@@ -67,8 +67,26 @@ describe('parsePackJson', () => {
         expect(parsePackJson(polluted).size).toBe(7);
     });
 
+    it('tolerates a banner whose own text contains a `[` before the payload', () => {
+        // Collision fixture, road-to-gates-that-can-fail Phase 6.2: npm echoes
+        // the lifecycle command line, and this repo's `prepare` script IS
+        // `[ -d .git ] && …` — so "slice from the first `[`" sliced from the
+        // banner's bracket and threw `No number after minus sign in JSON`.
+        const polluted =
+            '\n> agent-config@9.13.0 prepare\n' +
+            '> [ -d .git ] && bash src/scripts/install-hooks.sh || true\n\n' +
+            '[{"size":7,"unpackedSize":9,"files":[]}]';
+        expect(parsePackJson(polluted).size).toBe(7);
+    });
+
     it('throws on an empty array rather than returning undefined', () => {
         expect(() => parsePackJson('[]')).toThrow();
+    });
+
+    it('still throws when there is no JSON payload at all', () => {
+        // Sensitivity control: the candidate-scanning loop must not turn a
+        // genuinely broken stream into a silent pass.
+        expect(() => parsePackJson('> [ -d .git ] && echo no payload\n')).toThrow();
     });
 });
 

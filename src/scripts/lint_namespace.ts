@@ -18,10 +18,18 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
+import {
+    SRC_AGENT,
+    SRC_RULES,
+    SRC_SKILLS,
+    iter_commands,
+    logical_relpath,
+} from './_lib/agent_src.js';
+import { DeadScopeError, assertScanned } from './_lib/scan_scope.js';
+
 const _HERE = fileURLToPath(import.meta.url);
 
 const ROOT = path.resolve(path.dirname(_HERE), '..', '..');
-const SRC = path.join(ROOT, '.agent-src.uncondensed');
 
 // Source-of-truth regex; mirrored in docs/contracts/namespace.md § 1.
 const NAME_RE = /^[a-z][a-z0-9]*(-[a-z0-9]+)*$/;
@@ -44,13 +52,64 @@ interface Target {
     subVerb: boolean;
 }
 
+/**
+ * ADR-051 moved every one of these roots out of the pre-ADR-051 source
+ * container. Until 2026-08-02 the table still named it, so `scan()` skipped
+ * all four `_isDir` checks and reported `BASELINE: 0 issues · 0 name(s)
+ * checked` — a green verdict over an empty corpus.
+ *
+ * Commands are NOT in this table: they no longer live in one flat directory.
+ * `src/domains/<pack>/<subpath>/command.md` is walked by `_command_targets()`
+ * below, which reconstructs the same name/sub-verb semantics from the logical
+ * command path.
+ */
 const TARGETS: Target[] = [
-    { kind: 'skill', root: path.join(SRC, 'skills'), glob: '*/SKILL.md', depth: 1, subVerb: false },
-    { kind: 'rule', root: path.join(SRC, 'rules'), glob: '*.md', depth: 0, subVerb: false },
-    { kind: 'command', root: path.join(SRC, 'commands'), glob: '*.md', depth: 0, subVerb: false },
-    { kind: 'command', root: path.join(SRC, 'commands'), glob: '*/*.md', depth: 0, subVerb: true },
-    { kind: 'persona', root: path.join(SRC, 'personas'), glob: '*.md', depth: 0, subVerb: false },
+    { kind: 'skill', root: SRC_SKILLS(), glob: '*/SKILL.md', depth: 1, subVerb: false },
+    { kind: 'rule', root: SRC_RULES(), glob: '*.md', depth: 0, subVerb: false },
+    {
+        kind: 'persona',
+        root: path.join(SRC_AGENT(), 'personas'),
+        glob: '*.md',
+        depth: 0,
+        subVerb: false,
+    },
 ];
+
+/** One command name to check, plus the physical file that carries it. */
+interface CommandTarget {
+    fullPath: string;
+    name: string;
+    subVerb: boolean;
+}
+
+/**
+ * Command names, reconstructed from the `src/domains` layout.
+ *
+ * The retired flat layout globbed `commands/*.md` (top-level verb, sub_verb
+ * false) and `commands/​*​/*.md` (sub-verb, sub_verb true — reserved words are
+ * legal there). The logical path of a domains command is the same
+ * `commands/<subpath>.md`, so the mapping is exact: the LAST segment is the
+ * name, and anything nested below the top level is a sub-verb.
+ */
+function _command_targets(): CommandTarget[] {
+    const out: CommandTarget[] = [];
+    for (const physical of iter_commands()) {
+        let logical: string;
+        try {
+            logical = logical_relpath(physical);
+        } catch {
+            continue;
+        }
+        const segments = logical.slice('commands/'.length).replace(/\.md$/, '').split('/');
+        const name = segments[segments.length - 1] as string;
+        if (!name) {
+            continue;
+        }
+        out.push({ fullPath: physical, name, subVerb: segments.length > 1 });
+    }
+    out.sort((a, b) => (a.fullPath < b.fullPath ? -1 : a.fullPath > b.fullPath ? 1 : 0));
+    return out;
+}
 
 function _isDir(p: string): boolean {
     try {
@@ -205,6 +264,14 @@ function scan(): [number, number] {
             }
         }
     }
+    for (const { fullPath, name, subVerb } of _command_targets()) {
+        checked += 1;
+        for (const e of _shape_errors(name, subVerb, 'command')) {
+            const rel2 = path.relative(ROOT, fullPath).split(path.sep).join('/');
+            process.stderr.write(`❌ ${rel2}: ${e}\n`);
+            issues += 1;
+        }
+    }
     return [checked, issues];
 }
 
@@ -261,6 +328,25 @@ function main(argv?: readonly string[]): number {
         return check_single(args.name);
     }
     const [checked, issues] = scan();
+    // Scope assertion: 0 names checked means every root moved, not that every
+    // name is valid. That was this gate's shipped state until 2026-08-02.
+    try {
+        assertScanned({
+            gate: 'lint_namespace',
+            scanned: checked,
+            units: 'name(s)',
+            roots: [
+                ...TARGETS.map((t) => path.relative(ROOT, t.root).split(path.sep).join('/')),
+                'src/domains/**/command.md',
+            ],
+        });
+    } catch (exc) {
+        if (!(exc instanceof DeadScopeError)) {
+            throw exc;
+        }
+        process.stderr.write(`❌  ${exc.message}\n`);
+        return 2;
+    }
     if (issues) {
         process.stderr.write(`BASELINE: ${issues} issue(s) across ${checked} name(s)\n`);
         return 1;
@@ -299,7 +385,6 @@ if (_isCliEntry() || process.argv[1] === _HERE) {
 
 export {
     ROOT,
-    SRC,
     NAME_RE,
     RESERVED,
     NON_ARTEFACTS,

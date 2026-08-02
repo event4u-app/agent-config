@@ -3,7 +3,7 @@
  * prepack-check.mjs — guard the published artifact.
  *
  * Runs during `npm pack` / `npm publish` AND as a dry-run on every PR
- * (Static Checks workflow). Two gates:
+ * (Static Checks workflow). Four gates:
  *
  *   1. Compiled-bin shape — the TS CLI binary exists, is executable, and
  *      carries the Node shebang before the tarball is built. Otherwise a
@@ -12,6 +12,11 @@
  *   2. Shipped-import completeness — every relative import reachable from
  *      the shipped `src/` trees resolves to a file the `files` whitelist
  *      actually ships (the 8.3.0 ERR_MODULE_NOT_FOUND class).
+ *   3. Lifecycle-target shape — every consumer-side lifecycle script points
+ *      at a target that exists and ships (the 9.8.0 dead-postinstall class).
+ *   4. Router-target shipping — every `routes_to` target in dist/router.json
+ *      resolves inside the shipped `files[]` set, so a `files[]` narrowing
+ *      cannot ship a dead router pointer.
  *
  * Folded from external council pass 2026-05-18 (Phase 1.3 acceptance).
  *
@@ -175,6 +180,40 @@ if (lifecycleErrors.length > 0) {
     die(`${lifecycleErrors.length} lifecycle script target(s) missing or unshipped.`);
 }
 process.stderr.write('prepack-check: lifecycle script targets OK\n');
+
+// ---------------------------------------------------------------------------
+// Router-pointer shipping guard (gate 4): every `routes_to` target in
+// dist/router.json must resolve to a file that exists AND is inside the
+// shipped `files[]` set. A `files[]` narrowing that drops a routed target was
+// caught once by a working gate; this makes that catch structural rather than
+// incidental, and moves it to pack time on the causing PR
+// (road-to-gates-that-can-fail Phase 4). The kind→path table is single-sourced
+// from ./router_target_paths.mjs, shared with
+// cmd_conformance.ts::routeTargetPaths — two copies could disagree about where
+// a pointer lives, which is the packaging↔runtime gap this closes.
+//
+// PREPACK_ROUTER_JSON points the gate at a different index (repo-relative or
+// absolute) — used by tests/scripts/prepack_router_targets.test.ts and by the
+// planted-target proof, so dist/router.json itself is never mutated.
+// ---------------------------------------------------------------------------
+import { checkRouterTargetsShipped } from './prepack_router_targets.mjs';
+
+const routerRel = env.PREPACK_ROUTER_JSON ?? 'dist/router.json';
+const routerResult = checkRouterTargetsShipped({
+    routerPath: resolve(routerRel),
+    isShipped,
+    exists: (relPath) => existsSync(resolve(relPath)),
+    readFile: (p) => readFileSync(p, 'utf8'),
+});
+if (routerResult.errors.length > 0) {
+    for (const e of routerResult.errors) {
+        process.stderr.write(`prepack-check: ${e}\n`);
+    }
+    die(`${routerResult.errors.length} router target(s) do not resolve inside the shipped set.`);
+}
+process.stderr.write(
+    `prepack-check: router targets OK (${routerResult.scanned} routes_to target(s) in ${routerRel})\n`,
+);
 
 // Optional: invoked with --verbose dumps the size for tarball-budget bookkeeping.
 if (argv.includes('--verbose')) {

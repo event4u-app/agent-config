@@ -65,6 +65,38 @@ the **workflow_dispatch** on `release.yml` (inputs: `bump`, `version`,
       the heavy install matrices on release branches, so the release PR itself
       is the one PR that never installs the thing it is releasing. 9.8.0 shipped
       without `src/install/` across two minors and it was caught after publish.
+- [ ] **Exercise the release-gated workflows against `main` and require green
+      before cutting.** Three workflows only run on a release PR, a cron, or a
+      manual dispatch, so on the release PR itself they are being run for the
+      first time in days — 9.9.0 needed four CI round-trips because four of
+      them failed at once, on the one PR that cannot absorb the delay. Since
+      `road-to-gates-that-can-fail` Phase 4 they also trigger on any PR that
+      touches an input they measure, but a `main` dispatch is still the last
+      cheap moment to find a break. All three accept `workflow_dispatch`; run
+      them from a clean `main`:
+
+      ```bash
+      # 1. Fire all three against main (order does not matter; they are independent).
+      gh workflow run evaluator-umbrella.yml --ref main
+      gh workflow run consumer-matrix.yml   --ref main
+      gh workflow run release-validation.yml --ref main
+
+      # 2. Watch each to completion. `--exit-status` makes a red run exit non-zero,
+      #    so this is a gate and not a status page. Takes ~20-30 min in total;
+      #    consumer-matrix is the long pole.
+      for wf in evaluator-umbrella.yml consumer-matrix.yml release-validation.yml; do
+        sleep 5   # let the dispatch register before querying for its run id
+        id="$(gh run list --workflow "$wf" --branch main --event workflow_dispatch \
+                --limit 1 --json databaseId --jq '.[0].databaseId')"
+        echo "== $wf → run $id"
+        gh run watch "$id" --exit-status || { echo "RED: $wf — do not cut"; break; }
+      done
+      ```
+
+      Any red here is a **stop**: fix it on `main` first, then re-dispatch. On a
+      `workflow_dispatch` the four release-shape jobs in `release-validation.yml`
+      run without a `release/*` head branch (their `if:` admits dispatch), which
+      is intended — a shape failure there is a real signal about `main`.
 
 ## 2. The pipeline — what `release.ts` does (9 steps)
 
@@ -159,6 +191,13 @@ doing it, so a crash localises to a step.
 test -f src/scripts/release.ts && test -f .github/workflows/release.yml
 grep -q "release-prepare" Taskfile.yml
 ./scripts-run src/scripts/check_release_pr_shape --help >/dev/null 2>&1 || true
+# the pre-flight dry-run + the three release-gated workflows § 1 dispatches:
+test -f tests/test_release_install_e2e.sh
+for wf in evaluator-umbrella consumer-matrix release-validation; do
+  test -f ".github/workflows/$wf.yml" || { echo "stale: $wf.yml is gone"; exit 1; }
+  grep -q "workflow_dispatch" ".github/workflows/$wf.yml" \
+    || { echo "stale: $wf.yml no longer accepts workflow_dispatch"; exit 1; }
+done
 ```
 
 A written-steps-only **dry run** (cut a no-op release following ONLY this doc,

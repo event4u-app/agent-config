@@ -63,6 +63,7 @@ Read `.github/workflows/` to discover the actual job matrix. Common patterns:
 - Use **concurrency groups** to prevent duplicate runs: `group: ${{ github.workflow }}-${{ github.ref }}`
 - Use **`fail-fast: false`** in matrix strategies for independent job execution.
 - Extract shared logic into **reusable workflows** (`module-deploy.yaml` pattern).
+- A job with **`container:`** MUST run `git config --global --add safe.directory "$GITHUB_WORKSPACE"` immediately after `actions/checkout` — the checkout is owned by a different UID than the container user, so without it every git-backed step dies with `fatal: detected dubious ownership`.
 
 ### Composer auth
 

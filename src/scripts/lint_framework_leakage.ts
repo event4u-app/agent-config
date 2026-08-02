@@ -224,7 +224,19 @@ function _is_carve_out_pointer_line(line: string): boolean {
 const SHAPE_EXAMPLE_RE =
     /\((?:Laravel|Symfony|Django|Rails|Next\.js)[^)]*\b(?:shape|example)\b|\b(?:Laravel|Symfony|Django|Rails) (?:shape|example):/i;
 
-const FRONTMATTER_FRAMEWORK_RE = /^---\s*\n([\s\S]*?)\n---/m;
+/**
+ * Real frontmatter only — the block that OPENS the file, not any `---` fence.
+ *
+ * This carried `/m` with no start-of-file guard, the only such parser in the
+ * suite (every sibling anchors at index 0). With `/m`, a file that has no
+ * leading frontmatter latched onto the first `---`-delimited span anywhere in
+ * its body — and since a non-null match makes the caller `continue`, the whole
+ * file was then exempted from leakage scanning. What collides with it is the
+ * house convention of quoting a `---`-fenced frontmatter EXAMPLE in prose: one
+ * such example carrying a `framework:` line silently disarms the gate for that
+ * file (road-to-gates-that-can-fail Phase 6.2, finding 4).
+ */
+const FRONTMATTER_FRAMEWORK_RE = /^---[ \t]*\n([\s\S]*?)\n---/;
 const FRAMEWORK_KEY_RE = /^(?:framework|\s+framework)\s*:\s*(\S+)/m;
 
 export function is_carve_out(p: string): boolean {

@@ -114,7 +114,7 @@ to [`upstream-contribute`](../upstream-contribute/SKILL.md).
 **WHEN NOT to use this**
 
 - The peer repo needs a generic walk-through first — route to
-  [`analyze-reference-repo`](../analyze-reference-repo/SKILL.md);
+  [`analyze-reference-repo`](../../commands/analyze/reference-repo.md);
   this skill consumes its output, never duplicates it.
 - The decision is to contribute back upstream — route to
   [`upstream-contribute`](../upstream-contribute/SKILL.md).

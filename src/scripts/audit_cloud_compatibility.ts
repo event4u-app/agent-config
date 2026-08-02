@@ -22,6 +22,8 @@ import * as path from 'node:path';
 import process from 'node:process';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
+import { DeadScopeError, assertScanned } from './_lib/scan_scope.js';
+
 type Json = unknown;
 type JsonObject = Record<string, Json>;
 
@@ -29,8 +31,24 @@ const _HERE = fileURLToPath(import.meta.url);
 
 // src/scripts/audit_cloud_compatibility.ts → parents[2] of the .py file = repo root.
 export const ROOT = path.resolve(path.dirname(_HERE), '..', '..');
-export const SOURCE = path.join(ROOT, '.agent-src.uncondensed');
 export const SCAN_DIRS = ['skills', 'rules', 'commands', 'guidelines'];
+
+/**
+ * Where each artefact kind actually lives.
+ *
+ * Every kind used to be `SOURCE/<kind>` under one pre-ADR-051 container. All
+ * four resolved to a missing directory after the move, so `scan()` returned []
+ * and the audit emitted `"total": 0` with every histogram empty — a cloud-
+ * compatibility report over zero artefacts. The four kinds now have four
+ * unrelated homes (commands are not a directory at all but one `command.md`
+ * leaf per verb), so the mapping is explicit rather than a join.
+ */
+export const KIND_ROOTS: Readonly<Record<string, string>> = {
+    skills: path.join(ROOT, 'src', 'skills'),
+    rules: path.join(ROOT, 'src', 'rules'),
+    commands: path.join(ROOT, 'src', 'domains'),
+    guidelines: path.join(ROOT, 'docs', 'guidelines'),
+};
 
 // --- patterns (global so findall returns every non-overlapping match) ---------
 const SCRIPT_RE = /scripts\/[a-z_]+\.(?:py|sh)|python3\s+scripts\/|bash\s+scripts\/|\.\/scripts\//g;
@@ -357,7 +375,7 @@ interface Row extends ClassifyEvidence {
 export function scan(): Row[] {
     const rows: Row[] = [];
     for (const sub of SCAN_DIRS) {
-        const base = path.join(SOURCE, sub);
+        const base = KIND_ROOTS[sub] as string;
         if (!_isDir(base)) {
             continue;
         }
@@ -565,6 +583,23 @@ export function main(argv: string[] | null = null): number {
     }
 
     const rows = scan();
+    // Scope assertion: a cloud-compat report over an empty corpus is not "no
+    // cloud-incompatible artefacts", it is a report about nothing — the exact
+    // `"total": 0` output this audit produced while its roots were dead.
+    try {
+        assertScanned({
+            gate: 'audit_cloud_compatibility',
+            scanned: rows.length,
+            units: 'artefact(s)',
+            roots: SCAN_DIRS.map((k) => _relativeToPosix(KIND_ROOTS[k] as string, ROOT)),
+        });
+    } catch (exc) {
+        if (!(exc instanceof DeadScopeError)) {
+            throw exc;
+        }
+        process.stderr.write(`❌  ${exc.message}\n`);
+        return 2;
+    }
     const summary = summarize(rows);
 
     if (args.details) {

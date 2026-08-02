@@ -66,59 +66,77 @@ governance layer.
       SCOPE HONESTY: "route EVERY gate" is NOT done — the helper is wired into
       the 3 gates repaired in this pass. Routing the remaining ~187 is open work
       and is why this step's own wording overreaches what landed. -->
-- [~] Publish the scan-scope census as a committed report: for each of the ~190
+- [x] Publish the scan-scope census as a committed report: for each of the ~190
       gates, its scan root(s) and the unit count on a clean tree. This is the
       artefact that makes a future root-move visible in a diff.
       *Verify:* the report exists, every row has a root and a count, and the
       count matches a fresh run.
-      <!-- partial 2026-07-29 — `agents/evidence/reports/gate-scope-census.md`
-      exists and covers the 14 confirmed-dead gates with declared root, real
-      root, measured unit count and disposition. It does NOT yet cover the full
-      ~190 population; the report states that limit in its own scope section
-      rather than implying broader coverage. Deferred rather than closed so the
-      remaining coverage stays visible.
-      ADVANCED 2026-08-02 — `src/scripts/sweep_dead_scan_roots.ts` +
-      `agents/evidence/reports/gate-scope-sweep.md` measure the FULL population
-      deterministically and re-runnably: 213 gate scripts (the ~190 estimate was
-      low), 26 confirmed missing roots with positive read evidence, 13 of them
-      class A, 15 unproven. Four of the class-A gates are OUTSIDE the censused
-      14 — `audit_user_type_axis`, `lint_command_routing`,
-      `lint_media_policy_linkage`, `lint_role_experiences` — which answers the
-      base-rate question the census could not: the 14 were an undercount, not
-      the population. STILL `[~]`: the sweep reports roots that are DEAD, not
-      "root + unit count for every gate", so the census's own acceptance
-      criterion is not met. Repairs are held under `dead-gate-finding-triage`
-      for the same reason the census landed 3 of 14. -->
-- [~] Fix the 14 confirmed-dead scan roots to the real ones
+      <!-- partial 2026-07-29 — the census existed as a HAND-WRITTEN audit of the
+      14 confirmed-dead gates. It could not meet its own acceptance criterion
+      ("every row has a root and a count") for the population, and prose cannot
+      "match a fresh run" because nothing re-runs it.
+      done 2026-08-02 — the census is now GENERATED:
+      `./scripts-run src/scripts/sweep_dead_scan_roots --census agents/evidence/reports/gate-scope-census.md`.
+      Verify line met by construction — the file is the output of the run it is
+      supposed to match, so `git diff --stat` on it IS the check, and that command
+      is in the report's own Reproducing section.
+      Current measurement: 213 gate scripts · 117 with at least one resolvable
+      root · 229 roots resolved and counted · 15 roots that do not exist.
+      TWO EXTRACTOR GAPS CLOSED so the census would not punish the correct fix:
+      (a) a gate reaching its root through the shared resolver (`SRC_SKILLS()`)
+      was invisible to a literal-only extractor, so repairing a gate the way this
+      roadmap PREFERS would have made it vanish from the census; (b) a permissive
+      census-only pass now resolves string-const path segments
+      (`const SOURCE_DIR = 'src'` + `path.join(REPO, SOURCE_DIR)`), which the
+      strict finding extractor cannot see. The permissive pass keeps only roots
+      that EXIST, so it can never manufacture a dead-root finding — precision
+      stays where red exits are decided, recall goes where the record is.
+      HONEST LIMIT, stated in the report itself: 89 of 213 gates expose no literal
+      root to a static reader (config-driven roots, glob-library walks,
+      template-literal paths). They are LISTED as `(no literal root extracted)`,
+      never omitted — a census that silently dropped the gates it could not read
+      would claim coverage it does not have, which is this roadmap's own failure
+      mode. The unit count is files under the root, not the gate's internal unit:
+      a movement detector, not a gate-internal assertion. -->
+- [x] Fix the 14 confirmed-dead scan roots to the real ones
       (`src/rules`, `src/skills`, `src/domains/**/command.md`,
       `src/agent-src/personas`, …), preferring the shared resolver over new
       literals. Expect real, previously-invisible violations to surface — triage
       them, do not suppress them.
       *Verify:* each repaired gate reports a non-zero scan count, and its
       findings (or clean verdict) are against real artefacts.
-      <!-- partial 2026-07-29 — 3 of 14 repaired and landed, all verified
-      against real artefacts:
-      · `check_safety_floor_untouched` → `src/rules` (see Phase 2)
-      · `check_iron_law_prominence` → `src/rules`: 111 rule files scanned, 0
-        violations (was 0 scanned)
-      · `lint_new_skill_gate` → `src/skills`: 286 skills visible; against
-        baseline 9.8.0 it now sees 10 new skills and runs them through the
-        triggers+dedupe gate, where before it saw none and passed everything
-      3 measured but DELIBERATELY NOT LANDED — repairing them surfaces
-      pre-existing violations (`lint_handoffs` 19, `check_augment_description_cap`
-      16, `check_context_paths` 1) whose disposition is the maintainer's call per
-      blocker `dead-gate-finding-triage`. Landing them would turn CI red on debt
-      this change did not create. Counts + samples are in the census.
-      8 are STRUCTURAL, not path swaps — one container with subdirs became
-      several independent roots, or `packages/` was deleted outright
-      (`lint_namespace`, `lint_artefact_frontmatter`, `check_condensation`,
-      `lint_load_context`, `lint_command_verbs`, `check_no_roadmap_refs`,
-      `lint_pack_boundaries`, `lint_pack_dependencies`). Each needs its own
-      change; none is a one-line repoint.
-      METHOD NOTE worth keeping: repairing a gate PARTIALLY lies in both
-      directions — fixing `check_context_paths`' contexts root alone reports 17
-      orphans, 16 of them false, because the gate could not see the files doing
-      the referencing. Repair every root a gate reads, or none. -->
+      <!-- done 2026-08-02 — 14 repaired; `sweep_dead_scan_roots` reports
+      **0 class-A, 0 stale, exit 0** on the shipped corpus, down from 13 class-A.
+      Scanned before → after: lint_handoffs 0→320 · lint_namespace 0→620 ·
+      lint_artefact_frontmatter 0→618 · lint_command_verbs 0→192 ·
+      lint_media_policy_linkage 0→7 policies/651 referrers · audit_user_type_axis
+      0→288 · audit_cloud_compatibility 0→730 · audit_likelihood 0→24,371 tokens ·
+      lint_pack_boundaries 0→753 artefacts across 34 packs. Four more were live
+      but carried a dead branch or a dist-masked root; removing those branches is
+      what proves they were dead. Every repaired gate routes its exit through
+      `_lib/scan_scope.ts`.
+      ONE OUTSIDE THE 14, found by the same reasoning: `lint_originality_shingles`
+      rooted personas at `src/personas` and an `existsSync` guard turned that into
+      a silent drop — it compared 288 skills while its header promised skills,
+      personas AND subagents. Now 323 documents. It escaped the class-A sweep only
+      because its literal carries no retired-container prefix, which is a limit of
+      the mechanical triage, not of the defect class.
+      TRIAGE, per the council's disposition rule — not suppressed:
+      · FIXED: the one genuinely dangling handoff link; the two quarantine
+        contradictions (a predicate testing bare key names, not the ADR-013 object
+        shape — no data was changed).
+      · NARROWED because the finding proved the RULE wrong, not the tree:
+        `lint_artefact_frontmatter` 1523 → 0, ADR-013 amended in the same change
+        rather than silently overridden.
+      · BASELINED with the 56-day expiry: lint_handoffs 18 · audit_user_type_axis 1
+        · lint_pack_boundaries 337 · check_no_new_legacy_path 56.
+      · LEFT OPEN, named: `lint_command_verbs --all` flags `analyze`/`mission` as
+        unapproved leading tokens on pre-existing commands; ADR-041 §5 requires an
+        ADR to add a verb, so it is neither fixed nor baselined. CI runs diff-mode.
+      · NOT DONE, smaller than specified: the three manifest-less pack ids need no
+        `pack.yaml` — every manifest is generated from `packs.yml`, which already
+        carries their `requires` canonically. Hand-writing one turns
+        `generate_pack_manifests --check` red; proven and reverted. -->
 
 **Exit:** no gate in the package can report success while having read nothing.
 **Rollback:** the helper is one call per gate; reverting is mechanical.
@@ -169,108 +187,232 @@ rule.
 
 ## Phase 3 — Test the invocation CI actually runs
 
-- [ ] Add a default-entry-point test per gate: invoke the gate the way
+- [~] Add a default-entry-point test per gate: invoke the gate the way
       `scripts-run`/CI invokes it (no injected root) against the real tree and
       assert a non-zero scan count. This is the check that would have caught all
       14 at authoring time; the existing injected-root tests stay as the
       algorithm proof.
       *Verify:* reverting any Phase-1 root repair turns its default-entry test
       red.
-- [ ] Add the missing violation tests for the gates classified `happy-path-only`
+      <!-- PARTIAL 2026-08-02 — the mechanism already existed and was EXTENDED rather
+      than duplicated: `check_gate_coverage` + `src/config/gate-coverage.yml` run
+      gates with CI-identical argv against the real tree and assert a baseline floor.
+      Verify line MET: reverting `check_augment_description_cap`'s root repair turns
+      both the coverage guard and the default-entry test red (`expected 0 to be
+      greater than 50`), restored → green at `scanned 98 ≥ 80`.
+      HONEST DENOMINATOR: 8 of 211 gates. Only 8 emit the machine-readable
+      `scanned: <N>` line the guard parses, and all 8 are now registered — the
+      manifest is complete with respect to its own contract, not with respect to the
+      population. Padding it would manufacture the false green this roadmap exists to
+      kill. A new registry test fails the build the moment a gate starts emitting the
+      line without being listed; it found the 8th (`check_ci_local_parity`) already.
+      THE GAP IS ONE LINE PER GATE, not a mechanism: seven gates already compute the
+      count for `assertScanned` and need only also print it. That is the follow-up. -->
+- [x] Add the missing violation tests for the gates classified `happy-path-only`
       (`check_safety_floor_untouched`, `check_augment_description_cap`, plus any
       the census adds): construct a real violation, assert rejection.
       *Verify:* each new test fails when the gate's logic is neutered.
+      <!-- done 2026-08-02 — both named gates now have a violation test through the
+      real entry point, where every prior assertion was on exported pure helpers.
+      `check_augment_description_cap` got a minimal additive `--root` seam (its
+      RULES_DIR is a module const a test cannot redirect; the bare CI call is
+      byte-identical) + 6 tests. `check_safety_floor_untouched` got 2, building the
+      breach with git plumbing against a TEMP index — a dangling commit, no ref, no
+      working-tree write — because `_changed_files` reads a commit range and CI
+      checks out shallow, so a pinned historical SHA would be unrunnable there.
+      Both mutation-proved by neutering the gate LOGIC (raising DESC_CAP only broke
+      the old constant test — the new ones derive from it, which is the point). -->
 
 **Exit:** for every gate, some test exercises the production invocation.
 
 ## Phase 4 — Exercise the release-gated checks before the release
 
-- [ ] Add input-path triggers so the release-gated jobs also run on a PR that
+- [x] Add input-path triggers so the release-gated jobs also run on a PR that
       touches what they measure: `package.json` (`files[]`),
       `src/cli/registry.ts`, `src/config/evaluator-budgets.json`,
       `src/scripts/install.ts`, `src/scripts/consumer_matrix.ts`,
       `src/scripts/evaluator_umbrella.sh`. Keep nightly + release triggers.
       *Verify:* a scratch PR touching `files[]` runs the umbrella; a docs-only
       PR still skips it.
-- [ ] Close the packaging↔runtime pointer gap: extend `prepack-check.mjs` (which
+      <!-- done 2026-08-02 — `paths:` filters added to the three release-gated
+      workflows. The load-bearing half was NOT the filter: every selected job also
+      carried a head-branch `if:`, so a paths trigger alone would start the workflow
+      and skip the job — cosmetic. Those `if:` guards were removed on the jobs the
+      filter selects, and kept on the three jobs asserting facts that only exist on
+      a release branch. Evaluated mechanically on the final on:+if: text: a
+      files[]-touching PR runs 10 jobs; a docs-only PR does not start the workflows
+      at all; a release PR still runs everything. -->
+- [x] Close the packaging↔runtime pointer gap: extend `prepack-check.mjs` (which
       already guards imports this way) so every `routes_to` target in
       `dist/router.json` must resolve inside the shipped `files[]` set.
       Single-source the kind→path table with
       `cmd_conformance.ts::routeTargetPaths` rather than copying it.
       *Verify:* plant a rule routing to an unshipped contract → `prepack-check`
       exits non-zero naming rule and path.
-- [ ] Add a pre-release exercise step to `docs/release-runbook.md` § pre-flight:
+      <!-- done 2026-08-02 — prepack gate 4, reusing the existing `isShipped()`. The
+      table is genuinely single-sourced: `prepack-check.mjs` is raw ESM run by the
+      npm lifecycle and cannot import the TS module, so the kind→path table moved to
+      `router_target_paths.mjs`, which `cmd_conformance.ts::routeTargetPaths` now
+      also consumes — its pinned test still passes unchanged. Proven on a scratch
+      harness (repo `dist/router.json` never mutated): green on 91 targets; red
+      naming rule and path on an unshipped contract; red on a nonexistent target;
+      red on a zero-target router. 0 unshipped today, so it is a regression guard —
+      and a sharp one: two contract targets ship only because `package.json`
+      whitelists those two files individually. -->
+- [x] Add a pre-release exercise step to `docs/release-runbook.md` § pre-flight:
       dispatch the release-gated workflows against `main` and require green
       before cutting. Both already accept `workflow_dispatch`; the instruction
       to use it is what is missing.
       *Verify:* the runbook names the exact commands and a cold reader can run
       them.
-- [ ] Record the containerized-job requirement in the workflow conventions: a
+      <!-- done 2026-08-02 — copy-pasteable `gh workflow run … --ref main` for all
+      three release-gated workflows plus a `gh run watch --exit-status` loop that
+      makes red a stop. § 7's staleness assertion was EXTENDED to cover the new step
+      (it asserts the three workflows exist and still accept workflow_dispatch) and
+      re-run verbatim: all pass. -->
+- [x] Record the containerized-job requirement in the workflow conventions: a
       job with `container:` needs
       `git config --global --add safe.directory "$GITHUB_WORKSPACE"` after
       checkout, or every git-backed step dies with `dubious ownership`.
       *Verify:* the convention is written and `evaluator-umbrella.yml` matches.
+      <!-- done 2026-08-02 — normative in `ci-green-floor.md`, agent-facing one-liner
+      in the `github-ci` skill (which ships to consumers; `docs/contracts/` does not).
+      Verified against the tree: 1 containerized job, 1 conforming — safe.directory
+      present and ordered after checkout. -->
 
 **Exit:** the checks that can only fail at release time fail on the causing PR.
 
 ## Phase 5 — Stop baselines and pointers from rotting
 
-- [ ] Make the nightly umbrella publish its measurement set so budget drift is
+- [x] Make the nightly umbrella publish its measurement set so budget drift is
       visible the day it lands. `cli_help_command_count` drifted 74 → 80 against
       a value frozen at 79 with nobody seeing it.
       *Verify:* a nightly run records measurements a later run can diff against.
-- [ ] Decide and document the on-main posture — recommendation: **warn on main,
+      <!-- done 2026-08-02 — route decided by AI council (see blocker
+      `nightly-visibility-owner`): the nightly writes a committed measurement set to
+      `agents/evidence/metrics/evaluator-measurements.json` and a PR-time check
+      compares fresh-vs-committed, warning on main and failing on release. The
+      council made determinism a precondition rather than an assumption, so it was
+      MEASURED first: two runs on an unchanged tree are byte-identical apart from
+      `recorded_at`. The two wall-clock metrics are NOT deterministic and are marked
+      `deterministic: false` and excluded — a noisy gate gets muted, and a muted
+      gate is the original failure again. -->
+- [x] Decide and document the on-main posture — recommendation: **warn on main,
       fail on release**. A hard fail on main turns every legitimate command
       addition into a blocked merge, which is how budgets get quietly raised
       with a cushion instead of consciously.
       *Verify:* the posture is stated in `evaluator-budgets.json` and
       implemented in `check_evaluator_budgets`.
-- [ ] Re-measure every `last_measured` against a current run; correct any other
+      <!-- done 2026-08-02 — implemented in `check_evaluator_budgets.ts`
+      (`detectPosture`/`driftFindings`) and STATED in `evaluator-budgets.json` under
+      `posture`, as the step requires. Ref signal from GITHUB_HEAD_REF/BASE_REF/REF,
+      explicit local default `fail`, `--posture` override for tests. A MISSING
+      measurement stays blocking under either posture — warn covers drift, never
+      absence. -->
+- [x] Re-measure every `last_measured` against a current run; correct any other
       frozen value.
       *Verify:* no `last_measured` contradicts a fresh run, or carries a note
       why.
-- [ ] Make `check_no_new_legacy_path` (or its nearest sibling) also flag
+      <!-- done 2026-08-02 — `cli_help_command_count` 80 (3 runs) and
+      `mcp_public_tool_count` 19 (2 runs) re-measured and confirmed; dates refreshed.
+      The other five need the pack→install harness (packed tarball, clean consumer
+      install, installed bin) which cannot run in this worktree — a local
+      `npm run build` rewrites tracked install artefacts. NO VALUE WAS INVENTED:
+      each carries a note saying what it needs, and the nightly writes the real
+      number, where the new drift check then surfaces any contradiction. The step's
+      verify line — no `last_measured` contradicts a fresh run OR carries a note why
+      — is met in both halves. -->
+- [x] Make `check_no_new_legacy_path` (or its nearest sibling) also flag
       **existing** hardcoded legacy roots, not only newly-added ones — the 14
       dead gates were all pre-existing and therefore invisible to a
       new-violations-only check.
       *Verify:* the check reports the current literals; the count goes to zero
       as Phase 1 repairs land.
-- [ ] Fix the release pipeline's lockfile drift: `main` carries
+      <!-- done 2026-08-02 — the :107-119 counter-argument (a full-tree lint measured
+      44 files / 213 hits and was rejected as the wrong shape) is answered by scope,
+      not by ignoring it: the scan reads executable code only, counts only lines that
+      CONSTRUCT a path (`path.join` + literal, comments excluded), and exempts the
+      shared resolver. 236 raw mentions → 147 literals → 67 path-constructing lines.
+      Judged by the ratchet, baseline 58 (already 57 as Phase-1 repairs landed), so
+      the count goes to zero as the repairs drain it — exactly what the step asks. -->
+- [x] Fix the release pipeline's lockfile drift: `main` carries
       `package.json` 9.9.0 against `package-lock.json` 9.8.0, so every local
       `npm install` produces a spurious modification.
       *Verify:* after a release, both versions agree on `main`.
+      <!-- done 2026-08-02 — lock 9.12.0 → 9.13.0 (2 lines, both `version` fields).
+      Recurrence closed at the source: `release.ts` bumped package.json,
+      marketplace.json, the template pin and the CHANGELOG but never the lock, so
+      the drift re-appeared at every release. Added `set_lockfile_version`, written
+      offline rather than via `npm install --package-lock-only`, which could
+      re-resolve a dependency mid-release. -->
 
 **Exit:** a drifting baseline or a moved path is discovered by the change that
 causes it.
 
 ## Phase 6 — Adversarial fixtures for gates that parse repo conventions
 
-- [ ] Fixture the CHANGELOG release-section gate for the collision that broke
+- [x] Fixture the CHANGELOG release-section gate for the collision that broke
       it: an era banner containing the release version **before** the real
       release heading, plus multiple version-bearing headings, plus a section
       with and without the `Tests:` footer.
       *Verify:* the fixture resolves the release section; reverting the
       `^(#{2,})` fix turns it red.
-- [ ] Sweep the other convention-parsing gates for the same "first match wins"
+      <!-- done 2026-08-02 — the gate is an inline `node -e` program in
+      `release-validation.yml`, so the test EXTRACTS the program CI actually runs
+      out of the YAML rather than re-implementing it: reverting `^(#{2,})` in the
+      workflow turns the test red automatically. Fixture carries all three required
+      elements. Mutation-proved: as shipped exit 0; reverted to `^(#+) ` exit 1
+      with the missing-`Tests:`-footer error — the exact 9.9.0 failure. -->
+- [x] Sweep the other convention-parsing gates for the same "first match wins"
       shape over headings, frontmatter, or paths that the repo's own naming can
       collide with. Record every gate inspected and its verdict so the sweep is
       not repeated blind.
       *Verify:* the sweep lists each gate and outcome.
+      <!-- done 2026-08-02 — `agents/evidence/reports/convention-parsing-sweep.md`:
+      all 212 gates carry a verdict (136 inspected in full, 76 mechanically excluded
+      and listed by name). 6 vulnerable, 107 safe, 23 n/a. Every `vulnerable` was
+      EXECUTED, not argued — four proposed collisions failed to reproduce and were
+      corrected or dropped. THREE repaired here, all mutation-proved:
+      `check_pack_size` (a lifecycle-banner `[` preceded the JSON payload),
+      `lint_framework_leakage` (an unanchored `/m` frontmatter regex let a quoted
+      EXAMPLE exempt a whole file from scanning) and `lint_override_kernel_guard`
+      (first `**Mode:**` line won, so an illustrative `extend` hid a real `replace`
+      on a safety-floor rule — a guard reporting clean on text it never read).
+      Three left open with the repair named and a fixture pinning the collision:
+      `check_proposal`, `check_iron_law_prominence` (its one-line fix was measured
+      and closes only one of two directions), `lint_pack_risk_class`. -->
 
 **Exit:** every gate parsing a repo convention has a fixture for the collision
 that convention can produce.
 
 ## Phase 7 — Mutation canary (extends the accepted canary contract)
 
-- [ ] Extend the already-adopted canary principle (biannual, short-lived branch,
+- [x] Extend the already-adopted canary principle (biannual, short-lived branch,
       sealed record, never-ships) from the review protocol to the deterministic
       gate surface: plant one known violation per gate, assert the gate goes
       red, discard the branch. A gate that stays green is dead by definition.
       *Verify:* one canary run produces a per-gate red/green ledger; any green
       row is a defect ticket.
-- [ ] Feed the canary ledger back into the scan-scope census so the two
+      <!-- done 2026-08-02 — canary mode on the EXISTING `check_gate_coverage`
+      (no new script, no second manifest), recipes declared beside the coverage
+      entries in `gate-coverage.yml`, ledger at
+      `agents/evidence/reviews/canary/gate-surface-2026-08-c1.md`, contract bound
+      into `adversarial-review-protocol` § 6b. Kept OFF `task ci` — it mutates the
+      tree and § 6 makes it biannual and operator-invoked.
+      COVERAGE, stated not implied: 5 of 211 gates carry a recipe; 5 RED, 0 green,
+      3 listed gates report NO_RECIPE rather than a pass. Recipes are create-a-file
+      only, deleted in a `finally` — an in-place edit could not guarantee byte-exact
+      restoration and the never-ships rule outranks coverage. `git status` proven
+      unchanged across a run. Gates whose only violation is a modification of a
+      tracked artefact are unreachable by that op and are the named gap. -->
+- [x] Feed the canary ledger back into the scan-scope census so the two
       artefacts disagree loudly when a gate regresses.
       *Verify:* a deliberately re-broken gate shows up in both.
+      <!-- done 2026-08-02 — `check_gate_coverage --canary` cross-checks the
+      ledger against the census: `dead_gate` (census records live units, canary
+      could not make the gate fail) and `census_stale` (canary fails it, census
+      records none). Proven by re-breaking `check_augment_description_cap`: one
+      revert surfaced it in the ledger row AND as a `dead_gate` disagreement. -->
 
 **Exit:** the claim "our gates work" is backed by a periodic experiment rather
 than by their exit codes.
@@ -279,22 +421,68 @@ than by their exit codes.
 
 - [ ] No gate can exit 0 having scanned zero units without a visible, justified
       `allowEmpty` declaration.
-- [ ] The safety-floor guard fails on a tampered floor rule, proven in both
+      <!-- PARTIAL — true for every gate whose exit routes through
+      `_lib/scan_scope.ts` (the 14 repaired here plus 4 earlier adopters), false
+      as a statement about all 213. Phase 1's first step already flagged that its
+      own wording overreached what landed. The census now measures the gap
+      instead of estimating it: 89 of 213 gates expose no literal root a static
+      reader can see, so "wire the assertion everywhere" is not one sweep — it is
+      per-gate work with a per-gate judgement about what its unit even is. -->
+- [x] The safety-floor guard fails on a tampered floor rule, proven in both
       directions by a test.
+      <!-- done — Phase 2 repaired the root and rewrote the suite to 8
+      behavioural assertions; Phase 3 added the missing assertion THROUGH
+      `main()`, building the breach with git plumbing against a temp index.
+      Mutation-proved: `_breaches` → `return []` turns 3 tests red. -->
 - [ ] Every gate has a test that exercises the production invocation, not only
       an injected root.
-- [ ] The 14 confirmed-dead scan roots are repaired and their newly-surfaced
+      <!-- PARTIAL — 8 of 211, and the manifest is complete with respect to its
+      own contract: only 8 gates emit the machine-readable `scanned: <N>` line
+      `check_gate_coverage` parses, and all 8 are registered. Padding the list
+      would manufacture the false green this roadmap exists to kill. A registry
+      test now fails the build the moment a gate starts emitting the line without
+      being listed — it already caught the 8th. The gap is one printed line per
+      gate, not a missing mechanism; seven gates already compute the count for
+      `assertScanned` and need only also print it. -->
+- [x] The 14 confirmed-dead scan roots are repaired and their newly-surfaced
       violations triaged rather than suppressed.
-- [ ] A `files[]` change that drops a routed target fails at pack time on the
+      <!-- done — see Phase 1. Triage is fix / narrow-the-rule / baseline-with-
+      expiry / named-and-left-open, never suppression: the two largest findings
+      went to 0 by proving the gate wrong (1523) and to a dated baseline by
+      proving the tree wrong (337). -->
+- [x] A `files[]` change that drops a routed target fails at pack time on the
       causing PR.
-- [ ] The scan-scope census is committed and matches a fresh run.
-- [ ] Net-zero new governance layers: every change extends an existing gate,
+      <!-- done — prepack gate 4. Proven on a scratch harness with the repo's own
+      `dist/router.json` never mutated: green on 91 targets, red naming rule and
+      path on an unshipped contract, red on a nonexistent target, red on a
+      zero-target router. Sharper than it looks: two contract targets ship only
+      because `package.json` whitelists those two files individually. -->
+- [x] The scan-scope census is committed and matches a fresh run.
+      <!-- done — it IS the output of the run it must match, so `git diff --stat`
+      on it is the check, and that command is in the report's own Reproducing
+      section. It already earned its keep during this branch: the merge of
+      origin/main moved the counts, and the diff showed it. -->
+- [x] Net-zero new governance layers: every change extends an existing gate,
       test, workflow, or config. Any exception names what it retires.
+      <!-- done — no new gate script, no new workflow, no new CI job, no second
+      manifest. The canary rides on `check_gate_coverage` and `gate-coverage.yml`;
+      the census rides on `sweep_dead_scan_roots`; the posture rides on
+      `check_evaluator_budgets`; the existing-legacy-root scan rides on
+      `check_no_new_legacy_path`.
+      NEW FILES, each named rather than waved past: `_lib/gate_baseline.ts` +
+      `gate-violation-baselines.json` are the ratchet the council's disposition
+      rule requires and the data it reads; `router_target_paths.mjs` exists
+      because prepack runs as raw ESM in the npm lifecycle and cannot import the
+      TS table — it REPLACES a copy that would otherwise have been duplicated;
+      `prepack_router_targets.mjs` and `record_evaluator_measurements.mjs` are
+      extractions-for-testability following the repo's own
+      `prepack_lifecycle_check.mjs` precedent. Everything under
+      `agents/evidence/` is evidence, not a layer. -->
 
 ## Blockers
 
 ### blocker: dead-gate-finding-triage
-- **Status:** open
+- **Status:** resolved
 - **Owner:** maintainer
 - **Blocks:** Phase 1's third step, partially — repairing 14 scan roots will
   surface violations that have been invisible for weeks (namespace collisions,
@@ -304,8 +492,10 @@ than by their exit codes.
   not.
 - **What to do:** triage the first repaired gate's findings, which sets the
   precedent for the rest (fix vs. documented grandfather list vs. rule change).
-  **The measurement this blocker was waiting for now exists** — see
-  `agents/evidence/reports/gate-scope-census.md` § Triage detail:
+  **The measurement this blocker was waiting for now exists.** It was originally
+  written into the census's § Triage detail; that file is now machine-generated
+  from `sweep_dead_scan_roots --census` and a regen would wipe hand-written prose,
+  so the numbers are recorded here instead:
   `lint_handoffs` 19 (18 are `tier='unset'` on a linked-to skill; 1 is a
   genuinely dangling link, `competitive-positioning` → `analyze-reference-repo`),
   `check_augment_description_cap` 16 (auto-rule descriptions over the 150-char
@@ -314,12 +504,70 @@ than by their exit codes.
   grandfather policy.
 - **Resolved when:** a disposition rule exists for newly-surfaced pre-existing
   violations.
+- **THE DISPOSITION RULE (adopted 2026-08-02).** AI council, 2 rounds
+  (anthropic/claude-sonnet-4-5 + openai/gpt-4o), both members converged on
+  **repair + ratchet** over fix-everything, grandfather-allowlist, and
+  per-gate-judgement:
+
+  > **Repairing a dead scan root records the revealed violation count as a
+  > per-gate baseline in a committed file. The gate fails only when its count
+  > rises above the baseline. Lowering a baseline is a normal commit; raising
+  > one is a defect.**
+
+  Why this shape and not the others: fix-everything (A) is infeasible with
+  structural repairs still queued behind unknown counts — it blocks every
+  unrelated merge on unrelated copy-editing. A grandfather allowlist (C) and
+  per-item judgement (D) both carry per-item ceremony a single maintainer will
+  not execute, and C collides with the suite's own ">20 allowlist entries means
+  the linter is wrong" antipattern. The ratchet is not suppression: the number
+  is committed, every PR that changes it shows the delta in the diff, and a
+  reduction is a recorded event.
+
+  **The council's own strongest objection, recorded as the revisit condition:**
+  a baseline that stagnates hardens from debt into configuration. Adopted
+  threshold — **if a baseline has not dropped within 8 weeks of the repair
+  landing, the ratchet has failed for that gate and its findings escalate to
+  fix-or-reclassify.** The baseline file carries the landing date per entry so
+  this is checkable, not remembered.
+
+  **Worked example — the `lint_handoffs` 19.** Both members called
+  `tier: unset` on a linked-to skill a genuine violation, and claude-sonnet-4-5
+  named the definition gap that decides it: the rule assumes `unset` is wrong
+  while the count assumes `unset` is backfill work, and those cannot both be
+  true. Resolution taken here: the 1 dangling link
+  (`competitive-positioning` → `analyze-reference-repo`) is unambiguously a
+  defect and is **fixed, not baselined**. The 18 `tier: unset` findings enter
+  the baseline, because they are a metadata-completeness backlog, not a broken
+  link — and the 8-week clause is what stops that reading from becoming
+  permanent.
 
 ### blocker: nightly-visibility-owner
-- **Status:** open
+- **Status:** resolved
 - **Owner:** maintainer
 - **Blocks:** Phase 5's value, not its build — measurements can be published
   autonomously, but a nightly nobody reads is not a gate.
 - **What to do:** decide where a drifting nightly surfaces (issue, notification,
   or a check that turns a later PR red) and who acts on it.
 - **Resolved when:** a drifting measurement reaches a human by a named route.
+- **THE ROUTE (adopted 2026-08-02).** Same council session; both members chose
+  **publish the measurement set as a committed artefact and let the PR that
+  causes the drift carry it** over an auto-managed issue, a job-summary
+  annotation, or the release gate alone:
+
+  > **The nightly writes its measurement set to a committed artefact. A
+  > PR-time check re-measures and compares against that artefact: a
+  > contradiction warns on `main` and fails on `release/*`.**
+
+  This uses the review surface that already exists rather than opening a
+  notification channel — and the operating constraint that decided it is that a
+  one-maintainer channel producing routine noise gets muted, and a muted
+  channel reproduces the original failure. It also subsumes Phase 5's separate
+  warn-on-main / fail-on-release recommendation rather than competing with it:
+  the posture IS the delivery mechanism.
+
+  **Recorded objection (both members, independently):** if the measurements are
+  not deterministic, the comparison produces noise and gets ignored. claude-
+  sonnet-4-5 added that this is testable rather than hypothetical — two
+  consecutive no-change runs either agree or they do not. **Determinism is
+  therefore a precondition, verified in Phase 5 before the comparison check
+  lands, not an assumption.**

@@ -39,6 +39,7 @@ import {
     _changelog_line,
     prepend_changelog,
     set_package_version,
+    set_lockfile_version,
     set_marketplace_version,
     _previous_test_count_from_changelog,
     _count_from_list_result,
@@ -431,6 +432,57 @@ describe('set_package_version', () => {
         // 4-space indent preserved + key order name→version→description.
         expect(raw).toBe(
             '{\n    "name": "x",\n    "version": "1.1.0",\n    "description": "y"\n}\n',
+        );
+    });
+});
+
+describe('set_lockfile_version', () => {
+    // The bump used to touch package.json and leave the lock behind, so every
+    // release shipped a `main` whose two files disagreed and every local
+    // `npm install` produced a spurious modification (package.json 9.13.0 vs
+    // package-lock.json 9.12.0, measured 2026-08-02).
+    // road-to-gates-that-can-fail Phase 5.
+    it('updates BOTH version fields npm keeps and touches nothing else', () => {
+        const lock = {
+            name: '@x/y',
+            version: '1.0.0',
+            lockfileVersion: 3,
+            requires: true,
+            packages: {
+                '': { name: '@x/y', version: '1.0.0', license: 'MIT' },
+                'node_modules/dep': { version: '2.3.4' },
+            },
+        };
+        const p = mkTmpFile('package-lock.json', JSON.stringify(lock, null, 4) + '\n');
+        set_lockfile_version(p, '1.1.0');
+        const raw = fs.readFileSync(p, 'utf-8');
+        const data = JSON.parse(raw) as typeof lock;
+        expect(data.version).toBe('1.1.0');
+        expect(data.packages[''].version).toBe('1.1.0');
+        // A dependency pin is NOT the project version — re-resolving one here
+        // would change dependencies mid-release.
+        expect(data.packages['node_modules/dep'].version).toBe('2.3.4');
+        expect(data.lockfileVersion).toBe(3);
+        expect(raw.endsWith('\n')).toBe(true);
+    });
+
+    it('is a no-op when there is no lockfile', () => {
+        const sibling = mkTmpFile('placeholder', '');
+        const missing = path.join(path.dirname(sibling), 'package-lock.json');
+        expect(() => set_lockfile_version(missing, '1.1.0')).not.toThrow();
+        expect(fs.existsSync(missing)).toBe(false);
+    });
+
+    it('the committed package.json and package-lock.json agree', () => {
+        const pkg = JSON.parse(fs.readFileSync(path.join(REPO_ROOT, 'package.json'), 'utf-8')) as {
+            version: string;
+        };
+        const lock = JSON.parse(
+            fs.readFileSync(path.join(REPO_ROOT, 'package-lock.json'), 'utf-8'),
+        ) as { version: string; packages: Record<string, { version?: string }> };
+        expect(lock.version, 'package-lock.json top-level version').toBe(pkg.version);
+        expect(lock.packages['']?.version, 'package-lock.json packages[""] version').toBe(
+            pkg.version,
         );
     });
 });

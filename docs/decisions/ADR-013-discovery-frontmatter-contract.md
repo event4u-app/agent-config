@@ -329,6 +329,81 @@ not-legal-advice positioning; `legal-review-prep` names the actual capability
 user-type are a different axis and are unchanged. Rename, not additive;
 non-overlap reservations still hold. See `road-to-legal-review-prep` Phase 0.
 
+### 2026-08-02 — Strict five-key enforcement narrowed to `workspaces` + `packs`
+
+The Phase-4 reading of this ADR — *all five discovery keys strictly enforced on
+every artefact* — is **narrowed**, at both nesting levels, to one rule:
+
+> **Keys and sub-keys that carry irreducible information are required.
+> Everything the schema gives a default is validated-when-present.**
+
+Concretely, `lint_artefact_frontmatter` now requires only `workspaces` and
+`packs`. `lifecycle`, `trust` and `install` — and, inside the latter two, each
+individual sub-key (`trust.level`, `trust.confidence`,
+`trust.human_review_required`, `install.default`, `install.removable`) — are
+optional and take their documented schema default when absent. Every enum and
+type check survives untouched for values that ARE written down: a wrong
+`lifecycle` enum, a non-bool `trust.human_review_required`, a `trust` that is
+not a mapping all still fail. The narrowing changes *when* the checks fire,
+never what they accept.
+
+**Why.** Repairing that gate's dead scan root (ADR-051 moved the source
+container; the gate had been walking the retired one and reporting
+`0 artefact(s) clean`) surfaced 1523 findings across 618 artefacts. Two facts
+decided the disposition:
+
+1. **Two gates asserted contradictory contracts and only one was ever
+   enforced.** `validate_frontmatter` — green for months against
+   `src/scripts/schemas/skill.schema.json` — lists
+   `required: ["name","description","source","domain"]`, requiring none of the
+   five, and gives `lifecycle` (`"active"`), `trust` and `install` documented
+   defaults. `lint_artefact_frontmatter` demanded all five but was blind the
+   whole time. When two gates conflict and only one has actually run, the
+   enforced one reflects the real contract.
+2. **The corpus splits exactly along the information line.** `workspaces` and
+   `packs` are absent **0** times in 618 artefacts; `lifecycle`, `trust` and
+   `install` are absent 574 / 459 / 456 times. A default can supply a lifecycle
+   state or a trust level; it cannot invent which workspace or pack an artefact
+   belongs to. That 100 % / 0 % split is evidence the discovery contract *is*
+   honoured precisely where it carries irreducible information.
+3. **The same holds one level down, and the first pass contradicted itself
+   there.** Requiring only the top-level keys still left 327 findings, all
+   absent *sub-keys* of a `trust:` / `install:` block that was present. Across
+   288 skills `trust` is complete **0** times (120 partial, 168 absent) — a
+   required shape with zero adoption was never the requirement — and
+   `validate_frontmatter` accepts them because `apply_schema_defaults` fills
+   missing sub-keys before validating. The gate had also become internally
+   inconsistent: it honoured the documented default for an absent `trust`
+   object and refused that same default for a partial one. Sub-keys now default
+   too, which takes the gate to **0 violations across 618 artefacts**.
+
+This is deliberately **not** "the gate found too much, so weaken the gate": the
+narrowing follows the enforced schema, not the size of the finding count.
+Recording a 1523-entry ratchet baseline was rejected for a related reason — the
+ratchet policy (council 2026-08-02, roadmap `road-to-gates-that-can-fail`) was
+calibrated on a measured premise of ~36 findings in total, and a 56-day expiry
+over 593 files is not pressure but an unbeatable clock, so the entry would be
+reaffirmed into permanence and the ratchet would become the mechanism by which
+drift hardens.
+
+Decided by AI council (anthropic/claude-sonnet-4-5 + openai/gpt-4o, 2 rounds,
+converged), 2026-08-02; both members stated the ratchet ruling does not survive
+at this magnitude. Pinned by tests in
+`tests/scripts/lint_artefact_frontmatter.test.ts` asserting both directions.
+
+**Related correction, same pass.** The quarantine-collision check ("listed in
+`unassigned-artefacts.yml` AND declaring discovery frontmatter") tested bare key
+NAMES, so it read `trust: durable` on the knowledge-card template and
+`trust: low` on the lesson-card template as discovery frontmatter. Those are
+scalars in unrelated template schemas; ADR-013 `trust` is an object. Neither the
+quarantine entries nor the templates were wrong — the predicate was. It now
+counts `trust` only when object-shaped (`workspaces` / `packs` / `lifecycle` /
+`install` remain unambiguous by name). Those two were the only hits of any of
+the five names across the entire quarantine list, so no data was changed.
+
+**Net result:** `lint_artefact_frontmatter` scans 618 artefacts (was 0) and
+reports 0 violations. No ratchet baseline entry exists for this gate.
+
 ## Cross-references
 
 - [ADR-007 — Agent Discovery Scopes](ADR-007-agent-discovery-scopes.md):

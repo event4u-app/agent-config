@@ -24,6 +24,19 @@ name: Consumer Matrix
 on:
   pull_request:
     branches: [main, master]
+    # PR selection is owned by this `paths` filter (road-to-gates-that-can-fail
+    # Phase 4): a PR that changes the tarball's shape or the installer is the
+    # PR that can break the consumer legs, so it runs there instead of waiting
+    # for the release PR. Release PRs keep triggering by construction —
+    # `release.ts` bumps `package.json` + the lockfile on every release branch.
+    paths:
+      - 'package.json'                  # `files[]` — the tarball's contents
+      - 'package-lock.json'
+      - 'src/scripts/install.ts'        # the installer every leg exercises
+      - 'src/scripts/consumer_matrix.ts'
+      - 'src/scripts/prepack-check.mjs' # the pack gate the dry-run leg runs
+      - '.github/workflows/consumer-matrix.yml'
+      - '.github/workflows/publish-npm.yml'
   schedule:
     # Weekly Tuesday 06:00 UTC — offset from smoke-public-install
     # (Monday) so registry/upstream drift surfaces on distinct days.
@@ -36,10 +49,11 @@ concurrency:
 
 jobs:
   consumer-matrix:
-    # Runs on release PRs (primary trigger) + cron + dispatch. Ordinary
-    # PRs skip: the source-level matrices own that surface, and this
-    # job's npm-registry leg would add noise there.
-    if: ${{ github.event_name != 'pull_request' || startsWith(github.head_ref, 'release/') }}
+    # Runs on release PRs (primary trigger) + cron + dispatch + any PR that
+    # matched the `paths` filter above. No head-branch `if` guard: the filter
+    # already selected the PR, and re-guarding here would make the path
+    # trigger cosmetic. Ordinary PRs that touch none of those paths never
+    # start the workflow at all, so the npm-registry leg adds no noise there.
     name: tarball E2E · node ${{ matrix.node }}
     runs-on: ubuntu-latest
     timeout-minutes: 30
@@ -75,6 +89,12 @@ jobs:
       - name: Leg manifest → job summary
         if: always()
         run: |
+          # shellcheck disable=SC2016
+          # The single quotes around the `node -e` program below are deliberate:
+          # the `${r.leg}` forms inside it are JS template literals, and letting
+          # the shell expand them would blank the whole table. Surfaced only now
+          # because actionlint lints CHANGED workflow files, and this one was
+          # untouched until the paths-trigger work in this branch.
           if [ -f leg-manifest.json ]; then
             {
               echo "### Consumer matrix legs · node ${{ matrix.node }}"
@@ -105,7 +125,7 @@ jobs:
     # Replicates publish-npm.yml up to (not including) `npm publish`,
     # on BOTH supported Node majors — catches the npm@latest→Node-22
     # drift class and any pack/build breakage before the tag exists.
-    if: ${{ github.event_name != 'pull_request' || startsWith(github.head_ref, 'release/') }}
+    # PR selection: the workflow-level `paths` filter (see `on:`).
     name: npm publish dry-run · node ${{ matrix.node }}
     runs-on: ubuntu-latest
     timeout-minutes: 20
@@ -164,7 +184,7 @@ jobs:
   mcp-worker-dry-run:
     # deploy-mcp-worker.yml stayed red across five releases because it
     # only ran post-release. Same pack + deploy path, --dry-run, pre-tag.
-    if: ${{ github.event_name != 'pull_request' || startsWith(github.head_ref, 'release/') }}
+    # PR selection: the workflow-level `paths` filter (see `on:`).
     name: MCP worker deploy dry-run
     runs-on: ubuntu-24.04
     timeout-minutes: 15
@@ -193,7 +213,7 @@ jobs:
         working-directory: internal/workers/mcp
 
   plugin-bootstrap:
-    if: ${{ github.event_name != 'pull_request' || startsWith(github.head_ref, 'release/') }}
+    # PR selection: the workflow-level `paths` filter (see `on:`).
     name: Plugin bootstrap integrity
     runs-on: ubuntu-latest
     timeout-minutes: 10

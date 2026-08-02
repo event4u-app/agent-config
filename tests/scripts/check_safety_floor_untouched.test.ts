@@ -11,10 +11,13 @@
 // The replacement asserts BEHAVIOUR in both directions: a changed-file set that
 // touches a floor rule must be rejected, one that does not must pass, and the
 // guarded paths must resolve on disk.
+import { spawnSync } from 'node:child_process';
 import * as fs from 'node:fs';
+import * as os from 'node:os';
 import * as path from 'node:path';
 import { describe, expect, it } from 'vitest';
 
+import { runInProc } from '../_lib/run_in_process.js';
 import * as sf from '../../src/scripts/check_safety_floor_untouched.js';
 
 describe('check_safety_floor_untouched — behavioural spec', () => {
@@ -80,5 +83,113 @@ describe('check_safety_floor_untouched — behavioural spec', () => {
         // gate can never fire, which is exactly how it shipped for months.
         expect(sf._floor_candidates().length).toBeGreaterThan(0);
         expect(sf._floor_candidates()).toContain('src/rules/commit-policy.md');
+    });
+});
+
+// ── Violation test through the REAL entry point ────────────────────────────
+//
+// Every assertion above calls an exported pure helper. None reaches `main()`,
+// so the suite could not tell "blocks a tampered floor rule" from "exits 0
+// unconditionally" — the `happy-path-only` class in road-to-gates-that-can-fail
+// Phase 3.2, and precisely the shape of the original defect.
+//
+// The breach is built with git plumbing against a TEMP INDEX: `read-tree` HEAD
+// into a scratch index file, swap one blob, `write-tree`, `commit-tree -p HEAD`.
+// This creates a dangling commit only — no ref, no working-tree change, no touch
+// of the real index — and needs no history beyond HEAD, so it survives the
+// shallow `actions/checkout` clone the test job uses. Pinning a historical SHA
+// would have made this test unrunnable in CI.
+describe('main() — a tampered safety-floor rule is actually blocked', () => {
+    const git = (args: string[], env: NodeJS.ProcessEnv = {}): { code: number; out: string } => {
+        const p = spawnSync('git', args, {
+            cwd: sf.REPO_ROOT,
+            encoding: 'utf-8',
+            env: { ...process.env, ...env },
+        });
+        return { code: p.status ?? 1, out: `${p.stdout ?? ''}${p.stderr ?? ''}`.trim() };
+    };
+
+    /**
+     * A dangling commit whose only delta vs HEAD is a gutted floor rule.
+     *
+     * Returns the sha, or a `failed:` string naming the step and git's own
+     * stderr. A bare `null` was the first shape and it cost a CI round-trip:
+     * ubuntu reported only "expected null not to be null", which says a commit
+     * was not produced but not which of five plumbing steps refused or why.
+     * A helper that cannot explain its own failure is the same shape as a gate
+     * that reports success without reading anything.
+     */
+    const commitWithGuttedFloorRule = (rel: string): string => {
+        const idxDir = fs.mkdtempSync(path.join(os.tmpdir(), 'sfidx-'));
+        try {
+            // Identity via env: `commit-tree` refuses without a committer, and a
+            // CI runner may have no global `user.name`/`user.email` —
+            // `actions/checkout` does not set one. This writes nothing to the
+            // machine's git config.
+            const env = {
+                GIT_INDEX_FILE: path.join(idxDir, 'index'),
+                GIT_AUTHOR_NAME: 'safety-floor canary',
+                GIT_AUTHOR_EMAIL: 'canary@example.com',
+                GIT_COMMITTER_NAME: 'safety-floor canary',
+                GIT_COMMITTER_EMAIL: 'canary@example.com',
+            };
+            const step = (label: string, args: string[]): string => {
+                const r = git(args, env);
+                if (r.code !== 0) throw new Error(`${label} failed (exit ${r.code}): ${r.out}`);
+                return r.out;
+            };
+
+            step('read-tree HEAD', ['read-tree', 'HEAD']);
+
+            const written = spawnSync('git', ['hash-object', '-w', '--stdin'], {
+                cwd: sf.REPO_ROOT,
+                encoding: 'utf-8',
+                input: '# gutted by the canary — every passage removed\n',
+                env: { ...process.env, ...env },
+            });
+            const sha = (written.stdout ?? '').trim();
+            if (written.status !== 0 || sha === '') {
+                throw new Error(`hash-object failed (exit ${written.status}): ${written.stderr ?? ''}`);
+            }
+
+            step('update-index', ['update-index', '--add', '--cacheinfo', `100644,${sha},${rel}`]);
+            const tree = step('write-tree', ['write-tree']);
+            return step('commit-tree', ['commit-tree', tree, '-p', 'HEAD', '-m', 'canary']);
+        } finally {
+            fs.rmSync(idxDir, { recursive: true, force: true });
+        }
+    };
+
+    /** `main()` reads process.argv directly, so drive it the way the shell does. */
+    const runMain = (argv: string[]): ReturnType<typeof runInProc> => {
+        const saved = process.argv;
+        process.argv = ['node', 'check_safety_floor_untouched', ...argv];
+        try {
+            return runInProc(sf.main, []);
+        } finally {
+            process.argv = saved;
+        }
+    };
+
+    it('REJECTS a range in which a floor rule lost its content (exit 1)', () => {
+        const rel = `${sf.RULES_DIR_REL}/commit-policy.md`;
+        // Throws with the failing plumbing step and git's own stderr if it cannot
+        // build the breach, so a CI-only failure names its cause instead of
+        // asserting that something was not null.
+        const head = commitWithGuttedFloorRule(rel);
+        expect(head, 'git plumbing must produce a dangling commit').toMatch(/^[0-9a-f]{7,40}$/);
+        const r = runMain(['--baseline', 'HEAD', '--head', head]);
+        expect(r.status, `${r.stdout}${r.stderr}`).toBe(1);
+        expect(r.stderr).toContain('Substantive change to safety-floor rule(s)');
+        expect(r.stderr).toContain(rel);
+    });
+
+    it('PASSES a range with no floor-rule change (exit 0) — and says what it guarded', () => {
+        const r = runMain(['--baseline', 'HEAD', '--head', 'HEAD']);
+        expect(r.status, `${r.stdout}${r.stderr}`).toBe(0);
+        expect(r.stdout).toContain('Safety-floor untouched');
+        // The RESOLVED count, not the declared one: the shipped defect announced
+        // "4 rules guarded" while guarding zero.
+        expect(r.stdout).toContain(`${String(sf.SAFETY_FLOOR.length)} rule file(s) guarded`);
     });
 });

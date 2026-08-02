@@ -38,6 +38,7 @@ import { atomicAppendLine } from '../../install/atomic.js';
 import { readRecentEntries } from '../../install/txlog.js';
 import { detectToolPresence } from '../../install/detect.js';
 import { resolvePackageRoot } from '../_lib/package_root.js';
+import { routeTargetPathsPosix } from '../router_target_paths.mjs';
 import {
     _classify,
     _collect_manifest_entries,
@@ -146,32 +147,20 @@ export function _check_txlog_clean(logPath: string = installLogPath()): Dict {
  * Map one `routes_to` target (`<kind>:<id>`) to its candidate
  * package-relative paths. The FIRST existing candidate wins.
  *
- * `contract:` has two legitimate homes in the shipped tree: the public
- * contract pages under `docs/contracts/` (per the rule-router contract)
- * and the agent-facing contract contexts under
- * `dist/agent-src/contexts/contracts/` (e.g. artifact-engagement-flow).
+ * The kind→path table itself lives in `../router_target_paths.mjs` and is
+ * SHARED with `prepack-check.mjs` gate 4, which asserts every one of these
+ * targets lands inside the `files[]` whitelist at pack time. A second copy of
+ * the table would let the pack gate and this runtime resolver disagree about
+ * where a pointer lives — the packaging↔runtime gap Phase 4 of
+ * `road-to-gates-that-can-fail` closes. `contract:`'s two legitimate homes
+ * (public `docs/contracts/` pages and agent-facing
+ * `dist/agent-src/contexts/contracts/` contexts) are documented there.
  */
 export function routeTargetPaths(target: string): string[] {
-    const sep = target.indexOf(':');
-    if (sep <= 0) return [];
-    const kind = target.slice(0, sep);
-    const id = target.slice(sep + 1);
-    if (!id) return [];
-    switch (kind) {
-        case 'skill':
-            return [path.join('dist', 'agent-src', 'skills', id, 'SKILL.md')];
-        case 'command':
-            return [path.join('dist', 'agent-src', 'commands', `${id}.md`)];
-        case 'guideline':
-            return [path.join('docs', 'guidelines', `${id}.md`)];
-        case 'contract':
-            return [
-                path.join('docs', 'contracts', `${id}.md`),
-                path.join('dist', 'agent-src', 'contexts', 'contracts', `${id}.md`),
-            ];
-        default:
-            return [];
-    }
+    // POSIX templates → platform paths. `path.join` over the split segments
+    // reproduces the previous per-kind `path.join(...)` calls exactly,
+    // including a slash-bearing id such as `guideline:a/b`.
+    return routeTargetPathsPosix(target).map((rel) => path.join(...rel.split('/')));
 }
 
 export function _check_router_pointers(packageRoot: string = PACKAGE_ROOT): Dict {

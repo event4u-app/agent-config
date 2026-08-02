@@ -25,10 +25,10 @@ import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { parse as parseYaml } from "yaml";
 import { SRC_AGENT, iter_all_sources } from "./_lib/agent_src.js";
+import { DeadScopeError, assertScanned } from "./_lib/scan_scope.js";
 
 // src/scripts/lint_pack_dependencies.ts → two levels up is the repo root.
 const REPO = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "..");
-const PACKAGES = path.join(REPO, "packages");
 const SRC_DOMAINS = path.join(REPO, "src", "domains");
 const SRC_PACKS = path.join(REPO, "src", "packs");
 const PACKAGE_JSON = path.join(REPO, "package.json");
@@ -102,16 +102,7 @@ function _gpm_read_frontmatter(p: string): YamlObject {
   return isObject(data) ? data : {};
 }
 
-function _gpm_pack_id_from_dir(pkgDir: string): string {
-  const name = path.basename(pkgDir);
-  return name === "core" ? "core" : removePrefix(name, "pack-");
-}
-
-function removePrefix(s: string, prefix: string): string {
-  return s.startsWith(prefix) ? s.slice(prefix.length) : s;
-}
-
-type PackHome = [string, string, "core" | "flat" | "physical"];
+type PackHome = [string, string, "core" | "flat"];
 
 function _gpm_pack_homes(): PackHome[] {
   const homes: PackHome[] = [];
@@ -134,20 +125,6 @@ function _gpm_pack_homes(): PackHome[] {
         continue;
       }
       homes.push([pid, full, "flat"]);
-      seen.add(pid);
-    }
-  }
-  if (_exists(PACKAGES)) {
-    for (const pkg of sortedDirEntries(PACKAGES)) {
-      const full = path.join(PACKAGES, pkg);
-      if (!_isDir(full)) {
-        continue;
-      }
-      const pid = _gpm_pack_id_from_dir(full);
-      if (seen.has(pid)) {
-        continue;
-      }
-      homes.push([pid, full, "physical"]);
       seen.add(pid);
     }
   }
@@ -246,25 +223,6 @@ function asStringList(v: YamlValue | undefined): string[] {
   return v.filter((x): x is string => typeof x === "string");
 }
 
-function _gpm_collect_physical(pkgDir: string): ArtefactRecord[] {
-  const srcRoot = path.join(pkgDir, ".agent-src.uncondensed");
-  if (!_isDir(srcRoot)) {
-    return [];
-  }
-  const items: ArtefactRecord[] = [];
-  for (const p of rglobMd(srcRoot)) {
-    if (!_isFile(p)) {
-      continue;
-    }
-    const fm = _gpm_read_frontmatter(p);
-    if (Object.keys(fm).length === 0) {
-      continue;
-    }
-    items.push(_gpm_artefact_record(p, relPosix(p, srcRoot), fm));
-  }
-  return items;
-}
-
 function _gpm_collect_core(): ArtefactRecord[] {
   const items: ArtefactRecord[] = [];
   const seen = new Set<string>();
@@ -314,14 +272,10 @@ function _gpm_collect_flat(pid: string): ArtefactRecord[] {
 
 function _gpm_collect_artefacts(
   pid: string,
-  homeDir: string,
-  mode: "core" | "flat" | "physical",
+  mode: "core" | "flat",
 ): ArtefactRecord[] {
   if (mode === "core") {
     return _gpm_collect_core();
-  }
-  if (mode === "physical") {
-    return _gpm_collect_physical(homeDir);
   }
   return _gpm_collect_flat(pid);
 }
@@ -379,7 +333,7 @@ function _dependency_drift(): string[] {
     if (!_exists(manifest)) {
       continue;
     }
-    const artefacts = _gpm_collect_artefacts(pid, homeDir, mode);
+    const artefacts = _gpm_collect_artefacts(pid, mode);
     const expected = _gpm_build_dependencies(artefacts);
     let onDisk: YamlObject;
     try {
@@ -489,12 +443,23 @@ function _find_cycle(graph: Map<string, Set<string>>): string[] | null {
 }
 
 export function main(): number {
-  // Gate on the resolved home set, not on packages/ existing.
-  if (_gpm_pack_homes().length === 0) {
-    process.stdout.write(
-      "no pack homes (src/packs, src/domains, packages/) — nothing to lint\n",
-    );
-    return 0;
+  // Scope assertion: zero resolved pack homes means both roots moved, not that
+  // every pack is in sync. The previous soft skip printed a green line in
+  // exactly that state — the defect class this gate is being hardened against.
+  const homes = _gpm_pack_homes();
+  try {
+    assertScanned({
+      gate: "lint_pack_dependencies",
+      scanned: homes.length,
+      units: "pack home(s)",
+      roots: ["src/packs", "src/domains"],
+    });
+  } catch (exc) {
+    if (!(exc instanceof DeadScopeError)) {
+      throw exc;
+    }
+    process.stderr.write(`❌  ${exc.message}\n`);
+    return 2;
   }
   const errors = _dependency_drift();
   const cycle = _find_cycle(_pack_requires_graph());
@@ -510,7 +475,9 @@ export function main(): number {
     process.stderr.write(`\n${errors.length} pack-dependency violation(s).\n`);
     return 1;
   }
-  process.stdout.write("✅  pack dependencies in sync; pack-graph is acyclic.\n");
+  process.stdout.write(
+    `✅  pack dependencies in sync; pack-graph is acyclic (${homes.length} pack home(s) scanned).\n`,
+  );
   return 0;
 }
 

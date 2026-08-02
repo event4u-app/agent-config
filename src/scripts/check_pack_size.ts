@@ -55,12 +55,26 @@ export interface PackSizeBudget {
 /**
  * Parse `npm pack --json` stdout. npm runs the `prepare` lifecycle script even
  * under `--ignore-scripts` on some versions, and this repo's `prepare` prints a
- * banner — straight into the stream we parse. Slice from the first `[` so a
- * lifecycle banner is tolerated instead of becoming a SyntaxError.
+ * banner — straight into the stream we parse. Slice from a `[` so a lifecycle
+ * banner is tolerated instead of becoming a SyntaxError.
+ *
+ * Not the FIRST `[`: npm echoes the lifecycle command line, and this repo's own
+ * `prepare` is `[ -d .git ] && bash src/scripts/install-hooks.sh || true` — its
+ * `[` precedes the payload's. Try each candidate offset in order and keep the
+ * first that actually parses (road-to-gates-that-can-fail Phase 6.2).
  */
 export function parsePackJson(stdout: string): PackResult {
-    const start = stdout.indexOf('[');
-    const parsed = JSON.parse(start >= 0 ? stdout.slice(start) : stdout) as PackResult[];
+    let parsed: PackResult[] | null = null;
+    for (let i = stdout.indexOf('['); i >= 0; i = stdout.indexOf('[', i + 1)) {
+        try {
+            parsed = JSON.parse(stdout.slice(i)) as PackResult[];
+            break;
+        } catch {
+            // Not the payload — a banner bracket. Keep scanning.
+        }
+    }
+    // No candidate parsed: reproduce the original SyntaxError from the raw text.
+    parsed ??= JSON.parse(stdout) as PackResult[];
     const first = parsed[0];
     if (first === undefined) throw new Error('npm pack --json returned an empty array');
     return first;

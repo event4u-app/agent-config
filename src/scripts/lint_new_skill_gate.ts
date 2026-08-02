@@ -33,6 +33,9 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import YAML from 'yaml';
 
+import { SRC_SKILLS } from './_lib/agent_src.js';
+import { DeadScopeError, assertScanned } from './_lib/scan_scope.js';
+
 const _HERE = fileURLToPath(import.meta.url);
 // Path(__file__).resolve().parent.parent.parent — repo root (three dirs up).
 const ROOT = path.resolve(path.dirname(_HERE), '..', '..');
@@ -86,36 +89,19 @@ function _exists(p: string): boolean {
     }
 }
 
-/** Mirror `_skill_roots()`. */
+/**
+ * Mirror `_skill_roots()`.
+ *
+ * ADR-051 moved skill authoring to `src/skills`; a later commit deleted the
+ * per-package source trees this used to enumerate FIRST. That preferred branch
+ * has resolved to [] on every checkout since, so the 2026-07-29 repair's
+ * `src/skills` fallback is the only one that has ever fired. The dead
+ * preference is removed rather than left as a trap that would silently take
+ * precedence again if a `packages/` directory reappeared for another reason.
+ */
 function _skill_roots(): string[] {
-    const pkgs = path.join(ROOT, 'packages');
-    let roots: string[] = [];
-    if (_isDir(pkgs)) {
-        let entries: string[];
-        try {
-            entries = fs.readdirSync(pkgs);
-        } catch {
-            entries = [];
-        }
-        entries.sort();
-        for (const name of entries) {
-            const cand = path.join(pkgs, name, '.agent-src.uncondensed', 'skills');
-            if (_isDir(cand)) {
-                roots.push(cand);
-            }
-        }
-    }
-    // ADR-051 moved skill authoring to `src/skills`; a later commit deleted
-    // `packages/` entirely. Until 2026-07-29 the only fallback was the retired
-    // container, so this resolved to [] and the overlap gate silently passed
-    // every new skill.
-    if (roots.length === 0) {
-        const cand = path.join(ROOT, 'src', 'skills');
-        if (_isDir(cand)) {
-            roots = [cand];
-        }
-    }
-    return roots;
+    const cand = SRC_SKILLS();
+    return _isDir(cand) ? [cand] : [];
 }
 
 /** Mirror `_keyword_vector(text)`. */
@@ -378,16 +364,38 @@ export function main(argv?: string[]): number {
     }
     const { baseline, quiet } = parsed;
 
+    // Scope assertion FIRST, before the no-new-skills early return: the dedupe
+    // half of this gate compares a new skill against the existing corpus, so an
+    // empty corpus does not mean "nothing to check", it means every new skill
+    // is waved through as unique. Asserting only on the diff would miss that.
+    const allSkills = collect();
+    try {
+        assertScanned({
+            gate: 'lint_new_skill_gate',
+            scanned: allSkills.length,
+            units: 'existing skill(s)',
+            roots: _skill_roots().map((r) => path.relative(ROOT, r).split(path.sep).join('/')),
+        });
+    } catch (exc) {
+        if (!(exc instanceof DeadScopeError)) {
+            throw exc;
+        }
+        process.stderr.write(`❌  ${exc.message}\n`);
+        return 2;
+    }
+
     const added = added_skill_files(baseline);
     if (added.length === 0) {
         if (!quiet) {
-            process.stdout.write(`✅  No new skills added (baseline: ${baseline}).\n`);
+            process.stdout.write(
+                `✅  No new skills added (baseline: ${baseline}; ` +
+                    `${allSkills.length} existing skill(s) scanned).\n`,
+            );
         }
         return 0;
     }
 
     const addedSet = new Set(added);
-    const allSkills = collect();
     const existing = allSkills.filter((s) => !addedSet.has(s.relpath));
 
     const violations: string[] = [];

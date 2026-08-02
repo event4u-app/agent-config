@@ -65,10 +65,28 @@ export interface OverrideRow {
     violations: string[];
 }
 
-/** `**Mode:** \`extend\`` — the header form the override contract specifies. */
+/**
+ * `**Mode:** \`extend\`` — the header form the override contract specifies.
+ *
+ * Reads EVERY `**Mode:**` line, not the first. A non-global `exec` took
+ * whichever declaration appeared earliest, and the override contract doc itself
+ * carries two example `**Mode:**` lines — so a file whose real declaration is
+ * `replace` could be read as `extend` from an example sitting above it. On a
+ * safety-floor rule that is the difference between a blocked override and a
+ * silently permitted one, which makes first-match-wins a bypass rather than a
+ * parsing nit (road-to-gates-that-can-fail Phase 6.2, finding 5).
+ *
+ * Disagreeing declarations resolve to `unknown`, which the caller already
+ * treats as a violation — fail closed. A guard that cannot tell which mode a
+ * file declares must say so, never pick one.
+ */
 export function parse_mode(text: string): 'extend' | 'replace' | 'unknown' {
-    const m = /^\s*\*\*Mode:\*\*\s*`?(extend|replace)`?\s*$/im.exec(text);
-    return m ? (m[1] as 'extend' | 'replace') : 'unknown';
+    const found = new Set<string>();
+    const re = /^\s*\*\*Mode:\*\*\s*`?(extend|replace)`?\s*$/gim;
+    let m: RegExpExecArray | null;
+    while ((m = re.exec(text)) !== null) found.add(m[1] as string);
+    if (found.size !== 1) return 'unknown';
+    return [...found][0] as 'extend' | 'replace';
 }
 
 /** `> Overrides: <rule> §<section> — <reason>` — the citation obligation. */

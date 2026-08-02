@@ -23,8 +23,12 @@
 #   9. npx smoke            first-touch paths (--version, --help, mcp initialize)
 #   6-8 feed src/scripts/check_evaluator_budgets.ts against
 #   src/config/evaluator-budgets.json (owner + review date lint-enforced).
+#  8b. record publish     with UMBRELLA_RECORD=1, writes the measurement set to
+#                         agents/evidence/metrics/evaluator-measurements.json so
+#                         drift is visible in a diff the day it lands
 #
 # Usage: bash src/scripts/evaluator_umbrella.sh [--skip-pack <tarball>]
+#        UMBRELLA_RECORD=1 bash src/scripts/evaluator_umbrella.sh   # nightly
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
@@ -166,8 +170,37 @@ console.log(JSON.stringify(m, null, 1));' \
   "$MEASURE_TMP" "$UNPACKED_BYTES" "$NM_MB" "$DEP_COUNT" "$CLI_MS" "$MCP_MS" "$CLI_COUNT" "$MCP_TOOLS" \
   "$COLD_START_MS" "$COLD_START_CONDITIONS"
 
-step "budget gate (absolute + >regression_pct creep)"
+# The budget gate runs BEFORE the record is refreshed, so the comparison is
+# fresh-vs-committed. Refreshing first would make every drift check trivially
+# green (road-to-gates-that-can-fail Phase 5).
+step "budget gate (absolute + >regression_pct creep + drift vs the committed record)"
 ./scripts-run src/scripts/check_evaluator_budgets --measurements "$MEASURE_TMP"
+
+# ------------------------------------------------- 8b. publish the record
+# With UMBRELLA_RECORD=1 (the nightly sets it) the measurement set is written
+# to a COMMITTED artifact, so budget drift is visible the day it lands instead
+# of at the next release — `cli_help_command_count` drifted 74 → 80 against a
+# value frozen at 79 with nobody seeing it. It lives under agents/evidence/,
+# the repo's committed-evidence tree, and NOT under src/config/, which ships:
+# this is maintainer evidence with nightly churn, not consumer runtime config,
+# and keeping it out of the tarball also keeps evaluator-budgets.json (the
+# policy) reviewable on its own. Sorted keys + fixed indent so a moved number
+# is a one-line diff.
+if [[ "${UMBRELLA_RECORD:-0}" == "1" ]]; then
+  step "publish the measurement record (agents/evidence/metrics/)"
+  RECORD_PATH="$ROOT/agents/evidence/metrics/evaluator-measurements.json"
+  mkdir -p "$(dirname "$RECORD_PATH")"
+  RUN_URL=""
+  if [[ -n "${GITHUB_REPOSITORY:-}" && -n "${GITHUB_RUN_ID:-}" ]]; then
+    RUN_URL="${GITHUB_SERVER_URL:-https://github.com}/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
+  fi
+  node src/scripts/record_evaluator_measurements.mjs \
+    --measurements "$MEASURE_TMP" \
+    --out "$RECORD_PATH" \
+    --sha "$(git rev-parse HEAD 2>/dev/null || echo '')" \
+    --run-url "$RUN_URL" \
+    --conditions "$COLD_START_CONDITIONS"
+fi
 
 # ------------------------------------------------------------- 9. npx smoke
 step "first-touch smoke (installed bin)"

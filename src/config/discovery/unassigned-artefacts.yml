@@ -18,21 +18,21 @@
 # /skill-management, /override:create, etc. They carry no runtime
 # frontmatter on purpose: the consuming command fills it in. Quarantined
 # from the discovery manifest so strict mode stays clean.
-- path: .agent-src.uncondensed/templates/AGENTS.md
+- path: src/agent-src/templates/AGENTS.md
   reason: scaffold template for new project AGENTS.md; placeholders filled by /agents init
-- path: .agent-src.uncondensed/templates/agent-settings.md
+- path: src/agent-src/templates/agent-settings.md
   reason: scaffold for project .agent-settings.yml
-- path: .agent-src.uncondensed/templates/command.md
+- path: src/agent-src/templates/command.md
   reason: scaffold for new slash-command authoring
 - path: src/agent-src/templates/tickets.md
   reason: scaffold template for ticket-bundle tickets (ADR-101); carries no runtime frontmatter — emit-tickets fills it in per ticket
-- path: .agent-src.uncondensed/templates/contexts.md
+- path: src/agent-src/templates/contexts.md
   reason: scaffold index for project contexts/
-- path: .agent-src.uncondensed/templates/contexts/auth-model.md
+- path: src/agent-src/templates/contexts/auth-model.md
   reason: scaffold for project auth-model context
-- path: .agent-src.uncondensed/templates/contexts/data-sensitivity.md
+- path: src/agent-src/templates/contexts/data-sensitivity.md
   reason: scaffold for project data-sensitivity context
-- path: .agent-src.uncondensed/templates/contexts/deployment-order.md
+- path: src/agent-src/templates/contexts/deployment-order.md
   reason: scaffold for project deployment-order context
 - path: src/agent-src/templates/contexts/knowledge-card.md
   reason: fill-in skeleton for committed knowledge cards (evidence-first structure discovery / ADR-098); frontmatter is the example shape a filled card carries, not a runtime artefact
@@ -40,37 +40,35 @@
   reason: convention doc for the typed agents/knowledge/ page directories (road-to-knowledge-system); documents the optional page frontmatter shape, carries none itself
 - path: src/agent-src/templates/contexts/lesson-card.md
   reason: fill-in skeleton for Class-C learned lessons (Evidence v2 project-intelligence); frontmatter is the example shape a filled lesson carries, not a runtime artefact
-- path: .agent-src.uncondensed/templates/contexts/observability.md
+- path: src/agent-src/templates/contexts/observability.md
   reason: scaffold for project observability context
-- path: .agent-src.uncondensed/templates/contexts/tenant-boundaries.md
+- path: src/agent-src/templates/contexts/tenant-boundaries.md
   reason: scaffold for project tenant-boundaries context
-- path: .agent-src.uncondensed/templates/copilot-instructions.md
+- path: src/agent-src/templates/copilot-instructions.md
   reason: scaffold for project copilot-instructions.md
-- path: .agent-src.uncondensed/templates/features.md
+- path: src/agent-src/templates/features.md
   reason: scaffold for project features.md catalogue
-- path: .agent-src.uncondensed/templates/overrides/command.md
+- path: src/agent-src/templates/overrides/command.md
   reason: scaffold for project override of a shared command
-- path: .agent-src.uncondensed/templates/overrides/guideline.md
+- path: src/agent-src/templates/overrides/guideline.md
   reason: scaffold for project override of a shared guideline
-- path: .agent-src.uncondensed/templates/overrides/rule.md
+- path: src/agent-src/templates/overrides/rule.md
   reason: scaffold for project override of a shared rule
-- path: .agent-src.uncondensed/templates/overrides/skill.md
+- path: src/agent-src/templates/overrides/skill.md
   reason: scaffold for project override of a shared skill
-- path: .agent-src.uncondensed/templates/overrides/template.md
+- path: src/agent-src/templates/overrides/template.md
   reason: scaffold-of-scaffold for new override types
-- path: .agent-src.uncondensed/templates/persona.md
+- path: src/agent-src/templates/persona.md
   reason: scaffold for new persona authoring
-- path: .agent-src.uncondensed/templates/roadmaps.md
+- path: src/agent-src/templates/roadmaps.md
   reason: scaffold for new roadmap authoring
-- path: .agent-src.uncondensed/templates/rule.md
+- path: src/agent-src/templates/rule.md
   reason: scaffold for new rule authoring
-- path: .agent-src.uncondensed/templates/scripts/.pytest_cache/README.md
-  reason: pytest cache artefact, not an agent-config artefact
-- path: .agent-src.uncondensed/templates/scripts/README.md
+- path: src/agent-src/templates/scripts/README.md
   reason: scaffold README for project scripts/
-- path: .agent-src.uncondensed/templates/skill-archive-note.md
+- path: src/agent-src/templates/skill-archive-note.md
   reason: scaffold for archive-note generation
-- path: .agent-src.uncondensed/templates/skill.md
+- path: src/agent-src/templates/skill.md
   reason: scaffold for new SKILL.md authoring
-- path: .agent-src.uncondensed/README.md
+- path: src/agent-src/README.md
   reason: package-root orientation; carries no artefact frontmatter — follows package core

@@ -30,6 +30,8 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
+import { DeadScopeError, assertScanned } from './_lib/scan_scope.js';
+
 const _HERE = fileURLToPath(import.meta.url);
 // src/scripts/audit_likelihood.py → parent.parent.parent == repo root.
 export const REPO_ROOT = path.resolve(path.dirname(_HERE), '..', '..');
@@ -38,9 +40,20 @@ export const AUDIT_JSON = path.join(REPORT_DIR, 'auto-rules-audit.json');
 export const AUDIT_MD = path.join(REPORT_DIR, 'auto-rules-audit.md');
 export const LIKELIHOOD_JSON = path.join(REPORT_DIR, 'auto-rules-likelihood.json');
 
+/**
+ * The corpus a rule's trigger terms are scored against.
+ *
+ * The first two globs named the pre-ADR-051 source container, so skills and
+ * commands — by far the largest and most trigger-dense part of the corpus —
+ * contributed nothing. The audit still printed a score for every rule, derived
+ * from contexts + guidelines alone; that biases every score downward and makes
+ * the low-likelihood flag unreliable in the direction that matters (false
+ * "nothing triggers this"). Commands are now one `command.md` leaf per verb
+ * under `src/domains`.
+ */
 const CORPUS_GLOBS: readonly string[] = [
-    '.agent-src.uncondensed/skills/**/SKILL.md',
-    '.agent-src.uncondensed/commands/**/*.md',
+    'src/skills/**/SKILL.md',
+    'src/domains/**/command.md',
     'agents/settings/contexts/**/*.md',
     'docs/guidelines/**/*.md',
 ];
@@ -403,6 +416,22 @@ export function main(): number {
     }
     const rules: Json[] = JSON.parse(fs.readFileSync(AUDIT_JSON, 'utf-8'))['rules'];
     const corpus = build_corpus();
+    // Scope assertion: an empty corpus scores every rule as low-likelihood
+    // while looking exactly like a completed audit.
+    try {
+        assertScanned({
+            gate: 'audit_likelihood',
+            scanned: corpus.size,
+            units: 'distinct corpus token(s)',
+            roots: CORPUS_GLOBS,
+        });
+    } catch (exc) {
+        if (!(exc instanceof DeadScopeError)) {
+            throw exc;
+        }
+        process.stderr.write(`❌  ${exc.message}\n`);
+        return 2;
+    }
     const scores = rules.map((r) => score(r, corpus));
     fs.writeFileSync(
         LIKELIHOOD_JSON,

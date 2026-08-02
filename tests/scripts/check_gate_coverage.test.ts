@@ -5,17 +5,25 @@
  * emptied by the ADR-051 migration, each exiting 0. These tests pin the three
  * design rules the guard is built on, plus its own anti-self-blindness contract.
  */
-import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 
 import {
+    type CanaryResult,
     type GateSpec,
     classify,
+    count_gate_scripts,
+    cross_check,
     load_manifest,
+    parse_census,
     parse_scanned,
+    run_canary,
 } from '../../src/scripts/check_gate_coverage.js';
+
+const REPO_ROOT = join(dirname(fileURLToPath(import.meta.url)), '..', '..');
 
 const spec = (over: Partial<GateSpec> = {}): GateSpec => ({
     id: 'some_gate',
@@ -128,6 +136,207 @@ describe('the real manifest', () => {
         for (const s of specs) {
             expect(s.corpus, `${s.id} must document what its count means`).not.toBe('');
         }
+    });
+
+    // ── Registry completeness (Phase 3.1) ──────────────────────────────────
+    //
+    // The manifest's own failure mode is OMISSION, not a wrong floor.
+    // `check_site_links` reported green over a stale build for weeks and this
+    // guard never flagged it — because the gate was never listed. A guard whose
+    // coverage depends on someone remembering to register a gate repeats the
+    // class it exists to catch. This test removes the remembering.
+    it('every gate emitting the `scanned:` contract line is registered', () => {
+        const scriptsDir = join(REPO_ROOT, 'src', 'scripts');
+        // The literal a gate writes to satisfy design rule 1 — matched on the
+        // EMISSION (a write of `scanned: ` followed by an interpolation), not on
+        // the word appearing anywhere in the file.
+        const EMITS = /(?:process\.(?:stdout|stderr)\.write|lines\.push)\(\s*`scanned: \$\{/;
+        const emitters = readdirSync(scriptsDir)
+            .filter((f) => /^(lint|check|audit|skill)_.*\.ts$/.test(f))
+            .filter((f) => f !== 'check_gate_coverage.ts')
+            .filter((f) => EMITS.test(readFileSync(join(scriptsDir, f), 'utf8')))
+            .map((f) => f.replace(/\.ts$/, ''))
+            .sort();
+
+        const listed = new Set(load_manifest().map((s) => s.id));
+        const missing = emitters.filter((id) => !listed.has(id));
+        expect(
+            missing,
+            `these gates emit the coverage contract line but are not in ` +
+                `src/config/gate-coverage.yml: ${missing.join(', ')}`,
+        ).toEqual([]);
+        // ...and the emitter set is non-empty, so the assertion above cannot pass
+        // by scanning nothing — the same sin, one level up.
+        expect(emitters.length).toBeGreaterThan(0);
+    });
+
+    it('states an honest denominator rather than implying full coverage', () => {
+        const yml = readFileSync(join(REPO_ROOT, 'src', 'config', 'gate-coverage.yml'), 'utf8');
+        expect(yml).toMatch(/HONEST DENOMINATOR/);
+        // The population figure must be real: the header claims a number, and
+        // the tree must still have roughly that many gate scripts.
+        const claimed = /^# (\d+) `lint_\*`/m.exec(yml);
+        expect(claimed, 'the header must state the gate-script population').not.toBeNull();
+        const actual = count_gate_scripts();
+        expect(Math.abs(Number((claimed as RegExpExecArray)[1]) - actual)).toBeLessThanOrEqual(15);
+    });
+});
+
+// ── Mutation canary (Phase 7) ──────────────────────────────────────────────
+
+describe('run_canary — plant, prove, revert', () => {
+    const withRepo = (fn: (root: string) => void): void => {
+        const dir = mkdtempSync(join(tmpdir(), 'canary-'));
+        try {
+            fn(dir);
+        } finally {
+            rmSync(dir, { recursive: true, force: true });
+        }
+    };
+
+    const withCanary = (over: Partial<GateSpec> = {}): GateSpec =>
+        spec({
+            id: 'echo_gate',
+            canary: { class: 'test-class', path: 'nested/deep/plant.md', content: 'boom\n' },
+            ...over,
+        });
+
+    it('a gate with NO recipe is reported UNPROVEN, never green', () => {
+        // The failure this guards: an empty recipe set producing a clean ledger
+        // and the claim "our gates work".
+        const r = run_canary(spec());
+        expect(r.verdict).toBe('no_recipe');
+        expect(r.message).toMatch(/UNPROVEN/);
+    });
+
+    it('removes the plant — and the directories it created — whatever happens', () => {
+        withRepo((root) => {
+            const s = withCanary();
+            // No `scripts-run` in the temp root, so the probe fails; the revert
+            // still has to run. This is the crash path, deliberately.
+            run_canary(s, root);
+            expect(existsSync(join(root, 'nested/deep/plant.md'))).toBe(false);
+            expect(existsSync(join(root, 'nested'))).toBe(false);
+        });
+    });
+
+    it('REFUSES to plant over an existing file rather than overwriting it', () => {
+        withRepo((root) => {
+            writeFileSync(join(root, 'occupied.md'), 'real content\n', 'utf8');
+            const s = withCanary({
+                canary: { class: 'c', path: 'occupied.md', content: 'clobber\n' },
+            });
+            const r = run_canary(s, root);
+            expect(r.verdict).toBe('crashed');
+            expect(r.message).toMatch(/refusing to overwrite/);
+            expect(readFileSync(join(root, 'occupied.md'), 'utf8')).toBe('real content\n');
+        });
+    });
+
+    it('rejects a half-declared recipe at load time', () => {
+        const dir = mkdtempSync(join(tmpdir(), 'gatecov-'));
+        try {
+            const f = join(dir, 'm.yml');
+            writeFileSync(
+                f,
+                'gates:\n  - id: g\n    min_scanned: 1\n    canary:\n      class: c\n      path: p.md\n',
+                'utf8',
+            );
+            // A recipe with no content would plant an empty file and the gate
+            // would pass — a canary that certifies itself.
+            expect(() => load_manifest(f)).toThrow(/canary needs class, path and content/);
+        } finally {
+            rmSync(dir, { recursive: true, force: true });
+        }
+    });
+
+    it('rejects a canary path that escapes the repo', () => {
+        const dir = mkdtempSync(join(tmpdir(), 'gatecov-'));
+        try {
+            const f = join(dir, 'm.yml');
+            writeFileSync(
+                f,
+                'gates:\n  - id: g\n    min_scanned: 1\n    canary:\n      class: c\n' +
+                    '      path: ../../etc/plant.md\n      content: x\n',
+                'utf8',
+            );
+            expect(() => load_manifest(f)).toThrow(/repo-relative/);
+        } finally {
+            rmSync(dir, { recursive: true, force: true });
+        }
+    });
+
+    it('the real manifest declares at least one recipe, and each names a class', () => {
+        const withRecipe = load_manifest().filter((s) => s.canary !== undefined);
+        expect(withRecipe.length).toBeGreaterThan(0);
+        for (const s of withRecipe) {
+            expect(s.canary?.class, `${s.id} recipe must name its defect class`).not.toBe('');
+            expect(
+                existsSync(join(REPO_ROOT, s.canary?.path ?? '')),
+                `${s.id} canary path must NOT exist in a clean tree — a leftover plant means a previous run did not revert`,
+            ).toBe(false);
+        }
+    });
+});
+
+describe('parse_census — column-position-agnostic', () => {
+    const md = [
+        '| Gate | Root | Kind | Units | Declared by |',
+        '|---|---|---|---:|---|',
+        '| `lint_alpha` | `src/a` | corpus | 111 | literal |',
+        '| `lint_beta` | `src/b` | corpus | **19 violations** | resolver |',
+        '| `lint_gamma` | `src/c` | corpus | not measured | literal |',
+        '| `lint_delta` | `src/d` | corpus | 1,170 | resolver |',
+    ].join('\n');
+
+    it('reads gate → units regardless of where the columns sit', () => {
+        const m = parse_census(md);
+        expect(m.get('lint_alpha')).toBe(111);
+        expect(m.get('lint_beta')).toBe(19);
+        expect(m.get('lint_delta')).toBe(1170);
+    });
+
+    it('an unmeasured row is null, not zero — "unknown" is not "empty"', () => {
+        expect(parse_census(md).get('lint_gamma')).toBeNull();
+    });
+
+    it('a census with a different column order still parses', () => {
+        const reordered = [
+            '| Units | Gate | Status |',
+            '|---:|---|---|',
+            '| 42 | `lint_alpha` | repaired |',
+        ].join('\n');
+        expect(parse_census(reordered).get('lint_alpha')).toBe(42);
+    });
+});
+
+describe('cross_check — the two artefacts must disagree loudly', () => {
+    const res = (id: string, verdict: CanaryResult['verdict']): CanaryResult => ({
+        id,
+        verdict,
+        class: 'c',
+        exit_code: verdict === 'red' ? 1 : 0,
+        message: '',
+    });
+
+    it('census says it reads a live corpus + canary stayed green = DEAD GATE', () => {
+        const d = cross_check([res('g', 'green')], new Map([['g', 111]]));
+        expect(d).toHaveLength(1);
+        expect(d[0]?.kind).toBe('dead_gate');
+    });
+
+    it('canary went red but the census records nothing = STALE CENSUS', () => {
+        const d = cross_check([res('g', 'red')], new Map([['g', null]]));
+        expect(d[0]?.kind).toBe('census_stale');
+        expect(cross_check([res('g', 'red')], new Map([['g', 0]]))[0]?.kind).toBe('census_stale');
+    });
+
+    it('agreement is silent', () => {
+        expect(cross_check([res('g', 'red')], new Map([['g', 111]]))).toEqual([]);
+    });
+
+    it('a gate absent from the census produces no phantom disagreement', () => {
+        expect(cross_check([res('g', 'green')], new Map())).toEqual([]);
     });
 });
 

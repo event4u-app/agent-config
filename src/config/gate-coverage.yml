@@ -38,6 +38,51 @@
 #                pending = not yet emitting `scanned:`. The guard REPORTS these
 #                rather than skipping silently: its own partial coverage must be
 #                visible, or it repeats the sin it exists to catch.
+#   canary       optional mutation recipe (Phase 7) — see CANARY below
+#
+# COVERAGE — THE HONEST DENOMINATOR (measured 2026-08-02)
+# ------------------------------------------------------
+# 211 `lint_*` / `check_*` / `audit_*` scripts live under `src/scripts/`.
+# **8 of them emit the machine-readable `scanned: <N>` line under their
+# CI-identical argv, and all 8 are listed below.** The manifest is therefore
+# complete with respect to its own contract, and covers ~4 % of the gate
+# population.
+#
+# The other ~203 are NOT covered, for one reason: rule 1. They print their count
+# in prose ("111 file(s) scanned", "0 declarer(s)") or not at all, and a guard
+# that parses prose is the fragile thing being replaced. Padding this list with
+# them would manufacture exactly the false green the file exists to prevent.
+#
+# Closing the gap is one line per gate, not a new mechanism: a gate that already
+# computes its count for `_lib/scan_scope.assertScanned` need only also write
+# `scanned: <N>`. Seven gates are one line away today — they call `assertScanned`
+# / `assertWatchlistResolves` with a real count in hand: `audit_skill_overlap`,
+# `check_iron_law_prominence`, `check_safety_floor_untouched`, `lint_handoffs`,
+# `lint_namespace`, `lint_artefact_frontmatter`, `skill_linter` (listed).
+# `tests/scripts/check_gate_coverage.test.ts` fails the build the moment a gate
+# starts emitting the line without being registered here, so the list cannot
+# silently fall behind again (that omission is exactly how `check_site_links`
+# reported green over a stale build for weeks).
+#
+# CANARY (road-to-gates-that-can-fail Phase 7)
+# --------------------------------------------
+# Coverage proves a gate READ something. It cannot prove the gate can still FAIL.
+# An optional `canary:` block declares one revertible violation for the gate:
+#
+#   canary:
+#     class:   defect class planted (gate-surface classes, not the review-side
+#              five; the shared contract is cadence + sealing + never-ships)
+#     path:    repo-relative file to CREATE (must not already exist)
+#     content: the planted body
+#
+# `--canary` plants it, runs the gate with the same CI-identical argv, records
+# red/green, and deletes the plant in a `finally`. Create-only is deliberate: an
+# in-place edit would need byte-exact restoration of a tracked file, and a canary
+# that can corrupt the tree violates the never-ships rule it inherits. The
+# consequence is a real gap — a gate whose only possible violation is a
+# modification of an existing tracked artefact (`check_condensation`, whose
+# contract is `dist == rewrite(src)`; `check_ci_local_parity`, whose corpus is
+# workflow files) carries no recipe and is reported UNPROVEN, never green.
 gates:
   - id: check_condensation
     argv: []
@@ -50,6 +95,16 @@ gates:
     min_scanned: 80
     corpus: "auto-type rules carrying a description (98 at baseline)"
     status: enforced
+    canary:
+      class: oversized-artifact
+      path: src/rules/zz-canary-probe.md
+      content: |
+        ---
+        type: auto
+        description: "zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz"
+        ---
+
+        Planted canary: a 180-char auto-rule description, 30 over the cap.
     note: >
       Retargeted 2026-07-29 from the ADR-051-emptied tree (0 -> 98). It printed
       "All 0 auto-rule descriptions" and exited 0 in CI. Retargeting surfaced 16
@@ -64,6 +119,18 @@ gates:
     min_scanned: 180
     corpus: "md files inspected for a load_context block: src/rules + src/agent-src/contexts + agents/settings/contexts (231 at baseline, 17 declarers)"
     status: enforced
+    canary:
+      class: dead-target
+      path: src/rules/zz-canary-probe.md
+      content: |
+        ---
+        type: auto
+        description: "Planted canary rule declaring a load_context target that does not exist."
+        load_context:
+          - contexts/zz-canary-target-does-not-exist.md
+        ---
+
+        Planted canary: a declared context target with nothing behind it.
     note: >
       Retargeted 2026-07-29 from the ADR-051-emptied tree: 0 -> 231 files, and it
       immediately found a real violation the blindness had hidden
@@ -80,6 +147,11 @@ gates:
     min_scanned: 380
     corpus: "skills + rules under artefact_roots() (429 at baseline)"
     status: enforced
+    canary:
+      class: malformed-frontmatter
+      path: src/skills/zz-canary-probe/SKILL.md
+      content: |
+        Planted canary: a SKILL.md with no frontmatter block at all.
     note: >
       NOT blind — the manifest's regression case for rule 2. The sweep's bare
       probe made it look blind; `--all` scans 429. Enforced precisely so that
@@ -91,6 +163,17 @@ gates:
     min_scanned: 700
     corpus: "stable artefacts across src/{rules,skills,agent-src/*} + docs/ + agents/settings/contexts (872 at baseline)"
     status: enforced
+    canary:
+      class: stale-reference
+      path: src/rules/zz-canary-probe.md
+      content: |
+        ---
+        type: auto
+        description: "Planted canary rule linking a stable artefact into the transient roadmap tree."
+        ---
+
+        See [the plan](../../agents/roadmaps/road-to-nowhere.md) — the exact
+        stable-to-transient link this gate exists to reject.
     note: >
       Retargeted 2026-07-29 from the ADR-051-emptied tree. It had been enforcing the
       no-roadmap-references rule for docs/ only while the rule + skill layer went
@@ -102,9 +185,29 @@ gates:
     min_scanned: 900
     corpus: "reference corpus: src/{rules,skills,agent-src/commands,agent-src/contexts,domains} + agents/roadmaps (1170 at baseline)"
     status: enforced
+    canary:
+      class: orphan-artifact
+      path: src/agent-src/contexts/zz-canary-probe.md
+      content: |
+        # Planted canary: a context nothing in the reference corpus points at.
     note: >
       Retargeted 2026-07-29. An empty reference corpus makes every "unreferenced
       context" verdict vacuous, which is how the dead root stayed invisible.
+
+  - id: check_ci_local_parity
+    argv: ["--quiet"]
+    min_scanned: 380
+    corpus: "CI + local gate invocations parsed from .github/workflows + taskfiles (443 at baseline)"
+    status: enforced
+    note: >
+      Registered 2026-08-02. It already emitted the contract line on every path,
+      including the failing one — it was simply never listed, the same omission
+      that let check_site_links report green over a stale build. Found by the
+      registry-completeness test rather than by another sweep, which is the point
+      of adding that test. NO CANARY RECIPE: its corpus is the workflow and
+      taskfile set, so the only plantable violation is a new file under
+      .github/workflows — a surface the canary must not write to. Reported
+      UNPROVEN by --canary, never green.
 
   - id: check_site_links
     argv: []

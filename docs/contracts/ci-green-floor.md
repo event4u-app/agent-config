@@ -86,6 +86,35 @@ phantom; the check-suite still registers.
 `Jobs: 0` from the tally before computing pass/fail. The phantom
 is visible in the GitHub UI but invisible to the gate.
 
+## Workflow convention — a `container:` job marks the workspace safe for git
+
+```
+A JOB WITH `container:` RUNS `git config --global --add safe.directory
+"$GITHUB_WORKSPACE"` IMMEDIATELY AFTER `actions/checkout`, BEFORE ANY
+STEP THAT CAN REACH GIT.
+```
+
+`actions/checkout` writes the workspace as the runner user; a
+`container:` job then executes as a different UID inside the image.
+Git refuses every command on a tree it does not own with
+`fatal: detected dubious ownership in repository at '/__w/...'`, so
+the job dies inside a step that has nothing to do with git — a lint
+that shells out to `git diff`, a version probe, a submodule read. The
+failure is a setup defect, not a quality signal, and it costs a full
+round-trip to diagnose because the error names ownership rather than
+the step's own subject.
+
+Non-containerized jobs never hit this, which is why the class only
+surfaces on the release-gated container jobs — the ones that run
+least often. [`release-runbook.md`](../release-runbook.md) § 1
+dispatches those against `main` before a cut for the same reason.
+
+Reference implementation:
+[`evaluator-umbrella.yml`](../../.github/workflows/evaluator-umbrella.yml)
+— the only `container:` job in the tree today, and the one this
+convention was written from
+(`road-to-gates-that-can-fail` Phase 4).
+
 ## Freeze rule — the mechanics
 
 When a commit lands on `main` and any required-check workflow turns

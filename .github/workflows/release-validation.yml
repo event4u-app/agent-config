@@ -24,7 +24,9 @@ name: Release Validation
 #                            secret gate.
 #
 # Trigger:
-#   * `pull_request` against main, head matching `release/*`. push: main
+#   * `pull_request` against main, filtered to the release/install input
+#     paths (see `on:`). The three shape jobs stay head-branch-gated to
+#     `release/*`; `release-install-e2e` runs on any matching PR. push: main
 #     and tag triggers are owned by release-guard.yml — this workflow is
 #     PR-only by construction (it gates the PR before merge).
 
@@ -32,9 +34,28 @@ on:
   pull_request:
     branches: [main, master]
     # GitHub doesn't natively filter pull_request triggers by head branch
-    # pattern, only by base + paths. Every job below carries an inline
-    # `if:` guard so non-release PRs see the workflow as "skipped" rather
-    # than "failed".
+    # pattern, only by base + paths. The four release-SHAPE jobs below keep
+    # their inline `if:` guard (they assert facts that only exist on a
+    # `release/X.Y.Z` branch), so non-release PRs see them as "skipped"
+    # rather than "failed".
+    #
+    # The `paths` filter is what lets the one version-agnostic job —
+    # `release-install-e2e` — also run on the PR that CAUSES an install
+    # regression instead of only at release time (road-to-gates-that-can-fail
+    # Phase 4). Release PRs still trigger the whole workflow by construction:
+    # `release.ts` bumps `package.json` on every release branch, so the first
+    # entry always matches a release diff — including a release PR whose diff
+    # leaves the version-bump allowlist, which is exactly when `release-shape`
+    # must still run and go red.
+    paths:
+      - 'package.json'            # `files[]` + the release version bump
+      - 'package-lock.json'
+      - 'CHANGELOG.md'            # `changelog-entry` reads it
+      - 'marketplace.json'        # `version-consistency` reads it
+      - 'src/scripts/install.ts'  # what release-install-e2e exercises
+      - 'src/scripts/release.ts'
+      - 'tests/test_release_install_e2e.sh'
+      - '.github/workflows/release-validation.yml'
   workflow_dispatch:
 
 concurrency:
@@ -234,7 +255,13 @@ jobs:
         run: npm audit --omit=dev --audit-level=high
 
   release-install-e2e:
-    if: ${{ github.event_name == 'workflow_dispatch' || startsWith(github.head_ref, 'release/') }}
+    # The one job here that asserts nothing version-specific: it packs the
+    # CURRENT tree, installs it, and upgrades from a fixed 9.7.0 baseline.
+    # So unlike its three release-shape siblings it is meaningful on any PR,
+    # and the `paths` filter above has already narrowed the PR set to diffs
+    # that touch the installer / `files[]`. No head-branch guard — with one
+    # the path trigger would start the workflow and this job would skip,
+    # which is the cosmetic outcome Phase 4 exists to avoid.
     name: Release install E2E (pack → install → upgrade → boot)
     runs-on: ubuntu-latest
     timeout-minutes: 15

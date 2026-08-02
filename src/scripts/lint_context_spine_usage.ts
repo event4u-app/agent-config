@@ -18,16 +18,24 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
+import { DeadScopeError, assertScanned } from './_lib/scan_scope.js';
+
 const _HERE = fileURLToPath(import.meta.url);
 const QUIET = process.argv.slice(2).includes('--quiet');
 
 const REPO_ROOT = path.resolve(path.dirname(_HERE), '..', '..');
-// Mirror the Python glob order: each pattern is rglob'd + sorted, then the
-// patterns are concatenated in declaration order.
-const SKILL_GLOBS = [
-    '.agent-src.uncondensed/skills',
-    'dist/agent-src/skills',
-] as const;
+/**
+ * Skill roots in precedence order — FIRST match wins; they are not unioned.
+ *
+ * The inherited list concatenated its patterns, which was safe only because
+ * the first one — the pre-ADR-051 source container — never matched anything
+ * after the move. So this gate has been linting the `dist/` projection rather
+ * than source. Repointing the first entry at `src/skills` while keeping the
+ * concatenation would double-count: both roots hold the same 288 skills.
+ * Hence first-wins — `src/skills` is the source of truth, `dist/` stays as the
+ * fallback for an installed tree that has no `src/`.
+ */
+const SKILL_GLOBS = ['src/skills', 'dist/agent-src/skills'] as const;
 const VALID_SLOTS = [
     'product',
     'team',
@@ -136,13 +144,30 @@ function _relPosix(target: string, root: string): string {
 }
 
 function main(): number {
-    const skills: string[] = [];
+    let skills: string[] = [];
+    let usedRoot = SKILL_GLOBS[0] as string;
     for (const pattern of SKILL_GLOBS) {
-        skills.push(..._rglobSkillSorted(path.join(REPO_ROOT, pattern)));
+        const found = _rglobSkillSorted(path.join(REPO_ROOT, pattern));
+        if (found.length > 0) {
+            skills = found;
+            usedRoot = pattern;
+            break;
+        }
     }
-    if (skills.length === 0) {
-        process.stderr.write('❌  no SKILL.md files matched\n');
-        return 1;
+    // Scope assertion: no SKILL.md under ANY root means every root moved.
+    try {
+        assertScanned({
+            gate: 'lint_context_spine_usage',
+            scanned: skills.length,
+            units: 'SKILL.md file(s)',
+            roots: SKILL_GLOBS as readonly string[],
+        });
+    } catch (exc) {
+        if (!(exc instanceof DeadScopeError)) {
+            throw exc;
+        }
+        process.stderr.write(`❌  ${exc.message}\n`);
+        return 2;
     }
     let failed = 0;
     let declared = 0;
@@ -172,7 +197,8 @@ function main(): number {
     if (!QUIET) {
         process.stdout.write(
             `✅  ${declared} skill(s) declare context_spine; ` +
-                `all declared slots are cited in the body\n`,
+                `all declared slots are cited in the body ` +
+                `(${skills.length} SKILL.md scanned under ${usedRoot})\n`,
         );
     }
     return 0;

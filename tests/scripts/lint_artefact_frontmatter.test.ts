@@ -107,11 +107,34 @@ describe('lint_artefact_frontmatter — ported pytest suite', () => {
         expect(code).toBe(0);
     });
 
-    it('missing required key fails', () => {
-        fs.writeFileSync(skillPath(root), VALID_FRONTMATTER.replace('lifecycle: active\n', ''), 'utf-8');
+    // EXPECTATION CHANGED 2026-08-02 (ADR-013 amendment, § "Strict five-key
+    // enforcement narrowed"): this case used to delete `lifecycle` and assert a
+    // "missing required key" failure. Only `workspaces` and `packs` are
+    // required now — `lifecycle`/`trust`/`install` carry documented schema
+    // defaults and `validate_frontmatter`, the gate that actually ran, never
+    // required them. The required-key assertion therefore moves to the two keys
+    // a default cannot supply; "absent is fine, malformed still fails" is
+    // pinned in the dedicated block below.
+    it('missing required key `workspaces` fails', () => {
+        fs.writeFileSync(
+            skillPath(root),
+            VALID_FRONTMATTER.replace('workspaces:\n  - engineering\n', ''),
+            'utf-8',
+        );
         const [code, err] = runMain();
         expect(code).toBe(1);
-        expect(err).toContain('missing required key `lifecycle`');
+        expect(err).toContain('missing required key `workspaces`');
+    });
+
+    it('missing required key `packs` fails', () => {
+        fs.writeFileSync(
+            skillPath(root),
+            VALID_FRONTMATTER.replace('packs:\n  - engineering-base\n', ''),
+            'utf-8',
+        );
+        const [code, err] = runMain();
+        expect(code).toBe(1);
+        expect(err).toContain('missing required key `packs`');
     });
 
     it('unknown workspace fails', () => {
@@ -205,6 +228,177 @@ describe('lint_artefact_frontmatter — ported pytest suite', () => {
         expect(code).toBe(1);
         expect(err).toContain('quarantined');
         fs.rmSync(tmp2, { recursive: true, force: true });
+    });
+
+    // ADR-013 amendment 2026-08-02. Both directions are pinned deliberately:
+    // asserting only "absence passes" would let someone delete the validation
+    // entirely and still go green, which is the failure this narrowing is
+    // most at risk of being mistaken for.
+    describe('schema-defaulted keys — absent is legal, malformed is not', () => {
+        for (const [key, removal] of [
+            ['lifecycle', 'lifecycle: active\n'],
+            ['trust', 'trust:\n  level: core\n  confidence: high\n  human_review_required: false\n'],
+            ['install', 'install:\n  default: true\n  removable: true\n'],
+        ] as const) {
+            it(`omitting \`${key}\` passes — the schema supplies its default`, () => {
+                const body = VALID_FRONTMATTER.replace(removal, '');
+                expect(body).not.toContain(`${key}:`); // the fixture edit really landed
+                fs.writeFileSync(skillPath(root), body, 'utf-8');
+                const [code, err] = runMain();
+                expect(code, err).toBe(0);
+            });
+        }
+
+        it('a malformed `lifecycle` that IS present still fails', () => {
+            fs.writeFileSync(
+                skillPath(root),
+                VALID_FRONTMATTER.replace('lifecycle: active', 'lifecycle: yolo'),
+                'utf-8',
+            );
+            const [code, err] = runMain();
+            expect(code).toBe(1);
+            expect(err).toContain('lifecycle `yolo` not in');
+        });
+
+        it('a non-bool `trust.human_review_required` that IS present still fails', () => {
+            fs.writeFileSync(
+                skillPath(root),
+                VALID_FRONTMATTER.replace('human_review_required: false', 'human_review_required: "no"'),
+                'utf-8',
+            );
+            const [code, err] = runMain();
+            expect(code).toBe(1);
+            expect(err).toContain('trust.human_review_required must be bool');
+        });
+
+        it('a malformed `install` block that IS present still fails', () => {
+            fs.writeFileSync(
+                skillPath(root),
+                VALID_FRONTMATTER.replace('install:\n  default: true\n', 'install: not-a-mapping\n'),
+                'utf-8',
+            );
+            const [code, err] = runMain();
+            expect(code).toBe(1);
+            expect(err).toContain('install must be a mapping');
+        });
+    });
+
+    // The sub-key half of the same rule (ADR-013 amendment 2026-08-02). A
+    // PRESENT block with a MISSING sub-key takes the schema default — this is
+    // where the pre-amendment gate contradicted itself, defaulting an absent
+    // `trust` object while rejecting a partial one. Across 288 skills `trust`
+    // was complete 0 times, so the strict shape had zero adoption.
+    describe('schema-defaulted SUB-keys — absent is legal, present-but-invalid is not', () => {
+        it('a partial `trust` block (level only) passes', () => {
+            const body = VALID_FRONTMATTER.replace(
+                'trust:\n  level: core\n  confidence: high\n  human_review_required: false\n',
+                'trust:\n  level: core\n',
+            );
+            expect(body).not.toContain('confidence:');
+            expect(body).not.toContain('human_review_required:');
+            fs.writeFileSync(skillPath(root), body, 'utf-8');
+            const [code, err] = runMain();
+            expect(code, err).toBe(0);
+        });
+
+        it('a partial `install` block (removable only) passes', () => {
+            const body = VALID_FRONTMATTER.replace(
+                'install:\n  default: true\n  removable: true\n',
+                'install:\n  removable: true\n',
+            );
+            expect(body).not.toContain('default: true');
+            fs.writeFileSync(skillPath(root), body, 'utf-8');
+            const [code, err] = runMain();
+            expect(code, err).toBe(0);
+        });
+
+        // Mutation-critical: a careless "just stop checking sub-keys" narrowing
+        // passes every test above and silently kills all three of these.
+        it('a present-but-invalid `trust.confidence` still fails', () => {
+            fs.writeFileSync(
+                skillPath(root),
+                VALID_FRONTMATTER.replace('confidence: high', 'confidence: bogus'),
+                'utf-8',
+            );
+            const [code, err] = runMain();
+            expect(code).toBe(1);
+            expect(err).toContain('trust.confidence `bogus` not in');
+        });
+
+        it('a present-but-invalid `trust.level` still fails', () => {
+            fs.writeFileSync(
+                skillPath(root),
+                VALID_FRONTMATTER.replace('level: core', 'level: divine'),
+                'utf-8',
+            );
+            const [code, err] = runMain();
+            expect(code).toBe(1);
+            expect(err).toContain('trust.level `divine` not in');
+        });
+
+        it('a present-but-invalid `install.removable` still fails', () => {
+            fs.writeFileSync(
+                skillPath(root),
+                VALID_FRONTMATTER.replace('removable: true', 'removable: "yes"'),
+                'utf-8',
+            );
+            const [code, err] = runMain();
+            expect(code).toBe(1);
+            expect(err).toContain('install.removable must be bool');
+        });
+    });
+
+    // The quarantine-collision predicate keys off an ADR-013 discovery BLOCK,
+    // not a bare key name: `trust: <string>` belongs to the knowledge-card and
+    // lesson-card template schemas and must not be mistaken for discovery
+    // frontmatter. Both directions pinned so the fix cannot rot into "the
+    // collision check never fires".
+    describe('quarantine collision — discovery block vs. same-named scalar', () => {
+        function quarantinedRepo(skillBody: string): string {
+            const tmp2 = fs.mkdtempSync(path.join(os.tmpdir(), 'laf-q-'));
+            const root2 = makeRepo(tmp2, skillBody);
+            // Derived, not hardcoded: the quarantine key is whatever the gate
+            // computes as the artefact's repo-relative path, so deriving it
+            // from the fixture keeps this correct if the fixture container is
+            // ever renamed — and keeps a dead-path literal out of the tree.
+            const rel = path.relative(root2, skillPath(root2)).split(path.sep).join('/');
+            fs.writeFileSync(
+                path.join(root2, 'config', 'discovery', 'unassigned-artefacts.yml'),
+                `- path: ${rel}\n  reason: template scaffold\n`,
+                'utf-8',
+            );
+            applyPaths(root2);
+            return tmp2;
+        }
+
+        it('a quarantined file with a scalar `trust:` is NOT a collision', () => {
+            const tmp2 = quarantinedRepo(
+                '---\nname: sample-skill\ntype: anti-hallucination\ntrust: durable\n---\n\n# card\n',
+            );
+            const [code, err] = runMain();
+            expect(code, err).toBe(0);
+            fs.rmSync(tmp2, { recursive: true, force: true });
+        });
+
+        it('a quarantined file with an object `trust:` IS a collision', () => {
+            const tmp2 = quarantinedRepo(
+                '---\nname: sample-skill\ntrust:\n  level: core\n---\n\n# card\n',
+            );
+            const [code, err] = runMain();
+            expect(code).toBe(1);
+            expect(err).toContain('quarantined');
+            fs.rmSync(tmp2, { recursive: true, force: true });
+        });
+
+        it('a quarantined file carrying `packs:` IS a collision', () => {
+            const tmp2 = quarantinedRepo(
+                '---\nname: sample-skill\npacks:\n  - engineering-base\n---\n\n# card\n',
+            );
+            const [code, err] = runMain();
+            expect(code).toBe(1);
+            expect(err).toContain('quarantined');
+            fs.rmSync(tmp2, { recursive: true, force: true });
+        });
     });
 });
 
