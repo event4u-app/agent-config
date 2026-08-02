@@ -97,13 +97,17 @@ describe('tally_stances — splits, distinct labels, repair', () => {
         expect(r.options).toHaveLength(2);
     });
 
-    it('flags members with a missing/unparseable stance as needs_repair (excluded from W_total)', () => {
+    it('flags members with a missing/unparseable stance as needs_repair (COUNTED in W_total)', () => {
+        // Inclusion changed 2026-08-02 by the refusal-preservation invariant
+        // (road-to-governance-invariants Phase 2, opened by the S0.1 finding).
+        // Excluding them let a refusal phrased as prose shrink the quorum and
+        // make consensus easier — the steering vector the spike measured.
         const r = tally_stances([
             { member: 'a:1', text: stance('Adopt', 'high') },
             { member: 'b:2', text: 'I forgot to add a stance line.' },
         ]);
         expect(r.needs_repair).toEqual(['b:2']);
-        expect(r.w_total).toBe(1);
+        expect(r.w_total).toBe(2);
     });
 
     it('confidence factors match the spec', () => {
