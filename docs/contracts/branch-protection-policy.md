@@ -5,136 +5,204 @@ keep-beta-until: 2026-09-04
 
 # Branch Protection Policy
 
-> **Status:** active · **Owner:** maintainer (GitHub UI ruleset) ·
-> **Opened:** 2026-05-26
+> **Status:** active · **Owner:** maintainer (GitHub repository **ruleset**) ·
+> **Opened:** 2026-05-26 · **Reconciled against live state:** 2026-08-02
 >
-> Codifies the per-PR-shape required-status-check floor. Companion to
-> [`release-pr-gating.md`](release-pr-gating.md) (Phase A) and
-> [`ci-cost-budget.md`](ci-cost-budget.md) (Phase C). Branch protection
-> itself is applied by the maintainer in the GitHub Settings → Rules UI;
-> this doc is the source of truth the UI mirrors.
+> Companion to [`release-pr-gating.md`](release-pr-gating.md) (Phase A) and
+> [`ci-cost-budget.md`](ci-cost-budget.md) (Phase C).
+>
+> **This document describes what is enforced, not what we wish were
+> enforced.** The 2026-08-02 reconciliation (roadmap
+> `road-to-renewal-foundation`, Phase 1) found the previous version
+> documenting a 19-row required-check matrix against a live enforcement of
+> **one** check, plus an addendum for workflows that had already been
+> deleted. A policy doc that overstates enforcement is worse than no doc:
+> it is read as a guarantee. The rule is now: **this file mirrors the
+> ruleset; the ruleset is the source of truth.**
 
-## The floor
+## What is actually enforced (live, 2026-08-02)
 
-Every PR proves a floor of CI checks before it can merge. The floor differs
-by **PR shape** — a feature PR proves more (it carries runtime / install
-risk) than a release PR (whose diff is structurally limited to version
-bumps). Shape is detected by the same predicates documented in
-`release-pr-gating.md`; the workflows enforce the cut.
+Enforcement is a repository **ruleset**, not classic branch protection.
+`GET /repos/event4u-app/agent-config/branches/main/protection` returns
+`404 Branch not protected` — that endpoint is the wrong surface, and any
+tooling pointed at it reads "unprotected" for a protected branch.
 
-The optimisation is **never** subtractive: a PR whose shape can't be proved
-falls back to the full feature-PR floor. The cut is opt-in per push, not
-per branch name.
+| Property | Live value |
+|---|---|
+| Mechanism | Repository ruleset `main protection` (id `17749383`), `enforcement: active` |
+| Applies to | `~DEFAULT_BRANCH` (i.e. `main`) |
+| Read it | `gh api repos/event4u-app/agent-config/rulesets/17749383` |
+| Branch deletion | blocked (`deletion` rule) |
+| Force-push | blocked (`non_fast_forward` rule) |
+| Merge without PR | blocked (`pull_request` rule) |
+| Required approving reviews | **0** |
+| Review-thread resolution | required |
+| Stale reviews dismissed on push | yes |
+| Allowed merge methods | merge · squash · rebase |
+| Branch must be up to date | yes (`strict_required_status_checks_policy: true`) |
+| **Required status checks** | **exactly one — `Sync + Generate Tools Consistency`** |
+| Bypass | repository-admin role, `always` |
 
-## Per-PR-shape required-check matrix
+Everything else in CI is **advisory at the branch-protection layer**: the
+checks run, a red one is visible on the PR, but only
+`Sync + Generate Tools Consistency` mechanically blocks the merge button.
+The practical gate is therefore maintainer review of the checks tab, plus
+the admin bypass being deliberately not used.
 
-| Required check | Feature PR | Release PR | Docs-only PR |
-|---|:---:|:---:|:---:|
-| `Consistency` | ✅ | ✅ | ✅ |
-| `Smoke Contracts` (smoke.yml) | ✅ | ✅ | ✅ |
-| `Skill Lint` | ✅ | — | — |
-| `Tests / install-tests (ubuntu)` | ✅ | — | — |
-| `Tests / install-tests (macos)` | ✅ | — | — |
-| `Tests / install-aux-tests (ubuntu)` | ✅ | — | — |
-| `Tests / install-aux-tests (macos)` | ✅ | — | — |
-| `Tests / python-tests (ubuntu × 3.10–3.13)` | ✅ | — | — |
-| `Tests / python-tests (macos × 3.12)` | ✅ | — | — |
-| `Tests / node-tests (ubuntu)` | ✅ | — | — |
-| `Tests / node-tests (macos)` | ✅ | — | — |
-| `Tests / windows-lockfile-export` | path-filter only | — | — |
-| `Public Install Smoke / smoke (matrix)` | ✅ | — | — |
-| `Release Validation / release-shape` | — | ✅ | — |
-| `Release Validation / changelog-entry` | — | ✅ | — |
-| `Release Validation / version-consistency` | — | ✅ | — |
-| `Release Validation / release-install-e2e` | — | ✅ | — |
-| `Migration Dry-Run` | path-filter only | path-filter only | — |
-| `Release Guard` (tag-trigger) | — | (post-merge tag) | — |
+## What actually runs on a feature PR
 
-**Definitions:**
+Verified against the checks reported on PR #1108 (2026-08-02). Names are
+the **reported check names** — the strings a required-check list must match.
 
-- **Feature PR** — head branch does not match `release/X.Y.Z` (the default).
-- **Release PR** — head branch matches `^release/\d+\.\d+\.\d+$` AND the
-  diff stays within the version-bump allowlist (see `release-pr-gating.md`).
-  Either condition failing falls the PR back to feature-PR mode. Author is
-  either a maintainer (`task release`) or `github-actions[bot]` (the
-  `release`-labeled-PR CI path, `.github/workflows/release.yml`) — the
-  shape checks are author-agnostic. Verified live: this repo's branch
-  protection requires zero approving reviews and exactly one status check
-  (`Sync + Generate Tools Consistency`); the bot path's real friction is
-  GitHub's separate bot-created-PR approval gate, not a review requirement
-  — see [`ADR-113`](../decisions/ADR-113-ci-native-release-label-trigger.md).
-- **Docs-only PR** — diff is entirely inside `docs/**` or matches only
-  top-level Markdown (`README.md`, `CHANGELOG.md`, `CONTRIBUTING.md`,
-  `AGENTS.md`). No code, tests, workflows, or scripts. This shape is
-  detected by an opt-in linter (`task ci:required-checks`); branch
-  protection still defaults to the feature-PR floor unless the linter
-  asserts the docs-only shape.
+| Workflow | Reported checks |
+|---|---|
+| `consistency.yml` | `Sync + Generate Tools Consistency` **(the only required one)** |
+| `smoke.yml` | `Smoke — kernel` · `Smoke — router` · `Smoke — schema` · `Smoke — skills` |
+| `skill-lint.yml` | `skill-lint` (+ `skill-lint-strict`, release-gated) |
+| `tests.yml` | `Static Checks (ESLint · typecheck · prepack)` · `Install Script Tests ({ubuntu,macos}-latest, shard N/4)` · `Install Aux Tests ({ubuntu,macos}-latest)` · `Node Tests ({ubuntu,macos}-latest, shard N/4)` · `Golden Tests ({ubuntu,macos}-latest)` · `Workspace Tests ({ubuntu,macos}-latest)` |
+| `smoke-public-install.yml` | `{ubuntu,macos,windows}-latest · node {20,22}` · `tarball E2E · node {20,22}` · `npm publish dry-run · node {20,22}` |
+| `rule-backstops.yml` | `Rule backstops` |
+| `no-python-in-src.yml` | `no-python-in-src` |
+| `commit-subjects.yml` | `lint commit subjects` |
+| evaluator / originality | `originality-gate` · `gate-dry-run` · `live-advisory` |
+| `glama-mcp-smoke.yml` | `glama MCP smoke` |
+| `deploy-mcp-worker.yml` | `MCP worker deploy dry-run` |
+| `consumer-matrix.yml` | `Plugin bootstrap integrity` · `Packed-artifact evaluation (clean container)` |
+
+Release-shape-gated (report `skipping` on a feature PR):
+`Release-PR shape detector` · `CHANGELOG entry exists for head version` ·
+`package.json / marketplace.json / pack manifests agree` ·
+`Release install E2E (pack → install → upgrade → boot)` ·
+`npm audit (runtime deps, high+)` · `Release` · `skill-lint-strict`.
+
+**Note on `npm audit`:** the release-gated *job* of that name skips on
+feature PRs, but the same command
+(`npm audit --omit=dev --audit-level=high`) also runs as a **step inside
+`Static Checks`** on every PR (`tests.yml`). Runtime-dependency auditing is
+therefore live on every PR despite the skipping check name — see
+[Dependency auditing](#dependency-auditing) below.
+
+## The shape design — intent, and its enforcement status
+
+The per-PR-shape idea stands and is implemented **at the workflow level**:
+`tests.yml` and `smoke-public-install.yml` carry
+`if: !startsWith(github.head_ref, 'release/')`, so a release PR skips the
+heavy matrices while `release-validation.yml` adds its shape jobs. Shape
+predicates live in [`release-pr-gating.md`](release-pr-gating.md) and
+`src/scripts/check_release_pr_shape.ts`.
+
+What is **not** implemented:
+
+- **No per-shape required-check list exists in the ruleset.** GitHub
+  rulesets carry one required-check list per ref condition; a per-PR-shape
+  floor would need either separate rulesets per head-branch pattern or a
+  single aggregating gate job. Neither exists today.
+- **No docs-only shape at the enforcement layer.** `task ci:required-checks`
+  does exist (`taskfiles/ci-fast.yml:204` → `src/scripts/print_required_checks.ts`)
+  and does classify feature / release / docs-only from the local diff — but it
+  is a **pure offline preview**, never a gate. Branch protection has no
+  docs-only concept, so the docs-only row is a preview convenience, not a
+  floor. That script's own check-name lists were reconciled in the same change
+  (they had drifted to the same fiction as this doc, including a
+  `Tests / python-tests` entry that cannot exist post-migration); its output
+  now marks with `!` the single check that actually blocks a merge.
+
+The non-subtractive principle is unchanged and still true: a PR whose shape
+cannot be proved runs the full feature-PR workflow set, because the skip is
+an `if:` on the branch name plus a fail-closed shape detector, never an
+opt-out.
 
 ## Failure mode — the cut never silently lifts
 
-If a release-PR's diff exits the allowlist mid-stream (e.g. a last-minute
-CHANGELOG fixup that also touches `src/scripts/release.ts`):
+If a release PR's diff exits the allowlist mid-stream:
 
-1. `Release Validation / release-shape` exits non-zero.
-2. The required-check set for the PR effectively flips back to the
-   feature-PR floor because:
-   - `tests.yml` / `smoke-public-install.yml` jobs carry
-     `if: !startsWith(github.head_ref, 'release/')`, so they still skip on
-     the branch name — but
-   - the maintainer is expected to either narrow the diff (move the
-     out-of-shape edit to a separate PR) or close-and-reopen the release
-     PR off a freshly-bumped branch so the heavy matrix runs.
-3. Branch protection still blocks the merge because `release-shape` is red.
+1. `Release-PR shape detector` exits non-zero.
+2. `tests.yml` / `smoke-public-install.yml` still skip on the branch name,
+   so the heavy matrix does **not** auto-run.
+3. The maintainer narrows the diff, or re-cuts the release PR off a freshly
+   bumped branch so the heavy matrix runs.
 
-The branch name alone never bypasses the heavy matrix — the diff has to
-prove it can't regress runtime / install paths.
+Because `Release-PR shape detector` is **not** in the ruleset's required
+list, step 3 is a maintainer obligation, not a mechanical block. Closing
+that gap is the enforce half below.
 
-## Why path-filter only for some checks
+## Dependency auditing
 
-`Tests / windows-lockfile-export` and `Migration Dry-Run` are path-filtered
-at the workflow level (not branch-protection level). They run on every PR
-whose diff hits their declared paths and skip on every other PR. Branch
-protection lists them as "must pass if they run" — the GitHub Rules UI
-under "Required status checks" honours this when "Require branches to be
-up to date before merging" is enabled and the check's most recent run
-on the head SHA is green.
+- **Every PR:** `npm audit --omit=dev --audit-level=high` as a step in
+  `Static Checks` (`tests.yml`) — the runtime dependency tree must stay
+  free of high/critical advisories. Dev-only advisories do not block.
+- **Release PRs:** the same command again as a standalone job in
+  `release-validation.yml`.
+- **Scheduled:** `.github/dependabot.yml` — weekly `npm` and
+  `github-actions` update PRs, which also carry GitHub's security-advisory
+  updates for newly-published CVEs (the gap a PR-triggered audit alone
+  cannot cover on a quiet week).
+- **Publish integrity:** npm OIDC Trusted Publishing + provenance
+  (`publish-npm.yml`); secret scanning via the `check_secret_leak` gate.
 
-## Addendum — `python2ts` integration branch (py2ts migration)
+## Enforce half — maintainer action, not agent-executable
 
-> Added 2026-06-11 for the Python → TypeScript migration (roadmap
-> `road-to-typescript-only-scripts.md`, Phase 1). Lives until the
-> migration completes; applied by the maintainer in the same Rules UI.
+Aligning the ruleset with the checks that actually matter is an **admin API
+write on the production trunk**: a Hard-Floor action under
+`non-destructive-by-default`, reserved for the maintainer with explicit
+this-turn confirmation. It is tracked as
+`blocker: required-check-enforcement` in
+`agents/roadmaps/road-to-renewal-foundation.md`.
 
-The `python2ts` branch is the working trunk of the migration and carries
-its own protection rules:
+The correct endpoint is the **ruleset**, not classic protection:
 
-- **PRs only, no force-push, no deletion** — direct commits are blocked;
-  the scheduled `py2ts-main-sync.yml` workflow is the single sanctioned
-  direct-push writer (clean `main → python2ts` merges only; conflicts go
-  through the `sync/main-into-python2ts` PR instead).
-- **Required checks** — the full feature-PR floor (matrix above) plus
-  `py2ts Base Guard / py2ts-base-guard`.
-- **Migration PRs never target `main`** — a head branch matching
-  `^(feat|fix|chore)/py2ts-` or `^py2ts` must base on `python2ts`; the
-  base guard fails the PR otherwise. The inverse direction (non-py2ts
-  head targeting `python2ts`) only warns — sync PRs and hotfixes are
-  legitimate.
-- **Drift surfacing** — `py2ts-drift.yml` comments nightly on open
-  migration PRs whose touched `.py` files changed on `python2ts` since
-  the merge-base; such PRs rebase before merge.
-- **Final `python2ts → main` merge is user-owned** — Hard Floor
-  (production-trunk merge, explicit per-turn confirmation); never a
-  workflow, bot, or roadmap step.
+```bash
+# read current state (the verification artifact — record it before and after)
+gh api repos/event4u-app/agent-config/rulesets/17749383 > ruleset-before.json
+
+# write: PUT the full ruleset object with an extended required_status_checks
+gh api -X PUT repos/event4u-app/agent-config/rulesets/17749383 \
+  --input ruleset-after.json
+```
+
+Recommended minimum addition when that is executed — checks that prove the
+package still installs and behaves, all of which already run and pass on
+every feature PR:
+
+`Smoke — kernel` · `Smoke — router` · `Smoke — schema` · `Smoke — skills` ·
+`Static Checks (ESLint · typecheck · prepack)` · `skill-lint` ·
+`Rule backstops`.
+
+Sharded and OS-matrixed checks (`Node Tests (… shard N/4)`, the
+`smoke-public-install` matrix) are deliberately **not** proposed for the
+required list: their names encode shard counts and runner labels, so any
+matrix change silently breaks a pinned required-check name — the same class
+of drift this reconciliation just removed.
+
+## Change discipline
+
+Editing this file does **not** change enforcement, and changing the ruleset
+does not update this file. When either moves:
+
+1. Re-read `gh api repos/event4u-app/agent-config/rulesets/17749383`.
+2. Update the live-state table above from that JSON, not from memory.
+3. Re-verify the reported check names against a recent PR
+   (`gh pr checks <n>`) — job renames change the strings.
 
 ## See also
 
 - [`release-pr-gating.md`](release-pr-gating.md) — shape predicates, cut
   surface, kept surface, fail-closed contract.
 - [`ci-cost-budget.md`](ci-cost-budget.md) — measured baseline durations
-  per job + quarterly review cadence (Phase C).
-- `.github/workflows/release-validation.yml` — the three release-PR jobs.
+  per job + review cadence (Phase C).
+- `.github/workflows/release-validation.yml` — the release-PR jobs.
 - `src/scripts/check_release_pr_shape.ts` — the shape detector.
-- `src/scripts/release.ts` — emits release PRs (both entry points); release
-  cadence stays driven by Conventional Commits, not CI cost.
 - [`ADR-113`](../decisions/ADR-113-ci-native-release-label-trigger.md) — the
   CI-native (`release`-label) entry point and the bot-PR-approval finding.
+
+## Removed 2026-08-02 — the `python2ts` addendum
+
+The previous version carried a `python2ts` integration-branch addendum
+(base guard, nightly drift comments, a sanctioned direct-push sync
+workflow). Every workflow it named — `py2ts-main-sync.yml`,
+`py2ts-drift.yml`, `py2ts Base Guard` — has been deleted; the
+Python→TypeScript migration completed and `src/` is Python-free (enforced
+by `no-python-in-src.yml`). The `python2ts` ref still exists on the remote
+but carries no protection of its own (the repository has exactly one
+ruleset, covering the default branch). The addendum is removed rather than
+kept as historical prose, because a policy file is read as current.
