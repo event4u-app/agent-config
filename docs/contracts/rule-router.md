@@ -59,6 +59,27 @@ schema's `additionalProperties: false` now rejects it outright. The
 `docs/contracts/router-intents.md` vocabulary this section used to cite was
 never written.
 
+**`keyword` and `phrase` are the same matcher.** Both branches of
+`router_telemetry.ts::trigger_matches` run the identical case-insensitive
+`includes()`; the distinction is documentary (single token vs multi-word), not
+behavioural. Recorded here because the obvious repair for a noisy trigger —
+"promote it to a `phrase`" — is therefore a no-op, and has been proposed as
+one.
+
+**Precision budget — short keywords are ratcheted.** Because the match is an
+UNANCHORED substring, a short keyword claims every word that contains it: `AC`
+activated `cross-source-consistency` on "black" and "contact"; `CAC` activated
+the finance floor on "cache". `src/scripts/lint_trigger_precision.ts` counts
+ASCII `keyword` triggers of ≤ 3 characters and fails when the count RISES above
+its seeded budget (22, seeded 2026-08-02 after removing those two as provably
+redundant). Non-ASCII short keywords are excluded by construction — the eight
+emoji triggers on `no-decorative-emojis-in-git-surfaces` are one code point
+each and cannot collide with prose. Lowering the budget is a normal commit;
+raising it is not the fix. The durable repair — anchoring `keyword` on word
+boundaries, which would fix all 316 single-token keywords at once — changes
+shipped activation semantics and is deliberately NOT taken by that gate; its
+reopen terms live in `internal/bench/layer1-resolver-PREREG.md`.
+
 ### `routes_to:` shape
 
 Plain string list. Each entry is `<kind>:<id>`:
@@ -201,18 +222,43 @@ Legacy `rule_loading_tier: balanced` values map to `essential`.
 
 ## Activation semantics
 
-The host agent reads `dist/router.json` once per session. Per turn:
+**Read this first: nothing loads `dist/router.json` at runtime.** This section
+used to describe a per-turn loader — "the host agent reads `dist/router.json`
+once per session … active rules are loaded inline" — while § Schema v2 thirty
+lines above said, correctly, *"per ADR-040 the filtering happens at projection
+time; there is no runtime resolver."* Both could not be true. Reconciled
+2026-08-02 (road-to-renewal-foundation Phase 3 step 5) in favour of the tree:
+no code implements the loader, and building one is blocked on a transport that
+does not exist (`internal/bench/layer1-resolver-PREREG.md` § P1).
 
-1. Always evaluate kernel rules.
-2. If `profile = minimal` → stop after kernel.
-3. Otherwise, walk tier_1 (and tier_2 if `profile = full`); a rule
-   activates when **any** of its `triggers:` matches the current
-   prompt + open files + invoked command.
-4. Active rules are loaded inline; their routed artifacts (`skill:`
-   or `guideline:`) are surfaced to the agent for that turn.
+What actually happens:
 
-No runtime profile resolution — the profile is fixed at session
-start, the router lookup is keyword/phrase/path matching only.
+1. **Projection time.** The rule bodies that survive the workspace/pack/role
+   scope land as files in the host's own config tree. That set is fixed until
+   the next projection — it is the whole mechanism, per ADR-040.
+2. **Session time.** The host loads those files the way it loads any
+   instruction file. Kernel rules are unconditional by construction: they are
+   projected always and carry no scoping fields.
+3. **Turn time.** A non-kernel rule "activates" by the MODEL's judgment over
+   its description and body, which are already in context. No lookup runs, and
+   `triggers:` is not consulted by any host.
+
+So `triggers:` is **declarative metadata, not an execution path**. It exists
+for tooling that reasons ABOUT activation — `trigger_coverage` (the
+falsifiability floor: can this rule fire on a substring a real prompt
+contains?), `router_telemetry` (replay: which rules WOULD a resolver select),
+and the trigger-precision ratchet — plus host-native glob attach (§ below),
+which is the one place a trigger-shaped field does drive real behaviour, and it
+is the host doing it, not this package.
+
+The practical consequence for rule authors: a trigger is a testable claim about
+when a rule is relevant, and a wrong one shows up in the coverage and telemetry
+reports — but adding a trigger does not make a rule load, and removing one does
+not stop it loading. Only the projection scope does that.
+
+This is the same honesty the `intent:` removal applied one level down (§
+below): a field that never matched at runtime was giving authors a false
+activation path. Here it is the whole per-turn walk that was fictional.
 
 ### Intent-trigger semantics — superseded by removal (2026-08-02)
 

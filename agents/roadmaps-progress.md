@@ -2,14 +2,14 @@
 
 > Auto-generated — do not edit. Regenerate with `task roadmap-progress` or by running the `update_roadmap_progress` script for your install; rewritten on every roadmap create / execute / completion change (timestamp lives in git history).
 >
-> 17 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **14** open blockers
+> 16 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **12** open blockers
 
 ## Overall
 
-**112 / 216 steps done · 52%**
+**98 / 197 steps done · 50%**
 
 ```text
-█████████████████████░░░░░░░░░░░░░░░░░░░   52%
+████████████████████░░░░░░░░░░░░░░░░░░░░   50%
 ```
 
 ## Open roadmaps
@@ -25,14 +25,13 @@
 | 7 | [road-to-orchestration-scope-decision.md](roadmaps/road-to-orchestration-scope-decision.md) | 4 | 10 | 6 | 4 | 0 | 0 | [1](#blockers-road-to-orchestration-scope-decision) | ████░░░░░░ 40% |
 | 8 | [road-to-package-renewal.md](roadmaps/road-to-package-renewal.md) | 2 | 9 | 3 | 6 | 0 | 0 | 0 | ███████░░░ 67% |
 | 9 | [road-to-renewal-adr-hygiene.md](roadmaps/road-to-renewal-adr-hygiene.md) | 3 | 10 | 10 | 0 | 0 | 0 | [1](#blockers-road-to-renewal-adr-hygiene) | ░░░░░░░░░░ 0% |
-| 10 | [road-to-renewal-foundation.md](roadmaps/road-to-renewal-foundation.md) | 3 | 21 | 5 | 14 | 0 | 2 | [2](#blockers-road-to-renewal-foundation) | ███████░░░ 74% |
-| 11 | [road-to-renewal-leverage.md](roadmaps/road-to-renewal-leverage.md) | 3 | 11 | 11 | 0 | 0 | 0 | [1](#blockers-road-to-renewal-leverage) | ░░░░░░░░░░ 0% |
-| 12 | [road-to-scale-history-bench-run.md](roadmaps/road-to-scale-history-bench-run.md) | 1 | 2 | 2 | 0 | 0 | 0 | [1](#blockers-road-to-scale-history-bench-run) | ░░░░░░░░░░ 0% |
-| 13 | [road-to-solution-minimalism.md](roadmaps/road-to-solution-minimalism.md) | 4 | 36 | 12 | 23 | 0 | 1 | 0 | ███████░░░ 66% |
-| 14 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 6 | 3 | 0 | 0 | [1](#blockers-road-to-subagent-value-realization-followup) | ███░░░░░░░ 33% |
-| 15 | [road-to-surface-consolidation.md](roadmaps/road-to-surface-consolidation.md) | 3 | 14 | 1 | 12 | 1 | 0 | [3](#blockers-road-to-surface-consolidation) | █████████░ 92% |
-| 16 | [road-to-tier-removal.md](roadmaps/road-to-tier-removal.md) | 4 | 8 | 2 | 6 | 0 | 0 | [1](#blockers-road-to-tier-removal) | ████████░░ 75% |
-| 17 | [road-to-ui-track-integrity-followup.md](roadmaps/road-to-ui-track-integrity-followup.md) | 1 | 10 | 10 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+| 10 | [road-to-renewal-leverage.md](roadmaps/road-to-renewal-leverage.md) | 3 | 11 | 11 | 0 | 0 | 0 | [1](#blockers-road-to-renewal-leverage) | ░░░░░░░░░░ 0% |
+| 11 | [road-to-scale-history-bench-run.md](roadmaps/road-to-scale-history-bench-run.md) | 1 | 2 | 2 | 0 | 0 | 0 | [1](#blockers-road-to-scale-history-bench-run) | ░░░░░░░░░░ 0% |
+| 12 | [road-to-solution-minimalism.md](roadmaps/road-to-solution-minimalism.md) | 4 | 36 | 12 | 23 | 0 | 1 | 0 | ███████░░░ 66% |
+| 13 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 6 | 3 | 0 | 0 | [1](#blockers-road-to-subagent-value-realization-followup) | ███░░░░░░░ 33% |
+| 14 | [road-to-surface-consolidation.md](roadmaps/road-to-surface-consolidation.md) | 3 | 14 | 1 | 12 | 1 | 0 | [3](#blockers-road-to-surface-consolidation) | █████████░ 92% |
+| 15 | [road-to-tier-removal.md](roadmaps/road-to-tier-removal.md) | 4 | 8 | 2 | 6 | 0 | 0 | [1](#blockers-road-to-tier-removal) | ████████░░ 75% |
+| 16 | [road-to-ui-track-integrity-followup.md](roadmaps/road-to-ui-track-integrity-followup.md) | 1 | 10 | 10 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 
 ---
 
@@ -186,57 +185,6 @@ _1 blocker resolved._
     the TERMINAL activation red-baseline null (value-of-loading bench, not
     adherence adjudication) — it does not re-run that null.
   - **Resolved when:** the maintainer authorizes the bench spend and the recorded artifact lands.
-
-### [road-to-renewal-foundation.md](roadmaps/road-to-renewal-foundation.md)
-
-**Road to renewal — Foundation (CI oracle, dead tree, token quick wins)** — 14 / 19 done (74%)
-
-| # | Phase | State | Open | Done | Deferred | Cancelled | % |
-|---|---|---|---:|---:|---:|---:|---:|
-| 1 | CI becomes a trustworthy oracle | ✅ done | 0 | 8 | 0 | 2 | 100% |
-| 2 | token quick wins (no lock touched) | ✅ done | 0 | 6 | 0 | 0 | 100% |
-| 3 | runtime activation spike (phase-gated; go/no-go recorded first) | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
-
-<a id="blockers-road-to-renewal-foundation"></a>
-**Blockers**
-
-- **required-check-enforcement** (owner: maintainer) — blocks nothing in this roadmap (the doc-shrink half shipped; this is the enforcement half of the required-check-matrix step)
-  - **What to do:**
-    **ruleset** — NOT classic branch protection, which returns 404 for this
-    repo:
-    Recommended minimum additions (all already run and pass on every feature
-    PR): `Smoke — kernel`, `Smoke — router`, `Smoke — schema`, `Smoke — skills`,
-    `Static Checks (ESLint · typecheck · prepack)`, `skill-lint`,
-    `Rule backstops`. Sharded / OS-matrixed check names are deliberately
-    excluded — their names encode shard counts and runner labels, so a matrix
-    change silently breaks a pinned required-check name.
-    - **Why not the agent:** an admin API write on the production trunk is a
-    Hard Floor action under `non-destructive-by-default` — explicit this-turn
-    maintainer confirmation, never an autonomous roadmap step.
-  - **Resolved when:** the maintainer executes the PUT and records the resulting `ruleset-after.json` as the verification artifact, and `docs/contracts/branch-protection-policy.md` § "What is actually enforced" is updated from that JSON.
-- **rule-packs-auto-consumer-default** (owner: maintainer) — blocks nothing in this roadmap — the mechanism shipped in Phase 2 and the measurement is recorded; this is only the default flip.
-  - **What to do:**
-    `src/config/agent-settings.template.yml` from `[]` to `auto`, then re-run
-    `./scripts-run src/scripts/check_consumer_scope_flip` and record the new
-    consumer figure next to the existing workspace-axis one.
-    - **Why not the agent:** flipping it changes what a consumer install
-    RECEIVES, which is the same class of change as the workspace-axis flip of
-    2026-07-13 — recorded there as "the default flip stays a human gate"
-    (`agents/settings/contexts/consumer-scoping-audit-2026-07-07.md:70-73`).
-    The AI council (2026-08-02, both members) ruled the gate applies to the
-    pack axis too, even though the axis itself answers a different question.
-    - **Evidence for the decision, already measured:** on this repo `auto` drops
-    8 rules / 8,110 GPT tok, none of them kernel, none of them an
-    engineering-workspace floor. On the consumer surface the workspace axis
-    alone already yields 95 rules / 75,737 tok (`check_consumer_scope_flip`,
-    2026-08-02); `auto` composes with it as a second AND-constraint.
-    - **Counter-case to weigh:** the audit's "unsure → ship it" tie-breaker. A
-    consumer who later works on a finance question WITHOUT the finance pack
-    installed would no longer receive `finance-safety-floor`. The pack-axis
-    answer is that such a consumer also has no finance skills, so the floor
-    guards nothing — but that reasoning is exactly what the gate exists to have
-    a human confirm.
-  - **Resolved when:** the maintainer records accept-or-reject here with the reason; on accept, the template default and the `check_consumer_scope_flip` report land in the same commit.
 
 ### [road-to-renewal-leverage.md](roadmaps/road-to-renewal-leverage.md)
 
