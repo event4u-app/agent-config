@@ -93,8 +93,8 @@
     {
       "file": "src/skills/supply-chain-intake/SKILL.md",
       "lines": [
-        70,
-        72
+        80,
+        82
       ],
       "reason": "Per-ecosystem check commands in fenced blocks; the pip/composer siblings sit farther apart than the ±10-line window — genuine multi-ecosystem documentation."
     },

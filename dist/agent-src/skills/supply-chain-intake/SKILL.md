@@ -32,6 +32,16 @@ PIN IT, LOCK IT, CVE-SCAN IT. NEVER PIPE A REMOTE SCRIPT STRAIGHT TO A SHELL.
 
 ## Procedure — intake gate (run in order before adding a dependency)
 
+0. **Do you need a dependency at all?** The cheapest supply-chain risk is the
+   one never taken. Walk the rungs above "installed dependency" first — is it
+   already in the tree (`npm ls <pkg>`, `composer show`, `pip list`), does the
+   stdlib or framework carry it, does the **platform** already do it
+   (`crypto.randomUUID` before a uuid package, `Intl` before a formatting
+   library, `AbortSignal.timeout` before a timeout helper, the database's own
+   full-text / JSON support before an application-side index)? Full ordering:
+   [`agent-interaction-and-decision-quality` § 8b-ladder](../../../docs/guidelines/agent-infra/agent-interaction-and-decision-quality.md).
+   A dependency added for something already present is permanent cost — install
+   surface, CVE surface, upgrade surface — bought against a capability you had.
 1. **Existence** — confirm the exact string resolves on the real registry, published before your session and with real usage:
    ```bash
    npm view <pkg> version        # non-zero exit = does not exist (hallucination)

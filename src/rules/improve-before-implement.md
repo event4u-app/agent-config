@@ -40,6 +40,10 @@ Before implementing:
 
 On a "build me an app / add this feature" ask, ONE reflexive pre-check before the three checks: **who asked · what breaks if unbuilt · what's the evidence?** Recommend **build** only at a real retention/activation blocker (evidence, not anxiety); else **defer/validate**, naming the missing evidence. Advisory — "just build it" proceeds immediately; no network lookup. Hierarchy + build/defer table: guideline § 8-pre.
 
+## The solution-size ladder — stop at the first rung that works
+
+Once the demand gate says build, "does this already exist?" has an **ordered** answer set: need-to-exist → reuse-in-repo → stdlib / framework → **native platform** → installed dependency → smallest working form. Stop at the first rung that carries the requirement. Ordered **after** comprehension — it shortens the solution, never the reading. Two axes, not one: the ladder is *scope*; **shape** is the other half — of what must exist, the form with the least cognitive load, explicitly not the fewest keystrokes. Rungs, the platform-rung examples, and the precedence order when they pull against each other: guideline § 8b-ladder / § 8b-shape / § 8b-precedence.
+
 ## The three checks
 
 Run, in order: **1. Is the request clear?** · **2. Does it fit the existing architecture?** · **3. Is the approach sound?**

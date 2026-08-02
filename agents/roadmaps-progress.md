@@ -193,14 +193,14 @@ _1 blocker resolved._
 
 ### [road-to-solution-minimalism.md](roadmaps/road-to-solution-minimalism.md)
 
-**Road to solution minimalism — a first-class discipline against over-building** — 0 / 36 done (0%)
+**Road to solution minimalism — a first-class discipline against over-building** — 23 / 35 done (66%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
-| 0 | Verification spikes (read-only, no authoring) | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
-| 1 | The ladder, as rule text | ⬜ not started | 13 | 0 | 0 | 0 | 0% |
-| 2 | Over-build review lens | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
-| 3 | Pinned public-repo benchmark (the proof exhibit) | ⬜ not started | 16 | 0 | 0 | 0 | 0% |
+| 0 | Verification spikes (read-only, no authoring) | ✅ done | 0 | 3 | 0 | 0 | 100% |
+| 1 | The ladder, as rule text | ✅ done | 0 | 12 | 0 | 1 | 100% |
+| 2 | Over-build review lens | ✅ done | 0 | 4 | 0 | 0 | 100% |
+| 3 | Pinned public-repo benchmark (the proof exhibit) | 🟡 in progress | 12 | 4 | 0 | 0 | 25% |
 
 ### [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md)
 

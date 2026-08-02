@@ -1,0 +1,10 @@
+Lens:    overbuild-review-lens
+Target:  tests/fixtures/overbuild-lens/trap-yagni
+
+Verdict: overbuilt
+
+Findings:
+1. yagni:  submitted.ts:5   Six options; the ticket asks only for a welcome email.
+2. yagni:  submitted.ts:13  Channel Map is a one-implementation abstraction.
+
+Net: -21 lines

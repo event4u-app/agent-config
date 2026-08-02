@@ -7,6 +7,8 @@ triggers:
   - keyword: "drive-by"
   - keyword: "rewrite"
   - keyword: "fix"
+  - phrase: "from scratch"
+  - phrase: "second system"
 routes_to:
   - "guideline:agent-infra/minimal-safe-diff-mechanics"
 workspaces: [engineering]

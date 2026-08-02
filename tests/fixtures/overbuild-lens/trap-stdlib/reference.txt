@@ -1,0 +1,9 @@
+Lens:    overbuild-review-lens
+Target:  tests/fixtures/overbuild-lens/trap-stdlib
+
+Verdict: overbuilt
+
+Findings:
+1. stdlib:  submitted.ts:4  Hand-rolled v4 generator; crypto.randomUUID() is equivalent and built in.
+
+Net: -19 lines
