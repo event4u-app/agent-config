@@ -1,13 +1,13 @@
 # Agent-Config Internal Index
 
-Maintainer-facing index of all **690 artefacts** in this package.
+Maintainer-facing index of all **691 artefacts** in this package.
 Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
 
 > **Regenerate:** `./scripts-run src/scripts/generate_index`
 > **Drift check:** `./scripts-run src/scripts/generate_index --check` (runs in `task ci`)
 > Do not edit manually.
 
-## Skills (287)
+## Skills (288)
 
 | kind | name | source | description |
 |---|---|---|---|
@@ -185,6 +185,7 @@ Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
 | skill | [`one-on-one-cadence`](../src/skills/one-on-one-cadence/SKILL.md) | official | Use when designing engineering 1:1s — cadence, agenda mix, growth-vs-blocker-vs-trust shape, cancellation anti-patterns. Triggers on 'fix my 1:1s', 'should I cancel 1:1s this week'. |
 | skill | [`openapi`](../src/skills/openapi/SKILL.md) | official | Use when documenting APIs — OpenAPI/Swagger, PHP attributes, Redocly validation, versioned specs — even when the user just says 'document this endpoint' without naming OpenAPI. |
 | skill | [`org-design`](../src/skills/org-design/SKILL.md) | official | Use when shaping team structure — functional vs squad, span-of-control, reorg cost, Conway-aware boundaries. Triggers on 'should we reorg', 'how do we split this team'. |
+| skill | [`overbuild-review-lens`](../src/skills/overbuild-review-lens/SKILL.md) | official | Use when a diff builds more than the task needs — code that should not exist, a dependency the platform already covers, or a clever form where a flat one reads better. Deletion-hunting, not quality. |
 | skill | [`override-management`](../src/skills/override-management/SKILL.md) | official | Creates and manages project-level overrides for shared skills, rules, and commands — extending or replacing originals from .augment/ with project-specific behavior in agents/overrides/. |
 | skill | [`pdf-tools`](../src/skills/pdf-tools/SKILL.md) | official | Use when creating, merging, splitting, filling, or extracting from a PDF — library-per-task, output validated. Triggers on 'merge these PDFs', 'fill this PDF form', 'split the PDF', 'create a PDF'. |
 | skill | [`perf-feedback-craft`](../src/skills/perf-feedback-craft/SKILL.md) | official | Use when shaping feedback — situation-behavior-impact, growth-vs-corrective split, cadence design, ladder-of-inference checks. Triggers on 'how do I give this feedback', 'perf review shape'. |
