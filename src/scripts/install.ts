@@ -74,6 +74,7 @@ import type * as YamlModule from 'yaml';
 import { build_merge_entries } from './_lib/json_pointers.js';
 import { is_claude_builtin_name } from './_lib/claude_builtin_names.js';
 import * as installed_lock from './_lib/installed_lock.js';
+import * as scoped_projection from './_lib/scoped_projection.js';
 import * as surface_tiers from './_lib/surface_tiers.js';
 import * as global_deploy_inventory from './_lib/global_deploy_inventory.js';
 import * as installed_tools from './_lib/installed_tools.js';
@@ -3344,89 +3345,16 @@ function _prune_lab_modules(
 // `requires` graph). Mirrors the core-only lab prune above — same
 // `_prune_modules_by` mechanics, a different predicate.
 
-/** `workspaces` values whose packs are ALWAYS active under `scoped` mode. */
-const SCOPED_ACTIVE_WORKSPACES: ReadonlySet<string> = new Set(['engineering', 'agent-config-maintainer']);
-
-interface PackRecord {
-    id: string;
-    workspaces: string[];
-    requires: string[];
-}
-
-/**
- * Parse `src/config/discovery/packs.yml` into `{id, workspaces, requires}`
- * records. `requires` falls back to the legacy `requires_hint` field name
- * when `requires` is absent.
- *
- * Deliberately THROWS on a missing file or a parse result that is not a
- * list — an empty active-pack set would be the LEAST safe fallback here
- * (it would prune every tagged artefact, the opposite of the fail-safe
- * contract). The caller wraps this in a try/catch that restores the full
- * tree on any error instead.
+/*
+ * The scoped-projection predicate lives in `_lib/scoped_projection.ts` so the
+ * installer and `count_scoped_projection.ts` — which produces the number the
+ * claims ledger publishes — run the SAME code rather than the same rule
+ * written twice. Re-exported under the existing private names to keep the
+ * prune tests' import surface unchanged.
  */
-function _load_packs_registry(package_root: string): PackRecord[] {
-    const vocab_path = path.join(package_root, 'src', 'config', 'discovery', 'packs.yml');
-    const data = yamlSafeLoad(readText(vocab_path));
-    if (!Array.isArray(data)) {
-        throw new Error(`packs.yml did not parse to a list: ${vocab_path}`);
-    }
-    const out: PackRecord[] = [];
-    for (const entry of data) {
-        if (!_isPlainObject(entry)) continue;
-        const id = entry['id'];
-        if (typeof id !== 'string' || id === '') continue;
-        const workspaces_raw = entry['workspaces'];
-        const workspaces = Array.isArray(workspaces_raw)
-            ? workspaces_raw.filter((w): w is string => typeof w === 'string')
-            : [];
-        const requires_raw = entry['requires'] ?? entry['requires_hint'];
-        const requires = Array.isArray(requires_raw)
-            ? requires_raw.filter((r): r is string => typeof r === 'string')
-            : [];
-        out.push({ id, workspaces, requires });
-    }
-    return out;
-}
-
-/**
- * Active pack id set for `scoped` mode: every pack whose `workspaces`
- * intersects `SCOPED_ACTIVE_WORKSPACES`, unioned with `runtime_active_packs`,
- * expanded over the `requires` graph (transitive closure).
- */
-function _compute_active_pack_ids(
-    packs: readonly PackRecord[],
-    runtime_active_packs: readonly string[],
-): Set<string> {
-    const by_id = new Map<string, PackRecord>();
-    for (const p of packs) by_id.set(p.id, p);
-
-    const active = new Set<string>();
-    for (const p of packs) {
-        if (p.workspaces.some((w) => SCOPED_ACTIVE_WORKSPACES.has(w))) {
-            active.add(p.id);
-        }
-    }
-    for (const id of runtime_active_packs) {
-        active.add(id);
-    }
-
-    let frontier = [...active];
-    while (frontier.length > 0) {
-        const next: string[] = [];
-        for (const id of frontier) {
-            const rec = by_id.get(id);
-            if (rec === undefined) continue;
-            for (const dep of rec.requires) {
-                if (!active.has(dep)) {
-                    active.add(dep);
-                    next.push(dep);
-                }
-            }
-        }
-        frontier = next;
-    }
-    return active;
-}
+type PackRecord = scoped_projection.PackRecord;
+const _load_packs_registry = scoped_projection.load_packs_registry;
+const _compute_active_pack_ids = scoped_projection.compute_active_pack_ids;
 
 /**
  * Read the GLOBAL settings document that governs a global deploy, if one
@@ -3574,14 +3502,9 @@ function _prune_scoped_modules(
     deploy_results: Record<string, DeployResult>,
     active_ids: ReadonlySet<string>,
 ): [number, Record<string, DeployResult>] {
-    return _prune_modules_by(deploy_results, (p) => {
-        const packs = surface_tiers.frontmatter_packs(p);
-        if (packs.size === 0) return false;
-        for (const id of packs) {
-            if (active_ids.has(id)) return false;
-        }
-        return true;
-    });
+    return _prune_modules_by(deploy_results, (p) =>
+        scoped_projection.is_pruned_under_scoped(p, active_ids),
+    );
 }
 
 function install_global(

@@ -1,0 +1,212 @@
+/**
+ * The scoped-projection predicate — ONE implementation, two callers.
+ *
+ * `projection.mode: scoped` narrows a GLOBAL deploy to the active profile's
+ * packs. Two places need to know exactly which skills survive that prune:
+ *
+ *   1. `install.ts` — which artefacts it actually writes to the user's tree.
+ *   2. `count_scoped_projection.ts` — the number the claims ledger publishes.
+ *
+ * Before this module those were the same rule written once and *typed* a
+ * second time into `docs/CLAIMS.md`. The published pair drifted from the
+ * benchmark doc it cited as its own method (217/288 vs 215/286) and grew by
+ * one on every skill added, because nothing could compare them. The fix is
+ * not a second counter — a second counting path that disagrees with the
+ * first is the failure this replaces. It is this module: the installer and
+ * the counter call the same functions, so a divergence is impossible rather
+ * than merely unlikely.
+ *
+ * Consumers: `install.ts` (the prune itself) and `count_scoped_projection.ts`
+ * (the published number).
+ */
+
+import * as fs from 'node:fs';
+import { createRequire } from 'node:module';
+import * as path from 'node:path';
+import type * as YamlModule from 'yaml';
+
+import * as surface_tiers from './surface_tiers.js';
+
+/**
+ * ESM-safe `require`. A bare `require('yaml')` is `undefined` under tsx (the
+ * runner every `./scripts-run` gate uses), so the older lazy-require pattern
+ * elsewhere in this tree degrades to "no yaml" silently. `createRequire`
+ * keeps the load lazy — `yaml` stays out of the installer bundle's static
+ * graph — while actually resolving.
+ */
+const _require = createRequire(import.meta.url);
+
+/** `workspaces` values whose packs are ALWAYS active under `scoped` mode. */
+export const SCOPED_ACTIVE_WORKSPACES: ReadonlySet<string> = new Set([
+    'engineering',
+    'agent-config-maintainer',
+]);
+
+export interface PackRecord {
+    id: string;
+    workspaces: string[];
+    requires: string[];
+}
+
+function isPlainObject(v: unknown): v is Record<string, unknown> {
+    return typeof v === 'object' && v !== null && !Array.isArray(v);
+}
+
+/** Lazy YAML safe_load mirroring PyYAML (version 1.1); `null` when absent. */
+function yamlSafeLoad(text: string): unknown {
+    let YAML: typeof YamlModule;
+    try {
+        YAML = _require('yaml') as typeof YamlModule;
+    } catch {
+        return null;
+    }
+    try {
+        return YAML.parse(text, { version: '1.1' }) ?? null;
+    } catch {
+        return null;
+    }
+}
+
+/** Repo-relative location of the pack vocabulary. */
+export const PACKS_YML_REL = path.join('src', 'config', 'discovery', 'packs.yml');
+
+/**
+ * Parse `src/config/discovery/packs.yml` into `{id, workspaces, requires}`
+ * records. `requires` falls back to the legacy `requires_hint` field name
+ * when `requires` is absent.
+ *
+ * Deliberately THROWS on a missing file or a parse result that is not a
+ * list — an empty active-pack set would be the LEAST safe fallback here
+ * (it would prune every tagged artefact, the opposite of the fail-safe
+ * contract). Callers wrap this in a try/catch that restores the full tree
+ * on any error instead.
+ */
+export function load_packs_registry(package_root: string): PackRecord[] {
+    const vocab_path = path.join(package_root, PACKS_YML_REL);
+    const data = yamlSafeLoad(fs.readFileSync(vocab_path, 'utf-8'));
+    if (!Array.isArray(data)) {
+        throw new Error(`packs.yml did not parse to a list: ${vocab_path}`);
+    }
+    const out: PackRecord[] = [];
+    for (const entry of data) {
+        if (!isPlainObject(entry)) continue;
+        const id = entry['id'];
+        if (typeof id !== 'string' || id === '') continue;
+        const workspaces_raw = entry['workspaces'];
+        const workspaces = Array.isArray(workspaces_raw)
+            ? workspaces_raw.filter((w): w is string => typeof w === 'string')
+            : [];
+        const requires_raw = entry['requires'] ?? entry['requires_hint'];
+        const requires = Array.isArray(requires_raw)
+            ? requires_raw.filter((r): r is string => typeof r === 'string')
+            : [];
+        out.push({ id, workspaces, requires });
+    }
+    return out;
+}
+
+/**
+ * Active pack id set for `scoped` mode: every pack whose `workspaces`
+ * intersects `SCOPED_ACTIVE_WORKSPACES`, unioned with `runtime_active_packs`,
+ * expanded over the `requires` graph (transitive closure).
+ */
+export function compute_active_pack_ids(
+    packs: readonly PackRecord[],
+    runtime_active_packs: readonly string[],
+): Set<string> {
+    const by_id = new Map<string, PackRecord>();
+    for (const p of packs) by_id.set(p.id, p);
+
+    const active = new Set<string>();
+    for (const p of packs) {
+        if (p.workspaces.some((w) => SCOPED_ACTIVE_WORKSPACES.has(w))) {
+            active.add(p.id);
+        }
+    }
+    for (const id of runtime_active_packs) {
+        active.add(id);
+    }
+
+    let frontier = [...active];
+    while (frontier.length > 0) {
+        const next: string[] = [];
+        for (const id of frontier) {
+            const rec = by_id.get(id);
+            if (rec === undefined) continue;
+            for (const dep of rec.requires) {
+                if (!active.has(dep)) {
+                    active.add(dep);
+                    next.push(dep);
+                }
+            }
+        }
+        frontier = next;
+    }
+    return active;
+}
+
+/**
+ * The prune predicate itself: `true` when this artefact is DROPPED under
+ * `scoped`. Untagged artefacts (empty `packs:` frontmatter) are core/shared
+ * and always kept; a tagged artefact survives iff its tags intersect the
+ * active set.
+ */
+export function is_pruned_under_scoped(md_path: string, active_ids: ReadonlySet<string>): boolean {
+    const packs = surface_tiers.frontmatter_packs(md_path);
+    if (packs.size === 0) return false;
+    for (const id of packs) {
+        if (active_ids.has(id)) return false;
+    }
+    return true;
+}
+
+export interface ScopedProjectionStats {
+    /** Skills a default `projection.mode: scoped` install deploys. */
+    projected: number;
+    /** Every skill in the catalog — identical to canonical `count('skills')`. */
+    total: number;
+    /** `total - projected`; the reduction the claim reports. */
+    pruned: number;
+    /** Pack ids active by default, sorted — the requires-closure result. */
+    active_packs: string[];
+    /** The workspaces whose packs are always on under `scoped`. */
+    workspaces: string[];
+}
+
+/**
+ * Partition a skill catalog with the installer's own predicate.
+ *
+ * The caller supplies the file set — in practice always
+ * `update_counts.iter_skills()`, the walk behind the canonical
+ * `count('skills')`, so `projected + pruned === total` holds by
+ * construction. Taking it as a parameter (rather than importing
+ * `update_counts` here) keeps this module free of a cycle: `update_counts`
+ * imports it, not the other way round.
+ *
+ * `runtime_active_packs` defaults to empty: the published claim is about the
+ * DEFAULT for a new install, and a fresh machine has no overlay.
+ */
+export function scoped_projection_stats(
+    package_root: string,
+    skills: Iterable<string>,
+    runtime_active_packs: readonly string[] = [],
+): ScopedProjectionStats {
+    const active = compute_active_pack_ids(load_packs_registry(package_root), runtime_active_packs);
+
+    let projected = 0;
+    let total = 0;
+    for (const skill of skills) {
+        total += 1;
+        if (!is_pruned_under_scoped(skill, active)) {
+            projected += 1;
+        }
+    }
+
+    return {
+        projected,
+        total,
+        pruned: total - projected,
+        active_packs: [...active].sort(),
+        workspaces: [...SCOPED_ACTIVE_WORKSPACES].sort(),
+    };
+}
