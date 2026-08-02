@@ -109,6 +109,14 @@ const _FN_SPEC: Record<string, FnSpec> = {
         artifact: 'commands',
         cells: { 'claude-code': 'native', augment: 'native' },
     },
+    // The colon form (`/cluster:sub`) in the project tree. Same artifact and
+    // the same native cell as the hyphen wrapper above — the two split the
+    // command population between them (nested here, flat there); this is not
+    // an added surface.
+    generate_claude_project_commands: {
+        artifact: 'commands',
+        cells: { 'claude-code': 'native' },
+    },
     generate_claude_subagents: {
         artifact: 'subagents',
         cells: { 'claude-code': 'native' },

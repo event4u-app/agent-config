@@ -6,7 +6,6 @@ triggers:
   - keyword: "ticket"
   - keyword: "refine"
   - keyword: "acceptance criteria"
-  - keyword: "AC"
   - keyword: "mockup"
   - keyword: "screenshot"
   - keyword: "attachment"

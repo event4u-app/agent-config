@@ -83,6 +83,25 @@ projection:
   # a non-kernel rule also needs a `packs:` intersection to project — e.g.
   # deselecting `frontend-design` removes ui-audit-gate + design-fidelity.
   # Empty = inactive, same as rule_workspaces.
+  #
+  # `rule_packs: auto` derives the id list from the ACTIVE-PACK set — the same
+  # set the skill/command prune uses — instead of hand-typing ids that would
+  # need re-typing whenever a pack is added. It exists because a domain safety
+  # floor whose own body says "auto-activates when pack-X is installed" ships
+  # today into installs that have no pack-X, where it guards nothing. Measured
+  # on this repo (2026-08-02): `auto` drops 8 rules / 8,110 GPT tok — the six
+  # domain floors plus provider-lifecycle-discipline and
+  # spreadsheet-source-quality. `history-discipline` and `scale-discipline`
+  # correctly SURVIVE (their packs are engineering-workspace packs).
+  #
+  # The DEFAULT stays `[]`. Flipping it to `auto` changes what a consumer
+  # install receives and therefore inherits the same human release gate the
+  # workspace axis carries (2026-07-13,
+  # agents/settings/contexts/consumer-scoping-audit-2026-07-07.md) — that
+  # audit's "unsure → ship it" ruling was about the maintainer-vs-consumer
+  # WORKSPACE question, not about a pack condition the rule declares itself,
+  # but the gate applies to the flip either way. Do not set this from
+  # automation.
   rule_packs: []
 
 # --- Discipline profile (successor knob, opt-in until the evidence gates pass) ---

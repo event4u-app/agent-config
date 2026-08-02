@@ -10,7 +10,6 @@ triggers:
   - keyword: "IRR"
   - keyword: "MOIC"
   - keyword: "LTV"
-  - keyword: "CAC"
   - keyword: "payback"
   - keyword: "sensitivity"
   - keyword: "fundraise"

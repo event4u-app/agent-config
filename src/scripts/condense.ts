@@ -35,6 +35,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import * as YAML from 'yaml';
 
 import {
+    _domains_command_logical,
     artefact_roots as _agent_src_artefact_roots,
     iter_all_sources as _agent_src_iter_all_sources,
     resolve_logical as _agent_src_resolve_logical,
@@ -50,6 +51,7 @@ import { build_claude_hook_matrix } from './_lib/claude_settings_hooks.js';
 import { is_claude_builtin_name } from './_lib/claude_builtin_names.js';
 import { project_settings_path, load_agent_settings } from './_lib/agent_settings.js';
 import { rule_is_compile_enabled } from './_lib/compile_time_toggles.js';
+import { resolve_rule_pack_scope } from './_lib/scoped_projection.js';
 import { info, success, flush_summary, resolve_level } from './_lib/script_output.js';
 import {
     TIER_TO_CLAUDE_MODEL as _TIER_TO_CLAUDE_MODEL,
@@ -993,13 +995,16 @@ export { _HRR_BANNER_MARKER };
 // (rule-router contract § Schema v2). Untagged rules fail safe: they ship.
 // ADR-040: projection-time filtering only, no runtime resolver.
 
-function _read_projection_list(key: string): string[] | null {
+function _read_projection_raw(key: string): unknown {
     const data = load_agent_settings({ project_path: MODULE_STATE.SETTINGS_FILE });
     const proj = data['projection'];
-    const value =
-        typeof proj === 'object' && proj !== null && !Array.isArray(proj)
-            ? (proj as Record<string, unknown>)[key]
-            : null;
+    return typeof proj === 'object' && proj !== null && !Array.isArray(proj)
+        ? (proj as Record<string, unknown>)[key]
+        : null;
+}
+
+function _read_projection_list(key: string): string[] | null {
+    const value = _read_projection_raw(key);
     if (Array.isArray(value) && value.length > 0) {
         return value.map((v) => String(v));
     }
@@ -1010,8 +1015,28 @@ function _read_rule_workspaces(): string[] | null {
     return _read_projection_list('rule_workspaces');
 }
 
+/** `runtime.active_packs` overlay, empty when unset (fresh-install default). */
+function _read_runtime_active_packs(): string[] {
+    const data = load_agent_settings({ project_path: MODULE_STATE.SETTINGS_FILE });
+    const rt = data['runtime'];
+    const value =
+        typeof rt === 'object' && rt !== null && !Array.isArray(rt)
+            ? (rt as Record<string, unknown>)['active_packs']
+            : null;
+    return Array.isArray(value) ? value.map((v) => String(v)) : [];
+}
+
+/**
+ * Pack scope for the rule layer. `rule_packs: auto` derives the active-pack
+ * set (the same one the skill/command prune uses) instead of a hand-typed id
+ * list; anything else keeps the historical list-or-inactive semantics.
+ */
 function _read_rule_packs(): string[] | null {
-    return _read_projection_list('rule_packs');
+    return resolve_rule_pack_scope(
+        _read_projection_raw('rule_packs'),
+        MODULE_STATE.PROJECT_ROOT,
+        _read_runtime_active_packs(),
+    );
 }
 
 /**
@@ -1159,6 +1184,9 @@ function _WINDSURF_WORKFLOWS_DIR(): string {
 }
 function _CURSOR_COMMANDS_DIR(): string {
     return path.join(MODULE_STATE.PROJECT_ROOT, '.cursor', 'commands');
+}
+function _CLAUDE_COMMANDS_DIR(): string {
+    return path.join(MODULE_STATE.PROJECT_ROOT, '.claude', 'commands');
 }
 
 function _parse_frontmatter(content: string): [Record<string, unknown>, string] {
@@ -1580,6 +1608,92 @@ export function extract_description_from_md(content: string): string {
     return '';
 }
 
+/**
+ * The `commands/<sub>` path of a command source file, or `null` when it is a
+ * FLAT command (`commands/<name>.md`).
+ *
+ * A nested path is what Claude Code renders as `/cluster:sub`. Flat command
+ * FILES are not registered by Claude Code (probed ≤ 2.1.204 — see the
+ * flat-command mitigation in `install.ts`), which is why flat commands keep a
+ * skill wrapper and nested ones do not need one.
+ */
+function _nested_command_subpath(source_file: string): string | null {
+    const rel = _relativeToPosix(source_file, MODULE_STATE.PROJECT_ROOT);
+    const logical = _domains_command_logical(rel);
+    if (logical === null || !logical.startsWith('commands/')) {
+        return null;
+    }
+    const sub = logical.slice('commands/'.length).replace(/\.md$/, '');
+    return sub.includes('/') ? sub : null;
+}
+
+/**
+ * Project-scope `.claude/commands/<cluster>/<sub>.md` — the colon form.
+ *
+ * Before this, the package repo's own `.claude/` carried NO commands
+ * directory: every command reached Claude Code as a hyphen-named skill
+ * wrapper in `.claude/skills/`, while the colon form existed only in the
+ * user-global tree written by `install.ts`. Every clustered command was
+ * therefore listed TWICE for anyone with a global install
+ * (`roadmap-process-full` AND `roadmap:process-full`), costing 4,214 GPT tok
+ * of always-loaded catalog for zero added reach — measured 2026-08-02.
+ *
+ * Emitting the nested form here lets `generate_claude_commands` stop wrapping
+ * the clustered commands: one listing, same reachability, and reachability no
+ * longer depends on a global deploy having run. Claude Code dedupes project
+ * and user scope by name, so the two copies of `/cluster:sub` collapse.
+ *
+ * ADR-003 (colon canonical for clusters) and ADR-044 (flat commands stay
+ * hyphenated) both hold: flat commands are untouched and keep their wrapper.
+ */
+export function generate_claude_project_commands(
+    active_command_slugs: ReadonlySet<string> | null = null,
+): number {
+    if (!_isDir(path.join(MODULE_STATE.PROJECT_ROOT, 'src', 'domains'))) {
+        return 0;
+    }
+    const nested: Array<[string, string]> = [];
+    for (const [source_file, slug] of iterCommands()) {
+        if (active_command_slugs !== null && !active_command_slugs.has(slug)) {
+            continue;
+        }
+        const sub = _nested_command_subpath(source_file);
+        if (sub !== null) {
+            nested.push([source_file, sub]);
+        }
+    }
+
+    const target_root = _CLAUDE_COMMANDS_DIR();
+    const valid = new Set(nested.map(([, sub]) => `${sub}.md`));
+    // Sweep stale links first: a renamed or deleted command must not linger as
+    // a dangling `/cluster:sub`.
+    if (_exists(target_root)) {
+        for (const item of _rglobSorted(target_root, '*.md')) {
+            const rel = _relativeToPosix(item, target_root);
+            if (!valid.has(rel)) {
+                fs.unlinkSync(item);
+            }
+        }
+    }
+
+    let count = 0;
+    for (const [source_file, sub] of nested) {
+        const link = path.join(target_root, `${sub}.md`);
+        _mkdirp(path.dirname(link));
+        if (_existsOrSymlink(link)) {
+            fs.unlinkSync(link);
+        }
+        // path.relative, not a hand-counted `../` run: the nesting depth
+        // varies (2 and 3 segments both occur) and an off-by-one here writes
+        // a dangling link that still LOOKS right in `ls -l`.
+        const rel_target = path.relative(path.dirname(link), source_file);
+        fs.symlinkSync(rel_target, link);
+        count += 1;
+    }
+    info(`  ✅  Linked ${count} \`.claude/commands/**/*.md\` files (colon form)`);
+    return count;
+}
+
 export function generate_claude_commands(active_command_slugs: ReadonlySet<string> | null = null): number {
     if (!_isDir(path.join(MODULE_STATE.PROJECT_ROOT, 'src', 'domains'))) {
         process.stderr.write('  ⚠️  src/domains/ not found — skipping commands\n');
@@ -1608,6 +1722,15 @@ export function generate_claude_commands(active_command_slugs: ReadonlySet<strin
             continue;
         }
         if (skill_names.has(slug)) {
+            skipped += 1;
+            continue;
+        }
+        // A clustered command already reaches Claude Code as `/cluster:sub`
+        // from `.claude/commands/` (generate_claude_project_commands). A
+        // hyphen wrapper on top would be a second listing of the same command
+        // — the double-listing this de-duplicates. Flat commands still need
+        // the wrapper: Claude Code does not register flat command FILES.
+        if (_nested_command_subpath(source_file) !== null) {
             skipped += 1;
             continue;
         }
@@ -2158,6 +2281,11 @@ function _generate_tools_inner(
         generate_gemini_md();
     }
     const skills = _tool_active('claude-code') ? generate_claude_skills(skill_names) : 0;
+    // Colon form first: `generate_claude_commands` skips every command this
+    // one emitted, so the ordering is what keeps the two from double-listing.
+    const claude_cmds = _tool_active('claude-code')
+        ? generate_claude_project_commands(cmd_slugs)
+        : 0;
     const commands = _tool_active('claude-code') ? generate_claude_commands(cmd_slugs) : 0;
     const subagents = _tool_active('claude-code') ? generate_claude_subagents() : 0;
     const subagent_contexts = generate_subagent_host_contexts();
@@ -2171,7 +2299,8 @@ function _generate_tools_inner(
     const windsurf_wf = _tool_active('windsurf') ? generate_windsurf_workflows(cmd_slugs) : 0;
     const summary =
         `✅  generate-tools — rules=${rules} skills=${skills} ` +
-        `commands=${commands} subagents=${subagents} subagent_contexts=${subagent_contexts} plugin_cmd_skills=${plugin_cmd_skills} ` +
+        `claude_commands=${claude_cmds} command_skills=${commands} ` +
+        `subagents=${subagents} subagent_contexts=${subagent_contexts} plugin_cmd_skills=${plugin_cmd_skills} ` +
         `plugin_hooks=${plugin_hooks} ` +
         `personas=${personas} user_types=${user_types} ` +
         `cursor_mdc=${cursor_mdc} windsurf_rules=${windsurf_modern} ` +
