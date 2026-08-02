@@ -253,6 +253,41 @@ Entry-shape contract: [`docs/contracts/CHANGELOG-conventions.md`](docs/contracts
 > that forces a new era split (`# Era: 9.14.x`, etc.) — see
 > [`docs/contracts/CHANGELOG-conventions.md § Era splits`](docs/contracts/CHANGELOG-conventions.md).
 
+## [9.14.0](https://github.com/event4u-app/agent-config/compare/9.13.0...9.14.0) (2026-08-02)
+
+### Release highlights
+
+<!-- Curated head: fill before merge, keep it under 10 lines, and leave `_none_` where it is genuinely the answer. The generated log below is unchanged. -->
+- **Behaviour changes:** _none_
+- **Default changes + migration:** _none_
+- **Security and correctness:** _none_
+- **Honest nulls:** _none_
+- **Known limitations:** _none_
+
+### Features
+
+* **gates:** fail on any count position the generator cannot rewrite ([71c8761](https://github.com/event4u-app/agent-config/commit/71c8761e1a7ba5a7d89e234c30b22daa41f2ee3f))
+* **counts:** generate the scoped-projection and active-command figures ([0a69bad](https://github.com/event4u-app/agent-config/commit/0a69bad08a166295fbe0cf5be018742600f02450))
+
+### Documentation
+
+* **roadmap:** close and archive road-to-reproducible-artefact-counts ([2599fc4](https://github.com/event4u-app/agent-config/commit/2599fc470e8390bc7f03dbc3787f74933e5cd5a7))
+* **claims:** bind the default-install claim to the emitter, date the snapshot ([222c83c](https://github.com/event4u-app/agent-config/commit/222c83c0fb64105ff4819add5220c27182020cb6))
+
+### Refactoring
+
+* **install:** extract the scoped-projection predicate into _lib ([59be75f](https://github.com/event4u-app/agent-config/commit/59be75f3d7d9105a29e110424acce4bfeae1950e))
+
+### Tests
+
+* **counts:** witness that the two gates now move together ([14ac65b](https://github.com/event4u-app/agent-config/commit/14ac65b73355363204784585d76640a23b98e3c9))
+
+### Build
+
+* **install:** rebuild the install bundle for the extracted predicate ([00cc359](https://github.com/event4u-app/agent-config/commit/00cc359ce6a0582857b62f662b19e4cfd809b0b9))
+
+Tests: 10054 (+12 since 9.13.0)
+
 ## [9.13.0](https://github.com/event4u-app/agent-config/compare/9.12.0...9.13.0) (2026-08-02)
 
 ### Release highlights
