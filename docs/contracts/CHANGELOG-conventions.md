@@ -25,7 +25,34 @@ release date:
 ## [X.Y.Z](https://github.com/event4u-app/agent-config/compare/PREV...X.Y.Z) (YYYY-MM-DD)
 ```
 
-Inside the version block, group changes under level-3 headings using
+Inside the version block, the **curated head comes first** — before any
+generated section:
+
+```md
+### Release highlights
+
+- **Behaviour changes:** …
+- **Default changes + migration:** …
+- **Security and correctness:** …
+- **Honest nulls:** …
+- **Known limitations:** …
+```
+
+Five lines, that order, capped at roughly ten operator-relevant lines
+(`RELEASE_HEAD_CAP_LINES` in `src/scripts/release.ts`). `release.ts` emits the
+skeleton on every release so it cannot be forgotten; the maintainer fills it
+before merge. `_none_` is a legitimate value and often the true one — a
+release that changed no defaults should say so rather than carry an unfilled
+marker.
+
+Why it is a *head* and not a trailer: reviewers of 9.9.0 and 9.10.0 repeatedly
+could not tell, from a generated commit log, which entries change consumer
+behaviour, which need migration, which are internal gate repairs, and which
+ended as nulls. The log is a faithful record of what was committed; it is not
+a statement of what changed for the reader. That statement has to be the first
+thing in the entry.
+
+Below the head, group changes under level-3 headings using
 the Conventional Commits family the entry came from:
 
 - `### Features` — `feat:` commits.
@@ -42,6 +69,11 @@ Each bullet is one line, scope-prefixed, with the short SHA linked:
 ```md
 * **scope:** imperative-mood summary ([abc1234](https://github.com/event4u-app/agent-config/commit/abc1234...))
 ```
+
+No line appears twice. A cherry-pick, a re-land, or one change split across
+branches produces the same `scope: subject` under two SHAs; the generator folds
+those to the first occurrence (`dedupe_commit_lines`). A breaking commit is
+never folded into a non-breaking twin — `!` changes what the line means.
 
 Optional trailers — a free-form paragraph for the release narrative
 (only for non-trivial releases), followed by a single-line test count

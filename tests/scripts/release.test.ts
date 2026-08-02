@@ -25,6 +25,10 @@ import { fileURLToPath } from 'node:url';
 import { afterEach, describe, expect, it } from 'vitest';
 
 import {
+    RELEASE_HEAD_CAP_LINES,
+    dedupe_commit_lines,
+    release_head_line_count,
+    render_release_head,
     parse_version,
     bump_version,
     infer_bump,
@@ -199,11 +203,18 @@ describe('render_changelog_entry', () => {
         expect(fix).toBeLessThan(chore);
     });
 
-    it('breaking heading first', () => {
+    it('breaking heading first among the generated sections', () => {
         const c = new Commit('a'.repeat(40), 'feat', 'api', 'drop old route', true);
         const [, body] = render_changelog_entry('2.0.0', '1.11.0', [c], '2026-04-24');
-        // No non-breaking commits here → body starts with BREAKING CHANGES.
-        expect(body.startsWith('### BREAKING CHANGES')).toBe(true);
+        // The curated head now sits above the generated log
+        // (road-to-release-shape-honesty Phase 2), so the invariant is that
+        // BREAKING CHANGES is the first `###` *after* the head — not the first
+        // line of the body.
+        expect(body.startsWith('### Release highlights')).toBe(true);
+        const generated = body.slice(body.indexOf('### BREAKING CHANGES'));
+        expect(generated.startsWith('### BREAKING CHANGES')).toBe(true);
+        const headings = [...body.matchAll(/^### (.+)$/gm)].map((m) => m[1]);
+        expect(headings).toEqual(['Release highlights', 'BREAKING CHANGES']);
     });
 
     it('scope formatting', () => {
@@ -688,5 +699,89 @@ describe('resolve_split_decision — era gate measures the post-release state', 
         write_changelog(era_body(0, 0));
         const d = resolve_split_decision('8.1.0');
         expect(d).toEqual({ split: null, die_message: null, warning: null });
+    });
+});
+
+// ─── curated head + commit-line dedup (road-to-release-shape-honesty P2) ────
+
+describe('render_release_head', () => {
+    it('emits the five sections in the operator-reading order', () => {
+        const head = render_release_head();
+        const labels = head
+            .filter((l) => l.startsWith('- **'))
+            .map((l) => /^- \*\*(.+?):\*\*/.exec(l)?.[1]);
+        expect(labels).toEqual([
+            'Behaviour changes',
+            'Default changes + migration',
+            'Security and correctness',
+            'Honest nulls',
+            'Known limitations',
+        ]);
+    });
+
+    it('defaults to `_none_`, which is an answer rather than a placeholder', () => {
+        // A release that genuinely changed no defaults should SAY so. An
+        // unfilled marker would be wrong-if-shipped; this is merely terse.
+        const head = render_release_head();
+        const bullets = head.filter((l) => l.startsWith('- **'));
+        expect(bullets.filter((l) => l.endsWith('_none_'))).toHaveLength(5);
+        expect(head.join('\n')).not.toMatch(/TBD|TODO|<placeholder>/i);
+    });
+
+    it('keeps filled values and only defaults the rest', () => {
+        const head = render_release_head({ 'Behaviour changes': 'the port branch now refuses' });
+        expect(head.join('\n')).toContain('- **Behaviour changes:** the port branch now refuses');
+        expect(head.join('\n')).toContain('- **Known limitations:** _none_');
+    });
+
+    it('fits the operator-facing cap; the HTML comment does not count', () => {
+        const head = render_release_head();
+        expect(release_head_line_count(head)).toBeLessThanOrEqual(RELEASE_HEAD_CAP_LINES);
+        expect(head.some((l) => l.trimStart().startsWith('<!--'))).toBe(true);
+        expect(release_head_line_count(head)).toBeLessThan(head.length);
+    });
+
+    it('is emitted on every release, so it cannot be forgotten', () => {
+        const [, body] = render_changelog_entry('1.2.0', '1.1.0', [_c('feat: x')], '2026-04-24');
+        expect(body).toContain('### Release highlights');
+    });
+});
+
+describe('dedupe_commit_lines', () => {
+    const sha = (n: string) => n.repeat(40);
+
+    it('folds two commits whose rendered line would be identical', () => {
+        const a = new Commit(sha('a'), 'fix', 'router', 'stop double-loading', false);
+        const b = new Commit(sha('b'), 'fix', 'router', 'stop double-loading', false);
+        expect(dedupe_commit_lines([a, b])).toEqual([a]);
+    });
+
+    it('keeps the first occurrence, so the earliest SHA stays the citation', () => {
+        const a = new Commit(sha('a'), 'fix', null, 'x', false);
+        const b = new Commit(sha('b'), 'fix', null, 'x', false);
+        expect(dedupe_commit_lines([a, b])[0]?.sha).toBe(sha('a'));
+    });
+
+    it('never folds a breaking commit into a non-breaking twin', () => {
+        // `!` changes what the line means; collapsing them would hide a
+        // breaking change behind a routine one.
+        const plain = new Commit(sha('a'), 'feat', 'api', 'drop old route', false);
+        const breaking = new Commit(sha('b'), 'feat', 'api', 'drop old route', true);
+        expect(dedupe_commit_lines([plain, breaking])).toHaveLength(2);
+    });
+
+    it('distinguishes scope — same subject in two scopes is two changes', () => {
+        const a = new Commit(sha('a'), 'fix', 'router', 'tighten', false);
+        const b = new Commit(sha('b'), 'fix', 'linter', 'tighten', false);
+        expect(dedupe_commit_lines([a, b])).toHaveLength(2);
+    });
+
+    it('no line appears twice in a rendered entry', () => {
+        const a = new Commit(sha('a'), 'fix', 'router', 'stop double-loading', false);
+        const b = new Commit(sha('b'), 'fix', 'router', 'stop double-loading', false);
+        const [, body] = render_changelog_entry('1.2.1', '1.2.0', [a, b], '2026-04-24');
+        const bullets = body.split('\n').filter((l) => l.startsWith('* '));
+        expect(new Set(bullets).size).toBe(bullets.length);
+        expect(bullets).toHaveLength(1);
     });
 });

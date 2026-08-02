@@ -60,6 +60,10 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          # Tag span resolution (release PRs) needs the tags, not just the
+          # commits — without this the widened scope resolves to nothing and
+          # the gate goes blind again through a different door.
+          fetch-tags: true
 
       - name: Set up Node
         uses: actions/setup-node@v4
@@ -125,6 +129,10 @@ jobs:
         if: github.event_name == 'pull_request' && always()
         run: |
           ./scripts-run src/scripts/skill_linter --changed --format json > /tmp/changed-lint.json 2>/dev/null || true
+          # The single-quoted body below is JavaScript passed to `node -e`;
+          # shell expansion inside it would be a bug, not the fix SC2016
+          # suggests. The directive has to sit on the command it covers.
+          # shellcheck disable=SC2016
           node -e '
           const fs = require("node:fs");
           let data;
@@ -220,6 +228,10 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          # Tag span resolution (release PRs) needs the tags, not just the
+          # commits — without this the widened scope resolves to nothing and
+          # the gate goes blind again through a different door.
+          fetch-tags: true
 
       - name: Set up Node
         uses: actions/setup-node@v4
@@ -241,7 +253,10 @@ jobs:
           #   personas  src/agent-src/personas/*.md (top-level, non-underscore)
           #   commands  src/domains/**/command.md
           git fetch --no-tags origin "${{ github.base_ref }}"
-          CHANGED=$(git diff --name-only --diff-filter=ACMR "origin/${{ github.base_ref }}...HEAD" -- \
+          # Release-aware: on a release PR the base widens to the previous
+          # release tag, because the PR's own diff is the version bump.
+          BASE="$(./scripts-run src/scripts/resolve_lint_scope --base-ref "origin/${{ github.base_ref }}")"
+          CHANGED=$(git diff --name-only --diff-filter=ACMR "${BASE}...HEAD" -- \
             'src/skills/*/SKILL.md' \
             'src/agent-src/personas/*.md' \
             'src/domains/**/command.md' \
@@ -250,10 +265,19 @@ jobs:
             # Same guard shape as the skill-lint PR summary: an empty changed
             # set means the gate checked nothing — report it, never claim a pass.
             echo "⚠️ INCONCLUSIVE — 0 changed corpus files (skills / personas / domain commands); the originality gate checked nothing. This is not a pass."
+            # On a release PR it is also not an outcome. The scope resolved to a
+            # whole tag span; matching nothing there means the gate is blind,
+            # which is precisely what shipped a 179-commit release unchecked.
+            if [ "${BASE}" != "origin/${{ github.base_ref }}" ]; then
+              echo "::error::Release PR resolved scope ${BASE}...HEAD and still matched 0 corpus files — a release check that examined nothing must not pass."
+              exit 1
+            fi
             exit 0
           fi
           echo "Changed corpus files under review:"
-          echo "$CHANGED" | sed 's/^/  · /'
+          while IFS= read -r f; do
+            [ -n "$f" ] && printf '  · %s\n' "$f"
+          done <<< "$CHANGED"
           # shellcheck disable=SC2086
           ./scripts-run src/scripts/lint_originality --changed $CHANGED
 

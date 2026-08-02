@@ -125,79 +125,21 @@ function changedLineCount(baseRef: string, files: string[], cwd: string = REPO_R
 }
 
 // ── Release-PR detection (road-to-feedback-9.2.0-followups Phase 3) ────
-/**
- * A release PR is detected from its own packaging diff (baseRef...HEAD,
- * scoped to CHANGELOG.md + package.json): an added changelog heading and an
- * added package.json version bump, agreeing on the same version. Pure over
- * the patch text — no git call — so it is unit-testable with synthetic
- * patches. See docs/design/release-pr-review-mode.md.
- */
-export function detectReleaseVersion(patchText: string): string | null {
-    const addedLines = patchText
-        .split('\n')
-        .filter((l) => l.startsWith('+') && !l.startsWith('+++'))
-        .map((l) => l.slice(1));
+//
+// Moved to `_lib/release_scope.ts` so the release-aware content checks reuse
+// this detector instead of re-deriving it (road-to-release-shape-honesty
+// Phase 1). Imported for local use AND re-exported — a bare `export … from`
+// would not bind the names in this module's scope. Public surface unchanged.
+import {
+    detectReleaseVersionFromGit,
+    pickPreviousTag,
+} from './_lib/release_scope.js';
 
-    let changelogVersion: string | null = null;
-    let packageVersion: string | null = null;
-    for (const line of addedLines) {
-        const changelogMatch = /^##\s*\[(\d+\.\d+\.\d+)\]/.exec(line);
-        if (changelogMatch) changelogVersion = changelogMatch[1] ?? null;
-        const packageMatch = /^\s*"version"\s*:\s*"(\d+\.\d+\.\d+)"/.exec(line);
-        if (packageMatch) packageVersion = packageMatch[1] ?? null;
-    }
-    if (changelogVersion && packageVersion && changelogVersion === packageVersion) {
-        return changelogVersion;
-    }
-    return null;
-}
-
-function releaseDetectionPatch(baseRef: string, cwd: string): string {
-    const r = spawnSync('git', ['diff', `${baseRef}...HEAD`, '--', 'CHANGELOG.md', 'package.json'], {
-        cwd,
-        encoding: 'utf8',
-        maxBuffer: 8 * 1024 * 1024,
-    });
-    return (r.stdout ?? '').toString();
-}
-
-/** Impure wrapper: collects the packaging patch via git, then detects. */
-export function detectReleaseVersionFromGit(baseRef: string, cwd: string = REPO_ROOT): string | null {
-    return detectReleaseVersion(releaseDetectionPatch(baseRef, cwd));
-}
-
-/** `major.minor.patch`, tolerating an optional `v` prefix; null if not semver-shaped. */
-function parseSemver(raw: string): [number, number, number] | null {
-    const m = /^v?(\d+)\.(\d+)\.(\d+)$/.exec(raw.trim());
-    if (!m) return null;
-    return [Number(m[1]), Number(m[2]), Number(m[3])];
-}
-
-function semverLessThan(a: [number, number, number], b: [number, number, number]): boolean {
-    const [aMajor, aMinor, aPatch] = a;
-    const [bMajor, bMinor, bPatch] = b;
-    if (aMajor !== bMajor) return aMajor < bMajor;
-    if (aMinor !== bMinor) return aMinor < bMinor;
-    return aPatch < bPatch;
-}
-
-/**
- * Highest semver-shaped tag strictly below `version`, or null if none. Pure
- * over the supplied tag list — no git call. Non-semver tags (branch-backup
- * names etc.) are ignored rather than throwing.
- */
-export function pickPreviousTag(version: string, tags: readonly string[]): string | null {
-    const target = parseSemver(version);
-    if (!target) return null;
-    let best: { raw: string; parsed: [number, number, number] } | null = null;
-    for (const raw of tags) {
-        const parsed = parseSemver(raw);
-        if (!parsed) continue;
-        if (!semverLessThan(parsed, target)) continue;
-        if (!best || semverLessThan(best.parsed, parsed)) best = { raw, parsed };
-    }
-    return best ? best.raw : null;
-}
+export {
+    detectReleaseVersion,
+    detectReleaseVersionFromGit,
+    pickPreviousTag,
+} from './_lib/release_scope.js';
 
 function listGitTags(cwd: string): string[] {
     const r = spawnSync('git', ['tag'], { cwd, encoding: 'utf8' });

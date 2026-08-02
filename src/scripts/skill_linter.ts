@@ -30,7 +30,6 @@
  *   2 = errors
  *   3 = internal error / structural malice
  */
-import { spawnSync } from 'node:child_process';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import process from 'node:process';
@@ -44,6 +43,9 @@ import {
     type YamlValue,
 } from './validate_frontmatter.js';
 import { artefact_roots, resolve_logical } from './_lib/agent_src.js';
+import { ProbeOverflowError, runCountedProbe } from './_lib/counted_probe.js';
+import { resolveContentLintScope } from './_lib/release_scope.js';
+import { DeadScopeError, assertScanned } from './_lib/scan_scope.js';
 
 // __file__ equivalent for repo-root derivation (mirrors Python
 // `Path(__file__).resolve().parent.parent.parent` = <repo>/src/scripts → repo).
@@ -2428,20 +2430,42 @@ export function gather_candidate_files_under(srcRoot: string): string[] {
     return sortedUnique(out);
 }
 
-export function gather_changed_candidate_files(root: string): string[] {
+/**
+ * The scope `--changed` resolved, for the caller to report.
+ *
+ * Exported alongside the file list because a release PR silently widening its
+ * own scope would be as opaque as the blindness it fixes — the caller prints
+ * this line.
+ */
+export let last_changed_scope_reason = '';
+
+/**
+ * Candidate files changed against the resolved base.
+ *
+ * The base is release-aware (`_lib/release_scope.ts`): on a release PR it
+ * widens to `previous_release_tag...HEAD`, because a release PR's own diff is
+ * the version bump and the changelog — everything substantive landed in the
+ * commits before the cut. Scoped to the PR's own file list this returned
+ * nothing on a 179-commit release, and the gate reported
+ * "0 skills checked, INCONCLUSIVE" and passed.
+ *
+ * `since` pins the base explicitly and wins over detection.
+ */
+export function gather_changed_candidate_files(root: string, since?: string | null): string[] {
+    const scope = resolveContentLintScope({ cwd: root, since: since ?? null });
+    last_changed_scope_reason = scope.reason;
     const diffCommands = [
-        ['git', 'diff', '--name-only', 'origin/main...HEAD'],
+        ['git', 'diff', '--name-only', `${scope.base}...HEAD`],
         ['git', 'diff', '--name-only', '--cached', 'HEAD'],
         ['git', 'diff', '--name-only', 'HEAD'],
     ];
     try {
         let rawLines: string[] = [];
         for (const cmd of diffCommands) {
-            const result = spawnSync(cmd[0] as string, cmd.slice(1), {
-                cwd: root,
-                encoding: 'utf-8',
-            });
-            if (result.status === 0 && (result.stdout ?? '').trim()) {
+            // A truncated diff would silently shrink the change set — the same
+            // degrade-to-zero shape this roadmap closes elsewhere.
+            const result = runCountedProbe(cmd[0] as string, cmd.slice(1), { cwd: root });
+            if (result.ok && result.stdout.trim()) {
                 rawLines = splitlines(result.stdout);
                 break;
             }
@@ -2479,7 +2503,15 @@ export function gather_changed_candidate_files(root: string): string[] {
             }
         }
         return sortedUnique(files);
-    } catch {
+    } catch (exc) {
+        // An overflowed diff is not an empty diff. Everything else (a shallow
+        // clone with no `origin/main`, a detached worktree) legitimately has no
+        // resolvable change set and keeps the historical empty-list degrade.
+        if (exc instanceof ProbeOverflowError) {
+            throw exc;
+        }
+        last_changed_scope_reason =
+            `change set unresolvable (${exc instanceof Error ? exc.message : String(exc)})`;
         return [];
     }
 }
@@ -4082,6 +4114,8 @@ interface Args {
     report: boolean;
     repoRoot: string;
     quiet: boolean;
+    /** Explicit diff base for `--changed`; wins over release detection. */
+    since: string | null;
 }
 
 export function parse_args(argv: string[]): Args {
@@ -4095,6 +4129,7 @@ export function parse_args(argv: string[]): Args {
         condensationQuality: false,
         strictWarnings: false,
         report: false,
+        since: null,
         repoRoot: '.',
         quiet: false,
     };
@@ -4104,6 +4139,15 @@ export function parse_args(argv: string[]): Args {
             args.all = true;
         } else if (a === '--changed') {
             args.changed = true;
+        } else if (a === '--since') {
+            const v = argv[i + 1];
+            i += 1;
+            if (v === undefined || v.startsWith('--')) {
+                throw new ArgError('argument --since: expected a git ref');
+            }
+            args.since = v;
+        } else if (a.startsWith('--since=')) {
+            args.since = a.slice('--since='.length);
         } else if (a === '--format') {
             const v = argv[i + 1];
             i += 1;
@@ -4143,6 +4187,21 @@ export function parse_args(argv: string[]): Args {
 
 class ArgError extends Error {}
 
+/**
+ * True when an empty change set is a defect rather than a legitimate scope.
+ *
+ * Only on a release PR whose scope actually widened to a tag span: a release
+ * that changed no skill and no rule is possible in principle, but a *resolved*
+ * span that matched nothing is the "0 skills checked, INCONCLUSIVE" shape this
+ * gate exists to stop. A release whose previous tag could not be resolved is
+ * excluded — that scope never widened, so failing it would punish a shallow
+ * clone for the wrong reason.
+ */
+function _release_scope_requires_findings(root: string, since?: string | null): boolean {
+    const scope = resolveContentLintScope({ cwd: root, since: since ?? null });
+    return scope.isRelease && scope.previousTag !== null;
+}
+
 export function main(argv: string[]): number {
     let args: Args;
     try {
@@ -4162,7 +4221,8 @@ export function main(argv: string[]): number {
             paths.push(...gather_all_candidate_files(root));
         }
         if (args.changed) {
-            paths.push(...gather_changed_candidate_files(root));
+            paths.push(...gather_changed_candidate_files(root, args.since));
+            process.stderr.write(`skill_linter --changed: ${last_changed_scope_reason}\n`);
         }
         for (const raw of args.paths) {
             const p = path.isAbsolute(raw) ? raw : path.resolve(root, raw);
@@ -4182,6 +4242,28 @@ export function main(argv: string[]): number {
                 process.stdout.write(`${format_report([])}\n`);
             } else if (args.format === 'json') {
                 process.stdout.write(`${format_json([])}\n`);
+            }
+            // A release PR that resolved a real tag span and still matched
+            // nothing has not passed — it examined nothing. Mirrors the
+            // scan-scope regime the other gates already adopted
+            // (`_lib/scan_scope.ts`; exit 2, as `check_iron_law_prominence`).
+            // Ordinary PRs keep the historical exit 0: a change set with no
+            // skill or rule in it is a legitimate empty scope, not a dead one.
+            if (args.changed && _release_scope_requires_findings(root, args.since)) {
+                try {
+                    assertScanned({
+                        gate: 'skill_linter --changed (release PR)',
+                        scanned: 0,
+                        units: 'skill/rule files',
+                        roots: [last_changed_scope_reason],
+                    });
+                } catch (exc) {
+                    if (exc instanceof DeadScopeError) {
+                        process.stderr.write(`❌  ${exc.message}\n`);
+                        return 2;
+                    }
+                    throw exc;
+                }
             }
             process.stderr.write('No matching skill/rule files found.\n');
             return 0;
