@@ -56,7 +56,7 @@ a deletion.
 The whole roadmap is this phase. It is a search for a red baseline in data that
 already exists.
 
-- [ ] Pre-register the search **before looking**: the bar is ≥ 5 sessions, ≥ 8
+- [x] Pre-register the search **before looking**: the bar is ≥ 5 sessions, ≥ 8
       turns each, each showing a kernel or tier-2 rule whose obligation was
       objectively violated at a turn where the rule was **manually verified as
       still in context**, with turn-by-turn token accounting proving ≥ 3K tokens
