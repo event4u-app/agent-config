@@ -357,6 +357,109 @@ const SECTIONS: ReadonlyArray<readonly [string, string | null, readonly string[]
     ['Chores', null, ['chore']],
 ];
 
+// ---------------------------------------------------------------------------
+// Curated head (road-to-release-shape-honesty Phase 2)
+// ---------------------------------------------------------------------------
+
+/**
+ * The five head lines, in the order an operator reads them.
+ *
+ * Reviewers of 9.9.0 and 9.10.0 repeatedly could not tell, from a generated
+ * commit log, which entries change consumer behaviour, which need migration,
+ * which are internal gate repairs, and which ended as nulls. The log is a
+ * faithful record of *what was committed*; it is not a statement of *what
+ * changed for you*. The head is that statement, and it sits above the log
+ * rather than replacing it.
+ *
+ * Wording is taken from `docs/RELEASE_STORY_TEMPLATE.md` rather than invented,
+ * so the package does not end up with two competing definitions of a curated
+ * head.
+ */
+const RELEASE_HEAD_SECTIONS: ReadonlyArray<string> = [
+    'Behaviour changes',
+    'Default changes + migration',
+    'Security and correctness',
+    'Honest nulls',
+    'Known limitations',
+];
+
+/**
+ * Cap on the head, in rendered lines.
+ *
+ * Roughly ten operator-relevant lines: past that it stops being a summary and
+ * becomes a second changelog. The era budget is also finite
+ * (`_lib/changelog_eras.ts`, 250 lines per era), so an unbounded head would
+ * quietly consume it.
+ */
+export const RELEASE_HEAD_CAP_LINES = 10;
+
+/**
+ * The default value of every head line.
+ *
+ * `_none_` and not a placeholder token: for most releases it is the **true**
+ * answer, and a release that genuinely changed no defaults should say so
+ * rather than carry an unfilled marker. That also keeps the skeleton free of
+ * the placeholder prose `output-discipline` bans — there is nothing here that
+ * is wrong-if-shipped, only something that is uninformative-if-unedited.
+ */
+const HEAD_DEFAULT = '_none_';
+
+/**
+ * Render the curated head. Emitted by the generator on every release so it
+ * cannot be forgotten; edited by the maintainer before merge.
+ */
+export function render_release_head(
+    filled: Readonly<Record<string, string>> = {},
+): string[] {
+    const lines: string[] = [
+        '### Release highlights',
+        '',
+        '<!-- Curated head: fill before merge, keep it under ' +
+            `${RELEASE_HEAD_CAP_LINES} lines, and leave \`${HEAD_DEFAULT}\` where it is ` +
+            'genuinely the answer. The generated log below is unchanged. -->',
+    ];
+    for (const label of RELEASE_HEAD_SECTIONS) {
+        const value = (filled[label] ?? '').trim();
+        lines.push(`- **${label}:** ${value === '' ? HEAD_DEFAULT : value}`);
+    }
+    return lines;
+}
+
+/**
+ * Drop commits whose rendered line would be identical.
+ *
+ * The generated log is keyed by SHA, but a reader is not: a cherry-pick, a
+ * re-land, or one change split across branches produces the same
+ * `scope: subject` twice with different SHAs, and the notes then say the same
+ * thing twice with two links. Keyed on `type + scope + subject` — the parts
+ * that reach the rendered line — keeping the first occurrence, so the earliest
+ * SHA stays the citation.
+ *
+ * Breaking commits are never folded into a non-breaking twin: `!` changes what
+ * the line *means*, and collapsing them would hide a breaking change behind a
+ * routine one.
+ */
+export function dedupe_commit_lines(commits: readonly Commit[]): Commit[] {
+    const seen = new Set<string>();
+    const out: Commit[] = [];
+    for (const c of commits) {
+        const key = [c.breaking ? '!' : '', c.type, c.scope ?? '', c.subject].join('\x1f');
+        if (seen.has(key)) {
+            continue;
+        }
+        seen.add(key);
+        out.push(c);
+    }
+    return out;
+}
+
+/** Rendered length of the head, for the cap assertion. */
+export function release_head_line_count(head: readonly string[]): number {
+    // The HTML comment is invisible to a reader, so it does not count against
+    // an operator-facing cap.
+    return head.filter((l) => !l.trimStart().startsWith('<!--')).length;
+}
+
 const BREAKING_RE = /^([a-z]+)(\([^)]+\))?!:/;
 const CONVENTIONAL_RE = /^(?<type>[a-z]+)(?:\((?<scope>[^)]+)\))?(?<bang>!)?: (?<subject>.+)$/;
 
@@ -687,7 +790,7 @@ function render_changelog_entry(
     prev: string | null,
     commits: readonly Commit[],
     today: string,
-    opts: { test_trend_line?: string | null } = {},
+    opts: { test_trend_line?: string | null; head?: Readonly<Record<string, string>> } = {},
 ): [string, string] {
     const test_trend_line = opts.test_trend_line ?? null;
     let heading: string;
@@ -706,7 +809,7 @@ function render_changelog_entry(
     }
     grouped['BREAKING CHANGES'] = [];
     const other: Commit[] = [];
-    for (const c of commits) {
+    for (const c of dedupe_commit_lines(commits)) {
         if (c.breaking) {
             grouped['BREAKING CHANGES']!.push(c);
             continue;
@@ -724,7 +827,8 @@ function render_changelog_entry(
         }
     }
 
-    const body_lines: string[] = [];
+    // The curated head sits above the generated log, which stays unchanged.
+    const body_lines: string[] = [...render_release_head(opts.head ?? {})];
     const ordered_labels = ['BREAKING CHANGES', ...SECTIONS.map(([label]) => label)];
     for (const label of ordered_labels) {
         const bucket = grouped[label] ?? [];

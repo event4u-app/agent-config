@@ -36,6 +36,7 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { KERNEL_RULE_FILENAMES } from './_lib/kernel_rules.js';
+import { runCountedProbe } from './_lib/counted_probe.js';
 
 const KERNEL_RULES: ReadonlySet<string> = KERNEL_RULE_FILENAMES;
 
@@ -56,13 +57,13 @@ const KERNEL_DIR = 'src/rules';
 const DEFAULT_LABEL = 'bundled-always-rules-acknowledged';
 
 function _git_changed_files(base_ref: string): string[] {
-    const res = spawnSync('git', ['diff', '--name-only', `${base_ref}...HEAD`], {
-        encoding: 'utf8',
-    });
+    // Bounded read: a truncated diff would shrink the change set and let the
+    // bundle guard pass on files it never saw.
+    const res = runCountedProbe('git', ['diff', '--name-only', `${base_ref}...HEAD`]);
     // Python uses check_output(stderr=STDOUT, text=True): on non-zero it raises
     // CalledProcessError and the handler prints the combined output. spawnSync
     // does not raise; mirror by checking status and combining stdout+stderr.
-    if (res.status !== 0) {
+    if (!res.ok) {
         const combined = `${res.stdout ?? ''}${res.stderr ?? ''}`;
         process.stderr.write(`❌  git diff failed: ${combined.trim()}\n`);
         return [];
