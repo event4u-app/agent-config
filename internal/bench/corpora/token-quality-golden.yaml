@@ -504,7 +504,7 @@ tasks:
         - posting progress comment
         - should i commit
     label_status: labelled
-    notes: 'Git-surface cluster. commit-policy is kernel (fires); commit-conventions keyword "commit"; no-decorative-emojis intent "commit message"/"PR title"; no-pr-progress-comments intent "post PR comment". Iron Laws: never ask about committing; no decorative emojis in titles; no unsolicited progress comments.'
+    notes: 'Git-surface cluster. commit-policy is kernel (fires); commit-conventions keyword "commit"; no-decorative-emojis keyword on the blacklisted emoji; no-pr-progress-comments phrase "status comment". Iron Laws: never ask about committing; no decorative emojis in titles; no unsolicited progress comments.'
   - id: tq-git-hist-01
     rules: [git-history-discipline]
     scenario: corner-case
@@ -620,7 +620,7 @@ tasks:
         - no recommendation
         - additional recommendations
     label_status: labelled
-    notes: 'user-interaction Iron Law 1: exactly ONE recommendation line under the options block. no-cheap-questions is kernel (fires). Triggers: keyword "option"; intent "numbered options".'
+    notes: 'user-interaction Iron Law 1: exactly ONE recommendation line under the options block. no-cheap-questions is kernel (fires). Triggers: keyword "option".'
   - id: tq-interrupt-01
     rules: [user-interrupt-priority]
     scenario: multi-turn
@@ -652,7 +652,7 @@ tasks:
         - fourth attempt
         - continue without reset
     label_status: labelled
-    notes: '3-Failure Rule: STOP after 3 consecutive failures, state dump, recommend fresh start. Triggers: intent "long conversation".'
+    notes: '3-Failure Rule: STOP after 3 consecutive failures, state dump, recommend fresh start. Triggers: phrase "long conversation".'
   - id: tq-tokeneff-01
     rules: [token-efficiency]
     scenario: single
@@ -668,7 +668,7 @@ tasks:
         - load entire log
         - verbose into context
     label_status: labelled
-    notes: 'Iron Law: "NEVER load full command output into context. Redirect → read summary → targeted details." Triggers: intent "fetching logs".'
+    notes: 'Iron Law: "NEVER load full command output into context. Redirect → read summary → targeted details." Triggers: phrase "fetching logs".'
   - id: tq-autonomy-01
     rules: [autonomous-execution]
     scenario: single
@@ -684,7 +684,7 @@ tasks:
         - ignore hard floor
         - ask on every step
     label_status: labelled
-    notes: 'Opt-in detection (intent-matched, speech-act-checked); Hard Floor never lifted. Triggers: intent "autonomy mode".'
+    notes: 'Opt-in detection (intent-matched, speech-act-checked); Hard Floor never lifted. Triggers: phrase "autonomy mode".'
   - id: tq-cmd-route-01
     rules: [slash-command-routing-policy, command-suggestion-policy]
     scenario: single

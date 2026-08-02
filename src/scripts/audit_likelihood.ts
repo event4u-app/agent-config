@@ -16,7 +16,7 @@
  * For every auto-rule from `agents/reports/auto-rules-audit.json`:
  *
  * 1. Build a token set from `description`, `triggers[].keyword`,
- *    `triggers[].intent`, and the rule name itself.
+ *    `triggers[].phrase`, and the rule name itself.
  * 2. Index a corpus of skills (`SKILL.md`), contexts, guidelines, and
  *    command files.
  * 3. Score `corpus_hits = sum(1 for token in tokens if token in corpus)`.
@@ -197,9 +197,9 @@ function _ruleTokens(rule: Json): Set<string> {
     add(tokens(String(rule['name'] ?? '').replaceAll('-', ' ')));
     const trig = rule['triggers'] ?? {};
     const kw: Json[] = Array.isArray(trig['keywords']) ? trig['keywords'] : [];
-    const intents: Json[] = Array.isArray(trig['intents']) ? trig['intents'] : [];
+    const phrases: Json[] = Array.isArray(trig['phrases']) ? trig['phrases'] : [];
     add(tokens(kw.map((x) => String(x)).join(' ')));
-    add(tokens(intents.map((x) => String(x)).join(' ')));
+    add(tokens(phrases.map((x) => String(x)).join(' ')));
     return out;
 }
 

@@ -73,14 +73,9 @@ const LEGACY_TIER_MAP: Record<string, string> = {
 };
 
 const ALLOWED_TIERS = new Set(['kernel', 'tier-1', 'tier-2']);
-const ALLOWED_TRIGGER_KEYS = new Set([
-    'keyword',
-    'phrase',
-    'intent',
-    'file_pattern',
-    'path_prefix',
-    'command',
-]);
+// `intent` was removed: it never auto-matched at runtime, so declaring one gave
+// the author a false activation path. Compiling one is now a hard error.
+const ALLOWED_TRIGGER_KEYS = new Set(['keyword', 'phrase', 'file_pattern', 'path_prefix', 'command']);
 
 function _parse_frontmatter(text: string): JsonObject {
     if (!text.startsWith('---\n')) {

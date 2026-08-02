@@ -7,8 +7,6 @@ load_context:
   - contexts/execution/evidence-discipline.md
   - contexts/execution/project-intelligence.md
 triggers:
-  - intent: "before coding"
-  - intent: "DB-driven work"
   - keyword: "schema"
   - keyword: "endpoint"
   - phrase: "new API"

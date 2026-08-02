@@ -4,8 +4,6 @@ tier: "2b"
 alwaysApply: false
 description: "Writing/generating code — generalize (no overfit/tautological tests), supply the invisible cross-cutting controls, never invent an API/field/package"
 triggers:
-  - intent: "writing or generating code"
-  - intent: "implementing a feature"
   - keyword: "implement"
   - keyword: "endpoint"
   - keyword: "query"

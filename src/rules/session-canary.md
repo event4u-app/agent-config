@@ -4,8 +4,6 @@ tier: "2a"
 description: "personal.canary_name set — open every new task by name (liveness canary); keep the reply-close markers alive (ONE end-summary, PR URL last)"
 alwaysApply: false
 triggers:
-  - intent: "starting a new task or a new conversation"
-  - intent: "opening the first reply to a request"
   - keyword: "canary"
   - keyword: "canary_name"
   - phrase: "session canary"

@@ -4,9 +4,6 @@ tier: "2a"
 alwaysApply: false
 description: "Porting/adapting external code (algorithm, structure, >~10 lines) — close the source, re-derive; conscious borrows need a ledger entry + license check"
 triggers:
-  - intent: "porting or adapting code from an external source"
-  - intent: "implementing an algorithm or structure seen in another project"
-  - intent: "reusing a snippet from online / another repo / a training-data recall"
   - keyword: "port this"
   - keyword: "adapt this"
   - keyword: "based on this repo"

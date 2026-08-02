@@ -5,7 +5,6 @@ description: "CLI tool needed for the task is not installed — ask before worki
 triggers:
   - keyword: "command not found"
   - keyword: "not installed"
-  - intent: "install tool"
 routes_to:
   - "guideline:agent-infra/missing-tool-handling"
 workspaces: [agent-config-maintainer, construction, engineering, finance, founder, gtm, legal-review-prep, ops, product, small-business]

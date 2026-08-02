@@ -60,13 +60,22 @@ describe('trigger_coverage — matching primitives', () => {
         expect(tc.fired_rules('add a webhook secret', router).has('kw')).toBe(true);
         expect(tc.fired_rules('nothing here', router).has('kw')).toBe(false);
     });
-    it('intent trigger requires every alpha word (len>2) as a token', () => {
+    it('phrase trigger matches as a case-insensitive substring', () => {
+        const router = {
+            kernel: [],
+            tier_1: [],
+            tier_2: [{ id: 'ph', triggers: [{ phrase: 'before coding' }] }],
+        };
+        expect(tc.fired_rules('Before coding this feature, analyze', router).has('ph')).toBe(true);
+        // Word-set semantics would have fired here; substring semantics must not.
+        expect(tc.fired_rules('coding happens before lunch', router).has('ph')).toBe(false);
+    });
+    it('a removed trigger type (intent) fires nothing', () => {
         const router = {
             kernel: [],
             tier_1: [],
             tier_2: [{ id: 'it', triggers: [{ intent: 'structural decision' }] }],
         };
-        expect(tc.fired_rules('a structural decision was made', router).has('it')).toBe(true);
-        expect(tc.fired_rules('only structural here', router).has('it')).toBe(false);
+        expect(tc.fired_rules('a structural decision was made', router).has('it')).toBe(false);
     });
 });

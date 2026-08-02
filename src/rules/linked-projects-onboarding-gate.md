@@ -4,8 +4,6 @@ tier: "2b"
 alwaysApply: false
 description: "IDE-attached sibling repo detected — prompt once to opt into cross-repo awareness, persist local-only"
 triggers:
-  - intent: "work across two projects"
-  - intent: "sibling repository"
   - keyword: "linked project"
   - keyword: "cross-repo"
   - keyword: "sibling repo"

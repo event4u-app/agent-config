@@ -44,15 +44,20 @@ Each item is an object with exactly one match key plus an optional
 triggers:
   - keyword: "commit"          # case-insensitive substring of user prompt
   - phrase: "should I commit"  # case-insensitive substring, multi-word
-  - intent: "git-write"        # named intent token (router-defined vocabulary)
   - file_pattern: "*.tf"       # glob over edited / opened paths
   - path_prefix: "agents/"     # directory prefix over edited / opened paths
   - command: "/commit"         # literal slash-command invocation
 ```
 
 Multiple `triggers:` entries are OR-combined — any match activates the rule.
-Within one entry, only one match key is allowed. The router-defined
-intent vocabulary lives in `docs/contracts/router-intents.md` (Phase 3.2).
+Within one entry, only one match key is allowed.
+
+There were once six match keys. `intent:` was **removed** (2026-08-02): it
+never auto-matched at runtime, so declaring one gave the author a false
+activation path while the rule actually relied on description matching. The
+schema's `additionalProperties: false` now rejects it outright. The
+`docs/contracts/router-intents.md` vocabulary this section used to cite was
+never written.
 
 ### `routes_to:` shape
 
@@ -165,8 +170,9 @@ Cursor/Windsurf projectors derive `globs:` from the rule's path-shaped
 triggers: `file_pattern` maps verbatim, `path_prefix` maps as
 `<prefix>**`. Rules with ≥1 path-shaped trigger auto-attach host-natively
 (Cursor auto-attach / Windsurf `trigger: glob`) — deterministic, no
-model-compliance dependency. Keyword/phrase/intent-only rules keep
-description-based activation (Agent-Requested / `model_decision`).
+model-compliance dependency. Keyword/phrase-only rules — and rules with no
+triggers at all — keep description-based activation (Agent-Requested /
+`model_decision`).
 
 **No-double-fire invariant:** when thin projection lands on those hosts, a
 glob-attached rule must NOT also ship an eager inline body there — the
@@ -206,26 +212,42 @@ The host agent reads `dist/router.json` once per session. Per turn:
    or `guideline:`) are surfaced to the agent for that turn.
 
 No runtime profile resolution — the profile is fixed at session
-start, the router lookup is keyword/phrase/path/intent matching only.
+start, the router lookup is keyword/phrase/path matching only.
 
-### Intent-trigger semantics — two gates, two purposes (reconciled 2026-07-07)
+### Intent-trigger semantics — superseded by removal (2026-08-02)
 
-Two tools consume `intent:` triggers with deliberately different semantics.
-This divergence is **justified and locked**, not drift
-(`road-to-token-proof-and-story` Phase 2):
+The 2026-07-07 reconciliation locked a deliberate divergence: `trigger_coverage`
+matched `intent:` by word-set inclusion as a **falsifiability floor**, while
+`router_telemetry` treated the same key as informational-only, because real
+hosts resolve intents by model judgment and a word-set proxy would fabricate
+activation counts.
 
-| Tool | Intent semantics | Purpose |
-|---|---|---|
-| `trigger_coverage.ts` + the golden-set fires-check | word-set inclusion (every alpha word >2 chars of the intent appears in the prompt) | **Falsifiability floor** — a deliberately generous mechanical proxy proving a rule CAN fire on a phrasing; gates coverage claims. |
-| `router_telemetry.ts` (replay / field evidence) | informational-only — never auto-matches | **Field estimation** — real hosts resolve intents by model judgment, which cannot be replayed deterministically; pretending the word-set proxy models host behaviour would fabricate activation counts. |
+That lock is **superseded, not overridden**: it justified a *coexistence*, and
+the removal leaves only one party. `intent:` is gone from the schema, from all
+44 rules that declared it, and from both matchers. What replaced it:
 
-Consequence: **replay UNDERCOUNTS intent-triggered rule loads.** Every
-replay-derived figure (field-token-evidence report, benchmark refresh,
-release story) MUST state the chosen semantics and carry this caveat. Rules
-relying on intent triggers alone have no mechanical signal at all — hence
-the intent-only backstop audit (Phase 0 of
-`road-to-request-scoped-rule-load`: every intent-only rule gained
-keyword/phrase backstops or a written disposition).
+- `trigger_coverage` now matches `keyword` **and `phrase`** (plain
+  case-insensitive substring, the same semantics every other tool already used
+  for `phrase`). It never implemented `phrase` before — that gap is why the
+  falsifiability floor needed a second, looser matcher at all.
+- A rule now proves it can fire on a substring a prompt actually contains,
+  rather than on a bag of words. This is a *stricter* floor, and it was
+  measured before landing: 25 of 26 coverage cases already passed on `keyword`
+  alone; the one that did not (`think-before-action`) had its three intents
+  converted to `phrase:` — each is a literal substring of the corpus prompt,
+  not an invented phrasing.
+- Three rules (`communication-through-line`, `size-enforcement`,
+  `telegraph-speak`) declared *only* intents and now carry no triggers. That is
+  the honest end state, not a regression: because `intent` never matched at
+  runtime, those rules were already description-activated. Removing the
+  declaration changed nothing about how they fire — it stopped the file
+  claiming an activation path that did not exist.
+
+**Replay still undercounts**, for a different and narrower reason: rules with
+no lexical trigger are resolved by model judgment, which static replay cannot
+see. The `replay_opaque_triggers` escape hatch in the benchmark corpora
+therefore survives the removal — its justification shifts from "intent is
+invisible to replay" to "description-activation is invisible to replay".
 
 ## Activation end-state — one runtime knob (token program, 2026-07-07)
 

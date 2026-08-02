@@ -4,9 +4,6 @@ tier: "3"
 alwaysApply: false
 description: "PR/issue/comment/commit bodies — no 'Generated with' / 'Co-authored by' / 'opened by' attribution footers"
 triggers:
-  - intent: "PR body"
-  - intent: "commit message"
-  - intent: "Jira comment"
   - keyword: "co-authored"
 workspaces: [agent-config-maintainer, construction, engineering, finance, founder, gtm, legal-review-prep, ops, product, small-business]
 packs: [meta]

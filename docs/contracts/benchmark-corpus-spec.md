@@ -60,9 +60,13 @@ prompts:
                                         # silently. OPTIONAL on non-router-coverage corpora.
                                         # (Council R3 honesty floor — pass-3 onwards.)
     replay_opaque_triggers: [<rule_id>, ...] # rule ids the author expects to fire at
-                                        # RUNTIME but only via an `intent` trigger (or a
-                                        # router coverage gap) the static replay cannot
-                                        # see. Reported separately by the telemetry — NOT
+                                        # RUNTIME but by a path the static replay cannot
+                                        # see — description/model-judgment activation
+                                        # (a rule with no lexical trigger), or a router
+                                        # coverage gap. Until 2026-08-02 the dominant
+                                        # reason was the `intent` trigger type; that type
+                                        # was removed, the mechanism outlived it.
+                                        # Reported separately by the telemetry — NOT
                                         # counted as missed_intended (would be false drift)
                                         # nor as unintended_activations. A rule may sit in
                                         # at most one bucket. router-coverage tasks need at

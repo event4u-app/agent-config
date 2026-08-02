@@ -19,8 +19,14 @@
  * - kernel rules always fire (always-on layer).
  * - a tier rule fires iff any of its triggers matches the prompt:
  *   - `keyword` → case-insensitive substring.
- *   - `intent`  → every alpha word (len>2) of the intent phrase appears as a
- *     token in the prompt.
+ *   - `phrase`  → case-insensitive substring (multi-word).
+ *
+ * `intent` used to be the second matcher here, on word-set-inclusion
+ * semantics, while `router_telemetry` documented the same key as
+ * "informational only — never auto-matches". That divergence is gone: the
+ * trigger type was removed, and `phrase` — which every other tool already
+ * treats as a real matcher — took its place. A rule now proves it can fire on
+ * a substring a prompt actually contains, not on a bag of words.
  *
  * A case fails when an expected rule is NOT in the fired set. Exit 1 on any
  * miss → the merge that would have shrunk the rule is blocked (2.2).
@@ -39,9 +45,6 @@ const _HERE = fileURLToPath(import.meta.url);
 export const REPO_ROOT = path.resolve(path.dirname(_HERE), '..', '..');
 export const ROUTER = path.join(REPO_ROOT, 'dist', 'router.json');
 export const CORPUS = path.join(REPO_ROOT, 'tests', 'eval', 'trigger-coverage.yaml');
-
-// _WORD = re.compile(r"[a-z][a-z0-9_]+")  — matched against text.lower().
-const _WORD = /[a-z][a-z0-9_]+/g;
 
 type Router = {
     kernel?: string[];
@@ -63,48 +66,19 @@ interface CaseResult {
     expect: string[];
 }
 
-function _tokens(text: string): Set<string> {
-    const out = new Set<string>();
-    const low = text.toLowerCase();
-    _WORD.lastIndex = 0;
-    let m: RegExpExecArray | null;
-    while ((m = _WORD.exec(low)) !== null) {
-        const w = m[0];
-        if (w.length > 2) {
-            out.add(w);
-        }
-    }
-    return out;
-}
-
-function _isSubset(small: Set<string>, big: Set<string>): boolean {
-    for (const v of small) {
-        if (!big.has(v)) {
-            return false;
-        }
-    }
-    return true;
-}
-
 export function load_router(): Router {
     return JSON.parse(fs.readFileSync(ROUTER, 'utf-8')) as Router;
 }
 
 export function fired_rules(prompt: string, router: Router): Set<string> {
     const low = prompt.toLowerCase();
-    const toks = _tokens(prompt);
     const fired = new Set<string>(router.kernel ?? []);
     for (const tier of ['tier_1', 'tier_2'] as const) {
         for (const entry of router[tier] ?? []) {
             for (const trig of entry.triggers ?? []) {
-                if ('keyword' in trig) {
-                    if (low.includes((trig['keyword'] as string).toLowerCase())) {
-                        fired.add(entry.id);
-                        break;
-                    }
-                } else if ('intent' in trig) {
-                    const words = _tokens(trig['intent'] as string);
-                    if (words.size > 0 && _isSubset(words, toks)) {
+                if ('keyword' in trig || 'phrase' in trig) {
+                    const needle = String(trig['keyword'] ?? trig['phrase']).toLowerCase();
+                    if (needle !== '' && low.includes(needle)) {
                         fired.add(entry.id);
                         break;
                     }

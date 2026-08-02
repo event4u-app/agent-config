@@ -63,14 +63,13 @@
         "properties": {
           "keyword": {"type": "string"},
           "phrase": {"type": "string"},
-          "intent": {"type": "string"},
           "file_pattern": {"type": "string"},
           "path_prefix": {"type": "string", "description": "Literal path-prefix match pattern the host evaluates against the file the agent is editing — NOT a file reference. The rewriter leaves it verbatim. Source-of-truth rules that must fire on edits under `.agent-src.uncondensed/` keep that prefix here (the prefix ban applies only to `load_context:` and body links — see road-to-path-fixes.md P2.2 / AI-Council 2026-05-06)."},
           "command": {"type": "string"},
           "reason": {"type": "string"}
         }
       },
-      "description": "Router activation triggers (Phase 3 of road-to-kernel-and-router.md). Forbidden on kernel rules, required on non-kernel rules. Schema: docs/contracts/rule-router.md."
+      "description": "Router activation triggers (Phase 3 of road-to-kernel-and-router.md). Forbidden on kernel rules, required on non-kernel rules. Five match keys: keyword, phrase, file_pattern, path_prefix, command. `intent` was removed — it never auto-matched at runtime and only gave rule authors false confidence that an activation path existed; additionalProperties:false now rejects it. Schema: docs/contracts/rule-router.md."
     },
     "routes_to": {
       "type": "array",

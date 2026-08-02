@@ -31,19 +31,23 @@ describe('audit_auto_rules — unit helpers', () => {
         expect(fm).toEqual({});
         expect(body).toBe('no frontmatter here');
     });
-    it('_trigger_summary buckets path/keyword/intent', () => {
+    it('_trigger_summary buckets path/keyword/phrase', () => {
         const t = _trigger_summary([
             { path_prefix: 'src/' },
             { keyword: 'foo' },
-            { intent: 'bar' },
+            { phrase: 'bar baz' },
             { keyword: 'baz' },
             'not-a-dict',
         ]);
         expect(t.path_prefixes).toEqual(['src/']);
         expect(t.keywords).toEqual(['foo', 'baz']);
-        expect(t.intents).toEqual(['bar']);
+        expect(t.phrases).toEqual(['bar baz']);
+    });
+    it('_trigger_summary ignores a removed trigger type (intent)', () => {
+        const t = _trigger_summary([{ intent: 'bar' }]);
+        expect(t).toEqual({ path_prefixes: [], keywords: [], phrases: [] });
     });
     it('_trigger_summary tolerates non-list input', () => {
-        expect(_trigger_summary(null)).toEqual({ path_prefixes: [], keywords: [], intents: [] });
+        expect(_trigger_summary(null)).toEqual({ path_prefixes: [], keywords: [], phrases: [] });
     });
 });

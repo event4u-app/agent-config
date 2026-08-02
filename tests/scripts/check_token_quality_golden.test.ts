@@ -116,7 +116,7 @@ const ROUTER_V2 = {
   tier_1: [
     {
       id: "scope-control",
-      triggers: [{ keyword: "branch" }, { intent: "git operation" }],
+      triggers: [{ keyword: "branch" }, { phrase: "git operation" }],
       routes_to: [],
       workspaces: ["engineering"],
       packs: ["engineering-base"],

@@ -24,7 +24,6 @@
  *   | `keyword`      | case-insensitive substring inside the prompt text                |
  *   | `phrase`       | case-insensitive substring (multi-word) inside the prompt text   |
  *   | `command`      | case-sensitive prefix on `command:` field (optional context)     |
- *   | `intent`       | informational only — never auto-matches; counted separately      |
  *   | `path_prefix`  | prefix match against any path in `open_files` (optional context) |
  *   | `file_pattern` | fnmatch against any path in `open_files` (optional context)      |
  *
@@ -225,10 +224,6 @@ export function trigger_matches(
         return true;
       }
     }
-    return false;
-  }
-  if ("intent" in trigger) {
-    // Intent triggers are informational and never auto-match.
     return false;
   }
   return false;

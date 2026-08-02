@@ -6,9 +6,6 @@ alwaysApply: false
 load_context:
   - contexts/communication/rules-auto/user-interaction-mechanics.md
 triggers:
-  - intent: "ask user a question"
-  - intent: "numbered options"
-  - intent: "summarizing progress"
   - keyword: "option"
   - keyword: "recommendation"
   - phrase: "what do you recommend"

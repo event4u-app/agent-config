@@ -3,7 +3,7 @@
  * rule emitters (road-to-request-scoped-rule-load Phase 2).
  *
  * `file_pattern` triggers map verbatim into `globs:`; `path_prefix` triggers
- * map as `<prefix>**`. Keyword/intent-only rules keep empty globs and stay
+ * map as `<prefix>**`. Keyword/phrase-only rules keep empty globs and stay
  * description-activated (Cursor Agent-Requested / Windsurf model_decision).
  * Always-on rules never carry globs.
  */
@@ -70,8 +70,8 @@ describe("derive_trigger_globs", () => {
     expect(derive_trigger_globs(meta)).toEqual(["resources/views/**", "*.tf"]);
   });
 
-  it("returns empty for keyword/intent-only and missing triggers", () => {
-    expect(derive_trigger_globs({ triggers: [{ keyword: "a" }, { intent: "b" }] })).toEqual([]);
+  it("returns empty for keyword/phrase-only and missing triggers", () => {
+    expect(derive_trigger_globs({ triggers: [{ keyword: "a" }, { phrase: "b c" }] })).toEqual([]);
     expect(derive_trigger_globs({})).toEqual([]);
   });
 });

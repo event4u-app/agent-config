@@ -62,7 +62,7 @@ const SAMPLE_ROUTER = {
     tier_1: [
         {
             id: 'architecture',
-            triggers: [{ keyword: 'controller' }, { intent: 'structural decision' }],
+            triggers: [{ keyword: 'controller' }, { phrase: 'structural decision' }],
             routes_to: [],
             workspaces: ['engineering'],
             packs: ['meta'],

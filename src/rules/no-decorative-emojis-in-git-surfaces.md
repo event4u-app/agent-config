@@ -4,13 +4,16 @@ tier: "3"
 alwaysApply: false
 description: "PR/issue/commit titles and comments — no decorative emojis; bodies only with an in-artifact legend"
 triggers:
-  - intent: "PR title"
-  - intent: "PR body"
-  - intent: "commit message"
-  - intent: "issue title"
-  - intent: "post PR comment"
   - keyword: "gh pr create"
   - keyword: "git commit"
+  - keyword: "🤖"
+  - keyword: "🚀"
+  - keyword: "🎉"
+  - keyword: "✨"
+  - keyword: "🔥"
+  - keyword: "💡"
+  - keyword: "👍"
+  - keyword: "❤️"
 workspaces: [agent-config-maintainer, engineering]
 packs: [meta]
 ---

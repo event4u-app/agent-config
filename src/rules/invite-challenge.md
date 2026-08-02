@@ -5,10 +5,6 @@ description: "Before executing a complex plan — ask 'am I solving the right pr
 alwaysApply: false
 council_depth: deep
 triggers:
-  - intent: "complex plan"
-  - intent: "design decision"
-  - intent: "architectural plan"
-  - intent: "multi-step implementation"
   - keyword: "plan"
   - keyword: "design"
   - keyword: "architecture"

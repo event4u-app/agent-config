@@ -4,13 +4,6 @@ tier: "2b"
 description: "User names an external repo/file/URL as reference — fetch the actual tree and inspect; never summarize from README"
 alwaysApply: false
 triggers:
-  - intent: "look at how X does it"
-  - intent: "compare with reference repo"
-  - intent: "use as template / vorlage"
-  - intent: "wie macht es X"
-  - intent: "vergleiche mit Y"
-  - intent: "schau dir Z an"
-  - intent: "study this competitor"
   - keyword: "github.com/"
   - keyword: "source of truth"
   - phrase: "reference repo"

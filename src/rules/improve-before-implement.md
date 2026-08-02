@@ -5,8 +5,6 @@ description: "Before features or architectural changes — validate against exis
 alwaysApply: false
 council_depth: deep
 triggers:
-  - intent: "implement feature"
-  - intent: "architectural change"
   - keyword: "refactor"
   - keyword: "implement"
   - keyword: "migration"
