@@ -63,7 +63,7 @@ already exists.
       of distance at the failure, and the host tier named.
       *Verify:* the registration commit predates the first analysis commit. Do not
       edit the bar after reading the data.
-- [ ] Sweep the existing redacted chat-history JSONL for candidate failures.
+- [x] Sweep the existing redacted chat-history JSONL for candidate failures.
       Machine-checkable obligations only (a completion claim with no verification
       evidence recorded that turn; a diff touching files the stated task never
       named; a commit shape the policy forbids) — no judgement calls, so the
@@ -71,13 +71,13 @@ already exists.
       *Verify:* candidate list committed under
       `agents/evidence/analysis/activation-red-baseline.md` with one row per
       candidate: session, turn, rule id, obligation, distance in tokens, host.
-- [ ] For each candidate, confirm the rule was actually in context at the failing
+- [x] For each candidate, confirm the rule was actually in context at the failing
       turn. A rule that was **not projected** into that session is a
       scoping/projection defect and belongs to a different fix — record it
       separately and remove it from the activation corpus.
       *Verify:* every row is classified `in-context-and-violated`,
       `not-projected` (→ separate defect), or `rejected` with the reason.
-- [ ] Classify what remains by host tier. Failures confined to a host tier weaker
+- [x] Classify what remains by host tier. Failures confined to a host tier weaker
       than the pilot's weak host are already covered by the prior verdict's second
       revisit path and do **not** justify a resolver.
       *Verify:* per-tier counts stated in the report.
