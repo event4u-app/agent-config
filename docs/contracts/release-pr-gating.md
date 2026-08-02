@@ -47,6 +47,31 @@ out-of-allowlist entry otherwise. It reads the diff shape only — it does
 not check the PR author, so it passes identically for a `task
 release`-opened PR and a `release.yml`-opened one.
 
+## Mid-release fixes — land on main, never on the release branch
+
+A fix discovered while a release PR is red (a broken gate, a CI bug) must
+**not** be committed onto `release/X.Y.Z`: any non-allowlist file makes the
+shape detector red by design, because the cut surface below skips the heavy
+test matrix on `release/*` heads — code riding a release PR would bypass it.
+There is deliberately no escape hatch or override label.
+
+The conforming procedure:
+
+1. Branch off `origin/main`, cherry-pick (or author) the fix, open its own
+   PR — the full test matrix runs there.
+2. After that PR merges: `git checkout release/X.Y.Z && git merge
+   origin/main && git push`. The fix files are now identical on both sides
+   of the release PR, so its diff shrinks back to the allowlist and the
+   shape detector goes green — while the fix is present at the release
+   head for every other gate.
+3. Extend the release's CHANGELOG entry with the post-cut commits
+   (`CHANGELOG.md` is on the allowlist) and refresh the `Tests: N` footer.
+4. Resume with `task release -- --resume --yes`.
+
+Both failure surfaces point here: `check_release_pr_shape.ts` prints this
+procedure under its `OUT-OF-SHAPE` findings, and `release.ts` §
+`watch_pr_checks` names the failing checks and repeats the resume command.
+
 ## Cut surface — heavy jobs that skip on release PRs
 
 Skipped via `if: !startsWith(github.head_ref, 'release/')` guards on the

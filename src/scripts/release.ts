@@ -563,6 +563,65 @@ function git(args: readonly string[], opts: { capture?: boolean } = {}): string 
 }
 
 /**
+ * One name per failing check, from `gh pr checks --json name,bucket` output.
+ *
+ * Pure over the JSON text so the shape is testable without gh. Returns []
+ * when the payload is unparseable or nothing sits in the `fail` bucket —
+ * the caller then falls back to the raw watch output alone.
+ */
+export function _failed_check_names(jsonText: string): string[] {
+    let parsed: unknown;
+    try {
+        parsed = JSON.parse(jsonText);
+    } catch {
+        return [];
+    }
+    if (!Array.isArray(parsed)) {
+        return [];
+    }
+    const names: string[] = [];
+    for (const entry of parsed) {
+        if (typeof entry !== 'object' || entry === null) {
+            continue;
+        }
+        const e = entry as Record<string, unknown>;
+        if (e['bucket'] === 'fail' && typeof e['name'] === 'string') {
+            names.push(e['name']);
+        }
+    }
+    return names;
+}
+
+/**
+ * Remediation lines for a set of failing check names.
+ *
+ * The watch table scrolls failures out of view on a busy PR, so the operator
+ * repeatedly saw only `pass`/`skipping` rows plus "PR checks failed" — the
+ * 9.14.0 failure mode, twice. Name the red checks explicitly and, for the
+ * shape detector, say where the fix belongs (main, never the release branch).
+ */
+export function _failed_checks_report(names: readonly string[]): string {
+    if (names.length === 0) {
+        return '';
+    }
+    const lines: string[] = ['', 'Failing check(s):'];
+    for (const name of names) {
+        lines.push(`  ❌ ${name}`);
+    }
+    if (names.includes('Release-PR shape detector')) {
+        lines.push(
+            '',
+            'Release-PR shape: a release PR may only contain the version-bump',
+            'allowlist. Land the out-of-shape files on main via their own PR, then',
+            'merge main into the release branch — their release-PR diff becomes',
+            'empty (docs/contracts/release-pr-gating.md § Mid-release fixes).',
+        );
+    }
+    lines.push('', 'After fixing, resume with: task release -- --resume --yes', '');
+    return lines.join('\n');
+}
+
+/**
  * Watch PR checks and tolerate the 'no checks' case.
  *
  * `gh pr checks --watch` exits 1 both on real failures and when no checks are
@@ -605,6 +664,15 @@ function watch_pr_checks(): void {
     }
     if (output) {
         process.stderr.write(output + '\n');
+    }
+    const summary = spawnSync('gh', ['pr', 'checks', '--json', 'name,bucket'], {
+        cwd: REPO_ROOT,
+        encoding: 'utf-8',
+        stdio: ['ignore', 'pipe', 'pipe'],
+    });
+    const report = _failed_checks_report(_failed_check_names(summary.stdout ?? ''));
+    if (report) {
+        process.stderr.write(report + '\n');
     }
     die(`PR checks failed (exit ${returncode})`);
 }
