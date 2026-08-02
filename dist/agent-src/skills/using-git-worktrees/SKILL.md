@@ -135,7 +135,7 @@ reason the change did not cause.
 
 | Artefact | Action | Why |
 |---|---|---|
-| `node_modules/` (or the ecosystem equivalent) | **symlink** from the primary checkout, or run the § 5 install | Absent ⇒ every gate that shells to a local binary dies on its first import. A **partial** tree (only `.bin/`) is worse than none — it produces a scatter of spurious failures. Symlink or install fully; never half. |
+| The dependency tree the § 5 install would produce (`vendor/`, `node_modules/`, `.venv/`, `target/`, …) | **symlink** from the primary checkout, or run the § 5 install | Absent ⇒ every gate that shells to a local binary dies on its first import. A **partial** tree (only the binary shim directory) is worse than none — it produces a scatter of spurious failures. Symlink or install fully; never half. |
 | Generated agent projections (`.augment/`, other tool trees) | **copy** from the primary checkout, or regenerate before running gates | Several gates read the projection tree. Absent ⇒ the gate reports "produced by regeneration but absent before" — red for a reason the contributor did not cause. |
 | Build output (`dist/`, compiled artefacts) | **regenerate**, never copy a stale tree | A stale copy makes a byte-identity check report generator drift that does not exist. |
 | Local settings (`.agent-settings.yml`, `.agent-settings.local.yml`) | **NEVER copy** | Gitignored, machine-local, and deliberately absent in CI. **Absent IS the CI shape** — copying it makes local gate results diverge from the gate that actually decides. A worktree that carries it is testing a configuration no pipeline runs. |
