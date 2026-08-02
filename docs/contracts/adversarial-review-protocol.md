@@ -230,6 +230,57 @@ catch/miss verdict, and — on a miss — the RCA and the protocol fix. The
 first completed cycle is this contract's proof-of-life; until one exists
 the protocol is prose.
 
+### § 6b — The gate surface runs under the same contract
+
+The reviewer above is a human (or a model) reading a diff. The package's
+**deterministic gates** need the same calibration for the same reason: a
+gate's exit code is its own testimony, and a 2026-07-29 sweep found
+fourteen gates certifying corpora they never read. Coverage
+(`check_gate_coverage`) proves a gate READ something; only a planted
+defect proves it can still FAIL.
+
+**Inherited verbatim:** the biannual cadence, the sealed-record rule, the
+ledger artifact under `agents/evidence/reviews/canary/`, and — absolutely
+— **never ships**. The runner
+(`./scripts-run src/scripts/check_gate_coverage --canary`) creates each
+plant, runs the gate, and deletes the plant in a `finally`, including any
+directory it had to create. It is deliberately kept OFF the default CI
+path: it mutates the working tree, so it is an operator-invoked
+experiment, never a per-PR gate.
+
+**What differs, and why.** The rotating class list above (vulnerable
+dependency pin · dead script target · oversized artifact · stale
+reference · slow path) is calibrated to what a *reviewer* should notice. A
+gate canary plants what one *specific gate* is built to reject, so its
+`class` names the gate-surface defect kind — `oversized-artifact`,
+`stale-reference`, `dead-target`, `orphan-artifact`,
+`malformed-frontmatter`. Two of those coincide with the review list; the
+rest would be dishonest to force into it. And it is **one plant per gate,
+not one per cycle**: the review canary calibrates one reviewer, the gate
+canary calibrates N independent gates, and rotating a single class across
+them would leave most of the surface untested for years.
+
+**Consequence rule, restated for gates.** A gate that stays GREEN over its
+planted defect is dead by definition, and its ledger row is a defect
+ticket — the same "the process failed, not the reviewer" stance. There is
+no escape hatch here: a deterministic gate has no competing real findings
+it could have found instead.
+
+**Cross-check.** The ledger is compared against
+`agents/evidence/reports/gate-scope-census.md`, which records what each
+gate reads. Each artifact alone is satisfiable by a broken gate; together
+they are not. Two disagreements are reported, and either fails the run:
+
+- **`dead_gate`** — the census records a live, non-empty corpus, but the
+  canary could not make the gate fail.
+- **`census_stale`** — the canary made the gate fail, so it demonstrably
+  reads a live corpus, but the census records no units for it.
+
+**Coverage is stated, never implied.** The ledger prints the gate-script
+population, how many are listed in `src/config/gate-coverage.yml`, and how
+many carry a recipe. Every gate outside the recipe count is reported
+UNPROVEN — a gap, not a pass.
+
 ## § 7 — Publish-regardless rule
 
 **Every external score, scan result, registry rating, and dogfood delta is

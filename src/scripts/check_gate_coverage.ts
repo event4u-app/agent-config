@@ -23,13 +23,25 @@
  * the manifest is empty or unreadable, and it REPORTS `pending` gates (listed but
  * not yet emitting a count) instead of skipping them silently.
  *
+ * MUTATION CANARY (`--canary`, road-to-gates-that-can-fail Phase 7). Coverage
+ * proves a gate READ something; it cannot prove the gate can still FAIL. The
+ * canary plants one declared violation per gate, runs the gate, and records
+ * red/green — a gate that stays green over a real planted defect is dead by
+ * definition. It runs the same contract as the review-side canary in
+ * `docs/contracts/adversarial-review-protocol.md` § 6 (rotating class, sealed
+ * record, NEVER SHIPS) and is deliberately kept OFF the default CI path: it
+ * mutates the tree, so it is an operator-invoked biannual experiment, not a
+ * per-PR gate. Every plant is reverted in a `finally`.
+ *
  * CLI:
  *   ./scripts-run src/scripts/check_gate_coverage            # enforce
  *   ./scripts-run src/scripts/check_gate_coverage --list     # show the manifest
  *   ./scripts-run src/scripts/check_gate_coverage --format json
+ *   ./scripts-run src/scripts/check_gate_coverage --canary [--ledger <file>]
  *
  * Exit codes: 0 all enforced gates cleared their floor · 1 a gate is blind,
- * collapsed, or silent · 2 the manifest itself is missing/empty/malformed.
+ * collapsed, or silent (in `--canary`: a gate stayed green, or the ledger
+ * disagrees with the census) · 2 the manifest itself is missing/empty/malformed.
  */
 import * as fs from 'node:fs';
 import * as path from 'node:path';
@@ -42,9 +54,27 @@ import { runCountedProbe } from './_lib/counted_probe.js';
 const _HERE = fileURLToPath(import.meta.url);
 const REPO_ROOT = path.resolve(path.dirname(_HERE), '..', '..');
 const MANIFEST = path.join(REPO_ROOT, 'src/config/gate-coverage.yml');
+const CENSUS = path.join(REPO_ROOT, 'agents/evidence/reports/gate-scope-census.md');
 
 /** The one line a gate must emit. Deliberately narrow: no format guessing. */
 const SCANNED_RE = /^\s*scanned:\s*(\d+)\s*$/m;
+
+/**
+ * A declared, revertible violation for one gate (Phase 7).
+ *
+ * Only ONE operation shape exists on purpose: create a file that does not exist,
+ * delete it afterwards. An in-place edit would need byte-exact restoration of a
+ * tracked file, and a canary that can corrupt the tree is worse than no canary —
+ * the contract's "never ships" rule binds this implementation too.
+ */
+export interface CanarySpec {
+  /** Rotating-class label, per adversarial-review-protocol § 6. */
+  class: string;
+  /** Repo-relative path to create. MUST NOT already exist. */
+  path: string;
+  /** File body planted at that path. */
+  content: string;
+}
 
 export interface GateSpec {
   id: string;
@@ -52,6 +82,8 @@ export interface GateSpec {
   min_scanned: number;
   corpus: string;
   status: 'enforced' | 'pending';
+  /** Absent = this gate has no canary recipe; reported, never hidden. */
+  canary?: CanarySpec;
   /**
    * Exit code meaning "my prerequisite is absent, so I inspected nothing" — e.g.
    * check_site_links exits 2 when the site is unbuilt or stale. Without this the
@@ -117,8 +149,25 @@ export function load_manifest(file = MANIFEST): GateSpec[] {
         ? {}
         : { unavailable_exit: _require_int(e['unavailable_exit'], id, i) }),
       ...(e['note'] === undefined ? {} : { note: String(e['note']) }),
+      ...(e['canary'] === undefined ? {} : { canary: _require_canary(e['canary'], id, i) }),
     };
   });
+}
+
+function _require_canary(v: unknown, id: string, i: number): CanarySpec {
+  const c = v as Record<string, unknown>;
+  const cls = String(c?.['class'] ?? '');
+  const p = String(c?.['path'] ?? '');
+  const content = String(c?.['content'] ?? '');
+  // A half-declared recipe would plant nothing and read as a passing canary —
+  // the exact false green this whole file exists to prevent.
+  if (cls === '' || p === '' || content === '') {
+    throw new Error(`gates[${String(i)}] (${id}): canary needs class, path and content`);
+  }
+  if (path.isAbsolute(p) || p.split('/').includes('..')) {
+    throw new Error(`gates[${String(i)}] (${id}): canary path must be repo-relative and contain no '..'`);
+  }
+  return { class: cls, path: p, content };
 }
 
 /** Extract the contract line. Returns null when the gate emitted no count. */
@@ -215,6 +264,10 @@ export function main(argv: readonly string[]): number {
     return 2;
   }
 
+  if (argv.includes('--canary')) {
+    return run_canary_mode(specs, argv);
+  }
+
   if (listOnly) {
     for (const s of specs) {
       process.stdout.write(
@@ -281,6 +334,289 @@ function spec_is_pending(s: GateSpec): boolean {
  * but their count never fails the build. */
 function probe_pending(s: GateSpec): { scanned: number | null; crashed: boolean } {
   return run_gate(s);
+}
+
+// ── Mutation canary (Phase 7) ──────────────────────────────────────────────
+
+export type CanaryVerdict = 'red' | 'green' | 'no_recipe' | 'crashed';
+
+export interface CanaryResult {
+  id: string;
+  verdict: CanaryVerdict;
+  class: string | null;
+  exit_code: number | null;
+  message: string;
+}
+
+/**
+ * Plant one declared violation, run the gate, revert.
+ *
+ * The revert is in a `finally` and deletes exactly the file this function
+ * created — never a pre-existing one, which is why an occupied path aborts
+ * instead of overwriting.
+ */
+export function run_canary(spec: GateSpec, repoRoot = REPO_ROOT): CanaryResult {
+  const c = spec.canary;
+  if (c === undefined) {
+    return {
+      id: spec.id,
+      verdict: 'no_recipe',
+      class: null,
+      exit_code: null,
+      message: 'no canary recipe declared — this gate is UNPROVEN, not proven working',
+    };
+  }
+  const abs = path.join(repoRoot, c.path);
+  if (fs.existsSync(abs)) {
+    return {
+      id: spec.id,
+      verdict: 'crashed',
+      class: c.class,
+      exit_code: null,
+      message: `canary path ${c.path} already exists — refusing to overwrite a real file`,
+    };
+  }
+  let planted = false;
+  // Directories the plant had to create. An empty `src/skills/<x>/` left behind
+  // is invisible to `git status` but is still residue, and a skill directory
+  // with no SKILL.md is itself a defect the next gate run would report.
+  const madeDirs: string[] = [];
+  for (let d = path.dirname(abs); !fs.existsSync(d) && d.startsWith(repoRoot); d = path.dirname(d)) {
+    madeDirs.push(d);
+  }
+  try {
+    fs.mkdirSync(path.dirname(abs), { recursive: true });
+    fs.writeFileSync(abs, c.content, 'utf8');
+    planted = true;
+    const runner = path.join(repoRoot, 'scripts-run');
+    const r = runCountedProbe(runner, [`src/scripts/${spec.id}`, ...spec.argv], { cwd: repoRoot });
+    if (r.failure !== null && r.status === null) {
+      return {
+        id: spec.id,
+        verdict: 'crashed',
+        class: c.class,
+        exit_code: null,
+        message: `gate could not be executed under the plant: ${r.failure}`,
+      };
+    }
+    const code = r.status ?? 0;
+    return code !== 0
+      ? {
+          id: spec.id,
+          verdict: 'red',
+          class: c.class,
+          exit_code: code,
+          message: `caught the planted ${c.class} defect (exit ${String(code)})`,
+        }
+      : {
+          id: spec.id,
+          verdict: 'green',
+          class: c.class,
+          exit_code: 0,
+          message:
+            `stayed GREEN over a planted ${c.class} defect at ${c.path} — ` +
+            'the gate is dead by definition. This row is a defect ticket',
+        };
+  } finally {
+    // NEVER SHIPS (adversarial-review-protocol § 6): the plant is removed even
+    // when the gate crashes or the process is interrupted mid-run.
+    if (planted) {
+      try {
+        fs.rmSync(abs, { force: true });
+        // Innermost first — rmdir only succeeds while the directory is empty,
+        // so a dir that gained other content is left alone.
+        for (const d of madeDirs) {
+          try {
+            fs.rmdirSync(d);
+          } catch {
+            break;
+          }
+        }
+      } catch {
+        process.stderr.write(`❌  canary could not remove its plant at ${c.path} — REMOVE IT BY HAND\n`);
+      }
+    }
+  }
+}
+
+export interface Disagreement {
+  gate: string;
+  kind: 'dead_gate' | 'census_stale';
+  detail: string;
+}
+
+/**
+ * Read the scan-scope census into `gate -> units`.
+ *
+ * Column-position-agnostic: it locates the gate column and the units column by
+ * header text, so a census regenerated with a different column set still
+ * cross-checks. `null` = the census recorded no measurable count.
+ */
+export function parse_census(md: string): Map<string, number | null> {
+  const out = new Map<string, number | null>();
+  const rows = md.split('\n').filter((l) => l.trim().startsWith('|'));
+  const cells = (l: string): string[] =>
+    l.split('|').slice(1, -1).map((c) => c.trim());
+  let gateCol = -1;
+  let unitCol = -1;
+  for (const line of rows) {
+    const cs = cells(line);
+    const head = cs.map((c) => c.toLowerCase());
+    const g = head.findIndex((c) => c === 'gate');
+    const u = head.findIndex((c) => c.startsWith('unit'));
+    if (g >= 0 && u >= 0) {
+      gateCol = g;
+      unitCol = u;
+      continue;
+    }
+    if (gateCol < 0 || cs.length <= Math.max(gateCol, unitCol)) continue;
+    const idm = /`([A-Za-z0-9_.-]+)`/.exec(cs[gateCol] as string);
+    if (idm === null) continue;
+    const raw = cs[unitCol] as string;
+    const num = /(\d[\d,]*)/.exec(raw.replace(/\*/g, ''));
+    out.set(idm[1] as string, num === null ? null : Number((num[1] as string).replace(/,/g, '')));
+  }
+  return out;
+}
+
+/**
+ * Make the two artefacts disagree loudly (Phase 7 step 2).
+ *
+ * The census says what a gate READS; the canary says whether anything it reads
+ * can make it FAIL. Each alone is satisfiable by a broken gate; together they
+ * are not.
+ */
+export function cross_check(
+  results: readonly CanaryResult[],
+  census: ReadonlyMap<string, number | null>,
+): Disagreement[] {
+  const out: Disagreement[] = [];
+  for (const r of results) {
+    const units = census.get(r.id);
+    if (units === undefined) continue; // not censused — nothing to disagree with
+    if (r.verdict === 'green' && units !== null && units > 0) {
+      out.push({
+        gate: r.id,
+        kind: 'dead_gate',
+        detail:
+          `census records ${String(units)} unit(s) read, but the canary could not make it fail — ` +
+          'a gate that reads a live corpus and cannot go red is dead',
+      });
+    }
+    if (r.verdict === 'red' && (units === null || units === 0)) {
+      out.push({
+        gate: r.id,
+        kind: 'census_stale',
+        detail:
+          'the canary made it fail, so it reads a live corpus, but the census records no units — ' +
+          're-run the census; its row is stale',
+      });
+    }
+  }
+  return out;
+}
+
+const CANARY_ICON: Record<CanaryVerdict, string> = {
+  red: '✅',
+  green: '❌',
+  no_recipe: '⚠️',
+  crashed: '❌',
+};
+
+export function render_ledger(
+  results: readonly CanaryResult[],
+  disagreements: readonly Disagreement[],
+  totalGateScripts: number,
+  cycleId: string,
+): string {
+  const recipes = results.filter((r) => r.verdict !== 'no_recipe');
+  const red = results.filter((r) => r.verdict === 'red');
+  const green = results.filter((r) => r.verdict === 'green');
+  const lines = [
+    `# Gate-surface canary ledger — ${cycleId}`,
+    '',
+    'Produced by `./scripts-run src/scripts/check_gate_coverage --canary`. Governed by',
+    '[`adversarial-review-protocol`](../../../../docs/contracts/adversarial-review-protocol.md)',
+    '§ 6 — biannual cadence, rotating class, sealed record, never ships.',
+    '',
+    '## Coverage (stated, not implied)',
+    '',
+    `- Gate scripts in \`src/scripts/\`: **${String(totalGateScripts)}**`,
+    `- Listed in \`src/config/gate-coverage.yml\`: **${String(results.length)}**`,
+    `- Carrying a canary recipe: **${String(recipes.length)}**`,
+    `- RED (caught the plant): **${String(red.length)}** · GREEN (dead): **${String(green.length)}**`,
+    '',
+    'Every gate outside the recipe count is UNPROVEN by this experiment. That is a',
+    'gap, not a pass.',
+    '',
+    '## Per-gate ledger',
+    '',
+    '| Gate | Class | Verdict | Exit | Detail |',
+    '|---|---|---|---:|---|',
+  ];
+  for (const r of results) {
+    lines.push(
+      `| \`${r.id}\` | ${r.class ?? '—'} | ${CANARY_ICON[r.verdict]} ${r.verdict.toUpperCase()} ` +
+        `| ${r.exit_code === null ? '—' : String(r.exit_code)} | ${r.message} |`,
+    );
+  }
+  lines.push('', '## Cross-check against the scan-scope census', '');
+  if (disagreements.length === 0) {
+    lines.push('No disagreement: every censused gate with a recipe went red, and every red gate');
+    lines.push('has a non-zero census count.');
+  } else {
+    lines.push('| Gate | Kind | Detail |', '|---|---|---|');
+    for (const d of disagreements) lines.push(`| \`${d.gate}\` | **${d.kind}** | ${d.detail} |`);
+  }
+  lines.push('');
+  return lines.join('\n');
+}
+
+/** Count of gate-shaped scripts, for the honest denominator in the ledger. */
+export function count_gate_scripts(dir = path.join(REPO_ROOT, 'src/scripts')): number {
+  try {
+    return fs
+      .readdirSync(dir)
+      .filter((f) => /^(lint|check|audit)_.*\.ts$/.test(f) && !f.endsWith('.d.ts')).length;
+  } catch {
+    return 0;
+  }
+}
+
+function run_canary_mode(specs: readonly GateSpec[], argv: readonly string[]): number {
+  const results = specs.map((s) => run_canary(s));
+  const censusMd = fs.existsSync(CENSUS) ? fs.readFileSync(CENSUS, 'utf8') : '';
+  const disagreements = cross_check(results, parse_census(censusMd));
+
+  for (const r of results) {
+    process.stdout.write(`  ${CANARY_ICON[r.verdict]} ${r.id}: ${r.message}\n`);
+  }
+  for (const d of disagreements) {
+    process.stdout.write(`  ❌ DISAGREEMENT [${d.kind}] ${d.gate}: ${d.detail}\n`);
+  }
+
+  const cycleId = `gate-surface-${new Date().toISOString().slice(0, 10)}`;
+  const li = argv.indexOf('--ledger');
+  if (li >= 0 && argv[li + 1] !== undefined) {
+    const out = path.resolve(REPO_ROOT, argv[li + 1] as string);
+    fs.mkdirSync(path.dirname(out), { recursive: true });
+    fs.writeFileSync(out, render_ledger(results, disagreements, count_gate_scripts(), cycleId), 'utf8');
+    process.stdout.write(`\nledger: ${path.relative(REPO_ROOT, out)}\n`);
+  }
+
+  const recipes = results.filter((r) => r.verdict !== 'no_recipe').length;
+  const green = results.filter((r) => r.verdict === 'green' || r.verdict === 'crashed').length;
+  process.stdout.write(
+    `\nscanned: ${String(results.length)}\n` +
+      `  recipes ${String(recipes)} · unproven ${String(results.length - recipes)} · ` +
+      `green(dead) ${String(green)} · disagreements ${String(disagreements.length)}\n`,
+  );
+  if (green > 0 || disagreements.length > 0) {
+    process.stdout.write('❌  canary found dead gate(s) or a census disagreement — each row is a defect ticket.\n');
+    return 1;
+  }
+  process.stdout.write('✅  every gate with a recipe went red over its planted defect.\n');
+  return 0;
 }
 
 function _isCliEntry(): boolean {
