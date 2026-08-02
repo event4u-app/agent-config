@@ -271,10 +271,25 @@ const ALLOWLIST: string[] = [
     'package repository', // "package repository" concept
     'src/scripts/mcp_server/', // MCP server module path (road-to-mcp-server.md Phase 1)
     String.raw`scripts\.mcp_server`, // MCP server Python module entrypoint
+    // ── Revealed 2026-08-02 when `src/` entered SCAN_DIRS (dead-root repair,
+    // road-to-renewal-foundation Phase 1). Both live under `src/templates/`,
+    // which is never projected into `dist/agent-src/`, so this gate had never
+    // seen them. Neither is a CONSUMER-project leak — they are the package's
+    // own published identifiers, which a consumer must type verbatim:
+    String.raw`plugin install agent-conf@`, // real marketplace install command
+    String.raw`\.event4u-bridge\.yml`, // real shipped anchor filename (src/scripts/install.ts, lint_agents_layout.ts)
 ];
 
-// Directories to scan (only package files, not project-specific agents/)
-const SCAN_DIRS = ['dist/agent-src', '.agent-src.uncondensed'];
+// Directories to scan (only package files, not project-specific agents/).
+//
+// DEAD-ROOT REPAIR (road-to-renewal-foundation Phase 1): the second entry was
+// `.agent-src.uncondensed`, deleted by ADR-051. The loops below `continue` on a
+// missing directory, so half this gate's declared corpus — the whole authoring
+// tree — was silently skipped. A project identifier authored in `src/` was only
+// ever caught once a condense run projected it into `dist/agent-src/`, i.e. one
+// step later than the gate claims to catch it. `src/` is the source of truth
+// now and is scanned directly.
+const SCAN_DIRS = ['src', 'dist/agent-src'];
 
 // Additional root-level files shipped by the package that must also stay
 // portable. These are read by agents working on the package itself and —

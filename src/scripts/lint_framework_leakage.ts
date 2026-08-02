@@ -258,11 +258,12 @@ export function is_inventory_file(p: string): boolean {
     if (parts.includes('contexts')) {
         return true;
     }
-    if (
-        path.basename(rel) === 'README.md' &&
-        parts.length === 2 &&
-        (parts[0] === '.agent-src.uncondensed' || parts[0] === 'dist/agent-src')
-    ) {
+    // DEAD-ROOT REPAIR (road-to-renewal-foundation Phase 1). Both comparisons
+    // were unreachable: `.agent-src.uncondensed` was deleted by ADR-051, and
+    // `'dist/agent-src'` can never equal a single `/`-split segment. So the
+    // inventory-README exemption never fired for any file, and the real
+    // inventory file (`src/agent-src/README.md`) got no exemption at all.
+    if (path.basename(rel) === 'README.md' && parts.length === 3 && parts[0] === 'src') {
         return true;
     }
     return false;
