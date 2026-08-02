@@ -64,6 +64,65 @@ const STATUS_ORDER: Record<string, number> = { pass: 0, pass_with_warnings: 1, f
  * baseline worktree-add failure (→ exit 2 in main). */
 class CalledProcessError extends Error {}
 
+/** The baseline ran but produced nothing usable (→ exit 2 in main).
+ *
+ * Distinct from the two DOCUMENTED empty-baseline degradations (no linter file
+ * in the ref; a pre-migration `.py` baseline with no python3). Those are
+ * deliberate. This one is a broken run, and returning an empty baseline for it
+ * silently reclassifies every existing finding as a "new file" — the gate then
+ * fires on an unmodified tree and can never report a real regression, because a
+ * regression needs the file present in both maps. */
+class BaselineCollectionError extends Error {}
+
+/** Give the detached baseline worktree a resolvable module context.
+ *
+ * `git worktree add` checks out tracked files only, so the temp tree has no
+ * `node_modules` and the linter dies on its first bare import. Symlinking the
+ * repo's own install is enough — the baseline runs the ref's linter source
+ * against the ref's artefacts; only the dependency resolution is borrowed. */
+function _link_node_modules(tmpdir: string, repo_root: string): void {
+    const target = path.join(repo_root, 'node_modules');
+    const link = path.join(tmpdir, 'node_modules');
+    if (fs.existsSync(link) || !fs.existsSync(target)) {
+        return;
+    }
+    try {
+        fs.symlinkSync(target, link, 'dir');
+    } catch {
+        // Non-fatal here: a failed link surfaces as a failed baseline run
+        // below, which raises with the real cause rather than degrading.
+    }
+}
+
+/** Re-root the baseline's file keys onto the repo-relative paths the working-tree
+ * run emits.
+ *
+ * The baseline runs with `--repo-root <tmpdir>` and reports absolute paths under
+ * that temp worktree; the working-tree run reports paths relative to the repo.
+ * Left as-is the two maps share no key, so every comparison is vacuous — the
+ * disjoint guard would reject the run outright once the baseline is non-empty. */
+function _relativise(data: LinterJson, tmpdir: string): LinterJson {
+    const roots = new Set<string>([tmpdir]);
+    try {
+        roots.add(fs.realpathSync(tmpdir));
+    } catch {
+        /* the temp dir is about to be removed; the literal prefix still applies */
+    }
+    const strip = (f: string): string => {
+        for (const r of roots) {
+            const prefix = r.endsWith(path.sep) ? r : r + path.sep;
+            if (f.startsWith(prefix)) {
+                return f.slice(prefix.length);
+            }
+        }
+        return f;
+    };
+    return {
+        ...data,
+        results: (data.results ?? []).map((e) => ({ ...e, file: strip(e.file) })),
+    };
+}
+
 /** Run the linter and return parsed JSON. If ref is null, run on working tree.
  *
  * Mirrors `run_linter_json`: for a ref, add a detached temp worktree, run the
@@ -91,6 +150,7 @@ function run_linter_json(ref: string | null, repo_root: string): LinterJson {
             );
         }
         try {
+            _link_node_modules(tmpdir, repo_root);
             // The baseline ref may be pre-migration (`.py`, run via python3) or
             // post-migration (`.ts`, run via tsx). Probe both extensions in both
             // locations and spawn by extension. A historical `.py` ref genuinely
@@ -139,7 +199,17 @@ function run_linter_json(ref: string | null, repo_root: string): LinterJson {
                       encoding: 'utf8',
                   });
             const out = result.stdout ?? '';
-            return out.trim() ? (JSON.parse(out) as LinterJson) : { results: [], summary: {} };
+            if (!out.trim()) {
+                const why =
+                    result.status === 0
+                        ? 'it exited 0 but printed nothing'
+                        : `it exited ${result.status ?? 'null'}`;
+                throw new BaselineCollectionError(
+                    `the baseline linter for '${ref}' produced no output — ${why}.\n` +
+                        `stderr: ${(result.stderr ?? '').trim().split('\n').slice(-6).join('\n')}`,
+                );
+            }
+            return _relativise(JSON.parse(out) as LinterJson, tmpdir);
         } finally {
             spawnSync('git', ['-C', repo_root, 'worktree', 'remove', '--force', tmpdir], {
                 encoding: 'utf8',
@@ -433,6 +503,10 @@ function main(): number {
             );
             return 2;
         }
+        if (e instanceof BaselineCollectionError) {
+            process.stderr.write(`Error: ${e.message}\n`);
+            return 2;
+        }
         throw e;
     }
 
@@ -450,6 +524,22 @@ function main(): number {
         process.stderr.write(
             'Error: baseline and current lint results share no files — ' +
                 'runs are not comparable; refusing to report.\n',
+        );
+        return 2;
+    }
+
+    // The same guard's blind spot: an EMPTY baseline against a populated
+    // current tree is not comparable either, and it is the worse failure —
+    // every existing finding is then reported as a "new file", so the gate
+    // fires on an unmodified tree and no real regression can ever surface.
+    // The documented empty-baseline degradations (no linter in the ref; a
+    // pre-migration `.py` baseline with no python3) print their own warning
+    // above and land here on purpose.
+    if (!baseKeys.length && currKeys.length) {
+        process.stderr.write(
+            `Error: the baseline '${args.baseline}' produced no lint results while the ` +
+                `current tree produced ${currKeys.length} — runs are not comparable; ` +
+                'refusing to report. Every finding would be misreported as new.\n',
         );
         return 2;
     }
@@ -528,4 +618,5 @@ export {
     format_text,
     format_markdown,
     main,
+    _relativise,
 };
