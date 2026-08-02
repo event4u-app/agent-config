@@ -147,6 +147,14 @@ Every roadmap follows this structure:
 - Never remove completed steps — they serve as history.
 - **Status is binary: `ready` (default, implicit) or `draft`.** New roadmaps are created **ready** unless the user explicitly says otherwise — `ready` is implicit and need not be written. A roadmap that is still being authored, awaiting upstream decisions, or capturing options without a worked plan declares `status: draft` in YAML frontmatter at the top of the file. Drafts are hidden from `agents/roadmaps-progress.md` until the flag is removed or flipped to `ready`. There are no other status values; legacy banners (`**Status: directional**`, `Status: capture-only`, `mode: feedback`) are removed.
 
+### Awaiting evidence — a blocker entry, never a new glyph
+
+- A step that cannot close because the **evidence has not arrived yet** (soak window still running, benchmark not funded, external adopter absent) is neither `[~]` deferred nor `[-]` skipped.
+- The canonical signal is a structured `## Blockers` entry — the five-field shape in [`templates/roadmaps.md` rule 20](../../agent-src/templates/roadmaps.md) (`Status` / `Owner` / `Blocks` / `What to do` / `Resolved when`). The step stays `- [ ]` and cross-references it inline: `- [ ] … <!-- blocked-by: <blocker-id> -->`.
+- `Resolved when:` carries the awaiting-evidence semantics — it names the decidable signal that ends the wait. When the agent can probe that signal itself (CI run, published version, reachable URL) the blocker is agent-checkable and is not assigned to a human (rule 20's external-dependency clause).
+- **No new status glyph.** The vocabulary stays `[ ]` `[x]` `[~]` `[-]`; an `awaiting-evidence` glyph would add a state the dashboard, the progress script, and every reader must learn, for a need the blocker convention already carries.
+- Reading the three: `[ ]` + `blocked-by:` = real open work waiting on named evidence (counts open, roadmap stays active) · `[~]` = deferred by decision (blocks archival until resolved, Iron Law 3) · `[-]` = skipped/cancelled with a stated reason (does not block archival).
+
 ### Phases
 
 - Group related steps into phases (e.g. "Preparation", "Migration", "Cleanup").
@@ -488,7 +496,9 @@ owner, blocked scope, and full instructions. Authoring shape:
 [`templates/roadmaps.md` rule 20](../../agent-src/templates/roadmaps.md);
 authoring guidance: [`roadmap-writing § 5b`](../roadmap-writing/SKILL.md).
 Clearing a blocker flips its `Status: resolved` and regenerates the
-dashboard in the same reply, same cadence as a checkbox flip.
+dashboard in the same reply, same cadence as a checkbox flip. The
+blocker entry is also the canonical **awaiting-evidence** signal —
+see [§ Awaiting evidence](#awaiting-evidence--a-blocker-entry-never-a-new-glyph).
 
 ## Rubric pass (optional, surfacing-only)
 
