@@ -2,14 +2,14 @@
 
 > Auto-generated — do not edit. Regenerate with `task roadmap-progress` or by running the `update_roadmap_progress` script for your install; rewritten on every roadmap create / execute / completion change (timestamp lives in git history).
 >
-> 15 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **12** open blockers
+> 14 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **12** open blockers
 
 ## Overall
 
-**48 / 182 steps done · 26%**
+**71 / 173 steps done · 41%**
 
 ```text
-██████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   26%
+████████████████░░░░░░░░░░░░░░░░░░░░░░░░   41%
 ```
 
 ## Open roadmaps
@@ -20,17 +20,16 @@
 | 2 | [road-to-adoption-without-narrative-debt.md](roadmaps/road-to-adoption-without-narrative-debt.md) | 5 | 17 | 7 | 10 | 0 | 0 | [1](#blockers-road-to-adoption-without-narrative-debt) | ██████░░░░ 59% |
 | 3 | [road-to-ci-native-release-first-run.md](roadmaps/road-to-ci-native-release-first-run.md) | 2 | 8 | 8 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 4 | [road-to-council-blind-review.md](roadmaps/road-to-council-blind-review.md) | 3 | 6 | 2 | 3 | 0 | 1 | 0 | ██████░░░░ 60% |
-| 5 | [road-to-dead-surface-removal.md](roadmaps/road-to-dead-surface-removal.md) | 3 | 8 | 8 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
-| 6 | [road-to-gated-reach-followup.md](roadmaps/road-to-gated-reach-followup.md) | 1 | 12 | 12 | 0 | 0 | 0 | [1](#blockers-road-to-gated-reach-followup) | ░░░░░░░░░░ 0% |
-| 7 | [road-to-gates-that-can-fail.md](roadmaps/road-to-gates-that-can-fail.md) | 7 | 27 | 22 | 3 | 2 | 0 | [2](#blockers-road-to-gates-that-can-fail) | █░░░░░░░░░ 12% |
-| 8 | [road-to-maintainer-bus-factor.md](roadmaps/road-to-maintainer-bus-factor.md) | 4 | 12 | 5 | 7 | 0 | 0 | [1](#blockers-road-to-maintainer-bus-factor) | ██████░░░░ 58% |
-| 9 | [road-to-orchestration-scope-decision.md](roadmaps/road-to-orchestration-scope-decision.md) | 4 | 10 | 6 | 4 | 0 | 0 | [1](#blockers-road-to-orchestration-scope-decision) | ████░░░░░░ 40% |
-| 10 | [road-to-scale-history-bench-run.md](roadmaps/road-to-scale-history-bench-run.md) | 1 | 2 | 2 | 0 | 0 | 0 | [1](#blockers-road-to-scale-history-bench-run) | ░░░░░░░░░░ 0% |
-| 11 | [road-to-solution-minimalism.md](roadmaps/road-to-solution-minimalism.md) | 4 | 36 | 36 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
-| 12 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 6 | 3 | 0 | 0 | [1](#blockers-road-to-subagent-value-realization-followup) | ███░░░░░░░ 33% |
-| 13 | [road-to-surface-consolidation.md](roadmaps/road-to-surface-consolidation.md) | 3 | 14 | 1 | 12 | 1 | 0 | [3](#blockers-road-to-surface-consolidation) | █████████░ 92% |
-| 14 | [road-to-tier-removal.md](roadmaps/road-to-tier-removal.md) | 4 | 8 | 2 | 6 | 0 | 0 | [1](#blockers-road-to-tier-removal) | ████████░░ 75% |
-| 15 | [road-to-ui-track-integrity-followup.md](roadmaps/road-to-ui-track-integrity-followup.md) | 1 | 10 | 10 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+| 5 | [road-to-gated-reach-followup.md](roadmaps/road-to-gated-reach-followup.md) | 1 | 12 | 12 | 0 | 0 | 0 | [1](#blockers-road-to-gated-reach-followup) | ░░░░░░░░░░ 0% |
+| 6 | [road-to-gates-that-can-fail.md](roadmaps/road-to-gates-that-can-fail.md) | 7 | 27 | 22 | 3 | 2 | 0 | [2](#blockers-road-to-gates-that-can-fail) | █░░░░░░░░░ 12% |
+| 7 | [road-to-maintainer-bus-factor.md](roadmaps/road-to-maintainer-bus-factor.md) | 4 | 12 | 5 | 7 | 0 | 0 | [1](#blockers-road-to-maintainer-bus-factor) | ██████░░░░ 58% |
+| 8 | [road-to-orchestration-scope-decision.md](roadmaps/road-to-orchestration-scope-decision.md) | 4 | 10 | 6 | 4 | 0 | 0 | [1](#blockers-road-to-orchestration-scope-decision) | ████░░░░░░ 40% |
+| 9 | [road-to-scale-history-bench-run.md](roadmaps/road-to-scale-history-bench-run.md) | 1 | 2 | 2 | 0 | 0 | 0 | [1](#blockers-road-to-scale-history-bench-run) | ░░░░░░░░░░ 0% |
+| 10 | [road-to-solution-minimalism.md](roadmaps/road-to-solution-minimalism.md) | 4 | 36 | 12 | 23 | 0 | 1 | 0 | ███████░░░ 66% |
+| 11 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 6 | 3 | 0 | 0 | [1](#blockers-road-to-subagent-value-realization-followup) | ███░░░░░░░ 33% |
+| 12 | [road-to-surface-consolidation.md](roadmaps/road-to-surface-consolidation.md) | 3 | 14 | 1 | 12 | 1 | 0 | [3](#blockers-road-to-surface-consolidation) | █████████░ 92% |
+| 13 | [road-to-tier-removal.md](roadmaps/road-to-tier-removal.md) | 4 | 8 | 2 | 6 | 0 | 0 | [1](#blockers-road-to-tier-removal) | ████████░░ 75% |
+| 14 | [road-to-ui-track-integrity-followup.md](roadmaps/road-to-ui-track-integrity-followup.md) | 1 | 10 | 10 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 
 ---
 
@@ -204,14 +203,14 @@ _1 blocker resolved._
 
 ### [road-to-solution-minimalism.md](roadmaps/road-to-solution-minimalism.md)
 
-**Road to solution minimalism — a first-class discipline against over-building** — 0 / 36 done (0%)
+**Road to solution minimalism — a first-class discipline against over-building** — 23 / 35 done (66%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
-| 0 | Verification spikes (read-only, no authoring) | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
-| 1 | The ladder, as rule text | ⬜ not started | 13 | 0 | 0 | 0 | 0% |
-| 2 | Over-build review lens | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
-| 3 | Pinned public-repo benchmark (the proof exhibit) | ⬜ not started | 16 | 0 | 0 | 0 | 0% |
+| 0 | Verification spikes (read-only, no authoring) | ✅ done | 0 | 3 | 0 | 0 | 100% |
+| 1 | The ladder, as rule text | ✅ done | 0 | 12 | 0 | 1 | 100% |
+| 2 | Over-build review lens | ✅ done | 0 | 4 | 0 | 0 | 100% |
+| 3 | Pinned public-repo benchmark (the proof exhibit) | 🟡 in progress | 12 | 4 | 0 | 0 | 25% |
 
 ### [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md)
 
