@@ -72,6 +72,7 @@ evidence pointer, or `task check-claims` fails the build.
 | We publish our own measured null results and retire or constrain features when the evidence does not support them. Deliberately falsifiable — every published null links the run that produced it; find one that does not resolve and this line updates. | qual | `docs/benchmark.md#honest` | ✅ |
 | On the live end-to-end retrieval benchmark (9 tasks × 3 arms × 3 seeds on claude-haiku, fixture store with keyword-overlapping confusers), the memory retrieval substrate scored precision@5 = 100% (9/9) with 100% poisoned-entry rejection, and the retrieval-on arm passed 27/27 model-scored tasks vs 2/27 with retrieval off and 4/27 with a placebo injection. Known limit stays published: mean tie-set 4.111 means top-k ties break by store order, not relevance (the ADR-116/FTS5 signal). SOLE RECORD for this artefact as of 2026-07-25: a second entry (`second-brain-retrieval-precision`) described the same measurement from the precision angle and had drifted to 5/27, 5/27 and tie-set 3.3 — figures absent from the shared artefact. Two entries over one artefact is what allowed them to disagree while both resolved, so the pair was folded into this one. | quant | `internal/bench/reports/second-brain-retrieval.json#retrieval-on` | ✅ |
 | 111 governed rules. | quant | `exec:check_artefact_count_messaging -> 0` | ✅ |
+| Scope de-duplication of the rule projection removes 38.0% of the median cold-start payload (87,677 of 230,556 tokens) against a pre-registered 15% bar. CONDITION, inseparable from the number: that figure is FIXTURE-MEASURED on byte-identical global and project projections, and it is **currently unreachable for production installs** — the installer stamps ownership metadata (`package:` / `source_path:`) onto every installed rule unconditionally, so the two scopes are produced by two writers with deliberately different output, the byte-identity gate correctly refuses to dedup, and the recipient set is empty. The mechanism works; the saving is not realised by any consumer today. | quant | `agents/settings/contexts/cache-economy-refusals.md#Honest null — scope de-duplication is measured but` | ✅ |
 | On a deterministic multi-session recall corpus, the memory substrate produces a measured, placebo-controlled recall lift — memory-on 27/27 vs no-memory 10/27 and vs equal-byte placebo 9/27 (claude-haiku-4-5, n=9 tasks x 3 seeds, sign test p=0.031 for BOTH pairings). Scoped honestly: this is the context-value upper bound (perfect retrieval on a one-fact-per-task corpus), not retrieval precision under a large store. | quant | `internal/bench/reports/second-brain-delta.json` | ✅ |
 | Every artifact the package ships — source AND the condensed projection that reaches consumers — is machine-scanned in CI for hidden-Unicode, mixed-script-confusable, and instruction-smuggling payloads (the rules-file-backdoor class); a finding blocks the release before `npm publish`, not just the merge. | qual | `exec:lint_agent_security -> 0` | ✅ |
 | 287 skills. | quant | `exec:check_artefact_count_messaging -> 0` | ✅ |
@@ -79,14 +80,14 @@ evidence pointer, or `task check-claims` fails the build.
 | On the pre-registered 12-fixture defect-finding corpus (three arms, deterministic file-level recall, codex reviewer gpt-5.5), the cross-model team-review arm produced NO recall lift over single-model self-review — all three arms recalled every planted defect (Δ = 0, H1 not met). Honest null, ceiling-limited (recall 1.00 everywhere: the seeded defects are too obvious to discriminate the arms on recall); the only non-null signal is a single self-review false positive on the controversial-but-correct control vs 0 for team/council. No cross-model quality/lift claim binds; team mode stays workflow-value-only. Re-open: a judge-survivable-subtlety corpus or a new model generation. | quant | `internal/bench/reports/defect-finding.json#honest_null` | ✅ |
 | On the A3 orchestration eval (deterministic verify, measured token deltas), the production-validator subagent returned the correct verdict on both fixtures — NOT READY with the exact `file:line` citation on a planted hollow implementation, READY with zero spurious findings on the clean control — while consuming ~45k fewer tokens than the inline-host baseline on each task. Scope: two planted fixtures on a Claude Code host, not a broad hit-rate. | quant | `internal/bench/orchestration/pv-a3-results.md#token_delta_provenance: measured` | ✅ |
 
-**33 backed claim(s)** — all evidence pointers resolve in CI.
+**34 backed claim(s)** — all evidence pointers resolve in CI.
 
 ### How many of those re-derive themselves
 
-**10 of 33** backed claims carry `exec:` evidence —
+**10 of 34** backed claims carry `exec:` evidence —
 CI re-runs the command and compares its exit code to the claim, so a
 stale one turns the build red. The other
-**23** rest on a pointer: CI checks that the artefact
+**24** rest on a pointer: CI checks that the artefact
 exists and contains what it should, which cannot distinguish a live
 claim from one whose producer nobody has run in months.
 
@@ -116,6 +117,7 @@ given:
 | On a 12-fixture option-decision corpus (3 arms × 2 providers, blind rubric judge claude-opus-4-8, pre-register | benchmark output — regenerating it needs paid or stochastic model calls no CI job can re-derive |
 | We publish our own measured null results and retire or constrain features when the evidence does not support t | benchmark output — regenerating it needs paid or stochastic model calls no CI job can re-derive |
 | On the live end-to-end retrieval benchmark (9 tasks × 3 arms × 3 seeds on claude-haiku, fixture store with key | benchmark output — regenerating it needs paid or stochastic model calls no CI job can re-derive |
+| Scope de-duplication of the rule projection removes 38.0% of the median cold-start payload (87,677 of 230,556  | prose or contract artefact — no exit code carries the verdict |
 | On a deterministic multi-session recall corpus, the memory substrate produces a measured, placebo-controlled r | benchmark output — regenerating it needs paid or stochastic model calls no CI job can re-derive |
 | Removes only its own keys from a shared host config (matched by JSON-pointer + SHA-256), never a neighbour too | prose or contract artefact — no exit code carries the verdict |
 | On the pre-registered 12-fixture defect-finding corpus (three arms, deterministic file-level recall, codex rev | benchmark output — regenerating it needs paid or stochastic model calls no CI job can re-derive |
@@ -127,10 +129,15 @@ guidelines, personas) are **generated from source and CI-drift-checked**:
 fails the build on any count-shaped prose mention that drifts from the
 source count — or on two different numbers for the same artefact kind.
 
-We also publish our **debt**: 8 claim(s) are logged as
+We also publish our **debt**: 6 claim(s) are logged as
 `unbacked` inventory in the ledger — not yet bound, and therefore not
 allowed to carry a marker in public prose. Hiding them would be the
 opposite of the point.
+
+And our **nulls**: 2 claim(s) are `resolved-null` —
+measured, the threshold was missed, and the entry is closed rather than
+left open forever. A null that stays filed as pending debt is a claim
+quietly waiting to be re-argued.
 
 ## 2. We publish honest nulls
 
@@ -287,11 +294,11 @@ resolution (`check_enforcement_coverage`) and the claims ledger
 
 Undeclared rules (85) carry no row — an honest gap beats a false claim.
 
-**Axis 2 — evidence form per public claim.** 41 ledger entries · 33 backed · 8 unbacked inventory.
+**Axis 2 — evidence form per public claim.** 42 ledger entries · 34 backed · 6 unbacked inventory · 2 resolved-null.
 
 | Claim id | Kind | Status | Evidence pointer |
 |---|---|---|---|
-| `adversarial-council-finding-coverage` | quant | unbacked | `docs/benchmark.md#adversarial-verification-council` |
+| `adversarial-council-finding-coverage` | quant | resolved-null | `docs/benchmark.md#adversarial-verification-council` |
 | `bus-factor-tracked` | qual | backed | `docs/succession.md#trailing 90 days` |
 | `code-graph-retrieval-null` | quant | backed | `internal/bench/reports/code-graph-vs-grep.md#Verdict — NULL, decisively` |
 | `command-count` | quant | backed | `exec:check_artefact_count_messaging -> 0` |
@@ -321,10 +328,11 @@ Undeclared rules (85) carry no row — an honest gap beats a false claim.
 | `orchestration-dispatch-net-win` | comparative | unbacked | `PRE-REGISTERED 2026-07-11 (road-to-orchestration-scope-decision Phase 1 — no goalpost-moving after the numbers land). Falsification criteria fixed BEFORE data: (1) held quality is deterministic, scored by `src/scripts/check_quality_regression.ts` thresholds — a token/wall win that degrades output below the regression threshold FAILS the claim; (2) negative control — `pv-02-negative-control` must NOT trigger dispatch (a classifier that fires on everything is a cost leak, not a win); (3) win metric — ≥15% reduction in token-or-wall on `orch-02`+`orch-03` vs the single-agent baseline, read from `agents/runtime/state/audit/*.jsonl` orchestration lines through `gateVerdict()` / `resolveShippedDefault()`. Binds to a resolving report once ≥20 real `ask`-mode telemetry lines exist (Phase 2 — maintainer-run; the corpus `--run` agent-spawn is gated out of auto-mode). PROVE → flip to backed for the proven family only; DROP → renewed honest-null, keep `ask`, demote orchestration from the public value proposition.` |
 | `persona-identity-placebo-null` | quant | backed | `internal/bench/reports/persona-placebo.json#honest-null` |
 | `positioning-honest-nulls` | qual | backed | `docs/benchmark.md#honest` |
-| `provenance-detector-transformation-sensitivity` | quant | unbacked | `PRE-REGISTERED 2026-07-28 BEFORE the S0.3 baseline run (road-to-provenance-and-license-governance Phase 0; corpus frozen at content-sha256 dbbc84a7325e4fa38483ba05d35d9c0c98fa822ae25d873bd5efbafaf2534bb3 over internal/bench/provenance/, 36 files). Thresholds fixed BEFORE data, per the roadmap's S0.2 and its denominator fix: (1) detector recall on the verbatim+rename-only subset >= 10/16 (8 verbatim + 8 rename-only); (2) false positives on the 12 independent controls <= 1/12; (3) rename-only samples MUST hit (principle 6 — laundering by rename cannot clear a hit); (4) structural-rewrite samples form the residual class and their recall feeds the Phase-5 drop gate (>= 21/24 on the full seeded corpus DROPS Phase 5). The floor is a GO/NO-GO gate for building the CI layer, never the marketed capability — the marketed capability is the measured rate published per S3.1/S3.3 with the scope bound above co-located. HONEST-NULL consequence (K1): thresholds missed => no deterministic-gate claim ever, the behavioural layer ships alone, null published; no silent threshold adjustment.` |
+| `provenance-detector-transformation-sensitivity` | quant | resolved-null | `PRE-REGISTERED 2026-07-28 BEFORE the S0.3 baseline run (road-to-provenance-and-license-governance Phase 0; corpus frozen at content-sha256 dbbc84a7325e4fa38483ba05d35d9c0c98fa822ae25d873bd5efbafaf2534bb3 over internal/bench/provenance/, 36 files). Thresholds fixed BEFORE data, per the roadmap's S0.2 and its denominator fix: (1) detector recall on the verbatim+rename-only subset >= 10/16 (8 verbatim + 8 rename-only); (2) false positives on the 12 independent controls <= 1/12; (3) rename-only samples MUST hit (principle 6 — laundering by rename cannot clear a hit); (4) structural-rewrite samples form the residual class and their recall feeds the Phase-5 drop gate (>= 21/24 on the full seeded corpus DROPS Phase 5). The floor is a GO/NO-GO gate for building the CI layer, never the marketed capability — the marketed capability is the measured rate published per S3.1/S3.3 with the scope bound above co-located. HONEST-NULL consequence (K1): thresholds missed => no deterministic-gate claim ever, the behavioural layer ships alone, null published; no silent threshold adjustment.` |
 | `provenance-gate-effectiveness` | qual | unbacked | `PRE-REGISTERED 2026-07-28 (road-to-provenance-and-license-governance Phase 3, S3.1 — registered AFTER Gate G0's verdict, so this claim's text already reflects the re-scope rather than describing a capability that was later cancelled; the original S3.1 draft text ("AC's provenance gate detects seeded verbatim and rename-only OSS copies at the Phase-0 measured rate") is FALSE post-G0 and is not reused). G0 honest-null context (see `provenance-detector-transformation-sensitivity` for the pre-registered thresholds): the deterministic scan layer (jscpd offline + SCANOSS online) measured, on the frozen synthetic corpus, verbatim+rename-only recall 12/16 (union) and false positives 2/12 (union) — missing BOTH the recall and FP thresholds — with SCANOSS alone recalling rename-only samples 0/8. Council decision 2026-07-28 (K1 literal, Option A): no `lint_code_provenance.ts` ships in ANY form in CI, not even advisory — the scan capability exists ONLY as the `license-compliance-audit` skill (src/skills/license-compliance-audit/), invoked deliberately by a human, never wired into any pipeline. Falsification criteria fixed at registration: (1) any deny-class or unknown-license ledger entry passes `ci` (a `lint_provenance.ts` regression); (2) any ledger entry missing a `transformation_note` passes `ci`; (3) any rename-only-phrased `transformation_note` (the 15-phrase rejection list) passes `lint_provenance.ts`; (4) any user-facing surface asserts or implies a CI-facing similarity/duplication detector exists, or omits the co-located scope statement (S3.2/S3.3 global consequence bound, enforced by `lint_provenance_vocabulary.ts`). Backing trigger: (a) >=1 real (non-empty, non-fixture) ledger entry survives `lint_provenance` in a merged PR with a substantive transformation_note, AND (b) the Phase-4 dogfood self-audit (S4.1) publishes its findings against this repo itself, whatever the outcome. Part (b) is already satisfied — `internal/bench/provenance/reports/self-audit-2026-07-28.md` published a headline finding that 551 of 552 online-scanner hits on this repo's OWN source were self-matches against its own published releases, a third independent argument for the G0 verdict and evidence the corpus's 2/12 false-positive rate understated the real-world surface. Part (a) is NOT yet satisfied — `provenance/borrows.jsonl` holds zero entries — so this claim stays unbacked until a real borrow lands and clears the ledger.` |
 | `retrieval-substrate-live-pass` | quant | backed | `internal/bench/reports/second-brain-retrieval.json#retrieval-on` |
 | `rule-count` | quant | backed | `exec:check_artefact_count_messaging -> 0` |
+| `scope-dedup-cold-start-reduction` | quant | backed | `agents/settings/contexts/cache-economy-refusals.md#Honest null — scope de-duplication is measured but` |
 | `second-brain-recall-lift` | quant | backed | `internal/bench/reports/second-brain-delta.json` |
 | `shipped-artifacts-hidden-instruction-scanned` | qual | backed | `exec:lint_agent_security -> 0` |
 | `skill-count` | quant | backed | `exec:check_artefact_count_messaging -> 0` |

@@ -6,6 +6,15 @@ maintainer or consumer, in plain language, what they get and what to watch.
 
 Copy this template per release; keep it short (a screen or less).
 
+> **Relationship to the changelog's curated head.** Since
+> [`CHANGELOG-conventions.md` § Entry shape](contracts/CHANGELOG-conventions.md#entry-shape),
+> `release.ts` emits a five-line **Release highlights** head into the changelog
+> entry itself, and that head is the shipped artifact — it is what a consumer
+> reads. This template is the longer-form story for a release that warrants
+> one; its sections are the same five concerns at more length. Fill the head
+> first; reach for this file only when a screen of prose adds something the
+> five lines cannot carry.
+
 ## Headline
 
 One sentence: the single most important thing this release delivers.
