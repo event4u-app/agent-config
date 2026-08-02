@@ -45,6 +45,8 @@ import {
     _count_from_list_result,
     _TEST_LIST_MAX_BUFFER,
     _detect_in_flight_target,
+    _failed_check_names,
+    _failed_checks_report,
     Commit,
     SystemExitError,
     CONVENTIONAL_RE,
@@ -835,5 +837,44 @@ describe('dedupe_commit_lines', () => {
         const bullets = body.split('\n').filter((l) => l.startsWith('* '));
         expect(new Set(bullets).size).toBe(bullets.length);
         expect(bullets).toHaveLength(1);
+    });
+});
+
+describe('watch_pr_checks — failing-check summary (the scrolled-away-failure fix)', () => {
+    it('extracts only fail-bucket names from gh pr checks --json output', () => {
+        const payload = JSON.stringify([
+            { bucket: 'pass', name: 'skill-lint' },
+            { bucket: 'fail', name: 'Release-PR shape detector' },
+            { bucket: 'skipping', name: 'Node Tests (${{ matrix.os }}, shard ${{ matrix.shard }}/4)' },
+            { bucket: 'fail', name: 'originality-gate' },
+        ]);
+        expect(_failed_check_names(payload)).toEqual([
+            'Release-PR shape detector',
+            'originality-gate',
+        ]);
+    });
+
+    it('degrades to [] on unparseable or non-array payloads', () => {
+        expect(_failed_check_names('')).toEqual([]);
+        expect(_failed_check_names('not json')).toEqual([]);
+        expect(_failed_check_names('{"bucket":"fail"}')).toEqual([]);
+    });
+
+    it('names every failing check and always carries the resume command', () => {
+        const report = _failed_checks_report(['skill-lint', 'originality-gate']);
+        expect(report).toContain('❌ skill-lint');
+        expect(report).toContain('❌ originality-gate');
+        expect(report).toContain('task release -- --resume --yes');
+        expect(report).not.toContain('Release-PR shape:');
+    });
+
+    it('adds the land-on-main procedure only when the shape detector failed', () => {
+        const report = _failed_checks_report(['Release-PR shape detector']);
+        expect(report).toContain('Release-PR shape:');
+        expect(report).toContain('merge main into the release branch');
+    });
+
+    it('an empty name list yields an empty report — raw watch output stands alone', () => {
+        expect(_failed_checks_report([])).toBe('');
     });
 });
