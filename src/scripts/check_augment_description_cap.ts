@@ -91,11 +91,32 @@ function _globMdSorted(dir: string): string[] {
     return out;
 }
 
-export function main(): number {
+/**
+ * Injection seam for tests: `--root <dir>` overrides the scan root.
+ *
+ * Additive — no flag means the CI-identical bare call scans `RULES_DIR`, so the
+ * pinned CLI contract is unchanged. Without a seam the only way to exercise a
+ * real over-cap violation was to tamper with a committed rule, which is why this
+ * gate shipped with tests that never called `main()` at all.
+ */
+function _resolve_root(argv: readonly string[]): string {
+    for (let i = 0; i < argv.length; i++) {
+        const a = argv[i] as string;
+        if (a === '--root') {
+            const v = argv[i + 1];
+            if (v !== undefined) return path.resolve(v);
+        } else if (a.startsWith('--root=')) {
+            return path.resolve(a.slice('--root='.length));
+        }
+    }
+    return RULES_DIR;
+}
+
+export function main(argv: readonly string[] = []): number {
     const failures: Array<[string, number, string]> = [];
     let checked = 0;
 
-    for (const p of _globMdSorted(RULES_DIR)) {
+    for (const p of _globMdSorted(_resolve_root(argv))) {
         const text = fs.readFileSync(p, 'utf-8');
         const fm = parse_frontmatter(text);
         if (fm['type'] !== 'auto') {
@@ -157,7 +178,7 @@ function _isCliEntry(): boolean {
 }
 
 if (_isCliEntry() || process.argv[1] === _HERE) {
-    process.exit(main());
+    process.exit(main(process.argv.slice(2)));
 }
 
 export { REPO_ROOT, RULES_DIR, DESC_CAP };
