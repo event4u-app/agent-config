@@ -3434,7 +3434,7 @@ function _resolve_global_rule_scope(package_root: string): RuleScope {
     // contradict, and this is the documented upgrade-compat path.
     if (settings_path === null) {
         try {
-            return ruleScopeFromSettings(_load_default_settings(package_root));
+            return ruleScopeFromSettings(_load_default_settings(package_root), package_root);
         } catch {
             return LEGACY_ALL;
         }
@@ -3467,7 +3467,7 @@ function _resolve_global_rule_scope(package_root: string): RuleScope {
         return LEGACY_ALL;
     }
     try {
-        return ruleScopeFromSettings(parsed as Record<string, unknown>);
+        return ruleScopeFromSettings(parsed as Record<string, unknown>, package_root);
     } catch (e) {
         warn(
             `could not derive rule scope from ${settings_path} (${String(e)}) — ` +

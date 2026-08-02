@@ -32,6 +32,7 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 
+import { resolve_rule_pack_scope } from '../scripts/_lib/scoped_projection.js';
 import { rule_in_scope } from './ruleInScope.js';
 
 /**
@@ -67,17 +68,41 @@ function _list(value: unknown): readonly string[] | null {
  * already-parsed settings object (same key contract as condense's
  * `_read_projection_list` — absent / empty = legacy-all).
  */
-export function ruleScopeFromSettings(settings: Record<string, unknown>): RuleScope {
+export function ruleScopeFromSettings(
+    settings: Record<string, unknown>,
+    packageRoot?: string,
+): RuleScope {
     const proj = settings['projection'];
     if (typeof proj !== 'object' || proj === null || Array.isArray(proj)) {
         return LEGACY_ALL;
     }
     const p = proj as Record<string, unknown>;
+    // `rule_packs: auto` derives the active-pack set — the SAME set the
+    // skill/command prune uses — so the rule axis cannot drift from the
+    // artefact axis. Resolving it needs the package root (packs.yml lives
+    // there); without one the sentinel degrades to the inactive axis rather
+    // than to an empty set, which would prune every pack-tagged rule.
+    const packs =
+        packageRoot === undefined
+            ? _list(p['rule_packs'])
+            : resolve_rule_pack_scope(
+                  p['rule_packs'],
+                  packageRoot,
+                  _list(_runtimeActivePacks(settings)) ?? [],
+              );
     return {
         workspaces: _list(p['rule_workspaces']),
-        packs: _list(p['rule_packs']),
+        packs,
         roles: _list(p['rule_roles']),
     };
+}
+
+/** `runtime.active_packs` overlay from an already-parsed settings object. */
+function _runtimeActivePacks(settings: Record<string, unknown>): unknown {
+    const rt = settings['runtime'];
+    return typeof rt === 'object' && rt !== null && !Array.isArray(rt)
+        ? (rt as Record<string, unknown>)['active_packs']
+        : null;
 }
 
 /**

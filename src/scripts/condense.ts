@@ -50,6 +50,7 @@ import { build_claude_hook_matrix } from './_lib/claude_settings_hooks.js';
 import { is_claude_builtin_name } from './_lib/claude_builtin_names.js';
 import { project_settings_path, load_agent_settings } from './_lib/agent_settings.js';
 import { rule_is_compile_enabled } from './_lib/compile_time_toggles.js';
+import { resolve_rule_pack_scope } from './_lib/scoped_projection.js';
 import { info, success, flush_summary, resolve_level } from './_lib/script_output.js';
 import {
     TIER_TO_CLAUDE_MODEL as _TIER_TO_CLAUDE_MODEL,
@@ -993,13 +994,16 @@ export { _HRR_BANNER_MARKER };
 // (rule-router contract § Schema v2). Untagged rules fail safe: they ship.
 // ADR-040: projection-time filtering only, no runtime resolver.
 
-function _read_projection_list(key: string): string[] | null {
+function _read_projection_raw(key: string): unknown {
     const data = load_agent_settings({ project_path: MODULE_STATE.SETTINGS_FILE });
     const proj = data['projection'];
-    const value =
-        typeof proj === 'object' && proj !== null && !Array.isArray(proj)
-            ? (proj as Record<string, unknown>)[key]
-            : null;
+    return typeof proj === 'object' && proj !== null && !Array.isArray(proj)
+        ? (proj as Record<string, unknown>)[key]
+        : null;
+}
+
+function _read_projection_list(key: string): string[] | null {
+    const value = _read_projection_raw(key);
     if (Array.isArray(value) && value.length > 0) {
         return value.map((v) => String(v));
     }
@@ -1010,8 +1014,28 @@ function _read_rule_workspaces(): string[] | null {
     return _read_projection_list('rule_workspaces');
 }
 
+/** `runtime.active_packs` overlay, empty when unset (fresh-install default). */
+function _read_runtime_active_packs(): string[] {
+    const data = load_agent_settings({ project_path: MODULE_STATE.SETTINGS_FILE });
+    const rt = data['runtime'];
+    const value =
+        typeof rt === 'object' && rt !== null && !Array.isArray(rt)
+            ? (rt as Record<string, unknown>)['active_packs']
+            : null;
+    return Array.isArray(value) ? value.map((v) => String(v)) : [];
+}
+
+/**
+ * Pack scope for the rule layer. `rule_packs: auto` derives the active-pack
+ * set (the same one the skill/command prune uses) instead of a hand-typed id
+ * list; anything else keeps the historical list-or-inactive semantics.
+ */
 function _read_rule_packs(): string[] | null {
-    return _read_projection_list('rule_packs');
+    return resolve_rule_pack_scope(
+        _read_projection_raw('rule_packs'),
+        MODULE_STATE.PROJECT_ROOT,
+        _read_runtime_active_packs(),
+    );
 }
 
 /**
