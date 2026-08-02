@@ -8,6 +8,7 @@ tier: 2
 visibility: internal
 description: Context orchestrator — routes to create, refactor
 cluster: context
+routes_to: [context-create, context-refactor]
 type: orchestrator
 suggestion:
   eligible: true

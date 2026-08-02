@@ -8,6 +8,7 @@ tier: 2
 visibility: internal
 description: Module orchestrator — routes to create, explore
 cluster: module
+routes_to: [module-create, module-explore]
 type: orchestrator
 suggestion:
   eligible: true
