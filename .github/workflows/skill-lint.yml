@@ -128,11 +128,11 @@ jobs:
       - name: Generate PR summary
         if: github.event_name == 'pull_request' && always()
         run: |
+          ./scripts-run src/scripts/skill_linter --changed --format json > /tmp/changed-lint.json 2>/dev/null || true
           # The single-quoted body below is JavaScript passed to `node -e`;
           # shell expansion inside it would be a bug, not the fix SC2016
-          # suggests.
+          # suggests. The directive has to sit on the command it covers.
           # shellcheck disable=SC2016
-          ./scripts-run src/scripts/skill_linter --changed --format json > /tmp/changed-lint.json 2>/dev/null || true
           node -e '
           const fs = require("node:fs");
           let data;
