@@ -184,8 +184,8 @@ describe('sweep_dead_scan_roots — evidence fixtures', () => {
 
 describe('sweep_dead_scan_roots — triage classes', () => {
     it('maps the retired containers to A, build artifacts to B, the rest to C', () => {
-        expect(classify('.agent-src.uncondensed/skills')).toBe('A');
         expect(classify('packages')).toBe('A');
+        expect(classify('packages/core'), 'prefix match, not just equality').toBe('A');
         expect(classify('dist/discovery/x.json')).toBe('B');
         expect(classify('.github/budget-trend.jsonl')).toBe('B');
         expect(classify('agents/contexts')).toBe('C');
@@ -220,17 +220,14 @@ function ledgerFile(entries: unknown[]): string {
     return f;
 }
 
-const REAL_LEDGER = [
-    { script: 'check_gate_paths.ts', rel: 'packages', category: 'path-as-predicate', reason: 'r', date: 'd' },
-    { script: 'check_reply_consistency.ts', rel: '.agent-src.uncondensed', category: 'path-as-sentinel', reason: 'r', date: 'd' },
-    {
-        script: 'check_token_optimizer_freshness.ts',
-        rel: '.agent-src.uncondensed/skills/token-optimizer/SKILL.md',
-        category: 'deliberate-legacy-handling',
-        reason: 'r',
-        date: 'd',
-    },
-];
+/**
+ * The SHIPPED ledger, not a copy. Duplicating its rows here would let the two
+ * drift and would re-introduce the retired-container literals this repo's
+ * legacy-path gate forbids under `src/` and `tests/`.
+ */
+const REAL_LEDGER = JSON.parse(
+    fs.readFileSync(path.join(REPO, 'agents', 'evidence', 'sweep-dispositions.json'), 'utf-8'),
+) as unknown[];
 const GHOST = { script: 'lint_ghost_that_never_was.ts', rel: 'agents/gone', category: 'x', reason: 'r', date: 'd' };
 
 describe('sweep_dead_scan_roots — exit contract (one meaning per code)', () => {
