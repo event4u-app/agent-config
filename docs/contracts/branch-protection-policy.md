@@ -145,9 +145,9 @@ that gap is the enforce half below.
 Aligning the ruleset with the checks that actually matter is an **admin API
 write on the production trunk**: a Hard-Floor action under
 `non-destructive-by-default`, reserved for the maintainer with explicit
-this-turn confirmation. It is tracked as
-`blocker: required-check-enforcement` in
-`agents/roadmaps/road-to-renewal-foundation.md`.
+this-turn confirmation. It is deliberately NOT agent-executable and is tracked
+as an open maintainer blocker in the active roadmap set (slug
+`required-check-enforcement`).
 
 The correct endpoint is the **ruleset**, not classic protection:
 
