@@ -128,8 +128,9 @@ function main() {
 
     fs.mkdirSync(outDir, { recursive: true });
 
+    const inContext = argOf('in-context', 'in-context-and-violated');
     const qualifying = sweep.candidates.filter(
-        (c) => c.distance_passes && c.in_context === 'in-context-and-violated' && wanted.includes(c.detector),
+        (c) => c.distance_passes && c.in_context === inContext && wanted.includes(c.detector),
     );
     const bySession = new Map();
     for (const c of qualifying) {

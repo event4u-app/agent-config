@@ -105,18 +105,51 @@ string-matching test that does not. Any future gate built on "detect the
 out-of-scope edit" should expect the same result unless it can first represent
 the task.
 
-## Separate finding — 655 hits in 20 sessions read `not-projected`
+And re-specifying the rule does not rescue it. The property has no
+observer-independent ground state in this data: whether an edit "serves the
+stated task" when the task is *"work through the roadmap"* is a semantic
+judgement, not a fact derivable from a message log. Writing the obligation more
+carefully only moves the judgement from *"did the user name the file"* to
+*"would a reader agree this served the intent"* — which may be worth building as
+a review aid, but is not a mechanical gate, and should not be described as one.
 
-The in-context check looks for the rule's own Iron-Law literal in the session's
-recorded context. In 655 hits across 20 sessions it was absent. Per the
-pre-registration these are removed from the activation corpus and recorded
-separately — but they are **not** established as projection defects. The corpus
-cannot distinguish a genuinely unprojected rule from three benign causes: a
-session whose system prompt the host never writes to the transcript, an
-eval-harness session running a custom prompt, and a subagent sidechain that
-inherits a different instruction set. Deciding between those needs an
-instrumented run, not this data. Recorded here so the number is not lost, and
-deliberately not used to claim a defect.
+## The `not-projected` residue — classified, and it is a recording artifact
+
+655 hits across 20 sessions failed the in-context check: the rule's Iron-Law
+literal was absent from the session's recorded context. The first draft of this
+report parked that as unclassifiable. A reviewer called it correctly: parked, it
+is not a footnote but an **uncontrolled confound** — if a meaningful fraction
+were genuine projection failures, then the rejections in the adjudicated set
+would not be clean nulls, because a rule that never reached context cannot be
+said to have been "ignored despite distance".
+
+So all 20 sessions were checked, mechanically, for the marker that the host
+writes when it records the projected instruction block at all:
+
+| Marker | Sessions containing it |
+|---|---|
+| The `# claudeMd` instruction-block header | **0 / 20** |
+| "Codebase and user instructions are shown below" | **0 / 20** |
+| Any rule *name* in prose | 18 / 20 |
+| A subagent sidechain flag | 0 / 20 |
+
+**The whole instruction block is absent from these transcripts, not the specific
+rule.** That is a property of what the host writes to disk, not of what the
+model received: the session that produced this very report is one of the 20, and
+its rules were demonstrably in context throughout. The confound is closed — the
+`not-projected` class is a recording artifact, and no projection defect is
+evidenced by it.
+
+**The correction this forces on the in-context gate.** The gate is therefore a
+proxy for *"the transcript recorded the instruction block"*, not for *"the rule
+was projected"*. Under this package's default `eager-all` projection the rules
+are in context every turn regardless. So the honest reading is not that 547 hits
+qualified and 3,583 did not — it is that **the corpus is larger than the 12
+sessions adjudicated**, and the null rests on a 100 % rejection rate across the
+67 candidates that were adjudicated, not on the excluded ones having been
+disqualified for a real reason. Stated in the direction that costs the null
+something: candidates outside the adjudicated set were never examined, and the
+result is an inference from the sample, not a census.
 
 ## Limits of this corpus — the shape tested, and the shape not tested
 
@@ -150,6 +183,37 @@ null's revisit condition demanded was searched for and not produced.
 **Does not decide:** that rules never fail. The operator's report stands as a
 report; this corpus simply cannot see the failure it describes with the
 instruments that were pre-registered for it.
+
+**Says it precisely:** what is refused is *this design* — a prompt-time resolver
+justified by an adherence gap — on the grounds that the gap was searched for
+under a pre-committed bar and not produced. That is a design rejection, not
+epistemic closure on the problem space. A sharper instrument on a wider corpus
+could still find something these three detectors could not.
+
+## Council review (2026-08-02, `claude-sonnet-4-5` + `gpt-4o`, 2 rounds, $0.11)
+
+The draft of this report was put to the council before the verdict was
+published. Three of its four findings changed this document:
+
+- **Do not write "permanent".** Both members: the null refutes *this
+  operationalization*, not the problem space; "permanent" conflates a design
+  refusal with epistemic closure the evidence does not earn. Adopted — the
+  refusal is now stated as design-scoped throughout.
+- **The `not-projected` residue is a confound, not a footnote.** `sonnet-4-5`
+  argued the null cannot be called clean while 16 % of raw output sits
+  unexamined. Adopted, and the check it demanded was run: 0/20 sessions record
+  the instruction block at all, which closes the confound and additionally
+  corrects what the in-context gate was ever measuring (above).
+- **Scope-creep detection cannot be re-specified into a gate.** `sonnet-4-5`
+  against `gpt-4o`'s hedge: the problem is the absence of an
+  observer-independent ground state, not loose wording. Adopted (above).
+- **Dissent, not adopted:** `gpt-4o` recommended archiving the telemetry replay
+  script on the grounds that it "relies on the runtime resolver that's been
+  rejected". Checked against the tree: it does not. It replays corpora offline
+  through the same projection-time trigger matching that the coverage gate uses,
+  and feeds the value dashboard; no resolver exists for it to rely on. The
+  premise is false, so the recommendation is declined and recorded here rather
+  than silently dropped.
 
 ## Reproducing
 

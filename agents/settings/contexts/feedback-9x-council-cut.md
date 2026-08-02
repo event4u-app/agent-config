@@ -74,11 +74,15 @@ by a factor of three at the narrowest.
 
 Consequently, and per the pre-commitment above:
 
-- **D1 (the runtime resolver) is refused permanently.** No resolver code exists
-  anywhere in the tree; no hook reads `dist/router.json`. Re-opening needs a
-  materially weaker host tier in the consumer set (this corpus has **no**
-  weak-host session, so that path is untouched) or an explicitly funded
-  n ≈ 50/arm run.
+- **D1 (the runtime resolver) is refused as designed.** No resolver code exists
+  anywhere in the tree; no hook reads `dist/router.json`. The refusal is
+  design-scoped, not epistemic closure — two of the three detectors were blunt,
+  and the council (2026-08-02) was unanimous that "permanent" would overstate
+  what a 0/67 null earns. What it *does* close is the path from a **restated
+  complaint** to a built resolver. Re-opening needs a materially weaker host
+  tier in the consumer set (this corpus has **no** weak-host session, so that
+  path is untouched), an explicitly funded n ≈ 50/arm run, or a produced red
+  baseline under any instrument.
 - **ADR-054 is `rejected`**, unedited below its new Status block.
 - **The two contested items gated on this same corpus fall with it.** The
   stop-event consumer for the recorded verification state was gated on a found

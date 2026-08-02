@@ -128,10 +128,22 @@ commands this repo actually uses, and the scope detector could not represent the
 task at all (100% false-positive rate on its sample). Both were blunt toward
 **more** candidates, not fewer.
 
-**Consequence.** The prompt-time resolver (D1) is refused permanently on this
-evidence. Re-opening requires a materially weaker host tier entering the
-consumer set, or an explicitly funded n ≈ 50/arm run of the full pre-registered
-design. Full report:
+**The one confound, closed.** 655 hits in 20 sessions failed the in-context
+check. Left parked that would have contaminated the null — a rule that never
+reached context cannot be said to have been ignored despite distance. All 20
+were checked: **0/20 record the projected instruction block at all**, including
+the session that produced the report. It is a transcript-recording artifact, not
+a projection defect. The correction it forces: the in-context gate measured
+*what the host wrote to disk*, not *what the model received*, so the corpus is
+larger than the 12 sessions adjudicated and the null is an inference from a
+sample rather than a census.
+
+**Consequence.** The prompt-time resolver (D1) is refused **as designed** on this
+evidence — a design rejection, not epistemic closure (council 2026-08-02,
+unanimous that "permanent" would overstate a 0/67 null). What it closes is the
+path from a restated complaint to a built resolver. Re-opening requires a
+materially weaker host tier entering the consumer set, an explicitly funded
+n ≈ 50/arm run, or a produced red baseline under any instrument. Full report:
 [`activation-red-baseline`](../../evidence/analysis/activation-red-baseline.md).
 
 ## Reminder drift-audit disposition (2026-07-10, road-to-orchestration-and-memory-harvest Phase 5)

@@ -30,11 +30,18 @@ unmeasured claim — the precise precedent the pre-committed teardown exists to
 prevent. The design below is kept, unedited, as the record of what was proposed
 and why it was not built.
 
+**Scope of the rejection.** What is rejected is *this design* — a prompt-time
+resolver justified by an adherence gap — because the gap was searched for under
+a pre-committed bar and not produced. That is not epistemic closure on the
+problem space: two of the three detectors were blunt, and a sharper instrument
+on a wider corpus could still find something. What the rejection does close is
+the path from a **restated complaint** to a built resolver.
+
 **What would re-open it:** a materially weaker host tier entering the
 projection-consumer set (this corpus contains no weak-host session at all, so
-that path is untouched by this rejection), or an explicitly funded n ≈ 50/arm
-run of the full pre-registered design. A restated complaint is not evidence; a
-produced red baseline is.
+that path is untouched by this rejection); an explicitly funded n ≈ 50/arm run
+of the full pre-registered design; or a produced red baseline under any
+instrument. A restated complaint is not evidence; a produced corpus is.
 
 The original proposal follows.
 
