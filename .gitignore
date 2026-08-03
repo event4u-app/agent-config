@@ -125,6 +125,10 @@ __pycache__/
 /.claude/user-types/
 /.claude/skills/
 /.claude/agents/
+# `.claude/commands/` carries the project-scope colon form (`/cluster:sub`)
+# written by `generate_claude_project_commands`; same generated-projection
+# status as the dirs above.
+/.claude/commands/
 
 # Trigger-eval run outputs (produced by `scripts/skill_trigger_eval.py`;
 # triggers.json is tracked, last-run.json is per-run output)

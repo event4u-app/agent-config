@@ -17,7 +17,9 @@
  *   - thin_rule_load     — thin_projection.thin_gpt
  *   - skill_descriptions — description_catalog.skills_core_source.tokens_gpt
  *   - command_descriptions — description_catalog.commands_core_source.tokens_gpt
- *   - mcp_schemas        — Σ mcp_tool_schemas[*].tokens_gpt
+ *   - mcp_schemas        — max mcp_tool_schemas[*].tokens_gpt (per-transport;
+ *                          a client connects over ONE transport, so Σ would
+ *                          double-bill the tools both transports serve)
  *
  * A baseline captured under a different `token_method` (e.g. proxy → exact)
  * is a legitimate reset, not a regression — the gate WARNS and asks for a
@@ -74,10 +76,15 @@ function _num(obj: unknown, ...keys: string[]): number {
 
 /** Extract the flat gated-metric map from a projection-cost report. */
 function extract_metrics(report: Json): Metrics {
+  // MAX, not Σ. The report keys one entry per SERVER-TRANSPORT pair, and a
+  // client connects over exactly one transport of a given server — summing
+  // `agent-config (stdio)` and `agent-config (worker)` would bill the 19
+  // shared tools twice and read as a regression the moment the transports were
+  // split apart. The gated metric is what the worst-case single client loads.
   const mcp = (report['mcp_tool_schemas'] as Json) ?? {};
   let mcp_total = 0;
   for (const server of Object.values(mcp)) {
-    mcp_total += _num(server, 'tokens_gpt');
+    mcp_total = Math.max(mcp_total, _num(server, 'tokens_gpt'));
   }
   return {
     token_method: String(report['token_method'] ?? 'unknown'),

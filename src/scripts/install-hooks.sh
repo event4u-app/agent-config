@@ -266,10 +266,20 @@ write_chat_history_hook "post-rewrite"  "git:post-rewrite"
 # `.augment/`, etc. projections until they remember to run `task sync`.
 # These hooks bridge that gap: fast idempotent re-projection.
 #
+# The same staleness bites the compiled CLI: the Claude/agent hooks run
+# `./agent-config` → `dist/cli/` (gitignored tsc output). A pull that adds
+# or moves a TS module leaves `dist/` stale and EVERY subsequent tool-use
+# hook fails with ERR_MODULE_NOT_FOUND until someone rebuilds. So when the
+# range touches TS sources, rebuild via `npm run build:cli` — tsc only,
+# deliberately NOT the full `npm run build`: the install-bundle step
+# rewrites the committed `dist/install/install.mjs` and has produced
+# spurious tracked diffs from worktrees before.
+#
 # Bypass: `git pull --no-verify` does not exist, but devs can disable the
 # hooks per-command via `git -c core.hooksPath=/dev/null ...` or by
 # editing the file. Runtime ~200 ms when nothing relevant changed
-# (path-diff check exits early); ~2 s on full re-projection.
+# (path-diff check exits early); ~2 s on full re-projection; ~2 s extra
+# for the tsc rebuild when TS sources changed.
 
 append_auto_sync_block() {
     local name="$1"
@@ -294,11 +304,23 @@ elif [ "$name" = "post-checkout" ]; then
 fi
 
 if [ -n "\$prev" ] && [ -n "\$new" ] && [ "\$prev" != "\$new" ]; then
-    if git diff --name-only "\$prev" "\$new" 2>/dev/null | \\
+    changed="\$(git diff --name-only "\$prev" "\$new" 2>/dev/null)"
+    if printf '%s\n' "\$changed" | \\
         grep -qE '^(dist/agent-src/|\\.agent-src\\.uncondensed/|src/scripts/condense\\.ts|\\.agent-tools\\.yml|Taskfile\\.yml)'; then
         if command -v task >/dev/null 2>&1; then
             task sync >/dev/null 2>&1 || true
             task generate-tools >/dev/null 2>&1 || true
+        fi
+    fi
+    # TS sources changed → the gitignored tsc output (dist/cli, dist/scripts,
+    # …) is stale and the ./agent-config hook chain breaks with
+    # ERR_MODULE_NOT_FOUND. Rebuild tsc output only (build:cli), never the
+    # full build (install-bundle rewrites committed dist/install/install.mjs).
+    # Skip silently without node_modules (fresh clone / bare worktree).
+    if printf '%s\n' "\$changed" | \\
+        grep -qE '^(src/(cli|server|shared|install|scripts)/|tsconfig\\.json|package\\.json)'; then
+        if command -v npm >/dev/null 2>&1 && [ -d node_modules ]; then
+            npm run build:cli >/dev/null 2>&1 || true
         fi
     fi
 fi
