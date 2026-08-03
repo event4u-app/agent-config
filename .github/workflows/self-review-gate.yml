@@ -64,9 +64,12 @@ jobs:
       # — the deterministic `finding-dispositions` job in release-validation
       # is red until then. This job stays advisory by design.
       - name: Upload findings artifact (ingestion input for the disposition ledger)
-        if: hashFiles('/tmp/self-review-findings.json') != ''
+        # hashFiles() only sees GITHUB_WORKSPACE — gate on the file directly
+        # and let a missing file (NEUTRAL run, no findings) be a clean no-op.
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: self-review-findings
           path: /tmp/self-review-findings.json
           retention-days: 30
+          if-no-files-found: ignore
