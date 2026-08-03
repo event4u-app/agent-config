@@ -5,24 +5,25 @@ status: later
 
 # Road to plugin-runtime borrowings — seven mechanisms from an external host-plugin reference (Source A)
 
-> **Parked (2026-08-03, council disposition claude-sonnet-4-5 + gpt-4o, 2
-> rounds).** All seven borrows are purely additive capability with **zero
-> recorded internal failures cited** — the harvest freeze (restraint decision
-> 2026-07-20, split-by-pain rule reaffirmed 2026-08-02) applies to every item.
-> The council's sharper point stands recorded: "falsification spikes" means
-> feasibility is unproven; the freeze does not admit borrows that *might*
-> work.
+> **Parked per
+> [`ADR-211`](../../../docs/decisions/ADR-211-harvest-freeze-resume-conditions.md)
+> (harvest freeze; council disposition 2026-08-03).** All seven borrows are
+> purely additive with zero recorded internal failures cited — and the
+> council's sharper point stands: "falsification spikes" means feasibility is
+> itself unproven; the freeze does not admit borrows that *might* work.
+> Re-audited item-granularly on 2026-08-03: 0 EXTRACT, 0 LATENT-CANDIDATE,
+> 7 STAY (see ADR-211 § Consequences).
 >
-> **Resume when BOTH hold:** (1) the harvest freeze's own reopen condition
-> fires (first documented external adopter), AND (2) each resumed item cites
-> a RECORDED internal failure it closes, or a fresh council pass admits it as
-> deliberately additive post-freeze.
+> **Resume when:** the ADR-211 exit fires (external adopter OR the internal
+> arm), AND each resumed item satisfies ADR-211 Amendment C (pre-dating
+> failure finding) or Amendment D (pre-registered red test) — or a fresh
+> council pass admits it as deliberately additive post-freeze.
 >
 > **Source identity:** an external host-plugin runtime reference ("Source A",
 > Apache-2.0 + NOTICE — pattern adoption free; verbatim code needs
-> attribution). Raw analysis with the source name, pinned commit, and
-> file-level evidence is maintainer-local (gitignored transcript,
-> `agents/tmp.old/`), per source-confidentiality.
+> attribution). The raw analysis with the source name, pinned commit, and
+> file-level evidence is maintainer-local and gitignored, per
+> source-confidentiality.
 
 ## Verified borrow candidates (source-level evidence in the local analysis)
 
@@ -33,7 +34,7 @@ status: later
 | B3 | Broker lifecycle — detached app-server over Unix socket, PID file, readiness polling, reuse-if-alive, clean teardown | Borrow behind a latency spike (kill if median saving < 300 ms/call); spawn must go through `hardenedSpawnEnv()` — the reference's `env: process.env` passthrough is the exact inheritance pattern closed in 9.6.0 | frozen — additive; also touches the no-runtime boundary |
 | B4 | Schema-enforced review output — JSON Schema 2020-12 as `outputSchema`; verdict enum, findings with severity/file/line/confidence, `additionalProperties: false` | Borrow: council findings become machine-checkable (Claims-Ledger-compatible); per-provider conformance gate ≥95% | frozen — additive |
 | B5 | Prompt-block taxonomy as lintable artifact — fixed blocks (task / output contract / follow-through / verification loop / grounding rules / action safety) required per task class | Borrow as house lint | frozen — additive |
-| B6 | Path-confined session import — `realpathSync` on source AND allowed root, then `path.relative` containment (symlink-escape-safe) | Borrow — CWE-22/59 adjacent; 4-case escape battery | frozen here — **note:** the same test shape ships NOW via `road-to-release-truth.md` Phase 3 (symlink battery for the count/catalog walkers), which closes a recorded failure; only the session-import surface stays parked |
+| B6 | Path-confined session import — `realpathSync` on source AND allowed root, then `path.relative` containment (symlink-escape-safe) | Borrow — CWE-22/59 adjacent; 4-case escape battery | frozen here — **note:** the repo-side portion was EXTRACTED in PR #1120 (`road-to-release-truth.md` Phase 3, symlink battery for the count/catalog walkers — closes the recorded PR #1105 finding); only the cross-project session-import surface stays parked |
 | B7 | Thin-forwarding-wrapper subagent contract — exactly one tool call, no repo inspection, no commentary, routing flags stripped from task text | Borrow as template (anti-scope-creep, token saving) | frozen — additive |
 
 **Rejected at analysis time (do not resurrect):** the reference's
