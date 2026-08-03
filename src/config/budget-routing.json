@@ -1,0 +1,7 @@
+{
+  "$comment": "Single source of truth for the budget-routing reserve lifecycle (docs/contracts/budget-routing.md). Read by BOTH reserve readers — src/scripts/_lib/tier_budget_routing.ts (acquireBudgetPermit) and src/scripts/cost/budget.mjs (tier subcommand) — so the reserve window can never diverge between them. reserve_ttl_ms: reserves are RACE PROTECTION, not spend accounting — a pending entry older than this is dead and is dropped at the next compaction. lock_break_ms: an .lock file older than this is a crash leftover and is broken (unlink + one retry).",
+  "owner": "maintainer",
+  "review_by": "2027-08-03",
+  "reserve_ttl_ms": 600000,
+  "lock_break_ms": 30000
+}

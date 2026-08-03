@@ -45,6 +45,7 @@ evidence pointer, or `task check-claims` fails the build.
 
 | Claim | Kind | Evidence | Resolves |
 |---|---|---|---|
+| The budget-routing relation (cheapest classifier-adequate tier WITH available budget; exhausted/cooling tier falls back upward; all unavailable → session model, work never blocked; session model never switched) is implemented and deterministically tested, including the atomic reserve lifecycle (acquire → TTL-expire/settle → compact, shared-TTL single source, stale-lock breakage; pre-registered AC1–AC5). DELIVERY is agent-adherent policy — no code caller dispatches through pickTier at runtime — and is monitored by routing:doctor's delivery-evidence check, which WARNs when budget_routing is bound but zero recorded dispatches carry a tier decision. This entry deliberately does NOT claim "budget-aware delegation shipped" as autonomous runtime behavior. | qual | `tests/scripts/tier_budget_routing.test.ts` | ✅ |
 | The release process is documented as an inheritable runbook + succession doc, and the project's bus-factor (trailing-90-day distinct human reviewers) is tracked and reported truthfully — currently 1, not implied to be more. | qual | `docs/succession.md#trailing 90 days` | ✅ |
 | On the pre-registered 2-arm retrieval benchmark (18 hand-verified code-structure questions across 3 real repos, ground truth hash-bound before the run, deterministic, zero model calls), the native code graph scored mean recall 0.365 vs grep 0.797 on the 15 graph-shaped questions (delta -43.2 pp against a pre-declared +10 pp win threshold) and 0.111 vs 0.833 on the negative controls. HONEST NULL — measured root cause: TS arrow-function exports produce no symbol nodes (170 TS vs 13,428 PHP symbol nodes on same-shaped repos) and string-keyed dynamic consumers have no static edge. Consequence bound: code_graph.enabled stays false permanently; deprecation at the next major, removal the major after unless external evidence appears. | quant | `internal/bench/reports/code-graph-vs-grep.md#Verdict — NULL, decisively` | ✅ |
 | 193 commands. | quant | `exec:check_artefact_count_messaging -> 0` | ✅ |
@@ -69,6 +70,7 @@ evidence pointer, or `task check-claims` fails the build.
 | 23 host agents are detected and inventoried; 20 receive a written config surface (18 projection + 1 plugin + 1 bundle target) and 3 are export-only (aider, zed, jetbrains). The count is enforced, not asserted — `knownToolIds()` is pinned at 23 by a test whose assertion literal IS the number, and `src/config/surface-matrix.yml` is held in set-equality with the installer's own user-scope path map by `lint_surface_matrix`, so a host added to one and not the other fails the build. This entry stood `unbacked` while naming its own unblocking condition ("once `surface-matrix.yml` exists, bind the count to that file and flip"); the condition was met and nothing fired, so the shipped figure stayed "7+" — understating real coverage by 3x. | quant | `exec:vitest run tests/install/toolDetection.test.ts -> 0` | ✅ |
 | On the fixture corpus (n = 20 before/after pairs, 16 length-controlled within ±25%), the humanizer pass removes every mechanically detected AI-writing tell (mean hard hits 0.9 → 0, cluster score 53.97 → 0 per 500 words, dash density 9.22 → 0), and a blind judge (claude-sonnet-4-5, deterministic per-pair A/B seed) preferred the humanized text in 16/16 length-controlled pairs. Scope note — the "before" fixtures were deliberately tell-seeded, so this measures seeded-tell removal on a self-constructed corpus, NOT real-draft improvement; real-world lift is unmeasured until step 4b has processed real ghostwriter drafts (see the road-to-humanizer-hardening live-usage blocker). | quant | `internal/bench/reports/humanizer-v1.md#prefers the humanized text` | ✅ |
 | A fresh registry install of this package carries zero high/critical npm-audit findings on the runtime dependency tree (0 vulnerabilities total at last verification), gated on every PR and every release PR. | quant | `.github/workflows/release-validation.yml#npm audit --omit=dev --audit-level=high` | ✅ |
+| Word-boundary-anchored keyword matching reduced unintended rule activations by 12.5% (495 → 433) over the 302-prompt matrix-derived corpus with zero intended positives lost. Disclosure — the derived corpus was co-edited in the same change (6 German positives re-authored to standalone tokens; verb-inflection recall is a documented accepted cost). The circularity is broken by an independent replay over 49 UN-edited real-corpus prompts: recall 15/17 in BOTH arms (zero labels lost to anchoring), unintended activations 110 → 99 (−10.0%). | quant | `agents/evidence/analysis/anchoring-independent-replay-2026-08.md` | ✅ |
 | NONE of the backed ledger claims are machine-re-verifiable today — every evidence pointer is checked for existence (file present, substring present, URL carries a date), never for truth, so a claim pointing at a stale artefact stays backed indefinitely. A measured minority COULD carry a re-executing `exec:` form, clearing the >= 10 pp threshold that was pre-registered before the count was taken, which is why that form is scheduled rather than assumed. The rest cannot: paid or stochastic benchmark runs no CI job can re-derive, and prose contracts. Exact counts live in the evidence file and are NOT restated here on purpose — this entry hard-coded its denominator twice and drifted within a day both times (25 when the ledger held 26, then 26 when it held 27) while CI stayed green, because the pointer resolved. `check_claims` now compares the stored denominator against the live ledger and fails on divergence. A number a human retypes on every ledger edit will drift; the fix was to stop retyping it. | quant | `internal/reports/exec-evidence-feasibility.json#"exec_feasible"` | ✅ |
 | A hand-rolled, dependency-free BM25 + trigram lexical index resolves the "recalls but does not rank" gap: on the retrieval-precision corpus (9 keyword-overlapping-confuser tasks) it drives the mean top tie-set from 3.333 (the `_score` bucket scorer) to 1.0 — every needed decision uniquely top-ranked — with precision@1 and precision@5 unchanged at 1.0. Method: deterministic, model-free re-ranking of the SAME retrieved entry set; both scorers measured over the identical store via `measure_lexical_ranking.ts`. Cross-artefact note (2026-07-25): this baseline (3.333) is the value in THIS claim's own artefact and is cited correctly, but the retrieval-precision artefact records 4.111 for the same scorer on the same corpus — two bench scripts disagree. The lift direction (ties collapse to 1.0) holds under either baseline; the discrepancy itself is unresolved and recorded rather than smoothed. | quant | `exec:measure_lexical_ranking -> 0` | ✅ |
 | The whole layer is compiled into host agents with zero runtime daemon. | qual | `docs/contracts/no-runtime-boundary.md#file-first, no-runtime suite` | ✅ |
@@ -84,14 +86,14 @@ evidence pointer, or `task check-claims` fails the build.
 | On the pre-registered 12-fixture defect-finding corpus (three arms, deterministic file-level recall, codex reviewer gpt-5.5), the cross-model team-review arm produced NO recall lift over single-model self-review — all three arms recalled every planted defect (Δ = 0, H1 not met). Honest null, ceiling-limited (recall 1.00 everywhere: the seeded defects are too obvious to discriminate the arms on recall); the only non-null signal is a single self-review false positive on the controversial-but-correct control vs 0 for team/council. No cross-model quality/lift claim binds; team mode stays workflow-value-only. Re-open: a judge-survivable-subtlety corpus or a new model generation. | quant | `internal/bench/reports/defect-finding.json#honest_null` | ✅ |
 | On the A3 orchestration eval (deterministic verify, measured token deltas), the production-validator subagent returned the correct verdict on both fixtures — NOT READY with the exact `file:line` citation on a planted hollow implementation, READY with zero spurious findings on the clean control — while consuming ~45k fewer tokens than the inline-host baseline on each task. Scope: two planted fixtures on a Claude Code host, not a broad hit-rate. | quant | `internal/bench/orchestration/pv-a3-results.md#token_delta_provenance: measured` | ✅ |
 
-**38 backed claim(s)** — all evidence pointers resolve in CI.
+**40 backed claim(s)** — all evidence pointers resolve in CI.
 
 ### How many of those re-derive themselves
 
-**11 of 38** backed claims carry `exec:` evidence —
+**11 of 40** backed claims carry `exec:` evidence —
 CI re-runs the command and compares its exit code to the claim, so a
 stale one turns the build red. The other
-**27** rest on a pointer: CI checks that the artefact
+**29** rest on a pointer: CI checks that the artefact
 exists and contains what it should, which cannot distinguish a live
 claim from one whose producer nobody has run in months.
 
@@ -102,6 +104,7 @@ given:
 
 | Claim | Why it cannot re-execute |
 |---|---|
+| The budget-routing relation (cheapest classifier-adequate tier WITH available budget; exhausted/cooling tier f | prose or contract artefact — no exit code carries the verdict |
 | The release process is documented as an inheritable runbook + succession doc, and the project's bus-factor (tr | prose or contract artefact — no exit code carries the verdict |
 | On the pre-registered 2-arm retrieval benchmark (18 hand-verified code-structure questions across 3 real repos | benchmark output — regenerating it needs paid or stochastic model calls no CI job can re-derive |
 | A MEASURED-BUT-NOT-SHIPPED experiment — the thin rule projection reduced eager rule load 78,513 → 13,881 GPT-t | benchmark output — regenerating it needs paid or stochastic model calls no CI job can re-derive |
@@ -119,6 +122,7 @@ given:
 | Hook dispatch runs as one precompiled node process with all concerns in-process, and the CI latency gate measu | prose or contract artefact — no exit code carries the verdict |
 | On the fixture corpus (n = 20 before/after pairs, 16 length-controlled within ±25%), the humanizer pass remove | benchmark output — regenerating it needs paid or stochastic model calls no CI job can re-derive |
 | A fresh registry install of this package carries zero high/critical npm-audit findings on the runtime dependen | prose or contract artefact — no exit code carries the verdict |
+| Word-boundary-anchored keyword matching reduced unintended rule activations by 12.5% (495 → 433) over the 302- | prose or contract artefact — no exit code carries the verdict |
 | NONE of the backed ledger claims are machine-re-verifiable today — every evidence pointer is checked for exist | prose or contract artefact — no exit code carries the verdict |
 | The whole layer is compiled into host agents with zero runtime daemon. | prose or contract artefact — no exit code carries the verdict |
 | On a 12-fixture option-decision corpus (3 arms × 2 providers, blind rubric judge claude-opus-4-8, pre-register | benchmark output — regenerating it needs paid or stochastic model calls no CI job can re-derive |
@@ -301,11 +305,12 @@ resolution (`check_enforcement_coverage`) and the claims ledger
 
 Undeclared rules (85) carry no row — an honest gap beats a false claim.
 
-**Axis 2 — evidence form per public claim.** 46 ledger entries · 38 backed · 6 unbacked inventory · 2 resolved-null.
+**Axis 2 — evidence form per public claim.** 48 ledger entries · 40 backed · 6 unbacked inventory · 2 resolved-null.
 
 | Claim id | Kind | Status | Evidence pointer |
 |---|---|---|---|
 | `adversarial-council-finding-coverage` | quant | resolved-null | `docs/benchmark.md#adversarial-verification-council` |
+| `budget-routing-relation` | qual | backed | `tests/scripts/tier_budget_routing.test.ts` |
 | `bus-factor-tracked` | qual | backed | `docs/succession.md#trailing 90 days` |
 | `code-graph-retrieval-null` | quant | backed | `internal/bench/reports/code-graph-vs-grep.md#Verdict — NULL, decisively` |
 | `command-count` | quant | backed | `exec:check_artefact_count_messaging -> 0` |
@@ -332,6 +337,7 @@ Undeclared rules (85) carry no row — an honest gap beats a false claim.
 | `host-agent-count` | quant | backed | `exec:vitest run tests/install/toolDetection.test.ts -> 0` |
 | `humanizer-tell-reduction` | quant | backed | `internal/bench/reports/humanizer-v1.md#prefers the humanized text` |
 | `install-audit-clean` | quant | backed | `.github/workflows/release-validation.yml#npm audit --omit=dev --audit-level=high` |
+| `keyword-anchoring-census` | quant | backed | `agents/evidence/analysis/anchoring-independent-replay-2026-08.md` |
 | `lean-init-cost-reduction` | quant | unbacked | `PRE-REGISTERED 2026-07-28 (road-to-lean-agent-init Phase 3 — registered BEFORE any savings number is cited anywhere; family-scoped, modeled on `downshift-cost-reduction`; quality definition reused from the correctness-comparison acceptance, no second truth). Falsification criteria fixed BEFORE data: (1) correctness floor — primitive answer ≡ agent answer on the golden corpus (`internal/bench/lean-init/results-2026-07-28.md`, 12/12); ANY mismatch on a routed real task recorded via `correctness_match: false` counts against the claim; (2) negative control — a non-lookup task never routes to a primitive (`LOOKUP_CORPUS` lk-n1..n4, FP=0); (3) cost metric — read from `agents/runtime/state/audit/*.jsonl` orchestration lines tagged `origin: lean-init-2026` with `lookup_class != null`, comparing `route_taken: primitive` token cost against `route_taken: subagent` lines of the same class (n and family scope stated at backing time); (4) segregation — lines carry `origin: lean-init-2026` so the `road-to-orchestration-scope-decision` sample stays uncontaminated (council Q5, 2026-07-28). PROVE → flip to backed for the lookup family only; DROP → honest null, primitives stay (correctness-validated) but no savings number is ever cited.` |
 | `ledger-exec-verifiability` | quant | backed | `internal/reports/exec-evidence-feasibility.json#"exec_feasible"` |
 | `lexical-ranking-lift` | quant | backed | `exec:measure_lexical_ranking -> 0` |

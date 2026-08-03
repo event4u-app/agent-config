@@ -20,6 +20,7 @@
  */
 import * as fs from 'node:fs';
 import * as path from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 export type BudgetTier = 'cheap' | 'medium' | 'strong';
 
@@ -123,19 +124,91 @@ export const RESERVE_FILE = 'tier-reserves.jsonl';
 export const COOLDOWN_FILE = 'tier-cooldowns.json';
 export const DEFAULT_COOLDOWN_MS = 60 * 60 * 1000;
 
+// Reserve lifecycle constants — single source of truth shared with
+// budget.mjs (the second reserve reader) via src/config/budget-routing.json.
+// Duplicating the literal here was the exact two-truths defect the external
+// review flagged; both readers now load the same file.
+const _LIFECYCLE_CONFIG = path.join(
+    path.dirname(fileURLToPath(import.meta.url)),
+    '..',
+    '..',
+    'config',
+    'budget-routing.json',
+);
+
+function _lifecycle(): { reserve_ttl_ms: number; lock_break_ms: number } {
+    try {
+        const raw = JSON.parse(fs.readFileSync(_LIFECYCLE_CONFIG, 'utf-8')) as Record<string, unknown>;
+        const ttl = typeof raw['reserve_ttl_ms'] === 'number' ? raw['reserve_ttl_ms'] : 600_000;
+        const brk = typeof raw['lock_break_ms'] === 'number' ? raw['lock_break_ms'] : 30_000;
+        return { reserve_ttl_ms: ttl, lock_break_ms: brk };
+    } catch {
+        return { reserve_ttl_ms: 600_000, lock_break_ms: 30_000 };
+    }
+}
+
+export function reserveTtlMs(): number {
+    return _lifecycle().reserve_ttl_ms;
+}
+
 interface ReserveEntry {
     ts_ms: number;
     tier: BudgetTier;
     est_usd: number;
-    status: 'pending';
+    status: 'pending' | 'settled';
+}
+
+function _readReserves(reservePath: string): ReserveEntry[] {
+    if (!fs.existsSync(reservePath)) {
+        return [];
+    }
+    const out: ReserveEntry[] = [];
+    for (const line of fs.readFileSync(reservePath, 'utf-8').split('\n')) {
+        if (!line.trim()) continue;
+        try {
+            out.push(JSON.parse(line) as ReserveEntry);
+        } catch {
+            // tolerate a torn line — reserve file is advisory spend state
+        }
+    }
+    return out;
+}
+
+/** Take the reserve lock; break a stale one (crash leftover) once. */
+function _takeLock(lock: string, now_ms: number, lock_break_ms: number): number | null {
+    for (let attempt = 0; attempt < 2; attempt += 1) {
+        try {
+            return fs.openSync(lock, 'wx');
+        } catch {
+            try {
+                const age = now_ms - fs.statSync(lock).mtimeMs;
+                if (age > lock_break_ms) {
+                    fs.rmSync(lock, { force: true });
+                    continue; // one retry after breaking the stale lock
+                }
+            } catch {
+                continue; // lock vanished between open and stat — retry once
+            }
+            return null;
+        }
+    }
+    return null;
 }
 
 /**
- * Atomic budget reserve: O_EXCL lock → sum ledger+reserves → append a
- * pending entry → release. Returns granted=false (never throws) when the
- * ceiling would be crossed or the lock cannot be taken quickly — the
- * caller falls back per the relation (fail-open at the DECISION layer,
- * conservative at the SPEND layer).
+ * Atomic budget reserve — full lifecycle (external review 2026-08-03):
+ *
+ *   acquire → expire (TTL) / settle → compact-on-write
+ *
+ * Under the lock: live reserves = pending entries younger than the shared
+ * TTL (reserves are RACE PROTECTION, not spend accounting — real spend is
+ * the ledger's job); the file is COMPACTED to exactly those live entries
+ * on every acquire, so it stays bounded; a lock file older than
+ * `lock_break_ms` is a crash leftover and is broken with one retry.
+ * Returns granted=false (never throws) when the ceiling would be crossed
+ * or a fresh lock is genuinely held — the caller falls back per the
+ * relation (fail-open at the DECISION layer, conservative at the SPEND
+ * layer).
  */
 export function acquireBudgetPermit(options: {
     tracking_dir: string;
@@ -148,44 +221,45 @@ export function acquireBudgetPermit(options: {
     const dir = options.tracking_dir;
     fs.mkdirSync(dir, { recursive: true });
     const lock = path.join(dir, `${RESERVE_FILE}.lock`);
-    let fd: number;
-    try {
-        fd = fs.openSync(lock, 'wx');
-    } catch {
+    const { reserve_ttl_ms, lock_break_ms } = _lifecycle();
+    const fd = _takeLock(lock, options.now_ms, lock_break_ms);
+    if (fd === null) {
         return { granted: false, reason: 'reserve lock busy — treat tier as unavailable this instant' };
     }
     try {
         const reservePath = path.join(dir, RESERVE_FILE);
-        let reserved = 0;
-        if (fs.existsSync(reservePath)) {
-            for (const line of fs.readFileSync(reservePath, 'utf-8').split('\n')) {
-                if (!line.trim()) continue;
-                try {
-                    const e = JSON.parse(line) as ReserveEntry;
-                    if (e.tier === options.tier && e.status === 'pending') {
-                        reserved += e.est_usd;
-                    }
-                } catch {
-                    // tolerate a torn line — reserve file is advisory spend state
-                }
-            }
-        }
+        const live = _readReserves(reservePath).filter(
+            (e) => e.status === 'pending' && options.now_ms - e.ts_ms < reserve_ttl_ms,
+        );
+        const reserved = live
+            .filter((e) => e.tier === options.tier)
+            .reduce((acc, e) => acc + e.est_usd, 0);
         if (
             options.ceiling_usd !== null &&
             options.spent_usd + reserved + options.estimated_cost_usd > options.ceiling_usd
         ) {
+            // Compact even on deny — expiry must not depend on a grant.
+            fs.writeFileSync(
+                reservePath,
+                live.map((e) => JSON.stringify(e)).join('\n') + (live.length ? '\n' : ''),
+                'utf-8',
+            );
             return {
                 granted: false,
                 reason: `ceiling ${options.ceiling_usd} would be crossed (spent ${options.spent_usd} + reserved ${reserved})`,
             };
         }
-        const entry: ReserveEntry = {
+        live.push({
             ts_ms: options.now_ms,
             tier: options.tier,
             est_usd: options.estimated_cost_usd,
             status: 'pending',
-        };
-        fs.appendFileSync(reservePath, `${JSON.stringify(entry)}\n`, 'utf-8');
+        });
+        fs.writeFileSync(
+            reservePath,
+            live.map((e) => JSON.stringify(e)).join('\n') + '\n',
+            'utf-8',
+        );
         return { granted: true, reason: 'reserved' };
     } finally {
         fs.closeSync(fd);
@@ -193,7 +267,54 @@ export function acquireBudgetPermit(options: {
     }
 }
 
-/** Record a quota/429 error: the tier cools down; pickTier skips it. */
+/**
+ * Settle the oldest live pending reserve of a tier (call when the real
+ * cost lands in the ledger, so the estimate stops counting immediately
+ * instead of waiting out the TTL). Settled entries are dropped by the
+ * next compaction. Best-effort: lock busy → no-op (the TTL is the
+ * backstop that makes settling optional, never load-bearing).
+ */
+export function settlePermit(options: {
+    tracking_dir: string;
+    tier: BudgetTier;
+    now_ms: number;
+}): boolean {
+    const lock = path.join(options.tracking_dir, `${RESERVE_FILE}.lock`);
+    const { reserve_ttl_ms, lock_break_ms } = _lifecycle();
+    const fd = _takeLock(lock, options.now_ms, lock_break_ms);
+    if (fd === null) {
+        return false;
+    }
+    try {
+        const reservePath = path.join(options.tracking_dir, RESERVE_FILE);
+        const live = _readReserves(reservePath).filter(
+            (e) => e.status === 'pending' && options.now_ms - e.ts_ms < reserve_ttl_ms,
+        );
+        const idx = live.findIndex((e) => e.tier === options.tier);
+        if (idx === -1) {
+            return false;
+        }
+        live.splice(idx, 1);
+        fs.writeFileSync(
+            reservePath,
+            live.map((e) => JSON.stringify(e)).join('\n') + (live.length ? '\n' : ''),
+            'utf-8',
+        );
+        return true;
+    } finally {
+        fs.closeSync(fd);
+        fs.rmSync(lock, { force: true });
+    }
+}
+
+/**
+ * Record a quota/429 error: the tier cools down; pickTier skips it.
+ *
+ * Deliberately lock-free: last-writer-wins on a 3-key timestamp map is
+ * benign (two concurrent trips write near-identical "until" values), so
+ * the reserve lock is not reused here (accepted in the 2026-08-03 review).
+ * Expired entries are purged on every write so the map never grows stale.
+ */
 export function tripCooldown(options: {
     tracking_dir: string;
     tier: BudgetTier;
@@ -207,6 +328,11 @@ export function tripCooldown(options: {
         state = JSON.parse(fs.readFileSync(p, 'utf-8')) as Record<string, number>;
     } catch {
         state = {};
+    }
+    for (const [k, v] of Object.entries(state)) {
+        if (typeof v !== 'number' || v <= options.now_ms) {
+            delete state[k];
+        }
     }
     state[options.tier] = until;
     fs.mkdirSync(options.tracking_dir, { recursive: true });
