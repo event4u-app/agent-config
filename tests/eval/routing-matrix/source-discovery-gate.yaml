@@ -1,0 +1,8 @@
+rule: source-discovery-gate
+positives:
+  - prompt: "Which fields does the orders endpoint actually return?"
+  - prompt: "Check the schema before writing the filter for the report."
+  - prompt: "Prüfe zuerst das Schema der Tabelle, bevor du den Filter baust."
+near_misses:
+  - prompt: "Add retries to the outbound HTTP client."
+  - prompt: "Document the request flow between the two services."

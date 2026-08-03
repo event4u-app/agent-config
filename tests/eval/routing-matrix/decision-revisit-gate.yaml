@@ -1,0 +1,8 @@
+rule: decision-revisit-gate
+positives:
+  - prompt: "This was already decided last quarter, but the constraint has changed - can we reopen it?"
+  - prompt: "The eval came back an honest null - do we ever retry it?"
+  - prompt: "Da steht 'don't relitigate' in der Notiz - gilt das noch?"
+near_misses:
+  - prompt: "Should we adopt the new logging library or keep the current one?"
+  - prompt: "Document the outcome of yesterday's design discussion."

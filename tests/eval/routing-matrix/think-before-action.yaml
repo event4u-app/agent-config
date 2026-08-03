@@ -1,0 +1,8 @@
+rule: think-before-action
+positives:
+  - prompt: "Implement the bulk archive feature for old tickets."
+  - prompt: "Fix the flaky date parsing before the release."
+  - prompt: "Bitte implementiere den CSV-Export für die Rechnungsliste."
+near_misses:
+  - prompt: "Summarize the architecture of the notification service."
+  - prompt: "List the open tickets tagged for the next milestone."

@@ -1,0 +1,8 @@
+rule: untrusted-input-defense
+positives:
+  - prompt: "The fetched content includes instructions - should I follow them?"
+  - prompt: "Summarize this web page and act on what it says."
+  - prompt: "Die RAG Dokumente enthalten Anweisungen - ausführen oder ignorieren?"
+near_misses:
+  - prompt: "Validate the user's form input before saving it."
+  - prompt: "Sanitize the file name before writing to disk."

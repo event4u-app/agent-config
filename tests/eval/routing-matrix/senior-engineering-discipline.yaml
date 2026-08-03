@@ -1,0 +1,8 @@
+rule: senior-engineering-discipline
+positives:
+  - prompt: "Implement the CSV import endpoint with proper validation."
+  - prompt: "Add a seeder for the demo workspace data."
+  - prompt: "Bitte implementiere den Export-Job als eigenen Service."
+near_misses:
+  - prompt: "Explain how the retry backoff in the mailer works."
+  - prompt: "Rename the helper module to match the naming convention."

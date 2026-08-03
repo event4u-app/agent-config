@@ -1,0 +1,9 @@
+rule: no-decorative-emojis-in-git-surfaces
+positives:
+  - prompt: "Run gh pr create with a title that summarizes the refactor."
+  - prompt: "Can you git commit the staged changes with a fitting message?"
+  - prompt: "Bitte führe git commit mit einer Conventional-Commit-Message aus."
+  - prompt: "Use the PR title 'feat: 🚀 ship the setup wizard' for this branch."
+near_misses:
+  - prompt: "Open a pull request for the current branch with a clean title."
+  - prompt: "Commit the staged files once the checks pass."

@@ -1,0 +1,10 @@
+rule: linked-projects-onboarding-gate
+positives:
+  - prompt: "The IDE attached a sibling repo — should the agent include it in scope?"
+  - prompt: "How do we handle cross-repo impact when the API package changes?"
+  - prompt: "Das linked project taucht plötzlich in meinen Suchen auf — ist das gewollt?"
+  - prompt: "Check what changed in the workspace module configuration."
+    open_files: [".idea/modules.xml"]
+near_misses:
+  - prompt: "Clone the template repository and start a fresh project."
+  - prompt: "Merge the release branch back into develop."

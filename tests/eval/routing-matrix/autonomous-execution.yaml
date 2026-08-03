@@ -1,0 +1,8 @@
+rule: autonomous-execution
+positives:
+  - prompt: "What does personal.autonomy control in the agent settings?"
+  - prompt: "Switch to autonomy mode and finish the migration without asking me."
+  - prompt: "Bitte aktiviere den Autonomy Mode für diese Session."
+near_misses:
+  - prompt: "Just keep working without asking me about trivial steps."
+  - prompt: "Does the agent have to ask before every routine workflow decision?"

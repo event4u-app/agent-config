@@ -1,0 +1,8 @@
+rule: external-reference-deep-dive
+positives:
+  - prompt: "Analyze github.com/acme/agent-kit and tell me how their installer works."
+  - prompt: "Treat this reference repo as the template for our layout."
+  - prompt: "Schau dir github.com/foo/bar genauer an - wie lösen die das Routing?"
+near_misses:
+  - prompt: "Compare our installer with the notes I pasted below."
+  - prompt: "Summarize the README I've copied into the description."

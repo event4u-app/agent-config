@@ -1,0 +1,8 @@
+rule: security-sensitive-stop
+positives:
+  - prompt: "Add a password reset flow to the auth module."
+  - prompt: "Change the webhook signature validation for the Stripe integration."
+  - prompt: "Bitte passe die Billing-Logik für Plan-Upgrades an."
+near_misses:
+  - prompt: "Restyle the invoice PDF layout for the new template."
+  - prompt: "Harden the input validation on the search filter."

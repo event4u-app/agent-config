@@ -1,0 +1,9 @@
+rule: user-interrupt-priority
+positives:
+  - prompt: "Stop that build and look at the production alert first."
+  - prompt: "Mach stattdessen erst den Security-Patch fertig."
+  - prompt: "Process the whole roadmap without pausing between phases."
+    command: "roadmap:process-full"
+near_misses:
+  - prompt: "Pause the deployment until the database backup finishes."
+  - prompt: "Prioritize the bug list for tomorrow's standup."

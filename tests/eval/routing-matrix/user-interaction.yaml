@@ -1,0 +1,8 @@
+rule: user-interaction
+positives:
+  - prompt: "Give me the options for migrating the queue and pick one."
+  - prompt: "What do you recommend for structuring the new test suite?"
+  - prompt: "Was empfiehlst du für die Aufteilung der Migrationen?"
+near_misses:
+  - prompt: "Which of the two approaches do you prefer here?"
+  - prompt: "Pick the best path forward and just do it."

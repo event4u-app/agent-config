@@ -1,0 +1,8 @@
+rule: prefer-enums-over-literals
+positives:
+  - prompt: "The status field takes 'active' or 'archived' - model it properly."
+  - prompt: "Should the priority column be an enum or a plain integer?"
+  - prompt: "Bitte modelliere den Status der Bestellung als festen Wertesatz."
+near_misses:
+  - prompt: "Replace the magic numbers in the retry backoff with named constants."
+  - prompt: "Extract the hardcoded URLs into a config file."

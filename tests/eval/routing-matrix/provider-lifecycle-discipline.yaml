@@ -1,0 +1,9 @@
+rule: provider-lifecycle-discipline
+positives:
+  - prompt: "Which provider should /image:create default to for banner renders?"
+  - prompt: "Update the retry handling in this rendering script."
+    open_files: ["scripts/ai-video/adapters/kling.sh"]
+  - prompt: "Welcher Provider ist stabil genug für den Renderjob heute Nacht?"
+near_misses:
+  - prompt: "Render the storyboard frames with the configured backend service."
+  - prompt: "Rotate the API keys for the external rendering service account."

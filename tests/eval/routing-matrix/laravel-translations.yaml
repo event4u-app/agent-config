@@ -1,0 +1,10 @@
+rule: laravel-translations
+positives:
+  - prompt: "Add a translation for the new checkout error message."
+  - prompt: "Why does trans('cart.empty') render the raw key on staging?"
+  - prompt: "Bitte ergänze den fehlenden translation key für die Fehlermeldung im Checkout."
+  - prompt: "Sync the new keys into the locale files."
+    open_files: ["lang/de/checkout.php"]
+near_misses:
+  - prompt: "Make the error banner red instead of orange."
+  - prompt: "Log checkout failures to the monitoring channel."

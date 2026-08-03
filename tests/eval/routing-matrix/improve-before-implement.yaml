@@ -1,0 +1,8 @@
+rule: improve-before-implement
+positives:
+  - prompt: "Please implement the new export feature for the reporting module."
+  - prompt: "Refactor the settings loader so it supports layered overrides."
+  - prompt: "Schreib mir eine Migration, die die Spalte tenant_id ergänzt."
+near_misses:
+  - prompt: "What does this error message in the console mean?"
+  - prompt: "Fix the typo in the README heading."

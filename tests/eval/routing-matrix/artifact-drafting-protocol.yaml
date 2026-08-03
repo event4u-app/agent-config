@@ -1,0 +1,8 @@
+rule: artifact-drafting-protocol
+positives:
+  - prompt: "Please create a new skill for handling Stripe webhooks."
+  - prompt: "We need a new rule that stops the agent from committing secrets."
+  - prompt: "Bau mir ein Skill für die Rechnungsprüfung."
+near_misses:
+  - prompt: "Improve the wording of the existing linting skill's description."
+  - prompt: "Which guidelines cover error handling in this repo?"

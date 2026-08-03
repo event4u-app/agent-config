@@ -1,0 +1,8 @@
+rule: laravel-routing
+positives:
+  - prompt: "Add an Eloquent scope for active users on the User model."
+  - prompt: "Create a FormRequest for the checkout endpoint validation."
+  - prompt: "Wie definiere ich in Laravel einen Job, der stündlich läuft?"
+near_misses:
+  - prompt: "Add request validation to the checkout endpoint of our PHP backend."
+  - prompt: "How do I schedule an hourly cron job on the staging server?"

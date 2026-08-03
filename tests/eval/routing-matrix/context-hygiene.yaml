@@ -1,0 +1,8 @@
+rule: context-hygiene
+positives:
+  - prompt: "Does the 3-failure rule still apply when every attempt hits a different error?"
+  - prompt: "This has turned into a long conversation - should we start a fresh session?"
+  - prompt: "Greift die 3-Failure-Regel auch, wenn jeder Versuch anders fehlschlägt?"
+near_misses:
+  - prompt: "The chat feels slow, can you summarize where we currently stand?"
+  - prompt: "I failed three times to fix this test, what should we try next?"

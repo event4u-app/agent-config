@@ -1,0 +1,8 @@
+rule: scale-discipline
+positives:
+  - prompt: "Review this migration for the audit log table before it ships."
+  - prompt: "The orders list endpoint has an N+1 - can you add pagination?"
+  - prompt: "Braucht die neue Spalte einen index für die Filterabfragen?"
+near_misses:
+  - prompt: "Speed up the CSV export by streaming rows to the client."
+  - prompt: "Profile the slow dashboard render and cache the summary counts."

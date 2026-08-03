@@ -1,0 +1,11 @@
+rule: markdown-safe-codeblocks
+positives:
+  - prompt: "The triple backticks in this doc break the rendering - can you nest the code blocks safely?"
+  - prompt: "Add a fenced shell example to the setup section of this file."
+    open_files: ["docs/setup-guide.md"]
+  - prompt: "Bitte prüfe die verschachtelten Codeblöcke in dieser Anleitung."
+    open_files: ["README.md"]
+near_misses:
+  - prompt: "Wrap the shell snippet in a fenced code block on the HTML docs page."
+    open_files: ["docs/index.html"]
+  - prompt: "Escape the single backtick characters inside the template literal."

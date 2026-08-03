@@ -1,0 +1,8 @@
+rule: code-provenance
+positives:
+  - prompt: "I found this on GitHub - can we port this rate limiter into our codebase?"
+  - prompt: "Can we borrow the retry algorithm from that blog post?"
+  - prompt: "Dieser Code ist vendored aus einem Apache-Projekt - müssen wir die Lizenz nennen?"
+near_misses:
+  - prompt: "Write a rate limiter from scratch using a token bucket."
+  - prompt: "Which license does our own package ship under?"

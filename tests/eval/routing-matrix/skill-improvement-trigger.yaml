@@ -1,0 +1,8 @@
+rule: skill-improvement-trigger
+positives:
+  - prompt: "Run the improvement capture after completing this task."
+  - prompt: "Is the skill improvement pipeline enabled in this repo?"
+  - prompt: "Soll die improvement Pipeline nach großen Tasks automatisch laufen?"
+near_misses:
+  - prompt: "Capture what we learned from this task in the memory system."
+  - prompt: "Tune the CI workflow so the lint stage runs first."

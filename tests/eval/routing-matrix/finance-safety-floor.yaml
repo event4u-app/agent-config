@@ -1,0 +1,8 @@
+rule: finance-safety-floor
+positives:
+  - prompt: "How much runway do we have at the current burn?"
+  - prompt: "Build a DCF valuation for the acquisition target."
+  - prompt: "Sollten wir jetzt fundraisen? Modelliere bitte die Dilution."
+near_misses:
+  - prompt: "Reconcile last month's bank statement with the ledger."
+  - prompt: "Categorize these expenses for the quarterly report."

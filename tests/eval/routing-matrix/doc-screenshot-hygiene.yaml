@@ -1,0 +1,10 @@
+rule: doc-screenshot-hygiene
+positives:
+  - prompt: "Add a screenshot of the settings page to the README."
+  - prompt: "Generate a docs site for the package with Starlight."
+  - prompt: "Häng bitte einen Screenshot vom Admin-Panel in die Doku."
+  - prompt: "Is this image safe to ship as-is?"
+    open_files: ["docs/media/wizard-step-2.png"]
+near_misses:
+  - prompt: "Add an architecture diagram to the deployment guide."
+  - prompt: "Embed the logo SVG in the README header."

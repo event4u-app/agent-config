@@ -1,0 +1,8 @@
+rule: copilot-routing
+positives:
+  - prompt: "Can you tune how Copilot reviews our pull requests?"
+  - prompt: "Update copilot-instructions.md so suggestions follow our commit rules."
+  - prompt: "Wie konfiguriere ich Copilot, damit es unsere Namenskonventionen vorschlägt?"
+near_misses:
+  - prompt: "Configure the AI pair programmer plugin in VS Code."
+  - prompt: "How do I tune inline completion behavior in my editor?"

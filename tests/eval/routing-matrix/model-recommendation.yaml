@@ -1,0 +1,8 @@
+rule: model-recommendation
+positives:
+  - prompt: "Which model should I use for this large refactoring session?"
+  - prompt: "Starting a new task: port the billing exporter to TypeScript."
+  - prompt: "Setz bitte model_tier auf reasoning für diesen Command."
+near_misses:
+  - prompt: "Update the data schema of the reporting module before the release."
+  - prompt: "Schedule the nightly batch run for the recommendation engine."

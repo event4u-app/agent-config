@@ -1,0 +1,8 @@
+rule: media-sync-ground-truth
+positives:
+  - prompt: "Cut the music video so the mouths match the vocals in every scene."
+  - prompt: "Build the vocal map from the real track before we render any clips."
+  - prompt: "Der Charakter soll die Zeile mit den Lippen synchron mitsprechen."
+near_misses:
+  - prompt: "Align the subtitle timestamps with the podcast audio track."
+  - prompt: "Trim silence from the recorded voiceover before export."

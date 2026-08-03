@@ -1,0 +1,8 @@
+rule: preservation-guard
+positives:
+  - prompt: "Don't drop the Iron Law section when you merge these two skills."
+  - prompt: "Does the condensed rule still keep every Iron Law heading verbatim?"
+  - prompt: "Achte beim Zusammenführen darauf, dass die Iron Law Blöcke erhalten bleiben."
+near_misses:
+  - prompt: "Merge the two overlapping skills into one and keep the strongest examples."
+  - prompt: "Condense this guideline without losing the validation steps."

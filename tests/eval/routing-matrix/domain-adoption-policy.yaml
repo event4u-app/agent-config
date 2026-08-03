@@ -1,0 +1,10 @@
+rule: domain-adoption-policy
+positives:
+  - prompt: "Should we open a mobile track with React Native skills?"
+  - prompt: "Someone requested an ML track - do we have the demand signal for it?"
+  - prompt: "Sollen wir einen Blockchain Track im Paket aufmachen?"
+  - prompt: "Draft the first skill for the new domain."
+    open_files: ["src/skills/flutter-setup/SKILL.md"]
+near_misses:
+  - prompt: "Add another Laravel skill to the existing PHP set."
+  - prompt: "Which domains does the suite already cover today?"

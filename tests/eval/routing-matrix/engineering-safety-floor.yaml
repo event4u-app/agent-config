@@ -1,0 +1,8 @@
+rule: engineering-safety-floor
+positives:
+  - prompt: "Deploy the current release to production tonight."
+  - prompt: "Run the schema change migration on the primary database."
+  - prompt: "Bitte mach den Rollback des letzten Deployments."
+near_misses:
+  - prompt: "Run the smoke tests against the staging environment."
+  - prompt: "Bump the version number in the package manifest."

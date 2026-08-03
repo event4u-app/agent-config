@@ -1,0 +1,8 @@
+rule: git-history-discipline
+positives:
+  - prompt: "Can you git rebase this feature onto the tip of main?"
+  - prompt: "The branch diverged from origin - what now?"
+  - prompt: "Mach bitte ein fixup auf den letzten Commit und dann force-push."
+near_misses:
+  - prompt: "Merge the feature branch into develop once CI is green."
+  - prompt: "Show me the last ten commits with their authors."

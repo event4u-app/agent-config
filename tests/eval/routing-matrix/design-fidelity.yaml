@@ -1,0 +1,9 @@
+rule: design-fidelity
+positives:
+  - prompt: "Here's the Figma export - build this design exactly as shown."
+  - prompt: "Setz die Seite bitte genau so um wie in der Übergabedatei."
+    open_files: ["handover/checkout-design.html"]
+  - prompt: "Bau das nach, bitte exakt wie im Prototyp."
+near_misses:
+  - prompt: "Improve the layout of the settings page - feel free to explore variants."
+  - prompt: "Make the dashboard cards visually consistent with each other."

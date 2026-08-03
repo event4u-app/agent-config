@@ -1,0 +1,8 @@
+rule: downstream-changes
+positives:
+  - prompt: "I renamed the service - find all callers and update them."
+  - prompt: "Fix the broken imports after the namespace move."
+  - prompt: "Prüfe bitte alle Downstream-Effekte der Umbenennung."
+near_misses:
+  - prompt: "Rename the class and update its unit test."
+  - prompt: "Does anything else break if I change this method signature?"

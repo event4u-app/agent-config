@@ -1,0 +1,8 @@
+rule: content-quoting-floor
+positives:
+  - prompt: "Quote the key passage from that article in the summary."
+  - prompt: "Can you include a short excerpt from the interview transcript?"
+  - prompt: "Übernimm den Absatz bitte verbatim in den Entwurf."
+near_misses:
+  - prompt: "Paraphrase the main argument of the article in two sentences."
+  - prompt: "Cite the sources at the end of the report."

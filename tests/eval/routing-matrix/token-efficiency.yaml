@@ -1,0 +1,8 @@
+rule: token-efficiency
+positives:
+  - prompt: "Please minimize tool calls while scanning the repo."
+  - prompt: "You're fetching logs into context again - redirect them to a file first."
+  - prompt: "Bitte minimize tool calls, das Kontingent ist fast aufgebraucht."
+near_misses:
+  - prompt: "Reduce the verbosity of your replies for the rest of the session."
+  - prompt: "Read the error tail from the CI run instead of the whole output."

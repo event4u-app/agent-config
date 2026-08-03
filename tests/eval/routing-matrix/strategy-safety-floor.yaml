@@ -1,0 +1,8 @@
+rule: strategy-safety-floor
+positives:
+  - prompt: "What's our moat against the incumbent platforms?"
+  - prompt: "Should we enter the DACH market next year or wait?"
+  - prompt: "Wie schärfen wir unser positioning gegenüber dem Marktführer?"
+near_misses:
+  - prompt: "Draft the quarterly board update on engineering velocity."
+  - prompt: "Summarize the customer interviews from last week's research sprint."

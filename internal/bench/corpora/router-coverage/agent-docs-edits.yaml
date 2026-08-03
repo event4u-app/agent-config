@@ -25,13 +25,9 @@ prompts:
     intended_triggers: [skill-quality]  # augment-source-of-truth removed: it guards dist/agent-src/ (generated), not .agent-src.uncondensed/ (the source you edit)
     open_files: [.agent-src.uncondensed/skills/some-skill/SKILL.md]
 
-  - id: agent-docs-edits-03
-    category: router-coverage
-    language: en
-    prompt: "Condense this rule body to telegraph grammar — drop articles and shorten phrasing where unambiguous."
-    expected_skills: [condense-memory]
-    replay_opaque_triggers: [telegraph-speak]  # no lexical trigger — fires at runtime on every reply, never deterministically matchable
-    open_files: [.agent-src.uncondensed/rules/some-rule.md]
+  # agent-docs-edits-03 removed 2026-08-03: telegraph-speak is compile-dormant
+  # (COMPILE_TIME_TOGGLES) and no longer exists in dist/router.json, so the row
+  # measured nothing and failed lint_bench_corpus (unknown_intended_trigger).
 
   - id: agent-docs-edits-04
     category: router-coverage

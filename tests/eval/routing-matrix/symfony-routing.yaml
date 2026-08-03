@@ -1,0 +1,8 @@
+rule: symfony-routing
+positives:
+  - prompt: "Add a Doctrine entity for the invoice with a matching repository."
+  - prompt: "Render the totals table in the Twig template for the report page."
+  - prompt: "Wie registriere ich einen Symfony Console Command im DI-Container?"
+near_misses:
+  - prompt: "Add a new PHP entity class with a repository for invoices."
+  - prompt: "Dispatch the confirmation email through the queue worker."

@@ -1,0 +1,8 @@
+rule: domain-safety-disclaimer
+positives:
+  - prompt: "Draft a privacy policy for our SaaS."
+  - prompt: "Put together an investment memo for the seed round."
+  - prompt: "Kannst du die Terms of Service für die App entwerfen?"
+near_misses:
+  - prompt: "Summarize the new GDPR enforcement actions from last year."
+  - prompt: "Draft the internal runbook for handling refund requests."

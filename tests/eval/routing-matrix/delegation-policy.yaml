@@ -1,0 +1,8 @@
+rule: delegation-policy
+positives:
+  - prompt: "Delegate the lint fixes to a subagent while you work on the tests."
+  - prompt: "Can you run these three independent fixes in parallel?"
+  - prompt: "Bitte mach eine Analyse pro Modul und fasse die Ergebnisse zusammen."
+near_misses:
+  - prompt: "Split the migration into three commits so review is easier."
+  - prompt: "Run the whole test suite and report the failures."

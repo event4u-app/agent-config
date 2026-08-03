@@ -1,0 +1,8 @@
+rule: minimal-safe-diff
+positives:
+  - prompt: "Fix the null check in the invoice parser - smallest change possible."
+  - prompt: "Should I rewrite this module or just patch the broken branch?"
+  - prompt: "Bitte fixe nur den Tippfehler, ohne den Rest der Datei umzubauen."
+near_misses:
+  - prompt: "Reformat the entire file with the project linter settings."
+  - prompt: "Clean up the unused imports across the whole repo while you are at it."

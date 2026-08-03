@@ -1,0 +1,8 @@
+rule: icon-consistency
+positives:
+  - prompt: "Which icon set should the settings screen use?"
+  - prompt: "We're mixing Lucide and Heroicons - consolidate, please."
+  - prompt: "Welche Icons nehmen wir für die neue Navigation?"
+near_misses:
+  - prompt: "Pick a consistent illustration style for the empty states."
+  - prompt: "The button glyphs look blurry on retina displays - can you fix the SVG export?"

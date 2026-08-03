@@ -1,0 +1,9 @@
+rule: persona-governance
+positives:
+  - prompt: "Add a persona for database performance reviews."
+  - prompt: "Tighten the scope section of this review lens."
+    open_files: ["src/agent-src/personas/perf-hawk.md"]
+  - prompt: "Brauchen wir eine neue Persona für Security-Reviews?"
+near_misses:
+  - prompt: "Update the code-owner rotation for the backend team."
+  - prompt: "Refine the tone-of-voice guidelines for the marketing copy."

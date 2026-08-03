@@ -1,0 +1,12 @@
+rule: source-confidentiality
+positives:
+  - prompt: "Add a note about where this harvest idea came from."
+    open_files: ["agents/roadmaps/road-to-competitive-borrow.md"]
+  - prompt: "Document the comparison against the reference suite we analyzed."
+    open_files: ["docs/architecture.md"]
+  - prompt: "Soll ich die Quelle dieses Patterns im Skill nennen?"
+    open_files: ["src/skills/git-workflow/SKILL.md"]
+near_misses:
+  - prompt: "Where did this borrowed algorithm originally come from?"
+  - prompt: "Keep the raw competitor audit in the local scratch notes."
+    open_files: ["agents/tmp/harvest-notes.md"]
