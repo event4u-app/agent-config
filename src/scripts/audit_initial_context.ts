@@ -59,9 +59,22 @@ const MONOLITH_TOOLS = ['.windsurfrules'];
 // costing?" question as the rule/description surfaces, for the MCP slice. The
 // source-of-truth catalog is the one shipped by this package's MCP server.
 const MCP_CATALOG = path.join(REPO_ROOT, 'src', 'scripts', 'mcp_server', 'consumer_tool_catalog.json');
-// This package ships a single MCP server; the accounting is keyed by server so
-// a multi-server consumer surface generalises without a shape change.
+// The catalog is served by TWO transports with two different tool lists, so
+// pricing it once produced a number no client ever loads:
+//
+//   - stdio  (`src/scripts/mcp_server/`) registers only the implemented tools
+//     (`REGISTRY` in mcp_server/tools.ts) — the 12 discovery stubs are
+//     deliberately unregistered (ADR-132), so a local client sees 19.
+//   - worker (`internal/workers/mcp/`) maps EVERY catalog entry into
+//     `tools/list` (`stubs.ts::listTools`), tagging stubs `_meta.stub` and
+//     answering calls with the not_implemented envelope — so it sees 31.
+//
+// Pricing all 31 under one label reported a hybrid client that cannot exist,
+// and made the over-subscription flag fire on a count no local install pays.
+// Keying by transport keeps the per-server shape and makes each number belong
+// to a real client. `implemented_on` in the catalog is what distinguishes them.
 const MCP_SERVER_NAME = 'agent-config';
+const MCP_TRANSPORTS = ['stdio', 'worker'] as const;
 // Soft advisory ceiling on tool count per server. "Few used" cannot be known at
 // audit time (no runtime call data), so over-subscription is a count-based
 // heuristic: many tools => maintainer should review which earn their cost.
@@ -396,24 +409,40 @@ export function mcp_tool_schemas(): Record<string, McpServer> {
         return {};
     }
     const tools = (catalog.tools as unknown[]) ?? [];
-    const priced: McpPriced[] = tools
-        .filter((t): t is Record<string, unknown> => typeof t === 'object' && t !== null && !Array.isArray(t))
-        .map((t) => _measure_tool_schema(t));
-    // priced.sort(key=lambda r: (-int(r["tokens_gpt"]), str(r["name"])))
-    priced.sort(
-        (a, b) => b.tokens_gpt - a.tokens_gpt || (a.name < b.name ? -1 : a.name > b.name ? 1 : 0),
+    const records = tools.filter(
+        (t): t is Record<string, unknown> => typeof t === 'object' && t !== null && !Array.isArray(t),
     );
-    const server: McpServer = {
-        tool_count: priced.length,
-        chars: priced.reduce((acc, r) => acc + r.chars, 0),
-        tokens_gpt: priced.reduce((acc, r) => acc + r.tokens_gpt, 0),
-        tokens_claude: priced.reduce((acc, r) => acc + r.tokens_claude, 0),
-        tokens_gpt_exact: priced.length > 0 ? priced.every((r) => Boolean(r.tokens_gpt_exact)) : true,
-        over_subscription: priced.length > MCP_OVERSUBSCRIPTION_TOOL_CAP,
-        oversubscription_cap: MCP_OVERSUBSCRIPTION_TOOL_CAP,
-        tools: priced.map((r) => ({ name: r.name, tokens_gpt: r.tokens_gpt, chars: r.chars })),
+
+    /** Tools a given transport actually returns from `tools/list`. */
+    const served = (transport: string): Record<string, unknown>[] => {
+        // The Worker serves the whole catalog (stubs included, flagged
+        // `_meta.stub`); stdio serves only what `implemented_on` names.
+        if (transport === 'worker') return records;
+        return records.filter(
+            (t) => Array.isArray(t.implemented_on) && (t.implemented_on as unknown[]).includes(transport),
+        );
     };
-    return { [MCP_SERVER_NAME]: server };
+
+    const out: Record<string, McpServer> = {};
+    for (const transport of MCP_TRANSPORTS) {
+        const priced: McpPriced[] = served(transport).map((t) => _measure_tool_schema(t));
+        // priced.sort(key=lambda r: (-int(r["tokens_gpt"]), str(r["name"])))
+        priced.sort(
+            (a, b) => b.tokens_gpt - a.tokens_gpt || (a.name < b.name ? -1 : a.name > b.name ? 1 : 0),
+        );
+        out[`${MCP_SERVER_NAME} (${transport})`] = {
+            tool_count: priced.length,
+            chars: priced.reduce((acc, r) => acc + r.chars, 0),
+            tokens_gpt: priced.reduce((acc, r) => acc + r.tokens_gpt, 0),
+            tokens_claude: priced.reduce((acc, r) => acc + r.tokens_claude, 0),
+            tokens_gpt_exact:
+                priced.length > 0 ? priced.every((r) => Boolean(r.tokens_gpt_exact)) : true,
+            over_subscription: priced.length > MCP_OVERSUBSCRIPTION_TOOL_CAP,
+            oversubscription_cap: MCP_OVERSUBSCRIPTION_TOOL_CAP,
+            tools: priced.map((r) => ({ name: r.name, tokens_gpt: r.tokens_gpt, chars: r.chars })),
+        };
+    }
+    return out;
 }
 
 export function build(): Record<string, unknown> {
@@ -678,7 +707,12 @@ export function main(argv: string[] | null = null): number {
         const rf = rfVals.length > 0 ? (rfVals[0] as Measure) : ({} as Measure);
         const dc = data.description_catalog as Record<string, Measure>;
         const mcp = (data.mcp_tool_schemas as Record<string, McpServer>) ?? {};
-        const mcp_gpt = Object.values(mcp).reduce((acc, s) => acc + s.tokens_gpt, 0);
+        // MAX, not sum: the entries are two TRANSPORTS of the same server, and
+        // a client connects over exactly one of them. Summing would bill the
+        // 19 implemented tools twice and gate on a client that cannot exist —
+        // the same conflation the per-transport split exists to remove. The
+        // budget is what the worst-case single client actually loads.
+        const mcp_gpt = Object.values(mcp).reduce((acc, s) => Math.max(acc, s.tokens_gpt), 0);
         const checks: Record<string, number> = {
             'rules.gpt': rf.tokens_gpt ?? 0,
             // The always-SCANNED skill descriptions (258 source skills) — the

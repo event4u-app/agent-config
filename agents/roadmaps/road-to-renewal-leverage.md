@@ -7,7 +7,9 @@ parent: road-to-package-renewal.md
 # Road to renewal — Leverage (execution flows + documented-failure fixes)
 
 > Sub-roadmap of [`road-to-package-renewal.md`](road-to-package-renewal.md).
-> Blocked until Foundation Phase 1 is green.
+> ~~Blocked until Foundation Phase 1 is green.~~ **UNBLOCKED 2026-08-02** —
+> Foundation Phase 1 went green in PR #1109 and the whole Foundation
+> sub-roadmap is now complete and archived.
 > (Council-locked ordering: fix the oracle before shipping behavior changes
 > it must validate.)
 >

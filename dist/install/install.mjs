@@ -8282,6 +8282,23 @@ function is_pruned_under_scoped(md_path, active_ids) {
   }
   return true;
 }
+var RULE_PACKS_AUTO = "auto";
+function resolve_rule_pack_scope(raw, package_root, runtime_active_packs = []) {
+  const is_auto = raw === RULE_PACKS_AUTO || Array.isArray(raw) && raw.length === 1 && raw[0] === RULE_PACKS_AUTO;
+  if (is_auto) {
+    try {
+      return [
+        ...compute_active_pack_ids(load_packs_registry(package_root), runtime_active_packs)
+      ].sort();
+    } catch {
+      return null;
+    }
+  }
+  if (Array.isArray(raw) && raw.length > 0) {
+    return raw.map((v) => String(v));
+  }
+  return null;
+}
 
 // src/scripts/_lib/global_deploy_inventory.ts
 import { randomBytes as randomBytes2 } from "node:crypto";
@@ -10141,17 +10158,26 @@ function _list(value) {
   }
   return null;
 }
-function ruleScopeFromSettings(settings) {
+function ruleScopeFromSettings(settings, packageRoot) {
   const proj = settings["projection"];
   if (typeof proj !== "object" || proj === null || Array.isArray(proj)) {
     return LEGACY_ALL;
   }
   const p = proj;
+  const packs = packageRoot === void 0 ? _list(p["rule_packs"]) : resolve_rule_pack_scope(
+    p["rule_packs"],
+    packageRoot,
+    _list(_runtimeActivePacks(settings)) ?? []
+  );
   return {
     workspaces: _list(p["rule_workspaces"]),
-    packs: _list(p["rule_packs"]),
+    packs,
     roles: _list(p["rule_roles"])
   };
+}
+function _runtimeActivePacks(settings) {
+  const rt = settings["runtime"];
+  return typeof rt === "object" && rt !== null && !Array.isArray(rt) ? rt["active_packs"] : null;
 }
 function ruleFileArrives(sourcePath, scope) {
   if (!sourcePath.endsWith(".md")) {
@@ -14318,8 +14344,8 @@ var settingsSchema = external_exports.object({
     rule_workspaces: external_exports.array(external_exports.string()).default([]).describe(
       "Workspace scope for the RULE layer only (road-to-request-scoped-rule-load P1/P1b, opt-in). Absent or empty = legacy-all: every rule projects AND installs. Non-empty = only rules whose workspaces frontmatter intersects this list are projected (condense) and installed (install.sh + global wizard payload). Kernel rules always ship; untagged rules fail safe. The default flip to a scoped value is a HUMAN release gate \u2014 do not set this from automation."
     ),
-    rule_packs: external_exports.array(external_exports.string()).default([]).describe(
-      "Optional second scoping axis for the RULE layer, per pack ids (src/config/discovery/packs.yml). When set, a non-kernel rule also needs a packs frontmatter intersection to ship \u2014 e.g. deselecting frontend-design drops ui-audit-gate + design-fidelity. Same opt-in / human-gate semantics as rule_workspaces."
+    rule_packs: external_exports.union([external_exports.literal("auto"), external_exports.array(external_exports.string())]).default([]).describe(
+      'Optional second scoping axis for the RULE layer, per pack ids (src/config/discovery/packs.yml). When set, a non-kernel rule also needs a packs frontmatter intersection to ship \u2014 e.g. deselecting frontend-design drops ui-audit-gate + design-fidelity. Same opt-in / human-gate semantics as rule_workspaces. The literal "auto" derives the id list from the active-pack set (the same set the skill/command prune uses), so a domain safety floor stops shipping into installs that do not have the pack it guards; an explicit list stays supported and wins over the derivation.'
     )
   }).default({ mode: "legacy-all" }),
   rule_loading_tier: ruleLoadingTier.default("balanced").describe(
@@ -19447,7 +19473,7 @@ function _resolve_global_rule_scope(package_root) {
   const settings_path = _resolve_global_settings_path();
   if (settings_path === null) {
     try {
-      return ruleScopeFromSettings(_load_default_settings(package_root));
+      return ruleScopeFromSettings(_load_default_settings(package_root), package_root);
     } catch {
       return LEGACY_ALL;
     }
@@ -19469,7 +19495,7 @@ function _resolve_global_rule_scope(package_root) {
     return LEGACY_ALL;
   }
   try {
-    return ruleScopeFromSettings(parsed);
+    return ruleScopeFromSettings(parsed, package_root);
   } catch (e) {
     warn(
       `could not derive rule scope from ${settings_path} (${String(e)}) \u2014 falling back to legacy-all; ALL rules will be installed.`

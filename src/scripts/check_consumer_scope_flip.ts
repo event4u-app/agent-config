@@ -63,7 +63,7 @@ export interface FlipVerdict {
 
 export function verify_flip(repoRoot = '.'): FlipVerdict {
     const template = parseYaml(fs.readFileSync(path.join(repoRoot, TEMPLATE), 'utf-8')) as Record<string, unknown>;
-    const scope = ruleScopeFromSettings(template);
+    const scope = ruleScopeFromSettings(template, repoRoot);
     if (scope.workspaces === null) {
         throw new Error('template rule_workspaces is empty — nothing flipped, nothing to verify');
     }

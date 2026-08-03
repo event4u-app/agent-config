@@ -135,7 +135,18 @@ export function _buildEntries(): CatalogEntryOut[] {
             description: STUB_MARKER + stub.description,
             side_effect: stub.side_effect,
             implemented_on: [],
-            input_schema: stub.input_schema,
+            // A stub ships an EMPTY schema on purpose. `input_schema` exists to
+            // tell a client how to CALL the tool, and no transport permits that
+            // for a stub: the Worker answers with the not_implemented envelope
+            // and stdio never registers it (`REGISTRY` in mcp_server/tools.ts).
+            // A populated schema is therefore always-loaded context that can
+            // never be acted on — 665 GPT tok across the 12 stubs, measured
+            // 2026-08-02. `stub.input_schema` stays in STUB_TOOLS as the design
+            // record for the day the tool is wired; it is simply not shipped
+            // until then. The stub-envelope contract's "byte-identical apart
+            // from implemented_on" promise still holds — both transports read
+            // this same file.
+            input_schema: {},
         });
     }
 
