@@ -43,14 +43,30 @@ updates:
       prefix: fix
       prefix-development: chore
       include: scope
-    # web-tree-sitter is ABI-pinned to the tree-sitter-wasms grammars
-    # (0.24.7 ↔ 0.1.13, ABI 14). 0.25+ changes the load API and 0.26.x
-    # fails Language.load on the 0.1.13 grammars (tree-sitter #5171) —
-    # the code-graph ABI smoke test (tests/scripts/code_graph.test.ts)
-    # is the gate that catches it. Bump both packages together,
-    # deliberately, never via a scheduled group PR.
     ignore:
+      # web-tree-sitter is ABI-pinned to the tree-sitter-wasms grammars
+      # (0.24.7 ↔ 0.1.13, ABI 14). 0.25+ changes the load API and 0.26.x
+      # fails Language.load on the 0.1.13 grammars (tree-sitter #5171) —
+      # the code-graph ABI smoke test (tests/scripts/code_graph.test.ts)
+      # is the gate that catches it. Bump both packages together,
+      # deliberately, never via a scheduled group PR.
       - dependency-name: web-tree-sitter
+      # execa 10 raises the dependency's Node floor to >=22 while this
+      # package supports and CI-tests Node 20 (engines >=20.11.0). Taking
+      # it is a Node-baseline decision, not a dependency bump — lift this
+      # ignore when the package raises its Node floor (PR #1115).
+      - dependency-name: execa
+        update-types: ["version-update:semver-major"]
+      # zod 4 is a real migration: zod-to-json-schema call sites and the
+      # server route/wizard schemas break (26 typecheck errors), and the
+      # committed install bundle embeds zod. Migrate deliberately to zod 4's
+      # native z.toJSONSchema in its own PR, then lift this (PR #1131).
+      - dependency-name: zod
+        update-types: ["version-update:semver-major"]
+    # Majors are grouped too (npm-majors below): one collected weekly PR
+    # instead of one PR per major — the 2026-08-03 flood (execa, zod,
+    # @types/node, @inquirer/prompts, typescript, …) arrived as singles
+    # because the original groups only covered minor+patch.
     groups:
       npm-production:
         applies-to: version-updates
@@ -64,6 +80,10 @@ updates:
         update-types:
           - minor
           - patch
+      npm-majors:
+        applies-to: version-updates
+        update-types:
+          - major
 
   - package-ecosystem: github-actions
     directory: /
@@ -80,9 +100,14 @@ updates:
       prefix: chore
       include: scope
     groups:
+      # One collected PR for ALL action updates, majors included — action
+      # majors are runner-config changes, reviewable together; singles like
+      # setup-node 4→7 and sticky-pull-request-comment 2→3 each re-lint
+      # every touched workflow for no added review value.
       github-actions:
         applies-to: version-updates
         update-types:
+          - major
           - minor
           - patch
 
@@ -103,6 +128,7 @@ updates:
       site:
         applies-to: version-updates
         update-types:
+          - major
           - minor
           - patch
 
@@ -120,5 +146,6 @@ updates:
       telemetry-worker:
         applies-to: version-updates
         update-types:
+          - major
           - minor
           - patch
