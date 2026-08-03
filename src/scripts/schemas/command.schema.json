@@ -128,6 +128,39 @@
       "enum": ["deep"],
       "description": "Optional reasoning-depth marker for AI Council invocations triggered by this command. The only accepted value is 'deep'; omit the key for default depth (setting 'standard' is rejected — every frontmatter byte counts against the context window, and 'standard' is the implicit default). 'deep' instructs the host agent to pass --depth deep to council_cli, which floors rounds at max(ai_council.deep_min_rounds, ai_council.min_rounds). Use for architecture, refactoring, or bug-diagnosis commands. See .agent-src.uncondensed/skills/ai-council/SKILL.md."
     },
+    "limits": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["mode_default", "max_iterations", "hard_ceiling", "no_gain_stop", "target_metric"],
+      "description": "Machine-readable execution limits for autonomous-loop commands (release-truth Phase 4). The command body MUST restate each limit in its flow steps — frontmatter is the pin the deterministic test reads, the body is what the executing agent obeys.",
+      "properties": {
+        "mode_default": {
+          "type": "string",
+          "enum": ["plan", "execute"],
+          "description": "Default execution mode when the invocation names none. 'plan' = author and present, no push / PR / refinement loop."
+        },
+        "max_iterations": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Default refinement-loop budget."
+        },
+        "hard_ceiling": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Absolute loop ceiling — no flag may exceed it."
+        },
+        "no_gain_stop": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Consecutive loops without measurable gain on the pre-registered target metric that force a stop."
+        },
+        "target_metric": {
+          "type": "string",
+          "enum": ["required"],
+          "description": "A named target metric with a measured baseline must be recorded before loop 1."
+        }
+      }
+    },
     "model_tier": {
       "type": "string",
       "enum": ["lite", "medium", "high", "inherit"],
