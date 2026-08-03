@@ -43,6 +43,14 @@ updates:
       prefix: fix
       prefix-development: chore
       include: scope
+    # web-tree-sitter is ABI-pinned to the tree-sitter-wasms grammars
+    # (0.24.7 ↔ 0.1.13, ABI 14). 0.25+ changes the load API and 0.26.x
+    # fails Language.load on the 0.1.13 grammars (tree-sitter #5171) —
+    # the code-graph ABI smoke test (tests/scripts/code_graph.test.ts)
+    # is the gate that catches it. Bump both packages together,
+    # deliberately, never via a scheduled group PR.
+    ignore:
+      - dependency-name: web-tree-sitter
     groups:
       npm-production:
         applies-to: version-updates
