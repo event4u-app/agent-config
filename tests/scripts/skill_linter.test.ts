@@ -2108,7 +2108,7 @@ The pushed commit hash.
 
 describe('skill_linter — router routes_to self-contained carve-out (ADR-210)', () => {
     it('skipped for self_contained: true', () => {
-        const p = writeFile('.agent-src.uncondensed/rules/self-contained-rule.md', `---
+        const p = writeFile('src/rules/self-contained-rule.md', `---
 type: auto
 description: "Use when something specific happens — constraint-only rule"
 triggers:
@@ -2130,7 +2130,7 @@ Body IS the constraint — a prohibition with no procedure to delegate.
     });
 
     it('errors when neither routes_to nor self_contained is declared', () => {
-        const p = writeFile('.agent-src.uncondensed/rules/regular-auto-rule.md', `---
+        const p = writeFile('src/rules/regular-auto-rule.md', `---
 type: auto
 description: "Use when something specific happens — regular auto rule"
 triggers:
@@ -2148,7 +2148,7 @@ Body that should route to its skill or certify itself self-contained.
     });
 
     it('trust.level core no longer exempts (dead carve-out removed)', () => {
-        const p = writeFile('.agent-src.uncondensed/rules/trust-core-rule.md', `---
+        const p = writeFile('src/rules/trust-core-rule.md', `---
 type: auto
 description: "Use when something specific happens — core-trust rule without marker"
 triggers:
