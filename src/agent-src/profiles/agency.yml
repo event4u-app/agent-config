@@ -17,9 +17,9 @@ profile:
   defaults:
     preset_id: strict
     personas:
-      - reviewer
-      - product-strategist
-      - editor
+      - qa
+      - product-owner
+      - tech-writer
     skills_hint:
       - doc-coauthoring
       - decision-record
