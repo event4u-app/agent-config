@@ -23,6 +23,7 @@ describe('check_release_pr_shape — check() (ported pytest)', () => {
     it('real 3.3.0 release-PR shape passes', () => {
         const files = [
             'package.json',
+            'package-lock.json',
             'CHANGELOG.md',
             '.claude-plugin/marketplace.json',
             'src/packs/core/pack.yaml',
@@ -106,6 +107,8 @@ describe('check_release_pr_shape — check() (ported pytest)', () => {
         expect(shape._matches('src/packs/core/installer/foo.ts')).toBe(false);
         expect(shape._matches('docs/archive/some-other-doc.md')).toBe(false);
         expect(shape._matches('package.json')).toBe(true);
+        expect(shape._matches('package-lock.json')).toBe(true);
+        expect(shape._matches('src/some/nested/package-lock.json')).toBe(false);
         expect(shape._matches('src/packs/core/pack.yaml')).toBe(true);
         expect(shape._matches('src/packs/core/README.md')).toBe(true);
         expect(shape._matches('docs/archive/CHANGELOG-pre-5.4.0.md')).toBe(true);

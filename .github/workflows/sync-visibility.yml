@@ -30,9 +30,15 @@ on:
           - "true"
           - "false"
 
+# NOTE: `administration` is NOT a valid workflow permissions key — listing it
+# made the whole workflow unparseable, so `workflow_dispatch` returned HTTP 422
+# and the sync channel was dead (found 2026-08-03 while repairing an
+# about-description drift by hand). Repo metadata writes (PATCH /repos,
+# PUT /topics) need repo-admin rights the Actions GITHUB_TOKEN cannot carry;
+# the apply step fails with a clear API error in that case — dispatchable and
+# honest beats unparseable.
 permissions:
-  contents: write       # commit the audit log
-  administration: write # required for PUT /repos/{owner}/{repo}/topics
+  contents: write # commit the audit log
 
 concurrency:
   group: visibility-sync

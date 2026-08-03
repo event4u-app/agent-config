@@ -32,6 +32,8 @@ hold:
    `src/scripts/release.ts` § `_RELEASE_BRANCH_RE`.
 2. **Diff file set is a subset of the version-bump allowlist:**
    - `package.json`
+   - `package-lock.json` — version fields bumped in lockstep by
+     `release.ts` § `set_lockfile_version`
    - `CHANGELOG.md`
    - `.claude-plugin/marketplace.json`
    - `packages/*/pack.yaml`
