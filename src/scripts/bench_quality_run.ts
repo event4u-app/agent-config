@@ -30,7 +30,7 @@ import * as path from 'node:path';
 import process from 'node:process';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
-import yaml from 'js-yaml';
+import * as yaml from 'js-yaml';
 
 import { build_thin, RULES_SOURCE } from './project_thin_rules.js';
 import { evaluatePair, type JudgeFn, type JudgeVerdict, type PairResult } from './check_quality_regression.js';
