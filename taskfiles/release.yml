@@ -20,6 +20,17 @@ tasks:
     interactive: true
     cmd: ./scripts-run src/scripts/release {{.CLI_ARGS}}
 
+  release:drill:
+    desc: |
+      Exercise the release step machinery (checkout → push → PR → checks →
+      merge → tag → GitHub Release) against a SIMULATED git/gh world — no
+      network, no git mutation, no spend. Runs the real execute() through
+      every measured failure mode (rejected push, BEHIND head, merge race,
+      hard merge failure, failing checks) plus the happy path. Run it after
+      touching src/scripts/release.ts, before trusting a live release. The
+      same scenarios run in CI via tests/scripts/release_drill.test.ts.
+    cmd: ./scripts-run src/scripts/release_drill
+
   release:major:
     desc: |
       Force a major release (X+1.0.0) overriding auto-detect. Same

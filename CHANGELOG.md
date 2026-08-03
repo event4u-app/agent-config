@@ -262,6 +262,27 @@ Entry-shape contract: [`docs/contracts/CHANGELOG-conventions.md`](docs/contracts
 > that forces a new era split (`# Era: 9.16.x`, etc.) — see
 > [`docs/contracts/CHANGELOG-conventions.md § Era splits`](docs/contracts/CHANGELOG-conventions.md).
 
+## [9.16.0](https://github.com/event4u-app/agent-config/compare/9.15.0...9.16.0) (2026-08-03)
+
+### Release highlights
+
+<!-- Curated head: fill before merge, keep it under 10 lines, and leave `_none_` where it is genuinely the answer. The generated log below is unchanged. -->
+- **Behaviour changes:** _none_
+- **Default changes + migration:** _none_
+- **Security and correctness:** _none_
+- **Honest nulls:** _none_
+- **Known limitations:** _none_
+
+### Features
+
+* **gates:** fail the PR that moves the CLI registry without the evaluator budget ([84740f3](https://github.com/event4u-app/agent-config/commit/84740f3aba1cd7e9fd3e2fa6eb304a1ad106e149))
+
+### Chores
+
+* **deps:** bump the github-actions group across 1 directory with 5 updates ([5e272d8](https://github.com/event4u-app/agent-config/commit/5e272d89e6e9b5bcc1fff053e9448da294998221))
+
+Tests: 10588 (+8 since 9.15.0)
+
 ## [9.15.0](https://github.com/event4u-app/agent-config/compare/9.14.0...9.15.0) (2026-08-03)
 
 ### Release highlights
