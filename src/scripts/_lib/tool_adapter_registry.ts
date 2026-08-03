@@ -31,7 +31,14 @@ export const ADAPTER_REGISTRY: readonly AdapterEntry[] = [
     {
         tool: 'Claude Code',
         kind: 'native',
-        roots: ['.claude/rules', '.claude/skills', '.claude/agents', '.claude/personas', '.claude/user-types'],
+        roots: [
+            '.claude/rules',
+            '.claude/skills',
+            '.claude/commands',
+            '.claude/agents',
+            '.claude/personas',
+            '.claude/user-types',
+        ],
         generator_tag: 'claude-code',
     },
     { tool: 'Cursor', kind: 'native', roots: ['.cursor/rules', '.cursor/commands'], generator_tag: 'cursor' },
