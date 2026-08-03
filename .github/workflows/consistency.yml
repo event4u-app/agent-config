@@ -327,7 +327,7 @@ jobs:
 
       - name: Upload consistency artifacts
         if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: consistency-artifacts
           path: artifacts/
