@@ -76,7 +76,13 @@ jobs:
 
       - name: Pack content blob
         id: pack
+        # actionlint shellchecks only CHANGED workflow files, so this step's
+        # pre-existing SC2129 (style: group the >> redirects) first surfaced
+        # when the dependabot action bump touched this file. The individual
+        # redirects are deliberate — each line pairs one computed value with
+        # its output key, which reads clearer than a grouped block.
         run: |
+          # shellcheck disable=SC2129
           ./scripts-run src/scripts/pack_mcp_content
           sig=$(node -e "console.log(require('./internal/workers/mcp/manifest.json').signature)")
           release_key=$(node -e "console.log(require('./internal/workers/mcp/manifest.json').release_key)")
