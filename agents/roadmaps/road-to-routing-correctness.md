@@ -35,11 +35,12 @@ status: ready
 >    `finance-safety-floor` (`valuation`, `dcf`); `secret-vcs-guard` vs
 >    `security-sensitive-stop` (`secret`, `password`).
 > 4. *Tier fallthrough (VERIFIED at HEAD):* `LEGACY_TIER_MAP` in
->    `src/scripts/compile_router.ts` lacks `2b` (21 rules) and `safety-floor`
->    (3 rules); `?? 'tier-2'` silently downgrades any unknown tier value. The
->    `safety-floor` rules are `type: always` → kernel regardless; the 21 `2b`
->    rules land on tier-2 unreviewed, and a typo'd tier value today produces a
->    silent zero-injection downgrade instead of a compile error.
+>    `src/scripts/compile_router.ts` lacks the tier values `2b` (21 rules) and
+>    `safety-floor` (3 rules); `?? 'tier-2'` silently downgrades any unknown
+>    tier value. The safety-floor-tagged trio is `type: always` → kernel
+>    regardless; the 21 rules tagged 2b land on tier-2 unreviewed, and a
+>    typo'd tier value today produces a silent zero-injection downgrade
+>    instead of a compile error.
 > 5. *Frontend-set weight:* the UI track's mandatory chain
 >    (audit → design → apply → review → polish) fronts ~100 KB of reference
 >    skills; a `ui_trivial` lane exists but nothing measures whether trivial
@@ -172,7 +173,7 @@ status: ready
 
 - Trigger-collision lint green with every live collision dispositioned; zero
   identical-trigger duplicate pairs remain.
-- Unknown tier value = compile error; the 21 `2b` rules carry a reviewed
+- Unknown tier value = compile error; the 21 rules tagged 2b carry a reviewed
   mapping.
 - The question-triangle amendment lands through the kernel process; the
   literal texts no longer contradict.
