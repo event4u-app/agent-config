@@ -49,11 +49,14 @@ Every framework module is a project-local guideline under `docs/guidelines/agent
 
 ### Step 1: Initialize Analysis
 
-Ask the user three things in **one** message (not three turns), per `ask-when-uncertain` Iron Law (one question per turn — these three are bundled into a single numbered-options block):
+Open with ONE decision point (per `ask-when-uncertain` — a single numbered-options block answerable with a single number is one question; never three separate asks):
 
-1. **Goal** — problem-solving · learning · writing · decision-making · curiosity.
-2. **Depth** — L1 Quick (15 min) · L2 Standard (30 min) · L3 Deep (60 min) · L4 Research (120 min+).
-3. **Framework override** — defaults are auto-suggested by content type (table below); user may name specific frameworks.
+1. **Standard read** — L2 depth, auto-selected frameworks (default).
+2. **Quick skim** — L1 depth, auto-selected frameworks.
+3. **Deep dive** — L3/L4 depth, auto-selected frameworks.
+4. **Custom** — name your goal (problem-solving · learning · writing · decision-making · curiosity), depth level, and/or specific frameworks in your reply.
+
+Depth levels are scope descriptors, not wall-clock promises (per `direct-answers` — no duration estimates): L1 skim · L2 standard · L3 deep · L4 exhaustive-research.
 
 If the user does not answer, default to L2 Standard with auto-selected frameworks.
 

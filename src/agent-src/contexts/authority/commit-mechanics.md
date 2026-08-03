@@ -16,8 +16,10 @@ Outside the four below, no commit is allowed and no commit ask is allowed.
    ahead and commit". Single commit, not standing.
 2. **Standing instruction not yet revoked** — earlier "commit after
    every phase"; cache the instruction and commit per its terms.
-3. **Commit command invoked** — `/commit` (split + confirm per commit)
-   or `/commit:in-chunks` (auto-split, Hard Floor still applies).
+3. **Commit command invoked** — `/commit` (split + confirm **once per
+   plan** on the preview path; on the terse path the invocation itself
+   is the confirmation) or `/commit:in-chunks` (auto-split, Hard Floor
+   still applies).
 4. **Roadmap authorization** — roadmap lists explicit commit steps and
    the user invoked roadmap execution; each commit matches a step.
 
@@ -57,9 +59,12 @@ four exceptions cover *whether* commits happen; the Hard Floor covers
 When **executing** a roadmap that contains commit steps:
 
 - **Non-autonomous mode** (`personal.autonomy: off`, or `auto`
-  before opt-in) — agent may ask before each commit step. The user
-  authorized commits by writing them into the roadmap, but retains
-  step-level control.
+  before opt-in) — agent confirms the roadmap's commit plan **once
+  up front** (same pre-scan ask as below); per-step re-asks are not
+  permitted — `commit-policy` § NEVER ask about committing holds
+  regardless of autonomy. The user authorized commits by writing
+  them into the roadmap and retains plan-level control via the
+  one-shot ask.
 - **Autonomous mode** (`personal.autonomy: on`, or `auto` after
   opt-in) — agent does a quick pre-scan of the roadmap **before
   starting execution**. If commit steps are found, ask **once** at

@@ -184,7 +184,20 @@ echo '{"type":"supersede","supersedes":"<sig-id>","promoted_to":"<curated id>"}'
 This keeps the intake stream truthful — lookups will ignore the
 superseded signal.
 
-### 6. Open a promotion PR
+### 6. Open a promotion PR — git ops are permission-gated
+
+Branch, commit, and push are NOT authorized by invoking this command
+(per `scope-control` § git-ops and the `non-destructive-by-default`
+push floor — invoking `/memory:promote` names the promotion, not a git
+destination). Surface the exact operations and wait for explicit
+confirmation this turn:
+
+> Promotion is written. Ship it as a PR?
+>
+> 1. Yes — branch `memory/promote-<curated-id>`, commit, push, then `/create-pr`
+> 2. No — keep the promotion local, I'll ship it myself
+
+Only on option 1:
 
 ```bash
 git checkout -b memory/promote-<curated-id>

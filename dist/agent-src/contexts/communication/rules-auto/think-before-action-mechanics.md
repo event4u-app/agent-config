@@ -81,7 +81,12 @@ Never load full datasets into context. Extract what you need:
 - Do NOT retry the same approach hoping for a different result.
 - Do NOT loop through trial-and-error when one targeted inspection
   would reveal the cause.
-- Max 2 retries for the same approach — then stop and rethink.
+- Max 2 retries for the same approach — then stop and rethink. The 2
+  retries plus the initial attempt ARE the three attempts of
+  `autonomous-execution`'s N=3 stop: the 3rd consecutive failure on the
+  same target escalates to stop-and-ask, then to `context-hygiene`'s
+  fresh-session recommendation — one ladder, not competing budgets
+  ([`autonomy-mechanics § Retry-budget escalation ladder`](../../execution/autonomy-mechanics.md)).
 
 ## Open files are context, not intent
 
