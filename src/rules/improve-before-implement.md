@@ -69,5 +69,5 @@ When the request is to create or significantly rewrite a skill, rule, command,
 or guideline, the "fit the existing architecture" check is handled by
 [`artifact-drafting-protocol`](artifact-drafting-protocol.md)'s Phase B
 (Research). Follow that protocol instead of improvising a one-shot check — it
-scans `.agent-src.uncondensed/` for overlap and reports candidates to extend
+scans `src/` for overlap and reports candidates to extend
 before creating a new file.

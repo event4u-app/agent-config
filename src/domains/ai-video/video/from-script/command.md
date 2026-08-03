@@ -48,7 +48,7 @@ with a precise diff — no silent best-guess.
 ### 1. Validate dependencies
 
 ```bash
-scripts/ai-video/lib/validate-deps.sh .agent-src.uncondensed/commands/video/from-script.md
+scripts/ai-video/lib/validate-deps.sh dist/agent-src/commands/video/from-script.md
 ```
 
 Fails fast with the missing-id list if any declared persona / skill is

@@ -15,7 +15,7 @@
  *
  * Historical quirks are preserved deliberately — tests and downstream consumers pin the exact behaviour.
  *
- * Source of truth: `.agent-src.uncondensed/`.
+ * Source of truth: `src/`.
  *
  * Target files have explicit regex patterns for each count mention — no fuzzy
  * matching, no risk of touching unrelated numbers.

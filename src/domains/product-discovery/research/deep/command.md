@@ -106,7 +106,7 @@ Read {fields_path} to get all field definitions.
 
 ## Validation (no Python, no host paths)
 Self-validate the JSON against
-`<package>/.agent-src.uncondensed/contexts/contracts/research-schema.md`
+`<package>/dist/agent-src/contexts/contracts/research-schema.md`
 in memory before writing. The well-formedness escape hatch is
 `jq -e '.[]' {output_path}` — agent runs it after write and re-tries
 once on failure. Task is complete only after both checks pass.

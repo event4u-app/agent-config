@@ -36,7 +36,7 @@ Count lines affecting token consumption:
 
 ```bash
 # Always-loaded (per chat)
-for f in .agent-src.uncondensed/rules/*.md; do
+for f in src/rules/*.md; do
   type=$(head -5 "$f" | grep 'type:' | sed 's/.*"\(.*\)"/\1/')
   [ "$type" = "auto" ] && continue
   lines=$(wc -l < "$f"); echo "always | $lines | $(basename "$f")"
@@ -44,15 +44,15 @@ done | sort -t'|' -k2 -rn
 agents=$(wc -l < AGENTS.md); echo "always | $agents | AGENTS.md"
 
 # Auto-loaded rules
-for f in .agent-src.uncondensed/rules/*.md; do
+for f in src/rules/*.md; do
   type=$(head -5 "$f" | grep 'type:' | sed 's/.*"\(.*\)"/\1/')
   [ "$type" != "auto" ] && continue
   lines=$(wc -l < "$f"); echo "auto | $lines | $(basename "$f")"
 done | sort -t'|' -k2 -rn
 
 # Skills (top 20 by size)
-for f in .agent-src.uncondensed/skills/*/SKILL.md; do
-  name=$(echo "$f" | sed 's|.agent-src.uncondensed/skills/||;s|/SKILL.md||')
+for f in src/skills/*/SKILL.md; do
+  name=$(echo "$f" | sed 's|src/skills/||;s|/SKILL.md||')
   lines=$(wc -l < "$f"); echo "$lines | $name"
 done | sort -rn | head -20
 ```
@@ -67,7 +67,7 @@ Report totals (always + auto + skills + AGENTS.md).
 - **Merge candidates**: rules under 15 lines that belong inside a sibling rule.
 
 ```bash
-for f in .agent-src.uncondensed/rules/*.md; do
+for f in src/rules/*.md; do
   desc=$(head -5 "$f" | grep 'description:' | sed 's/.*"\(.*\)"/\1/')
   [ -n "$desc" ] && echo "$desc | $(basename "$f")"
 done | sort | awk -F' \\| ' '{descs[$1]=descs[$1] " " $2} END {for (d in descs) {n=split(descs[d], a, " "); if (n>1) print "⚠️  " d " →" descs[d]}}'
@@ -108,7 +108,7 @@ Failures route to `/agents optimize` — this command does **not** edit.
 ```
 
 Confirm counts/lists in `.augment/contexts/augment-infrastructure.md` and
-`docs/architecture.md` match the actual `.agent-src.uncondensed/` tree.
+`docs/architecture.md` match the actual `src/` tree.
 
 ### 6. Run skill linter
 
@@ -143,7 +143,7 @@ Then ask:
 - **No edits** — read-only audit. Fixes route to `/agents optimize`,
   `skill-reviewer`, or `/optimize skills`.
 - **No edits to `dist/agent-src/` or `.augment/`** — those regenerate from
-  `.agent-src.uncondensed/`. Edit the source.
+  `src/`. Edit the source.
 - **No `agents/` folder ops** — scaffolding, folder-audit, folder-cleanup
   live in `/optimize agents-dir`.
 - **No commits, no push, no PR** — finishing the audit is a user decision

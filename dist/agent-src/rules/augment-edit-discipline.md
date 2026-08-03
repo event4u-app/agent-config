@@ -21,7 +21,7 @@ packs: [meta]
 
 # Augment Edit Discipline
 
-**Iron Law (portability).** Files inside `.augment/` and `.agent-src.uncondensed/` MUST stay project-agnostic — no project names, domains, stacks.
+**Iron Law (portability).** Files inside `.augment/` and `src/` MUST stay project-agnostic — no project names, domains, stacks.
 
 **Iron Law (sync).** On any add / rename / delete of skill / rule / command / guideline, update counts and cross-references in the same edit.
 

@@ -6,16 +6,16 @@ status: later
 # Road to plugin-runtime borrowings — seven mechanisms from an external host-plugin reference (Source A)
 
 > **Parked per
-> [`ADR-210`](../../../docs/decisions/ADR-210-harvest-freeze-resume-conditions.md)
+> [`ADR-211`](../../../docs/decisions/ADR-211-harvest-freeze-resume-conditions.md)
 > (harvest freeze; council disposition 2026-08-03).** All seven borrows are
 > purely additive with zero recorded internal failures cited — and the
 > council's sharper point stands: "falsification spikes" means feasibility is
 > itself unproven; the freeze does not admit borrows that *might* work.
 > Re-audited item-granularly on 2026-08-03: 0 EXTRACT, 0 LATENT-CANDIDATE,
-> 7 STAY (see ADR-210 § Consequences).
+> 7 STAY (see ADR-211 § Consequences).
 >
-> **Resume when:** the ADR-210 exit fires (external adopter OR the internal
-> arm), AND each resumed item satisfies ADR-210 Amendment C (pre-dating
+> **Resume when:** the ADR-211 exit fires (external adopter OR the internal
+> arm), AND each resumed item satisfies ADR-211 Amendment C (pre-dating
 > failure finding) or Amendment D (pre-registered red test) — or a fresh
 > council pass admits it as deliberately additive post-freeze.
 >

@@ -132,7 +132,7 @@ When on, run **graduated** to control cost: a cheap single-model pass
 flags the riskiest matches first, then the full council reviews only the
 flagged matches (`event`) or every match (`match`). Fold the council's
 verdicts back into the table before Step 5. Council spend always asks
-first per [`ai-council`](../../../core/.agent-src.uncondensed/skills/ai-council/SKILL.md).
+first per [`ai-council`](../skills/ai-council/SKILL.md).
 
 ### 5. Output the approval table — ask whether & where to enter
 
@@ -170,7 +170,7 @@ and never touches credentials. Resolve the platform adapter:
 
 Fill the candidate results and **stop**. *You* press submit. The agent
 submits only if `--submit` was passed or you authorize it **this turn**
-(mirrors [`non-destructive-by-default`](../../../core/.agent-src.uncondensed/rules/non-destructive-by-default.md)).
+(mirrors [`non-destructive-by-default`](../rules/non-destructive-by-default.md)).
 
 ### 8. Offer a second pool
 
@@ -231,7 +231,7 @@ file path. No commit. No push.
   rules → odds → EV → field → tip cognition.
 - [`scripts/prediction-pool/adapters/_schema.md`](../../../scripts/prediction-pool/adapters/_schema.md) —
   the declarative adapter data contract (for PR contributions).
-- [`ai-council`](../../../core/.agent-src.uncondensed/skills/ai-council/SKILL.md) —
+- [`ai-council`](../skills/ai-council/SKILL.md) —
   the optional second-opinion pass (Step 4).
-- [`playwright-architect`](../../../core/.agent-src.uncondensed/skills/playwright-architect/SKILL.md) —
+- [`playwright-architect`](../skills/playwright-architect/SKILL.md) —
   browser-automation patterns for the entry step.

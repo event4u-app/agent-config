@@ -7,7 +7,15 @@ supersedes: —
 superseded_by: —
 phase: v3.x · changelog-era-auto-split Phase 4
 type: discovery-loop-closure
-review_date: 2027-05-25
+review_trigger: >-
+  Reopen when (a) no hand-written narrative paragraph ships for two
+  consecutive releases — the convention breaking down on its own rather than
+  by argument; (b) the active era grows past the 250-line cap from non-release
+  edits more than twice in a quarter, meaning humans are routing around the
+  gate and auto-split is no longer the right primitive; or (c) npm, Packagist,
+  or the GitHub Release renderer changes how it slices the top of
+  CHANGELOG.md, which falsifies the field-weight audit this whole decision
+  rests on
 ---
 
 # ADR-027 — CHANGELOG convention — confirm manual narrative + auto-split for 12 months

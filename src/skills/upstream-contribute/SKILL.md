@@ -79,12 +79,12 @@ Before ANY upstream work (branch, files, PR), ask the user:
 
 ### 1. Determine contribution type
 
-| Type | Uncondensed path | Condensed path |
+| Type | Source path | Condensed path |
 |---|---|---|
-| **New skill** | `.agent-src.uncondensed/skills/{name}/SKILL.md` | `.augment/skills/{name}/SKILL.md` |
-| **New rule** | `.agent-src.uncondensed/rules/{name}.md` | `.augment/rules/{name}.md` |
-| **New command** | `.agent-src.uncondensed/commands/{name}.md` | `.augment/commands/{name}.md` |
-| **New guideline** | `.agent-src.uncondensed/guidelines/{category}/{name}.md` | `.augment/guidelines/{category}/{name}.md` |
+| **New skill** | `src/skills/{name}/SKILL.md` | `.augment/skills/{name}/SKILL.md` |
+| **New rule** | `src/rules/{name}.md` | `.augment/rules/{name}.md` |
+| **New command** | `src/domains/{domain}/{name}/command.md` | `.augment/commands/{name}.md` |
+| **New guideline** | `docs/guidelines/{category}/{name}.md` | `.augment/guidelines/{category}/{name}.md` |
 | **Update to existing** | Same path as original | Same path as original |
 
 ### 2. Apply locally as override (immediate benefit)
@@ -151,7 +151,7 @@ git checkout -b feat/skills/{name}  # or fix/rules/{name}, etc.
 
 Create both files:
 
-- **Uncondensed version** → `.agent-src.uncondensed/{type}/{name}` (full, verbose, human-readable)
+- **Source version** → `src/{type}/{name}` (full, verbose, human-readable)
 - **Condensed version** → `.augment/{type}/{name}` (token-efficient, preserving all code blocks,
   headings, frontmatter, validation, gotchas)
 

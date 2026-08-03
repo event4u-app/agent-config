@@ -102,7 +102,7 @@ rather than guess.
 ### 4. Compare against this project
 
 Add a **this-repo** column per axis. Sources of truth:
-`.agent-src.uncondensed/` (skills/rules/commands), `docs/architecture.md`
+`src/` (skills/rules/commands), `docs/architecture.md`
 (stable/experimental), `scripts/` (installer), `.github/workflows/` (CI).
 Never invent capabilities — if we don't have it, say so.
 

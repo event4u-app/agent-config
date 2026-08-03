@@ -7,6 +7,14 @@ supersedes: —
 superseded_by: —
 phase: v6.0.0 · D structural restructure
 type: decision
+review_trigger: >-
+  Reopen when Claude Code stops shadowing a bare colon cluster-head, or begins
+  resolving two-colon depth (git:pr:create) — both are observed host limits
+  from 2026-06-03, not design preferences, and the flat hyphenated scheme is
+  the mitigation for them. Re-verify against the current build before
+  reopening. Also reopen if a second projection target (Cursor, Copilot)
+  rejects flat hyphenated names, which breaks the universal resolvability the
+  scheme was chosen to buy
 ---
 
 # ADR-044 — Command naming scheme: `<pack>-<verb>`, hyphenated, no colon namespacing

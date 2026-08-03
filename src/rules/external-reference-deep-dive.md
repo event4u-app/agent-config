@@ -7,6 +7,7 @@ triggers:
   - keyword: "github.com/"
   - keyword: "source of truth"
   - phrase: "reference repo"
+self_contained: true
 workspaces: [agent-config-maintainer, engineering]
 packs: [meta]
 ---

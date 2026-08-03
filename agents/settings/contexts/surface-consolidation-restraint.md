@@ -8,10 +8,10 @@ ersetzt?"** — growth of the mental surface must be paid for by removal.
 ## Decisions (recorded 2026-07-20)
 
 - **Harvest freeze — canonical record is now
-  [`ADR-210`](../../../docs/decisions/ADR-210-harvest-freeze-resume-conditions.md)
+  [`ADR-211`](../../../docs/decisions/ADR-211-harvest-freeze-resume-conditions.md)
   (2026-08-03).** Original 2026-07-20 wording: no new competitive-harvest /
   capability-adoption roadmap opens until ≥1 real external adoption is
-  documented; the binding constraint is adoption, not capability. ADR-210
+  documented; the binding constraint is adoption, not capability. ADR-211
   keeps the freeze and amends it: the resume condition becomes an OR
   (external adopter OR renewal-set closed + hook-latency repaired + council
   reconfirmation), adds a review cadence, requires failure findings to

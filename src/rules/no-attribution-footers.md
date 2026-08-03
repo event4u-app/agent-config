@@ -5,6 +5,7 @@ alwaysApply: false
 description: "PR/issue/comment/commit bodies — no 'Generated with' / 'Co-authored by' / 'opened by' attribution footers"
 triggers:
   - keyword: "co-authored"
+self_contained: true
 workspaces: [agent-config-maintainer, construction, engineering, finance, founder, gtm, legal-review-prep, ops, product, small-business]
 packs: [meta]
 ---

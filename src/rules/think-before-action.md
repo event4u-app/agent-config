@@ -14,6 +14,7 @@ triggers:
   - keyword: "refactor"
   - keyword: "fix"
   - keyword: "optimize"
+self_contained: true
 workspaces: [engineering]
 packs: [engineering-base]
 ---

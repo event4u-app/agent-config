@@ -5,7 +5,7 @@
  *
  * Ported from the retired Python `src/scripts/check_iron_law_prominence.py` (ADR-200,
  * Phase 4 / Wave 4c). The CLI contract is pinned — positional
- * paths (default `.agent-src.uncondensed/rules`), `--format` / `--quiet`
+ * paths (default `src/rules`), `--format` / `--quiet`
  * flags, exit codes (0 clean, 1 violations, 3 internal error),
  * stdout/stderr split, byte-identical finding messages, and the same
  * heading parse / code-fence skipping. No behaviour changes — latent bugs

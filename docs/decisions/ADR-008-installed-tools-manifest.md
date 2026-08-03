@@ -1,6 +1,6 @@
 ---
 adr: 008
-status: proposed
+status: accepted
 date: 2026-05-12
 decision: committed-installed-tools-manifest-separate-from-settings
 supersedes: —
@@ -11,6 +11,16 @@ phase: v2.x · post-global-first-install
 # ADR-008 — Installed-Tools Manifest
 
 ## Status
+
+**Accepted** · 2026-08-03 — perma-proposed sweep (`road-to-renewal-adr-hygiene`
+Phase 1, AI-council-confirmed 2026-08-03): de-facto implemented and tested —
+`src/scripts/_lib/installed_tools.ts` + `install_drift.ts`, the
+sync/validate/doctor/uninstall/prune/conformance CLI lifecycle, and
+`docs/contracts/installed-tools-lockfile.md`. One deviation from the record as
+written: the lockfile ships gitignored, local-only (`/agents/installed-
+tools.lock`, `.gitignore`), not committed — the inventory is per-machine state,
+and the contract doc is the committed surface. Original status prose retained
+below as the historical record.
 
 **Proposed** · 2026-05-12 · pending implementation in Phase 3 of
 [`road-to-global-first-install`](../../agents/roadmaps/road-to-global-first-install.md).

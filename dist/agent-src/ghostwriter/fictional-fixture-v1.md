@@ -84,7 +84,7 @@ contract validators have a complete, stable, non-defamatory example
 to load.
 
 Do not use this fixture as a template for adding a real person to
-`.agent-src.uncondensed/ghostwriter/`. Real-person profiles never
+`src/agent-src/ghostwriter/`. Real-person profiles never
 ship with the package — they belong in `agents/reference/ghostwriter/` on the
 consumer side, where they are gitignored by default.
 

@@ -48,7 +48,7 @@ Creating or materially rewriting a guideline **must** go through Understand
 * **Understand** — which skills or rules will cite this guideline? If the
   answer is "none", the guideline has no home — stop.
 * **Research** — **inspect** `docs/guidelines/` for overlap and grep
-  `.agent-src.uncondensed/` for pages that already cover the topic.
+  `src/` for pages that already cover the topic.
   **Analyze** 1–2 peer guidelines in the same topic folder for tone.
 * **Draft** — propose location (topic folder + filename) and outline. Only
   fill bodies once the outline is confirmed.
