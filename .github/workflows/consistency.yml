@@ -96,7 +96,7 @@ jobs:
 
     steps:
       - name: Check out repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Set up Node
         uses: actions/setup-node@v7
@@ -259,7 +259,7 @@ jobs:
       - name: Check kernel-rule bundle (one rule per PR; label override)
         # Phase 4.2 of road-to-always-budget-relief — slow-rollout guarantee.
         # Override: PR label `bundled-always-rules-acknowledged`.
-        # actions/checkout@v4 uses a shallow PR-merge fetch, so `git fetch
+        # actions/checkout@v7 uses a shallow PR-merge fetch, so `git fetch
         # origin <base>` can race with the configured auth extraheader on
         # some runners (observed: "could not read Username for github.com").
         # Sidestep the fetch entirely by pulling the PR's changed-file list
