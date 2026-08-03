@@ -14,6 +14,7 @@ triggers:
 applies_to_user_types:
   - "developer"
   - "maintainer"
+self_contained: true
 workspaces: [engineering]
 packs: [meta]
 ---

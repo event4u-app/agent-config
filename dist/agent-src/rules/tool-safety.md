@@ -5,6 +5,7 @@ description: "Skill uses external tools — enforce allowlist, deny-by-default, 
 triggers:
   - keyword: "allowed_tools"
   - keyword: "tool registry"
+self_contained: true
 workspaces: [agent-config-maintainer, engineering]
 packs: [meta]
 enforced_by:

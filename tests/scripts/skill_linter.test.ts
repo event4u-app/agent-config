@@ -2106,11 +2106,51 @@ The pushed commit hash.
     });
 });
 
-describe('skill_linter — router routes_to trust-core carve-out', () => {
-    it('skipped for trust core', () => {
+describe('skill_linter — router routes_to self-contained carve-out (ADR-210)', () => {
+    it('skipped for self_contained: true', () => {
+        const p = writeFile('.agent-src.uncondensed/rules/self-contained-rule.md', `---
+type: auto
+description: "Use when something specific happens — constraint-only rule"
+triggers:
+  - keyword: "foo"
+self_contained: true
+---
+
+# self-contained-rule
+
+\`\`\`
+IRON LAW
+DO THE THING. ALWAYS.
+\`\`\`
+
+Body IS the constraint — a prohibition with no procedure to delegate.
+`);
+        const result = lint_file(p);
+        expect(hasCode(result, 'router_routes_to_missing')).toBe(false);
+    });
+
+    it('errors when neither routes_to nor self_contained is declared', () => {
+        const p = writeFile('.agent-src.uncondensed/rules/regular-auto-rule.md', `---
+type: auto
+description: "Use when something specific happens — regular auto rule"
+triggers:
+  - keyword: "foo"
+---
+
+# regular-auto-rule
+
+Body that should route to its skill or certify itself self-contained.
+`);
+        const result = lint_file(p);
+        expect(hasCode(result, 'router_routes_to_missing')).toBe(true);
+        const issue = result.issues.find((i: Issue) => i.code === 'router_routes_to_missing');
+        expect(issue?.severity).toBe('error');
+    });
+
+    it('trust.level core no longer exempts (dead carve-out removed)', () => {
         const p = writeFile('.agent-src.uncondensed/rules/trust-core-rule.md', `---
 type: auto
-description: "Use when something specific happens — core-trust authoritative rule"
+description: "Use when something specific happens — core-trust rule without marker"
 triggers:
   - keyword: "foo"
 trust:
@@ -2121,32 +2161,7 @@ trust:
 
 # trust-core-rule
 
-\`\`\`
-IRON LAW
-DO THE THING. ALWAYS.
-\`\`\`
-
-Body lives inline because trust.level=core makes the rule authoritative.
-`);
-        const result = lint_file(p);
-        expect(hasCode(result, 'router_routes_to_missing')).toBe(false);
-    });
-
-    it('still fires without trust core', () => {
-        const p = writeFile('.agent-src.uncondensed/rules/regular-auto-rule.md', `---
-type: auto
-description: "Use when something specific happens — regular auto rule"
-triggers:
-  - keyword: "foo"
-trust:
-  level: advisory
-  confidence: medium
-  human_review_required: false
----
-
-# regular-auto-rule
-
-Body that should migrate to a skill in Phase 4.
+Body without routes_to and without the self_contained marker.
 `);
         const result = lint_file(p);
         expect(hasCode(result, 'router_routes_to_missing')).toBe(true);

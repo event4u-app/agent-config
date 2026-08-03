@@ -26,6 +26,7 @@ validator_ignore:
   - type: "substring"
     pattern: ".agent-src.uncondensed/"
     reason: "Rule contrasts project-local placement with the .agent-src.uncondensed/rules/ alternative — mentioning the path is the argument."
+self_contained: true
 workspaces: [agent-config-maintainer, engineering, gtm]
 packs: [ai-image, ai-video]
 enforced_by:
@@ -58,12 +59,12 @@ When any trigger above matches in the user prompt or in a tool invocation, the a
 
 Each policy carries its own trigger block, so within the active context the agent narrows from this superset to the policies whose specific patterns actually fired (e.g., a prompt naming a public figure activates `public-figures.md` and `disclosure.md`; a prompt requesting `--no-disclosure` activates `disclosure.md` standalone).
 
-## Why project-local, not `.agent-src.uncondensed/rules/`
+## Why project-local, not `src/rules/`
 
-The seven media policies live under [`agents/settings/policies/media/`](../../agents/settings/policies/media/), not as `.agent-src.uncondensed/rules/domain-safety-media-*.md`, for three reasons:
+The seven media policies live under [`agents/settings/policies/media/`](../../agents/settings/policies/media/), not as `src/rules/domain-safety-media-*.md`, for three reasons:
 
 1. **They are consumed by skills and adapters**, not surfaced as standalone always-loaded prose. The cost is non-trivial (7 × ~80 lines = ~560 lines into the always-context if hoisted to rules), and most sessions never touch a video / image / voice surface.
-2. **The enforcement model is project-local** — the working precedent (`/ghostwriter:*` mandatory footer in `write-engine.md`) and the audit log (session transcripts) are project artifacts. Rules under `.agent-src.uncondensed/` are tool-portable governance; these policies are domain-specific bindings.
+2. **The enforcement model is project-local** — the working precedent (`/ghostwriter:*` mandatory footer in `write-engine.md`) and the audit log (session transcripts) are project artifacts. Rules under `src/rules/` are tool-portable governance; these policies are domain-specific bindings.
 3. **Extraction to a reusable domain pack is explicitly deferred** until a second non-video domain (audio, image, docs, exports) lands with overlapping execution surfaces. Until then, a one-domain abstraction is structurally premature — the policies stay project-local and the routing rule is the on-demand bridge.
 
 This routing rule is the bridge: it sits in the always-loaded rule set so the trigger keywords surface the project-local policies into context on demand, without paying the full always-loaded cost.

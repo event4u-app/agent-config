@@ -5,6 +5,7 @@ description: "rich-class skills are exempt from telegraph + thin-projector trims
 triggers:
   - keyword: "token_budget_class"
   - keyword: "rich skill"
+self_contained: true
 workspaces: [agent-config-maintainer]
 packs: [meta]
 ---

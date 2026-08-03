@@ -9,6 +9,7 @@ triggers:
   - keyword: "revenue figures"
   - keyword: "market data"
   - phrase: "pull the numbers"
+self_contained: true
 workspaces:
   - finance
 packs:
