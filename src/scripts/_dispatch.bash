@@ -203,6 +203,11 @@ Tier 2 — maintenance / internal (hooks, MCP, memory, telemetry):
                              last dispatcher feedback per concern, missing trampolines.
                              Wraps hooks:status. Read-only.
                              Flags: --format json|table, --strict (CI), --project-root <path>
+  routing:doctor             Live routing diagnosis: per-gate ACTIVE/INACTIVE with the
+                             concern's own reason (read-only probes), session_start chain,
+                             router + projection freshness, host bridge status.
+                             Flags: --platform <p>, --workspace <path>, --json, --strict,
+                             --no-freshness
   hooks:replay               Replay a fixture through the universal dispatcher with
                              AGENT_CONFIG_REPLAY=1 (no writes under agents/runtime/state/).
                              Usage: hooks:replay --platform <name> --event <event>
@@ -755,6 +760,10 @@ cmd_hooks_doctor() {
   exec_hook "src/scripts/hooks_doctor" "$@"
 }
 
+cmd_routing_doctor() {
+  exec_hook "src/scripts/routing_doctor" "$@"
+}
+
 cmd_hooks_replay() {
   exec_hook "src/scripts/hooks/replay_hook" "$@"
 }
@@ -1217,6 +1226,7 @@ main() {
     dispatch:hook)           cmd_dispatch_hook "$@" ;;
     hooks:status)            cmd_hooks_status "$@" ;;
     hooks:doctor)            cmd_hooks_doctor "$@" ;;
+    routing:doctor)          cmd_routing_doctor "$@" ;;
     hooks:replay)            cmd_hooks_replay "$@" ;;
     reach:doctor)            cmd_reach_doctor "$@" ;;
     telemetry:record)        cmd_telemetry_record "$@" ;;
