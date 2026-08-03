@@ -23,7 +23,7 @@
  * Drop once no consumer ships the legacy file.
  */
 
-import yaml from 'js-yaml';
+import * as yaml from 'js-yaml';
 
 /** Frontmatter fence used by the legacy `.agent-user.md` format. */
 const FRONTMATTER_FENCE = /^---\r?\n([\s\S]*?)\r?\n---\r?\n?/;

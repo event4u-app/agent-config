@@ -119,6 +119,67 @@ export interface OrchestrationReport {
     mode: string | null;
     reason: string;
   } | null;
+  /** Budget-routing delivery evidence (external review 2026-08-03, Finding 2). */
+  delivery: {
+    eligible_dispatches: number;
+    budget_evidence_lines: number;
+    warning: string;
+  };
+}
+
+/**
+ * Adherence ≠ delivery: budget routing binds via policy prose, so the
+ * doctor checks the DELIVERY evidence — orchestration audit lines that
+ * carry a tier decision. Eligible dispatches recorded while
+ * `budget_routing != off` but ZERO tier-carrying lines → WARN with the
+ * exact reason. Read-only over agents/runtime/state/audit/*.jsonl; no
+ * new state. This closes the same blind-spot class the session-canary
+ * incident exposed (policy present, delivery silently absent).
+ */
+export function check_budget_delivery(
+  workspace_root: string,
+  budget_routing: string,
+): OrchestrationReport["delivery"] {
+  const out = { eligible_dispatches: 0, budget_evidence_lines: 0, warning: "" };
+  if (budget_routing === "off") {
+    return out;
+  }
+  const auditDir = path.join(workspace_root, "agents", "runtime", "state", "audit");
+  let files: string[] = [];
+  try {
+    files = fs.readdirSync(auditDir).filter((f) => f.endsWith(".jsonl"));
+  } catch {
+    return out; // no audit dir — nothing dispatched, nothing to warn about
+  }
+  for (const f of files) {
+    let text = "";
+    try {
+      text = fs.readFileSync(path.join(auditDir, f), "utf-8");
+    } catch {
+      continue;
+    }
+    for (const line of text.split("\n")) {
+      if (!line.trim()) continue;
+      try {
+        const rec = JSON.parse(line) as Record<string, unknown>;
+        const spawns = Number(rec["spawn_count"] ?? 0);
+        if (!Number.isFinite(spawns) || spawns < 1) continue;
+        out.eligible_dispatches += 1;
+        if (typeof rec["tier"] === "string" && rec["tier"] !== "") {
+          out.budget_evidence_lines += 1;
+        }
+      } catch {
+        // non-record line — audit files are shared JSONL surfaces
+      }
+    }
+  }
+  if (out.eligible_dispatches > 0 && out.budget_evidence_lines === 0) {
+    out.warning =
+      `budget_routing=${budget_routing} is policy-bound but shows no delivery evidence: ` +
+      `${out.eligible_dispatches} orchestration dispatch(es) recorded, 0 carry a tier decision — ` +
+      `the relation may not be running (adherence != delivery)`;
+  }
+  return out;
 }
 
 export interface DoctorReport {
@@ -160,8 +221,14 @@ export function collect_orchestration(
   const cost_budgets = (cost["budgets"] ?? {}) as Record<string, unknown>;
   const tracking_dir = path.join(workspace_root, "agents", "cost-tracking");
   const ledger_present = fs.existsSync(path.join(tracking_dir, "sessions.jsonl"));
+  // YAML 1.1 trap: an unquoted `off` parses as boolean false — coerce it
+  // back to the enum string so the check honors the user's intent.
   const budget_routing =
-    typeof sub["budget_routing"] === "string" ? (sub["budget_routing"] as string) : "ask";
+    sub["budget_routing"] === false
+      ? "off"
+      : typeof sub["budget_routing"] === "string"
+        ? (sub["budget_routing"] as string)
+        : "ask";
   const per_tier = (cost_budgets["per_tier"] ?? {}) as Record<string, unknown>;
   const cooldowns = readCooldowns(tracking_dir);
   const tier_budgets: OrchestrationReport["tier_budgets"] = {};
@@ -197,6 +264,7 @@ export function collect_orchestration(
     cost_budgets,
     ledger_present,
     sample,
+    delivery: check_budget_delivery(workspace_root, budget_routing),
   };
 }
 
@@ -407,6 +475,13 @@ function _render(report: DoctorReport): string {
     return `${t}=${cap}${cool}`;
   });
   lines.push(`  tier budgets (rolling-24h): ${tierBits.join(" · ")}`);
+  if (o.delivery.warning) {
+    lines.push(`  ⚠️ ${o.delivery.warning}`);
+  } else if (o.delivery.eligible_dispatches > 0) {
+    lines.push(
+      `  delivery evidence: ${o.delivery.budget_evidence_lines}/${o.delivery.eligible_dispatches} dispatches carry a tier decision`,
+    );
+  }
   lines.push(`  activation probe: ${o.activation.action} — ${o.activation.reason}`);
   if (o.sample) {
     lines.push(

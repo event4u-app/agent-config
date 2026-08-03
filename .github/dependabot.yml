@@ -71,6 +71,18 @@ updates:
       # native z.toJSONSchema in its own PR, then lift this (PR #1131).
       - dependency-name: zod
         update-types: ["version-update:semver-major"]
+      # Toolchain majors are migration projects, not dependency bumps —
+      # each below broke the 2026-08-03 npm-majors group PR (#1141, 35 red
+      # checks) and needs its own planned upgrade with config/API work.
+      # Lift an entry when that migration is scheduled.
+      - dependency-name: typescript
+        update-types: ["version-update:semver-major"]
+      - dependency-name: vite
+        update-types: ["version-update:semver-major"]
+      - dependency-name: vitest
+        update-types: ["version-update:semver-major"]
+      - dependency-name: eslint
+        update-types: ["version-update:semver-major"]
     # Majors are grouped too (npm-majors below): one collected weekly PR
     # instead of one PR per major — the 2026-08-03 flood (execa, zod,
     # @types/node, @inquirer/prompts, typescript, …) arrived as singles

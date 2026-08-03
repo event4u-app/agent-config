@@ -14,7 +14,7 @@
 
 import { readFileSync, readdirSync, existsSync, statSync } from 'node:fs';
 import { join, resolve, basename, relative, sep } from 'node:path';
-import yaml from 'js-yaml';
+import * as yaml from 'js-yaml';
 
 export type PromptKind = 'skill' | 'command';
 export type ResourceKind = 'rule' | 'guideline';

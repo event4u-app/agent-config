@@ -101,6 +101,19 @@ better, we tip the ADRs."* Findings and evidence consulted:
    post-anchoring runs the PREREG spike — no restated complaint, no
    council re-run, no silence.
 
+## Monitoring note — German-inflection recall (added 2026-08-03, before the first rules-mode canary run)
+
+The anchored matcher's documented recall cost is inflected forms
+(German verb endings; the plural-s relief covers English plurals only).
+Pre-registered trigger, fixed BEFORE any canary data exists: if the
+weekly rules-mode canary shows German-prompt recall ≥ 15 percentage
+points below English-prompt recall on the same suite for TWO consecutive
+scheduled runs, an inflection-relief change (e.g. optional `-e`/`-en`
+right-edge relief) runs as its own measured before/after PR — the same
+shape as the anchoring change itself. This trigger governs matcher
+relief only; it is NOT a resolver reopen (that stays the ≥ 30% tier-2
+floor-failure trigger above).
+
 ## Consequences
 
 - Routing complaints now have a live diagnosis path (`routing:doctor`)

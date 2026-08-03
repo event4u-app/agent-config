@@ -275,6 +275,12 @@ jobs:
         # or an un-regenerated registry change both fail this gate red.
         run: ./scripts-run src/scripts/build_mcp_catalog --strict
 
+      - name: CLI registry ↔ evaluator budget sync
+        # A registry entry added without moving cli_help_command_count (budget +
+        # committed record) only WARNS on main and BLOCKS the next release —
+        # the 9.15.0 failure mode. This fails the registering PR instead.
+        run: ./scripts-run src/scripts/check_cli_registry_budget_sync
+
       - name: Build (dist/cli + UI bundle)
         # prepack-check asserts the chmod +x hook applied by build:cli.
         run: npm run build --silent

@@ -29,7 +29,7 @@ import * as path from 'node:path';
 import process from 'node:process';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
-import yaml from 'js-yaml';
+import * as yaml from 'js-yaml';
 
 import { signTestP } from './second_brain_retrieval.js';
 
