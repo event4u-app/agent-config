@@ -2,18 +2,18 @@
 model_tier: medium
 name: agent-handoff
 pack: meta
-intent: "Generate a session-handoff summary to continue work in a fresh chat"
+intent: "Resume a previous session in a fresh chat: pick a session, generate a handoff, auto-seed the next session"
 routes_to: [agent-docs-writing]
 replaces: []
 tier: 0
 visibility: visible
 skills: [agent-docs-writing]
-description: Generate a context summary for continuing work in a fresh chat. Replaces the session system.
-argument-hint: "[with tasks]"
+description: Pick a recent session, generate a handoff from its transcript, and seed a fresh session with it — or summarize the live conversation for copy-paste.
+argument-hint: "[--print | --file | with tasks]"
 suggestion:
   eligible: true
-  trigger_description: "user asks for an agent handoff, fresh-chat summary, or context-summary to paste into a new chat"
-  trigger_context: "explicit verbatim ask — 'agent handoff', 'agend handoff' (typo), 'fasse für neuen chat zusammen', 'handoff summary', 'context summary for fresh chat'. Never inferred without a direct handoff / summary intent."
+  trigger_description: "user asks for an agent handoff, to resume/continue a previous session in a fresh chat, or a context-summary to paste into a new chat"
+  trigger_context: "explicit ask — 'agent handoff'/'agend handoff' (typo), 'handoff summary', 'context summary for fresh chat', 'resume/continue an old session in a fresh chat', 'fasse für neuen chat zusammen', 'neue session mit altem stand'. Never inferred."
 workspaces:
   - agent-config-maintainer
 packs:
@@ -22,24 +22,63 @@ packs:
 
 # /agent-handoff
 
-Generates a concise handoff prompt the user can paste into a new chat.
-This replaces the old session system — no files to save/load, just a copy-paste prompt.
+Resume-style flow: pick one of the recent sessions, a handoff is generated
+deterministically from its transcript, and the next session starts with that
+handoff already injected as context. The legacy copy-paste summary of the
+*live* conversation stays available as `--print`.
 
-## Steps
+## Steps — primary flow (CLI-backed session picker)
 
-### 1. Gather context
+### 1. List the recent sessions
 
-Collect the following from the current conversation:
+```bash
+agent-config handoff --list
+```
 
-- **Branch**: `git branch --show-current`
-- **Uncommitted changes**: `git status --short`
-- **Recent commits**: `git log --oneline -5`
-- **Active roadmap**: Check `agents/roadmaps/` for any active roadmap
-- **Task list**: Only include if the user explicitly asks for it (e.g., "/agent-handoff with tasks")
+Sources, merged newest-first: the cross-host chat-history log (primary),
+native Claude Code transcripts (`~/.claude/projects/<slug>/`), and the Codex
+session store (`~/.codex/sessions/`, Codex's only source).
 
-### 2. Generate handoff prompt
+### 2. Present the picker
 
-Create a fenced code block the user can copy-paste into a new chat:
+Show the sessions as ONE numbered-options block (per `user-interaction` —
+date · branch · summary per line) and let the user pick. One question, then
+wait.
+
+### 3. Generate the handoff for the pick
+
+```bash
+agent-config handoff --session <id>
+```
+
+The generator extracts the handoff sections deterministically from the
+transcript — no LLM spend, reproducible, privacy-floored per line (violating
+lines are DROPPED and counted, never rewritten) — and writes the result
+atomically to `agents/runtime/state/handoff-context.md` (gitignored runtime
+state, one-shot).
+
+### 4. Hand over to the fresh session
+
+Tell the user: **start a new session — the handoff is injected
+automatically** (the `handoff-context` session_start hook consumes the file
+exactly once, then deletes it). In a terminal-capable context, offer
+`agent-config handoff --session <id> --launch claude` (or `--launch codex`)
+to spawn the fresh session directly:
+
+- `claude` — seeds via the session_start hook (clean first message).
+- `codex` — no hook surface there; the adapter passes the handoff as the
+  initial prompt instead. Same UX, different transport.
+- Bundle hosts without hooks (Antigravity, Copilot) → use `--print` and
+  copy-paste.
+
+## Fallback mode — summarize the LIVE conversation (`--print`)
+
+On `/agent-handoff --print` (or when no session log exists), summarize the
+current conversation in-model — the original flow. Collect branch
+(`git branch --show-current`), uncommitted changes (`git status --short`),
+recent commits (`git log --oneline -5`), the active roadmap under
+`agents/roadmaps/`, and the task list only when explicitly asked
+("/agent-handoff with tasks"). Then emit:
 
 ```
 ---
@@ -80,12 +119,39 @@ Roadmap: {roadmap file if active, or "none"}
 - {list of files that were edited or are important for context}
 ```
 
+The CLI generator emits the same section set (minus the live-only
+*Repeatable workflow* / *Feedback history* refinements) — the template above
+stays the single source of the section contract.
+
 **Verbatim-first is the load-bearing rule:** the *User instructions* and
 *Feedback history* sections are preserved word-for-word and never compressed —
 lossy re-summarization of the user's own constraints is the exact failure this
 template prevents. Everything else (Done / Key decisions) stays concise.
 
-### 2b. File-artifact mode — `HANDOFF.md` (optional, host-neutral)
+### Present the fallback to the user
+
+Show the handoff prompt in a fenced code block and say:
+
+```
+> Copy this into a new chat to continue where we left off.
+```
+
+## Iron Law — printed output is ALWAYS a fenced code block
+
+```
+THE HANDOFF MUST BE WRAPPED IN A FENCED ```markdown CODE BLOCK
+SO THE USER CAN COPY IT IN ONE CLICK. NEVER RENDER IT AS LIVE
+MARKDOWN. NEVER SPLIT IT ACROSS MULTIPLE BLOCKS.
+```
+
+Applies to every in-chat emission (`--print` fallback, bundle hosts). Use
+` ```markdown ` as the fence so consumers get syntax highlighting and the
+inner content is preserved verbatim. Add one short prose line above the
+block (e.g. *"Copy this into a new chat:"*) and nothing after — no follow-up
+questions, no numbered options. The picker in Step 2 is the one exception:
+it is the flow's single question, asked BEFORE any handoff is generated.
+
+## 2b. File-artifact mode — `HANDOFF.md` (optional, host-neutral)
 
 On `/agent-handoff --file` (or when a workflow skill's phase boundary asks
 for a standing handoff), ALSO write the contract to
@@ -119,27 +185,6 @@ next to it (`HANDOFF.md.<ts>.bak`) before overwrite; duplicate-check before
 appending (never double-append a section); preserve the section structure;
 post-verify the write by re-reading the required fields.
 
-### 3. Present to user
-
-Show the handoff prompt in a fenced code block and say:
-
-```
-> Copy this into a new chat to continue where we left off.
-```
-
-## Iron Law — output is ALWAYS a fenced code block
-
-```
-THE HANDOFF MUST BE WRAPPED IN A FENCED ```markdown CODE BLOCK
-SO THE USER CAN COPY IT IN ONE CLICK. NEVER RENDER IT AS LIVE
-MARKDOWN. NEVER SPLIT IT ACROSS MULTIPLE BLOCKS.
-```
-
-Use ` ```markdown ` as the fence so consumers get syntax highlighting
-and the inner content is preserved verbatim. Add one short prose line
-above the block (e.g. *"Copy this into a new chat:"*) and nothing
-after — no follow-up questions, no numbered options.
-
 ## Detection — when natural-language triggers count as explicit
 
 The user does not need to type `/agent-handoff` literally. Treat as
@@ -149,6 +194,9 @@ explicit invocation when the prompt contains a verbatim mention of:
 - `fresh chat`, `neuer chat`, `for a new chat`
 - `context summary for {fresh,new} chat`
 - `fasse … für … chat zusammen`
+- `resume {a,the} previous session`, `continue {an,the} old session`
+- `neue session mit dem stand von {gestern,letzter session}`,
+  `alte session … weitermachen`
 
 A vague *"summarize this conversation"* without handoff/new-chat
 framing → NOT a trigger. Surface `/agent-handoff` as a numbered option,
@@ -156,6 +204,9 @@ do not auto-execute.
 
 ## Rules
 
+- **Primary flow is CLI-backed.** When `agent-config` is reachable, route
+  through the picker (Steps 1–4); fall back to the in-model summary only on
+  `--print`, on bundle hosts, or when the CLI reports no sessions.
 - **Concise everywhere EXCEPT the verbatim sections.** Keep Done / Key
   decisions tight, but never truncate *User instructions* or *Feedback history*
   to hit a line target — losing a user constraint costs far more than the
@@ -168,13 +219,13 @@ do not auto-execute.
 - **Open tasks are critical** — the new chat needs to know what's left.
 - **Decisions are important** — prevents the new chat from re-asking settled questions.
 - **File list is optional** — only include if the new chat will need to edit specific files.
-- **NEVER render the handoff as live markdown** — see Iron Law above.
+- **NEVER render a printed handoff as live markdown** — see Iron Law above.
 
 ## When to use this vs. `agents/runtime/.agent-chat-history`
 
-- `/agent-handoff` is **push-based**: you copy a short summary into the
-  new chat. Works across tools (Augment → Claude Code), across machines,
-  and without any persistent file.
+- `/agent-handoff` picks a **past session** and seeds the next one (or, with
+  `--print`, pushes a copy-paste summary of the live one). Works across
+  tools; the auto-inject path needs a hook-capable host on the same machine.
 - `agents/runtime/.agent-chat-history` is **pull-based** and **multi-session**: every
   session writes its own entries tagged with a 16-char session
   fingerprint derived from the platform `session_id` (schema v4, see
@@ -185,13 +236,14 @@ do not auto-execute.
   session for project-improving learnings with
   `/memory mine-session --mode=proposals`.
 
-Prefer `/agent-handoff` for planned context switches across tools or
-machines; use `/chat-history import` after a crash or fresh-chat reopen
-on the same workspace to surface prior-session context verbatim.
+Prefer `/agent-handoff` for planned context switches and session resumes;
+use `/chat-history import` after a crash or fresh-chat reopen on the same
+workspace to surface prior-session context verbatim.
 
 Three distinct mechanisms — do not conflate them:
 
-- **handoff** (this command) — a one-shot push summary for the *next* chat;
-  ephemeral, copy-paste, verbatim on the user's instructions.
+- **handoff** (this command) — a one-shot seed for the *next* chat;
+  generated from a picked session (or pushed from the live one), ephemeral,
+  verbatim on the user's instructions.
 - **[`chat-history import`](../chat-history/import/command.md)** — pull a prior *session's* logged context into the current chat.
 - **durable memory** ([`memory-consolidation`](../../../skills/memory-consolidation/SKILL.md)) — cross-*run* curated facts; a handoff is not memory, and memory is not a transcript.

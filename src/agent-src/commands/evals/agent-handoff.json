@@ -1,6 +1,6 @@
 {
   "command": "agent-handoff",
-  "intent": "Generate a session-handoff summary to continue work in a fresh chat",
+  "intent": "Resume a previous session in a fresh chat: pick a session, generate a handoff, auto-seed the next session",
   "cases": [
     {
       "prompt": "summarize where we are so I can paste it into a new chat",
@@ -29,6 +29,18 @@
     {
       "prompt": "show me the current message count and token cost",
       "expected": "agent-status"
+    },
+    {
+      "prompt": "let me continue an old session in a fresh chat",
+      "expected": "agent-handoff"
+    },
+    {
+      "prompt": "starte eine neue session mit dem stand von gestern",
+      "expected": "agent-handoff"
+    },
+    {
+      "prompt": "resume my previous session where we left off, but in a clean chat",
+      "expected": "agent-handoff"
     }
   ]
 }
