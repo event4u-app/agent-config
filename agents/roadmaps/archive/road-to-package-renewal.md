@@ -130,9 +130,9 @@ this central roadmap steering three sub-roadmaps.
 
 | Sub-roadmap | Scope | Status |
 |---|---|---|
-| [`road-to-renewal-foundation.md`](archive/road-to-renewal-foundation.md) | CI oracle repair, dead-tree sweep, token quick wins (pack-gated floors, MCP trim), runtime-activation spike (phase-gated) | **complete 2026-08-02** — archived. Phase 3's spike steps closed `[-]` as infeasible-as-specified (no per-prompt injection transport; corpus covers 10 of 97 rules); reopen terms in `internal/bench/layer1-resolver-PREREG.md` |
-| [`archive/road-to-renewal-leverage.md`](archive/road-to-renewal-leverage.md) | Execution flows (work-engine batching, parallel dispatch, cadence flip, hub generation, hook-fan-out trim) + three documented-failure fixes with borrowed shape + tracker-convention docs | **COMPLETE + archived 2026-08-02.** Shipped: `dashboard_regen_cadence` default → `every_5_steps`; worktree seeding allow/deny list; the `## Blockers` awaiting-evidence convention; `block-config-weakening` PreToolUse guard; `check_cluster_patterns` filesystem enumeration + the 9 drifting hubs fixed. Refused with evidence (5 of 12): work-engine batching (premise falsified — 4 of 24 directives are no-op gates and they already cost nothing; the real cost is 87% transport), parallel step dispatch (incompatible with the atomic-flip law + step interdependence), hub-body generation (51% of hubs carry non-generatable prose; a checker extension removes the same drift), `post_tool_use` trim (all 7 concerns cost ~10 ms against a 250 ms budget — 88% is the dispatcher floor), Inline-Brief fallback (its incident is already closed by `lint_ui_stack_bundles`). Two transport findings recorded for a future step: the work engine is the one Tier-0 flow with no `dist/cli-delegate` bundle (blocked on 13 unguarded `_isCliEntry()` modules), and the hook dispatcher's 70 ms floor |
-| [`road-to-renewal-adr-hygiene.md`](archive/road-to-renewal-adr-hygiene.md) | Drive-loop era batch disposition, ADR-085 amendment, perma-proposed sweep, ADR-201 resolution | **complete 2026-08-03** — archived; executed as its own PR (ADR-206–210, 40-rule self-contained certification, review_trigger retrofit, dead-tree sweep) |
+| [`road-to-renewal-foundation.md`](road-to-renewal-foundation.md) | CI oracle repair, dead-tree sweep, token quick wins (pack-gated floors, MCP trim), runtime-activation spike (phase-gated) | **complete 2026-08-02** — archived. Phase 3's spike steps closed `[-]` as infeasible-as-specified (no per-prompt injection transport; corpus covers 10 of 97 rules); reopen terms in `internal/bench/layer1-resolver-PREREG.md` |
+| [`road-to-renewal-leverage.md`](road-to-renewal-leverage.md) | Execution flows (work-engine batching, parallel dispatch, cadence flip, hub generation, hook-fan-out trim) + three documented-failure fixes with borrowed shape + tracker-convention docs | **COMPLETE + archived 2026-08-02.** Shipped: `dashboard_regen_cadence` default → `every_5_steps`; worktree seeding allow/deny list; the `## Blockers` awaiting-evidence convention; `block-config-weakening` PreToolUse guard; `check_cluster_patterns` filesystem enumeration + the 9 drifting hubs fixed. Refused with evidence (5 of 12): work-engine batching (premise falsified — 4 of 24 directives are no-op gates and they already cost nothing; the real cost is 87% transport), parallel step dispatch (incompatible with the atomic-flip law + step interdependence), hub-body generation (51% of hubs carry non-generatable prose; a checker extension removes the same drift), `post_tool_use` trim (all 7 concerns cost ~10 ms against a 250 ms budget — 88% is the dispatcher floor), Inline-Brief fallback (its incident is already closed by `lint_ui_stack_bundles`). Two transport findings recorded for a future step: the work engine is the one Tier-0 flow with no `dist/cli-delegate` bundle (blocked on 13 unguarded `_isCliEntry()` modules), and the hook dispatcher's 70 ms floor |
+| [`road-to-renewal-adr-hygiene.md`](road-to-renewal-adr-hygiene.md) | Drive-loop era batch disposition, ADR-085 amendment, perma-proposed sweep, ADR-201 resolution | **complete 2026-08-03** — archived; executed as its own PR (ADR-206–210, 40-rule self-contained certification, review_trigger retrofit, dead-tree sweep) |
 
 Ordering (council-locked): Foundation Phase 1 (CI oracle) gates everything —
 a broken validator cannot validate its own fix. Leverage starts only after
@@ -241,12 +241,33 @@ Foundation Phase 1 is green. ADR hygiene chips alongside any PR.
 
 ## Phase 2 — steering (after this PR merges)
 
-- [ ] Foundation Phase 1 (CI oracle) executed and verified → unblock Leverage
-- [ ] Re-measure token footprint after Foundation Phase 2; decide
+- [x] Foundation Phase 1 (CI oracle) executed and verified → unblock Leverage
+      — verified 2026-08-04: all three sub-roadmaps sit in `archive/` with
+      zero open steps (Foundation PR #1117, Leverage 2026-08-02, ADR-hygiene
+      PR #1123); Leverage was unblocked AND completed
+- [x] Re-measure token footprint after Foundation Phase 2; decide
       runtime-activation spike go/no-go on the recorded thresholds
-- [ ] Record the renewal-cadence decision (when/whether to re-invoke
+      — re-measured 2026-08-04 (`audit_initial_context` at 5d2065207):
+      `.claude`/`.cursor`/`.augment` rules 86,266 GPT tok (shipped-default
+      after was 85,880; +386 is content landed since, not regression),
+      `.windsurfrules` 69,716, skills catalog 13,792 (−4,213 held), MCP
+      worker 4,174 / stdio 3,074 (−665 held). The pack-axis flip
+      (−8,110) stays behind its human gate, unchanged. Spike decision
+      (council 2026-08-04, sonnet-4-5 + gpt-4o): **NO-GO (prerequisites
+      unmet, not executed)** — P1: no per-prompt injection transport in
+      the hook layer; P2: labelled corpus 10/97 rules (no statistical
+      power for T3). The pre-registered measurement was never produced;
+      `internal/bench/layer1-resolver-PREREG.md` holds sole reopen
+      authority (P1/P2/P3). No default changes, no new threshold set.
+- [x] Record the renewal-cadence decision (when/whether to re-invoke
       `/optimize:deep` against this roadmap set) as a one-line decision note
       here — the recurring re-run itself is cadence, not a checkbox
+      — **Decision (council 2026-08-04): event-triggered with a 6-month
+      backstop** — re-invoke `/optimize:deep` on a new operator performance
+      report, a major host-capability shift, the first external adopter, or
+      a release review surfacing systemic drift; if no event fires for 6
+      months, run a drift audit (invoke + decide, no auto-commit to
+      refinement loops).
 
 ## Cadence
 
