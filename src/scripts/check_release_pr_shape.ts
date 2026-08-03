@@ -34,6 +34,10 @@ const ALLOWLIST_GLOBS = [
     'src/domains/*/pack.yaml',
     'src/domains/*/README.md',
     'docs/archive/CHANGELOG-pre-*.md',
+    // Finding-disposition ledger (release-truth Phase 3) — a release PR must
+    // be able to carry the dispositions of its own self-review findings; the
+    // finding-dispositions gate is red until blocking ones are recorded here.
+    'agents/evidence/release-findings/*.json',
     // Project-settings template pin — bumped by release.ts set_template_pin and
     // its regenerated dist twin (kept in lockstep with package.json.version).
     'src/agent-src/templates/agents/agent-project-settings.example.yml',

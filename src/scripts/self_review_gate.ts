@@ -29,7 +29,8 @@
  * the `check_quality_regression.gateVerdict` pattern.
  */
 import { spawnSync } from 'node:child_process';
-import { appendFileSync, existsSync, readFileSync } from 'node:fs';
+import { createHash } from 'node:crypto';
+import { appendFileSync, existsSync, readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -48,6 +49,20 @@ export interface Finding {
     title: string;
     detail: string;
     file?: string;
+}
+
+/**
+ * Stable identifier for a finding — sha256 of kind|title|file, 12 hex chars
+ * (release-truth Phase 3). The id keys the disposition ledger
+ * (`agents/evidence/release-findings/<version>.json`): the 9.14.0 symlink
+ * finding merged with no traceable disposition precisely because findings
+ * carried no identity that outlived the PR comment.
+ */
+export function findingId(f: Pick<Finding, 'kind' | 'title' | 'file'>): string {
+    return createHash('sha256')
+        .update(`${f.kind}|${f.title}|${f.file ?? ''}`)
+        .digest('hex')
+        .slice(0, 12);
 }
 
 /**
@@ -332,7 +347,7 @@ export function renderReview(findings: Finding[], enforce: boolean, escalation: 
     const rows = findings
         .map((f) => {
             const marker = classifyBlocking(f) ? 'Blocking' : 'Advisory';
-            return `| ${f.severity} (${marker}) | ${f.kind} | ${f.file ?? '—'} | ${f.title} |`;
+            return `| ${findingId(f)} | ${f.severity} (${marker}) | ${f.kind} | ${f.file ?? '—'} | ${f.title} |`;
         })
         .join('\n');
     const verdictLine = blocking.length
@@ -340,7 +355,14 @@ export function renderReview(findings: Finding[], enforce: boolean, escalation: 
             ? `❌ ${blocking.length} merge-blocking finding(s) (security/claim × high+).`
             : `⚠️ ${blocking.length} finding(s) WOULD block merge under an enforced gate (advisory now).`
         : '✅ No merge-blocking findings (style/correctness advise only).';
-    return `${banner}\n\n${verdictLine}\n\n| severity | kind | file | finding |\n|---|---|---|---|\n${rows}${esc}`;
+    // Machine-readable block (release-truth Phase 3): invisible in the rendered
+    // comment; `check_finding_dispositions --pr` reads it as the TRIGGER that
+    // demands committed dispositions. The comment is transport, never the
+    // record — the record is `agents/evidence/release-findings/<version>.json`.
+    const machine = `\n\n<!-- release-findings-json: ${JSON.stringify(
+        findings.map((f) => ({ finding_id: findingId(f), severity: f.severity, kind: f.kind, title: f.title, file: f.file ?? null })),
+    )} -->`;
+    return `${banner}\n\n${verdictLine}\n\n| id | severity | kind | file | finding |\n|---|---|---|---|---|\n${rows}${esc}${machine}`;
 }
 
 function postReview(body: string): void {
@@ -432,6 +454,22 @@ export function main(argv: string[]): 0 | 2 {
             return 0; // no credit / transport / API error → never blocks the merge
         }
         const findings = parseFindings(resp.text);
+        const outIdx = argv.indexOf('--findings-out');
+        if (outIdx >= 0 && argv[outIdx + 1]) {
+            // Durable ingestion input for the disposition ledger (release-truth
+            // Phase 3): `check_finding_dispositions --ingest <this file>`.
+            writeFileSync(
+                argv[outIdx + 1]!,
+                JSON.stringify(
+                    {
+                        schema_version: 1,
+                        findings: findings.map((f) => ({ finding_id: findingId(f), ...f })),
+                    },
+                    null,
+                    2,
+                ) + '\n',
+            );
+        }
         const body = renderReview(findings, enforce, plan.escalation);
         postReview(body);
 
