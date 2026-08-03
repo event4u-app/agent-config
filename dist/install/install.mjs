@@ -9619,7 +9619,8 @@ function build_claude_hook_matrix(manifest_path2) {
     if (!concerns || Array.isArray(concerns) && concerns.length === 0) continue;
     const native = ac_to_native[ac_event];
     if (native === void 0) continue;
-    matrix[native] = `BIN="$CLAUDE_PROJECT_DIR/agent-config"; [ -x "$BIN" ] || BIN=agent-config; command -v "$BIN" >/dev/null 2>&1 || exit 0; "$BIN" dispatch:hook --platform claude --event ${ac_event} --native-event ${native} --project-dir "$CLAUDE_PROJECT_DIR" --min-version ${String(hook_spec)}`;
+    const dispatchArgs = `--platform claude --event ${ac_event} --native-event ${native} --project-dir "$CLAUDE_PROJECT_DIR" --min-version ${String(hook_spec)}`;
+    matrix[native] = `B=""; [ -f "$CLAUDE_PROJECT_DIR/node_modules/@event4u/agent-config/dist/hooks/dispatch.js" ] && B="$CLAUDE_PROJECT_DIR/node_modules/@event4u/agent-config/dist/hooks/dispatch.js"; [ -z "$B" ] && [ -f "$CLAUDE_PROJECT_DIR/dist/hooks/dispatch.js" ] && [ -f "$CLAUDE_PROJECT_DIR/src/scripts/hook_manifest.yaml" ] && B="$CLAUDE_PROJECT_DIR/dist/hooks/dispatch.js"; if [ -n "$B" ] && command -v node >/dev/null 2>&1; then exec node "$B" ${dispatchArgs}; fi; BIN="$CLAUDE_PROJECT_DIR/agent-config"; [ -x "$BIN" ] || BIN=agent-config; command -v "$BIN" >/dev/null 2>&1 || exit 0; "$BIN" dispatch:hook ${dispatchArgs}`;
   }
   return matrix;
 }

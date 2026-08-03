@@ -314,12 +314,18 @@ jobs:
         # 9.8.0 dead-postinstall class).
         run: node src/scripts/prepack-check.mjs
 
-      - name: hook-latency bench gate (pre-registered budget)
-        # Standing published gate (road-to-credible-install Phase 1): 50
-        # invocations per hook event against dist/hooks/dispatch.js; p95
-        # must meet src/config/hook-latency-budget.json and must not
-        # regress >20% vs the recorded docs/hook-latency.json numbers.
-        run: ./scripts-run src/scripts/bench_hook_latency --gate
+      - name: hook-latency bench gate (pre-registered budget, real path)
+        # Standing published gate (road-to-credible-install Phase 1;
+        # real-path flip: road-to-hook-latency-repair Phase 1): 50
+        # invocations per hook event via the EXACT command hooks.json
+        # installs (bash wrapper + shim probe + CLI), i.e. the path
+        # consumers actually pay — not the bare dist/hooks/dispatch.js
+        # bundle the old gate measured. p95 must meet
+        # src/config/hook-latency-budget.json and must not regress beyond
+        # regression_gate vs the recorded docs/hook-latency.json numbers
+        # (regression net applies only when the recorded invocation_path
+        # matches; absolute budgets always bind).
+        run: ./scripts-run src/scripts/bench_hook_latency --gate --via-cli
 
       - name: publint (published-package shape)
         # Release-gate addition (road-to-credible-install Phase 0): catches
