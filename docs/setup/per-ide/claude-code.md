@@ -65,7 +65,7 @@ Local overrides go in `agents/overrides/.claude/hooks/`.
 - `/commit` — Conventional-Commit splitter with confirmation gate.
 - `/create-pr` — opens a structured PR from the current branch.
 - `/review-changes` — five-judge self-review before requesting human review.
-- `/agent-handoff` — produces a fresh-chat continuation summary.
+- `/agent-handoff` — pick a recent session, generate a handoff, auto-seed the fresh session (`--print` for the copy-paste summary).
 
 Full list: `ls .claude/skills/`.
 

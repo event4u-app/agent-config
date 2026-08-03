@@ -434,7 +434,7 @@ are excluded.
 
 | kind | name | cluster | description |
 |---|---|---|---|
-| command | [`agent-handoff`](../dist/agent-src/commands/agent-handoff.md) |  | Generate a context summary for continuing work in a fresh chat. Replaces the session system. |
+| command | [`agent-handoff`](../dist/agent-src/commands/agent-handoff.md) |  | Pick a recent session, generate a handoff from its transcript, and seed a fresh session with it — or summarize the live conversation for copy-paste. |
 | command | [`agent-status`](../dist/agent-src/commands/agent-status.md) |  | Show current conversation stats — message count, token costs, task progress, next freshness check. |
 | command | [`agents`](../dist/agent-src/commands/agents.md) | cluster: agents | Agent-layer orchestrator — routes to init, optimize, audit. Covers AGENTS.md and its multi-tool stubs (CLAUDE.md, GEMINI.md, copilot-instructions.md, .cursorrules). |
 | command | [`agents-audit`](../dist/agent-src/commands/agents/audit.md) | cluster: agents | Audit agent infrastructure — token overhead, rule triggers, AGENTS.md health, Capability-over-Structure adherence, stale references. Read-only, suggest-only, never auto-apply. |

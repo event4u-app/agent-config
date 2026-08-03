@@ -419,7 +419,7 @@ Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
 
 | kind | name | cluster/shim | description |
 |---|---|---|---|
-| command | [`agent-handoff`](../src/domains/meta/agent-handoff/command.md) |  | Generate a context summary for continuing work in a fresh chat. Replaces the session system. |
+| command | [`agent-handoff`](../src/domains/meta/agent-handoff/command.md) |  | Pick a recent session, generate a handoff from its transcript, and seed a fresh session with it — or summarize the live conversation for copy-paste. |
 | command | [`agent-status`](../src/domains/meta/agent-status/command.md) |  | Show current conversation stats — message count, token costs, task progress, next freshness check. |
 | command | [`agents`](../src/domains/meta/agents/command.md) | cluster: agents | Agent-layer orchestrator — routes to init, optimize, audit. Covers AGENTS.md and its multi-tool stubs (CLAUDE.md, GEMINI.md, copilot-instructions.md, .cursorrules). |
 | command | [`agents-audit`](../src/domains/meta/agents/audit/command.md) | cluster: agents | Audit agent infrastructure — token overhead, rule triggers, AGENTS.md health, Capability-over-Structure adherence, stale references. Read-only, suggest-only, never auto-apply. |

@@ -1,0 +1,6 @@
+{"timestamp":"2026-08-01T10:00:00.000Z","type":"session_meta","payload":{"session_id":"019f7fd4-0000-0000-0000-000000000001","id":"019f7fd4-0000-0000-0000-000000000001","timestamp":"2026-08-01T10:00:00.000Z","cwd":"/tmp/fixture-repo","originator":"codex_exec","cli_version":"0.144.4","source":"cli","git":{"commit_hash":"abc123","branch":"feat/fixture-branch","repository_url":"https://example.com/repo.git"}}}
+{"timestamp":"2026-08-01T10:00:01.000Z","type":"event_msg","payload":{"type":"task_started","turn_id":"t1"}}
+{"timestamp":"2026-08-01T10:00:02.000Z","type":"event_msg","payload":{"type":"user_message","message":"Fix the failing parser test in src/parser.ts","images":[],"local_images":[],"text_elements":[]}}
+{"timestamp":"2026-08-01T10:00:03.000Z","type":"response_item","payload":{"type":"message","role":"assistant","content":[{"type":"text","text":"Looking at the parser now."}]}}
+{"timestamp":"2026-08-01T10:05:00.000Z","type":"event_msg","payload":{"type":"user_message","message":"Now also update the changelog","images":[],"local_images":[],"text_elements":[]}}
+{"timestamp":"2026-08-01T10:06:00.000Z","type":"event_msg","payload":{"type":"agent_message","message":"Done — parser fixed and changelog updated.","phase":"final_answer"}}
