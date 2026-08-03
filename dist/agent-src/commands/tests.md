@@ -8,6 +8,7 @@ tier: 2
 visibility: internal
 description: Tests orchestrator — routes to create, execute, e2e-plan, e2e-heal
 cluster: tests
+routes_to: [tests-create, tests-execute, tests-e2e-plan, tests-e2e-heal]
 type: orchestrator
 auto_detect: true
 suggestion:

@@ -9,6 +9,7 @@ triggers:
   - keyword: "kind"
   - keyword: "category"
   - keyword: "migration"
+self_contained: true
 workspaces: [engineering]
 packs: [engineering-base]
 ---

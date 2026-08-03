@@ -130,9 +130,9 @@ this central roadmap steering three sub-roadmaps.
 
 | Sub-roadmap | Scope | Status |
 |---|---|---|
-| [`road-to-renewal-foundation.md`](road-to-renewal-foundation.md) | CI oracle repair, dead-tree sweep, token quick wins (pack-gated floors, MCP trim), runtime-activation spike (phase-gated) | active |
-| [`road-to-renewal-leverage.md`](road-to-renewal-leverage.md) | Execution flows (work-engine batching, parallel dispatch, cadence flip, hub generation, hook-fan-out trim) + three documented-failure fixes with borrowed shape + tracker-convention docs | blocked on Foundation Phase 1 |
-| [`road-to-renewal-adr-hygiene.md`](road-to-renewal-adr-hygiene.md) | Drive-loop era batch disposition, ADR-085 amendment, perma-proposed sweep, ADR-201 resolution | chip-mode (attach to other PRs) |
+| [`road-to-renewal-foundation.md`](archive/road-to-renewal-foundation.md) | CI oracle repair, dead-tree sweep, token quick wins (pack-gated floors, MCP trim), runtime-activation spike (phase-gated) | **complete 2026-08-02** — archived. Phase 3's spike steps closed `[-]` as infeasible-as-specified (no per-prompt injection transport; corpus covers 10 of 97 rules); reopen terms in `internal/bench/layer1-resolver-PREREG.md` |
+| [`archive/road-to-renewal-leverage.md`](archive/road-to-renewal-leverage.md) | Execution flows (work-engine batching, parallel dispatch, cadence flip, hub generation, hook-fan-out trim) + three documented-failure fixes with borrowed shape + tracker-convention docs | **COMPLETE + archived 2026-08-02.** Shipped: `dashboard_regen_cadence` default → `every_5_steps`; worktree seeding allow/deny list; the `## Blockers` awaiting-evidence convention; `block-config-weakening` PreToolUse guard; `check_cluster_patterns` filesystem enumeration + the 9 drifting hubs fixed. Refused with evidence (5 of 12): work-engine batching (premise falsified — 4 of 24 directives are no-op gates and they already cost nothing; the real cost is 87% transport), parallel step dispatch (incompatible with the atomic-flip law + step interdependence), hub-body generation (51% of hubs carry non-generatable prose; a checker extension removes the same drift), `post_tool_use` trim (all 7 concerns cost ~10 ms against a 250 ms budget — 88% is the dispatcher floor), Inline-Brief fallback (its incident is already closed by `lint_ui_stack_bundles`). Two transport findings recorded for a future step: the work engine is the one Tier-0 flow with no `dist/cli-delegate` bundle (blocked on 13 unguarded `_isCliEntry()` modules), and the hook dispatcher's 70 ms floor |
+| [`road-to-renewal-adr-hygiene.md`](archive/road-to-renewal-adr-hygiene.md) | Drive-loop era batch disposition, ADR-085 amendment, perma-proposed sweep, ADR-201 resolution | **complete 2026-08-03** — archived; executed as its own PR (ADR-206–210, 40-rule self-contained certification, review_trigger retrofit, dead-tree sweep) |
 
 Ordering (council-locked): Foundation Phase 1 (CI oracle) gates everything —
 a broken validator cannot validate its own fix. Leverage starts only after
@@ -161,14 +161,68 @@ Foundation Phase 1 is green. ADR hygiene chips alongside any PR.
 
   Target on the primary surface: **85,880 → ≤ 75,880 GPT tokens.**
 
+  **AFTER — measured 2026-08-02, Foundation Phase 2 complete. The criterion is
+  NOT met by the shipped default, and is met once one gated flip lands. Both
+  numbers are recorded rather than one being presented as the result.**
+
+  Shipped default (`rule_packs: []`, nothing else changed on a fresh install):
+
+  | surface | before | after | Δ |
+  |---|--:|--:|--:|
+  | `.claude` / `.cursor` / `.augment` rules | 85,880 | 85,880 | 0 |
+  | `.windsurfrules` | 69,582 | 69,582 | 0 |
+  | `skills_projected` catalog (466 → 335 entries) | 17,992 | **13,779** | **−4,213** |
+  | MCP, worst-case client (worker, 31 tools) | 4,839 | **4,174** | **−665** |
+  | MCP, local client (stdio, 19 tools) | — | 3,074 | newly separated |
+
+  **Realized on the shipped default: −4,878 GPT tok.**
+
+  With the one gated flip (`projection.rule_packs: auto`; blocker
+  `rule-packs-auto-consumer-default` in the Foundation roadmap), measured
+  END-TO-END by projecting and re-running the audit, not by summing a
+  predicate:
+
+  | surface | before | after | Δ |
+  |---|--:|--:|--:|
+  | `.claude` rules (110 → 102 files) | 85,880 | **77,770** | **−8,110** |
+  | `.cursor` rules | 85,880 | **77,770** | **−8,110** |
+  | `.windsurfrules` | 69,582 | **63,251** | **−6,331** |
+  | `.augment` rules | 85,880 | 85,880 | 0 — full set by design |
+
+  **Available once the flip lands: −12,988 GPT tok across the audited
+  always-on surfaces.**
+
+  Two honest misses, both recorded rather than engineered away:
+
+  1. **The ≥10k floor is not cleared by the shipped default** (−4,878). It is
+     cleared only with the gated flip. The gate is not agent-liftable — it is
+     the workspace-axis human gate of 2026-07-13 applied to the pack axis by
+     the AI council (2026-08-02, both members).
+  2. **The `≤ 75,880` primary-surface sub-target is missed either way** —
+     77,770 with the flip, 1,890 over. The sub-target was unreachable by the
+     levers this criterion itself names: the MCP lever does not touch the rule
+     row at all, and `.augment` is unfilterable by design. The pre-registration
+     conflated a multi-surface floor with a single-surface sub-target; that is
+     a defect in the criterion, recorded here, not a result to restate.
+
+  A third figure worth keeping next to these: on the CONSUMER surface the
+  workspace axis alone already yields 95 rules / 75,737 tok
+  (`check_consumer_scope_flip`, 2026-08-02) — i.e. a consumer is already under
+  the sub-target today, and the 85,880 baseline is the maintainer's own
+  unscoped tree. The pack axis composes with that as a second AND-constraint.
+
   Adjacent finding from the same session (Foundation Phase 1), load-bearing for
   this criterion: the KERNEL's own extended footprint had never been measured —
   `check_always_budget` resolved every `load_context` path to a nonexistent file
   and counted ZERO, printing a confident 60.1% of a dimension it was not
   measuring. Repaired, it reads 60,254 chars against a 49,000 cap. That figure
   is now a hard-gated ratchet seeded at first measurement, and this phase's work
-  is what pays it down.
-- Every command appears exactly once in the host projection.
+  is what pays it down. **Unaffected by Phase 2**: that ratchet measures the 9
+  `type: always` kernel rules, and the pack axis never drops a kernel rule.
+- Every command appears exactly once in the host projection. **Met
+  2026-08-02** — the hyphen/colon double is gone: 134 clustered commands ship
+  as `/cluster:sub` from `.claude/commands/`, 47 flat commands keep the single
+  skill wrapper that is their only access path.
 - Zero `src/` references to `.agent-src.uncondensed/` + CI ban on new ones.
 
 ## Phase 1 — this PR

@@ -8,6 +8,7 @@ tier: 2
 visibility: internal
 description: Override orchestrator — routes to create, manage
 cluster: override
+routes_to: [override-create, override-manage]
 type: orchestrator
 auto_detect: true
 suggestion:

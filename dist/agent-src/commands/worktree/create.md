@@ -27,7 +27,8 @@ Thin orchestration — mechanics live in the skills; do not restate them.
 
 Run [`using-git-worktrees`](../../../skills/using-git-worktrees/SKILL.md)
 in full: `worktrees.mode` pre-flight, existing-worktree inspection,
-directory convention, ignore-safety check, worktree creation,
+directory convention, ignore-safety check, worktree creation, the
+[§ 4b seeding allow/deny list](../../../skills/using-git-worktrees/SKILL.md#4b-seed-the-worktree--allow--deny-list),
 dependency install + clean baseline. Its Iron Law (no worktree without
 verified ignore + clean baseline) is the creation gate.
 

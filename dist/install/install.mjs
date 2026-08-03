@@ -8282,6 +8282,23 @@ function is_pruned_under_scoped(md_path, active_ids) {
   }
   return true;
 }
+var RULE_PACKS_AUTO = "auto";
+function resolve_rule_pack_scope(raw, package_root, runtime_active_packs = []) {
+  const is_auto = raw === RULE_PACKS_AUTO || Array.isArray(raw) && raw.length === 1 && raw[0] === RULE_PACKS_AUTO;
+  if (is_auto) {
+    try {
+      return [
+        ...compute_active_pack_ids(load_packs_registry(package_root), runtime_active_packs)
+      ].sort();
+    } catch {
+      return null;
+    }
+  }
+  if (Array.isArray(raw) && raw.length > 0) {
+    return raw.map((v) => String(v));
+  }
+  return null;
+}
 
 // src/scripts/_lib/global_deploy_inventory.ts
 import { randomBytes as randomBytes2 } from "node:crypto";
@@ -9602,7 +9619,8 @@ function build_claude_hook_matrix(manifest_path2) {
     if (!concerns || Array.isArray(concerns) && concerns.length === 0) continue;
     const native = ac_to_native[ac_event];
     if (native === void 0) continue;
-    matrix[native] = `BIN="$CLAUDE_PROJECT_DIR/agent-config"; [ -x "$BIN" ] || BIN=agent-config; command -v "$BIN" >/dev/null 2>&1 || exit 0; "$BIN" dispatch:hook --platform claude --event ${ac_event} --native-event ${native} --project-dir "$CLAUDE_PROJECT_DIR" --min-version ${String(hook_spec)}`;
+    const dispatchArgs = `--platform claude --event ${ac_event} --native-event ${native} --project-dir "$CLAUDE_PROJECT_DIR" --min-version ${String(hook_spec)}`;
+    matrix[native] = `B=""; [ -f "$CLAUDE_PROJECT_DIR/node_modules/@event4u/agent-config/dist/hooks/dispatch.js" ] && B="$CLAUDE_PROJECT_DIR/node_modules/@event4u/agent-config/dist/hooks/dispatch.js"; [ -z "$B" ] && [ -f "$CLAUDE_PROJECT_DIR/dist/hooks/dispatch.js" ] && [ -f "$CLAUDE_PROJECT_DIR/src/scripts/hook_manifest.yaml" ] && B="$CLAUDE_PROJECT_DIR/dist/hooks/dispatch.js"; if [ -n "$B" ] && command -v node >/dev/null 2>&1; then exec node "$B" ${dispatchArgs}; fi; BIN="$CLAUDE_PROJECT_DIR/agent-config"; [ -x "$BIN" ] || BIN=agent-config; command -v "$BIN" >/dev/null 2>&1 || exit 0; "$BIN" dispatch:hook ${dispatchArgs}`;
   }
   return matrix;
 }
@@ -10141,17 +10159,26 @@ function _list(value) {
   }
   return null;
 }
-function ruleScopeFromSettings(settings) {
+function ruleScopeFromSettings(settings, packageRoot) {
   const proj = settings["projection"];
   if (typeof proj !== "object" || proj === null || Array.isArray(proj)) {
     return LEGACY_ALL;
   }
   const p = proj;
+  const packs = packageRoot === void 0 ? _list(p["rule_packs"]) : resolve_rule_pack_scope(
+    p["rule_packs"],
+    packageRoot,
+    _list(_runtimeActivePacks(settings)) ?? []
+  );
   return {
     workspaces: _list(p["rule_workspaces"]),
-    packs: _list(p["rule_packs"]),
+    packs,
     roles: _list(p["rule_roles"])
   };
+}
+function _runtimeActivePacks(settings) {
+  const rt = settings["runtime"];
+  return typeof rt === "object" && rt !== null && !Array.isArray(rt) ? rt["active_packs"] : null;
 }
 function ruleFileArrives(sourcePath, scope) {
   if (!sourcePath.endsWith(".md")) {
@@ -14318,8 +14345,8 @@ var settingsSchema = external_exports.object({
     rule_workspaces: external_exports.array(external_exports.string()).default([]).describe(
       "Workspace scope for the RULE layer only (road-to-request-scoped-rule-load P1/P1b, opt-in). Absent or empty = legacy-all: every rule projects AND installs. Non-empty = only rules whose workspaces frontmatter intersects this list are projected (condense) and installed (install.sh + global wizard payload). Kernel rules always ship; untagged rules fail safe. The default flip to a scoped value is a HUMAN release gate \u2014 do not set this from automation."
     ),
-    rule_packs: external_exports.array(external_exports.string()).default([]).describe(
-      "Optional second scoping axis for the RULE layer, per pack ids (src/config/discovery/packs.yml). When set, a non-kernel rule also needs a packs frontmatter intersection to ship \u2014 e.g. deselecting frontend-design drops ui-audit-gate + design-fidelity. Same opt-in / human-gate semantics as rule_workspaces."
+    rule_packs: external_exports.union([external_exports.literal("auto"), external_exports.array(external_exports.string())]).default([]).describe(
+      'Optional second scoping axis for the RULE layer, per pack ids (src/config/discovery/packs.yml). When set, a non-kernel rule also needs a packs frontmatter intersection to ship \u2014 e.g. deselecting frontend-design drops ui-audit-gate + design-fidelity. Same opt-in / human-gate semantics as rule_workspaces. The literal "auto" derives the id list from the active-pack set (the same set the skill/command prune uses), so a domain safety floor stops shipping into installs that do not have the pack it guards; an explicit list stays supported and wins over the derivation.'
     )
   }).default({ mode: "legacy-all" }),
   rule_loading_tier: ruleLoadingTier.default("balanced").describe(
@@ -14368,7 +14395,7 @@ var settingsSchema = external_exports.object({
       "Prefer short bullets and tables (true, default) vs verbose prose with rationale (false). Affects every chat reply; flip to false during debugging when you want the agent to think out loud."
     ),
     canary_name: external_exports.string().default("").describe(
-      'Session canary \u2014 the name the agent addresses you with at the start of every new task (e.g. "Alex"). When the greeting silently disappears, the context window is degrading: start a fresh conversation. Also keeps the reply-close markers (end-summary, PR URL as literal last line) alive. Empty = off. See rules/session-canary.md.'
+      'Session canary \u2014 the name the agent addresses you with at the start of every new task (e.g. "Alex"). When the greeting silently disappears, the context window is degrading: start a fresh conversation. Also keeps the reply-close markers (end-summary, PR URL as literal last line) alive. Empty = fall back to the user-global canary_name, then to identity.name from the setup wizard; no name anywhere = off. See rules/session-canary.md.'
     ),
     play_by_play: external_exports.boolean().default(false).describe(
       `Narrate intermediate findings between tool calls ("Found it.", "Let me check Y."). Off by default \u2014 most users find it noisy. Turn on when you want to follow the agent's reasoning step by step.`
@@ -14452,8 +14479,8 @@ var settingsSchema = external_exports.object({
     quality_cadence: qualityCadence.default("end_of_roadmap").describe(
       "When the agent runs the full quality / test suite during /roadmap:process-* runs. end_of_roadmap = once, after the last step (fastest, default). per_phase = after each phase boundary. per_step = after every single step (slowest, highest confidence)."
     ),
-    dashboard_regen_cadence: regenCadence.default("per_step").describe(
-      "How often the agent regenerates agents/roadmaps/dashboard.md during a roadmap run. per_step = after every step (default, freshest dashboard). every_5_steps = batch the regen. phase_boundary = only at phase edges."
+    dashboard_regen_cadence: regenCadence.default("every_5_steps").describe(
+      "How often the agent regenerates agents/roadmaps/dashboard.md during a roadmap run. every_5_steps = batch the regen (default). per_step = after every step (freshest dashboard, highest subprocess overhead). phase_boundary = only at phase edges. A rename, phase add, or archive always regenerates immediately regardless."
     ),
     horizon_weeks: external_exports.number().int().min(0).default(0).describe(
       'Optional planning horizon (weeks) the agent shows in roadmap framing ("next 4 weeks"). Set 0 to omit the horizon \u2014 most teams prefer to ship without a hardcoded window.'
@@ -19447,7 +19474,7 @@ function _resolve_global_rule_scope(package_root) {
   const settings_path = _resolve_global_settings_path();
   if (settings_path === null) {
     try {
-      return ruleScopeFromSettings(_load_default_settings(package_root));
+      return ruleScopeFromSettings(_load_default_settings(package_root), package_root);
     } catch {
       return LEGACY_ALL;
     }
@@ -19469,7 +19496,7 @@ function _resolve_global_rule_scope(package_root) {
     return LEGACY_ALL;
   }
   try {
-    return ruleScopeFromSettings(parsed);
+    return ruleScopeFromSettings(parsed, package_root);
   } catch (e) {
     warn(
       `could not derive rule scope from ${settings_path} (${String(e)}) \u2014 falling back to legacy-all; ALL rules will be installed.`

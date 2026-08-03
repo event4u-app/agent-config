@@ -69,8 +69,11 @@ Hard ceiling: 5 — above that, re-invoke deliberately with fresh context.
 2. Create or enter an isolated worktree on a fresh branch off the trunk
    (branch/worktree creation is authorized by invoking this command; every
    Hard-Floor action below stays gated).
-3. Honor any repo worktree-seeding convention when seeding the worktree;
-   never copy `.agent-settings.yml` into a worktree.
+3. Seed it per the
+   [`using-git-worktrees` § 4b allow/deny list](../../../../skills/using-git-worktrees/SKILL.md#4b-seed-the-worktree--allow--deny-list)
+   — symlink or fully install dependencies, copy or regenerate the generated
+   projections, regenerate build output, and never copy `.agent-settings.yml`
+   into a worktree.
 4. Read the lock inventory: honest nulls, DR memories, `later/` resume
    conditions, standing ADRs. These are constraints for Step 4, surfaced —
    never silently relitigated (`decision-revisit-gate`).

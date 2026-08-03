@@ -14,6 +14,7 @@ triggers:
   - keyword: "💡"
   - keyword: "👍"
   - keyword: "❤️"
+self_contained: true
 workspaces: [agent-config-maintainer, engineering]
 packs: [meta]
 ---

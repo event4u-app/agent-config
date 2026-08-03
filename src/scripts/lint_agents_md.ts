@@ -9,7 +9,7 @@
  * historical quirks preserved (consumers pin the exact behaviour).
  *
  * Enforces caps + pointer-ratio + pointer-anatomy + emergency-triage
- * contract from `.agent-src.uncondensed/skills/agents-md-thin-root/SKILL.md`.
+ * contract from `src/skills/agents-md-thin-root/SKILL.md`.
  *
  * Exit non-zero on any (a) FAIL, (b)–(e) error. WARN is informational.
  */

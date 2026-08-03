@@ -7,11 +7,16 @@ ersetzt?"** — growth of the mental surface must be paid for by removal.
 
 ## Decisions (recorded 2026-07-20)
 
-- **Harvest freeze until the first external adopter.** No new
-  competitive-harvest / capability-adoption roadmap opens until ≥1 real
-  external adoption is documented. The binding constraint is adoption, not
-  capability — every new capability widens the surface the review already
-  flags as the ceiling.
+- **Harvest freeze — canonical record is now
+  [`ADR-211`](../../../docs/decisions/ADR-211-harvest-freeze-resume-conditions.md)
+  (2026-08-03).** Original 2026-07-20 wording: no new competitive-harvest /
+  capability-adoption roadmap opens until ≥1 real external adoption is
+  documented; the binding constraint is adoption, not capability. ADR-211
+  keeps the freeze and amends it: the resume condition becomes an OR
+  (external adopter OR renewal-set closed + hook-latency repaired + council
+  reconfirmation), adds a review cadence, requires failure findings to
+  predate borrow proposals, and opens a red-test-first latent-risk door.
+  Consult the ADR, not this bullet, for the current rule.
 
 - **No new council / review / verification modes before the pending
   benchmarks.** Team-mode Phase 5 landed an honest null; adversarial-council is

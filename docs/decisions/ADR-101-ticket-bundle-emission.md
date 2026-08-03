@@ -1,6 +1,6 @@
 ---
 adr: 101
-status: proposed
+status: accepted
 date: 2026-06-15
 decision: ticket-bundle-emission
 supersedes: —
@@ -12,6 +12,14 @@ type: structural
 # ADR-101 — Roadmaps emit durable, self-contained ticket bundles; tracker import is a projection
 
 ## Status
+
+**Accepted** · 2026-08-03 — perma-proposed sweep (`road-to-renewal-adr-hygiene`
+Phase 1, AI-council-confirmed 2026-08-03): the self-named promotion condition
+fired — the 1a build pilot ran and passed (archived `road-to-ticket-bundles`
+Phase 1 Step 1 `[x]`, evidence in `agents/evidence/ticket-bundle-pilot.md`);
+the 1b transport spike was cancelled together with the API-export path itself
+(ADR-102: paste/MCP transport), so the surviving probe governs the format
+claim. Original status prose retained below as the historical record.
 
 **Proposed** · 2026-06-15. Promote to `accepted` after the Phase-1 probes
 (build pilot + transport spike) confirm the format holds.

@@ -7,6 +7,7 @@ triggers:
   - keyword: "gh pr comment"
   - keyword: "PullRequestComment"
   - phrase: "status comment"
+self_contained: true
 workspaces: [agent-config-maintainer, engineering]
 packs: [meta]
 ---

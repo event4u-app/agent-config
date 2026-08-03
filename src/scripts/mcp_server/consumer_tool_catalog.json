@@ -30,81 +30,21 @@
       "description": "[stub — implemented on demand] Return the metadata for one catalog entry by id (id, class, name, description, tags, path). Body is returned ONLY when include_body is true. Use after catalog_search to look at a candidate before loading it. Read-only. Activation deferred (see catalog_search).",
       "side_effect": "ro",
       "implemented_on": [],
-      "input_schema": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "description": "Catalog id, e.g. `skill:api-design` or `persona:backend-architect`."
-          },
-          "include_body": {
-            "type": "boolean",
-            "default": false,
-            "description": "When true, include the full body. Defaults to false (metadata only)."
-          }
-        },
-        "required": [
-          "id"
-        ],
-        "additionalProperties": false
-      }
+      "input_schema": {}
     },
     {
       "name": "catalog_load",
       "description": "[stub — implemented on demand] Load the full body of one catalog entry by id, wrapped in a neutral reference preamble that subordinates it to the user's request and system instructions. Use to bring a skill/persona/command body into context on demand. Read-only, path-confined to the package root. Never injects or acts — the host decides what to do with the body. Activation deferred (see catalog_search).",
       "side_effect": "ro",
       "implemented_on": [],
-      "input_schema": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "description": "Catalog id to load the body for."
-          }
-        },
-        "required": [
-          "id"
-        ],
-        "additionalProperties": false
-      }
+      "input_schema": {}
     },
     {
       "name": "catalog_search",
       "description": "[stub — implemented on demand] Search the package's own artifact catalog (skills, personas, commands) by free-text query and return ranked summaries — name, description, tags, score — WITHOUT loading any body. Use to discover which skill or persona fits a task when the full catalog is not in context. Read-only, deterministic (BM25 over an on-disk index). Activation deferred behind a task-quality A/B (see catalog_tools.ts).",
       "side_effect": "ro",
       "implemented_on": [],
-      "input_schema": {
-        "type": "object",
-        "properties": {
-          "query": {
-            "type": "string",
-            "description": "Free-text search query."
-          },
-          "class": {
-            "type": "string",
-            "enum": [
-              "skill",
-              "persona",
-              "command"
-            ],
-            "description": "Optional: restrict to one artifact class."
-          },
-          "pack": {
-            "type": "string",
-            "description": "Optional: restrict to entries tagged with this pack/domain."
-          },
-          "limit": {
-            "type": "integer",
-            "minimum": 1,
-            "default": 8,
-            "description": "Maximum results. Defaults to 8."
-          }
-        },
-        "required": [
-          "query"
-        ],
-        "additionalProperties": false
-      }
+      "input_schema": {}
     },
     {
       "name": "chat_history_append",
@@ -216,17 +156,7 @@
       "description": "[stub — implemented on demand] Regenerate the compiled router (`router.compiled.json`) from the current rule, skill, and command frontmatter, so trigger-based routing reflects the latest artifacts. Use after adding or editing a rule / skill / command's trigger metadata. Shell-bound — wraps `scripts/compile_router.py` — and returns the regenerated router summary. Set `dry_run: true` to compute the result without writing the file.",
       "side_effect": "shell",
       "implemented_on": [],
-      "input_schema": {
-        "type": "object",
-        "properties": {
-          "dry_run": {
-            "type": "boolean",
-            "default": false,
-            "description": "When true, compute the router without writing `router.compiled.json` to disk."
-          }
-        },
-        "additionalProperties": false
-      }
+      "input_schema": {}
     },
     {
       "name": "conformance_check",
@@ -502,20 +432,7 @@
       "description": "[stub — implemented on demand] Extract reusable patterns, decisions, and learnings from a single chat-history session, as candidate memory entries. Use to distill a finished session into durable memory before it ages out. Read-only. Returns the mined candidates grouped by kind.",
       "side_effect": "ro",
       "implemented_on": [],
-      "input_schema": {
-        "type": "object",
-        "properties": {
-          "session": {
-            "type": "string",
-            "description": "Session id to mine."
-          },
-          "path": {
-            "type": "string",
-            "description": "Optional path to a chat-history JSONL; defaults to the standard location."
-          }
-        },
-        "additionalProperties": false
-      }
+      "input_schema": {}
     },
     {
       "name": "read_resource_body",
@@ -584,16 +501,7 @@
       "description": "[stub — implemented on demand] Run the consumer project's configured quality gate (PHPStan / Rector / ECS or the stack equivalent) and return a structured per-tool result. Use before committing to confirm static-analysis and style gates pass. Shell-bound. Pass `tool` to run a single gate; omit to run all.",
       "side_effect": "shell",
       "implemented_on": [],
-      "input_schema": {
-        "type": "object",
-        "properties": {
-          "tool": {
-            "type": "string",
-            "description": "Restrict to a single quality tool by name (e.g. phpstan, rector, ecs)."
-          }
-        },
-        "additionalProperties": false
-      }
+      "input_schema": {}
     },
     {
       "name": "run_tests",
@@ -625,115 +533,35 @@
       "description": "[stub — implemented on demand] Score a user message against the compiled router and return the skills whose triggers match, each with the reason it fired. Use to predict which skills a given message would activate, for debugging trigger coverage. Read-only and deterministic. Returns a ranked list of matching skills with their trigger reasons.",
       "side_effect": "ro",
       "implemented_on": [],
-      "input_schema": {
-        "type": "object",
-        "properties": {
-          "message": {
-            "type": "string",
-            "description": "The user message to score against skill triggers."
-          },
-          "context": {
-            "type": "string",
-            "description": "Optional recent-turn context to sharpen the match."
-          },
-          "limit": {
-            "type": "integer",
-            "minimum": 1,
-            "default": 5,
-            "description": "Maximum number of matching skills to return. Defaults to 5."
-          }
-        },
-        "required": [
-          "message"
-        ],
-        "additionalProperties": false
-      }
+      "input_schema": {}
     },
     {
       "name": "suggest_command",
       "description": "[stub — implemented on demand] Run the command-suggestion engine: score the available slash commands against a user message and context, and return a ranked, numbered-options block of the best matches. Use to recommend a command for a free-form request without invoking anything. Read-only and deterministic. Returns the formatted suggestion block plus the scored candidates.",
       "side_effect": "ro",
       "implemented_on": [],
-      "input_schema": {
-        "type": "object",
-        "properties": {
-          "message": {
-            "type": "string",
-            "description": "The user message to match commands against."
-          },
-          "context": {
-            "type": "string",
-            "description": "Optional recent-turn context to sharpen the match."
-          }
-        },
-        "required": [
-          "message"
-        ],
-        "additionalProperties": false
-      }
+      "input_schema": {}
     },
     {
       "name": "suggest_skill_for_task",
       "description": "[stub — implemented on demand] Match a free-form task description to the most relevant skills, ranked by their frontmatter triggers. Use to pick a skill for a described task before starting work. Read-only. Returns a ranked list of skills with name, description, and match reason.",
       "side_effect": "ro",
       "implemented_on": [],
-      "input_schema": {
-        "type": "object",
-        "properties": {
-          "task": {
-            "type": "string",
-            "description": "Free-form description of the task to find a skill for."
-          },
-          "limit": {
-            "type": "integer",
-            "minimum": 1,
-            "default": 5,
-            "description": "Maximum number of skills to return. Defaults to 5."
-          }
-        },
-        "required": [
-          "task"
-        ],
-        "additionalProperties": false
-      }
+      "input_schema": {}
     },
     {
       "name": "sync_agent_settings",
       "description": "[stub — implemented on demand] Synchronise `.agent-settings.yml` against the current template and active profile — add new sections and keys while preserving existing user values. Use after a package upgrade to pick up newly introduced settings. Edits the settings file and returns the keys that were (or would be) added. Set `dry_run: true` to preview.",
       "side_effect": "fs-write",
       "implemented_on": [],
-      "input_schema": {
-        "type": "object",
-        "properties": {
-          "profile": {
-            "type": "string",
-            "description": "Override the profile pinned in the settings file."
-          },
-          "dry_run": {
-            "type": "boolean",
-            "default": false,
-            "description": "When true, return the planned settings changes without writing the file."
-          }
-        },
-        "additionalProperties": false
-      }
+      "input_schema": {}
     },
     {
       "name": "sync_gitignore",
       "description": "[stub — implemented on demand] Synchronise the managed `event4u/agent-config` block in the consumer project's `.gitignore` — add missing canonical entries while preserving user-added lines. Use after upgrading the package or when generated paths are being tracked by mistake. Edits `.gitignore` and returns the added / removed entries. Set `dry_run: true` to preview the changes.",
       "side_effect": "fs-write",
       "implemented_on": [],
-      "input_schema": {
-        "type": "object",
-        "properties": {
-          "dry_run": {
-            "type": "boolean",
-            "default": false,
-            "description": "When true, return the planned `.gitignore` changes without writing the file."
-          }
-        },
-        "additionalProperties": false
-      }
+      "input_schema": {}
     },
     {
       "name": "telemetry_report",
@@ -763,24 +591,7 @@
       "description": "[stub — implemented on demand] Synchronise the `messages()` method of a Laravel FormRequest class: add entries for validation rules that lack a custom message, link them to translation keys, and drop stale ones. Use after changing a FormRequest's `rules()`. Edits the class file on disk and returns the planned or applied message changes. Set `dry_run: true` to preview the diff without writing.",
       "side_effect": "fs-write",
       "implemented_on": [],
-      "input_schema": {
-        "type": "object",
-        "properties": {
-          "request_class": {
-            "type": "string",
-            "description": "Fully-qualified FormRequest class FQN or repo-relative file path."
-          },
-          "dry_run": {
-            "type": "boolean",
-            "default": false,
-            "description": "When true, return the planned message changes without editing the file."
-          }
-        },
-        "required": [
-          "request_class"
-        ],
-        "additionalProperties": false
-      }
+      "input_schema": {}
     }
   ]
 }

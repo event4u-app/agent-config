@@ -71,11 +71,11 @@ If project-specific content is found, ask:
 
 ### 3. Determine contribution type and target path
 
-| Type | Uncondensed target | Condensed target |
+| Type | Source target | Condensed target |
 |---|---|---|
-| **Skill** | `.agent-src.uncondensed/skills/{name}/SKILL.md` | `dist/agent-src/skills/{name}/SKILL.md` |
-| **Rule** | `.agent-src.uncondensed/rules/{name}.md` | `dist/agent-src/rules/{name}.md` |
-| **Command** | `.agent-src.uncondensed/commands/{name}.md` | `dist/agent-src/commands/{name}.md` |
+| **Skill** | `src/skills/{name}/SKILL.md` | `dist/agent-src/skills/{name}/SKILL.md` |
+| **Rule** | `src/rules/{name}.md` | `dist/agent-src/rules/{name}.md` |
+| **Command** | `src/domains/{domain}/{name}/command.md` | `dist/agent-src/commands/{name}.md` |
 | **Guideline** | `docs/guidelines/{cat}/{name}.md` | _(not condensed; reference-only)_ |
 
 ### 4. Get access to the package repo
@@ -142,7 +142,7 @@ Fix any issues before continuing.
 ```
 > ✅ Files created in {package-repo}:
 >
-> - `.agent-src.uncondensed/{type}/{name}` (uncondensed)
+> - `src/{type}/{name}` (source)
 > - `dist/agent-src/{type}/{name}` (condensed)
 >
 > Quality gates: {pass/fail summary}

@@ -7,12 +7,19 @@ supersedes: —
 superseded_by: —
 phase: road-to-claude-code-global-distribution Phase 3
 type: structural
-review_date: 2026-06-11
 ---
 
 # ADR-030 — Claude Code command-projection strategy: native slash-only
 
 ## Status
+
+**Partially superseded by [ADR-209](ADR-209-projection-era-corrections.md)**
+(2026-08-03): Decision 2 — the "keep the `.claude/skills/` skills-list
+projection for now" carve-out — is retired; its 14-day kill-switch window
+closed 2026-06-11 without Option B failing, and the residual `.claude/skills/`
+command wrappers are the ADR-044 discovery-defect mitigation, not this
+record's compat projection. **Decision 1 (Option B, native slash-only
+routing) still stands and governs the command channel.**
 
 **Accepted** · 2026-05-28. Three conditions enumerated below; all three
 verified empirically in the same session, so the decision lands

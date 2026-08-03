@@ -39,14 +39,14 @@ both reject the legacy prefix.
 `path_prefix:` is a **literal match pattern** the host evaluates against
 the file the agent is editing — it is **not** a file reference and is
 **not rewritten**. Rules that fire when the agent edits source-of-truth
-files legitimately keep the `.agent-src.uncondensed/` prefix (see
+files legitimately keep the `src/` prefix (see
 `skill-quality`, `rule-type-governance`,
 `augment-edit-discipline`). Rules that fire on consumer-project paths use
 `agents/`, `lang/`, `.augment/`, etc.
 
 | Use case | Example `path_prefix:` |
 |---|---|
-| Fires when editing source-of-truth artifacts | `.agent-src.uncondensed/skills/` |
+| Fires when editing source-of-truth artifacts | `src/skills/` |
 | Fires when editing consumer project files | `agents/`, `lang/`, `app/`, `src/` |
 | Fires when editing the projected layer | `.augment/` |
 

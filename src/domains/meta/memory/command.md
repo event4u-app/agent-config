@@ -5,7 +5,7 @@ disable-model-invocation: true
 argument-hint: "[add|load|mine-session|promote|propose] [args]"
 pack: memory
 intent: "Manage the agent memory layer — add, load, promote, propose"
-routes_to: [memory-add, memory-load, memory-promote, memory-propose]
+routes_to: [memory-add, memory-load, memory-mine-session, memory-promote, memory-propose, memory-learn-low-impact]
 replaces: []
 tier: 1
 visibility: advanced
@@ -36,6 +36,7 @@ commands with a single entry point + sub-command dispatch.
 | `/memory mine-session` | `commands/memory/mine-session.md` | Mine the active session transcript for memory signals (preview-by-default) |
 | `/memory promote` | `commands/memory/promote.md` | Promote an intake signal to a curated memory entry |
 | `/memory propose` | `commands/memory/propose.md` | Append a provisional signal to the intake stream |
+| `/memory learn-low-impact` | `commands/memory/learn-low-impact.md` | Draft an upstream PR from the project's low-impact decision corpus (redactor-gated) |
 
 Sub-command names match the locked contract in
 [`docs/contracts/command-clusters.md`](../../docs/contracts/command-clusters.md).

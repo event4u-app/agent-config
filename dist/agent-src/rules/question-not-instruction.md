@@ -21,6 +21,7 @@ applies_to_user_types:
   - "maintainer"
   - "operator"
   - "researcher"
+self_contained: true
 workspaces: [engineering]
 packs: [meta]
 ---

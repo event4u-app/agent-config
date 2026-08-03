@@ -14,6 +14,7 @@ triggers:
   - phrase: "sing the"
   - phrase: "mit den lippen"
   - phrase: "lippen passend"
+self_contained: true
 workspaces: [agent-config-maintainer, engineering, gtm]
 packs: [ai-video]
 ---

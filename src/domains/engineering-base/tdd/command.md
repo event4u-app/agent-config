@@ -8,6 +8,7 @@ tier: 2
 visibility: internal
 description: TDD orchestrator — routes to red (failing test), green (minimum code), refactor (clean while green)
 cluster: tdd
+routes_to: [tdd-red, tdd-green, tdd-refactor]
 type: orchestrator
 auto_detect: true
 suggestion:

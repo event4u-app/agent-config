@@ -5,7 +5,7 @@ disable-model-invocation: true
 argument-hint: "[create|ai-council|process-step|process-phase|process-full] [args]"
 pack: product-basic
 intent: "Roadmap dispatcher — create, process-step, process-phase, process-full, ai-council"
-routes_to: [roadmap-create, roadmap-process-step, roadmap-process-phase, roadmap-process-full]
+routes_to: [roadmap-create, roadmap-ai-council, roadmap-materialize, roadmap-process-step, roadmap-process-phase, roadmap-process-full]
 replaces: []
 tier: 1
 visibility: advanced
@@ -36,6 +36,7 @@ paused for confirmation before every step) was removed —
 |---|---|---|
 | `/roadmap:create` | `commands/roadmap/create.md` | Interactively scaffold a new roadmap in `agents/roadmaps/` |
 | `/roadmap:ai-council` | `commands/roadmap/ai-council.md` | Challenge an existing roadmap with the AI council (deep tier) and refactor from convergence findings |
+| `/roadmap:materialize` | `commands/roadmap/materialize.md` | Turn an accepted roadmap into the concrete artefacts it plans |
 | `/roadmap:process-step` | `commands/roadmap/process-step.md` | Autonomously process the next open step, then stop |
 | `/roadmap:process-phase` (**default execution scope**) | `commands/roadmap/process-phase.md` | Autonomously process every open step in the current phase |
 | `/roadmap:process-full` | `commands/roadmap/process-full.md` | Autonomously process every open step across every phase |

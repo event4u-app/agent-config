@@ -1,4 +1,5 @@
-import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { spawnSync } from 'node:child_process';
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
@@ -12,17 +13,28 @@ import {
     remove_managed_hooks,
 } from '../../src/scripts/_lib/claude_settings_hooks.js';
 
+function expectedCommand(acEvent: string, native: string): string {
+    const args =
+        `--platform claude --event ${acEvent} --native-event ${native} ` +
+        '--project-dir "$CLAUDE_PROJECT_DIR" --min-version 1';
+    return (
+        'B=""; ' +
+        '[ -f "$CLAUDE_PROJECT_DIR/node_modules/@event4u/agent-config/dist/hooks/dispatch.js" ] && ' +
+        'B="$CLAUDE_PROJECT_DIR/node_modules/@event4u/agent-config/dist/hooks/dispatch.js"; ' +
+        '[ -z "$B" ] && [ -f "$CLAUDE_PROJECT_DIR/dist/hooks/dispatch.js" ] && ' +
+        '[ -f "$CLAUDE_PROJECT_DIR/src/scripts/hook_manifest.yaml" ] && ' +
+        'B="$CLAUDE_PROJECT_DIR/dist/hooks/dispatch.js"; ' +
+        'if [ -n "$B" ] && command -v node >/dev/null 2>&1; then ' +
+        `exec node "$B" ${args}; fi; ` +
+        'BIN="$CLAUDE_PROJECT_DIR/agent-config"; [ -x "$BIN" ] || BIN=agent-config; ' +
+        'command -v "$BIN" >/dev/null 2>&1 || exit 0; ' +
+        `"$BIN" dispatch:hook ${args}`
+    );
+}
+
 const MATRIX = {
-    SessionStart:
-        'BIN="$CLAUDE_PROJECT_DIR/agent-config"; [ -x "$BIN" ] || BIN=agent-config; ' +
-        'command -v "$BIN" >/dev/null 2>&1 || exit 0; ' +
-        '"$BIN" dispatch:hook --platform claude --event session_start ' +
-        '--native-event SessionStart --project-dir "$CLAUDE_PROJECT_DIR" --min-version 1',
-    Stop:
-        'BIN="$CLAUDE_PROJECT_DIR/agent-config"; [ -x "$BIN" ] || BIN=agent-config; ' +
-        'command -v "$BIN" >/dev/null 2>&1 || exit 0; ' +
-        '"$BIN" dispatch:hook --platform claude --event stop ' +
-        '--native-event Stop --project-dir "$CLAUDE_PROJECT_DIR" --min-version 1',
+    SessionStart: expectedCommand('session_start', 'SessionStart'),
+    Stop: expectedCommand('stop', 'Stop'),
 };
 
 function read(p: string): Record<string, unknown> {
@@ -170,5 +182,88 @@ describe('claude_settings_hooks', () => {
         expect(Object.keys(matrix).sort()).toEqual(['SessionStart', 'Stop']);
         expect(matrix['SessionStart']).toBe(MATRIX.SessionStart);
         expect(matrix['Stop']).toBe(MATRIX.Stop);
+    });
+});
+
+// road-to-hook-latency-repair Phase 2: the generated command must (a) exec
+// the dispatcher bundle directly when a project install carries it, (b) fall
+// back to the CLI when the bundle is absent, and (c) NEVER execute an
+// unrelated consumer file that happens to sit at dist/hooks/dispatch.js
+// (the hook_manifest.yaml guard — council 2026-08-03). These run the real
+// generated bash line against staged workspaces.
+describe('generated hook command — bundle fast path + CLI fallback', () => {
+    let ws: string;
+
+    beforeEach(() => {
+        ws = mkdtempSync(join(tmpdir(), 'hookcmd-'));
+    });
+    afterEach(() => {
+        rmSync(ws, { recursive: true, force: true });
+    });
+
+    function runCommand(): void {
+        const res = spawnSync('bash', ['-c', MATRIX.SessionStart], {
+            input: '{}',
+            encoding: 'utf-8',
+            env: { ...process.env, CLAUDE_PROJECT_DIR: ws },
+            timeout: 30000,
+        });
+        expect(res.error).toBeUndefined();
+    }
+
+    function stageCliStub(): string {
+        const log = join(ws, 'cli-invoked.log');
+        writeFileSync(join(ws, 'agent-config'), `#!/usr/bin/env bash\necho "$@" > "${log}"\n`, {
+            mode: 0o755,
+        });
+        return log;
+    }
+
+    function stageBundleStub(dir: string): string {
+        const log = join(ws, 'bundle-invoked.log');
+        mkdirSync(dir, { recursive: true });
+        writeFileSync(
+            join(dir, 'dispatch.js'),
+            `require('fs').writeFileSync(${JSON.stringify(log)}, process.argv.slice(2).join(' '));\n`,
+        );
+        return log;
+    }
+
+    it('bundle absent → CLI fallback fires with the dispatch:hook contract', () => {
+        const cliLog = stageCliStub();
+        runCommand();
+        expect(existsSync(cliLog)).toBe(true);
+        const argv = readFileSync(cliLog, 'utf8');
+        expect(argv).toContain('dispatch:hook');
+        expect(argv).toContain('--platform claude');
+        expect(argv).toContain('--event session_start');
+    });
+
+    it('project-install bundle present → exec node bundle, CLI never invoked', () => {
+        const cliLog = stageCliStub();
+        const bundleLog = stageBundleStub(
+            join(ws, 'node_modules', '@event4u', 'agent-config', 'dist', 'hooks'),
+        );
+        runCommand();
+        expect(existsSync(bundleLog)).toBe(true);
+        expect(readFileSync(bundleLog, 'utf8')).toContain('--event session_start');
+        expect(existsSync(cliLog)).toBe(false);
+    });
+
+    it('source-checkout bundle needs the hook_manifest.yaml guard — an unrelated dist/hooks/dispatch.js is NOT executed', () => {
+        const cliLog = stageCliStub();
+        const bundleLog = stageBundleStub(join(ws, 'dist', 'hooks'));
+        runCommand();
+        // No src/scripts/hook_manifest.yaml next to it → guard refuses.
+        expect(existsSync(bundleLog)).toBe(false);
+        expect(existsSync(cliLog)).toBe(true);
+
+        // With the guard satisfied (a real source checkout), the bundle runs.
+        rmSync(cliLog, { force: true });
+        mkdirSync(join(ws, 'src', 'scripts'), { recursive: true });
+        writeFileSync(join(ws, 'src', 'scripts', 'hook_manifest.yaml'), 'schema_version: 1\n');
+        runCommand();
+        expect(existsSync(bundleLog)).toBe(true);
+        expect(existsSync(cliLog)).toBe(false);
     });
 });

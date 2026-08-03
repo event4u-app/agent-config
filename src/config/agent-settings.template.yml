@@ -83,6 +83,25 @@ projection:
   # a non-kernel rule also needs a `packs:` intersection to project — e.g.
   # deselecting `frontend-design` removes ui-audit-gate + design-fidelity.
   # Empty = inactive, same as rule_workspaces.
+  #
+  # `rule_packs: auto` derives the id list from the ACTIVE-PACK set — the same
+  # set the skill/command prune uses — instead of hand-typing ids that would
+  # need re-typing whenever a pack is added. It exists because a domain safety
+  # floor whose own body says "auto-activates when pack-X is installed" ships
+  # today into installs that have no pack-X, where it guards nothing. Measured
+  # on this repo (2026-08-02): `auto` drops 8 rules / 8,110 GPT tok — the six
+  # domain floors plus provider-lifecycle-discipline and
+  # spreadsheet-source-quality. `history-discipline` and `scale-discipline`
+  # correctly SURVIVE (their packs are engineering-workspace packs).
+  #
+  # The DEFAULT stays `[]`. Flipping it to `auto` changes what a consumer
+  # install receives and therefore inherits the same human release gate the
+  # workspace axis carries (2026-07-13,
+  # agents/settings/contexts/consumer-scoping-audit-2026-07-07.md) — that
+  # audit's "unsure → ship it" ruling was about the maintainer-vs-consumer
+  # WORKSPACE question, not about a pack condition the rule declares itself,
+  # but the gate applies to the flip either way. Do not set this from
+  # automation.
   rule_packs: []
 
 # --- Discipline profile (successor knob, opt-in until the evidence gates pass) ---
@@ -256,7 +275,11 @@ personal:
   # greeting silently disappears, the context window is degrading and it is
   # time for a fresh conversation. Also keeps the reply-close markers alive
   # (ONE end-summary; PR URL as the literal last line).
-  # Empty = feature off. See rules/session-canary.md.
+  # Personal concern, resolved user-globally: empty here falls back to the
+  # user-global settings' personal.canary_name and then to identity.name in
+  # the wizard's settings/.agent-user.yml — set this key only to OVERRIDE
+  # the global name per project. No name on any layer = feature off.
+  # See rules/session-canary.md.
   canary_name: ""
 
   # Prefix PR comment replies with a bot icon 🤖 (true, false)
@@ -458,14 +481,14 @@ roadmap:
   # of the run, at every phase boundary, and at run end — this knob
   # only affects the inter-step beat.
   #
-  #   per_step         = legacy default: regen after every checkbox flip.
-  #                      Safest for crash recovery; highest subprocess
-  #                      overhead. Use when a session may be killed
-  #                      mid-roadmap and a fresh dashboard must always
-  #                      reflect the last-saved step.
-  #   every_5_steps    = batch flips, regen every 5 closed steps + at
-  #                      every phase boundary. Balanced cost/freshness
-  #                      for runs of 20–100 steps.
+  #   per_step         = regen after every checkbox flip. Safest for
+  #                      crash recovery; highest subprocess overhead.
+  #                      Use when a session may be killed mid-roadmap
+  #                      and a fresh dashboard must always reflect the
+  #                      last-saved step.
+  #   every_5_steps    = default: batch flips, regen every 5 closed
+  #                      steps + at every phase boundary. Balanced
+  #                      cost/freshness for runs of 20–100 steps.
   #   phase_boundary   = regen only at phase boundaries + run end.
   #                      Cheapest for long roadmaps (100+ steps).
   #                      The checkbox flip itself is still inline per
@@ -474,8 +497,10 @@ roadmap:
   # `process-step` ignores this knob (single-step runs always regen
   # at the end of the step). The Iron Law 1 mandate to regen on any
   # file-shape touch (rename / phase add / archive) still fires
-  # immediately regardless of this setting.
-  dashboard_regen_cadence: per_step
+  # immediately regardless of this setting — so the dashboard is never
+  # stale across a rename, a phase add, or an archive, whatever the
+  # inter-step beat is.
+  dashboard_regen_cadence: every_5_steps
 
   # Visible-horizon framing in roadmap authoring (integer weeks, default 0).
   # 0  = off (default). Time-boxed plate / horizon framing is forbidden:

@@ -8,6 +8,7 @@ triggers:
   - keyword: "imports"
   - keyword: "downstream"
   - phrase: "api changed"
+self_contained: true
 workspaces: [engineering]
 packs: [engineering-base]
 ---

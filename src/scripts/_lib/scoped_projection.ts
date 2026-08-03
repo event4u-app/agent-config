@@ -160,6 +160,56 @@ export function is_pruned_under_scoped(md_path: string, active_ids: ReadonlySet<
     return true;
 }
 
+/**
+ * Sentinel value for `projection.rule_packs`: derive the pack scope from the
+ * active-pack set instead of listing ids by hand.
+ *
+ * The rule layer's pack axis was wired end-to-end but shipped inactive
+ * (`rule_packs: []`), so a rule whose own body says "auto-activates when
+ * pack-X is installed" projected into installs that do not have pack-X,
+ * where it guards nothing. Listing the active ids by hand is not a fix — the
+ * list would need re-typing whenever a pack is added, which is the
+ * two-counting-paths failure this module exists to prevent. `auto` reuses
+ * `compute_active_pack_ids`, the SAME set the skill/command prune uses, so
+ * the rule axis cannot drift from the artefact axis.
+ */
+export const RULE_PACKS_AUTO = 'auto';
+
+/**
+ * Resolve a raw `projection.rule_packs` setting into the pack scope
+ * `rule_in_scope` consumes.
+ *
+ * - `'auto'` (scalar or single-element list) → the derived active-pack set.
+ * - a non-empty list → that list, verbatim.
+ * - anything else (absent, `[]`, wrong type) → `null`, axis inactive.
+ *
+ * A derivation failure (unreadable / malformed `packs.yml`) returns `null`,
+ * not an empty set: an empty set would prune every pack-tagged rule, the
+ * opposite of the fail-safe contract `rule_in_scope` documents.
+ */
+export function resolve_rule_pack_scope(
+    raw: unknown,
+    package_root: string,
+    runtime_active_packs: readonly string[] = [],
+): string[] | null {
+    const is_auto =
+        raw === RULE_PACKS_AUTO ||
+        (Array.isArray(raw) && raw.length === 1 && raw[0] === RULE_PACKS_AUTO);
+    if (is_auto) {
+        try {
+            return [
+                ...compute_active_pack_ids(load_packs_registry(package_root), runtime_active_packs),
+            ].sort();
+        } catch {
+            return null;
+        }
+    }
+    if (Array.isArray(raw) && raw.length > 0) {
+        return raw.map((v) => String(v));
+    }
+    return null;
+}
+
 export interface ScopedProjectionStats {
     /** Skills a default `projection.mode: scoped` install deploys. */
     projected: number;

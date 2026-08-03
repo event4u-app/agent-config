@@ -48,7 +48,7 @@ the run with a precise diff.
 ### 1. Validate dependencies
 
 ```bash
-scripts/ai-video/lib/validate-deps.sh .agent-src.uncondensed/commands/video/scene.md
+scripts/ai-video/lib/validate-deps.sh dist/agent-src/commands/video/scene.md
 ```
 
 ### 2. Load config + resolve providers

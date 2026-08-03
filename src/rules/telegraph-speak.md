@@ -2,6 +2,7 @@
 type: "auto"
 tier: "1"
 description: "telegraph.speak_scope != off — telegraph the prose; carve-outs (options, Iron-Law, code, paths) stay byte-stable"
+self_contained: true
 workspaces: [agent-config-maintainer]
 packs: [meta]
 enforced_by:

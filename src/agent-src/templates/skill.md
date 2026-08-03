@@ -170,7 +170,7 @@ Do NOT use when:
 
 <!-- SENIOR-TIER STUB BLOCKS (delete entire section if not `tier: senior`):
   Senior-tier skills (frontmatter `tier: senior`) require four extra
-  blocks per `.agent-src.uncondensed/rules/skill-quality.md` §
+  blocks per `src/rules/skill-quality.md` §
   Senior-Tier Required Structure. Mid-tier and untiered skills MUST
   remove this section entirely. The four blocks are enforced by
   `scripts/skill_linter.ts` for `tier: senior` skills only.

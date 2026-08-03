@@ -154,7 +154,7 @@ Ask the user:
 1. Read `project.upstream_repo` and `project.improvement_pr_branch_prefix` from `.agent-settings.yml`
 2. If `project.upstream_repo` is empty → ask user for the target repo
 3. Create branch: `{prefix}{learning-slug}` from `main`
-4. Commit changes to `.agent-src.uncondensed/` AND `.augment/`
+4. Commit changes to `src/` AND `.augment/`
 5. Push branch
 6. Create PR with title: `improve(agent): {short description}`
 7. Use the agent-improvement PR template if it exists

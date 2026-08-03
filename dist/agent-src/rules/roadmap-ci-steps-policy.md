@@ -24,6 +24,7 @@ validator_ignore:
   - type: "substring"
     pattern: ".agent-settings.yml"
     reason: "Rule reads quality.local_auto_run from .agent-settings.yml; naming the file is the contract."
+self_contained: true
 workspaces: [agent-config-maintainer, engineering]
 packs: [meta]
 roles: [planner]

@@ -166,6 +166,7 @@ tasks:
       - task: check-discovery-determinism
       - task: check-artefact-checksums
       - task: lint-framework-leakage
+      - task: lint-trigger-precision
       - task: lint-context-spine-usage
       - task: check-surface-tiers
       - task: check-public-links

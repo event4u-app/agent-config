@@ -24,7 +24,7 @@ packs:
 
 Use this skill when:
 
-- Validating the shape of every skill and rule in `.agent-src.uncondensed/`
+- Validating the shape of every skill and rule in `src/`
 - Verifying execution metadata (`execution.type`, `handler`, `command`) is well-formed
 - Checking locally before opening a PR that CI's skill-lint job will pass
 - Investigating a reported linter failure on a specific skill or rule

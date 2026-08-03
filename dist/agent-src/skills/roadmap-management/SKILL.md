@@ -147,6 +147,11 @@ Every roadmap follows this structure:
 - Never remove completed steps — they serve as history.
 - **Status is binary: `ready` (default, implicit) or `draft`.** New roadmaps are created **ready** unless the user explicitly says otherwise — `ready` is implicit and need not be written. A roadmap that is still being authored, awaiting upstream decisions, or capturing options without a worked plan declares `status: draft` in YAML frontmatter at the top of the file. Drafts are hidden from `agents/roadmaps-progress.md` until the flag is removed or flipped to `ready`. There are no other status values; legacy banners (`**Status: directional**`, `Status: capture-only`, `mode: feedback`) are removed.
 
+### Awaiting evidence — a blocker entry, never a new glyph
+
+- Waiting on **evidence that has not arrived** (soak still running, benchmark unfunded, adopter absent) is neither `[~]` nor `[-]`. Signal it with a structured `## Blockers` entry — five-field shape in [`templates/roadmaps.md` rule 20](../../agent-src/templates/roadmaps.md) — whose `Resolved when:` names the decidable signal ending the wait. The item stays `- [ ]` and points at it: `<!-- blocked-by: <id> -->`.
+- **No new glyph.** `[ ]` + `blocked-by:` = open, awaiting named evidence (stays active) · `[~]` = deferred by decision (bars archival, Iron Law 3) · `[-]` = cancelled with a reason (does not bar it). A fifth state buys nothing the entry above does not already carry.
+
 ### Phases
 
 - Group related steps into phases (e.g. "Preparation", "Migration", "Cleanup").
@@ -488,7 +493,9 @@ owner, blocked scope, and full instructions. Authoring shape:
 [`templates/roadmaps.md` rule 20](../../agent-src/templates/roadmaps.md);
 authoring guidance: [`roadmap-writing § 5b`](../roadmap-writing/SKILL.md).
 Clearing a blocker flips its `Status: resolved` and regenerates the
-dashboard in the same reply, same cadence as a checkbox flip.
+dashboard in the same reply, same cadence as a checkbox flip. The
+blocker entry is also the canonical **awaiting-evidence** signal —
+see [§ Awaiting evidence](#awaiting-evidence--a-blocker-entry-never-a-new-glyph).
 
 ## Rubric pass (optional, surfacing-only)
 

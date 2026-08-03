@@ -39,6 +39,9 @@ import {
   needs_refresh,
 } from "./_lib/cli_wrapper.js";
 import { readHookStdin } from "./hooks/hook_stdin.js";
+import { probeRanToday, stampProbeRun } from "./hooks/probe_throttle.js";
+
+const THROTTLE_CONCERN = "wrapper-freshness";
 
 export const EXIT_ALLOW = 0;
 
@@ -202,6 +205,17 @@ export function main(argv?: string[]): number {
   _readStdinIfNotTty();
 
   const root = rootArg !== null ? rootArg : _project_root();
+
+  // Daily throttle (road-to-hook-latency-repair): a wrapper or pre-commit
+  // hook that was fresh this morning is still fresh this afternoon — one
+  // self-heal attempt per local calendar day. Skipped probe re-runs
+  // tomorrow; `agent-config upgrade` / `refresh --project` remain the
+  // immediate recovery paths.
+  if (probeRanToday(root, THROTTLE_CONCERN)) {
+    return EXIT_ALLOW;
+  }
+  stampProbeRun(root, THROTTLE_CONCERN);
+
   let wrapper: string | null;
   try {
     if (_is_source_repo(root)) {
