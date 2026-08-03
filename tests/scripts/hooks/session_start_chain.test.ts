@@ -119,7 +119,8 @@ describe("composed session_start chain — per platform", () => {
       const manifest = _load_yaml(MANIFEST_PATH) as {
         platforms: Record<string, Record<string, string[]>>;
       };
-      const expected = manifest.platforms[platform]["session_start"];
+      const expected = manifest.platforms[platform]?.["session_start"] ?? [];
+      expect(expected.length).toBeGreaterThan(0);
       const r = runDispatcher({ platform, workspace: ws, globalRoot, dryRun: true });
       expect(r.status).toBe(0);
       // The dry-run plan lists concerns in execution order; assert the

@@ -6,10 +6,10 @@
 
 ## Overall
 
-**111 / 269 steps done · 41%**
+**115 / 269 steps done · 43%**
 
 ```text
-████████████████░░░░░░░░░░░░░░░░░░░░░░░░   41%
+█████████████████░░░░░░░░░░░░░░░░░░░░░░░   43%
 ```
 
 ## Open roadmaps
@@ -31,7 +31,7 @@
 | 13 | [road-to-solution-minimalism.md](roadmaps/road-to-solution-minimalism.md) | 4 | 36 | 12 | 23 | 0 | 1 | 0 | ███████░░░ 66% |
 | 14 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 6 | 3 | 0 | 0 | [1](#blockers-road-to-subagent-value-realization-followup) | ███░░░░░░░ 33% |
 | 15 | [road-to-surface-consolidation.md](roadmaps/road-to-surface-consolidation.md) | 3 | 14 | 1 | 12 | 1 | 0 | [3](#blockers-road-to-surface-consolidation) | █████████░ 92% |
-| 16 | [road-to-tested-routing.md](roadmaps/road-to-tested-routing.md) | 7 | 37 | 24 | 13 | 0 | 0 | 0 | ████░░░░░░ 35% |
+| 16 | [road-to-tested-routing.md](roadmaps/road-to-tested-routing.md) | 7 | 37 | 20 | 17 | 0 | 0 | 0 | █████░░░░░ 46% |
 | 17 | [road-to-tier-removal.md](roadmaps/road-to-tier-removal.md) | 4 | 8 | 2 | 6 | 0 | 0 | [1](#blockers-road-to-tier-removal) | ████████░░ 75% |
 | 18 | [road-to-ui-track-integrity-followup.md](roadmaps/road-to-ui-track-integrity-followup.md) | 1 | 10 | 10 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 
@@ -280,13 +280,13 @@ _1 blocker resolved._
 
 ### [road-to-tested-routing.md](roadmaps/road-to-tested-routing.md)
 
-**Road to tested routing** — 13 / 37 done (35%)
+**Road to tested routing** — 17 / 37 done (46%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
 | 1 | Trust floor: live doctor + composed-chain tests | ✅ done | 0 | 4 | 0 | 0 | 100% |
 | 2 | Coverage corpus: per-rule routing matrices | ✅ done | 0 | 5 | 0 | 0 | 100% |
-| 3 | Matcher remediation: word-boundary anchoring as a measured change | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
+| 3 | Matcher remediation: word-boundary anchoring as a measured change | ✅ done | 0 | 4 | 0 | 0 | 100% |
 | 4 | LLM-side diagnostics (advisory only, never gating) | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
 | 5 | Decision record: supersede ADR-040, close the loop | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
 | 6 | Orchestration-routing coverage: which subagent, which council path, which tier | ✅ done | 0 | 4 | 0 | 0 | 100% |

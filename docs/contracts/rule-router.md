@@ -7,8 +7,9 @@ keep-beta-until: 2026-08-12
 # Rule Router — Frontmatter Schema and Compiled Output
 
 Status: locked for Phase 3 of `road-to-kernel-and-router.md`.
-Owners: this contract; `scripts/compile_router.py` (Phase 3.2);
-`scripts/skill_linter.py` extension (Phase 3.3).
+Owners: this contract; `src/scripts/compile_router.ts` (Phase 3.2);
+`src/scripts/skill_linter.ts` extension (Phase 3.3). <!-- .py owners retired
+by the ADR-200 py2ts migration; paths updated 2026-08-03. -->
 
 ## Why a router
 
@@ -60,12 +61,22 @@ schema's `additionalProperties: false` now rejects it outright. The
 `docs/contracts/router-intents.md` vocabulary this section used to cite was
 never written.
 
-**`keyword` and `phrase` are the same matcher.** Both branches of
-`router_telemetry.ts::trigger_matches` run the identical case-insensitive
-`includes()`; the distinction is documentary (single token vs multi-word), not
-behavioural. Recorded here because the obvious repair for a noisy trigger —
-"promote it to a `phrase`" — is therefore a no-op, and has been proposed as
-one.
+**`keyword` and `phrase` genuinely differ since 2026-08-03
+(road-to-tested-routing Phase 3).** `keyword` is **word-boundary anchored**
+via `router_telemetry.ts::keyword_matches_anchored` — an occurrence counts
+only when its word-character edges sit on word boundaries (`ac` no longer
+fires inside "black"), with two documented reliefs: a punctuation edge
+(`__()`, `/image:`, `trans(`) carries no boundary requirement on that side,
+and the right boundary accepts one optional plural `s` ("icons" fires
+`icon`). Richer inflection (German verb endings: "implementiere",
+"committen") is an accepted recall cost — the coverage matrices carry
+standalone-token phrasings for inflected languages. `phrase` stays
+case-insensitive unanchored substring, so "promote a noisy keyword to a
+phrase" is no longer a no-op: it OPTS OUT of anchoring.
+`trigger_coverage.ts` consumes the same helper — one matcher source of
+truth. Before/after over the 302-prompt matrix-derived corpus:
+unintended-activation census 495 → 433, zero intended positives lost
+(`internal/bench/reports/router-telemetry/`, 2026-08-03 pair).
 
 **Precision budget — short keywords are ratcheted.** Because the match is an
 UNANCHORED substring, a short keyword claims every word that contains it: `AC`
@@ -343,7 +354,7 @@ A projection or router that drifts from source silently re-introduces the
 eager bytes (or a missing pointer target). Three CI gates enforce
 `src == dist`, all already wired into `task ci`:
 
-- `task check-router` (`compile_router.py --check`) — `dist/router.json`
+- `task check-router` (`compile_router.ts --check`) — `dist/router.json`
   must equal a fresh compile from frontmatter `triggers:`/`routes_to:`.
 - `task check-artefact-checksums` — every artefact's committed checksum
   must match its current source bytes.

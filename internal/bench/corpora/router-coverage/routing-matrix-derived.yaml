@@ -41,7 +41,7 @@ prompts:
   - id: rm-architecture-02
     category: router-coverage
     language: en
-    prompt: "Please add a PaymentService that handles refunds and partial captures."
+    prompt: "Please add a payment service that handles refunds and partial captures."
     expected_skills: []
     intended_triggers: [architecture]
 
@@ -1161,7 +1161,7 @@ prompts:
   - id: rm-minimal-safe-diff-03
     category: router-coverage
     language: de
-    prompt: "Bitte fixe nur den Tippfehler, ohne den Rest der Datei umzubauen."
+    prompt: "Bitte nur diesen Fix für den Tippfehler, ohne den Rest der Datei umzubauen."
     expected_skills: []
     intended_triggers: [minimal-safe-diff]
 
@@ -1326,7 +1326,7 @@ prompts:
   - id: rm-notes-first-reasoning-03
     category: router-coverage
     language: de
-    prompt: "Bitte debugge den fehlgeschlagenen Import und halte die Zwischenschritte fest."
+    prompt: "Bitte starte eine Debug-Session für den fehlgeschlagenen Import und halte die Zwischenschritte fest."
     expected_skills: []
     intended_triggers: [notes-first-reasoning]
 
@@ -1686,7 +1686,7 @@ prompts:
   - id: rm-secret-vcs-guard-03
     category: router-coverage
     language: de
-    prompt: "Darf ich den Zugangsschlüssel in die Config schreiben und committen?"
+    prompt: "Darf ich den API Key einfach in die Config schreiben und dann git add ausführen?"
     expected_skills: []
     intended_triggers: [secret-vcs-guard]
 
@@ -1728,7 +1728,7 @@ prompts:
   - id: rm-senior-engineering-discipline-03
     category: router-coverage
     language: de
-    prompt: "Bitte implementiere den Export-Job als eigenen Service."
+    prompt: "Schreib die Migration für die neue Spalte und den Seeder gleich dazu."
     expected_skills: []
     intended_triggers: [senior-engineering-discipline]
 
@@ -1968,7 +1968,7 @@ prompts:
   - id: rm-think-before-action-03
     category: router-coverage
     language: de
-    prompt: "Bitte implementiere den CSV-Export für die Rechnungsliste."
+    prompt: "Vor dem Refactor bitte erst die Datenflüsse analysieren."
     expected_skills: []
     intended_triggers: [think-before-action]
 

@@ -1,7 +1,7 @@
 rule: architecture
 positives:
   - prompt: "Should the invoice calculation live in the controller or in a dedicated class?"
-  - prompt: "Please add a PaymentService that handles refunds and partial captures."
+  - prompt: "Please add a payment service that handles refunds and partial captures."
   - prompt: "Bitte lege einen neuen Controller für die Rechnungs-API an."
 near_misses:
   - prompt: "How should I organize the folder layout for the new billing feature?"
