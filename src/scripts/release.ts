@@ -679,6 +679,101 @@ function watch_pr_checks(): void {
     die(`PR checks failed (exit ${returncode})`);
 }
 
+/**
+ * Push the release branch, integrating a remote that moved under us.
+ *
+ * A GitHub-side "Update branch" click (or a concurrent resume run) advances
+ * `origin/<branch>` while the local ref stays behind; a bare `git push` is
+ * then rejected with "fetch first" and the whole release run dies (measured
+ * 2026-08-03, 9.15.0). Same-branch commits are never ours to drop, so the
+ * recovery is merge-and-retry, never force-push.
+ */
+function push_release_branch(branch: string): void {
+    const first = run(['git', 'push', '-u', REMOTE, branch], { check: false });
+    if (first.returncode === 0) {
+        return;
+    }
+    process.stdout.write(`↻  ${REMOTE}/${branch} moved — integrating and retrying push\n`);
+    run(['git', 'fetch', REMOTE, branch]);
+    run(['git', 'merge', '--no-edit', `${REMOTE}/${branch}`]);
+    run(['git', 'push', '-u', REMOTE, branch]);
+}
+
+/** mergeStateStatus of the current-branch PR ('' when the probe fails). */
+function _pr_merge_state(): string {
+    const r = run(['gh', 'pr', 'view', '--json', 'mergeStateStatus', '--jq', '.mergeStateStatus'], {
+        check: false,
+        capture: true,
+    });
+    return r.returncode === 0 ? r.stdout.trim() : '';
+}
+
+/**
+ * Bound on update-and-retry rounds in merge_release_pr. Three is deliberate:
+ * main receiving unrelated merges three times inside one checks-wait window
+ * means the queue is hot and a human should decide, not a loop.
+ */
+const _MERGE_UPDATE_ROUNDS = 3;
+
+/**
+ * Merge the release PR, absorbing a moving base branch.
+ *
+ * Branch protection requires the head to be up to date with `main`, and
+ * `main` moves constantly (dependabot, unrelated merges) — so between the
+ * checks-wait and the merge the PR routinely flips to BEHIND and a bare
+ * `gh pr merge` dies with "the head branch is not up to date with the base
+ * branch" (measured 2026-08-03, 9.16.0). Recovery is mechanical and safe by
+ * construction: merging `origin/main` into `release/X.Y.Z` makes the fix
+ * files identical on both sides, so the release-PR diff stays inside the
+ * version-bump allowlist (docs/contracts/release-pr-gating.md § Mid-release
+ * fixes) — do it here instead of aborting the run.
+ */
+function merge_release_pr(branch: string, wait_for_checks: boolean): void {
+    if (git(['rev-parse', '--abbrev-ref', 'HEAD'], { capture: true }) !== branch) {
+        run(['git', 'checkout', branch]);
+    }
+    for (let round = 0; round <= _MERGE_UPDATE_ROUNDS; round++) {
+        if (_pr_merge_state() !== 'BEHIND') {
+            const merged = run(['gh', 'pr', 'merge', '--merge', '--delete-branch'], {
+                check: false,
+            });
+            if (merged.returncode === 0) {
+                return;
+            }
+            if (_pr_merge_state() !== 'BEHIND') {
+                // Not the moving-base failure — surface it unchanged.
+                throw new CalledProcessError(merged.returncode, [
+                    'gh',
+                    'pr',
+                    'merge',
+                    '--merge',
+                    '--delete-branch',
+                ]);
+            }
+            // BEHIND appeared between the probe and the merge — fall through
+            // to the update below.
+        }
+        if (round === _MERGE_UPDATE_ROUNDS) {
+            break;
+        }
+        process.stdout.write(
+            `↻  head behind ${MAIN_BRANCH} (update round ${round + 1}/${_MERGE_UPDATE_ROUNDS}) — ` +
+                `merging ${REMOTE}/${MAIN_BRANCH} into ${branch} and re-running checks\n`,
+        );
+        run(['git', 'fetch', REMOTE, MAIN_BRANCH]);
+        run(['git', 'merge', '--no-edit', `${REMOTE}/${MAIN_BRANCH}`]);
+        push_release_branch(branch);
+        if (wait_for_checks) {
+            watch_pr_checks();
+        }
+    }
+    die(
+        `release PR is still behind ${MAIN_BRANCH} after ${_MERGE_UPDATE_ROUNDS} update round(s) — ` +
+            `${MAIN_BRANCH} is moving faster than the checks complete. ` +
+            'Re-run when the queue quiets down: task release -- --resume --yes',
+    );
+}
+
 function have(bin: string): boolean {
     const res = spawnSync('which', [bin], { encoding: 'utf-8', stdio: ['ignore', 'pipe', 'pipe'] });
     if (res.error) {
@@ -1596,9 +1691,10 @@ function execute(
         _step(4, total, 'PR already merged — skip push');
     } else {
         // `git push -u` is naturally idempotent — it prints "Everything
-        // up-to-date" when remote already matches. No probe needed.
+        // up-to-date" when remote already matches. push_release_branch
+        // additionally absorbs a remote that moved under us.
         _step(4, total, `Push ${branch} to ${REMOTE}`);
-        run(['git', 'push', '-u', REMOTE, branch]);
+        push_release_branch(branch);
     }
 
     // ─── 5. PR ──────────────────────────────────────────────────────────────
@@ -1647,7 +1743,7 @@ function execute(
         _step(7, total, `PR #${pr_info!['number']} already merged — skip`);
     } else {
         _step(7, total, 'Merge pull request (merge commit) and delete branch');
-        run(['gh', 'pr', 'merge', '--merge', '--delete-branch']);
+        merge_release_pr(branch, wait_for_checks);
     }
 
     // ─── 8. tag main + push tag ─────────────────────────────────────────────
