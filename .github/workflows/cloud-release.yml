@@ -36,13 +36,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Check out released tag
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           ref: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.ref }}
 
       - name: Set up Node
         # build_cloud_bundle is now TypeScript; the dispatcher runs it via tsx.
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
           node-version: "20"
           cache: "npm"
@@ -114,7 +114,7 @@ jobs:
         # release.yml's --ci path, which dispatches this workflow
         # explicitly and could race with a native tag-push trigger when a
         # RELEASE_PR_TOKEN PAT is configured.
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           tag_name: ${{ steps.tag.outputs.name }}
           files: artefacts/*

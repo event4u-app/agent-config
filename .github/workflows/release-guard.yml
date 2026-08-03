@@ -43,7 +43,7 @@ jobs:
           fi
 
       - name: Check out tagged commit
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           ref: ${{ steps.tag.outputs.name }}
 
