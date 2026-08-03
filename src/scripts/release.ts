@@ -517,6 +517,22 @@ interface RunResult {
  * stderr so release preflight failures are diagnosable without re-running with
  * a debugger.
  */
+/**
+ * Drill/test seam — when set, every external command run() would spawn is
+ * answered by this function instead. The check/die/CalledProcessError
+ * semantics of run() still apply to the simulated result, so the drill
+ * exercises the REAL error paths of the orchestration (release_drill.ts).
+ */
+type ExecOverride = (args: readonly string[]) => {
+    status: number;
+    stdout: string;
+    stderr: string;
+};
+let _exec_override: ExecOverride | null = null;
+function _set_exec_override(fn: ExecOverride | null): void {
+    _exec_override = fn;
+}
+
 function run(
     args: readonly string[],
     opts: { check?: boolean; capture?: boolean; cwd?: string | null } = {},
@@ -526,13 +542,15 @@ function run(
     const cwd = opts.cwd ?? REPO_ROOT;
 
     const [cmd, ...rest] = args;
-    const res = spawnSync(cmd as string, rest, {
-        cwd,
-        encoding: 'utf-8',
-        // capture_output=True → pipe; else inherit so child writes straight to
-        // this process's stdout/stderr (text mode, matching subprocess text=True).
-        stdio: capture ? ['ignore', 'pipe', 'pipe'] : ['inherit', 'inherit', 'inherit'],
-    });
+    const res = _exec_override
+        ? { ..._exec_override(args), error: undefined as Error | undefined }
+        : spawnSync(cmd as string, rest, {
+              cwd,
+              encoding: 'utf-8',
+              // capture_output=True → pipe; else inherit so child writes straight to
+              // this process's stdout/stderr (text mode, matching subprocess text=True).
+              stdio: capture ? ['ignore', 'pipe', 'pipe'] : ['inherit', 'inherit', 'inherit'],
+          });
 
     if (res.error) {
         // FileNotFoundError analogue (ENOENT) and other spawn failures — Python
@@ -635,24 +653,24 @@ export function _failed_checks_report(names: readonly string[]): string {
  * freshly-pushed branch.
  */
 function watch_pr_checks(branch: string): void {
-    // time.sleep(5) — blocking grace period. Never reached on any test path.
-    const until = Date.now() + 5000;
-    while (Date.now() < until) {
-        // busy-wait stand-in for time.sleep(5) without an event-loop yield.
+    if (_exec_override === null) {
+        // time.sleep(5) — blocking grace period for GitHub to register runs
+        // on a freshly-pushed branch. Skipped under the drill seam: there is
+        // no GitHub to wait for, and 5s per simulated wait adds up.
+        const until = Date.now() + 5000;
+        while (Date.now() < until) {
+            // busy-wait stand-in for time.sleep(5) without an event-loop yield.
+        }
     }
     // The branch is passed explicitly — `gh` inferring the PR from HEAD
     // resolved to `main` mid-run once (2026-08-03, 9.16.0 resume) and the
     // whole release died on "no pull requests found for branch main".
-    const proc = spawnSync('gh', ['pr', 'checks', branch, '--watch'], {
-        cwd: REPO_ROOT,
-        encoding: 'utf-8',
-        stdio: ['ignore', 'pipe', 'pipe'],
+    const proc = run(['gh', 'pr', 'checks', branch, '--watch'], {
+        check: false,
+        capture: true,
     });
-    if (proc.error) {
-        throw proc.error;
-    }
     const output = ((proc.stdout || '') + (proc.stderr || '')).trim();
-    const returncode = proc.status ?? 0;
+    const returncode = proc.returncode;
     if (returncode === 0) {
         if (output) {
             process.stdout.write(output + '\n');
@@ -670,10 +688,9 @@ function watch_pr_checks(branch: string): void {
     if (output) {
         process.stderr.write(output + '\n');
     }
-    const summary = spawnSync('gh', ['pr', 'checks', branch, '--json', 'name,bucket'], {
-        cwd: REPO_ROOT,
-        encoding: 'utf-8',
-        stdio: ['ignore', 'pipe', 'pipe'],
+    const summary = run(['gh', 'pr', 'checks', branch, '--json', 'name,bucket'], {
+        check: false,
+        capture: true,
     });
     const report = _failed_checks_report(_failed_check_names(summary.stdout ?? ''));
     if (report) {
@@ -2363,5 +2380,14 @@ export {
     SEMVER_RE,
     _RELEASE_BRANCH_RE,
     MODULE_DOC_FIRST_LINE,
+    // Drill seam (release_drill.ts) — the step machinery under a simulated
+    // git/gh world, so orchestration bugs surface in vitest, not mid-release.
+    execute,
+    _set_exec_override,
+    push_release_branch,
+    merge_release_pr,
+    watch_pr_checks,
+    _pr_merge_state,
+    _MERGE_UPDATE_ROUNDS,
 };
 export type { Args };
