@@ -62,7 +62,7 @@ INTENT
 │
 ├── Near context limit, work not finished
 │     → cite [agent-handoff](../../domains/meta/agent-handoff/command.md)
-│       (structured handoff envelope; resume in fresh chat)
+│       (session picker + generated handoff; auto-seeds the fresh chat)
 │
 ├── Cost-aware decision (model pick, budget, stop-criterion)
 │     → cite /cost:report (when shipped) — until then, fall back to
@@ -82,7 +82,7 @@ INTENT
 | `cli-output-handling` | `src/rules/cli-output-handling.md` | `verbose`, `tail`, `grep`, `CLI` | Wrap-tail-grep contract for any verbose command |
 | `rtk-output-filtering` | `src/skills/rtk-output-filtering/SKILL.md` | `rtk`, `verbose`, `filter`, `wrap` | Project-local rtk filters; wrapper command |
 | `token-efficiency` | `src/rules/token-efficiency.md` | `redirect`, `verbose`, `concise`, `tool` | Batch + parallelize tool calls; brevity floor |
-| `agent-handoff` | `src/domains/meta/agent-handoff/command.md` | `handoff`, `fresh`, `chat`, `context` | Context envelope for fresh-chat continuation |
+| `agent-handoff` | `src/domains/meta/agent-handoff/command.md` | `handoff`, `fresh`, `chat`, `context`, `resume`, `session` | Session picker + generated handoff auto-seeding the next session |
 | `direct-answers` | `src/rules/direct-answers.md` | `brevity`, `flattery`, `severity`, `tiered` | Iron-Law brevity floor (kernel) |
 | `markitdown` | upstream: github.com/microsoft/markitdown | `PDF`, `DOCX`, `HTML`, `convert` | Document → markdown converter (authoritative-link only) |
 | `/cost:report` | TBD — an internal roadmap (local-only) § P1.2` | `cost`, `model spend`, `budget` | Per-session cost telemetry (planned) |
