@@ -1,0 +1,8 @@
+rule: history-discipline
+positives:
+  - prompt: "Add an audit log for edits to the contract records."
+  - prompt: "Do we need event sourcing here or is a row-level history table enough?"
+  - prompt: "Wer hat was am Vertrag geändert? Wir brauchen Nachvollziehbarkeit."
+near_misses:
+  - prompt: "Record the timestamp of the last successful sync per account."
+  - prompt: "Add soft deletes so removed records can be restored."

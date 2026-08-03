@@ -1,0 +1,10 @@
+rule: php-coding
+positives:
+  - prompt: "Run phpstan on the changed files and fix the level 8 errors."
+  - prompt: "Run ecs --fix on the diff before pushing."
+  - prompt: "Bitte behebe die phpstan-Fehler im Payment-Modul."
+  - prompt: "Refactor this class to use early returns and strict types."
+    open_files: ["app/Services/InvoiceService.php"]
+near_misses:
+  - prompt: "Fix the type errors the TypeScript compiler reports in the CLI."
+  - prompt: "Tighten the static analysis rules for our Python tooling."

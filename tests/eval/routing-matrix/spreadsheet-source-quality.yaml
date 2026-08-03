@@ -1,0 +1,8 @@
+rule: spreadsheet-source-quality
+positives:
+  - prompt: "Pull the numbers for Q3 revenue into the board sheet."
+  - prompt: "Add the latest stock price of our competitor to the comparison tab."
+  - prompt: "Übernimm die revenue figures aus dem Quartalsbericht in die Tabelle."
+near_misses:
+  - prompt: "Format the budget spreadsheet with conditional highlighting."
+  - prompt: "Sum the quarterly totals per region in the pivot table."

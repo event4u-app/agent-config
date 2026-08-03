@@ -1,0 +1,8 @@
+rule: cli-output-handling
+positives:
+  - prompt: "Run phpstan on the changed files and summarize the errors."
+  - prompt: "npm run build keeps failing - can you check the output?"
+  - prompt: "Führe bitte die vitest-Suite aus und zeig mir nur die Fehler."
+near_misses:
+  - prompt: "Summarize the failing checks from the CI run on the PR."
+  - prompt: "Trim the verbose console noise before pasting it into the summary."

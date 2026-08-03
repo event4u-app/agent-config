@@ -1,0 +1,8 @@
+rule: docker-commands
+positives:
+  - prompt: "Run php artisan migrate in the app container and show me the output."
+  - prompt: "Should composer install run on the host or inside the container?"
+  - prompt: "Führe bitte docker compose up aus und prüfe die Logs des App-Containers."
+near_misses:
+  - prompt: "Run the PHPUnit suite for the billing package and report failures."
+  - prompt: "The container keeps restarting after deployment - can you find out what crashes?"

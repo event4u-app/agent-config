@@ -1,0 +1,5892 @@
+{
+  "schema_version": 1,
+  "schema_id": "router-telemetry-v1",
+  "generated_at": "2026-08-03T07:09:11+00:00",
+  "config": {
+    "router": "dist/router.json",
+    "profile": "full",
+    "sample_cap_per_corpus": 400,
+    "corpora": [
+      "internal/bench/corpora/router-coverage/routing-matrix-derived.yaml",
+      "internal/bench/corpora/router-coverage/agent-docs-edits.yaml",
+      "internal/bench/corpora/router-coverage/framework-routing.yaml",
+      "internal/bench/corpora/router-coverage/git-surface.yaml",
+      "internal/bench/corpora/router-coverage/roadmap-ops.yaml",
+      "internal/bench/corpora/router-coverage/slash-commands.yaml"
+    ]
+  },
+  "per_trigger_hits": {
+    "active-remediation::{\"keyword\": \"refactor\"}": 6,
+    "active-remediation::{\"keyword\": \"duplicate\"}": 1,
+    "code-comment-discipline::{\"keyword\": \"refactor\"}": 6,
+    "domain-safety-pii::{\"keyword\": \"invoice\"}": 6,
+    "domain-safety-pii::{\"keyword\": \"log\"}": 14,
+    "improve-before-implement::{\"keyword\": \"refactor\"}": 6,
+    "senior-engineering-discipline::{\"keyword\": \"refactor\"}": 6,
+    "think-before-action::{\"keyword\": \"refactor\"}": 6,
+    "architecture::{\"keyword\": \"module\"}": 7,
+    "active-remediation::{\"keyword\": \"legacy\"}": 1,
+    "active-remediation::{\"keyword\": \"deprecated\"}": 1,
+    "question-not-instruction::{\"phrase\": \"kannst du\"}": 6,
+    "active-remediation::{\"keyword\": \"cleanup\"}": 2,
+    "architecture::{\"keyword\": \"controller\"}": 3,
+    "broken-access-control::{\"keyword\": \"controller\"}": 3,
+    "code-comment-discipline::{\"keyword\": \"class\"}": 6,
+    "legal-safety-floor::{\"keyword\": \"controller\"}": 3,
+    "architecture::{\"keyword\": \"service\"}": 6,
+    "artifact-drafting-protocol::{\"phrase\": \"new skill\"}": 3,
+    "security-sensitive-stop::{\"keyword\": \"webhook\"}": 4,
+    "artifact-drafting-protocol::{\"phrase\": \"new rule\"}": 1,
+    "commit-conventions::{\"keyword\": \"commit\"}": 18,
+    "secret-vcs-guard::{\"keyword\": \"secret\"}": 1,
+    "secret-vcs-guard::{\"keyword\": \"commit\"}": 18,
+    "security-sensitive-stop::{\"keyword\": \"secret\"}": 1,
+    "artifact-drafting-protocol::{\"phrase\": \"bau mir ein Skill\"}": 1,
+    "artifact-engagement-recording::{\"phrase\": \"/implement-ticket\"}": 1,
+    "code-comment-discipline::{\"keyword\": \"implement\"}": 7,
+    "cross-source-consistency::{\"keyword\": \"ticket\"}": 8,
+    "improve-before-implement::{\"keyword\": \"implement\"}": 7,
+    "senior-engineering-discipline::{\"keyword\": \"implement\"}": 7,
+    "think-before-action::{\"keyword\": \"implement\"}": 7,
+    "artifact-engagement-recording::{\"keyword\": \"telemetry\"}": 2,
+    "augment-edit-discipline::{\"keyword\": \"rename\"}": 3,
+    "source-of-truth::{\"path_prefix\": \".augment/\"}": 2,
+    "augment-edit-discipline::{\"path_prefix\": \".augment/\"}": 2,
+    "augment-edit-discipline::{\"keyword\": \"portable\"}": 1,
+    "markdown-safe-codeblocks::{\"file_pattern\": \"*.md\"}": 35,
+    "source-confidentiality::{\"path_prefix\": \"src/rules/\"}": 5,
+    "augment-edit-discipline::{\"path_prefix\": \"src/\"}": 13,
+    "framework-neutrality-in-generic-skills::{\"path_prefix\": \"src/rules/\"}": 5,
+    "rule-type-governance::{\"path_prefix\": \"src/rules/\"}": 5,
+    "autonomous-execution::{\"keyword\": \"personal.autonomy\"}": 1,
+    "persona-governance::{\"keyword\": \"persona\"}": 4,
+    "autonomous-execution::{\"phrase\": \"autonomy mode\"}": 2,
+    "engineering-safety-floor::{\"keyword\": \"migration\"}": 7,
+    "improve-before-implement::{\"keyword\": \"migration\"}": 7,
+    "prefer-enums-over-literals::{\"keyword\": \"migration\"}": 7,
+    "scale-discipline::{\"keyword\": \"migration\"}": 7,
+    "senior-engineering-discipline::{\"keyword\": \"migration\"}": 7,
+    "broken-access-control::{\"keyword\": \"session\"}": 6,
+    "brand-consistency::{\"keyword\": \"brand\"}": 7,
+    "brand-consistency::{\"keyword\": \"on-brand\"}": 1,
+    "brand-consistency::{\"keyword\": \"brand tokens\"}": 2,
+    "brand-source-of-truth::{\"keyword\": \"brand tokens\"}": 2,
+    "secret-vcs-guard::{\"keyword\": \"token\"}": 5,
+    "brand-consistency::{\"keyword\": \"brand voice\"}": 1,
+    "brand-source-of-truth::{\"keyword\": \"brand voice\"}": 1,
+    "brand-source-of-truth::{\"keyword\": \"brand guide\"}": 1,
+    "brand-source-of-truth::{\"keyword\": \"brand profile\"}": 1,
+    "broken-access-control::{\"keyword\": \"endpoint\"}": 5,
+    "senior-engineering-discipline::{\"keyword\": \"endpoint\"}": 5,
+    "source-discovery-gate::{\"keyword\": \"endpoint\"}": 5,
+    "broken-access-control::{\"keyword\": \"IDOR\"}": 1,
+    "broken-access-control::{\"keyword\": \"findById\"}": 1,
+    "broken-access-control::{\"keyword\": \"authorization\"}": 1,
+    "security-sensitive-stop::{\"keyword\": \"auth\"}": 5,
+    "php-coding::{\"keyword\": \"phpstan\"}": 3,
+    "cli-output-handling::{\"keyword\": \"phpstan\"}": 3,
+    "framework-neutrality-in-generic-skills::{\"keyword\": \"PHPStan\"}": 3,
+    "cli-output-handling::{\"keyword\": \"npm\"}": 1,
+    "cli-output-handling::{\"keyword\": \"vitest\"}": 1,
+    "code-comment-discipline::{\"keyword\": \"docblock\"}": 1,
+    "code-comment-discipline::{\"keyword\": \"method\"}": 2,
+    "question-not-instruction::{\"phrase\": \"should i\"}": 7,
+    "code-comment-discipline::{\"keyword\": \"comment\"}": 4,
+    "commit-conventions::{\"keyword\": \"branch\"}": 8,
+    "code-comment-discipline::{\"keyword\": \"phpdoc\"}": 1,
+    "cli-output-handling::{\"keyword\": \"git\"}": 7,
+    "code-provenance::{\"keyword\": \"port this\"}": 1,
+    "code-provenance::{\"keyword\": \"found this on GitHub\"}": 1,
+    "code-provenance::{\"keyword\": \"borrow\"}": 1,
+    "code-provenance::{\"keyword\": \"vendored\"}": 1,
+    "command-suggestion-policy::{\"phrase\": \"free-form prompt\"}": 1,
+    "slash-command-routing-policy::{\"phrase\": \"slash command\"}": 1,
+    "command-suggestion-policy::{\"phrase\": \"command suggestion\"}": 2,
+    "minimal-safe-diff::{\"keyword\": \"fix\"}": 14,
+    "think-before-action::{\"keyword\": \"fix\"}": 14,
+    "commit-conventions::{\"phrase\": \"conventional commits\"}": 1,
+    "communication-through-line::{\"phrase\": \"reporting progress\"}": 3,
+    "content-quoting-floor::{\"keyword\": \"quote\"}": 1,
+    "content-quoting-floor::{\"keyword\": \"excerpt\"}": 1,
+    "content-quoting-floor::{\"keyword\": \"verbatim\"}": 3,
+    "context-hygiene::{\"keyword\": \"3-failure\"}": 2,
+    "context-hygiene::{\"phrase\": \"long conversation\"}": 1,
+    "copilot-routing::{\"keyword\": \"copilot\"}": 4,
+    "copilot-routing::{\"phrase\": \"copilot-instructions\"}": 2,
+    "cross-source-consistency::{\"keyword\": \"mockup\"}": 1,
+    "design-fidelity::{\"keyword\": \"mockup\"}": 1,
+    "cross-source-consistency::{\"keyword\": \"refine\"}": 2,
+    "cross-source-consistency::{\"keyword\": \"acceptance criteria\"}": 1,
+    "cross-source-consistency::{\"phrase\": \"refine this ticket\"}": 1,
+    "cross-source-consistency::{\"keyword\": \"screenshot\"}": 3,
+    "doc-screenshot-hygiene::{\"keyword\": \"screenshot\"}": 3,
+    "decision-revisit-gate::{\"keyword\": \"already decided\"}": 1,
+    "decision-revisit-gate::{\"keyword\": \"honest null\"}": 1,
+    "decision-revisit-gate::{\"keyword\": \"don't relitigate\"}": 1,
+    "delegation-policy::{\"keyword\": \"delegate\"}": 1,
+    "delegation-policy::{\"keyword\": \"subagent\"}": 1,
+    "delegation-policy::{\"keyword\": \"parallel\"}": 1,
+    "delegation-policy::{\"keyword\": \"analyse\"}": 1,
+    "design-fidelity::{\"keyword\": \"Figma\"}": 1,
+    "design-fidelity::{\"phrase\": \"build this design\"}": 1,
+    "invite-challenge::{\"keyword\": \"design\"}": 3,
+    "design-fidelity::{\"file_pattern\": \"*design.html\"}": 1,
+    "design-fidelity::{\"phrase\": \"bau das nach\"}": 1,
+    "devcontainer-routing::{\"keyword\": \"devcontainer\"}": 4,
+    "devcontainer-routing::{\"phrase\": \"devcontainer.json\"}": 2,
+    "devcontainer-routing::{\"keyword\": \"codespaces\"}": 1,
+    "devcontainer-routing::{\"keyword\": \"codespace\"}": 1,
+    "user-interrupt-priority::{\"keyword\": \"weiter\"}": 1,
+    "doc-screenshot-hygiene::{\"phrase\": \"add a screenshot\"}": 1,
+    "doc-screenshot-hygiene::{\"keyword\": \"docs site\"}": 1,
+    "doc-screenshot-hygiene::{\"keyword\": \"Starlight\"}": 1,
+    "doc-screenshot-hygiene::{\"phrase\": \"generate a docs site\"}": 1,
+    "source-confidentiality::{\"path_prefix\": \"docs/\"}": 3,
+    "doc-screenshot-hygiene::{\"path_prefix\": \"docs/media/\"}": 1,
+    "docker-commands::{\"keyword\": \"artisan\"}": 3,
+    "laravel-routing::{\"keyword\": \"artisan\"}": 3,
+    "framework-neutrality-in-generic-skills::{\"keyword\": \"php artisan\"}": 3,
+    "framework-neutrality-in-generic-skills::{\"keyword\": \"Artisan\"}": 3,
+    "docker-commands::{\"keyword\": \"composer\"}": 2,
+    "docker-commands::{\"phrase\": \"inside the container\"}": 1,
+    "cli-output-handling::{\"keyword\": \"composer\"}": 2,
+    "docker-commands::{\"keyword\": \"docker\"}": 1,
+    "cli-output-handling::{\"keyword\": \"docker\"}": 1,
+    "domain-adoption-policy::{\"keyword\": \"mobile track\"}": 1,
+    "domain-adoption-policy::{\"keyword\": \"ml track\"}": 1,
+    "domain-adoption-policy::{\"keyword\": \"blockchain track\"}": 1,
+    "skill-quality::{\"path_prefix\": \"src/skills/\"}": 7,
+    "source-confidentiality::{\"path_prefix\": \"src/skills/\"}": 7,
+    "domain-adoption-policy::{\"path_prefix\": \"src/skills/\"}": 7,
+    "framework-neutrality-in-generic-skills::{\"path_prefix\": \"src/skills/\"}": 7,
+    "lethal-trifecta-guard::{\"path_prefix\": \"src/skills/\"}": 7,
+    "domain-safety-disclaimer::{\"keyword\": \"privacy policy\"}": 1,
+    "domain-safety-disclaimer::{\"keyword\": \"investment memo\"}": 1,
+    "domain-safety-disclaimer::{\"keyword\": \"terms of service\"}": 1,
+    "domain-safety-pii::{\"keyword\": \"ticket response\"}": 1,
+    "domain-safety-pii::{\"phrase\": \"log the user\"}": 1,
+    "domain-safety-pii::{\"keyword\": \"rejection email\"}": 1,
+    "domain-safety-retention::{\"phrase\": \"how long should we keep\"}": 1,
+    "domain-safety-retention::{\"keyword\": \"DSAR\"}": 1,
+    "domain-safety-retention::{\"keyword\": \"retention policy\"}": 1,
+    "domain-safety-retention::{\"keyword\": \"data retention\"}": 1,
+    "legal-safety-floor::{\"keyword\": \"NDA\"}": 4,
+    "scale-discipline::{\"keyword\": \"retention\"}": 1,
+    "downstream-changes::{\"keyword\": \"callers\"}": 1,
+    "downstream-changes::{\"keyword\": \"imports\"}": 1,
+    "downstream-changes::{\"keyword\": \"downstream\"}": 1,
+    "engineering-safety-floor::{\"keyword\": \"production\"}": 2,
+    "engineering-safety-floor::{\"keyword\": \"deploy\"}": 3,
+    "engineering-safety-floor::{\"keyword\": \"schema change\"}": 1,
+    "scale-discipline::{\"keyword\": \"schema\"}": 4,
+    "source-discovery-gate::{\"keyword\": \"schema\"}": 4,
+    "engineering-safety-floor::{\"keyword\": \"rollback\"}": 1,
+    "external-code-graph-interop::{\"phrase\": \"who calls\"}": 1,
+    "external-code-graph-interop::{\"keyword\": \"scip\"}": 1,
+    "external-code-graph-interop::{\"phrase\": \"find references\"}": 1,
+    "scale-discipline::{\"keyword\": \"index\"}": 2,
+    "external-code-graph-interop::{\"keyword\": \"code graph\"}": 1,
+    "untrusted-input-defense::{\"keyword\": \"RAG\"}": 5,
+    "delegation-policy::{\"keyword\": \"analyze\"}": 2,
+    "external-reference-deep-dive::{\"keyword\": \"github.com/\"}": 2,
+    "external-reference-deep-dive::{\"phrase\": \"reference repo\"}": 1,
+    "fast-path-marker-visibility::{\"keyword\": \"fast-path\"}": 2,
+    "question-not-instruction::{\"keyword\": \"why\"}": 8,
+    "fast-path-marker-visibility::{\"keyword\": \"low-impact council\"}": 1,
+    "question-not-instruction::{\"phrase\": \"warum\"}": 3,
+    "finance-safety-floor::{\"keyword\": \"runway\"}": 1,
+    "finance-safety-floor::{\"keyword\": \"burn\"}": 1,
+    "domain-safety-disclaimer::{\"keyword\": \"valuation\"}": 1,
+    "domain-safety-disclaimer::{\"keyword\": \"DCF\"}": 1,
+    "finance-safety-floor::{\"keyword\": \"valuation\"}": 1,
+    "finance-safety-floor::{\"keyword\": \"DCF\"}": 1,
+    "finance-safety-floor::{\"keyword\": \"fundraise\"}": 1,
+    "finance-safety-floor::{\"keyword\": \"dilution\"}": 1,
+    "framework-neutrality-in-generic-skills::{\"phrase\": \"generic skill\"}": 1,
+    "framework-neutrality-in-generic-skills::{\"keyword\": \"Pest\"}": 1,
+    "laravel-routing::{\"keyword\": \"eloquent\"}": 2,
+    "framework-neutrality-in-generic-skills::{\"keyword\": \"Eloquent\"}": 2,
+    "git-history-discipline::{\"keyword\": \"git rebase\"}": 1,
+    "git-history-discipline::{\"phrase\": \"branch diverged\"}": 1,
+    "git-history-discipline::{\"keyword\": \"fixup\"}": 1,
+    "git-history-discipline::{\"keyword\": \"force-push\"}": 1,
+    "secret-vcs-guard::{\"keyword\": \"push\"}": 2,
+    "history-discipline::{\"keyword\": \"audit\"}": 2,
+    "history-discipline::{\"keyword\": \"audit log\"}": 2,
+    "history-discipline::{\"keyword\": \"history\"}": 1,
+    "history-discipline::{\"keyword\": \"event sourcing\"}": 1,
+    "history-discipline::{\"phrase\": \"wer hat was\"}": 1,
+    "icon-consistency::{\"keyword\": \"icon\"}": 3,
+    "icon-consistency::{\"keyword\": \"icon set\"}": 1,
+    "icon-consistency::{\"keyword\": \"lucide\"}": 1,
+    "icon-consistency::{\"keyword\": \"heroicons\"}": 1,
+    "image-likeness-and-rights::{\"keyword\": \"generate an image\"}": 1,
+    "image-likeness-and-rights::{\"keyword\": \"logo\"}": 2,
+    "image-likeness-and-rights::{\"path_prefix\": \"scripts/ai-image/adapters/\"}": 1,
+    "provider-lifecycle-discipline::{\"keyword\": \"adapter\"}": 1,
+    "provider-lifecycle-discipline::{\"path_prefix\": \"scripts/ai-image/adapters/\"}": 1,
+    "broken-access-control::{\"keyword\": \"tenant\"}": 2,
+    "security-sensitive-stop::{\"keyword\": \"tenant\"}": 2,
+    "invite-challenge::{\"keyword\": \"plan\"}": 5,
+    "minimal-safe-diff::{\"keyword\": \"rewrite\"}": 3,
+    "invite-challenge::{\"keyword\": \"architecture\"}": 1,
+    "laravel-routing::{\"keyword\": \"FormRequest\"}": 1,
+    "framework-neutrality-in-generic-skills::{\"keyword\": \"FormRequest\"}": 1,
+    "laravel-routing::{\"keyword\": \"laravel\"}": 3,
+    "scale-discipline::{\"keyword\": \"job\"}": 3,
+    "laravel-translations::{\"keyword\": \"translation\"}": 2,
+    "laravel-translations::{\"keyword\": \"trans(\"}": 1,
+    "php-coding::{\"file_pattern\": \"*.php\"}": 5,
+    "laravel-translations::{\"path_prefix\": \"lang/\"}": 1,
+    "domain-safety-disclaimer::{\"phrase\": \"review this contract\"}": 1,
+    "legal-safety-floor::{\"phrase\": \"review this contract\"}": 1,
+    "legal-safety-floor::{\"keyword\": \"clause\"}": 1,
+    "legal-safety-floor::{\"keyword\": \"DPA\"}": 1,
+    "legal-safety-floor::{\"keyword\": \"GDPR\"}": 1,
+    "lethal-trifecta-guard::{\"phrase\": \"fetch and send\"}": 1,
+    "lethal-trifecta-guard::{\"keyword\": \"untrusted content\"}": 1,
+    "untrusted-input-defense::{\"keyword\": \"untrusted\"}": 1,
+    "untrusted-input-defense::{\"phrase\": \"scraped\"}": 1,
+    "lethal-trifecta-guard::{\"keyword\": \"exfiltration\"}": 1,
+    "linked-projects-onboarding-gate::{\"keyword\": \"sibling repo\"}": 1,
+    "linked-projects-onboarding-gate::{\"keyword\": \"cross-repo\"}": 1,
+    "linked-projects-onboarding-gate::{\"keyword\": \"linked project\"}": 1,
+    "linked-projects-onboarding-gate::{\"path_prefix\": \".idea/modules.xml\"}": 1,
+    "low-impact-corpus-privacy-floor::{\"keyword\": \"low-impact corpus\"}": 2,
+    "low-impact-corpus-privacy-floor::{\"keyword\": \"learn-low-impact\"}": 1,
+    "cli-output-handling::{\"keyword\": \"tsc\"}": 1,
+    "low-impact-corpus-privacy-floor::{\"path_prefix\": \"agents/decisions/low-impact-decisions\"}": 1,
+    "upstream-proposal::{\"keyword\": \"upstream\"}": 3,
+    "markdown-safe-codeblocks::{\"keyword\": \"triple backticks\"}": 1,
+    "media-governance-routing::{\"keyword\": \"/video:\"}": 1,
+    "provider-lifecycle-discipline::{\"keyword\": \"/video:\"}": 1,
+    "image-likeness-and-rights::{\"keyword\": \"likeness\"}": 1,
+    "media-governance-routing::{\"keyword\": \"likeness\"}": 1,
+    "media-governance-routing::{\"keyword\": \"voice cloning\"}": 1,
+    "media-sync-ground-truth::{\"keyword\": \"music video\"}": 1,
+    "media-sync-ground-truth::{\"keyword\": \"vocal map\"}": 1,
+    "media-sync-ground-truth::{\"phrase\": \"mit den lippen\"}": 1,
+    "missing-tool-handling::{\"keyword\": \"command not found\"}": 2,
+    "missing-tool-handling::{\"keyword\": \"not installed\"}": 1,
+    "model-recommendation::{\"phrase\": \"which model\"}": 1,
+    "model-recommendation::{\"phrase\": \"new task\"}": 1,
+    "security-sensitive-stop::{\"keyword\": \"billing\"}": 2,
+    "model-recommendation::{\"keyword\": \"model_tier\"}": 1,
+    "no-attribution-footers::{\"keyword\": \"co-authored\"}": 3,
+    "no-decorative-emojis-in-git-surfaces::{\"keyword\": \"gh pr create\"}": 1,
+    "no-decorative-emojis-in-git-surfaces::{\"keyword\": \"git commit\"}": 2,
+    "no-decorative-emojis-in-git-surfaces::{\"keyword\": \"\\ud83d\\ude80\"}": 2,
+    "no-pr-progress-comments::{\"keyword\": \"gh pr comment\"}": 2,
+    "reviewer-awareness::{\"keyword\": \"reviewer\"}": 5,
+    "no-pr-progress-comments::{\"phrase\": \"status comment\"}": 1,
+    "prefer-enums-over-literals::{\"keyword\": \"status\"}": 4,
+    "no-roadmap-references::{\"path_prefix\": \"agents/roadmaps/\"}": 10,
+    "roadmap-progress-sync::{\"path_prefix\": \"agents/roadmaps/\"}": 10,
+    "source-confidentiality::{\"path_prefix\": \"agents/roadmaps/\"}": 10,
+    "cross-source-consistency::{\"keyword\": \"roadmap\"}": 8,
+    "roadmap-ci-steps-policy::{\"path_prefix\": \"agents/roadmaps/\"}": 10,
+    "no-roadmap-references::{\"path_prefix\": \"agents/runtime/council/sessions/\"}": 1,
+    "no-roadmap-references::{\"path_prefix\": \"agents/runtime/council/questions/\"}": 1,
+    "notes-first-reasoning::{\"keyword\": \"debug\"}": 2,
+    "scale-discipline::{\"keyword\": \"queue\"}": 2,
+    "think-before-action::{\"keyword\": \"debug\"}": 2,
+    "notes-first-reasoning::{\"keyword\": \"hypothesis\"}": 1,
+    "onboarding-gate::{\"keyword\": \"onboarding\"}": 2,
+    "onboarding-gate::{\"phrase\": \"first turn\"}": 1,
+    "onboarding-gate::{\"path_prefix\": \".agent-settings.yml\"}": 1,
+    "output-discipline::{\"keyword\": \"// rest of component\"}": 1,
+    "senior-engineering-discipline::{\"keyword\": \"component\"}": 2,
+    "ui-audit-gate::{\"keyword\": \"component\"}": 2,
+    "engineering-safety-floor::{\"keyword\": \"TRUNCATE\"}": 1,
+    "output-discipline::{\"keyword\": \"for brevity\"}": 1,
+    "output-discipline::{\"phrase\": \"similar pattern\"}": 1,
+    "persona-governance::{\"phrase\": \"add a persona\"}": 1,
+    "persona-governance::{\"path_prefix\": \"src/agent-src/personas/\"}": 1,
+    "persona-governance::{\"phrase\": \"review lens\"}": 1,
+    "php-coding::{\"keyword\": \"ecs\"}": 1,
+    "prefer-enums-over-literals::{\"keyword\": \"enum\"}": 1,
+    "preservation-guard::{\"keyword\": \"Iron Law\"}": 3,
+    "image-likeness-and-rights::{\"keyword\": \"/image:\"}": 1,
+    "media-governance-routing::{\"keyword\": \"/image:\"}": 1,
+    "provider-lifecycle-discipline::{\"keyword\": \"/image:\"}": 1,
+    "provider-lifecycle-discipline::{\"keyword\": \"provider\"}": 2,
+    "provider-lifecycle-discipline::{\"path_prefix\": \"scripts/ai-video/adapters/\"}": 1,
+    "question-not-instruction::{\"phrase\": \"what do you think\"}": 1,
+    "reviewer-awareness::{\"phrase\": \"suggest reviewers\"}": 1,
+    "roadmap-ci-steps-policy::{\"keyword\": \"task ci\"}": 2,
+    "user-interrupt-priority::{\"keyword\": \"continue\"}": 1,
+    "role-mode-adherence::{\"keyword\": \"active_role\"}": 1,
+    "role-mode-adherence::{\"keyword\": \"role-mode\"}": 2,
+    "runtime-safety::{\"keyword\": \"execution\"}": 1,
+    "runtime-safety::{\"keyword\": \"automated\"}": 1,
+    "runtime-safety::{\"keyword\": \"assisted\"}": 1,
+    "runtime-safety::{\"keyword\": \"handler\"}": 3,
+    "scale-discipline::{\"phrase\": \"review this migration\"}": 1,
+    "scale-discipline::{\"keyword\": \"N+1\"}": 1,
+    "scale-discipline::{\"keyword\": \"pagination\"}": 1,
+    "secret-vcs-guard::{\"keyword\": \".env\"}": 1,
+    "secret-vcs-guard::{\"keyword\": \"api key\"}": 1,
+    "secret-vcs-guard::{\"keyword\": \"git add\"}": 1,
+    "secret-vcs-guard::{\"keyword\": \"password\"}": 1,
+    "security-sensitive-stop::{\"keyword\": \"password\"}": 1,
+    "active-remediation::{\"keyword\": \"upgrade\"}": 1,
+    "senior-engineering-discipline::{\"keyword\": \"seeder\"}": 1,
+    "session-canary::{\"keyword\": \"canary\"}": 3,
+    "session-canary::{\"keyword\": \"canary_name\"}": 1,
+    "skill-improvement-trigger::{\"phrase\": \"after completing\"}": 1,
+    "skill-improvement-trigger::{\"keyword\": \"improvement\"}": 3,
+    "skill-improvement-trigger::{\"keyword\": \"pipeline\"}": 2,
+    "slash-command-routing-policy::{\"keyword\": \"/create-pr\"}": 2,
+    "slash-command-routing-policy::{\"keyword\": \"/commit\"}": 3,
+    "source-discovery-gate::{\"phrase\": \"which fields\"}": 1,
+    "source-of-truth::{\"path_prefix\": \"dist/agent-src/\"}": 3,
+    "source-of-truth::{\"path_prefix\": \".claude/\"}": 1,
+    "spreadsheet-source-quality::{\"phrase\": \"pull the numbers\"}": 1,
+    "spreadsheet-source-quality::{\"keyword\": \"stock price\"}": 1,
+    "spreadsheet-source-quality::{\"keyword\": \"revenue figures\"}": 1,
+    "strategy-safety-floor::{\"keyword\": \"moat\"}": 1,
+    "strategy-safety-floor::{\"phrase\": \"what's our moat\"}": 1,
+    "strategy-safety-floor::{\"phrase\": \"should we enter\"}": 1,
+    "strategy-safety-floor::{\"keyword\": \"positioning\"}": 1,
+    "symfony-routing::{\"keyword\": \"doctrine\"}": 3,
+    "symfony-routing::{\"keyword\": \"twig\"}": 1,
+    "symfony-routing::{\"keyword\": \"symfony\"}": 3,
+    "token-budget-discipline::{\"keyword\": \"rich skill\"}": 1,
+    "token-budget-discipline::{\"keyword\": \"token_budget_class\"}": 2,
+    "token-efficiency::{\"keyword\": \"minimize tool calls\"}": 2,
+    "token-efficiency::{\"phrase\": \"fetching logs\"}": 1,
+    "think-before-action::{\"keyword\": \"optimize\"}": 1,
+    "token-optimizer-maintenance::{\"keyword\": \"token-optimizer\"}": 1,
+    "token-optimizer-maintenance::{\"keyword\": \"rtk-output-filtering\"}": 1,
+    "token-optimizer-maintenance::{\"keyword\": \"markitdown\"}": 1,
+    "tool-safety::{\"keyword\": \"allowed_tools\"}": 2,
+    "tool-safety::{\"keyword\": \"tool registry\"}": 1,
+    "ui-audit-gate::{\"path_prefix\": \"resources/views/\"}": 2,
+    "framework-neutrality-in-generic-skills::{\"keyword\": \"Blade\"}": 1,
+    "untrusted-input-defense::{\"keyword\": \"fetched content\"}": 1,
+    "untrusted-input-defense::{\"keyword\": \"web page\"}": 1,
+    "upstream-proposal::{\"phrase\": \"after creating\"}": 1,
+    "artifact-drafting-protocol::{\"phrase\": \"neue Regel\"}": 1,
+    "user-interaction::{\"keyword\": \"option\"}": 1,
+    "user-interaction::{\"phrase\": \"what do you recommend\"}": 1,
+    "user-interaction::{\"phrase\": \"was empfiehlst du\"}": 1,
+    "user-interrupt-priority::{\"phrase\": \"stop that\"}": 1,
+    "user-interrupt-priority::{\"phrase\": \"mach stattdessen\"}": 1,
+    "invite-challenge::{\"keyword\": \"approach\"}": 2,
+    "notes-first-reasoning::{\"phrase\": \"should we use\"}": 1,
+    "symfony-routing::{\"keyword\": \"messenger\"}": 1,
+    "legal-safety-floor::{\"keyword\": \"processor\"}": 1,
+    "no-decorative-emojis-in-git-surfaces::{\"keyword\": \"\\u2728\"}": 1,
+    "no-decorative-emojis-in-git-surfaces::{\"keyword\": \"\\ud83e\\udd16\"}": 1,
+    "no-decorative-emojis-in-git-surfaces::{\"keyword\": \"\\ud83d\\udd25\"}": 1,
+    "roadmap-progress-sync::{\"command\": \"/roadmap:process-step\"}": 1,
+    "slash-command-routing-policy::{\"keyword\": \"/fix-ci\"}": 1
+  },
+  "per_rule_activations": {
+    "tier_2": {
+      "active-remediation": 10,
+      "code-comment-discipline": 25,
+      "domain-safety-pii": 21,
+      "improve-before-implement": 20,
+      "senior-engineering-discipline": 27,
+      "think-before-action": 30,
+      "broken-access-control": 17,
+      "legal-safety-floor": 10,
+      "artifact-drafting-protocol": 6,
+      "security-sensitive-stop": 14,
+      "commit-conventions": 26,
+      "secret-vcs-guard": 26,
+      "cross-source-consistency": 18,
+      "augment-edit-discipline": 18,
+      "markdown-safe-codeblocks": 36,
+      "framework-neutrality-in-generic-skills": 21,
+      "rule-type-governance": 5,
+      "persona-governance": 5,
+      "engineering-safety-floor": 12,
+      "prefer-enums-over-literals": 12,
+      "scale-discipline": 19,
+      "brand-consistency": 7,
+      "brand-source-of-truth": 5,
+      "source-discovery-gate": 9,
+      "cli-output-handling": 16,
+      "code-provenance": 3,
+      "minimal-safe-diff": 17,
+      "communication-through-line": 3,
+      "content-quoting-floor": 5,
+      "design-fidelity": 4,
+      "doc-screenshot-hygiene": 5,
+      "decision-revisit-gate": 3,
+      "delegation-policy": 5,
+      "invite-challenge": 11,
+      "user-interrupt-priority": 4,
+      "domain-adoption-policy": 10,
+      "lethal-trifecta-guard": 10,
+      "domain-safety-disclaimer": 5,
+      "domain-safety-retention": 3,
+      "downstream-changes": 3,
+      "external-code-graph-interop": 3,
+      "untrusted-input-defense": 8,
+      "external-reference-deep-dive": 3,
+      "finance-safety-floor": 3,
+      "git-history-discipline": 3,
+      "history-discipline": 4,
+      "icon-consistency": 3,
+      "image-likeness-and-rights": 6,
+      "provider-lifecycle-discipline": 5,
+      "laravel-translations": 4,
+      "linked-projects-onboarding-gate": 4,
+      "upstream-proposal": 4,
+      "media-governance-routing": 4,
+      "media-sync-ground-truth": 3,
+      "missing-tool-handling": 3,
+      "model-recommendation": 3,
+      "no-pr-progress-comments": 3,
+      "reviewer-awareness": 5,
+      "roadmap-ci-steps-policy": 12,
+      "notes-first-reasoning": 4,
+      "output-discipline": 3,
+      "ui-audit-gate": 4,
+      "preservation-guard": 3,
+      "role-mode-adherence": 3,
+      "runtime-safety": 4,
+      "session-canary": 3,
+      "skill-improvement-trigger": 3,
+      "spreadsheet-source-quality": 3,
+      "strategy-safety-floor": 3,
+      "token-budget-discipline": 3,
+      "token-efficiency": 3,
+      "token-optimizer-maintenance": 3,
+      "tool-safety": 3
+    },
+    "tier_1": {
+      "architecture": 16,
+      "question-not-instruction": 25,
+      "artifact-engagement-recording": 3,
+      "source-of-truth": 6,
+      "source-confidentiality": 25,
+      "autonomous-execution": 3,
+      "php-coding": 9,
+      "command-suggestion-policy": 3,
+      "slash-command-routing-policy": 7,
+      "context-hygiene": 3,
+      "copilot-routing": 4,
+      "devcontainer-routing": 5,
+      "docker-commands": 5,
+      "laravel-routing": 8,
+      "skill-quality": 7,
+      "fast-path-marker-visibility": 3,
+      "low-impact-corpus-privacy-floor": 4,
+      "no-attribution-footers": 3,
+      "no-decorative-emojis-in-git-surfaces": 7,
+      "no-roadmap-references": 12,
+      "roadmap-progress-sync": 10,
+      "onboarding-gate": 4,
+      "symfony-routing": 5,
+      "user-interaction": 3
+    }
+  },
+  "panel_b_untouchable_rules": [],
+  "panel_b_tier2_drivers": [],
+  "per_corpus_summary": [
+    {
+      "corpus": "matrix-derived",
+      "prompts_replayed": 302,
+      "unique_rules_activated": 97,
+      "top_rules": [
+        [
+          "markdown-safe-codeblocks",
+          29
+        ],
+        [
+          "think-before-action",
+          27
+        ],
+        [
+          "senior-engineering-discipline",
+          25
+        ],
+        [
+          "code-comment-discipline",
+          24
+        ],
+        [
+          "question-not-instruction",
+          24
+        ],
+        [
+          "secret-vcs-guard",
+          23
+        ],
+        [
+          "commit-conventions",
+          21
+        ],
+        [
+          "source-confidentiality",
+          21
+        ],
+        [
+          "domain-safety-pii",
+          20
+        ],
+        [
+          "framework-neutrality-in-generic-skills",
+          20
+        ]
+      ]
+    },
+    {
+      "corpus": "rc-agent-docs",
+      "prompts_replayed": 5,
+      "unique_rules_activated": 11,
+      "top_rules": [
+        [
+          "markdown-safe-codeblocks",
+          3
+        ],
+        [
+          "source-of-truth",
+          2
+        ],
+        [
+          "invite-challenge",
+          2
+        ],
+        [
+          "security-sensitive-stop",
+          1
+        ],
+        [
+          "question-not-instruction",
+          1
+        ],
+        [
+          "active-remediation",
+          1
+        ],
+        [
+          "code-comment-discipline",
+          1
+        ],
+        [
+          "improve-before-implement",
+          1
+        ],
+        [
+          "senior-engineering-discipline",
+          1
+        ],
+        [
+          "think-before-action",
+          1
+        ]
+      ]
+    },
+    {
+      "corpus": "rc-framework",
+      "prompts_replayed": 6,
+      "unique_rules_activated": 17,
+      "top_rules": [
+        [
+          "devcontainer-routing",
+          2
+        ],
+        [
+          "symfony-routing",
+          2
+        ],
+        [
+          "laravel-routing",
+          2
+        ],
+        [
+          "copilot-routing",
+          1
+        ],
+        [
+          "legal-safety-floor",
+          1
+        ],
+        [
+          "runtime-safety",
+          1
+        ],
+        [
+          "docker-commands",
+          1
+        ],
+        [
+          "php-coding",
+          1
+        ],
+        [
+          "cli-output-handling",
+          1
+        ],
+        [
+          "engineering-safety-floor",
+          1
+        ]
+      ]
+    },
+    {
+      "corpus": "rc-git",
+      "prompts_replayed": 4,
+      "unique_rules_activated": 9,
+      "top_rules": [
+        [
+          "commit-conventions",
+          3
+        ],
+        [
+          "no-decorative-emojis-in-git-surfaces",
+          3
+        ],
+        [
+          "secret-vcs-guard",
+          2
+        ],
+        [
+          "legal-safety-floor",
+          1
+        ],
+        [
+          "prefer-enums-over-literals",
+          1
+        ],
+        [
+          "architecture",
+          1
+        ],
+        [
+          "active-remediation",
+          1
+        ],
+        [
+          "minimal-safe-diff",
+          1
+        ],
+        [
+          "think-before-action",
+          1
+        ]
+      ]
+    },
+    {
+      "corpus": "rc-roadmap",
+      "prompts_replayed": 4,
+      "unique_rules_activated": 6,
+      "top_rules": [
+        [
+          "no-roadmap-references",
+          4
+        ],
+        [
+          "roadmap-progress-sync",
+          4
+        ],
+        [
+          "source-confidentiality",
+          4
+        ],
+        [
+          "markdown-safe-codeblocks",
+          4
+        ],
+        [
+          "roadmap-ci-steps-policy",
+          4
+        ],
+        [
+          "cross-source-consistency",
+          3
+        ]
+      ]
+    },
+    {
+      "corpus": "rc-slash",
+      "prompts_replayed": 4,
+      "unique_rules_activated": 7,
+      "top_rules": [
+        [
+          "slash-command-routing-policy",
+          3
+        ],
+        [
+          "commit-conventions",
+          2
+        ],
+        [
+          "cross-source-consistency",
+          1
+        ],
+        [
+          "domain-safety-pii",
+          1
+        ],
+        [
+          "secret-vcs-guard",
+          1
+        ],
+        [
+          "minimal-safe-diff",
+          1
+        ],
+        [
+          "think-before-action",
+          1
+        ]
+      ]
+    }
+  ],
+  "intended_vs_observed_match": [
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-active-remediation-01",
+      "intended": [
+        "active-remediation"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "active-remediation"
+      ],
+      "missed_intended": [],
+      "unintended_activations": [
+        "code-comment-discipline",
+        "domain-safety-pii",
+        "improve-before-implement",
+        "senior-engineering-discipline",
+        "think-before-action"
+      ]
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-active-remediation-02",
+      "intended": [
+        "active-remediation"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "active-remediation"
+      ],
+      "missed_intended": [],
+      "unintended_activations": [
+        "architecture"
+      ]
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-active-remediation-03",
+      "intended": [
+        "active-remediation"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "active-remediation"
+      ],
+      "missed_intended": [],
+      "unintended_activations": [
+        "domain-safety-pii",
+        "question-not-instruction"
+      ]
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-architecture-01",
+      "intended": [
+        "architecture"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "architecture"
+      ],
+      "missed_intended": [],
+      "unintended_activations": [
+        "broken-access-control",
+        "code-comment-discipline",
+        "domain-safety-pii",
+        "legal-safety-floor"
+      ]
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-architecture-02",
+      "intended": [
+        "architecture"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "architecture"
+      ],
+      "missed_intended": [],
+      "unintended_activations": []
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-architecture-03",
+      "intended": [
+        "architecture"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "architecture"
+      ],
+      "missed_intended": [],
+      "unintended_activations": [
+        "broken-access-control",
+        "legal-safety-floor"
+      ]
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-artifact-drafting-protocol-01",
+      "intended": [
+        "artifact-drafting-protocol"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "artifact-drafting-protocol"
+      ],
+      "missed_intended": [],
+      "unintended_activations": [
+        "security-sensitive-stop"
+      ]
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-artifact-drafting-protocol-02",
+      "intended": [
+        "artifact-drafting-protocol"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "artifact-drafting-protocol"
+      ],
+      "missed_intended": [],
+      "unintended_activations": [
+        "commit-conventions",
+        "secret-vcs-guard",
+        "security-sensitive-stop"
+      ]
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-artifact-drafting-protocol-03",
+      "intended": [
+        "artifact-drafting-protocol"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "artifact-drafting-protocol"
+      ],
+      "missed_intended": [],
+      "unintended_activations": []
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-artifact-engagement-recording-01",
+      "intended": [
+        "artifact-engagement-recording"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "artifact-engagement-recording"
+      ],
+      "missed_intended": [],
+      "unintended_activations": [
+        "code-comment-discipline",
+        "cross-source-consistency",
+        "improve-before-implement",
+        "senior-engineering-discipline",
+        "think-before-action"
+      ]
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-artifact-engagement-recording-02",
+      "intended": [
+        "artifact-engagement-recording"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "artifact-engagement-recording"
+      ],
+      "missed_intended": [],
+      "unintended_activations": []
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-artifact-engagement-recording-03",
+      "intended": [
+        "artifact-engagement-recording"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "artifact-engagement-recording"
+      ],
+      "missed_intended": [],
+      "unintended_activations": [
+        "question-not-instruction"
+      ]
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-augment-edit-discipline-01",
+      "intended": [
+        "augment-edit-discipline"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "augment-edit-discipline"
+      ],
+      "missed_intended": [],
+      "unintended_activations": []
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-augment-edit-discipline-02",
+      "intended": [
+        "augment-edit-discipline"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "augment-edit-discipline"
+      ],
+      "missed_intended": [],
+      "unintended_activations": [
+        "markdown-safe-codeblocks",
+        "source-of-truth"
+      ]
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-augment-edit-discipline-03",
+      "intended": [
+        "augment-edit-discipline"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "augment-edit-discipline"
+      ],
+      "missed_intended": [],
+      "unintended_activations": [
+        "framework-neutrality-in-generic-skills",
+        "markdown-safe-codeblocks",
+        "rule-type-governance",
+        "source-confidentiality"
+      ]
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-autonomous-execution-01",
+      "intended": [
+        "autonomous-execution"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "autonomous-execution"
+      ],
+      "missed_intended": [],
+      "unintended_activations": [
+        "persona-governance"
+      ]
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-autonomous-execution-02",
+      "intended": [
+        "autonomous-execution"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "autonomous-execution"
+      ],
+      "missed_intended": [],
+      "unintended_activations": [
+        "engineering-safety-floor",
+        "improve-before-implement",
+        "prefer-enums-over-literals",
+        "scale-discipline",
+        "senior-engineering-discipline"
+      ]
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-autonomous-execution-03",
+      "intended": [
+        "autonomous-execution"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "autonomous-execution"
+      ],
+      "missed_intended": [],
+      "unintended_activations": [
+        "broken-access-control"
+      ]
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-brand-consistency-01",
+      "intended": [
+        "brand-consistency"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "brand-consistency"
+      ],
+      "missed_intended": [],
+      "unintended_activations": []
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-brand-consistency-02",
+      "intended": [
+        "brand-consistency"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "brand-consistency"
+      ],
+      "missed_intended": [],
+      "unintended_activations": [
+        "brand-source-of-truth",
+        "secret-vcs-guard"
+      ]
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-brand-consistency-03",
+      "intended": [
+        "brand-consistency"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "brand-consistency"
+      ],
+      "missed_intended": [],
+      "unintended_activations": [
+        "brand-source-of-truth"
+      ]
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-brand-source-of-truth-01",
+      "intended": [
+        "brand-source-of-truth"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "brand-source-of-truth"
+      ],
+      "missed_intended": [],
+      "unintended_activations": [
+        "brand-consistency",
+        "secret-vcs-guard"
+      ]
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-brand-source-of-truth-02",
+      "intended": [
+        "brand-source-of-truth"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "brand-source-of-truth"
+      ],
+      "missed_intended": [],
+      "unintended_activations": [
+        "brand-consistency"
+      ]
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-brand-source-of-truth-03",
+      "intended": [
+        "brand-source-of-truth"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "brand-source-of-truth"
+      ],
+      "missed_intended": [],
+      "unintended_activations": [
+        "brand-consistency"
+      ]
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-broken-access-control-01",
+      "intended": [
+        "broken-access-control"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "broken-access-control"
+      ],
+      "missed_intended": [],
+      "unintended_activations": [
+        "domain-safety-pii",
+        "senior-engineering-discipline",
+        "source-discovery-gate"
+      ]
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-broken-access-control-02",
+      "intended": [
+        "broken-access-control"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "broken-access-control"
+      ],
+      "missed_intended": [],
+      "unintended_activations": []
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-broken-access-control-03",
+      "intended": [
+        "broken-access-control"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "broken-access-control"
+      ],
+      "missed_intended": [],
+      "unintended_activations": [
+        "architecture",
+        "legal-safety-floor",
+        "security-sensitive-stop"
+      ]
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-cli-output-handling-01",
+      "intended": [
+        "cli-output-handling"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "cli-output-handling"
+      ],
+      "missed_intended": [],
+      "unintended_activations": [
+        "framework-neutrality-in-generic-skills",
+        "php-coding"
+      ]
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-cli-output-handling-02",
+      "intended": [
+        "cli-output-handling"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "cli-output-handling"
+      ],
+      "missed_intended": [],
+      "unintended_activations": []
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-cli-output-handling-03",
+      "intended": [
+        "cli-output-handling"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "cli-output-handling"
+      ],
+      "missed_intended": [],
+      "unintended_activations": []
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-code-comment-discipline-01",
+      "intended": [
+        "code-comment-discipline"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "code-comment-discipline"
+      ],
+      "missed_intended": [],
+      "unintended_activations": []
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-code-comment-discipline-02",
+      "intended": [
+        "code-comment-discipline"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "code-comment-discipline"
+      ],
+      "missed_intended": [],
+      "unintended_activations": [
+        "commit-conventions",
+        "question-not-instruction"
+      ]
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-code-comment-discipline-03",
+      "intended": [
+        "code-comment-discipline"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "code-comment-discipline"
+      ],
+      "missed_intended": [],
+      "unintended_activations": []
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-code-provenance-01",
+      "intended": [
+        "code-provenance"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "code-provenance"
+      ],
+      "missed_intended": [],
+      "unintended_activations": [
+        "cli-output-handling"
+      ]
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-code-provenance-02",
+      "intended": [
+        "code-provenance"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "code-provenance"
+      ],
+      "missed_intended": [],
+      "unintended_activations": [
+        "domain-safety-pii"
+      ]
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-code-provenance-03",
+      "intended": [
+        "code-provenance"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "code-provenance"
+      ],
+      "missed_intended": [],
+      "unintended_activations": []
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-command-suggestion-policy-01",
+      "intended": [
+        "command-suggestion-policy"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "command-suggestion-policy"
+      ],
+      "missed_intended": [],
+      "unintended_activations": [
+        "slash-command-routing-policy"
+      ]
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-command-suggestion-policy-02",
+      "intended": [
+        "command-suggestion-policy"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "command-suggestion-policy"
+      ],
+      "missed_intended": [],
+      "unintended_activations": []
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-command-suggestion-policy-03",
+      "intended": [
+        "command-suggestion-policy"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "command-suggestion-policy"
+      ],
+      "missed_intended": [],
+      "unintended_activations": []
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-commit-conventions-01",
+      "intended": [
+        "commit-conventions"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "commit-conventions"
+      ],
+      "missed_intended": [],
+      "unintended_activations": [
+        "secret-vcs-guard"
+      ]
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-commit-conventions-02",
+      "intended": [
+        "commit-conventions"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "commit-conventions"
+      ],
+      "missed_intended": [],
+      "unintended_activations": [
+        "minimal-safe-diff",
+        "question-not-instruction",
+        "think-before-action"
+      ]
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-commit-conventions-03",
+      "intended": [
+        "commit-conventions"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "commit-conventions"
+      ],
+      "missed_intended": [],
+      "unintended_activations": [
+        "secret-vcs-guard"
+      ]
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-communication-through-line-01",
+      "intended": [
+        "communication-through-line"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "communication-through-line"
+      ],
+      "missed_intended": [],
+      "unintended_activations": [
+        "engineering-safety-floor",
+        "improve-before-implement",
+        "prefer-enums-over-literals",
+        "scale-discipline",
+        "senior-engineering-discipline"
+      ]
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-communication-through-line-02",
+      "intended": [
+        "communication-through-line"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "communication-through-line"
+      ],
+      "missed_intended": [],
+      "unintended_activations": []
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-communication-through-line-03",
+      "intended": [
+        "communication-through-line"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "communication-through-line"
+      ],
+      "missed_intended": [],
+      "unintended_activations": []
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-content-quoting-floor-01",
+      "intended": [
+        "content-quoting-floor"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "content-quoting-floor"
+      ],
+      "missed_intended": [],
+      "unintended_activations": []
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-content-quoting-floor-02",
+      "intended": [
+        "content-quoting-floor"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "content-quoting-floor"
+      ],
+      "missed_intended": [],
+      "unintended_activations": []
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-content-quoting-floor-03",
+      "intended": [
+        "content-quoting-floor"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "content-quoting-floor"
+      ],
+      "missed_intended": [],
+      "unintended_activations": []
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-context-hygiene-01",
+      "intended": [
+        "context-hygiene"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "context-hygiene"
+      ],
+      "missed_intended": [],
+      "unintended_activations": []
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-context-hygiene-02",
+      "intended": [
+        "context-hygiene"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "context-hygiene"
+      ],
+      "missed_intended": [],
+      "unintended_activations": [
+        "broken-access-control"
+      ]
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-context-hygiene-03",
+      "intended": [
+        "context-hygiene"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "context-hygiene"
+      ],
+      "missed_intended": [],
+      "unintended_activations": []
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-copilot-routing-01",
+      "intended": [
+        "copilot-routing"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "copilot-routing"
+      ],
+      "missed_intended": [],
+      "unintended_activations": []
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-copilot-routing-02",
+      "intended": [
+        "copilot-routing"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "copilot-routing"
+      ],
+      "missed_intended": [],
+      "unintended_activations": [
+        "commit-conventions",
+        "secret-vcs-guard"
+      ]
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-copilot-routing-03",
+      "intended": [
+        "copilot-routing"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "copilot-routing"
+      ],
+      "missed_intended": [],
+      "unintended_activations": []
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-cross-source-consistency-01",
+      "intended": [
+        "cross-source-consistency"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "cross-source-consistency"
+      ],
+      "missed_intended": [],
+      "unintended_activations": [
+        "design-fidelity"
+      ]
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-cross-source-consistency-02",
+      "intended": [
+        "cross-source-consistency"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "cross-source-consistency"
+      ],
+      "missed_intended": [],
+      "unintended_activations": []
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-cross-source-consistency-03",
+      "intended": [
+        "cross-source-consistency"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "cross-source-consistency"
+      ],
+      "missed_intended": [],
+      "unintended_activations": [
+        "doc-screenshot-hygiene"
+      ]
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-decision-revisit-gate-01",
+      "intended": [
+        "decision-revisit-gate"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "decision-revisit-gate"
+      ],
+      "missed_intended": [],
+      "unintended_activations": []
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-decision-revisit-gate-02",
+      "intended": [
+        "decision-revisit-gate"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "decision-revisit-gate"
+      ],
+      "missed_intended": [],
+      "unintended_activations": []
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-decision-revisit-gate-03",
+      "intended": [
+        "decision-revisit-gate"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "decision-revisit-gate"
+      ],
+      "missed_intended": [],
+      "unintended_activations": []
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-delegation-policy-01",
+      "intended": [
+        "delegation-policy"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "delegation-policy"
+      ],
+      "missed_intended": [],
+      "unintended_activations": [
+        "minimal-safe-diff",
+        "think-before-action"
+      ]
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-delegation-policy-02",
+      "intended": [
+        "delegation-policy"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "delegation-policy"
+      ],
+      "missed_intended": [],
+      "unintended_activations": [
+        "minimal-safe-diff",
+        "think-before-action"
+      ]
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-delegation-policy-03",
+      "intended": [
+        "delegation-policy"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "delegation-policy"
+      ],
+      "missed_intended": [],
+      "unintended_activations": []
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-design-fidelity-01",
+      "intended": [
+        "design-fidelity"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "design-fidelity"
+      ],
+      "missed_intended": [],
+      "unintended_activations": [
+        "invite-challenge"
+      ]
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-design-fidelity-02",
+      "intended": [
+        "design-fidelity"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "design-fidelity"
+      ],
+      "missed_intended": [],
+      "unintended_activations": []
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-design-fidelity-03",
+      "intended": [
+        "design-fidelity"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "design-fidelity"
+      ],
+      "missed_intended": [],
+      "unintended_activations": []
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-devcontainer-routing-01",
+      "intended": [
+        "devcontainer-routing"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "devcontainer-routing"
+      ],
+      "missed_intended": [],
+      "unintended_activations": []
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-devcontainer-routing-02",
+      "intended": [
+        "devcontainer-routing"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "devcontainer-routing"
+      ],
+      "missed_intended": [],
+      "unintended_activations": []
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-devcontainer-routing-03",
+      "intended": [
+        "devcontainer-routing"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "devcontainer-routing"
+      ],
+      "missed_intended": [],
+      "unintended_activations": [
+        "question-not-instruction",
+        "user-interrupt-priority"
+      ]
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-doc-screenshot-hygiene-01",
+      "intended": [
+        "doc-screenshot-hygiene"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "doc-screenshot-hygiene"
+      ],
+      "missed_intended": [],
+      "unintended_activations": [
+        "cross-source-consistency"
+      ]
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-doc-screenshot-hygiene-02",
+      "intended": [
+        "doc-screenshot-hygiene"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "doc-screenshot-hygiene"
+      ],
+      "missed_intended": [],
+      "unintended_activations": []
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-doc-screenshot-hygiene-03",
+      "intended": [
+        "doc-screenshot-hygiene"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "doc-screenshot-hygiene"
+      ],
+      "missed_intended": [],
+      "unintended_activations": [
+        "cross-source-consistency"
+      ]
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-doc-screenshot-hygiene-04",
+      "intended": [
+        "doc-screenshot-hygiene"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "doc-screenshot-hygiene"
+      ],
+      "missed_intended": [],
+      "unintended_activations": [
+        "source-confidentiality"
+      ]
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-docker-commands-01",
+      "intended": [
+        "docker-commands"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "docker-commands"
+      ],
+      "missed_intended": [],
+      "unintended_activations": [
+        "framework-neutrality-in-generic-skills",
+        "laravel-routing"
+      ]
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-docker-commands-02",
+      "intended": [
+        "docker-commands"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "docker-commands"
+      ],
+      "missed_intended": [],
+      "unintended_activations": [
+        "cli-output-handling"
+      ]
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-docker-commands-03",
+      "intended": [
+        "docker-commands"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "docker-commands"
+      ],
+      "missed_intended": [],
+      "unintended_activations": [
+        "cli-output-handling",
+        "domain-safety-pii"
+      ]
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-domain-adoption-policy-01",
+      "intended": [
+        "domain-adoption-policy"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "domain-adoption-policy"
+      ],
+      "missed_intended": [],
+      "unintended_activations": []
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-domain-adoption-policy-02",
+      "intended": [
+        "domain-adoption-policy"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "domain-adoption-policy"
+      ],
+      "missed_intended": [],
+      "unintended_activations": []
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-domain-adoption-policy-03",
+      "intended": [
+        "domain-adoption-policy"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "domain-adoption-policy"
+      ],
+      "missed_intended": [],
+      "unintended_activations": []
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-domain-adoption-policy-04",
+      "intended": [
+        "domain-adoption-policy"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "domain-adoption-policy"
+      ],
+      "missed_intended": [],
+      "unintended_activations": [
+        "augment-edit-discipline",
+        "framework-neutrality-in-generic-skills",
+        "lethal-trifecta-guard",
+        "markdown-safe-codeblocks",
+        "skill-quality",
+        "source-confidentiality"
+      ]
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-domain-safety-disclaimer-01",
+      "intended": [
+        "domain-safety-disclaimer"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "domain-safety-disclaimer"
+      ],
+      "missed_intended": [],
+      "unintended_activations": []
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-domain-safety-disclaimer-02",
+      "intended": [
+        "domain-safety-disclaimer"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "domain-safety-disclaimer"
+      ],
+      "missed_intended": [],
+      "unintended_activations": []
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-domain-safety-disclaimer-03",
+      "intended": [
+        "domain-safety-disclaimer"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "domain-safety-disclaimer"
+      ],
+      "missed_intended": [],
+      "unintended_activations": [
+        "architecture",
+        "question-not-instruction"
+      ]
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-domain-safety-pii-01",
+      "intended": [
+        "domain-safety-pii"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "domain-safety-pii"
+      ],
+      "missed_intended": [],
+      "unintended_activations": [
+        "cross-source-consistency"
+      ]
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-domain-safety-pii-02",
+      "intended": [
+        "domain-safety-pii"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "domain-safety-pii"
+      ],
+      "missed_intended": [],
+      "unintended_activations": []
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-domain-safety-pii-03",
+      "intended": [
+        "domain-safety-pii"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "domain-safety-pii"
+      ],
+      "missed_intended": [],
+      "unintended_activations": []
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-domain-safety-retention-01",
+      "intended": [
+        "domain-safety-retention"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "domain-safety-retention"
+      ],
+      "missed_intended": [],
+      "unintended_activations": [
+        "cross-source-consistency"
+      ]
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-domain-safety-retention-02",
+      "intended": [
+        "domain-safety-retention"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "domain-safety-retention"
+      ],
+      "missed_intended": [],
+      "unintended_activations": []
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-domain-safety-retention-03",
+      "intended": [
+        "domain-safety-retention"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "domain-safety-retention"
+      ],
+      "missed_intended": [],
+      "unintended_activations": [
+        "legal-safety-floor",
+        "scale-discipline"
+      ]
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-downstream-changes-01",
+      "intended": [
+        "downstream-changes"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "downstream-changes"
+      ],
+      "missed_intended": [],
+      "unintended_activations": [
+        "architecture",
+        "augment-edit-discipline"
+      ]
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-downstream-changes-02",
+      "intended": [
+        "downstream-changes"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "downstream-changes"
+      ],
+      "missed_intended": [],
+      "unintended_activations": [
+        "minimal-safe-diff",
+        "think-before-action"
+      ]
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-downstream-changes-03",
+      "intended": [
+        "downstream-changes"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "downstream-changes"
+      ],
+      "missed_intended": [],
+      "unintended_activations": []
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-engineering-safety-floor-01",
+      "intended": [
+        "engineering-safety-floor"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "engineering-safety-floor"
+      ],
+      "missed_intended": [],
+      "unintended_activations": []
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-engineering-safety-floor-02",
+      "intended": [
+        "engineering-safety-floor"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "engineering-safety-floor"
+      ],
+      "missed_intended": [],
+      "unintended_activations": [
+        "improve-before-implement",
+        "prefer-enums-over-literals",
+        "scale-discipline",
+        "senior-engineering-discipline",
+        "source-discovery-gate"
+      ]
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-engineering-safety-floor-03",
+      "intended": [
+        "engineering-safety-floor"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "engineering-safety-floor"
+      ],
+      "missed_intended": [],
+      "unintended_activations": []
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-external-code-graph-interop-01",
+      "intended": [
+        "external-code-graph-interop"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "external-code-graph-interop"
+      ],
+      "missed_intended": [],
+      "unintended_activations": [
+        "architecture",
+        "code-comment-discipline",
+        "domain-safety-pii"
+      ]
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-external-code-graph-interop-02",
+      "intended": [
+        "external-code-graph-interop"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "external-code-graph-interop"
+      ],
+      "missed_intended": [],
+      "unintended_activations": [
+        "scale-discipline"
+      ]
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-external-code-graph-interop-03",
+      "intended": [
+        "external-code-graph-interop"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "external-code-graph-interop"
+      ],
+      "missed_intended": [],
+      "unintended_activations": [
+        "untrusted-input-defense"
+      ]
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-external-reference-deep-dive-01",
+      "intended": [
+        "external-reference-deep-dive"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "external-reference-deep-dive"
+      ],
+      "missed_intended": [],
+      "unintended_activations": [
+        "cli-output-handling",
+        "delegation-policy"
+      ]
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-external-reference-deep-dive-02",
+      "intended": [
+        "external-reference-deep-dive"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "external-reference-deep-dive"
+      ],
+      "missed_intended": [],
+      "unintended_activations": []
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-external-reference-deep-dive-03",
+      "intended": [
+        "external-reference-deep-dive"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "external-reference-deep-dive"
+      ],
+      "missed_intended": [],
+      "unintended_activations": [
+        "cli-output-handling"
+      ]
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-fast-path-marker-visibility-01",
+      "intended": [
+        "fast-path-marker-visibility"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "fast-path-marker-visibility"
+      ],
+      "missed_intended": [],
+      "unintended_activations": [
+        "question-not-instruction"
+      ]
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-fast-path-marker-visibility-02",
+      "intended": [
+        "fast-path-marker-visibility"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "fast-path-marker-visibility"
+      ],
+      "missed_intended": [],
+      "unintended_activations": [
+        "content-quoting-floor"
+      ]
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-fast-path-marker-visibility-03",
+      "intended": [
+        "fast-path-marker-visibility"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "fast-path-marker-visibility"
+      ],
+      "missed_intended": [],
+      "unintended_activations": [
+        "question-not-instruction"
+      ]
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-finance-safety-floor-01",
+      "intended": [
+        "finance-safety-floor"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "finance-safety-floor"
+      ],
+      "missed_intended": [],
+      "unintended_activations": []
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-finance-safety-floor-02",
+      "intended": [
+        "finance-safety-floor"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "finance-safety-floor"
+      ],
+      "missed_intended": [],
+      "unintended_activations": [
+        "domain-safety-disclaimer"
+      ]
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-finance-safety-floor-03",
+      "intended": [
+        "finance-safety-floor"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "finance-safety-floor"
+      ],
+      "missed_intended": [],
+      "unintended_activations": []
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-framework-neutrality-in-generic-skills-01",
+      "intended": [
+        "framework-neutrality-in-generic-skills"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "framework-neutrality-in-generic-skills"
+      ],
+      "missed_intended": [],
+      "unintended_activations": [
+        "docker-commands",
+        "laravel-routing",
+        "legal-safety-floor"
+      ]
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-framework-neutrality-in-generic-skills-02",
+      "intended": [
+        "framework-neutrality-in-generic-skills"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "framework-neutrality-in-generic-skills"
+      ],
+      "missed_intended": [],
+      "unintended_activations": [
+        "augment-edit-discipline",
+        "domain-adoption-policy",
+        "lethal-trifecta-guard",
+        "markdown-safe-codeblocks",
+        "question-not-instruction",
+        "skill-quality",
+        "source-confidentiality"
+      ]
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-framework-neutrality-in-generic-skills-03",
+      "intended": [
+        "framework-neutrality-in-generic-skills"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "framework-neutrality-in-generic-skills"
+      ],
+      "missed_intended": [],
+      "unintended_activations": [
+        "augment-edit-discipline",
+        "laravel-routing",
+        "markdown-safe-codeblocks",
+        "rule-type-governance",
+        "source-confidentiality"
+      ]
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-git-history-discipline-01",
+      "intended": [
+        "git-history-discipline"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "git-history-discipline"
+      ],
+      "missed_intended": [],
+      "unintended_activations": [
+        "cli-output-handling"
+      ]
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-git-history-discipline-02",
+      "intended": [
+        "git-history-discipline"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "git-history-discipline"
+      ],
+      "missed_intended": [],
+      "unintended_activations": [
+        "commit-conventions"
+      ]
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-git-history-discipline-03",
+      "intended": [
+        "git-history-discipline"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "git-history-discipline"
+      ],
+      "missed_intended": [],
+      "unintended_activations": [
+        "commit-conventions",
+        "minimal-safe-diff",
+        "secret-vcs-guard",
+        "think-before-action"
+      ]
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-history-discipline-01",
+      "intended": [
+        "history-discipline"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "history-discipline"
+      ],
+      "missed_intended": [],
+      "unintended_activations": [
+        "domain-safety-pii"
+      ]
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-history-discipline-02",
+      "intended": [
+        "history-discipline"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "history-discipline"
+      ],
+      "missed_intended": [],
+      "unintended_activations": []
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-history-discipline-03",
+      "intended": [
+        "history-discipline"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "history-discipline"
+      ],
+      "missed_intended": [],
+      "unintended_activations": [
+        "untrusted-input-defense"
+      ]
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-icon-consistency-01",
+      "intended": [
+        "icon-consistency"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "icon-consistency"
+      ],
+      "missed_intended": [],
+      "unintended_activations": []
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-icon-consistency-02",
+      "intended": [
+        "icon-consistency"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "icon-consistency"
+      ],
+      "missed_intended": [],
+      "unintended_activations": []
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-icon-consistency-03",
+      "intended": [
+        "icon-consistency"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "icon-consistency"
+      ],
+      "missed_intended": [],
+      "unintended_activations": []
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-image-likeness-and-rights-01",
+      "intended": [
+        "image-likeness-and-rights"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "image-likeness-and-rights"
+      ],
+      "missed_intended": [],
+      "unintended_activations": []
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-image-likeness-and-rights-02",
+      "intended": [
+        "image-likeness-and-rights"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "image-likeness-and-rights"
+      ],
+      "missed_intended": [],
+      "unintended_activations": [
+        "domain-safety-pii",
+        "invite-challenge"
+      ]
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-image-likeness-and-rights-03",
+      "intended": [
+        "image-likeness-and-rights"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "image-likeness-and-rights"
+      ],
+      "missed_intended": [],
+      "unintended_activations": [
+        "domain-safety-pii"
+      ]
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-image-likeness-and-rights-04",
+      "intended": [
+        "image-likeness-and-rights"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "image-likeness-and-rights"
+      ],
+      "missed_intended": [],
+      "unintended_activations": [
+        "provider-lifecycle-discipline"
+      ]
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-improve-before-implement-01",
+      "intended": [
+        "improve-before-implement"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "improve-before-implement"
+      ],
+      "missed_intended": [],
+      "unintended_activations": [
+        "architecture",
+        "code-comment-discipline",
+        "senior-engineering-discipline",
+        "think-before-action"
+      ]
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-improve-before-implement-02",
+      "intended": [
+        "improve-before-implement"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "improve-before-implement"
+      ],
+      "missed_intended": [],
+      "unintended_activations": [
+        "active-remediation",
+        "code-comment-discipline",
+        "senior-engineering-discipline",
+        "think-before-action"
+      ]
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-improve-before-implement-03",
+      "intended": [
+        "improve-before-implement"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "improve-before-implement"
+      ],
+      "missed_intended": [],
+      "unintended_activations": [
+        "broken-access-control",
+        "engineering-safety-floor",
+        "prefer-enums-over-literals",
+        "scale-discipline",
+        "security-sensitive-stop",
+        "senior-engineering-discipline"
+      ]
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-invite-challenge-01",
+      "intended": [
+        "invite-challenge"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "invite-challenge"
+      ],
+      "missed_intended": [],
+      "unintended_activations": [
+        "minimal-safe-diff"
+      ]
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-invite-challenge-02",
+      "intended": [
+        "invite-challenge"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "invite-challenge"
+      ],
+      "missed_intended": [],
+      "unintended_activations": [
+        "architecture"
+      ]
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-invite-challenge-03",
+      "intended": [
+        "invite-challenge"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "invite-challenge"
+      ],
+      "missed_intended": [],
+      "unintended_activations": []
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-laravel-routing-01",
+      "intended": [
+        "laravel-routing"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "laravel-routing"
+      ],
+      "missed_intended": [],
+      "unintended_activations": [
+        "framework-neutrality-in-generic-skills"
+      ]
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-laravel-routing-02",
+      "intended": [
+        "laravel-routing"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "laravel-routing"
+      ],
+      "missed_intended": [],
+      "unintended_activations": [
+        "broken-access-control",
+        "framework-neutrality-in-generic-skills",
+        "senior-engineering-discipline",
+        "source-discovery-gate"
+      ]
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-laravel-routing-03",
+      "intended": [
+        "laravel-routing"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "laravel-routing"
+      ],
+      "missed_intended": [],
+      "unintended_activations": [
+        "scale-discipline"
+      ]
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-laravel-translations-01",
+      "intended": [
+        "laravel-translations"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "laravel-translations"
+      ],
+      "missed_intended": [],
+      "unintended_activations": []
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-laravel-translations-02",
+      "intended": [
+        "laravel-translations"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "laravel-translations"
+      ],
+      "missed_intended": [],
+      "unintended_activations": [
+        "question-not-instruction"
+      ]
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-laravel-translations-03",
+      "intended": [
+        "laravel-translations"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "laravel-translations"
+      ],
+      "missed_intended": [],
+      "unintended_activations": []
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-laravel-translations-04",
+      "intended": [
+        "laravel-translations"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "laravel-translations"
+      ],
+      "missed_intended": [],
+      "unintended_activations": [
+        "php-coding"
+      ]
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-legal-safety-floor-01",
+      "intended": [
+        "legal-safety-floor"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "legal-safety-floor"
+      ],
+      "missed_intended": [],
+      "unintended_activations": [
+        "domain-safety-disclaimer"
+      ]
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-legal-safety-floor-02",
+      "intended": [
+        "legal-safety-floor"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "legal-safety-floor"
+      ],
+      "missed_intended": [],
+      "unintended_activations": []
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-legal-safety-floor-03",
+      "intended": [
+        "legal-safety-floor"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "legal-safety-floor"
+      ],
+      "missed_intended": [],
+      "unintended_activations": []
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-lethal-trifecta-guard-01",
+      "intended": [
+        "lethal-trifecta-guard"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "lethal-trifecta-guard"
+      ],
+      "missed_intended": [],
+      "unintended_activations": [
+        "security-sensitive-stop"
+      ]
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-lethal-trifecta-guard-02",
+      "intended": [
+        "lethal-trifecta-guard"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "lethal-trifecta-guard"
+      ],
+      "missed_intended": [],
+      "unintended_activations": [
+        "untrusted-input-defense"
+      ]
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-lethal-trifecta-guard-03",
+      "intended": [
+        "lethal-trifecta-guard"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "lethal-trifecta-guard"
+      ],
+      "missed_intended": [],
+      "unintended_activations": []
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-lethal-trifecta-guard-04",
+      "intended": [
+        "lethal-trifecta-guard"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "lethal-trifecta-guard"
+      ],
+      "missed_intended": [],
+      "unintended_activations": [
+        "artifact-drafting-protocol",
+        "augment-edit-discipline",
+        "domain-adoption-policy",
+        "framework-neutrality-in-generic-skills",
+        "markdown-safe-codeblocks",
+        "skill-quality",
+        "source-confidentiality"
+      ]
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-linked-projects-onboarding-gate-01",
+      "intended": [
+        "linked-projects-onboarding-gate"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "linked-projects-onboarding-gate"
+      ],
+      "missed_intended": [],
+      "unintended_activations": []
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-linked-projects-onboarding-gate-02",
+      "intended": [
+        "linked-projects-onboarding-gate"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "linked-projects-onboarding-gate"
+      ],
+      "missed_intended": [],
+      "unintended_activations": []
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-linked-projects-onboarding-gate-03",
+      "intended": [
+        "linked-projects-onboarding-gate"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "linked-projects-onboarding-gate"
+      ],
+      "missed_intended": [],
+      "unintended_activations": []
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-linked-projects-onboarding-gate-04",
+      "intended": [
+        "linked-projects-onboarding-gate"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "linked-projects-onboarding-gate"
+      ],
+      "missed_intended": [],
+      "unintended_activations": [
+        "architecture"
+      ]
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-low-impact-corpus-privacy-floor-01",
+      "intended": [
+        "low-impact-corpus-privacy-floor"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "low-impact-corpus-privacy-floor"
+      ],
+      "missed_intended": [],
+      "unintended_activations": []
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-low-impact-corpus-privacy-floor-02",
+      "intended": [
+        "low-impact-corpus-privacy-floor"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "low-impact-corpus-privacy-floor"
+      ],
+      "missed_intended": [],
+      "unintended_activations": []
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-low-impact-corpus-privacy-floor-03",
+      "intended": [
+        "low-impact-corpus-privacy-floor"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "low-impact-corpus-privacy-floor"
+      ],
+      "missed_intended": [],
+      "unintended_activations": [
+        "cli-output-handling",
+        "question-not-instruction"
+      ]
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-low-impact-corpus-privacy-floor-04",
+      "intended": [
+        "low-impact-corpus-privacy-floor"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "low-impact-corpus-privacy-floor"
+      ],
+      "missed_intended": [],
+      "unintended_activations": [
+        "markdown-safe-codeblocks",
+        "upstream-proposal"
+      ]
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-markdown-safe-codeblocks-01",
+      "intended": [
+        "markdown-safe-codeblocks"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "markdown-safe-codeblocks"
+      ],
+      "missed_intended": [],
+      "unintended_activations": []
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-markdown-safe-codeblocks-02",
+      "intended": [
+        "markdown-safe-codeblocks"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "markdown-safe-codeblocks"
+      ],
+      "missed_intended": [],
+      "unintended_activations": [
+        "source-confidentiality"
+      ]
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-markdown-safe-codeblocks-03",
+      "intended": [
+        "markdown-safe-codeblocks"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "markdown-safe-codeblocks"
+      ],
+      "missed_intended": [],
+      "unintended_activations": []
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-media-governance-routing-01",
+      "intended": [
+        "media-governance-routing"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "media-governance-routing"
+      ],
+      "missed_intended": [],
+      "unintended_activations": [
+        "provider-lifecycle-discipline"
+      ]
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-media-governance-routing-02",
+      "intended": [
+        "media-governance-routing"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "media-governance-routing"
+      ],
+      "missed_intended": [],
+      "unintended_activations": [
+        "image-likeness-and-rights"
+      ]
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-media-governance-routing-03",
+      "intended": [
+        "media-governance-routing"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "media-governance-routing"
+      ],
+      "missed_intended": [],
+      "unintended_activations": []
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-media-sync-ground-truth-01",
+      "intended": [
+        "media-sync-ground-truth"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "media-sync-ground-truth"
+      ],
+      "missed_intended": [],
+      "unintended_activations": []
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-media-sync-ground-truth-02",
+      "intended": [
+        "media-sync-ground-truth"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "media-sync-ground-truth"
+      ],
+      "missed_intended": [],
+      "unintended_activations": []
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-media-sync-ground-truth-03",
+      "intended": [
+        "media-sync-ground-truth"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "media-sync-ground-truth"
+      ],
+      "missed_intended": [],
+      "unintended_activations": []
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-minimal-safe-diff-01",
+      "intended": [
+        "minimal-safe-diff"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "minimal-safe-diff"
+      ],
+      "missed_intended": [],
+      "unintended_activations": [
+        "domain-safety-pii",
+        "think-before-action"
+      ]
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-minimal-safe-diff-02",
+      "intended": [
+        "minimal-safe-diff"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "minimal-safe-diff"
+      ],
+      "missed_intended": [],
+      "unintended_activations": [
+        "architecture",
+        "commit-conventions",
+        "question-not-instruction"
+      ]
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-minimal-safe-diff-03",
+      "intended": [
+        "minimal-safe-diff"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "minimal-safe-diff"
+      ],
+      "missed_intended": [],
+      "unintended_activations": [
+        "think-before-action"
+      ]
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-missing-tool-handling-01",
+      "intended": [
+        "missing-tool-handling"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "missing-tool-handling"
+      ],
+      "missed_intended": [],
+      "unintended_activations": [
+        "untrusted-input-defense"
+      ]
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-missing-tool-handling-02",
+      "intended": [
+        "missing-tool-handling"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "missing-tool-handling"
+      ],
+      "missed_intended": [],
+      "unintended_activations": []
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-missing-tool-handling-03",
+      "intended": [
+        "missing-tool-handling"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "missing-tool-handling"
+      ],
+      "missed_intended": [],
+      "unintended_activations": []
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-model-recommendation-01",
+      "intended": [
+        "model-recommendation"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "model-recommendation"
+      ],
+      "missed_intended": [],
+      "unintended_activations": [
+        "active-remediation",
+        "broken-access-control",
+        "code-comment-discipline",
+        "improve-before-implement",
+        "question-not-instruction",
+        "senior-engineering-discipline",
+        "think-before-action"
+      ]
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-model-recommendation-02",
+      "intended": [
+        "model-recommendation"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "model-recommendation"
+      ],
+      "missed_intended": [],
+      "unintended_activations": [
+        "security-sensitive-stop"
+      ]
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-model-recommendation-03",
+      "intended": [
+        "model-recommendation"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "model-recommendation"
+      ],
+      "missed_intended": [],
+      "unintended_activations": []
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-no-attribution-footers-01",
+      "intended": [
+        "no-attribution-footers"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "no-attribution-footers"
+      ],
+      "missed_intended": [],
+      "unintended_activations": [
+        "commit-conventions",
+        "secret-vcs-guard",
+        "security-sensitive-stop"
+      ]
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-no-attribution-footers-02",
+      "intended": [
+        "no-attribution-footers"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "no-attribution-footers"
+      ],
+      "missed_intended": [],
+      "unintended_activations": [
+        "commit-conventions",
+        "secret-vcs-guard",
+        "security-sensitive-stop"
+      ]
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-no-attribution-footers-03",
+      "intended": [
+        "no-attribution-footers"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "no-attribution-footers"
+      ],
+      "missed_intended": [],
+      "unintended_activations": [
+        "commit-conventions",
+        "question-not-instruction",
+        "secret-vcs-guard",
+        "security-sensitive-stop"
+      ]
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-no-decorative-emojis-in-git-surfaces-01",
+      "intended": [
+        "no-decorative-emojis-in-git-surfaces"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "no-decorative-emojis-in-git-surfaces"
+      ],
+      "missed_intended": [],
+      "unintended_activations": [
+        "active-remediation",
+        "code-comment-discipline",
+        "improve-before-implement",
+        "senior-engineering-discipline",
+        "think-before-action"
+      ]
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-no-decorative-emojis-in-git-surfaces-02",
+      "intended": [
+        "no-decorative-emojis-in-git-surfaces"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "no-decorative-emojis-in-git-surfaces"
+      ],
+      "missed_intended": [],
+      "unintended_activations": [
+        "cli-output-handling",
+        "commit-conventions",
+        "secret-vcs-guard"
+      ]
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-no-decorative-emojis-in-git-surfaces-03",
+      "intended": [
+        "no-decorative-emojis-in-git-surfaces"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "no-decorative-emojis-in-git-surfaces"
+      ],
+      "missed_intended": [],
+      "unintended_activations": [
+        "cli-output-handling",
+        "commit-conventions",
+        "secret-vcs-guard"
+      ]
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-no-decorative-emojis-in-git-surfaces-04",
+      "intended": [
+        "no-decorative-emojis-in-git-surfaces"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "no-decorative-emojis-in-git-surfaces"
+      ],
+      "missed_intended": [],
+      "unintended_activations": [
+        "commit-conventions"
+      ]
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-no-pr-progress-comments-01",
+      "intended": [
+        "no-pr-progress-comments"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "no-pr-progress-comments"
+      ],
+      "missed_intended": [],
+      "unintended_activations": [
+        "code-comment-discipline",
+        "reviewer-awareness"
+      ]
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-no-pr-progress-comments-02",
+      "intended": [
+        "no-pr-progress-comments"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "no-pr-progress-comments"
+      ],
+      "missed_intended": [],
+      "unintended_activations": [
+        "code-comment-discipline",
+        "minimal-safe-diff",
+        "prefer-enums-over-literals",
+        "question-not-instruction",
+        "think-before-action"
+      ]
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-no-pr-progress-comments-03",
+      "intended": [
+        "no-pr-progress-comments"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "no-pr-progress-comments"
+      ],
+      "missed_intended": [],
+      "unintended_activations": [
+        "code-comment-discipline"
+      ]
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-no-roadmap-references-01",
+      "intended": [
+        "no-roadmap-references"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "no-roadmap-references"
+      ],
+      "missed_intended": [],
+      "unintended_activations": [
+        "cross-source-consistency",
+        "markdown-safe-codeblocks",
+        "roadmap-ci-steps-policy",
+        "roadmap-progress-sync",
+        "source-confidentiality"
+      ]
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-no-roadmap-references-02",
+      "intended": [
+        "no-roadmap-references"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "no-roadmap-references"
+      ],
+      "missed_intended": [],
+      "unintended_activations": [
+        "broken-access-control"
+      ]
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-no-roadmap-references-03",
+      "intended": [
+        "no-roadmap-references"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "no-roadmap-references"
+      ],
+      "missed_intended": [],
+      "unintended_activations": [
+        "cross-source-consistency",
+        "markdown-safe-codeblocks",
+        "roadmap-ci-steps-policy",
+        "roadmap-progress-sync",
+        "source-confidentiality"
+      ]
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-no-roadmap-references-04",
+      "intended": [
+        "no-roadmap-references"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "no-roadmap-references"
+      ],
+      "missed_intended": [],
+      "unintended_activations": [
+        "markdown-safe-codeblocks"
+      ]
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-notes-first-reasoning-01",
+      "intended": [
+        "notes-first-reasoning"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "notes-first-reasoning"
+      ],
+      "missed_intended": [],
+      "unintended_activations": [
+        "question-not-instruction",
+        "scale-discipline",
+        "think-before-action"
+      ]
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-notes-first-reasoning-02",
+      "intended": [
+        "notes-first-reasoning"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "notes-first-reasoning"
+      ],
+      "missed_intended": [],
+      "unintended_activations": []
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-notes-first-reasoning-03",
+      "intended": [
+        "notes-first-reasoning"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "notes-first-reasoning"
+      ],
+      "missed_intended": [],
+      "unintended_activations": [
+        "think-before-action"
+      ]
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-onboarding-gate-01",
+      "intended": [
+        "onboarding-gate"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "onboarding-gate"
+      ],
+      "missed_intended": [],
+      "unintended_activations": []
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-onboarding-gate-02",
+      "intended": [
+        "onboarding-gate"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "onboarding-gate"
+      ],
+      "missed_intended": [],
+      "unintended_activations": []
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-onboarding-gate-03",
+      "intended": [
+        "onboarding-gate"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "onboarding-gate"
+      ],
+      "missed_intended": [],
+      "unintended_activations": []
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-onboarding-gate-04",
+      "intended": [
+        "onboarding-gate"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "onboarding-gate"
+      ],
+      "missed_intended": [],
+      "unintended_activations": [
+        "question-not-instruction"
+      ]
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-output-discipline-01",
+      "intended": [
+        "output-discipline"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "output-discipline"
+      ],
+      "missed_intended": [],
+      "unintended_activations": [
+        "senior-engineering-discipline",
+        "ui-audit-gate"
+      ]
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-output-discipline-02",
+      "intended": [
+        "output-discipline"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "output-discipline"
+      ],
+      "missed_intended": [],
+      "unintended_activations": [
+        "code-comment-discipline",
+        "engineering-safety-floor"
+      ]
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-output-discipline-03",
+      "intended": [
+        "output-discipline"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "output-discipline"
+      ],
+      "missed_intended": [],
+      "unintended_activations": []
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-persona-governance-01",
+      "intended": [
+        "persona-governance"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "persona-governance"
+      ],
+      "missed_intended": [],
+      "unintended_activations": []
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-persona-governance-02",
+      "intended": [
+        "persona-governance"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "persona-governance"
+      ],
+      "missed_intended": [],
+      "unintended_activations": [
+        "augment-edit-discipline",
+        "markdown-safe-codeblocks"
+      ]
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-persona-governance-03",
+      "intended": [
+        "persona-governance"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "persona-governance"
+      ],
+      "missed_intended": [],
+      "unintended_activations": []
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-php-coding-01",
+      "intended": [
+        "php-coding"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "php-coding"
+      ],
+      "missed_intended": [],
+      "unintended_activations": [
+        "cli-output-handling",
+        "framework-neutrality-in-generic-skills",
+        "minimal-safe-diff",
+        "think-before-action"
+      ]
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-php-coding-02",
+      "intended": [
+        "php-coding"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "php-coding"
+      ],
+      "missed_intended": [],
+      "unintended_activations": [
+        "minimal-safe-diff",
+        "secret-vcs-guard",
+        "think-before-action"
+      ]
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-php-coding-03",
+      "intended": [
+        "php-coding"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "php-coding"
+      ],
+      "missed_intended": [],
+      "unintended_activations": [
+        "cli-output-handling",
+        "framework-neutrality-in-generic-skills"
+      ]
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-php-coding-04",
+      "intended": [
+        "php-coding"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "php-coding"
+      ],
+      "missed_intended": [],
+      "unintended_activations": [
+        "active-remediation",
+        "code-comment-discipline",
+        "improve-before-implement",
+        "senior-engineering-discipline",
+        "think-before-action"
+      ]
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-prefer-enums-over-literals-01",
+      "intended": [
+        "prefer-enums-over-literals"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "prefer-enums-over-literals"
+      ],
+      "missed_intended": [],
+      "unintended_activations": []
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-prefer-enums-over-literals-02",
+      "intended": [
+        "prefer-enums-over-literals"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "prefer-enums-over-literals"
+      ],
+      "missed_intended": [],
+      "unintended_activations": []
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-prefer-enums-over-literals-03",
+      "intended": [
+        "prefer-enums-over-literals"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "prefer-enums-over-literals"
+      ],
+      "missed_intended": [],
+      "unintended_activations": []
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-preservation-guard-01",
+      "intended": [
+        "preservation-guard"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "preservation-guard"
+      ],
+      "missed_intended": [],
+      "unintended_activations": []
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-preservation-guard-02",
+      "intended": [
+        "preservation-guard"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "preservation-guard"
+      ],
+      "missed_intended": [],
+      "unintended_activations": [
+        "content-quoting-floor"
+      ]
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-preservation-guard-03",
+      "intended": [
+        "preservation-guard"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "preservation-guard"
+      ],
+      "missed_intended": [],
+      "unintended_activations": []
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-provider-lifecycle-discipline-01",
+      "intended": [
+        "provider-lifecycle-discipline"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "provider-lifecycle-discipline"
+      ],
+      "missed_intended": [],
+      "unintended_activations": [
+        "image-likeness-and-rights",
+        "media-governance-routing"
+      ]
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-provider-lifecycle-discipline-02",
+      "intended": [
+        "provider-lifecycle-discipline"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "provider-lifecycle-discipline"
+      ],
+      "missed_intended": [],
+      "unintended_activations": []
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-provider-lifecycle-discipline-03",
+      "intended": [
+        "provider-lifecycle-discipline"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "provider-lifecycle-discipline"
+      ],
+      "missed_intended": [],
+      "unintended_activations": [
+        "scale-discipline"
+      ]
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-question-not-instruction-01",
+      "intended": [
+        "question-not-instruction"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "question-not-instruction"
+      ],
+      "missed_intended": [],
+      "unintended_activations": [
+        "code-comment-discipline",
+        "cross-source-consistency",
+        "improve-before-implement",
+        "senior-engineering-discipline",
+        "think-before-action"
+      ]
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-question-not-instruction-02",
+      "intended": [
+        "question-not-instruction"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "question-not-instruction"
+      ],
+      "missed_intended": [],
+      "unintended_activations": [
+        "code-comment-discipline"
+      ]
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-question-not-instruction-03",
+      "intended": [
+        "question-not-instruction"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "question-not-instruction"
+      ],
+      "missed_intended": [],
+      "unintended_activations": []
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-reviewer-awareness-01",
+      "intended": [
+        "reviewer-awareness"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "reviewer-awareness"
+      ],
+      "missed_intended": [],
+      "unintended_activations": []
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-reviewer-awareness-02",
+      "intended": [
+        "reviewer-awareness"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "reviewer-awareness"
+      ],
+      "missed_intended": [],
+      "unintended_activations": [
+        "architecture",
+        "minimal-safe-diff"
+      ]
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-reviewer-awareness-03",
+      "intended": [
+        "reviewer-awareness"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "reviewer-awareness"
+      ],
+      "missed_intended": [],
+      "unintended_activations": []
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-roadmap-ci-steps-policy-01",
+      "intended": [
+        "roadmap-ci-steps-policy"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "roadmap-ci-steps-policy"
+      ],
+      "missed_intended": [],
+      "unintended_activations": [
+        "invite-challenge",
+        "markdown-safe-codeblocks",
+        "no-roadmap-references",
+        "roadmap-progress-sync",
+        "source-confidentiality"
+      ]
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-roadmap-ci-steps-policy-02",
+      "intended": [
+        "roadmap-ci-steps-policy"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "roadmap-ci-steps-policy"
+      ],
+      "missed_intended": [],
+      "unintended_activations": []
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-roadmap-ci-steps-policy-03",
+      "intended": [
+        "roadmap-ci-steps-policy"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "roadmap-ci-steps-policy"
+      ],
+      "missed_intended": [],
+      "unintended_activations": []
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-roadmap-progress-sync-01",
+      "intended": [
+        "roadmap-progress-sync"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "roadmap-progress-sync"
+      ],
+      "missed_intended": [],
+      "unintended_activations": [
+        "markdown-safe-codeblocks",
+        "no-roadmap-references",
+        "roadmap-ci-steps-policy",
+        "source-confidentiality"
+      ]
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-roadmap-progress-sync-02",
+      "intended": [
+        "roadmap-progress-sync"
+      ],
+      "replay_opaque": [],
+      "hit": [],
+      "missed_intended": [
+        "roadmap-progress-sync"
+      ],
+      "unintended_activations": [
+        "invite-challenge",
+        "user-interrupt-priority"
+      ]
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-roadmap-progress-sync-03",
+      "intended": [
+        "roadmap-progress-sync"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "roadmap-progress-sync"
+      ],
+      "missed_intended": [],
+      "unintended_activations": [
+        "cross-source-consistency",
+        "markdown-safe-codeblocks",
+        "no-roadmap-references",
+        "roadmap-ci-steps-policy",
+        "source-confidentiality"
+      ]
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-role-mode-adherence-01",
+      "intended": [
+        "role-mode-adherence"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "role-mode-adherence"
+      ],
+      "missed_intended": [],
+      "unintended_activations": [
+        "broken-access-control",
+        "reviewer-awareness"
+      ]
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-role-mode-adherence-02",
+      "intended": [
+        "role-mode-adherence"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "role-mode-adherence"
+      ],
+      "missed_intended": [],
+      "unintended_activations": [
+        "question-not-instruction"
+      ]
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-role-mode-adherence-03",
+      "intended": [
+        "role-mode-adherence"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "role-mode-adherence"
+      ],
+      "missed_intended": [],
+      "unintended_activations": []
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-rule-type-governance-01",
+      "intended": [
+        "rule-type-governance"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "rule-type-governance"
+      ],
+      "missed_intended": [],
+      "unintended_activations": [
+        "augment-edit-discipline",
+        "framework-neutrality-in-generic-skills",
+        "markdown-safe-codeblocks",
+        "source-confidentiality"
+      ]
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-rule-type-governance-02",
+      "intended": [
+        "rule-type-governance"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "rule-type-governance"
+      ],
+      "missed_intended": [],
+      "unintended_activations": [
+        "augment-edit-discipline",
+        "framework-neutrality-in-generic-skills",
+        "markdown-safe-codeblocks",
+        "source-confidentiality"
+      ]
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-rule-type-governance-03",
+      "intended": [
+        "rule-type-governance"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "rule-type-governance"
+      ],
+      "missed_intended": [],
+      "unintended_activations": [
+        "augment-edit-discipline",
+        "framework-neutrality-in-generic-skills",
+        "markdown-safe-codeblocks",
+        "source-confidentiality"
+      ]
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-runtime-safety-01",
+      "intended": [
+        "runtime-safety"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "runtime-safety"
+      ],
+      "missed_intended": [],
+      "unintended_activations": []
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-runtime-safety-02",
+      "intended": [
+        "runtime-safety"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "runtime-safety"
+      ],
+      "missed_intended": [],
+      "unintended_activations": []
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-runtime-safety-03",
+      "intended": [
+        "runtime-safety"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "runtime-safety"
+      ],
+      "missed_intended": [],
+      "unintended_activations": []
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-scale-discipline-01",
+      "intended": [
+        "scale-discipline"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "scale-discipline"
+      ],
+      "missed_intended": [],
+      "unintended_activations": [
+        "domain-safety-pii",
+        "engineering-safety-floor",
+        "history-discipline",
+        "improve-before-implement",
+        "prefer-enums-over-literals",
+        "senior-engineering-discipline"
+      ]
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-scale-discipline-02",
+      "intended": [
+        "scale-discipline"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "scale-discipline"
+      ],
+      "missed_intended": [],
+      "unintended_activations": [
+        "broken-access-control",
+        "senior-engineering-discipline",
+        "source-discovery-gate"
+      ]
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-scale-discipline-03",
+      "intended": [
+        "scale-discipline"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "scale-discipline"
+      ],
+      "missed_intended": [],
+      "unintended_activations": [
+        "untrusted-input-defense"
+      ]
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-secret-vcs-guard-01",
+      "intended": [
+        "secret-vcs-guard"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "secret-vcs-guard"
+      ],
+      "missed_intended": [],
+      "unintended_activations": [
+        "commit-conventions"
+      ]
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-secret-vcs-guard-02",
+      "intended": [
+        "secret-vcs-guard"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "secret-vcs-guard"
+      ],
+      "missed_intended": [],
+      "unintended_activations": [
+        "cli-output-handling"
+      ]
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-secret-vcs-guard-03",
+      "intended": [
+        "secret-vcs-guard"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "secret-vcs-guard"
+      ],
+      "missed_intended": [],
+      "unintended_activations": [
+        "commit-conventions"
+      ]
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-security-sensitive-stop-01",
+      "intended": [
+        "security-sensitive-stop"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "security-sensitive-stop"
+      ],
+      "missed_intended": [],
+      "unintended_activations": [
+        "architecture",
+        "secret-vcs-guard"
+      ]
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-security-sensitive-stop-02",
+      "intended": [
+        "security-sensitive-stop"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "security-sensitive-stop"
+      ],
+      "missed_intended": [],
+      "unintended_activations": []
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-security-sensitive-stop-03",
+      "intended": [
+        "security-sensitive-stop"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "security-sensitive-stop"
+      ],
+      "missed_intended": [],
+      "unintended_activations": [
+        "active-remediation",
+        "domain-safety-pii",
+        "invite-challenge"
+      ]
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-senior-engineering-discipline-01",
+      "intended": [
+        "senior-engineering-discipline"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "senior-engineering-discipline"
+      ],
+      "missed_intended": [],
+      "unintended_activations": [
+        "broken-access-control",
+        "code-comment-discipline",
+        "improve-before-implement",
+        "source-discovery-gate",
+        "think-before-action"
+      ]
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-senior-engineering-discipline-02",
+      "intended": [
+        "senior-engineering-discipline"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "senior-engineering-discipline"
+      ],
+      "missed_intended": [],
+      "unintended_activations": []
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-senior-engineering-discipline-03",
+      "intended": [
+        "senior-engineering-discipline"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "senior-engineering-discipline"
+      ],
+      "missed_intended": [],
+      "unintended_activations": [
+        "architecture",
+        "code-comment-discipline",
+        "improve-before-implement",
+        "scale-discipline",
+        "think-before-action"
+      ]
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-session-canary-01",
+      "intended": [
+        "session-canary"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "session-canary"
+      ],
+      "missed_intended": [],
+      "unintended_activations": [
+        "question-not-instruction"
+      ]
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-session-canary-02",
+      "intended": [
+        "session-canary"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "session-canary"
+      ],
+      "missed_intended": [],
+      "unintended_activations": [
+        "persona-governance"
+      ]
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-session-canary-03",
+      "intended": [
+        "session-canary"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "session-canary"
+      ],
+      "missed_intended": [],
+      "unintended_activations": [
+        "broken-access-control"
+      ]
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-skill-improvement-trigger-01",
+      "intended": [
+        "skill-improvement-trigger"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "skill-improvement-trigger"
+      ],
+      "missed_intended": [],
+      "unintended_activations": []
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-skill-improvement-trigger-02",
+      "intended": [
+        "skill-improvement-trigger"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "skill-improvement-trigger"
+      ],
+      "missed_intended": [],
+      "unintended_activations": []
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-skill-improvement-trigger-03",
+      "intended": [
+        "skill-improvement-trigger"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "skill-improvement-trigger"
+      ],
+      "missed_intended": [],
+      "unintended_activations": []
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-skill-quality-01",
+      "intended": [
+        "skill-quality"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "skill-quality"
+      ],
+      "missed_intended": [],
+      "unintended_activations": [
+        "augment-edit-discipline",
+        "domain-adoption-policy",
+        "framework-neutrality-in-generic-skills",
+        "lethal-trifecta-guard",
+        "markdown-safe-codeblocks",
+        "source-confidentiality"
+      ]
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-skill-quality-02",
+      "intended": [
+        "skill-quality"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "skill-quality"
+      ],
+      "missed_intended": [],
+      "unintended_activations": [
+        "augment-edit-discipline",
+        "domain-adoption-policy",
+        "framework-neutrality-in-generic-skills",
+        "lethal-trifecta-guard",
+        "markdown-safe-codeblocks",
+        "scale-discipline",
+        "source-confidentiality",
+        "source-discovery-gate"
+      ]
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-skill-quality-03",
+      "intended": [
+        "skill-quality"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "skill-quality"
+      ],
+      "missed_intended": [],
+      "unintended_activations": [
+        "augment-edit-discipline",
+        "domain-adoption-policy",
+        "framework-neutrality-in-generic-skills",
+        "lethal-trifecta-guard",
+        "markdown-safe-codeblocks",
+        "source-confidentiality"
+      ]
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-slash-command-routing-policy-01",
+      "intended": [
+        "slash-command-routing-policy"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "slash-command-routing-policy"
+      ],
+      "missed_intended": [],
+      "unintended_activations": [
+        "commit-conventions"
+      ]
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-slash-command-routing-policy-02",
+      "intended": [
+        "slash-command-routing-policy"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "slash-command-routing-policy"
+      ],
+      "missed_intended": [],
+      "unintended_activations": [
+        "commit-conventions",
+        "secret-vcs-guard"
+      ]
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-slash-command-routing-policy-03",
+      "intended": [
+        "slash-command-routing-policy"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "slash-command-routing-policy"
+      ],
+      "missed_intended": [],
+      "unintended_activations": [
+        "commit-conventions",
+        "secret-vcs-guard"
+      ]
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-source-confidentiality-01",
+      "intended": [
+        "source-confidentiality"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "source-confidentiality"
+      ],
+      "missed_intended": [],
+      "unintended_activations": [
+        "markdown-safe-codeblocks",
+        "no-roadmap-references",
+        "roadmap-ci-steps-policy",
+        "roadmap-progress-sync"
+      ]
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-source-confidentiality-02",
+      "intended": [
+        "source-confidentiality"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "source-confidentiality"
+      ],
+      "missed_intended": [],
+      "unintended_activations": [
+        "delegation-policy",
+        "markdown-safe-codeblocks"
+      ]
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-source-confidentiality-03",
+      "intended": [
+        "source-confidentiality"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "source-confidentiality"
+      ],
+      "missed_intended": [],
+      "unintended_activations": [
+        "augment-edit-discipline",
+        "domain-adoption-policy",
+        "framework-neutrality-in-generic-skills",
+        "lethal-trifecta-guard",
+        "markdown-safe-codeblocks",
+        "skill-quality"
+      ]
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-source-discovery-gate-01",
+      "intended": [
+        "source-discovery-gate"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "source-discovery-gate"
+      ],
+      "missed_intended": [],
+      "unintended_activations": [
+        "broken-access-control",
+        "senior-engineering-discipline"
+      ]
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-source-discovery-gate-02",
+      "intended": [
+        "source-discovery-gate"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "source-discovery-gate"
+      ],
+      "missed_intended": [],
+      "unintended_activations": [
+        "scale-discipline"
+      ]
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-source-discovery-gate-03",
+      "intended": [
+        "source-discovery-gate"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "source-discovery-gate"
+      ],
+      "missed_intended": [],
+      "unintended_activations": [
+        "scale-discipline"
+      ]
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-source-of-truth-01",
+      "intended": [
+        "source-of-truth"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "source-of-truth"
+      ],
+      "missed_intended": [],
+      "unintended_activations": [
+        "markdown-safe-codeblocks",
+        "minimal-safe-diff",
+        "think-before-action"
+      ]
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-source-of-truth-02",
+      "intended": [
+        "source-of-truth"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "source-of-truth"
+      ],
+      "missed_intended": [],
+      "unintended_activations": [
+        "augment-edit-discipline",
+        "markdown-safe-codeblocks"
+      ]
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-source-of-truth-03",
+      "intended": [
+        "source-of-truth"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "source-of-truth"
+      ],
+      "missed_intended": [],
+      "unintended_activations": [
+        "markdown-safe-codeblocks",
+        "question-not-instruction"
+      ]
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-spreadsheet-source-quality-01",
+      "intended": [
+        "spreadsheet-source-quality"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "spreadsheet-source-quality"
+      ],
+      "missed_intended": [],
+      "unintended_activations": []
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-spreadsheet-source-quality-02",
+      "intended": [
+        "spreadsheet-source-quality"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "spreadsheet-source-quality"
+      ],
+      "missed_intended": [],
+      "unintended_activations": []
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-spreadsheet-source-quality-03",
+      "intended": [
+        "spreadsheet-source-quality"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "spreadsheet-source-quality"
+      ],
+      "missed_intended": [],
+      "unintended_activations": []
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-strategy-safety-floor-01",
+      "intended": [
+        "strategy-safety-floor"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "strategy-safety-floor"
+      ],
+      "missed_intended": [],
+      "unintended_activations": []
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-strategy-safety-floor-02",
+      "intended": [
+        "strategy-safety-floor"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "strategy-safety-floor"
+      ],
+      "missed_intended": [],
+      "unintended_activations": []
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-strategy-safety-floor-03",
+      "intended": [
+        "strategy-safety-floor"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "strategy-safety-floor"
+      ],
+      "missed_intended": [],
+      "unintended_activations": []
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-symfony-routing-01",
+      "intended": [
+        "symfony-routing"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "symfony-routing"
+      ],
+      "missed_intended": [],
+      "unintended_activations": [
+        "domain-safety-pii"
+      ]
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-symfony-routing-02",
+      "intended": [
+        "symfony-routing"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "symfony-routing"
+      ],
+      "missed_intended": [],
+      "unintended_activations": []
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-symfony-routing-03",
+      "intended": [
+        "symfony-routing"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "symfony-routing"
+      ],
+      "missed_intended": [],
+      "unintended_activations": []
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-think-before-action-01",
+      "intended": [
+        "think-before-action"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "think-before-action"
+      ],
+      "missed_intended": [],
+      "unintended_activations": [
+        "code-comment-discipline",
+        "cross-source-consistency",
+        "improve-before-implement",
+        "senior-engineering-discipline"
+      ]
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-think-before-action-02",
+      "intended": [
+        "think-before-action"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "think-before-action"
+      ],
+      "missed_intended": [],
+      "unintended_activations": [
+        "minimal-safe-diff"
+      ]
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-think-before-action-03",
+      "intended": [
+        "think-before-action"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "think-before-action"
+      ],
+      "missed_intended": [],
+      "unintended_activations": [
+        "code-comment-discipline",
+        "improve-before-implement",
+        "senior-engineering-discipline"
+      ]
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-token-budget-discipline-01",
+      "intended": [
+        "token-budget-discipline"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "token-budget-discipline"
+      ],
+      "missed_intended": [],
+      "unintended_activations": [
+        "invite-challenge"
+      ]
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-token-budget-discipline-02",
+      "intended": [
+        "token-budget-discipline"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "token-budget-discipline"
+      ],
+      "missed_intended": [],
+      "unintended_activations": [
+        "code-comment-discipline",
+        "secret-vcs-guard"
+      ]
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-token-budget-discipline-03",
+      "intended": [
+        "token-budget-discipline"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "token-budget-discipline"
+      ],
+      "missed_intended": [],
+      "unintended_activations": [
+        "code-comment-discipline",
+        "secret-vcs-guard"
+      ]
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-token-efficiency-01",
+      "intended": [
+        "token-efficiency"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "token-efficiency"
+      ],
+      "missed_intended": [],
+      "unintended_activations": []
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-token-efficiency-02",
+      "intended": [
+        "token-efficiency"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "token-efficiency"
+      ],
+      "missed_intended": [],
+      "unintended_activations": [
+        "domain-safety-pii"
+      ]
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-token-efficiency-03",
+      "intended": [
+        "token-efficiency"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "token-efficiency"
+      ],
+      "missed_intended": [],
+      "unintended_activations": []
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-token-optimizer-maintenance-01",
+      "intended": [
+        "token-optimizer-maintenance"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "token-optimizer-maintenance"
+      ],
+      "missed_intended": [],
+      "unintended_activations": [
+        "domain-safety-pii",
+        "secret-vcs-guard",
+        "think-before-action"
+      ]
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-token-optimizer-maintenance-02",
+      "intended": [
+        "token-optimizer-maintenance"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "token-optimizer-maintenance"
+      ],
+      "missed_intended": [],
+      "unintended_activations": [
+        "augment-edit-discipline",
+        "commit-conventions",
+        "secret-vcs-guard"
+      ]
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-token-optimizer-maintenance-03",
+      "intended": [
+        "token-optimizer-maintenance"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "token-optimizer-maintenance"
+      ],
+      "missed_intended": [],
+      "unintended_activations": [
+        "domain-safety-pii"
+      ]
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-tool-safety-01",
+      "intended": [
+        "tool-safety"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "tool-safety"
+      ],
+      "missed_intended": [],
+      "unintended_activations": []
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-tool-safety-02",
+      "intended": [
+        "tool-safety"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "tool-safety"
+      ],
+      "missed_intended": [],
+      "unintended_activations": []
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-tool-safety-03",
+      "intended": [
+        "tool-safety"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "tool-safety"
+      ],
+      "missed_intended": [],
+      "unintended_activations": [
+        "engineering-safety-floor"
+      ]
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-ui-audit-gate-01",
+      "intended": [
+        "ui-audit-gate"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "ui-audit-gate"
+      ],
+      "missed_intended": [],
+      "unintended_activations": [
+        "senior-engineering-discipline"
+      ]
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-ui-audit-gate-02",
+      "intended": [
+        "ui-audit-gate"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "ui-audit-gate"
+      ],
+      "missed_intended": [],
+      "unintended_activations": [
+        "brand-consistency",
+        "php-coding"
+      ]
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-ui-audit-gate-03",
+      "intended": [
+        "ui-audit-gate"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "ui-audit-gate"
+      ],
+      "missed_intended": [],
+      "unintended_activations": [
+        "framework-neutrality-in-generic-skills",
+        "php-coding"
+      ]
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-untrusted-input-defense-01",
+      "intended": [
+        "untrusted-input-defense"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "untrusted-input-defense"
+      ],
+      "missed_intended": [],
+      "unintended_activations": [
+        "question-not-instruction"
+      ]
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-untrusted-input-defense-02",
+      "intended": [
+        "untrusted-input-defense"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "untrusted-input-defense"
+      ],
+      "missed_intended": [],
+      "unintended_activations": []
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-untrusted-input-defense-03",
+      "intended": [
+        "untrusted-input-defense"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "untrusted-input-defense"
+      ],
+      "missed_intended": [],
+      "unintended_activations": []
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-upstream-proposal-01",
+      "intended": [
+        "upstream-proposal"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "upstream-proposal"
+      ],
+      "missed_intended": [],
+      "unintended_activations": [
+        "artifact-drafting-protocol"
+      ]
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-upstream-proposal-02",
+      "intended": [
+        "upstream-proposal"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "upstream-proposal"
+      ],
+      "missed_intended": [],
+      "unintended_activations": []
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-upstream-proposal-03",
+      "intended": [
+        "upstream-proposal"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "upstream-proposal"
+      ],
+      "missed_intended": [],
+      "unintended_activations": [
+        "artifact-drafting-protocol"
+      ]
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-user-interaction-01",
+      "intended": [
+        "user-interaction"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "user-interaction"
+      ],
+      "missed_intended": [],
+      "unintended_activations": [
+        "scale-discipline"
+      ]
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-user-interaction-02",
+      "intended": [
+        "user-interaction"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "user-interaction"
+      ],
+      "missed_intended": [],
+      "unintended_activations": []
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-user-interaction-03",
+      "intended": [
+        "user-interaction"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "user-interaction"
+      ],
+      "missed_intended": [],
+      "unintended_activations": [
+        "engineering-safety-floor",
+        "improve-before-implement",
+        "prefer-enums-over-literals",
+        "scale-discipline",
+        "senior-engineering-discipline"
+      ]
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-user-interrupt-priority-01",
+      "intended": [
+        "user-interrupt-priority"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "user-interrupt-priority"
+      ],
+      "missed_intended": [],
+      "unintended_activations": [
+        "engineering-safety-floor"
+      ]
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-user-interrupt-priority-02",
+      "intended": [
+        "user-interrupt-priority"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "user-interrupt-priority"
+      ],
+      "missed_intended": [],
+      "unintended_activations": []
+    },
+    {
+      "corpus": "matrix-derived",
+      "task": "rm-user-interrupt-priority-03",
+      "intended": [
+        "user-interrupt-priority"
+      ],
+      "replay_opaque": [],
+      "hit": [],
+      "missed_intended": [
+        "user-interrupt-priority"
+      ],
+      "unintended_activations": [
+        "cross-source-consistency"
+      ]
+    },
+    {
+      "corpus": "rc-agent-docs",
+      "task": "agent-docs-edits-01",
+      "intended": [
+        "source-of-truth"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "source-of-truth"
+      ],
+      "missed_intended": [],
+      "unintended_activations": [
+        "markdown-safe-codeblocks",
+        "security-sensitive-stop"
+      ]
+    },
+    {
+      "corpus": "rc-agent-docs",
+      "task": "agent-docs-edits-02",
+      "intended": [
+        "skill-quality"
+      ],
+      "replay_opaque": [],
+      "hit": [],
+      "missed_intended": [
+        "skill-quality"
+      ],
+      "unintended_activations": [
+        "markdown-safe-codeblocks"
+      ]
+    },
+    {
+      "corpus": "rc-agent-docs",
+      "task": "agent-docs-edits-04",
+      "intended": [],
+      "replay_opaque": [
+        "user-interaction"
+      ],
+      "hit": [],
+      "missed_intended": [],
+      "unintended_activations": [
+        "active-remediation",
+        "code-comment-discipline",
+        "improve-before-implement",
+        "invite-challenge",
+        "question-not-instruction",
+        "senior-engineering-discipline",
+        "think-before-action"
+      ]
+    },
+    {
+      "corpus": "rc-agent-docs",
+      "task": "agent-docs-edits-05",
+      "intended": [
+        "source-of-truth"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "source-of-truth"
+      ],
+      "missed_intended": [],
+      "unintended_activations": [
+        "markdown-safe-codeblocks"
+      ]
+    },
+    {
+      "corpus": "rc-agent-docs",
+      "task": "agent-docs-edits-06",
+      "intended": [],
+      "replay_opaque": [
+        "user-interaction"
+      ],
+      "hit": [],
+      "missed_intended": [],
+      "unintended_activations": [
+        "invite-challenge",
+        "notes-first-reasoning"
+      ]
+    },
+    {
+      "corpus": "rc-framework",
+      "task": "framework-routing-01",
+      "intended": [
+        "copilot-routing"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "copilot-routing"
+      ],
+      "missed_intended": [],
+      "unintended_activations": []
+    },
+    {
+      "corpus": "rc-framework",
+      "task": "framework-routing-02",
+      "intended": [
+        "devcontainer-routing"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "devcontainer-routing"
+      ],
+      "missed_intended": [],
+      "unintended_activations": []
+    },
+    {
+      "corpus": "rc-framework",
+      "task": "framework-routing-03",
+      "intended": [
+        "symfony-routing"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "symfony-routing"
+      ],
+      "missed_intended": [],
+      "unintended_activations": [
+        "legal-safety-floor",
+        "runtime-safety"
+      ]
+    },
+    {
+      "corpus": "rc-framework",
+      "task": "framework-routing-04",
+      "intended": [
+        "docker-commands",
+        "php-coding"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "docker-commands",
+        "php-coding"
+      ],
+      "missed_intended": [],
+      "unintended_activations": [
+        "cli-output-handling",
+        "engineering-safety-floor",
+        "framework-neutrality-in-generic-skills",
+        "improve-before-implement",
+        "laravel-routing",
+        "prefer-enums-over-literals",
+        "scale-discipline",
+        "senior-engineering-discipline"
+      ]
+    },
+    {
+      "corpus": "rc-framework",
+      "task": "framework-routing-05",
+      "intended": [
+        "devcontainer-routing"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "devcontainer-routing"
+      ],
+      "missed_intended": [],
+      "unintended_activations": [
+        "laravel-routing"
+      ]
+    },
+    {
+      "corpus": "rc-framework",
+      "task": "framework-routing-06",
+      "intended": [
+        "symfony-routing"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "symfony-routing"
+      ],
+      "missed_intended": [],
+      "unintended_activations": [
+        "broken-access-control",
+        "security-sensitive-stop"
+      ]
+    },
+    {
+      "corpus": "rc-git",
+      "task": "git-surface-01",
+      "intended": [],
+      "replay_opaque": [
+        "no-attribution-footers"
+      ],
+      "hit": [],
+      "missed_intended": [],
+      "unintended_activations": [
+        "commit-conventions",
+        "legal-safety-floor"
+      ]
+    },
+    {
+      "corpus": "rc-git",
+      "task": "git-surface-02",
+      "intended": [],
+      "replay_opaque": [
+        "no-decorative-emojis-in-git-surfaces"
+      ],
+      "hit": [],
+      "missed_intended": [],
+      "unintended_activations": [
+        "commit-conventions",
+        "secret-vcs-guard"
+      ]
+    },
+    {
+      "corpus": "rc-git",
+      "task": "git-surface-03",
+      "intended": [],
+      "replay_opaque": [
+        "no-attribution-footers",
+        "no-decorative-emojis-in-git-surfaces"
+      ],
+      "hit": [],
+      "missed_intended": [],
+      "unintended_activations": [
+        "prefer-enums-over-literals"
+      ]
+    },
+    {
+      "corpus": "rc-git",
+      "task": "git-surface-04",
+      "intended": [],
+      "replay_opaque": [
+        "no-decorative-emojis-in-git-surfaces"
+      ],
+      "hit": [],
+      "missed_intended": [],
+      "unintended_activations": [
+        "active-remediation",
+        "architecture",
+        "commit-conventions",
+        "minimal-safe-diff",
+        "secret-vcs-guard",
+        "think-before-action"
+      ]
+    },
+    {
+      "corpus": "rc-roadmap",
+      "task": "roadmap-ops-01",
+      "intended": [
+        "roadmap-progress-sync"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "roadmap-progress-sync"
+      ],
+      "missed_intended": [],
+      "unintended_activations": [
+        "cross-source-consistency",
+        "markdown-safe-codeblocks",
+        "no-roadmap-references",
+        "roadmap-ci-steps-policy",
+        "source-confidentiality"
+      ]
+    },
+    {
+      "corpus": "rc-roadmap",
+      "task": "roadmap-ops-02",
+      "intended": [
+        "roadmap-progress-sync"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "roadmap-progress-sync"
+      ],
+      "missed_intended": [],
+      "unintended_activations": [
+        "markdown-safe-codeblocks",
+        "no-roadmap-references",
+        "roadmap-ci-steps-policy",
+        "source-confidentiality"
+      ]
+    },
+    {
+      "corpus": "rc-roadmap",
+      "task": "roadmap-ops-03",
+      "intended": [
+        "no-roadmap-references"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "no-roadmap-references"
+      ],
+      "missed_intended": [],
+      "unintended_activations": [
+        "cross-source-consistency",
+        "markdown-safe-codeblocks",
+        "roadmap-ci-steps-policy",
+        "roadmap-progress-sync",
+        "source-confidentiality"
+      ]
+    },
+    {
+      "corpus": "rc-roadmap",
+      "task": "roadmap-ops-04",
+      "intended": [
+        "roadmap-progress-sync"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "roadmap-progress-sync"
+      ],
+      "missed_intended": [],
+      "unintended_activations": [
+        "cross-source-consistency",
+        "markdown-safe-codeblocks",
+        "no-roadmap-references",
+        "roadmap-ci-steps-policy",
+        "source-confidentiality"
+      ]
+    },
+    {
+      "corpus": "rc-slash",
+      "task": "slash-commands-01",
+      "intended": [],
+      "replay_opaque": [
+        "command-suggestion-policy"
+      ],
+      "hit": [],
+      "missed_intended": [],
+      "unintended_activations": [
+        "cross-source-consistency"
+      ]
+    },
+    {
+      "corpus": "rc-slash",
+      "task": "slash-commands-02",
+      "intended": [
+        "slash-command-routing-policy"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "slash-command-routing-policy"
+      ],
+      "missed_intended": [],
+      "unintended_activations": [
+        "commit-conventions"
+      ]
+    },
+    {
+      "corpus": "rc-slash",
+      "task": "slash-commands-03",
+      "intended": [
+        "slash-command-routing-policy"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "slash-command-routing-policy"
+      ],
+      "missed_intended": [],
+      "unintended_activations": [
+        "commit-conventions",
+        "domain-safety-pii",
+        "secret-vcs-guard"
+      ]
+    },
+    {
+      "corpus": "rc-slash",
+      "task": "slash-commands-04",
+      "intended": [
+        "slash-command-routing-policy"
+      ],
+      "replay_opaque": [],
+      "hit": [
+        "slash-command-routing-policy"
+      ],
+      "missed_intended": [],
+      "unintended_activations": [
+        "minimal-safe-diff",
+        "think-before-action"
+      ]
+    }
+  ],
+  "unintended_activation_histogram": [
+    [
+      "markdown-safe-codeblocks",
+      33
+    ],
+    [
+      "think-before-action",
+      27
+    ],
+    [
+      "senior-engineering-discipline",
+      24
+    ],
+    [
+      "commit-conventions",
+      23
+    ],
+    [
+      "secret-vcs-guard",
+      23
+    ],
+    [
+      "code-comment-discipline",
+      22
+    ],
+    [
+      "question-not-instruction",
+      22
+    ],
+    [
+      "source-confidentiality",
+      22
+    ],
+    [
+      "domain-safety-pii",
+      18
+    ],
+    [
+      "framework-neutrality-in-generic-skills",
+      18
+    ],
+    [
+      "improve-before-implement",
+      17
+    ],
+    [
+      "scale-discipline",
+      16
+    ],
+    [
+      "cross-source-consistency",
+      15
+    ],
+    [
+      "augment-edit-discipline",
+      15
+    ],
+    [
+      "broken-access-control",
+      14
+    ],
+    [
+      "minimal-safe-diff",
+      14
+    ],
+    [
+      "architecture",
+      13
+    ],
+    [
+      "cli-output-handling",
+      13
+    ],
+    [
+      "security-sensitive-stop",
+      11
+    ],
+    [
+      "engineering-safety-floor",
+      9
+    ],
+    [
+      "prefer-enums-over-literals",
+      9
+    ],
+    [
+      "roadmap-ci-steps-policy",
+      9
+    ],
+    [
+      "invite-challenge",
+      8
+    ],
+    [
+      "legal-safety-floor",
+      7
+    ],
+    [
+      "active-remediation",
+      7
+    ],
+    [
+      "no-roadmap-references",
+      7
+    ],
+    [
+      "source-discovery-gate",
+      6
+    ],
+    [
+      "lethal-trifecta-guard",
+      6
+    ],
+    [
+      "domain-adoption-policy",
+      6
+    ],
+    [
+      "laravel-routing",
+      5
+    ],
+    [
+      "untrusted-input-defense",
+      5
+    ],
+    [
+      "roadmap-progress-sync",
+      5
+    ],
+    [
+      "brand-consistency",
+      4
+    ],
+    [
+      "php-coding",
+      4
+    ],
+    [
+      "skill-quality",
+      4
+    ],
+    [
+      "artifact-drafting-protocol",
+      3
+    ],
+    [
+      "rule-type-governance",
+      2
+    ],
+    [
+      "persona-governance",
+      2
+    ],
+    [
+      "brand-source-of-truth",
+      2
+    ],
+    [
+      "user-interrupt-priority",
+      2
+    ],
+    [
+      "delegation-policy",
+      2
+    ],
+    [
+      "content-quoting-floor",
+      2
+    ],
+    [
+      "domain-safety-disclaimer",
+      2
+    ],
+    [
+      "provider-lifecycle-discipline",
+      2
+    ],
+    [
+      "image-likeness-and-rights",
+      2
+    ],
+    [
+      "reviewer-awareness",
+      2
+    ],
+    [
+      "source-of-truth",
+      1
+    ],
+    [
+      "slash-command-routing-policy",
+      1
+    ],
+    [
+      "design-fidelity",
+      1
+    ],
+    [
+      "doc-screenshot-hygiene",
+      1
+    ],
+    [
+      "docker-commands",
+      1
+    ],
+    [
+      "upstream-proposal",
+      1
+    ],
+    [
+      "ui-audit-gate",
+      1
+    ],
+    [
+      "media-governance-routing",
+      1
+    ],
+    [
+      "history-discipline",
+      1
+    ],
+    [
+      "notes-first-reasoning",
+      1
+    ],
+    [
+      "runtime-safety",
+      1
+    ]
+  ],
+  "never_matched_tier1": []
+}

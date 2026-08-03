@@ -1,0 +1,8 @@
+rule: tool-safety
+positives:
+  - prompt: "Add Bash to the allowed_tools of this skill."
+  - prompt: "Is the jira integration listed in the tool registry?"
+  - prompt: "Welche allowed_tools braucht das neue Deployment-Skill?"
+near_misses:
+  - prompt: "Grant the CI runner permission to write the coverage report."
+  - prompt: "Which MCP servers are configured for this project?"

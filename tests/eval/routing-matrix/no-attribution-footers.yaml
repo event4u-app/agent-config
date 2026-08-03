@@ -1,0 +1,8 @@
+rule: no-attribution-footers
+positives:
+  - prompt: "Should the commit message include a Co-Authored-By trailer?"
+  - prompt: "Strip the co-authored footer from the last commit message."
+  - prompt: "Warum steht ein Co-Authored-Trailer in der Commit-Message?"
+near_misses:
+  - prompt: "Add the reviewer's name to the PR description."
+  - prompt: "Check who authored this commit in the git history."

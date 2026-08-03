@@ -1,0 +1,10 @@
+rule: image-likeness-and-rights
+positives:
+  - prompt: "Generate an image of our CEO shaking hands with the mayor for the press page."
+  - prompt: "Can you design a logo that looks close to the Nike swoosh?"
+  - prompt: "Erstelle bitte ein Logo für unser neues Produkt, angelehnt an die Marke des Wettbewerbers."
+  - prompt: "Review this adapter change before we ship it."
+    open_files: ["scripts/ai-image/adapters/openai_images.ts"]
+near_misses:
+  - prompt: "Compress the hero photo on the landing page so it loads faster."
+  - prompt: "Add alt text to every picture in the gallery component."

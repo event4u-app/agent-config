@@ -1,0 +1,8 @@
+rule: brand-source-of-truth
+positives:
+  - prompt: "Where do our brand tokens live and which file wins on conflict?"
+  - prompt: "The corpus suggests a different palette than our brand guide - which one applies?"
+  - prompt: "Unser Brand Profile definiert Blau als Primärfarbe - übernimm das bitte."
+near_misses:
+  - prompt: "Which color palette should the new dashboard use?"
+  - prompt: "Apply the corporate design colors to the pricing page."

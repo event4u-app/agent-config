@@ -1,0 +1,8 @@
+rule: code-comment-discipline
+positives:
+  - prompt: "Add a docblock to this method explaining the ordering constraint."
+  - prompt: "Should I comment every branch in this parser?"
+  - prompt: "Brauche ich hier ein PHPDoc für die neue Klasse?"
+near_misses:
+  - prompt: "Write a README section describing the deployment flow."
+  - prompt: "Tighten the wording in the CHANGELOG entry for v2.4."

@@ -1,0 +1,11 @@
+rule: framework-neutrality-in-generic-skills
+positives:
+  - prompt: "This generic skill mandates php artisan directly - neutralize it."
+  - prompt: "Why does the testing skill hardcode Pest instead of naming a procedure?"
+    open_files: ["src/skills/api-testing/SKILL.md"]
+  - prompt: "Die Regel erwähnt Eloquent direkt - ist das ein Leak?"
+    open_files: ["src/rules/architecture.md"]
+near_misses:
+  - prompt: "Write the Laravel carve-out doc for request validation."
+    open_files: ["docs/guidelines/php/php-coding-patterns.md"]
+  - prompt: "Does the stack detection pick the right adapter for a Symfony project?"

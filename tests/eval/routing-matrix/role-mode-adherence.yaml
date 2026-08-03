@@ -1,0 +1,8 @@
+rule: role-mode-adherence
+positives:
+  - prompt: "Set active_role to reviewer for this session."
+  - prompt: "Why did the reply end with a role-mode marker?"
+  - prompt: "Was bedeutet der role-mode Marker am Ende deiner Antwort?"
+near_misses:
+  - prompt: "Switch to a stricter review posture for this diff."
+  - prompt: "Update the user roles table in the admin panel."

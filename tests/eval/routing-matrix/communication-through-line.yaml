@@ -1,0 +1,8 @@
+rule: communication-through-line
+positives:
+  - prompt: "What's the best cadence for reporting progress during a long migration?"
+  - prompt: "Keep reporting progress after each phase so I can follow along."
+  - prompt: "Beim Reporting Progress bitte kurz bleiben und nach jedem Meilenstein melden."
+near_misses:
+  - prompt: "Give me a status update when the build finishes."
+  - prompt: "Summarize what changed since yesterday's standup."

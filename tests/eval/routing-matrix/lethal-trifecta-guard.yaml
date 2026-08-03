@@ -1,0 +1,10 @@
+rule: lethal-trifecta-guard
+positives:
+  - prompt: "This skill should fetch and send the summary to our webhook automatically."
+  - prompt: "Could untrusted content from the scraped page end up in the outbound request?"
+  - prompt: "Prüfe den neuen Command auf Exfiltration-Risiken, bevor wir ihn freigeben."
+  - prompt: "Review the new skill draft for safety."
+    open_files: ["src/skills/web-digest/SKILL.md"]
+near_misses:
+  - prompt: "Cache the parsed config so we do not re-read it every turn."
+  - prompt: "Add retry logic to the flaky integration test."

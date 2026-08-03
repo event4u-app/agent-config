@@ -1,0 +1,8 @@
+rule: missing-tool-handling
+positives:
+  - prompt: "zsh says command not found when I run terragrunt - what now?"
+  - prompt: "The linter is not installed in this environment, how should we proceed?"
+  - prompt: "Beim Ausführen kommt command not found für jq - was tun?"
+near_misses:
+  - prompt: "Which package manager should we standardize on for this repo?"
+  - prompt: "The binary exists but exits with a permission error when I invoke it."

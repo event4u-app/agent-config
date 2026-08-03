@@ -1,0 +1,8 @@
+rule: slash-command-routing-policy
+positives:
+  - prompt: "Run /create-pr for the current branch once the checks are green."
+  - prompt: "What does /commit do differently from committing manually?"
+  - prompt: "Bitte führe /commit:in-chunks für die offenen Änderungen aus."
+near_misses:
+  - prompt: "Commit the changes in logical chunks when you are ready."
+  - prompt: "Create a pull request with a proper description for this branch."

@@ -1,0 +1,12 @@
+rule: source-of-truth
+positives:
+  - prompt: "Fix the typo in this generated rule file."
+    open_files: ["dist/agent-src/rules/direct-answers.md"]
+  - prompt: "This projection looks stale - update it directly, please."
+    open_files: [".augment/rules/scope-control.md"]
+  - prompt: "Kannst du diese Datei direkt anpassen?"
+    open_files: [".claude/skills/laravel/SKILL.md"]
+near_misses:
+  - prompt: "Edit the source rule and then regenerate the projections."
+    open_files: ["src/rules/direct-answers.md"]
+  - prompt: "Which tree is authoritative for rule edits in this repo?"

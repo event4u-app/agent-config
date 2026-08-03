@@ -506,6 +506,14 @@ First stop for any install problem: `agent-config doctor` — it flags a
 missing-from-`PATH` binary, binary↔plugin version drift, stale orphans and
 manifest issues, each with a one-line fix hint.
 
+For "why didn't rule/hook X fire?" questions: `agent-config routing:doctor`
+— a read-only, live diagnosis that reports every session-start gate as
+ACTIVE/INACTIVE with the concern's own reason (e.g.
+`session-canary: ACTIVE for "Alex"` vs `INACTIVE — no name on any settings
+layer`), the platform's concern chain, host hook registration, and router +
+projection freshness. Deeper hook internals (fail-open/closed posture, last
+dispatcher feedback per concern): `agent-config hooks:doctor`.
+
 ### A new command / skill is missing in Claude Code after an upgrade
 
 Under the single-surface model, `agent-config upgrade` refreshes the

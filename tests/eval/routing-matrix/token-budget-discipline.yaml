@@ -1,0 +1,8 @@
+rule: token-budget-discipline
+positives:
+  - prompt: "Mark design-intelligence as a rich skill with the required justification."
+  - prompt: "What does token_budget_class: rich require in the frontmatter?"
+  - prompt: "Braucht dieses Skill die Kennzeichnung token_budget_class rich?"
+near_misses:
+  - prompt: "Shorten this skill so it loads with fewer tokens."
+  - prompt: "Why is the context so large in this session?"

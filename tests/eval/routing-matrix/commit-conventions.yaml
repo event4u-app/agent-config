@@ -1,0 +1,8 @@
+rule: commit-conventions
+positives:
+  - prompt: "Write a commit message for these staged changes."
+  - prompt: "What should I name the branch for this bugfix?"
+  - prompt: "Wie formuliere ich die Commit-Message nach Conventional Commits?"
+near_misses:
+  - prompt: "Summarize the diff between the two release tags."
+  - prompt: "Push the tag v1.4.0 to the remote, please."

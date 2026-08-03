@@ -1,0 +1,8 @@
+rule: runtime-safety
+positives:
+  - prompt: "Set the execution type of this skill to automated."
+  - prompt: "Which handler values are allowed for assisted skills?"
+  - prompt: "Darf dieses Skill den handler shell verwenden?"
+near_misses:
+  - prompt: "Add a verification step to the deployment checklist."
+  - prompt: "The scheduled cron entry never fires - check the syntax."

@@ -1,0 +1,2164 @@
+# Router-coverage corpus — DERIVED FROM the per-rule routing matrices.
+#
+# GENERATED FILE — do not hand-edit. Source of truth:
+#   tests/eval/routing-matrix/*.yaml
+# Regenerate: npx tsx src/scripts/generate_router_coverage_from_matrix.ts
+# Drift gate:  npx tsx src/scripts/generate_router_coverage_from_matrix.ts --check
+
+version: 1
+corpus_id: router-coverage-routing-matrix-derived
+selection_accuracy_target: 0.0
+
+prompts:
+  - id: rm-active-remediation-01
+    category: router-coverage
+    language: en
+    prompt: "Refactor the invoice exporter and remove the duplicate parsing logic."
+    expected_skills: []
+    intended_triggers: [active-remediation]
+
+  - id: rm-active-remediation-02
+    category: router-coverage
+    language: en
+    prompt: "This legacy module still calls deprecated helpers - how should we handle that?"
+    expected_skills: []
+    intended_triggers: [active-remediation]
+
+  - id: rm-active-remediation-03
+    category: router-coverage
+    language: de
+    prompt: "Kannst du beim Cleanup des alten Moduls die doppelte Logik gleich mit entfernen?"
+    expected_skills: []
+    intended_triggers: [active-remediation]
+
+  - id: rm-architecture-01
+    category: router-coverage
+    language: en
+    prompt: "Should the invoice calculation live in the controller or in a dedicated class?"
+    expected_skills: []
+    intended_triggers: [architecture]
+
+  - id: rm-architecture-02
+    category: router-coverage
+    language: en
+    prompt: "Please add a payment service that handles refunds and partial captures."
+    expected_skills: []
+    intended_triggers: [architecture]
+
+  - id: rm-architecture-03
+    category: router-coverage
+    language: de
+    prompt: "Bitte lege einen neuen Controller für die Rechnungs-API an."
+    expected_skills: []
+    intended_triggers: [architecture]
+
+  - id: rm-artifact-drafting-protocol-01
+    category: router-coverage
+    language: en
+    prompt: "Please create a new skill for handling Stripe webhooks."
+    expected_skills: []
+    intended_triggers: [artifact-drafting-protocol]
+
+  - id: rm-artifact-drafting-protocol-02
+    category: router-coverage
+    language: en
+    prompt: "We need a new rule that stops the agent from committing secrets."
+    expected_skills: []
+    intended_triggers: [artifact-drafting-protocol]
+
+  - id: rm-artifact-drafting-protocol-03
+    category: router-coverage
+    language: de
+    prompt: "Bau mir ein Skill für die Rechnungsprüfung."
+    expected_skills: []
+    intended_triggers: [artifact-drafting-protocol]
+
+  - id: rm-artifact-engagement-recording-01
+    category: router-coverage
+    language: en
+    prompt: "Run /implement-ticket for PROJ-123 and make sure engagement gets recorded."
+    expected_skills: []
+    intended_triggers: [artifact-engagement-recording]
+
+  - id: rm-artifact-engagement-recording-02
+    category: router-coverage
+    language: en
+    prompt: "Is telemetry recording enabled for phase-steps in this project?"
+    expected_skills: []
+    intended_triggers: [artifact-engagement-recording]
+
+  - id: rm-artifact-engagement-recording-03
+    category: router-coverage
+    language: de
+    prompt: "Kannst du prüfen, ob die Telemetry-Events nach jedem Schritt geschrieben werden?"
+    expected_skills: []
+    intended_triggers: [artifact-engagement-recording]
+
+  - id: rm-augment-edit-discipline-01
+    category: router-coverage
+    language: en
+    prompt: "Rename this skill and update every cross-reference."
+    expected_skills: []
+    intended_triggers: [augment-edit-discipline]
+
+  - id: rm-augment-edit-discipline-02
+    category: router-coverage
+    language: en
+    prompt: "Is this file still portable across consumer projects?"
+    expected_skills: []
+    intended_triggers: [augment-edit-discipline]
+    open_files: [".augment/rules/scope-control.md"]
+
+  - id: rm-augment-edit-discipline-03
+    category: router-coverage
+    language: de
+    prompt: "Bitte prüfe, ob diese Regel projektneutral bleibt."
+    expected_skills: []
+    intended_triggers: [augment-edit-discipline]
+    open_files: ["src/rules/direct-answers.md"]
+
+  - id: rm-autonomous-execution-01
+    category: router-coverage
+    language: en
+    prompt: "What does personal.autonomy control in the agent settings?"
+    expected_skills: []
+    intended_triggers: [autonomous-execution]
+
+  - id: rm-autonomous-execution-02
+    category: router-coverage
+    language: en
+    prompt: "Switch to autonomy mode and finish the migration without asking me."
+    expected_skills: []
+    intended_triggers: [autonomous-execution]
+
+  - id: rm-autonomous-execution-03
+    category: router-coverage
+    language: de
+    prompt: "Bitte aktiviere den Autonomy Mode für diese Session."
+    expected_skills: []
+    intended_triggers: [autonomous-execution]
+
+  - id: rm-brand-consistency-01
+    category: router-coverage
+    language: en
+    prompt: "Is this landing page copy on-brand for us?"
+    expected_skills: []
+    intended_triggers: [brand-consistency]
+
+  - id: rm-brand-consistency-02
+    category: router-coverage
+    language: en
+    prompt: "Check the new banner against our brand tokens before it ships."
+    expected_skills: []
+    intended_triggers: [brand-consistency]
+
+  - id: rm-brand-consistency-03
+    category: router-coverage
+    language: en
+    prompt: "Passt dieser Social-Post zu unserer Brand Voice?"
+    expected_skills: []
+    intended_triggers: [brand-consistency]
+
+  - id: rm-brand-source-of-truth-01
+    category: router-coverage
+    language: en
+    prompt: "Where do our brand tokens live and which file wins on conflict?"
+    expected_skills: []
+    intended_triggers: [brand-source-of-truth]
+
+  - id: rm-brand-source-of-truth-02
+    category: router-coverage
+    language: en
+    prompt: "The corpus suggests a different palette than our brand guide - which one applies?"
+    expected_skills: []
+    intended_triggers: [brand-source-of-truth]
+
+  - id: rm-brand-source-of-truth-03
+    category: router-coverage
+    language: de
+    prompt: "Unser Brand Profile definiert Blau als Primärfarbe - übernimm das bitte."
+    expected_skills: []
+    intended_triggers: [brand-source-of-truth]
+
+  - id: rm-broken-access-control-01
+    category: router-coverage
+    language: en
+    prompt: "Add an endpoint that returns the current user's invoices."
+    expected_skills: []
+    intended_triggers: [broken-access-control]
+
+  - id: rm-broken-access-control-02
+    category: router-coverage
+    language: en
+    prompt: "Users can pass any id into findById here - is that an IDOR?"
+    expected_skills: []
+    intended_triggers: [broken-access-control]
+
+  - id: rm-broken-access-control-03
+    category: router-coverage
+    language: de
+    prompt: "Bitte prüfe die Authorization im neuen Admin-Controller."
+    expected_skills: []
+    intended_triggers: [broken-access-control]
+
+  - id: rm-cli-output-handling-01
+    category: router-coverage
+    language: en
+    prompt: "Run phpstan on the changed files and summarize the errors."
+    expected_skills: []
+    intended_triggers: [cli-output-handling]
+
+  - id: rm-cli-output-handling-02
+    category: router-coverage
+    language: en
+    prompt: "npm run build keeps failing - can you check the output?"
+    expected_skills: []
+    intended_triggers: [cli-output-handling]
+
+  - id: rm-cli-output-handling-03
+    category: router-coverage
+    language: de
+    prompt: "Führe bitte die vitest-Suite aus und zeig mir nur die Fehler."
+    expected_skills: []
+    intended_triggers: [cli-output-handling]
+
+  - id: rm-code-comment-discipline-01
+    category: router-coverage
+    language: en
+    prompt: "Add a docblock to this method explaining the ordering constraint."
+    expected_skills: []
+    intended_triggers: [code-comment-discipline]
+
+  - id: rm-code-comment-discipline-02
+    category: router-coverage
+    language: en
+    prompt: "Should I comment every branch in this parser?"
+    expected_skills: []
+    intended_triggers: [code-comment-discipline]
+
+  - id: rm-code-comment-discipline-03
+    category: router-coverage
+    language: de
+    prompt: "Brauche ich hier ein PHPDoc für die neue Klasse?"
+    expected_skills: []
+    intended_triggers: [code-comment-discipline]
+
+  - id: rm-code-provenance-01
+    category: router-coverage
+    language: en
+    prompt: "I found this on GitHub - can we port this rate limiter into our codebase?"
+    expected_skills: []
+    intended_triggers: [code-provenance]
+
+  - id: rm-code-provenance-02
+    category: router-coverage
+    language: en
+    prompt: "Can we borrow the retry algorithm from that blog post?"
+    expected_skills: []
+    intended_triggers: [code-provenance]
+
+  - id: rm-code-provenance-03
+    category: router-coverage
+    language: de
+    prompt: "Dieser Code ist vendored aus einem Apache-Projekt - müssen wir die Lizenz nennen?"
+    expected_skills: []
+    intended_triggers: [code-provenance]
+
+  - id: rm-command-suggestion-policy-01
+    category: router-coverage
+    language: en
+    prompt: "When a free-form prompt matches a slash command, what is supposed to happen?"
+    expected_skills: []
+    intended_triggers: [command-suggestion-policy]
+
+  - id: rm-command-suggestion-policy-02
+    category: router-coverage
+    language: en
+    prompt: "Does the command suggestion block always keep the run-as-is escape hatch?"
+    expected_skills: []
+    intended_triggers: [command-suggestion-policy]
+
+  - id: rm-command-suggestion-policy-03
+    category: router-coverage
+    language: de
+    prompt: "Wie funktioniert die Command Suggestion, wenn mein Prompt zu einem Befehl passt?"
+    expected_skills: []
+    intended_triggers: [command-suggestion-policy]
+
+  - id: rm-commit-conventions-01
+    category: router-coverage
+    language: en
+    prompt: "Write a commit message for these staged changes."
+    expected_skills: []
+    intended_triggers: [commit-conventions]
+
+  - id: rm-commit-conventions-02
+    category: router-coverage
+    language: en
+    prompt: "What should I name the branch for this bugfix?"
+    expected_skills: []
+    intended_triggers: [commit-conventions]
+
+  - id: rm-commit-conventions-03
+    category: router-coverage
+    language: de
+    prompt: "Wie formuliere ich die Commit-Message nach Conventional Commits?"
+    expected_skills: []
+    intended_triggers: [commit-conventions]
+
+  - id: rm-communication-through-line-01
+    category: router-coverage
+    language: en
+    prompt: "What's the best cadence for reporting progress during a long migration?"
+    expected_skills: []
+    intended_triggers: [communication-through-line]
+
+  - id: rm-communication-through-line-02
+    category: router-coverage
+    language: en
+    prompt: "Keep reporting progress after each phase so I can follow along."
+    expected_skills: []
+    intended_triggers: [communication-through-line]
+
+  - id: rm-communication-through-line-03
+    category: router-coverage
+    language: de
+    prompt: "Beim Reporting Progress bitte kurz bleiben und nach jedem Meilenstein melden."
+    expected_skills: []
+    intended_triggers: [communication-through-line]
+
+  - id: rm-content-quoting-floor-01
+    category: router-coverage
+    language: en
+    prompt: "Quote the key passage from that article in the summary."
+    expected_skills: []
+    intended_triggers: [content-quoting-floor]
+
+  - id: rm-content-quoting-floor-02
+    category: router-coverage
+    language: en
+    prompt: "Can you include a short excerpt from the interview transcript?"
+    expected_skills: []
+    intended_triggers: [content-quoting-floor]
+
+  - id: rm-content-quoting-floor-03
+    category: router-coverage
+    language: de
+    prompt: "Übernimm den Absatz bitte verbatim in den Entwurf."
+    expected_skills: []
+    intended_triggers: [content-quoting-floor]
+
+  - id: rm-context-hygiene-01
+    category: router-coverage
+    language: en
+    prompt: "Does the 3-failure rule still apply when every attempt hits a different error?"
+    expected_skills: []
+    intended_triggers: [context-hygiene]
+
+  - id: rm-context-hygiene-02
+    category: router-coverage
+    language: en
+    prompt: "This has turned into a long conversation - should we start a fresh session?"
+    expected_skills: []
+    intended_triggers: [context-hygiene]
+
+  - id: rm-context-hygiene-03
+    category: router-coverage
+    language: de
+    prompt: "Greift die 3-Failure-Regel auch, wenn jeder Versuch anders fehlschlägt?"
+    expected_skills: []
+    intended_triggers: [context-hygiene]
+
+  - id: rm-copilot-routing-01
+    category: router-coverage
+    language: en
+    prompt: "Can you tune how Copilot reviews our pull requests?"
+    expected_skills: []
+    intended_triggers: [copilot-routing]
+
+  - id: rm-copilot-routing-02
+    category: router-coverage
+    language: en
+    prompt: "Update copilot-instructions.md so suggestions follow our commit rules."
+    expected_skills: []
+    intended_triggers: [copilot-routing]
+
+  - id: rm-copilot-routing-03
+    category: router-coverage
+    language: de
+    prompt: "Wie konfiguriere ich Copilot, damit es unsere Namenskonventionen vorschlägt?"
+    expected_skills: []
+    intended_triggers: [copilot-routing]
+
+  - id: rm-cross-source-consistency-01
+    category: router-coverage
+    language: en
+    prompt: "The ticket text says birthdays today but the mockup shows one from two days ago."
+    expected_skills: []
+    intended_triggers: [cross-source-consistency]
+
+  - id: rm-cross-source-consistency-02
+    category: router-coverage
+    language: en
+    prompt: "Refine this ticket - the acceptance criteria contradict the description."
+    expected_skills: []
+    intended_triggers: [cross-source-consistency]
+
+  - id: rm-cross-source-consistency-03
+    category: router-coverage
+    language: de
+    prompt: "Das Ticket sagt X, aber der Screenshot zeigt Y - was gilt?"
+    expected_skills: []
+    intended_triggers: [cross-source-consistency]
+
+  - id: rm-decision-revisit-gate-01
+    category: router-coverage
+    language: en
+    prompt: "This was already decided last quarter, but the constraint has changed - can we reopen it?"
+    expected_skills: []
+    intended_triggers: [decision-revisit-gate]
+
+  - id: rm-decision-revisit-gate-02
+    category: router-coverage
+    language: en
+    prompt: "The eval came back an honest null - do we ever retry it?"
+    expected_skills: []
+    intended_triggers: [decision-revisit-gate]
+
+  - id: rm-decision-revisit-gate-03
+    category: router-coverage
+    language: de
+    prompt: "Da steht 'don't relitigate' in der Notiz - gilt das noch?"
+    expected_skills: []
+    intended_triggers: [decision-revisit-gate]
+
+  - id: rm-delegation-policy-01
+    category: router-coverage
+    language: en
+    prompt: "Delegate the lint fixes to a subagent while you work on the tests."
+    expected_skills: []
+    intended_triggers: [delegation-policy]
+
+  - id: rm-delegation-policy-02
+    category: router-coverage
+    language: en
+    prompt: "Can you run these three independent fixes in parallel?"
+    expected_skills: []
+    intended_triggers: [delegation-policy]
+
+  - id: rm-delegation-policy-03
+    category: router-coverage
+    language: de
+    prompt: "Bitte mach eine Analyse pro Modul und fasse die Ergebnisse zusammen."
+    expected_skills: []
+    intended_triggers: [delegation-policy]
+
+  - id: rm-design-fidelity-01
+    category: router-coverage
+    language: en
+    prompt: "Here's the Figma export - build this design exactly as shown."
+    expected_skills: []
+    intended_triggers: [design-fidelity]
+
+  - id: rm-design-fidelity-02
+    category: router-coverage
+    language: de
+    prompt: "Setz die Seite bitte genau so um wie in der Übergabedatei."
+    expected_skills: []
+    intended_triggers: [design-fidelity]
+    open_files: ["handover/checkout-design.html"]
+
+  - id: rm-design-fidelity-03
+    category: router-coverage
+    language: de
+    prompt: "Bau das nach, bitte exakt wie im Prototyp."
+    expected_skills: []
+    intended_triggers: [design-fidelity]
+
+  - id: rm-devcontainer-routing-01
+    category: router-coverage
+    language: en
+    prompt: "Add a devcontainer.json so every teammate gets the same environment."
+    expected_skills: []
+    intended_triggers: [devcontainer-routing]
+
+  - id: rm-devcontainer-routing-02
+    category: router-coverage
+    language: en
+    prompt: "Our Codespaces prebuild takes ten minutes - can we speed it up?"
+    expected_skills: []
+    intended_triggers: [devcontainer-routing]
+
+  - id: rm-devcontainer-routing-03
+    category: router-coverage
+    language: de
+    prompt: "Kannst du den Devcontainer um PHP 8.3 und Node 22 erweitern?"
+    expected_skills: []
+    intended_triggers: [devcontainer-routing]
+
+  - id: rm-doc-screenshot-hygiene-01
+    category: router-coverage
+    language: en
+    prompt: "Add a screenshot of the settings page to the README."
+    expected_skills: []
+    intended_triggers: [doc-screenshot-hygiene]
+
+  - id: rm-doc-screenshot-hygiene-02
+    category: router-coverage
+    language: en
+    prompt: "Generate a docs site for the package with Starlight."
+    expected_skills: []
+    intended_triggers: [doc-screenshot-hygiene]
+
+  - id: rm-doc-screenshot-hygiene-03
+    category: router-coverage
+    language: de
+    prompt: "Häng bitte einen Screenshot vom Admin-Panel in die Doku."
+    expected_skills: []
+    intended_triggers: [doc-screenshot-hygiene]
+
+  - id: rm-doc-screenshot-hygiene-04
+    category: router-coverage
+    language: en
+    prompt: "Is this image safe to ship as-is?"
+    expected_skills: []
+    intended_triggers: [doc-screenshot-hygiene]
+    open_files: ["docs/media/wizard-step-2.png"]
+
+  - id: rm-docker-commands-01
+    category: router-coverage
+    language: en
+    prompt: "Run php artisan migrate in the app container and show me the output."
+    expected_skills: []
+    intended_triggers: [docker-commands]
+
+  - id: rm-docker-commands-02
+    category: router-coverage
+    language: en
+    prompt: "Should composer install run on the host or inside the container?"
+    expected_skills: []
+    intended_triggers: [docker-commands]
+
+  - id: rm-docker-commands-03
+    category: router-coverage
+    language: de
+    prompt: "Führe bitte docker compose up aus und prüfe die Logs des App-Containers."
+    expected_skills: []
+    intended_triggers: [docker-commands]
+
+  - id: rm-domain-adoption-policy-01
+    category: router-coverage
+    language: en
+    prompt: "Should we open a mobile track with React Native skills?"
+    expected_skills: []
+    intended_triggers: [domain-adoption-policy]
+
+  - id: rm-domain-adoption-policy-02
+    category: router-coverage
+    language: en
+    prompt: "Someone requested an ML track - do we have the demand signal for it?"
+    expected_skills: []
+    intended_triggers: [domain-adoption-policy]
+
+  - id: rm-domain-adoption-policy-03
+    category: router-coverage
+    language: en
+    prompt: "Sollen wir einen Blockchain Track im Paket aufmachen?"
+    expected_skills: []
+    intended_triggers: [domain-adoption-policy]
+
+  - id: rm-domain-adoption-policy-04
+    category: router-coverage
+    language: en
+    prompt: "Draft the first skill for the new domain."
+    expected_skills: []
+    intended_triggers: [domain-adoption-policy]
+    open_files: ["src/skills/flutter-setup/SKILL.md"]
+
+  - id: rm-domain-safety-disclaimer-01
+    category: router-coverage
+    language: en
+    prompt: "Draft a privacy policy for our SaaS."
+    expected_skills: []
+    intended_triggers: [domain-safety-disclaimer]
+
+  - id: rm-domain-safety-disclaimer-02
+    category: router-coverage
+    language: en
+    prompt: "Put together an investment memo for the seed round."
+    expected_skills: []
+    intended_triggers: [domain-safety-disclaimer]
+
+  - id: rm-domain-safety-disclaimer-03
+    category: router-coverage
+    language: de
+    prompt: "Kannst du die Terms of Service für die App entwerfen?"
+    expected_skills: []
+    intended_triggers: [domain-safety-disclaimer]
+
+  - id: rm-domain-safety-pii-01
+    category: router-coverage
+    language: en
+    prompt: "Draft a ticket response for this angry customer email."
+    expected_skills: []
+    intended_triggers: [domain-safety-pii]
+
+  - id: rm-domain-safety-pii-02
+    category: router-coverage
+    language: en
+    prompt: "Log the user id and email when checkout fails."
+    expected_skills: []
+    intended_triggers: [domain-safety-pii]
+
+  - id: rm-domain-safety-pii-03
+    category: router-coverage
+    language: de
+    prompt: "Schreib eine Rejection Email für den Kandidaten aus der zweiten Runde."
+    expected_skills: []
+    intended_triggers: [domain-safety-pii]
+
+  - id: rm-domain-safety-retention-01
+    category: router-coverage
+    language: en
+    prompt: "How long should we keep closed support tickets?"
+    expected_skills: []
+    intended_triggers: [domain-safety-retention]
+
+  - id: rm-domain-safety-retention-02
+    category: router-coverage
+    language: en
+    prompt: "We received a DSAR - what do we need to produce and by when?"
+    expected_skills: []
+    intended_triggers: [domain-safety-retention]
+
+  - id: rm-domain-safety-retention-03
+    category: router-coverage
+    language: de
+    prompt: "Wie setzen wir eine Data Retention Policy für die Kundendaten auf?"
+    expected_skills: []
+    intended_triggers: [domain-safety-retention]
+
+  - id: rm-downstream-changes-01
+    category: router-coverage
+    language: en
+    prompt: "I renamed the service - find all callers and update them."
+    expected_skills: []
+    intended_triggers: [downstream-changes]
+
+  - id: rm-downstream-changes-02
+    category: router-coverage
+    language: en
+    prompt: "Fix the broken imports after the namespace move."
+    expected_skills: []
+    intended_triggers: [downstream-changes]
+
+  - id: rm-downstream-changes-03
+    category: router-coverage
+    language: de
+    prompt: "Prüfe bitte alle Downstream-Effekte der Umbenennung."
+    expected_skills: []
+    intended_triggers: [downstream-changes]
+
+  - id: rm-engineering-safety-floor-01
+    category: router-coverage
+    language: en
+    prompt: "Deploy the current release to production tonight."
+    expected_skills: []
+    intended_triggers: [engineering-safety-floor]
+
+  - id: rm-engineering-safety-floor-02
+    category: router-coverage
+    language: en
+    prompt: "Run the schema change migration on the primary database."
+    expected_skills: []
+    intended_triggers: [engineering-safety-floor]
+
+  - id: rm-engineering-safety-floor-03
+    category: router-coverage
+    language: de
+    prompt: "Bitte mach den Rollback des letzten Deployments."
+    expected_skills: []
+    intended_triggers: [engineering-safety-floor]
+
+  - id: rm-external-code-graph-interop-01
+    category: router-coverage
+    language: en
+    prompt: "Who calls the InvoiceService::finalize method?"
+    expected_skills: []
+    intended_triggers: [external-code-graph-interop]
+
+  - id: rm-external-code-graph-interop-02
+    category: router-coverage
+    language: en
+    prompt: "Use the SCIP index to find references to this symbol."
+    expected_skills: []
+    intended_triggers: [external-code-graph-interop]
+
+  - id: rm-external-code-graph-interop-03
+    category: router-coverage
+    language: de
+    prompt: "Wo liegt der Code Graph in diesem Repo und wie frage ich ihn ab?"
+    expected_skills: []
+    intended_triggers: [external-code-graph-interop]
+
+  - id: rm-external-reference-deep-dive-01
+    category: router-coverage
+    language: en
+    prompt: "Analyze github.com/acme/agent-kit and tell me how their installer works."
+    expected_skills: []
+    intended_triggers: [external-reference-deep-dive]
+
+  - id: rm-external-reference-deep-dive-02
+    category: router-coverage
+    language: en
+    prompt: "Treat this reference repo as the template for our layout."
+    expected_skills: []
+    intended_triggers: [external-reference-deep-dive]
+
+  - id: rm-external-reference-deep-dive-03
+    category: router-coverage
+    language: de
+    prompt: "Schau dir github.com/foo/bar genauer an - wie lösen die das Routing?"
+    expected_skills: []
+    intended_triggers: [external-reference-deep-dive]
+
+  - id: rm-fast-path-marker-visibility-01
+    category: router-coverage
+    language: en
+    prompt: "Why was the fast-path marker missing from your last reply?"
+    expected_skills: []
+    intended_triggers: [fast-path-marker-visibility]
+
+  - id: rm-fast-path-marker-visibility-02
+    category: router-coverage
+    language: en
+    prompt: "The low-impact council resolved this - where is the verbatim marker line?"
+    expected_skills: []
+    intended_triggers: [fast-path-marker-visibility]
+
+  - id: rm-fast-path-marker-visibility-03
+    category: router-coverage
+    language: de
+    prompt: "Warum fehlt der Fast-Path Marker in deiner letzten Antwort?"
+    expected_skills: []
+    intended_triggers: [fast-path-marker-visibility]
+
+  - id: rm-finance-safety-floor-01
+    category: router-coverage
+    language: en
+    prompt: "How much runway do we have at the current burn?"
+    expected_skills: []
+    intended_triggers: [finance-safety-floor]
+
+  - id: rm-finance-safety-floor-02
+    category: router-coverage
+    language: en
+    prompt: "Build a DCF valuation for the acquisition target."
+    expected_skills: []
+    intended_triggers: [finance-safety-floor]
+
+  - id: rm-finance-safety-floor-03
+    category: router-coverage
+    language: de
+    prompt: "Sollten wir jetzt fundraisen? Modelliere bitte die Dilution."
+    expected_skills: []
+    intended_triggers: [finance-safety-floor]
+
+  - id: rm-framework-neutrality-in-generic-skills-01
+    category: router-coverage
+    language: en
+    prompt: "This generic skill mandates php artisan directly - neutralize it."
+    expected_skills: []
+    intended_triggers: [framework-neutrality-in-generic-skills]
+
+  - id: rm-framework-neutrality-in-generic-skills-02
+    category: router-coverage
+    language: en
+    prompt: "Why does the testing skill hardcode Pest instead of naming a procedure?"
+    expected_skills: []
+    intended_triggers: [framework-neutrality-in-generic-skills]
+    open_files: ["src/skills/api-testing/SKILL.md"]
+
+  - id: rm-framework-neutrality-in-generic-skills-03
+    category: router-coverage
+    language: de
+    prompt: "Die Regel erwähnt Eloquent direkt - ist das ein Leak?"
+    expected_skills: []
+    intended_triggers: [framework-neutrality-in-generic-skills]
+    open_files: ["src/rules/architecture.md"]
+
+  - id: rm-git-history-discipline-01
+    category: router-coverage
+    language: en
+    prompt: "Can you git rebase this feature onto the tip of main?"
+    expected_skills: []
+    intended_triggers: [git-history-discipline]
+
+  - id: rm-git-history-discipline-02
+    category: router-coverage
+    language: en
+    prompt: "The branch diverged from origin - what now?"
+    expected_skills: []
+    intended_triggers: [git-history-discipline]
+
+  - id: rm-git-history-discipline-03
+    category: router-coverage
+    language: de
+    prompt: "Mach bitte ein fixup auf den letzten Commit und dann force-push."
+    expected_skills: []
+    intended_triggers: [git-history-discipline]
+
+  - id: rm-history-discipline-01
+    category: router-coverage
+    language: en
+    prompt: "Add an audit log for edits to the contract records."
+    expected_skills: []
+    intended_triggers: [history-discipline]
+
+  - id: rm-history-discipline-02
+    category: router-coverage
+    language: en
+    prompt: "Do we need event sourcing here or is a row-level history table enough?"
+    expected_skills: []
+    intended_triggers: [history-discipline]
+
+  - id: rm-history-discipline-03
+    category: router-coverage
+    language: de
+    prompt: "Wer hat was am Vertrag geändert? Wir brauchen Nachvollziehbarkeit."
+    expected_skills: []
+    intended_triggers: [history-discipline]
+
+  - id: rm-icon-consistency-01
+    category: router-coverage
+    language: en
+    prompt: "Which icon set should the settings screen use?"
+    expected_skills: []
+    intended_triggers: [icon-consistency]
+
+  - id: rm-icon-consistency-02
+    category: router-coverage
+    language: en
+    prompt: "We're mixing Lucide and Heroicons - consolidate, please."
+    expected_skills: []
+    intended_triggers: [icon-consistency]
+
+  - id: rm-icon-consistency-03
+    category: router-coverage
+    language: de
+    prompt: "Welche Icons nehmen wir für die neue Navigation?"
+    expected_skills: []
+    intended_triggers: [icon-consistency]
+
+  - id: rm-image-likeness-and-rights-01
+    category: router-coverage
+    language: en
+    prompt: "Generate an image of our CEO shaking hands with the mayor for the press page."
+    expected_skills: []
+    intended_triggers: [image-likeness-and-rights]
+
+  - id: rm-image-likeness-and-rights-02
+    category: router-coverage
+    language: en
+    prompt: "Can you design a logo that looks close to the Nike swoosh?"
+    expected_skills: []
+    intended_triggers: [image-likeness-and-rights]
+
+  - id: rm-image-likeness-and-rights-03
+    category: router-coverage
+    language: de
+    prompt: "Erstelle bitte ein Logo für unser neues Produkt, angelehnt an die Marke des Wettbewerbers."
+    expected_skills: []
+    intended_triggers: [image-likeness-and-rights]
+
+  - id: rm-image-likeness-and-rights-04
+    category: router-coverage
+    language: en
+    prompt: "Review this adapter change before we ship it."
+    expected_skills: []
+    intended_triggers: [image-likeness-and-rights]
+    open_files: ["scripts/ai-image/adapters/openai_images.ts"]
+
+  - id: rm-improve-before-implement-01
+    category: router-coverage
+    language: en
+    prompt: "Please implement the new export feature for the reporting module."
+    expected_skills: []
+    intended_triggers: [improve-before-implement]
+
+  - id: rm-improve-before-implement-02
+    category: router-coverage
+    language: en
+    prompt: "Refactor the settings loader so it supports layered overrides."
+    expected_skills: []
+    intended_triggers: [improve-before-implement]
+
+  - id: rm-improve-before-implement-03
+    category: router-coverage
+    language: de
+    prompt: "Schreib mir eine Migration, die die Spalte tenant_id ergänzt."
+    expected_skills: []
+    intended_triggers: [improve-before-implement]
+
+  - id: rm-invite-challenge-01
+    category: router-coverage
+    language: en
+    prompt: "Here is my plan for the checkout rewrite — start with phase one."
+    expected_skills: []
+    intended_triggers: [invite-challenge]
+
+  - id: rm-invite-challenge-02
+    category: router-coverage
+    language: en
+    prompt: "What architecture should the notification service use?"
+    expected_skills: []
+    intended_triggers: [invite-challenge]
+
+  - id: rm-invite-challenge-03
+    category: router-coverage
+    language: de
+    prompt: "Welcher Plan ist besser für das Caching — Redis oder In-Memory?"
+    expected_skills: []
+    intended_triggers: [invite-challenge]
+
+  - id: rm-laravel-routing-01
+    category: router-coverage
+    language: en
+    prompt: "Add an Eloquent scope for active users on the User model."
+    expected_skills: []
+    intended_triggers: [laravel-routing]
+
+  - id: rm-laravel-routing-02
+    category: router-coverage
+    language: en
+    prompt: "Create a FormRequest for the checkout endpoint validation."
+    expected_skills: []
+    intended_triggers: [laravel-routing]
+
+  - id: rm-laravel-routing-03
+    category: router-coverage
+    language: de
+    prompt: "Wie definiere ich in Laravel einen Job, der stündlich läuft?"
+    expected_skills: []
+    intended_triggers: [laravel-routing]
+
+  - id: rm-laravel-translations-01
+    category: router-coverage
+    language: en
+    prompt: "Add a translation for the new checkout error message."
+    expected_skills: []
+    intended_triggers: [laravel-translations]
+
+  - id: rm-laravel-translations-02
+    category: router-coverage
+    language: en
+    prompt: "Why does trans('cart.empty') render the raw key on staging?"
+    expected_skills: []
+    intended_triggers: [laravel-translations]
+
+  - id: rm-laravel-translations-03
+    category: router-coverage
+    language: de
+    prompt: "Bitte ergänze den fehlenden translation key für die Fehlermeldung im Checkout."
+    expected_skills: []
+    intended_triggers: [laravel-translations]
+
+  - id: rm-laravel-translations-04
+    category: router-coverage
+    language: en
+    prompt: "Sync the new keys into the locale files."
+    expected_skills: []
+    intended_triggers: [laravel-translations]
+    open_files: ["lang/de/checkout.php"]
+
+  - id: rm-legal-safety-floor-01
+    category: router-coverage
+    language: en
+    prompt: "Please review this contract before we send it back to the vendor."
+    expected_skills: []
+    intended_triggers: [legal-safety-floor]
+
+  - id: rm-legal-safety-floor-02
+    category: router-coverage
+    language: en
+    prompt: "Is clause 7 of this NDA acceptable for a small supplier?"
+    expected_skills: []
+    intended_triggers: [legal-safety-floor]
+
+  - id: rm-legal-safety-floor-03
+    category: router-coverage
+    language: de
+    prompt: "Prüfe bitte, ob diese DPA-Anlage mit der GDPR vereinbar ist."
+    expected_skills: []
+    intended_triggers: [legal-safety-floor]
+
+  - id: rm-lethal-trifecta-guard-01
+    category: router-coverage
+    language: en
+    prompt: "This skill should fetch and send the summary to our webhook automatically."
+    expected_skills: []
+    intended_triggers: [lethal-trifecta-guard]
+
+  - id: rm-lethal-trifecta-guard-02
+    category: router-coverage
+    language: en
+    prompt: "Could untrusted content from the scraped page end up in the outbound request?"
+    expected_skills: []
+    intended_triggers: [lethal-trifecta-guard]
+
+  - id: rm-lethal-trifecta-guard-03
+    category: router-coverage
+    language: de
+    prompt: "Prüfe den neuen Command auf Exfiltration-Risiken, bevor wir ihn freigeben."
+    expected_skills: []
+    intended_triggers: [lethal-trifecta-guard]
+
+  - id: rm-lethal-trifecta-guard-04
+    category: router-coverage
+    language: en
+    prompt: "Review the new skill draft for safety."
+    expected_skills: []
+    intended_triggers: [lethal-trifecta-guard]
+    open_files: ["src/skills/web-digest/SKILL.md"]
+
+  - id: rm-linked-projects-onboarding-gate-01
+    category: router-coverage
+    language: en
+    prompt: "The IDE attached a sibling repo — should the agent include it in scope?"
+    expected_skills: []
+    intended_triggers: [linked-projects-onboarding-gate]
+
+  - id: rm-linked-projects-onboarding-gate-02
+    category: router-coverage
+    language: en
+    prompt: "How do we handle cross-repo impact when the API package changes?"
+    expected_skills: []
+    intended_triggers: [linked-projects-onboarding-gate]
+
+  - id: rm-linked-projects-onboarding-gate-03
+    category: router-coverage
+    language: de
+    prompt: "Das linked project taucht plötzlich in meinen Suchen auf — ist das gewollt?"
+    expected_skills: []
+    intended_triggers: [linked-projects-onboarding-gate]
+
+  - id: rm-linked-projects-onboarding-gate-04
+    category: router-coverage
+    language: en
+    prompt: "Check what changed in the workspace module configuration."
+    expected_skills: []
+    intended_triggers: [linked-projects-onboarding-gate]
+    open_files: [".idea/modules.xml"]
+
+  - id: rm-low-impact-corpus-privacy-floor-01
+    category: router-coverage
+    language: en
+    prompt: "Append this naming verdict to the low-impact corpus, please."
+    expected_skills: []
+    intended_triggers: [low-impact-corpus-privacy-floor]
+
+  - id: rm-low-impact-corpus-privacy-floor-02
+    category: router-coverage
+    language: en
+    prompt: "Run /memory learn-low-impact for the decision we just settled."
+    expected_skills: []
+    intended_triggers: [low-impact-corpus-privacy-floor]
+
+  - id: rm-low-impact-corpus-privacy-floor-03
+    category: router-coverage
+    language: en
+    prompt: "Kannst du diese Entscheidung in den Low-Impact Corpus aufnehmen?"
+    expected_skills: []
+    intended_triggers: [low-impact-corpus-privacy-floor]
+
+  - id: rm-low-impact-corpus-privacy-floor-04
+    category: router-coverage
+    language: en
+    prompt: "Review this entry before it goes upstream."
+    expected_skills: []
+    intended_triggers: [low-impact-corpus-privacy-floor]
+    open_files: ["agents/decisions/low-impact-decisions.md"]
+
+  - id: rm-markdown-safe-codeblocks-01
+    category: router-coverage
+    language: en
+    prompt: "The triple backticks in this doc break the rendering - can you nest the code blocks safely?"
+    expected_skills: []
+    intended_triggers: [markdown-safe-codeblocks]
+
+  - id: rm-markdown-safe-codeblocks-02
+    category: router-coverage
+    language: en
+    prompt: "Add a fenced shell example to the setup section of this file."
+    expected_skills: []
+    intended_triggers: [markdown-safe-codeblocks]
+    open_files: ["docs/setup-guide.md"]
+
+  - id: rm-markdown-safe-codeblocks-03
+    category: router-coverage
+    language: de
+    prompt: "Bitte prüfe die verschachtelten Codeblöcke in dieser Anleitung."
+    expected_skills: []
+    intended_triggers: [markdown-safe-codeblocks]
+    open_files: ["README.md"]
+
+  - id: rm-media-governance-routing-01
+    category: router-coverage
+    language: en
+    prompt: "Generate a clip with /video:scene showing our mascot on a concert stage."
+    expected_skills: []
+    intended_triggers: [media-governance-routing]
+
+  - id: rm-media-governance-routing-02
+    category: router-coverage
+    language: en
+    prompt: "Can we use the CEO's likeness in the AI-generated launch teaser?"
+    expected_skills: []
+    intended_triggers: [media-governance-routing]
+
+  - id: rm-media-governance-routing-03
+    category: router-coverage
+    language: de
+    prompt: "Darf ich eine voice cloning Demo mit der Stimme unseres Moderators bauen?"
+    expected_skills: []
+    intended_triggers: [media-governance-routing]
+
+  - id: rm-media-sync-ground-truth-01
+    category: router-coverage
+    language: en
+    prompt: "Cut the music video so the mouths match the vocals in every scene."
+    expected_skills: []
+    intended_triggers: [media-sync-ground-truth]
+
+  - id: rm-media-sync-ground-truth-02
+    category: router-coverage
+    language: en
+    prompt: "Build the vocal map from the real track before we render any clips."
+    expected_skills: []
+    intended_triggers: [media-sync-ground-truth]
+
+  - id: rm-media-sync-ground-truth-03
+    category: router-coverage
+    language: de
+    prompt: "Der Charakter soll die Zeile mit den Lippen synchron mitsprechen."
+    expected_skills: []
+    intended_triggers: [media-sync-ground-truth]
+
+  - id: rm-minimal-safe-diff-01
+    category: router-coverage
+    language: en
+    prompt: "Fix the null check in the invoice parser - smallest change possible."
+    expected_skills: []
+    intended_triggers: [minimal-safe-diff]
+
+  - id: rm-minimal-safe-diff-02
+    category: router-coverage
+    language: en
+    prompt: "Should I rewrite this module or just patch the broken branch?"
+    expected_skills: []
+    intended_triggers: [minimal-safe-diff]
+
+  - id: rm-minimal-safe-diff-03
+    category: router-coverage
+    language: de
+    prompt: "Bitte nur diesen Fix für den Tippfehler, ohne den Rest der Datei umzubauen."
+    expected_skills: []
+    intended_triggers: [minimal-safe-diff]
+
+  - id: rm-missing-tool-handling-01
+    category: router-coverage
+    language: en
+    prompt: "zsh says command not found when I run terragrunt - what now?"
+    expected_skills: []
+    intended_triggers: [missing-tool-handling]
+
+  - id: rm-missing-tool-handling-02
+    category: router-coverage
+    language: en
+    prompt: "The linter is not installed in this environment, how should we proceed?"
+    expected_skills: []
+    intended_triggers: [missing-tool-handling]
+
+  - id: rm-missing-tool-handling-03
+    category: router-coverage
+    language: de
+    prompt: "Beim Ausführen kommt command not found für jq - was tun?"
+    expected_skills: []
+    intended_triggers: [missing-tool-handling]
+
+  - id: rm-model-recommendation-01
+    category: router-coverage
+    language: en
+    prompt: "Which model should I use for this large refactoring session?"
+    expected_skills: []
+    intended_triggers: [model-recommendation]
+
+  - id: rm-model-recommendation-02
+    category: router-coverage
+    language: en
+    prompt: "Starting a new task: port the billing exporter to TypeScript."
+    expected_skills: []
+    intended_triggers: [model-recommendation]
+
+  - id: rm-model-recommendation-03
+    category: router-coverage
+    language: de
+    prompt: "Setz bitte model_tier auf reasoning für diesen Command."
+    expected_skills: []
+    intended_triggers: [model-recommendation]
+
+  - id: rm-no-attribution-footers-01
+    category: router-coverage
+    language: en
+    prompt: "Should the commit message include a Co-Authored-By trailer?"
+    expected_skills: []
+    intended_triggers: [no-attribution-footers]
+
+  - id: rm-no-attribution-footers-02
+    category: router-coverage
+    language: en
+    prompt: "Strip the co-authored footer from the last commit message."
+    expected_skills: []
+    intended_triggers: [no-attribution-footers]
+
+  - id: rm-no-attribution-footers-03
+    category: router-coverage
+    language: de
+    prompt: "Warum steht ein Co-Authored-Trailer in der Commit-Message?"
+    expected_skills: []
+    intended_triggers: [no-attribution-footers]
+
+  - id: rm-no-decorative-emojis-in-git-surfaces-01
+    category: router-coverage
+    language: en
+    prompt: "Run gh pr create with a title that summarizes the refactor."
+    expected_skills: []
+    intended_triggers: [no-decorative-emojis-in-git-surfaces]
+
+  - id: rm-no-decorative-emojis-in-git-surfaces-02
+    category: router-coverage
+    language: en
+    prompt: "Can you git commit the staged changes with a fitting message?"
+    expected_skills: []
+    intended_triggers: [no-decorative-emojis-in-git-surfaces]
+
+  - id: rm-no-decorative-emojis-in-git-surfaces-03
+    category: router-coverage
+    language: de
+    prompt: "Bitte führe git commit mit einer Conventional-Commit-Message aus."
+    expected_skills: []
+    intended_triggers: [no-decorative-emojis-in-git-surfaces]
+
+  - id: rm-no-decorative-emojis-in-git-surfaces-04
+    category: router-coverage
+    language: en
+    prompt: "Use the PR title 'feat: 🚀 ship the setup wizard' for this branch."
+    expected_skills: []
+    intended_triggers: [no-decorative-emojis-in-git-surfaces]
+
+  - id: rm-no-pr-progress-comments-01
+    category: router-coverage
+    language: en
+    prompt: "Run gh pr comment to tell the reviewer that CI is green now."
+    expected_skills: []
+    intended_triggers: [no-pr-progress-comments]
+
+  - id: rm-no-pr-progress-comments-02
+    category: router-coverage
+    language: en
+    prompt: "Should I post a status comment after each CI fix iteration?"
+    expected_skills: []
+    intended_triggers: [no-pr-progress-comments]
+
+  - id: rm-no-pr-progress-comments-03
+    category: router-coverage
+    language: de
+    prompt: "Poste bitte per gh pr comment ein kurzes Update in den PR."
+    expected_skills: []
+    intended_triggers: [no-pr-progress-comments]
+
+  - id: rm-no-roadmap-references-01
+    category: router-coverage
+    language: en
+    prompt: "Can I link this roadmap phase from the skill's See-also section?"
+    expected_skills: []
+    intended_triggers: [no-roadmap-references]
+    open_files: ["agents/roadmaps/archive/road-to-tested-routing.md"]
+
+  - id: rm-no-roadmap-references-02
+    category: router-coverage
+    language: en
+    prompt: "Clean up the finished council session artifacts."
+    expected_skills: []
+    intended_triggers: [no-roadmap-references]
+    open_files: ["agents/runtime/council/sessions/2026-08-01-routing.json"]
+
+  - id: rm-no-roadmap-references-03
+    category: router-coverage
+    language: en
+    prompt: "Darf ich diese Roadmap aus einer Guideline heraus verlinken?"
+    expected_skills: []
+    intended_triggers: [no-roadmap-references]
+    open_files: ["agents/roadmaps/road-to-renewal-foundation.md"]
+
+  - id: rm-no-roadmap-references-04
+    category: router-coverage
+    language: en
+    prompt: "Summarize the open question for the next council run."
+    expected_skills: []
+    intended_triggers: [no-roadmap-references]
+    open_files: ["agents/runtime/council/questions/q-routing-eval.md"]
+
+  - id: rm-notes-first-reasoning-01
+    category: router-coverage
+    language: en
+    prompt: "Help me debug why the queue worker dies every night after midnight."
+    expected_skills: []
+    intended_triggers: [notes-first-reasoning]
+
+  - id: rm-notes-first-reasoning-02
+    category: router-coverage
+    language: en
+    prompt: "My hypothesis is that the cache key collides - how do we verify it?"
+    expected_skills: []
+    intended_triggers: [notes-first-reasoning]
+
+  - id: rm-notes-first-reasoning-03
+    category: router-coverage
+    language: de
+    prompt: "Bitte starte eine Debug-Session für den fehlgeschlagenen Import und halte die Zwischenschritte fest."
+    expected_skills: []
+    intended_triggers: [notes-first-reasoning]
+
+  - id: rm-onboarding-gate-01
+    category: router-coverage
+    language: en
+    prompt: "Does the onboarding wizard have to run before I can use any commands?"
+    expected_skills: []
+    intended_triggers: [onboarding-gate]
+
+  - id: rm-onboarding-gate-02
+    category: router-coverage
+    language: en
+    prompt: "What should happen on the first turn in a freshly cloned project?"
+    expected_skills: []
+    intended_triggers: [onboarding-gate]
+
+  - id: rm-onboarding-gate-03
+    category: router-coverage
+    language: de
+    prompt: "Muss ich das Onboarding erst abschließen, bevor der Agent loslegt?"
+    expected_skills: []
+    intended_triggers: [onboarding-gate]
+
+  - id: rm-onboarding-gate-04
+    category: router-coverage
+    language: en
+    prompt: "Why is this flag still set to false?"
+    expected_skills: []
+    intended_triggers: [onboarding-gate]
+    open_files: [".agent-settings.yml"]
+
+  - id: rm-output-discipline-01
+    category: router-coverage
+    language: en
+    prompt: "You wrote // rest of component again - emit the full file this time."
+    expected_skills: []
+    intended_triggers: [output-discipline]
+
+  - id: rm-output-discipline-02
+    category: router-coverage
+    language: en
+    prompt: "Don't truncate the class body for brevity, write everything out."
+    expected_skills: []
+    intended_triggers: [output-discipline]
+
+  - id: rm-output-discipline-03
+    category: router-coverage
+    language: de
+    prompt: "Schreib den Code komplett aus, nicht nur 'similar pattern' als Kommentar."
+    expected_skills: []
+    intended_triggers: [output-discipline]
+
+  - id: rm-persona-governance-01
+    category: router-coverage
+    language: en
+    prompt: "Add a persona for database performance reviews."
+    expected_skills: []
+    intended_triggers: [persona-governance]
+
+  - id: rm-persona-governance-02
+    category: router-coverage
+    language: en
+    prompt: "Tighten the scope section of this review lens."
+    expected_skills: []
+    intended_triggers: [persona-governance]
+    open_files: ["src/agent-src/personas/perf-hawk.md"]
+
+  - id: rm-persona-governance-03
+    category: router-coverage
+    language: de
+    prompt: "Brauchen wir eine neue Persona für Security-Reviews?"
+    expected_skills: []
+    intended_triggers: [persona-governance]
+
+  - id: rm-php-coding-01
+    category: router-coverage
+    language: en
+    prompt: "Run phpstan on the changed files and fix the level 8 errors."
+    expected_skills: []
+    intended_triggers: [php-coding]
+
+  - id: rm-php-coding-02
+    category: router-coverage
+    language: en
+    prompt: "Run ecs --fix on the diff before pushing."
+    expected_skills: []
+    intended_triggers: [php-coding]
+
+  - id: rm-php-coding-03
+    category: router-coverage
+    language: de
+    prompt: "Bitte behebe die phpstan-Fehler im Payment-Modul."
+    expected_skills: []
+    intended_triggers: [php-coding]
+
+  - id: rm-php-coding-04
+    category: router-coverage
+    language: en
+    prompt: "Refactor this class to use early returns and strict types."
+    expected_skills: []
+    intended_triggers: [php-coding]
+    open_files: ["app/Services/InvoiceService.php"]
+
+  - id: rm-prefer-enums-over-literals-01
+    category: router-coverage
+    language: en
+    prompt: "The status field takes 'active' or 'archived' - model it properly."
+    expected_skills: []
+    intended_triggers: [prefer-enums-over-literals]
+
+  - id: rm-prefer-enums-over-literals-02
+    category: router-coverage
+    language: en
+    prompt: "Should the priority column be an enum or a plain integer?"
+    expected_skills: []
+    intended_triggers: [prefer-enums-over-literals]
+
+  - id: rm-prefer-enums-over-literals-03
+    category: router-coverage
+    language: de
+    prompt: "Bitte modelliere den Status der Bestellung als festen Wertesatz."
+    expected_skills: []
+    intended_triggers: [prefer-enums-over-literals]
+
+  - id: rm-preservation-guard-01
+    category: router-coverage
+    language: en
+    prompt: "Don't drop the Iron Law section when you merge these two skills."
+    expected_skills: []
+    intended_triggers: [preservation-guard]
+
+  - id: rm-preservation-guard-02
+    category: router-coverage
+    language: en
+    prompt: "Does the condensed rule still keep every Iron Law heading verbatim?"
+    expected_skills: []
+    intended_triggers: [preservation-guard]
+
+  - id: rm-preservation-guard-03
+    category: router-coverage
+    language: de
+    prompt: "Achte beim Zusammenführen darauf, dass die Iron Law Blöcke erhalten bleiben."
+    expected_skills: []
+    intended_triggers: [preservation-guard]
+
+  - id: rm-provider-lifecycle-discipline-01
+    category: router-coverage
+    language: en
+    prompt: "Which provider should /image:create default to for banner renders?"
+    expected_skills: []
+    intended_triggers: [provider-lifecycle-discipline]
+
+  - id: rm-provider-lifecycle-discipline-02
+    category: router-coverage
+    language: en
+    prompt: "Update the retry handling in this rendering script."
+    expected_skills: []
+    intended_triggers: [provider-lifecycle-discipline]
+    open_files: ["scripts/ai-video/adapters/kling.sh"]
+
+  - id: rm-provider-lifecycle-discipline-03
+    category: router-coverage
+    language: de
+    prompt: "Welcher Provider ist stabil genug für den Renderjob heute Nacht?"
+    expected_skills: []
+    intended_triggers: [provider-lifecycle-discipline]
+
+  - id: rm-question-not-instruction-01
+    category: router-coverage
+    language: en
+    prompt: "Why did you only implement one phase of the roadmap?"
+    expected_skills: []
+    intended_triggers: [question-not-instruction]
+
+  - id: rm-question-not-instruction-02
+    category: router-coverage
+    language: en
+    prompt: "What do you think about splitting this class into two?"
+    expected_skills: []
+    intended_triggers: [question-not-instruction]
+
+  - id: rm-question-not-instruction-03
+    category: router-coverage
+    language: de
+    prompt: "Warum hast du die Tests nicht mit angepasst?"
+    expected_skills: []
+    intended_triggers: [question-not-instruction]
+
+  - id: rm-reviewer-awareness-01
+    category: router-coverage
+    language: en
+    prompt: "Suggest reviewers for this change to the permission checks."
+    expected_skills: []
+    intended_triggers: [reviewer-awareness]
+
+  - id: rm-reviewer-awareness-02
+    category: router-coverage
+    language: en
+    prompt: "Who is the right reviewer for the payment module rewrite?"
+    expected_skills: []
+    intended_triggers: [reviewer-awareness]
+
+  - id: rm-reviewer-awareness-03
+    category: router-coverage
+    language: de
+    prompt: "Wer wäre ein guter Reviewer für diese Änderung am Abrechnungsmodul?"
+    expected_skills: []
+    intended_triggers: [reviewer-awareness]
+
+  - id: rm-roadmap-ci-steps-policy-01
+    category: router-coverage
+    language: en
+    prompt: "Should this plan schedule a full quality gate at the end of each phase?"
+    expected_skills: []
+    intended_triggers: [roadmap-ci-steps-policy]
+    open_files: ["agents/roadmaps/road-to-faster-ci.md"]
+
+  - id: rm-roadmap-ci-steps-policy-02
+    category: router-coverage
+    language: en
+    prompt: "Add a step that runs task ci before opening the PR."
+    expected_skills: []
+    intended_triggers: [roadmap-ci-steps-policy]
+
+  - id: rm-roadmap-ci-steps-policy-03
+    category: router-coverage
+    language: de
+    prompt: "Soll ich am Ende der Phase task ci lokal laufen lassen?"
+    expected_skills: []
+    intended_triggers: [roadmap-ci-steps-policy]
+
+  - id: rm-roadmap-progress-sync-01
+    category: router-coverage
+    language: en
+    prompt: "Flip the checkbox for the step we just finished."
+    expected_skills: []
+    intended_triggers: [roadmap-progress-sync]
+    open_files: ["agents/roadmaps/archive/road-to-tested-routing.md"]
+
+  - id: rm-roadmap-progress-sync-02
+    category: router-coverage
+    language: en
+    prompt: "Continue with the next open step of the plan."
+    expected_skills: []
+    intended_triggers: [roadmap-progress-sync]
+
+  - id: rm-roadmap-progress-sync-03
+    category: router-coverage
+    language: de
+    prompt: "Bitte hake den erledigten Schritt in der Roadmap ab."
+    expected_skills: []
+    intended_triggers: [roadmap-progress-sync]
+    open_files: ["agents/roadmaps/road-to-renewal-foundation.md"]
+
+  - id: rm-role-mode-adherence-01
+    category: router-coverage
+    language: en
+    prompt: "Set active_role to reviewer for this session."
+    expected_skills: []
+    intended_triggers: [role-mode-adherence]
+
+  - id: rm-role-mode-adherence-02
+    category: router-coverage
+    language: en
+    prompt: "Why did the reply end with a role-mode marker?"
+    expected_skills: []
+    intended_triggers: [role-mode-adherence]
+
+  - id: rm-role-mode-adherence-03
+    category: router-coverage
+    language: de
+    prompt: "Was bedeutet der role-mode Marker am Ende deiner Antwort?"
+    expected_skills: []
+    intended_triggers: [role-mode-adherence]
+
+  - id: rm-rule-type-governance-01
+    category: router-coverage
+    language: en
+    prompt: "Should this rule be always-on or trigger-based?"
+    expected_skills: []
+    intended_triggers: [rule-type-governance]
+    open_files: ["src/rules/token-efficiency.md"]
+
+  - id: rm-rule-type-governance-02
+    category: router-coverage
+    language: en
+    prompt: "Draft the trigger set for this new guard."
+    expected_skills: []
+    intended_triggers: [rule-type-governance]
+    open_files: ["src/rules/new-guard.md"]
+
+  - id: rm-rule-type-governance-03
+    category: router-coverage
+    language: de
+    prompt: "Passt der Typ dieser Regel noch, oder sollte sie auf auto wechseln?"
+    expected_skills: []
+    intended_triggers: [rule-type-governance]
+    open_files: ["src/rules/commit-policy.md"]
+
+  - id: rm-runtime-safety-01
+    category: router-coverage
+    language: en
+    prompt: "Set the execution type of this skill to automated."
+    expected_skills: []
+    intended_triggers: [runtime-safety]
+
+  - id: rm-runtime-safety-02
+    category: router-coverage
+    language: en
+    prompt: "Which handler values are allowed for assisted skills?"
+    expected_skills: []
+    intended_triggers: [runtime-safety]
+
+  - id: rm-runtime-safety-03
+    category: router-coverage
+    language: en
+    prompt: "Darf dieses Skill den handler shell verwenden?"
+    expected_skills: []
+    intended_triggers: [runtime-safety]
+
+  - id: rm-scale-discipline-01
+    category: router-coverage
+    language: en
+    prompt: "Review this migration for the audit log table before it ships."
+    expected_skills: []
+    intended_triggers: [scale-discipline]
+
+  - id: rm-scale-discipline-02
+    category: router-coverage
+    language: en
+    prompt: "The orders list endpoint has an N+1 - can you add pagination?"
+    expected_skills: []
+    intended_triggers: [scale-discipline]
+
+  - id: rm-scale-discipline-03
+    category: router-coverage
+    language: de
+    prompt: "Braucht die neue Spalte einen index für die Filterabfragen?"
+    expected_skills: []
+    intended_triggers: [scale-discipline]
+
+  - id: rm-secret-vcs-guard-01
+    category: router-coverage
+    language: en
+    prompt: "I need to commit the .env changes - is that safe?"
+    expected_skills: []
+    intended_triggers: [secret-vcs-guard]
+
+  - id: rm-secret-vcs-guard-02
+    category: router-coverage
+    language: en
+    prompt: "Is it OK to git add the config with the API key inside?"
+    expected_skills: []
+    intended_triggers: [secret-vcs-guard]
+
+  - id: rm-secret-vcs-guard-03
+    category: router-coverage
+    language: de
+    prompt: "Darf ich den API Key einfach in die Config schreiben und dann git add ausführen?"
+    expected_skills: []
+    intended_triggers: [secret-vcs-guard]
+
+  - id: rm-security-sensitive-stop-01
+    category: router-coverage
+    language: en
+    prompt: "Add a password reset flow to the auth module."
+    expected_skills: []
+    intended_triggers: [security-sensitive-stop]
+
+  - id: rm-security-sensitive-stop-02
+    category: router-coverage
+    language: en
+    prompt: "Change the webhook signature validation for the Stripe integration."
+    expected_skills: []
+    intended_triggers: [security-sensitive-stop]
+
+  - id: rm-security-sensitive-stop-03
+    category: router-coverage
+    language: de
+    prompt: "Bitte passe die Billing-Logik für Plan-Upgrades an."
+    expected_skills: []
+    intended_triggers: [security-sensitive-stop]
+
+  - id: rm-senior-engineering-discipline-01
+    category: router-coverage
+    language: en
+    prompt: "Implement the CSV import endpoint with proper validation."
+    expected_skills: []
+    intended_triggers: [senior-engineering-discipline]
+
+  - id: rm-senior-engineering-discipline-02
+    category: router-coverage
+    language: en
+    prompt: "Add a seeder for the demo workspace data."
+    expected_skills: []
+    intended_triggers: [senior-engineering-discipline]
+
+  - id: rm-senior-engineering-discipline-03
+    category: router-coverage
+    language: de
+    prompt: "Schreib die Migration für die neue Spalte und den Seeder gleich dazu."
+    expected_skills: []
+    intended_triggers: [senior-engineering-discipline]
+
+  - id: rm-session-canary-01
+    category: router-coverage
+    language: en
+    prompt: "Why did you stop greeting me with my canary name this task?"
+    expected_skills: []
+    intended_triggers: [session-canary]
+
+  - id: rm-session-canary-02
+    category: router-coverage
+    language: en
+    prompt: "Set personal.canary_name in my settings so I can spot context decay."
+    expected_skills: []
+    intended_triggers: [session-canary]
+
+  - id: rm-session-canary-03
+    category: router-coverage
+    language: de
+    prompt: "Der canary Gruß fehlt in deiner letzten Antwort - Session neu starten?"
+    expected_skills: []
+    intended_triggers: [session-canary]
+
+  - id: rm-skill-improvement-trigger-01
+    category: router-coverage
+    language: en
+    prompt: "Run the improvement capture after completing this task."
+    expected_skills: []
+    intended_triggers: [skill-improvement-trigger]
+
+  - id: rm-skill-improvement-trigger-02
+    category: router-coverage
+    language: en
+    prompt: "Is the skill improvement pipeline enabled in this repo?"
+    expected_skills: []
+    intended_triggers: [skill-improvement-trigger]
+
+  - id: rm-skill-improvement-trigger-03
+    category: router-coverage
+    language: de
+    prompt: "Soll die improvement Pipeline nach großen Tasks automatisch laufen?"
+    expected_skills: []
+    intended_triggers: [skill-improvement-trigger]
+
+  - id: rm-skill-quality-01
+    category: router-coverage
+    language: en
+    prompt: "Tighten the validation section of this skill."
+    expected_skills: []
+    intended_triggers: [skill-quality]
+    open_files: ["src/skills/laravel/SKILL.md"]
+
+  - id: rm-skill-quality-02
+    category: router-coverage
+    language: en
+    prompt: "Is the frontmatter on this skill schema-complete?"
+    expected_skills: []
+    intended_triggers: [skill-quality]
+    open_files: ["src/skills/docker/SKILL.md"]
+
+  - id: rm-skill-quality-03
+    category: router-coverage
+    language: de
+    prompt: "Kürze die Beschreibung dieses Skills auf unter 200 Zeichen."
+    expected_skills: []
+    intended_triggers: [skill-quality]
+    open_files: ["src/skills/php-coder/SKILL.md"]
+
+  - id: rm-slash-command-routing-policy-01
+    category: router-coverage
+    language: en
+    prompt: "Run /create-pr for the current branch once the checks are green."
+    expected_skills: []
+    intended_triggers: [slash-command-routing-policy]
+
+  - id: rm-slash-command-routing-policy-02
+    category: router-coverage
+    language: en
+    prompt: "What does /commit do differently from committing manually?"
+    expected_skills: []
+    intended_triggers: [slash-command-routing-policy]
+
+  - id: rm-slash-command-routing-policy-03
+    category: router-coverage
+    language: de
+    prompt: "Bitte führe /commit:in-chunks für die offenen Änderungen aus."
+    expected_skills: []
+    intended_triggers: [slash-command-routing-policy]
+
+  - id: rm-source-confidentiality-01
+    category: router-coverage
+    language: en
+    prompt: "Add a note about where this harvest idea came from."
+    expected_skills: []
+    intended_triggers: [source-confidentiality]
+    open_files: ["agents/roadmaps/road-to-competitive-borrow.md"]
+
+  - id: rm-source-confidentiality-02
+    category: router-coverage
+    language: en
+    prompt: "Document the comparison against the reference suite we analyzed."
+    expected_skills: []
+    intended_triggers: [source-confidentiality]
+    open_files: ["docs/architecture.md"]
+
+  - id: rm-source-confidentiality-03
+    category: router-coverage
+    language: de
+    prompt: "Soll ich die Quelle dieses Patterns im Skill nennen?"
+    expected_skills: []
+    intended_triggers: [source-confidentiality]
+    open_files: ["src/skills/git-workflow/SKILL.md"]
+
+  - id: rm-source-discovery-gate-01
+    category: router-coverage
+    language: en
+    prompt: "Which fields does the orders endpoint actually return?"
+    expected_skills: []
+    intended_triggers: [source-discovery-gate]
+
+  - id: rm-source-discovery-gate-02
+    category: router-coverage
+    language: en
+    prompt: "Check the schema before writing the filter for the report."
+    expected_skills: []
+    intended_triggers: [source-discovery-gate]
+
+  - id: rm-source-discovery-gate-03
+    category: router-coverage
+    language: de
+    prompt: "Prüfe zuerst das Schema der Tabelle, bevor du den Filter baust."
+    expected_skills: []
+    intended_triggers: [source-discovery-gate]
+
+  - id: rm-source-of-truth-01
+    category: router-coverage
+    language: en
+    prompt: "Fix the typo in this generated rule file."
+    expected_skills: []
+    intended_triggers: [source-of-truth]
+    open_files: ["dist/agent-src/rules/direct-answers.md"]
+
+  - id: rm-source-of-truth-02
+    category: router-coverage
+    language: en
+    prompt: "This projection looks stale - update it directly, please."
+    expected_skills: []
+    intended_triggers: [source-of-truth]
+    open_files: [".augment/rules/scope-control.md"]
+
+  - id: rm-source-of-truth-03
+    category: router-coverage
+    language: en
+    prompt: "Kannst du diese Datei direkt anpassen?"
+    expected_skills: []
+    intended_triggers: [source-of-truth]
+    open_files: [".claude/skills/laravel/SKILL.md"]
+
+  - id: rm-spreadsheet-source-quality-01
+    category: router-coverage
+    language: en
+    prompt: "Pull the numbers for Q3 revenue into the board sheet."
+    expected_skills: []
+    intended_triggers: [spreadsheet-source-quality]
+
+  - id: rm-spreadsheet-source-quality-02
+    category: router-coverage
+    language: en
+    prompt: "Add the latest stock price of our competitor to the comparison tab."
+    expected_skills: []
+    intended_triggers: [spreadsheet-source-quality]
+
+  - id: rm-spreadsheet-source-quality-03
+    category: router-coverage
+    language: de
+    prompt: "Übernimm die revenue figures aus dem Quartalsbericht in die Tabelle."
+    expected_skills: []
+    intended_triggers: [spreadsheet-source-quality]
+
+  - id: rm-strategy-safety-floor-01
+    category: router-coverage
+    language: en
+    prompt: "What's our moat against the incumbent platforms?"
+    expected_skills: []
+    intended_triggers: [strategy-safety-floor]
+
+  - id: rm-strategy-safety-floor-02
+    category: router-coverage
+    language: en
+    prompt: "Should we enter the DACH market next year or wait?"
+    expected_skills: []
+    intended_triggers: [strategy-safety-floor]
+
+  - id: rm-strategy-safety-floor-03
+    category: router-coverage
+    language: de
+    prompt: "Wie schärfen wir unser positioning gegenüber dem Marktführer?"
+    expected_skills: []
+    intended_triggers: [strategy-safety-floor]
+
+  - id: rm-symfony-routing-01
+    category: router-coverage
+    language: en
+    prompt: "Add a Doctrine entity for the invoice with a matching repository."
+    expected_skills: []
+    intended_triggers: [symfony-routing]
+
+  - id: rm-symfony-routing-02
+    category: router-coverage
+    language: en
+    prompt: "Render the totals table in the Twig template for the report page."
+    expected_skills: []
+    intended_triggers: [symfony-routing]
+
+  - id: rm-symfony-routing-03
+    category: router-coverage
+    language: en
+    prompt: "Wie registriere ich einen Symfony Console Command im DI-Container?"
+    expected_skills: []
+    intended_triggers: [symfony-routing]
+
+  - id: rm-think-before-action-01
+    category: router-coverage
+    language: en
+    prompt: "Implement the bulk archive feature for old tickets."
+    expected_skills: []
+    intended_triggers: [think-before-action]
+
+  - id: rm-think-before-action-02
+    category: router-coverage
+    language: en
+    prompt: "Fix the flaky date parsing before the release."
+    expected_skills: []
+    intended_triggers: [think-before-action]
+
+  - id: rm-think-before-action-03
+    category: router-coverage
+    language: de
+    prompt: "Vor dem Refactor bitte erst die Datenflüsse analysieren."
+    expected_skills: []
+    intended_triggers: [think-before-action]
+
+  - id: rm-token-budget-discipline-01
+    category: router-coverage
+    language: en
+    prompt: "Mark design-intelligence as a rich skill with the required justification."
+    expected_skills: []
+    intended_triggers: [token-budget-discipline]
+
+  - id: rm-token-budget-discipline-02
+    category: router-coverage
+    language: en
+    prompt: "What does token_budget_class: rich require in the frontmatter?"
+    expected_skills: []
+    intended_triggers: [token-budget-discipline]
+
+  - id: rm-token-budget-discipline-03
+    category: router-coverage
+    language: de
+    prompt: "Braucht dieses Skill die Kennzeichnung token_budget_class rich?"
+    expected_skills: []
+    intended_triggers: [token-budget-discipline]
+
+  - id: rm-token-efficiency-01
+    category: router-coverage
+    language: en
+    prompt: "Please minimize tool calls while scanning the repo."
+    expected_skills: []
+    intended_triggers: [token-efficiency]
+
+  - id: rm-token-efficiency-02
+    category: router-coverage
+    language: en
+    prompt: "You're fetching logs into context again - redirect them to a file first."
+    expected_skills: []
+    intended_triggers: [token-efficiency]
+
+  - id: rm-token-efficiency-03
+    category: router-coverage
+    language: de
+    prompt: "Bitte minimize tool calls, das Kontingent ist fast aufgebraucht."
+    expected_skills: []
+    intended_triggers: [token-efficiency]
+
+  - id: rm-token-optimizer-maintenance-01
+    category: router-coverage
+    language: en
+    prompt: "Update the token-optimizer catalog row after editing the cited asset."
+    expected_skills: []
+    intended_triggers: [token-optimizer-maintenance]
+
+  - id: rm-token-optimizer-maintenance-02
+    category: router-coverage
+    language: en
+    prompt: "I renamed rtk-output-filtering - what else needs to change in the same commit?"
+    expected_skills: []
+    intended_triggers: [token-optimizer-maintenance]
+
+  - id: rm-token-optimizer-maintenance-03
+    category: router-coverage
+    language: de
+    prompt: "Ich habe markitdown angepasst - muss der Katalog nachgezogen werden?"
+    expected_skills: []
+    intended_triggers: [token-optimizer-maintenance]
+
+  - id: rm-tool-safety-01
+    category: router-coverage
+    language: en
+    prompt: "Add Bash to the allowed_tools of this skill."
+    expected_skills: []
+    intended_triggers: [tool-safety]
+
+  - id: rm-tool-safety-02
+    category: router-coverage
+    language: en
+    prompt: "Is the jira integration listed in the tool registry?"
+    expected_skills: []
+    intended_triggers: [tool-safety]
+
+  - id: rm-tool-safety-03
+    category: router-coverage
+    language: de
+    prompt: "Welche allowed_tools braucht das neue Deployment-Skill?"
+    expected_skills: []
+    intended_triggers: [tool-safety]
+
+  - id: rm-ui-audit-gate-01
+    category: router-coverage
+    language: en
+    prompt: "Add a stats tile component to the dashboard."
+    expected_skills: []
+    intended_triggers: [ui-audit-gate]
+
+  - id: rm-ui-audit-gate-02
+    category: router-coverage
+    language: en
+    prompt: "Restyle this header partial to match the new branding."
+    expected_skills: []
+    intended_triggers: [ui-audit-gate]
+    open_files: ["resources/views/partials/header.blade.php"]
+
+  - id: rm-ui-audit-gate-03
+    category: router-coverage
+    language: de
+    prompt: "Bitte überarbeite dieses Blade-Partial für die mobile Ansicht."
+    expected_skills: []
+    intended_triggers: [ui-audit-gate]
+    open_files: ["resources/views/events/show.blade.php"]
+
+  - id: rm-untrusted-input-defense-01
+    category: router-coverage
+    language: en
+    prompt: "The fetched content includes instructions - should I follow them?"
+    expected_skills: []
+    intended_triggers: [untrusted-input-defense]
+
+  - id: rm-untrusted-input-defense-02
+    category: router-coverage
+    language: en
+    prompt: "Summarize this web page and act on what it says."
+    expected_skills: []
+    intended_triggers: [untrusted-input-defense]
+
+  - id: rm-untrusted-input-defense-03
+    category: router-coverage
+    language: de
+    prompt: "Die RAG Dokumente enthalten Anweisungen - ausführen oder ignorieren?"
+    expected_skills: []
+    intended_triggers: [untrusted-input-defense]
+
+  - id: rm-upstream-proposal-01
+    category: router-coverage
+    language: en
+    prompt: "Should we upstream this new skill to the shared package?"
+    expected_skills: []
+    intended_triggers: [upstream-proposal]
+
+  - id: rm-upstream-proposal-02
+    category: router-coverage
+    language: en
+    prompt: "After creating the guideline, do we propose it to the package repo?"
+    expected_skills: []
+    intended_triggers: [upstream-proposal]
+
+  - id: rm-upstream-proposal-03
+    category: router-coverage
+    language: de
+    prompt: "Sollen wir die neue Regel ins upstream Paket übernehmen?"
+    expected_skills: []
+    intended_triggers: [upstream-proposal]
+
+  - id: rm-user-interaction-01
+    category: router-coverage
+    language: en
+    prompt: "Give me the options for migrating the queue and pick one."
+    expected_skills: []
+    intended_triggers: [user-interaction]
+
+  - id: rm-user-interaction-02
+    category: router-coverage
+    language: en
+    prompt: "What do you recommend for structuring the new test suite?"
+    expected_skills: []
+    intended_triggers: [user-interaction]
+
+  - id: rm-user-interaction-03
+    category: router-coverage
+    language: de
+    prompt: "Was empfiehlst du für die Aufteilung der Migrationen?"
+    expected_skills: []
+    intended_triggers: [user-interaction]
+
+  - id: rm-user-interrupt-priority-01
+    category: router-coverage
+    language: en
+    prompt: "Stop that build and look at the production alert first."
+    expected_skills: []
+    intended_triggers: [user-interrupt-priority]
+
+  - id: rm-user-interrupt-priority-02
+    category: router-coverage
+    language: de
+    prompt: "Mach stattdessen erst den Security-Patch fertig."
+    expected_skills: []
+    intended_triggers: [user-interrupt-priority]
+
+  - id: rm-user-interrupt-priority-03
+    category: router-coverage
+    language: en
+    prompt: "Process the whole roadmap without pausing between phases."
+    expected_skills: []
+    intended_triggers: [user-interrupt-priority]

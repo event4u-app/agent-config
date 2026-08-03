@@ -1,0 +1,8 @@
+rule: upstream-proposal
+positives:
+  - prompt: "Should we upstream this new skill to the shared package?"
+  - prompt: "After creating the guideline, do we propose it to the package repo?"
+  - prompt: "Sollen wir die neue Regel ins upstream Paket übernehmen?"
+near_misses:
+  - prompt: "Publish the release notes for the new package version."
+  - prompt: "Share the new lint check with the platform team via the wiki."

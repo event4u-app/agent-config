@@ -1,0 +1,8 @@
+rule: session-canary
+positives:
+  - prompt: "Why did you stop greeting me with my canary name this task?"
+  - prompt: "Set personal.canary_name in my settings so I can spot context decay."
+  - prompt: "Der canary Gruß fehlt in deiner letzten Antwort - Session neu starten?"
+near_misses:
+  - prompt: "The conversation feels degraded - should we start a fresh chat?"
+  - prompt: "Add my nickname to the profile settings."

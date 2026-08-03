@@ -1,0 +1,8 @@
+rule: no-pr-progress-comments
+positives:
+  - prompt: "Run gh pr comment to tell the reviewer that CI is green now."
+  - prompt: "Should I post a status comment after each CI fix iteration?"
+  - prompt: "Poste bitte per gh pr comment ein kurzes Update in den PR."
+near_misses:
+  - prompt: "Reply to the inline review feedback on the open pull request."
+  - prompt: "Summarize the CI progress here in chat instead of on GitHub."

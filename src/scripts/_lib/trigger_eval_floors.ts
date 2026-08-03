@@ -29,3 +29,12 @@ export const DOMAIN_FLOORS: Readonly<Record<string, TriggerEvalFloor>> = {
 export function floor_for(skill: string | null | undefined): TriggerEvalFloor {
     return (skill !== null && skill !== undefined && DOMAIN_FLOORS[skill]) || DEFAULT_FLOOR;
 }
+
+/**
+ * Advisory floor for the rules-mode canary leg (`rule_trigger_eval.ts`,
+ * road-to-tested-routing Phase 4). Deliberately loose: it is a drift canary
+ * over a ~40-case derived suite spanning ~97 rules, not a per-rule quality
+ * gate — ratchet only after live baseline data exists. A breach fails the
+ * scheduled canary job only, never a PR.
+ */
+export const RULES_MODE_FLOOR: TriggerEvalFloor = { minRecall: 0.5, minPrecision: 0.5 };

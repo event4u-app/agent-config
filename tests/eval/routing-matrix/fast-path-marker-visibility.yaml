@@ -1,0 +1,8 @@
+rule: fast-path-marker-visibility
+positives:
+  - prompt: "Why was the fast-path marker missing from your last reply?"
+  - prompt: "The low-impact council resolved this - where is the verbatim marker line?"
+  - prompt: "Warum fehlt der Fast-Path Marker in deiner letzten Antwort?"
+near_misses:
+  - prompt: "Can the council take a second look at this design decision?"
+  - prompt: "You skipped the transparency banner on that verdict - please explain."

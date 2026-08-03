@@ -42,14 +42,20 @@ export interface FetchRouterOpts {
     model?: string;
     apiKey?: string;
     fetchImpl?: FetchImpl;
+    /**
+     * Prompt header prepended to the catalogue (default: the skill-routing
+     * header). The rules-mode eval (`rule_trigger_eval.ts`) injects its own
+     * header here so it reuses this transport code unchanged.
+     */
+    promptHeader?: string;
 }
 
 const MAX_TOKENS = 256;
 
 /** Build the system prompt the same way AnthropicRouter does. */
-function buildSystemPrompt(skills: SkillMeta[]): string {
+function buildSystemPrompt(skills: SkillMeta[], header: string = ROUTING_PROMPT_HEADER): string {
     const catalogue = skills.map((s) => `- ${s.name} :: ${s.description}`).join('\n');
-    return ROUTING_PROMPT_HEADER + catalogue + '\n';
+    return header + catalogue + '\n';
 }
 
 function requireKey(name: string, apiKey: string | undefined): string {
@@ -97,11 +103,13 @@ export class OpenAiRouter implements TriggerRouter {
     private _model: string;
     private _apiKey: string;
     private _fetch: FetchImpl;
+    private _promptHeader: string | undefined;
 
     constructor(opts: FetchRouterOpts = {}) {
         this._model = opts.model ?? 'gpt-4o-mini';
         this._apiKey = requireKey('OpenAiRouter', opts.apiKey);
         this._fetch = opts.fetchImpl ?? (globalThis.fetch as unknown as FetchImpl);
+        this._promptHeader = opts.promptHeader;
     }
 
     route(_query: string, _skills: SkillMeta[]): [string[], number, number] {
@@ -109,7 +117,7 @@ export class OpenAiRouter implements TriggerRouter {
     }
 
     async routeAsync(query: string, skills: SkillMeta[]): Promise<[string[], number, number]> {
-        const systemPrompt = buildSystemPrompt(skills);
+        const systemPrompt = buildSystemPrompt(skills, this._promptHeader);
         const body = JSON.stringify({
             model: this._model,
             max_tokens: MAX_TOKENS,
@@ -156,12 +164,14 @@ export class GeminiRouter implements TriggerRouter {
     private _model: string;
     private _apiKey: string;
     private _fetch: FetchImpl;
+    private _promptHeader: string | undefined;
 
     constructor(opts: FetchRouterOpts = {}) {
         // flash, NOT pro: pro burns ~150 "thinking" tokens on trivial prompts.
         this._model = opts.model ?? 'gemini-2.5-flash';
         this._apiKey = requireKey('GeminiRouter', opts.apiKey);
         this._fetch = opts.fetchImpl ?? (globalThis.fetch as unknown as FetchImpl);
+        this._promptHeader = opts.promptHeader;
     }
 
     route(_query: string, _skills: SkillMeta[]): [string[], number, number] {
@@ -169,7 +179,7 @@ export class GeminiRouter implements TriggerRouter {
     }
 
     async routeAsync(query: string, skills: SkillMeta[]): Promise<[string[], number, number]> {
-        const systemPrompt = buildSystemPrompt(skills);
+        const systemPrompt = buildSystemPrompt(skills, this._promptHeader);
         const url =
             `https://generativelanguage.googleapis.com/v1beta/models/` +
             `${this._model}:generateContent?key=${this._apiKey}`;
@@ -221,11 +231,13 @@ export class AnthropicFetchRouter implements TriggerRouter {
     private _model: string;
     private _apiKey: string;
     private _fetch: FetchImpl;
+    private _promptHeader: string | undefined;
 
     constructor(opts: FetchRouterOpts = {}) {
         this._model = opts.model ?? 'claude-haiku-4-5-20251001';
         this._apiKey = requireKey('AnthropicFetchRouter', opts.apiKey);
         this._fetch = opts.fetchImpl ?? (globalThis.fetch as unknown as FetchImpl);
+        this._promptHeader = opts.promptHeader;
     }
 
     route(_query: string, _skills: SkillMeta[]): [string[], number, number] {
@@ -233,7 +245,7 @@ export class AnthropicFetchRouter implements TriggerRouter {
     }
 
     async routeAsync(query: string, skills: SkillMeta[]): Promise<[string[], number, number]> {
-        const systemPrompt = buildSystemPrompt(skills);
+        const systemPrompt = buildSystemPrompt(skills, this._promptHeader);
         const body = JSON.stringify({
             model: this._model,
             max_tokens: MAX_TOKENS,

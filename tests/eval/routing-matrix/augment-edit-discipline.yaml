@@ -1,0 +1,12 @@
+rule: augment-edit-discipline
+positives:
+  - prompt: "Rename this skill and update every cross-reference."
+  - prompt: "Is this file still portable across consumer projects?"
+    open_files: [".augment/rules/scope-control.md"]
+  - prompt: "Bitte prüfe, ob diese Regel projektneutral bleibt."
+    open_files: ["src/rules/direct-answers.md"]
+near_misses:
+  - prompt: "Update the count badge in the README after the last merge."
+    open_files: ["README.md"]
+  - prompt: "Move the changelog entry for version 2.3 to the top of the file."
+    open_files: ["CHANGELOG.md"]

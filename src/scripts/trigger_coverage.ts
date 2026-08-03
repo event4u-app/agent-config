@@ -39,6 +39,8 @@ import process from 'node:process';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { parse as parseYaml } from 'yaml';
 
+import { keyword_matches_anchored } from './router_telemetry.js';
+
 const _HERE = fileURLToPath(import.meta.url);
 
 // src/scripts/trigger_coverage.ts → parents[2] of the .py file is repo root.
@@ -76,8 +78,17 @@ export function fired_rules(prompt: string, router: Router): Set<string> {
     for (const tier of ['tier_1', 'tier_2'] as const) {
         for (const entry of router[tier] ?? []) {
             for (const trig of entry.triggers ?? []) {
-                if ('keyword' in trig || 'phrase' in trig) {
-                    const needle = String(trig['keyword'] ?? trig['phrase']).toLowerCase();
+                // Single matcher source of truth (road-to-tested-routing
+                // Phase 3): `keyword` is word-boundary anchored via the
+                // shared helper; `phrase` stays unanchored substring.
+                if ('keyword' in trig) {
+                    const needle = String(trig['keyword']).toLowerCase();
+                    if (needle !== '' && keyword_matches_anchored(low, needle)) {
+                        fired.add(entry.id);
+                        break;
+                    }
+                } else if ('phrase' in trig) {
+                    const needle = String(trig['phrase']).toLowerCase();
                     if (needle !== '' && low.includes(needle)) {
                         fired.add(entry.id);
                         break;

@@ -1,0 +1,8 @@
+rule: broken-access-control
+positives:
+  - prompt: "Add an endpoint that returns the current user's invoices."
+  - prompt: "Users can pass any id into findById here - is that an IDOR?"
+  - prompt: "Bitte prüfe die Authorization im neuen Admin-Controller."
+near_misses:
+  - prompt: "Harden the password hashing and bump the cost factor."
+  - prompt: "Encrypt the backup archives before uploading them to S3."

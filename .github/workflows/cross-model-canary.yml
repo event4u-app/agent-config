@@ -77,6 +77,21 @@ jobs:
           ( umask 077
             printf '%s' "$ANTHROPIC_API_KEY" > "$HOME/.event4u/agent-config/anthropic.key" )
           ./node_modules/.bin/tsx src/scripts/trigger_eval_rotation.ts --out-dir rotation-results
+      # road-to-tested-routing Phase 4 — advisory rules-mode leg: "which rules
+      # would you consult for this prompt" over the routing-matrix-derived
+      # suite (~40 cases, deterministic sampling). Same contract as the skills
+      # rotation above: a floor breach fails THIS scheduled job only — PRs are
+      # never blocked by live results; the PR gate stays skills-dry-run-only.
+      - name: Rule trigger-eval, advisory (skips if key secret absent)
+        run: |
+          if [ -z "$ANTHROPIC_API_KEY" ]; then
+            echo "::notice::Rule trigger-eval skipped — set ANTHROPIC_API_KEY repo secret to enable."
+            exit 0
+          fi
+          mkdir -p "$HOME/.event4u/agent-config"
+          ( umask 077
+            printf '%s' "$ANTHROPIC_API_KEY" > "$HOME/.event4u/agent-config/anthropic.key" )
+          ./node_modules/.bin/tsx src/scripts/rule_trigger_eval.ts --out rotation-results/rules-mode.json
       - name: Upload rotation result JSONs
         if: always()
         uses: actions/upload-artifact@v7

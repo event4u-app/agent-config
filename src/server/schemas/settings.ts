@@ -79,6 +79,17 @@ export const settingsSchema = z.object({
             monthly: z.number().min(0).default(0).describe(
                 'Calendar-month USD ceiling. Pairs with cost.enforcement = hard-stop for a hard cap on agent spend before the next billing cycle. Set 0 to disable.',
             ),
+            per_tier: z.object({
+                cheap: z.number().min(0).nullable().default(null).describe(
+                    'USD ceiling for the cheap model tier under budget-aware delegation (docs/contracts/budget-routing.md). null = no separate tier cap; global ceilings still apply.',
+                ),
+                medium: z.number().min(0).nullable().default(null).describe(
+                    'USD ceiling for the medium model tier. null = no separate tier cap.',
+                ),
+                strong: z.number().min(0).nullable().default(null).describe(
+                    'USD ceiling for the strong model tier. null = no separate tier cap — with cheap exhausted and strong funded, budget routing uses the strong tier rather than blocking work.',
+                ),
+            }).default({ cheap: null, medium: null, strong: null }),
         }),
         enforcement: enforcementMode.default('advisory').describe(
             'What happens when a budget hits 100%. advisory = show a banner, keep working (default — never blocks an active task). hard-stop = refuse further model calls until the budget resets or you raise the ceiling.',
@@ -287,6 +298,9 @@ export const settingsSchema = z.object({
         ),
         downshift: z.boolean().default(true).describe(
             'Route delegable sub-tasks to the lowest-capable model tier (cost + speed via model downshift). false = every subagent runs on the session tier.',
+        ),
+        budget_routing: z.enum(['ask', 'auto', 'off']).default('ask').describe(
+            'Budget-aware cheap-request delegation (docs/contracts/budget-routing.md): pick the cheapest classifier-adequate tier WITH available budget (cost.budgets.per_tier); cheap exhausted but strong funded → strong tier; all exhausted → session model + notice. Work is never blocked to save money; the session model is never switched (delegation with a model override). ask = confirm the first budget-motivated downshift per session (default). auto = apply silently with telemetry. off = today\'s behavior (single-flip rollback). Distinct from downshift: that is the quality/cost knob, this is the resource-availability gate.',
         ),
         quota_arbitrage: z.boolean().default(true).describe(
             'Prefer a separate quota-pool model for delegable sub-tasks where the host manifest reports one. Optional bonus only — identical behaviour (minus the quota win) where unsupported. Never load-bearing.',

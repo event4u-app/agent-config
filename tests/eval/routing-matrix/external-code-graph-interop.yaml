@@ -1,0 +1,8 @@
+rule: external-code-graph-interop
+positives:
+  - prompt: "Who calls the InvoiceService::finalize method?"
+  - prompt: "Use the SCIP index to find references to this symbol."
+  - prompt: "Wo liegt der Code Graph in diesem Repo und wie frage ich ihn ab?"
+near_misses:
+  - prompt: "Show me the inheritance hierarchy for the payment module."
+  - prompt: "Grep for every usage of the old namespace prefix."

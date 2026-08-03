@@ -1,0 +1,8 @@
+rule: question-not-instruction
+positives:
+  - prompt: "Why did you only implement one phase of the roadmap?"
+  - prompt: "What do you think about splitting this class into two?"
+  - prompt: "Warum hast du die Tests nicht mit angepasst?"
+near_misses:
+  - prompt: "Explain the difference between the two caching strategies."
+  - prompt: "Bitte erkläre mir den Unterschied zwischen den beiden Ansätzen."

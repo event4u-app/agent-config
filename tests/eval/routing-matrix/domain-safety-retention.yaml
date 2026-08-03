@@ -1,0 +1,8 @@
+rule: domain-safety-retention
+positives:
+  - prompt: "How long should we keep closed support tickets?"
+  - prompt: "We received a DSAR - what do we need to produce and by when?"
+  - prompt: "Wie setzen wir eine Data Retention Policy für die Kundendaten auf?"
+near_misses:
+  - prompt: "Archive last year's invoices to cold storage."
+  - prompt: "Set up automatic cleanup of temporary build artifacts after seven days."

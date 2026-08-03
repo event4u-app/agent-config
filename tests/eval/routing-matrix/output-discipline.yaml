@@ -1,0 +1,8 @@
+rule: output-discipline
+positives:
+  - prompt: "You wrote // rest of component again - emit the full file this time."
+  - prompt: "Don't truncate the class body for brevity, write everything out."
+  - prompt: "Schreib den Code komplett aus, nicht nur 'similar pattern' als Kommentar."
+near_misses:
+  - prompt: "Shorten the changelog entry to a single paragraph."
+  - prompt: "The generated file is too long - split it into two modules."

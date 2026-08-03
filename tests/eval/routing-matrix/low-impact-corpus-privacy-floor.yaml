@@ -1,0 +1,10 @@
+rule: low-impact-corpus-privacy-floor
+positives:
+  - prompt: "Append this naming verdict to the low-impact corpus, please."
+  - prompt: "Run /memory learn-low-impact for the decision we just settled."
+  - prompt: "Kannst du diese Entscheidung in den Low-Impact Corpus aufnehmen?"
+  - prompt: "Review this entry before it goes upstream."
+    open_files: ["agents/decisions/low-impact-decisions.md"]
+near_misses:
+  - prompt: "Record this architecture decision as a proper ADR."
+  - prompt: "Is this change low impact enough to skip a full council session?"

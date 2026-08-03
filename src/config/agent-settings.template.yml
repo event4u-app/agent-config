@@ -226,6 +226,16 @@ cost:
     weekly: 0
     # Monthly USD ceiling (rolling 30d). 0 / null = no monthly budget.
     monthly: 0
+    # Per-model-tier USD ceilings for budget-aware cheap-request delegation
+    # (docs/contracts/budget-routing.md; council 2026-08-03). null = no
+    # separate tier cap — the global ceilings above still apply and the
+    # budget-routing relation works purely off them. Set a value to cap one
+    # tier (e.g. cheap: 10 keeps haiku-class delegation under $10/day-window
+    # of the ledger). Consumed by subagents.budget_routing below.
+    per_tier:
+      cheap: null
+      medium: null
+      strong: null
   # Enforcement mode at the HARD_STOP tier (100% utilization):
   #   advisory  = dashboards and `cost:check` show the breach; agent
   #               keeps working. Default. Safe for greenfield projects.
@@ -703,6 +713,19 @@ subagents:
   # via model downshift). true (default) = downshift per declared model_tier;
   # false = every subagent runs on the session tier.
   downshift: true
+
+  # Budget-aware cheap-request delegation (docs/contracts/budget-routing.md).
+  # Picks the cheapest CLASSIFIER-ADEQUATE tier that has available budget
+  # (cost.budgets.per_tier above); cheap exhausted but strong funded → strong
+  # tier; everything exhausted → session model + notice. Work is never
+  # blocked to save money, and the session model is never switched — routing
+  # happens as delegation with a model override. DISTINCT from `downshift`
+  # above: downshift is the quality/cost trade-off knob, budget_routing is
+  # the resource-availability gate (council 2026-08-03).
+  #   ask  = (default) first budget-motivated downshift of a session asks once
+  #   auto = apply the relation silently (telemetry line per routed request)
+  #   off  = today's behavior; single-flip rollback
+  budget_routing: ask
 
   # Prefer a separate-quota-pool model for delegable sub-tasks WHERE the host
   # manifest reports `separate_quota_pool: true` (e.g. a subscription whose

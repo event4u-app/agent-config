@@ -1,0 +1,8 @@
+rule: domain-safety-pii
+positives:
+  - prompt: "Draft a ticket response for this angry customer email."
+  - prompt: "Log the user id and email when checkout fails."
+  - prompt: "Schreib eine Rejection Email für den Kandidaten aus der zweiten Runde."
+near_misses:
+  - prompt: "Anonymize the seeder data before the demo."
+  - prompt: "Mask the API keys in the sample configuration files."

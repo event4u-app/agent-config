@@ -1,0 +1,8 @@
+rule: cross-source-consistency
+positives:
+  - prompt: "The ticket text says birthdays today but the mockup shows one from two days ago."
+  - prompt: "Refine this ticket - the acceptance criteria contradict the description."
+  - prompt: "Das Ticket sagt X, aber der Screenshot zeigt Y - was gilt?"
+near_misses:
+  - prompt: "Implement the birthday widget exactly as the spec describes."
+  - prompt: "Summarize the sprint goals for the review meeting."

@@ -124,12 +124,26 @@ export function read_identity_name(user_yml_path: string): string | null {
  * an empty scalar at a layer means "not set here", not "feature off",
  * so the walk continues to the next layer.
  */
-export function resolve_canary_name(workspace_root: string): string {
+/** Which settings layer decided the canary name — surfaced verbatim in the
+ * hook's `reason` so `routing:doctor` can answer "why did/didn't this gate
+ * fire" with the deciding layer named (road-to-tested-routing Phase 1). */
+export type CanaryLayer =
+  | "project override"
+  | "user-global settings"
+  | "user-global identity"
+  | "none";
+
+export interface CanaryResolution {
+  name: string;
+  layer: CanaryLayer;
+}
+
+export function resolve_canary_name(workspace_root: string): CanaryResolution {
   const project = sanitize_name(
     read_canary_name(path.join(workspace_root, SETTINGS_FILE)),
   );
   if (project) {
-    return project;
+    return { name: project, layer: "project override" };
   }
   const global_settings = resolve_with_fallback(
     path.join("settings", ".agent-settings.yml"),
@@ -137,17 +151,17 @@ export function resolve_canary_name(workspace_root: string): string {
   if (global_settings) {
     const name = sanitize_name(read_canary_name(global_settings));
     if (name) {
-      return name;
+      return { name, layer: "user-global settings" };
     }
   }
   const global_user = resolve_with_fallback(path.join("settings", ".agent-user.yml"));
   if (global_user) {
     const name = sanitize_name(read_identity_name(global_user));
     if (name) {
-      return name;
+      return { name, layer: "user-global identity" };
     }
   }
-  return "";
+  return { name: "", layer: "none" };
 }
 
 /**
@@ -212,7 +226,7 @@ export function main(): number {
   }
 
   const root = _workspaceRoot(env);
-  const name = resolve_canary_name(root);
+  const { name, layer } = resolve_canary_name(root);
   if (!name) {
     return EXIT_ALLOW; // canary not configured on any layer — clean no-op
   }
@@ -220,7 +234,7 @@ export function main(): number {
   process.stdout.write(
     `${JSON.stringify({
       decision: "allow",
-      reason: `session-canary: active for "${name}"`,
+      reason: `session-canary: active for "${name}" (${layer})`,
       context: build_canary_block(name),
     })}\n`,
   );

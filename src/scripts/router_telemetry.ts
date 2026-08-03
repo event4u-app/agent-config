@@ -183,6 +183,57 @@ function _fnmatch(name: string, pat: string): boolean {
 // ── Trigger matching ─────────────────────────────────────────────────────
 
 /** Apply one trigger to a prompt + context; return True on match. */
+/** Unicode word character — letters, digits, underscore (incl. umlauts). */
+const _WORD_CHAR = /[\p{L}\p{N}_]/u;
+
+function _isWordChar(c: string | undefined): boolean {
+  return c !== undefined && _WORD_CHAR.test(c);
+}
+
+/**
+ * Word-boundary-anchored keyword match (road-to-tested-routing Phase 3).
+ *
+ * A `keyword` occurrence counts only when its word-character edges sit on
+ * word boundaries: `ac` no longer fires inside "black", `plan` no longer
+ * fires inside "planet". Two deliberate reliefs:
+ *
+ * - An edge that is itself a NON-word character (e.g. `__()`, `/image:`,
+ *   `trans(`, an emoji) carries no boundary requirement on that side —
+ *   punctuation-shaped keywords keep their exact substring semantics.
+ * - The right boundary accepts one optional plural `s` ("icons", "options",
+ *   "secrets" still fire their singular keyword). Richer inflection (German
+ *   verb endings: "implementiere", "committen") is a DOCUMENTED accepted
+ *   recall cost of anchoring — the matrices carry standalone-token phrasings
+ *   for those languages instead.
+ *
+ * `phrase` deliberately stays unanchored substring; since this change the
+ * two trigger kinds genuinely differ.
+ */
+export function keyword_matches_anchored(prompt_lower: string, kw_lower: string): boolean {
+  if (kw_lower === "") {
+    return false;
+  }
+  const needLeft = _isWordChar(kw_lower[0]);
+  const needRight = _isWordChar(kw_lower[kw_lower.length - 1]);
+  let idx = prompt_lower.indexOf(kw_lower);
+  while (idx !== -1) {
+    const leftOk = !needLeft || !_isWordChar(prompt_lower[idx - 1]);
+    let rightOk = true;
+    if (needRight) {
+      let end = idx + kw_lower.length;
+      if (prompt_lower[end] === "s") {
+        end += 1; // optional plural `s`
+      }
+      rightOk = !_isWordChar(prompt_lower[end]);
+    }
+    if (leftOk && rightOk) {
+      return true;
+    }
+    idx = prompt_lower.indexOf(kw_lower, idx + 1);
+  }
+  return false;
+}
+
 export function trigger_matches(
   trigger: Trigger,
   prompt: string,
@@ -191,7 +242,7 @@ export function trigger_matches(
 ): boolean {
   const prompt_lower = prompt.toLowerCase();
   if ("keyword" in trigger) {
-    return prompt_lower.includes(String(trigger["keyword"]).toLowerCase());
+    return keyword_matches_anchored(prompt_lower, String(trigger["keyword"]).toLowerCase());
   }
   if ("phrase" in trigger) {
     return prompt_lower.includes(String(trigger["phrase"]).toLowerCase());

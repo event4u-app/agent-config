@@ -1,0 +1,8 @@
+rule: legal-safety-floor
+positives:
+  - prompt: "Please review this contract before we send it back to the vendor."
+  - prompt: "Is clause 7 of this NDA acceptable for a small supplier?"
+  - prompt: "Prüfe bitte, ob diese DPA-Anlage mit der GDPR vereinbar ist."
+near_misses:
+  - prompt: "Add a terms-of-service link to the footer component."
+  - prompt: "The invoice PDF renders with the wrong date format."

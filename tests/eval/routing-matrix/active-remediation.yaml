@@ -1,0 +1,8 @@
+rule: active-remediation
+positives:
+  - prompt: "Refactor the invoice exporter and remove the duplicate parsing logic."
+  - prompt: "This legacy module still calls deprecated helpers - how should we handle that?"
+  - prompt: "Kannst du beim Cleanup des alten Moduls die doppelte Logik gleich mit entfernen?"
+near_misses:
+  - prompt: "Add a retry to the export job so transient failures recover on their own."
+  - prompt: "Why does the invoice exporter emit two identical rows for the same order?"

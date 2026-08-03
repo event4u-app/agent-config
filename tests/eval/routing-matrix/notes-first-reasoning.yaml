@@ -1,0 +1,8 @@
+rule: notes-first-reasoning
+positives:
+  - prompt: "Help me debug why the queue worker dies every night after midnight."
+  - prompt: "My hypothesis is that the cache key collides - how do we verify it?"
+  - prompt: "Bitte starte eine Debug-Session für den fehlgeschlagenen Import und halte die Zwischenschritte fest."
+near_misses:
+  - prompt: "Write the release notes for the sprint review meeting."
+  - prompt: "Format the log output as JSON for the monitoring dashboard."

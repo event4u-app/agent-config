@@ -1,0 +1,8 @@
+rule: token-optimizer-maintenance
+positives:
+  - prompt: "Update the token-optimizer catalog row after editing the cited asset."
+  - prompt: "I renamed rtk-output-filtering - what else needs to change in the same commit?"
+  - prompt: "Ich habe markitdown angepasst - muss der Katalog nachgezogen werden?"
+near_misses:
+  - prompt: "Refresh the skill index after adding the new command."
+  - prompt: "The CI freshness validator failed - which catalog table is stale?"

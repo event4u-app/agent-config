@@ -1,0 +1,8 @@
+rule: invite-challenge
+positives:
+  - prompt: "Here is my plan for the checkout rewrite — start with phase one."
+  - prompt: "What architecture should the notification service use?"
+  - prompt: "Welcher Plan ist besser für das Caching — Redis oder In-Memory?"
+near_misses:
+  - prompt: "Rename the helper function to something clearer."
+  - prompt: "Bump the dependency to the latest patch release."

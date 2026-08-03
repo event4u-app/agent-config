@@ -1,0 +1,11 @@
+rule: ui-audit-gate
+positives:
+  - prompt: "Add a stats tile component to the dashboard."
+  - prompt: "Restyle this header partial to match the new branding."
+    open_files: ["resources/views/partials/header.blade.php"]
+  - prompt: "Bitte überarbeite dieses Blade-Partial für die mobile Ansicht."
+    open_files: ["resources/views/events/show.blade.php"]
+near_misses:
+  - prompt: "Adjust the API response shape for the dashboard widgets."
+  - prompt: "Tweak the button colors in the marketing site stylesheet."
+    open_files: ["public/css/site.css"]

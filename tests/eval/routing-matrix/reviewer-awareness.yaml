@@ -1,0 +1,8 @@
+rule: reviewer-awareness
+positives:
+  - prompt: "Suggest reviewers for this change to the permission checks."
+  - prompt: "Who is the right reviewer for the payment module rewrite?"
+  - prompt: "Wer wäre ein guter Reviewer für diese Änderung am Abrechnungsmodul?"
+near_misses:
+  - prompt: "Review the caching layer design before we start building it."
+  - prompt: "Assign the ticket to whoever owns the search service."
