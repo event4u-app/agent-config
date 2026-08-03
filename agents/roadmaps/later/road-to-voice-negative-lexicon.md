@@ -6,14 +6,14 @@ status: later
 # Road to a voice negative lexicon — make "never say X" checkable instead of hoped
 
 > **Parked per
-> [`ADR-206`](../../../docs/decisions/ADR-206-harvest-freeze-resume-conditions.md)
+> [`ADR-210`](../../../docs/decisions/ADR-210-harvest-freeze-resume-conditions.md)
 > (harvest freeze; council disposition 2026-08-03):** additive schema surface
 > with no recorded internal failure. The design below is kept because its
 > Phase 0 is deliberately cheap and self-killing. Re-audited 2026-08-03:
 > STAY (no pre-dating finding, no latent risk beyond style).
 >
-> **Resume when:** the ADR-206 exit fires (external adopter OR the internal
-> arm), OR — per ADR-206 Amendment C — a recorded incident with provenance
+> **Resume when:** the ADR-210 exit fires (external adopter OR the internal
+> arm), OR — per ADR-210 Amendment C — a recorded incident with provenance
 > shows agent-authored persisted prose (PR bodies, commit messages) violating
 > a user's stated voice constraints. On resume, run Phase 0 FIRST — its
 > honest-null outcome archives this file with the numbers.

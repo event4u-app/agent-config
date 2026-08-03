@@ -6,7 +6,7 @@ status: later
 # Road to guided journeys & router family — dock the journey pattern onto the existing Flow layer (Source C)
 
 > **Parked per
-> [`ADR-206`](../../../docs/decisions/ADR-206-harvest-freeze-resume-conditions.md)
+> [`ADR-210`](../../../docs/decisions/ADR-210-harvest-freeze-resume-conditions.md)
 > (harvest freeze; council disposition 2026-08-03):** additive capability
 > system with no recorded internal failure; the external reviews'
 > "foundation-first" mandate binds. The analysis below is kept in full
@@ -15,7 +15,7 @@ status: later
 > adoptions STAY (the census documents capability gaps, not failures; no
 > recorded misroute incident exists).
 >
-> **Resume when:** the ADR-206 exit fires (external adopter OR the internal
+> **Resume when:** the ADR-210 exit fires (external adopter OR the internal
 > arm, which itself requires the renewal set to be complete). On resume,
 > Phase 0 (docking council) runs first — nothing here is pre-decided.
 >

@@ -1,5 +1,5 @@
 ---
-adr: 206
+adr: 210
 status: accepted
 date: 2026-08-03
 decision: harvest-freeze-resume-conditions
@@ -20,7 +20,7 @@ review_trigger: >-
   just the single borrow.
 ---
 
-# ADR-206 — The harvest freeze gets a canonical record, an internal exit, a review cadence, and a latent-risk door
+# ADR-210 — The harvest freeze gets a canonical record, an internal exit, a review cadence, and a latent-risk door
 
 ## Status
 
