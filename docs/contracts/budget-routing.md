@@ -46,9 +46,23 @@ existing delegation layer (`delegation-policy`, `subagents.*`). The user's
 
 - **Pre-dispatch permit** — the budget answer is acquired BEFORE the
   dispatch exists; no spend-then-check.
-- **Atomic reserve** — the permit is a single ledger transaction (lock →
-  sum tier spend → append a `pending` reserve entry). Check-then-spend
-  races two concurrent requests past the ceiling (council finding).
+- **Atomic reserve with a FULL lifecycle** (external review 2026-08-03):
+  `acquire → expire (TTL) / settle → compact-on-write`. The permit is a
+  single locked transaction (lock → sum LIVE reserves → write). A reserve
+  is race protection, not spend accounting: it counts only within the
+  shared TTL (`src/config/budget-routing.json`, `reserve_ttl_ms`, default
+  10 min) — real spend is the ledger's job, so a completed dispatch is
+  never double-counted. BOTH readers (`acquireBudgetPermit` and
+  `budget.mjs tier`) load the TTL from that one config file; a duplicated
+  window literal is the two-truths defect the review flagged. Every write
+  under the lock compacts the file to live entries (bounded size), and a
+  lock file older than `lock_break_ms` (default 30 s) is a crash leftover
+  that gets broken with one retry. `settlePermit` optionally releases a
+  reserve the moment real cost lands; the TTL is the backstop that keeps
+  settling optional, never load-bearing. Check-then-spend races two
+  concurrent requests past the ceiling (council finding) — pinned by the
+  pre-registered acceptance criteria AC1–AC5 in
+  `tests/scripts/tier_budget_routing.test.ts`.
 - **Tier cool-down on quota errors** — a 429/quota error from a tier trips
   a cool-down for that tier (default 60 min; pause, never retry-loop) with
   automatic fallback to the next tier per the relation.
