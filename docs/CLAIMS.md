@@ -400,3 +400,17 @@ metacharacters and repo escape, including the right-hand side of `--flag=value`.
 - evidence: internal/bench/reports/governance-invariants.json#adjacent_properties
 - status: backed
 - last_verified: 2026-08-02
+
+### claim: keyword-anchoring-census
+- claim: Word-boundary-anchored keyword matching reduced unintended rule activations by 12.5% (495 → 433) over the 302-prompt matrix-derived corpus with zero intended positives lost. Disclosure — the derived corpus was co-edited in the same change (6 German positives re-authored to standalone tokens; verb-inflection recall is a documented accepted cost). The circularity is broken by an independent replay over 49 UN-edited real-corpus prompts: recall 15/17 in BOTH arms (zero labels lost to anchoring), unintended activations 110 → 99 (−10.0%).
+- kind: quant
+- evidence: agents/evidence/analysis/anchoring-independent-replay-2026-08.md
+- status: backed
+- last_verified: 2026-08-03
+
+### claim: budget-routing-relation
+- claim: The budget-routing relation (cheapest classifier-adequate tier WITH available budget; exhausted/cooling tier falls back upward; all unavailable → session model, work never blocked; session model never switched) is implemented and deterministically tested, including the atomic reserve lifecycle (acquire → TTL-expire/settle → compact, shared-TTL single source, stale-lock breakage; pre-registered AC1–AC5). DELIVERY is agent-adherent policy — no code caller dispatches through pickTier at runtime — and is monitored by routing:doctor's delivery-evidence check, which WARNs when budget_routing is bound but zero recorded dispatches carry a tier decision. This entry deliberately does NOT claim "budget-aware delegation shipped" as autonomous runtime behavior.
+- kind: qual
+- evidence: tests/scripts/tier_budget_routing.test.ts
+- status: backed
+- last_verified: 2026-08-03
