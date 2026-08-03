@@ -21,7 +21,12 @@ two small, always-expected reply markers whose **silent disappearance** tells
 the user the conversation is degrading and it is time for a fresh session —
 long before the agent visibly starts making mistakes.
 
-Read `personal.canary_name` from `.agent-settings.yml`. Empty or missing →
+The canary is a **personal, user-global** concern — the name resolves through
+three layers, first non-empty wins: project `.agent-settings.yml` →
+`personal.canary_name` (override only) · user-global
+`settings/.agent-settings.yml` → `personal.canary_name` · user-global
+`settings/.agent-user.yml` → `identity.name` (the name the setup wizard
+already collects — never duplicate it per project). No name on any layer →
 rule is inert.
 
 ## The Iron Law
@@ -55,7 +60,8 @@ name it and suggest a fresh session or `/agent-handoff`, per
 
 ## When NOT to fire
 
-- `personal.canary_name` empty or missing — fully inert, no greeting.
+- No name on any layer (`personal.canary_name` project + user-global, global
+  `identity.name`) — fully inert, no greeting.
 - Intermediate replies inside an ongoing task (greeting only at task start).
 - The greeting never substitutes for substance — it prefixes the answer, it is
   not the answer.
