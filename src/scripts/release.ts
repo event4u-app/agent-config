@@ -118,6 +118,12 @@ import {
     perform_split,
     plan_split,
 } from './_lib/changelog_eras.js';
+import {
+    extract_changelog_section,
+    pr_body_from_section,
+    release_notes_from_section,
+    tag_message_from_section,
+} from './_lib/release_material.js';
 
 // `__doc__.splitlines()[0]` in `_parse_args` — the argparse description. Kept
 // as a referenceable constant so the first docstring line is preserved exactly.
@@ -619,6 +625,31 @@ export function _failed_checks_report(names: readonly string[]): string {
             'empty (docs/contracts/release-pr-gating.md § Mid-release fixes).',
         );
     }
+    if (names.includes('PR body equals CHANGELOG entry')) {
+        lines.push(
+            '',
+            'Surface equality: the PR body drifted from the CHANGELOG entry. A',
+            'resume run refreshes it from the branch head (release-truth Phase 1);',
+            'never hand-edit the PR body away from the changelog section.',
+        );
+    }
+    if (names.includes('Curated highlights plausible against the span')) {
+        lines.push(
+            '',
+            'Highlights: a curated `_none_` field contradicts the release span.',
+            'Fill the curated head in CHANGELOG.md on the release branch — the',
+            'gate output lists the deriving commits (release-truth Phase 2).',
+        );
+    }
+    if (names.includes('Blocking review findings dispositioned')) {
+        lines.push(
+            '',
+            'Dispositions: a blocking/high self-review finding has no committed',
+            'disposition. Ingest + adjudicate it in',
+            'agents/evidence/release-findings/<version>.json (release-truth Phase 3):',
+            '  ./scripts-run src/scripts/check_finding_dispositions --ingest <findings.json>',
+        );
+    }
     lines.push('', 'After fixing, resume with: task release -- --resume --yes', '');
     return lines.join('\n');
 }
@@ -734,11 +765,45 @@ const _MERGE_UPDATE_ROUNDS = 3;
  * version-bump allowlist (docs/contracts/release-pr-gating.md § Mid-release
  * fixes) — do it here instead of aborting the run.
  */
+/**
+ * Re-derive the release-PR body from the CHANGELOG section at the current
+ * release-branch head and push it to the PR (release-truth Phase 1: one
+ * final source — late commits and maintainer edits on the branch must reach
+ * the PR body instead of leaving it frozen at plan time). Best-effort sync
+ * of the local branch first; a no-op when the derived body is unchanged.
+ */
+function _target_from_branch(branch: string): string {
+    return branch.replace(/^release\//u, '');
+}
+
+function _refresh_pr_body_from_head(branch: string, target: string): void {
+    run(['git', 'pull', '--ff-only', REMOTE, branch], { check: false });
+    const changelog = fs.readFileSync(CHANGELOG, 'utf-8');
+    const section = extract_changelog_section(changelog, target);
+    if (!section) {
+        die(`CHANGELOG.md at ${branch} head carries no section for ${target} — cannot derive PR body`);
+    }
+    const capped = _cap_body(section!.body, GH_PR_BODY_LIMIT - 200, '`CHANGELOG.md` in this PR');
+    const body = pr_body_from_section(capped, target);
+    const live = run(['gh', 'pr', 'view', branch, '--json', 'body', '-q', '.body'], {
+        check: false,
+        capture: true,
+    });
+    if (live.returncode === 0 && live.stdout.replace(/\r\n/gu, '\n').trim() === body.trim()) {
+        return;
+    }
+    run(['gh', 'pr', 'edit', branch, '--body', body]);
+}
+
 function merge_release_pr(branch: string, wait_for_checks: boolean): void {
     if (git(['rev-parse', '--abbrev-ref', 'HEAD'], { capture: true }) !== branch) {
         run(['git', 'checkout', branch]);
     }
     for (let round = 0; round <= _MERGE_UPDATE_ROUNDS; round++) {
+        // One final generation step at the final head: every merge attempt
+        // first re-derives the PR body from the branch-head CHANGELOG, so
+        // update rounds and maintainer edits can never desynchronize it.
+        _refresh_pr_body_from_head(branch, _target_from_branch(branch));
         if (_pr_merge_state(branch) !== 'BEHIND') {
             const merged = run(['gh', 'pr', 'merge', branch, '--merge', '--delete-branch'], {
                 check: false,
@@ -1708,18 +1773,27 @@ function execute(
     if (pr_merged) {
         _step(5, total, `PR #${pr_info!['number']} already merged — skip`);
     } else if (resume && pr_state === 'OPEN') {
-        _step(5, total, `PR already open: ${pr_info!['url']}`);
+        // One final source: a resumed run re-derives the body from the
+        // branch-head CHANGELOG instead of leaving the plan-time snapshot —
+        // this was the 9.14.0 test-count desync (resume re-rendered from a
+        // later HEAD while the changelog kept the branch's entry).
+        _step(5, total, `PR already open: ${pr_info!['url']} — refresh body from branch head`);
+        _refresh_pr_body_from_head(branch, plan.target);
     } else {
         _step(5, total, 'Open pull request');
+        // Derive the PR body from the CHANGELOG section step 2 just wrote —
+        // the file is the single source; the in-memory plan is only its
+        // author (release-truth Phase 1).
+        const section = extract_changelog_section(fs.readFileSync(CHANGELOG, 'utf-8'), plan.target);
+        if (!section) {
+            die(`CHANGELOG.md carries no section for ${plan.target} — cannot derive PR body`);
+        }
         const pr_changelog = _cap_body(
-            plan.changelog_body,
+            section!.body,
             GH_PR_BODY_LIMIT - 200, // leave room for the prefix + footer
             '`CHANGELOG.md` in this PR',
         );
-        const pr_body =
-            `Release ${plan.target}.\n\n` +
-            `${pr_changelog}\n\n` +
-            'Created by `scripts/release.py`.';
+        const pr_body = pr_body_from_section(pr_changelog, plan.target);
         run([
             'gh',
             'pr',
@@ -1770,8 +1844,21 @@ function execute(
             run(['git', 'push', REMOTE, plan.target]);
         }
     } else {
-        _step(8, total, `Tag merge commit and push ${plan.target}`);
-        run(['git', 'tag', plan.target]);
+        // Sequencing is load-bearing (release-truth Phase 1, council
+        // 2026-08-03): merge FIRST (step 7), pull main (above), THEN derive
+        // the tag message from the MERGED changelog — tagging before the
+        // merge would read a section that does not exist yet. The annotated
+        // tag replaces the previous lightweight one so tag metadata is a
+        // fourth surface carrying the same single-source content.
+        _step(8, total, `Tag merge commit (annotated, from merged CHANGELOG) and push ${plan.target}`);
+        const merged = extract_changelog_section(fs.readFileSync(CHANGELOG, 'utf-8'), plan.target);
+        if (!merged) {
+            die(
+                `CHANGELOG.md on ${MAIN_BRANCH} carries no section for ${plan.target} — ` +
+                    'refusing to tag a release whose changelog entry is missing',
+            );
+        }
+        run(['git', 'tag', '-a', plan.target, '-m', tag_message_from_section(merged!.body, plan.target)]);
         run(['git', 'push', REMOTE, plan.target]);
     }
 
@@ -1786,8 +1873,19 @@ function execute(
                 ? 'Create GitHub Release (tag push under GITHUB_TOKEN triggers nothing — dispatching next)'
                 : 'Create GitHub Release (triggers publish-npm on the tag)',
         );
+        // One final source: the notes come from the CHANGELOG as recorded AT
+        // THE TAG — never from the plan-time render (whose scope can differ
+        // from the merged content; that was the 9.14.0 desync).
+        const tagged_changelog = git(['show', `${plan.target}:CHANGELOG.md`], { capture: true });
+        const tagged_section = extract_changelog_section(tagged_changelog, plan.target);
+        if (!tagged_section) {
+            die(
+                `CHANGELOG.md at tag ${plan.target} carries no section for ${plan.target} — ` +
+                    'refusing to publish release notes from a different source',
+            );
+        }
         const notes = _cap_body(
-            plan.changelog_body || `Release ${plan.target}`,
+            release_notes_from_section(tagged_section!.body, plan.target),
             GH_RELEASE_NOTES_LIMIT,
             '`CHANGELOG.md`',
         );
