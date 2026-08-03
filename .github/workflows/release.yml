@@ -88,6 +88,10 @@ jobs:
     steps:
       - name: Resolve release flags from the merged PR's labels
         id: flags
+        # actionlint shellchecks only CHANGED workflow files, so this step's
+        # pre-existing SC2129 (style: group the >> redirects) first surfaced
+        # when the dependabot action bump touched this file. The individual
+        # redirects are deliberate — one computed flag per line.
         run: |
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
             bump="${{ inputs.bump }}"
@@ -114,6 +118,7 @@ jobs:
             dry_run="false"
             resume="false"
           fi
+          # shellcheck disable=SC2129
           echo "bump=$bump" >> "$GITHUB_OUTPUT"
           echo "version=$version" >> "$GITHUB_OUTPUT"
           echo "dry_run=$dry_run" >> "$GITHUB_OUTPUT"
@@ -133,7 +138,7 @@ jobs:
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
 
       - name: Set up Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
           node-version: '20'
           cache: 'npm'
