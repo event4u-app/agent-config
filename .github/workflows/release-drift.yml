@@ -50,7 +50,7 @@ jobs:
           fetch-tags: true
 
       - name: Set up Node (npm registry read)
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
           node-version: '20'
           cache: 'npm'

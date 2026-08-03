@@ -24,6 +24,9 @@ const _HERE = fileURLToPath(import.meta.url);
 
 const ALLOWLIST_GLOBS = [
     'package.json',
+    // Lockfile version fields — bumped by release.ts set_lockfile_version in
+    // lockstep with package.json (road-to-gates-that-can-fail Phase 5).
+    'package-lock.json',
     'CHANGELOG.md',
     '.claude-plugin/marketplace.json',
     'src/packs/*/pack.yaml',
