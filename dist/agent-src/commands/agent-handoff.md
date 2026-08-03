@@ -13,7 +13,7 @@ argument-hint: "[--print | --file | with tasks]"
 suggestion:
   eligible: true
   trigger_description: "user asks for an agent handoff, to resume/continue a previous session in a fresh chat, or a context-summary to paste into a new chat"
-  trigger_context: "explicit verbatim ask — 'agent handoff', 'agend handoff' (typo), 'handoff summary', 'context summary for fresh chat', 'resume a previous session', 'continue an old session in a fresh chat', 'fasse für neuen chat zusammen', 'starte eine neue session mit dem stand von gestern', 'alte session in neuem chat weitermachen'. Never inferred without a direct handoff / resume / summary intent."
+  trigger_context: "explicit ask — 'agent handoff'/'agend handoff' (typo), 'handoff summary', 'context summary for fresh chat', 'resume/continue an old session in a fresh chat', 'fasse für neuen chat zusammen', 'neue session mit altem stand'. Never inferred."
 workspaces:
   - agent-config-maintainer
 packs:
