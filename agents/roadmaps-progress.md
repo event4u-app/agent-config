@@ -6,7 +6,7 @@
 
 ## Overall
 
-**98 / 226 steps done · 43%**
+**98 / 228 steps done · 43%**
 
 ```text
 █████████████████░░░░░░░░░░░░░░░░░░░░░░░   43%
@@ -17,7 +17,7 @@
 | # | Roadmap | Phases | Steps | Open | Done | Deferred | Cancelled | Blocker | Progress |
 |---|---|---:|---:|---:|---:|---:|---:|---:|---|
 | 1 | [road-to-adoption-without-narrative-debt.md](roadmaps/road-to-adoption-without-narrative-debt.md) | 5 | 17 | 7 | 10 | 0 | 0 | [1](#blockers-road-to-adoption-without-narrative-debt) | ██████░░░░ 59% |
-| 2 | [road-to-agent-handoff-resume.md](roadmaps/road-to-agent-handoff-resume.md) | 6 | 29 | 29 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+| 2 | [road-to-agent-handoff-resume.md](roadmaps/road-to-agent-handoff-resume.md) | 6 | 31 | 31 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 3 | [road-to-ci-native-release-first-run.md](roadmaps/road-to-ci-native-release-first-run.md) | 2 | 8 | 8 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 4 | [road-to-council-blind-review.md](roadmaps/road-to-council-blind-review.md) | 3 | 6 | 2 | 3 | 0 | 1 | 0 | ██████░░░░ 60% |
 | 5 | [road-to-gated-reach-followup.md](roadmaps/road-to-gated-reach-followup.md) | 1 | 12 | 12 | 0 | 0 | 0 | [1](#blockers-road-to-gated-reach-followup) | ░░░░░░░░░░ 0% |
@@ -65,16 +65,16 @@ _2 blockers resolved._
 
 ### [road-to-agent-handoff-resume.md](roadmaps/road-to-agent-handoff-resume.md)
 
-**Agent-handoff v2 — session picker, generated handoff, auto-seeded fresh session** — 0 / 29 done (0%)
+**Agent-handoff v2 — session picker, generated handoff, auto-seeded fresh session** — 0 / 31 done (0%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
-| 1 | Session enumeration layer | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
+| 1 | Session enumeration layer | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
 | 2 | Handoff generator | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
 | 3 | One-shot session_start injection | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
 | 4 | CLI — `agent-config handoff` | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
 | 5 | Rework the `/agent-handoff` command surface | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
-| 6 | Projection + docs sync | ⬜ not started | 8 | 0 | 0 | 0 | 0% |
+| 6 | Projection + docs sync | ⬜ not started | 9 | 0 | 0 | 0 | 0% |
 
 ### [road-to-ci-native-release-first-run.md](roadmaps/road-to-ci-native-release-first-run.md)
 
