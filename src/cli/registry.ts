@@ -52,6 +52,7 @@ export const REGISTRY: readonly CommandEntry[] = [
     { name: 'help', disposition: 'native', synopsis: 'Show TS-shell help; delegates --tier=N to Bash.' },
     { name: 'explain', disposition: 'delegate', synopsis: 'Read-only decision-chain trace (config | rule <name> | route "<text>") or command explanation.' },
     { name: 'analyze-session', disposition: 'delegate', synopsis: 'Read-only post-session report from on-disk runtime state.' },
+    { name: 'handoff', disposition: 'delegate', synopsis: 'Pick a recent session, generate a handoff, seed a fresh session.' },
     { name: 'migrate', disposition: 'delegate', synopsis: 'One-shot migration off every legacy install / state shape.' },
     { name: 'mcp:render', disposition: 'delegate', synopsis: 'Render mcp.json into per-tool MCP client configs.' },
     { name: 'mcp:check', disposition: 'delegate', synopsis: 'Dry-run mcp:render; exit non-zero if targets are stale.' },
