@@ -1,6 +1,6 @@
 # Skills Catalog
 
-All **287 skills** available in this package, in alphabetical order.
+All **288 skills** available in this package, in alphabetical order.
 Click a skill name to open its SKILL.md and read the full guidance.
 
 > **Regenerate:** `./scripts-run src/scripts/generate_catalog`
@@ -182,6 +182,7 @@ Click a skill name to open its SKILL.md and read the full guidance.
 | [`one-on-one-cadence`](../dist/agent-src/skills/one-on-one-cadence/SKILL.md) | Use when designing engineering 1:1s — cadence, agenda mix, growth-vs-blocker-vs-trust shape, cancellation anti-patterns. Triggers on 'fix my 1:1s', 'should I cancel 1:1s this week'. |
 | [`openapi`](../dist/agent-src/skills/openapi/SKILL.md) | Use when documenting APIs — OpenAPI/Swagger, PHP attributes, Redocly validation, versioned specs — even when the user just says 'document this endpoint' without naming OpenAPI. |
 | [`org-design`](../dist/agent-src/skills/org-design/SKILL.md) | Use when shaping team structure — functional vs squad, span-of-control, reorg cost, Conway-aware boundaries. Triggers on 'should we reorg', 'how do we split this team'. |
+| [`overbuild-review-lens`](../dist/agent-src/skills/overbuild-review-lens/SKILL.md) | Use when a diff builds more than the task needs — code that should not exist, a dependency the platform already covers, or a clever form where a flat one reads better. Deletion-hunting, not quality. |
 | [`override-management`](../dist/agent-src/skills/override-management/SKILL.md) | Creates and manages project-level overrides for shared skills, rules, and commands — extending or replacing originals from .augment/ with project-specific behavior in agents/overrides/. |
 | [`pdf-tools`](../dist/agent-src/skills/pdf-tools/SKILL.md) | Use when creating, merging, splitting, filling, or extracting from a PDF — library-per-task, output validated. Triggers on 'merge these PDFs', 'fill this PDF form', 'split the PDF', 'create a PDF'. |
 | [`perf-feedback-craft`](../dist/agent-src/skills/perf-feedback-craft/SKILL.md) | Use when shaping feedback — situation-behavior-impact, growth-vs-corrective split, cadence design, ladder-of-inference checks. Triggers on 'how do I give this feedback', 'perf review shape'. |
