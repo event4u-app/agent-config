@@ -62,7 +62,7 @@ jobs:
       # outside the checkout's toolchain assumptions.
       image: node:20-bullseye
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       # This job runs INSIDE a container, so the checkout is owned by a
       # different UID than the container user and git refuses every command

@@ -125,7 +125,7 @@ jobs:
           echo "resume=$resume" >> "$GITHUB_OUTPUT"
 
       - name: Check out main
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           ref: main
           fetch-depth: 0

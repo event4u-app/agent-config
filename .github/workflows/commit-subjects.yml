@@ -23,7 +23,7 @@ jobs:
     name: lint commit subjects
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           # Need the full history of the PR branch + the base ref so
           # `git log base..head` returns the actual PR commits, not

@@ -44,7 +44,7 @@ jobs:
       id-token: write  # required for npm OIDC Trusted Publishing + provenance
     steps:
       - name: Check out released tag
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           ref: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.ref }}
 
