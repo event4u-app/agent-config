@@ -68,7 +68,7 @@ jobs:
     name: Release-PR shape detector
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           # Need the full PR diff, not just the merge commit.
           fetch-depth: 0
@@ -100,7 +100,7 @@ jobs:
     name: CHANGELOG entry exists for head version
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Assert CHANGELOG.md has a non-empty section for the release
         env:
@@ -181,7 +181,7 @@ jobs:
     name: package.json / marketplace.json / pack manifests agree
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - uses: actions/setup-node@v7
         with:
@@ -242,7 +242,7 @@ jobs:
     name: npm audit (runtime deps, high+)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - uses: actions/setup-node@v7
         with:
@@ -266,7 +266,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - uses: actions/setup-node@v7
         with:
@@ -279,7 +279,7 @@ jobs:
       # / registry), never a release-quality signal.
       - name: Cache 9.7.0 baseline tarball
         id: baseline-cache
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: baseline-9.7.0.tgz
           key: npm-baseline-9.7.0
