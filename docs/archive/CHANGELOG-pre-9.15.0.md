@@ -18,11 +18,12 @@
 ### Release highlights
 
 <!-- Curated head: fill before merge, keep it under 10 lines, and leave `_none_` where it is genuinely the answer. The generated log below is unchanged. -->
-- **Behaviour changes:** _none_
-- **Default changes + migration:** _none_
-- **Security and correctness:** _none_
-- **Honest nulls:** _none_
-- **Known limitations:** _none_
+<!-- Backfilled 2026-08-03 (release-truth Phase 2): the head shipped as five `_none_` lines while the span below contradicted it — corrected retroactively, prose reviewed against the 9.13.0..9.14.0 span. -->
+- **Behaviour changes:** `/optimize:deep` shipped — an autonomous deep-refactoring loop (plan-only default and enforced iteration limits landed post-release); artefact counts are now generated, not hand-typed, and the count gates fail on any position the generator cannot rewrite.
+- **Default changes + migration:** the published default-install claim is now bound to its emitter with a dated snapshot.
+- **Security and correctness:** the automated release-PR review reported a symlink-traversal risk in the skill-catalog walk; the PR merged without a disposition. Retro-adjudicated 2026-08-03: partially real (the unconfined walk was in the commands/artefact walker, not `iter_skills`) — confinement + cycle guard fixed post-release; see `agents/evidence/release-findings/9.14.0.json`.
+- **Honest nulls:** the roadmap refinement loop converged at N=3 with review deltas applied — no mechanism change came out of loops 2–3.
+- **Known limitations:** `/optimize:deep` shipped without technically enforced loop limits (prose only) — closed post-release by the release-truth roadmap.
 
 ### Features
 
@@ -66,11 +67,12 @@ Tests: 10056 (+14 since 9.13.0)
 ### Release highlights
 
 <!-- Curated head: fill before merge, keep it under 10 lines, and leave `_none_` where it is genuinely the answer. The generated log below is unchanged. -->
-- **Behaviour changes:** _none_
-- **Default changes + migration:** _none_
-- **Security and correctness:** _none_
-- **Honest nulls:** _none_
-- **Known limitations:** _none_
+<!-- Backfilled 2026-08-03 (release-truth Phase 2): the head shipped as five `_none_` lines while the span below contradicted it — corrected retroactively, prose reviewed against the 9.12.0..9.13.0 span. -->
+- **Behaviour changes:** design-fidelity handover prompts now route with priority; the solution-size ladder landed as rule extensions; the public `intent:` trigger type was removed from the router.
+- **Default changes + migration:** the duplicated per-pack `version:` field was dropped — pack manifests carry no version pin anymore.
+- **Security and correctness:** automated tool grants are now resolved against the trusted registry ([f4470e1](https://github.com/event4u-app/agent-config/commit/f4470e1f4)).
+- **Honest nulls:** ADR-054 rejected the runtime activation resolver permanently; the 38% claim was conditioned and two nulls filed as debt were closed.
+- **Known limitations:** the curated head itself shipped unfilled in this release — the highlight plausibility gate that prevents this landed with the release-truth roadmap.
 
 ### Features
 

@@ -1,0 +1,18 @@
+{
+  "schema_version": 1,
+  "release": "9.14.0",
+  "findings": [
+    {
+      "finding_id": "3ddcca7957b4",
+      "severity": "critical",
+      "kind": "security",
+      "title": "Skill-catalog walk (`iter_skills`) dereferences symlinks without escapes-package-root check, enabling traversal outside repo boundaries",
+      "file": "src/scripts/update_counts.ts",
+      "status": "fixed",
+      "commit": "514189a18f44d55cd45cb6a2b5a7236365e4d0a3",
+      "rationale": "Retro-adjudication 2026-08-03 (release-truth Phase 3): partially real, misattributed. As worded the finding is false for `iter_skills` — its walker recursed only on Dirent.isDirectory(), which never follows a directory symlink. The CLASS is real in the same count-generator run: `_rglobSorted` (src/scripts/_lib/agent_src.ts, backing iter_commands/iter_artefacts/iter_all_sources) deliberately followed directory symlinks with no package-root confinement and no cycle guard — byte-identical at tag 9.14.0 — and the skills walk yielded symlinked SKILL.md leaves without an isFile/confinement check while root discovery dereferenced symlinked roots. Both walkers now confine every symlink to the walk root, bound cycles via a visited-realpath set, and skip broken links explicitly. Severity in practice low-to-moderate: exploitation presupposes write access to plant a symlink in the repo; impact was count corruption, a CI hang on cycles, and out-of-root reads during frontmatter parsing.",
+      "verified_by": "tests/scripts/symlink_confinement_walkers.test.ts (4-case battery x 2 walkers, green; asserts external targets ignored, internal allowed, loops terminate, broken links skipped)",
+      "date": "2026-08-03"
+    }
+  ]
+}

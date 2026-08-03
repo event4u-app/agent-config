@@ -52,22 +52,22 @@ status: ready
 
 ## Phase 1 — one final source for release material
 
-- [ ] The release pipeline emits PR body, `CHANGELOG.md` entry, GitHub
+- [x] The release pipeline emits PR body, `CHANGELOG.md` entry, GitHub
       release body, and tag metadata from ONE final generation step at the
       final head — regenerating on every release-branch update, so late
       commits cannot desynchronize the surfaces.
       *Verify:* fixture release with a late-added commit → all four surfaces
       carry the same content and the same test count.
-- [ ] Equality gate: `normalized(release body) == normalized(changelog
+- [x] Equality gate: `normalized(release body) == normalized(changelog
       entry)` (whitespace/anchor normalization only — not "similar", equal).
       *Verify:* seeded one-line divergence → red in the release workflow.
-- [ ] Test-count single-sourcing: the count appears in exactly one generated
+- [x] Test-count single-sourcing: the count appears in exactly one generated
       fragment that every surface includes.
       *Verify:* grep across the four surfaces finds one generated origin.
 
 ## Phase 2 — curated highlights that cannot silently lie
 
-- [ ] Highlight plausibility gate: derive generated categories from the
+- [x] Highlight plausibility gate: derive generated categories from the
       release span (security-tagged commits, behaviour/default changes from
       conventional-commit types + rule/schema diffs, honest-null markers,
       removed public surface) and FAIL when a populated generated category
@@ -76,7 +76,7 @@ status: ready
       *Verify:* fixture span with a `fix(security)` commit + curated
       `Security and correctness: _none_` → red; correctly curated head →
       green; empty span with `_none_` everywhere → green.
-- [ ] Backfill the 9.13.0 and 9.14.0 curated heads in `CHANGELOG.md` with
+- [x] Backfill the 9.13.0 and 9.14.0 curated heads in `CHANGELOG.md` with
       accurate entries (behaviour changes, removals, security fixes, honest
       nulls that actually shipped) — the two recorded false `_none_` cases
       get corrected, not just prevented.
@@ -84,20 +84,20 @@ status: ready
 
 ## Phase 3 — review findings get machine-readable dispositions
 
-- [ ] Disposition ledger for release-PR review findings: every blocking/high
+- [x] Disposition ledger for release-PR review findings: every blocking/high
       finding from the automated self-review carries
       `{finding_id, status: fixed|false_positive|accepted_risk, commit,
       rationale, verified_by}` in a tracked artefact; the release workflow
       fails while any blocking/high finding lacks a disposition.
       *Verify:* fixture PR with an undispositioned high finding → release
       validation red.
-- [ ] Retroactively disposition the 9.14.0 symlink finding: verify against
+- [x] Retroactively disposition the 9.14.0 symlink finding: verify against
       the tag whether `iter_skills` (skill-catalog walk in the count
       generator path) confines symlink targets to the package root; record
       fixed / false-positive / fix-now with evidence.
       *Verify:* disposition entry exists with a commit or an adjudication
       rationale; if the traversal is real, the fix lands in this phase.
-- [ ] Symlink-confinement test battery for the catalog/count walkers:
+- [x] Symlink-confinement test battery for the catalog/count walkers:
       internal symlink target allowed; external target rejected or ignored
       safely; symlink loop terminates; broken symlink handled explicitly.
       *Verify:* four permanent tests green; removing the confinement check
@@ -109,13 +109,13 @@ status: ready
 > technically enforced limits, and without appearing in its release's curated
 > head (the Phase-2 gate now catches the latter class).
 
-- [ ] Enforce in the command flow itself (not prose): plan-only default;
+- [x] Enforce in the command flow itself (not prose): plan-only default;
       `max_iterations: 3` with halt-on-spin; pre-registered target metric
       before loop 1; per-loop verification; stop when two consecutive
       iterations deliver no measurable gain.
       *Verify:* command spec + eval cases pin each limit; a fixture run that
       exceeds an iteration or produces no gain twice → halt.
-- [ ] Hard exclusions: no kernel-rule edits (kernel slow-rollout process
+- [x] Hard exclusions: no kernel-rule edits (kernel slow-rollout process
       owns those), no public-contract changes without explicit user
       approval, commit/push stays permission-gated per the existing floors.
       *Verify:* eval case — optimize run touching a kernel rule → refusal

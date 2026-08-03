@@ -83,6 +83,8 @@ class FakeWorld {
     pr_merged = false;
     release_created = false;
     branch_exists_remote = true;
+    /** Live PR body (release-truth Phase 1: refreshed from the changelog at head). */
+    pr_body = '';
 
     private push_rejections: number;
     private behind_probes: number;
@@ -126,9 +128,16 @@ class FakeWorld {
         if (cmd === `git tag -l ${this.target}`) {
             return { ...OK, stdout: this.tag_local ? `${this.target}\n` : '' };
         }
-        if (cmd === `git tag ${this.target}`) {
+        if (cmd === `git tag ${this.target}` || (args[1] === 'tag' && args[2] === '-a' && args[3] === this.target)) {
+            // release-truth Phase 1: the tag is annotated, message derived
+            // from the merged changelog section.
             this.tag_local = true;
             return OK;
+        }
+        if (cmd === `git show ${this.target}:CHANGELOG.md`) {
+            // The drill runs in the real repo — the changelog at the tag is
+            // the real file (execute() extracts the target's section from it).
+            return { ...OK, stdout: fs.readFileSync(path.join(REPO_ROOT, 'CHANGELOG.md'), 'utf-8') };
         }
         if (cmd === `git push origin ${this.target}`) {
             this.tag_remote = true;
@@ -208,6 +217,16 @@ class FakeWorld {
             this.pr_merged = true;
             this.branch_exists_remote = false;
             this.head = 'main'; // gh checks out the default branch after deleting
+            return OK;
+        }
+        if (cmd === `gh pr view ${this.branch} --json body -q .body`) {
+            // release-truth Phase 1: _refresh_pr_body_from_head probes the
+            // live body before deciding whether to edit.
+            return { ...OK, stdout: this.pr_body };
+        }
+        if (args[0] === 'gh' && args[1] === 'pr' && args[2] === 'edit' && args[3] === this.branch) {
+            const bodyIdx = args.indexOf('--body');
+            this.pr_body = bodyIdx >= 0 ? String(args[bodyIdx + 1] ?? '') : this.pr_body;
             return OK;
         }
         if (cmd === `gh release view ${this.target}`) {

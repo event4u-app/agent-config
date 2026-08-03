@@ -55,4 +55,21 @@ jobs:
           node-version: '20'
       - run: npm ci
       - name: Dogfooded self-review (advisory; skips if ANTHROPIC_API_KEY absent)
-        run: ./node_modules/.bin/tsx src/scripts/self_review_gate.ts --base "origin/${{ github.base_ref }}"
+        run: ./node_modules/.bin/tsx src/scripts/self_review_gate.ts --base "origin/${{ github.base_ref }}" --findings-out /tmp/self-review-findings.json
+
+      # Release-truth Phase 3: findings now carry stable ids and a durable
+      # ingestion artifact. On a release PR, blocking findings must be
+      # ingested + dispositioned in agents/evidence/release-findings/
+      # (`check_finding_dispositions --ingest /tmp/self-review-findings.json`)
+      # — the deterministic `finding-dispositions` job in release-validation
+      # is red until then. This job stays advisory by design.
+      - name: Upload findings artifact (ingestion input for the disposition ledger)
+        # hashFiles() only sees GITHUB_WORKSPACE — gate on the file directly
+        # and let a missing file (NEUTRAL run, no findings) be a clean no-op.
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: self-review-findings
+          path: /tmp/self-review-findings.json
+          retention-days: 30
+          if-no-files-found: ignore

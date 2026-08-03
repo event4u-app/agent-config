@@ -179,6 +179,27 @@ function _iterdirSorted(p: string): string[] {
 function _rglobSorted(root: string, pattern: string): string[] {
     const out: string[] = [];
     const suffix = pattern === '*' ? null : pattern.slice(1); // drop leading '*'
+    // Symlink confinement: every symlink (leaf or directory) must resolve
+    // inside the walk root, or it is ignored. A visited-realpath set bounds
+    // symlink cycles, and a broken symlink (realpath throws) is skipped
+    // explicitly. Without this, a directory symlink planted under a source
+    // root walks arbitrary paths outside the package and a cycle recurses
+    // until stack exhaustion (release-truth Phase 3).
+    let rootReal: string;
+    try {
+        rootReal = fs.realpathSync(root);
+    } catch {
+        return out;
+    }
+    const _confined = (p: string): string | null => {
+        try {
+            const real = fs.realpathSync(p);
+            return real === rootReal || _isUnder(real, rootReal) ? real : null;
+        } catch {
+            return null; // broken symlink → handled explicitly as "not yielded"
+        }
+    };
+    const visited = new Set<string>([rootReal]);
     const walk = (dir: string): void => {
         let entries: fs.Dirent[];
         try {
@@ -189,14 +210,21 @@ function _rglobSorted(root: string, pattern: string): string[] {
         for (const ent of entries) {
             const full = path.join(dir, ent.name);
             const matches = suffix === null ? true : ent.name.endsWith(suffix);
-            if (matches) {
+            if (matches && (!ent.isSymbolicLink() || _confined(full) !== null)) {
                 out.push(full);
             }
             // Recurse into directories. `isDirectory()` on a Dirent does not
-            // follow symlinks; pathlib.rglob follows directory symlinks. Use a
-            // stat-based dir check to match Python's traversal, but guard
-            // against unreadable entries.
-            if (ent.isDirectory() || (ent.isSymbolicLink() && _isDir(full))) {
+            // follow symlinks; pathlib.rglob follows directory symlinks. Follow
+            // a directory symlink only when its target stays inside the walk
+            // root and has not been visited yet (cycle guard).
+            if (ent.isDirectory()) {
+                walk(full);
+            } else if (ent.isSymbolicLink() && _isDir(full)) {
+                const real = _confined(full);
+                if (real === null || visited.has(real)) {
+                    continue;
+                }
+                visited.add(real);
                 walk(full);
             }
         }
@@ -432,7 +460,9 @@ export function artefact_roots(): string[] {
  *
  * Walks `_root_specs` (the leaf view). Deterministic order; deduplicated on
  * logical path so a file present in two roots during the move window is
- * yielded once. Symlinks and non-files are skipped. Mirrors `iter_artefacts`.
+ * yielded once. Non-files are skipped; symlinks are followed only when they
+ * resolve inside their walk root (external targets, broken links, and cycles
+ * are ignored). Mirrors `iter_artefacts`.
  */
 export function* iter_artefacts(suffix = '.md'): Generator<string> {
     const seen: Set<string> = new Set();

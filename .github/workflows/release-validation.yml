@@ -5,19 +5,25 @@ name: Release Validation
 # `tests.yml` + `smoke-public-install.yml` skip on the same condition
 # per docs/contracts/release-pr-gating.md.
 #
-# Three jobs, all targeting < 60s combined wall-clock:
-#   1. release-shape       — fail-closed shape detector via
-#                            scripts/check_release_pr_shape.py
-#   2. changelog-entry     — CHANGELOG.md must carry a non-empty section
-#                            matching the version on the head branch
-#   3. version-consistency — package.json / marketplace.json agree on the
-#                            version (pack manifests carry no version field)
+# Shape jobs, all targeting fast wall-clock:
+#   1. release-shape          — fail-closed shape detector via
+#                               scripts/check_release_pr_shape.py
+#   2. changelog-entry        — CHANGELOG.md must carry a non-empty section
+#                               matching the version on the head branch
+#   3. version-consistency    — package.json / marketplace.json agree on the
+#                               version (pack manifests carry no version field)
+#   4. surface-equality       — PR body equals the CHANGELOG entry
+#                               (release-truth Phase 1; whitespace-normalized)
+#   5. highlight-plausibility — curated head cannot say `_none_` against a
+#                               populated span category (release-truth Phase 2)
+#   6. finding-dispositions   — blocking self-review findings carry committed
+#                               dispositions (release-truth Phase 3)
 #
-# Four jobs total — the fourth closes the 9.8.0 skip-class (a release
-# shipped without src/install/ across two minors; caught only after
-# publish because nothing between merge and tag installed the actual
-# packed tarball as a consumer):
-#   4. release-install-e2e — packs the tarball, installs it into an
+# Plus the job that closes the 9.8.0 skip-class (a release shipped
+# without src/install/ across two minors; caught only after publish
+# because nothing between merge and tag installed the actual packed
+# tarball as a consumer):
+#   7. release-install-e2e — packs the tarball, installs it into an
 #                            isolated global npm prefix, upgrades from a
 #                            cached 9.7.0 baseline, boots the GUI server
 #                            headless, runs reach:doctor, and the repo-side
@@ -54,6 +60,7 @@ on:
       - 'marketplace.json'        # `version-consistency` reads it
       - 'src/scripts/install.ts'  # what release-install-e2e exercises
       - 'src/scripts/release.ts'
+      - 'agents/evidence/release-findings/**'  # `finding-dispositions` reads it
       - 'tests/test_release_install_e2e.sh'
       - '.github/workflows/release-validation.yml'
   workflow_dispatch:
@@ -176,6 +183,75 @@ jobs:
           console.log(`CHANGELOG section for ${version} has ${body.trim().split("\n").length} line(s) of body incl. Tests footer.`);
           ' "$version"
 
+  surface-equality:
+    # Release-truth Phase 1: the PR body must EQUAL the CHANGELOG entry
+    # (whitespace-normalized) — release.ts derives every surface from the
+    # changelog section at the branch head, and this gate proves the
+    # derivation held at the head CI actually sees. Re-runs on every push
+    # to the release branch, so a late commit that edits the entry without
+    # a PR-body refresh goes red instead of shipping the 9.14.0 desync.
+    if: ${{ github.event_name == 'pull_request' && startsWith(github.head_ref, 'release/') }}
+    name: PR body equals CHANGELOG entry
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install Node deps
+        run: |
+          npm ci --no-audit --no-fund --fetch-retries=5 --fetch-retry-mintimeout=10000 \
+            || (sleep 10 && npm ci --no-audit --no-fund --fetch-retries=5 --fetch-retry-mintimeout=10000)
+
+      - name: Compare PR body against the CHANGELOG section
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          ./scripts-run src/scripts/check_release_surface_equality --pr "${{ github.event.pull_request.number }}"
+
+  highlight-plausibility:
+    # Release-truth Phase 2: the curated head cannot silently lie. Generated
+    # categories are derived from the release span (security commits,
+    # behaviour/default changes, honest-null markers, removed public
+    # surface); a populated category meeting a `_none_` curated field is
+    # red. A human still writes the prose — the gate only blocks the
+    # contradiction (the recorded 9.13.0/9.14.0 false-`_none_` failure).
+    if: ${{ github.event_name == 'pull_request' && startsWith(github.head_ref, 'release/') }}
+    name: Curated highlights plausible against the span
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          # The span derivation walks prev-tag..HEAD — needs history + tags.
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install Node deps
+        run: |
+          npm ci --no-audit --no-fund --fetch-retries=5 --fetch-retry-mintimeout=10000 \
+            || (sleep 10 && npm ci --no-audit --no-fund --fetch-retries=5 --fetch-retry-mintimeout=10000)
+
+      - name: Derive span categories and compare against the curated head
+        env:
+          HEAD_REF: ${{ github.head_ref }}
+        run: |
+          set -euo pipefail
+          version="${HEAD_REF#release/}"
+          if ! [[ "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "::error::head_ref '$HEAD_REF' is not a release/X.Y.Z branch."
+            exit 1
+          fi
+          git fetch --tags --quiet origin
+          ./scripts-run src/scripts/check_release_highlights --version "$version"
+
   version-consistency:
     if: ${{ github.event_name == 'workflow_dispatch' || startsWith(github.head_ref, 'release/') }}
     name: package.json / marketplace.json / pack manifests agree
@@ -236,6 +312,39 @@ jobs:
           # fresh `init` bootstraps onto a stale pin. release.ts set_template_pin
           # keeps it in lockstep; this gate is the backstop on the release PR.
           ./scripts-run src/scripts/check_template_pin_drift
+
+  finding-dispositions:
+    # Release-truth Phase 3: the release is red while any blocking/high
+    # self-review finding lacks a machine-readable disposition in the
+    # committed ledger (agents/evidence/release-findings/<version>.json).
+    # Deterministic — no model call, never fail-open: the gate comment's
+    # machine block only TRIGGERS the demand; the committed file is the
+    # record (council 2026-08-03: a PR comment is mutable, not a record).
+    if: ${{ github.event_name == 'pull_request' && startsWith(github.head_ref, 'release/') }}
+    name: Blocking review findings dispositioned
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install Node deps
+        run: |
+          npm ci --no-audit --no-fund --fetch-retries=5 --fetch-retry-mintimeout=10000 \
+            || (sleep 10 && npm ci --no-audit --no-fund --fetch-retries=5 --fetch-retry-mintimeout=10000)
+
+      - name: Check disposition ledger against recorded + reported findings
+        env:
+          GH_TOKEN: ${{ github.token }}
+          HEAD_REF: ${{ github.head_ref }}
+        run: |
+          set -euo pipefail
+          version="${HEAD_REF#release/}"
+          ./scripts-run src/scripts/check_finding_dispositions \
+            --release "$version" --pr "${{ github.event.pull_request.number }}"
 
   audit-gate:
     if: ${{ github.event_name == 'workflow_dispatch' || startsWith(github.head_ref, 'release/') }}

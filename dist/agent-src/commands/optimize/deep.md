@@ -8,7 +8,13 @@ sub: deep
 cluster: optimize
 skills: [ai-council, roadmap-writing, subagent-orchestration, decision-review]
 description: "Autonomous deep-refactoring loop — subagent analysis, verified findings, council, central + sub-roadmaps, PR, then N refinement loops (default 3). E.g. 'run a deep optimization pass'."
-argument-hint: "[--loops=N] [--scope=<path>] [--no-external]"
+argument-hint: "[--mode=plan|execute] [--loops=N] [--scope=<path>] [--no-external]"
+limits:
+  mode_default: plan
+  max_iterations: 3
+  hard_ceiling: 5
+  no_gain_stop: 2
+  target_metric: required
 suggestion:
   eligible: false
   rationale: "Cluster sub-command — reached via its cluster head's routing or its explicit /cluster:sub name; not independently suggested (surface-consolidation)."
@@ -44,21 +50,70 @@ Do NOT invoke for: a single named bug, an interview-style sweep with the
 user in the loop (route to `/optimize project`), a code-only analysis
 (`/project-analyze`), or agent-layer file tooling (`/optimize` siblings).
 
-## Loop budget
+## Enforced limits (release-truth Phase 4)
+
+The frontmatter `limits:` block is the machine-readable pin
+(`tests/scripts/optimize_deep_limits.test.ts` fails when flow and pin
+drift); the flow steps below are the enforcement — each limit is a step
+the run MUST execute, not advice. The reviews' P0 this closes: an
+autonomous deep-refactoring loop shipped without technically enforced
+limits.
+
+### Execution mode — plan-only default
+
+`--mode=plan` is the **default**: run Steps 0–4 only — analyze, verify,
+council, author the roadmap set in the worktree — then present the plan
+plus the predicted delta on the target metric and STOP. No push, no PR, no
+refinement loop, no edit outside the worktree's roadmap drafts.
+`--mode=execute` must be **explicitly present in the invocation** to enter
+Steps 5–6; treat its absence as plan mode even when conversation momentum
+suggests otherwise. An execute-mode run still respects every gate below.
+
+### Pre-registered target metric — required before loop 1
+
+Before Step 5 may run (and therefore before any refinement loop), the
+central roadmap MUST carry a `Target metric` block naming ONE measurable
+metric (e.g. always-loaded token budget, gate wall-clock, red-test count),
+its **measured baseline at the branch SHA** (command output pasted, not
+asserted), and the predicted direction. No block → REFUSE to enter Step 5
+with: `target metric not pre-registered — record it in the central roadmap
+first`. Loops never move the goalposts: the metric named before loop 1 is
+the metric every loop is scored against.
+
+### Loop budget
 
 `--loops=N` caps the refinement loops. **Default: 3** (council-locked
 2026-08-02: autonomous loops without a fast, trustworthy CI oracle are
 compounding-error machines; 3 with a tripwire beats 5 on cost/benefit).
-Hard ceiling: 5 — above that, re-invoke deliberately with fresh context.
+Hard ceiling: 5 — a larger `--loops` value is clamped to 5 with a warning;
+above that, re-invoke deliberately with fresh context.
 
 **Halt-on-spin tripwire (checked after every loop, overrides the budget):**
 
 - A loop ends with no material roadmap delta (no step added, removed,
   re-scoped, or re-ordered) → STOP, the set has converged.
+- **Two consecutive loops deliver no measurable gain on the pre-registered
+  target metric (re-measured per loop, Step 6e) → STOP** — spinning without
+  gain is the failure the metric exists to catch.
 - The council splits on the same question twice → STOP, escalate that
   question to the user instead of burning a third loop on it.
 - Any validation target fails 3 consecutive refinement attempts → STOP
   (N=3 budget, `autonomous-execution`).
+
+### Hard exclusions — never inside this command
+
+- **Kernel rules:** the run NEVER edits a kernel rule (`is_kernel_rule` in
+  `src/scripts/_lib/kernel_rules.ts`; the `block-kernel-rule-writes`
+  PreToolUse guard denies the write anyway). A finding that wants a
+  kernel-rule change is recorded in the roadmap as a **proposal routed to
+  the kernel slow-rollout process** (`contexts/authority/kernel-rule-edits.md`:
+  own PR, ≥ 24 h soak) — the refusal names that process, never edits.
+- **Public contracts:** no change to a `docs/contracts/` surface marked
+  `stability: stable` without explicit user approval this run — record as a
+  proposal otherwise.
+- **Commit / push / PR floors:** unchanged — the invocation authorizes the
+  worktree branch and (execute mode) pushes to the run's own PR; merge,
+  deploy, and every Hard-Floor action stay this-turn gated.
 
 ## Steps
 
@@ -115,22 +170,28 @@ work (whatever must be true for the rest to be verifiable — typically the
 CI oracle) gates the leverage-class work explicitly. Regenerate the
 dashboard (`roadmap:progress`) in the same response as any roadmap write.
 
-### Step 5 — Pull request
+### Step 5 — Pull request (execute mode only)
 
-Push the branch and open the PR per [`/create-pr`](../pr/create.md) — its
-mechanics and the always-active PR-surface rules govern the body and reply
-shape; do not restate them here.
+**Gate first:** `--mode=execute` present in the invocation AND the
+`Target metric` block recorded (§ Enforced limits) — otherwise STOP here
+and present the plan (plan mode's defined end state). Then push the branch
+and open the PR per [`/create-pr`](../pr/create.md) — its mechanics and the
+always-active PR-surface rules govern the body and reply shape; do not
+restate them here.
 
-### Step 6 — Refinement loops (×N, autonomous)
+### Step 6 — Refinement loops (×N, execute mode only)
 
 Each loop: (a) re-read the roadmap set with fresh subagent reviewers
 (adversarial: hunt over-building, missing evidence, lock violations,
 sequencing errors); (b) resolve contested deltas in the council; (c) any
 delta resting on a NEW factual claim re-enters the Step-2 verification gate
 before application — reviewer assertions are findings, not facts; (d) apply
-the surviving deltas to the roadmaps; (e) push to the same PR; (f) evaluate
-the tripwire. Loop output is a delta summary in the PR description's
-changelog section, not a comment (`no-pr-progress-comments`).
+the surviving deltas to the roadmaps; (e) **re-measure the pre-registered
+target metric at the new SHA and record the value in the loop verdict** —
+this is the per-loop verification the no-gain tripwire consumes; (f) push
+to the same PR; (g) evaluate the tripwire (§ Enforced limits — including
+the two-consecutive-no-gain stop). Loop output is a delta summary in the PR
+description's changelog section, not a comment (`no-pr-progress-comments`).
 
 ## Output
 

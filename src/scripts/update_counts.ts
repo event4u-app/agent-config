@@ -34,25 +34,73 @@ const _HERE = fileURLToPath(import.meta.url);
 // REPO_ROOT = <file>.parent.parent.parent — two dirs up from src/scripts.
 export const REPO_ROOT = path.resolve(path.dirname(_HERE), '..', '..');
 
-/** Recursively walk a directory, yielding files whose basename matches. */
+/**
+ * Recursively walk a directory, yielding files whose basename matches.
+ *
+ * Symlink confinement (release-truth Phase 3): a symlink — leaf or directory —
+ * is honored only when its target resolves inside the walk root; external
+ * targets, broken links, and cycles are ignored. Directory symlinks are
+ * followed through a visited-realpath set so a self-referential link
+ * terminates instead of recursing to stack exhaustion.
+ */
 function* _rglob(dir: string, match: (name: string) => boolean): Generator<string> {
-    let entries: fs.Dirent[];
+    let rootReal: string;
     try {
-        entries = fs.readdirSync(dir, { withFileTypes: true });
+        rootReal = fs.realpathSync(dir);
     } catch {
         return;
     }
-    // Sort for determinism (Path.rglob order is filesystem-dependent in
-    // Python; we only count, so order does not affect the result).
-    entries.sort((a, b) => (a.name < b.name ? -1 : a.name > b.name ? 1 : 0));
-    for (const e of entries) {
-        const full = path.join(dir, e.name);
-        if (e.isDirectory()) {
-            yield* _rglob(full, match);
-        } else if (match(e.name)) {
-            yield full;
+    const confined = (p: string): string | null => {
+        try {
+            const real = fs.realpathSync(p);
+            const rel = path.relative(rootReal, real);
+            const inside = real === rootReal || (rel !== '' && !rel.startsWith('..') && !path.isAbsolute(rel));
+            return inside ? real : null;
+        } catch {
+            return null; // broken symlink → explicitly not yielded
+        }
+    };
+    const visited = new Set<string>([rootReal]);
+    function* walk(current: string): Generator<string> {
+        let entries: fs.Dirent[];
+        try {
+            entries = fs.readdirSync(current, { withFileTypes: true });
+        } catch {
+            return;
+        }
+        // Sort for determinism (Path.rglob order is filesystem-dependent in
+        // Python; we only count, so order does not affect the result).
+        entries.sort((a, b) => (a.name < b.name ? -1 : a.name > b.name ? 1 : 0));
+        for (const e of entries) {
+            const full = path.join(current, e.name);
+            if (e.isDirectory()) {
+                yield* walk(full);
+            } else if (e.isSymbolicLink()) {
+                const real = confined(full);
+                if (real === null) {
+                    continue;
+                }
+                let st: fs.Stats;
+                try {
+                    st = fs.statSync(full);
+                } catch {
+                    continue;
+                }
+                if (st.isDirectory()) {
+                    if (visited.has(real)) {
+                        continue;
+                    }
+                    visited.add(real);
+                    yield* walk(full);
+                } else if (st.isFile() && match(e.name)) {
+                    yield full;
+                }
+            } else if (e.isFile() && match(e.name)) {
+                yield full;
+            }
         }
     }
+    yield* walk(dir);
 }
 
 /** Yield immediate child files of dir matching `match`. */
