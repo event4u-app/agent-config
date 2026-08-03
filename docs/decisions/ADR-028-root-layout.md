@@ -7,7 +7,6 @@ supersedes: —
 superseded_by: ADR-045
 phase: v3.x · root-layout-cleanup Phase 1
 type: structural
-review_date: 2027-05-25
 ---
 
 # ADR-028 — Root layout — targeted prune now, multi-workspace deferred behind four audits

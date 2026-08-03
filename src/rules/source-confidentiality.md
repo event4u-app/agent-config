@@ -14,6 +14,7 @@ validator_ignore:
   - type: "substring"
     pattern: "external_sources_denylist"
     reason: "Rule names the linter/denylist asset that necessarily holds the tokens."
+self_contained: true
 workspaces: [agent-config-maintainer]
 packs: [meta]
 enforced_by:

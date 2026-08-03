@@ -339,6 +339,9 @@ up" later).
 
 ## Open question (deliberately NOT decided here)
 
+> **Resolved by [ADR-208](ADR-208-dist-agent-src-keep-forever.md)** (2026-08-03):
+> KEEP — permanently; rewrite-at-projection-time rejected.
+
 If `dist/agent-src/**/*.md` is a copy plus a deterministic rewrite, **should
 `dist/agent-src/` exist as a separate tree at all**, or should the per-tool
 projectors read `src/` and apply the rewrite at projection time? That is a

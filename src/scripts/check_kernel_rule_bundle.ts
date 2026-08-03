@@ -11,7 +11,7 @@
  * historical quirks preserved (consumers pin the exact behaviour).
  *
  * Fails when a single PR (or commit range) modifies more than one
- * kernel rule under `.agent-src.uncondensed/rules/`. Override via the
+ * kernel rule under `src/rules/`. Override via the
  * PR label `bundled-always-rules-acknowledged`.
  *
  * Kernel set is the locked 9-rule list in

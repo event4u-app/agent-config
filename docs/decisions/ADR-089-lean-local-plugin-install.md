@@ -1,15 +1,22 @@
 ---
 adr: 089
-status: accepted
+status: superseded
 date: 2026-06-12
 decision: lean-local-plugin-install
 supersedes: —
-superseded_by: —
+superseded_by: 209
 phase: plugin-distribution-hygiene
 type: structural
 ---
 
 # ADR-089 — Lean local plugin installs via git-worktree source; marketplace restructure rejected
+
+> **Superseded by [ADR-209](ADR-209-projection-era-corrections.md)** (2026-08-03).
+> Every quantity in this record's rationale is now false: the plugin was
+> stripped to a bootstrap shim (marketplace.json + one pointer skill,
+> 2026-07-08), the 146 command-as-skill symlinks are gone (the generator now
+> prunes them on every run), and the lean self-contained plugin root this
+> record rejected is the shipped reality.
 
 ## Status
 

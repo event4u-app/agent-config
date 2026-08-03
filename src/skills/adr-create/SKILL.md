@@ -170,7 +170,7 @@ the area's contract from the README in
 
 ### 6. Validate
 
-- Flat: `./scripts-run src/scripts/adr/regenerate_index --check` exits 0.
+- Flat: `./scripts-run src/scripts/adr/regenerate_index --dir docs/decisions/ --check` exits 0.
 - Per-area: `./scripts-run src/scripts/audit_adr_coverage --check` exits 0.
 - The project's CI / quality pipeline passes — locally only when
   `quality.local_auto_run: true`; under the default (`false` / missing)

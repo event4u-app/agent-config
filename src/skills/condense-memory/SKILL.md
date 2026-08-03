@@ -102,7 +102,7 @@ CLI exit codes:
 - **Denylist false positive** — a sensitive-looking filename outside the denylist surface (project-specific naming) will still pass `assert_safe()`. The denylist is necessary but not sufficient; the maintainer is responsible for never feeding secrets to the condenseor.
 - **Frontmatter ordering with existing keys** — if the target already has frontmatter, the condenseor preserves existing keys, drops any prior `original_sha256:` / `condensed_at:` entries, and appends the new pair. Other agents reading the file should treat the SHA + timestamp pair as the canonical condensation marker, not the file size.
 - **Negative savings on pointer-heavy files** — a `templates/AGENTS.md` that already follows Thin-Root (≥ 40 % pointers, ≥ 60-char *why*-clauses) has little prose left to drop; condensation may net near-zero or even add bytes via frontmatter. Run [`agents-md-thin-root`](../agents-md-thin-root/SKILL.md) first to maximise pointer share, then measure whether this skill still pays.
-- **Generated-tree drift** — condensing `.agent-src.uncondensed/templates/AGENTS.md` does NOT propagate to `.augment/`, `.claude/`, etc. until the package's sync + generate-tools scripts run (`scripts/condense.sh --sync` + `scripts/condense.ts --generate-tools`). Always regenerate after condensing a templated file.
+- **Generated-tree drift** — condensing `src/agent-src/templates/AGENTS.md` does NOT propagate to `.augment/`, `.claude/`, etc. until the package's sync + generate-tools scripts run (`scripts/condense.sh --sync` + `scripts/condense.ts --generate-tools`). Always regenerate after condensing a templated file.
 
 ## Measurement — when to condense
 

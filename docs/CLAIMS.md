@@ -325,11 +325,11 @@ metacharacters and repo escape, including the right-hand side of `--flag=value`.
 - last_verified: 2026-07-27
 
 ### claim: hook-dispatch-latency
-- claim: Hook dispatch runs as one precompiled node process with all concerns in-process — measured p50 76–103 ms / p95 81–103 ms per event across GitHub-hosted CI runners (shared-runner wall-clock varies ±23% run-to-run; a darwin dev machine measures ~70-90 ms) against the pre-registered budget (pre_tool_use p95 <= 150 ms, any event <= 250 ms), down from ~1.6 s p50 on the retired CLI-to-bash-to-tsx per-concern-respawn chain; the bench harness and its regression gate run in CI.
+- claim: Hook dispatch runs as one precompiled node process with all concerns in-process, and the CI latency gate measures the REAL invocation path — the exact command hooks.json installs (bash wrapper + install-shape probes + dispatcher), via `bench_hook_latency --gate --via-cli`, whose per-event commands come from the same generator that writes hooks.json — not the bare bundle the pre-repair gate measured. The repair (road-to-hook-latency-repair) is pinned before/after on one machine in the committed baseline history: pre-fix CLI path pre_tool_use p95 164 ms → post-fix bundle-direct path p95 84 ms (darwin dev, warm cache, n=50 each; the pre-fix path measured ~450–500 ms/event on a 1-vCPU container). Budgets unchanged (pre_tool_use p95 <= 150 ms, any event <= 250 ms on GitHub-hosted CI runners, shared-runner wall-clock varies ±23% run-to-run), down from ~1.6 s p50 on the retired CLI-to-bash-to-tsx per-concern-respawn chain.
 - kind: quant
-- evidence: docs/hook-latency.json#pre_tool_use
+- evidence: docs/hook-latency.json#invocation_path
 - status: backed
-- last_verified: 2026-07-27
+- last_verified: 2026-08-03
 
 ### claim: default-install-context-cost
 - claim: The scoped-projection default for new installs ships 217 of 288 skills (untagged core plus engineering/maintainer packs), an approximately 25% reduction of the skill-catalog surface (a reduction of 71 projected entries; the token figures measured 2026-07-27 at the then-283-skill catalog were about 577k to about 428k approximated tokens and are NOT rescaled here). Both figures are generated, not typed: reproduce them with `./scripts-run src/scripts/count_scoped_projection`, which partitions the canonical skill catalog with the same predicate `install.ts` applies when it prunes a real tree.

@@ -31,9 +31,10 @@ are preserved. New / formalized fields:
 | `type` | yes | `always` \| `auto` | Existing. Kernel = `always`; everything else = `auto`. |
 | `tier` | yes | `kernel` \| `tier-1` \| `tier-2` | New names. Kernel = always-loaded; tier-1 / tier-2 = trigger-routed on demand, in every discipline profile (ADR-040 / ADR-110). |
 | `triggers` | yes for non-kernel | list of objects | When the rule activates. **Forbidden** on kernel rules. |
-| `routes_to` | yes for non-kernel | list of strings | Skills / guidelines whose body fulfils the rule. **Forbidden** on kernel rules. |
+| `routes_to` | yes for non-kernel, unless `self_contained: true` | list of strings | Skills / guidelines whose body fulfils the rule. **Forbidden** on kernel rules. |
+| `self_contained` | the routes_to carve-out (ADR-210) | `true` | Certifies a rule whose body IS the constraint — a prohibition, gate, or output-format law with no procedure to delegate. Such a rule may offload detail via `load_context:` but declares no `routes_to`. Per-rule certification rationale: ADR-210 appendix. |
 | `profile` | no | `minimal` \| `essential` \| `full` | Override the tier-derived default profile. Rare; currently unused by any shipped rule. |
-| `triggered_by` | back-ref, on routed artifact | list of strings | Skill / guideline frontmatter declares which rule(s) route to it. Bidirectional check (P3.3). |
+| `triggered_by` | **not implemented** | — | A bidirectional back-ref check was promised by P3.3 but never built; no skill/guideline carries the key and no linter reads it. Recorded honestly per ADR-127 (a promised check that does not run is decoration). Reintroduce only together with its linter. |
 
 ### `triggers:` shape
 
@@ -354,15 +355,20 @@ source hash ≠ current source fails CI before it can ship a stale pointer.
 
 ## Linter contract (Phase 3.3)
 
-`scripts/skill_linter.py` extension enforces:
+`src/scripts/skill_linter.ts` (`lint_router_frontmatter`) enforces:
 
 - Every kernel rule has **no** `triggers:` and **no** `routes_to:`.
-- Every non-kernel rule has ≥ 1 `triggers:` entry and ≥ 1 `routes_to:` entry.
-- Every `routes_to:` target exists on disk.
-- Every routed skill / guideline declares `triggered_by:` listing the rule(s)
-  that route to it (bidirectional check; mirrors the existing back-ref
-  pattern in `scripts/check_references.py`).
+- Every non-kernel rule has ≥ 1 `triggers:` entry, and either ≥ 1
+  `routes_to:` entry **or** `self_contained: true` (the ADR-210 carve-out
+  for constraint-only rules) — neither declared is an `error`.
+- Every `routes_to:` target exists on disk (`kind:id`, kind ∈ skill /
+  guideline / command / contract).
 - `tier` and `profile` are in the allowed value sets.
+
+Dropped from the original P3.3 promise: the bidirectional `triggered_by:`
+back-ref check was never implemented (no frontmatter carries the key, no
+linter reads it) — removed from the contract instead of left as a false
+promise; see the frontmatter table above.
 
 ## Backward compatibility
 

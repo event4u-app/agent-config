@@ -202,7 +202,7 @@ When a project using this package wants to **optimize** a shared rule or skill:
 
 2. **Create PR against upstream** — submit the improvement to the shared `agent-config` package repository.
    The PR must contain:
-   - **Uncondensed version** in `.agent-src.uncondensed/{type}/{name}`
+   - **Source version** in `src/{type}/{name}`
    - **Condensed version** in `.augment/{type}/{name}`
    - Both files must be the complete, updated file (not a diff or partial)
 

@@ -15,6 +15,7 @@ applies_to_user_types:
   - "creator"
   - "developer"
   - "maintainer"
+self_contained: true
 workspaces: [agent-config-maintainer, engineering, gtm]
 packs: [ai-image]
 ---

@@ -104,7 +104,7 @@ For every link in the file, verify:
 
 ```bash
 diff <(awk '/^## Emergency triage/,/^## [^E]/' "$target") \
-     .agent-src.uncondensed/contexts/contracts/emergency-triage-block.md
+     src/agent-src/contexts/contracts/emergency-triage-block.md
 ```
 
 Drift = revert in-file block to the canonical variant (package-root

@@ -9,6 +9,7 @@ triggers:
   - keyword: "design"
   - keyword: "architecture"
   - keyword: "approach"
+self_contained: true
 workspaces: [agent-config-maintainer, engineering]
 packs: [meta]
 ---

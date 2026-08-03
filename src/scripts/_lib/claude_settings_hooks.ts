@@ -108,19 +108,45 @@ export function build_claude_hook_matrix(manifest_path: string): ClaudeHookMatri
         if (!concerns || (Array.isArray(concerns) && concerns.length === 0)) continue;
         const native = ac_to_native[ac_event];
         if (native === undefined) continue;
-        // Hook-resilience shim (road-to-opt-subagent-harvest P1.4):
+        // Bundle fast path (road-to-hook-latency-repair Phase 2): invoke the
+        // precompiled dispatcher bundle directly — no bash shim, no CLI boot
+        // (measured ~450-500 ms CLI vs ~110 ms bundle per event on a 1-vCPU
+        // container; bench_hook_latency --via-cli pins it). Candidates:
+        //   1. project npm install (node_modules/@event4u/agent-config/…)
+        //   2. a source checkout — guarded by hook_manifest.yaml existing
+        //      next to it, so an UNRELATED consumer file that happens to sit
+        //      at dist/hooks/dispatch.js can never be executed as a hook
+        //      (council 2026-08-03).
+        // `exec node` replaces the shell; stdin/exit codes flow through
+        // unchanged (a fail_closed concern still denies). Global installs
+        // have no project-relative bundle path and take the CLI fallback
+        // below, which boots the same bundle in-process via the launcher
+        // fast path (src/cli/agent-config.ts).
+        //
+        // Hook-resilience fallback (road-to-opt-subagent-harvest P1.4):
         // local binary → PATH fallback → SILENT exit 0 when neither exists
         // (a hook must never error-spam the loop on an uninstalled repo).
         // The dispatcher's own exit code PROPAGATES when it runs — a
         // fail_closed concern (e.g. block-no-verify) still denies; only the
         // missing-binary case degrades open, which is the honest degrade
         // (an absent dispatcher cannot evaluate anything).
+        // NOTE: the CLI fallback carries MANAGED_SIGNATURE — keep it, or
+        // previously installed managed entries orphan on refresh.
+        const dispatchArgs =
+            `--platform claude --event ${ac_event} --native-event ${native} ` +
+            `--project-dir "$CLAUDE_PROJECT_DIR" --min-version ${String(hook_spec)}`;
         matrix[native] =
+            'B=""; ' +
+            '[ -f "$CLAUDE_PROJECT_DIR/node_modules/@event4u/agent-config/dist/hooks/dispatch.js" ] && ' +
+            'B="$CLAUDE_PROJECT_DIR/node_modules/@event4u/agent-config/dist/hooks/dispatch.js"; ' +
+            '[ -z "$B" ] && [ -f "$CLAUDE_PROJECT_DIR/dist/hooks/dispatch.js" ] && ' +
+            '[ -f "$CLAUDE_PROJECT_DIR/src/scripts/hook_manifest.yaml" ] && ' +
+            'B="$CLAUDE_PROJECT_DIR/dist/hooks/dispatch.js"; ' +
+            'if [ -n "$B" ] && command -v node >/dev/null 2>&1; then ' +
+            `exec node "$B" ${dispatchArgs}; fi; ` +
             'BIN="$CLAUDE_PROJECT_DIR/agent-config"; [ -x "$BIN" ] || BIN=agent-config; ' +
             'command -v "$BIN" >/dev/null 2>&1 || exit 0; ' +
-            `"$BIN" dispatch:hook --platform claude --event ${ac_event} ` +
-            `--native-event ${native} --project-dir "$CLAUDE_PROJECT_DIR" ` +
-            `--min-version ${String(hook_spec)}`;
+            `"$BIN" dispatch:hook ${dispatchArgs}`;
     }
     return matrix;
 }

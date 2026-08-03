@@ -14,7 +14,7 @@ stability: beta
 
 This document is the stable reference for **what gets recorded, when, and
 under which constraints**. The roadmap tracks phased delivery; the rule
-([`artifact-engagement-recording`](../../.agent-src.uncondensed/rules/artifact-engagement-recording.md))
+([`artifact-engagement-recording`](../../rules/artifact-engagement-recording.md))
 tells the agent when to fire; this doc explains the contract every
 recording must honour.
 
@@ -55,8 +55,8 @@ refine → memory → analyze → plan → implement → test → verify → rep
 
 The setting lives at `telemetry.artifact_engagement.granularity` in
 `.agent-settings.yml`. Default `task`. Both flows
-([`/implement-ticket`](../../.agent-src.uncondensed/commands/implement-ticket.md)
-and [`/work`](../../.agent-src.uncondensed/commands/work.md)) use the
+([`/implement-ticket`](../../commands/implement-ticket.md)
+and [`/work`](../../commands/work.md)) use the
 same eight-step contract from
 [`implement-ticket-flow.md`](implement-ticket-flow.md).
 
@@ -264,7 +264,7 @@ layers reject.
 
 ## See also
 
-- [`artifact-engagement-recording`](../../.agent-src.uncondensed/rules/artifact-engagement-recording.md) — agent-side trigger
+- [`artifact-engagement-recording`](../../rules/artifact-engagement-recording.md) — agent-side trigger
 - [`implement-ticket-flow`](implement-ticket-flow.md) — the eight-step contract this rule observes
-- [`scripts/telemetry/`](../../.agent-src.uncondensed/templates/scripts/telemetry/) — schema, boundary session, settings reader
+- [`scripts/telemetry/`](../../templates/scripts/telemetry/) — schema, boundary session, settings reader
 - [`tests/telemetry/`](../../tests/telemetry/) — contract enforcement (schema, settings, aggregator, renderer, CLI, cost-floor, redaction)

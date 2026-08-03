@@ -351,10 +351,15 @@ async function main(rawArgv: readonly string[]): Promise<number> {
 
     const head = argv[0];
 
-    // Hook hot path (road-to-credible-install Phase 1): dispatch:hook runs
-    // IN THIS PROCESS via the precompiled dist/hooks bundle — no bash
-    // delegation, no tsx, no per-concern re-spawn. Placed before every
-    // other route so a hook event pays nothing but the bundle import.
+    // Hook hot path, second layer (road-to-hook-latency-repair Phase 2):
+    // the PRIMARY hot path lives in the bin launcher (agent-config.ts),
+    // which imports the dist/hooks bundle BEFORE this module's eager import
+    // graph loads — reaching this route through the launcher costs the full
+    // graph (~370 ms of the measured ~450–500 ms CLI boot on a 1-vCPU
+    // container; ~70 ms extra on a warm M-series — bench_hook_latency
+    // --via-cli pins it). This route still serves direct main() callers and
+    // the launcher's --config-root fall-through; it runs the same bundle
+    // in-process — no bash delegation, no tsx, no per-concern re-spawn.
     // Fallback: bundle missing (stale dev tree) → historical bash path.
     if (head === 'dispatch:hook') {
         const bundle = resolve(PACKAGE_ROOT, 'dist', 'hooks', 'dispatch.js');

@@ -9,6 +9,7 @@ validator_ignore:
   - type: "substring"
     pattern: ".agent-src.uncondensed/"
     reason: "Rule references the authoring tree as the operand of condensation/preservation."
+self_contained: true
 workspaces: [agent-config-maintainer]
 packs: [meta]
 enforced_by:

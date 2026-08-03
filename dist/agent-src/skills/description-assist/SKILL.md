@@ -63,7 +63,7 @@ Report which checks pass / fail in one compact line — **not** a long essay.
 
 If the target is a skill, check for a trigger-eval report:
 
-* `.agent-src.uncondensed/skills/{name}/evals/triggers.json` — the expected-trigger corpus
+* `src/skills/{name}/evals/triggers.json` — the expected-trigger corpus
 * `evals/last-run.json` — the most recent runner output (see
   [`scripts/skill_trigger_eval.ts`](../../../scripts/skill_trigger_eval.ts))
 

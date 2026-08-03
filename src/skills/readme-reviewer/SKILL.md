@@ -206,7 +206,7 @@ Compare the README's claims to the live repository:
 | # | Severity | Section | Issue | Fix |
 |---|---|---|---|---|
 | 1 | ❌ Critical | Install | Command `X` does not exist | Replace with `Y` |
-| 2 | ❌ Critical | Profile grid | Link `.agent-src.uncondensed/profiles/` 404s | Repoint to `packages/core/.agent-src.uncondensed/profiles/` |
+| 2 | ❌ Critical | Profile grid | Link `src/agent-src/profiles/` 404s | Repoint to `packages/core/src/agent-src/profiles/` |
 | 3 | ⚠️ Major | Badges | "Skills: 218" — live count is 207 | Update badge or note drift |
 | 4 | ⚠️ Major | Usage | Example uses deprecated API | Update to current API |
 | 5 | ℹ️ Minor | Structure | Requirements buried below usage | Move above install |

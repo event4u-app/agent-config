@@ -3,7 +3,7 @@
 > Template for `agents/evidence/archived-skills/<slug>.md`. Created during
 > `step-2-skill-inventory-rationalization.md`
 > Phase 4 execution. Every skill removed from
-> `.agent-src.uncondensed/skills/` MUST have a matching archive note
+> `src/skills/` MUST have a matching archive note
 > here — enforced by `scripts/lint_archived_skills.py`.
 
 ## Instructions
@@ -78,7 +78,7 @@ references the removed slug without pointing at this note.}
     relationship documented in the successor's frontmatter).
   - `deprecated` — capability retired; no successor needed.
 - **`replacement`** — successor slug (must exist under
-  `.agent-src.uncondensed/skills/`) or literal `none`. The linter
+  `src/skills/`) or literal `none`. The linter
   validates the successor's existence.
 - **`last_known_callers`** — references found by
   `scripts/check_references.py` at archival time. Empty list is valid
@@ -92,10 +92,10 @@ references the removed slug without pointing at this note.}
    has a frontmatter block with the six required fields.
 2. `reason` is one of the four allowed values.
 3. When `reason ∈ {merged, superseded}`, the `replacement` slug exists
-   under `.agent-src.uncondensed/skills/`.
+   under `src/skills/`.
 4. Every slug under `agents/evidence/archived-skills/` is *absent* from
-   `.agent-src.uncondensed/skills/` (no zombies).
-5. No SKILL.md present under `.agent-src.uncondensed/skills/`
+   `src/skills/` (no zombies).
+5. No SKILL.md present under `src/skills/`
    references an archived slug as a router target.
 
 Run via `task lint-archived-skills`. Included in `task ci`.

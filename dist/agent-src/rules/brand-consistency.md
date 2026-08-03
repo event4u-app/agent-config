@@ -14,6 +14,7 @@ applies_to_user_types:
   - "creator"
   - "developer"
   - "maintainer"
+self_contained: true
 workspaces: [engineering]
 packs: [brand]
 ---

@@ -7,7 +7,13 @@ supersedes: —
 superseded_by: —
 phase: distribution-identity
 type: structural
-review_date: 2026-08-29
+review_trigger: >-
+  Reopen when a PHP consumer of the Packagist listing is actually named — the
+  deprecation rests on a consumer base nobody has named, and one named
+  consumer falsifies it outright. Also reopen when the maintainer completes or
+  refuses the registry-side claim/archive at
+  packagist.org/packages/event4u/agent-config: until that human action lands,
+  the single-channel claim stays untrue in the one place a PHP consumer looks
 ---
 
 # ADR-033 — Distribution identity: npm-primary, Packagist deprecated-in-place

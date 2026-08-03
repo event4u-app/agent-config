@@ -30,6 +30,28 @@ function makeWorkspace(settingsYaml: string | null): string {
   return dir;
 }
 
+/**
+ * Isolated user-global root (EVENT4U_CONFIG_HOME target). Empty by default so
+ * the pre-existing project-layer tests keep their no-global semantics; pass
+ * file contents to exercise the global fallback layers.
+ */
+function makeGlobalRoot(files: {
+  settingsYaml?: string;
+  userYaml?: string;
+} = {}): string {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "session-canary-global-"));
+  tmpDirs.push(dir);
+  const settingsDir = path.join(dir, "settings");
+  fs.mkdirSync(settingsDir, { recursive: true });
+  if (files.settingsYaml !== undefined) {
+    fs.writeFileSync(path.join(settingsDir, ".agent-settings.yml"), files.settingsYaml, "utf-8");
+  }
+  if (files.userYaml !== undefined) {
+    fs.writeFileSync(path.join(settingsDir, ".agent-user.yml"), files.userYaml, "utf-8");
+  }
+  return dir;
+}
+
 afterEach(() => {
   while (tmpDirs.length > 0) {
     const dir = tmpDirs.pop();
@@ -39,11 +61,17 @@ afterEach(() => {
   }
 });
 
-function run(envelope: unknown): { stdout: string; status: number | null } {
+function run(
+  envelope: unknown,
+  globalRoot?: string,
+): { stdout: string; status: number | null } {
   const r = spawnSync(TSX_BIN, [TS_SCRIPT], {
     encoding: "utf8",
     cwd: REPO_ROOT,
     input: typeof envelope === "string" ? envelope : JSON.stringify(envelope),
+    // Always pin the user-global root: without this, the dev machine's real
+    // ~/.event4u/agent-config/ would leak into the global-fallback layers.
+    env: { ...process.env, EVENT4U_CONFIG_HOME: globalRoot ?? makeGlobalRoot() },
   });
   expect(r.status).not.toBeNull();
   return { stdout: r.stdout as string, status: r.status };
@@ -119,5 +147,65 @@ describe("session_canary_hook", () => {
   it("survives a malformed envelope without blocking (exit 0)", () => {
     const { status } = run("this is not json");
     expect(status).toBe(0);
+  });
+
+  it("falls back to the user-global settings canary_name when the project has none", () => {
+    const root = makeWorkspace("quality:\n  local_auto_run: false\n");
+    const globalRoot = makeGlobalRoot({
+      settingsYaml: 'personal:\n  canary_name: "Globala"\n',
+    });
+    const out = JSON.parse(
+      run({ event: "session_start", workspace_root: root }, globalRoot).stdout,
+    );
+    expect(out.context).toContain('"Globala"');
+  });
+
+  it("falls back to the global identity.name when no canary_name is set anywhere", () => {
+    const root = makeWorkspace(null);
+    const globalRoot = makeGlobalRoot({
+      settingsYaml: 'personal:\n  canary_name: ""\n',
+      userYaml: "version: 1\nidentity:\n  name: Matze\nlanguage: de\n",
+    });
+    const out = JSON.parse(
+      run({ event: "session_start", workspace_root: root }, globalRoot).stdout,
+    );
+    expect(out.context).toContain('"Matze"');
+  });
+
+  it("project canary_name overrides both global layers", () => {
+    const root = makeWorkspace(SETTINGS_WITH_NAME);
+    const globalRoot = makeGlobalRoot({
+      settingsYaml: 'personal:\n  canary_name: "Globala"\n',
+      userYaml: "identity:\n  name: Matze\n",
+    });
+    const out = JSON.parse(
+      run({ event: "session_start", workspace_root: root }, globalRoot).stdout,
+    );
+    expect(out.context).toContain('"Mathias"');
+    expect(out.context).not.toContain("Globala");
+  });
+
+  it("ignores a top-level name key outside the identity: block", () => {
+    const root = makeWorkspace(null);
+    const globalRoot = makeGlobalRoot({
+      userYaml: "name: dev\nstyle:\n  name: fancy\n",
+    });
+    const { stdout, status } = run(
+      { event: "session_start", workspace_root: root },
+      globalRoot,
+    );
+    expect(status).toBe(0);
+    expect(stdout.trim()).toBe("");
+  });
+
+  it("no-ops when all three layers are empty or missing", () => {
+    const root = makeWorkspace('personal:\n  canary_name: ""\n');
+    const globalRoot = makeGlobalRoot({});
+    const { stdout, status } = run(
+      { event: "session_start", workspace_root: root },
+      globalRoot,
+    );
+    expect(status).toBe(0);
+    expect(stdout.trim()).toBe("");
   });
 });
