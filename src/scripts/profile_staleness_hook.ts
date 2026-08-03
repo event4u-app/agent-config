@@ -37,6 +37,9 @@ import {
   LOCAL_PROJECT_SUBDIR,
 } from "./_lib/agent_settings.js";
 import { readHookStdin } from "./hooks/hook_stdin.js";
+import { probeRanToday, stampProbeRun } from "./hooks/probe_throttle.js";
+
+const THROTTLE_CONCERN = "profile-staleness";
 
 // --- inlined session_profiles.stale_notice slice (unported dep) ----------
 
@@ -143,6 +146,15 @@ export function main(argv?: string[]): number {
   _readStdinIfNotTty();
 
   const root = rootArg !== null ? rootArg : _project_root();
+
+  // Daily throttle (road-to-hook-latency-repair): the overlay does not
+  // change within a day more often than a session ends — one attempt per
+  // local calendar day is enough. Skipped probe re-runs tomorrow.
+  if (probeRanToday(root, THROTTLE_CONCERN)) {
+    return 0;
+  }
+  stampProbeRun(root, THROTTLE_CONCERN);
+
   let notice: string | null;
   try {
     notice = _stale_notice(root);
