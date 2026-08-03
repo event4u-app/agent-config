@@ -11,7 +11,7 @@ Artefacts that maintain this package (agent-config itself).
 
 ## Commands (150)
 
-- **`agent-handoff`** — Generate a context summary for continuing work in a fresh chat. Replaces the session system.
+- **`agent-handoff`** — Pick a recent session, generate a handoff from its transcript, and seed a fresh session with it — or summarize the live conversation for copy-paste.
 - **`agent-status`** — Show current conversation stats — message count, token costs, task progress, next freshness check.
 - **`agents`** — Agent-layer orchestrator — routes to init, optimize, audit. Covers AGENTS.md and its multi-tool stubs (CLAUDE.md, GEMINI.md, copilot-instructions.md, .cursorrules).
 - **`agents-audit`** — Audit agent infrastructure — token overhead, rule triggers, AGENTS.md health, Capability-over-Structure adherence, stale references. Read-only, suggest-only, never auto-apply.

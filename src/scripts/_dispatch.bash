@@ -257,6 +257,7 @@ Tier 2 — maintenance / internal (hooks, MCP, memory, telemetry):
   telemetry:status           Print artefact-engagement telemetry status (read-only)
   telemetry:report           Aggregate the engagement log into a quartile report
   analyze-session            Read-only post-session report from on-disk runtime state
+  handoff                    Pick a recent session, generate a handoff, seed a fresh session
 EOF
   fi
 
@@ -1182,6 +1183,13 @@ cmd_analyze_session() {
   exec_ts "$PACKAGE_ROOT/src/scripts/_cli/cmd_analyze_session.ts" "$@"
 }
 
+# `agent-config handoff` — pick a recent session, generate a deterministic
+# handoff into agents/runtime/state/handoff-context.md, optionally --launch a
+# fresh host session. See scripts/_cli/cmd_handoff.ts.
+cmd_handoff() {
+  exec_ts "$PACKAGE_ROOT/src/scripts/_cli/cmd_handoff.ts" "$@"
+}
+
 main() {
   local cmd="${1-}"
   [[ $# -gt 0 ]] && shift || true
@@ -1255,6 +1263,7 @@ main() {
     versions)                cmd_versions "$@" ;;
     explain)                 cmd_explain "$@" ;;
     analyze-session)         cmd_analyze_session "$@" ;;
+    handoff)                 cmd_handoff "$@" ;;
     help|--help|-h|"")
       # Optional `--tier=0|1|all` filter (default 0).
       local tier_arg="0"

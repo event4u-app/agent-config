@@ -8,7 +8,9 @@
         "on_release": "fail",
         "on_main_and_prs": "warn",
         "on_local": "fail",
-        "always_blocking": ["a metric with no measurement supplied"],
+        "always_blocking": [
+            "a metric with no measurement supplied"
+        ],
         "rationale": "road-to-gates-that-can-fail Phase 5. A hard fail on main turns every legitimate command addition into a blocked merge, which is how budgets get quietly raised with a cushion instead of consciously — so budget / regression / drift findings are ADVISORY on main, the nightly and ordinary PRs, and BLOCKING on a release ref. Not a weakening: before the Phase-4 path triggers, this gate ran on release PRs and the nightly only, so the surfaces that now warn never saw it at all. A LOCAL run (no CI env) is strict, because a maintainer running it by hand — including release.ts — wants the strict answer and blocks nobody. A metric with NO measurement is always blocking in either posture: that is a broken harness reporting green on nothing. Implemented in src/scripts/check_evaluator_budgets.ts::detectPosture; override with --posture warn|fail.",
         "delivery": "This posture IS the nightly-visibility route (council 2026-08-02, blocker nightly-visibility-owner), not a second mechanism beside it: the nightly publishes measurement_record below, a later run re-measures and compares, and the contradiction warns on main / fails on release. No notification channel, no auto-managed issue — a one-maintainer channel producing routine noise gets muted, and a muted channel reproduces the original failure."
     },
@@ -61,11 +63,11 @@
             "deterministic": false
         },
         "cli_help_command_count": {
-            "max": 81,
-            "last_measured": 81,
-            "last_measured_at": "2026-08-03",
+            "max": 82,
+            "last_measured": 82,
+            "last_measured_at": "2026-08-04",
             "method": "registry enumeration — count of `{ name: '...', disposition` entries in src/cli/registry.ts (NOT --help prose parsing; methods historically disagreed 74 vs 76 vs 79)",
-            "baseline_note": "80 → 81 on 2026-08-03 (release 9.15.0 gate). This RECORDS growth that already shipped through its own reviewed PR; it does not authorize new surface. The +1 is f02db54c2 (fix(cli): register routing:doctor in the CLI registry) — the command existed, only its registry entry was missing, and the registering PR did not move this budget. The gate did its job again: breach WARNS on main and BLOCKS on release, which is the conscious-decision point rather than a silently raised cap. Re-measured 2026-08-03 via the pinned method: 81. Headroom stays zero by design — the next registry addition must move this number in its own PR."
+            "baseline_note": "80 → 81 on 2026-08-03 (release 9.15.0 gate). This RECORDS growth that already shipped through its own reviewed PR; it does not authorize new surface. The +1 is f02db54c2 (fix(cli): register routing:doctor in the CLI registry) — the command existed, only its registry entry was missing, and the registering PR did not move this budget. The gate did its job again: breach WARNS on main and BLOCKS on release, which is the conscious-decision point rather than a silently raised cap. Re-measured 2026-08-03 via the pinned method: 81. Headroom stays zero by design — the next registry addition must move this number in its own PR. 81 → 82 on 2026-08-04: the `handoff` subcommand (road-to-agent-handoff-resume Phase 4) registers in the same PR that adds the surface, per this record's own contract. Re-measured via the pinned method: 82."
         },
         "mcp_public_tool_count": {
             "max": 19,

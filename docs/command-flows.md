@@ -36,7 +36,7 @@ _Explore, plan, estimate, refine, and investigate before building. The "what sho
 - `feature-plan` — Interactively plan a feature — research, discuss, and create a structured feature document
 - `feature-refactor` — Refine and update an existing feature plan through interactive discussion
 - `feature-roadmap` — Generate implementation roadmap(s) from a feature plan and link them
-- `optimize-deep` — Autonomous deep-refactoring loop — analyze the repo with parallel subagents, verify findings, council the c…
+- `optimize-deep` — Autonomous deep-refactoring loop — subagent analysis, verified findings, council, central + sub-roadmaps, P…
 - `optimize-project` — Project-wide optimization sweep — inventory roadmaps, ADRs, agent folders (incl. modules), challenge stale…
 - `project` — Project orchestrator — routes to analyze (full audit) and health (read-only status check)
 - `project-analyze` — Full project analysis — detect stack, inventory modules, audit docs, create missing contexts
@@ -270,6 +270,6 @@ _Recreational packs._
 
 _Handoff / status / mode — conversation lifecycle._
 
-- `agent-handoff` — Generate a context summary for continuing work in a fresh chat. Replaces the session system.
+- `agent-handoff` — Pick a recent session, generate a handoff from its transcript, and seed a fresh session with it — or summar…
 - `agent-status` — Show current conversation stats — message count, token costs, task progress, next freshness check.
 - `mode` — Set the active role mode — prints the contract, lists default skills, and refuses work outside the contract…
