@@ -5,9 +5,11 @@ an input prompt with a `baseline_reply` that demonstrates the rule's
 Iron Law in observable form, plus expected / forbidden regex patterns
 and structural counters that the scorer checks line-by-line.
 
-CI entry: `tests/test_outcome_baselines.py`. Scorer:
-[`scorer.py`](scorer.py) — 41 LOC, stdlib only (caps locked at
-≤ 50 LOC / stdlib / no AST per Phase 2.3a of
+CI entry: `tests/golden/outcomes.test.ts` (Golden Tests job) — the scorer
+lives inline there as a faithful TS port of the retired Python
+`scorer.py` (deleted executor-less in the py2ts sweep; revived by
+road-to-tested-routing Phase 4). Caps unchanged: ≤ 50 LOC scoring logic,
+stdlib regex only, no AST (Phase 2.3a of
 `road-to-context-layer-maturity`).
 
 ## Locked baselines (Phase 2.4)

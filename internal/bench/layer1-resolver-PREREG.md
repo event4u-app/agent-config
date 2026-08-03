@@ -115,7 +115,16 @@ stale. It asserted "no plugin API, no hook, no interception" in 2026-06;
 and three on `user_prompt_submit`, with a pre-registered latency budget. A
 stale premise is grounds to REOPEN a decision, not grounds to ignore it.
 
-**Reopen when:** a superseding/amending ADR is accepted.
+**Reopen when:** a superseding/amending ADR is accepted. **→ CLEARED
+2026-08-03 by ADR-212** (`docs/decisions/ADR-212-declarative-routing-with-quantified-resolver-reopen.md`):
+it amends ADR-040 with the corrected hook-layer premise, records the
+council verdict (resolver not built now), and quantifies THE reopen
+trigger — ≥ 30% of tier-2 rules failing their routing-matrix floor after
+the anchored matcher. P2 is also satisfied (97 labelled rule ids in
+`router-coverage/routing-matrix-derived.yaml`). P1 (per-prompt transport)
+remains open and becomes actionable only if ADR-212's trigger fires.
+Kernel + tier-1 always-full and fail-open-to-eager are binding invariants
+on any future spike (ADR-212 § Decision 4).
 
 ## What landed instead, and why it is not the spike
 
