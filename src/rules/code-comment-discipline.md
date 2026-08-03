@@ -13,6 +13,8 @@ triggers:
   - keyword: "class"
   - keyword: "method"
   - keyword: "refactor"
+routes_to:
+  - "guideline:code-clarity"
 workspaces: [engineering]
 packs: [engineering-base]
 ---

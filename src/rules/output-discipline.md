@@ -7,6 +7,7 @@ triggers:
   - keyword: "for brevity"
   - keyword: "rest follows the same pattern"
   - phrase: "similar pattern"
+self_contained: true
 workspaces: [engineering]
 packs: [engineering-base]
 enforced_by:

@@ -19,14 +19,25 @@
  * new conversation on hook-capable hosts. Copilot (no hook surface) falls back
  * to the rule alone.
  *
- * Gate: `personal.canary_name` non-empty. Missing settings file, missing key,
- * or empty value → clean no-op (exit 0, no stdout). Never blocks
+ * Gate + name resolution (first non-empty wins — the canary is a PERSONAL,
+ * user-global concern; the project file is only an override):
+ *
+ *   1. `<workspace_root>/.agent-settings.yml`            → `personal.canary_name`
+ *   2. `<event4u_root>/settings/.agent-settings.yml`     → `personal.canary_name`
+ *      (the wizard-managed user-global settings; legacy XDG root read as
+ *      fallback via `user_global_paths.resolve_with_fallback`)
+ *   3. `<event4u_root>/settings/.agent-user.yml`         → `identity.name`
+ *      (the global user identity the setup wizard already collects — no
+ *      per-project duplication of the name)
+ *
+ * No name anywhere → clean no-op (exit 0, no stdout). Never blocks
  * (fail_closed: false).
  */
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { readHookStdin } from "./hooks/hook_stdin.js";
+import { resolve_with_fallback } from "./_lib/user_global_paths.js";
 
 const EXIT_ALLOW = 0;
 
@@ -71,6 +82,72 @@ export function read_canary_name(settings_path: string): string | null {
     }
   }
   return null;
+}
+
+/**
+ * Line-walker for `identity.name` in the wizard's user-global
+ * `settings/.agent-user.yml` — same no-YAML-dependency approach as
+ * `read_canary_name`. Returns the raw scalar or null when absent.
+ */
+export function read_identity_name(user_yml_path: string): string | null {
+  let text: string;
+  try {
+    if (!fs.statSync(user_yml_path).isFile()) {
+      return null;
+    }
+    text = fs.readFileSync(user_yml_path, "utf-8");
+  } catch {
+    return null;
+  }
+  let in_identity = false;
+  for (const line of text.split(/\r?\n/)) {
+    if (/^identity\s*:\s*(?:#.*)?$/.test(line)) {
+      in_identity = true;
+      continue;
+    }
+    if (in_identity && /^\S/.test(line)) {
+      in_identity = false; // left the identity: block
+    }
+    if (in_identity) {
+      const m = /^\s+name\s*:\s*(.*?)\s*(?:#.*)?$/.exec(line);
+      if (m && m[1] !== undefined) {
+        return m[1].trim();
+      }
+    }
+  }
+  return null;
+}
+
+/**
+ * Resolve the canary name across the three layers (project override →
+ * user-global settings → user-global identity). First non-empty wins;
+ * an empty scalar at a layer means "not set here", not "feature off",
+ * so the walk continues to the next layer.
+ */
+export function resolve_canary_name(workspace_root: string): string {
+  const project = sanitize_name(
+    read_canary_name(path.join(workspace_root, SETTINGS_FILE)),
+  );
+  if (project) {
+    return project;
+  }
+  const global_settings = resolve_with_fallback(
+    path.join("settings", ".agent-settings.yml"),
+  );
+  if (global_settings) {
+    const name = sanitize_name(read_canary_name(global_settings));
+    if (name) {
+      return name;
+    }
+  }
+  const global_user = resolve_with_fallback(path.join("settings", ".agent-user.yml"));
+  if (global_user) {
+    const name = sanitize_name(read_identity_name(global_user));
+    if (name) {
+      return name;
+    }
+  }
+  return "";
 }
 
 /**
@@ -135,9 +212,9 @@ export function main(): number {
   }
 
   const root = _workspaceRoot(env);
-  const name = sanitize_name(read_canary_name(path.join(root, SETTINGS_FILE)));
+  const name = resolve_canary_name(root);
   if (!name) {
-    return EXIT_ALLOW; // canary not configured — clean no-op
+    return EXIT_ALLOW; // canary not configured on any layer — clean no-op
   }
 
   process.stdout.write(

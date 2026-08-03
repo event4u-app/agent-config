@@ -4,6 +4,13 @@ stability: experimental
 
 # Daily Workspace Surface Contract
 
+> **Drive-loop era superseded (2026-08-03)** — the governing ADRs for the
+> drive/workspace subsystem (ADR-068, ADR-070–084) are superseded by
+> [ADR-206](../decisions/ADR-206-drive-loop-era-disposition.md): the subsystem
+> is **frozen** (beta-internal, dev-mode-gated, bugfix-only). This contract
+> keeps describing the frozen endpoints accurately; no new capability is added
+> on its authority. Removal is a separate future decision.
+
 > **Status** · v0 / design · 2026-05-24. Surface contract for the daily
 > workspace introduced as Phase 4 of the employee-product workstream.
 > Governed by ADRs [`022`](../decisions/ADR-022-daily-workspace-decomposition.md) ·

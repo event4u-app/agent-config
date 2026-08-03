@@ -28,7 +28,7 @@ tasks:
       - ./scripts-run src/scripts/mcp_telemetry_health {{.CLI_ARGS}}
 
   mcp:parity-stdio:
-    desc: "Turnkey-launch parity: drive the built `agent-config mcp-server` over stdio and diff its content surface against the local Python source-of-truth (ADR-085 subset). Builds the CLI first. Guards the turnkey path from silent content drift."
+    desc: "Turnkey-launch parity: drive the built `agent-config mcp-server` over stdio and diff its content surface against the local tsx-run server source-of-truth (stdio-lite subset per ADR-112). Builds the CLI first. Guards the turnkey path from silent content drift."
     cmds:
       - npm run build:cli
       - ./scripts-run src/scripts/mcp_parity_smoke --node-stdio

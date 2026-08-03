@@ -10,6 +10,7 @@ load_context:
 triggers:
   - keyword: "personal.autonomy"
   - phrase: "autonomy mode"
+self_contained: true
 workspaces: [agent-config-maintainer, construction, engineering, finance, founder, gtm, legal-review-prep, ops, product, small-business]
 packs: [meta]
 ---

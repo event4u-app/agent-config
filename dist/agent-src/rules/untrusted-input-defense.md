@@ -13,6 +13,8 @@ triggers:
   - phrase: "treat as instructions"
   - phrase: "from the web"
   - phrase: "scraped"
+routes_to:
+  - "guideline:agent-infra/untrusted-input-spotlighting"
 workspaces: [engineering]
 packs: [engineering-base]
 enforced_by:

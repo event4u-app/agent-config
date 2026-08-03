@@ -10,7 +10,7 @@
  * changes — historical quirks preserved (consumers pin the exact behaviour).
  *
  * Given a pre-condensation reply and a post-condensation reply, assert that
- * every carve-out region from `.agent-src.uncondensed/rules/telegraph-speak.md`
+ * every carve-out region from `src/rules/telegraph-speak.md`
  * § Carve-outs survived byte-for-byte:
  *
  *   1. Triple-backtick code blocks (any language).

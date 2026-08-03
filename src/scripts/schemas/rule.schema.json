@@ -74,7 +74,11 @@
     "routes_to": {
       "type": "array",
       "items": {"type": "string", "pattern": "^(skill|guideline|command|contract):"},
-      "description": "Router targets (skill / guideline / command / contract). Forbidden on kernel rules. Schema: docs/contracts/rule-router.md."
+      "description": "Router targets (skill / guideline / command / contract). Forbidden on kernel rules. Non-kernel rules declare either routes_to or self_contained: true. Schema: docs/contracts/rule-router.md."
+    },
+    "self_contained": {
+      "type": "boolean",
+      "description": "Certifies a non-kernel rule whose body IS the constraint — a prohibition, gate, or output-format law with no procedure to delegate — so it legitimately declares no routes_to. May offload detail via load_context. Per-rule certification rationale lives in ADR-210's appendix; the linter errors when a non-kernel rule declares neither routes_to nor this marker. Schema: docs/contracts/rule-router.md."
     },
     "applies_to_user_types": {
       "type": "array",

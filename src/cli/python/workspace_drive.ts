@@ -1,4 +1,6 @@
 #!/usr/bin/env -S node --import tsx
+// Drive-loop era frozen per ADR-206 (2026-08-03): governing ADRs 068/070-084 are
+// superseded — subsystem is beta-internal, bugfix-only; no new capability work.
 /**
  * Tier-1 host drive loop — TypeScript twin of `src/cli/python/workspace_drive.py`
  * (ADR-200, py2ts Phase 1). Byte-for-byte behavioral mirror of the Python

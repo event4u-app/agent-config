@@ -1,15 +1,22 @@
 ---
 adr: 085
-status: accepted
+status: superseded
 date: 2026-06-10
 decision: mcp-stdio-end-user-distribution-shape
 supersedes: —
-superseded_by: —
+superseded_by: 207
 phase: mcp-stdio-end-user-packaging Phase 1 (road-to-mcp-stdio-end-user-packaging)
 type: structural
 ---
 
 # ADR-085 — Distribution shape for the turnkey end-user stdio MCP server
+
+> **Superseded by [ADR-207](ADR-207-mcp-stdio-lite-node-grounds.md)** (2026-08-03).
+> The A2×B1 conclusion (read-only stdio-lite via the npm bin) still stands and
+> is restated there on Node-only grounds. This record's Python-vs-Node matrix
+> is void post-ADR-200, its pre-approved Phase-2 flip path (pipx/uvx) is
+> unbuildable, its flip trigger was resolved differently by ADR-112, and its
+> "zero local script execution" consequence is factually overtaken.
 
 ## Status
 

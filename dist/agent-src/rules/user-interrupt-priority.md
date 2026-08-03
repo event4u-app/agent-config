@@ -15,6 +15,7 @@ triggers:
   - command: "implement-ticket"
 load_context:
   - ../contexts/execution/interrupt-examples.md
+self_contained: true
 workspaces: [agent-config-maintainer, construction, engineering, finance, founder, gtm, legal-review-prep, ops, product, small-business]
 packs: [meta]
 ---

@@ -185,7 +185,7 @@ it as "redundant" and never trim its bullets. The patterns it covers:
   (`../docs/guidelines/foo.md`, `../contexts/bar.md`) — paths resolve
   from the file's delivered location, not from the symlink in
   `.claude/rules/` etc. (per `road-to-path-fixes.md` Strategy A).
-- `path_prefix:` triggers containing `.agent-src.uncondensed/` —
+- `path_prefix:` triggers containing `src/` —
   literal match patterns, not file refs (per Modified Option 1,
   P2.2).
 - Symlinked rule files under `.claude/rules/`, `.cursor/rules/`,

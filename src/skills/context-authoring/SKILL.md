@@ -43,7 +43,7 @@ Do NOT use when:
 | `deployment-order.md` | Migration strategy, feature flags, rollback plan | `migration-safety`, `judge-bug-hunter`, release reviewers |
 | `observability.md` | Error tracking, log channels, metrics, known alerts | deploy reviewers, `bug-analyzer`, incident mode |
 
-The templates ship in `.agent-src.uncondensed/templates/contexts/` and are
+The templates ship in `src/agent-src/templates/contexts/` and are
 copied into `agents/settings/contexts/` by the installer.
 
 ## Procedure: context-authoring

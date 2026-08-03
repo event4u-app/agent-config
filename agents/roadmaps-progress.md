@@ -2,14 +2,14 @@
 
 > Auto-generated — do not edit. Regenerate with `task roadmap-progress` or by running the `update_roadmap_progress` script for your install; rewritten on every roadmap create / execute / completion change (timestamp lives in git history).
 >
-> 17 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **11** open blockers
+> 19 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **10** open blockers
 
 ## Overall
 
-**98 / 228 steps done · 43%**
+**98 / 252 steps done · 39%**
 
 ```text
-█████████████████░░░░░░░░░░░░░░░░░░░░░░░   43%
+████████████████░░░░░░░░░░░░░░░░░░░░░░░░   39%
 ```
 
 ## Open roadmaps
@@ -22,17 +22,19 @@
 | 4 | [road-to-council-blind-review.md](roadmaps/road-to-council-blind-review.md) | 3 | 6 | 2 | 3 | 0 | 1 | 0 | ██████░░░░ 60% |
 | 5 | [road-to-gated-reach-followup.md](roadmaps/road-to-gated-reach-followup.md) | 1 | 12 | 12 | 0 | 0 | 0 | [1](#blockers-road-to-gated-reach-followup) | ░░░░░░░░░░ 0% |
 | 6 | [road-to-gates-that-can-fail.md](roadmaps/road-to-gates-that-can-fail.md) | 7 | 27 | 2 | 24 | 1 | 0 | 0 | █████████░ 92% |
-| 7 | [road-to-maintainer-bus-factor.md](roadmaps/road-to-maintainer-bus-factor.md) | 4 | 12 | 5 | 7 | 0 | 0 | [1](#blockers-road-to-maintainer-bus-factor) | ██████░░░░ 58% |
-| 8 | [road-to-orchestration-scope-decision.md](roadmaps/road-to-orchestration-scope-decision.md) | 4 | 10 | 6 | 4 | 0 | 0 | [1](#blockers-road-to-orchestration-scope-decision) | ████░░░░░░ 40% |
-| 9 | [road-to-package-renewal.md](roadmaps/road-to-package-renewal.md) | 2 | 9 | 3 | 6 | 0 | 0 | 0 | ███████░░░ 67% |
-| 10 | [road-to-renewal-adr-hygiene.md](roadmaps/road-to-renewal-adr-hygiene.md) | 3 | 10 | 10 | 0 | 0 | 0 | [1](#blockers-road-to-renewal-adr-hygiene) | ░░░░░░░░░░ 0% |
-| 11 | [road-to-renewal-leverage.md](roadmaps/road-to-renewal-leverage.md) | 3 | 11 | 11 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
-| 12 | [road-to-scale-history-bench-run.md](roadmaps/road-to-scale-history-bench-run.md) | 1 | 2 | 2 | 0 | 0 | 0 | [1](#blockers-road-to-scale-history-bench-run) | ░░░░░░░░░░ 0% |
-| 13 | [road-to-solution-minimalism.md](roadmaps/road-to-solution-minimalism.md) | 4 | 36 | 12 | 23 | 0 | 1 | 0 | ███████░░░ 66% |
-| 14 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 6 | 3 | 0 | 0 | [1](#blockers-road-to-subagent-value-realization-followup) | ███░░░░░░░ 33% |
-| 15 | [road-to-surface-consolidation.md](roadmaps/road-to-surface-consolidation.md) | 3 | 14 | 1 | 12 | 1 | 0 | [3](#blockers-road-to-surface-consolidation) | █████████░ 92% |
-| 16 | [road-to-tier-removal.md](roadmaps/road-to-tier-removal.md) | 4 | 8 | 2 | 6 | 0 | 0 | [1](#blockers-road-to-tier-removal) | ████████░░ 75% |
-| 17 | [road-to-ui-track-integrity-followup.md](roadmaps/road-to-ui-track-integrity-followup.md) | 1 | 10 | 10 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+| 7 | [road-to-hook-latency-repair.md](roadmaps/road-to-hook-latency-repair.md) | 3 | 9 | 9 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+| 8 | [road-to-maintainer-bus-factor.md](roadmaps/road-to-maintainer-bus-factor.md) | 4 | 12 | 5 | 7 | 0 | 0 | [1](#blockers-road-to-maintainer-bus-factor) | ██████░░░░ 58% |
+| 9 | [road-to-orchestration-scope-decision.md](roadmaps/road-to-orchestration-scope-decision.md) | 4 | 10 | 6 | 4 | 0 | 0 | [1](#blockers-road-to-orchestration-scope-decision) | ████░░░░░░ 40% |
+| 10 | [road-to-package-renewal.md](roadmaps/road-to-package-renewal.md) | 2 | 9 | 3 | 6 | 0 | 0 | 0 | ███████░░░ 67% |
+| 11 | [road-to-release-truth.md](roadmaps/road-to-release-truth.md) | 4 | 10 | 10 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+| 12 | [road-to-renewal-leverage.md](roadmaps/road-to-renewal-leverage.md) | 3 | 11 | 11 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+| 13 | [road-to-routing-correctness.md](roadmaps/road-to-routing-correctness.md) | 4 | 15 | 15 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+| 14 | [road-to-scale-history-bench-run.md](roadmaps/road-to-scale-history-bench-run.md) | 1 | 2 | 2 | 0 | 0 | 0 | [1](#blockers-road-to-scale-history-bench-run) | ░░░░░░░░░░ 0% |
+| 15 | [road-to-solution-minimalism.md](roadmaps/road-to-solution-minimalism.md) | 4 | 36 | 12 | 23 | 0 | 1 | 0 | ███████░░░ 66% |
+| 16 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 6 | 3 | 0 | 0 | [1](#blockers-road-to-subagent-value-realization-followup) | ███░░░░░░░ 33% |
+| 17 | [road-to-surface-consolidation.md](roadmaps/road-to-surface-consolidation.md) | 3 | 14 | 1 | 12 | 1 | 0 | [3](#blockers-road-to-surface-consolidation) | █████████░ 92% |
+| 18 | [road-to-tier-removal.md](roadmaps/road-to-tier-removal.md) | 4 | 8 | 2 | 6 | 0 | 0 | [1](#blockers-road-to-tier-removal) | ████████░░ 75% |
+| 19 | [road-to-ui-track-integrity-followup.md](roadmaps/road-to-ui-track-integrity-followup.md) | 1 | 10 | 10 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 
 ---
 
@@ -125,6 +127,16 @@ _2 blockers resolved._
 | 6 | Adversarial fixtures for gates that parse repo conventions | ✅ done | 0 | 2 | 0 | 0 | 100% |
 | 7 | Mutation canary (extends the accepted canary contract) | 🟡 in progress | 2 | 7 | 0 | 0 | 78% |
 
+### [road-to-hook-latency-repair.md](roadmaps/road-to-hook-latency-repair.md)
+
+**Road to hook latency repair — pay for the bundle, not the CLI** — 0 / 9 done (0%)
+
+| # | Phase | State | Open | Done | Deferred | Cancelled | % |
+|---|---|---|---:|---:|---:|---:|---:|
+| 1 | measure the real path (before any fix lands) | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
+| 2 | the three levers | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
+| 3 | close the loop | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
+
 ### [road-to-maintainer-bus-factor.md](roadmaps/road-to-maintainer-bus-factor.md)
 
 **Road to maintainer bus-factor — make the project reviewable and inheritable, and dogfood its own review machinery** — 7 / 12 done (58%)
@@ -178,27 +190,16 @@ _1 blocker resolved._
 | 1 | this PR | ✅ done | 0 | 6 | 0 | 0 | 100% |
 | 2 | steering (after this PR merges) | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
 
-### [road-to-renewal-adr-hygiene.md](roadmaps/road-to-renewal-adr-hygiene.md)
+### [road-to-release-truth.md](roadmaps/road-to-release-truth.md)
 
-**Road to renewal — ADR hygiene (chip-mode)** — 0 / 10 done (0%)
+**Road to release truth — one final source, findings with dispositions, bounded autonomy** — 0 / 10 done (0%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
-| 1 | dated-era dispositions | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
-| 2 | structural decisions with new evidence | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
-| 3 | dead-tree endgame (after Foundation Phase 1 drains the gates) | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
-
-<a id="blockers-road-to-renewal-adr-hygiene"></a>
-**Blockers**
-
-- **kernel-router-value-rebaseline** (owner: maintainer) — blocks nothing (optional input to Foundation Phase 3's go/no-go if landed; that gate does not wait on it)
-  - **What to do:**
-    hosts with the pre-registered comparison + recorded artifact named up
-    front. The locked numbers are stale or unbacked (docs/CLAIMS.md
-    vocabulary). Mechanism-match note: this is a DIFFERENT measurement from
-    the TERMINAL activation red-baseline null (value-of-loading bench, not
-    adherence adjudication) — it does not re-run that null.
-  - **Resolved when:** the maintainer authorizes the bench spend and the recorded artifact lands.
+| 1 | one final source for release material | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
+| 2 | curated highlights that cannot silently lie | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
+| 3 | review findings get machine-readable dispositions | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
+| 4 | bounded autonomy for `/optimize:deep` | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
 
 ### [road-to-renewal-leverage.md](roadmaps/road-to-renewal-leverage.md)
 
@@ -209,6 +210,17 @@ _1 blocker resolved._
 | 1 | execution flows | ⬜ not started | 7 | 0 | 0 | 0 | 0% |
 | 2 | documented-failure fixes with borrowed shape | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
 | 3 | tracker clarification (docs-only) | ⬜ not started | 1 | 0 | 0 | 0 | 0% |
+
+### [road-to-routing-correctness.md](roadmaps/road-to-routing-correctness.md)
+
+**Road to routing correctness — the rule set stops fighting itself, and a command proves what routes** — 0 / 15 done (0%)
+
+| # | Phase | State | Open | Done | Deferred | Cancelled | % |
+|---|---|---|---:|---:|---:|---:|---:|
+| 1 | rule hygiene: stop the set from fighting itself | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
+| 2 | the validation surface the mandate asks for | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
+| 3 | frontend-set diet (measurement before trimming) | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
+| 4 | standing adherence telemetry (the anti-anecdote layer) | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
 
 ### [road-to-scale-history-bench-run.md](roadmaps/road-to-scale-history-bench-run.md)
 

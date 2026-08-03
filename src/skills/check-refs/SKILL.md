@@ -27,7 +27,7 @@ gaps:
 Use this skill when:
 
 - A skill, rule, command, guideline, or context has been renamed or deleted
-- Linking a newly added artifact from elsewhere in `.agent-src.uncondensed/`
+- Linking a newly added artifact from elsewhere in `src/`
 - Preparing a PR that touches cross-references between agent artifacts
 - CI's `check-refs` job failed and the broken reference needs to be located
 

@@ -8,7 +8,7 @@
  * same finding text, same scan scope and file-walk order. No behaviour
  * changes; latent bugs are replicated and flagged as divergence candidates.
  *
- * Scans dist/agent-src/ and .agent-src.uncondensed/ for project-specific
+ * Scans src/ and dist/agent-src/ for project-specific
  * references that violate package portability (the package must work in ANY
  * project).
  *

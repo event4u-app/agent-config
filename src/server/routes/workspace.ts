@@ -1,3 +1,5 @@
+// Drive-loop era frozen per ADR-206 (2026-08-03): governing ADRs 068/070-084 are
+// superseded — subsystem is beta-internal, bugfix-only; no new capability work.
 /**
  * `/api/v1/workspace/*` — surface contract for the daily-workspace tab
  * in the modern Preact shell.

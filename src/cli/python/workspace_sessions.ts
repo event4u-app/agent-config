@@ -1,4 +1,6 @@
 #!/usr/bin/env tsx
+// Drive-loop era frozen per ADR-206 (2026-08-03): governing ADRs 068/070-084 are
+// superseded — subsystem is beta-internal, bugfix-only; no new capability work.
 /**
  * Local workspace session store — Phase 4 of `road-to-employee-product`
  * (TypeScript twin).

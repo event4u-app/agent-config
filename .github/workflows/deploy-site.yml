@@ -38,7 +38,7 @@ jobs:
           node-version: '22'
           cache: 'npm'
       # Enables Pages on first run (build_type: workflow) — the "Pages an" step.
-      - uses: actions/configure-pages@v5
+      - uses: actions/configure-pages@v6
         with:
           enablement: true
       - name: Build the Starlight site

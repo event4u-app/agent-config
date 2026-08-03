@@ -4,7 +4,7 @@
 # stdout. Pure POSIX-compatible bash (no associative arrays, runs
 # on macOS bash 3.2); jq required for JSON safety.
 #
-# Schema: .agent-src.uncondensed/skills/scene-expander/scene-blueprint.schema.yaml
+# Schema: src/skills/scene-expander/scene-blueprint.schema.yaml
 # Contract: scripts/media/lib/adapter-contract.md
 #
 # Usage:

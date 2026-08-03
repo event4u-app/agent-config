@@ -7,7 +7,15 @@ supersedes: —
 superseded_by: —
 phase: v3.x · root-layout-cleanup Phase 3 close-out
 type: structural
-review_date: 2027-05-25
+review_trigger: >-
+  Reopen when the L0 symlink-mobility test in
+  agents/evidence/audits/2026-05-root-layout-phase2/02-symlink-mobility.md is
+  actually run against current Cursor + Claude Code + Windsurf and Audit 2 is
+  amended to pass or fail — that one untested premise is the entire blocker,
+  and the other three audits are already clean. Also reopen if a host that
+  today honours L1 subdirectory symlinks starts refusing them, which
+  invalidates the Phase-1 shape this ADR froze, not merely the Phase-3 option
+  it deferred
 ---
 
 # ADR-029 — Multi-workspace restructure deferred; Phase 3 closed pending L0 symlink-mobility evidence

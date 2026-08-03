@@ -794,30 +794,6 @@ function extractFrontmatterField(frontmatter: string, pattern: RegExp): string |
 
 type YamlListItem = string | Record<string, string>;
 
-function _parseTrustLevel(frontmatter: string): string | null {
-    const lines = splitlines(frontmatter);
-    let inBlock = false;
-    for (const line of lines) {
-        if (!inBlock) {
-            if (line.startsWith('trust:')) {
-                const rhs = line.slice('trust:'.length).trim();
-                if (rhs === '') {
-                    inBlock = true;
-                }
-            }
-            continue;
-        }
-        if (line.startsWith('  level:')) {
-            return stripQuotes(line.slice('  level:'.length).trim());
-        }
-        if (line.startsWith('  ')) {
-            continue;
-        }
-        break;
-    }
-    return null;
-}
-
 function stripQuotes(s: string): string {
     return s.replace(/^["']/, '').replace(/["']$/, '');
 }
@@ -932,13 +908,18 @@ function lint_router_frontmatter(
     }
 
     if (routesTo === null) {
-        const trustLevel = _parseTrustLevel(frontmatter);
-        if (trustLevel !== 'core') {
+        // Self-contained carve-out (ADR-210): a rule whose body IS the
+        // constraint (prohibition / gate / format law — no procedure to
+        // delegate) certifies itself via `self_contained: true` instead of
+        // routing. Neither declared → error: the contract's "routes_to ≥ 1
+        // unless self-contained" is unenforceable without a marker.
+        const selfContained = /^self_contained:[ \t]*true[ \t]*$/m.test(frontmatter);
+        if (!selfContained) {
             issues.push(
                 new Issue(
-                    'info',
+                    'error',
                     'router_routes_to_missing',
-                    'Non-kernel rule has no routes_to: — body should migrate to skill / guideline in Phase 4',
+                    "Non-kernel rule declares neither routes_to: nor self_contained: true — route the body to its skill/guideline, or certify it self-contained per docs/contracts/rule-router.md",
                 ),
             );
         }

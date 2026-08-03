@@ -110,7 +110,7 @@ surface changes.
 - **No commits, no push, no PR** — finishing is a user decision per
   [`commit-policy`](../../rules/commit-policy.md).
 - **No edits to `dist/agent-src/` or `.augment/`** — those regenerate from
-  `.agent-src.uncondensed/`. Edit the source.
+  `src/`. Edit the source.
 
 ## See also
 

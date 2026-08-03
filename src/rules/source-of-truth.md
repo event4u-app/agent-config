@@ -9,6 +9,7 @@ triggers:
   - path_prefix: ".augment/"
   - path_prefix: ".claude/"
   - path_prefix: ".cursor/"
+self_contained: true
 workspaces: [agent-config-maintainer]
 packs: [meta]
 enforced_by:
