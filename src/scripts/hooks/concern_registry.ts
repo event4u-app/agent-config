@@ -42,6 +42,7 @@ import { main as prUrlReminderMain } from '../pr_url_reminder_hook.js';
 import { main as sessionCanaryMain } from '../session_canary_hook.js';
 import { main as blockNoVerifyMain } from './block_no_verify.js';
 import { main as blockKernelRuleWritesMain } from './block_kernel_rule_writes.js';
+import { main as blockConfigWeakeningMain } from './block_config_weakening.js';
 import { main as rtkWrapMain } from './rtk_wrap_hook.js';
 import { main as designSlopMain } from './design_slop_hook.js';
 import { main as codeGraphNudgeMain } from './code_graph_nudge_hook.js';
@@ -69,6 +70,7 @@ export const CONCERN_REGISTRY: Readonly<Record<string, ConcernMain>> = {
     'src/scripts/session_canary_hook.ts': sessionCanaryMain as ConcernMain,
     'src/scripts/hooks/block_no_verify.ts': blockNoVerifyMain as ConcernMain,
     'src/scripts/hooks/block_kernel_rule_writes.ts': blockKernelRuleWritesMain as ConcernMain,
+    'src/scripts/hooks/block_config_weakening.ts': blockConfigWeakeningMain as ConcernMain,
     'src/scripts/hooks/rtk_wrap_hook.ts': rtkWrapMain as ConcernMain,
     'src/scripts/hooks/design_slop_hook.ts': designSlopMain as ConcernMain,
     'src/scripts/hooks/code_graph_nudge_hook.ts': codeGraphNudgeMain as ConcernMain,

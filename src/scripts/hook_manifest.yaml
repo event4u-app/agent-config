@@ -91,6 +91,20 @@ concerns:
     script: src/scripts/hooks/block_kernel_rule_writes.ts
     args: []
     fail_closed: true
+  # road-to-renewal-leverage Phase 2 — "fix the code, not the config".
+  # PreToolUse guard over the recorded allowlist-growth antipattern
+  # (autonomous-execution § Antipattern): warns as an allowlist grows within a
+  # session and BLOCKS past the cap that rule already states in words (>20
+  # entries in one session = the linter is wrong). Baselines and budget
+  # thresholds warn only — whether a rising count is weakening or a legitimate
+  # ratchet reset is not decidable from the edit alone. Council 2026-08-02
+  # rejected inventing a "fix-loop is active" predicate; the SESSION is the
+  # window the recorded rule already names. fail_closed: false — a malformed
+  # envelope must never block an unrelated edit.
+  block-config-weakening:
+    script: src/scripts/hooks/block_config_weakening.ts
+    args: []
+    fail_closed: false
   # token-saving Phase 3 — PreToolUse RTK-wrap nudge. DETERMINISTIC: keys off a
   # live `which rtk` probe (not the self-reported flag). When rtk is installed
   # and the agent is about to run a single verbose CLI command that is NOT
@@ -211,7 +225,7 @@ platforms:
     session_start:    [chat-history, hot-context, session-canary, first-run-gate, onboarding-gate, verify-before-complete, minimal-safe-diff, profile-staleness, wrapper-freshness, surface-probe]
     session_end:      [chat-history, memory-learn]
     stop:             [chat-history, hot-context, verify-before-complete]
-    pre_tool_use:     [block-no-verify, block-kernel-rule-writes, rtk-wrap, design-slop, code-graph-nudge]
+    pre_tool_use:     [block-no-verify, block-kernel-rule-writes, block-config-weakening, rtk-wrap, design-slop, code-graph-nudge]
     post_tool_use:    [chat-history, roadmap-progress, context-hygiene, verify-before-complete, minimal-safe-diff, injection-scan, pr-url-reminder]
 
   claude:
@@ -219,7 +233,7 @@ platforms:
     session_end:      [chat-history, memory-learn]
     stop:             [chat-history, hot-context, verify-before-complete, team-review-gate]
     user_prompt_submit: [chat-history, verify-before-complete, minimal-safe-diff]
-    pre_tool_use:     [block-no-verify, block-kernel-rule-writes, rtk-wrap, design-slop, code-graph-nudge]
+    pre_tool_use:     [block-no-verify, block-kernel-rule-writes, block-config-weakening, rtk-wrap, design-slop, code-graph-nudge]
     post_tool_use:    [chat-history, roadmap-progress, context-hygiene, verify-before-complete, minimal-safe-diff, injection-scan, pr-url-reminder]
 
   # Cowork — the Claude desktop app's local-agent-mode runtime, built
@@ -241,7 +255,7 @@ platforms:
     session_end:      [chat-history, memory-learn]
     stop:             [chat-history, hot-context, verify-before-complete]
     user_prompt_submit: [chat-history, verify-before-complete, minimal-safe-diff]
-    pre_tool_use:     [block-no-verify, block-kernel-rule-writes, rtk-wrap, design-slop, code-graph-nudge]
+    pre_tool_use:     [block-no-verify, block-kernel-rule-writes, block-config-weakening, rtk-wrap, design-slop, code-graph-nudge]
     post_tool_use:    [chat-history, roadmap-progress, context-hygiene, verify-before-complete, minimal-safe-diff, injection-scan, pr-url-reminder]
 
   # Phase 7.5 — Cursor. `.cursor/hooks.json` (project) is read by the

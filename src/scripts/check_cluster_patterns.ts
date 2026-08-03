@@ -18,6 +18,19 @@
  * must document the bare-invocation behaviour (menu / default route /
  * detection fallback) per command-clusters.md § Bare invocation.
  *
+ * Filesystem-enumeration addition (road-to-renewal-leverage, 2026-08-02): the
+ * checks above all read the CONTRACT and ask "does what it names exist?".
+ * Nothing asked the inverse — "does what exists get named?" — so a
+ * sub-command could sit on disk while appearing in neither its hub's
+ * `## Sub-commands` table nor its `routes_to:`, invisibly. Two instances were
+ * live when this was added (`/roadmap:materialize`, `/memory:learn-low-impact`)
+ * plus incomplete `routes_to` on 12 of 25 dispatch clusters.
+ * `check_completeness` closes that direction: for a `type: orchestrator`
+ * dispatcher, every on-disk `<sub>/command.md` sibling directory must be named
+ * in the table and listed in `routes_to`. Scoped to orchestrators on purpose —
+ * a few contract rows point at full working commands that merely happen to
+ * carry one nested sub-command, and those own no dispatch table.
+ *
  * Exit codes: 0 = clean, 1 = pattern violations, 3 = internal error.
  */
 
@@ -170,6 +183,90 @@ function _repr(v: string | undefined): string {
     return `'${v.replace(/\\/g, '\\\\').replace(/'/g, "\\'")}'`;
 }
 
+/** Parse a `routes_to: [a, b]` frontmatter value into its entries. */
+export function parse_routes_to(raw: string | undefined): string[] {
+    if (raw === undefined) {
+        return [];
+    }
+    const m = /^\[(.*)\]$/.exec(raw.trim());
+    if (!m) {
+        return [];
+    }
+    return (m[1] as string)
+        .split(',')
+        .map((s) => s.trim().replace(/^['"]|['"]$/g, ''))
+        .filter((s) => s.length > 0);
+}
+
+/** Sub-command directory names that carry a `command.md`, sorted. */
+export function on_disk_subs(dispatcher_path: string): string[] {
+    const dir = path.dirname(dispatcher_path);
+    let entries: fs.Dirent[];
+    try {
+        entries = fs.readdirSync(dir, { withFileTypes: true });
+    } catch {
+        return [];
+    }
+    return entries
+        .filter((e) => e.isDirectory() && _isFile(path.join(dir, e.name, 'command.md')))
+        .map((e) => e.name)
+        .sort();
+}
+
+/**
+ * Does the body name `<sub>` as a sub-command of `<cluster>`?
+ *
+ * Both `` `/cluster:sub` `` and `` `/cluster sub` `` count — command-clusters.md
+ * § 157 makes the space form a first-class equivalent of the colon form, so
+ * requiring one of them would be inventing a rule the contract does not carry.
+ * The trailing class allows a row that decorates the name inside the same
+ * backticks (`` `/team review [--background]` ``).
+ */
+export function names_sub(body: string, cluster: string, sub: string): boolean {
+    const re = new RegExp('`/' + cluster + '[: ]' + sub + '(?![a-z0-9-])');
+    return re.test(body);
+}
+
+/**
+ * Every on-disk sub-command of an orchestrator must be named in its
+ * `## Sub-commands` table and listed in `routes_to:`.
+ *
+ * Non-orchestrator dispatchers are skipped: a handful of contract rows point
+ * at full working commands that merely happen to carry a nested sub-command,
+ * and those own no dispatch table to be complete against.
+ */
+export function check_completeness(
+    cluster: string,
+    dispatcher_path: string,
+    fm: Record<string, string>,
+    body: string,
+): string[] {
+    if (fm['type'] !== 'orchestrator') {
+        return [];
+    }
+    const subs = on_disk_subs(dispatcher_path);
+    if (subs.length === 0) {
+        return [];
+    }
+    const errors: string[] = [];
+    const routes = parse_routes_to(fm['routes_to']);
+    for (const sub of subs) {
+        if (!names_sub(body, cluster, sub)) {
+            errors.push(
+                `sub-command \`${sub}\` exists on disk but is not named in the ` +
+                    '`## Sub-commands` table',
+            );
+        }
+        if (!routes.includes(`${cluster}-${sub}`) && !routes.includes(sub)) {
+            errors.push(
+                `sub-command \`${sub}\` exists on disk but is missing from ` +
+                    '`routes_to:`',
+            );
+        }
+    }
+    return errors;
+}
+
 export function check_dispatcher(cluster: string, slug_map: Map<string, string>): FileReport {
     const p = _resolve_command(cluster, slug_map);
     if (p === null) {
@@ -240,6 +337,9 @@ export function check_dispatcher(cluster: string, slug_map: Map<string, string>)
             }
         }
     }
+
+    // Completeness (2026-08-02): every sub-command that EXISTS must be named.
+    rep.errors.push(...check_completeness(cluster, p, fm, body));
 
     // Bare-invocation story (Phase 4 / ADR-115): the Dispatch section must say
     // what a bare `/<cluster>` does — a menu, a default route, or detection.

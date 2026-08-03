@@ -8,6 +8,7 @@ tier: 2
 visibility: internal
 description: Chat-history orchestrator — routes to import (selective cross-session resume). Mining moved to /memory mine-session; raw-log inspection uses the host's native transcript view.
 cluster: chat-history
+routes_to: [chat-history-import]
 type: orchestrator
 suggestion:
   eligible: true

@@ -14479,8 +14479,8 @@ var settingsSchema = external_exports.object({
     quality_cadence: qualityCadence.default("end_of_roadmap").describe(
       "When the agent runs the full quality / test suite during /roadmap:process-* runs. end_of_roadmap = once, after the last step (fastest, default). per_phase = after each phase boundary. per_step = after every single step (slowest, highest confidence)."
     ),
-    dashboard_regen_cadence: regenCadence.default("per_step").describe(
-      "How often the agent regenerates agents/roadmaps/dashboard.md during a roadmap run. per_step = after every step (default, freshest dashboard). every_5_steps = batch the regen. phase_boundary = only at phase edges."
+    dashboard_regen_cadence: regenCadence.default("every_5_steps").describe(
+      "How often the agent regenerates agents/roadmaps/dashboard.md during a roadmap run. every_5_steps = batch the regen (default). per_step = after every step (freshest dashboard, highest subprocess overhead). phase_boundary = only at phase edges. A rename, phase add, or archive always regenerates immediately regardless."
     ),
     horizon_weeks: external_exports.number().int().min(0).default(0).describe(
       'Optional planning horizon (weeks) the agent shows in roadmap framing ("next 4 weeks"). Set 0 to omit the horizon \u2014 most teams prefer to ship without a hardcoded window.'
