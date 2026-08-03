@@ -170,8 +170,9 @@ for the mechanics.
   not spawn processes or run tools independently.
 - **Personas as modes.** They do not change the host's contract or
   refuse work. Use `/mode` for that.
-- **Specialist sprawl.** Cap is "≤ 4 specialists per plate" by the
-  council A-OQ2 verdict. New specialists need ≥ 1 skill citation
+- **Specialist sprawl.** Cap is **≤ 2 specialists per domain**, enforced
+  by `lint_persona_governance` (`PER_DOMAIN_CAP = 2`) — see the
+  per-domain count table above. New specialists need ≥ 1 skill citation
   before merging.
 - **Core-tier mutation.** Core personas are versioned (`version` in
   frontmatter); breaking changes need a new ID, not an in-place

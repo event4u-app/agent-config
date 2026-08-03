@@ -158,8 +158,8 @@ generic descriptions cause **undertriggering**. Normative source:
 
 Three rules: name 2+ triggers (domains, symptoms, user phrasing), end with
 `... even if they don't explicitly ask for \`<skill-name>\`.`, and stay
-**≤ 200 characters** (`skill_linter.ts` warns `description_too_long` above
-that). When trimming to fit, drop adjectives or the second example phrasing
+**≤ 200 characters** (`skill_linter.ts` errors `description_too_long` above
+that — a hard cap). When trimming to fit, drop adjectives or the second example phrasing
 before you drop a trigger class or the `even if ...` tail.
 
 Canonical before/after (2026-04-21 audit baseline):

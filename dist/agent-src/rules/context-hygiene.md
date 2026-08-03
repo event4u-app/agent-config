@@ -18,7 +18,7 @@ enforced_by:
 
 > **Enforced by:** [`scripts/context_hygiene_hook.ts`](../../scripts/context_hygiene_hook.ts)
 > on Augment + Claude Code (`PostToolUse`). The hook maintains
-> `agents/runtime/state/context-hygiene.json` (turn count, loop signal,
+> `agents/state/context-hygiene.json` (tool-call count, loop signal,
 > freshness milestones at 20/40/60); the prose below is the spec the
 > hook implements and the agent-side fallback.
 
@@ -30,7 +30,8 @@ Monitor for **context decay** — long conversations degrade quality and waste t
 re-reading files already in context · 15+ completed tasks and a new unrelated
 topic · branch changed since start · ~24 hours passed.
 
-**Repeat** at multiples: messages 20/40/60, tasks 15/30/45.
+**Repeat** at multiples: messages 20/40/60, tasks 15/30/45 (the task
+15/30/45 ladder is agent-side only — the hook tracks no task counter).
 **ONLY at exact thresholds.** Between: silence. Suggestion template
 (token-cost estimate + numbered options): the mechanics guideline below.
 

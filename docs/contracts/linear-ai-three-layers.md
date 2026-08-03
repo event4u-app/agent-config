@@ -27,7 +27,8 @@ verbatim — no filesystem, no skill triggering, no `.augment/` access.
 
 ## Our mapping — workspace / team / personal
 
-The inclusion list partitions our 47 rules into three mutually exclusive
+The inclusion list partitions our 47 rules (2026-04 snapshot; suite total
+111 as-of 2026-08) into three mutually exclusive
 buckets. Counts and per-rule decisions live in
 [`linear-ai-rules-inclusion.md`](linear-ai-rules-inclusion.md); this
 section explains the *principle* behind each bucket.

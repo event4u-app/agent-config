@@ -14,7 +14,7 @@
 4. Pass the Unique-Questions heuristic — ≥ 3 questions that no other
    persona asks verbatim. If you cannot write three unique questions,
    the persona is redundant; drop it.
-5. Stay within the size budget: **Core ≤ 120 lines, Specialist ≤ 80 lines**.
+5. Stay within the size budget: **Core ≤ 120 lines, Specialist ≤ 100 lines** (wings 3–4: ≤ 140).
 6. Run `task sync` and `task ci` before commit.
 
 ## Template
@@ -88,7 +88,7 @@ Before considering a persona complete:
 
 - [ ] **Unique Questions heuristic** — ≥ 3 questions that no other
   persona asks verbatim. The linter enforces this.
-- [ ] **Size budget** — Core ≤ 120 lines, Specialist ≤ 80 lines.
+- [ ] **Size budget** — Core ≤ 120 lines, Specialist ≤ 100 lines (wings 3–4: ≤ 140).
 - [ ] **Portability** — no project names, domains, stacks, teams.
 - [ ] **English only** — all content in English.
 - [ ] **One sentence description** — ≤ 160 chars, starts with a voice

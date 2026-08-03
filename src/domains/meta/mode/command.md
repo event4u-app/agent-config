@@ -63,7 +63,9 @@ Extract `roles.default_role` and `roles.active_role`.
 
 Echo the full contract body for the target mode from `role-contracts.md`:
 
-- Goal / Constraints / Output fields
+- The mode's contract-skeleton fields (each mode's skeleton differs —
+  e.g. developer: Goal / Plan / Changes / Tests / Open questions;
+  planner: Goal / Constraints / Option set / …)
 - Default skills the mode loads first
 - Structured mode marker the agent will emit when closing
 
@@ -85,7 +87,7 @@ Do NOT write anything for `/mode` without an argument (status only).
 Announce the switch as:
 
 ```
-> entering {mode} mode — contract: {goal-field} / {constraints-field} / {output-field}
+> entering {mode} mode — contract fields: {first-3-field-names-from-skeleton}
 ```
 
 From this point in the session: the rule
@@ -105,7 +107,7 @@ numbered prompt:
 ## Output format
 
 ```
-> entering {mode} mode — contract: …
+> entering {mode} mode — contract fields: …
 >
 > Default skills: {skill-a}, {skill-b}, {skill-c}
 > Closing marker: <!-- role-mode: {mode} | contract: … -->
@@ -121,8 +123,10 @@ For `/mode` (status only):
 ## Gotchas
 
 - `.agent-settings.yml` is git-ignored. `/mode` never commits the file.
-- If the file is missing the `roles:` section, add it in the correct
-  place (between `subagents:` and EOF) using the template layout.
+- If the file is missing the `roles:` section, add it — note
+  `agent-settings.template.yml` ships no `roles:` block; the reference
+  `roles:` layout lives in
+  `src/agent-src/templates/agents/agent-project-settings.example.yml`.
 - Mode names are case-sensitive in the file; case-insensitive on input.
 - The contract is the source of truth, not this command — if the
   guideline changes, this command reflects the new contract on next run.

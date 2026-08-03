@@ -179,22 +179,24 @@ Future edits to any kernel rule must keep the Iron-Law SHA stable
 (or land a deliberate ADR-tracked SHA update). Cap re-raise requires
 a new ADR.
 
-### § 4.2 — Post-P2.2 kernel addition (`user-interrupt-priority`)
+### § 4.2 — Post-P2.2 kernel addition (`user-interrupt-priority`) — since demoted
 
-After the P2.2 lock, `user-interrupt-priority` was admitted as the
-10th kernel rule. It satisfies criterion (1) (Iron Law: stop → ask
-→ resume on user-interrupt signals) and criterion (3a) (pre-send
-gate — must fire before continuing the current task). The smoke
-baseline is bumped accordingly:
+After the P2.2 lock, `user-interrupt-priority` was briefly admitted
+as a 10th kernel rule. It satisfied criterion (1) (Iron Law: stop →
+ask → resume on user-interrupt signals) and criterion (3a) (pre-send
+gate — must fire before continuing the current task). The 2026-07-06
+council demotion (§ 3) returned it to `type: auto` (tier 2a,
+`alwaysApply: false`), so the kernel is the locked 9-rule set and the
+smoke baseline reads:
 
-- `scripts/smoke/kernel.sh` — `EXPECTED_KERNEL_COUNT=10`,
-  `EXPECTED_FENCE_CARRIERS=9`.
-- `docs/contracts/smoke-contracts.md` § 3.1 — `10 kernel rules · 9
-  carry Iron-Law fences · 1 dispatch index · ≤ 2 budget breaches`.
+- `scripts/smoke/kernel.sh` — `EXPECTED_KERNEL_COUNT=9`,
+  `EXPECTED_FENCE_CARRIERS=8`.
+- `docs/contracts/smoke-contracts.md` § 3.1 — `9 kernel rules · 8
+  carry Iron-Law fences · 1 dispatch index · ≤ 3 budget breaches`.
 
 The § 4 / § 4.1 tables remain the locked P2.2 baseline (9-rule
-snapshot, 2026-05-06); the 10th rule is tracked separately here
-until the next kernel re-measurement.
+snapshot, 2026-05-06); the brief 10th-rule episode is recorded here
+for the audit trail.
 
 † **agent-authority swap candidate (P1.4 ADR).** Sonnet 4.5 argues
 this is a routing index (zero Iron Law fences, dispatches to other

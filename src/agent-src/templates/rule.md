@@ -120,7 +120,7 @@ for full detail; rules are pointers, not playbooks.}
 |---|---|---|
 | `type` | yes | `always` or `auto`. Always-rules load every turn; auto-rules require trigger match. |
 | `tier` | yes | `kernel` (Iron Law floor), `tier-1` (default), `tier-2` (full profile only). Legacy values still accepted. |
-| `description` | yes | One sentence, ≤ 500 chars. Trigger-clarity wins over poetry. |
+| `description` | yes | One sentence, ≤ 190 chars (rule.schema.json; linter errors above 200). Trigger-clarity wins over poetry. |
 | `source` | yes | `package` (this repo) or `project` (consumer override). |
 | `load_context` | no | Lazy context list — logical names only. Budget enforced by `lint_load_context.ts`. |
 | `load_context_eager` | no | Eager context list — counts against per-rule char budget. |

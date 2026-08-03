@@ -81,8 +81,11 @@ Commands orchestrate — not implement.
 
 ## AGENTS.md
 
-- Target: **200–800 words**
-- Acceptable: **up to ~1200 words**
+- Enforced budget: **character caps** via `lint_agents_md.ts` — package
+  root fails at **3,000 chars** (warns 2,800); consumer template fails at
+  **2,500 chars** (warns 2,300).
+- Word guidance: aim for **≤ ~450 words** — that is roughly what fits
+  under the 3,000-char cap.
 
 High-level only.
 
@@ -92,6 +95,9 @@ High-level only.
 
 - Ideal: **< 60 lines**
 - Acceptable: **< 100–150 lines**
+- Note: Copilot Code Review reads only the **first 4,000 characters**
+  (see `src/agent-src/templates/copilot-instructions.md`), so the
+  effective cap is character-based — highest-priority rules go up top.
 
 Must stay lightweight.
 

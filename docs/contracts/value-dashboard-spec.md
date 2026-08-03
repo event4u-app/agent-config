@@ -286,7 +286,7 @@ dashboard was first conceived.
 The `load` rung previously read `agents/runtime/frugality/baseline.jsonl`
 which measures a hardcoded 6-rule canon
 (`scripts/measure_frugality_savings.py::CANON_RULES`) — NOT the
-actual always-loaded kernel. The real kernel has 10 rules per
+actual always-loaded kernel. The real kernel has 9 rules per
 `dist/router.json::kernel`. After fix:
 
 | Metric | Before fix | After fix | Delta |

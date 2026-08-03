@@ -66,7 +66,9 @@ don't need it, it is `auto`.
 ### 2. Write a trigger-style description
 
 The `description` field **is** the trigger. Describe **when** the rule
-applies, not **what** it contains. Soft cap: **200 characters**.
+applies, not **what** it contains. Hard cap: **200 characters** (the
+linter errors `description_too_long` above it); the rule schema
+(`rule.schema.json`) additionally sets `maxLength: 190`.
 
 ```yaml
 # Bad — describes content, won't match reliably:
@@ -185,7 +187,7 @@ diffing the full lint output. See
 ```yaml
 ---
 type: "auto"              # or "always"
-description: "Trigger-shaped sentence — domain + symptoms — soft cap 200 chars"
+description: "Trigger-shaped sentence — domain + symptoms — schema max 190 chars"
 alwaysApply: false        # true only if type: always
 source: package           # or project for consumer-local rules
 load_context:             # logical names only — `contexts/<area>/<file>.md`

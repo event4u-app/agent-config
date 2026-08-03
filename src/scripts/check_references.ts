@@ -58,6 +58,7 @@ const SKIP_DIRS = [
     'agents/reports', // transient run reports — historical/scratch refs, not stable artefacts
     'agents/roadmaps/skipped', // skipped roadmaps — abandoned plans w/ forward-refs that never shipped
     'agents/runtime', // volatile / machine-generated artefacts (gitignored)
+    'agents/state', // Tier-1 hook runtime state (gitignored, agents-layout § state/) — targets are runtime-created, never in the tree
     'agents/tmp', // user inbox (gitignored) — user-dropped notes/todos; agents only read + move to tmp.old/
     'agents/tmp.old', // processed inbox archive (gitignored) — consumed tmp/ files; janitor TTL 30 days
     'agents/.harvest-local', // deliberate gitignored evidence store (source-confidentiality) — refs to it can never resolve in CI
