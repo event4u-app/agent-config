@@ -66,7 +66,7 @@ jobs:
           fi
 
       - name: Upload snapshot row as artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: adoption-snapshot-${{ github.run_number }}
           path: agents/runtime/metrics/adoption-snapshots.jsonl

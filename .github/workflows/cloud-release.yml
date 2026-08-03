@@ -101,7 +101,7 @@ jobs:
           ls -la artefacts/
 
       - name: Upload as workflow artefact (debugging fallback)
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: cloud-release-${{ steps.tag.outputs.name }}
           path: artefacts/

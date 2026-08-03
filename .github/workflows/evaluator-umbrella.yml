@@ -91,7 +91,7 @@ jobs:
       # Always upload — a red run's numbers are the interesting ones.
       - name: Upload the measurement record
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: evaluator-measurements
           path: agents/evidence/metrics/evaluator-measurements.json
