@@ -7,7 +7,13 @@ supersedes: —
 superseded_by: —
 phase: continue-positioning-analysis
 type: structural
-review_date: 2026-06-12
+review_trigger: >-
+  Reopen when a minLength/maxLength violation actually reaches dist/ — the
+  reclassification to advisory was justified by a zero-violation baseline, so
+  the first artefact shipped with a malformed-length field falsifies the
+  loosens-nothing-today claim. Also reopen if a projection emitter drifts
+  without a roundtrip assertion failing, which would mean the second half of
+  this decision is no longer watching the emit path it was written to guard
 ---
 
 # ADR-031 — Adopt severity-tiered frontmatter validation + projection roundtrip test (from continuedev/continue analysis)

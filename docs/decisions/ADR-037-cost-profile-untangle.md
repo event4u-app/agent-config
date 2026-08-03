@@ -7,7 +7,13 @@ supersedes: —
 superseded_by: —
 phase: cost-profile-untangle
 type: structural
-review_date: 2026-09-01
+review_trigger: >-
+  Reopen when (a) a settings key is found carrying two value vocabularies
+  despite agent-settings.schema.json — the exact recurrence this ADR claims
+  the schema makes impossible, so one instance falsifies the claim; or (b) the
+  cost_profile legacy-key fallback is removed from the loaders and
+  LEGACY_RENAME_MAP, closing the grace period that the migration-not-break
+  promise depends on and turning the rename into a break
 ---
 
 # ADR-037 — Untangle `cost_profile` into single-purpose settings

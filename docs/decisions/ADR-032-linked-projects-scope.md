@@ -7,7 +7,14 @@ supersedes: —
 superseded_by: —
 phase: v3.x · multi-project-scope evaluation
 type: structural
-review_date: 2027-05-29
+review_trigger: >-
+  Reopen when (a) the opt-in is consistently declined or the opted-in siblings
+  go uncited in practice — the ADR's own kill-switch, and the signal that
+  passive awareness buys nothing; (b) a host other than Claude Code is
+  empirically tested against the detector and contradicts the Claude-Code-only
+  validation this decision generalised from; or (c) a sibling path leaks into
+  a committed file, which breaks the local-only .agent-settings.local.yml
+  premise the entire opt-in model rests on
 ---
 
 # ADR-032 — Linked-projects scope: GO on opt-in auto-detection (Option A, passive awareness)
