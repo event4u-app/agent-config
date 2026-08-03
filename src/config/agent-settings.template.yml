@@ -275,7 +275,11 @@ personal:
   # greeting silently disappears, the context window is degrading and it is
   # time for a fresh conversation. Also keeps the reply-close markers alive
   # (ONE end-summary; PR URL as the literal last line).
-  # Empty = feature off. See rules/session-canary.md.
+  # Personal concern, resolved user-globally: empty here falls back to the
+  # user-global settings' personal.canary_name and then to identity.name in
+  # the wizard's settings/.agent-user.yml — set this key only to OVERRIDE
+  # the global name per project. No name on any layer = feature off.
+  # See rules/session-canary.md.
   canary_name: ""
 
   # Prefix PR comment replies with a bot icon 🤖 (true, false)
