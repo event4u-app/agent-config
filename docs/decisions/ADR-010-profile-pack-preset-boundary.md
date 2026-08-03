@@ -1,6 +1,6 @@
 ---
 adr: 010
-status: proposed
+status: accepted
 date: 2026-05-16
 decision: profile-pack-preset-boundary
 supersedes: —
@@ -11,6 +11,13 @@ phase: v2.x · step-15 Phase 1 prerequisite
 # ADR-010 — Profile / Pack / Preset Boundary
 
 ## Status
+
+**Accepted** · 2026-08-03 — perma-proposed sweep (`road-to-renewal-adr-hygiene`
+Phase 1, AI-council-confirmed 2026-08-03): de-facto implemented — all six seed
+profiles in `src/profiles/`, 16 packs in `src/packs/`, all three contracts
+(`profile-system`, `config-presets`, `workflow-packs`), `pack.schema.json` +
+validator; the accepted ADR-040 already builds on this record as settled.
+Original status prose retained below as the historical record.
 
 **Proposed** · 2026-05-16 · pending Phase 1 of
 [`agents/roadmaps/step-15-product-refinement.md`](../../agents/roadmaps/step-15-product-refinement.md).

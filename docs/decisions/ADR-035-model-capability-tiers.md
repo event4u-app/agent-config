@@ -7,7 +7,14 @@ supersedes: 034
 superseded_by: —
 phase: model-capability-tiers
 type: structural
-review_date: 2026-08-30
+review_trigger: >-
+  Reopen when a model named in the single generator-owned Claude mapping (high
+  to opus, medium to sonnet, lite to haiku, in src/scripts/_lib/model_tier.ts)
+  is renamed, retired, or deprecated upstream — that one row is the only per-
+  vendor contract the package carries, and it drifts with the vendor's line-
+  up, not with the calendar. Also reopen if a vendor ships a band the three
+  tiers cannot express without a fourth, which is the frontier tier this ADR
+  rejected as too sparse to map
 ---
 
 # ADR-035 — Vendor-neutral model capability tiers (supersedes ADR-034)

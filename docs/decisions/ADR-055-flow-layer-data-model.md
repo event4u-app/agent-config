@@ -1,6 +1,6 @@
 ---
 adr: 055
-status: proposed
+status: accepted
 date: 2026-06-06
 decision: flow-layer-data-model
 supersedes: —
@@ -12,6 +12,15 @@ type: structural
 # ADR-055 — The flow-layer data model: a schema + validate-on-load lint, not a live resolver
 
 ## Status
+
+**Accepted** · 2026-08-03 — perma-proposed sweep (`road-to-renewal-adr-hygiene`
+Phase 1, AI-council-confirmed 2026-08-03): de-facto implemented exactly as
+specified — `src/scripts/schemas/flow.schema.json`, `lint_flows.ts` (TS port
+per ADR-200) wired as `task lint-flows`. Closed-set note: `cookbook.yaml` and
+`surface-map.yaml` sit beside the four user-work flows in `src/flows/` but are
+separate layers with their own validators, excluded from the closed set by the
+lint by design — not a closed-set breach. Original status prose retained below
+as the historical record.
 
 **Proposed** · 2026-06-06. Drafted for maintainer review (design-first), as the
 data-model foundation for road-to-6.1.0 Step 8b. Routed through the AI council

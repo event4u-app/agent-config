@@ -7,7 +7,13 @@ supersedes: —
 superseded_by: —
 phase: road-to-claude-skills-untrack
 type: structural
-review_date: 2026-06-15
+review_trigger: >-
+  Reopen when Claude Code stops resolving skills from the committed
+  marketplace sources — claude plugin details reporting fewer skills than
+  lint_marketplace counts, or a loader change that requires a committed
+  .claude/skills/ tree again. The entire decision rests on one empirical
+  observation against Claude Code v2.1.159; any loader change downstream of
+  that build invalidates it, and the revert is a single commit
 ---
 
 # ADR-039 — `.claude/skills/` is untracked; skills resolve from committed canonical sources

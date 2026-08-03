@@ -12,6 +12,7 @@ triggers:
   - keyword: "data exfil"
   - phrase: "fetch and send"
   - phrase: "read the file and post"
+self_contained: true
 workspaces: [engineering]
 packs: [engineering-base]
 enforced_by:

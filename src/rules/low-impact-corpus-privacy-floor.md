@@ -7,6 +7,7 @@ triggers:
   - keyword: "low-impact-decisions"
   - keyword: "low-impact corpus"
   - keyword: "learn-low-impact"
+self_contained: true
 workspaces: [agent-config-maintainer]
 packs: [meta]
 ---

@@ -4,6 +4,13 @@ stability: experimental
 
 # Host-Agent Protocol Contract
 
+> **Drive-loop era superseded (2026-08-03)** — the governing ADRs for the
+> drive/workspace subsystem (ADR-068, ADR-070–084) are superseded by
+> [ADR-206](../decisions/ADR-206-drive-loop-era-disposition.md): the subsystem
+> is **frozen** (beta-internal, dev-mode-gated, bugfix-only). This contract
+> keeps describing the frozen endpoints accurately; no new capability is added
+> on its authority. Removal is a separate future decision.
+
 > **Status** · v0 / inventory · 2026-05-24. The daily workspace shells out to
 > a host agent for every model interaction; it never re-implements one. This
 > contract names which surfaces each host agent exposes today, where the

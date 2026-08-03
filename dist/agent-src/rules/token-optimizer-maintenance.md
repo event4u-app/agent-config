@@ -34,10 +34,10 @@ THE CI LINK VALIDATOR IS A BACKSTOP, NOT A SUBSTITUTE FOR CARE.
 
 About to edit any of:
 
-- `.agent-src.uncondensed/rules/cli-output-handling.md`
-- `.agent-src.uncondensed/rules/token-efficiency.md`
-- `.agent-src.uncondensed/rules/direct-answers.md`
-- `.agent-src.uncondensed/skills/rtk-output-filtering/SKILL.md`
+- `src/rules/cli-output-handling.md`
+- `src/rules/token-efficiency.md`
+- `src/rules/direct-answers.md`
+- `src/skills/rtk-output-filtering/SKILL.md`
 - `src/domains/meta/agent-handoff/command.md`
 - Any other asset cited by
   [`token-optimizer`](../skills/token-optimizer/SKILL.md) (catalog
@@ -52,7 +52,7 @@ If the edit touches:
 - **The asset's path / location** (rename, move, deletion)
 
 then in the same commit, update the matching row in
-`.agent-src.uncondensed/skills/token-optimizer/SKILL.md` —
+`src/skills/token-optimizer/SKILL.md` —
 the catalog table AND the relevant tree leaf.
 
 ## Out of scope

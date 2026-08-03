@@ -14,6 +14,7 @@ validator_ignore:
   - type: "substring"
     pattern: "../../docs/"
     reason: "See-also routes to docs/threat-model.md — the canonical attack-surface doc lives there by design."
+self_contained: true
 workspaces: [engineering]
 packs: [engineering-base]
 enforced_by:

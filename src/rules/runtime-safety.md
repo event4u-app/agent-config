@@ -7,6 +7,7 @@ triggers:
   - keyword: "automated"
   - keyword: "assisted"
   - keyword: "handler"
+self_contained: true
 workspaces: [agent-config-maintainer, engineering]
 packs: [meta]
 ---

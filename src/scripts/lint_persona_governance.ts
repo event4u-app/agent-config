@@ -9,7 +9,7 @@
  * stderr), exit codes. Historical quirks are preserved deliberately — tests and downstream consumers pin the exact behaviour.
  *
  * Enforces the mechanical checks in
- * `.agent-src.uncondensed/rules/persona-governance.md`:
+ * `src/rules/persona-governance.md`:
  *
  *   1. Per-domain cap (HARD) — ≤ 2 active specialist personas per domain.
  *   2. Skill citation floor (WARN) — every active specialist persona SHOULD

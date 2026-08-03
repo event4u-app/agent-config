@@ -2,7 +2,7 @@
 
 > Canonical content of the **Emergency Triage** block referenced by the
 > `agents-md-thin-root` skill. Both the package-root `AGENTS.md` and
-> `.agent-src.uncondensed/templates/AGENTS.md` (consumer template)
+> `src/agent-src/templates/AGENTS.md` (consumer template)
 > embed this block verbatim. Drift is caught by the `lint-agents-md`
 > task in the package's CI pipeline.
 
@@ -19,7 +19,7 @@ Use this variant in `AGENTS.md` at the package root.
 
 1. **What is this repo?** — `event4u/agent-config`, a governed skill / rule / command suite for AI coding tools (no application runtime).
 2. **What language?** — All `.md` content is English; agents mirror the user's language at runtime.
-3. **Where do I edit?** — `.agent-src.uncondensed/` only. Never `dist/agent-src/`, `.augment/`, `.claude/`, `.cursor/`, `.clinerules/`, `.windsurfrules`.
+3. **Where do I edit?** — `src/` only. Never `dist/agent-src/`, `.augment/`, `.claude/`, `.cursor/`, `.clinerules/`, `.windsurfrules`.
 4. **Lint / test / sync entry point?** — `task ci` (full pipeline). Subsets: `task sync`, `task generate-tools`, `task lint-skills`, `task test`.
 5. **Where do the always-active rules live?** — `dist/agent-src/rules/` (kernel = 9 Iron-Law rules; tier-1 / tier-2 routed via `dist/agent-src/router.json`).
 ```

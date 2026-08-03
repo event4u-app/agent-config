@@ -1,15 +1,21 @@
 ---
 adr: 082
-status: accepted
+status: superseded
 date: 2026-06-09
 decision: 410-one-click-relaunch
 supersedes: —
-superseded_by: —
+superseded_by: 206
 phase: employee-product Phase 8 (road-to-employee-product-and-external-proof)
 type: structural
 ---
 
 # ADR-082 — One-click re-launch on a 410 (expired host session)
+
+> **Superseded by [ADR-206](ADR-206-drive-loop-era-disposition.md)** (2026-08-03).
+> Drive-loop-era batch disposition: this decision no longer governs — the host
+> now provides the drive loop's capabilities natively (subagents, sessions,
+> hooks, background tasks). The shipped code is frozen (beta-internal,
+> dev-mode-gated), not deleted; removal is a separate decision. See ADR-206.
 
 ## Status
 

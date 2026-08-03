@@ -7,6 +7,13 @@ supersedes: —
 superseded_by: —
 phase: road-to-mcp-full-power
 type: standing
+review_trigger: >-
+  Reopen on a named end-user ask for MCP tools without a repo checkout — a
+  Claude Desktop user who wants memory_signal but will not clone. That reopens
+  A1 as its own roadmap with a fresh council round, not as silent scope creep
+  here. Also reopen if the Phase 4/5 kernel handlers stop importing live repo
+  modules, since bundling-means-shipping-the-whole-src-tree is the cost
+  premise the rejection actually rests on
 ---
 
 # ADR-112 — the turnkey stdio-lite server stays read-only; tool users route to the kernel server

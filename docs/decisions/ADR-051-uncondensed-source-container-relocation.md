@@ -7,6 +7,13 @@ supersedes: —
 superseded_by: —
 phase: v6.0.x · workspace structural cleanup · Phase 1 sub-phase 1a
 type: structural
+review_trigger: >-
+  Reopen when another gate, script, or test is found still watching a path
+  this move retired (packages/**, .agent-src.uncondensed/) — ADR-127 traced
+  one silently-disarmed gate to exactly this relocation, so the class is live
+  rather than closed. Also reopen if the _root_specs() logical-prefix
+  collision guard ever throws, which means the single-container shape has
+  stopped separating the categories it was chosen to keep apart
 ---
 
 # ADR-051 — Relocate the uncondensed source container to `src/agent-src/`

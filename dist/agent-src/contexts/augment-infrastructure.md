@@ -57,7 +57,7 @@ Define hard constraints: coding standards, Docker usage, language preferences, s
 |---|---|
 | `quality-workflow.md` | PHP (PHPStan → Rector → PHPStan) and JS/TS pipelines |
 | `downstream-changes.md` | After every edit, find and update ALL callers, tests, imports |
-| `augment-edit-discipline.md` | Edits inside `.augment/` / `.agent-src.uncondensed/` stay project-agnostic AND sync counts + cross-references in the same edit |
+| `augment-edit-discipline.md` | Edits inside `.augment/` / `src/` stay project-agnostic AND sync counts + cross-references in the same edit |
 | `context-hygiene.md` | 3-failure rule, state dumps |
 | `architecture.md` | Architecture principles, file placement |
 | `docker-commands.md` | All PHP commands run inside Docker containers |

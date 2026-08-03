@@ -1,15 +1,25 @@
 ---
 adr: 067
-status: proposed
+status: superseded
 date: 2026-06-08
 decision: glama-registry-listing
 supersedes: —
-superseded_by: —
+superseded_by: 111
 phase: road-to-glama-registry-listing (Phases 1–3)
 type: lightweight
 ---
 
 # ADR-067 — Glama MCP registry listing
+
+> **Superseded by [ADR-111](ADR-111-canonical-glama-listing.md)** (flip recorded 2026-08-03).
+> ADR-111 (accepted 2026-07-07) re-decided the Glama listing question against the
+> two-server world and re-confirmed listing only the stdio server; the listing this
+> record proposed is live (auto-indexed). EXTERNAL PUBLICATION NOTE: this record's
+> Listing description (and the glama.ai copy derived from repo content) carried a
+> stale Python/`.venv-mcp` quick-start; the in-repo sources were corrected on
+> 2026-08-03 (`taskfiles/mcp.yml`, `docs/contracts/adr-mcp-runtime.md`) and the
+> listing refreshes on Glama's next repo re-crawl. Do not cite this record's
+> quick-start text.
 
 ## Status
 

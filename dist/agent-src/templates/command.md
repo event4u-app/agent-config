@@ -49,7 +49,7 @@ suggestion:
 
 {One-line summary of what this command does.}
 
-**Source of truth:** `.agent-src.uncondensed/` — never read or edit `dist/agent-src/` or `.augment/` directly.
+**Source of truth:** `src/` — never read or edit `dist/agent-src/` or `.augment/` directly.
 
 ## Steps
 
