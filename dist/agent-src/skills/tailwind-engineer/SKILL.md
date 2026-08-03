@@ -75,7 +75,9 @@ manually. Reviewer should read intent in one pass.
 
 ### 4. Extract only when duplicated ≥ 3 times
 
-The first two repetitions are noise; the third is a pattern.
+The first two repetitions of a **utility-class string** are noise; the third
+is a pattern (the utility-class row of the per-class canon,
+[`abstraction-thresholds`](../../../docs/guidelines/abstraction-thresholds.md)).
 Extract via:
 
 | Mechanism | When |
