@@ -82,11 +82,11 @@ jobs:
         # redirects are deliberate — each line pairs one computed value with
         # its output key, which reads clearer than a grouped block.
         run: |
-          # shellcheck disable=SC2129
           ./scripts-run src/scripts/pack_mcp_content
           sig=$(node -e "console.log(require('./internal/workers/mcp/manifest.json').signature)")
           release_key=$(node -e "console.log(require('./internal/workers/mcp/manifest.json').release_key)")
           pkg=$(node -e "console.log(require('./internal/workers/mcp/manifest.json').package_version)")
+          # shellcheck disable=SC2129
           echo "signature=$sig" >> "$GITHUB_OUTPUT"
           echo "release_key=$release_key" >> "$GITHUB_OUTPUT"
           echo "package_version=$pkg" >> "$GITHUB_OUTPUT"

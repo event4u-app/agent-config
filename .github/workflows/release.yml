@@ -93,7 +93,6 @@ jobs:
         # when the dependabot action bump touched this file. The individual
         # redirects are deliberate — one computed flag per line.
         run: |
-          # shellcheck disable=SC2129
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
             bump="${{ inputs.bump }}"
             version="${{ inputs.version }}"
@@ -119,6 +118,7 @@ jobs:
             dry_run="false"
             resume="false"
           fi
+          # shellcheck disable=SC2129
           echo "bump=$bump" >> "$GITHUB_OUTPUT"
           echo "version=$version" >> "$GITHUB_OUTPUT"
           echo "dry_run=$dry_run" >> "$GITHUB_OUTPUT"
