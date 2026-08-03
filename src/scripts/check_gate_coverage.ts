@@ -48,7 +48,7 @@ import * as path from 'node:path';
 import process from 'node:process';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
-import yaml from 'js-yaml';
+import * as yaml from 'js-yaml';
 import { runCountedProbe } from './_lib/counted_probe.js';
 
 const _HERE = fileURLToPath(import.meta.url);
