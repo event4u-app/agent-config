@@ -31,7 +31,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           # Astro 7 / Starlight require Node >=22.12 (the site workspace);
           # the root project + tsx run fine on 22 too.
