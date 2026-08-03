@@ -2,14 +2,14 @@
 
 > Auto-generated — do not edit. Regenerate with `task roadmap-progress` or by running the `update_roadmap_progress` script for your install; rewritten on every roadmap create / execute / completion change (timestamp lives in git history).
 >
-> 17 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **10** open blockers
+> 18 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **10** open blockers
 
 ## Overall
 
-**98 / 232 steps done · 42%**
+**111 / 269 steps done · 41%**
 
 ```text
-█████████████████░░░░░░░░░░░░░░░░░░░░░░░   42%
+████████████████░░░░░░░░░░░░░░░░░░░░░░░░   41%
 ```
 
 ## Open roadmaps
@@ -31,8 +31,9 @@
 | 13 | [road-to-solution-minimalism.md](roadmaps/road-to-solution-minimalism.md) | 4 | 36 | 12 | 23 | 0 | 1 | 0 | ███████░░░ 66% |
 | 14 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 6 | 3 | 0 | 0 | [1](#blockers-road-to-subagent-value-realization-followup) | ███░░░░░░░ 33% |
 | 15 | [road-to-surface-consolidation.md](roadmaps/road-to-surface-consolidation.md) | 3 | 14 | 1 | 12 | 1 | 0 | [3](#blockers-road-to-surface-consolidation) | █████████░ 92% |
-| 16 | [road-to-tier-removal.md](roadmaps/road-to-tier-removal.md) | 4 | 8 | 2 | 6 | 0 | 0 | [1](#blockers-road-to-tier-removal) | ████████░░ 75% |
-| 17 | [road-to-ui-track-integrity-followup.md](roadmaps/road-to-ui-track-integrity-followup.md) | 1 | 10 | 10 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+| 16 | [road-to-tested-routing.md](roadmaps/road-to-tested-routing.md) | 7 | 37 | 24 | 13 | 0 | 0 | 0 | ████░░░░░░ 35% |
+| 17 | [road-to-tier-removal.md](roadmaps/road-to-tier-removal.md) | 4 | 8 | 2 | 6 | 0 | 0 | [1](#blockers-road-to-tier-removal) | ████████░░ 75% |
+| 18 | [road-to-ui-track-integrity-followup.md](roadmaps/road-to-ui-track-integrity-followup.md) | 1 | 10 | 10 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 
 ---
 
@@ -276,6 +277,20 @@ _1 blocker resolved._
 - **benchmark-spend** (owner: user) — blocks lazy-catalog A/B, team/adversarial-council benchmarks, the Unified Verification Router decision (gated on those verdicts)
   - **What to do:**
   - **Resolved when:** the maintainer authorizes the specific run with an estimate.
+
+### [road-to-tested-routing.md](roadmaps/road-to-tested-routing.md)
+
+**Road to tested routing** — 13 / 37 done (35%)
+
+| # | Phase | State | Open | Done | Deferred | Cancelled | % |
+|---|---|---|---:|---:|---:|---:|---:|
+| 1 | Trust floor: live doctor + composed-chain tests | ✅ done | 0 | 4 | 0 | 0 | 100% |
+| 2 | Coverage corpus: per-rule routing matrices | ✅ done | 0 | 5 | 0 | 0 | 100% |
+| 3 | Matcher remediation: word-boundary anchoring as a measured change | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
+| 4 | LLM-side diagnostics (advisory only, never gating) | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
+| 5 | Decision record: supersede ADR-040, close the loop | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
+| 6 | Orchestration-routing coverage: which subagent, which council path, which tier | ✅ done | 0 | 4 | 0 | 0 | 100% |
+| 7 | Budget-aware cheap-request delegation (model-tier routing) | ⬜ not started | 14 | 0 | 0 | 0 | 0% |
 
 ### [road-to-tier-removal.md](roadmaps/road-to-tier-removal.md)
 
