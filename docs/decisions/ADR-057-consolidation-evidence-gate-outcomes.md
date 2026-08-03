@@ -1,6 +1,6 @@
 ---
 adr: 057
-status: proposed
+status: accepted
 date: 2026-06-06
 decision: consolidation-evidence-gate-outcomes
 supersedes: —
@@ -12,6 +12,13 @@ type: structural
 # ADR-057 — Consolidation evidence-gate outcomes (6.2.0)
 
 ## Status
+
+**Accepted** · 2026-08-03 — perma-proposed sweep (`road-to-renewal-adr-hygiene`
+Phase 1, AI-council-confirmed 2026-08-03): a verdict ledger whose verdicts were
+already executed when it was written — the source roadmap archived 2026-06-06
+and this record’s own body says "cancelled (decided, not pending)" and "8a and
+5b are done". The lingering `proposed` was a status-field bug, not an open
+review. Original status prose retained below as the historical record.
 
 **Proposed** · 2026-06-06. Records the outcome of running every gate in
 `road-to-6.2.0-consolidation-evidence-gates` (the council-deferred remainder of
