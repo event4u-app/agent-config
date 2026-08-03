@@ -76,7 +76,12 @@ jobs:
 
       - name: Render PR comment body
         id: render
+        # actionlint shellchecks only CHANGED workflow files, so this step's
+        # pre-existing SC2016 (info) first surfaced when the dependabot action
+        # bump touched this file. The single quotes are deliberate — the block
+        # is Node source, not shell; nothing in it should expand.
         run: |
+          # shellcheck disable=SC2016
           node -e '
           const fs = require("node:fs");
           const readJson = (p) => {
@@ -126,7 +131,7 @@ jobs:
 
       - name: Post / update PR comment
         if: github.event_name == 'pull_request'
-        uses: marocchino/sticky-pull-request-comment@v2
+        uses: marocchino/sticky-pull-request-comment@v3
         with:
           header: bench-drift
           path: /tmp/comment.md

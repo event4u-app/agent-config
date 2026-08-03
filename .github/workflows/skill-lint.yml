@@ -203,7 +203,7 @@ jobs:
 
       - name: Post PR comment
         if: github.event_name == 'pull_request' && always()
-        uses: marocchino/sticky-pull-request-comment@v2
+        uses: marocchino/sticky-pull-request-comment@v3
         with:
           header: skill-lint-report
           path: /tmp/pr-comment.md

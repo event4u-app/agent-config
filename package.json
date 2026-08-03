@@ -87,12 +87,12 @@
         "provenance": true
     },
     "devDependencies": {
-        "@inquirer/prompts": "^7.10.1",
+        "@inquirer/prompts": "^8.5.2",
         "@playwright/test": "^1.62.1",
         "@preact/preset-vite": "^2.10.6",
         "@testing-library/preact": "^3.2.4",
         "@types/js-yaml": "^4.0.9",
-        "@types/node": "^20.19.41",
+        "@types/node": "^26.1.2",
         "@typescript-eslint/eslint-plugin": "^8.65.0",
         "@typescript-eslint/parser": "^8.59.4",
         "eslint": "^9.39.4",
