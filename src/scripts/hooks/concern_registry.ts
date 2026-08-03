@@ -26,6 +26,7 @@
 
 import { main as chatHistoryMain } from '../chat_history.js';
 import { main as hotContextMain } from '../hot_context_hook.js';
+import { main as handoffContextMain } from '../handoff_context_hook.js';
 import { main as roadmapProgressMain } from '../roadmap_progress_hook.js';
 import { main as onboardingGateMain } from '../onboarding_gate_hook.js';
 import { main as contextHygieneMain } from '../context_hygiene_hook.js';
@@ -54,6 +55,7 @@ export type ConcernMain = (argv?: string[]) => number | undefined | void;
 export const CONCERN_REGISTRY: Readonly<Record<string, ConcernMain>> = {
     'src/scripts/chat_history.ts': chatHistoryMain as ConcernMain,
     'src/scripts/hot_context_hook.ts': hotContextMain as ConcernMain,
+    'src/scripts/handoff_context_hook.ts': handoffContextMain as ConcernMain,
     'src/scripts/roadmap_progress_hook.ts': roadmapProgressMain as ConcernMain,
     'src/scripts/onboarding_gate_hook.ts': onboardingGateMain as ConcernMain,
     'src/scripts/context_hygiene_hook.ts': contextHygieneMain as ConcernMain,
