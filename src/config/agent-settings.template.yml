@@ -724,7 +724,9 @@ subagents:
   # the resource-availability gate (council 2026-08-03).
   #   ask  = (default) first budget-motivated downshift of a session asks once
   #   auto = apply the relation silently (telemetry line per routed request)
-  #   off  = today's behavior; single-flip rollback
+  #   off  = today's behavior; single-flip rollback — QUOTE it ("off") when
+  #          editing: bare off is YAML-1.1 boolean false (readers coerce, but
+  #          the quoted form is the unambiguous one, same as `auto: "on"`)
   budget_routing: ask
 
   # Prefer a separate-quota-pool model for delegable sub-tasks WHERE the host

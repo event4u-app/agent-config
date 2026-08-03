@@ -180,6 +180,52 @@ describe("collect_orchestration (via collect_report)", () => {
   });
 });
 
+describe("budget-routing delivery evidence (review Finding 2)", () => {
+  function auditFixture(ws: string, lines: Array<Record<string, unknown>>): void {
+    const dir = path.join(ws, "agents", "runtime", "state", "audit");
+    fs.mkdirSync(dir, { recursive: true });
+    fs.writeFileSync(
+      path.join(dir, "2026-08.jsonl"),
+      lines.map((l) => JSON.stringify(l)).join("\n") + "\n",
+      "utf-8",
+    );
+  }
+
+  it("WARNs when budget_routing is bound but zero dispatches carry a tier decision", () => {
+    const ws = tmpDir("routing-doctor-ws-");
+    fs.writeFileSync(path.join(ws, ".agent-settings.yml"), "subagents:\n  budget_routing: ask\n", "utf-8");
+    auditFixture(ws, [
+      { id: "a", spawn_count: 3, task_class: "read-only-fanout" },
+      { id: "b", spawn_count: 1, task_class: "mechanical-covered" },
+    ]);
+    const report = collect_report({ platform: "claude", workspace_root: ws, no_freshness: true });
+    expect(report.orchestration.delivery.eligible_dispatches).toBe(2);
+    expect(report.orchestration.delivery.budget_evidence_lines).toBe(0);
+    expect(report.orchestration.delivery.warning).toContain("no delivery evidence");
+  });
+
+  it("stays silent when tier-carrying lines exist", () => {
+    const ws = tmpDir("routing-doctor-ws-");
+    fs.writeFileSync(path.join(ws, ".agent-settings.yml"), "subagents:\n  budget_routing: ask\n", "utf-8");
+    auditFixture(ws, [
+      { id: "a", spawn_count: 2, tier: "cheap", tier_source: "inferred" },
+      { id: "b", spawn_count: 1, task_class: "synthesis" },
+    ]);
+    const report = collect_report({ platform: "claude", workspace_root: ws, no_freshness: true });
+    expect(report.orchestration.delivery.warning).toBe("");
+    expect(report.orchestration.delivery.budget_evidence_lines).toBe(1);
+  });
+
+  it("budget_routing: off disables the check entirely", () => {
+    const ws = tmpDir("routing-doctor-ws-");
+    fs.writeFileSync(path.join(ws, ".agent-settings.yml"), "subagents:\n  budget_routing: off\n", "utf-8");
+    auditFixture(ws, [{ id: "a", spawn_count: 2 }]);
+    const report = collect_report({ platform: "claude", workspace_root: ws, no_freshness: true });
+    expect(report.orchestration.delivery.warning).toBe("");
+    expect(report.orchestration.delivery.eligible_dispatches).toBe(0);
+  });
+});
+
 describe("main", () => {
   it("emits parseable JSON and exits 0 with --json --no-freshness", () => {
     const ws = tmpDir("routing-doctor-ws-");
