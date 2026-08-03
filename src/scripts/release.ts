@@ -634,13 +634,16 @@ export function _failed_checks_report(names: readonly string[]): string {
  * A short grace period gives GitHub time to register workflow runs on a
  * freshly-pushed branch.
  */
-function watch_pr_checks(): void {
+function watch_pr_checks(branch: string): void {
     // time.sleep(5) — blocking grace period. Never reached on any test path.
     const until = Date.now() + 5000;
     while (Date.now() < until) {
         // busy-wait stand-in for time.sleep(5) without an event-loop yield.
     }
-    const proc = spawnSync('gh', ['pr', 'checks', '--watch'], {
+    // The branch is passed explicitly — `gh` inferring the PR from HEAD
+    // resolved to `main` mid-run once (2026-08-03, 9.16.0 resume) and the
+    // whole release died on "no pull requests found for branch main".
+    const proc = spawnSync('gh', ['pr', 'checks', branch, '--watch'], {
         cwd: REPO_ROOT,
         encoding: 'utf-8',
         stdio: ['ignore', 'pipe', 'pipe'],
@@ -667,7 +670,7 @@ function watch_pr_checks(): void {
     if (output) {
         process.stderr.write(output + '\n');
     }
-    const summary = spawnSync('gh', ['pr', 'checks', '--json', 'name,bucket'], {
+    const summary = spawnSync('gh', ['pr', 'checks', branch, '--json', 'name,bucket'], {
         cwd: REPO_ROOT,
         encoding: 'utf-8',
         stdio: ['ignore', 'pipe', 'pipe'],
@@ -699,12 +702,15 @@ function push_release_branch(branch: string): void {
     run(['git', 'push', '-u', REMOTE, branch]);
 }
 
-/** mergeStateStatus of the current-branch PR ('' when the probe fails). */
-function _pr_merge_state(): string {
-    const r = run(['gh', 'pr', 'view', '--json', 'mergeStateStatus', '--jq', '.mergeStateStatus'], {
-        check: false,
-        capture: true,
-    });
+/** mergeStateStatus of the branch's PR ('' when the probe fails). */
+function _pr_merge_state(branch: string): string {
+    const r = run(
+        ['gh', 'pr', 'view', branch, '--json', 'mergeStateStatus', '--jq', '.mergeStateStatus'],
+        {
+            check: false,
+            capture: true,
+        },
+    );
     return r.returncode === 0 ? r.stdout.trim() : '';
 }
 
@@ -733,19 +739,20 @@ function merge_release_pr(branch: string, wait_for_checks: boolean): void {
         run(['git', 'checkout', branch]);
     }
     for (let round = 0; round <= _MERGE_UPDATE_ROUNDS; round++) {
-        if (_pr_merge_state() !== 'BEHIND') {
-            const merged = run(['gh', 'pr', 'merge', '--merge', '--delete-branch'], {
+        if (_pr_merge_state(branch) !== 'BEHIND') {
+            const merged = run(['gh', 'pr', 'merge', branch, '--merge', '--delete-branch'], {
                 check: false,
             });
             if (merged.returncode === 0) {
                 return;
             }
-            if (_pr_merge_state() !== 'BEHIND') {
+            if (_pr_merge_state(branch) !== 'BEHIND') {
                 // Not the moving-base failure — surface it unchanged.
                 throw new CalledProcessError(merged.returncode, [
                     'gh',
                     'pr',
                     'merge',
+                    branch,
                     '--merge',
                     '--delete-branch',
                 ]);
@@ -764,7 +771,7 @@ function merge_release_pr(branch: string, wait_for_checks: boolean): void {
         run(['git', 'merge', '--no-edit', `${REMOTE}/${MAIN_BRANCH}`]);
         push_release_branch(branch);
         if (wait_for_checks) {
-            watch_pr_checks();
+            watch_pr_checks(branch);
         }
     }
     die(
@@ -1733,7 +1740,7 @@ function execute(
         _step(6, total, 'PR already merged — skip checks wait');
     } else if (wait_for_checks) {
         _step(6, total, 'Wait for PR checks');
-        watch_pr_checks();
+        watch_pr_checks(branch);
     } else {
         _step(6, total, 'Skip waiting for checks (--no-wait)');
     }
