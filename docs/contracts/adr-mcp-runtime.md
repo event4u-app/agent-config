@@ -92,9 +92,10 @@ That shape was rejected in favour of two existing entrypoints, both
 already shipped:
 
 - **One-liner onboarding:** `task mcp:setup` runs
-  [`scripts/mcp_setup.sh`](../../src/scripts/mcp_setup.sh) — creates
-  `.venv-mcp/`, installs `mcp`, and prints the Claude Desktop JSON snippet
-  the operator pastes into
+  [`src/scripts/mcp_setup.sh`](../../src/scripts/mcp_setup.sh) — verifies the
+  tsx runner + MCP server module are present (no Python venv / SDK install;
+  the runtime is Node/tsx per ADR-200) and prints the Claude Desktop JSON
+  snippet the operator pastes into
   `~/Library/Application Support/Claude/claude_desktop_config.json`
   (with the per-OS variants documented in
   [`docs/mcp-server.md`](../mcp-server.md)).
