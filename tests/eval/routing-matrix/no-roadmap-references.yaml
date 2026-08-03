@@ -1,7 +1,7 @@
 rule: no-roadmap-references
 positives:
   - prompt: "Can I link this roadmap phase from the skill's See-also section?"
-    open_files: ["agents/roadmaps/road-to-tested-routing.md"]
+    open_files: ["agents/roadmaps/archive/road-to-tested-routing.md"]
   - prompt: "Clean up the finished council session artifacts."
     open_files: ["agents/runtime/council/sessions/2026-08-01-routing.json"]
   - prompt: "Darf ich diese Roadmap aus einer Guideline heraus verlinken?"

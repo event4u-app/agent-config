@@ -1283,7 +1283,7 @@ prompts:
     prompt: "Can I link this roadmap phase from the skill's See-also section?"
     expected_skills: []
     intended_triggers: [no-roadmap-references]
-    open_files: ["agents/roadmaps/road-to-tested-routing.md"]
+    open_files: ["agents/roadmaps/archive/road-to-tested-routing.md"]
 
   - id: rm-no-roadmap-references-02
     category: router-coverage
@@ -1565,7 +1565,7 @@ prompts:
     prompt: "Flip the checkbox for the step we just finished."
     expected_skills: []
     intended_triggers: [roadmap-progress-sync]
-    open_files: ["agents/roadmaps/road-to-tested-routing.md"]
+    open_files: ["agents/roadmaps/archive/road-to-tested-routing.md"]
 
   - id: rm-roadmap-progress-sync-02
     category: router-coverage

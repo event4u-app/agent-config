@@ -1,7 +1,7 @@
 rule: roadmap-progress-sync
 positives:
   - prompt: "Flip the checkbox for the step we just finished."
-    open_files: ["agents/roadmaps/road-to-tested-routing.md"]
+    open_files: ["agents/roadmaps/archive/road-to-tested-routing.md"]
   - prompt: "Continue with the next open step of the plan."
     command: "/roadmap:process-step"
   - prompt: "Bitte hake den erledigten Schritt in der Roadmap ab."
