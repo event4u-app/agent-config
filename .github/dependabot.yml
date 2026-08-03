@@ -43,6 +43,14 @@ updates:
       prefix: fix
       prefix-development: chore
       include: scope
+    # Caret floors in package.json are SETTLED minors (^X.Y.0) by contract —
+    # check_dependency_floors blocks freshest-patch shapes, and the
+    # install-friction baseline pins dependencies exactly. Default range
+    # widening re-broke that on every in-range patch (preact ^10.29.7 in
+    # PR #1110, @preact/signals ^2.10.1 in PR #1139). increase-if-necessary
+    # keeps in-range updates lockfile-only; majors still widen the range and
+    # land in the npm-majors group.
+    versioning-strategy: increase-if-necessary
     ignore:
       # web-tree-sitter is ABI-pinned to the tree-sitter-wasms grammars
       # (0.24.7 ↔ 0.1.13, ABI 14). 0.25+ changes the load API and 0.26.x
@@ -62,6 +70,18 @@ updates:
       # committed install bundle embeds zod. Migrate deliberately to zod 4's
       # native z.toJSONSchema in its own PR, then lift this (PR #1131).
       - dependency-name: zod
+        update-types: ["version-update:semver-major"]
+      # Toolchain majors are migration projects, not dependency bumps —
+      # each below broke the 2026-08-03 npm-majors group PR (#1141, 35 red
+      # checks) and needs its own planned upgrade with config/API work.
+      # Lift an entry when that migration is scheduled.
+      - dependency-name: typescript
+        update-types: ["version-update:semver-major"]
+      - dependency-name: vite
+        update-types: ["version-update:semver-major"]
+      - dependency-name: vitest
+        update-types: ["version-update:semver-major"]
+      - dependency-name: eslint
         update-types: ["version-update:semver-major"]
     # Majors are grouped too (npm-majors below): one collected weekly PR
     # instead of one PR per major — the 2026-08-03 flood (execa, zod,

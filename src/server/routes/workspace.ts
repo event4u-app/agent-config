@@ -29,7 +29,7 @@ import { fileURLToPath } from 'node:url';
 import { randomUUID } from 'node:crypto';
 import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
-import yaml from 'js-yaml';
+import * as yaml from 'js-yaml';
 
 const execFileAsync = promisify(execFile);
 

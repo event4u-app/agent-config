@@ -199,9 +199,21 @@ function cmdCheck() {
 }
 
 // --- Per-tier budget state (docs/contracts/budget-routing.md) -------------
-// v1 window for per-tier ceilings: rolling 24h. Sums ledger entries tagged
-// `tier:` plus pending reserves from tier-reserves.jsonl (the atomic-permit
-// file) so a concurrent dispatch cannot read a stale "available".
+// v1 window for per-tier ceilings: rolling 24h for SPEND (ledger entries
+// tagged `tier:`). Pending reserves from tier-reserves.jsonl count only
+// within the shared reserve TTL — reserves are race protection, not spend
+// accounting. The TTL comes from src/config/budget-routing.json, the SAME
+// source acquireBudgetPermit reads, so the two readers cannot diverge
+// (external review 2026-08-03, Finding 1b).
+
+function loadReserveTtlMs() {
+  try {
+    const cfgPath = join(dirname(new URL(import.meta.url).pathname), '..', '..', 'config', 'budget-routing.json');
+    const raw = JSON.parse(readFileSync(cfgPath, 'utf-8'));
+    if (Number.isFinite(raw.reserve_ttl_ms)) return raw.reserve_ttl_ms;
+  } catch { /* fall through to the safe default below */ }
+  return 600000;
+}
 
 function loadPerTierCeilings() {
   const out = { cheap: null, medium: null, strong: null };
@@ -234,13 +246,14 @@ function cmdTier(rest) {
     .filter((s) => s.tier === tier && inWindow(s.capturedAt || s.endedAt || s.ts))
     .reduce((acc, s) => acc + (Number(s.total_cost_usd ?? s.cost_usd ?? 0) || 0), 0);
   let reserved = 0;
+  const reserveTtl = loadReserveTtlMs();
   const reservePath = join(dirname(STORE), 'tier-reserves.jsonl');
   if (existsSync(reservePath)) {
     for (const line of readFileSync(reservePath, 'utf-8').split('\n')) {
       if (!line.trim()) continue;
       try {
         const e = JSON.parse(line);
-        if (e.tier === tier && e.status === 'pending' && (now - e.ts_ms) < dayMs) {
+        if (e.tier === tier && e.status === 'pending' && (now - e.ts_ms) < reserveTtl) {
           reserved += Number(e.est_usd || 0) || 0;
         }
       } catch { /* skip malformed line */ }
@@ -251,6 +264,7 @@ function cmdTier(rest) {
   console.log(JSON.stringify({
     tier,
     window: 'rolling-24h',
+    reserve_ttl_ms: reserveTtl,
     ceiling_usd: ceiling,
     spent_usd: spent,
     reserved_usd: reserved,
