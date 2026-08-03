@@ -5,16 +5,18 @@ status: later
 
 # Road to a voice negative lexicon — make "never say X" checkable instead of hoped
 
-> **Parked (2026-08-03, council disposition claude-sonnet-4-5 + gpt-4o, 2
-> rounds):** additive schema surface with no recorded internal failure — the
-> harvest freeze's foundation-first mandate applies. The design below is kept
-> because its Phase 0 is deliberately cheap and self-killing.
+> **Parked per
+> [`ADR-206`](../../../docs/decisions/ADR-206-harvest-freeze-resume-conditions.md)
+> (harvest freeze; council disposition 2026-08-03):** additive schema surface
+> with no recorded internal failure. The design below is kept because its
+> Phase 0 is deliberately cheap and self-killing. Re-audited 2026-08-03:
+> STAY (no pre-dating finding, no latent risk beyond style).
 >
-> **Resume when:** the harvest freeze's reopen condition fires (first
-> documented external adopter), OR a recorded incident shows agent-authored
-> persisted prose (PR bodies, commit messages) violating a user's stated
-> voice constraints. On resume, run Phase 0 FIRST — its honest-null outcome
-> archives this file with the numbers.
+> **Resume when:** the ADR-206 exit fires (external adopter OR the internal
+> arm), OR — per ADR-206 Amendment C — a recorded incident with provenance
+> shows agent-authored persisted prose (PR bodies, commit messages) violating
+> a user's stated voice constraints. On resume, run Phase 0 FIRST — its
+> honest-null outcome archives this file with the numbers.
 
 ## The gap (verified against 9.9.0 source, 2026-07-30)
 

@@ -5,15 +5,18 @@ status: later
 
 # Road to guided journeys & router family — dock the journey pattern onto the existing Flow layer (Source C)
 
-> **Parked (2026-08-03, council disposition claude-sonnet-4-5 + gpt-4o, 2
-> rounds):** additive capability system with no recorded internal failure —
-> harvest freeze applies; the external reviews' "foundation-first, no new
-> capability before the renewal findings are repaired" mandate binds. The
-> analysis below is kept in full because its self-census overturned its own
-> v1 and is durable evidence about this repo's routing surfaces.
+> **Parked per
+> [`ADR-206`](../../../docs/decisions/ADR-206-harvest-freeze-resume-conditions.md)
+> (harvest freeze; council disposition 2026-08-03):** additive capability
+> system with no recorded internal failure; the external reviews'
+> "foundation-first" mandate binds. The analysis below is kept in full
+> because its self-census overturned its own v1 and is durable evidence
+> about this repo's routing surfaces. Re-audited 2026-08-03: all four
+> adoptions STAY (the census documents capability gaps, not failures; no
+> recorded misroute incident exists).
 >
-> **Resume when:** the harvest freeze's reopen condition fires (first
-> documented external adopter) AND the renewal set is complete. On resume,
+> **Resume when:** the ADR-206 exit fires (external adopter OR the internal
+> arm, which itself requires the renewal set to be complete). On resume,
 > Phase 0 (docking council) runs first — nothing here is pre-decided.
 >
 > **Source identity:** an external skills-content reference ("Source C") — 62
@@ -21,9 +24,8 @@ status: later
 > machinery. Pre-analysis verdict, binding on resume: adopt NO content from
 > the reference (book-derived material under a permissive license with
 > affiliate links — provenance red flag); adopt only structural patterns,
-> independently authored. Raw analysis with the source name and pinned
-> commit is maintainer-local (gitignored transcript, `agents/tmp.old/`), per
-> source-confidentiality.
+> independently authored. The raw analysis with the source name and pinned
+> commit is maintainer-local and gitignored, per source-confidentiality.
 
 ## The census finding worth keeping (source-verified 2026-08-02)
 
