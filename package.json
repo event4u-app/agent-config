@@ -87,7 +87,7 @@
         "provenance": true
     },
     "devDependencies": {
-        "@inquirer/prompts": "^7.10.1",
+        "@inquirer/prompts": "^8.5.2",
         "@playwright/test": "^1.62.1",
         "@preact/preset-vite": "^2.10.6",
         "@testing-library/preact": "^3.2.4",
