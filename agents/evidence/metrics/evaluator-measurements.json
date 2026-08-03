@@ -1,12 +1,12 @@
 {
     "schema_version": 1,
     "_comment": "Written by src/scripts/record_evaluator_measurements.mjs, invoked from src/scripts/evaluator_umbrella.sh when UMBRELLA_RECORD=1 (the nightly). check_evaluator_budgets.ts --recorded compares a fresh measurement set against this file; a contradiction on a DETERMINISTIC metric warns on main and fails on release. Do not hand-edit — refresh it from a real run.",
-    "recorded_at": "2026-08-02T13:09:10.592Z",
-    "git_sha": "352e971e3",
-    "run_url": null,
-    "conditions": "Seed record: the two metrics that are measurable without the pack->install harness. The five harness-bound metrics are absent on purpose rather than guessed; the first nightly fills them in.",
+    "recorded_at": "2026-08-03T10:40:58.458Z",
+    "git_sha": "9623fb917e26bd53299b6f8d51bfbbbb2e38b085",
+    "run_url": "https://github.com/event4u-app/agent-config/actions/runs/30796389677",
+    "conditions": "Refresh for the 80 -> 81 cli_help_command_count move (routing:doctor registration, f02db54c2). Both metrics re-measured with the pinned methods locally on this branch; identical fresh values (81/19) confirmed by the cited release-PR umbrella run. The five harness-bound metrics stay absent on purpose; the next nightly fills them in.",
     "measurements": {
-        "cli_help_command_count": 80,
+        "cli_help_command_count": 81,
         "mcp_public_tool_count": 19
     }
 }

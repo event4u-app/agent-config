@@ -57,7 +57,7 @@ jobs:
           fetch-depth: 0
 
       - name: Setup Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
           node-version: "22"
           cache: npm
@@ -76,11 +76,17 @@ jobs:
 
       - name: Pack content blob
         id: pack
+        # actionlint shellchecks only CHANGED workflow files, so this step's
+        # pre-existing SC2129 (style: group the >> redirects) first surfaced
+        # when the dependabot action bump touched this file. The individual
+        # redirects are deliberate — each line pairs one computed value with
+        # its output key, which reads clearer than a grouped block.
         run: |
           ./scripts-run src/scripts/pack_mcp_content
           sig=$(node -e "console.log(require('./internal/workers/mcp/manifest.json').signature)")
           release_key=$(node -e "console.log(require('./internal/workers/mcp/manifest.json').release_key)")
           pkg=$(node -e "console.log(require('./internal/workers/mcp/manifest.json').package_version)")
+          # shellcheck disable=SC2129
           echo "signature=$sig" >> "$GITHUB_OUTPUT"
           echo "release_key=$release_key" >> "$GITHUB_OUTPUT"
           echo "package_version=$pkg" >> "$GITHUB_OUTPUT"

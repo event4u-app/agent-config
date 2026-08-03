@@ -61,11 +61,11 @@
             "deterministic": false
         },
         "cli_help_command_count": {
-            "max": 80,
-            "last_measured": 80,
-            "last_measured_at": "2026-08-02",
+            "max": 81,
+            "last_measured": 81,
+            "last_measured_at": "2026-08-03",
             "method": "registry enumeration — count of `{ name: '...', disposition` entries in src/cli/registry.ts (NOT --help prose parsing; methods historically disagreed 74 vs 76 vs 79)",
-            "baseline_note": "79 → 80 on 2026-07-29 (9.9.0). This RECORDS growth that already shipped through its own reviewed PRs; it does not authorize new surface. Net +6 registry entries since the 9.8.0 tag (7 added — code-graph, knowledge, analytics, memory:get, memory:learn, rtk:detect, dispatch:hook; 1 removed — the old dispatch:hook entry), and the frozen 79 was never re-measured after them. The gate did its job: it made the drift visible at release time rather than letting it accrue silently. Next addition breaches again by design — under the posture above that breach WARNS on main and BLOCKS on release, which is the conscious-decision point rather than a silently raised cap. Re-measured 2026-08-02: still 80, so max and last_measured are both current and headroom is zero."
+            "baseline_note": "80 → 81 on 2026-08-03 (release 9.15.0 gate). This RECORDS growth that already shipped through its own reviewed PR; it does not authorize new surface. The +1 is f02db54c2 (fix(cli): register routing:doctor in the CLI registry) — the command existed, only its registry entry was missing, and the registering PR did not move this budget. The gate did its job again: breach WARNS on main and BLOCKS on release, which is the conscious-decision point rather than a silently raised cap. Re-measured 2026-08-03 via the pinned method: 81. Headroom stays zero by design — the next registry addition must move this number in its own PR."
         },
         "mcp_public_tool_count": {
             "max": 19,
