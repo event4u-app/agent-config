@@ -27,12 +27,12 @@ Skill audit: measure, find duplicates/merge candidates, run linter, present find
 ### 1. Measure baseline
 
 ```bash
-total=$(ls -d .agent-src.uncondensed/skills/*/SKILL.md 2>/dev/null | wc -l | tr -d ' ')
-total_lines=$(cat .agent-src.uncondensed/skills/*/SKILL.md 2>/dev/null | wc -l | tr -d ' ')
+total=$(ls -d src/skills/*/SKILL.md 2>/dev/null | wc -l | tr -d ' ')
+total_lines=$(cat src/skills/*/SKILL.md 2>/dev/null | wc -l | tr -d ' ')
 echo "Skills: $total, Total lines: $total_lines"
 
 # Top 15 by size
-for f in .agent-src.uncondensed/skills/*/SKILL.md; do
+for f in src/skills/*/SKILL.md; do
   name=$(basename $(dirname "$f"))
   lines=$(wc -l < "$f" | tr -d ' ')
   echo "$lines $name"
@@ -65,7 +65,7 @@ Present as table:
 Skills with overlapping trigger descriptions that might load simultaneously:
 
 ```bash
-for f in .agent-src.uncondensed/skills/*/SKILL.md; do
+for f in src/skills/*/SKILL.md; do
   name=$(basename $(dirname "$f"))
   desc=$(grep 'description:' "$f" | head -1 | sed 's/.*"\(.*\)"/\1/')
   echo "$name | $desc"
@@ -77,7 +77,7 @@ Flag pairs where descriptions target the same scenario.
 ### 5. Check sizes
 
 ```bash
-for f in .agent-src.uncondensed/skills/*/SKILL.md; do
+for f in src/skills/*/SKILL.md; do
   name=$(basename $(dirname "$f"))
   lines=$(wc -l < "$f" | tr -d ' ')
   [ "$lines" -gt 300 ] && echo "⚠️  $name — $lines lines"

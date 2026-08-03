@@ -104,7 +104,7 @@ interface DispatchHookModule {
  * reachable both when this module runs from the consumer projection
  * (`dist/agent-src/templates/scripts/work_engine/`) and from the
  * source-of-truth tree
- * (`packages/<pack>/.agent-src.uncondensed/templates/scripts/work_engine/`).
+ * (`src/agent-src/templates/scripts/work_engine/`).
  * Loaded by dynamic `import()` to avoid namespace collisions with test
  * modules named `hooks` (the TS analogue of the Python importlib-by-path
  * approach).

@@ -9,7 +9,7 @@
  * frontmatter parser, same `artefact_roots()` skill-root discovery.
  *
  * Enforces the contract from
- * .agent-src.uncondensed/templates/skill-archive-note.md:
+ * src/agent-src/templates/skill-archive-note.md:
  *
  *   1. Every <slug>.md under agents/evidence/archived-skills/ has the six
  *      required frontmatter fields with valid values.

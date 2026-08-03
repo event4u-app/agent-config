@@ -102,7 +102,7 @@ This repository contains {{project_description_oneline}}.
 ## ✅ Known False Positives — Do NOT Flag
 
 The repo ships agent-config rules and skills under `.augment/`,
-`dist/agent-src/`, and (during authoring) `.agent-src.uncondensed/`.
+`dist/agent-src/`, and (during authoring) `src/`.
 Cross-references inside those trees resolve via the **delivered**
 `.augment/` layout — not via raw git checkout. Copilot's static
 checker walks the git tree, so it sees broken paths where there are
@@ -116,7 +116,7 @@ resolve at agent runtime. The patterns below are correct by design:
   delivered location (e.g. `.augment/rules/<rule>.md`) — these paths
   are valid via the `.augment/` tree, even when the file is symlinked
   into `.claude/rules/`, `.cursor/rules/`, or `.clinerules/`.
-- **`path_prefix:` triggers containing `.agent-src.uncondensed/`**
+- **`path_prefix:` triggers containing `src/`**
   in YAML frontmatter. This is a literal match pattern for the
   host's router, **not** a file reference — source-of-truth meta-rules
   (`source-of-truth`, `augment-edit-discipline`, `skill-quality`,
@@ -129,7 +129,7 @@ resolve at agent runtime. The patterns below are correct by design:
 - **Body-link forms `../docs/guidelines/...`** (single-up). This is
   the post-rewrite shape produced by `scripts/condense.ts`. The
   condensed `dist/agent-src/rules/` tree is one level deeper than the
-  source `.agent-src.uncondensed/rules/`, so the rewriter collapses
+  source `src/rules/`, so the rewriter collapses
   `../../docs/...` to `../docs/...`. Both forms are expected — one in
   source, one in condensed output.
 

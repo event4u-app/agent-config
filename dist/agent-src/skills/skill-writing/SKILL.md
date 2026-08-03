@@ -68,8 +68,8 @@ Ask: **"Does the model need this to do its job correctly?"**
 
 ### Skills and commands share the `.claude/skills/` namespace
 
-Skills in `.agent-src.uncondensed/skills/{name}/SKILL.md` AND commands in
-`.agent-src.uncondensed/commands/{name}.md` both project into
+Skills in `src/skills/{name}/SKILL.md` AND commands in
+`src/domains/{domain}/{name}/command.md` both project into
 `.claude/skills/` (see `scripts/condense.ts` →
 `generate_claude_skills` + `generate_claude_commands`). Claude treats
 the whole directory as native skills.
@@ -111,7 +111,7 @@ Do NOT create a skill or rule for:
 ### 0. Inspect, then run the Drafting Protocol
 
 Before writing, **inspect** the landscape: grep
-`.agent-src.uncondensed/skills/` and `rules/` for duplicates or
+`src/skills/` and `src/rules/` for duplicates or
 near-matches, and **analyze** 1–2 gold-standard peers (e.g. `pest-testing`,
 `php-coder`) to anchor shape and tone. If requirements are unclear or
 incomplete, stop and ask — do not assume.
@@ -308,7 +308,7 @@ asks for it.
 **Workspace layout** (all under `.gitignore`):
 
 ```
-.agent-src.uncondensed/skills/{name}/evals/
+src/skills/{name}/evals/
   triggers.json              # tracked — routing eval (§ 1c)
   evals.json                 # tracked — behavior eval definitions
   runs/                      # gitignored — per-iteration outputs

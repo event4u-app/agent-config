@@ -37,7 +37,7 @@ diff.
 ### 1. Validate dependencies
 
 ```bash
-scripts/ai-video/lib/validate-deps.sh .agent-src.uncondensed/commands/video/storyboard.md
+scripts/ai-video/lib/validate-deps.sh dist/agent-src/commands/video/storyboard.md
 ```
 
 ### 2. Load config + resolve image provider

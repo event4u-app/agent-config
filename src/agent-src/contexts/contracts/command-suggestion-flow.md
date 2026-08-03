@@ -5,7 +5,7 @@ stability: beta
 # Command Suggestion — Flow & Scoring Contract
 
 > Cross-cutting reference for the suggestion layer.
-> The runtime rule is [`command-suggestion`](../../.agent-src.uncondensed/rules/command-suggestion-policy.md);
+> The runtime rule is [`command-suggestion`](../../rules/command-suggestion-policy.md);
 > the architectural decision lives in [`adr-command-suggestion.md`](adr-command-suggestion.md).
 >
 > - **Created:** 2026-04-30
@@ -154,7 +154,7 @@ Cursor, Cline, Windsurf) get the engine via `scripts/`.
 
 ## See also
 
-- [`command-suggestion`](../../.agent-src.uncondensed/rules/command-suggestion-policy.md) — runtime rule
+- [`command-suggestion`](../../rules/command-suggestion-policy.md) — runtime rule
 - [`adr-command-suggestion.md`](adr-command-suggestion.md) — architectural decision
 - [`command-suggestion-eligibility.md`](command-suggestion-eligibility.md) — locked eligibility table
-- [`agent-settings`](../../.agent-src.uncondensed/templates/agent-settings.md) — `commands.suggestion.*` reference
+- [`agent-settings`](../../templates/agent-settings.md) — `commands.suggestion.*` reference
