@@ -79,7 +79,7 @@ jobs:
           ./node_modules/.bin/tsx src/scripts/trigger_eval_rotation.ts --out-dir rotation-results
       - name: Upload rotation result JSONs
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: trigger-eval-rotation
           path: rotation-results/
