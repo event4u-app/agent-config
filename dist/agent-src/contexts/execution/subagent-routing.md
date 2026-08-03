@@ -36,6 +36,21 @@ THE SAME MINUS THE QUOTA WIN.
    the tier/model choice is unchanged. This is the only place the
    "Sonnet-has-its-own-allowance" idea lives, and it lives as a runtime-detected
    flag, never as portable prose.
+4. **Budget routing** (`subagents.budget_routing != off`,
+   [`budget-routing` contract](../../../../docs/contracts/budget-routing.md)) →
+   AFTER the tier resolves per 1–3, apply the budget relation via
+   `pickTier` (`src/scripts/_lib/tier_budget_routing.ts`): cheapest
+   classifier-adequate tier WITH available budget; that tier exhausted or
+   cooling → next tier up with budget; all unavailable → session model +
+   surfaced one-line notice. Work is never blocked to save money. Before
+   the dispatch is created, acquire the atomic reserve
+   (`acquireBudgetPermit`; check state via `node src/scripts/cost/budget.mjs
+   tier <t>`); a 429/quota error trips `tripCooldown` for that tier and
+   falls back per the relation — never a retry loop. Under
+   `budget_routing: ask`, the FIRST budget-motivated downshift of a session
+   is confirmed once; `auto` proceeds silently. Every budget-routed
+   dispatch emits one `orchestration_record` line (tier + provenance-tagged
+   token delta) so realized savings are measured, not asserted.
 
 **Cache trade-off (road-to-cache-economy Phase 4).** A tier downshift changes
 the sub-task's model, and the prompt cache is keyed by `(model, prefix)` — so
@@ -60,6 +75,10 @@ rule, or context asserts "model X is free".
 [`src/scripts/_lib/subagent_routing.ts`](../../../../src/scripts/_lib/subagent_routing.ts)
 (`resolveSubagentRouting`), covered by
 [`tests/scripts/_lib_subagent_routing.test.ts`](../../../../tests/scripts/_lib_subagent_routing.test.ts).
+Budget layer: [`src/scripts/_lib/tier_budget_routing.ts`](../../../../src/scripts/_lib/tier_budget_routing.ts)
+(`pickTier`, `acquireBudgetPermit`, cool-downs), covered by
+[`tests/scripts/tier_budget_routing.test.ts`](../../../../tests/scripts/tier_budget_routing.test.ts);
+live state: `agent-config routing:doctor` (orchestration section).
 
 ## Related
 

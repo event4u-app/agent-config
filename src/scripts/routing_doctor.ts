@@ -61,6 +61,7 @@ import {
   classifyTask,
   type ActivationInputs,
 } from "./_lib/auto_dispatch.js";
+import { TIER_ORDER, readCooldowns } from "./_lib/tier_budget_routing.js";
 
 const REPO_ROOT = path.resolve(
   path.dirname(fileURLToPath(import.meta.url)),
@@ -101,6 +102,9 @@ export interface OrchestrationReport {
   enabled: boolean;
   auto: string;
   downshift: boolean;
+  budget_routing: string;
+  /** cost.budgets.per_tier ceilings + live cool-down state per tier. */
+  tier_budgets: Record<string, { ceiling_usd: number | null; cooldown_until_ms: number }>;
   host_manifest: HostCapabilityManifest;
   /** Verdict of the real activation gate for a canonical delegable probe. */
   activation: { action: string; reason: string };
@@ -154,9 +158,20 @@ export function collect_orchestration(
   );
   const cost = (settings["cost"] ?? {}) as Record<string, unknown>;
   const cost_budgets = (cost["budgets"] ?? {}) as Record<string, unknown>;
-  const ledger_present = fs.existsSync(
-    path.join(workspace_root, "agents", "cost-tracking", "sessions.jsonl"),
-  );
+  const tracking_dir = path.join(workspace_root, "agents", "cost-tracking");
+  const ledger_present = fs.existsSync(path.join(tracking_dir, "sessions.jsonl"));
+  const budget_routing =
+    typeof sub["budget_routing"] === "string" ? (sub["budget_routing"] as string) : "ask";
+  const per_tier = (cost_budgets["per_tier"] ?? {}) as Record<string, unknown>;
+  const cooldowns = readCooldowns(tracking_dir);
+  const tier_budgets: OrchestrationReport["tier_budgets"] = {};
+  for (const t of TIER_ORDER) {
+    const v = per_tier[t];
+    tier_budgets[t] = {
+      ceiling_usd: typeof v === "number" && Number.isFinite(v) ? v : null,
+      cooldown_until_ms: cooldowns[t],
+    };
+  }
 
   let sample: OrchestrationReport["sample"] = null;
   if (sample_prompt) {
@@ -175,6 +190,8 @@ export function collect_orchestration(
     enabled,
     auto,
     downshift,
+    budget_routing,
+    tier_budgets,
     host_manifest,
     activation: { action: probe.action, reason: probe.reason },
     cost_budgets,
@@ -381,8 +398,15 @@ function _render(report: DoctorReport): string {
   const o = report.orchestration;
   lines.push(
     `Orchestration: enabled=${o.enabled} · auto=${o.auto} · downshift=${o.downshift} · ` +
-      `subagent_spawn=${o.host_manifest.subagent_spawn} · ledger=${o.ledger_present ? "present" : "absent"}`,
+      `budget_routing=${o.budget_routing} · subagent_spawn=${o.host_manifest.subagent_spawn} · ` +
+      `ledger=${o.ledger_present ? "present" : "absent"}`,
   );
+  const tierBits = Object.entries(o.tier_budgets).map(([t, s]) => {
+    const cap = s.ceiling_usd === null ? "no cap" : `$${s.ceiling_usd}`;
+    const cool = s.cooldown_until_ms > 0 ? " COOLING" : "";
+    return `${t}=${cap}${cool}`;
+  });
+  lines.push(`  tier budgets (rolling-24h): ${tierBits.join(" · ")}`);
   lines.push(`  activation probe: ${o.activation.action} — ${o.activation.reason}`);
   if (o.sample) {
     lines.push(

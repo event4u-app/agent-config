@@ -10,7 +10,7 @@
 // Env: BUDGET_STORE, BUDGET_CONFIG, BUDGET_PERIOD={today|week|month|all}, BUDGET_QUIET=1
 
 import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'node:fs';
-import { dirname } from 'node:path';
+import { dirname, join } from 'node:path';
 
 const STORE = process.env.BUDGET_STORE || 'agents/cost-tracking/sessions.jsonl';
 const CONFIG = process.env.BUDGET_CONFIG || 'agents/cost-tracking/budget.json';
@@ -198,14 +198,75 @@ function cmdCheck() {
   if (hardStop) process.exit(1);
 }
 
+// --- Per-tier budget state (docs/contracts/budget-routing.md) -------------
+// v1 window for per-tier ceilings: rolling 24h. Sums ledger entries tagged
+// `tier:` plus pending reserves from tier-reserves.jsonl (the atomic-permit
+// file) so a concurrent dispatch cannot read a stale "available".
+
+function loadPerTierCeilings() {
+  const out = { cheap: null, medium: null, strong: null };
+  if (!existsSync(SETTINGS)) return out;
+  let inPerTier = false;
+  for (const line of readFileSync(SETTINGS, 'utf-8').split('\n')) {
+    if (/^ {4}per_tier:/.test(line)) { inPerTier = true; continue; }
+    if (inPerTier) {
+      const m = line.match(/^ {6}(cheap|medium|strong):\s*([0-9.]+|null)\s*(#.*)?$/);
+      if (m) {
+        out[m[1]] = m[2] === 'null' ? null : Number(m[2]);
+        continue;
+      }
+      if (/^ {0,5}\S/.test(line)) inPerTier = false;
+    }
+  }
+  return out;
+}
+
+function cmdTier(rest) {
+  const tier = rest[0];
+  if (!['cheap', 'medium', 'strong'].includes(tier)) {
+    console.error('usage: budget.mjs tier {cheap|medium|strong}');
+    process.exit(2);
+  }
+  const dayMs = 24 * 3600 * 1000;
+  const now = Date.now();
+  const inWindow = (ts) => ts && (now - new Date(ts).getTime()) < dayMs;
+  const spent = loadSessions()
+    .filter((s) => s.tier === tier && inWindow(s.capturedAt || s.endedAt || s.ts))
+    .reduce((acc, s) => acc + (Number(s.total_cost_usd ?? s.cost_usd ?? 0) || 0), 0);
+  let reserved = 0;
+  const reservePath = join(dirname(STORE), 'tier-reserves.jsonl');
+  if (existsSync(reservePath)) {
+    for (const line of readFileSync(reservePath, 'utf-8').split('\n')) {
+      if (!line.trim()) continue;
+      try {
+        const e = JSON.parse(line);
+        if (e.tier === tier && e.status === 'pending' && (now - e.ts_ms) < dayMs) {
+          reserved += Number(e.est_usd || 0) || 0;
+        }
+      } catch { /* skip malformed line */ }
+    }
+  }
+  const ceiling = loadPerTierCeilings()[tier];
+  const available = ceiling === null ? true : spent + reserved < ceiling;
+  console.log(JSON.stringify({
+    tier,
+    window: 'rolling-24h',
+    ceiling_usd: ceiling,
+    spent_usd: spent,
+    reserved_usd: reserved,
+    available,
+  }));
+}
+
 function main() {
   const [cmd, ...rest] = process.argv.slice(2);
   switch (cmd) {
     case 'set':   return cmdSet(rest);
     case 'get':   return cmdGet();
     case 'check': return cmdCheck();
+    case 'tier':  return cmdTier(rest);
     default:
-      console.error('usage: budget.mjs {set <usd>|get|check}');
+      console.error('usage: budget.mjs {set <usd>|get|check|tier <cheap|medium|strong>}');
       process.exit(2);
   }
 }
