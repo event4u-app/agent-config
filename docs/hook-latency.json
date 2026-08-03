@@ -48,5 +48,111 @@
             "p95_ms": 82,
             "max_ms": 88
         }
+    ],
+    "history": [
+        {
+            "recorded_at": "2026-08-03T01:50:56.274Z",
+            "invocation_path": "cli",
+            "hardware": "darwin-arm64 local maintainer machine (warm cache) — pre-fix CLI invocation path",
+            "node": "v25.9.0",
+            "platform": "darwin-arm64",
+            "runs_per_event": 50,
+            "results": [
+                {
+                    "event": "pre_tool_use",
+                    "runs": 50,
+                    "p50_ms": 156,
+                    "p95_ms": 164,
+                    "max_ms": 169
+                },
+                {
+                    "event": "post_tool_use",
+                    "runs": 50,
+                    "p50_ms": 160,
+                    "p95_ms": 166,
+                    "max_ms": 169
+                },
+                {
+                    "event": "user_prompt_submit",
+                    "runs": 50,
+                    "p50_ms": 160,
+                    "p95_ms": 184,
+                    "max_ms": 186
+                },
+                {
+                    "event": "stop",
+                    "runs": 50,
+                    "p50_ms": 161,
+                    "p95_ms": 166,
+                    "max_ms": 170
+                },
+                {
+                    "event": "session_start",
+                    "runs": 50,
+                    "p50_ms": 163,
+                    "p95_ms": 168,
+                    "max_ms": 172
+                },
+                {
+                    "event": "session_end",
+                    "runs": 50,
+                    "p50_ms": 161,
+                    "p95_ms": 171,
+                    "max_ms": 172
+                }
+            ]
+        },
+        {
+            "recorded_at": "2026-08-03T02:11:41.673Z",
+            "invocation_path": "cli",
+            "hardware": "darwin-arm64 local maintainer machine (warm cache) — post-fix bundle-direct invocation path",
+            "node": "v25.9.0",
+            "platform": "darwin-arm64",
+            "runs_per_event": 50,
+            "results": [
+                {
+                    "event": "pre_tool_use",
+                    "runs": 50,
+                    "p50_ms": 75,
+                    "p95_ms": 79,
+                    "max_ms": 79
+                },
+                {
+                    "event": "post_tool_use",
+                    "runs": 50,
+                    "p50_ms": 90,
+                    "p95_ms": 95,
+                    "max_ms": 99
+                },
+                {
+                    "event": "user_prompt_submit",
+                    "runs": 50,
+                    "p50_ms": 89,
+                    "p95_ms": 93,
+                    "max_ms": 94
+                },
+                {
+                    "event": "stop",
+                    "runs": 50,
+                    "p50_ms": 90,
+                    "p95_ms": 92,
+                    "max_ms": 95
+                },
+                {
+                    "event": "session_start",
+                    "runs": 50,
+                    "p50_ms": 94,
+                    "p95_ms": 101,
+                    "max_ms": 109
+                },
+                {
+                    "event": "session_end",
+                    "runs": 50,
+                    "p50_ms": 92,
+                    "p95_ms": 143,
+                    "max_ms": 158
+                }
+            ]
+        }
     ]
 }
