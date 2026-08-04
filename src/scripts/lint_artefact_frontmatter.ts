@@ -359,6 +359,10 @@ function main(argv?: readonly string[]): number {
         process.stderr.write(`❌  ${exc.message}\n`);
         return 2;
     }
+    // Gate-coverage contract (src/config/gate-coverage.yml rule 1): publish the
+    // asserted count machine-readably, before the verdict branches, so a run
+    // that finds errors still reports the corpus it read.
+    process.stdout.write(`scanned: ${String(artefacts.length)}\n`);
     const allErrs: string[] = [];
     for (const p of artefacts) {
         allErrs.push(..._check_one(p, wsIds, packIds, quarantine));

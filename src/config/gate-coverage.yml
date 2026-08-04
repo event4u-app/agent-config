@@ -40,25 +40,43 @@
 #                visible, or it repeats the sin it exists to catch.
 #   canary       optional mutation recipe (Phase 7) — see CANARY below
 #
-# COVERAGE — THE HONEST DENOMINATOR (measured 2026-08-02)
-# ------------------------------------------------------
-# 211 `lint_*` / `check_*` / `audit_*` scripts live under `src/scripts/`.
-# **8 of them emit the machine-readable `scanned: <N>` line under their
-# CI-identical argv, and all 8 are listed below.** The manifest is therefore
-# complete with respect to its own contract, and covers ~4 % of the gate
-# population.
+# COVERAGE — THE HONEST DENOMINATOR (re-measured 2026-08-04)
+# ----------------------------------------------------------
+# 223 `lint_*` / `check_*` / `audit_*` scripts live under `src/scripts/`
+# (the count is computed, not asserted — `check_gate_coverage.count_gate_scripts`).
+# **22 of them emit the machine-readable `scanned: <N>` line under their
+# CI-identical argv, and all 22 are listed below.** The manifest is therefore
+# complete with respect to its own contract, and covers ~10 % of the population.
 #
-# The other ~203 are NOT covered, for one reason: rule 1. They print their count
+# The previous revision of this header claimed "8 of 211". Both halves had
+# drifted: entries were added without the header following, and the population
+# grew by 12. Numbers written in prose beside a mechanism that can compute them
+# is how a denominator goes stale — the population figure now comes from the
+# function, and the honest-denominator test bounds the drift.
+#
+# The other ~201 are NOT covered, for one reason: rule 1. They print their count
 # in prose ("111 file(s) scanned", "0 declarer(s)") or not at all, and a guard
 # that parses prose is the fragile thing being replaced. Padding this list with
 # them would manufacture exactly the false green the file exists to prevent.
 #
-# Closing the gap is one line per gate, not a new mechanism: a gate that already
-# computes its count for `_lib/scan_scope.assertScanned` need only also write
-# `scanned: <N>`. Seven gates are one line away today — they call `assertScanned`
-# / `assertWatchlistResolves` with a real count in hand: `audit_skill_overlap`,
-# `check_iron_law_prominence`, `check_safety_floor_untouched`, `lint_handoffs`,
-# `lint_namespace`, `lint_artefact_frontmatter`, `skill_linter` (listed).
+# THE "SEVEN GATES ONE LINE AWAY" NOTE IS DISCHARGED (2026-08-04). It named
+# `audit_skill_overlap`, `check_iron_law_prominence`, `check_safety_floor_untouched`,
+# `lint_handoffs`, `lint_namespace`, `lint_artefact_frontmatter`, `skill_linter`.
+# Five are now converted and listed below; `skill_linter` was already listed when
+# the note was written. `check_safety_floor_untouched` is deliberately NOT
+# converted: it is the one watch-list gate, so its "count" is the size of a fixed
+# guard list (4), not a corpus. A floor under a constant can never trip — that is
+# the false-count shape Phase 2 of the roadmap repaired, and re-introducing it
+# here to raise a coverage number would be the manufactured green this file
+# exists to prevent. It stays unlisted, named, with the reason.
+#
+# What remains is NOT one line per gate. For the ~201 the count would have to be
+# INVENTED (what is this gate's unit?) rather than published, and that judgement
+# is per-gate. It is tracked as a vulnerability ratchet — `gate-hardening:
+# unhardened-scan-scope` in src/config/gate-violation-baselines.json, which fails
+# on a RISE and targets 0 — and charter-owned by
+# `agents/roadmaps/road-to-gate-hardening-adoption.md`.
+#
 # `tests/scripts/check_gate_coverage.test.ts` fails the build the moment a gate
 # starts emitting the line without being registered here, so the list cannot
 # silently fall behind again (that omission is exactly how `check_site_links`
@@ -346,3 +364,64 @@ gates:
       from the CI invocation; nothing else changes at that switch. The entry
       stays registered so the guard reports this gate rather than skipping it
       silently.
+
+  # ---------------------------------------------------------------------------
+  # The five below close the gap this header named: they already called
+  # `_lib/scan_scope.assertScanned` with a real count and only had to PRINT it.
+  # The published number is not agent-derived — it is byte-identical to the value
+  # the gate's own dead-scope assertion already gates a red exit on, so there is
+  # no fresh judgement about "what a unit is" and no room for a count that drifts
+  # from what the gate inspected. That property is what made them convertible
+  # without per-gate adjudication; gates whose count would have to be INVENTED
+  # are deliberately NOT in this batch — see road-to-gate-hardening-adoption.
+  # Floors are ~87 % of the measured baseline: room for legitimate deletions,
+  # far above a collapse (rule 3).
+  # ---------------------------------------------------------------------------
+
+  - id: lint_handoffs
+    argv: ["--quiet"]
+    min_scanned: 250
+    corpus: "src/skills/*/SKILL.md (288 at baseline)"
+    status: enforced
+    note: >
+      The argv here is load-bearing, not decoration. Taskfile injects `--quiet`
+      (QUIET_FLAG) and this gate read `args[0]` as a positional path, so the CI
+      invocation resolved `--quiet` as its skills root, scanned 0 and exited 2 —
+      red in `task lint-handoffs`, green when probed bare. Fixed by filtering
+      flag-shaped args before the positional read. Registering it under the REAL
+      argv is what keeps that regression caught: a bare-probe entry would have
+      gone on passing over the broken invocation.
+
+  - id: lint_namespace
+    argv: ["--quiet"]
+    min_scanned: 540
+    corpus: "names across src/rules + src/skills + src/agent-src + src/domains/**/command.md (621 at baseline)"
+    status: enforced
+    note: >
+      Counts NAMES, not files — the scan-scope census counts files under the same
+      roots, so the two artefacts legitimately report different numbers here.
+
+  - id: lint_artefact_frontmatter
+    argv: ["--quiet"]
+    min_scanned: 540
+    corpus: "artefacts carrying frontmatter across the discovery roots (619 at baseline)"
+    status: enforced
+
+  - id: audit_skill_overlap
+    argv: ["--quiet", "--print-table", "--strict"]
+    min_scanned: 250
+    corpus: "src/skills/*/SKILL.md compared pairwise (288 at baseline)"
+    status: enforced
+    note: >
+      `--strict` is part of the CI invocation and can exit non-zero on a real
+      overlap finding. The guard reads the count independently of the exit code —
+      coverage and verdict are different questions.
+
+  - id: check_iron_law_prominence
+    argv: ["--quiet"]
+    min_scanned: 90
+    corpus: "src/rules/*.md (111 at baseline)"
+    status: enforced
+    note: >
+      Emits on stderr, not stdout: `--format json` owns this gate's stdout and a
+      count written there would corrupt the payload. The guard reads both streams.
