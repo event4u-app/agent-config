@@ -35,6 +35,7 @@ import type { WorkState } from '../state.js';
 
 export const INTENT_UI_BUILD = 'ui-build';
 export const INTENT_UI_IMPROVE = 'ui-improve';
+export const INTENT_UI_FIX = 'ui-fix';
 export const INTENT_UI_TRIVIAL = 'ui-trivial';
 export const INTENT_MIXED = 'mixed';
 export const INTENT_BACKEND = 'backend-coding';
@@ -48,6 +49,7 @@ export const INTENT_BACKEND = 'backend-coding';
 export const KNOWN_INTENTS: ReadonlySet<string> = new Set([
     INTENT_UI_BUILD,
     INTENT_UI_IMPROVE,
+    INTENT_UI_FIX,
     INTENT_UI_TRIVIAL,
     INTENT_MIXED,
     INTENT_BACKEND,
@@ -91,7 +93,16 @@ const _TRIVIAL_VERBS: ReadonlySet<string> = new Set([
 
 const _IMPROVE_VERBS: ReadonlySet<string> = new Set([
     'improve', 'polish', 'redesign', 'rework', 'refine',
-    'refactor', 'tighten', 'clean', 'fix', 'update', 'tune',
+    'refactor', 'tighten', 'clean', 'update', 'tune',
+]);
+
+// Fix-shaped verbs split out of _IMPROVE_VERBS (2026-08-04, chain
+// right-sizing): a defect repair on an existing surface does not need the
+// mandatory audit -> design front of the full chain — it enters at apply
+// with the audit available on demand. Redesign/improve intent keeps the
+// full chain.
+const _FIX_VERBS: ReadonlySet<string> = new Set([
+    'fix', 'repair', 'correct', 'debug', 'broken',
 ]);
 
 const _BUILD_VERBS: ReadonlySet<string> = new Set([
@@ -176,6 +187,9 @@ export function classify_intent(
     if (has_ui && has_backend) {
         return INTENT_MIXED;
     }
+    if (has_ui && _is_fix(text)) {
+        return INTENT_UI_FIX;
+    }
     if (has_ui && _is_improve(text)) {
         return INTENT_UI_IMPROVE;
     }
@@ -213,7 +227,9 @@ export function directive_set_for(intent: string): string {
                 `expected one of ${pyListRepr(pySorted(KNOWN_INTENTS))}`,
         );
     }
-    if (intent === INTENT_UI_BUILD || intent === INTENT_UI_IMPROVE) {
+    if (intent === INTENT_UI_BUILD || intent === INTENT_UI_IMPROVE || intent === INTENT_UI_FIX) {
+        // ui-fix shares the 'ui' set; the audit/design gates pass through for
+        // it (fix_lane_passthrough) so the run enters at apply.
         return 'ui';
     }
     if (intent === INTENT_UI_TRIVIAL) {
@@ -265,6 +281,15 @@ function _is_trivial(text: string): boolean {
         }
     }
     return hasVerb && pySplit(text).length <= 14;
+}
+
+function _is_fix(text: string): boolean {
+    for (const v of _FIX_VERBS) {
+        if (reSearch(wordBoundary(v), text)) {
+            return true;
+        }
+    }
+    return false;
 }
 
 function _is_improve(text: string): boolean {

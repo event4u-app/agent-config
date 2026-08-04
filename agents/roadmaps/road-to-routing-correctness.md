@@ -217,7 +217,7 @@ status: ready
       the unchanged corpus. Both numbers in
       agents/evidence/reports/ui-triviality-eval.md; work-engine suite
       697/697 green; eval_ui_triviality.test.ts pins the bar in CI. -->
-- [ ] Chain right-sizing (gated on the eval): `existing-ui-audit` +
+- [x] Chain right-sizing (gated on the eval): `existing-ui-audit` +
       `design-intelligence` become mandatory only for new-design / redesign
       intents; fix-intent UI work enters at `apply` with the audit available
       on demand. The resource-first hard-stop stays mandatory for any work
@@ -225,6 +225,16 @@ status: ready
       untouched).
       *Verify:* directive-set tests cover both intents; design-fidelity
       fixtures stay green.
+      <!-- done 2026-08-04 (gate cleared: recall 1.00): new intent `ui-fix`
+      (fix/repair/correct/debug/broken split out of _IMPROVE_VERBS; maps to
+      the 'ui' set); directives/ui/_fix_lane.ts passthrough in audit.ts +
+      design.ts — a ui-fix run without an audit/brief enters at apply with
+      both skills on demand, UNLESS the ticket references a design artifact
+      (mockup/figma/prototype/wireframe/screenshot/design.html markers —
+      the design-fidelity resource-first halt fires unchanged). Redesign/
+      improve intents keep the full chain. Tests:
+      directives_ui_fix_lane.test.ts (12) — both intents covered; work-engine
+      712/712 incl. design_fidelity_routing fixtures. -->
 - [ ] Progressive disclosure for the four heavy reference skills (`fe-design`,
       `design-intelligence`, `existing-ui-audit`, `design-review`):
       section-level entry points so an invocation loads the needed section,
