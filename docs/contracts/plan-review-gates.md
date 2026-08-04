@@ -524,20 +524,40 @@ holding only `round<N>-review.md` files means "no review of the current
 content" and the gate correctly reports `missing-artifact` — it does not mean
 the glob is broken.
 
-**Terminal-before-rename — `enforced_by: none` (stated, not implied).** Every
+**Terminal-before-rename — enforced by `check_review_dispositions`.** Every
 finding in a superseded round must already be terminal before it is renamed;
-the rename records the review, it never retires an open finding. **Nothing
-enforces this.** The rename moves the file out of the `*.findings.md` glob, so
-§ 2.2's "any `open` row → block" no longer sees it: renaming an artifact that
-still holds an `open` row escapes the gate, and no validator, hook, or test
-detects it. The obligation is agent-carried and a human reading the diff is
-what catches a violation — the same stance § 1 takes for the unenforced plan
-surfaces and § 4.1 for the handoff state.
+the rename records the review, it never retires an open finding. Renaming moves
+the file out of the `*.findings.md` glob, so § 2.2's "any `open` row → block" no
+longer sees it — an artifact renamed while still holding an `open` row escapes
+Gate R2 entirely.
 
-A CI-facing check is possible but was not built here: it would have to walk the
-renamed rounds and parse rows the gate deliberately stopped selecting, which
-re-introduces the directory-wide coupling § 2.6 removed. Named as an open
-option rather than silently claimed.
+This was carried as `enforced_by: none` and it failed in exactly the predicted
+way: five findings in `postmerge-blindpass-review.md` sat recorded as `open` for
+a day after two of them were fixed, in this repo's own corpus, with the diff
+reviewed. "A human reading the diff catches it" turned out to be the thing that
+did not happen. `check_review_dispositions` now reads the archived records and
+blocks a non-terminal or unreferenced row.
+
+**Why this does not re-introduce the § 2.6 coupling.** The earlier objection —
+that walking renamed rounds re-creates directory-wide poisoning — assumed the
+check would bind those rounds to the current review scope, which is what made
+directory-wide selection toxic: one branch's artefact reds another branch's PR.
+This check never reads `scope:` and never compares an archived record to the
+current diff. It asserts one scope-free property — *a closed round records
+closed findings* — so an unrelated branch's archived record cannot red this
+branch, and § 2.6's selection rule for R2 is untouched.
+
+**What it deliberately does not check.** Reference *shape*. The first draft
+resolved a `fixed` ref via `rev-parse` and a `deferred` ref via a path probe;
+measured against the real corpus it produced eight blocks, every one a
+pre-existing record whose reference is prose describing the change or a carrier
+named by bare slug — none of them the failure this gate exists to catch. Archived
+records are frozen, so a shape rule cannot be satisfied retroactively without
+editing them, and a gate whose only output is unfixable blocks is the gate that
+gets switched off. The rule is therefore: terminal status, non-empty
+Reason/Ref. Revisit when an unresolvable reference actually hides a disposition
+on a record written after this gate shipped — that record is fixable at source,
+and the trade-off changes.
 
 ## 3. Substantial-change heuristic (R1 trigger)
 
