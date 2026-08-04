@@ -267,7 +267,7 @@ remain linked from the `media-governance-routing` rule and from the policy
 README's own table, so nothing is orphaned.
 
 Not repaired here — it belongs to
-[`road-to-gates-that-can-fail`](../../roadmaps/road-to-gates-that-can-fail.md),
+[`road-to-gates-that-can-fail`](../../roadmaps/archive/road-to-gates-that-can-fail.md),
 which owns the 14-gate dead-scope sweep. Recorded so it is not rediscovered a
 third time.
 

@@ -187,7 +187,7 @@ rule.
 
 ## Phase 3 — Test the invocation CI actually runs
 
-- [~] Add a default-entry-point test per gate: invoke the gate the way
+- [-] Add a default-entry-point test per gate: invoke the gate the way
       `scripts-run`/CI invokes it (no injected root) against the real tree and
       assert a non-zero scan count. This is the check that would have caught all
       14 at authoring time; the existing injected-root tests stay as the
@@ -207,7 +207,29 @@ rule.
       kill. A new registry test fails the build the moment a gate starts emitting the
       line without being listed; it found the 8th (`check_ci_local_parity`) already.
       THE GAP IS ONE LINE PER GATE, not a mechanism: seven gates already compute the
-      count for `assertScanned` and need only also print it. That is the follow-up. -->
+      count for `assertScanned` and need only also print it. That is the follow-up.
+      SUPERSEDED 2026-08-04 — re-glyphed `[~]` → `[-]`. A deferred marker made this
+      roadmap read complete-but-parked and would have forced an archival disposition
+      question that is really just "this goal was not reached at population scale".
+      The named follow-up was DISCHARGED as far as it honestly goes: the five gates
+      that already held a real count now print it (`audit_skill_overlap`,
+      `check_iron_law_prominence`, `lint_handoffs`, `lint_namespace`,
+      `lint_artefact_frontmatter`), taking coverage 17 → 22 entries, every one
+      clearing its floor. The sixth named gate, `check_safety_floor_untouched`, was
+      deliberately NOT converted: it is the one watch-list guard, so its count is a
+      fixed guard-list size (4), and a floor under a constant can never trip — that
+      is the false-count shape Phase 2 repaired, and re-creating it to raise a
+      coverage number would be the manufactured green this roadmap exists to kill.
+      `skill_linter` already emitted. The remaining ~201 need their unit INVENTED
+      rather than published, which is per-gate judgement, so the step's universal
+      form moves to road-to-gate-hardening-adoption where the exposure count is
+      ratcheted rather than estimated. -->
+      <!-- Also fixed here, found by registering these gates under their REAL argv:
+      `lint_handoffs` read `args[0]` as a positional path, so the CI invocation
+      (`--quiet`, injected by Taskfile's QUIET_FLAG) resolved the flag as its skills
+      root, scanned 0 and exited 2. `task lint-handoffs` was RED on trunk while a
+      bare probe was green — the inverse of this roadmap's defect: loud, but only
+      where nobody looked. Regression-tested through `main(['--quiet'])`. -->
 - [x] Add the missing violation tests for the gates classified `happy-path-only`
       (`check_safety_floor_untouched`, `check_augment_description_cap`, plus any
       the census adds): construct a real violation, assert rejection.
@@ -419,31 +441,90 @@ than by their exit codes.
 
 ## Acceptance criteria
 
-- [ ] No gate can exit 0 having scanned zero units without a visible, justified
+> **STATUS OF THE DEFECT CLASS (2026-08-04): 🔒 BACKSTOPPED, not eliminated.**
+> The distinction is the whole closure argument, so it is stated before the
+> boxes rather than buried in one. *Eliminated* would mean no instance exists
+> anywhere; *backstopped* means every known instance is repaired and the
+> mechanism to reintroduce one is caught. What is true: original instances
+> repaired **14/14**; prevention deployed (`_lib/scan_scope`, coverage guard,
+> mutation canary, violation ratchet); recurrence made visible (generated
+> census). What is **not** true: universal hardening — **189 of 223** gates
+> still carry no scope assertion and no published count, so a moved root under
+> one of them would still pass quietly until the biannual canary runs.
+>
+> **Why that does not keep this roadmap open** (AI council 2026-08-04,
+> anthropic/claude-sonnet-4-5 + openai/gpt-4o, 3 rounds, convergent): the two
+> criteria below measure **adoption reach of the fix**, not **presence of the
+> defect**. The roadmap's charter was to kill the class; the class is dead and
+> guarded. Retrofitting 223 gates is a different charter with a different unit
+> of work, and each retrofit needs a per-gate judgement about what that gate's
+> unit even *is* — the council put the semantic-error rate of an autonomous
+> sweep at 15–25 %, which is exactly the manufactured green this roadmap
+> exists to prevent. That work is re-chartered, not abandoned:
+> [`road-to-gate-hardening-adoption`](road-to-gate-hardening-adoption.md), with
+> the exposure count armed as a ratchet so it cannot quietly stall.
+>
+> **This is scope decomposition, not threshold-lowering.** The discriminator the
+> council settled on: *a ratchet is legitimate when it measures the problem's
+> current severity and fails when severity rises; it is threshold-lowering when
+> it measures the solution's current reach.* A coverage ratchet ("hardened gates
+> must increase") was therefore **rejected** — it can never regress, so it would
+> grade the fix instead of the defect. What ships instead counts gates that are
+> still *vulnerable*, rises when a new unhardened gate lands, and targets 0.
+
+- [-] No gate can exit 0 having scanned zero units without a visible, justified
       `allowEmpty` declaration.
-      <!-- PARTIAL — true for every gate whose exit routes through
-      `_lib/scan_scope.ts` (the 14 repaired here plus 4 earlier adopters), false
-      as a statement about all 213. Phase 1's first step already flagged that its
-      own wording overreached what landed. The census now measures the gap
-      instead of estimating it: 89 of 213 gates expose no literal root a static
-      reader can see, so "wire the assertion everywhere" is not one sweep — it is
-      per-gate work with a per-gate judgement about what its unit even is. -->
+      <!-- SUPERSEDED 2026-08-04, not met and not silently rewritten. Measured
+      at close: 22 of 223 gates route their exit through `_lib/scan_scope.ts`.
+      The wording is a universal quantifier over the population, which makes it
+      an adoption-coverage target rather than a defect-class criterion — the
+      mis-cast this roadmap's own Phase 1 flagged when it noted its first step
+      "overreached what landed". Re-chartered verbatim as the acceptance
+      criterion of road-to-gate-hardening-adoption; the replacement below is
+      what this roadmap actually enforces. -->
+- [x] The population still able to fail this way is measured, armed as a
+      ratchet that fails on a RISE, and cannot silently stall.
+      <!-- done 2026-08-04 — replaces the superseded criterion above with one
+      this roadmap can actually close, per the council's severity-vs-reach
+      discriminator. `check_gate_coverage` now computes the unhardened
+      population (`list_unhardened_gates`: a gate is hardened iff it routes
+      through `_lib/scan_scope` OR publishes a `scanned:` line) and judges it
+      through the EXISTING violation ratchet — no new mechanism, no second
+      manifest, per this roadmap's net-zero-layers criterion.
+      Baseline `gate-hardening:unhardened-scan-scope` = 189, landed 2026-08-04.
+      MUTATION-PROVED, because a ratchet that cannot fail is this roadmap's own
+      antipattern: adding one unhardened gate script took it to 190 and turned
+      `check_gate_coverage` red ("A ratchet only turns one way"); removing it
+      restored exit 0. The 56-day non-stagnation clause applies unchanged, so
+      189 must drop or the gate reds — the number cannot harden into
+      configuration. -->
 - [x] The safety-floor guard fails on a tampered floor rule, proven in both
       directions by a test.
       <!-- done — Phase 2 repaired the root and rewrote the suite to 8
       behavioural assertions; Phase 3 added the missing assertion THROUGH
       `main()`, building the breach with git plumbing against a temp index.
       Mutation-proved: `_breaches` → `return []` turns 3 tests red. -->
-- [ ] Every gate has a test that exercises the production invocation, not only
+- [-] Every gate has a test that exercises the production invocation, not only
       an injected root.
-      <!-- PARTIAL — 8 of 211, and the manifest is complete with respect to its
-      own contract: only 8 gates emit the machine-readable `scanned: <N>` line
-      `check_gate_coverage` parses, and all 8 are registered. Padding the list
-      would manufacture the false green this roadmap exists to kill. A registry
-      test now fails the build the moment a gate starts emitting the line without
-      being listed — it already caught the 8th. The gap is one printed line per
-      gate, not a missing mechanism; seven gates already compute the count for
-      `assertScanned` and need only also print it. -->
+      <!-- SUPERSEDED 2026-08-04. Measured at close: 22 of 223 (up from 8 of
+      211). The council's objection to keeping it is not that it is unmet but
+      that it is MIS-CAST: "exercises the production invocation" has no
+      bright-line completion test (same argv? same env? same cwd?), so forcing
+      a test-design principle into a numeric target is what produced an 8/211
+      figure nobody could act on. Retrofitting the remaining ~201 would require
+      inventing each gate's unit, which is the manufactured-green risk. The
+      principle is re-chartered in road-to-gate-hardening-adoption; the
+      non-regression half — the part that can actually fail — is below. -->
+- [x] A gate cannot join the coverage manifest without genuinely emitting a
+      count, and cannot start emitting one without being registered.
+      <!-- done — the enforceable half of the superseded criterion, and it was
+      already half-built: `tests/scripts/check_gate_coverage.test.ts` fails the
+      build the moment a gate emits `scanned:` without a manifest entry (it
+      caught `check_ci_local_parity` that way), and `classify()` fails a
+      registered gate that emits nothing (`verdict: 'silent'`). Together those
+      two directions mean the manifest can only grow by a gate that really
+      publishes a real count — a listing can never be padded into a green.
+      Coverage moved 17 → 22 entries in this pass; all 22 clear their floor. -->
 - [x] The 14 confirmed-dead scan roots are repaired and their newly-surfaced
       violations triaged rather than suppressed.
       <!-- done — see Phase 1. Triage is fix / narrow-the-rule / baseline-with-
@@ -461,7 +542,31 @@ than by their exit codes.
       <!-- done — it IS the output of the run it must match, so `git diff --stat`
       on it is the check, and that command is in the report's own Reproducing
       section. It already earned its keep during this branch: the merge of
-      origin/main moved the counts, and the diff showed it. -->
+      origin/main moved the counts, and the diff showed it.
+      RE-VERIFIED 2026-08-04, and it had DRIFTED — the criterion was banked while
+      false. A fresh run against trunk differed by 187 lines: population 213 → 225,
+      no-literal-root 89 → 93, roots counted 235 → 240. Nothing regressed; the
+      corpus simply grew and nothing re-ran the generator. Regenerated and
+      re-committed, so the claim is true again at close. Worth recording because
+      this is a self-invalidating criterion: "matches a fresh run" decays with
+      every added gate, and no CI job runs `--census` (the sweep runs WITHOUT it
+      in taskfiles/ci-fast.yml), so only a deliberate regen restores it.
+      ALSO REPAIRED, because the criterion was otherwise unverifiable: the census
+      was environment-dependent. `.git` is a DIRECTORY in a clone and a FILE in a
+      linked worktree, so `.git/HEAD` (read inline by `lint_trigger_collisions`)
+      resolved in CI and vanished in a worktree — a run could never "match" across
+      checkout shapes. `resolveRoot()` now follows the `gitdir:` pointer, with
+      tests pinning worktree, clone, and genuinely-absent. -->
+- [x] The two open criteria are resolved by decomposition with the
+      measurements published, not by lowering what they asked for.
+      <!-- done 2026-08-04 — both superseded criteria are left in place, glyphed
+      `[-]`, with their measured shortfall stated (22 of 223, not 100 %) rather
+      than deleted or quietly re-worded. Each carries the reason it was
+      re-chartered and a pointer to the roadmap that inherits it. The council's
+      own strongest objection to this move — "your successor's JUSTIFIED category
+      is a trapdoor; an agent will mark gates `allowEmpty` with boilerplate to
+      dodge conversion work" — is carried into the successor as an explicit
+      audit rule rather than left as a known hole. -->
 - [x] Net-zero new governance layers: every change extends an existing gate,
       test, workflow, or config. Any exception names what it retires.
       <!-- done — no new gate script, no new workflow, no new CI job, no second
