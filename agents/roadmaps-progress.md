@@ -6,7 +6,7 @@
 
 ## Overall
 
-**92 / 230 steps done · 40%**
+**92 / 231 steps done · 40%**
 
 ```text
 ████████████████░░░░░░░░░░░░░░░░░░░░░░░░   40%
@@ -23,7 +23,7 @@
 | 5 | [road-to-gates-that-can-fail.md](roadmaps/road-to-gates-that-can-fail.md) | 7 | 27 | 2 | 24 | 1 | 0 | 0 | █████████░ 92% |
 | 6 | [road-to-maintainer-bus-factor.md](roadmaps/road-to-maintainer-bus-factor.md) | 4 | 12 | 5 | 7 | 0 | 0 | [1](#blockers-road-to-maintainer-bus-factor) | ██████░░░░ 58% |
 | 7 | [road-to-orchestration-scope-decision.md](roadmaps/road-to-orchestration-scope-decision.md) | 4 | 10 | 6 | 4 | 0 | 0 | [1](#blockers-road-to-orchestration-scope-decision) | ████░░░░░░ 40% |
-| 8 | [road-to-plan-governance-gates.md](roadmaps/road-to-plan-governance-gates.md) | 8 | 48 | 48 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+| 8 | [road-to-plan-governance-gates.md](roadmaps/road-to-plan-governance-gates.md) | 8 | 49 | 49 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 9 | [road-to-routing-correctness.md](roadmaps/road-to-routing-correctness.md) | 4 | 15 | 15 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 10 | [road-to-scale-history-bench-run.md](roadmaps/road-to-scale-history-bench-run.md) | 1 | 2 | 2 | 0 | 0 | 0 | [1](#blockers-road-to-scale-history-bench-run) | ░░░░░░░░░░ 0% |
 | 11 | [road-to-solution-minimalism.md](roadmaps/road-to-solution-minimalism.md) | 4 | 36 | 12 | 23 | 0 | 1 | 0 | ███████░░░ 66% |
@@ -156,7 +156,7 @@ _1 blocker resolved._
 
 ### [road-to-plan-governance-gates.md](roadmaps/road-to-plan-governance-gates.md)
 
-**Plan Governance Gates — confidence gate, plan-risk review, completion review** — 0 / 48 done (0%)
+**Plan Governance Gates — confidence gate, plan-risk review, completion review** — 0 / 49 done (0%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
@@ -165,7 +165,7 @@ _1 blocker resolved._
 | 3 | Wire Gate C surfaces | ⬜ not started | 7 | 0 | 0 | 0 | 0% |
 | 4 | R1/R2 schemas + deterministic validators | ⬜ not started | 6 | 0 | 0 | 0 | 0% |
 | 5 | Wire Gate R1 | ⬜ not started | 6 | 0 | 0 | 0 | 0% |
-| 6 | Wire Gate R2 | ⬜ not started | 6 | 0 | 0 | 0 | 0% |
+| 6 | Wire Gate R2 | ⬜ not started | 7 | 0 | 0 | 0 | 0% |
 | 7 | Pre-registered measurement | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
 | 8 | Projections + docs | ⬜ not started | 12 | 0 | 0 | 0 | 0% |
 
