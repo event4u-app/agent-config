@@ -80,8 +80,27 @@ export function annotatedKeys(metricsText: string): Set<string> {
     return keys;
 }
 
-function ask(rl: readline.Interface, q: string): Promise<string> {
-    return new Promise((resolve) => rl.question(q, resolve));
+/**
+ * Ask one question. Resolves `null` on EOF (closed stdin) instead of hanging:
+ * `rl.question`'s callback never fires when the stream ends, so a piped or
+ * CI invocation would otherwise block forever.
+ */
+function ask(rl: readline.Interface, q: string): Promise<string | null> {
+    return new Promise((resolve) => {
+        let settled = false;
+        const onClose = (): void => {
+            if (!settled) {
+                settled = true;
+                resolve(null);
+            }
+        };
+        rl.once('close', onClose);
+        rl.question(q, (answer) => {
+            settled = true;
+            rl.removeListener('close', onClose);
+            resolve(answer);
+        });
+    });
 }
 
 export async function main(argv?: readonly string[]): Promise<number> {
@@ -122,14 +141,35 @@ export async function main(argv?: readonly string[]): Promise<number> {
         return 0;
     }
 
+    // Interactive-only by construction: the annotation pass is a human quarterly
+    // cadence, so a non-TTY invocation is refused up front with the read-only
+    // alternative rather than left to block on a prompt nobody can answer.
+    if (process.stdin.isTTY !== true) {
+        process.stderr.write(
+            '❌  annotate_r1_outcomes needs an interactive terminal (stdin is not a TTY).\n' +
+                '    Use --list for the read-only pending inventory.\n',
+        );
+        return 2;
+    }
+
     const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
     try {
         for (const r of pending) {
             process.stdout.write(`\n${r.file} #${String(r.rank)}\n  risk: ${r.item}\n  mitigation: ${r.mitigation}\n`);
             let answer = '';
+            let eof = false;
             while (!OUTCOMES.has(answer)) {
-                answer = (await ask(rl, '  outcome [helped/fired/unknown, s=skip]: ')).trim().toLowerCase();
+                const raw = await ask(rl, '  outcome [helped/fired/unknown, s=skip]: ');
+                if (raw === null) {
+                    eof = true;
+                    break;
+                }
+                answer = raw.trim().toLowerCase();
                 if (answer === 's' || answer === 'skip') break;
+            }
+            if (eof) {
+                process.stdout.write('\n⚠️  stdin closed — ending the annotation pass early.\n');
+                break;
             }
             if (!OUTCOMES.has(answer)) continue;
             const event = {
