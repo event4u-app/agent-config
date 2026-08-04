@@ -10,7 +10,10 @@
  *
  * What it checks, given the current branch state (`--repo`, `--base`):
  *   - a completion-review artifact (`*.findings.md` under `--artifact-dir`)
- *     exists for the current HEAD sha, OR a valid skip declaration covers it;
+ *     exists for the current REVIEW-SCOPE HASH, OR a valid skip declaration
+ *     covers it;
+ *   - the artifact carries a §5 context manifest (a relevant artifact without
+ *     one is unverifiable → `missing-manifest`);
  *   - every finding row is terminal (`fixed` / `accepted-risk` / `deferred`)
  *     with the required Reason/Ref content;
  *   - severity rows are sorted descending (critical > high > medium > low);
@@ -18,13 +21,16 @@
  *     artifact is an ancestor of every referenced fix commit (§2.5 — the
  *     first-add commit is what counts, so backdating is detected too).
  *
- * The §5 context-manifest HTML comment is TOLERATED in the header but not
- * validated here — hash re-derivation is a separate CI step.
+ * The review binds to the review-SCOPE HASH, never to a commit sha. That
+ * definition is owned by `dispatch_r2_reviewer.ts` and imported here so the
+ * dispatcher and the validator can never diverge. Manifest hash
+ * re-derivation stays a separate step (`dispatch_r2_reviewer --verify`).
  *
- * Exit codes (contract §6): 0 = pass, 1 = policy violation,
- * 2 = internal error (missing base ref, git failure — the CALLER applies
- * degraded advisory mode). With `--advisory` (Stage-A window, §2) violations
- * are reported as warnings and the exit is ALWAYS 0.
+ * Exit codes (contract §6): 0 = pass, 1 = policy violation (including a DEAD
+ * SCAN SCOPE — a gate that read nothing has not passed), 2 = internal error
+ * (missing base ref, git failure — the CALLER applies degraded advisory
+ * mode). With `--advisory` (Stage-A window, §2) violations are reported as
+ * warnings and the exit is ALWAYS 0.
  */
 
 import { execFileSync } from 'node:child_process';
@@ -32,7 +38,15 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
-import { assertScanned } from './_lib/scan_scope.js';
+import { DeadScopeError, assertScanned } from './_lib/scan_scope.js';
+import {
+    computeReviewScope,
+    deriveSlug,
+    parseManifest,
+    reviewScopeNameOnlyArgs,
+    sanitizeSlug,
+    type ParsedManifest,
+} from './dispatch_r2_reviewer.js';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -46,18 +60,21 @@ export interface Violation {
 
 export interface Marker {
     reviewed: string;
+    /** The review-scope hash the review is bound to (§2.1) — 64 hex chars. */
+    scope: string;
+    /** Branch-head sha at review time. Provenance only, NEVER compared. */
     diffSha: string;
     reviewer: string;
 }
 
 export interface HonestNull {
-    sha: string;
+    scope: string;
     reviewed: string;
 }
 
 export interface SkipDeclaration {
     reason: string;
-    sha: string; // full/abbreviated sha or the literal 'none'
+    scope: string; // 64-hex scope hash or the literal 'none' (empty scope only)
     declared: string;
 }
 
@@ -80,13 +97,81 @@ export interface ParsedArtifact {
     rows: FindingRow[];
     /** Lines that start like honest-null / skip but miss the exact grammar. */
     malformedLines: string[];
+    /** The §5 context manifest, when present and parseable. */
+    manifest: ParsedManifest | null;
 }
 
 // ---------------------------------------------------------------------------
 // Pure grammar functions (exported for unit tests)
 // ---------------------------------------------------------------------------
 
-const CODE_EXTENSIONS = new Set(['ts', 'tsx', 'js', 'mjs', 'cjs', 'py', 'php', 'go', 'rs', 'sh']);
+// Contract §2.4. Deliberately broad: the suite installs into consumer repos of
+// every stack, and a stack whose extension is missing here would classify a
+// code-bearing completion as "no code surface" and accept a skip declaration.
+const CODE_EXTENSIONS = new Set([
+    // JS / TS
+    'ts',
+    'tsx',
+    'js',
+    'jsx',
+    'mjs',
+    'cjs',
+    'mts',
+    'cts',
+    'vue',
+    'svelte',
+    // Python / Ruby / PHP / Perl
+    'py',
+    'pyi',
+    'rb',
+    'rake',
+    'php',
+    'pl',
+    'pm',
+    // JVM / .NET
+    'java',
+    'kt',
+    'kts',
+    'scala',
+    'groovy',
+    'cs',
+    'fs',
+    // Native
+    'c',
+    'h',
+    'cc',
+    'cpp',
+    'cxx',
+    'hpp',
+    'hh',
+    'm',
+    'mm',
+    'swift',
+    'go',
+    'rs',
+    'zig',
+    // Shell / scripting
+    'sh',
+    'bash',
+    'zsh',
+    'fish',
+    'ps1',
+    'lua',
+    // Data / templates that carry executable behaviour
+    'sql',
+    'ex',
+    'exs',
+    'erl',
+    'dart',
+    'r',
+]);
+
+/**
+ * Template extensions whose *inner* extension decides. `foo.blade.php` is
+ * already caught by `php`; `foo.html.twig` / `foo.j2` are not, so they are
+ * listed as whole suffixes.
+ */
+const CODE_SUFFIXES = ['.blade.php', '.html.twig', '.twig', '.j2', '.erb', '.hbs'];
 
 export const SEVERITY_RANK: Readonly<Record<string, number>> = {
     critical: 4,
@@ -110,16 +195,19 @@ export function isCodePath(p: string): boolean {
     if (norm.startsWith('src/scripts/')) {
         return true;
     }
-    const base = norm.slice(norm.lastIndexOf('/') + 1);
+    const base = norm.slice(norm.lastIndexOf('/') + 1).toLowerCase();
+    if (CODE_SUFFIXES.some((s) => base.endsWith(s))) {
+        return true;
+    }
     const dot = base.lastIndexOf('.');
     if (dot <= 0) {
         return false;
     }
-    return CODE_EXTENSIONS.has(base.slice(dot + 1).toLowerCase());
+    return CODE_EXTENSIONS.has(base.slice(dot + 1));
 }
 
 const MARKER_RE =
-    /^<!--\s*completion-review:\s*v1\s*\|\s*reviewed:\s*(\d{4}-\d{2}-\d{2})\s*\|\s*diff:\s*([0-9a-fA-F]{7,40})\s*\|\s*reviewer:\s*(\S(?:[^|>]*[^|>\s])?)\s*-->$/;
+    /^<!--\s*completion-review:\s*v1\s*\|\s*reviewed:\s*(\d{4}-\d{2}-\d{2})\s*\|\s*scope:\s*([0-9a-fA-F]{64})\s*\|\s*diff:\s*([0-9a-fA-F]{7,40})\s*\|\s*reviewer:\s*(\S(?:[^|>]*[^|>\s])?)\s*-->$/;
 
 export function parseMarkerLine(line: string): Marker | null {
     const m = MARKER_RE.exec(line.trim());
@@ -128,23 +216,24 @@ export function parseMarkerLine(line: string): Marker | null {
     }
     return {
         reviewed: m[1] as string,
-        diffSha: (m[2] as string).toLowerCase(),
-        reviewer: (m[3] as string).trim(),
+        scope: (m[2] as string).toLowerCase(),
+        diffSha: (m[3] as string).toLowerCase(),
+        reviewer: (m[4] as string).trim(),
     };
 }
 
-const HONEST_NULL_RE = /^\*\*Honest-null:\*\* 0 findings, diff ([0-9a-fA-F]{7,40}), reviewed (\d{4}-\d{2}-\d{2})$/;
+const HONEST_NULL_RE = /^\*\*Honest-null:\*\* 0 findings, scope ([0-9a-fA-F]{64}), reviewed (\d{4}-\d{2}-\d{2})$/;
 
 export function parseHonestNull(line: string): HonestNull | null {
     const m = HONEST_NULL_RE.exec(line.trim());
     if (!m) {
         return null;
     }
-    return { sha: (m[1] as string).toLowerCase(), reviewed: m[2] as string };
+    return { scope: (m[1] as string).toLowerCase(), reviewed: m[2] as string };
 }
 
 const SKIP_RE =
-    /^\*\*Skipped:\*\* no code surface for this completion — (.+), diff ([0-9a-fA-F]{7,40}|none), declared (\d{4}-\d{2}-\d{2})$/;
+    /^\*\*Skipped:\*\* no code surface for this completion — (.+), scope ([0-9a-fA-F]{64}|none), declared (\d{4}-\d{2}-\d{2})$/;
 
 export function parseSkipDeclaration(line: string): SkipDeclaration | null {
     const m = SKIP_RE.exec(line.trim());
@@ -155,7 +244,7 @@ export function parseSkipDeclaration(line: string): SkipDeclaration | null {
     if (reason === '') {
         return null;
     }
-    return { reason, sha: (m[2] as string).toLowerCase(), declared: m[3] as string };
+    return { reason, scope: (m[2] as string).toLowerCase(), declared: m[3] as string };
 }
 
 /** First 7-40 char hex token in a Reason/Ref cell — the commit-ish, if any. */
@@ -164,11 +253,30 @@ export function extractFixRef(reasonRef: string): string | null {
     return m ? (m[0] as string).toLowerCase() : null;
 }
 
-/** Full-or-abbreviated sha match against the current HEAD sha. */
-export function shaMatches(token: string, headSha: string): boolean {
-    const t = token.toLowerCase();
-    const h = headSha.toLowerCase();
-    return t === h || (t.length >= 7 && h.startsWith(t));
+/**
+ * Does a leftover artifact in the reviews directory belong to THIS branch?
+ *
+ * Only own artifacts may produce violations. Without this, one malformed
+ * legacy artifact in the tracked reviews directory would block every
+ * subsequent PR (directory-wide poisoning). Containment is allowed in both
+ * directions so a roadmap-slug artifact (`road-to-x.findings.md`) still
+ * counts as own on branch `feat/road-to-x`; a 4-char floor keeps a stub like
+ * `feat` from matching everything.
+ */
+export function isOwnArtifactSlug(artifactSlug: string, branchSlug: string): boolean {
+    const a = artifactSlug.toLowerCase();
+    const b = branchSlug.toLowerCase();
+    if (a === '' || b === '') {
+        return false;
+    }
+    if (a === b) {
+        return true;
+    }
+    const shorter = a.length <= b.length ? a : b;
+    if (shorter.length < 4) {
+        return false;
+    }
+    return a.includes(b) || b.includes(a);
 }
 
 function splitTableRow(line: string): string[] {
@@ -190,6 +298,7 @@ export function parseArtifact(text: string): ParsedArtifact {
         skip: null,
         rows: [],
         malformedLines: [],
+        manifest: parseManifest(text),
     };
     const lines = text.split(/\r?\n/);
     let inFence = false;
@@ -349,29 +458,65 @@ function gitOut(repo: string, args: readonly string[]): string {
 interface ArtifactFile {
     file: string; // absolute path
     art: ParsedArtifact;
+    /** `<slug>.findings.md` → `<slug>`, sanitized. */
+    slug: string;
+    /** This branch's artifact (see {@link isOwnArtifactSlug}). */
+    own: boolean;
 }
 
 interface EvalInput {
     repo: string;
     head: string;
+    /** sha256 of the review-scope diff — what the review binds to (§2.1). */
+    scopeHash: string;
+    /** The review scope is empty — the only state a `scope none` skip covers. */
+    scopeEmpty: boolean;
     changed: readonly string[];
     artifacts: readonly ArtifactFile[];
     artifactDirLabel: string;
 }
 
+/** Does this artifact claim the CURRENT review scope? */
+function claimsScope(art: ParsedArtifact, scopeHash: string, scopeEmpty: boolean): boolean {
+    if (art.marker !== null && art.marker.scope === scopeHash) {
+        return true;
+    }
+    if (art.honestNull !== null && art.honestNull.scope === scopeHash) {
+        return true;
+    }
+    if (art.skip !== null) {
+        // `scope none` is valid ONLY for a genuinely empty review scope.
+        // Without that condition one committed `scope none` skip would satisfy
+        // the gate for every later diff, forever.
+        return art.skip.scope === 'none' ? scopeEmpty : art.skip.scope === scopeHash;
+    }
+    return false;
+}
+
 function evaluate(input: EvalInput): Violation[] {
-    const { repo, head, changed, artifacts } = input;
+    const { repo, head, scopeHash, scopeEmpty, changed, artifacts } = input;
     const violations: Violation[] = [];
     const codePaths = changed.filter(isCodePath);
 
-    for (const { file, art } of artifacts) {
+    const relevant = artifacts.filter(({ art }) => claimsScope(art, scopeHash, scopeEmpty));
+    const relevantFiles = new Set(relevant.map(({ file }) => file));
+
+    // Grammar violations are reported ONLY for artifacts that are this
+    // branch's (own slug) or that claim the current scope. A foreign or
+    // legacy artifact sitting in the tracked reviews directory must not be
+    // able to block an unrelated PR — that is directory-wide poisoning.
+    for (const { file, art, own } of artifacts) {
+        if (!own && !relevantFiles.has(file)) {
+            continue;
+        }
         if (art.markerMalformed) {
             violations.push({
                 kind: 'bad-marker',
                 file,
                 detail:
                     'completion-review header marker malformed — expected ' +
-                    '`<!-- completion-review: v1 | reviewed: YYYY-MM-DD | diff: <sha> | reviewer: <id> -->`',
+                    '`<!-- completion-review: v1 | reviewed: YYYY-MM-DD | scope: <64-hex scope hash> | ' +
+                    'diff: <sha> | reviewer: <id> -->`',
             });
         }
         for (const detail of art.malformedLines) {
@@ -379,15 +524,22 @@ function evaluate(input: EvalInput): Violation[] {
         }
     }
 
-    const relevantSkips = artifacts.filter(
-        ({ art }) => art.skip !== null && (art.skip.sha === 'none' || shaMatches(art.skip.sha, head)),
-    );
-    const relevantFindings = artifacts.filter(
-        ({ art }) => art.skip === null && art.marker !== null && shaMatches(art.marker.diffSha, head),
-    );
+    for (const { file, art } of relevant) {
+        const carriesReview = art.marker !== null || art.rows.length > 0 || art.honestNull !== null;
 
-    for (const { file } of relevantSkips) {
-        if (codePaths.length > 0) {
+        // A skip and a findings table cannot both hold. Reported, and the
+        // table is still validated — a skip line must never suppress rows.
+        if (art.skip !== null && art.rows.length > 0) {
+            violations.push({
+                kind: 'bad-value',
+                file,
+                detail:
+                    'contradictory artifact: a `**Skipped:**` declaration and a findings table are both ' +
+                    'present — a completion is either skip-eligible (no code surface) or reviewed, never both',
+            });
+        }
+
+        if (art.skip !== null && codePaths.length > 0) {
             violations.push({
                 kind: 'skip-on-code-diff',
                 file,
@@ -396,57 +548,77 @@ function evaluate(input: EvalInput): Violation[] {
                     `(e.g. ${codePaths.slice(0, 3).join(', ')}) — a code diff requires a findings artifact`,
             });
         }
-    }
 
-    for (const { file, art } of relevantFindings) {
-        if (art.honestNull !== null) {
-            if (!shaMatches(art.honestNull.sha, head)) {
-                violations.push({
-                    kind: 'stale-review',
-                    file,
-                    detail: `honest-null declares diff ${art.honestNull.sha} but current HEAD is ${head}`,
-                });
-            }
-            continue;
+        // §5: the manifest is verification, not self-attestation — an artifact
+        // without one is unverifiable, so its absence is a policy violation
+        // rather than something to tolerate. A bare skip declaration carries
+        // no reviewer dispatch and needs none.
+        if (carriesReview && art.manifest === null) {
+            violations.push({
+                kind: 'missing-manifest',
+                file,
+                detail:
+                    'findings artifact carries no parseable `context-manifest: v1` block — the §5 manifest ' +
+                    'is mandatory (verification, not self-attestation); re-dispatch via dispatch_r2_reviewer',
+            });
+        } else if (carriesReview && art.manifest !== null && art.manifest.scope_hash !== scopeHash) {
+            violations.push({
+                kind: 'stale-review',
+                file,
+                detail:
+                    `manifest records scope_hash ${art.manifest.scope_hash} but the current review scope is ` +
+                    `${scopeHash} — the header and the manifest disagree (contract §5)`,
+            });
         }
-        if (art.rows.length === 0) {
+
+        if (art.honestNull !== null && art.marker !== null && art.honestNull.scope !== scopeHash) {
+            violations.push({
+                kind: 'stale-review',
+                file,
+                detail: `honest-null declares scope ${art.honestNull.scope} but the current review scope is ${scopeHash}`,
+            });
+        }
+
+        if (art.rows.length > 0) {
+            for (const v of validateFindingRows(art.rows)) {
+                violations.push({ ...v, file });
+            }
+            violations.push(...checkFindingsBeforeFixes(repo, file, art.rows));
+        } else if (art.honestNull === null && art.skip === null) {
             violations.push({
                 kind: 'bad-value',
                 file,
                 detail: 'artifact has neither a findings table nor an honest-null / skip declaration line',
             });
-            continue;
         }
-        for (const v of validateFindingRows(art.rows)) {
-            violations.push({ ...v, file });
-        }
-        violations.push(...checkFindingsBeforeFixes(repo, file, art.rows));
     }
 
-    if (relevantSkips.length === 0 && relevantFindings.length === 0) {
-        const parseable = artifacts.filter(
+    if (relevant.length === 0) {
+        const ownArtifacts = artifacts.filter(({ own }) => own);
+        const ownParseable = ownArtifacts.filter(
             ({ art }) => art.marker !== null || art.honestNull !== null || art.skip !== null,
         );
-        const anyBadMarker = artifacts.some(({ art }) => art.markerMalformed);
-        if (parseable.length > 0) {
-            const shas = parseable.map(
-                ({ art }) => art.marker?.diffSha ?? art.skip?.sha ?? art.honestNull?.sha ?? '?',
+        const anyOwnBadMarker = ownArtifacts.some(({ art }) => art.markerMalformed);
+        if (ownParseable.length > 0) {
+            const scopes = ownParseable.map(
+                ({ art }) => art.marker?.scope ?? art.skip?.scope ?? art.honestNull?.scope ?? '?',
             );
             violations.push({
                 kind: 'stale-review',
-                file: (parseable[0] as ArtifactFile).file,
+                file: (ownParseable[0] as ArtifactFile).file,
                 detail:
-                    `no artifact matches current HEAD ${head} — found artifact(s) for diff sha(s): ` +
-                    `${shas.join(', ')}. A push after review forces re-review (contract §2.1).`,
+                    `no artifact matches the current review scope ${scopeHash} (head ${head}) — found ` +
+                    `artifact(s) for scope(s): ${scopes.join(', ')}. A change to the reviewed content forces ` +
+                    're-review (contract §2.1).',
             });
-        } else if (!anyBadMarker) {
+        } else if (!anyOwnBadMarker) {
             violations.push({
                 kind: 'missing-artifact',
                 file: null,
                 detail:
-                    `no completion-review artifact for HEAD ${head} under ${input.artifactDirLabel} ` +
-                    `and no valid skip declaration (diff has ${codePaths.length} code path(s) of ` +
-                    `${changed.length} changed file(s))`,
+                    `no completion-review artifact for review scope ${scopeHash} (head ${head}) under ` +
+                    `${input.artifactDirLabel} and no valid skip declaration (diff has ${codePaths.length} ` +
+                    `code path(s) of ${changed.length} changed file(s))`,
             });
         }
     }
@@ -627,6 +799,50 @@ function report(args: Args, violations: readonly Violation[], passNote: string |
     return args.advisory ? 0 : 1;
 }
 
+/** Is `rel` a tracked directory in `ref`? Absolute paths are never tracked. */
+function isTrackedTree(repo: string, ref: string, rel: string): boolean {
+    if (path.isAbsolute(rel)) {
+        return false;
+    }
+    return gitTry(repo, ['ls-tree', '-d', '--name-only', ref, '--', rel]).stdout.trim() !== '';
+}
+
+/**
+ * When is an unresolvable artefact root NOT a dead scope?
+ *
+ * The dead-scope assertion exists to catch a MOVED root (the ADR-051 class:
+ * fourteen gates kept scanning a path a migration had renamed, and reported
+ * green). Two states are legitimately empty instead:
+ *   - the review scope is empty — there is nothing to review at all;
+ *   - the root is absent AND was never tracked — a repo with no review corpus
+ *     yet. That state still blocks, via the actionable `missing-artifact`.
+ *
+ * A root that IS tracked but no longer resolves on disk is the real defect and
+ * gets no exemption.
+ *
+ * @returns the `allowEmpty` option to spread, or `null` to let it throw.
+ */
+function deadScopeExemption(
+    repo: string,
+    args: Args,
+    state: { scopeEmpty: boolean; artifactRootResolved: boolean },
+): { allowEmpty: string } | null {
+    if (state.scopeEmpty) {
+        return { allowEmpty: 'review scope is empty — no reviewable diff vs base' };
+    }
+    if (state.artifactRootResolved) {
+        return null; // scanned >= 1 anyway; the assertion will not fire
+    }
+    const tracked =
+        isTrackedTree(repo, args.base, args.artifactDir) || isTrackedTree(repo, 'HEAD', args.artifactDir);
+    if (tracked) {
+        return null; // tracked root that no longer resolves → dead scope
+    }
+    return {
+        allowEmpty: `artefact root '${args.artifactDir}' is absent and untracked — no review corpus in this repo yet`,
+    };
+}
+
 function run(args: Args): number {
     const repo = path.resolve(args.repo);
 
@@ -635,15 +851,23 @@ function run(args: Args): number {
         throw new InternalError(`base ref '${args.base}' not found in ${repo}`);
     }
     const head = gitOut(repo, ['rev-parse', 'HEAD']).trim().toLowerCase();
-    const changed = gitOut(repo, ['diff', '--name-only', `${args.base}...HEAD`])
+    // The REVIEW SCOPE excludes the review artefacts themselves, so committing
+    // the findings artifact (§2.5) cannot invalidate the review it records.
+    const scope = computeReviewScope((a) => gitOut(repo, a), args.base);
+    const scopeHash = scope.hash;
+    const scopeEmpty = scope.empty;
+    const changed = gitOut(repo, reviewScopeNameOnlyArgs(args.base))
         .split('\n')
         .map((l) => l.trim())
         .filter(Boolean);
+    const branchSlug = deriveSlug((a) => gitOut(repo, a));
 
     const artifactDirAbs = path.isAbsolute(args.artifactDir) ? args.artifactDir : path.join(repo, args.artifactDir);
+    let artifactRootResolved = false;
     let artifactPaths: string[] = [];
     try {
         if (fs.statSync(artifactDirAbs).isDirectory()) {
+            artifactRootResolved = true;
             artifactPaths = fs
                 .readdirSync(artifactDirAbs)
                 .filter((n) => n.endsWith('.findings.md'))
@@ -651,25 +875,49 @@ function run(args: Args): number {
                 .map((n) => path.join(artifactDirAbs, n));
         }
     } catch {
-        // Missing artifact dir = zero artifacts; the diff evaluation itself
-        // still counts, so the gate never reports a dead scope silently.
+        // Root missing → handled by the dead-scope check below, never silently.
     }
 
-    // Gate-coverage contract: `scanned:` is emitted BEFORE the pass/fail
-    // branch (coverage and verdict are different questions). N counts the
-    // artifacts inspected + 1 for the current-diff evaluation, so N >= 1
-    // whenever the gate evaluates at all.
-    const scanned = artifactPaths.length + 1;
+    // Gate-coverage contract: `scanned:` is emitted BEFORE the pass/fail branch
+    // (coverage and verdict are different questions). N counts the artefacts
+    // inspected plus 1 for the diff evaluation — and that +1 is counted ONLY
+    // when the artefact root actually resolves, so a moved/renamed root drops
+    // N to 0 instead of hiding behind a floor that cannot fail.
+    const scanned = artifactPaths.length + (artifactRootResolved ? 1 : 0);
     process.stdout.write(`scanned: ${scanned}\n`);
-    assertScanned({
-        gate: 'check_completion_review',
-        scanned,
-        units: 'review artefact(s) + diff evaluation',
-        roots: ['agents/evidence/reviews'],
-    });
+    try {
+        assertScanned({
+            gate: 'check_completion_review',
+            scanned,
+            units: 'review artefact(s) + diff evaluation',
+            roots: [args.artifactDir],
+            ...(deadScopeExemption(repo, args, { scopeEmpty, artifactRootResolved }) ?? {}),
+        });
+    } catch (exc) {
+        if (!(exc instanceof DeadScopeError)) {
+            throw exc;
+        }
+        // Contract §6 carve-out: a dead scan scope is a POLICY violation, not
+        // an internal error. Mapping it to exit 2 would make every caller
+        // warn-and-allow, silently degrading the gate to advisory the moment
+        // the artefact root moves.
+        return report(
+            args,
+            [
+                {
+                    kind: 'dead-scan-scope',
+                    file: null,
+                    detail:
+                        `${exc.message} (artefact root '${args.artifactDir}' does not resolve under ${repo}; ` +
+                        'create it or repoint --artifact-dir — a gate that read nothing has not passed)',
+                },
+            ],
+            null,
+        );
+    }
 
-    if (changed.length === 0) {
-        return report(args, [], `✅  No changes vs ${args.base} — nothing to review.\n`);
+    if (scopeEmpty) {
+        return report(args, [], `✅  No reviewable changes vs ${args.base} — nothing to review.\n`);
     }
 
     const artifacts: ArtifactFile[] = artifactPaths.map((file) => {
@@ -679,12 +927,15 @@ function run(args: Args): number {
         } catch (exc) {
             throw new InternalError(`unreadable artifact ${file}: ${exc instanceof Error ? exc.message : String(exc)}`);
         }
-        return { file, art: parseArtifact(text) };
+        const slug = sanitizeSlug(path.basename(file).replace(/\.findings\.md$/, ''));
+        return { file, art: parseArtifact(text), slug, own: isOwnArtifactSlug(slug, branchSlug) };
     });
 
     const violations = evaluate({
         repo,
         head,
+        scopeHash,
+        scopeEmpty,
         changed,
         artifacts,
         artifactDirLabel: args.artifactDir,

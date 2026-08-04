@@ -5,8 +5,10 @@
 // worktree. Covers: package + skeleton creation with recomputed sha256
 // hashes, the exact §5 manifest block shape, refuse-overwrite without
 // --force, empty-diff exit 1, --verify pass/fail (stale hash named),
-// byte-identical determinism under a frozen --now, slug derivation from the
-// branch name, and missing-base-ref exit 2.
+// --verify still passing AFTER the artifact is committed (the review-scope
+// binding — a head-sha binding could not), a missing manifest as a POLICY
+// violation, byte-identical determinism under a frozen --now, slug derivation
+// from the branch name, and missing-base-ref exit 2.
 import { spawnSync, type SpawnSyncReturns } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import * as fs from 'node:fs';
@@ -16,10 +18,14 @@ import { fileURLToPath } from 'node:url';
 import { afterAll, describe, expect, it } from 'vitest';
 
 import {
+    REVIEW_SCOPE_EXCLUDE,
+    computeReviewScope,
     deriveManifest,
     expectedHashes,
     extractAcceptanceCriteria,
+    isEmptyScope,
     parseManifest,
+    reviewScopeDiffArgs,
     sanitizeSlug,
 } from '../../src/scripts/dispatch_r2_reviewer.js';
 
@@ -78,6 +84,11 @@ function write(dir: string, rel: string, body: string): void {
     fs.writeFileSync(fp, body, 'utf-8');
 }
 
+/** The review-scope diff body the dispatcher hands the reviewer. */
+function scopeDiff(repo: string, base = 'main'): string {
+    return git(repo, ...reviewScopeDiffArgs(base));
+}
+
 /** Fresh git repo: main with roadmap + a.txt, then a feature branch with one commit. */
 function initRepo(opts: { branch?: boolean } = {}): string {
     const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'r2-dispatch-'));
@@ -121,7 +132,7 @@ describe('dispatch_r2_reviewer — package + skeleton', () => {
         const out = JSON.parse(res.stdout) as {
             slug: string;
             head_sha: string;
-            hashes: { diff_hash: string; roadmap_hash: string; ac_hash: string };
+            hashes: { scope_hash: string; roadmap_hash: string; ac_hash: string };
             files: Record<string, string | null>;
         };
 
@@ -130,10 +141,10 @@ describe('dispatch_r2_reviewer — package + skeleton', () => {
         expect(out.head_sha).toBe(git(repo, 'rev-parse', 'HEAD').trim());
 
         // Recompute every hash independently in the test.
-        const diff = git(repo, 'diff', 'main...HEAD');
+        const diff = scopeDiff(repo);
         const ac = extractAcceptanceCriteria(ROADMAP);
         expect(ac).toBe(['## Acceptance Criteria', '', '- AC one', '- AC two', ''].join('\n'));
-        expect(out.hashes.diff_hash).toBe(sha256(diff));
+        expect(out.hashes.scope_hash).toBe(sha256(diff));
         expect(out.hashes.roadmap_hash).toBe(sha256(ROADMAP));
         expect(out.hashes.ac_hash).toBe(sha256(ac));
 
@@ -157,20 +168,21 @@ describe('dispatch_r2_reviewer — package + skeleton', () => {
         expect(res.status, res.stderr).toBe(0);
 
         const head = git(repo, 'rev-parse', 'HEAD').trim();
-        const diff = git(repo, 'diff', 'main...HEAD');
+        const diff = scopeDiff(repo);
         const ac = extractAcceptanceCriteria(ROADMAP);
         const body = fs.readFileSync(path.join(repo, OUT, `${SLUG}.findings.md`), 'utf-8');
 
         expect(body.startsWith(`# Findings: ${SLUG}\n`)).toBe(true);
         expect(body).toContain(
-            `<!-- completion-review: v1 | reviewed: 2026-08-04 | diff: ${head} | reviewer: r2-fresh-subagent-${SLUG} -->`,
+            `<!-- completion-review: v1 | reviewed: 2026-08-04 | scope: ${sha256(diff)} | diff: ${head} | ` +
+                `reviewer: r2-fresh-subagent-${SLUG} -->`,
         );
 
         const expectedManifest = [
             '<!-- context-manifest: v1',
             'inputs:',
             `  diff_sha: ${head}`,
-            `  diff_hash: ${sha256(diff)}`,
+            `  scope_hash: ${sha256(diff)}`,
             '  roadmap: agents/roadmaps/road-x.md',
             `  roadmap_hash: ${sha256(ROADMAP)}`,
             `  ac_hash: ${sha256(ac)}`,
@@ -182,7 +194,7 @@ describe('dispatch_r2_reviewer — package + skeleton', () => {
         expect(body).toContain(expectedManifest);
         expect(deriveManifest({
             diffSha: head,
-            diffHash: sha256(diff),
+            scopeHash: sha256(diff),
             roadmap: 'agents/roadmaps/road-x.md',
             roadmapHash: sha256(ROADMAP),
             acHash: sha256(ac),
@@ -190,7 +202,7 @@ describe('dispatch_r2_reviewer — package + skeleton', () => {
         })).toBe(expectedManifest);
         expect(parseManifest(body)).toEqual({
             diff_sha: head,
-            diff_hash: sha256(diff),
+            scope_hash: sha256(diff),
             roadmap: 'agents/roadmaps/road-x.md',
             roadmap_hash: sha256(ROADMAP),
             ac_hash: sha256(ac),
@@ -238,7 +250,7 @@ describe('dispatch_r2_reviewer — package + skeleton', () => {
 });
 
 describe('dispatch_r2_reviewer — --verify', () => {
-    it('verifies an untouched artifact, then fails after a new commit naming the stale hashes', () => {
+    it('verifies an untouched artifact, then fails after a new commit naming the stale hash', () => {
         const repo = initRepo();
         expect(run(dispatchArgs(repo)).status).toBe(0);
         const findings = path.join(repo, OUT, `${SLUG}.findings.md`);
@@ -247,7 +259,7 @@ describe('dispatch_r2_reviewer — --verify', () => {
         expect(pass.status, pass.stderr).toBe(0);
         expect(pass.stdout).toContain('✅ manifest verified');
 
-        // A push-after-review moves HEAD and the diff body → stale review.
+        // A push-after-review changes the reviewed content → stale review.
         write(repo, 'src/foo.ts', 'export const x = 2;\n');
         git(repo, 'add', '-A');
         git(repo, 'commit', '-qm', 'feat: bump');
@@ -255,19 +267,38 @@ describe('dispatch_r2_reviewer — --verify', () => {
         const fail = run(['--verify', findings, '--repo', repo, '--base', 'main']);
         expect(fail.status).toBe(1);
         expect(fail.stderr).toMatch(/manifest mismatch \(stale review\)/);
-        expect(fail.stderr).toContain('diff_sha');
-        expect(fail.stderr).toContain('diff_hash');
+        expect(fail.stderr).toContain('scope_hash');
         expect(fail.stderr).not.toContain('roadmap_hash');
     });
 
-    it('exits 2 when the findings file is missing or carries no manifest', () => {
+    it('still verifies AFTER the review artifact is committed (a head-sha binding could not)', () => {
+        const repo = initRepo();
+        expect(run(dispatchArgs(repo)).status).toBe(0);
+        const findings = path.join(repo, OUT, `${SLUG}.findings.md`);
+        const headBefore = git(repo, 'rev-parse', 'HEAD').trim();
+
+        // §2.5 requires the artifact to be committed, and CI only ever sees
+        // committed state — this commit moves HEAD past the recorded diff_sha.
+        git(repo, 'add', '-A');
+        git(repo, 'commit', '-qm', 'chore: commit the R2 findings artifact');
+        expect(git(repo, 'rev-parse', 'HEAD').trim()).not.toBe(headBefore);
+
+        const after = run(['--verify', findings, '--repo', repo, '--base', 'main']);
+        expect(after.status, after.stderr).toBe(0);
+        expect(after.stdout).toContain('✅ manifest verified');
+    });
+
+    it('exits 1 (policy) when the artifact carries no manifest, 2 only when the file is missing', () => {
         const repo = initRepo();
         const missing = run(['--verify', path.join(repo, 'nope.md'), '--repo', repo, '--base', 'main']);
         expect(missing.status).toBe(2);
 
+        // An artifact that exists but omits the manifest bypasses the whole
+        // verification layer if it is treated as an internal error (warn-and-allow).
         write(repo, 'no-manifest.md', '# Findings: x\nno manifest here\n');
         const unparsable = run(['--verify', path.join(repo, 'no-manifest.md'), '--repo', repo, '--base', 'main']);
-        expect(unparsable.status).toBe(2);
+        expect(unparsable.status).toBe(1);
+        expect(unparsable.stderr).toMatch(/Policy violation/);
         expect(unparsable.stderr).toMatch(/no context-manifest block/);
     });
 });
@@ -301,13 +332,57 @@ describe('dispatch_r2_reviewer — pure helpers', () => {
     });
 
     it('expectedHashes maps null roadmap/AC to none', () => {
-        const h = expectedHashes({ diffText: 'd', roadmapText: null, acText: null });
-        expect(h.diff_hash).toBe(sha256('d'));
+        const h = expectedHashes({ scopeDiffText: 'd', roadmapText: null, acText: null });
+        expect(h.scope_hash).toBe(sha256('d'));
         expect(h.roadmap_hash).toBe('none');
         expect(h.ac_hash).toBe('none');
     });
 
     it('extractAcceptanceCriteria returns empty string when the section is absent', () => {
         expect(extractAcceptanceCriteria('# X\n\n## Phase 1\n- [ ] a\n')).toBe('');
+    });
+
+    it('reviewScopeDiffArgs excludes the review artefacts from the reviewed scope', () => {
+        expect(reviewScopeDiffArgs('origin/main')).toEqual([
+            'diff',
+            'origin/main...HEAD',
+            '--',
+            ':/',
+            REVIEW_SCOPE_EXCLUDE,
+        ]);
+        expect(REVIEW_SCOPE_EXCLUDE).toContain('agents/evidence/reviews');
+    });
+
+    it('isEmptyScope treats whitespace-only diff output as empty', () => {
+        expect(isEmptyScope('')).toBe(true);
+        expect(isEmptyScope('\n  \n')).toBe(true);
+        expect(isEmptyScope('diff --git a/x b/x\n')).toBe(false);
+    });
+});
+
+describe('dispatch_r2_reviewer — review scope', () => {
+    it('a commit that only touches the reviews directory leaves the scope hash unchanged', () => {
+        const repo = initRepo();
+        const runGit = (a: readonly string[]): string => git(repo, ...a);
+        const before = computeReviewScope(runGit, 'main');
+
+        write(repo, path.join(OUT, 'anything.findings.md'), '# Findings\n');
+        git(repo, 'add', '-A');
+        git(repo, 'commit', '-qm', 'chore: add a review artifact');
+
+        const after = computeReviewScope(runGit, 'main');
+        expect(after.hash).toBe(before.hash);
+        expect(after.empty).toBe(false);
+        // …while the RAW diff did change, which is exactly why it cannot bind.
+        expect(sha256(git(repo, 'diff', 'main...HEAD'))).not.toBe(before.hash);
+    });
+
+    it('a reviews-only branch has an empty review scope', () => {
+        const repo = initRepo({ branch: false });
+        git(repo, 'checkout', '-qb', 'reviews-only');
+        write(repo, path.join(OUT, 'x.findings.md'), '# Findings\n');
+        git(repo, 'add', '-A');
+        git(repo, 'commit', '-qm', 'chore: review only');
+        expect(computeReviewScope((a) => git(repo, ...a), 'main').empty).toBe(true);
     });
 });

@@ -6,11 +6,12 @@
 // (`main` takes --repo / --artifact-dir, so no cwd change is needed) with
 // `--format json` so each fixture can assert on its specific violation kind.
 //
-// Committed-artifact fixtures follow the real §2.5 workflow: the artifact
-// file is ADDED in a commit (the first-add commit is what ancestry counts),
-// and its final content — header `diff:` = current HEAD, rows terminal — is
-// a working-tree update on top (the file stays tracked; git log --diff-filter=A
-// still resolves the add commit).
+// Committed-artifact fixtures follow the real §2.5 workflow AND commit the
+// finalized artifact — which is the point of the review-SCOPE binding: the
+// scope excludes `agents/evidence/reviews`, so committing the findings file
+// (which §2.5 requires and CI can only see committed) cannot invalidate the
+// review it records. A head-sha binding made that unsatisfiable; there is no
+// "working-tree update on top" escape here.
 import { spawnSync } from 'node:child_process';
 import * as fs from 'node:fs';
 import * as os from 'node:os';
@@ -21,15 +22,16 @@ import { runInProc } from '../_lib/run_in_process.js';
 import {
     extractFixRef,
     isCodePath,
+    isOwnArtifactSlug,
     main,
     parseArtifact,
     parseHonestNull,
     parseMarkerLine,
     parseSkipDeclaration,
-    shaMatches,
     validateFindingRows,
     type Violation,
 } from '../../src/scripts/check_completion_review.js';
+import { computeReviewScope, deriveManifest } from '../../src/scripts/dispatch_r2_reviewer.js';
 
 const ART = 'agents/evidence/reviews/feat.findings.md';
 
@@ -61,6 +63,11 @@ function headSha(dir: string): string {
     return git(dir, 'rev-parse', 'HEAD').trim();
 }
 
+/** The review-scope hash the gate will derive — computed via the shared helper. */
+function scopeHash(dir: string, base = 'main'): string {
+    return computeReviewScope((a) => git(dir, ...a), base).hash;
+}
+
 const tmpDirs: string[] = [];
 afterEach(() => {
     for (const d of tmpDirs.splice(0)) {
@@ -82,17 +89,66 @@ function makeRepo(): string {
     return dir;
 }
 
-const marker = (sha: string): string =>
-    `<!-- completion-review: v1 | reviewed: 2026-08-04 | diff: ${sha} | reviewer: fresh-subagent-r2 -->`;
+/**
+ * The ADR-051 failure shape: the reviews root IS tracked in the base ref, but
+ * a later rename left the gate pointing at a path that no longer resolves.
+ */
+function movedRootRepo(): string {
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'ccr-moved-'));
+    tmpDirs.push(dir);
+    git(dir, 'init', '-q', '-b', 'main');
+    git(dir, 'config', 'user.email', 'gate@test.local');
+    git(dir, 'config', 'user.name', 'gate');
+    git(dir, 'config', 'commit.gpgsign', 'false');
+    write(dir, 'README.md', '# base\n');
+    write(dir, ART, 'placeholder\n');
+    commitAll(dir, 'base with a tracked reviews root');
+    git(dir, 'checkout', '-qb', 'feat');
+    git(dir, 'mv', 'agents/evidence/reviews', 'agents/evidence/renamed-reviews');
+    write(dir, 'src/feature.ts', 'export const y = 2;\n');
+    commitAll(dir, 'rename the reviews root and change code');
+    return dir;
+}
+
+const SCOPE_A = 'a'.repeat(64);
+
+const marker = (scope: string, headish = '0'.repeat(40)): string =>
+    `<!-- completion-review: v1 | reviewed: 2026-08-04 | scope: ${scope} | diff: ${headish} | reviewer: fresh-subagent-r2 -->`;
+
+/** A §5 manifest bound to `scope` — required on every review-bearing artifact. */
+const manifestFor = (scope: string): string =>
+    deriveManifest({
+        diffSha: '0'.repeat(40),
+        scopeHash: scope,
+        roadmap: 'none',
+        roadmapHash: 'none',
+        acHash: 'none',
+        dispatched: '2026-08-04T09:30:00Z',
+    });
 
 const TABLE_HEAD = [
     '| # | Severity | File:Line | Finding | Status | Reason/Ref |',
     '|---|----------|-----------|---------|--------|------------|',
 ];
 
-function findingsArtifact(sha: string, rows: readonly string[]): string {
-    return ['# Findings: feat', marker(sha), '', ...TABLE_HEAD, ...rows, ''].join('\n');
+function findingsArtifact(scope: string, rows: readonly string[]): string {
+    return ['# Findings: feat', marker(scope), '', manifestFor(scope), '', ...TABLE_HEAD, ...rows, ''].join('\n');
 }
+
+function honestNullArtifact(scope: string): string {
+    return [
+        '# Findings: feat',
+        marker(scope),
+        '',
+        manifestFor(scope),
+        '',
+        `**Honest-null:** 0 findings, scope ${scope}, reviewed 2026-08-04`,
+        '',
+    ].join('\n');
+}
+
+const skipLine = (reason: string, scope: string): string =>
+    `**Skipped:** no code surface for this completion — ${reason}, scope ${scope}, declared 2026-08-04\n`;
 
 interface GateResult {
     status: number;
@@ -118,23 +174,28 @@ function runGate(dir: string, extra: string[] = []): GateResult {
 // ---------------------------------------------------------------------------
 
 describe.runIf(hasGit())('check_completion_review — pass states', () => {
-    it('passes on a committed artifact with all findings terminal (refs/reasons present)', () => {
+    it('passes with the finalized artifact COMMITTED (the head-sha binding could not)', () => {
         const dir = makeRepo();
         // §2.5 order: artifact committed FIRST, fix commit after.
-        write(dir, ART, findingsArtifact('0'.repeat(40), ['| 1 | high | src/fix.ts:1 | bug | open | |']));
+        write(dir, ART, findingsArtifact(SCOPE_A, ['| 1 | high | src/fix.ts:1 | bug | open | |']));
         commitAll(dir, 'add findings artifact');
         write(dir, 'src/fix.ts', 'export const x = 1;\n');
         const fixSha = commitAll(dir, 'fix the bug');
-        // Working-tree finalization: header diff = current HEAD, rows terminal.
+        // Finalize AND COMMIT: HEAD now moves past every sha the reviewer could
+        // have recorded, and the gate must still pass.
+        const scope = scopeHash(dir);
         write(
             dir,
             ART,
-            findingsArtifact(fixSha, [
+            findingsArtifact(scope, [
                 `| 1 | high | src/fix.ts:1 | bug | fixed | ${fixSha} |`,
                 '| 2 | medium | src/fix.ts:2 | risky pattern | accepted-risk | perf acceptable, accepted by maintainer |',
                 '| 3 | low | src/fix.ts:3 | nit | deferred | roadmap: agents/roadmaps/followup.md |',
             ]),
         );
+        const finalSha = commitAll(dir, 'finalize findings artifact');
+        expect(finalSha).not.toBe(fixSha);
+
         const res = runGate(dir);
         expect(res.stderr).toBe('');
         expect(res.violations).toEqual([]);
@@ -142,17 +203,48 @@ describe.runIf(hasGit())('check_completion_review — pass states', () => {
         expect(res.stdout).toMatch(/^scanned: 2\n/);
     });
 
-    it('passes on an honest-null artifact for the current sha', () => {
+    it('scope survives a further commit that only touches the reviews directory', () => {
+        const dir = makeRepo();
+        write(dir, 'src/fix.ts', 'export const x = 1;\n');
+        commitAll(dir, 'feature');
+        const scope = scopeHash(dir);
+        write(dir, ART, honestNullArtifact(scope));
+        commitAll(dir, 'add review');
+        // A second edit to the artifact (e.g. a typo fix) must not re-open the gate.
+        write(dir, ART, honestNullArtifact(scope) + '\n<!-- touched -->\n');
+        commitAll(dir, 'touch review');
+        expect(scopeHash(dir)).toBe(scope);
+        const res = runGate(dir);
+        expect(res.violations).toEqual([]);
+        expect(res.status).toBe(0);
+    });
+
+    it('passes on a merge-commit checkout (the pull_request CI shape)', () => {
+        const dir = makeRepo();
+        write(dir, 'src/fix.ts', 'export const x = 1;\n');
+        commitAll(dir, 'feature');
+        const scope = scopeHash(dir);
+        write(dir, ART, honestNullArtifact(scope));
+        commitAll(dir, 'add review');
+        const featScope = scopeHash(dir);
+
+        // CI checks out a synthetic merge commit, never the branch head.
+        git(dir, 'checkout', '-q', 'main');
+        git(dir, 'checkout', '-qb', 'ci-merge-feat');
+        git(dir, 'merge', '-q', '--no-ff', '-m', 'Merge feat', 'feat');
+        expect(headSha(dir)).not.toBe(git(dir, 'rev-parse', 'feat').trim());
+
+        expect(scopeHash(dir)).toBe(featScope);
+        const res = runGate(dir);
+        expect(res.violations).toEqual([]);
+        expect(res.status).toBe(0);
+    });
+
+    it('passes on an honest-null artifact for the current scope', () => {
         const dir = makeRepo();
         write(dir, 'src/feature.ts', 'export const y = 2;\n');
-        const head = commitAll(dir, 'feature');
-        write(
-            dir,
-            ART,
-            ['# Findings: feat', marker(head), '', `**Honest-null:** 0 findings, diff ${head}, reviewed 2026-08-04`, ''].join(
-                '\n',
-            ),
-        );
+        commitAll(dir, 'feature');
+        write(dir, ART, honestNullArtifact(scopeHash(dir)));
         const res = runGate(dir);
         expect(res.violations).toEqual([]);
         expect(res.status).toBe(0);
@@ -162,21 +254,16 @@ describe.runIf(hasGit())('check_completion_review — pass states', () => {
         const dir = makeRepo();
         write(dir, 'docs/notes.md', '# notes\n');
         commitAll(dir, 'docs only');
-        write(
-            dir,
-            ART,
-            '**Skipped:** no code surface for this completion — docs-only change, diff none, declared 2026-08-04\n',
-        );
+        write(dir, ART, skipLine('docs-only change', scopeHash(dir)));
         const res = runGate(dir);
         expect(res.violations).toEqual([]);
         expect(res.status).toBe(0);
     });
 
-    it('passes with a note when there are no changes vs base', () => {
-        const dir = makeRepo(); // feat == main tip, empty diff
+    it('passes with a note when there are no reviewable changes vs base', () => {
+        const dir = makeRepo(); // feat == main tip, empty scope
         const res = runInProc(main, ['--repo', dir, '--base', 'main']);
         expect(res.status).toBe(0);
-        expect(res.stdout).toMatch(/^scanned: 1\n/);
         expect(res.stdout).toContain('nothing to review');
     });
 });
@@ -195,24 +282,101 @@ describe.runIf(hasGit())('check_completion_review — violations', () => {
         expect(res.status).toBe(1);
     });
 
-    it('stale-review: artifact exists only for an older sha, mismatch reported', () => {
+    it('stale-review: artifact exists only for an older scope, mismatch reported', () => {
         const dir = makeRepo();
         write(dir, 'src/feature.ts', 'export const y = 2;\n');
-        const head = commitAll(dir, 'feature');
-        const oldSha = 'a'.repeat(40);
-        write(dir, ART, findingsArtifact(oldSha, ['| 1 | low | src/feature.ts:1 | nit | accepted-risk | fine, accepted |']));
+        commitAll(dir, 'feature');
+        write(dir, ART, findingsArtifact(SCOPE_A, ['| 1 | low | src/feature.ts:1 | nit | accepted-risk | fine, accepted |']));
         const res = runGate(dir);
         expect(res.kinds).toEqual(['stale-review']);
-        expect(res.violations[0]?.detail).toContain(oldSha);
-        expect(res.violations[0]?.detail).toContain(head);
+        expect(res.violations[0]?.detail).toContain(SCOPE_A);
+        expect(res.violations[0]?.detail).toContain(scopeHash(dir));
         expect(res.status).toBe(1);
+    });
+
+    it('stale-review: a scope-none skip does NOT satisfy a non-empty scope', () => {
+        const dir = makeRepo();
+        write(dir, 'docs/notes.md', '# notes\n');
+        commitAll(dir, 'docs only');
+        // The forever-valid leftover: `scope none` used to satisfy every later diff.
+        write(dir, ART, skipLine('plan-only session', 'none'));
+        const res = runGate(dir);
+        expect(res.kinds).toEqual(['stale-review']);
+        expect(res.violations[0]?.detail).toContain('none');
+        expect(res.status).toBe(1);
+    });
+
+    it('missing-manifest: a review-bearing artifact without the §5 manifest blocks', () => {
+        const dir = makeRepo();
+        write(dir, 'src/feature.ts', 'export const y = 2;\n');
+        commitAll(dir, 'feature');
+        const scope = scopeHash(dir);
+        write(
+            dir,
+            ART,
+            ['# Findings: feat', marker(scope), '', ...TABLE_HEAD, '| 1 | low | src/feature.ts:1 | nit | accepted-risk | fine |', ''].join('\n'),
+        );
+        const res = runGate(dir);
+        expect(res.kinds).toEqual(['missing-manifest']);
+        expect(res.status).toBe(1);
+    });
+
+    it('bad-value: a skip line may not hide a findings table (contradictory artifact)', () => {
+        const dir = makeRepo();
+        write(dir, 'docs/notes.md', '# notes\n');
+        commitAll(dir, 'docs only');
+        const scope = scopeHash(dir);
+        write(
+            dir,
+            ART,
+            findingsArtifact(scope, ['| 1 | high | src/x.ts:1 | bug | open | |']) + skipLine('docs only', scope),
+        );
+        const res = runGate(dir);
+        // The contradiction is reported AND the hidden open row still blocks.
+        expect(res.kinds).toContain('bad-value');
+        expect(res.kinds).toContain('open-finding');
+        expect(res.status).toBe(1);
+    });
+
+    it('dead-scan-scope: a MOVED artefact root blocks (exit 1), never warn-and-allow', () => {
+        const dir = movedRootRepo();
+        const res = runGate(dir);
+        expect(res.kinds).toEqual(['dead-scan-scope']);
+        expect(res.status).toBe(1);
+        expect(res.stdout).toMatch(/^scanned: 0\n/);
+        expect(res.violations[0]?.detail).toContain('agents/evidence/reviews');
+    });
+
+    it('an absent-but-never-tracked artefact root is NOT a dead scope — it reports missing-artifact', () => {
+        const dir = makeRepo();
+        write(dir, 'src/feature.ts', 'export const y = 2;\n');
+        commitAll(dir, 'feature');
+        const res = runGate(dir, ['--artifact-dir', 'agents/evidence/no-corpus-yet']);
+        expect(res.kinds).toEqual(['missing-artifact']);
+        expect(res.status).toBe(1);
+    });
+
+    it('a foreign malformed artifact does not poison an otherwise clean PR', () => {
+        const dir = makeRepo();
+        write(dir, 'src/feature.ts', 'export const y = 2;\n');
+        commitAll(dir, 'feature');
+        write(dir, ART, honestNullArtifact(scopeHash(dir)));
+        // Leftover from an unrelated branch, malformed on purpose.
+        write(
+            dir,
+            'agents/evidence/reviews/legacy-unrelated-work.findings.md',
+            ['# Findings: legacy', '<!-- completion-review: v0 | broken -->', '**Honest-null:** nope', ''].join('\n'),
+        );
+        const res = runGate(dir);
+        expect(res.violations).toEqual([]);
+        expect(res.status).toBe(0);
     });
 
     it('open-finding: any open row blocks', () => {
         const dir = makeRepo();
         write(dir, 'src/feature.ts', 'export const y = 2;\n');
-        const head = commitAll(dir, 'feature');
-        write(dir, ART, findingsArtifact(head, ['| 1 | high | src/feature.ts:1 | bug | open | |']));
+        commitAll(dir, 'feature');
+        write(dir, ART, findingsArtifact(scopeHash(dir), ['| 1 | high | src/feature.ts:1 | bug | open | |']));
         const res = runGate(dir);
         expect(res.kinds).toEqual(['open-finding']);
         expect(res.status).toBe(1);
@@ -221,8 +385,8 @@ describe.runIf(hasGit())('check_completion_review — violations', () => {
     it('deferred-without-ref: deferred needs a ticket/issue/roadmap ref', () => {
         const dir = makeRepo();
         write(dir, 'src/feature.ts', 'export const y = 2;\n');
-        const head = commitAll(dir, 'feature');
-        write(dir, ART, findingsArtifact(head, ['| 1 | medium | src/feature.ts:1 | gap | deferred | |']));
+        commitAll(dir, 'feature');
+        write(dir, ART, findingsArtifact(scopeHash(dir), ['| 1 | medium | src/feature.ts:1 | gap | deferred | |']));
         const res = runGate(dir);
         expect(res.kinds).toEqual(['deferred-without-ref']);
         expect(res.status).toBe(1);
@@ -231,8 +395,8 @@ describe.runIf(hasGit())('check_completion_review — violations', () => {
     it('accepted-risk-without-reason: accepted-risk needs a reason', () => {
         const dir = makeRepo();
         write(dir, 'src/feature.ts', 'export const y = 2;\n');
-        const head = commitAll(dir, 'feature');
-        write(dir, ART, findingsArtifact(head, ['| 1 | low | src/feature.ts:1 | nit | accepted-risk | |']));
+        commitAll(dir, 'feature');
+        write(dir, ART, findingsArtifact(scopeHash(dir), ['| 1 | low | src/feature.ts:1 | nit | accepted-risk | |']));
         const res = runGate(dir);
         expect(res.kinds).toEqual(['accepted-risk-without-reason']);
         expect(res.status).toBe(1);
@@ -241,11 +405,11 @@ describe.runIf(hasGit())('check_completion_review — violations', () => {
     it('severity-order: rows must be sorted critical > high > medium > low', () => {
         const dir = makeRepo();
         write(dir, 'src/feature.ts', 'export const y = 2;\n');
-        const head = commitAll(dir, 'feature');
+        commitAll(dir, 'feature');
         write(
             dir,
             ART,
-            findingsArtifact(head, [
+            findingsArtifact(scopeHash(dir), [
                 '| 1 | low | src/feature.ts:1 | nit | accepted-risk | fine, accepted |',
                 '| 2 | critical | src/feature.ts:2 | injection | accepted-risk | mitigated upstream, accepted |',
             ]),
@@ -258,8 +422,8 @@ describe.runIf(hasGit())('check_completion_review — violations', () => {
     it('bad-value: unknown severity and unknown status', () => {
         const dir = makeRepo();
         write(dir, 'src/feature.ts', 'export const y = 2;\n');
-        const head = commitAll(dir, 'feature');
-        write(dir, ART, findingsArtifact(head, ['| 1 | gigantic | src/feature.ts:1 | bug | wip | some note |']));
+        commitAll(dir, 'feature');
+        write(dir, ART, findingsArtifact(scopeHash(dir), ['| 1 | gigantic | src/feature.ts:1 | bug | wip | some note |']));
         const res = runGate(dir);
         expect(res.kinds).toEqual(['bad-value', 'bad-value']);
         expect(res.status).toBe(1);
@@ -269,13 +433,20 @@ describe.runIf(hasGit())('check_completion_review — violations', () => {
         const dir = makeRepo();
         write(dir, 'src/feature.ts', 'export const y = 2;\n');
         commitAll(dir, 'feature');
-        write(
-            dir,
-            ART,
-            '**Skipped:** no code surface for this completion — plan-only session, diff none, declared 2026-08-04\n',
-        );
+        write(dir, ART, skipLine('plan-only session', scopeHash(dir)));
         const res = runGate(dir);
         expect(res.kinds).toEqual(['skip-on-code-diff']);
+        expect(res.status).toBe(1);
+    });
+
+    it('skip-on-code-diff: fires for a consumer-stack language too (.rb)', () => {
+        const dir = makeRepo();
+        write(dir, 'app/models/user.rb', "class User\nend\n");
+        commitAll(dir, 'ruby model');
+        write(dir, ART, skipLine('no code surface, honestly', scopeHash(dir)));
+        const res = runGate(dir);
+        expect(res.kinds).toEqual(['skip-on-code-diff']);
+        expect(res.violations[0]?.detail).toContain('app/models/user.rb');
         expect(res.status).toBe(1);
     });
 
@@ -283,9 +454,9 @@ describe.runIf(hasGit())('check_completion_review — violations', () => {
         const dir = makeRepo();
         write(dir, 'src/fix.ts', 'export const x = 1;\n');
         const fixSha = commitAll(dir, 'fix landed FIRST');
-        write(dir, ART, findingsArtifact('0'.repeat(40), ['| 1 | high | src/fix.ts:1 | bug | open | |']));
-        const head = commitAll(dir, 'artifact added AFTER the fix');
-        write(dir, ART, findingsArtifact(head, [`| 1 | high | src/fix.ts:1 | bug | fixed | ${fixSha} |`]));
+        write(dir, ART, findingsArtifact(SCOPE_A, ['| 1 | high | src/fix.ts:1 | bug | open | |']));
+        commitAll(dir, 'artifact added AFTER the fix');
+        write(dir, ART, findingsArtifact(scopeHash(dir), [`| 1 | high | src/fix.ts:1 | bug | fixed | ${fixSha} |`]));
         const res = runGate(dir);
         expect(res.kinds).toEqual(['fix-before-artifact']);
         expect(res.status).toBe(1);
@@ -295,11 +466,11 @@ describe.runIf(hasGit())('check_completion_review — violations', () => {
         const dir = makeRepo();
         write(dir, 'src/fix.ts', 'export const x = 1;\n');
         const fixSha = commitAll(dir, 'fix landed FIRST');
-        write(dir, ART, findingsArtifact('0'.repeat(40), ['| 1 | high | src/fix.ts:1 | bug | open | |']));
+        write(dir, ART, findingsArtifact(SCOPE_A, ['| 1 | high | src/fix.ts:1 | bug | open | |']));
         commitAll(dir, 'artifact added AFTER the fix');
-        write(dir, ART, findingsArtifact('1'.repeat(40), ['| 1 | high | src/fix.ts:1 | bug | open | |']));
-        const head = commitAll(dir, 'artifact rewritten later (backdating attempt)');
-        write(dir, ART, findingsArtifact(head, [`| 1 | high | src/fix.ts:1 | bug | fixed | ${fixSha} |`]));
+        write(dir, ART, findingsArtifact('b'.repeat(64), ['| 1 | high | src/fix.ts:1 | bug | open | |']));
+        commitAll(dir, 'artifact rewritten later (backdating attempt)');
+        write(dir, ART, findingsArtifact(scopeHash(dir), [`| 1 | high | src/fix.ts:1 | bug | fixed | ${fixSha} |`]));
         const res = runGate(dir);
         expect(res.kinds).toEqual(['fix-before-artifact']);
         expect(res.status).toBe(1);
@@ -309,7 +480,7 @@ describe.runIf(hasGit())('check_completion_review — violations', () => {
         const dir = makeRepo();
         write(dir, 'src/fix.ts', 'export const x = 1;\n');
         const fixSha = commitAll(dir, 'fix');
-        write(dir, ART, findingsArtifact(fixSha, [`| 1 | high | src/fix.ts:1 | bug | fixed | ${fixSha} |`]));
+        write(dir, ART, findingsArtifact(scopeHash(dir), [`| 1 | high | src/fix.ts:1 | bug | fixed | ${fixSha} |`]));
         const res = runGate(dir);
         expect(res.kinds).toEqual(['artifact-not-committed']);
         expect(res.status).toBe(1);
@@ -318,11 +489,11 @@ describe.runIf(hasGit())('check_completion_review — violations', () => {
     it('unresolvable-fix-ref: fixed ref that does not resolve, and fixed with no ref at all', () => {
         const dir = makeRepo();
         write(dir, 'src/fix.ts', 'export const x = 1;\n');
-        const head = commitAll(dir, 'fix');
+        commitAll(dir, 'fix');
         write(
             dir,
             ART,
-            findingsArtifact(head, [
+            findingsArtifact(scopeHash(dir), [
                 '| 1 | high | src/fix.ts:1 | bug | fixed | abcdef1234567 |',
                 '| 2 | low | src/fix.ts:2 | nit | fixed | see PR thread |',
             ]),
@@ -332,7 +503,7 @@ describe.runIf(hasGit())('check_completion_review — violations', () => {
         expect(res.status).toBe(1);
     });
 
-    it('bad-marker: malformed header marker', () => {
+    it('bad-marker: malformed header marker (own artifact)', () => {
         const dir = makeRepo();
         write(dir, 'src/feature.ts', 'export const y = 2;\n');
         const head = commitAll(dir, 'feature');
@@ -342,6 +513,27 @@ describe.runIf(hasGit())('check_completion_review — violations', () => {
             [
                 '# Findings: feat',
                 `<!-- completion-review: v2 | reviewed: 2026-08-04 | diff: ${head} -->`,
+                '',
+                ...TABLE_HEAD,
+                '| 1 | low | src/feature.ts:1 | nit | accepted-risk | fine, accepted |',
+                '',
+            ].join('\n'),
+        );
+        const res = runGate(dir);
+        expect(res.kinds).toEqual(['bad-marker']);
+        expect(res.status).toBe(1);
+    });
+
+    it('bad-marker: a v1 marker without the scope field is malformed', () => {
+        const dir = makeRepo();
+        write(dir, 'src/feature.ts', 'export const y = 2;\n');
+        const head = commitAll(dir, 'feature');
+        write(
+            dir,
+            ART,
+            [
+                '# Findings: feat',
+                `<!-- completion-review: v1 | reviewed: 2026-08-04 | diff: ${head} | reviewer: r2 -->`,
                 '',
                 ...TABLE_HEAD,
                 '| 1 | low | src/feature.ts:1 | nit | accepted-risk | fine, accepted |',
@@ -377,10 +569,16 @@ describe.runIf(hasGit())('check_completion_review — advisory + exit-2', () => 
     it('--advisory turns an open-finding block into exit 0 too', () => {
         const dir = makeRepo();
         write(dir, 'src/feature.ts', 'export const y = 2;\n');
-        const head = commitAll(dir, 'feature');
-        write(dir, ART, findingsArtifact(head, ['| 1 | high | src/feature.ts:1 | bug | open | |']));
+        commitAll(dir, 'feature');
+        write(dir, ART, findingsArtifact(scopeHash(dir), ['| 1 | high | src/feature.ts:1 | bug | open | |']));
         const res = runGate(dir, ['--advisory']);
         expect(res.kinds).toEqual(['open-finding']);
+        expect(res.status).toBe(0);
+    });
+
+    it('--advisory downgrades a dead scan scope like any other policy violation', () => {
+        const res = runGate(movedRootRepo(), ['--advisory']);
+        expect(res.kinds).toEqual(['dead-scan-scope']);
         expect(res.status).toBe(0);
     });
 
@@ -417,37 +615,90 @@ describe('isCodePath — §2.4 classification', () => {
         expect(isCodePath('composer.json')).toBe(false);
         expect(isCodePath('Makefile')).toBe(false);
     });
+
+    it('covers the consumer stacks the suite installs into', () => {
+        for (const p of [
+            'app/models/user.rb',
+            'src/main/java/App.java',
+            'app/Main.kt',
+            'build.gradle.kts',
+            'Sources/App.swift',
+            'src/core.c',
+            'include/core.h',
+            'src/core.cc',
+            'src/core.cpp',
+            'include/core.hpp',
+            'Api/Controller.cs',
+            'src/Main.scala',
+            'components/Widget.vue',
+            'components/Widget.svelte',
+            'db/migrate/001.sql',
+            'resources/views/home.blade.php',
+        ]) {
+            expect(isCodePath(p), `${p} must classify as code`).toBe(true);
+        }
+    });
+});
+
+describe('isOwnArtifactSlug — foreign artifacts cannot poison a PR', () => {
+    it('matches identical and containing slugs, rejects unrelated ones', () => {
+        expect(isOwnArtifactSlug('feat', 'feat')).toBe(true);
+        expect(isOwnArtifactSlug('road-to-x', 'feat-road-to-x')).toBe(true);
+        expect(isOwnArtifactSlug('feat-road-to-x', 'road-to-x')).toBe(true);
+        expect(isOwnArtifactSlug('legacy-unrelated-work', 'feat')).toBe(false);
+        expect(isOwnArtifactSlug('', 'feat')).toBe(false);
+    });
+
+    it('does not let a <4-char stub match everything by containment', () => {
+        expect(isOwnArtifactSlug('ci', 'ci-merge-feat')).toBe(false);
+        expect(isOwnArtifactSlug('feat', 'feature-branch')).toBe(true);
+    });
 });
 
 describe('grammar line parsers', () => {
-    const SHA = 'f'.repeat(40);
+    const SCOPE = 'f'.repeat(64);
+    const SHA = 'e'.repeat(40);
 
     it('parseMarkerLine accepts the exact §2.1 marker and rejects near-misses', () => {
-        const m = parseMarkerLine(`<!-- completion-review: v1 | reviewed: 2026-08-04 | diff: ${SHA} | reviewer: r2-x -->`);
-        expect(m).toEqual({ reviewed: '2026-08-04', diffSha: SHA, reviewer: 'r2-x' });
-        expect(parseMarkerLine(`<!-- completion-review: v2 | reviewed: 2026-08-04 | diff: ${SHA} | reviewer: x -->`)).toBeNull();
-        expect(parseMarkerLine('<!-- completion-review: v1 | reviewed: 2026-08-04 | reviewer: x -->')).toBeNull();
-        expect(parseMarkerLine(`<!-- completion-review: v1 | reviewed: 2026-08-04 | diff: ${SHA} | reviewer:  -->`)).toBeNull();
+        const m = parseMarkerLine(
+            `<!-- completion-review: v1 | reviewed: 2026-08-04 | scope: ${SCOPE} | diff: ${SHA} | reviewer: r2-x -->`,
+        );
+        expect(m).toEqual({ reviewed: '2026-08-04', scope: SCOPE, diffSha: SHA, reviewer: 'r2-x' });
+        expect(
+            parseMarkerLine(`<!-- completion-review: v2 | reviewed: 2026-08-04 | scope: ${SCOPE} | diff: ${SHA} | reviewer: x -->`),
+        ).toBeNull();
+        // scope is mandatory, and must be a full 64-hex hash
+        expect(parseMarkerLine(`<!-- completion-review: v1 | reviewed: 2026-08-04 | diff: ${SHA} | reviewer: x -->`)).toBeNull();
+        expect(
+            parseMarkerLine(`<!-- completion-review: v1 | reviewed: 2026-08-04 | scope: abc1234 | diff: ${SHA} | reviewer: x -->`),
+        ).toBeNull();
+        expect(
+            parseMarkerLine(`<!-- completion-review: v1 | reviewed: 2026-08-04 | scope: ${SCOPE} | diff: ${SHA} | reviewer:  -->`),
+        ).toBeNull();
     });
 
     it('parseHonestNull accepts only the exact §2.3 line', () => {
-        expect(parseHonestNull(`**Honest-null:** 0 findings, diff ${SHA}, reviewed 2026-08-04`)).toEqual({
-            sha: SHA,
+        expect(parseHonestNull(`**Honest-null:** 0 findings, scope ${SCOPE}, reviewed 2026-08-04`)).toEqual({
+            scope: SCOPE,
             reviewed: '2026-08-04',
         });
-        expect(parseHonestNull(`**Honest-null:** 0 findings diff ${SHA}, reviewed 2026-08-04`)).toBeNull();
-        expect(parseHonestNull(`**Honest-null:** 1 findings, diff ${SHA}, reviewed 2026-08-04`)).toBeNull();
+        expect(parseHonestNull(`**Honest-null:** 0 findings scope ${SCOPE}, reviewed 2026-08-04`)).toBeNull();
+        expect(parseHonestNull(`**Honest-null:** 1 findings, scope ${SCOPE}, reviewed 2026-08-04`)).toBeNull();
+        // the old sha-bound grammar is gone
+        expect(parseHonestNull(`**Honest-null:** 0 findings, diff ${SHA}, reviewed 2026-08-04`)).toBeNull();
     });
 
-    it('parseSkipDeclaration accepts sha or the literal none, requires the em dash', () => {
+    it('parseSkipDeclaration accepts a scope hash or the literal none, requires the em dash', () => {
         expect(
-            parseSkipDeclaration('**Skipped:** no code surface for this completion — docs only, diff none, declared 2026-08-04'),
-        ).toEqual({ reason: 'docs only', sha: 'none', declared: '2026-08-04' });
+            parseSkipDeclaration('**Skipped:** no code surface for this completion — docs only, scope none, declared 2026-08-04'),
+        ).toEqual({ reason: 'docs only', scope: 'none', declared: '2026-08-04' });
         expect(
-            parseSkipDeclaration(`**Skipped:** no code surface for this completion — plan session, diff ${SHA}, declared 2026-08-04`),
-        ).toEqual({ reason: 'plan session', sha: SHA, declared: '2026-08-04' });
+            parseSkipDeclaration(
+                `**Skipped:** no code surface for this completion — plan session, scope ${SCOPE}, declared 2026-08-04`,
+            ),
+        ).toEqual({ reason: 'plan session', scope: SCOPE, declared: '2026-08-04' });
         expect(
-            parseSkipDeclaration('**Skipped:** no code surface for this completion - docs only, diff none, declared 2026-08-04'),
+            parseSkipDeclaration('**Skipped:** no code surface for this completion - docs only, scope none, declared 2026-08-04'),
         ).toBeNull();
     });
 
@@ -457,29 +708,16 @@ describe('grammar line parsers', () => {
         expect(extractFixRef('see the PR thread')).toBeNull();
         expect(extractFixRef('')).toBeNull();
     });
-
-    it('shaMatches accepts full-sha equality and >=7-char prefixes', () => {
-        expect(shaMatches(SHA, SHA)).toBe(true);
-        expect(shaMatches(SHA.slice(0, 12), SHA)).toBe(true);
-        expect(shaMatches('abc123', SHA)).toBe(false); // < 7 chars never prefix-matches
-        expect(shaMatches('0'.repeat(40), SHA)).toBe(false);
-    });
 });
 
 describe('parseArtifact + validateFindingRows', () => {
-    const SHA = 'e'.repeat(40);
+    const SCOPE = 'e'.repeat(64);
 
-    it('parses marker, table rows, and tolerates a context-manifest comment (§5)', () => {
+    it('parses marker, table rows, and the §5 context manifest', () => {
         const text = [
             '# Findings: feat',
-            marker(SHA),
-            '<!-- context-manifest: v1',
-            'inputs:',
-            `  diff_sha: ${SHA}`,
-            '  diff_hash: 0123abc',
-            'excluded: [session-history]',
-            'dispatched: 2026-08-04T09:30:00Z',
-            '-->',
+            marker(SCOPE),
+            manifestFor(SCOPE),
             '',
             ...TABLE_HEAD,
             '| 1 | critical | src/a.ts:1 | injection | open | |',
@@ -487,8 +725,9 @@ describe('parseArtifact + validateFindingRows', () => {
             '',
         ].join('\n');
         const art = parseArtifact(text);
-        expect(art.marker?.diffSha).toBe(SHA);
+        expect(art.marker?.scope).toBe(SCOPE);
         expect(art.markerMalformed).toBe(false);
+        expect(art.manifest?.scope_hash).toBe(SCOPE);
         expect(art.rows).toHaveLength(2);
         expect(art.rows[0]?.severity).toBe('critical');
         expect(art.rows[1]?.status).toBe('deferred');
@@ -496,9 +735,14 @@ describe('parseArtifact + validateFindingRows', () => {
         expect(art.skip).toBeNull();
     });
 
+    it('reports an absent manifest as null rather than tolerating it silently', () => {
+        const art = parseArtifact(['# Findings: feat', marker(SCOPE), '', ...TABLE_HEAD, ''].join('\n'));
+        expect(art.manifest).toBeNull();
+    });
+
     it('flags near-miss honest-null / skip lines as malformed instead of accepting them', () => {
         const art = parseArtifact(
-            [marker(SHA), '**Honest-null:** zero findings', '**Skipped:** because reasons', ''].join('\n'),
+            [marker(SCOPE), '**Honest-null:** zero findings', '**Skipped:** because reasons', ''].join('\n'),
         );
         expect(art.honestNull).toBeNull();
         expect(art.skip).toBeNull();

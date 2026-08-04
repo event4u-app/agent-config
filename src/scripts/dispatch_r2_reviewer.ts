@@ -20,9 +20,14 @@
  * This is a dispatcher, not a gate — it emits no `scanned:` line and is not
  * registered in gate-coverage.yml.
  *
- * Exit codes: 0 = ok / manifest verified, 1 = policy refusal (empty diff,
- * refuse-overwrite, manifest mismatch), 2 = internal error (bad ref, parse
- * failure, crash).
+ * It also OWNS the review-scope hash (contract §2.1): the single definition of
+ * what a completion review is bound to. `check_completion_review` imports it
+ * rather than restating it — a divergence between the two would silently
+ * re-break the gate.
+ *
+ * Exit codes: 0 = ok / manifest verified, 1 = policy violation (empty diff,
+ * refuse-overwrite, missing manifest, manifest mismatch), 2 = internal error
+ * (bad ref, unreadable file, crash).
  */
 
 import { execFileSync } from 'node:child_process';
@@ -32,8 +37,8 @@ import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
 export interface ManifestInputs {
-    diffSha: string;
-    diffHash: string;
+    diffSha: string; // provenance only — never compared
+    scopeHash: string;
     roadmap: string; // path, or 'none'
     roadmapHash: string; // sha256, or 'none'
     acHash: string; // sha256, or 'none'
@@ -41,22 +46,83 @@ export interface ManifestInputs {
 }
 
 export interface ExpectedHashes {
-    diff_hash: string;
+    scope_hash: string;
     roadmap_hash: string;
     ac_hash: string;
 }
 
 export interface ParsedManifest {
     diff_sha: string;
-    diff_hash: string;
+    scope_hash: string;
     roadmap: string;
     roadmap_hash: string;
     ac_hash: string;
     dispatched: string;
 }
 
-function sha256(text: string): string {
+export function sha256(text: string): string {
     return createHash('sha256').update(text, 'utf8').digest('hex');
+}
+
+// ---------------------------------------------------------------------------
+// Review scope — the single source of the R2 binding (contract §2.1)
+// ---------------------------------------------------------------------------
+
+/**
+ * The review artefacts are excluded from the reviewed scope on purpose.
+ *
+ * A completion review is bound to the CONTENT it reviewed, never to a commit:
+ * §2.5 requires the findings artifact to be committed, and CI only ever sees
+ * committed state — so a head-sha binding is unsatisfiable by construction
+ * (committing the artifact moves HEAD past the recorded sha, and on
+ * `pull_request` the checkout is a synthetic merge commit whose sha no
+ * dispatcher could have recorded). Excluding `agents/evidence/reviews` means
+ * writing, editing, or committing the findings artifact cannot change the
+ * scope hash, and `base...HEAD` yields the same net diff on a branch head and
+ * on a merge commit of that branch.
+ */
+export const REVIEW_SCOPE_EXCLUDE = ':(exclude,top)agents/evidence/reviews';
+
+/** `git diff` argv for the review scope (patch body). */
+export function reviewScopeDiffArgs(base: string): string[] {
+    return ['diff', `${base}...HEAD`, '--', ':/', REVIEW_SCOPE_EXCLUDE];
+}
+
+/** `git diff --name-only` argv for the review scope (changed-file list). */
+export function reviewScopeNameOnlyArgs(base: string): string[] {
+    return ['diff', '--name-only', `${base}...HEAD`, '--', ':/', REVIEW_SCOPE_EXCLUDE];
+}
+
+/** A review scope with no reviewable content — the only state `scope none` covers. */
+export function isEmptyScope(scopeDiffText: string): boolean {
+    return scopeDiffText.trim() === '';
+}
+
+export type GitRunner = (args: readonly string[]) => string;
+
+export interface ReviewScope {
+    /** The review-scope diff body handed to the reviewer. */
+    diffText: string;
+    /** sha256 of `diffText` — the token the review binds to. */
+    hash: string;
+    /** Nothing reviewable in scope — the only state a `scope none` skip covers. */
+    empty: boolean;
+}
+
+/**
+ * Resolve the review scope in ONE git call. Both the dispatcher and the
+ * validator go through this function, injecting their own git wrapper (they
+ * differ only in error handling), so the definition of "what a review is bound
+ * to" exists exactly once.
+ */
+export function computeReviewScope(runGit: GitRunner, base: string): ReviewScope {
+    const diffText = runGit(reviewScopeDiffArgs(base));
+    return { diffText, hash: sha256(diffText), empty: isEmptyScope(diffText) };
+}
+
+/** The review-scope hash alone (see {@link computeReviewScope}). */
+export function computeScopeHash(runGit: GitRunner, base: string): string {
+    return computeReviewScope(runGit, base).hash;
 }
 
 /** Manifest comment block — exactly the contract §5 shape. */
@@ -65,7 +131,7 @@ export function deriveManifest(inputs: ManifestInputs): string {
         '<!-- context-manifest: v1',
         'inputs:',
         `  diff_sha: ${inputs.diffSha}`,
-        `  diff_hash: ${inputs.diffHash}`,
+        `  scope_hash: ${inputs.scopeHash}`,
         `  roadmap: ${inputs.roadmap}`,
         `  roadmap_hash: ${inputs.roadmapHash}`,
         `  ac_hash: ${inputs.acHash}`,
@@ -79,14 +145,17 @@ export function deriveManifest(inputs: ManifestInputs): string {
 /**
  * Pure hash derivation — CI re-derivation imports this to verify a submitted
  * artifact's manifest. `null` roadmap/AC text means "not provided" → 'none'.
+ * `scopeDiffText` is the REVIEW-SCOPE diff body (see {@link reviewScopeDiffArgs}),
+ * never the raw `base...HEAD` diff — the raw diff includes the findings artifact
+ * itself and is therefore unverifiable once that artifact is committed.
  */
 export function expectedHashes(args: {
-    diffText: string;
+    scopeDiffText: string;
     roadmapText?: string | null;
     acText?: string | null;
 }): ExpectedHashes {
     return {
-        diff_hash: sha256(args.diffText),
+        scope_hash: sha256(args.scopeDiffText),
         roadmap_hash: args.roadmapText == null ? 'none' : sha256(args.roadmapText),
         ac_hash: args.acText == null ? 'none' : sha256(args.acText),
     };
@@ -122,7 +191,7 @@ export function parseManifest(text: string): ParsedManifest | null {
         '<!-- context-manifest: v1\\n' +
             'inputs:\\n' +
             '  diff_sha: (.+)\\n' +
-            '  diff_hash: (.+)\\n' +
+            '  scope_hash: (.+)\\n' +
             '  roadmap: (.+)\\n' +
             '  roadmap_hash: (.+)\\n' +
             '  ac_hash: (.+)\\n' +
@@ -135,7 +204,7 @@ export function parseManifest(text: string): ParsedManifest | null {
     if (!m) return null;
     return {
         diff_sha: m[1] as string,
-        diff_hash: m[2] as string,
+        scope_hash: m[2] as string,
         roadmap: m[3] as string,
         roadmap_hash: m[4] as string,
         ac_hash: m[5] as string,
@@ -160,13 +229,22 @@ function git(repo: string, ...args: string[]): string {
     });
 }
 
-function deriveSlugFromBranch(repo: string): string {
-    const branch = git(repo, 'rev-parse', '--abbrev-ref', 'HEAD').trim();
+/**
+ * Branch-derived artifact slug. Shared with `check_completion_review`, which
+ * uses it to decide whether a leftover artifact in the reviews directory is
+ * THIS branch's (and may therefore produce violations) or a foreign one.
+ */
+export function deriveSlug(runGit: GitRunner): string {
+    const branch = runGit(['rev-parse', '--abbrev-ref', 'HEAD']).trim();
     if (branch === 'HEAD') {
-        const short = git(repo, 'rev-parse', '--short', 'HEAD').trim();
+        const short = runGit(['rev-parse', '--short', 'HEAD']).trim();
         return sanitizeSlug(`detached-${short}`);
     }
     return sanitizeSlug(branch);
+}
+
+function deriveSlugFromBranch(repo: string): string {
+    return deriveSlug((a) => git(repo, ...a));
 }
 
 /** ISO timestamp at seconds precision (YYYY-MM-DDTHH:MM:SSZ). */
@@ -177,6 +255,7 @@ function isoSeconds(d: Date): string {
 function reviewerPrompt(args: {
     slug: string;
     headSha: string;
+    scopeHash: string;
     roadmapGiven: boolean;
     changedFiles: readonly string[];
 }): string {
@@ -207,7 +286,8 @@ function reviewerPrompt(args: {
         '',
         '## Inputs',
         '',
-        `- diff: \`diff.patch\` (branch head ${args.headSha})`,
+        `- diff: \`diff.patch\` — the review scope (branch head ${args.headSha}, review`,
+        `  artefacts excluded), scope hash \`${args.scopeHash}\``,
         roadmapLine,
         '',
         'Changed files:',
@@ -231,7 +311,7 @@ function reviewerPrompt(args: {
         '  (contract §2.3):',
         '',
         '```markdown',
-        `**Honest-null:** 0 findings, diff ${args.headSha}, reviewed <YYYY-MM-DD>`,
+        `**Honest-null:** 0 findings, scope ${args.scopeHash}, reviewed <YYYY-MM-DD>`,
         '```',
         '',
     ].join('\n');
@@ -240,12 +320,13 @@ function reviewerPrompt(args: {
 function findingsSkeleton(args: {
     slug: string;
     headSha: string;
+    scopeHash: string;
     reviewedDate: string;
     manifest: string;
 }): string {
     return [
         `# Findings: ${args.slug}`,
-        `<!-- completion-review: v1 | reviewed: ${args.reviewedDate} | diff: ${args.headSha} | reviewer: r2-fresh-subagent-${args.slug} -->`,
+        `<!-- completion-review: v1 | reviewed: ${args.reviewedDate} | scope: ${args.scopeHash} | diff: ${args.headSha} | reviewer: r2-fresh-subagent-${args.slug} -->`,
         '',
         args.manifest,
         '',
@@ -353,12 +434,18 @@ function runVerify(args: Args): number {
     }
     const manifest = parseManifest(fs.readFileSync(findingsPath, 'utf-8'));
     if (manifest === null) {
-        process.stderr.write(`❌  Internal error: no context-manifest block found in ${findingsPath}\n`);
-        return 2;
+        // POLICY, not internal error (contract §5): a manifest is mandatory —
+        // "verification, not self-attestation". Exiting 2 here would let every
+        // caller warn-and-allow, so omitting the manifest would bypass the
+        // whole verification layer.
+        process.stderr.write(
+            `❌  Policy violation: no context-manifest block found in ${findingsPath} — ` +
+                'the §5 manifest is mandatory; a findings artifact without one is unverifiable.\n',
+        );
+        return 1;
     }
 
-    const headSha = git(args.repo, 'rev-parse', 'HEAD').trim();
-    const diffText = git(args.repo, 'diff', `${args.base}...HEAD`);
+    const scopeDiffText = computeReviewScope((a) => git(args.repo, ...a), args.base).diffText;
     let roadmapText: string | null = null;
     let acText: string | null = null;
     let roadmapMissing = false;
@@ -371,7 +458,7 @@ function runVerify(args: Args): number {
             roadmapMissing = true;
         }
     }
-    const expected = expectedHashes({ diffText, roadmapText, acText });
+    const expected = expectedHashes({ scopeDiffText, roadmapText, acText });
 
     const diverged: string[] = [];
     const check = (name: string, recorded: string, actual: string): void => {
@@ -380,8 +467,10 @@ function runVerify(args: Args): number {
             process.stderr.write(`  ${name}: recorded ${recorded} ≠ current ${actual}\n`);
         }
     };
-    check('diff_sha', manifest.diff_sha, headSha);
-    check('diff_hash', manifest.diff_hash, expected.diff_hash);
+    // `diff_sha` is provenance only and is NEVER compared: committing the
+    // artifact (§2.5) and CI's synthetic merge-commit checkout both move HEAD
+    // off the recorded sha. Content is what binds.
+    check('scope_hash', manifest.scope_hash, expected.scope_hash);
     if (roadmapMissing) {
         diverged.push('roadmap_hash');
         process.stderr.write(`  roadmap_hash: recorded ${manifest.roadmap_hash} but roadmap file ${manifest.roadmap} is missing\n`);
@@ -404,12 +493,13 @@ function runDispatch(args: Args): number {
     const reviewedDate = dispatched.slice(0, 10);
 
     const headSha = git(args.repo, 'rev-parse', 'HEAD').trim();
-    const diffText = git(args.repo, 'diff', `${args.base}...HEAD`);
-    if (diffText.trim() === '') {
+    const scope = computeReviewScope((a) => git(args.repo, ...a), args.base);
+    const scopeDiffText = scope.diffText;
+    if (scope.empty) {
         process.stderr.write(`❌  Empty diff (${args.base}...HEAD) — nothing to review.\n`);
         return 1;
     }
-    const changedFiles = git(args.repo, 'diff', '--name-only', `${args.base}...HEAD`)
+    const changedFiles = git(args.repo, ...reviewScopeNameOnlyArgs(args.base))
         .split('\n')
         .filter((l) => l.trim() !== '');
 
@@ -421,7 +511,7 @@ function runDispatch(args: Args): number {
         roadmapText = fs.readFileSync(path.resolve(args.repo, args.roadmap), 'utf-8');
         acText = extractAcceptanceCriteria(roadmapText);
     }
-    const hashes = expectedHashes({ diffText, roadmapText, acText });
+    const hashes = expectedHashes({ scopeDiffText, roadmapText, acText });
 
     const outDirAbs = path.resolve(args.repo, args.outDir);
     const inputDirAbs = path.join(outDirAbs, `${slug}.review-input`);
@@ -431,19 +521,25 @@ function runDispatch(args: Args): number {
         return 1;
     }
 
-    const promptText = reviewerPrompt({ slug, headSha, roadmapGiven: roadmapText !== null, changedFiles });
+    const promptText = reviewerPrompt({
+        slug,
+        headSha,
+        scopeHash: hashes.scope_hash,
+        roadmapGiven: roadmapText !== null,
+        changedFiles,
+    });
     const manifest = deriveManifest({
         diffSha: headSha,
-        diffHash: hashes.diff_hash,
+        scopeHash: hashes.scope_hash,
         roadmap: args.roadmap ?? 'none',
         roadmapHash: hashes.roadmap_hash,
         acHash: hashes.ac_hash,
         dispatched,
     });
-    const skeleton = findingsSkeleton({ slug, headSha, reviewedDate, manifest });
+    const skeleton = findingsSkeleton({ slug, headSha, scopeHash: hashes.scope_hash, reviewedDate, manifest });
 
     fs.mkdirSync(inputDirAbs, { recursive: true });
-    fs.writeFileSync(path.join(inputDirAbs, 'diff.patch'), diffText, 'utf-8');
+    fs.writeFileSync(path.join(inputDirAbs, 'diff.patch'), scopeDiffText, 'utf-8');
     if (roadmapText !== null) {
         fs.writeFileSync(path.join(inputDirAbs, 'roadmap.md'), roadmapText, 'utf-8');
     }
@@ -470,7 +566,9 @@ function runDispatch(args: Args): number {
         process.stdout.write(`input package: ${inputDirRel}\n`);
         process.stdout.write(`findings skeleton: ${findingsRel}\n`);
     } else {
-        process.stdout.write(`✅  R2 reviewer package prepared for '${slug}' (head ${headSha}).\n`);
+        process.stdout.write(
+            `✅  R2 reviewer package prepared for '${slug}' (head ${headSha}, scope ${hashes.scope_hash}).\n`,
+        );
         process.stdout.write(`  input package:     ${inputDirRel}\n`);
         process.stdout.write(`  findings skeleton: ${findingsRel}\n`);
         process.stdout.write('  Dispatch a FRESH subagent at the input package (never the implementing session).\n');
