@@ -362,7 +362,13 @@ export function validate_handoff_artifact(text: string): string[] {
 
 export function main(argv?: readonly string[]): number {
     let skills_dir = SKILLS_DIR;
-    const args = argv ?? process.argv.slice(2);
+    // Positional-only: flags are NOT paths. Before this filter the CI invocation
+    // (`lint_handoffs --quiet`, injected by Taskfile's QUIET_FLAG) resolved
+    // `--quiet` as the skills root, scanned 0 files and exited 2 — the gate was
+    // red under the exact argv CI runs while green when probed bare. That is the
+    // inverse of this suite's dead-scope defect and the reason gate-coverage
+    // rule 2 pins CI-identical argv.
+    const args = (argv ?? process.argv.slice(2)).filter((a) => !String(a).startsWith('-'));
     if (args.length > 0 && String(args[0]).endsWith('HANDOFF.md')) {
         // artifact mode — validate the workflow-resume file's required fields
         const text = fs.readFileSync(_resolve(args[0] as string), 'utf-8');
@@ -399,6 +405,12 @@ export function main(argv?: readonly string[]): number {
         process.stderr.write(`❌  ${exc.message}\n`);
         return 2;
     }
+    // Gate-coverage contract (src/config/gate-coverage.yml rule 1): publish the
+    // count the assertion above just validated. Emitted before the verdict
+    // branches so a run WITH violations still reports its corpus — coverage and
+    // verdict are different questions — and outside the QUIET guard, because CI
+    // passes --quiet and a count only visible without it is not a count.
+    process.stdout.write(`scanned: ${String(scanned)}\n`);
 
     const violations = lint(skills_dir);
     if (violations.length === 0) {

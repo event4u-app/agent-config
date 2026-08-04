@@ -1,6 +1,11 @@
 {
   "$comment": "Violation ratchet for gates whose dead scan root was repaired. A repair REVEALS pre-existing debt; it does not create it. Each entry records the count revealed at repair time — the gate fails only when its count RISES. Lowering a count is a normal commit; raising one is a defect. Entries expire: a baseline that has not dropped within 56 days of `landed` (or of `reaffirmed.date`) fails its gate, because a number that never moves is suppression with extra steps. Mechanism + rationale: src/scripts/_lib/gate_baseline.ts. Decision: AI council 2026-08-02, roadmap road-to-gates-that-can-fail blocker `dead-gate-finding-triage`.",
   "gates": {
+    "gate-hardening:unhardened-scan-scope": {
+      "count": 189,
+      "landed": "2026-08-04",
+      "note": "Gate scripts under src/scripts (population 223, the lint_/check_/audit_ prefix set) that neither route through _lib/scan_scope nor emit the machine-readable 'scanned:' line — the gates that can still report success over a moved or empty root without saying so. This is a VULNERABILITY count, not a coverage percentage: it measures how much of the original defect class is still reachable, it RISES whenever a new gate is written without a scope assertion, and its target is 0. That direction is the whole point — an adoption-reach metric ('hardened gates must increase') can never regress and would be threshold-lowering wearing a ratchet's clothes (AI council 2026-08-04, anthropic/claude-sonnet-4-5 + openai/gpt-4o, convergent on scope decomposition plus this discriminator). Clearing it is the charter of road-to-gate-hardening-adoption; the 56-day non-stagnation clause applies unchanged, so a number that never drops fails this gate rather than hardening into configuration. NEW ENTRY, not a raised threshold: this records newly-measured pre-existing exposure at first measurement — nothing was loosened."
+    },
     "check_no_new_legacy_path:hardcoded-scan-roots": {
       "count": 51,
       "landed": "2026-08-02",

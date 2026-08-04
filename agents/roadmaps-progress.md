@@ -6,10 +6,10 @@
 
 ## Overall
 
-**92 / 170 steps done · 54%**
+**68 / 157 steps done · 43%**
 
 ```text
-██████████████████████░░░░░░░░░░░░░░░░░░   54%
+█████████████████░░░░░░░░░░░░░░░░░░░░░░░   43%
 ```
 
 ## Open roadmaps
@@ -19,8 +19,8 @@
 | 1 | [road-to-adoption-without-narrative-debt.md](roadmaps/road-to-adoption-without-narrative-debt.md) | 5 | 17 | 7 | 10 | 0 | 0 | [1](#blockers-road-to-adoption-without-narrative-debt) | ██████░░░░ 59% |
 | 2 | [road-to-ci-native-release-first-run.md](roadmaps/road-to-ci-native-release-first-run.md) | 2 | 8 | 8 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 3 | [road-to-council-blind-review.md](roadmaps/road-to-council-blind-review.md) | 3 | 6 | 2 | 3 | 0 | 1 | 0 | ██████░░░░ 60% |
-| 4 | [road-to-gated-reach-followup.md](roadmaps/road-to-gated-reach-followup.md) | 1 | 12 | 12 | 0 | 0 | 0 | [1](#blockers-road-to-gated-reach-followup) | ░░░░░░░░░░ 0% |
-| 5 | [road-to-gates-that-can-fail.md](roadmaps/road-to-gates-that-can-fail.md) | 7 | 27 | 2 | 24 | 1 | 0 | 0 | █████████░ 92% |
+| 4 | [road-to-gate-hardening-adoption.md](roadmaps/road-to-gate-hardening-adoption.md) | 3 | 13 | 13 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+| 5 | [road-to-gated-reach-followup.md](roadmaps/road-to-gated-reach-followup.md) | 1 | 12 | 12 | 0 | 0 | 0 | [1](#blockers-road-to-gated-reach-followup) | ░░░░░░░░░░ 0% |
 | 6 | [road-to-kernel-question-triangle.md](roadmaps/road-to-kernel-question-triangle.md) | 1 | 3 | 3 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 7 | [road-to-maintainer-bus-factor.md](roadmaps/road-to-maintainer-bus-factor.md) | 4 | 12 | 5 | 7 | 0 | 0 | [1](#blockers-road-to-maintainer-bus-factor) | ██████░░░░ 58% |
 | 8 | [road-to-orchestration-scope-decision.md](roadmaps/road-to-orchestration-scope-decision.md) | 4 | 10 | 6 | 4 | 0 | 0 | [1](#blockers-road-to-orchestration-scope-decision) | ████░░░░░░ 40% |
@@ -79,6 +79,16 @@ _2 blockers resolved._
 | 2 | Re-run test on existing artifacts (minimal spend) | 🟡 in progress | 1 | 1 | 0 | 0 | 50% |
 | 3 | Landing & close | ⬜ not started | 1 | 0 | 0 | 1 | 0% |
 
+### [road-to-gate-hardening-adoption.md](roadmaps/road-to-gate-hardening-adoption.md)
+
+**Road to gate-hardening adoption — take the unhardened-gate count to zero** — 0 / 13 done (0%)
+
+| # | Phase | State | Open | Done | Deferred | Cancelled | % |
+|---|---|---|---:|---:|---:|---:|---:|
+| 1 | the mechanically-safe conversions | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
+| 2 | the gates whose unit must be decided | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
+| 3 | close the ratchet | ⬜ not started | 7 | 0 | 0 | 0 | 0% |
+
 ### [road-to-gated-reach-followup.md](roadmaps/road-to-gated-reach-followup.md)
 
 **Follow-up to Road to gated reach — exercise the YouTube channel** — 0 / 12 done (0%)
@@ -94,20 +104,6 @@ _2 blockers resolved._
   - **What to do:**
     `yt-dlp` and a JavaScript runtime are installed **by a human** on
   - **Resolved when:** condition described above clears
-
-### [road-to-gates-that-can-fail.md](roadmaps/road-to-gates-that-can-fail.md)
-
-**Road to gates that can fail — make every check prove it read something** — 24 / 26 done (92%)
-
-| # | Phase | State | Open | Done | Deferred | Cancelled | % |
-|---|---|---|---:|---:|---:|---:|---:|
-| 1 | Zero-scope is a failure (the one change that kills the class) | ✅ done | 0 | 3 | 0 | 0 | 100% |
-| 2 | Repair the safety-floor guard first, and un-pin its test | ✅ done | 0 | 2 | 0 | 0 | 100% |
-| 3 | Test the invocation CI actually runs | ✅ done | 0 | 1 | 1 | 0 | 100% |
-| 4 | Exercise the release-gated checks before the release | ✅ done | 0 | 4 | 0 | 0 | 100% |
-| 5 | Stop baselines and pointers from rotting | ✅ done | 0 | 5 | 0 | 0 | 100% |
-| 6 | Adversarial fixtures for gates that parse repo conventions | ✅ done | 0 | 2 | 0 | 0 | 100% |
-| 7 | Mutation canary (extends the accepted canary contract) | 🟡 in progress | 2 | 7 | 0 | 0 | 78% |
 
 ### [road-to-kernel-question-triangle.md](roadmaps/road-to-kernel-question-triangle.md)
 

@@ -499,6 +499,10 @@ export function main(argv: string[] | null = null): number {
         process.stderr.write(`❌  ${exc.message}\n`);
         return 3;
     }
+    // Gate-coverage contract (src/config/gate-coverage.yml rule 1): publish the
+    // asserted count machine-readably. Written to stderr, not stdout, because
+    // this audit's stdout carries the report body consumers read.
+    process.stderr.write(`scanned: ${String(skills.length)}\n`);
     const pairs = find_pairs(skills, args.threshold);
     const outDir = args.outDir ?? REPORT_DIR;
     const outJson = path.join(outDir, OUT_JSON_NAME);

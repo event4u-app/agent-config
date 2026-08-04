@@ -347,6 +347,11 @@ function main(argv?: readonly string[]): number {
         process.stderr.write(`❌  ${exc.message}\n`);
         return 2;
     }
+    // Gate-coverage contract (src/config/gate-coverage.yml rule 1): publish the
+    // asserted count machine-readably. The human line below is quiet-suppressed
+    // and only prints on the clean path; this one prints on both, because a gate
+    // that found issues still scanned its corpus.
+    process.stdout.write(`scanned: ${String(checked)}\n`);
     if (issues) {
         process.stderr.write(`BASELINE: ${issues} issue(s) across ${checked} name(s)\n`);
         return 1;

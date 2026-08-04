@@ -277,6 +277,10 @@ export function main(argv?: readonly string[]): number {
         process.stderr.write(`❌  ${exc instanceof Error ? exc.message : String(exc)}\n`);
         return 2;
     }
+    // Gate-coverage contract (src/config/gate-coverage.yml rule 1): publish the
+    // asserted count machine-readably. Written to stderr because `--format json`
+    // owns stdout here — a count on stdout would corrupt the JSON payload.
+    process.stderr.write(`scanned: ${String(targets.length)}\n`);
 
     const all_violations: Violation[] = [];
     for (const p of targets) {
