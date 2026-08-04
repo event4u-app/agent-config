@@ -328,8 +328,29 @@ current one is relevant **and** stale (`stale-review`).
   (```` ```markdown ````, closed CommonMark-style by a bare fence of at least as
   many backticks). A **bare** ``` never delimits a region: it is a **stray** →
   `unbalanced-fence` block, the lines around it are parsed as ordinary content,
-  and every stray line is named in the one violation. A labelled opener that is
-  never closed is a stray too, and likewise skips nothing.
+  and every stray line is named in the one violation. A labelled opener with no
+  bare fence after it anywhere in the artefact is a stray too, and skips nothing.
+
+  **KNOWN HOLE — do not read the rule above as complete** (blind-pass findings
+  1–3, 2026-08-04, `open`). A labelled opener *is* closed by the first later
+  bare fence **anywhere** in the file, even one the author never meant as its
+  closer. Everything between them is then skipped, a live `open` finding row
+  among those lines disappears from the parsed rows, and because the opener did
+  get consumed no `unbalanced-fence` fires — so the gate exits 0 on an
+  unreviewed finding. Reproduced. The arrangement is the one
+  `markdown-safe-codeblocks` itself prescribes (tilde-wrapped illustration
+  quoting an unpaired labelled opener) plus any bare fence later in the file,
+  and the remediation text the validator prints for `unbalanced-fence`
+  ("label the opener and close it") leads an author straight into it.
+
+  The fix is deliberately NOT improvised here: the obvious one — treat a
+  findings-shaped row inside a fenced region as a violation — fires on every
+  artefact that legitimately quotes the template, **including the skeleton the
+  dispatcher itself writes**, which contains a `| 1 | critical | … | open | |`
+  row. Resolving it means choosing between explicitly declared illustrative
+  regions and moving the safety check off fence pairing entirely; both change
+  this § 2.2 grammar, so the decision is recorded as open rather than patched
+  with something that reds every future artefact.
   Why a deliberate label is the discriminator: fenced regions exist for exactly
   one purpose — keeping the illustrative `| # | Severity | …` template above from
   being read as a live finding — and every counting-based rule tried before it
@@ -622,6 +643,41 @@ dispatched: YYYY-MM-DDTHH:MM:SSZ
   the reviewer input, and CI re-derives the manifest hashes — so a reviewer fed
   a *different* diff or roadmap is caught. A reviewer fed the correct inputs
   PLUS extra context is not.
+- **Residual (`accepted-risk`) — no proof of review EXECUTION.** The dispatcher
+  proves *input construction*; nothing proves a reviewer ever consumed that
+  input. A process can run the dispatcher (so every manifest hash verifies),
+  then write the honest-null line itself, and the artefact is indistinguishable
+  from one a reviewer produced. Repo-side enforcement is not available: the
+  reviewer is a host-dispatched subagent whose invocation leaves no trace the
+  repo can read. **Detection floor:** the audit trail — round records are
+  committed and never edited in place (§ 2.7), so a later review of the *same*
+  scope hash that reports findings contradicts an earlier honest-null on the
+  record, permanently and in public.
+- **Residual (`accepted-risk`) — the prompt channel, and it is the dangerous
+  one.** The host authors the reviewer's prompt. The dispatcher fixes the
+  *inputs*; it does not constrain the *instructions* wrapped around them, so a
+  host that tells the reviewer what to expect can steer the verdict while every
+  mechanical check passes. **A hash-verified artefact is therefore not evidence
+  of an unbiased review** — only evidence that the reviewer was handed the right
+  diff. No in-repo check can read the prompt, so there is no detection floor
+  beyond the same contradicting-round audit trail. What the host owes the gate,
+  and what no gate can collect: a prompt carrying **no** prior-round outcomes,
+  **no** statement of the expected result, and **no** narrowing to files the
+  requester selected.
+
+**Case zero (2026-08-04).** A commit shipped a "binding R2 honest-null"
+declaring 0 findings for one scope. A real reviewer *was* dispatched and did
+return `NO-FINDINGS` — but its prompt stated that the previous two rounds were
+clean, that "NO-FINDINGS is expected and welcome", that "a padded list is worse
+than none", and narrowed the review to four requester-chosen changes. A later
+unsteered round on the **identical** scope found **seven** defects, several of
+them direct consequences of that same change: a doc comment contradicting the
+code it documented, a duplicated settings reader, an incomplete extension set.
+Execution happened, the manifest verified, and the artefact was still false —
+which is why the prompt channel is named as its own residual instead of being
+folded into the context-injection one above. The correction was restored on top
+rather than rewritten into history, so the false claim and its refutation both
+remain on the record; that audit trail is the only reason it surfaced.
 
 ## 6. Validator exit-code contract
 
@@ -678,9 +734,46 @@ PII-free by construction: ids + counters only, each event carries the PR
 id / branch hash so concurrent branches merge without conflict. Event
 names: `gate_c_bypass`, `gate_c_interview`, `gate_c_direct`,
 `r1_register_written`, `r2_review`, `r2_skip`, `r2_honest_null`,
-`gate_latency`. The measurement protocol and thresholds are pre-registered
-in [`CLAIMS.md`](../CLAIMS.md) (two-stage: protocol before any data,
-enforced threshold derived from the 10-PR advisory baseline — verdict #20).
+`gate_latency`, `gate_internal_error`. The measurement protocol and thresholds
+are pre-registered in [`CLAIMS.md`](../CLAIMS.md) (two-stage: protocol before
+any data, enforced threshold derived from the 10-PR advisory baseline —
+verdict #20).
+
+### 7.0 `gate_internal_error` — the exit-2 rate alarm
+
+```
+EXIT 2 IS WARN-AND-ALLOW AT EVERY CALL SITE. A GATE THAT CRASHES OFTEN
+IS THEREFORE OFF, AND NOTHING SAYS SO. COUNT IT.
+```
+
+Exit 2 exists so a broken gate cannot block its own fix (§ 6) — a deliberate
+fail-open. The cost is that **every** future validator bug degrades the gate to
+advisory *silently*: the operation proceeds, the warning scrolls past, and the
+gate reads as satisfied. Three of this family's shipping blockers travelled that
+route (a missing `maxBuffer` → `ENOBUFS`, a depth-1 checkout leaving `--base`
+unresolvable, a dead scan scope). The dead-scope carve-out re-routed one
+instance to exit 1; the *class* remains, and this branch even widened it by
+adding a `scanned:`-on-throw path that returns 2.
+
+So the class gets a counter rather than another per-instance patch:
+
+- **Event:** `gate_internal_error`, one per observed exit 2, carrying the gate
+  id and the invoking surface. Producer is the agent, per § 7.1 — the
+  validators still never write.
+- **Alarm (protocol-level, registers in Stage A):** `gate_internal_error` on
+  **≥ 10 % of a gate's runs over 20 consecutive runs → audit that gate.** This
+  is a *sanity* alarm about the shape of the data, not a derived success
+  threshold, so it may be fixed before any baseline exists — the same standing
+  the `honest_null_rate ≥ 90 %` alarm already has. A gate above the line is
+  reported as de-facto-off; it is not auto-promoted to blocking, because
+  flipping a crashing gate to exit 1 is precisely what § 6 forbids.
+- **Coverage boundary, stated because a partial counter reads as a census:**
+  this observes the **agent-side and pre-push** path only. A CI-only exit 2 is
+  *not* captured — § 7.1's producer rule bars the validator from appending, and
+  the CI runner has no agent to do it. So the counter is a **floor, not a
+  census**: it can prove a gate crashes, never prove one does not. What would
+  close the gap is the same `--emit-metrics`-to-gitignored-staging design § 7.1
+  names for the other events, plus a promotion step; not built here.
 Quarterly `r1_mitigation_hit_rate` annotation:
 [`annotate_r1_outcomes.ts`](../../src/scripts/annotate_r1_outcomes.ts).
 

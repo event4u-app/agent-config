@@ -1258,3 +1258,58 @@ describe('parseArtifact + validateFindingRows', () => {
         expect(validateFindingRows(rows)).toEqual([]);
     });
 });
+
+// CHARACTERIZATION of an OPEN defect — blind-pass findings 1-3 (2026-08-04).
+//
+// This block asserts the CURRENT, WRONG behaviour on purpose. A labelled fence
+// opener is closed by the first later bare fence anywhere in the artefact, even
+// one the author never meant as its closer, so a live `open` finding row between
+// them is skipped and no `unbalanced-fence` fires — an unreviewed finding passes.
+//
+// It is pinned rather than fixed because the obvious guard (a findings-shaped row
+// inside a fenced region is a violation) fires on every artefact that quotes the
+// six-column template, including the skeleton dispatch_r2_reviewer writes.
+//
+// WHEN THIS BLOCK STARTS FAILING the hole is closed: delete it, and drop the
+// KNOWN HOLE notes in check_completion_review.ts (scanFences JSDoc) and in
+// docs/contracts/plan-review-gates.md §2.2. Do not "repair" it by loosening the
+// assertions.
+describe('check_completion_review — KNOWN HOLE: stray bare fence closes a labelled opener', () => {
+    const SCOPE = 'a'.repeat(64);
+    const holed = [
+        '# Findings: probe',
+        `<!-- completion-review: v1 | reviewed: 2026-08-04 | scope: ${SCOPE} | diff: abc1234 | reviewer: probe -->`,
+        '',
+        '| # | Severity | File:Line | Finding | Status | Reason/Ref |',
+        '|---|----------|-----------|---------|--------|------------|',
+        '| 1 | low | a.ts:1 | benign, already terminal | fixed | abc1234 |',
+        '',
+        'Illustration of the template:',
+        '```markdown',
+        '| 2 | critical | b.ts:9 | REAL UNREVIEWED DEFECT | open | |',
+        '',
+        'some prose',
+        '```',
+        '',
+    ].join('\n');
+
+    it('swallows the open row and reports no stray (the fail-open)', () => {
+        const parsed = parseArtifact(holed);
+        // The live `open` row is gone from the parsed rows …
+        expect(parsed.rows.map((r) => r.status)).toEqual(['fixed']);
+        expect(parsed.rows.some((r) => r.status === 'open')).toBe(false);
+        // … and nothing flags the arrangement, so the artefact looks clean.
+        expect(parsed.malformedLines).toEqual([]);
+        expect(parsed.malformedRows).toEqual([]);
+        expect(validateFindingRows(parsed.rows)).toEqual([]);
+    });
+
+    it('sees the open row once the opener is genuinely unpaired', () => {
+        // Same artefact minus the trailing bare fence: the opener has no closer
+        // anywhere, so it skips nothing and the row is visible again. This is the
+        // property the contract claims for BOTH shapes — it holds only for this one.
+        const unpaired = holed.split('\n').filter((l) => l !== '```').join('\n');
+        const parsed = parseArtifact(unpaired);
+        expect(parsed.rows.some((r) => r.status === 'open')).toBe(true);
+    });
+});
