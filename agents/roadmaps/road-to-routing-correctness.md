@@ -64,13 +64,18 @@ status: ready
 
 ## Phase 1 — rule hygiene: stop the set from fighting itself
 
-- [ ] Re-count the trigger collisions at HEAD with a committed script
+- [x] Re-count the trigger collisions at HEAD with a committed script
       (`route:explain`'s matcher module once Phase 2 lands, or a standalone
       scan until then). The 35-collision figure from the analysis becomes a
       reproducible number.
       *Verify:* collision report committed under `agents/evidence/`; count and
       per-trigger rule lists reproducible from the script.
-- [ ] New lint `lint_trigger_collisions.ts`: a trigger string shared by ≥2
+      <!-- done 2026-08-04: lint_trigger_collisions --report generates
+      agents/evidence/reports/trigger-collision-census.md. Reproducible
+      numbers replace the 35: 38 colliding values at pre-hygiene 500c2d63e
+      (measured via the same script in a detached scratch worktree), 32 after
+      the Phase-1 disjoins/merges. -->
+- [x] New lint `lint_trigger_collisions.ts`: a trigger string shared by ≥2
       rules is an error UNLESS every sharer declares a `precedence:` ordering
       or a `collision_ok: <reason>` frontmatter key. Seed all current
       collisions with explicit dispositions (many are legitimate — `refactor`
@@ -79,6 +84,16 @@ status: ready
       through `assertScanned` (0 rules scanned → red).
       *Verify:* seeded undeclared collision fixture → red in CI; all live
       collisions dispositioned.
+      <!-- done 2026-08-04: collision_ok (value→reason map) + precedence
+      (value→int map) in rule.schema.json; all 32 live collisions seeded with
+      per-rule reasons across 41 rules; assertScanned wired (scanned: line +
+      gate-coverage entry, min_scanned 90); registered in task ci AND the
+      Rule Backstops workflow (parity derived, no manifest entry needed).
+      Tests: red fixture, precedence distinct/equal, manual/kind exclusions,
+      dead-scope, mutation self-test — 13/13 with the Jaccard gate. Note:
+      the roadmap's minimal-safe-diff/refactor example was imprecise at HEAD
+      (minimal-safe-diff triggers on `fix`, not `refactor`) — the seeded
+      reasons reflect the actual trigger sets. -->
 - [x] Merge or disjoin the identical-trigger duplicates: brand pair → one rule
       + one pointer; `domain-safety-disclaimer` finance triggers move to
       `finance-safety-floor`; `secret-vcs-guard` vs `security-sensitive-stop`
