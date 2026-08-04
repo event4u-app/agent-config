@@ -35,6 +35,25 @@ A **ready** (non-draft) plan file under a roadmaps directory MUST contain a
 `## Risk Register` section. `status: draft` frontmatter exempts the file
 until it flips to ready.
 
+**Enforced corpus — narrower than the obligation (R2 round-3 finding 9).**
+The validator's corpus is the **top level of `agents/roadmaps/` only**.
+Three plan surfaces carry the § 1 obligation and are **not** machine-checked:
+
+| Surface | Status |
+|---|---|
+| `agents/roadmaps/*.md` (top level) | **enforced** — pre-push + CI |
+| `{module_root}/*/agents/roadmaps/*.md` (module-scoped, `templates/roadmaps.md`) | obligation stated, **not enforced** |
+| feature docs from `/feature:plan` (outside any roadmaps dir) | obligation stated, **not enforced** |
+| `archive/`, `skipped/`, `later/`, `stubs/` | deliberately out of scope |
+
+The dead-scan-scope assertion cannot surface this gap, because the configured
+root does resolve — the corpus is simply narrower than the rule. Widening it
+means enumerating module roots via `enumerate_modules()` and deciding what a
+"plan" is outside a roadmaps directory; that is a scope decision, not an
+oversight, and it is left open rather than silently claimed. Read the
+acceptance criterion "a ready plan without a valid Risk Register fails
+pre-push and CI" as scoped to the enforced row above.
+
 **Grandfather clause (council 2026-08-04, anthropic/claude-sonnet-4-5 +
 openai/gpt-4o, convergent).** Gate activation date: **2026-08-04** — this
 line is the committed source of the constant the validator carries
@@ -129,7 +148,9 @@ Artifact location: `agents/evidence/reviews/<branch-or-roadmap-slug>.findings.md
 ### 2.0 The review scope — what a review is bound to
 
 ```
-scope_hash = sha256( git diff <base>...HEAD -- :/ ':(exclude,top)agents/evidence/reviews' )
+scope_hash = sha256( git diff <base>...HEAD -- :/ \
+    ':(exclude,top)agents/evidence/reviews' \
+    ':(exclude,top)agents/evidence/metrics' )
 ```
 
 A completion review binds to the **content it reviewed**, never to a commit.
@@ -141,10 +162,24 @@ Two facts make a head-sha binding unsatisfiable, so it is forbidden:
 2. On `pull_request`, `actions/checkout` checks out a **synthetic merge
    commit**, so `git rev-parse HEAD` in CI never equals a branch-head sha.
 
-The `agents/evidence/reviews` pathspec exclusion is what makes the binding
-stable: writing, editing, or committing the review artefacts cannot change the
-hash. `base...HEAD` yields the same net diff on a branch head and on a merge
-commit of that branch, so the hash is identical on both checkouts.
+The pathspec exclusions are what make the binding stable: writing, editing, or
+committing anything the gate itself produces cannot change the hash. Both
+excluded paths are gate-owned outputs —
+`agents/evidence/reviews` (the findings artefacts, § 2.1) and
+`agents/evidence/metrics` (the outcome events § 7 **mandates** appending). A
+gate-owned output left inside the scope re-creates the self-invalidation this
+section exists to eliminate: the commit that records the review would
+invalidate it. Any future gate-owned evidence path joins this list.
+
+**Merge-commit invariance — and its one precondition.** `base...HEAD` is
+`merge-base(base, HEAD)..HEAD`, so it yields the same net diff on a branch head
+and on a merge commit of that branch: the hash is identical on both checkouts
+**as long as the recorded base is the same merge-base the review used.** If the
+base branch advances in a file the branch also touches, the local hash
+(fork-point at review time) and CI's (`pull_request.base.sha`) legitimately
+differ, and CI reports `stale-review`. That is the intended behaviour, not a
+defect — the reviewed content genuinely changed — and the resolution is a
+re-review after merging the base in, exactly as for any other content change.
 
 **Single definition.** The scope hash is computed by exactly one exported
 function (`computeReviewScope` in
@@ -335,21 +370,46 @@ Written by the Gate C flow only, at
 ```
 
 - `transcript_ref` is **mandatory** — path + content hash of the interview
-  transcript artifact. The R1 reader checks existence + hash match: a
-  forged state file requires a forged transcript, which is visible and
-  auditable.
+  transcript artifact, so a forged state file requires a forged transcript.
 - Freshness: R1 consumes the state only when present, `plan_hash` matches
   the current draft, and the session is the same one that wrote it;
   otherwise R1 runs fresh. No TTL — session-bound by design.
 - **Write-path rule:** only the Gate C flow writes
-  `agents/runtime/state/gate-c-*.json`; generic write operations on that
-  glob are a lint violation.
-- **Threat model (explicit, verdict #19):** this guard defends against
-  *silent agent shortcuts*, not against the local human — who holds a
-  legitimate settings escape hatch (`planning.challenge_on_create: false`)
-  anyway, so forgery gains nothing that cannot be done openly.
-  Detectability over prevention, by design. Cryptographic tamper-proofing
-  is refused: a secret stored in a local repo is not a secret.
+  `agents/runtime/state/gate-c-*.json`.
+
+### 4.1 Enforcement of § 4 — `enforced_by: none` (stated, not implied)
+
+```
+EVERY OBLIGATION IN § 4 IS AGENT-CARRIED. NO VALIDATOR READS THE HANDOFF
+STATE, THE TRANSCRIPT, OR THE WRITE-PATH GLOB. DO NOT READ § 4 AS A GATE.
+```
+
+This is the one section of this contract that describes a convention rather
+than a mechanism, so it says so in its own words:
+
+- `lint_plan_risk_register` contains **no** reference to `gate-c-*`,
+  `transcript_ref`, or `plan_hash`. "R1 checks existence + hash match"
+  describes what the **agent** does when it consumes the state during the
+  authoring flow — not a machine check. An earlier draft of this contract
+  (and verdict #19 in the archived roadmap) asserted the validator performed
+  it; that was an overstatement, corrected here — R2 round-3 finding 4.
+- The write-path rule has **no** lint and no hook entry. It binds the agent;
+  a human reading the diff is what catches a violation.
+- The state file is gitignored (`/agents/runtime/`), so none of it is visible
+  to CI at all. A CI-facing check would mean moving the state into the
+  tracked tree — a different design decision, not made here.
+
+**Threat model (verdict #19), restated against what actually ships:** the
+convention defends against *silent agent shortcuts* — an agent that skips the
+interview and claims resolved branches leaves a missing or mismatched
+transcript a human can spot. It does **not** defend against the local human,
+who holds a legitimate settings escape hatch
+(`planning.challenge_on_create: false`) anyway, so forgery gains nothing that
+cannot be done openly. Detectability over prevention, by design.
+Cryptographic tamper-proofing is refused: a secret stored in a local repo is
+not a secret. Since detection is human-only here, § 4 is honestly
+`enforced_by: none` — the same stance `security-sensitive-stop` and
+`untrusted-input-defense` take for obligations only the model can carry.
 
 ## 5. R2 context manifest — verification, not self-attestation
 
@@ -458,6 +518,37 @@ in [`CLAIMS.md`](../CLAIMS.md) (two-stage: protocol before any data,
 enforced threshold derived from the 10-PR advisory baseline — verdict #20).
 Quarterly `r1_mitigation_hit_rate` annotation:
 [`annotate_r1_outcomes.ts`](../../src/scripts/annotate_r1_outcomes.ts).
+
+### 7.1 Who writes these events — agent-side, and NOT the validators
+
+```
+THE VALIDATORS NEVER APPEND A METRIC EVENT. A CI GATE THAT WROTE INTO A
+TRACKED FILE WOULD DIRTY THE TREE AND RED THE CONSISTENCY CHECK.
+THE PRODUCER IS THE AGENT, AT THE SURFACES — COUNTING IS AGENT-CARRIED.
+```
+
+R2 round-3 finding 5 caught this contract claiming a metric floor with no
+producer: the only writer in the tree is `annotate_r1_outcomes.ts`, and it
+emits `r1_mitigation_outcome` only. The honest resolution is not to make the
+validators write — they run in CI, and `agents/evidence/metrics/` is
+**tracked**, so an appending gate would dirty the working tree and fail the
+byte-exactness check in the same job. Instead:
+
+- **Producer:** the agent, at the moment the gate fires, from the surfaces
+  that own the flow — `plan-confidence-gate` (`gate_c_*`), `roadmap-writing`
+  / `/roadmap:create` / `/feature:*` (`r1_register_written`),
+  `roadmap-management` step 0 and `/create-pr` § 1d (`r2_review`,
+  `r2_skip`, `r2_honest_null`, `gate_latency`).
+- **Consequence for Stage B, stated plainly:** the advisory window closes on
+  a count of agent-appended `r2_review` events. If the agent does not append
+  them, the window does not close and R2 stays advisory — a *visible* stall
+  (the JSONL simply stays short), not a silent pass. The follow-up roadmap's
+  flip-to-ready trigger reads that file, so the stall is inspectable with
+  `wc -l`.
+- **What would make this machine-enforced** is a different design: an
+  `--emit-metrics` flag used only on the local/agent path, writing to a
+  gitignored staging file that a human promotes. Not built here; recorded so
+  the next reader does not mistake the convention for a mechanism.
 
 ## Cross-references
 

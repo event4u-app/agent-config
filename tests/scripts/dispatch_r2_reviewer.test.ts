@@ -19,6 +19,8 @@ import { afterAll, describe, expect, it } from 'vitest';
 
 import {
     REVIEW_SCOPE_EXCLUDE,
+    REVIEW_SCOPE_EXCLUDES,
+    scopeExclusionViolation,
     computeReviewScope,
     deriveManifest,
     deriveSlug,
@@ -383,7 +385,24 @@ describe('dispatch_r2_reviewer — --verify-current', () => {
 
         // …and an --artifact-dir that does not resolve is not this step's error
         // either: a moved root is check_completion_review's dead-scope assertion.
+        // The path stays UNDER an excluded root so the two concerns stay
+        // separate: "does the configured root resolve" (validator's dead-scope
+        // assertion, exit 0 here) vs "may artefacts live there at all" (the
+        // §2.0 exclusion guard below, exit 1).
         const absent = run([
+            '--verify-current',
+            '--artifact-dir',
+            'agents/evidence/reviews/no-such-root',
+            '--repo',
+            repo,
+            '--base',
+            'main',
+        ]);
+        expect(absent.status, absent.stderr).toBe(0);
+
+        // A root OUTSIDE the exclusions is refused: an artefact committed there
+        // would change the scope hash and invalidate its own review.
+        const inScope = run([
             '--verify-current',
             '--artifact-dir',
             'agents/evidence/no-such-root',
@@ -392,7 +411,8 @@ describe('dispatch_r2_reviewer — --verify-current', () => {
             '--base',
             'main',
         ]);
-        expect(absent.status, absent.stderr).toBe(0);
+        expect(inScope.status).toBe(1);
+        expect(inScope.stderr).toMatch(/not excluded from the review scope/);
     });
 
     it('does not verify a bare skip declaration (§5: it needs no manifest)', () => {
@@ -412,8 +432,13 @@ describe('dispatch_r2_reviewer — --verify-current', () => {
 describe('dispatch_r2_reviewer — determinism', () => {
     it('same repo state + same args (frozen --now) → byte-identical outputs', () => {
         const repo = initRepo();
-        expect(run(dispatchArgs(repo, ['--out-dir', 'outA'])).status).toBe(0);
-        expect(run(dispatchArgs(repo, ['--out-dir', 'outB'])).status).toBe(0);
+        // Both out-dirs stay UNDER an excluded root: an artefact directory
+        // inside the reviewed scope is refused outright (§2.0 guard), so the
+        // two comparison runs use sibling sub-dirs of the default location.
+        const outA = 'agents/evidence/reviews/runA';
+        const outB = 'agents/evidence/reviews/runB';
+        expect(run(dispatchArgs(repo, ['--out-dir', outA])).status).toBe(0);
+        expect(run(dispatchArgs(repo, ['--out-dir', outB])).status).toBe(0);
 
         const names = [
             `${SLUG}.review-input/diff.patch`,
@@ -423,8 +448,8 @@ describe('dispatch_r2_reviewer — determinism', () => {
             `${SLUG}.findings.md`,
         ];
         for (const name of names) {
-            const a = fs.readFileSync(path.join(repo, 'outA', name));
-            const b = fs.readFileSync(path.join(repo, 'outB', name));
+            const a = fs.readFileSync(path.join(repo, outA, name));
+            const b = fs.readFileSync(path.join(repo, outB, name));
             expect(a.equals(b), `${name} differs between identical runs`).toBe(true);
         }
     });
@@ -471,15 +496,30 @@ describe('dispatch_r2_reviewer — pure helpers', () => {
         expect(extractAcceptanceCriteria('# X\n\n## Phase 1\n- [ ] a\n')).toBe('');
     });
 
-    it('reviewScopeDiffArgs excludes the review artefacts from the reviewed scope', () => {
+    it('reviewScopeDiffArgs excludes every gate-owned evidence path from the reviewed scope', () => {
         expect(reviewScopeDiffArgs('origin/main')).toEqual([
             'diff',
             'origin/main...HEAD',
             '--',
             ':/',
-            REVIEW_SCOPE_EXCLUDE,
+            ...REVIEW_SCOPE_EXCLUDES,
         ]);
         expect(REVIEW_SCOPE_EXCLUDE).toContain('agents/evidence/reviews');
+        // R2 round-3 finding 1: §7 MANDATES appending the outcome event to the
+        // tracked metrics JSONL, so leaving it in scope let the commit that
+        // records a review invalidate that same review.
+        expect(REVIEW_SCOPE_EXCLUDES.some((s) => s.includes('agents/evidence/metrics'))).toBe(true);
+    });
+
+    it('scopeExclusionViolation refuses an artefact dir that is inside the reviewed scope', () => {
+        // Default and nested-under-default are safe.
+        expect(scopeExclusionViolation('agents/evidence/reviews')).toBeNull();
+        expect(scopeExclusionViolation('./agents/evidence/reviews/')).toBeNull();
+        expect(scopeExclusionViolation('agents/evidence/metrics')).toBeNull();
+        // Anything else would be committed INSIDE the scope it records.
+        expect(scopeExclusionViolation('agents/reviews')).toContain('not excluded');
+        expect(scopeExclusionViolation('docs/reviews')).toContain('not excluded');
+        expect(scopeExclusionViolation('/tmp/reviews')).toContain('repo-relative');
     });
 
     it('isEmptyScope treats whitespace-only diff output as empty', () => {

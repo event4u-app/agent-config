@@ -51,6 +51,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 // (validator → dispatcher for the scope hash, dispatcher → validator for
 // relevance) is safe: neither module calls the other at module-evaluation
 // time, and each CLI entry guard only fires for its own argv[1].
+import { completionReviewDisabled } from './_lib/planning_settings.js';
 import { artifactRelevance } from './check_completion_review.js';
 
 export interface ManifestInputs {
@@ -97,17 +98,63 @@ export function sha256(text: string): string {
  * writing, editing, or committing the findings artifact cannot change the
  * scope hash, and `base...HEAD` yields the same net diff on a branch head and
  * on a merge commit of that branch.
+ *
+ * `agents/evidence/metrics` is excluded for the SAME reason, not as tidiness:
+ * contract §7 mandates appending the R2 outcome event (`r2_review` /
+ * `r2_honest_null` / `r2_skip`) to the tracked
+ * `agents/evidence/metrics/gate-metrics.jsonl`. Committing that mandated event
+ * would otherwise change the scope hash and turn the very artifact that just
+ * recorded the review into a `stale-review` block — the self-invalidation class
+ * §2.0 exists to eliminate, re-entering through a sibling path. Any future
+ * gate-owned evidence path that the gate itself writes belongs in this list.
  */
-export const REVIEW_SCOPE_EXCLUDE = ':(exclude,top)agents/evidence/reviews';
+export const REVIEW_SCOPE_EXCLUDES: readonly string[] = [
+    ':(exclude,top)agents/evidence/reviews',
+    ':(exclude,top)agents/evidence/metrics',
+];
+
+/** Back-compat single-pathspec alias (the reviews exclusion). */
+export const REVIEW_SCOPE_EXCLUDE = REVIEW_SCOPE_EXCLUDES[0] as string;
 
 /** `git diff` argv for the review scope (patch body). */
 export function reviewScopeDiffArgs(base: string): string[] {
-    return ['diff', `${base}...HEAD`, '--', ':/', REVIEW_SCOPE_EXCLUDE];
+    return ['diff', `${base}...HEAD`, '--', ':/', ...REVIEW_SCOPE_EXCLUDES];
 }
 
 /** `git diff --name-only` argv for the review scope (changed-file list). */
 export function reviewScopeNameOnlyArgs(base: string): string[] {
-    return ['diff', '--name-only', `${base}...HEAD`, '--', ':/', REVIEW_SCOPE_EXCLUDE];
+    return ['diff', '--name-only', `${base}...HEAD`, '--', ':/', ...REVIEW_SCOPE_EXCLUDES];
+}
+
+/**
+ * The artefact directory MUST live under an excluded path (§2.0).
+ *
+ * The exclusion list is static while the artefact location is a CLI parameter
+ * (`--out-dir` / `--artifact-dir`). A directory outside the exclusions puts the
+ * findings artifact back inside the reviewed scope, so committing it — which
+ * §2.5 requires — invalidates the review it records. That failure is silent, so
+ * it is refused loudly here instead: a policy violation, not a warning.
+ *
+ * Returns an error message, or `null` when the directory is safe.
+ */
+export function scopeExclusionViolation(artifactDirRel: string): string | null {
+    const norm = artifactDirRel.split(path.sep).join('/').replace(/^\.\//, '').replace(/\/+$/, '');
+    if (path.isAbsolute(norm)) {
+        return (
+            `❌  --out-dir / --artifact-dir must be repo-relative, got absolute '${artifactDirRel}'.\n` +
+            '    The review scope excludes repo-relative pathspecs only (contract §2.0).\n'
+        );
+    }
+    const roots = REVIEW_SCOPE_EXCLUDES.map((s) => s.replace(/^:\(exclude,top\)/, ''));
+    const covered = roots.some((r) => norm === r || norm.startsWith(`${r}/`));
+    if (covered) {
+        return null;
+    }
+    return (
+        `❌  artefact directory '${artifactDirRel}' is not excluded from the review scope.\n` +
+        `    Committing a findings artifact there would change the scope hash and invalidate\n` +
+        `    the review it records (contract §2.0). Excluded roots: ${roots.join(', ')}.\n`
+    );
 }
 
 /** A review scope with no reviewable content — the only state `scope none` covers. */
@@ -471,6 +518,10 @@ function resolveNow(nowArg: string | null): Date {
 }
 
 function runVerify(args: Args, findingsPath: string = args.verify as string): number {
+    if (completionReviewDisabled(args.repo)) {
+        process.stdout.write('⚠️  planning.completion_review=false — R2 manifest verification skipped (settings escape hatch)\n');
+        return 0;
+    }
     if (!fs.existsSync(findingsPath)) {
         process.stderr.write(`❌  Internal error: findings file not found: ${findingsPath}\n`);
         return 2;
@@ -551,7 +602,16 @@ function runVerify(args: Args, findingsPath: string = args.verify as string): nu
  *     it would report a policy violation the contract explicitly excludes.
  */
 function runVerifyCurrent(args: Args): number {
+    if (completionReviewDisabled(args.repo)) {
+        process.stdout.write('⚠️  planning.completion_review=false — R2 manifest re-derivation skipped (settings escape hatch)\n');
+        return 0;
+    }
     const artifactDirRel = args.artifactDir ?? args.outDir;
+    const excludeViolation = scopeExclusionViolation(artifactDirRel);
+    if (excludeViolation !== null) {
+        process.stderr.write(excludeViolation);
+        return 1;
+    }
     const dirAbs = path.resolve(args.repo, artifactDirRel);
     const scope = computeReviewScope((a) => git(args.repo, ...a), args.base);
 
@@ -639,6 +699,12 @@ function runDispatch(args: Args): number {
         acText = extractAcceptanceCriteria(roadmapText);
     }
     const hashes = expectedHashes({ scopeDiffText, roadmapText, acText });
+
+    const outDirViolation = scopeExclusionViolation(args.outDir);
+    if (outDirViolation !== null) {
+        process.stderr.write(outDirViolation);
+        return 1;
+    }
 
     const outDirAbs = path.resolve(args.repo, args.outDir);
     const inputDirAbs = path.join(outDirAbs, `${slug}.review-input`);
