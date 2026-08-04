@@ -148,6 +148,7 @@ tasks:
       - task: lint-roadmap-later-disposition
       - task: lint-plan-risk-register
       - task: check-completion-review
+      - task: check-r2-manifest
       - task: lint-tickets
       - task: lint-commit-subjects
       - task: lint-discovery-vocab
