@@ -9,7 +9,7 @@ status: ready
 > deterministic gates that scan zero files and exit 0 with a green checkmark** —
 > including the guard that is supposed to detect edits to the four safety-floor
 > rules. Evidence + reproduction:
-> [`gates-that-cannot-fail`](../settings/contexts/gates-that-cannot-fail.md).
+> [`gates-that-cannot-fail`](../../settings/contexts/gates-that-cannot-fail.md).
 
 ## Goal
 
