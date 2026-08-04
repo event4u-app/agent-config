@@ -8,9 +8,9 @@
 import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { lint, type Violation } from '../../src/scripts/lint_handoffs.js';
+import { lint, main, type Violation } from '../../src/scripts/lint_handoffs.js';
 
 
 
@@ -173,3 +173,29 @@ describe('lint_handoffs — ported pytest suite', () => {
 
 // --- Golden parity on the REAL REPO -----------------------------------------
 
+
+describe('lint_handoffs — CI-identical invocation', () => {
+    it('treats --quiet as a flag, not as the skills root', () => {
+        // Regression: Taskfile injects --quiet (QUIET_FLAG), and this gate read
+        // args[0] as a positional path. The CI invocation therefore resolved
+        // "--quiet" as its skills root, scanned 0 files and exited 2 — red under
+        // `task lint-handoffs`, green when probed bare. A gate that dies on the
+        // exact argv CI runs is the inverse of the dead-scope defect: loud, but
+        // only where nobody was looking.
+        const out: string[] = [];
+        const spy = vi.spyOn(process.stdout, 'write').mockImplementation((s) => {
+            out.push(String(s));
+            return true;
+        });
+        let code: number;
+        try {
+            code = main(['--quiet']);
+        } finally {
+            spy.mockRestore();
+        }
+        expect(code).toBe(0);
+        const m = /^scanned: (\d+)$/m.exec(out.join(''));
+        expect(m).not.toBeNull();
+        expect(Number(m![1])).toBeGreaterThan(250);
+    });
+});
