@@ -63,16 +63,76 @@ new gate is written without a scope assertion, and 0 stays the target. The
 unchanged: a number that never drops fails its gate rather than hardening into
 configuration.
 
+## The conversion contract — assert-first, measured not asserted
+
+> **Council 2026-08-04 round 2** (anthropic/claude-sonnet-4-5 + openai/gpt-4o,
+> 3 rounds, deep). Both members converged: **emit-only conversion is a
+> manufactured green.** Adding one `scanned: <N>` line satisfies the ratchet's
+> regex, but that line is only *enforced* for the 22 gates registered in
+> `gate-coverage.yml` with a floor — and padding that manifest is a non-goal of
+> this roadmap. An unregistered gate that prints `scanned: 0` on its way out of
+> a deleted root has published its blindness to nobody.
+
+The council proposed dropping the emit route outright (its option D), accepting
+that the count jumps before it falls. Measured against the tree first, per the
+package's own rule that a council's load-bearing premise is checked in-repo:
+
+| Route | Gates | Consequence of dropping the bare-emit route |
+|---|---:|---|
+| asserts **and** emits | 8 | unaffected |
+| asserts only | 12 | unaffected |
+| emits only | 14 | **all 14 are registered enforced** with `min_scanned ≥ 1` |
+| neither | 189 | the population this roadmap converts |
+
+So the honest tightening is not "drop the emit route" — it is to say what the
+emit route always meant:
+
+```
+HARDENED ⇔ ROUTES THROUGH _lib/scan_scope
+        ∨ (EMITS `scanned:` ∧ REGISTERED ENFORCED IN gate-coverage.yml WITH A FLOOR)
+```
+
+This is **not** goalpost movement in either direction: it costs the 14 emit-only
+gates nothing (every one is registered), and it matches this roadmap's own Goal
+sentence, which already says *"asserts its scan scope through `_lib/scan_scope.ts`,
+or carries a justified `allowEmpty`"* and never mentioned a bare emit. The
+ratchet implementation was looser than the charter it enforces; closing that is
+a drift repair. The one gate the tightening reclassifies is
+`check_gate_coverage` itself — it emits and is not in its own manifest — so it
+is converted in the same change and the baseline stays **189**, verified by
+measurement rather than by argument.
+
+Consequences for every conversion below:
+
+1. **Assert-first.** Each converted gate calls `assertScanned` /
+   `assertWatchlistResolves`. A `scanned:` line alone can no longer close a
+   gate, so the cheap path out of this roadmap is closed by construction.
+2. **`reportScanned` for gates that should also feed the coverage guard** —
+   assert + publish in ONE call, so a published number is assert-backed by
+   construction and cannot drift from the number that was validated.
+3. **`allowEmpty` carries a machine-readable prefix** (`OPTIONAL_INPUT:` /
+   `EMPTY_VALID:` / `WATCHLIST_DRIVEN:`) followed by the reason, so the
+   deletion test below is applied from the comment alone — the council's answer
+   to "how do you stop 116 boilerplate justifications".
+
 ## Phase 1 — the mechanically-safe conversions
 
 Gates whose count is **published, not invented**: the value already exists in
 the gate at the point of exit and already gates a red. Converting these adds no
 semantic judgement, which is exactly why they are separable from Phase 2.
 
-- [ ] Enumerate the gates that already compute a corpus size at their exit path
+- [x] Enumerate the gates that already compute a corpus size at their exit path
       but neither assert nor publish it.
       *Verify:* the list is produced by a script, not by reading; each entry
       names the file:line where the count already exists.
+      → `src/scripts/gate_scope_classify.ts` (AST, population imported from
+      `check_gate_coverage.list_unhardened_gates()` so it cannot disagree with
+      the ratchet); output `agents/evidence/reports/gate-scope-classification.md`.
+      Split: **31** `count_at_exit` · **42** `count_in_helper` · **116**
+      `no_corpus_count`. The classifier separates a **corpus** count from a
+      **findings** count — its first draft nominated 146 gates by reading
+      `errors.length` in `main()` as coverage, which is risk #1 of this register
+      implemented by the tool meant to prevent it.
 - [ ] Convert them in batches, smallest-risk first, each batch its own commit.
       *Verify:* `check_gate_coverage` green after every batch; the ratchet count
       drops by exactly the batch size (a drop that does not match the batch is a

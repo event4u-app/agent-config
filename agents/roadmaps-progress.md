@@ -6,10 +6,10 @@
 
 ## Overall
 
-**68 / 157 steps done · 43%**
+**69 / 157 steps done · 44%**
 
 ```text
-█████████████████░░░░░░░░░░░░░░░░░░░░░░░   43%
+██████████████████░░░░░░░░░░░░░░░░░░░░░░   44%
 ```
 
 ## Open roadmaps
@@ -19,7 +19,7 @@
 | 1 | [road-to-adoption-without-narrative-debt.md](roadmaps/road-to-adoption-without-narrative-debt.md) | 5 | 17 | 7 | 10 | 0 | 0 | [1](#blockers-road-to-adoption-without-narrative-debt) | ██████░░░░ 59% |
 | 2 | [road-to-ci-native-release-first-run.md](roadmaps/road-to-ci-native-release-first-run.md) | 2 | 8 | 8 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 3 | [road-to-council-blind-review.md](roadmaps/road-to-council-blind-review.md) | 3 | 6 | 2 | 3 | 0 | 1 | 0 | ██████░░░░ 60% |
-| 4 | [road-to-gate-hardening-adoption.md](roadmaps/road-to-gate-hardening-adoption.md) | 3 | 13 | 13 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+| 4 | [road-to-gate-hardening-adoption.md](roadmaps/road-to-gate-hardening-adoption.md) | 3 | 13 | 12 | 1 | 0 | 0 | 0 | █░░░░░░░░░ 8% |
 | 5 | [road-to-gated-reach-followup.md](roadmaps/road-to-gated-reach-followup.md) | 1 | 12 | 12 | 0 | 0 | 0 | [1](#blockers-road-to-gated-reach-followup) | ░░░░░░░░░░ 0% |
 | 6 | [road-to-kernel-question-triangle.md](roadmaps/road-to-kernel-question-triangle.md) | 1 | 3 | 3 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 7 | [road-to-maintainer-bus-factor.md](roadmaps/road-to-maintainer-bus-factor.md) | 4 | 12 | 5 | 7 | 0 | 0 | [1](#blockers-road-to-maintainer-bus-factor) | ██████░░░░ 58% |
@@ -81,11 +81,11 @@ _2 blockers resolved._
 
 ### [road-to-gate-hardening-adoption.md](roadmaps/road-to-gate-hardening-adoption.md)
 
-**Road to gate-hardening adoption — take the unhardened-gate count to zero** — 0 / 13 done (0%)
+**Road to gate-hardening adoption — take the unhardened-gate count to zero** — 1 / 13 done (8%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
-| 1 | the mechanically-safe conversions | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
+| 1 | the mechanically-safe conversions | 🟡 in progress | 2 | 1 | 0 | 0 | 33% |
 | 2 | the gates whose unit must be decided | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
 | 3 | close the ratchet | ⬜ not started | 7 | 0 | 0 | 0 | 0% |
 
