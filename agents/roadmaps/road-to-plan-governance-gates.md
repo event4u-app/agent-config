@@ -107,8 +107,16 @@ complexity: structural
 - **Handoff to R1 (single flow, no double interview):** Gate C persists
   its resolved branches as machine-readable state
   (`agents/runtime/state/gate-c-<plan-slug>.json`: resolved branches, plan
-  hash, timestamp). R1's risk pass reads it when present, plan-hash-fresh,
-  and same-session; otherwise it runs fresh. Contract in Phase 4 Step 1.
+  hash, timestamp, **and a mandatory `transcript_ref`** — path + content
+  hash of the interview transcript artifact; the R1 validator checks
+  existence + hash match, so a forged state file requires a forged,
+  census-visible transcript). R1's risk pass reads it when present,
+  plan-hash-fresh, and same-session; otherwise it runs fresh. Only the
+  Gate C flow writes `agents/runtime/state/gate-c-*.json` — generic write
+  operations on that glob are a lint violation. Threat model (verdict
+  #19): the guard defends against *silent agent shortcuts*, not against
+  the local human, who holds a legitimate settings escape hatch anyway —
+  detectability over prevention, by design. Contract in Phase 4 Step 1.
 
 ### Gate R1 — plan-risk review (at plan creation/substantial change)
 
@@ -203,7 +211,15 @@ complexity: structural
   beyond the branch, no repo-wide grep, no reads of `agents/runtime/` or
   session artifacts) so the context cannot be reconstructed through
   tools. The artifact header carries a context manifest (schema in
-  Phase 4 Step 1) so isolation is checkable.
+  Phase 4 Step 1) so isolation is checkable. **The manifest is
+  verification, not self-attestation (verdict #18):** the reviewer input
+  is never assembled by the implementing agent — a deterministic
+  dispatcher script constructs the reviewer context (branch diff via git,
+  roadmap file, extracted AC), computes the `inputs` hashes itself, and
+  writes the manifest; CI re-derives the expected hashes from diff SHA +
+  roadmap path and blocks on mismatch. Residual (`accepted-risk`):
+  host-level context injection outside the dispatcher is not preventable
+  from inside the repo; detection floor = the adversarial-leak E2E.
 
 ## Phase 1: Settings keys + schema
 
@@ -265,10 +281,11 @@ complexity: structural
       behavior change in challenge-me itself).
 - [ ] **Step 6:** C→R1 handoff: Gate C writes
       `agents/runtime/state/gate-c-<plan-slug>.json` (resolved branches,
-      plan hash, timestamp — schema per Phase 4 Step 1); the R1 authoring
-      step reads it when present + plan-hash-fresh + same-session, and
-      skips re-asking resolved branches. The user is never interviewed
-      twice for the same plan.
+      plan hash, timestamp, `transcript_ref` with content hash — schema
+      per Phase 4 Step 1); the R1 authoring step reads it when present +
+      plan-hash-fresh + same-session (validator checks the transcript
+      hash), and skips re-asking resolved branches. The user is never
+      interviewed twice for the same plan.
 - [ ] **Step 7:** Verify: `./scripts-run src/scripts/check_references` and
       `./scripts-run src/scripts/validate_frontmatter` green across all
       touched files; walkthrough evidence that (a) a Gate C interview
@@ -289,12 +306,16 @@ complexity: structural
       deliverable checkbox lines added/removed, content diff inside an
       `## Acceptance Criteria` block; state flips and prose-only edits
       excluded); the **context-manifest schema** for R2 reviewer headers
-      (`inputs` hashes, `excluded` classes, `tools` allowlist, timestamp);
-      the **C→R1 handoff state schema**; and the **validator exit-code
-      contract**: `0` = pass, `1` = policy violation (block), `2` =
-      internal error (crash/timeout/parse failure → **degraded advisory
-      mode**: log a warning, allow the operation — a broken gate must
-      never block its own fix).
+      (`inputs` hashes, `excluded` classes, `tools` allowlist, timestamp)
+      including the dispatcher-writes-manifest rule and the residual
+      host-injection `accepted-risk` (verdict #18); the **C→R1 handoff
+      state schema** with mandatory `transcript_ref` (path + content
+      hash), the gate-c write-path glob rule, and the explicit
+      detectability-over-prevention threat model (verdict #19); and the
+      **validator exit-code contract**: `0` = pass, `1` = policy violation
+      (block), `2` = internal error (crash/timeout/parse failure →
+      **degraded advisory mode**: log a warning, allow the operation — a
+      broken gate must never block its own fix).
 - [ ] **Step 2:** Implement `src/scripts/lint_plan_risk_register.ts`
       (deterministic, no LLM): existence on ready (non-draft) roadmaps,
       marker parse, rank monotonicity, mitigation presence, dangling
@@ -366,16 +387,23 @@ complexity: structural
       findings artifact references post-archival paths), (3) PR creation
       only with a valid findings artifact, honest-null, or skip
       declaration for the current diff hash.
-- [ ] **Step 3:** Fresh-subagent dispatch for Phase 1: reviewer receives
-      only diff + roadmap + acceptance criteria (no session history) and
-      runs under the tool allowlist from the Phase 4 contract
+- [ ] **Step 3:** Fresh-subagent dispatch for Phase 1: implement
+      `src/scripts/dispatch_r2_reviewer.ts` — a deterministic dispatcher
+      that constructs the reviewer input itself (branch diff via git,
+      roadmap file, extracted AC), computes the `inputs` hashes, writes
+      the context manifest into the artifact header, and dispatches the
+      reviewer under the tool allowlist from the Phase 4 contract
       (branch-scoped `git diff` + branch-path file reads; no `git log`
       beyond the branch, no repo-wide grep, no `agents/runtime/` or
-      session-artifact reads); reuse `/judge:on-diff` machinery; write the
-      context manifest into the artifact header. Findings artifact lands
-      tracked under `agents/reviews/` (confirm exact location against the
+      session-artifact reads); reuse `/judge:on-diff` machinery for the
+      review itself. The implementing agent never assembles the reviewer
+      context (verdict #18). Findings artifact lands tracked under
+      `agents/reviews/` (confirm exact location against the
       `agents-layout` contract; adjust there if it prescribes another
       home).
+- [ ] **Step 3b:** CI manifest verification: re-derive the expected
+      `inputs` hashes from the PR's diff SHA + roadmap path and block on
+      manifest mismatch (manifest = verification, not self-attestation).
 - [ ] **Step 4:** Two-phase enforcement: the findings artifact must be
       committed before the first fix commit (commit-ancestry check in
       `check_completion_review.ts`). Enforcement point: **pre-push hook +
@@ -416,17 +444,26 @@ complexity: structural
       Registers of archived roadmaps and prompts per mitigation —
       `helped | fired | unknown` — appending to the metrics JSONL;
       quarterly cadence noted in the contract doc.
-- [ ] **Step 3:** Pre-register thresholds in `CLAIMS.md` BEFORE the first
-      data point (regen `build_proof` + denominator bump in the same
-      change): success `r2_critical_catch_rate ≥ 15%` over the first 20
-      gated PRs; cost ceiling `gate_latency_p95 ≤ 5 min` per PR; alarm
-      `honest_null_rate ≥ 90%` over 10 consecutive reviews → audit the
-      reviewer setup.
+- [ ] **Step 3:** Two-stage pre-registration (verdict #20 — the original
+      flat `≥ 15%` figure is withdrawn as unanchored). **Stage A (before
+      any data):** pre-register the measurement *protocol* in `CLAIMS.md`
+      (regen `build_proof` + denominator bump in the same change) —
+      metric definitions, denominators, and a fixed advisory window: the
+      first 10 gated PRs run R2 in advisory-only mode and the observed
+      catch rate is recorded as baseline. Cost ceiling
+      `gate_latency_p95 ≤ 5 min` per PR and alarm `honest_null_rate ≥
+      90%` over 10 consecutive reviews are protocol-level and register in
+      Stage A. **Stage B (after the baseline, before the enforced
+      window):** derive the enforced-mode success threshold for
+      `r2_critical_catch_rate` from the observed baseline and commit it
+      to `CLAIMS.md` — set exactly once, never lowered afterwards.
 - [ ] **Step 4:** Honest-null publication commitment: if thresholds are
       missed, publish the result and rework or roll back the gates — never
       lower the thresholds afterwards.
-- [ ] **Step 5:** Acceptance: thresholds are committed before the first
-      data point (CLAIMS.md entry); after 20 gated PRs a measurement report
+- [ ] **Step 5:** Acceptance: the protocol (Stage A) is committed before
+      the first data point and the enforced-mode threshold (Stage B) is
+      committed after the 10-PR advisory baseline and before the enforced
+      window (CLAIMS.md entries); after 20 gated PRs a measurement report
       exists regardless of outcome.
 
 ## Phase 8: Projections + docs
@@ -467,8 +504,10 @@ complexity: structural
 - [ ] Both validators emit `scanned: <N>`, are registered in
       `gate-coverage.yml` with real floors, and have 0 false-pass on the
       fail fixtures.
-- [ ] Measurement thresholds are pre-registered in `CLAIMS.md` before the
-      first data point.
+- [ ] Measurement protocol is pre-registered in `CLAIMS.md` before the
+      first data point; the enforced-mode catch-rate threshold is derived
+      from the 10-PR advisory baseline and frozen before the enforced
+      window (two-stage pre-registration, verdict #20).
 - [ ] The post-artifact hard stop is unchanged on every surface; no gate
       lifts any safety floor.
 - [ ] `dist/agent-src/` byte-identical to `rewrite(src)`; install bundle
@@ -483,7 +522,7 @@ complexity: structural
 | 2 | Stale reviews | implementation | Review on an old diff, then a new push without re-review | Diff-hash binding in the artifact; hash mismatch = block | Phase 4 Step 3, Phase 6 Step 2 |
 | 3 | Broken gate blocks its own fix | implementation | A buggy/crashing validator blocks every push — including the push that would fix or disable it | Exit-code contract: internal errors (exit 2) → degraded advisory mode, warn-and-allow; only policy violations block | Phase 4 Step 1, Phase 5 Step 3 |
 | 4 | Gate fatigue / pro-forma registers | product | Agents fill registers with generic placeholder risks; the gate becomes ritual | `honest_null_rate` alarm + quarterly annotation; dangling-ref check forces anchoring in the plan | Phase 4 Step 2, Phase 7 Step 1 |
-| 5 | Reviewer context leaks | implementation | Fresh subagent reconstructs session context via data input or tools (`git log`, repo-wide grep) → blind-review property lost | Context manifest + tool allowlist in the review context; adversarial leak E2E | Phase 6 Step 3, Phase 6 Step 6 |
+| 5 | Reviewer context leaks | implementation | Fresh subagent reconstructs session context via data input or tools (`git log`, repo-wide grep) → blind-review property lost | Dispatcher-built reviewer context + CI hash re-derivation (manifest = verification, verdict #18); tool allowlist; adversarial leak E2E; residual host-injection declared accepted-risk | Phase 6 Step 3, Phase 6 Step 3b, Phase 6 Step 6 |
 | 6 | Latency cost exceeds value | product | Three gates measurably slow every plan/PR | Pre-registered cost ceiling `p95 ≤ 5 min`; on miss: rework/rollback, never threshold-lowering | Phase 7 Step 3 |
 | 7 | Substantial-change heuristic miscalibrated | implementation | R1 fires on typo fixes or misses real scope changes | Heuristic defined as a contract BEFORE implementation; FP/FN fixtures as regression suite | Phase 4 Step 1, Phase 5 Step 1 |
 | 8 | Blocking write-hook breaks incremental authoring | implementation | A pre-write block would reject every intermediate save while a plan is being drafted | Enforce at ready/push/CI instead; drafts exempt; authoring-flow step carries the agent-side obligation | Phase 5 Step 3 |
@@ -513,7 +552,7 @@ complexity: structural
 |-------|--------|----------|
 | "Gates block deterministically without LLM judgment" | pending | Phase 4 validators + fixtures |
 | "Fresh-subagent review runs without implementation context" | pending | Phase 6 context manifest + tool-leak E2E |
-| "R2 catches critical findings before merge" | pending | Phase 7 measurement, threshold ≥15% / 20 PRs |
+| "R2 catches critical findings before merge" | pending | Phase 7 two-stage protocol — threshold derived from the 10-PR advisory baseline, then frozen (the flat 15% figure is withdrawn as unanchored, verdict #20) |
 | "Gates cost ≤ 5 min p95 per PR" | pending | Phase 7 measurement |
 | "A crashed validator never blocks the workflow" | pending | Phase 4 exit-code fixtures + Phase 5/6 E2E |
 
@@ -606,3 +645,39 @@ anthropic/claude-sonnet-4-5 (Response-A), openai/gpt-4o (Response-B).
 Deep-tier run of 2026-08-04, members anthropic/claude-sonnet-4-5 +
 openai/gpt-4o (raw responses are local-only council artifacts,
 auto-pruned after the retention window — convergence is inlined above).
+
+## Addendum: post-merge adjudication of advisory-gate blocking findings (PR #1155)
+
+> The dogfooded advisory review on PR #1155 (2026-08-04) reported 3
+> findings that WOULD block merge under an enforced gate. The PR merged
+> while the gate was advisory. Per the two-phase rule this roadmap itself
+> introduces, every finding must end in `fixed | accepted-risk |
+> deferred`. This addendum closes that loop; the spec amendments the
+> verdicts require are applied in the phases above. Verdict-table
+> numbering continues from the council table (#18–#20).
+
+### Host verdict (continued — advisory-bot blockers)
+
+| # | Finding | Verdict | Applied as |
+|---|---|---|---|
+| 18 | R2 reviewer context isolation incomplete — agent-side advisory layer leaks implementation context (91e343b91057, critical) | `accept-with-modification` | Split into fix + residual. **Fix:** reviewer input is never assembled by the implementing agent — a dedicated dispatcher script (`src/scripts/dispatch_r2_reviewer.ts`, Phase 6 Step 3) constructs the reviewer context deterministically (branch diff via git, roadmap file, extracted AC), computes the `inputs` hashes itself, and writes the context manifest; CI re-derives the expected hashes from diff SHA + roadmap path and blocks on mismatch (Phase 6 Step 3b) — the manifest becomes verification, not self-attestation. **Residual (`accepted-risk`):** host-level injection outside the dispatcher (a host that prepends extra context to the subagent) is not preventable from inside the repo; detection floor = adversarial-leak E2E (Phase 6 Step 6). Threat model documented in the Phase 4 contract. |
+| 19 | C→R1 handoff state file writable by any agent op — tampering bypasses the interview (c36ee4726ad5, high) | `accept-with-modification` | Cryptographic tamper-proofing is refused (a secret stored in a local repo is not a secret). Applied instead: **verifiable provenance + explicit threat model.** (a) `gate-c-<plan-slug>.json` gains a mandatory `transcript_ref` (path + content hash of the interview transcript artifact); the R1 validator checks existence + hash match — a forged state file now requires a forged transcript, which is census-visible and auditable. (b) Write path restricted by rule: only the Gate C flow writes `agents/runtime/state/gate-c-*.json`; generic write operations on that glob are a lint violation. (c) The Phase 4 contract states the threat model explicitly: the guard defends against *silent agent shortcuts*, not against the local human — who holds a legitimate settings escape hatch anyway, so forgery gains nothing that cannot be done openly. Detectability over prevention, by design. |
+| 20 | R2 critical-catch threshold ≥15% / 20 PRs unanchored — no baseline (d4c3431122fe, high) | `accept` | Phase 7 Step 3 restructured into a two-stage pre-registration. **Stage A (before any data):** pre-register the measurement *protocol* — metric definitions, denominators, and a fixed advisory window of the first 10 gated PRs in which R2 runs advisory-only and the observed catch rate is recorded as baseline. **Stage B (after baseline, before the enforced window):** derive and commit the enforced-mode success threshold from the observed baseline to `CLAIMS.md` — set once, never lowered afterwards (honest-null commitment unchanged). The Claims Ledger entry "threshold ≥15% / 20 PRs" is updated to reference the two-stage protocol; the 15% figure is withdrawn as unanchored. |
+
+### Notes
+
+- **Sequencing:** #18 and #19 land as spec amendments before Phase 4/6
+  execution starts (they change the Phase 4 Step 1 contract file); #20
+  amends Phase 7 before activation. No shipped behavior is affected —
+  PR #1155 was roadmap-only.
+- **Bot findings vs. council findings:** the advisory bot ran *after* the
+  council-adjudicated commits, so these three were structurally unable to
+  appear in the original verdict table. Process note for the R2 rollout:
+  the enforced gate closes exactly this window (findings after last
+  commit → diff-hash mismatch → re-review before merge).
+- **Remaining advisory findings (non-blocking):** the 7 advisory-severity
+  findings from the same run are not adjudicated here; recommend a
+  follow-up pass, in particular 3d1ec40e05b0 (substantial-change heuristic
+  rename bypass — cheap contract fix) and 93a92e2d713a (stable risk IDs
+  `R-001` + separate rank column — prevents cross-reference breakage on
+  every register reorder).
