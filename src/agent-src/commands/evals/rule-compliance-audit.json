@@ -1,0 +1,46 @@
+{
+  "command": "rule-compliance-audit",
+  "intent": "Audit rule trigger quality and replay the router matcher over recent prompts (routing audit)",
+  "cases": [
+    {
+      "prompt": "audit my rules for weak triggers",
+      "expected": "rule-compliance-audit"
+    },
+    {
+      "prompt": "run a routing audit — which rules fired on my last prompts",
+      "expected": "rule-compliance-audit"
+    },
+    {
+      "prompt": "check whether the rule routing actually matches what I type",
+      "expected": "rule-compliance-audit"
+    },
+    {
+      "prompt": "why did no rule activate on my last message — audit the triggers",
+      "expected": "rule-compliance-audit"
+    },
+    {
+      "prompt": "find rules whose descriptions overlap or never activate",
+      "expected": "rule-compliance-audit"
+    },
+    {
+      "prompt": "fix the failing CI on this branch",
+      "expected": "fix"
+    },
+    {
+      "prompt": "review the changes on this branch before I push",
+      "expected": "review-changes"
+    },
+    {
+      "prompt": "run a full project health check",
+      "expected": "project-health"
+    },
+    {
+      "prompt": "estimate this ticket for me",
+      "expected": "estimate-ticket"
+    },
+    {
+      "prompt": "commit these changes in logical chunks",
+      "expected": "commit"
+    }
+  ]
+}
