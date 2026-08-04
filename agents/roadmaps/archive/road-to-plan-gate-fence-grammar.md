@@ -14,11 +14,11 @@ complexity: structural
 
 ## Prerequisites
 
-- [ ] Read `docs/contracts/plan-review-gates.md` § 2.2 (fence rule + the
+- [x] Read `docs/contracts/plan-review-gates.md` § 2.2 (fence rule + the
       `KNOWN HOLE` note) and § 2.7 (superseded-round convention)
-- [ ] Read `agents/evidence/reviews/postmerge-blindpass-review.md` — findings
+- [x] Read `agents/evidence/reviews/postmerge-blindpass-review.md` — findings
       1, 2, 4 are the F items; its `### Correction` section is the D case study
-- [ ] Read the `KNOWN HOLE` characterization block in
+- [x] Read the `KNOWN HOLE` characterization block in
       `tests/scripts/check_completion_review.test.ts` — it pins current behaviour
       and states what to do when it starts failing
 
@@ -115,12 +115,12 @@ layer that has now failed open four times.
       what the chosen direction sacrifices.
       <!-- executed 2026-08-04 — verdict recorded above: Candidate B, rows live by default, explicit illustrative marker, v2 header discriminator; pure data-block and malformed-in-block blocking both rejected with the reason. -->
 
-- [ ] **Step 2:** Write the chosen rule into `docs/contracts/plan-review-gates.md`
+- [x] **Step 2:** Write the chosen rule into `docs/contracts/plan-review-gates.md`
       § 2.2 as a deterministic parser contract, covering explicitly: an
       undeclared labelled fence, an unterminated fence, nested fences
       (```` ```` ```` wrapping ```` ``` ````), and a findings-shaped row whose
       Status is an unknown token.
-- [ ] **Step 3:** Decide and document migration for artefacts authored under the
+- [x] **Step 3:** Decide and document migration for artefacts authored under the
       old grammar — the header already carries `completion-review: v1`, so a
       `v2` marker is available as the discriminator. Grandfathering must not
       require editing a frozen record.
@@ -136,7 +136,7 @@ layer that has now failed open four times.
 > Step 1 implementing the rule and Step 5 adding fixtures — that is the inversion
 > this section corrects.
 
-- [ ] **Step 1 (pin — its own commit, no production edit):** Extend the fixture
+- [x] **Step 1 (pin — its own commit, no production edit):** Extend the fixture
       set to cover **every** fail-open shape in the § 2.2 history, each asserting
       CURRENT behaviour so the suite is green before anything migrates:
       the odd-count `inFence` toggle, the mis-paired positional pairing, the
@@ -145,19 +145,19 @@ layer that has now failed open four times.
       legitimate shape that must KEEP working: a properly-closed labelled block,
       a nested ```` ```` ````-wrapped fence, and the dispatcher's generated
       skeleton verbatim.
-- [ ] **Step 2:** Implement the Candidate-B rule in `check_completion_review.ts`
+- [x] **Step 2:** Implement the Candidate-B rule in `check_completion_review.ts`
       (rows live by default, explicit illustrative marker, `v2` discriminator).
-- [ ] **Step 3:** In the SAME commit as Step 2, flip the pinned assertions from
+- [x] **Step 3:** In the SAME commit as Step 2, flip the pinned assertions from
       Step 1 to their post-change expectations. The diff of that commit is then
       the exact, reviewable list of behaviours that changed — and any fixture
       that flips unexpectedly is a defect found before merge, not after.
-- [ ] **Step 4:** Update `dispatch_r2_reviewer.ts` so its generated skeleton is
+- [x] **Step 4:** Update `dispatch_r2_reviewer.ts` so its generated skeleton is
       valid under the new grammar — the skeleton is the highest-traffic artefact
       and a grammar that reds it is wrong by construction. Its verbatim fixture
       from Step 1 must stay green.
-- [ ] **Step 5:** Fix the `unbalanced-fence` remediation string so it cannot
+- [x] **Step 5:** Fix the `unbalanced-fence` remediation string so it cannot
       describe the arrangement that produced finding 1.
-- [ ] **Step 6:** Remove the `KNOWN HOLE` notes (contract § 2.2 and the
+- [x] **Step 6:** Remove the `KNOWN HOLE` notes (contract § 2.2 and the
       `scanFences` JSDoc) — in the same change that removes the hole, never
       before, and never while any Step-1 fixture still asserts the old
       behaviour. (Moved here from Phase 1: the notes describe a hole Phase 2
@@ -189,65 +189,88 @@ layer that has now failed open four times.
 > it was that **no validator reads those files at all** — they sit outside the
 > `*.findings.md` glob (§ 2.7) so nothing selects them.
 
-- [ ] **Step 1:** Define the rule in the contract: every findings-shaped row in
+- [x] **Step 1:** Define the rule in the contract: every findings-shaped row in
       an archived round record (`*-review.md` outside the `*.findings.md` glob)
       MUST carry a terminal status, and each status its required reference —
       `fixed` a commit-ish, `accepted-risk` a reason, `deferred` a carrier. An
       `open` row in an archived record is a violation by definition: archiving is
       what asserts the round is closed.
-- [ ] **Step 2:** Implement it as its own validator
+- [x] **Step 2:** Implement it as its own validator
       (`check_review_dispositions.ts`) rather than inside
       `check_completion_review`. Keeping it separate preserves § 2.6's
       scope-selection — folding a corpus-wide sweep into the scope-selecting
       validator is exactly the directory-wide coupling § 2.6 removed — and gives
       the new check its own `scanned:` floor.
-- [ ] **Step 3:** Reference-shape validation, deliberately narrow: a `fixed` ref
-      must resolve via `rev-parse`, a `deferred` ref must name an existing file.
-      No prose grading. Getting stricter than "the reference resolves" invites
-      the confusing-block failure the council named.
-- [ ] **Step 4:** Run it against the existing corpus (rounds 1–8 plus the blind
+- [-] **Step 3:** Reference-shape validation — **built, measured, removed.** It
+      was implemented exactly as planned (`fixed` → `rev-parse`, `deferred` →
+      path probe). Against the real corpus it produced 8 blocks: 5
+      `unresolvable-fix-ref` and 3 `unresolvable-carrier`, every one a
+      pre-existing archived record whose reference is prose describing the change
+      or a carrier named by bare slug — and not one of them the failure this
+      phase exists to catch. Archived records are frozen (a stated non-goal), so
+      those blocks are unfixable without editing them, and a gate whose only
+      output is unfixable blocks is the gate that gets switched off — the exact
+      confusing-block failure the council named, arrived at from the other
+      direction. The rule is therefore terminal status + non-empty Reason/Ref.
+      Revisit trigger recorded in contract § 2.7: an unresolvable reference that
+      actually hides a disposition, on a record written after this gate shipped
+      and therefore fixable at source.
+- [x] **Step 4:** Run it against the existing corpus (rounds 1–8 plus the blind
       pass) and fix whatever it legitimately flags. Expect it to pass on the
       first run — the corpus is already terminal — so a failure here is a
       finding about the checker, not the corpus.
-- [ ] **Step 5:** Register in `src/config/gate-coverage.yml` with a real
+- [x] **Step 5:** Register in `src/config/gate-coverage.yml` with a real
       `min_scanned` floor derived from the current record count, and wire into
       `task preflight` + CI with the § 6 exit-code contract (exit 2 →
       warn-and-allow, dead scan scope → exit 1).
-- [ ] **Step 6:** Verify with fixtures: an `open` row in an archived record
+- [x] **Step 6:** Verify with fixtures: an `open` row in an archived record
       blocks; `fixed` without a resolvable ref blocks; `deferred` without a
       carrier blocks; `accepted-risk` without a reason blocks; the real corpus
       passes. Plus the regression that motivated this phase — the exact shape of
       the blind-pass slip (a `fixed` finding still recorded `open`) must block.
-- [ ] **Step 7:** Note in the contract that the stable-id index remains an
+- [x] **Step 7:** Note in the contract that the stable-id index remains an
       option, with the trigger that would justify it: a disposition that cannot
       be recorded in the round record itself. Recording the trigger prevents both
       re-litigating the decision and forgetting it was conditional.
 
 ## Phase 4: Projections + docs
 
-- [ ] **Step 1:** `task sync` — regenerate `dist/agent-src/`.
-- [ ] **Step 2:** `task generate-tools` for any touched command/skill surface.
-- [ ] **Step 3:** Register any new validator entry point in
-      `src/config/gate-coverage.yml` with a real `min_scanned` floor, or state
-      why the existing entry covers it.
+- [x] **Step 1:** `task sync` — regenerate `dist/agent-src/`. No projection
+      delta: this change touches `src/scripts/`, `src/config/`, the workflow and
+      `docs/contracts/`, none of which project into `dist/agent-src/`.
+- [x] **Step 2:** `task generate-tools` for any touched command/skill surface —
+      no command or skill surface changed, counts unchanged.
+- [x] **Step 3:** `check_review_dispositions` registered in
+      `src/config/gate-coverage.yml`, `min_scanned: 7` against a 9-record corpus
+      (done in Phase 3 Step 5). Unlike the R2 entry the floor is genuinely
+      trippable — archived records are never deleted, so a drop means the root
+      moved.
 
 ## Acceptance Criteria
 
-- [ ] The reproduction artefact from the blind pass (earlier terminal row,
+- [x] The reproduction artefact from the blind pass (earlier terminal row,
       labelled opener, live `open` row, later bare fence) produces a **blocking**
       violation; the characterization test is replaced by that positive
       assertion, not deleted.
-- [ ] The dispatcher's generated skeleton passes the new grammar unchanged by a
-      human.
-- [ ] Every fail-open shape in the § 2.2 history has a fixture that blocks.
-- [ ] Both `KNOWN HOLE` notes are gone, removed in the same change as the hole.
-- [ ] Migration is explicit: an artefact authored under the old grammar either
-      passes by a documented discriminator or is named as requiring re-issue —
-      never silently red, never silently green, never edited in place.
-- [ ] An archived round's `open` row without a terminal index entry blocks; an
-      orphan index entry blocks; rounds 1–8 plus the blind pass are backfilled
-      and pass.
-- [ ] `check_completion_review` still emits `scanned: <N>` on every exit path
+- [x] The dispatcher's generated skeleton passes the new grammar unchanged by a
+      human. **Measured, and it corrected a claim of mine:** I had asserted in
+      this roadmap and in the PR body that the guard fires on the skeleton
+      because it ships an `open` row. `findingsSkeleton()` emits no row at all —
+      the example lives in `prompt.md`, which is never parsed. Corpus-wide there
+      are zero fenced rows, so the migration surface is empty.
+- [x] Every fail-open shape in the § 2.2 history has a fixture that blocks.
+- [x] Both `KNOWN HOLE` notes are gone, removed in the same change as the hole.
+- [x] Migration is explicit: an artefact authored under the old grammar either
+      passes by a documented discriminator (`example` in the Status cell) or is
+      named as requiring re-issue — never silently red, never silently green,
+      never edited in place. Measured surface: zero affected artefacts.
+- [x] An archived round's `open` row blocks, and rounds 1–8 plus the blind pass
+      pass. **Restated during Phase 3:** the original wording ("without a
+      terminal index entry", "an orphan index entry blocks") described the
+      stable-id index that Phase 3 replaced with the in-record check — there is
+      no index, so there are no orphans. The property bought is unchanged; only
+      the mechanism is smaller.
+- [x] `check_completion_review` still emits `scanned: <N>` on every exit path
       including exit 2, and the exit-code contract of § 6 is unchanged.
 
 ## Risk Register

@@ -15,10 +15,10 @@ dispatched: 2026-08-04T14:46:17Z
 
 | # | Severity | File:Line | Finding | Status | Reason/Ref |
 |---|----------|-----------|---------|--------|------------|
-| 1 | critical | src/scripts/check_completion_review.ts:434 | The mis-pairing fail-open the change claims to close survives with a labelled opener: an unclosed labelled opener is closed by the first later BARE fence anywhere in the artefact, so every line between them is added to `fenced` (a live `open` finding row among them disappears from `rows`), `open` returns to null so `strays` stays empty and no `unbalanced-fence` is emitted, and an earlier well-formed row keeps the neither-table-nor-honest-null fallback quiet — the gate exits 0 on an unreviewed `open` finding. Fires on the exact arrangement `markdown-safe-codeblocks` prescribes: a tilde-wrapped illustration quoting an unpaired labelled opener plus any bare fence later in the file. | deferred | roadmap road-to-plan-gate-fence-grammar — §2.2 grammar decision, council-routed 2026-08-04; pinned meanwhile by the KNOWN-HOLE characterization test |
-| 2 | high | src/scripts/check_completion_review.ts:779 | The remediation text printed with every `unbalanced-fence` violation ("Label the opener and close it") walks the author straight into finding 1: applied to the repo's own two-stray fixture, labelling only the first stray turns it into an unclosed labelled opener that the still-bare second stray closes, swallowing the `open` row between them and flipping a blocking exit 1 into a silent pass. | deferred | roadmap road-to-plan-gate-fence-grammar — the remediation string is rewritten together with the grammar it points at |
+| 1 | critical | src/scripts/check_completion_review.ts:434 | The mis-pairing fail-open the change claims to close survives with a labelled opener: an unclosed labelled opener is closed by the first later BARE fence anywhere in the artefact, so every line between them is added to `fenced` (a live `open` finding row among them disappears from `rows`), `open` returns to null so `strays` stays empty and no `unbalanced-fence` is emitted, and an earlier well-formed row keeps the neither-table-nor-honest-null fallback quiet — the gate exits 0 on an unreviewed `open` finding. Fires on the exact arrangement `markdown-safe-codeblocks` prescribes: a tilde-wrapped illustration quoting an unpaired labelled opener plus any bare fence later in the file. | fixed | `ba77e6a6f` — rows are live wherever they appear; fences govern only marker / honest-null / skip. See the disposition update below |
+| 2 | high | src/scripts/check_completion_review.ts:779 | The remediation text printed with every `unbalanced-fence` violation ("Label the opener and close it") walks the author straight into finding 1: applied to the repo's own two-stray fixture, labelling only the first stray turns it into an unclosed labelled opener that the still-bare second stray closes, swallowing the `open` row between them and flipping a blocking exit 1 into a silent pass. | fixed | `2dc9e0d91` — remediation text no longer walks the author into finding 1 |
 | 3 | high | docs/contracts/plan-review-gates.md:332 | The normative contract asserts "A labelled opener that is never closed is a stray too, and likewise skips nothing", which the parser does not implement — a later bare fence closes such an opener, so it skips everything up to that fence and is reported as no stray at all; the same over-claim appears in the JSDoc at `check_completion_review.ts:420`, so the doc certifies the property that would otherwise prompt the next author to test this hole. | fixed | 16dace44b |
-| 4 | medium | src/scripts/check_completion_review.ts:442 | Retroactive breaking grammar change with no migration or grandfathering: under the removed round-7 rule a closed bare pair was a valid illustrative region, and any already-committed findings artefact that quoted the six-column template inside a bare pair now emits a blocking `unbalanced-fence` (exit 1) and fails pre-push and CI for a completion whose artefact was correct when written — the §2.2 rewrite documents the new rule but records no transition for artefacts authored under the old one. | deferred | roadmap road-to-plan-gate-fence-grammar — migration for artefacts authored under the old grammar is part of that decision |
+| 4 | medium | src/scripts/check_completion_review.ts:442 | Retroactive breaking grammar change with no migration or grandfathering: under the removed round-7 rule a closed bare pair was a valid illustrative region, and any already-committed findings artefact that quoted the six-column template inside a bare pair now emits a blocking `unbalanced-fence` (exit 1) and fails pre-push and CI for a completion whose artefact was correct when written — the §2.2 rewrite documents the new rule but records no transition for artefacts authored under the old one. | fixed | `ba77e6a6f` + contract § 2.2 — `example` in the Status cell is the documented discriminator; measured migration surface is zero artefacts |
 | 5 | low | src/scripts/check_completion_review.ts:451 | `strays.sort()` is dead: bare strays can only be pushed while no opener is open, so they are appended in ascending index order, and the post-loop push of an unterminated opener is always the largest index — the sort can never reorder anything. | fixed | 16dace44b |
 
 ## Provenance
@@ -77,7 +77,7 @@ template, **including the skeleton `dispatch_r2_reviewer` itself writes**, which
 ships an example row whose status is literally `open`. Choosing between declared
 illustrative regions and moving the safety property off fence pairing changes the
 grammar for every future artefact, so it was routed to the council rather than
-improvised. Carrier: `agents/roadmaps/road-to-plan-gate-fence-grammar.md`.
+improvised. Carrier: `agents/roadmaps/archive/road-to-plan-gate-fence-grammar.md`.
 Interim anchor: the KNOWN-HOLE characterization test, which pins the current
 wrong behaviour and says what to do when it starts failing.
 
@@ -92,3 +92,27 @@ window, so neither layer looks at it. It is the exact gap the disposition-index
 work addresses — a terminal status recorded somewhere no machine reconciles.
 Logged here rather than silently corrected, because a quietly-fixed bookkeeping
 lie is the same class of defect as the steered review in § 5's case zero.
+
+### Disposition update — 1, 2 and 4 resolved by their carrier
+
+The carrier roadmap completed, so these three rows moved `deferred` → `fixed`
+rather than being left pointing at finished work. Recorded here instead of
+changed silently, because a reader of the earlier state should be able to see
+when and why the transition happened.
+
+One claim in the paragraph above is **wrong and is corrected here rather than
+edited away**: it says the obvious guard fires on the skeleton
+`dispatch_r2_reviewer` writes, "which ships an example row whose status is
+literally `open`". Measured while implementing the fix — `findingsSkeleton()`
+emits no findings row at all; the example row lives in `prompt.md`, which the
+validator never parses. A corpus-wide scan found zero fenced findings rows. The
+migration risk that argument was built on did not exist. The council routing was
+still the right call for a grammar change, but it was justified with a fact that
+was not checked first.
+
+This record was edited in place, which the carrier roadmap listed as a non-goal.
+The non-goal existed so a validator could not force retroactive edits on frozen
+records — and `check_review_dispositions`, shipped in the same change, does not:
+`deferred` is terminal and would have passed. This edit is the honest
+disposition of findings that this PR actually fixed, not a rule complying with
+itself.

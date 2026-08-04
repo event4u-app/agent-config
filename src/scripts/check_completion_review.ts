@@ -495,10 +495,18 @@ export function parseArtifact(text: string): ParsedArtifact {
         // LABELLED closed fence is illustrative content. A stray fence (bare, or
         // an unclosed opener) skips nothing (see scanFences) — the lines around
         // it are parsed, and the artefact is reported.
-        if (FENCE_RE.test(raw) || fences.fenced.has(i)) {
+        const trimmed = raw.trim();
+        // §2.2 row-liveness rule: fences govern the marker / honest-null / skip
+        // lines, which a fenced illustration may legitimately quote — but NOT
+        // findings rows. Hiding a marker or an honest-null fails CLOSED (the
+        // artefact reads as absent and the gate blocks); hiding a row fails OPEN
+        // (the finding silently ceases to exist). So the one line type whose
+        // concealment is dangerous is the one fences may not conceal, and a row
+        // is live wherever it appears. Only its own Status cell can excuse it.
+        const isCandidateRow = trimmed.startsWith('|');
+        if (FENCE_RE.test(raw) || (fences.fenced.has(i) && !isCandidateRow)) {
             continue;
         }
-        const trimmed = raw.trim();
         // Marker candidates must LOOK like the §2.1 HTML comment: prose that
         // merely mentions the grammar (`the \`completion-review:\` marker …`,
         // or a reviewer note quoting it in backticks — real artefacts in this
@@ -543,6 +551,12 @@ export function parseArtifact(text: string): ParsedArtifact {
             const second = (cells[1] ?? '').toLowerCase();
             if (first === '#' || second === 'severity') {
                 continue; // header row
+            }
+            // §2.2: `example` is the ONE illustrative marker. It is read from the
+            // Status cell of a six-cell row only — a short row cannot excuse
+            // itself, or `malformed-row` would become opt-out.
+            if (cells.length === 6 && (cells[4] ?? '').trim().toLowerCase() === 'example') {
+                continue;
             }
             // EXACTLY six, per contract §2.2 — not `>= 6`. An over-long row is
             // as malformed as a short one and the surplus is usually the tell:
@@ -797,8 +811,9 @@ function evaluate(input: EvalInput): Violation[] {
                 detail:
                     `${at}: stray \`\`\` fence — a bare fence delimits no region, and a labelled fence must ` +
                     'be closed. An artefact whose ``` fences do not resolve is malformed (contract §2.2). ' +
-                    'Label the opener (```markdown) and close it, or inline-escape an illustrative ```; ' +
-                    'the lines around a stray fence are still parsed, so any finding row there is validated too.',
+                    'Close the fence, or inline-escape an illustrative ```. NOTE: fences never hide a ' +
+                    'findings row — a row is live wherever it appears, and the ONLY way to mark one ' +
+                    'illustrative is the status `example` in its own Status cell.',
             });
         }
     }

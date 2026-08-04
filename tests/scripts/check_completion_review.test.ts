@@ -298,7 +298,7 @@ describe.runIf(hasGit())('check_completion_review — pass states', () => {
     // fenced regions exist at all: a template row inside a properly-closed
     // LABELLED fence (```markdown — the info string is the deliberate "this is an
     // illustration" act round 8 made load-bearing) is not a live finding.
-    it('a template row inside a closed labelled fence is illustrative, not an open finding', () => {
+    it('a quoted template row is illustrative via the `example` status, not via its fence', () => {
         const dir = makeRepo();
         write(dir, 'src/feature.ts', 'export const y = 2;\n');
         commitAll(dir, 'feature');
@@ -316,7 +316,7 @@ describe.runIf(hasGit())('check_completion_review — pass states', () => {
                 '',
                 '```markdown',
                 ...TABLE_HEAD,
-                '| 1 | critical | src/x.ts:42 | ... | open | |',
+                '| 1 | critical | src/x.ts:42 | ... | example | |',
                 '```',
                 '',
                 `**Honest-null:** 0 findings, scope ${scope}, reviewed 2026-08-04`,
@@ -326,7 +326,10 @@ describe.runIf(hasGit())('check_completion_review — pass states', () => {
         const res = runGate(dir);
         expect(res.violations).toEqual([]);
         expect(res.status).toBe(0);
-        // The labelled pair resolves (no stray) and its content really is skipped.
+        // The fence still resolves, and the honest-null line inside prose is read
+        // — but what makes the quoted row illustrative is its `example` status,
+        // not the fence around it. Written with `open` instead, this artefact
+        // blocks (see the row-liveness cases below).
         const art = parseArtifact(fs.readFileSync(path.join(dir, ART), 'utf-8'));
         expect(art.strayFenceLines).toEqual([]);
         expect(art.rows).toEqual([]);
@@ -1259,24 +1262,12 @@ describe('parseArtifact + validateFindingRows', () => {
     });
 });
 
-// CHARACTERIZATION of an OPEN defect — blind-pass findings 1-3 (2026-08-04).
-//
-// This block asserts the CURRENT, WRONG behaviour on purpose. A labelled fence
-// opener is closed by the first later bare fence anywhere in the artefact, even
-// one the author never meant as its closer, so a live `open` finding row between
-// them is skipped and no `unbalanced-fence` fires — an unreviewed finding passes.
-//
-// It is pinned rather than fixed because the obvious guard (a findings-shaped row
-// inside a fenced region is a violation) fires on every artefact that quotes the
-// six-column template, including the skeleton dispatch_r2_reviewer writes.
-//
-// WHEN THIS BLOCK STARTS FAILING the hole is closed: delete it, and drop the
-// KNOWN HOLE notes in check_completion_review.ts (scanFences JSDoc) and in
-// docs/contracts/plan-review-gates.md §2.2. Do not "repair" it by loosening the
-// assertions.
-describe('check_completion_review — KNOWN HOLE: stray bare fence closes a labelled opener', () => {
+// The defect the characterization block used to pin is CLOSED. Kept as the
+// positive assertion the roadmap required in its place (Phase 2 Step 2): the
+// exact arrangement that hid a live finding must now block.
+describe('check_completion_review — a fence can no longer hide a live row', () => {
     const SCOPE = 'a'.repeat(64);
-    const holed = [
+    const formerlyHoled = [
         '# Findings: probe',
         `<!-- completion-review: v1 | reviewed: 2026-08-04 | scope: ${SCOPE} | diff: abc1234 | reviewer: probe -->`,
         '',
@@ -1293,23 +1284,113 @@ describe('check_completion_review — KNOWN HOLE: stray bare fence closes a labe
         '',
     ].join('\n');
 
-    it('swallows the open row and reports no stray (the fail-open)', () => {
-        const parsed = parseArtifact(holed);
-        // The live `open` row is gone from the parsed rows …
-        expect(parsed.rows.map((r) => r.status)).toEqual(['fixed']);
-        expect(parsed.rows.some((r) => r.status === 'open')).toBe(false);
-        // … and nothing flags the arrangement, so the artefact looks clean.
-        expect(parsed.malformedLines).toEqual([]);
-        expect(parsed.malformedRows).toEqual([]);
-        expect(validateFindingRows(parsed.rows)).toEqual([]);
+    it('the arrangement that swallowed an open row now surfaces it', () => {
+        const parsed = parseArtifact(formerlyHoled);
+        expect(parsed.rows.map((r) => r.status)).toEqual(['fixed', 'open']);
+        expect(parsed.rows.some((r) => r.status === 'open')).toBe(true);
     });
 
-    it('sees the open row once the opener is genuinely unpaired', () => {
-        // Same artefact minus the trailing bare fence: the opener has no closer
-        // anywhere, so it skips nothing and the row is visible again. This is the
-        // property the contract claims for BOTH shapes — it holds only for this one.
-        const unpaired = holed.split('\n').filter((l) => l !== '```').join('\n');
-        const parsed = parseArtifact(unpaired);
-        expect(parsed.rows.some((r) => r.status === 'open')).toBe(true);
+    it('an author who means it illustratively marks the row, not the fence', () => {
+        const marked = formerlyHoled.replace('| open | |', '| example | |');
+        const parsed = parseArtifact(marked);
+        expect(parsed.rows.map((r) => r.status)).toEqual(['fixed']);
+        expect(validateFindingRows(parsed.rows)).toEqual([]);
+    });
+});
+
+// PIN — current behaviour of every fence arrangement, asserted BEFORE the §2.2
+// grammar migration (roadmap road-to-plan-gate-fence-grammar, Phase 2 Step 1).
+//
+// This block contains NO production change. It exists so the migration commit's
+// diff is the exact, reviewable list of behaviours that changed: any assertion
+// flipping here that was not predicted is a defect caught before merge. Rows
+// asserted `live` are visible to the gate; rows asserted `hidden` are not.
+describe('check_completion_review — fence arrangements, pinned pre-migration', () => {
+    const SCOPE = 'b'.repeat(64);
+    const head = (): string =>
+        `<!-- completion-review: v1 | reviewed: 2026-08-04 | scope: ${SCOPE} | diff: abc1234 | reviewer: pin -->`;
+    const art = (...body: string[]): string =>
+        ['# Findings: pin', head(), '', '| # | Severity | File:Line | Finding | Status | Reason/Ref |', '|---|---|---|---|---|---|', ...body, ''].join('\n');
+    const statuses = (text: string): string[] => parseArtifact(text).rows.map((r) => `${r.index}:${r.status}`);
+
+    it('shape 1 — odd fence count: the historical toggle hid everything after it', () => {
+        // A single bare fence with no partner. Pinned: it hides nothing today,
+        // and is reported as a stray instead.
+        const t = art('| 1 | high | a.ts:1 | before | fixed | abc1234 |', '```', '| 2 | critical | b.ts:2 | after | open | |');
+        expect(statuses(t)).toEqual(['1:fixed', '2:open']);
+        expect(parseArtifact(t).strayFenceLines.length).toBeGreaterThan(0);
+    });
+
+    it('shape 2 — a CLOSED bare pair hides nothing: bare fences never open a region', () => {
+        // Measured, not assumed — this assertion was written the other way round
+        // first and the pin caught it. The round-7/8 rule makes every bare fence
+        // a stray, so both are reported and the row between stays live. Only a
+        // LABELLED opener starts a skipped region, which is why shape 3 is the hole.
+        const t = art('| 1 | high | a.ts:1 | outside | fixed | abc1234 |', '```', '| 2 | critical | b.ts:2 | INSIDE | open | |', '```');
+        expect(statuses(t)).toEqual(['1:fixed', '2:open']);
+        expect(parseArtifact(t).strayFenceLines.length).toBe(2);
+    });
+
+    it('shape 3 — FLIPPED: the arrangement that hid a live row now surfaces it', () => {
+        // The fail-open this whole change exists to close. Fence pairing is
+        // unchanged (still no stray); what changed is that pairing no longer
+        // decides row liveness.
+        const t = art('| 1 | high | a.ts:1 | outside | fixed | abc1234 |', '```markdown', '| 2 | critical | b.ts:2 | NO LONGER HIDDEN | open | |', '```');
+        expect(statuses(t)).toEqual(['1:fixed', '2:open']);
+        expect(parseArtifact(t).strayFenceLines).toEqual([]);
+    });
+
+    it('shape 4 — FLIPPED: `example` is now the one illustrative marker', () => {
+        const t = art('| 1 | high | a.ts:1 | template row | example | |');
+        expect(statuses(t)).toEqual([]);
+        expect(validateFindingRows(parseArtifact(t).rows)).toEqual([]);
+    });
+
+    it('an unrecognised status stays LIVE and blocking — the marker cannot be typo-ed open', () => {
+        // The load-bearing half of the rule: if an unknown token made a row
+        // vanish, the fail-open would return through a new door.
+        const t = art('| 1 | high | a.ts:1 | typo | exmaple | |');
+        expect(statuses(t)).toEqual(['1:exmaple']);
+        expect(validateFindingRows(parseArtifact(t).rows).map((v) => v.kind)).toContain('bad-value');
+    });
+
+    it('a short row cannot excuse itself as illustrative', () => {
+        // `example` is read from the Status cell of a SIX-cell row only, or
+        // malformed-row would become opt-out.
+        const t = art('| 1 | high | a.ts:1 | example | |');
+        expect(parseArtifact(t).malformedRows.length).toBe(1);
+    });
+
+    it('non-regression — an unterminated LABELLED opener hides nothing', () => {
+        const t = art('| 1 | high | a.ts:1 | before | fixed | abc1234 |', '```markdown', '| 2 | critical | b.ts:2 | after | open | |');
+        expect(statuses(t)).toEqual(['1:fixed', '2:open']);
+    });
+
+    it('FLIPPED (was mislabelled non-regression) — a nested four-tick block does not hide a row either', () => {
+        // Predicted as unchanged when pinned; it changed, and correctly so.
+        // "Live wherever it appears" includes nested fences — the prediction was
+        // wrong, not the rule. Recorded because an unexplained flip is a defect
+        // signal, and this one had to be explained rather than waved through.
+        const t = art('| 1 | high | a.ts:1 | outside | fixed | abc1234 |', '````markdown', '```', '| 2 | critical | b.ts:2 | INSIDE | open | |', '```', '````');
+        expect(statuses(t)).toEqual(['1:fixed', '2:open']);
+    });
+
+    it('non-regression — the dispatcher skeleton parses to zero rows and no violations', () => {
+        // Verbatim shape of findingsSkeleton(): header row, separator, an HTML
+        // comment. It ships NO example row, so no grammar may red it.
+        const skeleton = [
+            '# Findings: some-slug',
+            head(),
+            '',
+            '| # | Severity | File:Line | Finding | Status | Reason/Ref |',
+            '|---|----------|-----------|---------|--------|------------|',
+            '<!-- reviewer fills the table; 0 findings => replace the table with the exact honest-null line per docs/contracts/plan-review-gates.md §2.3 -->',
+            '',
+        ].join('\n');
+        const p = parseArtifact(skeleton);
+        expect(p.rows).toEqual([]);
+        expect(p.malformedRows).toEqual([]);
+        expect(p.malformedLines).toEqual([]);
+        expect(p.strayFenceLines).toEqual([]);
     });
 });

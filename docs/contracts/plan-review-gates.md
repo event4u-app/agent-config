@@ -331,26 +331,26 @@ current one is relevant **and** stale (`stale-review`).
   and every stray line is named in the one violation. A labelled opener with no
   bare fence after it anywhere in the artefact is a stray too, and skips nothing.
 
-  **KNOWN HOLE — do not read the rule above as complete** (blind-pass findings
-  1–3, 2026-08-04, `open`). A labelled opener *is* closed by the first later
-  bare fence **anywhere** in the file, even one the author never meant as its
-  closer. Everything between them is then skipped, a live `open` finding row
-  among those lines disappears from the parsed rows, and because the opener did
-  get consumed no `unbalanced-fence` fires — so the gate exits 0 on an
-  unreviewed finding. Reproduced. The arrangement is the one
-  `markdown-safe-codeblocks` itself prescribes (tilde-wrapped illustration
-  quoting an unpaired labelled opener) plus any bare fence later in the file,
-  and the remediation text the validator prints for `unbalanced-fence`
-  ("label the opener and close it") leads an author straight into it.
+  **Fences do NOT govern row liveness.** The paragraph above describes where
+  fences still apply — the § 2.1 marker, the § 2.3 honest-null line and the
+  § 2.4 skip declaration, all of which a fenced illustration may legitimately
+  quote. **Findings rows are exempt from it entirely** (council 2026-08-04,
+  convergent): a findings-shaped row is **live wherever it appears**, fenced or
+  not, and only its own Status cell can make it illustrative.
 
-  The fix is deliberately NOT improvised here: the obvious one — treat a
-  findings-shaped row inside a fenced region as a violation — fires on every
-  artefact that legitimately quotes the template, **including the skeleton the
-  dispatcher itself writes**, which contains a `| 1 | critical | … | open | |`
-  row. Resolving it means choosing between explicitly declared illustrative
-  regions and moving the safety check off fence pairing entirely; both change
-  this § 2.2 grammar, so the decision is recorded as open rather than patched
-  with something that reds every future artefact.
+  The asymmetry is deliberate and is the whole safety argument. Hiding a
+  *marker* or an *honest-null* line fails **closed** — the artefact then looks
+  absent or incomplete and the gate blocks. Hiding a *row* fails **open**: the
+  finding silently ceases to exist. So the one line type whose concealment is
+  dangerous is the one line type fences may not conceal.
+
+  This replaces the fence-pairing approach, which failed open four times: a
+  single `inFence` toggle; positional pairing that mis-paired; the
+  labelled-opener rule; and finally a stray bare fence closing a labelled
+  opener anywhere later in the file, which hid a live `open` row while
+  consuming the opener so no `unbalanced-fence` fired. Each attempt was a
+  correct-looking patch of the previous arithmetic. Row liveness no longer
+  depends on that arithmetic at all.
   Why a deliberate label is the discriminator: fenced regions exist for exactly
   one purpose — keeping the illustrative `| # | Severity | …` template above from
   being read as a live finding — and every counting-based rule tried before it
@@ -366,6 +366,38 @@ current one is relevant **and** stale (`stale-review`).
   [`markdown-safe-codeblocks`](../../src/rules/markdown-safe-codeblocks.md) —
   wrap fence-bearing content in an outer `~~~` fence — is what produces those
   unpaired inner ``` fences; the outer `~~~` is not a fence to this grammar.
+
+- **Row liveness — the `example` status (the only illustrative marker).** A
+  findings-shaped line (starts with `|`, is neither the separator nor the header
+  row) is a **candidate row** wherever it appears. It is illustrative **iff its
+  Status cell is exactly `example`**; otherwise it is live. Deterministic
+  consequences, no other case:
+
+  | Shape | Verdict |
+  |---|---|
+  | Status `example` | illustrative — not a finding, never validated, never counted |
+  | Status ∈ {`open`, `fixed`, `accepted-risk`, `deferred`} | live — validated per § 2.2 |
+  | Status is any other token | **live and blocking** (`bad-value`) — an unrecognised status is never silently ignored |
+  | cell count ≠ 6 | **blocking** (`malformed-row`), fenced or not |
+
+  The unknown-token rule is the load-bearing half: it is what makes a typo'd or
+  invented marker fail **closed**. A grammar in which an unrecognised status made
+  a row disappear would reintroduce the same fail-open through a new door.
+
+- **No `v2` discriminator, and why.** The council recommended version-marker
+  migration (`completion-review: v1` → `v2`) on the assumption that many
+  artefacts quote the template inside fences and would newly block. That
+  assumption was **measured and is false**: across every review artefact in
+  `agents/evidence/reviews/`, the count of findings-shaped rows inside fenced
+  regions is **zero**, and the skeleton `dispatch_r2_reviewer` generates carries
+  **no** example row at all — only the header, the separator and an HTML comment.
+  The behaviour change therefore affects no existing artefact, and a version
+  discriminator would be machinery guarding an empty set.
+
+  **Trigger to revisit:** if an artefact is ever authored that must keep a
+  findings-shaped row hidden by a fence rather than marked `example`, introduce
+  `v2` then. Recorded so the omission is a decision with a condition, not an
+  oversight.
 
 ### 2.3 Honest-null grammar (exact)
 
@@ -492,20 +524,40 @@ holding only `round<N>-review.md` files means "no review of the current
 content" and the gate correctly reports `missing-artifact` — it does not mean
 the glob is broken.
 
-**Terminal-before-rename — `enforced_by: none` (stated, not implied).** Every
+**Terminal-before-rename — enforced by `check_review_dispositions`.** Every
 finding in a superseded round must already be terminal before it is renamed;
-the rename records the review, it never retires an open finding. **Nothing
-enforces this.** The rename moves the file out of the `*.findings.md` glob, so
-§ 2.2's "any `open` row → block" no longer sees it: renaming an artifact that
-still holds an `open` row escapes the gate, and no validator, hook, or test
-detects it. The obligation is agent-carried and a human reading the diff is
-what catches a violation — the same stance § 1 takes for the unenforced plan
-surfaces and § 4.1 for the handoff state.
+the rename records the review, it never retires an open finding. Renaming moves
+the file out of the `*.findings.md` glob, so § 2.2's "any `open` row → block" no
+longer sees it — an artifact renamed while still holding an `open` row escapes
+Gate R2 entirely.
 
-A CI-facing check is possible but was not built here: it would have to walk the
-renamed rounds and parse rows the gate deliberately stopped selecting, which
-re-introduces the directory-wide coupling § 2.6 removed. Named as an open
-option rather than silently claimed.
+This was carried as `enforced_by: none` and it failed in exactly the predicted
+way: five findings in `postmerge-blindpass-review.md` sat recorded as `open` for
+a day after two of them were fixed, in this repo's own corpus, with the diff
+reviewed. "A human reading the diff catches it" turned out to be the thing that
+did not happen. `check_review_dispositions` now reads the archived records and
+blocks a non-terminal or unreferenced row.
+
+**Why this does not re-introduce the § 2.6 coupling.** The earlier objection —
+that walking renamed rounds re-creates directory-wide poisoning — assumed the
+check would bind those rounds to the current review scope, which is what made
+directory-wide selection toxic: one branch's artefact reds another branch's PR.
+This check never reads `scope:` and never compares an archived record to the
+current diff. It asserts one scope-free property — *a closed round records
+closed findings* — so an unrelated branch's archived record cannot red this
+branch, and § 2.6's selection rule for R2 is untouched.
+
+**What it deliberately does not check.** Reference *shape*. The first draft
+resolved a `fixed` ref via `rev-parse` and a `deferred` ref via a path probe;
+measured against the real corpus it produced eight blocks, every one a
+pre-existing record whose reference is prose describing the change or a carrier
+named by bare slug — none of them the failure this gate exists to catch. Archived
+records are frozen, so a shape rule cannot be satisfied retroactively without
+editing them, and a gate whose only output is unfixable blocks is the gate that
+gets switched off. The rule is therefore: terminal status, non-empty
+Reason/Ref. Revisit when an unresolvable reference actually hides a disposition
+on a record written after this gate shipped — that record is fixable at source,
+and the trade-off changes.
 
 ## 3. Substantial-change heuristic (R1 trigger)
 
