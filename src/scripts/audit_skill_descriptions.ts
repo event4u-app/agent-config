@@ -25,6 +25,7 @@ import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import { artefact_roots } from './_lib/agent_src.js';
+import { assertScanned, DeadScopeError } from './_lib/scan_scope.js';
 
 export const MIN_LENGTH = 150;
 // Mirrors scripts/skill_linter.py `description_too_long` threshold.
@@ -385,6 +386,24 @@ export function main(argv: string[] | null = null): number {
     const findings: Finding[] = [];
     for (const r of roots) {
         findings.push(...collect_findings(r));
+    }
+    // The roots check above only proves a `skills/` DIRECTORY exists; roots that
+    // hold no SKILL.md still render "Audited 0 skills … ✅ All descriptions look
+    // reasonable." Exit 2 is this gate's only failure code, and it already
+    // covers the sibling "no skills/ directories found" case.
+    try {
+        assertScanned({
+            gate: 'audit_skill_descriptions',
+            scanned: findings.length,
+            units: 'SKILL.md file(s)',
+            roots,
+        });
+    } catch (exc) {
+        if (exc instanceof DeadScopeError) {
+            process.stderr.write(`error: ${exc.message}\n`);
+            return 2;
+        }
+        throw exc;
     }
     if (args.json) {
         process.stdout.write(pyJsonDumpsIndent2(findings.map(_asdict)) + '\n');

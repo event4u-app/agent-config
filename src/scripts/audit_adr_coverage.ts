@@ -22,6 +22,8 @@ import * as path from 'node:path';
 import process from 'node:process';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
+import { assertScanned, DeadScopeError } from './_lib/scan_scope.js';
+
 const _HERE = fileURLToPath(import.meta.url);
 
 // src/scripts/audit_adr_coverage.ts → parents[2] of the .py file is repo root.
@@ -251,14 +253,40 @@ export function render_area_readme(area: string, meta: AreaMeta, adrs: AdrEntry[
     return lines.join('\n') + '\n';
 }
 
+/**
+ * A vanished `docs/adrs/` makes every area report zero ADRs — "missing
+ * bootstrap" across the board, which both modes treat as a warning and exit 0.
+ * Exit 1 is the hard-failure code (`cmd_check`); 2 is reserved for argparse
+ * usage errors.
+ */
+function _dead_adr_scope(scanned: number): number | null {
+    try {
+        assertScanned({
+            gate: 'audit_adr_coverage',
+            scanned,
+            units: 'ADR file(s)',
+            roots: ['docs/adrs'],
+        });
+        return null;
+    } catch (exc) {
+        if (exc instanceof DeadScopeError) {
+            process.stderr.write(`❌ ${exc.message}\n`);
+            return 1;
+        }
+        throw exc;
+    }
+}
+
 export function cmd_report(): number {
     process.stdout.write('## ADR coverage report\n');
     process.stdout.write('\n');
     process.stdout.write('| Area | Contract | ADRs | README | Status |\n');
     process.stdout.write('|---|---|---:|:---:|---|\n');
     let missingBootstrap = 0;
+    let totalAdrs = 0;
     for (const [area, meta] of Object.entries(AREAS)) {
         const [adrs] = scan_area(area);
+        totalAdrs += adrs.length;
         const readme = _exists(path.join(ADR_ROOT, area, 'README.md')) ? '✅' : '—';
         const contractPresent = _exists(_contract_path(meta));
         const status = adrs.length > 0 ? 'ok' : 'missing bootstrap';
@@ -267,6 +295,10 @@ export function cmd_report(): number {
         }
         const contractCell = contractPresent ? meta.contract : `_${meta.contract}_ (no contract)`;
         process.stdout.write(`| \`${area}\` | ${contractCell} | ${adrs.length} | ${readme} | ${status} |\n`);
+    }
+    const dead = _dead_adr_scope(totalAdrs);
+    if (dead !== null) {
+        return dead;
     }
     process.stdout.write('\n');
     process.stdout.write(
@@ -278,6 +310,7 @@ export function cmd_report(): number {
 export function cmd_check(): number {
     let hard = 0;
     let warn = 0;
+    let totalAdrs = 0;
     for (const dir of unlistedAreaDirs(ADR_ROOT)) {
         process.stderr.write(
             `❌ ${dir}/: area directory exists on disk but is absent from AREAS — it is not audited at all. ` +
@@ -287,6 +320,7 @@ export function cmd_check(): number {
     }
     for (const [area, meta] of Object.entries(AREAS)) {
         const [adrs, errs] = scan_area(area);
+        totalAdrs += adrs.length;
         for (const e of errs) {
             process.stderr.write(`❌ ${e}\n`);
             hard += 1;
@@ -299,6 +333,10 @@ export function cmd_check(): number {
             process.stderr.write(`⚠️  ${area}/: no bootstrap ADR yet (contract: ${meta.contract})\n`);
             warn += 1;
         }
+    }
+    const dead = _dead_adr_scope(totalAdrs);
+    if (dead !== null) {
+        return dead;
     }
     process.stdout.write(`BASELINE: ${hard} hard fail(s) · ${warn} warn(s)\n`);
     return hard ? 1 : 0;

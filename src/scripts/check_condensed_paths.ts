@@ -47,6 +47,8 @@ import process from 'node:process';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import type * as YamlModule from 'yaml';
 
+import { assertScanned, DeadScopeError } from './_lib/scan_scope.js';
+
 // ESM-standard `require` shim. The bare `require` global is present when this
 // module is *imported* (tsx injects it) but absent when the module is the
 // directly-executed CLI entry, so resolve it explicitly here to preserve the
@@ -359,7 +361,26 @@ function main(): number {
     }
     const viols: Violation[] = [];
     const audited: Array<[string, IgnoreEntry]> = [];
-    for (const ruleFile of _globMdSorted(RULES_DIR)) {
+    const ruleFiles = _globMdSorted(RULES_DIR);
+    // The guard above only proves the directory node exists; an empty one still
+    // renders "clean (0 rules, 0 ignore(s) audited)". Exit 3 is the code that
+    // guard already uses for "there was nothing to check" — 1 means violations
+    // were found, which is a different claim.
+    try {
+        assertScanned({
+            gate: 'check_condensed_paths',
+            scanned: ruleFiles.length,
+            units: 'rule file(s)',
+            roots: ['dist/agent-src/rules'],
+        });
+    } catch (exc) {
+        if (exc instanceof DeadScopeError) {
+            process.stderr.write(`❌  ${exc.message}\n`);
+            return 3;
+        }
+        throw exc;
+    }
+    for (const ruleFile of ruleFiles) {
         const text = fs.readFileSync(ruleFile, 'utf-8');
         const [fm, body] = _split_frontmatter(text);
         const ignores: IgnoreEntry[] = fm !== null ? _parse_ignores(fm) : [];
@@ -383,7 +404,7 @@ function main(): number {
         process.stdout.write(`\n${viols.length} violation(s) in dist/agent-src/rules/\n`);
         return 1;
     }
-    const ruleCount = _globMdSorted(RULES_DIR).length;
+    const ruleCount = ruleFiles.length;
     if (!QUIET) {
         process.stdout.write(
             `✅  condensed-path check clean (${ruleCount} rules, ${audited.length} ignore(s) audited)\n`,

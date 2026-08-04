@@ -41,6 +41,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import YAML from 'yaml';
 
 import { resolve_logical } from './_lib/agent_src.js';
+import { assertScanned, DeadScopeError } from './_lib/scan_scope.js';
 
 const _HERE = fileURLToPath(import.meta.url);
 // Path(__file__).resolve().parents[2] — repo root, two dirs up from src/scripts.
@@ -645,6 +646,24 @@ export function main(argv?: string[]): number {
     } catch (exc) {
         process.stderr.write(`lint_flows: internal error: ${exc instanceof Error ? exc.message : String(exc)}\n`);
         return 3;
+    }
+
+    // Exit 3, not 1: an empty flows dir is the same class of failure as the
+    // `flows dir not found` / `schema not found` short-circuits above (the gate
+    // could not do its job), not a flow that violates the schema.
+    try {
+        assertScanned({
+            gate: 'lint_flows',
+            scanned: files.length,
+            units: 'flow file(s)',
+            roots: ['src/flows'],
+        });
+    } catch (exc) {
+        if (exc instanceof DeadScopeError) {
+            process.stderr.write(`${exc.message}\n`);
+            return 3;
+        }
+        throw exc;
     }
 
     if (vios.length > 0) {

@@ -28,6 +28,8 @@ import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import YAML from 'yaml';
 
+import { assertScanned, DeadScopeError } from './_lib/scan_scope.js';
+
 const _HERE = fileURLToPath(import.meta.url);
 const QUIET = process.argv.slice(2).includes('--quiet');
 
@@ -294,6 +296,30 @@ function main(): number {
     const cons_errors = lint_consumer_side();
     const errors = [...pkg_errors, ...cons_errors];
 
+    // Both tiers together are the corpus. The consumer tier is legitimately
+    // empty in the package repo, so counting it alone would read a vanished
+    // package-fixture dir as "no profiles to lint" and stay green.
+    const pkg_count = _exists(PACKAGE_DIR)
+        ? _globMdSorted(PACKAGE_DIR).filter((p) => !EXEMPT_STEMS.has(_stem(p))).length
+        : 0;
+    const cons_count = _exists(CONSUMER_DIR)
+        ? _globMdSorted(CONSUMER_DIR).filter((p) => !EXEMPT_STEMS.has(_stem(p))).length
+        : 0;
+    try {
+        assertScanned({
+            gate: 'lint_ghostwriter_source',
+            scanned: pkg_count + cons_count,
+            units: 'profile(s)',
+            roots: ['src/agent-src/ghostwriter', 'agents/ghostwriter'],
+        });
+    } catch (exc) {
+        if (exc instanceof DeadScopeError) {
+            process.stderr.write(`❌  ${exc.message}\n`);
+            return 1;
+        }
+        throw exc;
+    }
+
     if (errors.length) {
         process.stderr.write(`❌  lint_ghostwriter_source: ${errors.length} violation(s)\n`);
         for (const line of errors) {
@@ -304,12 +330,6 @@ function main(): number {
     }
 
     if (!QUIET) {
-        const pkg_count = _exists(PACKAGE_DIR)
-            ? _globMdSorted(PACKAGE_DIR).filter((p) => !EXEMPT_STEMS.has(_stem(p))).length
-            : 0;
-        const cons_count = _exists(CONSUMER_DIR)
-            ? _globMdSorted(CONSUMER_DIR).filter((p) => !EXEMPT_STEMS.has(_stem(p))).length
-            : 0;
         process.stdout.write(
             `✅  lint_ghostwriter_source: ${pkg_count} package fixture(s), ` +
                 `${cons_count} consumer profile(s), all compliant\n`,

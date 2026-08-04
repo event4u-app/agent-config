@@ -24,6 +24,8 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
+import { assertScanned, DeadScopeError } from './_lib/scan_scope.js';
+
 const QUIET = process.argv.includes('--quiet');
 
 const _HERE = fileURLToPath(import.meta.url);
@@ -246,7 +248,36 @@ export function lintLegalPack(skillsDir: string = SKILLS_DIR): Violation[] {
     return violations;
 }
 
+/** SKILL.md files under `skillsDir` — the corpus `lintLegalPack` walks. */
+function countSkillFiles(skillsDir: string = SKILLS_DIR): number {
+    try {
+        return fs
+            .readdirSync(skillsDir)
+            .filter((d) => fs.existsSync(path.join(skillsDir, d, 'SKILL.md'))).length;
+    } catch {
+        return 0;
+    }
+}
+
 export function main(): number {
+    // The unit is every SKILL.md, not the `packs: [legal-review-prep]` subset:
+    // the pack is opt-in, so a zero-legal-pack-skills count is a normal state
+    // and asserting on it would prove nothing. Over a vanished src/skills the
+    // subset is zero too — indistinguishable from "the pack is not installed".
+    try {
+        assertScanned({
+            gate: 'lint_legal_pack',
+            scanned: countSkillFiles(),
+            units: 'SKILL.md file(s)',
+            roots: ['src/skills'],
+        });
+    } catch (exc) {
+        if (exc instanceof DeadScopeError) {
+            process.stderr.write(`❌  ${exc.message}\n`);
+            return 1;
+        }
+        throw exc;
+    }
     const violations = lintLegalPack();
     if (violations.length === 0) {
         _print('✅  legal pack — all legal-pack skills carry the attorney-review line + Jurisdiction tag');

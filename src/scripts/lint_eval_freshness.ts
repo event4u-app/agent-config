@@ -40,6 +40,8 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
+import { assertScanned, DeadScopeError } from './_lib/scan_scope.js';
+
 const _HERE = fileURLToPath(import.meta.url);
 
 // REPO = Path(__file__).resolve().parents[2]
@@ -117,6 +119,19 @@ function _manifestPaths(): string[] {
     }
     out.sort();
     return out;
+}
+
+/** Immediate `src/skills/*` directories — the population `_manifestPaths` filters. */
+function _skillDirs(): string[] {
+    let entries: fs.Dirent[];
+    try {
+        entries = fs.readdirSync(SKILLS_DIR, { withFileTypes: true });
+    } catch {
+        return [];
+    }
+    return entries
+        .map((ent) => path.join(SKILLS_DIR, ent.name))
+        .filter((p) => _isDirPath(p));
 }
 
 function _isDirPath(p: string): boolean {
@@ -308,6 +323,26 @@ function main(argv?: readonly string[]): number {
         return parsed.exitCode;
     }
     const args = parsed.args as Args;
+
+    // The scanned unit is the skill directory, not the corpus manifests it
+    // filters down to: a skill without `data/manifest.json` is legitimately out
+    // of scope, so a zero-manifest count cannot be told from a healthy tree.
+    // Zero skill directories can — and `check()` returns clean over a missing
+    // SKILLS_DIR, which is the ✅ line printed over nothing.
+    try {
+        assertScanned({
+            gate: 'lint_eval_freshness',
+            scanned: _skillDirs().length,
+            units: 'skill director(ies)',
+            roots: [path.relative(REPO, SKILLS_DIR)],
+        });
+    } catch (exc) {
+        if (exc instanceof DeadScopeError) {
+            process.stderr.write(`${exc.message}\n`);
+            return 1;
+        }
+        throw exc;
+    }
 
     const errors = check();
     if (errors.length) {

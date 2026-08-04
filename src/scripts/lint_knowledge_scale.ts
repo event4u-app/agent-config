@@ -31,6 +31,8 @@ import * as path from 'node:path';
 import process from 'node:process';
 import { fileURLToPath } from 'node:url';
 
+import { assertScanned, DeadScopeError } from './_lib/scan_scope.js';
+
 const PROG = 'lint_knowledge_scale.ts';
 
 export const INTAKE_EVENTS_MAX = 2000;
@@ -109,7 +111,12 @@ export function collectTypeCounts(root: string): Map<string, number> {
     return counts;
 }
 
-export function runChecks(root: string): Warning[] {
+/** Out-param so the caller can assert the scope it just walked. */
+export interface ScanStats {
+    corpusFiles: number;
+}
+
+export function runChecks(root: string, stats?: ScanStats): Warning[] {
     const warnings: Warning[] = [];
 
     // 1. Intake scale.
@@ -155,6 +162,9 @@ export function runChecks(root: string): Warning[] {
                     'Activation path (resolved, road-to-retrieval-substrate-hardening B2): rank via the hand-rolled BM25 + trigram index in `_lib/lexical_index.ts` (pure stdlib, NO engine fork / NO SQLite-FTS5, ADR-061 honoured). Measured lift: mean tie-set 3.333 → 1.0 (internal/bench/reports/lexical-ranking.json). Wire it lazily at first lookup + a stat-index, no vectors, no service.',
             });
         }
+    }
+    if (stats) {
+        stats.corpusFiles = total;
     }
     if (total > CORPUS_FILES_MAX) {
         warnings.push({
@@ -252,11 +262,31 @@ function main(argv: string[]): number {
     }
 
     let warnings: Warning[];
+    const stats: ScanStats = { corpusFiles: 0 };
     try {
-        warnings = runChecks(path.resolve(dir));
+        warnings = runChecks(path.resolve(dir), stats);
     } catch (exc) {
         process.stderr.write(`${PROG}: internal error: ${String(exc)}\n`);
         return 3;
+    }
+    try {
+        assertScanned({
+            gate: 'lint_knowledge_scale',
+            scanned: stats.corpusFiles,
+            units: 'knowledge/memory file(s)',
+            roots: ['agents/knowledge', 'agents/memory'],
+            allowEmpty:
+                'OPTIONAL_INPUT: the memory/knowledge substrate accumulates in the consumer ' +
+                'tree over time — a project that has recorded nothing yet has no corpus, and ' +
+                'the tripwires it would trip are all upper bounds. Delete both roots and zero ' +
+                'still means "nothing recorded", never "the scale checks stopped looking".',
+        });
+    } catch (exc) {
+        if (exc instanceof DeadScopeError) {
+            process.stderr.write(`${PROG}: ${exc.message}\n`);
+            return 3;
+        }
+        throw exc;
     }
 
     if (format === 'json') {

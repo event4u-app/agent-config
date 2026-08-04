@@ -30,6 +30,7 @@ import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import { artefact_roots } from './_lib/agent_src.js';
+import { assertScanned, DeadScopeError } from './_lib/scan_scope.js';
 
 const _HERE = fileURLToPath(import.meta.url);
 
@@ -40,9 +41,8 @@ const REPO = path.resolve(path.dirname(_HERE), '..', '..');
 const ARCHIVE_DIR = path.join(REPO, 'agents', 'evidence', 'archived-skills');
 
 // Live skill directories live under every artefact root.
-const SKILLS_DIRS = artefact_roots()
-    .map((root) => path.join(root, 'skills'))
-    .filter((d) => _isDir(d));
+const ALL_SKILLS_DIRS = artefact_roots().map((root) => path.join(root, 'skills'));
+const SKILLS_DIRS = ALL_SKILLS_DIRS.filter((d) => _isDir(d));
 
 const REQUIRED_FIELDS = [
     'slug',
@@ -128,6 +128,27 @@ function main(): number {
 
     const notes = archived_slugs();
     const live = live_skill_slugs();
+
+    // The scanned unit is the LIVE skills tree, not the archive notes. Zero
+    // notes is a real success state (nothing has been archived yet), but three
+    // of the five contract checks — replacement-resolves, no-zombie, and the
+    // replaced_by cross-check — are decided entirely by `live`, so an empty or
+    // moved skills root silently answers "no zombies, all replacements fine".
+    try {
+        assertScanned({
+            gate: 'lint_archived_skills',
+            scanned: live.size,
+            units: 'live skill(s)',
+            roots: ALL_SKILLS_DIRS.map((d) => path.relative(REPO, d)),
+        });
+    } catch (exc) {
+        if (exc instanceof DeadScopeError) {
+            process.stderr.write(`❌  ${exc.message}\n`);
+            return 1;
+        }
+        throw exc;
+    }
+
     const errors: string[] = [];
 
     const archivedKeys = new Set<string>();

@@ -35,6 +35,8 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import YAML from 'yaml';
 
+import { assertScanned, DeadScopeError } from './_lib/scan_scope.js';
+
 const _HERE = fileURLToPath(import.meta.url);
 
 const REPO_ROOT = path.resolve(path.dirname(_HERE), '..', '..');
@@ -684,15 +686,29 @@ export function main(argv?: string[]): number {
     const mission_schema = _load_schema(MISSION_SCHEMA_PATH);
     const catalog_schema = _load_schema(CATALOG_SCHEMA_PATH);
 
-    if (!_isDir(MISSIONS_ROOT)) {
-        if (!args.quiet) {
-            process.stderr.write(`No missions directory found at ${MISSIONS_ROOT}\n`);
-        }
-        return 0;
-    }
-
     const all_findings: Finding[] = [];
     const mission_dirs = _sortedMissionDirs();
+
+    // Supersedes the `No missions directory found → exit 0` short-circuit: this
+    // gate is warn-only about what a mission SAYS, never about whether there are
+    // missions to read, and a missing root produced the same silent 0 as a clean
+    // run. Exit 1 is the hard-failure code (2 is reserved for argparse and
+    // schema-load errors), and it fires regardless of --strict — a scope that
+    // read nothing is not a warning about a manifest.
+    try {
+        assertScanned({
+            gate: 'lint_missions',
+            scanned: mission_dirs.length,
+            units: 'mission(s)',
+            roots: ['src/missions'],
+        });
+    } catch (exc) {
+        if (exc instanceof DeadScopeError) {
+            process.stderr.write(`❌  ${exc.message}\n`);
+            return 1;
+        }
+        throw exc;
+    }
 
     for (const mission_dir of mission_dirs) {
         const findings = validate_mission(mission_dir, mission_schema, catalog_schema);

@@ -54,6 +54,8 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
+import { assertScanned, DeadScopeError } from './_lib/scan_scope.js';
+
 const QUIET = process.argv.includes('--quiet');
 
 // Agent-facing surfaces where council config must resolve to `.ai-council.yml`.
@@ -318,6 +320,24 @@ function find_path_violations(root: string): string[] {
 
 function main(): number {
     const root = process.cwd();
+    // PATH_CHECK_GLOBS is the superset of both passes, so its resolution is the
+    // whole corpus either check can see. Run from the wrong cwd — or after the
+    // council surfaces move — every glob resolves to nothing and the gate
+    // reports "clean". Exit 1 is its only failure code.
+    try {
+        assertScanned({
+            gate: 'check_council_config_location',
+            scanned: [...iter_files(root, PATH_CHECK_GLOBS)].length,
+            units: 'council-surface file(s)',
+            roots: PATH_CHECK_GLOBS,
+        });
+    } catch (exc) {
+        if (exc instanceof DeadScopeError) {
+            process.stderr.write(`❌  ${exc.message}\n`);
+            return 1;
+        }
+        throw exc;
+    }
     const findings = [...find_violations(root), ...find_path_violations(root)];
     if (findings.length) {
         process.stdout.write('❌  Council config-location violations:\n\n');

@@ -19,6 +19,8 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
+import { assertScanned, DeadScopeError } from './_lib/scan_scope.js';
+
 const _HERE = fileURLToPath(import.meta.url);
 
 const AGENTS_ROOT = 'agents';
@@ -88,6 +90,16 @@ function _isFile(p: string): boolean {
 
 function find_violations(root: string): string[] {
     const findings: string[] = [];
+    // `agents/` is resolved relative to the cwd, so a run from anywhere but the
+    // repo root walks nothing and reports a clean layout. Thrown, not returned —
+    // `findings` is the violation channel, and a dead scope is not a violation.
+    const descendants = _isDir(root) ? _rglobAllSorted(root) : [];
+    assertScanned({
+        gate: 'check_council_layout',
+        scanned: descendants.length,
+        units: 'agents/ entries',
+        roots: [AGENTS_ROOT],
+    });
     if (!_isDir(root)) {
         return findings;
     }
@@ -110,7 +122,7 @@ function find_violations(root: string): string[] {
     }
 
     // 2. Council artefacts in non-canonical subdirectories.
-    for (const p of _rglobAllSorted(root)) {
+    for (const p of descendants) {
         if (!_isFile(p) || !is_council_artefact(path.basename(p))) {
             continue;
         }
@@ -144,7 +156,15 @@ function _posix(p: string): string {
 
 function main(argv: readonly string[]): number {
     const quiet = argv.includes('--quiet');
-    const findings = find_violations(AGENTS_ROOT);
+    let findings: string[];
+    try {
+        findings = find_violations(AGENTS_ROOT);
+    } catch (exc) {
+        if (!(exc instanceof DeadScopeError)) throw exc;
+        // Exit 1 is this gate's only failure code.
+        process.stderr.write(`❌  ${exc.message}\n`);
+        return 1;
+    }
     if (findings.length > 0) {
         process.stdout.write('❌  Council layout violations:\n\n');
         for (const f of findings) {

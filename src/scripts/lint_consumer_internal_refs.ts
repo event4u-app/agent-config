@@ -52,6 +52,8 @@ import { fileURLToPath } from 'node:url';
 
 import { parse as parseYaml } from 'yaml';
 
+import { assertScanned, DeadScopeError } from './_lib/scan_scope.js';
+
 const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..');
 const SKILLS_DIR = path.join(REPO_ROOT, 'dist', 'agent-src', 'skills');
 
@@ -174,9 +176,11 @@ export function main(): number {
     }
 
     const findings: string[] = [];
+    let projected = 0;
     for (const name of skillDirs) {
         const abs = path.join(SKILLS_DIR, name, 'SKILL.md');
         if (!fs.existsSync(abs) || !fs.statSync(abs).isFile()) continue;
+        projected += 1;
         const ws = skillWorkspaces(abs);
         if (isExclusivelyMaintainer(ws)) continue;
         let text: string;
@@ -187,6 +191,26 @@ export function main(): number {
         }
         const relPath = path.relative(REPO_ROOT, abs);
         findings.push(...scanText(name, relPath, text));
+    }
+
+    // Counted BEFORE the maintainer-exclusive skip, so an all-maintainer
+    // projection is not mistaken for a dead root. The dir-exists guard above
+    // only catches a deleted tree; a regenerated-but-empty projection reaches
+    // here and would print the ✅ line over nothing. Exit 2 follows that same
+    // guard: the projection is unusable, which is not a "finding" (1).
+    try {
+        assertScanned({
+            gate: 'lint_consumer_internal_refs',
+            scanned: projected,
+            units: 'projected SKILL.md file(s)',
+            roots: ['dist/agent-src/skills'],
+        });
+    } catch (exc) {
+        if (exc instanceof DeadScopeError) {
+            process.stderr.write(`❌  ${exc.message}\n`);
+            return 2;
+        }
+        throw exc;
     }
 
     if (findings.length > 0) {

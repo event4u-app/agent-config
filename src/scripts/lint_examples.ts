@@ -23,6 +23,8 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
+import { assertScanned, DeadScopeError } from './_lib/scan_scope.js';
+
 const _HERE = fileURLToPath(import.meta.url);
 // Path(__file__).resolve().parent.parent.parent — three dirs up from the file.
 const REPO_ROOT = path.resolve(path.dirname(_HERE), '..', '..');
@@ -145,9 +147,22 @@ function _pyRepr(s: string): string {
 
 export function main(): number {
     const demos = _sorted_demos(REPO_ROOT);
-    if (demos.length === 0) {
-        process.stderr.write(`❌  no demo files matched ${DEMO_GLOB}\n`);
-        return 1;
+    // Supersedes the bare `demos.length === 0 → exit 1` check: same exit code,
+    // but the message names the root, so a moved demo directory reads as a dead
+    // scope instead of "the glob matched nothing".
+    try {
+        assertScanned({
+            gate: 'lint_examples',
+            scanned: demos.length,
+            units: 'demo file(s)',
+            roots: [DEMO_GLOB],
+        });
+    } catch (exc) {
+        if (exc instanceof DeadScopeError) {
+            process.stderr.write(`❌  ${exc.message}\n`);
+            return 1;
+        }
+        throw exc;
     }
     let failed = 0;
     for (const demo of demos) {

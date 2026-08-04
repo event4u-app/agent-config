@@ -15,6 +15,8 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
+import { assertScanned, DeadScopeError } from './_lib/scan_scope.js';
+
 /** Mirror `QUIET = "--quiet" in sys.argv` (computed at import). */
 const QUIET = process.argv.slice(2).includes('--quiet');
 
@@ -115,6 +117,27 @@ function find_empty_roadmaps(root: string): string[] {
 
 function main(): number {
     const root = _repo_root();
+    // The scanned unit is every roadmap `*.md`, never the empty ones: this gate
+    // reports an ABSENCE, so "no empty roadmaps" and "no roadmaps at all" print
+    // the same green line. `_repo_root()` falls back to CWD when it finds no
+    // `agents/roadmaps` anywhere up the chain, which is exactly how a moved tree
+    // reaches zero silently.
+    const base = path.join(root, ROADMAP_DIR);
+    try {
+        assertScanned({
+            gate: 'lint_empty_roadmaps',
+            scanned: _isDir(base) ? _rglobMdSorted(base).length : 0,
+            units: 'roadmap file(s)',
+            roots: [ROADMAP_DIR],
+        });
+    } catch (exc) {
+        if (exc instanceof DeadScopeError) {
+            process.stderr.write(`❌  ${exc.message}\n`);
+            return 1;
+        }
+        throw exc;
+    }
+
     const empties = find_empty_roadmaps(root);
 
     if (empties.length === 0) {

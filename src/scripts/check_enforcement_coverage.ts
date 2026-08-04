@@ -37,6 +37,8 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
+import { assertScanned, DeadScopeError } from './_lib/scan_scope.js';
+
 const _HERE = path.dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = path.resolve(_HERE, '..', '..');
 const RULES_DIR = path.join(REPO_ROOT, 'src', 'rules');
@@ -478,6 +480,24 @@ function main(argv: string[]): number {
     }
 
     const rows = collect();
+    // Count every rule read, not the declared subset: with an empty rules dir
+    // the report renders "0/0 rules (0%)" and exits green, and `summarise`
+    // special-cases the zero denominator rather than rejecting it. Exit 2 is
+    // the code the missing-rules-dir guard above already uses for this class.
+    try {
+        assertScanned({
+            gate: 'check_enforcement_coverage',
+            scanned: rows.length,
+            units: 'rule file(s)',
+            roots: ['src/rules'],
+        });
+    } catch (exc) {
+        if (exc instanceof DeadScopeError) {
+            process.stderr.write(`❌  ${exc.message}\n`);
+            return 2;
+        }
+        throw exc;
+    }
     const summary = summarise(rows);
 
     if (as_json) {

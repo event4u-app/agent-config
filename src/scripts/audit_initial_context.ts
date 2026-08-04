@@ -32,6 +32,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import { parse as parseYaml } from 'yaml';
 
 import * as token_count from './_lib/token_count.js';
+import { assertScanned, DeadScopeError } from './_lib/scan_scope.js';
 import { SRC_AGENT, SRC_DOMAINS } from './_lib/agent_src.js';
 import * as projectThinRules from './project_thin_rules.js';
 
@@ -304,12 +305,28 @@ function _catalog(globPat: string): Measure {
     return m;
 }
 
+const CATALOG_GLOBS = {
+    skills_projected: '.claude/skills/*/SKILL.md',
+    skills_core_source: 'src/skills/*/SKILL.md',
+    commands_core_source: 'src/domains/*/**/command.md',
+} as const;
+
 export function description_catalog(): Record<string, Measure> {
     return {
-        skills_projected: _catalog('.claude/skills/*/SKILL.md'),
-        skills_core_source: _catalog('src/skills/*/SKILL.md'),
-        commands_core_source: _catalog('src/domains/*/**/command.md'),
+        skills_projected: _catalog(CATALOG_GLOBS.skills_projected),
+        skills_core_source: _catalog(CATALOG_GLOBS.skills_core_source),
+        commands_core_source: _catalog(CATALOG_GLOBS.commands_core_source),
     };
+}
+
+/**
+ * Files the catalogs glob — counted UNFILTERED, unlike the `entries` the
+ * measurement keeps (only those carrying a description). A vanished skills or
+ * commands tree must read as zero files, not as "nothing declares a
+ * description", which is indistinguishable from a clean tree at zero tokens.
+ */
+function catalog_file_count(): number {
+    return Object.values(CATALOG_GLOBS).reduce((n, pat) => n + _glob(pat).length, 0);
 }
 
 interface LongestRule {
@@ -699,6 +716,25 @@ function parse_args(argv: string[]): ParsedArgs {
 
 export function main(argv: string[] | null = null): number {
     const args = parse_args(argv ?? process.argv.slice(2));
+
+    // Every budget in BUDGETS is a token count over these catalogs: an empty
+    // catalog measures zero tokens and passes every cap, so the surface has to
+    // be proved non-empty before the caps mean anything. Exit 1 is the gate's
+    // failure code (`--fail-if-over-budget`); 2 is reserved for usage errors.
+    try {
+        assertScanned({
+            gate: 'audit_initial_context',
+            scanned: catalog_file_count(),
+            units: 'catalog file(s)',
+            roots: Object.values(CATALOG_GLOBS),
+        });
+    } catch (exc) {
+        if (exc instanceof DeadScopeError) {
+            process.stderr.write(`❌  ${exc.message}\n`);
+            return 1;
+        }
+        throw exc;
+    }
 
     const data = build();
 

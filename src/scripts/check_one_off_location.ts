@@ -29,6 +29,8 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
+import { assertScanned, DeadScopeError } from './_lib/scan_scope.js';
+
 // src/scripts/check_one_off_location.ts → two dirs up is the repo root.
 // Mirrors the Python `Path(__file__).resolve().parent.parent.parent`.
 const _HERE = fileURLToPath(import.meta.url);
@@ -71,6 +73,28 @@ function _rglobOneOff(root: string): string[] {
     walk(root);
     out.sort();
     return out;
+}
+
+/** Files the guard's walk visits under `root` — the scope, not the matches. */
+function _countFilesUnder(root: string): number {
+    let n = 0;
+    const walk = (dir: string): void => {
+        let entries: fs.Dirent[];
+        try {
+            entries = fs.readdirSync(dir, { withFileTypes: true });
+        } catch {
+            return;
+        }
+        for (const ent of entries) {
+            if (ent.isDirectory()) {
+                walk(path.join(dir, ent.name));
+            } else {
+                n += 1;
+            }
+        }
+    };
+    walk(root);
+    return n;
 }
 
 function _isFile(p: string): boolean {
@@ -125,6 +149,25 @@ function parse_args(argv: readonly string[]): Args {
 
 export function main(argv?: readonly string[]): number {
     const args = parse_args(argv ?? process.argv.slice(2));
+
+    // The unit is every file the walk visits, NOT the `_one_off_*.py` matches:
+    // zero matches is the normal clean state (the archive is empty today), so
+    // only the unfiltered walk can tell "nothing to move" from "nothing read".
+    try {
+        assertScanned({
+            gate: 'check_one_off_location',
+            scanned: _countFilesUnder(SCRIPTS),
+            units: 'file(s)',
+            roots: ['src/scripts'],
+        });
+    } catch (exc) {
+        if (exc instanceof DeadScopeError) {
+            // 1 = violation (3 is reserved for an internal error below).
+            process.stderr.write(`❌  ${exc.message}\n`);
+            return 1;
+        }
+        throw exc;
+    }
 
     let violations: string[];
     try {

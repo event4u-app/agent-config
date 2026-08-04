@@ -34,6 +34,7 @@ import process from 'node:process';
 import { fileURLToPath } from 'node:url';
 import YAML from 'yaml';
 
+import { assertScanned } from './_lib/scan_scope.js';
 import { jaccardSimilarity } from './_lib/text_similarity.js';
 
 const PROG = 'check_memory_contradiction.ts';
@@ -234,7 +235,21 @@ function main(argv: string[]): number {
 
     let hit: ContradictionHit | null;
     try {
-        hit = findContradiction(key, body, loadCuratedEntries(path.resolve(memoryRoot), type));
+        const existing = loadCuratedEntries(path.resolve(memoryRoot), type);
+        // Curated entries READ — the corpus every verdict below is decided
+        // against. Zero of them makes "no contradiction" unfalsifiable.
+        assertScanned({
+            gate: 'check_memory_contradiction',
+            scanned: existing.length,
+            units: 'curated entry(ies)',
+            roots: [path.join(memoryRoot, type), path.join(memoryRoot, `${type}.yml`)],
+            allowEmpty:
+                'OPTIONAL_INPUT: the per-type curated store is created by the first '
+                + '/memory promote of that type. Delete it and zero still reads as "nothing '
+                + 'of this type has been curated yet" — a state every consumer starts in, and '
+                + 'one in which no contradiction can exist by definition.',
+        });
+        hit = findContradiction(key, body, existing);
     } catch (exc) {
         process.stderr.write(`${PROG}: internal error: ${String(exc)}\n`);
         return 3;

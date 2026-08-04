@@ -37,6 +37,8 @@ import process from 'node:process';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { parse as parseYaml } from 'yaml';
 
+import { assertScanned, DeadScopeError } from './_lib/scan_scope.js';
+
 type Severity = 'error' | 'warning';
 
 const REQUIRED_FRONTMATTER: ReadonlySet<string> = new Set([
@@ -456,7 +458,28 @@ function main(): number {
         process.stderr.write(`error: ${p} not found\n`);
         return 3;
     }
-    const findings = _runChecks(fs.readFileSync(p, 'utf-8'), p);
+    const text = fs.readFileSync(p, 'utf-8');
+    // No corpus walk: this gate's scope is the single document named on argv.
+    // The unit is therefore the content lines actually read — every check below
+    // is a search over this text, so a zero-byte target makes the negative ones
+    // ("no TODO/TBD markers") vacuously true against nothing.
+    try {
+        assertScanned({
+            gate: 'check_proposal',
+            scanned: text.split('\n').filter((l) => l.trim() !== '').length,
+            units: 'content line(s)',
+            roots: [p],
+        });
+    } catch (exc) {
+        if (exc instanceof DeadScopeError) {
+            // 1 = gate failure, which is what an unusable proposal already
+            // returns today (3 is reserved for the not-found path above).
+            process.stderr.write(`❌  ${exc.message}\n`);
+            return 1;
+        }
+        throw exc;
+    }
+    const findings = _runChecks(text, p);
     const errors = findings.filter((f) => f.severity === 'error');
     if (args.format === 'json') {
         process.stdout.write(

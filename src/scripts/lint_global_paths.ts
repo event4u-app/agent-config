@@ -21,6 +21,8 @@ import os from "node:os";
 import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
+import { assertScanned, DeadScopeError } from "./_lib/scan_scope.js";
+
 const DEFAULT_POLICY = path.join(
   path.dirname(fileURLToPath(import.meta.url)),
   "expected_perms.json",
@@ -171,7 +173,29 @@ export function lint(policyPath: string, quiet = false): number {
   const policyObj: PolicyObject = isObject(policy) ? policy : {};
   const findings: string[] = [];
 
+  // The unit is the POLICY rule, not the audited path: the global install tree
+  // is machine-state and is legitimately absent (CI, a fresh clone), so a count
+  // of audited paths would have to be `allowEmpty` and assert nothing. An empty
+  // policy is the real dead scope — it audits nothing while exiting 0. Exit 2
+  // matches the other policy-load failures above.
   const rootSpecRaw = policyObj["global_root"];
+  try {
+    assertScanned({
+      gate: "lint_global_paths",
+      scanned:
+        (isObject(rootSpecRaw) ? 1 : 0) +
+        asArray(policyObj["files"]).length +
+        asArray(policyObj["directories"]).length,
+      units: "policy rule(s)",
+      roots: [policyPath],
+    });
+  } catch (exc) {
+    if (exc instanceof DeadScopeError) {
+      process.stderr.write(`error: ${exc.message}\n`);
+      return 2;
+    }
+    throw exc;
+  }
   const rootSpec: PolicyObject = isObject(rootSpecRaw) ? rootSpecRaw : {};
   const rootPath = _expand(asString(rootSpec["path"], "~/.event4u/agent-config"));
   if (_exists(rootPath)) {

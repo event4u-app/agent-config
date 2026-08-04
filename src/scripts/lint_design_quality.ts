@@ -44,6 +44,7 @@
  */
 import fs from "node:fs";
 import path from "node:path";
+import { assertScanned, DeadScopeError } from "./_lib/scan_scope.js";
 
 interface Finding {
   rule: string;
@@ -275,6 +276,27 @@ function main(): void {
     if (!ignoreGlobs.some((g) => f.includes(g.replace("**", "")))) {
       htmlCssFiles.push(f);
     }
+  }
+
+  // The opt-in escape above is the "consumer has no UI tree" path. Reaching
+  // here means the root EXISTS and still yielded nothing scannable — a moved
+  // subtree, a drifted extension list, or an over-broad ignoreFiles glob. That
+  // prints "clean — 0 file(s) checked" today. Exit 1 is this linter's
+  // internal-error code; 2 is reserved for real findings.
+  try {
+    assertScanned({
+      gate: "lint_design_quality",
+      scanned: htmlCssFiles.length,
+      units: "HTML/CSS file(s)",
+      // Absolute: --dir may point outside the cwd (or outside any repo).
+      roots: [scanDir],
+    });
+  } catch (exc) {
+    if (exc instanceof DeadScopeError) {
+      process.stderr.write(`❌  ${exc.message}\n`);
+      process.exit(1);
+    }
+    throw exc;
   }
 
   const allFindings: Finding[] = [];

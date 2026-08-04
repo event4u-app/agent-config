@@ -24,6 +24,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import { parse as parseYaml } from 'yaml';
 
 import { resolve_logical } from './_lib/agent_src.js';
+import { assertScanned, DeadScopeError } from './_lib/scan_scope.js';
 
 const _HERE = fileURLToPath(import.meta.url);
 
@@ -301,11 +302,30 @@ function main(argv?: readonly string[]): number {
     if (args.file !== null) {
         return lint(args.file);
     }
-    if (!_isDir(args.dir)) {
-        return 0; // opt-in directory; absence is not a failure
+    const pipelines = _isDir(args.dir) ? _globYamlSorted(args.dir) : [];
+    try {
+        assertScanned({
+            gate: 'lint_orchestration_dsl',
+            scanned: pipelines.length,
+            units: 'pipeline file(s)',
+            roots: ['.agent-config/orchestrations'],
+            allowEmpty:
+                'OPTIONAL_INPUT: `.agent-config/orchestrations/` is an opt-in consumer ' +
+                'directory — most projects author no pipelines at all, and the DSL contract ' +
+                'only binds files that exist. Delete the root and zero still means "this ' +
+                'project declares no pipelines", never a corpus that went missing.',
+        });
+    } catch (exc) {
+        // 2 is the file/schema-load code; 1 is reserved for a pipeline that
+        // violates the contract.
+        if (exc instanceof DeadScopeError) {
+            process.stderr.write(`lint_orchestration_dsl: ${exc.message}\n`);
+            return 2;
+        }
+        throw exc;
     }
     let rc = 0;
-    for (const p of _globYamlSorted(args.dir)) {
+    for (const p of pipelines) {
         rc = Math.max(rc, lint(p));
     }
     return rc;

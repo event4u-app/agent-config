@@ -32,6 +32,8 @@ import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { load as yamlLoad } from 'js-yaml';
 
+import { assertScanned, DeadScopeError } from './_lib/scan_scope.js';
+
 // NOTE: deliberately no runtime module dependency on the CLI registry —
 // src/cli/ is outside the package.json `files` whitelist, so importing it
 // would crash a global install (prepack-check). The registry file is parsed
@@ -625,6 +627,27 @@ function main(): number {
     const scanTrees: ScanTree[] = args.scanRoots.length
         ? args.scanRoots.map((dir) => ({ dir, match: (n: string) => n.endsWith('.md') }))
         : [...DEFAULT_SCAN_TREES];
+    // `_collectTargets` skips a scan tree whose dir is absent, so a renamed
+    // src/skills (or a --scan-root typo) yields zero targets and the run prints
+    // "Every documented package command resolves" having opened no doc. Exit 3
+    // matches the scan-failure code below: no targets means the linter did not
+    // run, which is not "0 violations" (0).
+    const targets = _collectTargets(args.root, scanTrees).length;
+    try {
+        assertScanned({
+            gate: 'lint_documented_commands',
+            scanned: targets,
+            units: 'doc file(s)',
+            roots: scanTrees.map((t) => t.dir),
+        });
+    } catch (exc) {
+        if (exc instanceof DeadScopeError) {
+            process.stderr.write(`${exc.message}\n`);
+            return 3;
+        }
+        throw exc;
+    }
+
     let violations: Violation[];
     try {
         violations = scan(args.root, scanTrees);

@@ -15,6 +15,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import { command_slug } from './_lib/agent_src.js';
 import { is_claude_builtin_name } from './_lib/claude_builtin_names.js';
+import { assertScanned, DeadScopeError } from './_lib/scan_scope.js';
 
 const SCRIPTS_DIR = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.dirname(path.dirname(SCRIPTS_DIR));
@@ -231,6 +232,35 @@ function parse_args(argv: readonly string[]): { quiet: boolean } {
 
 export function main(argv?: readonly string[]): number {
     const { quiet } = parse_args(argv ?? process.argv.slice(2));
+
+    // Both check_* helpers return [] on a missing root, so a moved src/domains
+    // or src/skills reads as "all names compliant". Count the name-bearing
+    // files themselves — the two roots are summed because either one alone
+    // going dead still leaves the other's names checked, and the ✅ line claims
+    // BOTH surfaces. Exit 3 is this gate's internal-error code: a dead scope is
+    // the linter failing to run, not a name violation (1).
+    const scanned =
+        (isDir(SRC_DOMAINS) ? rglobNamed(SRC_DOMAINS, 'command.md').length : 0) +
+        (isDir(SRC_SKILLS)
+            ? fs
+                  .readdirSync(SRC_SKILLS, { withFileTypes: true })
+                  .filter((e) => e.isDirectory() && isFile(path.join(SRC_SKILLS, e.name, 'SKILL.md')))
+                  .length
+            : 0);
+    try {
+        assertScanned({
+            gate: 'lint_agent_skill_names',
+            scanned,
+            units: 'command.md + SKILL.md file(s)',
+            roots: ['src/domains', 'src/skills'],
+        });
+    } catch (exc) {
+        if (exc instanceof DeadScopeError) {
+            process.stderr.write(`❌  ${exc.message}\n`);
+            return 3;
+        }
+        throw exc;
+    }
 
     let violations: string[];
     try {

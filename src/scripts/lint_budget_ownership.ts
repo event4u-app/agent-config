@@ -21,6 +21,8 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+import { assertScanned, DeadScopeError } from './_lib/scan_scope.js';
+
 const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..');
 const CONFIG_DIR = path.join(REPO_ROOT, 'src', 'config');
 
@@ -52,9 +54,24 @@ export function budgetFiles(dir: string = CONFIG_DIR): string[] {
 
 export function main(): number {
     const files = budgetFiles();
-    if (files.length === 0) {
-        process.stdout.write('ℹ️  no budget configs under src/config/ — nothing to lint\n');
-        return 0;
+    // `*budget*.json` IS this gate's corpus definition, not a content-derived
+    // subset: zero matches means src/config/ moved or the budgets were deleted,
+    // and the old "nothing to lint" exit 0 could not tell either from a healthy
+    // tree. Of the two documented failure codes, 1 is the one the gate actually
+    // returns when it will not vouch for the tree; 2 is reserved for a throw.
+    try {
+        assertScanned({
+            gate: 'lint_budget_ownership',
+            scanned: files.length,
+            units: 'budget config(s)',
+            roots: ['src/config'],
+        });
+    } catch (exc) {
+        if (exc instanceof DeadScopeError) {
+            process.stderr.write(`❌  ${exc.message}\n`);
+            return 1;
+        }
+        throw exc;
     }
     const errors: string[] = [];
     const today = new Date().toISOString().slice(0, 10);

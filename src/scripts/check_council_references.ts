@@ -40,6 +40,7 @@ import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import { artefact_roots, strip_source_prefix } from './_lib/agent_src.js';
+import { assertScanned, DeadScopeError } from './_lib/scan_scope.js';
 
 const QUIET = process.argv.includes('--quiet');
 
@@ -284,7 +285,14 @@ function* _iter_files(roots: readonly string[]): Generator<string> {
 
 function main(): number {
     const violations: Array<[string, number, string]> = [];
-    for (const p of _iter_files(_scan_roots())) {
+    const roots = _scan_roots();
+    // Counted before the allowlist filter — the question is what the walk
+    // reached, not what survived it. Every scan root is skipped when absent, so
+    // a relocated `docs/` or `agents/` leaves the linter reporting "no forbidden
+    // references" over an empty corpus. Exit 1 is its only failure code.
+    let scanned = 0;
+    for (const p of _iter_files(roots)) {
+        scanned += 1;
         const rel = p.split(path.sep).join('/');
         if (_is_allowlisted(rel)) {
             continue;
@@ -292,6 +300,20 @@ function main(): number {
         for (const [ln, ref] of _scan_file(p)) {
             violations.push([p, ln, ref]);
         }
+    }
+    try {
+        assertScanned({
+            gate: 'check_council_references',
+            scanned,
+            units: 'durable artefact file(s)',
+            roots,
+        });
+    } catch (exc) {
+        if (exc instanceof DeadScopeError) {
+            process.stdout.write(`❌  ${exc.message}\n`);
+            return 1;
+        }
+        throw exc;
     }
 
     if (violations.length === 0) {

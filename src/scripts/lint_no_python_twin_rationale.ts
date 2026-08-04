@@ -22,6 +22,8 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
+import { assertScanned, DeadScopeError } from './_lib/scan_scope.js';
+
 const _HERE = fileURLToPath(import.meta.url);
 export const ROOT = path.resolve(path.dirname(_HERE), '..', '..');
 const SCOPE = path.join(ROOT, 'src', 'scripts');
@@ -79,10 +81,26 @@ export function scan_file(rel: string, text: string): string[] {
 export function main(argv: readonly string[] = process.argv.slice(2)): number {
     const QUIET = argv.includes('--quiet');
     const findings: string[] = [];
+    let scanned = 0;
     for (const f of walk(SCOPE)) {
         if (path.resolve(f) === path.resolve(_HERE)) continue; // this guard documents the shapes
+        scanned += 1;
         const rel = path.relative(ROOT, f).split(path.sep).join('/');
         findings.push(...scan_file(rel, fs.readFileSync(f, 'utf-8')));
+    }
+    try {
+        assertScanned({
+            gate: 'lint_no_python_twin_rationale',
+            scanned,
+            units: 'source file(s)',
+            roots: ['src/scripts'],
+        });
+    } catch (exc) {
+        if (exc instanceof DeadScopeError) {
+            process.stdout.write(`❌  ${exc.message}\n`);
+            return 1;
+        }
+        throw exc;
     }
     if (findings.length === 0) {
         if (!QUIET) process.stdout.write('✅  No Python-twin rationale in src/scripts comments.\n');

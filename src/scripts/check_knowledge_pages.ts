@@ -29,6 +29,8 @@ import process from 'node:process';
 import { fileURLToPath } from 'node:url';
 import YAML from 'yaml';
 
+import { assertScanned } from './_lib/scan_scope.js';
+
 const PROG = 'check_knowledge_pages.ts';
 const PAGE_LINE_BUDGET = 200;
 const CONTESTED_WARN_COUNT = 2;
@@ -135,6 +137,14 @@ function listMarkdownFiles(dirPath: string): string[] {
         .sort((a, b) => (a < b ? -1 : a > b ? 1 : 0));
 }
 
+/** Pages `lintAll` reads — the corpus, independent of how many warn. */
+function countPages(knowledgeRoot: string): number {
+    return TYPED_DIRS.reduce(
+        (n, dir) => n + listMarkdownFiles(path.join(knowledgeRoot, dir)).length,
+        0,
+    );
+}
+
 export function lintAll(knowledgeRoot: string, today: Date = new Date()): Warning[] {
     const warnings: Warning[] = [];
     for (const dir of TYPED_DIRS) {
@@ -187,6 +197,19 @@ export function main(argv: string[]): number {
 
     const knowledgeRoot = path.join(dir, 'agents', 'knowledge');
     const warnings = lintAll(knowledgeRoot);
+    // Pages read, not warnings emitted — this lint never fails the build, so a
+    // moved root would print "no warnings" indefinitely with nothing behind it.
+    assertScanned({
+        gate: 'check_knowledge_pages',
+        scanned: countPages(knowledgeRoot),
+        units: 'knowledge page(s)',
+        roots: TYPED_DIRS.map((d) => path.join('agents', 'knowledge', d)),
+        allowEmpty:
+            'OPTIONAL_INPUT: the lifecycle-typed pages are project-authored runtime content, '
+            + 'not shipped package source, and the four typed subdirs are created on first '
+            + 'capture. Delete them and zero still reads as "this project has written no '
+            + 'knowledge pages yet" — the state every consumer starts in.',
+    });
 
     if (format === 'json') {
         process.stdout.write(JSON.stringify(warnings, null, 2) + '\n');

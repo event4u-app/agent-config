@@ -19,6 +19,8 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
+import { assertScanned, DeadScopeError } from './_lib/scan_scope.js';
+
 const _HERE = fileURLToPath(import.meta.url);
 const ROOT = path.resolve(path.dirname(_HERE), '..', '..');
 const CONTRACTS_DIR = 'docs/contracts';
@@ -191,8 +193,27 @@ function main(): number {
     const args = parse_args(process.argv.slice(2));
     const todayOrdinal = _todayOrdinal();
     const violations: Violation[] = [];
-    for (const p of _globMdSorted(path.join(ROOT, CONTRACTS_DIR))) {
+    const contracts = _globMdSorted(path.join(ROOT, CONTRACTS_DIR));
+    for (const p of contracts) {
         violations.push(...check_one(p, todayOrdinal));
+    }
+    // Count every contract read, not the `stability: beta` subset: over a moved
+    // `docs/contracts/` "no beta contracts" and "no contracts at all" produce
+    // the same clean line, and only the second is a dead gate. Exit 1 is the
+    // violation code; 3 stays reserved for the internal-error handler below.
+    try {
+        assertScanned({
+            gate: 'check_beta_review_markers',
+            scanned: contracts.length,
+            units: 'contract file(s)',
+            roots: [CONTRACTS_DIR],
+        });
+    } catch (exc) {
+        if (exc instanceof DeadScopeError) {
+            process.stderr.write(`❌  ${exc.message}\n`);
+            return 1;
+        }
+        throw exc;
     }
     if (args.json) {
         process.stdout.write(JSON.stringify({ violations }, null, 2) + '\n');
