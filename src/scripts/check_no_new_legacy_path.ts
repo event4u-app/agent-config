@@ -47,6 +47,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import { checkRatchet } from './_lib/gate_baseline.js';
 import { assertScanned, DeadScopeError } from './_lib/scan_scope.js';
+import { readStdinText } from './_lib/stdin.js';
 
 const LEGACY = '.agent-src.uncondensed/';
 const EXEMPT: ReadonlySet<string> = new Set([
@@ -319,7 +320,9 @@ function main(): number {
     // documented failure the kernel-bundle step sidesteps the same way).
     let offenders: string[];
     if (process.argv.includes('--stdin')) {
-        const stdin = fs.readFileSync(0, 'utf-8') as string;
+        // `readFileSync(0)` crashes with EAGAIN once the diff outgrows the pipe
+        // buffer — this gate's own PR was the first big enough to prove it.
+        const stdin = readStdinText();
         offenders = find_offenders(stdin);
     } else {
         const base = _base();
