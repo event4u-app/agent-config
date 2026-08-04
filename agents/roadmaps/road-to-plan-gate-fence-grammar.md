@@ -67,11 +67,47 @@ complexity: structural
 - No retro-application to artefacts already merged — migration is explicit
   (Phase 1 Step 3), never silent.
 
+## Council verdict (2026-08-04)
+
+Deep-tier run, members anthropic/claude-sonnet-4-5 + openai/gpt-4o. **Convergent
+on Candidate B — the safety property moves into the data model and out of
+presentation parsing.** The three fence failures are read as symptoms of one
+mistake: treating markdown layout as a security boundary.
+
+**Accepted, with the load-bearing refinement:** rows are **live by default**; an
+illustrative row must be **explicitly marked**. This inverts the current default
+and is what makes it fail-closed — forgetting a marker blocks, it never passes.
+
+**Explicitly rejected — the pure structured-data-block variant** (findings move
+into a ```` ```findings-table ```` block, everything outside is ignored). One
+member killed it on a false-*negative*: an author who forgets the wrapper leaves
+a `| … | open | |` row sitting in prose, and the gate passes while the author
+believes a blocker was filed. "Manual review will notice" is the assumption that
+created the need for the gate. Structured data stays a long-term option to
+evaluate, not this change.
+
+**Also rejected:** blocking on a malformed table *inside* a declared block — an
+author adding a row would be blocked by someone else's older formatting glitch,
+with no indication which row or what the parser wanted. That is the confusing-
+block category the FP budget exists to prevent.
+
+**Migration:** version-marker based. The header already carries
+`completion-review: v1`, so `v2` is the discriminator; a transitional window
+accepts both and emits a deprecation warning for old-style illustrative content.
+Frozen records are never edited to comply.
+
+**What this sacrifices:** every existing illustrative row must be marked, the
+dispatcher's skeleton included; markdown authors gain one more piece of syntax to
+remember. Accepted because the alternative keeps a security property in a text
+layer that has now failed open four times.
+
 ## Phase 1: Decide the grammar
 
-- [ ] **Step 1:** Read the council convergence and record the verdict in this
+- [x] **Step 1:** Read the council convergence and record the verdict in this
       roadmap (accept / accept-with-modification / reject per finding), naming
       what the chosen direction sacrifices.
+      <!-- executed 2026-08-04 — verdict recorded above: Candidate B, rows live by default, explicit illustrative marker, v2 header discriminator; pure data-block and malformed-in-block blocking both rejected with the reason. -->
+
 - [ ] **Step 2:** Write the chosen rule into `docs/contracts/plan-review-gates.md`
       § 2.2 as a deterministic parser contract, covering explicitly: an
       undeclared labelled fence, an unterminated fence, nested fences

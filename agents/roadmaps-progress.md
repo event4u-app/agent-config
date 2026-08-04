@@ -6,10 +6,10 @@
 
 ## Overall
 
-**68 / 182 steps done · 37%**
+**69 / 182 steps done · 38%**
 
 ```text
-███████████████░░░░░░░░░░░░░░░░░░░░░░░░░   37%
+███████████████░░░░░░░░░░░░░░░░░░░░░░░░░   38%
 ```
 
 ## Open roadmaps
@@ -24,7 +24,7 @@
 | 6 | [road-to-kernel-question-triangle.md](roadmaps/road-to-kernel-question-triangle.md) | 1 | 3 | 3 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 7 | [road-to-maintainer-bus-factor.md](roadmaps/road-to-maintainer-bus-factor.md) | 4 | 12 | 5 | 7 | 0 | 0 | [1](#blockers-road-to-maintainer-bus-factor) | ██████░░░░ 58% |
 | 8 | [road-to-orchestration-scope-decision.md](roadmaps/road-to-orchestration-scope-decision.md) | 4 | 10 | 6 | 4 | 0 | 0 | [1](#blockers-road-to-orchestration-scope-decision) | ████░░░░░░ 40% |
-| 9 | [road-to-plan-gate-fence-grammar.md](roadmaps/road-to-plan-gate-fence-grammar.md) | 4 | 25 | 25 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+| 9 | [road-to-plan-gate-fence-grammar.md](roadmaps/road-to-plan-gate-fence-grammar.md) | 4 | 25 | 24 | 1 | 0 | 0 | 0 | ░░░░░░░░░░ 4% |
 | 10 | [road-to-scale-history-bench-run.md](roadmaps/road-to-scale-history-bench-run.md) | 1 | 2 | 2 | 0 | 0 | 0 | [1](#blockers-road-to-scale-history-bench-run) | ░░░░░░░░░░ 0% |
 | 11 | [road-to-solution-minimalism.md](roadmaps/road-to-solution-minimalism.md) | 4 | 36 | 12 | 23 | 0 | 1 | 0 | ███████░░░ 66% |
 | 12 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 6 | 3 | 0 | 0 | [1](#blockers-road-to-subagent-value-realization-followup) | ███░░░░░░░ 33% |
@@ -160,11 +160,11 @@ _1 blocker resolved._
 
 ### [road-to-plan-gate-fence-grammar.md](roadmaps/road-to-plan-gate-fence-grammar.md)
 
-**Plan-gate fence grammar — close the live fail-open, make dispositions machine-checkable** — 0 / 25 done (0%)
+**Plan-gate fence grammar — close the live fail-open, make dispositions machine-checkable** — 1 / 25 done (4%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
-| 1 | Decide the grammar | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
+| 1 | Decide the grammar | 🟡 in progress | 3 | 1 | 0 | 0 | 25% |
 | 2 | Implement and prove it | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
 | 3 | Disposition index with stable ids | ⬜ not started | 6 | 0 | 0 | 0 | 0% |
 | 4 | Projections + docs | ⬜ not started | 10 | 0 | 0 | 0 | 0% |
