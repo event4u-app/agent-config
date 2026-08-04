@@ -24,6 +24,8 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
+import { assertScanned, DeadScopeError } from './_lib/scan_scope.js';
+
 const _HERE = fileURLToPath(import.meta.url);
 export const REPO_ROOT = path.resolve(path.dirname(_HERE), '..', '..');
 
@@ -71,6 +73,15 @@ export function scanText(text: string, file: string, ref: string): Hit[] {
 
 function _git(root: string, args: string[]): string {
     return execFileSync('git', args, { cwd: root, encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 });
+}
+
+/** How many tracked memory files `scanWorktree` has to read (0 when git fails). */
+function _trackedCount(root: string): number {
+    try {
+        return _git(root, ['ls-files', TRACKED_GLOB_ROOT]).split('\n').filter(Boolean).length;
+    } catch {
+        return 0;
+    }
 }
 
 /** Scan the current worktree's tracked memory files. */
@@ -147,6 +158,15 @@ export function main(argv: string[] = process.argv.slice(2)): number {
             process.stdout.write(
                 `scanned ${commits} commit(s), ${blobs} unique blob(s) under ${TRACKED_GLOB_ROOT}\n`,
             );
+            // The honest-null verdict rests on this scan having covered the
+            // full history; a "zero fires" certification over zero blobs would
+            // silently re-certify nothing at all.
+            assertScanned({
+                gate: 'lint_memory_tripwire',
+                scanned: blobs,
+                units: 'historical blob(s)',
+                roots: [TRACKED_GLOB_ROOT],
+            });
             if (hits.length === 0) {
                 process.stdout.write('✅  zero tripwire fires across the full history.\n');
                 return 0;
@@ -157,6 +177,15 @@ export function main(argv: string[] = process.argv.slice(2)): number {
             process.stdout.write(`❌  ${hits.length} fire(s). HALT — never rewrite; a human decides.\n`);
             return 1;
         }
+        // Count the corpus separately from the hits: `scanWorktree` returns
+        // only fires, and "no fires" is the pass state, so an unlistable or
+        // moved agents/memory tree would otherwise read as clean.
+        assertScanned({
+            gate: 'lint_memory_tripwire',
+            scanned: _trackedCount(root),
+            units: 'tracked memory file(s)',
+            roots: [TRACKED_GLOB_ROOT],
+        });
         const hits = scanWorktree(root);
         if (hits.length === 0) {
             process.stdout.write('✅  tripwire clean on tracked memory files.\n');
@@ -168,6 +197,12 @@ export function main(argv: string[] = process.argv.slice(2)): number {
         process.stdout.write(`❌  ${hits.length} fire(s). HALT — never rewrite; a human decides.\n`);
         return 1;
     } catch (exc) {
+        if (exc instanceof DeadScopeError) {
+            // A dead scope is a tripwire failure, not an internal fault: the
+            // gate reports the same HALT code it uses for a fire.
+            process.stderr.write(`❌  ${exc.message}\n`);
+            return 1;
+        }
         process.stderr.write(`lint_memory_tripwire: internal error: ${String(exc)}\n`);
         return 3;
     }

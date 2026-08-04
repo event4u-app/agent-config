@@ -27,6 +27,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { runCountedProbe } from "./_lib/counted_probe.js";
+import { assertWatchlistResolves, DeadScopeError } from "./_lib/scan_scope.js";
 
 const _HERE = path.dirname(fileURLToPath(import.meta.url));
 
@@ -183,6 +184,24 @@ function parse_args(argv: string[]): ParsedArgs {
 
 export function main(argv: string[] | null = null): number {
   const args = parse_args(argv ?? process.argv.slice(2));
+
+  // This runner owns no corpus of its own — it guards five named child linters,
+  // so its scope is that watch list. `_run` swallows an unparseable child
+  // payload as zero findings, which means a renamed or deleted child scores the
+  // umbrella "✅ clean (0 blocking)" instead of reporting that it never ran.
+  try {
+    assertWatchlistResolves({
+      gate: "lint_agent_security",
+      candidates: LINTERS.map(([, script]) => path.posix.join("src", "scripts", script)),
+      repoRoot: REPO_ROOT,
+    });
+  } catch (e) {
+    if (e instanceof DeadScopeError) {
+      process.stderr.write(`❌  ${e.message}\n`);
+      return 1;
+    }
+    throw e;
+  }
 
   const all_findings: Finding[] = [];
   let blocking = 0;

@@ -29,6 +29,8 @@ import process from 'node:process';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import YAML from 'yaml';
 
+import { assertScanned, DeadScopeError } from './_lib/scan_scope.js';
+
 // src/scripts/check_always_budget.ts → parents[2] is the repo root
 // (mirrors the Python module's Path(__file__).resolve().parents[2]).
 const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
@@ -550,6 +552,28 @@ function main(): number {
     if (!isDir(RULES_DIR)) {
         process.stderr.write(`❌  rules dir missing: ${RULES_DIR}\n`);
         return 3;
+    }
+
+    // The scanned unit is every projected rule, not the `type: always` subset the
+    // budget is measured over: `isDir` above catches a MISSING projection, but a
+    // present-and-empty one (a sync that produced no rules) reaches here, and
+    // "no always-rules" cannot distinguish that from a tree whose rules are all
+    // `type: auto`. Exit 3 stays — this file's documented internal-error code,
+    // already used for the empty case, and the Taskfile fails on any non-zero, so
+    // this was never a silent green.
+    try {
+        assertScanned({
+            gate: 'check_always_budget',
+            scanned: allRules().length,
+            units: 'projected rule file(s)',
+            roots: [path.relative(REPO_ROOT, RULES_DIR)],
+        });
+    } catch (exc) {
+        if (exc instanceof DeadScopeError) {
+            process.stderr.write(`❌  ${exc.message}\n`);
+            return 3;
+        }
+        throw exc;
     }
 
     const rules = allwaysRules();

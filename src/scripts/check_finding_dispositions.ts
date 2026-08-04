@@ -34,6 +34,8 @@ import * as path from 'node:path';
 import process from 'node:process';
 import { fileURLToPath } from 'node:url';
 
+import { assertScanned, DeadScopeError } from './_lib/scan_scope.js';
+
 const _HERE = fileURLToPath(import.meta.url);
 const REPO_ROOT = path.resolve(path.dirname(_HERE), '..', '..');
 
@@ -233,6 +235,33 @@ function main(argv: readonly string[]): number {
             process.stderr.write(`❌  ${e instanceof Error ? e.message : String(e)}\n`);
             return 2;
         }
+    }
+
+    // Scope declaration, not a scope guard. The ledger is written per release by
+    // `--ingest`, so "no <release>.json" is the normal state of a release whose
+    // self-review reported nothing — the gate's own success line says so. That
+    // makes an absent file indistinguishable from a moved ledger dir here, and
+    // the honest reading is that the corpus count cannot carry that signal: the
+    // durable trigger for an un-ingested finding is `--pr` mode, which compares
+    // the ledger against what the self-review actually reported.
+    try {
+        assertScanned({
+            gate: 'check_finding_dispositions',
+            scanned: ledger.findings.length,
+            units: 'recorded finding(s)',
+            roots: [path.relative(REPO_ROOT, ledgerPath)],
+            allowEmpty:
+                'EMPTY_VALID: zero recorded findings IS the pass state for a release whose '
+                + 'self-review reported none — the ledger file is created on first --ingest, so a '
+                + 'clean release legitimately has no <version>.json. Un-ingested findings are '
+                + 'caught by --pr (unrecorded_findings), never by this count.',
+        });
+    } catch (exc) {
+        if (exc instanceof DeadScopeError) {
+            process.stderr.write(`❌  ${exc.message}\n`);
+            return 1;
+        }
+        throw exc;
     }
 
     const problems = missing_dispositions(ledger.findings);

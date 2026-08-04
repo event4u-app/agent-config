@@ -44,6 +44,8 @@ import * as path from 'node:path';
 import process from 'node:process';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
+import { assertScanned, DeadScopeError } from './_lib/scan_scope.js';
+
 const _HERE = fileURLToPath(import.meta.url);
 // Path(__file__).resolve().parents[2] — repo root, two dirs up from src/scripts.
 const REPO = path.resolve(path.dirname(_HERE), '..', '..');
@@ -174,6 +176,25 @@ function main(argv?: readonly string[]): number {
     const args = parse_args(argv ?? process.argv.slice(2));
 
     const allow = load_allowlist();
+    const tracked = tracked_text_files();
+    // `_git` swallows every failure and returns "", so a run outside a work
+    // tree — or against a repo whose index this process cannot read — walks an
+    // empty file list, finds no markers, and reports the tree clean. The count
+    // the success line already prints was the evidence; nothing asserted on it.
+    try {
+        assertScanned({
+            gate: 'check_no_conflict_markers',
+            scanned: tracked.length,
+            units: 'tracked file(s)',
+            roots: [`${REPO} (git ls-files)`],
+        });
+    } catch (exc) {
+        if (exc instanceof DeadScopeError) {
+            process.stderr.write(`❌  ${exc.message}\n`);
+            return 1;
+        }
+        throw exc;
+    }
     const unmerged = unmerged_paths();
     const markerHits = scan_markers(allow);
 
@@ -208,7 +229,7 @@ function main(argv?: readonly string[]): number {
     if (!args.quiet) {
         process.stdout.write(
             `✅  check_no_conflict_markers: no conflicted index entries, no markers ` +
-                `(${tracked_text_files().length} tracked files scanned).\n`,
+                `(${tracked.length} tracked files scanned).\n`,
         );
     }
     return 0;

@@ -22,6 +22,7 @@ import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import { artefact_roots, resolve_logical } from './_lib/agent_src.js';
+import { assertScanned, DeadScopeError } from './_lib/scan_scope.js';
 import * as user_global_paths from './_lib/user_global_paths.js';
 
 const _HERE = path.dirname(fileURLToPath(import.meta.url));
@@ -966,6 +967,23 @@ export function main(argv?: string[]): number {
     }
 
     const skills = load_skill_metas();
+    // The full catalogue IS the routing condition — an empty one still yields
+    // a complete-looking result file with precision/recall computed over a
+    // router that was never given anything to choose from.
+    try {
+        assertScanned({
+            gate: 'skill_trigger_eval',
+            scanned: skills.length,
+            units: 'catalogue skill(s)',
+            roots: ['src/skills', 'src/agent-src/skills'],
+        });
+    } catch (exc) {
+        if (exc instanceof DeadScopeError) {
+            process.stderr.write(`❌  ${exc.message}\n`);
+            return 2;
+        }
+        throw exc;
+    }
     let router: TriggerRouter;
     let defaultOutput: string;
     if (args.dry_run) {

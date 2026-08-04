@@ -29,6 +29,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import { parse as parseYaml } from 'yaml';
 
 import { iter_all_sources } from './_lib/agent_src.js';
+import { assertScanned, DeadScopeError } from './_lib/scan_scope.js';
 
 const _HERE = fileURLToPath(import.meta.url);
 
@@ -133,6 +134,24 @@ function main(): number {
         } else {
             seen.set(key, [[category, rel]]);
         }
+    }
+
+    // `total` is the names read, not the collisions found: uniqueness holds
+    // vacuously over an empty name space, so only the corpus count can tell
+    // "no collisions" apart from "no artefacts reached the normalizer".
+    try {
+        assertScanned({
+            gate: 'lint_namespace_collisions',
+            scanned: total,
+            units: 'artefact name(s)',
+            roots: ['src/skills', 'src/rules', 'src/agent-src/commands', 'src/domains'],
+        });
+    } catch (exc) {
+        if (exc instanceof DeadScopeError) {
+            process.stderr.write(`❌  ${exc.message}\n`);
+            return 1;
+        }
+        throw exc;
     }
 
     const collisions = [...seen.entries()].filter(([, v]) => v.length > 1);

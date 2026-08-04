@@ -108,19 +108,23 @@ describe('lint_skill_originality — synthetic fixtures', () => {
         skillsDir = path.join(work, 'src', 'skills');
         fs.mkdirSync(path.join(scriptsDir, '_lib'), { recursive: true });
         fs.mkdirSync(skillsDir, { recursive: true });
-        // The gate + its shared primitives (skill_overlap + _lib/value_ladder) —
-        // the script resolves everything relative to its own location, so the
-        // whole import chain must live under <work>/src/scripts.
+        // The gate + its shared primitives — the script resolves everything
+        // relative to its own location, so the whole import chain must live
+        // under <work>/src/scripts. `agent_src` in particular derives the repo
+        // root from ITS own path, which is what makes the copied `skill_overlap`
+        // resolve `SRC_SKILLS()` to this fixture's tree rather than the real one.
         for (const [src, dst] of [
             [TS_SCRIPT, 'lint_skill_originality.ts'],
             [path.join(SCRIPTS, 'skill_overlap.ts'), 'skill_overlap.ts'],
         ] as const) {
             fs.copyFileSync(src, path.join(scriptsDir, dst));
         }
-        fs.copyFileSync(
-            path.join(SCRIPTS, '_lib', 'value_ladder.ts'),
-            path.join(scriptsDir, '_lib', 'value_ladder.ts'),
-        );
+        for (const lib of ['value_ladder.ts', 'scan_scope.ts', 'agent_src.ts'] as const) {
+            fs.copyFileSync(
+                path.join(SCRIPTS, '_lib', lib),
+                path.join(scriptsDir, '_lib', lib),
+            );
+        }
         writeAllowlist([]);
     });
 

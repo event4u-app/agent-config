@@ -26,6 +26,8 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
+import { assertScanned, DeadScopeError } from './_lib/scan_scope.js';
+
 const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
 const SKILLS_DIR = path.join(REPO_ROOT, 'src', 'skills');
 const ALLOWLIST_PATH = path.join(REPO_ROOT, 'src', 'scripts', 'trigger_eval_grandfather.json');
@@ -128,7 +130,27 @@ function main(): number {
         return 2;
     }
 
-    const { errors, covered, total } = check(list_skill_dirs(SKILLS_DIR), allowlist.skills);
+    // The ratchet only bites per skill directory found: an empty (or moved)
+    // skills root makes every rule in `check` iterate nothing, and the ✅ line
+    // reads "0/0 skills carry evals/triggers.json" — a passing presence gate
+    // over no skills at all.
+    const skills = list_skill_dirs(SKILLS_DIR);
+    try {
+        assertScanned({
+            gate: 'check_trigger_eval_presence',
+            scanned: skills.length,
+            units: 'skill director(ies)',
+            roots: ['src/skills'],
+        });
+    } catch (exc) {
+        if (exc instanceof DeadScopeError) {
+            process.stderr.write(`❌ ${exc.message}\n`);
+            return 1;
+        }
+        throw exc;
+    }
+
+    const { errors, covered, total } = check(skills, allowlist.skills);
 
     if (errors.length) {
         process.stderr.write('❌ check-trigger-eval-presence: presence-ratchet violation(s):\n');

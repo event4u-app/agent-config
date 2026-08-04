@@ -20,6 +20,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import { parse as parseYaml } from 'yaml';
 
 import { REPO, pointer_unresolved } from './check_claims.js';
+import { assertScanned, DeadScopeError } from './_lib/scan_scope.js';
 
 const _HERE = fileURLToPath(import.meta.url);
 export const DATA_REL = 'docs/comparison.yaml';
@@ -71,6 +72,23 @@ export function findErrors(rows: Row[]): string[] {
 export function main(argv: string[] = process.argv.slice(2)): number {
     const quiet = argv.includes('--quiet');
     const rows = loadRows();
+    // `loadRows` returns [] for a missing or rows-less `docs/comparison.yaml`,
+    // so a renamed data file made this gate certify "all our_evidence pointers
+    // resolve" over zero rows — the falsifiability lock passing vacuously.
+    try {
+        assertScanned({
+            gate: 'check_comparison',
+            scanned: rows.length,
+            units: 'comparison row(s)',
+            roots: [DATA_REL],
+        });
+    } catch (exc) {
+        if (exc instanceof DeadScopeError) {
+            process.stderr.write(`❌  ${exc.message}\n`);
+            return 1;
+        }
+        throw exc;
+    }
     const errs = findErrors(rows);
     if (errs.length > 0) {
         process.stdout.write('❌ comparison-honesty:\n');

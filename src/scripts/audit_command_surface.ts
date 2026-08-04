@@ -27,6 +27,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import { parse as parseYaml } from 'yaml';
 
 import { SRC_DOMAINS } from './_lib/agent_src.js';
+import { assertScanned, DeadScopeError } from './_lib/scan_scope.js';
 
 const _HERE = fileURLToPath(import.meta.url);
 
@@ -974,8 +975,50 @@ export function grown_packs(baseline: string, commands: Command[]): Map<string, 
     return grew;
 }
 
+/**
+ * Scope guard shared by all three modes.
+ *
+ * `_rglobMdSorted` yields nothing for a root that does not exist, and every
+ * mode's verdict is a comparison over the collected commands — so a moved
+ * `src/domains` leaves the per-pack budget trivially satisfied, the overlap
+ * scan pair-less, and the surface report regenerated with `total: 0`. Only
+ * `main`'s `_exists(args.root)` guard covered that, and it does not see a
+ * present-but-command-less tree.
+ *
+ * @returns the exit code to return, or null when the scope is live.
+ */
+function _dead_scope(commands: readonly Command[], roots: readonly string[]): number | null {
+    try {
+        assertScanned({
+            gate: 'audit_command_surface',
+            scanned: commands.length,
+            units: 'command file(s)',
+            roots,
+        });
+        return null;
+    } catch (exc) {
+        if (exc instanceof DeadScopeError) {
+            // Exit 2 — this file's existing "the root is not usable" code
+            // (`error: <root> does not exist`), not 1, which means a pack
+            // exceeded its budget.
+            process.stderr.write(`❌  ${exc.message}\n`);
+            return 2;
+        }
+        throw exc;
+    }
+}
+
+/** Repo-relative form of the roots `collect_all` walks, for the scope message. */
+function _command_roots_rel(): string[] {
+    return _command_roots().map((r) => _relPosix(r, REPO_ROOT));
+}
+
 export function check_new_budget(baseline: string, quiet: boolean): number {
     const commands = collect_all();
+    const dead = _dead_scope(commands, _command_roots_rel());
+    if (dead !== null) {
+        return dead;
+    }
     const audit = build_budget_audit(commands, load_size_classes());
     const byPack = new Map<string, PackEntry>();
     for (const p of audit.packs) {
@@ -1155,6 +1198,10 @@ export function main(argv: string[] | null = null): number {
 
     if (args.budget) {
         const commands = collect_all();
+        const dead = _dead_scope(commands, _command_roots_rel());
+        if (dead !== null) {
+            return dead;
+        }
         const audit = build_budget_audit(commands, load_size_classes());
         fs.writeFileSync(OUT_BUDGET_JSON, _jsonDumpsIndent2(audit), 'utf-8');
         fs.writeFileSync(OUT_BUDGET_MD, render_budget_md(audit), 'utf-8');
@@ -1177,6 +1224,10 @@ export function main(argv: string[] | null = null): number {
     }
 
     const commands = collect(args.root);
+    const dead = _dead_scope(commands, [_relPosix(args.root, REPO_ROOT)]);
+    if (dead !== null) {
+        return dead;
+    }
     const pairs = find_overlap_pairs(commands);
 
     fs.writeFileSync(

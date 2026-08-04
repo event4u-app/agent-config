@@ -31,6 +31,8 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
+import { assertScanned, DeadScopeError } from './_lib/scan_scope.js';
+
 const _HERE = fileURLToPath(import.meta.url);
 export const REPO = path.resolve(path.dirname(_HERE), '..', '..');
 let SKILLS_DIR = path.join(REPO, 'src', 'skills');
@@ -57,20 +59,28 @@ export interface FreshnessResult {
     ok: boolean;
     stale: Array<{ skill: string; pinned: string; current: string }>;
     inScope: number;
+    /**
+     * Skill directories walked. `inScope` counts only the PINNED subset, which
+     * is legitimately 0 today (nothing has opted in yet) — so it can never
+     * anchor the scope assertion; this can.
+     */
+    scanned: number;
 }
 
 export function checkFreshness(): FreshnessResult {
     const stale: FreshnessResult['stale'] = [];
     let inScope = 0;
+    let scanned = 0;
     let entries: fs.Dirent[];
     try {
         entries = fs.readdirSync(SKILLS_DIR, { withFileTypes: true });
     } catch {
-        return { ok: true, stale, inScope };
+        return { ok: true, stale, inScope, scanned };
     }
     entries.sort((a, b) => (a.name < b.name ? -1 : a.name > b.name ? 1 : 0));
     for (const e of entries) {
         if (!e.isDirectory()) continue;
+        scanned += 1;
         const evalsPath = path.join(SKILLS_DIR, e.name, 'evals', 'evals.json');
         const skillMd = path.join(SKILLS_DIR, e.name, 'SKILL.md');
         if (!fs.existsSync(evalsPath) || !fs.existsSync(skillMd)) continue;
@@ -91,7 +101,7 @@ export function checkFreshness(): FreshnessResult {
             stale.push({ skill: e.name, pinned, current });
         }
     }
-    return { ok: stale.length === 0, stale, inScope };
+    return { ok: stale.length === 0, stale, inScope, scanned };
 }
 
 export function main(argv: readonly string[] = process.argv.slice(2)): number {
@@ -103,7 +113,23 @@ export function main(argv: readonly string[] = process.argv.slice(2)): number {
             return 2;
         }
     }
-    const { ok, stale, inScope } = checkFreshness();
+    const { ok, stale, inScope, scanned } = checkFreshness();
+    // `checkFreshness` swallows an unreadable skills root and returns ok:true,
+    // so a moved `src/skills` prints "0 pinned eval(s) current" and passes.
+    try {
+        assertScanned({
+            gate: 'lint_behavioural_eval_freshness',
+            scanned,
+            units: 'skill director(ies)',
+            roots: ['src/skills'],
+        });
+    } catch (e) {
+        if (e instanceof DeadScopeError) {
+            process.stderr.write(`${e.message}\n`);
+            return 1;
+        }
+        throw e;
+    }
     if (!ok) {
         for (const s of stale) {
             process.stderr.write(

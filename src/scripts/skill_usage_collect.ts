@@ -25,6 +25,8 @@ import * as path from 'node:path';
 import process from 'node:process';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
+import { assertScanned, DeadScopeError } from './_lib/scan_scope.js';
+
 const _HERE = fileURLToPath(import.meta.url);
 
 // src/scripts/skill_usage_collect.ts → parents[2] of the .py file is repo root.
@@ -405,6 +407,25 @@ export function main(argv: string[] | null = null): number {
         return 0;
     }
     const known = load_known_slugs(REPO);
+    // The asserted unit is the in-repo slug vocabulary, not the session files
+    // above: sessions live under $HOME and are legitimately absent on a fresh
+    // clone or in CI (handled by the early return), whereas a vanished skills
+    // projection silently degrades every mention to the path-regex subset and
+    // still reports a successful collection.
+    try {
+        assertScanned({
+            gate: 'skill_usage_collect',
+            scanned: known.size,
+            units: 'known skill slug(s)',
+            roots: ['.augment/skills', '.claude/skills', 'dist/agent-src/skills'],
+        });
+    } catch (exc) {
+        if (exc instanceof DeadScopeError) {
+            process.stderr.write(`❌  ${exc.message}\n`);
+            return 2;
+        }
+        throw exc;
+    }
     const seen = new Set<string>();
     fs.mkdirSync(path.dirname(args.out), { recursive: true });
     if (fs.existsSync(args.out)) {
