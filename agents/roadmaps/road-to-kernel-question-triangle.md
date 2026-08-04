@@ -61,3 +61,17 @@ workflow questions are noise — just act") and `no-cheap-questions` IL4.
   no-cheap-questions IL4) carries no contradicting literal texts.
 - The amendment landed as its own PR with the kernel-prefix baseline
   re-anchored in the same PR.
+
+## Risk Register
+<!-- risk-review: v1 | reviewed: 2026-08-04 | reviewer: claude/host -->
+| Rank | Item | Risk type | Description | Mitigation | Anchored under |
+|------|------|-----------|-------------|------------|----------------|
+| 1 | Kernel-prefix cache invalidation | implementation | Editing a kernel rule moves the KV-cache anchor; without the sanctioned baseline re-anchor in the same PR the prefix-stability gate reds every later PR | Re-anchor `check_kernel_prefix_stability --update-baseline` in the SAME PR as the amendment (the documented path) | Phase 1 — apply through the kernel process |
+| 2 | Amendment weakens the one-question law | product | A band-4 qualifier on an Iron Law can be read as licence to ask more, inverting the law it is meant to reconcile | Wording keeps "even if trivial" literal and states the cap "never licenses the ask"; the string-level verify pins both texts | The amendment (drafted, ready to apply) |
+| 3 | Soak window skipped under momentum | implementation | Merging inside 24 h of another kernel-rule merge defeats the slow-rollout guarantee that exists to bound blast radius | Explicit merge-timestamp check as its own step; the guarantee is not liftable by an autonomy mandate | Phase 1 — apply through the kernel process |
+
+<!-- Register added 2026-08-04 by the plan-governance-gates PR (Gate R1 adoption):
+     this roadmap was first committed ON the gate activation date, so under the
+     strictly-before grandfather bound (docs/contracts/plan-review-gates.md § 1)
+     it has no pre-gate baseline and carries a register like any new plan. The
+     roadmap's own content and its maintainer-owned blocker are unchanged. -->

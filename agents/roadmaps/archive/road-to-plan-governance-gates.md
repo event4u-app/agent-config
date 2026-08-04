@@ -361,8 +361,10 @@ complexity: structural
       mitigations back into the plan and anchors each row. Prompt
       scaffolding lives in the surfaces; the validator stays the enforcer.
 - [x] **Step 3:** Pre-push enforcement: register the R1 validator in the
-      pre-push hook path (`hook_manifest.yaml`) for ready roadmaps touched
-      by the push; drafts exempt; exit-code-2 → warn-and-allow.
+      pre-push hook path (~~`hook_manifest.yaml`~~ → `task preflight`, see
+      note) for ready roadmaps touched by the push; drafts exempt;
+      exit-code-2 → warn-and-allow.
+      <!-- executed 2026-08-04 — the step text named the wrong surface; corrected here per R2 finding 6. The git pre-push chain in this repo is `.git/hooks/pre-push` → `task preflight` (verified: the hook body invokes it and exits non-zero on failure). `hook_manifest.yaml` carries AGENT-lifecycle hooks (session_start / pre_tool_use / post_tool_use) and has no pre-push slot, so it is the wrong registration point. Both validators are registered in `task preflight` and the `task ci` aggregate, each call site carrying the exit-2 → warn-and-allow wrapper. The AC "fails pre-push" is met by the real chain. -->
 - [x] **Step 4:** CI enforcement: wire `lint_plan_risk_register` into the
       CI pipeline (gate-coverage entry flips `status: pending` →
       `enforced`).
@@ -422,6 +424,7 @@ complexity: structural
       backdated findings artifact (amended to postdate fixes) is detected
       and blocked; (e) docs-only PR passes via skip declaration; (f) a
       skip declaration on a code-touching diff is rejected.
+      <!-- executed 2026-08-04 — (b) HALF-MET, corrected claim per R2 finding 7. Delivered: the dispatcher builds the reviewer context deterministically and the manifest's `inputs` hashes are re-derived by CI, so "runs without implementation context" IS checkable (that is the verdict-#18 mechanism). NOT delivered: repo-side REJECTION of a blocklisted tool call. The allowlist is prompt-carried and manifest-DECLARED; the host, not this repo, decides which tools a subagent may call, so no in-repo gate can reject `git log --all` inside a review context — asserting otherwise would be a coverage claim with no mechanism behind it. The residual is recorded as `accepted-risk` in contract § 5 (host-level injection / tool grant outside the dispatcher) rather than papered over with a test that only greps the prompt text. (a), (c)-(f) are covered by the validator test suites. -->
 
 ## Phase 7: Pre-registered measurement
 
@@ -493,12 +496,15 @@ complexity: structural
       honest-null) fails pre-push and CI; drafts are exempt (tested); stale
       or dangling registers fail.
 - [x] Gate R2: PR/completion without a valid findings artifact,
-      honest-null, or skip declaration for the current diff hash is
-      blocked; findings-before-fixes is enforced by ancestry check
-      (pre-push + CI, backdating detected); the fresh reviewer runs
-      without session history under a tool allowlist (manifest-checked,
-      leak-tested); no-code-surface completions skip explicitly, never
-      silently, and skips on code-touching diffs are rejected.
+      honest-null, or skip declaration for the current **review-scope
+      hash** is blocked; findings-before-fixes is enforced by ancestry
+      check (pre-push + CI, backdating detected); the fresh reviewer runs
+      without session history, its context built by the dispatcher and
+      manifest-checked (CI re-derives the input hashes) under a
+      **declared** tool allowlist; no-code-surface completions skip
+      explicitly, never silently, and skips on code-touching diffs are
+      rejected.
+      <!-- amended 2026-08-04 per R2 findings 1 + 7: (a) the binding is the review-scope diff hash, not a head sha — a head sha cannot be satisfied once the artifact is committed, and CI checks out a merge commit (contract § 2.1); (b) "leak-tested" removed — the allowlist is declared and manifest-checked, but rejecting a blocklisted tool call is host-side and not repo-enforceable; the residual is `accepted-risk` in contract § 5. -->
 - [x] Degraded mode: any validator internal error (exit 2) warns and
       allows — a broken gate never blocks its own fix; policy violations
       (exit 1) block.
