@@ -116,14 +116,117 @@ export const REVIEW_SCOPE_EXCLUDES: readonly string[] = [
 /** Back-compat single-pathspec alias (the reviews exclusion). */
 export const REVIEW_SCOPE_EXCLUDE = REVIEW_SCOPE_EXCLUDES[0] as string;
 
-/** `git diff` argv for the review scope (patch body). */
+/**
+ * Config overrides for a byte-stable diff — the two knobs no diff FLAG can pin.
+ *
+ * `core.quotePath=false` un-quotes non-ASCII pathnames (`"a/w\303\251ird"` →
+ * `a/wéird`), changing the bytes of every header line that names such a file.
+ * `true` is git's default, so this restores the default rather than choosing a
+ * new one.
+ *
+ * `diff.orderFile` reorders the per-file sections of the output; the documented
+ * canceller is the `-O/dev/null` flag (see {@link REVIEW_SCOPE_DIFF_FLAGS}),
+ * which is why it is not listed here.
+ */
+export const REVIEW_SCOPE_GIT_CONFIG: readonly string[] = ['-c', 'core.quotePath=true'];
+
+/**
+ * The pinned patch-output flag set (contract §2.0).
+ *
+ * The scope hash is THE cross-machine binding: a local dispatch records it and
+ * CI re-derives it (§5). Anything that changes the diff BYTES for identical
+ * content therefore produces a blocking `manifest mismatch (stale review)` that
+ * no content change explains — so every output-shaping git config knob is
+ * neutralised here, explicitly, at its git default:
+ *
+ *   `--no-ext-diff`          ← `diff.external`
+ *   `--no-textconv`          ← `diff.<driver>.textconv` attributes
+ *   `--no-color`             ← `color.diff` / `color.ui`, and with it
+ *                              `diff.wsErrorHighlight` / `diff.colorMoved`,
+ *                              which only alter coloured output
+ *   `--diff-algorithm=myers` ← `diff.algorithm`
+ *   `--indent-heuristic`     ← `diff.indentHeuristic`
+ *   `--unified=3`            ← `diff.context`
+ *   `--inter-hunk-context=0` ← `diff.interHunkContext`
+ *   `--src-prefix=a/`,
+ *   `--dst-prefix=b/`        ← `diff.noprefix`, `diff.mnemonicPrefix`
+ *   `--no-relative`          ← `diff.relative` (+ the caller's cwd)
+ *   `--full-index`,
+ *   `--abbrev=40`            ← `core.abbrev` / `diff.abbrev`: `--full-index`
+ *                              pins the `index <old>..<new>` line, `--abbrev`
+ *                              pins any other abbreviated oid git may print
+ *   `--submodule=short`      ← `diff.submodule`
+ *   `--ignore-submodules=none` ← `diff.ignoreSubmodules`
+ *   `-O/dev/null`            ← `diff.orderFile` (documented canceller)
+ *
+ * `--no-renames` (← `diff.renames` / `diff.renameLimit` / `diff.copies`) is the
+ * deliberate choice over a pinned `--find-renames=<n>`: rename detection is a
+ * similarity HEURISTIC whose result also depends on `diff.renameLimit` and on
+ * how many files the diff touches, so even a pinned threshold can flip a rename
+ * into an add/delete pair as a branch grows. With renames off the hash depends
+ * on content alone.
+ *
+ * This list is normative (contract §2.0): dropping a flag silently changes every
+ * scope hash the suite has ever recorded.
+ */
+export const REVIEW_SCOPE_DIFF_FLAGS: readonly string[] = [
+    '--no-ext-diff',
+    '--no-textconv',
+    '--no-color',
+    '--diff-algorithm=myers',
+    '--indent-heuristic',
+    '--unified=3',
+    '--inter-hunk-context=0',
+    '--src-prefix=a/',
+    '--dst-prefix=b/',
+    '--no-relative',
+    '--no-renames',
+    '--full-index',
+    '--abbrev=40',
+    '--submodule=short',
+    '--ignore-submodules=none',
+    '-O/dev/null',
+];
+
+/**
+ * The pinned `--name-only` flag set. The changed-file list is config-sensitive
+ * too — `diff.renames` decides whether a rename shows one path or two,
+ * `diff.orderFile` decides the order, `diff.relative` the prefix — and that list
+ * feeds the §2.4 code-path classification, so it is pinned for the same reason.
+ */
+export const REVIEW_SCOPE_NAME_ONLY_FLAGS: readonly string[] = [
+    '--name-only',
+    '--no-ext-diff',
+    '--no-color',
+    '--no-relative',
+    '--no-renames',
+    '-O/dev/null',
+];
+
+/** `git diff` argv for the review scope (patch body), config-pinned. */
 export function reviewScopeDiffArgs(base: string): string[] {
-    return ['diff', `${base}...HEAD`, '--', ':/', ...REVIEW_SCOPE_EXCLUDES];
+    return [
+        ...REVIEW_SCOPE_GIT_CONFIG,
+        'diff',
+        ...REVIEW_SCOPE_DIFF_FLAGS,
+        `${base}...HEAD`,
+        '--',
+        ':/',
+        ...REVIEW_SCOPE_EXCLUDES,
+    ];
 }
 
-/** `git diff --name-only` argv for the review scope (changed-file list). */
+/** `git diff --name-only` argv for the review scope (changed-file list), config-pinned. */
 export function reviewScopeNameOnlyArgs(base: string): string[] {
-    return ['diff', '--name-only', `${base}...HEAD`, '--', ':/', ...REVIEW_SCOPE_EXCLUDES];
+    return [
+        ...REVIEW_SCOPE_GIT_CONFIG,
+        'diff',
+        ...REVIEW_SCOPE_NAME_ONLY_FLAGS,
+        `${base}...HEAD`,
+        '--',
+        ':/',
+        ...REVIEW_SCOPE_EXCLUDES,
+    ];
 }
 
 /**
@@ -244,20 +347,33 @@ export function extractAcceptanceCriteria(roadmapText: string): string {
     return lines.slice(start, end).join('\n');
 }
 
-/** Parse the context-manifest comment block out of a findings artifact. */
+/**
+ * Parse the context-manifest comment block out of a findings artifact.
+ *
+ * Line separators are `\r?\n`, not `\n`: the artifact parser in
+ * `check_completion_review` already splits that way, and a CRLF working-tree
+ * copy (a `core.autocrlf` checkout, an editor that normalises on save) would
+ * otherwise yield `null` → a blocking `missing-manifest` violation and exit 1 in
+ * `--verify` / `--verify-current`, caused purely by line endings. The captures
+ * exclude `\r` for the same reason — a trailing carriage return inside a hash
+ * would make every re-derivation mismatch.
+ */
 export function parseManifest(text: string): ParsedManifest | null {
+    const nl = '\\r?\\n';
     const re = new RegExp(
-        '<!-- context-manifest: v1\\n' +
-            'inputs:\\n' +
-            '  diff_sha: (.+)\\n' +
-            '  scope_hash: (.+)\\n' +
-            '  roadmap: (.+)\\n' +
-            '  roadmap_hash: (.+)\\n' +
-            '  ac_hash: (.+)\\n' +
-            'excluded: \\[session-history, agents/runtime, implementation-context\\]\\n' +
-            'tools: \\[git-diff-branch-scoped, file-read-branch-paths\\]\\n' +
-            'dispatched: (.+)\\n' +
+        [
+            '<!-- context-manifest: v1',
+            'inputs:',
+            '  diff_sha: ([^\\r\\n]+)',
+            '  scope_hash: ([^\\r\\n]+)',
+            '  roadmap: ([^\\r\\n]+)',
+            '  roadmap_hash: ([^\\r\\n]+)',
+            '  ac_hash: ([^\\r\\n]+)',
+            'excluded: \\[session-history, agents/runtime, implementation-context\\]',
+            'tools: \\[git-diff-branch-scoped, file-read-branch-paths\\]',
+            'dispatched: ([^\\r\\n]+)',
             '-->',
+        ].join(nl),
     );
     const m = re.exec(text);
     if (!m) return null;

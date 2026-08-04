@@ -732,6 +732,22 @@ function parse_args(argv: readonly string[]): Args {
 export function main(argv?: readonly string[]): number {
     const args = parse_args(argv ?? process.argv.slice(2));
 
+    // Contract § 6: the `scanned:` line is emitted on EVERY exit path, exit 2
+    // included, because the coverage guard reads that number. Emit-once, so the
+    // count can be published BEFORE the first failure path without any later
+    // path duplicating it — the same shape check_completion_review uses (there
+    // an unresolvable base ref used to exit 2 emitting no count at all; here it
+    // was the dead-scope return, the unexpected-internal return, and the
+    // top-level CLI catch).
+    let scannedEmitted = false;
+    const emitScanned = (n: number): void => {
+        if (scannedEmitted) {
+            return;
+        }
+        scannedEmitted = true;
+        process.stdout.write(`scanned: ${String(n)}\n`);
+    };
+
     // Settings escape hatch (contract scope note): planning.risk_review: false
     // disables Gate R1. assertScanned is deliberately NOT called here — the
     // zero-scan is an explicit, configured skip, not a dead scope. The
@@ -739,11 +755,28 @@ export function main(argv?: readonly string[]): number {
     // the real scanned floor is still enforced there.
     if (riskReviewDisabled(process.cwd())) {
         process.stdout.write('⚠️  planning.risk_review=false — Gate R1 skipped (settings escape hatch)\n');
-        process.stdout.write('scanned: 0\n');
+        emitScanned(0);
         return 0;
     }
 
-    const targets = _resolveTargets(args.paths);
+    let targets: string[];
+    try {
+        targets = _resolveTargets(args.paths);
+    } catch (exc) {
+        // Inventory resolution itself can fail (an unreadable roots directory —
+        // EACCES on readdir). That used to escape main entirely and hit the
+        // top-level CLI catch, which printed no count at all.
+        emitScanned(0);
+        process.stderr.write(
+            `❌  Internal error: cannot resolve the roadmap corpus (${args.paths.join(', ')}): ` +
+                `${exc instanceof Error ? exc.message : String(exc)}\n`,
+        );
+        return 2;
+    }
+
+    // The inventory needs no git and no file reads, so the coverage number is
+    // known here — publish it before anything can fail.
+    emitScanned(targets.length);
 
     // A root that does not exist on disk at all is a legitimately empty
     // corpus (a project with no roadmaps yet), NOT a dead scope. Only a root
@@ -768,6 +801,9 @@ export function main(argv?: readonly string[]): number {
         // scanned-floor machinery exists to prevent. A gate that read nothing
         // has not passed. Contract carve-out:
         // docs/contracts/plan-review-gates.md § 6.
+        // Both returns below rely on the emitScanned above: a dead scope reports
+        // `scanned: 0` AND exit 1, so the coverage guard sees the zero instead
+        // of a missing line (contract § 6).
         if (exc instanceof DeadScopeError) {
             process.stderr.write(`❌  ${exc.message}\n`);
             return 1;
@@ -795,8 +831,10 @@ export function main(argv?: readonly string[]): number {
         // Contract § 6: `scanned:` is emitted on EVERY exit path, exit 2
         // included. A throw mid-loop (unreadable file, permission denied) that
         // exited silently would leave the coverage guard with no count at all —
-        // the same blind spot the guard exists to detect.
-        process.stdout.write(`scanned: ${String(scanned)}\n`);
+        // the same blind spot the guard exists to detect. Already published
+        // above (the inventory count); this call is the no-op that documents
+        // the obligation for this path.
+        emitScanned(scanned);
         process.stderr.write(
             `❌  lint_plan_risk_register: internal error after ${String(scanned)} file(s): ` +
                 `${exc instanceof Error ? exc.message : String(exc)}\n`,
@@ -822,8 +860,9 @@ export function main(argv?: readonly string[]): number {
     }
 
     // Gate-coverage contract (src/config/gate-coverage.yml): always emitted,
-    // independent of the pass/fail verdict.
-    process.stdout.write(`scanned: ${String(scanned)}\n`);
+    // independent of the pass/fail verdict — already published above, so this
+    // is a no-op that keeps the obligation visible on the success path too.
+    emitScanned(scanned);
 
     return all_violations.length > 0 ? 1 : 0;
 }
@@ -855,6 +894,11 @@ if (_isCliEntry() || process.argv[1] === _HERE) {
     } catch (exc) {
         // Exit-code contract (docs/contracts/plan-review-gates.md § 6):
         // internal error = 2 → degraded advisory mode for hook/CI callers.
+        // Last-resort `scanned:` emission: main() publishes its own count before
+        // any failure path, and the coverage guard reads the FIRST match, so a
+        // real count always wins over this zero — but a throw that escapes main
+        // before it emitted must still leave the guard a number, not silence.
+        process.stdout.write('scanned: 0\n');
         const msg = exc instanceof Error ? exc.message : String(exc);
         process.stderr.write(`❌  Internal error: ${msg}\n`);
         process.exit(2);

@@ -497,13 +497,17 @@ describe('dispatch_r2_reviewer — pure helpers', () => {
     });
 
     it('reviewScopeDiffArgs excludes every gate-owned evidence path from the reviewed scope', () => {
-        expect(reviewScopeDiffArgs('origin/main')).toEqual([
-            'diff',
-            'origin/main...HEAD',
-            '--',
-            ':/',
-            ...REVIEW_SCOPE_EXCLUDES,
-        ]);
+        const argv = reviewScopeDiffArgs('origin/main');
+        // Asserted as structure, not as a frozen array: the byte-stability flag
+        // set (REVIEW_SCOPE_DIFF_FLAGS / _GIT_CONFIG) grows whenever a new git
+        // output knob has to be pinned, and that must not red this test.
+        expect(argv).toContain('diff');
+        expect(argv).toContain('origin/main...HEAD');
+        // Pathspecs come last, after the `--` separator, in declaration order.
+        expect(argv.slice(argv.indexOf('--'))).toEqual(['--', ':/', ...REVIEW_SCOPE_EXCLUDES]);
+        // The revision range precedes the separator; the flags precede the range.
+        expect(argv.indexOf('origin/main...HEAD')).toBeLessThan(argv.indexOf('--'));
+        expect(argv.indexOf('diff')).toBeLessThan(argv.indexOf('origin/main...HEAD'));
         expect(REVIEW_SCOPE_EXCLUDE).toContain('agents/evidence/reviews');
         // R2 round-3 finding 1: §7 MANDATES appending the outcome event to the
         // tracked metrics JSONL, so leaving it in scope let the commit that

@@ -16,6 +16,8 @@
  *     one is unverifiable → `missing-manifest`);
  *   - every finding row is terminal (`fixed` / `accepted-risk` / `deferred`)
  *     with the required Reason/Ref content;
+ *   - every table-shaped row parses into the six §2.2 cells (`malformed-row`) —
+ *     a short row is never silently dropped, or an `open` finding would pass;
  *   - severity rows are sorted descending (critical > high > medium > low);
  *   - findings-before-fixes ancestry: the commit that FIRST added the
  *     artifact is an ancestor of every referenced fix commit (§2.5 — the
@@ -105,6 +107,14 @@ export interface ParsedArtifact {
     rows: FindingRow[];
     /** Lines that start like honest-null / skip but miss the exact grammar. */
     malformedLines: string[];
+    /**
+     * Table-shaped lines that do not parse into the six §2.2 cells.
+     *
+     * Kept separate from {@link malformedLines} so the violation can be reported
+     * as `malformed-row`, matching Gate R1's `malformed_row` naming for the same
+     * defect class.
+     */
+    malformedRows: string[];
     /** The §5 context manifest, when present and parseable. */
     manifest: ParsedManifest | null;
 }
@@ -301,6 +311,7 @@ export function parseArtifact(text: string): ParsedArtifact {
         skip: null,
         rows: [],
         malformedLines: [],
+        malformedRows: [],
         manifest: parseManifest(text),
     };
     const lines = text.split(/\r?\n/);
@@ -371,6 +382,19 @@ export function parseArtifact(text: string): ParsedArtifact {
                     reasonRef: cells[5] ?? '',
                     line: lineno,
                 });
+            } else {
+                // A short row is NOT "not a findings row": dropping it silently
+                // let an `open` finding pass whenever one well-formed row kept
+                // `rows.length > 0` (so the neither-table-nor-honest-null
+                // fallback stayed quiet too). Omitting the trailing empty
+                // `Reason/Ref` cell is the likeliest authoring slip, since the
+                // §2.2 template ends in exactly that empty cell. Gate R1 already
+                // reports this class — same name, `malformed_row`.
+                out.malformedRows.push(
+                    `line ${lineno}: findings row has ${String(cells.length)} cell(s), expected 6 ` +
+                        '(`| # | Severity | File:Line | Finding | Status | Reason/Ref |` — the trailing ' +
+                        'Reason/Ref cell is required even when empty)',
+                );
             }
         }
     }
@@ -573,6 +597,12 @@ function evaluate(input: EvalInput): Violation[] {
         }
         for (const detail of art.malformedLines) {
             violations.push({ kind: 'bad-value', file, detail });
+        }
+        // §2.2: a table-shaped line that does not carry the six cells is a
+        // violation, never a row to skip — an invisible row is an unreviewed
+        // finding that passes.
+        for (const detail of art.malformedRows) {
+            violations.push({ kind: 'malformed-row', file, detail });
         }
     }
 

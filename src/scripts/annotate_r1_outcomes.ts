@@ -29,6 +29,8 @@ import * as path from 'node:path';
 import * as readline from 'node:readline';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
+import { splitMarkdownRow } from './_lib/md_table.js';
+
 const ARCHIVE_DIR = 'agents/roadmaps/archive';
 const METRICS_FILE = 'agents/evidence/metrics/gate-metrics.jsonl';
 const OUTCOMES = new Set(['helped', 'fired', 'unknown']);
@@ -40,9 +42,14 @@ interface RegisterRow {
     mitigation: string;
 }
 
+/** § 1.2 register columns: Rank | Item | Risk type | Description | Mitigation | Anchored under. */
+const REGISTER_CELLS = 6;
+const ITEM_CELL = 1;
+const MITIGATION_CELL = 4;
+
 export function extractRegisterRows(file: string, content: string): RegisterRow[] {
     const rows: RegisterRow[] = [];
-    const lines = content.split('\n');
+    const lines = content.split(/\r?\n/);
     let inRegister = false;
     for (const line of lines) {
         if (/^##\s+Risk Register\s*$/.test(line)) {
@@ -51,15 +58,21 @@ export function extractRegisterRows(file: string, content: string): RegisterRow[
         }
         if (inRegister && /^##\s+/.test(line)) break;
         if (!inRegister) continue;
-        const m = /^\|\s*(\d+)\s*\|([^|]*)\|[^|]*\|[^|]*\|([^|]*)\|/.exec(line);
-        if (m !== null) {
-            rows.push({
-                file,
-                rank: Number(m[1]),
-                item: (m[2] ?? '').trim(),
-                mitigation: (m[3] ?? '').trim(),
-            });
-        }
+        if (!line.trim().startsWith('|')) continue;
+        // Escape-aware split, shared with both validators: a per-column
+        // `[^|]*` regex mis-aligns on a `\|` inside a cell — the shape the
+        // contract's own §1.2 example uses (`product \| implementation`) —
+        // and then records the Description as the mitigation.
+        const cells = splitMarkdownRow(line);
+        if (cells.length < REGISTER_CELLS) continue;
+        const rank = cells[0] ?? '';
+        if (!/^\d+$/.test(rank)) continue; // header / separator / prose row
+        rows.push({
+            file,
+            rank: Number(rank),
+            item: (cells[ITEM_CELL] ?? '').trim(),
+            mitigation: (cells[MITIGATION_CELL] ?? '').trim(),
+        });
     }
     return rows;
 }
@@ -103,7 +116,18 @@ function ask(rl: readline.Interface, q: string): Promise<string | null> {
     });
 }
 
-export async function main(argv?: readonly string[]): Promise<number> {
+export interface AnnotateIo {
+    /**
+     * readline input; defaults to `process.stdin`.
+     *
+     * Injected by the tests to drive the EOF path deterministically — a
+     * caller-supplied stream is a deliberate non-TTY answer channel, so the
+     * TTY refusal below applies to `process.stdin` only.
+     */
+    input?: NodeJS.ReadableStream;
+}
+
+export async function main(argv?: readonly string[], io: AnnotateIo = {}): Promise<number> {
     const args = argv ?? process.argv.slice(2);
     const listOnly = args.includes('--list');
 
@@ -144,7 +168,7 @@ export async function main(argv?: readonly string[]): Promise<number> {
     // Interactive-only by construction: the annotation pass is a human quarterly
     // cadence, so a non-TTY invocation is refused up front with the read-only
     // alternative rather than left to block on a prompt nobody can answer.
-    if (process.stdin.isTTY !== true) {
+    if (io.input === undefined && process.stdin.isTTY !== true) {
         process.stderr.write(
             '❌  annotate_r1_outcomes needs an interactive terminal (stdin is not a TTY).\n' +
                 '    Use --list for the read-only pending inventory.\n',
@@ -152,7 +176,7 @@ export async function main(argv?: readonly string[]): Promise<number> {
         return 2;
     }
 
-    const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
+    const rl = readline.createInterface({ input: io.input ?? process.stdin, output: process.stdout });
     try {
         for (const r of pending) {
             process.stdout.write(`\n${r.file} #${String(r.rank)}\n  risk: ${r.item}\n  mitigation: ${r.mitigation}\n`);
