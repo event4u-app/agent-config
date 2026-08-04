@@ -743,20 +743,18 @@ tasks:
   check-r2-manifest:
     silent: true
     desc: |
-      Gate R2 — context-manifest re-derivation (plan-review-gates §5):
-      re-derive the reviewer-input hashes for EVERY findings artefact and fail
-      on mismatch (manifest = verification, not self-attestation). Never select
-      artefacts by grepping the header for the current HEAD sha — per contract
-      § 2.0 that selector can never match, which turns the step into dead code.
+      Gate R2 — context-manifest re-derivation (plan-review-gates §5): the
+      manifest is verification, not self-attestation, so the input hashes are
+      re-derived and a mismatch fails. Selection lives inside the script
+      (`--verify-current`): grepping the header for the current HEAD sha can
+      never match (§ 2.0), and looping over every artefact reds as soon as the
+      tracked reviews dir holds another branch's artefact (§ 2.6 poisoning).
       Local mirror of the consistency-workflow step; exit 2 = degraded advisory.
     cmd: |
-      for f in agents/evidence/reviews/*.findings.md; do
-        [ -e "$f" ] || continue
-        ./scripts-run src/scripts/dispatch_r2_reviewer --verify "$f" --base origin/main || {
-          rc=$?;
-          if [ "$rc" = "2" ]; then echo "⚠️  dispatch_r2_reviewer --verify: internal error — degraded advisory mode, allowing"; else exit "$rc"; fi;
-        }
-      done
+      ./scripts-run src/scripts/dispatch_r2_reviewer --verify-current --base origin/main || {
+        rc=$?;
+        if [ "$rc" = "2" ]; then echo "⚠️  dispatch_r2_reviewer --verify-current: internal error — degraded advisory mode, allowing"; else exit "$rc"; fi;
+      }
 
   lint-roadmap-blockers:
     silent: true

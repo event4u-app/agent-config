@@ -213,9 +213,20 @@ jobs:
         # --advisory until the Stage-B threshold is committed to CLAIMS.md:
         # violations report as warnings, exit 0. CI is the authoritative
         # layer once enforced; exit 2 stays degraded-advisory either way.
+        #
+        # NO `git fetch origin main` HERE. actions/checkout uses a shallow
+        # PR-merge fetch, and this workflow already documents that the fetch
+        # races with the configured auth extraheader on some runners (see the
+        # kernel-rule-bundle step). Swallowing that failure with `|| true`
+        # would leave `--base` unresolvable → exit 2 → "degraded advisory,
+        # allowing", i.e. the layer the contract calls authoritative would
+        # silently never run. The PR's base sha is already present in the
+        # merge checkout (it is a parent of the merge commit), so pass it
+        # directly and fetch nothing.
+        if: github.event_name == 'pull_request'
         run: |
-          git fetch origin main --quiet || true
-          ./scripts-run src/scripts/check_completion_review --advisory --base origin/main || {
+          ./scripts-run src/scripts/check_completion_review \
+            --advisory --base "${{ github.event.pull_request.base.sha }}" || {
             rc=$?
             if [ "$rc" = "2" ]; then
               echo "::warning::check_completion_review internal error — degraded advisory mode, allowing"
@@ -226,26 +237,30 @@ jobs:
 
       - name: Gate R2 — context-manifest re-derivation (plan-review-gates §5)
         # The reviewer-input manifest is verification, not self-attestation:
-        # re-derive the input hashes from the repo state and block on mismatch.
-        # VERIFY EVERY ARTEFACT — never select by grepping the header for the
-        # current HEAD sha. Per contract § 2.0 a committed artefact can never
-        # carry the sha of the HEAD that contains it, and `pull_request`
-        # checks out a synthetic merge commit, so a sha-grep selector matches
-        # nothing and the whole step silently becomes dead code (the exact
-        # defect the R2 review of this gate found in its own first draft).
+        # re-derive the input hashes and block on mismatch.
+        #
+        # Selection lives INSIDE the script (`--verify-current`), not in this
+        # bash. Both obvious shell selectors are wrong and the R2 review of
+        # this gate caught each in turn: grepping the header for the current
+        # HEAD sha can never match (contract § 2.0), while looping over EVERY
+        # artefact reds by construction the moment the tracked reviews
+        # directory holds another branch's artefact — the directory-wide
+        # poisoning § 2.6 forbids. `--verify-current` computes the scope
+        # itself and verifies only the artefacts claiming it.
+        #
+        # Base sha passed directly for the same no-fetch reason as the step
+        # above.
+        if: github.event_name == 'pull_request'
         run: |
-          git fetch origin main --quiet || true
-          for f in agents/evidence/reviews/*.findings.md; do
-            [ -e "$f" ] || continue
-            ./scripts-run src/scripts/dispatch_r2_reviewer --verify "$f" --base origin/main || {
-              rc=$?
-              if [ "$rc" = "2" ]; then
-                echo "::warning::dispatch_r2_reviewer --verify internal error — degraded advisory mode, allowing"
-              else
-                exit "$rc"
-              fi
-            }
-          done
+          ./scripts-run src/scripts/dispatch_r2_reviewer \
+            --verify-current --base "${{ github.event.pull_request.base.sha }}" || {
+            rc=$?
+            if [ "$rc" = "2" ]; then
+              echo "::warning::dispatch_r2_reviewer --verify-current internal error — degraded advisory mode, allowing"
+            else
+              exit "$rc"
+            fi
+          }
 
       - name: Check always-rule budget (warn 80% / fail 90%)
         run: task check-always-budget

@@ -144,16 +144,23 @@ completion is read from the checkbox counts.
 Fixed sequence: (1) the § 1c archival sweep runs first, (2) the R2 review
 runs on the post-archival state (the findings artifact references
 post-archival paths), (3) the PR is created only with a valid findings
-artifact, honest-null, or skip declaration **for the current diff hash**
-per [`plan-review-gates § 2`](../../../docs/contracts/plan-review-gates.md).
+artifact, honest-null, or skip declaration **for the current review-scope
+hash** per
+[`plan-review-gates § 2`](../../../docs/contracts/plan-review-gates.md).
 
 - A completion-review artifact from the roadmap-completion event
   (`agents/evidence/reviews/<slug>.findings.md`) is re-used when its
-  `diff:` sha equals the current HEAD — one artifact covers both
-  triggers. Otherwise dispatch a fresh review via
-  `dispatch_r2_reviewer` (fresh subagent, no implementation context,
-  findings BEFORE fixes; every finding ends `fixed` / `accepted-risk` /
-  `deferred`).
+  `scope:` equals the current review-scope hash — one artifact covers
+  both triggers. **Never compare the `diff:` sha**: it is provenance only
+  (§ 2.1), and § 2.0 proves that comparison unsatisfiable — committing the
+  artifact moves HEAD, and CI checks out a synthetic merge commit.
+  Otherwise dispatch a fresh review via `dispatch_r2_reviewer` (fresh
+  subagent, no implementation context, findings BEFORE fixes; every
+  finding ends `fixed` / `accepted-risk` / `deferred`).
+- **Review last.** Any content commit after the review changes the scope
+  hash and invalidates the artifact — freeze the content, then review.
+  Artifacts from earlier rounds stay as audit trail under a name outside
+  the `*.findings.md` glob; the final round is the binding one.
 - Docs-only / plan-only diffs take the explicit skip declaration, never
   a silent skip.
 - The agent-side check here is advisory; `check_completion_review` at
