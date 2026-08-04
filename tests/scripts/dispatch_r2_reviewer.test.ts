@@ -29,6 +29,7 @@ import {
     isEmptyScope,
     parseManifest,
     reviewScopeDiffArgs,
+    reviewScopeNameOnlyArgs,
     sanitizeSlug,
 } from '../../src/scripts/dispatch_r2_reviewer.js';
 
@@ -303,6 +304,131 @@ describe('dispatch_r2_reviewer — --verify', () => {
         expect(unparsable.status).toBe(1);
         expect(unparsable.stderr).toMatch(/Policy violation/);
         expect(unparsable.stderr).toMatch(/no context-manifest block/);
+    });
+});
+
+// ---------------------------------------------------------------------------
+// Round-3 finding 8 — the scope hash is the single cross-machine binding, so it
+// must not move because of a developer's local diff config.
+// ---------------------------------------------------------------------------
+
+/** Local git config that changes `git diff` bytes for byte-identical content. */
+const HOSTILE_DIFF_CONFIG = [
+    '-c', 'diff.noprefix=true',
+    '-c', 'diff.mnemonicPrefix=true',
+    '-c', 'diff.algorithm=patience',
+    '-c', 'diff.context=7',
+    '-c', 'diff.interHunkContext=5',
+    '-c', 'core.abbrev=7',
+    '-c', 'core.quotePath=false',
+    '-c', 'diff.relative=true',
+    '-c', 'diff.renames=copies',
+    '-c', 'diff.renameLimit=1',
+    '-c', 'diff.indentHeuristic=false',
+    '-c', 'diff.submodule=log',
+    '-c', 'diff.suppressBlankEmpty=true',
+];
+
+/**
+ * A branch whose diff exercises every pinned knob: two separated hunks in one
+ * file (context / inter-hunk context / algorithm), a rename (rename detection),
+ * and a non-ASCII pathname (`core.quotePath`).
+ */
+function configSensitiveRepo(): string {
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'r2-cfg-'));
+    tmpDirs.push(dir);
+    git(dir, 'init', '-q', '-b', 'main');
+    git(dir, 'config', 'user.email', 'r2@test.local');
+    git(dir, 'config', 'user.name', 'r2');
+    git(dir, 'config', 'commit.gpgsign', 'false');
+    const lines = Array.from({ length: 30 }, (_, i) => `line ${String(i + 1)}`);
+    write(dir, 'src/wide.ts', `${lines.join('\n')}\n`);
+    write(dir, 'src/moved.ts', 'export const moved = 1;\n');
+    git(dir, 'add', '-A');
+    git(dir, 'commit', '-qm', 'init');
+
+    git(dir, 'checkout', '-qb', 'feat/config-sensitive');
+    lines[2] = 'line 3 — CHANGED';
+    lines[24] = 'line 25 — CHANGED';
+    write(dir, 'src/wide.ts', `${lines.join('\n')}\n`);
+    git(dir, 'mv', 'src/moved.ts', 'src/renamed.ts');
+    write(dir, 'src/ümläut.ts', 'export const u = 1;\n');
+    git(dir, 'add', '-A');
+    git(dir, 'commit', '-qm', 'feat: config-sensitive diff');
+    return dir;
+}
+
+describe('dispatch_r2_reviewer — the scope hash is config-independent', () => {
+    it('hostile local diff config produces the identical scope hash', () => {
+        const repo = configSensitiveRepo();
+        const pinnedDefault = git(repo, ...reviewScopeDiffArgs('main'));
+        const pinnedHostile = git(repo, ...HOSTILE_DIFF_CONFIG, ...reviewScopeDiffArgs('main'));
+        expect(sha256(pinnedHostile)).toBe(sha256(pinnedDefault));
+
+        // Control — the same config DOES move an unpinned diff, so the fixture
+        // really does exercise the knobs (a vacuous fixture would pass either way).
+        const rawDefault = git(repo, 'diff', 'main...HEAD');
+        const rawHostile = git(repo, ...HOSTILE_DIFF_CONFIG, 'diff', 'main...HEAD');
+        expect(sha256(rawHostile)).not.toBe(sha256(rawDefault));
+    });
+
+    it('the changed-file list is config-independent too (it feeds the §2.4 code-path check)', () => {
+        const repo = configSensitiveRepo();
+        const pinnedDefault = git(repo, ...reviewScopeNameOnlyArgs('main'));
+        const pinnedHostile = git(repo, ...HOSTILE_DIFF_CONFIG, ...reviewScopeNameOnlyArgs('main'));
+        expect(pinnedHostile).toBe(pinnedDefault);
+        // Rename detection off → both sides of the rename are listed as paths;
+        // `core.quotePath=true` (git's default, pinned) octal-quotes the
+        // non-ASCII path — the point is that BOTH runs agree, not which form.
+        expect(pinnedDefault.split('\n').filter(Boolean).sort()).toEqual([
+            '"src/\\303\\274ml\\303\\244ut.ts"',
+            'src/moved.ts',
+            'src/renamed.ts',
+            'src/wide.ts',
+        ]);
+    });
+
+    it('the pinned flag set is what computeReviewScope hashes', () => {
+        const repo = configSensitiveRepo();
+        const scope = computeReviewScope((a) => git(repo, ...HOSTILE_DIFF_CONFIG, ...a), 'main');
+        expect(scope.hash).toBe(sha256(git(repo, ...reviewScopeDiffArgs('main'))));
+        expect(scope.empty).toBe(false);
+    });
+});
+
+// ---------------------------------------------------------------------------
+// Round-3 finding 10 — a CRLF working-tree copy must not become a policy block.
+// ---------------------------------------------------------------------------
+
+describe('dispatch_r2_reviewer — CRLF tolerance', () => {
+    const MANIFEST = deriveManifest({
+        diffSha: '0'.repeat(40),
+        scopeHash: 'b'.repeat(64),
+        roadmap: 'agents/roadmaps/road-x.md',
+        roadmapHash: 'c'.repeat(64),
+        acHash: 'd'.repeat(64),
+        dispatched: '2026-08-04T09:30:00Z',
+    });
+
+    it('parseManifest reads a CRLF manifest and captures no stray carriage return', () => {
+        const crlf = MANIFEST.replace(/\n/g, '\r\n');
+        expect(parseManifest(crlf)).toEqual(parseManifest(MANIFEST));
+        const parsed = parseManifest(crlf);
+        expect(parsed?.scope_hash).toBe('b'.repeat(64));
+        expect(parsed?.dispatched).toBe('2026-08-04T09:30:00Z');
+    });
+
+    it('--verify passes on a CRLF findings artefact instead of blocking on missing-manifest', () => {
+        const repo = initRepo();
+        expect(run(dispatchArgs(repo)).status).toBe(0);
+        const findings = path.join(repo, OUT, `${SLUG}.findings.md`);
+        const lf = fs.readFileSync(findings, 'utf-8');
+        fs.writeFileSync(findings, lf.replace(/\n/g, '\r\n'), 'utf-8');
+        expect(fs.readFileSync(findings, 'utf-8')).toContain('\r\n');
+
+        const res = run(['--verify', findings, '--repo', repo, '--base', 'main']);
+        expect(res.status, res.stderr).toBe(0);
+        expect(res.stdout).toContain('✅ manifest verified');
     });
 });
 
