@@ -11,8 +11,14 @@
  * commit types + rule/schema diffs, honest-null markers, removed public
  * surface) and FAILS when a populated generated category meets a `_none_`
  * curated field. It blocks the contradiction only — a human still writes the
- * prose; nothing here auto-formulates highlights, and a filled field is
- * never judged for quality.
+ * prose, and a filled field is never judged for quality.
+ *
+ * The classifier lives in `_lib/release_highlights.ts` and is shared with the
+ * generator, which now pre-fills each substantiated label instead of writing
+ * `_none_` everywhere. That removes the guaranteed first-run red (9.17.0,
+ * 9.18.0) without blunting this gate: a machine-written `_none_` was never the
+ * failure it was built for — a HUMAN writing one was (9.13.0, 9.14.0), and that
+ * still fails here. An unrewritten derived line warns; it never blocks.
  *
  * Derivation is deliberately conservative (documented per-label below):
  * a false red makes every release annoying; a miss only returns the head to
@@ -25,96 +31,41 @@
  * `--from` defaults to the latest reachable release tag before `--to`
  * (default HEAD). Exit codes: 0 plausible · 1 contradiction · 2 usage error.
  */
-import { spawnSync } from 'node:child_process';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import process from 'node:process';
 import { fileURLToPath } from 'node:url';
 
+import {
+    HEAD_LABELS,
+    HEAD_NONE,
+    type SpanCommit,
+    collect_span_commits,
+    derive_categories,
+    parse_git_log,
+    previous_release_tag,
+    stale_draft_labels,
+} from './_lib/release_highlights.js';
 import { extract_changelog_section } from './_lib/release_material.js';
 
 const _HERE = fileURLToPath(import.meta.url);
 const REPO_ROOT = path.resolve(path.dirname(_HERE), '..', '..');
 
-// The five curated labels, mirrored from release.ts RELEASE_HEAD_SECTIONS
-// (kept literal here so this checker has no import edge into the release
-// pipeline it audits; the unit tests pin the two lists against each other).
-export const HEAD_LABELS: readonly string[] = [
-    'Behaviour changes',
-    'Default changes + migration',
-    'Security and correctness',
-    'Honest nulls',
-    'Known limitations',
-];
-
-export const HEAD_NONE = '_none_';
-
-export interface SpanCommit {
-    sha: string;
-    subject: string;
-    body: string;
-    /** `A` / `M` / `D` / `R…` status per touched path. */
-    files: ReadonlyArray<{ status: string; path: string }>;
-    breaking: boolean;
-}
-
-/** Public artefact trees whose deletions count as removed public surface. */
-const _PUBLIC_SURFACE_PREFIXES = [
-    'src/skills/',
-    'src/rules/',
-    'src/agent-src/commands/',
-    'src/domains/',
-];
-
-const _RULE_OR_SCHEMA_PREFIXES = ['src/rules/', 'src/scripts/schemas/'];
-
-/**
- * Derive evidence per curated label from the span. Rules per label:
- *
- * - Security and correctness: conventional scope matching /secur/i, or the
- *   whole word "security" in the subject.
- * - Behaviour changes: breaking (`!` / BREAKING CHANGE) commits, diffs
- *   touching `src/rules/` or `src/scripts/schemas/`, and deletions under the
- *   public artefact trees (removed public surface).
- * - Default changes + migration: subject carrying the whole word "default",
- *   "migration", or "migrate".
- * - Honest nulls: subject or body carrying an "honest null" marker.
- * - Known limitations: never derived — pure prose, not gate-checkable.
- */
-export function derive_categories(commits: readonly SpanCommit[]): Record<string, string[]> {
-    const out: Record<string, string[]> = {};
-    for (const label of HEAD_LABELS) {
-        out[label] = [];
-    }
-    const evidence = (c: SpanCommit): string => `${c.sha.slice(0, 7)} ${c.subject}`;
-    for (const c of commits) {
-        const scopeMatch = /^\w+\(([^)]*)\)!?:/u.exec(c.subject);
-        const scope = scopeMatch ? scopeMatch[1]! : '';
-        if (/secur/iu.test(scope) || /\bsecurity\b/iu.test(c.subject)) {
-            out['Security and correctness']!.push(evidence(c));
-        }
-        const removedPublic = c.files.filter(
-            (f) => f.status.startsWith('D') && _PUBLIC_SURFACE_PREFIXES.some((p) => f.path.startsWith(p)),
-        );
-        const ruleOrSchema = c.files.some((f) =>
-            _RULE_OR_SCHEMA_PREFIXES.some((p) => f.path.startsWith(p)),
-        );
-        if (c.breaking || ruleOrSchema || removedPublic.length > 0) {
-            const detail =
-                removedPublic.length > 0
-                    ? `${evidence(c)} (removes ${removedPublic.map((f) => f.path).join(', ')})`
-                    : evidence(c);
-            out['Behaviour changes']!.push(detail);
-        }
-        if (/\b(default|migration|migrate)\b/iu.test(c.subject)) {
-            out['Default changes + migration']!.push(evidence(c));
-        }
-        if (/honest[ -]null/iu.test(`${c.subject}\n${c.body}`)) {
-            out['Honest nulls']!.push(evidence(c));
-        }
-    }
-    return out;
-}
+// Labels and derivation live in `_lib/release_highlights.ts` — ONE definition
+// shared with the generator that pre-fills the head. They used to be duplicated
+// here to keep the checker independent of the release pipeline, and that
+// independence is what produced the defect this gate now guards against from
+// the other side: the generator wrote `_none_` into every field while this
+// checker rejected exactly that, so every release PR was red on its first run.
+// Sharing the classifier does not blunt the gate — it still blocks the failure
+// it was built for, a human editing a substantiated line back to `_none_`.
+export {
+    HEAD_LABELS,
+    HEAD_NONE,
+    derive_categories,
+    parse_git_log as _parse_git_log,
+    type SpanCommit,
+};
 
 /**
  * Parse the curated head from a changelog section body. Returns null when
@@ -162,74 +113,6 @@ export function highlight_contradictions(
     return out;
 }
 
-// ─── git span collection (CLI only — the core above is pure) ────────────────
-
-const _RECORD = '\u001e';
-const _FIELD = '\u001f';
-
-export function _parse_git_log(raw: string): SpanCommit[] {
-    const commits: SpanCommit[] = [];
-    for (const record of raw.split(_RECORD)) {
-        if (!record.trim()) {
-            continue;
-        }
-        const [head, ...restLines] = record.split('\n');
-        const parts = (head ?? '').split(_FIELD);
-        if (parts.length < 3) {
-            continue;
-        }
-        const sha = parts[0]!.trim();
-        const subject = parts[1]!;
-        const bodyParts: string[] = [parts.slice(2).join(_FIELD)];
-        const files: Array<{ status: string; path: string }> = [];
-        for (const line of restLines) {
-            const m = /^([A-Z]\d*)\t(.+)$/u.exec(line);
-            if (m) {
-                // Renames carry two paths; the last tab field is the new path,
-                // the first the old — record both so a rename out of a public
-                // tree still counts its origin path.
-                const segs = m[2]!.split('\t');
-                for (const p of segs) {
-                    files.push({ status: m[1]!, path: p });
-                }
-            } else {
-                // %b is multi-line — everything that is not a name-status
-                // line is body continuation (honest-null markers live there).
-                bodyParts.push(line);
-            }
-        }
-        const body = bodyParts.join('\n');
-        commits.push({
-            sha,
-            subject,
-            body,
-            files,
-            breaking: /^\w+(\([^)]*\))?!:/u.test(subject) || /BREAKING CHANGE/u.test(body),
-        });
-    }
-    return commits;
-}
-
-function _git(args: string[]): string {
-    const r = spawnSync('git', args, { encoding: 'utf-8', cwd: REPO_ROOT, maxBuffer: 64 * 1024 * 1024 });
-    if (r.status !== 0) {
-        process.stderr.write(`git ${args.join(' ')} failed: ${r.stderr}\n`);
-        process.exit(2);
-    }
-    return r.stdout;
-}
-
-function _collect_span(from: string, to: string): SpanCommit[] {
-    const raw = _git([
-        'log',
-        `${from}..${to}`,
-        '--no-merges',
-        '--name-status',
-        '--format=%x1e%H%x1f%s%x1f%b',
-    ]);
-    return _parse_git_log(raw);
-}
-
 function main(argv: readonly string[]): number {
     let version: string | null = null;
     let from: string | null = null;
@@ -251,7 +134,13 @@ function main(argv: readonly string[]): number {
         return 2;
     }
     if (!from) {
-        from = _git(['describe', '--tags', '--abbrev=0', '--match', '[0-9]*.[0-9]*.[0-9]*', `${to}^`]).trim();
+        from = previous_release_tag(to, REPO_ROOT);
+        if (!from) {
+            process.stderr.write(
+                `no release tag reachable before ${to} — pass --from explicitly\n`,
+            );
+            return 2;
+        }
     }
     const section = extract_changelog_section(fs.readFileSync(changelogPath, 'utf-8'), version);
     if (!section) {
@@ -263,7 +152,26 @@ function main(argv: readonly string[]): number {
         process.stdout.write(`ℹ️  no curated head in the ${version} section — nothing to check\n`);
         return 0;
     }
-    const derived = derive_categories(_collect_span(from, to));
+    let span: SpanCommit[];
+    try {
+        span = collect_span_commits(from, to, REPO_ROOT);
+    } catch (err) {
+        process.stderr.write(`${(err as Error).message}\n`);
+        return 2;
+    }
+    // A generator-derived line that nobody rewrote is a prose gap, never a
+    // contradiction: the line's evidence is true, it is just unpolished. Warn
+    // so the omission is visible, and keep the exit code owned solely by the
+    // `_none_` check — a warning that reds the build is the guaranteed-red
+    // failure mode this whole change exists to remove.
+    const drafts = stale_draft_labels(curated);
+    if (drafts.length > 0) {
+        process.stdout.write(
+            `⚠️  auto-derived head line(s) not yet rewritten for ${version}: ` +
+                `${drafts.join(', ')} — advisory, not blocking.\n`,
+        );
+    }
+    const derived = derive_categories(span);
     const contradictions = highlight_contradictions(curated, derived);
     if (contradictions.length === 0) {
         process.stdout.write(`✅  curated head plausible for ${version} (span ${from}..${to})\n`);
