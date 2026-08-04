@@ -811,8 +811,9 @@ function evaluate(input: EvalInput): Violation[] {
                 detail:
                     `${at}: stray \`\`\` fence — a bare fence delimits no region, and a labelled fence must ` +
                     'be closed. An artefact whose ``` fences do not resolve is malformed (contract §2.2). ' +
-                    'Label the opener (```markdown) and close it, or inline-escape an illustrative ```; ' +
-                    'the lines around a stray fence are still parsed, so any finding row there is validated too.',
+                    'Close the fence, or inline-escape an illustrative ```. NOTE: fences never hide a ' +
+                    'findings row — a row is live wherever it appears, and the ONLY way to mark one ' +
+                    'illustrative is the status `example` in its own Status cell.',
             });
         }
     }
