@@ -262,6 +262,59 @@ Entry-shape contract: [`docs/contracts/CHANGELOG-conventions.md`](docs/contracts
 > that forces a new era split (`# Era: 9.16.x`, etc.) — see
 > [`docs/contracts/CHANGELOG-conventions.md § Era splits`](docs/contracts/CHANGELOG-conventions.md).
 
+## [9.17.0](https://github.com/event4u-app/agent-config/compare/9.16.0...9.17.0) (2026-08-04)
+
+### Release highlights
+
+<!-- Curated head: fill before merge, keep it under 10 lines, and leave `_none_` where it is genuinely the answer. The generated log below is unchanged. -->
+- **Behaviour changes:** _none_
+- **Default changes + migration:** _none_
+- **Security and correctness:** _none_
+- **Honest nulls:** _none_
+- **Known limitations:** _none_
+
+### Features
+
+* **agent-handoff:** CLI-backed resume flow as the primary command surface ([0ca1ee9](https://github.com/event4u-app/agent-config/commit/0ca1ee9136263e03eff3a62aed83b4cc70aed36f))
+* **cli:** agent-config handoff — picker, launch adapters, print mode ([d88eea9](https://github.com/event4u-app/agent-config/commit/d88eea976c2752f67c6d342011904a664d9e4329))
+* **handoff:** session enumeration + deterministic handoff generator ([55d2459](https://github.com/event4u-app/agent-config/commit/55d24597150c1155379d22e37593d1c78fca3826))
+* **hooks:** one-shot handoff-context session_start concern ([9fa684d](https://github.com/event4u-app/agent-config/commit/9fa684d62800b21871b09582fb2c6f109ea03166))
+* **commands:** bound /optimize:deep — plan-only default, enforced limits ([980b4f1](https://github.com/event4u-app/agent-config/commit/980b4f18319db38b0a2c4d9bd2ab0783c17de672))
+* **release:** finding-disposition ledger with stable ids ([4428e57](https://github.com/event4u-app/agent-config/commit/4428e5788f5cc8ef6c98da1e05fd6879374f3fb8))
+* **release:** highlight plausibility gate + backfill the 9.13.0/9.14.0 heads ([491f98b](https://github.com/event4u-app/agent-config/commit/491f98b32767f5c84e0d46f5d2938fa298fb0f4b))
+* **release:** derive all four release surfaces from the changelog at head ([d947247](https://github.com/event4u-app/agent-config/commit/d9472472de75755583fd6220975e602804f46096))
+* **release:** drill — run the real step machinery against a simulated git/gh world ([a937e59](https://github.com/event4u-app/agent-config/commit/a937e5908edcf3953fc73a6a552de1a51fdc98cd))
+
+### Bug Fixes
+
+* **agent-handoff:** trim suggestion.trigger_context under the 240-char schema cap ([708f963](https://github.com/event4u-app/agent-config/commit/708f963e3bf674f9ec1449673608fbf413897641))
+* **deps:** bump ip-address past the SSRF advisory trio (npm audit high) ([be9fb0f](https://github.com/event4u-app/agent-config/commit/be9fb0f1f58c39570deb38ab317d159c657fc14b))
+* **deps:** bump fast-uri past GHSA-7p8r-x3mc-p8w7 (npm audit high) ([22887ba](https://github.com/event4u-app/agent-config/commit/22887badc0e18f7e3fb7301e9aa02465e02e90e5))
+* **ci:** gate the findings-artifact upload on the file, not hashFiles ([7779d55](https://github.com/event4u-app/agent-config/commit/7779d55efb79b98f7ee6dabd84ed1659db6b4ec6))
+* **security:** confine symlink traversal in the catalog/count walkers ([514189a](https://github.com/event4u-app/agent-config/commit/514189a18f44d55cd45cb6a2b5a7236365e4d0a3))
+
+### Documentation
+
+* **roadmap:** close and archive road-to-package-renewal (central) ([01b7ff6](https://github.com/event4u-app/agent-config/commit/01b7ff66b7886dfed9362682fc1262b15145adaa))
+* **handoff:** regenerate index catalogs ([a12e89e](https://github.com/event4u-app/agent-config/commit/a12e89e4f56c2bac0877f6f87c79a7ebb7168210))
+* **handoff:** sync generated catalogs, contracts, and archive the roadmap ([3505bb5](https://github.com/event4u-app/agent-config/commit/3505bb522fc69d2fdc9c5c3f4abc4ab35c3727ca))
+* **roadmap:** close and archive road-to-release-truth ([e8c1200](https://github.com/event4u-app/agent-config/commit/e8c120005250cfa116194b2aad54e237a8e09d8e))
+
+### Tests
+
+* **release:** script the release-truth surface interactions in the drill ([6ce8025](https://github.com/event4u-app/agent-config/commit/6ce8025597c0502f25b4cd350f69d20424568d1c))
+
+### CI
+
+* **release:** wire surface-equality, highlight-plausibility, finding-dispositions ([86866ed](https://github.com/event4u-app/agent-config/commit/86866edc918f4fbe3f2b2a1f6047584e2bc78b44))
+
+### Chores
+
+* ignore worktrees ([1c97785](https://github.com/event4u-app/agent-config/commit/1c9778549a4ea2dcb5c9a63b1e1252e5584876ce))
+* **budgets:** cli_help_command_count 81 -> 82 for the handoff subcommand ([b27e14d](https://github.com/event4u-app/agent-config/commit/b27e14d2a71ec4e682fbae34eec4b710d0165022))
+
+Tests: 10692 (+104 since 9.16.0)
+
 ## [9.16.0](https://github.com/event4u-app/agent-config/compare/9.15.0...9.16.0) (2026-08-03)
 
 ### Release highlights
