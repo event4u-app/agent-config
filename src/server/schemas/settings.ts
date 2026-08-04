@@ -215,7 +215,14 @@ export const settingsSchema = z.object({
         completion_review: z.boolean().default(true).describe(
             'Gate R2 — completion review at 100% roadmap completion / pre-PR. true (default) = a findings-before-fixes review by a fresh reviewer context must exist for the current diff hash (or an exact honest-null / skip declaration) before fix commits and PR creation, enforced by check_completion_review at pre-push + CI (CI authoritative; a crashed validator warns and allows). false = escape hatch, the validator skips.',
         ),
-    }),
+    })
+        // `.default({})` is load-bearing, not cosmetic: without it the SECTION is
+        // required, so any settings payload that omits `planning` fails with
+        // `ZodError: planning Required` — which contradicts this gate family's own
+        // contract ("missing key = true" for all three) and reds every server
+        // test whose fixture predates the section. With the default, an absent
+        // section materialises as the three `true` leaves the contract promises.
+        .default({}),
     quality: z.object({
         local_auto_run: z.boolean().default(false).describe(
             'Run quality tools (linters, type-checks, formatters) and the local test suite autonomously after edits. Off by default — the agent never runs quality tools proactively and does not ask; the user runs them manually (e.g. /quality-fix) and remote CI is the authoritative gate. The agent only runs a quality tool on an explicit ask, a concrete CI failure, or the new-gate carve-out. Turn on to restore autonomous pipeline runs.',
