@@ -19,6 +19,8 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+import { assertScanned, DeadScopeError } from './_lib/scan_scope.js';
+
 const QUIET = process.argv.includes('--quiet');
 
 const _HERE = fileURLToPath(import.meta.url);
@@ -78,6 +80,23 @@ function main(): number {
     const files: string[] = [];
     for (const root of SCAN_ROOTS) {
         walk(root, files);
+    }
+    // The citation haystack is the scanned unit. A vanished SCAN_ROOTS tree
+    // still fails — as "N of N uncited" — but names the fixtures as the
+    // culprit; asserting the walk here reports the real cause instead.
+    try {
+        assertScanned({
+            gate: 'lint_eval_fixture_citations',
+            scanned: files.length,
+            units: 'citation-surface file(s)',
+            roots: SCAN_ROOTS.map((r) => path.relative(REPO, r)),
+        });
+    } catch (exc) {
+        if (exc instanceof DeadScopeError) {
+            process.stderr.write(`${exc.message}\n`);
+            return 1;
+        }
+        throw exc;
     }
     const haystack = files
         .map((f) => {

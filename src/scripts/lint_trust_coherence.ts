@@ -26,6 +26,7 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { strip_source_prefix } from './_lib/agent_src.js';
+import { assertScanned, DeadScopeError } from './_lib/scan_scope.js';
 
 const _HERE = fileURLToPath(import.meta.url);
 const _DEFAULT_ROOT = path.resolve(path.dirname(_HERE), '..', '..');
@@ -316,6 +317,26 @@ function main(argv: readonly string[] = []): number {
 
     const manifest = _load_manifest(args.manifest);
     const kernel = _load_kernel(args.router);
+
+    // All three invariants iterate `artefacts`; the existing guard only covers a
+    // manifest that is ABSENT. One that parses but carries no artefacts — a
+    // discovery build over a moved source tree — visits nothing and prints the
+    // same success line, just with zeroes in it. Exit 1 is the gate's only
+    // failure code (the missing-manifest SystemExit lands on 1 too).
+    try {
+        assertScanned({
+            gate: 'lint_trust_coherence',
+            scanned: _asArray(manifest['artefacts']).length,
+            units: 'manifest artefact(s)',
+            roots: [args.manifest],
+        });
+    } catch (e) {
+        if (e instanceof DeadScopeError) {
+            process.stderr.write(`ERROR: ${e.message}\n`);
+            return 1;
+        }
+        throw e;
+    }
 
     const errs: string[] = [];
     errs.push(..._check_pack_safety_floors(manifest));

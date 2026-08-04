@@ -28,6 +28,7 @@ import {
     strip_pr_wrapper,
     surface_divergence,
 } from './_lib/release_material.js';
+import { assertWatchlistResolves, DeadScopeError } from './_lib/scan_scope.js';
 
 const _HERE = fileURLToPath(import.meta.url);
 const REPO_ROOT = path.resolve(path.dirname(_HERE), '..', '..');
@@ -101,6 +102,27 @@ function main(argv: readonly string[]): number {
             fs.readFileSync(path.join(REPO_ROOT, 'package.json'), 'utf-8'),
         ) as Record<string, unknown>;
         version = String(pkg['version']);
+    }
+    // The changelog is this gate's one fixed named input — the other surface is
+    // either fetched over the network (`--pr`) or a caller-supplied fixture. It
+    // is read unguarded below, so a moved or renamed CHANGELOG would surface as
+    // an ENOENT stack trace rather than a verdict. Listed alone on purpose: a
+    // watch list passes as soon as ANY candidate resolves, so pairing it with
+    // `--body-file` would let an existing fixture mask an absent changelog.
+    // Exit 2 — this gate's usage/extraction class — never 1, which asserts
+    // the two surfaces genuinely diverged.
+    try {
+        assertWatchlistResolves({
+            gate: 'check_release_surface_equality',
+            candidates: [path.relative(REPO_ROOT, path.resolve(changelogPath))],
+            repoRoot: REPO_ROOT,
+        });
+    } catch (err) {
+        if (err instanceof DeadScopeError) {
+            process.stderr.write(`❌  ${err.message}\n`);
+            return 2;
+        }
+        throw err;
     }
     const prBody = pr !== null ? _pr_body(pr) : fs.readFileSync(bodyFile!, 'utf-8');
     const changelogText = fs.readFileSync(changelogPath, 'utf-8');

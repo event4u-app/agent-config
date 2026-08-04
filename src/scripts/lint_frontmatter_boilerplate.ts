@@ -27,6 +27,7 @@ import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import { artefact_roots } from './_lib/agent_src.js';
+import { assertScanned, DeadScopeError } from './_lib/scan_scope.js';
 import {
     load_schema,
     parse_frontmatter,
@@ -301,6 +302,25 @@ function main(argv: readonly string[]): number {
                 );
             }
         }
+    }
+
+    // `_iter` skips a category whose base directory is absent, so an
+    // `artefact_roots()` that resolves to nothing (or four renamed category
+    // subdirs) yields no files at all and the gate reports "0 artefact(s)
+    // clean" — clean being exactly what it cannot know.
+    try {
+        assertScanned({
+            gate: 'lint_frontmatter_boilerplate',
+            scanned: total,
+            units: 'artefact(s)',
+            roots: artefact_roots().map((r) => path.relative(ROOT, r).split(path.sep).join('/') || '.'),
+        });
+    } catch (exc) {
+        if (exc instanceof DeadScopeError) {
+            process.stderr.write(`❌  ${exc.message}\n`);
+            return 1;
+        }
+        throw exc;
     }
 
     if (offenders > 0) {

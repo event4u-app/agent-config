@@ -20,6 +20,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { artefact_roots } from "./_lib/agent_src.js";
+import { assertScanned, DeadScopeError } from "./_lib/scan_scope.js";
 
 const QUIET = process.argv.includes("--quiet");
 
@@ -315,11 +316,34 @@ function rglobNamed(root: string, name: string): string[] {
 
 export function main(): number {
   const commandsDirs = COMMANDS_DIRS();
-  if (commandsDirs.length === 0 && !_isDir(DOMAINS_DIR)) {
-    process.stderr.write(
-      "lint_command_tiers: no commands dir found under any artefact root\n",
-    );
-    return 1;
+  // Each pass below guards its own emptiness, but nothing guarded the case
+  // where every pass is skipped: COMMANDS_DIRS() drops a root that holds no
+  // .md, and both DOMAINS_DIR and the condensed projection are conditional, so
+  // rc could stay 0 having read no command at all. The sum replaces the older
+  // "no commands dir found" check, which only saw the directory, not the files.
+  const commandsIn = (d: string): number =>
+    rglobMd(d).filter((p) => path.basename(p) !== "AGENTS.md").length;
+  const scanned =
+    (_isDir(DOMAINS_DIR) ? rglobNamed(DOMAINS_DIR, "command.md").length : 0) +
+    commandsDirs.reduce((n, d) => n + commandsIn(d), 0) +
+    (_isDir(COMMANDS_DIR_CONDENSED) ? commandsIn(COMMANDS_DIR_CONDENSED) : 0);
+  try {
+    assertScanned({
+      gate: "lint_command_tiers",
+      scanned,
+      units: "command file(s)",
+      roots: [
+        relPosix(DOMAINS_DIR, REPO),
+        ...commandsDirs.map((d) => relPosix(d, REPO)),
+        relPosix(COMMANDS_DIR_CONDENSED, REPO),
+      ],
+    });
+  } catch (exc) {
+    if (exc instanceof DeadScopeError) {
+      process.stderr.write(`❌  ${exc.message}\n`);
+      return 1;
+    }
+    throw exc;
   }
   let rc = 0;
   if (_isDir(DOMAINS_DIR)) {

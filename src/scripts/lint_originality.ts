@@ -57,6 +57,7 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
+import { assertScanned, DeadScopeError } from './_lib/scan_scope.js';
 import { shingles } from './_lib/shingle_similarity.js';
 
 const _HERE = fileURLToPath(import.meta.url);
@@ -411,6 +412,27 @@ export function main(argv?: string[]): number {
         else { process.stderr.write(`unexpected argument: ${a} (did you mean --changed ${a}?)\n${_usage()}`); return 2; }
     }
 
+    // Asserted for BOTH modes, and before either: `--changed` compares each
+    // candidate against the same corpus, so a dead root there reports "no
+    // overlap" instead of "nothing to compare against" — the quieter failure of
+    // the two. Supersedes the post-corpus `scanned === 0` check the full audit
+    // used to carry alone; exit 3 is that check's code, kept so 1 still means
+    // "a real overlap was found".
+    try {
+        assertScanned({
+            gate: 'lint_originality',
+            scanned: CLASSES.reduce((n, spec) => n + spec.files().length, 0),
+            units: 'corpus file(s)',
+            roots: ['src/skills', 'src/agent-src/personas', 'src/domains'],
+        });
+    } catch (e) {
+        if (e instanceof DeadScopeError) {
+            process.stderr.write(`❌  ${e.message}\n`);
+            return 3;
+        }
+        throw e;
+    }
+
     if (changedFiles !== null) {
         const { pairs, fails } = _changed(changedFiles);
         if (pairs.length > 0) {
@@ -428,10 +450,6 @@ export function main(argv?: string[]): number {
     // Full audit
     const byClass = _corpus();
     const scanned = [...byClass.values()].reduce((n, a) => n + a.length, 0);
-    if (scanned === 0) {
-        process.stderr.write('❌  No artifacts found under the corpus roots.\n');
-        return 3;
-    }
     const dist = _distribution(byClass);
     const pairs = _fullPairs(byClass);
     _writeReport(byClass, pairs, dist);

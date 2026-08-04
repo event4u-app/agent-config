@@ -25,6 +25,8 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
+import { assertScanned, DeadScopeError } from './_lib/scan_scope.js';
+
 const _HERE = fileURLToPath(import.meta.url);
 
 // src/scripts/lint_marketplace_install_completeness.ts → two dirs up is the
@@ -149,6 +151,27 @@ function lint(
 
     const commands = load_hook_commands(hooks_path);
     const known = load_dispatcher_subcommands(dispatch_path);
+
+    // `load_hook_commands` skips every non-conforming `hooks` shape silently, so
+    // a restructured hooks.json yields an empty command list and the gate
+    // announces "0 hook command(s) checked" — green. Assert the UNFILTERED list:
+    // `checked` below excludes entries whose command line failed to parse, and
+    // those are exactly the ones this gate must still report on. Exit 2 is the
+    // schema/file-error code ("could not run"); 1 means an unknown subcommand.
+    try {
+        assertScanned({
+            gate: 'lint-marketplace-install',
+            scanned: commands.length,
+            units: 'hook command(s)',
+            roots: [hooks_path],
+        });
+    } catch (exc) {
+        if (exc instanceof DeadScopeError) {
+            process.stderr.write(`${exc.message}\n`);
+            return 2;
+        }
+        throw exc;
+    }
 
     const issues: string[] = [];
     let checked = 0;

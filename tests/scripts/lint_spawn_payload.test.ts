@@ -148,7 +148,14 @@ describe('lint_spawn_payload — scanRepo / main over a synthetic tree', () => {
     });
 
     it('main() returns 0 on a clean tree', () => {
+        // One in-scope file so "clean" means "read something and found
+        // nothing" — an empty tree is a dead scope, asserted below.
+        fs.writeFileSync(path.join(tmp, 'tests', 'fixtures', 'unrelated.json'), '{}');
         expect(main(['--quiet'], tmp)).toBe(0);
+    });
+
+    it('main() fails on a tree with nothing to scan', () => {
+        expect(main(['--quiet'], tmp)).toBe(2);
     });
 });
 

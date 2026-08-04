@@ -2,14 +2,14 @@
 
 > Auto-generated — do not edit. Regenerate with `task roadmap-progress` or by running the `update_roadmap_progress` script for your install; rewritten on every roadmap create / execute / completion change (timestamp lives in git history).
 >
-> 14 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **10** open blockers
+> 14 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **11** open blockers
 
 ## Overall
 
-**68 / 157 steps done · 43%**
+**77 / 156 steps done · 49%**
 
 ```text
-█████████████████░░░░░░░░░░░░░░░░░░░░░░░   43%
+████████████████████░░░░░░░░░░░░░░░░░░░░   49%
 ```
 
 ## Open roadmaps
@@ -19,7 +19,7 @@
 | 1 | [road-to-adoption-without-narrative-debt.md](roadmaps/road-to-adoption-without-narrative-debt.md) | 5 | 17 | 7 | 10 | 0 | 0 | [1](#blockers-road-to-adoption-without-narrative-debt) | ██████░░░░ 59% |
 | 2 | [road-to-ci-native-release-first-run.md](roadmaps/road-to-ci-native-release-first-run.md) | 2 | 8 | 8 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 3 | [road-to-council-blind-review.md](roadmaps/road-to-council-blind-review.md) | 3 | 6 | 2 | 3 | 0 | 1 | 0 | ██████░░░░ 60% |
-| 4 | [road-to-gate-hardening-adoption.md](roadmaps/road-to-gate-hardening-adoption.md) | 3 | 13 | 13 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+| 4 | [road-to-gate-hardening-adoption.md](roadmaps/road-to-gate-hardening-adoption.md) | 3 | 13 | 3 | 9 | 0 | 1 | [1](#blockers-road-to-gate-hardening-adoption) | ████████░░ 75% |
 | 5 | [road-to-gated-reach-followup.md](roadmaps/road-to-gated-reach-followup.md) | 1 | 12 | 12 | 0 | 0 | 0 | [1](#blockers-road-to-gated-reach-followup) | ░░░░░░░░░░ 0% |
 | 6 | [road-to-kernel-question-triangle.md](roadmaps/road-to-kernel-question-triangle.md) | 1 | 3 | 3 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 7 | [road-to-maintainer-bus-factor.md](roadmaps/road-to-maintainer-bus-factor.md) | 4 | 12 | 5 | 7 | 0 | 0 | [1](#blockers-road-to-maintainer-bus-factor) | ██████░░░░ 58% |
@@ -81,13 +81,22 @@ _2 blockers resolved._
 
 ### [road-to-gate-hardening-adoption.md](roadmaps/road-to-gate-hardening-adoption.md)
 
-**Road to gate-hardening adoption — take the unhardened-gate count to zero** — 0 / 13 done (0%)
+**Road to gate-hardening adoption — take the unhardened-gate count to zero** — 9 / 12 done (75%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
-| 1 | the mechanically-safe conversions | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
-| 2 | the gates whose unit must be decided | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
-| 3 | close the ratchet | ⬜ not started | 7 | 0 | 0 | 0 | 0% |
+| 1 | the mechanically-safe conversions | ✅ done | 0 | 2 | 0 | 1 | 100% |
+| 2 | the gates whose unit must be decided | ✅ done | 0 | 3 | 0 | 0 | 100% |
+| 3 | close the ratchet | 🟡 in progress | 3 | 4 | 0 | 0 | 57% |
+
+<a id="blockers-road-to-gate-hardening-adoption"></a>
+**Blockers**
+
+- **four-gates-port-or-retire** (owner: maintainer) — blocks Phase 3 (`count reaches 0`) and thereby the deletion of the `gate-hardening:unhardened-scan-scope` ratchet entry — the roadmap's closure criterion.
+  - **What to do:**
+    replaced its corpus, retiring it, or declaring it out of the gate population.
+    None of the four is a conversion; each was attempted and reverted.
+  - **Resolved when:** all four are ported, retired, or excluded from the population, the count reaches 0, and the ratchet entry is deleted rather than zeroed-and-kept.
 
 ### [road-to-gated-reach-followup.md](roadmaps/road-to-gated-reach-followup.md)
 

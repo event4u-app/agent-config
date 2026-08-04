@@ -30,6 +30,8 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
+import { assertScanned, DeadScopeError } from './_lib/scan_scope.js';
+
 const _HERE = fileURLToPath(import.meta.url);
 // src/scripts/lint_breaking_changes_index.ts → two levels up is the repo root.
 const REPO_ROOT = path.resolve(path.dirname(_HERE), '..', '..');
@@ -236,6 +238,28 @@ function main(argv?: readonly string[]): number {
     const newLines = fs.existsSync(changelogPath)
         ? _splitlines(fs.readFileSync(changelogPath, 'utf-8'))
         : [];
+
+    // The diff is between two blobs, but the corpus is the working-tree
+    // CHANGELOG: an absent one yields no lines, hence no added majors, hence the
+    // green "no new released BREAKING entries vs trunk" — a clean bill of health
+    // for a file that was never read. The base blob is legitimately empty for a
+    // newly added CHANGELOG, so only this side is asserted.
+    try {
+        assertScanned({
+            gate: 'lint_breaking_changes_index',
+            scanned: newLines.length,
+            units: `${CHANGELOG_REL} line(s)`,
+            roots: [CHANGELOG_REL],
+        });
+    } catch (exc) {
+        if (exc instanceof DeadScopeError) {
+            // 1 = the gate's violation code; 2 is reserved for the pinned
+            // argparse usage contract, so it cannot carry "could not run".
+            process.stderr.write(`❌  ${exc.message}\n`);
+            return 1;
+        }
+        throw exc;
+    }
 
     // Was BREAKING_CHANGES.md touched (staged or unstaged) vs the base?
     const indexChanged = _git('diff', '--name-only', base, '--', INDEX_REL).trim() !== '';

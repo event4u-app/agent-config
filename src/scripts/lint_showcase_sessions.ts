@@ -22,6 +22,8 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
+import { assertWatchlistResolves, DeadScopeError } from './_lib/scan_scope.js';
+
 const _HERE = fileURLToPath(import.meta.url);
 // src/scripts/lint_showcase_sessions.ts → parent.parent.parent is the repo root.
 const ROOT = path.resolve(path.dirname(_HERE), '..', '..');
@@ -174,9 +176,23 @@ function _validate_session(slug: string): string[] {
 }
 
 function main(): number {
-    if (!_isFile(SHOWCASE_MD)) {
-        process.stderr.write(`❌  ${_relTo(SHOWCASE_MD, ROOT)} not found\n`);
-        return 1;
+    // There is no corpus to count — "0 referenced, 0 on disk" is the shipped
+    // state and a legitimate pass. The one thing that must resolve is the
+    // manifest both rules are derived from: with showcase.md gone there are no
+    // references, so no missing file and no orphan can ever be reported.
+    // Supersedes the previous bare `_isFile` check, same exit code.
+    try {
+        assertWatchlistResolves({
+            gate: 'lint_showcase_sessions',
+            candidates: [_relTo(SHOWCASE_MD, ROOT)],
+            repoRoot: ROOT,
+        });
+    } catch (e) {
+        if (e instanceof DeadScopeError) {
+            process.stderr.write(`❌  ${e.message}\n`);
+            return 1;
+        }
+        throw e;
     }
 
     const text = fs.readFileSync(SHOWCASE_MD, 'utf-8');

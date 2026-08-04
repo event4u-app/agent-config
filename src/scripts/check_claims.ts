@@ -44,6 +44,7 @@ import {
     parse_exec_pointer,
     run_exec_evidence,
 } from './_lib/exec_evidence.js';
+import { assertScanned, DeadScopeError } from './_lib/scan_scope.js';
 
 const _FILE = fileURLToPath(import.meta.url);
 const _HERE = path.dirname(_FILE);
@@ -271,6 +272,27 @@ interface Finding {
 function main(argv: string[] = process.argv.slice(2)): number {
     const args = parse_args(argv);
     const ledger = load_ledger();
+    // The ledger is the corpus both passes depend on: markers resolve against
+    // it and the rot guard walks it. `load_ledger` returns an empty map for a
+    // missing docs/CLAIMS.md, and with no ledger there is nothing to declare
+    // dangling — so a moved ledger would print "0 markered claim(s) bound ·
+    // ledger 0 entries" and certify the anti-hype guardrail over nothing.
+    // Marker count is deliberately not the unit: a surface tree with zero
+    // markers is a legitimate state, an absent ledger never is.
+    try {
+        assertScanned({
+            gate: 'check_claims',
+            scanned: ledger.size,
+            units: 'ledger entry(s)',
+            roots: [LEDGER_REL],
+        });
+    } catch (exc) {
+        if (exc instanceof DeadScopeError) {
+            process.stderr.write(`❌  ${exc.message}\n`);
+            return 2;
+        }
+        throw exc;
+    }
     const markers = scan_markers();
     const findings: Finding[] = [];
 

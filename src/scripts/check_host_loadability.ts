@@ -16,10 +16,14 @@ import * as path from 'node:path';
 
 import { parse as parseYaml } from 'yaml';
 
-export function check_claude_skills(root: string, errors: string[]): void {
+import { assertScanned, DeadScopeError } from './_lib/scan_scope.js';
+
+/** @returns how many skill directories were examined. */
+export function check_claude_skills(root: string, errors: string[]): number {
     const dir = path.join(root, '.claude', 'skills');
-    if (!fs.existsSync(dir)) return;
-    for (const name of fs.readdirSync(dir)) {
+    if (!fs.existsSync(dir)) return 0;
+    const names = fs.readdirSync(dir);
+    for (const name of names) {
         const skillMd = path.join(dir, name, 'SKILL.md');
         if (!fs.existsSync(skillMd)) {
             errors.push(`${skillMd}: missing SKILL.md`);
@@ -35,13 +39,17 @@ export function check_claude_skills(root: string, errors: string[]): void {
         else if (meta['name'] !== name) errors.push(`${skillMd}: name '${meta['name']}' != dir '${name}'`);
         if (typeof meta['description'] !== 'string' || !meta['description']) errors.push(`${skillMd}: missing description`);
     }
+    return names.length;
 }
 
-export function check_cursor_rules(root: string, errors: string[]): void {
+/** @returns how many `.mdc` rule files were examined. */
+export function check_cursor_rules(root: string, errors: string[]): number {
     const dir = path.join(root, '.cursor', 'rules');
-    if (!fs.existsSync(dir)) return;
+    if (!fs.existsSync(dir)) return 0;
+    let scanned = 0;
     for (const name of fs.readdirSync(dir)) {
         if (!name.endsWith('.mdc')) continue;
+        scanned += 1;
         const p = path.join(dir, name);
         const src = fs.readFileSync(p, 'utf-8');
         const m = src.match(/^---\n([\s\S]*?)\n---/);
@@ -57,12 +65,22 @@ export function check_cursor_rules(root: string, errors: string[]): void {
         try { parseYaml(lenient); }
         catch (e) { errors.push(`${p}: frontmatter YAML invalid (${(e as Error).message})`); }
     }
+    return scanned;
 }
 
 export function run(root: string): string[] {
     const errors: string[] = [];
-    check_claude_skills(root, errors);
-    check_cursor_rules(root, errors);
+    // Both host trees are generated and gitignored, and each checker returns
+    // early when its tree is absent — so "no malformed artefacts" and "no
+    // artefacts" are the same green. Thrown, not returned: `errors` names
+    // malformed files, and an unprojected tree is not one.
+    const scanned = check_claude_skills(root, errors) + check_cursor_rules(root, errors);
+    assertScanned({
+        gate: 'check_host_loadability',
+        scanned,
+        units: 'host artefact(s)',
+        roots: ['.claude/skills', '.cursor/rules'],
+    });
     return errors;
 }
 
@@ -71,7 +89,15 @@ const isMain = process.argv[1] !== undefined
 if (isMain) {
     const rootIdx = process.argv.indexOf('--root');
     const root = rootIdx !== -1 ? process.argv[rootIdx + 1] ?? '.' : '.';
-    const errors = run(root);
+    let errors: string[];
+    try {
+        errors = run(root);
+    } catch (exc) {
+        if (!(exc instanceof DeadScopeError)) throw exc;
+        // Exit 1 is this gate's only failure code.
+        process.stderr.write(`❌  ${exc.message}\n`);
+        process.exit(1);
+    }
     if (errors.length > 0) {
         for (const e of errors) process.stderr.write(`❌  ${e}\n`);
         process.exit(1);

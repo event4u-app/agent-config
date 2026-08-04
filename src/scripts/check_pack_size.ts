@@ -27,6 +27,8 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+import { assertScanned, DeadScopeError } from './_lib/scan_scope.js';
+
 const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..');
 const BUDGET_PATH = path.join(REPO_ROOT, 'src', 'config', 'pack-size-budget.json');
 const SKILL_PREFIX = 'dist/agent-src/skills/';
@@ -175,6 +177,26 @@ export function main(argv: readonly string[] = process.argv.slice(2)): number {
     } catch (err) {
         process.stderr.write(`❌  pack size: npm pack failed: ${String(err)}\n`);
         return 2;
+    }
+    // The pack manifest IS the corpus. `evaluate` refuses a vacuous per-skill
+    // share, but the packed-size arm has no such floor: an empty payload — a
+    // botched `files[]`, a pack that resolved nothing — measures 0 MB and sits
+    // comfortably under every budget.
+    try {
+        assertScanned({
+            gate: 'check_pack_size',
+            scanned: pack.files.length,
+            units: 'packed file(s)',
+            roots: ['npm pack --dry-run payload (package.json files[])'],
+        });
+    } catch (err) {
+        if (err instanceof DeadScopeError) {
+            // 2, not 1: the documented meaning of 1 is "over budget", and an
+            // empty manifest is unreadable input, not a budget violation.
+            process.stderr.write(`❌  pack size: ${err.message}\n`);
+            return 2;
+        }
+        throw err;
     }
 
     const errors = evaluate(budget, pack);

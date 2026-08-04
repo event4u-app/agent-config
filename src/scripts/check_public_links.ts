@@ -22,6 +22,8 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
+import { assertScanned, DeadScopeError } from './_lib/scan_scope.js';
+
 const _HERE = fileURLToPath(import.meta.url);
 const ROOT = path.resolve(path.dirname(_HERE), '..', '..');
 const PUBLIC_FILES = ['README.md', 'AGENTS.md', 'docs/architecture.md'] as const;
@@ -269,6 +271,23 @@ function main(): number {
     const args = parse_args(process.argv.slice(2));
 
     const contracts = collect_contracts();
+    // Every verdict below is decided against this map: an empty contracts dir
+    // turns "no stability violations" into "nothing was ever compared".
+    try {
+        assertScanned({
+            gate: 'check_public_links',
+            scanned: contracts.size,
+            units: 'contract file(s)',
+            roots: [CONTRACTS_DIR],
+        });
+    } catch (exc) {
+        if (exc instanceof DeadScopeError) {
+            // 1 = violations found (2 is argparse, 3 internal error).
+            process.stderr.write(`❌  ${exc.message}\n`);
+            return 1;
+        }
+        throw exc;
+    }
     if (args.list) {
         for (const [p, lvl] of contracts) {
             const label = lvl ?? '(no frontmatter)';

@@ -22,6 +22,8 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
+import { assertScanned, DeadScopeError } from './_lib/scan_scope.js';
+
 const QUIET = process.argv.includes('--quiet');
 
 const _HERE = fileURLToPath(import.meta.url);
@@ -214,9 +216,22 @@ function citations_for(personaId: string): string[] {
 
 function main(): number {
     const personas = collect_personas();
-    if (personas.length === 0) {
-        emit('persona-governance: no persona files found — nothing to lint.');
-        return 0;
+    // Zero personas used to exit 0 with "nothing to lint" — but this gate has
+    // already been inert once on a stale root (see PERSONA_DIR above), and that
+    // message is indistinguishable from the root having moved again.
+    try {
+        assertScanned({
+            gate: 'lint_persona_governance',
+            scanned: personas.length,
+            units: 'persona file(s)',
+            roots: ['src/agent-src/personas'],
+        });
+    } catch (exc) {
+        if (exc instanceof DeadScopeError) {
+            process.stderr.write(`❌  ${exc.message}\n`);
+            return 1;
+        }
+        throw exc;
     }
 
     const byDomain = new Map<string, string[]>();

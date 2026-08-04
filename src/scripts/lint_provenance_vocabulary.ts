@@ -38,6 +38,8 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
+import { assertScanned, DeadScopeError } from './_lib/scan_scope.js';
+
 const _HERE = fileURLToPath(import.meta.url);
 const REPO_ROOT = path.resolve(path.dirname(_HERE), '..', '..');
 const CLAIMS_LEDGER_REL = 'docs/CLAIMS.md';
@@ -384,6 +386,16 @@ export function lintProvenanceVocabulary(repoRoot: string = REPO_ROOT): Violatio
     for (const root of SCAN_ROOTS) {
         for (const f of _collectMd(path.join(repoRoot, root))) files.add(f);
     }
+    // `_collectMd` returns [] for a root that is not there, so a moved docs
+    // tree turns the honesty floor into a no-op that still prints its ✅ line.
+    // Counted over every markdown file walked — the banned-phrase scan reads
+    // all of them, long before any approved-vocabulary filtering.
+    assertScanned({
+        gate: 'lint_provenance_vocabulary',
+        scanned: files.size,
+        units: 'prose file(s)',
+        roots: SCAN_ROOTS,
+    });
     for (const abs of [...files].sort()) {
         const rel = path.relative(repoRoot, abs);
         const text = fs.readFileSync(abs, 'utf-8');
@@ -398,7 +410,18 @@ function _print(quiet: boolean, msg: string): void {
 
 export function main(): number {
     const quiet = process.argv.slice(2).includes('--quiet');
-    const violations = lintProvenanceVocabulary();
+    let violations: Violation[];
+    try {
+        violations = lintProvenanceVocabulary();
+    } catch (e) {
+        // 1 is the only failure code this gate defines, so a dead scan root and
+        // a real violation share it — the message distinguishes them.
+        if (e instanceof DeadScopeError) {
+            process.stderr.write(`❌ ${e.message}\n`);
+            return 1;
+        }
+        throw e;
+    }
     if (violations.length > 0) {
         for (const v of violations) {
             process.stderr.write(`❌ [${v.rule}] ${v.file}: ${v.msg}\n`);

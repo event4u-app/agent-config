@@ -28,6 +28,8 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
+import { assertScanned, DeadScopeError } from './_lib/scan_scope.js';
+
 const _HERE = fileURLToPath(import.meta.url);
 const ROOT = path.resolve(path.dirname(_HERE), '..', '..');
 // Mirrors the (scan-unused) module constant; kept for export parity.
@@ -159,7 +161,12 @@ function _exists(p: string): boolean {
     }
 }
 
-export function scan(root: string, today?: SimpleDate): Finding[] {
+/** Out-param so the caller can assert the scope `scan` just walked. */
+export interface ScanStats {
+    entries: number;
+}
+
+export function scan(root: string, today?: SimpleDate, stats?: ScanStats): Finding[] {
     const day = today ?? _today_utc();
     const base = path.join(root, 'scripts', '_one_off');
     if (!_exists(base)) {
@@ -169,6 +176,11 @@ export function scan(root: string, today?: SimpleDate): Finding[] {
     for (const month_dir of _iterdirSorted(base)) {
         if (!_isDir(month_dir)) {
             continue;
+        }
+        // A month dir is itself a checked unit — its name shape is validated
+        // below, so an empty one is still something this walk read.
+        if (stats) {
+            stats.entries += 1;
         }
         const monthName = path.basename(month_dir);
         const anchor = _month_anchor(monthName);
@@ -185,6 +197,9 @@ export function scan(root: string, today?: SimpleDate): Finding[] {
             const fname = path.basename(f);
             if (fname === 'README.md' || _isDir(f)) {
                 continue;
+            }
+            if (stats) {
+                stats.entries += 1;
             }
             if (!NAME_RE.test(fname)) {
                 out.push({
@@ -315,12 +330,33 @@ function parse_args(argv: readonly string[]): ParsedArgs {
 export function main(): number {
     const args = parse_args(process.argv.slice(2));
     let findings: Finding[];
+    const stats: ScanStats = { entries: 0 };
     try {
-        findings = scan(args.root);
+        findings = scan(args.root, undefined, stats);
     } catch (e) {
         const msg = e instanceof Error ? e.message : String(e);
         process.stderr.write(`Internal error: ${msg}\n`);
         return 3;
+    }
+    try {
+        assertScanned({
+            gate: 'lint_one_off_age',
+            scanned: stats.entries,
+            units: 'one-off entr(y/ies)',
+            roots: ['scripts/_one_off'],
+            allowEmpty:
+                'OPTIONAL_INPUT: `scripts/_one_off/` is a TTL-managed scratch tree created on ' +
+                'demand and purged by this very policy — an absent or empty root is the ' +
+                'intended steady state, not a lost corpus. Delete the root and zero still ' +
+                'means "no one-off scripts exist", which is exactly what the TTL is for.',
+        });
+    } catch (e) {
+        // 1 is the hard-fail code (2 is argparse, 3 an internal error).
+        if (e instanceof DeadScopeError) {
+            process.stderr.write(`❌  ${e.message}\n`);
+            return 1;
+        }
+        throw e;
     }
     if (args.format === 'json') {
         // json.dumps([asdict(f) for f in findings], indent=2) — keys keep the

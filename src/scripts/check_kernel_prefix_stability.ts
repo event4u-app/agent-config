@@ -37,6 +37,8 @@ import * as path from 'node:path';
 import process from 'node:process';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
+import { assertScanned, DeadScopeError } from './_lib/scan_scope.js';
+
 const _HERE = fileURLToPath(import.meta.url);
 const REPO_ROOT = path.resolve(path.dirname(_HERE), '..', '..');
 const ROUTER = path.join(REPO_ROOT, 'dist/router.json');
@@ -96,7 +98,17 @@ function _live_prefix(): KernelPrefix | null {
   const router = _readJson(ROUTER);
   if (router === null) return null;
   const ids = kernel_ids(router);
-  if (ids.length === 0) return null;
+  // Scope only — the baseline and the comparison are untouched. An empty kernel
+  // list used to collapse into the same `null` as an unreadable router, so a
+  // router that compiled to zero kernel rules was reported as a missing file;
+  // it is a dead scan scope, and a digest over no bodies is a constant that
+  // would then look byte-stable forever.
+  assertScanned({
+    gate: 'check_kernel_prefix_stability',
+    scanned: ids.length,
+    units: 'kernel rule(s)',
+    roots: ['dist/router.json (kernel)', 'dist/agent-src/rules'],
+  });
   return compute_prefix(ids, (id) => fs.readFileSync(path.join(RULES_DIR, `${id}.md`), 'utf-8'));
 }
 
@@ -118,6 +130,12 @@ function main(argv: string[]): number {
   try {
     current = _live_prefix();
   } catch (e) {
+    // 1 is the documented "file error" code — the gate could not run. 2 is
+    // reserved for drift, i.e. a prefix that was read and did change.
+    if (e instanceof DeadScopeError) {
+      process.stderr.write(`error: ${e.message}\n`);
+      return 1;
+    }
     process.stderr.write(`error: cannot read kernel bodies: ${(e as Error).message}\n`);
     return 1;
   }

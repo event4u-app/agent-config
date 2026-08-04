@@ -21,6 +21,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import { parse as parseYaml } from 'yaml';
 
 import { resolve_logical, strip_source_prefix } from './_lib/agent_src.js';
+import { assertWatchlistResolves, DeadScopeError } from './_lib/scan_scope.js';
 
 const _HERE = fileURLToPath(import.meta.url);
 const ROOT = path.resolve(path.dirname(_HERE), '..', '..');
@@ -125,8 +126,21 @@ function fail(errors: string[]): never {
 }
 
 function _run(): number {
-    if (!_exists(MATRIX)) {
-        fail([`${_relTo(MATRIX, ROOT)} is missing`]);
+    // Replaces the ad-hoc `_exists(MATRIX)` precondition: this gate's entire
+    // corpus is one named contract file, so a moved matrix is a dead scope, not
+    // a content finding. Exit 1 either way — the gate has a single failure code.
+    try {
+        assertWatchlistResolves({
+            gate: 'lint_rule_interactions',
+            candidates: [_relTo(MATRIX, ROOT)],
+            repoRoot: ROOT,
+        });
+    } catch (e) {
+        if (e instanceof DeadScopeError) {
+            process.stderr.write(`❌  ${e.message}\n`);
+            throw new FailExit([e.message]);
+        }
+        throw e;
     }
 
     const data = parseYaml(fs.readFileSync(MATRIX, 'utf-8'), { version: '1.1' });

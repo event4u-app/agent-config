@@ -31,6 +31,8 @@ import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import YAML from 'yaml';
 
+import { assertScanned, DeadScopeError } from './_lib/scan_scope.js';
+
 const _HERE = fileURLToPath(import.meta.url);
 const ROOT = path.resolve(path.dirname(_HERE), '..', '..');
 const SCHEMA_PATH = path.join(ROOT, 'docs', 'contracts', 'discovery-manifest.schema.json');
@@ -245,6 +247,27 @@ function main(argv?: readonly string[]): number {
     if (err) {
         process.stderr.write(`error: ${err}\n`);
         return 1;
+    }
+
+    // A manifest built over a dead source root is still well-formed and still
+    // checksums correctly — it just indexes nothing, and this gate signs it off
+    // with "OK …: 0 artefacts, 0 unassigned, checksum verified". Asserted after
+    // the structural checks so their own messages stay the first explanation.
+    try {
+        assertScanned({
+            gate: 'lint_discovery_manifest',
+            scanned: _asArray(manifest['artefacts']).length,
+            units: 'manifest artefact(s)',
+            roots: [_relPosix(args.manifest, ROOT)],
+        });
+    } catch (exc) {
+        if (exc instanceof DeadScopeError) {
+            // 1 = schema/integrity failure, the gate's only failure code; 2 is
+            // reserved for the pinned argparse usage contract.
+            process.stderr.write(`error: ${exc.message}\n`);
+            return 1;
+        }
+        throw exc;
     }
 
     const vocab_errs = _check_vocab(manifest);

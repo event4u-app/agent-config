@@ -29,6 +29,8 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
+import { assertScanned, DeadScopeError } from './_lib/scan_scope.js';
+
 const QUIET = process.argv.slice(2).includes('--quiet');
 
 const ROADMAP_ROOT = 'agents/roadmaps';
@@ -223,6 +225,24 @@ function main(): number {
     if (!_isDir(ROADMAP_ROOT)) {
         process.stderr.write(`❌  ${ROADMAP_ROOT} not found — run from project root.\n`);
         return 1;
+    }
+    // The dir check above cannot see an existing-but-empty tree, and the unit
+    // has to be the unfiltered walk: "0 active roadmaps" is a real success
+    // state (everything archived), while 0 `.md` under the root never is.
+    try {
+        assertScanned({
+            gate: 'check_roadmap_trackable',
+            scanned: _rglobMdSorted(ROADMAP_ROOT).length,
+            units: 'markdown file(s)',
+            roots: [ROADMAP_ROOT],
+        });
+    } catch (exc) {
+        if (exc instanceof DeadScopeError) {
+            // 1 is this gate's only failure code (0 clean / 1 violation).
+            process.stderr.write(`❌  ${exc.message}\n`);
+            return 1;
+        }
+        throw exc;
     }
     const findings: string[] = [];
     for (const p of find_active_roadmaps(ROADMAP_ROOT)) {

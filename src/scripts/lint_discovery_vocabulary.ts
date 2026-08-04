@@ -19,6 +19,8 @@ import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { parse as parseYaml } from 'yaml';
 
+import { assertScanned, DeadScopeError } from './_lib/scan_scope.js';
+
 const _HERE = path.resolve(fileURLToPath(import.meta.url));
 // REPO_ROOT = Path(__file__).resolve().parent.parent.parent
 const REPO_ROOT = path.resolve(path.dirname(_HERE), '..', '..');
@@ -178,6 +180,17 @@ function lint(quiet: boolean): number {
     const errors: string[] = [];
     const workspaces = _load(WORKSPACES_YML);
     const packs = _load(PACKS_YML);
+
+    // `_load` accepts an empty YAML list, so two present-but-emptied files read
+    // as a vocabulary of nothing. Assert the entries actually loaded — the ADR
+    // parity check below would report that as missing ids, which describes the
+    // symptom and not the cause.
+    assertScanned({
+        gate: 'lint_discovery_vocabulary',
+        scanned: workspaces.length + packs.length,
+        units: 'vocabulary entr(y/ies)',
+        roots: [_relToRoot(WORKSPACES_YML), _relToRoot(PACKS_YML)],
+    });
 
     const ws_ids = new Set<unknown>(workspaces.map((entry) => entry['id']));
     const pack_ids = new Set<unknown>(packs.map((entry) => entry['id']));
@@ -371,6 +384,12 @@ function main(): number {
     } catch (err) {
         if (err instanceof SystemExitError) {
             process.stderr.write(`${err.detail}\n`);
+            return 1;
+        }
+        if (err instanceof DeadScopeError) {
+            // Same code as a missing vocabulary file (1) — the gate has one
+            // failure code, and 2 belongs to the pinned YAML-loader contract.
+            process.stderr.write(`❌ ${err.message}\n`);
             return 1;
         }
         throw err;

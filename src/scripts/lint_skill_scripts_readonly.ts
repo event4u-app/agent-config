@@ -28,6 +28,8 @@ import * as path from 'node:path';
 import process from 'node:process';
 import { fileURLToPath } from 'node:url';
 
+import { assertScanned, DeadScopeError } from './_lib/scan_scope.js';
+
 const _HERE = fileURLToPath(import.meta.url);
 const REPO = path.resolve(path.dirname(_HERE), '..', '..');
 const DEFAULT_SKILLS = path.join(REPO, 'src', 'skills');
@@ -125,6 +127,24 @@ function main(argv: string[]): number {
         if (GATE_RE.test(body)) continue;
         if (allow.has(relSkills) || allow.has(rel)) continue;
         violations.push({ rel, detail: 'contains a content-mutation primitive but no write-gating flag (--writable/--apply/--write/--out/--fix) and is not allowlisted' });
+    }
+
+    // `scanned` is the script files read, which is also the number the success
+    // line publishes; a `--root` that resolves to nothing would otherwise
+    // report every script gated while having opened none.
+    try {
+        assertScanned({
+            gate: 'lint_skill_scripts_readonly',
+            scanned,
+            units: 'skill script(s)',
+            roots: [args.root === DEFAULT_SKILLS ? 'src/skills' : args.root],
+        });
+    } catch (exc) {
+        if (exc instanceof DeadScopeError) {
+            process.stderr.write(`❌  ${exc.message}\n`);
+            return 1;
+        }
+        throw exc;
     }
 
     if (violations.length > 0) {

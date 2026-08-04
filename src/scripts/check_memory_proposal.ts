@@ -16,6 +16,8 @@ import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import YAML from 'yaml';
 
+import { assertScanned } from './_lib/scan_scope.js';
+
 const _HERE = fileURLToPath(import.meta.url);
 
 // Relative to cwd, mirroring Python `Path("agents/memory/intake")`.
@@ -296,6 +298,19 @@ function _json_dumps_ascii(obj: unknown): string {
 
 function main(argv?: readonly string[]): number {
     const args = parse_args(argv ?? process.argv.slice(2));
+    // Intake FILES walked — the scope both `_find_intake` (record lookup) and
+    // `_count_sibling_paths` (pattern evidence) share.
+    assertScanned({
+        gate: 'check_memory_proposal',
+        scanned: _jsonlFilesSorted().length,
+        units: 'intake signal file(s)',
+        roots: [INTAKE_ROOT],
+        allowEmpty:
+            'OPTIONAL_INPUT: the intake dir is local, gitignored capture written by '
+            + '/memory propose. Delete it and zero still reads as "nothing captured yet". '
+            + 'An empty scope also tightens rather than relaxes this gate: zero sibling '
+            + 'paths forces the future_decisions branch, and --intake-id already fails 1.',
+    });
     let record: Record_;
     let source: string;
     if (args.intake_id !== null) {

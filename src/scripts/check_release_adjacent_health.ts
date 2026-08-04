@@ -18,7 +18,14 @@
  * Exit codes: 0 all green/absent · 1 durably-red workflow(s) · 2 usage/env.
  */
 
+import * as path from 'node:path';
 import { argv, env, exit } from 'node:process';
+import { fileURLToPath } from 'node:url';
+
+import { assertWatchlistResolves, DeadScopeError } from './_lib/scan_scope.js';
+
+// src/scripts/check_release_adjacent_health.ts → two levels up is the repo root.
+const REPO = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
 
 const WATCHED = [
     'publish-npm.yml',
@@ -69,6 +76,27 @@ async function main(): Promise<number> {
     if (!token || !repo) {
         process.stderr.write('❌  release-adjacent-health: GITHUB_TOKEN and GITHUB_REPOSITORY (or --repo) required.\n');
         return 2;
+    }
+
+    // The scope is the watch list itself. A renamed or deleted workflow answers
+    // 404 → the loop logs "no completed runs (or workflow absent) — skipping"
+    // and continues, so a fully stale WATCHED list still prints "✅ healthy" —
+    // the same silent-tripwire failure this gate exists to detect. Checking the
+    // names against `.github/workflows/` catches the rename locally, before the
+    // API can launder it into a skip. Exit 2 (usage/env) over 1 (durably red):
+    // a phantom watch list means the tripwire could not run.
+    try {
+        assertWatchlistResolves({
+            gate: 'check_release_adjacent_health',
+            candidates: WATCHED.map((wf) => `.github/workflows/${wf}`),
+            repoRoot: REPO,
+        });
+    } catch (err) {
+        if (err instanceof DeadScopeError) {
+            process.stderr.write(`❌  ${err.message}\n`);
+            return 2;
+        }
+        throw err;
     }
 
     // Tag/release-triggered workflows have no branch association — query

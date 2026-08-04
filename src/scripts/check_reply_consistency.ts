@@ -45,6 +45,7 @@ import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import { artefact_roots } from './_lib/agent_src.js';
+import { assertScanned, DeadScopeError } from './_lib/scan_scope.js';
 
 const _HERE = fileURLToPath(import.meta.url);
 const ROOT = path.resolve(path.dirname(_HERE), '..', '..');
@@ -269,8 +270,10 @@ export function cmd_scan_dir(root: string): number {
         roots = [root];
     }
     const violations: Array<[string, number, string]> = [];
+    let scanned = 0;
     for (const r of roots) {
         for (const md of _rglobMdSorted(r)) {
+            scanned += 1;
             const text = fs.readFileSync(md, 'utf-8');
             const lines = _splitlines(text);
             for (let idx = 0; idx < lines.length; idx++) {
@@ -281,6 +284,25 @@ export function cmd_scan_dir(root: string): number {
                 }
             }
         }
+    }
+    // The CI invocation points at the retired `.agent-src.uncondensed` root and
+    // relies on the fallback above; an EMPTY leftover of that directory still
+    // passes `_isDir`, so the fallback never fires and the sweep reads nothing.
+    try {
+        assertScanned({
+            gate: 'check_reply_consistency',
+            scanned,
+            units: 'markdown file(s)',
+            roots: roots.map((r) => _relToPosixOrAbs(r, ROOT)),
+        });
+    } catch (exc) {
+        if (exc instanceof DeadScopeError) {
+            // 1 = usage/IO error, as for the unresolvable-root case above
+            // (2 is reserved for findings).
+            process.stderr.write(`❌  ${exc.message}\n`);
+            return 1;
+        }
+        throw exc;
     }
     if (violations.length > 0) {
         for (const [p, line, snippet] of violations) {

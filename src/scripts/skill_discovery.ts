@@ -31,6 +31,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import { parse as parseYaml } from 'yaml';
 
 import { load_agent_settings } from './_lib/agent_settings.js';
+import { assertScanned, DeadScopeError } from './_lib/scan_scope.js';
 import { event4u_root as _event4u_root_impl } from './_lib/user_global_paths.js';
 
 const _HERE = fileURLToPath(import.meta.url);
@@ -339,6 +340,25 @@ export function main(argv: string[] | null = null): number {
     }
 
     const catalog = load_catalog();
+    // A recommender still owes an honest scope: analytics events are optional
+    // and degrade gracefully by design, but a vanished skills projection makes
+    // every class recommend nothing while the run still reports success.
+    try {
+        assertScanned({
+            gate: 'skill_discovery',
+            scanned: catalog.size,
+            units: 'catalog skill(s)',
+            roots: ['dist/agent-src/skills'],
+        });
+    } catch (exc) {
+        if (exc instanceof DeadScopeError) {
+            // 2 is this gate's only non-zero code (bad / missing role); here it
+            // reads as "could not run".
+            process.stderr.write(`${exc.message}\n`);
+            return 2;
+        }
+        throw exc;
+    }
     const shortlist = load_role_shortlist(role);
     const use_analytics = analytics_enabled(settings);
     const events = use_analytics ? load_analytics_events() : [];

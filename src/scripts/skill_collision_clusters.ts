@@ -4,7 +4,7 @@
  *
  * Ported from the retired Python `skill_collision_clusters.py` (Phase 8 / Wave 8e).
  *
- * Walks `.agent-src.uncondensed/skills/<id>/SKILL.md`, extracts the
+ * Walks `src/skills/<id>/SKILL.md`, extracts the
  * `description` frontmatter, computes pairwise keyword overlap, and groups
  * high-overlap skill pairs into clusters. The output drives the
  * selection-accuracy fixture set defined by council file 05 (Round-3
@@ -18,11 +18,26 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import { parse as parseYaml } from 'yaml';
 
+import { SRC_SKILLS } from './_lib/agent_src.js';
+import { assertScanned, DeadScopeError } from './_lib/scan_scope.js';
+
 const _HERE = fileURLToPath(import.meta.url);
 
 const REPO_ROOT = path.resolve(_HERE, '..', '..', '..');
-const SKILLS_DIR = path.join(REPO_ROOT, '.agent-src.uncondensed', 'skills');
-const OUT_JSON = path.join(REPO_ROOT, 'agents', 'reports', 'skill-collision-clusters.json');
+/**
+ * The live skills tree, via the shared ADR-051 resolver.
+ *
+ * This was a hardcoded path into the source container ADR-051 retired, so the
+ * gate read a directory that does not exist and clustered 0 of 288 skills. It
+ * was invisible for two reasons at once: the dead-root sweep and the hardening
+ * ratchet both defined "a gate" with a prefix set that excluded `skill_*`, so
+ * nothing in the repo was looking at it.
+ */
+const SKILLS_DIR = SRC_SKILLS();
+// `agents/runtime/reports/`, as this file's own header has always declared. The
+// code said `agents/reports/` (tracked) — harmless while the gate read a dead
+// root and never got far enough to write, load-bearing the moment it did.
+const OUT_JSON = path.join(REPO_ROOT, 'agents', 'runtime', 'reports', 'skill-collision-clusters.json');
 
 const KEYWORD_OVERLAP_THRESHOLD = 0.4;
 const MIN_SHARED_KEYWORDS = 3;
@@ -273,6 +288,25 @@ export function main(): number {
     if (!_isDir(SKILLS_DIR)) {
         process.stderr.write(`❌  Skills dir not found: ${SKILLS_DIR}\n`);
         return 2;
+    }
+    // The dir-exists check above does not cover an existing-but-empty root — a
+    // stray retired-container directory left behind by a local test run passes
+    // it — which would write a `0 clusters from 0 skills` report and exit green.
+    // The unit is the SKILL.md files found, not the subset that parsed a
+    // description.
+    try {
+        assertScanned({
+            gate: 'skill_collision_clusters',
+            scanned: _sortedSkillMds().length,
+            units: 'SKILL.md file(s)',
+            roots: ['src/skills'],
+        });
+    } catch (exc) {
+        if (exc instanceof DeadScopeError) {
+            process.stderr.write(`❌  ${exc.message}\n`);
+            return 2;
+        }
+        throw exc;
     }
     const skills = load_skills();
     const clusters = build_clusters(skills);

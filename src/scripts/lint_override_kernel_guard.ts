@@ -47,6 +47,7 @@ import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import { KERNEL_RULE_IDS, is_kernel_rule } from './_lib/kernel_rules.js';
+import { assertScanned, DeadScopeError } from './_lib/scan_scope.js';
 
 const _HERE = path.dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = path.resolve(_HERE, '..', '..');
@@ -220,6 +221,35 @@ export function audit(): OverrideRow[] {
 function main(argv: string[]): number {
     const as_json = argv.includes('--json');
     const strict = argv.includes('--strict');
+
+    // Not the override corpus: an empty `agents/overrides/rules/` is a real and
+    // common state (the report says so in words). The scope that cannot be
+    // allowed to die is `safety_floor_ids`' input — with src/rules gone the
+    // floor set is empty, every safety-floor override downgrades to "ordinary",
+    // and the replace/registration checks stop firing while the audit still
+    // reads clean. Exit 2 is this CLI's env-error slot; 1 stays "contract
+    // violated".
+    let rule_sources = 0;
+    try {
+        rule_sources = fs.readdirSync(RULES_DIR).filter((n) => n.endsWith('.md')).length;
+    } catch {
+        rule_sources = 0;
+    }
+    try {
+        assertScanned({
+            gate: 'lint_override_kernel_guard',
+            scanned: rule_sources,
+            units: 'rule source(s)',
+            roots: ['src/rules'],
+        });
+    } catch (e) {
+        if (e instanceof DeadScopeError) {
+            process.stderr.write(`❌  ${e.message}\n`);
+            return 2;
+        }
+        throw e;
+    }
+
     const rows = audit();
 
     if (as_json) {

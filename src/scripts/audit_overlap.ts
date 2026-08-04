@@ -28,6 +28,8 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
+import { assertScanned, DeadScopeError } from './_lib/scan_scope.js';
+
 const _HERE = fileURLToPath(import.meta.url);
 // src/scripts/audit_overlap.ts → parents[2] is the repo root (mirrors
 // `Path(__file__).resolve().parent.parent.parent` in the .py).
@@ -381,7 +383,28 @@ export function main(): number {
         return 1;
     }
     const data = JSON.parse(fs.readFileSync(AUDIT_JSON, 'utf-8')) as { rules: RuleEntry[] };
-    const pairs = analyse(data.rules);
+    // The existence check above does not cover a present-but-ruleless input:
+    // an upstream `audit_auto_rules` that itself scanned nothing yields a
+    // "0 pairs flagged" report, which is the answer a real clean run gives.
+    // The unit is the rules read, never the pairs flagged.
+    const rules = Array.isArray(data.rules) ? data.rules : [];
+    try {
+        assertScanned({
+            gate: 'audit_overlap',
+            scanned: rules.length,
+            units: 'rule(s)',
+            roots: ['agents/reports/auto-rules-audit.json'],
+        });
+    } catch (exc) {
+        if (exc instanceof DeadScopeError) {
+            // 1 is this gate's only non-zero code — same one the missing-input
+            // path uses, and for the same reason: it could not run.
+            process.stderr.write(`❌  ${exc.message}\n`);
+            return 1;
+        }
+        throw exc;
+    }
+    const pairs = analyse(rules);
     // Build the JSON payload with the two `round(x, 3)` fields wrapped as
     // PyFloat so 0.0 / 0.5 / 1.0 render with a trailing `.0` like json.dumps.
     const pairsJson: Json = pairs.map(

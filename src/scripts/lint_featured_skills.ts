@@ -21,6 +21,8 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
+import { assertScanned, DeadScopeError } from './_lib/scan_scope.js';
+
 const _HERE = fileURLToPath(import.meta.url);
 
 // CWD-relative, exactly as the Python module's Path(...) literals.
@@ -132,9 +134,32 @@ function main(argv: readonly string[]): number {
     const [skills, commands, packs] = manifest_names(manifest);
     const body = fs.readFileSync(DOC, 'utf-8');
 
+    // The doc existing is not the doc being readable by this gate: LINK_RE is
+    // pinned to the `../dist/agent-src/{skills,commands}/…` link shape, so a
+    // restructured or emptied Featured Skills page yields zero entries and the
+    // OK line reports "0 artefact entries validated". Assert the raw match list,
+    // before the dedupe the checks below run on.
+    const links = _findLinks(body);
+    try {
+        assertScanned({
+            gate: 'lint_featured_skills',
+            scanned: links.length,
+            units: 'featured artefact link(s)',
+            roots: [DOC],
+        });
+    } catch (exc) {
+        if (exc instanceof DeadScopeError) {
+            // 1 is the gate's only failure code — the same one a missing DOC or
+            // manifest already returns.
+            process.stderr.write(`❌  ${exc.message}\n`);
+            return 1;
+        }
+        throw exc;
+    }
+
     const missing: string[] = [];
     const seen = new Set<string>();
-    for (const [cat, raw] of _findLinks(body)) {
+    for (const [cat, raw] of links) {
         const slug = slug_from_path(cat, raw);
         const key = `${cat}\0${slug}`;
         if (seen.has(key)) {

@@ -31,6 +31,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import YAML from 'yaml';
 
+import { assertScanned, DeadScopeError } from './_lib/scan_scope.js';
 import { py_json_dumps_indent2 } from './_lib/security_lint.js';
 
 const _HERE = fileURLToPath(import.meta.url);
@@ -67,14 +68,6 @@ interface Finding {
 function _isFile(p: string): boolean {
     try {
         return fs.statSync(p).isFile();
-    } catch {
-        return false;
-    }
-}
-
-function _isDir(p: string): boolean {
-    try {
-        return fs.statSync(p).isDirectory();
     } catch {
         return false;
     }
@@ -557,18 +550,33 @@ export function main(argv?: string[]): number {
         throw e;
     }
 
-    if (!_isDir(WORKFLOWS_DIR)) {
-        if (!args.quiet) {
-            process.stderr.write(`No workflows directory found at ${WORKFLOWS_DIR}\n`);
+    // Replaces the former `!_isDir(WORKFLOWS_DIR)` → exit 0: a missing dir and
+    // an existing-but-empty one are the same blindness, and reporting
+    // "0 HIGH, 0 MEDIUM" over zero workflows is the vacuous pass.
+    const yml = _sortedGlob('.yml');
+    const yaml = _sortedGlob('.yaml');
+    try {
+        assertScanned({
+            gate: 'lint_workflow_security',
+            scanned: yml.length + yaml.length,
+            units: 'workflow file(s)',
+            roots: [WORKFLOWS_DIR],
+        });
+    } catch (e) {
+        if (e instanceof DeadScopeError) {
+            // 2 (the usage / could-not-run code) over 1, which means
+            // "a HIGH finding blocked under --strict".
+            process.stderr.write(`❌  ${e.message}\n`);
+            return 2;
         }
-        return 0;
+        throw e;
     }
 
     const all_findings: Finding[] = [];
-    for (const wf_path of _sortedGlob('.yml')) {
+    for (const wf_path of yml) {
         all_findings.push(...scan_workflow(wf_path, allowlist));
     }
-    for (const wf_path of _sortedGlob('.yaml')) {
+    for (const wf_path of yaml) {
         all_findings.push(...scan_workflow(wf_path, allowlist));
     }
 

@@ -22,6 +22,7 @@ import * as path from 'node:path';
 import process from 'node:process';
 import { fileURLToPath } from 'node:url';
 
+import { assertScanned } from './_lib/scan_scope.js';
 import { findMostSimilar, type Candidate } from './_lib/text_similarity.js';
 
 const PROG = 'check_memory_similarity.ts';
@@ -106,6 +107,21 @@ export function main(argv: string[]): number {
         return 2;
     }
 
+    // The unit is the signal FILES the glob walks, not the type-filtered
+    // candidates: the first entry of a given type legitimately has zero
+    // candidates, so only the unfiltered walk distinguishes that from a root
+    // that moved and turned every proposal into a silent "create".
+    assertScanned({
+        gate: 'check_memory_similarity',
+        scanned: globSignals(intakeRoot).length,
+        units: 'intake signal file(s)',
+        roots: [intakeRoot],
+        allowEmpty:
+            'OPTIONAL_INPUT: intake signals are local, gitignored capture written by '
+            + '/memory propose — never shipped source. Delete the root and zero still reads '
+            + 'as "nothing has been captured in this project yet", which is exactly the '
+            + 'state of the very first proposal. Advisory check: it never blocks a create.',
+    });
     const candidates = loadCandidates(intakeRoot, type);
     const match = findMostSimilar(body, candidates);
 

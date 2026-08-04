@@ -8,7 +8,8 @@
  * 1 drift, 1 no-commands-dir via stderr), stdout/stderr split,
  * byte-identical messages, same canonical-count derivation
  * (iter_commands union), same per-file pattern checks in the same order.
- * No behaviour changes.
+ * No behaviour changes — except that the no-commands-dir stderr line now comes
+ * from `_lib/scan_scope` and names the empty roots; the exit code is unchanged.
  *
  * Sources canonical counts from the command frontmatter and fails when any
  * documented number drifts (README hero badge, getting-started browse line;
@@ -20,6 +21,7 @@ import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import { iter_commands } from './_lib/agent_src.js';
+import { assertScanned, DeadScopeError } from './_lib/scan_scope.js';
 
 const _HERE = fileURLToPath(import.meta.url);
 const ROOT = path.resolve(path.dirname(_HERE), '..', '..');
@@ -62,9 +64,23 @@ function _command_files(): string[] {
 
 function canonical_counts(): [number, number, number] {
     const files = _command_files();
-    if (files.length === 0) {
-        process.stderr.write('❌  no commands/ directory found under any artefact root\n');
-        process.exit(1);
+    try {
+        assertScanned({
+            gate: 'check_command_count_messaging',
+            scanned: files.length,
+            units: 'command file(s)',
+            roots: ['src/domains/*/**/command.md', 'src/agent-src/commands'],
+        });
+    } catch (exc) {
+        if (exc instanceof DeadScopeError) {
+            // Exit 1 stays — the documented "no commands dir" code, and the
+            // Taskfile fails on any non-zero, so this was never a silent green.
+            // The assertion replaces a bare "no commands/ directory found" with
+            // a message that names the roots that came back empty.
+            process.stderr.write(`❌  ${exc.message}\n`);
+            process.exit(1);
+        }
+        throw exc;
     }
     let total = 0;
     let shims = 0;

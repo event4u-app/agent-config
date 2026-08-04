@@ -42,6 +42,8 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import YAML from 'yaml';
 
+import { assertScanned, DeadScopeError } from './_lib/scan_scope.js';
+
 const _HERE = fileURLToPath(import.meta.url);
 
 // REPO = Path(__file__).resolve().parents[2]
@@ -674,6 +676,27 @@ function lint(): number {
             `setup:cannot load schemas: ${exc instanceof Error ? exc.message : String(exc)}\n`,
         );
         return 3;
+    }
+
+    // The asserted unit is the roadmap corpus, not the ticket bundles: a repo
+    // with no bundles yet is a real state (the early return below), whereas a
+    // vanished agents/roadmaps/ answers "no orphan markers" for the spine
+    // check and "not materialised" for nothing, both silently.
+    try {
+        assertScanned({
+            gate: 'lint_ticket_buildable',
+            scanned: _glob(ROADMAPS, '*.md').length,
+            units: 'roadmap file(s)',
+            roots: [ROADMAPS],
+        });
+    } catch (exc) {
+        if (exc instanceof DeadScopeError) {
+            // 3 = IO/setup error, this gate's "could not run" code; 1 means
+            // lint failures were found.
+            process.stderr.write(`${exc.message}\n`);
+            return 3;
+        }
+        throw exc;
     }
 
     if (!_exists(TICKETS_ROOT)) {

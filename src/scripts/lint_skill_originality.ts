@@ -55,6 +55,7 @@ import * as path from 'node:path';
 import process from 'node:process';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
+import { assertScanned, DeadScopeError } from './_lib/scan_scope.js';
 import { jaccard, parse_frontmatter, tokenize } from './skill_overlap.js';
 
 const _HERE = fileURLToPath(import.meta.url);
@@ -257,9 +258,23 @@ function main(argv?: readonly string[]): number {
     const args = parse_args(argv ?? process.argv.slice(2));
 
     const skills = load_skills(SKILLS);
-    if (skills.length === 0) {
-        process.stderr.write(`no skills under ${SKILLS}\n`);
-        return 1;
+    try {
+        assertScanned({
+            gate: 'lint_skill_originality',
+            scanned: skills.length,
+            units: 'skill(s)',
+            roots: ['src/skills'],
+        });
+    } catch (exc) {
+        if (exc instanceof DeadScopeError) {
+            // The `no skills under <root>` line is part of the pinned CLI
+            // contract, so it stays first; the assertion's named-root detail
+            // follows it rather than replacing it.
+            process.stderr.write(`no skills under ${SKILLS}\n`);
+            process.stderr.write(`❌  ${exc.message}\n`);
+            return 1;
+        }
+        throw exc;
     }
     const allow = load_allowlist();
     const findings = analyse(skills, allow);

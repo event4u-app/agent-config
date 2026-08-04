@@ -16,6 +16,8 @@ import * as fs from 'node:fs';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import * as path from 'node:path';
 
+import { assertScanned, DeadScopeError } from './_lib/scan_scope.js';
+
 export type DriftInput = {
     /** True when origin/main is an ancestor of HEAD (branch contains trunk tip). */
     trunkIsAncestor: boolean;
@@ -42,8 +44,13 @@ function _git(args: string[]): string {
 
 export function main(): number {
     let input: DriftInput;
+    let trunkCommits = 0;
     try {
         _git(['fetch', 'origin', 'main', '--quiet']);
+        // The comparison is only meaningful against a trunk that has history.
+        // An origin/main pointing at an empty/orphan ref answers "0 behind" and
+        // scores the branch up to date without ever having read a trunk commit.
+        trunkCommits = Number(_git(['rev-list', '--count', 'origin/main']) || '0');
         let isAncestor = true;
         try {
             execFileSync('git', ['merge-base', '--is-ancestor', 'origin/main', 'HEAD'], { stdio: 'ignore' });
@@ -55,6 +62,22 @@ export function main(): number {
     } catch (e) {
         process.stdout.write(`⚠️  trunk-drift check skipped (no origin/main or git error): ${String(e)}\n`);
         return 0; // advisory — never block on a missing remote
+    }
+    try {
+        assertScanned({
+            gate: 'check_trunk_drift',
+            scanned: trunkCommits,
+            units: 'trunk commit(s)',
+            roots: ['origin/main'],
+        });
+    } catch (exc) {
+        if (exc instanceof DeadScopeError) {
+            // 1 is the only failure code; 0 means pass/advisory-skip, so a dead
+            // scope must not borrow it — a gate that read no trunk has not passed.
+            process.stderr.write(`❌  ${exc.message}\n`);
+            return 1;
+        }
+        throw exc;
     }
     const v = driftVerdict(input);
     process.stdout.write(`${v.message}\n`);

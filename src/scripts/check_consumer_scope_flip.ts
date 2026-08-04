@@ -32,6 +32,7 @@ import * as path from 'node:path';
 import { parse as parseYaml } from 'yaml';
 
 import { excludedRuleBasenames, ruleScopeFromSettings } from '../install/rule_scope.js';
+import { assertScanned, DeadScopeError } from './_lib/scan_scope.js';
 
 export const RULES_DIR = 'dist/agent-src/rules';
 export const TEMPLATE = 'src/config/agent-settings.template.yml';
@@ -112,8 +113,26 @@ async function main(): Promise<number> {
     let legacyTok = 0;
     let scopedRules = 0;
     let scopedTok = 0;
-    for (const name of fs.readdirSync(RULES_DIR).sort()) {
-        if (!name.endsWith('.md')) continue;
+    // The shipped rule tree is the corpus the before/after evidence is measured
+    // over. An emptied `dist/agent-src/rules` keeps every verdict vacuously true
+    // — nothing excluded, nothing dropped — so `pass` stays true and the flip
+    // reports as "verified" against a zero-rule baseline (with a NaN delta).
+    const ruleFiles = fs.readdirSync(RULES_DIR).sort().filter((n) => n.endsWith('.md'));
+    try {
+        assertScanned({
+            gate: 'check_consumer_scope_flip',
+            scanned: ruleFiles.length,
+            units: 'projected rule file(s)',
+            roots: [RULES_DIR],
+        });
+    } catch (exc) {
+        if (exc instanceof DeadScopeError) {
+            process.stderr.write(`❌  ${exc.message}\n`);
+            return 1;
+        }
+        throw exc;
+    }
+    for (const name of ruleFiles) {
         const body = fs.readFileSync(path.join(RULES_DIR, name), 'utf-8');
         const tok = gpt_tokens(body).tokens;
         // legacy-all baseline mirrors the 2026-07-08 report: compat exclusion applies on both arms

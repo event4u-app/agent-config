@@ -22,6 +22,9 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = path.resolve(HERE, '..', '..');
 const TS_SCRIPT = path.join(REPO_ROOT, 'src', 'scripts', 'check_no_external_sources.ts');
+// The guard imports the scan-scope assertions, so the fixture tree needs the
+// lib beside it. scan_scope imports only node builtins, so the chain ends here.
+const SCAN_SCOPE_SRC = path.join(REPO_ROOT, 'src', 'scripts', '_lib', 'scan_scope.ts');
 const TSX_BIN = path.join(
     REPO_ROOT,
     'node_modules',
@@ -88,6 +91,8 @@ describe('check_no_external_sources — synthetic hits', () => {
         // The script resolves ROOT from parents[2] of its own location, and
         // loads the sibling denylist — so it must live under <work>/src/scripts.
         fs.copyFileSync(TS_SCRIPT, path.join(work, 'src', 'scripts', 'check_no_external_sources.ts'));
+        fs.mkdirSync(path.join(work, 'src', 'scripts', '_lib'), { recursive: true });
+        fs.copyFileSync(SCAN_SCOPE_SRC, path.join(work, 'src', 'scripts', '_lib', 'scan_scope.ts'));
         // git ls-files needs a repo with the files tracked.
         spawnSync('git', ['init', '-q'], big(work));
         spawnSync('git', ['add', '-A'], big(work));

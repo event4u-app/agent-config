@@ -31,6 +31,12 @@ describe('check_council_references — behavioural spec (port of pytest suite)',
         process.chdir(tmp);
         // Mirror `monkeypatch.setattr(ccr, "ROOT", Path("."))`.
         ccr._setRootForTest('.');
+        // One clean in-scope file so every case runs against a live scan scope.
+        // Several fixtures below write only to paths OUTSIDE the scan roots
+        // (`agents/evidence/analysis/`, the source tree, `src/scripts/`); without
+        // this anchor those runs scan zero files, and a green exit would prove
+        // the allowlist works when it proves only that nothing was read.
+        write(path.join(tmp, 'agents/settings/contexts/scope-anchor.md'), 'All good.');
     });
 
     afterEach(() => {

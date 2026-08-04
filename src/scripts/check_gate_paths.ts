@@ -20,13 +20,17 @@
  * synchronous. No behaviour changes.
  *
  * Exit codes: 0 = all enforced targets resolve under the source tree ·
- * 1 = at least one missing / out-of-tree target · 2 = a gate failed to import.
+ * 1 = at least one missing / out-of-tree target · 2 = a gate failed to import
+ * (which now includes a dead scan scope — zero enforced targets across the
+ * whole GATES list — reported through `_lib/scan_scope`).
  */
 
 import { spawnSync } from 'node:child_process';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
+
+import { assertScanned, DeadScopeError } from './_lib/scan_scope.js';
 
 const _HERE = fileURLToPath(import.meta.url);
 const REPO_ROOT = path.resolve(path.dirname(_HERE), '..', '..');
@@ -190,6 +194,31 @@ function main(): number {
         process.stderr.write(`❌  check-gate-paths: ${msg}\n`);
         return 2;
     }
+    let total = 0;
+    for (const v of named.values()) {
+        total += v.length;
+    }
+    // The enforced targets ARE the corpus. A per-gate empty GATE_CORE_PATHS is
+    // already exit 2 inside the subprocess, but an emptied GATES list is not:
+    // it yields zero targets, zero failures, and a green "0 enforced target(s)
+    // … resolve" — the path-integrity gate certifying that nothing is enforced.
+    try {
+        assertScanned({
+            gate: 'check_gate_paths',
+            scanned: total,
+            units: 'enforced target(s)',
+            roots: ['src/scripts (GATE_CORE_PATHS of the GATES list)'],
+        });
+    } catch (exc) {
+        if (exc instanceof DeadScopeError) {
+            // Exit 2, not 1: 1 means "a declared target failed to resolve" (a
+            // finding), while 2 is this file's existing "a gate cannot be
+            // checked" code — which is exactly what an empty target set is.
+            process.stderr.write(`❌  ${exc.message}\n`);
+            return 2;
+        }
+        throw exc;
+    }
     const failures = check_paths(named);
     if (failures.length > 0) {
         process.stdout.write(
@@ -201,10 +230,6 @@ function main(): number {
         process.stdout.write("\n  A source-tree move likely desynced a gate. Fix the gate's\n");
         process.stdout.write('  GATE_CORE_PATHS or the move.\n');
         return 1;
-    }
-    let total = 0;
-    for (const v of named.values()) {
-        total += v.length;
     }
     process.stdout.write(
         `✅  check-gate-paths: ${total} enforced target(s) across ` +

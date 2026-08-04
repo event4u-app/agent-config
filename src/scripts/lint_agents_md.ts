@@ -19,6 +19,7 @@ import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import { SRC_AGENT } from './_lib/agent_src.js';
+import { assertWatchlistResolves, DeadScopeError } from './_lib/scan_scope.js';
 
 const _HERE = fileURLToPath(import.meta.url);
 const ROOT = path.resolve(path.dirname(_HERE), '..', '..');
@@ -253,6 +254,25 @@ function _fileSize(p: string): number {
 }
 
 function main(): number {
+    // No corpus walk — the contract binds two named files, so the watch list IS
+    // the scope. `SRC_AGENT()` has already moved once (ADR-051); if it moves
+    // again the per-target `not found` errors say nothing about the root.
+    try {
+        assertWatchlistResolves({
+            gate: 'lint_agents_md',
+            candidates: TARGETS.map((t) => _relPosix(t.path, ROOT)),
+            repoRoot: ROOT,
+        });
+    } catch (exc) {
+        if (exc instanceof DeadScopeError) {
+            // 1 is the gate's only failure code — a missing target already
+            // returns it, so "could not run at all" cannot be louder than that.
+            process.stdout.write(`  ❌  ${exc.message}\n`);
+            return 1;
+        }
+        throw exc;
+    }
+
     let rc = 0;
     for (const t of TARGETS) {
         const [ok, errors, warnings] = lint_file(t);

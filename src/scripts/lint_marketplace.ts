@@ -27,6 +27,8 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
+import { assertWatchlistResolves, DeadScopeError } from "./_lib/scan_scope.js";
+
 const ROOT = ".";
 const MARKETPLACE = path.join(ROOT, ".claude-plugin", "marketplace.json");
 const PACKAGE_JSON = path.join(ROOT, "package.json");
@@ -87,6 +89,30 @@ function require_key(
 }
 
 export function main(): number {
+  // No corpus to count — the shim is exactly one manifest plus one pointer
+  // skill, and every count the shape offers (plugins, skill entries, dirs under
+  // .claude-plugin/skills/) is a value an existing negative case drives to zero
+  // on purpose. What CAN vanish is the fixed set of paths this resolves against
+  // cwd, so the watch list is the honest guard: run from the wrong directory
+  // and the gate now says so instead of reporting a missing manifest.
+  try {
+    assertWatchlistResolves({
+      gate: "lint_marketplace",
+      candidates: [
+        ".claude-plugin/marketplace.json",
+        "package.json",
+        `${POINTER_SKILL_ENTRY.replace(/^\.\//, "")}/SKILL.md`,
+      ],
+      repoRoot: path.resolve(ROOT),
+    });
+  } catch (exc) {
+    if (exc instanceof DeadScopeError) {
+      process.stdout.write(`❌  ${exc.message}\n`);
+      return 1;
+    }
+    throw exc;
+  }
+
   if (!_exists(MARKETPLACE)) {
     process.stdout.write(`❌  ${MARKETPLACE} not found\n`);
     return 1;

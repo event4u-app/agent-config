@@ -25,6 +25,8 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
+import { assertScanned, DeadScopeError } from './_lib/scan_scope.js';
+
 const _HERE = fileURLToPath(import.meta.url);
 
 // Cwd-relative `agents/` root (mirrors Python `Path("agents")`).
@@ -214,6 +216,24 @@ function main(argv?: readonly string[]): number {
 
     const projectRoot = process.cwd();
     const consumerMode = !is_source_repo(projectRoot);
+    // `AGENTS_ROOT` is cwd-relative, so a run from the wrong directory — or a
+    // repo that has moved `agents/` — makes both finders return early on the
+    // `_isDir` guard and the gate prints "✅ agents/ layout clean" having
+    // enumerated nothing.
+    try {
+        assertScanned({
+            gate: 'lint_agents_layout',
+            scanned: _iterdirSorted(AGENTS_ROOT).length,
+            units: 'agents/ root entr(ies)',
+            roots: [AGENTS_ROOT],
+        });
+    } catch (exc) {
+        if (exc instanceof DeadScopeError) {
+            process.stdout.write(`❌  ${exc.message}\n`);
+            return 1;
+        }
+        throw exc;
+    }
     const unknown = find_violations(AGENTS_ROOT, !consumerMode);
     const warnings = consumerMode ? find_consumer_warnings(AGENTS_ROOT) : [];
 

@@ -20,6 +20,8 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
+import { assertScanned, DeadScopeError } from './_lib/scan_scope.js';
+
 const _HERE = fileURLToPath(import.meta.url);
 // src/scripts/check_release_includes_discovery.ts → two dirs up is repo root.
 // Mirrors Python `Path(__file__).resolve().parents[2]`.
@@ -68,17 +70,34 @@ function main(): number {
         data !== null && typeof data === 'object'
             ? (data as Record<string, unknown>)['artefacts']
             : undefined;
-    if (!Array.isArray(artefacts) || artefacts.length === 0) {
-        return _die(
-            `${_rel(MANIFEST)} carries no artefacts — discovery` +
-                ' scanner produced an empty manifest.',
-        );
+    // The empty-manifest check IS this gate's scan-scope assertion: a manifest
+    // listing nothing means the discovery scanner walked a dead root, and
+    // shipping it would tell every consumer the package has no artefacts.
+    const artefact_count = Array.isArray(artefacts) ? artefacts.length : 0;
+    try {
+        assertScanned({
+            gate: 'check_release_includes_discovery',
+            scanned: artefact_count,
+            units: 'artefact(s)',
+            roots: [_rel(MANIFEST)],
+        });
+    } catch (exc) {
+        if (exc instanceof DeadScopeError) {
+            // 1 is this gate's only failure code, and the wording below is the
+            // pinned py2ts message — so the DeadScopeError text is not
+            // substituted for it.
+            return _die(
+                `${_rel(MANIFEST)} carries no artefacts — discovery` +
+                    ' scanner produced an empty manifest.',
+            );
+        }
+        throw exc;
     }
     if (!_isFile(SUMMARY)) {
         return _die(`${_rel(SUMMARY)} is missing.`);
     }
     process.stdout.write(
-        `check-release-discovery: OK (${artefacts.length} artefacts in` +
+        `check-release-discovery: OK (${artefact_count} artefacts in` +
             ` ${_rel(MANIFEST)})\n`,
     );
     return 0;

@@ -23,6 +23,7 @@
  */
 import * as fs from 'node:fs';
 import * as path from 'node:path';
+import process from 'node:process';
 
 /** Raised when a gate's scope is empty — it cannot have checked anything. */
 export class DeadScopeError extends Error {
@@ -49,6 +50,24 @@ export interface ScannedOptions {
      * corpus is a real, expected state (an optional consumer surface that may
      * genuinely be absent) — never to silence a moved root. The string is the
      * reason and is printed, so it is reviewable in a diff.
+     *
+     * **Carry one of the three prefixes below.** A reason a reviewer cannot
+     * classify from the comment alone is how a justified exception becomes an
+     * allowlist of boilerplate (`road-to-gate-hardening-adoption`, AI council
+     * 2026-08-04). The prefix states which kind of emptiness is claimed:
+     *
+     * - `OPTIONAL_INPUT:` — the root belongs to a surface that may legitimately
+     *   be absent in this project (a consumer tree, an opt-in pack).
+     * - `EMPTY_VALID:` — zero units IS the success state (`check_no_todos`: an
+     *   empty tree genuinely has zero TODOs).
+     * - `WATCHLIST_DRIVEN:` — the gate has no corpus at all; it guards named
+     *   files and its scope is asserted by {@link assertWatchlistResolves}.
+     *
+     * The operational test every reason must pass, applied from the comment
+     * alone: **if this gate's scan root were deleted, would the reason still
+     * make sense?** `check_no_todos` → yes. `check_frontmatter_valid` → no; no
+     * docs to validate is blindness, not cleanliness, and that gate must
+     * reclassify rather than claim `allowEmpty`.
      */
     allowEmpty?: string;
 }
@@ -73,6 +92,31 @@ export function assertScanned(opts: ScannedOptions): void {
             'Repoint the root (prefer the shared resolver in _lib/agent_src.ts), ' +
             'or declare a justified `allowEmpty` reason if an empty corpus is genuinely expected.',
     );
+}
+
+/**
+ * Assert a corpus gate's scope AND publish the count it just validated.
+ *
+ * The two halves of scope hardening drifted apart in practice: 14 gates emit
+ * the machine-readable `scanned:` line the coverage guard reads, 12 assert
+ * their scope, and only 8 do both. A gate that publishes a number it never
+ * asserted can print `scanned: 0` and exit green; a gate that asserts without
+ * publishing is invisible to `check_gate_coverage`. Splitting the two also
+ * lets the published number drift from the number that was validated — the
+ * invented-count failure that is mechanically undetectable downstream.
+ *
+ * One call closes both: the emitted number is, by construction, the number the
+ * assertion just accepted. Use this for any gate that should also carry a floor
+ * in `src/config/gate-coverage.yml`; plain {@link assertScanned} stays correct
+ * for a gate that only needs its scope guarded.
+ *
+ * The line goes to stdout unconditionally — a count only visible without
+ * `--quiet` is not a count, since CI passes `--quiet` (the `lint_handoffs`
+ * lesson, preserved here so no caller has to rediscover it).
+ */
+export function reportScanned(opts: ScannedOptions, write = process.stdout.write.bind(process.stdout)): void {
+    assertScanned(opts);
+    write(`scanned: ${String(opts.scanned)}\n`);
 }
 
 export interface WatchlistOptions {

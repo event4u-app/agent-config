@@ -36,6 +36,8 @@ import * as path from 'node:path';
 import process from 'node:process';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
+import { assertWatchlistResolves, DeadScopeError } from './_lib/scan_scope.js';
+
 const _HERE = fileURLToPath(import.meta.url);
 // parents[2] of src/scripts/<file> is the repo root.
 const ROOT = path.resolve(path.dirname(_HERE), '..', '..');
@@ -142,6 +144,24 @@ function main(argv: readonly string[]): number {
         return _selftest();
     }
     const asJson = argv.includes('--json');
+    // Scope is the allowlist itself — there is no tree to walk. An emptied
+    // AUTHORING_FILES scans nothing and reports "No retired source-of-truth
+    // pointers" forever, which is the one result this gate must never produce
+    // by accident. Exit 2 (the usage / self-test class, i.e. the gate could
+    // not run), never 1 — 1 asserts a retired pointer was actually found.
+    try {
+        assertWatchlistResolves({
+            gate: 'check_source_pointer_freshness',
+            candidates: AUTHORING_FILES,
+            repoRoot: ROOT,
+        });
+    } catch (err) {
+        if (err instanceof DeadScopeError) {
+            process.stderr.write(`❌  ${err.message}\n`);
+            return 2;
+        }
+        throw err;
+    }
     const hits: Hit[] = [];
     for (const rel of AUTHORING_FILES) {
         hits.push(..._scanFile(rel));

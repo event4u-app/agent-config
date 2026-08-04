@@ -43,6 +43,8 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import * as yaml from 'js-yaml';
 
+import { assertScanned, DeadScopeError } from './_lib/scan_scope.js';
+
 const _HERE = fileURLToPath(import.meta.url);
 const REPO_ROOT = path.resolve(path.dirname(_HERE), '..', '..');
 const CORPUS = path.join(REPO_ROOT, 'internal/bench/corpora/token-quality-golden.yaml');
@@ -350,6 +352,25 @@ function main(argv: string[]): number {
   // Structure (incl. the fires-check) always validates against the FULL
   // universe — a maintainer-rule tag is not "unknown" under consumer scope.
   const report = validate(corpus, ruleIds, router);
+  // `tasks: []` parses, validates clean, and covers nothing — and without
+  // `--require-complete` an uncovered universe is only a ⚠️, so an emptied
+  // corpus exits 0 while proving nothing about any rule.
+  try {
+    assertScanned({
+      gate: 'check_token_quality_golden',
+      scanned: report.task_count,
+      units: 'golden task(s)',
+      roots: [path.relative(REPO_ROOT, CORPUS)],
+    });
+  } catch (e) {
+    if (e instanceof DeadScopeError) {
+      // 2 = invalid corpus; 1 is reserved for an unreadable file, and this one
+      // read and parsed fine.
+      process.stderr.write(`❌  ${e.message}\n`);
+      return 2;
+    }
+    throw e;
+  }
 
   // Coverage accounting runs against the SCOPED universe: which flip is
   // being gated decides what "complete" means.

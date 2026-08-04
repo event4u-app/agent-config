@@ -18,6 +18,8 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
+import { assertScanned, DeadScopeError } from './_lib/scan_scope.js';
+
 const _HERE = path.dirname(fileURLToPath(import.meta.url));
 // parent.parent.parent of the .py file (src/scripts/skill_usage_report.py)
 // is the repo root — two dirs up from src/scripts.
@@ -332,6 +334,25 @@ export function main(argv?: string[]): number {
     const now = new Date();
     const per = aggregate(records, now, args.window);
     const known = all_known_slugs(REPO);
+    // Same split as `skill_usage_collect`: the JSONL is legitimately empty
+    // before any turn is recorded, but a vanished skills projection makes the
+    // report list only the slugs that happen to appear in the metrics — and a
+    // report certifying over nothing is the same lie in a quieter voice.
+    try {
+        assertScanned({
+            gate: 'skill_usage_report',
+            scanned: known.size,
+            units: 'known skill slug(s)',
+            roots: ['.augment/skills', '.claude/skills', 'dist/agent-src/skills'],
+        });
+    } catch (exc) {
+        if (exc instanceof DeadScopeError) {
+            // 2 is the only non-zero code this CLI has (argparse errors).
+            process.stderr.write(`❌  ${exc.message}\n`);
+            return 2;
+        }
+        throw exc;
+    }
     fs.mkdirSync(path.dirname(args.out), { recursive: true });
     fs.writeFileSync(args.out, render(per, known), 'utf-8');
     if (!args.quiet) {

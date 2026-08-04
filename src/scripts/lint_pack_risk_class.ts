@@ -18,6 +18,8 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
+import { assertWatchlistResolves, DeadScopeError } from './_lib/scan_scope.js';
+
 const QUIET = process.argv.includes('--quiet');
 const _HERE = fileURLToPath(import.meta.url);
 const REPO = path.resolve(path.dirname(_HERE), '..', '..');
@@ -60,9 +62,23 @@ function _print(s: string): void {
 }
 
 export function main(): number {
-    if (!fs.existsSync(PACKS_YML)) {
-        _print('⚠️  packs.yml not found — skipping risk_class lint');
-        return 0;
+    // packs.yml IS the scope — there is nowhere else a `risk_class: high`
+    // declaration can hide. Replaces the "not found → skip, exit 0" branch,
+    // which turned a moved declaration file into a permanent green. Exit 1 is
+    // the only failure code; here it means the invariant could not be checked,
+    // not that a pack violates it.
+    try {
+        assertWatchlistResolves({
+            gate: 'lint_pack_risk_class',
+            candidates: [path.relative(REPO, PACKS_YML)],
+            repoRoot: REPO,
+        });
+    } catch (exc) {
+        if (exc instanceof DeadScopeError) {
+            process.stderr.write(`❌  ${exc.message}\n`);
+            return 1;
+        }
+        throw exc;
     }
     const violations = riskClassViolations(fs.readFileSync(PACKS_YML, 'utf-8'));
     if (violations.length === 0) {

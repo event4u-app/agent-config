@@ -35,6 +35,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import * as sl from './_lib/security_lint.js';
 import { TOKEN_RE, classifyToken } from './_lib/confusables.js';
+import { assertScanned, DeadScopeError } from './_lib/scan_scope.js';
 
 export const CHECK = 'mixed-script-confusable';
 
@@ -113,10 +114,33 @@ export function main(argv: readonly string[] | null = null): number {
     const args = parse_args(argv ?? process.argv.slice(2));
 
     const findings: sl.Finding[] = [];
+    let scanned = 0;
     for (const sf of sl.iter_corpus()) {
+        // Counted on the corpus walk, not on `_scan`'s return: `iter_corpus`
+        // skips a root that does not exist, so every root moving at once yields
+        // zero files and the report line still says "clean (scanned <roots>)".
+        scanned += 1;
         for (const h of _scan(sf)) {
             findings.push(h);
         }
+    }
+
+    try {
+        assertScanned({
+            gate: 'lint_confusables',
+            scanned,
+            units: 'file(s)',
+            roots: sl.DEFAULT_SCAN_ROOTS,
+        });
+    } catch (exc) {
+        if (exc instanceof DeadScopeError) {
+            // 2 = "could not run" (the usage-error code), never 0 and never the
+            // finding code 1: a homoglyph lint that read nothing is blind, and
+            // `--json` callers must not read an empty payload as clean either.
+            process.stderr.write(`❌  ${exc.message}\n`);
+            return 2;
+        }
+        throw exc;
     }
 
     if (args.json) {

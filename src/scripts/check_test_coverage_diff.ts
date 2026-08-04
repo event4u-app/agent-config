@@ -17,6 +17,8 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
+import { assertScanned } from './_lib/scan_scope.js';
+
 const _HERE = fileURLToPath(import.meta.url);
 
 // Injectable for tests (monkeypatch parity): REPO_ROOT, _git_name_status,
@@ -177,7 +179,21 @@ function parse_args(argv: readonly string[]): ParsedArgs {
 
 function main(argv?: readonly string[]): number {
     const opts = parse_args(argv ?? process.argv.slice(2));
-    const changed = _hooks.git_name_status(_resolve_base_ref(opts.base_ref));
+    const base_ref = _resolve_base_ref(opts.base_ref);
+    const changed = _hooks.git_name_status(base_ref);
+    assertScanned({
+        gate: 'check_test_coverage_diff',
+        scanned: changed.length,
+        units: 'changed path(s)',
+        roots: [`git diff --name-status ${base_ref}...HEAD`],
+        allowEmpty:
+            'EMPTY_VALID: a diff with no changed paths adds no gate, so there is nothing for a ' +
+            'coverage forcing-function to warn about. Deletion test: a deleted worktree cannot ' +
+            'produce this state — an UNREADABLE range is a different case and is not silent, ' +
+            '`_git_name_status` prints `⚠️  coverage-diff: git diff failed (…); skipping.` to ' +
+            'stderr before returning empty. The exit code is 0 either way by pinned contract ' +
+            '(warn-only this phase), so this assertion declares the scope rather than gating it.',
+    });
     const [warnings, suppressed] = evaluate(changed, _hooks.pragma_reason_from_tree);
     if (warnings.length > 0) {
         process.stdout.write(

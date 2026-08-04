@@ -59,6 +59,8 @@ import { fileURLToPath } from 'node:url';
 
 import ts from 'typescript';
 
+import { assertWatchlistResolves, DeadScopeError } from './_lib/scan_scope.js';
+
 const _HERE = path.dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = path.resolve(_HERE, '..', '..');
 
@@ -208,14 +210,6 @@ function parse(file: string): ts.SourceFile | null {
  */
 function auditEntry(entryRel: string, root: string = REPO_ROOT): Finding[] {
     const entryAbs = path.join(root, entryRel);
-    if (!fs.existsSync(entryAbs)) {
-        process.stderr.write(
-            `check-installer-import-purity: entry ${entryRel} does not exist — ` +
-                'update BUNDLE_ENTRIES\n',
-        );
-        process.exitCode = 1;
-        return [];
-    }
     const findings: Finding[] = [];
     const seen = new Set<string>([entryAbs]);
     // BFS so the reported chain is a shortest path — the least confusing one.
@@ -245,6 +239,26 @@ function auditEntry(entryRel: string, root: string = REPO_ROOT): Finding[] {
 }
 
 function main(): number {
+    // BUNDLE_ENTRIES is the whole scan scope — every module examined is reached
+    // from one of them. This REPLACES the per-entry existence guard in
+    // `auditEntry`, which could not fail: it set `process.exitCode = 1` and
+    // returned no findings, and `process.exit(main())` then overwrote that with
+    // main's 0, so a moved entry printed "✅ … reach no module-level
+    // process.exit()". 1 is the only failure code this gate has.
+    try {
+        assertWatchlistResolves({
+            gate: 'check_installer_import_purity',
+            candidates: BUNDLE_ENTRIES,
+            repoRoot: REPO_ROOT,
+        });
+    } catch (err) {
+        if (err instanceof DeadScopeError) {
+            process.stderr.write(`❌  ${err.message}\n`);
+            return 1;
+        }
+        throw err;
+    }
+
     const all: Finding[] = [];
     for (const entry of BUNDLE_ENTRIES) {
         all.push(...auditEntry(entry));

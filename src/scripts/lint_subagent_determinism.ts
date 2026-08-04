@@ -24,6 +24,7 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
+import { assertScanned, DeadScopeError } from './_lib/scan_scope.js';
 import { parse_frontmatter } from './validate_frontmatter.js';
 
 const QUIET = process.argv.includes('--quiet');
@@ -47,7 +48,28 @@ function main(dir: string = SUBAGENT_DIR): number {
     const findings: string[] = [];
     const namesSeen = new Map<string, string>();
 
-    for (const file of _listSubagents(dir)) {
+    const files = _listSubagents(dir);
+    // The unit is every `.md` walked, not `namesSeen` — that map only grows on
+    // units that already passed the stem-match, so it reads 0 both for a moved
+    // root and for a corpus where every unit is broken.
+    try {
+        assertScanned({
+            gate: 'lint_subagent_determinism',
+            scanned: files.length,
+            units: 'subagent file(s)',
+            roots: [dir],
+        });
+    } catch (exc) {
+        if (exc instanceof DeadScopeError) {
+            // 1 is this gate's only non-zero code; here it means "could not
+            // run", not "found a determinism violation".
+            process.stderr.write(`❌  ${exc.message}\n`);
+            return 1;
+        }
+        throw exc;
+    }
+
+    for (const file of files) {
         const rel = path.relative(REPO, file);
         const stem = path.basename(file, '.md');
         const text = fs.readFileSync(file, 'utf-8');

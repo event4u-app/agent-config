@@ -18,6 +18,8 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
+import { assertWatchlistResolves, DeadScopeError } from './_lib/scan_scope.js';
+
 const _HERE = fileURLToPath(import.meta.url);
 
 const README = 'README.md';
@@ -124,9 +126,25 @@ function _pyRepr(s: string): string {
 
 function main(): number {
     const quiet = process.argv.slice(2).includes('--quiet');
-    if (!fs.existsSync(README)) {
-        process.stderr.write(`error: ${README} not found\n`);
-        return 1;
+    // README is this gate's whole scope and resolves against cwd, so a wrong
+    // cwd is indistinguishable from a deleted file. Replaces the bare
+    // existsSync check: same exit code, but the failure now names the root it
+    // looked under. Exit 1 is the only failure code this CLI has (over budget /
+    // missing) — here it means "could not run", not "over budget".
+    try {
+        assertWatchlistResolves({
+            gate: 'lint_readme_jargon',
+            candidates: [README],
+            repoRoot: process.cwd(),
+        });
+    } catch (exc) {
+        if (exc instanceof DeadScopeError) {
+            // First line is the pinned py2ts wording; the second names the root.
+            process.stderr.write(`error: ${README} not found\n`);
+            process.stderr.write(`❌  ${exc.message}\n`);
+            return 1;
+        }
+        throw exc;
     }
 
     const allLines = _splitlines(fs.readFileSync(README, 'utf-8'));

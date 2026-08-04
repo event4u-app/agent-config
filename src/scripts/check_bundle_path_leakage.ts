@@ -57,6 +57,8 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
+import { assertScanned, DeadScopeError } from './_lib/scan_scope.js';
+
 const _HERE = fileURLToPath(import.meta.url);
 const REPO = path.resolve(path.dirname(_HERE), '..', '..');
 
@@ -290,6 +292,30 @@ function parse_args(argv: readonly string[]): Options {
 function main(argv: readonly string[] = process.argv.slice(2)): number {
     const opts = parse_args(argv);
     const targets = opts.files.length > 0 ? opts.files : tracked_bundle_files();
+
+    // `git ls-files <untracked-root>` returns nothing, by design (BUNDLE_ROOTS
+    // lists roots that may not be tracked yet). That tolerance is also the
+    // failure mode: if `dist/install/` stopped being force-included, every root
+    // resolves empty and the gate prints "0 tracked bundle file(s) scanned"
+    // with exit 0. Deletion test: a repo that ships an install bundle always
+    // tracks at least one bundle file, so 0 is never success here.
+    // Exit 2 (usage/env) over 1 (leak found) — a dead scope means the gate
+    // could not run, not that it found a leak.
+    try {
+        assertScanned({
+            gate: 'check_bundle_path_leakage',
+            scanned: targets.length,
+            units: 'bundle file(s)',
+            roots: opts.files.length > 0 ? ['<explicit file arguments>'] : BUNDLE_ROOTS,
+        });
+    } catch (exc) {
+        if (exc instanceof DeadScopeError) {
+            process.stderr.write(`❌  ${exc.message}\n`);
+            return 2;
+        }
+        throw exc;
+    }
+
     const hits = scan_files(targets);
 
     if (hits.length > 0) {

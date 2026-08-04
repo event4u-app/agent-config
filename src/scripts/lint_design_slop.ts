@@ -37,6 +37,7 @@
  */
 import fs from "node:fs";
 import path from "node:path";
+import { assertScanned, DeadScopeError } from "./_lib/scan_scope.js";
 import {
   SLOP_RULES,
   type DesignContext,
@@ -195,6 +196,28 @@ function main(): void {
   const files: string[] = [];
   for (const f of walkDir(scanDir, /\.(html|htm|css|scss|sass|less|vue|svelte|astro|jsx|tsx|md|mdx)$/i)) {
     if (!ignoreGlobs.some((g) => f.includes(g.replace("**", "")))) files.push(f);
+  }
+
+  // The opt-in escape above is the "consumer has no UI tree" path. Reaching
+  // here means the root EXISTS and still yielded nothing scannable — a moved
+  // subtree, a drifted extension list, or an over-broad ignoreFiles glob. This
+  // detector never hard-blocks on findings, so "no tells in 0 file(s)" is
+  // indistinguishable from a clean scan. Exit 1 is its internal-error code; 2
+  // is reserved for the --fail-on threshold.
+  try {
+    assertScanned({
+      gate: "lint_design_slop",
+      scanned: files.length,
+      units: "design source file(s)",
+      // Absolute: --dir may point outside the cwd (or outside any repo).
+      roots: [scanDir],
+    });
+  } catch (exc) {
+    if (exc instanceof DeadScopeError) {
+      process.stderr.write(`❌  ${exc.message}\n`);
+      process.exit(1);
+    }
+    throw exc;
   }
 
   const findings: Finding[] = [];

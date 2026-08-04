@@ -22,6 +22,7 @@ import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import * as agent_settings from './_lib/agent_settings.js';
+import { assertWatchlistResolves, DeadScopeError } from './_lib/scan_scope.js';
 import * as update_check from './_lib/update_check.js';
 
 const _HERE = fileURLToPath(import.meta.url);
@@ -105,6 +106,29 @@ async function main(argv: readonly string[] = process.argv.slice(2)): Promise<nu
     if (args.help) {
         process.stdout.write(DOC + '\n');
         return 0;
+    }
+
+    if (!args.installed_version) {
+        // Without the flag, `$PACKAGE_ROOT/package.json` IS the whole input.
+        // `_read_installed_version` swallows a missing or unparseable file into
+        // '' and the banner then simply never fires — indistinguishable from
+        // "you are up to date". The exit code stays 0 on purpose: "never
+        // raises, never exits non-zero" is this wrapper's pinned CLI contract,
+        // so the only loudness available is stderr, which is where the banner
+        // itself goes anyway.
+        try {
+            assertWatchlistResolves({
+                gate: 'check_update_banner',
+                candidates: ['package.json'],
+                repoRoot: ROOT,
+            });
+        } catch (err) {
+            if (err instanceof DeadScopeError) {
+                process.stderr.write(`❌  ${err.message}\n`);
+                return 0;
+            }
+            throw err;
+        }
     }
 
     const installed = args.installed_version || _read_installed_version(ROOT);

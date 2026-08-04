@@ -35,6 +35,8 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
+import { assertScanned, DeadScopeError } from './_lib/scan_scope.js';
+
 const _HERE = path.dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = path.resolve(_HERE, '..', '..');
 const ADR_DIR = path.join(REPO_ROOT, 'docs', 'decisions');
@@ -149,6 +151,27 @@ export function check(dir: string = ADR_DIR): AdrFinding[] {
 function main(argv: string[]): number {
     const as_json = argv.includes('--json');
     const findings = check();
+    const total = fs.existsSync(ADR_DIR)
+        ? fs.readdirSync(ADR_DIR).filter((f) => /^ADR-.*\.md$/.test(f)).length
+        : 0;
+
+    // `check()` returns findings, never a count, so a moved `docs/decisions/`
+    // yields an empty list — reported as "0 ADR(s) · 0 error(s)" and green.
+    // Exit 1 is the violation code; 2 stays reserved for usage/env errors.
+    try {
+        assertScanned({
+            gate: 'check_adr_frontmatter',
+            scanned: total,
+            units: 'ADR file(s)',
+            roots: ['docs/decisions'],
+        });
+    } catch (exc) {
+        if (exc instanceof DeadScopeError) {
+            process.stderr.write(`❌  ${exc.message}\n`);
+            return 1;
+        }
+        throw exc;
+    }
 
     if (as_json) {
         process.stdout.write(JSON.stringify({ findings }, null, 2) + '\n');
@@ -157,9 +180,6 @@ function main(argv: string[]): number {
 
     const errors = findings.filter((f) => f.level === 'error');
     const warns = findings.filter((f) => f.level === 'warn');
-    const total = fs.existsSync(ADR_DIR)
-        ? fs.readdirSync(ADR_DIR).filter((f) => /^ADR-.*\.md$/.test(f)).length
-        : 0;
 
     process.stdout.write(
         `ADR frontmatter: ${total} ADR(s) · ${errors.length} error(s) · ` +

@@ -22,6 +22,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import { parse as parseYaml } from 'yaml';
 
 import { _iter_domains_commands } from './_lib/agent_src.js';
+import { assertScanned, DeadScopeError } from './_lib/scan_scope.js';
 
 const _HERE = fileURLToPath(import.meta.url);
 const ROOT = path.resolve(path.dirname(_HERE), '..', '..');
@@ -117,6 +118,27 @@ export function main(): number {
         const msg = exc instanceof Error ? exc.message : String(exc);
         process.stderr.write(`lint_command_flow_coverage: internal error — ${msg}\n`);
         return 3;
+    }
+
+    // `_iter_domains_commands` returns nothing when the command tree is not a
+    // directory, so a moved root turns every mapped ref into a "phantom" — the
+    // gate would blame surface-map.yaml for a walk that never happened. Counted
+    // on the walk itself, before any comparison with the map.
+    try {
+        assertScanned({
+            gate: 'lint_command_flow_coverage',
+            scanned: real.size,
+            units: 'command file(s)',
+            roots: ['src/domains/<pack>/**/command.md'],
+        });
+    } catch (exc) {
+        if (exc instanceof DeadScopeError) {
+            // 3 = internal error, i.e. "this gate could not run" — 1 would
+            // claim the surface map is wrong, which is exactly the wrong story.
+            process.stderr.write(`lint_command_flow_coverage: ${exc.message}\n`);
+            return 3;
+        }
+        throw exc;
     }
 
     const user_flows = new Set<string>(

@@ -46,6 +46,8 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
+import { assertScanned, DeadScopeError } from "./_lib/scan_scope.js";
+
 const _HERE = path.dirname(fileURLToPath(import.meta.url));
 export const REPO_ROOT = path.resolve(_HERE, "..", "..");
 export const SCRIPTS_DIR = path.join(REPO_ROOT, "src", "scripts");
@@ -287,6 +289,24 @@ export function main(argv: readonly string[] = process.argv.slice(2)): number {
 
   const jsonMode = argv.includes("--json");
   const quiet = argv.includes("--quiet");
+
+  // The asserted unit is every eligible `.ts` file the walk yields, never the
+  // finding count: an empty findings list IS the pass state here, so a moved
+  // SCRIPTS_DIR would read as "clean" instead of "read nothing".
+  try {
+    assertScanned({
+      gate: "lint_governed_writes",
+      scanned: [...walkTsFiles(SCRIPTS_DIR, SCRIPTS_DIR)].length,
+      units: "script file(s)",
+      roots: ["src/scripts"],
+    });
+  } catch (exc) {
+    if (exc instanceof DeadScopeError) {
+      process.stderr.write(`❌  ${exc.message}\n`);
+      return 2;
+    }
+    throw exc;
+  }
 
   const findings = scanScriptsDir(SCRIPTS_DIR);
 

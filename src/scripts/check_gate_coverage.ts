@@ -51,6 +51,8 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import * as yaml from 'js-yaml';
 import { checkRatchet } from './_lib/gate_baseline.js';
 import { runCountedProbe } from './_lib/counted_probe.js';
+import { listGateScripts } from './_lib/gate_population.js';
+import { assertScanned } from './_lib/scan_scope.js';
 
 const _HERE = fileURLToPath(import.meta.url);
 const REPO_ROOT = path.resolve(path.dirname(_HERE), '..', '..');
@@ -260,6 +262,18 @@ export function main(argv: readonly string[]): number {
   let specs: GateSpec[];
   try {
     specs = load_manifest();
+    // This guard's own scan scope is the manifest. It already refused an empty
+    // gate list ("a coverage guard over an empty set is vacuous"), but as a
+    // bespoke throw — invisible to the very population test below, which is how
+    // the meta-gate ended up outside its own definition of hardened. Routing the
+    // same condition through the shared assertion is the honest fix: no new
+    // behaviour, one shape for "this gate read nothing".
+    assertScanned({
+      gate: 'check_gate_coverage',
+      scanned: specs.length,
+      units: 'manifest gate(s)',
+      roots: [path.relative(REPO_ROOT, MANIFEST)],
+    });
   } catch (e) {
     process.stderr.write(`❌  gate-coverage manifest: ${(e as Error).message}\n`);
     return 2;
@@ -358,33 +372,66 @@ export function report_hardening_ratchet(): number {
 }
 
 /**
- * Gate scripts that neither assert their scan scope nor publish a count — the
- * population still able to report success over an empty corpus.
+ * Manifest ids whose `scanned:` line is actually ENFORCED against a floor.
  *
- * A gate counts as hardened when it routes through `_lib/scan_scope` (the
- * assertion that turns a zero scan into a red exit) OR emits the machine-
- * readable `scanned:` line the coverage guard reads. Either one makes a dead
- * root visible; neither is satisfiable by a gate that read nothing.
+ * A `pending` entry, or an enforced one with `min_scanned: 0`, reads the line
+ * without being able to fail on it — so it cannot make a gate hardened either.
+ * Read best-effort: an unreadable manifest yields an empty set, which pushes
+ * every emit-only gate back into the unhardened count. That direction is
+ * deliberate — a coverage guard that cannot read its own manifest should
+ * over-report exposure, never under-report it.
  */
-export function list_unhardened_gates(dir = path.join(REPO_ROOT, 'src/scripts')): string[] {
-  let entries: string[];
+export function enforced_manifest_ids(file = MANIFEST): Set<string> {
   try {
-    entries = fs.readdirSync(dir);
+    return new Set(
+      load_manifest(file)
+        .filter((s) => s.status === 'enforced' && s.min_scanned >= 1)
+        .map((s) => s.id),
+    );
   } catch {
-    return [];
+    return new Set<string>();
   }
-  const gates = entries.filter((f) => /^(lint|check|audit)_.*\.ts$/.test(f) && !f.endsWith('.d.ts'));
+}
+
+/**
+ * Gate scripts that neither assert their scan scope nor publish an ENFORCED
+ * count — the population still able to report success over an empty corpus.
+ *
+ * ```
+ * hardened ⇔ routes through _lib/scan_scope
+ *          ∨ (emits `scanned:` ∧ registered enforced in gate-coverage.yml with a floor)
+ * ```
+ *
+ * The second clause used to be a bare "emits `scanned:`". Measured 2026-08-04
+ * while chartering the conversion of the remaining 189: a printed count is only
+ * a *guard* for the gates this file actually runs against a floor. For an
+ * unregistered gate the line is decoration — it can print `scanned: 0` out of a
+ * deleted root and still exit 0, with nobody reading it. That made the cheapest
+ * route to a green ratchet (add one write per gate) also the route that changes
+ * nothing, while "pad the manifest" is an explicit non-goal of the conversion
+ * roadmap. Requiring registration closes the loop: to harden by emitting you
+ * must accept a floor, and everything else asserts.
+ *
+ * The tightening cost the existing population nothing — all 14 emit-only gates
+ * were already registered enforced — which is why it is a drift repair against
+ * this guard's own charter ("asserts its scan scope … or carries a justified
+ * `allowEmpty`") rather than a moved goalpost.
+ */
+export function list_unhardened_gates(
+  dir = path.join(REPO_ROOT, 'src/scripts'),
+  registered: ReadonlySet<string> = enforced_manifest_ids(),
+): string[] {
   const out: string[] = [];
-  for (const f of gates) {
+  for (const id of listGateScripts(dir, (d) => fs.readdirSync(d))) {
     let src: string;
     try {
-      src = fs.readFileSync(path.join(dir, f), 'utf8');
+      src = fs.readFileSync(path.join(dir, `${id}.ts`), 'utf8');
     } catch {
       continue;
     }
-    const asserts = /assertScanned\(|assertWatchlistResolves\(/.test(src);
+    const asserts = /assertScanned\(|assertWatchlistResolves\(|reportScanned\(/.test(src);
     const emits = /(?:process\.(?:stdout|stderr)\.write|lines\.push)\(\s*`scanned: /.test(src);
-    if (!asserts && !emits) out.push(f.replace(/\.ts$/, ''));
+    if (!asserts && !(emits && registered.has(id))) out.push(id);
   }
   return out.sort();
 }
@@ -637,13 +684,7 @@ export function render_ledger(
 
 /** Count of gate-shaped scripts, for the honest denominator in the ledger. */
 export function count_gate_scripts(dir = path.join(REPO_ROOT, 'src/scripts')): number {
-  try {
-    return fs
-      .readdirSync(dir)
-      .filter((f) => /^(lint|check|audit)_.*\.ts$/.test(f) && !f.endsWith('.d.ts')).length;
-  } catch {
-    return 0;
-  }
+  return listGateScripts(dir, (d) => fs.readdirSync(d)).length;
 }
 
 function run_canary_mode(specs: readonly GateSpec[], argv: readonly string[]): number {

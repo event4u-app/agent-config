@@ -25,6 +25,8 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+import { assertScanned, DeadScopeError } from './_lib/scan_scope.js';
+
 const _HERE = fileURLToPath(import.meta.url);
 const REPO_ROOT = path.join(path.dirname(_HERE), '..', '..');
 
@@ -135,6 +137,17 @@ export function run(repoRoot: string): string[] {
     const before: Record<string, Record<string, string>> = {};
     for (const r of roots) before[r] = snapshot_tree(r);
 
+    // Both legs are diffs over these snapshots: with no bridge trees on disk
+    // there is nothing to diff and nothing to validate, and the check reports a
+    // fixpoint it never tested. Thrown, not returned — `errors` is the drift
+    // channel, and a dead scope is not drift.
+    assertScanned({
+        gate: 'check_bridge_derivation',
+        scanned: Object.values(before).reduce((n, snap) => n + Object.keys(snap).length, 0),
+        units: 'bridge entries',
+        roots: BRIDGE_ROOTS,
+    });
+
     // Regenerate in a child process so MODULE_STATE resolves exactly as the
     // real pipeline does (no partial in-process state). `--generate-tools`
     // covers the host trees; `--project-augment` covers `.augment` (it is
@@ -162,7 +175,15 @@ const isMain = process.argv[1] !== undefined && path.resolve(process.argv[1]) ==
 if (isMain) {
     const idx = process.argv.indexOf('--root');
     const root = idx !== -1 ? (process.argv[idx + 1] ?? REPO_ROOT) : REPO_ROOT;
-    const errors = run(root);
+    let errors: string[];
+    try {
+        errors = run(root);
+    } catch (exc) {
+        if (!(exc instanceof DeadScopeError)) throw exc;
+        // Exit 1 is this gate's only failure code.
+        process.stderr.write(`❌  ${exc.message}\n`);
+        process.exit(1);
+    }
     if (errors.length > 0) {
         for (const e of errors) process.stderr.write(`❌  ${e}\n`);
         process.exit(1);

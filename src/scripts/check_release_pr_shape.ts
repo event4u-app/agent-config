@@ -20,6 +20,8 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
+import { assertScanned, DeadScopeError } from './_lib/scan_scope.js';
+
 const _HERE = fileURLToPath(import.meta.url);
 
 const ALLOWLIST_GLOBS = [
@@ -127,7 +129,22 @@ function _gh_diff_files(pr: string): string[] {
 }
 
 function check(files: readonly string[]): number {
-    if (files.length === 0) {
+    // This gate already refused an empty diff by hand; routing that refusal
+    // through the shared primitive keeps the behaviour (pinned stdout line,
+    // exit 1) while making the scope assertion explicit. No `allowEmpty`: a
+    // release PR that touches nothing is the failure, not a clean state — and
+    // an empty `gh pr diff` (bad PR number, auth failure) reads identically.
+    try {
+        assertScanned({
+            gate: 'check_release_pr_shape',
+            scanned: files.length,
+            units: 'changed file(s)',
+            roots: ['gh pr diff --name-only <pr> | --files <list>'],
+        });
+    } catch (exc) {
+        if (!(exc instanceof DeadScopeError)) {
+            throw exc;
+        }
         process.stdout.write(
             'OUT-OF-SHAPE: empty diff — release PR must touch at least one file.\n',
         );

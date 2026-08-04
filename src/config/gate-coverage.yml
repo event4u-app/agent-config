@@ -441,3 +441,16 @@ gates:
     note: >
       Emits on stderr, not stdout: `--format json` owns this gate's stdout and a
       count written there would corrupt the payload. The guard reads both streams.
+
+  - id: check_cli_registry_budget_sync
+    argv: []
+    min_scanned: 3
+    corpus: "the three named inputs it cross-checks — src/cli/registry.ts, src/config/evaluator-budgets.json, internal/bench/reports/evaluator-measurements.json"
+    status: enforced
+    note: >
+      Registered because its count became REAL, not to pad the manifest. The
+      gate always printed a hardcoded `scanned: 3`; hardening derived it from
+      the watch list that actually resolved, which is what makes a floor of 3
+      meaningful — it now falls when one of the three inputs is renamed away.
+      `argv: []` is the CI-identical invocation: both `taskfiles/ci-fast.yml`
+      and `.github/workflows/tests.yml` call it bare.

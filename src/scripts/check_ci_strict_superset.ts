@@ -38,6 +38,8 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
+import { assertScanned, DeadScopeError } from './_lib/scan_scope.js';
+
 const _HERE = fileURLToPath(import.meta.url);
 const REPO_ROOT = path.resolve(path.dirname(_HERE), '..', '..');
 const TASKFILE = path.join(REPO_ROOT, 'Taskfile.yml');
@@ -117,9 +119,25 @@ export function main(): number {
         (e) => !e.startsWith('- defer:') && e !== '- task: _ci-start' && e !== '- task: _ci-end',
     );
 
-    if (gateEntries.length === 0) {
-        process.stderr.write('❌  check_ci_strict_superset: `ci-strict` has no gate entries.\n');
-        return 1;
+    // Replaces the ad-hoc `gateEntries.length === 0` guard. Exit 2, not the 1 it
+    // returned: a task list with nothing in it means the gate could not verify
+    // the invariant — the documented meaning of 2, and what the two
+    // missing-task branches above already return — not that the invariant is
+    // violated. Counted after the wrapper filter on purpose: a `ci-strict` made
+    // of nothing but `_ci-start`/`_ci-end` is just as dead a scope.
+    try {
+        assertScanned({
+            gate: 'check_ci_strict_superset',
+            scanned: gateEntries.length,
+            units: 'ci-strict gate entr(y|ies)',
+            roots: ['Taskfile.yml (ci-strict.cmds)'],
+        });
+    } catch (err) {
+        if (err instanceof DeadScopeError) {
+            process.stderr.write(`❌  ${err.message}\n`);
+            return 2;
+        }
+        throw err;
     }
 
     if (gateEntries[0] !== DELEGATION) {

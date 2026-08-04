@@ -23,6 +23,7 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 
+import { assertScanned, DeadScopeError } from './_lib/scan_scope.js';
 import { censusClaudeMdHierarchy, censusRuleDir, censusSkillsCatalog } from './preamble_byte_census.js';
 
 const HERE = path.dirname(new URL(import.meta.url).pathname);
@@ -40,7 +41,7 @@ export interface BudgetVerdict {
     baseline: number;
     ceiling: number;
     withinBudget: boolean;
-    buckets: Array<{ name: string; tokens: number }>;
+    buckets: Array<{ name: string; tokens: number; files: number }>;
 }
 
 function tokens(chars: number): number {
@@ -65,7 +66,7 @@ export function readBudget(file: string = BUDGET_FILE): Budget {
 /** Measure only what the repo tree determines — no `~`, no transcripts, no network. */
 export function measureDeterministicPayload(
     repoRoot: string = REPO_ROOT,
-): Array<{ name: string; tokens: number }> {
+): Array<{ name: string; tokens: number; files: number }> {
     const projectRules = censusRuleDir(path.join(repoRoot, 'dist', 'agent-src', 'rules'));
     const skills = censusSkillsCatalog(path.join(repoRoot, 'dist', 'agent-src', 'skills'));
     // Only the PROJECT half of the CLAUDE.md hierarchy is deterministic — the
@@ -73,10 +74,20 @@ export function measureDeterministicPayload(
     const claudeMd = censusClaudeMdHierarchy(repoRoot, path.join(repoRoot, '.no-such-home'));
     const projectClaudeMdChars =
         claudeMd.project_claude_md_chars + claudeMd.project_claude_local_md_chars;
+    // `files` carries the count of sources each census actually read. A token
+    // total cannot tell "the root moved" from "the payload is genuinely tiny",
+    // so the scope assertion in `main` needs the count, not the bytes.
+    const claudeMdFiles =
+        (claudeMd.project_claude_md_present ? 1 : 0) +
+        (claudeMd.project_claude_local_md_present ? 1 : 0);
     return [
-        { name: 'project-scope rules', tokens: tokens(projectRules.chars) },
-        { name: 'preloaded skills catalog', tokens: tokens(skills.chars) },
-        { name: 'CLAUDE.md hierarchy (project only)', tokens: tokens(projectClaudeMdChars) },
+        { name: 'project-scope rules', tokens: tokens(projectRules.chars), files: projectRules.files },
+        { name: 'preloaded skills catalog', tokens: tokens(skills.chars), files: skills.skills },
+        {
+            name: 'CLAUDE.md hierarchy (project only)',
+            tokens: tokens(projectClaudeMdChars),
+            files: claudeMdFiles,
+        },
     ];
 }
 
@@ -96,6 +107,25 @@ export function main(argv: string[] = process.argv.slice(2)): number {
     } catch (err) {
         process.stderr.write(`❌  preamble-payload budget: ${(err as Error).message}\n`);
         return 2;
+    }
+
+    // A ratchet over a measurement of nothing always passes: move
+    // `dist/agent-src/` and every census returns zero, which is trivially under
+    // any ceiling. Exit 2 (misuse / unreadable budget — the could-not-run
+    // code), never 1, which asserts the payload actually grew.
+    try {
+        assertScanned({
+            gate: 'check_preamble_payload_budget',
+            scanned: verdict.buckets.reduce((n, b) => n + b.files, 0),
+            units: 'payload source file(s)',
+            roots: ['dist/agent-src/rules', 'dist/agent-src/skills', 'CLAUDE.md'],
+        });
+    } catch (err) {
+        if (err instanceof DeadScopeError) {
+            process.stderr.write(`❌  preamble-payload budget: ${err.message}\n`);
+            return 2;
+        }
+        throw err;
     }
 
     if (json) {

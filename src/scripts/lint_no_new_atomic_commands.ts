@@ -21,6 +21,8 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
+import { assertScanned, DeadScopeError } from './_lib/scan_scope.js';
+
 const _HERE = fileURLToPath(import.meta.url);
 // src/scripts/lint_no_new_atomic_commands.ts → parent.parent.parent is repo root.
 const ROOT = path.resolve(path.dirname(_HERE), '..', '..');
@@ -288,6 +290,37 @@ function main(argv?: readonly string[]): number {
 
     const clusters = load_locked_clusters();
     const targets = args.all ? all_command_files() : added_command_files(args.baseline);
+    // Two scopes behind one variable. `--all` walks src/domains, and an empty
+    // walk there is a moved root — the gate would print "No new commands added"
+    // and pass over a corpus it never found. The default mode reads a git diff,
+    // where zero added command files is the ordinary clean-branch state, so it
+    // carries a justified allowEmpty. Exit 3 is the internal-error code ("could
+    // not run"); 1 means a real policy violation.
+    try {
+        assertScanned({
+            gate: 'lint_no_new_atomic_commands',
+            scanned: targets.length,
+            units: args.all ? 'command file(s)' : 'added command file(s)',
+            roots: [COMMANDS_DIR],
+            ...(args.all
+                ? {}
+                : {
+                      allowEmpty:
+                          'EMPTY_VALID: the default mode reads `git diff --diff-filter=A` plus ' +
+                          'untracked status, so zero added command files IS the pass state on a ' +
+                          'branch that adds none. Deletion test: deleting src/domains would not ' +
+                          'produce this zero — a deletion shows up as diff-filter=D, never as A — ' +
+                          'so an empty diff cannot launder a dead root. The tree-walking half of ' +
+                          'this gate (--all) is asserted without the exemption.',
+                  }),
+        });
+    } catch (exc) {
+        if (exc instanceof DeadScopeError) {
+            process.stderr.write(`❌  ${exc.message}\n`);
+            return 3;
+        }
+        throw exc;
+    }
     if (targets.length === 0) {
         process.stdout.write(
             `✅  No new commands added under ${COMMANDS_DIR} ` +

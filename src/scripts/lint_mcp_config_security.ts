@@ -24,6 +24,7 @@ import * as fs from 'node:fs';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import * as sl from './_lib/security_lint.js';
+import { assertScanned, DeadScopeError } from './_lib/scan_scope.js';
 
 export const CHECK = 'mcp-config-security';
 
@@ -204,10 +205,33 @@ export function main(argv: readonly string[] | null = null): number {
     // scan .md (fenced examples) under the default roots PLUS named MCP configs
     // under src/templates (where the shipped claude_desktop_config template lives).
     const roots = [...sl.DEFAULT_SCAN_ROOTS, 'src/templates'];
+    let corpusFiles = 0;
     for (const sf of sl.iter_corpus(roots, ['.md', '.json', '.template'])) {
+        corpusFiles += 1;
         for (const h of _scan(sf)) {
             findings.push(h);
         }
+    }
+
+    // `iter_corpus` skips a root that does not exist, so a moved
+    // `src/templates` (where the only shipped MCP config template lives) leaves
+    // this lint scanning `.md` fences alone — or nothing at all — while still
+    // printing "clean". Count files READ, not findings. Exit 1 is this CLI's
+    // only failure code (2 is the pinned argparse usage error), so it carries
+    // "could not run" here.
+    try {
+        assertScanned({
+            gate: 'lint_mcp_config_security',
+            scanned: corpusFiles,
+            units: 'corpus file(s)',
+            roots,
+        });
+    } catch (exc) {
+        if (exc instanceof DeadScopeError) {
+            process.stderr.write(`❌  ${exc.message}\n`);
+            return 1;
+        }
+        throw exc;
     }
 
     if (args.json) {

@@ -21,29 +21,56 @@ import * as path from 'node:path';
 import * as fs from 'node:fs';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
+import { assertScanned, DeadScopeError } from './_lib/scan_scope.js';
+
 const _HERE = fileURLToPath(import.meta.url);
 
 const LOCAL_FILE = '.agent-settings.local.yml';
 
-function tracked_local_settings(): string[] {
+/** Every tracked path — the unfiltered corpus the basename match runs over. */
+function _tracked_files(): string[] {
     const res = spawnSync('git', ['ls-files'], { encoding: 'utf-8' });
     // Mirror Python: CalledProcessError (non-zero) or FileNotFoundError
     // (git missing) → return [] (nothing to enforce).
     if (res.error !== undefined || res.status !== 0 || typeof res.stdout !== 'string') {
         return [];
     }
-    const out = res.stdout;
-    return out
-        .split('\n')
-        .filter((line) => line !== '')
-        .filter((line) => {
-            const parts = line.split('/');
-            return parts[parts.length - 1] === LOCAL_FILE;
-        });
+    return res.stdout.split('\n').filter((line) => line !== '');
+}
+
+function _isLocalSettings(line: string): boolean {
+    const parts = line.split('/');
+    return parts[parts.length - 1] === LOCAL_FILE;
+}
+
+function tracked_local_settings(): string[] {
+    return _tracked_files().filter(_isLocalSettings);
 }
 
 function main(): number {
-    const offenders = tracked_local_settings();
+    // Not a diff — `git ls-files` enumerates the WHOLE tracked tree, so zero
+    // lines means git failed or this is not a repo, not "nothing committed".
+    // The swallow above turns both into an empty list, and the gate then prints
+    // the ✅ line. Deletion test: a repo with zero tracked files is never a
+    // legitimate state here, so no `allowEmpty`. Exit 1 is the only failure
+    // code this pinned CLI has.
+    const tracked = _tracked_files();
+    try {
+        assertScanned({
+            gate: 'check_no_local_settings_committed',
+            scanned: tracked.length,
+            units: 'tracked file(s)',
+            roots: ['git ls-files'],
+        });
+    } catch (exc) {
+        if (exc instanceof DeadScopeError) {
+            process.stderr.write(`❌  ${exc.message}\n`);
+            return 1;
+        }
+        throw exc;
+    }
+
+    const offenders = tracked.filter(_isLocalSettings);
     if (offenders.length === 0) {
         process.stdout.write(`✅  No tracked ${LOCAL_FILE} files.\n`);
         return 0;

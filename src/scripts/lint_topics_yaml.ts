@@ -26,6 +26,8 @@ import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { parse as parseYaml, YAMLParseError } from 'yaml';
 
+import { assertWatchlistResolves, DeadScopeError } from './_lib/scan_scope.js';
+
 // src/scripts/lint_topics_yaml.ts → two dirs up is the repo root
 // (mirrors Path(__file__).resolve().parents[2]).
 const _HERE = fileURLToPath(import.meta.url);
@@ -37,15 +39,6 @@ const QUIET = process.argv.includes('--quiet');
 /** POSIX relative path of `target` under `root` (str(Path.relative_to)). */
 function _relTo(target: string, root: string): string {
     return path.relative(root, target).split(path.sep).join('/');
-}
-
-function _exists(p: string): boolean {
-    try {
-        fs.statSync(p);
-        return true;
-    } catch {
-        return false;
-    }
 }
 
 /**
@@ -103,9 +96,23 @@ function _fail(msg: string): void {
 }
 
 function main(): number {
-    if (!_exists(TOPICS_FILE)) {
-        _fail(`missing file: ${_relTo(TOPICS_FILE, ROOT)}`);
-        return 1;
+    // Replaces the ad-hoc `_exists(TOPICS_FILE)` precondition: the gate's whole
+    // corpus is this one named file, so its absence is a dead scope rather than
+    // a content finding. Same stderr channel, same exit 1 (the only failure code).
+    try {
+        assertWatchlistResolves({
+            gate: 'lint_topics_yaml',
+            candidates: [_relTo(TOPICS_FILE, ROOT)],
+            repoRoot: ROOT,
+        });
+    } catch (e) {
+        if (e instanceof DeadScopeError) {
+            // Not via `_fail`: its `topics.yml:` prefix would stutter against
+            // the gate name the DeadScopeError message already carries.
+            process.stderr.write(`❌  ${e.message}\n`);
+            return 1;
+        }
+        throw e;
     }
     let doc: unknown;
     try {

@@ -17,6 +17,8 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
+import { assertScanned, DeadScopeError } from './_lib/scan_scope.js';
+
 const _HERE = fileURLToPath(import.meta.url);
 const ROOT = path.resolve(path.dirname(_HERE), '..', '..');
 const DOCS_DIR = path.join(ROOT, 'docs');
@@ -157,6 +159,27 @@ function main(argv?: readonly string[]): number {
                 failures.push([doc, line_no, url]);
             }
         }
+    }
+
+    // `scan` exits 2 when a role doc is missing outright, but a doc that still
+    // exists and has lost every internal link — rewritten to external URLs, or
+    // the how-to section moved elsewhere — leaves `checked` at 0 and prints
+    // "0 links OK across 2 files", which is indistinguishable from a pass.
+    try {
+        assertScanned({
+            gate: 'check_role_doc_links',
+            scanned: checked,
+            units: 'internal link(s)',
+            roots: ROLE_DOCS.map((d) => _relTo(d)),
+        });
+    } catch (exc) {
+        if (exc instanceof DeadScopeError) {
+            // 2 is this gate's existing scope-failure code (missing role doc);
+            // 1 means "broken links", which is not what happened here.
+            process.stderr.write(`${exc.message}\n`);
+            return 2;
+        }
+        throw exc;
     }
 
     if (failures.length > 0) {

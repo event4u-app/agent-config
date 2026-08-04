@@ -13,6 +13,8 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
+import { assertScanned, DeadScopeError } from './_lib/scan_scope.js';
+
 const SCRIPTS_DIR = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.dirname(path.dirname(SCRIPTS_DIR));
 const DOMAINS = path.join(ROOT, 'src', 'domains');
@@ -26,14 +28,6 @@ const TYPE_RE = /^type:\s*orchestrator\s*$/m;
 export interface Violation {
     file: string;
     reason: string;
-}
-
-function isDir(p: string): boolean {
-    try {
-        return fs.statSync(p).isDirectory();
-    } catch {
-        return false;
-    }
 }
 
 /** Recursively collect files named `command.md`, sorted by POSIX path. */
@@ -78,10 +72,17 @@ export function _split_frontmatter(text: string): [string, string] {
 
 export function check(): Violation[] {
     const violations: Violation[] = [];
-    if (!isDir(DOMAINS)) {
-        return violations;
-    }
-    for (const filePath of rglobCommandMd(DOMAINS)) {
+    // Assert the whole walk, not the `auto_detect:`-carrying subset: opting out
+    // is the common case, so "0 opted in" is normal while "0 command files" can
+    // only mean the domains root moved out from under the literal above.
+    const commands = rglobCommandMd(DOMAINS);
+    assertScanned({
+        gate: 'lint_orchestrator_auto_detect',
+        scanned: commands.length,
+        units: 'command file(s)',
+        roots: ['src/domains'],
+    });
+    for (const filePath of commands) {
         const text = fs.readFileSync(filePath, 'utf-8');
         const [fm, body] = _split_frontmatter(text);
         const m = AUTO_DETECT_RE.exec(fm);
@@ -149,6 +150,12 @@ export function main(argv?: readonly string[]): number {
     try {
         violations = check();
     } catch (exc) {
+        // 3 = "the gate could not run" (1 is reserved for contract violations
+        // it actually found), so a dead scan root reports as the former.
+        if (exc instanceof DeadScopeError) {
+            process.stderr.write(`❌  ${exc.message}\n`);
+            return 3;
+        }
         const msg = exc instanceof Error ? exc.message : String(exc);
         process.stderr.write(`❌  lint-orchestrator-auto-detect: internal error: ${msg}\n`);
         return 3;

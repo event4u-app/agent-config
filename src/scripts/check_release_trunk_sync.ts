@@ -21,6 +21,8 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
+import { assertScanned } from './_lib/scan_scope.js';
+
 const RELEASE_BRANCH_RE = /^release\/(\d+)\.(\d+)\.(\d+)$/;
 const SEMVER_TAG_RE = /^(\d+)\.(\d+)\.(\d+)$/;
 const BOOTSTRAP_FILE = 'docs/contracts/release-trunk-sync.bootstrap';
@@ -137,6 +139,23 @@ function main(): number {
     }
     const m = RELEASE_BRANCH_RE.exec(branch);
     if (!m) {
+        // Declared no-op, not a silent one. The gate's other empty states —
+        // no semver tags, no tag reachable from main — are NOT swallowed
+        // either: each prints its own `::warning::… skipped` line below, and
+        // that wording is the pinned py2ts contract, so neither is converted
+        // into a DeadScopeError here.
+        assertScanned({
+            gate: 'check_release_trunk_sync',
+            scanned: 0,
+            units: 'release-prep branch(es)',
+            roots: ['git rev-parse --abbrev-ref HEAD'],
+            allowEmpty:
+                'OPTIONAL_INPUT: the checked-out branch is not release/X.Y.Z, so there is no ' +
+                'target version to compare main against — an absent question, not an empty ' +
+                'corpus. Deletion test: wiping every git ref would not produce this branch; ' +
+                'the input read here is the branch NAME, it was read successfully, and a ' +
+                'branch that could not be read exits at the detached-HEAD warning above.',
+        });
         return 0; // non-release branch class — gate is a no-op
     }
     const target: SemVer = [Number(m[1]), Number(m[2]), Number(m[3])];

@@ -28,6 +28,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import { parse as parseYaml } from 'yaml';
 
 import { artefact_roots } from './_lib/agent_src.js';
+import { assertScanned, DeadScopeError } from './_lib/scan_scope.js';
 
 const _HERE = fileURLToPath(import.meta.url);
 // src/scripts/audit_auto_rules.py → parent.parent.parent == repo root.
@@ -404,9 +405,22 @@ function _ruleToJson(r: RuleEntry): Record<string, Json> {
 }
 
 export function main(): number {
-    if (_src_rule_paths().length === 0) {
-        process.stderr.write("❌  No source rules found under any artefact root's rules/\n");
-        return 1;
+    // The scanned unit is every source rule, not the `type: auto` subset
+    // `collect()` keeps: over a vanished rules/ tree "no auto-rules" still reads
+    // true, and the budget report would be regenerated with rule_count 0.
+    try {
+        assertScanned({
+            gate: 'audit_auto_rules',
+            scanned: _src_rule_paths().length,
+            units: 'source rule file(s)',
+            roots: artefact_roots().map((r) => `${_relPosix(r, REPO_ROOT) || '.'}/rules`),
+        });
+    } catch (exc) {
+        if (exc instanceof DeadScopeError) {
+            process.stderr.write(`❌  ${exc.message}\n`);
+            return 1;
+        }
+        throw exc;
     }
     const rules = collect();
     fs.mkdirSync(REPORT_DIR, { recursive: true });

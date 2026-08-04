@@ -22,6 +22,8 @@ import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { parse as parseYaml } from 'yaml';
 
+import { assertWatchlistResolves, DeadScopeError } from './_lib/scan_scope.js';
+
 const _HERE = fileURLToPath(import.meta.url);
 const REPO_ROOT = path.resolve(path.dirname(_HERE), '..', '..');
 const README = path.join(REPO_ROOT, 'README.md');
@@ -154,6 +156,27 @@ function parse_args(argv: readonly string[]): ParsedArgs {
 
 export function main(): number {
     const args = parse_args(process.argv.slice(2));
+
+    // Four named surfaces ARE the scope; the gate only compares them against
+    // each other, so if the set moved there is nothing left to disagree. Asserted
+    // before the reads so a relocated repo layout names the roots instead of
+    // surfacing as a bare ENOENT stack. Exit 1 is the drift code and doubles as
+    // "could not run" (2 is reserved for the missing-YAML-runtime case).
+    try {
+        assertWatchlistResolves({
+            gate: 'lint_positioning',
+            candidates: [README, PACKAGE_JSON, ABOUT_YML, TOPICS_YML].map((p) =>
+                path.relative(REPO_ROOT, p),
+            ),
+            repoRoot: REPO_ROOT,
+        });
+    } catch (e) {
+        if (e instanceof DeadScopeError) {
+            process.stderr.write(`❌  ${e.message}\n`);
+            return 1;
+        }
+        throw e;
+    }
 
     let anchor: string;
     let pkg_desc: string;

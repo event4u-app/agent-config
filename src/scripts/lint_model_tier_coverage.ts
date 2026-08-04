@@ -23,6 +23,7 @@ import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { parse_frontmatter } from './validate_frontmatter.js';
 import { artefact_roots, iter_commands } from './_lib/agent_src.js';
+import { assertScanned, DeadScopeError } from './_lib/scan_scope.js';
 
 const _HERE = fileURLToPath(import.meta.url);
 const ROOT = path.resolve(path.dirname(_HERE), '..', '..');
@@ -97,6 +98,23 @@ function main(argv: readonly string[]): number {
         ) {
             missing.push([kind, _relToPosix(p, ROOT)]);
         }
+    }
+
+    // `total` is the artefacts read, `missing` the verdict — a coverage gate
+    // whose enumerator yields nothing reports full coverage of nothing.
+    try {
+        assertScanned({
+            gate: 'lint_model_tier_coverage',
+            scanned: total,
+            units: 'artefact(s)',
+            roots: ['src/skills', 'src/agent-src/commands', 'src/domains'],
+        });
+    } catch (exc) {
+        if (exc instanceof DeadScopeError) {
+            process.stderr.write(`❌  ${exc.message}\n`);
+            return 1;
+        }
+        throw exc;
     }
 
     if (missing.length > 0) {

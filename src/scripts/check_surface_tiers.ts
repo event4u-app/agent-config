@@ -37,6 +37,8 @@ import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { parse as parseYaml } from 'yaml';
 
+import { assertScanned, DeadScopeError } from './_lib/scan_scope.js';
+
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
 const SCRIPTS = path.join(ROOT, 'src', 'scripts');
 const REGISTRY = path.join(SCRIPTS, 'surface-tiers.yml');
@@ -103,6 +105,20 @@ function check_exhaustive(clusters: Map<string, string>): string[] {
         }
     }
     return errors;
+}
+
+/** Cluster dirs on disk under SCRIPTS — the corpus `check_exhaustive` classifies. */
+function _count_cluster_dirs(): number {
+    let children: fs.Dirent[];
+    try {
+        children = fs.readdirSync(SCRIPTS, { withFileTypes: true });
+    } catch {
+        // A missing root counts zero; the caller's assertion makes that loud.
+        return 0;
+    }
+    return children.filter(
+        (c) => !_IGNORE_DIRS.has(c.name) && _isDir(path.join(SCRIPTS, c.name)),
+    ).length;
 }
 
 function _module_tier(
@@ -527,6 +543,24 @@ function main(argv?: readonly string[]): number {
         args.skip_imports || envSkip === '1' || envSkip === 'true' || envSkip === 'yes';
 
     const { clusters, lab_modules } = _load_registry();
+    // The unit is the cluster dirs found on disk, not `clusters.size` (the
+    // registry's own entries): over a vanished src/scripts/ every registry
+    // entry goes unchallenged and both assertions are trivially clean.
+    try {
+        assertScanned({
+            gate: 'check_surface_tiers',
+            scanned: _count_cluster_dirs(),
+            units: 'cluster dir(s)',
+            roots: ['src/scripts'],
+        });
+    } catch (exc) {
+        if (exc instanceof DeadScopeError) {
+            // 1 = violation(s); 2 is reserved for argparse usage errors.
+            process.stderr.write(`❌  ${exc.message}\n`);
+            return 1;
+        }
+        throw exc;
+    }
     const errors = check_exhaustive(clusters);
     if (skip_imports) {
         process.stdout.write('surface-tiers: import boundary check SKIPPED (kill-switch).\n');

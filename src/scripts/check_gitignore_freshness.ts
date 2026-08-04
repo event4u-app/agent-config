@@ -17,6 +17,8 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
+import { assertScanned, DeadScopeError } from './_lib/scan_scope.js';
+
 const _HERE = fileURLToPath(import.meta.url);
 const REPO_ROOT = path.join(path.dirname(_HERE), '..', '..');
 
@@ -83,6 +85,27 @@ function main(argv?: readonly string[]): number {
     const blockLines = new Set(blockText.split('\n').map((l) => l.trim()).filter(Boolean));
 
     const entries = parseManifest(manifestText);
+    // Counted on the whole parse, not on the consumer-scoped subset the loop
+    // judges: `_isFile` above only proves the manifest exists, and a shape change
+    // that makes `- path:` stop matching yields zero entries, zero missing paths,
+    // and "✅ covers all 0 consumer-scoped ignored paths". Exit 2 (documented
+    // "invalid args or missing file" — the gate could not run), not 1, which
+    // means the block is genuinely missing a path.
+    try {
+        assertScanned({
+            gate: 'check_gitignore_freshness',
+            scanned: entries.length,
+            units: 'manifest entr(y|ies)',
+            roots: ['src/config/agents-paths.yml'],
+        });
+    } catch (err) {
+        if (err instanceof DeadScopeError) {
+            process.stderr.write(`❌  ${err.message}\n`);
+            return 2;
+        }
+        throw err;
+    }
+
     const missing: string[] = [];
 
     for (const e of entries) {

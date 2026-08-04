@@ -39,6 +39,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 // byte-faithful for behaviour (the only observable effect is the --global path).
 import * as _kg from './_lib/knowledge_global.js';
 import * as _kgr from './_lib/knowledge_global_redaction.js';
+import { assertScanned } from './_lib/scan_scope.js';
 
 // ROOT = Path(__file__).resolve().parent.parent.parent — src/scripts/ → repo root.
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
@@ -373,6 +374,18 @@ function main(): number {
     }
 
     const cards = _sortedGlobMd(card_dir).filter((p) => path.basename(p).toLowerCase() !== 'readme.md');
+    assertScanned({
+        gate: 'check_knowledge_cards',
+        scanned: cards.length,
+        units: 'knowledge card(s)',
+        roots: [path.relative(ROOT, card_dir) || card_dir],
+        allowEmpty:
+            'OPTIONAL_INPUT: cards are project-authored runtime content under agents/knowledge/ '
+            + '(or a --dir / --global store), never shipped package source. Delete the root and '
+            + 'zero still reads as "this project has captured no cards yet" — which is why both '
+            + 'the missing-dir and empty-dir paths are pinned as exit 0 by the CLI contract '
+            + 'below. A stale root cannot hide here: --dir is caller-supplied per invocation.',
+    });
     if (cards.length === 0) {
         process.stdout.write('No knowledge cards found — nothing to check.\n');
         return 0;

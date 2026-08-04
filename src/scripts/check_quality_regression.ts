@@ -51,6 +51,7 @@ import process from 'node:process';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import { wilcoxon } from './bench_ab_v2_stats.js';
+import { assertScanned, DeadScopeError } from './_lib/scan_scope.js';
 
 const _HERE = fileURLToPath(import.meta.url);
 const REPO_ROOT = path.resolve(path.dirname(_HERE), '..', '..');
@@ -299,6 +300,24 @@ function main(argv: string[]): number {
   }
 
   const results = Array.isArray(report.results) ? report.results : [];
+  // A MISSING report is the documented inert path and already returned above. A
+  // report that exists and carries no pairs is a different thing entirely — a
+  // truncated or half-written judge run — yet it aggregates to `no-data` and
+  // exits 0 outside flip-gate mode, i.e. reads as "quality held" on zero data.
+  try {
+    assertScanned({
+      gate: 'check_quality_regression',
+      scanned: results.length,
+      units: 'judged pair(s)',
+      roots: [path.relative(REPO_ROOT, reportPath)],
+    });
+  } catch (e) {
+    if (e instanceof DeadScopeError) {
+      process.stderr.write(`error: ${e.message}\n`);
+      return 1; // the gate's file-error code — the report is present but unusable
+    }
+    throw e;
+  }
   const thr = typeof report.threshold === 'number' ? report.threshold : threshold;
   const agg = aggregate(results, thr);
 

@@ -45,6 +45,8 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
+import { assertWatchlistResolves, DeadScopeError } from './_lib/scan_scope.js';
+
 const _HERE = path.dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = path.resolve(_HERE, '..', '..');
 const BASELINE = path.join(REPO_ROOT, 'internal', 'reports', 'rule-backstop-debt.json');
@@ -106,6 +108,26 @@ export function measure(gate: Gate, repo: string = REPO_ROOT): Measured {
 function main(argv: string[]): number {
     const as_json = argv.includes('--json');
     const write = argv.includes('--write-baseline');
+
+    // This file owns no corpus — it ratchets five NAMED gates, so its scope is
+    // that list. A renamed or deleted gate script still spawns, fails, and lands
+    // in `unparsed`, whose message sends the reader to fix a regex that is not
+    // the problem. Asserted before `--write-baseline` too: a baseline anchored
+    // over phantom gates is a ratchet that can never rise. Exit 2 (usage / env
+    // error) rather than 1 — the ratchet could not run, no count rose.
+    try {
+        assertWatchlistResolves({
+            gate: 'check_backstop_debt',
+            candidates: GATES.map((g) => `src/scripts/${g.script}.ts`),
+            repoRoot: REPO_ROOT,
+        });
+    } catch (exc) {
+        if (exc instanceof DeadScopeError) {
+            process.stderr.write(`❌  ${exc.message}\n`);
+            return 2;
+        }
+        throw exc;
+    }
 
     const measured = GATES.map((g) => measure(g));
 

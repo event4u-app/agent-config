@@ -53,6 +53,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import { parse as parseYaml } from 'yaml';
 
+import { assertScanned, DeadScopeError } from './_lib/scan_scope.js';
 import { SchemaError, validate, type YamlValue } from './validate_frontmatter.js';
 
 const _HERE = fileURLToPath(import.meta.url);
@@ -306,6 +307,27 @@ export function check_probe_cmd_binding(registry: unknown): SchemaError[] {
 }
 
 /**
+ * Backends declared across every channel — the units the schema rules and the
+ * `probe_cmd-binding` rule actually judge. Same deliberate shape-tolerance as
+ * `check_probe_cmd_binding`: anything unreadable is skipped, so the number is
+ * "entries a rule could be applied to", never "entries that passed".
+ */
+function count_backends(registry: unknown): number {
+    const root =
+        registry !== null && typeof registry === 'object' && !Array.isArray(registry)
+            ? (registry as Record<string, unknown>)
+            : null;
+    const channels = Array.isArray(root?.['channels']) ? (root['channels'] as unknown[]) : [];
+    return channels.reduce<number>((total, rawChannel) => {
+        if (rawChannel === null || typeof rawChannel !== 'object' || Array.isArray(rawChannel)) {
+            return total;
+        }
+        const backends = (rawChannel as Record<string, unknown>)['backends'];
+        return total + (Array.isArray(backends) ? backends.length : 0);
+    }, 0);
+}
+
+/**
  * Validate one registry file against the schema.
  *
  * Returns every finding in schema order (errors and warnings alike); the
@@ -374,6 +396,28 @@ export function main(argv: string[] = process.argv.slice(2)): number {
             process.stdout.write(`  - ${format_finding(error)}\n`);
         }
         return 1;
+    }
+
+    // Reaching a CLEAN verdict over zero backends means the SCHEMA stopped
+    // constraining, not that the registry is empty: `minItems: 1` sits on both
+    // `channels` and `backends`, so an empty registry is an error-severity
+    // finding and returned above. A gutted or repointed schema is therefore
+    // the only way to arrive here with nothing scanned — and it would print ✅
+    // over a file no rule was applied to. Exit 3 is the could-not-run class
+    // `RegistryLoadError` already uses; 1 asserts real violations were found.
+    try {
+        assertScanned({
+            gate: 'check_reach_channels',
+            scanned: count_backends(load_registry(targetPath)),
+            units: 'backend(s)',
+            roots: [relTarget],
+        });
+    } catch (err) {
+        if (err instanceof DeadScopeError || err instanceof RegistryLoadError) {
+            process.stderr.write(`❌  check_reach_channels: ${err.message}\n`);
+            return 3;
+        }
+        throw err;
     }
 
     if (!quiet) {

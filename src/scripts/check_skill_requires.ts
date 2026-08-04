@@ -19,6 +19,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import YAML from 'yaml';
 
 import { ROOT, iter_artefacts } from './_lib/agent_src.js';
+import { assertScanned, DeadScopeError } from './_lib/scan_scope.js';
 import { parse_frontmatter } from './validate_frontmatter.js';
 
 const _HERE = fileURLToPath(import.meta.url);
@@ -107,6 +108,24 @@ function _set_hooks_for_test(overrides: Partial<typeof _hooks>): void {
 function main(): number {
     const closure = _hooks.load_pack_closure();
     const skills = _hooks.collect_skills();
+    // The unit is every parsed SKILL.md, not the subset declaring
+    // `requires_skills:` — over a vanished skills tree "0 composition edges"
+    // is indistinguishable from a suite that legitimately declares none.
+    try {
+        assertScanned({
+            gate: 'check_skill_requires',
+            scanned: Object.keys(skills).length,
+            units: 'SKILL.md file(s)',
+            roots: ['src/agent-src', 'src/skills', 'src/rules'],
+        });
+    } catch (exc) {
+        if (exc instanceof DeadScopeError) {
+            // 1 is this gate's only failure code (0 clean / 1 violations).
+            process.stderr.write(`❌  ${exc.message}\n`);
+            return 1;
+        }
+        throw exc;
+    }
     const errors: string[] = [];
 
     for (const skill_id of Object.keys(skills).sort()) {

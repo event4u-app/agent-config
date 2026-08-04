@@ -28,6 +28,8 @@ import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { parse as parseYaml } from "yaml";
 
+import { assertScanned, DeadScopeError } from "./_lib/scan_scope.js";
+
 // src/scripts/lint_hook_manifest.ts → two levels up is the repo root.
 const REPO_ROOT = path.resolve(
   path.dirname(fileURLToPath(import.meta.url)),
@@ -320,6 +322,26 @@ export function lint(manifestPath: string, strict: boolean): number {
   }
   for (const e of errors) {
     process.stderr.write(`error: ${e}\n`);
+  }
+
+  // Concerns are the units read — each one resolves a script path on disk.
+  // Runs after the findings are printed so the existing `'concerns' must be a
+  // non-empty mapping` line still reaches the caller. Exit 1, not 2: the
+  // manifest loaded fine (2 is reserved for a file that could not be read or
+  // parsed); what is empty is its declared scope.
+  try {
+    assertScanned({
+      gate: "lint_hook_manifest",
+      scanned: concernNames.size,
+      units: "concern(s)",
+      roots: [manifestPath],
+    });
+  } catch (exc) {
+    if (exc instanceof DeadScopeError) {
+      process.stderr.write(`error: ${exc.message}\n`);
+      return 1;
+    }
+    throw exc;
   }
 
   if (errors.length > 0) {

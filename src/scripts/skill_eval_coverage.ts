@@ -43,6 +43,8 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import { parse as parseYaml } from 'yaml';
 
+import { assertScanned, DeadScopeError } from './_lib/scan_scope.js';
+
 const _HERE = fileURLToPath(import.meta.url);
 export const REPO_ROOT = path.resolve(path.dirname(_HERE), '..', '..');
 
@@ -325,6 +327,26 @@ export function main(argv: readonly string[] = process.argv.slice(2)): number {
             );
             return 2;
         }
+    }
+
+    // Every mode below is decided by the skills walk, and every one of them
+    // reads innocently at zero: `--check` passes a floor of 0/0, `--write-floor`
+    // pins that emptiness as the new floor, and the report prints `n/a`.
+    try {
+        assertScanned({
+            gate: 'skill_eval_coverage',
+            scanned: _allSkills(_skillsDir({})).length,
+            units: 'skill(s)',
+            roots: ['src/skills'],
+        });
+    } catch (exc) {
+        if (exc instanceof DeadScopeError) {
+            // 2 (usage) over 1, which this gate documents as a ratchet
+            // regression — a finding, not an inability to run.
+            process.stderr.write(`❌  ${exc.message}\n`);
+            return 2;
+        }
+        throw exc;
     }
 
     if (argv.includes('--write-floor')) {

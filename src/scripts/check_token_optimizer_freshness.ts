@@ -20,6 +20,7 @@ import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import { resolve_logical, strip_source_prefix } from './_lib/agent_src.js';
+import { assertScanned, DeadScopeError } from './_lib/scan_scope.js';
 
 const _HERE = fileURLToPath(import.meta.url);
 const REPO_ROOT = path.resolve(path.dirname(_HERE), '..', '..');
@@ -150,9 +151,23 @@ function main(): number {
     }
     const text = fs.readFileSync(SKILL, 'utf-8');
     const rows = parse_catalog(text);
-    if (rows.length === 0) {
-        process.stderr.write('ERROR: token-optimizer SKILL.md has no parseable catalog rows\n');
-        return 1;
+    // Supersedes the hand-rolled "no parseable catalog rows" guard: same exit
+    // code and stream, but the shared assertion names the root, so a renamed
+    // `## Catalog` heading or a moved SKILL.md reports as a dead scope instead
+    // of a bare ERROR line.
+    try {
+        assertScanned({
+            gate: 'check_token_optimizer_freshness',
+            scanned: rows.length,
+            units: 'catalog row(s)',
+            roots: [path.relative(REPO_ROOT, SKILL)],
+        });
+    } catch (exc) {
+        if (exc instanceof DeadScopeError) {
+            process.stderr.write(`ERROR: ${exc.message}\n`);
+            return 1;
+        }
+        throw exc;
     }
     const allErrs: string[] = [];
     let checked = 0;

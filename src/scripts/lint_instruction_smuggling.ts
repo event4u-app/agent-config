@@ -28,6 +28,7 @@ import * as fs from 'node:fs';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import * as sl from './_lib/security_lint.js';
+import { assertScanned, DeadScopeError } from './_lib/scan_scope.js';
 
 export const CHECK = 'instruction-smuggling';
 
@@ -152,10 +153,32 @@ export function main(argv: readonly string[] | null = null): number {
     const args = parse_args(argv ?? process.argv.slice(2));
 
     const findings: sl.Finding[] = [];
+    let corpusFiles = 0;
     for (const sf of sl.iter_corpus()) {
+        corpusFiles += 1;
         for (const h of _scan(sf)) {
             findings.push(h);
         }
+    }
+
+    // `iter_corpus` skips a root that does not exist, so a moved corpus yields
+    // zero files and this security lint reports "clean" — and the umbrella
+    // aggregate reads that as 0 blocking findings. Count files READ, not
+    // findings. Exit 1 is this CLI's only failure code (2 is reserved for the
+    // pinned argparse usage error), so it carries "could not run" here.
+    try {
+        assertScanned({
+            gate: 'lint_instruction_smuggling',
+            scanned: corpusFiles,
+            units: 'corpus file(s)',
+            roots: sl.DEFAULT_SCAN_ROOTS,
+        });
+    } catch (exc) {
+        if (exc instanceof DeadScopeError) {
+            process.stderr.write(`❌  ${exc.message}\n`);
+            return 1;
+        }
+        throw exc;
     }
 
     if (args.json) {

@@ -24,6 +24,8 @@ import { fileURLToPath } from 'node:url';
 import { pathToFileURL } from 'node:url';
 import { parse as parseYaml } from 'yaml';
 
+import { assertScanned, DeadScopeError } from './_lib/scan_scope.js';
+
 const _HERE = fileURLToPath(import.meta.url);
 // src/scripts/skill_preview.ts → parents[2] is the package root (mirrors the
 // Python module's parent.parent.parent resolution).
@@ -512,6 +514,35 @@ function parse_args(argv: string[]): Args {
 export function main(argv: string[] | null = null): number {
     const args = parse_args(argv ?? process.argv.slice(2));
     const name = args.name as string;
+
+    // A reporting tool, not a CI gate — but a moved corpus makes it answer
+    // "no skill named X" for EVERY name, which reads as the caller's typo
+    // rather than as a dead root. The corpus is in-repo (unlike a $HOME
+    // session directory, which may legitimately be empty in CI), so zero
+    // skill directories is never a valid state. Exit 2 is the existing
+    // "cannot preview" code; there is no other failure code.
+    let corpus = 0;
+    try {
+        corpus = fs
+            .readdirSync(_SKILLS_DIR, { withFileTypes: true })
+            .filter((e) => e.isDirectory()).length;
+    } catch {
+        corpus = 0;
+    }
+    try {
+        assertScanned({
+            gate: 'skill_preview',
+            scanned: corpus,
+            units: 'skill director(ies)',
+            roots: [path.relative(REPO_ROOT, _SKILLS_DIR) || _SKILLS_DIR],
+        });
+    } catch (exc) {
+        if (exc instanceof DeadScopeError) {
+            process.stderr.write(`❌  ${exc.message}\n`);
+            return 2;
+        }
+        throw exc;
+    }
 
     let preview: Preview;
     try {

@@ -33,6 +33,7 @@ import {
     type StackBundle,
     compose_bundle,
 } from '../agent-src/templates/scripts/work_engine/directives/ui/stack_bundles.js';
+import { assertScanned, DeadScopeError } from './_lib/scan_scope.js';
 
 const QUIET = process.argv.includes('--quiet');
 
@@ -153,9 +154,22 @@ function check_lane(lane: string, bundle: StackBundle): void {
 
 function main(): number {
     const lanes = Object.keys(STACK_BUNDLES).sort();
-    if (lanes.length === 0) {
-        process.stderr.write('lint-ui-stack-bundles: STACK_BUNDLES is empty — nothing to check.\n');
-        return 1;
+    // Replaces the ad-hoc `lanes.length === 0` check with the shared assertion,
+    // so an emptied bundle map names the root it came from instead of a bare
+    // "nothing to check". Exit 1 is the gate's only failure code.
+    try {
+        assertScanned({
+            gate: 'lint_ui_stack_bundles',
+            scanned: lanes.length,
+            units: 'stack lane(s)',
+            roots: ['src/agent-src/templates/scripts/work_engine/directives/ui/stack_bundles.ts'],
+        });
+    } catch (e) {
+        if (e instanceof DeadScopeError) {
+            process.stderr.write(`❌  ${e.message}\n`);
+            return 1;
+        }
+        throw e;
     }
     for (const lane of lanes) {
         check_lane(lane, STACK_BUNDLES[lane] as StackBundle);

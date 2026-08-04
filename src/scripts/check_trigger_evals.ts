@@ -27,6 +27,8 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
+import { assertScanned, DeadScopeError } from './_lib/scan_scope.js';
+
 const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
 const GLOB = 'src/skills/*/evals/triggers.json';
 const MAX_AGE_DAYS = 90;
@@ -276,6 +278,20 @@ function _isFile(p: string): boolean {
     }
 }
 
+/** Immediate `src/skills/*` directories — the population `_glob_triggers` filters. */
+function _skill_dirs(root: string): string[] {
+    const skillsDir = path.join(root, 'src', 'skills');
+    let entries: fs.Dirent[];
+    try {
+        entries = fs.readdirSync(skillsDir, { withFileTypes: true });
+    } catch {
+        return [];
+    }
+    return entries
+        .filter((ent) => ent.isDirectory() || ent.isSymbolicLink())
+        .map((ent) => path.join(skillsDir, ent.name));
+}
+
 /** Component-wise path comparison matching PosixPath ordering. */
 function _pathSort(a: string, b: string): number {
     const pa = a.split(path.sep);
@@ -340,6 +356,26 @@ function main(): number {
     if (today === null) {
         process.stderr.write(`❌ check-trigger-evals: bad --today ${_pyRepr(args.today)}\n`);
         return 2;
+    }
+
+    // The scanned unit is the skill directory, not the triggers.json subset:
+    // whether a given skill ships evals is `check_trigger_eval_presence`'s
+    // ratchet, so zero trigger sets under a populated tree is that gate's
+    // finding, not this one's. Zero skill DIRECTORIES is this gate's blindness
+    // — the ✅ line then reads "0 trigger set(s) fresh + valid".
+    try {
+        assertScanned({
+            gate: 'check_trigger_evals',
+            scanned: _skill_dirs(REPO_ROOT).length,
+            units: 'skill director(ies)',
+            roots: ['src/skills'],
+        });
+    } catch (exc) {
+        if (exc instanceof DeadScopeError) {
+            process.stderr.write(`❌ ${exc.message}\n`);
+            return 1;
+        }
+        throw exc;
     }
 
     const files = _glob_triggers(REPO_ROOT);

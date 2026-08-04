@@ -30,6 +30,8 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+import { assertScanned, DeadScopeError } from './_lib/scan_scope.js';
+
 const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..');
 
 const PATTERNS: readonly { re: RegExp; label: string }[] = [
@@ -72,6 +74,7 @@ export function scanText(relPath: string, text: string): string[] {
 
 export function main(): number {
     const findings: string[] = [];
+    let scanned = 0;
     for (const rel of shippedTrackedFiles()) {
         if (CARVE_OUTS.has(rel)) continue;
         if (SKIP_EXT.has(path.extname(rel))) continue;
@@ -83,7 +86,28 @@ export function main(): number {
         } catch {
             continue;
         }
+        scanned += 1;
         findings.push(...scanText(rel, text));
+    }
+    // The scope is an intersection — `git ls-files` ∩ the package.json `files`
+    // whitelist — and either side collapsing to nothing (no git, a rewritten
+    // whitelist) leaves the gate printing "no pre-migration install hints"
+    // over an empty set. Counts files whose text was READ, which is zero
+    // whenever the enumeration itself is empty. Exit 2 is the internal-error
+    // code ("could not run"); 1 means a live hint was found.
+    try {
+        assertScanned({
+            gate: 'lint_pre_migration_refs',
+            scanned,
+            units: 'shipped tracked file(s)',
+            roots: ['git ls-files ∩ package.json files[]'],
+        });
+    } catch (exc) {
+        if (exc instanceof DeadScopeError) {
+            process.stderr.write(`❌  ${exc.message}\n`);
+            return 2;
+        }
+        throw exc;
     }
     if (findings.length > 0) {
         for (const f of findings) {
