@@ -24,7 +24,8 @@
  *      heading / `**Step N:**` bullet in the same document).
  *   4. Staleness: `reviewed:` may not predate the last substantial change
  *      (feature comparison against the newest commit on/before the reviewed
- *      date).
+ *      date). Skipped while the file has uncommitted modifications — there is
+ *      no committed baseline for the current content to compare against.
  *
  * Exit codes (contract § 6): 0 = pass, 1 = policy violation,
  * 2 = internal error (degraded advisory mode for callers).
@@ -452,11 +453,21 @@ export function checkContent(file: string, text: string): ContentResult {
 // Git layer — grandfather clause + staleness.
 // --------------------------------------------------------------------------
 
+/**
+ * Node's default `maxBuffer` is 1 MiB. `_git` reads whole file blobs
+ * (`git show <sha>:<path>`), and a plan larger than that would throw ENOBUFS →
+ * `null` → **no staleness baseline** → the check silently passes. Same
+ * self-disabling shape as the Gate-R2 scope diff, and here it fails OPEN, so the
+ * ceiling is raised rather than relied on.
+ */
+const GIT_MAX_BUFFER = 256 * 1024 * 1024;
+
 function _git(cwd: string, args: readonly string[]): string | null {
     try {
         return execFileSync('git', [...args], {
             cwd,
             encoding: 'utf-8',
+            maxBuffer: GIT_MAX_BUFFER,
             stdio: ['ignore', 'pipe', 'pipe'],
         });
     } catch {
@@ -485,6 +496,29 @@ export function fileHistory(absPath: string): HistoryEntry[] {
         if (sha !== undefined && date !== undefined) entries.push({ sha, date });
     }
     return entries;
+}
+
+/**
+ * Does `absPath` differ from committed state in the working tree?
+ *
+ * Staleness (§ 1.1) compares the working-tree text against the blob of the
+ * newest commit dated `<= reviewed:`. While a substantial edit AND its freshly
+ * written register are both uncommitted, that baseline is the *previous* commit,
+ * whose features differ — so a register written the same minute is reported
+ * stale. The gate judges committed history; with uncommitted modifications there
+ * is no committed history to judge yet, so staleness is not decidable and the
+ * check is skipped rather than answered wrongly. Untracked / non-repo paths
+ * report `false` (they have no history at all, so staleness never fires there).
+ */
+export function hasUncommittedChanges(absPath: string): boolean {
+    const dir = path.dirname(absPath);
+    const top = _git(dir, ['rev-parse', '--show-toplevel']);
+    if (top === null) return false;
+    const root = top.trim();
+    const rel = path.relative(root, absPath).split(path.sep).join('/');
+    const out = _git(root, ['status', '--porcelain', '--', rel]);
+    if (out === null) return false;
+    return out.trim() !== '';
 }
 
 function _blobAt(absPath: string, sha: string): string | null {
@@ -557,7 +591,10 @@ export function checkFile(absPath: string): FileResult {
         };
     }
     const violations = [...content.violations];
-    if (content.reviewed !== null) {
+    // A file with uncommitted modifications has no committed baseline for the
+    // current content, so staleness is not judgeable — see
+    // hasUncommittedChanges. The committed-history case below is unchanged.
+    if (content.reviewed !== null && !hasUncommittedChanges(absPath)) {
         // Staleness (contract §§ 1.1 + 3): compare features of the newest
         // commit on/before the reviewed date against the current content.
         const history = fileHistory(absPath);

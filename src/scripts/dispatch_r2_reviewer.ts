@@ -16,6 +16,15 @@
  *   dispatch (default) — assemble package + skeleton.
  *   --verify <findings-file> — re-derive the manifest hashes from the
  *     CURRENT repo state and compare against the recorded inputs.
+ *   --verify-current — compute the current review scope, SELECT the artefacts
+ *     relevant to it (contract §2.6), and `--verify` each. The selection lives
+ *     here rather than in a caller's shell loop on purpose: `agents/evidence/
+ *     reviews/` is tracked and accumulates (§2.6), so "verify every
+ *     `*.findings.md`" mismatches every foreign artefact by construction and
+ *     would red the next gated PR — directory-wide poisoning. Selecting by
+ *     grepping the header for `HEAD` is equally wrong (§2.0 proves it matches
+ *     nothing), so the only correct selector re-derives the scope hash, which
+ *     is exactly what this mode does.
  *
  * This is a dispatcher, not a gate — it emits no `scanned:` line and is not
  * registered in gate-coverage.yml.
@@ -35,6 +44,14 @@ import { createHash } from 'node:crypto';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
+
+// `--verify-current` reuses the validator's §2.6 relevance notion instead of
+// restating it (a restated copy is what re-breaks these gates — see the
+// single-definition rule for the scope hash below). The resulting import cycle
+// (validator → dispatcher for the scope hash, dispatcher → validator for
+// relevance) is safe: neither module calls the other at module-evaluation
+// time, and each CLI entry guard only fires for its own argv[1].
+import { artifactRelevance } from './check_completion_review.js';
 
 export interface ManifestInputs {
     diffSha: string; // provenance only — never compared
@@ -225,13 +242,35 @@ function git(repo: string, ...args: string[]): string {
 }
 
 /**
+ * CI-provided head-branch names, most specific first. `GITHUB_HEAD_REF` is set
+ * only on `pull_request` and IS the head branch; `GITHUB_REF_NAME` covers
+ * `push`.
+ */
+const CI_BRANCH_ENV_KEYS = ['GITHUB_HEAD_REF', 'GITHUB_REF_NAME'] as const;
+
+/**
  * Branch-derived artifact slug. Shared with `check_completion_review`, which
  * uses it to decide whether a leftover artifact in the reviews directory is
  * THIS branch's (and may therefore produce violations) or a foreign one.
+ *
+ * The CI environment is consulted FIRST because on a `pull_request` checkout
+ * `HEAD` is a detached synthetic merge commit: `rev-parse --abbrev-ref HEAD`
+ * yields `HEAD`, the slug degrades to `detached-<sha>`, and no artefact can
+ * ever be "own" — which inverts contract §2.6 on the layer the contract calls
+ * authoritative (an own malformed artefact would be reported as
+ * `missing-artifact` instead of the root-cause `bad-marker`, and `stale-review`
+ * would never fire in CI). A `HEAD` / `detached-*` env value carries no branch
+ * identity either and is ignored.
  */
-export function deriveSlug(runGit: GitRunner): string {
+export function deriveSlug(runGit: GitRunner, env: NodeJS.ProcessEnv = process.env): string {
+    for (const key of CI_BRANCH_ENV_KEYS) {
+        const value = (env[key] ?? '').trim();
+        if (value !== '' && value !== 'HEAD' && !/^detached-/i.test(value)) {
+            return sanitizeSlug(value);
+        }
+    }
     const branch = runGit(['rev-parse', '--abbrev-ref', 'HEAD']).trim();
-    if (branch === 'HEAD') {
+    if (branch === '' || branch === 'HEAD') {
         const short = runGit(['rev-parse', '--short', 'HEAD']).trim();
         return sanitizeSlug(`detached-${short}`);
     }
@@ -343,6 +382,9 @@ interface Args {
     force: boolean;
     now: string | null;
     verify: string | null;
+    verifyCurrent: boolean;
+    /** `--verify-current` scan root; falls back to `--out-dir`. */
+    artifactDir: string | null;
 }
 
 function parse_args(argv: readonly string[]): Args {
@@ -357,6 +399,8 @@ function parse_args(argv: readonly string[]): Args {
         force: false,
         now: null,
         verify: null,
+        verifyCurrent: false,
+        artifactDir: null,
     };
     const takeValue = (flag: string, v: string | undefined): string => {
         if (v === undefined) {
@@ -382,6 +426,10 @@ function parse_args(argv: readonly string[]): Args {
             args.now = takeValue(arg, argv[++i]);
         } else if (arg === '--verify') {
             args.verify = takeValue(arg, argv[++i]);
+        } else if (arg === '--verify-current') {
+            args.verifyCurrent = true;
+        } else if (arg === '--artifact-dir') {
+            args.artifactDir = takeValue(arg, argv[++i]);
         } else if (arg === '--print-prompt') {
             args.printPrompt = true;
         } else if (arg === '--force') {
@@ -400,7 +448,8 @@ function parse_args(argv: readonly string[]): Args {
                 'usage: dispatch_r2_reviewer [-h] [--base REF] [--roadmap PATH] [--slug SLUG]\n' +
                     '                            [--out-dir PATH] [--repo PATH] [--print-prompt]\n' +
                     '                            [--format {text,json}] [--force] [--now ISO]\n' +
-                    '                            [--verify FINDINGS_FILE]\n',
+                    '                            [--verify FINDINGS_FILE]\n' +
+                    '                            [--verify-current [--artifact-dir DIR]]\n',
             );
             process.exit(0);
         } else {
@@ -421,8 +470,7 @@ function resolveNow(nowArg: string | null): Date {
     return d;
 }
 
-function runVerify(args: Args): number {
-    const findingsPath = args.verify as string;
+function runVerify(args: Args, findingsPath: string = args.verify as string): number {
     if (!fs.existsSync(findingsPath)) {
         process.stderr.write(`❌  Internal error: findings file not found: ${findingsPath}\n`);
         return 2;
@@ -479,6 +527,90 @@ function runVerify(args: Args): number {
         return 1;
     }
     process.stdout.write('✅ manifest verified\n');
+    return 0;
+}
+
+/**
+ * `--verify-current`: re-derive the manifest of every artefact RELEVANT to the
+ * current review scope.
+ *
+ * Selection is the whole point of the mode (see the header note). Three
+ * deliberate behaviours:
+ *
+ *   - **Foreign artefacts are never verified.** `agents/evidence/reviews/` is
+ *     tracked and accumulates (§2.6), and every past branch's artefact records
+ *     a different `scope_hash`, so a verify-everything loop reds by
+ *     construction and can only be un-stuck by editing an unrelated branch's
+ *     artefact.
+ *   - **No relevant artefact → exit 0.** Whether an artefact is *required* is
+ *     `check_completion_review`'s question (it reports `missing-artifact` /
+ *     `dead-scan-scope`); a re-derivation step has nothing to re-derive and
+ *     must not double-report it.
+ *   - **A bare §2.4 skip declaration is not verified.** It carries no reviewer
+ *     dispatch and per §5 needs no manifest, so running the manifest check on
+ *     it would report a policy violation the contract explicitly excludes.
+ */
+function runVerifyCurrent(args: Args): number {
+    const artifactDirRel = args.artifactDir ?? args.outDir;
+    const dirAbs = path.resolve(args.repo, artifactDirRel);
+    const scope = computeReviewScope((a) => git(args.repo, ...a), args.base);
+
+    let names: string[] = [];
+    try {
+        names = fs
+            .readdirSync(dirAbs)
+            .filter((n) => n.endsWith('.findings.md'))
+            .sort();
+    } catch {
+        // Absent root — a repo with no review corpus yet. Coverage (including a
+        // MOVED root) is check_completion_review's dead-scope assertion, not
+        // this step's; re-deriving nothing is exit 0.
+        names = [];
+    }
+
+    const selected: string[] = [];
+    for (const name of names) {
+        const abs = path.join(dirAbs, name);
+        let text: string;
+        try {
+            text = fs.readFileSync(abs, 'utf-8');
+        } catch (exc) {
+            process.stderr.write(
+                `❌  Internal error: unreadable artefact ${abs}: ${exc instanceof Error ? exc.message : String(exc)}\n`,
+            );
+            return 2;
+        }
+        const rel = artifactRelevance(text, scope.hash, scope.empty);
+        if (rel.relevant && rel.carriesReview) {
+            selected.push(abs);
+        }
+    }
+
+    if (selected.length === 0) {
+        process.stdout.write(
+            `✅ no review-bearing artefact claims the current review scope ${scope.hash} — nothing to re-derive.\n`,
+        );
+        return 0;
+    }
+
+    let mismatched = 0;
+    for (const abs of selected) {
+        process.stdout.write(`— ${path.relative(path.resolve(args.repo), abs)}\n`);
+        const rc = runVerify(args, abs);
+        if (rc === 2) {
+            return 2;
+        }
+        if (rc !== 0) {
+            mismatched += 1;
+        }
+    }
+    if (mismatched > 0) {
+        process.stderr.write(
+            `❌  ${mismatched} of ${selected.length} relevant artefact(s) failed manifest re-derivation\n`,
+        );
+        return 1;
+    }
+    process.stdout.write(`✅ ${selected.length} relevant artefact(s) verified against the current scope\n`);
     return 0;
 }
 
@@ -573,6 +705,9 @@ function runDispatch(args: Args): number {
 
 export function main(argv?: readonly string[]): number {
     const args = parse_args(argv ?? process.argv.slice(2));
+    if (args.verifyCurrent) {
+        return runVerifyCurrent(args);
+    }
     if (args.verify !== null) {
         return runVerify(args);
     }

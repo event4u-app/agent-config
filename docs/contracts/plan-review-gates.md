@@ -74,7 +74,12 @@ The first non-blank line after the `## Risk Register` heading MUST be:
 
 - `reviewed:` — ISO date. **Staleness rule:** the date may not be older
   than the date of the last *substantial* change to the plan (§ 3). Stale
-  = fail.
+  = fail. Staleness is decided against **committed** history (the newest
+  commit dated `<= reviewed:`), so while the plan file carries *uncommitted*
+  modifications the check is **skipped**: the current content has no committed
+  baseline yet, and comparing it against the previous commit reports a register
+  written the same minute as stale. The committed case is unchanged — a
+  committed substantial change with an older `reviewed:` date still fails.
 - `reviewer:` — free identifier (`claude/host`, `human`, `gpt-4o`, …);
   non-empty.
 
@@ -149,9 +154,20 @@ imports. A second, restated copy would silently re-break the gate the moment
 the two drifted, so a copy is a contract violation, not a style preference.
 
 **CI selection rule.** A CI step that picks which artefacts to verify MUST
-re-derive the scope hash (or simply verify every artefact) — it must never
-select by grepping the header for the current `HEAD` sha, which per (1) and (2)
-matches nothing.
+re-derive the scope hash — it must never select by grepping the header for the
+current `HEAD` sha, which per (1) and (2) matches nothing. It must equally never
+"simply verify every artefact": § 2.6 makes the reviews directory tracked and
+accumulating, so every artefact from a previous branch records a different
+`scope_hash` and mismatches **by construction** — a verify-everything loop reds
+the next gated PR and can only be un-stuck by editing an unrelated branch's
+artefact, which is exactly the directory-wide poisoning § 2.6 forbids. The
+selection therefore lives inside the single-source script, not in a caller's
+shell loop: `dispatch_r2_reviewer --verify-current` computes the current scope,
+selects the artefacts relevant to it (reusing the validator's § 2.6 relevance
+notion), verifies each, and exits `0` when none is relevant — whether an
+artefact was *required* is `check_completion_review`'s question, not the
+re-derivation step's. A bare § 2.4 skip declaration is not selected: it carries
+no reviewer dispatch and per § 5 needs no manifest.
 
 **Advisory window (Stage A, verdict #20):** until the enforced-mode
 threshold is committed to `CLAIMS.md` (after the 10-PR advisory
@@ -178,9 +194,16 @@ enforced-mode switch is the removal of that flag — nothing else changes.
   (§ 5), never the implementing session.
 
 All three fields are mandatory: a `v1` marker missing `scope:` is malformed
-(`bad-marker`), not tolerated. `v1` is unreleased, so there is no
-backward-compatibility path for the earlier sha-bound grammar — an artefact
-carrying it is re-dispatched, not migrated in place.
+(`bad-marker`), not tolerated — and so is a review-bearing artefact carrying **no
+header marker at all** (an artefact of manifest plus honest-null line is not
+"nothing to validate"; it is a missing mandatory header, `bad-marker`). `v1` is
+unreleased, so there is no backward-compatibility path for the earlier sha-bound
+grammar — an artefact carrying it is re-dispatched, not migrated in place.
+
+Because relevance (§ 2.6) ORs the header, honest-null and skip scopes, the header
+comparison is what actually decides staleness: an artefact whose header still
+points at an older scope while its honest-null line or manifest carries the
+current one is relevant **and** stale (`stale-review`).
 
 ### 2.2 Findings table
 
@@ -361,7 +384,8 @@ dispatched: YYYY-MM-DDTHH:MM:SSZ
 - **Compared set:** `scope_hash`, `roadmap_hash`, `ac_hash`. `diff_sha` is
   provenance and is never compared, for the § 2.0 reasons. The manifest's
   `scope_hash` must also agree with the header's `scope:`; a disagreement is
-  a stale review → block.
+  `manifest-header-mismatch` in the validator → block. (Staleness itself is the
+  header-vs-current comparison of § 2.1, so agreement is all this adds.)
 - **Dispatcher-writes-manifest rule (verdict #18):** the reviewer input is
   never assembled by the implementing agent. The deterministic dispatcher
   ([`dispatch_r2_reviewer.ts`](../../src/scripts/dispatch_r2_reviewer.ts))
@@ -394,7 +418,12 @@ Both validators (and every future gate in this family) obey:
 
 A broken gate must never block its own fix. Only policy violations block.
 Both validators emit the machine-readable `scanned: <N>` line and are
-registered in [`gate-coverage.yml`](../../src/config/gate-coverage.yml).
+registered in [`gate-coverage.yml`](../../src/config/gate-coverage.yml). The
+`scanned:` line is emitted on **every** exit path, exit `2` included: the
+coverage guard reads that number, so an unresolvable base ref must still print a
+count before it fails. The settings escape hatches
+(`planning.risk_review: false`, `planning.completion_review: false`) print
+`scanned: 0` with an explicit skip note — a configured skip, never a silent one.
 
 **A dead scan scope is a policy violation (exit `1`), never an internal
 error.** This is the one exception to the exit-2 rule, and it is deliberate: a

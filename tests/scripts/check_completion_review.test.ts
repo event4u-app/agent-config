@@ -20,6 +20,9 @@ import { afterEach, describe, expect, it } from 'vitest';
 
 import { runInProc } from '../_lib/run_in_process.js';
 import {
+    GIT_MAX_BUFFER,
+    artifactRelevance,
+    completionReviewDisabled,
     extractFixRef,
     isCodePath,
     isOwnArtifactSlug,
@@ -255,6 +258,36 @@ describe.runIf(hasGit())('check_completion_review — pass states', () => {
         write(dir, 'docs/notes.md', '# notes\n');
         commitAll(dir, 'docs only');
         write(dir, ART, skipLine('docs-only change', scopeHash(dir)));
+        const res = runGate(dir);
+        expect(res.violations).toEqual([]);
+        expect(res.status).toBe(0);
+    });
+
+    // Finding 11: `markerMalformed` was set by the FIRST non-fenced line merely
+    // containing `completion-review:` and never cleared, so a reviewer note
+    // quoting the grammar above the header (real artefacts in this repo contain
+    // exactly that) produced a spurious `bad-marker`.
+    it('prose quoting the marker grammar above the header is not a malformed marker', () => {
+        const dir = makeRepo();
+        write(dir, 'src/feature.ts', 'export const y = 2;\n');
+        commitAll(dir, 'feature');
+        const scope = scopeHash(dir);
+        write(
+            dir,
+            ART,
+            [
+                '# Findings: feat',
+                '',
+                'Note: `markerMalformed` fires only when a line containing `completion-review:` fails to parse.',
+                '',
+                marker(scope),
+                '',
+                manifestFor(scope),
+                '',
+                `**Honest-null:** 0 findings, scope ${scope}, reviewed 2026-08-04`,
+                '',
+            ].join('\n'),
+        );
         const res = runGate(dir);
         expect(res.violations).toEqual([]);
         expect(res.status).toBe(0);
@@ -524,6 +557,89 @@ describe.runIf(hasGit())('check_completion_review — violations', () => {
         expect(res.status).toBe(1);
     });
 
+    // Finding 7: an artifact of manifest + honest-null line and NO header was
+    // accepted, although §2.1 makes every header field mandatory —
+    // `markerMalformed` only fired when a marker-SHAPED line failed to parse.
+    it('bad-marker: a review-bearing artifact with NO header marker at all', () => {
+        const dir = makeRepo();
+        write(dir, 'src/feature.ts', 'export const y = 2;\n');
+        commitAll(dir, 'feature');
+        const scope = scopeHash(dir);
+        write(
+            dir,
+            ART,
+            [
+                '# Findings: feat',
+                '',
+                manifestFor(scope),
+                '',
+                `**Honest-null:** 0 findings, scope ${scope}, reviewed 2026-08-04`,
+                '',
+            ].join('\n'),
+        );
+        const res = runGate(dir);
+        expect(res.kinds).toEqual(['bad-marker']);
+        expect(res.violations[0]?.detail).toContain('§2.1 header is mandatory');
+        expect(res.status).toBe(1);
+    });
+
+    // Finding 6a: relevance ORs header / honest-null / skip, but §2.1 makes the
+    // header `scope:` the only field staleness is decided on. An artifact whose
+    // header points at an older scope while its honest-null line carries the
+    // current one used to pass both gates.
+    it('stale-review: header scope is older than the current scope, honest-null is current', () => {
+        const dir = makeRepo();
+        write(dir, 'src/feature.ts', 'export const y = 2;\n');
+        commitAll(dir, 'feature');
+        const scope = scopeHash(dir);
+        write(
+            dir,
+            ART,
+            [
+                '# Findings: feat',
+                marker(SCOPE_A), // header bound to an OLDER scope
+                '',
+                manifestFor(scope),
+                '',
+                `**Honest-null:** 0 findings, scope ${scope}, reviewed 2026-08-04`,
+                '',
+            ].join('\n'),
+        );
+        const res = runGate(dir);
+        expect(res.kinds).toContain('stale-review');
+        expect(res.violations[0]?.detail).toContain(SCOPE_A);
+        expect(res.violations[0]?.detail).toContain(scope);
+        expect(res.status).toBe(1);
+    });
+
+    // Finding 6b: §5 requires the manifest's scope_hash to AGREE with the
+    // header's scope:. The disagreement used to be reported (when detected at
+    // all) as manifest-vs-current staleness, which cannot distinguish
+    // "content changed" from "the two records disagree".
+    it('manifest-header-mismatch: current header, manifest bound to another scope', () => {
+        const dir = makeRepo();
+        write(dir, 'src/feature.ts', 'export const y = 2;\n');
+        commitAll(dir, 'feature');
+        const scope = scopeHash(dir);
+        write(
+            dir,
+            ART,
+            [
+                '# Findings: feat',
+                marker(scope),
+                '',
+                manifestFor(SCOPE_A), // manifest disagrees with the header
+                '',
+                `**Honest-null:** 0 findings, scope ${scope}, reviewed 2026-08-04`,
+                '',
+            ].join('\n'),
+        );
+        const res = runGate(dir);
+        expect(res.kinds).toEqual(['manifest-header-mismatch']);
+        expect(res.violations[0]?.detail).toContain(SCOPE_A);
+        expect(res.status).toBe(1);
+    });
+
     it('bad-marker: a v1 marker without the scope field is malformed', () => {
         const dir = makeRepo();
         write(dir, 'src/feature.ts', 'export const y = 2;\n');
@@ -588,6 +704,84 @@ describe.runIf(hasGit())('check_completion_review — advisory + exit-2', () => 
         expect(res.status).toBe(2);
         expect(res.stderr).toContain('Internal error');
         expect(res.stderr).toContain('origin/main');
+    });
+
+    // Finding 10: the gate is registered in gate-coverage.yml with
+    // `["--advisory", "--base", "origin/main"]`, and the coverage guard parses
+    // `scanned:`. The base-ref check used to throw BEFORE that line was written,
+    // so in any environment without an `origin/main` tracking ref the guard had
+    // no number to read at all.
+    it('emits `scanned:` even when the base ref is unresolvable (exit 2)', () => {
+        const dir = makeRepo();
+        write(dir, ART, 'placeholder\n');
+        const res = runInProc(main, ['--repo', dir, '--base', 'origin/main']);
+        expect(res.status).toBe(2);
+        expect(res.stdout).toMatch(/^scanned: 2\n/);
+    });
+});
+
+// ---------------------------------------------------------------------------
+// Large diffs, the settings escape hatch
+// ---------------------------------------------------------------------------
+
+describe.runIf(hasGit())('check_completion_review — degradation guards', () => {
+    // Finding 2: the review-scope diff was read under Node's 1 MiB default
+    // `maxBuffer`, so a large branch threw ENOBUFS → exit 2 → warn-and-allow at
+    // every caller. Gate R2 silently self-disabled on exactly the big PRs that
+    // most need it, while the dispatcher (which sets a 256 MiB ceiling for the
+    // identical diff) succeeded.
+    it('a >1 MiB review-scope diff still reaches a verdict instead of exit 2', () => {
+        const dir = makeRepo();
+        const bigBody = Array.from(
+            { length: 16000 },
+            (_unused, i) => `export const line${i} = '${'x'.repeat(80)}';`,
+        ).join('\n');
+        expect(bigBody.length).toBeGreaterThan(1024 * 1024);
+        write(dir, 'src/big.ts', `${bigBody}\n`);
+        commitAll(dir, 'a diff larger than the default maxBuffer');
+
+        const res = runGate(dir);
+        expect(res.stderr).not.toContain('Internal error');
+        expect(res.status).toBe(1);
+        expect(res.kinds).toEqual(['missing-artifact']);
+    });
+
+    it('the git runner ceiling is far above the 1 MiB default', () => {
+        expect(GIT_MAX_BUFFER).toBeGreaterThan(1024 * 1024);
+    });
+
+    // Finding 4: `planning.completion_review: false` is documented in the
+    // settings template, the Zod schema and the /create-pr surface, but the
+    // validator never read `.agent-settings.yml`, so the escape hatch did
+    // nothing and the only way out was deleting the CI step.
+    it('planning.completion_review=false skips the gate (note + scanned: 0 + exit 0)', () => {
+        const dir = makeRepo();
+        write(dir, 'src/feature.ts', 'export const y = 2;\n');
+        commitAll(dir, 'feature');
+        // Without the hatch this repo blocks with missing-artifact.
+        expect(runGate(dir).status).toBe(1);
+
+        write(dir, '.agent-settings.yml', 'planning:\n  completion_review: false\n');
+        expect(completionReviewDisabled(dir)).toBe(true);
+        const res = runInProc(main, ['--repo', dir, '--base', 'main']);
+        expect(res.status).toBe(0);
+        expect(res.stdout).toContain('planning.completion_review=false');
+        expect(res.stdout).toContain('scanned: 0');
+    });
+
+    it('a missing key, a missing file, or completion_review: true leaves the gate active', () => {
+        const dir = makeRepo();
+        write(dir, 'src/feature.ts', 'export const y = 2;\n');
+        commitAll(dir, 'feature');
+        expect(completionReviewDisabled(dir)).toBe(false); // no settings file
+
+        write(dir, '.agent-settings.yml', 'planning:\n  risk_review: false\n');
+        expect(completionReviewDisabled(dir)).toBe(false); // sibling key only
+        expect(runGate(dir).status).toBe(1);
+
+        write(dir, '.agent-settings.yml', 'planning:\n  completion_review: true\n');
+        expect(completionReviewDisabled(dir)).toBe(false);
+        expect(runGate(dir).kinds).toEqual(['missing-artifact']);
     });
 });
 
@@ -747,6 +941,33 @@ describe('parseArtifact + validateFindingRows', () => {
         expect(art.honestNull).toBeNull();
         expect(art.skip).toBeNull();
         expect(art.malformedLines).toHaveLength(2);
+    });
+
+    it('a later valid marker wins over an earlier line that failed to parse', () => {
+        const art = parseArtifact(
+            ['# Findings: feat', '<!-- completion-review: v0 | quoted grammar -->', marker(SCOPE), ''].join('\n'),
+        );
+        expect(art.marker?.scope).toBe(SCOPE);
+        expect(art.markerMalformed).toBe(false);
+    });
+
+    it('a marker-shaped line with no valid marker anywhere stays malformed', () => {
+        const art = parseArtifact(['# Findings: feat', '<!-- completion-review: v0 | broken -->', ''].join('\n'));
+        expect(art.marker).toBeNull();
+        expect(art.markerMalformed).toBe(true);
+    });
+
+    it('artifactRelevance shares the §2.6 relevance notion with --verify-current', () => {
+        const other = 'd'.repeat(64);
+        const review = honestNullArtifact(SCOPE);
+        expect(artifactRelevance(review, SCOPE, false)).toEqual({ relevant: true, carriesReview: true });
+        expect(artifactRelevance(review, other, false)).toEqual({ relevant: false, carriesReview: true });
+        // A bare skip declaration is relevant but carries no review → §5 needs
+        // no manifest for it, so --verify-current has nothing to re-derive.
+        expect(artifactRelevance(skipLine('docs only', SCOPE), SCOPE, false)).toEqual({
+            relevant: true,
+            carriesReview: false,
+        });
     });
 
     it('validateFindingRows keeps descending ties legal and reports ascents once', () => {

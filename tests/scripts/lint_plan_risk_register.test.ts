@@ -379,25 +379,27 @@ describe('lint_plan_risk_register — git layers (grandfather + staleness)', () 
         expect(res.violations[0]?.detail).toContain('substantially');
     });
 
-    it('stale review: substantial change after the reviewed date → violation', () => {
+    it('stale review: COMMITTED substantial change after the reviewed date → violation', () => {
         initRepo(tmp);
         const p = path.join(tmp, 'plan.md');
         const reviewedBody =
             '<!-- risk-review: v1 | reviewed: 2026-01-01 | reviewer: tester -->\n' + VALID_TABLE;
         fs.writeFileSync(p, planWith(reviewedBody), 'utf-8');
         commitAll(tmp, '2026-01-01');
-        // Substantial change in the working tree after the review date.
+        // Substantial change COMMITTED after the review date — the gate judges
+        // committed history, so this is the case that must still fail.
         fs.writeFileSync(
             p,
             planWith(reviewedBody).replace('## Phase 2: Ship the thing', '## Phase 2: Ship something else'),
             'utf-8',
         );
+        commitAll(tmp, '2026-02-01');
         const res = mod.checkFile(p);
         expect(res.status).toBe('fail');
         expect(kinds(res.violations)).toContain('stale_review');
     });
 
-    it('fresh review: non-substantial edits after the reviewed date pass', () => {
+    it('fresh review: non-substantial committed edits after the reviewed date pass', () => {
         initRepo(tmp);
         const p = path.join(tmp, 'plan.md');
         const reviewedBody =
@@ -410,8 +412,60 @@ describe('lint_plan_risk_register — git layers (grandfather + staleness)', () 
             planWith(reviewedBody).replace('- [ ] **Step 1:** do the first thing', '- [x] **Step 1:** do the first thing'),
             'utf-8',
         );
+        commitAll(tmp, '2026-02-01');
         const res = mod.checkFile(p);
         expect(res.status).toBe('ok');
+    });
+
+    // Finding 9: while the edit AND its freshly written register are both
+    // uncommitted, the staleness baseline is the PREVIOUS commit, so a register
+    // written the same minute was reported stale — a false positive in the
+    // normal local authoring flow. Staleness judges committed history; with
+    // uncommitted modifications there is nothing committed to judge yet.
+    it('uncommitted substantial change + freshly written register → no stale_review', () => {
+        initRepo(tmp);
+        const p = path.join(tmp, 'plan.md');
+        const reviewedOld =
+            '<!-- risk-review: v1 | reviewed: 2026-01-01 | reviewer: tester -->\n' + VALID_TABLE;
+        fs.writeFileSync(p, planWith(reviewedOld), 'utf-8');
+        commitAll(tmp, '2026-01-01');
+        expect(mod.hasUncommittedChanges(p)).toBe(false);
+
+        const reviewedNow =
+            '<!-- risk-review: v1 | reviewed: 2026-08-04 | reviewer: tester -->\n' + VALID_TABLE;
+        fs.writeFileSync(
+            p,
+            `${planWith(reviewedNow)}\n## Phase 3: New scope\n\n- [ ] **Step 1:** more work\n`,
+            'utf-8',
+        );
+        expect(mod.hasUncommittedChanges(p)).toBe(true);
+
+        const res = mod.checkFile(p);
+        expect(kinds(res.violations)).not.toContain('stale_review');
+        expect(res.status).toBe('ok');
+    });
+
+    // Same self-disabling shape as the Gate-R2 scope diff: `_git` reads whole
+    // file blobs, and under Node's 1 MiB default maxBuffer a plan larger than
+    // that threw ENOBUFS → null baseline → staleness silently skipped (fail
+    // OPEN, unlike the grandfather path).
+    it('staleness still fires on a plan larger than the default git maxBuffer', () => {
+        initRepo(tmp);
+        const p = path.join(tmp, 'plan.md');
+        const reviewedBody =
+            '<!-- risk-review: v1 | reviewed: 2026-01-01 | reviewer: tester -->\n' + VALID_TABLE;
+        const filler = `\n${'lorem ipsum dolor sit amet consectetur adipiscing elit sed do eiusmod tempor. '.repeat(15000)}\n`;
+        expect(filler.length).toBeGreaterThan(1024 * 1024);
+        fs.writeFileSync(p, planWith(reviewedBody) + filler, 'utf-8');
+        commitAll(tmp, '2026-01-01');
+        fs.writeFileSync(
+            p,
+            (planWith(reviewedBody) + filler).replace('## Phase 2: Ship the thing', '## Phase 2: Ship something else'),
+            'utf-8',
+        );
+        commitAll(tmp, '2026-02-01');
+        const res = mod.checkFile(p);
+        expect(kinds(res.violations)).toContain('stale_review');
     });
 
     it('register just written on an untracked file → fresh (no stale violation)', () => {

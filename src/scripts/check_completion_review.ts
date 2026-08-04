@@ -26,6 +26,10 @@
  * dispatcher and the validator can never diverge. Manifest hash
  * re-derivation stays a separate step (`dispatch_r2_reviewer --verify`).
  *
+ * Settings escape hatch: `planning.completion_review: false` in the repo's
+ * `.agent-settings.yml` skips the gate (note + `scanned: 0` + exit 0), exactly
+ * as `planning.risk_review: false` skips Gate R1.
+ *
  * Exit codes (contract §6): 0 = pass, 1 = policy violation (including a DEAD
  * SCAN SCOPE — a gate that read nothing has not passed), 2 = internal error
  * (missing base ref, git failure — the CALLER applies degraded advisory
@@ -37,6 +41,8 @@ import { execFileSync } from 'node:child_process';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
+
+import { parse as parseYaml } from 'yaml';
 
 import { DeadScopeError, assertScanned } from './_lib/scan_scope.js';
 import {
@@ -313,10 +319,18 @@ export function parseArtifact(text: string): ParsedArtifact {
             continue;
         }
         const trimmed = raw.trim();
-        if (out.marker === null && trimmed.includes('completion-review:')) {
+        // Marker candidates must LOOK like the §2.1 HTML comment: prose that
+        // merely mentions the grammar (`the \`completion-review:\` marker …`,
+        // or a reviewer note quoting it in backticks — real artefacts in this
+        // repo contain exactly that) is not a candidate at all. And a candidate
+        // that fails to parse is only malformed until a valid marker turns up
+        // later: without that, one quoted grammar line above the header
+        // permanently poisoned the artefact with a spurious `bad-marker`.
+        if (out.marker === null && trimmed.startsWith('<!--') && trimmed.includes('completion-review:')) {
             const marker = parseMarkerLine(trimmed);
             if (marker) {
                 out.marker = marker;
+                out.markerMalformed = false;
             } else {
                 out.markerMalformed = true;
             }
@@ -429,11 +443,22 @@ interface GitResult {
     status: number;
 }
 
+/**
+ * The review-scope diff is read through this runner, and Node's default
+ * `maxBuffer` is 1 MiB — a branch whose scope diff exceeds that throws ENOBUFS,
+ * which surfaces as exit 2 and makes every caller warn-and-allow. Gate R2 would
+ * then silently self-disable on exactly the large PRs that most need it. The
+ * dispatcher already reads the identical diff with this ceiling; the shared
+ * scope definition is only as strong as the weakest injected git runner.
+ */
+export const GIT_MAX_BUFFER = 256 * 1024 * 1024;
+
 function gitTry(repo: string, args: readonly string[]): GitResult {
     try {
         const stdout = execFileSync('git', args as string[], {
             cwd: repo,
             encoding: 'utf8',
+            maxBuffer: GIT_MAX_BUFFER,
             stdio: ['ignore', 'pipe', 'pipe'],
         });
         return { ok: true, stdout, status: 0 };
@@ -493,6 +518,36 @@ function claimsScope(art: ParsedArtifact, scopeHash: string, scopeEmpty: boolean
     return false;
 }
 
+/**
+ * Does the artifact carry a review (header marker, findings table, or
+ * honest-null line)? §5 makes a context manifest mandatory for one; a bare §2.4
+ * skip declaration carries no reviewer dispatch and needs none.
+ */
+function artifactCarriesReview(art: ParsedArtifact): boolean {
+    return art.marker !== null || art.rows.length > 0 || art.honestNull !== null;
+}
+
+export interface ArtifactRelevance {
+    /** Claims the CURRENT review scope — §2.6 relevance. */
+    relevant: boolean;
+    /** Carries a review, so §5 requires a manifest that can be re-derived. */
+    carriesReview: boolean;
+}
+
+/**
+ * The §2.6 relevance notion, exported so a CI re-derivation step can SELECT the
+ * artefacts to verify instead of verifying the whole accumulating directory
+ * (`dispatch_r2_reviewer --verify-current`). Restating the notion there is what
+ * would silently re-break the gate, so it lives here once.
+ */
+export function artifactRelevance(text: string, scopeHash: string, scopeEmpty: boolean): ArtifactRelevance {
+    const art = parseArtifact(text);
+    return {
+        relevant: claimsScope(art, scopeHash, scopeEmpty),
+        carriesReview: artifactCarriesReview(art),
+    };
+}
+
 function evaluate(input: EvalInput): Violation[] {
     const { repo, head, scopeHash, scopeEmpty, changed, artifacts } = input;
     const violations: Violation[] = [];
@@ -525,7 +580,7 @@ function evaluate(input: EvalInput): Violation[] {
     }
 
     for (const { file, art } of relevant) {
-        const carriesReview = art.marker !== null || art.rows.length > 0 || art.honestNull !== null;
+        const carriesReview = artifactCarriesReview(art);
 
         // A skip and a findings table cannot both hold. Reported, and the
         // table is still validated — a skip line must never suppress rows.
@@ -549,10 +604,43 @@ function evaluate(input: EvalInput): Violation[] {
             });
         }
 
+        // §2.1: every header field is mandatory. A review-bearing artifact with
+        // NO parseable header marker at all is malformed — not "no marker,
+        // therefore nothing to check". A marker-SHAPED line that failed to
+        // parse is already reported above, so this reports once (§2.6).
+        if (carriesReview && art.marker === null && !art.markerMalformed) {
+            violations.push({
+                kind: 'bad-marker',
+                file,
+                detail:
+                    'findings artifact carries a review but no `completion-review: v1` header marker — the §2.1 ' +
+                    'header is mandatory: `<!-- completion-review: v1 | reviewed: YYYY-MM-DD | ' +
+                    'scope: <64-hex scope hash> | diff: <sha> | reviewer: <id> -->`',
+            });
+        }
+
+        // §2.1: the header `scope:` is the ONLY field staleness is decided on.
+        // Relevance ORs header / honest-null / skip, so without this an artifact
+        // whose header still points at an older scope, while its honest-null
+        // line or manifest carries the current one, was relevant AND stale — and
+        // passed both gates.
+        if (art.marker !== null && art.marker.scope !== scopeHash) {
+            violations.push({
+                kind: 'stale-review',
+                file,
+                detail:
+                    `header declares scope ${art.marker.scope} but the current review scope is ${scopeHash} — ` +
+                    'the header `scope:` is the only field staleness is decided on (contract §2.1)',
+            });
+        }
+
         // §5: the manifest is verification, not self-attestation — an artifact
         // without one is unverifiable, so its absence is a policy violation
         // rather than something to tolerate. A bare skip declaration carries
-        // no reviewer dispatch and needs none.
+        // no reviewer dispatch and needs none. When both are present the
+        // manifest's `scope_hash` MUST agree with the header's `scope:` (§5);
+        // staleness itself is the header check above, so agreement is all that
+        // is left to verify here.
         if (carriesReview && art.manifest === null) {
             violations.push({
                 kind: 'missing-manifest',
@@ -561,13 +649,13 @@ function evaluate(input: EvalInput): Violation[] {
                     'findings artifact carries no parseable `context-manifest: v1` block — the §5 manifest ' +
                     'is mandatory (verification, not self-attestation); re-dispatch via dispatch_r2_reviewer',
             });
-        } else if (carriesReview && art.manifest !== null && art.manifest.scope_hash !== scopeHash) {
+        } else if (art.manifest !== null && art.marker !== null && art.manifest.scope_hash !== art.marker.scope) {
             violations.push({
-                kind: 'stale-review',
+                kind: 'manifest-header-mismatch',
                 file,
                 detail:
-                    `manifest records scope_hash ${art.manifest.scope_hash} but the current review scope is ` +
-                    `${scopeHash} — the header and the manifest disagree (contract §5)`,
+                    `manifest records scope_hash ${art.manifest.scope_hash} but the header declares scope ` +
+                    `${art.marker.scope} — the two must agree (contract §5); re-dispatch via dispatch_r2_reviewer`,
             });
         }
 
@@ -799,6 +887,31 @@ function report(args: Args, violations: readonly Violation[], passNote: string |
     return args.advisory ? 0 : 1;
 }
 
+/**
+ * `planning.completion_review === false` in `<dir>/.agent-settings.yml` disables
+ * Gate R2. Parsing mirrors Gate R1's `riskReviewDisabled` exactly (same file,
+ * same fail-open-on-unreadable/unparseable behaviour, same strict `=== false`
+ * test) so a missing key or a missing file leaves the gate ACTIVE.
+ */
+export function completionReviewDisabled(settingsDir: string): boolean {
+    const settingsPath = path.join(settingsDir, '.agent-settings.yml');
+    let raw: string;
+    try {
+        raw = fs.readFileSync(settingsPath, 'utf-8');
+    } catch {
+        return false;
+    }
+    try {
+        const parsed = parseYaml(raw) as unknown;
+        if (parsed === null || typeof parsed !== 'object') return false;
+        const planning = (parsed as Record<string, unknown>)['planning'];
+        if (planning === null || typeof planning !== 'object') return false;
+        return (planning as Record<string, unknown>)['completion_review'] === false;
+    } catch {
+        return false;
+    }
+}
+
 /** Is `rel` a tracked directory in `ref`? Absolute paths are never tracked. */
 function isTrackedTree(repo: string, ref: string, rel: string): boolean {
     if (path.isAbsolute(rel)) {
@@ -846,22 +959,21 @@ function deadScopeExemption(
 function run(args: Args): number {
     const repo = path.resolve(args.repo);
 
-    const baseCheck = gitTry(repo, ['rev-parse', '--verify', '--quiet', `${args.base}^{commit}`]);
-    if (!baseCheck.ok) {
-        throw new InternalError(`base ref '${args.base}' not found in ${repo}`);
+    // Settings escape hatch (contract § Scope): `planning.completion_review:
+    // false` disables Gate R2 — documented in the settings template, the Zod
+    // schema and the /create-pr surface, so it has to actually work. Mirrors
+    // Gate R1's `riskReviewDisabled`, including the explicit `scanned: 0`:
+    // the zero-scan is a configured skip, not a dead scope.
+    if (completionReviewDisabled(repo)) {
+        process.stdout.write('⚠️  planning.completion_review=false — Gate R2 skipped (settings escape hatch)\n');
+        process.stdout.write('scanned: 0\n');
+        return 0;
     }
-    const head = gitOut(repo, ['rev-parse', 'HEAD']).trim().toLowerCase();
-    // The REVIEW SCOPE excludes the review artefacts themselves, so committing
-    // the findings artifact (§2.5) cannot invalidate the review it records.
-    const scope = computeReviewScope((a) => gitOut(repo, a), args.base);
-    const scopeHash = scope.hash;
-    const scopeEmpty = scope.empty;
-    const changed = gitOut(repo, reviewScopeNameOnlyArgs(args.base))
-        .split('\n')
-        .map((l) => l.trim())
-        .filter(Boolean);
-    const branchSlug = deriveSlug((a) => gitOut(repo, a));
 
+    // The artefact inventory needs no git, so it is resolved FIRST: the
+    // gate-coverage guard parses `scanned:` and must get a number on EVERY exit
+    // path, including the exit-2 internal-error one below (an unresolvable base
+    // ref used to exit 2 emitting no count at all).
     const artifactDirAbs = path.isAbsolute(args.artifactDir) ? args.artifactDir : path.join(repo, args.artifactDir);
     let artifactRootResolved = false;
     let artifactPaths: string[] = [];
@@ -885,6 +997,23 @@ function run(args: Args): number {
     // N to 0 instead of hiding behind a floor that cannot fail.
     const scanned = artifactPaths.length + (artifactRootResolved ? 1 : 0);
     process.stdout.write(`scanned: ${scanned}\n`);
+
+    const baseCheck = gitTry(repo, ['rev-parse', '--verify', '--quiet', `${args.base}^{commit}`]);
+    if (!baseCheck.ok) {
+        throw new InternalError(`base ref '${args.base}' not found in ${repo}`);
+    }
+    const head = gitOut(repo, ['rev-parse', 'HEAD']).trim().toLowerCase();
+    // The REVIEW SCOPE excludes the review artefacts themselves, so committing
+    // the findings artifact (§2.5) cannot invalidate the review it records.
+    const scope = computeReviewScope((a) => gitOut(repo, a), args.base);
+    const scopeHash = scope.hash;
+    const scopeEmpty = scope.empty;
+    const changed = gitOut(repo, reviewScopeNameOnlyArgs(args.base))
+        .split('\n')
+        .map((l) => l.trim())
+        .filter(Boolean);
+    const branchSlug = deriveSlug((a) => gitOut(repo, a));
+
     try {
         assertScanned({
             gate: 'check_completion_review',

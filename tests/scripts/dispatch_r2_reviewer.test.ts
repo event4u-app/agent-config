@@ -21,6 +21,7 @@ import {
     REVIEW_SCOPE_EXCLUDE,
     computeReviewScope,
     deriveManifest,
+    deriveSlug,
     expectedHashes,
     extractAcceptanceCriteria,
     isEmptyScope,
@@ -303,6 +304,111 @@ describe('dispatch_r2_reviewer — --verify', () => {
     });
 });
 
+// A findings artefact left behind by a DIFFERENT branch: valid grammar, bound
+// to a scope this branch can never reproduce. Contract §2.6 makes the reviews
+// directory tracked and accumulating, so this is the normal steady state.
+const FOREIGN_SCOPE = 'a'.repeat(64);
+
+function writeForeignArtifact(repo: string): string {
+    const rel = path.join(OUT, 'some-other-branch.findings.md');
+    write(
+        repo,
+        rel,
+        [
+            '# Findings: some-other-branch',
+            `<!-- completion-review: v1 | reviewed: 2026-07-01 | scope: ${FOREIGN_SCOPE} | diff: ${'0'.repeat(40)} | reviewer: r2-fresh-subagent-other -->`,
+            '',
+            deriveManifest({
+                diffSha: '0'.repeat(40),
+                scopeHash: FOREIGN_SCOPE,
+                roadmap: 'none',
+                roadmapHash: 'none',
+                acHash: 'none',
+                dispatched: '2026-07-01T09:00:00Z',
+            }),
+            '',
+            `**Honest-null:** 0 findings, scope ${FOREIGN_SCOPE}, reviewed 2026-07-01`,
+            '',
+        ].join('\n'),
+    );
+    return path.join(repo, rel);
+}
+
+describe('dispatch_r2_reviewer — --verify-current', () => {
+    // Finding 1: a CI loop that runs `--verify` over every *.findings.md blocks
+    // on exit 1, and every artefact from a previous branch records a different
+    // scope_hash — so the step reds by construction on the next gated PR and can
+    // only be un-stuck by editing an unrelated branch's artefact (the
+    // directory-wide poisoning §2.6 forbids). Selection must live in the script.
+    it('ignores a foreign artefact that a verify-everything loop would red on', () => {
+        const repo = initRepo();
+        const foreign = writeForeignArtifact(repo);
+
+        // The poisoning shape, demonstrated: per-file --verify on the foreign
+        // artefact fails, because its scope is not this branch's.
+        const perFile = run(['--verify', foreign, '--repo', repo, '--base', 'main']);
+        expect(perFile.status).toBe(1);
+        expect(perFile.stderr).toMatch(/manifest mismatch \(stale review\)/);
+
+        const res = run(['--verify-current', '--repo', repo, '--base', 'main']);
+        expect(res.status, res.stderr).toBe(0);
+        expect(res.stdout).toContain('nothing to re-derive');
+    });
+
+    it('verifies the relevant artefact and exits 1 when its recorded hash is tampered with', () => {
+        const repo = initRepo();
+        expect(run(dispatchArgs(repo)).status).toBe(0);
+        writeForeignArtifact(repo); // must not influence the verdict either way
+
+        const clean = run(['--verify-current', '--repo', repo, '--base', 'main']);
+        expect(clean.status, clean.stderr).toBe(0);
+        expect(clean.stdout).toContain('1 relevant artefact(s) verified');
+
+        const findings = path.join(repo, OUT, `${SLUG}.findings.md`);
+        const body = fs.readFileSync(findings, 'utf-8');
+        const scope = computeReviewScope((a) => git(repo, ...a), 'main').hash;
+        fs.writeFileSync(findings, body.replace(`scope_hash: ${scope}`, `scope_hash: ${'b'.repeat(64)}`), 'utf-8');
+
+        const res = run(['--verify-current', '--repo', repo, '--base', 'main']);
+        expect(res.status).toBe(1);
+        expect(res.stderr).toMatch(/manifest mismatch \(stale review\)/);
+        expect(res.stderr).toMatch(/1 of 1 relevant artefact\(s\) failed/);
+    });
+
+    it('exits 0 when there are no artefacts at all (coverage is the validator\'s job)', () => {
+        const repo = initRepo();
+        const none = run(['--verify-current', '--repo', repo, '--base', 'main']);
+        expect(none.status, none.stderr).toBe(0);
+        expect(none.stdout).toContain('nothing to re-derive');
+
+        // …and an --artifact-dir that does not resolve is not this step's error
+        // either: a moved root is check_completion_review's dead-scope assertion.
+        const absent = run([
+            '--verify-current',
+            '--artifact-dir',
+            'agents/evidence/no-such-root',
+            '--repo',
+            repo,
+            '--base',
+            'main',
+        ]);
+        expect(absent.status, absent.stderr).toBe(0);
+    });
+
+    it('does not verify a bare skip declaration (§5: it needs no manifest)', () => {
+        const repo = initRepo();
+        const scope = computeReviewScope((a) => git(repo, ...a), 'main').hash;
+        write(
+            repo,
+            path.join(OUT, `${SLUG}.findings.md`),
+            `**Skipped:** no code surface for this completion — plan-only session, scope ${scope}, declared 2026-08-04\n`,
+        );
+        const res = run(['--verify-current', '--repo', repo, '--base', 'main']);
+        expect(res.status, res.stderr).toBe(0);
+        expect(res.stdout).toContain('nothing to re-derive');
+    });
+});
+
 describe('dispatch_r2_reviewer — determinism', () => {
     it('same repo state + same args (frozen --now) → byte-identical outputs', () => {
         const repo = initRepo();
@@ -329,6 +435,29 @@ describe('dispatch_r2_reviewer — pure helpers', () => {
         expect(sanitizeSlug('feat/Test_Branch-1')).toBe('feat-test-branch-1');
         expect(sanitizeSlug('--Weird//Name--')).toBe('weird-name');
         expect(sanitizeSlug('///')).toBe('review');
+    });
+
+    // Finding 8: on a `pull_request` checkout HEAD is a detached synthetic merge
+    // commit, so `rev-parse --abbrev-ref HEAD` returns `HEAD`, the slug degrades
+    // to `detached-<sha>`, and `isOwnArtifactSlug` can never match — inverting
+    // §2.6 on the layer the contract calls authoritative.
+    it('deriveSlug resolves the branch from the CI env before a detached HEAD', () => {
+        const detachedGit = (a: readonly string[]): string => (a.includes('--short') ? 'abc1234\n' : 'HEAD\n');
+
+        // No CI env → the honest detached fallback.
+        expect(deriveSlug(detachedGit, {})).toBe('detached-abc1234');
+        // pull_request: GITHUB_HEAD_REF is the head branch.
+        expect(deriveSlug(detachedGit, { GITHUB_HEAD_REF: 'feat/Road-To-X' })).toBe('feat-road-to-x');
+        // push: GITHUB_REF_NAME carries the branch.
+        expect(deriveSlug(detachedGit, { GITHUB_REF_NAME: 'feat/push-branch' })).toBe('feat-push-branch');
+        // HEAD_REF wins — on pull_request GITHUB_REF_NAME is `<pr>/merge`.
+        expect(deriveSlug(detachedGit, { GITHUB_HEAD_REF: 'feat/head', GITHUB_REF_NAME: '42/merge' })).toBe(
+            'feat-head',
+        );
+        // Empty / non-branch env values carry no identity and are ignored.
+        expect(deriveSlug(detachedGit, { GITHUB_HEAD_REF: '  ', GITHUB_REF_NAME: 'HEAD' })).toBe('detached-abc1234');
+        // A real branch checkout still wins over nothing in the env.
+        expect(deriveSlug((a) => (a.includes('--short') ? 'abc1234\n' : 'feat/local\n'), {})).toBe('feat-local');
     });
 
     it('expectedHashes maps null roadmap/AC to none', () => {
