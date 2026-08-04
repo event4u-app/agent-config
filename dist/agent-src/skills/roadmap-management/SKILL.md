@@ -266,6 +266,22 @@ Every roadmap ends in exactly one of four states:
 
 After the last step of a roadmap is done, check completion status:
 
+0. **Completion review (Gate R2)** — the moment the last open item flips
+   to done in a session, the completion-review flow fires (before any
+   archival decision): run
+   [`dispatch_r2_reviewer`](../../scripts/dispatch_r2_reviewer.ts) to
+   build the reviewer input deterministically, have a **fresh subagent
+   without the implementation context** write the findings artifact
+   (`agents/evidence/reviews/<slug>.findings.md`), then work the findings
+   in priority order — every finding ends `fixed` / `accepted-risk` /
+   `deferred` per
+   [`plan-review-gates § 2`](../../../docs/contracts/plan-review-gates.md).
+   No code surface in the completed work → the explicit skip declaration,
+   never a silent skip. The PR chokepoint (`/create-pr`) re-uses this
+   artifact when the diff hash still matches; a later push forces
+   re-review. `planning.completion_review: false` is the settings escape
+   hatch.
+
 1. **Scan the file** for all checkbox markers: `- [x]`, `- [ ]`, `- [~]`, `- [-]`.
 2. **Classify:**
    - `[x]` = completed

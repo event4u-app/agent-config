@@ -54,6 +54,16 @@ Understand → Research → Draft per the
 rule. Inspect existing roadmaps under `agents/roadmaps/` for overlap
 or supersession before opening a new one.
 
+**Confidence gate (Gate C) first.** The free-form "write a plan/roadmap"
+ask is a gated surface: before drafting, run
+[`plan-confidence-gate`](../../contexts/execution/plan-confidence-gate.md) —
+read `planning.challenge_on_create` (missing = `true`), do the codebase
+lookup, assess the four 95%-conditions. Confident → one marker line, then
+draft. Uncertain → `/challenge-me vision` interview (or the inline degrade
+protocol) before drafting; the C→R1 handoff state feeds the risk-review
+step so nothing is asked twice. An explicit user bypass wins for the turn
+and is counted.
+
 ### 1. Read the canonical template first
 
 The structure, frontmatter, lifecycle, and complexity-tier rules live
@@ -179,6 +189,21 @@ these into the overview's `Blocker` column and the per-roadmap
 breakdown. Full shape: [`templates/roadmaps.md` rule 20](../../agent-src/templates/roadmaps.md).
 Omit the section entirely when the roadmap has no such gate; run the
 § 4c gate-test before adding one.
+
+### 5c. Risk review (Gate R1) — after draft, before save
+
+Every ready (non-draft) plan carries a `## Risk Register` per
+[`plan-review-gates § 1`](../../../docs/contracts/plan-review-gates.md):
+(a) read the C→R1 handoff state (`agents/runtime/state/gate-c-<slug>.json`)
+if present, fresh, and same-session — its resolved branches seed the risk
+list, and nothing already resolved is re-asked; (b) identify the highest
+product AND implementation risks; (c) rank them descending; (d) write a
+mitigation per row and anchor each row to an existing phase/step of the
+same document. Self-review suffices — R1 checks completeness of risk
+capture, not blindness. No material risks → the exact honest-null grammar
+from the contract, never a bare "no risks" sentence.
+`lint_plan_risk_register` enforces the schema at pre-push + CI; drafts
+are exempt until flipped to ready.
 
 ### 6. Step-marker semantics — pick `[~]` (defer) vs `[-]` (cancel) honestly
 

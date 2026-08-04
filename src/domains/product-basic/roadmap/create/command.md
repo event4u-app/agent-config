@@ -20,6 +20,22 @@ packs:
 # /roadmap create
 ## Instructions
 
+### 0. Confidence gate (Gate C)
+
+Before anything else, run the plan-confidence gate per
+[`plan-confidence-gate`](../../contexts/execution/plan-confidence-gate.md):
+read `planning.challenge_on_create` (missing = `true`), do the codebase
+lookup, and assess the four 95%-conditions against the seed.
+
+- **Confident** (all four hold) → emit the single marker line and continue
+  with step 1.
+- **Uncertain** → route into `/challenge-me vision` with the ask as seed
+  (inline degrade protocol when the command is unavailable); the resulting
+  pitch pre-fills steps 3–4, and the C→R1 handoff state is written per the
+  context doc so the risk-review step re-asks nothing.
+- **Explicit user bypass** ("just write it") → skip the gate for this turn;
+  count the bypass.
+
 ### 1. Determine location
 
 Ask the user (in their language) where the roadmap should be created:
@@ -98,6 +114,19 @@ Show the complete roadmap to the user and ask (in their language) if anything sh
 
 - If yes → apply changes, show again.
 - Repeat until the user says it's done.
+
+### 5b. Risk review (Gate R1) — after draft, before save
+
+Unless the roadmap will be saved as `status: draft`, add a
+`## Risk Register` per
+[`plan-review-gates § 1`](../../../docs/contracts/plan-review-gates.md):
+read the C→R1 handoff state from step 0 if present (resolved branches
+seed the risk list — never re-ask them), identify the highest product and
+implementation risks, rank descending, write a mitigation per row, and
+anchor every row to a phase/step of this roadmap. No material risks → the
+exact honest-null grammar from the contract. Self-review suffices.
+`lint_plan_risk_register` enforces this at pre-push + CI; drafts are
+exempt until flipped to ready.
 
 ### 6. Save the file
 

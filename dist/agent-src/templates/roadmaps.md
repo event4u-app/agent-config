@@ -239,6 +239,18 @@ Templates for roadmap files stored in `agents/roadmaps/` or `{module_root}/{Modu
     full CI pipeline — per `roadmap-ci-steps-policy` a `verify:` must not
     be a full-suite gate.
 
+24. **Ready roadmaps carry a `## Risk Register` (Gate R1).** Every
+    ready (non-draft) roadmap ends with a schema-valid Risk Register —
+    marker line (`<!-- risk-review: v1 | reviewed: YYYY-MM-DD |
+    reviewer: <id> -->`), ranked rows (most → least risky), a
+    `Mitigation` and an in-document `Anchored under` reference per row.
+    No material risks → the **exact** honest-null grammar; a bare "no
+    risks" sentence fails. Schema, staleness rule, and the grandfather
+    clause for pre-gate roadmaps:
+    [`plan-review-gates § 1`](../../docs/contracts/plan-review-gates.md).
+    `status: draft` roadmaps are exempt until flipped to ready. Enforced
+    by `lint_plan_risk_register` at pre-push + CI.
+
 ---
 
 ## Quality Gates (remote CI by default)

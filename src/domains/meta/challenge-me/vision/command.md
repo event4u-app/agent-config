@@ -438,6 +438,11 @@ If the user wants any other follow-up, they invoke it explicitly. The
   polishing).
 - [`ask-when-uncertain`](../../rules/ask-when-uncertain.md) — the
   one-question-per-turn Iron Law this command is built on.
+- [`plan-confidence-gate`](../../contexts/execution/plan-confidence-gate.md)
+  — Gate C: the plan-authoring surfaces (`/roadmap:create`,
+  `roadmap-writing`, `/feature:plan`, `/feature:roadmap`) auto-route into
+  this interview when their confidence check falls below 95%. Reverse
+  pointer only — nothing in this command changes when the gate fires.
 - Inspiration: `mattpocock/skills/skills/productivity/grill-me/SKILL.md`
   — same spirit (relentless decision-tree interview, one question at a
   time, recommended answer per question), restructured to our command

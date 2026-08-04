@@ -55,6 +55,15 @@ Stop.
 - Read the roadmap template at `.augment/templates/roadmaps.md` for the structure.
 - Research the codebase for affected areas mentioned in the feature.
 
+**Confidence gate (Gate C)** — after reading the feature plan, run
+[`plan-confidence-gate`](../../contexts/execution/plan-confidence-gate.md)
+with the **feature document as seed** (`planning.challenge_on_create`,
+missing = `true`). All four 95%-conditions hold → single marker line,
+continue. A gap that would change the phases or acceptance criteria →
+`/challenge-me vision` interview (or inline degrade protocol) **before**
+proposing roadmaps; the C→R1 handoff state is written so the risk-review
+step re-asks nothing. Explicit user bypass wins for the turn and is counted.
+
 Determine how many roadmaps are needed:
 
 - **Single roadmap:** Small/medium features that fit in one document.
@@ -142,6 +151,16 @@ If any planned name already exists anywhere under the namespace,
 
 Re-run the check after a rename. Never silently overwrite, never
 auto-suffix without the user's pick.
+
+**Risk review (Gate R1)** — every generated roadmap that is saved ready
+(non-draft) carries a `## Risk Register` per
+[`plan-review-gates § 1`](../../../docs/contracts/plan-review-gates.md):
+read the C→R1 handoff state from step 2 if present (resolved branches
+seed the risks — never re-ask them), rank the highest product and
+implementation risks descending, one mitigation per row, each row
+anchored to a phase/step of that roadmap. No material risks → the exact
+honest-null grammar. `lint_plan_risk_register` enforces this at
+pre-push + CI; drafts are exempt until flipped to ready.
 
 ### 5. Link roadmaps in the feature plan
 
