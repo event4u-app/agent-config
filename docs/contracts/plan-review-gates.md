@@ -396,9 +396,22 @@ edited in place — the convention is
 State this because the shapes are indistinguishable otherwise: a directory
 holding only `round<N>-review.md` files means "no review of the current
 content" and the gate correctly reports `missing-artifact` — it does not mean
-the glob is broken. Every finding in a superseded round must already be
-terminal before it is renamed; the rename records the review, it never retires
-an open finding.
+the glob is broken.
+
+**Terminal-before-rename — `enforced_by: none` (stated, not implied).** Every
+finding in a superseded round must already be terminal before it is renamed;
+the rename records the review, it never retires an open finding. **Nothing
+enforces this.** The rename moves the file out of the `*.findings.md` glob, so
+§ 2.2's "any `open` row → block" no longer sees it: renaming an artifact that
+still holds an `open` row escapes the gate, and no validator, hook, or test
+detects it. The obligation is agent-carried and a human reading the diff is
+what catches a violation — the same stance § 1 takes for the unenforced plan
+surfaces and § 4.1 for the handoff state.
+
+A CI-facing check is possible but was not built here: it would have to walk the
+renamed rounds and parse rows the gate deliberately stopped selecting, which
+re-introduces the directory-wide coupling § 2.6 removed. Named as an open
+option rather than silently claimed.
 
 ## 3. Substantial-change heuristic (R1 trigger)
 
