@@ -12,7 +12,7 @@ keep-beta-until: 2026-08-12
 
 The matrix captures how the package's `always` rules relate when more
 than one fires on the same turn. It exists because rules at this size
-(55 rules, ~49k tokens budget) develop emergent precedence relationships
+(55 rules, ~49k chars budget) develop emergent precedence relationships
 that no single rule file can document on its own.
 
 The anchor pair is `non-destructive-by-default` — the universal safety

@@ -189,14 +189,17 @@ literal:
 
 | Metric | Value | Cap | Utilization |
 |---|---:|---:|---:|
-| Total extended budget | 49,311 chars | 49,000 | **100.6 %** |
-| Top-3 extended | 22,248 chars | 24,500 | 90.8 % |
+| Total extended budget | 49,311 chars | 60,254 (`EXT_TOTAL_CAP`) | 81.8 % |
+| Top-3 extended | 22,248 chars | 37,855 (`TOP3_CAP`) | 58.8 % |
 | Per-rule breaches | 2 of 9 | 0 | `non-destructive-by-default` (7,887), `scope-control` (8,529) |
 
-The total sits **0.6 % over** the cap — within the 2 % tolerance band
-(G3) which permits parameter refinement before model rejection. Per
-the contract, the model is **accepted**; the per-rule breaches are
-recorded in the transitional allowlist for Phase 2A.
+(The original writeup applied the **raw**-dimension cap of 49,000 to
+the extended measurement and derived a top-3 cap of 24,500 from it;
+the extended-dimension caps in `check_always_budget.ts` are
+`EXT_TOTAL_CAP` 60,254 and `TOP3_CAP` 37,855, under which the total
+sits below the cap.) Per the contract, the model is **accepted**; the
+per-rule breaches are recorded in the transitional allowlist for
+Phase 2A.
 
 `autonomous-execution` itself is `type: "auto"` and does not enter
 the always-budget. Its own extended size (rule 5,196 + three contexts

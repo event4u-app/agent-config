@@ -16,8 +16,8 @@ profile:
   defaults:
     preset_id: strict
     personas:
-      - reviewer
-      - security
+      - qa
+      - security-engineer
     skills_hint:
       - incident-commander
       - dashboard-design

@@ -16,8 +16,8 @@ profile:
   defaults:
     preset_id: fast
     personas:
-      - product-strategist
-      - reviewer
+      - strategist
+      - qa
     skills_hint:
       - refine-prompt
       - rice-prioritization

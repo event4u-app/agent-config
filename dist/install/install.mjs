@@ -14539,6 +14539,29 @@ var settingsSchema = external_exports.object({
       "Whether skills marked token_budget_class: rich may load in full (exempt from telegraph-speak + thin-projector trimming), consumed by the token-budget-discipline rule. on = allowed (default); off = fall back to standard condensed behavior; ask = surface an estimated token delta (tokens, not dollars) and ask once per session before loading."
     )
   }).default({ rich_skills: "on" }),
+  verbosity: external_exports.object({
+    intent_announcements: external_exports.boolean().default(false).describe(
+      'Intent narration before tool batches ("Let me check X\u2026"). Only honored when personal.play_by_play is ALSO true (the direct-answers narration carve-out requires both). false (default) = act and emit the result.'
+    ),
+    preview_artifacts: external_exports.boolean().default(false).describe(
+      "Show generated commit messages, PR titles/bodies, branch names before acting. false (default) = use generated content directly (/commit terse path)."
+    ),
+    routine_confirmations: external_exports.boolean().default(false).describe(
+      "Confirmation prompts for routine workflow steps with one obvious answer. Iron-Law gates (commit-policy, scope-control git-ops, Hard Floor) ALWAYS ask regardless."
+    ),
+    offer_council_in_delivery: external_exports.boolean().default(false).describe(
+      'Offer "run AI Council on this?" inside delivery commands (/feature-plan, /review-changes, /roadmap-create). Council commands themselves are unaffected.'
+    ),
+    post_action_reports: external_exports.enum(["off", "minimal", "full"]).default("minimal").describe(
+      "Status blocks after a successful action. off = errors only; minimal (default) = one-line confirmation; full = bullet list."
+    )
+  }).default({
+    intent_announcements: false,
+    preview_artifacts: false,
+    routine_confirmations: false,
+    offer_council_in_delivery: false,
+    post_action_reports: "minimal"
+  }),
   code_style: external_exports.object({
     docblocks: external_exports.enum(["minimal", "full"]).default("minimal").describe(
       "Consumed by the code-comment-discipline rule. minimal (default) = no signature-mirroring docblocks; docblocks only for machine-relevant precision (generics, array shapes) or genuine why-context. full = the exported public surface of a library package may carry one-line summary docblocks; the redundancy ban still holds."

@@ -68,8 +68,8 @@ If you need an ignored skill: read its SKILL.md directly, apply guidance, then a
 
 GitHub Copilot has no `PostToolUse` hook surface, so
 `scripts/context_hygiene_hook.ts` cannot run structurally and
-`agents/runtime/state/context-hygiene.json` is not maintained automatically
-(turn count, loop signal, freshness milestones at 20/40/60).
+`agents/state/context-hygiene.json` is not maintained automatically
+(tool-call count, loop signal, freshness milestones at 20/40/60).
 
 The cooperative path: track turns and tool-loop signals from memory
 during the conversation and apply the suggest-a-new-chat / 3-failure

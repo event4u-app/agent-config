@@ -18,7 +18,10 @@ and `readme-reviewer` skills.
 | **< 150** | Healthy | No splitting needed |
 | **150–300** | Busy | Add a Table of Contents; review for padding |
 | **300–500** | Overloaded | Split deep content to `/docs/` or `references/` |
-| **> 500** | Broken | Hard split required; README has stopped being an entry point |
+| **> 500** | Broken | Split strongly recommended; README has stopped being an entry point |
+
+These bands are editorial; the **enforced** limit is **750 lines** —
+`lint_readme_size.ts` fails the build above it.
 
 Lines, not bytes — tables, code blocks, and badges inflate bytes but stay
 scannable. The real signal is: **can a new reader reach install/usage
@@ -61,7 +64,7 @@ docs/
   api.md               ← full API reference
 ```
 
-README stays < 200 lines. Each `/docs/` file is a self-contained chapter.
+After a split, aim for a README < 200 lines. Each `/docs/` file is a self-contained chapter.
 
 ### Strategy 2 — Deep-link tables for multi-platform repos
 

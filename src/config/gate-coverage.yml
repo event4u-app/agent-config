@@ -260,6 +260,36 @@ gates:
       failure direction was false-positive rather than false-green, but the
       cause was the same dead root.
 
+  - id: lint_abstraction_thresholds
+    argv: []
+    min_scanned: 400
+    corpus: "src/rules + src/skills + src/agent-src/commands + docs/guidelines .md (533 at baseline)"
+    status: enforced
+    note: >
+      A collapse below the floor would mean the gate stopped reading the tree
+      that states extraction thresholds, so a bare or diverging threshold
+      (ADR-213 drift) could land while the gate still printed green.
+
+  - id: lint_profile_personas
+    argv: []
+    min_scanned: 5
+    corpus: "src/agent-src/profiles/*.yml (6 seed profiles at baseline)"
+    status: enforced
+    note: >
+      Fewer than 5 profiles scanned would mean the gate stopped reading the
+      seed-profile dir, so a defaults.personas id that resolves to no persona
+      file could land while the gate still printed green.
+
+  - id: lint_token_budget_discipline
+    argv: []
+    min_scanned: 200
+    corpus: "src/skills/*/SKILL.md (288 at baseline)"
+    status: enforced
+    note: >
+      A collapse below the floor would mean the gate stopped reading the skills
+      tree, so a rich-tagged skill without its justification section (or a cap
+      breach) could land while the gate still printed green.
+
   - id: lint_framework_leakage
     argv: []
     min_scanned: 350

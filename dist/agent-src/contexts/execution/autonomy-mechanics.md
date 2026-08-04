@@ -14,7 +14,10 @@ relevant. Detection logic lives in [`autonomy-detection.md`](autonomy-detection.
 
 The value is read once on the first turn (per
 [`layered-settings`](../../../docs/guidelines/agent-infra/layered-settings.md#section-aware-merge-rules))
-and cached. Missing key → treat as `on`.
+and cached. Missing key → treat as `auto` (fail-closed — same behavior
+as the shipped template default; absence of a key never grants the most
+permissive mode). The one exception is the explicit cloud carve-out
+below, where the whole settings file is absent by construction.
 
 ## Cloud platforms — settings degrade to `on`
 
@@ -128,6 +131,29 @@ rather than scaffold; the scaffold here is for a standard host **without** such 
 knob. The per-dimension uncertainty score (see
 [`notes-first-reasoning`](../../rules/notes-first-reasoning.md)) feeds this
 decision. Engage per [`rdp-gate`](rdp-gate.md).
+
+## Retry-budget escalation ladder — 2, 3, and the fresh session are ONE ladder
+
+The suite states three retry numbers; they are **stages of one escalation
+ladder on the same failing target**, not competing budgets:
+
+1. **Attempt 1 fails → up to 2 retries of the same approach**
+   ([`think-before-action`](../../rules/think-before-action.md) "MAX 2
+   RETRIES PER APPROACH") — the soft, agent-side stage: rethink between
+   attempts, switch approach when the same signature repeats
+   ([`context-hygiene`](../../rules/context-hygiene.md) "same failure
+   signature twice → pivot").
+2. **The 3rd consecutive failed attempt on the target trips N=3**
+   (this file, above): 2 retries + the initial attempt ARE the three
+   attempts N=3 counts. Terminal action: STOP, surface the attempts,
+   ask the user.
+3. **Repeated N=3 cycles on the same task** escalate to
+   [`context-hygiene`](../../rules/context-hygiene.md)'s 3-Failure Rule:
+   state dump + recommend a fresh session.
+
+No artifact may mint a fourth budget or a stricter one-strike cap for the
+same subject; per-tool loop caps (`token-efficiency` >2 same-tool calls)
+are a different subject (tool-call repetition, not fix attempts).
 
 **Concrete diminishing-returns stop-signal.** "Marginal evidence drops" is
 otherwise fuzzy; operationalize it so it is checkable, not vibes: when **two

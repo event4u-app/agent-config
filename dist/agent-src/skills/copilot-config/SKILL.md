@@ -197,7 +197,7 @@ Copilot and Augment complement each other:
 
 - copilot-instructions.md is for GitHub Copilot, NOT for Augment — don't mix audiences.
 - Don't duplicate .augment/ content into copilot-instructions.md — it bloats the file and causes drift.
-- Copilot reads the ENTIRE instructions file on every request — keep it under 500 lines.
+- Keep copilot-instructions.md under 150 lines (per `size-and-scope.md`) — Copilot Code Review reads only the first 4,000 characters, so put the highest-priority rules up top.
 
 ## Do NOT
 

@@ -2554,7 +2554,9 @@ function lint_interaction_quality(p: string, text: string): Issue[] {
     ].some((kw) => textLower.includes(kw));
 
     if (hasQuestionContext) {
-        const hasSimple = ['simple', 'binary', 'independent'].some((kw) => textLower.includes(kw));
+        // 'decision point' is the ADR-214 cadence boundary ("one decision
+        // point = one question") that replaced the simple-vs-complex split.
+        const hasSimple = ['simple', 'binary', 'independent', 'decision point'].some((kw) => textLower.includes(kw));
         const hasComplex = ['complex', 'one at a time', 'one question'].some((kw) => textLower.includes(kw));
         if (!(hasSimple && hasComplex)) {
             issues.push(

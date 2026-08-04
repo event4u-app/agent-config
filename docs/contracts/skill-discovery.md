@@ -10,7 +10,7 @@ stability: experimental
 
 ## Problem
 
-The package ships 220 skills. Both council members named "218-skill paralysis" as the dominant
+The package ships ~290 skills (288 as-of 2026-08). Both council members named "218-skill paralysis" as the dominant
 discoverability risk. This contract defines a **recommendation surface** that turns existing signals
 into a short, *explained* shortlist — and explicitly **reuses** signals already on disk. It adds **no**
 new always-loaded layer (that would fail the Phase-1 leaner-core premise).

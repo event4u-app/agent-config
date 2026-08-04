@@ -25,7 +25,7 @@ The universal safety floor (production-branch merges, deploys, pushes, prod data
 
 ## Setting — `personal.autonomy`
 
-Three values: `on` (suppress trivial questions), `off` (ask trivial questions too), `auto` (default — same as `off` until the user opts in via a standing autonomy directive). Read once on the first turn and cache. Missing key → treat as `on`. Full table, semantics, and cloud behavior: [`contexts/execution/autonomy-mechanics.md`](../contexts/execution/autonomy-mechanics.md).
+Three values: `on` (suppress trivial questions), `off` (ask trivial questions too), `auto` (default — same as `off` until the user opts in via a standing autonomy directive). Read once on the first turn and cache. Missing key → treat as `auto` (fail-closed, same as the shipped default; only the explicit cloud carve-out — no settings file at all — degrades to `on`). Full table, semantics, and cloud behavior: [`contexts/execution/autonomy-mechanics.md`](../contexts/execution/autonomy-mechanics.md).
 
 ## Opt-in detection — match by intent, not exact string
 

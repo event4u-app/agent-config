@@ -70,7 +70,7 @@ Integration cost is the most under-counted number. For each option:
 2. **Buy** — vendor integration (weeks to first value) + ongoing change-management cost + lock-in (cost to switch off).
 3. **Partner** — boundary management + divergence cost (what happens when partner changes their roadmap?).
 
-A buy decision with 2-week integration is rare; budget 4–8 weeks for non-trivial integrations and 3–6 months for enterprise-grade ones.
+A buy decision with 2-week integration is rare; industry-typical ranges (public integration benchmarks — not a prediction of your timeline, per `direct-answers` § no duration estimates) run 4–8 weeks for non-trivial integrations and 3–6 months for enterprise-grade ones.
 
 ### Step 3: Inversion — name the failure mode for each option
 

@@ -42,8 +42,15 @@ in a broken state:
 | `[Your component here]` / `<YourComponentName>` | Use the actual component name or write the component |
 | `Lorem ipsum` / `dolor sit amet` in UI output intended for review | Use realistic placeholder content or ask for content |
 
-The banned patterns above are also detected by `lint_output_slop.ts` (see
-`src/scripts/lint_output_slop.ts`) — violations cause a CI exit-code-2.
+A subset of the banned patterns is detected by `lint_output_slop.ts` (see
+`src/scripts/lint_output_slop.ts`) — Lorem-ipsum filler, bracket placeholders,
+`// rest of component` / `// ... (unchanged)`-style implementation
+placeholders, "for brevity" in code, standalone Unicode `…` lines, and
+`// TODO … implement` stubs — violations cause a CI exit-code-2. Three rows
+are NOT linter-detected (`/* similar pattern */`, `// rest follows same
+pattern`, ASCII `...`), and the linter scans only the suite's authored
+markdown (`src/skills/`, `src/rules/`, `docs/guidelines/`) as a backstop; for
+generated output the ban itself is model-carried.
 
 ## On budget overflow — PAUSED protocol
 

@@ -128,7 +128,7 @@ this table is a derived view, kept readable for reviewers.
 
 `analysis-autonomous-mode`, `analysis-skill-router`, `blast-radius-analyzer`, `bug-analyzer`, `data-flow-mapper`, `deep-reading-analyst`, `existing-ui-audit`, `performance-analysis`, `project-analysis-core`, `project-analysis-hypothesis-driven`, `project-analysis-laravel`, `project-analysis-nextjs`, `project-analysis-node-express`, `project-analysis-react`, `project-analysis-symfony`, `project-analysis-zend-laminas`, `project-analyzer`, `systematic-debugging`, `universal-project-analysis`
 
-**Total: 153 skills.**
+**Total: 153 skills** (domain-assigned subset; suite total 288 as-of 2026-08).
 
 ## § 5 — Versioning
 

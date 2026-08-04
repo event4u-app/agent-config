@@ -127,7 +127,7 @@ k-anonymity rule of thumb: combinations of {birth date, ZIP/postal code, gender}
 | Internal analyst, BYO-device, cloud analytics | Pseudonymized + aggregated only |
 | External partner, signed DPA | Pseudonymized + minimum-necessary columns |
 | External partner, no DPA | Refuse; require DPA first |
-| Public dataset | Aggregated, k-anonymity ≥ 5, no quasi-identifier combos |
+| Public dataset | Aggregated, k-anonymity ≥ 5 as the release floor, no quasi-identifier combos — a stricter bar (k ≥ 50) applies before *classifying* a metric as anonymous, per [`data-handling-judgment`](../skills/data-handling-judgment/SKILL.md) |
 
 ## Surface 4 — Legal privilege markers (legal pack)
 

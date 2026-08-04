@@ -31,7 +31,7 @@ Fires on new files, classes, controllers, modules, or any structural decision ab
 - **Business logic lives in services / use-cases** — calculations, orchestration, cross-aggregate validation.
 - **Domain models stay behavior-rich but I/O-free** — no HTTP, no DB transactions in the model; only domain rules, relationships, derived properties.
 - Always check the existing directory structure before creating new files.
-- Respect existing patterns — apply modern standards to **new** code only.
+- Respect existing patterns — apply modern standards to **new** code only. Stale idioms in *existing* code you touch are governed by the [`active-remediation`](active-remediation.md) ladder (fix-now / note + ask), not by this line.
 
 → Laravel-specific patterns (FormRequest, single-action `__invoke`, Eloquent scopes): see [`laravel`](../skills/laravel/SKILL.md), [`laravel-validation`](../skills/laravel-validation/SKILL.md).
 → Symfony: see [`symfony-workflow`](../skills/symfony-workflow/SKILL.md).
@@ -40,7 +40,7 @@ Fires on new files, classes, controllers, modules, or any structural decision ab
 ## Reusable components + object-oriented design
 
 - **Think in reusable units** — decompose UI into composable components; reuse the project's primitives / shared abstractions before building; extract a new unit only when the same shape repeats (audit existing first, per [`ui-audit-gate`](ui-audit-gate.md)).
-- **Object-oriented where it reduces complexity** — in an object-oriented / class-based codebase, encapsulation, single responsibility, composition over inheritance, behavior-rich domain objects, and design patterns *where they earn their place* are the high-priority default — never speculative abstraction, and never imposed on a functional / pipeline codebase (detect + defer to its paradigm). Bounded by [`minimal-safe-diff`](minimal-safe-diff.md) + [`senior-engineering-discipline`](senior-engineering-discipline.md), which **win on conflict**: a reviewer should be able to name the concrete duplication or second axis of change the abstraction removes (rule of thumb: two real repetitions before you extract).
+- **Object-oriented where it reduces complexity** — in an object-oriented / class-based codebase, encapsulation, single responsibility, composition over inheritance, behavior-rich domain objects, and design patterns *where they earn their place* are the high-priority default — never speculative abstraction, and never imposed on a functional / pipeline codebase (detect + defer to its paradigm). Bounded by [`minimal-safe-diff`](minimal-safe-diff.md) + [`senior-engineering-discipline`](senior-engineering-discipline.md), which **win on conflict**: a reviewer should be able to name the concrete duplication or second axis of change the abstraction removes (rule of thumb: two real repetitions before you extract a **code-level** abstraction; UI classes carry deliberately higher bars — per-class canon: [`abstraction-thresholds`](../docs/guidelines/abstraction-thresholds.md)).
 
 Full standard — split FE / backend, with the stack carve-out index and the anti-over-engineering deference: [`component-oriented-and-oop-development`](../docs/guidelines/component-oriented-and-oop-development.md).
 

@@ -64,9 +64,9 @@
     {
       "file": "src/skills/rule-writing/SKILL.md",
       "lines": [
-        76
+        78
       ],
-      "reason": "Quoted rule-description example (the php-coding rule's own description string) — meta content."
+      "reason": "Quoted rule-description example (the php-coding rule's own description string) — meta content. Re-anchored 76→78 after the description-cap edit above it."
     },
     {
       "file": "src/skills/security-audit/SKILL.md",

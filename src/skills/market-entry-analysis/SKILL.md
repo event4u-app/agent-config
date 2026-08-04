@@ -144,7 +144,7 @@ Horizontal SaaS, US-only, mid-market, considering EU expansion.
 
 - Step 0 — axis = geo (EU). Defer segment (stay mid-market) and vertical (stay horizontal).
 - Step 1 — candidate beachheads: DACH, Nordics, UK, Benelux. Scored: UK wins on constraint-favour (English-language sales motion translates, common-law contract familiarity), reference-reachability (5 mid-market UK customers reachable via existing channels), regulatory delta (UK-GDPR ≈ EU-GDPR floor with thinner data-residency requirement), expansion path (UK → Benelux → DACH).
-- Step 2 — Sales motion: existing AE motion translates to UK. Product delta: data-residency in EU (12 weeks). Operating cost: UK Ltd entity, VAT registration ≈ 3 months.
+- Step 2 — Sales motion: existing AE motion translates to UK. Product delta: data-residency in EU (industry-typical ~12 weeks, illustrative). Operating cost: UK Ltd entity, VAT registration (industry-typical ≈ 3 months, illustrative — not a prediction).
 - Step 3 — failure mode: "incumbent's UK channel partnerships locked us out of mid-market." Mitigation: direct-AE motion + content-led pipeline.
 - Step 4 — sequence: UK (beachhead) → Benelux (same motion, thin regulatory delta) → DACH (German-speaking sales hire required, larger TAM).
 - Step 5 — emit entry plan + compose P3 for UK-vs-incumbents positioning.
