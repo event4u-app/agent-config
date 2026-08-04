@@ -72,6 +72,28 @@ const GATE_DIR = path.join(REPO_ROOT, 'src/scripts');
 
 export type ScopeClass = 'count_at_exit' | 'count_in_helper' | 'no_corpus_count';
 
+/**
+ * What the gate READS, which decides which hardening primitive fits.
+ *
+ * Phase 2 of the conversion asks "what is a unit here?" for every gate with no
+ * countable corpus — and that question has a different answer per shape, not per
+ * gate. The shape narrows a 118-gate judgement call to four recipes:
+ *
+ * - `walks-a-tree` — it enumerates a directory but never keeps the count. The
+ *   corpus exists; hoist it. → `assertScanned`.
+ * - `reads-named-files` — a fixed set of paths (a config, a contract, a
+ *   manifest). No corpus to count, but the paths can vanish.
+ *   → `assertWatchlistResolves`.
+ * - `reads-a-diff` — it compares changed paths against a rule. A clean diff is
+ *   genuinely zero units. → `allowEmpty: 'EMPTY_VALID: …'`, and the watch list
+ *   (if any) still resolves.
+ * - `unclassified` — none of the above matched; read it.
+ *
+ * Syntactic and advisory. The deletion test is still applied per gate by whoever
+ * converts it; a shape that suggests `allowEmpty` is not permission to write one.
+ */
+export type GateShape = 'walks-a-tree' | 'reads-named-files' | 'reads-a-diff' | 'unclassified';
+
 /** What the counted value MEANS — the distinction that keeps Phase 1 honest. */
 export type CountKind = 'corpus' | 'findings';
 
@@ -89,10 +111,34 @@ export interface CountSite {
 export interface GateClassification {
     gate: string;
     cls: ScopeClass;
+    /** What the gate reads — picks the hardening primitive. See {@link GateShape}. */
+    shape: GateShape;
     /** Entry function the gate exits through, when one was identified. */
     entry: string | null;
     /** Count sites, exit-path ones first. */
     sites: CountSite[];
+}
+
+/** Which hardening primitive the shape suggests. Advisory, never a decision. */
+const SHAPE_RECIPE: Record<GateShape, string> = {
+    'walks-a-tree': '`assertScanned` — the corpus exists, hoist the count',
+    'reads-named-files': '`assertWatchlistResolves` — no corpus, but the paths can vanish',
+    'reads-a-diff': '`allowEmpty: EMPTY_VALID:` — a clean diff is genuinely zero units',
+    unclassified: 'read it — no shape matched',
+};
+
+/**
+ * Classify by what the source actually calls.
+ *
+ * Order matters: a gate that both diffs and walks is a diff gate, because the
+ * diff is what bounds its input. Walking beats reading named files for the same
+ * reason — the enumeration is the corpus, the named file is usually its config.
+ */
+export function shapeOf(src: string): GateShape {
+    if (/git diff|git ls-files|--name-only|--cached/.test(src)) return 'reads-a-diff';
+    if (/readdirSync|globSync|\bglob\(|iter_artefacts|opendirSync/.test(src)) return 'walks-a-tree';
+    if (/readFileSync\(/.test(src)) return 'reads-named-files';
+    return 'unclassified';
 }
 
 /** Callee names that build a collection. Matched on the called identifier. */
@@ -345,7 +391,7 @@ export function classifyGate(gate: string, dir = GATE_DIR): GateClassification {
     const ordered = [...atExit, ...sites.filter((s) => !atExit.includes(s))];
     const cls: ScopeClass =
         atExit.length > 0 ? 'count_at_exit' : corpusSites.length > 0 ? 'count_in_helper' : 'no_corpus_count';
-    return { gate, cls, entry, sites: ordered };
+    return { gate, cls, shape: shapeOf(text), entry, sites: ordered };
 }
 
 export function classifyAll(gates: readonly string[], dir = GATE_DIR): GateClassification[] {
@@ -354,7 +400,7 @@ export function classifyAll(gates: readonly string[], dir = GATE_DIR): GateClass
         try {
             out.push(classifyGate(g, dir));
         } catch {
-            out.push({ gate: g, cls: 'no_corpus_count', entry: null, sites: [] });
+            out.push({ gate: g, cls: 'no_corpus_count', shape: 'unclassified', entry: null, sites: [] });
         }
     }
     return out;
@@ -391,11 +437,11 @@ export function renderMarkdown(rows: readonly GateClassification[]): string {
             lines.push('_none_', '');
             continue;
         }
-        lines.push('| Gate | Entry | Count already at | Expression | Kind |', '|---|---|---|---|---|');
+        lines.push('| Gate | Shape | Entry | Count already at | Expression | Kind |', '|---|---|---|---|---|---|');
         for (const g of group) {
             const first = g.sites.find((s) => s.kind === 'corpus') ?? g.sites[0];
             lines.push(
-                `| \`${g.gate}\` | ${g.entry === null ? '—' : `\`${g.entry}()\``} | ` +
+                `| \`${g.gate}\` | ${g.shape} | ${g.entry === null ? '—' : `\`${g.entry}()\``} | ` +
                     `${first === undefined ? '—' : `\`${first.at}\``} | ` +
                     `${first === undefined ? '—' : `\`${first.expr}\` in \`${first.fn}()\``} | ` +
                     `${first === undefined ? '—' : first.kind} |`,
@@ -403,6 +449,17 @@ export function renderMarkdown(rows: readonly GateClassification[]): string {
         }
         lines.push('');
     }
+    lines.push('## Shape → hardening primitive', '', '| Shape | Suggested primitive |', '|---|---|');
+    for (const [shape, recipe] of Object.entries(SHAPE_RECIPE)) {
+        lines.push(`| \`${shape}\` | ${recipe} |`);
+    }
+    lines.push(
+        '',
+        'Advisory. The deletion test — *"if this gate\'s scan root were deleted, would',
+        'the reason still make sense?"* — is applied per gate by whoever converts it. A',
+        'shape suggesting `allowEmpty` is not permission to write one.',
+        '',
+    );
     return lines.join('\n');
 }
 

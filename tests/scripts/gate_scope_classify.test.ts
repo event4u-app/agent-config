@@ -15,7 +15,7 @@ import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
-import { classifyGate } from '../../src/scripts/gate_scope_classify.js';
+import { classifyGate, shapeOf } from '../../src/scripts/gate_scope_classify.js';
 
 function withGate(source: string, name = 'check_probe'): ReturnType<typeof classifyGate> {
     const dir = mkdtempSync(join(tmpdir(), 'gate-classify-'));
@@ -81,6 +81,33 @@ describe('corpus vs findings', () => {
             }
         `);
         expect(r.cls).toBe('no_corpus_count');
+    });
+});
+
+describe('shape — which hardening primitive fits', () => {
+    it('a diff gate outranks the tree it also walks', () => {
+        // Order is the claim: when a gate both diffs and enumerates, the diff is
+        // what bounds its input, so a clean diff is genuinely zero units and the
+        // tree walk is incidental. Classifying it as a corpus gate would push it
+        // toward an assertion that fires on every clean-diff run.
+        expect(shapeOf('const changed = execSync("git diff --name-only"); readdirSync(root);')).toBe(
+            'reads-a-diff',
+        );
+    });
+
+    it('walking a tree outranks reading a named file', () => {
+        // The enumeration is the corpus; the named file is usually its config.
+        expect(shapeOf('const cfg = readFileSync("x.yml"); const files = readdirSync(root);')).toBe(
+            'walks-a-tree',
+        );
+    });
+
+    it('a fixed path set is a watch list, not a corpus', () => {
+        expect(shapeOf('const contract = readFileSync(CONTRACT, "utf8");')).toBe('reads-named-files');
+    });
+
+    it('says so when nothing matched, instead of guessing a recipe', () => {
+        expect(shapeOf('export function main() { return 0; }')).toBe('unclassified');
     });
 });
 
