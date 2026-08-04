@@ -282,6 +282,28 @@ jobs:
             fi
           }
 
+      - name: Archived-review dispositions are terminal (plan-review-gates §2.7)
+        # NOT gated on `pull_request`, unlike the two R2 steps above: those
+        # evaluate the current diff, this reads the FROZEN records, which R2
+        # never looks at because § 2.6 scopes it to the current review scope.
+        # A superseded round renamed out of the `*.findings.md` glob is read by
+        # nothing at all — that gap is how two findings sat recorded as `open`
+        # in this repo's own corpus for a day.
+        #
+        # Same exit-code contract § 6: 2 = internal error → warn-and-allow, so a
+        # broken gate never blocks its own fix. Exit 1 blocks, and a dead scan
+        # scope is deliberately exit 1 rather than 2 — otherwise a moved reviews
+        # root would silently downgrade this gate to advisory.
+        run: |
+          ./scripts-run src/scripts/check_review_dispositions || {
+            rc=$?
+            if [ "$rc" = "2" ]; then
+              echo "::warning::check_review_dispositions internal error — degraded advisory mode, allowing"
+            else
+              exit "$rc"
+            fi
+          }
+
       - name: Check always-rule budget (warn 80% / fail 90%)
         run: task check-always-budget
 

@@ -365,6 +365,22 @@ gates:
       stays registered so the guard reports this gate rather than skipping it
       silently.
 
+  - id: check_review_dispositions
+    argv: []
+    min_scanned: 7
+    corpus: "archived round records — `*-review.md` under agents/evidence/reviews/, excluding live `*.findings.md` (9 at baseline)"
+    status: enforced
+    note: >
+      Contract § 2.7. Unlike the R2 entry above, this floor is genuinely
+      trippable: the corpus is 9 frozen records and archived records are not
+      deleted, so a drop to 7 means the reviews root moved or the naming
+      convention drifted — not that the work went clean. That is precisely the
+      case rule 3 exists for. The gate reads the FROZEN records because R2
+      selects only artefacts in the CURRENT review scope, so a superseded round
+      renamed out of the `*.findings.md` glob is read by nothing at all — two
+      findings sat recorded as `open` in this repo's own corpus for a day
+      through exactly that gap.
+
   # ---------------------------------------------------------------------------
   # The five below close the gap this header named: they already called
   # `_lib/scan_scope.assertScanned` with a real count and only had to PRINT it.
