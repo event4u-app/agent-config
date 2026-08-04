@@ -14,6 +14,8 @@ packs: [meta]
 roles: [planner]
 enforced_by:
   - "hook:roadmap-progress"
+collision_ok:
+  "agents/roadmaps/": "any roadmap touch regenerates the dashboard, same response"
 ---
 
 # Roadmap Progress Sync

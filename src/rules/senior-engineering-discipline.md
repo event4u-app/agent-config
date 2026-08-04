@@ -19,6 +19,12 @@ routes_to:
   - "skill:testing-anti-patterns"
 workspaces: [engineering]
 packs: [engineering-base]
+collision_ok:
+  "migration": "migration = invisible-controls surface (reversible, indexed, tenant-scoped)"
+  "refactor": "a refactor must generalize, never overfit — the anchor applies"
+  "implement": "implementation = the invisible-controls checklist"
+  "endpoint": "endpoint row of the surface-to-controls table"
+  "component": "component work = generalize + reuse duty"
 ---
 
 # Senior Engineering Discipline

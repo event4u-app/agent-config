@@ -112,6 +112,9 @@ jobs:
       - name: persona-governance
         run: ./scripts-run src/scripts/lint_persona_governance
 
+      - name: trigger collisions (every shared trigger dispositioned)
+        run: ./scripts-run src/scripts/lint_trigger_collisions --quiet
+
       # The kernel bodies are the KV-cache prefix of every request, so a byte
       # change there is a 10× cost event for every consumer. This gate existed
       # since the token-saving work and its own header claimed "CI fails if the

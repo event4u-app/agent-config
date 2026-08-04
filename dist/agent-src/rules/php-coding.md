@@ -16,6 +16,8 @@ trust:
 install:
   default: false
   removable: true
+collision_ok:
+  "phpstan": "phpstan findings are the PHP pattern floor's own quality surface"
 ---
 
 # Php Coding

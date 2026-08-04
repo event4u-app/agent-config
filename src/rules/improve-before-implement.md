@@ -16,6 +16,10 @@ validator_ignore:
     reason: "Rule cites the authoring tree when describing where examples live."
 workspaces: [engineering]
 packs: [engineering-base]
+collision_ok:
+  "migration": "a migration is a significant behavioural change — the pre-implementation checks apply"
+  "refactor": "refactor = significant change; the demand gate + three checks apply"
+  "implement": "its own core trigger — pre-implementation validation"
 ---
 
 # Improve Before Implement

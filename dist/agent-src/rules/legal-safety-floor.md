@@ -28,6 +28,9 @@ packs: [legal-review-prep]
 trust:
   level: advisory
   human_review_required: true
+collision_ok:
+  "controller": "'controller' is a GDPR role term (controller/processor) in the legal pack"
+  "review this contract": "the legal-pack contract-review gate — both floors must fire"
 ---
 <!-- agent-config:human-review-banner -->
 > HUMAN REVIEW REQUIRED · trust: advisory · owner: unknown

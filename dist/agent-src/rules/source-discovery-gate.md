@@ -17,6 +17,9 @@ routes_to:
   - "skill:source-discovery"
 workspaces: [engineering]
 packs: [engineering-base]
+collision_ok:
+  "endpoint": "an unconfirmed endpoint shape needs evidence before code"
+  "schema": "a DB schema is the canonical structure to verify from a real source"
 ---
 
 # Source Discovery — evidence before structure

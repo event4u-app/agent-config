@@ -20,6 +20,8 @@ packs: [meta]
 enforced_by:
   - "validator:src/scripts/check_no_roadmap_refs.ts"
   - "validator:src/scripts/check_council_references.ts"
+collision_ok:
+  "agents/roadmaps/": "roadmap edits are where transient-ref links get written"
 ---
 
 # No Transient References from Stable Artifacts

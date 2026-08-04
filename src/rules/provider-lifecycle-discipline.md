@@ -25,6 +25,11 @@ applies_to_user_types:
   - "maintainer"
 workspaces: [agent-config-maintainer, engineering, gtm]
 packs: [ai-image, ai-video]
+collision_ok:
+  "/image:": "provider-tier gate fires on the same generation surface"
+  "/audio:": "provider-tier gate for audio providers"
+  "/video:": "provider-tier gate for video providers"
+  "scripts/ai-image/adapters/": "adapter edits are the lifecycle contract's surface"
 ---
 
 # Provider Lifecycle Discipline

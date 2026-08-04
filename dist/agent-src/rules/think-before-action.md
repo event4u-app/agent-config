@@ -17,6 +17,11 @@ triggers:
 self_contained: true
 workspaces: [engineering]
 packs: [engineering-base]
+collision_ok:
+  "refactor": "analyze-before-modify floor fires on any refactor"
+  "implement": "analyze-first floor on any implementation"
+  "debug": "targeted inspection over brute force while debugging"
+  "fix": "no blind trial-and-error on fixes — max 2 retries"
 ---
 
 # think-before-action

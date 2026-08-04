@@ -23,6 +23,9 @@ routes_to:
   - "guideline:agent-infra/cross-source-consistency-mechanics"
 workspaces: [engineering, product]
 packs: [engineering-base, product-basic]
+collision_ok:
+  "mockup": "a mockup is a second source — discrepancy check against the ticket text"
+  "screenshot": "a screenshot is a second source — discrepancy check"
 ---
 
 # Cross-Source Consistency

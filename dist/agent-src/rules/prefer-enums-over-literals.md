@@ -12,6 +12,9 @@ triggers:
 self_contained: true
 workspaces: [engineering]
 packs: [engineering-base]
+collision_ok:
+  "migration": "migrations add columns — multi-state fields should land as enums from the start"
+  "category": "a category field is the canonical enum candidate"
 ---
 
 # Prefer Enums Over Literal Values

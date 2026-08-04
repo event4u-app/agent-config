@@ -14,6 +14,8 @@ routes_to:
   - "skill:typography-system"
 workspaces: [agent-config-maintainer, engineering]
 packs: [frontend-design]
+collision_ok:
+  "component": "no new component without audit findings — its core subject"
 ---
 
 # UI Audit Gate

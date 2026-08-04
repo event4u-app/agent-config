@@ -84,6 +84,12 @@
 # contract is `dist == rewrite(src)`; `check_ci_local_parity`, whose corpus is
 # workflow files) carries no recipe and is reported UNPROVEN, never green.
 gates:
+  - id: lint_trigger_collisions
+    argv: []
+    min_scanned: 90
+    corpus: "src/rules/*.md frontmatters (111 at baseline)"
+    status: enforced
+
   - id: check_condensation
     argv: []
     min_scanned: 380

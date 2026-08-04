@@ -16,6 +16,8 @@ routes_to:
   - "guideline:agent-infra/domain-adoption-gates"
 workspaces: [agent-config-maintainer]
 packs: [meta]
+collision_ok:
+  "src/skills/": "a skill in a fresh vertical is exactly the domain-gate surface"
 ---
 
 # Domain Adoption Policy

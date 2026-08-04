@@ -34,6 +34,15 @@ workspaces: [agent-config-maintainer]
 packs: [meta]
 enforced_by:
   - "validator:src/scripts/lint_framework_leakage.ts"
+collision_ok:
+  "src/skills/": "generic skills must not mandate a stack — fires on skill edits"
+  "src/rules/": "rule edits are checked for framework leakage"
+  "src/agent-src/commands/": "command edits are checked for framework leakage"
+  "artisan": "artisan named in a generic artifact is leakage — the lint surface"
+  "eloquent": "eloquent named in a generic artifact is leakage — the lint surface"
+  "formrequest": "FormRequest named in a generic artifact is leakage — the lint surface"
+  "phpstan": "phpstan named in a generic artifact is leakage — the lint surface"
+  "rector": "rector named in a generic artifact is leakage — the lint surface"
 ---
 
 # framework-neutrality-in-generic-skills

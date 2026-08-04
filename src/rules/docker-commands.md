@@ -11,6 +11,10 @@ routes_to:
   - "skill:docker"
 workspaces: [engineering]
 packs: [engineering-base]
+collision_ok:
+  "artisan": "artisan runs inside the project container, never on the host"
+  "composer": "composer runs inside the project container"
+  "docker": "its own core subject"
 ---
 
 # Docker Commands

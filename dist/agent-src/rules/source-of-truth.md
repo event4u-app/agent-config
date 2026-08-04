@@ -14,6 +14,8 @@ workspaces: [agent-config-maintainer]
 packs: [meta]
 enforced_by:
   - "validator:src/scripts/check_condensation.ts"
+collision_ok:
+  ".augment/": "the projection is read-only — edits belong in src/"
 ---
 
 # Source of Truth

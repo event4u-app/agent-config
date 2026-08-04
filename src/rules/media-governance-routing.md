@@ -31,6 +31,11 @@ workspaces: [agent-config-maintainer, engineering, gtm]
 packs: [ai-image, ai-video]
 enforced_by:
   - "validator:src/scripts/lint_media_policy_linkage.ts"
+collision_ok:
+  "/image:": "routes the project-local media policy layer on the same surface"
+  "/audio:": "routes the media policy layer for audio surfaces"
+  "/video:": "routes the media policy layer for video surfaces"
+  "likeness": "likeness prompts must load the policy layer before generation"
 ---
 
 # Media Governance Routing

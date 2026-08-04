@@ -8,6 +8,8 @@ routes_to:
   - "guideline:agent-infra/rule-type-governance"
 workspaces: [agent-config-maintainer]
 packs: [meta]
+collision_ok:
+  "src/rules/": "the always-vs-auto choice fires on every rule edit"
 ---
 
 # Rule Type Governance
