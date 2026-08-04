@@ -43,6 +43,8 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
+import { assertScanned, DeadScopeError } from './_lib/scan_scope.js';
+
 const _HERE = fileURLToPath(import.meta.url);
 const REPO_ROOT = path.resolve(path.dirname(_HERE), '..', '..');
 const ROUTER = path.join(REPO_ROOT, 'dist', 'router.json');
@@ -106,6 +108,31 @@ export function main(): number {
     } catch (e) {
         process.stderr.write(`error: cannot parse router.json (${String(e)})\n`);
         return 1;
+    }
+
+    // The routed-rule population, not `found` below: `found` counts VIOLATIONS,
+    // so zero is the direction this ratchet is pushing toward. A router.json
+    // regenerated over a moved rule tree parses fine and yields zero short
+    // keywords — indistinguishable from a clean run. Exit 1 is the existing
+    // "gate could not run" code (missing / unparseable router); 2 stays
+    // "over budget".
+    const routed = ['tier_1', 'tier_2'].reduce(
+        (n, tier) => n + (Array.isArray(router[tier]) ? (router[tier] as unknown[]).length : 0),
+        0,
+    );
+    try {
+        assertScanned({
+            gate: 'lint_trigger_precision',
+            scanned: routed,
+            units: 'routed rule(s)',
+            roots: ['dist/router.json'],
+        });
+    } catch (e) {
+        if (e instanceof DeadScopeError) {
+            process.stderr.write(`error: ${e.message}\n`);
+            return 1;
+        }
+        throw e;
     }
 
     const found = short_keywords(router);

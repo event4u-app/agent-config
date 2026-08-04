@@ -33,6 +33,7 @@ import {
     REPO_ROOT,
     VERSION_HEADING_RE,
 } from './_lib/changelog_eras.js';
+import { assertScanned, DeadScopeError } from './_lib/scan_scope.js';
 
 const _HERE = fileURLToPath(import.meta.url);
 
@@ -242,6 +243,29 @@ function main(argv?: readonly string[]): number {
     const cutoff = args.cutoff ?? package_json_version();
     const text = fs.readFileSync(changelog_path, 'utf-8');
     const lines = text.split(/\r\n|\r|\n/);
+
+    // Scope is the version sections the heading regex actually recognises, not
+    // the line count: a CHANGELOG whose heading shape drifts away from
+    // VERSION_HEADING_RE still reads as a big file while presenting zero
+    // sections to check, and the gate reports clean. Counted before the cutoff
+    // and patch filters — those are judgement, this is reach.
+    const sections = lines.filter((ln) => VERSION_HEADING_RE.test(ln)).length;
+    try {
+        assertScanned({
+            gate: 'lint_changelog_rollback',
+            scanned: sections,
+            units: 'version section(s)',
+            roots: [path.relative(REPO_ROOT, changelog_path)],
+        });
+    } catch (exc) {
+        if (exc instanceof DeadScopeError) {
+            // 1 = the gate's violation code; 2 is reserved for the pinned
+            // argparse usage contract, so it cannot carry "could not run".
+            process.stderr.write(`❌  ${exc.message}\n`);
+            return 1;
+        }
+        throw exc;
+    }
 
     const violations = check_rollback_lines(lines, cutoff);
     if (violations.length > 0) {

@@ -18,6 +18,8 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+import { assertWatchlistResolves, DeadScopeError } from './_lib/scan_scope.js';
+
 const _HERE = fileURLToPath(import.meta.url);
 const REPO = path.resolve(path.dirname(_HERE), '..', '..');
 const GLAMA_DIR = path.join(REPO, 'internal', 'glama');
@@ -44,6 +46,28 @@ function _canonicalCommand(scriptPath: string, stripPrefix?: string): string {
 
 function main(): number {
     const readmePath = path.join(GLAMA_DIR, 'README.md');
+
+    // No corpus — the gate guards three named files. If internal/glama/ moves,
+    // every read below throws rather than reporting; name the scope instead so
+    // the failure says which paths went missing.
+    try {
+        assertWatchlistResolves({
+            gate: 'lint_glama_drift',
+            candidates: [
+                path.posix.join('internal', 'glama', 'README.md'),
+                ...SCRIPTS.map((s) => path.posix.join('internal', 'glama', s.file)),
+            ],
+            repoRoot: REPO,
+        });
+    } catch (exc) {
+        if (exc instanceof DeadScopeError) {
+            // 1 is the gate's only failure code — drift and "cannot run" share it.
+            console.error(`❌  ${exc.message}`);
+            return 1;
+        }
+        throw exc;
+    }
+
     const readme = fs.readFileSync(readmePath, 'utf8');
 
     let failed = false;

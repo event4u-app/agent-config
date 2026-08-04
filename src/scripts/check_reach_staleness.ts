@@ -51,6 +51,7 @@ import * as path from 'node:path';
 import process from 'node:process';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
+import { assertScanned, DeadScopeError } from './_lib/scan_scope.js';
 import { RegistryLoadError, load_registry } from './check_reach_channels.js';
 
 const _HERE = fileURLToPath(import.meta.url);
@@ -313,11 +314,37 @@ export function main(argv: string[] = process.argv.slice(2)): number {
     const relTarget = path.relative(ROOT, registryPath) || registryPath;
 
     let findings: StalenessFinding[];
+    let channelCount: number;
     try {
         findings = run_checks({ registryPath, today });
+        // `load_registry` already refuses a missing / unparseable file (exit 3),
+        // but a registry that PARSES with no `channels:` list is the blind case:
+        // `extract_channels` is defensive by contract and returns [], so every
+        // per-channel check iterates nothing and the gate prints the ✅ line.
+        // Re-reading the (small) YAML keeps run_checks / extract_channels — both
+        // exported and pinned by fixtures — untouched.
+        channelCount = extract_channels(load_registry(registryPath)).length;
     } catch (err) {
         if (err instanceof RegistryLoadError) {
             process.stderr.write(`❌  check_reach_staleness: ${err.message}\n`);
+            return 3;
+        }
+        throw err;
+    }
+
+    // No `allowEmpty`: a registry with zero channels is a registry this gate
+    // cannot judge, and it reads exactly like a clean one. Exit 3 (unusable
+    // input) over 1 (violations) — a dead scope means the gate could not run.
+    try {
+        assertScanned({
+            gate: 'check_reach_staleness',
+            scanned: channelCount,
+            units: 'channel(s)',
+            roots: [`${path.relative(ROOT, registryPath) || registryPath} → channels[]`],
+        });
+    } catch (err) {
+        if (err instanceof DeadScopeError) {
+            process.stderr.write(`❌  ${err.message}\n`);
             return 3;
         }
         throw err;

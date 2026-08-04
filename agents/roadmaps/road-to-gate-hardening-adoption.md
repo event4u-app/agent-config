@@ -19,6 +19,34 @@ parent_roadmap: road-to-gates-that-can-fail
 > exists to prevent (their estimate of the semantic-error rate for a mechanical
 > sweep: **15–25 %**).
 
+### blocker: four gates need a port-or-retire decision, not a conversion
+
+- owner: maintainer
+- Resolved when: each of the four below is ported, retired, or explicitly
+  declared out of the gate population — and the ratchet entry is deleted.
+
+229 of 233 are converted. The remaining four are **decisions**, and each was
+attempted and reverted rather than papered over:
+
+| Gate | Why it cannot be converted | What it does today |
+|---|---|---|
+| `lint_skill_tools` | corpus is `skill_tools/*.py`; the py2ts migration left only `.ts`. Every check is Python-specific (argparse import, `__main__` guard, stdlib-only import scan, `snake_case.py` naming) | prints `✅ scripts/skill_tools/ — all tools clean.` over **0** tools |
+| `lint_workspace_boundary` | corpus is `src/cli/python/workspace_*.py`; same migration, same emptiness. The ADR-095 boundary it guards is entirely unenforced | prints `⚠️ no files match …`, exits **0** |
+| `check_bite_sized_granularity` | a pure library — no CLI, no `main`, no exit code, no root. `grep` finds **no production caller**, only its own test | nothing; it is called by nobody |
+| `verify_before_complete_hook` | an observability hook, not a gate. Its contract pins "exit code is always 0 — never blocks", and its only inputs are its own stdin envelope and the state file it writes | entered the population only because the definition widened to the `verify_*` prefix |
+
+**Why they are left unhardened and counted rather than waived.** An `allowEmpty`
+on any of them fails the deletion test in the most literal way available: delete
+`skill_tools/` and "no Python tools" still reads true — which is exactly the
+blindness the test exists to catch. Asserting their real (empty) corpus would
+red CI for a defect this roadmap is not chartered to fix. Inventing a unit for
+the last two would mean asserting a loop index or a constant.
+
+So the ratchet keeps four entries it cannot clear. That is the honest state, and
+it is why this roadmap's "count reaches 0" criterion is **not** met by the PR
+that does all 229 conversions. Faking it here would reproduce, at the finish
+line, the manufactured green the parent roadmap exists to prevent.
+
 ## Goal
 
 Take `gate-hardening:unhardened-scan-scope` from **189** to **0**: every gate
@@ -166,13 +194,21 @@ The remaining population, where "what is a unit?" has no mechanical answer. Per
 the council these carry a **15–25 %** semantic-error rate if swept blind, so
 they are per-gate work with a stated decision, not a sweep.
 
-- [ ] Classify each remaining gate: corpus gate (assert the count) · watch-list
+- [x] Classify each remaining gate: corpus gate (assert the count) · watch-list
       gate (`assertWatchlistResolves`) · legitimately-empty (`allowEmpty` with a
       reason).
       *Verify:* every gate lands in exactly one class with a one-line reason in
       the source, reviewable in the diff.
-- [ ] Convert per class, in batches, each batch dropping the ratchet count.
+      → `gate_scope_classify` reports a `shape` per gate — `walks-a-tree` (72)
+      · `reads-named-files` (64) · `reads-a-diff` (15) · `unclassified` (12) —
+      and the shape picks the primitive. Precedence carries the claim: a gate
+      that both diffs and walks is a diff gate, because the diff bounds its
+      input. The per-gate reason is the comment at each call site.
+- [x] Convert per class, in batches, each batch dropping the ratchet count.
       *Verify:* ratchet drop equals batch size; no batch raises it.
+      → 193 → 163 → 115 → 61 → 4, across three waves of four parallel batches.
+      Every drop matched its batch. **229 of 233 gates converted**; the
+      remaining 4 are the blocker above, not unconverted work.
 
 ### The `allowEmpty` trapdoor — the council's strongest objection, carried in
 
@@ -195,23 +231,41 @@ count units.* The operational test, applied per justification:
 A justification failing that test is not a hardened gate — it is an unhardened
 one wearing a label, and it stays in the count.
 
-- [ ] Every `allowEmpty` added by this roadmap passes the deletion test, stated
+- [x] Every `allowEmpty` added by this roadmap passes the deletion test, stated
       in the reason itself.
       *Verify:* a reviewer can apply the test from the comment alone, without
       reading the gate.
+      → 16 across 229 conversions (7 %). Each states its own deletion test in
+      the reason. The two shapes that earned one: project-authored runtime
+      corpora a consumer legitimately starts without (knowledge cards, memory
+      intake, the TTL-managed scratch tree, the opt-in orchestration DSL), and
+      git-range gates where an empty range is a real answer — those name why an
+      *unreadable* range is the different case that exits above them. Where a
+      gate looked like an `allowEmpty` candidate and a better unit removed the
+      need, the better unit won: `lint_legal_pack` counts every SKILL.md rather
+      than the opt-in pack's subset.
 
 ## Phase 3 — close the ratchet
 
 - [ ] Count reaches 0.
       *Verify:* `check_gate_coverage` reports 0 unhardened; the baseline entry is
       DELETED, not zeroed-and-kept.
-- [ ] The population regex that defines "a gate" is asserted in one place, not
+      → **4 of 233 remain, and they are the blocker above.** Deliberately open:
+      each needs a port-or-retire call no conversion can substitute for.
+- [x] The population regex that defines "a gate" is asserted in one place, not
       three.
       *Verify:* `check_gate_coverage`, `sweep_dead_scan_roots` and the registry
       test agree on the population; a test pins the agreement.
-      <!-- measured 2026-08-04: they disagree — 223 / 225 / 232 respectively,
-      because each carries its own prefix regex. Harmless while the numbers are
-      only reported, load-bearing the moment the ratchet reads one of them. -->
+      → `_lib/gate_population.ts` owns the answer; all three read it. Done
+      FIRST, not last (AI council 2026-08-04): reaching 0 on the narrow
+      population would have forced deleting the ratchet entry — this roadmap's
+      own closure criterion — at the moment 10 newly-visible gates still needed
+      conversion, leaving that work unprotected. The widening also paid for
+      itself immediately: the first sweep after it found `skill_collision_clusters`
+      and `skill_overlap` reading the retired container, 0 of 288 skills.
+      The pinning test asserts named real cases and that no consumer has grown a
+      private regex back — comparing the three constants would pass while all
+      three were wrong together.
 
 ## Non-goals
 
@@ -225,11 +279,12 @@ one wearing a label, and it stays in the count.
 ## Acceptance criteria
 
 - [ ] `gate-hardening:unhardened-scan-scope` reaches 0 and the baseline entry is
-      removed.
-- [ ] No gate can exit 0 having scanned zero units without a visible, justified
+      removed. → 193 → **4**; the last four are the blocker above.
+- [x] No gate can exit 0 having scanned zero units without a visible, justified
       `allowEmpty` declaration — the parent's criterion, inherited verbatim.
-- [ ] Every `allowEmpty` justification in the tree passes the deletion test.
-- [ ] The three population definitions agree, pinned by a test.
+      → holds for 229 of 233; the 4 exceptions are named, counted, and blocked.
+- [x] Every `allowEmpty` justification in the tree passes the deletion test.
+- [x] The three population definitions agree, pinned by a test.
 - [ ] All quality gates pass — see `quality-tools`.
 
 ## Risk Register

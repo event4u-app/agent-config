@@ -24,6 +24,8 @@ import * as os from 'node:os';
 import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
+import { assertScanned, DeadScopeError } from './_lib/scan_scope.js';
+
 interface FileEntry {
     status: string;
     codes: Set<string>;
@@ -519,6 +521,32 @@ function main(): number {
     // Sanity guard: two non-empty result sets sharing no file → not comparable.
     const baseKeys = Object.keys(baseline_map);
     const currKeys = Object.keys(current_map);
+
+    // The asserted unit is the WORKING TREE's linted-file population, not the
+    // baseline's. Baseline emptiness has two documented, legitimate causes (no
+    // linter file in the ref; a pre-migration `.py` baseline with no python3)
+    // and its own guard below, so asserting there would re-litigate the false
+    // reds this script already carries scars from. An empty CURRENT tree has no
+    // legitimate cause: it means the linter's corpus moved. Both guards below
+    // require `currKeys.length`, so today that case slips through all of them
+    // and every prior finding is reported as an improvement — exit 0.
+    // Exit 2 is the "runs are not comparable / could not run" code both guards
+    // already use; 1 stays "regressions found".
+    try {
+        assertScanned({
+            gate: 'lint_regression',
+            scanned: currKeys.length,
+            units: 'linted file(s) in the working tree',
+            roots: [`${root} (skill_linter --all)`],
+        });
+    } catch (e) {
+        if (e instanceof DeadScopeError) {
+            process.stderr.write(`Error: ${e.message}\n`);
+            return 2;
+        }
+        throw e;
+    }
+
     const shared = baseKeys.some((k) => k in current_map);
     if (baseKeys.length && currKeys.length && !shared) {
         process.stderr.write(

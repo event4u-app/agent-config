@@ -32,6 +32,8 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
+import { assertScanned, DeadScopeError } from './_lib/scan_scope.js';
+
 const _HERE = fileURLToPath(import.meta.url);
 
 function _repo_root(): string {
@@ -344,6 +346,27 @@ function main(argv?: readonly string[]): number {
     const opts = parse_args(argv ?? process.argv.slice(2));
 
     const schema = _load_schema();
+    // The payload is caller-supplied, so the gate's own scope is the schema —
+    // and `_load_schema` only proves the FILE is there. A schema that parses to
+    // an empty (or property-less) document validates every payload silently and
+    // prints `✅  explain-trace OK`. Count the property rules that will actually
+    // be applied; the keyword filtering below is judgement, this is reach.
+    try {
+        assertScanned({
+            gate: 'lint_explain_trace',
+            scanned: Object.keys(_isObject(schema['properties']) ? schema['properties'] : {}).length,
+            units: 'schema property rule(s)',
+            roots: ['docs/contracts/explain-trace.schema.json'],
+        });
+    } catch (exc) {
+        if (exc instanceof DeadScopeError) {
+            // 2 = invocation error — the same code a missing schema returns.
+            // 1 would claim the payload is invalid, which is not what happened.
+            process.stderr.write(`❌  ${exc.message}\n`);
+            throw new SystemExit(2);
+        }
+        throw exc;
+    }
     // Python: jsonschema.Draft202012Validator.check_schema(schema) — the
     // explain-trace schema is a valid Draft-2020-12 document, so this never
     // raises in practice; the subset validator has no schema-validation step.

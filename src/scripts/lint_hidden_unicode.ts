@@ -34,6 +34,7 @@ import { spawnSync } from 'node:child_process';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import * as sl from './_lib/security_lint.js';
+import { assertScanned, DeadScopeError } from './_lib/scan_scope.js';
 
 export const CHECK = 'hidden-unicode';
 
@@ -499,7 +500,9 @@ export function main(argv: readonly string[] | null = null): number {
 
     const findings: sl.Finding[] = [];
     const flagged = new Set<string>();
+    let corpusFiles = 0;
     for (const sf of sl.iter_corpus()) {
+        corpusFiles += 1;
         const hits = _scan(sf);
         for (const h of hits) {
             findings.push(h);
@@ -507,6 +510,28 @@ export function main(argv: readonly string[] | null = null): number {
         if (hits.length > 0) {
             flagged.add(sf.path);
         }
+    }
+
+    // `iter_corpus` skips a root that does not exist, so a moved corpus yields
+    // zero files and this security lint reports "clean" — and the umbrella
+    // aggregate reads that as 0 blocking findings. Count files READ, not
+    // findings. The second (source-bytes) pass states its own file count below
+    // and is separately visible, so this assertion guards the `.md` corpus.
+    // Exit 1 is this CLI's only failure code (2 is the pinned argparse usage
+    // error), so it carries "could not run" here.
+    try {
+        assertScanned({
+            gate: 'lint_hidden_unicode',
+            scanned: corpusFiles,
+            units: 'corpus file(s)',
+            roots: sl.DEFAULT_SCAN_ROOTS,
+        });
+    } catch (exc) {
+        if (exc instanceof DeadScopeError) {
+            process.stderr.write(`❌  ${exc.message}\n`);
+            return 1;
+        }
+        throw exc;
     }
 
     // Second pass — raw control bytes in text-intended SOURCE files, which the

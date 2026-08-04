@@ -30,6 +30,8 @@ import * as path from 'node:path';
 import * as fs from 'node:fs';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
+import { assertScanned, DeadScopeError } from './_lib/scan_scope.js';
+
 const QUIET = process.argv.includes('--quiet');
 // src/scripts/check_structural_breaking.ts → three levels up is the repo root
 // (Python: Path(__file__).resolve().parent.parent.parent).
@@ -91,12 +93,37 @@ function main(): number {
         return 0; // no trunk to diff against (e.g. shallow CI) → no-op
     }
     const names = _git('diff', '--name-status', `${base}...HEAD`);
-    if (names.trim() === '') {
+    const changed = _splitlines(names);
+    // Replaces the bare `names.trim() === ''` early return: a branch identical
+    // to trunk genuinely changes nothing, so zero is allowed — but it now says
+    // so through the shared primitive instead of a silent `return 0`.
+    // Exit 1 is this pinned CLI's only failure code.
+    try {
+        assertScanned({
+            gate: 'check_structural_breaking',
+            scanned: changed.length,
+            units: 'changed path(s)',
+            roots: [`git diff --name-status ${BASE_REF}...HEAD`],
+            allowEmpty:
+                'EMPTY_VALID: a branch with no diff against trunk has no structural change to ' +
+                'judge — an absent question, not an empty corpus. Deletion test: deleting the ' +
+                'watched artifact trees would show up here as D lines (the very break this gate ' +
+                'reports), so a wiped tree cannot produce this zero. An unresolvable base does ' +
+                'not reach here either — it exits at the no-trunk no-op above.',
+        });
+    } catch (exc) {
+        if (exc instanceof DeadScopeError) {
+            process.stderr.write(`❌ ${exc.message}\n`);
+            return 1;
+        }
+        throw exc;
+    }
+    if (changed.length === 0) {
         return 0; // nothing changed vs trunk
     }
 
     const breaks: string[] = [];
-    for (const line of _splitlines(names)) {
+    for (const line of changed) {
         const parts = line.split('\t');
         const status = parts[0]!;
         if (status.startsWith('D') && ARTIFACT_RE.test(parts[1]!)) {

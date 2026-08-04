@@ -19,6 +19,8 @@ import * as path from 'node:path';
 import * as fs from 'node:fs';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
+import { assertScanned, DeadScopeError } from './_lib/scan_scope.js';
+
 const _HERE = fileURLToPath(import.meta.url);
 const ROOT = path.resolve(path.dirname(_HERE), '..', '..');
 const SCANNER = path.join(ROOT, 'src', 'scripts', 'build_discovery_manifest.ts');
@@ -76,6 +78,30 @@ class ExitError extends Error {}
 function main(): number {
     const a = _normalise(_run());
     const b = _normalise(_run());
+
+    // Determinism over an EMPTY manifest is vacuously true: if the scanner's
+    // artefact roots moved, both runs emit zero artefacts, the two payloads
+    // compare equal, and this gate reports "OK: deterministic" having compared
+    // nothing. Assert the corpus the comparison ran over, not the comparison.
+    // Deletion test: wiping the artefact tree would give 0 — which is blindness
+    // here, never success — so no `allowEmpty`. Exit 1 is this pinned CLI's
+    // only failure code (the scanner-failed path also exits 1, via ExitError).
+    const artefacts = a['artefacts'];
+    try {
+        assertScanned({
+            gate: 'check_discovery_determinism',
+            scanned: Array.isArray(artefacts) ? artefacts.length : 0,
+            units: 'manifest artefact(s)',
+            roots: ['src/scripts/build_discovery_manifest.ts → manifest.artefacts'],
+        });
+    } catch (exc) {
+        if (exc instanceof DeadScopeError) {
+            process.stderr.write(`${exc.message}\n`);
+            return 1;
+        }
+        throw exc;
+    }
+
     const sa = _dumps(a);
     const sb = _dumps(b);
     if (sa !== sb) {

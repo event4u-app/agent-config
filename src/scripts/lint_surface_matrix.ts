@@ -23,6 +23,7 @@ import YAML from 'yaml';
 
 import { USER_SCOPE_PATHS } from './install.js';
 import { CLAUDE_MARKETPLACE_NAME, CLAUDE_PLUGIN_ID } from './_lib/claude_plugin.js';
+import { assertWatchlistResolves, DeadScopeError } from './_lib/scan_scope.js';
 
 const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..');
 export const MATRIX_PATH = path.join(REPO_ROOT, 'src', 'config', 'surface-matrix.yml');
@@ -59,9 +60,24 @@ export function load_surface_matrix(matrixPath: string = MATRIX_PATH): Record<st
 }
 
 export function main(): number {
-    if (!fs.existsSync(MATRIX_PATH)) {
-        process.stdout.write(`❌  ${MATRIX_PATH} not found\n`);
-        return 1;
+    // Replaces the ad-hoc `existsSync(MATRIX_PATH)` precondition. The matrix
+    // yaml is the gate's only file input — an emptied `tools:` mapping is
+    // already caught by the set-equality against USER_SCOPE_PATHS (a code
+    // constant a path migration cannot empty), so a moved file is the one
+    // remaining way this gate can go quiet. Exit 1 = "could not run" here; 3
+    // stays reserved for an unexpected throw at the CLI boundary.
+    try {
+        assertWatchlistResolves({
+            gate: 'lint_surface_matrix',
+            candidates: [path.relative(REPO_ROOT, MATRIX_PATH)],
+            repoRoot: REPO_ROOT,
+        });
+    } catch (e) {
+        if (e instanceof DeadScopeError) {
+            process.stderr.write(`❌  ${e.message}\n`);
+            return 1;
+        }
+        throw e;
     }
 
     const errors: string[] = [];

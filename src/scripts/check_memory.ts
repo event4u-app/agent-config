@@ -53,6 +53,8 @@ import process from 'node:process';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import YAML, { parseDocument } from 'yaml';
 
+import { assertScanned, DeadScopeError } from './_lib/scan_scope.js';
+
 type Severity = 'error' | 'warning' | 'info';
 
 const REQUIRED_KEYS: ReadonlySet<string> = new Set([
@@ -722,11 +724,34 @@ function main(): number {
         }
         return 0;
     }
+    // An ABSENT root stays a pinned exit-0 no-op (the branch above; the memory
+    // tree is an optional surface and `task check-memory` short-circuits it).
+    // A root that EXISTS but walks to zero `*.yml` is the case nothing covered:
+    // entries moved to a subtree this walk does not reach, and the validator
+    // reported "0 error(s)" over an empty read. No `allowEmpty` for that half —
+    // a present-but-unreadable corpus is blindness, not a clean bill of health.
+    // Exit 1 is this gate's only failure code (see `_emit`).
+    const ymls = _rglobYmlSorted(root);
+    try {
+        assertScanned({
+            gate: 'check_memory',
+            scanned: ymls.length,
+            units: 'memory entry file(s)',
+            roots: [`${root}/**/*.yml`],
+        });
+    } catch (exc) {
+        if (exc instanceof DeadScopeError) {
+            process.stderr.write(`❌  ${exc.message}\n`);
+            return 1;
+        }
+        throw exc;
+    }
+
     const criticalCounts: Record<string, number> = {};
     for (const key of Object.keys(_TYPE_COUNTS)) {
         delete _TYPE_COUNTS[key];
     }
-    for (const yml of _rglobYmlSorted(root)) {
+    for (const yml of ymls) {
         _validateFile(yml, findings, criticalCounts);
     }
     // Tier-0 inflation warning — soft cap on `priority: critical` per type.

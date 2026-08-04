@@ -28,6 +28,8 @@ import * as path from 'node:path';
 import * as fs from 'node:fs';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
+import { assertScanned } from './_lib/scan_scope.js';
+
 const _HERE = fileURLToPath(import.meta.url);
 
 const BLOCKLIST: ReadonlySet<string> = new Set([
@@ -182,6 +184,19 @@ function main(argv?: readonly string[]): number {
     const args = parse_args(argv ?? process.argv.slice(2));
 
     const subjects = fetch_subjects(args.base, args.head);
+    assertScanned({
+        gate: 'lint_commit_subjects',
+        scanned: subjects.length,
+        units: 'commit subject(s)',
+        roots: [`git log ${args.base}..${args.head}`],
+        allowEmpty:
+            'EMPTY_VALID: a branch that is level with its base contributes no subjects to the ' +
+            'release changelog, so zero subjects is the success state. Deletion test: no ' +
+            'deleted root can produce it — the range is computed from refs, not a tree. An ' +
+            'UNREADABLE range is the distinct case and is announced, not swallowed: ' +
+            '`fetch_subjects` writes `⚠️  git log <base>..<head> failed: …` to stderr first, ' +
+            'and staying advisory there is the pinned contract (never block on git plumbing).',
+    });
     if (subjects.length === 0) {
         if (!args.quiet) {
             process.stdout.write(

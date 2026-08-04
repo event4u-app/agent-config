@@ -37,6 +37,7 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
+import { assertScanned, DeadScopeError } from './_lib/scan_scope.js';
 import { scanText, type SecretFinding } from './_lib/secret_detector.js';
 
 const _HERE = path.dirname(fileURLToPath(import.meta.url));
@@ -253,6 +254,52 @@ function _stderr(s: string): void {
 export function main(argv?: readonly string[]): number {
     const args = parseArgs(argv ?? process.argv.slice(2));
     const mode: Mode = args.paths.length > 0 ? 'explicit' : args.all ? 'all' : 'diff';
+
+    // Scope assertion, deliberately here and not inside `scanRepo`: that export
+    // is called directly by tests and other callers against arbitrary roots, and
+    // a secret gate is the last place to widen a throw. The cost is one extra
+    // `resolveFiles` (a `git ls-files` / `git diff`); the file reads are not
+    // repeated. Assert the RESOLVED set, before the exclude/binary filters —
+    // those legitimately drop everything (a diff touching only `tests/`), so
+    // filtering to zero is not the same signal as resolving to zero.
+    // Exit 2 (usage/env) over 1 (leak found) — a dead scope means the gate could
+    // not run. `resolveFiles` already hard-throws on an unresolvable base, so
+    // that case never arrives here as a quiet zero; a non-DeadScopeError is
+    // re-thrown untouched to preserve it.
+    try {
+        const targets = resolveFiles(REPO_ROOT, mode, { explicit: args.paths, base: args.base });
+        assertScanned({
+            gate: 'check_secret_leak',
+            scanned: targets.length,
+            units: 'candidate file(s)',
+            roots:
+                mode === 'all'
+                    ? ['git ls-files']
+                    : mode === 'explicit'
+                      ? ['<explicit path arguments>']
+                      : [`git diff --name-only --diff-filter=ACMR ${args.base ?? 'origin/main'}`, 'git ls-files --others --exclude-standard'],
+            // `all` and `explicit` carry no reason: zero tracked files, or zero
+            // named paths, is blindness in a repo that has content.
+            ...(mode === 'diff'
+                ? {
+                      allowEmpty:
+                          'EMPTY_VALID: shift-left mode scans what the change introduces, and a ' +
+                          'branch identical to its base with no untracked files introduces nothing ' +
+                          '— an absent question, not an empty corpus. Deletion test: wiping the ' +
+                          'tracked tree would show up here as changed paths, and an unresolvable ' +
+                          'base (the dangerous zero, which shallow CI produces) already throws in ' +
+                          'resolveFiles above rather than reaching this line.',
+                  }
+                : {}),
+        });
+    } catch (exc) {
+        if (exc instanceof DeadScopeError) {
+            _stderr(`❌  ${exc.message}\n`);
+            return 2;
+        }
+        throw exc;
+    }
+
     const hits = scanRepo(REPO_ROOT, mode, { explicit: args.paths, base: args.base });
 
     if (args.json) {

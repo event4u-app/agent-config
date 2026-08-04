@@ -26,6 +26,8 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
+import { assertWatchlistResolves, DeadScopeError } from './_lib/scan_scope.js';
+
 const _HERE = path.resolve(fileURLToPath(import.meta.url));
 // ROOT = Path(__file__).resolve().parents[2]
 const ROOT = path.resolve(path.dirname(_HERE), '..', '..');
@@ -295,7 +297,26 @@ function main(argv: readonly string[]): number {
         throw e;
     }
 
-    for (const p of [SCHEMA, MANIFEST, ROW_MD, CF_JSON, SERVER_JSON]) {
+    const artefacts = [SCHEMA, MANIFEST, ROW_MD, CF_JSON, SERVER_JSON];
+    // The per-artefact loop below stays authoritative — it names the FIRST
+    // missing file and is the pinned `missing: <path>` contract. This assertion
+    // covers the case that loop reports misleadingly: all five gone at once,
+    // which is a relocated ROOT rather than an unbuilt artefact, and deserves a
+    // message that says so. Exit 1 is the gate's only failure code.
+    try {
+        assertWatchlistResolves({
+            gate: 'lint_mcp_registry_manifest',
+            candidates: artefacts.map(_relToRoot),
+            repoRoot: ROOT,
+        });
+    } catch (e) {
+        if (e instanceof DeadScopeError) {
+            process.stderr.write(`❌  ${e.message}\n`);
+            return 1;
+        }
+        throw e;
+    }
+    for (const p of artefacts) {
         if (!fs.existsSync(p)) {
             return _fail(`missing: ${_relToRoot(p)}`);
         }

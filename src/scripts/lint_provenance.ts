@@ -54,6 +54,8 @@ import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { parse as parseYaml } from 'yaml';
 
+import { assertWatchlistResolves, DeadScopeError } from './_lib/scan_scope.js';
+
 const _FILE = fileURLToPath(import.meta.url);
 const _HERE = path.dirname(_FILE);
 // src/scripts/lint_provenance.ts → two levels up is the repo root.
@@ -480,6 +482,25 @@ export function main(argv: string[] = process.argv.slice(2)): number {
     const args = parseArgs(argv);
     const ledgerPath = path.join(REPO, LEDGER_REL);
     const noticesPath = path.join(REPO, NOTICES_REL);
+    // The ledger is the record this gate audits. Record COUNT is not the scope
+    // signal — an empty ledger is a legitimate "no borrows yet" state (it is
+    // empty today) — but an absent ledger file is not: the `existsSync ? … : ''`
+    // fallback below would read a moved ledger as zero borrows and re-render the
+    // notices to match, laundering the loss into a clean sync. Exit 2 is this
+    // linter's single failure code ("this run produced nothing trustworthy").
+    try {
+        assertWatchlistResolves({
+            gate: 'lint_provenance',
+            candidates: [LEDGER_REL],
+            repoRoot: REPO,
+        });
+    } catch (exc) {
+        if (exc instanceof DeadScopeError) {
+            process.stderr.write(`❌  ${exc.message}\n`);
+            return 2;
+        }
+        throw exc;
+    }
     const text = fs.existsSync(ledgerPath) ? fs.readFileSync(ledgerPath, 'utf-8') : '';
     const deny = resolveDenyPolicy(REPO);
     const { records, findings } = lintLedgerText(text, REPO, deny);

@@ -46,6 +46,7 @@ import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import { checkRatchet } from './_lib/gate_baseline.js';
+import { assertScanned, DeadScopeError } from './_lib/scan_scope.js';
 
 const LEGACY = '.agent-src.uncondensed/';
 const EXEMPT: ReadonlySet<string> = new Set([
@@ -263,6 +264,31 @@ export function find_hardcoded_scan_roots(
  * live number, which is the whole point of committing it.
  */
 export function checkHardcodedScanRoots(repoRoot: string = process.cwd()): number {
+    // The scanned unit is script FILES walked, never `findings.length` — this
+    // pass is a downward ratchet, so zero findings is the goal state and can
+    // never distinguish "clean" from "the walk root moved". `_walkScripts`
+    // swallows an unreadable directory, so a relocated `src/scripts/` yields an
+    // empty walk, an actual of 0, a verdict under baseline, and a ✅ — this gate
+    // failing the same way it exists to detect. No `allowEmpty`: a repo with no
+    // scripts under the scan dir is blindness, not cleanliness.
+    // Exit 2 (git/environment failure) over 1 (above baseline) — a dead scope
+    // means the pass could not run; `main` propagates it via Math.max.
+    const walked = [..._walkScripts(path.join(repoRoot, HARDCODED_ROOT_SCAN_DIR))];
+    try {
+        assertScanned({
+            gate: HARDCODED_ROOT_GATE,
+            scanned: walked.length,
+            units: 'script file(s)',
+            roots: [`${HARDCODED_ROOT_SCAN_DIR}/**/*.{ts,mts,mjs}`],
+        });
+    } catch (exc) {
+        if (exc instanceof DeadScopeError) {
+            process.stdout.write(`❌  ${exc.message}\n`);
+            return 2;
+        }
+        throw exc;
+    }
+
     const findings = find_hardcoded_scan_roots(repoRoot);
     const verdict = checkRatchet({
         gate: HARDCODED_ROOT_GATE,

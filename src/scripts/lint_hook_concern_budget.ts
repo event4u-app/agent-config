@@ -25,6 +25,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import { parse as parseYaml } from 'yaml';
 
 import { project_settings_path } from './_lib/agent_settings.js';
+import { assertScanned, DeadScopeError } from './_lib/scan_scope.js';
 
 const _HERE = fileURLToPath(import.meta.url);
 const REPO_ROOT = path.resolve(path.dirname(_HERE), '..', '..');
@@ -148,14 +149,16 @@ function _isPlainDict(v: unknown): v is Record<string, unknown> {
     return typeof v === 'object' && v !== null && !Array.isArray(v);
 }
 
+/** @returns the number of platform/event concern lists inspected. */
 function _check_concern_counts(
     manifest: Manifest,
     max_per_event: number,
     warnings: string[],
-): void {
+): number {
+    let inspected = 0;
     const platforms = manifest['platforms'] ?? {};
     if (!_isPlainDict(platforms)) {
-        return;
+        return inspected;
     }
     for (const [plat, block] of Object.entries(platforms)) {
         if (!_isPlainDict(block) || block['fallback_only']) {
@@ -165,6 +168,7 @@ function _check_concern_counts(
             if (!Array.isArray(names)) {
                 continue;
             }
+            inspected += 1;
             const count = names.length;
             if (count > max_per_event) {
                 warnings.push(
@@ -175,18 +179,22 @@ function _check_concern_counts(
             }
         }
     }
+    return inspected;
 }
 
-function _check_fail_closed_tier(manifest: Manifest, tier1: string[], errors: string[]): void {
+/** @returns the number of concern declarations inspected. */
+function _check_fail_closed_tier(manifest: Manifest, tier1: string[], errors: string[]): number {
+    let inspected = 0;
     const concerns = manifest['concerns'] ?? {};
     if (!_isPlainDict(concerns)) {
-        return;
+        return inspected;
     }
     const allowed = new Set(tier1);
     for (const [name, spec] of Object.entries(concerns)) {
         if (!_isPlainDict(spec)) {
             continue;
         }
+        inspected += 1;
         if (spec['fail_closed'] === true && !allowed.has(name)) {
             errors.push(
                 `concerns.${name}: fail_closed=true but not declared in ` +
@@ -195,6 +203,7 @@ function _check_fail_closed_tier(manifest: Manifest, tier1: string[], errors: st
             );
         }
     }
+    return inspected;
 }
 
 export function lint(
@@ -227,8 +236,32 @@ export function lint(
 
     const warnings: string[] = [];
     const errors: string[] = [];
-    _check_concern_counts(manifest, max_per_event, warnings);
-    _check_fail_closed_tier(manifest, tier1, errors);
+    const inspected =
+        _check_concern_counts(manifest, max_per_event, warnings) +
+        _check_fail_closed_tier(manifest, tier1, errors);
+
+    // The manifest loads and parses, then every walk below silently tolerates a
+    // shape it does not recognise — no `platforms:`, no `concerns:`, a renamed
+    // top-level key — and the gate exits 0 having budgeted nothing. Counts units
+    // INSPECTED (platform/event concern lists + concern declarations), not
+    // warnings or errors. Exit 1 is the load-failure code and is the right one
+    // here: the manifest was readable but carried nothing this gate governs; 2
+    // is reserved for a hard-fail WITH violations.
+    try {
+        assertScanned({
+            gate: 'lint_hook_concern_budget',
+            scanned: inspected,
+            units: 'manifest concern unit(s)',
+            roots: [manifest_path],
+        });
+    } catch (exc) {
+        if (exc instanceof DeadScopeError) {
+            // The message already carries the gate name as its prefix.
+            process.stderr.write(`${exc.message}\n`);
+            return 1;
+        }
+        throw exc;
+    }
 
     for (const w of warnings) {
         process.stderr.write(`warn: ${w}\n`);

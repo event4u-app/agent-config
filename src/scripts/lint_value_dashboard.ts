@@ -20,6 +20,8 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
+import { assertWatchlistResolves, DeadScopeError } from './_lib/scan_scope.js';
+
 const _HERE = fileURLToPath(import.meta.url);
 const REPO_ROOT = path.resolve(path.dirname(_HERE), '..', '..');
 const DASHBOARD = path.join(REPO_ROOT, 'docs', 'value.md');
@@ -176,9 +178,23 @@ function _seqEqual(a: readonly unknown[], b: readonly unknown[]): boolean {
 function lint(quiet = false): number {
     const violations: string[] = [];
 
-    if (!_exists(DASHBOARD)) {
-        _log(`FAIL: dashboard not found: ${_relPosix(DASHBOARD, REPO_ROOT)}`, quiet, true);
-        return 1;
+    // Replaces the ad-hoc `_exists(DASHBOARD)` precondition. Only the dashboard
+    // is guarded: `LATEST` is genuinely optional (its absence is the documented
+    // "placeholder" success path below), so listing it here would let a moved
+    // dashboard pass whenever the report happened to exist. Exit 1 = the gate's
+    // only failure code.
+    try {
+        assertWatchlistResolves({
+            gate: 'lint_value_dashboard',
+            candidates: [_relPosix(DASHBOARD, REPO_ROOT)],
+            repoRoot: REPO_ROOT,
+        });
+    } catch (e) {
+        if (e instanceof DeadScopeError) {
+            _log(`FAIL: ${e.message}`, quiet, true);
+            return 1;
+        }
+        throw e;
     }
     const text = fs.readFileSync(DASHBOARD, 'utf-8');
     violations.push(...check_required_sections(text));

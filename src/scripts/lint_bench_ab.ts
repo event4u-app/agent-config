@@ -20,6 +20,8 @@ import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { parse as parseYaml } from 'yaml';
 
+import { assertWatchlistResolves, DeadScopeError } from './_lib/scan_scope.js';
+
 const _HERE = fileURLToPath(import.meta.url);
 
 const REPO_ROOT = path.resolve(path.dirname(_HERE), '..', '..');
@@ -269,6 +271,29 @@ function parse_args(argv: readonly string[]): Args {
 
 function main(argv?: readonly string[]): number {
     const args = parse_args(argv ?? process.argv.slice(2));
+
+    // The two corpora are the scope. `docs/benchmark.md` is deliberately NOT on
+    // the list: it is optional (lint_doc skips when unrendered), and a watch list
+    // passes when ANY entry resolves — including it would let both corpora
+    // disappear behind a rendered doc.
+    try {
+        assertWatchlistResolves({
+            gate: 'lint_bench_ab',
+            candidates: [TRACK_A_PATH, TRACK_B_PATH].map((p) =>
+                path.relative(REPO_ROOT, p).split(path.sep).join('/'),
+            ),
+            repoRoot: REPO_ROOT,
+        });
+    } catch (exc) {
+        if (exc instanceof DeadScopeError) {
+            // 1 = the gate's violation code; 2 is reserved for the pinned
+            // argparse usage contract, so it cannot carry "could not run".
+            process.stderr.write(`lint_bench_ab: ${exc.message}\n`);
+            return 1;
+        }
+        throw exc;
+    }
+
     try {
         lint_track_a();
         lint_track_b();

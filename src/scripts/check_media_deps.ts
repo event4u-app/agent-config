@@ -21,6 +21,8 @@ import * as path from 'node:path';
 import * as fs from 'node:fs';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
+import { assertScanned, DeadScopeError } from './_lib/scan_scope.js';
+
 const _FILE = fileURLToPath(import.meta.url);
 
 export interface MediaTool {
@@ -71,6 +73,27 @@ export function missingTools(tools: MediaTool[] = MEDIA_TOOLS): MediaTool[] {
 
 export function main(argv: string[] = process.argv.slice(2)): number {
     const quiet = argv.includes('--quiet');
+
+    // The scan scope is the declared tool list, not a directory: an empty
+    // MEDIA_TOOLS probes nothing and still prints the ✅ "all present" line.
+    // Deletion test: emptying the declaration would legitimately yield 0 only
+    // if "no tooling is required", which is never true for a prereq check.
+    // Exit 1 is the only failure code this CLI has, so a dead scope shares it.
+    try {
+        assertScanned({
+            gate: 'check_media_deps',
+            scanned: MEDIA_TOOLS.length,
+            units: 'declared media tool(s)',
+            roots: ['MEDIA_TOOLS (declared in src/scripts/check_media_deps.ts)'],
+        });
+    } catch (exc) {
+        if (exc instanceof DeadScopeError) {
+            process.stderr.write(`❌  ${exc.message}\n`);
+            return 1;
+        }
+        throw exc;
+    }
+
     const missing = missingTools();
     if (missing.length === 0) {
         if (!quiet) {

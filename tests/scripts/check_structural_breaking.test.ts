@@ -18,6 +18,9 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..');
 const TS_SCRIPT = path.join(REPO_ROOT, 'src', 'scripts', 'check_structural_breaking.ts');
+// The detector imports the scan-scope assertions, so the fixture tree needs the
+// lib beside it. scan_scope imports only node builtins, so the chain ends here.
+const SCAN_SCOPE_SRC = path.join(REPO_ROOT, 'src', 'scripts', '_lib', 'scan_scope.ts');
 const TSX_BIN = path.join(
     REPO_ROOT,
     'node_modules',
@@ -61,6 +64,8 @@ function fixtureRepo(): { root: string; ts: string } {
     fs.mkdirSync(path.join(root, 'src', 'scripts'), { recursive: true });
     const ts = path.join(root, 'src', 'scripts', 'check_structural_breaking.ts');
     fs.copyFileSync(TS_SCRIPT, ts);
+    fs.mkdirSync(path.join(root, 'src', 'scripts', '_lib'), { recursive: true });
+    fs.copyFileSync(SCAN_SCOPE_SRC, path.join(root, 'src', 'scripts', '_lib', 'scan_scope.ts'));
     fs.symlinkSync(path.join(REPO_ROOT, 'node_modules'), path.join(root, 'node_modules'));
     return { root, ts };
 }

@@ -112,6 +112,13 @@ function fixtureRepo(): { root: string; ts: string } {
     fs.mkdirSync(path.join(root, 'src', 'scripts'), { recursive: true });
     const ts = path.join(root, 'src', 'scripts', 'lint_breaking_changes_index.ts');
     fs.copyFileSync(TS_SCRIPT, ts);
+    // The gate imports ./_lib/scan_scope.js — the fixture tree needs it too, or
+    // every CLI run in this file dies on an unresolved import.
+    fs.mkdirSync(path.join(root, 'src', 'scripts', '_lib'), { recursive: true });
+    fs.copyFileSync(
+        path.join(REPO_ROOT, 'src', 'scripts', '_lib', 'scan_scope.ts'),
+        path.join(root, 'src', 'scripts', '_lib', 'scan_scope.ts'),
+    );
     fs.symlinkSync(path.join(REPO_ROOT, 'node_modules'), path.join(root, 'node_modules'));
     return { root, ts };
 }

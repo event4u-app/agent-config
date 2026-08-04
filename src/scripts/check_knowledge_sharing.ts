@@ -29,6 +29,8 @@ import process from 'node:process';
 import { fileURLToPath } from 'node:url';
 import YAML from 'yaml';
 
+import { assertScanned, DeadScopeError } from './_lib/scan_scope.js';
+
 const PROG = 'check_knowledge_sharing.ts';
 const CREATION_BUDGET_WARN = 5;
 const FRONTMATTER_RE = /^---[ \t]*\r?\n([\s\S]*?)\r?\n---[ \t]*\r?\n/;
@@ -148,6 +150,31 @@ export function main(argv: string[]): number {
     } catch (err) {
         process.stderr.write(`${PROG}: error: git diff --cached failed: ${(err as Error).message}\n`);
         return 3;
+    }
+
+    // Diff-driven: the corpus is whatever is staged, and an empty index is the
+    // normal state of a clean tree — so zero is allowed here. The dangerous
+    // empty (git itself failing) is NOT swallowed: it exits 3 above rather than
+    // reaching this point with an empty list. Exit 3 (internal error) is the
+    // code a dead scope would share, for the same "could not run" reason.
+    try {
+        assertScanned({
+            gate: 'check_knowledge_sharing',
+            scanned: staged.length,
+            units: 'staged path(s)',
+            roots: ['git diff --cached --name-status'],
+            allowEmpty:
+                'EMPTY_VALID: nothing staged means there is no commit to judge — an absent ' +
+                'question, not an empty corpus. Deletion test: deleting agents/knowledge/ ' +
+                'would not produce this zero (the staged deletions would themselves show up ' +
+                'in the diff); only an empty index does, and that is a clean tree.',
+        });
+    } catch (err) {
+        if (err instanceof DeadScopeError) {
+            process.stderr.write(`❌ ${err.message}\n`);
+            return 3;
+        }
+        throw err;
     }
 
     const { blocked, warnings } = checkSharing(staged, gitStagedContent);

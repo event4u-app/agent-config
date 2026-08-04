@@ -27,6 +27,7 @@ import * as fs from 'node:fs';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import * as sl from './_lib/security_lint.js';
+import { assertScanned, DeadScopeError } from './_lib/scan_scope.js';
 
 export const CHECK = 'dangerous-frontmatter';
 
@@ -258,10 +259,33 @@ export function main(argv: readonly string[] | null = null): number {
 
     const findings: sl.Finding[] = [];
     const roots = ['src/skills', 'src/agent-src', 'src/domains'];
+    let scanned = 0;
     for (const sf of sl.iter_corpus(roots, ['.md'])) {
+        scanned += 1;
         for (const h of _scan(sf)) {
             findings.push(h);
         }
+    }
+
+    // `iter_corpus` skips a root that does not exist, so all three moving at
+    // once yields zero files and a clean report — the quietest possible failure
+    // for a security lint. `scanned` counts files READ, never findings: zero
+    // findings over 900 files is the success state, zero files is blindness.
+    // Exit 1 = "this gate is not clean" (reds the build); 2 stays the argv
+    // usage code that `parse_args` owns.
+    try {
+        assertScanned({
+            gate: 'lint_skill_frontmatter_safety',
+            scanned,
+            units: 'markdown file(s)',
+            roots,
+        });
+    } catch (exc) {
+        if (exc instanceof DeadScopeError) {
+            process.stderr.write(`❌  ${exc.message}\n`);
+            return 1;
+        }
+        throw exc;
     }
 
     if (args.json) {

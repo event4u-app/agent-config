@@ -29,6 +29,8 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
+import { assertWatchlistResolves, DeadScopeError } from './_lib/scan_scope.js';
+
 const _HERE = fileURLToPath(import.meta.url);
 export const REPO_ROOT = path.resolve(path.dirname(_HERE), '..', '..');
 
@@ -112,6 +114,23 @@ export function main(argv: string[] = process.argv.slice(2)): number {
             process.stderr.write(`lint_store_boundary: unknown argument ${a}\n`);
             return 2;
         }
+    }
+    // SCAN_FILES is a hand-maintained watch list and `scanFile` swallows a read
+    // error, so a renamed or moved index module drops out of scope silently and
+    // the gate reports "clean" over the files it can no longer read. Exit 3 is
+    // the "this gate could not run" code; 1 stays "violations found".
+    try {
+        assertWatchlistResolves({
+            gate: 'lint_store_boundary',
+            candidates: SCAN_FILES,
+            repoRoot: root,
+        });
+    } catch (exc) {
+        if (exc instanceof DeadScopeError) {
+            process.stderr.write(`❌  ${exc.message}\n`);
+            return 3;
+        }
+        throw exc;
     }
     let violations: Violation[];
     try {

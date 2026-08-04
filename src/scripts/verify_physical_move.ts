@@ -25,6 +25,7 @@ import {
     _SKIP_NAMES,
     type Snapshot,
 } from './snapshot_agent_outputs.js';
+import { assertScanned, DeadScopeError } from './_lib/scan_scope.js';
 
 const _HERE = fileURLToPath(import.meta.url);
 
@@ -361,6 +362,29 @@ export function main(argv: string[] | null = null): number {
 
     const before = JSON.parse(fs.readFileSync(args.snapshot, 'utf-8')) as Obj;
     const after: Snapshot = _build_snapshot();
+
+    // The live half of the comparison. If both projection trees are gone the
+    // diff has nothing to disagree about and the gate reports "byte-identity
+    // OK — 0 files". Summed rather than asserted per tree: a worktree that
+    // never had `.augment` generated is a normal state, an empty BOTH is not.
+    // Exit 2 is the existing "an input is not there" code (snapshot-missing
+    // above); 1 stays "a regression was found".
+    try {
+        assertScanned({
+            gate: 'verify_physical_move',
+            scanned:
+                Object.keys(after.trees['dist/agent-src'] ?? {}).length +
+                Object.keys(after.trees['.augment'] ?? {}).length,
+            units: 'projected file(s)',
+            roots: ['dist/agent-src', '.augment'],
+        });
+    } catch (e) {
+        if (e instanceof DeadScopeError) {
+            process.stderr.write(`ERROR: ${e.message}\n`);
+            return 2;
+        }
+        throw e;
+    }
 
     _normalise_loaded_snapshot(before);
 

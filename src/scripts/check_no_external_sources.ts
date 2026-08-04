@@ -36,6 +36,8 @@ import * as path from 'node:path';
 import process from 'node:process';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
+import { assertScanned, DeadScopeError } from './_lib/scan_scope.js';
+
 const _HERE = fileURLToPath(import.meta.url);
 // parents[2] of src/scripts/<file> is the repo root.
 const ROOT = path.resolve(path.dirname(_HERE), '..', '..');
@@ -272,8 +274,31 @@ function main(argv: readonly string[]): number {
     const patterns: Array<[string, RegExp]> = cfg.deny.map((p) => [p, new RegExp(p, 'i')]);
     const skipGlobs = cfg.skip_paths ?? [];
 
+    // `_tracked_files` raises when git itself fails, but a git that succeeds
+    // with empty output (not a repo, nothing tracked) yields the same empty
+    // loop and the ✅ "no external-source references" line. Not a diff — this
+    // is the whole tracked tree, so zero is never a legitimate state; no
+    // `allowEmpty`. Assert the unfiltered enumeration, before the extension /
+    // skip_paths filters, so a filter change can never mask a dead scope.
+    // Exit 1 is the only failure code this pinned CLI reaches.
+    const tracked = _tracked_files();
+    try {
+        assertScanned({
+            gate: 'check_no_external_sources',
+            scanned: tracked.length,
+            units: 'tracked file(s)',
+            roots: ['git ls-files'],
+        });
+    } catch (exc) {
+        if (exc instanceof DeadScopeError) {
+            process.stderr.write(`❌  ${exc.message}\n`);
+            return 1;
+        }
+        throw exc;
+    }
+
     const hits: Hit[] = [];
-    for (const rel of _tracked_files()) {
+    for (const rel of tracked) {
         if (_SKIP_EXT.has(_suffixLower(rel))) {
             continue;
         }

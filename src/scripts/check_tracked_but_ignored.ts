@@ -19,14 +19,23 @@ import * as fs from 'node:fs';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import * as path from 'node:path';
 
+import { assertScanned, DeadScopeError } from './_lib/scan_scope.js';
+
 const _HERE = fileURLToPath(import.meta.url);
 
 function main(argv?: readonly string[]): number {
     const args = argv ?? process.argv.slice(2);
     const quiet = args.includes('--quiet');
 
+    let tracked: string;
     let output: string;
     try {
+        // The corpus is the tracked index, not the `-ci` result — that result IS
+        // the finding list, so counting it would count violations. Read the index
+        // itself: `git ls-files` is path-scoped to the cwd, so running from a
+        // subtree with nothing tracked yields an empty index AND an empty `-ci`
+        // result, and the gate prints its green line having examined nothing.
+        tracked = execSync('git ls-files', { encoding: 'utf-8', cwd: process.cwd() }).trim();
         output = execSync('git ls-files -ci --exclude-standard', {
             encoding: 'utf-8',
             cwd: process.cwd(),
@@ -34,6 +43,23 @@ function main(argv?: readonly string[]): number {
     } catch {
         process.stdout.write(`❌  git ls-files failed — not in a git repo or git not available\n`);
         return 2;
+    }
+
+    try {
+        assertScanned({
+            gate: 'check_tracked_but_ignored',
+            scanned: tracked ? tracked.split('\n').filter(Boolean).length : 0,
+            units: 'tracked file(s)',
+            roots: ['git ls-files (cwd-scoped index)'],
+        });
+    } catch (exc) {
+        if (exc instanceof DeadScopeError) {
+            // 2 = "this gate could not run" (its git-unavailable code), never 1,
+            // which asserts the stronger claim that ignored-but-tracked files exist.
+            process.stderr.write(`❌  ${exc.message}\n`);
+            return 2;
+        }
+        throw exc;
     }
 
     if (!output) {

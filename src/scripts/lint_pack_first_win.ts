@@ -21,6 +21,8 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
+import { assertScanned, DeadScopeError } from './_lib/scan_scope.js';
+
 const _HERE = fileURLToPath(import.meta.url);
 // src/scripts/lint_pack_first_win.ts → parents[2] is the repo root.
 const REPO_ROOT = path.resolve(path.dirname(_HERE), '..', '..');
@@ -142,6 +144,7 @@ function _has_onboarding_block(packYaml: string): [boolean, string[]] {
 
 function main(): number {
     const errors: string[] = [];
+    let homesResolved = 0;
     for (const pid of [...FEATURED_PACK_IDS].sort()) {
         const packDir = _pack_home(pid);
         if (packDir === null) {
@@ -151,6 +154,7 @@ function main(): number {
             );
             continue;
         }
+        homesResolved += 1;
         const firstWin = path.join(packDir, 'FIRST_WIN.md');
         let firstWinOk = false;
         try {
@@ -168,6 +172,25 @@ function main(): number {
                     `key(s) ${_pyReprStrList(missing)}`,
             );
         }
+    }
+    // The success line below reports FEATURED_PACK_IDS.size — a constant that
+    // stays 5 no matter what is on disk. This asserts the number that does move:
+    // pack homes actually resolved through the three-candidate precedence. Zero
+    // means every candidate root is gone, which is a layout migration, not five
+    // separate missing packs. Exit 1 is the gate's only failure code.
+    try {
+        assertScanned({
+            gate: 'lint_pack_first_win',
+            scanned: homesResolved,
+            units: 'featured pack home(s)',
+            roots: ['src/packs', 'src/domains', 'packages'],
+        });
+    } catch (exc) {
+        if (exc instanceof DeadScopeError) {
+            process.stderr.write(`❌  ${exc.message}\n`);
+            return 1;
+        }
+        throw exc;
     }
     if (errors.length > 0) {
         process.stderr.write('❌ pack first-win lint failed:\n');

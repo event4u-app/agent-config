@@ -37,6 +37,7 @@ import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { KERNEL_RULE_FILENAMES } from './_lib/kernel_rules.js';
 import { runCountedProbe } from './_lib/counted_probe.js';
+import { assertWatchlistResolves, DeadScopeError } from './_lib/scan_scope.js';
 
 const KERNEL_RULES: ReadonlySet<string> = KERNEL_RULE_FILENAMES;
 
@@ -55,6 +56,8 @@ const KERNEL_RULES: ReadonlySet<string> = KERNEL_RULE_FILENAMES;
  */
 const KERNEL_DIR = 'src/rules';
 const DEFAULT_LABEL = 'bundled-always-rules-acknowledged';
+// src/scripts/check_kernel_rule_bundle.ts → two levels up is the repo root.
+const REPO = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
 
 function _git_changed_files(base_ref: string): string[] {
     // Bounded read: a truncated diff would shrink the change set and let the
@@ -187,6 +190,26 @@ function parse_args(argv: readonly string[]): Args {
 
 export function main(argv?: readonly string[]): number {
     const args = parse_args(argv ?? process.argv.slice(2));
+
+    // This gate has no corpus — it matches changed paths against a fixed set of
+    // 9 kernel rules, so its scope IS that watch list. It has already been
+    // inert once for exactly this reason (see KERNEL_DIR above): a prefix that
+    // no longer exists never matches, and every kernel-rule edit scored
+    // "no kernel rule touched". Exit 3 (internal error) over 1 (bundle
+    // violated) — a phantom watch list means the gate could not run.
+    try {
+        assertWatchlistResolves({
+            gate: 'check_kernel_rule_bundle',
+            candidates: [...KERNEL_RULES].sort().map((name) => `${KERNEL_DIR}/${name}`),
+            repoRoot: REPO,
+        });
+    } catch (exc) {
+        if (exc instanceof DeadScopeError) {
+            process.stderr.write(`❌  ${exc.message}\n`);
+            return 3;
+        }
+        throw exc;
+    }
 
     // Python: args.files or _git_changed_files(...). An empty list from
     // `--files` (no values) is falsy in Python → falls through to git diff.
