@@ -1313,3 +1313,80 @@ describe('check_completion_review — KNOWN HOLE: stray bare fence closes a labe
         expect(parsed.rows.some((r) => r.status === 'open')).toBe(true);
     });
 });
+
+// PIN — current behaviour of every fence arrangement, asserted BEFORE the §2.2
+// grammar migration (roadmap road-to-plan-gate-fence-grammar, Phase 2 Step 1).
+//
+// This block contains NO production change. It exists so the migration commit's
+// diff is the exact, reviewable list of behaviours that changed: any assertion
+// flipping here that was not predicted is a defect caught before merge. Rows
+// asserted `live` are visible to the gate; rows asserted `hidden` are not.
+describe('check_completion_review — fence arrangements, pinned pre-migration', () => {
+    const SCOPE = 'b'.repeat(64);
+    const head = (): string =>
+        `<!-- completion-review: v1 | reviewed: 2026-08-04 | scope: ${SCOPE} | diff: abc1234 | reviewer: pin -->`;
+    const art = (...body: string[]): string =>
+        ['# Findings: pin', head(), '', '| # | Severity | File:Line | Finding | Status | Reason/Ref |', '|---|---|---|---|---|---|', ...body, ''].join('\n');
+    const statuses = (text: string): string[] => parseArtifact(text).rows.map((r) => `${r.index}:${r.status}`);
+
+    it('shape 1 — odd fence count: the historical toggle hid everything after it', () => {
+        // A single bare fence with no partner. Pinned: it hides nothing today,
+        // and is reported as a stray instead.
+        const t = art('| 1 | high | a.ts:1 | before | fixed | abc1234 |', '```', '| 2 | critical | b.ts:2 | after | open | |');
+        expect(statuses(t)).toEqual(['1:fixed', '2:open']);
+        expect(parseArtifact(t).strayFenceLines.length).toBeGreaterThan(0);
+    });
+
+    it('shape 2 — a CLOSED bare pair hides nothing: bare fences never open a region', () => {
+        // Measured, not assumed — this assertion was written the other way round
+        // first and the pin caught it. The round-7/8 rule makes every bare fence
+        // a stray, so both are reported and the row between stays live. Only a
+        // LABELLED opener starts a skipped region, which is why shape 3 is the hole.
+        const t = art('| 1 | high | a.ts:1 | outside | fixed | abc1234 |', '```', '| 2 | critical | b.ts:2 | INSIDE | open | |', '```');
+        expect(statuses(t)).toEqual(['1:fixed', '2:open']);
+        expect(parseArtifact(t).strayFenceLines.length).toBe(2);
+    });
+
+    it('shape 3 — the live hole: a stray bare fence closes a labelled opener', () => {
+        const t = art('| 1 | high | a.ts:1 | outside | fixed | abc1234 |', '```markdown', '| 2 | critical | b.ts:2 | HIDDEN | open | |', '```');
+        expect(statuses(t)).toEqual(['1:fixed']);
+        expect(parseArtifact(t).strayFenceLines).toEqual([]);
+    });
+
+    it('shape 4 — nearest miss of the incoming grammar: `example` is not yet a reserved status', () => {
+        // After migration this row must be illustrative. Today it is a LIVE row
+        // carrying an unknown status, which validateFindingRows rejects.
+        const t = art('| 1 | high | a.ts:1 | template row | example | |');
+        expect(statuses(t)).toEqual(['1:example']);
+        expect(validateFindingRows(parseArtifact(t).rows).map((v) => v.kind)).toContain('bad-value');
+    });
+
+    it('non-regression — an unterminated LABELLED opener hides nothing', () => {
+        const t = art('| 1 | high | a.ts:1 | before | fixed | abc1234 |', '```markdown', '| 2 | critical | b.ts:2 | after | open | |');
+        expect(statuses(t)).toEqual(['1:fixed', '2:open']);
+    });
+
+    it('non-regression — a nested four-tick block keeps its inner fence as content', () => {
+        const t = art('| 1 | high | a.ts:1 | outside | fixed | abc1234 |', '````markdown', '```', '| 2 | critical | b.ts:2 | INSIDE | open | |', '```', '````');
+        expect(statuses(t)).toEqual(['1:fixed']);
+    });
+
+    it('non-regression — the dispatcher skeleton parses to zero rows and no violations', () => {
+        // Verbatim shape of findingsSkeleton(): header row, separator, an HTML
+        // comment. It ships NO example row, so no grammar may red it.
+        const skeleton = [
+            '# Findings: some-slug',
+            head(),
+            '',
+            '| # | Severity | File:Line | Finding | Status | Reason/Ref |',
+            '|---|----------|-----------|---------|--------|------------|',
+            '<!-- reviewer fills the table; 0 findings => replace the table with the exact honest-null line per docs/contracts/plan-review-gates.md §2.3 -->',
+            '',
+        ].join('\n');
+        const p = parseArtifact(skeleton);
+        expect(p.rows).toEqual([]);
+        expect(p.malformedRows).toEqual([]);
+        expect(p.malformedLines).toEqual([]);
+        expect(p.strayFenceLines).toEqual([]);
+    });
+});
