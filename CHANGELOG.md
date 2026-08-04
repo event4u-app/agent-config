@@ -299,11 +299,11 @@ Entry-shape contract: [`docs/contracts/CHANGELOG-conventions.md`](docs/contracts
 ### Release highlights
 
 <!-- Curated head: fill before merge, keep it under 10 lines, and leave `_none_` where it is genuinely the answer. The generated log below is unchanged. -->
-- **Behaviour changes:** _none_
+- **Behaviour changes:** the release generator pre-fills the curated head from the release span instead of writing `_none_` into all five fields (8fe60e9, 2f23d6b) — `_none_` now means "the span substantiates nothing", so a reader can trust it; review-gate scope classification changed, with IaC and extensionless build files counting as code and a findings row required to be exactly six cells (6c5f0f5).
 - **Default changes + migration:** _none_
-- **Security and correctness:** _none_
-- **Honest nulls:** _auto-derived, rewrite before merge:_ commits carrying an honest-null marker in 2f23d6b, 55dc01d, d56c0be.
-- **Known limitations:** _none_
+- **Security and correctness:** two more fail-open routes in the review-gate fence parser are closed — an unterminated fence no longer swallows the rest of a findings artefact (55dc01d) and a bare fence never delimits a region (9937ad9, the fourth such route); both previously let a truncated artefact read as clean.
+- **Honest nulls:** the honest-null recorded against 6c6fc15a9 in the 9.18.0 notes was **false** — the real binding review is restored (d56c0be), so treat that 9.18.0 line as withdrawn. Rounds 6 to 8 of the R2 review closed 7 findings and deferred 10, with 0 critical or high (7a0f7b3, 39f071f, 70bb89f).
+- **Known limitations:** the head pre-fill matches an `honest-null` literal anywhere in a commit body, so a commit *about* the mechanism gets cited as one — it did here, for 2f23d6b, and a human dropped it. The derived line is a draft, never a claim; the gate blocks only a `_none_` the span contradicts and never judges a filled field.
 
 ### Bug Fixes
 
