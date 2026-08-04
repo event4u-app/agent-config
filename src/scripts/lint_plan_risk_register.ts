@@ -38,7 +38,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import { parse as parseYaml } from 'yaml';
 
-import { assertScanned } from './_lib/scan_scope.js';
+import { assertScanned, DeadScopeError } from './_lib/scan_scope.js';
 
 /**
  * Gate activation date — committed source:
@@ -705,12 +705,20 @@ export function main(argv?: readonly string[]): number {
 
     const targets = _resolveTargets(args.paths);
 
+    // A root that does not exist on disk at all is a legitimately empty
+    // corpus (a project with no roadmaps yet), NOT a dead scope. Only a root
+    // that IS there while yielding nothing means the scan went blind. Without
+    // this discriminator the gate would block every roadmap-less project with
+    // a misleading "the root moved" error.
+    const noRootOnDisk = args.paths.every((p) => !fs.existsSync(p));
+
     try {
         assertScanned({
             gate: 'lint_plan_risk_register',
             scanned: targets.length,
             units: 'ready roadmap file(s)',
             roots: args.paths,
+            ...(noRootOnDisk ? { allowEmpty: 'no roadmaps directory in this project — nothing to gate' } : {}),
         });
     } catch (exc) {
         // A dead scan scope is a POLICY violation (exit 1), never an internal
@@ -720,8 +728,13 @@ export function main(argv?: readonly string[]): number {
         // scanned-floor machinery exists to prevent. A gate that read nothing
         // has not passed. Contract carve-out:
         // docs/contracts/plan-review-gates.md § 6.
-        process.stderr.write(`❌  ${exc instanceof Error ? exc.message : String(exc)}\n`);
-        return 1;
+        if (exc instanceof DeadScopeError) {
+            process.stderr.write(`❌  ${exc.message}\n`);
+            return 1;
+        }
+        // Anything else here really is internal (unexpected): degraded advisory.
+        process.stderr.write(`❌  Internal error: ${exc instanceof Error ? exc.message : String(exc)}\n`);
+        return 2;
     }
 
     const all_violations: Violation[] = [];

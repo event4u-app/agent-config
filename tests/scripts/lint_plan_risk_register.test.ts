@@ -471,8 +471,13 @@ describe('lint_plan_risk_register — main', () => {
         expect(mod.main([empty, '--quiet'])).toBe(1);
     });
 
-    it('nonexistent root returns 1 — blocking, not advisory', () => {
-        expect(mod.main([path.join(tmp, 'does-not-exist'), '--quiet'])).toBe(1);
+    // A root that is not on disk at all is a legitimately empty corpus (a
+    // project with no roadmaps yet), NOT a dead scope — blocking there would
+    // fail every roadmap-less project with a misleading "the root moved".
+    // The discriminator is deliberate: present-but-yielding-nothing blocks
+    // (the test above), absent passes.
+    it('nonexistent root returns 0 — empty corpus, not a dead scope', () => {
+        expect(mod.main([path.join(tmp, 'does-not-exist'), '--quiet'])).toBe(0);
     });
 
     it('settings escape hatch: planning.risk_review=false → 0 without scanning', () => {

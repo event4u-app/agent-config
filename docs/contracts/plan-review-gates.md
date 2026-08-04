@@ -141,8 +141,8 @@ stable: writing, editing, or committing the review artefacts cannot change the
 hash. `base...HEAD` yields the same net diff on a branch head and on a merge
 commit of that branch, so the hash is identical on both checkouts.
 
-**Single definition.** The scope hash is computed by exactly one function
-(`computeReviewScope` in
+**Single definition.** The scope hash is computed by exactly one exported
+function (`computeReviewScope` in
 [`dispatch_r2_reviewer.ts`](../../src/scripts/dispatch_r2_reviewer.ts)), which
 [`check_completion_review.ts`](../../src/scripts/check_completion_review.ts)
 imports. A second, restated copy would silently re-break the gate the moment

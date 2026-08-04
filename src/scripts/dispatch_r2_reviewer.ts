@@ -120,11 +120,6 @@ export function computeReviewScope(runGit: GitRunner, base: string): ReviewScope
     return { diffText, hash: sha256(diffText), empty: isEmptyScope(diffText) };
 }
 
-/** The review-scope hash alone (see {@link computeReviewScope}). */
-export function computeScopeHash(runGit: GitRunner, base: string): string {
-    return computeReviewScope(runGit, base).hash;
-}
-
 /** Manifest comment block — exactly the contract §5 shape. */
 export function deriveManifest(inputs: ManifestInputs): string {
     return [
