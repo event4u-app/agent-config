@@ -17,10 +17,10 @@ complexity: structural
 
 ## Prerequisites
 
-- [ ] Read `AGENTS.md` and `src/rules/source-of-truth.md` (edit `src/` only)
-- [ ] Read `/challenge-me vision` (`src/domains/meta/challenge-me/vision/command.md`)
+- [x] Read `AGENTS.md` and `src/rules/source-of-truth.md` (edit `src/` only)
+- [x] Read `/challenge-me vision` (`src/domains/meta/challenge-me/vision/command.md`)
       — the four 95%-confidence conditions are the reused measure for Gate C
-- [ ] Read `src/config/gate-coverage.yml` — every new gate script must emit
+- [x] Read `src/config/gate-coverage.yml` — every new gate script must emit
       `scanned: <N>` and register there (the guard reports `pending` entries)
 
 ## Context
@@ -223,28 +223,28 @@ complexity: structural
 
 ## Phase 1: Settings keys + schema
 
-- [ ] **Step 1:** Add a `planning:` section to
+- [x] **Step 1:** Add a `planning:` section to
       `src/config/agent-settings.template.yml` with three keys and comment
       blocks (what each gate does, default semantics, honest-null/skip
       semantics, degraded mode): `challenge_on_create: true` (Gate C),
       `risk_review: true` (Gate R1), `completion_review: true` (Gate R2).
       Missing key = `true` for all three.
-- [ ] **Step 2:** Add the matching `planning` object to
+- [x] **Step 2:** Add the matching `planning` object to
       `src/server/schemas/settings.ts` — three `z.boolean().default(true)`
       leaves with `.describe(...)`. Every schema leaf must exist as an
       ACTIVE template key (parity test).
-- [ ] **Step 3:** Rebuild the tracked install bundle:
+- [x] **Step 3:** Rebuild the tracked install bundle:
       `npm run build:install-bundle` — **in the same commit as Steps 1–2**
       (schema edit + bundle rebuild are atomic; Phase 8's `task sync`
       regenerates `dist/agent-src/` only, never this bundle).
-- [ ] **Step 4:** Verify: `npx vitest run tests/server/schemas/parity.test.ts`
+- [x] **Step 4:** Verify: `npx vitest run tests/server/schemas/parity.test.ts`
       passes. Template comments are review-time surface — confirm in PR
       review that each comment matches the gate semantics (parity checks
       keys, not prose).
 
 ## Phase 2: Gate C shared context
 
-- [ ] **Step 1:** Create
+- [x] **Step 1:** Create
       `src/agent-src/contexts/execution/plan-confidence-gate.md` defining
       Gate C once (surfaces link to it, no duplication): activation read,
       seed-time assessment after the codebase lookup (challenge-me Step 0 —
@@ -259,34 +259,34 @@ complexity: structural
       (4) then author. Non-goals: no execution authorization; no firing on
       checkbox flips / dashboard regen / archival; explicit user bypass
       wins (and is counted).
-- [ ] **Step 2:** Verify: the new context file passes
+- [x] **Step 2:** Verify: the new context file passes
       `./scripts-run src/scripts/check_references` and the md-language
       check (English-only prose).
 
 ## Phase 3: Wire Gate C surfaces
 
-- [ ] **Step 1:** `/roadmap:create` — insert a "Step 0: Confidence gate"
+- [x] **Step 1:** `/roadmap:create` — insert a "Step 0: Confidence gate"
       before "Determine location", linking the context doc; keep existing
       inbound cross-references (challenge-me's links into
       `roadmap/create.md`) valid.
-- [ ] **Step 2:** `roadmap-writing` skill — extend § "0. Drafting protocol"
+- [x] **Step 2:** `roadmap-writing` skill — extend § "0. Drafting protocol"
       with the gate (free-form "write a plan/roadmap" path).
-- [ ] **Step 3:** `/feature:plan` — gate before its Step 1 ("Gather the
+- [x] **Step 3:** `/feature:plan` — gate before its Step 1 ("Gather the
       idea"); seed = the provided description.
-- [ ] **Step 4:** `/feature:roadmap` — gate after reading the feature plan;
+- [x] **Step 4:** `/feature:roadmap` — gate after reading the feature plan;
       seed = the feature document; gaps that would change phases/AC →
       interview first.
-- [ ] **Step 5:** `/challenge-me vision` — add a See-also note that plan
+- [x] **Step 5:** `/challenge-me vision` — add a See-also note that plan
       surfaces auto-route in when Gate C fires (reverse pointer; no
       behavior change in challenge-me itself).
-- [ ] **Step 6:** C→R1 handoff: Gate C writes
+- [x] **Step 6:** C→R1 handoff: Gate C writes
       `agents/runtime/state/gate-c-<plan-slug>.json` (resolved branches,
       plan hash, timestamp, `transcript_ref` with content hash — schema
       per Phase 4 Step 1); the R1 authoring step reads it when present +
       plan-hash-fresh + same-session (validator checks the transcript
       hash), and skips re-asking resolved branches. The user is never
       interviewed twice for the same plan.
-- [ ] **Step 7:** Verify: `./scripts-run src/scripts/check_references` and
+- [x] **Step 7:** Verify: `./scripts-run src/scripts/check_references` and
       `./scripts-run src/scripts/validate_frontmatter` green across all
       touched files; walkthrough evidence that (a) a Gate C interview
       followed by the R1 risk pass re-asks zero resolved questions, and
@@ -295,7 +295,7 @@ complexity: structural
 
 ## Phase 4: R1/R2 schemas + deterministic validators
 
-- [ ] **Step 1:** Write the contract file
+- [x] **Step 1:** Write the contract file
       `docs/contracts/plan-review-gates.md` defining ALL machine-checked
       grammars in one place: `risk-review: v1` marker + table rules;
       `completion-review: v1` marker + table rules; the **exact
@@ -316,20 +316,20 @@ complexity: structural
       (block), `2` = internal error (crash/timeout/parse failure →
       **degraded advisory mode**: log a warning, allow the operation — a
       broken gate must never block its own fix).
-- [ ] **Step 2:** Implement `src/scripts/lint_plan_risk_register.ts`
+- [x] **Step 2:** Implement `src/scripts/lint_plan_risk_register.ts`
       (deterministic, no LLM): existence on ready (non-draft) roadmaps,
       marker parse, rank monotonicity, mitigation presence, dangling
       `Anchored under` refs, staleness vs last substantial diff,
       honest-null grammar. Emits `scanned: <N>`; obeys the exit-code
       contract.
-- [ ] **Step 3:** Implement `src/scripts/check_completion_review.ts`
+- [x] **Step 3:** Implement `src/scripts/check_completion_review.ts`
       (deterministic, no LLM): artifact existence for current diff hash,
       severity ordering, status completeness (`open` /
       `deferred`-without-ref / `accepted-risk`-without-reason → fail),
       diff-hash match, honest-null and skip-declaration grammars,
       skip-rejected-when-diff-touches-code, fix-commit-before-artifact
       ancestry check. Emits `scanned: <N>`; obeys the exit-code contract.
-- [ ] **Step 4:** Unit tests with **synthetic fixtures** (this roadmap's
+- [x] **Step 4:** Unit tests with **synthetic fixtures** (this roadmap's
       own Risk Register is a reference example, never a test input — live
       files get edited/archived) for ALL fail paths (missing section,
       empty without honest-null, prose-only "no risks" without marker,
@@ -339,10 +339,10 @@ complexity: structural
       valid skip declaration, draft exemption), plus FP/FN fixtures for
       the substantial-change heuristic (typo-in-heading, scope-change-in-
       prose, phase-add, checkbox flip).
-- [ ] **Step 5:** Register both scripts in `src/config/gate-coverage.yml`
+- [x] **Step 5:** Register both scripts in `src/config/gate-coverage.yml`
       with CI-identical `argv` and a real `min_scanned` floor (derived from
       the current roadmap/PR corpus, documented in `corpus:`).
-- [ ] **Step 6:** Verify: `npx vitest run` on the two new test files — 0
+- [x] **Step 6:** Verify: `npx vitest run` on the two new test files — 0
       false-pass on the fail fixtures; exit-code-2 paths demonstrably
       warn-and-allow.
 
@@ -351,25 +351,25 @@ complexity: structural
 > Prerequisite: Phase 3 complete (the gated surfaces carry Gate C) and
 > Phase 4 merged (the contract + validator exist).
 
-- [ ] **Step 1:** Implement trigger detection per the Phase 4 contract's
+- [x] **Step 1:** Implement trigger detection per the Phase 4 contract's
       substantial-change heuristic (new-plan-file + heuristic match); wire
       the FP/FN fixtures from Phase 4 Step 4 as its regression suite.
-- [ ] **Step 2:** Authoring-flow step: add the risk-review step to the
+- [x] **Step 2:** Authoring-flow step: add the risk-review step to the
       gated surfaces (after draft, before save) — the agent (a) reads the
       C→R1 handoff state if present, (b) identifies the highest
       product/implementation risks, (c) ranks them descending, (d) writes
       mitigations back into the plan and anchors each row. Prompt
       scaffolding lives in the surfaces; the validator stays the enforcer.
-- [ ] **Step 3:** Pre-push enforcement: register the R1 validator in the
+- [x] **Step 3:** Pre-push enforcement: register the R1 validator in the
       pre-push hook path (`hook_manifest.yaml`) for ready roadmaps touched
       by the push; drafts exempt; exit-code-2 → warn-and-allow.
-- [ ] **Step 4:** CI enforcement: wire `lint_plan_risk_register` into the
+- [x] **Step 4:** CI enforcement: wire `lint_plan_risk_register` into the
       CI pipeline (gate-coverage entry flips `status: pending` →
       `enforced`).
-- [ ] **Step 5:** Add the Risk Register requirement + schema pointer to
+- [x] **Step 5:** Add the Risk Register requirement + schema pointer to
       `src/agent-src/templates/roadmaps.md` (new numbered rule) and to the
       roadmap-authoring surfaces' docs.
-- [ ] **Step 6:** E2E acceptance: (a) a ready roadmap without a valid Risk
+- [x] **Step 6:** E2E acceptance: (a) a ready roadmap without a valid Risk
       Register can be neither pushed (hook) nor merged (CI); (b) the
       honest-null path passes both; (c) a `status: draft` roadmap without
       a register pushes fine, and flipping it to ready without adding a
@@ -378,16 +378,16 @@ complexity: structural
 
 ## Phase 6: Wire Gate R2
 
-- [ ] **Step 1:** Completion-event detection: when the last open item of a
+- [x] **Step 1:** Completion-event detection: when the last open item of a
       roadmap flips to done in a session, the completion-review flow fires
       (extend the `roadmap-management` completion/archival flow, which
       already runs at `count_open == 0`).
-- [ ] **Step 2:** Pre-PR chokepoint: extend `/create-pr` with a fixed
+- [x] **Step 2:** Pre-PR chokepoint: extend `/create-pr` with a fixed
       sequence — (1) § 1c archival sweep runs first, (2) R2 review (the
       findings artifact references post-archival paths), (3) PR creation
       only with a valid findings artifact, honest-null, or skip
       declaration for the current diff hash.
-- [ ] **Step 3:** Fresh-subagent dispatch for Phase 1: implement
+- [x] **Step 3:** Fresh-subagent dispatch for Phase 1: implement
       `src/scripts/dispatch_r2_reviewer.ts` — a deterministic dispatcher
       that constructs the reviewer input itself (branch diff via git,
       roadmap file, extracted AC), computes the `inputs` hashes, writes
@@ -401,19 +401,20 @@ complexity: structural
       `agents/reviews/` (confirm exact location against the
       `agents-layout` contract; adjust there if it prescribes another
       home).
-- [ ] **Step 3b:** CI manifest verification: re-derive the expected
+      <!-- executed 2026-08-04: agents-layout prescribes agents/evidence/ for "everything evidential" — adjusted to agents/evidence/reviews/ (and metrics to agents/evidence/metrics/); no new top-level dir needed. -->
+- [x] **Step 3b:** CI manifest verification: re-derive the expected
       `inputs` hashes from the PR's diff SHA + roadmap path and block on
       manifest mismatch (manifest = verification, not self-attestation).
-- [ ] **Step 4:** Two-phase enforcement: the findings artifact must be
+- [x] **Step 4:** Two-phase enforcement: the findings artifact must be
       committed before the first fix commit (commit-ancestry check in
       `check_completion_review.ts`). Enforcement point: **pre-push hook +
       CI, dual layer, CI authoritative**; agent-side advisory only.
       Silent fixing → block.
-- [ ] **Step 5:** Applicability guard: implement the no-code-surface skip
+- [x] **Step 5:** Applicability guard: implement the no-code-surface skip
       path — plan-only/docs-only diffs and out-of-repo sessions produce
       the explicit skip declaration; the validator accepts it as a valid
       artifact state AND rejects it when the diff touches code paths.
-- [ ] **Step 6:** E2E acceptance: (a) PR without valid findings artifact is
+- [x] **Step 6:** E2E acceptance: (a) PR without valid findings artifact is
       blocked; (b) subagent review demonstrably runs without implementation
       context (context-manifest assertion) and a blocklisted tool call
       (`git log --all`, repo-wide grep) is rejected in the review context;
@@ -424,7 +425,7 @@ complexity: structural
 
 ## Phase 7: Pre-registered measurement
 
-- [ ] **Step 1:** Metrics capture from day 1 of activation — tracked
+- [x] **Step 1:** Metrics capture from day 1 of activation — tracked
       append-only JSONL `agents/metrics/gate-metrics.jsonl` (create the
       directory if missing; PII-free by construction — ids + counters
       only; each event carries the PR id / branch hash so concurrent
@@ -439,12 +440,12 @@ complexity: structural
       miscalibrated), `gate_c_bypass_rate` (share of plan asks where the
       user bypassed Gate C — persistent ~100% = gate friction exceeds
       value).
-- [ ] **Step 2:** Annotation helper for `r1_mitigation_hit_rate`: a small
+- [x] **Step 2:** Annotation helper for `r1_mitigation_hit_rate`: a small
       script (`src/scripts/annotate_r1_outcomes.ts`) that walks Risk
       Registers of archived roadmaps and prompts per mitigation —
       `helped | fired | unknown` — appending to the metrics JSONL;
       quarterly cadence noted in the contract doc.
-- [ ] **Step 3:** Two-stage pre-registration (verdict #20 — the original
+- [x] **Step 3:** Two-stage pre-registration (verdict #20 — the original
       flat `≥ 15%` figure is withdrawn as unanchored). **Stage A (before
       any data):** pre-register the measurement *protocol* in `CLAIMS.md`
       (regen `build_proof` + denominator bump in the same change) —
@@ -457,10 +458,10 @@ complexity: structural
       window):** derive the enforced-mode success threshold for
       `r2_critical_catch_rate` from the observed baseline and commit it
       to `CLAIMS.md` — set exactly once, never lowered afterwards.
-- [ ] **Step 4:** Honest-null publication commitment: if thresholds are
+- [x] **Step 4:** Honest-null publication commitment: if thresholds are
       missed, publish the result and rework or roll back the gates — never
       lower the thresholds afterwards.
-- [ ] **Step 5:** Acceptance: the protocol (Stage A) is committed before
+- [x] **Step 5:** Acceptance: the protocol (Stage A) is committed before
       the first data point and the enforced-mode threshold (Stage B) is
       committed after the 10-PR advisory baseline and before the enforced
       window (CLAIMS.md entries); after 20 gated PRs a measurement report
@@ -468,12 +469,12 @@ complexity: structural
 
 ## Phase 8: Projections + docs
 
-- [ ] **Step 1:** Run `task sync` — regenerate `dist/agent-src/` (CI
+- [x] **Step 1:** Run `task sync` — regenerate `dist/agent-src/` (CI
       asserts `dist == rewrite(src)` byte-for-byte; does NOT rebuild the
       install bundle — that happened atomically in Phase 1 Step 3).
-- [ ] **Step 2:** Run `task generate-tools` — regenerate per-tool
+- [x] **Step 2:** Run `task generate-tools` — regenerate per-tool
       projections for the touched command/skill files.
-- [ ] **Step 3:** Doc-impact: the three settings keys are public surface —
+- [x] **Step 3:** Doc-impact: the three settings keys are public surface —
       template comments are canonical; add to `docs/customization.md` only
       if a settings-key index exists there (one-line reason if not).
       Cross-link `docs/contracts/plan-review-gates.md` from the gate
@@ -481,36 +482,36 @@ complexity: structural
 
 ## Acceptance Criteria
 
-- [ ] `planning.challenge_on_create`, `planning.risk_review`,
+- [x] `planning.challenge_on_create`, `planning.risk_review`,
       `planning.completion_review` exist in template + Zod schema, default
       `true`; missing keys behave as `true`; parity test green.
-- [ ] Gate C: active + confidence < 95% → interview before authoring;
+- [x] Gate C: active + confidence < 95% → interview before authoring;
       all four conditions hold → direct creation with exactly one marker
       line; `false` → today's behavior; degrade path works without the
       challenge-me command; C→R1 handoff prevents double interviews.
-- [ ] Gate R1: a ready plan without a valid Risk Register (or explicit
+- [x] Gate R1: a ready plan without a valid Risk Register (or explicit
       honest-null) fails pre-push and CI; drafts are exempt (tested); stale
       or dangling registers fail.
-- [ ] Gate R2: PR/completion without a valid findings artifact,
+- [x] Gate R2: PR/completion without a valid findings artifact,
       honest-null, or skip declaration for the current diff hash is
       blocked; findings-before-fixes is enforced by ancestry check
       (pre-push + CI, backdating detected); the fresh reviewer runs
       without session history under a tool allowlist (manifest-checked,
       leak-tested); no-code-surface completions skip explicitly, never
       silently, and skips on code-touching diffs are rejected.
-- [ ] Degraded mode: any validator internal error (exit 2) warns and
+- [x] Degraded mode: any validator internal error (exit 2) warns and
       allows — a broken gate never blocks its own fix; policy violations
       (exit 1) block.
-- [ ] Both validators emit `scanned: <N>`, are registered in
+- [x] Both validators emit `scanned: <N>`, are registered in
       `gate-coverage.yml` with real floors, and have 0 false-pass on the
       fail fixtures.
-- [ ] Measurement protocol is pre-registered in `CLAIMS.md` before the
+- [x] Measurement protocol is pre-registered in `CLAIMS.md` before the
       first data point; the enforced-mode catch-rate threshold is derived
       from the 10-PR advisory baseline and frozen before the enforced
       window (two-stage pre-registration, verdict #20).
-- [ ] The post-artifact hard stop is unchanged on every surface; no gate
+- [x] The post-artifact hard stop is unchanged on every surface; no gate
       lifts any safety floor.
-- [ ] `dist/agent-src/` byte-identical to `rewrite(src)`; install bundle
+- [x] `dist/agent-src/` byte-identical to `rewrite(src)`; install bundle
       rebuilt atomically with the schema change; `check_references` and
       frontmatter validation green on touched files.
 
