@@ -131,7 +131,9 @@ describe('config/profiles — resolution chain', () => {
     it('developer seed shape', () => {
         const r = resolve_profile({ project_root: SEED_ROOT, runtime_id: 'developer' });
         expect(r.preset_id).toBe('balanced');
-        expect(r.personas).toContain('reviewer');
+        // 'reviewer' was never a shipped persona id — the review lens is `qa`;
+        // lint_profile_personas (2da00ad41) remapped the seeds to real ids.
+        expect(r.personas).toContain('qa');
         expect(r.commands_hint).toContain('work');
         expect(r.audience['readme_anchor']).toBe('developer');
         expect(r.docs_first_pointer).not.toBeNull();
