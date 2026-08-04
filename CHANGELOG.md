@@ -294,6 +294,44 @@ Entry-shape contract: [`docs/contracts/CHANGELOG-conventions.md`](docs/contracts
 > that forces a new era split (`# Era: 9.19.x`, etc.) — see
 > [`docs/contracts/CHANGELOG-conventions.md § Era splits`](docs/contracts/CHANGELOG-conventions.md).
 
+## [9.20.0](https://github.com/event4u-app/agent-config/compare/9.19.0...9.20.0) (2026-08-04)
+
+### Release highlights
+
+<!-- Curated head: fill before merge, keep it under 10 lines, and leave `_none_` where it is genuinely the answer. The generated log below is unchanged. -->
+- **Behaviour changes:** _none_
+- **Default changes + migration:** _auto-derived, rewrite before merge:_ commits naming a default, migration or migrate in 14dc053, bb362a0.
+- **Security and correctness:** _none_
+- **Honest nulls:** _auto-derived, rewrite before merge:_ commits carrying an honest-null marker in ba77e6a.
+- **Known limitations:** _none_
+
+### Features
+
+* **gates:** read the archived round records nothing was reading ([89eea71](https://github.com/event4u-app/agent-config/commit/89eea712b89048a032dfccf8a3bdd41f565adacc))
+
+### Bug Fixes
+
+* **gates:** stop the remediation text pointing at the closed hole ([2dc9e0d](https://github.com/event4u-app/agent-config/commit/2dc9e0d91262864237e50268d8ea54dcce761a62))
+* **gates:** rows are live wherever they appear — close the fence fail-open ([ba77e6a](https://github.com/event4u-app/agent-config/commit/ba77e6a6f4cc5c31b9de4741ee30ccc41e126df7))
+
+### Documentation
+
+* **evidence:** close the blind-pass dispositions and correct a claim I made ([0398238](https://github.com/event4u-app/agent-config/commit/0398238d99f7451712e710204c86ab41f964de50))
+* **contracts:** 2.7 is enforced now, and says what it still does not check ([d0b3650](https://github.com/event4u-app/agent-config/commit/d0b365035dc314183dcb0e353a09e3e2c5420284))
+* **roadmap:** pin-then-migrate ordering; drop the index for a round-record check ([bb362a0](https://github.com/event4u-app/agent-config/commit/bb362a0b64a5e16a156d238c1acadded44f229aa))
+* **roadmap:** record the council verdict on the fence grammar ([3e0deff](https://github.com/event4u-app/agent-config/commit/3e0deff6256050aa23fe952707ab88bf7bc9647e))
+* **review:** give the blind-pass findings terminal statuses and a carrier ([667b81e](https://github.com/event4u-app/agent-config/commit/667b81e9fa44d892095a7b057a6407196aa429bf))
+
+### Tests
+
+* **gates:** pin every fence arrangement before the grammar migration ([14dc053](https://github.com/event4u-app/agent-config/commit/14dc053d51ac1e932ce4deeb50ffb2e07737bd84))
+
+### CI
+
+* **gates:** wire check_review_dispositions with a trippable floor ([9b03190](https://github.com/event4u-app/agent-config/commit/9b0319032494345fdcaad40ae79dbe3ea95f6fc8))
+
+Tests: 10995 (+23 since 9.19.0)
+
 ## [9.19.0](https://github.com/event4u-app/agent-config/compare/9.18.1...9.19.0) (2026-08-04)
 
 ### Release highlights
