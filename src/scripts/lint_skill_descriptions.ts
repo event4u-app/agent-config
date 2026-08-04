@@ -61,6 +61,7 @@ import process from 'node:process';
 import { fileURLToPath } from 'node:url';
 
 import { OVERLAP_THRESHOLD, _cosine, collect } from './audit_skill_overlap.js';
+import { assertScanned, DeadScopeError } from './_lib/scan_scope.js';
 import { parse_frontmatter } from './skill_overlap.js';
 
 const _HERE = fileURLToPath(import.meta.url);
@@ -287,6 +288,24 @@ function main(argv: string[]): number {
         for (const v of analyseSkill(slug, fm, clusters.get(slug) ?? [])) {
             if (!allow.has(`${v.slug}::${v.code}`)) violations.push(v);
         }
+    }
+
+    // `skillMds` yields nothing for a root that does not exist, so a moved
+    // `src/skills` would report "no description defects" over zero skills —
+    // routing quality certified against an empty corpus.
+    try {
+        assertScanned({
+            gate: 'lint_skill_descriptions',
+            scanned,
+            units: 'skill(s)',
+            roots: [path.relative(REPO, args.root) || args.root],
+        });
+    } catch (exc) {
+        if (exc instanceof DeadScopeError) {
+            process.stderr.write(`❌  ${exc.message}\n`);
+            return 1;
+        }
+        throw exc;
     }
 
     if (args.json) {

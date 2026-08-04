@@ -16,6 +16,8 @@ import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { parse as parseYaml } from 'yaml';
 
+import { assertScanned, DeadScopeError } from './_lib/scan_scope.js';
+
 const _HERE = fileURLToPath(import.meta.url);
 export const ROOT = path.resolve(path.dirname(_HERE), '..', '..');
 const SKILLS_DIR = path.join(ROOT, 'src', 'skills');
@@ -76,8 +78,38 @@ export function findBrokenPointers(entries: SkillGaps[], root: string = ROOT): s
     return errs;
 }
 
+/** SKILL.md files under `skillsDir` — the corpus `collectSkillGaps` reads. */
+function countSkillFiles(skillsDir: string = SKILLS_DIR): number {
+    try {
+        return fs
+            .readdirSync(skillsDir)
+            .filter((name) => fs.existsSync(path.join(skillsDir, name, 'SKILL.md'))).length;
+    } catch {
+        // A missing root counts zero, which the caller's assertion turns into a
+        // loud failure — never a silent "no gaps to check".
+        return 0;
+    }
+}
+
 export function main(argv: string[] = process.argv.slice(2)): number {
     const quiet = argv.includes('--quiet');
+    // The scanned unit is every SKILL.md, not the subset declaring `gaps:` —
+    // asserting on the declaration count would read a vanished skills tree as
+    // "no gaps declared" and stay green, the exact blindness this guards.
+    try {
+        assertScanned({
+            gate: 'check_skill_gaps',
+            scanned: countSkillFiles(),
+            units: 'SKILL.md file(s)',
+            roots: ['src/skills'],
+        });
+    } catch (exc) {
+        if (exc instanceof DeadScopeError) {
+            process.stderr.write(`❌  ${exc.message}\n`);
+            return 1;
+        }
+        throw exc;
+    }
     const entries = collectSkillGaps();
     const errs = findBrokenPointers(entries);
     if (errs.length > 0) {

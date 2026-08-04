@@ -10,7 +10,8 @@
  * Exit codes:
  *   0  contract holds across every corpus
  *   1  one or more violations
- *   2  invocation error (no corpora found; corpus dir missing)
+ *   2  invocation error (no corpora found — now reported through _lib/scan_scope,
+ *      which names the empty roots; corpus dir missing)
  *
  * Flags:
  *   --quiet            suppress per-file OK lines
@@ -21,6 +22,7 @@ import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { parse as parseYaml, YAMLParseError } from "yaml";
 import { artefact_roots } from "./_lib/agent_src.js";
+import { assertScanned, DeadScopeError } from "./_lib/scan_scope.js";
 
 const QUIET = process.argv.includes("--quiet");
 const REQUIRE_FULL = process.argv.includes("--require-full");
@@ -348,9 +350,23 @@ export function main(): number {
   if (_isDir(ROUTER_COVERAGE_DIR)) {
     corpora.push(...globSorted(ROUTER_COVERAGE_DIR, "", ".yaml"));
   }
-  if (corpora.length === 0) {
-    process.stderr.write("error: no corpora found\n");
-    return 2;
+  try {
+    assertScanned({
+      gate: "lint_bench_corpus",
+      scanned: corpora.length,
+      units: "benchmark corpus file(s)",
+      roots: ["tests/eval", "internal/bench/corpora/router-coverage"],
+    });
+  } catch (exc) {
+    if (exc instanceof DeadScopeError) {
+      // Exit 2 stays — the documented code for "no corpora found". The Taskfile
+      // fails on any non-zero, so this was never a silent green; what the
+      // assertion adds is a message that names the roots that came back empty
+      // instead of a bare "error: no corpora found".
+      process.stderr.write(`❌  ${exc.message}\n`);
+      return 2;
+    }
+    throw exc;
   }
 
   const skills = live_skills();

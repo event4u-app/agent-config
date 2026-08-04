@@ -31,7 +31,9 @@
  * a few contract rows point at full working commands that merely happen to
  * carry one nested sub-command, and those own no dispatch table.
  *
- * Exit codes: 0 = clean, 1 = pattern violations, 3 = internal error.
+ * Exit codes: 0 = clean, 1 = pattern violations, 3 = internal error (which now
+ * includes a dead scan scope — an unparseable cluster table — reported through
+ * `_lib/scan_scope` so the message names the root).
  */
 
 import * as fs from 'node:fs';
@@ -39,6 +41,7 @@ import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import { SRC_DOMAINS, command_slug, resolve_logical } from './_lib/agent_src.js';
+import { assertScanned, DeadScopeError } from './_lib/scan_scope.js';
 
 const _HERE = fileURLToPath(import.meta.url);
 // src/scripts/check_cluster_patterns.ts → two dirs up is the repo root.
@@ -369,10 +372,29 @@ function _relativeToRootOrAbs(p: string): string {
 }
 
 export function main(): number {
+    // The locked-clusters table IS the corpus — every row drives one dispatcher
+    // read. A renamed contract file or a renamed `## Locked clusters` heading
+    // parses zero rows, which used to exit 3 (internal error, advisory at call
+    // sites) rather than fail: a blind gate, not a broken one.
     const rows = load_cluster_table();
-    if (rows.length === 0) {
-        process.stderr.write(`❌  No clusters parsed from ${_relativeToRootOrAbs(CONTRACT)}\n`);
-        return 3;
+    try {
+        assertScanned({
+            gate: 'check_cluster_patterns',
+            scanned: rows.length,
+            units: 'locked-cluster row(s)',
+            roots: [_relativeToRootOrAbs(CONTRACT)],
+        });
+    } catch (exc) {
+        if (exc instanceof DeadScopeError) {
+            // Exit 3, not 1: this gate's CLI contract is pinned by its py2ts
+            // port, and an empty table was ALREADY loud here (3 is non-zero, and
+            // the Taskfile fails on any non-zero). Hardening means routing the
+            // check through the shared assertion so the message names the root —
+            // not renumbering an exit code that was never a silent green.
+            process.stderr.write(`❌  ${exc.message}\n`);
+            return 3;
+        }
+        throw exc;
     }
 
     const slug_map = build_slug_map();
