@@ -13,33 +13,50 @@ tools: [git-diff-branch-scoped, file-read-branch-paths]
 dispatched: 2026-08-04T11:40:33Z
 -->
 
-**Honest-null:** 0 findings, scope 74c4fc466896d7d8d692bba78abd78bbb4bbab2e8298210dafb99f63a1211eb6, reviewed 2026-08-04
+| # | Severity | File:Line | Finding | Status | Reason/Ref |
+|---|----------|-----------|---------|--------|------------|
+| 1 | medium | src/scripts/check_completion_review.ts:128 | `CODE_EXTENSIONS` omits infrastructure-as-code and build surfaces: `.tf`, `.hcl`, `.tfvars`, `.gradle`, `.cmake`, `.proto`, and every extensionless build file (`Dockerfile`, `Makefile`, `Jenkinsfile` — `isCodePath` returns false when `dot <= 0`). An IaC-only or Dockerfile-only PR in a consumer repo therefore classifies as "no code surface", so a `**Skipped:**` declaration is accepted and R2 never runs on it: a code-bearing diff passing the gate silently. Contract § 2.4 declares that an omitted extension is a real hole and asserts the set "errs broad" — for IaC it does not, while the suite ships terraform / terragrunt / aws-infrastructure skills plus `engineering-safety-floor`, i.e. it already treats exactly these files as production-behaviour surfaces. | open | |
+| 2 | medium | src/scripts/check_completion_review.ts:374 | `parseArtifact` accepts any table-shaped row with `cells.length >= 6` and drops the surplus cells, but contract § 2.2 is normative and says a row that does not parse into **exactly** the six cells is a `malformed-row` block ("a divergence from that file is a validator bug, never a contract reinterpretation"). A row with 7+ columns — an added column, or an unescaped `\|` in the Finding cell shifting content rightwards — is read as a valid finding row with its trailing cells ignored, so Status and Reason/Ref are taken from the wrong columns. Only the short-row case has a fixture (`'5 cell(s), expected 6'`); the over-long case is untested, so neither the code nor the contract text is pinned. | open | |
+| 3 | low | src/scripts/check_completion_review.ts:269 | `extractFixRef` treats the first `\b[0-9a-f]{7,40}\b` run in `Reason/Ref` as the fix commit-ish, so any 7+ character token from the hex alphabet matches — including plain decimals: `fixed, closes #1234567` yields `1234567`, `fixed 20260804` yields `20260804`. `git rev-parse --verify` then fails and the row reports `unresolvable-fix-ref` (blocking once `--advisory` is dropped) even though a real ref appears later in the same cell. Scanning all candidate tokens and accepting the first that resolves removes the false positive without weakening § 2.5. | open | |
+| 4 | low | src/scripts/dispatch_r2_reviewer.ts:440 | The `deriveSlug` doc comment states "The CI environment is consulted FIRST because on a `pull_request` checkout `HEAD` is a detached synthetic merge commit", while the implementation ten lines below consults git first and says so in its own inline comment ("GIT FIRST — the env vars are a detached-HEAD fallback, not an override"). Two contradictory statements of the resolution order in one function; a reader who trusts the JSDoc mis-predicts the `--repo`-scoped behaviour that the inline comment exists to protect. | open | |
+| 5 | low | src/config/gate-coverage.yml:332 | The `check_completion_review` note asserts `scanned` "is >= 1 by construction and `min_scanned: 1` can never trip". That contradicts the validator's own comment (the `+1` "is counted ONLY when the artefact root actually resolves, so a moved/renamed root drops N to 0 instead of hiding behind a floor that cannot fail") and the qualified wording of contract § 6 ("guards nothing **on the happy path**"). A moved reviews root emits `scanned: 0`, so the floor does trip for the one case it exists to catch; understating a working floor invites a future maintainer to drop it as dead weight. | open | |
+| 6 | low | src/scripts/lint_plan_risk_register.ts:685 | `riskReviewDisabled` re-implements the settings escape-hatch reader that already exists, generically keyed, as `planningFlagIsFalse` in `src/scripts/_lib/planning_settings.ts:21` — which exports only the `completion_review` wrapper. The same diff states the opposite rule twice (`md_table.ts`: "One definition, imported by both validators: the same defect appearing twice is what made this a shared helper"; `planning_settings.ts`: "A reader that only the gate consulted left the second, blocking layer firing with the gate nominally switched off"). Two copies of fail-open semantics can drift exactly where a drift disables or over-enables a gate; exporting a `riskReviewDisabled` wrapper costs one line. | open | |
+| 7 | low | src/scripts/dispatch_r2_reviewer.ts:145 | Review-scope determinism: `REVIEW_SCOPE_GIT_CONFIG` pins `core.quotePath` and `core.attributesFile`, and § 2.0 names `$GIT_DIR/info/attributes` and `etc/gitattributes` as accepted residuals — but neither the pin nor the residual list covers the process **locale**. Git's `Binary files %s and %s differ` patch line is in git's message catalogue, so with `LANG`/`LC_ALL` set to a translated locale the same content yields different diff bytes whenever the scope includes a binary file, producing exactly the cross-machine `manifest mismatch (stale review)` § 2.0 exists to eliminate. `gitEnv()` strips only the `GIT_*` discovery variables, so the locale is inherited; forcing `LC_ALL=C` (with `GIT_ATTR_NOSYSTEM=1`) in that env closes it, otherwise the residual list should name it. | open | |
 
 ## Provenance
 
-Binding blind round, dispatched by `dispatch_r2_reviewer.ts` and answered by a
-fresh subagent with no implementation context (contract § 5). Bound to scope
+Blind round dispatched by `dispatch_r2_reviewer.ts` and answered by a fresh
+subagent with no implementation context (contract § 5), bound to scope
 `74c4fc46…` (head `f2c697191`).
 
-Result: **NO-FINDINGS.** The reviewer was pointed at the four changes made since
-the previous clean round and asked to check each against what the code actually
-does: the `planning` section's new `.default({})` against the template and the
-"missing key = true" promise; `deriveSlug`'s git-before-env order against the
-detached-HEAD reality of `actions/checkout` on `pull_request`; the metrics
-`mkdirSync` before append; and the corrected `gate-coverage` note against the
-`--advisory` argv that entry declares. It was also told that an honestly stated
-residual is correct rather than a finding, so the clean result is a real signal
-and not a lowered bar.
+Result: **7 findings — 2 medium, 5 low, 0 critical, 0 high.** No gate was found
+that a policy violation can pass unintentionally outside the declared Stage-A
+`--advisory` window: the three `consistency.yml` wrappers and the two
+`ci-fast.yml` / `Taskfile.yml` wrappers re-raise every non-2 exit code, the
+`DeadScopeError` → exit 1 carve-out is implemented in both validators, and the
+`--verify-current` selector is the one blocking R2 layer during Stage A. Findings
+1 and 2 are the two places where shipped behaviour is narrower than the
+contract's own normative text; 3 and 7 are false-block paths; 4, 5 and 6 are
+documentation/code contradictions inside this diff. Honestly stated residuals
+(§ 1 enforced corpus, § 4.1, § 6, § 7.1, the § 2.0 attributes residual) were
+read as declarations, not defects.
 
-**This is the binding artefact for the merge, and it is stable.** Committing it
-cannot invalidate it: `agents/evidence/reviews` is excluded from the scope
-(§ 2.0), so the scope stays `74c4fc46…`. That property is what terminates the
-review loop — every earlier round moved the scope because its fixes touched
-reviewed content; this round changes nothing outside the excluded path.
+Cross-checks that came back clean: the review-scope hash is computed by exactly
+one exported `computeReviewScope`, imported by the validator; `splitMarkdownRow`
+and `completionReviewDisabled` are single definitions shared by both layers;
+`agents/roadmaps/road-to-kernel-question-triangle.md` and
+`agents/roadmaps/road-to-plan-gates-measurement.md` both carry registers whose
+`Anchored under` values resolve in-document (`## Phase 1 — apply through the
+kernel process`, `## The amendment (drafted, ready to apply)`, `Phase 1 Step 1`
+/ `Step 2` bullets), so Gate R1 — the one blocking new gate — does not red this
+PR; `fetch-depth: 0` is present on the only job that runs the three gates;
+`planning` appears with the same three keys and defaults in the template, the
+Zod schema (`.default({})`) and the rebuilt `dist/install/install.mjs`; and
+`docs/proof.md` tracks the new `CLAIMS.md` entry (6→7 unbacked, 48→49 entries).
 
 ## Round history
 
-Eight blind rounds, each dispatched fresh with no implementation context:
+Blind rounds, each dispatched fresh with no implementation context:
 
 - round 1 (pre-scope-hash binding) — 11 findings: 10 fixed, 1 accepted-risk
 - round 2 (`2e8caaab…`) — 11 findings: 11 fixed
@@ -48,12 +65,11 @@ Eight blind rounds, each dispatched fresh with no implementation context:
 - round 5 (`fa8f4d32…`) — NO-FINDINGS
 - round 6 (`c7a76c7e…`) — 1 finding: 1 fixed
 - round 7 (`1559f51c…`) — NO-FINDINGS
-- round 8 (this artefact) — NO-FINDINGS, binding
+- round 8 (this artefact, scope `74c4fc46…`) — 7 findings, all `open`
 
-39 findings total: 37 fixed, 2 accepted-risk, 0 open. Superseded rounds are
-retained as `*.roundN-review.md` (§ 2.7) — outside the `*.findings.md` glob
-because each is bound to a scope that no longer exists.
+Superseded rounds are retained as `*.roundN-review.md` (§ 2.7) — outside the
+`*.findings.md` glob because each is bound to a scope that no longer exists.
 
 Rendered as a list, not a table, on purpose: § 2.2 parses every table-shaped
 line in a findings artefact as a findings row, so a prose table here reports as
-`malformed-row` — found by running the gate against this very artefact.
+`malformed-row`.
