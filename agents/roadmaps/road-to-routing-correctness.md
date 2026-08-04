@@ -79,30 +79,60 @@ status: ready
       through `assertScanned` (0 rules scanned → red).
       *Verify:* seeded undeclared collision fixture → red in CI; all live
       collisions dispositioned.
-- [ ] Merge or disjoin the identical-trigger duplicates: brand pair → one rule
+- [x] Merge or disjoin the identical-trigger duplicates: brand pair → one rule
       + one pointer; `domain-safety-disclaimer` finance triggers move to
       `finance-safety-floor`; `secret-vcs-guard` vs `security-sensitive-stop`
       get disjoint trigger sets (VCS surface vs conversational surface).
       Preservation-guard applies to every merge.
       *Verify:* zero identical-trigger duplicate pairs remain; condensation +
       router compile green; preservation checklist per merged rule.
-- [ ] Harden `LEGACY_TIER_MAP`: unknown tier value = compile error in
+      <!-- done 2026-08-04: brand-consistency merged INTO brand-source-of-truth
+      (both Iron Laws byte-preserved as Iron Law 1/2, every section retained,
+      trigger union); brand-consistency is now a type:manual pointer stub
+      (inbound refs keep resolving, no router emission). valuation+DCF removed
+      from domain-safety-disclaimer (finance-safety-floor already carries
+      both). secret/password removed from security-sensitive-stop (VCS-write
+      surface owns them via secret-vcs-guard); oauth + signing key added for
+      the conversational surface without creating new collisions.
+      validate_frontmatter 430/0; router recompiled (tier-2 73→72);
+      compile_router tests 17/17. -->
+- [x] Harden `LEGACY_TIER_MAP`: unknown tier value = compile error in
       `compile_router.ts` (today: silent tier-2 fallthrough). Add `2b`
       explicitly with a recorded decision (`2b` → tier-2 intended or the 21
       rules are re-tiered deliberately) and map/reject `safety-floor`.
       *Verify:* fixture rule with a typo'd tier fails compilation; the 21
       `2b` rules carry an explicit, reviewed mapping.
-- [ ] Reconcile the question triangle with a one-line amendment, not a
+      <!-- done 2026-08-04: `2b` → tier-2 explicit map entry; recorded decision
+      in rule-router.md § Backward compatibility; unknown tier throws with the
+      rule id; `safety-floor` rejected on non-always rules (always trio
+      short-circuits to kernel). compile_router.test.ts Layer 3, 17/17 green,
+      committed router.json byte-identical. -->
+- [~] Reconcile the question triangle with a one-line amendment, not a
       rewrite: `ask-when-uncertain`'s Iron Law gains the missing cross-band
       qualifier ("…for questions that clear the `autonomous-execution`
       trivial bar — trivial questions are not asked, per band 4"). Own PR,
       kernel process, human-owned.
       *Verify:* string-level check — "even if trivial" coexists with the
       band-4 qualifier; the literal texts no longer contradict.
+      <!-- deferred 2026-08-04: human-owned by this step's own lock AND
+      hard-enforced by the host — the edit-permission classifier denies agent
+      writes to this kernel ask-policy rule (correct per security-sensitive-
+      stop § self-modification). Maintainer applies the drafted one-liner in
+      src/rules/ask-when-uncertain.md:21 — replace
+        "Even if trivial or independent — exactly one."
+      with
+        "Even if trivial or independent — exactly one. Band-4 scope: this law
+        caps the count for questions that clear the `autonomous-execution`
+        trivial bar — a trivial workflow question below that bar is not asked
+        at all (per `agent-authority` band 4); the cap never licenses the ask."
+      Own PR + task sync + check_kernel_prefix_stability --update-baseline
+      (kernel-prefix.json re-anchor) + ≥24 h soak. AI-council verdict A1
+      (2026-08-04) endorsed agent-drafted/human-merged; the host gate tightens
+      that to human-applied. -->
 
 ## Phase 2 — the validation surface the mandate asks for
 
-- [ ] `agent-config route:explain "<prompt>" [--files a,b]` — deterministic,
+- [x] `agent-config route:explain "<prompt>" [--files a,b]` — deterministic,
       offline, reads `dist/router.json` (tier-1/2 + anchor scoring), prints:
       matched triggers, tier, injected-vs-pointer disposition, budget
       consumption, rejected candidates with reasons. Mandatory first output
@@ -110,17 +140,42 @@ status: ready
       measured here (see road-to-cross-model-routing-eval)."
       *Verify:* golden tests — 10 pinned prompts → pinned explanations; drift
       breaks CI.
-- [ ] Parity by construction: the explain command and any future resolver
+      <!-- done 2026-08-04: src/scripts/_cli/cmd_route_explain.ts + registry +
+      dispatcher + usage(); budget 82→83 + measurement record regenerated;
+      header cites ADR-126 instead of a roadmap file (check_no_roadmap_refs
+      forbids roadmap links from stable artifacts — same content, durable
+      citation). Note: router.json carries no anchor scoring (scout-verified);
+      the command prints what exists — triggers, tier, projection-time
+      disposition, token budget, rejected candidates. Goldens: 10 pinned
+      prompts, tests/scripts/cmd_route_explain.test.ts (13 tests). -->
+- [x] Parity by construction: the explain command and any future resolver
       share ONE matcher module (single implementation, two callers), asserted
       by an import-graph test — nothing can drift because there is nothing to
       drift between.
       *Verify:* import-graph test red when a second matcher implementation
       appears.
-- [ ] `/routing-audit` slash command: runs `route:explain` over the last N
+      <!-- done 2026-08-04: src/scripts/_lib/router_match.ts is the single
+      implementation (extracted from router_telemetry.ts, which re-exports);
+      cmd_explain.ts's divergent unanchored tier-1-only matcher replaced by
+      the shared one (now anchored, both tiers);
+      tests/scripts/router_match_parity.test.ts greps src/ for second
+      definitions and pins the import edges. 18/18 green incl. 196
+      routing-matrix verdicts. -->
+- [x] `/routing-audit` slash command: runs `route:explain` over the last N
       prompts from chat-history JSONL and renders should-have-matched vs
       matched. Read-only, no LLM call, same measurement-level header.
       *Verify:* command spec + eval cases; output header labels the
       measurement level.
+      <!-- done 2026-08-04, shape adapted: `routing` is not an approved
+      command verb (ADR-041 vocabulary) and a new atomic command needs a
+      locked cluster — so the surface landed as (a) the deterministic CLI
+      `agent-config route:audit [--last N] [--record] [--weekly]`
+      (cmd_route_audit.ts, reads chat-history JSONL user prompts, shared
+      matcher, measurement-level header first line, exit contract tested)
+      and (b) a new § 6 in the existing meta command /rule-compliance-audit
+      — the established rule-routing debug surface — that drives it, plus
+      eval cases (src/agent-src/commands/evals/rule-compliance-audit.json,
+      10 cases). Tests: cmd_route_audit.test.ts 9/9. -->
 
 ## Phase 3 — frontend-set diet (measurement before trimming)
 
@@ -153,14 +208,26 @@ status: ready
 
 ## Phase 4 — standing adherence telemetry (the anti-anecdote layer)
 
-- [ ] `router_telemetry` gains an opt-in, redacted session recorder: per
+- [x] `router_telemetry` gains an opt-in, redacted session recorder: per
       prompt, which triggers matched (from the shared matcher) and whether the
       matched rule's `enforced_by` mechanism (where one exists) fired that
       turn. Local JSONL under `agents/runtime/state/`, rebuildable, passes the
       state-store test.
       *Verify:* recorder off by default; redaction fixtures; delete-and-rerun
       loses history, changes no answer.
-- [ ] `/routing-audit --weekly` renders the rolling picture. The next "rules
+      <!-- done 2026-08-04: recorder lives in cmd_route_audit.ts (--record),
+      built on the shared matcher (the router_telemetry extraction). Opt-in
+      `telemetry.routing_recorder.enabled` (default off — zero file IO when
+      off); JSONL agents/runtime/state/routing-telemetry.jsonl; records are
+      PII-excluded BY CONSTRUCTION (closed field set, prompt sha16 digest,
+      never prompt text — stronger than redaction, per domain-safety-pii §2);
+      adversarial fixture asserts no secret/email/prompt text lands in the
+      record; delete-and-rerun rebuilds byte-identical records (state-store
+      test); AGENT_CONFIG_REPLAY=1 writes nothing. Enforcement join: honest
+      concern-name equality against rule-trips.json (block/warn counts) —
+      per-turn mechanism firing is not observable offline and is not claimed.
+      complexity runtime_state_surfaces is a soft report-only ratchet. -->
+- [x] `/routing-audit --weekly` renders the rolling picture. The next "rules
       are ignored" conversation starts from this corpus — which is also the
       instrument class both ADR-054's reopen clause ("a produced red baseline
       under any instrument") and the resolver PREREG's P2 corpus-growth
@@ -168,6 +235,11 @@ status: ready
       stays the sole resolver authority.
       *Verify:* weekly render golden test; the output cites the PREREG as the
       resolver authority.
+      <!-- done 2026-08-04: `agent-config route:audit --weekly` — rolling
+      7-day per-rule aggregation from the recorder log; golden test pins the
+      full render byte-for-byte incl. the PREREG-authority line
+      ("Resolver authority: internal/bench/layer1-resolver-PREREG.md …
+      nothing here revives a resolver"). cmd_route_audit.test.ts 9/9. -->
 
 ## Success criteria (pre-registered)
 

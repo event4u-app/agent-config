@@ -6,10 +6,10 @@
 
 ## Overall
 
-**92 / 182 steps done · 51%**
+**99 / 181 steps done · 55%**
 
 ```text
-████████████████████░░░░░░░░░░░░░░░░░░░░   51%
+██████████████████████░░░░░░░░░░░░░░░░░░   55%
 ```
 
 ## Open roadmaps
@@ -23,7 +23,7 @@
 | 5 | [road-to-gates-that-can-fail.md](roadmaps/road-to-gates-that-can-fail.md) | 7 | 27 | 2 | 24 | 1 | 0 | 0 | █████████░ 92% |
 | 6 | [road-to-maintainer-bus-factor.md](roadmaps/road-to-maintainer-bus-factor.md) | 4 | 12 | 5 | 7 | 0 | 0 | [1](#blockers-road-to-maintainer-bus-factor) | ██████░░░░ 58% |
 | 7 | [road-to-orchestration-scope-decision.md](roadmaps/road-to-orchestration-scope-decision.md) | 4 | 10 | 6 | 4 | 0 | 0 | [1](#blockers-road-to-orchestration-scope-decision) | ████░░░░░░ 40% |
-| 8 | [road-to-routing-correctness.md](roadmaps/road-to-routing-correctness.md) | 4 | 15 | 15 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+| 8 | [road-to-routing-correctness.md](roadmaps/road-to-routing-correctness.md) | 4 | 15 | 7 | 7 | 1 | 0 | 0 | █████░░░░░ 50% |
 | 9 | [road-to-scale-history-bench-run.md](roadmaps/road-to-scale-history-bench-run.md) | 1 | 2 | 2 | 0 | 0 | 0 | [1](#blockers-road-to-scale-history-bench-run) | ░░░░░░░░░░ 0% |
 | 10 | [road-to-solution-minimalism.md](roadmaps/road-to-solution-minimalism.md) | 4 | 36 | 12 | 23 | 0 | 1 | 0 | ███████░░░ 66% |
 | 11 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 6 | 3 | 0 | 0 | [1](#blockers-road-to-subagent-value-realization-followup) | ███░░░░░░░ 33% |
@@ -155,14 +155,14 @@ _1 blocker resolved._
 
 ### [road-to-routing-correctness.md](roadmaps/road-to-routing-correctness.md)
 
-**Road to routing correctness — the rule set stops fighting itself, and a command proves what routes** — 0 / 15 done (0%)
+**Road to routing correctness — the rule set stops fighting itself, and a command proves what routes** — 7 / 14 done (50%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
-| 1 | rule hygiene: stop the set from fighting itself | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
-| 2 | the validation surface the mandate asks for | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
+| 1 | rule hygiene: stop the set from fighting itself | 🟡 in progress | 2 | 2 | 1 | 0 | 50% |
+| 2 | the validation surface the mandate asks for | ✅ done | 0 | 3 | 0 | 0 | 100% |
 | 3 | frontend-set diet (measurement before trimming) | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
-| 4 | standing adherence telemetry (the anti-anecdote layer) | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
+| 4 | standing adherence telemetry (the anti-anecdote layer) | ✅ done | 0 | 2 | 0 | 0 | 100% |
 
 ### [road-to-scale-history-bench-run.md](roadmaps/road-to-scale-history-bench-run.md)
 
