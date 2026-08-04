@@ -372,7 +372,7 @@ export function analyze(src: string, repoRoot: string): Analysis {
     const confirmed: Finding[] = [];
     const unproven: Finding[] = [];
     const roots = new Map<string, string>();
-    const missing = (rel: string): boolean => !fs.existsSync(path.join(repoRoot, rel));
+    const missing = (rel: string): boolean => !rootExists(repoRoot, rel);
 
     for (const [rel, e] of found) {
         roots.set(rel, [...e.names].join(',') || '(inline)');
@@ -549,10 +549,44 @@ export function censusOnlyRoots(src: string, repoRoot: string): Map<string, stri
         if (rel === '' || rel.startsWith('..')) continue;
         // `node_modules/.bin/tsx` is a tool path a gate SPAWNS, not a corpus it reads.
         if (rel === 'node_modules' || rel.startsWith('node_modules/')) continue;
-        if (!fs.existsSync(path.join(repoRoot, rel))) continue; // the safety filter — see the doc comment
+        if (!rootExists(repoRoot, rel)) continue; // the safety filter — see the doc comment
         if (!out.has(rel)) out.set(rel, '(census-only)');
     }
     return out;
+}
+
+/**
+ * Does a declared root exist, independent of checkout shape?
+ *
+ * A plain `existsSync` answers differently in a linked git worktree, where
+ * `.git` is a FILE containing `gitdir: …` rather than a directory — so a root
+ * like `.git/HEAD` resolves in a clone and vanishes in a worktree. The census
+ * has to "match a fresh run" to be worth committing, and a report whose rows
+ * depend on which checkout generated it cannot. Resolving `.git/*` through the
+ * real git directory makes the two agree.
+ */
+export function resolveRoot(repoRoot: string, rel: string): string {
+    if (rel === '.git' || rel.startsWith('.git/')) {
+        const gitPath = path.join(repoRoot, '.git');
+        try {
+            if (fs.statSync(gitPath).isFile()) {
+                // `gitdir: <abs-or-relative path>` — the worktree's real git dir.
+                const m = /^gitdir:\s*(.+)$/m.exec(fs.readFileSync(gitPath, 'utf8'));
+                const target = m?.[1]?.trim();
+                if (target !== undefined && target !== '') {
+                    const gitDir = path.isAbsolute(target) ? target : path.join(repoRoot, target);
+                    return rel === '.git' ? gitDir : path.join(gitDir, rel.slice('.git/'.length));
+                }
+            }
+        } catch {
+            /* fall through to the plain join — a missing .git is genuinely absent */
+        }
+    }
+    return path.join(repoRoot, rel);
+}
+
+export function rootExists(repoRoot: string, rel: string): boolean {
+    return fs.existsSync(resolveRoot(repoRoot, rel));
 }
 
 /** Directories never worth walking for a unit count. */
@@ -578,7 +612,7 @@ export interface RootCount {
  * a container migration shows up as a diff instead of as silence.
  */
 export function countUnits(repoRoot: string, rel: string): RootCount {
-    const abs = path.join(repoRoot, rel);
+    const abs = resolveRoot(repoRoot, rel);
     let st: fs.Stats;
     try {
         st = fs.statSync(abs);

@@ -27,6 +27,8 @@ import {
     censusOnlyRoots,
     classify,
     countUnits,
+    resolveRoot,
+    rootExists,
     main,
     renderCensus,
     selfTest,
@@ -414,5 +416,50 @@ describe('sweep_dead_scan_roots — census', () => {
         expect(md).toContain('# Gate scan-scope census');
         expect(md).toMatch(/\| Gate scripts in population \| \d{3} \|/);
         expect(md).toContain('## Reproducing');
+    });
+});
+
+describe('root resolution is independent of checkout shape', () => {
+    it('resolves .git/* through the real git dir when .git is a worktree file', () => {
+        // In a linked worktree `.git` is a FILE (`gitdir: <path>`), so a plain
+        // existsSync reports `.git/HEAD` absent and the census gains a row that
+        // a clone does not have. A report whose contents depend on which
+        // checkout produced it cannot "match a fresh run", which is the whole
+        // claim the committed census makes.
+        const root = fs.mkdtempSync(path.join(os.tmpdir(), 'wt-'));
+        const realGit = fs.mkdtempSync(path.join(os.tmpdir(), 'gitdir-'));
+        try {
+            fs.writeFileSync(path.join(realGit, 'HEAD'), 'ref: refs/heads/main\n');
+            fs.writeFileSync(path.join(root, '.git'), `gitdir: ${realGit}\n`);
+
+            expect(rootExists(root, '.git/HEAD')).toBe(true);
+            expect(resolveRoot(root, '.git/HEAD')).toBe(path.join(realGit, 'HEAD'));
+            expect(countUnits(root, '.git/HEAD')).toEqual({ kind: 'file', units: 1 });
+        } finally {
+            fs.rmSync(root, { recursive: true, force: true });
+            fs.rmSync(realGit, { recursive: true, force: true });
+        }
+    });
+
+    it('still resolves .git/* directly when .git is a real directory (a clone)', () => {
+        const root = fs.mkdtempSync(path.join(os.tmpdir(), 'clone-'));
+        try {
+            fs.mkdirSync(path.join(root, '.git'));
+            fs.writeFileSync(path.join(root, '.git', 'HEAD'), 'ref: refs/heads/main\n');
+            expect(rootExists(root, '.git/HEAD')).toBe(true);
+            expect(resolveRoot(root, '.git/HEAD')).toBe(path.join(root, '.git', 'HEAD'));
+        } finally {
+            fs.rmSync(root, { recursive: true, force: true });
+        }
+    });
+
+    it('reports a genuinely missing .git as absent rather than throwing', () => {
+        const root = fs.mkdtempSync(path.join(os.tmpdir(), 'nogit-'));
+        try {
+            expect(rootExists(root, '.git/HEAD')).toBe(false);
+            expect(countUnits(root, '.git/HEAD')).toEqual({ kind: 'absent', units: 0 });
+        } finally {
+            fs.rmSync(root, { recursive: true, force: true });
+        }
     });
 });
