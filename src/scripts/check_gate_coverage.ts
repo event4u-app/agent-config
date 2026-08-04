@@ -49,6 +49,7 @@ import process from 'node:process';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import * as yaml from 'js-yaml';
+import { checkRatchet } from './_lib/gate_baseline.js';
 import { runCountedProbe } from './_lib/counted_probe.js';
 
 const _HERE = fileURLToPath(import.meta.url);
@@ -318,12 +319,74 @@ export function main(argv: readonly string[]): number {
       `⚠️  ${String(pending.length)} gate(s) are listed but NOT enforced — this guard's coverage is partial by declaration.\n`,
     );
   }
+  const hardening = report_hardening_ratchet();
   if (failed.length > 0) {
     process.stdout.write(`❌  ${String(failed.length)} gate(s) failed the coverage floor.\n`);
     return 1;
   }
+  if (hardening !== 0) {
+    return hardening;
+  }
   process.stdout.write('✅  every enforced gate cleared its coverage floor.\n');
   return 0;
+}
+
+/**
+ * Vulnerability ratchet — the count that must not RISE.
+ *
+ * This deliberately measures **defect exposure**, not adoption reach. A
+ * coverage-percentage ratchet ("hardened gates must increase") would be
+ * threshold-lowering in a ratchet's clothes: it tracks how far the fix has
+ * spread and can never regress, so it grades the solution instead of the
+ * problem. The number below is the opposite — how many gates could still exit 0
+ * over a moved root without saying so. It CAN regress (every new gate written
+ * without a scope assertion raises it) and the target stays 0.
+ *
+ * Recorded via the existing violation ratchet (`_lib/gate_baseline.ts`), so the
+ * 56-day non-stagnation clause applies unchanged: a count that never drops
+ * fails, because a frozen baseline is suppression with extra steps.
+ */
+export function report_hardening_ratchet(): number {
+  const unhardened = list_unhardened_gates();
+  const verdict = checkRatchet({
+    gate: 'gate-hardening:unhardened-scan-scope',
+    actual: unhardened.length,
+    repoRoot: REPO_ROOT,
+  });
+  process.stdout.write(`  ${verdict.ok ? '✅' : '❌'} ${verdict.message}\n`);
+  return verdict.ok ? 0 : 1;
+}
+
+/**
+ * Gate scripts that neither assert their scan scope nor publish a count — the
+ * population still able to report success over an empty corpus.
+ *
+ * A gate counts as hardened when it routes through `_lib/scan_scope` (the
+ * assertion that turns a zero scan into a red exit) OR emits the machine-
+ * readable `scanned:` line the coverage guard reads. Either one makes a dead
+ * root visible; neither is satisfiable by a gate that read nothing.
+ */
+export function list_unhardened_gates(dir = path.join(REPO_ROOT, 'src/scripts')): string[] {
+  let entries: string[];
+  try {
+    entries = fs.readdirSync(dir);
+  } catch {
+    return [];
+  }
+  const gates = entries.filter((f) => /^(lint|check|audit)_.*\.ts$/.test(f) && !f.endsWith('.d.ts'));
+  const out: string[] = [];
+  for (const f of gates) {
+    let src: string;
+    try {
+      src = fs.readFileSync(path.join(dir, f), 'utf8');
+    } catch {
+      continue;
+    }
+    const asserts = /assertScanned\(|assertWatchlistResolves\(/.test(src);
+    const emits = /(?:process\.(?:stdout|stderr)\.write|lines\.push)\(\s*`scanned: /.test(src);
+    if (!asserts && !emits) out.push(f.replace(/\.ts$/, ''));
+  }
+  return out.sort();
 }
 
 function spec_is_pending(s: GateSpec): boolean {

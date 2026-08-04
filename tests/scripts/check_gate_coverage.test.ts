@@ -16,6 +16,7 @@ import {
     type GateSpec,
     classify,
     count_gate_scripts,
+    list_unhardened_gates,
     cross_check,
     load_manifest,
     parse_census,
@@ -377,5 +378,48 @@ describe('classify — unavailable: prerequisite absent, not silence', () => {
         // key entirely when the manifest does not declare it.
         const { unavailable_exit: _omitted, ...strict } = spec;
         expect(classify(strict, null, false, 2).verdict).toBe('silent');
+    });
+});
+
+describe('vulnerability ratchet — unhardened gate population', () => {
+    it('classifies a gate as hardened only via a scope assertion or a scanned line', () => {
+        const dir = mkdtempSync(join(tmpdir(), 'unhardened-'));
+        try {
+            // Population members, one per hardening route plus one with neither.
+            writeFileSync(join(dir, 'check_asserts.ts'), 'assertScanned({ scanned: n });\n');
+            writeFileSync(join(dir, 'check_watchlist.ts'), 'assertWatchlistResolves({ candidates });\n');
+            writeFileSync(join(dir, 'lint_emits.ts'), 'process.stdout.write(`scanned: ${String(n)}\\n`);\n');
+            writeFileSync(join(dir, 'audit_bare.ts'), 'export function main() { return 0; }\n');
+            // Not in the population: wrong prefix, and a declaration file.
+            writeFileSync(join(dir, 'helper_bare.ts'), 'export const x = 1;\n');
+            writeFileSync(join(dir, 'check_types.d.ts'), 'export declare const y: number;\n');
+
+            expect(list_unhardened_gates(dir)).toEqual(['audit_bare']);
+        } finally {
+            rmSync(dir, { recursive: true, force: true });
+        }
+    });
+
+    it('counts the real tree and reports a number the ratchet can act on', () => {
+        // Not pinned to a literal — the count is expected to FALL as gates are
+        // hardened, and a pinned figure would turn every improvement red.
+        const unhardened = list_unhardened_gates();
+        expect(unhardened.length).toBeGreaterThan(0);
+        expect(unhardened.length).toBeLessThan(count_gate_scripts());
+        // Gates converted in this pass must not appear.
+        for (const id of ['lint_handoffs', 'lint_namespace', 'audit_skill_overlap']) {
+            expect(unhardened).not.toContain(id);
+        }
+    });
+
+    it('the recorded baseline matches the tree, so the ratchet starts armed not slack', () => {
+        // A baseline above the truth silently permits new unhardened gates — the
+        // exact failure the ratchet's own $comment warns about.
+        const raw = JSON.parse(
+            readFileSync(join(REPO_ROOT, 'src/config/gate-violation-baselines.json'), 'utf8'),
+        ) as { gates: Record<string, { count: number }> };
+        const entry = raw.gates['gate-hardening:unhardened-scan-scope'];
+        expect(entry).toBeDefined();
+        expect(list_unhardened_gates().length).toBeLessThanOrEqual(entry!.count);
     });
 });
