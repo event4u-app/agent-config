@@ -27,11 +27,11 @@ const REPO_ROOT = path.resolve(_HERE, '..', '..', '..');
 /**
  * The live skills tree, via the shared ADR-051 resolver.
  *
- * This was a hardcoded `.agent-src.uncondensed/skills` — the container ADR-051
- * retired — so the gate read a directory that does not exist and clustered 0 of
- * 288 skills. It was invisible for two reasons at once: the dead-root sweep and
- * the hardening ratchet both defined "a gate" with a prefix set that excluded
- * `skill_*`, so nothing in the repo was looking at it.
+ * This was a hardcoded path into the source container ADR-051 retired, so the
+ * gate read a directory that does not exist and clustered 0 of 288 skills. It
+ * was invisible for two reasons at once: the dead-root sweep and the hardening
+ * ratchet both defined "a gate" with a prefix set that excluded `skill_*`, so
+ * nothing in the repo was looking at it.
  */
 const SKILLS_DIR = SRC_SKILLS();
 // `agents/runtime/reports/`, as this file's own header has always declared. The
@@ -289,10 +289,11 @@ export function main(): number {
         process.stderr.write(`❌  Skills dir not found: ${SKILLS_DIR}\n`);
         return 2;
     }
-    // The dir-exists check above does not cover an existing-but-empty root
-    // (a stray `.agent-src.uncondensed/` left behind by a local run), which
-    // would write a `0 clusters from 0 skills` report and exit green. The unit
-    // is the SKILL.md files found, not the subset that parsed a description.
+    // The dir-exists check above does not cover an existing-but-empty root — a
+    // stray retired-container directory left behind by a local test run passes
+    // it — which would write a `0 clusters from 0 skills` report and exit green.
+    // The unit is the SKILL.md files found, not the subset that parsed a
+    // description.
     try {
         assertScanned({
             gate: 'skill_collision_clusters',

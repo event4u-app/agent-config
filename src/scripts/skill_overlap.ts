@@ -25,7 +25,7 @@ const _HERE = path.dirname(fileURLToPath(import.meta.url));
 // repo root — two dirs up from src/scripts.
 const REPO = path.resolve(_HERE, '..', '..');
 // The live skills tree via the shared ADR-051 resolver. This was a hardcoded
-// `.agent-src.uncondensed/skills` — the container ADR-051 retired — so the gate
+// path into the source container ADR-051 retired, so the gate
 // scored overlap across 0 of 288 skills. Invisible until the hardening
 // population stopped excluding the `skill_*` prefix.
 const SKILLS = SRC_SKILLS();
