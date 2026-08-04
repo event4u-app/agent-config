@@ -133,14 +133,27 @@ semantic judgement, which is exactly why they are separable from Phase 2.
       **findings** count — its first draft nominated 146 gates by reading
       `errors.length` in `main()` as coverage, which is risk #1 of this register
       implemented by the tool meant to prevent it.
-- [ ] Convert them in batches, smallest-risk first, each batch its own commit.
+- [x] Convert them in batches, smallest-risk first, each batch its own commit.
       *Verify:* `check_gate_coverage` green after every batch; the ratchet count
       drops by exactly the batch size (a drop that does not match the batch is a
       miscount, not a bonus).
-- [ ] Register each converted gate under its **CI-identical argv**, never a bare
+      → 5 + 28 + 2 converted across three commits; 193 → 163, every drop matching
+      its batch. `count_at_exit` is now **empty**: every gate whose corpus count
+      already existed at its exit path is asserted. The two extra are
+      `skill_collision_clusters` and `skill_overlap`, which the widened
+      population revealed reading a retired container — 0 of 288 skills.
+- [-] Register each converted gate under its **CI-identical argv**, never a bare
       probe.
       *Verify:* the manifest `argv` matches the taskfile/workflow invocation
       character for character.
+      → **Not applicable under the assert-first contract, and deliberately so.**
+      Registration is how an *emitted* count becomes enforced; every conversion
+      here asserts instead, and padding the manifest is a non-goal of this
+      roadmap. The argv rule is not dropped — it still governs the 22 gates that
+      ARE registered, and the `lint_handoffs` lesson that produced it (red under
+      `task lint-handoffs`, green when probed bare, because the injected
+      `--quiet` became its scan root) is carried into the conversion contract
+      above.
 
 > **The argv rule is not pedantry.** The parent PR found `lint_handoffs` red
 > under `task lint-handoffs` and green when probed bare: it read `args[0]` as a
