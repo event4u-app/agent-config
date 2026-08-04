@@ -196,6 +196,55 @@ jobs:
       - name: Check Iron Law prominence
         run: ./scripts-run src/scripts/check_iron_law_prominence
 
+      - name: Gate R1 — plan Risk Registers (plan-review-gates §1)
+        # Exit-code contract §6: 2 = internal error → degraded advisory
+        # (warn-and-allow — a broken gate never blocks its own fix).
+        run: |
+          ./scripts-run src/scripts/lint_plan_risk_register || {
+            rc=$?
+            if [ "$rc" = "2" ]; then
+              echo "::warning::lint_plan_risk_register internal error — degraded advisory mode, allowing"
+            else
+              exit "$rc"
+            fi
+          }
+
+      - name: Gate R2 — completion review (Stage-A advisory window, plan-review-gates §2)
+        # --advisory until the Stage-B threshold is committed to CLAIMS.md:
+        # violations report as warnings, exit 0. CI is the authoritative
+        # layer once enforced; exit 2 stays degraded-advisory either way.
+        run: |
+          git fetch origin main --quiet || true
+          ./scripts-run src/scripts/check_completion_review --advisory --base origin/main || {
+            rc=$?
+            if [ "$rc" = "2" ]; then
+              echo "::warning::check_completion_review internal error — degraded advisory mode, allowing"
+            else
+              exit "$rc"
+            fi
+          }
+
+      - name: Gate R2 — context-manifest re-derivation (plan-review-gates §5)
+        # The reviewer-input manifest is verification, not self-attestation:
+        # for every findings artifact bound to the CURRENT head, re-derive
+        # the input hashes from the repo state and block on mismatch.
+        run: |
+          git fetch origin main --quiet || true
+          head_sha="$(git rev-parse HEAD)"
+          for f in agents/evidence/reviews/*.findings.md; do
+            [ -e "$f" ] || continue
+            if grep -q "diff: ${head_sha}" "$f"; then
+              ./scripts-run src/scripts/dispatch_r2_reviewer --verify "$f" --base origin/main || {
+                rc=$?
+                if [ "$rc" = "2" ]; then
+                  echo "::warning::dispatch_r2_reviewer --verify internal error — degraded advisory mode, allowing"
+                else
+                  exit "$rc"
+                fi
+              }
+            fi
+          done
+
       - name: Check always-rule budget (warn 80% / fail 90%)
         run: task check-always-budget
 

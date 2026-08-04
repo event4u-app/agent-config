@@ -308,3 +308,26 @@ gates:
       count. Its inventory-file exemption was also dead: it compared against
       the retired root AND against 'dist/agent-src' as a single path segment,
       which a '/'-split can never yield.
+
+  - id: lint_plan_risk_register
+    argv: []
+    min_scanned: 12
+    corpus: "ready roadmap files under agents/roadmaps/ top level (19 at baseline: 14 grandfathered + 4 draft-exempt + 1 carrying a live register)"
+    status: enforced
+    note: >
+      Gate R1 (docs/contracts/plan-review-gates.md § 1). The count is READY
+      FILES INSPECTED incl. grandfathered/draft-exempt ones — exemptions are
+      reported, never silently skipped, so a collapse below the floor means
+      the roadmaps root moved, not that the corpus went clean.
+
+  - id: check_completion_review
+    argv: ["--advisory", "--base", "origin/main"]
+    min_scanned: 1
+    corpus: "findings artefacts under agents/evidence/reviews/ + the current-diff evaluation (1 at baseline — the evaluation itself; artefact count grows with gated PRs)"
+    status: enforced
+    note: >
+      Gate R2 (docs/contracts/plan-review-gates.md § 2). Scanned = artefacts
+      inspected + 1 for the diff evaluation, so the gate can never report a
+      dead scope as clean: even with zero artefacts the evaluation itself
+      counts, and 0 would mean the gate no longer evaluates the diff at all.
+      argv mirrors the CI invocation (Stage-A advisory window).
