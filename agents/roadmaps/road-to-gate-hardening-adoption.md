@@ -19,34 +19,6 @@ parent_roadmap: road-to-gates-that-can-fail
 > exists to prevent (their estimate of the semantic-error rate for a mechanical
 > sweep: **15–25 %**).
 
-### blocker: four gates need a port-or-retire decision, not a conversion
-
-- owner: maintainer
-- Resolved when: each of the four below is ported, retired, or explicitly
-  declared out of the gate population — and the ratchet entry is deleted.
-
-229 of 233 are converted. The remaining four are **decisions**, and each was
-attempted and reverted rather than papered over:
-
-| Gate | Why it cannot be converted | What it does today |
-|---|---|---|
-| `lint_skill_tools` | corpus is `skill_tools/*.py`; the py2ts migration left only `.ts`. Every check is Python-specific (argparse import, `__main__` guard, stdlib-only import scan, `snake_case.py` naming) | prints `✅ scripts/skill_tools/ — all tools clean.` over **0** tools |
-| `lint_workspace_boundary` | corpus is `src/cli/python/workspace_*.py`; same migration, same emptiness. The ADR-095 boundary it guards is entirely unenforced | prints `⚠️ no files match …`, exits **0** |
-| `check_bite_sized_granularity` | a pure library — no CLI, no `main`, no exit code, no root. `grep` finds **no production caller**, only its own test | nothing; it is called by nobody |
-| `verify_before_complete_hook` | an observability hook, not a gate. Its contract pins "exit code is always 0 — never blocks", and its only inputs are its own stdin envelope and the state file it writes | entered the population only because the definition widened to the `verify_*` prefix |
-
-**Why they are left unhardened and counted rather than waived.** An `allowEmpty`
-on any of them fails the deletion test in the most literal way available: delete
-`skill_tools/` and "no Python tools" still reads true — which is exactly the
-blindness the test exists to catch. Asserting their real (empty) corpus would
-red CI for a defect this roadmap is not chartered to fix. Inventing a unit for
-the last two would mean asserting a loop index or a constant.
-
-So the ratchet keeps four entries it cannot clear. That is the honest state, and
-it is why this roadmap's "count reaches 0" criterion is **not** met by the PR
-that does all 229 conversions. Faking it here would reproduce, at the finish
-line, the manufactured green the parent roadmap exists to prevent.
-
 ## Goal
 
 Take `gate-hardening:unhardened-scan-scope` from **189** to **0**: every gate
@@ -286,6 +258,44 @@ one wearing a label, and it stays in the count.
 - [x] Every `allowEmpty` justification in the tree passes the deletion test.
 - [x] The three population definitions agree, pinned by a test.
 - [ ] All quality gates pass — see `quality-tools`.
+
+## Blockers
+
+### blocker: four-gates-port-or-retire
+
+- **Status:** open
+- **Owner:** maintainer
+- **Blocks:** Phase 3 (`count reaches 0`) and thereby the deletion of the
+  `gate-hardening:unhardened-scan-scope` ratchet entry — the roadmap's closure
+  criterion.
+- **What to do:** decide, per gate, between porting it to the surface that
+  replaced its corpus, retiring it, or declaring it out of the gate population.
+  None of the four is a conversion; each was attempted and reverted.
+- **Resolved when:** all four are ported, retired, or excluded from the
+  population, the count reaches 0, and the ratchet entry is deleted rather than
+  zeroed-and-kept.
+
+229 of 233 are converted. The remaining four are **decisions**, and each was
+attempted and reverted rather than papered over:
+
+| Gate | Why it cannot be converted | What it does today |
+|---|---|---|
+| `lint_skill_tools` | corpus is `skill_tools/*.py`; the py2ts migration left only `.ts`. Every check is Python-specific (argparse import, `__main__` guard, stdlib-only import scan, `snake_case.py` naming) | prints `✅ scripts/skill_tools/ — all tools clean.` over **0** tools |
+| `lint_workspace_boundary` | corpus is `src/cli/python/workspace_*.py`; same migration, same emptiness. The ADR-095 boundary it guards is entirely unenforced | prints `⚠️ no files match …`, exits **0** |
+| `check_bite_sized_granularity` | a pure library — no CLI, no `main`, no exit code, no root. `grep` finds **no production caller**, only its own test | nothing; it is called by nobody |
+| `verify_before_complete_hook` | an observability hook, not a gate. Its contract pins "exit code is always 0 — never blocks", and its only inputs are its own stdin envelope and the state file it writes | entered the population only because the definition widened to the `verify_*` prefix |
+
+**Why they are left unhardened and counted rather than waived.** An `allowEmpty`
+on any of them fails the deletion test in the most literal way available: delete
+`skill_tools/` and "no Python tools" still reads true — which is exactly the
+blindness the test exists to catch. Asserting their real (empty) corpus would
+red CI for a defect this roadmap is not chartered to fix. Inventing a unit for
+the last two would mean asserting a loop index or a constant.
+
+So the ratchet keeps four entries it cannot clear. That is the honest state, and
+it is why this roadmap's "count reaches 0" criterion is **not** met by the PR
+that does all 229 conversions. Faking it here would reproduce, at the finish
+line, the manufactured green the parent roadmap exists to prevent.
 
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-08-04 | reviewer: claude/host -->
