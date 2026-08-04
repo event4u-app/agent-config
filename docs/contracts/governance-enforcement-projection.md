@@ -37,7 +37,7 @@ medium allows, everywhere, not just where hooks exist.
 
 - **Not runtime.** This is a projection-time transform, not a daemon, not new
   cross-session state. Runtime hook hardening is separate (Phase 2, MCP-only).
-- **Not all 93 rules.** Hardening a large rule set would blow the context
+- **Not all ~110 rules (111 as-of 2026-08).** Hardening a large rule set would blow the context
   budget and dilute the signal. The set is deliberately tiny (see Selector).
 - **Not a compliance guarantee.** A static host can still ignore a hardened
   block — the mechanism *maximises* emphasis, it does not *block*. The eval

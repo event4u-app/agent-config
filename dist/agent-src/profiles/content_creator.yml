@@ -12,8 +12,8 @@ profile:
   defaults:
     preset_id: balanced
     personas:
-      - editor
-      - brand-voice
+      - tech-writer
+      - brand-strategist
     skills_hint:
       - voice-and-tone-design
       - messaging-architecture

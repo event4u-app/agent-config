@@ -14,7 +14,8 @@
  * - All headings from source present in condensed
  * - All code blocks preserved exactly
  * - YAML frontmatter identical
- * - Word count reduction within healthy range (10-60%)
+ * - Word count: excessive-reduction alarm only (> 60% lost warns; expected
+ *   reduction is 0% post-ADR-201 verbatim copy — see the note near the check)
  * - Iron Law sections (## Iron Law / ### Iron Law / ## The Iron Law /
  *   Iron Laws / numbered) preserved per `preservation-guard`: heading
  *   verbatim at original level, structural-unit survival.

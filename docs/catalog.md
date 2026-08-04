@@ -1,6 +1,6 @@
 # agent-config — Public Catalog
 
-Consumer-facing catalog of all **691 public artefacts** shipped by
+Consumer-facing catalog of all **692 public artefacts** shipped by
 this package. Internal package-maintenance rules and deprecation shims
 are excluded.
 
@@ -628,10 +628,11 @@ are excluded.
 | command | [`worktree-status`](../dist/agent-src/commands/worktree/status.md) | cluster: worktree | List active worktrees — ownership (scope lock), dirty state, ahead/behind, merge-readiness incl. verification evidence |
 | command | [`worktree-verify`](../dist/agent-src/commands/worktree/verify.md) | cluster: worktree | Run the scoped verification for a worktree's declared change — narrow probes matched to the diff, never the full CI pipeline |
 
-## Guidelines (101)
+## Guidelines (102)
 
 | kind | name | category | description |
 |---|---|---|---|
+| guideline | [`abstraction-thresholds`](../docs/guidelines/abstraction-thresholds.md) | (root) |  |
 | guideline | [`5w2h-analysis`](../docs/guidelines/agent-infra/5w2h-analysis.md) | agent-infra |  |
 | guideline | [`active-remediation-mechanics`](../docs/guidelines/agent-infra/active-remediation-mechanics.md) | agent-infra |  |
 | guideline | [`agent-interaction-and-decision-quality`](../docs/guidelines/agent-infra/agent-interaction-and-decision-quality.md) | agent-infra |  |

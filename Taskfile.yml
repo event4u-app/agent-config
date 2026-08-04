@@ -166,6 +166,9 @@ tasks:
       - task: check-discovery-determinism
       - task: check-artefact-checksums
       - task: lint-framework-leakage
+      - task: lint-abstraction-thresholds
+      - task: lint-token-budget-discipline
+      - task: lint-profile-personas
       - task: lint-trigger-precision
       - task: lint-trigger-collisions
       - task: lint-context-spine-usage

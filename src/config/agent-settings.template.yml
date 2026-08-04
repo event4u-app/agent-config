@@ -321,6 +321,28 @@ personal:
   # See user-types/README.md for the per-id contract.
   user_type: "__USER_TYPE__"
 
+# --- Reply verbosity ---
+verbosity:
+  # Announce intent before tool batches ("Let me check X…") — only honored
+  # when personal.play_by_play is ALSO true (the direct-answers narration
+  # carve-out requires both). Default false = no intent narration.
+  intent_announcements: false
+
+  # Show generated commit messages, PR titles/bodies, branch names before
+  # acting. false = use generated content directly (/commit terse path).
+  preview_artifacts: false
+
+  # Confirmation prompts for routine workflow steps with one obvious answer.
+  # Iron-Law gates (commit-policy, scope-control git-ops, Hard Floor) ALWAYS
+  # ask regardless of this setting.
+  routine_confirmations: false
+
+  # Offer "run AI Council on this?" inside delivery commands.
+  offer_council_in_delivery: false
+
+  # Status blocks after a successful action: off | minimal | full.
+  post_action_reports: minimal
+
 # --- Project / team preferences ---
 project:
   # Path to the PR template file (relative to project root)

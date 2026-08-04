@@ -107,7 +107,7 @@ React island vs. Vue SFC) is the apply-step's concern, not this skill's.
 - **One stateful component per concern** — don't build mega-components.
 - **Compose with reusable UI components** for shared shells, headers, fields.
 - **Use the project's library primitives first** — never rebuild what the design system already provides (audit findings tell you which).
-- **Extract when used 3+ times** — DRY applies to UI too.
+- **Extract a props-only UI shell when used 3+ times** — DRY applies to UI too; stateful components carry a higher bar (~4 + real state) — per-class canon: [`abstraction-thresholds`](../../../docs/guidelines/abstraction-thresholds.md).
 - **Component workshop when the project is large enough** — for a real, growing shared-component library, isolate and document each reusable component in a component workshop so it stays discoverable and reused, not re-invented; skip it for a small surface of one-offs. Tool-specific setup is a carve-out (Storybook et al.) — see the implementation skill (e.g. [`react-shadcn-ui`](../react-shadcn-ui/SKILL.md) § Component workshop), never a generic mandate.
 
 ## Form Design

@@ -5,7 +5,7 @@ stability: experimental
 # Skill Dry-Run / Preview Contract
 
 > **Status** · v0 / design · 2026-05-30. Phase 5 of `road-to-leaner-core-and-discovery`.
-> The council's missing-item catch: with 220 skills, non-dev personas need a non-destructive way
+> The council's missing-item catch: with ~290 skills (288 as-of 2026-08), non-dev personas need a non-destructive way
 > to see what a skill/command will do **before** running it.
 
 ## What "preview" means

@@ -1,6 +1,6 @@
 # Agent-Config Internal Index
 
-Maintainer-facing index of all **692 artefacts** in this package.
+Maintainer-facing index of all **693 artefacts** in this package.
 Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
 
 > **Regenerate:** `./scripts-run src/scripts/generate_index`
@@ -613,10 +613,11 @@ Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
 | command | [`worktree-status`](../src/domains/engineering-base/worktree/status/command.md) | cluster: worktree | List active worktrees — ownership (scope lock), dirty state, ahead/behind, merge-readiness incl. verification evidence |
 | command | [`worktree-verify`](../src/domains/engineering-base/worktree/verify/command.md) | cluster: worktree | Run the scoped verification for a worktree's declared change — narrow probes matched to the diff, never the full CI pipeline |
 
-## Guidelines (101)
+## Guidelines (102)
 
 | kind | name | category | description |
 |---|---|---|---|
+| guideline | [`abstraction-thresholds`](../docs/guidelines/abstraction-thresholds.md) | (root) |  |
 | guideline | [`5w2h-analysis`](../docs/guidelines/agent-infra/5w2h-analysis.md) | agent-infra |  |
 | guideline | [`active-remediation-mechanics`](../docs/guidelines/agent-infra/active-remediation-mechanics.md) | agent-infra |  |
 | guideline | [`agent-interaction-and-decision-quality`](../docs/guidelines/agent-infra/agent-interaction-and-decision-quality.md) | agent-infra |  |

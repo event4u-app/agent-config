@@ -156,7 +156,11 @@ review_routing:
 # Leave empty to fall back to inferred mode switching.
 roles:
   # One of: developer, reviewer, tester, po, incident, planner.
-  default: ""
+  # Key names match what role-mode-adherence and /mode read/write.
+  default_role: ""
+
+  # Set by /mode at runtime; empty = rule inert (no guessed mode).
+  active_role: ""
 
   # If set, the agent refuses work outside the default contract
   # until the user explicitly switches modes with `/mode <name>`.

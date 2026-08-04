@@ -32,7 +32,7 @@ intact). The user picks every time.
 
 A maintainer who types "Setze Ticket ABC-123 um" got a generic
 implementation walk-through, not the `/implement-ticket` engine. The
-package owns 75 commands; the agent has the list in context but no
+package owns ~190 commands (193 as-of 2026-08); the agent has the list in context but no
 contract telling it "when the prompt looks like *this*, offer *that*
 command". Three forces converged:
 

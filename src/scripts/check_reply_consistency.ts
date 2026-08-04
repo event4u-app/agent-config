@@ -2,17 +2,42 @@
 /**
  * check_reply_consistency.ts — enforce user-interaction.md Iron Laws.
  *
- * Ported from the retired Python `src/scripts/check_reply_consistency.py` (ADR-200,
- * Phase 4 / Wave 4c). CLI contract mirrored EXACTLY — `--stdin` /
- * `--file` / `--scan-dir` mutually-exclusive required group, `--strict`,
- * `-v`/`--verbose`, `--quiet`; exit codes (0 ok · 2 inline tag · 3 multi-rec ·
- * 4 rec-not-in-options · 5 options-without-rec strict · 6 scan-dir found ·
- * 9 usage error); byte-identical messages; stdout/stderr split.
+ * Full rewrite (council 2026-08, "fix/extraction-threshold-consistency"):
+ * the previous version was a 1:1 port of a retired Python prototype whose
+ * lax-by-default, whole-reply semantics contradicted the spec it cites
+ * (`src/rules/user-interaction.md` Iron Law 1 +
+ * `src/agent-src/contexts/communication/rules-auto/user-interaction-mechanics.md`
+ * § Pre-send self-check).
  *
- * Single-Source Recommendation Line: a reply with numbered options must
- * have ONE bolded `Recommendation: N` / `Empfehlung: N` line, no inline
- * `(recommended)` / `(rec)` / `(empfohlen)` tag next to options, and the
- * recommended number must appear in the option block.
+ * Semantics (strict is the DEFAULT — the documented invocation
+ * `./scripts-run src/scripts/check_reply_consistency --stdin < draft.md`
+ * IS the strict behavior; there is no --strict/--lax flag):
+ *
+ * 1. Per-block validation. EVERY numbered-options block (>= 2 consecutive
+ *    numbered lines, optionally blockquoted) must carry exactly ONE
+ *    `Recommendation:`/`Empfehlung:` line DIRECTLY under it — within the
+ *    trailing 2 non-blank lines after the block, before any new heading or
+ *    new options block.
+ * 2. Multi-block replies: each block gets its own recommendation line. Two
+ *    blocks with two (different) recommendation numbers is VALID (mechanics
+ *    § self-check rule 5); a block without one is a finding.
+ * 3. The recommendation number must be within its block's option range.
+ * 4. No inline `(recommended)` / `(rec)` / `(empfohlen)` tag on an option
+ *    line (Iron Law 1 — the option block stays neutral).
+ *
+ * Known limit — wrong-language label: Iron Law 1 says a wrong-language label
+ * (`Recommendation:` for a German user, or vice versa) counts as NO
+ * recommendation, but this script cannot know the user's language from the
+ * draft alone. Both `Recommendation:` and `Empfehlung:` are therefore
+ * accepted in either context; the language match stays a model-side check.
+ *
+ * `--scan-dir` keeps the legacy-pattern sweep over `.md` trees (inline
+ * `(recommended)` tags only — docs legitimately contain numbered lists
+ * without recommendation lines, so per-block validation does not apply
+ * there).
+ *
+ * Exit: 0 clean · 1 usage/IO error · 2 findings (consistent with sibling
+ * lints, e.g. lint_abstraction_thresholds).
  */
 
 import * as fs from 'node:fs';
@@ -26,17 +51,36 @@ const ROOT = path.resolve(path.dirname(_HERE), '..', '..');
 
 const QUIET = process.argv.slice(2).includes('--quiet');
 
-const OPTION_LINE_RE = /^\s*>?\s*(\d+)\.\s+\S/;
-// Python re.IGNORECASE on (?:Recommendation|Empfehlung)\s*:\s*(\d+)\b
-const REC_LINE_RE = /(?:Recommendation|Empfehlung)\s*:\s*(\d+)\b/gi;
-const TAG_RE = /\((?:recommended|rec|empfohlen)\)/i;
+export const OPTION_LINE_RE = /^\s*>?\s*(\d+)\.\s+\S/;
+export const REC_LINE_RE = /(?:Recommendation|Empfehlung)\s*:\s*(\d+)\b/i;
+export const TAG_RE = /\((?:recommended|rec|empfohlen)\)/i;
 const CODESPAN_RE = /`[^`\n]*`/g;
+const HEADING_RE = /^#{1,6}\s/;
+const FENCE_RE = /^\s*(```|~~~)/;
+
+/** How many non-blank lines after a block may separate it from its recommendation line. */
+export const REC_ADJACENCY_WINDOW = 2;
+
+export interface OptionBlock {
+    /** 1-based line of the first option line. */
+    startLine: number;
+    /** 1-based line of the last option line. */
+    endLine: number;
+    /** Option numbers in order of appearance. */
+    numbers: number[];
+}
+
+export interface Finding {
+    /** 1-based line the finding anchors to. */
+    line: number;
+    message: string;
+}
 
 function _strip_codespans(line: string): string {
     return line.replace(CODESPAN_RE, '``');
 }
 
-/** Mirror Python `str.splitlines()` — splits on \n / \r\n / \r, drops trailing. */
+/** Split on \n / \r\n / \r, dropping a single trailing empty element. */
 function _splitlines(text: string): string[] {
     if (text === '') return [];
     const parts = text.split(/\r\n|\r|\n/);
@@ -47,87 +91,122 @@ function _splitlines(text: string): string[] {
 }
 
 /**
- * Return [line_no, raw_line] of the first numbered-option line carrying an
- * inline (recommended)-class tag outside code spans, or null.
+ * Lines with fenced code blocks blanked out — an example options block quoted
+ * inside ``` / ~~~ is illustration, not a live options block.
  */
-function find_inline_tag(text: string): [number, string] | null {
-    const lines = _splitlines(text);
-    for (let idx = 0; idx < lines.length; idx++) {
-        const raw = lines[idx]!;
-        const stripped = _strip_codespans(raw);
-        if (!OPTION_LINE_RE.test(stripped)) {
+export function mask_fences(lines: readonly string[]): string[] {
+    const out: string[] = [];
+    let fence: string | null = null;
+    for (const raw of lines) {
+        const m = FENCE_RE.exec(raw);
+        if (m) {
+            const marker = m[1]!;
+            if (fence === null) {
+                fence = marker;
+            } else if (fence === marker) {
+                fence = null;
+            }
+            out.push('');
             continue;
         }
-        if (TAG_RE.test(stripped)) {
-            return [idx + 1, raw.trim()];
-        }
+        out.push(fence === null ? raw : '');
     }
-    return null;
+    return out;
 }
 
-/**
- * Group consecutive numbered-option lines into blocks; return list of blocks,
- * each a list of the numbers found in that block.
- */
-function find_option_blocks(text: string): number[][] {
-    const blocks: number[][] = [];
-    let current: number[] = [];
-    for (const raw of _splitlines(text)) {
-        const m = OPTION_LINE_RE.exec(raw);
+/** Consecutive numbered-option lines (>= 2) grouped into blocks. */
+export function find_option_blocks(text: string): OptionBlock[] {
+    const lines = mask_fences(_splitlines(text));
+    const blocks: OptionBlock[] = [];
+    let current: OptionBlock | null = null;
+    for (let idx = 0; idx < lines.length; idx++) {
+        const m = OPTION_LINE_RE.exec(lines[idx]!);
         if (m) {
-            current.push(parseInt(m[1]!, 10));
+            const num = parseInt(m[1]!, 10);
+            if (current === null) {
+                current = { startLine: idx + 1, endLine: idx + 1, numbers: [num] };
+            } else {
+                current.endLine = idx + 1;
+                current.numbers.push(num);
+            }
         } else {
-            if (current.length >= 2) {
+            if (current !== null && current.numbers.length >= 2) {
                 blocks.push(current);
             }
-            current = [];
+            current = null;
         }
     }
-    if (current.length >= 2) {
+    if (current !== null && current.numbers.length >= 2) {
         blocks.push(current);
     }
     return blocks;
 }
 
-/** Run rules. Returns [exit_code, human_message]. */
-function validate(text: string, strict = false): [number, string] {
-    const tag = find_inline_tag(text);
-    if (tag) {
-        const [line_no, snippet] = tag;
-        return [2, `line ${line_no}: inline tag on numbered option — ${_pyRepr(snippet)}`];
+/**
+ * Core check — the exported function tests drive. Returns all findings for
+ * one reply draft; empty array = the draft is consistent.
+ */
+export function check_reply(text: string): Finding[] {
+    const rawLines = _splitlines(text);
+    const lines = mask_fences(rawLines);
+    const findings: Finding[] = [];
+
+    // Iron Law 1 — no inline tag on an option line (codespans exempt).
+    for (let idx = 0; idx < lines.length; idx++) {
+        const stripped = _strip_codespans(lines[idx]!);
+        if (OPTION_LINE_RE.test(stripped) && TAG_RE.test(stripped)) {
+            findings.push({
+                line: idx + 1,
+                message: `inline tag on numbered option — ${rawLines[idx]!.trim()}`,
+            });
+        }
     }
 
+    // Per-block: exactly one adjacent recommendation line, number in range.
     const blocks = find_option_blocks(text);
-    const rec_numbers: number[] = [];
-    REC_LINE_RE.lastIndex = 0;
-    let m: RegExpExecArray | null;
-    while ((m = REC_LINE_RE.exec(text)) !== null) {
-        rec_numbers.push(parseInt(m[1]!, 10));
-    }
-
-    if (blocks.length === 0) {
-        return [0, 'ok (no numbered options block)'];
-    }
-
-    if (rec_numbers.length === 0) {
-        if (strict) {
-            return [5, 'numbered options without Recommendation:/Empfehlung: line'];
-        }
-        return [0, 'ok (options without recommendation; non-strict)'];
-    }
-
-    const distinct = [...new Set(rec_numbers)].sort((a, b) => a - b);
-    if (distinct.length > 1) {
-        return [3, `multiple distinct recommendation numbers: [${distinct.join(', ')}]`];
-    }
-
-    const rec_num = distinct[0]!;
     for (const block of blocks) {
-        if (block.includes(rec_num)) {
-            return [0, `ok (recommendation ${rec_num} matches option block)`];
+        const recs: Array<{ line: number; num: number }> = [];
+        let inspected = 0;
+        for (let idx = block.endLine; idx < lines.length && inspected < REC_ADJACENCY_WINDOW; idx++) {
+            const line = lines[idx]!;
+            if (line.trim() === '') {
+                continue; // blank lines do not consume the adjacency window
+            }
+            if (HEADING_RE.test(line) || OPTION_LINE_RE.test(line)) {
+                break; // a new heading or a new options block ends this block's window
+            }
+            inspected += 1;
+            const m = REC_LINE_RE.exec(line);
+            if (m) {
+                recs.push({ line: idx + 1, num: parseInt(m[1]!, 10) });
+            }
+        }
+        if (recs.length === 0) {
+            findings.push({
+                line: block.startLine,
+                message:
+                    'numbered options block without a Recommendation:/Empfehlung: line directly under it',
+            });
+            continue;
+        }
+        if (recs.length > 1) {
+            findings.push({
+                line: recs[1]!.line,
+                message: `multiple recommendation lines under one options block: [${recs.map((r) => r.num).join(', ')}]`,
+            });
+            continue;
+        }
+        const rec = recs[0]!;
+        if (!block.numbers.includes(rec.num)) {
+            findings.push({
+                line: rec.line,
+                message: `recommendation ${String(rec.num)} not present in the options block above it (options: [${block.numbers.join(', ')}])`,
+            });
         }
     }
-    return [4, `recommendation ${rec_num} not present in any option block`];
+
+    findings.sort((a, b) => a.line - b.line);
+    return findings;
 }
 
 function _isDir(p: string): boolean {
@@ -169,7 +248,8 @@ function _relToPosixOrAbs(child: string, root: string): string {
     return rel.split(path.sep).join('/');
 }
 
-function cmd_scan_dir(root: string): number {
+/** Legacy-pattern sweep: inline (recommended)-class tags in `.md` trees. */
+export function cmd_scan_dir(root: string): number {
     // If the requested root is the legacy ".agent-src.uncondensed" and it no
     // longer exists (post-monorepo-move), fall back to artefact_roots().
     let roots: string[];
@@ -179,11 +259,11 @@ function cmd_scan_dir(root: string): number {
             roots = artefact_roots();
             if (roots.length === 0) {
                 process.stderr.write('error: no artefact roots found (legacy or packages/*)\n');
-                return 9;
+                return 1;
             }
         } else {
             process.stderr.write(`error: not a directory: ${root}\n`);
-            return 9;
+            return 1;
         }
     } else {
         roots = [root];
@@ -204,10 +284,10 @@ function cmd_scan_dir(root: string): number {
     }
     if (violations.length > 0) {
         for (const [p, line, snippet] of violations) {
-            process.stderr.write(`  🔴 ${p}:${line} — inline-tag — ${snippet}\n`);
+            process.stderr.write(`  🔴 ${p}:${String(line)} — inline-tag — ${snippet}\n`);
         }
-        process.stderr.write(`\n❌  ${violations.length} legacy-pattern violation(s)\n`);
-        return 6;
+        process.stderr.write(`\n❌  ${String(violations.length)} legacy-pattern violation(s)\n`);
+        return 2;
     }
     if (!QUIET) {
         const scanned = roots.map((r) => _relToPosixOrAbs(r, ROOT)).join(', ');
@@ -216,39 +296,21 @@ function cmd_scan_dir(root: string): number {
     return 0;
 }
 
-/** Python repr() of a single string. */
-function _pyRepr(s: string): string {
-    const hasSingle = s.includes("'");
-    const hasDouble = s.includes('"');
-    const quote = hasSingle && !hasDouble ? '"' : "'";
-    let out = quote;
-    for (const ch of s) {
-        if (ch === '\\') out += '\\\\';
-        else if (ch === quote) out += '\\' + ch;
-        else if (ch === '\n') out += '\\n';
-        else if (ch === '\r') out += '\\r';
-        else if (ch === '\t') out += '\\t';
-        else out += ch;
-    }
-    return out + quote;
-}
-
 interface ParsedArgs {
     stdin: boolean;
     file: string | null;
     scan_dir: string | null;
-    strict: boolean;
     verbose: boolean;
 }
 
+const USAGE =
+    'usage: check_reply_consistency [-h] (--stdin | --file FILE | --scan-dir SCAN_DIR)\n' +
+    '                              [-v] [--quiet]\n';
+
 function _usage_error(message: string): never {
-    // argparse prints usage to stderr then "<prog>: error: <message>" and exits 2.
-    process.stderr.write(
-        'usage: check_reply_consistency [-h] (--stdin | --file FILE | --scan-dir SCAN_DIR)\n' +
-            '                              [--strict] [-v] [--quiet]\n',
-    );
+    process.stderr.write(USAGE);
     process.stderr.write(`check_reply_consistency: error: ${message}\n`);
-    process.exit(2);
+    process.exit(1);
 }
 
 function _readStdin(): string {
@@ -259,11 +321,10 @@ function _readStdin(): string {
     }
 }
 
-function parse_args(argv: readonly string[]): ParsedArgs {
+export function parse_args(argv: readonly string[]): ParsedArgs {
     let stdin = false;
     let file: string | null = null;
     let scan_dir: string | null = null;
-    let strict = false;
     let verbose = false;
     const groupSeen: string[] = [];
     const need = (i: number, name: string): string => {
@@ -290,17 +351,12 @@ function parse_args(argv: readonly string[]): ParsedArgs {
         } else if (arg.startsWith('--scan-dir=')) {
             scan_dir = arg.slice('--scan-dir='.length);
             groupSeen.push('--scan-dir');
-        } else if (arg === '--strict') {
-            strict = true;
         } else if (arg === '-v' || arg === '--verbose') {
             verbose = true;
         } else if (arg === '--quiet') {
             // handled via module-level QUIET; still a valid flag
         } else if (arg === '-h' || arg === '--help') {
-            process.stdout.write(
-                'usage: check_reply_consistency [-h] (--stdin | --file FILE | --scan-dir SCAN_DIR)\n' +
-                    '                              [--strict] [-v] [--quiet]\n',
-            );
+            process.stdout.write(USAGE);
             process.exit(0);
         } else {
             _usage_error(`unrecognized arguments: ${arg}`);
@@ -310,32 +366,37 @@ function parse_args(argv: readonly string[]): ParsedArgs {
         _usage_error('one of the arguments --stdin --file --scan-dir is required');
     }
     if (groupSeen.length > 1) {
-        const first = groupSeen[0]!;
-        const second = groupSeen[1]!;
-        _usage_error(`argument ${second}: not allowed with argument ${first}`);
+        _usage_error(`argument ${groupSeen[1]!}: not allowed with argument ${groupSeen[0]!}`);
     }
-    return { stdin, file, scan_dir, strict, verbose };
+    return { stdin, file, scan_dir, verbose };
 }
 
-function main(argv: readonly string[] = process.argv.slice(2)): number {
+export function main(argv: readonly string[] = process.argv.slice(2)): number {
     const args = parse_args(argv);
 
     if (args.scan_dir !== null) {
         return cmd_scan_dir(args.scan_dir);
     }
 
-    const text = args.stdin ? _readStdin() : fs.readFileSync(args.file!, 'utf-8');
-    const [code, msg] = validate(text, args.strict);
-    if (code === 0) {
-        if (args.verbose) {
-            if (!QUIET) {
-                process.stdout.write(`✅  ${msg}\n`);
-            }
+    let text: string;
+    try {
+        text = args.stdin ? _readStdin() : fs.readFileSync(args.file!, 'utf-8');
+    } catch (e) {
+        process.stderr.write(`error: ${String(e)}\n`);
+        return 1;
+    }
+
+    const findings = check_reply(text);
+    if (findings.length === 0) {
+        if (args.verbose && !QUIET) {
+            process.stdout.write('✅  reply consistent (every options block carries one adjacent recommendation)\n');
         }
         return 0;
     }
-    process.stderr.write(`❌  [exit ${code}] ${msg}\n`);
-    return code;
+    for (const f of findings) {
+        process.stderr.write(`❌  line ${String(f.line)}: ${f.message}\n`);
+    }
+    return 2;
 }
 
 function _isCliEntry(): boolean {
@@ -349,8 +410,7 @@ function _isCliEntry(): boolean {
     // A symlinked invocation (e.g. via an installed `.augment/` projection,
     // or macOS /var → /private/var temp dirs) makes the raw URLs differ:
     // import.meta.url is the resolved real path while argv[1] keeps the
-    // symlink path. Compare realpaths so the entry guard still fires
-    // (without this the CLI silently no-ops when run through a symlink).
+    // symlink path. Compare realpaths so the entry guard still fires.
     try {
         const here = fs.realpathSync(fileURLToPath(import.meta.url));
         const argv = fs.realpathSync(path.resolve(process.argv[1]));
@@ -364,15 +424,4 @@ if (_isCliEntry() || process.argv[1] === _HERE) {
     process.exit(main());
 }
 
-export {
-    ROOT,
-    OPTION_LINE_RE,
-    REC_LINE_RE,
-    TAG_RE,
-    find_inline_tag,
-    find_option_blocks,
-    validate,
-    cmd_scan_dir,
-    parse_args,
-    main,
-};
+export { ROOT };

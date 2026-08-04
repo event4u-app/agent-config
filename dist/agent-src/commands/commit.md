@@ -193,7 +193,7 @@ Read `verbosity.post_action_reports` from `.agent-settings.yml` (default
 
 ## Rules
 
-- **Never commit before the user confirms** the plan.
+- **Preview path: never commit before the user confirms the plan — once, for the whole plan.** On the terse path (`preview_artifacts: false` AND `routine_confirmations: false`) the `/commit` invocation itself is the confirmation (`commit-policy` exception 3); proceed without a prompt.
 - **Never push** — pushing is left to the user.
 - **Never modify files** — only stage and commit existing changes.
 - **Do NOT add untracked files** unless they are clearly part of the change (check with `git status`).

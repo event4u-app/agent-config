@@ -127,8 +127,11 @@ only: lines matching `commit:` / `git commit` / `Commit phase`.
   Cache the answer for the whole run; do **not** re-ask per step.
   Hard-Floor diffs (bulk deletions, infra) still trigger the
   per-commit gate from [`commit-mechanics`](../authority/commit-mechanics.md).
-- **Commit steps present, non-autonomous** → ask before each commit
-  step inside the loop.
+- **Commit steps present, non-autonomous** → same one-shot pre-scan
+  ask as above, before the run starts; never per step
+  (per [`commit-mechanics`](../authority/commit-mechanics.md) —
+  `commit-policy` § NEVER ask about committing holds regardless of
+  autonomy).
 
 ## 4. Resolve cadences — read once, cache for the run
 

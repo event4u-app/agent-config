@@ -39,7 +39,7 @@ The two-tier choice is the convener-skeptic synthesis: **(b) is the always-on ga
 
 - **Author cost (steady-state):** zero. The lint runs in CI; the author only writes an ADR when they introduce a new cluster head.
 - **Author cost (when collisions land):** one ADR per cluster, ~150-300 lines.
-- **CI cost:** O(skills²) similarity scan; current 210 skills → ~22k pairs scanned at ms-each. Acceptable for `ci-fast`.
+- **CI cost:** O(skills²) similarity scan; current ~290 skills (288 as-of 2026-08) → ~41k pairs scanned at ms-each. Acceptable for `ci-fast`.
 - **Reviewer cost:** the cluster ADR is the single review surface — reviewers don't have to re-derive the cluster boundary on every PR touching the cluster.
 - **What this does not catch:** drift between a skill's description and its body. That is a different problem, addressed by `audit-descriptions` / `lint-skills` (already in CI).
 - **What this does not replace:** the `skill-quality` Iron-Law rule (every skill must be executable, validated, self-contained) and `description-assist` (push-toward-trigger phrasing). Those remain author-time obligations.

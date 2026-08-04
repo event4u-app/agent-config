@@ -207,7 +207,7 @@ Before considering a skill complete, verify it passes all 5 checks:
 - [ ] **K3: No obvious content** — doesn't teach the model what it already knows; only project-specific conventions and non-obvious patterns
 - [ ] **K4: Has Gotcha section** — documents real failure patterns, not theoretical advice; seeded with 2-3 entries
 - [ ] **K5: Has Output format** — numbered list with 2-4 deliverables describing what the skill produces
-- [ ] **K6: Under 500 lines** — if larger, extract reference tables or templates into separate files in the skill folder
+- [ ] **K6: Under 400 lines** — if larger, extract reference tables or templates into separate files in the skill folder
 - [ ] **English only** — all content in English
 - [ ] **No duplication** — doesn't repeat rules or guidelines that are already enforced elsewhere
 - [ ] **No "Related skills" section for mid-tier / untiered skills** — the agent discovers them via `<available_skills>` descriptions; cross-links waste tokens. Senior-tier skills (`tier: senior`) MUST include the block per `skill-quality.md` § Senior-Tier Required Structure (linter-enforced).

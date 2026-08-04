@@ -107,8 +107,8 @@ A single Markdown file at `src/agent-src/personas/{id}.md`:
 3. `## Unique questions` — 4–7 decidable questions
 4. `## Output expectations` — verdict format, severity vocabulary
 
-Length: ≤ 80 lines for a tier-core persona; longer signals the focus
-is too broad.
+Length: ≤ 120 lines for a tier-core persona (specialists ≤ 100; wings
+3–4: ≤ 140); longer signals the focus is too broad.
 
 ## Gotchas
 

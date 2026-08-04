@@ -25,7 +25,7 @@ document is the disposition map P2 / P4 will execute against.
 
 | bucket | rules | chars | target after roadmap |
 |---|---:|---:|---|
-| always (kernel proxy) | 9 | 32 403 | ≤ 25 000 hard, ≤ 20 000 target |
+| always (kernel proxy) | 9 | 32 403 | ≤ 26 000 hard (raised from 25 000 per ADR-002), ≤ 20 000 target |
 | auto | 47 | 142 297 | ≤ 60 000 |
 | **total** | **56** | **174 700** | **≤ 85 000** |
 

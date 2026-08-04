@@ -12,7 +12,8 @@ keep-beta-until: 2026-08-12
 > no skill triggering, no script execution, no `.augment/` access.
 >
 > Source of tier data: `./scripts-run src/scripts/audit_cloud_compatibility
-> --details` (47 rules: T1=20, T2=19, T3-S=8).
+> --details` (47 rules at the 2026-04 refresh: T1=20, T2=19, T3-S=8;
+> suite total 111 rules as-of 2026-08).
 >
 > Last refreshed: 2026-04-29.
 

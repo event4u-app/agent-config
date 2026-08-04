@@ -558,10 +558,10 @@ the canonical narrative lives in
 
 | Key path | Values | Default | Description |
 |---|---|---|---|
-| `rule_loading_tier` | `minimal`, `balanced`, `full`, `custom` | `minimal` | Selects which agent surfaces are active. See [Cost profiles](#cost-profiles). |
+| `rule_loading_tier` | `minimal`, `balanced`, `full`, `custom` | `balanced` | Selects which agent surfaces are active. See [Cost profiles](#cost-profiles). |
 | `personal.ide` | `code`, `phpstorm`, `cursor` | _(empty)_ | CLI command to open files in the IDE |
 | `personal.open_edited_files` | `true`, `false` | `false` | Auto-open edited files in the IDE after edits |
-| `personal.user_name` | first name | _(empty)_ | User's first name, used to address the user personally. Captured by `/onboard`. |
+| `personal.canary_name` | first name | _(empty)_ | Per-project OVERRIDE of the name the agent addresses the user with (session-canary). The name itself lives user-globally: `identity.name` in the wizard's `settings/.agent-user.yml`, fallback `personal.canary_name` in the user-global settings. See `rules/session-canary.md`. |
 | `personal.rtk_installed` | `true`, `false` | `false` | Whether rtk (Rust Token Killer) is installed. Detected and set by `/onboard`. |
 | `personal.minimal_output` | `true`, `false` | `true` | When `true`: short bullet points during work, concise summary at end. When `false`: verbose explanations. |
 | `personal.play_by_play` | `true`, `false` | `false` | When `true`: share intermediate findings during investigation. When `false`: work silently, report only the conclusion. |
@@ -578,13 +578,11 @@ the canonical narrative lives in
 | `chat_history.max_size_kb` | integer | per profile | Max file size before overflow handling. Defaults: `minimal`→`128`, `balanced`→`256`, `full`→`512`. |
 | `chat_history.on_overflow` | `rotate`, `condense` | per profile | On overflow: `rotate` drops oldest entries; `condense` marks the file for summarization on the next turn. Defaults: `minimal`/`balanced`→`rotate`, `full`→`condense`. |
 | `chat_history.text_limits.{user,agent,tool,phase}` | integer (chars) | `user=0`, `agent=5000`, `tool=200`, `phase=200` | Per-entry-type text-length cap. `0` = verbatim, no slice. `N > 0` = collapse whitespace, slice to N chars, append `" … [+K chars]"` so the log self-reports truncation. Defaults match `DEFAULT_TEXT_LIMITS` in `scripts/chat_history.ts`. |
-| `hooks.enabled` | `true`, `false` | `false` | Master switch for the work-engine hook layer. When `false` (default) the registry stays empty and golden replay is byte-stable. See [`agents/settings/contexts/work-engine-hooks.md`](../../../agents/settings/contexts/work-engine-hooks.md). |
-| `hooks.trace` | `true`, `false` | `false` | Emit per-event trace lines on stderr. Useful for debugging; off by default because it is noisy. |
-| `hooks.halt_surface_audit` | `true`, `false` | `true` | Defense-in-depth check that every halt surfaced by the dispatcher carries the expected shape. Cheap. |
-| `hooks.state_shape_validation` | `true`, `false` | `true` | Re-run the state schema validator on `AFTER_LOAD` and `BEFORE_SAVE`. Cheap, catches drift. |
-| `hooks.directive_set_guard` | `true`, `false` | `true` | Verify the dispatcher-resolved directive set matches the input envelope intent. Cheap, catches routing drift. |
-| `hooks.chat_history.enabled` | `true`, `false` | `true` | Register the chat-history hooks (`append` on `after_step`, `halt_append` on `on_halt`). Gated by **both** this flag AND `chat_history.enabled`; either off → no chat-history hook registers. Schema v4: every entry self-identifies via a 16-char session fingerprint, no ownership/sidecar layer. |
-| `hooks.chat_history.script` | path | `scripts/chat_history.ts` | Override path to the chat-history CLI. Set only when the script lives outside the standard location. |
+| `hooks.concern_budget.{max_per_event,tier1_concerns,hard_fail}` | integer / list / `true`,`false` | `8` / `[]` / `false` | Concern budget gate for the hook dispatcher (`lint_hook_concern_budget`): caps concerns per (platform, event) cell, restricts `fail_closed: true` to the `tier1_concerns` allowlist, and `hard_fail: false` keeps the gate warn-only. |
+| `hooks.injection_scan.enabled` | `true`, `false` | `false` | PostToolUse prompt-injection scanner: scans tool output for injection signatures and warns in context (exit 2) — never blocks. |
+| `hooks.rtk_wrap.enabled` | `true`, `false` | `false` | PreToolUse RTK-wrap nudge: when `rtk` is on PATH, warns (exit 2, never blocks) to re-run a verbose CLI command wrapped with rtk. |
+| `hooks.design_slop.enabled` | `true`, `false` | `false` | PreToolUse anti-slop nudge: runs the `lint_design_slop` registry against about-to-be-written UI content and warns (exit 2, never blocks) on P0/P1 aesthetic tells. |
+| `hooks.code_graph.enabled` | `true`, `false` | `false` | PreToolUse code-graph nudge (deprecated — honest null 2026-07-28): when a code-graph index exists, warns once per session to query the graph before grep. Requires manually installing the ABI-locked parser pair. |
 | `pipelines.skill_improvement` | `true`, `false` | `true` | When `true`: propose learning capture after meaningful tasks. When `false`: silent. Included in every profile except `custom`. |
 | `roadmap.skip_pre_run_gate` | `true`, `false` | `true` | When `true` (default): `/roadmap:process-step\|phase\|full` skips the interactive pre-run summary and starts the loop immediately — the resolved roadmap, cadence, and council are surfaced inline so an unwanted pick can still be aborted. When `false`: the loop shows the pre-run summary with numbered options (Go / Different roadmap / Different scope / Toggle council / Abort) and waits. The gate is always shown — regardless of this flag — when the roadmap is ambiguous (multiple active, none named) or a scope / cadence conflict has no sensible default. |
 | `roadmap.quality_cadence` | `end_of_roadmap`, `per_phase`, `per_step` | `end_of_roadmap` | When `/roadmap:process-step|phase|full` runs the project's quality pipeline — only relevant when `quality.local_auto_run` is `true`; when it is `false` (the default) local pipeline runs are suppressed at every cadence and remote CI is the gate. Default skips per-step / per-phase runs and gates only the final archival. `per_phase` runs once after every phase; `per_step` is the legacy verbose mode. Step checkboxes and the dashboard are always updated regardless. |
@@ -594,9 +592,9 @@ the canonical narrative lives in
 | `subagents.judge_model` | model alias or empty | _(empty)_ | Model for judge subagents. Empty = one tier above implementer (opus if sonnet, sonnet if haiku). |
 | `subagents.max_parallel` | integer | `3` | Maximum parallel subagent invocations. `1` serializes. |
 | `worktrees.mode` | `off`, `on`, `ask` | `ask` | Controls autonomous `git worktree` usage. `off` = skill refuses unless the user explicitly asks for a worktree that turn (then it runs); `subagent-orchestration` mode 6 falls back to mode 3. `on` = standing permission (skill skips the per-creation ask; ignore-check and clean-baseline gates still apply). `ask` = status quo — `scope-control` permission gate runs every time. |
-| `roles.default_role` | `""`, `developer`, `reviewer`, `tester`, `po`, `incident`, `planner` | _(empty)_ | Role the agent defaults to at the start of a session. See [`role-contracts`](../docs/guidelines/agent-infra/role-contracts.md). |
+| `roles.default_role` | `""`, `developer`, `reviewer`, `tester`, `po`, `incident`, `planner` | _(empty)_ | Role the agent defaults to at the start of a session. Lives in the PROJECT settings (`agent-project-settings.example.yml` § roles), not in the personal template. See [`role-contracts`](../docs/guidelines/agent-infra/role-contracts.md). |
 | `roles.active_role` | same as `default_role` | _(empty)_ | Role currently active; set by `/mode <name>`, cleared by `/mode none`. Enables the `role-mode-adherence` rule. |
-| `personas.override` | list of persona ids | `[]` | Developer-local override of the team default lens cast. Empty = inherit `personas.default` from `.agent-project-settings.yml`. See [`layered-settings`](../docs/guidelines/agent-infra/layered-settings.md). |
+| `personas.override` | list of persona ids | `[]` | Developer-local override of the team default lens cast (not in the shipped personal template — add the block when needed). Empty = inherit `personas.default` from `.agent-project-settings.yml`. See [`layered-settings`](../docs/guidelines/agent-infra/layered-settings.md). |
 | `personas.ignore` | list of persona ids | `[]` | Persona ids dropped from the default cast locally. Ignored personas stay invokable via `--personas=<id>`. |
 | `onboarding.onboarded` | `true`, `false` | `false` | Whether `/onboard` has run on this project. The `onboarding-gate` rule prompts for `/onboard` when this is `false`. Missing entirely = legacy project, treated as onboarded. |
 | `commands.suggestion.enabled` | `true`, `false` | `true` | Master switch for the command-suggestion layer. `false` = the layer is silent; explicit `/commands` still work. See `rules/command-suggestion-policy.md`. |
@@ -615,8 +613,8 @@ the canonical narrative lives in
 | `verbosity.offer_council_in_delivery` | `true`, `false` | `false` | Offer "run AI Council on this?" inside delivery commands (`/feature-plan`, `/review-changes`, `/roadmap-create`). Council commands themselves are unaffected. |
 | `verbosity.post_action_reports` | `off`, `minimal`, `full` | `minimal` | Multi-line status / summary blocks after a successful action. `off` = no report; `minimal` = one-line confirmation; `full` = bullet list. |
 | `verbosity.intent_announcements` | `true`, `false` | `false` | Intent announcements ("Let me check…", "Now I will…", "Found it") in skill bodies. `false` = act and emit the result. |
-| `telegraph.speak_scope` | `off`, `prose_only`, `aggressive` | `prose_only` | How widely telegraph-speak grammar applies in chat. `off` = no telegraph grammar; `prose_only` = telegraph in body prose, numbered options + Iron-Law-literal blocks stay full prose; `aggressive` = telegraph everywhere except Iron-Law literals. Compile-time toggle (`telegraph.speak`) lands in Phase 8. |
-| `telemetry.artifact_engagement.enabled` | `true`, `false` | `false` | Master switch for the artefact engagement log. Default-off; zero file IO and zero token cost when `false`. Maintainer-targeted; consumers leave it off. |
+| `telegraph.speak_scope` | `off`, `prose_only`, `aggressive` | `off` | How widely telegraph-speak grammar applies in chat. `off` = no telegraph grammar; `prose_only` = telegraph in body prose, numbered options + Iron-Law-literal blocks stay full prose; `aggressive` = telegraph everywhere except Iron-Law literals. The compile-time toggle `telegraph.speak` ships as `false` (dormant) — the projector gates the rule on `speak`, never on `speak_scope`. |
+| `telemetry.artifact_engagement.enabled` | `true`, `false` | `false` | Master switch for the artefact engagement log. Not in the shipped template — a missing `telemetry:` section means disabled (the recording rule no-ops). Default-off; zero file IO and zero token cost when `false`. Maintainer-targeted; consumers leave it off. |
 | `telemetry.artifact_engagement.granularity` | `task`, `phase-step`, `tool-call` | `task` | Boundary at which events are recorded. `tool-call` is expensive — opt-in only. |
 | `telemetry.artifact_engagement.record.consulted` | `true`, `false` | `true` | When `true`: record artefacts loaded into context. |
 | `telemetry.artifact_engagement.record.applied` | `true`, `false` | `true` | When `true`: record artefacts cited or driving a decision. |
@@ -666,8 +664,8 @@ The `rule_loading_tier` setting selects which agent surfaces are active. See
 
 | Profile | Description |
 |---|---|
-| `minimal` | Rules, skills, and commands only. **Includes the learning loop.** Default. |
-| `balanced` | `minimal` + Runtime dispatcher for skills that declare a shell command. |
+| `minimal` | Rules, skills, and commands only. **Includes the learning loop.** |
+| `balanced` | `minimal` + Runtime dispatcher for skills that declare a shell command. Default. |
 | `full` | `balanced` + Tool adapters (GitHub / Jira, read-only, opt-in). |
 | `custom` | Ignore profile — every matrix value must be set explicitly. |
 

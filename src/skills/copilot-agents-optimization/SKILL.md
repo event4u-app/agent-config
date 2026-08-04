@@ -47,7 +47,7 @@ Only after this analysis, proceed with optimization.
 |---|---|
 | **Audience** | Augment Agent, other AI agents |
 | **Can read `.augment/`?** | ✅ Yes — can follow references |
-| **Line budget** | Max 1000, ideal ≤ 500 |
+| **Size budget** | ≤ 3,000 chars (package root; consumer template ≤ 2,500) — enforced by `lint_agents_md.ts`; see `size-and-scope.md` |
 | **Purpose** | Project-specific setup, Docker, testing, quality tools |
 
 **What belongs here:**
@@ -73,7 +73,7 @@ Only after this analysis, proceed with optimization.
 |---|---|
 | **Audience** | GitHub Copilot (Code Review bot + Chat) |
 | **Can read `.augment/`?** | ❌ Code Review cannot, ✅ Chat can |
-| **Line budget** | Max 1000, ideal ≤ 500 |
+| **Line budget** | < 150 lines (ideal < 60); Copilot Code Review reads only the first 4,000 chars |
 | **Purpose** | Coding standards, review rules, architecture constraints |
 
 **What belongs here:**
@@ -127,8 +127,8 @@ both. Instead, reference with a table:
 
 | File | 🟢 Good | 🟡 Warning | 🔴 Over budget |
 |---|---|---|---|
-| `AGENTS.md` | ≤ 500 | 501–800 | > 1000 |
-| `copilot-instructions.md` | ≤ 500 | 501–800 | > 1000 |
+| `AGENTS.md` | ≤ 2,800 chars | 2,801–3,000 chars | > 3,000 chars — `lint_agents_md.ts` fails (consumer template: warn 2,300 / fail 2,500) |
+| `copilot-instructions.md` | < 60 lines | 60–150 lines | > 150 lines, or key rules past the 4,000-char Copilot read window |
 
 ### Reduction strategies (when over budget)
 

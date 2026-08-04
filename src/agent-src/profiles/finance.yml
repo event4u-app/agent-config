@@ -15,7 +15,7 @@ profile:
     preset_id: strict
     personas:
       - finance-partner
-      - reviewer
+      - qa
     skills_hint:
       - dcf-modeling
       - forecasting

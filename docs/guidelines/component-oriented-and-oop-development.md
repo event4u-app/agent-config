@@ -48,9 +48,13 @@ package's restraint posture and defers to it on every conflict:
   pattern for a five-line function, no class where a function is clearer.
 
 Rule of thumb: **two real repetitions (or a genuine second axis of change)
-before you extract.** One occurrence is not a component; one branch is not a
-Strategy. A reviewer should be able to name the concrete duplication or the
-concrete change-axis the abstraction removes.
+before you extract a code-level abstraction.** One occurrence is not a
+component; one branch is not a Strategy. A reviewer should be able to name the
+concrete duplication or the concrete change-axis the abstraction removes.
+UI extractions carry deliberately higher, scoped bars (shell 3+ · stateful
+component ~4 + real state) — the per-class canon is
+[`abstraction-thresholds`](abstraction-thresholds.md); this file does not
+restate it.
 
 **Precedence (explicit): `minimal-safe-diff` / YAGNI always trump OOP
 advocacy.** When "prefer OO shape" and "smallest change" conflict, the smallest
@@ -67,11 +71,12 @@ when they repeat. Depth and mechanics already live in dedicated skills — consu
 them, don't duplicate:
 
 - [`fe-design`](../../src/skills/fe-design/SKILL.md) § Component Architecture —
-  the stack-agnostic "kind, not framework" taxonomy, granularity, extract-on-3+.
+  the stack-agnostic "kind, not framework" taxonomy, granularity, and the
+  UI-shell bar (per [`abstraction-thresholds`](abstraction-thresholds.md)).
 - [`ui-component-architect`](../../src/skills/ui-component-architect/SKILL.md) —
   how to *shape* a reusable component: composition over inheritance, slot
-  contracts, prop-API caps, controlled/uncontrolled, the componentization
-  threshold (repeat **and** real state).
+  contracts, prop-API caps, controlled/uncontrolled, the stateful-component
+  bar (repeat **and** real state, per the same canon).
 - [`existing-ui-audit`](../../src/skills/existing-ui-audit/SKILL.md) — the
   reuse-before-invent gate: inventory existing components/tokens/primitives
   first (enforced by [`ui-audit-gate`](../../src/rules/ui-audit-gate.md)).
