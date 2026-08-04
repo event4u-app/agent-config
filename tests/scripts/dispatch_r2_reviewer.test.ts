@@ -18,8 +18,8 @@ import { fileURLToPath } from 'node:url';
 import { afterAll, describe, expect, it } from 'vitest';
 
 import {
-    REVIEW_SCOPE_EXCLUDE,
     REVIEW_SCOPE_EXCLUDES,
+    REVIEW_SCOPE_GIT_CONFIG,
     scopeExclusionViolation,
     computeReviewScope,
     deriveManifest,
@@ -634,11 +634,25 @@ describe('dispatch_r2_reviewer — pure helpers', () => {
         // The revision range precedes the separator; the flags precede the range.
         expect(argv.indexOf('origin/main...HEAD')).toBeLessThan(argv.indexOf('--'));
         expect(argv.indexOf('diff')).toBeLessThan(argv.indexOf('origin/main...HEAD'));
-        expect(REVIEW_SCOPE_EXCLUDE).toContain('agents/evidence/reviews');
+        expect(REVIEW_SCOPE_EXCLUDES.some((s) => s.includes('agents/evidence/reviews'))).toBe(true);
         // R2 round-3 finding 1: §7 MANDATES appending the outcome event to the
         // tracked metrics JSONL, so leaving it in scope let the commit that
         // records a review invalidate that same review.
         expect(REVIEW_SCOPE_EXCLUDES.some((s) => s.includes('agents/evidence/metrics'))).toBe(true);
+    });
+
+    // Round-6 finding 5: `REVIEW_SCOPE_EXCLUDE` (singular) was a dead export
+    // justified as "back-compat" in a module this branch introduces — nothing
+    // could depend on it yet, and its only reference in the tree was the test
+    // asserting on it. A dead export with an invented reason for existing is
+    // worse than none, so its absence is pinned.
+    it('exports no dead single-pathspec alias beside the pathspec list', async () => {
+        const mod = await import('../../src/scripts/dispatch_r2_reviewer.js');
+        const exported = Object.keys(mod);
+        // The plural list is the real API — asserted so this test cannot pass
+        // by the module simply failing to expose anything.
+        expect(exported).toContain('REVIEW_SCOPE_EXCLUDES');
+        expect(exported).not.toContain('REVIEW_SCOPE_EXCLUDE');
     });
 
     it('scopeExclusionViolation refuses an artefact dir that is inside the reviewed scope', () => {
@@ -683,5 +697,132 @@ describe('dispatch_r2_reviewer — review scope', () => {
         git(repo, 'add', '-A');
         git(repo, 'commit', '-qm', 'chore: review only');
         expect(computeReviewScope((a) => git(repo, ...a), 'main').empty).toBe(true);
+    });
+});
+
+/** `git` on `repo` with extra environment — used to install a hostile user config. */
+function gitWithEnv(cwd: string, args: readonly string[], env: Record<string, string>): string {
+    const res = spawnSync('git', [...args], { cwd, encoding: 'utf8', env: { ...process.env, ...env } });
+    expect(res.status, `git ${args.join(' ')} failed: ${res.stderr}`).toBe(0);
+    return res.stdout;
+}
+
+describe('dispatch_r2_reviewer — cross-machine byte stability', () => {
+    // Round-6 finding 2: `--no-textconv` neutralises a textconv FILTER only. A
+    // `-diff` attribute is a different layer — it replaces the whole patch body
+    // with `Binary files a/x and b/x differ` — so a single developer carrying a
+    // user-global `*.ts -diff` entry recorded a different scope hash for
+    // identical content, surfacing as a `manifest mismatch (stale review)` no
+    // content change explains. The user layer is pinned with
+    // `-c core.attributesFile=/dev/null`.
+    it('a user-global `-diff` attribute cannot change the scope hash', () => {
+        const repo = initRepo();
+        const home = fs.mkdtempSync(path.join(os.tmpdir(), 'r2-attrs-'));
+        tmpDirs.push(home);
+        const attrs = path.join(home, 'attributes');
+        fs.writeFileSync(attrs, '*.ts -diff\n', 'utf-8');
+        const gitconfig = path.join(home, 'gitconfig');
+        fs.writeFileSync(gitconfig, `[core]\n\tattributesFile = ${attrs}\n`, 'utf-8');
+        const hostile = { GIT_CONFIG_GLOBAL: gitconfig };
+
+        // Control — the failure demonstrated, not merely asserted: without the
+        // pin the branch's own `src/foo.ts` diffs as binary.
+        const unpinned = gitWithEnv(
+            repo,
+            ['diff', '--no-ext-diff', '--no-textconv', '--no-color', 'main...HEAD', '--', ':/'],
+            hostile,
+        );
+        expect(unpinned).toContain('Binary files');
+
+        // The pinned scope argv is immune to that same user config.
+        const clean = computeReviewScope((a) => git(repo, ...a), 'main');
+        const underHostileConfig = computeReviewScope((a) => gitWithEnv(repo, a, hostile), 'main');
+        expect(underHostileConfig.diffText).not.toContain('Binary files');
+        expect(underHostileConfig.hash).toBe(clean.hash);
+        expect(REVIEW_SCOPE_GIT_CONFIG).toContain('core.attributesFile=/dev/null');
+    });
+});
+
+/**
+ * A `git` shim on PATH that tallies PATCH-diff invocations (one byte each).
+ *
+ * `--full-index` is the discriminator: it is in the patch flag set and absent
+ * from the `--name-only` one, so `rev-parse` and file-list calls are not counted.
+ */
+function makeGitCounter(): { dir: string; counter: string } {
+    const realGit = spawnSync('sh', ['-c', 'command -v git'], { encoding: 'utf8' }).stdout.trim();
+    expect(realGit, 'no git on PATH').not.toBe('');
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'r2-gitshim-'));
+    tmpDirs.push(dir);
+    const counter = path.join(dir, 'calls');
+    fs.writeFileSync(counter, '', 'utf-8');
+    fs.writeFileSync(
+        path.join(dir, 'git'),
+        [
+            '#!/bin/sh',
+            'seen_diff=0; seen_full=0',
+            'for a in "$@"; do',
+            '  [ "$a" = "diff" ] && seen_diff=1',
+            '  [ "$a" = "--full-index" ] && seen_full=1',
+            'done',
+            'if [ "$seen_diff" = 1 ] && [ "$seen_full" = 1 ]; then printf x >> "$R2_GIT_COUNTER"; fi',
+            `exec ${realGit} "$@"`,
+            '',
+        ].join('\n'),
+        { mode: 0o755 },
+    );
+    return { dir, counter };
+}
+
+describe('dispatch_r2_reviewer — --verify-current scope reuse', () => {
+    // Round-6 finding 4: the review scope is ONE whole-branch `git diff`
+    // (~0.5 MB on a branch this size) and is identical for every artefact in a
+    // pass, but runVerify re-derived it per artefact. Counting the patch-diff
+    // invocations is the only observable proof that it is computed once.
+    it.skipIf(process.platform === 'win32')('computes the review-scope diff once, not once per artefact', () => {
+        const repo = initRepo();
+        expect(run(dispatchArgs(repo)).status).toBe(0);
+
+        const { dir: shimDir, counter } = makeGitCounter();
+        // Dispatch above ran in its own process; only the verify run is counted.
+        fs.writeFileSync(counter, '', 'utf-8');
+        const res = spawnSync(TSX_BIN, [SCRIPT, '--verify-current', '--repo', repo, '--base', 'main'], {
+            cwd: REPO_ROOT,
+            encoding: 'utf8',
+            env: {
+                ...process.env,
+                PATH: `${shimDir}${path.delimiter}${process.env.PATH ?? ''}`,
+                R2_GIT_COUNTER: counter,
+            },
+        });
+        expect(res.status, res.stderr).toBe(0);
+        expect(res.stdout).toContain('1 relevant artefact(s) verified');
+        // 1 = the single selection-time computation. 2 means runVerify re-derived
+        // the diff it had already been handed.
+        expect(fs.readFileSync(counter, 'utf-8').length).toBe(1);
+    });
+});
+
+// CI regression: the branch env vars are a DETACHED-HEAD fallback, never an
+// override. Env-first returned the workflow's branch for an explicitly passed
+// foreign --repo, so the dispatcher wrote one slug while every later lookup
+// asked for another — green locally (no such env), red on every CI shard.
+describe('dispatch_r2_reviewer — slug source precedence', () => {
+    const gitOn = (branch: string): ((a: readonly string[]) => string) =>
+        (a) => (a.includes('--short') ? 'abc1234\n' : `${branch}\n`);
+
+    it('git wins over a CI env var naming a different branch', () => {
+        expect(
+            deriveSlug(gitOn('feat/Test_Branch-1'), {
+                GITHUB_HEAD_REF: 'feat/road-to-something-else',
+                GITHUB_REF_NAME: 'feat/road-to-something-else',
+            }),
+        ).toBe('feat-test-branch-1');
+    });
+
+    it('the CI env still resolves a detached HEAD', () => {
+        const detached = (a: readonly string[]): string => (a.includes('--short') ? 'abc1234\n' : 'HEAD\n');
+        expect(deriveSlug(detached, { GITHUB_HEAD_REF: 'feat/Road-To-X' })).toBe('feat-road-to-x');
+        expect(deriveSlug(detached, {})).toBe('detached-abc1234');
     });
 });

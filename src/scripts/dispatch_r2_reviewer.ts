@@ -114,22 +114,40 @@ export const REVIEW_SCOPE_EXCLUDES: readonly string[] = [
     ':(exclude,top)agents/evidence/metrics',
 ];
 
-/** Back-compat single-pathspec alias (the reviews exclusion). */
-export const REVIEW_SCOPE_EXCLUDE = REVIEW_SCOPE_EXCLUDES[0] as string;
-
 /**
- * Config overrides for a byte-stable diff — the two knobs no diff FLAG can pin.
+ * Config overrides for a byte-stable diff — the knobs no diff FLAG can pin.
  *
  * `core.quotePath=false` un-quotes non-ASCII pathnames (`"a/w\303\251ird"` →
  * `a/wéird`), changing the bytes of every header line that names such a file.
  * `true` is git's default, so this restores the default rather than choosing a
  * new one.
  *
+ * `core.attributesFile=/dev/null` drops the per-USER attributes file. That is a
+ * different layer from `--no-textconv`, which only suppresses a `textconv`
+ * filter: a `-diff` (or `binary`) attribute replaces the entire patch body with
+ * `Binary files a/x and b/x differ`. One developer carrying a global `*.ts -diff`
+ * entry would otherwise record a different scope hash for identical content — a
+ * cross-machine `manifest mismatch (stale review)` that no content change
+ * explains.
+ *
+ * RESIDUAL, named rather than papered over: this pins the USER layer only.
+ * A **tracked** `.gitattributes` is part of the reviewed content and therefore
+ * identical on every checkout, so it is not a cross-machine variable at all.
+ * `$GIT_DIR/info/attributes` IS one — per-clone, untracked, and with no
+ * command-line override — so it stays un-neutralised; likewise the system-wide
+ * `etc/gitattributes`, which only the `GIT_ATTR_NOSYSTEM` environment variable
+ * disables. Both are accepted residuals, not gaps this list silently covers.
+ *
  * `diff.orderFile` reorders the per-file sections of the output; the documented
  * canceller is the `-O/dev/null` flag (see {@link REVIEW_SCOPE_DIFF_FLAGS}),
  * which is why it is not listed here.
  */
-export const REVIEW_SCOPE_GIT_CONFIG: readonly string[] = ['-c', 'core.quotePath=true'];
+export const REVIEW_SCOPE_GIT_CONFIG: readonly string[] = [
+    '-c',
+    'core.quotePath=true',
+    '-c',
+    'core.attributesFile=/dev/null',
+];
 
 /**
  * The pinned patch-output flag set (contract §2.0).
@@ -429,18 +447,27 @@ const CI_BRANCH_ENV_KEYS = ['GITHUB_HEAD_REF', 'GITHUB_REF_NAME'] as const;
  * identity either and is ignored.
  */
 export function deriveSlug(runGit: GitRunner, env: NodeJS.ProcessEnv = process.env): string {
+    // GIT FIRST — the env vars are a detached-HEAD fallback, not an override.
+    // They describe the WORKFLOW's branch, which is only the right answer when
+    // the inspected repo IS the workflow checkout. With an explicit `--repo`
+    // pointing elsewhere (every unit test, and any cross-repo invocation) an
+    // env-first order returns the outer branch's slug for a foreign repo, so the
+    // dispatcher writes one slug and every later lookup asks for another. Git,
+    // run against the inspected repo, cannot be wrong about that repo.
+    const branch = runGit(['rev-parse', '--abbrev-ref', 'HEAD']).trim();
+    if (branch !== '' && branch !== 'HEAD') {
+        return sanitizeSlug(branch);
+    }
+    // Detached HEAD — the case the CI vars exist for (`actions/checkout` leaves
+    // a detached HEAD on `pull_request`, where `--abbrev-ref` yields `HEAD`).
     for (const key of CI_BRANCH_ENV_KEYS) {
         const value = (env[key] ?? '').trim();
         if (value !== '' && value !== 'HEAD' && !/^detached-/i.test(value)) {
             return sanitizeSlug(value);
         }
     }
-    const branch = runGit(['rev-parse', '--abbrev-ref', 'HEAD']).trim();
-    if (branch === '' || branch === 'HEAD') {
-        const short = runGit(['rev-parse', '--short', 'HEAD']).trim();
-        return sanitizeSlug(`detached-${short}`);
-    }
-    return sanitizeSlug(branch);
+    const short = runGit(['rev-parse', '--short', 'HEAD']).trim();
+    return sanitizeSlug(`detached-${short}`);
 }
 
 function deriveSlugFromBranch(repo: string): string {
@@ -636,7 +663,16 @@ function resolveNow(nowArg: string | null): Date {
     return d;
 }
 
-function runVerify(args: Args, findingsPath: string = args.verify as string): number {
+/**
+ * Verify one artefact's manifest against the CURRENT repo state.
+ *
+ * `scopeDiffText` is an optional PRE-COMPUTED review-scope body. The scope is
+ * one `git diff` over the whole branch — ~0.5 MB on a branch this size — and it
+ * is identical for every artefact in a single pass, so `--verify-current`
+ * computes it once and hands it down instead of paying for it per artefact.
+ * Omitted (the single-artefact `--verify` path) it is computed here.
+ */
+function runVerify(args: Args, findingsPath: string = args.verify as string, scopeDiffText?: string): number {
     if (completionReviewDisabled(args.repo)) {
         process.stdout.write('⚠️  planning.completion_review=false — R2 manifest verification skipped (settings escape hatch)\n');
         return 0;
@@ -658,7 +694,7 @@ function runVerify(args: Args, findingsPath: string = args.verify as string): nu
         return 1;
     }
 
-    const scopeDiffText = computeReviewScope((a) => git(args.repo, ...a), args.base).diffText;
+    const scopeText = scopeDiffText ?? computeReviewScope((a) => git(args.repo, ...a), args.base).diffText;
     let roadmapText: string | null = null;
     let acText: string | null = null;
     let roadmapMissing = false;
@@ -671,7 +707,7 @@ function runVerify(args: Args, findingsPath: string = args.verify as string): nu
             roadmapMissing = true;
         }
     }
-    const expected = expectedHashes({ scopeDiffText, roadmapText, acText });
+    const expected = expectedHashes({ scopeDiffText: scopeText, roadmapText, acText });
 
     const diverged: string[] = [];
     const check = (name: string, recorded: string, actual: string): void => {
@@ -775,7 +811,9 @@ function runVerifyCurrent(args: Args): number {
     let mismatched = 0;
     for (const abs of selected) {
         process.stdout.write(`— ${path.relative(path.resolve(args.repo), abs)}\n`);
-        const rc = runVerify(args, abs);
+        // The scope is already in hand — re-deriving it per artefact would run
+        // the same whole-branch `git diff` again for an identical result.
+        const rc = runVerify(args, abs, scope.diffText);
         if (rc === 2) {
             return 2;
         }
