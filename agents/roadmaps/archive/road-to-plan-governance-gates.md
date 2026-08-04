@@ -511,6 +511,10 @@ complexity: structural
 - [x] Both validators emit `scanned: <N>`, are registered in
       `gate-coverage.yml` with real floors, and have 0 false-pass on the
       fail fixtures.
+      <!-- executed 2026-08-04 — "real floors" is HALF-MET, corrected claim per R2 round-4 finding 4. `lint_plan_risk_register` carries a real floor (`min_scanned: 12` against 19 actual). `check_completion_review` does NOT: its `scanned` is `artefacts + 1 for the diff evaluation`, so `min_scanned: 1` can never trip — the gate-coverage entry says so in its own note rather than implying a floor it does not have. Its teeth are elsewhere and they are real: the dead-scan-scope assertion exits 1 (blocking), so a moved reviews root fails loudly instead of reporting a clean scope. The `scanned:`-emission and 0-false-pass halves of this criterion are fully met. -->
+
+      <!-- Also corrected per round-4 finding 2: the Write-path rule wording at line ~116 of this roadmap ("generic write operations on that glob are a lint violation") over-claims. There is no lint and no hook entry; the rule is agent-carried and the state file is gitignored, so CI never sees it. The shipped context (`plan-confidence-gate.md`) and contract § 4.1 now both state `enforced_by: none` explicitly. This roadmap's line stays as the historical record of the verdict-#19 decision. -->
+
 - [x] Measurement protocol is pre-registered in `CLAIMS.md` before the
       first data point; the enforced-mode catch-rate threshold is derived
       from the 10-PR advisory baseline and frozen before the enforced

@@ -148,10 +148,43 @@ Artifact location: `agents/evidence/reviews/<branch-or-roadmap-slug>.findings.md
 ### 2.0 The review scope — what a review is bound to
 
 ```
-scope_hash = sha256( git diff <base>...HEAD -- :/ \
+scope_hash = sha256( git -c core.quotePath=true diff \
+    --no-ext-diff --no-textconv --no-color \
+    --diff-algorithm=myers --indent-heuristic \
+    --unified=3 --inter-hunk-context=0 \
+    --src-prefix=a/ --dst-prefix=b/ --no-relative \
+    --no-renames --full-index --abbrev=40 \
+    --submodule=short --ignore-submodules=none -O/dev/null \
+    <base>...HEAD -- :/ \
     ':(exclude,top)agents/evidence/reviews' \
     ':(exclude,top)agents/evidence/metrics' )
 ```
+
+**The flag set is part of the definition, not a robustness nit.** The hash is the
+single cross-machine binding — a local dispatch records it, CI re-derives it
+(§ 5) — so anything that changes the diff **bytes** for identical content
+produces a blocking `manifest mismatch (stale review)` that no content change
+explains. Each flag neutralises one local git config knob at its git default:
+`diff.external` (`--no-ext-diff`), textconv attributes (`--no-textconv`),
+`color.diff` / `color.ui` and with them `diff.wsErrorHighlight` /
+`diff.colorMoved` (`--no-color`), `diff.algorithm`, `diff.indentHeuristic`,
+`diff.context`, `diff.interHunkContext`, `diff.noprefix` +
+`diff.mnemonicPrefix` (explicit prefixes), `diff.relative`, `diff.renames` /
+`diff.renameLimit` / `diff.copies` (`--no-renames`), `core.abbrev` / `diff.abbrev`
+(`--full-index` pins the `index <old>..<new>` line, `--abbrev=40` any other
+abbreviated oid), `diff.submodule`, `diff.ignoreSubmodules`, `diff.orderFile`
+(`-O/dev/null`, its documented canceller) and `core.quotePath` (the one knob no
+flag expresses). Rename detection is **off** rather than pinned to a threshold:
+it is a similarity heuristic whose outcome also depends on `diff.renameLimit`
+and on how many files the diff touches, so even a fixed `--find-renames=<n>`
+can flip a rename into an add/delete pair as a branch grows — with it off the
+hash depends on content alone. The changed-file list
+(`--name-only`) is pinned the same way (`--no-ext-diff --no-color --no-relative
+--no-renames -O/dev/null` + `core.quotePath`), because it feeds the § 2.4
+code-path classification. Dropping a flag silently changes **every** recorded
+scope hash; the flag lists live in one place
+([`REVIEW_SCOPE_DIFF_FLAGS` / `REVIEW_SCOPE_NAME_ONLY_FLAGS` /
+`REVIEW_SCOPE_GIT_CONFIG`](../../src/scripts/dispatch_r2_reviewer.ts)).
 
 A completion review binds to the **content it reviewed**, never to a commit.
 Two facts make a head-sha binding unsatisfiable, so it is forbidden:
@@ -261,6 +294,16 @@ current one is relevant **and** stale (`stale-review`).
   **contradictory** → `bad-value` block. The skip never suppresses the table:
   its rows are validated regardless, so appending a skip line cannot hide
   `open` findings.
+- **Malformed row rule:** a table-shaped line (starts with `|`, is neither the
+  header nor the separator) that does not parse into **exactly the six cells
+  above** is a violation → `malformed-row` block. It is never a row to skip:
+  omitting the trailing empty `Reason/Ref` cell is the likeliest authoring slip
+  (the template ends in exactly that empty cell), and a dropped row is an
+  unreviewed finding that passes — one well-formed row keeps the table
+  non-empty, so the "neither table nor honest-null" fallback stays silent too.
+  Cells split on **unescaped** `|` only, so `\|` inside a cell is content, not a
+  column boundary. Same defect class, same name as Gate R1's `malformed_row`
+  (§ 1.2).
 
 ### 2.3 Honest-null grammar (exact)
 
@@ -461,10 +504,17 @@ dispatched: YYYY-MM-DDTHH:MM:SSZ
 - **Tool allowlist for the reviewer context:** branch-scoped `git diff` +
   reads of branch-touched files only; no `git log` beyond the branch, no
   repo-wide grep, no reads of `agents/runtime/` or session artifacts.
-- **Residual (`accepted-risk`):** host-level context injection outside the
-  dispatcher (a host that prepends extra context to the subagent) is not
-  preventable from inside the repo. Detection floor: the adversarial-leak
-  E2E in the R2 acceptance suite.
+- **Residual (`accepted-risk`), with NO detection floor:** host-level context
+  injection outside the dispatcher (a host that prepends extra context to the
+  subagent) is not preventable — and not *detectable* — from inside the repo.
+  An earlier draft named "the adversarial-leak E2E in the R2 acceptance suite"
+  as the detection floor; no such test exists and none can, because the leak
+  would happen in the host's prompt assembly, which no in-repo test observes.
+  The claim is withdrawn rather than satisfied by a test that only greps the
+  prompt text (R2 round-4 finding 3). What IS mechanical: the dispatcher builds
+  the reviewer input, and CI re-derives the manifest hashes — so a reviewer fed
+  a *different* diff or roadmap is caught. A reviewer fed the correct inputs
+  PLUS extra context is not.
 
 ## 6. Validator exit-code contract
 

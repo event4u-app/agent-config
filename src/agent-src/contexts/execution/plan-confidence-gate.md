@@ -102,9 +102,13 @@ resolved branches, plan hash, timestamp, and a mandatory `transcript_ref`
 (path + content hash of the interview transcript artifact).
 
 **Write-path rule:** only the Gate C flow writes
-`agents/runtime/state/gate-c-*.json`. Generic write operations on that glob
-are a lint violation — the guard defends against silent agent shortcuts,
-not against the local human (who holds the settings escape hatch anyway).
+`agents/runtime/state/gate-c-*.json`. This binds the **agent**; there is no
+lint and no hook entry behind it, and the state file is gitignored so CI never
+sees it — a human reading the diff is what catches a violation (stated
+`enforced_by: none` in
+[`plan-review-gates § 4.1`](../../../docs/contracts/plan-review-gates.md)).
+The rule defends against silent agent shortcuts, not against the local human
+(who holds the settings escape hatch anyway).
 Confident-path runs (no interview) write no state file; R1 then runs its
 risk pass fresh.
 
