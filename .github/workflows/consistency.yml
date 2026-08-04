@@ -97,6 +97,26 @@ jobs:
     steps:
       - name: Check out repository
         uses: actions/checkout@v7
+        with:
+          # Full history — REQUIRED by the three plan-governance gates below,
+          # and by nothing else in this job. The default depth-1 PR-merge fetch
+          # gives you the merge commit and NOT its parents, which silently
+          # breaks all three in different ways (found by the R2 review of this
+          # gate, round 3, on exactly this file):
+          #   · Gate R1's grandfather clause resolves "was there a commit
+          #     before the activation date" via `git log` — unanswerable on a
+          #     grafted depth-1 history, so all 14 grandfathered roadmaps fail
+          #     `missing_register` and the step reds EVERY PR;
+          #   · both R2 steps take `--base <pull_request.base.sha>`, which is
+          #     not fetched at depth 1 → exit 2 → warn-and-allow, i.e. the
+          #     layer the contract calls authoritative self-disables;
+          #   · the findings-before-fixes ancestry check needs the fix commits
+          #     as real objects, or every `fixed` row reads unresolvable.
+          # The GitHub-API workaround the other PR-scoped steps use returns
+          # changed FILES; it cannot answer a question about history. Deepening
+          # inside the steps would re-introduce the auth-extraheader fetch race
+          # this workflow documents, so the depth is set once, here.
+          fetch-depth: 0
 
       - name: Set up Node
         uses: actions/setup-node@v7
@@ -214,15 +234,15 @@ jobs:
         # violations report as warnings, exit 0. CI is the authoritative
         # layer once enforced; exit 2 stays degraded-advisory either way.
         #
-        # NO `git fetch origin main` HERE. actions/checkout uses a shallow
-        # PR-merge fetch, and this workflow already documents that the fetch
-        # races with the configured auth extraheader on some runners (see the
-        # kernel-rule-bundle step). Swallowing that failure with `|| true`
-        # would leave `--base` unresolvable → exit 2 → "degraded advisory,
-        # allowing", i.e. the layer the contract calls authoritative would
-        # silently never run. The PR's base sha is already present in the
-        # merge checkout (it is a parent of the merge commit), so pass it
-        # directly and fetch nothing.
+        # NO `git fetch origin main` HERE — that fetch races with the
+        # configured auth extraheader on some runners (this workflow documents
+        # it at the kernel-rule-bundle step), and swallowing the failure with
+        # `|| true` leaves `--base` unresolvable → exit 2 → "degraded
+        # advisory, allowing", i.e. the layer the contract calls authoritative
+        # silently never runs. The base sha is a parent of the merge commit and
+        # is present because this job checks out with `fetch-depth: 0` (see the
+        # checkout step — at the default depth 1 the parents are NOT fetched,
+        # which is precisely how this step self-disabled before).
         if: github.event_name == 'pull_request'
         run: |
           ./scripts-run src/scripts/check_completion_review \
