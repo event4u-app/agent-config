@@ -432,19 +432,41 @@ export function checkContent(file: string, text: string): ContentResult {
         }
         break;
     }
-    if (!honestNullSeen) {
-        const { headerFound, rowCount, violations } = validateTable(file, text, bodyLines, bodyStartLine);
-        result.violations.push(...violations);
-        if (!headerFound || rowCount === 0) {
+    // The table is validated whenever one is PRESENT — never suppressed by the
+    // honest-null line. § 1.3 makes honest-null valid "only as exactly this
+    // shape", so honest-null + table is contradictory: gating validateTable on
+    // `!honestNullSeen` let such a register pass with zero row checks (bad
+    // ranks, bad risk types, empty mitigations, dangling anchors all
+    // unreported) — one honest-null line anywhere in the body disabled the whole
+    // table check. Gate R2's `evaluate` already reports the analogous
+    // skip-declaration-plus-table combination and still validates the rows; this
+    // is the same rule on the R1 side.
+    const { headerFound, rowCount, violations } = validateTable(file, text, bodyLines, bodyStartLine);
+    if (honestNullSeen) {
+        if (headerFound || rowCount > 0) {
+            result.violations.push(...violations);
             result.violations.push({
                 file,
                 line: regIdx + 1,
-                kind: 'empty_register',
+                kind: 'contradictory_register',
                 detail:
-                    'Risk Register is empty or prose-only — needs the six-column risk table ' +
-                    'or the exact honest-null line (prose like "no risks" does not count)',
+                    'Risk Register carries BOTH the honest-null line and a risk table — § 1.3 admits ' +
+                    'honest-null only as the sole body content. Remove one: the table if there are ' +
+                    'genuinely no risks, the honest-null line otherwise',
             });
         }
+        return result;
+    }
+    result.violations.push(...violations);
+    if (!headerFound || rowCount === 0) {
+        result.violations.push({
+            file,
+            line: regIdx + 1,
+            kind: 'empty_register',
+            detail:
+                'Risk Register is empty or prose-only — needs the six-column risk table ' +
+                'or the exact honest-null line (prose like "no risks" does not count)',
+        });
     }
     return result;
 }

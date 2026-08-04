@@ -9,6 +9,7 @@ import * as os from 'node:os';
 import * as path from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
+import { runInProc } from '../_lib/run_in_process.js';
 import * as mod from '../../src/scripts/lint_plan_risk_register.js';
 
 const BASE_PLAN = [
@@ -534,6 +535,41 @@ describe('lint_plan_risk_register — main', () => {
         expect(mod.main([path.join(tmp, 'does-not-exist'), '--quiet'])).toBe(0);
     });
 
+    // Round-3 finding 7 — contract §6: the `scanned:` line is emitted on EVERY
+    // exit path, exit 2 included, because the coverage guard reads that number.
+    // Three R1 exits printed none: the dead-scope return, the unexpected-internal
+    // return, and the top-level CLI catch.
+    it('dead scope emits scanned: 0 AND exits 1', () => {
+        const empty = path.join(tmp, 'empty');
+        fs.mkdirSync(empty);
+        const res = runInProc(mod.main, [empty, '--quiet']);
+        expect(res.status).toBe(1);
+        expect(res.stdout).toMatch(/^scanned: 0$/m);
+    });
+
+    // Root ignores mode bits, so the EACCES probe cannot be built there.
+    it.skipIf(process.getuid?.() === 0)('an unreadable corpus root emits scanned: 0 AND exits 2', () => {
+        const locked = path.join(tmp, 'locked');
+        fs.mkdirSync(locked);
+        fs.writeFileSync(path.join(locked, 'plan.md'), VALID_PLAN, 'utf-8');
+        fs.chmodSync(locked, 0o000);
+        try {
+            const res = runInProc(mod.main, [locked, '--quiet']);
+            expect(res.status).toBe(2);
+            expect(res.stdout).toMatch(/^scanned: 0$/m);
+            expect(res.stderr).toMatch(/Internal error/);
+        } finally {
+            fs.chmodSync(locked, 0o755);
+        }
+    });
+
+    it('emits the scanned count exactly once on the success path', () => {
+        fs.writeFileSync(path.join(tmp, 'plan-a.md'), VALID_PLAN, 'utf-8');
+        const res = runInProc(mod.main, [tmp, '--quiet']);
+        expect(res.status).toBe(0);
+        expect(res.stdout.match(/^scanned: \d+$/gm)).toEqual(['scanned: 1']);
+    });
+
     it('settings escape hatch: planning.risk_review=false → 0 without scanning', () => {
         fs.writeFileSync(path.join(tmp, '.agent-settings.yml'), 'planning:\n  risk_review: false\n', 'utf-8');
         expect(mod.riskReviewDisabled(tmp)).toBe(true);
@@ -551,5 +587,42 @@ describe('lint_plan_risk_register — main', () => {
         expect(mod.riskReviewDisabled(tmp)).toBe(false);
         fs.writeFileSync(path.join(tmp, '.agent-settings.yml'), 'planning:\n  risk_review: true\n', 'utf-8');
         expect(mod.riskReviewDisabled(tmp)).toBe(false);
+    });
+});
+
+// R2 round-4 finding 1: one `**Honest-null:**` line anywhere in the body used to
+// skip validateTable entirely, so a register carrying BOTH the line and a table
+// passed with zero row checks.
+describe('lint_plan_risk_register — honest-null does not suppress the table', () => {
+    const BAD_TABLE = [
+        '| Rank | Item | Risk type | Description | Mitigation | Anchored under |',
+        '|------|------|-----------|-------------|------------|----------------|',
+        '| 2 | A | operational | d |  | Phase 9 Step 9 |',
+    ].join('\n');
+
+    it('honest-null + a table reports the contradiction AND the row violations', () => {
+        const body =
+            `${VALID_MARKER}\n` +
+            '**Honest-null:** no material product or implementation risks identified because: none found.\n' +
+            BAD_TABLE;
+        const res = mod.checkContent('plan.md', planWith(body));
+        const ks = kinds(res.violations);
+        expect(ks).toContain('contradictory_register');
+        // The row checks must still fire — the whole point of the fix.
+        expect(ks).toContain('bad_rank_order');
+        expect(ks).toContain('bad_risk_type');
+        expect(ks).toContain('empty_mitigation');
+        expect(ks).toContain('dangling_anchor');
+    });
+
+    it('honest-null alone still passes', () => {
+        const body =
+            `${VALID_MARKER}\n` +
+            '**Honest-null:** no material product or implementation risks identified because: prose-only meta plan.';
+        expect(mod.checkContent('plan.md', planWith(body)).violations).toEqual([]);
+    });
+
+    it('a valid table alone still passes', () => {
+        expect(mod.checkContent('plan.md', VALID_PLAN).violations).toEqual([]);
     });
 });
