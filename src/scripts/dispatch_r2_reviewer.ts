@@ -51,6 +51,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 // (validator → dispatcher for the scope hash, dispatcher → validator for
 // relevance) is safe: neither module calls the other at module-evaluation
 // time, and each CLI entry guard only fires for its own argv[1].
+import { gitEnv } from './_lib/git_env.js';
 import { completionReviewDisabled } from './_lib/planning_settings.js';
 import { artifactRelevance } from './check_completion_review.js';
 
@@ -401,6 +402,8 @@ function git(repo: string, ...args: string[]): string {
         encoding: 'utf8',
         maxBuffer: 256 * 1024 * 1024,
         stdio: ['ignore', 'pipe', 'pipe'],
+        // cwd decides, never an inherited GIT_DIR (hook environments).
+        env: gitEnv(),
     });
 }
 

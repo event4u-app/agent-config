@@ -44,6 +44,7 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
+import { gitEnv } from './_lib/git_env.js';
 import { splitMarkdownRow } from './_lib/md_table.js';
 import { completionReviewDisabled } from './_lib/planning_settings.js';
 import { DeadScopeError, assertScanned } from './_lib/scan_scope.js';
@@ -479,6 +480,8 @@ function gitTry(repo: string, args: readonly string[]): GitResult {
             encoding: 'utf8',
             maxBuffer: GIT_MAX_BUFFER,
             stdio: ['ignore', 'pipe', 'pipe'],
+            // cwd decides, never an inherited GIT_DIR (hook environments).
+            env: gitEnv(),
         });
         return { ok: true, stdout, status: 0 };
     } catch (exc) {

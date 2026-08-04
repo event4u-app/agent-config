@@ -39,6 +39,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import { parse as parseYaml } from 'yaml';
 
+import { gitEnv } from './_lib/git_env.js';
 import { splitMarkdownRow } from './_lib/md_table.js';
 import { assertScanned, DeadScopeError } from './_lib/scan_scope.js';
 
@@ -491,6 +492,8 @@ function _git(cwd: string, args: readonly string[]): string | null {
             encoding: 'utf-8',
             maxBuffer: GIT_MAX_BUFFER,
             stdio: ['ignore', 'pipe', 'pipe'],
+            // cwd decides, never an inherited GIT_DIR (hook environments).
+            env: gitEnv(),
         });
     } catch {
         return null;
