@@ -603,4 +603,6 @@ anthropic/claude-sonnet-4-5 (Response-A), openai/gpt-4o (Response-B).
 
 ### Predecessor council trace
 
-`agents/runtime/council/responses/road-to-plan-governance-gates-roadmap.json` (this run).
+Deep-tier run of 2026-08-04, members anthropic/claude-sonnet-4-5 +
+openai/gpt-4o (raw responses are local-only council artifacts,
+auto-pruned after the retention window — convergence is inlined above).
