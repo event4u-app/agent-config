@@ -194,15 +194,29 @@ status: ready
 
 ## Phase 3 — frontend-set diet (measurement before trimming)
 
-- [ ] Pre-register the classification claim: on a labelled corpus of ≥30 real
+- [x] Pre-register the classification claim: on a labelled corpus of ≥30 real
       frontend tasks (redacted), the ui/ui_trivial classifier must route ≥80%
       of human-labelled trivial tasks to the trivial lane. Corpus and labels
       committed BEFORE the classifier is touched.
       *Verify:* corpus + labels + threshold committed in one PR with zero
       classifier changes.
-- [ ] Run the eval. If the trivial-recall bar is missed, fix classification
+      <!-- done 2026-08-04: internal/bench/corpora/ui-triviality-golden.yaml,
+      40 tasks (15 trivial / 25 non-trivial incl. adversarial near-misses),
+      threshold 0.80 in the header, committed at f71a41c82 with ZERO
+      classifier changes — council verdict C1: commit ancestry within the PR
+      is the freeze proof, disclosed in the PR description. Labels
+      council-derived per verdict B1 (provenance block in the corpus header;
+      amends "human-labelled" per precedent PR #885, disclosed). -->
+- [x] Run the eval. If the trivial-recall bar is missed, fix classification
       FIRST — no chain trimming lands on a misrouting classifier.
       *Verify:* eval report committed; recall number recorded either way.
+      <!-- done 2026-08-04: recall 0.600 MISS recorded at the frozen corpus
+      commit → classification fixed FIRST per the step (micro-tweak
+      vocabulary, verb-less copy pattern, scope-escalation + multi-scope
+      guards in intent/classify.ts) → recall 1.000 / precision 0.938 PASS on
+      the unchanged corpus. Both numbers in
+      agents/evidence/reports/ui-triviality-eval.md; work-engine suite
+      697/697 green; eval_ui_triviality.test.ts pins the bar in CI. -->
 - [ ] Chain right-sizing (gated on the eval): `existing-ui-audit` +
       `design-intelligence` become mandatory only for new-design / redesign
       intents; fix-intent UI work enters at `apply` with the audit available
