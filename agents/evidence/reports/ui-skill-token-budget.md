@@ -28,6 +28,22 @@
 | design-review | 15,521 | 3,730 |
 | **Total** | **76,103** | **18,403** |
 
-## AFTER
+## AFTER (same command, same metric)
 
-(to be filled by the measurement after the cut — same command, same metric)
+| Skill | chars | GPT tokens | references/ entry points |
+|---|---|---|---|
+| fe-design | 7,749 | 1,795 | design-patterns.md · design-read-and-memory.md |
+| design-intelligence | 10,752 | 2,613 | context-and-registers.md · integration-mapping.md (+ the two pre-existing) |
+| existing-ui-audit | 12,923 | 3,227 | output-and-pitfalls.md |
+| design-review | 11,156 | 2,688 | review-communication.md · verification-automation.md |
+| **Total** | **42,580** | **10,323** | |
+
+**Reduction: 43.9% — the pre-registered ≥30% threshold is met.** Every moved
+section survives VERBATIM in its references/ file; each SKILL.md carries a
+"Section index — load on demand" routing table. `design-intelligence` stays
+inside its rich-class band (2,000–5,000 tokens) with the "Why this skill is
+rich" section retained; lint_token_budget_discipline, audit_skill_overlap
+(0 pairs ≥ 70%), and skill_linter --changed (44/44) are green.
+
+Output-quality judgment stays routed to `bench:ui` — this work adds NO second
+UI harness (roadmap non-goal upheld).

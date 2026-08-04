@@ -122,28 +122,25 @@ status: ready
       rule id; `safety-floor` rejected on non-always rules (always trio
       short-circuits to kernel). compile_router.test.ts Layer 3, 17/17 green,
       committed router.json byte-identical. -->
-- [~] Reconcile the question triangle with a one-line amendment, not a
+- [-] Reconcile the question triangle with a one-line amendment, not a
       rewrite: `ask-when-uncertain`'s Iron Law gains the missing cross-band
       qualifier ("…for questions that clear the `autonomous-execution`
       trivial bar — trivial questions are not asked, per band 4"). Own PR,
       kernel process, human-owned.
       *Verify:* string-level check — "even if trivial" coexists with the
       band-4 qualifier; the literal texts no longer contradict.
-      <!-- deferred 2026-08-04: human-owned by this step's own lock AND
-      hard-enforced by the host — the edit-permission classifier denies agent
-      writes to this kernel ask-policy rule (correct per security-sensitive-
-      stop § self-modification). Maintainer applies the drafted one-liner in
-      src/rules/ask-when-uncertain.md:21 — replace
-        "Even if trivial or independent — exactly one."
-      with
-        "Even if trivial or independent — exactly one. Band-4 scope: this law
-        caps the count for questions that clear the `autonomous-execution`
-        trivial bar — a trivial workflow question below that bar is not asked
-        at all (per `agent-authority` band 4); the cap never licenses the ask."
-      Own PR + task sync + check_kernel_prefix_stability --update-baseline
-      (kernel-prefix.json re-anchor) + ≥24 h soak. AI-council verdict A1
-      (2026-08-04) endorsed agent-drafted/human-merged; the host gate tightens
-      that to human-applied. -->
+      <!-- resolved 2026-08-04 via roadmap-management § 4b option 2
+      (follow-up, ready + blocked): the step is human-owned by its own lock
+      AND hard-enforced by the host edit gate (agent writes to this kernel
+      ask-policy rule are denied — correct per security-sensitive-stop
+      § self-modification). The drafted one-liner + full kernel procedure
+      (own PR, sync, kernel-prefix baseline re-anchor, ≥24 h soak) moved to
+      the spawned follow-up `road-to-kernel-question-triangle.md`
+      (status: ready, blocker owner: maintainer). AI-council verdict A1
+      (2026-08-04) blessed the maintainer-owned separate-PR shape; the run's
+      standing instruction routed this § 4b disposition to the council
+      instead of a user halt — surfaced prominently in the PR description
+      for veto. -->
 
 ## Phase 2 — the validation surface the mandate asks for
 
@@ -235,15 +232,30 @@ status: ready
       improve intents keep the full chain. Tests:
       directives_ui_fix_lane.test.ts (12) — both intents covered; work-engine
       712/712 incl. design_fidelity_routing fixtures. -->
-- [ ] Progressive disclosure for the four heavy reference skills (`fe-design`,
+- [x] Progressive disclosure for the four heavy reference skills (`fe-design`,
       `design-intelligence`, `existing-ui-audit`, `design-review`):
       section-level entry points so an invocation loads the needed section,
       not the full body. Tokens-per-UI-task measured before/after; threshold
       pre-registered before the first cut. Preservation-guard applies.
       *Verify:* before/after token numbers committed; no Iron-Law section
       dropped (preservation checklist).
-- [ ] Output-quality judgment routes to `road-to-ui-track-integrity-followup.md`'s
+      <!-- done 2026-08-04: threshold (>=30% total token reduction, zero
+      deletion) pre-registered at 0914f65b2 BEFORE the first cut; sections
+      moved VERBATIM to per-skill references/ entry points with a "Section
+      index — load on demand" routing table in each SKILL.md. Measured:
+      18,403 -> 10,323 GPT tokens = 43.9% (before/after tables in
+      agents/evidence/reports/ui-skill-token-budget.md). No Iron-Law section
+      existed in these four bodies; anti-slop + Do NOT + procedure sections
+      kept in-body. design-intelligence stays in its rich band (2,613) with
+      "Why this skill is rich" retained. lint_token_budget_discipline,
+      audit_skill_overlap (0 pairs >=70%), skill_linter --changed 44/44
+      green. -->
+- [x] Output-quality judgment routes to `road-to-ui-track-integrity-followup.md`'s
       `bench:ui` — no second UI harness.
+      <!-- done 2026-08-04 by construction: this roadmap's diff builds no UI
+      output-quality harness — the eval measures ROUTING (recall/precision of
+      the intent classifier), never output quality; the evidence report
+      states the bench:ui routing explicitly. Non-goal upheld. -->
 
 ## Phase 4 — standing adherence telemetry (the anti-anecdote layer)
 

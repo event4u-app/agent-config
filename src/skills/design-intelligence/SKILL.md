@@ -49,100 +49,12 @@ Provenance + licenses: [`ATTRIBUTION.md`](ATTRIBUTION.md); manifest:
   layout pattern / chart type / icon system fits this product.
 - Stack-idiom lookup before writing UI code (`--stack` axis).
 
-## Cross-task design memory — read DESIGN.md / PRODUCT.md first
+## Section index — load on demand
 
-Before running the corpus grounding or producing any design brief, check
-the project root for `DESIGN.md` and/or `PRODUCT.md` (written by
-`design-system-capture`). If they exist:
+Load the reference file whose sections the task needs — never all of them by default:
 
-1. Read `DESIGN.md` — apply its captured visual decisions (radius, shadows,
-   motion, spacing) as **project constraints** that take precedence over
-   corpus suggestions. The corpus fills gaps; DESIGN.md overrides.
-2. Read `PRODUCT.md` — note interaction patterns that affect the design
-   (e.g., destructive-action policy, empty-state approach) so the brief
-   is consistent with existing product conventions.
-3. After generating the design brief: if a decision was made that isn't yet
-   in DESIGN.md (e.g., chose a specific shadow for a new elevated surface),
-   flag it for capture: *"Suggest adding to DESIGN.md: elevated surface shadow = …"*
-
-Boundary vs `brand-to-tokens`/`.tokens.json`:
-- `.tokens.json` = primitive definitions (gray-700 = #374151)
-- `DESIGN.md` = usage decisions (elevated surfaces use the gray-700 shadow, 8px radius)
-Both are consumed; DESIGN.md takes precedence for usage questions.
-
-## Register — brand vs product
-
-Determine the design register before grounding (see
-[`docs/guidelines/design-modes.md`](../../../docs/guidelines/design-modes.md)):
-**brand mode** ("the impression IS the product" — marketing, landing, consumer
-first-impression) prioritizes distinctive selection; **product mode** ("design
-serves the task" — dashboard, admin, workflow) prioritizes earned familiarity
-and accessibility. The register changes which corpus selections are appropriate
-(distinctive palette/typography in brand mode; predictable, semantic in product
-mode). State the register in the Design Read line below.
-
-**Embedded vs standalone (a third discriminator).** UI **embedded inside a host
-surface** — a widget in a slide, a card in a chat, a panel in someone else's
-app — follows a **flatter charter** than a greenfield standalone page:
-restrained weights, hairline borders, no atmospherics/gradients/shadows that
-would fight the host. Select the register per surface (embedded → flat;
-standalone → the brand/product register above) — it is a selector, not a fixed
-token set (no values vendored; the host's tokens win).
-
-## Design Read — articulate intent before generating
-
-Before producing any design brief or making any style selection, emit one
-line that declares the design read:
-
-```
-Reading this as: <page-kind> for <audience>, <vibe> language, leaning <design-system>.
-```
-
-Examples:
-- `Reading this as: SaaS dashboard for internal ops teams, functional language, leaning Radix/shadcn.`
-- `Reading this as: marketing landing for B2C consumer product, playful editorial, leaning custom tokens.`
-- `Reading this as: admin panel for technical users, dense/utilitarian language, leaning data-grid primitives.`
-
-**If context is incomplete:** state so and proceed exploratory — *"Design context incomplete: no audience defined; proposing exploratory direction, expect revision after audience is clarified."* Do NOT block on missing context; do NOT prompt the user with a gate; state the gap and continue.
-
-### Taste Dials — quantify, infer, emit
-
-If `DESIGN.md` declares `## Taste Dials`, use those values. Otherwise infer
-three 1–10 dials from the brief and append them to the Design Read line
-(`… · dials V/M/D = 6/3/4`) so the user can correct them; on confirmation,
-suggest persisting to `DESIGN.md` (via `design-system-capture`). Dials are a
-config, not a vibe — never re-infer when `DESIGN.md` already sets them
-(no drift across sessions).
-
-**Dial Inference Table** (brief signal → Variance / Motion / Density, 1–10):
-
-| Brief signal | V | M | D |
-|---|---|---|---|
-| minimal / calm / editorial / clean | 3–5 | 2–4 | 2–4 |
-| trust / regulated / public-sector / fintech | 3–4 | 2–3 | 4–6 |
-| default / unstated | 5–6 | 3–4 | 4–5 |
-| data-dense / dashboard / admin / cockpit | 4–6 | 2–3 | 7–9 |
-| bold / playful / expressive / awards / Dribbble | 8–10 | 7–10 | 3–5 |
-
-**Dial → downstream levers** (how a dial value changes generation):
-
-| Dial | Low (1–3) | High (8–10) |
-|---|---|---|
-| Variance | symmetric grids, one layout family | asymmetry, varied layout families, off-grid accents |
-| Motion | static / `prefers-reduced-motion`-first, opacity-only | choreographed scroll/stagger (still GPU-only, still reduced-motion alt) |
-| Density | generous whitespace, large spacing scale, few items/viewport | tight spacing scale, more information per viewport |
-
-Dials persist in `DESIGN.md`; the stack executors (`tailwind-engineer`,
-`react-shadcn-ui`, `blade-ui`, `flux`) read `DESIGN.md` and honour them.
-
-**Anti-Default Discipline — first-impulse check:** Before committing to any
-design direction, cross-check your first impulse against the current-generation
-tells in [`design-antipatterns.md`](../../../docs/guidelines/design-antipatterns.md)
-(§ Current-generation tells — the warm-editorial C5+T2+T7 signature and the
-previous-generation C1/C2 gradient) plus the L1/L2 layout defaults. If a tell
-was your first reach, name a different direction or explicitly justify why this
-brief genuinely calls for it. (The finalization cross-check against the full
-catalog is under *Anti-slop discipline* below.)
+- [`references/context-and-registers.md`](references/context-and-registers.md) — Cross-task design memory — read DESIGN.md / PRODUCT.md first · Register — brand vs product · Design Read — articulate intent before generating
+- [`references/integration-mapping.md`](references/integration-mapping.md) — `MASTER.md` + page overrides ↔ `state.ui_design` (mapping) · Grounding the review/polish a11y gate (charts + contrast) · Stack guidance (`--stack` axis) · Diagram-type routing — route on the verb · Interplay (who owns what)
 
 ## Honesty / real-system grounding
 
@@ -229,51 +141,6 @@ pairings: query `https://fonts.google.com/specimen/<Family>` (or the
 `webfonts` API) for metadata, OR propose the nearest curated pairing and
 say why. Never invent pairing metadata.
 
-## `MASTER.md` + page overrides ↔ `state.ui_design` (mapping)
-
-The upstream cross-session memory pattern maps onto our delivery state:
-
-| Upstream artifact | Our state | Notes |
-|---|---|---|
-| `design-system/<project>/MASTER.md` | `state.ui_design` (project-level brief: style, tokens, typography, anti-patterns) | The state is the source of truth during a run. |
-| `design-system/<project>/pages/<page>.md` | per-page override entries inside `state.ui_design` (e.g. `pages.<page>` dict) | Page rules override project rules for that page only. |
-
-File persistence stays **opt-in** (`ground … --persist <dir>`) and writes
-under the consumer's project as a durable artifact for multi-session
-consistency; on a fresh session, re-hydrate `state.ui_design` from
-`MASTER.md` + the page file before re-running `design`.
-
-## Grounding the review/polish a11y gate (charts + contrast)
-
-The `review`/`polish` steps gate on `state.ui_review.a11y`. Ground two
-finding classes instead of ad-hoc judgment:
-
-- **Chart-type findings** — the grounding CLI (`ground` via
-  ./scripts-run) — `…/ground search --manifest … --domain
-  chart "<data shape>"` → `Accessibility Grade`, `A11y Fallback`,
-  `Color Guidance` columns justify "wrong chart type / missing colorblind
-  fallback" findings with a citable row.
-- **Contrast findings** — `--domain color "<product>"` returns the
-  WCAG-adjusted token set; a finding that a hex pair deviates from the
-  adopted set cites the row instead of eyeballing ratios. Auditing
-  *method* stays with [`accessibility-auditor`](../accessibility-auditor/SKILL.md).
-
-## Stack guidance (`--stack` axis)
-
-Per-framework Do/Don't corpora (16 stacks) ride the same manifest:
-
-```bash
-./scripts-run <skills-root>/corpus-grounding/scripts/ground search \
-  --manifest <skills-root>/design-intelligence/data/manifest.json \
-  --stack react "list rerender memo" [--filter "Severity=HIGH"]
-```
-
-Stack executors ([`blade-ui`](../blade-ui/SKILL.md),
-[`livewire`](../livewire/SKILL.md), [`flux`](../flux/SKILL.md),
-[`react-shadcn-ui`](../react-shadcn-ui/SKILL.md),
-[`tailwind-engineer`](../tailwind-engineer/SKILL.md)) pull idiomatic
-guidance + docs URLs from here instead of memory.
-
 ## Output format
 
 1. Grounded brief candidates per `state.ui_design` slot (layout,
@@ -293,47 +160,6 @@ guidance + docs URLs from here instead of memory.
 - Do NOT propose a new component the `existing-ui-audit` inventory
   already covers — audit findings outrank corpus suggestions.
 - Do NOT hide low confidence — the user signs off on the gaps too.
-
-## Diagram-type routing — route on the verb
-
-Choose a visualization by the *intent verb*, not the noun. Count the nouns
-before you draw (input-complexity triage): 1–2 → inline prose or a single
-shape; 3–7 → one diagram; 8+ → split or summarize, never one dense picture.
-
-| The user asks… | Intent | Draw |
-|---|---|---|
-| "how does X **work** / flow" | illustrative (intuition) | flowchart / sequence — illustrative default |
-| "what is X's **architecture** / structure" | reference (structural) | structural diagram (boxes + typed edges) |
-| a **cycle** / loop / lifecycle | — | a **stepper widget**, never a hand-drawn ring |
-| a **DB schema / ERD** / entity relations | — | **mermaid**, never hand-placed SVG |
-
-### Geometric pre-checks (run BEFORE finalizing an SVG/diagram)
-
-Ranked by failure rate — procedures, not constants:
-
-1. **viewBox safety** — compute the lowest + rightmost element (plus a buffer)
-   and set the viewBox from that; never assume the default fits.
-2. **arrow-through-box trace** — trace every arrow's path and confirm it does
-   not cross through an unrelated box before drawing it.
-3. **box-width-from-longest-label** — size each box from its longest label
-   before placing it, so text never overflows.
-
-(Reference-only: any color/easing/frame values come from the consumer's tokens
-or a maintained upstream — this skill vendors no drawn-asset corpus.)
-
-## Interplay (who owns what)
-
-| Concern | Owner |
-|---|---|
-| What already exists (components, tokens) | [`existing-ui-audit`](../existing-ui-audit/SKILL.md) — mandatory pre-step; audit findings outrank corpus suggestions |
-| What to build (grounded selection) | **this skill** |
-| Stack-agnostic heuristics + flow | [`fe-design`](../fe-design/SKILL.md) — invokes this skill for grounding |
-| Orchestration gates + locks | `directives/ui/{design,review,polish}.ts` — never import the engine |
-| WCAG audit method | [`accessibility-auditor`](../accessibility-auditor/SKILL.md) |
-| Token authoring | [`design-tokens`](../design-tokens/SKILL.md) |
-| Lo-fi structure exploration (pre-selection) | [`wireframe`](../wireframe/SKILL.md) — disposable greyscale variants |
-| Multiple hi-fi options (post-selection) | [`design-variations`](../design-variations/SKILL.md) — grounds each variation via this skill |
-| Fixed-canvas slide decks | [`html-deck`](../html-deck/SKILL.md) — own medium, still corpus-grounded |
 
 ## Gotchas
 

@@ -160,127 +160,12 @@ When a finding warrants a remediation recommendation, prefer in this order:
 suggesting a different easing curve.* The same applies to decorative elements,
 excessive copy, and redundant UI chrome.
 
-## Before / After / Why output format
+## Section index — load on demand
 
-When reporting a finding with a specific remediation, use this table format:
+Load the reference file whose sections the review needs — never all of them by default:
 
-| Field | Content |
-|---|---|
-| **Before** | The current state (quote the code, value, or describe the pattern) |
-| **After** | The corrected state (specific value or alternative) |
-| **Why** | The mechanism: why is Before wrong and After better? (one sentence, states the principle) |
-
-**Wrong format** (do not use):
-```
-Before:
-  button { transition: all 0.3s ease; }
-After:
-  button { transition: transform 0.2s ease-out, opacity 0.2s ease-out; }
-```
-
-**Right format:**
-
-| | |
-|---|---|
-| **Before** | `transition: all 0.3s ease` |
-| **After** | `transition: transform 0.2s ease-out, opacity 0.2s ease-out` |
-| **Why** | `transition: all` animates layout properties on every state change, causing browser reflow; enumerate only the properties that move. |
-
-The Why column carries the reasoning — it's the part that teaches the developer
-and prevents the same finding from recurring.
-
-## Communication principles
-
-### Problems over prescriptions
-
-Describe **what's wrong and why it matters**, not how to fix it.
-
-```
-❌ "Change margin to 16px"
-✅ "Spacing feels inconsistent with adjacent elements, creating visual clutter near the CTA."
-```
-
-### Triage matrix
-
-Every issue gets a severity:
-
-| Severity | Meaning | Action |
-|---|---|---|
-| **Blocker** | Must fix before merge | Blocks PR |
-| **High** | Should fix before merge | Strong recommendation |
-| **Medium** | Consider for follow-up | Suggestion |
-| **Nitpick** | Optional polish | Prefix with "Nit:" |
-
-### Evidence-based
-
-Screenshots required for all visual issues. Reference specific viewport and state.
-
-### Start positive
-
-Acknowledge what works well before listing issues.
-
-## Report structure
-
-```markdown
-## Design Review Summary
-[Positive opening + overall assessment]
-
-### 🚫 Blockers
-[Critical issues — must fix]
-
-### ⚠️ High Priority
-[Significant issues — should fix]
-
-### 💡 Suggestions
-[Improvements for follow-up]
-
-### ✨ Nitpicks
-[Minor aesthetic details]
-
-### Testing Evidence
-[Screenshots: Desktop, Tablet, Mobile]
-
-### Next Steps
-1. [Fix blockers]
-2. [Address high-priority]
-
-**Overall: [Ready to merge | Needs revisions]**
-```
-
-
-## Visual QA with browser automation
-
-When Playwright MCP or browser tools are available, use them for automated visual verification:
-
-### Before/After comparison
-
-1. **Capture baseline** — screenshot before changes at all 3 viewports.
-2. **Apply changes** — deploy or hot-reload.
-3. **Capture after** — screenshot at the same viewports and states.
-4. **Compare** — visually diff the screenshots, flag regressions.
-
-### State-based verification
-
-Don't just screenshot the default state. Capture:
-
-| State | How to trigger |
-|---|---|
-| Empty | Remove data, check empty state UI |
-| Loading | Throttle network, capture skeleton/spinner |
-| Error | Force an error response, check error UI |
-| Overflow | Add very long text, many items |
-| Interactive | Hover, focus, open dropdowns |
-
-### Mockup-to-code verification
-
-When implementing from a design mockup or screenshot:
-
-1. **Open the mockup** — use the provided image/screenshot.
-2. **Implement** — build the UI component.
-3. **Side-by-side** — compare mockup vs. implementation at the same viewport.
-4. **Flag deviations** — spacing, colors, typography, alignment differences.
-
-This is especially useful when the user provides a screenshot or Figma export as a reference.
+- [`references/review-communication.md`](references/review-communication.md) — Before / After / Why output format · Communication principles · Report structure · Design Review Summary
+- [`references/verification-automation.md`](references/verification-automation.md) — Visual QA with browser automation · Async-verifier pattern (keep the main context clean)
 
 ## Output format
 
@@ -296,28 +181,6 @@ This is especially useful when the user provides a screenshot or Figma export as
 - accessibility
 - WCAG
 - responsive
-
-## Async-verifier pattern (keep the main context clean)
-
-For a review that needs browser probing, use an **async background verifier**
-rather than self-screenshotting inline: fork a verifier subagent with its own
-view — it takes the screenshots, probes viewports, and checks states, then
-**stays silent on pass and surfaces only real, actionable problems** (never
-nitpicks). The main agent does not self-screenshot, so its context stays clean
-for the actual review reasoning. This is an orchestration pattern —
-dispatch it via [`subagent-orchestration`](../subagent-orchestration/SKILL.md)
-and position it against [`verify-repair-loop`](../verify-repair-loop/SKILL.md)
-(the existing verify skill); it complements them, it does not duplicate them.
-
-**Why the audit passes stay serial (not a parallel-4 fan-out).** A fan-out of
-a11y + slop + hierarchy + states across four subagents was evaluated and
-deferred: the passes share one live browser/navigation session and later phases
-build on state established by earlier ones, so they are not cleanly independent;
-and the expensive part — browser probing / screenshots — is already offloaded by
-the async verifier above, which captures the fan-out's main win without spinning
-up four separate views. Reconsider only when `design-review` runs as a standalone
-heavy batch over many *independent* surfaces, where per-surface
-`do-in-parallel` genuinely pays.
 
 ## Gotcha
 
