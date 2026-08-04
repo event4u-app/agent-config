@@ -218,6 +218,12 @@ export async function main(argv?: readonly string[], io: AnnotateIo = {}): Promi
                 rank: r.rank,
                 outcome: answer,
             };
+            // The metrics dir need not exist yet (a repo whose first recorded
+            // event is this one). Creating it here rather than letting
+            // `appendFileSync` throw matters because the throw would land AFTER
+            // the operator answered — an ENOENT crash that discards answers a
+            // human just typed. `recursive: true` is a no-op once it exists.
+            fs.mkdirSync(path.dirname(METRICS_FILE), { recursive: true });
             fs.appendFileSync(METRICS_FILE, `${JSON.stringify(event)}\n`);
         }
     } finally {

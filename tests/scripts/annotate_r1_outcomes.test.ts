@@ -48,11 +48,13 @@ const REGISTER = [
     '',
 ].join('\n');
 
-function makeCwd(register = REGISTER): string {
+function makeCwd(register = REGISTER, opts: { metricsDir?: boolean } = {}): string {
     const dir = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'r1-annotate-')));
     tmpDirs.push(dir);
     fs.mkdirSync(path.join(dir, ARCHIVE_REL), { recursive: true });
-    fs.mkdirSync(path.join(dir, path.dirname(METRICS_REL)), { recursive: true });
+    if (opts.metricsDir !== false) {
+        fs.mkdirSync(path.join(dir, path.dirname(METRICS_REL)), { recursive: true });
+    }
     fs.writeFileSync(path.join(dir, ARCHIVE_REL, 'road-x.md'), register, 'utf-8');
     return dir;
 }
@@ -123,6 +125,29 @@ describe('annotate_r1_outcomes — non-interactive input', () => {
         // The prompt showed the mitigation cell, not the description cell —
         // the escaped-pipe row would otherwise report `describes the risk`.
         expect(res.stdout).toContain('mitigation: THE MITIGATION');
+    }, 5_000);
+
+    // Round-6 finding 3: the append target's DIRECTORY was never created, so on a
+    // repo whose first recorded event is this one `appendFileSync` threw ENOENT —
+    // and it threw AFTER the operator had already answered, discarding an answer
+    // a human just typed. The whole point of the helper is capturing that answer.
+    it('creates the metrics directory instead of losing an answer to ENOENT', async () => {
+        const cwd = makeCwd(REGISTER, { metricsDir: false });
+        expect(fs.existsSync(path.join(cwd, path.dirname(METRICS_REL)))).toBe(false);
+
+        const input = new PassThrough();
+        input.end('helped\n');
+        const res = await runInProcAsync((argv) => main(argv as string[], { input }), [], { cwd });
+
+        expect(res.stderr).toBe('');
+        expect(res.status).toBe(0);
+        const lines = fs
+            .readFileSync(path.join(cwd, METRICS_REL), 'utf-8')
+            .split('\n')
+            .filter(Boolean)
+            .map((l) => JSON.parse(l) as Record<string, unknown>);
+        expect(lines).toHaveLength(1);
+        expect(lines[0]?.outcome).toBe('helped');
     }, 5_000);
 
     it('--list is read-only and needs no input at all', async () => {
