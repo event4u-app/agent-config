@@ -5,7 +5,6 @@ import { describe, expect, it } from 'vitest';
 
 import { DeliveryState, Outcome } from '../../../src/agent-src/templates/scripts/work_engine/delivery_state.js';
 import {
-    fix_lane_passthrough,
     is_fix_intent,
     references_design_artifact,
 } from '../../../src/agent-src/templates/scripts/work_engine/directives/ui/_fix_lane.js';
