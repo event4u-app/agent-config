@@ -513,12 +513,14 @@ export function checkFile(absPath: string): FileResult {
     }
     if (content.registerMissing) {
         // Grandfather clause (contract § 1): exempt while feature-equal with
-        // the file's committed state as of the activation date ("no
-        // substantial change SINCE the activation date") — newest commit with
-        // date <= activation. A file whose history starts after activation
-        // has no such baseline and must carry a register.
+        // the file's last committed state STRICTLY BEFORE the activation date.
+        // Strictness is load-bearing: with `<=`, a substantial change committed
+        // on the activation day becomes its own baseline and grandfathers
+        // itself — the exemption would cover exactly the changes the gate
+        // exists to catch. A file whose history starts on or after activation
+        // has no baseline and must carry a register.
         const history = fileHistory(absPath);
-        const pre = history.find((h) => h.date <= RISK_REGISTER_GATE_ACTIVATION);
+        const pre = history.find((h) => h.date < RISK_REGISTER_GATE_ACTIVATION);
         if (pre === undefined) {
             return {
                 file: absPath,
@@ -529,7 +531,7 @@ export function checkFile(absPath: string): FileResult {
                         line: 1,
                         kind: 'missing_register',
                         detail:
-                            'no `## Risk Register` section and no committed version on/before the ' +
+                            'no `## Risk Register` section and no committed version before the ' +
                             `gate activation date ${RISK_REGISTER_GATE_ACTIVATION} — new plans must carry a register`,
                     },
                 ],
@@ -711,8 +713,15 @@ export function main(argv?: readonly string[]): number {
             roots: args.paths,
         });
     } catch (exc) {
+        // A dead scan scope is a POLICY violation (exit 1), never an internal
+        // error (exit 2). Exit 2 is warn-and-allow at every call site, so
+        // mapping a moved/renamed roadmaps root to 2 would silently degrade
+        // this gate to advisory — the exact blind-gate failure the
+        // scanned-floor machinery exists to prevent. A gate that read nothing
+        // has not passed. Contract carve-out:
+        // docs/contracts/plan-review-gates.md § 6.
         process.stderr.write(`❌  ${exc instanceof Error ? exc.message : String(exc)}\n`);
-        return 2;
+        return 1;
     }
 
     const all_violations: Violation[] = [];

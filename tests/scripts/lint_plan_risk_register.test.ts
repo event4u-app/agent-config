@@ -322,13 +322,28 @@ describe('lint_plan_risk_register — git layers (grandfather + staleness)', () 
         expect(kinds(res.violations)).toContain('missing_register');
     });
 
-    it('missing register, first commit ON the activation day, unchanged → grandfathered', () => {
+    it('missing register, first commit ON the activation day → violation (cannot self-grandfather)', () => {
         initRepo(tmp);
         const p = path.join(tmp, 'plan.md');
         fs.writeFileSync(p, BASE_PLAN, 'utf-8');
         commitAll(tmp, mod.RISK_REGISTER_GATE_ACTIVATION);
         const res = mod.checkFile(p);
-        expect(res.status).toBe('grandfathered');
+        expect(res.status).toBe('fail');
+        expect(kinds(res.violations)).toContain('missing_register');
+    });
+
+    it('missing register, substantial change committed ON the activation day → exemption lifted', () => {
+        initRepo(tmp);
+        const p = path.join(tmp, 'plan.md');
+        fs.writeFileSync(p, BASE_PLAN, 'utf-8');
+        commitAll(tmp, '2026-07-01');
+        // A post-gate substantial change landing on the activation day must not
+        // become its own baseline (the `<=` self-grandfathering hole).
+        fs.writeFileSync(p, `${BASE_PLAN}\n## Phase 3: New scope\n\n- [ ] **Step 1:** more work\n`, 'utf-8');
+        commitAll(tmp, mod.RISK_REGISTER_GATE_ACTIVATION);
+        const res = mod.checkFile(p);
+        expect(res.status).toBe('fail');
+        expect(kinds(res.violations)).toContain('missing_register');
     });
 
     it('missing register, untracked file → violation', () => {
@@ -446,14 +461,18 @@ describe('lint_plan_risk_register — main', () => {
         expect(mod.main([tmp, '--quiet'])).toBe(1);
     });
 
-    it('dead scope (no targets) returns 2 per the exit-code contract', () => {
+    // A dead scan scope BLOCKS (exit 1) — it is not an internal error.
+    // Exit 2 is warn-and-allow at every call site, so mapping a moved root to
+    // 2 would degrade the gate to advisory (R2 finding 8). Contract § 6
+    // carve-out: a gate that read nothing has not passed.
+    it('dead scope (no targets) returns 1 — blocking, not advisory', () => {
         const empty = path.join(tmp, 'empty');
         fs.mkdirSync(empty);
-        expect(mod.main([empty, '--quiet'])).toBe(2);
+        expect(mod.main([empty, '--quiet'])).toBe(1);
     });
 
-    it('nonexistent root returns 2', () => {
-        expect(mod.main([path.join(tmp, 'does-not-exist'), '--quiet'])).toBe(2);
+    it('nonexistent root returns 1 — blocking, not advisory', () => {
+        expect(mod.main([path.join(tmp, 'does-not-exist'), '--quiet'])).toBe(1);
     });
 
     it('settings escape hatch: planning.risk_review=false → 0 without scanning', () => {

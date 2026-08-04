@@ -226,23 +226,25 @@ jobs:
 
       - name: Gate R2 — context-manifest re-derivation (plan-review-gates §5)
         # The reviewer-input manifest is verification, not self-attestation:
-        # for every findings artifact bound to the CURRENT head, re-derive
-        # the input hashes from the repo state and block on mismatch.
+        # re-derive the input hashes from the repo state and block on mismatch.
+        # VERIFY EVERY ARTEFACT — never select by grepping the header for the
+        # current HEAD sha. Per contract § 2.0 a committed artefact can never
+        # carry the sha of the HEAD that contains it, and `pull_request`
+        # checks out a synthetic merge commit, so a sha-grep selector matches
+        # nothing and the whole step silently becomes dead code (the exact
+        # defect the R2 review of this gate found in its own first draft).
         run: |
           git fetch origin main --quiet || true
-          head_sha="$(git rev-parse HEAD)"
           for f in agents/evidence/reviews/*.findings.md; do
             [ -e "$f" ] || continue
-            if grep -q "diff: ${head_sha}" "$f"; then
-              ./scripts-run src/scripts/dispatch_r2_reviewer --verify "$f" --base origin/main || {
-                rc=$?
-                if [ "$rc" = "2" ]; then
-                  echo "::warning::dispatch_r2_reviewer --verify internal error — degraded advisory mode, allowing"
-                else
-                  exit "$rc"
-                fi
-              }
-            fi
+            ./scripts-run src/scripts/dispatch_r2_reviewer --verify "$f" --base origin/main || {
+              rc=$?
+              if [ "$rc" = "2" ]; then
+                echo "::warning::dispatch_r2_reviewer --verify internal error — degraded advisory mode, allowing"
+              else
+                exit "$rc"
+              fi
+            }
           done
 
       - name: Check always-rule budget (warn 80% / fail 90%)

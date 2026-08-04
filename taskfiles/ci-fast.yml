@@ -743,21 +743,19 @@ tasks:
   check-r2-manifest:
     silent: true
     desc: |
-      Gate R2 — context-manifest re-derivation (plan-review-gates §5): for
-      every findings artifact bound to the CURRENT head, re-derive the
-      reviewer-input hashes from the repo state and fail on mismatch
-      (manifest = verification, not self-attestation). Local mirror of the
-      consistency-workflow step; exit 2 = degraded advisory.
+      Gate R2 — context-manifest re-derivation (plan-review-gates §5):
+      re-derive the reviewer-input hashes for EVERY findings artefact and fail
+      on mismatch (manifest = verification, not self-attestation). Never select
+      artefacts by grepping the header for the current HEAD sha — per contract
+      § 2.0 that selector can never match, which turns the step into dead code.
+      Local mirror of the consistency-workflow step; exit 2 = degraded advisory.
     cmd: |
-      head_sha="$(git rev-parse HEAD)"
       for f in agents/evidence/reviews/*.findings.md; do
         [ -e "$f" ] || continue
-        if grep -q "diff: ${head_sha}" "$f"; then
-          ./scripts-run src/scripts/dispatch_r2_reviewer --verify "$f" --base origin/main || {
-            rc=$?;
-            if [ "$rc" = "2" ]; then echo "⚠️  dispatch_r2_reviewer --verify: internal error — degraded advisory mode, allowing"; else exit "$rc"; fi;
-          }
-        fi
+        ./scripts-run src/scripts/dispatch_r2_reviewer --verify "$f" --base origin/main || {
+          rc=$?;
+          if [ "$rc" = "2" ]; then echo "⚠️  dispatch_r2_reviewer --verify: internal error — degraded advisory mode, allowing"; else exit "$rc"; fi;
+        }
       done
 
   lint-roadmap-blockers:
