@@ -51,6 +51,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import * as yaml from 'js-yaml';
 import { checkRatchet } from './_lib/gate_baseline.js';
 import { runCountedProbe } from './_lib/counted_probe.js';
+import { listGateScripts } from './_lib/gate_population.js';
 import { assertScanned } from './_lib/scan_scope.js';
 
 const _HERE = fileURLToPath(import.meta.url);
@@ -420,22 +421,14 @@ export function list_unhardened_gates(
   dir = path.join(REPO_ROOT, 'src/scripts'),
   registered: ReadonlySet<string> = enforced_manifest_ids(),
 ): string[] {
-  let entries: string[];
-  try {
-    entries = fs.readdirSync(dir);
-  } catch {
-    return [];
-  }
-  const gates = entries.filter((f) => /^(lint|check|audit)_.*\.ts$/.test(f) && !f.endsWith('.d.ts'));
   const out: string[] = [];
-  for (const f of gates) {
+  for (const id of listGateScripts(dir, (d) => fs.readdirSync(d))) {
     let src: string;
     try {
-      src = fs.readFileSync(path.join(dir, f), 'utf8');
+      src = fs.readFileSync(path.join(dir, `${id}.ts`), 'utf8');
     } catch {
       continue;
     }
-    const id = f.replace(/\.ts$/, '');
     const asserts = /assertScanned\(|assertWatchlistResolves\(|reportScanned\(/.test(src);
     const emits = /(?:process\.(?:stdout|stderr)\.write|lines\.push)\(\s*`scanned: /.test(src);
     if (!asserts && !(emits && registered.has(id))) out.push(id);
@@ -691,13 +684,7 @@ export function render_ledger(
 
 /** Count of gate-shaped scripts, for the honest denominator in the ledger. */
 export function count_gate_scripts(dir = path.join(REPO_ROOT, 'src/scripts')): number {
-  try {
-    return fs
-      .readdirSync(dir)
-      .filter((f) => /^(lint|check|audit)_.*\.ts$/.test(f) && !f.endsWith('.d.ts')).length;
-  } catch {
-    return 0;
-  }
+  return listGateScripts(dir, (d) => fs.readdirSync(d)).length;
 }
 
 function run_canary_mode(specs: readonly GateSpec[], argv: readonly string[]): number {

@@ -103,6 +103,7 @@ import { fileURLToPath } from 'node:url';
 
 import * as agentSrc from './_lib/agent_src.js';
 import { checkRatchet } from './_lib/gate_baseline.js';
+import { matchesGatePattern } from './_lib/gate_population.js';
 
 const _HERE = fileURLToPath(import.meta.url);
 const REPO = path.resolve(path.dirname(_HERE), '..', '..');
@@ -110,8 +111,15 @@ const DEFAULT_SCRIPTS = path.join(REPO, 'src', 'scripts');
 const DEFAULT_LEDGER = path.join(REPO, 'agents', 'evidence', 'sweep-dispositions.json');
 const LEDGER_CAP = 15;
 
-/** Population: the gate-name prefix convention the census uses. */
-const GATE_RE = /^(lint|audit|check|verify)_.*\.ts$/;
+/**
+ * Population: shared with the ratchet and the registration test.
+ *
+ * This file used to carry its own `(lint|audit|check|verify)_` regex and the
+ * three sites disagreed — 223 / 225 / 232 gates. Reading one definition is what
+ * makes "the census covers every gate the ratchet counts" a fact rather than a
+ * hope; see `_lib/gate_population.ts` for what the filter deliberately includes.
+ */
+const isGateFile = matchesGatePattern;
 
 /** Identifiers accepted as a repo-root base for a literal join. */
 const BASE_IDS: ReadonlySet<string> = new Set([
@@ -806,7 +814,7 @@ export function main(argv: string[]): number {
     }
 
     const pop = fs.existsSync(args.scripts)
-        ? fs.readdirSync(args.scripts).filter((f) => GATE_RE.test(f)).sort()
+        ? fs.readdirSync(args.scripts).filter(isGateFile).sort()
         : [];
     // Census needs every gate's roots; the finding report needs only the ones
     // with hits. Keep both, and filter at the point of use rather than dropping

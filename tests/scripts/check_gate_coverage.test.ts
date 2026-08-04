@@ -11,6 +11,7 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 
+import { matchesGatePattern } from '../../src/scripts/_lib/gate_population.js';
 import {
     type CanaryResult,
     type GateSpec,
@@ -154,7 +155,7 @@ describe('the real manifest', () => {
         // the word appearing anywhere in the file.
         const EMITS = /(?:process\.(?:stdout|stderr)\.write|lines\.push)\(\s*`scanned: \$\{/;
         const emitters = readdirSync(scriptsDir)
-            .filter((f) => /^(lint|check|audit|skill)_.*\.ts$/.test(f))
+            .filter(matchesGatePattern)
             .filter((f) => f !== 'check_gate_coverage.ts')
             .filter((f) => EMITS.test(readFileSync(join(scriptsDir, f), 'utf8')))
             .map((f) => f.replace(/\.ts$/, ''))
