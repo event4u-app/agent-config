@@ -61,6 +61,8 @@ import {
     load_agent_settings,
     resolve_project_root,
 } from '../_lib/agent_settings.js';
+import { trigger_matches } from '../_lib/router_match.js';
+import type { Trigger } from '../_lib/router_match.js';
 import * as presets from '../config/presets.js';
 import * as profiles from '../config/profiles.js';
 import { build_trace } from './explain_last/index.js';
@@ -410,52 +412,51 @@ function pyReprAny(value: unknown): string {
     return String(value);
 }
 
-function _matches_trigger(trigger: Dict, text: string, lowered: string): string | null {
-    if ('keyword' in trigger) {
-        const kw = String(trigger['keyword']).toLowerCase();
-        if (kw && lowered.includes(kw)) {
-            return `keyword: ${kw}`;
+/** `kind: value` label for a trigger's single match key. */
+function _trigger_reason(trigger: Dict): string {
+    for (const kind of ['keyword', 'phrase', 'command', 'path_prefix', 'file_pattern']) {
+        if (kind in trigger) {
+            return `${kind}: ${String(trigger[kind])}`;
         }
     }
-    if ('phrase' in trigger) {
-        const ph = String(trigger['phrase']).toLowerCase();
-        if (ph && lowered.includes(ph)) {
-            return `phrase: ${ph}`;
-        }
-    }
-    if ('path_prefix' in trigger) {
-        const prefix = String(trigger['path_prefix']);
-        if (prefix && text.includes(prefix)) {
-            return `path_prefix: ${prefix}`;
-        }
-    }
-    return null;
+    return `trigger: ${JSON.stringify(trigger)}`;
 }
 
 function _explain_route(project_root: string, text: string, as_json: boolean): number {
     const router = _load_router(project_root);
-    const lowered = text.toLowerCase();
-    const matches: Dict[] = [];
-    const tier_1 = (router['tier_1'] as Dict[] | undefined) || [];
-    for (const entry of tier_1) {
-        const triggers = (entry['triggers'] as Dict[] | undefined) || [];
-        for (const trig of triggers) {
-            const reason = _matches_trigger(trig, text, lowered);
-            if (reason !== null) {
-                matches.push({ id: entry['id'], tier: 'tier_1', reason });
-                break;
+    // Matching goes through the SHARED matcher (_lib/router_match) — anchored
+    // keyword semantics, both tiers. This surface carries no open-files /
+    // command context, so path_prefix / file_pattern / command triggers
+    // cannot match here (previously path_prefix was probed against the
+    // prompt TEXT — a divergent second matcher, removed on purpose).
+    const tier_1_matches: Dict[] = [];
+    const tier_2_matches: Dict[] = [];
+    for (const [tier, sink] of [
+        ['tier_1', tier_1_matches],
+        ['tier_2', tier_2_matches],
+    ] as Array<[string, Dict[]]>) {
+        const rules = (router[tier] as Dict[] | undefined) || [];
+        for (const entry of rules) {
+            const triggers = (entry['triggers'] as Dict[] | undefined) || [];
+            for (const trig of triggers) {
+                if (trigger_matches(trig as Trigger, text, null, null)) {
+                    sink.push({ id: entry['id'], tier, reason: _trigger_reason(trig) });
+                    break;
+                }
             }
         }
     }
+    const total = tier_1_matches.length + tier_2_matches.length;
     const kernel_always = [...((router['kernel'] as unknown[] | undefined) || [])];
     const payload: Dict = {
         input: text,
         kernel_always,
-        tier_1_matches: matches,
+        tier_1_matches,
+        tier_2_matches,
     };
     if (as_json) {
         _dumpJson(payload);
-        return 0;
+        return total === 0 ? 1 : 0;
     }
     print(`  input: ${pyReprStr(text)}`);
     print();
@@ -464,13 +465,18 @@ function _explain_route(project_root: string, text: string, as_json: boolean): n
         print(`    · ${pyStr(kid)}`);
     }
     print();
-    print(`  tier-1 matches (${matches.length}):`);
-    if (matches.length === 0) {
+    print(`  tier-1 matches (${tier_1_matches.length}):`);
+    for (const match of tier_1_matches) {
+        print(`    · ${match['id']}  (${match['reason']})`);
+    }
+    print();
+    print(`  tier-2 matches (${tier_2_matches.length}):`);
+    for (const match of tier_2_matches) {
+        print(`    · ${match['id']}  (${match['reason']})`);
+    }
+    if (total === 0) {
         print('    · (no trigger matched — only kernel rules active)');
         return 1;
-    }
-    for (const match of matches) {
-        print(`    · ${match['id']}  (${match['reason']})`);
     }
     return 0;
 }
@@ -757,7 +763,6 @@ export {
     _explain_config,
     _find_rule,
     _explain_rule,
-    _matches_trigger,
     _explain_route,
     _explain_last,
     _LAST_HELP,

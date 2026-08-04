@@ -208,6 +208,15 @@ Tier 2 — maintenance / internal (hooks, MCP, memory, telemetry):
                              router + projection freshness, host bridge status.
                              Flags: --platform <p>, --workspace <path>, --json, --strict,
                              --no-freshness
+  route:explain              Deterministic rule-routing trace for one prompt: matched
+                             triggers, tier, injected-vs-pointer disposition, budget
+                             consumption, rejected candidates. Trigger-match level only
+                             (what the host invokes is not measured).
+                             Flags: --files a,b, --profile full|balanced, --json
+  route:audit                Replay the router matcher over the last N user prompts of
+                             the chat-history log; renders matched rules per prompt.
+                             Trigger-match level only; read-only, no LLM call.
+                             Flags: --last N, --record (opt-in recorder), --weekly, --json
   hooks:replay               Replay a fixture through the universal dispatcher with
                              AGENT_CONFIG_REPLAY=1 (no writes under agents/runtime/state/).
                              Usage: hooks:replay --platform <name> --event <event>
@@ -1171,6 +1180,18 @@ cmd_versions() {
 
 # `agent-config explain <config|rule|route>` — print the decision chain
 # behind a configuration or routing outcome. Read-only diagnostic; never
+# Router-matcher replay over recent chat-history prompts (read-only).
+# See scripts/_cli/cmd_route_audit.ts.
+cmd_route_audit() {
+  exec_ts "$PACKAGE_ROOT/src/scripts/_cli/cmd_route_audit.ts" "$@"
+}
+
+# Deterministic rule-routing trace (trigger-match measurement level only).
+# See scripts/_cli/cmd_route_explain.ts.
+cmd_route_explain() {
+  exec_ts "$PACKAGE_ROOT/src/scripts/_cli/cmd_route_explain.ts" "$@"
+}
+
 # edits state. See scripts/_cli/cmd_explain.ts.
 cmd_explain() {
   exec_ts "$PACKAGE_ROOT/src/scripts/_cli/cmd_explain.ts" "$@"
@@ -1235,6 +1256,8 @@ main() {
     hooks:status)            cmd_hooks_status "$@" ;;
     hooks:doctor)            cmd_hooks_doctor "$@" ;;
     routing:doctor)          cmd_routing_doctor "$@" ;;
+    route:explain)           cmd_route_explain "$@" ;;
+    route:audit)             cmd_route_audit "$@" ;;
     hooks:replay)            cmd_hooks_replay "$@" ;;
     reach:doctor)            cmd_reach_doctor "$@" ;;
     telemetry:record)        cmd_telemetry_record "$@" ;;
