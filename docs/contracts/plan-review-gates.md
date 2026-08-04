@@ -331,26 +331,26 @@ current one is relevant **and** stale (`stale-review`).
   and every stray line is named in the one violation. A labelled opener with no
   bare fence after it anywhere in the artefact is a stray too, and skips nothing.
 
-  **KNOWN HOLE — do not read the rule above as complete** (blind-pass findings
-  1–3, 2026-08-04, `open`). A labelled opener *is* closed by the first later
-  bare fence **anywhere** in the file, even one the author never meant as its
-  closer. Everything between them is then skipped, a live `open` finding row
-  among those lines disappears from the parsed rows, and because the opener did
-  get consumed no `unbalanced-fence` fires — so the gate exits 0 on an
-  unreviewed finding. Reproduced. The arrangement is the one
-  `markdown-safe-codeblocks` itself prescribes (tilde-wrapped illustration
-  quoting an unpaired labelled opener) plus any bare fence later in the file,
-  and the remediation text the validator prints for `unbalanced-fence`
-  ("label the opener and close it") leads an author straight into it.
+  **Fences do NOT govern row liveness.** The paragraph above describes where
+  fences still apply — the § 2.1 marker, the § 2.3 honest-null line and the
+  § 2.4 skip declaration, all of which a fenced illustration may legitimately
+  quote. **Findings rows are exempt from it entirely** (council 2026-08-04,
+  convergent): a findings-shaped row is **live wherever it appears**, fenced or
+  not, and only its own Status cell can make it illustrative.
 
-  The fix is deliberately NOT improvised here: the obvious one — treat a
-  findings-shaped row inside a fenced region as a violation — fires on every
-  artefact that legitimately quotes the template, **including the skeleton the
-  dispatcher itself writes**, which contains a `| 1 | critical | … | open | |`
-  row. Resolving it means choosing between explicitly declared illustrative
-  regions and moving the safety check off fence pairing entirely; both change
-  this § 2.2 grammar, so the decision is recorded as open rather than patched
-  with something that reds every future artefact.
+  The asymmetry is deliberate and is the whole safety argument. Hiding a
+  *marker* or an *honest-null* line fails **closed** — the artefact then looks
+  absent or incomplete and the gate blocks. Hiding a *row* fails **open**: the
+  finding silently ceases to exist. So the one line type whose concealment is
+  dangerous is the one line type fences may not conceal.
+
+  This replaces the fence-pairing approach, which failed open four times: a
+  single `inFence` toggle; positional pairing that mis-paired; the
+  labelled-opener rule; and finally a stray bare fence closing a labelled
+  opener anywhere later in the file, which hid a live `open` row while
+  consuming the opener so no `unbalanced-fence` fired. Each attempt was a
+  correct-looking patch of the previous arithmetic. Row liveness no longer
+  depends on that arithmetic at all.
   Why a deliberate label is the discriminator: fenced regions exist for exactly
   one purpose — keeping the illustrative `| # | Severity | …` template above from
   being read as a live finding — and every counting-based rule tried before it
@@ -366,6 +366,38 @@ current one is relevant **and** stale (`stale-review`).
   [`markdown-safe-codeblocks`](../../src/rules/markdown-safe-codeblocks.md) —
   wrap fence-bearing content in an outer `~~~` fence — is what produces those
   unpaired inner ``` fences; the outer `~~~` is not a fence to this grammar.
+
+- **Row liveness — the `example` status (the only illustrative marker).** A
+  findings-shaped line (starts with `|`, is neither the separator nor the header
+  row) is a **candidate row** wherever it appears. It is illustrative **iff its
+  Status cell is exactly `example`**; otherwise it is live. Deterministic
+  consequences, no other case:
+
+  | Shape | Verdict |
+  |---|---|
+  | Status `example` | illustrative — not a finding, never validated, never counted |
+  | Status ∈ {`open`, `fixed`, `accepted-risk`, `deferred`} | live — validated per § 2.2 |
+  | Status is any other token | **live and blocking** (`bad-value`) — an unrecognised status is never silently ignored |
+  | cell count ≠ 6 | **blocking** (`malformed-row`), fenced or not |
+
+  The unknown-token rule is the load-bearing half: it is what makes a typo'd or
+  invented marker fail **closed**. A grammar in which an unrecognised status made
+  a row disappear would reintroduce the same fail-open through a new door.
+
+- **No `v2` discriminator, and why.** The council recommended version-marker
+  migration (`completion-review: v1` → `v2`) on the assumption that many
+  artefacts quote the template inside fences and would newly block. That
+  assumption was **measured and is false**: across every review artefact in
+  `agents/evidence/reviews/`, the count of findings-shaped rows inside fenced
+  regions is **zero**, and the skeleton `dispatch_r2_reviewer` generates carries
+  **no** example row at all — only the header, the separator and an HTML comment.
+  The behaviour change therefore affects no existing artefact, and a version
+  discriminator would be machinery guarding an empty set.
+
+  **Trigger to revisit:** if an artefact is ever authored that must keep a
+  findings-shaped row hidden by a fence rather than marked `example`, introduce
+  `v2` then. Recorded so the omission is a decision with a condition, not an
+  oversight.
 
 ### 2.3 Honest-null grammar (exact)
 
