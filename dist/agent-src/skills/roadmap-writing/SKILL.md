@@ -52,17 +52,10 @@ Authoring or materially rewriting a roadmap must go through
 Understand → Research → Draft per the
 [`artifact-drafting-protocol`](../../rules/artifact-drafting-protocol.md)
 rule. Inspect existing roadmaps under `agents/roadmaps/` for overlap
-or supersession before opening a new one.
-
-**Confidence gate (Gate C) first.** The free-form "write a plan/roadmap"
-ask is a gated surface: before drafting, run
-[`plan-confidence-gate`](../../contexts/execution/plan-confidence-gate.md) —
-read `planning.challenge_on_create` (missing = `true`), do the codebase
-lookup, assess the four 95%-conditions. Confident → one marker line, then
-draft. Uncertain → `/challenge-me vision` interview (or the inline degrade
-protocol) before drafting; the C→R1 handoff state feeds the risk-review
-step so nothing is asked twice. An explicit user bypass wins for the turn
-and is counted.
+or supersession before opening a new one. **Gate C first** — "write a
+plan/roadmap" is a gated surface, so run
+[`plan-confidence-gate`](../../contexts/execution/plan-confidence-gate.md)
+before drafting (95%-conditions, marker, interview-or-degrade, C→R1 handoff).
 
 ### 1. Read the canonical template first
 
@@ -192,18 +185,11 @@ Omit the section entirely when the roadmap has no such gate; run the
 
 ### 5c. Risk review (Gate R1) — after draft, before save
 
-Every ready (non-draft) plan carries a `## Risk Register` per
-[`plan-review-gates § 1`](../../../docs/contracts/plan-review-gates.md):
-(a) read the C→R1 handoff state (`agents/runtime/state/gate-c-<slug>.json`)
-if present, fresh, and same-session — its resolved branches seed the risk
-list, and nothing already resolved is re-asked; (b) identify the highest
-product AND implementation risks; (c) rank them descending; (d) write a
-mitigation per row and anchor each row to an existing phase/step of the
-same document. Self-review suffices — R1 checks completeness of risk
-capture, not blindness. No material risks → the exact honest-null grammar
-from the contract, never a bare "no risks" sentence.
-`lint_plan_risk_register` enforces the schema at pre-push + CI; drafts
-are exempt until flipped to ready.
+- Ready (non-draft) plan → `## Risk Register` before save, self-review; seed
+  from a fresh C→R1 handoff state (never re-ask a resolved branch).
+- Product AND implementation risks ranked descending, one mitigation per row,
+  each anchored to a phase/step here; none → exact honest-null grammar.
+- Schema, staleness, grandfather, drafts-exempt: [`plan-review-gates § 1`](../../../docs/contracts/plan-review-gates.md).
 
 ### 6. Step-marker semantics — pick `[~]` (defer) vs `[-]` (cancel) honestly
 
