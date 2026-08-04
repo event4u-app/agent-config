@@ -16,6 +16,7 @@ import {
     type GateSpec,
     classify,
     count_gate_scripts,
+    enforced_manifest_ids,
     list_unhardened_gates,
     cross_check,
     load_manifest,
@@ -388,16 +389,53 @@ describe('vulnerability ratchet — unhardened gate population', () => {
             // Population members, one per hardening route plus one with neither.
             writeFileSync(join(dir, 'check_asserts.ts'), 'assertScanned({ scanned: n });\n');
             writeFileSync(join(dir, 'check_watchlist.ts'), 'assertWatchlistResolves({ candidates });\n');
+            writeFileSync(join(dir, 'check_reports.ts'), 'reportScanned({ scanned: n });\n');
             writeFileSync(join(dir, 'lint_emits.ts'), 'process.stdout.write(`scanned: ${String(n)}\\n`);\n');
             writeFileSync(join(dir, 'audit_bare.ts'), 'export function main() { return 0; }\n');
             // Not in the population: wrong prefix, and a declaration file.
             writeFileSync(join(dir, 'helper_bare.ts'), 'export const x = 1;\n');
             writeFileSync(join(dir, 'check_types.d.ts'), 'export declare const y: number;\n');
 
-            expect(list_unhardened_gates(dir)).toEqual(['audit_bare']);
+            expect(list_unhardened_gates(dir, new Set(['lint_emits']))).toEqual(['audit_bare']);
         } finally {
             rmSync(dir, { recursive: true, force: true });
         }
+    });
+
+    it('an emitted count hardens nothing when no floor enforces it', () => {
+        // The tightening measured on 2026-08-04: a `scanned:` line in a gate the
+        // coverage guard never runs is decoration. It can print `scanned: 0` out
+        // of a deleted root, exit 0, and be read by nobody — so adding one was
+        // simultaneously the cheapest route to a green ratchet and the route that
+        // changes nothing. Registration is what turns the line into a guard.
+        const dir = mkdtempSync(join(tmpdir(), 'unregistered-emit-'));
+        try {
+            writeFileSync(join(dir, 'lint_emits.ts'), 'process.stdout.write(`scanned: ${String(n)}\\n`);\n');
+            expect(list_unhardened_gates(dir, new Set())).toEqual(['lint_emits']);
+            expect(list_unhardened_gates(dir, new Set(['lint_emits']))).toEqual([]);
+        } finally {
+            rmSync(dir, { recursive: true, force: true });
+        }
+    });
+
+    it('only enforced manifest entries with a real floor can harden an emitter', () => {
+        // A `pending` entry, or `min_scanned: 0`, reads the line without being
+        // able to fail on it — hardening on either would be a floor of nothing.
+        const ids = enforced_manifest_ids();
+        expect(ids.size).toBeGreaterThan(0);
+        for (const spec of load_manifest()) {
+            if (spec.status !== 'enforced' || spec.min_scanned < 1) {
+                expect(ids.has(spec.id)).toBe(false);
+            }
+        }
+    });
+
+    it('the coverage guard is inside its own definition of hardened', () => {
+        // It emits `scanned:` but is not in its own manifest, so before the
+        // 2026-08-04 conversion it was the one gate exempt from the rule it
+        // enforces. Grandfathering it would have been the exact self-exemption
+        // this file exists to refuse.
+        expect(list_unhardened_gates()).not.toContain('check_gate_coverage');
     });
 
     it('counts the real tree and reports a number the ratchet can act on', () => {
