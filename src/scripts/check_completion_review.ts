@@ -416,8 +416,26 @@ function fenceParts(line: string): { ticks: number; info: string } | null {
  * So no arrangement of bare fences can hide a row — a swallowed `open` finding
  * needs a deliberate label, which is the authoring act that means "illustration".
  * Closing follows CommonMark (bare, and at least as many backticks as the
- * opener), which also makes a ```` ````-wrapped ``` block nest correctly. An
- * unterminated labelled opener skips nothing either and is itself a stray.
+ * opener), which also makes a ```` ````-wrapped ``` block nest correctly. A
+ * labelled opener with NO bare fence after it anywhere is a stray and skips
+ * nothing.
+ *
+ * KNOWN HOLE, still open — this function does NOT deliver the property the two
+ * paragraphs above imply (blind-pass findings 1-3, 2026-08-04). A labelled
+ * opener is closed by the first later bare fence ANYWHERE in the artefact, even
+ * one the author never meant as its closer: the lines between them are skipped,
+ * a live `open` row among them vanishes from `rows`, and because the opener was
+ * consumed `strays` stays empty so no `unbalanced-fence` fires. Reproduced; an
+ * unreviewed `open` finding passes. The remediation string this file prints for
+ * `unbalanced-fence` leads an author into exactly that arrangement.
+ *
+ * Not patched here on purpose: the obvious guard — a findings-shaped row inside
+ * a fenced region is a violation — fires on every artefact that quotes the
+ * template, including the skeleton `dispatch_r2_reviewer` writes, which carries
+ * an `open` row. The fix is a §2.2 grammar decision (declare illustrative
+ * regions explicitly, or move the safety check off fence pairing), recorded in
+ * the contract as open rather than replaced with a guard that reds every future
+ * artefact.
  */
 export function scanFences(lines: readonly string[]): FenceScan {
     const fenced = new Set<number>();
@@ -448,7 +466,10 @@ export function scanFences(lines: readonly string[]): FenceScan {
     if (open !== null) {
         strays.push(open.at + 1);
     }
-    strays.sort((a, b) => a - b);
+    // No sort: bare strays are only pushed while no opener is open, so they land
+    // in ascending line order, and the unterminated-opener push above is always
+    // the largest index. A sort here was dead code (blind-pass finding 5) —
+    // keeping it would imply an ordering hazard that cannot occur.
     return { fenced, strays };
 }
 
