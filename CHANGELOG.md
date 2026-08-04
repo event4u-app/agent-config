@@ -294,6 +294,41 @@ Entry-shape contract: [`docs/contracts/CHANGELOG-conventions.md`](docs/contracts
 > that forces a new era split (`# Era: 9.19.x`, etc.) — see
 > [`docs/contracts/CHANGELOG-conventions.md § Era splits`](docs/contracts/CHANGELOG-conventions.md).
 
+## [9.19.0](https://github.com/event4u-app/agent-config/compare/9.18.1...9.19.0) (2026-08-04)
+
+### Release highlights
+
+<!-- Curated head: fill before merge, keep it under 10 lines, and leave `_none_` where it is genuinely the answer. The generated log below is unchanged. -->
+- **Behaviour changes:** _none_
+- **Default changes + migration:** _none_
+- **Security and correctness:** _none_
+- **Honest nulls:** _auto-derived, rewrite before merge:_ commits carrying an honest-null marker in 1c744c3.
+- **Known limitations:** _none_
+
+### Features
+
+* **gate-coverage:** ratchet the unhardened-gate count, armed at 189 and able to fail ([5d1564f](https://github.com/event4u-app/agent-config/commit/5d1564fe0dcbeb340c97f33a29245a54c43a8591))
+* **gate-coverage:** publish the asserted count from five gates, 17 -> 22 covered ([d228aa5](https://github.com/event4u-app/agent-config/commit/d228aa5cb5019dffe11c0e4606644630450d0816))
+
+### Bug Fixes
+
+* **roadmap:** repair the archived roadmap's own relative link ([ac85f3a](https://github.com/event4u-app/agent-config/commit/ac85f3a0fdefbbed74c50cc7049c5ffc72b408a8))
+* **census:** make the scan-scope census reproducible, and regenerate it ([1e539ee](https://github.com/event4u-app/agent-config/commit/1e539ee96efc1807663342e084c2a0e666eaf9bc))
+* **lint_handoffs:** stop the CI invocation resolving --quiet as the scan root ([6994781](https://github.com/event4u-app/agent-config/commit/6994781875f8d1d2feab6012ac7704e04232447e))
+* **gates:** name the fence hole, drop the dead sort ([16dace4](https://github.com/event4u-app/agent-config/commit/16dace44b7d468aaba95abf16ec79d65d9862db8))
+
+### Documentation
+
+* **roadmap:** close road-to-gates-that-can-fail, re-charter the adoption gap ([34ff10c](https://github.com/event4u-app/agent-config/commit/34ff10c0748ea7e1c4cfdb99f423c35bba1c9a98))
+* **claims:** register the exit-2 rate alarm in the Stage-A protocol ([4653841](https://github.com/event4u-app/agent-config/commit/46538415f7a59993aef7575f32cc84582a03126f))
+* **review:** unsteered post-merge blind pass — 5 findings, 1 critical ([1c744c3](https://github.com/event4u-app/agent-config/commit/1c744c395f8d1bb727be946f459ce5a498320b5d))
+
+### Chores
+
+* **census:** regenerate after merging origin/main ([239f141](https://github.com/event4u-app/agent-config/commit/239f1413b950455efbe379976ea34a67ff02d380))
+
+Tests: 10972 (+9 since 9.18.1)
+
 ## [9.18.1](https://github.com/event4u-app/agent-config/compare/9.18.0...9.18.1) (2026-08-04)
 
 ### Release highlights
