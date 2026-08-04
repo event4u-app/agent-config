@@ -53,7 +53,9 @@ describe('check_evaluator_budgets', () => {
     });
 
     it('committed budgets: every entry carries max, last_measured and a pinned method', () => {
-        expect(Object.keys(BUDGETS.budgets).length).toBeGreaterThanOrEqual(7);
+        // 7 → 6 on 2026-08-04: unpacked_size_mb removed by maintainer decision
+        // (see removed_2026_08_04 in evaluator-budgets.json).
+        expect(Object.keys(BUDGETS.budgets).length).toBeGreaterThanOrEqual(6);
         for (const [name, entry] of Object.entries(BUDGETS.budgets)) {
             expect(entry.max, name).toBeGreaterThan(0);
             expect(entry.last_measured, name).toBeGreaterThan(0);
