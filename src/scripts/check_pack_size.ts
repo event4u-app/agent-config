@@ -10,9 +10,10 @@
  *   2. PER-SKILL share of the skills subtree — no single skill may silently
  *      reclaim space freed elsewhere. Named exceptions carry a reason.
  *
- * The UNPACKED size is deliberately NOT re-gated here: it is already owned by
- * `evaluator-budgets.unpacked_size_mb`, measured at release time on the BUILT
- * artifact. Two gates for one lever is how conflicting numbers start.
+ * The UNPACKED size is deliberately NOT gated here — and since 2026-08-04 not
+ * anywhere: the former `evaluator-budgets.unpacked_size_mb` key was removed by
+ * maintainer decision (see `removed_2026_08_04` in evaluator-budgets.json);
+ * the evaluator umbrella still measures it as evidence.
  *
  * Usage:
  *   ./scripts-run src/scripts/check_pack_size [--json]
