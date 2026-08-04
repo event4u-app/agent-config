@@ -2372,9 +2372,14 @@ function main(argv: readonly string[] | null = null): number {
     // (~15s+), which `--dry-run exits 0 without needing …` contracts (and
     // the release test) assume never runs. Real releases compute it.
     const test_trend_line = args.dry_run ? null : _render_test_trend_line(prev);
+    // Derived unconditionally, dry-run included: it is one `git log` (~25 ms),
+    // not the trend line's full vitest collection. Skipping it on `--dry-run`
+    // made the preview print the `_none_` skeleton while the real run wrote
+    // pre-filled lines — a preview that contradicts its own output, which is
+    // the exact class of surface disagreement this pre-fill exists to end.
     const [full, body] = render_changelog_entry(target, prev, commits, today, {
         test_trend_line,
-        head: args.dry_run ? {} : _derive_head_prefill(prev),
+        head: _derive_head_prefill(prev),
     });
 
     // Era-split planning — gate on the POST-release view (2026-07-07 fix).
