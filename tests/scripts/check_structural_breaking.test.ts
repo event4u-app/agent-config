@@ -28,9 +28,6 @@ const TSX_BIN = path.join(
     process.platform === 'win32' ? 'tsx.cmd' : 'tsx',
 );
 
-function hasGit(): boolean {
-    return spawnSync('git', ['--version'], { encoding: 'utf8' }).status === 0;
-}
 function mkTmp(): string {
     return fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'csb-')));
 }
