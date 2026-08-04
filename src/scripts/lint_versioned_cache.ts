@@ -31,6 +31,8 @@ import * as path from 'node:path';
 import process from 'node:process';
 import { fileURLToPath } from 'node:url';
 
+import { assertScanned, DeadScopeError } from './_lib/scan_scope.js';
+
 const PROG = 'lint_versioned_cache.ts';
 
 /** Window (lines) around a cache-path literal scanned for a justification. */
@@ -135,7 +137,17 @@ export function scanFile(file: string, source: string): Violation[] {
 
 export function runChecks(root: string): Violation[] {
     const violations: Violation[] = [];
-    for (const file of listTsFiles(root)) {
+    const files = listTsFiles(root);
+    // The unit is every `.ts` walked — `.ts` defines this gate's corpus, while
+    // the cache-suffix match is the finding. Asserting on matches would read
+    // green for a moved `--dir` exactly as it does for a clean tree.
+    assertScanned({
+        gate: 'lint_versioned_cache',
+        scanned: files.length,
+        units: 'TypeScript file(s)',
+        roots: [root],
+    });
+    for (const file of files) {
         // Never lint this file itself — its regexes contain the very suffixes
         // it hunts for.
         if (path.basename(file) === 'lint_versioned_cache.ts') continue;
@@ -177,6 +189,12 @@ export function main(argv: string[]): number {
     try {
         violations = runChecks(path.resolve(dir));
     } catch (exc) {
+        // 3 (internal) over 2 (violations found): a dead `--dir` means the
+        // gate could not run, not that it found an unversioned cache.
+        if (exc instanceof DeadScopeError) {
+            process.stderr.write(`${PROG}: ${exc.message}\n`);
+            return 3;
+        }
         process.stderr.write(`${PROG}: internal error: ${String(exc)}\n`);
         return 3;
     }

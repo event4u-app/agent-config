@@ -47,6 +47,7 @@ import {
     stale_draft_labels,
 } from './_lib/release_highlights.js';
 import { extract_changelog_section } from './_lib/release_material.js';
+import { assertScanned, assertWatchlistResolves, DeadScopeError } from './_lib/scan_scope.js';
 
 const _HERE = fileURLToPath(import.meta.url);
 const REPO_ROOT = path.resolve(path.dirname(_HERE), '..', '..');
@@ -142,6 +143,23 @@ function main(argv: readonly string[]): number {
             return 2;
         }
     }
+    // The changelog is the curated half of the comparison and it is read
+    // unconditionally below; a moved or renamed file would otherwise surface as
+    // an ENOENT stack trace rather than a gate verdict. Exit 2 is this gate's
+    // could-not-run code (same as a missing section); 1 means a contradiction.
+    try {
+        assertWatchlistResolves({
+            gate: 'check_release_highlights',
+            candidates: [path.relative(REPO_ROOT, path.resolve(changelogPath))],
+            repoRoot: REPO_ROOT,
+        });
+    } catch (err) {
+        if (err instanceof DeadScopeError) {
+            process.stderr.write(`❌  ${err.message}\n`);
+            return 2;
+        }
+        throw err;
+    }
     const section = extract_changelog_section(fs.readFileSync(changelogPath, 'utf-8'), version);
     if (!section) {
         process.stderr.write(`CHANGELOG carries no section for ${version}\n`);
@@ -159,6 +177,22 @@ function main(argv: readonly string[]): number {
         process.stderr.write(`${(err as Error).message}\n`);
         return 2;
     }
+    // Every derived category comes from this span, so an empty one makes the
+    // contradiction check pass over nothing.
+    assertScanned({
+        gate: 'check_release_highlights',
+        scanned: span.length,
+        units: 'span commit(s)',
+        roots: [`git log ${from}..${to}`],
+        allowEmpty:
+            'EMPTY_VALID: git already answered for the range — a from..to it could not read ' +
+            'throws in collect_span_commits above and exits 2, so reaching here with zero ' +
+            'commits means git read the range successfully and it is genuinely empty. ' +
+            '"Empty span with _none_ everywhere is green" is a pre-registered fixture of this ' +
+            'gate, not a scope failure: with no commits there is no evidence a curated `_none_` ' +
+            'could contradict. Deleting the scan root is not the same state — that is the ' +
+            'throwing branch, not this one.',
+    });
     // A generator-derived line that nobody rewrote is a prose gap, never a
     // contradiction: the line's evidence is true, it is just unpolished. Warn
     // so the omission is visible, and keep the exit code owned solely by the

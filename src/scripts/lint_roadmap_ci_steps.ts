@@ -21,6 +21,7 @@ import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import { project_settings_path } from './_lib/agent_settings.js';
+import { assertScanned, DeadScopeError } from './_lib/scan_scope.js';
 
 const _HERE = fileURLToPath(import.meta.url);
 const QUIET = process.argv.slice(2).includes('--quiet');
@@ -173,6 +174,32 @@ function _relPosix(target: string, root: string): string {
     return path.relative(root, target).split(path.sep).join('/');
 }
 
+/**
+ * Every `*.md` anywhere under the roadmap tree — active plus `archive/`,
+ * `later/`, `skipped/`.
+ *
+ * The active glob is the subset this gate judges, and it reaches zero
+ * legitimately once everything is archived, so it cannot double as the scope
+ * assertion. The whole tree reaching zero has only one cause: the root moved.
+ */
+function _countRoadmapTree(dir: string): number {
+    let entries: fs.Dirent[];
+    try {
+        entries = fs.readdirSync(dir, { withFileTypes: true });
+    } catch {
+        return 0;
+    }
+    let n = 0;
+    for (const entry of entries) {
+        if (entry.isDirectory()) {
+            n += _countRoadmapTree(path.join(dir, entry.name));
+        } else if (entry.name.endsWith('.md')) {
+            n += 1;
+        }
+    }
+    return n;
+}
+
 function main(): number {
     if (_read_local_auto_run()) {
         if (!QUIET) {
@@ -181,6 +208,24 @@ function main(): number {
             );
         }
         return 0;
+    }
+    // Asserted only past the disabled-return: a declared no-op reads nothing by
+    // design, and failing there would red every repo that leaves the setting
+    // unset. Past it the gate claims to be armed, so its root must resolve.
+    try {
+        assertScanned({
+            gate: 'lint_roadmap_ci_steps',
+            scanned: _countRoadmapTree(path.join(REPO_ROOT, 'agents', 'roadmaps')),
+            units: 'roadmap file(s)',
+            roots: ['agents/roadmaps'],
+        });
+    } catch (e) {
+        // 1 is the only failure code this gate defines.
+        if (e instanceof DeadScopeError) {
+            process.stderr.write(`❌  ${e.message}\n`);
+            return 1;
+        }
+        throw e;
     }
     const roadmaps = _globRoadmaps();
     if (roadmaps.length === 0) {

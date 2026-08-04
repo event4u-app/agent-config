@@ -24,6 +24,8 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
+import { assertWatchlistResolves, DeadScopeError } from './_lib/scan_scope.js';
+
 const QUIET = process.argv.slice(2).includes('--quiet');
 
 const STALE_DAYS = 90;
@@ -32,15 +34,6 @@ const MIN_USEFUL_LINES = 5;
 // Mirrors Python `Path(__file__).resolve().parent.parent.parent`.
 const _HERE = fileURLToPath(import.meta.url);
 const REPO_ROOT = path.resolve(path.dirname(_HERE), '..', '..');
-
-function _exists(p: string): boolean {
-    try {
-        fs.statSync(p);
-        return true;
-    } catch {
-        return false;
-    }
-}
 
 function _emit(notes: readonly string[]): void {
     if (notes.length === 0) {
@@ -60,12 +53,26 @@ function check(): number {
     const target = path.join(REPO_ROOT, '.augmentignore');
     const notes: string[] = [];
 
-    if (!_exists(target)) {
-        notes.push(
-            '⚠️  .augmentignore is missing — run `/optimize augmentignore` to scaffold it.',
-        );
-        _emit(notes);
-        return 0;
+    // The whole scan scope is this one file, so its absence IS the dead-scope
+    // case. It used to surface as a scaffolding hint on stdout, which reads the
+    // same whether the file was never written or the root moved. The exit code
+    // stays 0 because "always exits 0" is this file's pinned contract (advisory,
+    // not a gate) — there is no failure code to choose between.
+    try {
+        assertWatchlistResolves({
+            gate: 'check_augmentignore',
+            candidates: ['.augmentignore'],
+            repoRoot: REPO_ROOT,
+        });
+    } catch (exc) {
+        if (exc instanceof DeadScopeError) {
+            process.stderr.write(
+                `⚠️  ${exc.message}\n` +
+                    '    Run `/optimize augmentignore` to scaffold it.\n',
+            );
+            return 0;
+        }
+        throw exc;
     }
 
     const mtimeMs = fs.statSync(target).mtimeMs;

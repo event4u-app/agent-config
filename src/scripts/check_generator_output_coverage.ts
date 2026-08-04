@@ -18,6 +18,8 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
+import { assertScanned, DeadScopeError } from './_lib/scan_scope.js';
+
 const _HERE = fileURLToPath(import.meta.url);
 const REPO_ROOT = path.join(path.dirname(_HERE), '..', '..');
 
@@ -102,6 +104,27 @@ function main(argv?: readonly string[]): number {
             .map((l) => l.trim())
             .filter((l) => Boolean(l) && !l.startsWith('#')),
     );
+
+    // The registry below is the corpus — the manifest and .gitignore are only
+    // what each root is checked AGAINST, and both already fail closed above. An
+    // emptied registry (a refactor that moves the list, a bad merge) leaves the
+    // loop with nothing to classify and prints "✅ All 0 generator output roots
+    // are classified". Exit 2, the code this gate already uses for "a required
+    // input is not there", never 1, which means a root is unclassified.
+    try {
+        assertScanned({
+            gate: 'check_generator_output_coverage',
+            scanned: GENERATOR_OUTPUT_ROOTS.length,
+            units: 'generator output root(s)',
+            roots: ['src/scripts/check_generator_output_coverage.ts (GENERATOR_OUTPUT_ROOTS)'],
+        });
+    } catch (err) {
+        if (err instanceof DeadScopeError) {
+            process.stderr.write(`❌  ${err.message}\n`);
+            return 2;
+        }
+        throw err;
+    }
 
     const unclassified: typeof GENERATOR_OUTPUT_ROOTS[number][] = [];
     for (const entry of GENERATOR_OUTPUT_ROOTS) {

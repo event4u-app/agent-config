@@ -15,6 +15,8 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
+import { assertWatchlistResolves, DeadScopeError } from './_lib/scan_scope.js';
+
 const _HERE = fileURLToPath(import.meta.url);
 const REPO_ROOT = path.join(path.dirname(_HERE), '..', '..');
 
@@ -54,6 +56,25 @@ function checkFile(p: string): boolean {
 function main(argv?: readonly string[]): number {
     const args = argv ?? process.argv.slice(2);
     const quiet = args.includes('--quiet');
+
+    // Every artefact is skipped when absent, so all three moving at once prints
+    // "✅ All 3 generated artefacts carry the freshness marker" over zero reads.
+    // The per-file skip below stays — a single gitignored artefact is a real
+    // state; none of them existing is a moved root. 1 is the only failure code
+    // this gate has, so "could not run" and "found something" share it.
+    try {
+        assertWatchlistResolves({
+            gate: 'check_generated_artefact_headers',
+            candidates: GENERATED_ARTEFACTS.map((e) => e.path),
+            repoRoot: REPO_ROOT,
+        });
+    } catch (err) {
+        if (err instanceof DeadScopeError) {
+            process.stderr.write(`❌  ${err.message}\n`);
+            return 1;
+        }
+        throw err;
+    }
 
     const errors: string[] = [];
     const warnings: string[] = [];

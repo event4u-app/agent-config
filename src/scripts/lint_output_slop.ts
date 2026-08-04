@@ -26,6 +26,8 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
+import { assertScanned, DeadScopeError } from "./_lib/scan_scope.js";
+
 const _HERE = path.dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = path.resolve(_HERE, "..", "..");
 
@@ -191,6 +193,23 @@ function main(): void {
   const quiet = process.argv.includes("--quiet");
 
   const files = collectFiles();
+  // `walkDir` returns nothing for a root that does not exist, so all three
+  // literals above can rot into a clean run. Exit 1 is the "internal error"
+  // slot; 2 means findings were actually located and must stay distinct.
+  try {
+    assertScanned({
+      gate: "lint_output_slop",
+      scanned: files.length,
+      units: "file(s)",
+      roots: ["src/skills", "src/rules", "docs/guidelines"],
+    });
+  } catch (e) {
+    if (e instanceof DeadScopeError) {
+      process.stderr.write(`❌  ${e.message}\n`);
+      process.exit(1);
+    }
+    throw e;
+  }
   const allFindings: Finding[] = [];
 
   for (const file of files) {

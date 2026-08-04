@@ -27,6 +27,8 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
+import { assertWatchlistResolves, DeadScopeError } from './_lib/scan_scope.js';
+
 const _HERE = fileURLToPath(import.meta.url);
 const REPO_ROOT = path.resolve(path.dirname(_HERE), '..', '..');
 const SKILL_PATH = path.join(
@@ -54,14 +56,6 @@ const BODY_BANNED_PATTERNS: readonly BannedPattern[] = [
     // `App\\\\Modules\\\\` → runtime "App\\\\Modules\\\\" (four backslashes each).
     { re: /App\\\\Modules\\\\/, source: 'App\\\\\\\\Modules\\\\\\\\' },
 ];
-
-function _isFile(p: string): boolean {
-    try {
-        return fs.statSync(p).isFile();
-    } catch {
-        return false;
-    }
-}
 
 /** POSIX relative path of `child` under `root` (mirrors relative_to().as_posix-ish for display). */
 function _relToPosix(child: string, root: string): string {
@@ -193,9 +187,23 @@ function _scan_frontmatter(fm: string): string[] {
 }
 
 function main(): number {
-    if (!_isFile(SKILL_PATH)) {
-        process.stderr.write(`error: SKILL.md not found at ${SKILL_PATH}\n`);
-        return 2;
+    // One named file is the entire scan scope, so `_isFile` was this gate's
+    // zero-check; the shared assertion replaces it and names the scope. The
+    // ported message is kept verbatim ahead of it (the py2ts CLI contract pins
+    // it) and exit 2 is unchanged.
+    try {
+        assertWatchlistResolves({
+            gate: 'check_module_management_neutral',
+            candidates: [_relToPosix(SKILL_PATH, REPO_ROOT)],
+            repoRoot: REPO_ROOT,
+        });
+    } catch (exc) {
+        if (exc instanceof DeadScopeError) {
+            process.stderr.write(`error: SKILL.md not found at ${SKILL_PATH}\n`);
+            process.stderr.write(`   ${exc.message}\n`);
+            return 2;
+        }
+        throw exc;
     }
     const text = fs.readFileSync(SKILL_PATH, 'utf-8');
     const [fm, body] = _split_frontmatter(text);

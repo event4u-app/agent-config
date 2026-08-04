@@ -21,6 +21,8 @@ import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { parse as parseYaml } from 'yaml';
 
+import { assertScanned, DeadScopeError } from './_lib/scan_scope.js';
+
 const _HERE = fileURLToPath(import.meta.url);
 const REPO_ROOT = path.resolve(path.dirname(_HERE), '..', '..');
 const ALIASES_YML = path.join(REPO_ROOT, 'src/config/discovery/session-profiles.yml');
@@ -237,11 +239,13 @@ function lint(quiet = false): number {
         ['profile', PROFILES_DIR, 'profile', 'packs'],
         ['pack', PACKS_DIR, 'pack', null],
     ];
+    let definitions = 0;
     for (const [, directory, rootKey, seedKey] of dirs) {
         if (!_exists(directory)) {
             continue;
         }
         for (const p of _globYmlSorted(directory)) {
+            definitions += 1;
             const doc = _load_yaml(p);
             if (!_isPlainObject(doc)) {
                 continue;
@@ -289,6 +293,26 @@ function lint(quiet = false): number {
                 }
             }
         }
+    }
+
+    // Clauses 1b/2a/2b run per static definition file, and both their roots are
+    // skipped silently when absent — so the whole per-file half of this lint can
+    // go quiet while clause 1a keeps printing an alias count. Counted before the
+    // parse filter above: an unparseable file is still a file that was walked.
+    try {
+        assertScanned({
+            gate: 'lint_profile_overlay_set_only',
+            scanned: definitions,
+            units: 'static definition file(s)',
+            roots: ['src/agent-src/profiles', 'src/agent-src/packs'],
+        });
+    } catch (e) {
+        if (e instanceof DeadScopeError) {
+            // 1 is this CLI's only failure code — pinned by the ported contract.
+            process.stderr.write(`❌ ${e.message}\n`);
+            return 1;
+        }
+        throw e;
     }
 
     if (errors.length > 0) {

@@ -44,8 +44,14 @@ describe('lint_showcase_sessions — ported pytest scenarios (differential)', ()
         // Realpath-resolve so the copied-script CLI-entry guard fires for both
         // python3 (Path.resolve) and tsx (realpath'd import.meta.url).
         root = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'lss-')));
-        fs.mkdirSync(path.join(root, 'src', 'scripts'), { recursive: true });
+        fs.mkdirSync(path.join(root, 'src', 'scripts', '_lib'), { recursive: true });
         fs.copyFileSync(TS_SRC, path.join(root, 'src', 'scripts', 'lint_showcase_sessions.ts'));
+        // The script resolves ROOT from its own location, so its whole import
+        // chain has to live under <root>/src/scripts too.
+        fs.copyFileSync(
+            path.join(REPO_ROOT, 'src', 'scripts', '_lib', 'scan_scope.ts'),
+            path.join(root, 'src', 'scripts', '_lib', 'scan_scope.ts'),
+        );
     });
     afterEach(() => {
         fs.rmSync(root, { recursive: true, force: true });

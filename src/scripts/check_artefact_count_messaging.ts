@@ -32,6 +32,7 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
+import { assertWatchlistResolves, DeadScopeError } from './_lib/scan_scope.js';
 import { canonical_counts } from './check_command_count_messaging.js';
 import { count, TARGETS } from './update_counts.js';
 
@@ -253,6 +254,25 @@ export function anchor_coverage_gaps(root: string = ROOT): CoverageGap[] {
 
 export function main(argv: readonly string[] = process.argv.slice(2)): number {
     const QUIET = argv.includes('--quiet');
+    // This gate walks no tree — it guards a hand-maintained surface list, and
+    // every missing entry is skipped with a warning so nothing hard-breaks on a
+    // doc rename. That tolerance is also the failure mode: a repo-wide docs
+    // move leaves every surface "skipped" and the gate reporting all counts in
+    // sync. Deleting these paths must fail, never quieten, the gate.
+    try {
+        assertWatchlistResolves({
+            gate: 'check_artefact_count_messaging',
+            candidates: [...SURFACES, ...STRUCTURED_SURFACES.map((s) => s.file)],
+            repoRoot: ROOT,
+        });
+    } catch (exc) {
+        if (exc instanceof DeadScopeError) {
+            // 1 is this gate's only non-zero code.
+            process.stderr.write(`❌  ${exc.message}\n`);
+            return 1;
+        }
+        throw exc;
+    }
     const expected: Record<string, number> = {};
     for (const [kind] of KIND_PATTERNS) {
         expected[kind] = canonical_for(kind);

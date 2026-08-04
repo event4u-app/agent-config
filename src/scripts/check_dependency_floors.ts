@@ -37,6 +37,8 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+import { assertScanned, DeadScopeError } from './_lib/scan_scope.js';
+
 const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..');
 
 /**
@@ -137,9 +139,23 @@ export function main(argv: readonly string[] = process.argv.slice(2)): number {
         process.stderr.write(`❌  dependency floors: cannot read ${manifestPath}: ${String(err)}\n`);
         return 2;
     }
-    if (Object.keys(dependencies).length === 0) {
-        process.stderr.write('❌  dependency floors: no runtime dependencies found — gate would pass vacuously\n');
-        return 2;
+    // Replaces the ad-hoc "gate would pass vacuously" guard with the shared
+    // assertion — same condition, same exit code (2 = the manifest yielded no
+    // corpus, vs 1 = a floor violates the rule), now counted on the unfiltered
+    // read rather than on what `evaluate` judges.
+    try {
+        assertScanned({
+            gate: 'check_dependency_floors',
+            scanned: Object.keys(dependencies).length,
+            units: 'runtime dependency floor(s)',
+            roots: ['package.json#dependencies'],
+        });
+    } catch (err) {
+        if (err instanceof DeadScopeError) {
+            process.stderr.write(`❌  ${err.message}\n`);
+            return 2;
+        }
+        throw err;
     }
     const errors = evaluate(dependencies);
     if (asJson) {

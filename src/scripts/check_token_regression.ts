@@ -41,6 +41,8 @@ import * as path from 'node:path';
 import process from 'node:process';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
+import { assertScanned, DeadScopeError } from './_lib/scan_scope.js';
+
 const _HERE = fileURLToPath(import.meta.url);
 // REPO_ROOT = <repo>/src/scripts/<file> → up two.
 const REPO_ROOT = path.resolve(path.dirname(_HERE), '..', '..');
@@ -215,6 +217,29 @@ function main(argv: string[]): number {
     return 1;
   }
   const current = extract_metrics(report);
+
+  // `_num` returns 0 both for "absent from the report" and for "genuinely
+  // zero", and no gated surface is ever legitimately zero tokens — so a
+  // renamed report key reads as 0, every pct goes negative against the
+  // baseline, and the gate reports ✅ while measuring nothing. Counting the
+  // metrics that resolved is counting units READ, not units passing. Asserted
+  // BEFORE --update-baseline so a report of zeros can never be recorded as the
+  // baseline every later run compares against. Exit 1 (the file/argument
+  // error class — the gate could not run); 2 means a real regression.
+  try {
+    assertScanned({
+      gate: 'check_token_regression',
+      scanned: Object.values(current.metrics).filter((v) => v > 0).length,
+      units: 'gated metric(s)',
+      roots: [path.relative(REPO_ROOT, PROJECTION_REPORT)],
+    });
+  } catch (err) {
+    if (err instanceof DeadScopeError) {
+      process.stderr.write(`❌  ${err.message}\n`);
+      return 1;
+    }
+    throw err;
+  }
 
   if (updateBaseline) {
     const payload = JSON.stringify(current, null, 2) + '\n';

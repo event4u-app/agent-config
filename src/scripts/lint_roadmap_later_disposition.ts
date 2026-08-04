@@ -44,6 +44,8 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
+import { assertScanned, DeadScopeError } from './_lib/scan_scope.js';
+
 const _HERE = fileURLToPath(import.meta.url);
 
 // REPO_ROOT = Path(__file__).resolve().parent.parent.parent
@@ -312,6 +314,27 @@ function main(argv?: readonly string[]): number {
         return parsed.exitCode;
     }
     const args = parsed.args as Args;
+
+    // `check` walks the whole tree already, but returns only violations, and it
+    // opens with `if (!_isDir(root)) return []` — a moved root reads as "every
+    // blocked-for-later roadmap is parked correctly". Assert the unfiltered
+    // walk here rather than inside `check`, which is exercised against empty
+    // sandbox roots. Exit 2 is this CLI's internal-error slot; 1 stays
+    // "disposition violations found".
+    try {
+        assertScanned({
+            gate: 'lint_roadmap_later_disposition',
+            scanned: _rglobMdSorted(ROADMAP_ROOT).length,
+            units: 'roadmap file(s)',
+            roots: ['agents/roadmaps'],
+        });
+    } catch (e) {
+        if (e instanceof DeadScopeError) {
+            process.stderr.write(`❌  ${e.message}\n`);
+            return 2;
+        }
+        throw e;
+    }
 
     const violations = check(ROADMAP_ROOT);
 

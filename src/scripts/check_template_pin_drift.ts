@@ -27,6 +27,7 @@ import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import { resolve_logical } from './_lib/agent_src.js';
+import { assertWatchlistResolves, DeadScopeError } from './_lib/scan_scope.js';
 
 const _HERE = fileURLToPath(import.meta.url);
 // Python `Path(__file__).resolve().parents[2]` — two dirs up from src/scripts.
@@ -159,8 +160,29 @@ function main(argv: readonly string[] = []): number {
         return 1;
     }
 
+    // Scope is two named templates, one of them resolved through
+    // `resolve_logical` — a resolver returning a path under an artefact root
+    // that no longer exists is exactly how this comparison ends up with
+    // nothing to compare. Exit 1: it is this gate's only failure code, and it
+    // already carries the could-not-run meaning (a missing template file is
+    // reported as a failure below); 2 is reserved for CLI misuse.
+    const templates = _template_files();
+    try {
+        assertWatchlistResolves({
+            gate: 'check_template_pin_drift',
+            candidates: templates.map((p) => path.relative(REPO_ROOT, p)),
+            repoRoot: REPO_ROOT,
+        });
+    } catch (exc) {
+        if (exc instanceof DeadScopeError) {
+            process.stderr.write(`❌  check_template_pin_drift: ${exc.message}\n`);
+            return 1;
+        }
+        throw exc;
+    }
+
     const failures: string[] = [];
-    for (const template of _template_files()) {
+    for (const template of templates) {
         const rel = _relToPosixOrAbs(template, REPO_ROOT);
         if (!_isFile(template)) {
             failures.push(`missing template file: ${rel}`);

@@ -26,6 +26,8 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
+import { assertScanned, DeadScopeError } from './_lib/scan_scope.js';
+
 const QUIET = process.argv.slice(2).includes('--quiet');
 
 const _HERE = fileURLToPath(import.meta.url);
@@ -117,6 +119,10 @@ function main(): number {
     const missing: Array<[number, string]> = [];
     const unshipped: Array<[number, string]> = [];
 
+    // Counted BEFORE any filtering — external hrefs and anchors included — so
+    // the number answers "did the catalog still carry links", not "how many
+    // survived the checks".
+    let links_seen = 0;
     const lines = _splitlines(text);
     for (let i = 0; i < lines.length; i++) {
         const lineno = i + 1;
@@ -124,6 +130,7 @@ function main(): number {
         LINK_RE.lastIndex = 0;
         let m: RegExpExecArray | null;
         while ((m = LINK_RE.exec(line)) !== null) {
+            links_seen += 1;
             const href = m[1]!;
             if (href.includes(FORBIDDEN_PREFIX)) {
                 forbidden.push([lineno, href]);
@@ -141,6 +148,26 @@ function main(): number {
                 unshipped.push([lineno, href]);
             }
         }
+    }
+
+    // The catalog is generated. A renderer that stops emitting links leaves a
+    // file that still exists and still parses, so the three violation buckets
+    // stay empty and this reports "all links resolve" over no links at all.
+    // Exit 1 is the only failure code here, and it already carries the
+    // could-not-run meaning (the missing-catalog path above returns it too).
+    try {
+        assertScanned({
+            gate: 'check_public_catalog_links',
+            scanned: links_seen,
+            units: 'markdown link(s)',
+            roots: ['docs/catalog.md'],
+        });
+    } catch (exc) {
+        if (exc instanceof DeadScopeError) {
+            process.stdout.write(`❌  ${exc.message}\n`);
+            return 1;
+        }
+        throw exc;
     }
 
     const total_violations = forbidden.length + missing.length + unshipped.length;

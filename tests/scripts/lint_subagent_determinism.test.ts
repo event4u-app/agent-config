@@ -63,9 +63,11 @@ describe('lint_subagent_determinism', () => {
         expect(main(dir)).toBe(0);
     });
 
-    it('passes an empty dir (no subagents)', () => {
+    // An empty dir used to pass ("0 subagent(s) clean") — indistinguishable
+    // from the root having moved, which is the whole scan-scope defect.
+    it('fails on an empty dir (a gate that read nothing has not passed)', () => {
         const dir = _fixtureDir({});
-        expect(main(dir)).toBe(0);
+        expect(main(dir)).toBe(1);
     });
 
     it('fails when discovery.visible is true (default-off breached)', () => {

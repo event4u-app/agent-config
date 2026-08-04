@@ -41,6 +41,8 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
+import { assertScanned, DeadScopeError } from './_lib/scan_scope.js';
+
 const _HERE = path.dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = path.resolve(_HERE, '..', '..');
 
@@ -204,9 +206,14 @@ function scanMarkdownTranscript(filePath: string, repoRoot: string): Finding[] {
 
 function scanRepo(repoRoot: string): Finding[] {
     const findings: Finding[] = [];
+    // Counted before the `*spawn*.json` / spawn-context filters: those decide
+    // what is JUDGED, and both are legitimately zero on a clean tree. Only the
+    // walk itself distinguishes "no spawn payloads" from "no files read".
+    let scanned = 0;
 
     const fixturesDir = path.join(repoRoot, 'tests', 'fixtures');
     for (const f of walkFiles(fixturesDir)) {
+        scanned += 1;
         if (f.endsWith('.json') && /spawn/i.test(path.basename(f))) {
             findings.push(...scanJsonFixture(f, repoRoot));
         }
@@ -216,11 +223,18 @@ function scanRepo(repoRoot: string): Finding[] {
     if (fs.existsSync(transcriptsDir)) {
         for (const entry of fs.readdirSync(transcriptsDir, { withFileTypes: true })) {
             if (entry.isFile() && entry.name.endsWith('.md')) {
+                scanned += 1;
                 findings.push(...scanMarkdownTranscript(path.join(transcriptsDir, entry.name), repoRoot));
             }
         }
     }
 
+    assertScanned({
+        gate: 'lint_spawn_payload',
+        scanned,
+        units: 'fixture / transcript file(s)',
+        roots: ['tests/fixtures', 'tests/reasoning-layer-eval/golden-transcripts'],
+    });
     return findings;
 }
 
@@ -234,7 +248,19 @@ function parseArgs(argv: readonly string[]): { strict: boolean; quiet: boolean }
 function main(argv?: readonly string[], repoRootOverride?: string): number {
     const args = parseArgs(argv ?? process.argv.slice(2));
     const root = repoRootOverride ?? REPO_ROOT;
-    const findings = scanRepo(root);
+    let findings: Finding[];
+    try {
+        findings = scanRepo(root);
+    } catch (exc) {
+        if (exc instanceof DeadScopeError) {
+            // 2 is this gate's only non-zero code. Returning it without
+            // `--strict` is deliberate: warn-only governs FINDINGS, and a dead
+            // scope means there were none to warn about.
+            process.stderr.write(`❌  ${exc.message}\n`);
+            return 2;
+        }
+        throw exc;
+    }
 
     if (!args.quiet) {
         for (const f of findings) {

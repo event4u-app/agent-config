@@ -19,8 +19,11 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { artefact_roots } from "./_lib/agent_src.js";
+import { assertScanned, DeadScopeError } from "./_lib/scan_scope.js";
 
 const QUIET = process.argv.includes("--quiet");
+
+const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "..");
 
 // Rules live under every artefact root post-monorepo Phase 4.
 function RULES_DIRS(): string[] {
@@ -106,12 +109,22 @@ export function main(): number {
     rules.push(...globMd(rulesDir));
   }
   rules.sort();
-  if (rules.length === 0) {
-    const rootsLabel = RULES_DIRS().join(", ") || "<no rules root>";
-    process.stderr.write(
-      `lint_rule_tiers: no rules found under ${rootsLabel}\n`,
-    );
-    return 1;
+  // Supersedes the previous bare `rules.length === 0` message: same exit code
+  // (1 — the only failure this CLI contract defines), but the shared assertion
+  // names the roots and says the scope is dead rather than merely "no rules".
+  try {
+    assertScanned({
+      gate: "lint_rule_tiers",
+      scanned: rules.length,
+      units: "rule file(s)",
+      roots: artefact_roots().map((r) => `${path.relative(REPO_ROOT, r)}/rules`),
+    });
+  } catch (e) {
+    if (e instanceof DeadScopeError) {
+      process.stderr.write(`${e.message}\n`);
+      return 1;
+    }
+    throw e;
   }
 
   const missing: string[] = [];

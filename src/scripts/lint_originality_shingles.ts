@@ -32,6 +32,8 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
+import { assertScanned, DeadScopeError } from './_lib/scan_scope.js';
+
 const _HERE = path.dirname(fileURLToPath(import.meta.url));
 const REPO = path.resolve(_HERE, '..', '..');
 
@@ -84,8 +86,12 @@ function _shingles(words: string[]): Set<string> {
     return out;
 }
 
-function _collect(): Doc[] {
+/** `read` counts every corpus file opened, `docs` only those long enough to
+ *  compare — a corpus of stubs is a different problem from a corpus that is not
+ *  there, and only the second one means the roots below have rotted. */
+function _collect(): { docs: Doc[]; read: number } {
     const docs: Doc[] = [];
+    let read = 0;
     const push = (id: string, file: string): void => {
         let body: string;
         try {
@@ -93,6 +99,7 @@ function _collect(): Doc[] {
         } catch {
             return;
         }
+        read += 1;
         const sh = _shingles(_normalize(body));
         if (sh.size >= 20) {
             docs.push({ id, shingles: sh });
@@ -132,7 +139,7 @@ function _collect(): Doc[] {
             }
         }
     }
-    return docs;
+    return { docs, read };
 }
 
 function _jaccardPct(a: Set<string>, b: Set<string>): number {
@@ -162,7 +169,25 @@ export function main(argv: string[] = process.argv.slice(2)): number {
         else if (arg === '--quiet') quiet = true;
     }
 
-    const docs = _collect();
+    const { docs, read } = _collect();
+    // Two of the three roots are behind `existsSync` guards, which is exactly
+    // how the personas root went missing for a whole release (see `_collect`).
+    // Exit 1 is the only failure this gate has; report-only mode included, since
+    // an empty corpus makes the report itself a false all-clear.
+    try {
+        assertScanned({
+            gate: 'lint_originality_shingles',
+            scanned: read,
+            units: 'corpus file(s)',
+            roots: ['src/skills', 'src/agent-src/personas', 'src/subagents'],
+        });
+    } catch (e) {
+        if (e instanceof DeadScopeError) {
+            process.stderr.write(`❌  ${e.message}\n`);
+            return 1;
+        }
+        throw e;
+    }
     const pairs: Array<{ a: string; b: string; pct: number }> = [];
     for (let i = 0; i < docs.length; i++) {
         for (let j = i + 1; j < docs.length; j++) {

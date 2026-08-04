@@ -21,6 +21,8 @@ import * as path from 'node:path';
 import process from 'node:process';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
+import { assertWatchlistResolves, DeadScopeError } from './_lib/scan_scope.js';
+
 const _HERE = fileURLToPath(import.meta.url);
 
 // src/scripts/audit_mcp_tools.ts → parent.parent.parent of the .py file = repo root.
@@ -227,6 +229,29 @@ function parse_args(argv: string[]): ParsedArgs {
 
 export function main(argv: string[] | null = null): number {
     const args = parse_args(argv ?? process.argv.slice(2));
+
+    // This generator walks no tree — it reads two named sources, and
+    // `_index_handlers` / `_index_catalog_lines` swallow a read failure as an
+    // empty index, so a moved `tools.ts` renders every tool `_stub-only_`
+    // rather than reporting that half the input vanished.
+    try {
+        assertWatchlistResolves({
+            gate: 'audit_mcp_tools',
+            candidates: [
+                path.posix.join('src', 'scripts', 'mcp_server', 'consumer_tool_catalog.json'),
+                path.posix.join('src', 'scripts', 'mcp_server', 'tools.ts'),
+            ],
+            repoRoot: ROOT,
+        });
+    } catch (e) {
+        if (e instanceof DeadScopeError) {
+            // 2 (the usage / could-not-run code) over 1, which this CLI
+            // documents as "the inventory drifted from the generator".
+            process.stderr.write(`❌ ${e.message}\n`);
+            return 2;
+        }
+        throw e;
+    }
 
     const catalog = JSON.parse(fs.readFileSync(CATALOG, 'utf-8')) as Catalog;
     const handlers = _index_handlers();

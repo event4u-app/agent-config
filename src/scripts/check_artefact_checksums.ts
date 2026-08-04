@@ -33,6 +33,7 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
+import { assertScanned, DeadScopeError } from './_lib/scan_scope.js';
 import {
     apply_schema_defaults,
     load_schema,
@@ -153,6 +154,16 @@ function _check(manifestPath: string): [number, string[]] {
     const artefacts = Array.isArray(manifest['artefacts'])
         ? (manifest['artefacts'] as Json[])
         : [];
+    // A readable manifest with an empty (or non-array) `artefacts` reports
+    // "0 artefact checksums verified" and exits green — the drift this gate
+    // exists to catch would be invisible in exactly the case where the
+    // generator produced nothing.
+    assertScanned({
+        gate: 'check_artefact_checksums',
+        scanned: artefacts.length,
+        units: 'manifest artefact(s)',
+        roots: [manifestPath],
+    });
     for (const artRaw of artefacts) {
         const art = (artRaw ?? {}) as JsonObject;
         const rel = art['path'];
@@ -238,7 +249,19 @@ function parse_args(argv: readonly string[]): ParsedArgs {
 function main(argv: readonly string[]): number {
     const args = parse_args(argv);
 
-    const [code, errors] = _check(args.manifest);
+    let code: number;
+    let errors: string[];
+    try {
+        [code, errors] = _check(args.manifest);
+    } catch (exc) {
+        if (exc instanceof DeadScopeError) {
+            // 1 is this gate's only non-zero code, and it already covers the
+            // sibling could-not-run case (`manifest not found`).
+            process.stderr.write(`error: ${exc.message}\n`);
+            return 1;
+        }
+        throw exc;
+    }
     if (code !== 0) {
         for (const e of errors.slice(0, 20)) {
             process.stderr.write(`error: ${e}\n`);

@@ -40,6 +40,8 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+import { assertScanned, DeadScopeError } from './_lib/scan_scope.js';
+
 const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..');
 const BUDGETS_PATH = path.join(REPO_ROOT, 'src', 'config', 'evaluator-budgets.json');
 
@@ -228,6 +230,27 @@ export function main(argv: string[] = process.argv.slice(2)): number {
     } catch (e) {
         process.stderr.write(`check_evaluator_budgets: ${(e as Error).message}\n`);
         return 2;
+    }
+
+    // The budget document IS the corpus: every finding below is produced by
+    // iterating it, so a budgets file that parses to no entries reports
+    // "✅ evaluator budgets met (0 metrics)" — green over nothing, the exact
+    // shape this harness exists to end. A missing `budgets` key counts as 0 for
+    // the same reason. Exit 2 (documented internal error — the gate could not
+    // run), never 1, which means a metric actually breached.
+    try {
+        assertScanned({
+            gate: 'check_evaluator_budgets',
+            scanned: Object.keys(budgetsDoc.budgets ?? {}).length,
+            units: 'budgeted metric(s)',
+            roots: ['src/config/evaluator-budgets.json (budgets)'],
+        });
+    } catch (e) {
+        if (e instanceof DeadScopeError) {
+            process.stderr.write(`❌  ${e.message}\n`);
+            return 2;
+        }
+        throw e;
     }
 
     // The committed record is optional: a fresh checkout before the first

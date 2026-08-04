@@ -20,6 +20,8 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
+import { assertScanned, DeadScopeError } from './_lib/scan_scope.js';
+
 // Umlauts and German-only characters.
 const UMLAUT_RE = /[äöüÄÖÜß]/g;
 
@@ -247,6 +249,7 @@ export function main(argv?: readonly string[]): number {
     const args = parse_args(argv ?? process.argv.slice(2));
 
     const all_violations: Violation[] = [];
+    let scanned = 0;
     for (const raw_path of args.paths) {
         if (!_exists(raw_path)) {
             process.stderr.write(`⚠️  Not found: ${raw_path}\n`);
@@ -256,7 +259,28 @@ export function main(argv?: readonly string[]): number {
             process.stderr.write(`⚠️  Skipping non-.md: ${raw_path}\n`);
             continue;
         }
+        scanned += 1;
         all_violations.push(...scan_file(raw_path));
+    }
+
+    // The caller expands the path list (`find docs -name '*.md' …`), so a moved
+    // docs tree hands this gate paths that every skip above swallows into a
+    // stderr warning while stdout still reports "No German content detected".
+    // Exit 3 is the documented "internal error" code — the gate could not run;
+    // 1 means it read files and found German in them.
+    try {
+        assertScanned({
+            gate: 'check_md_language',
+            scanned,
+            units: '.md file(s)',
+            roots: [`${String(args.paths.length)} caller-supplied path(s)`],
+        });
+    } catch (exc) {
+        if (exc instanceof DeadScopeError) {
+            process.stderr.write(`❌  ${exc.message}\n`);
+            return 3;
+        }
+        throw exc;
     }
 
     if (args.format === 'json') {

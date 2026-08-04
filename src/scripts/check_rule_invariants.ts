@@ -33,6 +33,8 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
+import { assertWatchlistResolves } from './_lib/scan_scope.js';
+
 // src/scripts/check_rule_invariants.ts → two dirs up is the repo root.
 const _HERE = fileURLToPath(import.meta.url);
 const ROOT = path.resolve(path.dirname(_HERE), '..', '..');
@@ -247,6 +249,18 @@ function main(): number {
             return mutationSelftest(args.root);
         }
         const entries = loadEntries(args.root);
+        // This guard has no corpus to walk — it byte-pins fragments of named
+        // kernel rules, so its scope IS that watch list. An emptied
+        // invariants.json yields no candidates at all and this prints
+        // "All 0 kernel rule invariants present in src + dist"; a wholesale
+        // move of `src/rules/` + `dist/agent-src/rules/` leaves it watching
+        // phantoms. DeadScopeError lands in the catch below → stderr + exit 3,
+        // the could-not-run code; 1 means a clause was genuinely lost.
+        assertWatchlistResolves({
+            gate: 'check_rule_invariants',
+            candidates: entries.flatMap((e) => [e.file, e.dist]),
+            repoRoot: args.root,
+        });
         const invariantCount = entries.reduce((n, e) => n + e.strings.length, 0);
         const misses = scan(args.root);
         process.stdout.write(formatText(misses, invariantCount) + '\n');

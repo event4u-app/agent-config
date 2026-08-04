@@ -27,12 +27,20 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
+import { assertWatchlistResolves, DeadScopeError } from './_lib/scan_scope.js';
+
 const _HERE = fileURLToPath(import.meta.url);
 const REPO_ROOT = path.resolve(path.dirname(_HERE), '..', '..');
 
-const REGISTRY_PATH = path.join(REPO_ROOT, 'src/cli/registry.ts');
-const BUDGETS_PATH = path.join(REPO_ROOT, 'src/config/evaluator-budgets.json');
-const RECORD_PATH = path.join(REPO_ROOT, 'agents/evidence/metrics/evaluator-measurements.json');
+/** The gate's entire scan scope: three named inputs, repo-relative. */
+const INPUTS = [
+    'src/cli/registry.ts',
+    'src/config/evaluator-budgets.json',
+    'agents/evidence/metrics/evaluator-measurements.json',
+] as const;
+const [REGISTRY_PATH, BUDGETS_PATH, RECORD_PATH] = INPUTS.map((rel) =>
+    path.join(REPO_ROOT, rel),
+) as [string, string, string];
 
 const METRIC = 'cli_help_command_count';
 
@@ -105,6 +113,27 @@ function _read_json(p: string): Record<string, unknown> {
 }
 
 function main(): number {
+    // No corpus to walk — the scope is the watch list above. The reads below
+    // already fail closed, but they surface an ENOENT for whichever path is read
+    // first; this names all three, and it keeps the `scanned:` line derived from
+    // what actually resolved instead of the literal 3 it used to print. Exit 2
+    // is the same fail-closed code those reads use: a gate that cannot read its
+    // inputs must not certify them.
+    let resolved: string[];
+    try {
+        resolved = assertWatchlistResolves({
+            gate: 'check_cli_registry_budget_sync',
+            candidates: INPUTS,
+            repoRoot: REPO_ROOT,
+        });
+    } catch (err) {
+        if (err instanceof DeadScopeError) {
+            process.stderr.write(`ERROR: ${err.message}\n`);
+            return 2;
+        }
+        throw err;
+    }
+
     let registrySource: string;
     let budgetsDoc: Record<string, unknown>;
     let recordDoc: Record<string, unknown>;
@@ -128,7 +157,7 @@ function main(): number {
         recorded: measurements?.[METRIC],
     });
 
-    process.stdout.write('scanned: 3\n');
+    process.stdout.write(`scanned: ${String(resolved.length)}\n`);
     if (findings.length > 0) {
         for (const f of findings) {
             process.stdout.write(`❌  ${METRIC} out of sync: ${f}\n`);

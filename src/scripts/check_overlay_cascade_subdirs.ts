@@ -30,6 +30,7 @@ import {
     CASCADE_ELIGIBLE_KINDS,
     USER_GLOBAL_OVERLAY_KINDS,
 } from './_lib/agents_overlay.js';
+import { assertScanned, DeadScopeError } from './_lib/scan_scope.js';
 
 const _HERE = fileURLToPath(import.meta.url);
 // src/scripts/check_overlay_cascade_subdirs.ts → two dirs up is the repo root.
@@ -96,6 +97,26 @@ export function main(): number {
     }
     const text = fs.readFileSync(DOCS_PATH, 'utf-8');
     const parsed = _parse_doc_table(text);
+    // The doc side of this comparison is a table PARSE, so a restructured,
+    // renamed, or reformatted table yields zero rows while the file still
+    // exists — and the set comparison then reports drift against phantoms, or
+    // nothing at all once both lists are empty. Exit 3, not 1: an unreadable
+    // table means the gate could not run, which is the same class as the
+    // `not found` path above; 1 is reserved for real code↔docs drift.
+    try {
+        assertScanned({
+            gate: 'check_overlay_cascade_subdirs',
+            scanned: parsed.all_kinds.size,
+            units: 'overlay table row(s)',
+            roots: ['docs/customization.md'],
+        });
+    } catch (exc) {
+        if (exc instanceof DeadScopeError) {
+            process.stderr.write(`❌  ${exc.message}\n`);
+            return 3;
+        }
+        throw exc;
+    }
     const doc_cascade = parsed.cascade_yes;
     const doc_user_global = parsed.user_global_yes;
 

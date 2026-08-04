@@ -19,6 +19,7 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 
+import { assertWatchlistResolves, DeadScopeError } from './_lib/scan_scope.js';
 import { main as runOriginality } from './lint_originality.js';
 
 const REPO_ROOT = path.resolve(path.dirname(new URL(import.meta.url).pathname), '..', '..');
@@ -136,8 +137,31 @@ export function main(): number {
         );
         return 0;
     }
-    const { drifted, missing } = checkFreshness();
     const rel = (f: string): string => path.relative(REPO_ROOT, f);
+
+    // `REPORTS` is the entire scope. One of the two absent is a real state the
+    // `missing` branch below reports; BOTH absent is the reports directory
+    // having moved, and the sweep would then WRITE two files, call them missing,
+    // and delete them again — a warning about the wrong thing. Exit stays 0:
+    // this surface is an advisory by design and has no failure code.
+    try {
+        assertWatchlistResolves({
+            gate: 'check_originality_freshness',
+            candidates: REPORTS.map(rel),
+            repoRoot: REPO_ROOT,
+        });
+    } catch (err) {
+        if (err instanceof DeadScopeError) {
+            process.stderr.write(
+                `⚠️  ${err.message}\n` +
+                    '    Run `./scripts-run src/scripts/lint_originality` and commit the result.\n',
+            );
+            return 0;
+        }
+        throw err;
+    }
+
+    const { drifted, missing } = checkFreshness();
 
     if (missing.length > 0) {
         process.stdout.write(

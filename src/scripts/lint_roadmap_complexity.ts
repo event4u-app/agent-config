@@ -20,6 +20,7 @@ import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import { project_settings_path } from './_lib/agent_settings.js';
+import { assertScanned, DeadScopeError } from './_lib/scan_scope.js';
 
 /** Mirror `QUIET = "--quiet" in sys.argv` (computed at import). */
 const QUIET = process.argv.slice(2).includes('--quiet');
@@ -383,6 +384,21 @@ function _check_execution_mode(fm: string, problems: string[]): void {
 }
 
 function main(): number {
+    try {
+        assertScanned({
+            gate: 'lint_roadmap_complexity',
+            scanned: _countRoadmapTree(path.join(REPO_ROOT, 'agents', 'roadmaps')),
+            units: 'roadmap file(s)',
+            roots: ['agents/roadmaps'],
+        });
+    } catch (e) {
+        // 1 is the only failure code this gate defines.
+        if (e instanceof DeadScopeError) {
+            process.stderr.write(`❌  ${e.message}\n`);
+            return 1;
+        }
+        throw e;
+    }
     const roadmaps = _globRoadmaps();
     const horizon_weeks = _read_horizon_weeks();
     if (roadmaps.length === 0) {
@@ -475,6 +491,32 @@ function _globRoadmaps(): string[] {
 
 function _relPosix(target: string, root: string): string {
     return path.relative(root, target).split(path.sep).join('/');
+}
+
+/**
+ * Every `*.md` anywhere under the roadmap tree — active plus `archive/`,
+ * `later/`, `skipped/`.
+ *
+ * The active glob is the subset this gate judges, and it reaches zero
+ * legitimately once everything is archived, so it cannot double as the scope
+ * assertion. The whole tree reaching zero has only one cause: the root moved.
+ */
+function _countRoadmapTree(dir: string): number {
+    let entries: fs.Dirent[];
+    try {
+        entries = fs.readdirSync(dir, { withFileTypes: true });
+    } catch {
+        return 0;
+    }
+    let n = 0;
+    for (const entry of entries) {
+        if (entry.isDirectory()) {
+            n += _countRoadmapTree(path.join(dir, entry.name));
+        } else if (entry.name.endsWith('.md')) {
+            n += 1;
+        }
+    }
+    return n;
 }
 
 function _isCliEntry(): boolean {

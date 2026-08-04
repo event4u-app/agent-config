@@ -26,6 +26,8 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
+import { assertWatchlistResolves, DeadScopeError } from './_lib/scan_scope.js';
+
 const SEMVER_RE = /^(\d+)\.(\d+)\.(\d+)(?:[-+].*)?$/;
 const _HERE = fileURLToPath(import.meta.url);
 const REPO_ROOT = path.resolve(path.dirname(_HERE), '..', '..');
@@ -130,6 +132,25 @@ const _hooks: Hooks = {
 
 function main(argv: readonly string[] = [], hooks: Hooks = _hooks): number {
     const args = parse_args(argv);
+
+    // This gate walks no tree: one named file supplies BOTH sides of every
+    // invariant — the version the git tag must match and the package name npm
+    // is queried for. A repointed PACKAGE_JSON constant is the whole failure
+    // surface, so the watch list is the scope assertion. Exit 3 (internal
+    // error — the gate could not run), never 1, which asserts real drift.
+    try {
+        assertWatchlistResolves({
+            gate: 'check_release_published',
+            candidates: [path.relative(REPO_ROOT, PACKAGE_JSON)],
+            repoRoot: REPO_ROOT,
+        });
+    } catch (exc) {
+        if (exc instanceof DeadScopeError) {
+            process.stderr.write(`❌  ${exc.message}\n`);
+            return 3;
+        }
+        throw exc;
+    }
 
     let version: string;
     try {

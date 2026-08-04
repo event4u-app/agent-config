@@ -28,6 +28,7 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+import { assertScanned, DeadScopeError } from './_lib/scan_scope.js';
 import type { Finding, WaiverRecord } from './_lib/persistence/types.js';
 import { scan_dir as scan_sql_dir } from './_lib/persistence/adapter_raw_sql.js';
 import { scan_dir as scan_n1_dir } from './_lib/persistence/detect_n1_eloquent.js';
@@ -150,6 +151,24 @@ function main(argv: string[]): number {
     }
 
     const resolved_stacks = stacks.length > 0 ? stacks : detect_stacks(dir);
+    // `--dir` existing is not the same as `--dir` holding anything scannable:
+    // every adapter is keyed off a resolved stack, so zero stacks provably
+    // reads zero files while still printing "no gate findings". Exit 2 is the
+    // usage/env slot this CLI already uses for an unusable `--dir`.
+    try {
+        assertScanned({
+            gate: 'lint_persistence',
+            scanned: resolved_stacks.length,
+            units: 'stack(s) to scan',
+            roots: [dir],
+        });
+    } catch (e) {
+        if (e instanceof DeadScopeError) {
+            process.stderr.write(`❌  ${e.message}\n`);
+            return 2;
+        }
+        throw e;
+    }
     const report = run_lint(dir, resolved_stacks, audit_scope);
 
     if (format === 'json') {
