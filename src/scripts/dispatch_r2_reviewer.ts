@@ -437,11 +437,12 @@ const CI_BRANCH_ENV_KEYS = ['GITHUB_HEAD_REF', 'GITHUB_REF_NAME'] as const;
  * uses it to decide whether a leftover artifact in the reviews directory is
  * THIS branch's (and may therefore produce violations) or a foreign one.
  *
- * The CI environment is consulted FIRST because on a `pull_request` checkout
- * `HEAD` is a detached synthetic merge commit: `rev-parse --abbrev-ref HEAD`
- * yields `HEAD`, the slug degrades to `detached-<sha>`, and no artefact can
- * ever be "own" — which inverts contract §2.6 on the layer the contract calls
- * authoritative (an own malformed artefact would be reported as
+ * Resolution order is **git first, CI environment as the fallback** — see the
+ * reason inline below. The env fallback exists because on a `pull_request`
+ * checkout `HEAD` is a detached synthetic merge commit: `rev-parse --abbrev-ref
+ * HEAD` yields `HEAD`, the slug would degrade to `detached-<sha>`, and no
+ * artefact could ever be "own" — inverting contract §2.6 on the layer the
+ * contract calls authoritative (an own malformed artefact would report
  * `missing-artifact` instead of the root-cause `bad-marker`, and `stale-review`
  * would never fire in CI). A `HEAD` / `detached-*` env value carries no branch
  * identity either and is ignored.
