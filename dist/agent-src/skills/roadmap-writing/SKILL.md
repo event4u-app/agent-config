@@ -52,7 +52,10 @@ Authoring or materially rewriting a roadmap must go through
 Understand → Research → Draft per the
 [`artifact-drafting-protocol`](../../rules/artifact-drafting-protocol.md)
 rule. Inspect existing roadmaps under `agents/roadmaps/` for overlap
-or supersession before opening a new one.
+or supersession before opening a new one. **Gate C first** — "write a
+plan/roadmap" is a gated surface, so run
+[`plan-confidence-gate`](../../contexts/execution/plan-confidence-gate.md)
+before drafting (95%-conditions, marker, interview-or-degrade, C→R1 handoff).
 
 ### 1. Read the canonical template first
 
@@ -179,6 +182,14 @@ these into the overview's `Blocker` column and the per-roadmap
 breakdown. Full shape: [`templates/roadmaps.md` rule 20](../../agent-src/templates/roadmaps.md).
 Omit the section entirely when the roadmap has no such gate; run the
 § 4c gate-test before adding one.
+
+### 5c. Risk review (Gate R1) — after draft, before save
+
+- Ready (non-draft) plan → `## Risk Register` before save, self-review; seed
+  from a fresh C→R1 handoff state (never re-ask a resolved branch).
+- Product AND implementation risks ranked descending, one mitigation per row,
+  each anchored to a phase/step here; none → exact honest-null grammar.
+- Schema, staleness, grandfather, drafts-exempt: [`plan-review-gates § 1`](../../../docs/contracts/plan-review-gates.md).
 
 ### 6. Step-marker semantics — pick `[~]` (defer) vs `[-]` (cancel) honestly
 

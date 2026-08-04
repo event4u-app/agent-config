@@ -414,3 +414,10 @@ metacharacters and repo escape, including the right-hand side of `--flag=value`.
 - evidence: tests/scripts/tier_budget_routing.test.ts
 - status: backed
 - last_verified: 2026-08-03
+
+### claim: plan-gates-measurement-protocol
+- claim: The plan-governance gates (C/R1/R2) ship with a two-stage pre-registered measurement protocol committed BEFORE the first data point — Stage A (this entry) fixes the metric definitions, denominators, and a fixed advisory window: the first 10 gated PRs run Gate R2 in advisory-only mode (`check_completion_review --advisory`) and the observed critical/high catch rate is recorded as the baseline; Stage B derives the enforced-mode success threshold for `r2_critical_catch_rate` from that observed baseline and commits it to this ledger BEFORE the enforced window — set exactly once, never lowered afterwards. Protocol-level gates registered now: cost ceiling `gate_latency_p95 <= 5 min` per PR; alarm `honest_null_rate >= 90%` over 10 consecutive reviews (review toothless or reviewer too lax); sanity `r2_skip_rate` rising on code-bearing work = applicability guard miscalibrated; `gate_c_bypass_rate` persistently ~100% = gate friction exceeds value. Metric events append to agents/evidence/metrics/gate-metrics.jsonl (ids + counters only, PII-free by construction). HONEST-NULL consequence: thresholds missed => publish the result and rework or roll back the gates — never lower a threshold after the fact. After 20 gated PRs a measurement report exists regardless of outcome (carrier: the trigger-gated follow-up in the roadmap layer).
+- kind: quant
+- evidence: docs/contracts/plan-review-gates.md#Advisory window (Stage A, verdict #20)
+- status: unbacked
+- last_verified: 2026-08-04

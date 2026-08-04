@@ -308,3 +308,37 @@ gates:
       count. Its inventory-file exemption was also dead: it compared against
       the retired root AND against 'dist/agent-src' as a single path segment,
       which a '/'-split can never yield.
+
+  - id: lint_plan_risk_register
+    argv: []
+    min_scanned: 12
+    corpus: "ready roadmap files under agents/roadmaps/ top level (19 at baseline: 14 grandfathered + 4 draft-exempt + 1 carrying a live register)"
+    status: enforced
+    note: >
+      Gate R1 (docs/contracts/plan-review-gates.md § 1). The count is READY
+      FILES INSPECTED incl. grandfathered/draft-exempt ones — exemptions are
+      reported, never silently skipped, so a collapse below the floor means
+      the roadmaps root moved, not that the corpus went clean.
+
+  - id: check_completion_review
+    argv: ["--advisory", "--base", "origin/main"]
+    min_scanned: 1
+    corpus: "findings artefacts under agents/evidence/reviews/ + the current-diff evaluation (1 at baseline — the evaluation itself; artefact count grows with gated PRs)"
+    status: enforced
+    note: >
+      Gate R2 (docs/contracts/plan-review-gates.md § 2). HONEST LIMIT, stated
+      because a floor that cannot fail is exactly the false green this file
+      exists to prevent: scanned = artefacts inspected + 1 for the diff
+      evaluation, so it is >= 1 by construction and `min_scanned: 1` can never
+      trip. NOTHING ELSE TRIPS EITHER DURING THE ADVISORY WINDOW. The argv above
+      mirrors the CI invocation, and under `--advisory` every violation kind —
+      dead-scan-scope included — is printed as a warning and the exit code is 0.
+      So for the duration of the Stage-A window this entry proves only that the
+      gate RAN: it has no blocking path and no trippable floor. The blocking
+      behaviour is real but dormant — the dead-scan-scope assertion is a policy
+      violation, exit 1 (contract § 6 carve-out: a gate that read nothing has not
+      passed), which is what makes a moved reviews root fail loudly instead of
+      reporting a clean scope. It takes effect when Stage B drops `--advisory`
+      from the CI invocation; nothing else changes at that switch. The entry
+      stays registered so the guard reports this gate rather than skipping it
+      silently.

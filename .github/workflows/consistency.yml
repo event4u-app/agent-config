@@ -97,6 +97,26 @@ jobs:
     steps:
       - name: Check out repository
         uses: actions/checkout@v7
+        with:
+          # Full history — REQUIRED by the three plan-governance gates below,
+          # and by nothing else in this job. The default depth-1 PR-merge fetch
+          # gives you the merge commit and NOT its parents, which silently
+          # breaks all three in different ways (found by the R2 review of this
+          # gate, round 3, on exactly this file):
+          #   · Gate R1's grandfather clause resolves "was there a commit
+          #     before the activation date" via `git log` — unanswerable on a
+          #     grafted depth-1 history, so all 14 grandfathered roadmaps fail
+          #     `missing_register` and the step reds EVERY PR;
+          #   · both R2 steps take `--base <pull_request.base.sha>`, which is
+          #     not fetched at depth 1 → exit 2 → warn-and-allow, i.e. the
+          #     layer the contract calls authoritative self-disables;
+          #   · the findings-before-fixes ancestry check needs the fix commits
+          #     as real objects, or every `fixed` row reads unresolvable.
+          # The GitHub-API workaround the other PR-scoped steps use returns
+          # changed FILES; it cannot answer a question about history. Deepening
+          # inside the steps would re-introduce the auth-extraheader fetch race
+          # this workflow documents, so the depth is set once, here.
+          fetch-depth: 0
 
       - name: Set up Node
         uses: actions/setup-node@v7
@@ -195,6 +215,72 @@ jobs:
 
       - name: Check Iron Law prominence
         run: ./scripts-run src/scripts/check_iron_law_prominence
+
+      - name: Gate R1 — plan Risk Registers (plan-review-gates §1)
+        # Exit-code contract §6: 2 = internal error → degraded advisory
+        # (warn-and-allow — a broken gate never blocks its own fix).
+        run: |
+          ./scripts-run src/scripts/lint_plan_risk_register || {
+            rc=$?
+            if [ "$rc" = "2" ]; then
+              echo "::warning::lint_plan_risk_register internal error — degraded advisory mode, allowing"
+            else
+              exit "$rc"
+            fi
+          }
+
+      - name: Gate R2 — completion review (Stage-A advisory window, plan-review-gates §2)
+        # --advisory until the Stage-B threshold is committed to CLAIMS.md:
+        # violations report as warnings, exit 0. CI is the authoritative
+        # layer once enforced; exit 2 stays degraded-advisory either way.
+        #
+        # NO `git fetch origin main` HERE — that fetch races with the
+        # configured auth extraheader on some runners (this workflow documents
+        # it at the kernel-rule-bundle step), and swallowing the failure with
+        # `|| true` leaves `--base` unresolvable → exit 2 → "degraded
+        # advisory, allowing", i.e. the layer the contract calls authoritative
+        # silently never runs. The base sha is a parent of the merge commit and
+        # is present because this job checks out with `fetch-depth: 0` (see the
+        # checkout step — at the default depth 1 the parents are NOT fetched,
+        # which is precisely how this step self-disabled before).
+        if: github.event_name == 'pull_request'
+        run: |
+          ./scripts-run src/scripts/check_completion_review \
+            --advisory --base "${{ github.event.pull_request.base.sha }}" || {
+            rc=$?
+            if [ "$rc" = "2" ]; then
+              echo "::warning::check_completion_review internal error — degraded advisory mode, allowing"
+            else
+              exit "$rc"
+            fi
+          }
+
+      - name: Gate R2 — context-manifest re-derivation (plan-review-gates §5)
+        # The reviewer-input manifest is verification, not self-attestation:
+        # re-derive the input hashes and block on mismatch.
+        #
+        # Selection lives INSIDE the script (`--verify-current`), not in this
+        # bash. Both obvious shell selectors are wrong and the R2 review of
+        # this gate caught each in turn: grepping the header for the current
+        # HEAD sha can never match (contract § 2.0), while looping over EVERY
+        # artefact reds by construction the moment the tracked reviews
+        # directory holds another branch's artefact — the directory-wide
+        # poisoning § 2.6 forbids. `--verify-current` computes the scope
+        # itself and verifies only the artefacts claiming it.
+        #
+        # Base sha passed directly for the same no-fetch reason as the step
+        # above.
+        if: github.event_name == 'pull_request'
+        run: |
+          ./scripts-run src/scripts/dispatch_r2_reviewer \
+            --verify-current --base "${{ github.event.pull_request.base.sha }}" || {
+            rc=$?
+            if [ "$rc" = "2" ]; then
+              echo "::warning::dispatch_r2_reviewer --verify-current internal error — degraded advisory mode, allowing"
+            else
+              exit "$rc"
+            fi
+          }
 
       - name: Check always-rule budget (warn 80% / fail 90%)
         run: task check-always-budget

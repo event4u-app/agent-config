@@ -24,6 +24,10 @@ tasks:
       - ./scripts-run src/scripts/check_no_new_legacy_path
       - ./scripts-run src/scripts/check_kernel_rule_bundle
       - ./scripts-run src/scripts/lint_regression
+      # Gate R1 + R2 (plan-governance) — pre-push layer; CI is authoritative.
+      # Exit 2 = degraded advisory (a broken gate never blocks its own fix).
+      - task: lint-plan-risk-register
+      - task: check-completion-review
 
   check-ci-local-parity:
     silent: true
@@ -704,6 +708,53 @@ tasks:
     silent: true
     desc: Reject empty (0-byte / whitespace-only) roadmap files under agents/roadmaps/ — backstop against auto-commit 0-byte stubs
     cmd: ./scripts-run src/scripts/lint_empty_roadmaps {{.QUIET_FLAG}}
+
+  lint-plan-risk-register:
+    silent: true
+    desc: |
+      Gate R1 — every ready (non-draft) roadmap carries a schema-valid
+      ## Risk Register (marker, ranked rows, mitigation + in-document anchor,
+      staleness vs last substantial change, exact honest-null grammar).
+      Grandfather clause for pre-activation roadmaps; drafts exempt.
+      Contract: docs/contracts/plan-review-gates.md § 1. Exit-code contract:
+      0 pass, 1 policy violation (block), 2 internal error → degraded
+      advisory (warn-and-allow — a broken gate never blocks its own fix).
+    cmd: |
+      ./scripts-run src/scripts/lint_plan_risk_register {{.QUIET_FLAG}} || {
+        rc=$?;
+        if [ "$rc" = "2" ]; then echo "⚠️  lint_plan_risk_register: internal error — degraded advisory mode, allowing (exit-code contract §6)"; else exit "$rc"; fi;
+      }
+
+  check-completion-review:
+    silent: true
+    desc: |
+      Gate R2 — completion-review artifact (findings-before-fixes, diff-hash
+      bound, ancestry-checked) for the current branch diff. ADVISORY during
+      the Stage-A baseline window (first 10 gated PRs): violations warn,
+      exit 0. The enforced-mode flip removes --advisory (Stage B — see
+      docs/contracts/plan-review-gates.md § Advisory window). Exit 2 =
+      internal error → degraded advisory (warn-and-allow).
+    cmd: |
+      ./scripts-run src/scripts/check_completion_review --advisory --base origin/main || {
+        rc=$?;
+        if [ "$rc" = "2" ]; then echo "⚠️  check_completion_review: internal error — degraded advisory mode, allowing (exit-code contract §6)"; else exit "$rc"; fi;
+      }
+
+  check-r2-manifest:
+    silent: true
+    desc: |
+      Gate R2 — context-manifest re-derivation (plan-review-gates §5): the
+      manifest is verification, not self-attestation, so the input hashes are
+      re-derived and a mismatch fails. Selection lives inside the script
+      (`--verify-current`): grepping the header for the current HEAD sha can
+      never match (§ 2.0), and looping over every artefact reds as soon as the
+      tracked reviews dir holds another branch's artefact (§ 2.6 poisoning).
+      Local mirror of the consistency-workflow step; exit 2 = degraded advisory.
+    cmd: |
+      ./scripts-run src/scripts/dispatch_r2_reviewer --verify-current --base origin/main || {
+        rc=$?;
+        if [ "$rc" = "2" ]; then echo "⚠️  dispatch_r2_reviewer --verify-current: internal error — degraded advisory mode, allowing"; else exit "$rc"; fi;
+      }
 
   lint-roadmap-blockers:
     silent: true

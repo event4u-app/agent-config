@@ -21,6 +21,19 @@ packs:
 # /feature plan
 ## Instructions
 
+### 0. Confidence gate (Gate C)
+
+Before gathering, run the plan-confidence gate per
+[`plan-confidence-gate`](../../contexts/execution/plan-confidence-gate.md):
+read `planning.challenge_on_create` (missing = `true`), do the codebase
+lookup, and assess the four 95%-conditions — **seed = the provided
+description** (when none was provided, step 1's ask supplies it first).
+Confident → single marker line, continue with step 1. Uncertain → route
+into `/challenge-me vision` (inline degrade protocol without the command);
+the pitch feeds steps 5c–6, and the C→R1 handoff state is written so the
+risk-review step re-asks nothing. Explicit user bypass wins for the turn
+and is counted.
+
 ### 1. Gather the idea
 
 If the user provided a description, use it. Otherwise ask:
@@ -259,6 +272,13 @@ If picked **2** → continue.
 - Set the `Module` field in the feature doc accordingly.
 - Set status to `📋 Planned`.
 - If Jira tickets were provided, add them to the `Jira` field and reference them in the feature doc.
+- **Risk review (Gate R1)** — before saving, add a `## Risk Register`
+  section per [`plan-review-gates § 1`](../../../docs/contracts/plan-review-gates.md):
+  read the C→R1 handoff state from step 0 if present (resolved branches
+  seed the risks — never re-ask them), rank the highest product and
+  implementation risks descending, one mitigation per row, each row
+  anchored to a section of this document. No material risks → the exact
+  honest-null grammar. Self-review suffices.
 
 **Ask for the filename:**
 ```

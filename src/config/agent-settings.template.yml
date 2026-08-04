@@ -550,6 +550,52 @@ roadmap:
   # only if your team genuinely commits work on a calendar plate.
   horizon_weeks: 0
 
+# --- Plan governance gates ---
+#
+# Three governance gates around the plan/delivery workflow (contract:
+# docs/contracts/plan-review-gates.md). Scope is every plan artifact —
+# roadmaps AND feature plans — which is why these keys do not live under
+# `roadmap:`. All three default to true; a missing key behaves as true.
+planning:
+  # Gate C — plan-confidence gate, BEFORE authoring (true, false).
+  # true  = default. A plan-artifact authoring ask (/roadmap:create,
+  #         roadmap-writing, /feature:plan, /feature:roadmap) first runs
+  #         the four 95%-confidence conditions from /challenge-me vision.
+  #         All four hold → the agent creates directly and emits exactly
+  #         one marker line ("Confidence ≥ 95% — creating directly").
+  #         Any gap → the ask routes into the /challenge-me vision
+  #         interview first; hosts without that command run the inline
+  #         degrade interview (one question per turn, same stop
+  #         conditions — contexts/execution/plan-confidence-gate.md).
+  #         An explicit user bypass ("just write it") wins for that turn
+  #         and is counted (gate_c_bypass_rate).
+  # false = inert; plan asks author directly (today's behavior).
+  challenge_on_create: true
+
+  # Gate R1 — plan-risk review at plan creation / substantial change
+  # (true, false).
+  # true  = default. Every ready (non-draft) plan carries a schema-valid
+  #         `## Risk Register` section (ranked risks, mitigation +
+  #         in-document anchor per row, freshness marker). Enforced by
+  #         lint_plan_risk_register at pre-push + CI; drafts are exempt
+  #         until flipped to ready. Honest-null: an empty register is
+  #         valid only with the exact marker grammar from the contract.
+  # false = escape hatch; the validator skips (governance default is on).
+  risk_review: true
+
+  # Gate R2 — completion review at 100% roadmap completion / pre-PR
+  # (true, false).
+  # true  = default. A findings-BEFORE-fixes review by a fresh reviewer
+  #         context: the findings artifact (agents/evidence/reviews/…) must exist
+  #         for the current diff hash before the first fix commit; every
+  #         finding ends fixed | accepted-risk | deferred. No code
+  #         surface → explicit skip declaration, never a silent skip.
+  #         Enforced by check_completion_review at pre-push + CI (CI
+  #         authoritative); a crashed validator (exit 2) warns and
+  #         allows — a broken gate never blocks its own fix.
+  # false = escape hatch; the validator skips (governance default is on).
+  completion_review: true
+
 # --- Quality / CI execution ---
 #
 # Controls whether the agent runs the project's quality pipeline

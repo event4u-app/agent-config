@@ -266,6 +266,16 @@ Every roadmap ends in exactly one of four states:
 
 After the last step of a roadmap is done, check completion status:
 
+0. **Completion review (Gate R2)** — last open item done → findings BEFORE
+   fixes, before any archival decision:
+   - `dispatch_r2_reviewer` builds the reviewer input; a **fresh subagent
+     without the implementation context** writes
+     `agents/evidence/reviews/<slug>.findings.md`.
+   - Work findings in priority order — each ends `fixed` / `accepted-risk` /
+     `deferred`. No code surface → explicit skip, never silent.
+   - Grammar, scope-hash binding, escape hatch:
+     [`plan-review-gates § 2`](../../../docs/contracts/plan-review-gates.md).
+
 1. **Scan the file** for all checkbox markers: `- [x]`, `- [ ]`, `- [~]`, `- [-]`.
 2. **Classify:**
    - `[x]` = completed

@@ -146,6 +146,9 @@ tasks:
       - task: lint-empty-roadmaps
       - task: lint-roadmap-blockers
       - task: lint-roadmap-later-disposition
+      - task: lint-plan-risk-register
+      - task: check-completion-review
+      - task: check-r2-manifest
       - task: lint-tickets
       - task: lint-commit-subjects
       - task: lint-discovery-vocab
