@@ -148,7 +148,8 @@ Artifact location: `agents/evidence/reviews/<branch-or-roadmap-slug>.findings.md
 ### 2.0 The review scope — what a review is bound to
 
 ```
-scope_hash = sha256( git -c core.quotePath=true diff \
+scope_hash = sha256( git -c core.quotePath=true \
+    -c core.attributesFile=/dev/null diff \
     --no-ext-diff --no-textconv --no-color \
     --diff-algorithm=myers --indent-heuristic \
     --unified=3 --inter-hunk-context=0 \
@@ -173,18 +174,34 @@ explains. Each flag neutralises one local git config knob at its git default:
 `diff.renameLimit` / `diff.copies` (`--no-renames`), `core.abbrev` / `diff.abbrev`
 (`--full-index` pins the `index <old>..<new>` line, `--abbrev=40` any other
 abbreviated oid), `diff.submodule`, `diff.ignoreSubmodules`, `diff.orderFile`
-(`-O/dev/null`, its documented canceller) and `core.quotePath` (the one knob no
-flag expresses). Rename detection is **off** rather than pinned to a threshold:
+(`-O/dev/null`, its documented canceller) and the two knobs no flag expresses:
+`core.quotePath` and `core.attributesFile`. The latter is a **separate layer from
+`--no-textconv`**, which suppresses a `textconv` filter only: a `-diff` (or
+`binary`) attribute replaces the entire patch body with `Binary files a/x and
+b/x differ`, so one developer's user-global `*.ts -diff` entry would record a
+different scope hash for identical content. Rename detection is **off** rather
+than pinned to a threshold:
 it is a similarity heuristic whose outcome also depends on `diff.renameLimit`
 and on how many files the diff touches, so even a fixed `--find-renames=<n>`
 can flip a rename into an add/delete pair as a branch grows — with it off the
 hash depends on content alone. The changed-file list
 (`--name-only`) is pinned the same way (`--no-ext-diff --no-color --no-relative
---no-renames -O/dev/null` + `core.quotePath`), because it feeds the § 2.4
-code-path classification. Dropping a flag silently changes **every** recorded
-scope hash; the flag lists live in one place
+--no-renames -O/dev/null` + `core.quotePath` + `core.attributesFile`), because it
+feeds the § 2.4 code-path classification. Dropping a flag silently changes
+**every** recorded scope hash; the flag lists live in one place
 ([`REVIEW_SCOPE_DIFF_FLAGS` / `REVIEW_SCOPE_NAME_ONLY_FLAGS` /
 `REVIEW_SCOPE_GIT_CONFIG`](../../src/scripts/dispatch_r2_reviewer.ts)).
+
+**Residual — what "every knob" does not cover.** The pin reaches the *user*
+attributes layer, not every attributes layer, and the gap is named rather than
+left inside the claim. A **tracked** `.gitattributes` is part of the reviewed
+content and is therefore byte-identical on every checkout — not a cross-machine
+variable at all. `$GIT_DIR/info/attributes` **is** one: per-clone, untracked, and
+with no command-line override, so it stays un-neutralised; the same holds for the
+system-wide `etc/gitattributes`, which only the `GIT_ATTR_NOSYSTEM` environment
+variable disables. A `-diff` entry in either of those two files on one machine
+and not another still produces a `stale-review` mismatch that no content change
+explains. That is an accepted residual of this definition, not a covered case.
 
 A completion review binds to the **content it reviewed**, never to a commit.
 Two facts make a head-sha binding unsatisfiable, so it is forbidden:
@@ -582,11 +599,19 @@ policy violation rather than bypassing the report.
 `scanned` = artefacts inspected + 1 for the diff evaluation, and that `+1` is
 counted only when the artefact root resolves. The floor therefore guards
 nothing on the happy path (any resolving root yields N ≥ 1); **the dead-scope
-assertion is what has teeth**. Its trigger is precise: the root does not
-resolve on disk *while being a tracked tree* in the base ref or `HEAD` — a
-moved or renamed root. An absent-and-never-tracked root (a repo with no review
-corpus yet) is a legitimate empty corpus and still blocks through the
-actionable `missing-artifact` violation instead.
+assertion is what has teeth — once the gate runs in enforced mode.** Its trigger
+is precise: the root does not resolve on disk *while being a tracked tree* in the
+base ref or `HEAD` — a moved or renamed root. An absent-and-never-tracked root (a
+repo with no review corpus yet) is a legitimate empty corpus and still blocks
+through the actionable `missing-artifact` violation instead.
+
+**During the Stage-A advisory window, neither has teeth.** The registered argv
+carries `--advisory`, and that downgrades *every* violation kind —
+`dead-scan-scope` included — to a warning with exit `0`. So for the duration of
+that window the gate's coverage entry attests only that the gate **ran**: there
+is no blocking path and no trippable floor, which is exactly why the entry says
+so in its own note. Both become live when Stage B removes the flag; nothing else
+changes at that switch.
 
 ## 7. Metrics floor (Phase 7 consumers)
 

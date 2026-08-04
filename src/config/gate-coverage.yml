@@ -330,9 +330,15 @@ gates:
       because a floor that cannot fail is exactly the false green this file
       exists to prevent: scanned = artefacts inspected + 1 for the diff
       evaluation, so it is >= 1 by construction and `min_scanned: 1` can never
-      trip. The teeth are elsewhere — the gate's own dead-scan-scope assertion
-      exits 1 (BLOCKING, contract § 6 carve-out: a gate that read nothing has
-      not passed), so a moved reviews root fails loudly instead of reporting a
-      clean scope. The entry stays registered so the guard reports this gate
-      rather than skipping it silently.
-      argv mirrors the CI invocation (Stage-A advisory window).
+      trip. NOTHING ELSE TRIPS EITHER DURING THE ADVISORY WINDOW. The argv above
+      mirrors the CI invocation, and under `--advisory` every violation kind —
+      dead-scan-scope included — is printed as a warning and the exit code is 0.
+      So for the duration of the Stage-A window this entry proves only that the
+      gate RAN: it has no blocking path and no trippable floor. The blocking
+      behaviour is real but dormant — the dead-scan-scope assertion is a policy
+      violation, exit 1 (contract § 6 carve-out: a gate that read nothing has not
+      passed), which is what makes a moved reviews root fail loudly instead of
+      reporting a clean scope. It takes effect when Stage B drops `--advisory`
+      from the CI invocation; nothing else changes at that switch. The entry
+      stays registered so the guard reports this gate rather than skipping it
+      silently.
