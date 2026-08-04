@@ -28,6 +28,8 @@ self_contained: true
 workspaces: [agent-config-maintainer, engineering]
 packs: [meta]
 roles: [planner]
+collision_ok:
+  "agents/roadmaps/": "roadmap steps must not schedule CI-shaped gates"
 ---
 
 # Roadmap CI-Steps Policy

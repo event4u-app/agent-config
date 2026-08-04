@@ -173,3 +173,36 @@ describe.skipIf(!routerExists)('compile_router — writer reproduces the committ
         expect(ts.status, ts.stderr).toBe(0);
     });
 });
+
+// --- Layer 3: tier resolution hardening (road: routing correctness) ---------
+
+describe('_resolve_tier — explicit map, no silent fallthrough', () => {
+    it('maps every legacy tier value explicitly (2b included)', () => {
+        expect(cr._resolve_tier('auto', '1', 'r')).toBe('tier-1');
+        expect(cr._resolve_tier('auto', '2', 'r')).toBe('tier-2');
+        expect(cr._resolve_tier('auto', '2a', 'r')).toBe('tier-2');
+        expect(cr._resolve_tier('auto', '2b', 'r')).toBe('tier-2');
+        expect(cr._resolve_tier('auto', '3', 'r')).toBe('tier-1');
+        expect(cr._resolve_tier('auto', 'mechanical-already', 'r')).toBe('tier-1');
+        expect(cr._resolve_tier('auto', 'kernel', 'r')).toBe('kernel');
+        expect(cr._resolve_tier('auto', 'tier-1', 'r')).toBe('tier-1');
+        expect(cr._resolve_tier('auto', 'tier-2', 'r')).toBe('tier-2');
+    });
+
+    it('type: always short-circuits to kernel regardless of tier value', () => {
+        expect(cr._resolve_tier('always', 'safety-floor', 'commit-policy')).toBe('kernel');
+        expect(cr._resolve_tier('always', 'anything', 'r')).toBe('kernel');
+    });
+
+    it('a typo’d tier value fails compilation instead of downgrading to tier-2', () => {
+        expect(() => cr._resolve_tier('auto', '2c', 'my-rule')).toThrowError(
+            /rule 'my-rule' has unknown tier '2c'/,
+        );
+    });
+
+    it('safety-floor on a non-always rule is a compile error, not tier-2', () => {
+        expect(() => cr._resolve_tier('auto', 'safety-floor', 'rogue-rule')).toThrowError(
+            /unknown tier 'safety-floor'/,
+        );
+    });
+});

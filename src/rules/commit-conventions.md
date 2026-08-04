@@ -10,6 +10,8 @@ routes_to:
   - "skill:conventional-commits-writing"
 workspaces: [engineering]
 packs: [engineering-base]
+collision_ok:
+  "commit": "format floor for every commit message"
 ---
 
 # Commit Conventions

@@ -23,6 +23,9 @@ workspaces: [engineering]
 packs: [scale-discipline]
 trust:
   level: professional
+collision_ok:
+  "migration": "R-A6 migration-safety owns reversibility/index/retention rules"
+  "schema": "schema change routes the persistence pack floor (R-A6/R-A2)"
 ---
 
 # Scale Discipline

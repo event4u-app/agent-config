@@ -5,11 +5,11 @@ pack: meta
 tier: 2
 visibility: internal
 skills: [rule-compliance-audit]
-description: Audit rule trigger quality, simulate activation, detect overlaps, and find never-activating rules
+description: Audit rule trigger quality, simulate activation, detect overlaps, find never-activating rules, and replay the router matcher over recent prompts (route:audit)
 suggestion:
   eligible: true
-  trigger_description: "audit my rules, check rule trigger quality"
-  trigger_context: "maintainer working on .augment/rules/ files"
+  trigger_description: "audit my rules, check rule trigger quality, routing audit — which rules fired"
+  trigger_context: "maintainer working on .augment/rules/ files or questioning whether rules route"
 workspaces:
   - agent-config-maintainer
 packs:
@@ -121,7 +121,27 @@ ALWAYS-RULE HEALTH
   {name}: {line_count} lines — {✅ healthy | ⚠️ large (>100 lines) | ⚠️ could be auto}
 ```
 
-### 6. Summary and recommendations
+### 6. Session routing audit (deterministic; the `/routing-audit` surface)
+
+Replay the router's ONE shared matcher over the recent session — read-only,
+no LLM call, deterministic:
+
+```bash
+agent-config route:audit --last 10        # matched rules per recent user prompt
+agent-config route:explain "<prompt>"     # deep trace for one prompt
+agent-config route:audit --weekly         # rolling 7-day recorder render
+```
+
+Render the matched-vs-should-have-matched review: for each audited prompt,
+the tool prints the matched rules + triggers; flag prompts where a rule you
+would expect is absent (should-have-matched is YOUR judgment as reviewer —
+the tool never computes it). Every output opens with the measurement-level
+header: **trigger matching only — what the host actually invoked is NOT
+measured** (ADR-126). Recording (`--record`) is opt-in via
+`telemetry.routing_recorder.enabled` (default off) and stores prompt digests,
+never prompt text.
+
+### 7. Summary and recommendations
 
 ```
 ═══════════════════════════════════════════════
@@ -152,7 +172,10 @@ Wait for user to pick which recommendations to apply.
 ## Rules
 
 - **Do NOT modify any files** until the user approves recommendations.
-- **Do NOT run any scripts** — this is a pure analysis command.
+- **Do NOT run any scripts** — this is a pure analysis command. Sole
+  carve-out: the read-only routing CLI in step 6 (`route:explain` /
+  `route:audit`), which is deterministic and writes nothing (the opt-in
+  `--record` flag is the one gated exception).
 - **Be honest about uncertainty** — if a trigger might or might not match, say "might miss".
 - **Always-rules are expensive** — flag any that could safely be auto.
 - **Auto-rules that never activate are dead weight** — flag them clearly.

@@ -25,6 +25,7 @@ describe('intent/classify — TS-side unit checks', () => {
             'backend-coding',
             'mixed',
             'ui-build',
+            'ui-fix',
             'ui-improve',
             'ui-trivial',
         ]);
@@ -33,6 +34,7 @@ describe('intent/classify — TS-side unit checks', () => {
     it('directive_set_for maps every label', () => {
         expect(directive_set_for(INTENT_UI_BUILD)).toBe('ui');
         expect(directive_set_for(INTENT_UI_IMPROVE)).toBe('ui');
+        expect(directive_set_for('ui-fix')).toBe('ui');
         expect(directive_set_for(INTENT_UI_TRIVIAL)).toBe('ui-trivial');
         expect(directive_set_for(INTENT_MIXED)).toBe('mixed');
         expect(directive_set_for(INTENT_BACKEND)).toBe('backend');

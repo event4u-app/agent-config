@@ -15,6 +15,8 @@ workspaces: [engineering]
 packs: [engineering-base]
 enforced_by:
   - "hook:minimal-safe-diff"
+collision_ok:
+  "fix": "a fix is the smallest change that solves the stated problem"
 ---
 
 # Minimal Safe Diff

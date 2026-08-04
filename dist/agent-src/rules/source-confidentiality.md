@@ -19,6 +19,10 @@ workspaces: [agent-config-maintainer]
 packs: [meta]
 enforced_by:
   - "validator:src/scripts/check_no_external_sources.ts"
+collision_ok:
+  "src/skills/": "skill prose must not name derivation sources"
+  "src/rules/": "rule prose must not name derivation sources"
+  "agents/roadmaps/": "harvest/comparison roadmaps stay anonymized"
 ---
 
 # Source Confidentiality

@@ -3,13 +3,18 @@ type: "auto"
 tier: "2a"
 alwaysApply: false
 description: "Security-sensitive paths (auth, billing, tenants, secrets, uploads, webhooks) — threat-model BEFORE editing"
+# Trigger set disjoint from secret-vcs-guard by design (2026-08-04): bare
+# `secret` / `password` belong to the VCS-write surface (secret-vcs-guard);
+# this rule keeps the conversational security surface (editing auth/billing/
+# tenant/webhook paths and secrets *infrastructure*, not committing a
+# credential).
 triggers:
   - keyword: "auth"
   - keyword: "billing"
   - keyword: "tenant"
-  - keyword: "secret"
   - keyword: "webhook"
-  - keyword: "password"
+  - keyword: "oauth"
+  - keyword: "signing key"
 validator_ignore:
   - type: "substring"
     pattern: "../../docs/"
@@ -19,6 +24,8 @@ workspaces: [engineering]
 packs: [engineering-base]
 enforced_by:
   - "none"
+collision_ok:
+  "tenant": "tenancy is a threat-model-before-edit surface"
 ---
 
 # Security-Sensitive Stop Rule

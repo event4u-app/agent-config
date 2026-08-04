@@ -16,6 +16,8 @@ routes_to:
   - "guideline:agent-infra/active-remediation-mechanics"
 workspaces: [engineering]
 packs: [engineering-base]
+collision_ok:
+  "refactor": "an explicit clean-up/refactor ask is the remediation ladder's own trigger"
 ---
 
 # Active Remediation

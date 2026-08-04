@@ -17,6 +17,9 @@ routes_to:
   - "guideline:code-clarity"
 workspaces: [engineering]
 packs: [engineering-base]
+collision_ok:
+  "refactor": "refactors churn comments — the keep/drop discipline applies"
+  "implement": "fresh implementation is where over-commenting lands"
 ---
 
 # Code Comment Discipline

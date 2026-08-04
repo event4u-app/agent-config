@@ -30,6 +30,11 @@ routes_to:
   - "skill:rtk-output-filtering"
 workspaces: [agent-config-maintainer, engineering]
 packs: [meta]
+collision_ok:
+  "phpstan": "phpstan output is verbose — rtk wrap applies"
+  "composer": "composer output is verbose — rtk wrap applies"
+  "docker": "docker output is verbose — rtk wrap applies"
+  "rector": "rector output is verbose — rtk wrap applies"
 ---
 
 # Cli Output Handling

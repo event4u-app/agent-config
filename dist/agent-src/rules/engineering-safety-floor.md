@@ -26,6 +26,8 @@ routes_to:
   - "skill:threat-modeling"
 workspaces: [engineering]
 packs: [engineering-base]
+collision_ok:
+  "migration": "a prod migration is a hard-floor evidence surface (rollback path, blast radius)"
 ---
 
 # Engineering Safety Floor

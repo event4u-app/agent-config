@@ -951,6 +951,11 @@ tasks:
     desc: "Ratchet on short (<=3 char) keyword triggers — a keyword matches as an unanchored substring, so a new short one claims part of the language"
     cmd: ./scripts-run src/scripts/lint_trigger_precision {{.QUIET_FLAG}}
 
+  lint-trigger-collisions:
+    silent: true
+    desc: "Every trigger value shared by >=2 routed rules carries a written collision_ok/precedence disposition in each sharer's frontmatter"
+    cmd: ./scripts-run src/scripts/lint_trigger_collisions {{.QUIET_FLAG}}
+
   lint-context-spine-usage:
     silent: true
     desc: Verify every skill that declares context_spine cites each slot in its body (closes lint gap from 1.34.0)

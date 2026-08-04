@@ -32,6 +32,8 @@ routes_to:
   - "guideline:design-fidelity-mechanics"
 workspaces: [engineering]
 packs: [engineering-base, frontend-design]
+collision_ok:
+  "mockup": "a provided mockup is the spec — 1:1 fidelity floor"
 ---
 
 # Design Fidelity

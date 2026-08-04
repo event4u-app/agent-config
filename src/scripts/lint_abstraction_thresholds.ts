@@ -103,7 +103,9 @@ export const SITES: ReadonlyArray<{ file: string; mustMatch: RegExp; why: string
         why: 'guideline pointer to the scoped UI bars',
     },
     {
-        file: 'src/skills/fe-design/SKILL.md',
+        // Moved with the fe-design progressive-disclosure split (2026-08-04):
+        // the componentization bar lives in the design-patterns reference now.
+        file: 'src/skills/fe-design/references/design-patterns.md',
         mustMatch: /Extract a props-only UI shell when used 3\+ times[\s\S]{0,160}?~4 \+ real state/,
         why: 'UI-shell 3+ bar and the stateful ~4 pointer',
     },

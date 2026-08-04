@@ -234,6 +234,14 @@ violations will surface as new findings on every run.
 2. Verify `state.ui_audit.greenfield == true` implies `state.ui_audit.greenfield_decision` is set.
 3. Write the full object back into the state-file. Audit completes with outcome `done` — the dispatcher's audit gate now passes.
 
+## Section index — load on demand
+
+Load on demand once the audit needs the pitfall catalog:
+
+- [`references/anti-slop-cross-reference.md`](references/anti-slop-cross-reference.md) — Anti-slop cross-reference
+
+- [`references/output-and-pitfalls.md`](references/output-and-pitfalls.md) — Output format · Gotcha · Anti-slop cross-reference
+
 ## Output format
 
 1. **`state.ui_audit.components`** — array of component/template descriptors (path, name, kind, exports)
@@ -273,33 +281,6 @@ tool produces, so the import path is uniform.
   that run are absent from the inventory the later ones are checked against.
   Adding a second component in the same run → re-read the component directories
   directly rather than trusting `state.ui_audit.components_found`.
-
-## Anti-slop cross-reference
-
-When the audit inventory reveals an existing aesthetic direction (dominant color
-scheme, border-radius convention, motion patterns), cross-check the findings
-against
-[`docs/guidelines/design-antipatterns.md`](../../../docs/guidelines/design-antipatterns.md).
-If the existing UI already uses a listed anti-pattern, surface it as a design-debt
-finding (separate from the reuse inventory) — flag by entry ID and severity.
-
-**What the design step may then do depends on whose aesthetic it is.** These
-are two different situations and the sentence that used to cover both was
-wrong about one of them:
-
-| The anti-pattern lives in… | The design step may… |
-|---|---|
-| **The consumer's own legacy UI** (inventoried from the repo) | continue it for consistency, **or** propose a corrective direction change. Both are legitimate; it is their codebase and their debt. |
-| **A supplied spec** (a handed-over artifact, a `design-system.json`, a registered brand token) | **neither.** Build it as given. The finding is recorded as informational, marked `artifact_covered`, and no polish round acts on it. |
-
-A corrective direction change against a supplied spec is not a design
-improvement, it is overriding a decision the user already made — the failure
-[`design-fidelity`](../../rules/design-fidelity.md) exists to prevent, arriving
-through the audit's side door. Precedence and its exact scope:
-[`design-fidelity-mechanics`](../../../docs/guidelines/design-fidelity-mechanics.md)
-§ Provided-artifact precedence. Where the two sources disagree, surface the
-conflict rather than picking (fixture `daf-slop-vs-provided`).
-
 ## Do NOT
 
 - Do NOT advance to `directives/ui/design.ts` or `apply.ts` if `state.ui_audit` is empty.

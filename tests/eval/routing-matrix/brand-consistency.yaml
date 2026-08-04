@@ -1,8 +1,0 @@
-rule: brand-consistency
-positives:
-  - prompt: "Is this landing page copy on-brand for us?"
-  - prompt: "Check the new banner against our brand tokens before it ships."
-  - prompt: "Passt dieser Social-Post zu unserer Brand Voice?"
-near_misses:
-  - prompt: "Make the marketing site color palette consistent across all pages."
-  - prompt: "The tone of this newsletter feels off compared to our usual style."

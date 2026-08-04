@@ -35,6 +35,7 @@ import type { WorkState } from '../state.js';
 
 export const INTENT_UI_BUILD = 'ui-build';
 export const INTENT_UI_IMPROVE = 'ui-improve';
+export const INTENT_UI_FIX = 'ui-fix';
 export const INTENT_UI_TRIVIAL = 'ui-trivial';
 export const INTENT_MIXED = 'mixed';
 export const INTENT_BACKEND = 'backend-coding';
@@ -48,6 +49,7 @@ export const INTENT_BACKEND = 'backend-coding';
 export const KNOWN_INTENTS: ReadonlySet<string> = new Set([
     INTENT_UI_BUILD,
     INTENT_UI_IMPROVE,
+    INTENT_UI_FIX,
     INTENT_UI_TRIVIAL,
     INTENT_MIXED,
     INTENT_BACKEND,
@@ -91,7 +93,16 @@ const _TRIVIAL_VERBS: ReadonlySet<string> = new Set([
 
 const _IMPROVE_VERBS: ReadonlySet<string> = new Set([
     'improve', 'polish', 'redesign', 'rework', 'refine',
-    'refactor', 'tighten', 'clean', 'fix', 'update', 'tune',
+    'refactor', 'tighten', 'clean', 'update', 'tune',
+]);
+
+// Fix-shaped verbs split out of _IMPROVE_VERBS (2026-08-04, chain
+// right-sizing): a defect repair on an existing surface does not need the
+// mandatory audit -> design front of the full chain — it enters at apply
+// with the audit available on demand. Redesign/improve intent keeps the
+// full chain.
+const _FIX_VERBS: ReadonlySet<string> = new Set([
+    'fix', 'repair', 'correct', 'debug', 'broken',
 ]);
 
 const _BUILD_VERBS: ReadonlySet<string> = new Set([
@@ -118,8 +129,32 @@ const _NEW_SURFACE: RegExp =
 const _EXISTING_SURFACE: RegExp =
     /\b(existing|current|the)\s+(page|screen|view|component|form|modal)\b/;
 
+// Verb window widened 40 -> 60 chars and the noun set extended with the
+// micro-tweak vocabulary (padding/font/radius/token/…) on 2026-08-04: the
+// pre-registered ui-triviality eval measured 0.60 trivial recall against the
+// council-labelled corpus — six of fifteen trivial tasks (padding change,
+// font-weight tweak, token swap, typo fix, label copy) missed every rung and
+// fell into the full audit chain. The corpus is the regression net for this
+// pattern (eval_ui_triviality).
 const _TRIVIAL_PATTERN: RegExp =
-    /\b(make|change|update|set|swap)\b[^.]{0,40}\b(red|blue|green|yellow|black|white|primary|secondary|color|colour|copy|text|label|wording|class|prop)\b/;
+    /\b(make|change|update|set|swap|tweak|adjust|fix|rename|relabel)\b[^.]{0,60}\b(red|blue|green|yellow|black|white|primary|secondary|color|colour|copy|text|label|wording|class|prop|padding|margin|spacing|font|weight|radius|token|icon|tooltip|placeholder|heading|title|alignment|border|typo)\b/;
+
+// A copy correction phrased without an imperative verb ("the save button
+// label should read 'Save changes'") is still a one-line change.
+const _TRIVIAL_COPY_PATTERN: RegExp =
+    /\b(label|copy|text|heading|title|wording|greeting)\b[^.]{0,60}\bshould\s+(read|say|be)\b/;
+
+// Feature-scope escalators: a trivial VERB with a non-trivial OBJECT
+// ("tweak the checkout page to support coupon codes") must not enter the
+// trivial lane — new capability means new state/logic, outside the
+// ≤1-file/≤5-line envelope the lane enforces at apply time.
+const _TRIVIAL_SCOPE_ESCALATION: RegExp =
+    /\b(support|allow|enable|offer|so\s+(?:that\s+)?users?\b|upload|crop|recalculat\w*|integrat\w*|logic|workflow|persist\w*|toggle)\b/;
+
+// Multi-file scope markers and compound tasks (a second imperative after
+// and/then/also/plus) violate the lane's ≤1-file precondition by shape.
+const _TRIVIAL_MULTI_SCOPE: RegExp =
+    /\bacross\s+(?:the\s+)?(?:app|site|codebase|project|pages)\b|\b(?:app|site)-wide\b|\ball\s+pages\b|\beverywhere\b|\b(?:and|then|also|plus)\s+(?:align|update|change|tweak|adjust|swap|add|fix|make|set|rename|relabel)\b/;
 
 /**
  * Return one of {@link KNOWN_INTENTS} for the supplied text.
@@ -151,6 +186,9 @@ export function classify_intent(
     }
     if (has_ui && has_backend) {
         return INTENT_MIXED;
+    }
+    if (has_ui && _is_fix(text)) {
+        return INTENT_UI_FIX;
     }
     if (has_ui && _is_improve(text)) {
         return INTENT_UI_IMPROVE;
@@ -189,7 +227,9 @@ export function directive_set_for(intent: string): string {
                 `expected one of ${pyListRepr(pySorted(KNOWN_INTENTS))}`,
         );
     }
-    if (intent === INTENT_UI_BUILD || intent === INTENT_UI_IMPROVE) {
+    if (intent === INTENT_UI_BUILD || intent === INTENT_UI_IMPROVE || intent === INTENT_UI_FIX) {
+        // ui-fix shares the 'ui' set; the audit/design gates pass through for
+        // it (fix_lane_passthrough) so the run enters at apply.
         return 'ui';
     }
     if (intent === INTENT_UI_TRIVIAL) {
@@ -227,7 +267,10 @@ function _has_backend_signal(text: string): boolean {
 }
 
 function _is_trivial(text: string): boolean {
-    if (reSearch(_TRIVIAL_PATTERN, text)) {
+    if (reSearch(_TRIVIAL_SCOPE_ESCALATION, text) || reSearch(_TRIVIAL_MULTI_SCOPE, text)) {
+        return false;
+    }
+    if (reSearch(_TRIVIAL_PATTERN, text) || reSearch(_TRIVIAL_COPY_PATTERN, text)) {
         return true;
     }
     let hasVerb = false;
@@ -238,6 +281,15 @@ function _is_trivial(text: string): boolean {
         }
     }
     return hasVerb && pySplit(text).length <= 14;
+}
+
+function _is_fix(text: string): boolean {
+    for (const v of _FIX_VERBS) {
+        if (reSearch(wordBoundary(v), text)) {
+            return true;
+        }
+    }
+    return false;
 }
 
 function _is_improve(text: string): boolean {

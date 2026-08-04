@@ -110,6 +110,14 @@ _2 blockers resolved._
 | 6 | Adversarial fixtures for gates that parse repo conventions | ✅ done | 0 | 2 | 0 | 0 | 100% |
 | 7 | Mutation canary (extends the accepted canary contract) | 🟡 in progress | 2 | 7 | 0 | 0 | 78% |
 
+### [road-to-kernel-question-triangle.md](roadmaps/road-to-kernel-question-triangle.md)
+
+**Road to the kernel question-triangle amendment — one line, human-applied** — 0 / 3 done (0%)
+
+| # | Phase | State | Open | Done | Deferred | Cancelled | % |
+|---|---|---|---:|---:|---:|---:|---:|
+| 1 | apply through the kernel process | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
+
 ### [road-to-maintainer-bus-factor.md](roadmaps/road-to-maintainer-bus-factor.md)
 
 **Road to maintainer bus-factor — make the project reviewable and inheritable, and dogfood its own review machinery** — 7 / 12 done (58%)

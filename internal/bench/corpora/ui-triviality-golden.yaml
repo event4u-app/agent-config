@@ -1,0 +1,274 @@
+# UI-triviality routing golden corpus — pre-registered.
+#
+# PRE-REGISTERED THRESHOLD (frozen BEFORE any classifier change):
+#   trivial-lane recall >= 0.80 — the share of `label: trivial` tasks that the
+#   work-engine intent classifier routes to the `ui-trivial` directive set.
+#   The eval runner (`src/scripts/eval_ui_triviality.ts`) reads this corpus
+#   READ-ONLY and reports the number; it never edits labels and never touches
+#   the classifier. Labels are frozen once council-confirmed — the corpus is
+#   never tuned to make the classifier pass.
+#
+# GROUND TRUTH for labels — the ui-trivial lane's own written criteria:
+#   - src/agent-src/templates/scripts/work_engine/directives/ui_trivial/apply.ts:
+#     MAX_FILES = 1, MAX_LINES_CHANGED = 5, no new component, no new state,
+#     no new dependency.
+#   - src/rules/ui-audit-gate.md allow-list: directive_set == "ui-trivial" AND
+#     <= 1 file, <= 5 changed lines, no new component, no new state.
+#   A task is `trivial` iff a competent developer would satisfy it within that
+#   envelope AND it is a frontend/UI task at all. Labels reflect the TASK's
+#   true triviality per these criteria — never the classifier's own heuristics
+#   (several trivial tasks are deliberately longer than the classifier's
+#   14-word heuristic window; the label ignores that).
+#
+# LABEL PROVENANCE (disclosed — integrity note):
+#   Labels are COUNCIL-DERIVED, not human-labelled. This amends the roadmap's
+#   "human-labelled" wording per the council disposition of this run
+#   (Q2 verdict B1 in agents/runtime/council/responses, precedent PR #885 —
+#   token-quality-golden), disclosed here and in the PR description. Labels
+#   are cheap for a human to re-label: one YAML field per task.
+#   - Council members: anthropic/claude-sonnet-4-5 + openai/gpt-4o.
+#   - Rule-grounded: each member was given the criteria above verbatim and
+#     asked to confirm or override the drafter's proposed label per task,
+#     grounding every label in the criteria — never in what the current
+#     classifier would say.
+#   - Tiebreaker on member disagreement: label `non-trivial` (conservative —
+#     routes to the full audit chain).
+#   - Date: 2026-08-04.
+#   - Parse status and flip count vs the drafter's proposal: recorded below
+#     after the council run (PROVENANCE RESULT block).
+#
+# PROVENANCE RESULT (filled after the council run on 2026-08-04):
+#   - anthropic/claude-sonnet-4-5: PARSEABLE — returned the full 40-entry JSON
+#     array; adopted as the label + criterion source.
+#   - openai/gpt-4o: NOT PARSEABLE as a full array — its final round is a
+#     prose peer review without the required JSON. It states explicit
+#     positions on two tasks only: uit-006 (non-trivial — agrees with the
+#     override) and uit-016 (trivial — agrees). No usable position on the
+#     other 38 tasks; per the disclosed fallback, the parseable member's
+#     labels stand, corroborated by gpt-4o where it spoke.
+#   - Labels flipped vs draft: 1 of 40 — uit-006 trivial -> non-trivial
+#     (both members converge on the flip; consistent with the tiebreaker,
+#     which would also yield non-trivial).
+#   - Council spend: $0.068034 actual (estimate $0.4205), 2 members, 2 rounds.
+#   - label_criterion strings: taken from the anthropic member's per-task
+#     reasoning, prefixed with the envelope verdict.
+#
+# COUNCIL INVOCATION PROMPT (verbatim): the full question file lives at
+#   agents/runtime/council/questions/ui-triviality-labels.md and was submitted
+#   via:
+#     npx tsx src/scripts/council_cli.ts run \
+#       agents/runtime/council/questions/ui-triviality-labels.md \
+#       --input-mode prompt --prompt-mode design --invocation user_explicit \
+#       --output agents/runtime/council/responses/ui-triviality-labels.json \
+#       --confirm
+#
+# REDACTION: no real names, customer/product identifiers, or local paths —
+# generic app nouns only (dashboard, checkout, profile page). Tasks sourced
+# from the repo's own golden recipes cite the recipe id in `source:`.
+version: 1
+corpus_id: ui-triviality-golden
+tasks:
+  # --- drafted-as-trivial block (16 drafted; 15 confirmed trivial — the
+  # council flipped uit-006 to non-trivial; final corpus: 15 trivial /
+  # 25 non-trivial of 40) --------------------------------------------------
+  - id: uit-001
+    prompt: "Change the primary button color from blue to brand-red in the shared button component."
+    label: trivial
+    label_criterion: "≤1 file / ≤5 lines / no new component|state|dependency — single color property change in one component file, ≤5 lines, no new component/state/dependency"
+    source: gt_u7
+  - id: uit-002
+    prompt: "Rename the 'Submit' button label to 'Send request' on the contact form."
+    label: trivial
+    label_criterion: "≤1 file / ≤5 lines / no new component|state|dependency — button label string change in one file, ≤5 lines, no new component/state/dependency"
+    source: synthesized
+  - id: uit-003
+    prompt: "Fix the typo in the dashboard header greeting — 'Welcom back' should read 'Welcome back'."
+    label: trivial
+    label_criterion: "≤1 file / ≤5 lines / no new component|state|dependency — typo fix in one file, ≤5 lines, no new component/state/dependency"
+    source: synthesized
+  - id: uit-004
+    prompt: "Swap the footer link color to the secondary color token."
+    label: trivial
+    label_criterion: "≤1 file / ≤5 lines / no new component|state|dependency — color token swap in one file, ≤5 lines, no new component/state/dependency"
+    source: synthesized
+  - id: uit-005
+    prompt: "Change the padding on the profile page avatar card from 16px to 24px so it lines up with the neighboring settings card in the same row."
+    label: trivial
+    label_criterion: "≤1 file / ≤5 lines / no new component|state|dependency — padding value change in one file, ≤5 lines, no new component/state/dependency"
+    source: synthesized
+  - id: uit-006
+    prompt: "Update the empty-state copy on the orders page to say 'No orders yet — your first order will show up here as soon as a customer checks out.'"
+    label: non-trivial
+    label_criterion: "exceeds ≤1 file / ≤5 lines / no new component|state|dependency — empty-state copy is 83 chars, likely requires multi-line formatting or unclear if new component, exceeds triviality envelope"
+    source: synthesized
+  - id: uit-007
+    prompt: "Adjust the modal close icon size from 16px to 20px."
+    label: trivial
+    label_criterion: "≤1 file / ≤5 lines / no new component|state|dependency — icon size property change in one file, ≤5 lines, no new component/state/dependency"
+    source: synthesized
+  - id: uit-008
+    prompt: "Change the default value of the size prop on the badge component from 'md' to 'sm'."
+    label: trivial
+    label_criterion: "≤1 file / ≤5 lines / no new component|state|dependency — default prop value change in one file, ≤5 lines, no new component/state/dependency"
+    source: synthesized
+  - id: uit-009
+    prompt: "Tweak the checkout summary heading font weight from semibold to bold so it matches the cart page heading."
+    label: trivial
+    label_criterion: "≤1 file / ≤5 lines / no new component|state|dependency — font-weight property change in one file, ≤5 lines, no new component/state/dependency"
+    source: synthesized
+  - id: uit-010
+    prompt: "Make the sidebar active menu item background use the primary color token instead of the hardcoded hex value."
+    label: trivial
+    label_criterion: "≤1 file / ≤5 lines / no new component|state|dependency — background color token swap in one file, ≤5 lines, no new component/state/dependency"
+    source: synthesized
+  - id: uit-011
+    prompt: "Relabel the navigation tab 'Docs' to 'Documentation'."
+    label: trivial
+    label_criterion: "≤1 file / ≤5 lines / no new component|state|dependency — navigation label string change in one file, ≤5 lines, no new component/state/dependency"
+    source: synthesized
+  - id: uit-012
+    prompt: "Change the toast auto-dismiss timeout from 3 seconds to 5 seconds."
+    label: trivial
+    label_criterion: "≤1 file / ≤5 lines / no new component|state|dependency — timeout constant change in one file, ≤5 lines, no new component/state/dependency"
+    source: synthesized
+  - id: uit-013
+    prompt: "The save button label on the profile page currently reads 'OK'; it should read 'Save changes' to match the rest of the app."
+    label: trivial
+    label_criterion: "≤1 file / ≤5 lines / no new component|state|dependency — button label string change in one file, ≤5 lines, no new component/state/dependency"
+    source: synthesized
+  - id: uit-014
+    prompt: "Set the dashboard card corner radius to the rounded-lg token."
+    label: trivial
+    label_criterion: "≤1 file / ≤5 lines / no new component|state|dependency — border-radius token swap in one file, ≤5 lines, no new component/state/dependency"
+    source: synthesized
+  - id: uit-015
+    prompt: "Update the placeholder text in the header search input from 'Search…' to 'Search projects…'."
+    label: trivial
+    label_criterion: "≤1 file / ≤5 lines / no new component|state|dependency — placeholder text change in one file, ≤5 lines, no new component/state/dependency"
+    source: synthesized
+  - id: uit-016
+    prompt: "Change the primary button colour to green."
+    label: trivial
+    label_criterion: "≤1 file / ≤5 lines / no new component|state|dependency — color property change in one file, ≤5 lines, no new component/state/dependency"
+    source: evals:fe-design
+  # --- expected-non-trivial (24 tasks, ~60%) ----------------------------
+  - id: uit-017
+    prompt: "Add a contact form to the marketing site that matches the existing form primitives."
+    label: non-trivial
+    label_criterion: "exceeds ≤1 file / ≤5 lines / no new component|state|dependency — adding contact form creates new component, violates no-new-component precondition"
+    source: gt_u1
+  - id: uit-018
+    prompt: "Improve the form layout — make it look better and feel more consistent with what we already have."
+    label: non-trivial
+    label_criterion: "exceeds ≤1 file / ≤5 lines / no new component|state|dependency — layout improvement is structural work, plausibly spans multiple files and exceeds 5-line threshold"
+    source: gt_u2
+  - id: uit-019
+    prompt: "Tweak the marketing hero copy and align the CTA button color to the new brand-red token."
+    label: non-trivial
+    label_criterion: "exceeds ≤1 file / ≤5 lines / no new component|state|dependency — compound task (copy tweak AND button color) with underspecified scope, exceeds single-edit triviality envelope"
+    source: gt_u8
+  - id: uit-020
+    prompt: "Add an empty-state component to the dashboard sidebar."
+    label: non-trivial
+    label_criterion: "exceeds ≤1 file / ≤5 lines / no new component|state|dependency — adding empty-state component violates no-new-component precondition"
+    source: gt_u4
+  - id: uit-021
+    prompt: "Design the multi-step onboarding flow."
+    label: non-trivial
+    label_criterion: "exceeds ≤1 file / ≤5 lines / no new component|state|dependency — multi-step flow design is structural work spanning multiple files and components"
+    source: evals:fe-design
+  - id: uit-022
+    prompt: "Redesign the dashboard — the React components live in the frontend components directory; make it cleaner."
+    label: non-trivial
+    label_criterion: "exceeds ≤1 file / ≤5 lines / no new component|state|dependency — dashboard redesign spans multiple files, exceeds 5-line threshold, structural change"
+    source: evals:existing-ui-audit
+  - id: uit-023
+    prompt: "Improve the UI of the existing checkout flow."
+    label: non-trivial
+    label_criterion: "exceeds ≤1 file / ≤5 lines / no new component|state|dependency — checkout flow improvement is structural work spanning multiple screens and files"
+    source: evals:existing-ui-audit
+  - id: uit-024
+    prompt: "Build a new settings page with tabs for profile, notifications, and billing."
+    label: non-trivial
+    label_criterion: "exceeds ≤1 file / ≤5 lines / no new component|state|dependency — new settings page with tabs creates new component and state, violates preconditions"
+    source: synthesized
+  - id: uit-025
+    prompt: "Swap the icon set from the external icon package to the in-house icon library across the app."
+    label: non-trivial
+    label_criterion: "exceeds ≤1 file / ≤5 lines / no new component|state|dependency — icon swap across app violates ≤1 file precondition"
+    source: synthesized
+  - id: uit-026
+    prompt: "Add dark mode support across the dashboard."
+    label: non-trivial
+    label_criterion: "exceeds ≤1 file / ≤5 lines / no new component|state|dependency — dark mode support spans multiple files and adds state management, violates preconditions"
+    source: synthesized
+  - id: uit-027
+    prompt: "Make the data table on the reports page responsive so it collapses into cards on mobile."
+    label: non-trivial
+    label_criterion: "exceeds ≤1 file / ≤5 lines / no new component|state|dependency — responsive table redesign spans multiple files and exceeds 5-line threshold"
+    source: synthesized
+  - id: uit-028
+    prompt: "Add client-side validation with inline error messages to the signup form."
+    label: non-trivial
+    label_criterion: "exceeds ≤1 file / ≤5 lines / no new component|state|dependency — client-side validation adds new state and error UI, violates no-new-state precondition"
+    source: synthesized
+  - id: uit-029
+    prompt: "Introduce a global toast notification system for success and error feedback."
+    label: non-trivial
+    label_criterion: "exceeds ≤1 file / ≤5 lines / no new component|state|dependency — global toast system is new component with new state, violates preconditions"
+    source: synthesized
+  - id: uit-030
+    prompt: "Run an accessibility pass over the checkout flow — fix focus order, ARIA labels, and contrast."
+    label: non-trivial
+    label_criterion: "exceeds ≤1 file / ≤5 lines / no new component|state|dependency — accessibility pass spans multiple files and components in checkout flow"
+    source: synthesized
+  - id: uit-031
+    prompt: "Add a CSV export button to the reports page and the endpoint that streams the file."
+    label: non-trivial
+    label_criterion: "exceeds ≤1 file / ≤5 lines / no new component|state|dependency — CSV export with backend endpoint is mixed frontend+backend task, non-trivial by definition"
+    source: synthesized
+  - id: uit-032
+    prompt: "Show the current plan limits on the billing page — needs a new API field and a small UI panel."
+    label: non-trivial
+    label_criterion: "exceeds ≤1 file / ≤5 lines / no new component|state|dependency — new API field plus UI panel is mixed frontend+backend task with new component"
+    source: synthesized
+  - id: uit-033
+    prompt: "Change the API response schema for the orders endpoint to include a currency field."
+    label: non-trivial
+    label_criterion: "exceeds ≤1 file / ≤5 lines / no new component|state|dependency — API schema change is backend task, non-trivial by category regardless of size"
+    source: synthesized
+  - id: uit-034
+    prompt: "Swap the auth token handling from localStorage to httpOnly cookies."
+    label: non-trivial
+    label_criterion: "exceeds ≤1 file / ≤5 lines / no new component|state|dependency — auth token handling change is backend/security task spanning multiple files"
+    source: synthesized
+  - id: uit-035
+    prompt: "Tweak the checkout page to support coupon codes."
+    label: non-trivial
+    label_criterion: "exceeds ≤1 file / ≤5 lines / no new component|state|dependency — coupon support adds new state and input UI, spans multiple files"
+    source: synthesized
+  - id: uit-036
+    prompt: "Rename the user_id column to account_id and update every query that reads it."
+    label: non-trivial
+    label_criterion: "exceeds ≤1 file / ≤5 lines / no new component|state|dependency — database column rename is backend task, non-trivial by category regardless of size"
+    source: synthesized
+  - id: uit-037
+    prompt: "Update the dropdown component to load its options from the new preferences endpoint instead of the hardcoded list."
+    label: non-trivial
+    label_criterion: "exceeds ≤1 file / ≤5 lines / no new component|state|dependency — endpoint data source change adds new state dependency, violates no-new-state precondition"
+    source: synthesized
+  - id: uit-038
+    prompt: "Change the profile page so users can crop and re-upload their avatar."
+    label: non-trivial
+    label_criterion: "exceeds ≤1 file / ≤5 lines / no new component|state|dependency — avatar crop/upload adds new UI state and file-handling logic, violates no-new-state precondition"
+    source: synthesized
+  - id: uit-039
+    prompt: "Adjust the pricing page to offer a monthly/yearly toggle with recalculated prices."
+    label: non-trivial
+    label_criterion: "exceeds ≤1 file / ≤5 lines / no new component|state|dependency — pricing toggle with recalculation adds new state and logic, spans multiple elements"
+    source: synthesized
+  - id: uit-040
+    prompt: "Clean up the modal component — extract the overlay into a reusable primitive and add focus trapping."
+    label: non-trivial
+    label_criterion: "exceeds ≤1 file / ≤5 lines / no new component|state|dependency — extracting overlay primitive creates new component, focus trap adds state, violates preconditions"
+    source: synthesized

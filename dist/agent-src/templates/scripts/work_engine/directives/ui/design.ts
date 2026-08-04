@@ -9,6 +9,7 @@
  * exactly as the brief specifies. Hallucinated microcopy at apply time is the
  * failure mode this step exists to prevent.
  */
+import { fix_lane_passthrough } from './_fix_lane.js';
 import {
     type Any,
     type DeliveryState,
@@ -146,6 +147,11 @@ function _pyRStrip(s: string): string {
 /** Apply the design-brief lock to `state.ui_design`. */
 export function run(state: DeliveryState): StepResult {
     const design = state.ui_design;
+    if (!_is_populated(design) && fix_lane_passthrough(state)) {
+        // ui-fix enters at apply: design-intelligence stays on demand. A
+        // ticket referencing a design artifact keeps the mandatory brief.
+        return new StepResult({ outcome: Outcome.SUCCESS });
+    }
     if (!_is_populated(design)) {
         return _delegate_to_design_skill(state);
     }

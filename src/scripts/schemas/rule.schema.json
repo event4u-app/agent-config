@@ -155,6 +155,16 @@
       },
       "description": "ADR-013 trust block. Vocabulary mirrored by scripts/lint_artefact_frontmatter.py."
     },
+    "collision_ok": {
+      "type": "object",
+      "additionalProperties": {"type": "string", "minLength": 8},
+      "description": "Per-trigger collision disposition: maps a trigger VALUE (case-insensitive) shared with >=1 other rule to a one-line reason why this rule also firing on it is correct. Enforced by scripts/lint_trigger_collisions.ts."
+    },
+    "precedence": {
+      "type": "object",
+      "additionalProperties": {"type": "integer"},
+      "description": "Alternative collision disposition: maps a shared trigger VALUE to an integer ordering; a collision is clean when ALL sharers declare pairwise-distinct integers for it. Enforced by scripts/lint_trigger_collisions.ts."
+    },
     "install": {
       "type": "object",
       "additionalProperties": false,

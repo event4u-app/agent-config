@@ -25,6 +25,8 @@ applies_to_user_types:
   - "all"
 workspaces: [agent-config-maintainer, construction, engineering, finance, founder, gtm, legal-review-prep, ops, product, small-business]
 packs: [meta]
+collision_ok:
+  "screenshot": "a screenshot shipping into docs is the PII/anonymization gate"
 ---
 
 # Doc-Screenshot Hygiene

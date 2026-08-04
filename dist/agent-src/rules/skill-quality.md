@@ -10,6 +10,8 @@ workspaces: [agent-config-maintainer]
 packs: [meta]
 enforced_by:
   - "validator:src/scripts/skill_linter.ts"
+collision_ok:
+  "src/skills/": "every skill edit passes the executable-quality floor"
 ---
 
 # Skill Quality

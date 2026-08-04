@@ -170,6 +170,7 @@ tasks:
       - task: lint-token-budget-discipline
       - task: lint-profile-personas
       - task: lint-trigger-precision
+      - task: lint-trigger-collisions
       - task: lint-context-spine-usage
       - task: check-surface-tiers
       - task: check-public-links

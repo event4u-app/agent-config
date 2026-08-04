@@ -10,6 +10,7 @@
  * enforceable from code, not norms. Mirrors the `state.ui_audit` gate the
  * `ui-audit-gate` rule defends.
  */
+import { fix_lane_passthrough } from './_fix_lane.js';
 import {
     type Any,
     type DeliveryState,
@@ -96,6 +97,13 @@ function _pyRStrip(s: string): string {
 /** Apply the audit gate to `state.ui_audit`. */
 export function run(state: DeliveryState): StepResult {
     const audit = state.ui_audit;
+    if (!_is_populated(audit) && fix_lane_passthrough(state)) {
+        // ui-fix enters at apply: the audit skill stays on demand instead of
+        // mandatory. Refused when the ticket references a design artifact —
+        // the design-fidelity floor keeps the resource-first halt.
+        state.ui_audit = { components_found: [], audit_path: 'fix-intent-on-demand' };
+        return new StepResult({ outcome: Outcome.SUCCESS });
+    }
     if (!_is_populated(audit)) {
         return _delegate_to_audit_skill(state);
     }

@@ -17,6 +17,9 @@ workspaces: [engineering]
 packs: [engineering-base]
 enforced_by:
   - "validator:src/scripts/lint_skill_frontmatter_safety.ts"
+collision_ok:
+  "src/skills/": "skill authoring reviews tool grants and the egress leg"
+  "src/agent-src/commands/": "command authoring reviews the three trifecta legs"
 ---
 
 # Lethal-Trifecta Guard

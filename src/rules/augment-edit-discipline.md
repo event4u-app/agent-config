@@ -17,6 +17,8 @@ validator_ignore:
     reason: "Rule scopes the portability gate to the uncondensed authoring tree."
 workspaces: [agent-config-maintainer]
 packs: [meta]
+collision_ok:
+  ".augment/": "portability + sync floors for the .augment tree"
 ---
 
 # Augment Edit Discipline

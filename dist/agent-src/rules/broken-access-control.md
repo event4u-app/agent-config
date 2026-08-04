@@ -19,6 +19,10 @@ routes_to:
   - "skill:multi-tenancy"
 workspaces: [engineering]
 packs: [engineering-base]
+collision_ok:
+  "controller": "controllers return user data — the ownership/tenant check floor"
+  "endpoint": "every data-returning endpoint needs the three negative tests"
+  "tenant": "cross-tenant isolation is this rule's core subject"
 ---
 
 # Broken Access Control

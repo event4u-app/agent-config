@@ -15,6 +15,8 @@ routes_to:
   - "skill:memory-consolidation"
 workspaces: [agent-config-maintainer, engineering]
 packs: [meta]
+collision_ok:
+  "debug": "debug hypotheses belong in the session notes file"
 ---
 
 # Notes-First Reasoning

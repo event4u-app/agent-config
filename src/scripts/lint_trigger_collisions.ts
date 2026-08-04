@@ -1,0 +1,257 @@
+#!/usr/bin/env tsx
+/**
+ * lint_trigger_collisions — every shared trigger carries a written-down
+ * disposition, or the build is red.
+ *
+ * Defect measured: a trigger string shared by ≥2 routed rules makes both fire
+ * on the same prompt. Many collisions are correct (`refactor` firing both the
+ * analyze-first and the diff-shape floor is complementary), but before this
+ * gate nothing forced that argument to be WRITTEN DOWN — so accidental
+ * co-firing (the brand pair, secret/password, valuation/DCF) accumulated
+ * silently. This gate makes every collision either dispositioned or an error.
+ *
+ * Why this gate shape: the existing `tests/scripts/rule_trigger_collisions.test.ts`
+ * is a pair-level Jaccard SIMILARITY ratchet (near-duplicate trigger sets);
+ * it is kept untouched. This lint is per-trigger-VALUE disposition coverage —
+ * a different axis: one shared value between otherwise-different rules never
+ * moves Jaccard past 0.4, but still needs an argument.
+ *
+ * Disposition, in the sharing rule's frontmatter (both optional keys are in
+ * `schemas/rule.schema.json`):
+ *
+ *   collision_ok:
+ *     "refactor": "one-line reason why this rule also firing here is correct"
+ *   precedence:
+ *     "refactor": 1        # all sharers declare pairwise-distinct integers
+ *
+ * A collision is clean when EVERY sharer has `collision_ok[<value>]`, OR all
+ * sharers carry pairwise-distinct `precedence[<value>]` integers.
+ *
+ * Scope: `src/rules/*.md`, `type: manual` excluded (reference-only, no router
+ * emission — ADR-004), rules without `triggers:` excluded (kernel).
+ * Same-value-different-kind never collides (a `keyword` and a `path_prefix`
+ * match different surfaces).
+ *
+ * Modes: default lint (exit 0 clean, 2 findings/dead-scope, 1 internal error;
+ * emits one machine-readable `scanned: <N>` line for gate-coverage), plus
+ * `--report <path>` writing the collision-census markdown, `--json`, `--quiet`.
+ */
+
+import * as fs from 'node:fs';
+import * as path from 'node:path';
+import { fileURLToPath, pathToFileURL } from 'node:url';
+import { parse as parseYaml } from 'yaml';
+
+import { assertScanned, DeadScopeError } from './_lib/scan_scope.js';
+
+const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
+export const RULES_ROOT = 'src/rules';
+const TRIGGER_KINDS = ['keyword', 'phrase', 'command', 'path_prefix', 'file_pattern'] as const;
+
+export interface RuleTriggers {
+    id: string;
+    type: string;
+    triggers: { kind: string; value: string }[];
+    collision_ok: Record<string, string>;
+    precedence: Record<string, number>;
+}
+
+export interface Collision {
+    kind: string;
+    value: string; // case-folded
+    sharers: string[]; // rule ids, sorted
+    undispositioned: string[]; // rule ids missing a valid disposition
+}
+
+function _parse_frontmatter(text: string): Record<string, unknown> {
+    if (!text.startsWith('---\n')) return {};
+    const end = text.indexOf('\n---', 4);
+    if (end < 0) return {};
+    const data = parseYaml(text.slice(4, end), { version: '1.1' }) ?? {};
+    return data !== null && typeof data === 'object' && !Array.isArray(data)
+        ? (data as Record<string, unknown>)
+        : {};
+}
+
+function _as_string_map(v: unknown): Record<string, string> {
+    if (v === null || typeof v !== 'object' || Array.isArray(v)) return {};
+    const out: Record<string, string> = {};
+    for (const [k, val] of Object.entries(v as Record<string, unknown>)) {
+        out[k.toLowerCase()] = String(val);
+    }
+    return out;
+}
+
+function _as_int_map(v: unknown): Record<string, number> {
+    if (v === null || typeof v !== 'object' || Array.isArray(v)) return {};
+    const out: Record<string, number> = {};
+    for (const [k, val] of Object.entries(v as Record<string, unknown>)) {
+        const n = Number(val);
+        if (Number.isInteger(n)) out[k.toLowerCase()] = n;
+    }
+    return out;
+}
+
+export function load_rules(rules_dir: string): RuleTriggers[] {
+    const out: RuleTriggers[] = [];
+    let files: string[] = [];
+    try {
+        files = fs.readdirSync(rules_dir).filter((f) => f.endsWith('.md')).sort();
+    } catch {
+        return [];
+    }
+    for (const f of files) {
+        const fm = _parse_frontmatter(fs.readFileSync(path.join(rules_dir, f), 'utf-8'));
+        if (Object.keys(fm).length === 0) continue;
+        const type = String(fm['type'] ?? 'auto');
+        const rawTriggers = Array.isArray(fm['triggers']) ? (fm['triggers'] as unknown[]) : [];
+        const triggers: { kind: string; value: string }[] = [];
+        for (const t of rawTriggers) {
+            if (t === null || typeof t !== 'object' || Array.isArray(t)) continue;
+            for (const kind of TRIGGER_KINDS) {
+                if (kind in (t as Record<string, unknown>)) {
+                    triggers.push({ kind, value: String((t as Record<string, unknown>)[kind]).toLowerCase() });
+                    break;
+                }
+            }
+        }
+        out.push({
+            id: f.replace(/\.md$/, ''),
+            type,
+            triggers,
+            collision_ok: _as_string_map(fm['collision_ok']),
+            precedence: _as_int_map(fm['precedence']),
+        });
+    }
+    return out;
+}
+
+export function find_collisions(rules: RuleTriggers[]): Collision[] {
+    const routed = rules.filter((r) => r.type !== 'manual' && r.triggers.length > 0);
+    const byKey = new Map<string, Set<string>>();
+    const ruleById = new Map(routed.map((r) => [r.id, r]));
+    for (const r of routed) {
+        for (const t of r.triggers) {
+            const key = `${t.kind}\u0000${t.value}`;
+            const set = byKey.get(key) ?? new Set<string>();
+            set.add(r.id);
+            byKey.set(key, set);
+        }
+    }
+    const collisions: Collision[] = [];
+    for (const [key, sharerSet] of byKey) {
+        if (sharerSet.size < 2) continue;
+        const [kind, value] = key.split('\u0000') as [string, string];
+        const sharers = [...sharerSet].sort();
+        const withOk = sharers.filter((id) => value in (ruleById.get(id)?.collision_ok ?? {}));
+        const precedences = sharers
+            .map((id) => (ruleById.get(id)?.precedence ?? {})[value])
+            .filter((n): n is number => n !== undefined);
+        const precedence_ok =
+            precedences.length === sharers.length && new Set(precedences).size === sharers.length;
+        const undispositioned = precedence_ok ? [] : sharers.filter((id) => !withOk.includes(id));
+        collisions.push({ kind, value, sharers, undispositioned });
+    }
+    collisions.sort(
+        (a, b) => b.sharers.length - a.sharers.length || (a.value < b.value ? -1 : a.value > b.value ? 1 : 0),
+    );
+    return collisions;
+}
+
+export function render_report(rules: RuleTriggers[], collisions: Collision[], sha: string): string {
+    const routed = rules.filter((r) => r.type !== 'manual' && r.triggers.length > 0);
+    const totalTriggers = routed.reduce((s, r) => s + r.triggers.length, 0);
+    const distinct = new Set(routed.flatMap((r) => r.triggers.map((t) => `${t.kind}\u0000${t.value}`))).size;
+    const undisp = collisions.filter((c) => c.undispositioned.length > 0);
+    const lines: string[] = [
+        '# Trigger-collision census',
+        '',
+        `> Generated by \`./scripts-run src/scripts/lint_trigger_collisions --report agents/evidence/reports/trigger-collision-census.md\` on 2026-08-04 at ${sha}.`,
+        '> Do not hand-edit — re-run the command.',
+        '',
+        `- Routed rules with triggers: ${routed.length} (of ${rules.length} rule files; \`type: manual\` and trigger-less kernel rules excluded)`,
+        `- Trigger entries: ${totalTriggers} · distinct (kind, value) pairs: ${distinct}`,
+        `- Colliding values (shared by ≥2 rules): ${collisions.length}`,
+        `- Undispositioned collisions: ${undisp.length} (the lint is red unless this is 0)`,
+        '',
+        '| # | Kind | Trigger | Rules | Disposition |',
+        '|---|------|---------|-------|-------------|',
+    ];
+    collisions.forEach((c, i) => {
+        const status = c.undispositioned.length === 0 ? 'dispositioned' : `MISSING: ${c.undispositioned.join(', ')}`;
+        lines.push(`| ${i + 1} | ${c.kind} | \`${c.value}\` | ${c.sharers.join(', ')} | ${status} |`);
+    });
+    lines.push('');
+    return lines.join('\n');
+}
+
+export function main(argv: string[]): number {
+    const quiet = argv.includes('--quiet');
+    const as_json = argv.includes('--json');
+    let reportPath: string | null = null;
+    const ri = argv.indexOf('--report');
+    if (ri >= 0) reportPath = argv[ri + 1] ?? null;
+
+    const rulesDir = path.join(REPO_ROOT, RULES_ROOT);
+    const rules = load_rules(rulesDir);
+    try {
+        assertScanned({
+            gate: 'lint_trigger_collisions',
+            scanned: rules.length,
+            units: 'rule file(s)',
+            roots: [RULES_ROOT],
+        });
+    } catch (exc) {
+        if (!(exc instanceof DeadScopeError)) throw exc;
+        process.stderr.write(`❌  ${exc.message}\n`);
+        return 2;
+    }
+    process.stdout.write(`scanned: ${rules.length}\n`);
+
+    const collisions = find_collisions(rules);
+    const findings = collisions.filter((c) => c.undispositioned.length > 0);
+
+    if (reportPath) {
+        let sha = 'HEAD';
+        try {
+            sha = fs.readFileSync(path.join(REPO_ROOT, '.git', 'HEAD'), 'utf-8').trim().slice(0, 9);
+        } catch {
+            // detached info unavailable — keep the placeholder
+        }
+        const target = path.isAbsolute(reportPath) ? reportPath : path.join(REPO_ROOT, reportPath);
+        fs.mkdirSync(path.dirname(target), { recursive: true });
+        fs.writeFileSync(target, render_report(rules, collisions, sha));
+        if (!quiet) process.stdout.write(`report → ${reportPath}\n`);
+    }
+
+    if (as_json) {
+        process.stdout.write(JSON.stringify({ collisions, findings: findings.length }, null, 2) + '\n');
+    }
+
+    if (findings.length > 0) {
+        process.stderr.write(
+            `❌  ${findings.length} trigger collision(s) without a written disposition:\n`,
+        );
+        for (const c of findings) {
+            process.stderr.write(
+                `    ${c.kind} "${c.value}" shared by [${c.sharers.join(', ')}] — missing collision_ok/precedence on: ${c.undispositioned.join(', ')}\n`,
+            );
+        }
+        process.stderr.write(
+            '    Remedy: add `collision_ok: {"<value>": "<one-line reason>"}` (or pairwise-distinct\n' +
+                '    `precedence: {"<value>": <int>}`) to EVERY sharer’s frontmatter, or disjoin the trigger sets.\n',
+        );
+        return 2;
+    }
+    if (!quiet) {
+        process.stdout.write(
+            `✅  ${collisions.length} trigger collision(s), all dispositioned (${rules.length} rules scanned)\n`,
+        );
+    }
+    return 0;
+}
+
+const _HERE = fileURLToPath(import.meta.url);
+if (process.argv[1] && (import.meta.url === pathToFileURL(process.argv[1]).href || path.resolve(process.argv[1]) === _HERE)) {
+    process.exitCode = main(process.argv.slice(2));
+}

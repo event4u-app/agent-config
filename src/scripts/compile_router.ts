@@ -61,10 +61,17 @@ export { COMPILE_TIME_TOGGLES };
 
 // Maps legacy tier values to the router-canonical names. See
 // docs/contracts/rule-router.md § Backward compatibility.
+// `2b` → tier-2 is a recorded decision (2026-08-04): the 21 rules tagged 2b
+// are tier-2 deliberately — before this entry they reached tier-2 only via a
+// silent fallthrough that also swallowed typos. `safety-floor` is deliberately
+// NOT mapped: it is documentation-only on the always-typed trio (which
+// short-circuits to kernel before this map is consulted); on any other rule it
+// is a contract violation and must fail compilation.
 const LEGACY_TIER_MAP: Record<string, string> = {
     '1': 'tier-1',
     '2': 'tier-2',
     '2a': 'tier-2',
+    '2b': 'tier-2',
     '3': 'tier-1',
     'mechanical-already': 'tier-1',
     kernel: 'kernel',
@@ -93,11 +100,21 @@ function _parse_frontmatter(text: string): JsonObject {
         : {};
 }
 
-function _resolve_tier(rule_type: string, raw_tier: string): string {
+export function _resolve_tier(rule_type: string, raw_tier: string, rule_id: string): string {
     if (rule_type === 'always') {
         return 'kernel';
     }
-    return LEGACY_TIER_MAP[String(raw_tier)] ?? 'tier-2';
+    const mapped = LEGACY_TIER_MAP[String(raw_tier)];
+    if (mapped === undefined) {
+        // A typo'd (or unmapped) tier used to downgrade silently to tier-2 —
+        // a zero-injection failure nobody sees. Fail the compile instead.
+        throw new Error(
+            `compile_router: rule '${rule_id}' has unknown tier '${raw_tier}' — `
+            + `allowed values: ${Object.keys(LEGACY_TIER_MAP).sort().join(', ')} `
+            + `(or type: always, where tier is inert)`,
+        );
+    }
+    return mapped;
 }
 
 function _normalize_trigger(item: Json): JsonObject | null {
@@ -205,7 +222,7 @@ function _collect(): JsonObject {
         if (rule_type === 'manual') {
             continue;
         }
-        const tier = _resolve_tier(rule_type, String(fm['tier'] ?? ''));
+        const tier = _resolve_tier(rule_type, String(fm['tier'] ?? ''), rule_id);
         if (!ALLOWED_TIERS.has(tier)) {
             continue;
         }

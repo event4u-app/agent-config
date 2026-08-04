@@ -1,8 +1,15 @@
 rule: brand-source-of-truth
+# Absorbed the former brand-consistency matrix on 2026-08-04 — the rules
+# merged (rule hygiene); every positive of the old gate must route here.
 positives:
   - prompt: "Where do our brand tokens live and which file wins on conflict?"
   - prompt: "The corpus suggests a different palette than our brand guide - which one applies?"
   - prompt: "Unser Brand Profile definiert Blau als Primärfarbe - übernimm das bitte."
+  - prompt: "Is this landing page copy on-brand for us?"
+  - prompt: "Check the new banner against our brand tokens before it ships."
+  - prompt: "Passt dieser Social-Post zu unserer Brand Voice?"
 near_misses:
   - prompt: "Which color palette should the new dashboard use?"
   - prompt: "Apply the corporate design colors to the pricing page."
+  - prompt: "Make the marketing site color palette consistent across all pages."
+  - prompt: "The tone of this newsletter feels off compared to our usual style."
