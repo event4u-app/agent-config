@@ -383,9 +383,19 @@ promise; see the frontmatter table above.
 
 ## Backward compatibility
 
-- The legacy `tier: "1" | "2" | "2a" | "3" | "mechanical-already"` values
-  remain readable; the compiler maps them to `kernel` / `tier-1` / `tier-2`
-  as locked in `kernel-membership.md` § 4 (status-quo bucket model).
+- The legacy `tier: "1" | "2" | "2a" | "2b" | "3" | "mechanical-already"`
+  values remain readable; the compiler maps them to `kernel` / `tier-1` /
+  `tier-2` as locked in `kernel-membership.md` § 4 (status-quo bucket model).
+  `2b` → `tier-2` is a recorded decision (2026-08-04): the 21 rules tagged
+  `2b` are tier-2 deliberately — before the explicit map entry they reached
+  tier-2 only through a silent fallthrough.
+- An **unknown tier value fails compilation** (hardened 2026-08-04;
+  previously a silent `tier-2` downgrade, so a typo'd tier produced a
+  zero-injection failure nobody saw). `tier: "safety-floor"` is
+  documentation-only on the `type: always` trio (`commit-policy`,
+  `non-destructive-by-default`, `scope-control` short-circuit to `kernel`
+  before the map is consulted); on any non-`always` rule it fails
+  compilation.
 - Rules without `triggers:` keep firing under their current `description`-
   matching behaviour until P4.x migrations land — the linter only enforces
   presence; activation falls back to `description` for unmigrated rules.
