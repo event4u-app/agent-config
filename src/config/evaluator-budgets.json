@@ -27,13 +27,8 @@
         },
         "not_re_measured": "unpacked_size_mb, node_modules_mb, runtime_dep_count, cli_version_cold_ms, mcp_boot_to_initialize_ms. All five require the packed-tarball harness (npm pack of a fully built tree, then a clean `npm install --omit=dev <tarball>` into a scratch project) that evaluator_umbrella.sh runs in CI. They were NOT re-measured in this pass and their values remain the 2026-07-27 acceptance numbers — stated rather than invented. The next nightly writes the real numbers into measurement_record, and the drift check then reports any contradiction with last_measured on the PR that carries it."
     },
+    "removed_2026_08_04": "unpacked_size_mb (max 28) — removed by maintainer decision at the 9.17.0 release: the gate turned every legitimate payload addition into a blocked release (measured 28.22 vs max 28 with all functional gates green), and the maintainer judged tarball size not worth gating. evaluator_umbrella.sh still MEASURES and records unpacked_size_mb as evidence; only the budget enforcement is gone. ADR-204 review_trigger (a) fired and was resolved this way.",
     "budgets": {
-        "unpacked_size_mb": {
-            "max": 28,
-            "last_measured": 26.05,
-            "last_measured_at": "2026-07-27",
-            "method": "npm pack --json → dist.unpackedSize / 1e6 — includes the Phase-1 precompiled bundles (dist/hooks/dispatch.js + dist/mcp/server.mjs, ~2.1 MB) that bought the 23x hook-latency win and the tsx removal, plus dist/cli-delegate/ (~1.40 MB, ADR-204) which finished that removal for the consumer command surface. This gate is the ONLY size trip-wire on those bundles by design: a dedicated per-bundle budget key would need its own measurement wired into evaluator_umbrella.sh, and an unwired key fails check_evaluator_budgets with 'no measurement supplied' instead of guarding anything. ADR-204 projected 27.45 against max 28 without packing — the next real measurement here is the confirming one, and headroom is thin"
-        },
         "node_modules_mb": {
             "max": 140,
             "last_measured": 127,
