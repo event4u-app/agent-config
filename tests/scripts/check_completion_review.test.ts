@@ -434,7 +434,7 @@ describe.runIf(hasGit())('check_completion_review — violations', () => {
         );
         const res = runGate(dir);
         expect(res.kinds).toContain('malformed-row');
-        expect(res.violations.find((v) => v.kind === 'malformed-row')?.detail).toContain('5 cell(s), expected 6');
+        expect(res.violations.find((v) => v.kind === 'malformed-row')?.detail).toContain('5 cell(s), expected exactly 6');
         expect(res.status).toBe(1);
     });
 
@@ -847,7 +847,17 @@ describe('isCodePath — §2.4 classification', () => {
         expect(isCodePath('docs/readme.md')).toBe(false);
         expect(isCodePath('lib/util.py')).toBe(true);
         expect(isCodePath('composer.json')).toBe(false);
-        expect(isCodePath('Makefile')).toBe(false);
+        // Extensionless build/infra files ARE code: a Makefile or Dockerfile
+        // change is production behaviour, and classifying it as "no code
+        // surface" let such a completion take the §2.4 skip path. This
+        // expectation read `false` until the R2 round-6 review named it —
+        // the fix widens what needs review, it never narrows it.
+        expect(isCodePath('Makefile')).toBe(true);
+        expect(isCodePath('Dockerfile')).toBe(true);
+        expect(isCodePath('Dockerfile.prod')).toBe(true);
+        expect(isCodePath('infra/main.tf')).toBe(true);
+        // …but a lockfile that merely shares a stem is not.
+        expect(isCodePath('Gemfile.lock')).toBe(false);
     });
 
     it('covers the consumer stacks the suite installs into', () => {

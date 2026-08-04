@@ -181,7 +181,45 @@ const CODE_EXTENSIONS = new Set([
     'erl',
     'dart',
     'r',
+    // Infrastructure-as-code and build definitions. Production behaviour lives
+    // here as much as in application code — this suite ships terraform /
+    // terragrunt / aws-infrastructure skills and an engineering-safety-floor
+    // that treats these files as prod surfaces, so omitting them let an
+    // IaC-only completion claim "no code surface" and take the skip path.
+    'tf',
+    'tfvars',
+    'hcl',
+    'gradle',
+    'cmake',
+    'proto',
+    'bicep',
 ]);
+
+/**
+ * Extensionless build / infra files. `isCodePath` decides by extension, so a
+ * `Dockerfile` or `Makefile` (no dot) fell through to "not code" — the same
+ * hole as a missing extension, one step further along.
+ */
+const CODE_BASENAMES = new Set([
+    'dockerfile',
+    'containerfile',
+    'makefile',
+    'jenkinsfile',
+    'vagrantfile',
+    'procfile',
+    'brewfile',
+    'rakefile',
+    'gemfile',
+    'justfile',
+]);
+
+/**
+ * Tails that turn a {@link CODE_BASENAMES} stem into generated or prose state
+ * rather than code — `Gemfile.lock`, `Makefile.md`. Kept narrow on purpose: an
+ * unknown tail (`Dockerfile.prod`) stays code, so the classification errs broad
+ * exactly as contract §2.4 promises.
+ */
+const GENERATED_TAILS = new Set(['lock', 'md', 'txt', 'json', 'yml', 'yaml', 'bak', 'orig']);
 
 /**
  * Template extensions whose *inner* extension decides. `foo.blade.php` is
@@ -215,6 +253,18 @@ export function isCodePath(p: string): boolean {
     const base = norm.slice(norm.lastIndexOf('/') + 1).toLowerCase();
     if (CODE_SUFFIXES.some((s) => base.endsWith(s))) {
         return true;
+    }
+    // Extensionless build/infra files (Dockerfile, Makefile, …) plus their
+    // environment variants (`Dockerfile.prod`, `Makefile.local`). A generated
+    // sibling that merely shares the stem is NOT code — `Gemfile.lock` is
+    // dependency state, the same class as the `composer.json` this function
+    // already excludes.
+    const stem = base.includes('.') ? base.slice(0, base.indexOf('.')) : base;
+    if (CODE_BASENAMES.has(stem)) {
+        const tail = base.slice(stem.length + 1);
+        if (tail === '' || !GENERATED_TAILS.has(tail)) {
+            return true;
+        }
     }
     const dot = base.lastIndexOf('.');
     if (dot <= 0) {
@@ -371,7 +421,12 @@ export function parseArtifact(text: string): ParsedArtifact {
             if (first === '#' || second === 'severity') {
                 continue; // header row
             }
-            if (cells.length >= 6) {
+            // EXACTLY six, per contract §2.2 — not `>= 6`. An over-long row is
+            // as malformed as a short one and the surplus is usually the tell:
+            // an unescaped `|` inside a cell (the shape §2.2 requires escaping)
+            // splits one cell into two and shifts Status/Reason-Ref rightwards,
+            // so accepting it silently reads the wrong cell as the status.
+            if (cells.length === 6) {
                 out.rows.push({
                     index: cells[0] ?? '',
                     severity: (cells[1] ?? '').toLowerCase(),
@@ -390,7 +445,7 @@ export function parseArtifact(text: string): ParsedArtifact {
                 // §2.2 template ends in exactly that empty cell. Gate R1 already
                 // reports this class — same name, `malformed_row`.
                 out.malformedRows.push(
-                    `line ${lineno}: findings row has ${String(cells.length)} cell(s), expected 6 ` +
+                    `line ${lineno}: findings row has ${String(cells.length)} cell(s), expected exactly 6 ` +
                         '(`| # | Severity | File:Line | Finding | Status | Reason/Ref |` — the trailing ' +
                         'Reason/Ref cell is required even when empty)',
                 );
