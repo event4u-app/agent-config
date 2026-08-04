@@ -329,8 +329,12 @@ gates:
       Gate R2 (docs/contracts/plan-review-gates.md § 2). HONEST LIMIT, stated
       because a floor that cannot fail is exactly the false green this file
       exists to prevent: scanned = artefacts inspected + 1 for the diff
-      evaluation, so it is >= 1 by construction and `min_scanned: 1` can never
-      trip. NOTHING ELSE TRIPS EITHER DURING THE ADVISORY WINDOW. The argv above
+      evaluation, so on any run that REACHES the count `min_scanned: 1` cannot
+      trip. It is not unreachable in principle — a moved reviews root exits
+      before the inventory and reports `scanned: 0`, which the guard does read —
+      but that path is the dead-scope violation below, so the floor never adds
+      anything the assertion does not already catch.
+      NOTHING TRIPS AT ALL DURING THE ADVISORY WINDOW. The argv above
       mirrors the CI invocation, and under `--advisory` every violation kind —
       dead-scan-scope included — is printed as a warning and the exit code is 0.
       So for the duration of the Stage-A window this entry proves only that the

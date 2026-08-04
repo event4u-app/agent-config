@@ -18,10 +18,15 @@
  *     with the required Reason/Ref content;
  *   - every table-shaped row parses into the six §2.2 cells (`malformed-row`) —
  *     a short row is never silently dropped, or an `open` finding would pass;
+ *   - ``` fences resolve (`unbalanced-fence`) — only a LABELLED, properly-closed
+ *     fence hides content, so no arrangement of bare fences can swallow a row,
+ *     for the same reason;
  *   - severity rows are sorted descending (critical > high > medium > low);
  *   - findings-before-fixes ancestry: the commit that FIRST added the
  *     artifact is an ancestor of every referenced fix commit (§2.5 — the
- *     first-add commit is what counts, so backdating is detected too).
+ *     first-add commit is what counts, so backdating is detected too; it is the
+ *     earliest add of the PATH, so the guarantee covers the artefact's FIRST
+ *     round, and per-round ordering stays convention — §2.5 names that limit).
  *
  * The review binds to the review-SCOPE HASH, never to a commit sha. That
  * definition is owned by `dispatch_r2_reviewer.ts` and imported here so the
@@ -114,6 +119,16 @@ export interface ParsedArtifact {
      * defect class.
      */
     malformedRows: string[];
+    /**
+     * 1-based lines of every stray ``` fence, ascending (§2.2).
+     *
+     * A stray is a BARE ``` (which never delimits a region) or a labelled opener
+     * that is never closed. All of them are reported as one `unbalanced-fence`
+     * violation naming every line — a single number could only ever name the
+     * last. Stray fences skip nothing: the lines around them are parsed, because
+     * no fence arrangement may swallow an `open` row (see {@link scanFences}).
+     */
+    strayFenceLines: number[];
     /** The §5 context manifest, when present and parseable. */
     manifest: ParsedManifest | null;
 }
@@ -181,7 +196,45 @@ const CODE_EXTENSIONS = new Set([
     'erl',
     'dart',
     'r',
+    // Infrastructure-as-code and build definitions. Production behaviour lives
+    // here as much as in application code — this suite ships terraform /
+    // terragrunt / aws-infrastructure skills and an engineering-safety-floor
+    // that treats these files as prod surfaces, so omitting them let an
+    // IaC-only completion claim "no code surface" and take the skip path.
+    'tf',
+    'tfvars',
+    'hcl',
+    'gradle',
+    'cmake',
+    'proto',
+    'bicep',
 ]);
+
+/**
+ * Extensionless build / infra files. `isCodePath` decides by extension, so a
+ * `Dockerfile` or `Makefile` (no dot) fell through to "not code" — the same
+ * hole as a missing extension, one step further along.
+ */
+const CODE_BASENAMES = new Set([
+    'dockerfile',
+    'containerfile',
+    'makefile',
+    'jenkinsfile',
+    'vagrantfile',
+    'procfile',
+    'brewfile',
+    'rakefile',
+    'gemfile',
+    'justfile',
+]);
+
+/**
+ * Tails that turn a {@link CODE_BASENAMES} stem into generated or prose state
+ * rather than code — `Gemfile.lock`, `Makefile.md`. Kept narrow on purpose: an
+ * unknown tail (`Dockerfile.prod`) stays code, so the classification errs broad
+ * exactly as contract §2.4 promises.
+ */
+const GENERATED_TAILS = new Set(['lock', 'md', 'txt', 'json', 'yml', 'yaml', 'bak', 'orig']);
 
 /**
  * Template extensions whose *inner* extension decides. `foo.blade.php` is
@@ -215,6 +268,18 @@ export function isCodePath(p: string): boolean {
     const base = norm.slice(norm.lastIndexOf('/') + 1).toLowerCase();
     if (CODE_SUFFIXES.some((s) => base.endsWith(s))) {
         return true;
+    }
+    // Extensionless build/infra files (Dockerfile, Makefile, …) plus their
+    // environment variants (`Dockerfile.prod`, `Makefile.local`). A generated
+    // sibling that merely shares the stem is NOT code — `Gemfile.lock` is
+    // dependency state, the same class as the `composer.json` this function
+    // already excludes.
+    const stem = base.includes('.') ? base.slice(0, base.indexOf('.')) : base;
+    if (CODE_BASENAMES.has(stem)) {
+        const tail = base.slice(stem.length + 1);
+        if (tail === '' || !GENERATED_TAILS.has(tail)) {
+            return true;
+        }
     }
     const dot = base.lastIndexOf('.');
     if (dot <= 0) {
@@ -301,6 +366,91 @@ function splitTableRow(line: string): string[] {
 }
 
 const FENCE_RE = /^\s*```/;
+/** A ```-prefixed line split into its backtick run and its info string. */
+const FENCE_PARTS_RE = /^\s*(`{3,})(.*)$/;
+
+export interface FenceScan {
+    /** 0-based indices of lines inside a LABELLED, properly-closed fence — the only lines to skip. */
+    fenced: Set<number>;
+    /**
+     * 1-based line numbers of every stray ``` fence, ascending.
+     *
+     * A stray is a bare ``` that opens nothing (no region is ever delimited by
+     * one) or a labelled opener that is never closed. Empty = fences are sound.
+     */
+    strays: number[];
+}
+
+/** Backtick-run length and info string of a fence line, or null if not a fence. */
+function fenceParts(line: string): { ticks: number; info: string } | null {
+    const m = FENCE_PARTS_RE.exec(line);
+    return m ? { ticks: (m[1] as string).length, info: (m[2] as string).trim() } : null;
+}
+
+/**
+ * Which lines are fenced — and which ``` fences are stray?
+ *
+ * Fenced regions exist for ONE reason: an *illustrative* template row (the §2.2
+ * `| # | Severity | …` example a doc-ish artefact quotes) must not be read as a
+ * live finding. Nothing else justifies making a line invisible, so the
+ * delimiter has to be something no author produces by accident.
+ *
+ * Two earlier shapes both failed OPEN, and they are the same defect:
+ *   - a single `inFence` toggle made every line after an ODD ```-count invisible;
+ *   - POSITIONAL pairing then detected parity but never MIS-pairing — two
+ *     unpaired inner openers (two `~~~`-wrapped illustrations, each holding one
+ *     stray ``` — exactly what `markdown-safe-codeblocks` produces, since the
+ *     outer `~~~` is not a fence to this grammar) paired with EACH OTHER and
+ *     swallowed every line between them, `unterminatedAt` staying `null`.
+ * In both, one earlier well-formed row kept `rows.length > 0`, so the
+ * neither-table-nor-honest-null fallback also stayed quiet and an unreviewed
+ * `open` row PASSED — the same fail-open the §2.2 `malformed-row` rule closes by
+ * a different route. Patching parity, then pairing, then the next arrangement is
+ * a losing game, so the discriminator is fixed instead of the arithmetic:
+ *
+ *   A region is skipped ONLY when it is a properly-closed pair whose OPENING
+ *   fence carries an info string (```` ```markdown ````). A BARE ``` never
+ *   delimits a region: it is recorded as a stray, the lines around it are parsed
+ *   as ordinary content, and the artefact is reported `unbalanced-fence`.
+ *
+ * So no arrangement of bare fences can hide a row — a swallowed `open` finding
+ * needs a deliberate label, which is the authoring act that means "illustration".
+ * Closing follows CommonMark (bare, and at least as many backticks as the
+ * opener), which also makes a ```` ````-wrapped ``` block nest correctly. An
+ * unterminated labelled opener skips nothing either and is itself a stray.
+ */
+export function scanFences(lines: readonly string[]): FenceScan {
+    const fenced = new Set<number>();
+    const strays: number[] = [];
+    let open: { at: number; ticks: number } | null = null;
+    for (let i = 0; i < lines.length; i++) {
+        const parts = fenceParts(lines[i] as string);
+        if (!parts) {
+            continue;
+        }
+        if (open !== null) {
+            // CommonMark closer: bare, and at least as long as the opener.
+            // Anything else is content inside the open region.
+            if (parts.info === '' && parts.ticks >= open.ticks) {
+                for (let j = open.at + 1; j < i; j++) {
+                    fenced.add(j);
+                }
+                open = null;
+            }
+            continue;
+        }
+        if (parts.info === '') {
+            strays.push(i + 1);
+            continue;
+        }
+        open = { at: i, ticks: parts.ticks };
+    }
+    if (open !== null) {
+        strays.push(open.at + 1);
+    }
+    strays.sort((a, b) => a - b);
+    return { fenced, strays };
+}
 
 export function parseArtifact(text: string): ParsedArtifact {
     const out: ParsedArtifact = {
@@ -311,18 +461,20 @@ export function parseArtifact(text: string): ParsedArtifact {
         rows: [],
         malformedLines: [],
         malformedRows: [],
+        strayFenceLines: [],
         manifest: parseManifest(text),
     };
     const lines = text.split(/\r?\n/);
-    let inFence = false;
+    const fences = scanFences(lines);
+    out.strayFenceLines = fences.strays;
     for (let i = 0; i < lines.length; i++) {
         const raw = lines[i] as string;
         const lineno = i + 1;
-        if (FENCE_RE.test(raw)) {
-            inFence = !inFence;
-            continue;
-        }
-        if (inFence) {
+        // A fence marker line carries no grammar of its own, and a line inside a
+        // LABELLED closed fence is illustrative content. A stray fence (bare, or
+        // an unclosed opener) skips nothing (see scanFences) — the lines around
+        // it are parsed, and the artefact is reported.
+        if (FENCE_RE.test(raw) || fences.fenced.has(i)) {
             continue;
         }
         const trimmed = raw.trim();
@@ -371,7 +523,12 @@ export function parseArtifact(text: string): ParsedArtifact {
             if (first === '#' || second === 'severity') {
                 continue; // header row
             }
-            if (cells.length >= 6) {
+            // EXACTLY six, per contract §2.2 — not `>= 6`. An over-long row is
+            // as malformed as a short one and the surplus is usually the tell:
+            // an unescaped `|` inside a cell (the shape §2.2 requires escaping)
+            // splits one cell into two and shifts Status/Reason-Ref rightwards,
+            // so accepting it silently reads the wrong cell as the status.
+            if (cells.length === 6) {
                 out.rows.push({
                     index: cells[0] ?? '',
                     severity: (cells[1] ?? '').toLowerCase(),
@@ -390,7 +547,7 @@ export function parseArtifact(text: string): ParsedArtifact {
                 // §2.2 template ends in exactly that empty cell. Gate R1 already
                 // reports this class — same name, `malformed_row`.
                 out.malformedRows.push(
-                    `line ${lineno}: findings row has ${String(cells.length)} cell(s), expected 6 ` +
+                    `line ${lineno}: findings row has ${String(cells.length)} cell(s), expected exactly 6 ` +
                         '(`| # | Severity | File:Line | Finding | Status | Reason/Ref |` — the trailing ' +
                         'Reason/Ref cell is required even when empty)',
                 );
@@ -605,6 +762,24 @@ function evaluate(input: EvalInput): Violation[] {
         for (const detail of art.malformedRows) {
             violations.push({ kind: 'malformed-row', file, detail });
         }
+        // §2.2: stray ``` fences — a BARE fence (which delimits nothing) or a
+        // labelled opener left unclosed. The parser swallows no line around them
+        // (so an `open` row still blocks), but an artefact whose fences do not
+        // resolve is malformed in its own right — the reader cannot tell
+        // illustrative content from live rows. ONE violation naming EVERY stray:
+        // a single line number could only ever name the last one.
+        if (art.strayFenceLines.length > 0) {
+            const at = art.strayFenceLines.map((n) => `line ${String(n)}`).join(', ');
+            violations.push({
+                kind: 'unbalanced-fence',
+                file,
+                detail:
+                    `${at}: stray \`\`\` fence — a bare fence delimits no region, and a labelled fence must ` +
+                    'be closed. An artefact whose ``` fences do not resolve is malformed (contract §2.2). ' +
+                    'Label the opener (```markdown) and close it, or inline-escape an illustrative ```; ' +
+                    'the lines around a stray fence are still parsed, so any finding row there is validated too.',
+            });
+        }
     }
 
     for (const { file, art } of relevant) {
@@ -757,6 +932,13 @@ function checkFindingsBeforeFixes(repo: string, artifactAbs: string, rows: reado
     // Earliest add commit: `git log --diff-filter=A` lists newest-first, so the
     // LAST line is the first commit that ever added the file (backdating via a
     // later amend does not move it).
+    //
+    // Scope of the guarantee, per contract §2.5: this resolves the earliest add
+    // of the PATH, not of the current round's artefact — a re-bound (or renamed
+    // and re-added) `<slug>.findings.md` keeps round 1's add. So the check proves
+    // "the review file existed before the fixes of its FIRST round", and
+    // per-round ordering stays agent-carried convention. Deliberate, and named
+    // as a limit in the contract rather than implied away.
     const logRes = gitTry(repo, ['log', '--diff-filter=A', '--format=%H', '--', rel]);
     const addLines = logRes.stdout
         .split('\n')

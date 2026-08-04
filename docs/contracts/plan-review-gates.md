@@ -270,7 +270,9 @@ enforced-mode switch is the removal of that flag — nothing else changes.
 - `scope:` — the § 2.0 review-scope hash, 64 lowercase hex chars. **Stale
   rule:** artifact `scope:` ≠ current `scope_hash` → stale review → block
   (a change to the reviewed content forces re-review). This is the **only**
-  field staleness is decided on.
+  field staleness is decided on. Because a fix commit changes the scope, a fix
+  pass **re-binds this field in the same artefact, in place** — that is the
+  normal path (§ 2.5), not the superseding rename of § 2.7.
 - `diff:` — the branch-head SHA at review time. **Provenance only; never
   compared.** It exists so an auditor can locate the reviewed head; a
   validator that compares it re-introduces the unsatisfiable binding § 2.0
@@ -321,6 +323,28 @@ current one is relevant **and** stale (`stale-review`).
   Cells split on **unescaped** `|` only, so `\|` inside a cell is content, not a
   column boundary. Same defect class, same name as Gate R1's `malformed_row`
   (§ 1.2).
+- **Fence rule:** a fenced region is skipped as illustrative content **only when
+  it is a properly-closed pair whose OPENING fence carries an info string**
+  (```` ```markdown ````, closed CommonMark-style by a bare fence of at least as
+  many backticks). A **bare** ``` never delimits a region: it is a **stray** →
+  `unbalanced-fence` block, the lines around it are parsed as ordinary content,
+  and every stray line is named in the one violation. A labelled opener that is
+  never closed is a stray too, and likewise skips nothing.
+  Why a deliberate label is the discriminator: fenced regions exist for exactly
+  one purpose — keeping the illustrative `| # | Severity | …` template above from
+  being read as a live finding — and every counting-based rule tried before it
+  failed open. First a single `inFence` toggle made every line after an odd
+  ```-count invisible; then positional pairing detected parity but never
+  *mis*-pairing, so two unpaired inner openers paired with **each other** and
+  swallowed every line between them while the unterminated-fence report stayed
+  silent. Each time, one earlier well-formed row kept the table non-empty, so the
+  "neither table nor honest-null" fallback also stayed quiet and an unreviewed
+  `open` row PASSED — the same fail-open as a dropped malformed row. An info
+  string cannot be produced by accident, so hiding a row now takes the authoring
+  act that means "this is an illustration". Note that following
+  [`markdown-safe-codeblocks`](../../src/rules/markdown-safe-codeblocks.md) —
+  wrap fence-bearing content in an outer `~~~` fence — is what produces those
+  unpaired inner ``` fences; the outer `~~~` is not a fence to this grammar.
 
 ### 2.3 Honest-null grammar (exact)
 
@@ -373,9 +397,33 @@ The findings artifact MUST be committed before the first fix commit:
 - **Backdating:** an artifact amended/rewritten to postdate fixes is
   detected via commit ancestry (the artifact's first-add commit is what
   counts, not its latest edit) → block.
+- **Re-binding in place is expected, not a violation.** A fix pass changes the
+  review scope (§ 2.0), so § 2.1 forces the binding artefact's `scope:` to be
+  re-bound; the artefact is edited in place and re-committed, and its first-add
+  commit deliberately does not move. § 2.7's rename is the archival step for a
+  round that is already **closed and superseded** — it is not an edit ban on the
+  live artefact.
 - Enforcement point: pre-push hook + CI, dual layer, **CI
   authoritative**; the agent-side check is advisory (warns, never blocks
   local work).
+
+**What the check proves — and what it does not (the limit of § 2.5).** The
+resolved commit is the earliest add of the artefact's **path**
+(`git log --diff-filter=A -- <path>`, last line), so the check proves exactly
+one thing: *the review file existed at that path before the fixes of its FIRST
+round.* It does **not** prove per-round ordering, for two independent reasons:
+
+1. re-binding the same `<slug>.findings.md` in place across rounds leaves the
+   first-add commit at round 1's add; and
+2. the path resolution ignores file identity — after a § 2.7 rename the path is
+   re-added, and the earliest add of that path is still round 1's.
+
+Consequence, stated plainly: a round-*N* `fixed` row may cite a commit that
+predates round *N*'s own review and still pass. Per-round ordering is
+agent-carried convention (dispatch the round, commit its artefact, then fix),
+the same stance § 2.7 takes for terminal-before-rename. What § 2.5 does hold
+against is the case it was built for: fixing silently and writing the review
+afterwards, on a branch whose review file did not exist yet.
 
 ### 2.6 Artefact relevance — no directory-wide poisoning
 
@@ -398,11 +446,19 @@ additionally report `missing-artifact`.
 
 ### 2.7 Superseded rounds — naming, so the glob and the reader agree
 
-The gate's corpus is `*.findings.md`. A review whose content has moved on (the
-fixes changed the scope, § 2.0) is **renamed out of that glob** rather than
-edited in place — the convention is
-`<slug>.round<N>-review.md`:
+The gate's corpus is `*.findings.md`. A round that is **closed and superseded**
+— every finding terminal, its scope dead because the next round's review will
+bind the new content — is **renamed out of that glob**; the convention is
+`<slug>.round<N>-review.md`. The rename is an **archival step at the end of a
+round, never an edit ban on the live artefact**:
 
+- **Within a round, the binding artefact is re-bound in place.** The fix pass
+  changes the review scope (§ 2.0), so `<slug>.findings.md` is edited — new
+  `scope:`, rows flipped to terminal — and re-committed. § 2.1 requires exactly
+  that (`scope:` must equal the CURRENT scope), § 2.5 names it as expected, and
+  the validator's own pass fixture exercises it. Renaming instead of re-binding
+  here would leave the shipping content with no review at all →
+  `missing-artifact`.
 - **`<slug>.findings.md`** — exactly one per branch: the **binding** review of
   the content as it ships. This is what the gate reads.
 - **`<slug>.round<N>-review.md`** — superseded rounds, kept as the audit trail
