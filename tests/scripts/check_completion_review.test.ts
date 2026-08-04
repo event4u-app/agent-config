@@ -293,6 +293,39 @@ describe.runIf(hasGit())('check_completion_review — pass states', () => {
         expect(res.status).toBe(0);
     });
 
+    // Non-regression for the round-7 fence fix: a row inside a CLOSED fence is
+    // still illustrative content, not a live finding. Only the UNTERMINATED case
+    // changed behaviour.
+    it('a template row inside a closed fence is illustrative, not an open finding', () => {
+        const dir = makeRepo();
+        write(dir, 'src/feature.ts', 'export const y = 2;\n');
+        commitAll(dir, 'feature');
+        const scope = scopeHash(dir);
+        write(
+            dir,
+            ART,
+            [
+                '# Findings: feat',
+                marker(scope),
+                '',
+                manifestFor(scope),
+                '',
+                'The §2.2 template, quoted:',
+                '',
+                '```markdown',
+                ...TABLE_HEAD,
+                '| 1 | critical | src/x.ts:42 | ... | open | |',
+                '```',
+                '',
+                `**Honest-null:** 0 findings, scope ${scope}, reviewed 2026-08-04`,
+                '',
+            ].join('\n'),
+        );
+        const res = runGate(dir);
+        expect(res.violations).toEqual([]);
+        expect(res.status).toBe(0);
+    });
+
     it('passes with a note when there are no reviewable changes vs base', () => {
         const dir = makeRepo(); // feat == main tip, empty scope
         const res = runInProc(main, ['--repo', dir, '--base', 'main']);
@@ -452,6 +485,47 @@ describe.runIf(hasGit())('check_completion_review — violations', () => {
         );
         const res = runGate(dir);
         expect(res.kinds.sort()).toEqual(['malformed-row', 'open-finding']);
+        expect(res.status).toBe(1);
+    });
+
+    // Round-7 finding 1: an ODD number of ```-prefixed lines used to make every
+    // LATER line invisible (one `inFence` toggle that never reset), so a trailing
+    // `open` row was never parsed — while one earlier terminal row kept
+    // rows.length > 0 and the neither-table-nor-honest-null fallback quiet. The
+    // artefact PASSED. `markdown-safe-codeblocks` produces exactly that odd
+    // count: its outer fence is `~~~`, which the ``` grammar does not match.
+    it('unbalanced-fence: an unterminated fence blocks and swallows no later row', () => {
+        const dir = makeRepo();
+        write(dir, 'src/feature.ts', 'export const y = 2;\n');
+        commitAll(dir, 'feature');
+        const scope = scopeHash(dir);
+        write(
+            dir,
+            ART,
+            [
+                '# Findings: feat',
+                marker(scope),
+                '',
+                manifestFor(scope),
+                '',
+                ...TABLE_HEAD,
+                '| 1 | high | src/feature.ts:1 | real bug | accepted-risk | mitigated upstream, accepted |',
+                '',
+                'Illustration (outer fence `~~~` per markdown-safe-codeblocks):',
+                '',
+                '~~~markdown',
+                '```', // unpaired inner opener — the ``` count is now odd
+                '~~~',
+                '',
+                '| 2 | medium | src/feature.ts:2 | used to be swallowed | open | |',
+                '',
+            ].join('\n'),
+        );
+        const res = runGate(dir);
+        expect(res.kinds.sort()).toEqual(['open-finding', 'unbalanced-fence']);
+        expect(res.violations.find((v) => v.kind === 'unbalanced-fence')?.detail).toContain(
+            'opened and never closed',
+        );
         expect(res.status).toBe(1);
     });
 

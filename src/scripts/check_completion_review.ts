@@ -18,10 +18,14 @@
  *     with the required Reason/Ref content;
  *   - every table-shaped row parses into the six §2.2 cells (`malformed-row`) —
  *     a short row is never silently dropped, or an `open` finding would pass;
+ *   - ``` fences balance (`unbalanced-fence`) — and an unterminated one never
+ *     swallows the rest of the artefact, for the same reason;
  *   - severity rows are sorted descending (critical > high > medium > low);
  *   - findings-before-fixes ancestry: the commit that FIRST added the
  *     artifact is an ancestor of every referenced fix commit (§2.5 — the
- *     first-add commit is what counts, so backdating is detected too).
+ *     first-add commit is what counts, so backdating is detected too; it is the
+ *     earliest add of the PATH, so the guarantee covers the artefact's FIRST
+ *     round, and per-round ordering stays convention — §2.5 names that limit).
  *
  * The review binds to the review-SCOPE HASH, never to a commit sha. That
  * definition is owned by `dispatch_r2_reviewer.ts` and imported here so the
@@ -114,6 +118,14 @@ export interface ParsedArtifact {
      * defect class.
      */
     malformedRows: string[];
+    /**
+     * 1-based line of a ``` fence opened and never closed, if any (§2.2).
+     *
+     * Reported as `unbalanced-fence`. The region after such an opener is still
+     * parsed — an unbalanced fence must never swallow the rest of the artefact,
+     * or a later `open` row would pass unseen.
+     */
+    unbalancedFenceAt: number | null;
     /** The §5 context manifest, when present and parseable. */
     manifest: ParsedManifest | null;
 }
@@ -352,6 +364,49 @@ function splitTableRow(line: string): string[] {
 
 const FENCE_RE = /^\s*```/;
 
+export interface FenceScan {
+    /** 0-based indices of lines inside a CLOSED fence — the only lines to skip. */
+    fenced: Set<number>;
+    /** 1-based line number of a fence opened and never closed, if any. */
+    unterminatedAt: number | null;
+}
+
+/**
+ * Which lines are fenced — and is the last fence left open?
+ *
+ * A single-pass `inFence` toggle fails OPEN on an ODD number of ```-prefixed
+ * lines: every later line becomes invisible, so a trailing `open` (or
+ * `deferred`-without-ref) row is never parsed, while one earlier well-formed
+ * row keeps `rows.length > 0` and the neither-table-nor-honest-null fallback
+ * quiet — the same fail-open the §2.2 `malformed-row` rule closed by a
+ * different route. This repo's own `markdown-safe-codeblocks` rule PRODUCES
+ * that odd count: it tells authors to wrap fence-bearing content in an OUTER
+ * `~~~` fence, which FENCE_RE does not match, leaving the inner ``` unpaired.
+ *
+ * So only lines between a MATCHED pair count as fenced; the region after an
+ * unterminated opener is re-scanned as ordinary content (nothing is swallowed),
+ * and the artefact is separately reported `unbalanced-fence` — fences that do
+ * not balance make an artefact unparseable by inspection, not merely untidy.
+ */
+export function scanFences(lines: readonly string[]): FenceScan {
+    const fenced = new Set<number>();
+    let openAt: number | null = null;
+    for (let i = 0; i < lines.length; i++) {
+        if (!FENCE_RE.test(lines[i] as string)) {
+            continue;
+        }
+        if (openAt === null) {
+            openAt = i;
+            continue;
+        }
+        for (let j = openAt + 1; j < i; j++) {
+            fenced.add(j);
+        }
+        openAt = null;
+    }
+    return { fenced, unterminatedAt: openAt === null ? null : openAt + 1 };
+}
+
 export function parseArtifact(text: string): ParsedArtifact {
     const out: ParsedArtifact = {
         marker: null,
@@ -361,18 +416,19 @@ export function parseArtifact(text: string): ParsedArtifact {
         rows: [],
         malformedLines: [],
         malformedRows: [],
+        unbalancedFenceAt: null,
         manifest: parseManifest(text),
     };
     const lines = text.split(/\r?\n/);
-    let inFence = false;
+    const fences = scanFences(lines);
+    out.unbalancedFenceAt = fences.unterminatedAt;
     for (let i = 0; i < lines.length; i++) {
         const raw = lines[i] as string;
         const lineno = i + 1;
-        if (FENCE_RE.test(raw)) {
-            inFence = !inFence;
-            continue;
-        }
-        if (inFence) {
+        // A fence marker line carries no grammar of its own, and a line inside a
+        // CLOSED fence is illustrative content. An unterminated fence skips
+        // nothing (see scanFences) — its region is parsed, and reported.
+        if (FENCE_RE.test(raw) || fences.fenced.has(i)) {
             continue;
         }
         const trimmed = raw.trim();
@@ -660,6 +716,21 @@ function evaluate(input: EvalInput): Violation[] {
         for (const detail of art.malformedRows) {
             violations.push({ kind: 'malformed-row', file, detail });
         }
+        // §2.2: fences that do not balance. The parser no longer swallows the
+        // region after the opener (so a trailing `open` row still blocks), but
+        // an artefact whose fences do not close is malformed in its own right —
+        // the reader cannot tell illustrative content from live rows.
+        if (art.unbalancedFenceAt !== null) {
+            violations.push({
+                kind: 'unbalanced-fence',
+                file,
+                detail:
+                    `line ${String(art.unbalancedFenceAt)}: code fence opened and never closed — an artefact ` +
+                    'whose ``` fences do not balance is malformed (contract §2.2). Close the fence, or ' +
+                    'inline-escape an illustrative ``` so the count balances; the region after the opener is ' +
+                    'still parsed, so any finding row in it is validated too.',
+            });
+        }
     }
 
     for (const { file, art } of relevant) {
@@ -812,6 +883,13 @@ function checkFindingsBeforeFixes(repo: string, artifactAbs: string, rows: reado
     // Earliest add commit: `git log --diff-filter=A` lists newest-first, so the
     // LAST line is the first commit that ever added the file (backdating via a
     // later amend does not move it).
+    //
+    // Scope of the guarantee, per contract §2.5: this resolves the earliest add
+    // of the PATH, not of the current round's artefact — a re-bound (or renamed
+    // and re-added) `<slug>.findings.md` keeps round 1's add. So the check proves
+    // "the review file existed before the fixes of its FIRST round", and
+    // per-round ordering stays agent-carried convention. Deliberate, and named
+    // as a limit in the contract rather than implied away.
     const logRes = gitTry(repo, ['log', '--diff-filter=A', '--format=%H', '--', rel]);
     const addLines = logRes.stdout
         .split('\n')
