@@ -11,9 +11,10 @@ triggers:
   - keyword: "symptoms"
   - keyword: "dosage"
   - keyword: "medication"
+  # `valuation` / `DCF` moved to finance-safety-floor (2026-08-04) — that
+  # pack floor already carried both; this rule keeps the advisory-shaped
+  # finance triggers the floor does not cover.
   - keyword: "investment memo"
-  - keyword: "valuation"
-  - keyword: "DCF"
   - keyword: "tax position"
   - keyword: "strategic recommendation"
   - keyword: "board memo"
@@ -39,6 +40,8 @@ applies_to_user_types:
   - "creator"
 workspaces: [agent-config-maintainer, construction, engineering, finance, founder, gtm, legal-review-prep, ops, product, small-business]
 packs: [meta]
+collision_ok:
+  "review this contract": "contract review is advisory-shaped — the not-legal-advice footer floor"
 ---
 
 # Domain Safety — Advisory Disclaimer

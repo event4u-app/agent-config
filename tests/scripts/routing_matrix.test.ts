@@ -38,8 +38,10 @@ interface MatrixFile {
  * Tier-2 matrices are a presence RATCHET: the count may only rise. Raise
  * this floor in the same change that adds new tier-2 matrix files.
  * 2026-08-03: full tier-2 coverage landed (73/73).
+ * 2026-08-04: 73 → 72 — brand-consistency merged into brand-source-of-truth
+ * (rule hygiene); its matrix positives were absorbed, coverage stays full.
  */
-const TIER2_MATRIX_FLOOR = 73;
+const TIER2_MATRIX_FLOOR = 72;
 
 const files = fs
   .readdirSync(MATRIX_DIR)

@@ -20,8 +20,8 @@ Brand as a first-class UX layer — archetype/voice/identity grounding corpus, b
 
 ## Rules (2)
 
-- **`brand-consistency`** — Generated UI/copy/assets check against active brand tokens + voice profile — untraceable values are flagged off-brand
-- **`brand-source-of-truth`** — Consumer brand tokens + voice profile are the run's source of truth — the corpus fills gaps, never overrides
+- **`brand-consistency`** — Merged into brand-source-of-truth (2026-08-04) — every emitted colour/type/spacing/voice choice traces to a brand token or voice rule
+- **`brand-source-of-truth`** — Consumer brand tokens + voice profile are the run's source of truth — the corpus fills gaps, never overrides; emitted values that trace to no token are flagged off-brand
 
 ## Skills (5)
 
