@@ -46,12 +46,11 @@ Mechanical backstop:
 (non-zero exit on any rule below). Self-scan is the primary gate;
 the script is the deterministic safety net.
 
-## Question pacing — simple vs complex
+## Question pacing — one decision point per turn
 
-- **Simple, binary, or independent questions** may be grouped into a single reply with numbered options.
-- **Complex, dependent, or branching questions** must be asked **one at a time** — one question per turn — so each answer informs the next.
+[`ask-when-uncertain`](ask-when-uncertain.md)'s Iron Law is canonical: **one question per turn**. What counts as "one question" is **one decision point** — a single numbered-options block is ONE question even when its options span multiple dimensions (a depth-and-framework matrix answered with a single number is one decision). Multiple separate asks in one reply, or a block whose answer would need a structured reply (`1a, 2b`), violate the kernel rule's self-check.
 
-If in doubt, prefer one question at a time over a long batched prompt.
+If in doubt, split into serial turns — never a long batched prompt.
 
 ## Mechanics — rationale, failure modes, format details, examples
 

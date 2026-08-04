@@ -52,7 +52,7 @@ Normative source: [`skill-quality`](../../rules/skill-quality.md) § *Descriptio
 
 | Check | Pass when… |
 |---|---|
-| **Length** | ≤ 200 characters (soft cap; linter warns `description_too_long`) |
+| **Length** | ≤ 200 characters (hard cap; linter errors `description_too_long`) |
 | **Trigger prefix** | Starts with "Use when …" or equivalent trigger phrasing |
 | **Trigger classes** | Names ≥ 2 of: domain, symptom, user phrasing, tool, file type |
 | **Undertrigger tail** | Ends with "… even if the user doesn't say `{name}`" or equivalent |

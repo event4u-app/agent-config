@@ -132,7 +132,8 @@ Size checks:
 - **< 150 lines** — healthy
 - **150–300 lines** — expect a Table of Contents; flag if missing
 - **300–500 lines** — flag as overloaded; deep content should be in `/docs/`
-- **> 500 lines** — flag as broken entry point; hard split required
+- **> 500 lines** — flag as broken entry point; split strongly recommended
+- The enforced lint limit is **750 lines** (`lint_readme_size.ts` fails above it); the 150/300/500 bands are editorial
 
 Structure checks:
 

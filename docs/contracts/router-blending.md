@@ -43,7 +43,7 @@ Each pool entry is a `recommended_for_user_types:` frontmatter tag on the skill.
 ## How the loader resolves a profile
 
 1. **Read** `.agent-config.local.json` → `user_type`.
-2. **Filter** all 210 skills: keep the skill iff `user_type ∈ recommended_for_user_types` **or** `recommended_for_user_types` is absent (universal).
+2. **Filter** all ~290 skills (288 as-of 2026-08): keep the skill iff `user_type ∈ recommended_for_user_types` **or** `recommended_for_user_types` is absent (universal).
 3. **Stack overlay.** If `stack` is set (laravel / nextjs / python / …), also keep skills whose body cites that stack — language-keyed bridge. Implementation: pattern match on the skill `description:` frontmatter; details land with the schema-rigor contract once the schema bridge for stack-keyed bridge tagging is finalised.
 4. **Cap.** No filter is applied if the result drops below 50 skills (safety floor — under-filtering is recoverable, over-filtering hides essentials).
 5. **Surface** `loaded_skills_count` + per-pool counts in the agent debug output.

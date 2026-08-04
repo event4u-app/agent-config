@@ -135,7 +135,7 @@ source's remote lookup is dropped — a lethal-trifecta egress concern).
 - Is the scope bounded? (not "make it better" but "add X to Y")
 - Are edge cases considered?
 
-**If unclear** → ask ONE focused question. Max 2 questions, never an interrogation.
+**If unclear** → ask ONE focused question per turn (`ask-when-uncertain` Iron Law — serial, never batched), never an interrogation.
 
 ### 8b. Does it fit the existing architecture?
 

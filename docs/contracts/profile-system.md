@@ -18,7 +18,7 @@ keep-beta-until: 2026-08-14
 
 A **profile** declares the user's audience identity. Six seed profiles
 ship; users can declare their own under
-`.agent-src.uncondensed/profiles/<id>.yml`.
+`src/agent-src/profiles/<id>.yml`.
 
 | `profile.id` | Audience | README entry-paragraph | Default `preset.id` |
 |---|---|---|---|
@@ -44,7 +44,7 @@ profile:
     readme_anchor: "developer"          # selects README first-screen block
   defaults:
     preset_id: balanced                  # may be overridden by .agent-settings.yml
-    personas: [reviewer, security]       # pre-selected persona ids
+    personas: [qa, security-engineer]    # pre-selected persona ids
     skills_hint: [developer-like-execution, verify-before-complete, minimal-safe-diff]
   surface:
     commands_hint: [work, implement-ticket, review-changes, fix]
@@ -109,7 +109,7 @@ After the loader runs, the session has:
   "packs": ["engineering-base"],
   "audience": {"label": "IC engineer", "readme_anchor": "developer"},
   "preset_id": "balanced",
-  "personas": ["reviewer", "security"],
+  "personas": ["qa", "security-engineer"],
   "skills_hint": ["developer-like-execution", ...],
   "commands_hint": ["work", "implement-ticket", ...],
   "source": "user-settings | env | runtime | pack | default",
@@ -123,7 +123,7 @@ command (Phase 1 item 3).
 ## User-defined profiles
 
 A consumer project MAY ship a custom profile under
-`.agent-src.uncondensed/profiles/<id>.yml`. Constraints:
+`src/agent-src/profiles/<id>.yml`. Constraints:
 
 - `id` MUST be unique across seed + user-defined profiles.
 - Shape MUST match the seed contract above (audience / defaults / surface).
@@ -143,7 +143,7 @@ Only changes to the **seed set** require an ADR.
 - A profile YAML references a non-existent `preset_id`.
 - The seed-profile count diverges from this contract's table.
 - `defaults.personas` references a persona id that does not exist
-  under `.agent-src.uncondensed/personas/`.
+  under `src/agent-src/personas/`.
 
 ## Non-goals
 

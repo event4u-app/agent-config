@@ -120,6 +120,13 @@ is a fabricated fact wearing a number:
 
 A step list is honest ("A → B → C, C depends on B"); a schedule is invention.
 
+**Carve-out — world-knowledge ranges.** An industry-typical duration sourced
+from public benchmarks in strategy-advisory output ("integrations of this
+class typically run 4–8 weeks") is a statement about the world, not a
+prediction of the agent's or the user's own latency — allowed, but it MUST
+carry an "industry-typical, not a prediction" qualifier. Unqualified, it
+reads as the banned schedule.
+
 ### Never cite the rule as the reason
 
 When declining or constraining an action, give the **actual, substantive

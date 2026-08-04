@@ -78,7 +78,7 @@ sections triplicated):
 | **Total** | **≤ 240** |
 
 Net always-rule budget delta: **+39 lines** (≈ 1.8 % of the current
-2207-line total). Within the ~49k-token target ceiling tracked in
+2207-line total). Within the ~49k-char target ceiling tracked in
 `road-to-governance-cleanup.md`.
 
 ## Consequences

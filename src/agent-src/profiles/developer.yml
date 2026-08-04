@@ -13,8 +13,8 @@ profile:
   defaults:
     preset_id: balanced
     personas:
-      - reviewer
-      - security
+      - qa
+      - security-engineer
     skills_hint:
       - developer-like-execution
       - verify-completion-evidence

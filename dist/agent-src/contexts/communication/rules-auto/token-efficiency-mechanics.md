@@ -53,7 +53,10 @@ command says "ask the user", you ask.
   or ask the user.
 - Max 3 diagnostic commands per error. Read the error, think, act.
 - One hypothesis at a time. Pick the most likely, try it. Fails →
-  ask.
+  next hypothesis; failures on the same target accrue to the ONE
+  retry ladder (2 retries per approach → N=3 stop-and-ask, per
+  [`autonomy-mechanics § Retry-budget escalation ladder`](../../execution/autonomy-mechanics.md))
+  — never a separate one-strike cap.
 
 ### Keep intermediate output minimal
 

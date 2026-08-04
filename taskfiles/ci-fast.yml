@@ -931,6 +931,21 @@ tasks:
     desc: "Block PHP/Laravel/etc. leakage in generic skills/rules/commands (framework-neutrality-in-generic-skills rule)"
     cmd: ./scripts-run src/scripts/lint_framework_leakage {{.QUIET_FLAG}}
 
+  lint-abstraction-thresholds:
+    silent: true
+    desc: "Extraction-threshold drift gate (ADR-213) — a numeric extraction threshold outside the canon must cite docs/guidelines/abstraction-thresholds.md; canon rows + citing sites are pinned bidirectionally"
+    cmd: ./scripts-run src/scripts/lint_abstraction_thresholds {{.QUIET_FLAG}}
+
+  lint-profile-personas:
+    silent: true
+    desc: "Profile → persona join gate — every defaults.personas id in src/agent-src/profiles/*.yml must resolve to a persona file under src/agent-src/personas/ (incl. advisors/)"
+    cmd: ./scripts-run src/scripts/lint_profile_personas {{.QUIET_FLAG}}
+
+  lint-token-budget-discipline:
+    silent: true
+    desc: "Token-budget discipline (token-budget-discipline rule) — rich-tagged skills stay under the 15% cap and carry a '## Why this skill is rich' section; invalid class values fail"
+    cmd: ./scripts-run src/scripts/lint_token_budget_discipline {{.QUIET_FLAG}}
+
   lint-trigger-precision:
     silent: true
     desc: "Ratchet on short (<=3 char) keyword triggers — a keyword matches as an unanchored substring, so a new short one claims part of the language"

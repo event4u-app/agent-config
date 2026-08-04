@@ -27,12 +27,14 @@ The smallest change is also the least *abstract* and least *speculative* one:
   / generic / config layer to dedupe two or three call sites — inline
   repetition is cheaper to read and change than the wrong abstraction. Per new
   abstraction: **cite the second caller — or inline it.** The operative
-  threshold in this suite is the **second real repetition** (or a genuine second
-  axis of change), matching `architecture` and
+  **code-level** threshold in this suite is the **second real repetition** (or a
+  genuine second axis of change), matching `architecture` and
   [`component-oriented-and-oop-development`](../component-oriented-and-oop-development.md);
   the "three lines" phrasing is about *line* count inside one call site, not a
   third-occurrence gate. A borrowed "wait for the third occurrence" rule is
-  **not** adopted — it would fork a threshold this repo already decided.
+  **not** adopted for code — it would fork a threshold this repo already
+  decided. UI extractions carry deliberately higher, scoped bars (ADR-213) —
+  the per-class canon is [`abstraction-thresholds`](../abstraction-thresholds.md).
 - **No speculative features.** Nothing beyond what was asked: no
   configurability or "flexibility" nobody requested, no parameters with one
   call site, no error handling for scenarios that cannot occur in this

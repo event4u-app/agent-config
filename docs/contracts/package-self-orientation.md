@@ -87,14 +87,14 @@ condense + regenerate the tool directories.
 
 ```
 .agent-src.uncondensed/      ← edit here
-  skills/       (150 skills)
-  rules/        (58 rules)
-  commands/     (103 commands)
+  skills/       (288 skills)
+  rules/        (111 rules)
+  commands/     (193 commands)
   personas/     (7 personas)
   templates/    (AGENTS.md, copilot-instructions.md, skill.md, …)
   contexts/
 
-docs/guidelines/            (47 guidelines — reference material, not packaged)
+docs/guidelines/            (102 guidelines — reference material, not packaged)
 docs/contracts/             (kernel-membership, rule-router, rule-classification, …)
 docs/decisions/             (ADRs — kernel overrides, scope decisions)
 dist/agent-src/                 ← condensed output shipped in the package

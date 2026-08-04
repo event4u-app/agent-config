@@ -20,8 +20,8 @@ packs:
 
 # condense
 
-Condense agent config `.md` files from `src/` into token-efficient telegraph format
-and write the condensed output to `dist/agent-src/`.
+Project agent config `.md` files from `src/` into `dist/agent-src/` — verbatim
+copy with the path rewriter applied (ADR-201; the LLM prose rewrite is removed).
 
 The projection is deterministic: `dist == rewrite(src)` byte-for-byte. A file is
 out of date only when its projection does not match that rewrite.
@@ -96,76 +96,31 @@ Read `verbosity.post_action_reports` from `.agent-settings.yml` (default
 `minimal`).
 
 - `off` → emit nothing on success; surface errors only.
-- `minimal` (default) → one line: `→ N files condensed (avg X% savings)`.
-- `full` → multi-line table with per-category stats (files condensed,
-  avg savings).
+- `minimal` (default) → one line: `→ N files synced`.
+- `full` → multi-line table with per-category stats (files synced,
+  stale files reaped).
 
-## Iron Laws — do not touch
+## Iron Laws — preserved by construction
 
 Sections under headings matching `Iron Law`, `Iron Laws`, or `The Iron Law` (any
 heading level, numbered variants like `Iron Law 1` included) are **load-bearing
-behavioral rules**. Condensation rules above do **not** apply to them.
+behavioral rules**. Post-ADR-201 the projection is a verbatim copy, so headings,
+fenced blocks, and negation clauses survive by construction — there is no manual
+preservation step for the agent to perform.
 
-For every Iron Law section in a source file:
-
-- **Copy the heading verbatim**, exact text, exact `#` level. NEVER downgrade
-  `## Iron Law` to `### Iron Law` or to inline `**Iron Law:**`.
-- **Copy the fenced code block byte-for-byte**, including capitalization, line
-  breaks, and trailing punctuation.
-- **Copy the negation clauses verbatim** — `NO X`, `NEVER Y`, `NOT Z`. These
-  are the law's exception denials; stripping them weakens the rule.
-- **Telegraph the prose, keep every passage** — every paragraph, every list
-  item, and every fenced code block from the source must appear in the
-  condensed output, in order. Drop articles, shorten phrasing, primitive
-  grammar, terse cave-speak — all encouraged. What's forbidden is dropping
-  whole sentences, merging two paragraphs into one, or skipping a bullet.
-  One paragraph → one paragraph; one bullet → one bullet.
-- **No word-count budget** — condense the prose as hard as telegraph style
-  allows. The check is structural (passage count), not quantitative.
-
-`scripts/check_condensation.ts` enforces these mechanically — `iron_law_missing`,
-`iron_law_passage_dropped`, and `iron_law_heading_downgrade` are `error`-level
-and block CI.
+`scripts/check_condensation.ts` enforces this mechanically — since ADR-201 it
+asserts `dist == rewrite(src)` byte-for-byte; `iron_law_missing`,
+`iron_law_passage_dropped`, and `iron_law_heading_downgrade` remain `error`-level
+diagnostics that name what differs when the bytes do.
 
 If an Iron Law section genuinely contains filler (rare): edit the SOURCE in
-`src/`, not the condensed copy. Source is the truth.
-
-## Condensation quality checklist
-
-**Also apply the [preservation-guard](../rules/preservation-guard.md) rule** — strongest validation, example, anti-pattern, and decision hints must survive condensation. Iron Laws are non-negotiable.
-
-See also: [markdown-safe-codeblocks](../rules/markdown-safe-codeblocks.md) for fenced-block hygiene.
-
-After condensing each file, verify:
-
-- [ ] All code blocks preserved exactly (no content changes)
-- [ ] All inline code, URLs, file paths unchanged
-- [ ] YAML frontmatter identical to source
-- [ ] Headings match source exactly
-- [ ] Tables structure preserved (cell text may be shortened)
-- [ ] "NEVER", "MUST", "Do NOT" and other strong language preserved
-- [ ] Technical terms, library names, API names unchanged
-- [ ] No meaning lost — condensed version says the same thing, shorter
-- [ ] No sections accidentally removed
-- [ ] Word count reduction is 20-50% (typical range for prose-heavy files)
-
-### Safe vs unsafe condensation
-
-Safe:
-- "You should always make sure to run the tests before committing" → "Run tests before commit"
-- "In order to ensure that the configuration is correct" → "To verify config"
-- "It is important to note that this feature requires" → "Requires"
-
-Unsafe (DO NOT do this):
-- Removing a bullet point that contains unique information
-- Changing `php artisan test --filter=MyTest` to `php artisan test`
-- Shortening "Do NOT use float for money" to "Avoid float"
-- Removing "NEVER" from "NEVER add to phpstan-baseline.neon"
+`src/`, not the projected copy. Source is the truth. Authoring-time transforms
+(merges, splits, refactors) remain governed by
+[preservation-guard](../rules/preservation-guard.md).
 
 ## Rules
 
 - **Do NOT commit or push.** Only write files.
 - **Do NOT modify `src/`** — it is the source of truth.
-- **Only write to `.augment/`** — the condensed output directory.
-- **Preserve ALL technical content** — only condense natural language prose.
-- **YAML frontmatter** in command/skill files must be preserved exactly.
+- **Only write to `dist/agent-src/`** (via `condense.sh` / the script) — never
+  hand-edit any projection.
