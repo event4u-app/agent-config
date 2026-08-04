@@ -44,6 +44,8 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import { parse as parseYaml } from 'yaml';
 
+import { splitMarkdownRow } from './_lib/md_table.js';
+import { completionReviewDisabled } from './_lib/planning_settings.js';
 import { DeadScopeError, assertScanned } from './_lib/scan_scope.js';
 import {
     computeReviewScope,
@@ -286,12 +288,7 @@ export function isOwnArtifactSlug(artifactSlug: string, branchSlug: string): boo
 }
 
 function splitTableRow(line: string): string[] {
-    let inner = line.trim();
-    inner = inner.slice(1); // leading |
-    if (inner.endsWith('|')) {
-        inner = inner.slice(0, -1);
-    }
-    return inner.split('|').map((c) => c.trim());
+    return splitMarkdownRow(line);
 }
 
 const FENCE_RE = /^\s*```/;
@@ -722,7 +719,10 @@ function checkFindingsBeforeFixes(repo: string, artifactAbs: string, rows: reado
         return violations;
     }
 
-    const rel = path.relative(repo, artifactAbs);
+    // `/`-normalized: a raw Windows separator is not a valid git pathspec, and
+    // an empty result here reads as `artifact-not-committed` on a properly
+    // committed artifact.
+    const rel = path.relative(repo, artifactAbs).split(path.sep).join('/');
     // Earliest add commit: `git log --diff-filter=A` lists newest-first, so the
     // LAST line is the first commit that ever added the file (backdating via a
     // later amend does not move it).
@@ -892,25 +892,12 @@ function report(args: Args, violations: readonly Violation[], passNote: string |
  * Gate R2. Parsing mirrors Gate R1's `riskReviewDisabled` exactly (same file,
  * same fail-open-on-unreadable/unparseable behaviour, same strict `=== false`
  * test) so a missing key or a missing file leaves the gate ACTIVE.
+ *
+ * Re-exported from `_lib/planning_settings.ts`: the dispatcher's `--verify`
+ * layer must honour the same hatch, and it cannot import from this module
+ * (this module imports the scope hash from it).
  */
-export function completionReviewDisabled(settingsDir: string): boolean {
-    const settingsPath = path.join(settingsDir, '.agent-settings.yml');
-    let raw: string;
-    try {
-        raw = fs.readFileSync(settingsPath, 'utf-8');
-    } catch {
-        return false;
-    }
-    try {
-        const parsed = parseYaml(raw) as unknown;
-        if (parsed === null || typeof parsed !== 'object') return false;
-        const planning = (parsed as Record<string, unknown>)['planning'];
-        if (planning === null || typeof planning !== 'object') return false;
-        return (planning as Record<string, unknown>)['completion_review'] === false;
-    } catch {
-        return false;
-    }
-}
+export { completionReviewDisabled };
 
 /** Is `rel` a tracked directory in `ref`? Absolute paths are never tracked. */
 function isTrackedTree(repo: string, ref: string, rel: string): boolean {

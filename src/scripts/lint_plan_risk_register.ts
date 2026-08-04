@@ -39,6 +39,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import { parse as parseYaml } from 'yaml';
 
+import { splitMarkdownRow } from './_lib/md_table.js';
 import { assertScanned, DeadScopeError } from './_lib/scan_scope.js';
 
 /**
@@ -208,8 +209,7 @@ export function anchorResolves(anchor: string, docText: string): boolean {
 const TABLE_HEADER_CELLS = ['Rank', 'Item', 'Risk type', 'Description', 'Mitigation', 'Anchored under'];
 
 function _splitRow(line: string): string[] {
-    const trimmed = line.trim().replace(/^\|/, '').replace(/\|$/, '');
-    return trimmed.split('|').map((c) => c.trim());
+    return splitMarkdownRow(line);
 }
 
 function _isHeaderRow(line: string): boolean {
@@ -486,7 +486,10 @@ export function fileHistory(absPath: string): HistoryEntry[] {
     const top = _git(dir, ['rev-parse', '--show-toplevel']);
     if (top === null) return [];
     const root = top.trim();
-    const rel = path.relative(root, absPath);
+    // Normalize separators: git pathspecs use `/` on every platform, so a raw
+    // Windows `path.relative()` result matches nothing and would silently yield
+    // an empty history — which the grandfather clause reads as "no baseline".
+    const rel = path.relative(root, absPath).split(path.sep).join('/');
     const out = _git(root, ['log', '--format=%H %cs', '--', rel]);
     if (out === null) return [];
     const entries: HistoryEntry[] = [];
@@ -777,15 +780,28 @@ export function main(argv?: readonly string[]): number {
     const all_violations: Violation[] = [];
     let scanned = 0;
     const statusLines: string[] = [];
-    for (const p of targets) {
-        const result = checkFile(p);
-        scanned += 1;
-        if (result.status === 'draft-exempt') {
-            statusLines.push(`  draft-exempt: ${p}`);
-        } else if (result.status === 'grandfathered') {
-            statusLines.push(`  grandfathered: ${p}`);
+    try {
+        for (const p of targets) {
+            const result = checkFile(p);
+            scanned += 1;
+            if (result.status === 'draft-exempt') {
+                statusLines.push(`  draft-exempt: ${p}`);
+            } else if (result.status === 'grandfathered') {
+                statusLines.push(`  grandfathered: ${p}`);
+            }
+            all_violations.push(...result.violations);
         }
-        all_violations.push(...result.violations);
+    } catch (exc) {
+        // Contract § 6: `scanned:` is emitted on EVERY exit path, exit 2
+        // included. A throw mid-loop (unreadable file, permission denied) that
+        // exited silently would leave the coverage guard with no count at all —
+        // the same blind spot the guard exists to detect.
+        process.stdout.write(`scanned: ${String(scanned)}\n`);
+        process.stderr.write(
+            `❌  lint_plan_risk_register: internal error after ${String(scanned)} file(s): ` +
+                `${exc instanceof Error ? exc.message : String(exc)}\n`,
+        );
+        return 2;
     }
 
     if (args.format === 'json') {
