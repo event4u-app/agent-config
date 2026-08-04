@@ -31,6 +31,7 @@ import {
     parseHonestNull,
     parseMarkerLine,
     parseSkipDeclaration,
+    scanFences,
     validateFindingRows,
     type Violation,
 } from '../../src/scripts/check_completion_review.js';
@@ -293,10 +294,11 @@ describe.runIf(hasGit())('check_completion_review — pass states', () => {
         expect(res.status).toBe(0);
     });
 
-    // Non-regression for the round-7 fence fix: a row inside a CLOSED fence is
-    // still illustrative content, not a live finding. Only the UNTERMINATED case
-    // changed behaviour.
-    it('a template row inside a closed fence is illustrative, not an open finding', () => {
+    // Non-regression for the round-7 AND round-8 fence fixes, and the reason
+    // fenced regions exist at all: a template row inside a properly-closed
+    // LABELLED fence (```markdown — the info string is the deliberate "this is an
+    // illustration" act round 8 made load-bearing) is not a live finding.
+    it('a template row inside a closed labelled fence is illustrative, not an open finding', () => {
         const dir = makeRepo();
         write(dir, 'src/feature.ts', 'export const y = 2;\n');
         commitAll(dir, 'feature');
@@ -324,6 +326,10 @@ describe.runIf(hasGit())('check_completion_review — pass states', () => {
         const res = runGate(dir);
         expect(res.violations).toEqual([]);
         expect(res.status).toBe(0);
+        // The labelled pair resolves (no stray) and its content really is skipped.
+        const art = parseArtifact(fs.readFileSync(path.join(dir, ART), 'utf-8'));
+        expect(art.strayFenceLines).toEqual([]);
+        expect(art.rows).toEqual([]);
     });
 
     it('passes with a note when there are no reviewable changes vs base', () => {
@@ -523,9 +529,123 @@ describe.runIf(hasGit())('check_completion_review — violations', () => {
         );
         const res = runGate(dir);
         expect(res.kinds.sort()).toEqual(['open-finding', 'unbalanced-fence']);
-        expect(res.violations.find((v) => v.kind === 'unbalanced-fence')?.detail).toContain(
-            'opened and never closed',
+        expect(res.violations.find((v) => v.kind === 'unbalanced-fence')?.detail).toContain('stray ``` fence');
+        expect(res.status).toBe(1);
+    });
+
+    // Round-8 finding 1 (high), reproduced by a blind reviewer against the shipped
+    // parser: POSITIONAL pairing detected parity but never MIS-pairing. Two
+    // `~~~`-wrapped illustrations, each holding one unpaired inner ``` — the exact
+    // shape `markdown-safe-codeblocks` prescribes and the round-7 fixture uses —
+    // paired with EACH OTHER, so every line between them was added to `fenced`,
+    // `unterminatedAt` stayed null, and the `open` row between them vanished from
+    // `rows` while a later terminal row kept the fallback quiet. The artefact
+    // PASSED with an unreviewed `open` finding: the fourth route to one fail-open,
+    // hence a class fix (only a LABELLED closed pair may hide anything).
+    it('unbalanced-fence: two stray fences cannot pair with each other and swallow a row', () => {
+        const dir = makeRepo();
+        write(dir, 'src/feature.ts', 'export const y = 2;\n');
+        commitAll(dir, 'feature');
+        const scope = scopeHash(dir);
+        write(
+            dir,
+            ART,
+            [
+                '# Findings: feat',
+                marker(scope),
+                '',
+                manifestFor(scope),
+                '',
+                ...TABLE_HEAD,
+                '| 1 | high | src/feature.ts:1 | real bug | accepted-risk | mitigated upstream, accepted |',
+                '',
+                '~~~markdown',
+                '```', // stray #1
+                '~~~',
+                '',
+                '| 2 | high | src/feature.ts:2 | used to be swallowed by the pair | open | |',
+                '',
+                '~~~markdown',
+                '```', // stray #2 — used to CLOSE stray #1
+                '~~~',
+                '',
+                '| 3 | low | src/feature.ts:3 | keeps rows.length > 0 | accepted-risk | noted |',
+                '',
+            ].join('\n'),
         );
+        const res = runGate(dir);
+        expect(res.kinds.sort()).toEqual(['open-finding', 'unbalanced-fence']);
+        expect(res.status).toBe(1);
+        // The swallowed row is parsed again — the point of the fix.
+        const art = parseArtifact(fs.readFileSync(path.join(dir, ART), 'utf-8'));
+        expect(art.rows.map((r) => `${String(r.index)}/${r.status}`)).toEqual([
+            '1/accepted-risk',
+            '2/open',
+            '3/accepted-risk',
+        ]);
+    });
+
+    // Round-8 finding 1, secondary: `unbalancedFenceAt` was a single number, so
+    // with three or more strays only the LAST one was ever named — the author
+    // fixed it, re-ran, and met the next one.
+    it('unbalanced-fence: every stray fence line is named, not only the last', () => {
+        const dir = makeRepo();
+        write(dir, 'src/feature.ts', 'export const y = 2;\n');
+        commitAll(dir, 'feature');
+        const scope = scopeHash(dir);
+        write(
+            dir,
+            ART,
+            [
+                '# Findings: feat', // 1
+                marker(scope), // 2
+                '', // 3
+                manifestFor(scope), // 4..14 (11 lines)
+                '', // 15
+                '```', // 16 — stray
+                '```', // 17 — stray
+                '```', // 18 — stray
+                '', // 19
+                `**Honest-null:** 0 findings, scope ${scope}, reviewed 2026-08-04`,
+                '',
+            ].join('\n'),
+        );
+        const res = runGate(dir);
+        expect(res.kinds).toEqual(['unbalanced-fence']);
+        const detail = res.violations[0]?.detail ?? '';
+        const art = parseArtifact(fs.readFileSync(path.join(dir, ART), 'utf-8'));
+        expect(art.strayFenceLines).toHaveLength(3);
+        for (const n of art.strayFenceLines) {
+            expect(detail).toContain(`line ${String(n)}`);
+        }
+        expect(res.status).toBe(1);
+    });
+
+    // The other half of the discriminator: a BARE pair is no longer a region, so
+    // a row between two bare fences is a live finding, not an illustration.
+    it('unbalanced-fence: a bare closed pair delimits nothing and hides no row', () => {
+        const dir = makeRepo();
+        write(dir, 'src/feature.ts', 'export const y = 2;\n');
+        commitAll(dir, 'feature');
+        const scope = scopeHash(dir);
+        write(
+            dir,
+            ART,
+            [
+                '# Findings: feat',
+                marker(scope),
+                '',
+                manifestFor(scope),
+                '',
+                ...TABLE_HEAD,
+                '```',
+                '| 1 | high | src/feature.ts:1 | not illustrative — the opener is bare | open | |',
+                '```',
+                '',
+            ].join('\n'),
+        );
+        const res = runGate(dir);
+        expect(res.kinds.sort()).toEqual(['open-finding', 'unbalanced-fence']);
         expect(res.status).toBe(1);
     });
 
@@ -1025,6 +1145,38 @@ describe('grammar line parsers', () => {
         expect(extractFixRef(`landed as ${SHA} on feat`)).toBe(SHA);
         expect(extractFixRef('see the PR thread')).toBeNull();
         expect(extractFixRef('')).toBeNull();
+    });
+});
+
+// The §2.2 fence discriminator, unit level: only a LABELLED, properly-closed
+// pair may hide a line. Closing follows CommonMark (bare, and at least as many
+// backticks as the opener), which is what makes a ````-wrapped ``` block nest.
+describe('scanFences — §2.2 fence discriminator', () => {
+    const T3 = '`'.repeat(3);
+    const T4 = '`'.repeat(4);
+
+    it('skips a labelled closed pair and reports no stray', () => {
+        const s = scanFences([`${T3}markdown`, 'hidden', T3, 'visible']);
+        expect([...s.fenced]).toEqual([1]);
+        expect(s.strays).toEqual([]);
+    });
+
+    it('treats a bare opener as a stray that delimits nothing', () => {
+        const s = scanFences([T3, 'still parsed', T3, 'also parsed']);
+        expect([...s.fenced]).toEqual([]);
+        expect(s.strays).toEqual([1, 3]);
+    });
+
+    it('reports an unclosed labelled opener and skips nothing after it', () => {
+        const s = scanFences([`${T3}markdown`, 'still parsed']);
+        expect([...s.fenced]).toEqual([]);
+        expect(s.strays).toEqual([1]);
+    });
+
+    it('nests a shorter bare fence inside a longer labelled one (CommonMark closer)', () => {
+        const s = scanFences([`${T4}markdown`, T3, 'inner', T3, T4, 'visible']);
+        expect([...s.fenced]).toEqual([1, 2, 3]);
+        expect(s.strays).toEqual([]);
     });
 });
 

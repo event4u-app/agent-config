@@ -323,18 +323,28 @@ current one is relevant **and** stale (`stale-review`).
   Cells split on **unescaped** `|` only, so `\|` inside a cell is content, not a
   column boundary. Same defect class, same name as Gate R1's `malformed_row`
   (§ 1.2).
-- **Fence rule:** lines inside a **closed** ``` fence are illustrative content
-  and are not parsed. A fence that is opened and never closed is a violation →
-  `unbalanced-fence` block, **and it swallows nothing**: the region after the
-  opener is parsed as ordinary content, so a finding row there is still
-  validated. Both halves matter — an odd number of ```-prefixed lines used to
-  make every later line invisible, which is the same fail-open as a dropped
-  malformed row (one earlier well-formed row keeps the table non-empty, so the
-  fallback stays silent and a trailing `open` row passes). Note that following
+- **Fence rule:** a fenced region is skipped as illustrative content **only when
+  it is a properly-closed pair whose OPENING fence carries an info string**
+  (```` ```markdown ````, closed CommonMark-style by a bare fence of at least as
+  many backticks). A **bare** ``` never delimits a region: it is a **stray** →
+  `unbalanced-fence` block, the lines around it are parsed as ordinary content,
+  and every stray line is named in the one violation. A labelled opener that is
+  never closed is a stray too, and likewise skips nothing.
+  Why a deliberate label is the discriminator: fenced regions exist for exactly
+  one purpose — keeping the illustrative `| # | Severity | …` template above from
+  being read as a live finding — and every counting-based rule tried before it
+  failed open. First a single `inFence` toggle made every line after an odd
+  ```-count invisible; then positional pairing detected parity but never
+  *mis*-pairing, so two unpaired inner openers paired with **each other** and
+  swallowed every line between them while the unterminated-fence report stayed
+  silent. Each time, one earlier well-formed row kept the table non-empty, so the
+  "neither table nor honest-null" fallback also stayed quiet and an unreviewed
+  `open` row PASSED — the same fail-open as a dropped malformed row. An info
+  string cannot be produced by accident, so hiding a row now takes the authoring
+  act that means "this is an illustration". Note that following
   [`markdown-safe-codeblocks`](../../src/rules/markdown-safe-codeblocks.md) —
-  wrap fence-bearing content in an outer `~~~` fence — is what produces the odd
-  count when the wrapped content holds an unpaired ```; the outer `~~~` is not a
-  fence to this grammar.
+  wrap fence-bearing content in an outer `~~~` fence — is what produces those
+  unpaired inner ``` fences; the outer `~~~` is not a fence to this grammar.
 
 ### 2.3 Honest-null grammar (exact)
 

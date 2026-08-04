@@ -18,8 +18,9 @@
  *     with the required Reason/Ref content;
  *   - every table-shaped row parses into the six §2.2 cells (`malformed-row`) —
  *     a short row is never silently dropped, or an `open` finding would pass;
- *   - ``` fences balance (`unbalanced-fence`) — and an unterminated one never
- *     swallows the rest of the artefact, for the same reason;
+ *   - ``` fences resolve (`unbalanced-fence`) — only a LABELLED, properly-closed
+ *     fence hides content, so no arrangement of bare fences can swallow a row,
+ *     for the same reason;
  *   - severity rows are sorted descending (critical > high > medium > low);
  *   - findings-before-fixes ancestry: the commit that FIRST added the
  *     artifact is an ancestor of every referenced fix commit (§2.5 — the
@@ -119,13 +120,15 @@ export interface ParsedArtifact {
      */
     malformedRows: string[];
     /**
-     * 1-based line of a ``` fence opened and never closed, if any (§2.2).
+     * 1-based lines of every stray ``` fence, ascending (§2.2).
      *
-     * Reported as `unbalanced-fence`. The region after such an opener is still
-     * parsed — an unbalanced fence must never swallow the rest of the artefact,
-     * or a later `open` row would pass unseen.
+     * A stray is a BARE ``` (which never delimits a region) or a labelled opener
+     * that is never closed. All of them are reported as one `unbalanced-fence`
+     * violation naming every line — a single number could only ever name the
+     * last. Stray fences skip nothing: the lines around them are parsed, because
+     * no fence arrangement may swallow an `open` row (see {@link scanFences}).
      */
-    unbalancedFenceAt: number | null;
+    strayFenceLines: number[];
     /** The §5 context manifest, when present and parseable. */
     manifest: ParsedManifest | null;
 }
@@ -363,48 +366,90 @@ function splitTableRow(line: string): string[] {
 }
 
 const FENCE_RE = /^\s*```/;
+/** A ```-prefixed line split into its backtick run and its info string. */
+const FENCE_PARTS_RE = /^\s*(`{3,})(.*)$/;
 
 export interface FenceScan {
-    /** 0-based indices of lines inside a CLOSED fence — the only lines to skip. */
+    /** 0-based indices of lines inside a LABELLED, properly-closed fence — the only lines to skip. */
     fenced: Set<number>;
-    /** 1-based line number of a fence opened and never closed, if any. */
-    unterminatedAt: number | null;
+    /**
+     * 1-based line numbers of every stray ``` fence, ascending.
+     *
+     * A stray is a bare ``` that opens nothing (no region is ever delimited by
+     * one) or a labelled opener that is never closed. Empty = fences are sound.
+     */
+    strays: number[];
+}
+
+/** Backtick-run length and info string of a fence line, or null if not a fence. */
+function fenceParts(line: string): { ticks: number; info: string } | null {
+    const m = FENCE_PARTS_RE.exec(line);
+    return m ? { ticks: (m[1] as string).length, info: (m[2] as string).trim() } : null;
 }
 
 /**
- * Which lines are fenced — and is the last fence left open?
+ * Which lines are fenced — and which ``` fences are stray?
  *
- * A single-pass `inFence` toggle fails OPEN on an ODD number of ```-prefixed
- * lines: every later line becomes invisible, so a trailing `open` (or
- * `deferred`-without-ref) row is never parsed, while one earlier well-formed
- * row keeps `rows.length > 0` and the neither-table-nor-honest-null fallback
- * quiet — the same fail-open the §2.2 `malformed-row` rule closed by a
- * different route. This repo's own `markdown-safe-codeblocks` rule PRODUCES
- * that odd count: it tells authors to wrap fence-bearing content in an OUTER
- * `~~~` fence, which FENCE_RE does not match, leaving the inner ``` unpaired.
+ * Fenced regions exist for ONE reason: an *illustrative* template row (the §2.2
+ * `| # | Severity | …` example a doc-ish artefact quotes) must not be read as a
+ * live finding. Nothing else justifies making a line invisible, so the
+ * delimiter has to be something no author produces by accident.
  *
- * So only lines between a MATCHED pair count as fenced; the region after an
- * unterminated opener is re-scanned as ordinary content (nothing is swallowed),
- * and the artefact is separately reported `unbalanced-fence` — fences that do
- * not balance make an artefact unparseable by inspection, not merely untidy.
+ * Two earlier shapes both failed OPEN, and they are the same defect:
+ *   - a single `inFence` toggle made every line after an ODD ```-count invisible;
+ *   - POSITIONAL pairing then detected parity but never MIS-pairing — two
+ *     unpaired inner openers (two `~~~`-wrapped illustrations, each holding one
+ *     stray ``` — exactly what `markdown-safe-codeblocks` produces, since the
+ *     outer `~~~` is not a fence to this grammar) paired with EACH OTHER and
+ *     swallowed every line between them, `unterminatedAt` staying `null`.
+ * In both, one earlier well-formed row kept `rows.length > 0`, so the
+ * neither-table-nor-honest-null fallback also stayed quiet and an unreviewed
+ * `open` row PASSED — the same fail-open the §2.2 `malformed-row` rule closes by
+ * a different route. Patching parity, then pairing, then the next arrangement is
+ * a losing game, so the discriminator is fixed instead of the arithmetic:
+ *
+ *   A region is skipped ONLY when it is a properly-closed pair whose OPENING
+ *   fence carries an info string (```` ```markdown ````). A BARE ``` never
+ *   delimits a region: it is recorded as a stray, the lines around it are parsed
+ *   as ordinary content, and the artefact is reported `unbalanced-fence`.
+ *
+ * So no arrangement of bare fences can hide a row — a swallowed `open` finding
+ * needs a deliberate label, which is the authoring act that means "illustration".
+ * Closing follows CommonMark (bare, and at least as many backticks as the
+ * opener), which also makes a ```` ````-wrapped ``` block nest correctly. An
+ * unterminated labelled opener skips nothing either and is itself a stray.
  */
 export function scanFences(lines: readonly string[]): FenceScan {
     const fenced = new Set<number>();
-    let openAt: number | null = null;
+    const strays: number[] = [];
+    let open: { at: number; ticks: number } | null = null;
     for (let i = 0; i < lines.length; i++) {
-        if (!FENCE_RE.test(lines[i] as string)) {
+        const parts = fenceParts(lines[i] as string);
+        if (!parts) {
             continue;
         }
-        if (openAt === null) {
-            openAt = i;
+        if (open !== null) {
+            // CommonMark closer: bare, and at least as long as the opener.
+            // Anything else is content inside the open region.
+            if (parts.info === '' && parts.ticks >= open.ticks) {
+                for (let j = open.at + 1; j < i; j++) {
+                    fenced.add(j);
+                }
+                open = null;
+            }
             continue;
         }
-        for (let j = openAt + 1; j < i; j++) {
-            fenced.add(j);
+        if (parts.info === '') {
+            strays.push(i + 1);
+            continue;
         }
-        openAt = null;
+        open = { at: i, ticks: parts.ticks };
     }
-    return { fenced, unterminatedAt: openAt === null ? null : openAt + 1 };
+    if (open !== null) {
+        strays.push(open.at + 1);
+    }
+    strays.sort((a, b) => a - b);
+    return { fenced, strays };
 }
 
 export function parseArtifact(text: string): ParsedArtifact {
@@ -416,18 +461,19 @@ export function parseArtifact(text: string): ParsedArtifact {
         rows: [],
         malformedLines: [],
         malformedRows: [],
-        unbalancedFenceAt: null,
+        strayFenceLines: [],
         manifest: parseManifest(text),
     };
     const lines = text.split(/\r?\n/);
     const fences = scanFences(lines);
-    out.unbalancedFenceAt = fences.unterminatedAt;
+    out.strayFenceLines = fences.strays;
     for (let i = 0; i < lines.length; i++) {
         const raw = lines[i] as string;
         const lineno = i + 1;
         // A fence marker line carries no grammar of its own, and a line inside a
-        // CLOSED fence is illustrative content. An unterminated fence skips
-        // nothing (see scanFences) — its region is parsed, and reported.
+        // LABELLED closed fence is illustrative content. A stray fence (bare, or
+        // an unclosed opener) skips nothing (see scanFences) — the lines around
+        // it are parsed, and the artefact is reported.
         if (FENCE_RE.test(raw) || fences.fenced.has(i)) {
             continue;
         }
@@ -716,19 +762,22 @@ function evaluate(input: EvalInput): Violation[] {
         for (const detail of art.malformedRows) {
             violations.push({ kind: 'malformed-row', file, detail });
         }
-        // §2.2: fences that do not balance. The parser no longer swallows the
-        // region after the opener (so a trailing `open` row still blocks), but
-        // an artefact whose fences do not close is malformed in its own right —
-        // the reader cannot tell illustrative content from live rows.
-        if (art.unbalancedFenceAt !== null) {
+        // §2.2: stray ``` fences — a BARE fence (which delimits nothing) or a
+        // labelled opener left unclosed. The parser swallows no line around them
+        // (so an `open` row still blocks), but an artefact whose fences do not
+        // resolve is malformed in its own right — the reader cannot tell
+        // illustrative content from live rows. ONE violation naming EVERY stray:
+        // a single line number could only ever name the last one.
+        if (art.strayFenceLines.length > 0) {
+            const at = art.strayFenceLines.map((n) => `line ${String(n)}`).join(', ');
             violations.push({
                 kind: 'unbalanced-fence',
                 file,
                 detail:
-                    `line ${String(art.unbalancedFenceAt)}: code fence opened and never closed — an artefact ` +
-                    'whose ``` fences do not balance is malformed (contract §2.2). Close the fence, or ' +
-                    'inline-escape an illustrative ``` so the count balances; the region after the opener is ' +
-                    'still parsed, so any finding row in it is validated too.',
+                    `${at}: stray \`\`\` fence — a bare fence delimits no region, and a labelled fence must ` +
+                    'be closed. An artefact whose ``` fences do not resolve is malformed (contract §2.2). ' +
+                    'Label the opener (```markdown) and close it, or inline-escape an illustrative ```; ' +
+                    'the lines around a stray fence are still parsed, so any finding row there is validated too.',
             });
         }
     }
