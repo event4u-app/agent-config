@@ -267,11 +267,11 @@ Entry-shape contract: [`docs/contracts/CHANGELOG-conventions.md`](docs/contracts
 ### Release highlights
 
 <!-- Curated head: fill before merge, keep it under 10 lines, and leave `_none_` where it is genuinely the answer. The generated log below is unchanged. -->
-- **Behaviour changes:** _none_
-- **Default changes + migration:** _none_
-- **Security and correctness:** _none_
-- **Honest nulls:** _none_
-- **Known limitations:** _none_
+- **Behaviour changes:** rule triggers were re-cut — the brand pair is merged into one rule and the `disclaimer`/`finance` plus `secret`/`security` trigger sets are disjoined, so a prompt that used to load two rules now loads one (71c3527); `existing-ui-audit` moved its required sections back into the skill body and `references/output-and-pitfalls.md` is removed (b3cc0ad); an unknown router `tier` value now fails compilation instead of silently downgrading to tier-2 (02960bf); a new trigger-collision disposition gate lands with a reproducible census (b71e36c).
+- **Default changes + migration:** the new `planning` settings section (Gate C/R1/R2) ships with defaults, so omitting it stays legal (4bd8813, 74afbf9) — no data or config migration.
+- **Security and correctness:** the `secret`/`security` trigger overlap was disjoined so a secret-shaped edit routes to exactly one floor (71c3527); round-2 review of the new gate scripts closed eight findings, two of which were fail-open — a missing `maxBuffer` switched R2 off on large PRs, and the documented `planning.completion_review: false` escape hatch was read by nobody (8a2bf76).
+- **Honest nulls:** the R2 review of the merge scope returned a binding honest-null (6c6fc15); the Stage-A metrics protocol is pre-registered but unmeasured, so no effectiveness claim ships with it (01323d1); an honest-null verdict no longer suppresses the risk-table checks it previously masked (65fe441).
+- **Known limitations:** R2 (completion review) has **no blocking path in this release** — every wired call site passes `--advisory`, which downgrades every violation kind including dead-scan-scope; the gate-coverage note that claimed a trippable floor was withdrawn, and teeth arrive when Stage B drops the flag (f2c6971).
 
 ### Features
 
