@@ -294,6 +294,37 @@ Entry-shape contract: [`docs/contracts/CHANGELOG-conventions.md`](docs/contracts
 > that forces a new era split (`# Era: 9.19.x`, etc.) — see
 > [`docs/contracts/CHANGELOG-conventions.md § Era splits`](docs/contracts/CHANGELOG-conventions.md).
 
+## [9.18.1](https://github.com/event4u-app/agent-config/compare/9.18.0...9.18.1) (2026-08-04)
+
+### Release highlights
+
+<!-- Curated head: fill before merge, keep it under 10 lines, and leave `_none_` where it is genuinely the answer. The generated log below is unchanged. -->
+- **Behaviour changes:** _none_
+- **Default changes + migration:** _none_
+- **Security and correctness:** _none_
+- **Honest nulls:** _auto-derived, rewrite before merge:_ commits carrying an honest-null marker in 2f23d6b, 55dc01d, d56c0be.
+- **Known limitations:** _none_
+
+### Bug Fixes
+
+* **release:** derive the head in --dry-run too, so the preview matches ([2f23d6b](https://github.com/event4u-app/agent-config/commit/2f23d6bb963577af5741951962b48e556e5a3e97))
+* **release:** stop the generator writing a `_none_` the gate rejects ([8fe60e9](https://github.com/event4u-app/agent-config/commit/8fe60e9aba5192c07f8e33bc6ce1747a77e82922))
+* **gates:** a bare fence never delimits a region — close the fourth fail-open route ([9937ad9](https://github.com/event4u-app/agent-config/commit/9937ad9b75f60bffd4ad42f2a830589bd4be7e5c))
+* **gates:** an unterminated fence must not swallow the rest of a findings artefact ([55dc01d](https://github.com/event4u-app/agent-config/commit/55dc01d1fd3c8dbf44dd04fa7b3f41e3f4bc39bb))
+* **gates:** IaC and extensionless build files are code; a row is exactly six cells ([6c5f0f5](https://github.com/event4u-app/agent-config/commit/6c5f0f5999b8a421cf765269a8da8b780465dc98))
+
+### Documentation
+
+* **review:** close round 8 — 1 fixed, 4 deferred, 0 critical ([70bb89f](https://github.com/event4u-app/agent-config/commit/70bb89f2820f4c5a5a26cd25f5db2daa53b08e5e))
+* **review:** close round 7 — 2 fixed, 3 deferred, 0 critical/high ([39f071f](https://github.com/event4u-app/agent-config/commit/39f071fad58dc2c5cb9e6ec87e8e37b79085db2f))
+* **gates:** in-place re-binding is the normal fix-pass path (2.1/2.5/2.7) ([1f7d140](https://github.com/event4u-app/agent-config/commit/1f7d1404c4bc63e87d4b46f91d52f81f2ae51f7b))
+* **review:** round-7 R2 findings — 2 medium, 3 low, 0 critical/high ([2bd3eda](https://github.com/event4u-app/agent-config/commit/2bd3edad82ff69700f62c4d16c93f38a484e5e08))
+* **review:** close round 6 — 4 fixed, 3 deferred, 0 critical/high ([7a0f7b3](https://github.com/event4u-app/agent-config/commit/7a0f7b33aed30921f2404ae1955a8e5aa76dde9b))
+* **gates:** two claims corrected to match the code (round-6 lows) ([0f5d43a](https://github.com/event4u-app/agent-config/commit/0f5d43a17be245b034287b0f486839fb156f8b86))
+* **review:** restore the real binding review — 6c6fc15a9's honest-null was false ([d56c0be](https://github.com/event4u-app/agent-config/commit/d56c0be63f6782183737ab50256401ab52a1f38f))
+
+Tests: 10963 (+19 since 9.18.0)
+
 ## [9.18.0](https://github.com/event4u-app/agent-config/compare/9.17.0...9.18.0) (2026-08-04)
 
 ### Release highlights
