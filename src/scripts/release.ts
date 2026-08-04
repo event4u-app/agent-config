@@ -119,6 +119,12 @@ import {
     plan_split,
 } from './_lib/changelog_eras.js';
 import {
+    HEAD_LABELS,
+    collect_span_commits,
+    derive_category_hits,
+    render_derived_head_values,
+} from './_lib/release_highlights.js';
+import {
     extract_changelog_section,
     pr_body_from_section,
     release_notes_from_section,
@@ -383,13 +389,7 @@ const SECTIONS: ReadonlyArray<readonly [string, string | null, readonly string[]
  * so the package does not end up with two competing definitions of a curated
  * head.
  */
-const RELEASE_HEAD_SECTIONS: ReadonlyArray<string> = [
-    'Behaviour changes',
-    'Default changes + migration',
-    'Security and correctness',
-    'Honest nulls',
-    'Known limitations',
-];
+const RELEASE_HEAD_SECTIONS: ReadonlyArray<string> = HEAD_LABELS;
 
 /**
  * Cap on the head, in rendered lines.
@@ -402,15 +402,43 @@ const RELEASE_HEAD_SECTIONS: ReadonlyArray<string> = [
 export const RELEASE_HEAD_CAP_LINES = 10;
 
 /**
- * The default value of every head line.
+ * The fallback value of a head line the span does not substantiate.
  *
- * `_none_` and not a placeholder token: for most releases it is the **true**
- * answer, and a release that genuinely changed no defaults should say so
- * rather than carry an unfilled marker. That also keeps the skeleton free of
- * the placeholder prose `output-discipline` bans — there is nothing here that
- * is wrong-if-shipped, only something that is uninformative-if-unedited.
+ * `_none_` and not a placeholder token: where nothing was derived it is the
+ * **true** answer, and a release that genuinely changed no defaults should say
+ * so rather than carry an unfilled marker.
+ *
+ * It is a fallback and no longer a blanket default. Writing `_none_` into
+ * every field made the generator assert five things it had not checked, and
+ * `check_release_highlights` rejected exactly that assertion the moment the
+ * span contradicted it — which for this package is every release, because every
+ * release touches `src/rules/` or `src/scripts/schemas/`. Substantiated labels
+ * are now pre-filled from the span (`_derive_head_prefill`), so the tool states
+ * only what it can support and `_none_` means what it says.
  */
 const HEAD_DEFAULT = '_none_';
+
+/**
+ * Pre-fill values for the curated head from the release span.
+ *
+ * Best-effort by design, same stance as the test-trend footer: a git failure
+ * degrades to the `_none_` skeleton rather than blocking a release. The gate
+ * that reads the result runs later, on the branch head, and derives from the
+ * same shared classifier — so a degraded run surfaces as the gate's ordinary
+ * "fill the head" message instead of a crash mid-release.
+ */
+function _derive_head_prefill(prev: string | null): Record<string, string> {
+    try {
+        const span = collect_span_commits(prev, 'HEAD', REPO_ROOT);
+        return render_derived_head_values(derive_category_hits(span));
+    } catch (err) {
+        process.stderr.write(
+            `warning: could not derive release-head highlights (${(err as Error).message}); ` +
+                'the head ships as the `_none_` skeleton\n',
+        );
+        return {};
+    }
+}
 
 /**
  * Render the curated head. Emitted by the generator on every release so it
@@ -2346,6 +2374,7 @@ function main(argv: readonly string[] | null = null): number {
     const test_trend_line = args.dry_run ? null : _render_test_trend_line(prev);
     const [full, body] = render_changelog_entry(target, prev, commits, today, {
         test_trend_line,
+        head: args.dry_run ? {} : _derive_head_prefill(prev),
     });
 
     // Era-split planning — gate on the POST-release view (2026-07-07 fix).

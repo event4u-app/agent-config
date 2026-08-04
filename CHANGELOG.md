@@ -82,6 +82,29 @@ Entry-shape contract: [`docs/contracts/CHANGELOG-conventions.md`](docs/contracts
 
 ### Fixed
 
+- **Every release PR was red on its first run — the generator and the
+  highlight gate contradicted each other.** `release.ts` wrote `_none_` into
+  all five curated-head fields; `check_release_highlights` (added 2026-08-03)
+  fails a `_none_` the release span contradicts. Because every release of this
+  package touches `src/rules/` or `src/scripts/schemas/`, "Behaviour changes"
+  is *always* substantiated, so the gate reliably red-flagged the generator's
+  own default — 9.17.0 (run 30871194277) and 9.18.0 (run 30909511315) both
+  failed on that one step, and each release had to be unblocked by hand.
+  - The span → category classifier now lives once, in
+    `src/scripts/_lib/release_highlights.ts`, and is shared by the generator
+    and the gate; the two duplicated label lists are gone with it.
+  - `release.ts` **pre-fills** each substantiated label with the deriving
+    reason plus its citing SHAs (capped at 6, remainder stated, never silently
+    truncated). `_none_` is now a fallback for labels the span does not
+    substantiate, not a blanket default — so the tool no longer asserts five
+    things it never checked.
+  - The gate keeps full teeth for the failure it was actually built for: a
+    **human** editing a substantiated line back down to `_none_`, which is what
+    produced the false 9.13.0 and 9.14.0 heads. An unrewritten auto-derived
+    line is advisory (a prose gap, not a false claim) and never blocks.
+  - Derivation is best-effort in the generator: a git failure degrades to the
+    `_none_` skeleton with a warning instead of aborting a release.
+
 - **`/team delegate` double gate is now enforced in code, not only in prose**
   (team mode stays default-off; closing `road-to-team-mode`). The gate on the
   only write-access wrapper existed as agent-followed instructions in the
