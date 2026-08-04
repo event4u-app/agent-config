@@ -379,6 +379,27 @@ branch's artefact. Exactly one root-cause violation is emitted per situation:
 an own artefact with a malformed marker reports `bad-marker` and does **not**
 additionally report `missing-artifact`.
 
+### 2.7 Superseded rounds — naming, so the glob and the reader agree
+
+The gate's corpus is `*.findings.md`. A review whose content has moved on (the
+fixes changed the scope, § 2.0) is **renamed out of that glob** rather than
+edited in place — the convention is
+`<slug>.round<N>-review.md`:
+
+- **`<slug>.findings.md`** — exactly one per branch: the **binding** review of
+  the content as it ships. This is what the gate reads.
+- **`<slug>.round<N>-review.md`** — superseded rounds, kept as the audit trail
+  that explains why the fixes exist. Outside the glob **on purpose**: each is
+  bound to a scope that no longer exists, so leaving them in the corpus would
+  mean permanent `stale-review` noise.
+
+State this because the shapes are indistinguishable otherwise: a directory
+holding only `round<N>-review.md` files means "no review of the current
+content" and the gate correctly reports `missing-artifact` — it does not mean
+the glob is broken. Every finding in a superseded round must already be
+terminal before it is renamed; the rename records the review, it never retires
+an open finding.
+
 ## 3. Substantial-change heuristic (R1 trigger)
 
 A plan diff is **substantial** when at least one of:
