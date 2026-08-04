@@ -23,6 +23,14 @@ review_trigger: >-
 
 Accepted 2026-07-31.
 
+> **Update 2026-08-04:** review_trigger (a) fired — the first real packed
+> measurement at the 9.17.0 release came in at 28.22 MB against max 28. The
+> maintainer resolved it by **removing the `unpacked_size_mb` budget key**
+> (tarball size is no longer gated; the umbrella still measures it as
+> evidence), not by cutting the `dist/cli-delegate/` bundle. References in
+> this ADR to that gate as "the confirming measurement" describe the state
+> at acceptance time.
+
 ## Context
 
 `tsx` is a devDependency, so the published package ships no `tsx`. That is
