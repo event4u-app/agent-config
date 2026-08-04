@@ -44,8 +44,6 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
-import { parse as parseYaml } from 'yaml';
-
 import { splitMarkdownRow } from './_lib/md_table.js';
 import { completionReviewDisabled } from './_lib/planning_settings.js';
 import { DeadScopeError, assertScanned } from './_lib/scan_scope.js';

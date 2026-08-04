@@ -94,12 +94,19 @@ export function annotatedKeys(metricsText: string): Set<string> {
 }
 
 /**
- * Ask one question. Resolves `null` on EOF (closed stdin) instead of hanging:
- * `rl.question`'s callback never fires when the stream ends, so a piped or
- * CI invocation would otherwise block forever.
+ * Ask one question. Resolves `null` on EOF instead of hanging or throwing:
+ * `rl.question`'s callback never fires once the stream ends, so a piped or
+ * scheduled invocation would otherwise block forever — and an interface that is
+ * ALREADY closed (the input ran out between two prompts) throws
+ * `ERR_USE_AFTER_CLOSE` from `question`, which is the same end-of-input state
+ * and must end the pass just as cleanly.
  */
 function ask(rl: readline.Interface, q: string): Promise<string | null> {
     return new Promise((resolve) => {
+        if ((rl as { closed?: boolean }).closed === true) {
+            resolve(null);
+            return;
+        }
         let settled = false;
         const onClose = (): void => {
             if (!settled) {
@@ -108,11 +115,19 @@ function ask(rl: readline.Interface, q: string): Promise<string | null> {
             }
         };
         rl.once('close', onClose);
-        rl.question(q, (answer) => {
-            settled = true;
+        try {
+            rl.question(q, (answer) => {
+                settled = true;
+                rl.removeListener('close', onClose);
+                resolve(answer);
+            });
+        } catch {
             rl.removeListener('close', onClose);
-            resolve(answer);
-        });
+            if (!settled) {
+                settled = true;
+                resolve(null);
+            }
+        }
     });
 }
 

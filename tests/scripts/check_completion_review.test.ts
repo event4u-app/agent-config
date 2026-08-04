@@ -415,6 +415,46 @@ describe.runIf(hasGit())('check_completion_review — violations', () => {
         expect(res.status).toBe(1);
     });
 
+    // Round-3 finding 6: a row missing the trailing (empty) Reason/Ref cell used
+    // to be dropped silently. With one well-formed row keeping rows.length > 0
+    // the neither-table-nor-honest-null fallback stayed quiet too, so the
+    // artifact PASSED while carrying an `open` finding.
+    it('malformed-row: a short findings row blocks instead of vanishing', () => {
+        const dir = makeRepo();
+        write(dir, 'src/feature.ts', 'export const y = 2;\n');
+        commitAll(dir, 'feature');
+        write(
+            dir,
+            ART,
+            findingsArtifact(scopeHash(dir), [
+                '| 1 | high | src/feature.ts:1 | real bug | accepted-risk | mitigated upstream, accepted |',
+                // Trailing empty Reason/Ref cell omitted — 5 cells, status `open`.
+                '| 2 | medium | src/feature.ts:2 | silently dropped finding | open |',
+            ]),
+        );
+        const res = runGate(dir);
+        expect(res.kinds).toContain('malformed-row');
+        expect(res.violations.find((v) => v.kind === 'malformed-row')?.detail).toContain('5 cell(s), expected 6');
+        expect(res.status).toBe(1);
+    });
+
+    it('malformed-row is reported for the row and the surviving rows still validate', () => {
+        const dir = makeRepo();
+        write(dir, 'src/feature.ts', 'export const y = 2;\n');
+        commitAll(dir, 'feature');
+        write(
+            dir,
+            ART,
+            findingsArtifact(scopeHash(dir), [
+                '| 1 | high | src/feature.ts:1 | still open | open | |',
+                '| 2 | medium | src/feature.ts:2 | short row | deferred |',
+            ]),
+        );
+        const res = runGate(dir);
+        expect(res.kinds.sort()).toEqual(['malformed-row', 'open-finding']);
+        expect(res.status).toBe(1);
+    });
+
     it('deferred-without-ref: deferred needs a ticket/issue/roadmap ref', () => {
         const dir = makeRepo();
         write(dir, 'src/feature.ts', 'export const y = 2;\n');
