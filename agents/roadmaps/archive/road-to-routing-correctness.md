@@ -243,10 +243,10 @@ status: ready
       deletion) pre-registered at 0914f65b2 BEFORE the first cut; sections
       moved VERBATIM to per-skill references/ entry points with a "Section
       index — load on demand" routing table in each SKILL.md. Measured:
-      18,403 -> 10,323 GPT tokens = 43.9% (before/after tables in
-      agents/evidence/reports/ui-skill-token-budget.md). No Iron-Law section
-      existed in these four bodies; anti-slop + Do NOT + procedure sections
-      kept in-body. design-intelligence stays in its rich band (2,613) with
+      18,403 -> 11,148 GPT tokens = 39.4% (before/after tables in
+      agents/evidence/reports/ui-skill-token-budget.md). No Iron-Law section existed in these four bodies; Output format,
+      Gotcha, anti-slop, Do NOT and procedure sections kept in-body (the
+      skill linter requires them). design-intelligence stays in its rich band (2,613) with
       "Why this skill is rich" retained. lint_token_budget_discipline,
       audit_skill_overlap (0 pairs >=70%), skill_linter --changed 44/44
       green. -->

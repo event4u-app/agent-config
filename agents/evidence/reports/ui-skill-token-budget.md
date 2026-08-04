@@ -34,11 +34,11 @@
 |---|---|---|---|
 | fe-design | 7,749 | 1,795 | design-patterns.md · design-read-and-memory.md |
 | design-intelligence | 10,752 | 2,613 | context-and-registers.md · integration-mapping.md (+ the two pre-existing) |
-| existing-ui-audit | 12,923 | 3,227 | output-and-pitfalls.md |
+| existing-ui-audit | 16,461 | 4,052 | anti-slop-cross-reference.md |
 | design-review | 11,156 | 2,688 | review-communication.md · verification-automation.md |
-| **Total** | **42,580** | **10,323** | |
+| **Total** | **46,118** | **11,148** | |
 
-**Reduction: 43.9% — the pre-registered ≥30% threshold is met.** Every moved
+**Reduction: 39.4% — the pre-registered ≥30% threshold is met.** (Output format + Gotcha stayed in-body for existing-ui-audit — required skill sections per the linter; only the anti-slop cross-reference moved.) Every moved
 section survives VERBATIM in its references/ file; each SKILL.md carries a
 "Section index — load on demand" routing table. `design-intelligence` stays
 inside its rich-class band (2,000–5,000 tokens) with the "Why this skill is
