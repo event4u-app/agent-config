@@ -267,10 +267,10 @@ Entry-shape contract: [`docs/contracts/CHANGELOG-conventions.md`](docs/contracts
 ### Release highlights
 
 <!-- Curated head: fill before merge, keep it under 10 lines, and leave `_none_` where it is genuinely the answer. The generated log below is unchanged. -->
-- **Behaviour changes:** _none_
-- **Default changes + migration:** _none_
-- **Security and correctness:** _none_
-- **Honest nulls:** _none_
+- **Behaviour changes:** `/optimize:deep` is now bounded — plan-only with a schema-backed limits block, a 5-loop ceiling, a pre-registered target metric, and hard exclusions for kernel rules and stable contracts (980b4f1).
+- **Default changes + migration:** `/optimize:deep` defaults to plan-only; push/PR/loop execution now requires an explicit `--mode=execute`. No data or config migration.
+- **Security and correctness:** symlink traversal is confined in the catalog/count walkers (514189a); `ip-address` and `fast-uri` bumped past high npm-audit advisories (be9fb0f, 22887ba).
+- **Honest nulls:** no new nulls in this span — the highlight-plausibility gate itself ships here, and the false-`_none_` 9.13.0/9.14.0 heads were backfilled retroactively (491f98b).
 - **Known limitations:** _none_
 
 ### Features
