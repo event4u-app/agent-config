@@ -205,6 +205,17 @@ export const settingsSchema = z.object({
             'Optional planning horizon (weeks) the agent shows in roadmap framing ("next 4 weeks"). Set 0 to omit the horizon — most teams prefer to ship without a hardcoded window.',
         ),
     }),
+    planning: z.object({
+        challenge_on_create: z.boolean().default(true).describe(
+            'Gate C — plan-confidence gate before authoring. true (default) = a plan-artifact ask (/roadmap:create, roadmap-writing, /feature:plan, /feature:roadmap) first checks the four 95%-confidence conditions from /challenge-me vision; any gap routes into the interview (or the inline degrade protocol) before authoring, and a confident pass emits exactly one marker line. false = inert, plan asks author directly. An explicit user bypass always wins for that turn and is counted.',
+        ),
+        risk_review: z.boolean().default(true).describe(
+            'Gate R1 — plan-risk review. true (default) = every ready (non-draft) plan must carry a schema-valid "## Risk Register" section (ranked risks, mitigation + anchor per row, freshness marker, exact honest-null grammar), enforced by lint_plan_risk_register at pre-push + CI. false = escape hatch, the validator skips.',
+        ),
+        completion_review: z.boolean().default(true).describe(
+            'Gate R2 — completion review at 100% roadmap completion / pre-PR. true (default) = a findings-before-fixes review by a fresh reviewer context must exist for the current diff hash (or an exact honest-null / skip declaration) before fix commits and PR creation, enforced by check_completion_review at pre-push + CI (CI authoritative; a crashed validator warns and allows). false = escape hatch, the validator skips.',
+        ),
+    }),
     quality: z.object({
         local_auto_run: z.boolean().default(false).describe(
             'Run quality tools (linters, type-checks, formatters) and the local test suite autonomously after edits. Off by default — the agent never runs quality tools proactively and does not ask; the user runs them manually (e.g. /quality-fix) and remote CI is the authoritative gate. The agent only runs a quality tool on an explicit ask, a concrete CI failure, or the new-gate carve-out. Turn on to restore autonomous pipeline runs.',
