@@ -42,6 +42,7 @@
   "docs/contracts/settings-classes.md",
         "src/scripts/",
         "src/server/schemas/",
+  "src/server/io/yamlIO.ts",
         "src/shared/",
         "src/install/",
         "src/agent-src/scripts/",
