@@ -390,7 +390,7 @@ _1 blocker resolved._
 <a id="blockers-road-to-zero-ceremony-settings"></a>
 **Blockers**
 
-- **absent-is-not-default-for-projection-mode** (owner: maintainer) — blocks Phase 3 (all four steps), and Phase 4 by inheritance
+- **absent-is-not-default-for-projection-mode** (owner: maintainer) — blocks Phase 3 steps 1, 3, and 4 — step 2 (keep the template as the package-internal defaults source) is independent and already closed — and Phase 4 by inheritance
   - **What to do:**
     consumer contradicts that **deliberately**, so the sparse file cannot ship
     until the exceptions are enumerated and carved out.

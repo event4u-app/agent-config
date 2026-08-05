@@ -138,6 +138,89 @@ describe('settings:set', () => {
     });
 });
 
+describe('settings:set — the existing file', () => {
+    let root: string;
+
+    beforeEach(() => {
+        root = fs.mkdtempSync(path.join(os.tmpdir(), 'settings-set-file-'));
+        fs.mkdirSync(path.join(root, 'settings'), { recursive: true });
+    });
+    afterEach(() => {
+        fs.rmSync(root, { recursive: true, force: true });
+    });
+
+    function seed(body: string): void {
+        fs.writeFileSync(settingsFilePath(root), body, 'utf-8');
+    }
+
+    function run(over: Partial<SettingsSetOptions> = {}) {
+        return runSettingsSet({
+            key: 'personal.play_by_play',
+            rawValue: 'true',
+            source: 'manual',
+            root,
+            packageRoot: PACKAGE_ROOT,
+            now: NOW,
+            dryRun: false,
+            ...over,
+        });
+    }
+
+    it('preserves the comments around a key it rewrites', () => {
+        // The file this writes to IS the commented template the wizard lays
+        // down; a dump-based write would strip ~1,200 lines of explanation to
+        // set one boolean.
+        seed('# top comment\npersonal:\n  # keep me\n  play_by_play: false\n');
+        expect(run().code).toBe(0);
+        const after = fs.readFileSync(settingsFilePath(root), 'utf-8');
+        expect(after).toContain('# top comment');
+        expect(after).toContain('# keep me');
+        expect(after).toMatch(/play_by_play:\s*true/);
+    });
+
+    it('says so when it had to rewrite a file that lacked the key', () => {
+        seed('personal:\n  minimal_output: true\n');
+        const res = run();
+        expect(res.code).toBe(0);
+        // Losing comments is bad; losing them silently is worse, and emitting a
+        // flat dotted key the next read cannot see would be worse still.
+        expect(res.out.join('\n')).toContain('comments are gone');
+        const after = parseYaml(fs.readFileSync(settingsFilePath(root), 'utf-8')) as Record<string, unknown>;
+        expect((after['personal'] as Record<string, unknown>)['play_by_play']).toBe(true);
+        expect((after['personal'] as Record<string, unknown>)['minimal_output']).toBe(true);
+    });
+
+    it('refuses a file that is not a settings map instead of replacing it', () => {
+        seed('- this\n- is\n- a list\n');
+        const res = run();
+        expect(res.code).toBe(1);
+        expect(res.err.join('\n')).toContain('not a settings map');
+        // The user's content survives. Overwriting it to set one key is the
+        // failure this branch exists to prevent.
+        expect(fs.readFileSync(settingsFilePath(root), 'utf-8')).toContain('- a list');
+    });
+
+    it('refuses malformed YAML with an exit code, not a stack trace', () => {
+        seed('personal:\n  play_by_play: [unclosed\n');
+        const res = run();
+        expect(res.code).toBe(1);
+        expect(res.err.join('\n')).toContain('not a settings map');
+    });
+
+    it('treats a comments-only file as an empty document', () => {
+        seed('# nothing decided yet\n');
+        expect(run().code).toBe(0);
+        const after = parseYaml(fs.readFileSync(settingsFilePath(root), 'utf-8')) as Record<string, unknown>;
+        expect((after['personal'] as Record<string, unknown>)['play_by_play']).toBe(true);
+    });
+
+    it('does not pollute Object.prototype through a dotted key', () => {
+        const res = run({ key: '__proto__.polluted', rawValue: 'true' });
+        expect(res.code).toBe(1);
+        expect(({} as Record<string, unknown>)['polluted']).toBeUndefined();
+    });
+});
+
 describe('settings:set — helpers', () => {
     it('parseScalar types the CLI token the way YAML would', () => {
         expect(parseScalar('true')).toBe(true);

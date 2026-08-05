@@ -158,3 +158,78 @@ export function getSettingsLeaf(root: unknown, dotted: string): unknown {
     }
     return node;
 }
+
+/**
+ * The class governing a dotted path, walking to the nearest classified ancestor.
+ *
+ * An exact row wins. Failing that, the longest classified prefix does: a
+ * class-C key whose value is a MAP has children that never appear in a flattened
+ * diff under the key's own name, so `subagents.host_capabilities.subagent_spawn`
+ * must inherit the C on `subagents.host_capabilities` rather than read as
+ * unclassified. Returns `undefined` when nothing on the path is classified —
+ * and every caller treats that as guarded, not as free.
+ */
+export function classOfPath(
+    index: ReadonlyMap<string, SettingsClass>,
+    dotted: string,
+): SettingsClass | undefined {
+    const exact = index.get(dotted);
+    if (exact !== undefined) {
+        return exact;
+    }
+    const parts = dotted.split('.');
+    for (let end = parts.length - 1; end > 0; end--) {
+        const ancestor = index.get(parts.slice(0, end).join('.'));
+        if (ancestor !== undefined) {
+            return ancestor;
+        }
+    }
+    return undefined;
+}
+
+/** Absent / null / empty-scalar — the three spellings of "not set" in a settings file. */
+export function isUnsetSettingValue(value: unknown): boolean {
+    return value === undefined || value === null || value === '';
+}
+
+/** One entry of a settings diff, as `diffValues` produces them. */
+export interface SettingsChange {
+    path: string;
+    from: unknown;
+    to: unknown;
+}
+
+/**
+ * The changed paths a human must confirm before the write lands.
+ *
+ * Extracted from the Fastify write route so the fail-closed branch is testable
+ * without booting a server around it. That branch is the one a single inverted
+ * operator turns into a fail-OPEN, and a gate whose most dangerous line has no
+ * test is a gate that passes review once and rots after.
+ *
+ * `classes === null` means the contract could not be read. Every changed key is
+ * then guarded: unverifiable is not the same as unguarded. With a contract in
+ * hand, a key is guarded when its nearest classified ancestor is C, and ALSO
+ * when nothing on its path is classified at all — the same per-key refusal the
+ * CLI writer applies.
+ *
+ * Pairs where both sides are unset are dropped first: a key written as `null`
+ * reads back as `''` through the comment-preserving merge, and a confirmation
+ * that appears on every save is one nobody reads.
+ */
+export function guardedChangedKeys(
+    classes: ReadonlyMap<string, SettingsClass> | null,
+    changed: readonly SettingsChange[],
+): string[] {
+    return changed
+        .filter((c) => !(isUnsetSettingValue(c.from) && isUnsetSettingValue(c.to)))
+        .map((c) => c.path)
+        .filter((key) => {
+            if (classes === null) {
+                return true;
+            }
+            const cls = classOfPath(classes, key);
+            return cls === 'C' || cls === undefined;
+        })
+        .sort();
+}

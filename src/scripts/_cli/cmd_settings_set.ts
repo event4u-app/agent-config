@@ -46,7 +46,9 @@ import { dump as yamlDump, load as yamlLoad } from 'js-yaml';
 
 import { z } from 'zod';
 
+import { mergeIntoTemplate } from '../../server/io/yamlIO.js';
 import { settingsSchema } from '../../server/schemas/settings.js';
+import { resolvePackageRoot } from '../_lib/package_root.js';
 import {
     buildSettingsClassIndex,
     getSettingsLeaf,
@@ -55,7 +57,25 @@ import {
 } from '../../shared/settingsClasses.js';
 
 const _HERE = path.resolve(fileURLToPath(import.meta.url));
-const PACKAGE_ROOT = path.resolve(path.dirname(_HERE), '..', '..', '..');
+// Ascend to the real package root rather than counting parents. `prepack`
+// bundles this file into `dist/cli-delegate/`, and `_dispatch.bash` PREFERS
+// that bundle over the source, where three hops land outside the package —
+// the class contract then reads as missing and the writer fails closed on
+// every key. That exact shape turned the 9.11.0 tarball E2E red, which is
+// why `_lib/package_root.ts` exists and every other delegate uses it.
+const PACKAGE_ROOT = resolvePackageRoot(import.meta.url);
+
+/**
+ * Header for a file this writer creates from nothing.
+ *
+ * Stated rather than assumed: a reader opening a two-line settings file should
+ * learn that the absent keys are not missing, they are defaulted.
+ */
+const SPARSE_FILE_HEADER =
+    '# Settings decisions recorded by `agent-config settings:set`.\n' +
+    '# Every key absent from this file resolves to its documented default in\n' +
+    '# the package template. How each entry came to be set is recorded in\n' +
+    '# `.agent-settings.provenance.json` beside it.\n\n';
 
 /** Where the class contract ships. Shipped via package.json `files[]`. */
 const CONTRACT_RELATIVE = 'docs/contracts/settings-classes.md';
@@ -126,8 +146,20 @@ export function parseScalar(raw: string): unknown {
     }
 }
 
+/** Segments that would step onto the prototype chain rather than into the document. */
+const FORBIDDEN_SEGMENTS = new Set(['__proto__', 'constructor', 'prototype']);
+
 function _setDotted(target: Record<string, unknown>, dotted: string, value: unknown): void {
     const parts = dotted.split('.');
+    // The class lookup already refuses any key without a contract row, so this
+    // is unreachable today. It is here because that guard lives in a markdown
+    // data file while this function is exported: a code invariant should not
+    // depend on nobody adding the wrong row.
+    for (const part of parts) {
+        if (FORBIDDEN_SEGMENTS.has(part)) {
+            throw new Error(`settings:set: refusing prototype-walking key segment '${part}' in '${dotted}'`);
+        }
+    }
     let node = target;
     for (const part of parts.slice(0, -1)) {
         const next = node[part];
@@ -139,18 +171,44 @@ function _setDotted(target: Record<string, unknown>, dotted: string, value: unkn
     node[parts[parts.length - 1] as string] = value;
 }
 
-function _readYaml(file: string): Record<string, unknown> {
+/**
+ * The current file as `{ text, values }`, or `null` when it exists but cannot
+ * be used.
+ *
+ * `null` and "absent" are deliberately different. An absent file is a first
+ * write and starts from an empty document; a file that fails to parse, or that
+ * parses to something other than a map, is a file with content this writer does
+ * not understand — and overwriting it would replace whatever the user had with
+ * one key. The earlier shape returned `{}` for both and did exactly that.
+ */
+function _readSettingsFile(file: string): { text: string; values: Record<string, unknown> } | null | 'absent' {
     let text: string;
     try {
         text = fs.readFileSync(file, 'utf-8');
     } catch {
-        return {};
+        return 'absent';
     }
-    const parsed = yamlLoad(text);
-    if (typeof parsed !== 'object' || parsed === null || Array.isArray(parsed)) {
-        return {};
+    // A file holding only comments and blank lines is an empty DOCUMENT, not a
+    // broken one — js-yaml throws "expected a document, but the input is empty"
+    // on it, which is indistinguishable from a real syntax error at the catch.
+    // Decide that case before parsing rather than guessing from the exception.
+    if (!text.split('\n').some((line) => line.trim() !== '' && !line.trimStart().startsWith('#'))) {
+        return { text, values: {} };
     }
-    return parsed as Record<string, unknown>;
+    let parsed: unknown;
+    try {
+        parsed = yamlLoad(text);
+    } catch {
+        return null;
+    }
+    if (parsed === null || parsed === undefined) {
+        // An empty or comments-only file is a legitimate starting point.
+        return { text, values: {} };
+    }
+    if (typeof parsed !== 'object' || Array.isArray(parsed)) {
+        return null;
+    }
+    return { text, values: parsed as Record<string, unknown> };
 }
 
 function _readProvenance(file: string): Record<string, ProvenanceEntry> {
@@ -272,7 +330,16 @@ export function runSettingsSet(opts: SettingsSetOptions): SettingsSetResult {
 
     const value = parseScalar(opts.rawValue);
     const file = settingsFilePath(opts.root);
-    const current = _readYaml(file);
+    const existing = _readSettingsFile(file);
+    if (existing === null) {
+        err.push(
+            `❌  settings:set refused — ${file} exists but is not a settings map.`,
+            '    Refusing rather than replacing it: whatever is in there is the user\'s,',
+            '    and one key is not worth losing it. Fix the file, then re-run.',
+        );
+        return { code: 1, out, err };
+    }
+    const current = existing === 'absent' ? {} : existing.values;
     const before = getSettingsLeaf(current, opts.key);
 
     const leafSchema = leafSchemaAt(settingsSchema, opts.key);
@@ -313,7 +380,37 @@ export function runSettingsSet(opts: SettingsSetOptions): SettingsSetResult {
     const provenance = _readProvenance(provenanceFile);
     provenance[opts.key] = { source: opts.source, at: opts.now };
 
-    _writeAtomicSync(file, yamlDump(candidate, { lineWidth: 100, noRefs: true }));
+    // Comment-preserving where a document exists to preserve. `yamlIO` opens by
+    // stating that the template's comments explain every key and MUST NOT be
+    // discarded, and the file this writes to IS that commented template — a
+    // dump-based write strips ~1,200 lines of explanation to set one boolean.
+    //
+    // `mergeIntoTemplate` replaces the scalar on its existing line and, when the
+    // path is NOT in the document, appends it as a flat dotted key. That flat
+    // form does not read back as the nested value, so the merge is verified
+    // rather than trusted: if the round-trip does not produce the value that was
+    // asked for, fall back to a structured dump and SAY that the comments were
+    // rewritten. Silently emitting a key the next read cannot see would be worse
+    // than losing comments, and silently losing comments would be worse than
+    // saying so.
+    let body: string;
+    let commentsRewritten = false;
+    if (existing === 'absent') {
+        body = `${SPARSE_FILE_HEADER}${yamlDump(candidate, { lineWidth: 100, noRefs: true })}`;
+    } else {
+        body = mergeIntoTemplate(existing.text, candidate);
+        let merged: unknown;
+        try {
+            merged = yamlLoad(body);
+        } catch {
+            merged = undefined;
+        }
+        if (JSON.stringify(getSettingsLeaf(merged, opts.key)) !== JSON.stringify(value)) {
+            body = `${SPARSE_FILE_HEADER}${yamlDump(candidate, { lineWidth: 100, noRefs: true })}`;
+            commentsRewritten = true;
+        }
+    }
+    _writeAtomicSync(file, body);
     _writeAtomicSync(provenanceFile, `${JSON.stringify(provenance, null, 4)}\n`);
 
     // One loud line per write. A settings change the user never saw scroll past
@@ -323,6 +420,12 @@ export function runSettingsSet(opts: SettingsSetOptions): SettingsSetResult {
         `✅  settings:set — \`${opts.key}\` = ${JSON.stringify(value)} ` +
             `(was ${JSON.stringify(before ?? null)}) · class ${cls} · source ${opts.source} · ${file}`,
     );
+    if (commentsRewritten) {
+        out.push(
+            `⚠️  \`${opts.key}\` had no line in that file, so it was rewritten from its parsed ` +
+                'values and the comments are gone. Values are unchanged.',
+        );
+    }
     return { code: 0, out, err };
 }
 

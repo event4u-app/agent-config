@@ -26,7 +26,7 @@ import { parseYaml, mergeIntoTemplate, diffValues, deepMerge } from '../io/yamlI
 import { writeAtomic } from '../io/atomicWrite.js';
 import { sharedWriteTarget, resolveThroughSymlinks } from '../io/sharedWriteCheck.js';
 import { PACKAGE_ROOT } from '../../cli/paths.js';
-import { buildSettingsClassIndex, parseSettingsClassRows, type SettingsClass } from '../../shared/settingsClasses.js';
+import { buildSettingsClassIndex, guardedChangedKeys, parseSettingsClassRows, type SettingsClass } from '../../shared/settingsClasses.js';
 
 /** Sidecar written by `settings:set`, keyed by dotted path. */
 const PROVENANCE_RELATIVE = join('settings', '.agent-settings.provenance.json');
@@ -51,11 +51,6 @@ async function readProvenance(writeRoot: string): Promise<Record<string, { sourc
         // fall through
     }
     return {};
-}
-
-/** Absent / null / empty-scalar — the three spellings of "not set" in this file. */
-function _isUnset(value: unknown): boolean {
-    return value === undefined || value === null || value === '';
 }
 
 /** Where the A/B/C class contract ships, relative to the package root. */
@@ -498,22 +493,13 @@ export function settingsRoute(opts: SettingsRouteOptions): FastifyPluginAsync {
                 // this point and is not gated — it writes nothing.
                 if (body.confirmGuarded !== true) {
                     const classes = await readClassIndex(packageRoot);
-                    const guarded = diffValues(
-                        current.values as Record<string, unknown>,
-                        parsed.data as Record<string, unknown>,
-                    )
-                        // Absent, explicit null, and the empty scalar are the same
-                        // effective value in a system where absent means "use the
-                        // default". A `cost.budgets.per_tier.*` key written as
-                        // `null` reads back as '' through the comment-preserving
-                        // merge, so without this the gate re-fires on every save —
-                        // and a confirmation that always appears is one nobody
-                        // reads. Only BOTH sides unset is skipped: '' → 'x' still
-                        // counts as a change.
-                        .filter((c) => !(_isUnset(c.from) && _isUnset(c.to)))
-                        .map((c) => c.path)
-                        .filter((key) => classes === null || classes.get(key) === 'C')
-                        .sort();
+                    const guarded = guardedChangedKeys(
+                        classes,
+                        diffValues(
+                            current.values as Record<string, unknown>,
+                            parsed.data as Record<string, unknown>,
+                        ),
+                    );
                     if (guarded.length > 0) {
                         await reply.code(409).send({
                             error: 'guarded-keys',

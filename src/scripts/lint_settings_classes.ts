@@ -28,8 +28,9 @@
  * **Gaming risk.** The cheap degenerate pass is class inflation in the *other*
  * direction from the one people expect: marking every key `C` makes the gate
  * green while making the writer useless, and nothing here can tell a
- * conscientious C from a lazy one. Mitigation: the contract states seven
- * explicit tests for C and names `commands.suggestion.enabled` as the worked
+ * conscientious C from a lazy one. Mitigation: the contract states eight
+ * explicit tests for C (the eighth, audit-and-observability, is the one a lazy
+ * blanket-C most often hides behind) and names `commands.suggestion.enabled` as the worked
  * A-not-C counter-example, so a blanket-C diff reads as wrong to a reviewer;
  * check 4 additionally makes the B class mechanically falsifiable rather than
  * decorative. Residual: **the A/B/C judgement itself is not machine-checkable.**
@@ -261,6 +262,7 @@ function main(): number {
     ledger.plan(leaves.map((k) => `key:${k}`));
     ledger.plan(rows.map((r, i) => `row:${String(i)}:${r.key}`));
 
+    const leafSet = new Set(leaves);
     for (const [i, row] of rows.entries()) {
         const target = `row:${String(i)}:${row.key}`;
         const duplicate = rowByKey.get(row.key);
@@ -281,19 +283,22 @@ function main(): number {
             ledger.fail(target, finding);
             continue;
         }
+        if (!leafSet.has(row.key)) {
+            // Resolved HERE rather than in a later pass. A stale row that
+            // `complete`s and then produces a finding downstream is counted as
+            // satisfied by the ledger while the gate exits 1 — a completeness
+            // report that covers less than it appears to, which is the exact
+            // shape the ledger exists to make impossible.
+            const finding =
+                `${CONTRACT_RELATIVE}:${String(row.line)}  \`${row.key}\` is not a leaf in ` +
+                `${TEMPLATE_RELATIVE} — the row is stale; delete it or restore the key.`;
+            findings.push(finding);
+            ledger.fail(target, finding);
+            continue;
+        }
         ledger.complete(target);
     }
 
-    const leafSet = new Set(leaves);
-    for (const row of rows) {
-        if (leafSet.has(row.key)) {
-            continue;
-        }
-        const finding =
-            `${CONTRACT_RELATIVE}:${String(row.line)}  \`${row.key}\` is not a leaf in ` +
-            `${TEMPLATE_RELATIVE} — the row is stale; delete it or restore the key.`;
-        findings.push(finding);
-    }
 
     const tally: Record<SettingsClass, number> = { A: 0, B: 0, C: 0 };
     for (const leaf of leaves) {

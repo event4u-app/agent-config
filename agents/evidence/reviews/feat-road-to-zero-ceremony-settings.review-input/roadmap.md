@@ -192,16 +192,9 @@ backward-compatible because absent keys already mean defaults.
       <!-- verify: npx vitest run tests/server/schemas/parity.test.ts -->
 - [~] Generate the human-readable reference page from the schema plus the class
       table, so the long-form documentation survives the file shrinking.
-      **Deferred with step 1.** The page exists to replace the explanation the
-      user loses when the file shrinks; generating it before the file shrinks
-      would ship a second surface to keep in sync for no reader.
 - [~] Migration: an existing populated user file is honoured as-is, every entry
       stamped `source: manual`. Nothing is rewritten under the user.
       <!-- verify: npx vitest run tests/install/settings_materialisation.test.ts -->
-      **Deferred with step 1.** Migration is defined against the sparse shape:
-      until the emitter exists there is nothing to migrate *to*, and stamping
-      every existing entry `manual` on its own would write a provenance file
-      claiming decisions the user never made.
 
 **Exit criteria:** a fresh install produces a user settings file whose entry
 count is bounded by what the install actually decided; the parity gate and the
@@ -255,9 +248,7 @@ hook-capable host refuses to run without the record.
 ### blocker: absent-is-not-default-for-projection-mode
 - **Status:** open
 - **Owner:** maintainer
-- **Blocks:** Phase 3 steps 1, 3, and 4 — step 2 (keep the template as the
-  package-internal defaults source) is independent and already closed — and
-  Phase 4 by inheritance
+- **Blocks:** Phase 3 (all four steps), and Phase 4 by inheritance
 - **What to do:** Phase 3 rests on *absent = documented default*. At least one
   consumer contradicts that **deliberately**, so the sparse file cannot ship
   until the exceptions are enumerated and carved out.

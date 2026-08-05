@@ -328,7 +328,8 @@ approval ever stops being a separate mechanical step and becomes an in-turn
 2. Add a row here. The lint fails until you do — that is the point.
 3. If you reach for **B**, check the invariant above first: the template default
    must be the conservative value.
-4. If you reach for **A**, check it against the seven C tests. If any of them
+4. If you reach for **A**, check it against all eight C tests — test 8 first,
+   because it is the one the other seven cannot cover by analogy. If any of them
    fires, it is C.
 
 ## See also
