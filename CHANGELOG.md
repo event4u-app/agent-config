@@ -294,6 +294,41 @@ Entry-shape contract: [`docs/contracts/CHANGELOG-conventions.md`](docs/contracts
 > that forces a new era split (`# Era: 9.19.x`, etc.) — see
 > [`docs/contracts/CHANGELOG-conventions.md § Era splits`](docs/contracts/CHANGELOG-conventions.md).
 
+## [9.22.0](https://github.com/event4u-app/agent-config/compare/9.21.0...9.22.0) (2026-08-05)
+
+### Release highlights
+
+<!-- Curated head: fill before merge, keep it under 10 lines, and leave `_none_` where it is genuinely the answer. The generated log below is unchanged. -->
+- **Behaviour changes:** _none_
+- **Default changes + migration:** _none_
+- **Security and correctness:** _none_
+- **Honest nulls:** _none_
+- **Known limitations:** _none_
+
+### Features
+
+* **worktree:** classify every worktree safe/review/live in one pass ([ac42fa6](https://github.com/event4u-app/agent-config/commit/ac42fa6c041db0343b6363472541a2fdf3815c3c))
+* **bench:** report which arm the dropped pairs came from ([9230102](https://github.com/event4u-app/agent-config/commit/9230102868bd25a20aa2e30e35a9e57d45c0051c))
+* **bench:** fail the sweep on an unproven arm, a swapped model, or an overrun ([490a5e5](https://github.com/event4u-app/agent-config/commit/490a5e5995db3e2f49676d7df5a0db41bf8e3926))
+* **bench:** record which model actually answered each run ([5ea6b60](https://github.com/event4u-app/agent-config/commit/5ea6b60cb850e10299fe66c4c9e8aa0fd612772f))
+* **bench:** the activation audit the invalid-nulls incident needed ([2630c48](https://github.com/event4u-app/agent-config/commit/2630c481b834b192c974cf828b72b2b3a3304b81))
+
+### Bug Fixes
+
+* **bench:** validate the sweep cap before probing for the host CLI ([4aee1d8](https://github.com/event4u-app/agent-config/commit/4aee1d8aa02598db80d0cad819fe85618558dc53))
+
+### Documentation
+
+* **roadmap:** promote worktree hygiene on the fired disk trigger, record the baseline ([78d5b7a](https://github.com/event4u-app/agent-config/commit/78d5b7ab2691b7cb75e094fa724e5a3eaa5d2f06))
+* **worktree:** route whole-checkout sweeps through the inventory mode ([3ba4c55](https://github.com/event4u-app/agent-config/commit/3ba4c556a7eee4256be3378bd67aa962b884dede))
+* **roadmap:** name why Measurement A cannot run, and correct my own scope ruling ([460dfb0](https://github.com/event4u-app/agent-config/commit/460dfb0c5e2d96e8deb831638684f501522661d2))
+* **bench:** withdraw the interactions degradation rule — measured, then falsified ([56d3fe3](https://github.com/event4u-app/agent-config/commit/56d3fe3b1433c69419a7d118c567ea2581a0a0d2))
+* **roadmap:** close the UI-track prerequisites and name the real blocker ([e8fa469](https://github.com/event4u-app/agent-config/commit/e8fa46953df5afacfb402a6d8468b44b72155191))
+* **bench:** pre-register the UI-track tier and lane measurements ([3a8b601](https://github.com/event4u-app/agent-config/commit/3a8b6017965bc9eed189c1971f28a6212b9dc3d3))
+* **roadmap:** record prerequisite work that moves no checkbox ([ad3bd4e](https://github.com/event4u-app/agent-config/commit/ad3bd4e9903e81ef38e647a6cbddacbd95f4f282))
+
+Tests: 11091 (+57 since 9.21.0)
+
 ## [9.21.0](https://github.com/event4u-app/agent-config/compare/9.20.0...9.21.0) (2026-08-05)
 
 ### Release highlights
