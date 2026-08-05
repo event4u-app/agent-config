@@ -357,10 +357,11 @@ export function parseArgv(argv: readonly string[]): ParsedArgv {
             positional.push(a);
         }
     }
-    if (positional.length !== 2) {
+    const [key, rawValue] = positional;
+    if (key === undefined || rawValue === undefined || positional.length !== 2) {
         return { ok: false, message: 'usage: agent-config settings:set <key> <value> [--source …] [--dry-run]' };
     }
-    return { ok: true, key: positional[0], rawValue: positional[1], source, dryRun };
+    return { ok: true, key, rawValue, source, dryRun };
 }
 
 export function main(argv: readonly string[] = process.argv.slice(2)): number {
