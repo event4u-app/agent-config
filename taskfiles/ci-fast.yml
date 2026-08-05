@@ -699,6 +699,17 @@ tasks:
     desc: Reject empty (0-byte / whitespace-only) roadmap files under agents/roadmaps/ — backstop against auto-commit 0-byte stubs
     cmd: ./scripts-run src/scripts/lint_empty_roadmaps {{.QUIET_FLAG}}
 
+  lint-roadmap-family-cap:
+    silent: true
+    desc: |
+      Enforce the skill-ecosystem roadmap concurrency cap (ADR-215 § D2 as
+      amended by ADR-216 § D3). The cap is a capacity mechanism — one maintainer
+      cannot hold N parallel workstreams — and it is the only surviving restraint
+      after the adoption-anchored gates were struck, so it must be mechanical
+      rather than carried by discipline. Counts top-level roadmaps only;
+      archive/ later/ skipped/ stubs/ are not concurrently open.
+    cmd: ./scripts-run src/scripts/lint_roadmap_family_cap {{.QUIET_FLAG}}
+
   lint-plan-risk-register:
     silent: true
     desc: |

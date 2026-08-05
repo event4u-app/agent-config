@@ -126,6 +126,32 @@ The lesson for the sweep method: filtering a grep on words like "struck" or
 "superseded" hides live gates that happen to sit near an annotation. The second
 pass read every hit.
 
+**The change set reproduced the defect it exists to fix — twice — and both
+instances are worth recording because they are the cheapest available evidence
+that the failure class is real rather than historical.**
+
+*First:* ADR-215 was authored earlier the same day with an external-adoption
+condition on its capability arm. It was written specifically to narrow an
+unreachable gate, and it carried that gate forward into its own text one file
+over. The commit history shows it plainly — the first three commits still title
+the work "freeze narrowed to verification arm", and the correction arrives only in
+the later commits. A record can inherit a premise from the record it amends
+without ever examining it.
+
+*Second:* ADR-215 § D2 declared the concurrency cap "mechanically enforced, not
+left to discipline" — the load-bearing sentence, since the cap became the only
+surviving restraint once the adoption gates were struck — and then deferred the
+implementation to a roadmap step that **did not exist**. So for the duration of
+this change set the sole remaining restraint ran on maintainer discipline while
+its own record asserted otherwise. Fixed by writing the gate rather than by
+softening the sentence: a written contract that describes an absent mechanism is
+the exact thing this package's own doctrine says loses to an enforced gate.
+
+Both are instances of the same shape the sweep found six sources converging on:
+**an assertion of coverage that nothing verifies.** Finding them inside the change
+that removes the class is not embarrassing, it is the method working — and it is
+why the enforcement obligation is discharged here rather than promised.
+
 **Two further adoption citations** were found in
 [ADR-123](ADR-123-runtime-security-scope-and-spawn-hardening.md) (three security
 items deferred, with the restraint's adoption clause cited as part of the
@@ -253,9 +279,15 @@ not do is gate work.
 pruning track, which is real work with a reachable end. That blocker is
 untouched.
 
+**Newly enforced rather than merely written:** the concurrency cap now has a gate
+(`src/scripts/lint_roadmap_family_cap.ts`, `task lint-roadmap-family-cap`) with
+paired fixtures proving it fails when the cap is exceeded and when its scan root
+is dead. Before this change the cap was the only surviving restraint and ran on
+discipline alone while its record claimed enforcement.
+
 **Not changed:** every safety floor, the Hard Floor, the evidence-direction
 requirement, the red-test door, the review cadence, the claims-pointer
-discipline, and the concurrency cap. This record removes an unreachable
+discipline, and the concurrency cap itself. This record removes an unreachable
 condition; it does not relax a standard.
 
 **Honest cost:** the project gives up the option of using adoption as a

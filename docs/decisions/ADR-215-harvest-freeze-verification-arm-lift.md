@@ -111,8 +111,23 @@ conformance (position 5).
 A guideline a single maintainer intends to honour drifts under urgency. The cap is
 enforced by a gate: a third concurrently-open `road-to-skill-ecosystem-*` roadmap
 outside `archive/` and `later/` fails the build with a pointer to this record.
-Implementation lands as a step in the gate-integrity roadmap rather than as a
-separate change, so the enforcement arrives with the work it bounds.
+
+> **Corrected 2026-08-05 — the claim now matches reality.** As first written this
+> clause asserted present-tense mechanical enforcement and then deferred the
+> implementation to "a step in the gate-integrity roadmap". **No such step
+> existed.** So the record claimed an enforcement that did not exist and pointed
+> at work that was never written — a claim-without-resolution in the one record
+> governing what is now the *only* surviving restraint mechanism, and a textbook
+> instance of the failure class this whole change set is about.
+>
+> The gate is `src/scripts/lint_roadmap_family_cap.ts`, registered as
+> `task lint-roadmap-family-cap` and wired into the CI aggregator. It carries the
+> scan-scope assertion (a dead roadmap root fails rather than passing green),
+> prints the scanned denominator on the green path, and ships six paired fixtures
+> including an over-cap failure and a dead-root failure — so it is demonstrably
+> able to fail. The family prefix and the cap are named constants: widening them
+> is a visible one-line diff that needs its own decision record, never a silent
+> threshold edit.
 
 ### D3 — ~~Capability stays frozen behind its own arm~~ — STRUCK by ADR-216
 
