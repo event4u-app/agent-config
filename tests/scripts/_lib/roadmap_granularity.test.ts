@@ -1,4 +1,4 @@
-// Tests for src/scripts/check_bite_sized_granularity.ts (py2ts Phase 4 / Wave 4c).
+// Tests for src/scripts/_lib/roadmap_granularity.ts (py2ts Phase 4 / Wave 4c).
 //
 // 1:1 port of tests/test_bite_sized_granularity.py. This module is a pure
 // library (no CLI), so there is no golden-parity subprocess layer; the
@@ -6,7 +6,7 @@
 // check_granularity). The Python parametrized cases map to test.each.
 import { describe, expect, it } from 'vitest';
 
-import * as bsg from '../../src/scripts/check_bite_sized_granularity.js';
+import * as bsg from '../../../src/scripts/_lib/roadmap_granularity.js';
 
 const STRUCTURAL_CLEAN = `\
 ---
@@ -53,7 +53,7 @@ const UNTAGGED_WITH_PLACEHOLDERS = `\
 - [ ] TODO: do the thing
 `;
 
-describe('check_bite_sized_granularity (ported pytest)', () => {
+describe('roadmap_granularity (folded from check_bite_sized_granularity)', () => {
     it('read_complexity structural', () => {
         expect(bsg.read_complexity(STRUCTURAL_CLEAN)).toBe('structural');
     });
@@ -134,5 +134,42 @@ Prose with <placeholder> and TODO and ???.
         const result = bsg.check_granularity(text);
         expect(result.gated).toBe(true);
         expect(result.violations.some((v) => v.kind === kind)).toBe(true);
+    });
+
+    // The command-template discriminator, both directions. Added when the check
+    // was folded into `lint_roadmap_complexity`: blanking every backtick span
+    // silenced a real placeholder, and blanking none flagged CLI metasyntax on a
+    // fully-specified step. Neither direction may regress silently.
+    describe('command-template discriminator', () => {
+        const structural = (bullet: string): string =>
+            `---\ncomplexity: structural\n---\n\n## Phase 1\n${bullet}\n`;
+
+        it('a code span holding ONLY the placeholder is a violation', () => {
+            const result = bsg.check_granularity(
+                structural('- [ ] Edit `<file>` and add the new method.'),
+            );
+            expect(result.violations.map((v) => v.kind)).toContain('angle-placeholder');
+        });
+
+        it('a bare placeholder outside any code span is a violation', () => {
+            const result = bsg.check_granularity(structural('- [ ] Update <docs> for the flag.'));
+            expect(result.violations.map((v) => v.kind)).toContain('angle-placeholder');
+        });
+
+        it('CLI argument metasyntax inside a command template is not a violation', () => {
+            // The real corpus case: `later/road-to-zero-ceremony-settings.md`.
+            const result = bsg.check_granularity(
+                structural(
+                    '- [ ] `settings set <key> <value>`: zod-validated against the existing ' +
+                        'schema, atomic via the existing helper.',
+                ),
+            );
+            expect(result.violations).toHaveLength(0);
+        });
+
+        it('a literal TODO inside a code span is still a violation', () => {
+            const result = bsg.check_granularity(structural('- [ ] Run `make TODO` first.'));
+            expect(result.violations.map((v) => v.kind)).toContain('todo');
+        });
     });
 });
