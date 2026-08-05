@@ -315,9 +315,22 @@ describe('bench_ab_v2_run — measurement integrity', () => {
 
     it('refuses --max-usd when no pricing row matches the model', () => {
         // Enforcing a cap the harness cannot price would be a cap in name only.
-        const r = runTs(['--model', 'some-unpriced-model-9', '--max-usd', '10', '--limit', '1']);
+        // Asserted in dry-run so the check is proven on a host WITHOUT the claude
+        // CLI too — behind the CLI-presence check this was unreachable in CI.
+        const r = runTs(['--model', 'some-unpriced-model-9', '--max-usd', '10', '--limit', '1', '--mode', 'dry-run']);
         expect(r.status).toBe(2);
         expect(r.stderr).toContain('the sweep cap cannot be enforced');
+    });
+
+    it('accepts --max-usd on a priceable model', () => {
+        const r = runTs(['--model', 'claude-sonnet-4-6', '--max-usd', '10', '--limit', '1', '--mode', 'dry-run']);
+        expect(r.status).toBe(0);
+    });
+
+    it('leaves an unpriceable model alone when no cap was asked for', () => {
+        // The refusal is about an unenforceable CAP, not about the model.
+        const r = runTs(['--model', 'some-unpriced-model-9', '--limit', '1', '--mode', 'dry-run']);
+        expect(r.status).toBe(0);
     });
 
     it('reports the sweep cap in the dry-run line', () => {

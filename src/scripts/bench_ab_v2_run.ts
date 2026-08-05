@@ -910,6 +910,27 @@ export function main(argv: string[] | null = null): number {
         return 2;
     }
 
+    // Delta #4 — sweep-level cap. `--max-budget-usd` is PER RUN, so 30×4×3 at
+    // --budget 3.5 has a $1,260 ceiling with nothing to stop it. Prices come
+    // from internal/bench/pricing.yaml; an unrecognised model tier leaves the
+    // guard inert rather than silently mispricing the sweep.
+    //
+    // Resolved HERE, with the other argument validation, rather than next to
+    // its use below: a cap the harness cannot price is a bad argument, and a
+    // bad argument must be reported whether or not the host CLI is installed.
+    // Behind the CLI-presence check it was unreachable on any machine without
+    // `claude` — including CI.
+    const [rates] = load_pricing(PRICING_PATH);
+    const tier = tier_for_model(args.model);
+    const tier_rates: TierRates | null = tier && rates[tier] ? (rates[tier] as TierRates) : null;
+    if (args.max_usd !== null && tier_rates === null) {
+        process.stderr.write(
+            `bench_ab_v2: --max-usd given but no pricing row matches model "${args.model}" ` +
+                `(${_relToRootPosix(PRICING_PATH)}) — the sweep cap cannot be enforced.\n`,
+        );
+        return 2;
+    }
+
     if (args.mode === 'dry-run') {
         process.stdout.write(
             `bench_ab_v2: DRY — ${tasks.length} tasks × ${arms.length} arms × ` +
@@ -961,20 +982,6 @@ export function main(argv: string[] | null = null): number {
         ckpt = { path: ckpt_path, completed };
     }
 
-    // Delta #4 — sweep-level cap. `--max-budget-usd` is PER RUN, so 30×4×3 at
-    // --budget 3.5 has a $1,260 ceiling with nothing to stop it. Prices come
-    // from internal/bench/pricing.yaml; an unrecognised model tier leaves the
-    // guard inert rather than silently mispricing the sweep.
-    const [rates] = load_pricing(PRICING_PATH);
-    const tier = tier_for_model(args.model);
-    const tier_rates: TierRates | null = tier && rates[tier] ? (rates[tier] as TierRates) : null;
-    if (args.max_usd !== null && tier_rates === null) {
-        process.stderr.write(
-            `bench_ab_v2: --max-usd given but no pricing row matches model "${args.model}" ` +
-                `(${_relToRootPosix(PRICING_PATH)}) — the sweep cap cannot be enforced.\n`,
-        );
-        return 2;
-    }
     const budget = new SweepBudget(args.max_usd, tier_rates);
 
     const { records, aborted } = collect_records(
