@@ -990,6 +990,11 @@ export function main(argv?: string[]): number {
   // stdout-injection; harmless surfacing elsewhere). All other events keep
   // the swallow-stdout contract unchanged.
   const context_blocks: string[] = [];
+  // Per-concern message for the host emission (P0.1). Kept OUT of
+  // feedback_entries on purpose: that record is written to disk with a
+  // fixed-field schema (PII-exclusion-by-construction), and a concern's raw
+  // stderr is free-form content. This array is in-memory only.
+  const concern_messages: Array<{ rc: number; text: string }> = [];
   for (const concern of concerns) {
     const concern_started = _now_iso();
     const { rc: rawRcResult, stderr: stderr_text, stdout: stdout_text, duration_ms } =
@@ -1018,6 +1023,18 @@ export function main(argv?: string[]): number {
     }
     rcs.push(rc);
     const reply = _parse_concern_stdout(stdout_text);
+    // A concern states its reason either as JSON {"reason": …} on stdout
+    // (advisory concerns) or as a formatted stderr line (the block guards, e.g.
+    // `block-no-verify: BLOCKED — …`). Both are captured here so the emission
+    // layer can surface the REAL message instead of a generic label; before
+    // this, a rc=1 block discarded the concern's stderr entirely.
+    const stated =
+      typeof reply["reason"] === "string" && (reply["reason"] as string).trim()
+        ? (reply["reason"] as string).trim()
+        : stderr_text.trim();
+    if (stated) {
+      concern_messages.push({ rc, text: stated });
+    }
     if (
       args.event === "session_start" &&
       rc === EXIT_ALLOW &&
@@ -1052,10 +1069,9 @@ export function main(argv?: string[]): number {
   // disagree: on Claude Code exit 1 does not block and exit 2 does, which
   // inverted every verdict (see host_semantics.ts for the documented mapping).
   // Unverified platforms keep the legacy pass-through byte-for-byte.
-  const decidingReasons = feedback_entries
-    .filter((e) => e["exit_code"] === final_rc)
-    .map((e) => (typeof e["reason"] === "string" ? (e["reason"] as string) : ""))
-    .filter((r) => r.trim().length > 0);
+  const decidingReasons = concern_messages
+    .filter((m) => m.rc === final_rc)
+    .map((m) => m.text);
   const emission = emitFor(
     args.platform,
     args.event,
