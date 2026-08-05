@@ -178,17 +178,21 @@ backward-compatible because absent keys already mean defaults.
 
 ## Phase 3 — The user file becomes sparse
 
-- [ ] Stop materialising the full template into the user's global settings file;
+- [~] Stop materialising the full template into the user's global settings file;
       write only what the install genuinely decided (the installer presets that
       fill profile-dependent keys stay, and stay explicit).
       <!-- verify: npx vitest run tests/install/settings_materialisation.test.ts -->
-- [ ] Keep the template as the package-internal defaults source: parity gate,
+      **Blocked on `absent-is-not-default-for-projection-mode` below.** The
+      writer is `src/server/routes/wizard.ts:1310`, and the change itself is one
+      line. What stops it is a consumer that reads absent and default as
+      different values on purpose.
+- [x] Keep the template as the package-internal defaults source: parity gate,
       installer placeholder invariant, and every direct template reader
       untouched. Pin this with the parity test in the same change.
       <!-- verify: npx vitest run tests/server/schemas/parity.test.ts -->
-- [ ] Generate the human-readable reference page from the schema plus the class
+- [~] Generate the human-readable reference page from the schema plus the class
       table, so the long-form documentation survives the file shrinking.
-- [ ] Migration: an existing populated user file is honoured as-is, every entry
+- [~] Migration: an existing populated user file is honoured as-is, every entry
       stamped `source: manual`. Nothing is rewritten under the user.
       <!-- verify: npx vitest run tests/install/settings_materialisation.test.ts -->
 
@@ -240,6 +244,45 @@ hook-capable host refuses to run without the record.
 **Rollback:** revert to per-setting prose; no stored data changes shape.
 
 ## Blockers
+
+### blocker: absent-is-not-default-for-projection-mode
+- **Status:** open
+- **Owner:** maintainer
+- **Blocks:** Phase 3 (all four steps), and Phase 4 by inheritance
+- **What to do:** Phase 3 rests on *absent = documented default*. At least one
+  consumer contradicts that **deliberately**, so the sparse file cannot ship
+  until the exceptions are enumerated and carved out.
+
+  `src/scripts/install.ts:3404 _resolve_scoped_projection` reads
+  `_resolve_global_settings_doc() ?? _load_default_settings(package_root)` and
+  then `projection['mode'] === 'scoped' ? 'scoped' : 'legacy-all'`. The template
+  fallback applies only when **no global settings file exists at all**. Once a
+  file exists — which is the case the moment the wizard has run — an absent
+  `projection.mode` resolves to `legacy-all`, **not** to the template's
+  `scoped`. `_resolve_global_rule_scope` (`:3429`) documents the same rule in
+  prose: *"an existing global settings doc is authoritative, and only a
+  genuinely fresh machine falls through to the packaged template."*
+
+  So dropping `projection.mode` from the materialised file would silently flip
+  every consumer from scoped to unscoped rule projection — every rule installed,
+  for everyone, with no signal. That is the roadmap's own Risk 1 materialised,
+  found by looking rather than by shipping.
+
+  The work this blocker gates, in order:
+
+  1. Audit every key for absent-vs-default semantics. `projection.mode` is one
+     confirmed case; `runtime.active_packs` is read by the same function and is
+     the obvious second candidate. The audit is mechanical — grep each C-class
+     key's readers for a `?? default` / `=== value ? … : fallback` shape — but it
+     has to be done before, not after.
+  2. Give the sparse emitter an **always-written** set for the keys whose
+     absence means something other than their default, with the reason recorded
+     per key.
+  3. Only then change `src/server/routes/wizard.ts:1310`.
+- **Resolved when:** the absent-vs-default audit exists, every key whose absence
+  changes behaviour is either carved out or fixed at its reader, and
+  `tests/install/settings_materialisation.test.ts` pins a fresh install whose
+  file is sparse AND whose resolved rule scope is unchanged.
 
 ### blocker: polish-gate-open
 - **Status:** resolved
