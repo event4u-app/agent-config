@@ -18,6 +18,7 @@ concerns:
     script: src/scripts/chat_history.ts
     args: [hook-dispatch]
     fail_closed: false
+    severity: advisory
   # Hot-context working-memory cache (road-to-second-brain Phase 1).
   # stop: deterministic, redacted 400-word overwrite of
   # agents/runtime/state/hot-context.md from the chat-history JSONL.
@@ -30,6 +31,7 @@ concerns:
     script: src/scripts/hot_context_hook.ts
     args: []
     fail_closed: false
+    severity: advisory
   # One-shot handoff injection (road-to-agent-handoff-resume Phase 3).
   # session_start only: if `agent-config handoff` wrote
   # agents/runtime/state/handoff-context.md, inject it as spotlighted DATA
@@ -40,18 +42,22 @@ concerns:
     script: src/scripts/handoff_context_hook.ts
     args: []
     fail_closed: false
+    severity: advisory
   roadmap-progress:
     script: src/scripts/roadmap_progress_hook.ts
     args: []
     fail_closed: false
+    severity: advisory
   onboarding-gate:
     script: src/scripts/onboarding_gate_hook.ts
     args: []
     fail_closed: false
+    severity: advisory
   context-hygiene:
     script: src/scripts/context_hygiene_hook.ts
     args: []
     fail_closed: false
+    severity: advisory
   # Phase 5 — Tier-1 hook for the verify-before-complete rule. Records
   # observable evidence of verification commands (tests, quality tools,
   # builds) into agents/runtime/state/verify-before-complete.json. The rule body
@@ -60,6 +66,7 @@ concerns:
     script: src/scripts/before_complete_hook.ts
     args: []
     fail_closed: false
+    severity: advisory
   # Phase 5 — Tier-1 hook for the minimal-safe-diff rule. Counts unique
   # files touched per turn into agents/runtime/state/minimal-safe-diff.json and
   # flips warning=true past hooks.minimal_safe_diff.threshold.
@@ -67,6 +74,7 @@ concerns:
     script: src/scripts/minimal_safe_diff_hook.ts
     args: []
     fail_closed: false
+    severity: advisory
   # road-to-security-pillar.md P3.2 — PostToolUse prompt-injection scanner.
   # Warn-in-context (exit 2), never blocks. Default-OFF: no-ops unless
   # hooks.injection_scan.enabled is true in .agent-settings.yml. The runtime
@@ -75,6 +83,7 @@ concerns:
     script: src/scripts/injection_scan_hook.ts
     args: []
     fail_closed: false
+    severity: advisory
   # road-to-security-hardening Phase 3 — PreToolUse guard turning the
   # git-history-discipline Iron Law into a deterministic gate. Blocks
   # `git … --no-verify` / `-n` and `git -c core.hooksPath=…` (which would
@@ -86,6 +95,7 @@ concerns:
     script: src/scripts/hooks/block_no_verify.ts
     args: []
     fail_closed: true
+    severity: blocking
   # road-to-ai-employee-borrowings Phase 1 — kernel immutability Layer 1.
   # PreToolUse guard: DENIES Write/Edit/NotebookEdit (and cross-platform
   # equivalents) whose target path is a kernel rule file — the source tree
@@ -101,6 +111,7 @@ concerns:
     script: src/scripts/hooks/block_kernel_rule_writes.ts
     args: []
     fail_closed: true
+    severity: blocking
   # road-to-renewal-leverage Phase 2 — "fix the code, not the config".
   # PreToolUse guard over the recorded allowlist-growth antipattern
   # (autonomous-execution § Antipattern): warns as an allowlist grows within a
@@ -115,6 +126,7 @@ concerns:
     script: src/scripts/hooks/block_config_weakening.ts
     args: []
     fail_closed: false
+    severity: blocking
   # token-saving Phase 3 — PreToolUse RTK-wrap nudge. DETERMINISTIC: keys off a
   # live `which rtk` probe (not the self-reported flag). When rtk is installed
   # and the agent is about to run a single verbose CLI command that is NOT
@@ -127,6 +139,7 @@ concerns:
     script: src/scripts/hooks/rtk_wrap_hook.ts
     args: []
     fail_closed: false
+    severity: advisory
   # road-to-anti-slop-detector Phase 3 — OPTIONAL PreToolUse anti-slop nudge.
   # Runs the lint_design_slop registry against about-to-be-written UI content
   # and WARNS (exit 2) on P0/P1 aesthetic tells. Never blocks (flags, not
@@ -138,6 +151,7 @@ concerns:
     script: src/scripts/hooks/design_slop_hook.ts
     args: []
     fail_closed: false
+    severity: advisory
   # ADR-124 Phase 4 — OPTIONAL PreToolUse code-graph nudge. When a code-graph
   # source is present and the agent is about to search/read source, WARNS
   # (exit 2) once per session to query the graph first (or rebuild if stale,
@@ -148,6 +162,7 @@ concerns:
     script: src/scripts/hooks/code_graph_nudge_hook.ts
     args: []
     fail_closed: false
+    severity: advisory
   # road-to-reachable-code-memory Phase 4 — session_end learning-sidecar
   # aggregation. Joins the EXISTING session_end concern set (no new platform
   # wiring). Aggregates agents/memory/intake/*.jsonl through the learning
@@ -161,6 +176,7 @@ concerns:
     script: src/scripts/memory_learn_hook.ts
     args: []
     fail_closed: false
+    severity: advisory
   # Phase 2 of road-to-hooks-actually-fire-in-consumers — session_start
   # gate that surfaces the marketplace-install-but-unscaffolded shape.
   # Writes .augment/.first-run-action-needed.md + one stderr line so
@@ -170,6 +186,7 @@ concerns:
     script: src/scripts/first_run_gate_hook.ts
     args: []
     fail_closed: false
+    severity: advisory
   # session-profile-activation Phase 1 — emits a one-line staleness notice
   # when a new session starts with a `runtime.active_packs` overlay carried
   # over from a previous session. Never resets (option a, explicit
@@ -178,6 +195,7 @@ concerns:
     script: src/scripts/profile_staleness_hook.ts
     args: []
     fail_closed: false
+    severity: advisory
   # Defense-in-depth twin of the update-command wrapper refresh
   # (cmd_upgrade / cmd_refresh). On session_start, re-stamps a stale
   # project-local ./agent-config wrapper from the canonical template so
@@ -187,6 +205,7 @@ concerns:
     script: src/scripts/wrapper_freshness_hook.ts
     args: []
     fail_closed: false
+    severity: advisory
   # road-to-install-path-convergence Phase 4 — duplicate-surface probe.
   # Reads src/config/surface-matrix.yml, existence-checks declared duplicate
   # classes, nudges ONCE per day (state: agents/runtime/state/
@@ -196,6 +215,7 @@ concerns:
     script: src/scripts/surface_probe_hook.ts
     args: []
     fail_closed: false
+    severity: advisory
   # road-to-team-mode Phase 4 — managed Review-Gate circuit breaker.
   # Runs AFTER the plugin's own Stop gate: reads the persisted gate job
   # record, counts consecutive BLOCK verdicts per session, injects the
@@ -207,6 +227,7 @@ concerns:
     script: src/scripts/team_review_gate_hook.ts
     args: []
     fail_closed: false
+    severity: advisory
   # Reply-shape backstop for the direct-answers rule (reply-close): a PR
   # created THIS turn must end the reply as the literal last raw URL. This
   # PostToolUse hook fires right after a PR *create* (gh pr create, or a
@@ -218,6 +239,7 @@ concerns:
     script: src/scripts/pr_url_reminder_hook.ts
     args: []
     fail_closed: false
+    severity: advisory
   # session_start canary injection — deterministic carrier for the
   # session-canary rule (greet-by-name at task start + reply-close markers
   # as a user-observable context-degradation signal). Gated on
@@ -229,6 +251,7 @@ concerns:
     script: src/scripts/session_canary_hook.ts
     args: []
     fail_closed: false
+    severity: advisory
 
 platforms:
   augment:

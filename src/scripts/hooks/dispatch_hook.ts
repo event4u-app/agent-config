@@ -47,6 +47,7 @@ import {
   setHookStdinOverride,
   clearHookStdinOverride,
 } from "./hook_stdin.js";
+import { emitFor, type Severity } from "./host_semantics.js";
 
 // Free-form JSON values flow through every helper here; a documented
 // alias keeps the surface honest without `any` (ADR-200 § strict TS).
@@ -101,6 +102,19 @@ function _isObject(v: unknown): v is JsonObject {
 
 export function _severity_for(rc: number): string {
   return _SEVERITY_BY_EXIT[rc] ?? "error";
+}
+
+/**
+ * P0.2 (road-to-rule-coherence) — is this concern declared advisory?
+ *
+ * An advisory concern MUST never produce a BLOCK verdict on any host. Four
+ * PreToolUse concerns document themselves as advisory in prose
+ * (`design_slop_hook`: "FLAGS, NEVER A BLOCK") while the transport happily
+ * turned their WARN into a host-level deny. Prose is not enforcement: the
+ * manifest now declares severity and the dispatcher enforces the ceiling.
+ */
+export function _is_advisory(concern: JsonObject): boolean {
+  return String(concern["severity"] ?? "").trim().toLowerCase() === "advisory";
 }
 
 function _now_iso(): string {
@@ -992,6 +1006,16 @@ export function main(argv?: string[]): number {
         process.stderr.write(stderr_text);
       }
     }
+    // P0.2 severity ceiling: an advisory concern can never block, on any host.
+    // This covers BOTH the concern emitting EXIT_BLOCK directly and the
+    // fail_closed promotion above turning a crash into a block.
+    if (rc === EXIT_BLOCK && _is_advisory(concern)) {
+      process.stderr.write(
+        `dispatch_hook: concern '${String(concern["name"])}' is declared ` +
+          `severity: advisory but returned BLOCK — downgraded to warn.\n`,
+      );
+      rc = EXIT_WARN;
+    }
     rcs.push(rc);
     const reply = _parse_concern_stdout(stdout_text);
     if (
@@ -1021,7 +1045,31 @@ export function main(argv?: string[]): number {
   if (context_blocks.length > 0 && final_rc === EXIT_ALLOW) {
     process.stdout.write(context_blocks.join("\n\n") + "\n");
   }
-  return final_rc;
+
+  // P0.1 host-semantics translation. The internal ladder (0/1/2) is written to
+  // the feedback dir verbatim above — that record is unchanged. What leaves the
+  // process is now the HOST's native contract, because the two languages
+  // disagree: on Claude Code exit 1 does not block and exit 2 does, which
+  // inverted every verdict (see host_semantics.ts for the documented mapping).
+  // Unverified platforms keep the legacy pass-through byte-for-byte.
+  const decidingReasons = feedback_entries
+    .filter((e) => e["exit_code"] === final_rc)
+    .map((e) => (typeof e["reason"] === "string" ? (e["reason"] as string) : ""))
+    .filter((r) => r.trim().length > 0);
+  const emission = emitFor(
+    args.platform,
+    args.event,
+    _severity_for(final_rc) as Severity,
+    decidingReasons,
+    final_rc,
+  );
+  if (emission.stdout) {
+    process.stdout.write(emission.stdout);
+  }
+  if (emission.stderr) {
+    process.stderr.write(emission.stderr);
+  }
+  return emission.exit;
 }
 
 function _isDir(p: string): boolean {
