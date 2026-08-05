@@ -2,7 +2,7 @@
 
 > Auto-generated — do not edit. Regenerate with `task roadmap-progress` or by running the `update_roadmap_progress` script for your install; rewritten on every roadmap create / execute / completion change (timestamp lives in git history).
 >
-> 13 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **10** open blockers
+> 13 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **12** open blockers
 
 ## Overall
 
@@ -28,7 +28,7 @@
 | 10 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 6 | 3 | 0 | 0 | [1](#blockers-road-to-subagent-value-realization-followup) | ███░░░░░░░ 33% |
 | 11 | [road-to-surface-consolidation.md](roadmaps/road-to-surface-consolidation.md) | 3 | 14 | 1 | 12 | 1 | 0 | [3](#blockers-road-to-surface-consolidation) | █████████░ 92% |
 | 12 | [road-to-tier-removal.md](roadmaps/road-to-tier-removal.md) | 4 | 8 | 2 | 6 | 0 | 0 | [1](#blockers-road-to-tier-removal) | ████████░░ 75% |
-| 13 | [road-to-ui-track-integrity-followup.md](roadmaps/road-to-ui-track-integrity-followup.md) | 1 | 10 | 10 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+| 13 | [road-to-ui-track-integrity-followup.md](roadmaps/road-to-ui-track-integrity-followup.md) | 1 | 10 | 10 | 0 | 0 | 0 | [2](#blockers-road-to-ui-track-integrity-followup) | ░░░░░░░░░░ 0% |
 
 ---
 
@@ -255,6 +255,58 @@ _1 blocker resolved._
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
 | 1 | Two measurements against the same harness | ⬜ not started | 10 | 0 | 0 | 0 | 0% |
+
+<a id="blockers-road-to-ui-track-integrity-followup"></a>
+**Blockers**
+
+- **measurement-a-no-per-arm-builder-tier** (owner: maintainer (scope decision) / any roadmap that needs a UI-generation runner for its own reason) — blocks Measurement A (both steps) and the two A acceptance criteria. It does **not** block the pre-registration, which is committed and complete.
+  - **What to do:**
+    Measurement A varies exactly one thing — the model tier the **builder skill**
+    runs on — and nothing in the tree can set it per arm. Verified 2026-08-05,
+    against the tree rather than against the argument:
+    - `bench:ui` (`internal/bench/ui/run.ts`) scores `config.candidates`, a list of
+    **committed static files**. Its whole CLI surface is `--json` and
+    `--update-lock`: no arm, no tier, no model call, nothing that produces a
+    candidate.
+    - The tier → native `model:` rewrite happens **only** in
+    `install.ts::finalize_claude_model_tiers`, and only on a consumer install
+    whose `model.auto_switch` is `auto`. This checkout has **zero** entries under
+    `.claude/skills/` and no projected skill pins a `model:` at all, so a session
+    `--model` flag sets the whole session, never one skill.
+    - The machinery the scope ruling assumed could be reused does not carry the
+    variable: `bench_ab_clone` copies the maintainer's `.claude/` surface
+    verbatim — no `auto_switch` handling, no per-skill tier rewrite — and
+    `bench_ab_task_runner` scores **transcripts**, not written UI artifacts.
+    So a faithful arm needs a materialised consumer-shaped install with
+    `auto_switch: auto`, a per-arm rewrite of the target skill's tier, an
+    artifact-extraction step, and — before any of it can be trusted — a validation
+    that the port task actually dispatches the UI builder skill. That is a
+    generation subsystem, which is what this roadmap's own Non-goal forbids
+    building here, and its arm isolation is itself unvalidated.
+    The two outlier arms make it sharper: `accessibility-auditor` at medium and
+    `ui-component-architect` at high are **per-skill** tier facts. No session-level
+    `--model` can express them, so they cannot be measured without exactly the
+    per-skill control that is missing.
+  - **Resolved when:** a UI-generation runner with per-skill tier control exists — landed for its own reason, with its arm isolation validated (the port task demonstrably dispatches the builder skill, and the tier demonstrably reaches it) — at which point Measurement A runs against the committed pre-registration unchanged, in the controls' epoch.
+- **measurement-b-no-renderable-lane-pair** (owner: maintainer (host capability) / any roadmap that lands a host-renderable framework lane or a generic-lane override for its own reason) — blocks Measurement B (both steps) and the two B acceptance criteria. Measurement A is **not** blocked by it — a null on one is not a null on the other, which is why they were authored as separate sub-sections.
+  - **What to do:**
+    Measurement B needs two stacks where **both** lanes exist. Framework bundles
+    are `blade-livewire-flux`, `blade-livewire`, `filament` (PHP/Blade) and
+    `react-shadcn`, `react`; the generic-routing lanes (`vue`, `plain`, `unknown`)
+    have no framework lane to be compared against. Today **no** pair satisfies all
+    three of: both lanes defined · both host-renderable · framework lane needs no
+    build step that has not been built. Concretely — no `php`/`composer` on the
+    host (a human install), the scorer captures `file://` HTML so a React
+    candidate needs a build/serve step that does not exist, and `GENERIC_LANES` is
+    derived from detected stack state with no supported override.
+    Docker **is** available on the host and is deliberately not used: one arm in a
+    container and one on the host makes the 0.40-weighted `pixel` component a
+    cross-epoch comparison — 40 % of the weighted score would be noise — and both
+    in a container voids the existing calibration anchors. Council 2026-08-05
+    (anthropic/claude-sonnet-4-5 + openai/gpt-4o, convergent) rejected that path
+    and chose the named blocker over a re-scope that changes a pre-registered
+    input.
+  - **Resolved when:** either a host-renderable framework lane exists (a build/serve step for the React lane, landed for its own reason) **or** a supported generic-lane override exists — at which point the re-scope is recorded as a dated amendment in `internal/bench/corpora/ui-track-integrity-PREREG.md` and Measurement B becomes executable.
 
 ---
 

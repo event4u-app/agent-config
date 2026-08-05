@@ -59,18 +59,25 @@ distinction that may well be deliberate.
 
 ## Prerequisites
 
-- [ ] Read `AGENTS.md` and the parent's archive entry.
-- [ ] `road-to-provided-artifact-honesty` Phase 0 (port fixtures) and Phase 4
+- [x] Read `AGENTS.md` and the parent's archive entry.
+- [x] `road-to-provided-artifact-honesty` Phase 0 (port fixtures) and Phase 4
       (`bench:ui`) have landed. Both measurements below consume them; neither
       needs a fixture set or a scorer of its own.
-- [ ] The four component weights and the Measurement-B tolerance are fixed and
+      <!-- verified 2026-08-05: archive/road-to-provided-artifact-honesty.md has 0 open steps; internal/bench/ui/{run.ts,bench.config.json,fixtures.lock.json,README.md} + tests/design-artifacts/fixtures/{design,port-faithful,port-regenerated}.html all present -->
+      <!-- SCOPE CORRECTION, same date: "landed" covers the SCORER only. bench:ui scores a committed candidate list; nothing in the tree PRODUCES a candidate. See the generation-gap blocker below — the measurements are not runnable on this prerequisite alone. -->
+      <!-- SUPERSEDED BRANCH: an unmerged `docs/ui-track-integrity-followup` (84fa47fd8, 2026-07-31) added a "candidate harness is behind the 2026-06-28 lock" note. The 2026-08-01 UNBLOCKED note above supersedes it, and its second half (prefer diff-distance over a rubric) is what bench:ui already implements. Recorded so the orphan is not re-merged as if it were news. -->
+- [x] The four component weights and the Measurement-B tolerance are fixed and
       written down **before** the first scored run.
-- [ ] **The fixture set is committed and SHA-pinned** before Measurement A
+      <!-- done 2026-08-05 in internal/bench/corpora/ui-track-integrity-PREREG.md: weights quoted from bench.config.json (frozen, unchanged); Measurement A arms + N + endpoints + decision rule registered; the interaction-contract fix registered. -->
+      <!-- FALSIFIED-AND-WITHDRAWN, same date, recorded because it is the more useful half: the council's proposed interactions weight-degradation rule was implemented and then measured BEFORE publication. Its discriminator ("a score under 0.50 means renamed hooks, not absent behaviour") is falsified by the committed port-regenerated control, which scores 0.25 with pure selector-resolution failures while genuinely lacking the behaviour. Applying the rule would have granted that control +0.0514 and eroded the instrument's registered separation 0.4634 -> 0.4120 — above the 0.25 floor, so no committed test would have caught it. The instrument is left untouched; the port prompt states the interaction contract instead. -->
+      <!-- AMENDMENT, recorded as one: the "Measurement-B tolerance" is NOT a single pre-registered number. Council 2026-08-05 (anthropic/claude-sonnet-4-5 + openai/gpt-4o, convergent, both members rejecting the point-tolerance framing) — a point tolerance derived before any generated pair exists is arithmetic on two anchors from a different measurement context (the 0.4634 separation is faithful-vs-regenerated WITHIN one lane, and carries no information about cross-lane separation). Registered instead: a distribution-based decision rule with per-component decomposition. Measurement B is separately blocked (see the blocker below), so nothing is scored against it yet either way. -->
+- [x] **The fixture set is committed and SHA-pinned** before Measurement A
       starts, with the pin recorded beside the weights. Pre-registering the
       scoring while leaving the *inputs* editable would contaminate both
       measurements exactly as a post-hoc threshold does. Any fixture added later
       forms a new set, scored separately — never a revision of the pinned one.
-- [ ] **The render environment is pinned and the fixtures render
+      <!-- done 2026-08-05: all three fixture SHA-256 values are recorded beside the weights in internal/bench/corpora/ui-track-integrity-PREREG.md § Fixture pin, enforced by internal/bench/ui/fixtures.lock.json (mismatch refuses the run, it does not warn). -->
+- [x] **The render environment is pinned and the fixtures render
       deterministically** — browser version from the `@playwright/test`
       devDependency recorded with the run, fonts embedded in the fixtures rather
       than hotlinked, animations disabled at capture. A `fonts.googleapis.com`
@@ -78,10 +85,13 @@ distinction that may well be deliberate.
       runner's network and font fallback, i.e. the harness would measure the
       runner. The self-hosted route needed for this already shipped with the
       webfont-delivery work.
-- [ ] Confirm the cost asymmetry still holds of the pipeline: builders run first,
+      <!-- verified 2026-08-05: run.ts pins deviceScaleFactor 1, reducedMotion 'reduce', screenshot animations 'disabled', and records `chromium ${browser.version()}` + platform + node into every report (@playwright/test ^1.62.1, devDependency). All three fixtures carry ZERO network references (the single grep hit in design.html is the comment stating the invariant). Epoch on the first scored run: chromium 148.0.7778.96 / darwin-arm64 / v25.9.0. -->
+      <!-- KNOWN LIMIT, restated here because it constrains BOTH measurements: the fixtures use generic font families, so absolute `pixel` scores compare only WITHIN one platform+browser epoch. Every arm of a measurement must therefore run on one host, in one session — which is what the "one harness session" acceptance criterion already demands for an unrelated reason. -->
+- [x] Confirm the cost asymmetry still holds of the pipeline: builders run first,
       run longest, and re-run up to `POLISH_CEILING` times, so raising them is the
       expensive direction. If the pipeline shape changed, re-derive it before
       spending anything.
+      <!-- re-derived 2026-08-05, shape UNCHANGED: directives/ui/index.ts maps implement→apply (builder), test→review, verify→polish; so the builder runs BEFORE both graders. polish.ts re-dispatches the per-stack `ui-polish-<stack>` builder directive, POLISH_CEILING = 2 (effective 3 with the one-round extension). Builder invocations per run: 1 + up to 3; grader invocations: 1. Raising the builder tier is the expensive direction — confirmed. -->
 
 **Historical note — why this was blocked, and what closed it.** Neither existing
 harness answers "is this frontend better": `bench:ab` measures surface presence
@@ -173,6 +183,37 @@ step list.
   subsystem to settle one frontmatter question is the speculative scale the
   parent's own design constraints forbid. If such a harness lands for another
   reason, this roadmap unblocks for free.
+
+  > **Scope ruling, 2026-08-05 — the generation half is IN scope; this non-goal
+  > is not violated by it.** Council (anthropic/claude-sonnet-4-5 +
+  > openai/gpt-4o, convergent): what this non-goal forbids is the *judgement*
+  > half — a UI-**quality** harness, a rubric, a model in the scoring path. That
+  > half was not built and will not be: `bench:ui` scores a diff-distance
+  > against a ground truth with no model in the scoring path. What is missing is
+  > a per-arm **generation** step, which is an increment on the landed scorer
+  > reusing the existing `bench_ab_clone` / `bench_ab_task_runner` machinery,
+  > not a new subsystem.
+  >
+  > The council attached one condition, and it is met here: name the customers,
+  > so "customer-driven" is checkable rather than asserted. The generation half
+  > serves the same three the scorer serves — **(1)** this roadmap's two
+  > measurements, **(2)** `road-to-provided-artifact-honesty`'s port-fidelity
+  > question, which today scores committed static fixtures and needs generated
+  > candidates to extend beyond them, and **(3)** the standing regression watch
+  > on every future change to the UI skills, which cannot fire on hand-authored
+  > fixtures at all. A generation step with three customers is not a subsystem
+  > built to settle one frontmatter question.
+  >
+  > **Correction, same day, after checking the tree rather than the argument.**
+  > The ruling's *premise* — "an increment on the landed scorer reusing the
+  > existing `bench_ab_clone` / `bench_ab_task_runner` machinery" — is **false**.
+  > That machinery cannot express the one variable Measurement A varies. See the
+  > `measurement-a-no-per-arm-builder-tier` blocker below for the evidence. The
+  > ruling's *conclusion* still holds in principle (a generation step is not the
+  > forbidden judgement half), but with the reuse premise gone it is no longer an
+  > increment, and building it here is the benchmark subsystem the Non-goal
+  > forbids. Measurement A therefore stays open behind a named blocker rather
+  > than being unblocked by a build this roadmap is not allowed to make.
 - **No tier change on argument.** The finding is not in doubt; only its remedy
   is. Flipping without the measurement is precisely what the parent's Phase 5
   existed to prevent.
@@ -190,3 +231,77 @@ step list.
 - [ ] Both measurements are run from **one** harness session; neither is
       answered by argument.
 - [ ] All quality gates pass — see `quality-tools`.
+
+## Blockers
+
+### blocker: measurement-a-no-per-arm-builder-tier
+
+- **Status:** open
+- **Owner:** maintainer (scope decision) / any roadmap that needs a UI-generation
+  runner for its own reason
+- **Blocks:** Measurement A (both steps) and the two A acceptance criteria. It
+  does **not** block the pre-registration, which is committed and complete.
+- **What to do:**
+  Measurement A varies exactly one thing — the model tier the **builder skill**
+  runs on — and nothing in the tree can set it per arm. Verified 2026-08-05,
+  against the tree rather than against the argument:
+  - `bench:ui` (`internal/bench/ui/run.ts`) scores `config.candidates`, a list of
+    **committed static files**. Its whole CLI surface is `--json` and
+    `--update-lock`: no arm, no tier, no model call, nothing that produces a
+    candidate.
+  - The tier → native `model:` rewrite happens **only** in
+    `install.ts::finalize_claude_model_tiers`, and only on a consumer install
+    whose `model.auto_switch` is `auto`. This checkout has **zero** entries under
+    `.claude/skills/` and no projected skill pins a `model:` at all, so a session
+    `--model` flag sets the whole session, never one skill.
+  - The machinery the scope ruling assumed could be reused does not carry the
+    variable: `bench_ab_clone` copies the maintainer's `.claude/` surface
+    verbatim — no `auto_switch` handling, no per-skill tier rewrite — and
+    `bench_ab_task_runner` scores **transcripts**, not written UI artifacts.
+  So a faithful arm needs a materialised consumer-shaped install with
+  `auto_switch: auto`, a per-arm rewrite of the target skill's tier, an
+  artifact-extraction step, and — before any of it can be trusted — a validation
+  that the port task actually dispatches the UI builder skill. That is a
+  generation subsystem, which is what this roadmap's own Non-goal forbids
+  building here, and its arm isolation is itself unvalidated.
+  The two outlier arms make it sharper: `accessibility-auditor` at medium and
+  `ui-component-architect` at high are **per-skill** tier facts. No session-level
+  `--model` can express them, so they cannot be measured without exactly the
+  per-skill control that is missing.
+- **Resolved when:** a UI-generation runner with per-skill tier control exists —
+  landed for its own reason, with its arm isolation validated (the port task
+  demonstrably dispatches the builder skill, and the tier demonstrably reaches
+  it) — at which point Measurement A runs against the committed pre-registration
+  unchanged, in the controls' epoch.
+
+### blocker: measurement-b-no-renderable-lane-pair
+
+- **Status:** open
+- **Owner:** maintainer (host capability) / any roadmap that lands a
+  host-renderable framework lane or a generic-lane override for its own reason
+- **Blocks:** Measurement B (both steps) and the two B acceptance criteria.
+  Measurement A is **not** blocked by it — a null on one is not a null on the
+  other, which is why they were authored as separate sub-sections.
+- **What to do:**
+  Measurement B needs two stacks where **both** lanes exist. Framework bundles
+  are `blade-livewire-flux`, `blade-livewire`, `filament` (PHP/Blade) and
+  `react-shadcn`, `react`; the generic-routing lanes (`vue`, `plain`, `unknown`)
+  have no framework lane to be compared against. Today **no** pair satisfies all
+  three of: both lanes defined · both host-renderable · framework lane needs no
+  build step that has not been built. Concretely — no `php`/`composer` on the
+  host (a human install), the scorer captures `file://` HTML so a React
+  candidate needs a build/serve step that does not exist, and `GENERIC_LANES` is
+  derived from detected stack state with no supported override.
+  Docker **is** available on the host and is deliberately not used: one arm in a
+  container and one on the host makes the 0.40-weighted `pixel` component a
+  cross-epoch comparison — 40 % of the weighted score would be noise — and both
+  in a container voids the existing calibration anchors. Council 2026-08-05
+  (anthropic/claude-sonnet-4-5 + openai/gpt-4o, convergent) rejected that path
+  and chose the named blocker over a re-scope that changes a pre-registered
+  input.
+- **Resolved when:** either a host-renderable framework lane exists (a
+  build/serve step for the React lane, landed for its own reason) **or** a
+  supported generic-lane override exists — at which point the re-scope is
+  recorded as a dated amendment in
+  `internal/bench/corpora/ui-track-integrity-PREREG.md` and Measurement B
+  becomes executable.
