@@ -44,11 +44,30 @@ skill body to hand it off; read a profile to launch under it) — it must not
 
 Two layers, with an explicit division of labour:
 
-1. **Import-edge linter** (`scripts/lint_workspace_boundary.py`, AST-static,
-   wired into CI). Fails if any `src/cli/python/workspace_*.py` module imports
-   an owner-module of a not-owned domain. This is the cheap, precise lock — it
-   catches the most common concrete drift (a workspace module reaching into
-   video / MCP / skill-design internals).
+1. **Import-edge lint** — the `no-restricted-imports` block scoped to
+   `src/cli/python/workspace_*.ts` in `eslint.config.js`, wired into CI via
+   `lint-ts`. Fails if any workspace module imports an owner-module of a
+   not-owned domain. This is the cheap, precise lock — it catches the most
+   common concrete drift (a workspace module reaching into video / MCP /
+   skill-design internals).
+
+   > **Mechanism changed 2026-08-05 (AI council).** This was the bespoke gate
+   > `lint_workspace_boundary`. ADR-200 migrated this contract's corpus from
+   > `.py` to `.ts`; the gate's glob never followed, so it matched **0 files**
+   > and exited 0 for ~7 weeks — printing `⚠️ no files match …` even under
+   > `--quiet` — and the boundary was documented but unenforced. Repointing the
+   > glob was rejected: the gate's Python-shaped import scanner extracts garbage
+   > from TypeScript (measured: `'*'`, `"{ fileURLToPath"`), so a glob swap
+   > would have satisfied a scan-scope assertion while enforcing nothing, and
+   > rewriting the scanner is a new analyser rather than a port. ESLint already
+   > lints this corpus and already carried `no-restricted-imports` for the
+   > `src/shared/**` boundary, so the edge moved to the layer built for it.
+   > ADR-095's original rejection of TS tooling here ("the surface is Python,
+   > not TS; importing JS tooling for it is wrong-stack") was falsified by
+   > ADR-200: the surface *is* TS now. The move also fixed a live defect — the
+   > bespoke patterns anchored on `[._-]`, which **missed 7 of 10** forbidden
+   > tokens when they began a path segment (`../../scripts/mcp_render.js`
+   > passed); the ESLint patterns add `/` to the boundary class and catch them.
 
 2. **Doc-governance (review).** The import check enforces **import edges
    only**. It does **not** catch *semantic* drift — a workspace module that
@@ -76,6 +95,23 @@ Survey of all 13 `workspace_*.py` modules (2026-06-14, recorded in ADR-095):
 **zero violations**. The only cross-module import is intra-workspace
 (`workspace_inbox → workspace_skills`). The import check therefore locks a
 boundary that currently holds.
+
+**Re-surveyed on the TS surface, 2026-08-05: still zero violations.** The corpus
+did not shrink — the same 13 modules exist as `workspace_*.ts` (the directory is
+still named `python/`; renaming it is a wide-blast change and out of scope here).
+Their complete import set is 7 Node built-ins, one third-party (`yaml`), and
+three intra-workspace siblings. Both directions were proven before the mechanism
+was swapped: the real corpus passes, and a probe file importing
+`compile_router` / `mcp_render` / `condense` / `lint_persona_governance` /
+`build_discovery_manifest` fails with 5 domain-specific errors while its
+`./workspace_crypto.js` sibling and `node:fs` import stay clean.
+
+### Escape hatch on the new mechanism
+
+The `# boundary-exception:` pragma is replaced by an
+`// eslint-disable-next-line no-restricted-imports` carrying a reason — same
+contract as before: a documented, reviewed, deliberate exception, never a silent
+bypass.
 
 ## See also
 

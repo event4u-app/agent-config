@@ -110,6 +110,76 @@ export default [
         },
     },
     {
+        // ADR-095 workspace-boundary contract, import-edge layer. A workspace
+        // module may not import an owner-module of a domain the workspace does
+        // NOT own: skill design, profile/pack semantics, video-provider logic,
+        // MCP-registry policy, router/projection policy, persona design.
+        //
+        // Previously enforced by `src/scripts/lint_workspace_boundary.ts` over
+        // `src/cli/python/workspace_*.py`. ADR-200 migrated that corpus to
+        // `.ts`, so the bespoke gate scanned 0 files and exited 0 for ~7 weeks
+        // while the contract stayed `stable`. AI council 2026-08-05 rejected
+        // repointing it: its Python `ast`-shaped import scanner extracts garbage
+        // from TS (measured: `'*'`, `"{ fileURLToPath"`), so a glob swap would
+        // have satisfied the scan-scope assertion while enforcing nothing — and
+        // rewriting the scanner is a new analyzer, not a port. ESLint already
+        // lints this corpus and already carries `no-restricted-imports` for the
+        // `src/shared/**` boundary above, so the edge moves to the layer built
+        // for it. `regex` (ESLint ≥ 9) preserves the original segment
+        // boundaries; `/` is added to the boundary class, which the bespoke
+        // gate's `[._-]` omitted — measured, that omission made 7 of 10 patterns
+        // miss a forbidden token at the start of a path segment.
+        //
+        // Allowed: Node built-ins, third-party deps, and intra-workspace
+        // `./workspace_*` siblings. Escape hatch: an eslint-disable-next-line
+        // carrying a reason, reviewed against docs/contracts/workspace-boundary.md.
+        files: ['src/cli/python/workspace_*.ts'],
+        rules: {
+            'no-restricted-imports': [
+                'error',
+                {
+                    patterns: [
+                        {
+                            regex: '(?:^|[._\\-/])condense(?:$|[._\\-/])',
+                            message:
+                                'workspace-boundary (ADR-095): skill design / condensation is not a workspace-owned domain.',
+                        },
+                        {
+                            regex: '(?:^|[._\\-/])skill_(?:linter|management|writing)(?:$|[._\\-/])',
+                            message:
+                                'workspace-boundary (ADR-095): skill design is not a workspace-owned domain.',
+                        },
+                        {
+                            regex: '(?:^|[._\\-/])(?:discovery_manifest|profiles?|packs?)(?:$|[._\\-/])',
+                            message:
+                                'workspace-boundary (ADR-095): profile/pack semantics is not a workspace-owned domain.',
+                        },
+                        {
+                            regex: 'ai[_-]?video',
+                            message:
+                                'workspace-boundary (ADR-095): video-provider logic is not a workspace-owned domain.',
+                        },
+                        {
+                            regex: '(?:^|[._\\-/])mcp(?:$|[._\\-/])',
+                            message:
+                                'workspace-boundary (ADR-095): MCP-registry policy is not a workspace-owned domain.',
+                        },
+                        {
+                            regex: '(?:^|[._\\-/])router(?:$|[._\\-/])',
+                            message:
+                                'workspace-boundary (ADR-095): router / projection policy is not a workspace-owned domain.',
+                        },
+                        {
+                            regex: 'persona',
+                            message:
+                                'workspace-boundary (ADR-095): persona / skill design is not a workspace-owned domain.',
+                        },
+                    ],
+                },
+            ],
+        },
+    },
+    {
         // Vitest specs may use console for diagnostic output.
         files: ['tests/**/*.ts', 'src/**/*.test.ts'],
         rules: { 'no-console': 'off' },

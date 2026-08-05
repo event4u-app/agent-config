@@ -439,26 +439,27 @@ describe('vulnerability ratchet — unhardened gate population', () => {
         expect(list_unhardened_gates()).not.toContain('check_gate_coverage');
     });
 
-    it('counts the real tree and reports a number the ratchet can act on', () => {
-        // Not pinned to a literal — the count is expected to FALL as gates are
-        // hardened, and a pinned figure would turn every improvement red.
+    it('the whole population is hardened — the count is 0', () => {
+        // Reached 2026-08-05 (189 → 0). Asserted as an exact 0 rather than a
+        // falling number: with the baseline entry deleted (next test) the ratchet
+        // has no floor left to sit on, so any new gate written without a scope
+        // assertion must red here immediately.
         const unhardened = list_unhardened_gates();
-        expect(unhardened.length).toBeGreaterThan(0);
-        expect(unhardened.length).toBeLessThan(count_gate_scripts());
-        // Gates converted in this pass must not appear.
-        for (const id of ['lint_handoffs', 'lint_namespace', 'audit_skill_overlap']) {
-            expect(unhardened).not.toContain(id);
-        }
+        expect(unhardened).toEqual([]);
+        expect(count_gate_scripts()).toBeGreaterThan(0);
     });
 
-    it('the recorded baseline matches the tree, so the ratchet starts armed not slack', () => {
-        // A baseline above the truth silently permits new unhardened gates — the
-        // exact failure the ratchet's own $comment warns about.
+    it('the baseline entry is DELETED, not zeroed-and-kept', () => {
+        // The roadmap's closure criterion, pinned. A `count: 0` entry left in
+        // place would still be a baseline: `checkRatchet` compares against it and
+        // the 56-day non-stagnation clause would start failing a number that
+        // cannot drop further. With NO entry it returns `unbaselined` with
+        // `ok = (actual === 0)` — zero becomes mandatory instead of a floor.
+        // Re-adding an entry here is how this gate gets quietly disarmed, so the
+        // absence is a test, not an accident.
         const raw = JSON.parse(
             readFileSync(join(REPO_ROOT, 'src/config/gate-violation-baselines.json'), 'utf8'),
         ) as { gates: Record<string, { count: number }> };
-        const entry = raw.gates['gate-hardening:unhardened-scan-scope'];
-        expect(entry).toBeDefined();
-        expect(list_unhardened_gates().length).toBeLessThanOrEqual(entry!.count);
+        expect(raw.gates['gate-hardening:unhardened-scan-scope']).toBeUndefined();
     });
 });

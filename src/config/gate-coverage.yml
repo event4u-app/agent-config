@@ -72,10 +72,15 @@
 #
 # What remains is NOT one line per gate. For the ~201 the count would have to be
 # INVENTED (what is this gate's unit?) rather than published, and that judgement
-# is per-gate. It is tracked as a vulnerability ratchet — `gate-hardening:
-# unhardened-scan-scope` in src/config/gate-violation-baselines.json, which fails
-# on a RISE and targets 0 — and charter-owned by
-# `agents/roadmaps/road-to-gate-hardening-adoption.md`.
+# is per-gate. It was tracked as a vulnerability ratchet — `gate-hardening:
+# unhardened-scan-scope` in src/config/gate-violation-baselines.json, which
+# failed on a RISE and targeted 0 — under the road-to-gate-hardening-adoption
+# charter. That charter closed 2026-08-05: the count reached 0 and the baseline
+# entry was DELETED rather than zeroed, so `checkRatchet` now returns
+# `unbaselined` with `ok = (actual === 0)`. Zero is mandatory, not a floor — any
+# new gate written without a scope assertion reds immediately, and
+# `tests/scripts/check_gate_coverage.test.ts` pins both the empty population and
+# the entry's continued absence.
 #
 # `tests/scripts/check_gate_coverage.test.ts` fails the build the moment a gate
 # starts emitting the line without being registered here, so the list cannot

@@ -304,7 +304,6 @@ tasks:
       - task: lint-readme-size
       - task: lint-readme-jargon
       - task: lint-readme-serial-comma
-      - task: lint-workspace-boundary
       - task: lint-featured-skills
       - task: lint-pack-first-win
 

@@ -20,6 +20,7 @@ import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import { project_settings_path } from './_lib/agent_settings.js';
+import { granularity_problems } from './_lib/roadmap_granularity.js';
 import { assertScanned, DeadScopeError } from './_lib/scan_scope.js';
 
 /** Mirror `QUIET = "--quiet" in sys.argv` (computed at import). */
@@ -185,6 +186,10 @@ function lint_roadmap(
     if (complexity === 'lightweight') {
         _check_lightweight(text, line_count, problems);
     }
+    // Bite-sized granularity — self-gated to `complexity: structural`. Folded in
+    // here rather than shipped as its own gate; `_lib/roadmap_granularity.ts`
+    // carries the reason.
+    problems.push(...granularity_problems(text));
     if (horizon_weeks <= 0) {
         _check_no_plate(text, problems);
     }

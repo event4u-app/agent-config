@@ -37,7 +37,7 @@ type JsonValue = string | number | boolean | null | JsonValue[] | { [k: string]:
 type JsonObject = { [k: string]: JsonValue };
 
 // Tool names across platforms whose command field carries a shell command
-// (kept in lock-step with verify_before_complete_hook.COMMAND_TOOLS).
+// (kept in lock-step with before_complete_hook.COMMAND_TOOLS).
 const COMMAND_TOOLS: ReadonlySet<string> = new Set([
   "launch-process",
   "launch_process",
