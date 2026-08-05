@@ -2,14 +2,14 @@
 
 > Auto-generated — do not edit. Regenerate with `task roadmap-progress` or by running the `update_roadmap_progress` script for your install; rewritten on every roadmap create / execute / completion change (timestamp lives in git history).
 >
-> 14 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **13** open blockers
+> 16 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **15** open blockers
 
 ## Overall
 
-**75 / 153 steps done · 49%**
+**75 / 248 steps done · 30%**
 
 ```text
-████████████████████░░░░░░░░░░░░░░░░░░░░   49%
+████████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░   30%
 ```
 
 ## Open roadmaps
@@ -24,12 +24,14 @@
 | 6 | [road-to-maintainer-bus-factor.md](roadmaps/road-to-maintainer-bus-factor.md) | 4 | 12 | 5 | 7 | 0 | 0 | [1](#blockers-road-to-maintainer-bus-factor) | ██████░░░░ 58% |
 | 7 | [road-to-orchestration-scope-decision.md](roadmaps/road-to-orchestration-scope-decision.md) | 4 | 10 | 6 | 4 | 0 | 0 | [1](#blockers-road-to-orchestration-scope-decision) | ████░░░░░░ 40% |
 | 8 | [road-to-scale-history-bench-run.md](roadmaps/road-to-scale-history-bench-run.md) | 1 | 2 | 2 | 0 | 0 | 0 | [1](#blockers-road-to-scale-history-bench-run) | ░░░░░░░░░░ 0% |
-| 9 | [road-to-solution-minimalism.md](roadmaps/road-to-solution-minimalism.md) | 4 | 36 | 12 | 23 | 0 | 1 | 0 | ███████░░░ 66% |
-| 10 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 6 | 3 | 0 | 0 | [1](#blockers-road-to-subagent-value-realization-followup) | ███░░░░░░░ 33% |
-| 11 | [road-to-surface-consolidation.md](roadmaps/road-to-surface-consolidation.md) | 3 | 14 | 1 | 12 | 1 | 0 | [3](#blockers-road-to-surface-consolidation) | █████████░ 92% |
-| 12 | [road-to-tier-removal.md](roadmaps/road-to-tier-removal.md) | 4 | 8 | 2 | 6 | 0 | 0 | [1](#blockers-road-to-tier-removal) | ████████░░ 75% |
-| 13 | [road-to-ui-track-integrity-followup.md](roadmaps/road-to-ui-track-integrity-followup.md) | 1 | 10 | 10 | 0 | 0 | 0 | [2](#blockers-road-to-ui-track-integrity-followup) | ░░░░░░░░░░ 0% |
-| 14 | [road-to-worktree-hygiene.md](roadmaps/road-to-worktree-hygiene.md) | 1 | 9 | 2 | 7 | 0 | 0 | [1](#blockers-road-to-worktree-hygiene) | ████████░░ 78% |
+| 9 | [road-to-skill-ecosystem-authoring-discipline.md](roadmaps/road-to-skill-ecosystem-authoring-discipline.md) | 6 | 52 | 52 | 0 | 0 | 0 | [2](#blockers-road-to-skill-ecosystem-authoring-discipline) | ░░░░░░░░░░ 0% |
+| 10 | [road-to-skill-ecosystem-gate-integrity.md](roadmaps/road-to-skill-ecosystem-gate-integrity.md) | 5 | 43 | 43 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+| 11 | [road-to-solution-minimalism.md](roadmaps/road-to-solution-minimalism.md) | 4 | 36 | 12 | 23 | 0 | 1 | 0 | ███████░░░ 66% |
+| 12 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 6 | 3 | 0 | 0 | [1](#blockers-road-to-subagent-value-realization-followup) | ███░░░░░░░ 33% |
+| 13 | [road-to-surface-consolidation.md](roadmaps/road-to-surface-consolidation.md) | 3 | 14 | 1 | 12 | 1 | 0 | [3](#blockers-road-to-surface-consolidation) | █████████░ 92% |
+| 14 | [road-to-tier-removal.md](roadmaps/road-to-tier-removal.md) | 4 | 8 | 2 | 6 | 0 | 0 | [1](#blockers-road-to-tier-removal) | ████████░░ 75% |
+| 15 | [road-to-ui-track-integrity-followup.md](roadmaps/road-to-ui-track-integrity-followup.md) | 1 | 10 | 10 | 0 | 0 | 0 | [2](#blockers-road-to-ui-track-integrity-followup) | ░░░░░░░░░░ 0% |
+| 16 | [road-to-worktree-hygiene.md](roadmaps/road-to-worktree-hygiene.md) | 1 | 9 | 2 | 7 | 0 | 0 | [1](#blockers-road-to-worktree-hygiene) | ████████░░ 78% |
 
 ---
 
@@ -165,6 +167,46 @@ _1 blocker resolved._
     task; same standing authorization the team-mode Phase-5 bench
     waits on).
   - **Resolved when:** the user confirms the run budget in-session.
+
+### [road-to-skill-ecosystem-authoring-discipline.md](roadmaps/road-to-skill-ecosystem-authoring-discipline.md)
+
+**Road to authoring discipline — forced artifacts, named biases, and a removal signal** — 0 / 52 done (0%)
+
+| # | Phase | State | Open | Done | Deferred | Cancelled | % |
+|---|---|---|---:|---:|---:|---:|---:|
+| 1 | Forced artifacts at the decision point | ⬜ not started | 7 | 0 | 0 | 0 | 0% |
+| 2 | Rule and skill authoring sections | ⬜ not started | 7 | 0 | 0 | 0 | 0% |
+| 3 | Ledger the lossy transform, register the contradictions | ⬜ not started | 7 | 0 | 0 | 0 | 0% |
+| 4 | Lint what the authored text teaches | ⬜ not started | 7 | 0 | 0 | 0 | 0% |
+| 5 | A removal signal, and the first question | ⬜ not started | 6 | 0 | 0 | 0 | 0% |
+| 6 | Review and judge output shape | ⬜ not started | 18 | 0 | 0 | 0 | 0% |
+
+<a id="blockers-road-to-skill-ecosystem-authoring-discipline"></a>
+**Blockers**
+
+- **mandated-line-set** (owner: user) — blocks Phase 1 — Forced artifacts at the decision point
+  - **What to do:**
+    1. Confirm the four mandated lines are the right set, and whether a fifth is wanted for the commit surface. Every mandated line is text the agent must emit in a user-facing reply, so the set is a communication decision as much as a governance one.
+    2. Note the tension to weigh: this package's reply-brevity rule treats long replies as a failure mode, and four mandated lines add fixed length to any reply that owes them.
+  - **Resolved when:** the set is named in Phase 1 Step 1 and the brevity interaction is recorded.
+- **rich-class-band-question** (owner: user) — blocks Phase 2 — Rule and skill authoring sections
+  - **What to do:**
+    1. Read § R1 of the sweep record. A published measurement over 7,308 trajectories places this package's declared rich size band inside the diminishing-returns zone, and above roughly 5,000 tokens in the measured degradation zone.
+    2. Phase 2 Step 5 adds an internal precedence band to rich-class artifacts, which mitigates partial reading but does not answer whether the band itself should move.
+    3. Decide: measure real tokenisation first and revisit, or leave the bands and treat the precedence band as the mitigation.
+  - **Resolved when:** the decision is recorded, either as an architecture decision record or as an explicit no-change with the reason.
+
+### [road-to-skill-ecosystem-gate-integrity.md](roadmaps/road-to-skill-ecosystem-gate-integrity.md)
+
+**Road to gate integrity — a gate that scanned nothing must never exit green** — 0 / 43 done (0%)
+
+| # | Phase | State | Open | Done | Deferred | Cancelled | % |
+|---|---|---|---:|---:|---:|---:|---:|
+| 1 | Completeness accounting | ⬜ not started | 7 | 0 | 0 | 0 | 0% |
+| 2 | Make shrink-only mechanical | ⬜ not started | 7 | 0 | 0 | 0 | 0% |
+| 3 | Gate authoring discipline | ⬜ not started | 7 | 0 | 0 | 0 | 0% |
+| 4 | Second-order guards | ⬜ not started | 6 | 0 | 0 | 0 | 0% |
+| 5 | Honest reporting surfaces | ⬜ not started | 16 | 0 | 0 | 0 | 0% |
 
 ### [road-to-solution-minimalism.md](roadmaps/road-to-solution-minimalism.md)
 

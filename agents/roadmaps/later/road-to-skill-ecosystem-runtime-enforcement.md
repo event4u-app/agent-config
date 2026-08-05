@@ -1,0 +1,204 @@
+---
+complexity: lightweight
+status: later
+execution:
+  mode: phase-checkpoints
+---
+
+# Road to runtime enforcement — bind the rules that currently only ask
+
+> **Parked at queue position 3 of the verification track.** The 2026-08-05
+> council capped concurrently-open verification roadmaps at two; the two open
+> slots are held by the gate-integrity and authoring-discipline roadmaps, which
+> the council named mandatory-first and mandatory-second. This roadmap is
+> verification infrastructure and is therefore eligible under the successor
+> constraint, not under the capability arm.
+>
+> **Resume when** one of the two open verification roadmaps reaches zero open
+> steps and is archived, freeing a slot. Verify with
+> `./agent-config roadmap:progress` and by confirming the predecessor moved to
+> `agents/roadmaps/archive/`.
+
+> Convert the cheapest of this package's honestly-unenforced obligations into
+> deterministic runtime behaviour — a non-zero exit, a machine-checkable state, a
+> named terminal outcome — and verify that the six generated projections actually
+> load in the hosts they target.
+
+## Context
+
+Source + verdicts:
+[`skill-ecosystem-sweep-2026-08`](../settings/contexts/skill-ecosystem-sweep-2026-08.md)
+§ C2, § C4, § C5, and § Gate coverage this sweep exposes.
+
+**The gap.** Several rules here ship `enforced_by: none` and say so honestly. That
+honesty is correct and stays. What the sweep supplies is evidence that a subset of
+them can be bound cheaply: one source converts a behavioural rule into an
+executable shim placed ahead of the real binary, which prints the sanctioned
+alternative and exits non-zero — at the cost of one path prepend per session
+rather than a process spawn per tool call, which matters given this package's own
+measured finding that transport dominates hook cost. A second source drives a
+bounded loop from a stop event with re-entrancy detection and a whole-line
+completion marker, which is this package's validation budget and read-loop abort
+made machine-enforced instead of model-carried.
+
+**A second, separable gap.** Six projection surfaces are generated and verified
+byte-exact against source. None is verified to **load**. One source installs its
+output into the real host command-line tools in continuous integration and asserts
+every artifact is enumerated. That is pure enumeration with no model inference, so
+it is safe to automate and is distinct from the live trigger evaluation this
+package correctly keeps as a human gate.
+
+**In-tree facts verified before drafting.** `src/scripts/hooks/` holds 15 hooks
+registered in `hook_manifest.yaml`. There is no stop-event hook. `docker-commands`
+routes to the docker skill and is model-carried. `block_no_verify.ts` already
+guards hook-bypass flags as a pre-tool guard, which a shim would strengthen rather
+than replace. The recorded trap that an advisory warn exiting 2 reads as a hard
+block on this host constrains every new hook's exit contract.
+
+## Gap table
+
+| Item from the sweep | Verdict | Where it lands |
+|---|---|---|
+| Session-start shim installer ahead of real binaries | KEEP | Phase 1 |
+| Argument re-quoting so the suggested alternative stays runnable | KEEP | Phase 1 |
+| Per-invocation hook disable flag, surfaced by a diagnostic | KEEP | Phase 1 |
+| Hook performance doctrine plus its false-positive classes | KEEP | Phase 1 |
+| Runtime-wiring diagnostic separate from artifact gates | KEEP | Phase 2 |
+| Sentinel-file working-directory guard | KEEP | Phase 2 |
+| Host-loadability assertion in continuous integration | KEEP | Phase 3 |
+| Cross-host capability-to-spelling equivalence table | KEEP | Phase 3 |
+| Named subagent types resolve to a real definition | KEEP | Phase 3 |
+| Wrong-surface tool-restriction key rejected | KEEP | Phase 3 |
+| Named terminal-state vocabulary for autonomous runs | KEEP | Phase 4 |
+| Retryable and truncated fields in script output | KEEP | Phase 4 |
+| Progress-primary stop with the count as backstop | KEEP | Phase 4 |
+| Stop-event bounded loop with re-entrancy detection | KEEP | Phase 5 |
+| Whole-line completion marker so quoted prose cannot match | KEEP | Phase 5 |
+| Missing-dependency detection so a gap does not burn iterations | KEEP | Phase 5 |
+| Per-turn re-injection of the active plan into context | FOLD | Phase 5, gated behind the attestation precondition below; the injection half is deferred to a follow-up because the attestation is the load-bearing part |
+| Content attestation on any auto-injected tracked artifact | KEEP | Phase 5 |
+| Single sanctioned writer for concurrent checkbox mutation | KEEP | Phase 6 |
+| Fail-closed on ambiguous plan resolution | KEEP | Phase 6 |
+| Append-only run ledger with a cache-stable summary | FOLD | Phase 6, as the stall signal only; the full ledger schema is out of scope |
+| Session-transcript catch-up replay | CUT | Recovery primitive with a host-specific path-mangling landmine and no recorded failure here to justify it |
+| Marker-hook convention: hooks record, never work | KEEP | Phase 1 |
+
+## Prerequisites
+
+- [x] **Step 1:** Sweep record committed.
+- [ ] **Step 2:** Enumerate the current 15 hooks with their events and exit contracts from `hook_manifest.yaml`, so Phase 1 does not duplicate an existing guard.
+
+## Phase 1: Shims and the hook contract
+
+- [ ] **Step 1:** Add `src/scripts/hooks/shims/` and a session-start installer that prepends the shim directory to the path for the session only. <!-- verify: bash -n src/scripts/hooks/shims/install.sh -->
+- [ ] **Step 2:** Ship the first shim for the surface with the clearest recorded need: the container-only tooling rule. The shim prints the sanctioned in-container invocation and exits non-zero; it re-quotes the received arguments so the printed alternative is directly runnable. <!-- verify: bash -n src/scripts/hooks/shims/php -->
+- [ ] **Step 3:** Dispatch on the invoked basename so one script can serve several names, and give each shim a paired test asserting both the non-zero exit and the runnable suggestion. <!-- verify: npx vitest run tests/scripts/hook_shims.test.ts -->
+- [ ] **Step 4:** Add a documented false-positive matrix per shim covering the cases where the binary name appears without being invoked — a which query, a grep for the name, a file whose name contains it — and assert each is a fast pass. <!-- verify: npx vitest run tests/scripts/hook_shims.test.ts -->
+- [ ] **Step 5:** Record the hook performance doctrine in `docs/contracts/` alongside the hook manifest: prefer shell over an interpreted runtime because startup dominates, fast-pass non-matching invocations, prefer a regex over a parse and accept rare false positives, and prefer a path prepend over a per-tool-call spawn where both are available.
+- [ ] **Step 6:** Record the marker-hook convention in the same contract: a hook that triggers work records a marker and exits zero; it never performs the work and never spends. Cite the recorded trap that an advisory exit code 2 reads as a hard block on this host.
+- [ ] **Step 7:** Add a single environment flag that disables every hook for one invocation, and make the Phase 2 diagnostic report it as a warning when set, so a disabled estate is visible rather than silent.
+
+## Phase 2: A diagnostic for the runtime wiring
+
+- [ ] **Step 1:** Add an `agent-config doctor` verb. It writes nothing and always exits zero, reporting pass, warn, fail, or informational per check. The 466 existing gates check artifacts; nothing checks whether the runtime wiring is live.
+- [ ] **Step 2:** Check that the settings resolver returns a project-then-global result and report which file won.
+- [ ] **Step 3:** Check that the router artifact exists, parses, and reports its rule count.
+- [ ] **Step 4:** Check that each registered hook resolves to an existing executable and report per-hook invocation cost, so a latency regression is visible where it is incurred.
+- [ ] **Step 5:** Check for an inherited git-directory environment variable, which overrides discovery and is the recorded cause of a gate resolving against the wrong repository inside a hook.
+- [ ] **Step 6:** Add `src/scripts/_lib/repo_root.ts` resolving the repository root only when a sentinel file exists in the resolved directory, and refusing otherwise. Adopt it in the generators and in the Phase 1 installer. This is a one-line fix for a trap class that has cost multiple sessions. <!-- verify: task typecheck-ts -->
+- [ ] **Step 7:** Add a test that the resolver refuses a directory with no sentinel. <!-- verify: npx vitest run tests/scripts/repo_root.test.ts -->
+
+## Phase 3: Projection reach
+
+- [ ] **Step 1:** Add `src/scripts/check_host_loadability.ts`. For each host command-line tool present on the runner, install the generated projection into a temporary repository and assert the expected artifact count is enumerated. Skip with a recorded reason when the tool is absent, per the completeness ledger.
+- [ ] **Step 2:** Register the loadability check as a continuous-integration-only job and add it to the enumerated local-versus-remote delta list.
+- [ ] **Step 3:** Add `docs/contracts/host-tool-vocabulary.md` mapping each capability to its per-host spelling — subagent dispatch, file create, file edit, file read, shell run, search — and record every case where a host has no equivalent, with what to do instead. An absent equivalent documented is worth more than an invented mapping.
+- [ ] **Step 4:** Add a portability gate flagging a tool grant declared for one host and absent for another.
+- [ ] **Step 5:** Add a gate asserting every subagent type named in an authored artifact resolves to a real definition, with a built-in allowlist for the host's own types. A broken dispatch is invisible until runtime.
+- [ ] **Step 6:** Extend the frontmatter safety lint to reject a tool-restriction key on the wrong surface. The loader silently ignores an unrecognised key and the artifact then inherits everything, so a parse success is not a restriction.
+
+## Phase 4: Name the outcome
+
+- [ ] **Step 1:** Add a terminal-state vocabulary to `contexts/execution/` — success, clean no-op, blocked, approval-required, exhausted, stagnated — and state that an error or an exhausted budget is never reported as success.
+- [ ] **Step 2:** Map the vocabulary onto the existing roadmap glyphs and record the three states the glyphs cannot express, which are exactly the states the validation budget and the hard-blocker classes produce.
+- [ ] **Step 3:** Adopt the vocabulary in the autonomous roadmap run's closing report, so a budget-exhausted stop is distinguishable from a completed one.
+- [ ] **Step 4:** Add `retryable` and `suggestion` to the error envelope of scripts that the agent invokes, so the hard-blocker distinction is machine-decidable rather than model-judged. <!-- verify: task typecheck-ts -->
+- [ ] **Step 5:** Add a `truncated` boolean wherever a script caps its findings, with per-category caps so one high-volume check cannot fill the budget. A capped list without a flag reads as a complete list.
+- [ ] **Step 6:** Record the progress-primary ordering in the validation-budget mechanics: a no-progress or new-minimum signal is primary where the objective is countable, and the iteration cap is the backstop. Do not remove the cap.
+
+## Phase 5: A bounded loop the harness enforces
+
+- [ ] **Step 1:** Add a stop-event hook that reads the host's re-entrancy flag from its input and exits immediately when set, so the loop cannot recurse.
+- [ ] **Step 2:** Read the iteration counter and its ceiling from a state file under the gitignored state directory, updating it atomically by temporary file and rename.
+- [ ] **Step 3:** Exit the loop on a whole-line completion marker match, never a substring, so a quoted example in a transcript cannot terminate or extend a run.
+- [ ] **Step 4:** Detect an unavailable dependency in the transcript and exit rather than consuming iterations against a gap the loop cannot close.
+- [ ] **Step 5:** Record the host-capability tier for the stop event: which hosts can genuinely block, which can only re-inject, and which can only notify — and state plainly that enforcement is real only on the first tier.
+- [ ] **Step 6:** Add `src/scripts/attest_artifact.ts` storing a content hash beside any tracked artifact that a hook would inject, refusing injection on a hash mismatch or a missing attestation. Auto-injection turns a governed file into a standing injection amplifier, so the attestation is the precondition, not a follow-up. <!-- verify: task typecheck-ts -->
+- [ ] **Step 7:** Add a test that a modified artifact fails attestation and that a missing attestation refuses rather than defaults to injecting. <!-- verify: npx vitest run tests/scripts/attest_artifact.test.ts -->
+
+## Phase 6: Concurrent-writer safety
+
+- [ ] **Step 1:** Add an `agent-config roadmap:set-step` verb as the single sanctioned writer of a checkbox glyph, using an advisory lock plus a temporary file and rename so a torn write cannot leave a half-rewritten plan.
+- [ ] **Step 2:** Bound the mutation to the addressed step by anchoring on its own line, never a greedy multi-line pattern. A greedy pattern across a multi-entry file is the recorded mechanism by which one substitution overwrites later entries.
+- [ ] **Step 3:** Assert a structural invariant — the step count — against the live pre-write file rather than an in-memory snapshot. A snapshot-based invariant confirms what you intended to write while destroying what a parallel writer wrote.
+- [ ] **Step 4:** After writing, grep for the mutated step and confirm it appears exactly once. A writer must verify survival, not merely a successful write; in a concurrent overwrite the loser receives no error.
+- [ ] **Step 5:** Make plan resolution fail closed on ambiguity: when the working directory carries an active roadmap and a nested directory carries its own, resolve neither and name both, rather than silently choosing.
+- [ ] **Step 6:** Emit a stall signal from the run state so Phase 4's progress-primary ordering has a machine-readable input. <!-- verify: npx vitest run tests/scripts/roadmap_set_step.test.ts -->
+
+## Acceptance Criteria
+
+- [ ] A shim for the container-only tooling surface exits non-zero and prints a runnable alternative, proven by a test.
+- [ ] Each shim's false-positive matrix passes, proven by a test.
+- [ ] `agent-config doctor` reports settings resolution, router presence, per-hook cost, and an inherited git-directory variable, and always exits zero.
+- [ ] The repository-root resolver refuses a directory with no sentinel file, proven by a test.
+- [ ] The loadability check asserts the expected artifact count in every host tool present on the runner, and records a reason for each absent one.
+- [ ] Every subagent type named in an authored artifact resolves, proven by a gate.
+- [ ] The terminal-state vocabulary is recorded and used in the autonomous run's closing report.
+- [ ] A capped finding list carries an explicit truncation flag.
+- [ ] The stop-event hook respects the host re-entrancy flag and terminates on a whole-line marker, proven by a test.
+- [ ] A modified injected artifact fails attestation, and a missing attestation refuses rather than injects, proven by a test.
+- [ ] The checkbox writer verifies survival after writing, proven by a test.
+- [ ] Quality gates delegated to remote CI on the pull request.
+
+## Blockers
+
+### blocker: shim-scope-decision
+- **Status:** open
+- **Owner:** user
+- **Blocks:** Phase 1 — Shims and the hook contract
+- **What to do:**
+  1. Decide which surfaces get a shim beyond the container-only tooling rule. Candidates observed in the sweep: hook-bypass flags (already guarded by a pre-tool hook, so a shim is additive), and package-manager invocations the house rules route elsewhere.
+  2. A shim changes what a developer's shell does inside a session, so the set is a maintainer decision rather than an agent inference.
+- **Resolved when:** the shim set is named in this roadmap's Phase 1 Step 2 and the remaining candidates are recorded as out of scope.
+
+### blocker: plan-injection-decision
+- **Status:** open
+- **Owner:** user
+- **Blocks:** Phase 5 — A bounded loop the harness enforces
+- **What to do:**
+  1. Decide whether per-turn re-injection of the active roadmap into context is wanted at all. The sweep's evidence is that it closes context rot; the sweep's own counter-evidence is that it converts a governed file into a standing injection amplifier.
+  2. The attestation mechanism (Phase 5 Steps 6 and 7) ships regardless, because it is the precondition and is useful on its own.
+- **Resolved when:** the decision is recorded and either a follow-up roadmap opens for the injection half or it is marked out of scope.
+
+## Risk Register
+
+<!-- risk-review: v1 | reviewed: 2026-08-05 | reviewer: claude/host -->
+
+| Rank | Item | Risk type | Description | Mitigation | Anchored under |
+|------|------|-----------|-------------|------------|----------------|
+| 1 | A shim breaks a developer's own shell usage | product | A shim placed ahead of a real binary intercepts every invocation in the session, including ones the developer makes deliberately outside the rule's intent. | Session-scoped path prepend only, never a global install; a documented false-positive matrix per shim; the disable flag from Phase 1 Step 7; and the surface set gated on a maintainer decision. | blocker: shim-scope-decision |
+| 2 | The stop-event hook exit contract is misread by the host | implementation | This package has already recorded that an advisory exit code 2 is read as a hard block on this host, so a wrong exit contract turns a bounded loop into a deadlock. | The tier record in Phase 5 Step 5 states which hosts can block; the advisory path always exits zero; the re-entrancy flag is read before any decision. | Phase 5: A bounded loop the harness enforces |
+| 3 | Auto-injection becomes an injection amplifier | product | Injecting a tracked artifact on every turn means anything written into that artifact reaches context repeatedly, including content that arrived from an untrusted fetch. | Attestation ships before injection and refuses an unattested body; the injection half itself is blocked on an explicit decision rather than shipped by default. | blocker: plan-injection-decision |
+| 4 | The loadability check is flaky or unavailable on the runner | implementation | Host command-line tools may be absent or version-skewed on the runner, and a check that silently skips is exactly the failure the sibling gate-integrity roadmap exists to prevent. | The check records an explicit skip reason through the completeness ledger, so an absent tool is a recorded skip rather than a silent pass. | Phase 3: Projection reach |
+| 5 | The single-writer verb is bypassed by direct edits | implementation | Nothing prevents an agent turn from editing a checkbox with a generic file-edit tool instead of the new verb, so the concurrency guarantee holds only where the verb is used. | The verb is the documented path and the survival check runs inside it; a follow-up may add a guard, but the interim state is strictly better than today's unguarded edits. | Phase 6: Concurrent-writer safety |
+
+## Provenance
+
+- Source: one first-party security-firm suite for the shim and stop-event
+  mechanisms, one planning-runtime suite for the diagnostic, attestation, and
+  concurrent-writer mechanisms, and one first-party vendor suite for the
+  cross-host vocabulary. Anonymized per `source-confidentiality`; per-source links
+  in the sweep record's § Provenance.
+- Sweep record + full verdict set:
+  [`skill-ecosystem-sweep-2026-08`](../settings/contexts/skill-ecosystem-sweep-2026-08.md).
+- Council: see the sweep record § Council.
