@@ -1,167 +1,255 @@
-// Tests for src/scripts/lint_skill_tools.ts (py2ts Phase 4 / Wave 4b).
+// Tests for src/scripts/lint_skill_tools.ts.
 //
-// The pytest suite tests/test_lint_skill_tools.py is ported 1:1 over the
-// `lint(toolsDir) -> [code, findings]` surface, plus a golden-parity layer
-// running python3 vs tsx on the REAL REPO (skipped without python3).
+// The gate was reduced and re-pointed on 2026-08-05 (AI council): its corpus is
+// `src/scripts/skill_tools/*.ts` (was `*.py`) and it keeps exactly three pure
+// regex checks — snake_case_verb_noun naming, a registered `--json` flag, and an
+// embedded `_SAMPLE` constant or CLI-entry guard. The 200-LOC size cap, the
+// `argparse` import check, the `add_help=False` check, and the stdlib-only
+// import scan are gone, so nothing here tests them; the former python3-gated
+// golden-parity layer is gone with the Python original.
+//
+// Every fixture is a TypeScript tool source written into a temp dir, and every
+// expectation is derived from the fixture that produced it — no assertion here
+// depends on the real `src/scripts/skill_tools/` corpus or its size.
 import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import * as st from '../../src/scripts/lint_skill_tools.js';
 
+// --- fixtures ---------------------------------------------------------------
+//
+// Built by joining lines so the tool sources need no escaping, and derived from
+// one another by targeted replacement so each variant differs in exactly the
+// invariant it is meant to break.
 
+/** Satisfies all three surviving invariants: naming (by filename), `--json`, `_SAMPLE`. */
+const VALID = [
+    '#!/usr/bin/env tsx',
+    '/** Sample tool that obeys the three surviving D1 invariants. */',
+    "import * as YAML from 'yaml';",
+    '',
+    "const _SAMPLE = { hello: 'world' };",
+    '',
+    'export function main(argv: readonly string[]): number {',
+    "    if (argv.includes('--json')) {",
+    '        process.stdout.write(YAML.stringify(_SAMPLE));',
+    '    }',
+    '    return 0;',
+    '}',
+    '',
+].join('\n');
 
-const VALID = `#!/usr/bin/env python3
-"""Sample tool that obeys all D1 invariants."""
-from __future__ import annotations
-import argparse, json, sys
+/** No `--json` anywhere — breaks the CLI check only. */
+const NO_JSON = VALID.replace("argv.includes('--json')", 'argv.length > 0');
 
-_SAMPLE = {"hello": "world"}
+/** No `_SAMPLE` and no `import.meta.url` — breaks the sample check only. */
+const NO_SAMPLE = VALID.replace(
+    "const _SAMPLE = { hello: 'world' };",
+    "const payload = { hello: 'world' };",
+).replace('YAML.stringify(_SAMPLE)', 'YAML.stringify(payload)');
 
+/** No `_SAMPLE`, but carries the CLI-entry guard the sample check also accepts. */
+const ENTRY_GUARD_ONLY = [
+    NO_SAMPLE,
+    'if (import.meta.url === pathToFileURL(process.argv[1]).href) {',
+    '    process.exit(main(process.argv.slice(2)));',
+    '}',
+    '',
+].join('\n');
 
-def main(argv=None) -> int:
-    p = argparse.ArgumentParser()
-    p.add_argument("--json", action="store_true")
-    p.parse_args(argv)
-    return 0
+/** Breaks both text checks at once (naming depends on the filename it is written to). */
+const NO_JSON_NO_SAMPLE = NO_SAMPLE.replace("argv.includes('--json')", 'argv.length > 0');
 
-
-if __name__ == "__main__":
-    raise SystemExit(main())
-`;
-
-function firstFindings(findings: Record<string, string[]>): string[] {
-    const k = Object.keys(findings)[0]!;
-    return findings[k]!;
+/** The leading token of each violation string — `naming` / `cli` / `sample`. */
+function kinds(viols: readonly string[]): string[] {
+    return viols.map((v) => v.split(':')[0]!).sort();
 }
 
-describe('lint_skill_tools.lint — ported pytest', () => {
+function only(findings: Record<string, string[]>): string[] {
+    const keys = Object.keys(findings);
+    expect(keys).toHaveLength(1);
+    return findings[keys[0]!]!;
+}
+
+describe('lint_skill_tools — exported constants', () => {
+    it('TOOLS_DIR points at the .ts tool package under ROOT', () => {
+        expect(path.relative(st.ROOT, st.TOOLS_DIR).split(path.sep)).toEqual([
+            'src',
+            'scripts',
+            'skill_tools',
+        ]);
+    });
+
+    it('NAME_RE accepts snake_case_verb_noun.ts and rejects the near misses', () => {
+        expect(st.NAME_RE.test('do_thing.ts')).toBe(true);
+        expect(st.NAME_RE.test('score_skill_relevance.ts')).toBe(true);
+        expect(st.NAME_RE.test('lonely.ts')).toBe(false);
+        expect(st.NAME_RE.test('Do-Thing.ts')).toBe(false);
+        expect(st.NAME_RE.test('do_thing.py')).toBe(false);
+    });
+});
+
+describe('lint_skill_tools.lint', () => {
     let tmp: string;
+
     beforeEach(() => {
         tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'lst-'));
     });
+
     afterEach(() => {
         fs.rmSync(tmp, { recursive: true, force: true });
     });
 
-    function write(name: string, body: string): void {
-        fs.mkdirSync(tmp, { recursive: true });
-        fs.writeFileSync(path.join(tmp, name), body, 'utf-8');
+    function write(name: string, body: string): string {
+        const p = path.join(tmp, name);
+        fs.mkdirSync(path.dirname(p), { recursive: true });
+        fs.writeFileSync(p, body, 'utf-8');
+        return p;
     }
 
-    it('valid tool passes', () => {
-        write('do_thing.py', VALID);
+    it('a clean tool passes', () => {
+        write('do_thing.ts', VALID);
         const [code, findings] = st.lint(tmp);
         expect(code).toBe(0);
         expect(findings).toEqual({});
     });
 
-    it('third-party import fails', () => {
-        write('do_thing.py', VALID.replace('import argparse, json, sys', 'import argparse, json, sys\nimport requests'));
-        const [code, findings] = st.lint(tmp);
-        expect(code).toBe(1);
-        expect(firstFindings(findings).some((v) => v.includes('requests'))).toBe(true);
-    });
-
-    it('third-party from-import fails', () => {
-        write('do_thing.py', VALID + 'from yaml import safe_load\n');
-        const [code, findings] = st.lint(tmp);
-        expect(code).toBe(1);
-        expect(firstFindings(findings).some((v) => v.includes('yaml'))).toBe(true);
-    });
-
-    it('internal scripts import passes', () => {
-        write('do_thing.py', VALID + 'from scripts.skill_tools import score_skill_relevance  # type: ignore\n');
-        const [code] = st.lint(tmp);
-        expect(code).toBe(0);
-    });
-
-    it('missing --json flag fails', () => {
-        write('do_thing.py', VALID.replace('p.add_argument("--json", action="store_true")', ''));
-        const [code, findings] = st.lint(tmp);
-        expect(code).toBe(1);
-        expect(firstFindings(findings).some((v) => v.includes('--json'))).toBe(true);
-    });
-
-    it('missing argparse fails', () => {
-        const body = `#!/usr/bin/env python3
-"""No argparse."""
-import sys
-_SAMPLE = {}
-if __name__ == "__main__":
-    print("hi")
-`;
-        write('do_thing.py', body);
-        const [code, findings] = st.lint(tmp);
-        expect(code).toBe(1);
-        expect(firstFindings(findings).some((v) => v.includes('argparse'))).toBe(true);
-    });
-
-    it('naming violation fails (uppercase + dash)', () => {
-        write('Bad-Name.py', VALID);
-        const [code, findings] = st.lint(tmp);
-        expect(code).toBe(1);
-        expect(firstFindings(findings).some((v) => v.includes('naming'))).toBe(true);
-    });
-
-    it('naming with no underscore fails', () => {
-        write('lonely.py', VALID);
-        const [code, findings] = st.lint(tmp);
-        expect(code).toBe(1);
-        expect(firstFindings(findings).some((v) => v.includes('naming'))).toBe(true);
-    });
-
-    it('size cap is enforced', () => {
-        const extra = Array.from({ length: 220 }, (_, i) => `x${i} = ${i}`).join('\n') + '\n';
-        write('do_thing.py', VALID + extra);
-        const [code, findings] = st.lint(tmp);
-        expect(code).toBe(1);
-        expect(firstFindings(findings).some((v) => v.includes('size'))).toBe(true);
-    });
-
-    it('no sample + no main fails', () => {
-        const body = `#!/usr/bin/env python3
-"""No sample, no main."""
-import argparse
-def main():
-    p = argparse.ArgumentParser()
-    p.add_argument("--json", action="store_true")
-    p.parse_args()
-`;
-        write('do_thing.py', body);
-        const [code, findings] = st.lint(tmp);
-        expect(code).toBe(1);
-        expect(firstFindings(findings).some((v) => v.includes('sample'))).toBe(true);
-    });
-
-    it('add_help disabled fails', () => {
-        write(
-            'do_thing.py',
-            VALID.replace(
-                'p = argparse.ArgumentParser()',
-                'p = argparse.ArgumentParser(add_help=False)',
-            ),
-        );
-        const [code, findings] = st.lint(tmp);
-        expect(code).toBe(1);
-        expect(firstFindings(findings).some((v) => v.includes('add_help'))).toBe(true);
-    });
-
-    it('__init__.py is skipped', () => {
-        write('__init__.py', '# pkg marker\n');
-        write('do_thing.py', VALID);
+    it('a CLI-entry guard satisfies the sample check without a _SAMPLE constant', () => {
+        expect(ENTRY_GUARD_ONLY).not.toContain('_SAMPLE');
+        write('do_thing.ts', ENTRY_GUARD_ONLY);
         const [code, findings] = st.lint(tmp);
         expect(code).toBe(0);
         expect(findings).toEqual({});
     });
 
-    it('missing dir returns usage error (code 2)', () => {
-        const [code, findings] = st.lint(path.join(tmp, 'nope'));
+    it('a non-snake_case filename fails on naming alone', () => {
+        write('Do-Thing.ts', VALID);
+        const [code, findings] = st.lint(tmp);
+        expect(code).toBe(1);
+        expect(kinds(only(findings))).toEqual(['naming']);
+        expect(only(findings)[0]).toContain('Do-Thing.ts');
+    });
+
+    it('a filename with no underscore fails on naming alone', () => {
+        write('lonely.ts', VALID);
+        const [code, findings] = st.lint(tmp);
+        expect(code).toBe(1);
+        expect(kinds(only(findings))).toEqual(['naming']);
+    });
+
+    it('a missing --json flag fails on the CLI check alone', () => {
+        expect(NO_JSON).not.toContain('--json');
+        write('do_thing.ts', NO_JSON);
+        const [code, findings] = st.lint(tmp);
+        expect(code).toBe(1);
+        expect(kinds(only(findings))).toEqual(['cli']);
+        expect(only(findings)[0]).toContain('--json');
+    });
+
+    it('no _SAMPLE and no entry guard fails on the sample check alone', () => {
+        expect(NO_SAMPLE).not.toContain('_SAMPLE');
+        expect(NO_SAMPLE).not.toContain('import.meta.url');
+        write('do_thing.ts', NO_SAMPLE);
+        const [code, findings] = st.lint(tmp);
+        expect(code).toBe(1);
+        expect(kinds(only(findings))).toEqual(['sample']);
+        expect(only(findings)[0]).toContain('_SAMPLE');
+    });
+
+    it('all three checks report together on one file', () => {
+        write('Bad-Name.ts', NO_JSON_NO_SAMPLE);
+        const [code, findings] = st.lint(tmp);
+        expect(code).toBe(1);
+        expect(kinds(only(findings))).toEqual(['cli', 'naming', 'sample']);
+    });
+
+    it('index.ts is skipped — it is the package marker, not a tool', () => {
+        // Would trip naming-free but both text checks if it were treated as a tool.
+        write('index.ts', "export * from './do_thing.js';\n");
+        write('do_thing.ts', VALID);
+        const [code, findings] = st.lint(tmp);
+        expect(code).toBe(0);
+        expect(findings).toEqual({});
+    });
+
+    it('.d.ts and .test.ts siblings are not tools', () => {
+        write('Bad-Name.d.ts', 'export declare const x: number;\n');
+        write('Bad-Name.test.ts', 'export const y = 1;\n');
+        write('do_thing.ts', VALID);
+        const [code, findings] = st.lint(tmp);
+        expect(code).toBe(0);
+        expect(findings).toEqual({});
+    });
+
+    it('a directory whose name ends in .ts is not a tool', () => {
+        fs.mkdirSync(path.join(tmp, 'Not-A-Tool.ts'));
+        write('do_thing.ts', VALID);
+        const [code, findings] = st.lint(tmp);
+        expect(code).toBe(0);
+        expect(findings).toEqual({});
+    });
+
+    it('violations from several tools aggregate, keyed by the offending file', () => {
+        // Fixtures live outside ROOT, so the key is the absolute path (inside the
+        // repo the gate keys findings by the POSIX path relative to ROOT).
+        const noJson = write('do_thing.ts', NO_JSON);
+        const badName = write('Bad-Name.ts', VALID);
+        write('do_other.ts', VALID);
+
+        const [code, findings] = st.lint(tmp);
+        expect(code).toBe(1);
+        expect(Object.keys(findings).sort()).toEqual([noJson, badName].sort());
+        expect(kinds(findings[noJson]!)).toEqual(['cli']);
+        expect(kinds(findings[badName]!)).toEqual(['naming']);
+    });
+
+    it('a missing tools dir returns the usage code with an _error finding', () => {
+        const missing = path.join(tmp, 'nope');
+        const [code, findings] = st.lint(missing);
         expect(code).toBe(2);
-        expect('_error' in findings).toBe(true);
+        expect(Object.keys(findings)).toEqual(['_error']);
+        expect(findings['_error']![0]).toContain(missing);
     });
 });
 
-// --- Golden parity on the REAL REPO ----------------------------------------
+describe('lint_skill_tools.main', () => {
+    let tmp: string;
+    let stdoutSpy: { mockRestore: () => void };
+    let stderrSpy: { mockRestore: () => void };
 
+    beforeEach(() => {
+        tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'lst-main-'));
+        stdoutSpy = vi.spyOn(process.stdout, 'write').mockImplementation(() => true);
+        stderrSpy = vi.spyOn(process.stderr, 'write').mockImplementation(() => true);
+    });
+
+    afterEach(() => {
+        stdoutSpy.mockRestore();
+        stderrSpy.mockRestore();
+        fs.rmSync(tmp, { recursive: true, force: true });
+    });
+
+    it('returns 0 on a clean corpus', () => {
+        fs.writeFileSync(path.join(tmp, 'do_thing.ts'), VALID, 'utf-8');
+        expect(st.main(['--tools-dir', tmp, '--quiet'])).toBe(0);
+        expect(st.lintedCount()).toBe(1);
+    });
+
+    it('returns 1 on a genuine violation', () => {
+        fs.writeFileSync(path.join(tmp, 'do_thing.ts'), NO_JSON, 'utf-8');
+        expect(st.main(['--tools-dir', tmp, '--quiet'])).toBe(1);
+    });
+
+    it('returns 2 on a dead scan scope — an empty tools dir is blindness, not success', () => {
+        expect(st.main(['--tools-dir', tmp, '--quiet'])).toBe(2);
+        expect(st.lintedCount()).toBe(0);
+    });
+
+    it('returns 2 when only the package marker is present — index.ts is not a scanned tool', () => {
+        fs.writeFileSync(path.join(tmp, 'index.ts'), 'export {};\n', 'utf-8');
+        expect(st.main(['--tools-dir', tmp, '--quiet'])).toBe(2);
+        expect(st.lintedCount()).toBe(0);
+    });
+});

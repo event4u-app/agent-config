@@ -452,7 +452,7 @@ tasks:
 
   lint-skill-tools:
     silent: true
-    desc: Block D · D1 — meta-lint scripts/skill_tools/*.py (stdlib-only, --json, snake_case_verb_noun, ≤200 LOC, embedded sample)
+    desc: Block D · D1 — meta-lint src/scripts/skill_tools/*.ts (--json flag, snake_case_verb_noun naming, embedded _SAMPLE or CLI-entry guard); asserts its scan scope, so an emptied corpus fails instead of reporting clean
     cmd: ./scripts-run src/scripts/lint_skill_tools {{.QUIET_FLAG}}
 
   lint-agents-md:

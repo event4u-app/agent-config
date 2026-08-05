@@ -15,6 +15,37 @@ phase: road-to-better-skills-and-profiles · Block D (D1–D5) — historical: P
 **Accepted** · 2026-05-09 · pilot **PASSED** · tools kept under
 `scripts/skill_tools/`.
 
+**Amended 2026-08-05 — the invariant set is re-cut for the TypeScript surface.**
+ADR-200 migrated these tools from Python to TypeScript without mentioning this
+ADR, so `lint_skill_tools` — the gate that enforces the invariants below — kept
+globbing `skill_tools/*.py` and matched nothing. For ~7 weeks it printed
+`✅ scripts/skill_tools/ — all tools clean.` over **zero** tools on every CI run,
+and in that window two invariants went unmet unnoticed: `--help` appears in
+**0 of 6** tools, and `_SAMPLE` survived in only **3 of 5**.
+
+Re-pointing the glob and keeping all five invariants was measured and rejected:
+the TS ports are 2.4–4.0× their Python originals (92–142 LOC → 253–470), so the
+**≤ 200 LOC cap reds 5 of 5 tools**, and the only way to green it is raising the
+cap to ≥ 470 — threshold-lowering, which this gate's own ratchet exists to
+prevent. AI council 2026-08-05 (anthropic/claude-sonnet-4-5 + openai/gpt-4o)
+resolved it as *extract the checkable, retire the rest explicitly*:
+
+| Invariant | Disposition on the TS surface |
+|---|---|
+| machine-readable output (`--json`) | **enforced** — regex over the tool source |
+| `snake_case_verb_noun` naming | **enforced** — now anchored on `*.ts` |
+| embedded `_SAMPLE` | **enforced**, widened to accept the `import.meta.url` CLI-entry guard that replaced Python's `__main__` block |
+| ≤ 200 LOC per tool | **retired** — unpassable without raising the cap 2.35×; TS is structurally more verbose than the Python it replaced |
+| stdlib-only imports | **retired as a gate** — the check was a Python `ast`-shaped scanner plus a hardcoded Python-stdlib set, and re-implementing it for TS specifiers is a new analyser, not a port. Measured: all 6 tools import only Node built-ins and relative siblings, so the property holds today — it is simply no longer mechanically guarded |
+| `argparse` import · `add_help=False` | **retired** — no TypeScript analogue |
+| blind-labelled eval corpora · kill-switch | unchanged; the kill-switch trigger (eval < 2/3) has never fired |
+
+The gate now also **asserts its scan scope**, so an emptied or moved corpus fails
+loudly instead of certifying nothing. This is a scope re-cut of Decision 1–2
+below, not a reversal: the tools stay, the gate stays in CI, and this ADR is
+**not** `superseded_by` anything. The reversibility clause further down is
+untouched — its trigger is an eval regression, which did not happen here.
+
 ## Context
 
 `road-to-better-skills-and-profiles` **Block D** introduced four
