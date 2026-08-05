@@ -16,15 +16,32 @@
  */
 
 import * as fs from 'node:fs';
+import * as os from 'node:os';
 import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import { project_settings_path } from './_lib/agent_settings.js';
+import { GateLedger } from './_lib/gate_ledger.js';
+import { runGateCli, runSelfTest } from './_lib/gate_self_test.js';
 import { granularity_problems } from './_lib/roadmap_granularity.js';
 import { assertScanned, DeadScopeError } from './_lib/scan_scope.js';
 
 /** Mirror `QUIET = "--quiet" in sys.argv` (computed at import). */
 const QUIET = process.argv.slice(2).includes('--quiet');
+
+/**
+ * Optional roadmap-tree root, additive to the pinned CLI contract.
+ *
+ * Needed because this gate resolves its root from its own file location, not
+ * from the working directory — so nothing could exercise the real binary
+ * against a fixture tree, and the two rejection paths (untagged roadmap, dead
+ * scope) had no end-to-end proof at all. Absent, behaviour is unchanged.
+ */
+function _rootOverride(argv: readonly string[]): string | null {
+    const i = argv.indexOf('--root');
+    const value = i === -1 ? undefined : argv[i + 1];
+    return value === undefined ? null : path.resolve(value);
+}
 
 const _HERE = path.resolve(fileURLToPath(import.meta.url));
 // REPO_ROOT = Path(__file__).resolve().parent.parent.parent
@@ -388,11 +405,61 @@ function _check_execution_mode(fm: string, problems: string[]): void {
     }
 }
 
+/**
+ * Prove, against the real CLI, that this gate still rejects what it must.
+ *
+ * The empty-tree case is the one that would otherwise rot silently: this gate
+ * legitimately reaches zero ACTIVE roadmaps, so only the whole-tree assertion
+ * separates "everything is archived" from "the root moved".
+ */
+export function selfTest(): number {
+    const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'rmc-selftest-'));
+    const seed = (name: string, body: string | null): string => {
+        const root = path.join(tmp, name);
+        fs.mkdirSync(path.join(root, 'agents', 'roadmaps'), { recursive: true });
+        if (body !== null) {
+            fs.writeFileSync(path.join(root, 'agents', 'roadmaps', 'demo.md'), body, 'utf-8');
+        }
+        return root;
+    };
+    const run = (cwd: string): number =>
+        runGateCli(REPO_ROOT, 'src/scripts/lint_roadmap_complexity.ts', ['--quiet', '--root', cwd], REPO_ROOT);
+
+    const clean = '---\ncomplexity: lightweight\n---\n\n# Demo\n\n## Phase 1\n\n- [ ] **Step 1:** do the thing.\n';
+    try {
+        return runSelfTest({
+            gate: 'lint_roadmap_complexity',
+            minCases: 3,
+            minRejectCases: 2,
+            cases: [
+                {
+                    name: 'a roadmap without a `complexity:` tag is rejected',
+                    expect: 'reject',
+                    run: () => run(seed('untagged', '# Demo\n\n## Phase 1\n\n- [ ] **Step 1:** do the thing.\n')),
+                },
+                { name: 'a tagged roadmap passes', expect: 'accept', run: () => run(seed('clean', clean)) },
+                {
+                    name: 'an EMPTY roadmap tree is rejected — dead scope, not "all archived"',
+                    expect: 'reject',
+                    run: () => run(seed('empty', null)),
+                },
+            ],
+        });
+    } finally {
+        fs.rmSync(tmp, { recursive: true, force: true });
+    }
+}
+
 function main(): number {
+    if (process.argv.slice(2).includes('--self-test')) {
+        return selfTest();
+    }
+    const root = _rootOverride(process.argv.slice(2)) ?? REPO_ROOT;
+    const tree = _listRoadmapTree(path.join(root, 'agents', 'roadmaps'));
     try {
         assertScanned({
             gate: 'lint_roadmap_complexity',
-            scanned: _countRoadmapTree(path.join(REPO_ROOT, 'agents', 'roadmaps')),
+            scanned: tree.length,
             units: 'roadmap file(s)',
             roots: ['agents/roadmaps'],
         });
@@ -404,18 +471,32 @@ function main(): number {
         }
         throw e;
     }
-    const roadmaps = _globRoadmaps();
+    const roadmaps = _globRoadmaps(root);
     const horizon_weeks = _read_horizon_weeks();
+    // The ledger plans the WHOLE tree, not just the active glob. The gap
+    // between the asserted population and the judged one used to be invisible:
+    // the assertion counted `archive/` + `later/` + `skipped/`, the loop judged
+    // only the top level, and nothing said so. Now every disposed roadmap is an
+    // explicit `out_of_scope`, so the denominator on the green line is honest.
+    const ledger = new GateLedger('lint_roadmap_complexity');
+    ledger.plan(tree.map((p) => _relPosix(p, root)));
+    const active = new Set(roadmaps.map((p) => _relPosix(p, root)));
+    for (const rel of tree.map((p) => _relPosix(p, root))) {
+        if (!active.has(rel)) {
+            ledger.outOfScope(rel, 'excluded_directory');
+        }
+    }
     if (roadmaps.length === 0) {
         if (!QUIET) {
             process.stdout.write(`✅  no active roadmaps under ${ROADMAP_GLOB} — nothing to lint\n`);
         }
+        ledger.report();
         return 0;
     }
     let failed = 0;
     const summary: Array<[string, string]> = [];
     for (const roadmap of roadmaps) {
-        const rel = _relPosix(roadmap, REPO_ROOT);
+        const rel = _relPosix(roadmap, root);
         const warnings: string[] = [];
         const problems = lint_roadmap(roadmap, horizon_weeks, warnings);
         for (const w of warnings) {
@@ -426,11 +507,13 @@ function main(): number {
         summary.push([rel, complexity]);
         if (problems.length > 0) {
             failed++;
+            ledger.fail(rel, problems[0] ?? 'complexity lint failed');
             process.stderr.write(`❌  ${rel}  [${complexity}]\n`);
             for (const pr of problems) {
                 process.stderr.write(`    - ${pr}\n`);
             }
         } else {
+            ledger.complete(rel);
             if (!QUIET) {
                 process.stdout.write(`✅  ${rel}  [${complexity}]\n`);
             }
@@ -444,6 +527,9 @@ function main(): number {
         `summary: ${light} lightweight · ${structural} structural · ` +
             `${untagged} untagged · ${summary.length} total\n`,
     );
+    // Unconditional: the completeness line is printed on the red path too, so a
+    // failing run still says how much of the corpus it actually judged.
+    ledger.report();
     if (failed) {
         process.stderr.write(`\n❌  ${failed} roadmap(s) failed complexity lint\n`);
         return 1;
@@ -477,8 +563,8 @@ function _countChar(text: string, ch: string, start = 0, end?: number): number {
 }
 
 /** Sorted `agents/roadmaps/*.md` (non-recursive — mirrors glob, not rglob). */
-function _globRoadmaps(): string[] {
-    const dir = path.join(REPO_ROOT, 'agents', 'roadmaps');
+function _globRoadmaps(root: string = REPO_ROOT): string[] {
+    const dir = path.join(root, 'agents', 'roadmaps');
     let entries: fs.Dirent[];
     try {
         entries = fs.readdirSync(dir, { withFileTypes: true });
@@ -505,23 +591,28 @@ function _relPosix(target: string, root: string): string {
  * The active glob is the subset this gate judges, and it reaches zero
  * legitimately once everything is archived, so it cannot double as the scope
  * assertion. The whole tree reaching zero has only one cause: the root moved.
+ *
+ * Returns the paths rather than a bare count so the ledger can account for the
+ * difference between the two populations explicitly: a file under `archive/`
+ * is not unchecked-by-accident, it is out of scope for a named reason, and the
+ * ledger says which.
  */
-function _countRoadmapTree(dir: string): number {
+function _listRoadmapTree(dir: string): string[] {
     let entries: fs.Dirent[];
     try {
         entries = fs.readdirSync(dir, { withFileTypes: true });
     } catch {
-        return 0;
+        return [];
     }
-    let n = 0;
+    const out: string[] = [];
     for (const entry of entries) {
         if (entry.isDirectory()) {
-            n += _countRoadmapTree(path.join(dir, entry.name));
+            out.push(..._listRoadmapTree(path.join(dir, entry.name)));
         } else if (entry.name.endsWith('.md')) {
-            n += 1;
+            out.push(path.join(dir, entry.name));
         }
     }
-    return n;
+    return out.sort();
 }
 
 function _isCliEntry(): boolean {
