@@ -294,6 +294,57 @@ Entry-shape contract: [`docs/contracts/CHANGELOG-conventions.md`](docs/contracts
 > that forces a new era split (`# Era: 9.19.x`, etc.) — see
 > [`docs/contracts/CHANGELOG-conventions.md § Era splits`](docs/contracts/CHANGELOG-conventions.md).
 
+## [9.21.0](https://github.com/event4u-app/agent-config/compare/9.20.0...9.21.0) (2026-08-05)
+
+### Release highlights
+
+<!-- Curated head: fill before merge, keep it under 10 lines, and leave `_none_` where it is genuinely the answer. The generated log below is unchanged. -->
+- **Behaviour changes:** _none_
+- **Default changes + migration:** _none_
+- **Security and correctness:** _none_
+- **Honest nulls:** _none_
+- **Known limitations:** _none_
+
+### Features
+
+* **gates:** take the unhardened-gate count to 0 and delete the ratchet entry ([e31690c](https://github.com/event4u-app/agent-config/commit/e31690c7330bb90ed813cc25ead2268da2971ea1))
+* **gates:** repoint lint_skill_tools at the .ts corpus and harden it ([694a729](https://github.com/event4u-app/agent-config/commit/694a729359e674953881a996af6079123e91a98d))
+* **gates:** fold bite-sized granularity into lint_roadmap_complexity ([08d9075](https://github.com/event4u-app/agent-config/commit/08d9075c978a6a76a250a74fe6377ad3b2c2d8a2))
+* **gates:** assert the scan scope of the last 57 gates — 61 → 4 ([5244b21](https://github.com/event4u-app/agent-config/commit/5244b21ea664db73a3a07c8ce717a2b43c4ba157))
+* **gates:** assert the scan scope of 54 more gates — 115 → 61 ([835fd54](https://github.com/event4u-app/agent-config/commit/835fd545649287574c9d74e3280302ca429b8d20))
+* **gates:** assert the scan scope of 48 tree-walking gates ([9cc51a2](https://github.com/event4u-app/agent-config/commit/9cc51a20c8d3d3c9f133d0bb8a94a322b90ee235))
+* **gates:** assert the scan scope of 28 more corpus gates ([f4e79e4](https://github.com/event4u-app/agent-config/commit/f4e79e4a8f7c90e27353693f42d27c1a70bbdac4))
+* **gates:** classify the corpusless gates by what they read ([c7a851b](https://github.com/event4u-app/agent-config/commit/c7a851becd7a77ff85c7c443c59ca45b91bc7ef3))
+* **gates:** assert the scan scope of five corpus gates ([7433f72](https://github.com/event4u-app/agent-config/commit/7433f72482c639bf88d01e58e093d7c57a608960))
+* **gates:** derive the conversion work-list instead of reading 189 gates ([b845e4d](https://github.com/event4u-app/agent-config/commit/b845e4df66e90b1d43a42f9fa55bb41457b4a1b5))
+* **scan-scope:** pair the scope assertion with the published count ([b8b2840](https://github.com/event4u-app/agent-config/commit/b8b2840d17466f0be5047fbaa98ed67751a93a70))
+
+### Bug Fixes
+
+* **gates:** read piped stdin whole — a gate that only broke on big diffs ([0e3e9cd](https://github.com/event4u-app/agent-config/commit/0e3e9cd4ca91c01c00d8c611a96db72b936952d8))
+* **gates:** clear the two preflight blockers the repairs introduced ([2683395](https://github.com/event4u-app/agent-config/commit/268339595ca2dd34b14a1a63abd6362fde7868fb))
+* **gates:** repair two dead scan roots the widened population revealed ([5b41c55](https://github.com/event4u-app/agent-config/commit/5b41c556bc245c4eb9da7506b4de449a3cde07b0))
+* **gates:** one definition of "a gate", and an honest denominator ([9f65efe](https://github.com/event4u-app/agent-config/commit/9f65efea7882d4c79f2e5f4c8fcefb0b521bcdde))
+* **gate-coverage:** an unenforced `scanned:` line hardens nothing ([2873c91](https://github.com/event4u-app/agent-config/commit/2873c919d0245ca76a18f2315c768b9a9cb1e1ca))
+
+### Documentation
+
+* **roadmap:** close and archive road-to-gate-hardening-adoption ([d1497c5](https://github.com/event4u-app/agent-config/commit/d1497c5fc12f5475b683f27b42953cf2f448def8))
+* **roadmap:** file the four-gate blocker where the dashboard reads it ([7e0c8e9](https://github.com/event4u-app/agent-config/commit/7e0c8e9e369c29a7574c99f1ec453835e1ae44e9))
+* **roadmap:** close Phase 1 — the mechanically-safe conversions ([877859a](https://github.com/event4u-app/agent-config/commit/877859ac99e70a79630b201a025a474df156fe55))
+* **roadmap:** record the assert-first conversion contract ([613d478](https://github.com/event4u-app/agent-config/commit/613d47878252edfe8c5d225d73c1bed3fe6fb753))
+
+### Refactoring
+
+* **gates:** re-home the ADR-095 workspace boundary to ESLint ([2bc2483](https://github.com/event4u-app/agent-config/commit/2bc24833149cff33573a84c9dfbc973b5b3b5fe3))
+* **hooks:** rename verify_before_complete_hook off the gate prefix ([f57d969](https://github.com/event4u-app/agent-config/commit/f57d969c6c54e591060054f217a12d816d121116))
+
+### Chores
+
+* **tests:** drop a dead helper the lint scope only now reaches ([9b49d24](https://github.com/event4u-app/agent-config/commit/9b49d240140c9b6af28969c752f4757bf5580d98))
+
+Tests: 11034 (+39 since 9.20.0)
+
 ## [9.20.0](https://github.com/event4u-app/agent-config/compare/9.19.0...9.20.0) (2026-08-04)
 
 ### Release highlights
