@@ -5,6 +5,19 @@ status: later
 
 # Road to gateway harvest — what the runtime layer could carry, parked behind the freeze (Source B)
 
+> **FREEZE LIFTED 2026-08-05.** The ADR-211 harvest freeze that parked this
+> roadmap was anchored on external adoption; that anchoring is struck by
+> [`ADR-216`](../../../docs/decisions/ADR-216-restraint-reanchored-to-capacity.md)
+> (external adoption is not a project goal and is not a valid gate anywhere in
+> this tree). The freeze's real basis was maintainer capacity, and its conditions
+> are met — **so nothing external holds this roadmap any more.**
+>
+> **Resume when** the maintainer decides to spend a slot on it. That is the only
+> remaining condition: a sequencing decision, in the maintainer's control, not an
+> event to wait for. Per-item evidence discipline is untouched — ADR-211
+> Amendment C (the cited failure finding must predate the borrow) and Amendment D
+> (red test committed first) still apply to each item on resume.
+
 > **Parked per
 > [`ADR-211`](../../../docs/decisions/ADR-211-harvest-freeze-resume-conditions.md)
 > (harvest freeze; council disposition 2026-08-03): 0 of 9 milestones proceed
@@ -17,8 +30,8 @@ status: later
 > its root), 3 LATENT-CANDIDATE (M2, M5, M6 — marked in the table below with
 > the red test that would qualify each under ADR-211 Amendment D), 5 STAY.
 >
-> **Resume when:** the ADR-211 exit fires (external adopter OR the internal
-> arm), AND each resumed milestone satisfies ADR-211 Amendment C (pre-dating
+> **Resume when:** the maintainer spends a slot on it (ADR-216 struck the
+> adoption gate; the capacity conditions are met), AND each resumed milestone satisfies ADR-211 Amendment C (pre-dating
 > failure finding) or Amendment D (pre-registered red test) — or a fresh
 > council pass admits it as deliberately additive post-freeze. A
 > LATENT-CANDIDATE may re-enter EARLIER by committing its red test first;

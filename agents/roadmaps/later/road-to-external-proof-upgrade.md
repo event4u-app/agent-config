@@ -6,7 +6,20 @@ parent_roadmap: road-to-employee-product-and-external-proof
 
 # Roadmap: External-Proof Upgrade — recruit sessions, beta promotion, v1.0 activation events
 
-> Blocked until a human owner schedules the first recruit session (Phase 1) — everything in this roadmap is human-owner or release-event gated by design.
+> **SPLIT 2026-08-05 per
+> [`ADR-216`](../../../docs/decisions/ADR-216-restraint-reanchored-to-capacity.md).**
+> Recruiting external testers is out of scope — external adoption is not a project
+> goal, and this was already the recorded owner ruling before ADR-216 restated it
+> (see `feedback-9x-council-cut`, which refuses "recruiting external testers"
+> by name). So the recruit-session phases are **not** work this project will do.
+>
+> The problem is that this roadmap gated *everything* on that first recruit
+> session, including work that has nothing to do with adoption — the
+> encryption default-flip. **That half is unblocked.**
+>
+> **Resume when** the maintainer picks up the encryption default-flip; it needs no
+> recruit session and never did. The recruit-session and beta-promotion phases stay
+> parked as out-of-scope rather than pending, so nobody reads them as owed work.
 
 Spawned from the deferred items of `road-to-employee-product-and-external-proof.md` (archived) so that roadmap could close honestly without cancelling work that stays valuable. Per the AI-council decision of 2026-06-08 (claude-sonnet-4-5 + gpt-4o, design mode), recruit sessions are **de-gated, not cancelled**: nothing downstream blocks on them anymore, but running them is the one external-proof upgrade the self-improvement loop cannot fabricate — *can a cold-start external user get in at all?* This roadmap is the standing home for that upgrade plus the two v1.0 activation events that were intentionally not pre-flipped.
 

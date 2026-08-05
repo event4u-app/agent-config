@@ -16,11 +16,17 @@ related_contexts: [host-capability-manifest, subagent-routing, model-recommendat
 > answered "no" for a closely-related mechanism. Settle it with probe data, not
 > with a plan.
 
-> **Blocked until** two conditions hold: the composition-ratchet polish gate has
-> exited (feature work), and the ADR that governs tier→model mapping enters its
-> recorded review window — where revisiting is procedurally cheap rather than a
+> **Blocked until** the ADR that governs tier→model mapping enters its recorded
+> review window — where revisiting is procedurally cheap rather than a
 > supersession fight. Phase 0 is the only part that produces value before then,
 > and it produces exactly the evidence that review needs.
+>
+> **One of the two original conditions is struck.** This roadmap previously also
+> waited on the composition-ratchet polish gate. That gate was anchored on
+> external adoption and is retired per
+> [`ADR-216`](../../../docs/decisions/ADR-216-restraint-reanchored-to-capacity.md)
+> § D4. The remaining condition is real, reachable, and unrelated to adoption, so
+> this roadmap stays parked on its own merits rather than on a zombie.
 
 ## Goal
 
@@ -186,13 +192,19 @@ behaviour is byte-identical to today.
   it supersedes.
 
 ### blocker: polish-gate-open
-- **Status:** open
+- **Status:** resolved
 - **Owner:** maintainer
 - **Blocks:** Phases 2 and 3 (Phase 0 probes and Phase 1's template fix are
   evidence and bug-fix work respectively)
-- **What to do:** confirm the gate's status; feature work waits for its exit.
-- **Resolved when:** 3 external adoptions are documented, or
-  `road-to-adoption-without-narrative-debt` is archived.
+- **What to do:** RESOLVED 2026-08-05 by the gate's own second exit clause —
+  `road-to-adoption-without-narrative-debt` was disposed to
+  `agents/roadmaps/skipped/`. The first clause ("3 external adoptions") is struck
+  outright by
+  [`ADR-216`](../../../docs/decisions/ADR-216-restraint-reanchored-to-capacity.md)
+  § D5. Phases 2 and 3 now wait only on the tier-to-model ADR's review window,
+  which is the roadmap's other and genuinely reachable condition.
+- **Resolved when:** resolved. Kept rather than deleted so the disposition stays
+  visible.
 
 ## Acceptance criteria
 

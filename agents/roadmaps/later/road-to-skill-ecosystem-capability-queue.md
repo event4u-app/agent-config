@@ -3,21 +3,26 @@ complexity: lightweight
 status: later
 ---
 
-# Road to the capability queue — everything capability-shaped, and the gate it waits on
+# Road to the capability queue — everything capability-shaped, waiting on a capacity slot
 
-> **Parked on the capability arm, not the verification track.** The 2026-08-05
-> council split the freeze's governance: verification infrastructure lifts under a
-> two-slot cap, while capability additions stay frozen. Every item in this file is
-> capability-shaped — a new skill, a corpus, a domain surface, or a user-facing
-> output format — so none of it proceeds under the successor constraint.
+> **Parked on capacity only.** The 2026-08-05 council split the freeze into a
+> verification arm and a capability arm and gated the latter partly on external
+> adoption. [`ADR-216`](../../../docs/decisions/ADR-216-restraint-reanchored-to-capacity.md)
+> struck that gate the same day — external adoption is not a project goal — and
+> with it **the verification-versus-capability split dissolved.** Nothing in this
+> file is categorically frozen any more.
 >
-> **Resume when** either arm opens: at least one real external adoption is
-> documented, **or** an external finding recorded in the sweep is reproduced by
-> local measurement and the reproduction is documented. Verify by checking
-> `docs/decisions/` for the recording; no roadmap step may substitute for it.
+> **What remains is one capacity mechanism:** at most two concurrently-open
+> `road-to-skill-ecosystem-*` roadmaps outside `archive/` and `later/`
+> (ADR-215 § D2, mechanically enforced). Both slots are currently held.
+>
+> **Resume when** a slot frees and the maintainer picks an entry for it. Verify
+> with `./agent-config roadmap:progress`. Promotion is still per entry rather than
+> as a batch — that discipline was about maintainer load, not about the gate, so
+> it survives.
 
 > Hold the sweep's capability findings in one reviewable queue with their evidence
-> attached, so that when the capability arm opens the queue is a decision list
+> attached, so that when a capacity slot frees the queue is a decision list
 > rather than a re-analysis.
 
 ## Context
@@ -25,25 +30,30 @@ status: later
 Source + verdicts:
 [`skill-ecosystem-sweep-2026-08`](../../settings/contexts/skill-ecosystem-sweep-2026-08.md).
 
-**Why one file rather than five.** The council's stated risk of lifting was
-mistaking activity for progress on the binding constraint, which is adoption
-rather than capability. Authoring five executable capability roadmaps would pay
-the authoring cost for work that cannot start and would present as an open
-workload. One queue file with the evidence attached preserves the sweep's value at
-a fraction of the cost, and it is honest about the state: these are queued
-decisions, not planned work.
+**Why one file rather than five.** Authoring five executable capability roadmaps
+would pay the authoring cost for work that cannot start under the slot cap, and
+would present as an open workload. One queue file with the evidence attached
+preserves the sweep's value at a fraction of the cost, and it is honest about the
+state: these are queued decisions, not planned work.
 
-**Why the amendment this waits on is defective, recorded here so it is not
-rediscovered.** The freeze's latent-risk door requires a failing test written and
-committed before the borrow. That works for a defect in existing machinery — the
-test exercises real code that misbehaves. It cannot work for a capability that does
-not exist yet: a test referencing absent code is not a failing test, it is a
-declaration of intent, which the amendment explicitly excludes. Both council
-members identified this; one classified it as a construction defect rather than
-intended design, on the grounds that the freeze's own framing says the binding
-constraint is adoption and never says capability is banned. The proposed repair is
-a separate capability arm rather than a patch to the latent-risk door, which is
-what the resume condition above encodes.
+The council framed its risk-of-lifting as mistaking activity for progress on the
+binding constraint, which it took to be adoption. ADR-216 corrects the premise —
+the binding constraint is maintainer capacity — but the shape of the caution
+survives translation: five open workstreams for one maintainer is the fragmentation
+the cap exists to prevent, whatever the outside world is doing.
+
+**A construction defect recorded so it is not rediscovered.** The freeze's
+latent-risk door requires a failing test written and committed before the borrow.
+That works for a defect in existing machinery — the test exercises real code that
+misbehaves. It cannot work for a capability that does not exist yet: a test
+referencing absent code is not a failing test, it is a declaration of intent,
+which the amendment explicitly excludes. Both council members identified this.
+
+The council's proposed repair was a separate capability arm. ADR-216 went further
+and removed the need for one: with the freeze lifted in full, the latent-risk door
+is no longer the path capability has to squeeze through, so its inability to admit
+capability stops mattering. The door stays exactly as written for the defect-closure
+case it handles well.
 
 ## The queue
 
@@ -61,7 +71,7 @@ dependency** — so this finding removes the stated gate reason rather than argu
 around it. The existing HTML deck skill stays as the editable and reviewable path;
 this becomes the must-be-a-real-file path.
 
-*Proceeds when:* the capability arm opens. This is the strongest entry in the
+*Proceeds when:* a capacity slot frees. This is the strongest entry in the
 queue because the blocking reason is now known to be false, which is a documented
 contradiction rather than a preference.
 
@@ -90,7 +100,7 @@ Verified absent from the typography and design skills by direct inspection:
   query in both directions. Our published-artifact surface requires this and no
   authored artifact teaches the mechanism.
 
-*Proceeds when:* the capability arm opens. Every value is re-derived rather than
+*Proceeds when:* a capacity slot frees. Every value is re-derived rather than
 copied; one source's radius and spacing columns were verified constant across all
 its entries including two where the correct value is zero, so its numbers are
 unreliable even where its rules are not.
@@ -102,7 +112,7 @@ vector format merely because the output is a diagram), and concrete pan-and-zoom
 mechanics. Verified genuinely absent: this package carries a dense chart corpus and
 no diagram artifact at all.
 
-*Proceeds when:* the capability arm opens.
+*Proceeds when:* a capacity slot frees.
 
 ### Q4 — Publish-target degradation matrix
 
@@ -113,7 +123,7 @@ an honest note that a runtime-injected stylesheet is invisible to the inliner so
 computed-style walk is the fallback. This package's published-artifact surface has
 exactly one hostile target and no artifact covering the class.
 
-*Proceeds when:* the capability arm opens.
+*Proceeds when:* a capacity slot frees.
 
 ### Q5 — Media corpus depth
 
@@ -139,7 +149,7 @@ exactly one hostile target and no artifact covering the class.
 - A dual master from one timeline, with and without the music bed, which removes
   the most common reason a finished render is rebuilt.
 
-*Proceeds when:* the capability arm opens. Note that one adjacent source in the
+*Proceeds when:* a capacity slot frees. Note that one adjacent source in the
 same group was refused outright on policy grounds and nothing from it enters this
 queue.
 
@@ -165,7 +175,7 @@ queue.
   incomparable across two deliverables; binding it to a ladder we already ship is
   free.
 
-*Proceeds when:* the capability arm opens. One item is refused outright and
+*Proceeds when:* a capacity slot frees. One item is refused outright and
 recorded here so it is not re-proposed: averaging two terminal-value methods at
 their midpoint, which our valuation skill forbids because naming both inflates
 spurious precision.
@@ -198,7 +208,7 @@ spurious precision.
   the supplied map is mechanically detectable. Cheapest defence observed, and we
   have nothing at that layer.
 
-*Proceeds when:* the capability arm opens. The citation-verification item is a
+*Proceeds when:* a capacity slot frees. The citation-verification item is a
 network call and belongs inside a research command's step rather than the gate
 estate.
 
@@ -222,9 +232,12 @@ estate.
   negotiation, and a time-boxed facilitation protocol. Both would still have to
   clear the overlap ceiling.
 
-*Proceeds when:* the capability arm opens **and**, for the marketing vertical, the
-three domain-adoption gates pass independently. The capability arm does not
-substitute for the domain gates.
+*Proceeds when:* a capacity slot frees **and**, for the marketing vertical, the
+three domain-adoption gates pass independently. A freed slot does not substitute
+for the domain gates. Note the naming collision: the `domain-adoption-policy`
+gates are about adopting a technical DOMAIN into the suite and are unaffected by
+ADR-216, which struck external-USER adoption as a gate. Different sense of the
+word; the domain gates stay.
 
 ## Explicit non-adoptions
 
@@ -258,22 +271,22 @@ Recorded so they are not re-proposed, with the reason:
 - [ ] Every queue entry states what the sweep established and what must be true for
       it to proceed.
 - [ ] Every explicit non-adoption states its reason.
-- [ ] No queue entry has been converted into an executable roadmap while the
-      capability arm remains closed.
+- [ ] No queue entry has been converted into an executable roadmap while both
+      capacity slots remain held.
 - [ ] The presentation-format entry records that the previously stated gate reason
       is now known to be false, so the next reader does not re-derive it.
 
 ## Blockers
 
-### blocker: capability-arm
+### blocker: capacity-slot
 - **Status:** open
-- **Owner:** user
+- **Owner:** maintainer
 - **Blocks:** the whole queue
 - **What to do:**
-  1. The capability arm opens on either of two conditions: a documented real external adoption, or an external finding from the sweep reproduced by local measurement with the reproduction recorded.
-  2. Neither condition is an agent action. The first is an external event; the second requires a measurement decision only the maintainer can authorize, because it spends budget.
-  3. When the arm opens, promote entries individually. The queue is deliberately not a batch.
-- **Resolved when:** a decision record in `docs/decisions/` documents either condition, and the queue entry being promoted cites it.
+  1. At most two `road-to-skill-ecosystem-*` roadmaps may sit outside `archive/` and `later/` (ADR-215 § D2). Both slots are currently held.
+  2. When a slot frees, pick ONE entry from this queue, promote it to its own roadmap, and leave the rest here. The queue is deliberately not a batch — that is a maintainer-load constraint, not a leftover of the struck adoption gate.
+  3. Ordering is a maintainer choice informed by the evidence attached to each entry; no category (verification versus capability) ranks entries any more.
+- **Resolved when:** fewer than two `road-to-skill-ecosystem-*` roadmaps sit outside `archive/` and `later/`, checked by `./agent-config roadmap:progress`.
 
 ### blocker: marketing-domain-gates
 - **Status:** open
@@ -290,10 +303,10 @@ Recorded so they are not re-proposed, with the reason:
 
 | Rank | Item | Risk type | Description | Mitigation | Anchored under |
 |------|------|-----------|-------------|------------|----------------|
-| 1 | The queue is promoted as a batch when the arm opens | product | Opening the capability arm on one condition could be read as authorizing every entry, which reproduces the nine-parallel-workstreams risk the council's cap exists to prevent. | The blocker states promotion is individual and each promoted entry must cite the record that opened the arm; the queue is explicitly not a batch. | blocker: capability-arm |
+| 1 | The queue is promoted as a batch when a slot frees | product | A freed slot could be read as authorizing several entries at once, which reproduces the nine-parallel-workstreams risk the cap exists to prevent. | The blocker states promotion is one entry per slot; the cap is mechanically enforced, so a third concurrent roadmap fails the build rather than relying on restraint. | blocker: capacity-slot |
 | 2 | The queue rots into a stale wish list | product | A parked file with eight entries and no review cadence becomes a document nobody trusts, which is the failure the sweep observed in several sources' own backlogs. | Every entry carries its evidence and its proceed condition inline, so a stale entry is visibly stale; the freeze's own review cadence re-reads this file as part of the periodic disposition. | Q1 — Presentation output in the format the gate named |
 | 3 | A capability entry is smuggled in as verification infrastructure | implementation | Some entries have a verification-shaped component — the beat-measurement loop and the citation verifier both end in a check — so the boundary is arguable in exactly the cases where arguing is tempting. | The classification test is whether the change adds a user-facing surface; a measurement that exists only to validate a new surface travels with that surface. Both borderline entries are named here rather than left implicit. | Q5 — Media corpus depth |
-| 4 | The domain gates are treated as satisfied by the capability arm | product | Opening the capability arm could be misread as clearing the separate three-gate domain policy for the marketing vertical. | Q8 states the gates are independent and the second blocker restates it; the sweep record's refusal table carries the same distinction. | blocker: marketing-domain-gates |
+| 4 | The domain gates are treated as satisfied by a freed slot | product | A freed capacity slot could be misread as clearing the separate three-gate domain policy for the marketing vertical, helped by the word "adoption" appearing in both senses. | Q8 states the gates are independent and the second blocker restates it; the sweep record's refusal table carries the same distinction. | blocker: marketing-domain-gates |
 
 ## Provenance
 

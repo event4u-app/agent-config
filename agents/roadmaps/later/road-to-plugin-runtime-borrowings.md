@@ -5,6 +5,19 @@ status: later
 
 # Road to plugin-runtime borrowings — seven mechanisms from an external host-plugin reference (Source A)
 
+> **FREEZE LIFTED 2026-08-05.** The ADR-211 harvest freeze that parked this
+> roadmap was anchored on external adoption; that anchoring is struck by
+> [`ADR-216`](../../../docs/decisions/ADR-216-restraint-reanchored-to-capacity.md)
+> (external adoption is not a project goal and is not a valid gate anywhere in
+> this tree). The freeze's real basis was maintainer capacity, and its conditions
+> are met — **so nothing external holds this roadmap any more.**
+>
+> **Resume when** the maintainer decides to spend a slot on it. That is the only
+> remaining condition: a sequencing decision, in the maintainer's control, not an
+> event to wait for. Per-item evidence discipline is untouched — ADR-211
+> Amendment C (the cited failure finding must predate the borrow) and Amendment D
+> (red test committed first) still apply to each item on resume.
+
 > **Parked per
 > [`ADR-211`](../../../docs/decisions/ADR-211-harvest-freeze-resume-conditions.md)
 > (harvest freeze; council disposition 2026-08-03).** All seven borrows are
@@ -14,8 +27,8 @@ status: later
 > Re-audited item-granularly on 2026-08-03: 0 EXTRACT, 0 LATENT-CANDIDATE,
 > 7 STAY (see ADR-211 § Consequences).
 >
-> **Resume when:** the ADR-211 exit fires (external adopter OR the internal
-> arm), AND each resumed item satisfies ADR-211 Amendment C (pre-dating
+> **Resume when:** the maintainer spends a slot on it (ADR-216 struck the
+> adoption gate; the capacity conditions are met), AND each resumed item satisfies ADR-211 Amendment C (pre-dating
 > failure finding) or Amendment D (pre-registered red test) — or a fresh
 > council pass admits it as deliberately additive post-freeze.
 >

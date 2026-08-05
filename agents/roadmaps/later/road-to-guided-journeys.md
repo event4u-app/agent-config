@@ -5,6 +5,19 @@ status: later
 
 # Road to guided journeys & router family — dock the journey pattern onto the existing Flow layer (Source C)
 
+> **FREEZE LIFTED 2026-08-05.** The ADR-211 harvest freeze that parked this
+> roadmap was anchored on external adoption; that anchoring is struck by
+> [`ADR-216`](../../../docs/decisions/ADR-216-restraint-reanchored-to-capacity.md)
+> (external adoption is not a project goal and is not a valid gate anywhere in
+> this tree). The freeze's real basis was maintainer capacity, and its conditions
+> are met — **so nothing external holds this roadmap any more.**
+>
+> **Resume when** the maintainer decides to spend a slot on it. That is the only
+> remaining condition: a sequencing decision, in the maintainer's control, not an
+> event to wait for. Per-item evidence discipline is untouched — ADR-211
+> Amendment C (the cited failure finding must predate the borrow) and Amendment D
+> (red test committed first) still apply to each item on resume.
+
 > **Parked per
 > [`ADR-211`](../../../docs/decisions/ADR-211-harvest-freeze-resume-conditions.md)
 > (harvest freeze; council disposition 2026-08-03):** additive capability
@@ -15,8 +28,8 @@ status: later
 > adoptions STAY (the census documents capability gaps, not failures; no
 > recorded misroute incident exists).
 >
-> **Resume when:** the ADR-211 exit fires (external adopter OR the internal
-> arm, which itself requires the renewal set to be complete). On resume,
+> **Resume when:** the maintainer spends a slot on it (ADR-216 struck the
+> adoption gate; the renewal set is closed and the capacity conditions are met). On resume,
 > Phase 0 (docking council) runs first — nothing here is pre-decided.
 >
 > **Source identity:** an external skills-content reference ("Source C") — 62

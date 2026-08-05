@@ -131,7 +131,7 @@ command deleted. Rollback: the flip is a single reversible frontmatter field.
       <!-- done 2026-07-20: folded into artifact-drafting-protocol-mechanics § Complexity budget (guideline, net-zero — no new rule/lint). --> <!-- was-verify: grep -qi 'complexity budget\|who debugs' src/rules/artifact-drafting-protocol.md docs/guidelines/agent-infra/artifact-drafting-protocol-mechanics.md -->
 - [x] **Record the restraint decisions** (harvest-freeze until the first
       external adopter; no new council/review modes before the pending
-      benchmarks) as a decision-context note, NOT a new rule. <!-- done 2026-07-20: agents/settings/contexts/surface-consolidation-restraint.md (one note: harvest-freeze + no-new-modes + learning-tutor quarantine + complexity-budget pointer). -->
+      benchmarks) as a decision-context note, NOT a new rule. <!-- done 2026-07-20: agents/settings/contexts/surface-consolidation-restraint.md (one note: harvest-freeze + no-new-modes + learning-tutor quarantine + complexity-budget pointer). --> <!-- superseded 2026-08-05: ADR-216 struck the "until the first external adopter" anchoring on BOTH recorded restraints — the freeze is capacity-anchored and now lifted; the no-new-modes restraint waits on the pending benchmarks only. The step stays [x] because the note WAS written as specified; its content was later corrected. -->
 - [~] **Locked-decision re-address:** before the catalog flip can proceed
       (blocker), record the 8.0.0-era locked-decision collision as a superseding
       note / documented non-collision (decision-record), so the flip is not
@@ -301,11 +301,11 @@ own verify, pre-window deletions are forbidden.
 ## Blockers
 
 ### blocker: launch-and-adoption
-- **Status:** open
+- **Status:** resolved
 - **Owner:** user
 - **Blocks:** the product half of the review (post the drafted launch, distribute the wedge, run a first external session)
-- **What to do:** posting the launch is an irreversible external publish (Hard Floor) + external adoption needs a real person; both are the standing adoption gate.
-- **Resolved when:** the launch is posted and ≥1 external session is recorded.
+- **What to do:** RESOLVED AS OUT OF SCOPE, 2026-08-05, per [`ADR-216`](../../docs/decisions/ADR-216-restraint-reanchored-to-capacity.md). Owner decision: external adoption is not a project goal, so posting a launch and running an external session are not work this project will do. The blocker is kept rather than deleted so the disposition is visible in history — it was never going to resolve, and leaving it open would have read as pending.
+- **Resolved when:** resolved by the ADR-216 scope decision. The adoption-facing half of this review is closed as out of scope, not as done.
 
 ### blocker: repo-admin-and-usage
 - **Status:** open
