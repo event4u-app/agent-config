@@ -23,7 +23,14 @@ import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { afterEach, describe, expect, it } from 'vitest';
 
-import { mcnemar_exact, cohens_h, wilcoxon, recursiveNovelLift, analyse } from '../../src/scripts/bench_ab_v2_stats.js';
+import {
+    mcnemar_exact,
+    cohens_h,
+    wilcoxon,
+    recursiveNovelLift,
+    analyse,
+    compare,
+} from '../../src/scripts/bench_ab_v2_stats.js';
 
 const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..');
 const SCRIPTS = path.join(REPO_ROOT, 'src', 'scripts');
@@ -287,5 +294,86 @@ describe('recursiveNovelLift (ADR-106 — D₂ − D₁, additive, golden-parity
         // Arm absent → arm-guard skips it; existing comparisons unaffected.
         const withoutArm = analyse({ records, arms: ['package', 'vanilla'] });
         expect(labelsOf(withoutArm)).not.toContain('recursion novel lift (D₂ − D₁)');
+    });
+});
+
+// ── attrition (S0.3 delta #5) ───────────────────────────────────────────────
+//
+// Dropped pairs are not missing-at-random: a budget cap or timeout fires
+// preferentially on the arm doing more work, so silent exclusion biases the
+// surviving sample toward the baseline. The count alone is not enough — WHICH
+// side died is the load-bearing number, so that is what these assert.
+describe('bench_ab_v2_stats — attrition reporting', () => {
+    function trial(over: Record<string, unknown> = {}): Record<string, unknown> {
+        return {
+            seed: 0,
+            errored: false,
+            capability_pass: true,
+            discipline_score: 0.5,
+            metrics: { status_bucket: 'completed' },
+            ...over,
+        };
+    }
+    function rec(t: Record<string, unknown>[], b: Record<string, unknown>[]): Record<string, unknown> {
+        return { id: 'task', arms: { package: t, vanilla: b } };
+    }
+
+    it('reports zero attrition on a clean sweep', () => {
+        const at = compare([rec([trial()], [trial()])], 'package', 'vanilla')['attrition'] as Record<string, unknown>;
+        expect(at['pairs_seen']).toBe(1);
+        expect(at['pairs_analysed']).toBe(1);
+        expect(at['pairs_dropped']).toBe(0);
+        expect(at['drop_asymmetry']).toBe(0);
+    });
+
+    it('attributes the drop to the side that actually errored', () => {
+        const records = [
+            rec(
+                [trial({ errored: true, metrics: { status_bucket: 'budget_exhausted' } })],
+                [trial()],
+            ),
+        ];
+        const at = compare(records, 'package', 'vanilla')['attrition'] as Record<string, unknown>;
+        expect(at['pairs_dropped']).toBe(1);
+        expect(at['dropped_treatment_only']).toBe(1);
+        expect(at['dropped_baseline_only']).toBe(0);
+        // Positive = the treatment arm died more → surviving sample favours the baseline.
+        expect(at['drop_asymmetry']).toBe(1);
+        expect(at['dropped_by_status_bucket']).toEqual({ budget_exhausted: 1 });
+    });
+
+    it('signs the asymmetry the other way when the BASELINE is the one dying', () => {
+        const records = [rec([trial()], [trial({ errored: true })])];
+        const at = compare(records, 'package', 'vanilla')['attrition'] as Record<string, unknown>;
+        expect(at['dropped_baseline_only']).toBe(1);
+        expect(at['drop_asymmetry']).toBe(-1);
+    });
+
+    it('counts a both-sides-dead pair once, and both its buckets', () => {
+        const records = [
+            rec(
+                [trial({ errored: true, metrics: { status_bucket: 'timeout' } })],
+                [trial({ errored: true, metrics: { status_bucket: 'budget_exhausted' } })],
+            ),
+        ];
+        const at = compare(records, 'package', 'vanilla')['attrition'] as Record<string, unknown>;
+        expect(at['dropped_both']).toBe(1);
+        expect(at['pairs_dropped']).toBe(1);
+        expect(at['drop_asymmetry']).toBe(0);
+        expect(at['dropped_by_status_bucket']).toEqual({ timeout: 1, budget_exhausted: 1 });
+    });
+
+    it('keeps pairs_analysed equal to the n the significance tests actually used', () => {
+        const records = [
+            rec(
+                [trial({ seed: 0 }), trial({ seed: 1, errored: true })],
+                [trial({ seed: 0 }), trial({ seed: 1 })],
+            ),
+        ];
+        const cmp = compare(records, 'package', 'vanilla');
+        const at = cmp['attrition'] as Record<string, unknown>;
+        expect(at['pairs_seen']).toBe(2);
+        expect(at['pairs_analysed']).toBe(cmp['n_pairs']);
+        expect(cmp['n_pairs']).toBe(1);
     });
 });

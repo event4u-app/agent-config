@@ -236,11 +236,11 @@ nothing to stop it.
 
 | # | Delta | Size |
 |---|---|---|
-| 1 | Per-trial injection audit — assert the arm's expected footprint from `tokens_breakdown` before it is discarded; persist an `activation` verdict; hard-fail on violation. Shape to copy: `bench_ab_tracka_run.ts:120-134` `integrity_check`. | small |
-| 2 | Preserve `tokens_breakdown` in the v2 record (one field). Unblocks #1 and #6. | small |
-| 3 | Model-id verification — read the model back from the CLI envelope, refuse on mismatch, reject bare aliases (`"sonnet"` appears in a stored report). | small |
-| 4 | Sweep-level `--max-usd` abort (pattern exists in `bench_quality_rerun.ts`). | small |
-| 5 | Record the errored-pair drop count per arm-pair and per `status_bucket` — attrition is not missing-at-random; budget caps fire preferentially on the arm doing more work. | small |
+| 1 | ~~Per-trial injection audit~~ — **DONE 2026-08-05.** `_lib/bench_ab_activation.ts`: `activation_verdict` (per-trial, both directions on the text channel) + `audit_activation` (the paired plugin direction, which one trial cannot see). Wired into `bench_ab_v2_run.main` as an **exit-2** gate; the report is still written so an invalid sweep stays inspectable. | small |
+| 2 | ~~Preserve `tokens_breakdown` in the v2 record~~ — **DONE 2026-08-05** via `integrity_fields`, on both the plain and the recursive arm. | small |
+| 3 | ~~Model-id verification~~ — **DONE 2026-08-05.** `bench_ab_task_runner.run_live` now records `models_seen` from the envelope's `modelUsage` keys unconditionally; `verify_model_id` compares it to the request (build-stamp-insensitive), and `main` refuses a bare alias with exit 2 **before** any spend. | small |
+| 4 | ~~Sweep-level `--max-usd` abort~~ — **DONE 2026-08-05.** `SweepBudget` prices the four buckets separately from `pricing.yaml` and aborts the sweep through a `collect_records` guard; completed runs are kept. An unpriceable model + `--max-usd` is refused rather than silently uncapped. | small |
+| 5 | ~~Record the errored-pair drop count~~ — **DONE 2026-08-05.** `bench_ab_v2_stats.compare` emits an `attrition` block (pairs seen / analysed / dropped, per-side split, signed asymmetry, per-`status_bucket` counts), rendered as Table 4 with the bias direction spelled out. | small |
 | 6 | Cost sheet — wire `load_pricing` into `bench_ab_v2_stats.ts`, price the four buckets separately, re-source the 2026-05-14 prices. | medium |
 | 7 | Preserve per-run workspaces + transcripts (key the work dir by `task\|arm\|seed`, not task alone) — prerequisite for offline re-scoring, and therefore for retro-fitting the complexity endpoint. | medium |
 | 8 | A real `--selftest` — today's `--mode dry-run` returns at `:844-851` before the CLI check, the fixtures, the scorer, and the report writer. The injectable seams (`:767`, `:534`) already exist. | medium |
@@ -252,6 +252,13 @@ nothing to stop it.
 and an unpublishable one — they land before any spend. #9 and #10 ship together
 (a harness pointed at a real repo with no oracles runs nothing). #11 is
 separable but the roadmap's metric-pair acceptance criterion depends on it.
+
+**Status 2026-08-05:** #1–#5 are landed (rows above, tests in
+`tests/scripts/_lib_bench_ab_activation.test.ts` plus the integrity block in
+`tests/scripts/bench_ab_v2_run.test.ts` and the attrition block in
+`tests/scripts/bench_ab_v2_stats.test.ts` — every gate asserted in both
+directions, so neither an always-firing nor a never-firing audit passes). #6–#11
+are untouched, and the two Phase-3 halt gates (spend grant; #9/#10/#11) stand.
 
 ### Consequence for Phase 3
 

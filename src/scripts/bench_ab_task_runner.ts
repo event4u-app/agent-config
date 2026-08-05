@@ -194,6 +194,12 @@ interface RunResult {
     tokens?: number;
     /** Empty object `{}` on dry-run (key absent in Python); breakdown otherwise. */
     tokens_breakdown?: TokensBreakdown | Record<string, never>;
+    /**
+     * Model ids the envelope actually billed (`modelUsage` keys) — the only
+     * place a run states which model answered it. Empty when the envelope
+     * omits the block. Feeds the delta-#3 model-id check.
+     */
+    models_seen?: string[];
     errored?: boolean;
     num_turns?: number;
     subtype?: string;
@@ -295,6 +301,7 @@ export function run_live(
     const returncode = result.status ?? -1;
     let transcript: string = stdout;
     let tokens = 0;
+    let modelsSeen: string[] = [];
     let isError = false;
     let errReason = 'ok';
     let numTurns = 0;
@@ -337,6 +344,16 @@ export function run_live(
             breakdown.output_tokens +
             breakdown.cache_read_input_tokens +
             breakdown.cache_creation_input_tokens;
+        // `modelUsage` is keyed by the model ids the run actually billed. Record
+        // them unconditionally: the delta-#3 check needs the id even on a run
+        // whose top-level `usage` was fine, and a mid-sweep model swap is exactly
+        // the case where the totals look ordinary.
+        modelsSeen = Object.keys(
+            (_isPlainObj(obj['modelUsage']) ? (obj['modelUsage'] as Record<string, unknown>) : {}) as Record<
+                string,
+                unknown
+            >,
+        );
         // The top-level `usage` block is zeroed on a budget-capped / errored run
         // (and unreliable even on some completions). `modelUsage` carries the
         // authoritative per-model counts — sum it as the fallback so token deltas
@@ -387,6 +404,7 @@ export function run_live(
         wall_time_seconds: _pyRound(duration, 3),
         tokens,
         tokens_breakdown: breakdown,
+        models_seen: modelsSeen,
         errored: isError || returncode !== 0,
         num_turns: numTurns,
         subtype,

@@ -468,6 +468,11 @@ the standing model-id verification blocker.
 > from an undetected activation leak and today's code would not catch a
 > recurrence. Whatever else happens, they land before the first paid trial.
 >
+> **Deltas #1–#5 LANDED 2026-08-05** — see § Untracked prerequisite work below.
+> Both halt gates stand unchanged: the spend grant is still the user's, and
+> #9/#10/#11 are still missing. What changed is that the harness can no longer
+> produce the specific invalid null it produced before.
+>
 > Nothing from this phase is cancelled or reinterpreted; the steps stand as
 > written. Full evidence, delta table, and price inputs:
 > [`solution-minimalism-phase0-spikes § S0.3`](../evidence/investigations/solution-minimalism-phase0-spikes.md).
@@ -484,6 +489,12 @@ the standing model-id verification blocker.
       routed floors add over the naked principle; its safety-tier result is the
       exhibit for why the floors exist) · inert-prose placebo.
       *Verify:* per-trial injection audit in both directions for every arm.
+      <!-- OPEN 2026-08-05, but the VERIFY half now exists: the both-directions
+      audit shipped with delta #1 (`_lib/bench_ab_activation.activation_verdict`
+      + `audit_activation`, wired into `bench_ab_v2_run` as an exit-2 gate). What
+      remains is the STEP body — `ARMS` still lacks a `package + ladder` arm and
+      the bare-principle control, and those are arm definitions, not audit work. -->
+
 - [ ] **Endpoints:** added lines from `git diff`; tokens as the **sum** of
       input + cache + output (a metric mismatch here is the known reporting
       trap); cost; wall-clock; the existing discipline rubric; a **safety tier**
@@ -526,6 +537,36 @@ the standing model-id verification blocker.
       drops a guard has lost, not won (F6).
       *Verify:* the scoring code cannot rank an arm above another on size alone
       when its safety tier regressed.
+
+## Untracked prerequisite work (landed 2026-08-05)
+
+S0.3 deltas **#1–#5** landed ahead of any spend, exactly as the Phase-3 halt
+note requires. They close **zero checkboxes** — every open step above is gated
+on the spend grant or on deltas #9/#10/#11 — so the dashboard does not move.
+Recorded here rather than left invisible, and deliberately not spun off into a
+roadmap of its own: a meta-roadmap tracking untracked work is the recursive
+process debt this roadmap argues against.
+
+| # | What landed | Where |
+|---|---|---|
+| 1 | Per-trial injection audit + the paired cross-arm audit; violations fail the sweep with exit 2 | `_lib/bench_ab_activation.ts`, wired in `bench_ab_v2_run.ts` |
+| 2 | `tokens_breakdown` preserved on every trial record (unblocks #1 and #6) | `bench_ab_v2_run.integrity_fields` |
+| 3 | Model-id read back from the CLI envelope's `modelUsage`; bare aliases refused before spend | `bench_ab_task_runner.ts` (`models_seen`), `bench_ab_v2_run.ts` |
+| 4 | Sweep-level `--max-usd` abort, priced per bucket from `internal/bench/pricing.yaml` | `SweepBudget`, `collect_records` guard |
+| 5 | Errored-pair attrition per arm-pair and per `status_bucket`, with the drop asymmetry | `bench_ab_v2_stats.compare` → report Table 4 |
+
+**Why now, with the phase halted.** The harness has already produced one full
+set of invalid nulls from an undetected activation leak, and the only activation
+field on a record — `injected_chars` — is the length of a file the harness wrote
+itself and is `0` by construction for the `package` arm. A disabled or
+version-drifted plugin would have degraded every treatment run to `vanilla` and
+produced a report that looks identical to a real one. These five close that hole
+before the $150–250 grant is spent against it, not after.
+
+**What did NOT change.** Both Phase-3 halt gates stand: the spend grant is the
+user's to give, and #9 (pinned external repo), #10 (~30 oracles) and #11 (the
+cognitive-complexity endpoint) are still absent. No effect claim, no number, and
+no threshold was added anywhere.
 
 ## The principle-admission gate (this table is the scope boundary)
 
