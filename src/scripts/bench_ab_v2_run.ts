@@ -53,6 +53,18 @@ import { parse as parseYaml } from 'yaml';
 
 import * as v1 from './bench_ab_task_runner.js';
 import * as scoring from './_lib/bench_ab_scoring_v2.js';
+import {
+    SweepBudget,
+    activation_verdict,
+    audit_activation,
+    expected_injection,
+    is_bare_alias,
+    tier_for_model,
+    verify_model_id,
+    type TierRates,
+    type TokensBreakdown,
+} from './_lib/bench_ab_activation.js';
+import { load_pricing } from './_lib/bench_cost.js';
 
 const _HERE = fileURLToPath(import.meta.url);
 
@@ -66,6 +78,7 @@ const CORPUS_PATH = path.join(REPO_ROOT, 'internal', 'bench', 'corpora', 'ab-tra
 const FIXTURES_ROOT = path.join(REPO_ROOT, 'internal', 'bench', 'ab');
 const REPORTS_DIR = path.join(REPO_ROOT, 'internal', 'bench', 'reports', 'ab-v2');
 const CHECKPOINTS_DIR = path.join(REPORTS_DIR, 'checkpoints');
+const PRICING_PATH = path.join(REPO_ROOT, 'internal', 'bench', 'pricing.yaml');
 // CRITICAL (2026-06-15): clones MUST live OUTSIDE the agent-config repo. A clone
 // under the repo lets Claude discover the repo's own project surface (CLAUDE.md /
 // AGENTS.md / .claude/rules+skills) walking up from the cwd — so the `vanilla`
@@ -461,6 +474,31 @@ export function run_live_codex(
     };
 }
 
+/**
+ * Delta #1–#3 — stamp the measurement-integrity block onto a trial record.
+ *
+ * `tokens_breakdown` is preserved here (delta #2) because it is the ONLY
+ * observable that can see a plugin-arm collapse: `injected_chars` is the length
+ * of a file the harness wrote itself, and it is 0 for every arm that arrives
+ * through global settings. Discarding the breakdown made the audit
+ * unreconstructable even post-hoc.
+ */
+export function integrity_fields(run: Dict, spec: ArmSpec, injected_chars: number, model: string | null): Dict {
+    const breakdown = (run['tokens_breakdown'] ?? {}) as TokensBreakdown | Record<string, never>;
+    const models_seen = Array.isArray(run['models_seen']) ? (run['models_seen'] as string[]) : [];
+    return {
+        tokens_breakdown: breakdown,
+        models_seen,
+        activation: activation_verdict({
+            expected: expected_injection(spec),
+            tokens_breakdown: breakdown,
+            injected_chars,
+            errored: _pyBool(run['errored']),
+        }),
+        model_check: model ? verify_model_id(model, models_seen) : { ok: true, reason: 'no model pinned' },
+    };
+}
+
 export function run_one(task: Dict, arm: string, opts: RunOneOpts): Dict {
     const spec = ARMS[arm] as ArmSpec;
     if (spec.recursive) {
@@ -501,6 +539,7 @@ export function run_one(task: Dict, arm: string, opts: RunOneOpts): Dict {
         discipline_pass: score.discipline_pass,
         metrics: trajectory_metrics(run, score),
         injected_chars: sp_text ? sp_text.length : 0,
+        ...integrity_fields(run, spec, sp_text ? sp_text.length : 0, opts.model),
     };
 }
 
@@ -618,6 +657,10 @@ export function run_one_recursive(
         injected_chars: last_verdict_len,
         depth_reached: depth,
         stop_reason,
+        // `injected_chars` here counts the re-attempt VERDICT text, not an arm
+        // injection — the recursive arm's channel is the plugin. Pass 0 so the
+        // audit reads the arm's real channel instead of flagging the verdict.
+        ...integrity_fields(run, ARMS['package-recursive'] as ArmSpec, 0, opts.model),
     };
 }
 
@@ -767,17 +810,28 @@ export function collect_records(
     run_fn: (task: Dict, arm: string, seed: number) => Dict,
     ckpt: CheckpointIO | null = null,
     log: (msg: string) => void = (m) => process.stderr.write(m),
-): { records: Dict[]; executed: number; reused: number } {
+    /**
+     * Delta #4 — sweep-level spend guard. Called after each executed run with
+     * that run's record; a non-null return aborts the sweep. Records collected
+     * so far are still returned (and are already on the checkpoint), so an
+     * abort costs no completed work.
+     */
+    guard: ((record: Dict) => string | null) | null = null,
+): { records: Dict[]; executed: number; reused: number; aborted: string | null } {
     const total = tasks.length * arms.length * seeds;
     let done = 0;
     let executed = 0;
     let reused = 0;
+    let aborted: string | null = null;
     const records: Dict[] = [];
     for (const task of tasks) {
         const per_arm: Record<string, Dict[]> = {};
         for (const arm of arms) {
             const seed_runs: Dict[] = [];
             for (let seed = 0; seed < seeds; seed += 1) {
+                if (aborted) {
+                    break;
+                }
                 done += 1;
                 const key = run_key(String(task['id']), arm, seed);
                 const cached = ckpt?.completed.get(key);
@@ -794,6 +848,7 @@ export function collect_records(
                     append_checkpoint(ckpt.path, key, r);
                 }
                 seed_runs.push(r);
+                aborted = guard?.(r) ?? null;
             }
             per_arm[arm] = seed_runs;
         }
@@ -803,8 +858,11 @@ export function collect_records(
             rule: task['rule'],
             arms: per_arm,
         });
+        if (aborted) {
+            break;
+        }
     }
-    return { records, executed, reused };
+    return { records, executed, reused, aborted };
 }
 
 export function main(argv: string[] | null = null): number {
@@ -841,11 +899,23 @@ export function main(argv: string[] | null = null): number {
         }
     }
 
+    // Delta #3 — refuse a bare alias BEFORE any spend. An alias resolves
+    // server-side to whatever is current, so a report produced under one is
+    // unreproducible: nothing in it records which model actually answered.
+    if (is_bare_alias(args.model)) {
+        process.stderr.write(
+            `bench_ab_v2: refusing bare model alias "${args.model}" — pin a full id ` +
+                `(e.g. claude-sonnet-4-6). An alias makes the report unreproducible.\n`,
+        );
+        return 2;
+    }
+
     if (args.mode === 'dry-run') {
         process.stdout.write(
             `bench_ab_v2: DRY — ${tasks.length} tasks × ${arms.length} arms × ` +
                 `${args.seeds} seeds = ${tasks.length * arms.length * args.seeds} runs ` +
-                `(model=${args.model}, budget=${_pyNumStr(args.budget)}). No spend.\n`,
+                `(model=${args.model}, budget=${_pyNumStr(args.budget)}, ` +
+                `sweep cap=${args.max_usd === null ? 'none' : `$${_pyNumStr(args.max_usd)}`}). No spend.\n`,
         );
         return 0;
     }
@@ -891,7 +961,23 @@ export function main(argv: string[] | null = null): number {
         ckpt = { path: ckpt_path, completed };
     }
 
-    const { records } = collect_records(
+    // Delta #4 — sweep-level cap. `--max-budget-usd` is PER RUN, so 30×4×3 at
+    // --budget 3.5 has a $1,260 ceiling with nothing to stop it. Prices come
+    // from internal/bench/pricing.yaml; an unrecognised model tier leaves the
+    // guard inert rather than silently mispricing the sweep.
+    const [rates] = load_pricing(PRICING_PATH);
+    const tier = tier_for_model(args.model);
+    const tier_rates: TierRates | null = tier && rates[tier] ? (rates[tier] as TierRates) : null;
+    if (args.max_usd !== null && tier_rates === null) {
+        process.stderr.write(
+            `bench_ab_v2: --max-usd given but no pricing row matches model "${args.model}" ` +
+                `(${_relToRootPosix(PRICING_PATH)}) — the sweep cap cannot be enforced.\n`,
+        );
+        return 2;
+    }
+    const budget = new SweepBudget(args.max_usd, tier_rates);
+
+    const { records, aborted } = collect_records(
         tasks,
         arms,
         args.seeds,
@@ -905,7 +991,16 @@ export function main(argv: string[] | null = null): number {
                 host: args.host,
             }),
         ckpt,
+        undefined,
+        (r) => budget.add(r['tokens_breakdown'] as TokensBreakdown | undefined),
     );
+
+    // Delta #1 — the activation audit. Runs BEFORE the report is judged usable:
+    // the paired plugin direction needs the whole record set, so it cannot be a
+    // per-trial check alone. `vanilla` is the baseline; every arm that is
+    // supposed to carry a surface the baseline lacks is a lift arm.
+    const lift_arms = arms.filter((a) => a !== 'vanilla' && expected_injection(ARMS[a] as ArmSpec) !== 'none');
+    const audit = audit_activation(records, { baseline_arm: 'vanilla', lift_arms });
 
     const stamp = v1.utc_stamp();
     const payload: Dict = {
@@ -915,9 +1010,17 @@ export function main(argv: string[] | null = null): number {
         seeds: args.seeds,
         arms,
         budget_usd_per_run: args.budget,
+        sweep_cap_usd: args.max_usd,
+        sweep_spend_usd: new PyFloat(Number(budget.spent_usd.toFixed(4))),
         placebo_chars,
         corpus: 'ab-trackb-v2',
         host: args.host,
+        activation_audit: {
+            checked: audit.checked,
+            skipped: audit.skipped,
+            violations: audit.violations as unknown as Json,
+        },
+        aborted: aborted ?? null,
         records,
     };
     const out = path.join(REPORTS_DIR, `${stamp}-ab-v2-paired.json`);
@@ -928,8 +1031,31 @@ export function main(argv: string[] | null = null): number {
         fs.rmSync(ckpt.path);
     }
     process.stdout.write(
-        `bench_ab_v2: wrote ${_relToRootPosix(out)} ` + `(${records.length} tasks, ${total} runs)\n`,
+        `bench_ab_v2: wrote ${_relToRootPosix(out)} ` +
+            `(${records.length} tasks, ${total} runs, spend $${budget.spent_usd.toFixed(2)})\n`,
     );
+
+    // The report is always written — an aborted or integrity-failed sweep still
+    // cost money and its raw runs stay inspectable. The EXIT CODE is what makes
+    // the failure non-ignorable, so a caller cannot mistake an invalid sweep for
+    // a publishable one.
+    if (aborted) {
+        process.stderr.write(`bench_ab_v2: ${aborted}\n`);
+        return 2;
+    }
+    if (audit.violations.length > 0) {
+        process.stderr.write(
+            `bench_ab_v2: ACTIVATION AUDIT FAILED — ${audit.violations.length} violation(s) ` +
+                `over ${audit.checked} checked pair(s). This report is NOT publishable.\n`,
+        );
+        for (const v of audit.violations.slice(0, 20)) {
+            process.stderr.write(`  ${v.kind}: ${v.task_id} · ${v.arm} · seed ${v.seed} — ${v.detail}\n`);
+        }
+        if (audit.violations.length > 20) {
+            process.stderr.write(`  … ${audit.violations.length - 20} more (see the report)\n`);
+        }
+        return 2;
+    }
     return 0;
 }
 
@@ -942,6 +1068,8 @@ interface ParsedArgs {
     limit: number;
     model: string;
     budget: number;
+    /** Sweep-wide USD cap (delta #4); `null` = uncapped, the pre-existing behaviour. */
+    max_usd: number | null;
     timeout: number;
     mode: string;
     host: string;
@@ -960,13 +1088,14 @@ function parse_args(argv: string[]): ParsedArgs {
         limit: 0,
         model: 'claude-sonnet-4-6',
         budget: 1.0,
+        max_usd: null,
         timeout: 180,
         mode: 'live',
         host: 'claude',
         checkpoint: true,
         fresh: false,
     };
-    const usage = `usage: ${prog} [-h] [--arms ARMS] [--seeds SEEDS] [--tasks TASKS] [--limit LIMIT] [--model MODEL] [--budget BUDGET] [--timeout TIMEOUT] [--mode {live,dry-run}] [--host {claude,codex}] [--no-checkpoint] [--fresh]\n`;
+    const usage = `usage: ${prog} [-h] [--arms ARMS] [--seeds SEEDS] [--tasks TASKS] [--limit LIMIT] [--model MODEL] [--budget BUDGET] [--max-usd MAX_USD] [--timeout TIMEOUT] [--mode {live,dry-run}] [--host {claude,codex}] [--no-checkpoint] [--fresh]\n`;
     const argErr = (msg: string): never => {
         process.stderr.write(usage);
         process.stderr.write(`${prog}: error: ${msg}\n`);
@@ -1014,6 +1143,11 @@ function parse_args(argv: string[]): ParsedArgs {
             i += 1;
         } else if (a.startsWith('--budget=')) {
             out.budget = _pyFloatArg(a.slice('--budget='.length), '--budget');
+        } else if (a === '--max-usd') {
+            out.max_usd = _pyFloatArg(need(i, '--max-usd'), '--max-usd');
+            i += 1;
+        } else if (a.startsWith('--max-usd=')) {
+            out.max_usd = _pyFloatArg(a.slice('--max-usd='.length), '--max-usd');
         } else if (a === '--timeout') {
             out.timeout = _pyInt(need(i, '--timeout'), '--timeout');
             i += 1;

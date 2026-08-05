@@ -34,6 +34,7 @@ import {
     load_checkpoint,
     append_checkpoint,
     collect_records,
+    integrity_fields,
     PyFloat,
     type CheckpointIO,
 } from '../../src/scripts/bench_ab_v2_run.js';
@@ -292,5 +293,94 @@ describe('bench_ab_v2_run — checkpoint / resume', () => {
         expect(logs).toEqual(['[1/2] t1 · vanilla · seed 0\n', '[2/2] t1 · vanilla · seed 1\n']);
         const perArm = (records[0] as Record<string, unknown>)['arms'] as Record<string, unknown[]>;
         expect(perArm['vanilla']).toHaveLength(2);
+    });
+});
+
+// ── measurement integrity (S0.3 deltas #1–#4) ───────────────────────────────
+//
+// These guard the paid-run preconditions the roadmap's Phase-3 halt note says
+// must land before any spend. Each gate is asserted BOTH ways: it fires on the
+// bad input and stays quiet on the good one.
+describe('bench_ab_v2_run — measurement integrity', () => {
+    it('refuses a bare model alias before any spend', () => {
+        const r = runTs(['--model', 'sonnet', '--mode', 'dry-run']);
+        expect(r.status).toBe(2);
+        expect(r.stderr).toContain('refusing bare model alias');
+    });
+
+    it('accepts a pinned full model id', () => {
+        const r = runTs(['--model', 'claude-sonnet-4-6', '--mode', 'dry-run', '--limit', '1']);
+        expect(r.status).toBe(0);
+    });
+
+    it('refuses --max-usd when no pricing row matches the model', () => {
+        // Enforcing a cap the harness cannot price would be a cap in name only.
+        const r = runTs(['--model', 'some-unpriced-model-9', '--max-usd', '10', '--limit', '1']);
+        expect(r.status).toBe(2);
+        expect(r.stderr).toContain('the sweep cap cannot be enforced');
+    });
+
+    it('reports the sweep cap in the dry-run line', () => {
+        expect(runTs(['--mode', 'dry-run', '--limit', '1', '--max-usd', '25']).stdout).toContain('sweep cap=$25');
+        expect(runTs(['--mode', 'dry-run', '--limit', '1']).stdout).toContain('sweep cap=none');
+    });
+
+    it('integrity_fields stamps the activation block a plugin arm needs', () => {
+        const run = {
+            errored: false,
+            tokens_breakdown: { input_tokens: 90_000, output_tokens: 1, cache_read_input_tokens: 0, cache_creation_input_tokens: 0 },
+            models_seen: ['claude-sonnet-4-6'],
+        };
+        const f = integrity_fields(run, { setting_sources: null, inject: null }, 0, 'claude-sonnet-4-6');
+        expect((f['activation'] as Record<string, unknown>)['expected']).toBe('plugin');
+        expect((f['activation'] as Record<string, unknown>)['verdict']).toBe('ok');
+        expect((f['activation'] as Record<string, unknown>)['prompt_tokens']).toBe(90_000);
+        // Delta #2: the breakdown survives onto the record instead of being discarded.
+        expect(f['tokens_breakdown']).toEqual(run.tokens_breakdown);
+        expect((f['model_check'] as Record<string, unknown>)['ok']).toBe(true);
+    });
+
+    it('integrity_fields records a model swap the totals would not reveal', () => {
+        const f = integrity_fields(
+            { errored: false, tokens_breakdown: {}, models_seen: ['claude-opus-4-8'] },
+            { setting_sources: null, inject: null },
+            0,
+            'claude-sonnet-4-6',
+        );
+        expect((f['model_check'] as Record<string, unknown>)['ok']).toBe(false);
+    });
+
+    it('collect_records stops the sweep when the guard aborts, keeping completed runs', () => {
+        const tasks = [{ id: 't1' }, { id: 't2' }];
+        let seen = 0;
+        const { records, executed, aborted } = collect_records(
+            tasks,
+            ['vanilla'],
+            2,
+            () => ({ errored: false }),
+            null,
+            () => {},
+            () => (++seen >= 2 ? 'sweep budget abort: test' : null),
+        );
+        expect(aborted).toContain('sweep budget abort');
+        expect(executed).toBe(2);
+        // The completed runs are still returned — an abort costs no finished work.
+        const perArm = (records[0] as Record<string, unknown>)['arms'] as Record<string, unknown[]>;
+        expect(perArm['vanilla']).toHaveLength(2);
+        expect(records).toHaveLength(1);
+    });
+
+    it('collect_records runs to completion when the guard never aborts', () => {
+        const { executed, aborted } = collect_records(
+            [{ id: 't1' }, { id: 't2' }],
+            ['vanilla'],
+            2,
+            () => ({ errored: false }),
+            null,
+            () => {},
+            () => null,
+        );
+        expect(aborted).toBeNull();
+        expect(executed).toBe(4);
     });
 });
