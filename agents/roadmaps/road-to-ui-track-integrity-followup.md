@@ -203,6 +203,17 @@ step list.
   > on every future change to the UI skills, which cannot fire on hand-authored
   > fixtures at all. A generation step with three customers is not a subsystem
   > built to settle one frontmatter question.
+  >
+  > **Correction, same day, after checking the tree rather than the argument.**
+  > The ruling's *premise* — "an increment on the landed scorer reusing the
+  > existing `bench_ab_clone` / `bench_ab_task_runner` machinery" — is **false**.
+  > That machinery cannot express the one variable Measurement A varies. See the
+  > `measurement-a-no-per-arm-builder-tier` blocker below for the evidence. The
+  > ruling's *conclusion* still holds in principle (a generation step is not the
+  > forbidden judgement half), but with the reuse premise gone it is no longer an
+  > increment, and building it here is the benchmark subsystem the Non-goal
+  > forbids. Measurement A therefore stays open behind a named blocker rather
+  > than being unblocked by a build this roadmap is not allowed to make.
 - **No tier change on argument.** The finding is not in doubt; only its remedy
   is. Flipping without the measurement is precisely what the parent's Phase 5
   existed to prevent.
@@ -222,6 +233,46 @@ step list.
 - [ ] All quality gates pass — see `quality-tools`.
 
 ## Blockers
+
+### blocker: measurement-a-no-per-arm-builder-tier
+
+- **Status:** open
+- **Owner:** maintainer (scope decision) / any roadmap that needs a UI-generation
+  runner for its own reason
+- **Blocks:** Measurement A (both steps) and the two A acceptance criteria. It
+  does **not** block the pre-registration, which is committed and complete.
+- **What to do:**
+  Measurement A varies exactly one thing — the model tier the **builder skill**
+  runs on — and nothing in the tree can set it per arm. Verified 2026-08-05,
+  against the tree rather than against the argument:
+  - `bench:ui` (`internal/bench/ui/run.ts`) scores `config.candidates`, a list of
+    **committed static files**. Its whole CLI surface is `--json` and
+    `--update-lock`: no arm, no tier, no model call, nothing that produces a
+    candidate.
+  - The tier → native `model:` rewrite happens **only** in
+    `install.ts::finalize_claude_model_tiers`, and only on a consumer install
+    whose `model.auto_switch` is `auto`. This checkout has **zero** entries under
+    `.claude/skills/` and no projected skill pins a `model:` at all, so a session
+    `--model` flag sets the whole session, never one skill.
+  - The machinery the scope ruling assumed could be reused does not carry the
+    variable: `bench_ab_clone` copies the maintainer's `.claude/` surface
+    verbatim — no `auto_switch` handling, no per-skill tier rewrite — and
+    `bench_ab_task_runner` scores **transcripts**, not written UI artifacts.
+  So a faithful arm needs a materialised consumer-shaped install with
+  `auto_switch: auto`, a per-arm rewrite of the target skill's tier, an
+  artifact-extraction step, and — before any of it can be trusted — a validation
+  that the port task actually dispatches the UI builder skill. That is a
+  generation subsystem, which is what this roadmap's own Non-goal forbids
+  building here, and its arm isolation is itself unvalidated.
+  The two outlier arms make it sharper: `accessibility-auditor` at medium and
+  `ui-component-architect` at high are **per-skill** tier facts. No session-level
+  `--model` can express them, so they cannot be measured without exactly the
+  per-skill control that is missing.
+- **Resolved when:** a UI-generation runner with per-skill tier control exists —
+  landed for its own reason, with its arm isolation validated (the port task
+  demonstrably dispatches the builder skill, and the tier demonstrably reaches
+  it) — at which point Measurement A runs against the committed pre-registration
+  unchanged, in the controls' epoch.
 
 ### blocker: measurement-b-no-renderable-lane-pair
 

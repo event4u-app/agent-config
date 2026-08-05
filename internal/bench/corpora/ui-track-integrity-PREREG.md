@@ -77,6 +77,19 @@ The two outlier arms exist so that a flip cannot silently erase a distinction
 that may be deliberate. They are arms, not a footnote, because the harness makes
 that nearly free.
 
+### Runnability — registered, not yet executable
+
+**No paid run has been fired, and none can be yet.** The arms above are
+registered so that the run, whenever it becomes possible, has nothing left to
+decide. What is missing is not authorization or budget but the ability to set the
+builder tier **per arm**: the tier → native `model:` rewrite lives only in
+`install.ts::finalize_claude_model_tiers` on a consumer install with
+`model.auto_switch: auto`, this checkout pins no `model:` on any projected skill,
+and a session-level `--model` cannot express the two outlier arms, which are
+per-skill facts. Tracked as `measurement-a-no-per-arm-builder-tier` on the
+roadmap. Registering the design before the capability exists is the point: it is
+what stops the eventual run from choosing its own thresholds.
+
 ### N and cost discipline
 
 **Registered N = 5 generations per arm** (20 generations total). A single
