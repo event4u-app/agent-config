@@ -69,6 +69,18 @@ pre_push_budget_seconds: 25
 #   resolver       not a gate at all — a helper a workflow step calls to compute
 #                  something (a diff base, a scope); it decides and blocks nothing
 ci_only:
+  - id: check_release_surface_equality
+    class: release
+    reason: "shells out to `gh pr diff <n>` for a live release PR — there is no PR body to compare the CHANGELOG against on a local checkout"
+  - id: check_release_highlights
+    class: release
+    reason: "requires `--version X.Y.Z` and derives evidence from a release span; exits 2 without one, so a local run gates nothing"
+  - id: check_finding_dispositions
+    class: release
+    reason: "adjudicates the release-PR self-review findings ledger, whose input JSON is produced by the self-review workflow job"
+  - id: rule_trigger_eval
+    class: network
+    reason: "live cross-model LLM trigger evaluation in the secret-gated canary workflow; advisory, paid, and never gating"
   - id: check_evaluator_budgets
     class: benchmark
     reason: "asserts against a measurements JSON that only the nightly evaluator-umbrella run produces — with no artifact there is nothing local to compare against"
