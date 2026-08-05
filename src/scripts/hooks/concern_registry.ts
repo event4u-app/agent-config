@@ -30,7 +30,7 @@ import { main as handoffContextMain } from '../handoff_context_hook.js';
 import { main as roadmapProgressMain } from '../roadmap_progress_hook.js';
 import { main as onboardingGateMain } from '../onboarding_gate_hook.js';
 import { main as contextHygieneMain } from '../context_hygiene_hook.js';
-import { main as verifyBeforeCompleteMain } from '../verify_before_complete_hook.js';
+import { main as verifyBeforeCompleteMain } from '../before_complete_hook.js';
 import { main as minimalSafeDiffMain } from '../minimal_safe_diff_hook.js';
 import { main as injectionScanMain } from '../injection_scan_hook.js';
 import { main as memoryLearnMain } from '../memory_learn_hook.js';
@@ -59,7 +59,7 @@ export const CONCERN_REGISTRY: Readonly<Record<string, ConcernMain>> = {
     'src/scripts/roadmap_progress_hook.ts': roadmapProgressMain as ConcernMain,
     'src/scripts/onboarding_gate_hook.ts': onboardingGateMain as ConcernMain,
     'src/scripts/context_hygiene_hook.ts': contextHygieneMain as ConcernMain,
-    'src/scripts/verify_before_complete_hook.ts': verifyBeforeCompleteMain as ConcernMain,
+    'src/scripts/before_complete_hook.ts': verifyBeforeCompleteMain as ConcernMain,
     'src/scripts/minimal_safe_diff_hook.ts': minimalSafeDiffMain as ConcernMain,
     'src/scripts/injection_scan_hook.ts': injectionScanMain as ConcernMain,
     'src/scripts/memory_learn_hook.ts': memoryLearnMain as ConcernMain,

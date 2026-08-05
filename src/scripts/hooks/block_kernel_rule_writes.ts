@@ -40,7 +40,7 @@ import * as path from 'node:path';
 
 import { is_kernel_rule } from '../_lib/kernel_rules.js';
 import { EDIT_TOOLS } from '../minimal_safe_diff_hook.js';
-import { COMMAND_TOOLS } from '../verify_before_complete_hook.js';
+import { COMMAND_TOOLS } from '../before_complete_hook.js';
 import { readHookStdin } from './hook_stdin.js';
 
 const _HERE = fileURLToPath(import.meta.url);

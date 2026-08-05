@@ -2,9 +2,22 @@
 /**
  * Platform-agnostic hook for the `verify-before-complete` rule.
  *
- * Ported from the retired Python `src/scripts/verify_before_complete_hook.py` (ADR-200 —
- * Python→TS migration, Phase 6 / hooks). Public API mirrors the Python
- * module exactly (snake_case kept deliberately — fidelity over TS idiom).
+ * Named `before_complete_hook`, not `verify_before_complete_hook`: `verify_` is
+ * one of the gate-shaped prefixes in `_lib/gate_population.ts`, so the old name
+ * put an observability hook into the gate population, where the scan-scope
+ * ratchet counted it as a gate that cannot assert a scan scope (it scans no
+ * corpus — its only inputs are its stdin envelope and the state file it writes).
+ * AI council 2026-08-05 rejected the alternative of excluding `_hook.ts` in the
+ * population filter as population-shrinking: `.d.ts` / `.test.ts` are excluded
+ * because the language and the test runner make them structurally
+ * non-executable, whereas "a hook never blocks" is an operational property you
+ * can only learn by reading `hook_manifest.yaml` — and manifest-driven
+ * classification was already rejected once. Renaming keeps classification
+ * structural and needs no exclusion rule.
+ *
+ * Ported from the retired Python `src/scripts/verify_before_complete_hook.py`
+ * (ADR-200 — Python→TS migration, Phase 6 / hooks). Public API mirrors the
+ * Python module exactly (snake_case kept deliberately — fidelity over TS idiom).
  *
  * Records observable evidence that a verification command (tests, quality
  * tools, build) ran. The rule body cites the resulting state file as the

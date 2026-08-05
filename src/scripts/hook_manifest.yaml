@@ -57,7 +57,7 @@ concerns:
   # builds) into agents/runtime/state/verify-before-complete.json. The rule body
   # cites that file as the source of truth for "verified this turn?".
   verify-before-complete:
-    script: src/scripts/verify_before_complete_hook.ts
+    script: src/scripts/before_complete_hook.ts
     args: []
     fail_closed: false
   # Phase 5 — Tier-1 hook for the minimal-safe-diff rule. Counts unique

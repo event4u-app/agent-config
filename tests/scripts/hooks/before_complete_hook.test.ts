@@ -2,19 +2,9 @@
 import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
-import { fileURLToPath } from 'node:url';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
-import { run, STATE_FILE } from '../../../src/scripts/verify_before_complete_hook.js';
-
-const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..', '..');
-const TS_SCRIPT = path.join(REPO_ROOT, 'src', 'scripts', 'verify_before_complete_hook.ts');
-const TSX_BIN = path.join(
-    REPO_ROOT,
-    'node_modules',
-    '.bin',
-    process.platform === 'win32' ? 'tsx.cmd' : 'tsx',
-);
+import { run, STATE_FILE } from '../../../src/scripts/before_complete_hook.js';
 
 function state(root: string): Record<string, unknown> {
     return JSON.parse(fs.readFileSync(path.join(root, STATE_FILE), 'utf8'));
@@ -155,22 +145,3 @@ describe('verify_before_complete — tracker behaviour', () => {
         expect(state(tmp)['session_id']).toBe('s1');
     });
 });
-
-interface RunResult {
-    status: number | null;
-    stdout: string;
-    stderr: string;
-    state: Record<string, unknown> | null;
-}
-
-function normalize(parsed: Record<string, unknown> | null): Record<string, unknown> | null {
-    if (!parsed) return parsed;
-    if ('checked_at' in parsed) parsed['checked_at'] = '<TS>';
-    if (parsed['turn_started_at'] != null) parsed['turn_started_at'] = '<TS>';
-    if (parsed['last_stop_at'] != null) parsed['last_stop_at'] = '<TS>';
-    const lv = parsed['last_verification'];
-    if (lv && typeof lv === 'object' && !Array.isArray(lv)) {
-        (lv as Record<string, unknown>)['at'] = '<TS>';
-    }
-    return parsed;
-}
