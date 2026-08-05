@@ -19,6 +19,27 @@ Routed through the AI council (anthropic/claude-sonnet-4-5 + openai/gpt-4o,
 design mode, 2026-06-14; converged 2-round on "import-boundary linter as MVP
 with explicit semantic-drift disclaimer + escape-hatch").
 
+**Amended 2026-08-05 — the drift MECHANISM in Decision 2 changed. The boundary
+itself is unchanged and is still enforced in CI.** ADR-200 migrated this
+contract's corpus from `src/cli/python/workspace_*.py` to `.ts`. The bespoke
+linter's glob never followed, so it matched 0 files and exited 0 for ~7 weeks:
+the boundary was `stable` on paper and mechanically unenforced in fact. AI
+council 2026-08-05 (anthropic/claude-sonnet-4-5 + openai/gpt-4o) rejected both
+repointing it — the Python-shaped import scanner extracts garbage from TS, so a
+glob swap enforces nothing while looking green — and rewriting it, which is a new
+analyser rather than a port.
+
+The import-edge lock now lives in `eslint.config.js` as a `no-restricted-imports`
+block scoped to `src/cli/python/workspace_*.ts`, wired into CI via `lint-ts`, and
+`src/scripts/lint_workspace_boundary.ts` is deleted. This **reverses the
+"wrong-stack" rejection in § Alternatives** below: that reasoning was correct for
+a Python surface and is falsified now that the surface is TypeScript and the repo
+already runs ESLint over it with this very rule for `src/shared/**`. Zero
+violations were re-verified on the TS corpus and a negative probe proved the rule
+fires; the ESLint patterns additionally catch 7 forbidden-token shapes the
+bespoke `[._-]` boundary class missed. **Not** `superseded_by` — Decisions 1 and
+3 stand verbatim.
+
 ## Context
 
 The PR #489 / 6.0.0 review flagged that **"workspace" risks becoming the new
