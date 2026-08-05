@@ -2,14 +2,14 @@
 
 > Auto-generated — do not edit. Regenerate with `task roadmap-progress` or by running the `update_roadmap_progress` script for your install; rewritten on every roadmap create / execute / completion change (timestamp lives in git history).
 >
-> 16 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **13** open blockers
+> 16 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **14** open blockers
 
 ## Overall
 
-**65 / 250 steps done · 26%**
+**104 / 250 steps done · 42%**
 
 ```text
-██████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   26%
+█████████████████░░░░░░░░░░░░░░░░░░░░░░░   42%
 ```
 
 ## Open roadmaps
@@ -24,7 +24,7 @@
 | 6 | [road-to-orchestration-scope-decision.md](roadmaps/road-to-orchestration-scope-decision.md) | 4 | 10 | 6 | 4 | 0 | 0 | [1](#blockers-road-to-orchestration-scope-decision) | ████░░░░░░ 40% |
 | 7 | [road-to-scale-history-bench-run.md](roadmaps/road-to-scale-history-bench-run.md) | 1 | 2 | 2 | 0 | 0 | 0 | [1](#blockers-road-to-scale-history-bench-run) | ░░░░░░░░░░ 0% |
 | 8 | [road-to-skill-ecosystem-authoring-discipline.md](roadmaps/road-to-skill-ecosystem-authoring-discipline.md) | 6 | 52 | 52 | 0 | 0 | 0 | [2](#blockers-road-to-skill-ecosystem-authoring-discipline) | ░░░░░░░░░░ 0% |
-| 9 | [road-to-skill-ecosystem-gate-integrity.md](roadmaps/road-to-skill-ecosystem-gate-integrity.md) | 5 | 43 | 43 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+| 9 | [road-to-skill-ecosystem-gate-integrity.md](roadmaps/road-to-skill-ecosystem-gate-integrity.md) | 7 | 43 | 4 | 39 | 0 | 0 | [1](#blockers-road-to-skill-ecosystem-gate-integrity) | █████████░ 91% |
 | 10 | [road-to-solution-minimalism.md](roadmaps/road-to-solution-minimalism.md) | 4 | 36 | 12 | 23 | 0 | 1 | 0 | ███████░░░ 66% |
 | 11 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 6 | 3 | 0 | 0 | [1](#blockers-road-to-subagent-value-realization-followup) | ███░░░░░░░ 33% |
 | 12 | [road-to-surface-consolidation.md](roadmaps/road-to-surface-consolidation.md) | 3 | 14 | 1 | 12 | 1 | 0 | [2](#blockers-road-to-surface-consolidation) | █████████░ 92% |
@@ -173,15 +173,45 @@ _1 blocker resolved._
 
 ### [road-to-skill-ecosystem-gate-integrity.md](roadmaps/road-to-skill-ecosystem-gate-integrity.md)
 
-**Road to gate integrity — a gate that scanned nothing must never exit green** — 0 / 43 done (0%)
+**Road to gate integrity — a gate that scanned nothing must never exit green** — 39 / 43 done (91%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
-| 1 | Completeness accounting | ⬜ not started | 7 | 0 | 0 | 0 | 0% |
-| 2 | Make shrink-only mechanical | ⬜ not started | 7 | 0 | 0 | 0 | 0% |
-| 3 | Gate authoring discipline | ⬜ not started | 7 | 0 | 0 | 0 | 0% |
-| 4 | Second-order guards | ⬜ not started | 6 | 0 | 0 | 0 | 0% |
-| 5 | Honest reporting surfaces | ⬜ not started | 16 | 0 | 0 | 0 | 0% |
+| 1 | Completeness accounting | ✅ done | 0 | 7 | 0 | 0 | 100% |
+| 2 | Make shrink-only mechanical | ✅ done | 0 | 7 | 0 | 0 | 100% |
+| 2 | execution notes | ⬜ empty | 0 | 0 | 0 | 0 | 0% |
+| 3 | Gate authoring discipline | 🟡 in progress | 2 | 5 | 0 | 0 | 71% |
+| 4 | Second-order guards | ✅ done | 0 | 6 | 0 | 0 | 100% |
+| 5 | Honest reporting surfaces | ✅ done | 0 | 6 | 0 | 0 | 100% |
+| 4 | 5 execution notes | 🟡 in progress | 2 | 8 | 0 | 0 | 80% |
+
+<a id="blockers-road-to-skill-ecosystem-gate-integrity"></a>
+**Blockers**
+
+- **kernel-cross-link-soak** (owner: maintainer) — blocks Phase 3 Step 6 and Step 7, and the acceptance criterion that both new guidelines are cross-linked from `verify-before-complete`.
+  - **What to do:**
+    `src/rules/verify-before-complete.md` in their OWN pull request, with the
+    ≥24 h kernel soak. `verify-before-complete` is one of the nine kernel rules
+    (`docs/contracts/kernel-membership.md`), and `scope-control § Kernel-rule
+    edits` requires one rule per PR plus the soak window — a guarantee no
+    autonomous mandate lifts. Batching them into this change would also risk the
+    kernel-prefix byte-stability gate, which local preflight does not catch.
+    1. **Step 6 — the ease tripwire.** Add to the `## Red flags — STOP
+    immediately` list:
+    > - A verification that was **far easier than expected** — check the path
+    >   before believing the result, per [`false-green`](../docs/guidelines/agent-infra/false-green.md)
+    The existing red flags track confidence *wording* ("should pass", "seems
+    fine") and not *ease*; every false green catalogued in `false-green.md`
+    felt like a pass at the moment it happened.
+    2. **Step 7 — the cross-links.** Add to `## Verification commands`:
+    > Authoring a new gate → [`gate-authoring`](../docs/guidelines/agent-infra/gate-authoring.md).
+    > Ways a green result can be false, with detection commands →
+    > [`false-green`](../docs/guidelines/agent-infra/false-green.md).
+    Then update the `verify-before-complete` row in
+    `src/skills/token-optimizer/SKILL.md` in the same PR, per
+    `token-optimizer-maintenance` (the rule's summary changes, so the catalog
+    row must too).
+  - **Resolved when:** both edits are merged and the soak has elapsed. Everything else in Phase 3 — both guidelines, the lifecycle, the gaming-risk block, and the inline suppression key — landed in this change and does not wait on it.
 
 ### [road-to-solution-minimalism.md](roadmaps/road-to-solution-minimalism.md)
 
