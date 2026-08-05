@@ -143,38 +143,70 @@ for a reason that has nothing to do with model tier. Both tier arms would land i
 the same low band, the run would report a null, and the null path above would
 freeze the allocation on an instrument artefact.
 
-**The council split, and how it is resolved.** One member proposed stating the
-id contract in the port prompt; the other objected that this measures
-instruction-following on an arbitrary constraint and still yields a false null if
-both arms comply equally, and proposed a deterministic weight-degradation rule
-instead. The two fixes are **orthogonal** and both are adopted, because they
-close different holes:
+**The council split.** One member proposed stating the id contract in the port
+prompt. The other objected that this measures instruction-following on an
+arbitrary constraint, and proposed instead a deterministic weight-degradation
+rule: below an `interactions` score of **0.50** — asserted to be "the signature
+of ID mismatches, not behavioral absence" — re-weight the component to 0.05 and
+redistribute the freed 0.15 across the other three in proportion.
 
-1. **The port prompt states the interaction contract explicitly.** The handed-over
-   artifact's interactive hooks are part of what is being ported. An arm is never
-   scored on a requirement it was not given — that is the unfairness the first
-   member identified, and it is cheap to remove.
-2. **`interactions` degrades deterministically instead of silently eating 0.20.**
-   When an arm's `interactions` score falls below **0.50** — the signature of
-   renamed hooks rather than absent behaviour — the component is reported at full
-   detail but re-weighted to **0.05**, and the freed **0.15** is redistributed to
-   `pixel` / `dom` / `tokens` in proportion to their registered weights
-   (0.40 : 0.20 : 0.20 → +0.075 / +0.0375 / +0.0375). Every application is logged
-   in the report with the reason, so the adjustment is visible per run and never
-   inferred.
+**AMENDMENT 2026-08-05 — the degradation rule is WITHDRAWN. Its discriminator is
+falsified by data already in the tree.** It was drafted, implemented, and then
+measured before publication rather than after; the measurement killed it.
 
-Both the 0.50 trigger and the redistribution are fixed **now**, before any
-generated candidate exists. The rule is deterministic, keeps the scoring path
-model-free, and cannot be tuned after seeing a score without a dated amendment
-to this file.
+The claim the rule rests on is that a low `interactions` score indicates renamed
+hooks. The committed `port-regenerated` control scores **0.25** on
+`interactions` — comfortably under the proposed trigger — and it is not a
+renamed port at all: it is the pre-fix rebuild that genuinely never built the
+archive screen or the disclosure toggle. Its recorded per-step failures are
 
-**Epoch consequence.** Changing how a weight is applied opens a **new scoring
-epoch** for any candidate the rule fires on. The two committed controls are
-re-scored under the amended scorer in the same run as the generated candidates,
-so every number published for Measurement A is comparable within one epoch. The
-controls' original figures (`port-faithful` 0.9877, `port-regenerated` 0.5243,
-separation 0.4634) remain valid for the epoch they were taken in and are **not**
-compared against amended-epoch numbers.
+```
+screen switch      waiting for locator('[aria-controls=\'screen-archive\']')  (timeout)
+disclosure toggle  waiting for locator('#disclosure-toggle')                  (timeout)
+subscribe submit   ok
+rule-draw keyframe no CSS rule matching @keyframes rule-draw
+```
+
+— i.e. **selector-resolution failures**, which is exactly the failure shape a
+renamed-hooks port produces. So neither the score threshold nor the finer
+"selector-not-found vs assertion-failed" discriminator separates *renamed the
+hooks* from *never built the behaviour*. There is no observable in the current
+instrument that does.
+
+Applying the rule to that control, with the numbers as they were registered:
+
+| | weighted | separation vs `port-faithful` (0.9877) |
+|---|---:|---:|
+| registered weights | 0.5243 | 0.4634 |
+| degradation applied | 0.5757 | 0.4120 |
+
+The rule would have handed **+0.0514** to a port that never built the behaviour,
+and eroded the instrument's own discriminating power by the same amount. A rule
+whose stated purpose is to stop an artefact from faking a null would instead have
+manufactured one in the other direction. The separation stays above the 0.25
+floor, so no committed test would have caught it — which is the point: it would
+have shipped silently.
+
+**Adopted instead — fix 1 only, and the instrument is not touched.** The port
+prompt states the interaction contract explicitly: the handed-over artifact's
+interactive hooks are part of what is being ported. That removes the real
+unfairness the first member identified — an arm scored on a requirement it was
+never given — without pretending to a discriminator that does not exist. Weights,
+thresholds, and the scoring path are **unchanged**, so Measurement A is scored in
+the same epoch as the committed controls and the 0.9877 / 0.5243 / 0.4634
+anchors stay directly comparable.
+
+The remaining objection is answered rather than dismissed: if both arms honour
+the stated contract, a flat `interactions` score across arms is a **true** null
+on that component, not an artefact. If an arm ignores a contract it was given,
+that is a fidelity failure and belongs in the score.
+
+**Re-scope condition.** If a generated arm's `interactions` failures turn out to
+be dominated by hook renaming *despite* the stated contract, the answer is
+selector-agnostic behavioural assertions (assert that some control toggles some
+panel, not that `#disclosure-toggle` does) — a change to what the component
+measures, validated on its own before use, and a new scoring epoch. It is not a
+weight adjustment.
 
 ## Measurement B — structurally blocked
 
@@ -218,7 +250,7 @@ a null on one is not a null on the other.
 |---|---|---|
 | Component weights | No | Frozen with the fixture lock |
 | Fixture set | No (extensions form a new set) | `--update-lock` opens a new epoch, visibly |
-| The `interactions` degradation rule | Only by a dated amendment here | Never after seeing a score |
+| What `interactions` measures | Only on the re-scope condition above | Selector-agnostic assertions, validated first, new epoch |
 | N per arm | Downward only, recorded before scoring | Budget cap; achieved N stated in the report |
 | Measurement A decision rule | No | Registered above |
 | Measurement B scope | Yes, on the re-scope condition | Recorded as an amendment |
