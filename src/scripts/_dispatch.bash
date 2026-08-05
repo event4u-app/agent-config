@@ -194,6 +194,10 @@ Tier 2 — maintenance / internal (hooks, MCP, memory, telemetry):
                              ~/.event4u/agent-config/ (the global-only consumer surface,
                              ADR-020). Idempotent; --force overwrites a non-empty global
                              file, --dry-run lists intended copies with zero writes.
+  settings:set               Set one setting in the global file. Refuses every class-C
+                             (guarded) key from docs/contracts/settings-classes.md, and
+                             refuses everything when that contract is unreadable.
+                             --source auto-detected|jit-answer|manual|gui, --dry-run.
   hooks:install              Install the combined pre-commit hook (roadmap-progress
                              + ADR-013 artefact frontmatter lint).
                              (use --print to dump it, --force to overwrite an existing hook)
@@ -1289,6 +1293,7 @@ main() {
     settings:check)          cmd_settings_check "$@" ;;
     settings:sync)           cmd_settings_sync "$@" ;;
     settings:migrate)        cmd_settings_migrate "$@" ;;
+    settings:set)            cmd_settings_set "$@" ;;
     uninstall)               cmd_uninstall "$@" ;;
     prune)                   cmd_prune "$@" ;;
     doctor)                  cmd_doctor "$@" ;;
