@@ -30,8 +30,14 @@ describe('verify_physical_move — _diff_tree', () => {
 });
 
 describe('verify_physical_move — _diff_manifest', () => {
-    it('returns [] when both are null', () => {
-        expect(vp._diff_manifest(null, null)).toEqual([]);
+    it('FLAGS both-null rather than returning [] — two absences are not a match', () => {
+        // This used to return `[]`, and an empty issue list means clean to every
+        // caller: the literal `diff a b` where neither side exists and the
+        // answer comes back "equal". Equality without validity, catalogued in
+        // `docs/guidelines/agent-infra/false-green.md § 9`.
+        const issues = vp._diff_manifest(null, null);
+        expect(issues).toHaveLength(1);
+        expect(issues[0]).toContain('nothing was compared');
     });
     it('flags a missing pre-move snapshot', () => {
         expect(vp._diff_manifest(null, {})).toEqual(['  manifest: pre-move snapshot missing']);
