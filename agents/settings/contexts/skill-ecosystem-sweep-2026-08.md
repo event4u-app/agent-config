@@ -307,6 +307,26 @@ a minor release had made due. Convergence inlined here per
 Disposition recorded as
 [`ADR-215`](../../../docs/decisions/ADR-215-harvest-freeze-verification-arm-lift.md).
 
+> **Superseded the same day by
+> [`ADR-216`](../../../docs/decisions/ADR-216-restraint-reanchored-to-capacity.md)
+> — owner decision.** The council was asked whether the freeze still served its
+> purpose *in its current form*. It was never asked the prior question: is the
+> freeze anchored to the right thing at all? The answer is no. Both members
+> reasoned from "the binding constraint is adoption", because that is what the
+> record they were shown said. **External adoption is not a project goal**, so
+> that premise was false and every conclusion resting on it needed re-deriving.
+>
+> What survives the correction, because it never depended on adoption: the
+> two-slot concurrency cap (a capacity mechanism), its mechanical enforcement, the
+> mandatory-first and mandatory-second ordering of the two open roadmaps, and the
+> finding that the latent-risk door cannot admit capability. What does not survive:
+> the verification-versus-capability split, which existed only to hold capability
+> behind the adoption gate, and every reopen trigger phrased in terms of adopters.
+>
+> The council's judgement on mechanism was sound and is retained. A council cannot
+> adjudicate what a project is *for* — that is the owner's call, and this is the
+> record of it being made.
+
 ## Provenance
 
 Sources are referenced by neutral label throughout. Real links are encrypted;

@@ -14,21 +14,35 @@ review_trigger: >-
   reopen when (a) both open verification roadmaps stall incomplete across a
   release cycle while a third high-value verification item is identified — the
   two-slot cap is then too tight, or (b) verification work ships across two
-  release cycles with external adoption still at zero — the activity-versus-
-  progress gap the council named is then confirmed and the successor constraint
-  is treating the wrong bottleneck, or (c) a capability entry from the queue is
-  requested by a real external adopter, which opens the capability arm on its
-  own terms.
+  release cycles while the maintainer judges that foundational quality has not
+  improved — the activity-versus-progress gap the council named is then confirmed
+  and the cap is treating the wrong bottleneck. Trigger (c) of the original
+  wording (a capability entry requested by a real external adopter) is STRUCK by
+  ADR-216: adoption is not a valid condition in this tree.
 ---
 
 # ADR-215 — The harvest freeze lifts for verification infrastructure only, under a two-slot cap
 
 ## Status
 
-**Accepted.** ADR-211's internal resume arm is satisfied and the freeze is
-partially lifted: verification-infrastructure work may open under a hard
-concurrency cap, capability additions remain frozen behind a separate arm, and
-ADR-211's latent-risk door is recorded as structurally unable to admit capability.
+**Accepted, then partially superseded the same day.**
+
+> **CORRECTED BY [ADR-216](ADR-216-restraint-reanchored-to-capacity.md)
+> (2026-08-05).** This record gated its capability arm partly on "≥1 real
+> external adoption documented" — the same unreachable condition it was written
+> to narrow. ADR-216 strikes that clause, records that external adoption is not a
+> project goal, and lifts the freeze **in full**. Consequently the
+> verification-versus-capability split below **dissolves**: it existed only to
+> hold capability behind the adoption gate. What survives from this record is
+> **D2, the mechanically-enforced two-slot concurrency cap** — a capacity
+> mechanism that is independent of adoption and now the only thing restraining
+> the queue. Read D1 and D2 as live, D3 as struck, D4 and D5 as live.
+
+ADR-211's internal resume arm is satisfied and the freeze was partially lifted
+here: verification-infrastructure work may open under a hard concurrency cap,
+capability additions were held behind a separate arm (since struck), and
+ADR-211's latent-risk door is recorded as structurally unable to admit
+capability.
 
 ## Context
 
@@ -64,10 +78,16 @@ capability — it is verification infrastructure and rule text.**
 
 ### D1 — The freeze lifts for verification infrastructure, under a two-slot cap
 
-At most **two** verification-infrastructure roadmaps may sit outside `archive/`
-and `later/` at any time. Verification infrastructure means changes to gates,
-checkers, projection enforcement, or rule-enforcement mechanisms — not new skills,
-corpora, domain surfaces, or user-facing output formats.
+At most **two** roadmaps in this family may sit outside `archive/` and `later/` at
+any time.
+
+> **Scope widened by ADR-216.** As written, this clause said
+> "verification-infrastructure roadmaps" and defined that as changes to gates,
+> checkers, projection enforcement, or rule-enforcement mechanisms — explicitly
+> excluding new skills, corpora, domain surfaces, and user-facing output formats.
+> With D3 struck the category no longer gates anything, so the cap now counts
+> **any** `road-to-skill-ecosystem-*` roadmap. The number is unchanged; only the
+> category filter is gone.
 
 The two slots opened by this record are, in the order the council named them
 mandatory-first and mandatory-second:
@@ -94,23 +114,24 @@ outside `archive/` and `later/` fails the build with a pointer to this record.
 Implementation lands as a step in the gate-integrity roadmap rather than as a
 separate change, so the enforcement arrives with the work it bounds.
 
-### D3 — Capability stays frozen behind its own arm (Amendment E)
+### D3 — ~~Capability stays frozen behind its own arm~~ — STRUCK by ADR-216
 
-A capability roadmap may open only when **either**:
-
-- ≥1 real external adoption is documented (ADR-211's external arm, unchanged), **or**
-- an external finding recorded in the sweep is **reproduced by local measurement**
-  and the reproduction is documented in `docs/decisions/`.
-
-Capability roadmaps are capped at **zero** concurrent until one of those holds.
-The queue with its evidence attached lives in
-[`road-to-skill-ecosystem-capability-queue`](../../agents/roadmaps/later/road-to-skill-ecosystem-capability-queue.md);
-promotion is per entry, never as a batch.
-
-The second condition matters because it is the only arm reachable from inside.
-The sweep produced two findings that contradict locked decisions here (sweep
-record § R1 and § R2); reproducing either locally opens the arm on evidence rather
-than on appetite.
+> **STRUCK.** This clause gated capability on "≥1 real external adoption is
+> documented" OR a locally reproduced external finding. The first half is the
+> unreachable condition this whole record exists to narrow, and carrying it
+> forward reproduced the defect one file over. ADR-216 strikes it and lifts the
+> freeze in full, so there is no capability arm to gate.
+>
+> **What replaces it:** one queue, one capacity mechanism. The two-slot cap in D2
+> applies to any roadmap in the family regardless of whether its content is
+> verification or capability; a capability roadmap competes for a slot on equal
+> terms. Ordering within the queue is a maintainer choice per slot, informed by
+> the sweep record's evidence, not fixed by a category.
+>
+> The one part worth keeping from the original clause: the sweep's two findings
+> that contradict locked decisions here (sweep record § R1 and § R2) are still
+> best resolved by reproducing them locally before acting. That is now a
+> **sequencing preference backed by evidence discipline**, not a gate.
 
 ### D4 — ADR-211 Amendment D cannot admit capability; recorded as a construction defect
 
@@ -154,9 +175,11 @@ louder restatement — is adopted independently of the unsettled style question.
   with explicit slot and arm blockers.
 - **The activity-versus-progress risk is named and instrumented.** The council's
   strongest objection to lifting was that verification work feels productive while
-  doing nothing about the binding constraint. Review trigger (b) above makes that
-  falsifiable: verification shipping across two release cycles with adoption still
-  at zero confirms the gap.
+  doing nothing about the binding constraint — which the council took to be
+  adoption. ADR-216 corrects that premise: the binding constraint is maintainer
+  capacity. Review trigger (b) is re-anchored accordingly — verification shipping
+  across two release cycles without the maintainer judging foundational quality
+  improved is what confirms the gap.
 - Every adoption from the sweep is re-derived under `code-provenance`, never
   adapted as text. One source is copyleft ShareAlike and one is GPL; adapting
   either's prose would propagate their terms into this tree.
@@ -168,10 +191,12 @@ louder restatement — is adopted independently of the unsettled style question.
   lifting, because the top findings close failures this package has already paid
   for — one of them four times — and refusing to fix a known repeated failure for
   procedural reasons wastes the sweep and produces no compensating benefit.
-- **Lift entirely.** Rejected. The sweep is large enough that converting all of it
-  into open work is roughly nine parallel workstreams for one maintainer, which is
-  the fragmentation the freeze exists to prevent. Zero documented external adopters
-  remains true and remains the binding constraint.
+- **Lift entirely.** Rejected *here*, then accepted by ADR-216 once the anchoring
+  was corrected. The load-bearing half of the rejection survives: the sweep is
+  large enough that converting all of it into open work is roughly nine parallel
+  workstreams for one maintainer, which is the fragmentation the restraint exists
+  to prevent — hence the concurrency cap. The adoption half of the rejection was
+  the defect ADR-216 removed.
 - **Author every roadmap and park all of them.** Rejected as a middle-ground
   fallacy: either the work is valuable enough to execute, or it is not worth the
   authoring cost. "Valuable but not now" requires a specific unparking condition —
@@ -183,9 +208,12 @@ louder restatement — is adopted independently of the unsettled style question.
 - **Patch Amendment D to accept a pending test.** Rejected per D4 — a test written
   before the code it references cannot fail for the right reason.
 - **One verification slot plus one capability slot.** The minority council
-  position. Rejected because the capability arm's own gate (external adoption)
-  remains unmet, so a capability slot would open work with no evidence behind it,
-  which is precisely what the freeze governs.
+  position, rejected here because the capability arm's gate was unmet. **ADR-216
+  supersedes this reasoning**: with the split dissolved, both slots are simply
+  slots, and whether a slot holds verification or capability work is a maintainer
+  choice rather than a category rule. The minority position turns out to have
+  been closer to correct, for a reason neither member could reach — the gate it
+  deferred to was never valid.
 
 ## References
 
