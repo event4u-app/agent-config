@@ -7,7 +7,7 @@ parent_roadmap: road-to-gates-that-can-fail
 # Road to gate-hardening adoption — take the unhardened-gate count to zero
 
 > **Source:** the two acceptance criteria
-> [`road-to-gates-that-can-fail`](archive/road-to-gates-that-can-fail.md) could
+> [`road-to-gates-that-can-fail`](road-to-gates-that-can-fail.md) could
 > not honestly close, re-chartered rather than dropped. That roadmap killed the
 > **defect class** (14 dead scan roots repaired, prevention + canary + ratchet +
 > census shipped). This one closes the **adoption gap** the class left behind.
@@ -286,7 +286,17 @@ one wearing a label, and it stays in the count.
       hook it always was.
 - [x] Every `allowEmpty` justification in the tree passes the deletion test.
 - [x] The three population definitions agree, pinned by a test.
-- [ ] All quality gates pass — see `quality-tools`.
+- [x] All quality gates pass — see `quality-tools`.
+      → Verified on PR #1172, 2026-08-05: **42 SUCCESS · 1 SKIPPED**
+      (`skill-lint-strict`, expected) · **0 failures** across all 43 checks —
+      Static Checks (ESLint · typecheck · prepack), Node Tests (4 shards ×
+      ubuntu/macos), Install Script + Aux Tests, Golden Tests, Workspace
+      Tests, Sync + Generate Tools Consistency, gate-dry-run, Rule
+      backstops, the four Smoke gates, no-python-in-src, skill-lint,
+      originality-gate, and the windows/macos/ubuntu node 20+22 matrix.
+      Remote CI is the authoritative gate here (`quality.local_auto_run`
+      is false per the shipped default), so this criterion is recorded
+      against the PR run rather than a local `task ci`.
 
 ## Blockers
 
