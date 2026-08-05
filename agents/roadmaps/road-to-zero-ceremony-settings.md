@@ -4,7 +4,7 @@ execution:
   mode: phase-checkpoints
 related_roadmaps: [road-to-zero-ceremony-detection, road-to-zero-ceremony-install]
 related_adrs: [ADR-020, ADR-037, ADR-110]
-related_contracts: [settings-api, layered-settings]
+related_contracts: [settings-api, settings-classes]
 ---
 
 # Road to zero-ceremony settings — the user's file records decisions, the template stays the defaults source
@@ -66,6 +66,51 @@ green. That reframe is the whole reason this roadmap survives at all.
 Also verified: `settings set` does not exist (`settings` is a GUI alias, and
 only `check` / `sync` / `migrate` mutate or validate) — the writer is greenfield.
 
+### Prerequisite re-read, 2026-08-05 — what Risk 5 caught
+
+Risk 5 mandates re-reading the prerequisites as the first act of execution
+rather than trusting them from the parked state. That re-read fired. Six facts
+above and in the phases below were stale; they are corrected here rather than in
+place, so the diff between what was planned and what is true stays legible.
+
+| Roadmap says | Measured 2026-08-05 | Where it bites |
+|---|---|---|
+| template is 1,233 lines | **1,359 lines / 139 parity leaves / 140 classified leaves** | Phase 1's table is that big |
+| "nine further scripts read the template path directly" | **ten**, at eleven call sites (twelve counting the installer's two) | Phase 3's "every direct template reader untouched" |
+| "the three existing ask-shaped settings" | **six** — `tokens.rich_skills`, `subagents.auto`, `subagents.budget_routing`, `subagents.adversarial_council`, `worktrees.mode`, `decision_engine.on_block` | Phase 5 step 3 |
+| Phase 2: "the existing settings read path" (singular) | **two families, opposite precedence, three filenames** — see below | Phase 2 step 2 |
+| the template "is materialised into every user's global settings file" | **true, but the writer is `src/server/routes/wizard.ts:1310`**, not the installer; `install_global` writes no settings file at all, and `ensure_agent_settings` is unreachable for consumers (`_enforce_consumer_global_only`) | Phase 3 step 1 aims at the wrong writer |
+| `related_contracts: [settings-api, layered-settings]` | `docs/contracts/layered-settings.md` **does not exist** | frontmatter reference |
+
+**The read-path split, in full.** Root resolution is clean and single-sourced
+(`~/.event4u/agent-config`, env override `EVENT4U_CONFIG_HOME`, read-only legacy
+XDG fallback). The filenames under it are not:
+
+- scripts / work-engine loader → `agent-settings.yml` (no dot, no subdir);
+- installer + `settings:migrate` → `.agent-settings.yml` (dot, flat);
+- GUI server write target and the installer's own global *read* →
+  `settings/.agent-settings.yml` (typed subdir).
+
+Precedence differs too: the scripts family merges
+`{} < user-global (whitelist-filtered) < repo-root < CWD`, the server family
+merges `template-defaults < global < project`.
+
+**And the load-bearing correction the council did not have.** The council
+(2026-08-05, `claude-sonnet-4-5` + `gpt-4o`, 2/2) treated this as blocking on the
+premise that *"the two families disagree about what the default IS"*, and
+prescribed a default-parity probe as the gate. That premise is falsifiable
+in-tree and false: `_DEFAULTS` in the scripts loader is **`{}`** — the scripts
+family has no settings defaults at all, so every consumer there already supplies
+its own fallback at the read site and is already sparse-tolerant. Nothing can
+disagree with an empty object. The probe would have compared a hardcoded table
+that does not exist against the template.
+
+What survives from the council verdict is its *shape* — prove, then scope — with
+the probe replaced by the fact that settles the same question: the file the
+wizard materialises is read by the server layered read and by the installer's
+global read, and by **neither** of the scripts-family paths. Making it sparse
+therefore cannot break the scripts family, because that family never read it.
+
 ### Gap audit against the source draft
 
 | Draft item | Verdict | Why |
@@ -83,16 +128,16 @@ only `check` / `sync` / `migrate` mutate or validate) — the writer is greenfie
 
 ## Phase 1 — The taxonomy contract
 
-- [ ] Classify every key in the current template into A (preferences, never
+- [x] Classify every key in the current template into A (preferences, never
       asked) / B (consent, JIT-asked once, persisted) / C (guarded, never
       agent-writable) in one table, checked in as
       `docs/contracts/settings-classes.md`.
-- [ ] Add a lint refusing any new or existing key without a class.
+- [x] Add a lint refusing any new or existing key without a class.
       <!-- verify: npx vitest run tests/scripts/lint_settings_classes.test.ts -->
-- [ ] Put every budget-raising key, allow/deny list, kill-switch, strict mode,
+- [x] Put every budget-raising key, allow/deny list, kill-switch, strict mode,
       and master flag in C — and justify each B assignment in one line, because
       a wrong B is the only way this design can hurt someone.
-- [ ] Council-review the C list specifically: the fence is only as good as its
+- [x] Council-review the C list specifically: the fence is only as good as its
       completeness, and completeness is not something a single reviewer should
       certify alone.
 
