@@ -1,12 +1,12 @@
 {
     "schema_version": 1,
     "_comment": "Written by src/scripts/record_evaluator_measurements.mjs, invoked from src/scripts/evaluator_umbrella.sh when UMBRELLA_RECORD=1 (the nightly). check_evaluator_budgets.ts --recorded compares a fresh measurement set against this file; a contradiction on a DETERMINISTIC metric warns on main and fails on release. Do not hand-edit — refresh it from a real run.",
-    "recorded_at": "2026-08-04T03:13:59.314Z",
-    "git_sha": "500c2d63e5949b21722d4758f25bd8738b7d9f2a",
+    "recorded_at": "2026-08-05T21:00:16.606Z",
+    "git_sha": "ba9b0f0f0e148857a8574faa2e512b64c099d2e4",
     "run_url": null,
-    "conditions": "Refresh for the 82 -> 84 cli_help_command_count move (route:explain + route:audit verbs, routing-correctness validation surface). Re-measured locally via the pinned registry-enumeration method: 84. mcp_public_tool_count carried at 19 (surface untouched by this PR). The five harness-bound metrics stay absent on purpose; the next nightly fills them in.",
+    "conditions": "Refresh for the 84 -> 85 cli_help_command_count move (settings:set, the one agent-reachable settings writer, road-to-zero-ceremony-settings Phase 2). Re-measured locally via the pinned registry-enumeration method: 85. mcp_public_tool_count carried at 19 (surface untouched by this PR). The five harness-bound metrics stay absent on purpose; the next nightly fills them in.",
     "measurements": {
-        "cli_help_command_count": 84,
+        "cli_help_command_count": 85,
         "mcp_public_tool_count": 19
     }
 }

@@ -13,6 +13,13 @@ import * as path from 'node:path';
 import { describe, expect, it } from 'vitest';
 
 import * as mod from '../../src/scripts/lint_settings_classes.js';
+import {
+    isConservativeDefault,
+    parseDeclaredClassCounts,
+    parseSettingsClassRows,
+    SETTINGS_CLASSES,
+    settingsLeafPaths,
+} from '../../src/shared/settingsClasses.js';
 
 const REPO_ROOT = mod.REPO_ROOT;
 
@@ -35,11 +42,11 @@ describe('lint_settings_classes — helpers', () => {
         // The parity walk drops `{}` because it has no entries to recurse into.
         // A dropped key is a key with no class, which is what this gate exists
         // to prevent — so an empty map is a leaf here, deliberately.
-        expect(mod.templateLeaves({ a: {}, b: { c: 1 } })).toEqual(['a', 'b.c']);
+        expect(settingsLeafPaths({ a: {}, b: { c: 1 } })).toEqual(['a', 'b.c']);
     });
 
     it('templateLeaves treats a list as a leaf, not a branch', () => {
-        expect(mod.templateLeaves({ a: [1, 2, 3] })).toEqual(['a']);
+        expect(settingsLeafPaths({ a: [1, 2, 3] })).toEqual(['a']);
     });
 
     it('parseContractRows reads key rows and ignores prose tables', () => {
@@ -53,7 +60,7 @@ describe('lint_settings_classes — helpers', () => {
             '| `alpha.one` | B | `false` | because |',
             '| `beta` | C | `"x"` | because |',
         ].join('\n');
-        const rows = mod.parseContractRows(text);
+        const rows = parseSettingsClassRows(text);
         expect(rows.map((r) => [r.key, r.cls])).toEqual([
             ['alpha.one', 'B'],
             ['beta', 'C'],
@@ -63,7 +70,7 @@ describe('lint_settings_classes — helpers', () => {
 
     it('parseDeclaredCounts returns null for a count the contract omits', () => {
         const partial = '| A — preference | 3 |\n';
-        const counts = mod.parseDeclaredCounts(partial);
+        const counts = parseDeclaredClassCounts(partial);
         expect(counts.A).toBe(3);
         expect(counts.B).toBeNull();
         expect(counts.total).toBeNull();
@@ -71,10 +78,10 @@ describe('lint_settings_classes — helpers', () => {
 
     it('isConservativeDefault accepts only values that cannot carry a permission', () => {
         for (const v of [false, '', 0, null, [] as never[], {}]) {
-            expect(mod.isConservativeDefault(v)).toBe(true);
+            expect(isConservativeDefault(v)).toBe(true);
         }
         for (const v of [true, 'on', 1, ['x'], { a: 1 }]) {
-            expect(mod.isConservativeDefault(v)).toBe(false);
+            expect(isConservativeDefault(v)).toBe(false);
         }
     });
 });
@@ -108,10 +115,10 @@ describe('lint_settings_classes — the real corpus', () => {
 
     it('every class in the contract is one this gate accepts', () => {
         const text = fs.readFileSync(path.join(REPO_ROOT, mod.CONTRACT_RELATIVE), 'utf-8');
-        const rows = mod.parseContractRows(text);
+        const rows = parseSettingsClassRows(text);
         expect(rows.length).toBeGreaterThan(100);
         for (const row of rows) {
-            expect(mod.CLASSES).toContain(row.cls);
+            expect(SETTINGS_CLASSES).toContain(row.cls);
         }
     });
 });

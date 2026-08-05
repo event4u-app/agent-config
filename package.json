@@ -39,6 +39,7 @@
         "docs/guidelines/",
         "docs/contracts/persona-schema.md",
         "docs/contracts/provider-lifecycle.md",
+  "docs/contracts/settings-classes.md",
         "src/scripts/",
         "src/server/schemas/",
         "src/shared/",

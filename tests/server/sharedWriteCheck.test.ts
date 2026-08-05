@@ -202,7 +202,9 @@ describe('PUT /api/v1/settings — shared-write collision gate (route-level)', (
             method: 'PUT',
             url: '/api/v1/settings',
             headers: { ...authHeaders(ctx.token, ctx.host), 'content-type': 'application/json', 'if-unmodified-since': String(ius + 5) },
-            payload: { values: fixtureSettings({ rule_loading_tier: 'minimal' }), confirmSharedWrite: true },
+            // `rule_loading_tier` is class C; this case is about the shared-write
+            // gate, so it clears the guarded-key one explicitly.
+            payload: { values: fixtureSettings({ rule_loading_tier: 'minimal' }), confirmSharedWrite: true, confirmGuarded: true },
         });
         expect(res.statusCode).toBe(200);
 
@@ -226,7 +228,9 @@ describe('PUT /api/v1/settings — shared-write collision gate (route-level)', (
             method: 'PUT',
             url: '/api/v1/settings',
             headers: { ...authHeaders(ctx.token, ctx.host), 'content-type': 'application/json', 'if-unmodified-since': String(ius + 5) },
-            payload: { values: fixtureSettings({ rule_loading_tier: 'minimal' }) },
+            // `rule_loading_tier` is class C; this case is about the shared-write
+            // gate, so it clears the guarded-key one explicitly.
+            payload: { values: fixtureSettings({ rule_loading_tier: 'minimal' }), confirmGuarded: true },
         });
         expect(res.statusCode).toBe(200);
     });

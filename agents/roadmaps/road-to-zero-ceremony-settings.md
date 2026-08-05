@@ -80,7 +80,7 @@ place, so the diff between what was planned and what is true stays legible.
 | "the three existing ask-shaped settings" | **six** — `tokens.rich_skills`, `subagents.auto`, `subagents.budget_routing`, `subagents.adversarial_council`, `worktrees.mode`, `decision_engine.on_block` | Phase 5 step 3 |
 | Phase 2: "the existing settings read path" (singular) | **two families, opposite precedence, three filenames** — see below | Phase 2 step 2 |
 | the template "is materialised into every user's global settings file" | **true, but the writer is `src/server/routes/wizard.ts:1310`**, not the installer; `install_global` writes no settings file at all, and `ensure_agent_settings` is unreachable for consumers (`_enforce_consumer_global_only`) | Phase 3 step 1 aims at the wrong writer |
-| `related_contracts: [settings-api, layered-settings]` | `docs/contracts/layered-settings.md` **does not exist** | frontmatter reference |
+| `related_contracts: [settings-api, layered-settings]` | the `layered-settings` contract **does not exist** under `docs/contracts/` — the frontmatter now points at `settings-classes` instead | frontmatter reference |
 
 **The read-path split, in full.** Root resolution is clean and single-sourced
 (`~/.event4u/agent-config`, env override `EVENT4U_CONFIG_HOME`, read-only legacy
@@ -148,18 +148,28 @@ outside C.
 
 ## Phase 2 — The writer
 
-- [ ] `settings set <key> <value>`: zod-validated against the existing schema,
+- [x] `settings set <key> <value>`: zod-validated against the existing schema,
       atomic via the existing helper, refusing every C-class key from every
       caller, stamping `source` and a timestamp, echoing each write as one loud
       line.
       <!-- verify: npx vitest run tests/scripts/settings_set.test.ts -->
-- [ ] Effective-value resolution (sparse file → template defaults) sits behind
+- [~] Effective-value resolution (sparse file → template defaults) sits behind
       the existing settings read path, so every consumer stays oblivious.
       <!-- verify: npx vitest run tests/server/schemas/parity.test.ts -->
-- [ ] Refuse C-class writes server-side in the GUI's write route too — the CLI
+      **Deferred — the premise is only half true, and closing the other half is
+      a different roadmap.** The SERVER family already resolves absent keys from
+      the template defaults layer, and the parity test still passes unchanged, so
+      that half holds and is pinned. The SCRIPTS family has no defaults layer at
+      all (`_DEFAULTS` is `{}`) — it is already sparse-tolerant, but only because
+      every consumer supplies its own fallback at the read site, which is not the
+      same guarantee. Giving it a template-defaults layer means touching
+      `load_agent_settings`, whose precedence is the inverse of the server's and
+      whose user-global layer is whitelist-filtered through `MERGEABLE_KEYS`
+      under an ADR. That is the filename/precedence convergence, not this step.
+- [x] Refuse C-class writes server-side in the GUI's write route too — the CLI
       refusal must not be the only fence.
       <!-- verify: npx vitest run tests/server/routes/settings.test.ts -->
-- [ ] Add the provenance column to the GUI's settings view.
+- [x] Add the provenance column to the GUI's settings view.
 
 **Exit criteria:** every C-class key is refused from CLI and server routes; the
 parity test is still green; a set/read round-trip preserves provenance.

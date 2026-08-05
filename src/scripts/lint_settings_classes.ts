@@ -46,6 +46,17 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import { load as parseYaml } from 'js-yaml';
 
+import {
+    getSettingsLeaf,
+    isConservativeDefault,
+    isSettingsClass,
+    parseDeclaredClassCounts,
+    parseSettingsClassRows,
+    SETTINGS_CLASSES,
+    type SettingsClass,
+    type SettingsClassRow,
+    settingsLeafPaths,
+} from '../shared/settingsClasses.js';
 import { GateLedger } from './_lib/gate_ledger.js';
 import { runGateCli, runSelfTest } from './_lib/gate_self_test.js';
 import { DeadScopeError, reportScanned } from './_lib/scan_scope.js';
@@ -61,124 +72,12 @@ const REPO_ROOT = path.resolve(path.dirname(_HERE), '..', '..');
 const TEMPLATE_RELATIVE = 'src/config/agent-settings.template.yml';
 const CONTRACT_RELATIVE = 'docs/contracts/settings-classes.md';
 
-/** The closed class vocabulary. A row outside it is a finding, not a new class. */
-const CLASSES = ['A', 'B', 'C'] as const;
-type SettingsClass = (typeof CLASSES)[number];
-
 type Yaml = string | number | boolean | null | Yaml[] | { [k: string]: Yaml };
-
-/** One row of the contract's key table. */
-interface ContractRow {
-    key: string;
-    cls: string;
-    /** 1-indexed line in the contract, so a finding points at something. */
-    line: number;
-}
-
-/** What the contract's own `## Counts` table claims. */
-interface DeclaredCounts {
-    A: number | null;
-    B: number | null;
-    C: number | null;
-    total: number | null;
-}
 
 function _rootOverride(argv: readonly string[]): string | null {
     const i = argv.indexOf('--root');
     const value = i === -1 ? undefined : argv[i + 1];
     return value === undefined ? null : path.resolve(value);
-}
-
-function _isPlainObject(value: Yaml): value is { [k: string]: Yaml } {
-    return typeof value === 'object' && value !== null && !Array.isArray(value);
-}
-
-/**
- * Dotted leaf paths of the parsed template.
- *
- * A leaf is anything that is not a NON-EMPTY map. An empty map is a real
- * configurable value with a real default (`subagents.host_capabilities: {}`),
- * so it is a leaf here — one more than the template↔schema parity test walks.
- * That divergence is deliberate: a key the parity walk skips is exactly the key
- * that would otherwise reach the writer with no class.
- */
-export function templateLeaves(value: Yaml, prefix = ''): string[] {
-    if (!_isPlainObject(value) || Object.keys(value).length === 0) {
-        return [prefix];
-    }
-    return Object.entries(value).flatMap(([k, v]) => templateLeaves(v, prefix === '' ? k : `${prefix}.${k}`));
-}
-
-/** `| \`some.key\` | C | \`false\` | why |` → one row. Non-matching lines are ignored. */
-const ROW_RE = /^\|\s*`([^`]+)`\s*\|\s*([^|]*?)\s*\|/;
-
-export function parseContractRows(text: string): ContractRow[] {
-    const rows: ContractRow[] = [];
-    const lines = text.split('\n');
-    for (let i = 0; i < lines.length; i++) {
-        const m = ROW_RE.exec(lines[i] ?? '');
-        if (m === null) {
-            continue;
-        }
-        const key = m[1] ?? '';
-        const cls = m[2] ?? '';
-        // The class column is the discriminator between the key table and the
-        // prose tables above it (which also open with a backticked key). A row
-        // whose second cell is not a bare class token is not a key row.
-        if (!/^[A-Za-z]$/.test(cls)) {
-            continue;
-        }
-        rows.push({ key, cls, line: i + 1 });
-    }
-    return rows;
-}
-
-/** `| A — preference | 32 |` and `| **Total** | **140** |` → the declared tallies. */
-export function parseDeclaredCounts(text: string): DeclaredCounts {
-    const read = (re: RegExp): number | null => {
-        const m = re.exec(text);
-        const raw = m?.[1];
-        return raw === undefined ? null : Number.parseInt(raw, 10);
-    };
-    return {
-        A: read(/^\|\s*A\s+—\s+preference\s*\|\s*(\d+)\s*\|/m),
-        B: read(/^\|\s*B\s+—\s+consent\s*\|\s*(\d+)\s*\|/m),
-        C: read(/^\|\s*C\s+—\s+guarded\s*\|\s*(\d+)\s*\|/m),
-        total: read(/^\|\s*\*\*Total\*\*\s*\|\s*\*\*(\d+)\*\*\s*\|/m),
-    };
-}
-
-/**
- * Conservative-default test for class B.
- *
- * A sparse settings file means absent = default. A B key whose default is the
- * permissive value makes "never asked" indistinguishable from "answered yes",
- * which turns the ask into decoration on a decision already taken in the user's
- * name. Empty string, `false`, `0`, `null`, `[]`, and `{}` are the values that
- * cannot carry a permission.
- */
-export function isConservativeDefault(value: Yaml): boolean {
-    if (value === null || value === false || value === '' || value === 0) {
-        return true;
-    }
-    if (Array.isArray(value)) {
-        return value.length === 0;
-    }
-    if (_isPlainObject(value)) {
-        return Object.keys(value).length === 0;
-    }
-    return false;
-}
-
-function _getDotted(root: Yaml, dotted: string): Yaml {
-    let node: Yaml = root;
-    for (const part of dotted.split('.')) {
-        if (!_isPlainObject(node)) {
-            return null;
-        }
-        node = node[part] ?? null;
-    }
-    return node;
 }
 
 function _readFile(p: string): string | null {
@@ -334,12 +233,12 @@ function main(): number {
         process.stderr.write(`❌  ${GATE}: ${TEMPLATE_RELATIVE} did not parse: ${String(e)}\n`);
         return 1;
     }
-    if (!_isPlainObject(parsed)) {
+    if (typeof parsed !== 'object' || parsed === null || Array.isArray(parsed)) {
         process.stderr.write(`❌  ${GATE}: ${TEMPLATE_RELATIVE} did not parse to a map.\n`);
         return 1;
     }
 
-    const leaves = templateLeaves(parsed);
+    const leaves = settingsLeafPaths(parsed);
     try {
         // Publishes the number it just asserted, so the coverage guard reads the
         // judged denominator rather than an enumerated one.
@@ -352,8 +251,8 @@ function main(): number {
         throw e;
     }
 
-    const rows = parseContractRows(contractText);
-    const rowByKey = new Map<string, ContractRow>();
+    const rows = parseSettingsClassRows(contractText);
+    const rowByKey = new Map<string, SettingsClassRow>();
     const findings: string[] = [];
 
     // The ledger plans one target per template leaf plus one per contract row,
@@ -374,10 +273,10 @@ function main(): number {
             continue;
         }
         rowByKey.set(row.key, row);
-        if (!(CLASSES as readonly string[]).includes(row.cls)) {
+        if (!isSettingsClass(row.cls)) {
             const finding =
                 `${CONTRACT_RELATIVE}:${String(row.line)}  \`${row.key}\` has class '${row.cls}' — ` +
-                `allowed: ${CLASSES.join(' | ')}.`;
+                `allowed: ${SETTINGS_CLASSES.join(' | ')}.`;
             findings.push(finding);
             ledger.fail(target, finding);
             continue;
@@ -408,14 +307,14 @@ function main(): number {
             ledger.fail(target, finding);
             continue;
         }
-        if (!(CLASSES as readonly string[]).includes(row.cls)) {
+        if (!isSettingsClass(row.cls)) {
             // Already reported against the row; do not double-count the key.
             ledger.outOfScope(target, 'declared_exemption');
             continue;
         }
-        const cls = row.cls as SettingsClass;
+        const cls: SettingsClass = row.cls;
         tally[cls] += 1;
-        if (cls === 'B' && !isConservativeDefault(_getDotted(parsed, leaf))) {
+        if (cls === 'B' && !isConservativeDefault(getSettingsLeaf(parsed, leaf))) {
             const finding =
                 `${CONTRACT_RELATIVE}:${String(row.line)}  \`${leaf}\` is class B but its template default is ` +
                 'permissive — a B key must default to the conservative value, or "never asked" and ' +
@@ -427,7 +326,7 @@ function main(): number {
         ledger.complete(target);
     }
 
-    const declared = parseDeclaredCounts(contractText);
+    const declared = parseDeclaredClassCounts(contractText);
     const expected: Array<[string, number | null, number]> = [
         ['A', declared.A, tally.A],
         ['B', declared.B, tally.B],
@@ -490,4 +389,4 @@ if (_isCliEntry() || process.argv[1] === _HERE) {
     process.exit(main());
 }
 
-export { CLASSES, CONTRACT_RELATIVE, GATE, REPO_ROOT, TEMPLATE_RELATIVE, main };
+export { CONTRACT_RELATIVE, GATE, REPO_ROOT, TEMPLATE_RELATIVE, main };

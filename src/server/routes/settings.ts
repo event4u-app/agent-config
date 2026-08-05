@@ -26,6 +26,74 @@ import { parseYaml, mergeIntoTemplate, diffValues, deepMerge } from '../io/yamlI
 import { writeAtomic } from '../io/atomicWrite.js';
 import { sharedWriteTarget, resolveThroughSymlinks } from '../io/sharedWriteCheck.js';
 import { PACKAGE_ROOT } from '../../cli/paths.js';
+import { buildSettingsClassIndex, parseSettingsClassRows, type SettingsClass } from '../../shared/settingsClasses.js';
+
+/** Sidecar written by `settings:set`, keyed by dotted path. */
+const PROVENANCE_RELATIVE = join('settings', '.agent-settings.provenance.json');
+
+/**
+ * Read the provenance sidecar; `{}` when absent or unparseable.
+ *
+ * Provenance is a record ABOUT a decision, never a gate ON one, so a missing or
+ * corrupt sidecar degrades the display and nothing else. It lives beside the
+ * settings file rather than inside it because that file has a leaf-for-leaf
+ * parity test against the zod schema, and bookkeeping keys would mean relaxing
+ * the one gate keeping the GUI's form generator honest.
+ */
+async function readProvenance(writeRoot: string): Promise<Record<string, { source: string; at: string }>> {
+    try {
+        const raw = await fs.readFile(join(writeRoot, PROVENANCE_RELATIVE), 'utf8');
+        const parsed: unknown = JSON.parse(raw);
+        if (typeof parsed === 'object' && parsed !== null && !Array.isArray(parsed)) {
+            return parsed as Record<string, { source: string; at: string }>;
+        }
+    } catch {
+        // fall through
+    }
+    return {};
+}
+
+/** Absent / null / empty-scalar — the three spellings of "not set" in this file. */
+function _isUnset(value: unknown): boolean {
+    return value === undefined || value === null || value === '';
+}
+
+/** Where the A/B/C class contract ships, relative to the package root. */
+const SETTINGS_CLASSES_RELATIVE = 'docs/contracts/settings-classes.md';
+
+/**
+ * Guarded-key confirmation message — surfaced verbatim in the 409 body.
+ *
+ * The CLI writer refuses class-C keys outright, because its caller is an agent.
+ * This route cannot do the same: the contract names the GUI's write route as one
+ * of the two paths a C-class key may legitimately travel, so a blanket refusal
+ * here would leave no way to change one at all. What the route CAN do is refuse
+ * to take a C-class change on trust — the loopback API is reachable by anything
+ * running on the machine, an agent included, and an unconfirmed PUT is
+ * indistinguishable from a human at the form.
+ */
+const GUARDED_WRITE_MESSAGE =
+    'This write changes guarded (class C) settings — keys governing spend, an allow/deny list, ' +
+    'a gate, agent authority, what code runs, egress, a credential, or the audit trail. ' +
+    'Re-send with confirmGuarded:true once a human has reviewed the listed keys.';
+
+/**
+ * Class index from the shipped contract, or `null` when it cannot be read.
+ *
+ * `null` means *unverifiable*, and the route treats that as "every change needs
+ * the confirmation" rather than "nothing is guarded". Read per request and not
+ * cached: the file is small, and a cache would keep a stale fence alive across
+ * an upgrade that added guarded keys.
+ */
+async function readClassIndex(packageRoot: string): Promise<Map<string, SettingsClass> | null> {
+    try {
+        const text = await fs.readFile(join(packageRoot, SETTINGS_CLASSES_RELATIVE), 'utf8');
+        const index = buildSettingsClassIndex(parseSettingsClassRows(text));
+        return index.size === 0 ? null : index;
+    } catch {
+        return null;
+    }
+}
 
 /**
  * Shared-write collision message (road-to-reciprocal-ecosystem Phase 2)
@@ -332,6 +400,10 @@ export function settingsRoute(opts: SettingsRouteOptions): FastifyPluginAsync {
                     // Phase 5.4 — per-layer provenance for the settings hub's
                     // "set globally / in this project" source badges.
                     sources: state.sources,
+                    // How each value came to be set (road-to-zero-ceremony-settings
+                    // Phase 2). Distinct from `sources`, which says WHICH LAYER a
+                    // value came from; this says HOW the decision was made.
+                    provenance: await readProvenance(opts.writeRoot),
                 };
             } catch (err) {
                 const message = err instanceof Error ? err.message : 'YAML parse failed';
@@ -372,7 +444,11 @@ export function settingsRoute(opts: SettingsRouteOptions): FastifyPluginAsync {
                 await reply.code(412).send({ error: { code: 'PRECONDITION_REQUIRED', message: 'If-Unmodified-Since header required' } });
                 return reply;
             }
-            const body = (request.body ?? {}) as { values?: unknown; confirmSharedWrite?: unknown };
+            const body = (request.body ?? {}) as {
+                values?: unknown;
+                confirmSharedWrite?: unknown;
+                confirmGuarded?: unknown;
+            };
             const parsed = settingsSchema.safeParse(body.values);
             if (!parsed.success) {
                 await reply.code(422).send({
@@ -413,6 +489,40 @@ export function settingsRoute(opts: SettingsRouteOptions): FastifyPluginAsync {
                 if (sharedPath !== null && body.confirmSharedWrite !== true) {
                     await reply.code(409).send({ error: 'shared-write', sharedPath, message: SHARED_WRITE_MESSAGE });
                     return reply;
+                }
+                // Guarded-key gate — additive, and deliberately AFTER the
+                // shared-write check so that pre-existing 409 keeps its
+                // precedence: a write landing through a shared symlink is a
+                // fact about WHERE it goes, and the caller should learn that
+                // before being asked about WHAT changes. Dry-run returns above
+                // this point and is not gated — it writes nothing.
+                if (body.confirmGuarded !== true) {
+                    const classes = await readClassIndex(packageRoot);
+                    const guarded = diffValues(
+                        current.values as Record<string, unknown>,
+                        parsed.data as Record<string, unknown>,
+                    )
+                        // Absent, explicit null, and the empty scalar are the same
+                        // effective value in a system where absent means "use the
+                        // default". A `cost.budgets.per_tier.*` key written as
+                        // `null` reads back as '' through the comment-preserving
+                        // merge, so without this the gate re-fires on every save —
+                        // and a confirmation that always appears is one nobody
+                        // reads. Only BOTH sides unset is skipped: '' → 'x' still
+                        // counts as a change.
+                        .filter((c) => !(_isUnset(c.from) && _isUnset(c.to)))
+                        .map((c) => c.path)
+                        .filter((key) => classes === null || classes.get(key) === 'C')
+                        .sort();
+                    if (guarded.length > 0) {
+                        await reply.code(409).send({
+                            error: 'guarded-keys',
+                            guardedKeys: guarded,
+                            classContractRead: classes !== null,
+                            message: GUARDED_WRITE_MESSAGE,
+                        });
+                        return reply;
+                    }
                 }
                 const writePath = sharedPath !== null ? resolveThroughSymlinks(targetPath) : targetPath;
                 await fs.mkdir(dirname(writePath), { recursive: true, mode: 0o700 });

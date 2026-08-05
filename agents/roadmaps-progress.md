@@ -6,10 +6,10 @@
 
 ## Overall
 
-**109 / 250 steps done · 44%**
+**112 / 249 steps done · 45%**
 
 ```text
-██████████████████░░░░░░░░░░░░░░░░░░░░░░   44%
+██████████████████░░░░░░░░░░░░░░░░░░░░░░   45%
 ```
 
 ## Open roadmaps
@@ -31,7 +31,7 @@
 | 13 | [road-to-tier-removal.md](roadmaps/road-to-tier-removal.md) | 4 | 8 | 2 | 6 | 0 | 0 | [1](#blockers-road-to-tier-removal) | ████████░░ 75% |
 | 14 | [road-to-ui-track-integrity-followup.md](roadmaps/road-to-ui-track-integrity-followup.md) | 1 | 10 | 10 | 0 | 0 | 0 | [2](#blockers-road-to-ui-track-integrity-followup) | ░░░░░░░░░░ 0% |
 | 15 | [road-to-worktree-hygiene.md](roadmaps/road-to-worktree-hygiene.md) | 1 | 9 | 2 | 7 | 0 | 0 | [1](#blockers-road-to-worktree-hygiene) | ████████░░ 78% |
-| 16 | [road-to-zero-ceremony-settings.md](roadmaps/road-to-zero-ceremony-settings.md) | 5 | 19 | 15 | 4 | 0 | 0 | 0 | ██░░░░░░░░ 21% |
+| 16 | [road-to-zero-ceremony-settings.md](roadmaps/road-to-zero-ceremony-settings.md) | 5 | 19 | 11 | 7 | 1 | 0 | 0 | ████░░░░░░ 39% |
 
 ---
 
@@ -377,12 +377,12 @@ _1 blocker resolved._
 
 ### [road-to-zero-ceremony-settings.md](roadmaps/road-to-zero-ceremony-settings.md)
 
-**Road to zero-ceremony settings — the user's file records decisions, the template stays the defaults source** — 4 / 19 done (21%)
+**Road to zero-ceremony settings — the user's file records decisions, the template stays the defaults source** — 7 / 18 done (39%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
 | 1 | The taxonomy contract | ✅ done | 0 | 4 | 0 | 0 | 100% |
-| 2 | The writer | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
+| 2 | The writer | ✅ done | 0 | 3 | 1 | 0 | 100% |
 | 3 | The user file becomes sparse | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
 | 4 | First run: one question, one notice | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
 | 5 | The JIT protocol | ⬜ not started | 4 | 0 | 0 | 0 | 0% |

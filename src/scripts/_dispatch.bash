@@ -1130,6 +1130,17 @@ cmd_settings_migrate() {
   exec_ts "$PACKAGE_ROOT/src/scripts/_cli/cmd_settings_migrate.ts" "$@"
 }
 
+# `agent-config settings:set <key> <value>` — the one agent-reachable settings
+# writer. Refuses every C-class key from docs/contracts/settings-classes.md,
+# fails closed when that contract is unreadable, zod-validates before writing,
+# writes atomically into ~/.event4u/agent-config/settings/.agent-settings.yml,
+# and stamps source+timestamp into the .agent-settings.provenance.json sidecar.
+# Flags: --source auto-detected|jit-answer|manual|gui | --dry-run.
+# Exit 0 written / no-op, 1 refused, 2 usage.
+cmd_settings_set() {
+  exec_ts "$PACKAGE_ROOT/src/scripts/_cli/cmd_settings_set.ts" "$@"
+}
+
 # `agent-config uninstall` — remove bridge markers (project) or lockfile
 # entries (global). Idempotent. Pass `--purge` to also delete deployed
 # content directories under user-scope anchors (destructive). See
