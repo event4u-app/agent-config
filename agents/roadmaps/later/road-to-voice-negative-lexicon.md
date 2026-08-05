@@ -5,6 +5,19 @@ status: later
 
 # Road to a voice negative lexicon — make "never say X" checkable instead of hoped
 
+> **FREEZE LIFTED 2026-08-05.** The ADR-211 harvest freeze that parked this
+> roadmap was anchored on external adoption; that anchoring is struck by
+> [`ADR-216`](../../../docs/decisions/ADR-216-restraint-reanchored-to-capacity.md)
+> (external adoption is not a project goal and is not a valid gate anywhere in
+> this tree). The freeze's real basis was maintainer capacity, and its conditions
+> are met — **so nothing external holds this roadmap any more.**
+>
+> **Resume when** the maintainer decides to spend a slot on it. That is the only
+> remaining condition: a sequencing decision, in the maintainer's control, not an
+> event to wait for. Per-item evidence discipline is untouched — ADR-211
+> Amendment C (the cited failure finding must predate the borrow) and Amendment D
+> (red test committed first) still apply to each item on resume.
+
 > **Parked per
 > [`ADR-211`](../../../docs/decisions/ADR-211-harvest-freeze-resume-conditions.md)
 > (harvest freeze; council disposition 2026-08-03):** additive schema surface
@@ -12,8 +25,8 @@ status: later
 > Phase 0 is deliberately cheap and self-killing. Re-audited 2026-08-03:
 > STAY (no pre-dating finding, no latent risk beyond style).
 >
-> **Resume when:** the ADR-211 exit fires (external adopter OR the internal
-> arm), OR — per ADR-211 Amendment C — a recorded incident with provenance
+> **Resume when:** the maintainer spends a slot on it (ADR-216 struck the
+> adoption gate; the capacity conditions are met), OR — per ADR-211 Amendment C — a recorded incident with provenance
 > shows agent-authored persisted prose (PR bodies, commit messages) violating
 > a user's stated voice constraints. On resume, run Phase 0 FIRST — its
 > honest-null outcome archives this file with the numbers.

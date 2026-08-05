@@ -7,22 +7,29 @@ ersetzt?"** — growth of the mental surface must be paid for by removal.
 
 ## Decisions (recorded 2026-07-20)
 
-- **Harvest freeze — canonical record is now
+- **Harvest freeze — LIFTED 2026-08-05. Canonical records:
   [`ADR-211`](../../../docs/decisions/ADR-211-harvest-freeze-resume-conditions.md)
-  (2026-08-03).** Original 2026-07-20 wording: no new competitive-harvest /
-  capability-adoption roadmap opens until ≥1 real external adoption is
-  documented; the binding constraint is adoption, not capability. ADR-211
-  keeps the freeze and amends it: the resume condition becomes an OR
-  (external adopter OR renewal-set closed + hook-latency repaired + council
-  reconfirmation), adds a review cadence, requires failure findings to
-  predate borrow proposals, and opens a red-test-first latent-risk door.
-  Consult the ADR, not this bullet, for the current rule.
+  (2026-08-03) as amended by
+  [`ADR-216`](../../../docs/decisions/ADR-216-restraint-reanchored-to-capacity.md)
+  (2026-08-05).** The original 2026-07-20 wording anchored the freeze on external
+  adoption. **That anchoring was wrong and is struck.** External adoption is not a
+  project goal and is not a valid gate anywhere in this tree (ADR-216 § D5). The
+  restraint's real and only basis was **maintainer capacity**: harvest work waits
+  while foundational work is open, because one maintainer cannot carry both.
+  Those foundational conditions are met, so the freeze is lifted in full.
+  What survives is the **two-slot concurrency cap** on concurrently-open
+  `road-to-skill-ecosystem-*` roadmaps — capacity, mechanically enforced. The
+  evidence-direction requirement (finding precedes borrow) and the
+  red-test-first latent-risk door also survive; both are adoption-independent.
+  Consult ADR-216, not this bullet, for the current rule.
 
 - **No new council / review / verification modes before the pending
   benchmarks.** Team-mode Phase 5 landed an honest null; adversarial-council is
   UNBACKED (corpus-gated); council-vs-solo is open. No `/verify`, no Unified
   Verification Router, no new judge/council variant ships until those verdicts
-  exist. A router that cannot *replace* the scattered modes (only sit above
+  exist. **The condition is the pending benchmarks and nothing else** — an earlier
+  reading of this bullet tied it to "pending the first external adopter", which
+  ADR-216 strikes. Benchmarks are reachable; an adopter was not. A router that cannot *replace* the scattered modes (only sit above
   them) is out of scope — it would add the seventh entry point to the six it
   "unifies."
 

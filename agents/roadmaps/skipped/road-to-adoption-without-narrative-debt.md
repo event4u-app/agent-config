@@ -1,9 +1,39 @@
 ---
 complexity: structural
-status: ready
+status: skipped
 ---
 
 # Road to adoption without narrative debt — win users on the proof identity, not on unbacked headline numbers
+
+> **SKIPPED 2026-08-05 — decision against pursuit, per
+> [`ADR-216`](../../../docs/decisions/ADR-216-restraint-reanchored-to-capacity.md)
+> § D4.** Owner decision: **external adoption is not a project goal.** This suite
+> is developed for internal use; outside uptake is a welcome side effect and not
+> something the project will spend effort pursuing. Every one of the seven
+> remaining open steps is external-adoption work — linking the published docs
+> site, a donation path, a human-gated study with a real external person,
+> third-party directory submissions, a launch story, and installer-conversion
+> measurement. None of it is wanted, so the honest disposition is `skipped/`
+> (decision against pursuit) rather than `archive/` (work happened, no more
+> planned).
+>
+> **This disposal also retires the polish gate on the gate's own terms.** The
+> sequencing gate recorded below ("no new settings-interface / theming /
+> configuration-management polish while this roadmap has open phases; exits when
+> three external adoptions are documented **or this roadmap is archived**") was
+> blocking 33 open steps across `road-to-zero-ceremony-settings` (19) and
+> `road-to-zero-ceremony-host-primitives` (14). Disposing this roadmap satisfies
+> the gate's second exit clause, so no override was needed.
+>
+> **What is NOT lost:** the 13 completed steps stay recorded, and the discipline
+> this roadmap defended — no public number without a resolving claims pointer — is
+> already shipped and enforced by a continuous-integration gate, not by this file.
+> That floor is untouched.
+>
+> **Reopen only as a fresh product decision.** If external adoption is ever
+> adopted as a goal, that is a new decision needing its own record. It is not a
+> revival of this file, and it is explicitly not a gate on other work
+> (ADR-216 § D5).
 
 > Close the adoption gap (7 stars / 1 fork at 8.0.0) without adopting the one
 > thing the package explicitly positions against: unverifiable headline numbers.

@@ -74,9 +74,19 @@ rejected.** They remain `## Blockers` on the roadmap with a `revisit-if`: a real
 outbound-injection incident, a consumer demand signal, or utilization evidence —
 at which point they must also pass the six-question complexity budget
 (`artifact-drafting-protocol-mechanics` § Complexity budget), given PR #983 just
-consolidated surface and `surface-consolidation-restraint` freezes new modes
-pending the first external adopter. This ADR records the deferral so the
-decision is surfaced, not silently dropped (`decision-revisit-gate`).
+consolidated surface and `surface-consolidation-restraint` holds new modes until
+the pending benchmarks land. This ADR records the deferral so the decision is
+surfaced, not silently dropped (`decision-revisit-gate`).
+
+> **Corrected 2026-08-05 by [ADR-216](ADR-216-restraint-reanchored-to-capacity.md).**
+> The clause above originally read "freezes new modes pending the first external
+> adopter". External adoption is not a project goal and is not a valid gate
+> anywhere in this tree, so that half is struck. The restraint's real condition —
+> the pending benchmarks — is unchanged and reachable, and the three named
+> deferrals keep their own revisit triggers untouched: a real outbound-injection
+> incident, a demand signal, or utilization evidence. None of those three depends
+> on an external adopter, so this deferral was never actually adoption-gated; the
+> citation was.
 
 **4. Rejected:** a consumer-supplied-pattern ReDoS/trust-framing layer (Source A
 P5) — `security_lint.ts` has no consumer-pattern surface, so guarding it would

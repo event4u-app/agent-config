@@ -1,6 +1,5 @@
 ---
 complexity: structural
-status: later
 execution:
   mode: phase-checkpoints
 related_roadmaps: [road-to-zero-ceremony-detection, road-to-zero-ceremony-install]
@@ -16,12 +15,16 @@ related_contracts: [settings-api, layered-settings]
 > internal defaults-and-schema source; what the *user* gets becomes a sparse,
 > provenance-stamped record of decisions actually made.
 
-> **Blocked until** the composition-ratchet polish gate exits — 3 documented
-> external adoptions, or `road-to-adoption-without-narrative-debt` archived.
-> This roadmap is config-management work, which that gate names explicitly;
-> its exceptions (bug fixes, completing broken first-run flows, CI/claims
-> infrastructure) do not cover it. Parked whole rather than smuggled in as
-> "simplification", which is not one of the listed exceptions.
+> **UNBLOCKED 2026-08-05 per
+> [`ADR-216`](../../docs/decisions/ADR-216-restraint-reanchored-to-capacity.md)
+> § D4.** This roadmap was parked because the composition-ratchet polish gate
+> named configuration-management work explicitly, and that gate's exit condition
+> was "3 documented external adoptions, or `road-to-adoption-without-narrative-debt`
+> archived". External adoption is not a project goal, so the first clause was
+> unreachable; the second is now satisfied — that roadmap was disposed to
+> `skipped/` on 2026-08-05. **The gate has exited on its own terms and this
+> roadmap is active with 19 open steps.** Nothing was smuggled in as
+> "simplification"; the gate is genuinely gone.
 
 ## Goal
 
@@ -40,7 +43,7 @@ exactly as strict as it is today.
 ## Context
 
 Source: an external planning set, audited 2026-07-31. Corrections and refusals:
-[`zero-ceremony-inbox-cut`](../../settings/contexts/zero-ceremony-inbox-cut.md).
+[`zero-ceremony-inbox-cut`](../settings/contexts/zero-ceremony-inbox-cut.md).
 
 The audit changed this roadmap's central claim. The draft's headline was **ship
 NO settings template**. That is not available: the template is the source of
@@ -184,18 +187,18 @@ hook-capable host refuses to run without the record.
 ## Blockers
 
 ### blocker: polish-gate-open
-- **Status:** open
+- **Status:** resolved
 - **Owner:** maintainer
 - **Blocks:** every phase
-- **What to do:**
-  1. Confirm this is config-management work under the composition-ratchet gate
-     and therefore parked, or
-  2. grant an explicit exception on the record — noting that "simplification"
-     is not one of the gate's three listed exceptions, so an exception here is a
-     decision, not an interpretation.
-- **Resolved when:** 3 external adoptions are documented, or
-  `road-to-adoption-without-narrative-debt` is archived, or an explicit
-  exception is recorded.
+- **What to do:** RESOLVED 2026-08-05 by the gate's own second exit clause. No
+  exception was granted and none was needed — `road-to-adoption-without-narrative-debt`
+  was disposed to `agents/roadmaps/skipped/` as a decision against pursuit
+  (external adoption is not a project goal), which satisfies "or that roadmap is
+  archived". The first clause ("3 external adoptions") is struck outright by
+  [`ADR-216`](../../docs/decisions/ADR-216-restraint-reanchored-to-capacity.md)
+  § D5: no gate in this tree may be anchored on an external-adoption signal.
+- **Resolved when:** resolved. Kept rather than deleted so the disposition is
+  visible — this blocker held 19 open steps and the reason it lifted matters.
 
 ## Acceptance criteria
 
@@ -220,6 +223,18 @@ hook-capable host refuses to run without the record.
   and no shorter first *week* — the same decisions get made, later and in
   context.
 
+## Risk Register
+
+<!-- risk-review: v1 | reviewed: 2026-08-05 | reviewer: claude/host -->
+
+| Rank | Item | Risk type | Description | Mitigation | Anchored under |
+|------|------|-----------|-------------|------------|----------------|
+| 1 | A sparse user settings file breaks a consumer whose flow depended on a written default | implementation | Today the template writes opinions into the user's file; making it sparse means a key that used to be present is now absent, and any code path reading it without a fallback breaks at the consumer rather than here. | Phase 1 fixes the taxonomy contract before Phase 2 writes anything, and Phase 3 only removes a key once the resolver is proven to fall back to the schema default for it. | Phase 1 — The taxonomy contract |
+| 2 | The template-to-schema parity gate is weakened to let the split land | implementation | Splitting one file into an internal defaults source and a user decision record is exactly the change that makes a parity gate inconvenient, and this package has recorded gate-weakening as its own failure class. | The parity gate is treated as a fixed constraint the split must satisfy, not a cost to negotiate; any relaxation would be a separate recorded decision rather than a step here. | Phase 3 — The user file becomes sparse |
+| 3 | The provenance stamp becomes decoration | product | Recording how each decision was made is only worth the field if something reads it; an unread stamp is cost with no return, which is the anti-ceremony failure the sweep record names. | Phase 5's just-in-time protocol is the reader — it uses the stamp to decide whether to re-ask; if that protocol does not land, the stamp does not either. | Phase 5 — The JIT protocol |
+| 4 | First-run reduction trades one prompt for a worse silent default | product | Cutting first-run to one question means every other setting resolves without asking, and a wrong silent default is harder to notice than a question. | The single question is chosen to be the one whose wrong answer is most expensive; everything else resolves to a schema default that is observable in the sparse file rather than hidden. | Phase 4 — First run: one question, one notice |
+| 5 | The roadmap was unblocked by a governance change rather than by its own readiness | product | This roadmap moved out of `later/` because an adoption-anchored gate was retired, not because its own prerequisites were re-verified — so a stale assumption inside it could now execute. | The prerequisites section is re-read as the first act of execution rather than trusted from the parked state; the blocker above records exactly what changed and why. | blocker: polish-gate-open |
+
 ## Provenance
 
 Source: an external planning set delivered through the user inbox, drafted by
@@ -228,4 +243,4 @@ maintainer offered the idea explicitly for critical review; the review changed
 its shape twice — the language question was dropped as answerable by
 observation, and "ship no template" became "split the template's two jobs" once
 the parity gate and installer invariant were verified. Corrections and refusals:
-[`zero-ceremony-inbox-cut`](../../settings/contexts/zero-ceremony-inbox-cut.md).
+[`zero-ceremony-inbox-cut`](../settings/contexts/zero-ceremony-inbox-cut.md).
