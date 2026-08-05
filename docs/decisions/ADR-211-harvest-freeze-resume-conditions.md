@@ -163,3 +163,17 @@ same mechanism as Amendment C.
 
 - 2026-08-03 — record created; Amendments A–D accepted; item re-audit result:
   0 EXTRACT / 3 LATENT-CANDIDATE / rest STAY (honest null on extraction).
+- 2026-08-05 — **Amendment A internal arm satisfied; Amendment B cadence review
+  discharged.** Conditions A.1 and A.2 verified met by inspection (both
+  prerequisite roadmaps archived, 0 open / 0 deferred). Condition A.3 satisfied by
+  an AI-council session (anthropic/claude-sonnet-4-5 + openai/gpt-4o, 2 rounds,
+  blind peer review) convened on a 40-source ecosystem sweep. Council convergent:
+  lift for **verification infrastructure only**, under a two-slot mechanically
+  enforced concurrency cap; **capability remains frozen** behind a separate arm
+  (external adoption OR an external finding reproduced by local measurement).
+  Council also found Amendment D **structurally unable to admit capability** — a
+  test referencing not-yet-existing code cannot fail for the right reason —
+  recorded as a construction defect and repaired by the separate capability arm
+  rather than by patching D, which stays as written for defect closure. This
+  freeze record stays in force; the narrowing is
+  [`ADR-215`](ADR-215-harvest-freeze-verification-arm-lift.md).
