@@ -16,11 +16,18 @@
  *   scope-overlap           Scan every worktree's .worktree-scope.md and
  *                           report pairwise `owns:` overlaps (the hazard
  *                           /worktree status + verify must surface).
+ *   inventory               Classify EVERY worktree safe / review / live and
+ *                           report the counts, the review reasons, and a
+ *                           prepared removal plan for the safe set. Reporting
+ *                           only — it never removes anything, because bulk
+ *                           worktree + branch deletion is a Hard-Floor action
+ *                           (`non-destructive-by-default`) that needs the
+ *                           user's explicit this-turn approval.
  *
  * Reachability counts ALL other refs — local branches, remotes, AND tags
  * (a branch whose only other ref is a tag is still reachable elsewhere).
- * Exit codes: 0 = allowed / no overlap, 1 = refused / overlap found,
- * 2 = usage error, 3 = internal error.
+ * Exit codes: 0 = allowed / no overlap / inventory reported, 1 = refused /
+ * overlap found, 2 = usage error, 3 = internal error.
  */
 
 import { execFileSync } from 'node:child_process';
@@ -53,6 +60,17 @@ function tryGit(cwd: string, args: string[]): string | null {
     }
 }
 
+/**
+ * `git status` with the index left alone. Plain `git status` refreshes the
+ * on-disk index, which bumps its mtime — and the inventory mode reads that
+ * mtime as the "another session is working here" signal. Without
+ * `--no-optional-locks` the check corrupts the very signal it is measured
+ * against: two consecutive inventory runs moved 10 worktrees from safe to live.
+ */
+function statusPorcelain(cwd: string): string {
+    return git(cwd, ['--no-optional-locks', 'status', '--porcelain']);
+}
+
 /** Refs (heads + remotes + tags) EXCLUDING the given branch's own head ref. */
 function otherRefs(cwd: string, branch: string): string[] {
     const out = git(cwd, ['for-each-ref', '--format=%(refname)']);
@@ -77,7 +95,7 @@ export function checkWorktree(worktreePath: string): CheckResult {
     }
     const branch = headRef.trim().replace(/^refs\/heads\//, '');
 
-    const status = git(worktreePath, ['status', '--porcelain']);
+    const status = statusPorcelain(worktreePath);
     if (status.trim().length > 0) {
         const files = status
             .trimEnd()
@@ -194,9 +212,260 @@ export function findScopeOverlaps(repoPath: string): ScopeOverlap[] {
     return overlaps;
 }
 
+/**
+ * A worktree is "live" when another session may be working in it. Git touches
+ * the per-worktree index on almost every command, so its mtime is the cheapest
+ * available activity signal.
+ */
+export const LIVE_WINDOW_HOURS = 48;
+
+/**
+ * The two conventional worktree roots, relative to the repo. Anything else is
+ * a non-standard location: it is not wrong, but it is excluded from the safe
+ * set on purpose — worktrees that sit beside the repo can be mistaken for
+ * sibling packages, so their removal is a judgement the maintainer makes.
+ */
+export const STANDARD_WORKTREE_DIRS = ['.claude/worktrees', '.worktrees'] as const;
+
+/**
+ * Symlink-resolved absolute path, falling back to a plain resolve when the
+ * path is gone. Git reports worktree paths as realpaths, so a repo reached
+ * through a symlinked parent (`/tmp` → `/private/tmp` on macOS, or any
+ * symlinked checkout root) would otherwise fail every path comparison and
+ * mis-report conventional worktrees as non-standard.
+ */
+function canonical(p: string): string {
+    const abs = path.resolve(p);
+    const tail: string[] = [];
+    let head = abs;
+    for (;;) {
+        try {
+            // Resolve the longest existing ancestor, then re-append the rest —
+            // a registration pointing at an already-deleted directory still has
+            // to classify its location correctly.
+            const real = fs.realpathSync(head);
+            return tail.length === 0 ? real : path.join(real, ...tail);
+        } catch {
+            const parent = path.dirname(head);
+            if (parent === head) return abs;
+            tail.unshift(path.basename(head));
+            head = parent;
+        }
+    }
+}
+
+export type Classification = 'safe' | 'review' | 'live';
+
+export interface InventoryRow {
+    path: string;
+    branch: string | null;
+    classification: Classification;
+    /** Why it is not safe. Empty exactly when `classification === 'safe'`. */
+    reasons: string[];
+    /** The branch is an ancestor of the trunk, so `git branch -d` is safe. */
+    mergedIntoTrunk: boolean;
+    standardLocation: boolean;
+    /** Main worktree — never removable, and never counted as residue. */
+    isMain: boolean;
+}
+
+export interface Inventory {
+    trunk: string;
+    rows: InventoryRow[];
+    counts: {
+        total: number;
+        safe: number;
+        review: number;
+        live: number;
+        /** Review rows grouped by reason, highest first. */
+        reviewReasons: Record<string, number>;
+    };
+}
+
+/** First existing trunk ref, preferring the remote (the merge authority). */
+export function resolveTrunk(repoPath: string): string {
+    for (const ref of [
+        'refs/remotes/origin/main',
+        'refs/remotes/origin/master',
+        'refs/heads/main',
+        'refs/heads/master',
+    ]) {
+        if (tryGit(repoPath, ['rev-parse', '--verify', '--quiet', ref]) !== null) return ref;
+    }
+    return 'HEAD';
+}
+
+function isAncestor(repoPath: string, branch: string, trunk: string): boolean {
+    try {
+        git(repoPath, ['merge-base', '--is-ancestor', branch, trunk]);
+        return true;
+    } catch {
+        return false;
+    }
+}
+
+export function isStandardLocation(repoPath: string, worktreePath: string): boolean {
+    const rel = path.relative(canonical(repoPath), canonical(worktreePath));
+    if (rel.startsWith('..') || path.isAbsolute(rel)) return false;
+    return STANDARD_WORKTREE_DIRS.some(
+        (dir) => rel === dir || rel.startsWith(`${dir}${path.sep}`),
+    );
+}
+
+/**
+ * Per-worktree git-dir mtime, or null when it cannot be read. A linked
+ * worktree's `.git` is a file holding `gitdir: <path>`; the main worktree's is
+ * a directory.
+ */
+function lastGitActivity(worktreePath: string): Date | null {
+    const dotGit = path.join(worktreePath, '.git');
+    let gitDir: string;
+    try {
+        const st = fs.statSync(dotGit);
+        if (st.isDirectory()) {
+            gitDir = dotGit;
+        } else {
+            const m = fs.readFileSync(dotGit, 'utf-8').match(/^gitdir:\s*(.+)$/m);
+            if (!m) return null;
+            gitDir = path.resolve(worktreePath, m[1]!.trim());
+        }
+    } catch {
+        return null;
+    }
+    let newest: number | null = null;
+    for (const name of ['index', 'HEAD']) {
+        try {
+            const t = fs.statSync(path.join(gitDir, name)).mtimeMs;
+            if (newest === null || t > newest) newest = t;
+        } catch {
+            /* absent is not an error — the other candidate may still exist */
+        }
+    }
+    return newest === null ? null : new Date(newest);
+}
+
+/**
+ * Classify every worktree. `now` is injectable so the live-window boundary is
+ * testable rather than wall-clock dependent.
+ */
+export function buildInventory(repoPath: string, now: Date = new Date()): Inventory {
+    const trunk = resolveTrunk(repoPath);
+    const entries = listWorktrees(repoPath);
+    const mainPath = canonical(entries.length > 0 ? entries[0]!.path : repoPath);
+    const liveCutoff = now.getTime() - LIVE_WINDOW_HOURS * 3600 * 1000;
+
+    const rows: InventoryRow[] = entries.map((e) => {
+        const resolved = canonical(e.path);
+        const isMain = resolved === mainPath;
+        const standardLocation = isMain ? true : isStandardLocation(repoPath, resolved);
+        const reasons: string[] = [];
+
+        if (!fs.existsSync(resolved)) {
+            return {
+                path: e.path,
+                branch: e.branch,
+                classification: 'review',
+                reasons: ['registration points at a missing directory — `git worktree prune` clears it'],
+                mergedIntoTrunk: false,
+                standardLocation,
+                isMain,
+            };
+        }
+
+        const activity = lastGitActivity(resolved);
+        if (activity !== null && activity.getTime() >= liveCutoff) {
+            return {
+                path: e.path,
+                branch: e.branch,
+                classification: 'live',
+                reasons: [`git activity within the last ${LIVE_WINDOW_HOURS}h — another session may hold it`],
+                mergedIntoTrunk: e.branch !== null && isAncestor(resolved, e.branch, trunk),
+                standardLocation,
+                isMain,
+            };
+        }
+
+        if (isMain) reasons.push('main worktree — cannot be removed');
+        if (e.branch === null) {
+            reasons.push('detached HEAD — no branch to judge reachability for');
+        }
+        if (!standardLocation) {
+            reasons.push('non-standard location — outside the conventional worktree roots');
+        }
+
+        const mergedIntoTrunk = e.branch !== null && isAncestor(resolved, e.branch, trunk);
+
+        // A branch that is an ancestor of the trunk has every commit reachable
+        // from the trunk ref, so the expensive rev-list gate cannot find a
+        // unique commit. Only run it for the branches that are NOT merged —
+        // that is where it can actually refuse.
+        if (e.branch !== null && !mergedIntoTrunk) {
+            reasons.push(`branch is not an ancestor of ${trunk} — unmerged work`);
+            const gate = checkWorktree(resolved);
+            if (!gate.allowed) reasons.push(...gate.reasons);
+        } else if (e.branch !== null) {
+            const status = statusPorcelain(resolved);
+            if (status.trim().length > 0) {
+                const n = status.trimEnd().split('\n').length;
+                reasons.push(`unsaved work — ${n} dirty or untracked path(s)`);
+            }
+        }
+
+        return {
+            path: e.path,
+            branch: e.branch,
+            classification: reasons.length === 0 ? 'safe' : 'review',
+            reasons,
+            mergedIntoTrunk,
+            standardLocation,
+            isMain,
+        };
+    });
+
+    const reviewReasons: Record<string, number> = {};
+    for (const r of rows) {
+        if (r.classification !== 'review') continue;
+        // Group by the first reason: it is the primary disqualifier, and the
+        // per-row reasons stay available in --json for the full picture.
+        const key = (r.reasons[0] ?? 'unknown').split('\n')[0]!;
+        reviewReasons[key] = (reviewReasons[key] ?? 0) + 1;
+    }
+
+    return {
+        trunk,
+        rows,
+        counts: {
+            total: rows.length,
+            safe: rows.filter((r) => r.classification === 'safe').length,
+            review: rows.filter((r) => r.classification === 'review').length,
+            live: rows.filter((r) => r.classification === 'live').length,
+            reviewReasons: Object.fromEntries(
+                Object.entries(reviewReasons).sort((a, b) => b[1] - a[1]),
+            ),
+        },
+    };
+}
+
+/**
+ * The removal commands for the safe set — printed for a human to review and
+ * run, never executed here. `git branch -d` (never `-D`) so git itself
+ * re-checks the merge before the branch goes.
+ */
+export function removalPlan(inv: Inventory): string[] {
+    return inv.rows
+        .filter((r) => r.classification === 'safe')
+        .map((r) => {
+            const remove = `git worktree remove ${JSON.stringify(r.path)}`;
+            return r.branch !== null && r.mergedIntoTrunk
+                ? `${remove} && git branch -d ${JSON.stringify(r.branch)}`
+                : remove;
+        });
+}
+
 function usage(): never {
     process.stderr.write(
-        'usage: worktree_cleanup_check check <worktree-path> | scope-overlap [repo-path]\n',
+        'usage: worktree_cleanup_check check <worktree-path> | scope-overlap [repo-path] | ' +
+            'inventory [repo-path] [--json|--plan]\n',
     );
     process.exit(2);
 }
@@ -235,6 +504,52 @@ export function main(argv: readonly string[] = process.argv.slice(2)): number {
             );
         }
         return 1;
+    }
+    if (mode === 'inventory') {
+        const rest = argv.slice(1);
+        const flags = rest.filter((a) => a.startsWith('--'));
+        const positional = rest.filter((a) => !a.startsWith('--'));
+        if (positional.length > 1 || flags.some((f) => f !== '--json' && f !== '--plan')) usage();
+        const repo = path.resolve(positional[0] ?? '.');
+        const inv = buildInventory(repo);
+
+        if (flags.includes('--json')) {
+            process.stdout.write(`${JSON.stringify(inv, null, 2)}\n`);
+            return 0;
+        }
+        if (flags.includes('--plan')) {
+            const plan = removalPlan(inv);
+            if (plan.length === 0) {
+                process.stdout.write('# no safe worktrees — nothing to propose.\n');
+                return 0;
+            }
+            process.stdout.write(
+                `# Prepared removal plan for ${plan.length} safe worktree(s).\n` +
+                    '# NOT executed: bulk worktree + branch deletion is a Hard-Floor action that\n' +
+                    '# needs the maintainer\'s explicit approval. Review, then run deliberately.\n',
+            );
+            process.stdout.write(`${plan.join('\n')}\n`);
+            return 0;
+        }
+
+        const c = inv.counts;
+        process.stdout.write(
+            `worktree inventory · ${c.total} registered · trunk ${inv.trunk}\n` +
+                `  safe    ${c.safe}\n` +
+                `  review  ${c.review}\n` +
+                `  live    ${c.live}\n`,
+        );
+        if (c.review > 0) {
+            process.stdout.write('\nreview reasons (primary disqualifier):\n');
+            for (const [reason, n] of Object.entries(c.reviewReasons)) {
+                process.stdout.write(`  ${String(n).padStart(4)}  ${reason}\n`);
+            }
+        }
+        process.stdout.write(
+            '\nThis mode reports only. `--plan` prints the removal commands for the safe set;\n' +
+                'running them is a Hard-Floor action needing the maintainer\'s explicit approval.\n',
+        );
+        return 0;
     }
     usage();
 }
