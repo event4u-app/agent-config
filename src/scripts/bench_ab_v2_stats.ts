@@ -291,8 +291,37 @@ export function compare(records: Dict[], arm_t: string, arm_b: string): Dict {
     let dis_t_sum = 0.0;
     let dis_b_sum = 0.0;
     let disn = 0.0;
+    // Delta #5 — attrition. A dropped pair is not missing-at-random: a budget
+    // cap or a timeout fires preferentially on the arm doing MORE work, so
+    // silently excluding those pairs biases the surviving sample toward the
+    // baseline. Report which side died and in which status bucket, so a reader
+    // can see whether the drops are balanced before trusting the estimate.
+    let pairs_seen = 0;
+    let dropped_treatment_only = 0;
+    let dropped_baseline_only = 0;
+    let dropped_both = 0;
+    const dropped_buckets: Record<string, number> = {};
     for (const { rt, rb } of _pairs(records, arm_t, arm_b)) {
-        if (!_pyTruthy(rt['errored']) && !_pyTruthy(rb['errored'])) {
+        pairs_seen += 1;
+        const t_err = _pyTruthy(rt['errored']);
+        const b_err = _pyTruthy(rb['errored']);
+        if (t_err || b_err) {
+            if (t_err && b_err) {
+                dropped_both += 1;
+            } else if (t_err) {
+                dropped_treatment_only += 1;
+            } else {
+                dropped_baseline_only += 1;
+            }
+            for (const r of [t_err ? rt : null, b_err ? rb : null]) {
+                if (r === null) {
+                    continue;
+                }
+                const bucket = _strOr(_dictOr(r['metrics'])['status_bucket'], 'unknown');
+                dropped_buckets[bucket] = (dropped_buckets[bucket] ?? 0) + 1;
+            }
+        }
+        if (!t_err && !b_err) {
             const t = _pyTruthy(rt['capability_pass']);
             const bb = _pyTruthy(rb['capability_pass']);
             capn += 1;
@@ -340,6 +369,18 @@ export function compare(records: Dict[], arm_t: string, arm_b: string): Dict {
             wilcoxon_p: PF(wil.p),
             rank_biserial: PF(wil.rank_biserial),
             n_nonzero: wil.n,
+        },
+        attrition: {
+            pairs_seen,
+            pairs_analysed: capn,
+            pairs_dropped: pairs_seen - capn,
+            dropped_treatment_only,
+            dropped_baseline_only,
+            dropped_both,
+            // Positive = the treatment arm died more often than the baseline,
+            // i.e. the surviving sample is biased toward the baseline.
+            drop_asymmetry: dropped_treatment_only - dropped_baseline_only,
+            dropped_by_status_bucket: dropped_buckets,
         },
     };
 }
@@ -509,7 +550,9 @@ export function to_markdown(analysis: Dict, payload: Dict): string {
     );
     L.push(
         '> 4. **Paired design**, errored runs excluded; McNemar (capability) + ' +
-            'Wilcoxon signed-rank (discipline) + effect sizes.',
+            'Wilcoxon signed-rank (discipline) + effect sizes. Exclusion is NOT ' +
+            'assumed harmless — see each comparison’s Table 4 for how many pairs ' +
+            'were dropped and whether the drops favour one arm.',
     );
     L.push(
         '> 5. **Not comparable to SWE-bench / GAIA / Fable scores** — a different ' +
@@ -597,6 +640,29 @@ export function to_markdown(analysis: Dict, payload: Dict): string {
         L.push('|---|---|---|---|');
         L.push(`| mean tokens | ${_thousands(tb)} | ${_thousands(tt)} | ${_thousandsSigned(tt - tb)} |`);
         L.push('');
+        const at = _dictOr(cmp['attrition']);
+        L.push('### Table 4 — attrition (dropped pairs are not missing-at-random)');
+        L.push('');
+        L.push('| pairs seen | analysed | dropped | treatment-only | baseline-only | both | asymmetry |');
+        L.push('|---|---|---|---|---|---|---|');
+        L.push(
+            `| ${_pyStr(at['pairs_seen'])} | ${_pyStr(at['pairs_analysed'])} | ${_pyStr(at['pairs_dropped'])} ` +
+                `| ${_pyStr(at['dropped_treatment_only'])} | ${_pyStr(at['dropped_baseline_only'])} ` +
+                `| ${_pyStr(at['dropped_both'])} | ${_fmtSignedInt(at['drop_asymmetry'])} |`,
+        );
+        const dropBuckets = Object.entries(_dictOr(at['dropped_by_status_bucket']))
+            .map(([k, v]) => `${k}:${_pyStr(v)}`)
+            .join(', ');
+        L.push('');
+        L.push(`Dropped runs by status bucket: ${dropBuckets || '_none_'}.`);
+        L.push('');
+        L.push(
+            '> A positive asymmetry means the treatment arm errored out more often than ' +
+                'the baseline. Budget caps and timeouts fire preferentially on the arm doing ' +
+                'more work, so the surviving sample is then biased TOWARD the baseline and the ' +
+                'measured lift is a floor, not an estimate.',
+        );
+        L.push('');
     }
     L.push('## Status buckets (trajectory)');
     L.push('');
@@ -653,6 +719,12 @@ function _fmt3(v: unknown): string {
 function _fmtSigned3(v: unknown): string {
     const body = _pyFixed(_pyFloat(v), 3);
     return body.startsWith('-') ? body : `+${body}`;
+}
+
+/** `f"{n:+d}"` over an int-ish JSON value (attrition asymmetry). */
+function _fmtSignedInt(v: unknown): string {
+    const n = _pyIntTrunc(_pyFloat(v));
+    return n < 0 ? String(n) : `+${n}`;
 }
 
 /** `f"{n:,}"` over `int(value)`. */
