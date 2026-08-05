@@ -107,6 +107,29 @@
 # contract is `dist == rewrite(src)`; `check_ci_local_parity`, whose corpus is
 # workflow files) carries no recipe and is reported UNPROVEN, never green.
 gates:
+  - id: check_gate_completeness
+    argv: []
+    min_scanned: 180
+    corpus: "gates reachable from the `ci` / `consistency` task roots (220 at baseline)"
+    status: enforced
+    note: >
+      Floor set below the live count on purpose: the registered set legitimately
+      shrinks when a gate is retired, and a floor pinned at today's exact number
+      would red on the very change that removes one. It is still high enough
+      that a broken closure walk — the dead-scan-root shape one level up, where
+      the Taskfile parse degrades and the population silently collapses —
+      cannot pass.
+
+  - id: check_suppression_hygiene
+    argv: []
+    min_scanned: 8
+    corpus: "declared human-authored suppression surfaces (10 at baseline)"
+    status: enforced
+    note: >
+      The denominator is the INVENTORY, not the entry count — the gate's job is
+      that every suppression surface is accounted for, and a surface list that
+      collapsed to nothing must not read as "no suppressions to check".
+
   - id: lint_trigger_collisions
     argv: []
     min_scanned: 90
@@ -322,7 +345,7 @@ gates:
   - id: lint_framework_leakage
     argv: []
     min_scanned: 350
-    corpus: "skills / rules / commands .md (431 at baseline)"
+    corpus: "skills / rules / commands .md actually judged (368 of 438 enumerated; the rest carry a declared exemption the ledger names)"
     status: enforced
     note: >
       Its human summary prints "N hits across M files", where M is files WITH

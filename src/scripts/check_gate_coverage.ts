@@ -52,6 +52,7 @@ import * as yaml from 'js-yaml';
 import { checkRatchet } from './_lib/gate_baseline.js';
 import { runCountedProbe } from './_lib/counted_probe.js';
 import { listGateScripts } from './_lib/gate_population.js';
+import { describeOutcome, namesEstateInvalidatingError } from './_lib/gate_result.js';
 import { assertScanned } from './_lib/scan_scope.js';
 
 const _HERE = fileURLToPath(import.meta.url);
@@ -100,7 +101,14 @@ export interface GateSpec {
   note?: string;
 }
 
-export type Verdict = 'ok' | 'below_floor' | 'silent' | 'crashed' | 'pending' | 'unavailable';
+export type Verdict =
+  | 'ok'
+  | 'below_floor'
+  | 'silent'
+  | 'crashed'
+  | 'estate_invalid'
+  | 'pending'
+  | 'unavailable';
 
 export interface GateResult {
   id: string;
@@ -186,6 +194,7 @@ export function classify(
   scanned: number | null,
   crashed: boolean,
   exit_code?: number | null,
+  output = '',
 ): GateResult {
   const base = { id: spec.id, status: spec.status, scanned, min_scanned: spec.min_scanned };
   if (spec.status === 'pending') {
@@ -200,6 +209,18 @@ export function classify(
   }
   if (crashed) {
     return { ...base, verdict: 'crashed', message: 'gate could not be executed' };
+  }
+  // A gate that could not MEASURE is not a gate that found violations, and it
+  // is not a gate that passed either. Reporting it as itself is the whole point:
+  // three of this repository's recorded traps are estate invalidation
+  // misreported as a per-gate red, sending a contributor hunting for a
+  // violation that does not exist.
+  if (namesEstateInvalidatingError(output)) {
+    return {
+      ...base,
+      verdict: 'estate_invalid',
+      message: describeOutcome(spec.id, 'estate_invalid'),
+    };
   }
   if (
     spec.unavailable_exit !== undefined &&
@@ -234,16 +255,23 @@ export function classify(
   return { ...base, verdict: 'ok', message: `scanned ${String(scanned)} ≥ ${String(spec.min_scanned)}` };
 }
 
-function run_gate(spec: GateSpec): { scanned: number | null; crashed: boolean; exit_code: number | null } {
+function run_gate(spec: GateSpec): {
+  scanned: number | null;
+  crashed: boolean;
+  exit_code: number | null;
+  output: string;
+} {
   const runner = path.join(REPO_ROOT, 'scripts-run');
   // Bounded read: a gate whose output overflowed would lose its `scanned:`
   // line and be classified `silent` — the scan-scope guard reporting a dead
   // scope that is merely truncated. `runCountedProbe` throws instead.
   const r = runCountedProbe(runner, [`src/scripts/${spec.id}`, ...spec.argv], { cwd: REPO_ROOT });
-  if (r.failure !== null && r.status === null) return { scanned: null, crashed: true, exit_code: null };
+  const output = `${r.stdout}\n${r.stderr}`;
+  if (r.failure !== null && r.status === null)
+    return { scanned: null, crashed: true, exit_code: null, output };
   // A gate may legitimately exit non-zero (it found real violations) and still
   // have scanned plenty — coverage and verdict are different questions.
-  return { scanned: parse_scanned(`${r.stdout}\n${r.stderr}`), crashed: false, exit_code: r.status };
+  return { scanned: parse_scanned(output), crashed: false, exit_code: r.status, output };
 }
 
 const ICON: Record<Verdict, string> = {
@@ -251,6 +279,7 @@ const ICON: Record<Verdict, string> = {
   below_floor: '❌',
   silent: '❌',
   crashed: '❌',
+  estate_invalid: '❌',
   pending: '⚠️',
   unavailable: '⚠️',
 };
@@ -299,8 +328,8 @@ export function main(argv: readonly string[]): number {
       const { scanned, crashed } = probe_pending(s);
       return classify(s, scanned, crashed);
     }
-    const { scanned, crashed, exit_code } = run_gate(s);
-    return classify(s, scanned, crashed, exit_code);
+    const { scanned, crashed, exit_code, output } = run_gate(s);
+    return classify(s, scanned, crashed, exit_code, output);
   });
 
   if (wantJson) {

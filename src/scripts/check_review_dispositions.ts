@@ -45,6 +45,7 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
+import { GateLedger } from './_lib/gate_ledger.js';
 import { DeadScopeError, assertScanned } from './_lib/scan_scope.js';
 import { parseArtifact } from './check_completion_review.js';
 
@@ -150,12 +151,23 @@ export function main(argv?: readonly string[]): number {
     }
 
     const violations: Violation[] = [];
+    // Per-target completeness accounting: the read below can throw partway and
+    // the catch reports `scanned` as if the remaining records had been judged.
+    // The ledger names what was actually reached.
+    const ledger = new GateLedger('check_review_dispositions');
+    ledger.plan(files);
     let scanned = 0;
     try {
         for (const rel of files) {
             const text = fs.readFileSync(path.resolve(repo, rel), 'utf-8');
             scanned += 1;
-            violations.push(...checkRecord(rel, text, { repo }));
+            const found = checkRecord(rel, text, { repo });
+            if (found.length > 0) {
+                ledger.fail(rel, `${String(found.length)} disposition violation(s)`);
+            } else {
+                ledger.complete(rel);
+            }
+            violations.push(...found);
         }
     } catch (exc) {
         process.stdout.write(`scanned: ${String(scanned)}\n`);
@@ -174,6 +186,7 @@ export function main(argv?: readonly string[]): number {
     } else if (!quiet) {
         process.stdout.write(`✅  Archived review records all terminal (${String(scanned)} record(s) scanned).\n`);
     }
+    ledger.report();
     process.stdout.write(`scanned: ${String(scanned)}\n`);
     return violations.length > 0 ? 1 : 0;
 }

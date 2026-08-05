@@ -179,7 +179,16 @@ export function _diff_tree(
 
 export function _diff_manifest(before: Obj | null, after: Obj | null): string[] {
     if (before === null && after === null) {
-        return [];
+        // Equality without validity — the literal `diff a b` where NEITHER side
+        // exists and the answer comes back "equal". An empty issue list means
+        // clean to every caller, so both-absent used to certify a move that was
+        // never compared. Two absent sides are the absence of a comparison, not
+        // the presence of a match. (Audited estate-wide in
+        // `docs/guidelines/agent-infra/false-green.md § The audited sync/parity gates`.)
+        return [
+            '  manifest: BOTH the pre-move snapshot and the post-move manifest are missing — ' +
+                'nothing was compared, so nothing is verified',
+        ];
     }
     if (before === null) {
         return ['  manifest: pre-move snapshot missing'];

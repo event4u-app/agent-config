@@ -174,6 +174,30 @@ required list: their names encode shard counts and runner labels, so any
 matrix change silently breaks a pinned required-check name — the same class
 of drift this reconciliation just removed.
 
+## The path-filter trap on a required check
+
+```
+A REQUIRED CHECK WITH A PATH FILTER ON ITS PULL-REQUEST TRIGGER
+BLOCKS EVERY PR THAT TOUCHES NO FILTERED PATH — PERMANENTLY.
+```
+
+Protection here is a **ruleset**, and a ruleset requires a named check to
+*report*. GitHub does not treat "the workflow was skipped because no path
+matched" as a pass — it treats it as "has not reported", and the PR stays
+blocked with no failing check to fix. The pull-request UI shows an
+expected-but-missing status; nothing in the run log explains it, because there
+is no run.
+
+So: **do not add `paths:` / `paths-ignore:` to the `pull_request` trigger of a
+workflow whose job is a required check.** If a check genuinely only applies to
+some paths, filter INSIDE the job (an early exit that still reports a
+conclusion), never at the trigger.
+
+This is the same class as everything in
+[`false-green.md`](../guidelines/agent-infra/false-green.md), inverted: instead
+of a check that passes without running, a check that never runs and therefore
+never passes. Both come from treating "did not execute" as if it were a verdict.
+
 ## Change discipline
 
 Editing this file does **not** change enforcement, and changing the ruleset

@@ -136,6 +136,42 @@ the work-engine via golden-transcript diff, and is a required check
 in the engine-path subset (not the universal floor). Both apply
 together; the names don't conflict.
 
+## CI delta — what the local task runner cannot run
+
+```
+A LOCAL PASS FOLLOWED BY A REMOTE FAIL IS A DEFECT IN THIS DELTA LIST,
+NOT IN THE REMOTE.
+```
+
+`task ci` is not a superset of what CI runs, and it never can be: some gates
+need a token, a published tarball, a live PR, an OS this machine is not, or a
+measurement that is timing-sensitive. Leaving that gap undocumented is what
+turns "green locally" into a claim it cannot support.
+
+**The list is `src/config/ci-local-parity.yml`, not this file.** Enumerating the
+delta in prose beside a machine-readable manifest would create two sources that
+drift, so this section names the manifest, its vocabulary, and the gate that
+keeps it fresh — never a copy of its rows.
+
+| Class | What it means | Examples |
+|---|---|---|
+| `network` | needs a token, a registry, or a live API | `adoption_snapshot`, `sync_github_metadata`, `rule_trigger_eval` |
+| `release` | verifies tag / release / published-package / release-PR state | `check_release_surface_equality`, `check_release_highlights`, `check_finding_dispositions` |
+| `artifact` | needs something only CI builds (site, tarball, bundle) | `check_site_links`, `pack_mcp_content` |
+| `benchmark` | a measurement — timing-sensitive or paid | `bench_hook_latency`, `bench_drift_check` |
+| `matrix` | needs an OS or Node version this machine is not | `consumer_matrix` |
+| `resolver` | not a gate — a helper a workflow step calls; it decides and blocks nothing | `resolve_lint_scope` |
+
+**Freshness is enforced, not asserted.** `check_ci_local_parity` walks both
+directions — every gate a workflow reaches, and the transitive closure of the
+`ci` / `consistency` task roots — and fails on any gate in one set and not the
+other that the manifest does not declare, with a reason. A stale delta list is a
+build failure.
+
+The reverse direction (`local_only:`) is the more dangerous one and the manifest
+says so out loud: a gate that only runs locally is the direction that lets real
+defects merge. Prefer wiring it into a workflow over declaring it.
+
 ## What this contract is not
 
 - **Not a list of "all green workflows".** Advisory and phantom

@@ -119,11 +119,19 @@ describe('lint_framework_leakage — ported pytest suite', () => {
         expect('allowlisted' in data.summary).toBe(true);
     });
 
-    it('test_quiet_mode_only_prints_summary', () => {
+    it('test_quiet_mode_prints_summary_and_denominator_but_no_per_hit_detail', () => {
+        // `--quiet` suppresses the per-hit listing. It does NOT suppress the
+        // completeness line: CI passes `--quiet`, and a denominator only
+        // visible without it is not a denominator (the recorded `lint_handoffs`
+        // lesson, restated in `_lib/scan_scope.ts`).
         makeTree(tmp, { 'skills/foo/SKILL.md': '# Foo\n\nUses FormRequest here.\n' });
         expect(runExtra(['--quiet'], 'skills')).toBe(1);
-        const stripped = stdout.trim();
-        expect(/^\d+ hits across \d+ files \(\d+ allowlisted\)$/.test(stripped)).toBe(true);
+        const lines = stdout.trim().split('\n').filter((l) => l.trim() !== '');
+        expect(lines.some((l) => /^\d+ hits across \d+ files \(\d+ allowlisted\)$/.test(l))).toBe(true);
+        expect(lines.some((l) => /^lint_framework_leakage ledger: scanned=\d+ planned=\d+ skipped=\d+$/.test(l))).toBe(
+            true,
+        );
+        expect(stdout).not.toContain('FormRequest here.');
     });
 
     it('test_multistack_table_with_2_ecosystems_passes', () => {
