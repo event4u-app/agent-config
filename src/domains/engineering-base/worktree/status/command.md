@@ -29,6 +29,12 @@ git worktree list --porcelain
 ```
 
 One report block per worktree (skip the main working tree unless asked).
+Above roughly a dozen worktrees a per-worktree block stops being readable —
+lead with the aggregate instead, then block only what the user asks about:
+
+```bash
+./scripts-run src/scripts/worktree_cleanup_check inventory
+```
 
 ### 2. Per worktree, gather
 

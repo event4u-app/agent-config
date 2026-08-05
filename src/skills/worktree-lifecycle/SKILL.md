@@ -128,6 +128,28 @@ step (`scope-control`); never force-delete (`-D`) as part of cleanup.
 Cross-worktree scope-lock overlaps are scanned via
 `worktree_cleanup_check scope-overlap` (surfaced by `/worktree status`).
 
+**Whole-checkout sweeps.** Worktrees accumulate one per branch and are never
+removed on merge; `git worktree prune` only clears registrations whose
+directory is already gone, so it does nothing for the live ones. Classify the
+whole set in one pass rather than gate-checking by hand:
+
+```bash
+npx tsx node_modules/@event4u/agent-config/src/scripts/worktree_cleanup_check.ts inventory [repo] [--json|--plan]
+```
+
+`safe` requires all of: on a branch, merged into the trunk, clean, inside a
+conventional worktree root (`.claude/worktrees/` or `.worktrees/`), and no git
+activity for 48 h. `review` keeps its disqualifying reason so the next sweep
+starts from a shorter list; `live` means another session may hold it. A
+worktree outside the conventional roots is never `safe` — sitting beside the
+repo it can be mistaken for a sibling package, so its removal stays a
+judgement call.
+
+The mode reports only. `--plan` prints `git worktree remove` plus
+`git branch -d` (never `-D`) for the safe set; **running it is a bulk deletion
+needing the user's explicit this-turn approval**
+(`non-destructive-by-default`), which a single earlier approval never covers.
+
 ## Host-native mapping
 
 | Host capability | Use |

@@ -31,6 +31,23 @@ never force-removes.
 `git worktree list --porcelain` — target the worktree(s) named by the
 user, or every non-main worktree when asked to "clean up".
 
+For a whole-checkout sweep, get the classified set in one pass instead of
+running the per-worktree gate by hand:
+
+```bash
+./scripts-run src/scripts/worktree_cleanup_check inventory        # counts + review reasons
+./scripts-run src/scripts/worktree_cleanup_check inventory --plan # commands for the safe set
+```
+
+`safe` = on a branch, merged into the trunk, clean, in a conventional
+worktree root, and no git activity for 48 h. `review` carries its
+disqualifying reason; `live` means another session may hold it. The mode
+reports only — running the plan is a bulk deletion needing the user's
+explicit this-turn approval per
+[`non-destructive-by-default`](../../../rules/non-destructive-by-default.md).
+Present the safe set as a list and wait; a bulk sweep never inherits a
+single earlier approval.
+
 ### 2. Per candidate, run the gates IN ORDER
 
 Run the deterministic gate helper (edge-case-tested: detached HEAD,
