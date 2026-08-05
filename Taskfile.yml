@@ -147,6 +147,9 @@ tasks:
       - task: lint-roadmap-blockers
       - task: lint-roadmap-later-disposition
       - task: lint-roadmap-family-cap
+      - task: check-gate-completeness
+      - task: check-suppression-hygiene
+      - task: check-review-dispositions
       - task: lint-plan-risk-register
       - task: check-completion-review
       - task: check-r2-manifest

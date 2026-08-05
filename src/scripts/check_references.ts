@@ -21,9 +21,17 @@
  */
 
 import * as fs from 'node:fs';
+import * as os from 'node:os';
 import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import type * as YamlModule from 'yaml';
+
+import { GateLedger, type GateSkipReason } from './_lib/gate_ledger.js';
+import { runGateCli, runSelfTest } from './_lib/gate_self_test.js';
+import { assertScanned } from './_lib/scan_scope.js';
+
+/** Where this script lives — used only to re-invoke its own CLI in `--self-test`. */
+const REPO_ROOT_FOR_SELF_TEST = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
 
 type Severity = 'error' | 'warning';
 
@@ -480,13 +488,26 @@ function _closest_match(name: string, candidates: Set<string>): string {
     return '';
 }
 
-function check_file(filepath: string, artifacts: Artifacts, root: string): BrokenRef[] {
+function check_file(
+    filepath: string,
+    artifacts: Artifacts,
+    root: string,
+    /**
+     * Called instead of checking, when the file is not judged at all. Both
+     * early returns below used to return an empty `broken[]`, which is
+     * byte-identical to "checked and clean" for every caller — so an
+     * opted-out file counted as coverage. The sink lets the ledger tell the
+     * two apart without changing this function's return type.
+     */
+    onSkip?: (reason: GateSkipReason) => void,
+): BrokenRef[] {
     // Check a single .md file for broken references.
     const broken: BrokenRef[] = [];
     let text: string;
     try {
         text = fs.readFileSync(filepath, 'utf-8');
     } catch {
+        onSkip?.('binary_content');
         return broken;
     }
 
@@ -496,6 +517,7 @@ function check_file(filepath: string, artifacts: Artifacts, root: string): Broke
     // with the per-line `<!-- ref-ignore -->` below; either suffices.
     const headerLines = text.split('\n').slice(0, 10);
     if (headerLines.some((line) => line.includes(FILE_SKIP_MARKER))) {
+        onSkip?.('declared_exemption');
         return broken;
     }
 
@@ -783,37 +805,73 @@ function check_memory_yaml(filepath: string, artifacts: Artifacts, root: string)
 function scan_all(root: string): BrokenRef[] {
     const artifacts = collect_artifacts(root);
     const broken: BrokenRef[] = [];
-    // gate-coverage contract (src/config/gate-coverage.yml): a machine-readable
-    // count of files actually read, so `check_gate_coverage` can assert this
-    // gate saw a real corpus rather than a moved root.
-    let scannedFiles = 0;
+    // Completeness accounting. The two hidden outcomes this makes visible:
+    // a missing scan root (`continue` on a dead directory, previously silent
+    // and uncounted — the canonical false green), and a file that opted out of
+    // the check but was still counted as coverage.
+    const ledger = new GateLedger('check_references');
     for (const scanDir of SCAN_DIRS) {
         const d = path.join(root, scanDir);
         if (!_exists(d)) {
+            ledger.plan(scanDir);
+            ledger.skip(scanDir, 'dead_scan_root');
             continue;
         }
         const files = _rglob(d, '.md').sort();
+        ledger.plan(files.map((f) => _relPosix(root, f)));
         for (const f of files) {
+            const rel = _relPosix(root, f);
             // Skip archived directories
             if (SKIP_DIRS.some((skip) => f.startsWith(path.join(root, skip)))) {
+                ledger.outOfScope(rel, 'excluded_directory');
                 continue;
             }
-            scannedFiles += 1;
-            broken.push(...check_file(f, artifacts, root));
+            let skipped = false;
+            const found = check_file(f, artifacts, root, (reason) => {
+                skipped = true;
+                ledger.skip(rel, reason);
+            });
+            if (!skipped) {
+                if (found.length > 0) {
+                    ledger.fail(rel, `${String(found.length)} broken reference(s)`);
+                } else {
+                    ledger.complete(rel);
+                }
+            }
+            broken.push(...found);
         }
     }
     const memoryDir = path.join(root, MEMORY_YAML_ROOT);
     if (_isDir(memoryDir)) {
-        for (const f of _rglob(memoryDir, '.yml').sort()) {
-            scannedFiles += 1;
-            broken.push(...check_memory_yaml(f, artifacts, root));
-        }
-        for (const f of _rglob(memoryDir, '.yaml').sort()) {
-            scannedFiles += 1;
-            broken.push(...check_memory_yaml(f, artifacts, root));
+        const yamls = [..._rglob(memoryDir, '.yml').sort(), ..._rglob(memoryDir, '.yaml').sort()];
+        ledger.plan(yamls.map((f) => _relPosix(root, f)));
+        for (const f of yamls) {
+            const rel = _relPosix(root, f);
+            const found = check_memory_yaml(f, artifacts, root);
+            if (found.length > 0) {
+                ledger.fail(rel, `${String(found.length)} broken reference(s)`);
+            } else {
+                ledger.complete(rel);
+            }
+            broken.push(...found);
         }
     }
-    process.stderr.write(`scanned: ${String(scannedFiles)}\n`);
+    // gate-coverage contract (src/config/gate-coverage.yml): a machine-readable
+    // count of files actually JUDGED, so `check_gate_coverage` can assert this
+    // gate saw a real corpus rather than a moved root. It is the ledger's own
+    // completed+failed, so the published number cannot drift from the number
+    // the accounting accepted.
+    const tally = ledger.report();
+    // Fail closed on a fully dead scope. Both scan roots absent used to print
+    // `scanned: 0` and then `✅ No broken references found.` — the canonical
+    // false green, and the one shape this gate had no guard against.
+    assertScanned({
+        gate: 'check_references',
+        scanned: tally.completed + tally.failed,
+        units: 'file(s)',
+        roots: SCAN_DIRS,
+    });
+    process.stderr.write(`scanned: ${String(tally.completed + tally.failed)}\n`);
     return broken;
 }
 
@@ -918,7 +976,59 @@ function _argparse_error(message: string): never {
     process.exit(2);
 }
 
+/**
+ * Prove, against the real CLI, that this gate still rejects what it must.
+ *
+ * The dead-scope case is the one that matters: until this change, both scan
+ * roots absent produced `scanned: 0` followed by "No broken references found"
+ * and exit 0.
+ */
+export function selfTest(): number {
+    const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'refs-selftest-'));
+    const seed = (root: string, body: string | null): string => {
+        const dir = path.join(tmp, root, 'dist', 'agent-src', 'rules');
+        fs.mkdirSync(dir, { recursive: true });
+        if (body !== null) {
+            fs.writeFileSync(path.join(dir, 'demo.md'), body, 'utf-8');
+        }
+        return path.join(tmp, root);
+    };
+    const run = (root: string): number =>
+        runGateCli(REPO_ROOT_FOR_SELF_TEST, 'src/scripts/check_references.ts', ['--root', root], REPO_ROOT_FOR_SELF_TEST);
+
+    try {
+        return runSelfTest({
+            gate: 'check_references',
+            minCases: 3,
+            minRejectCases: 2,
+            cases: [
+                {
+                    name: 'a broken file reference is rejected',
+                    expect: 'reject',
+                    run: () =>
+                        run(seed('broken', '# Demo\n\nSee `docs/guidelines/definitely-not-here.md` for detail.\n')),
+                },
+                {
+                    name: 'a document with no references passes',
+                    expect: 'accept',
+                    run: () => run(seed('clean', '# Demo\n\nNothing to resolve here.\n')),
+                },
+                {
+                    name: 'an EMPTY corpus is rejected — a gate that read nothing has not passed',
+                    expect: 'reject',
+                    run: () => run(seed('empty', null)),
+                },
+            ],
+        });
+    } finally {
+        fs.rmSync(tmp, { recursive: true, force: true });
+    }
+}
+
 function main(): number {
+    if (process.argv.slice(2).includes('--self-test')) {
+        return selfTest();
+    }
     const args = parse_args(process.argv.slice(2));
 
     let broken: BrokenRef[];

@@ -20,6 +20,12 @@
       "count": 337,
       "landed": "2026-08-02",
       "note": "Markdown links between source artefacts that cross a pack boundary the source pack's `requires` graph does not reach — revealed when the scan root moved off the deleted packages/ tree to the live corpus (0 -> 753 artefacts scanned). 82 distinct pack pairs across 131 source files; largest single class is engineering-base -> meta (73), skills in a consumer-installable pack citing this package's own maintenance skills. Each is a link that dangles for a consumer who installs the source pack without the target's. Judged real drift rather than an over-strict gate because it is long-tailed — top bucket 22%, no single systematic cause — unlike the lint_artefact_frontmatter case, where one required shape had 0-of-288 adoption. Fix per finding: add the edge to packs.yml requires, retarget the link, or move the artefact."
+    },
+    "check_gate_completeness": {
+      "count": 217,
+      "landed": "2026-08-05",
+      "note": "Ledger adoption ratchet. 217 of 221 CI-registered gates do not yet carry per-target completeness accounting (`_lib/gate_ledger.ts`) or a `// ledger-exempt:` marker. This is deliberately NOT a sweep: road-to-skill-ecosystem-gate-integrity Phase 1 adopts exactly three gates (lint_framework_leakage, check_references, lint_roadmap_complexity) plus the checker itself to prove the interface, and the remainder migrates as gates are touched. Shrink-only from here — the number may not grow, so a NEW gate must adopt or exempt.",
+      "falsifier": "./scripts-run src/scripts/check_gate_completeness"
     }
   }
 }

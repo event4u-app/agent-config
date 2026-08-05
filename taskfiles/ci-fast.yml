@@ -710,6 +710,38 @@ tasks:
       archive/ later/ skipped/ stubs/ are not concurrently open.
     cmd: ./scripts-run src/scripts/lint_roadmap_family_cap {{.QUIET_FLAG}}
 
+  check-gate-completeness:
+    silent: true
+    desc: |
+      Ratchet ledger adoption across the CI-registered gate estate. A gate
+      either imports `_lib/gate_ledger.ts` (per-target completeness accounting,
+      so "found nothing" and "looked at almost nothing" stop printing the same
+      green line) or carries a `// ledger-exempt: <reason>` marker. Today's
+      un-adopted count is the baseline and may only shrink — deliberately a
+      ratchet rather than a 220-gate sweep, which would be an unreviewable diff.
+    cmd: ./scripts-run src/scripts/check_gate_completeness {{.QUIET_FLAG}}
+
+  check-suppression-hygiene:
+    silent: true
+    desc: |
+      Shrink-only enforced against the BASE REF, not against a count — a count
+      comparison passes swap-one-out-add-one-in, which keeps the number flat
+      while the estate moves backwards. Also requires a `reason` on every
+      human-authored suppression entry and a `falsifier` (a re-runnable command
+      that decides it) on every NEW one, and fails on a suppression-shaped file
+      the inventory does not declare.
+    cmd: ./scripts-run src/scripts/check_suppression_hygiene {{.QUIET_FLAG}}
+
+  check-review-dispositions:
+    silent: true
+    desc: |
+      Archived review rounds must not leave a finding recorded `open` after it
+      was fixed. Runs in the consistency workflow and, until now, nowhere
+      locally — a CI-only gate with no reason it could not run here, which is
+      the "local-only by neglect" direction inverted. Reachable locally now, so
+      a contributor sees it before pushing.
+    cmd: ./scripts-run src/scripts/check_review_dispositions {{.QUIET_FLAG}}
+
   lint-plan-risk-register:
     silent: true
     desc: |

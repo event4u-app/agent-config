@@ -8,10 +8,13 @@
 // (logical-path matching via strip_source_prefix), JSON/quiet modes, the
 // path-does-not-exist exit(2), and the `_`-prefixed-file skip.
 import * as fs from 'node:fs';
+import * as os from 'node:os';
 import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import { artefact_roots, strip_source_prefix } from './_lib/agent_src.js';
+import { GateLedger } from './_lib/gate_ledger.js';
+import { runGateCli, runSelfTest } from './_lib/gate_self_test.js';
 
 const SCRIPTS_DIR = path.dirname(fileURLToPath(import.meta.url));
 const REAL_REPO_ROOT = path.dirname(path.dirname(SCRIPTS_DIR));
@@ -295,7 +298,19 @@ export function has_framework_frontmatter(p: string): string | null {
 interface AllowlistEntry {
     file?: string;
     lines?: number[] | '*';
+    /**
+     * Content anchor — a substring of the exempted line.
+     *
+     * Position-keyed entries (`lines: [100]`) are drift-fragile by
+     * construction: inserting a paragraph above line 100 silently re-fires the
+     * ratchet on an entry nobody touched, which this repository has recorded as
+     * a real cost. An anchor keys the exemption to what is actually being
+     * exempted, so the entry survives the edit that moves it. Prefer it for new
+     * entries; `lines` stays supported for the existing ones.
+     */
+    anchor?: string;
     reason?: string;
+    falsifier?: string;
 }
 interface Allowlist {
     entries: AllowlistEntry[];
@@ -313,7 +328,12 @@ function _load_allowlist(): Allowlist {
     }
 }
 
-function _allowlisted(rel_path: string, line_no: number, allowlist: Allowlist): boolean {
+function _allowlisted(
+    rel_path: string,
+    line_no: number,
+    allowlist: Allowlist,
+    line_text = '',
+): boolean {
     const logical = strip_source_prefix(rel_path);
     for (const entry of allowlist.entries ?? []) {
         const entry_file = entry.file;
@@ -324,6 +344,12 @@ function _allowlisted(rel_path: string, line_no: number, allowlist: Allowlist): 
         }
         const lines = entry.lines;
         if (lines === '*') {
+            return true;
+        }
+        // Content anchor before line number: an anchored entry keeps matching
+        // after an insertion moves the line, which a position key cannot.
+        const anchor = entry.anchor;
+        if (typeof anchor === 'string' && anchor !== '' && line_text.includes(anchor)) {
             return true;
         }
         if (Array.isArray(lines) && lines.includes(line_no)) {
@@ -465,10 +491,12 @@ function* iter_md_files(paths: Iterable<string>): Generator<string> {
             const pb = toPosix(b);
             return pa < pb ? -1 : pa > pb ? 1 : 0;
         });
+        // Underscore-prefixed files are NOT filtered here. They used to be, and
+        // that made them invisible to every count downstream: the generator
+        // dropped them before `scannedFiles` ever saw one. The exclusion is
+        // still applied — in `main`, where the ledger records it as a named
+        // out-of-scope outcome instead of a silent `continue`.
         for (const f of collected) {
-            if (path.basename(f).startsWith('_')) {
-                continue;
-            }
             yield f;
         }
     }
@@ -510,38 +538,122 @@ function parse_args(argv: readonly string[]): { json: boolean; quiet: boolean; p
     return { json, quiet, paths: paths.length > 0 ? paths : _default_paths() };
 }
 
+/**
+ * The allowlist entry that would silence one finding, ready to paste.
+ *
+ * Anchored on the matched token rather than on the line number: a
+ * position-keyed entry re-fires the moment an insertion above moves the line,
+ * on an entry nobody touched, which `check_suppression_hygiene` counts every
+ * run until the existing 18 migrate.
+ */
+export function suppressionKey(rel: string, hit: Hit): string {
+    const anchor = hit.snippet.trim().slice(0, 60);
+    return JSON.stringify({
+        file: rel,
+        anchor,
+        reason: '<why this token is quoted content rather than a mandate>',
+        falsifier: `./scripts-run src/scripts/lint_framework_leakage --paths ${rel}`,
+    });
+}
+
+/**
+ * Prove, against the real CLI, that this gate still rejects what it must.
+ *
+ * The floor is 3 cases with at least 2 rejecting: a clean file alone would be a
+ * suite that only ever passes, which proves nothing about detection.
+ */
+export function selfTest(): number {
+    const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'fwl-selftest-'));
+    const write = (rel: string, body: string): string => {
+        const p = path.join(tmp, rel);
+        fs.mkdirSync(path.dirname(p), { recursive: true });
+        fs.writeFileSync(p, body, 'utf-8');
+        return p;
+    };
+    const run = (target: string): number =>
+        runGateCli(REAL_REPO_ROOT, 'src/scripts/lint_framework_leakage.ts', ['--paths', target, '--quiet'], REAL_REPO_ROOT);
+
+    try {
+        const leak = write('generic/skills/demo/SKILL.md', '# Demo\n\nAlways run `php artisan migrate` here.\n');
+        const clean = write('clean/skills/demo/SKILL.md', '# Demo\n\nRun the project migration command.\n');
+        const framed = write(
+            'framed/skills/demo/SKILL.md',
+            '---\nframework: laravel\n---\n\n# Demo\n\nAlways run `php artisan migrate` here.\n',
+        );
+        return runSelfTest({
+            gate: 'lint_framework_leakage',
+            minCases: 3,
+            minRejectCases: 2,
+            cases: [
+                { name: 'a framework mandate in a generic artefact is rejected', expect: 'reject', run: () => run(leak) },
+                { name: 'a neutral artefact passes', expect: 'accept', run: () => run(clean) },
+                {
+                    name: 'a second family (PHP tooling, not Laravel) is rejected — detection is not one pattern',
+                    expect: 'reject',
+                    run: () =>
+                        run(write('generic2/skills/demo/SKILL.md', '# Demo\n\nRun PHPStan before every commit.\n')),
+                },
+                {
+                    name: 'a `framework:`-declared artefact is exempt',
+                    expect: 'accept',
+                    run: () => run(framed),
+                },
+            ],
+        });
+    } finally {
+        fs.rmSync(tmp, { recursive: true, force: true });
+    }
+}
+
 export function main(argv?: readonly string[]): number {
-    const args = parse_args(argv ?? process.argv.slice(2));
+    const raw = argv ?? process.argv.slice(2);
+    if (raw.includes('--self-test')) {
+        return selfTest();
+    }
+    const args = parse_args(raw);
 
     const allowlist = _load_allowlist();
     const file_hits: Array<[string, Hit[]]> = [];
     let total_hits = 0;
     let allowlisted_total = 0;
-    // gate-coverage contract (src/config/gate-coverage.yml): files actually
-    // inspected. NOTE the "N files" in the human summary is files WITH HITS —
-    // reading that as coverage is exactly how a blind gate looks healthy.
-    let scannedFiles = 0;
+    // Every enumerated file is planned up front, so the five exemption branches
+    // below stop being invisible `continue`s. Before the ledger, `scannedFiles`
+    // counted files *enumerated*, not files *judged* — a carve-out and a clean
+    // file were indistinguishable in the published number.
+    const ledger = new GateLedger('lint_framework_leakage');
+    const enumerated = [...iter_md_files(args.paths)];
+    ledger.plan(enumerated.map(relToRepo));
 
-    for (const f of iter_md_files(args.paths)) {
-        scannedFiles += 1;
+    for (const f of enumerated) {
+        const rel = relToRepo(f);
+        // Partials are fragments included into a parent artefact; the parent is
+        // the unit this gate judges.
+        if (path.basename(f).startsWith('_')) {
+            ledger.outOfScope(rel, 'not_applicable_kind');
+            continue;
+        }
         if (is_carve_out(f)) {
+            ledger.outOfScope(rel, 'declared_exemption');
             continue;
         }
         if (is_inventory_file(f)) {
+            ledger.outOfScope(rel, 'not_applicable_kind');
             continue;
         }
         if (has_framework_frontmatter(f)) {
+            ledger.outOfScope(rel, 'declared_exemption');
             continue;
         }
         // Self-exemption: the neutrality rule itself enumerates the forbidden
         // tokens (frontmatter triggers + fix table) — it can never be clean
         // by construction.
         if (f.endsWith(`${path.sep}framework-neutrality-in-generic-skills.md`)) {
+            ledger.outOfScope(rel, 'declared_exemption');
             continue;
         }
-        const rel = relToRepo(f);
         const raw_hits = scan_file(f);
         if (raw_hits.length === 0) {
+            ledger.complete(rel);
             continue;
         }
         const kept: Hit[] = [];
@@ -549,7 +661,7 @@ export function main(argv?: readonly string[]): number {
             if (h.cross_stack) {
                 continue;
             }
-            if (_allowlisted(rel, h.line, allowlist)) {
+            if (_allowlisted(rel, h.line, allowlist, h.snippet)) {
                 h.allowlisted = true;
                 allowlisted_total += 1;
                 continue;
@@ -560,6 +672,10 @@ export function main(argv?: readonly string[]): number {
         if (kept.length > 0) {
             file_hits.push([f, kept]);
             total_hits += kept.length;
+            ledger.fail(rel, `${String(kept.length)} un-allowlisted leakage hit(s)`);
+        } else {
+            // Every raw hit was cross-stack or allowlisted: the file WAS judged.
+            ledger.complete(rel);
         }
     }
 
@@ -569,6 +685,10 @@ export function main(argv?: readonly string[]): number {
         allowlisted: allowlisted_total,
     };
 
+    // Finalize before either output branch: an unaccounted target must throw
+    // rather than let a formatted result be printed over it.
+    const tally = ledger.finalize();
+
     if (args.json) {
         const out = {
             version: 1,
@@ -576,6 +696,7 @@ export function main(argv?: readonly string[]): number {
                 hits.map((h) => ({ file: relToRepo(p), ...h })),
             ),
             summary,
+            ledger: tally,
         };
         process.stdout.write(`${JSON.stringify(out, null, 2)}\n`);
         return total_hits ? 1 : 0;
@@ -590,6 +711,11 @@ export function main(argv?: readonly string[]): number {
                 const lineCol = String(h.line).padStart(4, ' ');
                 const catCol = h.category.padEnd(16, ' ');
                 process.stdout.write(`  L${lineCol}  ${catCol}  /${h.pattern}/  ${h.snippet}\n`);
+                // The suppression key travels WITH the finding, copy-pasteable and
+                // anchor-keyed. Friction in the narrow path is what pushes a
+                // maintainer to the blunt off-switch instead; and an anchor keeps
+                // matching after an edit moves the line, which `lines: [N]` cannot.
+                process.stdout.write(`        suppress: ${suppressionKey(rel, h)}\n`);
             }
         }
     }
@@ -598,7 +724,13 @@ export function main(argv?: readonly string[]): number {
         `\n${total_hits} hits across ${file_hits.length} files ` +
             `(${allowlisted_total} allowlisted)\n`,
     );
-    process.stderr.write(`scanned: ${String(scannedFiles)}\n`);
+    ledger.report();
+    // gate-coverage contract (src/config/gate-coverage.yml): files actually
+    // JUDGED — completed plus failed. It used to be files *enumerated*, which
+    // over-reported coverage by every exempted file (438 published against 368
+    // judged) and is the same "reading M as coverage" trap the human summary
+    // carries. The ledger makes the honest number the cheap one to publish.
+    process.stderr.write(`scanned: ${String(tally.completed + tally.failed)}\n`);
     return total_hits ? 1 : 0;
 }
 
