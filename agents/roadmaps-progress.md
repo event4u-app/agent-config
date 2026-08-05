@@ -6,7 +6,7 @@
 
 ## Overall
 
-**104 / 250 steps done · 42%**
+**105 / 250 steps done · 42%**
 
 ```text
 █████████████████░░░░░░░░░░░░░░░░░░░░░░░   42%
@@ -24,7 +24,7 @@
 | 6 | [road-to-orchestration-scope-decision.md](roadmaps/road-to-orchestration-scope-decision.md) | 4 | 10 | 6 | 4 | 0 | 0 | [1](#blockers-road-to-orchestration-scope-decision) | ████░░░░░░ 40% |
 | 7 | [road-to-scale-history-bench-run.md](roadmaps/road-to-scale-history-bench-run.md) | 1 | 2 | 2 | 0 | 0 | 0 | [1](#blockers-road-to-scale-history-bench-run) | ░░░░░░░░░░ 0% |
 | 8 | [road-to-skill-ecosystem-authoring-discipline.md](roadmaps/road-to-skill-ecosystem-authoring-discipline.md) | 6 | 52 | 52 | 0 | 0 | 0 | [2](#blockers-road-to-skill-ecosystem-authoring-discipline) | ░░░░░░░░░░ 0% |
-| 9 | [road-to-skill-ecosystem-gate-integrity.md](roadmaps/road-to-skill-ecosystem-gate-integrity.md) | 7 | 43 | 4 | 39 | 0 | 0 | [1](#blockers-road-to-skill-ecosystem-gate-integrity) | █████████░ 91% |
+| 9 | [road-to-skill-ecosystem-gate-integrity.md](roadmaps/road-to-skill-ecosystem-gate-integrity.md) | 7 | 43 | 3 | 40 | 0 | 0 | [1](#blockers-road-to-skill-ecosystem-gate-integrity) | █████████░ 93% |
 | 10 | [road-to-solution-minimalism.md](roadmaps/road-to-solution-minimalism.md) | 4 | 36 | 12 | 23 | 0 | 1 | 0 | ███████░░░ 66% |
 | 11 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 6 | 3 | 0 | 0 | [1](#blockers-road-to-subagent-value-realization-followup) | ███░░░░░░░ 33% |
 | 12 | [road-to-surface-consolidation.md](roadmaps/road-to-surface-consolidation.md) | 3 | 14 | 1 | 12 | 1 | 0 | [2](#blockers-road-to-surface-consolidation) | █████████░ 92% |
@@ -173,7 +173,7 @@ _1 blocker resolved._
 
 ### [road-to-skill-ecosystem-gate-integrity.md](roadmaps/road-to-skill-ecosystem-gate-integrity.md)
 
-**Road to gate integrity — a gate that scanned nothing must never exit green** — 39 / 43 done (91%)
+**Road to gate integrity — a gate that scanned nothing must never exit green** — 40 / 43 done (93%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
@@ -183,7 +183,7 @@ _1 blocker resolved._
 | 3 | Gate authoring discipline | 🟡 in progress | 2 | 5 | 0 | 0 | 71% |
 | 4 | Second-order guards | ✅ done | 0 | 6 | 0 | 0 | 100% |
 | 5 | Honest reporting surfaces | ✅ done | 0 | 6 | 0 | 0 | 100% |
-| 4 | 5 execution notes | 🟡 in progress | 2 | 8 | 0 | 0 | 80% |
+| 4 | 5 execution notes | 🟡 in progress | 1 | 9 | 0 | 0 | 90% |
 
 <a id="blockers-road-to-skill-ecosystem-gate-integrity"></a>
 **Blockers**

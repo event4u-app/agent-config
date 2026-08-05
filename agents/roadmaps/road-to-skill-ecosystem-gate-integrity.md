@@ -225,7 +225,7 @@ rather than silently absorbed.
 - [x] A deliberately crashing gate does not produce a green aggregate, proven by a test.
 - [x] `docs/contracts/ci-green-floor.md` carries a `## CI delta` section and a gate keeps it fresh.
 - [x] A generator given an unmeasured dimension emits no percentage for it, proven by a test.
-- [ ] Quality gates delegated to remote CI on the pull request.
+- [x] Quality gates delegated to remote CI on the pull request. _(PR #1181: 43 checks pass, 1 skipping, 0 failures.)_
 
 ## Risk Register
 
