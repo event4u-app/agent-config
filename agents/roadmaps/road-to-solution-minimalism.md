@@ -544,12 +544,34 @@ blocker as standing overstates its own gating.
       **publishing nothing below full** (F4); paired non-parametric tests;
       errored pairs dropped from both arms.
       *Verify:* the report states which tier it is from.
-- [ ] **Reproducibility deliverables, first-class not afterthoughts:** a no-API
+- [ ] **Reproducibility deliverables, first-class not afterthoughts:** a no-API <!-- blocked-by: benchmark-spend-authorization -->
       `--selftest` entry point, the pinned SHA, preserved per-run workspaces for
       offline re-scoring, and a one-page reproduce doc. The record shows the
       harshest critic becomes the most-cited validator once handed the
       reproduction path.
       *Verify:* `--selftest` runs green with no network and no key.
+      <!-- verify: npx vitest run tests/scripts/bench_ab_v2_run.test.ts -->
+      **Three of the four landed; the step stays open on the fourth, which is not
+      ours to close.** The named *Verify* is satisfied — `--mode selftest` exits 0
+      with `ANTHROPIC_API_KEY`, `CLAUDE_CODE_OAUTH_TOKEN` and `ANTHROPIC_AUTH_TOKEN`
+      stripped from the environment, and it substitutes only the model call: the
+      fixture clone, the deterministic scorer, the per-trial activation stamp, the
+      cross-arm audit, the report writer and every exit code run for real
+      (delta #8). Preserved per-run workspaces landed with it (delta #7): keyed
+      `task|arm|seed`, path recorded on each trial, 20 trials → 20 distinct
+      workspaces where the old task-only key left one. The one-page reproduce doc
+      is [`internal/bench/REPRODUCE-ab-v2.md`](../../internal/bench/REPRODUCE-ab-v2.md).
+      **The pinned SHA cannot be delivered here, and marking it done would be the
+      false claim F7 exists to forbid.** There is nothing to pin: the corpus has no
+      `repo`/`sha` keys and every fixture is a self-contained in-repo tree, so a
+      pinned SHA requires delta #9 — which the S0.3 sequencing ships together with
+      #10 (~30 hand-written oracles, sized large), because a harness pointed at a
+      real repo with no oracles runs nothing. That pair is the **Repo** and
+      **Tasks** steps above, both spend-gated. Hence the `blocked-by` annotation
+      rather than a `[~]`: this is blocked on a gate, not deferred by choice, and
+      the difference matters to the archival gate.
+      The reproduce doc states this residue in its own closing section instead of
+      implying a full reproduction path exists.
 - [ ] **The size claim is a metric PAIR, not a single number (F9).** The ladder
       arm must lower added lines **without raising median cognitive complexity
       per changed function**. Lines down **and** complexity up is golfing, and it
@@ -560,7 +582,7 @@ blocker as standing overstates its own gating.
       anti-golfing gate therefore costs almost nothing to add.
       *Verify:* the scorer refuses to report a size win when the complexity arm
       regressed; prove it by feeding it a deliberately golfed fixture.
-- [ ] **Pre-registered thresholds (F3-calibrated, weak-host arm):** ladder arm
+- [x] **Pre-registered thresholds (F3-calibrated, weak-host arm):** ladder arm
       vs. package arm — median added lines ≤ **−10 %** at p<0.05, **and** no
       significant rise in median cognitive complexity per changed function,
       **and** no significant regression on the discipline rubric, the safety
@@ -568,6 +590,22 @@ blocker as standing overstates its own gating.
       default-on. Miss any one → it stays opt-in and the null is published with
       the same honesty labels the existing nulls carry.
       *Verify:* thresholds are committed before the full run.
+      Committed as [`internal/bench/ab-v2-phase3-PREREG.md`](../../internal/bench/ab-v2-phase3-PREREG.md),
+      in the shape the tree's four existing `*-PREREG.md` records use (binding
+      threshold table with a per-row "why this number", plus reopen terms).
+      **Registered while the run is impossible, which is the strongest form of the
+      guarantee**: thresholds fitted after seeing data are not thresholds, and both
+      halt gates still stand, so there is no data to fit to. T1 is calibrated to the
+      independent −15.4 % (p=0.088) rather than the source's −54 % headline, with
+      the reason recorded per row.
+      Two things the record states that this step's text did not, because writing
+      them down is what pre-registration is for: **T1 cannot be evaluated without
+      T2's endpoint** (the size claim is a pair, so half a pair is no result, not a
+      partial one), and **granting the spend does not make the run possible** —
+      preconditions 2–4 there are a harness-extension project, not money.
+      A machine-readable companion was deliberately not shipped: no consumer exists
+      to read it until the endpoints do, and a JSON nobody reads is the speculative
+      form this roadmap argues against. Enforcement lands with the endpoints.
 - [ ] **Goodhart guard (hard, applies to any competitive setup, agent or human):**
       a size metric is a **measurement**, never a **scored target**. The safety
       tier is a disqualifier, not a side metric: an arm that saves a line and
