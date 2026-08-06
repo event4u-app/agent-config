@@ -2,14 +2,14 @@
 
 > Auto-generated — do not edit. Regenerate with `task roadmap-progress` or by running the `update_roadmap_progress` script for your install; rewritten on every roadmap create / execute / completion change (timestamp lives in git history).
 >
-> 17 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **16** open blockers
+> 17 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **17** open blockers
 
 ## Overall
 
-**105 / 257 steps done · 41%**
+**113 / 253 steps done · 45%**
 
 ```text
-████████████████░░░░░░░░░░░░░░░░░░░░░░░░   41%
+██████████████████░░░░░░░░░░░░░░░░░░░░░░   45%
 ```
 
 ## Open roadmaps
@@ -32,7 +32,7 @@
 | 14 | [road-to-tier-removal.md](roadmaps/road-to-tier-removal.md) | 4 | 8 | 2 | 6 | 0 | 0 | [1](#blockers-road-to-tier-removal) | ████████░░ 75% |
 | 15 | [road-to-ui-track-integrity-followup.md](roadmaps/road-to-ui-track-integrity-followup.md) | 1 | 10 | 10 | 0 | 0 | 0 | [2](#blockers-road-to-ui-track-integrity-followup) | ░░░░░░░░░░ 0% |
 | 16 | [road-to-worktree-hygiene.md](roadmaps/road-to-worktree-hygiene.md) | 1 | 9 | 2 | 7 | 0 | 0 | [1](#blockers-road-to-worktree-hygiene) | ████████░░ 78% |
-| 17 | [road-to-zero-ceremony-settings.md](roadmaps/road-to-zero-ceremony-settings.md) | 5 | 19 | 19 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+| 17 | [road-to-zero-ceremony-settings.md](roadmaps/road-to-zero-ceremony-settings.md) | 5 | 19 | 7 | 8 | 4 | 0 | [1](#blockers-road-to-zero-ceremony-settings) | █████░░░░░ 53% |
 
 ---
 
