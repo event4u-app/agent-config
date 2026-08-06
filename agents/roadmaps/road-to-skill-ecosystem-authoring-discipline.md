@@ -438,6 +438,40 @@ migration is a genuinely lossy authoring transform with no ledger, while
 - [x] The imperative-density report runs advisory and states its unsettled direction.
 - [ ] Quality gates delegated to remote CI on the pull request.
 
+## Second execution pass — 2026-08-06, all remaining phases closed
+
+Every step in Phases 2, 3 and 4 landed. The roadmap is complete apart from the
+remote-CI acceptance criterion, which closes on the pull request.
+
+**What shipped:** four new gates (`lint_example_fences`, `check_depth_budget`,
+`lint_rule_migration_ledger`, `lint_decision_impact`), a closure check added to
+`lint_rule_interactions`, a preemption check added to `lint_skill_descriptions`,
+44 migration ledgers, 8 new rule-interaction pairs, one schema field, and six
+authoring conventions. Every gate adopts the ledger interface, publishes a
+`scanned:` count, and carries a canary recipe.
+
+**Three steps departed from what they specified, each on a measurement:**
+
+- **Phase 4 Step 3** planned an advisory landing; the classification pass came
+  back **zero hits over 503 files**, so the gate shipped strict. An advisory
+  gate over an empty violation set is one nobody is obliged to act on.
+- **Phase 4 Step 5** planned a per-file ceiling; it shipped as a **shrink-only
+  ratchet** rather than the advisory the council proposed, because an advisory
+  number in a gate that exits 0 would leave the four outliers as four outliers
+  a year from now.
+- **Phase 3 Steps 5-6** planned to build a contradiction register on the
+  authority index. That index is a kernel rule and could not be touched, and a
+  register **already existed** — so the work became extending it, and the
+  corpus-wide gate the step described was measured at ~64 rows over a surface
+  two thirds boilerplate and deliberately not shipped. The bounded closure
+  check that shipped instead surfaced three unrecorded subordinations on its
+  first run.
+
+**The finding worth carrying forward** is Phase 3's: the migration ledger
+recorded **15 dropped sections across 9 rules**, several of them losses nobody
+had recorded, and three that left a live citation pointing at content which no
+longer exists. They are recorded, not repaired — a follow-up with its own scope.
+
 ## What landed in the first execution pass, and what did not
 
 Recorded 2026-08-06 so the next run starts from the state rather than
