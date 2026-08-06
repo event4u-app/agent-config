@@ -68,9 +68,26 @@ ask, and a large already-built fraction.
   `work_engine/scoring/decision_engine.ts` — it is simply not connected to
   `planning.risk_review` / `completion_review`. An adapter, not a subsystem, and
   explicitly not a new `plan:doctor` command: the CLI budget has zero headroom.
-- [ ] **P1.3 Ratchet `gate_self_test` adoption.** It exists with 4 adopters
+- [x] **P1.3 Ratchet `gate_self_test` adoption.** It exists with 4 adopters
   against 27 registered gates. Add adoption as a column in `gate-coverage.yml`
   and ratchet it. No new gate — a column on the existing one.
+  - **Shipped as the inverse, and the step's own numbers were stale.** Measured
+    at HEAD: **8 adopters, 31 registered** (the 4/27 figure was correct on
+    2026-08-05 and the manifest has grown since). Of the 31 rows registered
+    *enforced with a floor*, **7 adopt and 24 do not**.
+  - **Departure — a column ratcheted upward is the shape this file already
+    rejects.** `check_gate_coverage.ts` § `report_hardening_ratchet` states it
+    verbatim: a coverage-percentage ratchet "tracks how far the fix has spread
+    and can never regress, so it grades the solution instead of the problem".
+    So adoption ships as a **shrink-only NON-adopter count** —
+    `gate-self-test:registered-non-adopters`, baseline 24, target 0, and it CAN
+    rise when a new registered gate lands without a self-test. Same shape as the
+    sibling adoption ratchet (`check_gate_completeness`, baseline 217), and the
+    56-day non-stagnation clause applies unchanged.
+  - "No new gate" is honoured: the counter lives in `check_gate_coverage.ts`
+    beside the hardening ratchet, deriving adoption from the source
+    (`_lib/gate_self_test.js` import, or `// self-test-exempt: <reason>`) rather
+    than from a hand-maintained column that could drift from it.
 - [~] **P1.4 Deferred-finding owner + expiry.** Deferred. The stable-id index
   this needs was **explicitly declined** with a named revisit trigger at
   `check_review_dispositions.ts:16-22`, so this reopens a recorded decision —
@@ -152,11 +169,36 @@ before the file was written*.
   is open, while the read-side (`ui-audit-gate`) is closed. Build it as that
   rule's twin: tier 2b, `packs: [frontend-design]`, same diff-decidable
   `ui-trivial` allowlist. Cheapest real capability gain here.
-- [ ] **P5.3 Per-concern `tools:` matcher in the hook manifest** (from
+- [x] **P5.3 Per-concern `tools:` matcher in the hook manifest** (from
   `crytical-analysis.txt`). **13 concerns fire on every single tool call.**
   A `tools:` field per concern plus a generator change is the one latency lever
   the shipped hook-repair work left open — and it matches the measured finding
   that transport dominates hook cost.
+  - 13 confirmed (6 pre + 7 post, `hook_manifest.yaml`); three of them already
+    re-read `tool_name` and return early — after the dispatch cost is paid.
+  - **Departure 1 — no generator change.** The filter is applied by the
+    dispatcher in-process, not projected as a host `matcher`.
+    `build_claude_hook_matrix` collapses each event to ONE command and
+    `claude_hook_matrix_parity.test.ts` asserts one group with one command per
+    event, so per-concern matchers break that parity contract for a filter the
+    dispatcher can apply itself — and a matcher would help only the two hosts
+    that support one, against eight platforms in the manifest.
+  - **Departure 2 — the latency claim is withdrawn, not inherited.** The measured
+    finding was that the *invocation path* dominated (~370 of ~450–500 ms was
+    eager CLI imports), and that was repaired: p95 is ~84 ms. Nothing in the tree
+    measures the concern share of that 84 ms, so "the one latency lever" is
+    unverified. `bench_hook_latency` reads the manifest, so it is benchable; it
+    is not asserted until benched. What is true without a benchmark: a concern
+    that cannot fire on a tool no longer runs at all.
+  - **Scope — advisory concerns only, on purpose.** `tools:` is declared on
+    `code-graph-nudge`, whose set is provable from its own branch surface and
+    pinned against it by a test. It is deliberately NOT declared on the three
+    blocking guards: their tool sets span host naming variants (`Bash` /
+    `BashTool` / `launch-process` / `str-replace-editor` / …), so a list missing
+    one variant silently disables a security guard on that host.
+  - `lint_hook_manifest` validates the key (a typo or empty list fails the
+    build) because the dispatcher fails toward *running* the concern — an
+    unvalidated filter would look like it works while filtering nothing.
 - [ ] **P5.4 `check_corpus_staleness.ts`** (from `better-frontend.txt`). The
   design corpus pins a commit last checked **2026-06-07** and declares
   `refresh_cadence: quarterly` with **zero enforcement**. Clone
