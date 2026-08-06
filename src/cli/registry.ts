@@ -34,6 +34,7 @@ export const REGISTRY: readonly CommandEntry[] = [
     { name: 'settings:check', disposition: 'delegate', synopsis: 'Validate .agent-settings.yml against the YAML-subset contract (read-only).' },
     { name: 'settings:sync', disposition: 'delegate', synopsis: 'Additively merge new template keys into an existing .agent-settings.yml.' },
     { name: 'settings:migrate', disposition: 'delegate', synopsis: 'Lift legacy project-local settings into ~/.event4u/agent-config/.' },
+    { name: 'settings:set', disposition: 'delegate', synopsis: 'Set one A/B-class setting in the global file; C-class keys are refused.' },
     { name: 'uninstall', disposition: 'delegate', synopsis: 'Remove bridge markers (project) or lockfile entries (global).' },
     { name: 'prune', disposition: 'delegate', synopsis: 'Remove project bridge markers not declared in installed-tools.lock.' },
     { name: 'doctor', disposition: 'delegate', synopsis: 'Read-only drift report: manifest ↔ filesystem.' },

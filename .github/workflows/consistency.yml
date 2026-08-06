@@ -391,6 +391,11 @@ jobs:
       - name: Lint AGENTS.md (Thin-Root contract)
         run: task lint-agents-md
 
+      # Wired explicitly rather than relying on the `ci:` task list: no workflow
+      # invokes `task ci`, so a gate registered only there never runs remotely.
+      - name: Lint settings A/B/C classes (every template leaf is classified)
+        run: task lint-settings-classes
+
       - name: Cloud bundle dry-run (source invariants)
         run: task ci-cloud-bundle
 

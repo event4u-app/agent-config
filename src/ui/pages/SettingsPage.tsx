@@ -16,6 +16,13 @@ interface SettingsGetResponse {
     lastModified: number;
     path: string;
     schema: JsonSchemaLeaf | { definitions?: Record<string, JsonSchemaLeaf>; $ref?: string };
+    /** How each value came to be set — written by `settings:set`, absent before the first one. */
+    provenance?: Record<string, ProvenanceEntry>;
+}
+
+interface ProvenanceEntry {
+    source: string;
+    at: string;
 }
 
 interface DiffChange {
@@ -33,6 +40,7 @@ const errors = signal<Record<string, string>>({});
 const banner = signal<string | null>(null);
 const saving = signal(false);
 const pendingDiff = signal<DiffChange[] | null>(null);
+const provenance = signal<Record<string, ProvenanceEntry>>({});
 
 function unwrap(raw: SettingsGetResponse['schema']): JsonSchemaLeaf {
     if ('$ref' in raw && raw.$ref !== undefined && 'definitions' in raw && raw.definitions !== undefined) {
@@ -50,6 +58,7 @@ async function load(): Promise<void> {
         values.value = res.values;
         schema.value = unwrap(res.schema);
         lastModified.value = res.lastModified;
+        provenance.value = res.provenance ?? {};
         loaded.value = true;
     } catch (err) {
         loadError.value = err instanceof Error ? err.message : String(err);
@@ -86,7 +95,11 @@ async function commit(): Promise<void> {
         const res = await apiFetch<{ lastModified: number; writtenPaths: string[] }>('/api/v1/settings', {
             method: 'PUT',
             headers: { 'If-Unmodified-Since': String(lastModified.value) },
-            body: { values: values.value },
+            // The diff modal the user just confirmed IS the human review the
+            // server's guarded-key gate asks for. Anything reaching this route
+            // WITHOUT that flag did not pass a human, which is exactly the
+            // caller the gate exists to stop.
+            body: { values: values.value, confirmGuarded: true },
         });
         lastModified.value = res.lastModified;
         pendingDiff.value = null;
@@ -142,6 +155,45 @@ function DiffModal({ changes }: { changes: DiffChange[] }): preact.JSX.Element {
     );
 }
 
+/**
+ * How each recorded value came to be set.
+ *
+ * Deliberately a separate table rather than a column inside the form: the form
+ * is generated from the JSON schema and shows every key, while provenance
+ * exists only for keys somebody actually decided. Rendering "—" beside 140
+ * fields would bury the handful that carry a real answer, and the point of the
+ * stamp is that a decision is visible as a decision.
+ *
+ * Absent before the first `settings:set` write, and that emptiness is stated
+ * rather than rendered as a blank table.
+ */
+function ProvenanceTable({ entries }: { entries: Record<string, ProvenanceEntry> }): preact.JSX.Element {
+    const rows = Object.entries(entries).sort(([a], [b]) => a.localeCompare(b));
+    return (
+        <section class="ac-provenance">
+            <h2>How these were set</h2>
+            {rows.length === 0
+                ? <p>No recorded decisions yet — every value is still its documented default.</p>
+                : (
+                    <table class="ac-provenance__table">
+                        <thead>
+                            <tr><th scope="col">Setting</th><th scope="col">Set by</th><th scope="col">When</th></tr>
+                        </thead>
+                        <tbody>
+                            {rows.map(([key, entry]) => (
+                                <tr key={key}>
+                                    <td><code>{key}</code></td>
+                                    <td>{entry.source}</td>
+                                    <td>{entry.at}</td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                )}
+        </section>
+    );
+}
+
 export function SettingsPage(): preact.JSX.Element {
     useEffect(() => { void load(); }, []);
 
@@ -181,6 +233,7 @@ export function SettingsPage(): preact.JSX.Element {
                     </>
                 }
             />
+            <ProvenanceTable entries={provenance.value} />
             {pendingDiff.value !== null ? <DiffModal changes={pendingDiff.value} /> : null}
         </div>
     );

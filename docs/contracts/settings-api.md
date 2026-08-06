@@ -77,6 +77,18 @@ Response (200):
 }
 ```
 
+`provenance` (road-to-zero-ceremony-settings § Phase 2) carries, per dotted
+leaf, **how** the value came to be set — `{ source, at }` where `source` is
+`auto-detected | jit-answer | manual | gui` and `at` is ISO-8601 UTC. It is read
+from the `settings/.agent-settings.provenance.json` sidecar and is `{}` before
+the first `agent-config settings:set` write. Distinct from `sources` below,
+which says which *layer* a value came from; this says how the *decision* was
+made. The sidecar is deliberately not part of the settings YAML: that file has a
+leaf-for-leaf parity test against `settingsSchema`, and bookkeeping keys inside
+it would mean relaxing the gate that keeps the form generator honest. A missing
+or unparseable sidecar degrades to `{}` — provenance is a record about a
+decision, never a gate on one.
+
 `sources` (road-to-setup-experience § Phase 5.4) carries the dotted
 leaf paths present in each layer FILE (not the merged tree) so the
 settings hub can badge which layer supplies a value — a `project`
@@ -121,15 +133,49 @@ populated).
 
 Validates, merges with disk, writes atomically.
 
-Request: same shape as `/diff`. Required header:
+Request: same shape as `/diff`, plus two optional booleans —
+`confirmSharedWrite` and `confirmGuarded`. Required header:
 `If-Unmodified-Since: <ms-epoch>`.
 
 Response (200): `{ "lastModified": <new-ms-epoch>, "writtenPaths": [".agent-settings.yml"] }`.
 
 Errors: **412 Precondition Required** when the header is absent;
 **409 Conflict** when the on-disk mtime is newer than the header value;
+**409 `error: "guarded-keys"`** when the write changes a class-C key and
+`confirmGuarded` is not `true` (below);
 **422 Unprocessable Entity** with per-field errors on validation
 failure; **500** with `code=ATOMIC_WRITE` if the temp-rename loop fails.
+
+#### The guarded-key gate
+
+Keys classified **C** in [`settings-classes.md`](settings-classes.md) govern
+spend, an allow/deny list, a gate, agent authority, what code runs, egress, a
+credential, or the audit trail. The `settings:set` CLI refuses them outright,
+because its caller is an agent. This route cannot: the contract names the GUI's
+write route as one of the two paths a C-class key may legitimately travel. What
+it does instead is refuse to take such a change **on trust** — the loopback API
+is reachable by anything running on the machine, and an unconfirmed PUT is
+indistinguishable from a human at the form.
+
+```json
+{
+    "error": "guarded-keys",
+    "guardedKeys": ["rule_loading_tier"],
+    "classContractRead": true,
+    "message": "This write changes guarded (class C) settings — …"
+}
+```
+
+`classContractRead` is `false` when the class contract could not be read. The
+route then treats **every** changed key as guarded, because unverifiable is not
+the same as unguarded — and the flag lets the caller tell a refusal-because-
+guarded apart from a refusal-because-unverifiable rather than reading the first
+as the second forever.
+
+Only genuinely changed keys are considered, and absent / `null` / empty-scalar
+count as the same value: a confirmation that appears on every save is one nobody
+reads. The SPA sends `confirmGuarded: true` from its commit path, where the diff
+modal the user just approved is the human review this gate asks for.
 
 ### `GET /api/v1/settings/changes`
 
