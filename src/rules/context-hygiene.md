@@ -81,8 +81,8 @@ A mandated analysis/audit/review protocol is exactly the case that legitimately 
 - **Undeclared reading keeps 3-warn / 5-abort.** Unchanged.
 - **A declared protocol raises the abort to 8 read-only turns** — and never suspends it. "Non-bypassable" narrows to **no *silent* bypass**: a declared protocol is not silent.
 
-> **The 8 is provisional (n=1).** It comes from a single observed run — the coherence audit that motivated this clause needed 8+ read turns and was the protocol working, not a loop. That is a plausible number without a reproducible derivation, which is the same failure class as the "17 rules carry absolutes" figure this rule's own roadmap refuted. It is stated here rather than presented as measured.
-> **Revisit-if:** declared-protocol read counts have been observed across enough real sessions to take a p95 — then set the cap from that distribution and drop this note. Not a schedule; a trigger.
+> **The 8 is a guess, and specifically a LOWER BOUND.** One observed run — the coherence audit that motivated this clause — needed 8+ read turns and was legibly the protocol working, not a loop. So 8 is "the number that was enough once", not a measured optimum: n=1 says almost nothing about where the tail of the distribution sits, and nobody knows how many sessions silently hit the old 5 and should have continued. Calling this a derivation would be false advertising, which is the same failure class as the "17 rules carry absolutes" figure this rule's own roadmap refuted.
+> **Revisit-if — whichever comes first:** (a) **≥ 10 declared-protocol sessions** have been observed, at which point set the cap from their p95 and delete this note; or (b) **90 days** elapse with fewer than 10, which is itself the answer — declared protocols are rare, the cap is not load-bearing, and it drops back to the undeclared 5. A condition like "once a distribution exists" was rejected as unfalsifiable: it is gradual, never feels urgent, and absence of complaints is indistinguishable from absence of measurement.
 
 A declaration is only valid when it states, before the reading starts, all three of:
 

@@ -41,6 +41,12 @@
  * that are not imperatives addressed to the agent.
  *
  * Output: default table, `--json` for the deterministic record.
+ *
+ * SCOPE: this is a CLOSED decision input, not ongoing instrumentation — see
+ * docs/decisions/ADR-218-absoluta-census-is-a-closed-decision-input.md. Nothing
+ * consumes the number; it exists so the figures in that record can be
+ * re-derived instead of cited from a commit message. A future "did this PR
+ * introduce a new absolute?" check is a DIFFERENT tool that watches diffs.
  */
 
 import * as fs from 'node:fs';

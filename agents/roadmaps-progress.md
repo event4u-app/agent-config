@@ -6,10 +6,10 @@
 
 ## Overall
 
-**140 / 254 steps done · 55%**
+**141 / 254 steps done · 56%**
 
 ```text
-██████████████████████░░░░░░░░░░░░░░░░░░   55%
+██████████████████████░░░░░░░░░░░░░░░░░░   56%
 ```
 
 ## Open roadmaps
@@ -22,7 +22,7 @@
 | 4 | [road-to-kernel-question-triangle.md](roadmaps/road-to-kernel-question-triangle.md) | 1 | 3 | 3 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 5 | [road-to-maintainer-bus-factor.md](roadmaps/road-to-maintainer-bus-factor.md) | 4 | 12 | 5 | 7 | 0 | 0 | [1](#blockers-road-to-maintainer-bus-factor) | ██████░░░░ 58% |
 | 6 | [road-to-orchestration-scope-decision.md](roadmaps/road-to-orchestration-scope-decision.md) | 4 | 10 | 6 | 4 | 0 | 0 | [1](#blockers-road-to-orchestration-scope-decision) | ████░░░░░░ 40% |
-| 7 | [road-to-rule-coherence-followup.md](roadmaps/road-to-rule-coherence-followup.md) | 5 | 9 | 9 | 0 | 0 | 0 | [2](#blockers-road-to-rule-coherence-followup) | ░░░░░░░░░░ 0% |
+| 7 | [road-to-rule-coherence-followup.md](roadmaps/road-to-rule-coherence-followup.md) | 5 | 9 | 8 | 1 | 0 | 0 | [2](#blockers-road-to-rule-coherence-followup) | █░░░░░░░░░ 11% |
 | 8 | [road-to-scale-history-bench-run.md](roadmaps/road-to-scale-history-bench-run.md) | 1 | 2 | 2 | 0 | 0 | 0 | [1](#blockers-road-to-scale-history-bench-run) | ░░░░░░░░░░ 0% |
 | 9 | [road-to-skill-ecosystem-authoring-discipline.md](roadmaps/road-to-skill-ecosystem-authoring-discipline.md) | 6 | 52 | 24 | 27 | 1 | 0 | 0 | █████░░░░░ 53% |
 | 10 | [road-to-skill-ecosystem-gate-integrity.md](roadmaps/road-to-skill-ecosystem-gate-integrity.md) | 7 | 43 | 3 | 40 | 0 | 0 | [1](#blockers-road-to-skill-ecosystem-gate-integrity) | █████████░ 93% |
@@ -127,7 +127,7 @@ _1 blocker resolved._
 
 ### [road-to-rule-coherence-followup.md](roadmaps/road-to-rule-coherence-followup.md)
 
-**Follow-up to road-to-rule-coherence** — 0 / 9 done (0%)
+**Follow-up to road-to-rule-coherence** — 1 / 9 done (11%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
@@ -135,7 +135,7 @@ _1 blocker resolved._
 | 2 | Measure, with the comparison that is actually open | ⬜ not started | 1 | 0 | 0 | 0 | 0% |
 | 3 | Architecture, owned elsewhere | ⬜ not started | 1 | 0 | 0 | 0 | 0% |
 | 4 | Re-adjudicate what the audit left open | ⬜ not started | 1 | 0 | 0 | 0 | 0% |
-| 5 | Retire the two provisional numbers | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
+| 5 | Retire the two provisional numbers | 🟡 in progress | 1 | 1 | 0 | 0 | 50% |
 
 <a id="blockers-road-to-rule-coherence-followup"></a>
 **Blockers**
