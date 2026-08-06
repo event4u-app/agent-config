@@ -102,9 +102,10 @@ sanctioned solicitation.
 One row per finding:
 
 ```markdown
-| ID | Severity | Finding (one sentence) | Command executed | Captured output (excerpt) | Competitor baseline (if any) |
-|----|----------|------------------------|------------------|---------------------------|------------------------------|
-| F1 | S0       | …                      | `…`              | `…`                       | …                            |
+| ID | Severity | Confidence | Finding (one sentence) | Command executed | Captured output (excerpt) | Competitor baseline (if any) |
+|----|----------|------------|------------------------|------------------|---------------------------|------------------------------|
+| F1 | S0       | confirmed  | …                      | `…`              | `…`                       | …                            |
+| F2 | S1       | unverified | …                      | `…`              | `…`                       | …                            |
 ```
 
 Severity scale:
@@ -128,6 +129,64 @@ behind it is recorded as `UNSWEPT` — unswept is not passed. An `UNSWEPT`
 first-priority surface voids any "nothing found" conclusion for that
 surface. "Checked X" without its command is discarded exactly like a
 finding without one (§ 2.4 applied to coverage, not only to findings).
+
+### Severity is carried, never used to decide what to report
+
+```
+EVERY FINDING CARRIES A SEVERITY. FILTERING HAPPENS IN A SEPARATE PASS,
+AFTER THE LEDGER IS COMPLETE — NEVER INSIDE THE REVIEW.
+NEVER INSTRUCT A REVIEWER TO PRE-FILTER BY SEVERITY.
+```
+
+The failure this forbids is specific and it is not laziness. An instruction to
+"only report high and above" is followed **literally**: the reviewer
+investigates fully, finds the defects, and then declines to report the ones
+below the bar. Precision rises, recall appears to collapse, and the regression
+reads as a capability problem in the reviewer rather than as an instruction
+defect in the prompt. The findings were found. They were withheld.
+
+So the two operations are separated: the review produces every finding it has,
+each tagged S0–S3; whoever consumes the ledger filters it. A consumer that wants
+only S0 and S1 slices the ledger — it does not ask for a shorter review.
+
+**Verified 2026-08-06:** grepped 14 judge and review skills plus 12 review and
+judge commands for pre-filter phrasings — **zero matches**. This tree does not
+carry the defect today; the clause exists so the next author does not introduce
+it, and so the grep has something to be checked against.
+
+### Confidence is a separate field, and an unconfirmed finding is preserved
+
+```
+AN UNCONFIRMED HIGH-SEVERITY FINDING IS TAGGED, NEVER DROPPED.
+CONFIDENCE IS NOT SEVERITY. A CONFIDENT NOTE AND AN UNCERTAIN BREACH
+ARE DIFFERENT FACTS AND MUST NOT COLLAPSE INTO ONE COLUMN.
+```
+
+Severity says *how bad if real*. Confidence says *how sure it is real*. Folding
+them produces the worst available default — a possible S0 downgraded to S2
+because the reviewer was unsure, which loses exactly the finding a human most
+needs to see.
+
+The ledger row therefore carries `Confidence` beside `Severity`
+(`confirmed | plausible | unverified`), and an S0 or S1 the reviewer could not
+confirm ships **as S0/S1, tagged `unverified`**, with what it would take to
+settle it. Dropping it is not available: an unverified breach is a question for
+the human, and the reviewer's uncertainty is not authority to answer it.
+
+### Rubric shape — scope, do-not-flag, and what a gate already owns
+
+Every per-check rubric in a judge artifact carries three things:
+
+1. **A scope column** — what this check looks at. A check with no stated scope
+   expands to fill the reviewer's imagination.
+2. **A do-not-flag list** — the near-misses this check must stay silent on,
+   named. This is the false-positive-fatigue control the question surface
+   already fights for, applied to the review surface: a reviewer that flags
+   everything is filtered out entirely, which costs more recall than any
+   pre-filter would have.
+3. **A closing instruction not to report what a deterministic gate already
+   owns.** If a lint fails the build on it, a review finding about it is noise
+   that competes for attention with the findings nothing else catches.
 
 ## § 4 — Solicitation template (ready to paste)
 

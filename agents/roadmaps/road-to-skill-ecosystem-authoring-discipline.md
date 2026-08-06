@@ -166,12 +166,13 @@ migration is a genuinely lossy authoring transform with no ledger, while
 
 ## Phase 6: Review and judge output shape
 
-- [ ] **Step 1:** Remove any instruction to a reviewer to pre-filter by severity from the judge cluster and the review command. The instruction is followed literally: the model investigates fully, finds the defects, then declines to report those below the bar, so precision rises while recall appears to collapse and the regression reads as a capability problem.
-- [ ] **Step 2:** Require every finding to carry a severity and filter in a separate pass.
-- [ ] **Step 3:** Add the rubric shape to every judge skill: a scope column per check, a paired do-not-flag list per check, and a closing instruction not to report what a deterministic gate already owns. This is the false-positive-fatigue control this package fights on the question surface, applied to the review surface.
-- [ ] **Step 4:** Preserve an unconfirmed high-severity finding with an explicit tag rather than dropping it, and carry confidence as a field separate from severity.
-- [ ] **Step 5:** Add an advisory imperative-density report over authored rules and skills, printing the ratio without gating on it. Section 2 of the sweep record leaves the style question open; a gate would prejudge it, and an advisory number is the input a future decision needs.
-- [ ] **Step 6:** State plainly in the report's header that the direction of the metric is unsettled, citing § R2. A number whose direction is unknown must not be read as a target.
+- [x] **Step 1:** Remove any instruction to a reviewer to pre-filter by severity from the judge cluster and the review command.
+      **Honest null — nothing to remove.** Grepped 14 judge and review skills plus 12 review and judge commands for pre-filter phrasings: **zero matches**. The defect class is absent from this tree. The prohibition is now stated in `adversarial-review-protocol` § 3 so the next author does not introduce it, and so the grep has a clause to be checked against. The instruction is followed literally: the model investigates fully, finds the defects, then declines to report those below the bar, so precision rises while recall appears to collapse and the regression reads as a capability problem.
+- [x] **Step 2:** Require every finding to carry a severity and filter in a separate pass.
+- [x] **Step 3:** Add the rubric shape to every judge skill: a scope column per check, a paired do-not-flag list per check, and a closing instruction not to report what a deterministic gate already owns. This is the false-positive-fatigue control this package fights on the question surface, applied to the review surface.
+- [x] **Step 4:** Preserve an unconfirmed high-severity finding with an explicit tag rather than dropping it, and carry confidence as a field separate from severity.
+- [x] **Step 5:** Add an advisory imperative-density report over authored rules and skills, printing the ratio without gating on it. Section 2 of the sweep record leaves the style question open; a gate would prejudge it, and an advisory number is the input a future decision needs.
+- [x] **Step 6:** State plainly in the report's header that the direction of the metric is unsettled, citing § R2. A number whose direction is unknown must not be read as a target.
 
 ## Acceptance Criteria
 
