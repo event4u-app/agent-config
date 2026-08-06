@@ -1053,12 +1053,51 @@ function _read_rule_packs(): string[] | null {
  * compiles and behaves unchanged.
  */
 /** List rule basenames under RULES_SOURCE, workspace/pack scope applied. */
+/**
+ * Is this rule `type: manual` (ADR-004 reference-only)?
+ *
+ * The schema is explicit: `manual` = "no auto-injection (zero workspace-budget
+ * cost); file remains as a reference document linkable from skills/contexts."
+ * `compile_router` already honours the first half by omitting manual rules from
+ * `dist/router.json`. The per-tool projection did NOT: it symlinked them into
+ * `.claude/rules/` (and siblings), so under the default `eager-all` projection
+ * their full bodies were injected every turn — the exact opposite of "zero
+ * workspace-budget cost". `brand-consistency` is the clearest case: its own body
+ * says "reference-only, no router emission", and it shipped in context anyway.
+ *
+ * Excluded from the per-tool trees ONLY. The file keeps its place in
+ * `dist/agent-src/rules/`, which is what "remains as a reference document
+ * linkable" requires — inbound cross-references must still resolve.
+ */
+function _is_manual_rule(rule_path: string): boolean {
+    let content: string;
+    try {
+        content = fs.readFileSync(rule_path, 'utf-8');
+    } catch {
+        return false; // unreadable → fail open, same posture as the scope filters
+    }
+    const [fm_lines] = _split_frontmatter(content);
+    if (fm_lines === null) {
+        return false;
+    }
+    for (const line of fm_lines) {
+        const m = /^type:\s*["']?([a-z]+)["']?\s*$/.exec(line);
+        if (m) {
+            return m[1] === 'manual';
+        }
+    }
+    return false;
+}
+
 function _scoped_rule_basenames(): string[] {
     const scope = _read_rule_workspaces();
     const pack_scope = _read_rule_packs();
     return _iterdirSorted(MODULE_STATE.RULES_SOURCE)
         .filter((p) => p.endsWith('.md') && _isFile(p))
         .filter((p) => rule_in_scope(p, scope, pack_scope))
+        // ADR-004: a manual rule costs zero workspace budget, so it never gets a
+        // per-tool symlink regardless of projection mode. See _is_manual_rule.
+        .filter((p) => !_is_manual_rule(p))
         // A compile-disabled rule has no dist/agent-src/ counterpart, so a per-tool
         // symlink to it would dangle. The source file still exists, which is why the
         // scope filters alone let it through — the toggle is a separate axis and this
@@ -1311,7 +1350,10 @@ export function generate_cursor_mdc_rules(): number {
     const pack_scope = _read_rule_packs();
     const rules = _rglobSorted(MODULE_STATE.RULES_SOURCE, '*.md')
         .filter((p) => _isFile(p))
-        .filter((p) => rule_in_scope(p, scope, pack_scope));
+        .filter((p) => rule_in_scope(p, scope, pack_scope))
+        // ADR-004 manual rules are reference-only — never auto-injected into a
+        // per-tool tree. Same predicate as generate_rule_symlinks.
+        .filter((p) => !_is_manual_rule(p));
     const stems = rules.map((r) => path.basename(r, '.md'));
     const valid = new Set([
         ...stems.map((s) => `${s}.mdc`),
@@ -1330,7 +1372,10 @@ export function generate_windsurf_modern_rules(): number {
     const pack_scope = _read_rule_packs();
     const rules = _rglobSorted(MODULE_STATE.RULES_SOURCE, '*.md')
         .filter((p) => _isFile(p))
-        .filter((p) => rule_in_scope(p, scope, pack_scope));
+        .filter((p) => rule_in_scope(p, scope, pack_scope))
+        // ADR-004 manual rules are reference-only — never auto-injected into a
+        // per-tool tree. Same predicate as generate_rule_symlinks.
+        .filter((p) => !_is_manual_rule(p));
     const valid = new Set(rules.map((r) => path.basename(r)));
     _clean_modern_dir(_WINDSURF_RULES_DIR(), valid);
     for (const rule of rules) {

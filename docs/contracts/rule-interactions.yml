@@ -33,6 +33,14 @@ rules:
   - agent-authority
   - language-and-tone
   - direct-answers
+  - no-cheap-questions
+  - user-interrupt-priority
+  - engineering-safety-floor
+  - context-hygiene
+  - secret-vcs-guard
+  - fast-path-marker-visibility
+  - role-mode-adherence
+  - session-canary
 
 pairs:
 
@@ -258,3 +266,172 @@ pairs:
     evidence:
       - .agent-src.uncondensed/rules/language-and-tone.md#iron-law--mirror-the-users-language-always
       - .agent-src.uncondensed/rules/direct-answers.md#iron-law-1--no-flattery
+
+  - id: ask-x-no-cheap-questions
+    rules: [ask-when-uncertain, no-cheap-questions]
+    relation: narrows
+    conflict: >-
+      Two kernel rules with opposite defaults fire on the same moment.
+      `ask-when-uncertain` Iron Law: "ONE QUESTION PER TURN. NO
+      EXCEPTIONS." plus "When in doubt, ask." `no-cheap-questions` Iron
+      Law: "NEVER ASK WHAT CONTEXT ANSWERS", enforced by a 14-point
+      pre-send self-check whose every branch ends in "don't ask".
+      Undeclared until now, so nothing said which wins.
+    resolution: >-
+      They compose; they do not compete, once the split is stated.
+      `ask-when-uncertain` decides whether a genuine decision point
+      exists and owns the shape (one per turn, numbered options).
+      `no-cheap-questions` is the narrower filter on that set: it
+      removes asks whose answer is already in the stated context, asks
+      that offer an Iron-Law-violating option, and asks that differ only
+      in sequencing. It never manufactures silence where real ambiguity
+      remains — its own closing line is "In doubt → ask: this rule
+      narrows asking, never widens silence." So the composed test is
+      ask iff (context does not answer it) AND (proceeding on the wrong
+      branch is destructive or expensive). When the filter and the
+      trigger genuinely disagree, `ask-when-uncertain` wins: a
+      suppressed question that was real costs more than one extra turn.
+    evidence:
+      - .agent-src.uncondensed/rules/ask-when-uncertain.md#iron-law--one-question-per-turn-always
+      - .agent-src.uncondensed/rules/no-cheap-questions.md#the-iron-laws
+
+  - id: interrupt-x-no-cheap-questions
+    rules: [user-interrupt-priority, no-cheap-questions]
+    relation: overrides
+    conflict: >-
+      The user interrupts with a new task; the agent finishes it and must
+      decide whether to resume the interrupted one. `user-interrupt-priority`
+      mandates the ask ("THEN ASK BEFORE RESUMING THE OLD TASK") and states it
+      holds "regardless of `personal.autonomy`, standing autonomy directives,
+      or roadmap authorization". `no-cheap-questions` Iron Law 4 forbids it
+      under exactly those conditions ("STANDING AUTONOMOUS MANDATE ACTIVE →
+      NEVER ASK 'WEITER? / NEXT STEP? / SHALL I CONTINUE?'"). A
+      `/roadmap:process-full` invocation is itself a listed mandate trigger, so
+      the contradiction is live in the package's own execution commands.
+    resolution: >-
+      `user-interrupt-priority` wins: the resume ask survives the mandate. The
+      two are only superficially the same question. Iron Law 4 suppresses a
+      *continuation prompt* — "a clean edit-batch is not a halt condition", i.e.
+      the agent asking permission to keep doing the work it was already told to
+      do. The resume ask is a *task-boundary decision the user themselves
+      created* by interrupting: which of two deliverables to work on next. The
+      agent cannot answer it from context, because the user's interrupt is the
+      only evidence of their current priority. Resume-after-interrupt is
+      therefore added to Iron Law 4's halt list in
+      `contexts/execution/cheap-question-mechanics.md` as a sixth condition.
+    evidence:
+      - .agent-src.uncondensed/rules/user-interrupt-priority.md#the-iron-law
+      - .agent-src.uncondensed/rules/no-cheap-questions.md#iron-law-4--no-continuation-prompts-under-autonomous-mandate
+      - src/agent-src/contexts/execution/cheap-question-mechanics.md
+
+  - id: ndd-x-engineering-safety-floor
+    rules: [non-destructive-by-default, engineering-safety-floor]
+    relation: restates
+    conflict: >-
+      Both open with an unqualified supremacy claim over the same surface.
+      `non-destructive-by-default`: "HARD FLOOR OVERRIDES EVERYTHING."
+      `engineering-safety-floor`: "HARD FLOOR OVERRIDES EVERYTHING. DEPLOY,
+      MERGE-TO-PROD-TRUNK, PROD DATA / INFRA, BULK DESTRUCTIVE — EXPLICIT
+      USER CONFIRMATION ON THIS TURN." Read cold, two rules assert final
+      authority over deploys and prod-trunk merges with no stated order.
+    resolution: >-
+      `non-destructive-by-default` is canonical; `engineering-safety-floor`
+      restates its triggers for the engineering surface and adds the
+      evidence the user needs to judge the call — blast radius, rollback
+      path, pre-flight checks, observability, named risk owner. Its own
+      body already says so ("This rule does not lift the Hard Floor — it
+      surfaces the engineering-shaped evidence"), which is why this is a
+      restatement rather than a contest. Declared so the ordering is
+      machine-readable instead of inferable only by reading both bodies.
+    evidence:
+      - .agent-src.uncondensed/rules/non-destructive-by-default.md#the-iron-law
+      - .agent-src.uncondensed/rules/engineering-safety-floor.md#iron-law--production-infra-and-bulk-destructive-moves-are-never-autonomous
+
+  - id: context-hygiene-x-autonomous-execution
+    rules: [context-hygiene, autonomous-execution]
+    relation: gates
+    conflict: >-
+      `autonomous-execution` grants a standing mandate to keep working
+      without trivial questions. `context-hygiene`'s read-loop abort fires
+      at 5 read-only turns and declares itself "Non-bypassable: an
+      autonomous mandate does **not** lift the abort". So the mandate says
+      continue and the abort says stop, on the same turn, with neither
+      naming the other.
+    resolution: >-
+      `context-hygiene` gates: the abort holds and the mandate does not lift
+      it. That is deliberate — the abort is the safety net that keeps
+      autonomy from becoming a token sink, so a rule that autonomy could
+      switch off would be worthless. What the mandate DOES lift is the
+      cheap-question floor around it: the agent stops and states what it
+      has, rather than asking permission to continue reading. The declared
+      read protocol (goal + expected count + output shape) raises the abort
+      to 8 turns for legible analysis work instead of suspending it.
+    evidence:
+      - .agent-src.uncondensed/rules/context-hygiene.md#read-loop-detection--the-15--25-rule
+      - .agent-src.uncondensed/rules/autonomous-execution.md#validation-loop-budget--hard-cap-n3-per-target
+
+  - id: secret-guard-x-commit-policy
+    rules: [secret-vcs-guard, commit-policy]
+    relation: gates
+    conflict: >-
+      `commit-policy` names four exceptions under which committing is
+      allowed and forbids even asking about it otherwise.
+      `secret-vcs-guard` requires a STOP-and-ask on a high-confidence
+      credential match at exactly the moment a commit is authorized —
+      "NEVER SILENTLY COMMIT A SECRET. NEVER SILENTLY STRIP ONE." One rule
+      forbids the commit question; the other mandates one.
+    resolution: >-
+      `secret-vcs-guard` gates every commit path, including an authorized
+      one. `commit-policy`'s "never ask about committing" bans the
+      permission question ("should I commit?"), not a safety surface: the
+      secret prompt is not asking whether to commit, it is reporting that
+      the staged content contains a live credential and that committing it
+      is irreversible. Same shape as the `no-pr-progress-comments` safety
+      carve-out. The commit proceeds only on an explicit user choice, and
+      the agent never auto-strips.
+    evidence:
+      - .agent-src.uncondensed/rules/secret-vcs-guard.md#the-iron-law
+      - .agent-src.uncondensed/rules/commit-policy.md#never-ask-about-committing
+
+  - id: fast-path-marker-x-session-canary
+    rules: [fast-path-marker-visibility, session-canary]
+    relation: overrides
+    conflict: >-
+      Both rules claim the reply's FIRST line, literally.
+      `fast-path-marker-visibility`: "First non-whitespace line of the reply
+      is the marker. No prose, greeting, or restating-the-question above it."
+      `session-canary`: the first reply of every new task "opens by addressing
+      the user by that name". On a task-start turn that also resolves through
+      the low-impact fast path, both cannot be first.
+    resolution: >-
+      The marker wins the first line; the greeting moves to the first prose
+      line directly beneath it. The marker is an audit signal that downstream
+      agents and tooling pattern-match on, and its wording is normative — a
+      greeting above it breaks the match. The canary is a liveness signal for
+      a human reader, and it survives intact one line lower. Neither rule
+      loses its function; only the ordering needed stating.
+    evidence:
+      - .agent-src.uncondensed/rules/fast-path-marker-visibility.md#the-iron-law
+      - .agent-src.uncondensed/rules/session-canary.md#the-two-canaries
+
+  - id: direct-answers-x-role-mode-adherence
+    rules: [role-mode-adherence, direct-answers]
+    relation: overrides
+    conflict: >-
+      Both rules claim the reply's LAST line. `direct-answers` Iron Law 3
+      (restated by `session-canary`): a PR created this turn puts its raw URL
+      as "the **literal last line**". `role-mode-adherence`: every closing
+      output ends with the structured mode marker
+      `<!-- role-mode: … -->`. A turn that creates a PR while a role mode is
+      active cannot satisfy both as written.
+    resolution: >-
+      The mode marker goes last; the PR URL is the last line of PROSE,
+      immediately above it. The marker is an HTML comment — invisible in
+      rendered output — so a human still reads the URL as the closing line,
+      which is the purpose the literal-last-line rule serves (a scannable
+      handle, not a byte offset). A visible line below the URL would break
+      that purpose; an invisible one does not. Where no role mode is active
+      the marker is absent and the URL is last unconditionally.
+    evidence:
+      - .agent-src.uncondensed/rules/direct-answers.md#iron-law-3--brevity-by-default
+      - .agent-src.uncondensed/rules/role-mode-adherence.md
