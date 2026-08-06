@@ -36,8 +36,11 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import { match_prompt, type Router } from '../_lib/router_match.js';
 import { load_agent_settings } from '../_lib/agent_settings.js';
 import { read_entries } from '../chat_history.js';
+import { resolvePackageRoot } from '../_lib/package_root.js';
 
-const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..', '..');
+// Marker-anchored, not hop-counted — see the sibling note in cmd_route_explain.ts.
+// Both routing commands were the last two `_cli` entries still counting hops.
+const REPO_ROOT = resolvePackageRoot(import.meta.url);
 const ROUTER_JSON = path.join(REPO_ROOT, 'dist', 'router.json');
 
 // cache-version: v1 — rebuildable audit log: delete-and-rerun rebuilds it from
