@@ -6,10 +6,10 @@
 
 ## Overall
 
-**109 / 265 steps done · 41%**
+**113 / 253 steps done · 45%**
 
 ```text
-████████████████░░░░░░░░░░░░░░░░░░░░░░░░   41%
+██████████████████░░░░░░░░░░░░░░░░░░░░░░   45%
 ```
 
 ## Open roadmaps
@@ -22,7 +22,7 @@
 | 4 | [road-to-kernel-question-triangle.md](roadmaps/road-to-kernel-question-triangle.md) | 1 | 3 | 3 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 5 | [road-to-maintainer-bus-factor.md](roadmaps/road-to-maintainer-bus-factor.md) | 4 | 12 | 5 | 7 | 0 | 0 | [1](#blockers-road-to-maintainer-bus-factor) | ██████░░░░ 58% |
 | 6 | [road-to-orchestration-scope-decision.md](roadmaps/road-to-orchestration-scope-decision.md) | 4 | 10 | 6 | 4 | 0 | 0 | [1](#blockers-road-to-orchestration-scope-decision) | ████░░░░░░ 40% |
-| 7 | [road-to-rule-coherence.md](roadmaps/road-to-rule-coherence.md) | 4 | 20 | 11 | 4 | 4 | 1 | [3](#blockers-road-to-rule-coherence) | ███░░░░░░░ 27% |
+| 7 | [road-to-rule-coherence-followup.md](roadmaps/road-to-rule-coherence-followup.md) | 4 | 7 | 7 | 0 | 0 | 0 | [2](#blockers-road-to-rule-coherence-followup) | ░░░░░░░░░░ 0% |
 | 8 | [road-to-scale-history-bench-run.md](roadmaps/road-to-scale-history-bench-run.md) | 1 | 2 | 2 | 0 | 0 | 0 | [1](#blockers-road-to-scale-history-bench-run) | ░░░░░░░░░░ 0% |
 | 9 | [road-to-skill-ecosystem-authoring-discipline.md](roadmaps/road-to-skill-ecosystem-authoring-discipline.md) | 6 | 52 | 52 | 0 | 0 | 0 | [2](#blockers-road-to-skill-ecosystem-authoring-discipline) | ░░░░░░░░░░ 0% |
 | 10 | [road-to-skill-ecosystem-gate-integrity.md](roadmaps/road-to-skill-ecosystem-gate-integrity.md) | 7 | 43 | 3 | 40 | 0 | 0 | [1](#blockers-road-to-skill-ecosystem-gate-integrity) | █████████░ 93% |
@@ -32,7 +32,7 @@
 | 14 | [road-to-tier-removal.md](roadmaps/road-to-tier-removal.md) | 4 | 8 | 2 | 6 | 0 | 0 | [1](#blockers-road-to-tier-removal) | ████████░░ 75% |
 | 15 | [road-to-ui-track-integrity-followup.md](roadmaps/road-to-ui-track-integrity-followup.md) | 1 | 10 | 10 | 0 | 0 | 0 | [2](#blockers-road-to-ui-track-integrity-followup) | ░░░░░░░░░░ 0% |
 | 16 | [road-to-worktree-hygiene.md](roadmaps/road-to-worktree-hygiene.md) | 1 | 9 | 2 | 7 | 0 | 0 | [1](#blockers-road-to-worktree-hygiene) | ████████░░ 78% |
-| 17 | [road-to-zero-ceremony-settings.md](roadmaps/road-to-zero-ceremony-settings.md) | 5 | 19 | 19 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+| 17 | [road-to-zero-ceremony-settings.md](roadmaps/road-to-zero-ceremony-settings.md) | 5 | 19 | 7 | 8 | 4 | 0 | [1](#blockers-road-to-zero-ceremony-settings) | █████░░░░░ 53% |
 
 ---
 
@@ -125,43 +125,32 @@ _1 blocker resolved._
     `wc -l agents/runtime/state/audit/$(date +%Y-%m).jsonl`. Resume at ≥20.
   - **Resolved when:** the current-month audit log holds ≥20 orchestration lines.
 
-### [road-to-rule-coherence.md](roadmaps/road-to-rule-coherence.md)
+### [road-to-rule-coherence-followup.md](roadmaps/road-to-rule-coherence-followup.md)
 
-**Road to rule coherence — fix the delivery system, not the rules** — 4 / 15 done (27%)
+**Follow-up to road-to-rule-coherence** — 0 / 7 done (0%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
-| 0 | Transport: make verdicts mean what they say | 🟡 in progress | 3 | 2 | 0 | 0 | 40% |
-| 1 | Scoping errors: make the good rules reachable | ⬜ not started | 6 | 0 | 0 | 0 | 0% |
-| 2 | One-time conflict audit (measured: audit, NOT a CI gate) | 🟡 in progress | 2 | 2 | 0 | 1 | 50% |
-| 3 | Human-gated: selection and measurement | ⏭️ skipped | 0 | 0 | 4 | 0 | 0% |
+| 1 | The default flip (human release gate) | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
+| 2 | Measure, with the comparison that is actually open | ⬜ not started | 1 | 0 | 0 | 0 | 0% |
+| 3 | Architecture, owned elsewhere | ⬜ not started | 1 | 0 | 0 | 0 | 0% |
+| 4 | Re-adjudicate what the audit left open | ⬜ not started | 1 | 0 | 0 | 0 | 0% |
 
-<a id="blockers-road-to-rule-coherence"></a>
+<a id="blockers-road-to-rule-coherence-followup"></a>
 **Blockers**
 
-- **default-flip-release-gate** (owner: maintainer) — blocks Phase 3
+- **default-flip-release-gate** (owner: maintainer) — blocks Phase 1
   - **What to do:**
-    This repo already treats a projection-default flip as a human release gate
-    (the `rule_workspaces` precedent: maintainer-approved, evidence-gated,
-    "do not set this from automation"). The agent prepares the diff, the census
-    numbers, and the delta-to-`essential`; a human decides whether it ships.
-  - **Resolved when:** the maintainer either merges the flip with the census evidence attached, or records a decision to keep the current default and ship `essential-plus` as opt-in only.
-- **bench-spend-and-methodology** (owner: maintainer) — blocks Phase 3
+    default. The evidence is prepared and cited in F1.1–F1.4; the settings
+    template's own comment on `rule_packs` — "Do not set this from automation" —
+    is why this cannot be an agent decision.
+  - **Resolved when:** the maintainer merges the flip with the census attached, or records a decision to keep the current default and ship the preset as opt-in.
+- **bench-spend-and-methodology** (owner: maintainer) — blocks Phase 2
   - **What to do:**
-    existing harness. Both cost and methodology are a maintainer call — the
-    council was explicit that an LLM-judged 10-scenario probe has no power
-    against the original human-judged production measurement, so a real claim
-    needs human judging at adequate N.
-  - **Resolved when:** thresholds are pre-registered in this file and the run is authorized, or P3.3 is cancelled and the preset ships documentation-only with no lift language.
-- **design-slop-enabled-on-reporting-install** (owner: maintainer) — blocks Phase 0
-  - **What to do:**
-    `hooks.design_slop.enabled: true` in their `.agent-settings.yml`. The hook is
-    default-OFF, so it is inert in this repo — but if they enabled it, their
-    "UI rules get discarded" was primarily the D3 transport inversion (every UI
-    write to `.tsx/.vue/.css/.scss/.astro` silently denied with no stderr) rather
-    than prose conflict. One-line check; it re-prioritizes their report, not this
-    roadmap.
-  - **Resolved when:** the setting is confirmed either way and the finding is recorded against D3 or against the prose-conflict class.
+    was explicit that an LLM-judged probe has no power against the original
+    human-judged production measurement, so a real claim needs human judging at
+    adequate N.
+  - **Resolved when:** thresholds are pre-registered here and the run is authorized, or F2.1 is cancelled and the preset ships documentation-only.
 
 ### [road-to-scale-history-bench-run.md](roadmaps/road-to-scale-history-bench-run.md)
 

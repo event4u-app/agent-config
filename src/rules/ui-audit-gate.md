@@ -46,12 +46,43 @@ EXISTING-UI-AUDIT RUNS FIRST. ALWAYS.
 
 `null` or `{}` is **not** findings; empty dict is rejected on purpose.
 
-## Allow-list — `ui-trivial`
+## Allow-list — `ui-trivial`, decidable from the diff alone
 
 Skip only when **all** hold:
 
-- `directive_set == "ui-trivial"`.
 - ≤ 1 file, ≤ 5 changed lines, no new component, no new state.
+- Inside the work engine, `directive_set == "ui-trivial"` — the dispatcher
+  states it directly. Outside it, the same four conditions are read **off the
+  diff**, which is observable without any dispatcher state.
+
+The `directive_set` check used to be an additional *requirement* rather than
+the dispatcher's way of stating the same fact. That made the escape hatch
+dispatcher-only, and with `state.ui_audit` also dispatcher-only the gate could
+be neither satisfied nor skipped in a plain chat session — the only
+rule-conform action left was "write no UI". A gate whose sole compliant path is
+inaction is not a gate.
+
+## Honest scope — what this rule does NOT enforce in a chat session
+
+```
+OUTSIDE THE WORK ENGINE, THE AUDIT OBLIGATION IS MODEL-CARRIED.
+NEVER CLAIM THE AUDIT RAN AS IF IT WERE VERIFIED.
+```
+
+`state.ui_audit` exists only inside the work-engine dispatcher, so only there
+is "the audit ran" a *checked* fact. A chat session cannot verify it: "I ran
+`existing-ui-audit` first" is self-report, and self-report is not enforcement —
+the same honesty boundary `security-sensitive-stop` and
+`untrusted-input-defense` state for their own obligations. So this rule ships
+`enforced_by: none` outside the dispatcher, deliberately, rather than pretending
+a satisfiable-by-assertion condition is a gate.
+
+What that leaves, and it is the useful part: run
+[`existing-ui-audit`](../skills/existing-ui-audit/SKILL.md) before adding a
+component because reuse beats duplication — not because a check will catch you.
+Full enforcement requires the dispatcher (or the `frontend-design` pack once
+pack-scoped rule projection is enabled; that flip is a maintainer decision,
+never an automated one).
 
 ## Failure modes
 
