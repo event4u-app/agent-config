@@ -52,6 +52,28 @@ the script is the deterministic safety net.
 
 If in doubt, split into serial turns — never a long batched prompt.
 
+## The trigger is a decision, not a format
+
+```
+THE OBLIGATION FIRES ON HANDING A DECISION TO THE USER — IN ANY FORM.
+NOT ON THE PRESENCE OF A NUMBERED LIST.
+A TRAILING FREE-TEXT OFFER IS AN ASK. A BARE YES/NO IS AN ASK.
+```
+
+Measured (30-session conformance audit, 2026-08-06): **every** malformed ask was
+a one-line parenthetical or a trailing free-text offer — *"sag Bescheid, wenn
+ich die drei Zeilen mitnehmen soll"*, *"Soll ich das so umsetzen?"* — while the
+same sessions formatted their **large** asks perfectly. So the rule is being
+read as *if numbered options, then a recommendation line*. It is the other way
+round, and an ask that feels too small for a block is exactly the one that
+escapes the format. Three further caught shapes: a contentless filler option; an
+inline `(Empfohlen)` tag **beside** the recommendation line (the dual source
+Iron Law 1 forbids); an option set answerable only as `1,3,4`.
+
+**No gate ships for this** — `check_reply_consistency` scans authored markdown,
+never a chat draft. `conformance:behavior` deliberately does not score ask-shape,
+so an unmoved rate is a finding rather than a silence.
+
 ## Mechanics — rationale, failure modes, format details, examples
 
 The "why take a position", position-agnostic clause, format

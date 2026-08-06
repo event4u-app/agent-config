@@ -111,6 +111,8 @@ function _empty_state(): StateDict {
     verifications_this_session: 0,
     last_stop_at: null,
     verified_this_turn: false,
+    ci_saw_pending: false,
+    nonevidence_this_turn: 0,
     checked_at: _now(),
   };
 }
@@ -163,7 +165,94 @@ function _extract_command(payload: StateDict): [string | null, string | null] {
 }
 
 function _is_verification(command: string): boolean {
-  return _VERIFICATION_RE.test(command);
+  // CI polls join the verification set here (they did not match the local
+  // runner pattern). A settled green CI run IS evidence — but only once the
+  // settle is genuine, which is what the FC-3b guard below decides. Before this
+  // change a CI poll counted for nothing at all, so nothing observed the
+  // difference between "settled" and "never started".
+  return _VERIFICATION_RE.test(command) || isCiPoll(command);
+}
+
+/**
+ * Non-vacuity guard (conformance audit 2026-08-06, failure class FC-3b).
+ *
+ * The measured failure: a CI poll landing in the gap between `git push` and
+ * GitHub registering the checks returned `0 pass / 0 fail`, so the agent's exit
+ * condition `pending == 0` was TRIVIALLY satisfied and "CI settled" was reported
+ * twice — on a run that had not started. The verification *command* ran, so the
+ * evidence gate felt satisfied. Nothing checked that its output said anything.
+ *
+ * A result set of size zero is not evidence. `∀x ∈ ∅` is vacuously true, and
+ * that is a logic error rather than a judgement call, which is why it is gated
+ * here rather than described in a rule.
+ */
+const _VACUOUS_PATTERNS: readonly RegExp[] = [
+  // gh pr checks / gh run — no checks registered at all.
+  /\b0\s+(?:checks?|runs?)\b/i,
+  // Test runners reporting an empty run.
+  /\bno tests? (?:ran|found|to run|were run)\b/i,
+  /\bNo test files found\b/i,
+  /\b0\s+pass(?:ed|ing)?\b[\s,|·]*\b0\s+fail(?:ed|ing|ures)?\b/i,
+  /\bTests?\s+0\s+passed\b/i,
+  /\bRan 0 tests?\b/i,
+  // Linters / scanners with an empty target set.
+  /\bno files? (?:matched|to (?:lint|check|scan)|found)\b/i,
+  /\b0\s+files?\s+(?:checked|scanned|linted)\b/i,
+  /\bnothing to check\b/i,
+];
+
+/** True when a verification command's output proves nothing because it covered nothing. */
+export function isVacuousOutput(output: string): boolean {
+  const text = output.trim();
+  if (!text) {
+    // A verification command that printed nothing at all is not evidence either.
+    return true;
+  }
+  return _VACUOUS_PATTERNS.some((re) => re.test(text));
+}
+
+/** Commands that poll CI state rather than produce a local result. */
+const _CI_POLL_RE = /\bgh\s+(?:pr\s+checks|run\s+(?:watch|list|view))\b/i;
+
+export function isCiPoll(command: string): boolean {
+  return _CI_POLL_RE.test(command);
+}
+
+/**
+ * Read a pending-check count out of a CI poll's output. Returns null when the
+ * shape is unrecognised — an unknown shape must not be read as "settled".
+ */
+export function pendingCount(output: string): number | null {
+  const m = /(\d+)\s+(?:checks? )?pending\b/i.exec(output) ?? /\bpending[:=]\s*(\d+)/i.exec(output);
+  if (m?.[1] !== undefined) {
+    return Number(m[1]);
+  }
+  // `gh pr checks` prints one row per check; count the in-progress markers.
+  const rows = output.match(/^\S.*\b(pending|in_progress|queued)\b/gim);
+  return rows ? rows.length : null;
+}
+
+/**
+ * Extract a tool's textual output from a post-tool payload.
+ *
+ * Returns `null` when the payload carries NO output field at all — which is not
+ * the same fact as "the command produced no output". Several platforms do not
+ * surface tool output on this event, and treating their silence as a vacuous
+ * result would turn the guard into a blanket regression that stops counting
+ * every verification everywhere. The guard only fires where it can actually
+ * read a result.
+ */
+function _extract_output(payload: StateDict): string | null {
+  for (const key of ["tool_response", "toolResponse", "output", "stdout", "result"]) {
+    const v = payload[key];
+    if (typeof v === "string") {
+      return v;
+    }
+    if (v !== null && typeof v === "object") {
+      return JSON.stringify(v);
+    }
+  }
+  return null;
 }
 
 function _reset_turn(state: StateDict, session_id: string): StateDict {
@@ -171,6 +260,10 @@ function _reset_turn(state: StateDict, session_id: string): StateDict {
   state["turn_started_at"] = _now();
   state["verifications_this_turn"] = 0;
   state["verified_this_turn"] = false;
+  // FC-3b turn-scoped counters: a CI settle must be witnessed within the same
+  // turn that claims it, so the in-flight observation does not survive a turn.
+  state["ci_saw_pending"] = false;
+  state["nonevidence_this_turn"] = 0;
   return state;
 }
 
@@ -205,16 +298,45 @@ function _update(state: StateDict, event: string, envelope: StateDict): StateDic
   } else if (event === "post_tool_use") {
     const [tool, cmd] = _extract_command(pl);
     if (cmd && _is_verification(cmd)) {
+      const output = _extract_output(pl);
+      // No readable output → the guard has nothing to judge, so behaviour is
+      // exactly what it was before FC-3b landed.
+      const vacuous = output !== null && isVacuousOutput(output);
+
+      // A CI poll is evidence of a SETTLE only when this turn has already seen
+      // the run in flight. Polling once and reading `pending == 0` off a run
+      // that never registered is the measured FC-3b failure. With no readable
+      // output a poll counts for nothing — which is also its pre-FC-3b
+      // behaviour, since CI polls were not in the verification set at all.
+      let counts = !vacuous;
+      if (isCiPoll(cmd)) {
+        const pending = output === null ? null : pendingCount(output);
+        if (pending !== null && pending > 0) {
+          state["ci_saw_pending"] = true;
+          counts = false; // running, not settled
+        } else if (pending === 0) {
+          counts = !vacuous && state["ci_saw_pending"] === true;
+        } else {
+          counts = false; // unrecognised or unreadable — never read as settled
+        }
+      }
+
       state["last_verification"] = {
         command: cmd.slice(0, 512),
         tool,
         at: _now(),
         platform: (envelope["platform"] || "") as unknown,
+        vacuous,
+        counted: counts,
       };
-      state["verifications_this_turn"] = _asInt(state["verifications_this_turn"]) + 1;
-      state["verifications_this_session"] =
-        _asInt(state["verifications_this_session"]) + 1;
-      state["verified_this_turn"] = true;
+      if (counts) {
+        state["verifications_this_turn"] = _asInt(state["verifications_this_turn"]) + 1;
+        state["verifications_this_session"] =
+          _asInt(state["verifications_this_session"]) + 1;
+        state["verified_this_turn"] = true;
+      } else {
+        state["nonevidence_this_turn"] = _asInt(state["nonevidence_this_turn"]) + 1;
+      }
     }
   } else if (event === "stop") {
     state["last_stop_at"] = _now();

@@ -40,6 +40,7 @@ export const REGISTRY: readonly CommandEntry[] = [
     { name: 'doctor', disposition: 'delegate', synopsis: 'Read-only drift report: manifest ↔ filesystem.' },
     { name: 'converge', disposition: 'delegate', synopsis: 'Consented cleanup of duplicate install surfaces (surface-matrix driven).' },
     { name: 'conformance', disposition: 'delegate', synopsis: 'Consumer conformance contract: doctor --ci + installed-and-firing checks.' },
+    { name: 'conformance:behavior', disposition: 'delegate', synopsis: 'Replay local transcripts through the mechanised conformance checks (report, not gate).' },
     { name: 'doctor-shell', disposition: 'native', synopsis: 'Native TS-shell environment probe.' },
     { name: 'rtk:detect', disposition: 'native', synopsis: 'rtk (Rust Token Killer) presence + identity readout — contract: docs/contracts/rtk-detection.md.' },
     { name: 'ui:serve', disposition: 'native', synopsis: 'Start the local UI server.' },
