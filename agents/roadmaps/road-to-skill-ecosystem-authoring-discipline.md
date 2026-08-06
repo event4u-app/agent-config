@@ -147,11 +147,66 @@ migration is a genuinely lossy authoring transform with no ledger, while
 
 ## Phase 4: Lint what the authored text teaches
 
-- [ ] **Step 1:** Add `src/scripts/lint_example_fences.ts` scanning fenced code blocks in authored rules, skills, and guidelines against a forbidden-pattern registry seeded from the render-security, tool-safety, git-history, and output-discipline rules. An example demonstrating the anti-pattern its own neighbour forbids passes every gate today. <!-- verify: task typecheck-ts -->
-- [ ] **Step 2:** Ship an inline escape token for deliberate negative examples and make it mandatory rather than optional, because this package carries many of them.
-- [ ] **Step 3:** Classify every hit on the real corpus before promoting the gate past advisory, per the sibling gate-integrity roadmap's lifecycle. A gate landing as an unfixable blocker is a recorded failure here. <!-- verify: ./scripts-run src/scripts/lint_example_fences -->
+- [x] **Step 1:** Add `src/scripts/lint_example_fences.ts` scanning fenced code blocks in authored rules, skills, and guidelines against a forbidden-pattern registry seeded from the render-security, tool-safety, git-history, and output-discipline rules. An example demonstrating the anti-pattern its own neighbour forbids passes every gate today. <!-- verify: task typecheck-ts -->
+      **Eight patterns, scoped by the fence's language tag** — that scoping is
+      what keeps the registry believable: `dangerouslySetInnerHTML` inside a
+      `bash` fence is an `rg` search string (the corpus has exactly that line,
+      in the skill built to hunt the sink) and must not fire. **The
+      output-discipline half is deliberately NOT implemented:** its six
+      placeholder patterns are already owned by `lint_output_slop` over the same
+      fences, and detecting them twice would mean two findings and two
+      suppressions per defect. That is the Phase 6 "do not report what a
+      deterministic gate already owns" rubric line applied to a gate rather than
+      to a reviewer, and a test pins the omission so it does not erode.
+      `git reset --hard` is also absent, with its reason recorded: this suite
+      documents real divergent-state recovery, so the pattern would fire mostly
+      on correct instruction, and a gate whose hits are mostly legitimate
+      teaches suppression by reflex.
+- [x] **Step 2:** Ship an inline escape token for deliberate negative examples and make it mandatory rather than optional, because this package carries many of them.
+      `<!-- example-fence-allow: <rule-id> -- <reason> -->` on the fence opener,
+      the line above, or file-scoped. **There is deliberately no allowlist JSON**
+      — a side-channel file is the shape that grows past 20 entries and becomes
+      the silent budget bypass `autonomous-execution` names, so the only way to
+      declare a negative example is inline, beside it. The reason is load-bearing
+      rather than decorative: a token whose reason is one word is reported as
+      `<rule>/unsubstantive-reason` instead of silencing anything.
+- [x] **Step 3:** Classify every hit on the real corpus before promoting the gate past advisory, per the sibling gate-integrity roadmap's lifecycle. A gate landing as an unfixable blocker is a recorded failure here. <!-- verify: ./scripts-run src/scripts/lint_example_fences -->
+      **Zero hits over all 503 files, so the gate shipped STRICT on day one** —
+      the opposite of the advisory landing this step planned for, because an
+      advisory gate over an empty violation set is one nobody is obliged to act
+      on. The zero is *verified*, not assumed, which is the discriminator this
+      repository already pays for: every raw occurrence of the eight registry
+      tokens in the tree was read, and each is prose forbidding the pattern, a
+      table row, or a search string in a shell fence — while a liveness probe
+      that injected a violation **into a real corpus file** fired (exit 1) and
+      the untouched original stayed clean. The `--canary` recipe re-proves it on
+      every run.
 - [ ] **Step 4:** Add a preemption-phrase check to the description lint: a description claiming priority over a sibling, or instructing activation regardless of the request, degrades routing globally and invisibly. This is a live class — the sweep observed it in a shipped third-party description and in a second suite's own catalogue.
-- [ ] **Step 5:** Add a per-file ceiling to the on-demand depth layer. Rules and skills are capped; the context and guideline files they route to are not, which is where the always-loaded budget leaks into on-demand bloat.
+- [x] **Step 5:** Add a per-file ceiling to the on-demand depth layer. Rules and skills are capped; the context and guideline files they route to are not, which is where the always-loaded budget leaks into on-demand bloat.
+      `src/scripts/check_depth_budget.ts` — 16,000 chars over the 161 files in
+      `src/agent-src/contexts/` + `docs/guidelines/`. **Enforced as a shrink-only
+      ratchet at 4, not as the advisory the AI council proposed.** Advisory is
+      the right shape when a new gate would land as an unfixable blocker; it has
+      a second-order cost this repository has already paid, which is that a
+      number in a gate exiting 0 is a number nobody must move — the four
+      outliers would still be four a year on. The ratchet gives both halves: the
+      four are recorded and do not block, a fifth reds. Both directions are
+      proven, not asserted (planting a 16,100-char file → exit 1; removing it →
+      exit 0).
+      **The number is named as a growth ratchet, not a quality threshold**, in
+      the gate header, its output line, and the baseline note. Both council
+      members independently flagged the trap: the 7,308-trajectory study behind
+      ADR-217's 3,500-token *skill* ceiling was taken on procedural,
+      always-co-loaded artifacts, and this layer is declarative and loaded one
+      or two files at a time, so importing that number here would be a
+      percentile wearing a study's clothes. The council's alternative — a 40,000-char
+      hard per-route budget — was **not** adopted: `lint_load_context` already
+      enforces a combined budget on *eager* edges, so the per-route half is not
+      missing, and a hard gate on an uncalibrated number is the exact move the
+      same paragraph warns against.
+      The existence proof is in-corpus: `contexts/execution/roadmap-process-loop.md`
+      states "Size budget: ≤ 4,000 chars" in its own header and is 5× over it —
+      a declared budget with nothing measuring it.
 - [ ] **Step 6:** Add an upstream-version-notes convention for skills wrapping a fast-moving external tool: what was renamed, what is unchanged, and how to read older output. Without it an agent reading a modern report concludes the skill is wrong, or invents the removed surface.
 - [ ] **Step 7:** Add a security-constraints section convention to skills that ship executable scripts, so the constraints travel with the artifact rather than living only in the always-loaded rules.
 
