@@ -8,7 +8,7 @@ sub: inbox
 cluster: analyze
 skills: [learning-to-rule-or-skill, roadmap-writing, decision-review]
 description: Analyze a dropped inbox artifact (review, prompt, spec, transcript) against the current tree, verify every claim it makes, map what survives onto this suite's artefact types, emit a roadmap each.
-argument-hint: "[<file> | <dir>] [--triage-only] [--no-roadmap] [--keep-inbox]"
+argument-hint: "[<file> | <dir>] [--triage-only] [--no-roadmap] [--keep-inbox] [--worktree]"
 suggestion:
   eligible: false
   rationale: "Cluster sub-command — reached via its cluster head's routing or its explicit /analyze:inbox name; not independently suggested (surface-consolidation)."
@@ -40,7 +40,35 @@ still true.
 
 Flags: `--triage-only` stops after Phase 2 (no deep analysis, no roadmap) ·
 `--no-roadmap` analyses but emits findings instead of roadmaps ·
-`--keep-inbox` skips the `tmp.old/` move (default is to move — see Phase 6).
+`--keep-inbox` skips the `tmp.old/` move (default is to move — see Phase 6) ·
+`--worktree` opts into an isolated worktree (see below; off by default).
+
+## Where the work happens — the checked-out branch, unless asked otherwise
+
+```
+RUN IN THE CURRENT BRANCH. NEVER CREATE A BRANCH, A WORKTREE, OR A PR
+ON THIS COMMAND'S OWN AUTHORITY. A WORKTREE ONLY ON AN EXPLICIT ASK.
+```
+
+Default: the branch already checked out. The roadmaps, the findings, and the
+`agents/tmp.old/` move land there as ordinary uncommitted changes for the
+operator to review. This command authorizes **analysis and authoring** — not a
+git shape ([`scope-control`](../../../../rules/scope-control.md) § Git
+operations: branch and worktree creation are permission-gated, spike and
+throwaway branches included).
+
+An isolated worktree runs only when the invocation asks for one — `--worktree`,
+or the operator saying so in the prompt. Then follow
+[`using-git-worktrees`](../../../../skills/using-git-worktrees/SKILL.md),
+including its seeding allow/deny list.
+
+Why the current branch is the right default here: this command is read-heavy and
+its whole output is a few markdown files plus a rename. Nothing it writes is a
+generated tree, so there is no build to isolate — while a worktree costs a fresh
+`node_modules`, a copied `.augment`, and a family of stale-projection failures
+that only exist because the checkout is a second one. Isolation earns its price
+when a run churns generated output or must keep a large diff off the current
+branch; an inbox triage does neither.
 
 ## The Iron Law
 
@@ -188,3 +216,6 @@ each one is and why it is spent, and let the user remove it.
   execution authorization
   ([`scope-control`](../../../../rules/scope-control.md) § Authoring vs.
   implementation).
+- Spin up a branch, a worktree, or a PR because the run feels large. Scope is
+  the operator's call; without `--worktree` or an explicit ask, the work stays
+  in the checked-out branch.
