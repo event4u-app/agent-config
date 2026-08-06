@@ -29,6 +29,7 @@ import {
     main,
     parseArtifact,
     parseHonestNull,
+    authorIsReviewer,
     parseMarkerLine,
     parseSkipDeclaration,
     scanFences,
@@ -1116,6 +1117,65 @@ describe('grammar line parsers', () => {
         expect(
             parseMarkerLine(`<!-- completion-review: v1 | reviewed: 2026-08-04 | scope: ${SCOPE} | diff: ${SHA} | reviewer:  -->`),
         ).toBeNull();
+    });
+
+    it('the two optional trailing fields parse, and their absence is unchanged', () => {
+        // Additive, not a version bump: every committed v1 artefact keeps parsing
+        // to exactly the four fields, so no evidence had to be migrated.
+        const four = parseMarkerLine(
+            `<!-- completion-review: v1 | reviewed: 2026-08-04 | scope: ${SCOPE} | diff: ${SHA} | reviewer: r2-x -->`,
+        );
+        expect(four).toEqual({ reviewed: '2026-08-04', scope: SCOPE, diffSha: SHA, reviewer: 'r2-x' });
+        expect(four?.author).toBeUndefined();
+        expect(four?.promptHash).toBeUndefined();
+
+        const withAuthor = parseMarkerLine(
+            `<!-- completion-review: v1 | reviewed: 2026-08-04 | scope: ${SCOPE} | diff: ${SHA} | reviewer: r2-x | author: impl-session -->`,
+        );
+        expect(withAuthor?.author).toBe('impl-session');
+        expect(withAuthor?.reviewer).toBe('r2-x');
+
+        const both = parseMarkerLine(
+            `<!-- completion-review: v1 | reviewed: 2026-08-04 | scope: ${SCOPE} | diff: ${SHA} | reviewer: r2-x | author: impl | prompt_hash: ${'a'.repeat(64)} -->`,
+        );
+        expect(both?.author).toBe('impl');
+        expect(both?.promptHash).toBe('a'.repeat(64));
+
+        // prompt_hash alone, without author — the fields are independent.
+        const hashOnly = parseMarkerLine(
+            `<!-- completion-review: v1 | reviewed: 2026-08-04 | scope: ${SCOPE} | diff: ${SHA} | reviewer: r2-x | prompt_hash: ${'b'.repeat(64)} -->`,
+        );
+        expect(hashOnly?.promptHash).toBe('b'.repeat(64));
+        expect(hashOnly?.author).toBeUndefined();
+
+        // A short prompt_hash is not a prompt_hash — same 64-hex discipline the
+        // scope field carries, so a truncated paste cannot pass as provenance.
+        expect(
+            parseMarkerLine(
+                `<!-- completion-review: v1 | reviewed: 2026-08-04 | scope: ${SCOPE} | diff: ${SHA} | reviewer: r2-x | prompt_hash: abc123 -->`,
+            ),
+        ).toBeNull();
+        // Order is fixed: author before prompt_hash.
+        expect(
+            parseMarkerLine(
+                `<!-- completion-review: v1 | reviewed: 2026-08-04 | scope: ${SCOPE} | diff: ${SHA} | reviewer: r2-x | prompt_hash: ${'c'.repeat(64)} | author: impl -->`,
+            ),
+        ).toBeNull();
+    });
+
+    it('authorIsReviewer fires only when the field is present and matches', () => {
+        const mk = (extra: string): string =>
+            `<!-- completion-review: v1 | reviewed: 2026-08-04 | scope: ${SCOPE} | diff: ${SHA} | reviewer: claude/host${extra} -->`;
+
+        // Absent → nothing to check. This is the whole back-compat story: every
+        // committed v1 artefact must stay clean.
+        expect(authorIsReviewer(parseMarkerLine(mk('')) as never)).toBe(false);
+        // Present and different → a real fresh reviewer.
+        expect(authorIsReviewer(parseMarkerLine(mk(' | author: impl-session')) as never)).toBe(false);
+        // Present and identical → the self-review the two-gate design prevents.
+        expect(authorIsReviewer(parseMarkerLine(mk(' | author: claude/host')) as never)).toBe(true);
+        // Case and surrounding whitespace do not make it a different session.
+        expect(authorIsReviewer(parseMarkerLine(mk(' | author: Claude/Host')) as never)).toBe(true);
     });
 
     it('parseHonestNull accepts only the exact §2.3 line', () => {

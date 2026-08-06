@@ -177,9 +177,17 @@ describe('dispatch_r2_reviewer — package + skeleton', () => {
         const body = fs.readFileSync(path.join(repo, OUT, `${SLUG}.findings.md`), 'utf-8');
 
         expect(body.startsWith(`# Findings: ${SLUG}\n`)).toBe(true);
+        // The marker now carries `prompt_hash` — the dispatcher hashes the
+        // prompt IT built, which is what makes the § 5 prompt channel
+        // attributable instead of absent. Re-derived here from the file the
+        // dispatcher wrote, so the assertion cannot pass by copying a constant.
+        const promptText = fs.readFileSync(
+            path.join(repo, OUT, `${SLUG}.review-input`, 'prompt.md'),
+            'utf-8',
+        );
         expect(body).toContain(
             `<!-- completion-review: v1 | reviewed: 2026-08-04 | scope: ${sha256(diff)} | diff: ${head} | ` +
-                `reviewer: r2-fresh-subagent-${SLUG} -->`,
+                `reviewer: r2-fresh-subagent-${SLUG} | prompt_hash: ${sha256(promptText)} -->`,
         );
 
         const expectedManifest = [

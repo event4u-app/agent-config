@@ -199,10 +199,38 @@ its central gap is verified in code.
 
 Source: `agents/tmp.old/optimize-plan.txt`. Phase 1 only; the rest is unproven.
 
-- [ ] **P4.1 Dispatcher-owned review prompt + `prompt_hash`.** Closes a residual
+- [x] **P4.1 Dispatcher-owned review prompt + `prompt_hash`.** Closes a residual
   named verbatim in `docs/contracts/plan-review-gates.md`. Provider-independent.
-- [ ] **P4.2 `author ≠ reviewer` in the marker grammar.** The grammar carries
+- [x] **P4.2 `author ≠ reviewer` in the marker grammar.** The grammar carries
   `reviewer` only; the second named residual.
+  - **P4.1 — the residual IS named verbatim; the identifier was not.** The
+    contract's § 5 residual "the prompt channel, and it is the dangerous one"
+    exists word for word, with a recorded case zero (a hash-verified honest-null
+    whose prompt stated prior rounds were clean; a later unsteered round on the
+    identical scope found seven defects). The string `prompt_hash` appeared
+    nowhere in the plan-gate code, contract or schemas — its only prior art in
+    the tree is the unrelated ai-video `prompt_sha256`. Shipped: the dispatcher
+    hashes the prompt it built and writes it into the marker it already owns.
+    Stated honestly in both code and contract — this makes the channel
+    ATTRIBUTABLE, it does not close the residual, because the same host that
+    authors a steered prompt could hash the steered text.
+  - **P4.2 — the step's justification was wrong, the gap was real.** It called
+    author-vs-reviewer "the second named residual"; the contract names five
+    residual blocks and none is about it. The nearest text is a DEFINITION
+    (§ 2.1, `reviewer:` is "never the implementing session"), i.e. a convention
+    with no field to check against. So the claim is corrected in place and the
+    work still shipped: an optional `author:` field plus an `author-is-reviewer`
+    violation when it is present and matches.
+  - **Both are one change on purpose, and that dissolved the council's cost
+    argument.** The council leaned toward cancelling P4.2 on the ground that its
+    edit would be better spent on the prompt channel. But P4.1 extends the same
+    anchored regex in the same commit, so the "same edit" is literally the same
+    edit — there is no migration to pay twice. Departure recorded rather than
+    silently taken.
+  - Additive, not a version bump: the four `v1` fields stay required and in
+    order, so all 81 existing `check_completion_review` tests pass untouched and
+    no committed artefact needed migration.
+
 - [-] **P4.3 Risk routing, council-CLI-as-R2, plan-QA pass — CANCELLED for
   now.** Unproven, and the direction-asymmetry evidence behind them is not
   verifiable here; the draft itself says to treat it as a prior only.
