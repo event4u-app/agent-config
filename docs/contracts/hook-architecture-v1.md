@@ -174,6 +174,47 @@ Validated by `scripts/lint_hook_manifest.py` (Phase 7.10): every
 concern script must exist on disk, every platform key must be a known
 platform, every event key must be in the agent-config event vocabulary.
 
+### Optional per-concern `tools:` filter
+
+A concern may declare which tools it applies to. The **dispatcher** skips it
+in-process for any other tool — this is not projected into the host config as a
+`matcher`:
+
+```yaml
+concerns:
+  code-graph-nudge:
+    script: src/scripts/hooks/code_graph_nudge_hook.ts
+    fail_closed: false
+    severity: advisory
+    tools: [Grep, Glob, Read]
+```
+
+Semantics (`_concern_matches_tool` in `hooks/dispatch_hook.ts`):
+
+| Declaration | Effect |
+|---|---|
+| key absent | runs on every event (the default; unchanged) |
+| `["*"]` | the same, stated explicitly |
+| `[A, B]` | runs only when the payload's `tool_name` is exactly `A` or `B` |
+| non-tool event (no `tool_name`) | **never filtered** — a key describing tool events cannot skip a lifecycle concern |
+| malformed / empty list | **runs anyway**, and `lint_hook_manifest` fails the build |
+
+Two constraints worth stating, because both are load-bearing:
+
+- **Not a host `matcher`.** `build_claude_hook_matrix` collapses each event to a
+  single command and `claude_hook_matrix_parity.test.ts` asserts one group with
+  one command per event; per-concern matchers would break that parity for a
+  filter the dispatcher can apply itself. The in-process skip also covers all
+  eight platforms, where a matcher would help only the two that support one.
+- **Not a latency claim.** The measured hook cost that was repaired was the
+  invocation path, not the concern bodies; nothing in the tree measures the
+  concern share of the current p95. `bench_hook_latency` reads the manifest, so
+  the claim is benchable — it is not asserted until it is benched.
+
+The filter is deliberately absent from the blocking PreToolUse guards, whose
+tool sets span host naming variants (`Bash` / `BashTool` / `launch-process` / …);
+a list that misses one variant silently disables a guard on that host.
+
 ## Concurrency — atomic state writes
 
 Concerns that write under `agents/runtime/state/` MUST use the pattern:
