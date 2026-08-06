@@ -202,7 +202,9 @@ describe('bench_ab_v2_run — pure helpers', () => {
         // audit to the text channel — never that it removes the arm from auditing.
         // Both directions are asserted here so neither an always-firing nor a
         // never-firing audit passes.
-        const expected = expected_injection(ARMS['bare-principle']);
+        const spec = ARMS['bare-principle'];
+        expect(spec).toBeDefined();
+        const expected = expected_injection(spec as NonNullable<typeof spec>);
         expect(expected).toBe('text');
 
         const usage = {
