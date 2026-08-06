@@ -50,8 +50,9 @@ clears — all of:
   [`auto-dispatch-classification`](../contexts/execution/auto-dispatch-classification.md)
   (≥1 independent, well-specified slice above the size floor).
 
-`subagents.auto: ask` → ask once before dispatching (per
-[`user-interaction`](user-interaction.md)); `auto: on` → surface the chosen mode
+`subagents.auto: ask` → ask once before dispatching, in the shape
+[`settings-ask-protocol`](settings-ask-protocol.md) fixes (the answer is not
+persisted — `subagents.auto` is class C); `auto: on` → surface the chosen mode
 + per-subtask tiers in one line. Any gate failing, or `auto: off`, or no host
 primitive → run in-session (clean no-op).
 
