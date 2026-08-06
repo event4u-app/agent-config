@@ -1259,6 +1259,20 @@ tasks:
       Catches the class where a gate scans a dead root and exits 0; see ADR-201 context.
     cmd: ./scripts-run src/scripts/check_gate_coverage
 
+  lint-example-fences:
+    silent: true
+    desc: >-
+      Hold authored fenced examples to the rules they sit beside — render-security
+      sinks, credential literals, hook bypass. Strict: the corpus is at zero.
+    cmd: ./scripts-run src/scripts/lint_example_fences --strict
+
+  check-depth-budget:
+    silent: true
+    desc: >-
+      Per-file ceiling on the on-demand depth layer (contexts + guidelines).
+      Shrink-only ratchet — a fifth over-ceiling file reds.
+    cmd: ./scripts-run src/scripts/check_depth_budget
+
   check-augment-description-cap:
     silent: true
     desc: Auto-rule description-length gate (≤ 150 chars) — see road-to-augment-limit-fit P1.3
