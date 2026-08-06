@@ -6,7 +6,22 @@ _Origin: migrated from `src/rules/artifact-drafting-protocol.md` per the P4 patt
 
 ## Phase A — Understand
 
-Ask up to **5** clarifying questions (numbered options, each with a
+**Question zero, asked first: should this artifact exist at all?**
+
+Before the five below, put the extend-versus-create question to the user —
+*is there an existing artifact this belongs in?* It used to live in Phase B,
+after the research, and it was measured moving: one source found that the same
+stop placed after work had begun was passed straight through, because mid-build
+momentum beats restraint. A stop that only fires once you are invested is a stop
+that does not fire.
+
+Asking it first costs one question and is answerable without the research: the
+user usually knows whether they are extending something. Phase B still runs the
+overlap scan — that is what turns a guess into a verdict — but it now *confirms
+or overturns* an answer already on the record rather than raising the question
+for the first time at the point where a draft is half-formed.
+
+Ask up to **5** further clarifying questions (numbered options, each with a
 *"skip / I don't know yet"* escape):
 
 1. **Problem** — what does this solve that no existing artifact solves?
@@ -26,12 +41,18 @@ Run the **search protocol** from
 grep with **solution-words AND problem-words**, scan sub-directory
 taxonomies, then **open and skim** the 3 nearest matches. A negative grep
 alone is not proof of no overlap. Report the top 3-5 most-similar
-artifacts and ask (numbered options):
+artifacts and ask (numbered options) — this **confirms or overturns** the
+question-zero answer from Phase A with evidence, rather than raising it for the
+first time:
 
 - Extend an existing one?
 - Create a new one — gap is real?
 - Show overlap first?
 - Promote via `learning-to-rule-or-skill` instead?
+
+A Phase-B verdict that contradicts the Phase-A answer is the useful outcome, not
+an embarrassment: it is the research doing its job. Surface the contradiction
+and let the user re-decide.
 
 Carry the summary into the commit message (*"Reviewed before drafting:
 X, Y"*).
