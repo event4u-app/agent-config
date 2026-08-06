@@ -42,7 +42,7 @@
 #
 # COVERAGE — THE HONEST DENOMINATOR (re-measured 2026-08-05)
 # ----------------------------------------------------------
-# 224 `lint_*` / `check_*` / `audit_*` scripts live under `src/scripts/`
+# 240 `lint_*` / `check_*` / `audit_*` scripts live under `src/scripts/`
 # (the count is computed, not asserted — `check_gate_coverage.count_gate_scripts`).
 # **31 of them emit the machine-readable `scanned: <N>` line under their
 # CI-identical argv, and all 31 are listed below.** The manifest is therefore
@@ -57,7 +57,7 @@
 # stays a manual count until something computes it too. If you add an entry,
 # the two numbers in the paragraph above are part of the diff.
 #
-# The other ~197 are NOT covered, for one reason: rule 1. They print their count
+# The other ~209 are NOT covered, for one reason: rule 1. They print their count
 # in prose ("111 file(s) scanned", "0 declarer(s)") or not at all, and a guard
 # that parses prose is the fragile thing being replaced. Padding this list with
 # them would manufacture exactly the false green the file exists to prevent.
