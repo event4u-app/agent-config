@@ -384,10 +384,38 @@ not rot back in.
     `autonomous-execution`, and a third instance of
     `memory/gates-that-scan-nothing-exit-green` /
     `shape-gates-over-frozen-corpora-only-block`.
-- [ ] **P2.4 Run the generator ONCE as an offline audit.** 227 pairs ≈ 2–3 h of
-  human adjudication. Every candidate gets a disposition: rewrite, exclude,
-  pack-scope, or `no-conflict` with a reason. Not wired to CI.
-  - Acceptance: every one of the 227 carries a written disposition.
+- [x] **P2.4 Offline audit run once — every candidate dispositioned.** Report
+  committed at
+  [`agents/evidence/analysis/rule-conflict-audit-2026-08-06.md`](../evidence/analysis/rule-conflict-audit-2026-08-06.md).
+  **192 unique candidates** (from 211 raw axis hits across the 5 axes, deduped
+  — fewer than the 227 estimate because the generator deduped pairs nominated
+  by more than one axis):
+  `real-conflict` **12** · `already-declared` **43** ·
+  `no-conflict-different-object` **89** (46%, the predicted dominant false
+  positive) · `no-conflict-other` **48**.
+  All three known conflicts were detected. Two are `real-conflict`; the third
+  (`ask-when-uncertain` × `no-cheap-questions`) came back **already-declared**
+  because `no-cheap-questions` self-resolves in its own body — a useful
+  correction to this roadmap's own framing, which had called it flatly
+  contradictory. It is now declared explicitly anyway (P1.4).
+  **Acted on in this run — 3 of the 12:**
+  - #1 `commit-policy` × `secret-vcs-guard` — independently confirmed the pair
+    P2.5 derived from the authority census; declared.
+  - #3 `context-hygiene` × `downstream-changes` — the audit caught that P1.3
+    was **incomplete**: `context-hygiene`'s Tool Loop Detection carries the
+    same ">2 same tool" ceiling as `token-efficiency`, and only the latter got
+    the enumerated-set carve-out. Same defect, second location; now fixed in
+    both.
+  - #8/#10 the **reply-position class** the roadmap had missed entirely — four
+    rules contesting the reply's literal first or last line. Two declared:
+    `fast-path-marker-x-session-canary` (first line) and
+    `direct-answers-x-role-mode-adherence` (last line).
+  **Remaining 9 real-conflicts are follow-up**, not silently dropped: #2/#12
+  are the same reply-position root cause as #8/#10, and #4–#7 are all
+  `context-hygiene`'s read-loop against a mandated multi-read protocol —
+  materially reduced by P1.2's declared-protocol cap of 8, so they should be
+  re-adjudicated against the new text before any further rewrite.
+  - Matrix across this roadmap: 9 rules / 14 pairs → **17 / 21**.
 - [x] **P2.5 Authority conflicts — the 3 candidates fixed; the gate deliberately
   NOT built.** Council round 2 (Q4, both members) rejected a permanent CI gate
   for a 3-finding corpus: it would be a frozen-corpus gate that can only ever
@@ -414,19 +442,20 @@ not rot back in.
 Nothing here is an agent decision. Each item is prepared with evidence and
 stops.
 
-- [~] **P3.1 Default `discipline_profile` flip.** Deferred: a default flip
+- [-] **CARRIED to `road-to-rule-coherence-followup.md`** (Iron Law 3 resolution, option 2 — spawn follow-up as ready with a blocked-until note). Not dropped: the plan moves whole, with its blockers and owner intact.
+- [-] **P3.1 Default `discipline_profile` flip.** Deferred: a default flip
   changes what every consumer receives and is an explicit human release gate in
   this repo (the `rule_workspaces` precedent, maintainer-approved and
   evidence-gated). Council additionally requires P0+P1+P2 green first. Prepare
   the diff and the evidence; do not merge the flip.
-- [~] **P3.2 `essential-plus` preset.** Deferred with P3.1. If it lands it MUST
+- [-] **P3.2 `essential-plus` preset.** Deferred with P3.1. If it lands it MUST
   include `agent-authority` — the current whitelist excludes the only arbiter
   while loading conflicting absolutes.
-- [~] **P3.3 A/B bench: zero vs essential-plus.** Deferred: needs the bench
+- [-] **P3.3 A/B bench: zero vs essential-plus.** Deferred: needs the bench
   harness and spend authorization. Pre-registered before any run —
   non-inferiority Δ ≥ −0.05 at ≤ 1.4× tokens. Explicitly **not** `full` vs
   `essential` (already measured, p=0.37).
-- [~] **P3.4 `thin` projection viability.** Deferred to the existing
+- [-] **P3.4 `thin` projection viability.** Deferred to the existing
   `road-to-thin-flip-under-anchor-scoring.md`; do not fork it here. Council
   flagged it as the only plausible path to restoring delegation (D5) — if thin
   cannot restore subagent spawning for a validated set, the rule-count ceiling

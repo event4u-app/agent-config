@@ -56,6 +56,8 @@ When **3 consecutive attempts** at the same task fail (code fix, test fix, confi
 
 Calling the **same tool** more than **2 times in a row** with similar parameters = loop.
 **Immediate action:** 1. STOP all tool calls. 2. Do the task directly. 3. Can't proceed → ask the user.
+
+**"Similar parameters" is the load-bearing word — an enumerated set is not a loop.** Walking N *declared, distinct* targets (a downstream-caller sweep per [`downstream-changes`](downstream-changes.md), an override chain, the members of a grep result) is one operation whose parameters differ every call. Counting it as N repetitions makes `downstream-changes`' "find **ALL** callers, tests, imports" unsatisfiable — it cannot be done in two calls. The loop this detects is *repetition without new information*: same target, same parameters, hoping for a different answer. Mirrors the same carve-out in [`token-efficiency`](token-efficiency.md).
 `sequentialthinking` is especially prone to loops: at most **once** per task, NEVER for simple file operations, command execution, or straightforward edits.
 
 ## Read-Loop Detection — the 15 / 25 rule

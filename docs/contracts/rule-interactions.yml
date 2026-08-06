@@ -38,6 +38,9 @@ rules:
   - engineering-safety-floor
   - context-hygiene
   - secret-vcs-guard
+  - fast-path-marker-visibility
+  - role-mode-adherence
+  - session-canary
 
 pairs:
 
@@ -389,3 +392,46 @@ pairs:
     evidence:
       - .agent-src.uncondensed/rules/secret-vcs-guard.md#the-iron-law
       - .agent-src.uncondensed/rules/commit-policy.md#never-ask-about-committing
+
+  - id: fast-path-marker-x-session-canary
+    rules: [fast-path-marker-visibility, session-canary]
+    relation: overrides
+    conflict: >-
+      Both rules claim the reply's FIRST line, literally.
+      `fast-path-marker-visibility`: "First non-whitespace line of the reply
+      is the marker. No prose, greeting, or restating-the-question above it."
+      `session-canary`: the first reply of every new task "opens by addressing
+      the user by that name". On a task-start turn that also resolves through
+      the low-impact fast path, both cannot be first.
+    resolution: >-
+      The marker wins the first line; the greeting moves to the first prose
+      line directly beneath it. The marker is an audit signal that downstream
+      agents and tooling pattern-match on, and its wording is normative — a
+      greeting above it breaks the match. The canary is a liveness signal for
+      a human reader, and it survives intact one line lower. Neither rule
+      loses its function; only the ordering needed stating.
+    evidence:
+      - .agent-src.uncondensed/rules/fast-path-marker-visibility.md#the-iron-law
+      - .agent-src.uncondensed/rules/session-canary.md#the-two-canaries
+
+  - id: direct-answers-x-role-mode-adherence
+    rules: [role-mode-adherence, direct-answers]
+    relation: overrides
+    conflict: >-
+      Both rules claim the reply's LAST line. `direct-answers` Iron Law 3
+      (restated by `session-canary`): a PR created this turn puts its raw URL
+      as "the **literal last line**". `role-mode-adherence`: every closing
+      output ends with the structured mode marker
+      `<!-- role-mode: … -->`. A turn that creates a PR while a role mode is
+      active cannot satisfy both as written.
+    resolution: >-
+      The mode marker goes last; the PR URL is the last line of PROSE,
+      immediately above it. The marker is an HTML comment — invisible in
+      rendered output — so a human still reads the URL as the closing line,
+      which is the purpose the literal-last-line rule serves (a scannable
+      handle, not a byte offset). A visible line below the URL would break
+      that purpose; an invisible one does not. Where no role mode is active
+      the marker is absent and the URL is last unconditionally.
+    evidence:
+      - .agent-src.uncondensed/rules/direct-answers.md#iron-law-3--brevity-by-default
+      - .agent-src.uncondensed/rules/role-mode-adherence.md
