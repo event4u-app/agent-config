@@ -6,10 +6,10 @@
 
 ## Overall
 
-**109 / 265 steps done · 41%**
+**117 / 264 steps done · 44%**
 
 ```text
-████████████████░░░░░░░░░░░░░░░░░░░░░░░░   41%
+██████████████████░░░░░░░░░░░░░░░░░░░░░░   44%
 ```
 
 ## Open roadmaps
@@ -22,7 +22,7 @@
 | 4 | [road-to-kernel-question-triangle.md](roadmaps/road-to-kernel-question-triangle.md) | 1 | 3 | 3 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 5 | [road-to-maintainer-bus-factor.md](roadmaps/road-to-maintainer-bus-factor.md) | 4 | 12 | 5 | 7 | 0 | 0 | [1](#blockers-road-to-maintainer-bus-factor) | ██████░░░░ 58% |
 | 6 | [road-to-orchestration-scope-decision.md](roadmaps/road-to-orchestration-scope-decision.md) | 4 | 10 | 6 | 4 | 0 | 0 | [1](#blockers-road-to-orchestration-scope-decision) | ████░░░░░░ 40% |
-| 7 | [road-to-rule-coherence.md](roadmaps/road-to-rule-coherence.md) | 4 | 20 | 11 | 4 | 4 | 1 | [3](#blockers-road-to-rule-coherence) | ███░░░░░░░ 27% |
+| 7 | [road-to-rule-coherence.md](roadmaps/road-to-rule-coherence.md) | 4 | 20 | 2 | 12 | 4 | 2 | [3](#blockers-road-to-rule-coherence) | █████████░ 86% |
 | 8 | [road-to-scale-history-bench-run.md](roadmaps/road-to-scale-history-bench-run.md) | 1 | 2 | 2 | 0 | 0 | 0 | [1](#blockers-road-to-scale-history-bench-run) | ░░░░░░░░░░ 0% |
 | 9 | [road-to-skill-ecosystem-authoring-discipline.md](roadmaps/road-to-skill-ecosystem-authoring-discipline.md) | 6 | 52 | 52 | 0 | 0 | 0 | [2](#blockers-road-to-skill-ecosystem-authoring-discipline) | ░░░░░░░░░░ 0% |
 | 10 | [road-to-skill-ecosystem-gate-integrity.md](roadmaps/road-to-skill-ecosystem-gate-integrity.md) | 7 | 43 | 3 | 40 | 0 | 0 | [1](#blockers-road-to-skill-ecosystem-gate-integrity) | █████████░ 93% |
@@ -127,12 +127,12 @@ _1 blocker resolved._
 
 ### [road-to-rule-coherence.md](roadmaps/road-to-rule-coherence.md)
 
-**Road to rule coherence — fix the delivery system, not the rules** — 4 / 15 done (27%)
+**Road to rule coherence — fix the delivery system, not the rules** — 12 / 14 done (86%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
-| 0 | Transport: make verdicts mean what they say | 🟡 in progress | 3 | 2 | 0 | 0 | 40% |
-| 1 | Scoping errors: make the good rules reachable | ⬜ not started | 6 | 0 | 0 | 0 | 0% |
+| 0 | Transport: make verdicts mean what they say | ✅ done | 0 | 4 | 0 | 1 | 100% |
+| 1 | Scoping errors: make the good rules reachable | ✅ done | 0 | 6 | 0 | 0 | 100% |
 | 2 | One-time conflict audit (measured: audit, NOT a CI gate) | 🟡 in progress | 2 | 2 | 0 | 1 | 50% |
 | 3 | Human-gated: selection and measurement | ⏭️ skipped | 0 | 0 | 4 | 0 | 0% |
 

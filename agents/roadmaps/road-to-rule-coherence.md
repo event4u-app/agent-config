@@ -15,6 +15,10 @@ status: ready
 > Source (consumed inbox): [`agents/tmp.old/road-to-rule-coherence.txt`](../tmp.old/road-to-rule-coherence.txt).
 > Council round 1 (2 members, blind + peer-review round, 2026-08-05):
 > `anthropic/claude-sonnet-4-5` + `openai/gpt-4o`, $0.11 actual.
+> Council round 2 (same members, 2026-08-06, $0.07) settled the implementation
+> decisions and **reversed two round-1 calls** — the read-loop cap direction and
+> the advisory re-homing. Reversals are marked inline below rather than edited
+> away, so the reasoning that changed stays visible.
 
 ## Iron Law of this roadmap
 
@@ -102,15 +106,25 @@ back in if the reasoning is not written down.
   unvalidated preset ships broken governance to every consumer and then patches
   it post-release. Validate first, flip last, human-gated.
 - **Read-loop: no suspension.** A "declared read protocol" that suspends the
-  counter reopens the exact token sink the abort closes. Cap declared protocols
-  at **3 reads** — stricter than the general abort, not looser — with an
-  explicit escape (summarize → ask).
+  counter reopens the exact token sink the abort closes. ~~Cap declared
+  protocols at **3 reads** — stricter than the general abort, not looser~~ —
+  **REVERSED in round 2 (2026-08-06), both members.** Stricter-for-declared is
+  backwards: a declared analysis protocol is exactly the case that legitimately
+  needs *more* reads. Shipped as declared → **8**, undeclared unchanged at
+  3-warn/5-abort, with a structured declaration (falsifiable goal + expected
+  count + output shape) as the anti-gaming guard. The no-suspension half
+  stands.
 - **Contract tests are critical safety, not deferrable.** P0 remaps exit codes
   for two currently-broken security guards; the remap cannot ship without tests
   proving it.
-- **Advisory concerns should leave `pre_tool_use`** (council preference: move to
-  `post_tool_use`, exit 0). Scoped as its own step below rather than folded into
-  the transport fix, because re-homing a concern changes when it observes.
+- ~~**Advisory concerns should leave `pre_tool_use`**~~ — **REVERSED in round 2
+  (2026-08-06)** on a criterion round 1 did not have: **ephemeral intention vs
+  durable outcome**. All three candidates observe an intention that no longer
+  exists after the call (`design-slop` reads the *proposed* content out of
+  `tool_input`; `code-graph-nudge` observes the query-strategy choice;
+  `rtk-wrap` wraps a command string), so `pre_tool_use` is correct for all
+  three. The harm — an advisory concern *blocking* — was already removed by
+  P0.2's severity ceiling. See P0.5, cancelled.
 
 ## Reuse inventory — build almost nothing new
 
@@ -161,23 +175,63 @@ contract tests per council.
   - Acceptance: `tests/hooks/concern_severity.test.ts` — every concern declares
     a severity; only the three real policy guards may be `blocking`;
     `fail_closed: true` implies `blocking`. **Green.**
-- [ ] **P0.3 Honor `type: manual` in projection.** A `manual` rule is excluded
-  from every projection regardless of projection mode. `brand-consistency` is
-  the live violation.
-  - Acceptance: projection census test — no `type: manual` slug in an emitted
-    tree.
-- [ ] **P0.4 De-duplicate the global+project rule load.** Same slug present in
-  both scopes → load once. Wrap the existing `censusDuplicateScope()` in a
-  `check_*` gate; do not write a new census.
-  - Acceptance: gate reports `duplicate_chars == 0` for a single host;
-    registered in `gate-coverage.yml` with a `min_scanned` floor.
-- [ ] **P0.5 Re-home advisory concerns off `pre_tool_use`** (council Q1).
-  `design-slop`, `code-graph-nudge`, `rtk-wrap` observe outcomes, not
-  intentions; `post_tool_use` at exit 0 is the right slot and removes advisory
-  latency from the critical path. Requires per-concern review — a concern that
-  genuinely needs to see the *proposed* content may have to stay.
-  - Acceptance: no `severity: advisory` concern wired to `pre_tool_use`, or a
-    written per-concern exemption reason.
+- [x] **P0.3 Honor `type: manual` in projection.** The schema is unambiguous:
+  `manual` = "no auto-injection (zero workspace-budget cost); file remains as a
+  reference document linkable". `compile_router` already honoured half of that
+  (no `dist/router.json` entry) — the per-tool projection did not, symlinking
+  manual rules into `.claude/rules/` and emitting `.mdc`/windsurf copies, so
+  under `eager-all` their bodies shipped every session. Fixed in all three
+  generators (`generate_rule_symlinks`, `generate_cursor_mdc_rules`,
+  `generate_windsurf_modern_rules`) via one shared `_is_manual_rule` predicate;
+  the files stay in `dist/agent-src/rules/` so inbound cross-references still
+  resolve, and only the link text remains in the aggregates.
+  **Measured: 5 rules, 5,188 chars (~1,297 GPT tok) removed per tool tree per
+  session** — `analysis-skill-routing`, `brand-consistency`, `guidelines`,
+  `package-ci-checks`, `size-enforcement`.
+  - Acceptance: `tests/scripts/manual_rule_projection.test.ts` — 6 assertions
+    across all three trees, plus the inverse (every manual rule still linkable
+    in dist, so the obvious wrong repair is blocked). **Green.**
+- [x] **P0.4 De-duplicate the global+project rule load — already built; the
+  proposed CI gate is deliberately NOT built.** Investigation found every layer
+  already present: the **mechanism** (`projection.scope_dedup`, with
+  `_dedupable_rules()` wired into `generate_rule_symlinks`), the
+  **measurement** (`_lib/duplicate_scope_census.censusDuplicateScope`, unit-
+  tested — 4 assertions green), and **two surfaces** consuming it
+  (`cache_realization_report` and the `doctor` `duplicate-scope-rules` health
+  check, which emits `{status, message, remedy}`). Re-verified live on this
+  machine: **109 shared basenames** between `~/.claude/rules` and
+  `dist/agent-src/rules`.
+  - **The acceptance criterion as written would have produced a false green.**
+    A CI gate asserting `duplicate_chars == 0` cannot work: CI has no
+    user-global rules directory, so the census returns `evaluable: false` and
+    the gate scans nothing while exiting green. That is exactly the
+    `gates-that-scan-nothing-exit-green` class this repo has been burned by
+    three times, and building it would have been the fourth. The duplicate is
+    a property of a *local install*, so a local diagnostic is the right
+    surface — and it already exists.
+  - **Human-gated:** `projection.scope_dedup` defaults to `false`. Flipping it
+    changes what a consumer install projects, so it belongs with P3.1 under the
+    default-flip blocker, not to an agent.
+- [-] **P0.5 Re-home advisory concerns off `pre_tool_use` — CANCELLED on the
+  council's own criterion (round 2, Q1).** The step's premise was backwards:
+  it asserted these concerns "observe outcomes, not intentions". The reverse is
+  true, and that is the criterion — **ephemeral intention vs durable outcome**:
+  - `design-slop` scans the **proposed** UI content out of `tool_input`. After
+    the write that payload is gone; a post-hook would have to re-read the file,
+    which is a different artefact.
+  - `code-graph-nudge` observes the **query-strategy choice** — once the grep
+    has run the intention no longer exists to redirect.
+  - `rtk-wrap` wraps a **command string** — wrapping it after execution is
+    meaningless.
+  All three observe intentions, so `pre_tool_use` is the correct slot for all
+  three. The harm this step existed to remove — an advisory concern *blocking* —
+  was already removed by P0.2's severity ceiling, which is why the remaining
+  latency argument (the one member who favoured moving two of them) does not
+  carry: an advisory concern now exits 0. Both members agreed `code-graph-nudge`
+  stays; the split on the other two is resolved by the criterion above.
+  - Verified: the three concerns are `severity: advisory`, so
+    `tests/hooks/concern_severity.test.ts` already guarantees none can block
+    from `pre_tool_use`. No wiring change ships.
 
 Exit criterion P0: a review/roadmap session including config diffs completes
 with zero silent mechanical aborts, and both security guards demonstrably
@@ -188,25 +242,57 @@ refuse.
 Not arbitration. Each item removes an *unsatisfiable* or *mis-scoped*
 condition, per the council's reframe.
 
-- [ ] **P1.1 `ui-audit-gate` becomes satisfiable or pack-scoped.** Two parts:
-  (a) where no dispatcher state exists, the gate is satisfied by the observable
-  action of running `skill:existing-ui-audit` first, and `ui-trivial` is
-  decidable from the diff alone (≤1 file, ≤5 lines, no new component/state)
-  without `directive_set`; (b) it ships only with the `frontend-design` pack.
-  - Acceptance: scenario test — a UI write in a plain chat session has a
-    reachable compliant path; default install (`rule_packs: []`) census shows
-    no `ui-audit-gate`.
-- [ ] **P1.2 `context-hygiene` read-loop gets a declared-protocol cap of 3**
-  (not a suspension). "Non-bypassable" narrows to "no *silent* bypass".
-  - Acceptance: scenario test reproducing this session's 8+ read turns.
-- [ ] **P1.3 `token-efficiency` exempts enumerated file sets.** Reading N
-  declared files (an override chain, a downstream-caller sweep) is one logical
-  operation, not N repetitions.
-  - Acceptance: scenario test — a 4-file override read is compliant.
-- [ ] **P1.4 `ask-when-uncertain` × `no-cheap-questions` declared pair,**
-  relation `narrows`: ask only when context does not answer **and** proceeding
-  wrong is destructive or expensive. One question per turn stands.
-- [ ] **P1.5 `no-cheap-questions` IL4 × `user-interrupt-priority` declared
+- [x] **P1.1 `ui-audit-gate` becomes satisfiable — half (a) dropped on council
+  advice, half (b) is human-gated.** Shipped: `ui-trivial` is now decidable
+  **from the diff alone** (≤1 file, ≤5 lines, no new component/state);
+  `directive_set` is reframed as the dispatcher's way of *stating* those same
+  facts rather than an extra requirement, which is what made the escape hatch
+  dispatcher-only. A gate whose only compliant path is inaction is not a gate.
+  - **Dropped, per council round 2 Q2 (both members):** "satisfy it by having
+    run `skill:existing-ui-audit`" — that is self-report, and self-report is
+    not enforcement. Shipping it would have made the gate theatre. Instead the
+    rule now states its honest scope: outside the work engine the audit
+    obligation is model-carried (`enforced_by: none`), same stance as
+    `security-sensitive-stop` and `untrusted-input-defense`.
+  - **Human-gated:** pack-scoping (ship only with `frontend-design`) needs
+    `projection.rule_packs: auto`, and the template says of that key **"Do not
+    set this from automation."** Recorded under the default-flip blocker.
+- [x] **P1.2 `context-hygiene` declared-protocol cap — INVERTED after round 2.**
+  Round 1 said cap declared protocols at **3**, stricter than the undeclared
+  5-abort. Round 2 (both members) called that backwards and they are right: a
+  declared analysis protocol is precisely the case that legitimately needs
+  *more* reads — this roadmap's own evidence sweep ran 8+ read turns and was
+  the protocol working, not a loop. Shipped: undeclared keeps 3-warn/5-abort; a
+  **declared protocol raises the abort to 8** and never suspends the counter.
+  - Anti-gaming, per both members: a declaration is valid only if it states, up
+    front, a falsifiable goal + an expected read count + the output shape.
+    Free-text intent buys nothing, and exceeding the declared count by more
+    than 2 is itself the violation.
+  - "Non-bypassable" narrows to **no *silent* bypass** — a declared protocol is
+    not silent.
+- [x] **P1.3 `token-efficiency` exempts enumerated file sets.** The same-tool
+  ceiling now counts *repetition without new information*, which is what it was
+  always for. Reading N **enumerated** files — an override chain, a
+  downstream-caller sweep, the members of a grep result, a declared read
+  protocol — is one logical operation: the set was known before the first call
+  and every read returns different content. Counting it as N repetitions put
+  the rule in direct conflict with `downstream-changes` ("find **ALL**
+  callers"), which cannot be satisfied in two calls.
+  - The discriminator shipped as **"did the previous call change what I know"**,
+    not the tool name. Still caught: re-reading the same file hoping for a
+    different answer, re-running a failing command unchanged, widening a grep
+    one word at a time.
+  - The Iron Law fenced block is untouched (per `preservation-guard`); the
+    carve-out is a sibling section.
+- [x] **P1.4 `ask-when-uncertain` × `no-cheap-questions` declared pair.**
+  Landed as `ask-x-no-cheap-questions`, relation `narrows`, in
+  `docs/contracts/rule-interactions.yml` — **no kernel rule body was touched**,
+  so the one-kernel-rule-per-PR soak gate never fires. Composed test: ask iff
+  context does not answer it **and** proceeding on the wrong branch is
+  destructive or expensive; on genuine disagreement `ask-when-uncertain` wins,
+  because a suppressed real question costs more than one extra turn. One
+  question per turn stands.
+- [x] **P1.5 `no-cheap-questions` IL4 × `user-interrupt-priority` declared
   pair** — a second undocumented **kernel-level** contradiction, found by the
   P2.2 generator: `no-cheap-questions.md:27` says "STANDING AUTONOMOUS MANDATE
   ACTIVE → NEVER ASK 'WEITER? / SHALL I CONTINUE?'", while
@@ -216,11 +302,38 @@ condition, per the council's reframe.
   resume-after-interrupt, and the two rules contain **zero** cross-references to
   each other. Under an autonomous mandate the agent is simultaneously required
   and forbidden to ask before resuming.
-  - Acceptance: declared pair with a relation; the resume-after-interrupt ask is
-    added to the halt list or explicitly excluded in one of the two rules.
-- [ ] **P1.6 Mis-scoping sweep.** The council's open question: how many other
-  rules are labelled general but are context-specific? Enumerate; do not fix
-  in this phase.
+  - **Both** halves shipped: the pair `interrupt-x-no-cheap-questions`
+    (relation `overrides` — the resume ask survives the mandate) **and** the
+    halt-list fix, adding resume-after-interrupt as Iron Law 4's sixth halt
+    condition in `contexts/execution/cheap-question-mechanics.md`. The
+    distinction that resolves it: IL 4 suppresses a *continuation prompt*
+    (asking permission to keep doing already-authorized work); the resume ask
+    is a *task-boundary decision the user created by interrupting*, and the
+    agent cannot answer it from context because the interrupt is the only
+    evidence of their current priority.
+- [x] **P1.6 Mis-scoping sweep — enumerated, with a falsifiable test.** The
+  council (round 2, Q5) refused to accept this step without a discriminator, so
+  one was derived first. A rule is **mis-scoped-as-general** iff all four hold:
+  (1) broad activation — its triggers fire in an ordinary chat session;
+  (2) narrow-only satisfaction — its obligation names a field whose *producer*
+  exists in exactly one pipeline; (3) no general fallback branch; (4) it
+  therefore forces a degenerate universal action rather than merely staying
+  silent.
+  **Result: `ui-audit-gate` is the only true hit** — already fixed by P1.1.
+  Not padded: every other rule either self-gates on a generally-readable
+  settings key with an explicit inert path, or stays behaviourally harmless
+  outside its domain. Two of the four candidate signals were discarded as
+  non-discriminating — notably "declares `packs:`", since **111 of 111 rules
+  do**.
+  Secondary class (self-claimed pack activation contradicted by the shipped
+  `rule_packs: []` default): `finance-safety-floor`, `legal-safety-floor`,
+  `strategy-safety-floor` — 3 rules, fix class `pack-scope`, therefore
+  human-gated with P3.1. `history-discipline` / `scale-discipline` match the
+  pattern but are correct as-shipped (their packs are engineering-workspace
+  packs; the settings template defends this).
+  Bonus verification: `rule_packs: auto` drops **exactly the 8 rules** the
+  template names — claim exact. Its token figure measures 8,308 today vs the
+  archived 8,110 (~3% drift, directionally verified, not stale).
 
 ## Phase 2 — One-time conflict audit (measured: audit, NOT a CI gate)
 
