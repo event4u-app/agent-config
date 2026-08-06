@@ -1,6 +1,6 @@
 # agent-config — Public Catalog
 
-Consumer-facing catalog of all **695 public artefacts** shipped by
+Consumer-facing catalog of all **696 public artefacts** shipped by
 this package. Internal package-maintenance rules and deprecation shims
 are excluded.
 
@@ -316,7 +316,7 @@ are excluded.
 | skill | [`wireframe`](../dist/agent-src/skills/wireframe/SKILL.md) | official | Explore a flow or layout with 3+ disposable lo-fi greyscale wireframes on a named axis, before any hi-fi work. Use when the user wants to sketch directions or explore structure. |
 | skill | [`worktree-lifecycle`](../dist/agent-src/skills/worktree-lifecycle/SKILL.md) | official | Use when governing a worktree across its whole life — scope-lock declaration, merge-readiness status, scoped verification, and safe cleanup that refuses while unique unmerged commits exist. |
 
-## Rules (109)
+## Rules (110)
 
 | kind | name | type | description |
 |---|---|---|---|
@@ -346,6 +346,7 @@ are excluded.
 | rule | [`decision-revisit-gate`](../dist/agent-src/rules/decision-revisit-gate.md) | auto | Beneficial change blocked by a lock (honest-null, don't-relitigate memory, budget canon, ADR) — surface a council re-evaluation offer, never drop |
 | rule | [`delegation-policy`](../dist/agent-src/rules/delegation-policy.md) | auto | Delegable multi-part work + auto-orchestration on — decompose, tier-size, dispatch to subagents instead of in-session |
 | rule | [`design-fidelity`](../dist/agent-src/rules/design-fidelity.md) | auto | A provided prototype/mockup/design system is the spec — build 1:1; never swap fonts, controls, or layout unconfirmed |
+| rule | [`design-review-after-ui-write`](../dist/agent-src/rules/design-review-after-ui-write.md) | auto | UI written or changed — review it against the design contract before calling it done; the write-side twin of ui-audit-gate |
 | rule | [`devcontainer-routing`](../dist/agent-src/rules/devcontainer-routing.md) | auto | Wiring DevContainers/Codespaces (devcontainer.json, features, ports) — route to the devcontainer skill |
 | rule | [`direct-answers`](../dist/agent-src/rules/direct-answers.md) | always | Always — direct, unembellished answers. No flattery, no invented facts (verify load-bearing claims, otherwise ask). Emojis only as functional markers. Brevity is the default. |
 | rule | [`doc-screenshot-hygiene`](../dist/agent-src/rules/doc-screenshot-hygiene.md) | auto | Doc screenshots — anonymize sensitive data before shipping; data-bearing shots human-gated (published egress); terminal/CLI/IDE shots forbidden |
