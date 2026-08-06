@@ -14,6 +14,8 @@ routes_to:
   - "skill:decision-review"
 workspaces: [agent-config-maintainer, engineering]
 packs: [meta]
+collision_ok:
+  "honest null": "this rule asks whether a recorded null may be REVISITED; evaluator-independence asks how one was PRODUCED — different decision points on the same artefact"
 ---
 
 # Decision Revisit Gate

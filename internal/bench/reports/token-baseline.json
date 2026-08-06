@@ -1,10 +1,12 @@
 {
   "token_method": "tokens_gpt: exact (tiktoken cl100k_base); tokens_claude: proxy (chars/3.6)",
   "metrics": {
-    "eager_rule_load": 86624,
+    "eager_rule_load": 92621,
     "thin_rule_load": 15964,
     "skill_descriptions": 12242,
-    "command_descriptions": 5962,
+    "command_descriptions": 6189,
     "mcp_schemas": 4839
-  }
+  },
+  "rebaselined_at": "2026-08-06",
+  "rebaseline_note": "eager_rule_load 86624 -> 92621, itemised rather than silently raised. At the moment this PR branched, origin/main already measured 90898 (+4.9%) against the previous anchor — 4274 tokens of inherited growth, and 57 tokens of headroom under the 5% cliff (90955). No new rule of any size could have landed. This PR adds 1723: the new evaluator-independence rule plus measured findings appended to session-canary and user-interaction. The two appended sections were trimmed once (-221) before rebaselining; the remainder is a genuine new obligation, not prose weight. The finding worth acting on is NOT this PR: it is that the eager-rule surface was already at the cliff on main with nobody looking, which is the same 'breach warns on main and blocks on release' shape recorded for cli_help_command_count. command_descriptions 5962 -> 6189 covers the new /analyze:conformance command. Re-measured via `task audit-tokens` on this branch; method unchanged (tiktoken cl100k_base)."
 }

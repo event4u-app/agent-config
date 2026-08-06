@@ -1,74 +1,74 @@
 {
-    "_comment": "Outside-in evaluator budgets (road-to-credible-install Phase 6). VALUES ARE FROZEN FROM MEASURED ACCEPTANCE NUMBERS of Phases 0-3 (2026-07-27, packed tarball @ 9.8.0 tree, --omit=dev consumer install), never invented. The umbrella harness (src/scripts/evaluator_umbrella.sh) measures the packed artifact and check_evaluator_budgets.ts enforces: absolute budget AND >regression_pct growth vs last_measured fails even under budget. Owner + review date are lint-enforced (lint_budget_ownership). Timing metrics carry a per-entry regression_pct override (200) — wall-clock noise would flap a 10% creep rule; their absolute max is the binding gate. Sizes/counts keep the tight 10% creep.",
-    "schema_version": 1,
-    "owner": "maintainer",
-    "review_by": "2027-07-27",
-    "regression_pct": 10,
-    "posture": {
-        "on_release": "fail",
-        "on_main_and_prs": "warn",
-        "on_local": "fail",
-        "always_blocking": [
-            "a metric with no measurement supplied"
-        ],
-        "rationale": "road-to-gates-that-can-fail Phase 5. A hard fail on main turns every legitimate command addition into a blocked merge, which is how budgets get quietly raised with a cushion instead of consciously — so budget / regression / drift findings are ADVISORY on main, the nightly and ordinary PRs, and BLOCKING on a release ref. Not a weakening: before the Phase-4 path triggers, this gate ran on release PRs and the nightly only, so the surfaces that now warn never saw it at all. A LOCAL run (no CI env) is strict, because a maintainer running it by hand — including release.ts — wants the strict answer and blocks nobody. A metric with NO measurement is always blocking in either posture: that is a broken harness reporting green on nothing. Implemented in src/scripts/check_evaluator_budgets.ts::detectPosture; override with --posture warn|fail.",
-        "delivery": "This posture IS the nightly-visibility route (council 2026-08-02, blocker nightly-visibility-owner), not a second mechanism beside it: the nightly publishes measurement_record below, a later run re-measures and compares, and the contradiction warns on main / fails on release. No notification channel, no auto-managed issue — a one-maintainer channel producing routine noise gets muted, and a muted channel reproduces the original failure."
+  "_comment": "Outside-in evaluator budgets (road-to-credible-install Phase 6). VALUES ARE FROZEN FROM MEASURED ACCEPTANCE NUMBERS of Phases 0-3 (2026-07-27, packed tarball @ 9.8.0 tree, --omit=dev consumer install), never invented. The umbrella harness (src/scripts/evaluator_umbrella.sh) measures the packed artifact and check_evaluator_budgets.ts enforces: absolute budget AND >regression_pct growth vs last_measured fails even under budget. Owner + review date are lint-enforced (lint_budget_ownership). Timing metrics carry a per-entry regression_pct override (200) — wall-clock noise would flap a 10% creep rule; their absolute max is the binding gate. Sizes/counts keep the tight 10% creep.",
+  "schema_version": 1,
+  "owner": "maintainer",
+  "review_by": "2027-07-27",
+  "regression_pct": 10,
+  "posture": {
+    "on_release": "fail",
+    "on_main_and_prs": "warn",
+    "on_local": "fail",
+    "always_blocking": [
+      "a metric with no measurement supplied"
+    ],
+    "rationale": "road-to-gates-that-can-fail Phase 5. A hard fail on main turns every legitimate command addition into a blocked merge, which is how budgets get quietly raised with a cushion instead of consciously — so budget / regression / drift findings are ADVISORY on main, the nightly and ordinary PRs, and BLOCKING on a release ref. Not a weakening: before the Phase-4 path triggers, this gate ran on release PRs and the nightly only, so the surfaces that now warn never saw it at all. A LOCAL run (no CI env) is strict, because a maintainer running it by hand — including release.ts — wants the strict answer and blocks nobody. A metric with NO measurement is always blocking in either posture: that is a broken harness reporting green on nothing. Implemented in src/scripts/check_evaluator_budgets.ts::detectPosture; override with --posture warn|fail.",
+    "delivery": "This posture IS the nightly-visibility route (council 2026-08-02, blocker nightly-visibility-owner), not a second mechanism beside it: the nightly publishes measurement_record below, a later run re-measures and compares, and the contradiction warns on main / fails on release. No notification channel, no auto-managed issue — a one-maintainer channel producing routine noise gets muted, and a muted channel reproduces the original failure."
+  },
+  "measurement_record": {
+    "path": "agents/evidence/metrics/evaluator-measurements.json",
+    "written_by": "src/scripts/evaluator_umbrella.sh (UMBRELLA_RECORD=1 — the nightly sets it)",
+    "compared_by": "src/scripts/check_evaluator_budgets.ts --recorded",
+    "note": "Only entries WITHOUT `deterministic: false` participate in the drift comparison. The council's recorded objection was that a non-deterministic comparison produces noise and gets ignored; determinism is therefore a precondition, verified per metric, not an assumption."
+  },
+  "remeasurement_2026_08_02": {
+    "verified_against_a_fresh_run": {
+      "cli_help_command_count": "80 — three consecutive runs of the pinned method on an unchanged tree returned 80/80/80. Matches last_measured; deterministic confirmed.",
+      "mcp_public_tool_count": "19 — two consecutive tools/list runs on a freshly built dist/mcp/server.mjs returned 19/19. Matches last_measured; deterministic confirmed."
     },
-    "measurement_record": {
-        "path": "agents/evidence/metrics/evaluator-measurements.json",
-        "written_by": "src/scripts/evaluator_umbrella.sh (UMBRELLA_RECORD=1 — the nightly sets it)",
-        "compared_by": "src/scripts/check_evaluator_budgets.ts --recorded",
-        "note": "Only entries WITHOUT `deterministic: false` participate in the drift comparison. The council's recorded objection was that a non-deterministic comparison produces noise and gets ignored; determinism is therefore a precondition, verified per metric, not an assumption."
+    "not_re_measured": "unpacked_size_mb, node_modules_mb, runtime_dep_count, cli_version_cold_ms, mcp_boot_to_initialize_ms. All five require the packed-tarball harness (npm pack of a fully built tree, then a clean `npm install --omit=dev <tarball>` into a scratch project) that evaluator_umbrella.sh runs in CI. They were NOT re-measured in this pass and their values remain the 2026-07-27 acceptance numbers — stated rather than invented. The next nightly writes the real numbers into measurement_record, and the drift check then reports any contradiction with last_measured on the PR that carries it."
+  },
+  "removed_2026_08_04": "unpacked_size_mb (max 28) — removed by maintainer decision at the 9.17.0 release: the gate turned every legitimate payload addition into a blocked release (measured 28.22 vs max 28 with all functional gates green), and the maintainer judged tarball size not worth gating. evaluator_umbrella.sh still MEASURES and records unpacked_size_mb as evidence; only the budget enforcement is gone. ADR-204 review_trigger (a) fired and was resolved this way.",
+  "budgets": {
+    "node_modules_mb": {
+      "max": 140,
+      "last_measured": 127,
+      "last_measured_at": "2026-07-27",
+      "method": "du -sm node_modules after `npm install --omit=dev <tarball>` in a clean project"
     },
-    "remeasurement_2026_08_02": {
-        "verified_against_a_fresh_run": {
-            "cli_help_command_count": "80 — three consecutive runs of the pinned method on an unchanged tree returned 80/80/80. Matches last_measured; deterministic confirmed.",
-            "mcp_public_tool_count": "19 — two consecutive tools/list runs on a freshly built dist/mcp/server.mjs returned 19/19. Matches last_measured; deterministic confirmed."
-        },
-        "not_re_measured": "unpacked_size_mb, node_modules_mb, runtime_dep_count, cli_version_cold_ms, mcp_boot_to_initialize_ms. All five require the packed-tarball harness (npm pack of a fully built tree, then a clean `npm install --omit=dev <tarball>` into a scratch project) that evaluator_umbrella.sh runs in CI. They were NOT re-measured in this pass and their values remain the 2026-07-27 acceptance numbers — stated rather than invented. The next nightly writes the real numbers into measurement_record, and the drift check then reports any contradiction with last_measured on the PR that carries it."
+    "runtime_dep_count": {
+      "max": 200,
+      "last_measured": 187,
+      "last_measured_at": "2026-07-27",
+      "method": "package-lock.json packages count (minus root) of the clean --omit=dev install"
     },
-    "removed_2026_08_04": "unpacked_size_mb (max 28) — removed by maintainer decision at the 9.17.0 release: the gate turned every legitimate payload addition into a blocked release (measured 28.22 vs max 28 with all functional gates green), and the maintainer judged tarball size not worth gating. evaluator_umbrella.sh still MEASURES and records unpacked_size_mb as evidence; only the budget enforcement is gone. ADR-204 review_trigger (a) fired and was resolved this way.",
-    "budgets": {
-        "node_modules_mb": {
-            "max": 140,
-            "last_measured": 127,
-            "last_measured_at": "2026-07-27",
-            "method": "du -sm node_modules after `npm install --omit=dev <tarball>` in a clean project"
-        },
-        "runtime_dep_count": {
-            "max": 200,
-            "last_measured": 187,
-            "last_measured_at": "2026-07-27",
-            "method": "package-lock.json packages count (minus root) of the clean --omit=dev install"
-        },
-        "cli_version_cold_ms": {
-            "max": 1500,
-            "last_measured": 370,
-            "last_measured_at": "2026-07-27",
-            "method": "wall-clock of the FIRST `agent-config --version` after install (cold fs cache run counts)",
-            "regression_pct": 200,
-            "deterministic": false
-        },
-        "mcp_boot_to_initialize_ms": {
-            "max": 2000,
-            "last_measured": 264,
-            "last_measured_at": "2026-07-27",
-            "method": "initialize request piped to `node dist/mcp/server.mjs`, wall-clock to response",
-            "regression_pct": 200,
-            "deterministic": false
-        },
-        "cli_help_command_count": {
-            "max": 85,
-            "last_measured": 85,
-            "last_measured_at": "2026-08-05",
-            "method": "registry enumeration — count of `{ name: '...', disposition` entries in src/cli/registry.ts (NOT --help prose parsing; methods historically disagreed 74 vs 76 vs 79)",
-            "baseline_note": "80 → 81 on 2026-08-03 (release 9.15.0 gate). This RECORDS growth that already shipped through its own reviewed PR; it does not authorize new surface. The +1 is f02db54c2 (fix(cli): register routing:doctor in the CLI registry) — the command existed, only its registry entry was missing, and the registering PR did not move this budget. The gate did its job again: breach WARNS on main and BLOCKS on release, which is the conscious-decision point rather than a silently raised cap. Re-measured 2026-08-03 via the pinned method: 81. Headroom stays zero by design — the next registry addition must move this number in its own PR. 81 → 82 on 2026-08-04: the `handoff` subcommand (road-to-agent-handoff-resume Phase 4) registers in the same PR that adds the surface, per this record's own contract. Re-measured via the pinned method: 82. 82 → 84 on 2026-08-04: the `route:explain` + `route:audit` verbs (routing-correctness validation surface) register in the same PR that adds the surface. Re-measured via the pinned method: 84. 84 → 85 on 2026-08-05: the `settings:set` verb (road-to-zero-ceremony-settings Phase 2 — the one agent-reachable settings writer) registers in the same PR that adds the surface, per this record's own contract. Re-measured via the pinned method: 85."
-        },
-        "mcp_public_tool_count": {
-            "max": 19,
-            "last_measured": 19,
-            "last_measured_at": "2026-08-02",
-            "method": "tools/list length on the stdio server (post-ADR-132: implemented tools only)"
-        }
+    "cli_version_cold_ms": {
+      "max": 1500,
+      "last_measured": 370,
+      "last_measured_at": "2026-07-27",
+      "method": "wall-clock of the FIRST `agent-config --version` after install (cold fs cache run counts)",
+      "regression_pct": 200,
+      "deterministic": false
+    },
+    "mcp_boot_to_initialize_ms": {
+      "max": 2000,
+      "last_measured": 264,
+      "last_measured_at": "2026-07-27",
+      "method": "initialize request piped to `node dist/mcp/server.mjs`, wall-clock to response",
+      "regression_pct": 200,
+      "deterministic": false
+    },
+    "cli_help_command_count": {
+      "max": 86,
+      "last_measured": 86,
+      "last_measured_at": "2026-08-06",
+      "method": "registry enumeration — count of `{ name: '...', disposition` entries in src/cli/registry.ts (NOT --help prose parsing; methods historically disagreed 74 vs 76 vs 79)",
+      "baseline_note": "80 → 81 on 2026-08-03 (release 9.15.0 gate). This RECORDS growth that already shipped through its own reviewed PR; it does not authorize new surface. The +1 is f02db54c2 (fix(cli): register routing:doctor in the CLI registry) — the command existed, only its registry entry was missing, and the registering PR did not move this budget. The gate did its job again: breach WARNS on main and BLOCKS on release, which is the conscious-decision point rather than a silently raised cap. Re-measured 2026-08-03 via the pinned method: 81. Headroom stays zero by design — the next registry addition must move this number in its own PR. 81 → 82 on 2026-08-04: the `handoff` subcommand (road-to-agent-handoff-resume Phase 4) registers in the same PR that adds the surface, per this record's own contract. Re-measured via the pinned method: 82. 82 → 84 on 2026-08-04: the `route:explain` + `route:audit` verbs (routing-correctness validation surface) register in the same PR that adds the surface. Re-measured via the pinned method: 84. 84 → 85 on 2026-08-05: the `settings:set` verb (road-to-zero-ceremony-settings Phase 2 — the one agent-reachable settings writer) registers in the same PR that adds the surface, per this record's own contract. Re-measured via the pinned method: 85. 85 → 86 on 2026-08-06: the `conformance:behavior` verb (road-to-agent-behavior-conformance Phase 5 — replays the local transcript store through the four mechanised conformance checks) registers in the same PR that adds the surface, per this record's own contract. Re-measured via the pinned method: 86."
+    },
+    "mcp_public_tool_count": {
+      "max": 19,
+      "last_measured": 19,
+      "last_measured_at": "2026-08-02",
+      "method": "tools/list length on the stdio server (post-ADR-132: implemented tools only)"
     }
+  }
 }
