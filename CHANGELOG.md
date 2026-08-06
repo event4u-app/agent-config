@@ -303,6 +303,55 @@ Entry-shape contract: [`docs/contracts/CHANGELOG-conventions.md`](docs/contracts
 > that forces a new era split (`# Era: 9.24.x`, etc.) — see
 > [`docs/contracts/CHANGELOG-conventions.md § Era splits`](docs/contracts/CHANGELOG-conventions.md).
 
+## [9.25.0](https://github.com/event4u-app/agent-config/compare/9.24.0...9.25.0) (2026-08-06)
+
+### Release highlights
+
+<!-- Curated head: fill before merge, keep it under 10 lines, and leave `_none_` where it is genuinely the answer. The generated log below is unchanged. -->
+- **Behaviour changes:** _auto-derived, rewrite before merge:_ rule/schema diffs, breaking commits or removed public surface in 5d653e2, 00018c4, 20bb411, cb0917d, 7641291.
+- **Default changes + migration:** _auto-derived, rewrite before merge:_ commits naming a default, migration or migrate in bd45f62, 11a699c.
+- **Security and correctness:** _none_
+- **Honest nulls:** _auto-derived, rewrite before merge:_ commits carrying an honest-null marker in 5d653e2, 20bb411.
+- **Known limitations:** _none_
+
+### Features
+
+* **commands:** add /analyze:conformance, and clear the six red CI checks ([5d653e2](https://github.com/event4u-app/agent-config/commit/5d653e2ecfa1b697c7c44a94087d0248debea3d9))
+* **cli:** add conformance:behavior — replay transcripts through the shipped gates ([7c7a9dc](https://github.com/event4u-app/agent-config/commit/7c7a9dc10d83245b7507cbcef348e52901968c45))
+* **hooks:** gate the language pin, git authorization and evaluator independence ([582a9f3](https://github.com/event4u-app/agent-config/commit/582a9f37b97d3cb1f6474963fea576349f6b0b5d))
+* **authoring:** a decision-impact class, and four conventions Phase 2 owed ([7641291](https://github.com/event4u-app/agent-config/commit/7641291866dac3c24deaf4cea1827a6c24d63edb))
+* **ledger:** record what the rule-body migration kept, folded, and lost ([11a699c](https://github.com/event4u-app/agent-config/commit/11a699cda54c2eca55899af25435aee80a6b7f75))
+* **skill-writing:** two conventions that travel with the artifact ([9120d0f](https://github.com/event4u-app/agent-config/commit/9120d0ffd1d8ea7140f9cc393e34c595dba29085))
+* **interactions:** close the register over the set it claims to cover ([654837b](https://github.com/event4u-app/agent-config/commit/654837b1b8c3e33a43539d256bcd18592ade6621))
+* **descriptions:** reject a description that argues against its siblings ([9889529](https://github.com/event4u-app/agent-config/commit/9889529bcb34e604fd2bedde3ab2abf98e3f6a40))
+* **gates:** lint authored examples, and cap the on-demand depth layer ([c2c2d91](https://github.com/event4u-app/agent-config/commit/c2c2d917cede10eab64144ac9302857f6edd80b5))
+
+### Bug Fixes
+
+* **rules:** clear a lint regression and register the new rule in the router ([00018c4](https://github.com/event4u-app/agent-config/commit/00018c4315269467b856713ec056f2c61982ca33))
+* **roadmap:** drop the duplicate un-archived copy ([532200a](https://github.com/event4u-app/agent-config/commit/532200ac94966a83df0a97e0c48e02e240d72c3f))
+* **hooks:** stop counting vacuous verification as evidence ([7696e54](https://github.com/event4u-app/agent-config/commit/7696e5453b770d200e2925204cba4e08f323ca7b))
+* **ci:** bump the gate-script population and regenerate the artefact index ([21a16f1](https://github.com/event4u-app/agent-config/commit/21a16f15a04c1c6b515832ddf56a951fce6b16d1))
+* **schema:** insert decision_impact surgically instead of reserialising the file ([cb0917d](https://github.com/event4u-app/agent-config/commit/cb0917daca7080b2e5446473b6e420b854554d5e))
+
+### Documentation
+
+* **analyze-conformance:** adopt the checked-out-branch default from its sibling ([bd45f62](https://github.com/event4u-app/agent-config/commit/bd45f62e52edb86fd4e22cc8828a819a60788ae7))
+* **analyze-inbox:** run in the checked-out branch; worktree only on request ([aaf29b4](https://github.com/event4u-app/agent-config/commit/aaf29b466e4df37236e32fd588077c83f51f5483))
+* **roadmap:** record the conformance audit and close its roadmap ([1616c23](https://github.com/event4u-app/agent-config/commit/1616c236d4e47b0bc77af6521a2db23419760f75))
+* **rules:** add evaluator-independence, and downgrade two enforcement claims ([20bb411](https://github.com/event4u-app/agent-config/commit/20bb4116d7d0a2dec198d4e08ade4371ff802b8a))
+* **roadmap:** close and archive the authoring-discipline roadmap ([977ebd9](https://github.com/event4u-app/agent-config/commit/977ebd9a3771eaeb42b631cd9660bf4b16d0d1ae))
+* **roadmap:** record the second execution pass and its three measured departures ([ec1acfb](https://github.com/event4u-app/agent-config/commit/ec1acfbfc5718a2197bdc9ca5cdcc091ba3a410c))
+* **roadmap:** close Phase 4 steps 1-3 and 5, with what changed from the plan ([87d4bd2](https://github.com/event4u-app/agent-config/commit/87d4bd24e5f2b7f1e7429ba016e7d473aec00fa7))
+
+### Chores
+
+* **docs:** regenerate the artefact index for /analyze:conformance ([d1f8f25](https://github.com/event4u-app/agent-config/commit/d1f8f25105b8df849160b2b62e78a84f555d8222))
+* **docs:** regenerate the artefact index for the new rule ([910555a](https://github.com/event4u-app/agent-config/commit/910555a46f5345352e8dd6a950a370ac53019fa1))
+* **sync:** regenerate the projections for the two authoring skills ([44f037e](https://github.com/event4u-app/agent-config/commit/44f037efc1d92d07f6efed30ecb4cb612b2bb55a))
+
+Tests: 11443 (+134 since 9.24.0)
+
 ## [9.24.0](https://github.com/event4u-app/agent-config/compare/9.23.0...9.24.0) (2026-08-06)
 
 ### Release highlights
