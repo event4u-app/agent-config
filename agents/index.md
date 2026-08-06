@@ -1,6 +1,6 @@
 # Agent-Config Internal Index
 
-Maintainer-facing index of all **696 artefacts** in this package.
+Maintainer-facing index of all **697 artefacts** in this package.
 Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
 
 > **Regenerate:** `./scripts-run src/scripts/generate_index`
@@ -300,7 +300,7 @@ Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
 | skill | [`wireframe`](../src/skills/wireframe/SKILL.md) | official | Explore a flow or layout with 3+ disposable lo-fi greyscale wireframes on a named axis, before any hi-fi work. Use when the user wants to sketch directions or explore structure. |
 | skill | [`worktree-lifecycle`](../src/skills/worktree-lifecycle/SKILL.md) | official | Use when governing a worktree across its whole life — scope-lock declaration, merge-readiness status, scoped verification, and safe cleanup that refuses while unique unmerged commits exist. |
 
-## Rules (110)
+## Rules (111)
 
 | kind | name | type | description |
 |---|---|---|---|
@@ -340,6 +340,7 @@ Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
 | rule | [`domain-safety-retention`](../src/rules/domain-safety-retention.md) | auto | Data retention — jurisdiction gap, longest floor, honor DSR/audit holds; never delete under inquiry |
 | rule | [`downstream-changes`](../src/rules/downstream-changes.md) | auto | After EVERY code edit, find ALL downstream changes — callers, tests, imports, types, documentation |
 | rule | [`engineering-safety-floor`](../src/rules/engineering-safety-floor.md) | auto | Production/infra/security/external-system output — blast radius + rollback; Hard-Floor never autonomous |
+| rule | [`evaluator-independence`](../src/rules/evaluator-independence.md) | auto | Commissioning a review/judge/blind-pass on your own work — never author the verdict, never narrow the scope, record the prompt with the result |
 | rule | [`external-code-graph-interop`](../src/rules/external-code-graph-interop.md) | auto | Repo ships a code-graph index (graph.json-shaped or SCIP) — query IT first for codebase-structure questions, do not grep from scratch |
 | rule | [`external-reference-deep-dive`](../src/rules/external-reference-deep-dive.md) | auto | User names an external repo/file/URL as reference — fetch the actual tree and inspect; never summarize from README |
 | rule | [`fast-path-marker-visibility`](../src/rules/fast-path-marker-visibility.md) | auto | Low-impact council fast-path — surface the transparency marker verbatim as the reply opener |

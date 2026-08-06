@@ -1,6 +1,6 @@
 # agent-config — Public Catalog
 
-Consumer-facing catalog of all **695 public artefacts** shipped by
+Consumer-facing catalog of all **696 public artefacts** shipped by
 this package. Internal package-maintenance rules and deprecation shims
 are excluded.
 
@@ -316,7 +316,7 @@ are excluded.
 | skill | [`wireframe`](../dist/agent-src/skills/wireframe/SKILL.md) | official | Explore a flow or layout with 3+ disposable lo-fi greyscale wireframes on a named axis, before any hi-fi work. Use when the user wants to sketch directions or explore structure. |
 | skill | [`worktree-lifecycle`](../dist/agent-src/skills/worktree-lifecycle/SKILL.md) | official | Use when governing a worktree across its whole life — scope-lock declaration, merge-readiness status, scoped verification, and safe cleanup that refuses while unique unmerged commits exist. |
 
-## Rules (109)
+## Rules (110)
 
 | kind | name | type | description |
 |---|---|---|---|
@@ -356,6 +356,7 @@ are excluded.
 | rule | [`domain-safety-retention`](../dist/agent-src/rules/domain-safety-retention.md) | auto | Data retention — jurisdiction gap, longest floor, honor DSR/audit holds; never delete under inquiry |
 | rule | [`downstream-changes`](../dist/agent-src/rules/downstream-changes.md) | auto | After EVERY code edit, find ALL downstream changes — callers, tests, imports, types, documentation |
 | rule | [`engineering-safety-floor`](../dist/agent-src/rules/engineering-safety-floor.md) | auto | Production/infra/security/external-system output — blast radius + rollback; Hard-Floor never autonomous |
+| rule | [`evaluator-independence`](../dist/agent-src/rules/evaluator-independence.md) | auto | Commissioning a review/judge/blind-pass on your own work — never author the verdict, never narrow the scope, record the prompt with the result |
 | rule | [`external-code-graph-interop`](../dist/agent-src/rules/external-code-graph-interop.md) | auto | Repo ships a code-graph index (graph.json-shaped or SCIP) — query IT first for codebase-structure questions, do not grep from scratch |
 | rule | [`external-reference-deep-dive`](../dist/agent-src/rules/external-reference-deep-dive.md) | auto | User names an external repo/file/URL as reference — fetch the actual tree and inspect; never summarize from README |
 | rule | [`fast-path-marker-visibility`](../dist/agent-src/rules/fast-path-marker-visibility.md) | auto | Low-impact council fast-path — surface the transparency marker verbatim as the reply opener |
