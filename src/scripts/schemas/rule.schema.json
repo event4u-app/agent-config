@@ -6,42 +6,27 @@
   "$comment": "Source: agents/reference/docs/frontmatter-contract.md#rules. `type` is authoritative; `alwaysApply` is a Cursor/Cline sidecar and accepted but not enforced.",
   "type": "object",
   "additionalProperties": false,
-  "required": [
-    "type",
-    "source",
-    "description"
-  ],
+  "required": ["type", "source", "description"],
   "properties": {
     "type": {
       "type": "string",
-      "enum": [
-        "always",
-        "auto",
-        "manual"
-      ],
+      "enum": ["always", "auto", "manual"],
       "description": "`always` = injected verbatim every turn (kernel). `auto` = description stub injected, body loaded on trigger match. `manual` = no auto-injection (zero workspace-budget cost); file remains as a reference document linkable from skills/contexts. Introduced by ADR-004 to demote thin pointer-rules without breaking cross-references."
+    },
+    "source": {
+      "type": "string",
+      "enum": ["package", "project"],
+      "default": "package"
     },
     "decision_impact": {
       "type": "string",
-      "enum": [
-        "overrides-model-default",
-        "encodes-house-choice",
-        "already-complied-with"
-      ],
-      "description": "What is at stake when this rule fires — distinct from `type`, which is a DELIVERY class (how the rule reaches the model). `overrides-model-default`: the model's base behaviour is wrong here, so the rule is load-bearing. `encodes-house-choice`: the model would make *a* defensible choice but not *our* choice. `already-complied-with`: the model does this unprompted — the one value that permits removal, and therefore the one carrying an evidence bar (`decision_impact_evidence`, enforced by lint_decision_impact). OPTIONAL by design: backfilling 111 rules in one batch is exactly the shape that trips check_kernel_prefix_stability, so it lands on new rules and on rules touched for another reason. Introduced by road-to-skill-ecosystem-authoring-discipline Phase 2."
+      "enum": ["overrides-model-default", "encodes-house-choice", "already-complied-with"],
+      "description": "What is at stake when this rule fires — distinct from `type`, which is a DELIVERY class (how the rule reaches the model). `overrides-model-default`: the model's base behaviour is wrong here, so the rule is load-bearing. `encodes-house-choice`: the model would make *a* defensible choice but not *our* choice. `already-complied-with`: the model does this unprompted — the one value that permits removal, and therefore the one carrying an evidence bar (`decision_impact_evidence`, enforced by lint_decision_impact). OPTIONAL by design: classifying all 111 rules in one batch is exactly the shape that trips check_kernel_prefix_stability, so it lands on new rules and on rules touched for another reason."
     },
     "decision_impact_evidence": {
       "type": "string",
       "minLength": 20,
-      "description": "Required when `decision_impact: already-complied-with`, forbidden otherwise. A pointer a reviewer can follow to the observation that the model complies without this rule — an eval report, a PR discussion, a trajectory sample. The bar exists because that classification is what permits deleting a rule, and 'the model probably does this anyway' is the cheapest possible way to delete a floor that was working precisely because nothing had crossed it."
-    },
-    "source": {
-      "type": "string",
-      "enum": [
-        "package",
-        "project"
-      ],
-      "default": "package"
+      "description": "Required when `decision_impact: already-complied-with`, forbidden otherwise. A pointer a reviewer can follow to the observation that the model complies without this rule — an eval report, a PR discussion, a trajectory sample. The bar exists because that classification is what permits deleting a rule, and 'the model probably does this anyway' is the cheapest possible way to remove a floor that was working precisely because nothing had crossed it."
     },
     "description": {
       "type": "string",
@@ -72,24 +57,12 @@
     },
     "tier": {
       "type": "string",
-      "enum": [
-        "1",
-        "2a",
-        "2b",
-        "3",
-        "safety-floor",
-        "mechanical-already",
-        "kernel",
-        "tier-1",
-        "tier-2"
-      ],
+      "enum": ["1", "2a", "2b", "3", "safety-floor", "mechanical-already", "kernel", "tier-1", "tier-2"],
       "description": "Hardening tier. Legacy values (1/2a/2b/3/safety-floor/mechanical-already) accepted; new router-canonical values (kernel/tier-1/tier-2) introduced by road-to-kernel-and-router.md Phase 4."
     },
     "council_depth": {
       "type": "string",
-      "enum": [
-        "deep"
-      ],
+      "enum": ["deep"],
       "description": "Optional reasoning-depth marker for AI Council invocations triggered while this rule is active. The only accepted value is 'deep'; omit the key for default depth (setting 'standard' is rejected — every frontmatter byte counts against the context window, and 'standard' is the implicit default). 'deep' instructs the host agent to pass --depth deep to council_cli, which floors rounds at max(ai_council.deep_min_rounds, ai_council.min_rounds). Use for rules that gate architecture, refactoring, or bug-diagnosis flows. See .agent-src.uncondensed/skills/ai-council/SKILL.md."
     },
     "triggers": {
@@ -98,35 +71,19 @@
         "type": "object",
         "additionalProperties": false,
         "properties": {
-          "keyword": {
-            "type": "string"
-          },
-          "phrase": {
-            "type": "string"
-          },
-          "file_pattern": {
-            "type": "string"
-          },
-          "path_prefix": {
-            "type": "string",
-            "description": "Literal path-prefix match pattern the host evaluates against the file the agent is editing — NOT a file reference. The rewriter leaves it verbatim. Source-of-truth rules that must fire on edits under `.agent-src.uncondensed/` keep that prefix here (the prefix ban applies only to `load_context:` and body links — see road-to-path-fixes.md P2.2 / AI-Council 2026-05-06)."
-          },
-          "command": {
-            "type": "string"
-          },
-          "reason": {
-            "type": "string"
-          }
+          "keyword": {"type": "string"},
+          "phrase": {"type": "string"},
+          "file_pattern": {"type": "string"},
+          "path_prefix": {"type": "string", "description": "Literal path-prefix match pattern the host evaluates against the file the agent is editing — NOT a file reference. The rewriter leaves it verbatim. Source-of-truth rules that must fire on edits under `.agent-src.uncondensed/` keep that prefix here (the prefix ban applies only to `load_context:` and body links — see road-to-path-fixes.md P2.2 / AI-Council 2026-05-06)."},
+          "command": {"type": "string"},
+          "reason": {"type": "string"}
         }
       },
       "description": "Router activation triggers (Phase 3 of road-to-kernel-and-router.md). Forbidden on kernel rules, required on non-kernel rules. Five match keys: keyword, phrase, file_pattern, path_prefix, command. `intent` was removed — it never auto-matched at runtime and only gave rule authors false confidence that an activation path existed; additionalProperties:false now rejects it. Schema: docs/contracts/rule-router.md."
     },
     "routes_to": {
       "type": "array",
-      "items": {
-        "type": "string",
-        "pattern": "^(skill|guideline|command|contract):"
-      },
+      "items": {"type": "string", "pattern": "^(skill|guideline|command|contract):"},
       "description": "Router targets (skill / guideline / command / contract). Forbidden on kernel rules. Non-kernel rules declare either routes_to or self_contained: true. Schema: docs/contracts/rule-router.md."
     },
     "self_contained": {
@@ -135,18 +92,12 @@
     },
     "applies_to_user_types": {
       "type": "array",
-      "items": {
-        "type": "string"
-      },
+      "items": {"type": "string"},
       "description": "Forward-compatible user-type filter (step-12-universal-os-reframe Phase 4). Rule loads only when the active user-type matches one of these tags. Wired by step-9-user-types-axis once it lands; treated as a no-op gate until then. Free-form tags (e.g. 'support', 'finance', 'recruiting', 'marketing', 'legal-drafting', 'consulting', 'medical-drafting', 'finance-drafting', 'ops', 'analytics-export', 'all') — no enum until the user-types axis closes."
     },
     "profile": {
       "type": "string",
-      "enum": [
-        "minimal",
-        "balanced",
-        "full"
-      ],
+      "enum": ["minimal", "balanced", "full"],
       "description": "Optional profile override; rare. Tier-derived default applies otherwise."
     },
     "validator_ignore": {
@@ -154,26 +105,11 @@
       "items": {
         "type": "object",
         "additionalProperties": false,
-        "required": [
-          "type",
-          "pattern"
-        ],
+        "required": ["type", "pattern"],
         "properties": {
-          "type": {
-            "type": "string",
-            "enum": [
-              "substring",
-              "regex"
-            ]
-          },
-          "pattern": {
-            "type": "string",
-            "minLength": 1
-          },
-          "reason": {
-            "type": "string",
-            "description": "Human-readable rationale for the suppression — surfaced in audit logs."
-          }
+          "type": {"type": "string", "enum": ["substring", "regex"]},
+          "pattern": {"type": "string", "minLength": 1},
+          "reason": {"type": "string", "description": "Human-readable rationale for the suppression — surfaced in audit logs."}
         }
       },
       "description": "Per-rule allowlist consumed by the post-condensation validator (scripts/check_condensed_paths.py). Rules that document forbidden path substrings as their subject matter (e.g. augment-portability, no-roadmap-references) declare the literal strings here so the gate does not flag itself. road-to-path-fixes.md P5.1."
@@ -182,20 +118,14 @@
       "type": "array",
       "minItems": 1,
       "uniqueItems": true,
-      "items": {
-        "type": "string",
-        "pattern": "^[a-z][a-z0-9-]*$"
-      },
+      "items": {"type": "string", "pattern": "^[a-z][a-z0-9-]*$"},
       "description": "ADR-013 workspace ids (additive discovery axis). Closed vocabulary enforced by scripts/lint_artefact_frontmatter.py against config/discovery/workspaces.yml."
     },
     "packs": {
       "type": "array",
       "minItems": 1,
       "uniqueItems": true,
-      "items": {
-        "type": "string",
-        "pattern": "^[a-z][a-z0-9-]*$"
-      },
+      "items": {"type": "string", "pattern": "^[a-z][a-z0-9-]*$"},
       "description": "ADR-013 pack ids (additive discovery axis). Closed vocabulary enforced by scripts/lint_artefact_frontmatter.py against config/discovery/packs.yml."
     },
     "roles": {
@@ -204,25 +134,13 @@
       "uniqueItems": true,
       "items": {
         "type": "string",
-        "enum": [
-          "developer",
-          "reviewer",
-          "tester",
-          "po",
-          "incident",
-          "planner"
-        ]
+        "enum": ["developer", "reviewer", "tester", "po", "incident", "planner"]
       },
       "description": "Subagent role-mode scoping axis (road-to-lean-agent-init Phase 4), parallel to `workspaces`/`packs`. Closed vocabulary — the six RoleMode ids from src/scripts/_lib/subagent_spawn.ts. Absent/empty = untagged, fails safe (ships to every role). Kernel rules (type: always) always ship regardless of this field. Enforced via this schema's `enum` (not a src/config/discovery/*.yml + lint_artefact_frontmatter.ts cross-check like workspaces/packs) because lint_artefact_frontmatter.ts still scans the retired legacy rules tree (0 artefacts post-ADR-051 src/ migration) and is a no-op for src/rules/*.md today; validate_frontmatter.ts (the active src/rules linter) enforces this enum instead."
     },
     "lifecycle": {
       "type": "string",
-      "enum": [
-        "active",
-        "deprecated",
-        "experimental",
-        "archived"
-      ],
+      "enum": ["active", "deprecated", "experimental", "archived"],
       "default": "active",
       "description": "ADR-013 lifecycle state."
     },
@@ -239,70 +157,31 @@
     "trust": {
       "type": "object",
       "additionalProperties": false,
-      "required": [
-        "level",
-        "confidence",
-        "human_review_required"
-      ],
+      "required": ["level", "confidence", "human_review_required"],
       "properties": {
-        "level": {
-          "type": "string",
-          "enum": [
-            "core",
-            "professional",
-            "experimental",
-            "advisory",
-            "restricted"
-          ],
-          "default": "core"
-        },
-        "confidence": {
-          "type": "string",
-          "enum": [
-            "high",
-            "medium",
-            "low"
-          ],
-          "default": "high"
-        },
-        "human_review_required": {
-          "type": "boolean",
-          "default": false
-        }
+        "level": {"type": "string", "enum": ["core", "professional", "experimental", "advisory", "restricted"], "default": "core"},
+        "confidence": {"type": "string", "enum": ["high", "medium", "low"], "default": "high"},
+        "human_review_required": {"type": "boolean", "default": false}
       },
       "description": "ADR-013 trust block. Vocabulary mirrored by scripts/lint_artefact_frontmatter.py."
     },
     "collision_ok": {
       "type": "object",
-      "additionalProperties": {
-        "type": "string",
-        "minLength": 8
-      },
+      "additionalProperties": {"type": "string", "minLength": 8},
       "description": "Per-trigger collision disposition: maps a trigger VALUE (case-insensitive) shared with >=1 other rule to a one-line reason why this rule also firing on it is correct. Enforced by scripts/lint_trigger_collisions.ts."
     },
     "precedence": {
       "type": "object",
-      "additionalProperties": {
-        "type": "integer"
-      },
+      "additionalProperties": {"type": "integer"},
       "description": "Alternative collision disposition: maps a shared trigger VALUE to an integer ordering; a collision is clean when ALL sharers declare pairwise-distinct integers for it. Enforced by scripts/lint_trigger_collisions.ts."
     },
     "install": {
       "type": "object",
       "additionalProperties": false,
-      "required": [
-        "default",
-        "removable"
-      ],
+      "required": ["default", "removable"],
       "properties": {
-        "default": {
-          "type": "boolean",
-          "default": true
-        },
-        "removable": {
-          "type": "boolean",
-          "default": false
-        }
+        "default": {"type": "boolean", "default": true},
+        "removable": {"type": "boolean", "default": false}
       },
       "description": "ADR-013 install hints (default-on at consumer install; user-removable)."
     }
