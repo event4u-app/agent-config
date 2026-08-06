@@ -694,6 +694,11 @@ tasks:
     desc: Forbid full-pipeline CI steps (task ci / make test / npm run check) in roadmaps when quality.local_auto_run=false (roadmap-ci-steps-policy rule)
     cmd: ./scripts-run src/scripts/lint_roadmap_ci_steps {{.QUIET_FLAG}}
 
+  lint-settings-classes:
+    silent: true
+    desc: Every settings-template leaf carries an A/B/C class in docs/contracts/settings-classes.md (road-to-zero-ceremony-settings Phase 1)
+    cmd: ./scripts-run src/scripts/lint_settings_classes {{.QUIET_FLAG}}
+
   lint-empty-roadmaps:
     silent: true
     desc: Reject empty (0-byte / whitespace-only) roadmap files under agents/roadmaps/ — backstop against auto-commit 0-byte stubs

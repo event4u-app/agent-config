@@ -42,7 +42,10 @@ describe('PUT /api/v1/settings — happy paths', () => {
                 'content-type': 'application/json',
                 'if-unmodified-since': String(ius + 5),
             },
-            payload: { values: payload },
+            // `rule_loading_tier` is class C; these cases exercise the write
+            // mechanics, so they clear the guarded-key gate explicitly. The gate
+            // itself is covered in settings.write-rejects.test.ts.
+            payload: { values: payload, confirmGuarded: true },
         });
         expect(res.statusCode).toBe(200);
         const body = res.json() as PutResponse;
@@ -70,7 +73,10 @@ describe('PUT /api/v1/settings — happy paths', () => {
                 'content-type': 'application/json',
                 'if-unmodified-since': String(ius + 5),
             },
-            payload: { values: payload },
+            // `rule_loading_tier` is class C; these cases exercise the write
+            // mechanics, so they clear the guarded-key gate explicitly. The gate
+            // itself is covered in settings.write-rejects.test.ts.
+            payload: { values: payload, confirmGuarded: true },
         });
         expect(res.statusCode).toBe(200);
         const onDisk = readFileSync(join(ctx.projectRoot, 'settings', '.agent-settings.yml'), 'utf8');
@@ -115,7 +121,10 @@ describe('PUT /api/v1/settings — happy paths', () => {
                 'content-type': 'application/json',
                 'if-unmodified-since': String(ius + 5),
             },
-            payload: { values: payload },
+            // `rule_loading_tier` is class C; these cases exercise the write
+            // mechanics, so they clear the guarded-key gate explicitly. The gate
+            // itself is covered in settings.write-rejects.test.ts.
+            payload: { values: payload, confirmGuarded: true },
         });
         // Re-diff with the same payload — every previously-placeholder
         // template key now holds the typed default, so the change list
@@ -124,7 +133,10 @@ describe('PUT /api/v1/settings — happy paths', () => {
             method: 'POST',
             url: '/api/v1/settings/diff',
             headers: { ...authHeaders(ctx.token, ctx.host), 'content-type': 'application/json' },
-            payload: { values: payload },
+            // `rule_loading_tier` is class C; these cases exercise the write
+            // mechanics, so they clear the guarded-key gate explicitly. The gate
+            // itself is covered in settings.write-rejects.test.ts.
+            payload: { values: payload, confirmGuarded: true },
         });
         expect(diffRes.statusCode).toBe(200);
         const diff = diffRes.json() as { changes: unknown[] };

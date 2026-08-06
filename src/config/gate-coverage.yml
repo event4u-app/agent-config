@@ -40,21 +40,24 @@
 #                visible, or it repeats the sin it exists to catch.
 #   canary       optional mutation recipe (Phase 7) — see CANARY below
 #
-# COVERAGE — THE HONEST DENOMINATOR (re-measured 2026-08-04)
+# COVERAGE — THE HONEST DENOMINATOR (re-measured 2026-08-05)
 # ----------------------------------------------------------
-# 223 `lint_*` / `check_*` / `audit_*` scripts live under `src/scripts/`
+# 224 `lint_*` / `check_*` / `audit_*` scripts live under `src/scripts/`
 # (the count is computed, not asserted — `check_gate_coverage.count_gate_scripts`).
-# **22 of them emit the machine-readable `scanned: <N>` line under their
-# CI-identical argv, and all 22 are listed below.** The manifest is therefore
-# complete with respect to its own contract, and covers ~10 % of the population.
+# **27 of them emit the machine-readable `scanned: <N>` line under their
+# CI-identical argv, and all 27 are listed below.** The manifest is therefore
+# complete with respect to its own contract, and covers ~12 % of the population.
 #
-# The previous revision of this header claimed "8 of 211". Both halves had
-# drifted: entries were added without the header following, and the population
-# grew by 12. Numbers written in prose beside a mechanism that can compute them
-# is how a denominator goes stale — the population figure now comes from the
-# function, and the honest-denominator test bounds the drift.
+# Two revisions of this header have now gone stale the same way. It claimed
+# "8 of 211", then "22 of 223" while 26 entries were listed. Both halves drift
+# for the same reason: entries are added without the header following. Numbers
+# written in prose beside a mechanism that can compute them is how a denominator
+# goes stale — the population figure comes from the function, the
+# honest-denominator test bounds the drift on that half, and the emitter half
+# stays a manual count until something computes it too. If you add an entry,
+# the two numbers in the paragraph above are part of the diff.
 #
-# The other ~201 are NOT covered, for one reason: rule 1. They print their count
+# The other ~197 are NOT covered, for one reason: rule 1. They print their count
 # in prose ("111 file(s) scanned", "0 declarer(s)") or not at all, and a guard
 # that parses prose is the fragile thing being replaced. Padding this list with
 # them would manufacture exactly the false green the file exists to prevent.
@@ -482,3 +485,19 @@ gates:
       meaningful — it now falls when one of the three inputs is renamed away.
       `argv: []` is the CI-identical invocation: both `taskfiles/ci-fast.yml`
       and `.github/workflows/tests.yml` call it bare.
+
+  - id: lint_settings_classes
+    argv: ["--quiet"]
+    min_scanned: 100
+    corpus: "leaf keys in src/config/agent-settings.template.yml (140 at baseline)"
+    status: enforced
+    note: >
+      Floor set well below the live 140 so retiring a settings key does not red
+      the change that retires it, but high enough that the collapse this file
+      exists to catch — the template moving and the gate classifying an empty
+      map — cannot pass. No `canary:` recipe: this gate's only possible
+      violation is a MODIFICATION of two tracked files (a key added to the
+      template, or a row removed from the contract), and the canary harness is
+      create-only by design. Discrimination is proven instead by the gate's own
+      `--self-test`, which drives the real binary through six rejecting cases
+      including the dead-scan-root one.
