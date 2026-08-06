@@ -29,6 +29,17 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
+// This hook is the first in the tree to import from `src/shared/`, and its
+// contract is fail-open — but the `try/catch` that delivers that lives in
+// `main()`, so an import-time throw would escape it. The concern is real and
+// the answer is measured rather than assumed: esbuild INLINES both modules into
+// `dist/hooks/dispatch.js` (verified by building the bundle to a scratch path
+// and grepping for `consentVerdict` and `withheld-machine-inferred`), so the
+// installed path performs no runtime module resolution at all. Both modules are
+// also pure declarations with zero top-level side effects, so there is nothing
+// at import time that can throw. If either fact stops holding — a dynamic
+// import, a module-level read — the fail-open guarantee weakens and this
+// import has to move inside the guard.
 import type { SettingsClass } from '../shared/settingsClasses.js';
 import { consentVerdict, type ConsentVerdict } from '../shared/settingsConsent.js';
 
@@ -69,15 +80,20 @@ export const LEARN_KEY_CLASS: SettingsClass = 'B';
  * `isConservativeDefault` would treat any non-empty string as permissive — so
  * the normalisation happens here, before the consent check, not inside it.
  *
- * WHAT THE TRI-STATE DOES AND DOES NOT SAY. `undefined` means the key is
- * absent. `false` means EITHER a deliberate `false` OR a present-but-malformed
- * scalar, and the two are not distinguished — a user who writes
- * `learn_on_session_end: yes` gets a silent, permanent no-op with no
- * diagnostic. The fail-safe direction is deliberate (a hook that writes files
- * must not be enabled by a value nobody typed on purpose), but the ambiguity is
- * real and is stated here rather than implied by a "raw scalar" the function
- * does not actually return. Diagnosing a malformed value belongs to
- * `settings:check`, not to a fail-open teardown hook.
+ * WHAT THE TRI-STATE DOES AND DOES NOT SAY. `undefined` means "no answer was
+ * found" — the key is absent, the file is absent, OR the file could not be read
+ * at all (permissions, a directory at the path, an I/O error). `false` means
+ * EITHER a deliberate `false` OR a present-but-malformed scalar. So there are
+ * two collapses, not one: a user who writes `learn_on_session_end: yes` and a
+ * user whose settings file is unreadable both get a silent, permanent no-op
+ * with no diagnostic.
+ *
+ * The fail-safe direction is deliberate in both cases — a hook that writes
+ * files must not be enabled by a value nobody typed on purpose, nor by a file
+ * nobody could read. The ambiguity is the cost, and it is stated here rather
+ * than implied by a "raw scalar" this function does not actually return.
+ * Diagnosing either shape belongs to `settings:check`, not to a fail-open
+ * teardown hook.
  */
 export function readLearnValue(root: string): boolean | undefined {
     const p = path.join(root, SETTINGS_FILE);
@@ -119,10 +135,24 @@ export function readLearnValue(root: string): boolean | undefined {
  * `docs/contracts/settings-classes.md` names as a file only a human writes —
  * `settings:set` and the GUI both write the user-global file instead. So on
  * this path a permissive value IS the recorded decision and the verdict is
- * `granted`; what the check adds is that the class is now live (a
- * reclassification out of B refuses the hook instead of silently leaving it
- * enabled) and that the value goes through the shared conservative-default
- * notion rather than a local `=== 'true'`.
+ * `granted`.
+ *
+ * WHAT THIS CHANGES TODAY: nothing observable. Stated plainly because the
+ * opposite was claimed first and it was wrong. With `cls` a constant,
+ * `handEdited` a constant `true`, and the value already reduced to a boolean by
+ * `readLearnValue`, every discriminating input to `consentVerdict` is fixed, so
+ * `enabled()` returns exactly what the previous `=== 'true'` read returned —
+ * including for `yes` / `1` / `on`, which that read already rejected. The
+ * normalisation is not new and this call did not narrow it.
+ *
+ * WHAT IT DOES BUY, which is smaller than it sounds and worth being exact
+ * about: the obligation is expressed in code instead of prose, so
+ * `consentVerdict` has a real caller and stops being a library nobody invokes;
+ * the class binding is asserted against the contract by a test, so a
+ * reclassification reds CI (it does NOT re-route the hook at runtime — the
+ * class is a hardcoded constant); and the day this hook learns to read the
+ * user-global file, the sidecar check is already the thing standing in front of
+ * it rather than a change someone must remember to make.
  *
  * KNOWN GAP, recorded rather than fixed here: the hook reads only the
  * project-local file, so a user who enables this in the GUI — which writes the

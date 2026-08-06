@@ -13,7 +13,7 @@ import { readFileSync } from 'node:fs';
 import { PACKAGE_JSON } from '../../cli/paths.js';
 import { CAPABILITIES } from '../../shared/capabilities.js';
 import { detectAgentSwitchProfile } from '../../install/agentSwitchProfile.js';
-import { cachedNicknamePrefill } from '../nicknameResolver.js';
+import { cachedNicknamePrefill, warmNicknamePrefill } from '../nicknameResolver.js';
 
 /**
  * The wizard's name prefill.
@@ -133,6 +133,11 @@ export interface PingRouteOptions {
 
 export function pingRoute(opts: PingRouteOptions): FastifyPluginAsync {
     const plugin: FastifyPluginAsync = async (app: FastifyInstance) => {
+        // Pay the git fork at registration, not on the first poll. Memoisation
+        // alone still landed it on request #1 — the one the UI bundle blocks on
+        // at startup — with the event loop held and everything else queued
+        // behind it. This is process-startup work; it belongs here.
+        warmNicknamePrefill();
         app.get('/api/v1/ping', async () => {
             const response: PingResponse = {
                 ok: true,

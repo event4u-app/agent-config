@@ -123,10 +123,23 @@ describe('the consent gate — a value read is not a decision read', () => {
         // collapse to `false`, so `learn_on_session_end: yes` is a silent
         // permanent no-op. The fail-safe direction is deliberate; the ambiguity
         // is the cost, and diagnosing it belongs to `settings:check`.
+        //
+        // Asserted against the CONCRETE value, not against each other: a bare
+        // equality between the two reads would also pass if the parser
+        // regressed to `undefined` for both, i.e. it could not fail for the
+        // reason this case is named after.
         writeSettings(tmp, 'memory:\n  learn_on_session_end: false\n');
-        const deliberate = readLearnValue(tmp);
+        expect(readLearnValue(tmp)).toBe(false);
         writeSettings(tmp, 'memory:\n  learn_on_session_end: yes\n');
-        expect(readLearnValue(tmp)).toBe(deliberate);
+        expect(readLearnValue(tmp)).toBe(false);
+    });
+
+    it('collapses an UNREADABLE settings file to the same undefined as an absent one', () => {
+        // The second collapse the docstring names. A directory where the file
+        // should be is the cheapest reproducible I/O failure.
+        fs.mkdirSync(path.join(tmp, '.agent-settings.yml'));
+        expect(readLearnValue(tmp)).toBeUndefined();
+        expect(learnConsent(tmp)).toBe('withheld-default');
     });
 });
 

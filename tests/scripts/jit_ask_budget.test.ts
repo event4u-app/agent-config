@@ -480,11 +480,18 @@ describe('the migration — every ask-shaped setting routes to the protocol', ()
     ];
 
     /**
-     * Index of the last `## See also` heading, or the file length when there is
-     * none. Everything at or after it is the footer.
+     * Index of the last `## See also` heading, or `null` when the file has no
+     * see-also section at all. Everything at or after it is the footer.
+     *
+     * `null` rather than `lines.length`, because the two cases need different
+     * assertions and collapsing them is how this check silently weakens: with
+     * no boundary, "in the body" degenerates to plain presence — exactly the
+     * check the block rejects as insufficient. One of the four files
+     * (`subagent-routing.md`) genuinely has no see-also section, so this is a
+     * live case, not a hypothetical.
      */
-    function seeAlsoBoundary(lines: readonly string[]): number {
-        let boundary = lines.length;
+    function seeAlsoBoundary(lines: readonly string[]): number | null {
+        let boundary: number | null = null;
         lines.forEach((l, i) => {
             if (/^#{1,6}\s+see also\s*$/iu.test(l.trim())) boundary = i;
         });
@@ -507,14 +514,28 @@ describe('the migration — every ask-shaped setting routes to the protocol', ()
             // the key itself. What a demoted citation cannot survive is being
             // required in the body.
             const boundary = seeAlsoBoundary(lines);
-            const inBody = lines
-                .slice(0, boundary)
-                .some((l) => l.includes('settings-ask-protocol'));
-            expect(
-                inBody,
-                `${rel}: settings-ask-protocol appears only in the see-also footer — ` +
-                    `a link is not a deferral, and the bespoke prose may have returned`,
-            ).toBe(true);
+            const cited = lines
+                .map((l, i) => (l.includes('settings-ask-protocol') ? i : -1))
+                .filter((i) => i >= 0);
+            expect(cited.length, `${rel} must cite settings-ask-protocol`).toBeGreaterThan(0);
+
+            if (boundary === null) {
+                // No footer to hide in, so presence IS body-presence. Recorded
+                // explicitly so a future file that GROWS a see-also section
+                // moves onto the strict branch instead of quietly staying on
+                // the weak one.
+                expect(
+                    lines.some((l) => /^#{1,6}\s+see also/iu.test(l.trim())),
+                    `${rel}: a see-also-like heading exists but did not match the exact ` +
+                        `boundary pattern — tighten seeAlsoBoundary rather than degrading`,
+                ).toBe(false);
+            } else {
+                expect(
+                    cited.some((i) => i < boundary),
+                    `${rel}: settings-ask-protocol appears only in the see-also footer — ` +
+                        `a link is not a deferral, and the bespoke prose may have returned`,
+                ).toBe(true);
+            }
         });
     }
 

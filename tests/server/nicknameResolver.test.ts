@@ -82,14 +82,43 @@ describe('resolveNicknamePrefill — the chain against the real machine', () => 
     });
 
     it('labels the OS-account floor as os-account, never as env-user', () => {
-        // The floor only fires with no git identity and no USER/USERNAME. Where
-        // it does fire, its rank must be observable — that is the whole claim
-        // the floor makes about itself.
-        const got = resolveNicknamePrefill({});
-        if (readGitUserName() === undefined && got.source !== 'none') {
-            expect(got.source).toBe('os-account');
-        }
-        expect(got.source).not.toBe('env-username');
+        // Injected, not machine-conditional. The earlier version guarded this
+        // behind `readGitUserName() === undefined`, so on any box with a git
+        // identity the body was skipped and the case passed green having
+        // asserted nothing about the one behaviour this module adds.
+        const got = resolveNicknamePrefill(
+            {},
+            { gitUserName: () => undefined, osAccount: () => 'login-handle' },
+        );
+        expect(got).toEqual({ name: 'login-handle', source: 'os-account' });
+        expect(got.source).not.toBe('env-user');
+    });
+
+    it('reaches the floor only after git, $USER and $USERNAME are all empty', () => {
+        const probes = { gitUserName: () => undefined, osAccount: () => 'login-handle' };
+        expect(resolveNicknamePrefill({ USER: 'u' }, probes).source).toBe('env-user');
+        expect(resolveNicknamePrefill({ USERNAME: 'w' }, probes).source).toBe('env-username');
+        expect(
+            resolveNicknamePrefill({}, { ...probes, gitUserName: () => 'Real Name' }).source,
+        ).toBe('git-user-name');
+    });
+
+    it('returns none when even the floor is empty', () => {
+        expect(
+            resolveNicknamePrefill(
+                {},
+                { gitUserName: () => undefined, osAccount: () => undefined },
+            ),
+        ).toEqual({ name: '', source: 'none' });
+    });
+
+    it('trims what the floor returns', () => {
+        expect(
+            resolveNicknamePrefill(
+                {},
+                { gitUserName: () => undefined, osAccount: () => '  padded  ' },
+            ).name,
+        ).toBe('padded');
     });
 });
 

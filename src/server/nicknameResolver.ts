@@ -41,11 +41,38 @@ export function readGitUserName(): string | undefined {
     }
 }
 
+/**
+ * The two impure probes, injectable.
+ *
+ * Defaulted rather than required so the ordinary caller writes
+ * `resolveNicknamePrefill()`. They exist because the `os-account` floor is the
+ * only behaviour this module adds over the pure chain, and it fires only on a
+ * machine with no git identity and no `USER` — so on any developer box a test
+ * that does not inject asserts nothing about it and passes green. That is the
+ * injection lesson the pure half already took.
+ */
+export interface ResolverProbes {
+    gitUserName?: () => string | undefined;
+    osAccount?: () => string | undefined;
+}
+
+function _defaultOsAccount(): string | undefined {
+    try {
+        const name = userInfo().username;
+        return typeof name === 'string' && name.trim() !== '' ? name.trim() : undefined;
+    } catch {
+        // No resolvable account — an empty prefill is a legal outcome.
+        return undefined;
+    }
+}
+
 /** The documented chain, resolved against the real machine. */
 export function resolveNicknamePrefill(
     env: NodeJS.ProcessEnv = process.env,
+    probes: ResolverProbes = {},
 ): NicknamePrefill {
-    const resolved = nicknamePrefill({ env, gitUserName: readGitUserName() });
+    const git = (probes.gitUserName ?? readGitUserName)();
+    const resolved = nicknamePrefill({ env, gitUserName: git });
     if (resolved.source !== 'none') {
         return resolved;
     }
@@ -54,13 +81,9 @@ export function resolveNicknamePrefill(
     // USER variable it is the only remaining answer, and an empty prefill is
     // strictly worse than a login handle. What changed is its rank — last,
     // not first — and it reports `os-account` so that rank is observable.
-    try {
-        const name = userInfo().username;
-        if (typeof name === 'string' && name.trim() !== '') {
-            return { name: name.trim(), source: 'os-account' };
-        }
-    } catch {
-        // No resolvable user — an empty prefill is a legal outcome.
+    const account = (probes.osAccount ?? _defaultOsAccount)();
+    if (account !== undefined && account.trim() !== '') {
+        return { name: account.trim(), source: 'os-account' };
     }
     return resolved;
 }
@@ -86,6 +109,28 @@ let _cached: NicknamePrefill | undefined;
 export function cachedNicknamePrefill(): NicknamePrefill {
     _cached ??= resolveNicknamePrefill();
     return _cached;
+}
+
+/**
+ * Fill the memo before the server serves anything.
+ *
+ * Memoisation alone bounds the fork to once per process, but "once" was still
+ * landing on the FIRST `GET /api/v1/ping` — the request the UI bundle blocks on
+ * at startup, with the event loop held for the duration and every concurrent
+ * request queued behind it. Paying it at route-registration time moves the cost
+ * out of the request path entirely, which is where it belongs: it is
+ * process-startup work, not per-request work.
+ *
+ * Errors are swallowed for the same reason the resolver swallows them — a
+ * prefill is a convenience and must never be the thing that stops a server
+ * from starting.
+ */
+export function warmNicknamePrefill(): void {
+    try {
+        cachedNicknamePrefill();
+    } catch {
+        // A cold memo simply means the first caller resolves it instead.
+    }
 }
 
 /** Drop the memo. Tests only — a process never needs this. */
