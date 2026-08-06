@@ -212,9 +212,16 @@ do not auto-execute.
   to hit a line target — losing a user constraint costs far more than the
   tokens. The concise-<30-line default applies to the narrative, not the
   verbatim record.
-- **Keep errors + fixes, drop dead-end noise.** Record what failed AND the fix
-  that worked (so the new chat does not re-hit it); skip reasoning chatter and
-  abandoned attempts that led nowhere.
+- **Keep errors + fixes — and keep the dead ends.** Record what failed AND the
+  fix that worked, so the new chat does not re-hit it. Skip reasoning chatter,
+  but **never** drop an approach that was tried and abandoned *without* a fix:
+  that is the more expensive omission, because the fresh session has no way to
+  know it was already ruled out and will spend the same tokens re-deriving it.
+  A dead end with no fix is a **result** — the same honest-null discipline the
+  rest of this package applies to measurements. List them explicitly, with one
+  line each on what killed them, under a `Failed approaches` heading; write
+  `None` when there genuinely were none, so the reader can tell "nothing was
+  ruled out" apart from "the section was skipped".
 - **Branch name is critical** — always include it.
 - **Open tasks are critical** — the new chat needs to know what's left.
 - **Decisions are important** — prevents the new chat from re-asking settled questions.
