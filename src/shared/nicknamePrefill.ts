@@ -34,10 +34,22 @@
 /**
  * Where a candidate name came from, so a caller can say so.
  *
- * `none` is a real outcome, not an error: a machine with no git identity and no
- * `USER` is unusual but legal, and the ask still works — it just starts empty.
+ * `os-account` is the `userInfo()` floor, and it is a distinct member rather
+ * than a reuse of `env-user` on purpose: the whole claim of the floor is that
+ * its RANK changed (last, not first), and a rank nothing can observe is not a
+ * rank. A caller reporting provenance would otherwise name the wrong rung on
+ * exactly the path the floor exists to serve.
+ *
+ * `none` is a real outcome, not an error: a machine with no git identity, no
+ * `USER` and no resolvable account is unusual but legal, and the ask still
+ * works — it just starts empty.
  */
-export type NicknameSource = 'git-user-name' | 'env-user' | 'env-username' | 'none';
+export type NicknameSource =
+    | 'git-user-name'
+    | 'env-user'
+    | 'env-username'
+    | 'os-account'
+    | 'none';
 
 export interface NicknamePrefill {
     /** The prefill value, or `''` when nothing resolved. */

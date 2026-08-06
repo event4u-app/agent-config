@@ -14,6 +14,11 @@ import { describe, expect, it } from 'vitest';
 
 import { nicknamePrefill } from '../../src/shared/nicknamePrefill.js';
 
+// Anchored on this file, never on the process CWD: the read below happens at
+// COLLECTION time, so a CWD-relative path turns a runner rooted anywhere else
+// into a whole-file collection error rather than one failing assertion.
+const REPO = path.resolve(__dirname, '..', '..');
+
 describe('nicknamePrefill — the documented chain, in order', () => {
     it('prefers the git user name over every environment variable', () => {
         const got = nicknamePrefill({
@@ -71,7 +76,7 @@ describe('the chain matches the rule that documents it', () => {
     // implementation disagreeing. A test that only exercises the code would not
     // have caught it, so this one reads the rule.
     const rule = readFileSync(
-        path.resolve('src/rules/settings-ask-protocol.md'),
+        path.join(REPO, 'src/rules/settings-ask-protocol.md'),
         'utf8',
     );
 

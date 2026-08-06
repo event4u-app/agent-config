@@ -53,14 +53,42 @@ export function resolveNicknamePrefill(
     // floor rather than dropped: on a machine with neither a git identity nor a
     // USER variable it is the only remaining answer, and an empty prefill is
     // strictly worse than a login handle. What changed is its rank — last,
-    // not first.
+    // not first — and it reports `os-account` so that rank is observable.
     try {
         const name = userInfo().username;
         if (typeof name === 'string' && name.trim() !== '') {
-            return { name: name.trim(), source: 'env-user' };
+            return { name: name.trim(), source: 'os-account' };
         }
     } catch {
         // No resolvable user — an empty prefill is a legal outcome.
     }
     return resolved;
+}
+
+let _cached: NicknamePrefill | undefined;
+
+/**
+ * `resolveNicknamePrefill`, computed at most once per process.
+ *
+ * The uncached function forks git, and `execFileSync` blocks the event loop for
+ * up to its timeout. That is fine once and not fine per request: `GET
+ * /api/v1/ping` is a liveness probe polled by the UI bundle and by CI smoke
+ * tests, so an un-memoised call there stalls every other route behind a
+ * subprocess on a cold or network-backed PATH.
+ *
+ * Caching is safe because the answer is machine-static for the process
+ * lifetime — a git identity or a `USER` variable does not change under a
+ * running server — and it is deliberately NOT hidden inside
+ * `resolveNicknamePrefill` itself: a general-purpose resolver that silently
+ * ignores a changed environment is a trap for the next caller. The server opts
+ * in by name.
+ */
+export function cachedNicknamePrefill(): NicknamePrefill {
+    _cached ??= resolveNicknamePrefill();
+    return _cached;
+}
+
+/** Drop the memo. Tests only — a process never needs this. */
+export function _resetNicknamePrefillCache(): void {
+    _cached = undefined;
 }

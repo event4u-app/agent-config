@@ -60,15 +60,24 @@ export const LEARN_KEY = 'memory.learn_on_session_end';
 export const LEARN_KEY_CLASS: SettingsClass = 'B';
 
 /**
- * The raw scalar for `memory.learn_on_session_end`, or `undefined` when the
- * file or the key is absent (same hand-rolled mini-parser pattern as the
+ * Whether `memory.learn_on_session_end` reads as enabled, or `undefined` when
+ * the file or the key is absent (same hand-rolled mini-parser pattern as the
  * sibling hooks — no YAML dependency in the hook hot path).
  *
- * Normalised strictly to a boolean: the literal `true` and nothing else enables
- * the hook. A crude parser must not let `yes` / `1` / `maybe` read as a
- * permission, and `isConservativeDefault` would treat any non-empty string as
- * permissive — so the normalisation happens here, before the consent check,
- * not inside it.
+ * Normalised strictly: the literal `true` and nothing else enables the hook. A
+ * crude parser must not let `yes` / `1` / `maybe` read as a permission, and
+ * `isConservativeDefault` would treat any non-empty string as permissive — so
+ * the normalisation happens here, before the consent check, not inside it.
+ *
+ * WHAT THE TRI-STATE DOES AND DOES NOT SAY. `undefined` means the key is
+ * absent. `false` means EITHER a deliberate `false` OR a present-but-malformed
+ * scalar, and the two are not distinguished — a user who writes
+ * `learn_on_session_end: yes` gets a silent, permanent no-op with no
+ * diagnostic. The fail-safe direction is deliberate (a hook that writes files
+ * must not be enabled by a value nobody typed on purpose), but the ambiguity is
+ * real and is stated here rather than implied by a "raw scalar" the function
+ * does not actually return. Diagnosing a malformed value belongs to
+ * `settings:check`, not to a fail-open teardown hook.
  */
 export function readLearnValue(root: string): boolean | undefined {
     const p = path.join(root, SETTINGS_FILE);

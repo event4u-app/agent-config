@@ -80,8 +80,10 @@ describe('the consent gate — a value read is not a decision read', () => {
         // key out of B, the hardcode silently unbinds the gate — consentVerdict
         // would return 'not-a-consent-key' and the hook would refuse forever,
         // or worse, a future edit would "fix" it by dropping the check.
+        // Anchored on this file, never on the process CWD — same reason as the
+        // sibling suite: a CWD-relative read is a collection-time landmine.
         const contract = fs.readFileSync(
-            path.resolve('docs/contracts/settings-classes.md'),
+            path.join(path.resolve(__dirname, '..', '..'), 'docs/contracts/settings-classes.md'),
             'utf8',
         );
         const index = buildSettingsClassIndex(parseSettingsClassRows(contract));
@@ -114,6 +116,17 @@ describe('the consent gate — a value read is not a decision read', () => {
         expect(readLearnValue(tmp)).toBeUndefined();
         writeSettings(tmp, 'memory:\n  learn_on_session_end: false\n');
         expect(readLearnValue(tmp)).toBe(false);
+    });
+
+    it('does NOT distinguish a deliberate false from a malformed value', () => {
+        // Pinned as a known limitation rather than left to be discovered: both
+        // collapse to `false`, so `learn_on_session_end: yes` is a silent
+        // permanent no-op. The fail-safe direction is deliberate; the ambiguity
+        // is the cost, and diagnosing it belongs to `settings:check`.
+        writeSettings(tmp, 'memory:\n  learn_on_session_end: false\n');
+        const deliberate = readLearnValue(tmp);
+        writeSettings(tmp, 'memory:\n  learn_on_session_end: yes\n');
+        expect(readLearnValue(tmp)).toBe(deliberate);
     });
 });
 

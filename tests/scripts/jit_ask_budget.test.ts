@@ -479,13 +479,42 @@ describe('the migration — every ask-shaped setting routes to the protocol', ()
         ['decision_engine.on_block', /TTY prompt/u],
     ];
 
+    /**
+     * Index of the last `## See also` heading, or the file length when there is
+     * none. Everything at or after it is the footer.
+     */
+    function seeAlsoBoundary(lines: readonly string[]): number {
+        let boundary = lines.length;
+        lines.forEach((l, i) => {
+            if (/^#{1,6}\s+see also\s*$/iu.test(l.trim())) boundary = i;
+        });
+        return boundary;
+    }
+
     for (const [rel, key] of MIGRATED) {
-        it(`${rel} defers the ask shape to the protocol for ${key}`, () => {
-            const text = fs.readFileSync(path.join(REPO, rel), 'utf8');
-            expect(text, `${rel} must still own ${key}`).toContain(key);
-            expect(text, `${rel} must cite settings-ask-protocol`).toContain(
-                'settings-ask-protocol',
+        it(`${rel} defers the ask shape to the protocol in its BODY for ${key}`, () => {
+            const lines = fs.readFileSync(path.join(REPO, rel), 'utf8').split('\n');
+            expect(lines.some((l) => l.includes(key)), `${rel} must still own ${key}`).toBe(
+                true,
             );
+
+            // Body, not footer — and this discriminator was arrived at by
+            // mutation, not by taste. A bare `toContain('settings-ask-protocol')`
+            // passes for a file that restores its full bespoke ask prose and
+            // keeps a see-also link, which is the exact regression this block
+            // claims to guard. Line-proximity to a key mention was tried first
+            // and ALSO passes that mutation, because the see-also section names
+            // the key itself. What a demoted citation cannot survive is being
+            // required in the body.
+            const boundary = seeAlsoBoundary(lines);
+            const inBody = lines
+                .slice(0, boundary)
+                .some((l) => l.includes('settings-ask-protocol'));
+            expect(
+                inBody,
+                `${rel}: settings-ask-protocol appears only in the see-also footer — ` +
+                    `a link is not a deferral, and the bespoke prose may have returned`,
+            ).toBe(true);
         });
     }
 
@@ -497,15 +526,29 @@ describe('the migration — every ask-shaped setting routes to the protocol', ()
         }
     });
 
-    it('the carved-out keys did not quietly get migrated anyway', () => {
-        // If a future PR routes `worktrees.mode` through the settings protocol,
-        // that is a real decision and it should break this test rather than pass
-        // silently — the rule's own carve-out prose would then be stale.
-        for (const [rel] of MIGRATED) {
+    it('the carved-out keys still live outside the protocol, in their own homes', () => {
+        // Pointed at the files a real migration would actually touch. Scanning
+        // the four MIGRATED files for `worktrees.mode` instead would pass
+        // vacuously — they have no reason to mention it either way, so the
+        // assertion could never fail for the reason it gives.
+        //
+        // If a future PR routes one of these through the settings protocol, that
+        // is a real decision, and it should break here rather than pass
+        // silently, because the carve-out prose in the rule would then be stale.
+        const HOMES: ReadonlyArray<readonly [string, string]> = [
+            ['src/skills/using-git-worktrees/SKILL.md', 'worktrees.mode'],
+            [
+                'src/agent-src/templates/scripts/work_engine/hooks/builtin/decision_gate.ts',
+                'on_block',
+            ],
+        ];
+        for (const [rel, key] of HOMES) {
             const text = fs.readFileSync(path.join(REPO, rel), 'utf8');
-            for (const [key] of CARVED_OUT) {
-                expect(text, `${rel} unexpectedly carries ${key}`).not.toContain(key);
-            }
+            expect(text, `${rel} should still own ${key}`).toContain(key);
+            expect(
+                text,
+                `${rel} now cites settings-ask-protocol — the carve-out in the rule is stale`,
+            ).not.toContain('settings-ask-protocol');
         }
     });
 });
