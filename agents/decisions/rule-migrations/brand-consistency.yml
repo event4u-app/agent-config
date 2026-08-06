@@ -1,0 +1,43 @@
+# Migration ledger for `brand-consistency` — what the body-migration transform kept, folded, and lost.
+#
+# `source_headings` is the HARVEST, not a cache: the pre-migration commits are
+# not ancestors of HEAD and a remote branch prune would destroy them, so the
+# headings are recorded here to survive that. See lint_rule_migration_ledger.
+rule: brand-consistency
+source: recoverable
+source_commit: 71c35279a774a42557f91d9f769ad0bdcf2386ba
+source_path: src/rules/brand-consistency.md
+migrated_to:
+  - src/rules/brand-source-of-truth.md
+source_headings:
+  - "The Iron Law"
+  - "What this gates"
+  - "When it fires"
+  - "When NOT to fire"
+  - "How to surface a violation"
+  - "See also"
+rows:
+  - heading: "The Iron Law"
+    disposition: carried
+    target: "src/rules/brand-source-of-truth.md#Iron Law 2 — the consistency gate"
+    reason: "the every-value-traces-to-a-token law became the second Iron Law of the rule it merged into, which is why the merge was possible at all"
+  - heading: "What this gates"
+    disposition: carried
+    target: "src/rules/brand-source-of-truth.md#What the gate covers"
+    reason: "colour, type, spacing, copy register and generated brand assets are enumerated under the renamed heading"
+  - heading: "When it fires"
+    disposition: carried
+    target: "src/rules/brand-source-of-truth.md#When it fires"
+    reason: "the firing condition became the gate-half bullet of a section that now covers both halves of the merged rule"
+  - heading: "When NOT to fire"
+    disposition: carried
+    target: "src/rules/brand-source-of-truth.md#When NOT to fire"
+    reason: "the greenfield and exploration carve-outs survive with the corpus-sourced marking added"
+  - heading: "How to surface a violation"
+    disposition: carried
+    target: "src/rules/brand-source-of-truth.md#How to surface a violation"
+    reason: "the name-the-value-and-the-token-it-missed instruction moved across intact including the never-silently-rewrite clause"
+  - heading: "See also"
+    disposition: merged
+    target: "src/rules/brand-source-of-truth.md#See also"
+    reason: "the pointer list was folded into the surviving rule's own See-also block rather than kept as a second list"

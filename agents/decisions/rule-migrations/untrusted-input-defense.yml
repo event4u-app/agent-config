@@ -1,0 +1,48 @@
+# Migration ledger for `untrusted-input-defense` — what the body-migration transform kept, folded, and lost.
+#
+# `source_headings` is the HARVEST, not a cache: the pre-migration commits are
+# not ancestors of HEAD and a remote branch prune would destroy them, so the
+# headings are recorded here to survive that. See lint_rule_migration_ledger.
+rule: untrusted-input-defense
+source: recoverable
+source_commit: 94dc19cac62ff21449afd5a373c1363ee3d6215c
+source_path: src/rules/untrusted-input-defense.md
+migrated_to:
+  - docs/guidelines/agent-infra/untrusted-input-spotlighting.md
+source_headings:
+  - "The Iron Law"
+  - "Found-instructions quarantine"
+  - "What to do"
+  - "Hidden-instruction awareness"
+  - "Injection-signal taxonomy"
+  - "Least agency"
+  - "See also"
+rows:
+  - heading: "The Iron Law"
+    disposition: carried
+    target: "src/rules/untrusted-input-defense.md#The Iron Law"
+    reason: "the section stayed in the rule; the migration moved the depth beneath it, not this heading"
+  - heading: "Found-instructions quarantine"
+    disposition: carried
+    target: "src/rules/untrusted-input-defense.md#Found-instructions quarantine"
+    reason: "the section stayed in the rule; the migration moved the depth beneath it, not this heading"
+  - heading: "What to do"
+    disposition: carried
+    target: "docs/guidelines/agent-infra/untrusted-input-spotlighting.md#Runtime defense protocol"
+    reason: "all five numbered items are reproduced verbatim with the inline pointer replaced by a section cross-reference"
+  - heading: "Hidden-instruction awareness"
+    disposition: carried
+    target: "docs/guidelines/agent-infra/untrusted-input-spotlighting.md#Hidden-instruction awareness"
+    reason: "the section moved to the migration target under the same heading text"
+  - heading: "Injection-signal taxonomy"
+    disposition: carried
+    target: "docs/guidelines/agent-infra/untrusted-input-spotlighting.md#Injection-signal taxonomy"
+    reason: "the section moved to the migration target under the same heading text"
+  - heading: "Least agency"
+    disposition: carried
+    target: "docs/guidelines/agent-infra/untrusted-input-spotlighting.md#Least-agency → existing-gate mapping (OWASP LLM06 / LLM01)"
+    reason: "the paragraph is reproduced verbatim and extended with the four-row mapping table the rule version had deferred"
+  - heading: "See also"
+    disposition: carried
+    target: "src/rules/untrusted-input-defense.md#See also"
+    reason: "the section stayed in the rule; the migration moved the depth beneath it, not this heading"

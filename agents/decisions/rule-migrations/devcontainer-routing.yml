@@ -1,0 +1,13 @@
+# Migration ledger for `devcontainer-routing` — what the body-migration transform kept, folded, and lost.
+#
+# `source_headings` is the HARVEST, not a cache: the pre-migration commits are
+# not ancestors of HEAD and a remote branch prune would destroy them, so the
+# headings are recorded here to survive that. See lint_rule_migration_ledger.
+rule: devcontainer-routing
+source: born_thin
+source_commit: 2a11c70b274741e7d98fd814ac39c1d05a1a38c9
+source_headings: []
+rows: []
+# No pre-migration body ever existed: this file was ADDED already carrying
+# its migration pointer. That is a different fact from 'the body is lost',
+# which is why it has its own `source:` value rather than an empty row set.

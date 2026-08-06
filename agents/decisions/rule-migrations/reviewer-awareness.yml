@@ -1,0 +1,46 @@
+# Migration ledger for `reviewer-awareness` — what the body-migration transform kept, folded, and lost.
+#
+# `source_headings` is the HARVEST, not a cache: the pre-migration commits are
+# not ancestors of HEAD and a remote branch prune would destroy them, so the
+# headings are recorded here to survive that. See lint_rule_migration_ledger.
+rule: reviewer-awareness
+source: recoverable
+source_commit: d4fe80e1ce2a956eb86df328de32e3252515553f
+source_path: .agent-src.uncompressed/rules/reviewer-awareness.md
+migrated_to:
+  - src/skills/review-routing/SKILL.md
+source_headings:
+  - "When this rule applies"
+  - "Required behavior"
+  - "Reviewer roles"
+  - "Anti-patterns — reject them"
+  - "Format"
+  - "Rationale"
+  - "See also"
+rows:
+  - heading: "When this rule applies"
+    disposition: carried
+    target: "src/skills/review-routing/SKILL.md#When to use"
+    reason: "the three activation conditions reappear as the skill when-to-use bullets and the low-risk escape became the first do-not-use bullet"
+  - heading: "Required behavior"
+    disposition: merged
+    target: "src/skills/review-routing/SKILL.md#Validation"
+    reason: "three of five items became numbered validation checks while the anchor-in-the-diff and name-the-focus items survive only inside the output-format requirement"
+  - heading: "Reviewer roles"
+    disposition: dropped
+    reason: "the seven-role vocabulary table exists nowhere in the tree, yet the skill and its data-format doc both still cite this rule as the home of that vocabulary, so two live pointers now dangle"
+  - heading: "Anti-patterns — reject them"
+    disposition: merged
+    target: "src/skills/review-routing/SKILL.md#Gotcha"
+    reason: "the usernames anti-pattern survives as a Gotcha bullet and the one-role case as a validation requirement, but the last-reviewer and rubber-stamp warnings have no equivalent"
+  - heading: "Format"
+    disposition: carried
+    target: "src/skills/review-routing/SKILL.md#Output format"
+    reason: "the primary and secondary block is reproduced in the canonical output layout and emitted by the routing script"
+  - heading: "Rationale"
+    disposition: dropped
+    reason: "the blind-spot-reduction-comes-from-role-diversity justification is absent everywhere, so the reasoning was lost while the imperative survived in the Iron Law"
+  - heading: "See also"
+    disposition: carried
+    target: "src/skills/review-routing/SKILL.md#See also"
+    reason: "the section moved to the migration target under the same heading text"

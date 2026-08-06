@@ -96,7 +96,7 @@ mandatory-first and mandatory-second:
    — generalizes into a checkable invariant the failure class this package has
    recorded four separate times from its own history and fixed four times
    individually.
-2. [`road-to-skill-ecosystem-authoring-discipline`](../../agents/roadmaps/road-to-skill-ecosystem-authoring-discipline.md)
+2. [`road-to-skill-ecosystem-authoring-discipline`](../../agents/roadmaps/archive/road-to-skill-ecosystem-authoring-discipline.md)
    — implements the one intervention shape the sweep found measured, where the
    identical obligation scored 0 of 4 absent, 1 of 4 as prose (below the
    no-instruction control), and 4 of 4 as a mandated artifact at the decision

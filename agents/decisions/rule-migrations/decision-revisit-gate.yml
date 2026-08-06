@@ -1,0 +1,43 @@
+# Migration ledger for `decision-revisit-gate` — what the body-migration transform kept, folded, and lost.
+#
+# `source_headings` is the HARVEST, not a cache: the pre-migration commits are
+# not ancestors of HEAD and a remote branch prune would destroy them, so the
+# headings are recorded here to survive that. See lint_rule_migration_ledger.
+rule: decision-revisit-gate
+source: recoverable
+source_commit: 94dc19cac62ff21449afd5a373c1363ee3d6215c
+source_path: src/rules/decision-revisit-gate.md
+migrated_to:
+  - src/skills/decision-review/SKILL.md
+source_headings:
+  - "The Iron Law"
+  - "What counts as a \"lock\""
+  - "What to do when it fires"
+  - "When NOT to fire"
+  - "Failure modes"
+  - "See also"
+rows:
+  - heading: "The Iron Law"
+    disposition: carried
+    target: "src/rules/decision-revisit-gate.md#The Iron Law"
+    reason: "the section stayed in the rule; the migration moved the depth beneath it, not this heading"
+  - heading: "What counts as a \"lock\""
+    disposition: carried
+    target: "src/skills/decision-review/SKILL.md#What counts as a \"lock\""
+    reason: "the section moved to the migration target under the same heading text"
+  - heading: "What to do when it fires"
+    disposition: carried
+    target: "src/skills/decision-review/SKILL.md#What to do when it fires"
+    reason: "the section moved to the migration target under the same heading text"
+  - heading: "When NOT to fire"
+    disposition: carried
+    target: "src/skills/decision-review/SKILL.md#When NOT to fire"
+    reason: "the section moved to the migration target under the same heading text"
+  - heading: "Failure modes"
+    disposition: carried
+    target: "src/skills/decision-review/SKILL.md#Failure modes"
+    reason: "the section moved to the migration target under the same heading text"
+  - heading: "See also"
+    disposition: carried
+    target: "src/rules/decision-revisit-gate.md#See also"
+    reason: "the section stayed in the rule; the migration moved the depth beneath it, not this heading"

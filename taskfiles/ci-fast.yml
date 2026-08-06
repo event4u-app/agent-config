@@ -5,8 +5,10 @@ tasks:
     silent: true
     desc: |
       Repo-content gates that CI runs and no local chain reached until 2026-07-30.
-      Measured 15s total — affordable before a push, which is the point: each of
-      these turned a PR red this session for something a local run would have caught.
+      Measured 25.1s total (2026-08-06, including the two gates added that day;
+      15s at authoring 2026-07-30 — most of the drift is environment, the added
+      gates account for 1.1s of it) — affordable before a push, which is the
+      point: each of these turned a PR red for something local would have caught.
       Deliberately EXCLUDES check_enforcement_coverage (30.7s measured): a pre-push
       gate that doubles the hook teaches people to skip it. That one stays in the
       full `task ci` and belongs in the post-CI loop.
@@ -24,6 +26,21 @@ tasks:
       - ./scripts-run src/scripts/check_no_new_legacy_path
       - ./scripts-run src/scripts/check_kernel_rule_bundle
       - ./scripts-run src/scripts/lint_regression
+      # Same argv the CI `skill-lint` job runs. NOT chosen for speed — both
+      # forms are sub-second here (0.44s --changed / 0.52s --all, measured
+      # 2026-08-06) — but for argv parity and blast radius: `--all` would let
+      # a pre-existing finding anywhere in the tree block an unrelated push,
+      # which is how a pre-push gate teaches people to skip it. `--all` still
+      # runs in `task ci` via `lint-skills`.
+      # Its absence is what let a 226-char command description reach CI on
+      # 2026-08-06 — `validate_frontmatter` does not check the description
+      # cap, only the linter does, so no other preflight gate could catch it.
+      - ./scripts-run src/scripts/skill_linter --changed
+      # agents/index.md + docs/catalog.md embed artefact descriptions verbatim,
+      # so ANY description edit makes them stale — the consistency workflow says
+      # so in its own comment. Same 2026-08-06 PR reddened CI twice on the same
+      # one-line change: once for the cap, once for this drift. 0.69s measured.
+      - task: check-index
       # Gate R1 + R2 (plan-governance) — pre-push layer; CI is authoritative.
       # Exit 2 = degraded advisory (a broken gate never blocks its own fix).
       - task: lint-plan-risk-register
@@ -1258,6 +1275,34 @@ tasks:
       something (baseline floor, CI-identical argv, machine-readable `scanned:` count).
       Catches the class where a gate scans a dead root and exits 0; see ADR-201 context.
     cmd: ./scripts-run src/scripts/check_gate_coverage
+
+  lint-decision-impact:
+    silent: true
+    desc: >-
+      The evidence bar on `decision_impact: already-complied-with` — the one
+      classification that permits removing a rule.
+    cmd: ./scripts-run src/scripts/lint_decision_impact --quiet
+
+  lint-rule-migration-ledger:
+    silent: true
+    desc: >-
+      Every rule whose body was migrated out has a ledger, every pre-migration
+      heading has exactly one disposition, every target anchor resolves.
+    cmd: ./scripts-run src/scripts/lint_rule_migration_ledger --quiet
+
+  lint-example-fences:
+    silent: true
+    desc: >-
+      Hold authored fenced examples to the rules they sit beside — render-security
+      sinks, credential literals, hook bypass. Strict: the corpus is at zero.
+    cmd: ./scripts-run src/scripts/lint_example_fences --strict
+
+  check-depth-budget:
+    silent: true
+    desc: >-
+      Per-file ceiling on the on-demand depth layer (contexts + guidelines).
+      Shrink-only ratchet — a fifth over-ceiling file reds.
+    cmd: ./scripts-run src/scripts/check_depth_budget
 
   check-augment-description-cap:
     silent: true

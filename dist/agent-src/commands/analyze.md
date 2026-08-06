@@ -2,14 +2,14 @@
 model_tier: medium
 name: analyze
 disable-model-invocation: true
-argument-hint: "[postmortem|premortem|decision|near-miss|incident|reference-repo] [subject]"
+argument-hint: "[postmortem|premortem|decision|near-miss|incident|reference-repo|inbox] [subject]"
 pack: analysis-workbench
 intent: "Analysis dispatcher — classify input by keywords, propose a weighted framework path, let the user pick"
-routes_to: [analyze-postmortem, analyze-premortem, analyze-decision, analyze-near-miss, analyze-incident, analyze-reference-repo]
+routes_to: [analyze-postmortem, analyze-premortem, analyze-decision, analyze-near-miss, analyze-incident, analyze-reference-repo, analyze-inbox]
 replaces: []
 tier: 1
 visibility: advanced
-description: Analysis orchestrator — confidence-weighted suggester that routes to postmortem, premortem, decision-review, near-miss, incident, or reference-repo analysis.
+description: Analysis orchestrator — confidence-weighted suggester that routes to postmortem, premortem, decision-review, near-miss, incident, reference-repo, or inbox-artifact analysis.
 cluster: analyze
 type: orchestrator
 suggestion:
@@ -39,6 +39,7 @@ to the chosen sub-command. Never auto-selects silently.
 | `/analyze:near-miss` | `analyze/near-miss/command.md` | Post-mortem for a near-miss (same flow, lighter severity framing) |
 | `/analyze:incident` | `analyze/incident/command.md` | Full incident flow: commander → RCA → post-mortem → memory candidate |
 | `/analyze:reference-repo` | `analyze/reference-repo/command.md` | Deep-dive an external reference repo (competitor, inspiration, peer) → structured comparison + adoption plan |
+| `/analyze:inbox` | `analyze/inbox/command.md` | Deep-dive a LOCAL artifact dropped in `agents/tmp/` (review, prompt, spec, transcript) → claim verification against the current tree + artefact mapping + roadmap |
 
 ## Dispatch
 

@@ -1,6 +1,6 @@
 # agent-config — Public Catalog
 
-Consumer-facing catalog of all **694 public artefacts** shipped by
+Consumer-facing catalog of all **695 public artefacts** shipped by
 this package. Internal package-maintenance rules and deprecation shims
 are excluded.
 
@@ -117,7 +117,7 @@ are excluded.
 | skill | [`fe-design`](../dist/agent-src/skills/fe-design/SKILL.md) | official | Reference for frontend-design heuristics — component architecture, layout patterns, form/table design, responsive strategy, a11y, UX principles. Stack-agnostic; cited by directives/ui/design.ts. |
 | skill | [`feature-planning`](../dist/agent-src/skills/feature-planning/SKILL.md) | official | Use when the user says \"plan a feature\", \"brainstorm\", \"explore this idea\", or wants to go from idea to structured plan and roadmap. |
 | skill | [`file-editor`](../dist/agent-src/skills/file-editor/SKILL.md) | official | Use when opening edited files in the user's IDE. Reads settings from .agent-settings.yml to determine IDE and whether auto-open is enabled. |
-| skill | [`finishing-a-development-branch`](../dist/agent-src/skills/finishing-a-development-branch/SKILL.md) | official | Use when the feature is implementation-complete and the next step is 'ship it' — verifies, cleans up, and routes to merge/PR/park/discard — even when the user just says 'I'm done, what now?'. |
+| skill | [`finishing-a-development-branch`](../dist/agent-src/skills/finishing-a-development-branch/SKILL.md) | official | Use when the feature is implementation-complete and the next step is 'ship it' — verifies, cleans up, routes to merge/PR/park/discard; never destroys work without explicit confirmation. |
 | skill | [`flux`](../dist/agent-src/skills/flux/SKILL.md) | official | Use when the project uses `livewire/flux` — dispatched by `directives/ui/{apply,review,polish}.ts`. Covers Flux components, slots, variants, and form primitives. |
 | skill | [`forecast-accuracy`](../dist/agent-src/skills/forecast-accuracy/SKILL.md) | official | Use when constructing the forecast call — commit / best-case / pipeline categorisation, deal-level evidence test, accuracy retro-loop. Triggers on 'build the forecast', 'why does our commit miss'. |
 | skill | [`forecasting`](../dist/agent-src/skills/forecasting/SKILL.md) | official | Use when constructing the finance-side forecast — top-down vs bottom-up shape, confidence bands, retro-loop. Triggers on 'build the forecast model', 'reconcile top-down with bottom-up'. |
@@ -430,7 +430,7 @@ are excluded.
 | rule | [`user-interrupt-priority`](../dist/agent-src/rules/user-interrupt-priority.md) | auto | New user instruction mid-flight — STOP the current task, run the new one in full, ASK before resuming |
 | rule | [`verify-before-complete`](../dist/agent-src/rules/verify-before-complete.md) | always | Verify before completion — run tests and quality tools before claiming done |
 
-## Commands (193)
+## Commands (194)
 
 | kind | name | cluster | description |
 |---|---|---|---|
@@ -450,8 +450,9 @@ are excluded.
 | command | [`analytics`](../dist/agent-src/commands/analytics.md) | cluster: analytics | Analytics orchestrator — routes to show, prune. Local-only workspace event log under `~/.event4u/agent-config/workspace/analytics/`. |
 | command | [`analytics-prune`](../dist/agent-src/commands/analytics/prune.md) | cluster: analytics | Drop events older than the 90-day retention window from the local analytics log. Atomic and idempotent. |
 | command | [`analytics-show`](../dist/agent-src/commands/analytics/show.md) | cluster: analytics | Render top prompts, launcher → completion rate per role, average session length, and knowledge-source usage from the local analytics log. |
-| command | [`analyze`](../dist/agent-src/commands/analyze.md) | cluster: analyze | Analysis orchestrator — confidence-weighted suggester that routes to postmortem, premortem, decision-review, near-miss, incident, or reference-repo analysis. |
+| command | [`analyze`](../dist/agent-src/commands/analyze.md) | cluster: analyze | Analysis orchestrator — confidence-weighted suggester that routes to postmortem, premortem, decision-review, near-miss, incident, reference-repo, or inbox-artifact analysis. |
 | command | [`analyze-decision`](../dist/agent-src/commands/analyze/decision.md) | cluster: analyze | Audit a past architectural decision — restate what was chosen and why, compare original assumptions against reality now, produce a verdict (still valid / needs amendment / superseded). |
+| command | [`analyze-inbox`](../dist/agent-src/commands/analyze/inbox.md) | cluster: analyze | Analyze a dropped inbox artifact (review, prompt, spec, transcript) against the current tree, verify every claim it makes, map what survives onto this suite's artefact types, emit a roadmap each. |
 | command | [`analyze-incident`](../dist/agent-src/commands/analyze/incident.md) | cluster: analyze | Full incident flow — incident-commander coordination, then RCA via root-cause-frameworks, then a blame-free write-up via blameless-post-mortem, ending with an incident-learnings candidate. |
 | command | [`analyze-near-miss`](../dist/agent-src/commands/analyze/near-miss.md) | cluster: analyze | Blame-free near-miss analysis — same post-mortem flow as analyze:postmortem but framed around a close call that did not result in a production incident. |
 | command | [`analyze-postmortem`](../dist/agent-src/commands/analyze/postmortem.md) | cluster: analyze | Blame-free post-mortem after a resolved incident — consume the incident-commander skeleton, derive root cause, write corrective actions, draft an incident-learnings memory candidate. |

@@ -36,6 +36,7 @@ commands:
   discovery:
     - analyze
     - analyze/reference-repo
+    - analyze/inbox
     - analyze/decision
     - analyze/incident
     - analyze/near-miss

@@ -1,0 +1,48 @@
+# Migration ledger for `architecture` — what the body-migration transform kept, folded, and lost.
+#
+# `source_headings` is the HARVEST, not a cache: the pre-migration commits are
+# not ancestors of HEAD and a remote branch prune would destroy them, so the
+# headings are recorded here to survive that. See lint_rule_migration_ledger.
+rule: architecture
+source: recoverable
+source_commit: 94dc19cac62ff21449afd5a373c1363ee3d6215c
+source_path: src/rules/architecture.md
+migrated_to:
+  - src/skills/module-detect-on-the-fly/SKILL.md
+source_headings:
+  - "General Principles"
+  - "Project Detection"
+  - "Project-Specific Architecture"
+  - "Architectural Decision Records (ADRs)"
+  - "Module-Level Documentation"
+  - "Packages"
+  - "Build / Task Runner Detection"
+rows:
+  - heading: "General Principles"
+    disposition: carried
+    target: "src/rules/architecture.md#General Principles"
+    reason: "the section stayed in the rule; the migration moved the depth beneath it, not this heading"
+  - heading: "Project Detection"
+    disposition: carried
+    target: "src/skills/module-detect-on-the-fly/SKILL.md#Project detection"
+    reason: "the section moved to the migration target under the same heading text"
+  - heading: "Project-Specific Architecture"
+    disposition: carried
+    target: "src/skills/module-detect-on-the-fly/SKILL.md#Project-specific architecture docs"
+    reason: "moved intact under a lower-cased heading with one edit the relocation required, since the text no longer sits in a rule file"
+  - heading: "Architectural Decision Records (ADRs)"
+    disposition: carried
+    target: "src/rules/architecture.md#Architectural Decision Records (ADRs)"
+    reason: "the section stayed in the rule; the migration moved the depth beneath it, not this heading"
+  - heading: "Module-Level Documentation"
+    disposition: carried
+    target: "src/skills/module-detect-on-the-fly/SKILL.md#Module-level documentation"
+    reason: "the section moved to the migration target under the same heading text"
+  - heading: "Packages"
+    disposition: carried
+    target: "src/skills/module-detect-on-the-fly/SKILL.md#Packages"
+    reason: "the section moved to the migration target under the same heading text"
+  - heading: "Build / Task Runner Detection"
+    disposition: carried
+    target: "src/skills/module-detect-on-the-fly/SKILL.md#Build / task runner detection"
+    reason: "the section moved to the migration target under the same heading text"

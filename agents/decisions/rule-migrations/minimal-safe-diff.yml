@@ -1,0 +1,63 @@
+# Migration ledger for `minimal-safe-diff` — what the body-migration transform kept, folded, and lost.
+#
+# `source_headings` is the HARVEST, not a cache: the pre-migration commits are
+# not ancestors of HEAD and a remote branch prune would destroy them, so the
+# headings are recorded here to survive that. See lint_rule_migration_ledger.
+rule: minimal-safe-diff
+source: recoverable
+source_commit: c6eb79cb7383a78e3b48bc46bef4ade01b7d9106
+source_path: src/rules/minimal-safe-diff.md
+migrated_to:
+  - docs/guidelines/agent-infra/minimal-safe-diff-mechanics.md
+source_headings:
+  - "The rule"
+  - "Before writing the diff"
+  - "When the task seems to require a larger change"
+  - "Auto-formatter or linter rewrites unrelated code"
+  - "Red flags in your own diff — reject them"
+  - "When in doubt"
+  - "Anti-over-engineering"
+  - "Own-orphan cleanup"
+  - "Break-glass exception"
+  - "Bounded remediation carve-out"
+rows:
+  - heading: "The rule"
+    disposition: carried
+    target: "src/rules/minimal-safe-diff.md#The rule"
+    reason: "the section stayed in the rule; the migration moved the depth beneath it, not this heading"
+  - heading: "Before writing the diff"
+    disposition: carried
+    target: "src/rules/minimal-safe-diff.md#Before writing the diff"
+    reason: "the section stayed in the rule; the migration moved the depth beneath it, not this heading"
+  - heading: "When the task seems to require a larger change"
+    disposition: carried
+    target: "docs/guidelines/agent-infra/minimal-safe-diff-mechanics.md#When the task seems to require a larger change"
+    reason: "the section moved to the migration target under the same heading text"
+  - heading: "Auto-formatter or linter rewrites unrelated code"
+    disposition: carried
+    target: "docs/guidelines/agent-infra/minimal-safe-diff-mechanics.md#Auto-formatter or linter rewrites unrelated code"
+    reason: "the section moved to the migration target under the same heading text"
+  - heading: "Red flags in your own diff — reject them"
+    disposition: carried
+    target: "src/rules/minimal-safe-diff.md#Red flags in your own diff — reject them"
+    reason: "the section stayed in the rule; the migration moved the depth beneath it, not this heading"
+  - heading: "When in doubt"
+    disposition: carried
+    target: "src/rules/minimal-safe-diff.md#When in doubt"
+    reason: "the section stayed in the rule; the migration moved the depth beneath it, not this heading"
+  - heading: "Anti-over-engineering"
+    disposition: carried
+    target: "docs/guidelines/agent-infra/minimal-safe-diff-mechanics.md#Anti-over-engineering"
+    reason: "the section moved to the migration target under the same heading text"
+  - heading: "Own-orphan cleanup"
+    disposition: carried
+    target: "src/rules/minimal-safe-diff.md#Own-orphan cleanup"
+    reason: "the section stayed in the rule; the migration moved the depth beneath it, not this heading"
+  - heading: "Break-glass exception"
+    disposition: carried
+    target: "docs/guidelines/agent-infra/minimal-safe-diff-mechanics.md#Break-glass exception"
+    reason: "the section moved to the migration target under the same heading text"
+  - heading: "Bounded remediation carve-out"
+    disposition: carried
+    target: "docs/guidelines/agent-infra/minimal-safe-diff-mechanics.md#Bounded remediation carve-out"
+    reason: "the section moved to the migration target under the same heading text"

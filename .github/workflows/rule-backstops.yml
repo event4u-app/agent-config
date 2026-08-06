@@ -100,6 +100,28 @@ jobs:
       - name: output-discipline (placeholder prose)
         run: ./scripts-run src/scripts/lint_output_slop
 
+      # `already-complied-with` is the class that permits deleting a rule, so
+      # it is the one that carries an evidence bar.
+      - name: decision-impact (evidence bar on the removal-permitting class)
+        run: ./scripts-run src/scripts/lint_decision_impact --quiet
+
+      # A lossy transform with no record: 44 rules had their body migrated out,
+      # and for 24 of them `git log --follow` cannot even find the commit.
+      - name: rule-migration ledger (what the migration kept, folded, and lost)
+        run: ./scripts-run src/scripts/lint_rule_migration_ledger --quiet
+
+      # An example is the part a reader copies. Every other gate reads the prose
+      # an artifact teaches; none read the code it shows. Strict on day one
+      # because the classification pass came back zero hits over all 503 files.
+      - name: example fences (code examples vs the rules beside them)
+        run: ./scripts-run src/scripts/lint_example_fences --strict
+
+      # Rules and skills are capped; the contexts and guidelines they route to
+      # were not, which is where the always-loaded budget leaks back in as
+      # on-demand bloat. Shrink-only ratchet at 4.
+      - name: depth budget (per-file ceiling on contexts + guidelines)
+        run: ./scripts-run src/scripts/check_depth_budget
+
       - name: pre-migration references (retired Python install hints)
         run: ./scripts-run src/scripts/lint_pre_migration_refs
 

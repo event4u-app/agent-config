@@ -1,0 +1,43 @@
+# Migration ledger for `commit-conventions` — what the body-migration transform kept, folded, and lost.
+#
+# `source_headings` is the HARVEST, not a cache: the pre-migration commits are
+# not ancestors of HEAD and a remote branch prune would destroy them, so the
+# headings are recorded here to survive that. See lint_rule_migration_ledger.
+rule: commit-conventions
+source: recoverable
+source_commit: d4fe80e1ce2a956eb86df328de32e3252515553f
+source_path: .agent-src.uncompressed/rules/commit-conventions.md
+migrated_to:
+  - src/skills/conventional-commits-writing/SKILL.md
+source_headings:
+  - "Format"
+  - "Types"
+  - "Scope"
+  - "Breaking changes"
+  - "Commit splitting"
+  - "Examples"
+rows:
+  - heading: "Format"
+    disposition: merged
+    target: "src/skills/conventional-commits-writing/SKILL.md#4. Write the description"
+    reason: "the 72-char cap and imperative mood survive as bullets, but the literal type(scope) template and the always-English clause did not reach the skill and now live only in a consumer-facing Copilot template"
+  - heading: "Types"
+    disposition: merged
+    target: "src/skills/conventional-commits-writing/SKILL.md#1. Identify the actual intent"
+    reason: "the ten-row type table was reshaped into the ten-item intent list under step 1, with per-type prose in the php git guideline"
+  - heading: "Scope"
+    disposition: carried
+    target: "src/skills/conventional-commits-writing/SKILL.md#3. Choose scope"
+    reason: "Jira-ticket-as-scope, module names and the only-if-it-helps optionality all survive verbatim in the step"
+  - heading: "Breaking changes"
+    disposition: carried
+    target: "src/skills/conventional-commits-writing/SKILL.md#5. Check for breaking change"
+    reason: "the bang marker, the footer alternative and the worked rename example all survive in the step"
+  - heading: "Commit splitting"
+    disposition: carried
+    target: "src/skills/conventional-commits-writing/SKILL.md#2. Detect mixed concerns"
+    reason: "the split-unrelated-concerns obligation became an explicit procedure step and its do-not clause became a Do-NOT bullet"
+  - heading: "Examples"
+    disposition: carried
+    target: "docs/guidelines/php/git.md#Examples by area"
+    reason: "all seven example lines survive grouped by area in the sibling guideline the pre-migration rule already pointed at"

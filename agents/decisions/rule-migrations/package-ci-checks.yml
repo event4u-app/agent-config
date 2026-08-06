@@ -1,0 +1,32 @@
+# Migration ledger for `package-ci-checks` — what the body-migration transform kept, folded, and lost.
+#
+# `source_headings` is the HARVEST, not a cache: the pre-migration commits are
+# not ancestors of HEAD and a remote branch prune would destroy them, so the
+# headings are recorded here to survive that. See lint_rule_migration_ledger.
+rule: package-ci-checks
+source: recoverable
+source_commit: d4fe80e1ce2a956eb86df328de32e3252515553f
+source_path: .agent-src.uncompressed/rules/package-ci-checks.md
+migrated_to:
+  - src/skills/lint-skills/SKILL.md
+source_headings:
+  - "When this applies"
+  - "The Iron Law"
+  - "Required checks — see mechanics"
+  - "Do NOT"
+rows:
+  - heading: "When this applies"
+    disposition: merged
+    target: "src/skills/lint-skills/SKILL.md#When to use"
+    reason: "the before-push timing survives narrowed to one gate and the consumer-scoping is now encoded structurally in frontmatter rather than stated in prose"
+  - heading: "The Iron Law"
+    disposition: carried
+    target: "src/rules/package-ci-checks.md#Package Ci Checks"
+    reason: "the law stayed in the rule rewritten around task ci, though its every-CI-failure-is-preventable rationale was kept nowhere"
+  - heading: "Required checks — see mechanics"
+    disposition: dropped
+    reason: "the ordered five-check enumeration died with its context file and task ci genuinely subsumes the list, but the ordering and the per-step common-failure notes were relocated nowhere"
+  - heading: "Do NOT"
+    disposition: carried
+    target: "src/skills/lint-skills/SKILL.md#Do NOT"
+    reason: "the section moved to the migration target under the same heading text"

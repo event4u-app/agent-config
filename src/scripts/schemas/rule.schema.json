@@ -18,6 +18,16 @@
       "enum": ["package", "project"],
       "default": "package"
     },
+    "decision_impact": {
+      "type": "string",
+      "enum": ["overrides-model-default", "encodes-house-choice", "already-complied-with"],
+      "description": "What is at stake when this rule fires — distinct from `type`, which is a DELIVERY class (how the rule reaches the model). `overrides-model-default`: the model's base behaviour is wrong here, so the rule is load-bearing. `encodes-house-choice`: the model would make *a* defensible choice but not *our* choice. `already-complied-with`: the model does this unprompted — the one value that permits removal, and therefore the one carrying an evidence bar (`decision_impact_evidence`, enforced by lint_decision_impact). OPTIONAL by design: classifying all 111 rules in one batch is exactly the shape that trips check_kernel_prefix_stability, so it lands on new rules and on rules touched for another reason."
+    },
+    "decision_impact_evidence": {
+      "type": "string",
+      "minLength": 20,
+      "description": "Required when `decision_impact: already-complied-with`, forbidden otherwise. A pointer a reviewer can follow to the observation that the model complies without this rule — an eval report, a PR discussion, a trajectory sample. The bar exists because that classification is what permits deleting a rule, and 'the model probably does this anyway' is the cheapest possible way to remove a floor that was working precisely because nothing had crossed it."
+    },
     "description": {
       "type": "string",
       "minLength": 1,

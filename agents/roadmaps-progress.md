@@ -2,14 +2,14 @@
 
 > Auto-generated — do not edit. Regenerate with `task roadmap-progress` or by running the `update_roadmap_progress` script for your install; rewritten on every roadmap create / execute / completion change (timestamp lives in git history).
 >
-> 17 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **15** open blockers
+> 17 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **17** open blockers
 
 ## Overall
 
-**141 / 254 steps done · 56%**
+**114 / 217 steps done · 53%**
 
 ```text
-██████████████████████░░░░░░░░░░░░░░░░░░   56%
+█████████████████████░░░░░░░░░░░░░░░░░░░   53%
 ```
 
 ## Open roadmaps
@@ -19,12 +19,12 @@
 | 1 | [road-to-ci-native-release-first-run.md](roadmaps/road-to-ci-native-release-first-run.md) | 2 | 8 | 8 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 2 | [road-to-council-blind-review.md](roadmaps/road-to-council-blind-review.md) | 3 | 6 | 2 | 3 | 0 | 1 | 0 | ██████░░░░ 60% |
 | 3 | [road-to-gated-reach-followup.md](roadmaps/road-to-gated-reach-followup.md) | 1 | 12 | 12 | 0 | 0 | 0 | [1](#blockers-road-to-gated-reach-followup) | ░░░░░░░░░░ 0% |
-| 4 | [road-to-kernel-question-triangle.md](roadmaps/road-to-kernel-question-triangle.md) | 1 | 3 | 3 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
-| 5 | [road-to-maintainer-bus-factor.md](roadmaps/road-to-maintainer-bus-factor.md) | 4 | 12 | 5 | 7 | 0 | 0 | [1](#blockers-road-to-maintainer-bus-factor) | ██████░░░░ 58% |
-| 6 | [road-to-orchestration-scope-decision.md](roadmaps/road-to-orchestration-scope-decision.md) | 4 | 10 | 6 | 4 | 0 | 0 | [1](#blockers-road-to-orchestration-scope-decision) | ████░░░░░░ 40% |
-| 7 | [road-to-rule-coherence-followup.md](roadmaps/road-to-rule-coherence-followup.md) | 5 | 9 | 8 | 1 | 0 | 0 | [2](#blockers-road-to-rule-coherence-followup) | █░░░░░░░░░ 11% |
-| 8 | [road-to-scale-history-bench-run.md](roadmaps/road-to-scale-history-bench-run.md) | 1 | 2 | 2 | 0 | 0 | 0 | [1](#blockers-road-to-scale-history-bench-run) | ░░░░░░░░░░ 0% |
-| 9 | [road-to-skill-ecosystem-authoring-discipline.md](roadmaps/road-to-skill-ecosystem-authoring-discipline.md) | 6 | 52 | 24 | 27 | 1 | 0 | 0 | █████░░░░░ 53% |
+| 4 | [road-to-inbox-harvest-2026-08.md](roadmaps/road-to-inbox-harvest-2026-08.md) | 5 | 21 | 14 | 0 | 3 | 4 | [2](#blockers-road-to-inbox-harvest-2026-08) | ░░░░░░░░░░ 0% |
+| 5 | [road-to-kernel-question-triangle.md](roadmaps/road-to-kernel-question-triangle.md) | 1 | 3 | 3 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+| 6 | [road-to-maintainer-bus-factor.md](roadmaps/road-to-maintainer-bus-factor.md) | 4 | 12 | 5 | 7 | 0 | 0 | [1](#blockers-road-to-maintainer-bus-factor) | ██████░░░░ 58% |
+| 7 | [road-to-orchestration-scope-decision.md](roadmaps/road-to-orchestration-scope-decision.md) | 4 | 10 | 6 | 4 | 0 | 0 | [1](#blockers-road-to-orchestration-scope-decision) | ████░░░░░░ 40% |
+| 8 | [road-to-rule-coherence-followup.md](roadmaps/road-to-rule-coherence-followup.md) | 5 | 9 | 8 | 1 | 0 | 0 | [2](#blockers-road-to-rule-coherence-followup) | █░░░░░░░░░ 11% |
+| 9 | [road-to-scale-history-bench-run.md](roadmaps/road-to-scale-history-bench-run.md) | 1 | 2 | 2 | 0 | 0 | 0 | [1](#blockers-road-to-scale-history-bench-run) | ░░░░░░░░░░ 0% |
 | 10 | [road-to-skill-ecosystem-gate-integrity.md](roadmaps/road-to-skill-ecosystem-gate-integrity.md) | 7 | 43 | 3 | 40 | 0 | 0 | [1](#blockers-road-to-skill-ecosystem-gate-integrity) | █████████░ 93% |
 | 11 | [road-to-solution-minimalism.md](roadmaps/road-to-solution-minimalism.md) | 4 | 36 | 12 | 23 | 0 | 1 | 0 | ███████░░░ 66% |
 | 12 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 6 | 3 | 0 | 0 | [1](#blockers-road-to-subagent-value-realization-followup) | ███░░░░░░░ 33% |
@@ -72,6 +72,38 @@
   - **What to do:**
     `yt-dlp` and a JavaScript runtime are installed **by a human** on
   - **Resolved when:** condition described above clears
+
+### [road-to-inbox-harvest-2026-08.md](roadmaps/road-to-inbox-harvest-2026-08.md)
+
+**Road to inbox harvest 2026-08** — 0 / 14 done (0%)
+
+| # | Phase | State | Open | Done | Deferred | Cancelled | % |
+|---|---|---|---:|---:|---:|---:|---:|
+| 1 | The release-review harvest (from `feedback-9.18.1-1.txt`) | ⬜ not started | 3 | 0 | 1 | 1 | 0% |
+| 2 | The self-fix loop (from `loops-feature.txt`) | ⬜ not started | 2 | 0 | 0 | 1 | 0% |
+| 3 | Small verified fixes | ⬜ not started | 2 | 0 | 1 | 0 | 0% |
+| 4 | The review-mechanization residuals (from `optimize-plan.txt`) | ⬜ not started | 2 | 0 | 0 | 1 | 0% |
+| 5 | The four large chat-log audits | ⬜ not started | 5 | 0 | 1 | 1 | 0% |
+
+<a id="blockers-road-to-inbox-harvest-2026-08"></a>
+**Blockers**
+
+- **deferred-finding-decision-reopen** (owner: maintainer) — blocks Phase 1
+  - **What to do:**
+    declined at `check_review_dispositions.ts:16-22` with a named revisit
+    trigger. Reopening a recorded decision is a maintainer call under
+    `decision-revisit-gate`, not something an agent does because a reviewer asked.
+  - **Resolved when:** the decision is reopened with the trigger cited, or P1.4 is cancelled against it.
+- **spent-inbox-artifacts-await-deletion** (owner: maintainer) — blocks nothing
+  - **What to do:**
+    the agent reports rather than deletes: both `council-q-*.md` files (answered
+    and shipped verbatim), `bench-local/` (null published, roadmap archived), and
+    the byte-identical `(1).md` duplicate plus `chat.txt` inside `memory-mcp/`.
+    Related finding worth a separate look: `check_council_layout` prints these as
+    findings and **exits 0** — an advisory gate nobody sees, currently carrying
+    ~18 permanent findings, which is the allowlist-fatigue shape this repo's own
+    rules warn about.
+  - **Resolved when:** the files are deleted, or a reason to keep them is recorded.
 
 ### [road-to-kernel-question-triangle.md](roadmaps/road-to-kernel-question-triangle.md)
 
@@ -171,19 +203,6 @@ _1 blocker resolved._
     task; same standing authorization the team-mode Phase-5 bench
     waits on).
   - **Resolved when:** the user confirms the run budget in-session.
-
-### [road-to-skill-ecosystem-authoring-discipline.md](roadmaps/road-to-skill-ecosystem-authoring-discipline.md)
-
-**Road to authoring discipline — forced artifacts, named biases, and a removal signal** — 27 / 51 done (53%)
-
-| # | Phase | State | Open | Done | Deferred | Cancelled | % |
-|---|---|---|---:|---:|---:|---:|---:|
-| 1 | Forced artifacts at the decision point | ✅ done | 0 | 7 | 0 | 0 | 100% |
-| 2 | Rule and skill authoring sections | 🟡 in progress | 5 | 2 | 0 | 0 | 29% |
-| 3 | Ledger the lossy transform, register the contradictions | ⬜ not started | 7 | 0 | 0 | 0 | 0% |
-| 4 | Lint what the authored text teaches | ⬜ not started | 7 | 0 | 0 | 0 | 0% |
-| 5 | A removal signal, and the first question | ✅ done | 0 | 6 | 0 | 0 | 100% |
-| 6 | Review and judge output shape | 🟡 in progress | 5 | 12 | 1 | 0 | 71% |
 
 ### [road-to-skill-ecosystem-gate-integrity.md](roadmaps/road-to-skill-ecosystem-gate-integrity.md)
 

@@ -6,14 +6,52 @@ keep-beta-until: 2026-08-12
 # Rule-Interaction Matrix
 
 > **Audience:** rule authors and reviewers — anyone editing
-> `.agent-src.uncondensed/rules/*.md` or proposing a new always-rule.
+> `src/rules/*.md` or proposing a new always-rule.
 > **Authoritative source:** [`rule-interactions.yml`](rule-interactions.yml).
-> **Linter:** `scripts/lint_rule_interactions.py` (run via `task lint-rule-interactions`).
+> **Linter:** `src/scripts/lint_rule_interactions.ts` (run via `task lint-rule-interactions`).
 
-The matrix captures how the package's `always` rules relate when more
-than one fires on the same turn. It exists because rules at this size
-(55 rules, ~49k chars budget) develop emergent precedence relationships
-that no single rule file can document on its own.
+The matrix captures how the package's rules relate when more than one
+fires on the same turn. It exists because rules at this size (111 rules,
+9 of them always-loaded) develop emergent precedence relationships that
+no single rule file can document on its own.
+
+## What this register does NOT cover
+
+**It records arbitration decisions that have been explicitly written down.
+It does not claim completeness over the contradictions between artifacts.**
+An unclaimed contradiction — two rules pushing opposite answers in
+non-overlapping words, neither naming the other — is invisible to it, and
+that gap is structural rather than an oversight: a static detector for
+undeclared conflicts was built and measured against this corpus, and it
+returned 67 % false positives at the only operating point with full
+recall, with the co-firing signal *anti-correlated* with real conflict.
+So detection stays a periodic human audit; this file holds what those
+audits, and the rules themselves, resolved.
+
+The linter enforces one closure property over that honest scope: **for the
+rules this file declares, a precedence claim between two of them must have
+a row.** The register is answerable for the set it covers and silent about
+the rest. Extending `rules:` therefore widens the obligation — which is the
+intended cost, and is exactly how three unrecorded subordinations surfaced
+when the set last grew.
+
+## The arbitration litmus
+
+Before adding a row, apply it:
+
+> **If one artifact must arbitrate between them, they are not
+> complementary.**
+
+A pair that needs no arbiter — two rules that push toward the *same*
+response for different reasons — is `complements`, and the row's job is to
+say so plainly so a future reader does not invent a precedence that was
+never needed. A pair where a turn cannot satisfy both as written needs a
+named winner **and a named decision domain**: which kind of decision the
+senior rule governs, not a global rank. Ninety-seven per cent of the
+precedence claims in the corpus are situated in exactly this way; the
+three that assert naked global precedence are already encoded in
+[`agent-authority`](../../src/rules/agent-authority.md)'s band table and
+belong there rather than here.
 
 The anchor pair is `non-destructive-by-default` — the universal safety
 floor — paired with the five rules most likely to be invoked in the

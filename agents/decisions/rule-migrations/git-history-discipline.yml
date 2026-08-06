@@ -1,0 +1,63 @@
+# Migration ledger for `git-history-discipline` — what the body-migration transform kept, folded, and lost.
+#
+# `source_headings` is the HARVEST, not a cache: the pre-migration commits are
+# not ancestors of HEAD and a remote branch prune would destroy them, so the
+# headings are recorded here to survive that. See lint_rule_migration_ledger.
+rule: git-history-discipline
+source: recoverable
+source_commit: 6ef4102d6448cf5a37f3e1555b33299ebd75c907
+source_path: src/rules/git-history-discipline.md
+migrated_to:
+  - src/skills/git-workflow/SKILL.md
+source_headings:
+  - "Iron Law — Gate (no unsolicited rewrites)"
+  - "Iron Law — Protocol (once authorized)"
+  - "Iron Law — Inherited & shared-branch commits (never drop without asking)"
+  - "When rewrite is allowed"
+  - "Two protective stops (for the protocol phase)"
+  - "Equivalents that are also forbidden by default"
+  - "Amend-after-hook-failure trap (data-loss)"
+  - "Why this rule exists"
+  - "When you'd be tempted"
+  - "See also"
+rows:
+  - heading: "Iron Law — Gate (no unsolicited rewrites)"
+    disposition: carried
+    target: "src/rules/git-history-discipline.md#Iron Law — Gate (no unsolicited rewrites)"
+    reason: "the section stayed in the rule; the migration moved the depth beneath it, not this heading"
+  - heading: "Iron Law — Protocol (once authorized)"
+    disposition: carried
+    target: "src/rules/git-history-discipline.md#Iron Law — Protocol (once authorized)"
+    reason: "the section stayed in the rule; the migration moved the depth beneath it, not this heading"
+  - heading: "Iron Law — Inherited & shared-branch commits (never drop without asking)"
+    disposition: carried
+    target: "src/rules/git-history-discipline.md#Iron Law — Inherited & shared-branch commits (never drop without asking)"
+    reason: "the section stayed in the rule; the migration moved the depth beneath it, not this heading"
+  - heading: "When rewrite is allowed"
+    disposition: carried
+    target: "src/rules/git-history-discipline.md#When rewrite is allowed"
+    reason: "the section stayed in the rule; the migration moved the depth beneath it, not this heading"
+  - heading: "Two protective stops (for the protocol phase)"
+    disposition: carried
+    target: "src/skills/git-workflow/SKILL.md#Two protective stops (for the protocol phase)"
+    reason: "the section moved to the migration target under the same heading text"
+  - heading: "Equivalents that are also forbidden by default"
+    disposition: carried
+    target: "src/skills/git-workflow/SKILL.md#Equivalents that are also forbidden by default"
+    reason: "the section moved to the migration target under the same heading text"
+  - heading: "Amend-after-hook-failure trap (data-loss)"
+    disposition: carried
+    target: "src/skills/git-workflow/SKILL.md#Amend-after-hook-failure trap (data-loss)"
+    reason: "the section moved to the migration target under the same heading text"
+  - heading: "Why this rule exists"
+    disposition: carried
+    target: "src/skills/git-workflow/SKILL.md#Why history discipline exists"
+    reason: "both paragraphs moved verbatim under a renamed heading, with a deliberate factual update after one derived file was retired"
+  - heading: "When you'd be tempted"
+    disposition: carried
+    target: "src/skills/git-workflow/SKILL.md#When you'd be tempted"
+    reason: "the section moved to the migration target under the same heading text"
+  - heading: "See also"
+    disposition: carried
+    target: "src/rules/git-history-discipline.md#See also"
+    reason: "the section stayed in the rule; the migration moved the depth beneath it, not this heading"

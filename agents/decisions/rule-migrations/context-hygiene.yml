@@ -1,0 +1,48 @@
+# Migration ledger for `context-hygiene` — what the body-migration transform kept, folded, and lost.
+#
+# `source_headings` is the HARVEST, not a cache: the pre-migration commits are
+# not ancestors of HEAD and a remote branch prune would destroy them, so the
+# headings are recorded here to survive that. See lint_rule_migration_ledger.
+rule: context-hygiene
+source: recoverable
+source_commit: c6eb79cb7383a78e3b48bc46bef4ade01b7d9106
+source_path: src/rules/context-hygiene.md
+migrated_to:
+  - docs/guidelines/agent-infra/context-hygiene-mechanics.md
+source_headings:
+  - "Conversation Freshness"
+  - "The 3-Failure Rule"
+  - "Tool Loop Detection"
+  - "Read-Loop Detection — the 15 / 25 rule"
+  - "State dump format"
+  - "Augment-specific: Ignored Skills Recovery"
+  - "Copilot fallback"
+rows:
+  - heading: "Conversation Freshness"
+    disposition: carried
+    target: "src/rules/context-hygiene.md#Conversation Freshness"
+    reason: "the section stayed in the rule; the migration moved the depth beneath it, not this heading"
+  - heading: "The 3-Failure Rule"
+    disposition: carried
+    target: "src/rules/context-hygiene.md#The 3-Failure Rule"
+    reason: "the section stayed in the rule; the migration moved the depth beneath it, not this heading"
+  - heading: "Tool Loop Detection"
+    disposition: carried
+    target: "src/rules/context-hygiene.md#Tool Loop Detection"
+    reason: "the section stayed in the rule; the migration moved the depth beneath it, not this heading"
+  - heading: "Read-Loop Detection — the 15 / 25 rule"
+    disposition: carried
+    target: "src/rules/context-hygiene.md#Read-Loop Detection — the 15 / 25 rule"
+    reason: "the section stayed in the rule; the migration moved the depth beneath it, not this heading"
+  - heading: "State dump format"
+    disposition: carried
+    target: "docs/guidelines/agent-infra/context-hygiene-mechanics.md#State dump format"
+    reason: "the section moved to the migration target under the same heading text"
+  - heading: "Augment-specific: Ignored Skills Recovery"
+    disposition: carried
+    target: "docs/guidelines/agent-infra/context-hygiene-mechanics.md#Augment-specific: ignored-skills recovery"
+    reason: "the whole section moved verbatim under a heading differing only in capitalisation, which is why the mechanical text match missed it"
+  - heading: "Copilot fallback"
+    disposition: carried
+    target: "docs/guidelines/agent-infra/context-hygiene-mechanics.md#Copilot fallback"
+    reason: "the section moved to the migration target under the same heading text"
