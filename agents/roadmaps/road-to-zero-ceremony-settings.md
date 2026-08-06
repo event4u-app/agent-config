@@ -178,6 +178,15 @@ outside C.
       thread-loss the cancellation was meant to avert does not exist while the
       roadmap is open — and cancelling into a stub nobody owns would convert a
       visible deferral into a second file to keep in sync.
+      **The premise is TEMPORARY, and that is an exit condition, not a
+      footnote.** It holds only while Phase 3 is open. The moment
+      `absent-is-not-default-for-projection-mode` clears and Phase 3 closes,
+      `count_open` returns to 0 with this one `[~]` still present and Iron Law 3
+      fires again — the same repo-wide commit refusal, with no agent-side
+      bypass. **Whoever closes Phase 3 must dispose of this item in the same
+      change**, and by then the council's cancel-with-successor is the likely
+      right answer, because at that point the roadmap really is archiving. See
+      the blocker below, which now carries this as part of its resolution.
 - [x] Refuse C-class writes server-side in the GUI's write route too — the CLI
       refusal must not be the only fence.
       <!-- verify: npx vitest run tests/server/routes/settings.test.ts -->
@@ -461,10 +470,17 @@ here rather than done, per halt condition 4.
      absence means something other than their default, with the reason recorded
      per key.
   3. Only then change `src/server/routes/wizard.ts:1310`.
+  4. In the SAME change, dispose of the one remaining `[~]` (Phase 2 step 2).
+     Closing Phase 3 takes `count_open` back to 0 with that item still
+     deferred, which re-fires Iron Law 3 as a repo-wide commit refusal with no
+     agent-side bypass — the deadlock this roadmap already hit once, recorded
+     under § Glyph re-encoding. Announced here so the next contributor meets it
+     in the plan rather than in a blocked commit.
 - **Resolved when:** the absent-vs-default audit exists, every key whose absence
   changes behaviour is either carved out or fixed at its reader, and
   `tests/install/settings_materialisation.test.ts` pins a fresh install whose
-  file is sparse AND whose resolved rule scope is unchanged.
+  file is sparse AND whose resolved rule scope is unchanged — and step 4 above
+  has disposed of the remaining `[~]` in the same change.
 
 ### blocker: polish-gate-open
 - **Status:** resolved
