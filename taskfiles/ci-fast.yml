@@ -25,6 +25,13 @@ tasks:
       - ./scripts-run src/scripts/check_safety_floor_untouched
       - ./scripts-run src/scripts/check_no_new_legacy_path
       - ./scripts-run src/scripts/check_kernel_rule_bundle
+      # Catches the one failure that is invisible to CI AND to the test suite:
+      # a self-hosted hook bundle older than the hook sources it bundles, i.e.
+      # the agent running a merged hook fix that was never built. On 2026-08-06
+      # four such fixes ran nowhere for a full session. Sub-second (38 stats).
+      # In CI it declares a loud no-op — a fresh checkout has no bundle — rather
+      # than passing silently on an invariant it never evaluated.
+      - ./scripts-run src/scripts/check_hook_bundle_freshness
       - ./scripts-run src/scripts/lint_regression
       # Same argv the CI `skill-lint` job runs. NOT chosen for speed — both
       # forms are sub-second here (0.44s --changed / 0.52s --all, measured
