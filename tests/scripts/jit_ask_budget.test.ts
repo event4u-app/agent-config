@@ -451,6 +451,65 @@ describe('consentVerdict — a value is not a decision', () => {
     });
 });
 
+describe('the migration — every ask-shaped setting routes to the protocol', () => {
+    // Phase 5 step 3. The migration was performed and pinned by nothing: a
+    // rewrite of any of these four files could restore its bespoke ask prose and
+    // no gate would notice, which is how a universalised pattern quietly
+    // re-fragments. The two absences at the end are the load-bearing half —
+    // without them this suite would also pass if someone "migrated" the two keys
+    // the rule deliberately routes elsewhere.
+
+    /** The four sites the protocol owns, and the key each one carries. */
+    const MIGRATED: ReadonlyArray<readonly [string, string]> = [
+        ['src/rules/token-budget-discipline.md', 'tokens.rich_skills'],
+        ['src/rules/delegation-policy.md', 'subagents.auto'],
+        [
+            'src/agent-src/contexts/execution/subagent-routing.md',
+            'subagents.budget_routing',
+        ],
+        [
+            'src/domains/engineering-base/review/changes/command.md',
+            'subagents.adversarial_council',
+        ],
+    ];
+
+    /** The two the rule routes AWAY, each with the reason it states. */
+    const CARVED_OUT: ReadonlyArray<readonly [string, RegExp]> = [
+        ['worktrees.mode', /permission gate/u],
+        ['decision_engine.on_block', /TTY prompt/u],
+    ];
+
+    for (const [rel, key] of MIGRATED) {
+        it(`${rel} defers the ask shape to the protocol for ${key}`, () => {
+            const text = fs.readFileSync(path.join(REPO, rel), 'utf8');
+            expect(text, `${rel} must still own ${key}`).toContain(key);
+            expect(text, `${rel} must cite settings-ask-protocol`).toContain(
+                'settings-ask-protocol',
+            );
+        });
+    }
+
+    it('states, per carved-out key, why it is NOT on the protocol', () => {
+        const text = ruleText();
+        for (const [key, reason] of CARVED_OUT) {
+            expect(text, key).toContain(key);
+            expect(text, `${key} needs its carve-out reason`).toMatch(reason);
+        }
+    });
+
+    it('the carved-out keys did not quietly get migrated anyway', () => {
+        // If a future PR routes `worktrees.mode` through the settings protocol,
+        // that is a real decision and it should break this test rather than pass
+        // silently — the rule's own carve-out prose would then be stale.
+        for (const [rel] of MIGRATED) {
+            const text = fs.readFileSync(path.join(REPO, rel), 'utf8');
+            for (const [key] of CARVED_OUT) {
+                expect(text, `${rel} unexpectedly carries ${key}`).not.toContain(key);
+            }
+        }
+    });
+});
+
 describe('who picks the moment — the half no gate can check', () => {
     it('carries the anti-coercion clause the class contract states as prose', () => {
         const text = ruleText();
