@@ -42,7 +42,15 @@ describe('rule-trip counting', () => {
             } catch (e) {
                 status = (e as { status?: number }).status ?? 0;
             }
-            expect(status).toBe(1); // the violation was caught (BLOCK)
+            // The violation was caught (BLOCK). The dispatch is `--platform claude
+            // --event pre_tool_use`, so the exit code is the HOST-native one, not
+            // the internal ladder: on Claude Code a policy refusal must exit 2
+            // ("only exit code 2 blocks the action"; exit 1 is a non-blocking
+            // error and the tool would proceed). Translation lives in
+            // hooks/host_semantics.ts; the internal EXIT_BLOCK = 1 is unchanged
+            // and still asserted directly against `_reduce` in
+            // tests/scripts/hooks/dispatch_hook.test.ts.
+            expect(status).toBe(2);
 
             const target = path.join(workspace, 'agents', 'runtime', 'state', 'rule-trips.json');
             expect(fs.existsSync(target)).toBe(true);

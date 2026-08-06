@@ -47,6 +47,7 @@ import {
   setHookStdinOverride,
   clearHookStdinOverride,
 } from "./hook_stdin.js";
+import { emitFor, type Severity } from "./host_semantics.js";
 
 // Free-form JSON values flow through every helper here; a documented
 // alias keeps the surface honest without `any` (ADR-200 § strict TS).
@@ -101,6 +102,19 @@ function _isObject(v: unknown): v is JsonObject {
 
 export function _severity_for(rc: number): string {
   return _SEVERITY_BY_EXIT[rc] ?? "error";
+}
+
+/**
+ * P0.2 (road-to-rule-coherence) — is this concern declared advisory?
+ *
+ * An advisory concern MUST never produce a BLOCK verdict on any host. Four
+ * PreToolUse concerns document themselves as advisory in prose
+ * (`design_slop_hook`: "FLAGS, NEVER A BLOCK") while the transport happily
+ * turned their WARN into a host-level deny. Prose is not enforcement: the
+ * manifest now declares severity and the dispatcher enforces the ceiling.
+ */
+export function _is_advisory(concern: JsonObject): boolean {
+  return String(concern["severity"] ?? "").trim().toLowerCase() === "advisory";
 }
 
 function _now_iso(): string {
@@ -976,6 +990,11 @@ export function main(argv?: string[]): number {
   // stdout-injection; harmless surfacing elsewhere). All other events keep
   // the swallow-stdout contract unchanged.
   const context_blocks: string[] = [];
+  // Per-concern message for the host emission (P0.1). Kept OUT of
+  // feedback_entries on purpose: that record is written to disk with a
+  // fixed-field schema (PII-exclusion-by-construction), and a concern's raw
+  // stderr is free-form content. This array is in-memory only.
+  const concern_messages: Array<{ rc: number; text: string }> = [];
   for (const concern of concerns) {
     const concern_started = _now_iso();
     const { rc: rawRcResult, stderr: stderr_text, stdout: stdout_text, duration_ms } =
@@ -992,8 +1011,30 @@ export function main(argv?: string[]): number {
         process.stderr.write(stderr_text);
       }
     }
+    // P0.2 severity ceiling: an advisory concern can never block, on any host.
+    // This covers BOTH the concern emitting EXIT_BLOCK directly and the
+    // fail_closed promotion above turning a crash into a block.
+    if (rc === EXIT_BLOCK && _is_advisory(concern)) {
+      process.stderr.write(
+        `dispatch_hook: concern '${String(concern["name"])}' is declared ` +
+          `severity: advisory but returned BLOCK — downgraded to warn.\n`,
+      );
+      rc = EXIT_WARN;
+    }
     rcs.push(rc);
     const reply = _parse_concern_stdout(stdout_text);
+    // A concern states its reason either as JSON {"reason": …} on stdout
+    // (advisory concerns) or as a formatted stderr line (the block guards, e.g.
+    // `block-no-verify: BLOCKED — …`). Both are captured here so the emission
+    // layer can surface the REAL message instead of a generic label; before
+    // this, a rc=1 block discarded the concern's stderr entirely.
+    const stated =
+      typeof reply["reason"] === "string" && (reply["reason"] as string).trim()
+        ? (reply["reason"] as string).trim()
+        : stderr_text.trim();
+    if (stated) {
+      concern_messages.push({ rc, text: stated });
+    }
     if (
       args.event === "session_start" &&
       rc === EXIT_ALLOW &&
@@ -1021,7 +1062,30 @@ export function main(argv?: string[]): number {
   if (context_blocks.length > 0 && final_rc === EXIT_ALLOW) {
     process.stdout.write(context_blocks.join("\n\n") + "\n");
   }
-  return final_rc;
+
+  // P0.1 host-semantics translation. The internal ladder (0/1/2) is written to
+  // the feedback dir verbatim above — that record is unchanged. What leaves the
+  // process is now the HOST's native contract, because the two languages
+  // disagree: on Claude Code exit 1 does not block and exit 2 does, which
+  // inverted every verdict (see host_semantics.ts for the documented mapping).
+  // Unverified platforms keep the legacy pass-through byte-for-byte.
+  const decidingReasons = concern_messages
+    .filter((m) => m.rc === final_rc)
+    .map((m) => m.text);
+  const emission = emitFor(
+    args.platform,
+    args.event,
+    _severity_for(final_rc) as Severity,
+    decidingReasons,
+    final_rc,
+  );
+  if (emission.stdout) {
+    process.stdout.write(emission.stdout);
+  }
+  if (emission.stderr) {
+    process.stderr.write(emission.stderr);
+  }
+  return emission.exit;
 }
 
 function _isDir(p: string): boolean {
