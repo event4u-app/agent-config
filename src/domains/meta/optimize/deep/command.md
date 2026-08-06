@@ -200,6 +200,19 @@ description's changelog section, not a comment (`no-pr-progress-comments`).
 - Council artifacts under `agents/runtime/council/` (local-only, auto-pruned).
 - A one-paragraph verdict per refinement loop: what changed, what converged.
 
+## Removal is one of the outputs
+
+An optimization pass that only ever adds is not an optimization pass. Every
+refinement loop asks the removal question as deliberately as the addition one:
+**is there an artifact here that should stop existing?**
+
+The disposition and the six simplify signals are specified once, in
+[`decision-review` § Removal is a disposition](../../skills/decision-review/SKILL.md);
+this command applies them rather than restating them. The fork that matters
+here: a rule the agent consistently fails to follow gets **structural
+enforcement or deletion**, never a louder restatement — and non-adherence is the
+trigger, not low frequency.
+
 ## Gotchas
 
 - Merge/deploy is where autonomy ends — Step 6 loop pushes go to the

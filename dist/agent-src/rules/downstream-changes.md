@@ -47,6 +47,32 @@ After editing any file, search for **all** of these:
 | **Routes** | Search `routes/` for controller references | Update after controller rename/move |
 | **Documentation** | Search `agents/`, `docs/`, `README`, examples for references | Update the doc that **describes** the changed surface — see Doc-Impact below |
 
+## Defect-pattern search — one instance is a sample, not the population
+
+```
+A DEFECT FOUND IN ONE PLACE IS PRESUMED TO RECUR UNTIL SEARCHED.
+NAME THE EXACT WRONG CONSTRUCT. SEARCH THE TREE. REPORT THE COUNT AND THE FILES.
+"I FIXED IT" WITHOUT A COUNT IS A FIX OF ONE INSTANCE, NOT OF THE DEFECT.
+```
+
+After fixing a defect, before claiming the fix is complete: write down the
+**exact wrong construct** — the literal pattern, not a description of it — grep
+the tree for it, and report **how many sites matched and which**. Zero is a real
+answer and is worth reporting; it is the difference between "this was unique"
+and "I did not look".
+
+The own-orphan sweep above greps identifiers your diff *stopped referencing*.
+This greps for the **defect itself**, which nothing else does — the two run over
+different sets and neither substitutes for the other.
+
+Emit the finding as the sibling-search mandated line
+([`mandated-lines`](../contexts/execution/mandated-lines.md) § 5), which is
+where its shape and the reason it carries a count are specified.
+
+**When NOT to fire:** the defect is in code the diff created this turn (there is
+no population to search), or the construct is one the language makes impossible
+to express twice.
+
 ## Doc-Impact — docs follow code (same change)
 
 ```

@@ -45,6 +45,31 @@ NO BLIND TRIAL-AND-ERROR. MAX 2 RETRIES PER APPROACH.
 - Do NOT modify code you do not fully understand — read it, trace the flow, then change it.
 - Multiple valid frameworks/patterns coexist (Tailwind + Flux, multiple form libs, competing state stores) → do NOT pick one silently — ask. See [`no blind implementation`](../docs/guidelines/agent-infra/agent-interaction-and-decision-quality.md#2-no-blind-implementation).
 
+## The intent line, before a behaviour-changing edit
+
+Before an edit that changes behaviour, emit the **intent line**: what the code
+does · what the failing check expects · what the specification says. When the
+three disagree, the disagreement is the finding and the edit does not proceed.
+Shape, the other four mandated lines, and the pre-send sweep:
+[`mandated-lines`](../contexts/execution/mandated-lines.md).
+
+## Where the answer lives — and saying so when it lives nowhere
+
+Route by **where the answer actually is**: the code, a config, a live probe, a
+doc, the user. When the answer exists only in your own inference — nothing to
+open, nothing to run, nobody to ask — **say that**, in the report, in one clause.
+
+```
+AN INFERENCE DRESSED IN PROCESS IS INDISTINGUISHABLE FROM A LOOKUP.
+NAME THE DETOUR. A SILENT DETOUR READS AS A SKIPPED STEP.
+```
+
+This rule and its neighbours say *be rigorous* often enough that the costume
+version — narrating a thorough-sounding procedure over a guess — is a live risk
+here specifically. The cost of naming it is one clause; the cost of not naming
+it is that a reader cannot tell a verified fact from a confident one, which is
+the property the whole evidence discipline exists to protect.
+
 ## Mechanics — workflow, minimum read set, verify-with-real-tools, no blind retries
 
 The five-step Understand → Analyze → Plan → Implement → Verify workflow, the minimum read set (symbol, callers, tests, abstractions, data), the memory-consult step, the verification matrix, the output-reduction patterns, the no-blind-retries protocol, and the "open files are context, not intent" clause all live in [`contexts/communication/rules-auto/think-before-action-mechanics.md`](../contexts/communication/rules-auto/think-before-action-mechanics.md). The rule above is the obligation surface; the mechanics file is the lookup material.

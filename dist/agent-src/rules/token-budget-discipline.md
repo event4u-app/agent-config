@@ -28,7 +28,7 @@ TO THE FULL FRUGALITY CANON (telegraph-speak, thin-projector).
 |---|---|---|---|---|
 | `lean` | No explicit key = lean | Full condensation | May be trimmed | < 500 tokens |
 | `standard` | — | Balanced condensation | Not trimmed if priority ≥ 60 | 500–2000 tokens |
-| `rich` | Must be declared + justified | **Exempt** | **Never trimmed** | 2000–5000 tokens |
+| `rich` | Must be declared + justified | **Exempt** | **Never trimmed** | 2000–3500 tokens |
 
 Read `tokens.rich_skills` from `.agent-settings.yml` (default `on`) to determine
 whether rich skills may load in full. If `off`, treat them as
@@ -82,7 +82,7 @@ THE BUDGET LINE IS AN INPUT TO THE DECISION, NEVER THE DECISION ITSELF.
 The 15 % rich-skill cap, the lean/standard/rich size targets, and every
 telegraph-speak / thin-projector trim point are cost controls, not
 capability ceilings. When a proposed change is blocked *purely* because
-it would cross one of these lines — a skill needs more than 5000 tokens
+it would cross one of these lines — a skill needs more than 3500 tokens
 to stay useful, a rule's condensed form loses a worked example the
 frugality canon would otherwise trim — do not silently reject it.
 Surface the trade-off instead: the estimated token delta, and the
@@ -107,10 +107,53 @@ These skills are approved `rich` by this roadmap's council:
 | `accessibility-auditor` | WCAG criteria are non-negotiable detail; every criterion has a testable condition + failure mode; compression loses the test procedures |
 | `design-system-capture` (Phase 6) | Writes + maintains DESIGN.md + PRODUCT.md; needs full templates + worked examples to generate useful artifacts |
 
+## Rich artifacts lead with a non-negotiable band
+
+```
+A RICH-CLASS ARTIFACT OPENS WITH THE SECTION THAT OUTRANKS THE REST OF ITS
+OWN DOCUMENT, THEN THE REASONING LAYER.
+A LONG REFERENCE READ PARTIALLY MUST LOSE THE REASONING, NEVER THE OBLIGATION.
+```
+
+The `rich` exemption buys length, and length buys the risk that a reader stops
+early. Ordering is the mitigation available at authoring time: put the
+load-bearing fraction first, so a partial read loses the part that was
+explanation rather than the part that was binding.
+
+This is a **precedence claim inside one document**, not a claim over other
+artifacts — a rich skill's leading band outranks that skill's own later
+sections and nothing else. Cross-artifact precedence is the authority index's
+job.
+
+It mitigates partial reading. It does **not** answer whether the artifact should
+be shorter — that is the ceiling, gated below, and the two controls are
+independent: an artifact can sit comfortably under the ceiling and still bury
+its obligation on line 300.
+
+## The size band is measured, and only its ceiling is gated
+
+The `rich` band is **2,000–3,500 tokens** ([ADR-217](../docs/decisions/ADR-217-rich-class-band-measured-and-enforced.md)).
+It was 2,000–5,000 and enforced by nothing until that record: measured with the
+exact BPE tokenizer, the largest rich artifact in the tree is 3,331 tokens, so
+the old ceiling described no artifact that existed. An unused permission costs
+nothing until someone uses it.
+
+`lint_token_budget_discipline.ts` gates the **ceiling** and publishes every rich
+artifact's size on the green path. It does **not** gate the floor, and that is a
+finding rather than an omission: running the check once surfaced a 1,931-token
+skill legitimately holding the class, because `rich` buys exemption from
+condensation — a claim about what compression would *lose*, not about file size.
+The published study supplies a degradation threshold, which is a ceiling.
+Nothing measures a minimum.
+
+Measurement is exact where `js-tiktoken` resolves and the character proxy where
+it does not; the gate says which, and a proxy reading within its own error
+margin of the ceiling is reported **unresolved** rather than classified.
+
 ## Governed by
 
 - `tokens.rich_skills` setting in `.agent-settings.yml` (consumer override)
-- `lint_token_budget_discipline.ts` (cap + justification CI check)
+- `lint_token_budget_discipline.ts` (cap + justification + ceiling CI check)
 - the telegraph-speak rule, where enabled (amended to except rich-tagged skills)
 
 ## See also

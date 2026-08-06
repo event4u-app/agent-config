@@ -102,9 +102,10 @@ sanctioned solicitation.
 One row per finding:
 
 ```markdown
-| ID | Severity | Finding (one sentence) | Command executed | Captured output (excerpt) | Competitor baseline (if any) |
-|----|----------|------------------------|------------------|---------------------------|------------------------------|
-| F1 | S0       | …                      | `…`              | `…`                       | …                            |
+| ID | Severity | Confidence | Finding (one sentence) | Command executed | Captured output (excerpt) | Competitor baseline (if any) |
+|----|----------|------------|------------------------|------------------|---------------------------|------------------------------|
+| F1 | S0       | confirmed  | …                      | `…`              | `…`                       | …                            |
+| F2 | S1       | unverified | …                      | `…`              | `…`                       | …                            |
 ```
 
 Severity scale:
@@ -128,6 +129,86 @@ behind it is recorded as `UNSWEPT` — unswept is not passed. An `UNSWEPT`
 first-priority surface voids any "nothing found" conclusion for that
 surface. "Checked X" without its command is discarded exactly like a
 finding without one (§ 2.4 applied to coverage, not only to findings).
+
+### Severity is carried, never used to decide what to report
+
+```
+EVERY FINDING CARRIES A SEVERITY. FILTERING HAPPENS IN A SEPARATE PASS,
+AFTER THE LEDGER IS COMPLETE — NEVER INSIDE THE REVIEW.
+NEVER INSTRUCT A REVIEWER TO PRE-FILTER BY SEVERITY.
+```
+
+The failure this forbids is specific and it is not laziness. An instruction to
+"only report high and above" is followed **literally**: the reviewer
+investigates fully, finds the defects, and then declines to report the ones
+below the bar. Precision rises, recall appears to collapse, and the regression
+reads as a capability problem in the reviewer rather than as an instruction
+defect in the prompt. The findings were found. They were withheld.
+
+So the two operations are separated: the review produces every finding it has,
+each tagged S0–S3; whoever consumes the ledger filters it. A consumer that wants
+only S0 and S1 slices the ledger — it does not ask for a shorter review.
+
+**Swept 2026-08-06, and the first sweep was wrong.** A keyword grep over 14
+judge and review skills plus 12 review and judge commands returned zero, and a
+full read of the same surface returned **six**. The defect does not announce
+itself with the words a grep looks for — the live instances read *"surface only
+the trade-offs the user needs to decide"*, *"top concerns"*, *"not every minor
+gap"*, and *"prioritized fix recommendations"*. All six are fixed; the worst sat
+in `adversarial-review`, which `self_review_gate.ts` loads as the system prompt
+for this package's own CI self-review, so it was suppressing findings on every
+pull request.
+
+Two lessons, and the second is the reusable one: a phrase like *"top concerns"*
+does the defect's work without any of its vocabulary, and **a keyword grep is
+evidence of absence only for the keywords.** Distinguish the three shapes when
+sweeping — a genuine pre-filter tells the reviewer not to REPORT what it found;
+a scope limit tells it what to LOOK at; an ordering instruction tells it what to
+put first. Only the first is the defect, and mistaking a scope limit for one
+would strip the lane-keeping that makes a multi-judge panel work.
+
+### Confidence is a separate field, and an unconfirmed finding is preserved
+
+```
+AN UNCONFIRMED HIGH-SEVERITY FINDING IS TAGGED, NEVER DROPPED.
+CONFIDENCE IS NOT SEVERITY. A CONFIDENT NOTE AND AN UNCERTAIN BREACH
+ARE DIFFERENT FACTS AND MUST NOT COLLAPSE INTO ONE COLUMN.
+```
+
+Severity says *how bad if real*. Confidence says *how sure it is real*. Folding
+them produces the worst available default — a possible S0 downgraded to S2
+because the reviewer was unsure, which loses exactly the finding a human most
+needs to see.
+
+The ledger row therefore carries `Confidence` beside `Severity`
+(`confirmed | plausible | unverified`), and an S0 or S1 the reviewer could not
+confirm ships **as S0/S1, tagged `unverified`**, with what it would take to
+settle it. Dropping it is not available: an unverified breach is a question for
+the human, and the reviewer's uncertainty is not authority to answer it.
+
+### Rubric shape — scope, do-not-flag, and what a gate already owns
+
+**Status: adopted for new and touched rubrics, not yet true of the estate.**
+Measured 2026-08-06 across the seven judge skills: zero carry a per-check scope
+column, one carries partial do-not-flag prose, none carries the gate-owned
+exclusion. Stating it as *every rubric carries* would be a mandate with no
+compliant instance — the shape this contract's own § 2 forbids. So it binds a
+rubric the moment it is authored or edited, and the retrofit is opportunistic,
+for the same reason the primary-bias retrofit is: a batch edit across the judge
+cluster lands without attention and trips the byte-stability gate.
+
+A per-check rubric carries three things:
+
+1. **A scope column** — what this check looks at. A check with no stated scope
+   expands to fill the reviewer's imagination.
+2. **A do-not-flag list** — the near-misses this check must stay silent on,
+   named. This is the false-positive-fatigue control the question surface
+   already fights for, applied to the review surface: a reviewer that flags
+   everything is filtered out entirely, which costs more recall than any
+   pre-filter would have.
+3. **A closing instruction not to report what a deterministic gate already
+   owns.** If a lint fails the build on it, a review finding about it is noise
+   that competes for attention with the findings nothing else catches.
 
 ## § 4 — Solicitation template (ready to paste)
 
@@ -158,9 +239,12 @@ Rules:
    numbers next to theirs.
 4. OUTPUT FORMAT: a findings ledger only — one row per finding with
    ID, severity (S0 reject-grade / S1 adoption-blocking / S2
-   credibility-eroding / S3 cosmetic), the finding in one sentence, the
-   command you executed, the captured output, and the competitor baseline
-   where relevant.
+   credibility-eroding / S3 cosmetic), CONFIDENCE (confirmed / plausible /
+   unverified, and it is NOT severity — an S0 you could not confirm stays an
+   S0 tagged `unverified`, never a downgrade), the finding in one sentence,
+   the command you executed, the captured output, and the competitor baseline
+   where relevant. Report every finding you have; do not filter by severity —
+   whoever reads the ledger does that.
 5. DO NOT produce a numeric score of any kind. If you have no
    reject-grade findings, state exactly what you measured and failed to
    break. Praise is not output.

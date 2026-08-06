@@ -159,6 +159,37 @@ Ask the user:
 6. Create PR with title: `improve(agent): {short description}`
 7. Use the agent-improvement PR template if it exists
 
+## Classify the missing component BEFORE choosing the artifact
+
+```
+ON A FAILURE, NAME WHICH COMPONENT WAS ABSENT. THE CLASS PICKS THE ARTIFACT.
+THE DEFAULT ANSWER TODAY IS "ANOTHER RULE". IT IS USUALLY THE WRONG ONE.
+```
+
+A failure means something was missing. Which something decides what to build,
+and the pipeline's own bias is to answer "a rule" regardless — which is how a
+tree accumulates prose for problems prose cannot solve.
+
+| Absent component | What it becomes |
+|---|---|
+| **Instruction** — nothing said to do it | a rule or a skill section |
+| **Source of truth** — the fact was not written down anywhere | a context or contract |
+| **Tool** — the step was manual and got skipped | a script |
+| **Validator** — nothing checked the result | a gate |
+| **Permission rule** — authority was ambiguous | an authority-band edit |
+| **Sandbox signal** — the environment did not say what it allowed | a capability probe |
+| **Evaluation** — nothing would have caught the regression | a fixture |
+| **Recovery path** — the failure had no exit | a runbook step |
+
+Run this before the promotion gate, not after: a validator gap that reaches the
+gate as a proposed rule is judged on whether the *rule* is worth adding, which
+is the wrong question asked well.
+
+**The escalation threshold applies here too.** A third recurrence of the same
+violation class converts an observation into a deterministic gate — and a review
+finding never silently becomes a hard gate. Both halves, specified in
+[`decision-review` § Removal is a disposition](../decision-review/SKILL.md).
+
 ## Output format
 
 1. Learning summary with promotion gate results

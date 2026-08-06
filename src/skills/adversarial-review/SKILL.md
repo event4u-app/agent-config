@@ -37,7 +37,7 @@ sums ("attack the winner, using the losing options' strongest criteria")
 1. **Inspect the artifact** — Read the plan, diff, or draft you are about to critique; note its scope, assumptions, and the explicit asks before attacking.
 2. **Attack** — Run Step 1 below as the grumpy senior engineer.
 3. **Defend** — Run Step 2 as the balanced engineer; classify each criticism as must-fix / defer / reject.
-4. **Revise** — Run Step 3 to fold valid fixes back in and surface only the trade-offs the user needs to decide.
+4. **Revise** — Run Step 3 to fold valid fixes back in, then report every criticism with its disposition. Deciding which trade-offs matter is the user's pass, not this step's.
 
 ### Step 1: Attack (Grumpy Senior Engineer)
 
@@ -64,8 +64,19 @@ Counter the criticism fairly:
 - Move deferred concerns to "Open Questions" or "Known Limitations".
 - Present the improved version to the user.
 
-**Do this internally** — the user sees the improved result, not the raw debate.
-Only surface trade-offs or concerns that need the user's input.
+**Debate internally, report completely.** The user sees the improved result
+rather than the blow-by-blow — but every criticism raised reaches the report
+with its disposition (must-fix / deferred / rejected, each with one line of
+reason). Do not decide on the user's behalf which concerns were worth their
+attention.
+
+This clause used to read *"surface only the trade-offs that need the user's
+input"*, and that is the pre-filter defect: an instruction to report a subset is
+followed literally — the review finds the defects, then withholds the ones it
+judged unimportant, and the loss is invisible because the withheld set leaves no
+trace. It matters here more than anywhere: `self_review_gate.ts` loads this file
+as the system prompt for the package's own CI self-review, so a suppression
+clause here suppresses findings on every pull request.
 
 ## Context-specific attack questions
 
@@ -148,7 +159,10 @@ triggers it. See [`rdp-gate`](../../contexts/execution/rdp-gate.md) (L12).
 ## Output format
 
 1. Improved plan/code incorporating adversarial findings
-2. Risk summary — top concerns discovered and how they were addressed
+2. **Every criticism raised**, each with severity and disposition (must-fix /
+   deferred / rejected) and one line of reason. Not "top concerns" — a summary
+   that keeps only the highlights is the pre-filter defect wearing an
+   editor's hat.
 3. Remaining open risks (if any) with severity rating
 
 ## Gotcha

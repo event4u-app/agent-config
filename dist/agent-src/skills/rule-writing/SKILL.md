@@ -203,6 +203,39 @@ See § 3b above for the load-bearing distinction between `load_context:`
 (logical, rewritten), `triggers[].path_prefix:` (literal, verbatim),
 and body links (relative `../../docs/...`, rewriter handles depth).
 
+## Required: name the primary bias this rule overrides
+
+```
+EVERY RULE STATES, IN ONE SENTENCE, THE MODEL'S WRONG DEFAULT IT EXISTS TO
+OVERRIDE. NOT THE HISTORY. NOT THE RATIONALE. THE TENDENCY.
+A RULE THAT CANNOT NAME ONE IS A RULE WITH NO OBSERVED FAILURE BEHIND IT.
+```
+
+One sentence, near the top, in the shape *"left alone, the model
+&lt;does the wrong thing&gt;"*:
+
+- ✅ "Left alone, the model treats a question as an instruction and starts
+  building."
+- ✅ "Left alone, the model reports the happy path it just made pass and calls
+  the change finished."
+- ❌ "This rule exists because a session in June went badly." — backstory.
+- ❌ "Correctness matters." — a value, not a tendency.
+- ❌ "Agents sometimes make mistakes." — true of everything, discriminates
+  nothing.
+
+**Why this field and not a longer rationale.** It is the discriminator the
+mechanism-must-match-an-observed-failure-mode discipline wants at *authoring*
+time: a rule whose bias sentence is a plausible generality is a rule aimed at
+nothing in particular, and that is visible in one line where it is invisible in
+three paragraphs. The field is also the input to the removal question later —
+`decision-review` asks whether the agent still exhibits the named tendency, and
+that question cannot be asked of a rule that never named one.
+
+**Retrofit is opportunistic, never a sweep.** Add the sentence when you touch a
+rule for another reason. A batch edit across the rule set trips the
+kernel-prefix byte-stability gate, and that gate is right to fire — the kernel
+prefix is pinned deliberately.
+
 ## Output format
 
 1. Complete rule file at `src/rules/{name}.md`

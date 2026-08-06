@@ -203,7 +203,7 @@ Before scoring the 5 Killers, verify structure:
 ## Output format
 
 1. Review report with pass/fail per checklist item
-2. Prioritized fix recommendations
+2. Prioritized fix recommendations — ordered over the **complete** per-killer table above, never a subset of it. Priority is a sort, not a filter.
 
 ## Gotcha
 

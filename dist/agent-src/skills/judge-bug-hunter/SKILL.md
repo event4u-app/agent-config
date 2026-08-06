@@ -121,10 +121,23 @@ Issues (if revise/reject):
       Trigger: <concrete input/condition>
       Expected: <what should happen>
   🟡  ...
+
+Rejected candidates (if the devil's-advocate pass killed any):
+  🔴→drop  path/to/file.ext:LINE — <the finding> · refuted by: <guard clause
+           upstream | framework default | unreachable input | …>
 ```
 
 Severity: 🔴 crash or incorrect result / 🟡 edge case unhandled but
 graceful / 🟢 defensive-coding suggestion.
+
+**A killed 🔴 is demoted, never deleted.** This judge runs a refutation pass on
+every 🔴 and used to leave no trace of what it killed — the one judge with a
+refutation step and no demotion bucket, where `code-review`, `security-audit`,
+`bug-analyzer`, and the adversarial council all pair theirs with one. The
+asymmetry matters because refutation is a judgement: a reviewer who was wrong to
+refute leaves the reader no way to notice. Confidence is what the row carries;
+severity is what it keeps — a 🔴 refuted on a guess is still a 🔴 somebody should
+look at.
 
 Required fields (ordered):
 
@@ -133,6 +146,9 @@ Required fields (ordered):
 3. **Verdict** — `apply`, `revise`, or `reject`
 4. **Issues** — every finding cites file:line and concrete trigger;
    omit only when verdict is `apply`
+5. **Rejected candidates** — every finding the refutation pass killed, with what
+   refuted it. Omit the section only when the pass killed nothing; never omit it
+   because the kills seemed obvious.
 
 If a finding needs runtime confirmation, note it as a follow-up for
 the implementer with the concrete probe — backend: `curl` or
