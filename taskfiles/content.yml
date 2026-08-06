@@ -197,6 +197,11 @@ tasks:
     desc: "Offline supply-chain gate for reach install prescriptions — pinning, moving-target sources, intake-record coverage + pin traceability, plus the unpinned-install / pipe-to-shell grep gate over src/config/reach-*.yml and the reach sections of docs/ (road-to-internet-reach P3.3 + P3.5)"
     cmd: ./scripts-run src/scripts/validate_reach_prescriptions {{.QUIET_FLAG}}
 
+  check-corpus-staleness:
+    silent: true
+    desc: "Offline staleness + CSV-integrity gate for the grounding corpora — a declared refresh_cadence past its bound, or a declared CSV that is missing / header-only / short a declared column (schema_validator never opens a CSV)"
+    cmd: ./scripts-run src/scripts/check_corpus_staleness {{.QUIET_FLAG}}
+
   check-reach-staleness:
     silent: true
     desc: "Offline staleness gate for the reach channel registry — last_verified older than 90 days, a deprecated channel with no replacement, or a channel past its removal_after date and still present (road-to-internet-reach P7.3)"

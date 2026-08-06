@@ -99,6 +99,11 @@ describe('lint_agents_layout — ported pytest suite (helpers)', () => {
                 '.gitkeep',
                 'knowledge',
                 'memory',
+                // Consumer-scoped because the drafting skill runs consumer-side:
+                // learning-to-rule-or-skill writes agents/proposals/<id>.md there
+                // and upstream-contribute opens the PR from it. Without the entry
+                // a consumer proposals/ warns as a legacy artefact.
+                'proposals',
                 'roadmaps',
                 'tmp',
                 'tmp.old',

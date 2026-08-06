@@ -63,6 +63,7 @@ const ALLOWED_SOURCE_DIRS: ReadonlySet<string> = new Set([
     'notes',        // legacy; new files go to evidence/notes/
     'reports',      // legacy; new files go to evidence/reports/ (see agents-layout.md)
     'overrides',    // * consumer
+    'proposals',    // * consumer — curated self-improvement proposals, tracked
     'recruit-sessions',
     'reference',
     'roadmap-assets',
@@ -88,6 +89,7 @@ const CONSUMER_EXPECTED_ENTRIES: ReadonlySet<string> = new Set([
     // Optional but legitimate consumer entries (will not trigger warnings)
     'knowledge',
     'memory',
+    'proposals',
     'roadmaps',
     'tmp',
     'tmp.old',

@@ -148,6 +148,35 @@ function _check_concerns(manifest: YamlObject, errors: string[]): Set<string> {
     if (!_isFile(path.join(REPO_ROOT, script))) {
       errors.push(`concerns.${name}: script not found at '${script}'`);
     }
+    // `tools:` — the optional per-concern tool filter the dispatcher applies
+    // in-process (`_concern_matches_tool`). Validated because the failure mode
+    // is silent: the dispatcher fails toward RUNNING the concern on anything
+    // malformed, so a typo (`tool:`, a bare string, `[]`) would look like a
+    // working filter while filtering nothing. An unvalidated key is worse than
+    // no key.
+    if ("tools" in spec) {
+      const tools = spec["tools"];
+      if (!Array.isArray(tools)) {
+        errors.push(
+          `concerns.${name}: 'tools' must be a list of tool names ` +
+            `(got ${pyTypeName(tools)}) — omit the key for "every event"`,
+        );
+      } else if (tools.length === 0) {
+        errors.push(
+          `concerns.${name}: 'tools' is an empty list — omit the key, or use ` +
+            `["*"], rather than a filter that reads as "no tools"`,
+        );
+      } else {
+        for (const t of tools) {
+          if (typeof t !== "string" || t.trim() === "") {
+            errors.push(
+              `concerns.${name}: 'tools' entries must be non-empty strings, ` +
+                `got ${pyTypeName(t)}`,
+            );
+          }
+        }
+      }
+    }
     names.add(name);
   }
   return names;

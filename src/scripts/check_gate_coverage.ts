@@ -363,12 +363,16 @@ export function main(argv: readonly string[]): number {
     );
   }
   const hardening = report_hardening_ratchet();
+  const selfTest = report_self_test_ratchet();
   if (failed.length > 0) {
     process.stdout.write(`❌  ${String(failed.length)} gate(s) failed the coverage floor.\n`);
     return 1;
   }
   if (hardening !== 0) {
     return hardening;
+  }
+  if (selfTest !== 0) {
+    return selfTest;
   }
   process.stdout.write('✅  every enforced gate cleared its coverage floor.\n');
   return 0;
@@ -394,6 +398,69 @@ export function report_hardening_ratchet(): number {
   const verdict = checkRatchet({
     gate: 'gate-hardening:unhardened-scan-scope',
     actual: unhardened.length,
+    repoRoot: REPO_ROOT,
+  });
+  process.stdout.write(`  ${verdict.ok ? '✅' : '❌'} ${verdict.message}\n`);
+  return verdict.ok ? 0 : 1;
+}
+
+/**
+ * Registered gates that carry no `--self-test` and no exemption — the count
+ * that must not RISE.
+ *
+ * `_lib/gate_self_test.ts` proves a gate DISCRIMINATES: it drives the real
+ * binary through cases that must reject and cases that must accept, with a
+ * `minRejectCases` floor so an all-accepting suite cannot satisfy it. A gate
+ * that emits an enforced `scanned:` count has proven it read something; only a
+ * self-test proves the reading changes the verdict.
+ *
+ * ## Why this is a NON-ADOPTER count and not an adoption column
+ *
+ * The roadmap item asked for adoption as a column in `gate-coverage.yml`,
+ * ratcheted upward. That is the exact shape `report_hardening_ratchet` above
+ * rejects in this same file — a coverage-percentage ratchet "tracks how far the
+ * fix has spread and can never regress, so it grades the solution instead of
+ * the problem". Inverting it fixes that: the number below can regress (a new
+ * registered gate written without a self-test raises it), and the target is 0.
+ * That is also the shape the sibling adoption ratchet already uses —
+ * `check_gate_completeness`'s ledger baseline is a shrink-only count of
+ * non-adopters, not a rising percentage.
+ *
+ * Population is the MANIFEST, not every script under `src/scripts`: a self-test
+ * is a claim about a gate CI runs against a floor. Padding the manifest to move
+ * this number would add a floor per row, which is the opposite of gaming.
+ *
+ * Exemption marker: `// self-test-exempt: <reason>` with a non-empty reason. A
+ * bare marker does not count — same discipline as `// no-index:` and
+ * `// ledger-exempt:`.
+ */
+export function list_self_test_non_adopters(
+  dir = path.join(REPO_ROOT, 'src/scripts'),
+  ids: ReadonlySet<string> = enforced_manifest_ids(),
+): string[] {
+  const out: string[] = [];
+  for (const id of [...ids].sort()) {
+    let src: string;
+    try {
+      src = fs.readFileSync(path.join(dir, `${id}.ts`), 'utf8');
+    } catch {
+      // A registered id with no readable script cannot prove discrimination.
+      out.push(id);
+      continue;
+    }
+    const adopts = /_lib\/gate_self_test\.js/.test(src);
+    const exempt = /\/\/\s*self-test-exempt:\s*\S/.test(src);
+    if (!adopts && !exempt) out.push(id);
+  }
+  return out;
+}
+
+/** Ratchet wrapper for {@link list_self_test_non_adopters}. */
+export function report_self_test_ratchet(): number {
+  const missing = list_self_test_non_adopters();
+  const verdict = checkRatchet({
+    gate: 'gate-self-test:registered-non-adopters',
+    actual: missing.length,
     repoRoot: REPO_ROOT,
   });
   process.stdout.write(`  ${verdict.ok ? '✅' : '❌'} ${verdict.message}\n`);

@@ -163,6 +163,25 @@ concerns:
     args: []
     fail_closed: false
     severity: advisory
+    # Per-concern tool filter — the dispatcher skips this concern in-process on
+    # any other tool. See `_concern_matches_tool` in hooks/dispatch_hook.ts for
+    # the semantics (absent = every event, "*" = the same, non-tool events are
+    # never filtered) and for why the filter is NOT a host `matcher`.
+    #
+    # This set is not a guess: the hook's entire branch surface is
+    # `name === 'Grep' || name === 'Glob'` and `name === 'Read'`
+    # (code_graph_nudge_hook.ts), and a test pins the manifest list against it.
+    #
+    # Deliberately NOT declared on the three blocking PreToolUse guards
+    # (block-no-verify, block-kernel-rule-writes, block-config-weakening): their
+    # tool sets span host-specific naming variants (`Bash` / `BashTool` /
+    # `launch-process` / `launch_process`, `str-replace-editor` /
+    # `str_replace_editor` / `save-file` / …), so a list that misses one variant
+    # silently disables a security guard on that host. The concerns already
+    # re-read `tool_name` and return early; paying one dispatch to keep a guard
+    # correct is the right trade, and the cheap filter is reserved for advisory
+    # concerns whose set is provable from their own source.
+    tools: [Grep, Glob, Read]
   # road-to-reachable-code-memory Phase 4 — session_end learning-sidecar
   # aggregation. Joins the EXISTING session_end concern set (no new platform
   # wiring). Aggregates agents/memory/intake/*.jsonl through the learning

@@ -7,18 +7,18 @@ Derived from rule frontmatter `routes_to:` + "Body migrated to" prose.
 No skill frontmatter carries this (council 2026-07-12: routed_from_rules
 REJECTED — linkage stays rule-side and derivable).
 
-83 routing targets · 91 backlinks
+92 routing targets · 101 backlinks
 
 ## Orphan stubs
 
 A stub pointing at a deleted target is a broken promise. `--check` exits 1
 iff this section is non-empty; report mode always exits 0.
 
-None — all 83 resolvable targets resolve.
+None — all 92 resolvable targets resolve.
 
 ## Fan-out (info)
 
-Backlink targets per rule. 56 routing rules · max fan-out 8.
+Backlink targets per rule. 63 routing rules · max fan-out 8.
 Rules with >2 targets are listed as info, NOT failures.
 
 | Rule | Targets |
@@ -30,6 +30,7 @@ Rules with >2 targets are listed as info, NOT failures.
 | `legal-safety-floor` | 4 |
 | `senior-engineering-discipline` | 4 |
 | `broken-access-control` | 3 |
+| `code-provenance` | 3 |
 | `ui-audit-gate` | 3 |
 
 ## contexts/execution/autonomy-mechanics.md
@@ -80,6 +81,10 @@ Rules with >2 targets are listed as info, NOT failures.
 
 - `context-hygiene` (frontmatter)
 
+## guideline:agent-infra/cross-source-consistency-mechanics
+
+- `cross-source-consistency` (frontmatter)
+
 ## guideline:agent-infra/domain-adoption-gates
 
 - `domain-adoption-policy` (frontmatter)
@@ -118,7 +123,7 @@ Rules with >2 targets are listed as info, NOT failures.
 
 ## guideline:agent-infra/untrusted-input-spotlighting
 
-- `untrusted-input-defense` (prose)
+- `untrusted-input-defense` (frontmatter)
 
 ## guideline:augment-portability-patterns
 
@@ -126,7 +131,7 @@ Rules with >2 targets are listed as info, NOT failures.
 
 ## guideline:code-clarity
 
-- `code-comment-discipline` (prose)
+- `code-comment-discipline` (frontmatter)
 
 ## guideline:design-fidelity-mechanics
 
@@ -135,6 +140,10 @@ Rules with >2 targets are listed as info, NOT failures.
 ## guideline:php/php-coding-patterns
 
 - `php-coding` (frontmatter)
+
+## skill:accessibility-auditor
+
+- `design-review-after-ui-write` (frontmatter)
 
 ## skill:agent-docs-writing
 
@@ -211,6 +220,10 @@ Rules with >2 targets are listed as info, NOT failures.
 
 - `decision-revisit-gate` (frontmatter)
 
+## skill:design-review
+
+- `design-review-after-ui-write` (frontmatter)
+
 ## skill:devcontainer
 
 - `devcontainer-routing` (frontmatter)
@@ -239,6 +252,10 @@ Rules with >2 targets are listed as info, NOT failures.
 
 - `git-history-discipline` (frontmatter)
 
+## skill:history-design
+
+- `history-discipline` (frontmatter)
+
 ## skill:iconography
 
 - `ui-audit-gate` (frontmatter)
@@ -255,6 +272,18 @@ Rules with >2 targets are listed as info, NOT failures.
 ## skill:legal-intake-triage
 
 - `legal-safety-floor` (frontmatter)
+
+## skill:license-compliance-audit
+
+- `code-provenance` (frontmatter)
+
+## skill:license-compliance-borrow-check
+
+- `code-provenance` (frontmatter)
+
+## skill:license-compliance-credits
+
+- `code-provenance` (frontmatter)
 
 ## skill:lint-skills
 
@@ -315,9 +344,18 @@ Rules with >2 targets are listed as info, NOT failures.
 - `domain-safety-disclaimer` (frontmatter)
 - `finance-safety-floor` (frontmatter)
 
+## skill:schema-review
+
+- `scale-discipline` (frontmatter)
+
+## skill:screenshot-hygiene
+
+- `doc-screenshot-hygiene` (frontmatter)
+
 ## skill:secrets-management
 
 - `domain-safety-pii` (frontmatter)
+- `secret-vcs-guard` (frontmatter)
 
 ## skill:skill-improvement-pipeline
 
