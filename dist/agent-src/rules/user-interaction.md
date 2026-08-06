@@ -82,7 +82,7 @@ that escapes the format. Three further shapes the same audit caught:
   answer `1,3,4`.
 
 **No gate ships for this.** `check_reply_consistency` scans authored markdown,
-never a chat draft, and nothing observes a reply before it is sent. This section
+never a chat draft, and no gate sees a reply before it is sent. This section
 is prose against a failure that prose already failed to prevent once — which is
 why the next step is measurement, not a stronger adjective:
 `agent-config conformance:behavior` deliberately does **not** score ask-shape, so
