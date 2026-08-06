@@ -70,8 +70,9 @@ escapes the format. Three further caught shapes: a contentless filler option; an
 inline `(Empfohlen)` tag **beside** the recommendation line (the dual source
 Iron Law 1 forbids); an option set answerable only as `1,3,4`.
 
-**No gate ships for this** — `check_reply_consistency` scans authored markdown,
-never a chat draft. `conformance:behavior` deliberately does not score ask-shape,
+**No gate ships for this.** `check_reply_consistency` can read a draft on stdin,
+but it inspects *numbered-option blocks* — and every measured failure had no
+block by construction, so it scans exactly the surface that did not fail. `conformance:behavior` deliberately does not score ask-shape,
 so an unmoved rate is a finding rather than a silence.
 
 ## Mechanics — rationale, failure modes, format details, examples

@@ -47,7 +47,14 @@ import { readHookStdin } from "./hook_stdin.js";
 import { STATE_FILE, type GitOp } from "../git_authorization_hook.js";
 
 const EXIT_ALLOW = 0;
-const EXIT_BLOCK = 2;
+// MUST equal dispatch_hook.EXIT_BLOCK. The dispatcher's internal ladder is
+// 0 allow / 1 block / 2 warn — NOT the 2-means-block shape a PreToolUse guard
+// reads naturally from Claude's own native contract. This constant was 2 when
+// this gate first shipped, so the dispatcher reduced every refusal to a WARN
+// and the gate emitted advisory context while the operation went through.
+// Pinned against the dispatcher's export by
+// tests/hooks/concern_block_exit_parity.test.ts.
+const EXIT_BLOCK = 1;
 
 type JsonValue = string | number | boolean | null | JsonValue[] | { [k: string]: JsonValue };
 type JsonObject = { [k: string]: JsonValue };
@@ -76,15 +83,30 @@ export const WARN_OPS: ReadonlySet<GitOp> = new Set<GitOp>([
  * Command → operation. Order matters: the most specific pattern wins, so
  * `git push --tags` is a tag push and not a plain push.
  */
+// `git`/`gh` accept global options before the subcommand (`git -C dir push`,
+// `git --git-dir=x push`), and each of those was a silent bypass of the whole
+// gate. `G` allows any run of them.
+const G = "(?:-[A-Za-z-]+(?:=\\S+)?(?:\\s+\\S+)?\\s+)*";
+
+/**
+ * Command → operation. Order matters: the most specific pattern wins, so
+ * `git push --tags` is a tag push and not a plain push.
+ */
 const COMMAND_OPS: ReadonlyArray<{ op: GitOp; re: RegExp }> = [
-  { op: "publish", re: /\b(npm|pnpm|yarn)\s+publish\b/i },
-  { op: "release", re: /\bgh\s+release\s+create\b/i },
-  { op: "tag", re: /\bgit\s+push\b[^\n;|&]*--tags\b|\bgit\s+push\b[^\n;|&]*\brefs\/tags\//i },
-  { op: "pr-merge", re: /\bgh\s+pr\s+merge\b/i },
-  { op: "pr-create", re: /\bgh\s+pr\s+create\b/i },
-  { op: "push", re: /\bgit\s+push\b/i },
-  { op: "commit", re: /\bgit\s+commit\b/i },
-  { op: "branch", re: /\bgit\s+(checkout\s+-b|switch\s+-c)\b/i },
+  { op: "publish", re: new RegExp(`\\b(npm|pnpm|yarn)\\s+${G}publish\\b`, "i") },
+  { op: "release", re: /\bgh\s+release\s+create\b|\bgh\s+api\b[^\n]*\/releases\b/i },
+  {
+    op: "tag",
+    re: new RegExp(
+      `\\bgit\\s+${G}push\\b[^\\n;|&]*(--tags|--follow-tags|refs\\/tags\\/)`,
+      "i",
+    ),
+  },
+  { op: "pr-merge", re: /\bgh\s+pr\s+merge\b|\bgh\s+api\b[^\n]*\/pulls\/\d+\/merge\b/i },
+  { op: "pr-create", re: /\bgh\s+pr\s+create\b|\bgh\s+api\b[^\n]*-X\s+POST[^\n]*\/pulls\b/i },
+  { op: "push", re: new RegExp(`\\bgit\\s+${G}push\\b`, "i") },
+  { op: "commit", re: new RegExp(`\\bgit\\s+${G}commit\\b`, "i") },
+  { op: "branch", re: new RegExp(`\\bgit\\s+${G}(checkout\\s+-b|switch\\s+-c)\\b`, "i") },
 ];
 
 const COMMAND_TOOLS: ReadonlySet<string> = new Set([
@@ -121,21 +143,112 @@ export function extractCommand(envelope: JsonObject): string | null {
   return null;
 }
 
-/** Classify a shell command into the operation it performs, if any. */
-export function commandOp(command: string): GitOp | null {
-  for (const { op, re } of COMMAND_OPS) {
-    if (re.test(command)) {
-      return op;
-    }
+/**
+ * Split a shell command into the segments that are actually INVOKED.
+ *
+ * A substring match over the whole command string is wrong, and measurably so:
+ * the round-2 self-scan found this gate firing on two commands of the auditor's
+ * own session whose only sin was carrying `npm publish` inside a `printf`
+ * argument as test data. Blocking a command because it mentions an operation is
+ * the worst false-positive shape a refusing gate can have.
+ *
+ * So: split on shell separators, drop leading env assignments, and keep the
+ * segment only from its command word. `printf '{"cmd":"npm publish"}'` yields a
+ * segment starting at `printf` and never matches.
+ *
+ * Quoted payloads are NOT simply discarded — `sh -c "npm publish"` really does
+ * publish. Those are unwrapped and re-split, so closing the false positive does
+ * not open a bypass.
+ */
+export function invokedSegments(command: string, depth = 0): string[] {
+  if (depth > 3) {
+    return [];
   }
-  return null;
+  const out: string[] = [];
+  // Strip heredoc bodies before splitting: a line inside `<<EOF … EOF` is data
+  // being written, not a command being run, but after a newline split it looks
+  // exactly like an invocation.
+  const withoutHeredocs = command.replace(
+    /<<-?\s*(['"]?)([A-Za-z_][A-Za-z0-9_]*)\1[\s\S]*?^\s*\2\s*$/gm,
+    "<<HEREDOC",
+  );
+  for (const raw of withoutHeredocs.split(/\n|;|&&|\|\||\||&/)) {
+    let seg = raw.trim();
+    if (!seg) {
+      continue;
+    }
+    // Drop leading env assignments: `FOO=bar BAZ=1 npm publish`.
+    seg = seg.replace(/^(?:[A-Za-z_][A-Za-z0-9_]*=(?:"[^"]*"|'[^']*'|\S*)\s+)+/, "");
+    // Unwrap `sh -c '<payload>'` / `bash -c "<payload>"` and recurse.
+    const wrapped = /^(?:\S*\/)?(?:ba|z|k)?sh\s+-[a-z]*c\s+(?:"([^"]*)"|'([^']*)'|(\S+))/.exec(seg);
+    if (wrapped) {
+      out.push(...invokedSegments(wrapped[1] ?? wrapped[2] ?? wrapped[3] ?? "", depth + 1));
+      continue;
+    }
+    out.push(seg);
+  }
+  return out;
 }
 
-function _loadLedger(consumer_root: string): { authorized: Set<GitOp>; present: boolean } {
+/**
+ * Classify a shell command into the operation it performs, if any.
+ *
+ * Matches per invoked segment and only when the segment BEGINS with the tool —
+ * a mention inside an argument is not an invocation.
+ */
+export function commandOp(command: string): GitOp | null {
+  // Every segment is classified and the MOST SEVERE result wins. Returning the
+  // first match let `npm publish && git push --tags` pass its tag push
+  // unchecked once `publish` was authorized.
+  let found: GitOp | null = null;
+  for (const seg of invokedSegments(command)) {
+    if (!/^(?:\S*\/)?(git|gh|npm|pnpm|yarn)\b/.test(seg)) {
+      continue;
+    }
+    for (const { op, re } of COMMAND_OPS) {
+      if (re.test(seg)) {
+        if (BLOCK_OPS.has(op)) {
+          return op;
+        }
+        found ??= op;
+        break;
+      }
+    }
+  }
+  return found;
+}
+
+/** A ledger older than this is not "this turn" under any reading. */
+export const LEDGER_MAX_AGE_MS = 30 * 60 * 1000;
+
+/**
+ * Load the ledger, and refuse one that does not belong to THIS session and
+ * THIS turn.
+ *
+ * The header claims the gate answers "did the user authorize this THIS turn?".
+ * Before this check it answered "did anyone, in any session, ever authorize
+ * it?" — the file records `session_id` and `detected_at` and neither was read.
+ * Two concurrent worktrees share one state root, so session A typing
+ * `mach den release` authorized session B.
+ */
+function _loadLedger(
+  consumer_root: string,
+  session_id: string,
+  now: number,
+): { authorized: Set<GitOp>; present: boolean } {
   try {
     const raw = fs.readFileSync(path.join(consumer_root, STATE_FILE), "utf8");
     const decoded = JSON.parse(raw) as unknown;
     if (_isObject(decoded) && Array.isArray(decoded["authorized"])) {
+      const ledgerSession = typeof decoded["session_id"] === "string" ? decoded["session_id"] : "";
+      // A ledger from a different session is another conversation's consent.
+      if (session_id && ledgerSession && ledgerSession !== session_id) {
+        return { authorized: new Set<GitOp>(), present: false };
+      }
+      const at = Date.parse(String(decoded["detected_at"] ?? ""));
+      if (Number.isFinite(at) && now - at > LEDGER_MAX_AGE_MS) {
+        return { authorized: new Set<GitOp>(), present: false };
+      }
       return {
         authorized: new Set((decoded["authorized"] as string[]).filter(Boolean) as GitOp[]),
         present: true,
@@ -203,7 +316,11 @@ export function run(stdin_text: string, options: { consumer_root: string }): num
       return EXIT_ALLOW;
     }
   }
-  const decision = decide(extractCommand(envelope), _loadLedger(options.consumer_root));
+  const session_id = typeof envelope["session_id"] === "string" ? envelope["session_id"] : "";
+  const decision = decide(
+    extractCommand(envelope),
+    _loadLedger(options.consumer_root, session_id, Date.now()),
+  );
   if (decision.stdout) {
     process.stdout.write(decision.stdout);
   }

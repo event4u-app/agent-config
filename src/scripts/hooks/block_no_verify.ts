@@ -339,7 +339,9 @@ function _check_command(cmd: string): [boolean, string] {
             if (/\bgit\b/.test(cmd)) {
                 return [
                     true,
-                    'command parse failed (shlex) on a git-containing command — fail-closed (git-history-discipline)',
+                    'command parse failed (shlex) on a git-containing command — fail-closed (git-history-discipline). \n'
+                    + 'Most common cause: an apostrophe or backtick inside a heredoc commit message in the SAME compound command as `git`. \n'
+                    + 'Fix: write the message to a file and use `git commit -F <file>` — do not retry the heredoc.',
                 ];
             }
             return [false, ''];

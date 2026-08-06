@@ -139,6 +139,15 @@ export function isInjectedBody(text: string): boolean {
   return text.length > 2500 && classify(text).language === "en";
 }
 
+/**
+ * Harness-generated text that occupies an assistant turn but is not the
+ * assistant writing. Round-2 self-scan: 8 of 9 "violations" in one session were
+ * `API Error: 529 Overloaded` retry banners. Counting the harness as the model
+ * inflates the very number this scan exists to report honestly.
+ */
+const HARNESS_TEXT =
+  /^(API Error:|Request (timed out|was aborted)|\[Request interrupted|Error: |Credit balance is too low|You've hit your|Prompt is too long)/i;
+
 /** Rough English-opener test for the language check (first prose line only). */
 const EN_OPENER =
   /^(let me|i'?ll |i'?m |found it|ok[,. ]|okay|alright|here'?s|now[,. ]|looking|checking|reading|running|the |this |that |there |we |you |good |right[,. ]|perfect|done[.,]|all |confirmed|correct)/i;
@@ -152,6 +161,7 @@ export function scanSession(sessionId: string, lines: string[]): SessionReport {
   };
 
   let pinned: "de" | "en" | null = null;
+  let pendingPoll: { at: string; cmd: string } | null = null;
   let authorized = new Set<GitOp>();
   let sawPending = false;
   let evaluationsThisTurn = 0;
@@ -164,6 +174,25 @@ export function scanSession(sessionId: string, lines: string[]): SessionReport {
     try {
       entry = JSON.parse(line) as Entry;
     } catch {
+      continue;
+    }
+
+    // Tool results arrive as `user` entries carrying `toolUseResult`.
+    if (entry["type"] === "user" && entry["toolUseResult"] !== undefined && pendingPoll !== null) {
+      const raw = entry["toolUseResult"];
+      const out = typeof raw === "string" ? raw : JSON.stringify(raw);
+      const pending = pendingCount(out);
+      if (pending !== null && pending > 0) {
+        sawPending = true;
+      } else if (isVacuousOutput(out) || (pending === 0 && !sawPending)) {
+        report.violations.push({
+          check: "vacuous-evidence",
+          session: sessionId,
+          at: pendingPoll.at,
+          detail: `CI poll read as settled without an in-flight observation: ${out.slice(0, 90)}`,
+        });
+      }
+      pendingPoll = null;
       continue;
     }
 
@@ -181,6 +210,7 @@ export function scanSession(sessionId: string, lines: string[]): SessionReport {
       authorized = new Set(classifyAuthorization(ut).authorized);
       sawPending = false;
       evaluationsThisTurn = 0;
+      pendingPoll = null;
       continue;
     }
 
@@ -194,6 +224,9 @@ export function scanSession(sessionId: string, lines: string[]): SessionReport {
       report.assistant_turns += 1;
       if (pinned === "de") {
         const first = prose.split("\n").find((l) => l.trim()) ?? "";
+        if (HARNESS_TEXT.test(first.trim())) {
+          continue; // harness banner, not the assistant's prose
+        }
         const c = classify(first);
         if (first.length > 12 && (c.language === "en" || EN_OPENER.test(first.trim()))) {
           report.violations.push({
@@ -220,21 +253,14 @@ export function scanSession(sessionId: string, lines: string[]): SessionReport {
           });
         }
         if (isCiPoll(cmd)) {
-          // A settle claim needs a prior in-flight observation in the same turn.
-          // The transcript carries the poll but not always its output, so this
-          // check only fires on the shape it can actually read.
-          const out = typeof entry["toolUseResult"] === "string" ? entry["toolUseResult"] : "";
-          const pending = out ? pendingCount(out) : null;
-          if (pending !== null && pending > 0) {
-            sawPending = true;
-          } else if (out && (isVacuousOutput(out) || (pending === 0 && !sawPending))) {
-            report.violations.push({
-              check: "vacuous-evidence",
-              session: sessionId,
-              at,
-              detail: `CI poll read as settled without an in-flight observation: ${out.slice(0, 90)}`,
-            });
-          }
+          // The RESULT of this call arrives on the NEXT entry, and that entry is
+          // role `user` — not assistant. The first version read
+          // `entry["toolUseResult"]` off the assistant entry, where it never
+          // exists: measured on a 20 MB transcript, 1913 entries carry the key
+          // and all 1913 are `user`. So this check could not fire at all and the
+          // scan printed a permanent `✅ vacuous-evidence 0` — a false green in
+          // the one report whose job is to say whether the gates bite.
+          pendingPoll = { at, cmd };
         }
       }
 
@@ -269,7 +295,8 @@ export function scanSession(sessionId: string, lines: string[]): SessionReport {
 
 /** Default Claude Code transcript store for a project directory. */
 export function defaultStore(projectDir: string): string {
-  const slug = projectDir.replace(/\//g, "-");
+  // Claude Code slugs BOTH separators and dots: /Users/x/.claude → -Users-x--claude.
+  const slug = projectDir.replace(/[/.]/g, "-");
   return path.join(process.env["HOME"] ?? "", ".claude", "projects", slug);
 }
 
@@ -362,7 +389,10 @@ export function main(argv?: string[]): number {
   if (out) {
     fs.writeFileSync(out, `${JSON.stringify(report, null, 2)}\n`, "utf8");
   }
-  process.stdout.write(json ? `${JSON.stringify(report, null, 2)}\n` : `${render(report)}\n`);
+  // fs.writeSync, not process.stdout.write: `process.exit()` below does not
+  // flush an async pipe write, so `--json | jq` reproducibly received a
+  // truncated 64 KB document with no error (measured: 85,169 vs 65,536 bytes).
+  fs.writeSync(1, json ? `${JSON.stringify(report, null, 2)}\n` : `${render(report)}\n`);
   return 0;
 }
 

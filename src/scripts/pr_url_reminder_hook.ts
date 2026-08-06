@@ -66,6 +66,20 @@ function _isObject(v: unknown): v is JsonObject {
 }
 
 /** Return [tool_name, command_text] from a tool-event payload. */
+/**
+ * Unwrap the dispatcher envelope.
+ *
+ * The dispatcher hands every concern `{event, platform, payload: <native>}`,
+ * but this hook read `tool_name` / `tool_response` off the TOP level. Fed a raw
+ * payload it worked; fed the real envelope it found nothing and returned ALLOW.
+ * Measured 2026-08-06: standalone 624 bytes of output, through the built
+ * dispatcher 0 bytes — the reminder had never fired in production.
+ */
+function _unwrap(envelope: JsonObject): JsonObject {
+  const inner = envelope["payload"];
+  return _isObject(inner) ? inner : envelope;
+}
+
 function _extractCommand(payload: JsonObject): [string | null, string | null] {
   const toolRaw = payload["tool_name"] ?? payload["toolName"] ?? payload["tool"];
   const tool = typeof toolRaw === "string" ? toolRaw : null;
@@ -124,12 +138,13 @@ export function main(): number {
     return EXIT_ALLOW;
   }
 
-  const [tool, command] = _extractCommand(envelope);
+  const inner = _unwrap(envelope);
+  const [tool, command] = _extractCommand(inner);
   if (!_isPrCreate(tool, command)) {
     return EXIT_ALLOW;
   }
 
-  const match = _PR_URL.exec(_toolOutput(envelope));
+  const match = _PR_URL.exec(_toolOutput(inner));
   if (match === null) {
     return EXIT_ALLOW; // create attempted but no URL produced (failed / dry-run) — do not nag
   }

@@ -21,10 +21,12 @@ import {
   STATE_FILE,
   type GitOp,
 } from "../../src/scripts/git_authorization_hook.js";
+import { EXIT_BLOCK as DISPATCHER_BLOCK } from "../../src/scripts/hooks/dispatch_hook.js";
 import {
   BLOCK_OPS,
   WARN_OPS,
   commandOp,
+  invokedSegments,
   decide,
   extractCommand,
   run as gateRun,
@@ -91,16 +93,28 @@ describe("classifyAuthorization — pasted fences", () => {
   });
 
   it("does NOT treat a pasted error trace containing `git push` as authorization", () => {
-    const trace =
-      "```\n" +
-      "$ git push\n".replace("$ git push", "To github.com:event4u-app/agent-config.git") +
+    // Round-2 fix: the first fixture built the trace with
+    // `"$ git push\n".replace("$ git push", "To github.com…")`, which DELETED the
+    // token under test — the string `git push` never appeared. These two carry
+    // it verbatim, in both shapes the maintainer actually pastes.
+    const fenced =
+      "das kommt raus:\n```\n" +
+      "$ git push origin main\n" +
+      "To github.com:event4u-app/agent-config.git\n" +
       " ! [rejected]        main -> main (fetch first)\n" +
-      "error: failed to push some refs to 'github.com:event4u-app/agent-config.git'\n" +
-      "hint: Updates were rejected because the remote contains work that you do not\n" +
-      "```";
-    const { authorized } = classifyAuthorization(`das kommt raus:\n${trace}`);
-    expect(authorized).not.toContain("push");
+      "error: failed to push some refs\n" +
+      "hint: Updates were rejected because the remote contains work\n```";
+    expect(classifyAuthorization(fenced).authorized).not.toContain("push");
+
+    const unfenced =
+      "hier der fehler:\n" +
+      "To github.com:event4u-app/agent-config.git\n" +
+      " ! [rejected] main -> main\n" +
+      "error: failed to push some refs\n" +
+      "hint: git push --force?";
+    expect(classifyAuthorization(unfenced).authorized).toEqual([]);
   });
+
 
   it("splitFences separates prose from fenced bodies", () => {
     const { prose, fences } = splitFences("vorher\n```\ngit push\n```\nnachher");
@@ -121,6 +135,34 @@ describe("commandOp", () => {
     expect(commandOp("npm publish --access public")).toBe("publish");
     expect(commandOp("gh release create 9.20.0 --notes x")).toBe("release");
     expect(commandOp("gh pr merge 1188 --squash")).toBe("pr-merge");
+  });
+
+  // Round-2 self-scan: the gate fired on two commands of the auditor's own
+  // session whose only sin was carrying the operation name inside a `printf`
+  // argument as test data. Blocking a command because it MENTIONS an operation
+  // is the worst false positive a refusing gate can have.
+  it("does not fire on an operation merely mentioned inside an argument", () => {
+    for (const cmd of [
+      `printf '{"tool_input":{"command":"npm publish"}}'`,
+      `echo "npm publish" > /tmp/fixture.txt`,
+      `grep -rn "gh pr merge" src/`,
+      `cat <<'EOF'\nnpm publish\nEOF`,
+    ]) {
+      expect(commandOp(cmd), cmd).toBeNull();
+    }
+  });
+
+  it("still fires when the operation is genuinely invoked, including via sh -c", () => {
+    expect(commandOp("npm publish --access public")).toBe("publish");
+    expect(commandOp(`sh -c "npm publish"`)).toBe("publish");
+    expect(commandOp(`bash -c 'gh pr merge 1 --squash'`)).toBe("pr-merge");
+    expect(commandOp("NPM_TOKEN=x npm publish")).toBe("publish");
+    expect(commandOp("git status && npm publish")).toBe("publish");
+  });
+
+  it("invokedSegments keeps only the invoked head of each segment", () => {
+    expect(invokedSegments("git status && npm publish")).toEqual(["git status", "npm publish"]);
+    expect(invokedSegments(`printf 'npm publish'`)).toEqual([`printf 'npm publish'`]);
   });
 
   it("returns null for an unrelated command", () => {
@@ -151,7 +193,7 @@ describe("decide", () => {
     ] as const) {
       const d = decide(cmd, { authorized: new Set(), present: false });
       expect(BLOCK_OPS.has(op)).toBe(true);
-      expect(d.exit).toBe(2);
+      expect(d.exit).toBe(DISPATCHER_BLOCK);
       expect(d.stderr).toMatch(/Blocked/);
       expect(d.stderr).toContain(op);
     }
@@ -187,7 +229,7 @@ describe("end to end", () => {
     submit("Release 9.20.0 sauber, dann den eigenen PR.");
     expect(ledger().authorized).toContain("release");
     expect(preTool("gh release create 9.20.0")).toBe(0);
-    expect(preTool("npm publish")).toBe(2);
+    expect(preTool("npm publish")).toBe(DISPATCHER_BLOCK);
   });
 
   it("reproduces the measured failure: a pasted rejection trace does not unlock the release chain", () => {
@@ -196,20 +238,20 @@ describe("end to end", () => {
         "error: failed to push some refs\n```",
     );
     expect(ledger().authorized).toEqual([]);
-    expect(preTool("gh pr merge 1134 --squash")).toBe(2);
-    expect(preTool("git push origin --tags")).toBe(2);
-    expect(preTool("npm publish")).toBe(2);
+    expect(preTool("gh pr merge 1134 --squash")).toBe(DISPATCHER_BLOCK);
+    expect(preTool("git push origin --tags")).toBe(DISPATCHER_BLOCK);
+    expect(preTool("npm publish")).toBe(DISPATCHER_BLOCK);
   });
 
   it("a new turn replaces the ledger — a spent authorization does not carry forward", () => {
     submit("mach den npm publish");
     expect(preTool("npm publish")).toBe(0);
     submit("fixe die ci");
-    expect(preTool("npm publish")).toBe(2);
+    expect(preTool("npm publish")).toBe(DISPATCHER_BLOCK);
   });
 
   it("no ledger at all is treated as not-authorized for the block subset", () => {
     expect(fs.existsSync(path.join(tmp, STATE_FILE))).toBe(false);
-    expect(preTool("npm publish")).toBe(2);
+    expect(preTool("npm publish")).toBe(DISPATCHER_BLOCK);
   });
 });

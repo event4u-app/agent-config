@@ -52,6 +52,13 @@ import { atomic_write_json } from "./hooks/state_io.js";
 import { readHookStdin } from "./hooks/hook_stdin.js";
 
 const EXIT_ALLOW = 0;
+// Severity is taken from the EXIT CODE, not from the `decision` field in the
+// stdout payload. This hook shipped returning EXIT_ALLOW while writing
+// {"decision":"warn", …}, so the dispatcher reduced it to `allow`, emitted
+// nothing, and the pin reached the model on no path — a state write with no
+// delivery, for the audit's largest failure class (626 turns). Round 2, found
+// by tracing the delivery rather than re-reading the unit tests.
+const EXIT_WARN = 2;
 
 export const STATE_FILE = path.join("agents", "state", "language-mirror.json");
 
@@ -68,7 +75,7 @@ function _isObject(v: unknown): v is JsonObject {
  * ("fixe die ci", "mach weiter") where content words carry no signal.
  */
 const DE_MARKERS =
-  /\b(der|die|das|den|dem|und|ist|sind|nicht|kein|keine|mach|mache|bitte|warum|wieso|weshalb|weiter|kannst|sollst|soll|musst|muss|hast|habe|haben|wir|ich|du|dann|noch|auch|schon|wenn|aber|alle|mit|ohne|damit|dass|wurde|werden|gibt|nochmal|erstell|erstelle|erstelle|fehler|regeln|arbeite|analysiere|fixe|nimm|lege|prüfe|pruefe|schau|zeig|mir|dir|sich|eine|einen|einem|einer|vom|zum|zur|beim|im|am)\b|[äöüÄÖÜß]/gi;
+  /\b(der|die|das|den|dem|und|ist|sind|nicht|kein|keine|mach|mache|bitte|warum|wieso|weshalb|weiter|kannst|sollst|soll|musst|muss|hast|habe|haben|wir|ich|du|dann|noch|auch|schon|wenn|aber|alle|mit|ohne|damit|dass|wurde|werden|gibt|nochmal|erstell|erstelle|erstelle|fehler|regeln|arbeite|analysiere|fixe|nimm|lege|prüfe|pruefe|schau|zeig|mir|dir|sich|eine|einen|einem|einer|vom|zum|zur|beim|im)\b|[äöüÄÖÜß]/gi;
 
 /**
  * English function words that a German sentence would not contain. Chosen to
@@ -96,9 +103,45 @@ export interface Classification {
  * Below `MIN_MARKERS` on both sides the verdict is `und` (undetermined) and the
  * caller keeps any previous pin.
  */
+/**
+ * Strip the parts of a prompt that are PASTED rather than written.
+ *
+ * Without this the classifier reproduced the very defect it exists to fix: one
+ * German instruction plus a pasted English stack trace scored `en=18 / de=2`
+ * and pinned English — then asserted emphatically that English was the mirror
+ * target. The maintainer's most common prompt shape is exactly that.
+ */
+export function instructionText(prompt: string): string {
+  const OUTPUT_HEAD =
+    /^\s*(To\s+\S+|remote:|error:|fatal:|hint:|warning:|npm ERR!|Error:|Traceback|Exception|[A-Za-z]*Error\b|at\s+\S+:\d+|\s{4,}\S|[-+]{3}\s|@@\s|\$\s|>\s|\||\d+\s*\|)/i;
+  const kept: string[] = [];
+  let inPaste = false;
+  for (const line of prompt.replace(/```[\s\S]*?```/g, "\n\n").split("\n")) {
+    if (!line.trim()) {
+      // A blank line ends a pasted block — this is how pastes actually look,
+      // and it is what makes the filter work on a MULTI-LINE trace whose
+      // continuation lines carry no marker of their own.
+      inPaste = false;
+      kept.push(line);
+      continue;
+    }
+    if (OUTPUT_HEAD.test(line)) {
+      inPaste = true;
+      continue;
+    }
+    if (inPaste) {
+      continue;
+    }
+    kept.push(line);
+  }
+  return kept.join("\n");
+}
+
+
 export function classify(prompt: string): Classification {
-  const de = (prompt.match(DE_MARKERS) ?? []).length;
-  const en = (prompt.match(EN_MARKERS) ?? []).length;
+  const text = instructionText(prompt);
+  const de = (text.match(DE_MARKERS) ?? []).length;
+  const en = (text.match(EN_MARKERS) ?? []).length;
   if (de < MIN_MARKERS && en < MIN_MARKERS) {
     return { language: "und", de_markers: de, en_markers: en };
   }
@@ -220,6 +263,7 @@ export function run(stdin_text: string, options: { consumer_root: string }): num
     process.stdout.write(
       `${JSON.stringify({ decision: "warn", reason: `Reply language for this turn: ${LANGUAGE_NAME[effective]}.`, additional_context: pinText(effective) })}\n`,
     );
+    return EXIT_WARN;
   }
   return EXIT_ALLOW;
 }

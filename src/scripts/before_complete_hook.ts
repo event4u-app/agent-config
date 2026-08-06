@@ -205,10 +205,17 @@ const _VACUOUS_PATTERNS: readonly RegExp[] = [
 export function isVacuousOutput(output: string): boolean {
   const text = output.trim();
   if (!text) {
-    // A verification command that printed nothing at all is not evidence either.
-    return true;
+    // Silence is the Unix convention for success: a clean `tsc --noEmit`,
+    // `eslint`, or `phpstan` prints nothing. Round 2 caught this reading empty
+    // output as vacuity, which quietly stopped counting the most common green
+    // signal in this repo. Genuinely unreadable CI polls are handled separately
+    // (`pendingCount` returns null and the poll counts for nothing).
+    return false;
   }
-  return _VACUOUS_PATTERNS.some((re) => re.test(text));
+  // Per RESULT LINE, not per blob: a composite run whose 812 tests passed and
+  // whose one empty sub-package printed "No test files found" is evidence.
+  const lines = text.split("\n").filter((l) => l.trim());
+  return lines.every((l) => _VACUOUS_PATTERNS.some((re) => re.test(l)));
 }
 
 /** Commands that poll CI state rather than produce a local result. */
@@ -228,8 +235,20 @@ export function pendingCount(output: string): number | null {
     return Number(m[1]);
   }
   // `gh pr checks` prints one row per check; count the in-progress markers.
+  // `gh pr checks` prints one row per check (`name\tpass\t1m2s\t…`). Count the
+  // in-flight rows; a table with rows but none pending IS a settle, which the
+  // first version could not see because it returned null and never counted.
   const rows = output.match(/^\S.*\b(pending|in_progress|queued)\b/gim);
-  return rows ? rows.length : null;
+  if (rows) {
+    return rows.length;
+  }
+  if (/\bno checks reported\b/i.test(output)) {
+    return null; // the push→registration gap — not a settle
+  }
+  if (/^\S+\s+(pass|fail|skipping|successful|failing)\b/im.test(output)) {
+    return 0; // a real result table with no in-flight rows
+  }
+  return null;
 }
 
 /**

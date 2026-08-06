@@ -10,6 +10,7 @@ import * as os from "node:os";
 import * as path from "node:path";
 import { beforeEach, describe, expect, it } from "vitest";
 
+import { EXIT_BLOCK as DISPATCHER_BLOCK } from "../../src/scripts/hooks/dispatch_hook.js";
 import {
   decide,
   extractDispatch,
@@ -105,13 +106,13 @@ describe("decide", () => {
       "Do a blind review of these four files. NO-FINDINGS is expected and welcome.",
       0,
     );
-    expect(d.exit).toBe(2);
+    expect(d.exit).toBe(DISPATCHER_BLOCK);
     expect(d.stderr).toMatch(/pre-loads its verdict/);
   });
 
   it("blocks a second evaluation of MY OWN work in the same turn as verdict shopping", () => {
     const d = decide("Agent", "Audit my change again with a wider scope.", 1);
-    expect(d.exit).toBe(2);
+    expect(d.exit).toBe(DISPATCHER_BLOCK);
     expect(d.stderr).toMatch(/verdict shopping/);
   });
 
@@ -154,22 +155,27 @@ describe("end to end", () => {
 
   it("warns once then blocks the second self-review", () => {
     expect(dispatch("Review my change on this branch and report findings.")).toBe(0);
-    expect(dispatch("Review this diff again, this time only src/scripts/.")).toBe(2);
+    expect(dispatch("Review this diff again, this time only src/scripts/.")).toBe(DISPATCHER_BLOCK);
   });
 
-  it("resets the evaluation count on a new turn", () => {
+  it("resets the evaluation count when a new user turn rewrites the ledger", () => {
+    // Round-2 fix: the previous version injected `turn_id: "t2"`, a field the
+    // production envelope never carries — it passed only for a shape that does
+    // not occur, while the real counter was session-scoped. The turn marker is
+    // now the authorization ledger's `detected_at`, which
+    // git_authorization_hook rewrites on every user_prompt_submit.
+    const ledger = path.join(tmp, "agents", "state", "git-authorization.json");
+    fs.mkdirSync(path.dirname(ledger), { recursive: true });
+
+    fs.writeFileSync(ledger, JSON.stringify({ detected_at: "2026-08-06T10:00:00Z", authorized: [] }));
     expect(dispatch("Review my change and report findings.")).toBe(0);
-    const rc = run(
-      JSON.stringify({
-        event: "pre_tool_use",
-        session_id: "s1",
-        turn_id: "t2",
-        payload: { tool_name: "Agent", tool_input: { prompt: "Review my change and report findings." } },
-      }),
-      { consumer_root: tmp },
-    );
-    expect(rc).toBe(0);
+    expect(dispatch("Review my change again, wider scope.")).toBe(DISPATCHER_BLOCK);
+
+    // A new user turn moves the stamp, so the counter starts over.
+    fs.writeFileSync(ledger, JSON.stringify({ detected_at: "2026-08-06T10:05:00Z", authorized: [] }));
+    expect(dispatch("Review my change and report findings.")).toBe(0);
   });
+
 
   it("is a clean no-op on a malformed envelope", () => {
     expect(run("{not json", { consumer_root: tmp })).toBe(0);
