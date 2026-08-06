@@ -1,6 +1,6 @@
 # agent-config — Public Catalog
 
-Consumer-facing catalog of all **695 public artefacts** shipped by
+Consumer-facing catalog of all **696 public artefacts** shipped by
 this package. Internal package-maintenance rules and deprecation shims
 are excluded.
 
@@ -430,7 +430,7 @@ are excluded.
 | rule | [`user-interrupt-priority`](../dist/agent-src/rules/user-interrupt-priority.md) | auto | New user instruction mid-flight — STOP the current task, run the new one in full, ASK before resuming |
 | rule | [`verify-before-complete`](../dist/agent-src/rules/verify-before-complete.md) | always | Verify before completion — run tests and quality tools before claiming done |
 
-## Commands (194)
+## Commands (195)
 
 | kind | name | cluster | description |
 |---|---|---|---|
@@ -579,10 +579,11 @@ are excluded.
 | command | [`review`](../dist/agent-src/commands/review.md) | cluster: review | Review orchestrator — routes to changes (five-judge self-review of the local diff) and routing (compute reviewer roles + historical bug patterns) |
 | command | [`review-changes`](../dist/agent-src/commands/review/changes.md) | cluster: review | Self-review local changes before creating a PR — dispatches to five specialized judges (bug, security, tests, quality, architecture) and consolidates verdicts |
 | command | [`review-routing`](../dist/agent-src/commands/review/routing.md) | cluster: review | Compute reviewer roles and matched historical bug patterns for the current diff, using project-local ownership-map.yml and historical-bug-patterns.yml |
-| command | [`roadmap`](../dist/agent-src/commands/roadmap.md) | cluster: roadmap | Roadmap orchestrator — routes to create (authoring) and process-step / process-phase / process-full (autonomous execution). |
+| command | [`roadmap`](../dist/agent-src/commands/roadmap.md) | cluster: roadmap | Roadmap orchestrator — routes to create (authoring), process-step / process-phase / process-full (autonomous execution), and next (pick a roadmap and ship it). |
 | command | [`roadmap-ai-council`](../dist/agent-src/commands/roadmap/ai-council.md) | cluster: roadmap | Challenge a roadmap with the AI council (deep tier) and refactor from convergence findings. Wraps `/council default` pinned to `--input-mode roadmap --depth deep`; patches surface as numbered options. |
 | command | [`roadmap-create`](../dist/agent-src/commands/roadmap/create.md) | cluster: roadmap | Interactively create a new roadmap file in agents/roadmaps/ |
 | command | [`roadmap-materialize`](../dist/agent-src/commands/roadmap/materialize.md) | cluster: roadmap | Materialise a roadmap into a self-contained, importable ticket bundle under agents/tickets/ |
+| command | [`roadmap-next`](../dist/agent-src/commands/roadmap/next.md) | cluster: roadmap | Pick the next executable roadmap and carry it to a reviewable PR — live remote screen, five-disqualifier feasibility pass, council on the pick, process-full, chunked commits, PR, CI fix. |
 | command | [`roadmap-process-full`](../dist/agent-src/commands/roadmap/process-full.md) | cluster: roadmap | Autonomously process every open step across every phase of a roadmap until the file is fully closed. Largest execution scope of the /roadmap cluster — runs continuously across phase boundaries. |
 | command | [`roadmap-process-phase`](../dist/agent-src/commands/roadmap/process-phase.md) | cluster: roadmap | Autonomously process every open step in the next or current phase of a roadmap, then stop. Default execution scope of the /roadmap cluster. |
 | command | [`roadmap-process-step`](../dist/agent-src/commands/roadmap/process-step.md) | cluster: roadmap | Autonomously process the single next open step of a roadmap and stop. Smallest execution scope of the /roadmap cluster — one step in, one step out. |

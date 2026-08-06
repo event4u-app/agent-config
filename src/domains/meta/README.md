@@ -7,9 +7,9 @@ Artefacts that maintain this package (agent-config itself).
 - **id**: `meta`
 - **owner**: agent-config-maintainer
 - **requires**: engineering-base
-- **artefacts**: 290
+- **artefacts**: 291
 
-## Commands (151)
+## Commands (152)
 
 - **`agent-handoff`** — Pick a recent session, generate a handoff from its transcript, and seed a fresh session with it — or summarize the live conversation for copy-paste.
 - **`agent-status`** — Show current conversation stats — message count, token costs, task progress, next freshness check.
@@ -113,10 +113,11 @@ Artefacts that maintain this package (agent-config itself).
 - **`review`** — Review orchestrator — routes to changes (five-judge self-review of the local diff) and routing (compute reviewer roles + historical bug patterns)
 - **`review-changes`** — Self-review local changes before creating a PR — dispatches to five specialized judges (bug, security, tests, quality, architecture) and consolidates verdicts
 - **`review-routing`** — Compute reviewer roles and matched historical bug patterns for the current diff, using project-local ownership-map.yml and historical-bug-patterns.yml
-- **`roadmap`** — Roadmap orchestrator — routes to create (authoring) and process-step / process-phase / process-full (autonomous execution).
+- **`roadmap`** — Roadmap orchestrator — routes to create (authoring), process-step / process-phase / process-full (autonomous execution), and next (pick a roadmap and ship it).
 - **`roadmap-ai-council`** — Challenge a roadmap with the AI council (deep tier) and refactor from convergence findings. Wraps `/council default` pinned to `--input-mode roadmap --depth deep`; patches surface as numbered options.
 - **`roadmap-create`** — Interactively create a new roadmap file in agents/roadmaps/
 - **`roadmap-materialize`** — Materialise a roadmap into a self-contained, importable ticket bundle under agents/tickets/
+- **`roadmap-next`** — Pick the next executable roadmap and carry it to a reviewable PR — live remote screen, five-disqualifier feasibility pass, council on the pick, process-full, chunked commits, PR, CI fix.
 - **`roadmap-process-full`** — Autonomously process every open step across every phase of a roadmap until the file is fully closed. Largest execution scope of the /roadmap cluster — runs continuously across phase boundaries.
 - **`roadmap-process-phase`** — Autonomously process every open step in the next or current phase of a roadmap, then stop. Default execution scope of the /roadmap cluster.
 - **`roadmap-process-step`** — Autonomously process the single next open step of a roadmap and stop. Smallest execution scope of the /roadmap cluster — one step in, one step out.

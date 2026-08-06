@@ -1,0 +1,47 @@
+{
+  "skill": "roadmap-next",
+  "last_eval": "2026-08-06",
+  "description": "5 should-trigger + 5 should-not-trigger. Should-trigger covers the case where the user has NOT named a roadmap and wants one chosen and shipped: pick the next sensible/executable roadmap, screen what is actually startable, and carry it to a PR. Should-not-trigger covers the near-miss neighbours that each own a different surface: /roadmap:process-full and /roadmap:process-phase (a roadmap is NAMED, so nothing is selected — scope only), /roadmap:create (authoring a new roadmap from a stated request), /roadmap:ai-council (challenging one named roadmap, no execution), and a plain read-only status question about the roadmap dashboard.",
+  "queries": [
+    {
+      "q": "nimm dir die nächste sinnvolle Roadmap vor und arbeite sie komplett ab",
+      "trigger": true
+    },
+    {
+      "q": "pick the next executable roadmap and ship it as a PR",
+      "trigger": true
+    },
+    {
+      "q": "which roadmap can actually be finished right now? take that one",
+      "trigger": true
+    },
+    {
+      "q": "choose a roadmap yourself, work it in a worktree, then open a PR ready for review",
+      "trigger": true
+    },
+    {
+      "q": "screen the open roadmaps for one that isn't blocked and start it",
+      "trigger": true
+    },
+    {
+      "q": "process every open step of road-to-zero-ceremony-settings.md",
+      "trigger": false
+    },
+    {
+      "q": "finish the current phase of the roadmap I have open",
+      "trigger": false
+    },
+    {
+      "q": "create a roadmap for splitting the settings template",
+      "trigger": false
+    },
+    {
+      "q": "run the AI council over road-to-worktree-hygiene before I execute it",
+      "trigger": false
+    },
+    {
+      "q": "how many open roadmap steps are left on the dashboard?",
+      "trigger": false
+    }
+  ]
+}
