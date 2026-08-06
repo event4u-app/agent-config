@@ -429,14 +429,29 @@ migration is a genuinely lossy authoring transform with no ledger, while
 - [x] `src/scripts/lint_mandated_lines.ts` rejects a completion claim describing an outward action with no authorization line, proven by a test.
 - [x] `rule-writing` requires a primary-bias section, and the schema decision-impact class landed with its evidence bar enforced by `lint_decision_impact`.
 - [x] Every migrated rule has a ledger whose target anchors all resolve, proven by a gate — 44 ledgers, 277 rows, and 15 recorded losses the tree had no record of.
-- [~] The contradiction register exists (it already did — `rule-interactions.yml`, extended 21 → 29 pairs), and every wins-on-conflict claim **between two rules the register declares** has a row, proven by a gate. <!-- deferred: the corpus-wide half is not shipped — 90 arbitration claims over 111 rules, ~64 pairs, two thirds of the surrounding surface boilerplate. See Phase 3 Step 6. -->
+- [-] The contradiction register exists (it already did — `rule-interactions.yml`, extended 21 → 29 pairs), and every wins-on-conflict claim **between two rules the register declares** has a row, proven by a gate. The corpus-wide half is **cancelled as a deliberate non-adoption**, decided by the maintainer at closure on 2026-08-06.
+      The criterion as written would have required a row for every one of the 90
+      arbitration claims across all 111 rules — roughly 64 pairs — and the sweep
+      that measured them classified about two thirds of the surrounding
+      cross-artifact surface as boilerplate: see-also glosses, canonical-home
+      pointers and deliberate safety-floor restatements, prose carrying no
+      decision. A gate demanding those rows lands as an unfixable blocker, which
+      is this roadmap's own Risk 4 and a failure this repository has recorded
+      before. What shipped instead is answerable for what it claims: the
+      register is closed over the rules it declares, and widening `rules:`
+      widens the obligation — the mechanism that surfaced three unrecorded
+      subordinations during this run and will surface the next one.
+      **Reopen if** a routing defect is traced to two rules that genuinely
+      conflict, are both outside the declared set, and would have been caught by
+      a row — that is the evidence this cancellation lacks, and the only thing
+      that should overturn it.
 
 - [x] `src/scripts/lint_example_fences.ts` runs over the authored tree with every current hit classified — 503 files, zero hits, so it ships strict rather than advisory.
 - [x] The description lint rejects a preemption phrase, proven by a test — six positive specimens plus three must-not-fire rows pinning the corpus lines a word-keyed draft flagged wrongly.
 - [x] The removal disposition and the simplify-signal list are recorded in the optimization path.
 - [x] No judge skill or review command instructs pre-filtering by severity — six instances found by full read (a keyword grep had returned zero) and all six fixed.
 - [x] The imperative-density report runs advisory and states its unsettled direction.
-- [ ] Quality gates delegated to remote CI on the pull request.
+- [x] Quality gates delegated to remote CI on the pull request — PR #1188, 36 SUCCESS / 1 SKIPPED / 0 failures after two fixes this branch caused itself (the gate-script population figure the honest-denominator test bounds, and the artefact index that carries every skill description).
 
 ## Second execution pass — 2026-08-06, all remaining phases closed
 
