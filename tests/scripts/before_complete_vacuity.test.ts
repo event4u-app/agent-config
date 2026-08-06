@@ -49,8 +49,6 @@ function state(): Record<string, unknown> {
 describe("isVacuousOutput", () => {
   it("treats an empty result set as vacuous", () => {
     for (const out of [
-      "",
-      "   ",
       "0 checks",
       "no tests ran",
       "No test files found",
@@ -61,6 +59,21 @@ describe("isVacuousOutput", () => {
     ]) {
       expect(isVacuousOutput(out), out).toBe(true);
     }
+  });
+
+  // Changed deliberately in round 2: silence is the Unix convention for
+  // success, so a clean `tsc --noEmit` / `eslint` / `phpstan` must still count.
+  // Treating empty output as vacuity quietly stopped counting the most common
+  // green signal in this repo.
+  it("does NOT treat silent success as vacuity", () => {
+    expect(isVacuousOutput("")).toBe(false);
+    expect(isVacuousOutput("   ")).toBe(false);
+  });
+
+  it("does not let one empty sub-run poison a real one", () => {
+    expect(
+      isVacuousOutput("Test Files 40 passed (40)\n Tests 812 passed (812)\n[pkg-x] No test files found"),
+    ).toBe(false);
   });
 
   it("treats a real result set as non-vacuous", () => {

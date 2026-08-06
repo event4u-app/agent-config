@@ -52,7 +52,14 @@ import { atomic_write_json } from "./state_io.js";
 import { readHookStdin } from "./hook_stdin.js";
 
 const EXIT_ALLOW = 0;
-const EXIT_BLOCK = 2;
+// MUST equal dispatch_hook.EXIT_BLOCK. The dispatcher's internal ladder is
+// 0 allow / 1 block / 2 warn — NOT the 2-means-block shape a PreToolUse guard
+// reads naturally from Claude's own native contract. This constant was 2 when
+// this gate first shipped, so the dispatcher reduced every refusal to a WARN
+// and the gate emitted advisory context while the operation went through.
+// Pinned against the dispatcher's export by
+// tests/hooks/concern_block_exit_parity.test.ts.
+const EXIT_BLOCK = 1;
 
 export const STATE_FILE = path.join("agents", "state", "evidence-dispatch.json");
 
@@ -77,7 +84,7 @@ const DISPATCH_TOOLS: ReadonlySet<string> = new Set([
 
 /** The dispatch is an EVALUATION of work rather than ordinary fan-out. */
 const EVALUATION_RE =
-  /\b(review|reviewer|audit|auditor|judge|verdict|blind[- ]pass|blind review|adversarial|critique|assess(ment)?|verify (my|the) (work|change|diff|implementation)|find (any )?(bugs|issues|defects|problems) in (my|the))\b/i;
+  /\b(review|reviewer|audit|auditor|judge|verdict|blind[- ]pass|blind review|adversarial|critique|assess(ment)?|verify (my|the) (work|change|diff|implementation)|find (any )?(bugs|issues|defects|problems) in (my|the)|pr(ü|ue)f(e|ung)?|begutachte|gutachten|bewerte|(gegen)?check(e)?|durchsicht|review(e|iere))\b/i;
 
 /**
  * Verdict pre-loading. Each pattern is a phrase that tells the evaluator what
@@ -85,6 +92,16 @@ const EVALUATION_RE =
  * fabricated honest-null.
  */
 const PRELOADED_VERDICT_RE = [
+  // German — the operator writes German, and an English-only list meant no
+  // German dispatch was ever screened at all.
+  /\bich erwarte (hier )?(keine|nichts)\b/i,
+  /\b(du )?(wirst|solltest) (hier )?nichts finden\b/i,
+  /\bbest(ä|ae)tige (nur|kurz)\b/i,
+  /\b(ist|sollte) (wahrscheinlich|vermutlich|sicher) (sauber|korrekt|in ordnung|fine)\b/i,
+  /\bkeine findings? (erwartet|zu erwarten)\b/i,
+  // English paraphrases of the audited construct.
+  /\bi am confident there is nothing\b/i,
+  /\ba clean pass is the likely\b/i,
   /\bno[- ]findings? (is|are) (expected|welcome|fine|acceptable|the likely)/i,
   /\b(you )?(should|will|probably) find (nothing|no (issues|problems|bugs|findings))/i,
   /\bconfirm (that )?there (are|is) no\b/i,
@@ -160,6 +177,20 @@ interface DispatchState extends JsonObject {
   session_id: string;
   turn_started_at: string;
   evaluations: JsonValue[];
+}
+
+/** The current user turn's stamp, or "" when no ledger exists yet. */
+function _ledgerStamp(consumer_root: string): string {
+  try {
+    const raw = fs.readFileSync(
+      path.join(consumer_root, "agents", "state", "git-authorization.json"),
+      "utf8",
+    );
+    const d = JSON.parse(raw) as Record<string, unknown>;
+    return typeof d["detected_at"] === "string" ? d["detected_at"] : "";
+  } catch {
+    return "";
+  }
 }
 
 function _load(target: string): DispatchState {
@@ -258,10 +289,13 @@ export function run(stdin_text: string, options: { consumer_root: string }): num
   const state = _load(target);
   const session_id = typeof envelope["session_id"] === "string" ? envelope["session_id"] : "";
 
-  // The authorization ledger owns turn boundaries; this guard reads its own
-  // marker so it never depends on another concern's ordering.
-  const turnMarker =
-    typeof envelope["turn_id"] === "string" ? (envelope["turn_id"] as string) : session_id;
+  // Turn boundary. `turn_id` does NOT exist in the production envelope — the
+  // dispatcher never sets it, so the original marker fell through to
+  // `session_id` and the counter was session-scoped: one self-review anywhere
+  // in a session blocked every later one. The only per-user-turn stamp that
+  // actually exists is `detected_at` in the authorization ledger, which
+  // `git_authorization_hook` rewrites on every `user_prompt_submit`.
+  const turnMarker = `${session_id}:${_ledgerStamp(options.consumer_root)}`;
   if (state.session_id !== turnMarker) {
     state.session_id = turnMarker;
     state.turn_started_at = new Date().toISOString();

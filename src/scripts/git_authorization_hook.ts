@@ -83,15 +83,64 @@ export const ALL_OPS: readonly GitOp[] = [
  * cost latency on every turn and be unauditable.
  */
 const PHRASES: ReadonlyArray<{ op: GitOp; re: RegExp }> = [
-  { op: "commit", re: /\b(commit(e|et|ten|ted|ting)?|committe|einchecken)\b/i },
-  { op: "push", re: /\b(push(e|en|ed|ing)?|hochladen|hochschieben|raufschieben)\b/i },
-  { op: "branch", re: /\b(branch(e|es)?|zweig|feature-branch|erstelle einen branch)\b/i },
-  { op: "pr-create", re: /\b(pull[- ]request|pr\b|mach(e|en)? (einen|nen) pr|erstelle .{0,20}pr)\b/i },
-  { op: "pr-merge", re: /\b(merge[nrd]?|mergen|zusammenführen|zusammenfuehren|reinmergen|gemerged)\b/i },
-  { op: "tag", re: /\b(tag(ge|gen|ged|ging)?|version(iere|ieren)?)\b/i },
-  { op: "release", re: /\b(release[nd]?|releasen|veröffentlich(e|en|ung)|veroeffentlich(e|en))\b/i },
-  { op: "publish", re: /\b(publish(e|en|ed|ing)?|npm publish|publiziere[n]?)\b/i },
+  { op: "commit", re: /\b(commit(e|et|te|ten)?|committe|einchecken)\b/i },
+  { op: "push", re: /\b(push(e|en|t)?|hochladen|hochschieben|raufschieben)\b/i },
+  { op: "branch", re: /\b(branch|feature-branch|zweig)\b/i },
+  // A creation verb is required — "schau dir den PR an" is not "open a PR".
+  {
+    op: "pr-create",
+    re: /\b(erstell(e|en)?|mach(e|en)?|leg(e|en)?\s+an|(er)?(ö|oe)ffne|open|create|raise|aufmachen)\b[^.\n]{0,30}\b(pr|pull[- ]request)\b|\b(pr|pull[- ]request)\b[^.\n]{0,20}\b(erstellen|aufmachen|anlegen|(er)?(ö|oe)ffnen)\b/i,
+  },
+  // `merge` as an ACTION, never as the noun in "merge conflict" / "merge commit".
+  { op: "pr-merge", re: /\b(merge|merg(e|en|st|t)|zusammenf(ü|ue)hren|reinmergen)\b(?!\s*[- ]?(conflict|konflikt|commit|base|queue|state|status))/i },
+  // A tag is an ACTION here — bare "Tag" is the German word for day, and
+  // "Version" is an ordinary noun. Both authorized a BLOCK op before this.
+  { op: "tag", re: /\b(tagge(n|st)?|tag\s+(setzen|anlegen|erstellen)|git\s+tag|--tags|--follow-tags)\b/i },
+  // "die release notes sind falsch" is a noun phrase, not an authorization.
+  {
+    op: "release",
+    re: /\b(releasen?|ver(ö|oe)ffentlich(e|en))\b(?!\s*[- ]?(notes?|branch|candidate|pr\b|datum|date|zweig))/i,
+  },
+  { op: "publish", re: /\b(publish(e|en)?|publiziere[n]?)\b/i },
 ];
+
+/**
+ * Lines that are pasted TOOL OUTPUT rather than the user instructing.
+ *
+ * Round-2 adversarial review: an UNFENCED paste of a `git push … rejected`
+ * trace authorized `push` through the prose matcher — i.e. the gate
+ * pre-authorized the exact scenario it was built to stop. Fenced pastes were
+ * already handled; prose was not.
+ */
+const OUTPUT_LINE =
+  /^\s*(To\s+\S+|remote:|error:|fatal:|hint:|warning:|!\s|\?\?\s|\s*\^|[-+]{3}\s|@@\s|\$\s|>\s|\d+\s+(pass|fail)|npm ERR!|Error:|Traceback|at\s+\S+:\d+)/i;
+
+/**
+ * A prompt that ASKS about an operation does not authorize it.
+ *
+ * `question-not-instruction` states this for the agent; the ledger needs it
+ * too. "was macht npm publish eigentlich genau?" authorized a real publish
+ * before this check.
+ */
+export function isInterrogative(prose: string): boolean {
+  const t = prose.trim();
+  if (!t) {
+    return false;
+  }
+  const hasImperative =
+    /\b(mach|mache|bitte|leg|lege|erstell|erstelle|f(ü|ue)hr|f(ü|ue)hre|setz|setze|starte|los|jetzt|go ahead|do it|ja[,.]?\s|ok[,.]?\s)\b/i.test(
+      t,
+    );
+  if (hasImperative) {
+    return false;
+  }
+  return (
+    /\?\s*$/.test(t) ||
+    /^(was|wie|warum|wieso|weshalb|wann|wer|welche[rs]?|wo|ist|sind|kann|kannst|k(ö|oe)nnen|soll|sollen|darf|d(ü|ue)rfen|why|what|how|when|which|who|is|are|can|could|should|does|do)\b/i.test(
+      t,
+    )
+  );
+}
 
 /** Executable commands a user may paste, mapped to the op they authorize. */
 const PASTED_COMMANDS: ReadonlyArray<{ op: GitOp; re: RegExp }> = [
@@ -155,8 +204,15 @@ export function classifyAuthorization(prompt: string): {
   const authorized = new Set<GitOp>();
   const evidence: Record<string, string> = {};
 
-  for (const { op, re } of PHRASES) {
-    const m = re.exec(prose);
+  // Drop pasted tool output from the prose before matching (C4), then refuse
+  // to read a question as an instruction (C3).
+  const instruction = prose
+    .split("\n")
+    .filter((l) => !OUTPUT_LINE.test(l))
+    .join("\n");
+
+  for (const { op, re } of isInterrogative(instruction) ? [] : PHRASES) {
+    const m = re.exec(instruction);
     if (m) {
       authorized.add(op);
       evidence[op] = `prose: "${m[0]}"`;
@@ -164,6 +220,15 @@ export function classifyAuthorization(prompt: string): {
   }
 
   for (const fence of fences) {
+    // A fence that also carries tool OUTPUT is a transcript of something that
+    // already happened, not a command the user is handing over. Pasting
+    //   $ git push origin main
+    //   ! [rejected] …
+    // is showing a failure, and reading it as "authorized push" is exactly the
+    // implicit-continuation misread this gate exists to stop.
+    if (fence.split("\n").some((l) => OUTPUT_LINE.test(l))) {
+      continue;
+    }
     for (const line of _commandLines(fence)) {
       for (const { op, re } of PASTED_COMMANDS) {
         if (re.test(line)) {

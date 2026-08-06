@@ -13,6 +13,7 @@ import { beforeEach, describe, expect, it } from "vitest";
 
 import {
   classify,
+  instructionText,
   nextState,
   pinText,
   run,
@@ -113,7 +114,7 @@ describe("pinText", () => {
 describe("run", () => {
   it("pins de on a German prompt and emits the context block", () => {
     const rc = run(envelope(REAL_GERMAN_PROMPT), { consumer_root: tmp });
-    expect(rc).toBe(0);
+    expect(rc).toBe(2)  // WARN — the only severity the dispatcher delivers;
     expect(readState().language).toBe("de");
   });
 
@@ -121,7 +122,7 @@ describe("run", () => {
     const rc = run(envelope("Please refactor the parser and make sure that these tests are green."), {
       consumer_root: tmp,
     });
-    expect(rc).toBe(0);
+    expect(rc).toBe(2)  // WARN — the only severity the dispatcher delivers;
     expect(readState().language).toBe("en");
   });
 
@@ -141,22 +142,52 @@ describe("run", () => {
     expect(readState().language).toBe("de");
   });
 
-  // THE REGRESSION. Reproduces the measured worst case: a German prompt, then a
-  // 4 KB English skill body delivered in the user role. Before this hook the
-  // model's most recent user-role content was the English body, and 136
-  // consecutive English replies followed. The hook only ever sees genuine
-  // prompt submissions, so the pin must still read `de`.
-  it("does not let a skill body arriving as user content overwrite the German pin", () => {
-    run(envelope(REAL_GERMAN_PROMPT), { consumer_root: tmp });
-    expect(readState().language).toBe("de");
+  // THE REGRESSION — rewritten in round 2 because the first version was
+  // tautological: it called run(german), asserted `de`, called nothing, and
+  // asserted `de` again. It proved x === x while its own name claimed to prove
+  // the defect was closed. Caught by an adversarial review of the PR that
+  // shipped a vacuity guard, which is the joke telling itself.
+  //
+  // What actually has to hold: the classifier must not let PASTED English decide
+  // the language of a German instruction. That is the shape that produced 626
+  // wrong-language turns, and it is now testable directly.
+  it("a German instruction plus a pasted English log still classifies as German", () => {
+    const mixed =
+      "mach das:\n" +
+      "Error: the test suite is not passing. There are 3 failures that should be\n" +
+      "fixed, and these are from the module which was changed and that will need\n" +
+      "work before this can be merged into the branch that has these commits.";
+    // Without the paste filter this scores en=18 / de=2 and pins ENGLISH.
+    expect(classify(mixed).language).toBe("de");
+    expect(instructionText(mixed)).not.toMatch(/test suite is not passing/);
+  });
 
-    // A skill body is NOT a user_prompt_submit — the hook never receives it.
-    // Assert the shape that made the defect invisible: classified alone it
-    // reads English, and it is long enough to dominate any transcript window.
+  it("a fenced English block does not flip a German prompt", () => {
+    const fenced = "hier der fehler, bitte behebe ihn:\n```\n" +
+      "TypeError: cannot read the property of undefined and that is what the\n" +
+      "handler was doing when these requests were dispatched from the queue\n```";
+    expect(classify(fenced).language).toBe("de");
+  });
+
+  it("a genuinely English prompt is still classified English", () => {
+    expect(
+      classify("Please refactor the parser and make sure that these tests are green.").language,
+    ).toBe("en");
+  });
+
+  it("run() returns WARN so the dispatcher actually delivers the pin", () => {
+    // Returning ALLOW was the round-1 defect: severity is taken from the exit
+    // code, so the payload was written and then dropped by the dispatcher.
+    const rc = run(envelope(REAL_GERMAN_PROMPT), { consumer_root: tmp });
+    expect(rc).toBe(2);
+    expect(readState().language).toBe("de");
+  });
+
+  it("an English skill body classified alone still reads English", () => {
+    // Kept as a property of the FIXTURE, not as a claim about the hook: this is
+    // the shape that made the defect invisible, and it must stay long enough to
+    // dominate a transcript window for the fixture to be honest.
     expect(ENGLISH_SKILL_BODY.length).toBeGreaterThan(2500);
     expect(classify(ENGLISH_SKILL_BODY).language).toBe("en");
-
-    // The pin is unchanged because no prompt was submitted in between.
-    expect(readState().language).toBe("de");
   });
 });

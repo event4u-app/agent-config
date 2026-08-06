@@ -1111,8 +1111,24 @@ export function main(argv?: string[]): number {
       typeof reply["reason"] === "string" && (reply["reason"] as string).trim()
         ? (reply["reason"] as string).trim()
         : stderr_text.trim();
-    if (stated) {
-      concern_messages.push({ rc, text: stated });
+    // `additional_context` — the longer, model-facing half of a concern's
+    // reply. The contract has promised since v1 that it is forwarded and
+    // "concatenated with \n\n separators"
+    // (docs/contracts/hook-architecture-v1.md § reply shape), but nothing here
+    // ever read the key: `reason` is capped at ~200 chars by convention and is
+    // written for a human reading stderr, so every concern that put its
+    // actionable instruction in `additional_context` delivered it nowhere.
+    // Found 2026-08-06 by tracing why the language-mirror pin reached the model
+    // on no path; `pr_url_reminder` had the same silent gap, and its own header
+    // calls `additional_context` "what surfaces back to the model".
+    const extra =
+      typeof reply["additional_context"] === "string" &&
+      (reply["additional_context"] as string).trim()
+        ? (reply["additional_context"] as string).trim()
+        : "";
+    const message = [stated, extra].filter(Boolean).join("\n\n");
+    if (message) {
+      concern_messages.push({ rc, text: message });
     }
     if (
       args.event === "session_start" &&

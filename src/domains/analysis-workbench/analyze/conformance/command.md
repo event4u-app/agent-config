@@ -8,7 +8,7 @@ sub: conformance
 cluster: analyze
 skills: [roadmap-writing, decision-review, ai-council, subagent-orchestration]
 description: Audit recent local sessions for rule violations — deterministic scan plus subagent passes over the transcripts, root-cause each class, and emit a roadmap that mechanises what is mechanisable.
-argument-hint: "[--sessions N] [--scan-only] [--no-council] [--no-roadmap] [--worktree]"
+argument-hint: "[--limit N] [--scan-only] [--no-council] [--no-roadmap] [--worktree]"
 suggestion:
   eligible: false
   rationale: "Cluster sub-command — reached via its cluster head's routing or its explicit /analyze:conformance name; not independently suggested (surface-consolidation)."
@@ -155,7 +155,7 @@ Before the roadmap is believed, run every new detector and gate against:
 
 | Flag | Effect |
 |---|---|
-| `--sessions N` | How many recent sessions to read (default 30). |
+| `--limit N` | How many recent sessions to read (default 30). |
 | `--scan-only` | Step 1 only — the deterministic report, no subagents, no spend. |
 | `--no-council` | Skip step 4. Record that it was skipped. |
 | `--no-roadmap` | Findings only; no artefact authored. |
