@@ -240,6 +240,45 @@ concerns:
     args: []
     fail_closed: false
     severity: advisory
+  # Language-mirror pin — carries the ONE fact the transcript cannot express:
+  # which language the human actually typed. 47 skill/slash-command bodies were
+  # measured arriving in the `user` role across 21 of 30 audited sessions, and
+  # in the worst case a 4,196-char English skill body was the last user-role
+  # content before 136 consecutive English replies to a German prompt.
+  # `user_prompt_submit` is the only event a skill body never reaches.
+  # Advisory: it supplies a fact, it never blocks.
+  language-mirror:
+    script: src/scripts/language_mirror_hook.ts
+    args: []
+    fail_closed: false
+    severity: advisory
+  # Git-authorization ledger — records which git ops the user's OWN WORDS
+  # authorize this turn. Writes state only; never blocks.
+  git-authorization:
+    script: src/scripts/git_authorization_hook.ts
+    args: []
+    fail_closed: false
+    severity: advisory
+  # The blocking half. BLOCKS only the irreversible subset that
+  # non-destructive-by-default already declares never-autonomous (npm publish,
+  # tag push, gh release create, gh pr merge); WARNS on commit / push /
+  # pr-create / branch. Severity, not reach — see the header of the script.
+  block-unauthorized-git:
+    script: src/scripts/hooks/block_unauthorized_git.ts
+    args: []
+    fail_closed: true
+    severity: blocking
+  # Evaluator independence. Gates EVALUATION dispatches only — a verdict
+  # pre-loaded into the prompt, or a second evaluation of the same work in one
+  # turn. Ordinary parallel fan-out is untouched: the council's "second dispatch
+  # of any kind" criterion would have blocked 6 of the 7 analysis subagents in
+  # the very session that produced this guard. fail_closed: false — a malformed
+  # envelope must never block a dispatch.
+  evidence-independence:
+    script: src/scripts/hooks/evidence_independence.ts
+    args: []
+    fail_closed: false
+    severity: blocking
   # session_start canary injection — deterministic carrier for the
   # session-canary rule (greet-by-name at task start + reply-close markers
   # as a user-observable context-degradation signal). Gated on
@@ -258,15 +297,15 @@ platforms:
     session_start:    [chat-history, hot-context, handoff-context, session-canary, first-run-gate, onboarding-gate, verify-before-complete, minimal-safe-diff, profile-staleness, wrapper-freshness, surface-probe]
     session_end:      [chat-history, memory-learn]
     stop:             [chat-history, hot-context, verify-before-complete]
-    pre_tool_use:     [block-no-verify, block-kernel-rule-writes, block-config-weakening, rtk-wrap, design-slop, code-graph-nudge]
+    pre_tool_use:     [block-no-verify, block-unauthorized-git, evidence-independence, block-kernel-rule-writes, block-config-weakening, rtk-wrap, design-slop, code-graph-nudge]
     post_tool_use:    [chat-history, roadmap-progress, context-hygiene, verify-before-complete, minimal-safe-diff, injection-scan, pr-url-reminder]
 
   claude:
     session_start:    [chat-history, hot-context, handoff-context, session-canary, first-run-gate, onboarding-gate, verify-before-complete, minimal-safe-diff, profile-staleness, wrapper-freshness, surface-probe]
     session_end:      [chat-history, memory-learn]
     stop:             [chat-history, hot-context, verify-before-complete, team-review-gate]
-    user_prompt_submit: [chat-history, verify-before-complete, minimal-safe-diff]
-    pre_tool_use:     [block-no-verify, block-kernel-rule-writes, block-config-weakening, rtk-wrap, design-slop, code-graph-nudge]
+    user_prompt_submit: [chat-history, verify-before-complete, minimal-safe-diff, language-mirror, git-authorization]
+    pre_tool_use:     [block-no-verify, block-unauthorized-git, evidence-independence, block-kernel-rule-writes, block-config-weakening, rtk-wrap, design-slop, code-graph-nudge]
     post_tool_use:    [chat-history, roadmap-progress, context-hygiene, verify-before-complete, minimal-safe-diff, injection-scan, pr-url-reminder]
 
   # Cowork — the Claude desktop app's local-agent-mode runtime, built
@@ -287,8 +326,8 @@ platforms:
     session_start:    [chat-history, hot-context, handoff-context, session-canary, first-run-gate, onboarding-gate, verify-before-complete, minimal-safe-diff, profile-staleness, wrapper-freshness, surface-probe]
     session_end:      [chat-history, memory-learn]
     stop:             [chat-history, hot-context, verify-before-complete]
-    user_prompt_submit: [chat-history, verify-before-complete, minimal-safe-diff]
-    pre_tool_use:     [block-no-verify, block-kernel-rule-writes, block-config-weakening, rtk-wrap, design-slop, code-graph-nudge]
+    user_prompt_submit: [chat-history, verify-before-complete, minimal-safe-diff, language-mirror, git-authorization]
+    pre_tool_use:     [block-no-verify, block-unauthorized-git, evidence-independence, block-kernel-rule-writes, block-config-weakening, rtk-wrap, design-slop, code-graph-nudge]
     post_tool_use:    [chat-history, roadmap-progress, context-hygiene, verify-before-complete, minimal-safe-diff, injection-scan, pr-url-reminder]
 
   # Phase 7.5 — Cursor. `.cursor/hooks.json` (project) is read by the
@@ -302,7 +341,7 @@ platforms:
     session_start:      [chat-history, hot-context, handoff-context, session-canary, first-run-gate, onboarding-gate, verify-before-complete, minimal-safe-diff, profile-staleness, wrapper-freshness, surface-probe]
     session_end:        [chat-history, memory-learn]
     stop:               [chat-history, hot-context, verify-before-complete]
-    user_prompt_submit: [chat-history, verify-before-complete, minimal-safe-diff]
+    user_prompt_submit: [chat-history, verify-before-complete, minimal-safe-diff, language-mirror, git-authorization]
     post_tool_use:      [chat-history, roadmap-progress, context-hygiene, verify-before-complete, minimal-safe-diff, injection-scan, pr-url-reminder]
 
   # Phase 7.6 — Cline. Hooks live under `.clinerules/hooks/<HookName>`
@@ -317,7 +356,7 @@ platforms:
     session_start:      [chat-history, hot-context, handoff-context, session-canary, first-run-gate, onboarding-gate, verify-before-complete, minimal-safe-diff, profile-staleness, wrapper-freshness, surface-probe]
     session_end:        [chat-history, memory-learn]
     stop:               [chat-history, hot-context, verify-before-complete]
-    user_prompt_submit: [chat-history, verify-before-complete, minimal-safe-diff]
+    user_prompt_submit: [chat-history, verify-before-complete, minimal-safe-diff, language-mirror, git-authorization]
     post_tool_use:      [chat-history, roadmap-progress, context-hygiene, verify-before-complete, minimal-safe-diff, injection-scan, pr-url-reminder]
 
   # Phase 7.7 — Windsurf (Cascade). Hooks live at `.windsurf/hooks.json`
@@ -335,7 +374,9 @@ platforms:
   windsurf:
     session_start:      [chat-history, hot-context, handoff-context, session-canary, first-run-gate, onboarding-gate, verify-before-complete, profile-staleness, wrapper-freshness, surface-probe]
     stop:               [chat-history, hot-context, verify-before-complete]
-    user_prompt_submit: [chat-history, verify-before-complete]
+    # language-mirror IS bound here: unlike minimal-safe-diff it needs only the
+    # user_prompt_submit slot, which Windsurf has.
+    user_prompt_submit: [chat-history, verify-before-complete, language-mirror, git-authorization]
 
   # Phase 7.8 — Gemini CLI. Hooks live at `.gemini/settings.json`
   # (project) or `~/.gemini/settings.json` (user). Per Gemini docs
@@ -351,7 +392,7 @@ platforms:
     session_start:      [chat-history, hot-context, handoff-context, session-canary, first-run-gate, onboarding-gate, verify-before-complete, minimal-safe-diff, profile-staleness, wrapper-freshness, surface-probe]
     session_end:        [chat-history, memory-learn]
     stop:               [chat-history, hot-context, verify-before-complete]
-    user_prompt_submit: [chat-history, verify-before-complete, minimal-safe-diff]
+    user_prompt_submit: [chat-history, verify-before-complete, minimal-safe-diff, language-mirror, git-authorization]
     post_tool_use:      [chat-history, roadmap-progress, context-hygiene, verify-before-complete, minimal-safe-diff, injection-scan, pr-url-reminder]
 
   # Phase 7.9 — Copilot has no hook surface. Concerns route through

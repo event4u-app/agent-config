@@ -67,13 +67,25 @@ name it and suggest a fresh session or `/agent-handoff`, per
 - The greeting never substitutes for substance — it prefixes the answer, it is
   not the answer.
 
-## Enforcement
+## Enforcement — per session, NOT per task
 
 > **Enforced by:** [`scripts/session_canary_hook.ts`](../../scripts/session_canary_hook.ts)
 > (`session_start`, all hook-capable hosts) — injects the `<session-canary>`
 > contract block into every new session, so a fresh conversation cannot start
 > without it. **Copilot fallback:** no hook surface — this rule is the only
 > carrier; re-read it when the trigger fires.
+
+**The gap, stated because it was measured.** The injection fires on
+`session_start`; the obligation is per *task*. Nothing re-injects at a task
+boundary, so from the second task on the contract is model-carried.
+
+Conformance audit, 30 sessions, 2026-08-06: opening canary dropped on ~13 of 15
+task starts, often present only in the closing summary, twice carrying a name
+the settings chain did not resolve; the honesty clause fired zero times. No
+per-task gate ships — the audit found no harm beyond the lost signal, and a
+mechanism for a signal whose absence nobody acted on has no failure mode to
+match. The consequence stands: this canary cannot currently be relied on as the
+degradation detector its own rationale describes.
 
 ## See also
 

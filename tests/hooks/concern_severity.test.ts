@@ -30,6 +30,23 @@ const BLOCKING_ALLOWLIST = new Set([
     'block-no-verify',
     'block-kernel-rule-writes',
     'block-config-weakening',
+    // road-to-agent-behavior-conformance. Both refuse, and both refuse only
+    // what a rule already declares never-autonomous — the deliberate decision
+    // this allowlist exists to record:
+    //
+    //   block-unauthorized-git — blocks ONLY the irreversible subset
+    //   non-destructive-by-default already names (npm publish, tag push,
+    //   gh release create, gh pr merge) when the turn's prompt carries no
+    //   authorization. Everything recoverable (commit, push, pr-create,
+    //   branch) warns. The audit measured a full release chain — prod-trunk
+    //   merge, tag, GitHub release, npm publish — shipped with no Go.
+    //
+    //   evidence-independence — blocks an evaluation prompt that pre-loads its
+    //   verdict, and a second self-review dispatch in one turn. The audit found
+    //   a fabricated NO-FINDINGS committed as binding gate evidence over a
+    //   delta an unsteered pass then found a live critical in.
+    'block-unauthorized-git',
+    'evidence-independence',
 ]);
 
 interface Concern {
