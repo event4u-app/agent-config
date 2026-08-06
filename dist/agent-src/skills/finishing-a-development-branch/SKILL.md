@@ -1,7 +1,7 @@
 ---
 model_tier: medium
 name: finishing-a-development-branch
-description: "Use when the feature is implementation-complete and the next step is 'ship it' — verifies, cleans up, and routes to merge/PR/park/discard — even when the user just says 'I'm done, what now?'."
+description: "Use when the feature is implementation-complete and the next step is 'ship it' — verifies, cleans up, routes to merge/PR/park/discard; never destroys work without explicit confirmation."
 domain: process
 workspaces:
   - engineering

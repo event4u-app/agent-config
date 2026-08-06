@@ -530,6 +530,120 @@ tool skill*, **never** a new skill per pitfall and never a generated grid (see
 [`size-enforcement`](../../rules/size-enforcement.md) § Per-tool pitfall
 content).
 
+## Rationalizations-to-reject section (required, security-stop-routed skills)
+
+A skill routed by `security-sensitive-stop` already carries a forbidden-moves or
+failure-mode list. Those describe **what is wrong**. They do not answer the
+sentence the agent actually produces at the moment it skips the control:
+*"this one is internal, so the tenant check is not needed here."*
+
+So those skills add `## Rationalizations to reject`, where each entry is a pair:
+
+- **the shortcut, in the words it will be argued in** — not a label. "It is an
+  internal endpoint" beats "insufficient authorization".
+- **the mechanism that defeats it** — the concrete fact that makes the argument
+  wrong. "Internal is a network claim, not an identity claim; the object id
+  still comes from the request."
+
+Writing the shortcut in its persuasive form is the whole point. A list of
+labelled anti-patterns is matched against by a reader who has already decided;
+a list of *arguments* is matched against by a reader mid-decision, which is when
+the skip actually happens.
+
+Keep it to the arguments that have really been made. An invented rationalization
+teaches nothing and dilutes the ones that recur.
+
+## Non-negotiable-deliverable section (required, adjacent-technology clusters)
+
+Some skills sit next to a technology that is a *tempting wrong answer* — close
+enough to look interchangeable, different enough that picking it silently loses
+something. The framework-cluster skills the routing rules already disambiguate
+pairwise are the standing example.
+
+For those, state the deliverable as a constraint rather than as a preference:
+
+1. **What the output must use.** One sentence, unhedged.
+2. **The substitutes to refuse, named.** The agent will meet them; naming them
+   is what makes the refusal recognisable rather than a judgement call.
+3. **What each substitute loses.** This is the load-bearing line. A prohibition
+   without a cost reads as arbitrary and gets argued away the first time the
+   substitute is more convenient; a named loss survives that conversation.
+
+The routing rules answer *which skill loads*. This section answers *what the
+skill may emit once it has loaded* — a different question, and the one that goes
+wrong quietly.
+
+## Destructive-operation gates belong in the description
+
+If a skill performs an operation the user cannot undo — deleting, removing,
+publishing, spending — the confirmation gate goes in the **description**, not
+only in the body.
+
+The reason is routing order: the description is what the agent reads when
+choosing a skill, and the body loads afterwards. A gate stated only in the body
+is invisible at exactly the moment the skill is being selected for a task whose
+shape the gate might forbid.
+
+One clause is enough — `worktree-lifecycle` carries "safe cleanup that refuses
+while unique unmerged commits exist", which tells a router both what the skill
+does and what it will not do. Verified by
+`./scripts-run src/scripts/lint_skill_descriptions`.
+
+## Upstream-version-notes section (optional pattern, wrapped fast-moving tools)
+
+A skill that wraps an external tool is written against one version of it. When
+the tool renames a flag, restructures its report, or drops a subcommand, the
+skill does not fail loudly — it fails as **the agent concluding the skill is
+wrong**, or, worse, inventing the removed surface so its own instructions still
+make sense. Both are silent.
+
+For a skill wrapping a tool that moves faster than this package's release
+cadence, add `## Upstream version notes` carrying exactly three things:
+
+1. **The version this skill was written against, and the date it was checked.**
+   A version alone rots into a claim nobody can date.
+2. **What was renamed** — old → new, one line each. This is the row that stops
+   an agent inventing a flag that no longer exists.
+3. **How to read older output** — the agent will meet reports from earlier
+   versions in logs, issues and fixtures, and needs to know which fields moved
+   rather than guessing.
+
+State briefly what is **unchanged** too. "The subcommand set is unchanged since
+X" is what lets an agent trust the rest of the skill after finding one stale
+flag, instead of second-guessing every instruction that follows.
+
+Scope floor — add it only where drift is **observed**, never anticipated. A
+version-notes block on a stable tool is maintenance with no reader, and a stale
+one is worse than none: it is a dated claim that is now false.
+
+## Security-constraints section (required pattern, script-bearing skills)
+
+A skill that ships an executable script carries its constraints in the
+always-loaded rules — `tool-safety`, `runtime-safety`, `lethal-trifecta-guard`.
+That holds while the skill is read inside this suite. It stops holding the
+moment the script travels: vendored into a consumer, copied into another
+project, or run by an agent whose rule set is not ours. The constraints stay
+behind; the script does not.
+
+So a skill with anything under its `scripts/` directory states them **on the
+artifact**, in a `## Security constraints` section:
+
+- **What it may touch** — the paths and hosts it legitimately reads or writes.
+  Naming the boundary is what makes an overreach reviewable.
+- **What it must never do** — the prohibitions specific to THIS script, not a
+  restatement of the general rules. "Never writes outside the target directory"
+  is checkable; "follows security best practice" is not.
+- **Its default-invocation behaviour** — read-only or mutating. A script that
+  mutates on a bare invocation already violates the `## Do NOT` list below; if
+  it is gated behind a flag, name the flag here.
+- **What it sends outbound, if anything** — the egress leg of the lethal
+  trifecta. A script with no network access says so in four words, and that
+  sentence is the cheapest possible answer to a reviewer's first question.
+
+This duplicates the rules on purpose, and the duplication is the point: the
+rules are the enforcement, the section is what survives the artifact leaving
+their reach.
+
 ## Do NOT
 
 * Write documentation-style, pointer-only, or too-broad skills ("Laravel skill", "Django skill")
