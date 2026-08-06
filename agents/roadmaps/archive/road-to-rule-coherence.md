@@ -351,6 +351,20 @@ not rot back in.
   non-stub rules. **The "17" in the source draft was wrong by 5.7×** — it came
   from a narrow lexicon (STOP/abort/non-bypassable only). Any gate sized for 17
   was sized for the wrong corpus.
+
+  > **CORRECTION (2026-08-06, post-merge).** The 97 was produced by a throwaway
+  > script in a scratch directory and could not be re-run — an unverified number
+  > replacing an unverified number, the same failure class as the 17. Re-derived
+  > by the committed `src/scripts/measure_rule_absoluta.ts`, **both prior figures
+  > are lexicon artifacts**: strict ALL-CAPS imperatives give **79/111 (71.2%)**;
+  > the same lexicon read case-insensitively gives **97/111 (87.4%)** — which
+  > identifies the original method; and the structural, lexicon-free count of
+  > rules carrying an Iron-Law block gives **94/111 (84.7%)**. The strict reading
+  > has false negatives of its own (`downstream-changes` carries a full Iron Law
+  > using none of the lexicon terms and scores 0). No point estimate is
+  > defensible — but all three readings land at 71–87%, so **the conclusion that
+  > actually cut the lattice is invariant to the method**. Cite the range and the
+  > structural figure; not a single number.
 - [x] **P2.2 Candidate generator — built, measured, and it needs a 5th axis.**
   The 4 proposed classes cannot detect the `token-efficiency` ↔
   `downstream-changes` conflict at all: ">2 same tool in a row" is an *effort

@@ -89,6 +89,35 @@ preparing the evidence is in scope; an agent flipping the default is not.
   rewrite. Two more share the reply-position root cause already declared for
   the other two.
 
+## Phase 5 — Retire the two provisional numbers
+
+Both are plausible figures without a reproducible derivation — the failure class
+the parent roadmap exposed in the "17 rules carry absolutes" claim and then
+committed twice more itself.
+
+- [ ] **F5.1 Set the declared-protocol read cap from data, not from n=1.** The
+  cap of 8 in `context-hygiene` comes from a single observed run and is marked
+  provisional in the rule body with a revisit trigger. Record declared-protocol
+  read counts across real sessions, then set the cap at p95 and drop the note.
+  - **Trigger, whichever first** (round 3 rejected "once a distribution exists"
+    as unfalsifiable — gradual, never urgent, and absence of complaints reads
+    identically to absence of measurement): **≥ 10 declared-protocol sessions**
+    → set the cap from their p95; or **90 days with fewer than 10** → that is
+    itself the answer, declared protocols are rare, the cap is not load-bearing
+    and drops back to the undeclared 5.
+  - Acceptance: the cap cites a distribution and an n, or the 90-day branch
+    fired; either way the provisional note is removed in the same change.
+- [x] **F5.2 What the absoluta figure is FOR — answered, and the answer is
+  "nothing ongoing".** Council round 3's kill question named the census as the
+  weaker of the two fixes, both members converging on the same reason: it is a
+  write-only diagnostic. It answered one question, that answer killed the
+  precedence lattice, and the question is closed. Recorded as
+  [`ADR-218`](../../docs/decisions/ADR-218-absoluta-census-is-a-closed-decision-input.md):
+  cite the range plus the structural figure, never a point estimate; the script
+  stays only so those figures are re-derivable rather than quoted from a commit
+  message; and a future "did this PR add an absolute?" check is a **different**
+  tool that watches diffs, built when there is intent to enforce that boundary.
+
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-08-06 | reviewer: claude/host -->
 | Rank | Item | Risk type | Description | Mitigation | Anchored under |
