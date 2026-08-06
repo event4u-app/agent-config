@@ -134,6 +134,7 @@ commands:
     - roadmap/ai-council
     - roadmap/create
     - roadmap/materialize
+    - roadmap/next
     - roadmap/process-full
     - roadmap/process-phase
     - roadmap/process-step
