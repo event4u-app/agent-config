@@ -221,11 +221,32 @@ before the file was written*.
   `acrossfade`, or make the flag fail loudly. Two-pass `loudnorm` is absent too.
   - The single highest-value item in the whole inbox: smallest diff, real
     user-visible wrongness, no new subsystem.
-- [ ] **P5.2 `design-review-after-ui-write` rule** (from `better-frontend.txt`).
+- [x] **P5.2 `design-review-after-ui-write` rule** (from `better-frontend.txt`).
   **Zero rules currently route to `skill:design-review`** — the write-side loop
   is open, while the read-side (`ui-audit-gate`) is closed. Build it as that
   rule's twin: tier 2b, `packs: [frontend-design]`, same diff-decidable
   `ui-trivial` allowlist. Cheapest real capability gain here.
+  - Confirmed at HEAD: zero rules routed to `skill:design-review` — not one even
+    mentioned the string. Shipped as `design-review-after-ui-write`, tier 2b,
+    `packs: [frontend-design]`, the twin's trigger set, and the same honest-scope
+    section (`enforced_by: none`, because "I ran the review" is self-report and
+    self-report is not enforcement).
+  - Two deliberate deltas from a pure copy. The allow-list carries the engine's
+    **five** conditions, not the four its sibling's prose lists —
+    `ui_trivial/apply.ts` enforces `new_dependency` too, so copying the shorter
+    prose would inherit a gap the engine does not have. And it routes to
+    `accessibility-auditor` as well as `design-review`, because `design-review`
+    lives in `engineering-base` while this rule is scoped to `frontend-design`:
+    a consumer with one pack and not the other would otherwise get the
+    obligation without a skill to discharge it.
+  - `lint_trigger_collisions` required a disposition on **both** sharers for all
+    three shared triggers (`design token`, `resources/views/`, `resources/js/`),
+    so `ui-audit-gate` gained the matching `collision_ok` entries in the same
+    commit — 35 collisions, all dispositioned.
+  - `rule-interactions.yml` row deliberately NOT added: the pair needs no
+    arbiter (its own litmus calls that `complements`), and declaring the slugs
+    there widens the file's closure obligation for no arbitration gain. The
+    relationship is stated in both rule bodies, which is where a reader meets it.
 - [x] **P5.3 Per-concern `tools:` matcher in the hook manifest** (from
   `crytical-analysis.txt`). **13 concerns fire on every single tool call.**
   A `tools:` field per concern plus a generator change is the one latency lever

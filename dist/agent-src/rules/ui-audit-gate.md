@@ -16,6 +16,9 @@ workspaces: [agent-config-maintainer, engineering]
 packs: [frontend-design]
 collision_ok:
   "component": "no new component without audit findings — its core subject"
+  "design token": "same surface, opposite side: this inventories tokens before the write, design-review-after-ui-write reviews what the write emitted"
+  "resources/views/": "both halves of one UI loop fire on the same path — audit before, review after; neither substitutes for the other"
+  "resources/js/": "both halves of one UI loop fire on the same path — audit before, review after; neither substitutes for the other"
 ---
 
 # UI Audit Gate
