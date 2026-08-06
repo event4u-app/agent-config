@@ -106,12 +106,12 @@ its central gap is verified in code.
 
 ## Phase 3 — Small verified fixes
 
-- [ ] **P3.1 `lint_abstraction_thresholds` regex + site count.** Reported: the
+- [x] **P3.1 `lint_abstraction_thresholds` regex + site count.** Reported: the
   cardinal branch cannot match "duplicated twice", and a header says "six
   deliberate sites" while `SITES` holds more. **Both unverified by me** — the
   site count depends on what the header counts, which I could not pin down. Two
   one-liners at most; verify before touching.
-- [ ] **P3.2 Three `design-fidelity` additions** (from `claude-design.txt`, the
+- [x] **P3.2 Three `design-fidelity` additions** (from `claude-design.txt`, the
   only survivors of that file): capability-URL trigger pattern,
   `.claude/design-system/` trigger path, and one acceptance fixture for a
   handoff bundle on the existing "port a provided artifact" branch. Add a
@@ -139,7 +139,7 @@ All four triaged. Same shape as the rest: heavy already-shipped fraction, and in
 two cases a flagship recommendation that argues against a lock accepted *days
 before the file was written*.
 
-- [ ] **P5.1 Fix `stitch.sh --crossfade` — an advertised flag that lies.**
+- [x] **P5.1 Fix `stitch.sh --crossfade` — an advertised flag that lies.**
   `src/scripts/ai-video/stitch.sh:152` prints "not yet implemented" and then
   **silently falls through to plain concat**, so a caller who asked for a
   crossfade gets a hard cut and no error. That is worse than an unimplemented
@@ -163,7 +163,7 @@ before the file was written*.
   `check_reach_staleness.ts`. Pair it with a CSV integrity gate in
   `corpus-grounding/scripts/schema_validator.ts`, which today never opens a CSV
   — that gate must land *before* any re-vendor, not after.
-- [ ] **P5.5 `agents/proposals/` does not exist** (from `hermes.txt`). Two
+- [x] **P5.5 `agents/proposals/` does not exist** (from `hermes.txt`). Two
   artefacts name it as an output path. One directory closes a dangling contract.
 - [~] **P5.6 God-file LOC ratchet** (from `crytical-analysis.txt`). Seven files
   confirmed oversized, plus `chat_history.ts` (2397) and `orchestrator.ts`

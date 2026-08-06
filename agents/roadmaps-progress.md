@@ -6,10 +6,10 @@
 
 ## Overall
 
-**114 / 217 steps done · 53%**
+**118 / 217 steps done · 54%**
 
 ```text
-█████████████████████░░░░░░░░░░░░░░░░░░░   53%
+██████████████████████░░░░░░░░░░░░░░░░░░   54%
 ```
 
 ## Open roadmaps
@@ -19,7 +19,7 @@
 | 1 | [road-to-ci-native-release-first-run.md](roadmaps/road-to-ci-native-release-first-run.md) | 2 | 8 | 8 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 2 | [road-to-council-blind-review.md](roadmaps/road-to-council-blind-review.md) | 3 | 6 | 2 | 3 | 0 | 1 | 0 | ██████░░░░ 60% |
 | 3 | [road-to-gated-reach-followup.md](roadmaps/road-to-gated-reach-followup.md) | 1 | 12 | 12 | 0 | 0 | 0 | [1](#blockers-road-to-gated-reach-followup) | ░░░░░░░░░░ 0% |
-| 4 | [road-to-inbox-harvest-2026-08.md](roadmaps/road-to-inbox-harvest-2026-08.md) | 5 | 21 | 14 | 0 | 3 | 4 | [2](#blockers-road-to-inbox-harvest-2026-08) | ░░░░░░░░░░ 0% |
+| 4 | [road-to-inbox-harvest-2026-08.md](roadmaps/road-to-inbox-harvest-2026-08.md) | 5 | 21 | 10 | 4 | 3 | 4 | [2](#blockers-road-to-inbox-harvest-2026-08) | ███░░░░░░░ 29% |
 | 5 | [road-to-kernel-question-triangle.md](roadmaps/road-to-kernel-question-triangle.md) | 1 | 3 | 3 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 6 | [road-to-maintainer-bus-factor.md](roadmaps/road-to-maintainer-bus-factor.md) | 4 | 12 | 5 | 7 | 0 | 0 | [1](#blockers-road-to-maintainer-bus-factor) | ██████░░░░ 58% |
 | 7 | [road-to-orchestration-scope-decision.md](roadmaps/road-to-orchestration-scope-decision.md) | 4 | 10 | 6 | 4 | 0 | 0 | [1](#blockers-road-to-orchestration-scope-decision) | ████░░░░░░ 40% |
@@ -75,15 +75,15 @@
 
 ### [road-to-inbox-harvest-2026-08.md](roadmaps/road-to-inbox-harvest-2026-08.md)
 
-**Road to inbox harvest 2026-08** — 0 / 14 done (0%)
+**Road to inbox harvest 2026-08** — 4 / 14 done (29%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
 | 1 | The release-review harvest (from `feedback-9.18.1-1.txt`) | ⬜ not started | 3 | 0 | 1 | 1 | 0% |
 | 2 | The self-fix loop (from `loops-feature.txt`) | ⬜ not started | 2 | 0 | 0 | 1 | 0% |
-| 3 | Small verified fixes | ⬜ not started | 2 | 0 | 1 | 0 | 0% |
+| 3 | Small verified fixes | ✅ done | 0 | 2 | 1 | 0 | 100% |
 | 4 | The review-mechanization residuals (from `optimize-plan.txt`) | ⬜ not started | 2 | 0 | 0 | 1 | 0% |
-| 5 | The four large chat-log audits | ⬜ not started | 5 | 0 | 1 | 1 | 0% |
+| 5 | The four large chat-log audits | 🟡 in progress | 3 | 2 | 1 | 1 | 40% |
 
 <a id="blockers-road-to-inbox-harvest-2026-08"></a>
 **Blockers**
