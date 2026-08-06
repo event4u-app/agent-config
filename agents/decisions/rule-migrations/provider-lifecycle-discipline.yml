@@ -1,0 +1,43 @@
+# Migration ledger for `provider-lifecycle-discipline` — what the body-migration transform kept, folded, and lost.
+#
+# `source_headings` is the HARVEST, not a cache: the pre-migration commits are
+# not ancestors of HEAD and a remote branch prune would destroy them, so the
+# headings are recorded here to survive that. See lint_rule_migration_ledger.
+rule: provider-lifecycle-discipline
+source: recoverable
+source_commit: 94dc19cac62ff21449afd5a373c1363ee3d6215c
+source_path: src/rules/provider-lifecycle-discipline.md
+migrated_to:
+  - docs/contracts/provider-lifecycle.md
+source_headings:
+  - "Iron Law"
+  - "What this rule enforces"
+  - "Failure modes — what counts as a violation"
+  - "Day-one state"
+  - "Why agent-in-the-loop, not Python gate"
+  - "See also"
+rows:
+  - heading: "Iron Law"
+    disposition: carried
+    target: "src/rules/provider-lifecycle-discipline.md#Iron Law"
+    reason: "the section stayed in the rule; the migration moved the depth beneath it, not this heading"
+  - heading: "What this rule enforces"
+    disposition: merged
+    target: "docs/contracts/provider-lifecycle.md#§ 4 — Agent obligations"
+    reason: "the five enforcement points were folded into the pre-existing obligations list which the migration expanded in place rather than appending a second list"
+  - heading: "Failure modes — what counts as a violation"
+    disposition: carried
+    target: "docs/contracts/provider-lifecycle.md#§ 4a — Failure modes (agent-side violations)"
+    reason: "all four violation bullets moved verbatim into a newly added section that names this rule as its origin"
+  - heading: "Day-one state"
+    disposition: merged
+    target: "docs/contracts/provider-lifecycle.md#§ 5 — Day-one assignment"
+    reason: "the rule paragraph duplicated a section that already existed, so the migration deleted the rule copy without needing to add anything"
+  - heading: "Why agent-in-the-loop, not Python gate"
+    disposition: carried
+    target: "docs/contracts/provider-lifecycle.md#§ 4b — Why agent-in-the-loop, not a Python gate"
+    reason: "both paragraphs moved verbatim into a newly added section of the contract"
+  - heading: "See also"
+    disposition: carried
+    target: "src/rules/provider-lifecycle-discipline.md#See also"
+    reason: "the section stayed in the rule; the migration moved the depth beneath it, not this heading"

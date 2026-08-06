@@ -1,0 +1,48 @@
+# Migration ledger for `framework-neutrality-in-generic-skills` — what the body-migration transform kept, folded, and lost.
+#
+# `source_headings` is the HARVEST, not a cache: the pre-migration commits are
+# not ancestors of HEAD and a remote branch prune would destroy them, so the
+# headings are recorded here to survive that. See lint_rule_migration_ledger.
+rule: framework-neutrality-in-generic-skills
+source: recoverable
+source_commit: e382bec6cc04470e19534c7521a8271c52e0f79e
+source_path: src/rules/framework-neutrality-in-generic-skills.md
+migrated_to:
+  - docs/guidelines/agent-infra/framework-neutrality-patterns.md
+source_headings:
+  - "The Iron Law"
+  - "Scope"
+  - "Forbidden patterns in generic artifacts"
+  - "Allowed: cross-stack documentation"
+  - "Allowed: carve-out pointers"
+  - "Enforcement"
+  - "See also"
+rows:
+  - heading: "The Iron Law"
+    disposition: carried
+    target: "src/rules/framework-neutrality-in-generic-skills.md#The Iron Law"
+    reason: "the section stayed in the rule; the migration moved the depth beneath it, not this heading"
+  - heading: "Scope"
+    disposition: carried
+    target: "src/rules/framework-neutrality-in-generic-skills.md#Scope"
+    reason: "the section stayed in the rule; the migration moved the depth beneath it, not this heading"
+  - heading: "Forbidden patterns in generic artifacts"
+    disposition: carried
+    target: "docs/guidelines/agent-infra/framework-neutrality-patterns.md#Forbidden patterns in generic artifacts"
+    reason: "the section moved to the migration target under the same heading text"
+  - heading: "Allowed: cross-stack documentation"
+    disposition: carried
+    target: "docs/guidelines/agent-infra/framework-neutrality-patterns.md#Allowed: cross-stack documentation"
+    reason: "the section moved to the migration target under the same heading text"
+  - heading: "Allowed: carve-out pointers"
+    disposition: carried
+    target: "docs/guidelines/agent-infra/framework-neutrality-patterns.md#Allowed: carve-out pointers"
+    reason: "the section moved to the migration target under the same heading text"
+  - heading: "Enforcement"
+    disposition: carried
+    target: "docs/guidelines/agent-infra/framework-neutrality-patterns.md#Enforcement"
+    reason: "the section moved to the migration target under the same heading text"
+  - heading: "See also"
+    disposition: carried
+    target: "src/rules/framework-neutrality-in-generic-skills.md#See also"
+    reason: "the section stayed in the rule; the migration moved the depth beneath it, not this heading"

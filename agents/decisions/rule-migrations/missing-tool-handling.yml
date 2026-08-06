@@ -1,0 +1,38 @@
+# Migration ledger for `missing-tool-handling` — what the body-migration transform kept, folded, and lost.
+#
+# `source_headings` is the HARVEST, not a cache: the pre-migration commits are
+# not ancestors of HEAD and a remote branch prune would destroy them, so the
+# headings are recorded here to survive that. See lint_rule_migration_ledger.
+rule: missing-tool-handling
+source: recoverable
+source_commit: d73c06d03afdb7dd2da7aaa7d7b13edeb98f81b5
+source_path: src/rules/missing-tool-handling.md
+migrated_to:
+  - docs/guidelines/agent-infra/missing-tool-handling.md
+source_headings:
+  - "The rule"
+  - "When it applies"
+  - "When it does NOT apply"
+  - "How to ask"
+  - "Capture the learning"
+rows:
+  - heading: "The rule"
+    disposition: carried
+    target: "docs/guidelines/agent-infra/missing-tool-handling.md#The rule"
+    reason: "the section moved to the migration target under the same heading text"
+  - heading: "When it applies"
+    disposition: carried
+    target: "docs/guidelines/agent-infra/missing-tool-handling.md#When it applies"
+    reason: "the section moved to the migration target under the same heading text"
+  - heading: "When it does NOT apply"
+    disposition: carried
+    target: "docs/guidelines/agent-infra/missing-tool-handling.md#When it does NOT apply"
+    reason: "the section moved to the migration target under the same heading text"
+  - heading: "How to ask"
+    disposition: carried
+    target: "docs/guidelines/agent-infra/missing-tool-handling.md#How to ask"
+    reason: "the section moved to the migration target under the same heading text"
+  - heading: "Capture the learning"
+    disposition: carried
+    target: "docs/guidelines/agent-infra/missing-tool-handling.md#Capture the learning"
+    reason: "the section moved to the migration target under the same heading text"

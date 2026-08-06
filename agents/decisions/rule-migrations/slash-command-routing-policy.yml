@@ -1,0 +1,25 @@
+# Migration ledger for `slash-command-routing-policy` — what the body-migration transform kept, folded, and lost.
+#
+# `source_headings` is the HARVEST, not a cache: the pre-migration commits are
+# not ancestors of HEAD and a remote branch prune would destroy them, so the
+# headings are recorded here to survive that. See lint_rule_migration_ledger.
+rule: slash-command-routing-policy
+source: recoverable
+source_commit: d4fe80e1ce2a956eb86df328de32e3252515553f
+source_path: .agent-src.uncompressed/rules/slash-command-routing-policy.md
+migrated_to:
+  - src/skills/command-routing/SKILL.md
+source_headings:
+  - "Open files are irrelevant for command detection"
+  - "Read the whole prompt — command is the operator, prose is the target"
+  - "Pre-flight before expensive operations"
+rows:
+  - heading: "Open files are irrelevant for command detection"
+    disposition: dropped
+    reason: "the command-routing skill says nothing about editor state and the nearest surviving text is about general intent inference, so the typed-command-outranks-an-open-file disambiguation was lost"
+  - heading: "Read the whole prompt — command is the operator, prose is the target"
+    disposition: dropped
+    reason: "the operator-versus-target law and all three worked examples return zero hits repo-wide, a genuine loss with no replacement anywhere"
+  - heading: "Pre-flight before expensive operations"
+    disposition: dropped
+    reason: "the silent re-read before API spend or council runs, and its calibration against the cheap-question floor, exist in neither the skill nor the mechanics context — a cost-safety gate lost"

@@ -1,0 +1,44 @@
+# Migration ledger for `linked-projects-onboarding-gate` — what the body-migration transform kept, folded, and lost.
+#
+# `source_headings` is the HARVEST, not a cache: the pre-migration commits are
+# not ancestors of HEAD and a remote branch prune would destroy them, so the
+# headings are recorded here to survive that. See lint_rule_migration_ledger.
+rule: linked-projects-onboarding-gate
+source: recoverable
+source_commit: d73c06d03afdb7dd2da7aaa7d7b13edeb98f81b5
+source_path: src/rules/linked-projects-onboarding-gate.md
+migrated_to:
+  - docs/guidelines/agent-infra/linked-projects-onboarding-gate.md
+  - docs/guides/cross-repo-linked-projects.md
+source_headings:
+  - "When this fires"
+  - "Detection"
+  - "Opt-in (one-time per sibling)"
+  - "Behavioral directive (for each `include: true` sibling)"
+  - "Kill-switch"
+  - "Follow-up (not yet shipped)"
+rows:
+  - heading: "When this fires"
+    disposition: carried
+    target: "docs/guidelines/agent-infra/linked-projects-onboarding-gate.md#When this fires"
+    reason: "the section moved to the migration target under the same heading text"
+  - heading: "Detection"
+    disposition: carried
+    target: "docs/guidelines/agent-infra/linked-projects-onboarding-gate.md#Detection"
+    reason: "the section moved to the migration target under the same heading text"
+  - heading: "Opt-in (one-time per sibling)"
+    disposition: carried
+    target: "docs/guidelines/agent-infra/linked-projects-onboarding-gate.md#Opt-in (one-time per sibling)"
+    reason: "the section moved to the migration target under the same heading text"
+  - heading: "Behavioral directive (for each `include: true` sibling)"
+    disposition: carried
+    target: "docs/guidelines/agent-infra/linked-projects-onboarding-gate.md#Behavioral directive (for each `include: true` sibling)"
+    reason: "the section moved to the migration target under the same heading text"
+  - heading: "Kill-switch"
+    disposition: carried
+    target: "docs/guidelines/agent-infra/linked-projects-onboarding-gate.md#Kill-switch"
+    reason: "the section moved to the migration target under the same heading text"
+  - heading: "Follow-up (not yet shipped)"
+    disposition: carried
+    target: "docs/guidelines/agent-infra/linked-projects-onboarding-gate.md#Follow-up (not yet shipped)"
+    reason: "the section moved to the migration target under the same heading text"

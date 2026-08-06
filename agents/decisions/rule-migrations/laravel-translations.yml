@@ -1,0 +1,27 @@
+# Migration ledger for `laravel-translations` — what the body-migration transform kept, folded, and lost.
+#
+# `source_headings` is the HARVEST, not a cache: the pre-migration commits are
+# not ancestors of HEAD and a remote branch prune would destroy them, so the
+# headings are recorded here to survive that. See lint_rule_migration_ledger.
+rule: laravel-translations
+source: recoverable
+source_commit: d4fe80e1ce2a956eb86df328de32e3252515553f
+source_path: .agent-src.uncompressed/rules/laravel-translations.md
+migrated_to:
+  - src/skills/laravel/SKILL.md
+source_headings:
+  - "Key format — always inline (dot notation)"
+  - "Both languages are mandatory"
+  - "Referencing language lines"
+rows:
+  - heading: "Key format — always inline (dot notation)"
+    disposition: dropped
+    reason: "the laravel skill contains no translation content at all, so the flat-dot-notation mandate and its worked pair are gone while a live command file still cites this rule as their home"
+  - heading: "Both languages are mandatory"
+    disposition: carried
+    target: "src/rules/laravel-translations.md#Laravel Translations"
+    reason: "the obligation stayed in the rule Iron Law as mirror-keys-across-locales, though the concrete pairing and the ships-to-both-audiences rationale did not survive"
+  - heading: "Referencing language lines"
+    disposition: carried
+    target: "src/rules/laravel-translations.md#Laravel Translations"
+    reason: "the helper usage and never-hardcode clause stayed in the Iron Law, but the parameterised worked examples were carried nowhere"

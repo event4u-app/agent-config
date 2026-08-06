@@ -1,0 +1,63 @@
+# Migration ledger for `autonomous-execution` — what the body-migration transform kept, folded, and lost.
+#
+# `source_headings` is the HARVEST, not a cache: the pre-migration commits are
+# not ancestors of HEAD and a remote branch prune would destroy them, so the
+# headings are recorded here to survive that. See lint_rule_migration_ledger.
+rule: autonomous-execution
+source: recoverable
+source_commit: 6ef4102d6448cf5a37f3e1555b33299ebd75c907
+source_path: src/rules/autonomous-execution.md
+migrated_to:
+  - src/agent-src/contexts/execution/autonomy-mechanics.md
+source_headings:
+  - "Hard Floor — see [`non-destructive-by-default`](non-destructive-by-default.md)"
+  - "Setting — `personal.autonomy`"
+  - "Opt-in detection — match by intent, not exact string"
+  - "Task-scope — autonomy is bound to the named task"
+  - "User interrupts override the current task"
+  - "Validation-loop budget — hard cap N=3 per target"
+  - "Antipattern — allowlist-growth as silent budget bypass"
+  - "Probe efficiency — direct over orchestration"
+  - "Adaptive effort & stop (RDP)"
+  - "See also"
+rows:
+  - heading: "Hard Floor — see [`non-destructive-by-default`](non-destructive-by-default.md)"
+    disposition: carried
+    target: "src/rules/autonomous-execution.md#Hard Floor — see [`non-destructive-by-default`](non-destructive-by-default.md)"
+    reason: "the section stayed in the rule; the migration moved the depth beneath it, not this heading"
+  - heading: "Setting — `personal.autonomy`"
+    disposition: carried
+    target: "src/rules/autonomous-execution.md#Setting — `personal.autonomy`"
+    reason: "the section stayed in the rule; the migration moved the depth beneath it, not this heading"
+  - heading: "Opt-in detection — match by intent, not exact string"
+    disposition: carried
+    target: "src/rules/autonomous-execution.md#Opt-in detection — match by intent, not exact string"
+    reason: "the section stayed in the rule; the migration moved the depth beneath it, not this heading"
+  - heading: "Task-scope — autonomy is bound to the named task"
+    disposition: carried
+    target: "src/rules/autonomous-execution.md#Task-scope — autonomy is bound to the named task"
+    reason: "the section stayed in the rule; the migration moved the depth beneath it, not this heading"
+  - heading: "User interrupts override the current task"
+    disposition: carried
+    target: "src/rules/autonomous-execution.md#User interrupts override the current task"
+    reason: "the section stayed in the rule; the migration moved the depth beneath it, not this heading"
+  - heading: "Validation-loop budget — hard cap N=3 per target"
+    disposition: carried
+    target: "src/rules/autonomous-execution.md#Validation-loop budget — hard cap N=3 per target"
+    reason: "the section stayed in the rule; the migration moved the depth beneath it, not this heading"
+  - heading: "Antipattern — allowlist-growth as silent budget bypass"
+    disposition: carried
+    target: "src/rules/autonomous-execution.md#Antipattern — allowlist-growth as silent budget bypass"
+    reason: "the section stayed in the rule; the migration moved the depth beneath it, not this heading"
+  - heading: "Probe efficiency — direct over orchestration"
+    disposition: carried
+    target: "src/agent-src/contexts/execution/autonomy-mechanics.md#Probe efficiency — direct over orchestration"
+    reason: "the section moved to the migration target under the same heading text"
+  - heading: "Adaptive effort & stop (RDP)"
+    disposition: carried
+    target: "src/agent-src/contexts/execution/autonomy-mechanics.md#Adaptive effort & stop (RDP)"
+    reason: "the section moved to the migration target under the same heading text"
+  - heading: "See also"
+    disposition: carried
+    target: "src/rules/autonomous-execution.md#See also"
+    reason: "the section stayed in the rule; the migration moved the depth beneath it, not this heading"

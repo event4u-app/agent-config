@@ -105,6 +105,10 @@ tasks:
       - task: check-subagent-floor
       - task: lint-override-kernel-guard
       - task: lint-output-slop
+      - task: lint-example-fences
+      - task: lint-rule-migration-ledger
+      - task: lint-decision-impact
+      - task: check-depth-budget
       - task: lint-spawn-payload
       - task: lint-pre-migration-refs
       - task: lint-consumer-internal-refs

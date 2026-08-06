@@ -44,6 +44,17 @@
  * construction and wake up exactly when a new skill lands close to an existing
  * one. That is the point.
  *
+ * A seventh check runs on EVERY skill and is neither absence nor presence — it
+ * is a prohibition:
+ *
+ *   (g) preemption-phrase  — the description claims priority over a sibling, or
+ *                            instructs activation regardless of the request.
+ *                            Unlike (a)-(f), this defect harms OTHER skills: it
+ *                            wins turns that belonged to them, and the loss is
+ *                            invisible at the source. See PREEMPTION_PATTERNS
+ *                            for why every pattern is anchored on the directive
+ *                            rather than on a vocabulary word.
+ *
  * Deterministic, static-config only. Allowlist mirrors lint_skill_originality:
  * `lint_skill_descriptions_allowlist.json`, capped at 20 (autonomous-execution
  * allowlist-growth antipattern — over-cap means the linter is wrong).
@@ -78,6 +89,62 @@ const CONDITION_RE =
 const IMPERATIVE_LEAD_RE =
     /^["'`]*\s*(write|author|convert|review|run|add|build|generate|create|fix|wire|detect|analy[sz]e|optimi[sz]e|draft|extract|route|turn|produce|score|consolidate|rate|model|estimate|plan|check|audit|ship|emit|render|guide|poll|capture|explain|map|prepare|handle|manage|track|compare|validate|verify|enforce|choose|pick|enumerate|investigate|format|scaffold|design|define|describe|gate|block|refactor|migrate|transcribe|summari[sz]e|orchestrate|surface|propose|walk|stress-test|red-team|challenge|bootstrap|seed|install|deploy|package|split|merge|condense|harvest|evaluate|assess|diagnose|reproduce|trace|inspect|lint|test)/i;
 
+/**
+ * (g) Preemption phrases — a description that argues for itself against the
+ * rest of the catalogue.
+ *
+ * Every other check here asks whether a description carries ENOUGH signal.
+ * This one is the opposite: a description claiming priority over a sibling, or
+ * instructing activation regardless of the request, degrades routing **globally
+ * and invisibly**. It does not misroute its own skill — it wins turns that
+ * belonged to other skills, and the loss surfaces as those skills mysteriously
+ * under-firing. The sweep behind this check found the class live in a shipped
+ * third-party description and in a second suite's own catalogue.
+ *
+ * Every pattern is anchored on the **directive**, never on a vocabulary word,
+ * and that is the whole design. A first pass keyed on the words alone
+ * (`overrides`, `supersedes`, `for every …`) returned three hits on this corpus
+ * and **all three were false positives**: `override-management` manages
+ * overrides, `decision-review` asks whether an ADR should be superseded, and
+ * `prediction-pool-optimizer` answers "every question" in a prediction pool.
+ * Those are subjects, not claims. The patterns below therefore require the
+ * shape of an instruction to the router (`always use`, `use this instead of`,
+ * `this skill takes precedence`), which no domain noun produces.
+ */
+const PREEMPTION_PATTERNS: ReadonlyArray<readonly [string, RegExp]> = [
+    [
+        'unconditional activation',
+        /\b(?:always|invariably|unconditionally)\s+(?:use|load|apply|run|activate|invoke|prefer)\b/i,
+    ],
+    [
+        'activation regardless of the request',
+        /\b(?:regardless of|no matter)\s+(?:the|what|which)\b|\b(?:for|on)\s+(?:every|all|any)\s+(?:request|turn|prompt|conversation|session)s?\b|\beven if not (?:asked|requested)\b/i,
+    ],
+    [
+        'priority over a sibling',
+        /\b(?:use|load|apply|invoke|prefer)\s+(?:this|these|it)\b[^.;]{0,60}?\b(?:instead of|rather than|over|in preference to)\b/i,
+    ],
+    [
+        'authority claim over the catalogue',
+        /\bthis (?:skill|one|artifact)\s+(?:takes precedence|outranks|supersedes|overrides|wins)\b|\b(?:takes precedence over|outranks)\s+(?:all|any|every)\b/i,
+    ],
+    [
+        'load-order claim',
+        /\b(?:before|prior to)\s+(?:any|all)\s+other\s+(?:skill|tool|rule)s?\b|\bload (?:this )?first\b/i,
+    ],
+];
+
+/** The first preemption claim in a description, or null. */
+function preemptionPhrase(desc: string): { kind: string; match: string } | null {
+    for (const [kind, rx] of PREEMPTION_PATTERNS) {
+        const m = rx.exec(desc);
+        if (m) {
+            return { kind: kind as string, match: m[0] };
+        }
+    }
+    return null;
+}
+
 interface Violation {
     slug: string;
     code:
@@ -86,7 +153,8 @@ interface Violation {
         | 'triggers-are-name'
         | 'no-routing-signal'
         | 'clustered-no-sibling-routing'
-        | 'clustered-no-quoted-phrase';
+        | 'clustered-no-quoted-phrase'
+        | 'preemption-phrase';
     detail: string;
 }
 
@@ -201,6 +269,22 @@ function analyseSkill(slug: string, fm: Record<string, string>, siblings: readon
             slug,
             code: 'no-routing-signal',
             detail: 'no condition marker, imperative-verb lead, specifics enumeration, or example query — the router has nothing to disambiguate on',
+        });
+    }
+
+    // (g) a claim of priority over the rest of the catalogue. Unlike (a)-(d),
+    // this defect harms OTHER skills, so it is checked on every skill and is
+    // never scoped to a cluster — a preemption phrase costs turns regardless of
+    // whether the router already had a near-neighbour to confuse it with.
+    const preemption = preemptionPhrase(desc);
+    if (preemption) {
+        out.push({
+            slug,
+            code: 'preemption-phrase',
+            detail:
+                `description claims ${preemption.kind} ("${preemption.match}") — a description ` +
+                'argues for its own routing conditions, never against its siblings; this wins ' +
+                'turns that belonged to other skills and the loss is invisible at the source',
         });
     }
 
@@ -332,4 +416,4 @@ if (path.resolve(process.argv[1] ?? '') === path.resolve(_HERE)) {
     process.exit(main(process.argv.slice(2)));
 }
 
-export { analyseSkill, normalize, triggerPhrases, main };
+export { analyseSkill, normalize, triggerPhrases, preemptionPhrase, main };

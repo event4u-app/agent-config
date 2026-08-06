@@ -1,0 +1,58 @@
+# Migration ledger for `persona-governance` — what the body-migration transform kept, folded, and lost.
+#
+# `source_headings` is the HARVEST, not a cache: the pre-migration commits are
+# not ancestors of HEAD and a remote branch prune would destroy them, so the
+# headings are recorded here to survive that. See lint_rule_migration_ledger.
+rule: persona-governance
+source: recoverable
+source_commit: 94dc19cac62ff21449afd5a373c1363ee3d6215c
+source_path: src/rules/persona-governance.md
+migrated_to:
+  - docs/contracts/persona-schema.md
+source_headings:
+  - "Iron Law"
+  - "The four checks"
+  - "1. Per-domain cap — ≤ 2 specialised personas per content domain"
+  - "2. Skill citation floor — ≥ 1 cite before merge"
+  - "3. Deprecation path — delete immediately, record in commit"
+  - "4. Schema conformance — the skill linter is the gate"
+  - "Failure modes — what counts as a violation"
+  - "Day-one state"
+  - "See also"
+rows:
+  - heading: "Iron Law"
+    disposition: carried
+    target: "src/rules/persona-governance.md#Iron Law"
+    reason: "the section stayed in the rule; the migration moved the depth beneath it, not this heading"
+  - heading: "The four checks"
+    disposition: carried
+    target: "docs/contracts/persona-schema.md#§ 8 — Governance discipline (the four checks)"
+    reason: "the container heading and its framing paragraph survive as the section preamble with the four checks renumbered beneath it"
+  - heading: "1. Per-domain cap — ≤ 2 specialised personas per content domain"
+    disposition: carried
+    target: "docs/contracts/persona-schema.md#8.1 Per-domain cap — ≤ 2 specialised personas per content domain"
+    reason: "the domain definition, the eight-row cap table and the deprecation-candidate requirement moved word-for-word with only a link depth changed"
+  - heading: "2. Skill citation floor — ≥ 1 cite before merge"
+    disposition: carried
+    target: "docs/contracts/persona-schema.md#8.2 Skill citation floor — ≥ 1 cite before merge"
+    reason: "the citation requirement, the reject-the-PR consequence and the catalog pointer are reproduced verbatim"
+  - heading: "3. Deprecation path — delete immediately, record in commit"
+    disposition: carried
+    target: "docs/contracts/persona-schema.md#8.3 Deprecation path — delete immediately, record in commit"
+    reason: "delete-in-the-same-commit, the successor-naming message rule and the no-silent-delete clause all survive verbatim"
+  - heading: "4. Schema conformance — the skill linter is the gate"
+    disposition: carried
+    target: "docs/contracts/persona-schema.md#8.4 Schema conformance — the skill linter is the gate"
+    reason: "the full linted-property list and the pre-PR linter step survive, rewired from an external link to this contract's own sections"
+  - heading: "Failure modes — what counts as a violation"
+    disposition: carried
+    target: "docs/contracts/persona-schema.md#Failure modes — what counts as a violation"
+    reason: "the section moved to the migration target under the same heading text"
+  - heading: "Day-one state"
+    disposition: carried
+    target: "docs/contracts/persona-schema.md#Governance day-one state"
+    reason: "the council verdict, the fold-in decision and the persona inventory line survive verbatim under a disambiguated heading"
+  - heading: "See also"
+    disposition: carried
+    target: "src/rules/persona-governance.md#See also"
+    reason: "the section stayed in the rule; the migration moved the depth beneath it, not this heading"

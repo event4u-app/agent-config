@@ -1,0 +1,63 @@
+# Migration ledger for `design-fidelity` — what the body-migration transform kept, folded, and lost.
+#
+# `source_headings` is the HARVEST, not a cache: the pre-migration commits are
+# not ancestors of HEAD and a remote branch prune would destroy them, so the
+# headings are recorded here to survive that. See lint_rule_migration_ledger.
+rule: design-fidelity
+source: recoverable
+source_commit: e382bec6cc04470e19534c7521a8271c52e0f79e
+source_path: src/rules/design-fidelity.md
+migrated_to:
+  - docs/guidelines/design-fidelity-mechanics.md
+source_headings:
+  - "The Iron Law"
+  - "What counts as the spec"
+  - "Strictness — set by `design.fidelity_mode`"
+  - "When it fires"
+  - "When NOT to fire"
+  - "How to surface a deviation — do NOT execute it"
+  - "Failure modes"
+  - "Surgical visual edits"
+  - "Asset & imagery discipline"
+  - "See also"
+rows:
+  - heading: "The Iron Law"
+    disposition: carried
+    target: "src/rules/design-fidelity.md#The Iron Law"
+    reason: "the section stayed in the rule; the migration moved the depth beneath it, not this heading"
+  - heading: "What counts as the spec"
+    disposition: carried
+    target: "src/rules/design-fidelity.md#What counts as the spec"
+    reason: "the section stayed in the rule; the migration moved the depth beneath it, not this heading"
+  - heading: "Strictness — set by `design.fidelity_mode`"
+    disposition: carried
+    target: "src/rules/design-fidelity.md#Strictness — set by `design.fidelity_mode`"
+    reason: "the section stayed in the rule; the migration moved the depth beneath it, not this heading"
+  - heading: "When it fires"
+    disposition: carried
+    target: "src/rules/design-fidelity.md#When it fires"
+    reason: "the section stayed in the rule; the migration moved the depth beneath it, not this heading"
+  - heading: "When NOT to fire"
+    disposition: carried
+    target: "src/rules/design-fidelity.md#When NOT to fire"
+    reason: "the section stayed in the rule; the migration moved the depth beneath it, not this heading"
+  - heading: "How to surface a deviation — do NOT execute it"
+    disposition: carried
+    target: "docs/guidelines/design-fidelity-mechanics.md#How to surface a deviation — do NOT execute it"
+    reason: "the section moved to the migration target under the same heading text"
+  - heading: "Failure modes"
+    disposition: carried
+    target: "docs/guidelines/design-fidelity-mechanics.md#Failure modes"
+    reason: "the section moved to the migration target under the same heading text"
+  - heading: "Surgical visual edits"
+    disposition: carried
+    target: "docs/guidelines/design-fidelity-mechanics.md#Surgical visual edits"
+    reason: "the section moved to the migration target under the same heading text"
+  - heading: "Asset & imagery discipline"
+    disposition: carried
+    target: "docs/guidelines/design-fidelity-mechanics.md#Asset & imagery discipline"
+    reason: "the section moved to the migration target under the same heading text"
+  - heading: "See also"
+    disposition: carried
+    target: "src/rules/design-fidelity.md#See also"
+    reason: "the section stayed in the rule; the migration moved the depth beneath it, not this heading"

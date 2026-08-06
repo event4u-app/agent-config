@@ -1,0 +1,63 @@
+# Migration ledger for `broken-access-control` — what the body-migration transform kept, folded, and lost.
+#
+# `source_headings` is the HARVEST, not a cache: the pre-migration commits are
+# not ancestors of HEAD and a remote branch prune would destroy them, so the
+# headings are recorded here to survive that. See lint_rule_migration_ledger.
+rule: broken-access-control
+source: recoverable
+source_commit: 6ef4102d6448cf5a37f3e1555b33299ebd75c907
+source_path: src/rules/broken-access-control.md
+migrated_to:
+  - src/skills/authz-review/SKILL.md
+source_headings:
+  - "The Iron Law"
+  - "Non-optional controls (every data-returning surface)"
+  - "The three negative tests — the completion gate"
+  - "Role-based field-level access — both directions (vertical BOPLA + BFLA)"
+  - "Defense-in-depth (so one miss can't leak)"
+  - "GDPR / DSGVO — data protection by design"
+  - "Backstop greps (authoring-time)"
+  - "When it fires"
+  - "When NOT to fire"
+  - "See also"
+rows:
+  - heading: "The Iron Law"
+    disposition: carried
+    target: "src/rules/broken-access-control.md#The Iron Law"
+    reason: "the section stayed in the rule; the migration moved the depth beneath it, not this heading"
+  - heading: "Non-optional controls (every data-returning surface)"
+    disposition: carried
+    target: "src/skills/authz-review/SKILL.md#Non-optional controls (every data-returning surface)"
+    reason: "the section moved to the migration target under the same heading text"
+  - heading: "The three negative tests — the completion gate"
+    disposition: carried
+    target: "src/rules/broken-access-control.md#The three negative tests — the completion gate"
+    reason: "the section stayed in the rule; the migration moved the depth beneath it, not this heading"
+  - heading: "Role-based field-level access — both directions (vertical BOPLA + BFLA)"
+    disposition: carried
+    target: "src/skills/authz-review/SKILL.md#Role-based field-level access — both directions (vertical BOPLA + BFLA)"
+    reason: "the section moved to the migration target under the same heading text"
+  - heading: "Defense-in-depth (so one miss can't leak)"
+    disposition: carried
+    target: "src/skills/authz-review/SKILL.md#Defense-in-depth (so one miss can't leak)"
+    reason: "the section moved to the migration target under the same heading text"
+  - heading: "GDPR / DSGVO — data protection by design"
+    disposition: carried
+    target: "src/skills/authz-review/SKILL.md#GDPR / DSGVO — data protection by design"
+    reason: "the section moved to the migration target under the same heading text"
+  - heading: "Backstop greps (authoring-time)"
+    disposition: carried
+    target: "src/skills/authz-review/SKILL.md#Backstop greps (authoring-time)"
+    reason: "the section moved to the migration target under the same heading text"
+  - heading: "When it fires"
+    disposition: carried
+    target: "src/rules/broken-access-control.md#When it fires"
+    reason: "the section stayed in the rule; the migration moved the depth beneath it, not this heading"
+  - heading: "When NOT to fire"
+    disposition: carried
+    target: "src/rules/broken-access-control.md#When NOT to fire"
+    reason: "the section stayed in the rule; the migration moved the depth beneath it, not this heading"
+  - heading: "See also"
+    disposition: carried
+    target: "src/rules/broken-access-control.md#See also"
+    reason: "the section stayed in the rule; the migration moved the depth beneath it, not this heading"
