@@ -1,0 +1,185 @@
+// Tests for src/scripts/hooks/evidence_independence.ts.
+//
+// The fixture in "blocks the exact construct that fabricated the honest-null"
+// is the literal phrase from the audited session. The fan-out tests are the
+// guard's own false-positive floor: the session that produced this hook
+// dispatched seven analysis subagents in one turn, and none of them may be
+// touched.
+import * as fs from "node:fs";
+import * as os from "node:os";
+import * as path from "node:path";
+import { beforeEach, describe, expect, it } from "vitest";
+
+import {
+  decide,
+  extractDispatch,
+  isDispatchTool,
+  isEvaluationPrompt,
+  isSelfScoped,
+  preloadedVerdict,
+  run,
+  STATE_FILE,
+} from "../../src/scripts/hooks/evidence_independence.js";
+
+let tmp: string;
+
+beforeEach(() => {
+  tmp = fs.mkdtempSync(path.join(os.tmpdir(), "evidence-"));
+});
+
+function dispatch(prompt: string, tool = "Agent"): number {
+  return run(
+    JSON.stringify({
+      event: "pre_tool_use",
+      session_id: "s1",
+      turn_id: "t1",
+      payload: { tool_name: tool, tool_input: { prompt } },
+    }),
+    { consumer_root: tmp },
+  );
+}
+
+describe("shape detection", () => {
+  it("recognises subagent-dispatch tools", () => {
+    expect(isDispatchTool("Agent")).toBe(true);
+    expect(isDispatchTool("Task")).toBe(true);
+    expect(isDispatchTool("Bash")).toBe(false);
+    expect(isDispatchTool(null)).toBe(false);
+  });
+
+  it("recognises an evaluation prompt", () => {
+    expect(isEvaluationPrompt("Run a blind review of the delta on this branch.")).toBe(true);
+    expect(isEvaluationPrompt("Audit these files for security defects.")).toBe(true);
+    expect(isEvaluationPrompt("Find any bugs in my implementation of the parser.")).toBe(true);
+  });
+
+  it("does NOT treat ordinary fan-out as an evaluation", () => {
+    for (const p of [
+      "Read these five transcript digests and summarise the failure classes.",
+      "Map every call site of `resolve_settings` and report file:line.",
+      "Write the migration for the new column.",
+    ]) {
+      expect(isEvaluationPrompt(p), p).toBe(false);
+    }
+  });
+});
+
+describe("preloadedVerdict", () => {
+  it("catches the literal phrase from the audited session", () => {
+    expect(preloadedVerdict("NO-FINDINGS is expected and welcome for this scope.")).not.toBeNull();
+  });
+
+  it("catches the common softeners", () => {
+    for (const p of [
+      "You should find nothing, but check anyway.",
+      "Please confirm that there are no issues with this diff.",
+      "I believe this is clean — verify the work.",
+      "Just confirm the change is right.",
+      "It's probably fine, but take a look.",
+    ]) {
+      expect(preloadedVerdict(p), p).not.toBeNull();
+    }
+  });
+
+  it("does not fire on a neutral prompt", () => {
+    expect(
+      preloadedVerdict("Review this diff adversarially and report every finding with file:line."),
+    ).toBeNull();
+  });
+});
+
+describe("decide", () => {
+  it("warns on the first evaluation and names both observed failure shapes", () => {
+    const d = decide("Agent", "Review my diff and report findings.", 0);
+    expect(d.exit).toBe(0);
+    const out = JSON.parse(d.stdout);
+    expect(out.decision).toBe("warn");
+    expect(out.reason).toMatch(/pre-loaded/);
+    expect(out.reason).toMatch(/scope narrowed/);
+    expect(d.evaluations).toBe(1);
+  });
+
+  it("blocks the exact construct that fabricated the honest-null", () => {
+    const d = decide(
+      "Agent",
+      "Do a blind review of these four files. NO-FINDINGS is expected and welcome.",
+      0,
+    );
+    expect(d.exit).toBe(2);
+    expect(d.stderr).toMatch(/pre-loads its verdict/);
+  });
+
+  it("blocks a second evaluation of MY OWN work in the same turn as verdict shopping", () => {
+    const d = decide("Agent", "Audit my change again with a wider scope.", 1);
+    expect(d.exit).toBe(2);
+    expect(d.stderr).toMatch(/verdict shopping/);
+  });
+
+  // Caught by the conformance scan against real data: the audit session that
+  // built this hook dispatched seven subagents opening "You are auditing real
+  // Claude Code session transcripts…". `audit` matches the evaluation pattern,
+  // so six were flagged as verdict shopping — the exact false positive the
+  // hook claims to avoid. Auditing thirty transcripts is not reviewing your own
+  // diff twice, so the second-dispatch block now requires a self-reference.
+  it("does not treat repeated evaluation of an EXTERNAL artifact as shopping", () => {
+    const external = "You are auditing real Claude Code session transcripts. Review group 3.";
+    expect(isEvaluationPrompt(external)).toBe(true);
+    expect(isSelfScoped(external)).toBe(false);
+    for (const prior of [0, 1, 6]) {
+      expect(decide("Agent", external, prior).exit).toBe(0);
+    }
+  });
+
+  it("never touches a non-evaluation dispatch, at any count", () => {
+    for (const prior of [0, 1, 6]) {
+      const d = decide("Agent", "Summarise these transcript digests.", prior);
+      expect(d.exit).toBe(0);
+      expect(d.stdout).toBe("");
+    }
+  });
+
+  it("never touches a non-dispatch tool", () => {
+    expect(decide("Bash", "review this diff", 0).exit).toBe(0);
+  });
+});
+
+describe("end to end", () => {
+  // The guard's false-positive floor, taken from the session that built it.
+  it("allows a seven-way analysis fan-out untouched", () => {
+    for (let i = 0; i < 7; i += 1) {
+      expect(dispatch(`Read digest group ${i} and report the rule violations you find.`)).toBe(0);
+    }
+    expect(fs.existsSync(path.join(tmp, STATE_FILE))).toBe(false);
+  });
+
+  it("warns once then blocks the second self-review", () => {
+    expect(dispatch("Review my change on this branch and report findings.")).toBe(0);
+    expect(dispatch("Review this diff again, this time only src/scripts/.")).toBe(2);
+  });
+
+  it("resets the evaluation count on a new turn", () => {
+    expect(dispatch("Review my change and report findings.")).toBe(0);
+    const rc = run(
+      JSON.stringify({
+        event: "pre_tool_use",
+        session_id: "s1",
+        turn_id: "t2",
+        payload: { tool_name: "Agent", tool_input: { prompt: "Review my change and report findings." } },
+      }),
+      { consumer_root: tmp },
+    );
+    expect(rc).toBe(0);
+  });
+
+  it("is a clean no-op on a malformed envelope", () => {
+    expect(run("{not json", { consumer_root: tmp })).toBe(0);
+  });
+
+  it("extractDispatch reads the prompt out of the tool input", () => {
+    const [tool, prompt] = extractDispatch({
+      payload: { tool_name: "Agent", tool_input: { prompt: "hello" } },
+    });
+    expect(tool).toBe("Agent");
+    expect(prompt).toBe("hello");
+  });
+});
