@@ -1,6 +1,6 @@
 # agent-config — Public Catalog
 
-Consumer-facing catalog of all **699 public artefacts** shipped by
+Consumer-facing catalog of all **700 public artefacts** shipped by
 this package. Internal package-maintenance rules and deprecation shims
 are excluded.
 
@@ -316,7 +316,7 @@ are excluded.
 | skill | [`wireframe`](../dist/agent-src/skills/wireframe/SKILL.md) | official | Explore a flow or layout with 3+ disposable lo-fi greyscale wireframes on a named axis, before any hi-fi work. Use when the user wants to sketch directions or explore structure. |
 | skill | [`worktree-lifecycle`](../dist/agent-src/skills/worktree-lifecycle/SKILL.md) | official | Use when governing a worktree across its whole life — scope-lock declaration, merge-readiness status, scoped verification, and safe cleanup that refuses while unique unmerged commits exist. |
 
-## Rules (111)
+## Rules (112)
 
 | kind | name | type | description |
 |---|---|---|---|
@@ -411,6 +411,7 @@ are excluded.
 | rule | [`security-sensitive-stop`](../dist/agent-src/rules/security-sensitive-stop.md) | auto | Security-sensitive paths (auth, billing, tenants, secrets, uploads, webhooks) — threat-model BEFORE editing |
 | rule | [`senior-engineering-discipline`](../dist/agent-src/rules/senior-engineering-discipline.md) | auto | Writing/generating code — generalize (no overfit/tautological tests), supply the invisible cross-cutting controls, never invent an API/field/package |
 | rule | [`session-canary`](../dist/agent-src/rules/session-canary.md) | auto | personal.canary_name set — open every new task by name (liveness canary); keep the reply-close markers alive (ONE end-summary, PR URL last) |
+| rule | [`settings-ask-protocol`](../dist/agent-src/rules/settings-ask-protocol.md) | auto | Asking the user about a setting — one question per command execution, a fixed four-slot shape, and the key's class decides where the answer goes |
 | rule | [`size-enforcement`](../dist/agent-src/rules/size-enforcement.md) | manual | Creating or editing rules, skills, commands, guidelines, AGENTS.md, or copilot-instructions.md — enforce size and scope limits |
 | rule | [`skill-improvement-trigger`](../dist/agent-src/rules/skill-improvement-trigger.md) | auto | After a meaningful task — trigger post-task learning capture if pipelines.skill_improvement is enabled |
 | rule | [`skill-quality`](../dist/agent-src/rules/skill-quality.md) | auto | Creating/editing/reviewing skills — minimum quality standard; every skill executable, validated, self-contained |

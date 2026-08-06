@@ -7,7 +7,7 @@ Artefacts that maintain this package (agent-config itself).
 - **id**: `meta`
 - **owner**: agent-config-maintainer
 - **requires**: engineering-base
-- **artefacts**: 292
+- **artefacts**: 293
 
 ## Commands (153)
 
@@ -165,7 +165,7 @@ Artefacts that maintain this package (agent-config itself).
 - **`worktree-status`** — List active worktrees — ownership (scope lock), dirty state, ahead/behind, merge-readiness incl. verification evidence
 - **`worktree-verify`** — Run the scoped verification for a worktree's declared change — narrow probes matched to the diff, never the full CI pipeline
 
-## Rules (65)
+## Rules (66)
 
 - **`agent-authority`** — Priority Index for the four authority rules — Hard Floor → Permission Gate → Commit Default → Trivial-vs-Blocking; read first, route to canonical rule
 - **`analysis-skill-routing`** — When choosing an analysis skill, route to the narrowest matching skill instead of defaulting to broad analysis
@@ -218,6 +218,7 @@ Artefacts that maintain this package (agent-config itself).
 - **`rule-type-governance`** — Creating/editing rules, or auditing rule types — decides when a rule should be always vs auto
 - **`runtime-safety`** — Skill declares execution metadata — enforce safety constraints for assisted/automated execution types
 - **`session-canary`** — personal.canary_name set — open every new task by name (liveness canary); keep the reply-close markers alive (ONE end-summary, PR URL last)
+- **`settings-ask-protocol`** — Asking the user about a setting — one question per command execution, a fixed four-slot shape, and the key's class decides where the answer goes
 - **`size-enforcement`** — Creating or editing rules, skills, commands, guidelines, AGENTS.md, or copilot-instructions.md — enforce size and scope limits
 - **`skill-improvement-trigger`** — After a meaningful task — trigger post-task learning capture if pipelines.skill_improvement is enabled
 - **`skill-quality`** — Creating/editing/reviewing skills — minimum quality standard; every skill executable, validated, self-contained
