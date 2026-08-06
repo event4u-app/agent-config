@@ -71,8 +71,20 @@ function enabled(root: string): boolean {
   return false;
 }
 
+/**
+ * The dispatcher nests the host-shaped tool fields under `payload`; a bare host
+ * invocation puts them at the top level. Read both — this hook shipped reading
+ * only the top level, so under the dispatcher `extract` always returned null and
+ * the concern was silent on every write it was supposed to flag.
+ */
+function _unwrap(envelope: JsonObject): JsonObject {
+  const inner = envelope["payload"];
+  return isObject(inner) ? inner : envelope;
+}
+
 /** Best-effort: pull (toolName, filePath, proposedContent) from the PreToolUse envelope. */
-function extract(envelope: JsonObject): { file: string; content: string } | null {
+function extract(outer: JsonObject): { file: string; content: string } | null {
+  const envelope = _unwrap(outer);
   const ti = envelope["tool_input"] ?? envelope["toolInput"] ?? envelope["input"];
   if (!isObject(ti)) return null;
   const fileVal = ti["file_path"] ?? ti["path"] ?? ti["filePath"];
