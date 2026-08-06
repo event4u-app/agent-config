@@ -100,6 +100,11 @@ jobs:
       - name: output-discipline (placeholder prose)
         run: ./scripts-run src/scripts/lint_output_slop
 
+      # `already-complied-with` is the class that permits deleting a rule, so
+      # it is the one that carries an evidence bar.
+      - name: decision-impact (evidence bar on the removal-permitting class)
+        run: ./scripts-run src/scripts/lint_decision_impact --quiet
+
       # A lossy transform with no record: 44 rules had their body migrated out,
       # and for 24 of them `git log --follow` cannot even find the commit.
       - name: rule-migration ledger (what the migration kept, folded, and lost)

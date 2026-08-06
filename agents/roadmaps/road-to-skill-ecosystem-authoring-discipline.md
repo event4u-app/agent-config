@@ -128,12 +128,64 @@ migration is a genuinely lossy authoring transform with no ledger, while
 ## Phase 2: Rule and skill authoring sections
 
 - [x] **Step 1:** Add a required primary-bias section to `rule-writing`: one sentence naming the model's wrong default this rule overrides. Retrofit opportunistically when a rule is touched for another reason, never as a sweep — a batch touching the kernel-prefix set trips the byte-stability gate.
-- [ ] **Step 2:** Add an optional condition-action section convention so situational conditionals are enumerable rather than mixed into standing obligations. The router matches on frontmatter; in-body conditionals are currently prose.
-- [ ] **Step 3:** Add a decision-impact classification to the rule frontmatter schema, distinct from the existing delivery class. Kernel-membership and always-budget arguments are currently made without a stated impact class. Require evidence before classifying a rule as one the model already complies with — that classification is the one that permits removal, so it carries the evidence bar.
-- [ ] **Step 4:** Add a required rationalizations-to-reject section to skills routed by the security stop: each entry names the shortcut and the mechanism that defeats it. The existing forbidden-moves and failure-mode sections describe what is wrong; this pre-empts the argument for doing it anyway.
+- [x] **Step 2:** Add an optional condition-action section convention so situational conditionals are enumerable rather than mixed into standing obligations. The router matches on frontmatter; in-body conditionals are currently prose.
+      `rule-writing` § Optional: enumerate condition-action clauses — a
+      `## Conditions` heading with one `<condition>` → `<action>` bullet each,
+      **only where a rule carries more than two**, because a heading over a
+      single bullet is ceremony. Its second effect is the one that pays later:
+      an unreachable condition becomes a visible line, which is exactly the
+      input `decision-review` needs to ask whether the clause still earns its
+      place.
+- [x] **Step 3:** Add a decision-impact classification to the rule frontmatter schema, distinct from the existing delivery class. Kernel-membership and always-budget arguments are currently made without a stated impact class. Require evidence before classifying a rule as one the model already complies with — that classification is the one that permits removal, so it carries the evidence bar.
+      `decision_impact` on the rule schema, three values on the
+      why-the-rule-exists axis (`overrides-model-default` /
+      `encodes-house-choice` / `already-complied-with`) — **not** the
+      consequence-of-violation axis, which both council members independently
+      rejected as failing the decision-relevance test: two rules can both be
+      "correctness" while one is load-bearing and the other a removal
+      candidate, so that axis does not drive the decision it exists for.
+      **The evidence bar is enforced, not documented.** `already-complied-with`
+      is the value that permits deletion, so `lint_decision_impact` requires
+      `decision_impact_evidence` alongside it and rejects that field attached
+      to any other value, where it would be decoration. The gate reads all 111
+      rules and finds 0 classified — verified-empty by design, since the field
+      is optional and backfill is opportunistic: classifying 111 rules in one
+      batch is precisely the shape that trips the kernel-prefix byte-stability
+      gate.
+- [x] **Step 4:** Add a required rationalizations-to-reject section to skills routed by the security stop: each entry names the shortcut and the mechanism that defeats it. The existing forbidden-moves and failure-mode sections describe what is wrong; this pre-empts the argument for doing it anyway.
+      `skill-writing` § Rationalizations-to-reject. Each entry is a pair: the
+      shortcut **in the words it will be argued in** ("it is an internal
+      endpoint"), and the mechanism that defeats it ("internal is a network
+      claim, not an identity claim — the object id still comes from the
+      request"). Writing the shortcut in its persuasive form is the whole
+      point, and is what separates this from the forbidden-moves lists these
+      skills already carry: a labelled anti-pattern is matched against by a
+      reader who has already decided, an argument is matched against by a
+      reader mid-decision, which is when the skip happens.
 - [x] **Step 5:** Add an internal precedence band convention for artifacts in the rich budget class: a leading non-negotiable section that outranks the rest of its own document, followed by the reasoning layer. A long reference read partially loses its load-bearing fraction. Enforce presence alongside the existing rich-class justification check.
-- [ ] **Step 6:** Add a non-negotiable-deliverable convention for skills where an adjacent technology is a tempting wrong answer: state what the output must use, then name the substitutes to refuse and what each loses. Apply it first to the framework-cluster skills the routing rules already disambiguate pairwise.
-- [ ] **Step 7:** Move a destructive-operation confirmation requirement into the description of any skill that carries one, so it is visible at routing time before the body loads. <!-- verify: ./scripts-run src/scripts/lint_skill_descriptions -->
+- [x] **Step 6:** Add a non-negotiable-deliverable convention for skills where an adjacent technology is a tempting wrong answer: state what the output must use, then name the substitutes to refuse and what each loses. Apply it first to the framework-cluster skills the routing rules already disambiguate pairwise.
+      `skill-writing` § Non-negotiable-deliverable. Three elements, and the
+      third carries the weight: what the output must use, the substitutes to
+      refuse **by name**, and **what each substitute loses**. A prohibition
+      without a stated cost reads as arbitrary and is argued away the first
+      time the substitute is more convenient. It also answers a different
+      question from the routing rules — they decide *which skill loads*, this
+      decides *what it may emit once loaded*, which is the half that goes wrong
+      quietly.
+- [x] **Step 7:** Move a destructive-operation confirmation requirement into the description of any skill that carries one, so it is visible at routing time before the body loads. <!-- verify: ./scripts-run src/scripts/lint_skill_descriptions -->
+      Convention in `skill-writing`, and applied — but the measurement made
+      the application much smaller than the step assumed. A first scan found
+      **24 skills** whose body mentions a destructive operation while the
+      description does not, and reading them showed almost all were false
+      positives: the word appears because the skill *discusses* destructive
+      operations, not because it performs one. Of the three that genuinely
+      gate an irreversible act, `worktree-lifecycle` already complied ("safe
+      cleanup that refuses while unique unmerged commits exist") and
+      `image-creator` already says "provider/governance-gated". **One real
+      gap**, now closed: `finishing-a-development-branch` routed on
+      "merge/PR/park/discard" with its never-destroy-without-confirmation gate
+      visible only in the body — invisible at exactly the moment the skill is
+      being selected for a task the gate might forbid.
 
 ## Phase 3: Ledger the lossy transform, register the contradictions
 
@@ -375,7 +427,7 @@ migration is a genuinely lossy authoring transform with no ledger, while
 - [x] The mandated-line contract exists with **five** named lines (the council added the commit surface), each bound to a decision point.
 - [x] The pre-send sweep is recorded and fires only on an owed-and-missing line.
 - [x] `src/scripts/lint_mandated_lines.ts` rejects a completion claim describing an outward action with no authorization line, proven by a test.
-- [~] `rule-writing` requires a primary-bias section (done); the schema decision-impact class is Phase 2 Step 3 and did not land.
+- [x] `rule-writing` requires a primary-bias section, and the schema decision-impact class landed with its evidence bar enforced by `lint_decision_impact`.
 - [x] Every migrated rule has a ledger whose target anchors all resolve, proven by a gate — 44 ledgers, 277 rows, and 15 recorded losses the tree had no record of.
 - [~] The contradiction register exists (it already did — `rule-interactions.yml`, extended 21 → 29 pairs), and every wins-on-conflict claim **between two rules the register declares** has a row, proven by a gate. <!-- deferred: the corpus-wide half is not shipped — 90 arbitration claims over 111 rules, ~64 pairs, two thirds of the surrounding surface boilerplate. See Phase 3 Step 6. -->
 

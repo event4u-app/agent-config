@@ -44,8 +44,8 @@
 # ----------------------------------------------------------
 # 224 `lint_*` / `check_*` / `audit_*` scripts live under `src/scripts/`
 # (the count is computed, not asserted — `check_gate_coverage.count_gate_scripts`).
-# **30 of them emit the machine-readable `scanned: <N>` line under their
-# CI-identical argv, and all 30 are listed below.** The manifest is therefore
+# **31 of them emit the machine-readable `scanned: <N>` line under their
+# CI-identical argv, and all 31 are listed below.** The manifest is therefore
 # complete with respect to its own contract, and covers ~13 % of the population.
 #
 # Two revisions of this header have now gone stale the same way. It claimed
@@ -576,3 +576,26 @@ gates:
       is the defect the gate exists for — a lossy transform with no record.
       Floor at 35 against a live 44 leaves room for a rule un-migrating (its
       body coming back) without redding the change that does it.
+
+  - id: lint_decision_impact
+    argv: ["--quiet"]
+    min_scanned: 90
+    corpus: "src/rules/*.md frontmatters (111 at baseline)"
+    status: enforced
+    canary:
+      class: unevidenced-removal-class
+      path: src/rules/zz-canary-decision-impact.md
+      content: |
+        ---
+        type: auto
+        description: "Planted canary claiming the removal-permitting class with no evidence behind it."
+        decision_impact: already-complied-with
+        ---
+
+        # Canary
+    note: >
+      Verified-empty by design: 111 rules read, 0 classified, because the field
+      is optional and backfill is opportunistic (a 111-rule batch trips
+      check_kernel_prefix_stability). The canary is what distinguishes that from
+      a gate scanning nothing — it plants the removal-permitting class with no
+      evidence and the gate reds.

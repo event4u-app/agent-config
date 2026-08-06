@@ -236,6 +236,51 @@ rule for another reason. A batch edit across the rule set trips the
 kernel-prefix byte-stability gate, and that gate is right to fire — the kernel
 prefix is pinned deliberately.
 
+## Optional: enumerate condition-action clauses
+
+A rule body mixes two shapes. **Standing obligations** hold for every turn the
+rule is loaded ("every reply mirrors the user's language"). **Condition-action
+clauses** fire on a situation ("when the diff deletes a directory, surface it").
+The router matches on frontmatter; in-body conditionals are prose, so a rule's
+situational half is invisible to everything except a full read.
+
+Where a rule carries more than two of them, group them under a
+`## Conditions` heading, one bullet per clause, each in the shape
+**`<condition>` → `<action>`**. Two effects, both cheap:
+
+- A reader can answer "does this rule apply to what I am doing?" from a list
+  instead of by reading the body.
+- A condition that turns out to be unreachable becomes visible as a line, which
+  is the input `decision-review` needs to ask whether the clause still earns its
+  place.
+
+Optional on purpose. A rule with one conditional does not need a section to hold
+it, and a heading over a single bullet is ceremony.
+
+## Optional: state the decision-impact class
+
+`type:` is a **delivery** class — how the rule reaches the model. It says
+nothing about what is at stake when the rule fires, and kernel-membership and
+always-loaded-budget arguments were being made with no stated impact class at
+all. `decision_impact:` carries that, with three values:
+
+| Value | Meaning | Consequence |
+|---|---|---|
+| `overrides-model-default` | the model's base behaviour is wrong here | load-bearing; the strongest case for staying loaded |
+| `encodes-house-choice` | the model would make *a* defensible choice, not *ours* | stays until the house choice changes |
+| `already-complied-with` | the model does this unprompted | **the one value that permits removal** |
+
+The third carries an evidence bar, enforced by `lint_decision_impact`: it
+requires `decision_impact_evidence`, a pointer a reviewer can follow to the
+observation. The bar exists because that classification is what permits deleting
+a rule, and "the model probably does this anyway" is the cheapest possible way
+to remove a floor that was working precisely *because* nothing had crossed it —
+`active-remediation` names that failure as deleting a rule that is merely quiet.
+
+**Optional, and backfill is opportunistic.** Classifying all 111 rules in one
+batch is exactly the shape that trips `check_kernel_prefix_stability`. Add it to
+new rules, and to a rule you are already touching for another reason.
+
 ## Output format
 
 1. Complete rule file at `src/rules/{name}.md`

@@ -1259,6 +1259,13 @@ tasks:
       Catches the class where a gate scans a dead root and exits 0; see ADR-201 context.
     cmd: ./scripts-run src/scripts/check_gate_coverage
 
+  lint-decision-impact:
+    silent: true
+    desc: >-
+      The evidence bar on `decision_impact: already-complied-with` — the one
+      classification that permits removing a rule.
+    cmd: ./scripts-run src/scripts/lint_decision_impact --quiet
+
   lint-rule-migration-ledger:
     silent: true
     desc: >-
