@@ -1,8 +1,27 @@
+---
+adr: 218
+status: accepted
+date: 2026-08-06
+decision: absoluta-census-is-a-closed-decision-input
+supersedes: —
+superseded_by: —
+phase: road-to-rule-coherence — post-merge correction of two unverified numbers
+type: structural
+review_trigger: >-
+  Reopen when something actually wants to CONSUME the absoluta figure — a
+  proposal to gate, ratchet, or block on "carries an absolute", or an artefact
+  that needs to cite a prevalence number. That is the event this record closes
+  against: today nothing consumes it, which is precisely why it is scoped as a
+  closed decision input rather than instrumentation. Also reopen if the corpus
+  composition changes enough that the three readings stop agreeing — the
+  decision rests on their 71-87% band being invariant, so a run where the strict
+  and structural readings diverge by more than ~20 points invalidates the
+  "method-independent" claim this ADR is built on.
+---
+
 # ADR-218 — The absoluta census is a closed decision input, not instrumentation
 
-- **Status:** Accepted
-- **Date:** 2026-08-06
-- **Deciders:** maintainer; AI council round 3 (`anthropic/claude-sonnet-4-5` + `openai/gpt-4o`, blind + peer review)
+**Deciders:** maintainer; AI council round 3 (`anthropic/claude-sonnet-4-5` + `openai/gpt-4o`, blind + peer review).
 
 ## Context
 
