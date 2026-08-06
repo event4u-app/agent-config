@@ -10,7 +10,10 @@
 #   stitch.sh <manifest.json> <output.mp4>
 #               [--skip-scene <id> ...]
 #               [--abort-on-missing | --continue]
-#               [--crossfade <seconds>]
+#
+# NOT a flag: --crossfade. It is parsed and REFUSED (exit 2). See
+# "Refused flags" below — it is listed so a caller who read the old
+# usage line gets an error instead of a hard cut.
 #
 # Failure semantics:
 #   - Missing clip → fail loud with scene_id and re-render hint
@@ -21,6 +24,22 @@
 #     <project>/scenes/<id>/error.json; stitch.sh checks for that
 #     file alongside the clip and surfaces it instead of an opaque
 #     ffmpeg error.
+#
+# Refused flags:
+#   --crossfade <seconds> — accepted by the parser, then REFUSED with
+#     exit 2 before any work. It used to print "not yet implemented"
+#     to stderr and fall straight through to the plain concat, so the
+#     script reported success (exit 0, success JSON) while delivering a
+#     hard cut. Worse, the notice sat AFTER the dry-run exit, and
+#     AIV_DRYRUN defaults to true — so in the default mode the flag was
+#     accepted in total silence.
+#     A crossfade is not a small addition here: the output path is
+#     `-f concat -c copy`, and stream copy precludes any filtergraph, so
+#     xfade/acrossfade need a re-encode path that does not exist. It was
+#     also never reachable from a governed surface: /video:stitch passes
+#     only --skip-scene and --continue and rejects anything else. So the
+#     honest state is a refusal, not a silent downgrade and not a
+#     filtergraph shipped into a script with no test harness.
 
 set -euo pipefail
 
@@ -39,19 +58,23 @@ esac
 MANIFEST="${1:-}"
 OUTPUT="${2:-}"
 [ -n "${MANIFEST}" ] && [ -n "${OUTPUT}" ] \
-  || aiv_die 2 "usage: stitch.sh <manifest.json> <output.mp4> [--skip-scene <id>] [--abort-on-missing|--continue] [--crossfade <s>]"
+  || aiv_die 2 "usage: stitch.sh <manifest.json> <output.mp4> [--skip-scene <id>] [--abort-on-missing|--continue]"
 [ -r "${MANIFEST}" ] || aiv_die 2 "manifest not readable: ${MANIFEST}"
 shift 2 || true
 
 SKIP_IDS=""
 MISSING_POLICY="abort"
-CROSSFADE=""
 while [ "$#" -gt 0 ]; do
   case "$1" in
     --skip-scene) SKIP_IDS="${SKIP_IDS} ${2:-}"; shift 2 ;;
     --abort-on-missing) MISSING_POLICY="abort"; shift ;;
     --continue) MISSING_POLICY="continue"; shift ;;
-    --crossfade) CROSSFADE="${2:-}"; shift 2 ;;
+    --crossfade)
+      # Refused HERE — before the dry-run branch, before ffmpeg, before any
+      # output. The old code warned after the dry-run exit and then concatenated
+      # anyway, so a caller asking for a crossfade got a hard cut and exit 0.
+      aiv_die 2 "stitch.sh: --crossfade is not implemented and will not be silently downgraded. The output path is 'ffmpeg -f concat -c copy', and stream copy precludes any filtergraph, so xfade/acrossfade require a re-encode path this script does not have. Re-run without --crossfade for a hard-cut concat, or open a roadmap item for the re-encode path."
+      ;;
     *) aiv_die 2 "stitch.sh: unknown flag '$1'" ;;
   esac
 done
@@ -147,11 +170,6 @@ if [ "${DRYRUN_FLAG}" -eq 1 ]; then
   printf '%b' "${plan}" >&2
   printf '{"output":"%s","scenes":%d,"missing":0,"dry_run":true}\n' "${OUTPUT}" "${count}"
   exit 0
-fi
-
-if [ -n "${CROSSFADE}" ]; then
-  printf 'stitch: crossfade=%ss requested — passing through ffmpeg xfade filter not yet implemented (concat path used)\n' \
-    "${CROSSFADE}" >&2
 fi
 
 ffmpeg -loglevel error -y -f concat -safe 0 -i "${CONCAT_LIST}" \
