@@ -6,10 +6,10 @@
 
 ## Overall
 
-**127 / 215 steps done · 59%**
+**133 / 218 steps done · 61%**
 
 ```text
-████████████████████████░░░░░░░░░░░░░░░░   59%
+████████████████████████░░░░░░░░░░░░░░░░   61%
 ```
 
 ## Open roadmaps
@@ -32,7 +32,7 @@
 | 14 | [road-to-tier-removal.md](roadmaps/road-to-tier-removal.md) | 4 | 8 | 2 | 6 | 0 | 0 | [1](#blockers-road-to-tier-removal) | ████████░░ 75% |
 | 15 | [road-to-ui-track-integrity-followup.md](roadmaps/road-to-ui-track-integrity-followup.md) | 1 | 10 | 10 | 0 | 0 | 0 | [2](#blockers-road-to-ui-track-integrity-followup) | ░░░░░░░░░░ 0% |
 | 16 | [road-to-worktree-hygiene.md](roadmaps/road-to-worktree-hygiene.md) | 1 | 9 | 2 | 7 | 0 | 0 | [1](#blockers-road-to-worktree-hygiene) | ████████░░ 78% |
-| 17 | [road-to-zero-ceremony-settings.md](roadmaps/road-to-zero-ceremony-settings.md) | 5 | 19 | 7 | 8 | 4 | 0 | [1](#blockers-road-to-zero-ceremony-settings) | █████░░░░░ 53% |
+| 17 | [road-to-zero-ceremony-settings.md](roadmaps/road-to-zero-ceremony-settings.md) | 5 | 19 | 4 | 14 | 1 | 0 | [1](#blockers-road-to-zero-ceremony-settings) | ████████░░ 78% |
 
 ---
 
@@ -429,15 +429,15 @@ _1 blocker resolved._
 
 ### [road-to-zero-ceremony-settings.md](roadmaps/road-to-zero-ceremony-settings.md)
 
-**Road to zero-ceremony settings — the user's file records decisions, the template stays the defaults source** — 8 / 15 done (53%)
+**Road to zero-ceremony settings — the user's file records decisions, the template stays the defaults source** — 14 / 18 done (78%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
 | 1 | The taxonomy contract | ✅ done | 0 | 4 | 0 | 0 | 100% |
 | 2 | The writer | ✅ done | 0 | 3 | 1 | 0 | 100% |
-| 3 | The user file becomes sparse | ✅ done | 0 | 1 | 3 | 0 | 100% |
-| 4 | First run: one question, one notice | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
-| 5 | The JIT protocol | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
+| 3 | The user file becomes sparse | 🟡 in progress | 3 | 1 | 0 | 0 | 25% |
+| 4 | First run: one question, one notice | 🟡 in progress | 1 | 2 | 0 | 0 | 67% |
+| 5 | The JIT protocol | ✅ done | 0 | 4 | 0 | 0 | 100% |
 
 <a id="blockers-road-to-zero-ceremony-settings"></a>
 **Blockers**
@@ -469,7 +469,13 @@ _1 blocker resolved._
     absence means something other than their default, with the reason recorded
     per key.
     3. Only then change `src/server/routes/wizard.ts:1310`.
-  - **Resolved when:** the absent-vs-default audit exists, every key whose absence changes behaviour is either carved out or fixed at its reader, and `tests/install/settings_materialisation.test.ts` pins a fresh install whose file is sparse AND whose resolved rule scope is unchanged.
+    4. In the SAME change, dispose of the one remaining `[~]` (Phase 2 step 2).
+    Closing Phase 3 takes `count_open` back to 0 with that item still
+    deferred, which re-fires Iron Law 3 as a repo-wide commit refusal with no
+    agent-side bypass — the deadlock this roadmap already hit once, recorded
+    under § Glyph re-encoding. Announced here so the next contributor meets it
+    in the plan rather than in a blocked commit.
+  - **Resolved when:** the absent-vs-default audit exists, every key whose absence changes behaviour is either carved out or fixed at its reader, and `tests/install/settings_materialisation.test.ts` pins a fresh install whose file is sparse AND whose resolved rule scope is unchanged — and step 4 above has disposed of the remaining `[~]` in the same change.
 
 _1 blocker resolved._
 

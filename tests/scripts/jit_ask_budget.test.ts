@@ -451,6 +451,129 @@ describe('consentVerdict — a value is not a decision', () => {
     });
 });
 
+describe('the migration — every ask-shaped setting routes to the protocol', () => {
+    // Phase 5 step 3. The migration was performed and pinned by nothing: a
+    // rewrite of any of these four files could restore its bespoke ask prose and
+    // no gate would notice, which is how a universalised pattern quietly
+    // re-fragments. The two absences at the end are the load-bearing half —
+    // without them this suite would also pass if someone "migrated" the two keys
+    // the rule deliberately routes elsewhere.
+
+    /** The four sites the protocol owns, and the key each one carries. */
+    const MIGRATED: ReadonlyArray<readonly [string, string]> = [
+        ['src/rules/token-budget-discipline.md', 'tokens.rich_skills'],
+        ['src/rules/delegation-policy.md', 'subagents.auto'],
+        [
+            'src/agent-src/contexts/execution/subagent-routing.md',
+            'subagents.budget_routing',
+        ],
+        [
+            'src/domains/engineering-base/review/changes/command.md',
+            'subagents.adversarial_council',
+        ],
+    ];
+
+    /** The two the rule routes AWAY, each with the reason it states. */
+    const CARVED_OUT: ReadonlyArray<readonly [string, RegExp]> = [
+        ['worktrees.mode', /permission gate/u],
+        ['decision_engine.on_block', /TTY prompt/u],
+    ];
+
+    /**
+     * Index of the last `## See also` heading, or `null` when the file has no
+     * see-also section at all. Everything at or after it is the footer.
+     *
+     * `null` rather than `lines.length`, because the two cases need different
+     * assertions and collapsing them is how this check silently weakens: with
+     * no boundary, "in the body" degenerates to plain presence — exactly the
+     * check the block rejects as insufficient. One of the four files
+     * (`subagent-routing.md`) genuinely has no see-also section, so this is a
+     * live case, not a hypothetical.
+     */
+    function seeAlsoBoundary(lines: readonly string[]): number | null {
+        let boundary: number | null = null;
+        lines.forEach((l, i) => {
+            if (/^#{1,6}\s+see also\s*$/iu.test(l.trim())) boundary = i;
+        });
+        return boundary;
+    }
+
+    for (const [rel, key] of MIGRATED) {
+        it(`${rel} defers the ask shape to the protocol in its BODY for ${key}`, () => {
+            const lines = fs.readFileSync(path.join(REPO, rel), 'utf8').split('\n');
+            expect(lines.some((l) => l.includes(key)), `${rel} must still own ${key}`).toBe(
+                true,
+            );
+
+            // Body, not footer — and this discriminator was arrived at by
+            // mutation, not by taste. A bare `toContain('settings-ask-protocol')`
+            // passes for a file that restores its full bespoke ask prose and
+            // keeps a see-also link, which is the exact regression this block
+            // claims to guard. Line-proximity to a key mention was tried first
+            // and ALSO passes that mutation, because the see-also section names
+            // the key itself. What a demoted citation cannot survive is being
+            // required in the body.
+            const boundary = seeAlsoBoundary(lines);
+            const cited = lines
+                .map((l, i) => (l.includes('settings-ask-protocol') ? i : -1))
+                .filter((i) => i >= 0);
+            expect(cited.length, `${rel} must cite settings-ask-protocol`).toBeGreaterThan(0);
+
+            if (boundary === null) {
+                // No footer to hide in, so presence IS body-presence. Recorded
+                // explicitly so a future file that GROWS a see-also section
+                // moves onto the strict branch instead of quietly staying on
+                // the weak one.
+                expect(
+                    lines.some((l) => /^#{1,6}\s+see also/iu.test(l.trim())),
+                    `${rel}: a see-also-like heading exists but did not match the exact ` +
+                        `boundary pattern — tighten seeAlsoBoundary rather than degrading`,
+                ).toBe(false);
+            } else {
+                expect(
+                    cited.some((i) => i < boundary),
+                    `${rel}: settings-ask-protocol appears only in the see-also footer — ` +
+                        `a link is not a deferral, and the bespoke prose may have returned`,
+                ).toBe(true);
+            }
+        });
+    }
+
+    it('states, per carved-out key, why it is NOT on the protocol', () => {
+        const text = ruleText();
+        for (const [key, reason] of CARVED_OUT) {
+            expect(text, key).toContain(key);
+            expect(text, `${key} needs its carve-out reason`).toMatch(reason);
+        }
+    });
+
+    it('the carved-out keys still live outside the protocol, in their own homes', () => {
+        // Pointed at the files a real migration would actually touch. Scanning
+        // the four MIGRATED files for `worktrees.mode` instead would pass
+        // vacuously — they have no reason to mention it either way, so the
+        // assertion could never fail for the reason it gives.
+        //
+        // If a future PR routes one of these through the settings protocol, that
+        // is a real decision, and it should break here rather than pass
+        // silently, because the carve-out prose in the rule would then be stale.
+        const HOMES: ReadonlyArray<readonly [string, string]> = [
+            ['src/skills/using-git-worktrees/SKILL.md', 'worktrees.mode'],
+            [
+                'src/agent-src/templates/scripts/work_engine/hooks/builtin/decision_gate.ts',
+                'on_block',
+            ],
+        ];
+        for (const [rel, key] of HOMES) {
+            const text = fs.readFileSync(path.join(REPO, rel), 'utf8');
+            expect(text, `${rel} should still own ${key}`).toContain(key);
+            expect(
+                text,
+                `${rel} now cites settings-ask-protocol — the carve-out in the rule is stale`,
+            ).not.toContain('settings-ask-protocol');
+        }
+    });
+});
+
 describe('who picks the moment — the half no gate can check', () => {
     it('carries the anti-coercion clause the class contract states as prose', () => {
         const text = ruleText();

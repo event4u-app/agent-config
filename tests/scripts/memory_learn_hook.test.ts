@@ -4,7 +4,19 @@ import os from 'node:os';
 import path from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
-import { enabled, runLearn } from '../../src/scripts/memory_learn_hook.js';
+import {
+    buildSettingsClassIndex,
+    classOfPath,
+    parseSettingsClassRows,
+} from '../../src/shared/settingsClasses.js';
+import {
+    enabled,
+    LEARN_KEY,
+    LEARN_KEY_CLASS,
+    learnConsent,
+    readLearnValue,
+    runLearn,
+} from '../../src/scripts/memory_learn_hook.js';
 
 let tmp: string;
 
@@ -52,6 +64,82 @@ describe('enabled() — settings mini-parser', () => {
         expect(enabled(tmp)).toBe(false);
         writeSettings(tmp, 'other:\n  learn_on_session_end: true\nmemory:\n  visibility: on\n');
         expect(enabled(tmp)).toBe(false);
+    });
+});
+
+describe('the consent gate — a value read is not a decision read', () => {
+    // Phase 5 step 4 of road-to-zero-ceremony-settings: the consent-gated
+    // action verifies the RECORDED DECISION. Before this wiring `consentVerdict`
+    // had zero production callers — a library with a test and no consumer,
+    // which is the "defined but not wired" shape senior-engineering-discipline
+    // counts as not done.
+
+    it('pins the key class against the contract, so a reclassification reds CI', () => {
+        // The hook hardcodes the class to keep the 2 s teardown budget. That is
+        // only safe while this assertion holds: if the contract ever moves the
+        // key out of B, the hardcode silently unbinds the gate — consentVerdict
+        // would return 'not-a-consent-key' and the hook would refuse forever,
+        // or worse, a future edit would "fix" it by dropping the check.
+        // Anchored on this file, never on the process CWD — same reason as the
+        // sibling suite: a CWD-relative read is a collection-time landmine.
+        const contract = fs.readFileSync(
+            path.join(path.resolve(__dirname, '..', '..'), 'docs/contracts/settings-classes.md'),
+            'utf8',
+        );
+        const index = buildSettingsClassIndex(parseSettingsClassRows(contract));
+        expect(classOfPath(index, LEARN_KEY)).toBe(LEARN_KEY_CLASS);
+    });
+
+    it('grants only on a permissive value in the human-written project file', () => {
+        writeSettings(tmp, 'memory:\n  learn_on_session_end: true\n');
+        expect(learnConsent(tmp)).toBe('granted');
+    });
+
+    it('withholds on the conservative default — absent and no are one answer', () => {
+        expect(learnConsent(tmp)).toBe('withheld-default');
+        writeSettings(tmp, 'memory:\n  learn_on_session_end: false\n');
+        expect(learnConsent(tmp)).toBe('withheld-default');
+    });
+
+    it('refuses a truthy-looking scalar that is not the literal true', () => {
+        // The mini-parser is crude by design, and isConservativeDefault treats
+        // every non-empty string as permissive. Normalising before the consent
+        // check is what stops `yes` from reading as a permission.
+        for (const scalar of ['yes', '1', 'on', 'maybe']) {
+            writeSettings(tmp, `memory:\n  learn_on_session_end: ${scalar}\n`);
+            expect(readLearnValue(tmp), scalar).toBe(false);
+            expect(learnConsent(tmp), scalar).toBe('withheld-default');
+        }
+    });
+
+    it('distinguishes an absent key from a key set to false', () => {
+        expect(readLearnValue(tmp)).toBeUndefined();
+        writeSettings(tmp, 'memory:\n  learn_on_session_end: false\n');
+        expect(readLearnValue(tmp)).toBe(false);
+    });
+
+    it('does NOT distinguish a deliberate false from a malformed value', () => {
+        // Pinned as a known limitation rather than left to be discovered: both
+        // collapse to `false`, so `learn_on_session_end: yes` is a silent
+        // permanent no-op. The fail-safe direction is deliberate; the ambiguity
+        // is the cost, and diagnosing it belongs to `settings:check`.
+        //
+        // Asserted against the CONCRETE value, not against each other: a bare
+        // equality between the two reads would also pass if the parser
+        // regressed to `undefined` for both, i.e. it could not fail for the
+        // reason this case is named after.
+        writeSettings(tmp, 'memory:\n  learn_on_session_end: false\n');
+        expect(readLearnValue(tmp)).toBe(false);
+        writeSettings(tmp, 'memory:\n  learn_on_session_end: yes\n');
+        expect(readLearnValue(tmp)).toBe(false);
+    });
+
+    it('collapses an UNREADABLE settings file to the same undefined as an absent one', () => {
+        // The second collapse the docstring names. A directory where the file
+        // should be is the cheapest reproducible I/O failure.
+        fs.mkdirSync(path.join(tmp, '.agent-settings.yml'));
+        expect(readLearnValue(tmp)).toBeUndefined();
+        expect(learnConsent(tmp)).toBe('withheld-default');
     });
 });
 

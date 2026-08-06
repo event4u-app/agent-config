@@ -272,8 +272,12 @@ packs`).
 
 The `welcome` step (Step 1, both modes) collects **name + language** up front —
 pulled out of the user-md step so the agent knows who it's talking to before
-anything else. Name pre-fills from the OS account (`GET /api/v1/ping`
-`systemUser`) when empty; language pre-fills from the browser locale
+anything else. Name pre-fills from `GET /api/v1/ping` `systemUser` when empty —
+which resolves the chain `src/rules/settings-ask-protocol.md` documents, **git
+user name → `$USER` → `$USERNAME`**, with the OS account as the last-resort
+floor rather than the first answer (a login handle is rarely the name someone
+wants to be called by, and the rule forbids `$USER` alone); language pre-fills
+from the browser locale
 (`navigator.language`) when no `.agent-user.yml` exists yet. In install mode
 the user-md step hides its name + language fields (collected here); setup mode
 skips the welcome step (it lands on the first settings step) and keeps those
