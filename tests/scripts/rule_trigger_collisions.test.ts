@@ -68,6 +68,19 @@ const ALLOWLIST: Record<string, string> = {};
 interface RuleTriggers {
     slug: string;
     triggers: Set<string>;
+    /**
+     * Trigger VALUES this rule has dispositioned in frontmatter, via
+     * `collision_ok:` or `precedence:`.
+     *
+     * Read here so this gate and `lint_trigger_collisions` stop disagreeing. That
+     * linter already requires a per-value disposition on EVERY sharer, so a pair
+     * whose shared values are dispositioned on both sides has by construction had
+     * "a human read both rules and decided the overlap is structural" — which is
+     * verbatim what the ALLOWLIST below asks for. Recording the same decision in
+     * a test constant as well would be a second source of truth for one
+     * judgement, i.e. a new drift source.
+     */
+    dispositioned: Set<string>;
 }
 
 function parseTriggers(): RuleTriggers[] {
@@ -78,19 +91,37 @@ function parseTriggers(): RuleTriggers[] {
         const fm = raw.match(/^---\n([\s\S]*?)\n---/);
         if (!fm?.[1]) continue;
         const triggers = new Set<string>();
+        const dispositioned = new Set<string>();
         let inTriggers = false;
+        let inDisposition = false;
         for (const line of fm[1].split('\n')) {
             if (/^triggers:\s*$/.test(line)) {
                 inTriggers = true;
+                inDisposition = false;
                 continue;
             }
-            // A non-indented, non-list line ends the triggers block.
-            if (inTriggers && /^\S/.test(line)) inTriggers = false;
+            if (/^(collision_ok|precedence):\s*$/.test(line)) {
+                inDisposition = true;
+                inTriggers = false;
+                continue;
+            }
+            // A non-indented, non-list line ends either block.
+            if (/^\S/.test(line)) {
+                inTriggers = false;
+                inDisposition = false;
+            }
+            if (inDisposition) {
+                const d = line.match(/^\s*"?([^":]+?)"?\s*:\s*\S/);
+                if (d?.[1]) dispositioned.add(d[1].trim().toLowerCase());
+                continue;
+            }
             if (!inTriggers) continue;
             const m = line.match(/^\s*-\s*(keyword|phrase):\s*"?([^"]+?)"?\s*$/);
             if (m?.[2]) triggers.add(m[2].trim().toLowerCase());
         }
-        if (triggers.size > 0) out.push({ slug: file.replace(/\.md$/, ''), triggers });
+        if (triggers.size > 0) {
+            out.push({ slug: file.replace(/\.md$/, ''), triggers, dispositioned });
+        }
     }
     return out;
 }
@@ -115,10 +146,16 @@ function findCollisions(rules: RuleTriggers[]): string[] {
             const score = jaccard(a.triggers, b.triggers);
             if (score < THRESHOLD) continue;
             if (ALLOWLIST[pairKey(a.slug, b.slug)]) continue;
-            const shared = [...a.triggers]
-                .filter((t) => b.triggers.has(t))
-                .sort()
-                .join('|');
+            const sharedValues = [...a.triggers].filter((t) => b.triggers.has(t)).sort();
+            // Dispositioned on BOTH sides = the decision `lint_trigger_collisions`
+            // already demands. One-sided is NOT enough: that linter fails a pair
+            // where only one sharer wrote the reason, and so does this.
+            if (
+                sharedValues.every((v) => a.dispositioned.has(v) && b.dispositioned.has(v))
+            ) {
+                continue;
+            }
+            const shared = sharedValues.join('|');
             offenders.push(`${a.slug} × ${b.slug} = ${score.toFixed(3)} (shared: ${shared})`);
         }
     }
@@ -148,7 +185,14 @@ describe('rule trigger collisions', () => {
         expect(victim).toBeDefined();
         const mutated = [
             ...rules,
-            { slug: 'zz-synthetic-clone', triggers: new Set(victim!.triggers) },
+            // No dispositions on the clone — an UNreviewed overlap is exactly
+            // what this gate must catch, and it is what makes the mutation
+            // meaningful now that a dispositioned pair is skipped.
+            {
+                slug: 'zz-synthetic-clone',
+                triggers: new Set(victim!.triggers),
+                dispositioned: new Set<string>(),
+            },
         ];
         const offenders = findCollisions(mutated);
         expect(offenders.some((o) => o.includes('zz-synthetic-clone'))).toBe(true);

@@ -42,6 +42,24 @@ function fixtureProject(): { manifest: string; output: string; dir: string } {
     return { manifest, output: path.join(dir, 'out.mp4'), dir };
 }
 
+/**
+ * Is ffmpeg on PATH?
+ *
+ * Load-bearing for exactly one case below. `stitch.sh` runs
+ * `aiv_require_cmd ffmpeg` in the non-dry-run branch BEFORE it parses argv, so
+ * without ffmpeg the script dies on the missing dependency and never reaches the
+ * `--crossfade` refusal. That ordering is correct — a missing hard dependency is
+ * the more fundamental error — but it makes the non-default-mode assertion
+ * environment-dependent, and CI has no ffmpeg. Skipped with its reason rather
+ * than weakened into an OR over two different error messages, which would have
+ * passed for the wrong reason.
+ *
+ * The DEFAULT-mode case needs no ffmpeg and therefore runs everywhere. That is
+ * the important half: the default mode is the one where the old code was
+ * completely silent.
+ */
+const HAS_FFMPEG = spawnSync('ffmpeg', ['-version'], { encoding: 'utf-8' }).status === 0;
+
 function runStitch(
     args: readonly string[],
     env: Record<string, string> = {},
@@ -68,7 +86,7 @@ describe('stitch.sh — --crossfade is refused, never downgraded', () => {
         expect(fs.existsSync(output)).toBe(false);
     });
 
-    it('exits 2 in the explicit non-dry-run mode too', () => {
+    it.skipIf(!HAS_FFMPEG)('exits 2 in the explicit non-dry-run mode too', () => {
         const { manifest, output } = fixtureProject();
         const r = runStitch([manifest, output, '--crossfade', '1'], { AIV_DRYRUN: 'false' });
 
