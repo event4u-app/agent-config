@@ -173,7 +173,7 @@ hash** per
 Run `/create-pr:description-only` Steps 1–4 to generate the PR title and body.
 This handles: Jira ticket extraction, diff analysis, commit messages, **PR template filling**.
 
-The generation honors the cached content flags from step 1 (§4e):
+The generation honors the cached content flags from step 1 (§4f):
 `detail_level` sets the Description tier (default `min`), `api_examples`
 adds a grounded JSON block for API-endpoint changes, and `screenshots`
 (capability-gated) adds frontend screenshots. Critical-info callouts
@@ -407,28 +407,28 @@ output as absent, not as a pass.
 in the chat reply, never as a PR comment
 ([`no-pr-progress-comments`](../rules/no-pr-progress-comments.md)).
 
-#### 4d. Jira transition (only when transitioned)
+#### 4e. Jira transition (only when transitioned)
 
 Linked ticket + `routine_confirmations: true` → ask `1. Yes / 2. No`.
 Default (`false`) → skip silently. **Only emit a transition line when
 an actual Jira API call succeeded** — never announce "skipped".
 
-#### 4e. Settings short-circuit — single read per run
+#### 4f. Settings short-circuit — single read per run
 
 `verbosity.routine_confirmations`, `verbosity.post_action_reports`,
 `commands.create_pr.preview_description`, `commands.create_pr.detail_level`,
 `commands.create_pr.api_examples`, `commands.create_pr.screenshots`,
 `commands.create_pr.ui_paths`, and `commands.create_pr.api_paths` are read
 **once** at the top of the run and cached for the whole `/create-pr`
-invocation. Do **not** re-read `.agent-settings.yml` in Step 2 or 4b / 4d —
+invocation. Do **not** re-read `.agent-settings.yml` in Step 2 or 4b / 4e —
 every branch resolves from the cached values from step 1. The content flags
 (`detail_level`, `api_examples`, `screenshots`, `ui_paths`, `api_paths`) are
 consumed by the `/create-pr:description-only` generation step (Step 2); the
 confirmation/report flags by steps 3–4.
 
 When all three resolve to their silent defaults (`false` / `minimal` /
-`false`), steps 4b + 4d collapse to the single `→ #N opened: <url>` line
-from 4b and a silent 4d. No extra file reads, no "checking settings…"
+`false`), steps 4b + 4e collapse to the single `→ #N opened: <url>` line
+from 4b and a silent 4e. No extra file reads, no "checking settings…"
 narration, no confirmation prompts. Step 4c is never collapsed — status
 claims always carry evidence.
 
