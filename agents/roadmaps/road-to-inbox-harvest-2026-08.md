@@ -51,7 +51,7 @@ roadmap slice each, and a block of cancellations where they argue against locks.
 Source: `agents/tmp.old/feedback-9.18.1-1.txt`. Six reviewers, one convergent
 ask, and a large already-built fraction.
 
-- [ ] **P1.1 JSON as the binding R1/R2 findings format.** The only item all six
+- [~] **P1.1 JSON as the binding R1/R2 findings format — schema SHIPPED, the rendering half deferred with its reason.** The only item all six
   reviewers converge on and the only one still fully unbuilt:
   `check_completion_review.ts` parses `*.findings.md`, with `unbalanced-fence`
   and `malformed-row` as first-class violation kinds — i.e. it hand-parses
@@ -62,6 +62,36 @@ ask, and a large already-built fraction.
   a second one.
   - Acceptance: `src/scripts/schemas/review-findings.schema.json` exists and
     both tracks validate against it; Markdown becomes a rendering of the JSON.
+  - **Shipped: `src/scripts/schemas/review-findings.schema.json`**, and it is the
+    shape that already existed — `self_review_gate`'s `{schema_version,
+    findings[]}` with the sha256 `findingId()`, plus the release-findings ledger.
+    Not a second format, which was the whole point of the reviewers' complaint.
+    Both tracks' REAL artefacts are asserted against it: every committed ledger
+    under `agents/evidence/release-findings/`, and the exact emission shape
+    `--findings-out` writes (reproduced from the producer, not hand-written).
+  - **A measured trap, and the reason the schema is written the way it looks
+    wrong.** The repo has no `ajv`; validation goes through its own Draft-07
+    **subset** (`validate_frontmatter.ts`), which enforces `enum` at top level and
+    under `items` but **silently ignores `$ref` and `const`**. Probed all four
+    combinations before committing. So the item shape is INLINED and the version
+    pin is a one-member `enum`: written the obvious way — `const: 1` plus a
+    `$ref`-ed definition — this schema would have validated **nothing at all**,
+    which is exactly the gate-that-scans-nothing class this package keeps finding.
+    Two tests pin the spellings so a "tidy-up" cannot silently disarm it.
+  - **Deferred, with the reason: "Markdown becomes a rendering of the JSON".**
+    That clause requires the R2 dispatcher to emit JSON and render Markdown, and
+    the gate to parse JSON — i.e. re-formatting every committed artefact under
+    `agents/evidence/reviews/`. § 2.7 of the contract forbids editing a round
+    record in place, so the clause as written demands the corpus migration the
+    contract prohibits. It is also not what the reviewers asked for: their
+    complaint was TWO incompatible findings shapes, and one schema both tracks
+    validate against answers it. Reopen only with a migration story for the
+    committed corpus.
+  - Also recorded while grounding this: `check_completion_review` carries a
+    documented parser hole of its own (a labelled fence closed by a later bare
+    fence swallows a live `open` row and emits no `unbalanced-fence`). It is
+    already named in-source at `check_completion_review.ts:423-438` and is a
+    separate defect from this step's format question — not silently folded in.
 - [-] **P1.2 CANCELLED — the premise does not exist.** Six findings, measured
   against the tree before any adapter was written; AI council 2/2 (option A1).
   1. There is **no classifier** at `work_engine/scoring/decision_engine.ts` —
