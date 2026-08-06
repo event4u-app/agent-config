@@ -30,6 +30,8 @@ import {
     recursiveNovelLift,
     analyse,
     compare,
+    cost_by_arm,
+    pricing_age_days,
 } from '../../src/scripts/bench_ab_v2_stats.js';
 
 const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..');
@@ -375,5 +377,122 @@ describe('bench_ab_v2_stats — attrition reporting', () => {
         expect(at['pairs_seen']).toBe(2);
         expect(at['pairs_analysed']).toBe(cmp['n_pairs']);
         expect(cmp['n_pairs']).toBe(1);
+    });
+});
+
+// ── delta #6 — the cost sheet ───────────────────────────────────────────────
+//
+// Table 3 reports token VOLUME. These assertions exist because volume and price
+// rank arms differently: the four usage buckets differ in cost by up to 125x, so
+// a blended rate over a token total is a different number, not an approximation.
+
+describe('bench_ab_v2_stats — cost_by_arm (delta #6)', () => {
+    const PRICING = path.join(REPO_ROOT, 'internal', 'bench', 'pricing.yaml');
+
+    /** One trial with an explicit four-bucket usage split. */
+    function costTrial(b: Partial<Record<string, number>>, errored = false): Record<string, unknown> {
+        return {
+            errored,
+            metrics: { tokens: 0, status_bucket: errored ? 'task_limit' : 'completed' },
+            tokens_breakdown: {
+                input_tokens: b['input'] ?? 0,
+                output_tokens: b['output'] ?? 0,
+                cache_creation_input_tokens: b['cache_write'] ?? 0,
+                cache_read_input_tokens: b['cache_read'] ?? 0,
+            },
+        };
+    }
+
+    it('prices each bucket at its own rate, not a blended one', () => {
+        // sonnet: in 3.00 / out 15.00 / cache_write 3.75 / cache_read 0.30 per 1M.
+        // Both arms carry 1,000,000 tokens; only the MIX differs. A blended rate
+        // would call them equal — which is the whole reason this table exists.
+        const records = [
+            {
+                id: 't1',
+                arms: {
+                    vanilla: [costTrial({ cache_read: 1_000_000 })],
+                    package: [costTrial({ output: 1_000_000 })],
+                },
+            },
+        ];
+        const cost = cost_by_arm(records, ['vanilla', 'package'], 'claude-sonnet-4-5-20250929', PRICING);
+        expect(cost['priced']).toBe(true);
+        expect(cost['tier']).toBe('sonnet');
+
+        const per = cost['per_arm'] as Record<string, Record<string, unknown>>;
+        expect(Number((per['vanilla']?.['total_usd'] as { value: number }).value)).toBeCloseTo(0.3, 6);
+        expect(Number((per['package']?.['total_usd'] as { value: number }).value)).toBeCloseTo(15.0, 6);
+        // 50x apart on an identical token count.
+        expect(per['vanilla']?.['tokens_by_bucket']).toEqual({
+            input: 0,
+            output: 0,
+            cache_write: 0,
+            cache_read: 1_000_000,
+        });
+    });
+
+    it('excludes errored runs, matching the token axis', () => {
+        const records = [
+            {
+                id: 't1',
+                arms: {
+                    vanilla: [costTrial({ input: 1_000_000 }), costTrial({ input: 1_000_000 }, true)],
+                },
+            },
+        ];
+        const per = cost_by_arm(records, ['vanilla'], 'claude-sonnet-4-5-20250929', PRICING)['per_arm'] as Record<
+            string,
+            Record<string, unknown>
+        >;
+        // An errored run's usage is capped by the budget, not representative.
+        expect(per['vanilla']?.['n']).toBe(1);
+        expect(Number((per['vanilla']?.['total_usd'] as { value: number }).value)).toBeCloseTo(3.0, 6);
+    });
+
+    it('an unpriceable model yields null, never zero', () => {
+        const records = [{ id: 't1', arms: { vanilla: [costTrial({ input: 1_000_000 })] } }];
+        const cost = cost_by_arm(records, ['vanilla'], 'some-other-vendor-model', PRICING);
+        expect(cost['priced']).toBe(false);
+        expect(cost['tier']).toBe('unknown');
+        const per = cost['per_arm'] as Record<string, Record<string, unknown>>;
+        // A zero would read as "this arm was free" — a different claim from "we
+        // cannot price it". The bucket counts are still reported, so the gap is
+        // visible rather than silent.
+        expect(per['vanilla']?.['total_usd']).toBeNull();
+        expect(per['vanilla']?.['mean_usd']).toBeNull();
+        expect((per['vanilla']?.['tokens_by_bucket'] as Record<string, number>)['input']).toBe(1_000_000);
+    });
+
+    it('pricing_age_days measures against the report stamp, not against today', () => {
+        // A fixed artefact must not change its own numbers when re-rendered.
+        expect(pricing_age_days('2026-05-14', '2026-08-06T18-00-00Z')).toBe(84);
+        expect(pricing_age_days('2026-05-14', '2026-05-14T00-00-00Z')).toBe(0);
+        // An unreadable date yields null — an invented age is worse than none.
+        expect(pricing_age_days(null, '2026-08-06T18-00-00Z')).toBeNull();
+        expect(pricing_age_days('2026-05-14', null)).toBeNull();
+        expect(pricing_age_days('not-a-date', '2026-08-06T18-00-00Z')).toBeNull();
+    });
+
+    it('analyse() carries the cost block, and the markdown table renders from it', () => {
+        const payload = {
+            stamp: '2026-08-06T18-00-00Z',
+            model: 'claude-sonnet-4-5-20250929',
+            seeds: 1,
+            arms: ['vanilla', 'package'],
+            records: [
+                {
+                    id: 't1',
+                    arms: {
+                        vanilla: [costTrial({ input: 1_000_000 })],
+                        package: [costTrial({ output: 1_000_000 })],
+                    },
+                },
+            ],
+        };
+        const a = analyse(payload);
+        const cost = a['cost'] as Record<string, unknown>;
+        expect(cost['priced']).toBe(true);
+        expect(cost['pricing_sourced_on']).toBe('2026-05-14');
     });
 });
