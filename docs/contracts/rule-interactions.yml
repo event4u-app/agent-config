@@ -33,6 +33,8 @@ rules:
   - agent-authority
   - language-and-tone
   - direct-answers
+  - no-cheap-questions
+  - user-interrupt-priority
 
 pairs:
 
@@ -258,3 +260,60 @@ pairs:
     evidence:
       - .agent-src.uncondensed/rules/language-and-tone.md#iron-law--mirror-the-users-language-always
       - .agent-src.uncondensed/rules/direct-answers.md#iron-law-1--no-flattery
+
+  - id: ask-x-no-cheap-questions
+    rules: [ask-when-uncertain, no-cheap-questions]
+    relation: narrows
+    conflict: >-
+      Two kernel rules with opposite defaults fire on the same moment.
+      `ask-when-uncertain` Iron Law: "ONE QUESTION PER TURN. NO
+      EXCEPTIONS." plus "When in doubt, ask." `no-cheap-questions` Iron
+      Law: "NEVER ASK WHAT CONTEXT ANSWERS", enforced by a 14-point
+      pre-send self-check whose every branch ends in "don't ask".
+      Undeclared until now, so nothing said which wins.
+    resolution: >-
+      They compose; they do not compete, once the split is stated.
+      `ask-when-uncertain` decides whether a genuine decision point
+      exists and owns the shape (one per turn, numbered options).
+      `no-cheap-questions` is the narrower filter on that set: it
+      removes asks whose answer is already in the stated context, asks
+      that offer an Iron-Law-violating option, and asks that differ only
+      in sequencing. It never manufactures silence where real ambiguity
+      remains — its own closing line is "In doubt → ask: this rule
+      narrows asking, never widens silence." So the composed test is
+      ask iff (context does not answer it) AND (proceeding on the wrong
+      branch is destructive or expensive). When the filter and the
+      trigger genuinely disagree, `ask-when-uncertain` wins: a
+      suppressed question that was real costs more than one extra turn.
+    evidence:
+      - .agent-src.uncondensed/rules/ask-when-uncertain.md#iron-law--one-question-per-turn-always
+      - .agent-src.uncondensed/rules/no-cheap-questions.md#the-iron-laws
+
+  - id: interrupt-x-no-cheap-questions
+    rules: [user-interrupt-priority, no-cheap-questions]
+    relation: overrides
+    conflict: >-
+      The user interrupts with a new task; the agent finishes it and must
+      decide whether to resume the interrupted one. `user-interrupt-priority`
+      mandates the ask ("THEN ASK BEFORE RESUMING THE OLD TASK") and states it
+      holds "regardless of `personal.autonomy`, standing autonomy directives,
+      or roadmap authorization". `no-cheap-questions` Iron Law 4 forbids it
+      under exactly those conditions ("STANDING AUTONOMOUS MANDATE ACTIVE →
+      NEVER ASK 'WEITER? / NEXT STEP? / SHALL I CONTINUE?'"). A
+      `/roadmap:process-full` invocation is itself a listed mandate trigger, so
+      the contradiction is live in the package's own execution commands.
+    resolution: >-
+      `user-interrupt-priority` wins: the resume ask survives the mandate. The
+      two are only superficially the same question. Iron Law 4 suppresses a
+      *continuation prompt* — "a clean edit-batch is not a halt condition", i.e.
+      the agent asking permission to keep doing the work it was already told to
+      do. The resume ask is a *task-boundary decision the user themselves
+      created* by interrupting: which of two deliverables to work on next. The
+      agent cannot answer it from context, because the user's interrupt is the
+      only evidence of their current priority. Resume-after-interrupt is
+      therefore added to Iron Law 4's halt list in
+      `contexts/execution/cheap-question-mechanics.md` as a sixth condition.
+    evidence:
+      - .agent-src.uncondensed/rules/user-interrupt-priority.md#the-iron-law
+      - .agent-src.uncondensed/rules/no-cheap-questions.md#iron-law-4--no-continuation-prompts-under-autonomous-mandate
+      - src/agent-src/contexts/execution/cheap-question-mechanics.md

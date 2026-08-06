@@ -37,8 +37,18 @@ The only halts named in the invoking command:
 - **Security-sensitive** — auth, secrets, tenancy, public endpoints (`security-sensitive-stop`).
 - **Scope out of roadmap** — work crosses the roadmap's stated bounds.
 - **Test / quality RED** — failure that cannot be auto-fixed.
+- **Resume after a user interrupt** — the user interrupted with a new task, that
+  task is finished, and the question is whether to resume the *interrupted* one.
+  [`user-interrupt-priority`](../../rules/user-interrupt-priority.md) mandates
+  that ask and states it holds "regardless of `personal.autonomy`". Without this
+  halt the two rules contradict each other outright under a mandate — IL 4
+  forbids the ask, `user-interrupt-priority` requires it. Declared as a pair in
+  [`rule-interactions.yml`](../../../docs/contracts/rule-interactions.yml)
+  (`interrupt-x-no-cheap-questions`).
 
-A clean edit-batch is not a halt condition — pick the next item.
+A clean edit-batch is not a halt condition — pick the next item. Neither is a
+*task boundary the user themselves created*: the resume ask above is a decision
+about which deliverable to work on, not a continuation prompt.
 
 ## Iron Law 5 — prereq examples (silent execution, never a question)
 
