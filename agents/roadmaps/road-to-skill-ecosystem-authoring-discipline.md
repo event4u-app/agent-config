@@ -181,7 +181,24 @@ migration is a genuinely lossy authoring transform with no ledger, while
       that injected a violation **into a real corpus file** fired (exit 1) and
       the untouched original stayed clean. The `--canary` recipe re-proves it on
       every run.
-- [ ] **Step 4:** Add a preemption-phrase check to the description lint: a description claiming priority over a sibling, or instructing activation regardless of the request, degrades routing globally and invisibly. This is a live class — the sweep observed it in a shipped third-party description and in a second suite's own catalogue.
+- [x] **Step 4:** Add a preemption-phrase check to the description lint: a description claiming priority over a sibling, or instructing activation regardless of the request, degrades routing globally and invisibly. This is a live class — the sweep observed it in a shipped third-party description and in a second suite's own catalogue.
+      Check `(g) preemption-phrase` in `lint_skill_descriptions`, five pattern
+      families, running on **every** skill rather than on the clustered subset —
+      unlike checks (a)–(f) this defect harms *other* skills, so a near
+      neighbour is not a precondition for the damage.
+      **The design came out of a measurement that failed, which is the part
+      worth keeping.** A first pass keyed on the obvious vocabulary
+      (`overrides`, `supersedes`, `for every …`) returned three hits and **all
+      three were false positives**: `override-management` manages overrides,
+      `decision-review` asks whether an ADR should be superseded, and
+      `prediction-pool-optimizer` answers "every question" in a prediction pool.
+      Precedence words are these skills' *subjects*, not their claims. Every
+      pattern was therefore re-anchored on the shape of an instruction to the
+      router (`always use`, `use this instead of`, `this skill takes
+      precedence`), which no domain noun produces — final measurement **0 hits
+      over 288 descriptions**, with all six positive specimens caught and all
+      three original false positives pinned as must-not-fire tests so the
+      patterns cannot be loosened back to vocabulary.
 - [x] **Step 5:** Add a per-file ceiling to the on-demand depth layer. Rules and skills are capped; the context and guideline files they route to are not, which is where the always-loaded budget leaks into on-demand bloat.
       `src/scripts/check_depth_budget.ts` — 16,000 chars over the 161 files in
       `src/agent-src/contexts/` + `docs/guidelines/`. **Enforced as a shrink-only
@@ -237,8 +254,8 @@ migration is a genuinely lossy authoring transform with no ledger, while
 - [~] `rule-writing` requires a primary-bias section (done); the schema decision-impact class is Phase 2 Step 3 and did not land.
 - [ ] Every migrated rule has a ledger whose target anchors all resolve, proven by a gate.
 - [ ] The contradiction register exists, and every wins-on-conflict claim has a row, proven by a gate.
-- [ ] `src/scripts/lint_example_fences.ts` runs over the authored tree with every current hit classified.
-- [ ] The description lint rejects a preemption phrase, proven by a test.
+- [x] `src/scripts/lint_example_fences.ts` runs over the authored tree with every current hit classified — 503 files, zero hits, so it ships strict rather than advisory.
+- [x] The description lint rejects a preemption phrase, proven by a test — six positive specimens plus three must-not-fire rows pinning the corpus lines a word-keyed draft flagged wrongly.
 - [x] The removal disposition and the simplify-signal list are recorded in the optimization path.
 - [x] No judge skill or review command instructs pre-filtering by severity — six instances found by full read (a keyword grep had returned zero) and all six fixed.
 - [x] The imperative-density report runs advisory and states its unsettled direction.
