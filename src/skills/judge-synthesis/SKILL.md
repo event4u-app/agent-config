@@ -94,7 +94,11 @@ contested.
 - **Must-fix** — every finding from a worst-tier verdict (`reject` / `incomplete`
   / `breached`) + every consensus finding at the highest severity.
 - **Should-fix** — mid-tier (`revise` / `partial`) findings.
-- **Advisory** — single-judge low-severity suggestions.
+- **Advisory** — single-judge low-severity suggestions. **Emitted in full,
+  never elided.** This is the tier with no downstream consumer, which makes it
+  the one where quiet dropping costs nothing visible — and that is exactly why
+  it is stated: a finding that reached a judge and not the reader was suppressed
+  by the aggregator, whatever the tier was called.
 
 Each entry carries **provenance**: which judge(s) raised it. Never merge two
 judges' findings into one unattributed line.

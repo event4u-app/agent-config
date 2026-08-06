@@ -149,10 +149,23 @@ So the two operations are separated: the review produces every finding it has,
 each tagged S0–S3; whoever consumes the ledger filters it. A consumer that wants
 only S0 and S1 slices the ledger — it does not ask for a shorter review.
 
-**Verified 2026-08-06:** grepped 14 judge and review skills plus 12 review and
-judge commands for pre-filter phrasings — **zero matches**. This tree does not
-carry the defect today; the clause exists so the next author does not introduce
-it, and so the grep has something to be checked against.
+**Swept 2026-08-06, and the first sweep was wrong.** A keyword grep over 14
+judge and review skills plus 12 review and judge commands returned zero, and a
+full read of the same surface returned **six**. The defect does not announce
+itself with the words a grep looks for — the live instances read *"surface only
+the trade-offs the user needs to decide"*, *"top concerns"*, *"not every minor
+gap"*, and *"prioritized fix recommendations"*. All six are fixed; the worst sat
+in `adversarial-review`, which `self_review_gate.ts` loads as the system prompt
+for this package's own CI self-review, so it was suppressing findings on every
+pull request.
+
+Two lessons, and the second is the reusable one: a phrase like *"top concerns"*
+does the defect's work without any of its vocabulary, and **a keyword grep is
+evidence of absence only for the keywords.** Distinguish the three shapes when
+sweeping — a genuine pre-filter tells the reviewer not to REPORT what it found;
+a scope limit tells it what to LOOK at; an ordering instruction tells it what to
+put first. Only the first is the defect, and mistaking a scope limit for one
+would strip the lane-keeping that makes a multi-judge panel work.
 
 ### Confidence is a separate field, and an unconfirmed finding is preserved
 

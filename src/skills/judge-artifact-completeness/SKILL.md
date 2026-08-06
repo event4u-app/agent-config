@@ -101,7 +101,11 @@ Before finalising:
 2. No dimension was penalised for length or word count.
 3. N/A credit was granted only where the schema allows it.
 4. The verdict follows the ratio thresholds above, not intuition.
-5. Top gaps are the highest-weight missing dimensions — not every minor gap.
+5. The **Dimensions block lists every dimension**, scored, with no omissions —
+   that is the complete emission and it is not optional. **Top gaps** is a
+   ranked summary layered over it, so it names the highest-weight misses rather
+   than repeating the block. Shortening the block itself is the pre-filter
+   defect; shortening the summary is what a summary is.
 
 ## Output format
 
