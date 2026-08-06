@@ -173,6 +173,55 @@ strengthening evidence.
   `skipped` (stale — age > `review_after_days`), surface them to
   the user; do not silently use stale entries as if they were current.
 
+## Removal is a disposition — a rule the agent keeps failing gets teeth or gets deleted
+
+```
+A RULE THE AGENT CONSISTENTLY FAILS TO FOLLOW GETS STRUCTURAL ENFORCEMENT
+OR DELETION. NEVER A LOUDER RESTATEMENT.
+ASK WHAT CAN BE REMOVED AS DELIBERATELY AS WHAT SHOULD BE ADDED.
+```
+
+Ratchets in this tree move one way. Counts go up, gates accumulate, and nothing
+retires an artifact — so the default response to non-adherence has been to say
+it again, harder. That is the one response the evidence rules out: an obligation
+that did not change behaviour as prose does not change it as louder prose. The
+fork is **enforcement or deletion**, and both are real options.
+
+**Non-adherence is the trigger, not low frequency.** A rule that rarely fires is
+not a rule that fails. A floor is working precisely when nothing crosses it, and
+deleting it because it has been quiet removes the thing that was holding.
+
+### The simplify signals
+
+Any of these is a reason to open the question. None of them is on its own a
+verdict:
+
+- a section that has not been relevant across many sessions;
+- a rule derived from a **single unvalidated observation**;
+- a workflow that is consistently shortcut in practice;
+- sections that are loaded every run and never acted on;
+- two rules that contradict each other;
+- complexity added for a case that has never triggered.
+
+Note that *never relevant*, *single unvalidated observation*, and *never acted
+on* are listed separately on purpose. They look alike and they are not: the
+first is about scope, the second about evidence, the third about attention.
+
+### Escalation, and its counterpart
+
+```
+A THIRD RECURRENCE OF THE SAME VIOLATION CLASS CONVERTS AN OBSERVATION
+INTO A DETERMINISTIC GATE.
+A REVIEW FINDING NEVER SILENTLY BECOMES A HARD GATE.
+ESCALATE AT A STATED THRESHOLD, NEVER SILENTLY.
+```
+
+Both halves are load-bearing and they come from sources that disagree. The
+threshold stops a recurring defect from being re-observed forever; the
+counterpart stops a single reviewer's opinion from quietly becoming law. Between
+them, the only legitimate path from *noticed* to *enforced* is a stated count
+reached in the open.
+
 ## Decision-revisit gate — mechanics (migrated from the `decision-revisit-gate` rule)
 
 Body of [`decision-revisit-gate`](../../rules/decision-revisit-gate.md)

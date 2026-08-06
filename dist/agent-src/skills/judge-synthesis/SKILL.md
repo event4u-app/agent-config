@@ -63,6 +63,15 @@ finding count. Preserve each
 judge's own verdict word (do not normalise away `breached` into `reject`); add a
 severity tier (worst/mid/clean) only as a sort key.
 
+**A sort key, never a filter.** Severity orders the synthesis; it never decides
+what enters it. Dropping a judge's low-severity finding during synthesis
+reproduces the pre-filter defect one layer up — the finding was found, the
+reviewer reported it, and the aggregator withheld it. Filtering is the
+consumer's pass, after the ledger is whole. Output shape, the separate
+`Confidence` field, and the preserve-an-unverified-S0 rule are specified once in
+[`adversarial-review-protocol`](../../../docs/contracts/adversarial-review-protocol.md)
+§ 3.
+
 ### 2. Find consensus (highest confidence)
 
 A finding flagged by **≥2 judges** (same file:line / same dimension / same
@@ -85,7 +94,11 @@ contested.
 - **Must-fix** — every finding from a worst-tier verdict (`reject` / `incomplete`
   / `breached`) + every consensus finding at the highest severity.
 - **Should-fix** — mid-tier (`revise` / `partial`) findings.
-- **Advisory** — single-judge low-severity suggestions.
+- **Advisory** — single-judge low-severity suggestions. **Emitted in full,
+  never elided.** This is the tier with no downstream consumer, which makes it
+  the one where quiet dropping costs nothing visible — and that is exactly why
+  it is stated: a finding that reached a judge and not the reader was suppressed
+  by the aggregator, whatever the tier was called.
 
 Each entry carries **provenance**: which judge(s) raised it. Never merge two
 judges' findings into one unattributed line.
