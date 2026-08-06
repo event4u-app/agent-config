@@ -10,18 +10,27 @@
 import type { FastifyInstance, FastifyPluginAsync } from 'fastify';
 import { z } from 'zod';
 import { readFileSync } from 'node:fs';
-import { userInfo } from 'node:os';
 import { PACKAGE_JSON } from '../../cli/paths.js';
 import { CAPABILITIES } from '../../shared/capabilities.js';
 import { detectAgentSwitchProfile } from '../../install/agentSwitchProfile.js';
+import { cachedNicknamePrefill, warmNicknamePrefill } from '../nicknameResolver.js';
 
+/**
+ * The wizard's name prefill.
+ *
+ * Delegates to the one implementation of the chain
+ * `src/rules/settings-ask-protocol.md` documents — git user name, then `$USER`,
+ * then `$USERNAME`. This used to read `userInfo().username` and nothing else,
+ * which is the `$USER`-alone shape that rule forbids in as many words, so the
+ * shipped prefill contradicted the shipped rule.
+ *
+ * The CACHED variant is load-bearing here, not a micro-optimisation: the chain
+ * forks git, this route is a liveness probe, and `execFileSync` blocks the
+ * event loop — so an uncached call would stall every other route behind a
+ * subprocess on each poll. The value is machine-static for the process lifetime.
+ */
 function systemUserName(): string {
-    try {
-        const name = userInfo().username;
-        return typeof name === 'string' ? name : '';
-    } catch {
-        return '';
-    }
+    return cachedNicknamePrefill().name;
 }
 
 export const PingResponseSchema = z.object({
@@ -43,9 +52,14 @@ export const PingResponseSchema = z.object({
      */
     projectScopeAvailable: z.boolean(),
     /**
-     * Best-effort OS account name (e.g. `matze`), used to pre-fill the
-     * welcome step's name field on a fresh wizard. Empty string when the
-     * platform does not expose it.
+     * Best-effort display name for the human at this machine, used to pre-fill
+     * the welcome step's name field on a fresh wizard. Resolves the chain
+     * `src/rules/settings-ask-protocol.md` documents — `git config user.name`
+     * (so typically a real name, `Mathias Berg`), then `$USER`, then
+     * `$USERNAME`, with the OS account as the last-resort floor. It is
+     * therefore NOT an OS account name, which is what it used to be and what
+     * a consumer reading this field as a login handle would still assume.
+     * Empty string when nothing resolves.
      */
     systemUser: z.string(),
     /**
@@ -119,6 +133,11 @@ export interface PingRouteOptions {
 
 export function pingRoute(opts: PingRouteOptions): FastifyPluginAsync {
     const plugin: FastifyPluginAsync = async (app: FastifyInstance) => {
+        // Pay the git fork at registration, not on the first poll. Memoisation
+        // alone still landed it on request #1 — the one the UI bundle blocks on
+        // at startup — with the event loop held and everything else queued
+        // behind it. This is process-startup work; it belongs here.
+        warmNicknamePrefill();
         app.get('/api/v1/ping', async () => {
             const response: PingResponse = {
                 ok: true,

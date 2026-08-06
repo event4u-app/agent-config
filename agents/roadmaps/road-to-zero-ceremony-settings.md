@@ -166,6 +166,27 @@ outside C.
       `load_agent_settings`, whose precedence is the inverse of the server's and
       whose user-global layer is whitelist-filtered through `MERGEABLE_KEYS`
       under an ADR. That is the filename/precedence convergence, not this step.
+      **Stays `[~]` — this is the one genuine deferral in the file.** It is not
+      blocked by anything here; it was scope-transferred, and no successor
+      roadmap names it yet. The 2026-08-07 council recommended cancelling it with
+      an atomically-created successor stub, on the premise that the roadmap is
+      about to archive and *"the dashboard has no mechanism to surface deferred
+      work from archived roadmaps"*. **Declined: that premise is falsified by the
+      same council's own Option A.** With the three Phase-3 steps re-encoded to
+      `[ ]` this roadmap keeps `open_ ≥ 3`, so it does not archive, stays on the
+      dashboard, and keeps rendering this item in its Deferred column. The
+      thread-loss the cancellation was meant to avert does not exist while the
+      roadmap is open — and cancelling into a stub nobody owns would convert a
+      visible deferral into a second file to keep in sync.
+      **The premise is TEMPORARY, and that is an exit condition, not a
+      footnote.** It holds only while Phase 3 is open. The moment
+      `absent-is-not-default-for-projection-mode` clears and Phase 3 closes,
+      `count_open` returns to 0 with this one `[~]` still present and Iron Law 3
+      fires again — the same repo-wide commit refusal, with no agent-side
+      bypass. **Whoever closes Phase 3 must dispose of this item in the same
+      change**, and by then the council's cancel-with-successor is the likely
+      right answer, because at that point the roadmap really is archiving. See
+      the blocker below, which now carries this as part of its resolution.
 - [x] Refuse C-class writes server-side in the GUI's write route too — the CLI
       refusal must not be the only fence.
       <!-- verify: npx vitest run tests/server/routes/settings.test.ts -->
@@ -178,7 +199,7 @@ backward-compatible because absent keys already mean defaults.
 
 ## Phase 3 — The user file becomes sparse
 
-- [~] Stop materialising the full template into the user's global settings file;
+- [ ] Stop materialising the full template into the user's global settings file;
       write only what the install genuinely decided (the installer presets that
       fill profile-dependent keys stay, and stay explicit).
       <!-- verify: npx vitest run tests/install/settings_materialisation.test.ts -->
@@ -186,22 +207,25 @@ backward-compatible because absent keys already mean defaults.
       writer is `src/server/routes/wizard.ts:1310`, and the change itself is one
       line. What stops it is a consumer that reads absent and default as
       different values on purpose.
+      *(Re-encoded `[~]` → `[ ]` on 2026-08-07 — see § Glyph re-encoding.)*
 - [x] Keep the template as the package-internal defaults source: parity gate,
       installer placeholder invariant, and every direct template reader
       untouched. Pin this with the parity test in the same change.
       <!-- verify: npx vitest run tests/server/schemas/parity.test.ts -->
-- [~] Generate the human-readable reference page from the schema plus the class
+- [ ] Generate the human-readable reference page from the schema plus the class
       table, so the long-form documentation survives the file shrinking.
-      **Deferred with step 1.** The page exists to replace the explanation the
+      **Blocked with step 1.** The page exists to replace the explanation the
       user loses when the file shrinks; generating it before the file shrinks
       would ship a second surface to keep in sync for no reader.
-- [~] Migration: an existing populated user file is honoured as-is, every entry
+      *(Re-encoded `[~]` → `[ ]` on 2026-08-07 — see § Glyph re-encoding.)*
+- [ ] Migration: an existing populated user file is honoured as-is, every entry
       stamped `source: manual`. Nothing is rewritten under the user.
       <!-- verify: npx vitest run tests/install/settings_materialisation.test.ts -->
-      **Deferred with step 1.** Migration is defined against the sparse shape:
+      **Blocked with step 1.** Migration is defined against the sparse shape:
       until the emitter exists there is nothing to migrate *to*, and stamping
       every existing entry `manual` on its own would write a provenance file
       claiming decisions the user never made.
+      *(Re-encoded `[~]` → `[ ]` on 2026-08-07 — see § Glyph re-encoding.)*
 
 **Exit criteria:** a fresh install produces a user settings file whose entry
 count is bounded by what the install actually decided; the parity gate and the
@@ -212,43 +236,217 @@ because absent means default in both directions.
 
 ## Phase 4 — First run: one question, one notice
 
-- [ ] Auto-set the language from the first message's language, falling back to
+- [x] Auto-set the language from the first message's language, falling back to
       the system locale, with a visible one-line notice and provenance
       `auto-detected`; any later explicit statement by the user overrides it.
+      <!-- verify: npx vitest run tests/scripts/language_mirror_hook.test.ts -->
+      **Shipped under a different storage design, on a recorded council
+      decision.** `src/scripts/language_mirror_hook.ts` carries the detection,
+      the `systemLocaleVerdict` fallback, the one-line notice, and the override
+      (a `prompt` pin always outranks a `system-locale` one, so "a later
+      statement wins" needs no second mechanism). It is wired for real —
+      `hook_manifest.yaml` binds it to `user_prompt_submit` on six hosts.
+      **Departure:** there is no `language` settings key and the provenance
+      vocabulary is `prompt | system-locale` in `agents/state/language-mirror.json`,
+      not `auto-detected` in the settings file. An AI council (2026-08-06) ruled
+      against the key: a value documented as "never use this to decide reply
+      language" is a footgun, and the per-turn mirror in `language-and-tone` is
+      fresher than any stored one. Consequence for this phase's exit criterion:
+      language contributes **zero** entries to the settings file, so "at most two
+      entries" is satisfied by the nickname alone.
 - [ ] Ask the nickname once, prefilled from git user name then `$USER`, so
       accepting is one keypress; answering activates the session canary the
       package already ships dark.
-- [ ] Skip cleanly in non-TTY, CI, and headless contexts: no file, defaults,
+      **The prefill half shipped; the ASK half did not, so the box stays open.**
+      It was briefly flipped to `[x]` on the strength of the prefill work and an
+      R2 review caught it — marking a step done because its buildable fraction
+      is built is exactly the overclaim this run exists to correct, and doing it
+      while criticising PR #1197 for the same move would have been worse than
+      the original.
+      <!-- verify: npx vitest run tests/shared/nicknamePrefill.test.ts -->
+      **The prefill chain now has exactly one implementation, and it is the
+      documented one.** `src/rules/settings-ask-protocol.md` shipped the chain
+      (git user name → `$USER` → `$USERNAME`) closed by the negation *"Never
+      `$USER` alone"* — while the only surface that actually prefills,
+      `src/server/routes/ping.ts`, read `userInfo().username` and nothing else:
+      precisely the shape the rule forbids. A rule and the code it describes
+      disagreeing is drift, so the order moved into `src/shared/nicknamePrefill.ts`
+      (pure) with the Node half in `src/server/nicknameResolver.ts`, and the route
+      delegates. `userInfo()` is kept as a floor rather than dropped — what
+      changed is its rank, last instead of first. The tests pin the code AND
+      re-read the rule, because a test over the code alone would not have caught
+      the original drift.
+      **Model-carried half, stated rather than implied:** the *ask* itself is
+      agent-carried by the protocol's own design (`enforced_by: none`) — no
+      chat-side trigger code exists, and `planSettingsAsks` names
+      `personal.canary_name` as the one question a fresh session may pose.
+- [x] Skip cleanly in non-TTY, CI, and headless contexts: no file, defaults,
       no questions, ever.
       <!-- verify: npx vitest run tests/scripts/first_run.test.ts -->
+      **Predicate and planner shipped and pinned; the consumer is model-carried.**
+      `nonInteractiveReason` (`src/shared/interactiveContext.ts`) takes the widest
+      CI shape (`CI`, `GITHUB_ACTIONS`, `AGENT_CONFIG_CI`), plus an explicit no-UI
+      request, both TTY streams and a headless display; `planSettingsAsks` yields
+      `ask: null` by construction in that context. "No file" holds because both
+      modules are pure. 16 cases green, including the contrast case (a human IS
+      present → one ask), so the suite is not vacuous.
+      **Recorded, not repaired:** the tree carries four other CI-detection shapes
+      that disagree (`firstRunNotice.ts`, `initRouting.ts`, `install.ts`,
+      `release.ts`, `exec_evidence.ts`, `reach_doctor.ts`). The module header
+      declines to rewrite them as a drive-by and cites "the roadmap note on Phase
+      4 step 3" — **this is that note**; it did not exist until now, which is
+      itself one of the dangling citations under Findings below.
 
 **Exit criteria:** a fresh interactive session asks exactly one question and
 prints exactly one auto-set notice; a non-TTY session asks nothing; the
 resulting file has at most two entries, each with provenance.
+**Status of these criteria, 2026-08-07 — NOT met, and the phase is not done.**
+Two of the three criteria are unreachable as *code* under decisions taken since
+they were written, and saying so beats quietly passing the phase:
+- *"asks exactly one question"* — there is no chat-side ask trigger and there
+  will not be one: the protocol is `enforced_by: none`, so the ask is
+  agent-carried on every host. `planSettingsAsks` computes WHICH key gets the
+  question and is imported only by its tests. Step 2 stays `[ ]` for this.
+- *"at most two entries"* — language contributes zero entries (no settings key,
+  per the council decision on step 1), so the reachable maximum is one.
+- *"a non-TTY session asks nothing"* — this one IS met, and pinned by 16 cases.
 **Rollback:** disable the first-run trigger; the canary stays dark as today.
 
 ## Phase 5 — The JIT protocol
 
-- [ ] One normalised B-class ask template as a single rule: what is needed, why
+- [x] One normalised B-class ask template as a single rule: what is needed, why
       now, options with the default marked, and where the answer is stored.
-- [ ] Enforce the budget: at most ONE settings question per command execution.
+      <!-- verify: npx vitest run tests/scripts/jit_ask_budget.test.ts -->
+      `src/rules/settings-ask-protocol.md`. Slot 4 is read from the key's
+      **class**, never from taste. **Widened on purpose:** the rule covers two
+      classes, not one — B (persist once) and C-set-to-`ask` (this run only) —
+      because the prerequisite re-read found all six ask-shaped keys are C.
+- [x] Enforce the budget: at most ONE settings question per command execution.
       Further undecided B keys in the same run take the conservative default
       silently and are listed in the end-summary with the command that changes
       them.
       <!-- verify: npx vitest run tests/scripts/jit_ask_budget.test.ts -->
-- [ ] Migrate the three existing ask-shaped settings onto the protocol and
+      The *split* is computed, not promised: `planSettingsAsks` returns the one
+      key asked, the keys defaulted silently, and the keys skipped with a typed
+      reason; `silentDefaultsSummary` renders them into the one end-summary that
+      already exists. The exit criterion is therefore runnable — the planted
+      three-B fixture is built from the contract's real three B keys. **The
+      ceiling itself stays prose:** no gate can count the questions in a chat
+      turn, and the rule says so under `enforced_by: none` rather than borrowing
+      a neighbour's hook.
+- [x] Migrate the three existing ask-shaped settings onto the protocol and
       delete their bespoke per-setting prose — the pattern already exists
       piecemeal; this universalises it.
-- [ ] On hook-capable hosts, have the consent-gated action verify the recorded
+      <!-- verify: npx vitest run tests/scripts/jit_ask_budget.test.ts -->
+      **Four of six migrated; two carved out with a stated reason.** The step
+      said "three" — the real set is six (prerequisite re-read). Migrated:
+      `tokens.rich_skills` (`token-budget-discipline`), `subagents.auto`
+      (`delegation-policy`), `subagents.budget_routing` (`subagent-routing`),
+      `subagents.adversarial_council` (`review/changes`). Carved out, because
+      neither is a settings-value ask: `worktrees.mode: ask` routes to
+      `scope-control`'s per-creation **permission** gate, and
+      `decision_engine.on_block: ask` is a TTY prompt in TypeScript.
+      **Closed this run:** the migration was pinned by nothing, so a rewrite of
+      any of the four could restore its bespoke prose unnoticed. Six cases now
+      assert each site still cites the protocol *and* that the two carved-out
+      keys did not quietly get migrated anyway — the absence is the load-bearing
+      half. Note the prose was **rewritten to defer the shape while keeping the
+      site-specific "why now"**, not deleted; only `review/changes/command.md`
+      lost an actual block.
+- [x] On hook-capable hosts, have the consent-gated action verify the recorded
       decision before it runs, and state the enforcement gradient honestly for
       prose-only hosts: the ask is model-carried there, and ask-once can
       degrade to ask-never.
-      <!-- verify: npx vitest run tests/scripts/jit_ask_budget.test.ts -->
+      <!-- verify: npx vitest run tests/scripts/memory_learn_hook.test.ts -->
+      **`consentVerdict` has its first production caller.** Until this run it was
+      a library with a test and no consumer — the "defined but not wired" shape
+      `senior-engineering-discipline` counts as not done, and a sharper instance
+      of this roadmap's own Risk 3 than the one it predicted: the reader built to
+      stop the provenance stamp becoming decoration had itself become decoration.
+      `src/scripts/memory_learn_hook.ts` is the only action in the tree a class-B
+      key actually gates, and it read the bare value through a local `=== 'true'`.
+      It now asks `learnConsent()`. The class is pinned rather than parsed (the
+      2 s teardown budget forbids reading the contract markdown on every session
+      end) and a test asserts the contract still says `B`, so a reclassification
+      reds CI instead of silently unbinding the gate.
+      **What it does and does not discriminate, plainly:** the hook reads the
+      PROJECT-LOCAL `.agent-settings.yml`, which the class contract names as a
+      file only a human writes, so `handEdited: true` is a fact about the path
+      and a permissive value there IS the recorded decision. What the check adds
+      today is a live class binding and shared value semantics — `yes` / `1` /
+      `on` no longer read as a permission. The sidecar's
+      `auto-detected`-refusing power only becomes live on the user-global path,
+      which the hook does not read; see Findings.
 
 **Exit criteria:** a planted fixture needing three B decisions asks once,
 assumes two conservatively, and lists both in the summary; the gated action on a
 hook-capable host refuses to run without the record.
 **Rollback:** revert to per-setting prose; no stored data changes shape.
+
+## Glyph re-encoding, 2026-08-07 — and the discriminator it produced
+
+Closing Phases 4 and 5 took `count_open` to 0 while four `[~]` items remained,
+which fires `roadmap-progress-sync` Iron Law 3 — and that fires as a **commit
+refusal**, not merely as an archive block (`update_roadmap_progress.ts:608` +
+`install-hooks.sh:147-168`; `--no-verify` is independently blocked by
+`block-no-verify`). There is no agent-side bypass, so the encoding had to be
+right rather than worked around.
+
+An AI council (2026-08-07, `claude-sonnet-4-5` + `gpt-4o`, 2 rounds, $0.09)
+converged 2/2 that three of the four were **mis-encoded from the start**, and
+produced the reusable test:
+
+```
+A STEP IS [ ] IF UNBLOCKING IT MEANS "NOW EXECUTE".
+IT IS [~] ONLY IF UNBLOCKING IT STILL LEAVES "SHOULD WE?" UNANSWERED.
+```
+
+Applied here: if the maintainer closed `absent-is-not-default-for-projection-mode`
+tomorrow, Phase 3 steps 1, 3 and 4 would be implemented immediately — there is no
+"should we?" left in any of them. They are **sequencing-blocked, not
+scope-deferred**, and "open and blocked" is exactly what a `[ ]` plus a recorded
+blocker already means; the dashboard renders the blocker in its own column. So
+the conversion is an accurate re-description, not gate-gaming. Steps 3 and 4
+make the point sharpest: their stated reason was *"deferred with step 1"* — a
+reference to a dependency, which is a `[ ]`, never a deferral.
+
+The option of leaving one genuinely-done Phase 4/5 step unflipped to keep the
+gate quiet was considered and rejected outright by both members: a knowingly
+false checkbox to bypass a safety gate is an integrity violation, and it is the
+precise failure this run exists to correct.
+
+**Out of scope, recorded:** the council's structural fix is to tighten
+`roadmap-progress-sync` Iron Law 2 to *"a step with a recorded blocker in the
+same roadmap MUST be `[ ]`, not `[~]`"*, making `[~]` a planning state rather
+than an execution state. That is a rule edit in a different subject area
+(`roadmap-progress-sync` is not a kernel rule, so it needs no soak) — filed
+here rather than done, per halt condition 4.
+
+## Findings — recorded, not repaired
+
+1. **PR #1197 claimed "six of the roadmap's seven open steps close."** Verified
+   against the tree this run: **two** closed cleanly (5.1, 5.2), four were
+   partial and one had not started. The overstatement is why this roadmap's
+   checkboxes are flipped from evidence rather than from the PR body.
+2. **Two dangling citations pointing at prose that did not exist.**
+   `src/shared/interactiveContext.ts:26` cites "the roadmap note on Phase 4
+   step 3", and commit `27e664999` says of the 5.4 deferral that "the roadmap
+   records why". Neither existed. Both are written now (Phase 4 step 3, Phase 5
+   step 4) — the class of defect is a citation added in the same breath as the
+   decision to defer *documenting* it.
+3. **`memory_learn_hook` reads only the project-local settings file.** A user
+   who enables `memory.learn_on_session_end` in the GUI — which writes the
+   user-global file plus the provenance sidecar — never triggers the hook.
+   Reading the user-global file is also where `consentVerdict`'s
+   `auto-detected`-refusing power would actually discriminate. It is a behaviour
+   change (a file-writing hook would start firing for users it does not fire for
+   today), so it is a decision, not this step.
+4. **Three of the four Phase-5 modules still have no production caller.**
+   `planSettingsAsks`, `silentDefaultsSummary` and `nonInteractiveReason` are
+   imported only by their tests. That is correct *as designed* — the ask is
+   agent-carried (`enforced_by: none`) — but it means the non-interactive skip
+   is proven for a gate nothing consults. `consentVerdict` is no longer in this
+   list.
 
 ## Blockers
 
@@ -288,10 +486,17 @@ hook-capable host refuses to run without the record.
      absence means something other than their default, with the reason recorded
      per key.
   3. Only then change `src/server/routes/wizard.ts:1310`.
+  4. In the SAME change, dispose of the one remaining `[~]` (Phase 2 step 2).
+     Closing Phase 3 takes `count_open` back to 0 with that item still
+     deferred, which re-fires Iron Law 3 as a repo-wide commit refusal with no
+     agent-side bypass — the deadlock this roadmap already hit once, recorded
+     under § Glyph re-encoding. Announced here so the next contributor meets it
+     in the plan rather than in a blocked commit.
 - **Resolved when:** the absent-vs-default audit exists, every key whose absence
   changes behaviour is either carved out or fixed at its reader, and
   `tests/install/settings_materialisation.test.ts` pins a fresh install whose
-  file is sparse AND whose resolved rule scope is unchanged.
+  file is sparse AND whose resolved rule scope is unchanged — and step 4 above
+  has disposed of the remaining `[~]` in the same change.
 
 ### blocker: polish-gate-open
 - **Status:** resolved
