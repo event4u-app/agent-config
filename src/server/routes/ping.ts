@@ -10,18 +10,22 @@
 import type { FastifyInstance, FastifyPluginAsync } from 'fastify';
 import { z } from 'zod';
 import { readFileSync } from 'node:fs';
-import { userInfo } from 'node:os';
 import { PACKAGE_JSON } from '../../cli/paths.js';
 import { CAPABILITIES } from '../../shared/capabilities.js';
 import { detectAgentSwitchProfile } from '../../install/agentSwitchProfile.js';
+import { resolveNicknamePrefill } from '../nicknameResolver.js';
 
+/**
+ * The wizard's name prefill.
+ *
+ * Delegates to the one implementation of the chain
+ * `src/rules/settings-ask-protocol.md` documents — git user name, then `$USER`,
+ * then `$USERNAME`. This used to read `userInfo().username` and nothing else,
+ * which is the `$USER`-alone shape that rule forbids in as many words, so the
+ * shipped prefill contradicted the shipped rule.
+ */
 function systemUserName(): string {
-    try {
-        const name = userInfo().username;
-        return typeof name === 'string' ? name : '';
-    } catch {
-        return '';
-    }
+    return resolveNicknamePrefill().name;
 }
 
 export const PingResponseSchema = z.object({
