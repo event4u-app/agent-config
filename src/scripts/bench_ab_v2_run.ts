@@ -95,6 +95,25 @@ interface ArmSpec {
     setting_sources: string | null;
     inject: string | null; // None | "rdp" | "placebo"
     recursive?: boolean; // ADR-106 D₂ arm: depth-bounded attempt→critic→re-attempt loop
+    /**
+     * Per-arm override for the footprint-lift audit, or `null` to declare that
+     * lift is **not a valid signal** for this arm.
+     *
+     * `audit_activation`'s cross-arm direction catches a treatment surface that
+     * COLLAPSED to baseline, by requiring the arm's prompt footprint to sit at
+     * least `ACTIVATION_MIN_LIFT_RATIO` above the paired vanilla run. That test
+     * presupposes a treatment surface large enough to move the footprint. An arm
+     * whose treatment is deliberately *minimal* — `bare-principle` is one
+     * sentence — has no lift to detect, so including it would fail legitimate
+     * runs: the exact failure the ratio's own calibration note warns about.
+     *
+     * `null` narrows the audit for that arm to the per-trial TEXT direction,
+     * which is checked both ways (`activation_verdict`: a text arm must carry an
+     * injection, a non-text arm must not). It never leaves the arm unaudited —
+     * and `bench_ab_v2_run.test.ts` pins both halves, so neither an
+     * always-firing nor a never-firing audit passes.
+     */
+    min_lift_ratio?: number | null;
 }
 
 // Arm -> (setting_sources, inject) where inject ∈ {None, "rdp", "placebo"}.
@@ -118,6 +137,28 @@ interface ArmSpec {
 // shipped `balanced` router profile (which does NOT include downstream-changes
 // — tier_2 — so this arm also tests whether that profile cut loses the lift).
 // Both are opt-in: NOT in the default arm list; existing runs unchanged.
+//
+// `package-ladder` / `bare-principle` (road-to-solution-minimalism Phase 3 — the
+// two arms its Arms step names and `ARMS` lacked). Also opt-in, so existing runs
+// and golden-parity outputs are unchanged.
+//
+// `package-ladder` is NOT redundant with `package`, and the reason is measurable
+// rather than stylistic: the ladder ships inside `improve-before-implement`,
+// which is `type: auto`, `tier: 2b`, `alwaysApply: false`, keyword-triggered on
+// `refactor|implement|migration`, and is absent from `dist/router.json`'s
+// preloaded tier lists. So under `package` the ladder reaches the model only when
+// a task's own wording happens to trip one of those keywords — unmeasured, and
+// per-task. That is finding F1's failure class exactly (an activation gap that a
+// null cannot be distinguished from), which is why the pair is: `package` = the
+// shipped reality, `package-ladder` = the same config with the ladder rule body
+// injected via sysprompt so it is guaranteed in context. The contrast measures
+// the ladder, not the trigger set.
+//
+// `bare-principle` is finding F6's control: the naked principle with NO floors
+// routed, plugin scoped away. Its text is authored HERE and is deliberately not
+// the external source's own prompt — per `code-provenance`, a borrowed prompt is
+// re-derived rather than copied, and the arm's job is to be a floor-free
+// principle statement, not a specific artefact.
 export const ARMS: Record<string, ArmSpec> = {
     vanilla: { setting_sources: 'project,local', inject: null },
     package: { setting_sources: null, inject: null },
@@ -128,6 +169,8 @@ export const ARMS: Record<string, ArmSpec> = {
     'hardened-placebo': { setting_sources: null, inject: 'hardened-placebo' },
     'rules-kernel-dc': { setting_sources: 'project,local', inject: 'rules-kernel-dc' },
     'rules-balanced': { setting_sources: 'project,local', inject: 'rules-balanced' },
+    'package-ladder': { setting_sources: null, inject: 'ladder' },
+    'bare-principle': { setting_sources: 'project,local', inject: 'bare-principle', min_lift_ratio: null },
 };
 
 /**
@@ -202,7 +245,71 @@ export function rules_subset_text(subset: 'rules-kernel-dc' | 'rules-balanced'):
     return bodies.join('\n\n---\n\n');
 }
 
+/**
+ * The `bare-principle` arm's whole treatment — finding F6's control.
+ *
+ * One sentence, no floors, no routing, no ladder rungs. It exists so the
+ * benchmark can separate "the principle" from "the principle with this package's
+ * safety floors routed behind it": F6 measured a bare critic prompt nearly
+ * matching a full minimalism artefact on size *while being the only arm that
+ * dropped a safety guard*, so a report without this arm asserts the floors'
+ * contribution instead of measuring it.
+ *
+ * Authored here on purpose. The external source's own prompt is not reproduced —
+ * `code-provenance` requires a conscious borrow to be re-derived rather than
+ * copied, and nothing about the arm's function depends on its exact wording.
+ * Deterministic (no interpolation) so the injected bytes are stable per checkout.
+ */
+export function bare_principle_text(): string {
+    return 'Prefer the smallest solution that fully solves the stated problem; do not add what was not asked for.';
+}
+
+/**
+ * The ladder rule body, read from the projection — the `package-ladder` arm.
+ *
+ * Reads `dist/agent-src/rules/improve-before-implement.md`, the same source
+ * `rules_subset_text` uses, so the injected text is exactly the rule the package
+ * would load if its keyword triggers fired. Reading the projection rather than
+ * restating the ladder keeps the arm honest: a hand-copied summary would measure
+ * the summary.
+ */
+export function ladder_rule_text(): string {
+    return fs.readFileSync(path.join(RULES_DIR, 'improve-before-implement.md'), 'utf-8').trim();
+}
+
+/**
+ * Which arms the cross-arm FOOTPRINT-lift direction of the activation audit
+ * applies to.
+ *
+ * Three exclusions, each for a different reason:
+ * - `vanilla` is the baseline the ratio is measured against.
+ * - an arm with no treatment surface (`expected_injection === 'none'`) has no
+ *   lift to require.
+ * - an arm declaring `min_lift_ratio: null` has a treatment too small for lift to
+ *   be a signal at all (see `ArmSpec.min_lift_ratio`); requiring one there fails
+ *   legitimate runs. Its per-trial TEXT direction is unaffected and still runs
+ *   both ways.
+ *
+ * Pure and exported so the exclusion set is asserted rather than trusted — a
+ * silent widening of it would be a reach reduction in the audit.
+ */
+export function lift_audit_arms(arms: readonly string[]): string[] {
+    return arms.filter((a) => {
+        const spec = ARMS[a] as ArmSpec | undefined;
+        if (!spec || a === 'vanilla') {
+            return false;
+        }
+        return expected_injection(spec) !== 'none' && spec.min_lift_ratio !== null;
+    });
+}
+
 export function injected_text(inject: string | null, placebo_chars: number): string | null {
+    if (inject === 'bare-principle') {
+        return bare_principle_text();
+    }
+    if (inject === 'ladder') {
+        return ladder_rule_text();
+    }
     if (inject === 'rdp') {
         return v1.system_prompt_for('with-rdp');
     }
@@ -302,6 +409,10 @@ export const CODEX_VALID_ARMS: readonly string[] = [
     'placebo',
     'rules-kernel-dc',
     'rules-balanced',
+    // Pure-injection, so it carries to a non-Claude host unchanged. Its
+    // plugin-bearing sibling `package-ladder` deliberately is NOT here — it
+    // depends on the real plugin, which this host cannot load.
+    'bare-principle',
 ];
 
 export function codex_executable(): string | null {
@@ -1006,8 +1117,7 @@ export function main(argv: string[] | null = null): number {
     // the paired plugin direction needs the whole record set, so it cannot be a
     // per-trial check alone. `vanilla` is the baseline; every arm that is
     // supposed to carry a surface the baseline lacks is a lift arm.
-    const lift_arms = arms.filter((a) => a !== 'vanilla' && expected_injection(ARMS[a] as ArmSpec) !== 'none');
-    const audit = audit_activation(records, { baseline_arm: 'vanilla', lift_arms });
+    const audit = audit_activation(records, { baseline_arm: 'vanilla', lift_arms: lift_audit_arms(arms) });
 
     const stamp = v1.utc_stamp();
     const payload: Dict = {

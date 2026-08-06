@@ -27,6 +27,11 @@ import {
     trajectory_metrics,
     injected_text,
     hardened_blocks_text,
+    bare_principle_text,
+    ladder_rule_text,
+    lift_audit_arms,
+    ARMS,
+    CODEX_VALID_ARMS,
     checkpoint_key,
     run_key,
     freeze_result,
@@ -39,6 +44,7 @@ import {
     type CheckpointIO,
 } from '../../src/scripts/bench_ab_v2_run.js';
 import type { ScoreResultV2 } from '../../src/scripts/_lib/bench_ab_scoring_v2.js';
+import { activation_verdict, expected_injection } from '../../src/scripts/_lib/bench_ab_activation.js';
 
 const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..');
 const SCRIPTS = path.join(REPO_ROOT, 'src', 'scripts');
@@ -105,6 +111,121 @@ describe('bench_ab_v2_run — pure helpers', () => {
         const placebo = injected_text('hardened-placebo', 2000) as string;
         expect(placebo.length).toBe(hardened_blocks_text().length);
         expect(placebo).not.toContain('HARD CONSTRAINT');
+    });
+
+    // ── road-to-solution-minimalism Phase 3, Arms step ──────────────────────
+    //
+    // The two arms the step names and `ARMS` lacked. Every assertion here is a
+    // property of the arm's PURPOSE, not a snapshot of its text: the
+    // bare-principle arm's job is to be floor-free and small, the ladder arm's job
+    // is to carry the projected rule rather than a restatement of it.
+
+    it('bare-principle: one short sentence, no floor vocabulary, no ladder rungs', () => {
+        const bare = injected_text('bare-principle', 2000);
+        expect(bare).toBe(bare_principle_text());
+        const text = bare as string;
+
+        // Small by construction — this is finding F6's control, so it must not
+        // smuggle in a second treatment. One sentence, no line breaks.
+        expect(text.length).toBeLessThan(200);
+        expect(text).not.toContain('\n');
+
+        // Floor-free is the whole point: the arm exists to measure what the
+        // ROUTED floors add over the naked principle, so it may not route any.
+        for (const floor of [
+            'engineering-safety-floor',
+            'security-sensitive-stop',
+            'senior-engineering-discipline',
+            'scale-discipline',
+            'HARD CONSTRAINT',
+        ]) {
+            expect(text).not.toContain(floor);
+        }
+        // Nor may it carry the ladder's own rungs — that would make it a second
+        // ladder arm rather than a control.
+        for (const rung of ['reuse-in-repo', 'native platform', 'stdlib']) {
+            expect(text.toLowerCase()).not.toContain(rung.toLowerCase());
+        }
+    });
+
+    it('package-ladder: injects the PROJECTED ladder rule, not a restatement', () => {
+        const injected = injected_text('ladder', 2000);
+        expect(injected).toBe(ladder_rule_text());
+        const text = injected as string;
+
+        // Read from `dist/agent-src/rules/improve-before-implement.md`, so it must
+        // carry that rule's own ladder section — if the projection ever stopped
+        // carrying the ladder, this arm would be measuring the wrong thing and
+        // this assertion is what says so.
+        expect(text).toContain('solution-size ladder');
+        expect(text).toContain('reuse-in-repo');
+        // Substantially larger than the bare control — the contrast between the
+        // two arms is the measurement, so a collapse of that contrast is a bug.
+        expect(text.length).toBeGreaterThan(bare_principle_text().length * 5);
+    });
+
+    it('ARMS: the two new arms use the channels their purpose requires', () => {
+        // Plugin ON + text injection: the ladder is guaranteed in context rather
+        // than left to `improve-before-implement`'s keyword triggers.
+        expect(ARMS['package-ladder']).toEqual({ setting_sources: null, inject: 'ladder' });
+        // Plugin scoped AWAY + text injection: no floors reach the model.
+        expect(ARMS['bare-principle']).toEqual({
+            setting_sources: 'project,local',
+            inject: 'bare-principle',
+            min_lift_ratio: null,
+        });
+    });
+
+    it('lift_audit_arms: excludes the tiny-treatment arm, keeps every real lift arm', () => {
+        const selected = lift_audit_arms(['vanilla', 'package', 'package-ladder', 'bare-principle', 'placebo']);
+
+        // Baseline is never its own lift arm.
+        expect(selected).not.toContain('vanilla');
+        // A deliberately minimal treatment cannot show footprint lift; requiring
+        // it would fail legitimate runs.
+        expect(selected).not.toContain('bare-principle');
+        // Every arm that DOES carry a real surface stays audited — this is the
+        // half that must not silently shrink.
+        expect(selected).toContain('package');
+        expect(selected).toContain('package-ladder');
+        expect(selected).toContain('placebo');
+
+        // An unknown arm name is not silently promoted into the audit set.
+        expect(lift_audit_arms(['no-such-arm'])).toEqual([]);
+    });
+
+    it('bare-principle stays audited: the text direction fires BOTH ways for it', () => {
+        // The point of the `min_lift_ratio: null` opt-out is that it narrows the
+        // audit to the text channel — never that it removes the arm from auditing.
+        // Both directions are asserted here so neither an always-firing nor a
+        // never-firing audit passes.
+        const expected = expected_injection(ARMS['bare-principle']);
+        expect(expected).toBe('text');
+
+        const usage = {
+            input_tokens: 900,
+            output_tokens: 100,
+            cache_read_input_tokens: 0,
+            cache_creation_input_tokens: 0,
+        };
+        // Declared a text injection and carried none → violation.
+        expect(
+            activation_verdict({ expected, tokens_breakdown: usage, injected_chars: 0, errored: false }).verdict,
+        ).toBe('violation');
+        // Declared one and carried it → ok.
+        expect(
+            activation_verdict({
+                expected,
+                tokens_breakdown: usage,
+                injected_chars: bare_principle_text().length,
+                errored: false,
+            }).verdict,
+        ).toBe('ok');
+    });
+
+    it('CODEX_VALID_ARMS: the pure-injection arm carries to codex, the plugin one does not', () => {
+        expect(CODEX_VALID_ARMS).toContain('bare-principle');
+        expect(CODEX_VALID_ARMS).not.toContain('package-ladder');
     });
 
     it('status_bucket: completed / budget_limit / task_limit / validation_failed', () => {
