@@ -767,11 +767,48 @@ function watch_pr_checks(branch: string): void {
  * 2026-08-03, 9.15.0). Same-branch commits are never ours to drop, so the
  * recovery is merge-and-retry, never force-push.
  */
+/**
+ * True when git rejected the push because the remote ref moved ahead — the
+ * ONLY failure the merge-and-retry recovery below can repair.
+ *
+ * git's wording for this is stable across versions: the hint is `fetch first`
+ * / `Updates were rejected`, and the ref line carries `[rejected]` with
+ * `non-fast-forward` or `fetch first`.
+ */
+export function _is_non_fast_forward(stderr: string, stdout: string): boolean {
+    const text = `${stderr}\n${stdout}`;
+    return (
+        /\[rejected\]/i.test(text) &&
+        /(non-fast-forward|fetch first|behind its remote counterpart)/i.test(text)
+    );
+}
+
 function push_release_branch(branch: string): void {
-    const first = run(['git', 'push', '-u', REMOTE, branch], { check: false });
+    const first = run(['git', 'push', '-u', REMOTE, branch], { check: false, capture: true });
     if (first.returncode === 0) {
+        process.stdout.write(first.stdout);
+        process.stderr.write(first.stderr);
         return;
     }
+
+    // A push can fail for many reasons — a pre-push hook refusing the commit,
+    // no credentials, a protected branch. Only ONE of them is repaired by
+    // fetch+merge+retry, and the recovery's first step (`git fetch <branch>`)
+    // exits 128 for a branch that was never pushed. Taking that path
+    // unconditionally replaced every real error with
+    // `couldn't find remote ref <branch>` — measured 2026-08-06 on 9.26.0,
+    // where a pre-push gate rejection surfaced as a git-fetch crash and cost
+    // an hour of diagnosis pointed at the wrong layer.
+    if (!_is_non_fast_forward(first.stderr, first.stdout)) {
+        process.stdout.write(first.stdout);
+        process.stderr.write(first.stderr);
+        die(
+            `push of ${branch} failed (exit ${first.returncode}) and the remote ref did not move — ` +
+                'this is not the fetch-and-retry case. The push output above is the real error ' +
+                '(a pre-push gate, credentials, or branch protection); fix that and re-run.',
+        );
+    }
+
     process.stdout.write(`↻  ${REMOTE}/${branch} moved — integrating and retrying push\n`);
     run(['git', 'fetch', REMOTE, branch]);
     run(['git', 'merge', '--no-edit', `${REMOTE}/${branch}`]);
