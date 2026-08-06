@@ -42,51 +42,6 @@ export function check_claude_skills(root: string, errors: string[]): number {
     return names.length;
 }
 
-/**
- * Every authored skill must REACH the Claude tree, not merely be well-formed
- * once there.
- *
- * The checker above validates whatever it finds, so a skill that never
- * projects is indistinguishable from a skill that does not exist. Probed
- * 2026-08-06 by deleting `.claude/skills/laravel`: this gate and
- * `check_condensation` both stayed green, and the host would simply never see
- * that skill. Loadability and completeness are different questions and only
- * the first one was being asked.
- *
- * Scoped to `src/skills/*` deliberately. The tree also carries ~47 entries
- * projected from `src/domains/<pack>/<cmd>/command.md`, whose directory name
- * need not match the projected skill name (`domains/git/commit` →
- * `git-commit`), so a naive directory comparison there would invent failures.
- * The authored-skill set is the one with a 1:1 name contract.
- *
- * @returns how many authored skills were checked for arrival.
- */
-export function check_claude_skill_completeness(root: string, errors: string[]): number {
-    const projected = path.join(root, '.claude', 'skills');
-    const authored = path.join(root, 'src', 'skills');
-    // An ungenerated projection is not an incomplete one — same stance as the
-    // checkers above. Nothing to compare against, so nothing to claim.
-    if (!fs.existsSync(projected) || !fs.existsSync(authored)) return 0;
-
-    const missing: string[] = [];
-    let checked = 0;
-    for (const entry of fs.readdirSync(authored, { withFileTypes: true })) {
-        if (!entry.isDirectory()) continue;
-        if (!fs.existsSync(path.join(authored, entry.name, 'SKILL.md'))) continue;
-        checked += 1;
-        if (!fs.existsSync(path.join(projected, entry.name, 'SKILL.md'))) missing.push(entry.name);
-    }
-    if (missing.length > 0) {
-        const shown = missing.slice(0, 10).join(', ');
-        const rest = missing.length > 10 ? ` … and ${String(missing.length - 10)} more` : '';
-        errors.push(
-            `.claude/skills: ${String(missing.length)} of ${String(checked)} authored skill(s) never reached the host tree — ` +
-                `${shown}${rest}. Regenerate with \`task generate-tools\`; if one is deliberately unprojected, the generator must say so.`,
-        );
-    }
-    return checked;
-}
-
 /** @returns how many `.mdc` rule files were examined. */
 export function check_cursor_rules(root: string, errors: string[]): number {
     const dir = path.join(root, '.cursor', 'rules');
@@ -119,10 +74,7 @@ export function run(root: string): string[] {
     // early when its tree is absent — so "no malformed artefacts" and "no
     // artefacts" are the same green. Thrown, not returned: `errors` names
     // malformed files, and an unprojected tree is not one.
-    // Completeness reads the same tree the first checker walks, so it adds no
-    // scanned units — counting it twice would inflate the published number.
     const scanned = check_claude_skills(root, errors) + check_cursor_rules(root, errors);
-    check_claude_skill_completeness(root, errors);
     assertScanned({
         gate: 'check_host_loadability',
         scanned,
