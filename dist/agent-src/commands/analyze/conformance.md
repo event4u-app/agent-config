@@ -40,6 +40,30 @@ That is the shape of this whole job. A conformance audit is measuring a
 measurement failure, so every instrument has to be checked against a case whose
 answer is already known before its number is believed.
 
+## Where the work happens — the checked-out branch, unless asked otherwise
+
+```
+RUN IN THE CURRENT BRANCH. NEVER CREATE A BRANCH, A WORKTREE, OR A PR
+ON THIS COMMAND'S OWN AUTHORITY. A WORKTREE ONLY ON AN EXPLICIT ASK.
+```
+
+Same default and same reasoning as [`/analyze:inbox`](../inbox/command.md): the
+roadmap and the findings land in the branch already checked out, as ordinary
+uncommitted changes for the operator to review. This command authorizes
+**analysis and authoring** — not a git shape
+([`scope-control`](../../../../rules/scope-control.md) § Git operations).
+
+An isolated worktree runs only when the invocation asks for one — `--worktree`,
+or the operator saying so in the prompt. Then follow
+[`using-git-worktrees`](../../../../skills/using-git-worktrees/SKILL.md),
+including its seeding allow/deny list.
+
+One difference from its sibling worth knowing: a **full** run of this command
+(subagent fan-out plus council) is long enough that a worktree can genuinely
+earn its price by keeping a multi-file diff off the current branch. It still
+does not take one by itself — that is the operator's call, and `--worktree` is
+how they make it.
+
 ## Procedure
 
 ### 1 — Scan (deterministic, always)
@@ -135,7 +159,7 @@ Before the roadmap is believed, run every new detector and gate against:
 | `--scan-only` | Step 1 only — the deterministic report, no subagents, no spend. |
 | `--no-council` | Skip step 4. Record that it was skipped. |
 | `--no-roadmap` | Findings only; no artefact authored. |
-| `--worktree` | Do the work in a governed worktree. Default is the current branch. |
+| `--worktree` | Opt into an isolated worktree. Off by default — see above. |
 
 ## Do NOT
 
