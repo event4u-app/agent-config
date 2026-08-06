@@ -329,10 +329,38 @@ export function injected_text(inject: string | null, placebo_chars: number): str
     return null;
 }
 
-/** Copy the task's pristine fixture into a throwaway working clone. */
-export function reset_fixture(task: Dict): [string, string] {
+/**
+ * Workspace directory for one trial — delta #7 of the S0.3 spike.
+ *
+ * Keyed by `task|arm|seed`, not by task alone. The old task-only key meant every
+ * arm and every seed of a task reused ONE directory that the next trial deleted,
+ * so at the end of a sweep exactly one workspace survived per task — the last one
+ * written, with no record of which arm or seed it belonged to.
+ *
+ * That is not a tidiness problem. Phase 3's anti-golfing gate is specified as
+ * retro-fittable onto already-completed runs by offline re-scoring, and the
+ * roadmap calls that gate cheap *because* the workspaces are preserved. Under the
+ * old key there was nothing to re-score, so the claim was false. A distinct
+ * directory per trial is what makes it true.
+ *
+ * `arm` is sanitised because arm names are used verbatim as a path segment and
+ * one of them would otherwise be free to escape the root.
+ */
+export function workspace_dir(task_id: string, arm: string, seed: number): string {
+    const safe_arm = arm.replace(/[^A-Za-z0-9._-]/g, '_');
+    return path.join(WORK_ROOT, `${task_id}__${safe_arm}__seed${seed}`);
+}
+
+/**
+ * Copy the task's pristine fixture into this trial's own working clone.
+ *
+ * The clone is re-created from the fixture on every call, so a resumed or
+ * repeated trial still starts pristine — the per-trial key changes *which*
+ * directory that is, never whether it is clean.
+ */
+export function reset_fixture(task: Dict, arm: string, seed: number): [string, string] {
     const fixture = path.join(FIXTURES_ROOT, String(task['fixture']));
-    const dest = path.join(WORK_ROOT, String(task['id']));
+    const dest = workspace_dir(String(task['id']), arm, seed);
     if (fs.existsSync(dest)) {
         fs.rmSync(dest, { recursive: true, force: true });
     }
@@ -384,6 +412,13 @@ interface RunOneOpts {
     sp_dir: string;
     max_depth?: number | null; // recursion arm only — hard cap on correction rounds (default 1)
     host?: string; // 'claude' (default) | 'codex' — P2 non-Claude replication (ADR-110 roadmap Phase 4)
+    /**
+     * Trial seed — delta #7. Part of the workspace key, so each (task, arm, seed)
+     * gets its own preserved clone. Defaults to 0 so an existing caller that does
+     * not thread it still gets a stable, arm-scoped directory rather than the old
+     * task-only collision.
+     */
+    seed?: number;
 }
 
 // ── codex host adapter (P2 non-Claude weak-host replication) ────────────────
@@ -616,7 +651,7 @@ export function run_one(task: Dict, arm: string, opts: RunOneOpts): Dict {
         return run_one_recursive(task, opts);
     }
     const host = opts.host ?? 'claude';
-    const [clone, fixture] = reset_fixture(task);
+    const [clone, fixture] = reset_fixture(task, arm, opts.seed ?? 0);
     const sp_text = injected_text(spec.inject, opts.placebo_chars);
     let run: Dict;
     if (host === 'codex') {
@@ -650,6 +685,10 @@ export function run_one(task: Dict, arm: string, opts: RunOneOpts): Dict {
         discipline_pass: score.discipline_pass,
         metrics: trajectory_metrics(run, score),
         injected_chars: sp_text ? sp_text.length : 0,
+        // Delta #7 — where this trial's evidence lives. Recorded on the trial
+        // rather than recomputed later, so an offline re-scorer reads the path the
+        // sweep actually used instead of re-deriving a key that may have changed.
+        workspace: clone,
         ...integrity_fields(run, spec, sp_text ? sp_text.length : 0, opts.model),
     };
 }
@@ -678,6 +717,96 @@ export interface RecursiveAttempt {
  * threading). Whether recursion actually lifts capability/discipline is the
  * empirical question the live `bench:ab` run answers — not asserted here.
  */
+// ── delta #8 — the no-network selftest ──────────────────────────────────────
+//
+// `--mode dry-run` printed a run count and returned before the CLI check, the
+// fixtures, the scorer, the activation audit and the report writer — so it could
+// not tell a working harness from a broken one. The roadmap's Reproducibility
+// step asks for a `--selftest` that "runs green with no network and no key", and
+// a mode that exercises nothing cannot answer that.
+//
+// `--mode selftest` substitutes EXACTLY ONE thing: the model call. Fixture
+// cloning, the deterministic scorer, the per-trial activation stamp, the
+// cross-arm audit, the report writer and every exit code run for real. What it
+// therefore proves is the harness, not the hypothesis — and that is the whole
+// distinction between a self-test and a measurement.
+
+/**
+ * Deterministic synthetic usage for one selftest trial.
+ *
+ * Derived from the arm's real treatment size rather than invented, so the
+ * footprint relationships the activation audit reads are the ones the arm
+ * actually implies: a plugin-bearing arm shows the package's footprint, a text arm
+ * shows its injection, and `vanilla` shows neither.
+ *
+ * The plugin figure is a stand-in for a surface this process cannot observe
+ * without the real CLI. It is deliberately far above `ACTIVATION_MIN_LIFT_RATIO`
+ * so a selftest failure means the wiring is broken, never that a synthetic
+ * constant drifted under a threshold.
+ */
+export function selftest_usage(arm: string, seed: number, placebo_chars: number): TokensBreakdown {
+    const spec = ARMS[arm] as ArmSpec | undefined;
+    const injected = spec ? (injected_text(spec.inject, placebo_chars)?.length ?? 0) : 0;
+    const plugin = spec && spec.setting_sources === null ? 4000 : 0;
+    return {
+        input_tokens: 1000 + plugin + Math.floor(injected / 4),
+        output_tokens: 200 + seed,
+        cache_read_input_tokens: 0,
+        cache_creation_input_tokens: 0,
+    };
+}
+
+/**
+ * One selftest trial — the real pipeline around a synthetic model call.
+ *
+ * `usage_fn` is injectable so a test can force the failure directions (a
+ * collapsed footprint, a model mismatch) and assert that the audit still fires.
+ * Without that seam the selftest could only ever be observed passing, which is
+ * the "gate that scans nothing" shape this repo's own discipline warns about.
+ */
+export function selftest_run(
+    task: Dict,
+    arm: string,
+    opts: RunOneOpts,
+    usage_fn: (arm: string, seed: number, placebo_chars: number) => TokensBreakdown = selftest_usage,
+): Dict {
+    const spec = ARMS[arm] as ArmSpec;
+    const seed = opts.seed ?? 0;
+    // Real fixture clone — this is also what exercises delta #7's per-trial key.
+    const [clone, fixture] = reset_fixture(task, arm, seed);
+    const sp_text = injected_text(spec.inject, opts.placebo_chars);
+    const run: Dict = {
+        errored: false,
+        reason: null,
+        transcript: `selftest transcript · ${String(task['id'])} · ${arm} · seed ${seed}`,
+        num_turns: 1,
+        wall_time_seconds: 0,
+        tokens: 0,
+        tokens_breakdown: usage_fn(arm, seed, opts.placebo_chars),
+        // The synthetic envelope bills exactly the pinned model, so `model_check`
+        // passes for a healthy run and fails if the pin is ever dropped.
+        models_seen: opts.model ? [opts.model] : [],
+    };
+    // Real scorer — no model call, reads the fixture and the clone off disk.
+    const score = scoring.score_task_v2(task, {
+        fixture_root: fixture,
+        clone_root: clone,
+        transcript: String(run['transcript'] ?? ''),
+    });
+    return {
+        errored: false,
+        reason: null,
+        synthetic: true,
+        capability_pass: score.capability_pass,
+        discipline_score: new PyFloat(score.discipline_score),
+        discipline_pass: score.discipline_pass,
+        metrics: trajectory_metrics(run, score),
+        injected_chars: sp_text ? sp_text.length : 0,
+        workspace: clone,
+        ...integrity_fields(run, spec, sp_text ? sp_text.length : 0, opts.model),
+    };
+}
+
 export function run_one_recursive(
     task: Dict,
     opts: RunOneOpts,
@@ -688,7 +817,9 @@ export function run_one_recursive(
     const makeAttempt =
         attemptFn ??
         ((depth: number, priorVerdict: string | null): RecursiveAttempt => {
-            const [clone, fixture] = reset_fixture(task);
+            // Each correction round gets its own preserved workspace too — a
+            // depth-2 attempt must not overwrite the depth-1 evidence.
+            const [clone, fixture] = reset_fixture(task, `package-recursive-d${depth}`, opts.seed ?? 0);
             let sp_file: string | null = null;
             if (priorVerdict) {
                 sp_file = path.join(opts.sp_dir, `.sp-recursive-${depth}.txt`);
@@ -1052,7 +1183,11 @@ export function main(argv: string[] | null = null): number {
         return 0;
     }
 
-    if (v1.claude_executable() === null) {
+    const selftest = args.mode === 'selftest';
+
+    // The selftest exists to run with no network and no key, so requiring the
+    // host CLI here would defeat it. Every other gate below still applies.
+    if (!selftest && v1.claude_executable() === null) {
         process.stderr.write('claude CLI not found\n');
         return 1;
     }
@@ -1099,15 +1234,18 @@ export function main(argv: string[] | null = null): number {
         tasks,
         arms,
         args.seeds,
-        (task, _arm, _seed) =>
-            run_one(task, _arm, {
+        (task, _arm, _seed) => {
+            const runOpts: RunOneOpts = {
                 model: args.model,
                 max_budget,
                 timeout: args.timeout,
                 placebo_chars,
                 sp_dir,
                 host: args.host,
-            }),
+                seed: _seed,
+            };
+            return selftest ? selftest_run(task, _arm, runOpts) : run_one(task, _arm, runOpts);
+        },
         ckpt,
         undefined,
         (r) => budget.add(r['tokens_breakdown'] as TokensBreakdown | undefined),
@@ -1132,6 +1270,12 @@ export function main(argv: string[] | null = null): number {
         placebo_chars,
         corpus: 'ab-trackb-v2',
         host: args.host,
+        // Hygiene (F4/F7): a selftest report must be unmistakable for a measured
+        // one. Both the tier marker and the filename say so, because a number is
+        // only ever allowed to render from a report and this report's numbers are
+        // synthetic by construction.
+        tier: selftest ? 'selftest' : 'live',
+        synthetic: selftest,
         activation_audit: {
             checked: audit.checked,
             skipped: audit.skipped,
@@ -1140,7 +1284,7 @@ export function main(argv: string[] | null = null): number {
         aborted: aborted ?? null,
         records,
     };
-    const out = path.join(REPORTS_DIR, `${stamp}-ab-v2-paired.json`);
+    const out = path.join(REPORTS_DIR, `${stamp}-ab-v2-paired${selftest ? '-selftest' : ''}.json`);
     fs.writeFileSync(out, _jsonDumps(_toJson(payload), 2) + '\n');
     // The paired report now holds everything — retire the checkpoint so a
     // finished sweep leaves no residue and a later identical sweep starts fresh.
@@ -1149,7 +1293,9 @@ export function main(argv: string[] | null = null): number {
     }
     process.stdout.write(
         `bench_ab_v2: wrote ${_relToRootPosix(out)} ` +
-            `(${records.length} tasks, ${total} runs, spend $${budget.spent_usd.toFixed(2)})\n`,
+            `(${records.length} tasks, ${total} runs, ` +
+            (selftest ? 'SELFTEST — synthetic runs, no spend, not publishable' : `spend $${budget.spent_usd.toFixed(2)}`) +
+            `)\n`,
     );
 
     // The report is always written — an aborted or integrity-failed sweep still
@@ -1212,7 +1358,7 @@ function parse_args(argv: string[]): ParsedArgs {
         checkpoint: true,
         fresh: false,
     };
-    const usage = `usage: ${prog} [-h] [--arms ARMS] [--seeds SEEDS] [--tasks TASKS] [--limit LIMIT] [--model MODEL] [--budget BUDGET] [--max-usd MAX_USD] [--timeout TIMEOUT] [--mode {live,dry-run}] [--host {claude,codex}] [--no-checkpoint] [--fresh]\n`;
+    const usage = `usage: ${prog} [-h] [--arms ARMS] [--seeds SEEDS] [--tasks TASKS] [--limit LIMIT] [--model MODEL] [--budget BUDGET] [--max-usd MAX_USD] [--timeout TIMEOUT] [--mode {live,dry-run,selftest}] [--host {claude,codex}] [--no-checkpoint] [--fresh]\n`;
     const argErr = (msg: string): never => {
         process.stderr.write(usage);
         process.stderr.write(`${prog}: error: ${msg}\n`);
@@ -1271,7 +1417,7 @@ function parse_args(argv: string[]): ParsedArgs {
         } else if (a.startsWith('--timeout=')) {
             out.timeout = _pyInt(a.slice('--timeout='.length), '--timeout');
         } else if (a === '--mode') {
-            out.mode = _choice(need(i, '--mode'), '--mode', ['live', 'dry-run'], argErr);
+            out.mode = _choice(need(i, '--mode'), '--mode', ['live', 'dry-run', 'selftest'], argErr);
             i += 1;
         } else if (a === '--host') {
             out.host = _choice(need(i, '--host'), '--host', ['claude', 'codex'], argErr);
@@ -1279,7 +1425,7 @@ function parse_args(argv: string[]): ParsedArgs {
         } else if (a.startsWith('--host=')) {
             out.host = _choice(a.slice('--host='.length), '--host', ['claude', 'codex'], argErr);
         } else if (a.startsWith('--mode=')) {
-            out.mode = _choice(a.slice('--mode='.length), '--mode', ['live', 'dry-run'], argErr);
+            out.mode = _choice(a.slice('--mode='.length), '--mode', ['live', 'dry-run', 'selftest'], argErr);
         } else if (a === '--no-checkpoint') {
             out.checkpoint = false;
         } else if (a === '--fresh') {
