@@ -2,14 +2,14 @@
 
 > Auto-generated — do not edit. Regenerate with `task roadmap-progress` or by running the `update_roadmap_progress` script for your install; rewritten on every roadmap create / execute / completion change (timestamp lives in git history).
 >
-> 16 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **15** open blockers
+> 17 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **17** open blockers
 
 ## Overall
 
-**114 / 203 steps done · 56%**
+**114 / 217 steps done · 53%**
 
 ```text
-██████████████████████░░░░░░░░░░░░░░░░░░   56%
+█████████████████████░░░░░░░░░░░░░░░░░░░   53%
 ```
 
 ## Open roadmaps
@@ -19,19 +19,20 @@
 | 1 | [road-to-ci-native-release-first-run.md](roadmaps/road-to-ci-native-release-first-run.md) | 2 | 8 | 8 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 2 | [road-to-council-blind-review.md](roadmaps/road-to-council-blind-review.md) | 3 | 6 | 2 | 3 | 0 | 1 | 0 | ██████░░░░ 60% |
 | 3 | [road-to-gated-reach-followup.md](roadmaps/road-to-gated-reach-followup.md) | 1 | 12 | 12 | 0 | 0 | 0 | [1](#blockers-road-to-gated-reach-followup) | ░░░░░░░░░░ 0% |
-| 4 | [road-to-kernel-question-triangle.md](roadmaps/road-to-kernel-question-triangle.md) | 1 | 3 | 3 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
-| 5 | [road-to-maintainer-bus-factor.md](roadmaps/road-to-maintainer-bus-factor.md) | 4 | 12 | 5 | 7 | 0 | 0 | [1](#blockers-road-to-maintainer-bus-factor) | ██████░░░░ 58% |
-| 6 | [road-to-orchestration-scope-decision.md](roadmaps/road-to-orchestration-scope-decision.md) | 4 | 10 | 6 | 4 | 0 | 0 | [1](#blockers-road-to-orchestration-scope-decision) | ████░░░░░░ 40% |
-| 7 | [road-to-rule-coherence-followup.md](roadmaps/road-to-rule-coherence-followup.md) | 5 | 9 | 8 | 1 | 0 | 0 | [2](#blockers-road-to-rule-coherence-followup) | █░░░░░░░░░ 11% |
-| 8 | [road-to-scale-history-bench-run.md](roadmaps/road-to-scale-history-bench-run.md) | 1 | 2 | 2 | 0 | 0 | 0 | [1](#blockers-road-to-scale-history-bench-run) | ░░░░░░░░░░ 0% |
-| 9 | [road-to-skill-ecosystem-gate-integrity.md](roadmaps/road-to-skill-ecosystem-gate-integrity.md) | 7 | 43 | 3 | 40 | 0 | 0 | [1](#blockers-road-to-skill-ecosystem-gate-integrity) | █████████░ 93% |
-| 10 | [road-to-solution-minimalism.md](roadmaps/road-to-solution-minimalism.md) | 4 | 36 | 12 | 23 | 0 | 1 | 0 | ███████░░░ 66% |
-| 11 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 6 | 3 | 0 | 0 | [1](#blockers-road-to-subagent-value-realization-followup) | ███░░░░░░░ 33% |
-| 12 | [road-to-surface-consolidation.md](roadmaps/road-to-surface-consolidation.md) | 3 | 14 | 1 | 12 | 1 | 0 | [2](#blockers-road-to-surface-consolidation) | █████████░ 92% |
-| 13 | [road-to-tier-removal.md](roadmaps/road-to-tier-removal.md) | 4 | 8 | 2 | 6 | 0 | 0 | [1](#blockers-road-to-tier-removal) | ████████░░ 75% |
-| 14 | [road-to-ui-track-integrity-followup.md](roadmaps/road-to-ui-track-integrity-followup.md) | 1 | 10 | 10 | 0 | 0 | 0 | [2](#blockers-road-to-ui-track-integrity-followup) | ░░░░░░░░░░ 0% |
-| 15 | [road-to-worktree-hygiene.md](roadmaps/road-to-worktree-hygiene.md) | 1 | 9 | 2 | 7 | 0 | 0 | [1](#blockers-road-to-worktree-hygiene) | ████████░░ 78% |
-| 16 | [road-to-zero-ceremony-settings.md](roadmaps/road-to-zero-ceremony-settings.md) | 5 | 19 | 7 | 8 | 4 | 0 | [1](#blockers-road-to-zero-ceremony-settings) | █████░░░░░ 53% |
+| 4 | [road-to-inbox-harvest-2026-08.md](roadmaps/road-to-inbox-harvest-2026-08.md) | 5 | 21 | 14 | 0 | 3 | 4 | [2](#blockers-road-to-inbox-harvest-2026-08) | ░░░░░░░░░░ 0% |
+| 5 | [road-to-kernel-question-triangle.md](roadmaps/road-to-kernel-question-triangle.md) | 1 | 3 | 3 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+| 6 | [road-to-maintainer-bus-factor.md](roadmaps/road-to-maintainer-bus-factor.md) | 4 | 12 | 5 | 7 | 0 | 0 | [1](#blockers-road-to-maintainer-bus-factor) | ██████░░░░ 58% |
+| 7 | [road-to-orchestration-scope-decision.md](roadmaps/road-to-orchestration-scope-decision.md) | 4 | 10 | 6 | 4 | 0 | 0 | [1](#blockers-road-to-orchestration-scope-decision) | ████░░░░░░ 40% |
+| 8 | [road-to-rule-coherence-followup.md](roadmaps/road-to-rule-coherence-followup.md) | 5 | 9 | 8 | 1 | 0 | 0 | [2](#blockers-road-to-rule-coherence-followup) | █░░░░░░░░░ 11% |
+| 9 | [road-to-scale-history-bench-run.md](roadmaps/road-to-scale-history-bench-run.md) | 1 | 2 | 2 | 0 | 0 | 0 | [1](#blockers-road-to-scale-history-bench-run) | ░░░░░░░░░░ 0% |
+| 10 | [road-to-skill-ecosystem-gate-integrity.md](roadmaps/road-to-skill-ecosystem-gate-integrity.md) | 7 | 43 | 3 | 40 | 0 | 0 | [1](#blockers-road-to-skill-ecosystem-gate-integrity) | █████████░ 93% |
+| 11 | [road-to-solution-minimalism.md](roadmaps/road-to-solution-minimalism.md) | 4 | 36 | 12 | 23 | 0 | 1 | 0 | ███████░░░ 66% |
+| 12 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 6 | 3 | 0 | 0 | [1](#blockers-road-to-subagent-value-realization-followup) | ███░░░░░░░ 33% |
+| 13 | [road-to-surface-consolidation.md](roadmaps/road-to-surface-consolidation.md) | 3 | 14 | 1 | 12 | 1 | 0 | [2](#blockers-road-to-surface-consolidation) | █████████░ 92% |
+| 14 | [road-to-tier-removal.md](roadmaps/road-to-tier-removal.md) | 4 | 8 | 2 | 6 | 0 | 0 | [1](#blockers-road-to-tier-removal) | ████████░░ 75% |
+| 15 | [road-to-ui-track-integrity-followup.md](roadmaps/road-to-ui-track-integrity-followup.md) | 1 | 10 | 10 | 0 | 0 | 0 | [2](#blockers-road-to-ui-track-integrity-followup) | ░░░░░░░░░░ 0% |
+| 16 | [road-to-worktree-hygiene.md](roadmaps/road-to-worktree-hygiene.md) | 1 | 9 | 2 | 7 | 0 | 0 | [1](#blockers-road-to-worktree-hygiene) | ████████░░ 78% |
+| 17 | [road-to-zero-ceremony-settings.md](roadmaps/road-to-zero-ceremony-settings.md) | 5 | 19 | 7 | 8 | 4 | 0 | [1](#blockers-road-to-zero-ceremony-settings) | █████░░░░░ 53% |
 
 ---
 
@@ -71,6 +72,38 @@
   - **What to do:**
     `yt-dlp` and a JavaScript runtime are installed **by a human** on
   - **Resolved when:** condition described above clears
+
+### [road-to-inbox-harvest-2026-08.md](roadmaps/road-to-inbox-harvest-2026-08.md)
+
+**Road to inbox harvest 2026-08** — 0 / 14 done (0%)
+
+| # | Phase | State | Open | Done | Deferred | Cancelled | % |
+|---|---|---|---:|---:|---:|---:|---:|
+| 1 | The release-review harvest (from `feedback-9.18.1-1.txt`) | ⬜ not started | 3 | 0 | 1 | 1 | 0% |
+| 2 | The self-fix loop (from `loops-feature.txt`) | ⬜ not started | 2 | 0 | 0 | 1 | 0% |
+| 3 | Small verified fixes | ⬜ not started | 2 | 0 | 1 | 0 | 0% |
+| 4 | The review-mechanization residuals (from `optimize-plan.txt`) | ⬜ not started | 2 | 0 | 0 | 1 | 0% |
+| 5 | The four large chat-log audits | ⬜ not started | 5 | 0 | 1 | 1 | 0% |
+
+<a id="blockers-road-to-inbox-harvest-2026-08"></a>
+**Blockers**
+
+- **deferred-finding-decision-reopen** (owner: maintainer) — blocks Phase 1
+  - **What to do:**
+    declined at `check_review_dispositions.ts:16-22` with a named revisit
+    trigger. Reopening a recorded decision is a maintainer call under
+    `decision-revisit-gate`, not something an agent does because a reviewer asked.
+  - **Resolved when:** the decision is reopened with the trigger cited, or P1.4 is cancelled against it.
+- **spent-inbox-artifacts-await-deletion** (owner: maintainer) — blocks nothing
+  - **What to do:**
+    the agent reports rather than deletes: both `council-q-*.md` files (answered
+    and shipped verbatim), `bench-local/` (null published, roadmap archived), and
+    the byte-identical `(1).md` duplicate plus `chat.txt` inside `memory-mcp/`.
+    Related finding worth a separate look: `check_council_layout` prints these as
+    findings and **exits 0** — an advisory gate nobody sees, currently carrying
+    ~18 permanent findings, which is the allowlist-fatigue shape this repo's own
+    rules warn about.
+  - **Resolved when:** the files are deleted, or a reason to keep them is recorded.
 
 ### [road-to-kernel-question-triangle.md](roadmaps/road-to-kernel-question-triangle.md)
 

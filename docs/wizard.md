@@ -149,7 +149,7 @@ To go the other way and *force* the wizard past the TTY and headless checks,
 pass `--gui` (it does not override `CI`, `AGENT_CONFIG_NO_UI`, or a CLI-mode
 flag — those combinations exit non-zero instead of silently installing).
 With the GUI suppressed, pass profile + pack on the command line —
-`npx -y @event4u/agent-config init --no-ui --profile=developer
+`npx -y @event4u/agent-config init --no-ui --profile=balanced
 --pack=engineering-base` — or hand-edit `.agent-settings.yml`
 directly. Preview the gate verdict and the planned writes with
 `npx @event4u/agent-config install --dry-run` (zero filesystem writes,

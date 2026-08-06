@@ -1,0 +1,47 @@
+{
+  "skill": "analyze-inbox",
+  "last_eval": "2026-08-06",
+  "description": "5 should-trigger + 5 should-not-trigger. Should-trigger covers asking to work through a file (or the whole directory) someone dropped in agents/tmp/ — analysing it against the current tree and turning what survives into a roadmap. Should-not-trigger covers the near-miss neighbours that each own a different surface: /analyze:reference-repo (an EXTERNAL repo, not a local dropped file), /roadmap:create (authoring a roadmap from a request the user states directly, with no artifact to verify), /optimize:project (sweeping the repo's own roadmaps and ADRs, not an inbox artifact), plain file reading with no adoption question, and /memory:mine-session (extracting lessons from a session transcript into memory, not into roadmaps).",
+  "queries": [
+    {
+      "q": "analysiere die Dateien in agents/tmp und mach Roadmaps draus",
+      "trigger": true
+    },
+    {
+      "q": "work through the inbox — analyse each dropped file and tell me what's still relevant",
+      "trigger": true
+    },
+    {
+      "q": "analyse agents/tmp/better-frontend.txt in detail and follow its instructions",
+      "trigger": true
+    },
+    {
+      "q": "someone dropped a review in tmp — is any of it still true, and what should we adopt?",
+      "trigger": true
+    },
+    {
+      "q": "triage the inbox: which of these files are already implemented and which need work?",
+      "trigger": true
+    },
+    {
+      "q": "analyse the competitor repo at github.com/foo/bar and compare it to ours",
+      "trigger": false
+    },
+    {
+      "q": "create a roadmap for adding OAuth to the login flow",
+      "trigger": false
+    },
+    {
+      "q": "run a deep optimization pass over this project's roadmaps and ADRs",
+      "trigger": false
+    },
+    {
+      "q": "read agents/tmp/notes.txt and tell me what it says",
+      "trigger": false
+    },
+    {
+      "q": "mine this session for lessons and write them to memory",
+      "trigger": false
+    }
+  ]
+}
