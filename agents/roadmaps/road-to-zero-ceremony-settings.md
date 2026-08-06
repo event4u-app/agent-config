@@ -254,9 +254,15 @@ because absent means default in both directions.
       fresher than any stored one. Consequence for this phase's exit criterion:
       language contributes **zero** entries to the settings file, so "at most two
       entries" is satisfied by the nickname alone.
-- [x] Ask the nickname once, prefilled from git user name then `$USER`, so
+- [ ] Ask the nickname once, prefilled from git user name then `$USER`, so
       accepting is one keypress; answering activates the session canary the
       package already ships dark.
+      **The prefill half shipped; the ASK half did not, so the box stays open.**
+      It was briefly flipped to `[x]` on the strength of the prefill work and an
+      R2 review caught it — marking a step done because its buildable fraction
+      is built is exactly the overclaim this run exists to correct, and doing it
+      while criticising PR #1197 for the same move would have been worse than
+      the original.
       <!-- verify: npx vitest run tests/shared/nicknamePrefill.test.ts -->
       **The prefill chain now has exactly one implementation, and it is the
       documented one.** `src/rules/settings-ask-protocol.md` shipped the chain
@@ -294,6 +300,16 @@ because absent means default in both directions.
 **Exit criteria:** a fresh interactive session asks exactly one question and
 prints exactly one auto-set notice; a non-TTY session asks nothing; the
 resulting file has at most two entries, each with provenance.
+**Status of these criteria, 2026-08-07 — NOT met, and the phase is not done.**
+Two of the three criteria are unreachable as *code* under decisions taken since
+they were written, and saying so beats quietly passing the phase:
+- *"asks exactly one question"* — there is no chat-side ask trigger and there
+  will not be one: the protocol is `enforced_by: none`, so the ask is
+  agent-carried on every host. `planSettingsAsks` computes WHICH key gets the
+  question and is imported only by its tests. Step 2 stays `[ ]` for this.
+- *"at most two entries"* — language contributes zero entries (no settings key,
+  per the council decision on step 1), so the reachable maximum is one.
+- *"a non-TTY session asks nothing"* — this one IS met, and pinned by 16 cases.
 **Rollback:** disable the first-run trigger; the canary stays dark as today.
 
 ## Phase 5 — The JIT protocol
