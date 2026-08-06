@@ -136,8 +136,8 @@ export function main(argv: string[] = process.argv.slice(2)): number {
   // here is indistinguishable from a pass.
   if (r.skipped) {
     if (!quiet) {
-      console.log(
-        `✅  OK  hook bundle: no self-hosted ${BUNDLE} — the installed package copy is in use, nothing to check`,
+      process.stdout.write(
+        `✅  OK  hook bundle: no self-hosted ${BUNDLE} — the installed package copy is in use, nothing to check\n`,
       );
     }
     return 0;
@@ -145,8 +145,8 @@ export function main(argv: string[] = process.argv.slice(2)): number {
 
   if (r.stale.length === 0) {
     if (!quiet) {
-      console.log(
-        `✅  OK  hook bundle: fresh (built ${stamp(r.bundleMtimeMs)}, ${r.checked} bundled source(s) checked)`,
+      process.stdout.write(
+        `✅  OK  hook bundle: fresh (built ${stamp(r.bundleMtimeMs)}, ${String(r.checked)} bundled source(s) checked)\n`,
       );
     }
     return 0;
