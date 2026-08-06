@@ -33,14 +33,34 @@
  * context does not otherwise contain — which language the human wrote in.
  *
  * State: `agents/state/language-mirror.json`
- *   { "language": "de"|"en"|"und", "detected_at": iso8601,
- *     "prompt_chars": int, "de_markers": int, "en_markers": int,
- *     "session_id": str }
+ *   { "language": "de"|"en"|"und", "source": "prompt"|"system-locale",
+ *     "detected_at": iso8601, "prompt_chars": int, "de_markers": int,
+ *     "en_markers": int, "session_id": str }
  *
  * Undetermined prompts (a bare "1", "ok", a pasted URL) leave a previous pin
  * UNTOUCHED rather than clearing it — a short continuation does not change the
  * conversation's language, and clearing on every terse turn would reproduce the
  * exact drift this hook removes.
+ *
+ * FIRST TURN OF A SESSION — the system-locale fallback.
+ *
+ * The keep-previous-pin rule has nothing to keep on the very first prompt. If
+ * that prompt is terse ("weiter", "1", a pasted URL) the verdict is `und`, no
+ * pin is written, and the turn runs with no pin at all — which is the drift
+ * this hook exists to remove, occurring precisely where the conversation has
+ * the least other evidence. So when there is no previous pin AND the prompt is
+ * undetermined, the environment's locale supplies a starting language, recorded
+ * as `source: "system-locale"` so the weaker provenance is legible rather than
+ * indistinguishable from a read of the user's own words.
+ *
+ * A locale pin is a floor, never a ceiling: the FIRST prompt carrying real
+ * markers replaces it, because `source: "prompt"` always wins. That is what
+ * makes "any later explicit statement by the user overrides it" true without a
+ * second mechanism — the ordinary path already outranks the fallback.
+ *
+ * Locales outside the classifier's two languages stay `und` on purpose. Mapping
+ * `fr_FR` to English because the classifier has no French would pin a language
+ * the user never wrote, which is worse than carrying no pin.
  *
  * Never blocks (`fail_closed: false`, `severity: advisory`). Exit 0 always.
  */
@@ -153,9 +173,97 @@ const LANGUAGE_NAME: Record<Exclude<Verdict, "und">, string> = {
   en: "English",
 };
 
-/** The context block handed back to the model for this turn. */
-export function pinText(language: Exclude<Verdict, "und">): string {
+/**
+ * How a pin came to be — the provenance the roadmap's Phase 4 asks for.
+ *
+ * `prompt` means the user's own words carried the markers. `system-locale`
+ * means they did not and the environment answered instead. The distinction is
+ * load-bearing rather than decorative: a locale pin is the one a user may
+ * legitimately want to contradict, and the notice says which it is so that
+ * contradicting it does not require guessing where it came from.
+ */
+export type PinSource = "prompt" | "system-locale";
+
+/**
+ * The env vars that carry a POSIX locale, most specific first.
+ *
+ * `LC_ALL` overrides everything by definition; `LC_MESSAGES` governs the
+ * language of messages specifically, which is exactly this question; `LANG` is
+ * the fallback for both. `LANGUAGE` is deliberately last — it is a GNU
+ * extension holding a colon-separated PREFERENCE LIST, so it answers a
+ * different question and only its first entry is comparable.
+ */
+const LOCALE_ENV_KEYS = ["LC_ALL", "LC_MESSAGES", "LANG", "LANGUAGE"] as const;
+
+/**
+ * Map an environment locale onto the classifier's verdict space.
+ *
+ * Returns `und` for a locale the classifier cannot mirror, for `C`/`POSIX`
+ * (which name no human language), and for an unset environment. Only the
+ * primary subtag is read: `de_AT.UTF-8`, `de-CH`, and `de` are one answer.
+ */
+export function systemLocaleVerdict(env: NodeJS.ProcessEnv = process.env): Verdict {
+  for (const key of LOCALE_ENV_KEYS) {
+    const raw = (env[key] ?? "").trim();
+    if (!raw) {
+      continue;
+    }
+    // `LANGUAGE` may hold `de:en:fr`; the leading entry is the preference.
+    const first = raw.split(":")[0] ?? "";
+    // Strip the territory and codeset: `de_AT.UTF-8@euro` → `de`.
+    const primary = (first.split(/[._@-]/)[0] ?? "").toLowerCase();
+    if (primary === "c" || primary === "posix" || !primary) {
+      continue;
+    }
+    if (primary === "de") {
+      return "de";
+    }
+    if (primary === "en") {
+      return "en";
+    }
+    // A locale the classifier has no markers for. Stop rather than fall
+    // through to a less specific variable: the user HAS stated a language and
+    // it is neither of the two, so the honest answer is "no pin".
+    return "und";
+  }
+  return "und";
+}
+
+/**
+ * The one-line notice the dispatcher surfaces for this turn.
+ *
+ * A locale-sourced pin says so and says how to override it. A prompt-sourced
+ * pin keeps its original wording, because that line is what the conformance
+ * audit measured and a reworded pin is a changed instrument.
+ */
+export function noticeText(language: Exclude<Verdict, "und">, source: PinSource): string {
   const name = LANGUAGE_NAME[language];
+  if (source === "system-locale") {
+    return (
+      `Reply language for this turn: ${name} — the prompt carried no language ` +
+      `markers, so this fell back to the system locale. Write in another ` +
+      `language and the next turn follows the prompt instead.`
+    );
+  }
+  return `Reply language for this turn: ${name}.`;
+}
+
+/** The context block handed back to the model for this turn. */
+export function pinText(language: Exclude<Verdict, "und">, source: PinSource = "prompt"): string {
+  const name = LANGUAGE_NAME[language];
+  if (source === "system-locale") {
+    return (
+      `<language-pin>\n` +
+      `No language markers were found in this turn's prompt and no language was ` +
+      `pinned yet, so the mirror target falls back to the environment's locale: ` +
+      `${name}. Use it for EVERY user-visible token this turn.\n\n` +
+      `This is the WEAKER of the two provenances — it reflects the machine, not ` +
+      `the user's own words. The first prompt that carries real markers replaces ` +
+      `it. Do not treat it as a standing preference, and do not argue with the ` +
+      `user about it if they write in something else.\n` +
+      `</language-pin>`
+    );
+  }
   return (
     `<language-pin>\n` +
     `The user submitted this turn's prompt in ${name}. That is the mirror target ` +
@@ -173,6 +281,7 @@ export function pinText(language: Exclude<Verdict, "und">): string {
 
 export interface PinState extends JsonObject {
   language: Verdict;
+  source: PinSource;
   detected_at: string;
   prompt_chars: number;
   de_markers: number;
@@ -200,13 +309,30 @@ export function nextState(
   prompt_chars: number,
   session_id: string,
   now: string,
+  locale: Verdict = "und",
 ): PinState | null {
   if (classification.language === "und") {
     // Terse continuation ("1", "ok", "weiter") — keep whatever was pinned.
-    return null;
+    if (previous.language === "de" || previous.language === "en") {
+      return null;
+    }
+    // FIRST turn and nothing to keep: the locale is better than no pin at all.
+    if (locale === "und") {
+      return null;
+    }
+    return {
+      language: locale,
+      source: "system-locale",
+      detected_at: now,
+      prompt_chars,
+      de_markers: classification.de_markers,
+      en_markers: classification.en_markers,
+      session_id,
+    };
   }
   return {
     language: classification.language,
+    source: "prompt",
     detected_at: now,
     prompt_chars,
     de_markers: classification.de_markers,
@@ -225,7 +351,10 @@ function _extractPrompt(payload: JsonObject): string {
   return "";
 }
 
-export function run(stdin_text: string, options: { consumer_root: string }): number {
+export function run(
+  stdin_text: string,
+  options: { consumer_root: string; env?: NodeJS.ProcessEnv },
+): number {
   let envelope: JsonObject = {};
   if (stdin_text.trim()) {
     try {
@@ -248,9 +377,25 @@ export function run(stdin_text: string, options: { consumer_root: string }): num
   const target = path.join(options.consumer_root, STATE_FILE);
   const previous = _loadState(target);
   const classification = classify(prompt);
-  const next = nextState(previous, classification, prompt.length, session_id, new Date().toISOString());
+  const next = nextState(
+    previous,
+    classification,
+    prompt.length,
+    session_id,
+    new Date().toISOString(),
+    // Injectable so the suite can pin a locale instead of inheriting the
+    // machine's — a test whose verdict depends on the developer's `LANG` is a
+    // test that passes here and fails in CI for reasons unrelated to the diff.
+    systemLocaleVerdict(options.env ?? process.env),
+  );
 
   const effective = next?.language ?? (previous.language as Verdict | undefined);
+  // A state file written before `source` existed carries only what the old
+  // version could produce — a prompt reading. Absent is therefore `prompt`,
+  // never "unknown": treating it as unknown would reword the audited notice
+  // for every pre-existing session.
+  const effectiveSource: PinSource =
+    next?.source ?? (previous.source === "system-locale" ? "system-locale" : "prompt");
   if (next) {
     try {
       atomic_write_json(target, next);
@@ -261,7 +406,7 @@ export function run(stdin_text: string, options: { consumer_root: string }): num
 
   if (effective === "de" || effective === "en") {
     process.stdout.write(
-      `${JSON.stringify({ decision: "warn", reason: `Reply language for this turn: ${LANGUAGE_NAME[effective]}.`, additional_context: pinText(effective) })}\n`,
+      `${JSON.stringify({ decision: "warn", reason: noticeText(effective, effectiveSource), additional_context: pinText(effective, effectiveSource) })}\n`,
     );
     return EXIT_WARN;
   }

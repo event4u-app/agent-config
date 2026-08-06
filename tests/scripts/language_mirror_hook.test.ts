@@ -15,10 +15,12 @@ import {
   classify,
   instructionText,
   nextState,
+  noticeText,
   pinText,
   run,
   STATE_FILE,
   MIN_MARKERS,
+  systemLocaleVerdict,
 } from "../../src/scripts/language_mirror_hook.js";
 
 /** The maintainer's real prompt from the worst-case session (451 chars, de=16/en=0). */
@@ -189,5 +191,165 @@ describe("run", () => {
     // dominate a transcript window for the fixture to be honest.
     expect(ENGLISH_SKILL_BODY.length).toBeGreaterThan(2500);
     expect(classify(ENGLISH_SKILL_BODY).language).toBe("en");
+  });
+});
+
+// ---------------------------------------------------------------------------
+// The system-locale fallback — Phase 4 step 1 of `road-to-zero-ceremony-settings`.
+//
+// The gap it closes: the keep-previous-pin rule has nothing to keep on the FIRST
+// prompt of a session, so a terse opener ("weiter", "1") ran with no pin at all
+// — the drift this hook exists to remove, at the point with the least other
+// evidence. The tests below are weighted towards the cases where the fallback
+// must STAY SILENT, because a fallback that over-fires pins a language the user
+// never wrote, which is worse than carrying no pin.
+// ---------------------------------------------------------------------------
+
+describe("systemLocaleVerdict", () => {
+  it("reads a German locale from LANG", () => {
+    expect(systemLocaleVerdict({ LANG: "de_DE.UTF-8" })).toBe("de");
+  });
+
+  it("reads an English locale from LANG", () => {
+    expect(systemLocaleVerdict({ LANG: "en_US.UTF-8" })).toBe("en");
+  });
+
+  it("ignores territory and codeset — de_AT, de-CH and de are one answer", () => {
+    expect(systemLocaleVerdict({ LANG: "de_AT.UTF-8@euro" })).toBe("de");
+    expect(systemLocaleVerdict({ LANG: "de-CH" })).toBe("de");
+    expect(systemLocaleVerdict({ LANG: "de" })).toBe("de");
+  });
+
+  it("honours LC_ALL over LC_MESSAGES over LANG", () => {
+    expect(systemLocaleVerdict({ LC_ALL: "de_DE", LC_MESSAGES: "en_US", LANG: "en_US" })).toBe("de");
+    expect(systemLocaleVerdict({ LC_MESSAGES: "de_DE", LANG: "en_US" })).toBe("de");
+  });
+
+  it("takes only the leading entry of a LANGUAGE preference list", () => {
+    expect(systemLocaleVerdict({ LANGUAGE: "de:en:fr" })).toBe("de");
+  });
+
+  it("returns und for a locale the classifier cannot mirror", () => {
+    // The user HAS stated a language and it is neither of the two. Mapping it to
+    // English would pin words they never wrote.
+    expect(systemLocaleVerdict({ LANG: "fr_FR.UTF-8" })).toBe("und");
+    expect(systemLocaleVerdict({ LANG: "ja_JP.UTF-8" })).toBe("und");
+  });
+
+  it("returns und for C / POSIX, which name no human language", () => {
+    expect(systemLocaleVerdict({ LANG: "C" })).toBe("und");
+    expect(systemLocaleVerdict({ LC_ALL: "POSIX" })).toBe("und");
+  });
+
+  it("returns und on an empty environment", () => {
+    expect(systemLocaleVerdict({})).toBe("und");
+  });
+
+  it("skips an empty variable rather than treating it as a statement", () => {
+    expect(systemLocaleVerdict({ LC_ALL: "", LANG: "de_DE" })).toBe("de");
+  });
+
+  it("does not fall through past a non-mirrorable locale to a weaker variable", () => {
+    // `LC_ALL` overrides everything by definition. Reading `LANG` after it said
+    // French would answer with a variable the system already overrode.
+    expect(systemLocaleVerdict({ LC_ALL: "fr_FR", LANG: "en_US" })).toBe("und");
+  });
+});
+
+describe("nextState — the locale fallback", () => {
+  const und = { language: "und" as const, de_markers: 0, en_markers: 0 };
+
+  it("pins from the locale when the first prompt is undetermined", () => {
+    const s = nextState({}, und, 1, "s1", "2026-08-06T00:00:00.000Z", "de");
+    expect(s?.language).toBe("de");
+    expect(s?.source).toBe("system-locale");
+  });
+
+  it("writes no pin when there is nothing to keep and no usable locale", () => {
+    expect(nextState({}, und, 1, "s1", "2026-08-06T00:00:00.000Z", "und")).toBeNull();
+  });
+
+  it("keeps an existing pin instead of overwriting it with the locale", () => {
+    // The locale is a FLOOR for the first turn, not a competitor afterwards.
+    const previous = { language: "de" as const, source: "prompt" as const };
+    expect(nextState(previous, und, 1, "s1", "2026-08-06T00:00:00.000Z", "en")).toBeNull();
+  });
+
+  it("a determined prompt outranks a locale pin — the override needs no second mechanism", () => {
+    const previous = { language: "en" as const, source: "system-locale" as const };
+    const de = { language: "de" as const, de_markers: 9, en_markers: 0 };
+    const s = nextState(previous, de, 80, "s1", "2026-08-06T00:00:00.000Z", "en");
+    expect(s?.language).toBe("de");
+    expect(s?.source).toBe("prompt");
+  });
+
+  it("stamps a prompt reading as source prompt, never as the locale", () => {
+    const de = { language: "de" as const, de_markers: 9, en_markers: 0 };
+    expect(nextState({}, de, 80, "s1", "2026-08-06T00:00:00.000Z", "en")?.source).toBe("prompt");
+  });
+});
+
+describe("noticeText / pinText provenance", () => {
+  it("keeps the audited wording for a prompt-sourced pin", () => {
+    // This line is the instrument the 30-session audit measured. Rewording it
+    // silently changes what a future audit is comparing against.
+    expect(noticeText("de", "prompt")).toBe("Reply language for this turn: German (Deutsch).");
+  });
+
+  it("says it fell back to the locale, and how to override it", () => {
+    const notice = noticeText("de", "system-locale");
+    expect(notice).toMatch(/system locale/i);
+    expect(notice).toMatch(/another language/i);
+  });
+
+  it("marks the locale pin as the weaker provenance in the injected block", () => {
+    const block = pinText("en", "system-locale");
+    expect(block).toMatch(/WEAKER/);
+    expect(block).toMatch(/locale/i);
+    expect(block).not.toMatch(/The user submitted this turn's prompt/);
+  });
+
+  it("defaults to the prompt provenance so existing callers are unchanged", () => {
+    expect(pinText("de")).toBe(pinText("de", "prompt"));
+  });
+});
+
+describe("run — the locale fallback end to end", () => {
+  it("pins from the locale on a terse FIRST prompt and says so", () => {
+    const rc = run(envelope("weiter"), { consumer_root: tmp, env: { LANG: "de_DE.UTF-8" } });
+    expect(rc).toBe(2);
+    const state = readState();
+    expect(state.language).toBe("de");
+    expect(state.source).toBe("system-locale");
+  });
+
+  it("stays a clean no-op on a terse first prompt with no usable locale", () => {
+    expect(run(envelope("weiter"), { consumer_root: tmp, env: {} })).toBe(0);
+    expect(fs.existsSync(statePath())).toBe(false);
+  });
+
+  it("a later real prompt replaces the locale pin with a prompt pin", () => {
+    run(envelope("ok"), { consumer_root: tmp, env: { LANG: "en_US.UTF-8" } });
+    expect(readState().source).toBe("system-locale");
+    run(envelope(REAL_GERMAN_PROMPT), { consumer_root: tmp, env: { LANG: "en_US.UTF-8" } });
+    const state = readState();
+    expect(state.language).toBe("de");
+    expect(state.source).toBe("prompt");
+  });
+
+  it("treats a pre-existing sourceless pin as prompt-sourced", () => {
+    // A state file written before `source` existed can only have come from a
+    // prompt reading. Reading it as unknown would reword the audited notice for
+    // every session that predates this change.
+    fs.mkdirSync(path.dirname(statePath()), { recursive: true });
+    fs.writeFileSync(
+      statePath(),
+      JSON.stringify({ language: "de", detected_at: "2026-08-01T00:00:00.000Z" }),
+      "utf8",
+    );
+    const rc = run(envelope("1"), { consumer_root: tmp, env: { LANG: "en_US.UTF-8" } });
+    expect(rc).toBe(2);
+    // The pin is kept, not overwritten, and the locale does not leak in.
+    expect(readState().language).toBe("de");
   });
 });
