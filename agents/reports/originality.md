@@ -1,13 +1,13 @@
 # Originality audit — entity-neutralized shingle overlap
 
-> Anti-reskin gate over 513 authored artifacts (skills · personas · commands), 
+> Anti-reskin gate over 514 authored artifacts (skills · personas · commands), 
 class-scoped, scaffold-subtracted, k=8. Thresholds: FAIL 60 / WARN 40. 
 This report blocks NOTHING on its own — `lint_originality --changed` is the CI gate.
 
 
-- Artifacts scanned: **513**
+- Artifacts scanned: **514**
 
-- Pairwise comparisons: **60678**
+- Pairwise comparisons: **60873**
 
 - Overlap distribution: worst **40%** · p95 **0%** · median **0%**
 
