@@ -72,6 +72,21 @@ EVERY TURN MUST EDIT, RUN, OR ASK.
 
 **25-min abort (5 read-only turns) — STOP and ask** with the abort block (template in the mechanics guideline). Non-bypassable: an autonomous mandate does **not** lift the abort — it is the safety net that protects autonomy from becoming a token sink.
 
+### Declared read protocol — the cap goes UP, never off
+
+A mandated analysis/audit/review protocol is exactly the case that legitimately needs *more* reads, not fewer — an 8-turn evidence sweep is the protocol working, not a loop. Capping a declared protocol tighter than an undeclared one is backwards. So:
+
+- **Undeclared reading keeps 3-warn / 5-abort.** Unchanged.
+- **A declared protocol raises the abort to 8 read-only turns** — and never suspends it. "Non-bypassable" narrows to **no *silent* bypass**: a declared protocol is not silent.
+
+A declaration is only valid when it states, before the reading starts, all three of:
+
+1. **the analysis goal**, falsifiably ("map every call chain that writes to the audit table" — not "understand the code");
+2. **the expected read count**;
+3. **the output shape** the reads feed (a table, an evidence report, a decision).
+
+Free-text intent is not a declaration — the three fields exist so that "declared protocol: I need to read things" cannot buy the higher cap. Exceeding the declared count by more than 2 is itself the violation: stop, surface what the extra reads were for, and ask.
+
 Body migrated to [`guideline:agent-infra/context-hygiene-mechanics`](../docs/guidelines/agent-infra/context-hygiene-mechanics.md) (per P4 of `road-to-kernel-and-router.md`) — the freshness-suggestion template, the read-loop self-check + abort block, the state-dump format + `/agent-handoff` pointer, the Augment ignored-skills recovery flow, and the Copilot no-hook fallback (manual `context_hygiene_hook` refresh).
 Trigger-set above activates this routing on demand, independent of the discipline profile (ADR-110).
 
