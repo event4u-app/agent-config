@@ -232,6 +232,79 @@ interface ConcernDef extends JsonObject {
 }
 
 /**
+ * The tool name the host reported for this event, or `""`.
+ *
+ * Only tool events carry one. Read defensively: the payload is host-shaped and
+ * a missing / non-string field must degrade to "unknown tool", never throw.
+ */
+export function _payload_tool_name(envelope: JsonObject): string {
+  const payload = envelope["payload"];
+  if (!_isObject(payload)) {
+    return "";
+  }
+  const raw = payload["tool_name"];
+  return typeof raw === "string" ? raw : "";
+}
+
+/**
+ * Per-concern tool filter — the `tools:` key.
+ *
+ * 13 concerns fire on EVERY tool call (6 pre + 7 post), and three of them
+ * already re-read `tool_name` and return early — after the dispatcher has
+ * already spawned the work. A concern may now declare which tools it cares
+ * about, and the dispatcher skips it in-process for everything else.
+ *
+ * ## Why the filter is here and not in the generated host config
+ *
+ * The obvious alternative is a host `matcher` per concern group. Rejected on
+ * two measurements:
+ *
+ * - `build_claude_hook_matrix` collapses each event to ONE command string, and
+ *   `claude_hook_matrix_parity.test.ts` asserts exactly one group per event with
+ *   exactly one command. Per-concern matchers mean per-concern groups, which
+ *   breaks that parity contract for a filter the dispatcher can apply itself.
+ * - A host matcher would only help the two hosts that support one (Claude,
+ *   Gemini). The in-process skip helps all eight platforms in the manifest.
+ *
+ * ## What this does NOT claim
+ *
+ * It does not claim a latency win. The measured hook cost that was fixed was
+ * the *invocation path* (~370 of ~450–500 ms was eager CLI imports); nothing in
+ * the tree measures how much of the current ~84 ms p95 the concern bodies
+ * account for. `bench_hook_latency` reads the manifest, so the claim is
+ * benchable — it is simply not yet benched, and is therefore not asserted.
+ * What IS true without a benchmark: a concern that cannot fire on a tool no
+ * longer runs at all, instead of running and returning early.
+ *
+ * Absent `tools:` → the concern runs on every event, unchanged. `"*"` is the
+ * explicit form of the same thing. Matching is exact on the host's `tool_name`.
+ * A non-tool event (session_start, stop, …) reports no tool name and is NEVER
+ * filtered — a lifecycle concern must not be silently skipped by a key that
+ * only describes tool events.
+ */
+export function _concern_matches_tool(concern: JsonObject, tool_name: string): boolean {
+  const raw = concern["tools"];
+  if (raw === undefined || raw === null) {
+    return true;
+  }
+  if (!Array.isArray(raw) || raw.length === 0) {
+    // A malformed or empty filter must not silence a concern — fail toward
+    // running it, the same direction `fail_closed` guards take.
+    return true;
+  }
+  const names = raw.filter((t): t is string => typeof t === "string");
+  if (names.length === 0 || names.includes("*")) {
+    return true;
+  }
+  // No tool in the payload → not a tool event (or a host that omits it).
+  // Either way this key cannot decide, so it does not.
+  if (tool_name === "") {
+    return true;
+  }
+  return names.includes(tool_name);
+}
+
+/**
  * Return the ordered concern definitions for (platform, event).
  */
 export function _resolve_concerns(
@@ -995,7 +1068,13 @@ export function main(argv?: string[]): number {
   // fixed-field schema (PII-exclusion-by-construction), and a concern's raw
   // stderr is free-form content. This array is in-memory only.
   const concern_messages: Array<{ rc: number; text: string }> = [];
+  // Per-concern `tools:` filter (see _concern_matches_tool). Applied here so it
+  // is one place, after the envelope exists and before any concern is spawned.
+  const tool_name = _payload_tool_name(envelope);
   for (const concern of concerns) {
+    if (!_concern_matches_tool(concern, tool_name)) {
+      continue;
+    }
     const concern_started = _now_iso();
     const { rc: rawRcResult, stderr: stderr_text, stdout: stdout_text, duration_ms } =
       _run_concern(concern, envelope);

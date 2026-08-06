@@ -23,7 +23,9 @@ triggers:
   - phrase: "bau das nach"
   - phrase: "1:1 um"
   - phrase: "1:1 nach"
+  - phrase: "claude.site/artifacts"
   - file_pattern: "*design.html"
+  - path_prefix: ".claude/design-system/"
 applies_to_user_types:
   - "creator"
   - "developer"
@@ -96,13 +98,27 @@ artifact is simply attached. The last is covered by `file_pattern: *design.html`
 HTML edit in every project and be strictly worse than the gap it closes. A
 handover under some other filename needs one word in the prompt.
 
+Two further handover shapes carry the artifact without any of the above:
+
+- **A capability URL.** A published artifact is handed over as a link, not a
+  file — so `phrase: "claude.site/artifacts"` fires on the *published-artifact
+  path*, not on the host. `claude.ai` alone is a chat link and must stay quiet:
+  a keyword on the bare domain would fire on "I pasted this from claude.ai",
+  which is a conversation reference, not a spec.
+- **A design-system directory.** `path_prefix: ".claude/design-system/"` — the
+  conventional location for a handed-over token/component set. The prefix is the
+  vendor-scoped directory, never a bare `design-system/`, which is a normal
+  source folder in a large fraction of frontend repos.
+
 The trigger set is deliberately phrase-heavy on the German side and on
 `artifact`: a bare `artifact` keyword fires on "the CI build artifact is 40 MB".
 `ROUTING_MATRIX` in
 [`design_fidelity_routing.test.ts`](../../tests/scripts/design_fidelity_routing.test.ts)
 pins both halves — every class that must route, and the near-misses that must
 stay silent (fixture `daf-port-trigger-de`). Extending the set without adding a
-near-miss row there is how an over-broad trigger lands.
+near-miss row there is how an over-broad trigger lands: each of the two triggers
+above ships with its own near-miss row (`near-claude-ai-chat-link`,
+`near-generic-design-system-dir`).
 
 Body migrated to [`guideline:design-fidelity-mechanics`](../docs/guidelines/design-fidelity-mechanics.md) (per P4 of `road-to-kernel-and-router.md`) — surgical visual edits (targeted-edit vs redesign-trigger discipline, stable anchors), asset & imagery discipline (owned-asset path, third-party delivery is self-hosted by default, real-imagery-as-proof, iconography floor, no unrequested filler), deviation-surfacing shape, failure-mode catalog, `daf-*` fixtures.
 Trigger-set above activates this routing on demand, independent of the discipline profile (ADR-110).

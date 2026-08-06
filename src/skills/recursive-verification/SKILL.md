@@ -48,6 +48,19 @@ until a benchmark gate authorises it per host.
 > major unless external evidence appears first. This skill is NOT sold as a
 > quality-lift mechanism.
 
+> **Scope of that null — what it does NOT close.** It measured a loop that ADDS
+> a critic to judge whether an attempt was good enough (deterministic
+> scorer-as-critic, `max_depth=1`, weak host, `capH-debug`). It is not evidence
+> about retrying on a check that has **already returned red**: there the verdict
+> is deterministic and in hand, and no critic is introduced, so there is nothing
+> for the null to be null about. The measurement's own decisive finding inverts
+> in that case — recursion was redundant because the first attempt already
+> passed the critic 72% of the time, so cost scaled with every task while benefit
+> sat in the ~28% tail; a red-triggered retry costs nothing on the passing
+> majority and fires only on the tail. What the null DOES bind, for any such
+> loop, is the falsification shape: pre-register the reduction it must deliver,
+> and revert rather than narrate if it does not.
+
 ## The Iron Law
 
 ```

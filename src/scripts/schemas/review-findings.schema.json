@@ -1,0 +1,99 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "review-findings.schema.json",
+  "title": "Review findings",
+  "description": "ONE findings shape for both review tracks. All six external reviewers of 9.18.1 converged on a single ask: the R2 gate hand-parses Markdown and carries `unbalanced-fence` and `malformed-row` as first-class violation kinds — i.e. it has defect classes FOR ITS OWN PARSER. This schema is deliberately NOT a new format: it is the shape `self_review_gate.ts` already emits under `--findings-out` and `check_finding_dispositions.ts` already hand-validates in code, lifted into a file both tracks can point at. Inventing a second JSON shape here would have been the exact fragmentation the reviewers complained about.",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "findings"
+  ],
+  "additionalProperties": true,
+  "properties": {
+    "schema_version": {
+      "enum": [
+        1
+      ],
+      "description": "Pinned. `check_finding_dispositions.parse_ledger` already rejects anything else, so this is a promotion of an existing check rather than a new constraint. Spelled as a one-member `enum` rather than `const`: the repo's own Draft-07 subset validator (validate_frontmatter.ts) enforces `enum` and silently ignores `const`, so `const` here would have been a pin nothing checked."
+    },
+    "release": {
+      "type": "string",
+      "description": "Version the ledger belongs to. Present on the release-findings ledger (agents/evidence/release-findings/<version>.json); absent on a bare --findings-out emission, which is why it is not required here."
+    },
+    "findings": {
+      "type": "array",
+      "description": "May be empty. An empty array is an honest null, not a missing field — the distinction the Markdown track spells with its own §2.3 line. The item shape is INLINED rather than `$ref`-ed for the same measured reason: the subset validator does not resolve `$ref`, so a referenced definition would have validated nothing.",
+      "items": {
+        "type": "object",
+        "required": [
+          "severity",
+          "kind",
+          "title"
+        ],
+        "additionalProperties": true,
+        "properties": {
+          "finding_id": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{12}$",
+            "description": "First 12 hex of sha256(`kind|title|file`), per findingId() in self_review_gate.ts. Stable across runs, which is what lets the disposition ledger key on it. NOT required: an in-flight finding may not have been keyed yet, and requiring it would make the schema reject the shape the model returns before the gate stamps it."
+          },
+          "severity": {
+            "enum": [
+              "critical",
+              "high",
+              "medium",
+              "low"
+            ],
+            "description": "The JSON track's four levels. The Markdown track's own severity vocabulary is a superset in spirit but a different list; mapping between them is a caller's job, not this schema's — see the mapping note in the description of `kind`."
+          },
+          "kind": {
+            "enum": [
+              "security",
+              "claim",
+              "correctness",
+              "style"
+            ],
+            "description": "Finding class. Load-bearing for the id: findingId() hashes kind|title|file, so a kind change is a new finding rather than an edit of the old one."
+          },
+          "title": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 300,
+            "description": "Truncated at 300 by parseFindings() in self_review_gate.ts; the bound is pinned here so a producer cannot emit a title the consumer will silently cut."
+          },
+          "detail": {
+            "type": "string",
+            "maxLength": 2000,
+            "description": "Truncated at 2000 by parseFindings(). Same reasoning as `title`."
+          },
+          "file": {
+            "type": "string",
+            "description": "Repo-relative path. Optional because a finding can be about the change as a whole; findingId() folds an absent file to the empty string so the id stays stable either way."
+          },
+          "status": {
+            "enum": [
+              "open",
+              "fixed",
+              "accepted_risk",
+              "false_positive"
+            ],
+            "description": "Disposition. `fixed` / `false_positive` / `accepted_risk` are the three terminal states check_finding_dispositions accepts; `open` is the initial state. NOTE the underscore spelling — the Markdown track writes `accepted-risk` with a hyphen in its Status cell, and the two vocabularies are deliberately not unified here: renaming either would break committed artefacts on that track."
+          },
+          "rationale": {
+            "type": "string",
+            "description": "Why the disposition. Required by check_finding_dispositions for a non-`fixed` terminal status; enforced there rather than here because the requirement is conditional on the workflow stage, not on the document."
+          },
+          "verified_by": {
+            "type": "string",
+            "description": "Who or what confirmed the disposition."
+          },
+          "date": {
+            "type": "string",
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+            "description": "ISO calendar date of the disposition."
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,33 @@
+{
+  "$schema": "https://tr.designtokens.org/format/",
+  "$description": "The token half of the handoff-bundle fixture, named for the filename the shipped design gate honours verbatim (work_engine/directives/ui/design.ts, design_provided_without_contract). Values are transcribed verbatim from the :root block of ../design.html — the SAME artifact, split across two files, which is what makes this a bundle rather than a second fixture set. A value here that disagrees with design.html is a fixture defect, not a variant.",
+  "color": {
+    "$type": "color",
+    "cream": { "$value": "#f5f1ea" },
+    "cream-deep": { "$value": "#ece4d8" },
+    "ink": { "$value": "#2b2622" },
+    "ink-soft": { "$value": "#6d6055" },
+    "terracotta": { "$value": "#c96442" },
+    "terracotta-deep": { "$value": "#a44d30" },
+    "rule": { "$value": "#e3d7c6" }
+  },
+  "type": {
+    "$type": "dimension",
+    "$description": "A four-step scale. The ratio is not stated in the markup and must not be inferred and 'completed' — the bundle ships exactly these four steps.",
+    "step-0": { "$value": "1rem" },
+    "step-1": { "$value": "1.25rem" },
+    "step-2": { "$value": "1.5625rem" },
+    "step-3": { "$value": "1.953rem" }
+  },
+  "space": {
+    "$type": "dimension",
+    "space-1": { "$value": "8px" },
+    "space-2": { "$value": "16px" },
+    "space-3": { "$value": "24px" },
+    "space-4": { "$value": "40px" }
+  },
+  "radius": {
+    "$type": "dimension",
+    "default": { "$value": "10px" }
+  }
+}

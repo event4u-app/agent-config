@@ -51,7 +51,7 @@ roadmap slice each, and a block of cancellations where they argue against locks.
 Source: `agents/tmp.old/feedback-9.18.1-1.txt`. Six reviewers, one convergent
 ask, and a large already-built fraction.
 
-- [ ] **P1.1 JSON as the binding R1/R2 findings format.** The only item all six
+- [~] **P1.1 JSON as the binding R1/R2 findings format — schema SHIPPED, the rendering half deferred with its reason.** The only item all six
   reviewers converge on and the only one still fully unbuilt:
   `check_completion_review.ts` parses `*.findings.md`, with `unbalanced-fence`
   and `malformed-row` as first-class violation kinds — i.e. it hand-parses
@@ -62,15 +62,89 @@ ask, and a large already-built fraction.
   a second one.
   - Acceptance: `src/scripts/schemas/review-findings.schema.json` exists and
     both tracks validate against it; Markdown becomes a rendering of the JSON.
-- [ ] **P1.2 Wire the existing `risk_class` into the plan gates.** The
-  adaptive-ceremony complaint ("too much ceremony for a one-file change") is
-  real, and the classifier **already exists** at
-  `work_engine/scoring/decision_engine.ts` — it is simply not connected to
-  `planning.risk_review` / `completion_review`. An adapter, not a subsystem, and
-  explicitly not a new `plan:doctor` command: the CLI budget has zero headroom.
-- [ ] **P1.3 Ratchet `gate_self_test` adoption.** It exists with 4 adopters
+  - **Shipped: `src/scripts/schemas/review-findings.schema.json`**, and it is the
+    shape that already existed — `self_review_gate`'s `{schema_version,
+    findings[]}` with the sha256 `findingId()`, plus the release-findings ledger.
+    Not a second format, which was the whole point of the reviewers' complaint.
+    Both tracks' REAL artefacts are asserted against it: every committed ledger
+    under `agents/evidence/release-findings/`, and the exact emission shape
+    `--findings-out` writes (reproduced from the producer, not hand-written).
+  - **A measured trap, and the reason the schema is written the way it looks
+    wrong.** The repo has no `ajv`; validation goes through its own Draft-07
+    **subset** (`validate_frontmatter.ts`), which enforces `enum` at top level and
+    under `items` but **silently ignores `$ref` and `const`**. Probed all four
+    combinations before committing. So the item shape is INLINED and the version
+    pin is a one-member `enum`: written the obvious way — `const: 1` plus a
+    `$ref`-ed definition — this schema would have validated **nothing at all**,
+    which is exactly the gate-that-scans-nothing class this package keeps finding.
+    Two tests pin the spellings so a "tidy-up" cannot silently disarm it.
+  - **Deferred, with the reason: "Markdown becomes a rendering of the JSON".**
+    That clause requires the R2 dispatcher to emit JSON and render Markdown, and
+    the gate to parse JSON — i.e. re-formatting every committed artefact under
+    `agents/evidence/reviews/`. § 2.7 of the contract forbids editing a round
+    record in place, so the clause as written demands the corpus migration the
+    contract prohibits. It is also not what the reviewers asked for: their
+    complaint was TWO incompatible findings shapes, and one schema both tracks
+    validate against answers it. Reopen only with a migration story for the
+    committed corpus.
+  - Also recorded while grounding this: `check_completion_review` carries a
+    documented parser hole of its own (a labelled fence closed by a later bare
+    fence swallows a live `open` row and emits no `unbalanced-fence`). It is
+    already named in-source at `check_completion_review.ts:423-438` and is a
+    separate defect from this step's format question — not silently folded in.
+- [-] **P1.2 CANCELLED — the premise does not exist.** Six findings, measured
+  against the tree before any adapter was written; AI council 2/2 (option A1).
+  1. There is **no classifier** at `work_engine/scoring/decision_engine.ts` —
+     that file is a *consumer* of `risk_class`. The producer is
+     `derive_risk_class` in `work_engine/scoring/decision_trace.ts:82-103`.
+  2. That producer returns `low` when its input is falsy or non-iterable and
+     `medium` when it is an iterable with `count > 0`. **It never returns
+     `high`.** Operationally it answers "are there any changes at all".
+  3. `risk_class` lives entirely inside the *consumer-installed work-engine
+     template* namespace. **Zero** of the six plan-gate scripts reference it
+     (`lint_plan_risk_register`, `check_completion_review`,
+     `dispatch_r2_reviewer`, `check_review_dispositions`,
+     `check_finding_dispositions`, `self_review_gate`).
+  4. `docs/contracts/plan-review-gates.md` has **no** risk-routing or
+     adaptive-ceremony section — there is nothing to extend. The applicability
+     escape that does exist is the § 2.4 skip declaration, and it is binary
+     (code / no-code), not graded.
+  5. **P4.3 in this same roadmap already cancelled risk routing** as "unproven,
+     and the direction-asymmetry evidence behind them is not verifiable here".
+  6. So the only available build was an adapter mapping a two-valued producer —
+     effectively "the diff is non-empty" — onto the gates. The council named that
+     directly: it would create the *illusion* of adaptive ceremony while
+     delivering none of it, which is worse than nothing.
+  - The adaptive-ceremony complaint stays real and stays unaddressed. What it
+    needs is a graded classifier the plan gates own, which is a new subsystem —
+    explicitly what this step said it was not.
+  - **Original step text**, kept verbatim so the cancellation is auditable
+    against the claim it refutes: *"The adaptive-ceremony complaint ('too much
+    ceremony for a one-file change') is real, and the classifier already exists
+    at `work_engine/scoring/decision_engine.ts` — it is simply not connected to
+    `planning.risk_review` / `completion_review`. An adapter, not a subsystem,
+    and explicitly not a new `plan:doctor` command: the CLI budget has zero
+    headroom."*
+- [x] **P1.3 Ratchet `gate_self_test` adoption.** It exists with 4 adopters
   against 27 registered gates. Add adoption as a column in `gate-coverage.yml`
   and ratchet it. No new gate — a column on the existing one.
+  - **Shipped as the inverse, and the step's own numbers were stale.** Measured
+    at HEAD: **8 adopters, 31 registered** (the 4/27 figure was correct on
+    2026-08-05 and the manifest has grown since). Of the 31 rows registered
+    *enforced with a floor*, **7 adopt and 24 do not**.
+  - **Departure — a column ratcheted upward is the shape this file already
+    rejects.** `check_gate_coverage.ts` § `report_hardening_ratchet` states it
+    verbatim: a coverage-percentage ratchet "tracks how far the fix has spread
+    and can never regress, so it grades the solution instead of the problem".
+    So adoption ships as a **shrink-only NON-adopter count** —
+    `gate-self-test:registered-non-adopters`, baseline 24, target 0, and it CAN
+    rise when a new registered gate lands without a self-test. Same shape as the
+    sibling adoption ratchet (`check_gate_completeness`, baseline 217), and the
+    56-day non-stagnation clause applies unchanged.
+  - "No new gate" is honoured: the counter lives in `check_gate_coverage.ts`
+    beside the hardening ratchet, deriving adoption from the source
+    (`_lib/gate_self_test.js` import, or `// self-test-exempt: <reason>`) rather
+    than from a hand-maintained column that could drift from it.
 - [~] **P1.4 Deferred-finding owner + expiry.** Deferred. The stable-id index
   this needs was **explicitly declined** with a named revisit trigger at
   `check_review_dispositions.ts:16-22`, so this reopens a recorded decision —
@@ -90,10 +164,40 @@ ask, and a large already-built fraction.
 Source: `agents/tmp.old/loops-feature.txt`. A finished roadmap in house style;
 its central gap is verified in code.
 
-- [ ] **P2.1 Phase 0 null-scope check first.** `recursive-verification` carries a
-  TERMINAL honest null. The file's deterministic-vs-critic distinction is a
-  legitimate reason the null may not bind here — but that argument is made
-  *before* building, not after.
+- [x] **P2.1 Phase 0 null-scope check — DONE, and the null does NOT bind P2.2.**
+  The argument, made before building (which is the whole point of this step) and
+  grounded in the published measurement rather than in the file's own framing:
+  - **What the null measured.** `docs/benchmark.md` § "Recursive
+    self-verification (ADR-106)": weak host `claude-haiku-4-5`, `capH-debug`
+    family, **deterministic scorer-as-critic**, `max_depth=1`, n=54 paired.
+    Capability 87% vs 87% (McNemar p=1.0); discipline 0.852 vs 0.861 (Wilcoxon
+    p=0.79, 3 discordant pairs against the ≥6 the gate required). ADR-106 gate
+    FALSIFIED. The model-critic variant was closed by council reasoning, not
+    measurement, with "Recursion-as-a-class is closed".
+  - **Why P2.2 is a different mechanism, in one line.** The measured arm ADDS a
+    critic to decide whether an attempt was good enough. P2.2 adds no critic:
+    the red is already a deterministic verdict the engine holds in hand
+    (`directives/backend/test.ts` reaches `_blocked_on_bad_verdict` because the
+    test verdict is literally `failed`). There is no judgement to be null about.
+  - **The null's decisive argument inverts here.** Its killer finding was that
+    recursion fired on 8/29 tasks and produced differentiated output on 4/29,
+    because with the rules active the first attempt already passes the critic
+    **72%** of the time — so cost scaled with all tasks and benefit sat in the
+    ~28% tail. A red-check retry fires **only** on a red: zero cost on the
+    passing majority, all of it on the tail. Same arithmetic, opposite sign.
+  - **What the null DOES bind: the falsification shape.** "Recursion is
+    redundant with the always-on rules" is the outcome a self-fix loop must be
+    able to discover about itself. P2.2 therefore keeps its pre-registered
+    ≥50% halt reduction with revert-not-narrate, and the no-progress floor the
+    `recursive-verification` skill already states in prose ("two consecutive
+    attempts score identical on the deterministic scorer; further depth cannot
+    help, so stop") is adopted as a hard floor rather than left as guidance.
+  - Scope boundary recorded in the skill itself so the next reader cannot
+    misapply the null to a deterministic retry.
+  - **Original step text:** *"`recursive-verification` carries a TERMINAL honest
+    null. The file's deterministic-vs-critic distinction is a legitimate reason
+    the null may not bind here — but that argument is made before building, not
+    after."* Confirmed: that distinction is the load-bearing one, and it holds.
 - [ ] **P2.2 Executable DoD + bounded self-fix loop.** Verified gap: the work
   engine halts to `Outcome.BLOCKED` on a red check with **no attempt counter**,
   so every red costs a user round-trip. Needs `dod.schema.json`, a `dod[]` slot
@@ -106,12 +210,12 @@ its central gap is verified in code.
 
 ## Phase 3 — Small verified fixes
 
-- [ ] **P3.1 `lint_abstraction_thresholds` regex + site count.** Reported: the
+- [x] **P3.1 `lint_abstraction_thresholds` regex + site count.** Reported: the
   cardinal branch cannot match "duplicated twice", and a header says "six
   deliberate sites" while `SITES` holds more. **Both unverified by me** — the
   site count depends on what the header counts, which I could not pin down. Two
   one-liners at most; verify before touching.
-- [ ] **P3.2 Three `design-fidelity` additions** (from `claude-design.txt`, the
+- [x] **P3.2 Three `design-fidelity` additions** (from `claude-design.txt`, the
   only survivors of that file): capability-URL trigger pattern,
   `.claude/design-system/` trigger path, and one acceptance fixture for a
   handoff bundle on the existing "port a provided artifact" branch. Add a
@@ -125,10 +229,38 @@ its central gap is verified in code.
 
 Source: `agents/tmp.old/optimize-plan.txt`. Phase 1 only; the rest is unproven.
 
-- [ ] **P4.1 Dispatcher-owned review prompt + `prompt_hash`.** Closes a residual
+- [x] **P4.1 Dispatcher-owned review prompt + `prompt_hash`.** Closes a residual
   named verbatim in `docs/contracts/plan-review-gates.md`. Provider-independent.
-- [ ] **P4.2 `author ≠ reviewer` in the marker grammar.** The grammar carries
+- [x] **P4.2 `author ≠ reviewer` in the marker grammar.** The grammar carries
   `reviewer` only; the second named residual.
+  - **P4.1 — the residual IS named verbatim; the identifier was not.** The
+    contract's § 5 residual "the prompt channel, and it is the dangerous one"
+    exists word for word, with a recorded case zero (a hash-verified honest-null
+    whose prompt stated prior rounds were clean; a later unsteered round on the
+    identical scope found seven defects). The string `prompt_hash` appeared
+    nowhere in the plan-gate code, contract or schemas — its only prior art in
+    the tree is the unrelated ai-video `prompt_sha256`. Shipped: the dispatcher
+    hashes the prompt it built and writes it into the marker it already owns.
+    Stated honestly in both code and contract — this makes the channel
+    ATTRIBUTABLE, it does not close the residual, because the same host that
+    authors a steered prompt could hash the steered text.
+  - **P4.2 — the step's justification was wrong, the gap was real.** It called
+    author-vs-reviewer "the second named residual"; the contract names five
+    residual blocks and none is about it. The nearest text is a DEFINITION
+    (§ 2.1, `reviewer:` is "never the implementing session"), i.e. a convention
+    with no field to check against. So the claim is corrected in place and the
+    work still shipped: an optional `author:` field plus an `author-is-reviewer`
+    violation when it is present and matches.
+  - **Both are one change on purpose, and that dissolved the council's cost
+    argument.** The council leaned toward cancelling P4.2 on the ground that its
+    edit would be better spent on the prompt channel. But P4.1 extends the same
+    anchored regex in the same commit, so the "same edit" is literally the same
+    edit — there is no migration to pay twice. Departure recorded rather than
+    silently taken.
+  - Additive, not a version bump: the four `v1` fields stay required and in
+    order, so all 81 existing `check_completion_review` tests pass untouched and
+    no committed artefact needed migration.
+
 - [-] **P4.3 Risk routing, council-CLI-as-R2, plan-QA pass — CANCELLED for
   now.** Unproven, and the direction-asymmetry evidence behind them is not
   verifiable here; the draft itself says to treat it as a prior only.
@@ -139,7 +271,7 @@ All four triaged. Same shape as the rest: heavy already-shipped fraction, and in
 two cases a flagship recommendation that argues against a lock accepted *days
 before the file was written*.
 
-- [ ] **P5.1 Fix `stitch.sh --crossfade` — an advertised flag that lies.**
+- [x] **P5.1 Fix `stitch.sh --crossfade` — an advertised flag that lies.**
   `src/scripts/ai-video/stitch.sh:152` prints "not yet implemented" and then
   **silently falls through to plain concat**, so a caller who asked for a
   crossfade gets a hard cut and no error. That is worse than an unimplemented
@@ -147,23 +279,97 @@ before the file was written*.
   `acrossfade`, or make the flag fail loudly. Two-pass `loudnorm` is absent too.
   - The single highest-value item in the whole inbox: smallest diff, real
     user-visible wrongness, no new subsystem.
-- [ ] **P5.2 `design-review-after-ui-write` rule** (from `better-frontend.txt`).
+- [x] **P5.2 `design-review-after-ui-write` rule** (from `better-frontend.txt`).
   **Zero rules currently route to `skill:design-review`** — the write-side loop
   is open, while the read-side (`ui-audit-gate`) is closed. Build it as that
   rule's twin: tier 2b, `packs: [frontend-design]`, same diff-decidable
   `ui-trivial` allowlist. Cheapest real capability gain here.
-- [ ] **P5.3 Per-concern `tools:` matcher in the hook manifest** (from
+  - Confirmed at HEAD: zero rules routed to `skill:design-review` — not one even
+    mentioned the string. Shipped as `design-review-after-ui-write`, tier 2b,
+    `packs: [frontend-design]`, the twin's trigger set, and the same honest-scope
+    section (`enforced_by: none`, because "I ran the review" is self-report and
+    self-report is not enforcement).
+  - Two deliberate deltas from a pure copy. The allow-list carries the engine's
+    **five** conditions, not the four its sibling's prose lists —
+    `ui_trivial/apply.ts` enforces `new_dependency` too, so copying the shorter
+    prose would inherit a gap the engine does not have. And it routes to
+    `accessibility-auditor` as well as `design-review`, because `design-review`
+    lives in `engineering-base` while this rule is scoped to `frontend-design`:
+    a consumer with one pack and not the other would otherwise get the
+    obligation without a skill to discharge it.
+  - `lint_trigger_collisions` required a disposition on **both** sharers for all
+    three shared triggers (`design token`, `resources/views/`, `resources/js/`),
+    so `ui-audit-gate` gained the matching `collision_ok` entries in the same
+    commit — 35 collisions, all dispositioned.
+  - `rule-interactions.yml` row deliberately NOT added: the pair needs no
+    arbiter (its own litmus calls that `complements`), and declaring the slugs
+    there widens the file's closure obligation for no arbitration gain. The
+    relationship is stated in both rule bodies, which is where a reader meets it.
+- [x] **P5.3 Per-concern `tools:` matcher in the hook manifest** (from
   `crytical-analysis.txt`). **13 concerns fire on every single tool call.**
   A `tools:` field per concern plus a generator change is the one latency lever
   the shipped hook-repair work left open — and it matches the measured finding
   that transport dominates hook cost.
-- [ ] **P5.4 `check_corpus_staleness.ts`** (from `better-frontend.txt`). The
+  - 13 confirmed (6 pre + 7 post, `hook_manifest.yaml`); three of them already
+    re-read `tool_name` and return early — after the dispatch cost is paid.
+  - **Departure 1 — no generator change.** The filter is applied by the
+    dispatcher in-process, not projected as a host `matcher`.
+    `build_claude_hook_matrix` collapses each event to ONE command and
+    `claude_hook_matrix_parity.test.ts` asserts one group with one command per
+    event, so per-concern matchers break that parity contract for a filter the
+    dispatcher can apply itself — and a matcher would help only the two hosts
+    that support one, against eight platforms in the manifest.
+  - **Departure 2 — the latency claim is withdrawn, not inherited.** The measured
+    finding was that the *invocation path* dominated (~370 of ~450–500 ms was
+    eager CLI imports), and that was repaired: p95 is ~84 ms. Nothing in the tree
+    measures the concern share of that 84 ms, so "the one latency lever" is
+    unverified. `bench_hook_latency` reads the manifest, so it is benchable; it
+    is not asserted until benched. What is true without a benchmark: a concern
+    that cannot fire on a tool no longer runs at all.
+  - **Scope — advisory concerns only, on purpose.** `tools:` is declared on
+    `code-graph-nudge`, whose set is provable from its own branch surface and
+    pinned against it by a test. It is deliberately NOT declared on the three
+    blocking guards: their tool sets span host naming variants (`Bash` /
+    `BashTool` / `launch-process` / `str-replace-editor` / …), so a list missing
+    one variant silently disables a security guard on that host.
+  - `lint_hook_manifest` validates the key (a typo or empty list fails the
+    build) because the dispatcher fails toward *running* the concern — an
+    unvalidated filter would look like it works while filtering nothing.
+- [x] **P5.4 `check_corpus_staleness.ts`** (from `better-frontend.txt`). The
   design corpus pins a commit last checked **2026-06-07** and declares
   `refresh_cadence: quarterly` with **zero enforcement**. Clone
   `check_reach_staleness.ts`. Pair it with a CSV integrity gate in
   `corpus-grounding/scripts/schema_validator.ts`, which today never opens a CSV
   — that gate must land *before* any re-vendor, not after.
-- [ ] **P5.5 `agents/proposals/` does not exist** (from `hermes.txt`). Two
+  - Both claims confirmed. `design-intelligence/data/manifest.json` pins
+    `last_checked: 2026-06-07` against `refresh_cadence: quarterly`, and **five**
+    manifests share that date (`accessibility-auditor`, `api-design`, `database`,
+    `design-intelligence`, `threat-modeling`); `brand` declares the cadence with
+    `upstream: null` and is exempt by declaration. `schema_validator.ts` touches
+    the filesystem exactly three times and never opens a corpus file — it
+    computes a CSV path, refuses an escape, and stops.
+  - **Shipped as one gate, not two.** The staleness half and the integrity half
+    read the same manifest and would otherwise parse it twice; a second script
+    to keep in sync is a second drift source. Seven violation classes:
+    `stale-corpus`, `future-date`, `unparseable-date`,
+    `attribution-date-mismatch`, `missing-csv`, `empty-csv`, `missing-column`.
+    Measured on the real tree: 6 manifests, **40 CSVs opened**, clean.
+  - **Two deliberate design calls.** The quarterly bound is **100** days, not 90:
+    a quarter is ~91, so a cadence met on its due date would red the maintainer
+    who honoured it. And a header-only CSV counts as `empty-csv`, because zero
+    rows reads exactly like a clean corpus.
+  - **It carries a `--self-test` because the ratchet demanded one.** Registering
+    it in `gate-coverage.yml` adds it to the enforced population that
+    `gate-self-test:registered-non-adopters` measures, so shipping without one
+    would have taken the count 24 → 25 and redded CI. 7 cases, 5 rejecting. That
+    is P1.3's ratchet doing its job on the first gate written after it landed.
+  - **Wired to a workflow, not only to `task ci`.** `task ci` is invoked by no
+    workflow — which is exactly why the template `check-reach-staleness` has been
+    local-only since it shipped. The `--today` pin in the coverage row is
+    deliberate: unpinned, that row flips red on 2026-09-15 with no diff behind
+    it. The unpinned calendar check is the workflow step, and it is *meant* to
+    red when the cadence is genuinely missed.
+- [x] **P5.5 `agents/proposals/` does not exist** (from `hermes.txt`). Two
   artefacts name it as an output path. One directory closes a dangling contract.
 - [~] **P5.6 God-file LOC ratchet** (from `crytical-analysis.txt`). Seven files
   confirmed oversized, plus `chat_history.ts` (2397) and `orchestrator.ts`

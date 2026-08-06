@@ -280,7 +280,34 @@ enforced-mode switch is the removal of that flag — nothing else changes.
 - `reviewer:` — the fresh reviewer context id written by the dispatcher
   (§ 5), never the implementing session.
 
-All three fields are mandatory: a `v1` marker missing `scope:` is malformed
+Two OPTIONAL trailing fields, in this order, both added 2026-08-06:
+
+```markdown
+<!-- completion-review: v1 | reviewed: … | scope: … | diff: … | reviewer: … | author: <impl-session-id> | prompt_hash: <64-hex> -->
+```
+
+- `author:` — the implementing session. It exists so that "`reviewer:` … never
+  the implementing session" above stops being a convention with nothing to check
+  it against: when `author:` is present and equals `reviewer:` the gate emits
+  **`author-is-reviewer`**. Comparison is case-insensitive and trimmed, and
+  deliberately no smarter — a gate that guessed two different ids were "really"
+  the same principal would start blocking legitimate reviews.
+- `prompt_hash:` — sha256 of the reviewer prompt the dispatcher built, written by
+  the dispatcher (§ 5). It addresses the residual at § 5 ("the prompt channel"):
+  the dispatcher fixes the reviewer's inputs but not the instructions around
+  them. It does **not** close that residual — the same host that authors a
+  steered prompt could hash the steered text — and it is not claimed to. What it
+  buys is an attributable record where there was none, so the never-edited round
+  records (§ 2.7) can be checked against the prompt that produced them.
+
+Both are optional because the four `v1` fields are already carried by every
+committed artefact under `agents/evidence/reviews/`, and § 2.7 forbids editing a
+round record in place: a required field would have been a migration event for the
+whole evidence corpus. Absent → no check, byte-identical behaviour to before.
+Field ORDER is fixed (`author` before `prompt_hash`); a reordered marker is
+`bad-marker`, and a `prompt_hash` shorter than 64 hex is not a hash.
+
+The first four fields are mandatory: a `v1` marker missing `scope:` is malformed
 (`bad-marker`), not tolerated — and so is a review-bearing artefact carrying **no
 header marker at all** (an artefact of manifest plus honest-null line is not
 "nothing to validate"; it is a missing mandatory header, `bad-marker`). `v1` is

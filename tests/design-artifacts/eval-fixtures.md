@@ -189,11 +189,13 @@ the criteria are the contract.
 
 ## Provided-artifact port fixtures (`road-to-provided-artifact-honesty`)
 
-All four share one ground-truth artifact:
+All five share one ground-truth artifact:
 [`fixtures/design.html`](fixtures/design.html) — a standalone page in the
 cream/terracotta register, two screens, three interactions, one keyframe, with
 no network reference of any kind. It is also the scored input of `bench:ui`
-(`internal/bench/ui/README.md`); there is deliberately no second fixture set.
+(`internal/bench/ui/README.md`); there is deliberately no second fixture set —
+`daf-handoff-bundle` adds a token **sidecar** to the same page rather than a
+second page, for exactly that reason.
 
 `daf-port-trigger-de` is **deterministic** — it lives as
 [`design_fidelity_routing.test.ts`](../scripts/design_fidelity_routing.test.ts),
@@ -359,6 +361,39 @@ other three are rubric-scored: no unit test can assert whether an agent
   `flagged` and fails without it
   ([`provided_artifact_port.test.ts`](../scripts/work_engine/provided_artifact_port.test.ts)
   § "a flagged loss is what keeps a dropped handler out of silence").
+
+### daf-handoff-bundle
+- **primitive:** `static_inspect`
+- **lifecycle stage:** branch selection → build (port a provided artifact,
+  bundle shape)
+- **scenario:** The handover is a **bundle**, not a single page:
+  [`fixtures/design.html`](fixtures/design.html) plus
+  [`fixtures/handoff-bundle/design-system.json`](fixtures/handoff-bundle/design-system.json)
+  — the same artifact split across markup and a token sidecar. The prompt
+  carries no fidelity keyword; the design-system file is simply attached.
+- **pass:**
+  1. The request still routes to `design-fidelity` — the bundle's directory
+     shape is the signal, not a phrase. Deterministic half: the matrix row
+     `none-design-system-dir` in
+     [`design_fidelity_routing.test.ts`](../scripts/design_fidelity_routing.test.ts).
+  2. It is classified a **port**, and the token file is treated as the
+     authority: emitted colour/type/space/radius reference the token names, and
+     no value appears that the sidecar does not declare. A port that hardcodes
+     `#c96442` has lost the binding even when the pixels match.
+  3. The two value classes the sidecar closes (exact spacing values, easing /
+     timing per `UNCARRIED_BY_THE_BRIEF`) are **not** re-derived, and the three
+     it does not close (hover/focus/active, event handlers, asset manifest) are
+     still named before any regeneration — a supplied contract narrows the loss
+     report, it does not silence it.
+- **why this is not covered by `daf-port-baseline`:** that fixture hands over a
+  self-contained page, where reading values off the markup is indistinguishable
+  from honouring them. The bundle is the only shape where "honoured the
+  contract" and "eyeballed the CSS" produce different artefacts, so it is the
+  only shape that can score the difference.
+- **rubric, with one deterministic half.** Routing is asserted by the matrix
+  row; the token-binding half cannot be — no unit test distinguishes a hex that
+  was *copied* from one that was *resolved*. Recorded as a known limit rather
+  than dressed up as a computed score.
 
 ## Lane fixtures (`road-to-ui-track-integrity`)
 
