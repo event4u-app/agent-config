@@ -5,10 +5,10 @@ tasks:
     silent: true
     desc: |
       Repo-content gates that CI runs and no local chain reached until 2026-07-30.
-      Measured 20.3s total (2026-08-06; 15s at authoring 2026-07-30 — the drift is
-      environment, not the one 0.44s gate added since) — affordable before a push,
-      which is the point: each of these turned a PR red for something local would
-      have caught.
+      Measured 25.1s total (2026-08-06, including the two gates added that day;
+      15s at authoring 2026-07-30 — most of the drift is environment, the added
+      gates account for 1.1s of it) — affordable before a push, which is the
+      point: each of these turned a PR red for something local would have caught.
       Deliberately EXCLUDES check_enforcement_coverage (30.7s measured): a pre-push
       gate that doubles the hook teaches people to skip it. That one stays in the
       full `task ci` and belongs in the post-CI loop.
@@ -36,6 +36,11 @@ tasks:
       # 2026-08-06 — `validate_frontmatter` does not check the description
       # cap, only the linter does, so no other preflight gate could catch it.
       - ./scripts-run src/scripts/skill_linter --changed
+      # agents/index.md + docs/catalog.md embed artefact descriptions verbatim,
+      # so ANY description edit makes them stale — the consistency workflow says
+      # so in its own comment. Same 2026-08-06 PR reddened CI twice on the same
+      # one-line change: once for the cap, once for this drift. 0.69s measured.
+      - task: check-index
       # Gate R1 + R2 (plan-governance) — pre-push layer; CI is authoritative.
       # Exit 2 = degraded advisory (a broken gate never blocks its own fix).
       - task: lint-plan-risk-register
