@@ -31,8 +31,16 @@ import {
 } from '../_lib/router_match.js';
 import { measure, method_note } from '../_lib/token_count.js';
 import { load_agent_settings } from '../_lib/agent_settings.js';
+import { resolvePackageRoot } from '../_lib/package_root.js';
 
-const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..', '..');
+// Marker-anchored, not hop-counted: this module runs from `src/scripts/_cli/`
+// (three levels down) AND from the precompiled `dist/cli-delegate/` (two), and
+// a fixed hop count is right in exactly one of them. Three hops from the bundle
+// landed on `<pkg>/..` — `node_modules/@event4u` for a scoped install — so
+// `route:explain` and `route:audit` reported dist/router.json as missing on
+// every invocation through the shipped binary while both worked under `tsx`.
+// The resolver exists precisely for this and 12 sibling commands already use it.
+const REPO_ROOT = resolvePackageRoot(import.meta.url);
 const ROUTER_JSON = path.join(REPO_ROOT, 'dist', 'router.json');
 const RULES_DIST_DIR = path.join(REPO_ROOT, 'dist', 'agent-src', 'rules');
 
