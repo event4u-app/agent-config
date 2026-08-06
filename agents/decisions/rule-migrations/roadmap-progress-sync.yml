@@ -1,0 +1,48 @@
+# Migration ledger for `roadmap-progress-sync` — what the body-migration transform kept, folded, and lost.
+#
+# `source_headings` is the HARVEST, not a cache: the pre-migration commits are
+# not ancestors of HEAD and a remote branch prune would destroy them, so the
+# headings are recorded here to survive that. See lint_rule_migration_ledger.
+rule: roadmap-progress-sync
+source: recoverable
+source_commit: d4fe80e1ce2a956eb86df328de32e3252515553f
+source_path: .agent-src.uncompressed/rules/roadmap-progress-sync.md
+migrated_to:
+  - docs/guidelines/agent-infra/roadmap-progress-mechanics.md
+source_headings:
+  - "Iron Law — dashboard sync"
+  - "Iron Law — every active roadmap is trackable"
+  - "Status — binary `ready` (default) vs `draft`"
+  - "Agent-authored roadmaps — placement is mandatory"
+  - "Autonomous execution — checkbox cadence"
+  - "Mechanics — triggers, regen command, self-check, failures"
+  - "Copilot fallback"
+rows:
+  - heading: "Iron Law — dashboard sync"
+    disposition: carried
+    target: "docs/guidelines/agent-infra/roadmap-progress-mechanics.md#Iron Law — dashboard sync"
+    reason: "the section moved to the migration target under the same heading text"
+  - heading: "Iron Law — every active roadmap is trackable"
+    disposition: carried
+    target: "docs/guidelines/agent-infra/roadmap-progress-mechanics.md#Iron Law — every active roadmap is trackable"
+    reason: "the section moved to the migration target under the same heading text"
+  - heading: "Status — binary `ready` (default) vs `draft`"
+    disposition: carried
+    target: "docs/guidelines/agent-infra/roadmap-progress-mechanics.md#Status — binary `ready` (default) vs `draft`"
+    reason: "the section moved to the migration target under the same heading text"
+  - heading: "Agent-authored roadmaps — placement is mandatory"
+    disposition: carried
+    target: "docs/guidelines/agent-infra/roadmap-progress-mechanics.md#Agent-authored roadmaps — placement is mandatory"
+    reason: "the section moved to the migration target under the same heading text"
+  - heading: "Autonomous execution — checkbox cadence"
+    disposition: carried
+    target: "docs/guidelines/agent-infra/roadmap-progress-mechanics.md#Autonomous execution — checkbox cadence"
+    reason: "the section moved to the migration target under the same heading text"
+  - heading: "Mechanics — triggers, regen command, self-check, failures"
+    disposition: carried
+    target: "docs/guidelines/agent-infra/roadmap-progress-mechanics.md#Mechanics — triggers, regen command, self-check, failures"
+    reason: "the section moved to the migration target under the same heading text"
+  - heading: "Copilot fallback"
+    disposition: carried
+    target: "docs/guidelines/agent-infra/roadmap-progress-mechanics.md#Copilot fallback"
+    reason: "the section moved to the migration target under the same heading text"

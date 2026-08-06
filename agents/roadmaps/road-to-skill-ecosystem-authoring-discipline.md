@@ -137,10 +137,60 @@ migration is a genuinely lossy authoring transform with no ledger, while
 
 ## Phase 3: Ledger the lossy transform, register the contradictions
 
-- [ ] **Step 1:** Add `agents/decisions/rule-migrations/` holding one ledger per migrated rule, keyed on heading anchors rather than line numbers.
-- [ ] **Step 2:** Give each ledger row exactly one disposition: carried to a named target anchor, merged into a named row, or intentionally dropped. Forbid a vague reason; a row reading "secondary" or "lower-yield" is rejected.
-- [ ] **Step 3:** Add `src/scripts/lint_rule_migration_ledger.ts` asserting that every second-level heading present in a rule's pre-migration content appears as a ledger row, and that every target anchor resolves. <!-- verify: task typecheck-ts -->
-- [ ] **Step 4:** Populate the ledger for the migrated set inventoried in the prerequisites. Where the pre-migration content is no longer recoverable, record that honestly as an unledgered row rather than reconstructing it.
+- [x] **Step 1:** Add `agents/decisions/rule-migrations/` holding one ledger per migrated rule, keyed on heading anchors rather than line numbers.
+      44 files plus a README. **One design change the step did not anticipate:
+      each ledger records its own `source_headings` verbatim.** The obvious
+      build has the gate re-derive them from git, and it cannot — the commits
+      holding the pre-migration bodies for 20 of these rules are **not
+      ancestors of HEAD**, surviving only on 31 and 2 `origin/*` branches, so a
+      CI clone cannot reach them and a routine branch prune destroys them. The
+      recorded headings are therefore not a cache: they **are** the harvest
+      Risk 7 called this roadmap's only perishable input, and recording them
+      discharges it. The gate needs no git at all as a consequence, which is
+      also why it runs unchanged in a shallow clone.
+- [x] **Step 2:** Give each ledger row exactly one disposition: carried to a named target anchor, merged into a named row, or intentionally dropped. Forbid a vague reason; a row reading "secondary" or "lower-yield" is rejected.
+      Three row dispositions (`carried` / `merged` / `dropped`) plus a
+      rule-level `source` of `recoverable` / `born_thin` / `unrecoverable` —
+      **five values across two fields rather than five dispositions**, because
+      "no body ever existed" is a property of the rule and "this heading was
+      dropped" is a property of a row, and flattening them would let a
+      born-thin stub masquerade as a rule whose content was lost. The
+      vague-reason ban is a closed denylist of known-empty phrasings plus a
+      five-word floor, deliberately mechanical: a gate that *scored* reason
+      quality would be unfalsifiable and would invite writing to the scorer.
+- [x] **Step 3:** Add `src/scripts/lint_rule_migration_ledger.ts` asserting that every second-level heading present in a rule's pre-migration content appears as a ledger row, and that every target anchor resolves. <!-- verify: task typecheck-ts -->
+      Keyed on heading **text**, per the inventory's finding 4 — `##` → `###`
+      demotion is the norm in these targets and a level-keyed check misses
+      every demoted section. H1 counts as an anchor too, which the corpus
+      forced: three of the migrated rules are pointer stubs whose entire
+      surviving body sits under the H1 with no `##` beneath it, and excluding
+      it would have made those rows invent a subsection that does not exist —
+      the anchor fabrication the gate exists to prevent. The gate caught five
+      such imprecise anchors on its first real run.
+      What it does **not** assert is written into its header: not the semantic
+      quality of a reason, not that `unrecoverable` is truly unrecoverable, and
+      not that a heading *should* have been carried. A ledger records history,
+      and a gate demanding history be reproduced would push an author to invent
+      rows.
+- [x] **Step 4:** Populate the ledger for the migrated set inventoried in the prerequisites. Where the pre-migration content is no longer recoverable, record that honestly as an unledgered row rather than reconstructing it.
+      **277 rows: 238 carried · 24 merged · 15 dropped, the drops across 9
+      rules.** 114 of the carried rows were derivable mechanically (the heading
+      text is present in the target); the remaining 69 could only be decided by
+      reading the pre-migration section content against the target, which three
+      parallel subagents did with an explicit instruction to prefer an honest
+      "this looks like an unintentional loss" over a tidy guess.
+      **The 15 drops are the finding.** Three left a live citation pointing at
+      content that no longer exists: a command file still refers readers to
+      `docker-commands` for a tool-detection branch that is gone,
+      `laravel-translations` is cited as the home of a key-format mandate it no
+      longer states, and two files name `reviewer-awareness` as the home of a
+      reviewer-role vocabulary that exists nowhere in the tree. Others are
+      quieter but real — `upstream-proposal` lost its "max one proposal per
+      artifact, never nag" cap and its no-self-referential-proposals guard, and
+      `cli-output-handling` lost both the never-pipe-a-running-command-through-`tail`
+      warning and its subcommand catalogue. They are **recorded, not repaired**:
+      making the loss visible is this step, and repairing it is a change with
+      its own scope.
 - [x] **Step 5:** Extend the authority index into a contradiction register: one row per pair of artifacts that push opposite decisions, naming which artifact arbitrates which decision domain rather than asserting a global precedence. Seed it from the existing wins-on-conflict prose.
       **Two premises in this step were wrong, and finding that out was most of
       the work.** First, the register is not built on the authority index:
@@ -326,7 +376,7 @@ migration is a genuinely lossy authoring transform with no ledger, while
 - [x] The pre-send sweep is recorded and fires only on an owed-and-missing line.
 - [x] `src/scripts/lint_mandated_lines.ts` rejects a completion claim describing an outward action with no authorization line, proven by a test.
 - [~] `rule-writing` requires a primary-bias section (done); the schema decision-impact class is Phase 2 Step 3 and did not land.
-- [ ] Every migrated rule has a ledger whose target anchors all resolve, proven by a gate.
+- [x] Every migrated rule has a ledger whose target anchors all resolve, proven by a gate — 44 ledgers, 277 rows, and 15 recorded losses the tree had no record of.
 - [~] The contradiction register exists (it already did — `rule-interactions.yml`, extended 21 → 29 pairs), and every wins-on-conflict claim **between two rules the register declares** has a row, proven by a gate. <!-- deferred: the corpus-wide half is not shipped — 90 arbitration claims over 111 rules, ~64 pairs, two thirds of the surrounding surface boilerplate. See Phase 3 Step 6. -->
 
 - [x] `src/scripts/lint_example_fences.ts` runs over the authored tree with every current hit classified — 503 files, zero hits, so it ships strict rather than advisory.

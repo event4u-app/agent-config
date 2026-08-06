@@ -1,0 +1,36 @@
+# Migration ledger for `skill-improvement-trigger` — what the body-migration transform kept, folded, and lost.
+#
+# `source_headings` is the HARVEST, not a cache: the pre-migration commits are
+# not ancestors of HEAD and a remote branch prune would destroy them, so the
+# headings are recorded here to survive that. See lint_rule_migration_ledger.
+rule: skill-improvement-trigger
+source: recoverable
+source_commit: d4fe80e1ce2a956eb86df328de32e3252515553f
+source_path: .agent-src.uncompressed/rules/skill-improvement-trigger.md
+migrated_to:
+  - src/skills/skill-improvement-pipeline/SKILL.md
+source_headings:
+  - "When to activate"
+  - "What counts as \"meaningful task\""
+  - "What does NOT trigger"
+  - "Trigger behavior"
+  - "Important"
+rows:
+  - heading: "When to activate"
+    disposition: carried
+    target: "src/rules/skill-improvement-trigger.md#Skill Improvement Trigger"
+    reason: "the settings gate stayed in the rule compressed into the Iron Law, though the explicit fail-closed default now exists only in the settings table"
+  - heading: "What counts as \"meaningful task\""
+    disposition: dropped
+    reason: "the five qualifiers appear nowhere, so the term meaningful task is now used by the Iron Law but defined in no artifact"
+  - heading: "What does NOT trigger"
+    disposition: dropped
+    reason: "the suppression list has no equivalent and the skill do-not bullets gate misuse of the pipeline rather than suppression, so an auto-firing rule lost its lower boundary"
+  - heading: "Trigger behavior"
+    disposition: merged
+    target: "src/skills/skill-improvement-pipeline/SKILL.md#Step 2: Promotion Gate"
+    reason: "the three-question check was absorbed into the four-check promotion gate, though the two-option user prompt exists verbatim nowhere"
+  - heading: "Important"
+    disposition: merged
+    target: "src/skills/skill-improvement-pipeline/SKILL.md#Gotcha"
+    reason: "be-honest and never-auto-run survive as Gotcha lines, but the two anti-nagging guarantees have no equivalent for a rule that fires automatically"

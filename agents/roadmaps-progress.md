@@ -6,10 +6,10 @@
 
 ## Overall
 
-**152 / 251 steps done · 61%**
+**157 / 251 steps done · 63%**
 
 ```text
-████████████████████████░░░░░░░░░░░░░░░░   61%
+█████████████████████████░░░░░░░░░░░░░░░   63%
 ```
 
 ## Open roadmaps
@@ -24,7 +24,7 @@
 | 6 | [road-to-orchestration-scope-decision.md](roadmaps/road-to-orchestration-scope-decision.md) | 4 | 10 | 6 | 4 | 0 | 0 | [1](#blockers-road-to-orchestration-scope-decision) | ████░░░░░░ 40% |
 | 7 | [road-to-rule-coherence-followup.md](roadmaps/road-to-rule-coherence-followup.md) | 4 | 7 | 7 | 0 | 0 | 0 | [2](#blockers-road-to-rule-coherence-followup) | ░░░░░░░░░░ 0% |
 | 8 | [road-to-scale-history-bench-run.md](roadmaps/road-to-scale-history-bench-run.md) | 1 | 2 | 2 | 0 | 0 | 0 | [1](#blockers-road-to-scale-history-bench-run) | ░░░░░░░░░░ 0% |
-| 9 | [road-to-skill-ecosystem-authoring-discipline.md](roadmaps/road-to-skill-ecosystem-authoring-discipline.md) | 6 | 52 | 11 | 39 | 2 | 0 | 0 | ████████░░ 78% |
+| 9 | [road-to-skill-ecosystem-authoring-discipline.md](roadmaps/road-to-skill-ecosystem-authoring-discipline.md) | 6 | 52 | 6 | 44 | 2 | 0 | 0 | █████████░ 88% |
 | 10 | [road-to-skill-ecosystem-gate-integrity.md](roadmaps/road-to-skill-ecosystem-gate-integrity.md) | 7 | 43 | 3 | 40 | 0 | 0 | [1](#blockers-road-to-skill-ecosystem-gate-integrity) | █████████░ 93% |
 | 11 | [road-to-solution-minimalism.md](roadmaps/road-to-solution-minimalism.md) | 4 | 36 | 12 | 23 | 0 | 1 | 0 | ███████░░░ 66% |
 | 12 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 6 | 3 | 0 | 0 | [1](#blockers-road-to-subagent-value-realization-followup) | ███░░░░░░░ 33% |
@@ -173,16 +173,16 @@ _1 blocker resolved._
 
 ### [road-to-skill-ecosystem-authoring-discipline.md](roadmaps/road-to-skill-ecosystem-authoring-discipline.md)
 
-**Road to authoring discipline — forced artifacts, named biases, and a removal signal** — 39 / 50 done (78%)
+**Road to authoring discipline — forced artifacts, named biases, and a removal signal** — 44 / 50 done (88%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
 | 1 | Forced artifacts at the decision point | ✅ done | 0 | 7 | 0 | 0 | 100% |
 | 2 | Rule and skill authoring sections | 🟡 in progress | 5 | 2 | 0 | 0 | 29% |
-| 3 | Ledger the lossy transform, register the contradictions | 🟡 in progress | 4 | 3 | 0 | 0 | 43% |
+| 3 | Ledger the lossy transform, register the contradictions | ✅ done | 0 | 7 | 0 | 0 | 100% |
 | 4 | Lint what the authored text teaches | ✅ done | 0 | 7 | 0 | 0 | 100% |
 | 5 | A removal signal, and the first question | ✅ done | 0 | 6 | 0 | 0 | 100% |
-| 6 | Review and judge output shape | 🟡 in progress | 2 | 14 | 2 | 0 | 88% |
+| 6 | Review and judge output shape | 🟡 in progress | 1 | 15 | 2 | 0 | 94% |
 
 ### [road-to-skill-ecosystem-gate-integrity.md](roadmaps/road-to-skill-ecosystem-gate-integrity.md)
 

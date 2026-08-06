@@ -1,0 +1,17 @@
+# Migration ledger for `analysis-skill-routing` — what the body-migration transform kept, folded, and lost.
+#
+# `source_headings` is the HARVEST, not a cache: the pre-migration commits are
+# not ancestors of HEAD and a remote branch prune would destroy them, so the
+# headings are recorded here to survive that. See lint_rule_migration_ledger.
+rule: analysis-skill-routing
+source: recoverable
+source_commit: d4fe80e1ce2a956eb86df328de32e3252515553f
+source_path: .agent-src.uncompressed/rules/analysis-skill-routing.md
+migrated_to:
+  - src/skills/analysis-skill-router/SKILL.md
+source_headings:
+  - "Routing quality gate"
+rows:
+  - heading: "Routing quality gate"
+    disposition: dropped
+    reason: "the route-back-to-the-broader-skill fallback for a hollow narrow skill is absent everywhere, leaving the narrowest-row tie-break unconditional with no path back when the narrow skill has no executable workflow"

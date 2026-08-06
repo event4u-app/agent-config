@@ -1,0 +1,63 @@
+# Migration ledger for `skill-quality` — what the body-migration transform kept, folded, and lost.
+#
+# `source_headings` is the HARVEST, not a cache: the pre-migration commits are
+# not ancestors of HEAD and a remote branch prune would destroy them, so the
+# headings are recorded here to survive that. See lint_rule_migration_ledger.
+rule: skill-quality
+source: recoverable
+source_commit: d4fe80e1ce2a956eb86df328de32e3252515553f
+source_path: .agent-src.uncompressed/rules/skill-quality.md
+migrated_to:
+  - docs/guidelines/agent-infra/skill-quality-checklist.md
+source_headings:
+  - "Minimum Sharpness"
+  - "Required Sections"
+  - "Frontmatter Contract"
+  - "Description Triggering"
+  - "Skill Independence"
+  - "Merge & Compression Preservation"
+  - "Refactor Safety"
+  - "Senior-Tier Required Structure"
+  - "Structural Malice Floor"
+  - "Confidence Tagging"
+rows:
+  - heading: "Minimum Sharpness"
+    disposition: carried
+    target: "docs/guidelines/agent-infra/skill-quality-checklist.md#Minimum Sharpness"
+    reason: "the section moved to the migration target under the same heading text"
+  - heading: "Required Sections"
+    disposition: carried
+    target: "docs/guidelines/agent-infra/skill-quality-checklist.md#Required Sections"
+    reason: "the section moved to the migration target under the same heading text"
+  - heading: "Frontmatter Contract"
+    disposition: carried
+    target: "docs/guidelines/agent-infra/skill-quality-checklist.md#Frontmatter Contract"
+    reason: "the section moved to the migration target under the same heading text"
+  - heading: "Description Triggering"
+    disposition: carried
+    target: "docs/guidelines/agent-infra/skill-quality-checklist.md#Description Triggering"
+    reason: "the section moved to the migration target under the same heading text"
+  - heading: "Skill Independence"
+    disposition: carried
+    target: "docs/guidelines/agent-infra/skill-quality-checklist.md#Skill Independence"
+    reason: "the section moved to the migration target under the same heading text"
+  - heading: "Merge & Compression Preservation"
+    disposition: carried
+    target: "docs/guidelines/agent-infra/skill-quality-checklist.md#Merge & Condensation Preservation"
+    reason: "the paragraph is identical apart from a repo-wide rename and its onward pointer still resolves"
+  - heading: "Refactor Safety"
+    disposition: carried
+    target: "docs/guidelines/agent-infra/skill-quality-checklist.md#Refactor Safety"
+    reason: "the section moved to the migration target under the same heading text"
+  - heading: "Senior-Tier Required Structure"
+    disposition: carried
+    target: "docs/guidelines/agent-infra/skill-quality-checklist.md#Senior-Tier Required Structure"
+    reason: "the section moved to the migration target under the same heading text"
+  - heading: "Structural Malice Floor"
+    disposition: carried
+    target: "docs/guidelines/agent-infra/skill-quality-checklist.md#Structural Malice Floor"
+    reason: "the section moved to the migration target under the same heading text"
+  - heading: "Confidence Tagging"
+    disposition: carried
+    target: "docs/guidelines/agent-infra/skill-quality-checklist.md#Confidence Tagging"
+    reason: "the section moved to the migration target under the same heading text"

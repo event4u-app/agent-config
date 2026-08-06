@@ -1,0 +1,98 @@
+# Migration ledger for `legal-safety-floor` — what the body-migration transform kept, folded, and lost.
+#
+# `source_headings` is the HARVEST, not a cache: the pre-migration commits are
+# not ancestors of HEAD and a remote branch prune would destroy them, so the
+# headings are recorded here to survive that. See lint_rule_migration_ledger.
+rule: legal-safety-floor
+source: recoverable
+source_commit: 6ef4102d6448cf5a37f3e1555b33299ebd75c907
+source_path: src/rules/legal-safety-floor.md
+migrated_to:
+  - src/skills/legal-practice-profile/SKILL.md
+source_headings:
+  - "Iron Law — no final legal call"
+  - "What this pack is — and is not (liability disclaimer)"
+  - "Consent gate — refuse until acknowledged"
+  - "Iron Law — legal work-product is council / deep-research gated"
+  - "Iron Law — general information only, never individual-case examination"
+  - "No definitive legal language"
+  - "Host usage policy"
+  - "Mandatory work-product line"
+  - "Role-conditional header"
+  - "EU/DE-only scope — hard refusal"
+  - "Jurisdiction-honesty — machine-checkable"
+  - "GREEN × non-lawyer → attorney gate"
+  - "Source-tag + currency vocabulary"
+  - "Privilege-circle / destination + retrieved-content"
+  - "Distribution — open-source forever, no commercial tier"
+  - "When this rule applies"
+  - "See also"
+rows:
+  - heading: "Iron Law — no final legal call"
+    disposition: carried
+    target: "src/rules/legal-safety-floor.md#Iron Law — no final legal call"
+    reason: "the section stayed in the rule; the migration moved the depth beneath it, not this heading"
+  - heading: "What this pack is — and is not (liability disclaimer)"
+    disposition: carried
+    target: "src/rules/legal-safety-floor.md#What this pack is — and is not (liability disclaimer)"
+    reason: "the section stayed in the rule; the migration moved the depth beneath it, not this heading"
+  - heading: "Consent gate — refuse until acknowledged"
+    disposition: carried
+    target: "src/rules/legal-safety-floor.md#Consent gate — refuse until acknowledged"
+    reason: "the section stayed in the rule; the migration moved the depth beneath it, not this heading"
+  - heading: "Iron Law — legal work-product is council / deep-research gated"
+    disposition: carried
+    target: "src/rules/legal-safety-floor.md#Iron Law — legal work-product is council / deep-research gated"
+    reason: "the section stayed in the rule; the migration moved the depth beneath it, not this heading"
+  - heading: "Iron Law — general information only, never individual-case examination"
+    disposition: carried
+    target: "src/rules/legal-safety-floor.md#Iron Law — general information only, never individual-case examination"
+    reason: "the section stayed in the rule; the migration moved the depth beneath it, not this heading"
+  - heading: "No definitive legal language"
+    disposition: merged
+    target: "src/skills/legal-practice-profile/SKILL.md#Language, host policy, and output discipline"
+    reason: "the language discipline was folded into a combined section that also absorbed the host-policy material"
+  - heading: "Host usage policy"
+    disposition: merged
+    target: "src/skills/legal-practice-profile/SKILL.md#Language, host policy, and output discipline"
+    reason: "host terms-of-service policy shares the combined section with the language rules rather than keeping a heading of its own"
+  - heading: "Mandatory work-product line"
+    disposition: carried
+    target: "src/rules/legal-safety-floor.md#Mandatory work-product line"
+    reason: "the section stayed in the rule; the migration moved the depth beneath it, not this heading"
+  - heading: "Role-conditional header"
+    disposition: carried
+    target: "src/skills/legal-practice-profile/SKILL.md#Role-conditional header"
+    reason: "the per-role output header table moved to the skill under an identical heading demoted one level"
+  - heading: "EU/DE-only scope — hard refusal"
+    disposition: carried
+    target: "src/rules/legal-safety-floor.md#EU/DE-only scope — hard refusal"
+    reason: "the section stayed in the rule; the migration moved the depth beneath it, not this heading"
+  - heading: "Jurisdiction-honesty — machine-checkable"
+    disposition: carried
+    target: "src/rules/legal-safety-floor.md#EU/DE-only scope — hard refusal"
+    reason: "the jurisdiction tag and its lint_legal_jurisdiction_tag backstop stayed in the rule under a renamed heading rather than migrating"
+  - heading: "GREEN × non-lawyer → attorney gate"
+    disposition: carried
+    target: "src/skills/legal-practice-profile/SKILL.md#GREEN × non-lawyer → attorney gate"
+    reason: "the triage-signal-is-not-a-clearance gate moved to the skill under the same heading, with the rule keeping a one-line pointer to it"
+  - heading: "Source-tag + currency vocabulary"
+    disposition: carried
+    target: "src/skills/legal-practice-profile/SKILL.md#Source-tag + currency vocabulary"
+    reason: "the source-tag vocabulary moved to the skill under an identical heading"
+  - heading: "Privilege-circle / destination + retrieved-content"
+    disposition: carried
+    target: "src/skills/legal-practice-profile/SKILL.md#Privilege-circle / destination + retrieved content"
+    reason: "the privilege egress check moved to the skill with only a hyphen dropped from the heading"
+  - heading: "Distribution — open-source forever, no commercial tier"
+    disposition: carried
+    target: "src/skills/legal-practice-profile/SKILL.md#Distribution stance"
+    reason: "the ADR-108 distribution position moved to the skill under a shortened heading"
+  - heading: "When this rule applies"
+    disposition: carried
+    target: "src/rules/legal-safety-floor.md#When this rule applies"
+    reason: "the section stayed in the rule; the migration moved the depth beneath it, not this heading"
+  - heading: "See also"
+    disposition: carried
+    target: "src/rules/legal-safety-floor.md#See also"
+    reason: "the section stayed in the rule; the migration moved the depth beneath it, not this heading"

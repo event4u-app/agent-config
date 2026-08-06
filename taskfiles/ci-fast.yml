@@ -1259,6 +1259,13 @@ tasks:
       Catches the class where a gate scans a dead root and exits 0; see ADR-201 context.
     cmd: ./scripts-run src/scripts/check_gate_coverage
 
+  lint-rule-migration-ledger:
+    silent: true
+    desc: >-
+      Every rule whose body was migrated out has a ledger, every pre-migration
+      heading has exactly one disposition, every target anchor resolves.
+    cmd: ./scripts-run src/scripts/lint_rule_migration_ledger --quiet
+
   lint-example-fences:
     silent: true
     desc: >-

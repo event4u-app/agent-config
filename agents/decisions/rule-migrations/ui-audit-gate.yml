@@ -1,0 +1,47 @@
+# Migration ledger for `ui-audit-gate` — what the body-migration transform kept, folded, and lost.
+#
+# `source_headings` is the HARVEST, not a cache: the pre-migration commits are
+# not ancestors of HEAD and a remote branch prune would destroy them, so the
+# headings are recorded here to survive that. See lint_rule_migration_ledger.
+rule: ui-audit-gate
+source: recoverable
+source_commit: d4fe80e1ce2a956eb86df328de32e3252515553f
+source_path: .agent-src.uncompressed/rules/ui-audit-gate.md
+migrated_to:
+  - src/skills/existing-ui-audit/SKILL.md
+source_headings:
+  - "The Iron Law"
+  - "When this rule activates"
+  - "Allow-list — when to skip"
+  - "What to do when the gate fires"
+  - "What \"audit findings\" means"
+  - "Failure modes"
+  - "Lookup material — see mechanics"
+rows:
+  - heading: "The Iron Law"
+    disposition: carried
+    target: "src/rules/ui-audit-gate.md#The Iron Law"
+    reason: "the section stayed in the rule; the migration moved the depth beneath it, not this heading"
+  - heading: "When this rule activates"
+    disposition: merged
+    target: "src/skills/existing-ui-audit/SKILL.md#When to use"
+    reason: "the surface list survives split between skill and rule, but the wording-recognition examples and the major-edit trigger are gone from both"
+  - heading: "Allow-list — when to skip"
+    disposition: carried
+    target: "src/rules/ui-audit-gate.md#Allow-list — `ui-trivial`, decidable from the diff alone"
+    reason: "the escape hatch stayed in the rule with the same preconditions and the skill mirrors it in a do-not-use bullet"
+  - heading: "What to do when the gate fires"
+    disposition: merged
+    target: "src/skills/existing-ui-audit/SKILL.md#Procedure: Audit the existing UI surface"
+    reason: "three of four steps live in the procedure including the greenfield branch, but the stop-before-opening-an-editor step survives only implicitly in the Iron Law"
+  - heading: "What \"audit findings\" means"
+    disposition: carried
+    target: "src/rules/ui-audit-gate.md#What \"audit findings\" means"
+    reason: "the section stayed in the rule; the migration moved the depth beneath it, not this heading"
+  - heading: "Failure modes"
+    disposition: carried
+    target: "src/rules/ui-audit-gate.md#Failure modes"
+    reason: "the section stayed in the rule; the migration moved the depth beneath it, not this heading"
+  - heading: "Lookup material — see mechanics"
+    disposition: dropped
+    reason: "the pointer targeted a mechanics file that no longer exists anywhere, so the failure-mode catalog and cloud-surface adaptation it promised are gone with it"

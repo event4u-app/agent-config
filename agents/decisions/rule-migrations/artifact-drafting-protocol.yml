@@ -1,0 +1,43 @@
+# Migration ledger for `artifact-drafting-protocol` — what the body-migration transform kept, folded, and lost.
+#
+# `source_headings` is the HARVEST, not a cache: the pre-migration commits are
+# not ancestors of HEAD and a remote branch prune would destroy them, so the
+# headings are recorded here to survive that. See lint_rule_migration_ledger.
+rule: artifact-drafting-protocol
+source: recoverable
+source_commit: e382bec6cc04470e19534c7521a8271c52e0f79e
+source_path: src/rules/artifact-drafting-protocol.md
+migrated_to:
+  - docs/guidelines/agent-infra/artifact-drafting-protocol-mechanics.md
+source_headings:
+  - "When this rule fires"
+  - "Phase A — Understand"
+  - "Phase B — Research"
+  - "Phase C — Draft"
+  - "Roadmap-run batch mode — the ONE structured bypass"
+  - "Golden rules"
+rows:
+  - heading: "When this rule fires"
+    disposition: carried
+    target: "src/rules/artifact-drafting-protocol.md#When this rule fires"
+    reason: "the section stayed in the rule; the migration moved the depth beneath it, not this heading"
+  - heading: "Phase A — Understand"
+    disposition: carried
+    target: "docs/guidelines/agent-infra/artifact-drafting-protocol-mechanics.md#Phase A — Understand"
+    reason: "the section moved to the migration target under the same heading text"
+  - heading: "Phase B — Research"
+    disposition: carried
+    target: "docs/guidelines/agent-infra/artifact-drafting-protocol-mechanics.md#Phase B — Research"
+    reason: "the section moved to the migration target under the same heading text"
+  - heading: "Phase C — Draft"
+    disposition: carried
+    target: "docs/guidelines/agent-infra/artifact-drafting-protocol-mechanics.md#Phase C — Draft"
+    reason: "the section moved to the migration target under the same heading text"
+  - heading: "Roadmap-run batch mode — the ONE structured bypass"
+    disposition: carried
+    target: "docs/guidelines/agent-infra/artifact-drafting-protocol-mechanics.md#Roadmap-run batch mode — the ONE structured bypass"
+    reason: "the section moved to the migration target under the same heading text"
+  - heading: "Golden rules"
+    disposition: carried
+    target: "src/rules/artifact-drafting-protocol.md#Golden rules"
+    reason: "the section stayed in the rule; the migration moved the depth beneath it, not this heading"

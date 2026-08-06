@@ -1,0 +1,48 @@
+# Migration ledger for `roadmap-ci-steps-policy` — what the body-migration transform kept, folded, and lost.
+#
+# `source_headings` is the HARVEST, not a cache: the pre-migration commits are
+# not ancestors of HEAD and a remote branch prune would destroy them, so the
+# headings are recorded here to survive that. See lint_rule_migration_ledger.
+rule: roadmap-ci-steps-policy
+source: recoverable
+source_commit: 94dc19cac62ff21449afd5a373c1363ee3d6215c
+source_path: src/rules/roadmap-ci-steps-policy.md
+migrated_to:
+  - src/agent-src/contexts/execution/roadmap-ci-steps-mechanics.md
+source_headings:
+  - "Iron Law"
+  - "Forbidden step patterns (authoring + execution)"
+  - "Carve-outs — when CI-shaped steps are still allowed"
+  - "Authoring — linter blocks at write-time"
+  - "Execution — process-loop skips inline"
+  - "Failure modes"
+  - "See also"
+rows:
+  - heading: "Iron Law"
+    disposition: carried
+    target: "src/rules/roadmap-ci-steps-policy.md#Iron Law"
+    reason: "the section stayed in the rule; the migration moved the depth beneath it, not this heading"
+  - heading: "Forbidden step patterns (authoring + execution)"
+    disposition: carried
+    target: "src/agent-src/contexts/execution/roadmap-ci-steps-mechanics.md#Forbidden step patterns (authoring + execution)"
+    reason: "the section moved to the migration target under the same heading text"
+  - heading: "Carve-outs — when CI-shaped steps are still allowed"
+    disposition: carried
+    target: "src/agent-src/contexts/execution/roadmap-ci-steps-mechanics.md#Carve-outs — when CI-shaped steps are still allowed"
+    reason: "the section moved to the migration target under the same heading text"
+  - heading: "Authoring — linter blocks at write-time"
+    disposition: carried
+    target: "src/agent-src/contexts/execution/roadmap-ci-steps-mechanics.md#Authoring — linter blocks at write-time"
+    reason: "the section moved to the migration target under the same heading text"
+  - heading: "Execution — process-loop skips inline"
+    disposition: carried
+    target: "src/agent-src/contexts/execution/roadmap-ci-steps-mechanics.md#Execution — process-loop skips inline"
+    reason: "the section moved to the migration target under the same heading text"
+  - heading: "Failure modes"
+    disposition: carried
+    target: "src/agent-src/contexts/execution/roadmap-ci-steps-mechanics.md#Failure modes"
+    reason: "the section moved to the migration target under the same heading text"
+  - heading: "See also"
+    disposition: carried
+    target: "src/rules/roadmap-ci-steps-policy.md#See also"
+    reason: "the section stayed in the rule; the migration moved the depth beneath it, not this heading"

@@ -1,0 +1,43 @@
+# Migration ledger for `php-coding` — what the body-migration transform kept, folded, and lost.
+#
+# `source_headings` is the HARVEST, not a cache: the pre-migration commits are
+# not ancestors of HEAD and a remote branch prune would destroy them, so the
+# headings are recorded here to survive that. See lint_rule_migration_ledger.
+rule: php-coding
+source: recoverable
+source_commit: d4fe80e1ce2a956eb86df328de32e3252515553f
+source_path: .agent-src.uncompressed/rules/php-coding.md
+migrated_to:
+  - docs/guidelines/php/php-coding-patterns.md
+source_headings:
+  - "Eloquent Models — Attribute Access"
+  - "Relationship Getters"
+  - "Eloquent Models — Observers over `booted()`"
+  - "PHPStan"
+  - "Testing"
+  - "PHPDoc"
+rows:
+  - heading: "Eloquent Models — Attribute Access"
+    disposition: carried
+    target: "docs/guidelines/php/php-coding-patterns.md#Eloquent Models — Attribute Access"
+    reason: "the section moved to the migration target under the same heading text"
+  - heading: "Relationship Getters"
+    disposition: carried
+    target: "docs/guidelines/php/php-coding-patterns.md#Relationship Getters"
+    reason: "the section moved to the migration target under the same heading text"
+  - heading: "Eloquent Models — Observers over `booted()`"
+    disposition: carried
+    target: "docs/guidelines/php/php-coding-patterns.md#Eloquent Models — Observers over `booted()`"
+    reason: "the section moved to the migration target under the same heading text"
+  - heading: "PHPStan"
+    disposition: carried
+    target: "docs/guidelines/php/php-coding-patterns.md#PHPStan"
+    reason: "the section moved to the migration target under the same heading text"
+  - heading: "Testing"
+    disposition: carried
+    target: "docs/guidelines/php/php-coding-patterns.md#Testing"
+    reason: "the section moved to the migration target under the same heading text"
+  - heading: "PHPDoc"
+    disposition: carried
+    target: "docs/guidelines/php/php-coding-patterns.md#PHPDoc"
+    reason: "the section moved to the migration target under the same heading text"

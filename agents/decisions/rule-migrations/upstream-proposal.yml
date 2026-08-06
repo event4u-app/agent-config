@@ -1,0 +1,43 @@
+# Migration ledger for `upstream-proposal` — what the body-migration transform kept, folded, and lost.
+#
+# `source_headings` is the HARVEST, not a cache: the pre-migration commits are
+# not ancestors of HEAD and a remote branch prune would destroy them, so the
+# headings are recorded here to survive that. See lint_rule_migration_ledger.
+rule: upstream-proposal
+source: recoverable
+source_commit: d4fe80e1ce2a956eb86df328de32e3252515553f
+source_path: .agent-src.uncompressed/rules/upstream-proposal.md
+migrated_to:
+  - src/skills/upstream-contribute/SKILL.md
+source_headings:
+  - "When to activate"
+  - "Consent check"
+  - "For universal content (directly applicable):"
+  - "For project-specific content (needs generalization):"
+  - "After user response"
+  - "Important"
+rows:
+  - heading: "When to activate"
+    disposition: merged
+    target: "src/skills/upstream-contribute/SKILL.md#When to use"
+    reason: "the positive triggers survive one-for-one, but the no-self-referential-proposals and no-trivial-fixes guards reached no target, so the proposal can now fire on a typo inside the package itself"
+  - heading: "Consent check"
+    disposition: merged
+    target: "src/skills/upstream-contribute/SKILL.md#0. Mandatory consent gate"
+    reason: "the mandatory ask survives as step zero, but the three triage questions were dispersed and now run as PR-quality criteria rather than as the filter deciding whether to propose"
+  - heading: "For universal content (directly applicable):"
+    disposition: merged
+    target: "src/skills/upstream-contribute/SKILL.md#0. Mandatory consent gate"
+    reason: "both prompt variants collapsed into one generic consent template that keeps the two numbered options but loses the universal-content wording"
+  - heading: "For project-specific content (needs generalization):"
+    disposition: merged
+    target: "src/skills/upstream-contribute/SKILL.md#2b. Generalize project-specific content (if needed)"
+    reason: "the show-the-diff-and-get-approval obligation survives but moved from being the consent question to a step that runs after consent is granted"
+  - heading: "After user response"
+    disposition: merged
+    target: "src/skills/upstream-contribute/SKILL.md#0. Mandatory consent gate"
+    reason: "the stop-on-no branch survives verbatim, but the max-one-proposal-per-artifact cap exists nowhere in the repo and nothing now bounds proposal frequency"
+  - heading: "Important"
+    disposition: merged
+    target: "src/skills/upstream-contribute/SKILL.md#Core principles"
+    reason: "consent-is-non-negotiable survives as a core principle, but the do-not-batch, do-not-interrupt-flow and do-not-propose-for-trivial guards reached no target"

@@ -1,0 +1,73 @@
+# Migration ledger for `active-remediation` — what the body-migration transform kept, folded, and lost.
+#
+# `source_headings` is the HARVEST, not a cache: the pre-migration commits are
+# not ancestors of HEAD and a remote branch prune would destroy them, so the
+# headings are recorded here to survive that. See lint_rule_migration_ledger.
+rule: active-remediation
+source: recoverable
+source_commit: e382bec6cc04470e19534c7521a8271c52e0f79e
+source_path: src/rules/active-remediation.md
+migrated_to:
+  - docs/guidelines/agent-infra/active-remediation-mechanics.md
+source_headings:
+  - "The Iron Law"
+  - "What to remediate"
+  - "The ladder — classify, then act"
+  - "Fix now (autonomous, inline) — a bounded amendment to `minimal-safe-diff`"
+  - "Note + ask (batched)"
+  - "Propose a follow-up PR (many spots)"
+  - "Version-gated modernization"
+  - "Live-security carve-out (priority)"
+  - "Guardrails — don't become a nagging machine"
+  - "When it fires"
+  - "When NOT to fire"
+  - "See also"
+rows:
+  - heading: "The Iron Law"
+    disposition: carried
+    target: "src/rules/active-remediation.md#The Iron Law"
+    reason: "the section stayed in the rule; the migration moved the depth beneath it, not this heading"
+  - heading: "What to remediate"
+    disposition: carried
+    target: "src/rules/active-remediation.md#What to remediate"
+    reason: "the section stayed in the rule; the migration moved the depth beneath it, not this heading"
+  - heading: "The ladder — classify, then act"
+    disposition: carried
+    target: "docs/guidelines/agent-infra/active-remediation-mechanics.md#The ladder — classify, then act"
+    reason: "the section moved to the migration target under the same heading text"
+  - heading: "Fix now (autonomous, inline) — a bounded amendment to `minimal-safe-diff`"
+    disposition: carried
+    target: "docs/guidelines/agent-infra/active-remediation-mechanics.md#Fix now (autonomous, inline) — a bounded amendment to `minimal-safe-diff`"
+    reason: "the section moved to the migration target under the same heading text"
+  - heading: "Note + ask (batched)"
+    disposition: carried
+    target: "docs/guidelines/agent-infra/active-remediation-mechanics.md#Note + ask (batched)"
+    reason: "the section moved to the migration target under the same heading text"
+  - heading: "Propose a follow-up PR (many spots)"
+    disposition: carried
+    target: "docs/guidelines/agent-infra/active-remediation-mechanics.md#Propose a follow-up PR (many spots)"
+    reason: "the section moved to the migration target under the same heading text"
+  - heading: "Version-gated modernization"
+    disposition: carried
+    target: "docs/guidelines/agent-infra/active-remediation-mechanics.md#Version-gated modernization"
+    reason: "the section moved to the migration target under the same heading text"
+  - heading: "Live-security carve-out (priority)"
+    disposition: carried
+    target: "src/rules/active-remediation.md#Live-security carve-out (priority)"
+    reason: "the section stayed in the rule; the migration moved the depth beneath it, not this heading"
+  - heading: "Guardrails — don't become a nagging machine"
+    disposition: carried
+    target: "docs/guidelines/agent-infra/active-remediation-mechanics.md#Guardrails — don't become a nagging machine"
+    reason: "the section moved to the migration target under the same heading text"
+  - heading: "When it fires"
+    disposition: carried
+    target: "src/rules/active-remediation.md#When it fires"
+    reason: "the section stayed in the rule; the migration moved the depth beneath it, not this heading"
+  - heading: "When NOT to fire"
+    disposition: carried
+    target: "src/rules/active-remediation.md#When NOT to fire"
+    reason: "the section stayed in the rule; the migration moved the depth beneath it, not this heading"
+  - heading: "See also"
+    disposition: carried
+    target: "src/rules/active-remediation.md#See also"
+    reason: "the section stayed in the rule; the migration moved the depth beneath it, not this heading"

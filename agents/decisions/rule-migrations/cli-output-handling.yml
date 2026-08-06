@@ -1,0 +1,27 @@
+# Migration ledger for `cli-output-handling` — what the body-migration transform kept, folded, and lost.
+#
+# `source_headings` is the HARVEST, not a cache: the pre-migration commits are
+# not ancestors of HEAD and a remote branch prune would destroy them, so the
+# headings are recorded here to survive that. See lint_rule_migration_ledger.
+rule: cli-output-handling
+source: recoverable
+source_commit: d4fe80e1ce2a956eb86df328de32e3252515553f
+source_path: .agent-src.uncompressed/rules/cli-output-handling.md
+migrated_to:
+  - src/skills/rtk-output-filtering/SKILL.md
+source_headings:
+  - "Iron Law — rtk first, tail/grep fallback"
+  - "Lookup material — see mechanics"
+  - "Exceptions"
+rows:
+  - heading: "Iron Law — rtk first, tail/grep fallback"
+    disposition: merged
+    target: "src/skills/rtk-output-filtering/SKILL.md#When to use rtk"
+    reason: "the rtk-first core survives as the wrap-or-skip procedure, but the never-pipe-a-running-command-through-tail warning and the five-row subcommand map reached no target and are undocumented anywhere"
+  - heading: "Lookup material — see mechanics"
+    disposition: dropped
+    reason: "the pointer died with its context file in the same commit and the skill never picked it up, so the redirect-summarize-target recipe still exists in the output-patterns guideline but is unreachable from this rule chain"
+  - heading: "Exceptions"
+    disposition: carried
+    target: "src/agent-src/contexts/communication/rules-auto/token-efficiency-mechanics.md#Exceptions"
+    reason: "all three exception bullets survive near-verbatim in the sibling token-efficiency mechanics rather than in the declared target"

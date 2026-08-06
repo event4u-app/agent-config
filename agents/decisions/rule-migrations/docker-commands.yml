@@ -1,0 +1,35 @@
+# Migration ledger for `docker-commands` — what the body-migration transform kept, folded, and lost.
+#
+# `source_headings` is the HARVEST, not a cache: the pre-migration commits are
+# not ancestors of HEAD and a remote branch prune would destroy them, so the
+# headings are recorded here to survive that. See lint_rule_migration_ledger.
+rule: docker-commands
+source: recoverable
+source_commit: d4fe80e1ce2a956eb86df328de32e3252515553f
+source_path: .agent-src.uncompressed/rules/docker-commands.md
+migrated_to:
+  - src/skills/docker/SKILL.md
+source_headings:
+  - "Container Detection"
+  - "Tooling Detection"
+  - "Examples (Laravel project)"
+  - "Examples (Composer project)"
+  - "Build / Task Runner"
+rows:
+  - heading: "Container Detection"
+    disposition: merged
+    target: "src/skills/docker/SKILL.md#Container commands"
+    reason: "the substance split across two existing sections rather than getting its own, with the service-name-varies note landing under docker-compose services"
+  - heading: "Tooling Detection"
+    disposition: dropped
+    reason: "the does-artisan-exist branch and its per-branch tool mapping appear nowhere in the docker skill, and a live command file still points readers here for exactly this detection, so the citation now dangles"
+  - heading: "Examples (Laravel project)"
+    disposition: dropped
+    reason: "the four copy-pasteable in-container tool invocations are absent from the docker skill, which greps clean for phpstan rector and ecs, leaving only the generic exec form"
+  - heading: "Examples (Composer project)"
+    disposition: dropped
+    reason: "the in-container phpunit invocation has no counterpart in the docker skill or in quality-tools, which only states that PHP commands run in the container without showing them"
+  - heading: "Build / Task Runner"
+    disposition: carried
+    target: "src/skills/docker/SKILL.md#Makefile targets"
+    reason: "check-the-Makefile-first survives as the section opener, though the trailing frontend-commands-run-on-the-host sentence reached no target"

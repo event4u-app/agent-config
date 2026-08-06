@@ -1,0 +1,68 @@
+# Migration ledger for `improve-before-implement` — what the body-migration transform kept, folded, and lost.
+#
+# `source_headings` is the HARVEST, not a cache: the pre-migration commits are
+# not ancestors of HEAD and a remote branch prune would destroy them, so the
+# headings are recorded here to survive that. See lint_rule_migration_ledger.
+rule: improve-before-implement
+source: recoverable
+source_commit: 94dc19cac62ff21449afd5a373c1363ee3d6215c
+source_path: src/rules/improve-before-implement.md
+migrated_to:
+  - docs/guidelines/agent-infra/agent-interaction-and-decision-quality.md
+source_headings:
+  - "When to activate"
+  - "What to check"
+  - "1. Is the request clear?"
+  - "2. Does it fit the existing architecture?"
+  - "3. Is the approach sound?"
+  - "How to challenge"
+  - "The golden rule"
+  - "Scope limits"
+  - "Verify with concrete tools, not prose"
+  - "Intent inference (RDP, standard host)"
+  - "Creating new agent artifacts"
+rows:
+  - heading: "When to activate"
+    disposition: carried
+    target: "src/rules/improve-before-implement.md#When to activate"
+    reason: "the section stayed in the rule; the migration moved the depth beneath it, not this heading"
+  - heading: "What to check"
+    disposition: merged
+    target: "docs/guidelines/agent-infra/agent-interaction-and-decision-quality.md#8. Improve before implement — pre-implementation validation"
+    reason: "a wrapper heading whose only prose was the lead-in sentence, absorbed into the section preamble with the sub-checks renumbered beneath it"
+  - heading: "1. Is the request clear?"
+    disposition: carried
+    target: "docs/guidelines/agent-infra/agent-interaction-and-decision-quality.md#8a. Is the request clear?"
+    reason: "all three bullets survive verbatim and the ask-escalation was deliberately tightened to one question per turn"
+  - heading: "2. Does it fit the existing architecture?"
+    disposition: carried
+    target: "docs/guidelines/agent-infra/agent-interaction-and-decision-quality.md#8b. Does it fit the existing architecture?"
+    reason: "all five bullets survive verbatim including the Strategy sniff test, with only link paths rewritten for the new location"
+  - heading: "3. Is the approach sound?"
+    disposition: carried
+    target: "docs/guidelines/agent-infra/agent-interaction-and-decision-quality.md#8c. Is the approach sound?"
+    reason: "all three bullets and the propose-a-better-approach resolution line survive byte-identically"
+  - heading: "How to challenge"
+    disposition: carried
+    target: "docs/guidelines/agent-infra/agent-interaction-and-decision-quality.md#How to challenge"
+    reason: "the section moved to the migration target under the same heading text"
+  - heading: "The golden rule"
+    disposition: carried
+    target: "src/rules/improve-before-implement.md#The golden rule"
+    reason: "the section stayed in the rule; the migration moved the depth beneath it, not this heading"
+  - heading: "Scope limits"
+    disposition: carried
+    target: "docs/guidelines/agent-infra/agent-interaction-and-decision-quality.md#Scope limits"
+    reason: "the section moved to the migration target under the same heading text"
+  - heading: "Verify with concrete tools, not prose"
+    disposition: carried
+    target: "docs/guidelines/agent-infra/agent-interaction-and-decision-quality.md#Verify with concrete tools, not prose"
+    reason: "the section moved to the migration target under the same heading text"
+  - heading: "Intent inference (RDP, standard host)"
+    disposition: carried
+    target: "docs/guidelines/agent-infra/agent-interaction-and-decision-quality.md#Intent inference (RDP, standard host)"
+    reason: "the section moved to the migration target under the same heading text"
+  - heading: "Creating new agent artifacts"
+    disposition: carried
+    target: "src/rules/improve-before-implement.md#Creating new agent artifacts"
+    reason: "the section stayed in the rule; the migration moved the depth beneath it, not this heading"

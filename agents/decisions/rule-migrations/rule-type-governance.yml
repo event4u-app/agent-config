@@ -1,0 +1,43 @@
+# Migration ledger for `rule-type-governance` — what the body-migration transform kept, folded, and lost.
+#
+# `source_headings` is the HARVEST, not a cache: the pre-migration commits are
+# not ancestors of HEAD and a remote branch prune would destroy them, so the
+# headings are recorded here to survive that. See lint_rule_migration_ledger.
+rule: rule-type-governance
+source: recoverable
+source_commit: d4fe80e1ce2a956eb86df328de32e3252515553f
+source_path: .agent-src.uncompressed/rules/rule-type-governance.md
+migrated_to:
+  - docs/guidelines/agent-infra/rule-type-governance.md
+source_headings:
+  - "`always` = loaded every conversation"
+  - "`auto` = loaded on demand by description match"
+  - "Decision test"
+  - "Auto description quality"
+  - "Hard constraint"
+  - "Hardening tier — required on new or edited rules"
+rows:
+  - heading: "`always` = loaded every conversation"
+    disposition: carried
+    target: "docs/guidelines/agent-infra/rule-type-governance.md#`always` = loaded every conversation"
+    reason: "the section moved to the migration target under the same heading text"
+  - heading: "`auto` = loaded on demand by description match"
+    disposition: carried
+    target: "docs/guidelines/agent-infra/rule-type-governance.md#`auto` = loaded on demand by description match"
+    reason: "the section moved to the migration target under the same heading text"
+  - heading: "Decision test"
+    disposition: carried
+    target: "docs/guidelines/agent-infra/rule-type-governance.md#Decision test"
+    reason: "the section moved to the migration target under the same heading text"
+  - heading: "Auto description quality"
+    disposition: carried
+    target: "docs/guidelines/agent-infra/rule-type-governance.md#Auto description quality"
+    reason: "the section moved to the migration target under the same heading text"
+  - heading: "Hard constraint"
+    disposition: carried
+    target: "docs/guidelines/agent-infra/rule-type-governance.md#Hard constraint"
+    reason: "the section moved to the migration target under the same heading text"
+  - heading: "Hardening tier — required on new or edited rules"
+    disposition: carried
+    target: "docs/guidelines/agent-infra/rule-type-governance.md#Hardening tier — required on new or edited rules"
+    reason: "the section moved to the migration target under the same heading text"

@@ -44,8 +44,8 @@
 # ----------------------------------------------------------
 # 224 `lint_*` / `check_*` / `audit_*` scripts live under `src/scripts/`
 # (the count is computed, not asserted — `check_gate_coverage.count_gate_scripts`).
-# **29 of them emit the machine-readable `scanned: <N>` line under their
-# CI-identical argv, and all 29 are listed below.** The manifest is therefore
+# **30 of them emit the machine-readable `scanned: <N>` line under their
+# CI-identical argv, and all 30 are listed below.** The manifest is therefore
 # complete with respect to its own contract, and covers ~13 % of the population.
 #
 # Two revisions of this header have now gone stale the same way. It claimed
@@ -553,3 +553,26 @@ gates:
       the file took it back to exit 0. Floor at 140 against a live 161 leaves
       room for consolidating reference documents — which is the direction this
       ratchet is meant to push — without redding the change that consolidates.
+
+  - id: lint_rule_migration_ledger
+    argv: ["--quiet"]
+    min_scanned: 35
+    corpus: "rules whose body was migrated out to a skill, guideline, context or contract (44 at baseline)"
+    status: enforced
+    canary:
+      class: unledgered-migration
+      path: src/rules/zz-canary-migrated-rule.md
+      content: |
+        ---
+        type: auto
+        description: "Planted canary rule whose body was migrated out with no ledger behind it."
+        ---
+
+        # Canary
+
+        Body migrated to `skill:docker`.
+    note: >
+      The canary plants a rule carrying a migration pointer and no ledger, which
+      is the defect the gate exists for — a lossy transform with no record.
+      Floor at 35 against a live 44 leaves room for a rule un-migrating (its
+      body coming back) without redding the change that does it.

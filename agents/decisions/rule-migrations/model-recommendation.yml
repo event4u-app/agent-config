@@ -1,0 +1,34 @@
+# Migration ledger for `model-recommendation` — what the body-migration transform kept, folded, and lost.
+#
+# `source_headings` is the HARVEST, not a cache: the pre-migration commits are
+# not ancestors of HEAD and a remote branch prune would destroy them, so the
+# headings are recorded here to survive that. See lint_rule_migration_ledger.
+rule: model-recommendation
+source: recoverable
+source_commit: d4fe80e1ce2a956eb86df328de32e3252515553f
+source_path: .agent-src.uncompressed/rules/model-recommendation.md
+migrated_to:
+  - docs/guidelines/agent-infra/model-recommendation.md
+  - src/agent-src/contexts/model-recommendations.md
+source_headings:
+  - "When to act"
+  - "Switch confirmation"
+  - "Downgrade after Opus"
+  - "Gemini warning"
+rows:
+  - heading: "When to act"
+    disposition: merged
+    target: "src/agent-src/contexts/model-recommendations.md#Recommendation Flow"
+    reason: "classification and timing moved to the context tables, but the command-invocations-are-task-changes clause, the ordering against command routing, and the stop-and-wait halt are absent from both targets while another rule still cites that halt"
+  - heading: "Switch confirmation"
+    disposition: carried
+    target: "src/agent-src/contexts/model-recommendations.md#Switch confirmation flow"
+    reason: "both branches survive near-verbatim and the never-ask-twice-per-task condition survives alongside them"
+  - heading: "Downgrade after Opus"
+    disposition: carried
+    target: "src/agent-src/contexts/model-recommendations.md#Downgrade reminder"
+    reason: "the post-architecture downgrade prompt survives with its numbered options, re-pointed from named models to vendor-neutral tiers"
+  - heading: "Gemini warning"
+    disposition: carried
+    target: "src/agent-src/contexts/model-recommendations.md#Gemini warning"
+    reason: "the section moved to the migration target under the same heading text"
