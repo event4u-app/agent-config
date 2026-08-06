@@ -40,14 +40,6 @@ Standing "just keep going" + next step crosses the floor → STOP, surface it (o
 
 **Never act while asking.** Ask and action are strictly sequential: surface the confirmation, then WAIT. Never fire the action in the turn you ask — no do-then-ask race, no "I went ahead and…". **The approval names the exact object**, not a category: a download names filename + size + source; a purchase names amount + card-last4 + total; a send names recipient + subject. Shape per [`user-interaction`](user-interaction.md) numbered-options.
 
-## The authorization line — the confirmation, written down
-
-Before an irreversible action from the table above, emit the **authorization
-line** carrying the user's own words, with the two denials the contract states:
-documentation is not authorization, and completing the task is not
-authorization. Shape and the sweep that catches an owed-but-missing one:
-[`mandated-lines`](../contexts/execution/mandated-lines.md).
-
 ## Not in scope — deterministic regeneration
 
 Output regenerated from a tracked source (condensation, code-gen, formatters, lock-files) is reversible — **not destructive** ([`autonomous-execution`](autonomous-execution.md)). Per-file diff approval is theater.

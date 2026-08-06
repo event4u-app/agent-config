@@ -2,12 +2,20 @@
 
 Shared contract for the small closed set of **verbatim lines the run must emit
 at a decision point**, and for the pre-send sweep that catches an owed line that
-went missing. Loaded by the rules that own each decision point
-([`think-before-action`](../../rules/think-before-action.md),
-[`non-destructive-by-default`](../../rules/non-destructive-by-default.md),
-[`commit-policy`](../../rules/commit-policy.md),
-[`downstream-changes`](../../rules/downstream-changes.md)) rather than restated
-in each.
+went missing. Routed from the rule that owns each decision point rather than
+restated in each.
+
+**Routing status, stated because a claimed edge that does not exist is worse
+than a missing one.** Two rules link here today:
+[`think-before-action`](../../rules/think-before-action.md) (the intent line)
+and [`downstream-changes`](../../rules/downstream-changes.md) (the sibling
+search). The authorization and commit lines belong to
+[`non-destructive-by-default`](../../rules/non-destructive-by-default.md) and
+[`commit-policy`](../../rules/commit-policy.md) — both **kernel** rules, whose
+edits require their own pull request and a 24-hour soak under
+[`scope-control`](../../rules/scope-control.md). Those two edges are therefore
+deliberately absent from this change rather than smuggled into it, and until
+they land those two lines are carried by this contract alone.
 
 ## Why a line and not a rule
 
