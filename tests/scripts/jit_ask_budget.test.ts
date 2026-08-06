@@ -27,6 +27,11 @@ import {
     silentDefaultsSummary,
 } from '../../src/shared/settingsAsks.js';
 import {
+    consentGranted,
+    consentVerdict,
+    withheldReason,
+} from '../../src/shared/settingsConsent.js';
+import {
     buildSettingsClassIndex,
     isConservativeDefault,
     parseSettingsClassRows,
@@ -38,6 +43,17 @@ const CONTRACT = path.join(REPO, 'docs', 'contracts', 'settings-classes.md');
 
 const ruleText = (): string => fs.readFileSync(RULE, 'utf8');
 const contractText = (): string => fs.readFileSync(CONTRACT, 'utf8');
+
+/**
+ * The rule with runs of whitespace collapsed.
+ *
+ * Prose assertions use this, because where a sentence happens to wrap is not
+ * what any of them are testing — and a `\s*\n?` sprinkled into every pattern
+ * both hides that fact and breaks the moment a reflow moves the newline one word
+ * over. Structural assertions (the Iron Law block, the tables) keep reading the
+ * raw text, where the line breaks ARE the content.
+ */
+const flat = (): string => ruleText().replace(/\s+/g, ' ');
 
 /** The rule's frontmatter, parsed — never regex-scraped. */
 function frontmatter(): Record<string, unknown> {
@@ -122,7 +138,7 @@ describe('slot 4 — the destination is bound to the class, not to taste', () =>
 
     it('binds C-set-to-ask to this run only, with no writer at all', () => {
         const text = ruleText();
-        expect(text).toMatch(/applies to this run only/);
+        expect(flat()).toMatch(/not saved; making it permanent is a human edit/);
         // The load-bearing negation: the agent writes nothing for a C key.
         expect(text).toMatch(/CLASS C SET TO `ask` → THIS RUN ONLY\. THE AGENT NEVER PERSISTS IT\./);
     });
@@ -212,7 +228,7 @@ describe('the nickname worked example — Phase 4 step 2', () => {
         // be asked. Asking anyway is the cheap question this avoids.
         const text = ruleText();
         expect(text).toMatch(/identity\.name/);
-        expect(text).toMatch(/third resolution layer|third layer/);
+        expect(flat()).toMatch(/third resolution layer/);
         expect(text).toMatch(/Check before asking/);
     });
 });
@@ -355,14 +371,94 @@ describe('planSettingsAsks — what never reaches the ask path', () => {
     });
 });
 
+// ---------------------------------------------------------------------------
+// The consent verifier — Phase 5 step 4, and the answer to the roadmap's Risk 3
+// ("the provenance stamp becomes decoration"). Before this the sidecar was
+// written by settings:set and only DISPLAYED by the GUI; nothing decided on it.
+// ---------------------------------------------------------------------------
+
+describe('consentVerdict — a value is not a decision', () => {
+    it('grants when a human answered the just-in-time question', () => {
+        expect(consentVerdict({ cls: 'B', value: true, source: 'jit-answer' })).toBe('granted');
+    });
+
+    it('grants for the GUI and for a manual write', () => {
+        expect(consentVerdict({ cls: 'B', value: true, source: 'gui' })).toBe('granted');
+        expect(consentVerdict({ cls: 'B', value: true, source: 'manual' })).toBe('granted');
+    });
+
+    it('REFUSES an auto-detected permission — a machine inference is not a consent', () => {
+        // The load-bearing row. Without it the agent could reach its own
+        // permission by observing the world.
+        expect(consentVerdict({ cls: 'B', value: true, source: 'auto-detected' })).toBe(
+            'withheld-machine-inferred',
+        );
+    });
+
+    it('REFUSES a permissive value that nothing records — fail closed', () => {
+        expect(consentVerdict({ cls: 'B', value: true })).toBe('withheld-unrecorded');
+    });
+
+    it('withholds on the conservative default regardless of provenance', () => {
+        expect(consentVerdict({ cls: 'B', value: false, source: 'jit-answer' })).toBe(
+            'withheld-default',
+        );
+        expect(consentVerdict({ cls: 'B', value: '', source: 'gui' })).toBe('withheld-default');
+    });
+
+    it('grants a hand-edit, which the class contract guarantees carries no stamp', () => {
+        // The contract says the user may edit anything in their own file. A check
+        // that refused that path would be a bug wearing a fence.
+        expect(consentVerdict({ cls: 'B', value: true, handEdited: true })).toBe('granted');
+    });
+
+    it('is not applicable to A, to C, or to an unclassified key', () => {
+        for (const cls of ['A', 'C', undefined] as const) {
+            expect(consentVerdict({ cls, value: true, source: 'jit-answer' })).toBe(
+                'not-a-consent-key',
+            );
+        }
+    });
+
+    it('consentGranted is true for granted and false for every withheld verdict', () => {
+        expect(consentGranted({ cls: 'B', value: true, source: 'gui' })).toBe(true);
+        expect(consentGranted({ cls: 'B', value: true, source: 'auto-detected' })).toBe(false);
+        expect(consentGranted({ cls: 'B', value: true })).toBe(false);
+        expect(consentGranted({ cls: 'B', value: false, source: 'gui' })).toBe(false);
+    });
+
+    it('explains every refusal and stays silent on the allow path', () => {
+        expect(withheldReason('granted', 'personal.open_edited_files')).toBeNull();
+        for (const v of [
+            'withheld-default',
+            'withheld-unrecorded',
+            'withheld-machine-inferred',
+            'not-a-consent-key',
+        ] as const) {
+            const reason = withheldReason(v, 'personal.open_edited_files');
+            expect(reason, v).toBeTruthy();
+            expect(reason, v).toContain('personal.open_edited_files');
+        }
+    });
+
+    it('the two B keys that gate behaviour are the ones this applies to', () => {
+        // Derived, not asserted: canary_name gates nothing (it is a name), the
+        // other two gate an action. If the contract adds a B key this row does
+        // not break — it documents which of today's three the gate is for.
+        const b = keysOfClass('B');
+        expect(b).toContain('personal.open_edited_files');
+        expect(b).toContain('memory.learn_on_session_end');
+    });
+});
+
 describe('who picks the moment — the half no gate can check', () => {
     it('carries the anti-coercion clause the class contract states as prose', () => {
         const text = ruleText();
-        expect(text).toMatch(/user's own request arriving at a point where the setting is genuinely/);
+        expect(flat()).toMatch(/user's own request arriving at a point where the setting is genuinely/);
         expect(text).toMatch(/convenient lull/);
     });
 
     it('says the run completing without the setting means there is no question', () => {
-        expect(ruleText()).toMatch(/If the run would complete without the setting/);
+        expect(flat()).toMatch(/If the run would complete without the setting/);
     });
 });

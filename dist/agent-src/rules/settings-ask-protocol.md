@@ -29,11 +29,9 @@ collision_ok:
 
 # Settings-Ask Protocol
 
-A settings question is the one ask where the agent both poses the question and
-owns where the answer goes. Nine keys can produce one, in two mechanisms that
-look identical from the outside and differ completely underneath. This rule
-normalises the shape and fixes the destination, so a consent the user gave once
-is not asked again and a guarded key is never persisted in their name.
+A settings question is the one ask where the agent poses the question *and* owns
+where the answer goes. Nine keys can produce one, in two mechanisms that look
+identical from outside and differ completely underneath.
 
 ## The Iron Law
 
@@ -47,28 +45,33 @@ IN THE END-SUMMARY WITH THE COMMAND THAT CHANGES THEM.
 A SILENT PERMISSIVE DEFAULT IS A DECISION TAKEN IN THE USER'S NAME. NEVER TAKE ONE.
 ```
 
-## The four slots — every settings question, same shape
+## The four slots
 
-1. **What is needed** — the key, in plain words, not the dotted path alone.
+1. **What is needed** — the key in plain words, not the dotted path alone.
 2. **Why now** — the concrete thing in *this* run that cannot proceed without it.
-3. **Options, with the default marked** — the conservative option is always
-   present and always marked as what happens if the user says nothing.
+3. **Options, default marked** — the conservative option is always present and
+   always marked as what happens if the user says nothing.
 4. **Where the answer is stored** — one line, and it is not optional: it is the
-   only way the user can tell a one-run answer from a standing consent.
+   only way to tell a one-run answer from a standing consent.
 
-Slot 4 is filled from the class, never from taste:
+Slot 4 is read from the class, never from taste:
 
 | Class | Slot 4 reads | Writer |
 |---|---|---|
 | **B** (3 keys) | "persisted to your global settings — you will not be asked again" | `agent-config settings:set <key> <value> --source jit-answer` |
-| **C** set to `ask` | "applies to this run only; making it permanent is a human edit or the GUI" | none — the agent writes nothing |
+| **C** set to `ask` | "not saved; making it permanent is a human edit or the GUI" | none — the agent writes nothing |
+
+**"Not saved" is about persistence, not about how long the answer is honoured.**
+How long it stays cached in working state is the key's own business, and several
+keys state their own scope. Reading the C path as "re-ask every execution" would
+turn a fence against illegal writes into a source of extra questions.
 
 ## The nine keys
 
-**Class B — persist once** (`docs/contracts/settings-classes.md`):
-`personal.canary_name` · `personal.open_edited_files` ·
-`memory.learn_on_session_end`. Each ships a conservative default (`""`,
-`false`, `false`), so absent is indistinguishable from *no* and never from *yes*.
+**Class B — persist once**: `personal.canary_name` ·
+`personal.open_edited_files` · `memory.learn_on_session_end`. Each ships a
+conservative default (`""`, `false`, `false`), so absent is indistinguishable
+from *no* and never from *yes*.
 
 **Class C carrying an `ask` value in its own enum** — a runtime question whose
 answer dies with the run: `subagents.budget_routing` and `worktrees.mode` (both
@@ -76,69 +79,98 @@ answer dies with the run: `subagents.budget_routing` and `worktrees.mode` (both
 `subagents.adversarial_council`, `decision_engine.on_block` (which can be set to
 `ask` by a human but do not ship that way).
 
-## The budget, and what "further undecided" means
+## The budget
 
 The first key that genuinely blocks the run gets the question. Every other
-undecided key in the same execution resolves to its conservative default
-**without a question** and appears in the end-summary as one line: the key, the
-value taken, and the command that changes it. `isConservativeDefault` in
-`src/shared/settingsClasses.ts` is the test — `null`, `false`, `''`, `0`, `[]`,
-`{}`.
+undecided key resolves to its conservative default **without a question** and
+appears in the end-summary as one line: key, value taken, command that changes it.
 
-Two questions in one execution is the violation this rule exists to prevent.
+**The split is computed, not chosen.** `planSettingsAsks` in
+`src/shared/settingsAsks.ts` returns the single key asked, the keys taking their
+default silently, and the keys skipped with a reason; `silentDefaultsSummary`
+renders lines that ride **inside** the one end-summary
+([`direct-answers`](direct-answers.md) Iron Law 3).
+
+Two questions in one execution is the violation this rule prevents.
 Batching them into a single numbered-options block is the same violation wearing
 a different shape: one *block* is one question only when a single number answers
 it ([`user-interaction`](user-interaction.md) § question pacing).
 
+## Non-interactive executions ask nothing, ever
+
+CI, a pipe, a hook, MCP serving, `AGENT_CONFIG_NO_UI`, a headless display: the
+budget is **zero**, not one. `nonInteractiveReason` in
+`src/shared/interactiveContext.ts` is the predicate; `interactive: false` makes
+`planSettingsAsks` carry no ask by construction. Defaults taken are still named —
+silent is not invisible. A question nobody can answer is not a question; it is a
+hang, or a default taken in the user's name wearing a prompt's clothes.
+
 ## Who picks the moment — the half no gate can check
 
 The class contract's B invariant has two halves. Half one (a conservative
-default) is linted. Half two is not, and it binds here: the trigger must be the
-**user's own request arriving at a point where the setting is genuinely
-required**. A threshold the agent watched, a moment it judged favourable, or a
-convenient lull are not triggers. If the run would complete without the setting,
-there is no question to ask.
+default) is linted. Half two binds here: the trigger must be the **user's own
+request arriving at a point where the setting is genuinely required**. A
+threshold the agent watched, a moment it judged favourable, or a convenient lull
+are not triggers. If the run would complete without the setting, there is no
+question.
 
 ## Worked example — the nickname, the canonical B ask
 
 `personal.canary_name` is un-inferrable and arms the session-degradation canary,
-so it is the one settings question a fresh session legitimately asks. Prefill it
-so accepting costs one keypress, in this order:
+so it is the one settings question a fresh session legitimately asks. Prefill so
+accepting costs one keypress:
 
 ```bash
 git config user.name        # first choice — the name they already chose here
 # then: $USER, then $USERNAME (Windows). Never $USER alone.
 ```
 
-Then, on an answer: `agent-config settings:set personal.canary_name "<name>" --source jit-answer`.
+On an answer: `agent-config settings:set personal.canary_name "<name>" --source jit-answer`.
 
-Already-armed cases where the question must **not** fire: the browser wizard
-writes `identity.name` into `settings/.agent-user.yml`, which is the canary's
-third resolution layer — a wizard user is already covered, and
-[`session-canary`](session-canary.md) resolves all three layers before the canary
-is dark. Check before asking.
+**Do not ask an already-armed user.** The browser wizard writes `identity.name`
+into `settings/.agent-user.yml`, the canary's third resolution layer, so a wizard
+user is already covered ([`session-canary`](session-canary.md) resolves all
+three). Check before asking.
+
+## Before a consent-gated action — verify the record, not the value
+
+`true` a human chose and `true` the machine inferred are the same byte and not
+the same permission. `consentVerdict` in `src/shared/settingsConsent.ts` grants on
+`jit-answer` / `gui` / `manual` and on a hand-edited file (which the class
+contract guarantees carries no stamp); it withholds on the conservative default,
+on a permissive value nothing records, and on `auto-detected` — an agent that may
+write its own provenance must not reach its own permission by observing the
+world. This is also the reader the provenance sidecar was missing: it was written
+by `settings:set` and only *displayed* by the GUI.
 
 ## When NOT to fire
 
-- The key is class A — it resolves to its default and is never asked.
-- The key is class C **not** set to `ask` — there is no question; a change is a
-  human edit.
-- The setting is already decided on any resolution layer.
-- The run completes without it.
+- Class A — resolves to its default, never asked.
+- Class C **not** set to `ask` — no question; a change is a human edit.
+- Already decided on any resolution layer, or the run completes without it.
+- **The `ask` routes to a permission gate.** `worktrees.mode: ask` means
+  `scope-control`'s per-creation gate applies — a permission ask about an
+  *action*, which that rule owns; a storage line there would store nothing.
+- **The `ask` is code, not agent-carried.** `decision_engine.on_block: ask` is a
+  TTY prompt in `work_engine/hooks/builtin/decision_gate.ts`.
 
 ## Honest enforcement — `enforced_by: none`
 
-No gate counts the questions in a chat turn. The one-per-execution budget, the
-four-slot shape, and the who-picks-the-moment half are model-carried, and saying
-so is the point: the deterministic fences that DO exist sit one layer down and
-guard a different thing — `settings:set` and the GUI write route both refuse
-every C key and fail closed on an unreadable contract, so a protocol violation
-cannot become an illegal *write*. It can only become a badly-shaped *ask*.
+No gate counts the questions in a chat turn, and no B key currently gates an
+action through a guard: the two that gate behaviour
+(`personal.open_edited_files`, `memory.learn_on_session_end`) are read as values,
+and the action they govern is prose. So the budget, the four slots, the
+who-picks-the-moment half, and the obligation to consult `consentVerdict` are all
+model-carried. On a prose-only host ask-once can degrade to ask-never. The
+deterministic fences sit one layer down and guard a different thing:
+`settings:set` and the GUI write route both refuse every C key and fail closed on
+an unreadable contract, so a protocol violation cannot become an illegal *write* —
+only a badly-shaped *ask*.
 
 ## See also
 
 - [`docs/contracts/settings-classes.md`](../docs/contracts/settings-classes.md) — the A/B/C source of truth; slot 4 is read from it.
-- [`ask-when-uncertain`](ask-when-uncertain.md) — one question per turn; this rule narrows it to one *settings* question per execution and fixes the shape.
-- [`no-cheap-questions`](no-cheap-questions.md) — the floor a settings question must clear before it is asked at all.
-- [`user-interaction`](user-interaction.md) — the numbered-options shape and the recommendation line slot 3 uses.
-- [`session-canary`](session-canary.md) — what the nickname answer activates, and the three layers to check before asking.
+- [`ask-when-uncertain`](ask-when-uncertain.md) — one question per turn; this narrows it to one *settings* question per execution.
+- [`no-cheap-questions`](no-cheap-questions.md) — the floor a settings question clears before it is asked at all.
+- [`user-interaction`](user-interaction.md) — the numbered-options shape slot 3 uses.
+- [`session-canary`](session-canary.md) — what the nickname answer activates, and the layers to check first.
