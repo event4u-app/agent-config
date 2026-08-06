@@ -117,7 +117,7 @@ describe('check_cluster_patterns — check_completeness', () => {
     });
 
     it('accepts a hub that names every on-disk sub in both places', () => {
-        const subs = ['ai-council', 'create', 'materialize', 'process-full', 'process-phase', 'process-step'];
+        const subs = ['ai-council', 'create', 'materialize', 'next', 'process-full', 'process-phase', 'process-step'];
         const body = subs.map((s) => `| \`/roadmap:${s}\` | x | y |`).join('\n');
         const fm = {
             type: 'orchestrator',
@@ -127,7 +127,7 @@ describe('check_cluster_patterns — check_completeness', () => {
     });
 
     it('accepts a bare sub name in routes_to as well as the prefixed slug', () => {
-        const subs = ['ai-council', 'create', 'materialize', 'process-full', 'process-phase', 'process-step'];
+        const subs = ['ai-council', 'create', 'materialize', 'next', 'process-full', 'process-phase', 'process-step'];
         const body = subs.map((s) => `| \`/roadmap ${s}\` | x | y |`).join('\n');
         const fm = { type: 'orchestrator', routes_to: `[${subs.join(', ')}]` };
         expect(check_completeness('roadmap', roadmap, fm, body)).toEqual([]);
