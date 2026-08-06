@@ -73,25 +73,46 @@ export interface DensityReport {
  * file happens to carry.
  */
 export function proseLines(text: string): string[] {
-    const out: string[] = [];
-    let inFence = false;
-    let inFrontmatter = false;
     const lines = text.split('\n');
-    for (const [i, raw] of lines.entries()) {
-        const line = raw.trimEnd();
-        if (i === 0 && line === '---') {
-            inFrontmatter = true;
-            continue;
+
+    // Frontmatter only when the opening `---` actually CLOSES. A file whose
+    // first line is a horizontal rule used to swallow everything to the next
+    // `---`, and a file with an unterminated opener swallowed all of it.
+    let start = 0;
+    if (lines[0]?.trim() === '---') {
+        const close = lines.findIndex((l, i) => i > 0 && l.trim() === '---');
+        // …and only when the block LOOKS like YAML. `---` opening a document
+        // that then reads as prose is a horizontal rule, and treating it as
+        // frontmatter silently ate everything up to the next one.
+        const looksYaml = close > 0 && lines.slice(1, close).some((l) => /^\s*[\w.-]+:\s/.test(l));
+        if (close !== -1 && looksYaml) start = close + 1;
+    }
+
+    // Fences are matched BY CHARACTER, so `~~~` cannot close a ```-opened
+    // block, and an opener that never closes is treated as though it never
+    // opened — dropping the rest of a file silently is worse than counting a
+    // few code lines as prose, because the denominator is the thing this
+    // report publishes.
+    const openers: Array<{ index: number; marker: string }> = [];
+    const fenced = new Set<number>();
+    let open: { index: number; marker: string } | null = null;
+    for (let i = start; i < lines.length; i++) {
+        const m = /^\s*(`{3,}|~{3,})/.exec(lines[i] ?? '');
+        if (m === null) continue;
+        const marker = (m[1] as string)[0] as string;
+        if (open === null) {
+            open = { index: i, marker };
+            openers.push(open);
+        } else if (open.marker === marker) {
+            for (let j = open.index; j <= i; j++) fenced.add(j);
+            open = null;
         }
-        if (inFrontmatter) {
-            if (line === '---') inFrontmatter = false;
-            continue;
-        }
-        if (/^\s*(```|~~~)/.test(line)) {
-            inFence = !inFence;
-            continue;
-        }
-        if (inFence) continue;
+    }
+
+    const out: string[] = [];
+    for (let i = start; i < lines.length; i++) {
+        if (fenced.has(i)) continue;
+        const line = (lines[i] ?? '').trimEnd();
         if (line.trim() === '') continue;
         if (/^\s*\|/.test(line)) continue;
         out.push(line);

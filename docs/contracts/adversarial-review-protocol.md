@@ -188,7 +188,16 @@ the human, and the reviewer's uncertainty is not authority to answer it.
 
 ### Rubric shape — scope, do-not-flag, and what a gate already owns
 
-Every per-check rubric in a judge artifact carries three things:
+**Status: adopted for new and touched rubrics, not yet true of the estate.**
+Measured 2026-08-06 across the seven judge skills: zero carry a per-check scope
+column, one carries partial do-not-flag prose, none carries the gate-owned
+exclusion. Stating it as *every rubric carries* would be a mandate with no
+compliant instance — the shape this contract's own § 2 forbids. So it binds a
+rubric the moment it is authored or edited, and the retrofit is opportunistic,
+for the same reason the primary-bias retrofit is: a batch edit across the judge
+cluster lands without attention and trips the byte-stability gate.
+
+A per-check rubric carries three things:
 
 1. **A scope column** — what this check looks at. A check with no stated scope
    expands to fill the reviewer's imagination.
@@ -230,9 +239,12 @@ Rules:
    numbers next to theirs.
 4. OUTPUT FORMAT: a findings ledger only — one row per finding with
    ID, severity (S0 reject-grade / S1 adoption-blocking / S2
-   credibility-eroding / S3 cosmetic), the finding in one sentence, the
-   command you executed, the captured output, and the competitor baseline
-   where relevant.
+   credibility-eroding / S3 cosmetic), CONFIDENCE (confirmed / plausible /
+   unverified, and it is NOT severity — an S0 you could not confirm stays an
+   S0 tagged `unverified`, never a downgrade), the finding in one sentence,
+   the command you executed, the captured output, and the competitor baseline
+   where relevant. Report every finding you have; do not filter by severity —
+   whoever reads the ledger does that.
 5. DO NOT produce a numeric score of any kind. If you have no
    reject-grade findings, state exactly what you measured and failed to
    break. Praise is not output.

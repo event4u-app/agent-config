@@ -1,0 +1,2802 @@
+diff --git a/agents/roadmaps-progress.md b/agents/roadmaps-progress.md
+index 78f062b02f50de457c803fa202565ef3600229f6..a559d20cf2c24a08bfe6a13f86571bd5bdac22f9 100644
+--- a/agents/roadmaps-progress.md
++++ b/agents/roadmaps-progress.md
+@@ -2,14 +2,14 @@
+ 
+ > Auto-generated — do not edit. Regenerate with `task roadmap-progress` or by running the `update_roadmap_progress` script for your install; rewritten on every roadmap create / execute / completion change (timestamp lives in git history).
+ >
+-> 17 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **17** open blockers
++> 17 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **16** open blockers
+ 
+ ## Overall
+ 
+-**109 / 265 steps done · 41%**
++**144 / 260 steps done · 55%**
+ 
+ ```text
+-████████████████░░░░░░░░░░░░░░░░░░░░░░░░   41%
++██████████████████████░░░░░░░░░░░░░░░░░░   55%
+ ```
+ 
+ ## Open roadmaps
+@@ -24,7 +24,7 @@
+ | 6 | [road-to-orchestration-scope-decision.md](roadmaps/road-to-orchestration-scope-decision.md) | 4 | 10 | 6 | 4 | 0 | 0 | [1](#blockers-road-to-orchestration-scope-decision) | ████░░░░░░ 40% |
+ | 7 | [road-to-rule-coherence.md](roadmaps/road-to-rule-coherence.md) | 4 | 20 | 11 | 4 | 4 | 1 | [3](#blockers-road-to-rule-coherence) | ███░░░░░░░ 27% |
+ | 8 | [road-to-scale-history-bench-run.md](roadmaps/road-to-scale-history-bench-run.md) | 1 | 2 | 2 | 0 | 0 | 0 | [1](#blockers-road-to-scale-history-bench-run) | ░░░░░░░░░░ 0% |
+-| 9 | [road-to-skill-ecosystem-authoring-discipline.md](roadmaps/road-to-skill-ecosystem-authoring-discipline.md) | 6 | 52 | 52 | 0 | 0 | 0 | [2](#blockers-road-to-skill-ecosystem-authoring-discipline) | ░░░░░░░░░░ 0% |
++| 9 | [road-to-skill-ecosystem-authoring-discipline.md](roadmaps/road-to-skill-ecosystem-authoring-discipline.md) | 6 | 52 | 24 | 27 | 1 | 0 | 0 | █████░░░░░ 53% |
+ | 10 | [road-to-skill-ecosystem-gate-integrity.md](roadmaps/road-to-skill-ecosystem-gate-integrity.md) | 7 | 43 | 3 | 40 | 0 | 0 | [1](#blockers-road-to-skill-ecosystem-gate-integrity) | █████████░ 93% |
+ | 11 | [road-to-solution-minimalism.md](roadmaps/road-to-solution-minimalism.md) | 4 | 36 | 12 | 23 | 0 | 1 | 0 | ███████░░░ 66% |
+ | 12 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 6 | 3 | 0 | 0 | [1](#blockers-road-to-subagent-value-realization-followup) | ███░░░░░░░ 33% |
+@@ -32,7 +32,7 @@
+ | 14 | [road-to-tier-removal.md](roadmaps/road-to-tier-removal.md) | 4 | 8 | 2 | 6 | 0 | 0 | [1](#blockers-road-to-tier-removal) | ████████░░ 75% |
+ | 15 | [road-to-ui-track-integrity-followup.md](roadmaps/road-to-ui-track-integrity-followup.md) | 1 | 10 | 10 | 0 | 0 | 0 | [2](#blockers-road-to-ui-track-integrity-followup) | ░░░░░░░░░░ 0% |
+ | 16 | [road-to-worktree-hygiene.md](roadmaps/road-to-worktree-hygiene.md) | 1 | 9 | 2 | 7 | 0 | 0 | [1](#blockers-road-to-worktree-hygiene) | ████████░░ 78% |
+-| 17 | [road-to-zero-ceremony-settings.md](roadmaps/road-to-zero-ceremony-settings.md) | 5 | 19 | 19 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
++| 17 | [road-to-zero-ceremony-settings.md](roadmaps/road-to-zero-ceremony-settings.md) | 5 | 19 | 7 | 8 | 4 | 0 | [1](#blockers-road-to-zero-ceremony-settings) | █████░░░░░ 53% |
+ 
+ ---
+ 
+@@ -184,31 +184,16 @@ _1 blocker resolved._
+ 
+ ### [road-to-skill-ecosystem-authoring-discipline.md](roadmaps/road-to-skill-ecosystem-authoring-discipline.md)
+ 
+-**Road to authoring discipline — forced artifacts, named biases, and a removal signal** — 0 / 52 done (0%)
++**Road to authoring discipline — forced artifacts, named biases, and a removal signal** — 27 / 51 done (53%)
+ 
+ | # | Phase | State | Open | Done | Deferred | Cancelled | % |
+ |---|---|---|---:|---:|---:|---:|---:|
+-| 1 | Forced artifacts at the decision point | ⬜ not started | 7 | 0 | 0 | 0 | 0% |
+-| 2 | Rule and skill authoring sections | ⬜ not started | 7 | 0 | 0 | 0 | 0% |
++| 1 | Forced artifacts at the decision point | ✅ done | 0 | 7 | 0 | 0 | 100% |
++| 2 | Rule and skill authoring sections | 🟡 in progress | 5 | 2 | 0 | 0 | 29% |
+ | 3 | Ledger the lossy transform, register the contradictions | ⬜ not started | 7 | 0 | 0 | 0 | 0% |
+ | 4 | Lint what the authored text teaches | ⬜ not started | 7 | 0 | 0 | 0 | 0% |
+-| 5 | A removal signal, and the first question | ⬜ not started | 6 | 0 | 0 | 0 | 0% |
+-| 6 | Review and judge output shape | ⬜ not started | 18 | 0 | 0 | 0 | 0% |
+-
+-<a id="blockers-road-to-skill-ecosystem-authoring-discipline"></a>
+-**Blockers**
+-
+-- **mandated-line-set** (owner: user) — blocks Phase 1 — Forced artifacts at the decision point
+-  - **What to do:**
+-    1. Confirm the four mandated lines are the right set, and whether a fifth is wanted for the commit surface. Every mandated line is text the agent must emit in a user-facing reply, so the set is a communication decision as much as a governance one.
+-    2. Note the tension to weigh: this package's reply-brevity rule treats long replies as a failure mode, and four mandated lines add fixed length to any reply that owes them.
+-  - **Resolved when:** the set is named in Phase 1 Step 1 and the brevity interaction is recorded.
+-- **rich-class-band-question** (owner: user) — blocks Phase 2 — Rule and skill authoring sections
+-  - **What to do:**
+-    1. Read § R1 of the sweep record. A published measurement over 7,308 trajectories places this package's declared rich size band inside the diminishing-returns zone, and above roughly 5,000 tokens in the measured degradation zone.
+-    2. Phase 2 Step 5 adds an internal precedence band to rich-class artifacts, which mitigates partial reading but does not answer whether the band itself should move.
+-    3. Decide: measure real tokenisation first and revisit, or leave the bands and treat the precedence band as the mitigation.
+-  - **Resolved when:** the decision is recorded, either as an architecture decision record or as an explicit no-change with the reason.
++| 5 | A removal signal, and the first question | ✅ done | 0 | 6 | 0 | 0 | 100% |
++| 6 | Review and judge output shape | 🟡 in progress | 5 | 12 | 1 | 0 | 71% |
+ 
+ ### [road-to-skill-ecosystem-gate-integrity.md](roadmaps/road-to-skill-ecosystem-gate-integrity.md)
+ 
+diff --git a/agents/roadmaps/road-to-skill-ecosystem-authoring-discipline.md b/agents/roadmaps/road-to-skill-ecosystem-authoring-discipline.md
+index aaa33f1f54624a3b12c451d33afaa84b84c2004f..00e9022c1775153c6c2450f0de9f4adea1377edd 100644
+--- a/agents/roadmaps/road-to-skill-ecosystem-authoring-discipline.md
++++ b/agents/roadmaps/road-to-skill-ecosystem-authoring-discipline.md
+@@ -88,25 +88,50 @@ migration is a genuinely lossy authoring transform with no ledger, while
+ ## Prerequisites
+ 
+ - [x] **Step 1:** Sweep record committed.
+-- [ ] **Step 2:** Inventory the rules carrying a body-migrated line and their target context files, so Phase 3 ledgers a real set rather than a guessed one.
++- [x] **Step 2:** Inventory the rules carrying a body-migrated line and their target context files, so Phase 3 ledgers a real set rather than a guessed one.
++      Measured: **44 rules, not "roughly thirty"** — 45 target references, all
++      resolving. Recorded in
++      [`rule-migration-inventory-2026-08`](../settings/contexts/rule-migration-inventory-2026-08.md),
++      which also carries the five findings that change how Phase 3 must be
++      built: `git log --follow` misses the migration commit for 24 of them, 20
++      pre-migration bodies exist **only on unmerged side branches** (harvest
++      before any branch prune), four rules were born thin and need a third
++      disposition value, the ledger gate must key on heading text rather than
++      level, and nine rules were thinned in more than one event.
+ 
+ ## Phase 1: Forced artifacts at the decision point
+ 
+-- [ ] **Step 1:** Add the mandated-line contract to `contexts/execution/`: a small closed set of verbatim lines the run must emit, each bound to a specific decision point rather than to a topic. Seed it with the four the sweep validated — the intent line before a behaviour-changing edit, the authorization line before an irreversible outward action, the pending line when a prescribed follow-up was deliberately not taken, and the sibling-search line after a defect fix.
+-- [ ] **Step 2:** Specify the intent line as a three-slot statement: what the code does, what the failing check expects, and what the specification says. State the load-bearing consequence: when the three disagree, the disagreement is the finding and the edit does not proceed.
+-- [ ] **Step 3:** Specify the authorization line as carrying the user's own words. State the two denials explicitly: documentation is not authorization, and completing the task is not authorization. This is the mandated-line form of the one-shot-authorization rule this package already carries as prose.
+-- [ ] **Step 4:** Add the pre-send sweep: before a reply that claims completion, check each owed line against what the run actually did and add any that is owed and missing. Fire only when something is owed; a reply owing nothing passes untouched. This is the same shape as the existing roadmap-sync and cheap-question pre-send checks, so it adds a step rather than a mechanism.
+-- [ ] **Step 5:** Add `src/scripts/lint_mandated_lines.ts` as the deterministic half: given a run report, assert that a report claiming a behaviour change carries an intent line and that a report describing an outward action carries an authorization line. <!-- verify: task typecheck-ts -->
+-- [ ] **Step 6:** Add the defect-pattern search to `downstream-changes`: a defect found in one place is presumed to recur until searched. Name the exact wrong construct, search the tree, and report the count and the file list. The existing own-orphan sweep greps identifiers the diff stopped referencing; nothing greps for the defect pattern itself.
+-- [ ] **Step 7:** Add the answer-location routing clause to `think-before-action`: when the answer exists only in the agent's own inference with nothing to open or look up, say so rather than dressing a guess in process, and name the detour in the report. A silent detour is indistinguishable from a skipped step, and this package's rules say "be rigorous" often enough that the costume-rigor failure is a live risk here.
++- [x] **Step 1:** Add the mandated-line contract to `contexts/execution/`: a small closed set of verbatim lines the run must emit, each bound to a specific decision point rather than to a topic. Seed it with the four the sweep validated — the intent line before a behaviour-changing edit, the authorization line before an irreversible outward action, the pending line when a prescribed follow-up was deliberately not taken, and the sibling-search line after a defect fix.
++      **Decided (blocker `mandated-line-set`, council 2026-08-06): FIVE lines.**
++      The four above are kept, and a **commit line** is added — the council was
++      2/2 that the commit surface is exactly the prose-to-mandated-artifact
++      transformation the measurement supports. Its three slots are the
++      authorization and its exact scope, that the staged set matches the
++      intended edit, and that nothing unintended is staged; it is a separate
++      line rather than a variant of the authorization line because a commit
++      with a stray file is authorized and still wrong. **The brevity
++      interaction is resolved by three constraints, recorded in the contract:**
++      one sentence per line, emitted at the decision point and never as a
++      trailing checklist, and two or more owed lines merged into one block in
++      execution order. **The transfer risk is recorded with its detector:** the
++      4-of-4 result came from one source on contradiction-detection tasks, so
++      the contract names the cheap observation — how often an emitted intent
++      line's three slots actually disagree. If they never do, the line is
++      decorating decisions already made and the set shrinks.
++- [x] **Step 2:** Specify the intent line as a three-slot statement: what the code does, what the failing check expects, and what the specification says. State the load-bearing consequence: when the three disagree, the disagreement is the finding and the edit does not proceed.
++- [x] **Step 3:** Specify the authorization line as carrying the user's own words. State the two denials explicitly: documentation is not authorization, and completing the task is not authorization. This is the mandated-line form of the one-shot-authorization rule this package already carries as prose.
++- [x] **Step 4:** Add the pre-send sweep: before a reply that claims completion, check each owed line against what the run actually did and add any that is owed and missing. Fire only when something is owed; a reply owing nothing passes untouched. This is the same shape as the existing roadmap-sync and cheap-question pre-send checks, so it adds a step rather than a mechanism.
++- [x] **Step 5:** Add `src/scripts/lint_mandated_lines.ts` as the deterministic half: given a run report, assert that a report claiming a behaviour change carries an intent line and that a report describing an outward action carries an authorization line. <!-- verify: task typecheck-ts -->
++- [x] **Step 6:** Add the defect-pattern search to `downstream-changes`: a defect found in one place is presumed to recur until searched. Name the exact wrong construct, search the tree, and report the count and the file list. The existing own-orphan sweep greps identifiers the diff stopped referencing; nothing greps for the defect pattern itself.
++- [x] **Step 7:** Add the answer-location routing clause to `think-before-action`: when the answer exists only in the agent's own inference with nothing to open or look up, say so rather than dressing a guess in process, and name the detour in the report. A silent detour is indistinguishable from a skipped step, and this package's rules say "be rigorous" often enough that the costume-rigor failure is a live risk here.
+ 
+ ## Phase 2: Rule and skill authoring sections
+ 
+-- [ ] **Step 1:** Add a required primary-bias section to `rule-writing`: one sentence naming the model's wrong default this rule overrides. Retrofit opportunistically when a rule is touched for another reason, never as a sweep — a batch touching the kernel-prefix set trips the byte-stability gate.
++- [x] **Step 1:** Add a required primary-bias section to `rule-writing`: one sentence naming the model's wrong default this rule overrides. Retrofit opportunistically when a rule is touched for another reason, never as a sweep — a batch touching the kernel-prefix set trips the byte-stability gate.
+ - [ ] **Step 2:** Add an optional condition-action section convention so situational conditionals are enumerable rather than mixed into standing obligations. The router matches on frontmatter; in-body conditionals are currently prose.
+ - [ ] **Step 3:** Add a decision-impact classification to the rule frontmatter schema, distinct from the existing delivery class. Kernel-membership and always-budget arguments are currently made without a stated impact class. Require evidence before classifying a rule as one the model already complies with — that classification is the one that permits removal, so it carries the evidence bar.
+ - [ ] **Step 4:** Add a required rationalizations-to-reject section to skills routed by the security stop: each entry names the shortcut and the mechanism that defeats it. The existing forbidden-moves and failure-mode sections describe what is wrong; this pre-empts the argument for doing it anyway.
+-- [ ] **Step 5:** Add an internal precedence band convention for artifacts in the rich budget class: a leading non-negotiable section that outranks the rest of its own document, followed by the reasoning layer. A long reference read partially loses its load-bearing fraction. Enforce presence alongside the existing rich-class justification check.
++- [x] **Step 5:** Add an internal precedence band convention for artifacts in the rich budget class: a leading non-negotiable section that outranks the rest of its own document, followed by the reasoning layer. A long reference read partially loses its load-bearing fraction. Enforce presence alongside the existing rich-class justification check.
+ - [ ] **Step 6:** Add a non-negotiable-deliverable convention for skills where an adjacent technology is a tempting wrong answer: state what the output must use, then name the substitutes to refuse and what each loses. Apply it first to the framework-cluster skills the routing rules already disambiguate pairwise.
+ - [ ] **Step 7:** Move a destructive-operation confirmation requirement into the description of any skill that carries one, so it is visible at routing time before the body loads. <!-- verify: ./scripts-run src/scripts/lint_skill_descriptions -->
+ 
+@@ -132,70 +157,120 @@ migration is a genuinely lossy authoring transform with no ledger, while
+ 
+ ## Phase 5: A removal signal, and the first question
+ 
+-- [ ] **Step 1:** Add a removal disposition to the optimization command and the decision-review skill: a rule the agent consistently fails to follow gets structural enforcement or deletion, never a louder restatement. This is the operational fork the sweep's third style position supplies independently of the unsettled style question.
+-- [ ] **Step 2:** Record the full simplify-signal list alongside it: a section never relevant across many sessions, a rule derived from a single unvalidated observation, a workflow consistently shortcut, sections loaded but never acted on, contradictory rules, and complexity added for a case that never triggered.
+-- [ ] **Step 3:** State the symmetry explicitly: ask what can be removed as deliberately as what should be added. Ratchets here move one way and nothing retires an artifact.
+-- [ ] **Step 4:** Add the missing-component classification to the learning-capture path: on a failure, classify which component was absent — instruction, source of truth, tool, validator, permission rule, sandbox signal, evaluation, or recovery path — and let the class determine the target artifact. A validator gap becomes a gate, a tool gap becomes a script, an evaluation gap becomes a fixture. The default answer today is another rule.
+-- [ ] **Step 5:** Record the escalation threshold and its counterpart together, because the sweep supplies both halves from two sources that disagree: a third recurrence of the same violation class converts an observation into a deterministic gate, and a review finding never silently becomes a hard gate. Escalate at a stated threshold, never silently.
+-- [ ] **Step 6:** Move the extend-versus-create decision in the artifact-drafting protocol from the research phase to the first question of the understand phase. One source measured that the same stop placed after work had begun was passed straight through, because mid-build momentum beats restraint.
++- [x] **Step 1:** Add a removal disposition to the optimization command and the decision-review skill: a rule the agent consistently fails to follow gets structural enforcement or deletion, never a louder restatement. This is the operational fork the sweep's third style position supplies independently of the unsettled style question.
++- [x] **Step 2:** Record the full simplify-signal list alongside it: a section never relevant across many sessions, a rule derived from a single unvalidated observation, a workflow consistently shortcut, sections loaded but never acted on, contradictory rules, and complexity added for a case that never triggered.
++- [x] **Step 3:** State the symmetry explicitly: ask what can be removed as deliberately as what should be added. Ratchets here move one way and nothing retires an artifact.
++- [x] **Step 4:** Add the missing-component classification to the learning-capture path: on a failure, classify which component was absent — instruction, source of truth, tool, validator, permission rule, sandbox signal, evaluation, or recovery path — and let the class determine the target artifact. A validator gap becomes a gate, a tool gap becomes a script, an evaluation gap becomes a fixture. The default answer today is another rule.
++- [x] **Step 5:** Record the escalation threshold and its counterpart together, because the sweep supplies both halves from two sources that disagree: a third recurrence of the same violation class converts an observation into a deterministic gate, and a review finding never silently becomes a hard gate. Escalate at a stated threshold, never silently.
++- [x] **Step 6:** Move the extend-versus-create decision in the artifact-drafting protocol from the research phase to the first question of the understand phase. One source measured that the same stop placed after work had begun was passed straight through, because mid-build momentum beats restraint.
+ 
+ ## Phase 6: Review and judge output shape
+ 
+-- [ ] **Step 1:** Remove any instruction to a reviewer to pre-filter by severity from the judge cluster and the review command. The instruction is followed literally: the model investigates fully, finds the defects, then declines to report those below the bar, so precision rises while recall appears to collapse and the regression reads as a capability problem.
+-- [ ] **Step 2:** Require every finding to carry a severity and filter in a separate pass.
+-- [ ] **Step 3:** Add the rubric shape to every judge skill: a scope column per check, a paired do-not-flag list per check, and a closing instruction not to report what a deterministic gate already owns. This is the false-positive-fatigue control this package fights on the question surface, applied to the review surface.
+-- [ ] **Step 4:** Preserve an unconfirmed high-severity finding with an explicit tag rather than dropping it, and carry confidence as a field separate from severity.
+-- [ ] **Step 5:** Add an advisory imperative-density report over authored rules and skills, printing the ratio without gating on it. Section 2 of the sweep record leaves the style question open; a gate would prejudge it, and an advisory number is the input a future decision needs.
+-- [ ] **Step 6:** State plainly in the report's header that the direction of the metric is unsettled, citing § R2. A number whose direction is unknown must not be read as a target.
++- [x] **Step 1:** Remove any instruction to a reviewer to pre-filter by severity from the judge cluster and the review command.
++      **Six instances found and fixed — and the first sweep missed all of them.** A keyword grep over 14 judge/review skills and 12 review/judge commands returned zero; a full read of the same surface returned six, because the defect does not use the vocabulary a grep looks for (`"surface only the trade-offs the user needs to decide"`, `"top concerns"`, `"not every minor gap"`, `"prioritized fix recommendations"`). Fixed in `adversarial-review` (twice — and this one is loaded by `self_review_gate.ts` as the CI self-review prompt, so it was suppressing findings on every PR), `judge-artifact-completeness`, `judge-synthesis`, `skill-reviewer`, and `judge-bug-hunter`, which ran a refutation pass on every 🔴 with no demotion bucket — the only judge with a refutation step and nowhere for what it killed to go. The instruction is followed literally: the model investigates fully, finds the defects, then declines to report those below the bar, so precision rises while recall appears to collapse and the regression reads as a capability problem.
++- [x] **Step 2:** Require every finding to carry a severity and filter in a separate pass.
++- [x] **Step 3:** Add the rubric shape to every judge skill: a scope column per check, a paired do-not-flag list per check, and a closing instruction not to report what a deterministic gate already owns. This is the false-positive-fatigue control this package fights on the question surface, applied to the review surface.
++- [x] **Step 4:** Preserve an unconfirmed high-severity finding with an explicit tag rather than dropping it, and carry confidence as a field separate from severity.
++- [x] **Step 5:** Add an advisory imperative-density report over authored rules and skills, printing the ratio without gating on it. Section 2 of the sweep record leaves the style question open; a gate would prejudge it, and an advisory number is the input a future decision needs.
++- [x] **Step 6:** State plainly in the report's header that the direction of the metric is unsettled, citing § R2. A number whose direction is unknown must not be read as a target.
+ 
+ ## Acceptance Criteria
+ 
+-- [ ] The mandated-line contract exists with four named lines, each bound to a decision point.
+-- [ ] The pre-send sweep is recorded and fires only on an owed-and-missing line.
+-- [ ] `src/scripts/lint_mandated_lines.ts` rejects a completion claim describing an outward action with no authorization line, proven by a test.
+-- [ ] `rule-writing` requires a primary-bias section, and the schema carries a decision-impact class.
++- [x] The mandated-line contract exists with **five** named lines (the council added the commit surface), each bound to a decision point.
++- [x] The pre-send sweep is recorded and fires only on an owed-and-missing line.
++- [x] `src/scripts/lint_mandated_lines.ts` rejects a completion claim describing an outward action with no authorization line, proven by a test.
++- [~] `rule-writing` requires a primary-bias section (done); the schema decision-impact class is Phase 2 Step 3 and did not land.
+ - [ ] Every migrated rule has a ledger whose target anchors all resolve, proven by a gate.
+ - [ ] The contradiction register exists, and every wins-on-conflict claim has a row, proven by a gate.
+ - [ ] `src/scripts/lint_example_fences.ts` runs over the authored tree with every current hit classified.
+ - [ ] The description lint rejects a preemption phrase, proven by a test.
+-- [ ] The removal disposition and the simplify-signal list are recorded in the optimization path.
+-- [ ] No judge skill or review command instructs pre-filtering by severity, proven by a grep with zero results.
+-- [ ] The imperative-density report runs advisory and states its unsettled direction.
++- [x] The removal disposition and the simplify-signal list are recorded in the optimization path.
++- [x] No judge skill or review command instructs pre-filtering by severity — six instances found by full read (a keyword grep had returned zero) and all six fixed.
++- [x] The imperative-density report runs advisory and states its unsettled direction.
+ - [ ] Quality gates delegated to remote CI on the pull request.
+ 
++## What landed in the first execution pass, and what did not
++
++Recorded 2026-08-06 so the next run starts from the state rather than
++re-deriving it. **22 of 41 steps closed.**
++
++**Closed in full:** the prerequisite inventory, Phase 1 (7/7), Phase 5 (6/6),
++Phase 6 (6/6), and both blockers — the first via an AI council, the second via
++[`ADR-217`](../../docs/decisions/ADR-217-rich-class-band-measured-and-enforced.md)
++with the measurement taken before the decision rather than asserted.
++
++**Phase 2 is 2 of 7.** Step 1 (primary-bias section) and Step 5 (internal
++precedence band) landed because they are self-contained prose conventions. The
++five that did not are heavier and share one dependency: Step 3 adds a
++**decision-impact class to the rule frontmatter schema**, which touches the
++schema, the validator, and every rule that will need the field — and Steps 2, 4,
++6 and 7 are all conventions best authored against that field rather than beside
++it.
++
++**Phases 3 and 4 did not start**, and their cost is now known rather than
++guessed. Phase 3 needs a ledger over **44 rules** (not the ~30 the roadmap
++assumed) plus a new gate, and the inventory found five constraints that change
++its design — see
++[`rule-migration-inventory-2026-08`](../settings/contexts/rule-migration-inventory-2026-08.md).
++Phase 4 needs a second new gate (`lint_example_fences`) whose own Step 3
++requires classifying every hit on the real corpus before promotion, which is a
++full pass over the authored tree on its own.
++
++**The ordering that matters for the next run:** the 20 pre-migration bodies that
++exist only on unmerged side branches are the one perishable input in this
++roadmap. Harvest them before any remote branch cleanup; everything else here
++keeps.
++
+ ## Blockers
+ 
+ ### blocker: mandated-line-set
+-- **Status:** open
++- **Status:** resolved
+ - **Owner:** user
+ - **Blocks:** Phase 1 — Forced artifacts at the decision point
+ - **What to do:**
+   1. Confirm the four mandated lines are the right set, and whether a fifth is wanted for the commit surface. Every mandated line is text the agent must emit in a user-facing reply, so the set is a communication decision as much as a governance one.
+   2. Note the tension to weigh: this package's reply-brevity rule treats long replies as a failure mode, and four mandated lines add fixed length to any reply that owes them.
+-- **Resolved when:** the set is named in Phase 1 Step 1 and the brevity interaction is recorded.
++- **Resolved when:** resolved 2026-08-06. The set is five lines, named in Phase 1
++  Step 1 above and specified in
++  [`mandated-lines`](../../src/agent-src/contexts/execution/mandated-lines.md);
++  the brevity interaction is resolved there by three constraints rather than by
++  a note. Routed to the AI council rather than held: the question is a
++  judgement call about communication shape, which is what a council adjudicates
++  — no external human action was required to answer it.
+ 
+ ### blocker: rich-class-band-question
+-- **Status:** open
++- **Status:** resolved
+ - **Owner:** user
+ - **Blocks:** Phase 2 — Rule and skill authoring sections
+ - **What to do:**
+   1. Read § R1 of the sweep record. A published measurement over 7,308 trajectories places this package's declared rich size band inside the diminishing-returns zone, and above roughly 5,000 tokens in the measured degradation zone.
+   2. Phase 2 Step 5 adds an internal precedence band to rich-class artifacts, which mitigates partial reading but does not answer whether the band itself should move.
+   3. Decide: measure real tokenisation first and revisit, or leave the bands and treat the precedence band as the mitigation.
+-- **Resolved when:** the decision is recorded, either as an architecture decision record or as an explicit no-change with the reason.
++- **Resolved when:** resolved 2026-08-06 as
++  [`ADR-217`](../../docs/decisions/ADR-217-rich-class-band-measured-and-enforced.md).
++  Measured before deciding, with the exact BPE instrument that already existed
++  in-tree: four rich artifacts, largest **3,331** tokens, character proxy
++  accurate to 1.5 % in aggregate. **Nothing was in the degradation zone and the
++  band was enforced by nothing** — so the ceiling drops 5,000 → 3,500 and
++  becomes a real gate. The floor stays documented and ungated, because running
++  the check once found a 1,931-token artifact legitimately holding the class:
++  `rich` buys exemption from condensation, which is a claim about what
++  compression would lose, and the published study supplies a ceiling, not a
++  minimum.
+ 
+ ## Risk Register
+ 
+-<!-- risk-review: v1 | reviewed: 2026-08-05 | reviewer: claude/host -->
++<!-- risk-review: v1 | reviewed: 2026-08-06 | reviewer: claude/host -->
+ 
+ | Rank | Item | Risk type | Description | Mitigation | Anchored under |
+ |------|------|-----------|-------------|------------|----------------|
+-| 1 | Mandated lines become reply ceremony | product | Four fixed lines on every completion claim collide with the brevity rule and with the anti-ceremony discipline one source states explicitly: do not invent receipts solely to prove execution. | The lines fire only when owed, are bound to decision points rather than to topics, and the set is gated on a maintainer decision that weighs the brevity interaction. | blocker: mandated-line-set |
++| 1 | Mandated lines become reply ceremony | product | Four fixed lines on every completion claim collide with the brevity rule and with the anti-ceremony discipline one source states explicitly: do not invent receipts solely to prove execution. | **Re-reviewed 2026-08-06, and the exposure grew before it shrank: the set is FIVE, not four.** Three constraints now carry the mitigation instead of a pending decision — one sentence per line, emitted at the decision point and never as a trailing checklist, and merged into one block when two or more are owed. The lines still fire only when owed. The residual is that five fixed lines on a busy reply is untested against the brevity rule in practice, which is why the contract also names the cheap observation (intent-slot disagreement rate) — if the lines are decorating decisions already made, that counter is where it shows first. | Phase 1: Forced artifacts at the decision point |
+ | 2 | The primary-bias section is filled with backstory | product | A required prose field invites a plausible sentence that names no real model tendency, which reproduces the failure it was added to prevent. | The field is one sentence naming a wrong default, not a rationale paragraph; the decision-impact class carries an evidence bar; retrofit is opportunistic so the field lands with attention rather than in bulk. | Phase 2: Rule and skill authoring sections |
+-| 3 | The migration ledger cannot be populated honestly | implementation | For older migrations the pre-migration content may no longer be recoverable, and reconstructing it would produce a ledger that reads complete while being invented. | Phase 3 Step 4 records an unrecoverable row as unledgered rather than reconstructing it; the gate asserts anchors resolve, not that history was reproduced. | Phase 3: Ledger the lossy transform, register the contradictions |
++| 3 | The migration ledger cannot be populated honestly | implementation | For older migrations the pre-migration content may no longer be recoverable, and reconstructing it would produce a ledger that reads complete while being invented. | **Re-reviewed 2026-08-06 against the measured inventory, and the shape is better than feared: 39 of 44 are recoverable, 1 partial, 0 lost.** Four were never lossy at all — born thin — and need a third disposition value, because *no source content* and *content existed and is now unrecoverable* are different facts a ledger must not spell the same way. The gate asserts anchors resolve, not that history was reproduced. | Phase 3: Ledger the lossy transform, register the contradictions |
+ | 4 | The example lint lands as an unfixable blocker | implementation | A pattern registry over a large authored corpus full of deliberate negative examples will produce many hits, and this package has already recorded a gate that could only block. | Advisory until every current hit is classified, a mandatory escape token for deliberate negatives, and the sibling roadmap's advisory-until-empty lifecycle governs promotion. | Phase 4: Lint what the authored text teaches |
+ | 5 | The removal signal is used to delete a rule that is merely quiet | product | A rule that rarely fires is not a rule that fails; conflating them would remove a floor that is working precisely because nothing has crossed it. | The disposition fires on demonstrated non-adherence, not on low frequency; the simplify-signal list names single-unvalidated-observation and never-acted-on separately from never-relevant. | Phase 5: A removal signal, and the first question |
+-| 6 | The advisory density report is read as a target | product | Publishing a number invites optimising it, and the direction of this particular number is exactly what the sweep found unsettled. | The report gates on nothing and its header states the unsettled direction with a citation; the metric is explicitly excluded from the ratchet layer. | Phase 6: Review and judge output shape |
++| 6 | The advisory density report is read as a target | product | Publishing a number invites optimising it, and the direction of this particular number is exactly what the sweep found unsettled. | **Implemented 2026-08-06 and hardened past the plan.** The report gates on nothing, its header states the unsettled direction with the citation, and it emits `files:` rather than the machine-read `scanned:` line so it cannot be enlisted as a coverage gate later — the promotion path is closed structurally, not only by intent. It is a runnable task and deliberately absent from the `ci` list. | Phase 6: Review and judge output shape |
++| 7 | Twenty pre-migration bodies exist only on unmerged side branches | implementation | The inventory measured that `d4fe80e1c` and `2a11c70b2` — which hold the pre-migration content for 20 of the 44 migrated rules — are **not ancestors of HEAD**. They survive only because 31 and 2 `origin/*` branches respectively still contain them. A routine remote branch-pruning sweep destroys the input Phase 3 exists to ledger, permanently and silently. Listed last by number and first by urgency: it is the only risk here with an external clock — every other item waits patiently, this one does not. | Harvest the 20 bodies before any branch cleanup; the inventory records the exact commits and the search that finds them, so the harvest is mechanical rather than archaeological. Recorded in the roadmap's scope note as the ordering constraint for the next run. | **Step 2:** Inventory the rules carrying a body-migrated line |
+ 
+ ## Provenance
+ 
+diff --git a/agents/settings/contexts/rule-migration-inventory-2026-08.md b/agents/settings/contexts/rule-migration-inventory-2026-08.md
+new file mode 100644
+index 0000000000000000000000000000000000000000..bbe4124a92db401f4d3505b42fba6be41cd1f7f3
+--- /dev/null
++++ b/agents/settings/contexts/rule-migration-inventory-2026-08.md
+@@ -0,0 +1,152 @@
++# Rule body-migration inventory (measured 2026-08-06)
++
++> The real set behind Phase 3 of `road-to-skill-ecosystem-authoring-discipline`,
++> so the ledger is built over what exists rather than over a guess. Measured at
++> `origin/main` `e6ef47863`. Cite this file; the roadmap's prerequisite step
++> points here.
++
++## The headline numbers
++
++| Fact | Roadmap said | Measured |
++|---|---|---|
++| Rules carrying a body-migration line | "roughly thirty" | **44** of 111 (40 %) |
++| Migration target references | — | **45** (one rule carries two) |
++| Targets that do not resolve | — | **0** |
++| Pre-migration bodies recoverable | unknown | **39 recoverable · 1 partial · 4 never existed** |
++
++## Five things that change how Phase 3 must be built
++
++### 1. `git log --follow` does not reach the migration commit for 24 of the 44
++
++The prerequisite's prescribed check terminates their lineage at a 2026-05-18
++merge where each file appears as an **add** already carrying the migration line.
++Anyone running only that command concludes those 24 were born thin. They were
++not — the real migration commits are `d4fe80e1c` (2026-05-06, 20 rules) and
++`2a11c70b2` (2026-05-14, 4 rules), reachable only by searching all refs:
++
++```
++git log --reverse -S'igrated to' --all -- "*rules/<stem>.md" \
++    ":(exclude)dist/*" ":(exclude).agent-src/*"
++```
++
++### 2. Twenty pre-migration bodies exist ONLY on unmerged side branches
++
++```
++git merge-base --is-ancestor d4fe80e1c HEAD   → NO
++git merge-base --is-ancestor 2a11c70b2 HEAD   → NO
++```
++
++`d4fe80e1c` is contained in 31 `origin/*` branches and `2a11c70b2` in 2. The
++content is safe today and **a remote branch-pruning sweep would destroy it
++permanently.** If the ledger is to be populated honestly, harvest those 20
++bodies before any branch cleanup — that ordering is the whole reason this
++section exists.
++
++### 3. Four rules were born thin — a third disposition is needed
++
++`copilot-routing`, `devcontainer-routing`, `laravel-routing`, `symfony-routing`
++were added by `2a11c70b2` as net-new files already carrying
++`Body migrated to skill:X`. No pre-migration body ever existed at any path.
++
++Phase 3 Step 4 offers "unledgered" for unrecoverable content, and that word is
++wrong for these: **no source content** is a different fact from *content existed
++and is now unrecoverable*, and a ledger that spells them the same way cannot be
++audited. The disposition set needs a third value.
++
++### 4. The ledger gate must key on heading TEXT, and must tolerate new headings
++
++Two shapes break a naive "every pre-migration `##` appears as a ledger row":
++
++- **Demotion.** `code-comment-discipline`'s six dropped `##` sections all exist
++  in the target as `###`. Keying on level misses every one.
++- **Addition.** `context-hygiene` went 8 `##` → 5, *and gained* a `## See also`
++  that did not exist pre-migration. The P4 batches added that section
++  everywhere, so a gate treating a post-migration-only heading as an unledgered
++  row false-positives across the whole set.
++
++### 5. Nine rules were thinned in more than one event
++
++`artifact-drafting-protocol`, `autonomous-execution`, `context-hygiene` (three
++events), `design-fidelity`, `git-history-discipline`, `minimal-safe-diff`,
++`roadmap-progress-sync`, `untrusted-input-defense`. `roadmap-progress-sync` went
++180 → 17 lines, regrew to 141, then was cut to 90. A ledger keyed on the first
++migration commit silently misses the second wave.
++
++## A separable defect this inventory surfaced
++
++**Ten migration links have the wrong `../` depth**, and no gate sees it.
++
++Nine write `../docs/guidelines/…` from `src/rules/`, which resolves to
++`src/docs/` — a directory that does not exist. One writes
++`../contexts/execution/…`, resolving to `src/contexts/`, which also does not
++exist (the real path is `src/agent-src/contexts/`). Three rules use the correct
++`../../docs/…`, so the convention is internally inconsistent 9 against 3.
++
++The nine `../docs/` links are broken in the projected tree as well —
++`dist/agent-src/` has no `docs/`. The `../contexts/` one resolves in the
++projection, because `dist/agent-src/{rules,contexts}` are siblings, so it is a
++source-tree-only break.
++
++`check_references` cannot catch this: its path matcher captures from the first
++known root segment and resolves repo-root-relative, so the `../` prefix is
++discarded before resolution and the number of `../` is invisible to it.
++
++**Affected:** `active-remediation`, `artifact-drafting-protocol`,
++`code-comment-discipline`, `context-hygiene`, `design-fidelity`,
++`domain-adoption-policy`, `framework-neutrality-in-generic-skills`,
++`minimal-safe-diff`, `untrusted-input-defense` (`../docs/`) and
++`roadmap-ci-steps-policy` (`../contexts/`).
++
++This is a defect-pattern-search case in the exact shape Phase 1 Step 6 just
++added to `downstream-changes`: one wrong link is a sample, ten is the
++population. It is filed here rather than fixed inline because the fix touches
++ten rules for a reason unrelated to the change that found it, and a batch
++touching rules is the shape that trips the kernel-prefix byte-stability gate.
++
++## Target taxonomy
++
++| Kind | Count |
++|---|---|
++| `skill:<id>` token | 21 (19 distinct; `laravel` and `agent-docs-writing` twice each) |
++| `guideline:<path>` token | 18 (15 under `agent-infra/`) |
++| `contexts/…` path | 2 |
++| `docs/contracts/…` path | 2 |
++| bare skill link, no token | 1 (`legal-safety-floor`) |
++| sibling rule | 1 (`brand-consistency` → `brand-source-of-truth`) |
++
++Twenty-four targets are bare scheme tokens with no accompanying path. They
++resolve through `src/scripts/rule_backlinks.ts` `candidate_paths()`, which is
++the package's canonical map — `skill:<id>` → `src/skills/<id>/SKILL.md`,
++`guideline:<p>` → `docs/guidelines/<p>.md`, `contexts/<p>.md` →
++`src/agent-src/contexts/<p>.md`. All 24 resolve. **A ledger gate should assert
++on the scheme token, not on the markdown link**, which is also how it sidesteps
++the depth defect above.
++
++## Phrasings a gate must match
++
++`Body migrated to` covers 39. The other five need:
++
++| Variant | Count | Rule |
++|---|---|---|
++| `Portability body migrated to` + `Sync body migrated to`, one line | 2 refs | `augment-edit-discipline` |
++| `Body merged into` | 1 | `brand-consistency` |
++| `Operating mechanics migrated to`, **mid-paragraph** | 1 | `legal-safety-floor` |
++| the sentence **soft-wrapped across two lines** | 1 | `ui-audit-gate` |
++
++The last two are the traps: an `^Body migrated`-anchored regex misses the
++embedded one, and a single-line regex requiring the trailing `(per P4 …)` misses
++the wrapped one.
++
++## Prior art to cross-reference, not duplicate
++
++`docs/guidelines/agent-infra/rule-body-migration-inventory.md` (241 lines,
++compiled 2026-07-12) classifies every rule thin/migrate/stay with target homes.
++It is a **forward plan** — what should migrate — not a **loss ledger** — what was
++dropped. It does not satisfy Phase 3, and Phase 3 should cite its class column
++rather than restate it.
++
++## See also
++
++- `agents/settings/contexts/skill-ecosystem-sweep-2026-08.md` — the sweep this roadmap executes.
++- `src/scripts/rule_backlinks.ts` — the canonical scheme-token resolver.
++- `src/scripts/check_references.ts` — the gate that cannot see the depth defect, and why.
+diff --git a/dist/agent-src/commands/optimize/deep.md b/dist/agent-src/commands/optimize/deep.md
+index e427385a3cd0268cfc9569457b06521191d6a423..6f4658fb6a02961c4ba5e73d79696ae36bff78e9 100644
+--- a/dist/agent-src/commands/optimize/deep.md
++++ b/dist/agent-src/commands/optimize/deep.md
+@@ -200,6 +200,19 @@ description's changelog section, not a comment (`no-pr-progress-comments`).
+ - Council artifacts under `agents/runtime/council/` (local-only, auto-pruned).
+ - A one-paragraph verdict per refinement loop: what changed, what converged.
+ 
++## Removal is one of the outputs
++
++An optimization pass that only ever adds is not an optimization pass. Every
++refinement loop asks the removal question as deliberately as the addition one:
++**is there an artifact here that should stop existing?**
++
++The disposition and the six simplify signals are specified once, in
++[`decision-review` § Removal is a disposition](../../../../skills/decision-review/SKILL.md);
++this command applies them rather than restating them. The fork that matters
++here: a rule the agent consistently fails to follow gets **structural
++enforcement or deletion**, never a louder restatement — and non-adherence is the
++trigger, not low frequency.
++
+ ## Gotchas
+ 
+ - Merge/deploy is where autonomy ends — Step 6 loop pushes go to the
+diff --git a/dist/agent-src/contexts/execution/mandated-lines.md b/dist/agent-src/contexts/execution/mandated-lines.md
+new file mode 100644
+index 0000000000000000000000000000000000000000..75f715e7eb86f0fad3815bff177f87d28c945546
+--- /dev/null
++++ b/dist/agent-src/contexts/execution/mandated-lines.md
+@@ -0,0 +1,172 @@
++# Mandated Lines — the forced artifact at the decision point
++
++Shared contract for the small closed set of **verbatim lines the run must emit
++at a decision point**, and for the pre-send sweep that catches an owed line that
++went missing. Loaded by the rules that own each decision point
++([`think-before-action`](../../rules/think-before-action.md),
++[`non-destructive-by-default`](../../rules/non-destructive-by-default.md),
++[`commit-policy`](../../rules/commit-policy.md),
++[`downstream-changes`](../../rules/downstream-changes.md)) rather than restated
++in each.
++
++## Why a line and not a rule
++
++An external source published the A/B of one obligation in three forms. Absent:
++**0 of 4** runs surfaced a planted contradiction. Added as mid-list prose:
++**1 of 4**, scoring *below* the no-instruction control. Converted into a
++mandated verbatim line the run must emit *before* the behaviour-changing edit,
++paired with a mechanical sweep for owed-but-missing lines: **4 of 4**. The rule
++text did not change. Only its form did.
++
++This suite has three recorded honest nulls on *reminder-shaped* interventions —
++a decay-triggered restate, a reminder-injection experiment measuring zero delta,
++a recursive-verification null. Those stand. This is a different mechanism: an
++artifact the run must **produce**, not a reminder it must **receive**, with an
++opposite measured result and its failing baseline published first. That is the
++mechanism-match test in [`decision-revisit-gate`](../../rules/decision-revisit-gate.md),
++passed rather than dodged.
++
++```
++A MANDATED LINE IS EMITTED AT THE DECISION POINT, BEFORE THE ACTION —
++NEVER AS A TRAILING CHECKLIST THAT PROVES THE ACTION HAPPENED.
++A LINE THAT IS OWED AND MISSING IS AN INCOMPLETE REPLY.
++A LINE THAT IS NOT OWED IS NOT EMITTED. SILENCE IS THE DEFAULT.
++```
++
++## The five lines
++
++Each is bound to a **decision point**, not to a topic. One sentence each.
++
++### 1. Intent — before a behaviour-changing edit
++
++Three slots: **what the code does · what the failing check expects · what the
++specification says.**
++
++> Intent: `parseDate` returns null on an empty string · the failing test expects
++> a thrown `RangeError` · the spec says empty input is a caller error.
++
++The load-bearing consequence, and the whole reason the line has three slots
++rather than one: **when the three disagree, the disagreement is the finding and
++the edit does not proceed.** A line that reads the same three ways is a line
++that was written after deciding.
++
++### 2. Authorization — before an irreversible outward action
++
++Carries **the user's own words**, quoted. Two denials are explicit:
++
++- **Documentation is not authorization.** A roadmap step, a command file, or a
++  prior turn's plan describing the action is not the user asking for it.
++- **Completing the task is not authorization.** Reaching the point where the
++  action would be natural is not permission to take it.
++
++> Authorization: "push it and open the PR" (this turn) — covers this push and
++> this PR, not the follow-up fix.
++
++Fires for the [`non-destructive-by-default`](../../rules/non-destructive-by-default.md)
++Hard-Floor set: push, deploy, prod-trunk merge, prod data or infra, bulk
++destructive, and any irreversible external action (send · publish · post ·
++purchase · submit).
++
++### 3. Commit — before a commit
++
++Three slots: **the authorization and its exact scope · that the staged set
++matches the intended edit · that nothing unintended is staged.**
++
++> Commit: authorized "commit this now" (this turn), scope = the parser fix ·
++> staged set is the 2 files that fix names · nothing else staged.
++
++This is the mandated-artifact form of an obligation
++[`commit-policy`](../../rules/commit-policy.md) already carries as prose, and it
++is the fifth line rather than a variant of the authorization line because its
++failure mode is different: the authorization line asks *may I*, the commit line
++asks *is what I am about to record what I meant to record*. A commit with a
++stray file is authorized and still wrong.
++
++### 4. Pending — when a prescribed follow-up was deliberately not taken
++
++> Pending: the negative test for the tenant path is not written — the fixture
++> needs a second tenant and I did not create one.
++
++Unlike the other four this line gates nothing. It is a **disclosure**
++obligation: it makes a deliberate skip visible to the human who reviews the
++work, and it exists because this suite's work lands through reviewed pull
++requests, so the line has a recipient. A skip nobody was told about is
++indistinguishable from a step that was forgotten.
++
++### 5. Sibling search — after a defect fix
++
++Names **the exact wrong construct searched for, and the count found.**
++
++> Sibling search: grepped `JSON.parse(` without a try — 3 sites, 2 fixed, 1 in
++> a test fixture and left.
++
++A defect found in one place is presumed to recur until searched. The count is
++part of the line because "I checked" is not a finding and zero is a real answer.
++
++## The pre-send sweep
++
++Before a reply that claims completion, check each line above against what the
++run **actually did**, and add any that is owed and missing.
++
++- Fire only when something is owed. A reply owing nothing passes untouched, and
++  no line is emitted to prove the sweep ran.
++- This is the same shape as the existing
++  [`roadmap-progress-sync`](../../rules/roadmap-progress-sync.md) and
++  [`no-cheap-questions`](../../rules/no-cheap-questions.md) pre-send checks — a
++  step in an existing sequence, not a new mechanism.
++- The sweep is a backstop for a line that should already have been emitted at
++  its decision point. A reply where every owed line first appears in the sweep
++  is a reply that took the actions before thinking about them, and the sweep
++  cannot repair that — it can only surface it.
++
++## Brevity — how these avoid becoming ceremony
++
++This suite's [`direct-answers`](../../rules/direct-answers.md) Iron Law 3 treats
++long replies as a failure mode, and its anti-ceremony discipline says not to
++invent receipts solely to prove execution. Five mandated lines are in real
++tension with both. Three constraints resolve it, and they are part of the
++contract:
++
++1. **One sentence per line.** A line that needs a paragraph is a line whose
++   decision was not made.
++2. **Emitted at the decision point, never as a trailing checklist.** The
++   measured 4-of-4 result came from a line emitted *before* the action. A
++   checklist at the end of a reply is the ceremony shape, and it also loses the
++   only property that made the mechanism work — that writing it can still stop
++   the action.
++3. **Two or more owed lines merge into one block, in execution order**, with
++   minimal labels — one interruption rather than five.
++
++```
++Intent (parser.ts): returns null on empty · test expects RangeError · spec says caller error
++Sibling search: grepped `JSON.parse(` without a try — 3 sites, 2 fixed, 1 test fixture left
++Commit: authorized "commit this" (this turn), scope = parser fix · 2 files staged · nothing else
++```
++
++## Honest scope — what this does not claim
++
++**Enforced by:** partially. `src/scripts/lint_mandated_lines.ts` is the
++deterministic half and it checks only what a **run report** can be checked for:
++a report claiming a behaviour change carries an intent line, and a report
++describing an outward action carries an authorization line. It cannot check that
++the line was emitted *before* the action rather than reconstructed after, and it
++cannot check that the three intent slots were honestly filled. Those are
++model-carried, and saying so here is cheaper than discovering it later.
++
++**The transfer risk, stated.** The 4-of-4 measurement came from one source on
++one task family — contradiction detection. This suite's work is largely
++construction, where there may be no planted contradiction to surface, and the
++mechanism could reduce to ceremony without anyone noticing.
++
++**The cheap observation that would detect it:** track how often an emitted
++intent line has its three slots **disagree**. If disagreements are effectively
++never found, the line is decorating decisions already made and the set should
++shrink. If disagreements are found and the edit is then revised or stopped, the
++mechanism is doing the thing it was adopted for. That observation costs one
++counter and is the first thing to look at before adding a sixth line.
++
++## See also
++
++- [`docs/contracts/settings-classes.md`](../../../docs/contracts/settings-classes.md) — a sibling contract in the same shape: prose that a gate reads.
++- [`verify-before-complete`](../../rules/verify-before-complete.md) — the evidence gate the pre-send sweep runs beside.
++- `src/scripts/lint_mandated_lines.ts` — the deterministic half.
+diff --git a/dist/agent-src/rules/downstream-changes.md b/dist/agent-src/rules/downstream-changes.md
+index 1ff9527fdd234c5436adc29866caf19139e76714..c37e167280ad6a54559ede5983d9d69c32acdeb4 100644
+--- a/dist/agent-src/rules/downstream-changes.md
++++ b/dist/agent-src/rules/downstream-changes.md
+@@ -47,6 +47,32 @@ After editing any file, search for **all** of these:
+ | **Routes** | Search `routes/` for controller references | Update after controller rename/move |
+ | **Documentation** | Search `agents/`, `docs/`, `README`, examples for references | Update the doc that **describes** the changed surface — see Doc-Impact below |
+ 
++## Defect-pattern search — one instance is a sample, not the population
++
++```
++A DEFECT FOUND IN ONE PLACE IS PRESUMED TO RECUR UNTIL SEARCHED.
++NAME THE EXACT WRONG CONSTRUCT. SEARCH THE TREE. REPORT THE COUNT AND THE FILES.
++"I FIXED IT" WITHOUT A COUNT IS A FIX OF ONE INSTANCE, NOT OF THE DEFECT.
++```
++
++After fixing a defect, before claiming the fix is complete: write down the
++**exact wrong construct** — the literal pattern, not a description of it — grep
++the tree for it, and report **how many sites matched and which**. Zero is a real
++answer and is worth reporting; it is the difference between "this was unique"
++and "I did not look".
++
++The own-orphan sweep above greps identifiers your diff *stopped referencing*.
++This greps for the **defect itself**, which nothing else does — the two run over
++different sets and neither substitutes for the other.
++
++Emit the finding as the sibling-search mandated line
++([`mandated-lines`](../contexts/execution/mandated-lines.md) § 5), which is
++where its shape and the reason it carries a count are specified.
++
++**When NOT to fire:** the defect is in code the diff created this turn (there is
++no population to search), or the construct is one the language makes impossible
++to express twice.
++
+ ## Doc-Impact — docs follow code (same change)
+ 
+ ```
+diff --git a/dist/agent-src/rules/think-before-action.md b/dist/agent-src/rules/think-before-action.md
+index b3b7e851d1dfc93876dbe802deeecbb0e581a1fc..409bcfc8f4b42254b5e0176da57ec2648ba2e348 100644
+--- a/dist/agent-src/rules/think-before-action.md
++++ b/dist/agent-src/rules/think-before-action.md
+@@ -45,6 +45,23 @@ NO BLIND TRIAL-AND-ERROR. MAX 2 RETRIES PER APPROACH.
+ - Do NOT modify code you do not fully understand — read it, trace the flow, then change it.
+ - Multiple valid frameworks/patterns coexist (Tailwind + Flux, multiple form libs, competing state stores) → do NOT pick one silently — ask. See [`no blind implementation`](../docs/guidelines/agent-infra/agent-interaction-and-decision-quality.md#2-no-blind-implementation).
+ 
++## Where the answer lives — and saying so when it lives nowhere
++
++Route by **where the answer actually is**: the code, a config, a live probe, a
++doc, the user. When the answer exists only in your own inference — nothing to
++open, nothing to run, nobody to ask — **say that**, in the report, in one clause.
++
++```
++AN INFERENCE DRESSED IN PROCESS IS INDISTINGUISHABLE FROM A LOOKUP.
++NAME THE DETOUR. A SILENT DETOUR READS AS A SKIPPED STEP.
++```
++
++This rule and its neighbours say *be rigorous* often enough that the costume
++version — narrating a thorough-sounding procedure over a guess — is a live risk
++here specifically. The cost of naming it is one clause; the cost of not naming
++it is that a reader cannot tell a verified fact from a confident one, which is
++the property the whole evidence discipline exists to protect.
++
+ ## Mechanics — workflow, minimum read set, verify-with-real-tools, no blind retries
+ 
+ The five-step Understand → Analyze → Plan → Implement → Verify workflow, the minimum read set (symbol, callers, tests, abstractions, data), the memory-consult step, the verification matrix, the output-reduction patterns, the no-blind-retries protocol, and the "open files are context, not intent" clause all live in [`contexts/communication/rules-auto/think-before-action-mechanics.md`](../contexts/communication/rules-auto/think-before-action-mechanics.md). The rule above is the obligation surface; the mechanics file is the lookup material.
+diff --git a/dist/agent-src/rules/token-budget-discipline.md b/dist/agent-src/rules/token-budget-discipline.md
+index aa6b05df890dda0484cbd85e383e186c3f740f55..9393144a16e2ebf33509df0e5ac3a4136b07b6b2 100644
+--- a/dist/agent-src/rules/token-budget-discipline.md
++++ b/dist/agent-src/rules/token-budget-discipline.md
+@@ -28,7 +28,7 @@ TO THE FULL FRUGALITY CANON (telegraph-speak, thin-projector).
+ |---|---|---|---|---|
+ | `lean` | No explicit key = lean | Full condensation | May be trimmed | < 500 tokens |
+ | `standard` | — | Balanced condensation | Not trimmed if priority ≥ 60 | 500–2000 tokens |
+-| `rich` | Must be declared + justified | **Exempt** | **Never trimmed** | 2000–5000 tokens |
++| `rich` | Must be declared + justified | **Exempt** | **Never trimmed** | 2000–3500 tokens |
+ 
+ Read `tokens.rich_skills` from `.agent-settings.yml` (default `on`) to determine
+ whether rich skills may load in full. If `off`, treat them as
+@@ -82,7 +82,7 @@ THE BUDGET LINE IS AN INPUT TO THE DECISION, NEVER THE DECISION ITSELF.
+ The 15 % rich-skill cap, the lean/standard/rich size targets, and every
+ telegraph-speak / thin-projector trim point are cost controls, not
+ capability ceilings. When a proposed change is blocked *purely* because
+-it would cross one of these lines — a skill needs more than 5000 tokens
++it would cross one of these lines — a skill needs more than 3500 tokens
+ to stay useful, a rule's condensed form loses a worked example the
+ frugality canon would otherwise trim — do not silently reject it.
+ Surface the trade-off instead: the estimated token delta, and the
+@@ -107,10 +107,53 @@ These skills are approved `rich` by this roadmap's council:
+ | `accessibility-auditor` | WCAG criteria are non-negotiable detail; every criterion has a testable condition + failure mode; compression loses the test procedures |
+ | `design-system-capture` (Phase 6) | Writes + maintains DESIGN.md + PRODUCT.md; needs full templates + worked examples to generate useful artifacts |
+ 
++## Rich artifacts lead with a non-negotiable band
++
++```
++A RICH-CLASS ARTIFACT OPENS WITH THE SECTION THAT OUTRANKS THE REST OF ITS
++OWN DOCUMENT, THEN THE REASONING LAYER.
++A LONG REFERENCE READ PARTIALLY MUST LOSE THE REASONING, NEVER THE OBLIGATION.
++```
++
++The `rich` exemption buys length, and length buys the risk that a reader stops
++early. Ordering is the mitigation available at authoring time: put the
++load-bearing fraction first, so a partial read loses the part that was
++explanation rather than the part that was binding.
++
++This is a **precedence claim inside one document**, not a claim over other
++artifacts — a rich skill's leading band outranks that skill's own later
++sections and nothing else. Cross-artifact precedence is the authority index's
++job.
++
++It mitigates partial reading. It does **not** answer whether the artifact should
++be shorter — that is the ceiling, gated below, and the two controls are
++independent: an artifact can sit comfortably under the ceiling and still bury
++its obligation on line 300.
++
++## The size band is measured, and only its ceiling is gated
++
++The `rich` band is **2,000–3,500 tokens** ([ADR-217](../docs/decisions/ADR-217-rich-class-band-measured-and-enforced.md)).
++It was 2,000–5,000 and enforced by nothing until that record: measured with the
++exact BPE tokenizer, the largest rich artifact in the tree is 3,331 tokens, so
++the old ceiling described no artifact that existed. An unused permission costs
++nothing until someone uses it.
++
++`lint_token_budget_discipline.ts` gates the **ceiling** and publishes every rich
++artifact's size on the green path. It does **not** gate the floor, and that is a
++finding rather than an omission: running the check once surfaced a 1,931-token
++skill legitimately holding the class, because `rich` buys exemption from
++condensation — a claim about what compression would *lose*, not about file size.
++The published study supplies a degradation threshold, which is a ceiling.
++Nothing measures a minimum.
++
++Measurement is exact where `js-tiktoken` resolves and the character proxy where
++it does not; the gate says which, and a proxy reading within its own error
++margin of the ceiling is reported **unresolved** rather than classified.
++
+ ## Governed by
+ 
+ - `tokens.rich_skills` setting in `.agent-settings.yml` (consumer override)
+-- `lint_token_budget_discipline.ts` (cap + justification CI check)
++- `lint_token_budget_discipline.ts` (cap + justification + ceiling CI check)
+ - the telegraph-speak rule, where enabled (amended to except rich-tagged skills)
+ 
+ ## See also
+diff --git a/dist/agent-src/skills/adversarial-review/SKILL.md b/dist/agent-src/skills/adversarial-review/SKILL.md
+index ac35270c84228a08df0e0390fe1057c1b0cdd9a8..52f1c79cb1a753ef7d6b16f0da4cc0fab7dc229a 100644
+--- a/dist/agent-src/skills/adversarial-review/SKILL.md
++++ b/dist/agent-src/skills/adversarial-review/SKILL.md
+@@ -37,7 +37,7 @@ sums ("attack the winner, using the losing options' strongest criteria")
+ 1. **Inspect the artifact** — Read the plan, diff, or draft you are about to critique; note its scope, assumptions, and the explicit asks before attacking.
+ 2. **Attack** — Run Step 1 below as the grumpy senior engineer.
+ 3. **Defend** — Run Step 2 as the balanced engineer; classify each criticism as must-fix / defer / reject.
+-4. **Revise** — Run Step 3 to fold valid fixes back in and surface only the trade-offs the user needs to decide.
++4. **Revise** — Run Step 3 to fold valid fixes back in, then report every criticism with its disposition. Deciding which trade-offs matter is the user's pass, not this step's.
+ 
+ ### Step 1: Attack (Grumpy Senior Engineer)
+ 
+@@ -64,8 +64,19 @@ Counter the criticism fairly:
+ - Move deferred concerns to "Open Questions" or "Known Limitations".
+ - Present the improved version to the user.
+ 
+-**Do this internally** — the user sees the improved result, not the raw debate.
+-Only surface trade-offs or concerns that need the user's input.
++**Debate internally, report completely.** The user sees the improved result
++rather than the blow-by-blow — but every criticism raised reaches the report
++with its disposition (must-fix / deferred / rejected, each with one line of
++reason). Do not decide on the user's behalf which concerns were worth their
++attention.
++
++This clause used to read *"surface only the trade-offs that need the user's
++input"*, and that is the pre-filter defect: an instruction to report a subset is
++followed literally — the review finds the defects, then withholds the ones it
++judged unimportant, and the loss is invisible because the withheld set leaves no
++trace. It matters here more than anywhere: `self_review_gate.ts` loads this file
++as the system prompt for the package's own CI self-review, so a suppression
++clause here suppresses findings on every pull request.
+ 
+ ## Context-specific attack questions
+ 
+@@ -148,7 +159,10 @@ triggers it. See [`rdp-gate`](../../contexts/execution/rdp-gate.md) (L12).
+ ## Output format
+ 
+ 1. Improved plan/code incorporating adversarial findings
+-2. Risk summary — top concerns discovered and how they were addressed
++2. **Every criticism raised**, each with severity and disposition (must-fix /
++   deferred / rejected) and one line of reason. Not "top concerns" — a summary
++   that keeps only the highlights is the pre-filter defect wearing an
++   editor's hat.
+ 3. Remaining open risks (if any) with severity rating
+ 
+ ## Gotcha
+diff --git a/dist/agent-src/skills/decision-review/SKILL.md b/dist/agent-src/skills/decision-review/SKILL.md
+index a846cc33d503f9d6101e013fcabf468ec3e0e57c..f95aedfc3f2674d9468e6ec45d7cfada75e75af6 100644
+--- a/dist/agent-src/skills/decision-review/SKILL.md
++++ b/dist/agent-src/skills/decision-review/SKILL.md
+@@ -173,6 +173,55 @@ strengthening evidence.
+   `skipped` (stale — age > `review_after_days`), surface them to
+   the user; do not silently use stale entries as if they were current.
+ 
++## Removal is a disposition — a rule the agent keeps failing gets teeth or gets deleted
++
++```
++A RULE THE AGENT CONSISTENTLY FAILS TO FOLLOW GETS STRUCTURAL ENFORCEMENT
++OR DELETION. NEVER A LOUDER RESTATEMENT.
++ASK WHAT CAN BE REMOVED AS DELIBERATELY AS WHAT SHOULD BE ADDED.
++```
++
++Ratchets in this tree move one way. Counts go up, gates accumulate, and nothing
++retires an artifact — so the default response to non-adherence has been to say
++it again, harder. That is the one response the evidence rules out: an obligation
++that did not change behaviour as prose does not change it as louder prose. The
++fork is **enforcement or deletion**, and both are real options.
++
++**Non-adherence is the trigger, not low frequency.** A rule that rarely fires is
++not a rule that fails. A floor is working precisely when nothing crosses it, and
++deleting it because it has been quiet removes the thing that was holding.
++
++### The simplify signals
++
++Any of these is a reason to open the question. None of them is on its own a
++verdict:
++
++- a section that has not been relevant across many sessions;
++- a rule derived from a **single unvalidated observation**;
++- a workflow that is consistently shortcut in practice;
++- sections that are loaded every run and never acted on;
++- two rules that contradict each other;
++- complexity added for a case that has never triggered.
++
++Note that *never relevant*, *single unvalidated observation*, and *never acted
++on* are listed separately on purpose. They look alike and they are not: the
++first is about scope, the second about evidence, the third about attention.
++
++### Escalation, and its counterpart
++
++```
++A THIRD RECURRENCE OF THE SAME VIOLATION CLASS CONVERTS AN OBSERVATION
++INTO A DETERMINISTIC GATE.
++A REVIEW FINDING NEVER SILENTLY BECOMES A HARD GATE.
++ESCALATE AT A STATED THRESHOLD, NEVER SILENTLY.
++```
++
++Both halves are load-bearing and they come from sources that disagree. The
++threshold stops a recurring defect from being re-observed forever; the
++counterpart stops a single reviewer's opinion from quietly becoming law. Between
++them, the only legitimate path from *noticed* to *enforced* is a stated count
++reached in the open.
++
+ ## Decision-revisit gate — mechanics (migrated from the `decision-revisit-gate` rule)
+ 
+ Body of [`decision-revisit-gate`](../../rules/decision-revisit-gate.md)
+diff --git a/dist/agent-src/skills/judge-artifact-completeness/SKILL.md b/dist/agent-src/skills/judge-artifact-completeness/SKILL.md
+index c94ac23a8d1707aec748ac9d04621328b77c61dd..9e1ddeedc27213042ff80de63759288a621b94a9 100644
+--- a/dist/agent-src/skills/judge-artifact-completeness/SKILL.md
++++ b/dist/agent-src/skills/judge-artifact-completeness/SKILL.md
+@@ -101,7 +101,11 @@ Before finalising:
+ 2. No dimension was penalised for length or word count.
+ 3. N/A credit was granted only where the schema allows it.
+ 4. The verdict follows the ratio thresholds above, not intuition.
+-5. Top gaps are the highest-weight missing dimensions — not every minor gap.
++5. The **Dimensions block lists every dimension**, scored, with no omissions —
++   that is the complete emission and it is not optional. **Top gaps** is a
++   ranked summary layered over it, so it names the highest-weight misses rather
++   than repeating the block. Shortening the block itself is the pre-filter
++   defect; shortening the summary is what a summary is.
+ 
+ ## Output format
+ 
+diff --git a/dist/agent-src/skills/judge-bug-hunter/SKILL.md b/dist/agent-src/skills/judge-bug-hunter/SKILL.md
+index eba697b54916ae8b564a792dbd76c8d7c5e2ba75..6af2d198cfb8bebf8c7a68837463386f77c588ad 100644
+--- a/dist/agent-src/skills/judge-bug-hunter/SKILL.md
++++ b/dist/agent-src/skills/judge-bug-hunter/SKILL.md
+@@ -121,11 +121,24 @@ Issues (if revise/reject):
+       Trigger: <concrete input/condition>
+       Expected: <what should happen>
+   🟡  ...
++
++Rejected candidates (if the devil's-advocate pass killed any):
++  🔴→drop  path/to/file.ext:LINE — <the finding> · refuted by: <guard clause
++           upstream | framework default | unreachable input | …>
+ ```
+ 
+ Severity: 🔴 crash or incorrect result / 🟡 edge case unhandled but
+ graceful / 🟢 defensive-coding suggestion.
+ 
++**A killed 🔴 is demoted, never deleted.** This judge runs a refutation pass on
++every 🔴 and used to leave no trace of what it killed — the one judge with a
++refutation step and no demotion bucket, where `code-review`, `security-audit`,
++`bug-analyzer`, and the adversarial council all pair theirs with one. The
++asymmetry matters because refutation is a judgement: a reviewer who was wrong to
++refute leaves the reader no way to notice. Confidence is what the row carries;
++severity is what it keeps — a 🔴 refuted on a guess is still a 🔴 somebody should
++look at.
++
+ Required fields (ordered):
+ 
+ 1. **Judge** and **Model** — skill name and resolved judge model
+@@ -133,6 +146,9 @@ Required fields (ordered):
+ 3. **Verdict** — `apply`, `revise`, or `reject`
+ 4. **Issues** — every finding cites file:line and concrete trigger;
+    omit only when verdict is `apply`
++5. **Rejected candidates** — every finding the refutation pass killed, with what
++   refuted it. Omit the section only when the pass killed nothing; never omit it
++   because the kills seemed obvious.
+ 
+ If a finding needs runtime confirmation, note it as a follow-up for
+ the implementer with the concrete probe — backend: `curl` or
+diff --git a/dist/agent-src/skills/judge-synthesis/SKILL.md b/dist/agent-src/skills/judge-synthesis/SKILL.md
+index e2e54440a1dca91f9dc8277a79e96765bf0db324..d60b715b3f54d157fc8139cfeb9c2872b70f49f7 100644
+--- a/dist/agent-src/skills/judge-synthesis/SKILL.md
++++ b/dist/agent-src/skills/judge-synthesis/SKILL.md
+@@ -63,6 +63,15 @@ finding count. Preserve each
+ judge's own verdict word (do not normalise away `breached` into `reject`); add a
+ severity tier (worst/mid/clean) only as a sort key.
+ 
++**A sort key, never a filter.** Severity orders the synthesis; it never decides
++what enters it. Dropping a judge's low-severity finding during synthesis
++reproduces the pre-filter defect one layer up — the finding was found, the
++reviewer reported it, and the aggregator withheld it. Filtering is the
++consumer's pass, after the ledger is whole. Output shape, the separate
++`Confidence` field, and the preserve-an-unverified-S0 rule are specified once in
++[`adversarial-review-protocol`](../../../docs/contracts/adversarial-review-protocol.md)
++§ 3.
++
+ ### 2. Find consensus (highest confidence)
+ 
+ A finding flagged by **≥2 judges** (same file:line / same dimension / same
+@@ -85,7 +94,11 @@ contested.
+ - **Must-fix** — every finding from a worst-tier verdict (`reject` / `incomplete`
+   / `breached`) + every consensus finding at the highest severity.
+ - **Should-fix** — mid-tier (`revise` / `partial`) findings.
+-- **Advisory** — single-judge low-severity suggestions.
++- **Advisory** — single-judge low-severity suggestions. **Emitted in full,
++  never elided.** This is the tier with no downstream consumer, which makes it
++  the one where quiet dropping costs nothing visible — and that is exactly why
++  it is stated: a finding that reached a judge and not the reader was suppressed
++  by the aggregator, whatever the tier was called.
+ 
+ Each entry carries **provenance**: which judge(s) raised it. Never merge two
+ judges' findings into one unattributed line.
+diff --git a/dist/agent-src/skills/rule-writing/SKILL.md b/dist/agent-src/skills/rule-writing/SKILL.md
+index 9db36bdc23d2e8e009b21373b4c928edce0916fb..b9a26435049cbeea28b85eb3955da5357b065576 100644
+--- a/dist/agent-src/skills/rule-writing/SKILL.md
++++ b/dist/agent-src/skills/rule-writing/SKILL.md
+@@ -203,6 +203,39 @@ See § 3b above for the load-bearing distinction between `load_context:`
+ (logical, rewritten), `triggers[].path_prefix:` (literal, verbatim),
+ and body links (relative `../../docs/...`, rewriter handles depth).
+ 
++## Required: name the primary bias this rule overrides
++
++```
++EVERY RULE STATES, IN ONE SENTENCE, THE MODEL'S WRONG DEFAULT IT EXISTS TO
++OVERRIDE. NOT THE HISTORY. NOT THE RATIONALE. THE TENDENCY.
++A RULE THAT CANNOT NAME ONE IS A RULE WITH NO OBSERVED FAILURE BEHIND IT.
++```
++
++One sentence, near the top, in the shape *"left alone, the model
++&lt;does the wrong thing&gt;"*:
++
++- ✅ "Left alone, the model treats a question as an instruction and starts
++  building."
++- ✅ "Left alone, the model reports the happy path it just made pass and calls
++  the change finished."
++- ❌ "This rule exists because a session in June went badly." — backstory.
++- ❌ "Correctness matters." — a value, not a tendency.
++- ❌ "Agents sometimes make mistakes." — true of everything, discriminates
++  nothing.
++
++**Why this field and not a longer rationale.** It is the discriminator the
++mechanism-must-match-an-observed-failure-mode discipline wants at *authoring*
++time: a rule whose bias sentence is a plausible generality is a rule aimed at
++nothing in particular, and that is visible in one line where it is invisible in
++three paragraphs. The field is also the input to the removal question later —
++`decision-review` asks whether the agent still exhibits the named tendency, and
++that question cannot be asked of a rule that never named one.
++
++**Retrofit is opportunistic, never a sweep.** Add the sentence when you touch a
++rule for another reason. A batch edit across the rule set trips the
++kernel-prefix byte-stability gate, and that gate is right to fire — the kernel
++prefix is pinned deliberately.
++
+ ## Output format
+ 
+ 1. Complete rule file at `src/rules/{name}.md`
+diff --git a/dist/agent-src/skills/skill-improvement-pipeline/SKILL.md b/dist/agent-src/skills/skill-improvement-pipeline/SKILL.md
+index f99f3e6be9e814036a40985a26de927401d9cacc..9008f87afa04ff68607519fe0c73bb4146deade5 100644
+--- a/dist/agent-src/skills/skill-improvement-pipeline/SKILL.md
++++ b/dist/agent-src/skills/skill-improvement-pipeline/SKILL.md
+@@ -159,6 +159,37 @@ Ask the user:
+ 6. Create PR with title: `improve(agent): {short description}`
+ 7. Use the agent-improvement PR template if it exists
+ 
++## Classify the missing component BEFORE choosing the artifact
++
++```
++ON A FAILURE, NAME WHICH COMPONENT WAS ABSENT. THE CLASS PICKS THE ARTIFACT.
++THE DEFAULT ANSWER TODAY IS "ANOTHER RULE". IT IS USUALLY THE WRONG ONE.
++```
++
++A failure means something was missing. Which something decides what to build,
++and the pipeline's own bias is to answer "a rule" regardless — which is how a
++tree accumulates prose for problems prose cannot solve.
++
++| Absent component | What it becomes |
++|---|---|
++| **Instruction** — nothing said to do it | a rule or a skill section |
++| **Source of truth** — the fact was not written down anywhere | a context or contract |
++| **Tool** — the step was manual and got skipped | a script |
++| **Validator** — nothing checked the result | a gate |
++| **Permission rule** — authority was ambiguous | an authority-band edit |
++| **Sandbox signal** — the environment did not say what it allowed | a capability probe |
++| **Evaluation** — nothing would have caught the regression | a fixture |
++| **Recovery path** — the failure had no exit | a runbook step |
++
++Run this before the promotion gate, not after: a validator gap that reaches the
++gate as a proposed rule is judged on whether the *rule* is worth adding, which
++is the wrong question asked well.
++
++**The escalation threshold applies here too.** A third recurrence of the same
++violation class converts an observation into a deterministic gate — and a review
++finding never silently becomes a hard gate. Both halves, specified in
++[`decision-review` § Removal is a disposition](../decision-review/SKILL.md).
++
+ ## Output format
+ 
+ 1. Learning summary with promotion gate results
+diff --git a/dist/agent-src/skills/skill-reviewer/SKILL.md b/dist/agent-src/skills/skill-reviewer/SKILL.md
+index 65ac73582120bd9b25fbdbdf885a6669273dab01..4872d3df6e54de166e5320a17619b1fccadea046 100644
+--- a/dist/agent-src/skills/skill-reviewer/SKILL.md
++++ b/dist/agent-src/skills/skill-reviewer/SKILL.md
+@@ -203,7 +203,7 @@ Before scoring the 5 Killers, verify structure:
+ ## Output format
+ 
+ 1. Review report with pass/fail per checklist item
+-2. Prioritized fix recommendations
++2. Prioritized fix recommendations — ordered over the **complete** per-killer table above, never a subset of it. Priority is a sort, not a filter.
+ 
+ ## Gotcha
+ 
+diff --git a/docs/contracts/adversarial-review-protocol.md b/docs/contracts/adversarial-review-protocol.md
+index a60f80e156e54f3742ed05c0ecb8b46f27fc12a9..23f0c952f440ef83222b3cf527df20ee919f3b97 100644
+--- a/docs/contracts/adversarial-review-protocol.md
++++ b/docs/contracts/adversarial-review-protocol.md
+@@ -102,9 +102,10 @@ sanctioned solicitation.
+ One row per finding:
+ 
+ ```markdown
+-| ID | Severity | Finding (one sentence) | Command executed | Captured output (excerpt) | Competitor baseline (if any) |
+-|----|----------|------------------------|------------------|---------------------------|------------------------------|
+-| F1 | S0       | …                      | `…`              | `…`                       | …                            |
++| ID | Severity | Confidence | Finding (one sentence) | Command executed | Captured output (excerpt) | Competitor baseline (if any) |
++|----|----------|------------|------------------------|------------------|---------------------------|------------------------------|
++| F1 | S0       | confirmed  | …                      | `…`              | `…`                       | …                            |
++| F2 | S1       | unverified | …                      | `…`              | `…`                       | …                            |
+ ```
+ 
+ Severity scale:
+@@ -129,6 +130,77 @@ first-priority surface voids any "nothing found" conclusion for that
+ surface. "Checked X" without its command is discarded exactly like a
+ finding without one (§ 2.4 applied to coverage, not only to findings).
+ 
++### Severity is carried, never used to decide what to report
++
++```
++EVERY FINDING CARRIES A SEVERITY. FILTERING HAPPENS IN A SEPARATE PASS,
++AFTER THE LEDGER IS COMPLETE — NEVER INSIDE THE REVIEW.
++NEVER INSTRUCT A REVIEWER TO PRE-FILTER BY SEVERITY.
++```
++
++The failure this forbids is specific and it is not laziness. An instruction to
++"only report high and above" is followed **literally**: the reviewer
++investigates fully, finds the defects, and then declines to report the ones
++below the bar. Precision rises, recall appears to collapse, and the regression
++reads as a capability problem in the reviewer rather than as an instruction
++defect in the prompt. The findings were found. They were withheld.
++
++So the two operations are separated: the review produces every finding it has,
++each tagged S0–S3; whoever consumes the ledger filters it. A consumer that wants
++only S0 and S1 slices the ledger — it does not ask for a shorter review.
++
++**Swept 2026-08-06, and the first sweep was wrong.** A keyword grep over 14
++judge and review skills plus 12 review and judge commands returned zero, and a
++full read of the same surface returned **six**. The defect does not announce
++itself with the words a grep looks for — the live instances read *"surface only
++the trade-offs the user needs to decide"*, *"top concerns"*, *"not every minor
++gap"*, and *"prioritized fix recommendations"*. All six are fixed; the worst sat
++in `adversarial-review`, which `self_review_gate.ts` loads as the system prompt
++for this package's own CI self-review, so it was suppressing findings on every
++pull request.
++
++Two lessons, and the second is the reusable one: a phrase like *"top concerns"*
++does the defect's work without any of its vocabulary, and **a keyword grep is
++evidence of absence only for the keywords.** Distinguish the three shapes when
++sweeping — a genuine pre-filter tells the reviewer not to REPORT what it found;
++a scope limit tells it what to LOOK at; an ordering instruction tells it what to
++put first. Only the first is the defect, and mistaking a scope limit for one
++would strip the lane-keeping that makes a multi-judge panel work.
++
++### Confidence is a separate field, and an unconfirmed finding is preserved
++
++```
++AN UNCONFIRMED HIGH-SEVERITY FINDING IS TAGGED, NEVER DROPPED.
++CONFIDENCE IS NOT SEVERITY. A CONFIDENT NOTE AND AN UNCERTAIN BREACH
++ARE DIFFERENT FACTS AND MUST NOT COLLAPSE INTO ONE COLUMN.
++```
++
++Severity says *how bad if real*. Confidence says *how sure it is real*. Folding
++them produces the worst available default — a possible S0 downgraded to S2
++because the reviewer was unsure, which loses exactly the finding a human most
++needs to see.
++
++The ledger row therefore carries `Confidence` beside `Severity`
++(`confirmed | plausible | unverified`), and an S0 or S1 the reviewer could not
++confirm ships **as S0/S1, tagged `unverified`**, with what it would take to
++settle it. Dropping it is not available: an unverified breach is a question for
++the human, and the reviewer's uncertainty is not authority to answer it.
++
++### Rubric shape — scope, do-not-flag, and what a gate already owns
++
++Every per-check rubric in a judge artifact carries three things:
++
++1. **A scope column** — what this check looks at. A check with no stated scope
++   expands to fill the reviewer's imagination.
++2. **A do-not-flag list** — the near-misses this check must stay silent on,
++   named. This is the false-positive-fatigue control the question surface
++   already fights for, applied to the review surface: a reviewer that flags
++   everything is filtered out entirely, which costs more recall than any
++   pre-filter would have.
++3. **A closing instruction not to report what a deterministic gate already
++   owns.** If a lint fails the build on it, a review finding about it is noise
++   that competes for attention with the findings nothing else catches.
++
+ ## § 4 — Solicitation template (ready to paste)
+ 
+ This template **replaces** the prompt previously used to solicit /120 chat
+diff --git a/docs/decisions/ADR-217-rich-class-band-measured-and-enforced.md b/docs/decisions/ADR-217-rich-class-band-measured-and-enforced.md
+new file mode 100644
+index 0000000000000000000000000000000000000000..291bc803ffac7f0ddd993afb05273b6ab7c3296b
+--- /dev/null
++++ b/docs/decisions/ADR-217-rich-class-band-measured-and-enforced.md
+@@ -0,0 +1,169 @@
++---
++adr: 217
++status: accepted
++date: 2026-08-06
++decision: rich-class-band-measured-and-enforced
++supersedes: —
++superseded_by: —
++phase: road-to-skill-ecosystem-authoring-discipline — blocker rich-class-band-question
++type: structural
++review_trigger: >-
++  Reopen when a rich-class artifact is legitimately blocked by the 3,500-token
++  ceiling — that is, when its `## Why this skill is rich` section survives
++  review AND the content cannot be split by responsibility. One blocked
++  artifact is a data point; two is the signal the ceiling is set wrong. Also
++  reopen if a published measurement moves the diminishing-returns threshold, or
++  if the character proxy is ever observed misclassifying an artifact across a
++  band boundary — the per-artifact margin check in the linter exists to detect
++  exactly that, so its first firing is a reopening condition.
++---
++
++# ADR-217 — The rich-class band is measured against real tokenisation, lowered to what the corpus uses, and enforced
++
++## Status
++
++**Accepted.** Resolves the `rich-class-band-question` blocker on
++`road-to-skill-ecosystem-authoring-discipline`. AI council consulted
++(`claude-sonnet-4-5` + `gpt-4o`, 2026-08-06); where they split, the split and
++the reason for the call are recorded below.
++
++## Context
++
++### The claim that opened this
++
++A published study (84 tasks, 7,308 trajectories) tiers instruction-file size by
++measured effect: compact and mid-size bands both help substantially; above
++roughly **2,500 tokens** returns diminish; above roughly **5,000 tokens**
++performance measurably degrades.
++
++This suite declares a `rich` token-budget class banded at **2,000–5,000
++tokens**, exempt from condensation and never trimmed. The sweep record's § R1
++noted that band spans the diminishing-returns zone, that the suite's budget
++estimates use character division rather than real tokenisation, and set the
++disposition: *measure real tokenisation first, then put the band question to the
++maintainer with the numbers.* That is what this record does.
++
++### The measurement — done before deciding, not asserted
++
++The exact-BPE instrument already existed in-tree and nobody had pointed it at
++this question: `src/scripts/_lib/token_count.ts`, `js-tiktoken` `cl100k_base`, a
++**declared** dependency with a graceful `TIKTOKEN_AVAILABLE` fallback. Measured
++2026-08-06 over every artifact declaring `token_budget_class: rich` — there are
++exactly four:
++
++| Skill | exact BPE | chars/4 proxy | proxy error | published band |
++|---|---|---|---|---|
++| `design-system-capture` | **3,331** | 3,518 | −187 (−5.3 %) | diminishing (> 2,500) |
++| `typography-system` | **2,807** | 2,764 | +43 (+1.6 %) | diminishing (> 2,500) |
++| `design-intelligence` | **2,613** | 2,688 | −75 (−2.8 %) | diminishing (> 2,500) |
++| `accessibility-auditor` | **1,931** | 1,878 | +53 (+2.8 %) | below the band entirely |
++
++Totals: 10,682 exact vs 10,848 proxy — **1.5 % aggregate error, 5.3 % worst
++case.**
++
++Three facts follow, and they are what actually decided this:
++
++1. **Nothing is in the degradation zone.** The largest rich artifact is 3,331
++   tokens. The declared 5,000 ceiling describes no artifact that exists; it is
++   unused headroom.
++2. **The character proxy was not materially misleading.** The concern that
++   estimates use character division is real in principle and worth 1.5 % here.
++3. **The band was never enforced.** `lint_token_budget_discipline.ts` checks the
++   15 % count cap and the presence of the `## Why this skill is rich` section.
++   It has never checked a size. The 2,000–5,000 band was documentation, not a
++   gate — which is why nothing ever noticed that no artifact used its top half.
++
++## Decision
++
++1. **The declared ceiling drops from 5,000 to 3,500 tokens.** The floor stays
++   at 2,000 as documentation of the intended band.
++2. **The ceiling becomes enforced**, in `lint_token_budget_discipline.ts`,
++   alongside the checks it already runs. **The floor does not.** That is a
++   finding, not an omission — see below.
++3. **Measurement is exact where the tokenizer resolves and proxy where it does
++   not**, and the gate states which one it used. It does not become a hard
++   dependency: `token_count.ts` already degrades and flags `exact: false`.
++4. **A per-artifact margin check ships with it.** For any artifact measured by
++   proxy, the gate reports the distance to the nearest band boundary; a
++   proxy-measured artifact within its own error margin of a boundary is reported
++   as unresolved rather than silently classified.
++5. **The three artifacts in the diminishing-returns band stay.** Their
++   `## Why this skill is rich` sections stand; this record does not order a split.
++
++### The floor is documented and not gated — what running the check taught
++
++This record initially gated both ends. The first run of the ceiling-and-floor
++gate over the real corpus produced exactly one finding: `accessibility-auditor`
++at **1,931 tokens**, under the 2,000 floor while legitimately holding the class.
++
++That is not a mislabelled artifact. `rich` buys exemption from condensation, and
++that is a claim about what compression would **lose** — for a skill whose body is
++WCAG criteria with per-criterion test procedures, the rule's own justification
++table says compression loses the procedures. A floor gate would have forced it
++out of the exemption on a threshold with no measurement behind it: the published
++study supplies a **degradation threshold**, which is a ceiling. Nothing in it
++measures a minimum.
++
++So the floor stays as the band's documented intent and the gate enforces only the
++ceiling. Recorded here rather than quietly dropped, because the alternative
++reading — that the gate was weakened to make a finding go away — is exactly the
++failure this tree has a rule against, and the distinction is the evidence: the
++ceiling has a measurement behind it and the floor never did.
++
++## Consequences
++
++**A number that described nothing now describes the corpus.** 3,500 leaves 5 %
++headroom over the largest real artifact — enough that the next honest edit does
++not red the build, tight enough that a doubling does.
++
++**The failure mode this closes is the unused-permission one.** An unenforced
++5,000 invites growth into a band the research calls degrading, and nothing would
++have reported it. The first artifact to cross 3,500 now has to argue for it in
++review rather than discover the ceiling was theoretical.
++
++**The count cap and the size cap are one control with two factors, not two
++controls.** 15 % of 288 skills × 3,500 tokens bounds the total rich-class budget
++at ~151k tokens. Neither factor alone bounds it.
++
++**Cost:** one more thing the linter can red on. The margin check is the mitigation
++for the only false-positive shape available — a proxy measurement near a
++boundary.
++
++## Alternatives
++
++**Keep 5,000, unenforced (one council member's call).** Argument: aligning to the
++published degradation threshold preserves flexibility for a future artifact that
++genuinely needs the room. Rejected because it confuses a *threshold* with a
++*budget*: the research says performance degrades above 5,000, which is a reason
++not to allow 5,000, not a reason to permit up to it. An unused permission costs
++nothing until someone uses it, and the whole point of a band is to be consulted
++before that happens.
++
++**Switch the whole budget rule to exact tokenisation (rejected by both members).**
++The proxy has not failed its job — no artifact was misclassified, and the
++aggregate error is 1.5 %. Making exact counting mandatory would add a hard
++dependency at lint time for precision the decision has never needed. Adopted
++instead in the weaker form above: exact where available, flagged, with a margin
++check for the proxy path.
++
++**Split the three diminishing-band artifacts.** Deferred, not refused. One member
++raised trigger-routing — a compact trigger plus a conditionally-loaded payload —
++as a shape the published research does not cover, because it never tested
++conditional loading. This suite already has the routing infrastructure. That is a
++real question and it is not this record's: nothing measured says a 2,613-token
++skill read in full performs worse than a 400-token trigger plus a 2,213-token
++payload read on demand.
++
++**Replace the count cap with a size cap.** Rejected. They bound different things;
++the count cap stops proliferation, the size cap stops individual growth, and the
++measured risk in the study is per-artifact size while the measured risk in this
++tree's own history is accretion.
++
++## References
++
++- `agents/settings/contexts/skill-ecosystem-sweep-2026-08.md` § R1 — the
++  contradiction and the measure-first disposition this record discharges.
++- `src/rules/token-budget-discipline.md` — the rule carrying the band.
++- `src/scripts/lint_token_budget_discipline.ts` — the gate that now enforces it.
++- `src/scripts/_lib/token_count.ts` — the exact/proxy instrument and its
++  `TIKTOKEN_AVAILABLE` fallback.
+diff --git a/docs/guidelines/agent-infra/artifact-drafting-protocol-mechanics.md b/docs/guidelines/agent-infra/artifact-drafting-protocol-mechanics.md
+index 33c1017eea9d9f216d455c2c61f951923bb0c2f3..53b41adf1f08280035fe944608bbbc2b1a863376 100644
+--- a/docs/guidelines/agent-infra/artifact-drafting-protocol-mechanics.md
++++ b/docs/guidelines/agent-infra/artifact-drafting-protocol-mechanics.md
+@@ -6,7 +6,22 @@ _Origin: migrated from `src/rules/artifact-drafting-protocol.md` per the P4 patt
+ 
+ ## Phase A — Understand
+ 
+-Ask up to **5** clarifying questions (numbered options, each with a
++**Question zero, asked first: should this artifact exist at all?**
++
++Before the five below, put the extend-versus-create question to the user —
++*is there an existing artifact this belongs in?* It used to live in Phase B,
++after the research, and it was measured moving: one source found that the same
++stop placed after work had begun was passed straight through, because mid-build
++momentum beats restraint. A stop that only fires once you are invested is a stop
++that does not fire.
++
++Asking it first costs one question and is answerable without the research: the
++user usually knows whether they are extending something. Phase B still runs the
++overlap scan — that is what turns a guess into a verdict — but it now *confirms
++or overturns* an answer already on the record rather than raising the question
++for the first time at the point where a draft is half-formed.
++
++Ask up to **5** further clarifying questions (numbered options, each with a
+ *"skip / I don't know yet"* escape):
+ 
+ 1. **Problem** — what does this solve that no existing artifact solves?
+@@ -26,13 +41,19 @@ Run the **search protocol** from
+ grep with **solution-words AND problem-words**, scan sub-directory
+ taxonomies, then **open and skim** the 3 nearest matches. A negative grep
+ alone is not proof of no overlap. Report the top 3-5 most-similar
+-artifacts and ask (numbered options):
++artifacts and ask (numbered options) — this **confirms or overturns** the
++question-zero answer from Phase A with evidence, rather than raising it for the
++first time:
+ 
+ - Extend an existing one?
+ - Create a new one — gap is real?
+ - Show overlap first?
+ - Promote via `learning-to-rule-or-skill` instead?
+ 
++A Phase-B verdict that contradicts the Phase-A answer is the useful outcome, not
++an embarrassment: it is the research doing its job. Surface the contradiction
++and let the user re-decide.
++
+ Carry the summary into the commit message (*"Reviewed before drafting:
+ X, Y"*).
+ 
+diff --git a/src/agent-src/contexts/execution/mandated-lines.md b/src/agent-src/contexts/execution/mandated-lines.md
+new file mode 100644
+index 0000000000000000000000000000000000000000..75f715e7eb86f0fad3815bff177f87d28c945546
+--- /dev/null
++++ b/src/agent-src/contexts/execution/mandated-lines.md
+@@ -0,0 +1,172 @@
++# Mandated Lines — the forced artifact at the decision point
++
++Shared contract for the small closed set of **verbatim lines the run must emit
++at a decision point**, and for the pre-send sweep that catches an owed line that
++went missing. Loaded by the rules that own each decision point
++([`think-before-action`](../../rules/think-before-action.md),
++[`non-destructive-by-default`](../../rules/non-destructive-by-default.md),
++[`commit-policy`](../../rules/commit-policy.md),
++[`downstream-changes`](../../rules/downstream-changes.md)) rather than restated
++in each.
++
++## Why a line and not a rule
++
++An external source published the A/B of one obligation in three forms. Absent:
++**0 of 4** runs surfaced a planted contradiction. Added as mid-list prose:
++**1 of 4**, scoring *below* the no-instruction control. Converted into a
++mandated verbatim line the run must emit *before* the behaviour-changing edit,
++paired with a mechanical sweep for owed-but-missing lines: **4 of 4**. The rule
++text did not change. Only its form did.
++
++This suite has three recorded honest nulls on *reminder-shaped* interventions —
++a decay-triggered restate, a reminder-injection experiment measuring zero delta,
++a recursive-verification null. Those stand. This is a different mechanism: an
++artifact the run must **produce**, not a reminder it must **receive**, with an
++opposite measured result and its failing baseline published first. That is the
++mechanism-match test in [`decision-revisit-gate`](../../rules/decision-revisit-gate.md),
++passed rather than dodged.
++
++```
++A MANDATED LINE IS EMITTED AT THE DECISION POINT, BEFORE THE ACTION —
++NEVER AS A TRAILING CHECKLIST THAT PROVES THE ACTION HAPPENED.
++A LINE THAT IS OWED AND MISSING IS AN INCOMPLETE REPLY.
++A LINE THAT IS NOT OWED IS NOT EMITTED. SILENCE IS THE DEFAULT.
++```
++
++## The five lines
++
++Each is bound to a **decision point**, not to a topic. One sentence each.
++
++### 1. Intent — before a behaviour-changing edit
++
++Three slots: **what the code does · what the failing check expects · what the
++specification says.**
++
++> Intent: `parseDate` returns null on an empty string · the failing test expects
++> a thrown `RangeError` · the spec says empty input is a caller error.
++
++The load-bearing consequence, and the whole reason the line has three slots
++rather than one: **when the three disagree, the disagreement is the finding and
++the edit does not proceed.** A line that reads the same three ways is a line
++that was written after deciding.
++
++### 2. Authorization — before an irreversible outward action
++
++Carries **the user's own words**, quoted. Two denials are explicit:
++
++- **Documentation is not authorization.** A roadmap step, a command file, or a
++  prior turn's plan describing the action is not the user asking for it.
++- **Completing the task is not authorization.** Reaching the point where the
++  action would be natural is not permission to take it.
++
++> Authorization: "push it and open the PR" (this turn) — covers this push and
++> this PR, not the follow-up fix.
++
++Fires for the [`non-destructive-by-default`](../../rules/non-destructive-by-default.md)
++Hard-Floor set: push, deploy, prod-trunk merge, prod data or infra, bulk
++destructive, and any irreversible external action (send · publish · post ·
++purchase · submit).
++
++### 3. Commit — before a commit
++
++Three slots: **the authorization and its exact scope · that the staged set
++matches the intended edit · that nothing unintended is staged.**
++
++> Commit: authorized "commit this now" (this turn), scope = the parser fix ·
++> staged set is the 2 files that fix names · nothing else staged.
++
++This is the mandated-artifact form of an obligation
++[`commit-policy`](../../rules/commit-policy.md) already carries as prose, and it
++is the fifth line rather than a variant of the authorization line because its
++failure mode is different: the authorization line asks *may I*, the commit line
++asks *is what I am about to record what I meant to record*. A commit with a
++stray file is authorized and still wrong.
++
++### 4. Pending — when a prescribed follow-up was deliberately not taken
++
++> Pending: the negative test for the tenant path is not written — the fixture
++> needs a second tenant and I did not create one.
++
++Unlike the other four this line gates nothing. It is a **disclosure**
++obligation: it makes a deliberate skip visible to the human who reviews the
++work, and it exists because this suite's work lands through reviewed pull
++requests, so the line has a recipient. A skip nobody was told about is
++indistinguishable from a step that was forgotten.
++
++### 5. Sibling search — after a defect fix
++
++Names **the exact wrong construct searched for, and the count found.**
++
++> Sibling search: grepped `JSON.parse(` without a try — 3 sites, 2 fixed, 1 in
++> a test fixture and left.
++
++A defect found in one place is presumed to recur until searched. The count is
++part of the line because "I checked" is not a finding and zero is a real answer.
++
++## The pre-send sweep
++
++Before a reply that claims completion, check each line above against what the
++run **actually did**, and add any that is owed and missing.
++
++- Fire only when something is owed. A reply owing nothing passes untouched, and
++  no line is emitted to prove the sweep ran.
++- This is the same shape as the existing
++  [`roadmap-progress-sync`](../../rules/roadmap-progress-sync.md) and
++  [`no-cheap-questions`](../../rules/no-cheap-questions.md) pre-send checks — a
++  step in an existing sequence, not a new mechanism.
++- The sweep is a backstop for a line that should already have been emitted at
++  its decision point. A reply where every owed line first appears in the sweep
++  is a reply that took the actions before thinking about them, and the sweep
++  cannot repair that — it can only surface it.
++
++## Brevity — how these avoid becoming ceremony
++
++This suite's [`direct-answers`](../../rules/direct-answers.md) Iron Law 3 treats
++long replies as a failure mode, and its anti-ceremony discipline says not to
++invent receipts solely to prove execution. Five mandated lines are in real
++tension with both. Three constraints resolve it, and they are part of the
++contract:
++
++1. **One sentence per line.** A line that needs a paragraph is a line whose
++   decision was not made.
++2. **Emitted at the decision point, never as a trailing checklist.** The
++   measured 4-of-4 result came from a line emitted *before* the action. A
++   checklist at the end of a reply is the ceremony shape, and it also loses the
++   only property that made the mechanism work — that writing it can still stop
++   the action.
++3. **Two or more owed lines merge into one block, in execution order**, with
++   minimal labels — one interruption rather than five.
++
++```
++Intent (parser.ts): returns null on empty · test expects RangeError · spec says caller error
++Sibling search: grepped `JSON.parse(` without a try — 3 sites, 2 fixed, 1 test fixture left
++Commit: authorized "commit this" (this turn), scope = parser fix · 2 files staged · nothing else
++```
++
++## Honest scope — what this does not claim
++
++**Enforced by:** partially. `src/scripts/lint_mandated_lines.ts` is the
++deterministic half and it checks only what a **run report** can be checked for:
++a report claiming a behaviour change carries an intent line, and a report
++describing an outward action carries an authorization line. It cannot check that
++the line was emitted *before* the action rather than reconstructed after, and it
++cannot check that the three intent slots were honestly filled. Those are
++model-carried, and saying so here is cheaper than discovering it later.
++
++**The transfer risk, stated.** The 4-of-4 measurement came from one source on
++one task family — contradiction detection. This suite's work is largely
++construction, where there may be no planted contradiction to surface, and the
++mechanism could reduce to ceremony without anyone noticing.
++
++**The cheap observation that would detect it:** track how often an emitted
++intent line has its three slots **disagree**. If disagreements are effectively
++never found, the line is decorating decisions already made and the set should
++shrink. If disagreements are found and the edit is then revised or stopped, the
++mechanism is doing the thing it was adopted for. That observation costs one
++counter and is the first thing to look at before adding a sixth line.
++
++## See also
++
++- [`docs/contracts/settings-classes.md`](../../../docs/contracts/settings-classes.md) — a sibling contract in the same shape: prose that a gate reads.
++- [`verify-before-complete`](../../rules/verify-before-complete.md) — the evidence gate the pre-send sweep runs beside.
++- `src/scripts/lint_mandated_lines.ts` — the deterministic half.
+diff --git a/src/domains/meta/optimize/deep/command.md b/src/domains/meta/optimize/deep/command.md
+index e427385a3cd0268cfc9569457b06521191d6a423..6f4658fb6a02961c4ba5e73d79696ae36bff78e9 100644
+--- a/src/domains/meta/optimize/deep/command.md
++++ b/src/domains/meta/optimize/deep/command.md
+@@ -200,6 +200,19 @@ description's changelog section, not a comment (`no-pr-progress-comments`).
+ - Council artifacts under `agents/runtime/council/` (local-only, auto-pruned).
+ - A one-paragraph verdict per refinement loop: what changed, what converged.
+ 
++## Removal is one of the outputs
++
++An optimization pass that only ever adds is not an optimization pass. Every
++refinement loop asks the removal question as deliberately as the addition one:
++**is there an artifact here that should stop existing?**
++
++The disposition and the six simplify signals are specified once, in
++[`decision-review` § Removal is a disposition](../../../../skills/decision-review/SKILL.md);
++this command applies them rather than restating them. The fork that matters
++here: a rule the agent consistently fails to follow gets **structural
++enforcement or deletion**, never a louder restatement — and non-adherence is the
++trigger, not low frequency.
++
+ ## Gotchas
+ 
+ - Merge/deploy is where autonomy ends — Step 6 loop pushes go to the
+diff --git a/src/rules/downstream-changes.md b/src/rules/downstream-changes.md
+index 1ff9527fdd234c5436adc29866caf19139e76714..c37e167280ad6a54559ede5983d9d69c32acdeb4 100644
+--- a/src/rules/downstream-changes.md
++++ b/src/rules/downstream-changes.md
+@@ -47,6 +47,32 @@ After editing any file, search for **all** of these:
+ | **Routes** | Search `routes/` for controller references | Update after controller rename/move |
+ | **Documentation** | Search `agents/`, `docs/`, `README`, examples for references | Update the doc that **describes** the changed surface — see Doc-Impact below |
+ 
++## Defect-pattern search — one instance is a sample, not the population
++
++```
++A DEFECT FOUND IN ONE PLACE IS PRESUMED TO RECUR UNTIL SEARCHED.
++NAME THE EXACT WRONG CONSTRUCT. SEARCH THE TREE. REPORT THE COUNT AND THE FILES.
++"I FIXED IT" WITHOUT A COUNT IS A FIX OF ONE INSTANCE, NOT OF THE DEFECT.
++```
++
++After fixing a defect, before claiming the fix is complete: write down the
++**exact wrong construct** — the literal pattern, not a description of it — grep
++the tree for it, and report **how many sites matched and which**. Zero is a real
++answer and is worth reporting; it is the difference between "this was unique"
++and "I did not look".
++
++The own-orphan sweep above greps identifiers your diff *stopped referencing*.
++This greps for the **defect itself**, which nothing else does — the two run over
++different sets and neither substitutes for the other.
++
++Emit the finding as the sibling-search mandated line
++([`mandated-lines`](../contexts/execution/mandated-lines.md) § 5), which is
++where its shape and the reason it carries a count are specified.
++
++**When NOT to fire:** the defect is in code the diff created this turn (there is
++no population to search), or the construct is one the language makes impossible
++to express twice.
++
+ ## Doc-Impact — docs follow code (same change)
+ 
+ ```
+diff --git a/src/rules/think-before-action.md b/src/rules/think-before-action.md
+index 6244f75eac2096028c6ca3b2c0b59949d0e77309..eaa58f676459ee7c3ff75a105a2b75e862de0df2 100644
+--- a/src/rules/think-before-action.md
++++ b/src/rules/think-before-action.md
+@@ -45,6 +45,23 @@ NO BLIND TRIAL-AND-ERROR. MAX 2 RETRIES PER APPROACH.
+ - Do NOT modify code you do not fully understand — read it, trace the flow, then change it.
+ - Multiple valid frameworks/patterns coexist (Tailwind + Flux, multiple form libs, competing state stores) → do NOT pick one silently — ask. See [`no blind implementation`](../../docs/guidelines/agent-infra/agent-interaction-and-decision-quality.md#2-no-blind-implementation).
+ 
++## Where the answer lives — and saying so when it lives nowhere
++
++Route by **where the answer actually is**: the code, a config, a live probe, a
++doc, the user. When the answer exists only in your own inference — nothing to
++open, nothing to run, nobody to ask — **say that**, in the report, in one clause.
++
++```
++AN INFERENCE DRESSED IN PROCESS IS INDISTINGUISHABLE FROM A LOOKUP.
++NAME THE DETOUR. A SILENT DETOUR READS AS A SKIPPED STEP.
++```
++
++This rule and its neighbours say *be rigorous* often enough that the costume
++version — narrating a thorough-sounding procedure over a guess — is a live risk
++here specifically. The cost of naming it is one clause; the cost of not naming
++it is that a reader cannot tell a verified fact from a confident one, which is
++the property the whole evidence discipline exists to protect.
++
+ ## Mechanics — workflow, minimum read set, verify-with-real-tools, no blind retries
+ 
+ The five-step Understand → Analyze → Plan → Implement → Verify workflow, the minimum read set (symbol, callers, tests, abstractions, data), the memory-consult step, the verification matrix, the output-reduction patterns, the no-blind-retries protocol, and the "open files are context, not intent" clause all live in [`contexts/communication/rules-auto/think-before-action-mechanics.md`](../contexts/communication/rules-auto/think-before-action-mechanics.md). The rule above is the obligation surface; the mechanics file is the lookup material.
+diff --git a/src/rules/token-budget-discipline.md b/src/rules/token-budget-discipline.md
+index aa6b05df890dda0484cbd85e383e186c3f740f55..9393144a16e2ebf33509df0e5ac3a4136b07b6b2 100644
+--- a/src/rules/token-budget-discipline.md
++++ b/src/rules/token-budget-discipline.md
+@@ -28,7 +28,7 @@ TO THE FULL FRUGALITY CANON (telegraph-speak, thin-projector).
+ |---|---|---|---|---|
+ | `lean` | No explicit key = lean | Full condensation | May be trimmed | < 500 tokens |
+ | `standard` | — | Balanced condensation | Not trimmed if priority ≥ 60 | 500–2000 tokens |
+-| `rich` | Must be declared + justified | **Exempt** | **Never trimmed** | 2000–5000 tokens |
++| `rich` | Must be declared + justified | **Exempt** | **Never trimmed** | 2000–3500 tokens |
+ 
+ Read `tokens.rich_skills` from `.agent-settings.yml` (default `on`) to determine
+ whether rich skills may load in full. If `off`, treat them as
+@@ -82,7 +82,7 @@ THE BUDGET LINE IS AN INPUT TO THE DECISION, NEVER THE DECISION ITSELF.
+ The 15 % rich-skill cap, the lean/standard/rich size targets, and every
+ telegraph-speak / thin-projector trim point are cost controls, not
+ capability ceilings. When a proposed change is blocked *purely* because
+-it would cross one of these lines — a skill needs more than 5000 tokens
++it would cross one of these lines — a skill needs more than 3500 tokens
+ to stay useful, a rule's condensed form loses a worked example the
+ frugality canon would otherwise trim — do not silently reject it.
+ Surface the trade-off instead: the estimated token delta, and the
+@@ -107,10 +107,53 @@ These skills are approved `rich` by this roadmap's council:
+ | `accessibility-auditor` | WCAG criteria are non-negotiable detail; every criterion has a testable condition + failure mode; compression loses the test procedures |
+ | `design-system-capture` (Phase 6) | Writes + maintains DESIGN.md + PRODUCT.md; needs full templates + worked examples to generate useful artifacts |
+ 
++## Rich artifacts lead with a non-negotiable band
++
++```
++A RICH-CLASS ARTIFACT OPENS WITH THE SECTION THAT OUTRANKS THE REST OF ITS
++OWN DOCUMENT, THEN THE REASONING LAYER.
++A LONG REFERENCE READ PARTIALLY MUST LOSE THE REASONING, NEVER THE OBLIGATION.
++```
++
++The `rich` exemption buys length, and length buys the risk that a reader stops
++early. Ordering is the mitigation available at authoring time: put the
++load-bearing fraction first, so a partial read loses the part that was
++explanation rather than the part that was binding.
++
++This is a **precedence claim inside one document**, not a claim over other
++artifacts — a rich skill's leading band outranks that skill's own later
++sections and nothing else. Cross-artifact precedence is the authority index's
++job.
++
++It mitigates partial reading. It does **not** answer whether the artifact should
++be shorter — that is the ceiling, gated below, and the two controls are
++independent: an artifact can sit comfortably under the ceiling and still bury
++its obligation on line 300.
++
++## The size band is measured, and only its ceiling is gated
++
++The `rich` band is **2,000–3,500 tokens** ([ADR-217](../docs/decisions/ADR-217-rich-class-band-measured-and-enforced.md)).
++It was 2,000–5,000 and enforced by nothing until that record: measured with the
++exact BPE tokenizer, the largest rich artifact in the tree is 3,331 tokens, so
++the old ceiling described no artifact that existed. An unused permission costs
++nothing until someone uses it.
++
++`lint_token_budget_discipline.ts` gates the **ceiling** and publishes every rich
++artifact's size on the green path. It does **not** gate the floor, and that is a
++finding rather than an omission: running the check once surfaced a 1,931-token
++skill legitimately holding the class, because `rich` buys exemption from
++condensation — a claim about what compression would *lose*, not about file size.
++The published study supplies a degradation threshold, which is a ceiling.
++Nothing measures a minimum.
++
++Measurement is exact where `js-tiktoken` resolves and the character proxy where
++it does not; the gate says which, and a proxy reading within its own error
++margin of the ceiling is reported **unresolved** rather than classified.
++
+ ## Governed by
+ 
+ - `tokens.rich_skills` setting in `.agent-settings.yml` (consumer override)
+-- `lint_token_budget_discipline.ts` (cap + justification CI check)
++- `lint_token_budget_discipline.ts` (cap + justification + ceiling CI check)
+ - the telegraph-speak rule, where enabled (amended to except rich-tagged skills)
+ 
+ ## See also
+diff --git a/src/scripts/lint_mandated_lines.ts b/src/scripts/lint_mandated_lines.ts
+new file mode 100644
+index 0000000000000000000000000000000000000000..40adf84d5f2b4794c49f243b4abae50ae14659e4
+--- /dev/null
++++ b/src/scripts/lint_mandated_lines.ts
+@@ -0,0 +1,223 @@
++#!/usr/bin/env tsx
++/**
++ * lint_mandated_lines.ts — the deterministic half of the mandated-line contract.
++ *
++ * Contract: `src/agent-src/contexts/execution/mandated-lines.md`. Given a run
++ * report on stdin (or `--file`), assert the two checkable obligations:
++ *
++ * 1. A report claiming a **behaviour change** carries an **Intent** line.
++ * 2. A report describing an **outward action** carries an **Authorization** line.
++ *
++ * Documented invocation, mirroring the sibling reply checker:
++ *
++ *     ./scripts-run src/scripts/lint_mandated_lines --stdin < report.md
++ *
++ * **Not wired into the `ci` corpus sweep, deliberately.** There is no standing
++ * tree of run reports to scan, and a gate pointed at a directory that does not
++ * accumulate is the dead-scan-root shape this repository has already paid for
++ * four times. It is a callable checker, exactly like
++ * `check_reply_consistency --stdin`, and its discrimination is proven by a test
++ * rather than by a corpus.
++ *
++ * **What it cannot check, stated rather than discovered later.** It reads a
++ * report, so it can see whether a line is present and well-formed. It cannot
++ * see whether the line was emitted *before* the action or reconstructed after,
++ * and it cannot see whether the three intent slots were filled honestly. Those
++ * are model-carried — the contract says so in the same words.
++ *
++ * **Gaming risk.** The cheap degenerate pass is a report that never uses the
++ * trigger vocabulary: describe the edit without the word "fix", the push
++ * without the word "push", and both obligations evaporate because nothing was
++ * detected to owe them. Mitigation: the trigger sets below are deliberately
++ * broad and include the past-tense forms a completion claim actually uses, and
++ * a report that trips NO trigger is reported as `no obligations detected`
++ * rather than as a pass — the two read differently on purpose. Residual: a
++ * sufficiently vague report still owes nothing, and no lexical check can fix
++ * that. The line's real enforcement is that the model emits it at the decision
++ * point; this is the backstop for the case where it did not.
++ *
++ * Exit: 0 clean · 1 usage/IO error · 2 findings.
++ */
++
++import * as fs from 'node:fs';
++import * as path from 'node:path';
++import { fileURLToPath, pathToFileURL } from 'node:url';
++
++const _HERE = fileURLToPath(import.meta.url);
++const REPO_ROOT = path.resolve(path.dirname(_HERE), '..', '..');
++
++/**
++ * A report claims a behaviour change. Past tense included on purpose: a
++ * completion claim says "fixed", not "will fix".
++ */
++export const BEHAVIOUR_CHANGE_TRIGGERS: readonly RegExp[] = [
++    /\b(fixed|fixes|fixing|a fix)\b/i,
++    /\b(changed|changes|changing) the behaviou?r\b/i,
++    /\b(implemented|implements|implementing)\b/i,
++    /\b(patched|patches|patching)\b/i,
++    /\b(refactored|refactors|refactoring)\b/i,
++    /\b(corrected|corrects|correcting)\b/i,
++    /\bbehaviou?r[- ]changing\b/i,
++];
++
++/**
++ * A report describes an irreversible outward action — the
++ * `non-destructive-by-default` Hard-Floor set.
++ */
++export const OUTWARD_ACTION_TRIGGERS: readonly RegExp[] = [
++    /\b(pushed|pushing|push(?:ed)? to (?:remote|origin|main))\b/i,
++    /\b(deployed|deploying|deploy(?:ed)? to prod)\b/i,
++    /\b(published|publishing)\b/i,
++    /\b(merged|merging) (?:into |to )?(?:main|master|prod)/i,
++    /\b(opened|created) (?:the |a )?(?:pull request|PR)\b/i,
++    /\b(sent|sending) (?:the |an )?(?:email|message)\b/i,
++    /\b(posted|posting) (?:the |a )?comment\b/i,
++    /\b(purchased|submitted|ordered)\b/i,
++];
++
++/** `Intent: … · … · …` — three slots separated by the middle dot. */
++export const INTENT_RE = /^\s*(?:>\s*)?Intent(?:\s*\([^)]*\))?:\s*(.+)$/im;
++
++/** `Authorization: "…"` — carrying the user's own words. */
++export const AUTHORIZATION_RE = /^\s*(?:>\s*)?Authorization:\s*(.+)$/im;
++
++/** The slot separator the contract specifies. */
++const SLOT_SEPARATOR = '·';
++
++export interface Finding {
++    code: 'missing-intent' | 'missing-authorization' | 'intent-slots' | 'authorization-quote';
++    message: string;
++}
++
++export interface Verdict {
++    findings: Finding[];
++    /** True when no trigger fired at all — reported distinctly from a pass. */
++    noObligations: boolean;
++    owed: string[];
++}
++
++function _fires(text: string, triggers: readonly RegExp[]): boolean {
++    return triggers.some((re) => re.test(text));
++}
++
++/**
++ * Check one report.
++ *
++ * Separated from the CLI so the discrimination cases are unit-testable without
++ * spawning a process — the boundary cases here are textual, and a fixture file
++ * per case would make them harder to read, not easier.
++ */
++export function checkReport(text: string): Verdict {
++    const findings: Finding[] = [];
++    const owed: string[] = [];
++
++    const claimsChange = _fires(text, BEHAVIOUR_CHANGE_TRIGGERS);
++    const claimsOutward = _fires(text, OUTWARD_ACTION_TRIGGERS);
++
++    if (claimsChange) {
++        owed.push('intent');
++        const m = INTENT_RE.exec(text);
++        if (m === null) {
++            findings.push({
++                code: 'missing-intent',
++                message:
++                    'the report claims a behaviour change and carries no Intent line. ' +
++                    'Three slots: what the code does · what the failing check expects · what the spec says.',
++            });
++        } else {
++            const slots = (m[1] ?? '').split(SLOT_SEPARATOR).map((s) => s.trim()).filter((s) => s !== '');
++            if (slots.length < 3) {
++                findings.push({
++                    code: 'intent-slots',
++                    message:
++                        `the Intent line has ${String(slots.length)} slot(s), not 3. The three slots are the ` +
++                        'mechanism: when they disagree, the disagreement is the finding and the edit does not proceed. ' +
++                        `Separate them with '${SLOT_SEPARATOR}'.`,
++                });
++            }
++        }
++    }
++
++    if (claimsOutward) {
++        owed.push('authorization');
++        const m = AUTHORIZATION_RE.exec(text);
++        if (m === null) {
++            findings.push({
++                code: 'missing-authorization',
++                message:
++                    'the report describes an irreversible outward action and carries no Authorization line. ' +
++                    'Documentation is not authorization; completing the task is not authorization.',
++            });
++        } else if (!/["“”'']/.test(m[1] ?? '')) {
++            findings.push({
++                code: 'authorization-quote',
++                message:
++                    'the Authorization line quotes nothing. It carries the USER\'S OWN WORDS — a paraphrase ' +
++                    'is the agent restating its own conclusion, which is what the line exists to prevent.',
++            });
++        }
++    }
++
++    return { findings, noObligations: !claimsChange && !claimsOutward, owed };
++}
++
++function _readInput(argv: readonly string[]): { text: string } | { error: string } {
++    const fileIdx = argv.indexOf('--file');
++    if (fileIdx !== -1) {
++        const p = argv[fileIdx + 1];
++        if (p === undefined) {
++            return { error: '--file needs a path' };
++        }
++        try {
++            return { text: fs.readFileSync(path.resolve(p), 'utf-8') };
++        } catch (e) {
++            return { error: `cannot read ${p}: ${String(e)}` };
++        }
++    }
++    if (argv.includes('--stdin')) {
++        try {
++            return { text: fs.readFileSync(0, 'utf-8') };
++        } catch (e) {
++            return { error: `cannot read stdin: ${String(e)}` };
++        }
++    }
++    return { error: 'usage: lint_mandated_lines --stdin | --file <report.md> [--quiet]' };
++}
++
++export function main(argv: readonly string[] = process.argv.slice(2)): number {
++    const quiet = argv.includes('--quiet');
++    const input = _readInput(argv);
++    if ('error' in input) {
++        process.stderr.write(`${input.error}\n`);
++        return 1;
++    }
++
++    const verdict = checkReport(input.text);
++    for (const f of verdict.findings) {
++        process.stderr.write(`❌  ${f.code}  ${f.message}\n`);
++    }
++    if (verdict.findings.length > 0) {
++        process.stderr.write(`\n❌  lint_mandated_lines: ${String(verdict.findings.length)} finding(s)\n`);
++        return 2;
++    }
++    if (!quiet) {
++        if (verdict.noObligations) {
++            // Deliberately not "clean". A report that triggered nothing has not
++            // been shown to comply; it has been shown to owe nothing, and the
++            // two are different facts.
++            process.stdout.write('✅  lint_mandated_lines: no obligations detected in this report\n');
++        } else {
++            process.stdout.write(
++                `✅  lint_mandated_lines: ${String(verdict.owed.length)} obligation(s) owed and present — ` +
++                    `${verdict.owed.join(', ')}\n`,
++            );
++        }
++    }
++    return 0;
++}
++
++if (process.argv[1] && import.meta.url === pathToFileURL(path.resolve(process.argv[1])).href) {
++    process.exit(main());
++}
++
++export { REPO_ROOT };
+diff --git a/src/scripts/lint_token_budget_discipline.ts b/src/scripts/lint_token_budget_discipline.ts
+index 6641e06c5da2828aa9639c2030781e2a9cb8d1d4..975277bed8bd3d8855f2cc9b0dafdf3267b7e37a 100644
+--- a/src/scripts/lint_token_budget_discipline.ts
++++ b/src/scripts/lint_token_budget_discipline.ts
+@@ -10,6 +10,27 @@
+  * 2. JUSTIFICATION — every `rich`-tagged skill carries a
+  *    `## Why this skill is rich` section explaining the irreducible
+  *    complexity.
++ * 3. SIZE — a `rich`-tagged skill stays under the declared ceiling
++ *    (3,500 tokens, ADR-217). Measured with the exact BPE tokenizer
++ *    where `js-tiktoken` resolves and with the character proxy where it does
++ *    not; the gate says which. A proxy measurement sitting within its own
++ *    error margin of a band boundary is reported UNRESOLVED rather than
++ *    silently classified — the proxy runs ~5 % off per file, and a number
++ *    that close to a boundary has not decided anything.
++ *
++ * The band was documentation until ADR-217: the ceiling described no artifact
++ * that existed (measured max 3,331 of a declared 5,000), so nothing ever
++ * noticed that its top half was unused. An unused permission costs nothing
++ * until someone uses it.
++ *
++ * The band's FLOOR is documented and deliberately NOT gated. Running the check
++ * once found `accessibility-auditor` at 1,931 tokens — under the 2,000 floor
++ * while legitimately holding the class, because `rich` buys exemption from
++ * condensation and that is a claim about what compression would LOSE, not
++ * about how large the file is. The published measurement supplies a
++ * degradation threshold, which is a ceiling; nothing measures a minimum. A
++ * floor gate would have forced a WCAG-criteria skill out of the exemption on a
++ * number with no evidence behind it.
+  *
+  * Additionally, any `token_budget_class` value outside
+  * `lean | standard | rich` is a finding (schema drift).
+@@ -20,6 +41,8 @@ import * as fs from 'node:fs';
+ import * as path from 'node:path';
+ import { fileURLToPath, pathToFileURL } from 'node:url';
+ 
++import { gpt_tokens } from './_lib/token_count.js';
++
+ const _HERE = fileURLToPath(import.meta.url);
+ const REPO_ROOT = path.resolve(path.dirname(_HERE), '..', '..');
+ 
+@@ -32,6 +55,17 @@ export const VALID_CLASSES = ['lean', 'standard', 'rich'] as const;
+ 
+ export const RICH_SECTION_HEADING = '## Why this skill is rich';
+ 
++/** Declared band for the rich class (ADR-217). Floor unchanged; ceiling 5,000 → 3,500. */
++export const RICH_MIN_TOKENS = 2000;
++export const RICH_MAX_TOKENS = 3500;
++
++/**
++ * Worst-case per-file error of the character proxy, measured over the four
++ * rich artifacts on 2026-08-06 (−5.3 % on the largest). A proxy measurement
++ * inside this margin of a boundary is not a verdict.
++ */
++export const PROXY_ERROR_MARGIN = 0.06;
++
+ export interface Finding {
+     /** repo-relative path */
+     file: string;
+@@ -44,6 +78,36 @@ export interface ScanResult {
+     scanned: number;
+     /** Skills declaring token_budget_class: rich. */
+     richCount: number;
++    /** Per-rich-skill size measurements, for the report line. */
++    sizes: RichSize[];
++    /** True when every size came from the exact BPE tokenizer. */
++    exactThroughout: boolean;
++}
++
++export interface RichSize {
++    file: string;
++    tokens: number;
++    exact: boolean;
++    /** Set when a proxy measurement lands inside its own error margin of a boundary. */
++    unresolved: boolean;
++}
++
++/**
++ * Measure one artifact, exact where the tokenizer resolved.
++ *
++ * Split out so the size rule is testable without a filesystem: the boundary
++ * cases that matter (exactly at the cap, one token over, a proxy reading a
++ * hair under) are the ones a fixture tree makes awkward and a function call
++ * makes trivial.
++ */
++export function classify_size(tokens: number, exact: boolean): { over: boolean; unresolved: boolean } {
++    const margin = exact ? 0 : Math.ceil(tokens * PROXY_ERROR_MARGIN);
++    const over = tokens > RICH_MAX_TOKENS;
++    // Only a NON-verdict is unresolved: a proxy reading that already breaches
++    // is reported as a breach, because the margin cannot rescue it into range
++    // without also being able to push it further out.
++    const nearCeiling = !over && tokens + margin > RICH_MAX_TOKENS;
++    return { over, unresolved: !exact && nearCeiling };
+ }
+ 
+ /** `token_budget_class` value from a SKILL.md's YAML frontmatter, or null. */
+@@ -63,6 +127,7 @@ export function frontmatter_class(content: string): string | null {
+ /** Scan one skills root (directory of `<skill>/SKILL.md`). */
+ export function scan_skills(skillsRoot: string): ScanResult {
+     const findings: Finding[] = [];
++    const sizes: RichSize[] = [];
+     let scanned = 0;
+     let richCount = 0;
+     const entries = fs
+@@ -97,6 +162,28 @@ export function scan_skills(skillsRoot: string): ScanResult {
+                     message: `rich-tagged skill missing the '${RICH_SECTION_HEADING}' justification section`,
+                 });
+             }
++            const measured = gpt_tokens(content);
++            const verdict = classify_size(measured.tokens, measured.exact);
++            sizes.push({ file: rel, tokens: measured.tokens, exact: measured.exact, unresolved: verdict.unresolved });
++            const how = measured.exact ? 'exact BPE' : 'chars/4 proxy';
++            if (verdict.over) {
++                findings.push({
++                    file: rel,
++                    message:
++                        `rich-class size band exceeded: ${String(measured.tokens)} tokens (${how}) > ` +
++                        `${String(RICH_MAX_TOKENS)} (ADR-217). Split by responsibility, or argue the ` +
++                        'ceiling in a decision record — not in this file.',
++                });
++            } else if (verdict.unresolved) {
++                findings.push({
++                    file: rel,
++                    message:
++                        `rich-class size UNRESOLVED: ${String(measured.tokens)} tokens (${how}) sits within the ` +
++                        `${String(PROXY_ERROR_MARGIN * 100)} % proxy margin of a band boundary. Install the exact ` +
++                        'tokenizer (js-tiktoken is a declared dependency) and re-run — a proxy reading this ' +
++                        'close has not decided anything.',
++                });
++            }
+         }
+     }
+     if (scanned > 0 && richCount > scanned * RICH_RATIO_CAP) {
+@@ -108,7 +195,7 @@ export function scan_skills(skillsRoot: string): ScanResult {
+                 `max ${String(Math.floor(scanned * RICH_RATIO_CAP))})`,
+         });
+     }
+-    return { findings, scanned, richCount };
++    return { findings, scanned, richCount, sizes, exactThroughout: sizes.every((s) => s.exact) };
+ }
+ 
+ export function main(argv?: readonly string[]): number {
+@@ -134,9 +221,21 @@ export function main(argv?: readonly string[]): number {
+         process.stdout.write(`❌  ${f.file}  ${f.message}\n`);
+     }
+     if (result.findings.length === 0 && !quiet) {
++        const how = result.exactThroughout ? 'exact BPE' : 'chars/4 proxy (js-tiktoken did not resolve)';
++        const largest = result.sizes.reduce((max, s) => (s.tokens > max ? s.tokens : max), 0);
+         process.stdout.write(
+             `✅  token-budget discipline: ${String(result.richCount)} rich of ${String(result.scanned)} skills within the ${String(RICH_RATIO_CAP * 100)} % cap; every rich skill justifies itself\n`,
+         );
++        // Publish the sizes on the GREEN path too. A band nobody sees the
++        // numbers for is how this one spent months describing no artifact
++        // that existed.
++        process.stdout.write(
++            `    size ceiling ${String(RICH_MAX_TOKENS)} (ADR-217; the ${String(RICH_MIN_TOKENS)} floor is documented, not gated), ` +
++                `measured ${how}; largest ${String(largest)}\n`,
++        );
++        for (const s of result.sizes) {
++            process.stdout.write(`    ${String(s.tokens).padStart(5)}  ${s.file}\n`);
++        }
+     }
+     // gate-coverage contract (src/config/gate-coverage.yml): files inspected.
+     process.stdout.write(`scanned: ${String(result.scanned)}\n`);
+diff --git a/src/scripts/report_imperative_density.ts b/src/scripts/report_imperative_density.ts
+new file mode 100644
+index 0000000000000000000000000000000000000000..d9fe2d2951b79d2d2299337ff3f0a3d28b07bbf5
+--- /dev/null
++++ b/src/scripts/report_imperative_density.ts
+@@ -0,0 +1,208 @@
++#!/usr/bin/env tsx
++/**
++ * report_imperative_density.ts — an advisory number whose direction is unknown.
++ *
++ * Prints the ratio of imperative-marker lines to prose lines across the
++ * authored rules and skills. **It gates on nothing, and it must not acquire a
++ * threshold without the measurement that would justify one.**
++ *
++ * WHY THIS IS NOT A GATE, AND MUST NOT BECOME ONE
++ * -----------------------------------------------
++ * Three external sources disagree about which direction is better. One asserts
++ * reasoning-based phrasing outperforms rigid directives. One ships a metric
++ * that scores instruction files HIGHER for imperative-marker density — the
++ * opposite ranking from the same observation. A third sits between them and
++ * supplies the only part all three can live with: a rule the agent consistently
++ * fails to follow needs structural enforcement or deletion, not a louder rule.
++ *
++ * This suite's house style sits at the imperative end and has no measurement
++ * either way. A gate would prejudge exactly the question the sweep left open
++ * (`skill-ecosystem-sweep-2026-08.md` § R2). An advisory number is the input a
++ * future decision needs; a target is the thing that would corrupt it, because
++ * the moment a number is optimised it stops measuring what it measured.
++ *
++ * So: no exit-2, no baseline entry, no `gate-coverage.yml` row, and the header
++ * of every run says the direction is unsettled. Read it as a description, not
++ * as a score.
++ *
++ * Exit: 0 always (except a usage/IO error, which is 1). That is deliberate.
++ */
++
++import * as fs from 'node:fs';
++import * as path from 'node:path';
++import { fileURLToPath, pathToFileURL } from 'node:url';
++
++const _HERE = fileURLToPath(import.meta.url);
++const REPO_ROOT = path.resolve(path.dirname(_HERE), '..', '..');
++
++export const RULES_ROOT = 'src/rules';
++export const SKILLS_ROOT = 'src/skills';
++
++/**
++ * Lines counted as imperative markers.
++ *
++ * Deliberately narrow and stated: an all-caps directive line, a bullet opening
++ * with a modal or a bare imperative verb, and the fenced Iron-Law blocks this
++ * suite uses. A broader net would inflate the number without making it mean
++ * more, and the number's meaning is already the open question.
++ */
++const IMPERATIVE_PATTERNS: ReadonlyArray<readonly [string, RegExp]> = [
++    ['all-caps directive', /^[^a-z]*\b(NEVER|ALWAYS|MUST|DO NOT|STOP|REFUSE|FORBIDDEN)\b[^a-z]*$/],
++    ['inline modal', /\b(MUST|NEVER|ALWAYS|DO NOT|SHALL)\b/],
++    ['imperative bullet', /^\s*[-*]\s+(Always|Never|Do not|Don't|Use|Run|Check|Verify|Refuse|Stop|Add|Remove|Keep|Prefer|Avoid)\b/],
++];
++
++export interface FileDensity {
++    file: string;
++    prose: number;
++    imperative: number;
++    ratio: number;
++}
++
++export interface DensityReport {
++    files: FileDensity[];
++    totalProse: number;
++    totalImperative: number;
++    /** Ratio over the whole corpus, or null when nothing was counted. */
++    ratio: number | null;
++}
++
++/**
++ * Lines that carry prose. Fenced code, frontmatter, table rows, and blanks are
++ * excluded — counting them would make the ratio a function of how much YAML a
++ * file happens to carry.
++ */
++export function proseLines(text: string): string[] {
++    const out: string[] = [];
++    let inFence = false;
++    let inFrontmatter = false;
++    const lines = text.split('\n');
++    for (const [i, raw] of lines.entries()) {
++        const line = raw.trimEnd();
++        if (i === 0 && line === '---') {
++            inFrontmatter = true;
++            continue;
++        }
++        if (inFrontmatter) {
++            if (line === '---') inFrontmatter = false;
++            continue;
++        }
++        if (/^\s*(```|~~~)/.test(line)) {
++            inFence = !inFence;
++            continue;
++        }
++        if (inFence) continue;
++        if (line.trim() === '') continue;
++        if (/^\s*\|/.test(line)) continue;
++        out.push(line);
++    }
++    return out;
++}
++
++export function countImperative(lines: readonly string[]): number {
++    let n = 0;
++    for (const line of lines) {
++        if (IMPERATIVE_PATTERNS.some(([, re]) => re.test(line))) n += 1;
++    }
++    return n;
++}
++
++function _walkMarkdown(dir: string): string[] {
++    let entries: fs.Dirent[];
++    try {
++        entries = fs.readdirSync(dir, { withFileTypes: true });
++    } catch {
++        return [];
++    }
++    const out: string[] = [];
++    for (const e of entries) {
++        const full = path.join(dir, e.name);
++        if (e.isDirectory()) out.push(..._walkMarkdown(full));
++        else if (e.name.endsWith('.md')) out.push(full);
++    }
++    return out.sort();
++}
++
++export function buildReport(root: string): DensityReport {
++    const files: FileDensity[] = [];
++    let totalProse = 0;
++    let totalImperative = 0;
++    for (const dir of [RULES_ROOT, SKILLS_ROOT]) {
++        for (const abs of _walkMarkdown(path.join(root, dir))) {
++            const lines = proseLines(fs.readFileSync(abs, 'utf-8'));
++            if (lines.length === 0) continue;
++            const imperative = countImperative(lines);
++            totalProse += lines.length;
++            totalImperative += imperative;
++            files.push({
++                file: path.relative(root, abs).split(path.sep).join('/'),
++                prose: lines.length,
++                imperative,
++                ratio: imperative / lines.length,
++            });
++        }
++    }
++    return {
++        files,
++        totalProse,
++        totalImperative,
++        ratio: totalProse === 0 ? null : totalImperative / totalProse,
++    };
++}
++
++const HEADER = [
++    'imperative-density report — ADVISORY, and the direction of this number is UNSETTLED.',
++    '',
++    'Three sources disagree on whether higher is better. One prefers reasoning-based',
++    'phrasing; one scores instruction files higher for imperative density; the third',
++    'declines the question and supplies the operational fork instead. This suite has',
++    'no measurement either way — see skill-ecosystem-sweep-2026-08.md § R2.',
++    '',
++    'Do not read this as a score, and do not optimise it. It gates nothing on purpose:',
++    'a threshold here would prejudge the open question, and a number that gets',
++    'optimised stops measuring what it measured.',
++].join('\n');
++
++export function main(argv: readonly string[] = process.argv.slice(2)): number {
++    const top = argv.includes('--top') ? Number.parseInt(argv[argv.indexOf('--top') + 1] ?? '10', 10) : 10;
++    const json = argv.includes('--json');
++
++    const report = buildReport(REPO_ROOT);
++    if (json) {
++        process.stdout.write(`${JSON.stringify({ note: 'advisory; direction unsettled (§ R2)', ...report }, null, 2)}\n`);
++        return 0;
++    }
++
++    process.stdout.write(`${HEADER}\n\n`);
++    if (report.ratio === null) {
++        // `renderShare`'s rule, applied by hand: an empty denominator renders as
++        // "not measured", never as 0.0 %.
++        process.stdout.write('corpus ratio: not measured — zero prose lines found under the scanned roots\n');
++        process.stdout.write(`files: ${String(report.files.length)}\n`);
++        return 0;
++    }
++    process.stdout.write(
++        `corpus ratio: ${(report.ratio * 100).toFixed(1)} % ` +
++            `(${String(report.totalImperative)} imperative lines of ${String(report.totalProse)} prose lines, ` +
++            `${String(report.files.length)} files)\n\n`,
++    );
++    const ranked = [...report.files].sort((a, b) => b.ratio - a.ratio).slice(0, top);
++    process.stdout.write(`densest ${String(ranked.length)}:\n`);
++    for (const f of ranked) {
++        process.stdout.write(
++            `  ${(f.ratio * 100).toFixed(1).padStart(5)} %  ${String(f.imperative).padStart(4)}/${String(f.prose).padEnd(5)}  ${f.file}\n`,
++        );
++    }
++    // `files:` and not `scanned:` on purpose. The latter is the machine-read
++    // coverage signal `check_gate_coverage` parses, and emitting it would
++    // enlist an advisory report as a gate with a coverage floor — the exact
++    // promotion this report must not undergo.
++    process.stdout.write(`\nfiles: ${String(report.files.length)}\n`);
++    return 0;
++}
++
++if (process.argv[1] && import.meta.url === pathToFileURL(path.resolve(process.argv[1])).href) {
++    process.exit(main());
++}
++
++export { REPO_ROOT };
+diff --git a/src/skills/adversarial-review/SKILL.md b/src/skills/adversarial-review/SKILL.md
+index ac35270c84228a08df0e0390fe1057c1b0cdd9a8..52f1c79cb1a753ef7d6b16f0da4cc0fab7dc229a 100644
+--- a/src/skills/adversarial-review/SKILL.md
++++ b/src/skills/adversarial-review/SKILL.md
+@@ -37,7 +37,7 @@ sums ("attack the winner, using the losing options' strongest criteria")
+ 1. **Inspect the artifact** — Read the plan, diff, or draft you are about to critique; note its scope, assumptions, and the explicit asks before attacking.
+ 2. **Attack** — Run Step 1 below as the grumpy senior engineer.
+ 3. **Defend** — Run Step 2 as the balanced engineer; classify each criticism as must-fix / defer / reject.
+-4. **Revise** — Run Step 3 to fold valid fixes back in and surface only the trade-offs the user needs to decide.
++4. **Revise** — Run Step 3 to fold valid fixes back in, then report every criticism with its disposition. Deciding which trade-offs matter is the user's pass, not this step's.
+ 
+ ### Step 1: Attack (Grumpy Senior Engineer)
+ 
+@@ -64,8 +64,19 @@ Counter the criticism fairly:
+ - Move deferred concerns to "Open Questions" or "Known Limitations".
+ - Present the improved version to the user.
+ 
+-**Do this internally** — the user sees the improved result, not the raw debate.
+-Only surface trade-offs or concerns that need the user's input.
++**Debate internally, report completely.** The user sees the improved result
++rather than the blow-by-blow — but every criticism raised reaches the report
++with its disposition (must-fix / deferred / rejected, each with one line of
++reason). Do not decide on the user's behalf which concerns were worth their
++attention.
++
++This clause used to read *"surface only the trade-offs that need the user's
++input"*, and that is the pre-filter defect: an instruction to report a subset is
++followed literally — the review finds the defects, then withholds the ones it
++judged unimportant, and the loss is invisible because the withheld set leaves no
++trace. It matters here more than anywhere: `self_review_gate.ts` loads this file
++as the system prompt for the package's own CI self-review, so a suppression
++clause here suppresses findings on every pull request.
+ 
+ ## Context-specific attack questions
+ 
+@@ -148,7 +159,10 @@ triggers it. See [`rdp-gate`](../../contexts/execution/rdp-gate.md) (L12).
+ ## Output format
+ 
+ 1. Improved plan/code incorporating adversarial findings
+-2. Risk summary — top concerns discovered and how they were addressed
++2. **Every criticism raised**, each with severity and disposition (must-fix /
++   deferred / rejected) and one line of reason. Not "top concerns" — a summary
++   that keeps only the highlights is the pre-filter defect wearing an
++   editor's hat.
+ 3. Remaining open risks (if any) with severity rating
+ 
+ ## Gotcha
+diff --git a/src/skills/decision-review/SKILL.md b/src/skills/decision-review/SKILL.md
+index a846cc33d503f9d6101e013fcabf468ec3e0e57c..f95aedfc3f2674d9468e6ec45d7cfada75e75af6 100644
+--- a/src/skills/decision-review/SKILL.md
++++ b/src/skills/decision-review/SKILL.md
+@@ -173,6 +173,55 @@ strengthening evidence.
+   `skipped` (stale — age > `review_after_days`), surface them to
+   the user; do not silently use stale entries as if they were current.
+ 
++## Removal is a disposition — a rule the agent keeps failing gets teeth or gets deleted
++
++```
++A RULE THE AGENT CONSISTENTLY FAILS TO FOLLOW GETS STRUCTURAL ENFORCEMENT
++OR DELETION. NEVER A LOUDER RESTATEMENT.
++ASK WHAT CAN BE REMOVED AS DELIBERATELY AS WHAT SHOULD BE ADDED.
++```
++
++Ratchets in this tree move one way. Counts go up, gates accumulate, and nothing
++retires an artifact — so the default response to non-adherence has been to say
++it again, harder. That is the one response the evidence rules out: an obligation
++that did not change behaviour as prose does not change it as louder prose. The
++fork is **enforcement or deletion**, and both are real options.
++
++**Non-adherence is the trigger, not low frequency.** A rule that rarely fires is
++not a rule that fails. A floor is working precisely when nothing crosses it, and
++deleting it because it has been quiet removes the thing that was holding.
++
++### The simplify signals
++
++Any of these is a reason to open the question. None of them is on its own a
++verdict:
++
++- a section that has not been relevant across many sessions;
++- a rule derived from a **single unvalidated observation**;
++- a workflow that is consistently shortcut in practice;
++- sections that are loaded every run and never acted on;
++- two rules that contradict each other;
++- complexity added for a case that has never triggered.
++
++Note that *never relevant*, *single unvalidated observation*, and *never acted
++on* are listed separately on purpose. They look alike and they are not: the
++first is about scope, the second about evidence, the third about attention.
++
++### Escalation, and its counterpart
++
++```
++A THIRD RECURRENCE OF THE SAME VIOLATION CLASS CONVERTS AN OBSERVATION
++INTO A DETERMINISTIC GATE.
++A REVIEW FINDING NEVER SILENTLY BECOMES A HARD GATE.
++ESCALATE AT A STATED THRESHOLD, NEVER SILENTLY.
++```
++
++Both halves are load-bearing and they come from sources that disagree. The
++threshold stops a recurring defect from being re-observed forever; the
++counterpart stops a single reviewer's opinion from quietly becoming law. Between
++them, the only legitimate path from *noticed* to *enforced* is a stated count
++reached in the open.
++
+ ## Decision-revisit gate — mechanics (migrated from the `decision-revisit-gate` rule)
+ 
+ Body of [`decision-revisit-gate`](../../rules/decision-revisit-gate.md)
+diff --git a/src/skills/judge-artifact-completeness/SKILL.md b/src/skills/judge-artifact-completeness/SKILL.md
+index c94ac23a8d1707aec748ac9d04621328b77c61dd..9e1ddeedc27213042ff80de63759288a621b94a9 100644
+--- a/src/skills/judge-artifact-completeness/SKILL.md
++++ b/src/skills/judge-artifact-completeness/SKILL.md
+@@ -101,7 +101,11 @@ Before finalising:
+ 2. No dimension was penalised for length or word count.
+ 3. N/A credit was granted only where the schema allows it.
+ 4. The verdict follows the ratio thresholds above, not intuition.
+-5. Top gaps are the highest-weight missing dimensions — not every minor gap.
++5. The **Dimensions block lists every dimension**, scored, with no omissions —
++   that is the complete emission and it is not optional. **Top gaps** is a
++   ranked summary layered over it, so it names the highest-weight misses rather
++   than repeating the block. Shortening the block itself is the pre-filter
++   defect; shortening the summary is what a summary is.
+ 
+ ## Output format
+ 
+diff --git a/src/skills/judge-bug-hunter/SKILL.md b/src/skills/judge-bug-hunter/SKILL.md
+index eba697b54916ae8b564a792dbd76c8d7c5e2ba75..6af2d198cfb8bebf8c7a68837463386f77c588ad 100644
+--- a/src/skills/judge-bug-hunter/SKILL.md
++++ b/src/skills/judge-bug-hunter/SKILL.md
+@@ -121,11 +121,24 @@ Issues (if revise/reject):
+       Trigger: <concrete input/condition>
+       Expected: <what should happen>
+   🟡  ...
++
++Rejected candidates (if the devil's-advocate pass killed any):
++  🔴→drop  path/to/file.ext:LINE — <the finding> · refuted by: <guard clause
++           upstream | framework default | unreachable input | …>
+ ```
+ 
+ Severity: 🔴 crash or incorrect result / 🟡 edge case unhandled but
+ graceful / 🟢 defensive-coding suggestion.
+ 
++**A killed 🔴 is demoted, never deleted.** This judge runs a refutation pass on
++every 🔴 and used to leave no trace of what it killed — the one judge with a
++refutation step and no demotion bucket, where `code-review`, `security-audit`,
++`bug-analyzer`, and the adversarial council all pair theirs with one. The
++asymmetry matters because refutation is a judgement: a reviewer who was wrong to
++refute leaves the reader no way to notice. Confidence is what the row carries;
++severity is what it keeps — a 🔴 refuted on a guess is still a 🔴 somebody should
++look at.
++
+ Required fields (ordered):
+ 
+ 1. **Judge** and **Model** — skill name and resolved judge model
+@@ -133,6 +146,9 @@ Required fields (ordered):
+ 3. **Verdict** — `apply`, `revise`, or `reject`
+ 4. **Issues** — every finding cites file:line and concrete trigger;
+    omit only when verdict is `apply`
++5. **Rejected candidates** — every finding the refutation pass killed, with what
++   refuted it. Omit the section only when the pass killed nothing; never omit it
++   because the kills seemed obvious.
+ 
+ If a finding needs runtime confirmation, note it as a follow-up for
+ the implementer with the concrete probe — backend: `curl` or
+diff --git a/src/skills/judge-synthesis/SKILL.md b/src/skills/judge-synthesis/SKILL.md
+index e2e54440a1dca91f9dc8277a79e96765bf0db324..d60b715b3f54d157fc8139cfeb9c2872b70f49f7 100644
+--- a/src/skills/judge-synthesis/SKILL.md
++++ b/src/skills/judge-synthesis/SKILL.md
+@@ -63,6 +63,15 @@ finding count. Preserve each
+ judge's own verdict word (do not normalise away `breached` into `reject`); add a
+ severity tier (worst/mid/clean) only as a sort key.
+ 
++**A sort key, never a filter.** Severity orders the synthesis; it never decides
++what enters it. Dropping a judge's low-severity finding during synthesis
++reproduces the pre-filter defect one layer up — the finding was found, the
++reviewer reported it, and the aggregator withheld it. Filtering is the
++consumer's pass, after the ledger is whole. Output shape, the separate
++`Confidence` field, and the preserve-an-unverified-S0 rule are specified once in
++[`adversarial-review-protocol`](../../../docs/contracts/adversarial-review-protocol.md)
++§ 3.
++
+ ### 2. Find consensus (highest confidence)
+ 
+ A finding flagged by **≥2 judges** (same file:line / same dimension / same
+@@ -85,7 +94,11 @@ contested.
+ - **Must-fix** — every finding from a worst-tier verdict (`reject` / `incomplete`
+   / `breached`) + every consensus finding at the highest severity.
+ - **Should-fix** — mid-tier (`revise` / `partial`) findings.
+-- **Advisory** — single-judge low-severity suggestions.
++- **Advisory** — single-judge low-severity suggestions. **Emitted in full,
++  never elided.** This is the tier with no downstream consumer, which makes it
++  the one where quiet dropping costs nothing visible — and that is exactly why
++  it is stated: a finding that reached a judge and not the reader was suppressed
++  by the aggregator, whatever the tier was called.
+ 
+ Each entry carries **provenance**: which judge(s) raised it. Never merge two
+ judges' findings into one unattributed line.
+diff --git a/src/skills/rule-writing/SKILL.md b/src/skills/rule-writing/SKILL.md
+index 9db36bdc23d2e8e009b21373b4c928edce0916fb..b9a26435049cbeea28b85eb3955da5357b065576 100644
+--- a/src/skills/rule-writing/SKILL.md
++++ b/src/skills/rule-writing/SKILL.md
+@@ -203,6 +203,39 @@ See § 3b above for the load-bearing distinction between `load_context:`
+ (logical, rewritten), `triggers[].path_prefix:` (literal, verbatim),
+ and body links (relative `../../docs/...`, rewriter handles depth).
+ 
++## Required: name the primary bias this rule overrides
++
++```
++EVERY RULE STATES, IN ONE SENTENCE, THE MODEL'S WRONG DEFAULT IT EXISTS TO
++OVERRIDE. NOT THE HISTORY. NOT THE RATIONALE. THE TENDENCY.
++A RULE THAT CANNOT NAME ONE IS A RULE WITH NO OBSERVED FAILURE BEHIND IT.
++```
++
++One sentence, near the top, in the shape *"left alone, the model
++&lt;does the wrong thing&gt;"*:
++
++- ✅ "Left alone, the model treats a question as an instruction and starts
++  building."
++- ✅ "Left alone, the model reports the happy path it just made pass and calls
++  the change finished."
++- ❌ "This rule exists because a session in June went badly." — backstory.
++- ❌ "Correctness matters." — a value, not a tendency.
++- ❌ "Agents sometimes make mistakes." — true of everything, discriminates
++  nothing.
++
++**Why this field and not a longer rationale.** It is the discriminator the
++mechanism-must-match-an-observed-failure-mode discipline wants at *authoring*
++time: a rule whose bias sentence is a plausible generality is a rule aimed at
++nothing in particular, and that is visible in one line where it is invisible in
++three paragraphs. The field is also the input to the removal question later —
++`decision-review` asks whether the agent still exhibits the named tendency, and
++that question cannot be asked of a rule that never named one.
++
++**Retrofit is opportunistic, never a sweep.** Add the sentence when you touch a
++rule for another reason. A batch edit across the rule set trips the
++kernel-prefix byte-stability gate, and that gate is right to fire — the kernel
++prefix is pinned deliberately.
++
+ ## Output format
+ 
+ 1. Complete rule file at `src/rules/{name}.md`
+diff --git a/src/skills/skill-improvement-pipeline/SKILL.md b/src/skills/skill-improvement-pipeline/SKILL.md
+index f99f3e6be9e814036a40985a26de927401d9cacc..9008f87afa04ff68607519fe0c73bb4146deade5 100644
+--- a/src/skills/skill-improvement-pipeline/SKILL.md
++++ b/src/skills/skill-improvement-pipeline/SKILL.md
+@@ -159,6 +159,37 @@ Ask the user:
+ 6. Create PR with title: `improve(agent): {short description}`
+ 7. Use the agent-improvement PR template if it exists
+ 
++## Classify the missing component BEFORE choosing the artifact
++
++```
++ON A FAILURE, NAME WHICH COMPONENT WAS ABSENT. THE CLASS PICKS THE ARTIFACT.
++THE DEFAULT ANSWER TODAY IS "ANOTHER RULE". IT IS USUALLY THE WRONG ONE.
++```
++
++A failure means something was missing. Which something decides what to build,
++and the pipeline's own bias is to answer "a rule" regardless — which is how a
++tree accumulates prose for problems prose cannot solve.
++
++| Absent component | What it becomes |
++|---|---|
++| **Instruction** — nothing said to do it | a rule or a skill section |
++| **Source of truth** — the fact was not written down anywhere | a context or contract |
++| **Tool** — the step was manual and got skipped | a script |
++| **Validator** — nothing checked the result | a gate |
++| **Permission rule** — authority was ambiguous | an authority-band edit |
++| **Sandbox signal** — the environment did not say what it allowed | a capability probe |
++| **Evaluation** — nothing would have caught the regression | a fixture |
++| **Recovery path** — the failure had no exit | a runbook step |
++
++Run this before the promotion gate, not after: a validator gap that reaches the
++gate as a proposed rule is judged on whether the *rule* is worth adding, which
++is the wrong question asked well.
++
++**The escalation threshold applies here too.** A third recurrence of the same
++violation class converts an observation into a deterministic gate — and a review
++finding never silently becomes a hard gate. Both halves, specified in
++[`decision-review` § Removal is a disposition](../decision-review/SKILL.md).
++
+ ## Output format
+ 
+ 1. Learning summary with promotion gate results
+diff --git a/src/skills/skill-reviewer/SKILL.md b/src/skills/skill-reviewer/SKILL.md
+index 65ac73582120bd9b25fbdbdf885a6669273dab01..4872d3df6e54de166e5320a17619b1fccadea046 100644
+--- a/src/skills/skill-reviewer/SKILL.md
++++ b/src/skills/skill-reviewer/SKILL.md
+@@ -203,7 +203,7 @@ Before scoring the 5 Killers, verify structure:
+ ## Output format
+ 
+ 1. Review report with pass/fail per checklist item
+-2. Prioritized fix recommendations
++2. Prioritized fix recommendations — ordered over the **complete** per-killer table above, never a subset of it. Priority is a sort, not a filter.
+ 
+ ## Gotcha
+ 
+diff --git a/taskfiles/ci-fast.yml b/taskfiles/ci-fast.yml
+index e6b4a4a58c7656ad7c4ebcd1fa0ae2a6c6267447..9cfdfe96b2ecaac66f813f95454191ff3b23193f 100644
+--- a/taskfiles/ci-fast.yml
++++ b/taskfiles/ci-fast.yml
+@@ -694,6 +694,11 @@ tasks:
+     desc: Forbid full-pipeline CI steps (task ci / make test / npm run check) in roadmaps when quality.local_auto_run=false (roadmap-ci-steps-policy rule)
+     cmd: ./scripts-run src/scripts/lint_roadmap_ci_steps {{.QUIET_FLAG}}
+ 
++  report-imperative-density:
++    silent: true
++    desc: Advisory imperative-density ratio over authored rules and skills — gates on nothing; direction unsettled per the sweep record § R2
++    cmd: ./scripts-run src/scripts/report_imperative_density
++
+   lint-settings-classes:
+     silent: true
+     desc: Every settings-template leaf carries an A/B/C class in docs/contracts/settings-classes.md (road-to-zero-ceremony-settings Phase 1)
+diff --git a/tests/scripts/lint_mandated_lines.test.ts b/tests/scripts/lint_mandated_lines.test.ts
+new file mode 100644
+index 0000000000000000000000000000000000000000..5b1e51e8e0f41b6880949180859c645fae573a00
+--- /dev/null
++++ b/tests/scripts/lint_mandated_lines.test.ts
+@@ -0,0 +1,127 @@
++// Tests for src/scripts/lint_mandated_lines.ts — Phase 1 of
++// road-to-skill-ecosystem-authoring-discipline.
++//
++// The acceptance criterion this suite discharges: "rejects a completion claim
++// describing an outward action with no authorization line, proven by a test".
++// Weighted at the rejecting cases — a checker that accepts is easy to write and
++// worthless; one that rejects the right reports is the whole point.
++import { execFileSync } from 'node:child_process';
++import { describe, expect, it } from 'vitest';
++
++import { checkReport, REPO_ROOT } from '../../src/scripts/lint_mandated_lines.js';
++
++function runCli(stdin: string): { code: number; stdout: string; stderr: string } {
++    try {
++        const stdout = execFileSync('./scripts-run', ['src/scripts/lint_mandated_lines', '--stdin'], {
++            cwd: REPO_ROOT,
++            input: stdin,
++            encoding: 'utf-8',
++            stdio: ['pipe', 'pipe', 'pipe'],
++        });
++        return { code: 0, stdout, stderr: '' };
++    } catch (e) {
++        const err = e as { status?: number; stdout?: string; stderr?: string };
++        return { code: err.status ?? 1, stdout: err.stdout ?? '', stderr: err.stderr ?? '' };
++    }
++}
++
++const INTENT = 'Intent: returns null on empty · the test expects RangeError · the spec says caller error';
++const AUTH = 'Authorization: "push it and open the PR" (this turn)';
++
++describe('lint_mandated_lines — the two checkable obligations', () => {
++    it('rejects a completion claim describing an outward action with no authorization line', () => {
++        const v = checkReport('Pushed to origin and opened the PR.');
++        expect(v.findings.map((f) => f.code)).toContain('missing-authorization');
++    });
++
++    it('rejects a report claiming a behaviour change with no intent line', () => {
++        const v = checkReport('Fixed the date parser.');
++        expect(v.findings.map((f) => f.code)).toContain('missing-intent');
++    });
++
++    it('accepts the same reports once the owed line is present', () => {
++        expect(checkReport(`Pushed to origin.\n\n${AUTH}\n`).findings).toEqual([]);
++        expect(checkReport(`Fixed the parser.\n\n${INTENT}\n`).findings).toEqual([]);
++    });
++
++    it('rejects an intent line with fewer than three slots', () => {
++        // The three slots ARE the mechanism: when they disagree the
++        // disagreement is the finding. A one-slot line is an assertion.
++        const v = checkReport('Fixed the parser.\n\nIntent: made it throw instead of returning null\n');
++        expect(v.findings.map((f) => f.code)).toEqual(['intent-slots']);
++    });
++
++    it('rejects an authorization line that quotes nothing', () => {
++        // A paraphrase is the agent restating its own conclusion, which is
++        // exactly what carrying the user's own words exists to prevent.
++        const v = checkReport('Pushed to origin.\n\nAuthorization: the user asked for a push earlier\n');
++        expect(v.findings.map((f) => f.code)).toEqual(['authorization-quote']);
++    });
++
++    it('owes both lines when a report does both things', () => {
++        const v = checkReport('Fixed the parser, then pushed to origin.');
++        expect(v.owed.sort()).toEqual(['authorization', 'intent']);
++        expect(v.findings).toHaveLength(2);
++    });
++
++    it('distinguishes "no obligations detected" from a pass', () => {
++        // A report that triggered nothing has not been shown to comply; it has
++        // been shown to owe nothing. Collapsing the two is how a lexical gate
++        // starts certifying silence.
++        const v = checkReport('Read the router contract and answered a question.');
++        expect(v.noObligations).toBe(true);
++        expect(v.owed).toEqual([]);
++        expect(v.findings).toEqual([]);
++    });
++
++    it('reads a blockquoted line, because the merged block is quoted in the contract', () => {
++        expect(checkReport(`Fixed it.\n\n> ${INTENT}\n`).findings).toEqual([]);
++    });
++
++    it('reads an intent line carrying a file label', () => {
++        const labelled = 'Intent (parser.ts): returns null · test expects RangeError · spec says caller error';
++        expect(checkReport(`Fixed it.\n\n${labelled}\n`).findings).toEqual([]);
++    });
++
++    it('fires on past-tense claims, which is what a completion report actually uses', () => {
++        for (const claim of ['Implemented the guard.', 'Refactored the loader.', 'Corrected the off-by-one.']) {
++            expect(checkReport(claim).owed, claim).toContain('intent');
++        }
++        for (const claim of ['Deployed to production.', 'Published the release.', 'Sent the email.']) {
++            expect(checkReport(claim).owed, claim).toContain('authorization');
++        }
++    });
++});
++
++describe('lint_mandated_lines — the CLI', () => {
++    it('exits 2 on a finding and 0 on a clean report', () => {
++        expect(runCli('Pushed to origin.').code).toBe(2);
++        expect(runCli(`Pushed to origin.\n\n${AUTH}\n`).code).toBe(0);
++    });
++
++    it('names the offender on stderr, not stdout', () => {
++        const r = runCli('Pushed to origin.');
++        expect(r.stderr).toContain('missing-authorization');
++        expect(r.stdout).not.toContain('missing-authorization');
++    });
++
++    it('--quiet changes the output, not the verdict', () => {
++        const loud = runCli(`Fixed it.\n\n${INTENT}\n`);
++        expect(loud.stdout).toContain('obligation(s) owed and present');
++        // The verdict is what must not move; the chatter may.
++        expect(loud.code).toBe(0);
++    });
++
++    it('exits 1 — usage, not findings — when given no input mode', () => {
++        try {
++            execFileSync('./scripts-run', ['src/scripts/lint_mandated_lines'], {
++                cwd: REPO_ROOT,
++                encoding: 'utf-8',
++                stdio: ['ignore', 'pipe', 'pipe'],
++            });
++            throw new Error('expected a non-zero exit');
++        } catch (e) {
++            expect((e as { status?: number }).status).toBe(1);
++        }
++    });
++});

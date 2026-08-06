@@ -57,6 +57,14 @@ NEVER ASK "ONE COMMIT OR MULTIPLE?", "HOW SHOULD I SPLIT?",
 
 One chunk per concern, foundation-first; generated files ride with their source. Mechanics + carve-outs: [`commit-mechanics`](../contexts/authority/commit-mechanics.md).
 
+## The commit line
+
+Before a commit, emit the **commit line**: the authorization and its exact scope
+· the staged set matches the intended edit · nothing unintended is staged. It is
+separate from the authorization line because a commit with a stray file is
+authorized and still wrong. Shape:
+[`mandated-lines`](../contexts/execution/mandated-lines.md).
+
 ## NEVER write commit steps into roadmaps unsolicited
 
 Roadmaps plan **work**, not commits — never add commit steps to a roadmap unless the user explicitly asked. Detail: [`commit-mechanics`](../contexts/authority/commit-mechanics.md).

@@ -12,8 +12,11 @@ import { fileURLToPath } from 'node:url';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import {
+    PROXY_ERROR_MARGIN,
+    RICH_MAX_TOKENS,
     RICH_RATIO_CAP,
     RICH_SECTION_HEADING,
+    classify_size,
     frontmatter_class,
     scan_skills,
 } from '../../src/scripts/lint_token_budget_discipline.js';
@@ -103,5 +106,39 @@ describe('lint_token_budget_discipline — real tree', () => {
         expect(result.findings).toEqual([]);
         expect(result.scanned).toBeGreaterThan(200);
         expect(result.richCount).toBeLessThanOrEqual(result.scanned * RICH_RATIO_CAP);
+    });
+});
+
+describe('classify_size — the band verdict', () => {
+    it('exact measurements are verdicts, at the cap and one over', () => {
+        expect(classify_size(RICH_MAX_TOKENS, true)).toEqual({ over: false, unresolved: false });
+        expect(classify_size(RICH_MAX_TOKENS + 1, true)).toEqual({ over: true, unresolved: false });
+        expect(classify_size(1, true)).toEqual({ over: false, unresolved: false });
+    });
+
+    it('a proxy reading HIGH near the ceiling is unresolved, not a breach', () => {
+        // The regression this pins: the measured proxy error on the largest
+        // artifact runs HIGH (3,518 against 3,331 exact). The first version
+        // applied the margin upward only, so that reading hard-failed the one
+        // artifact ADR-217 rules in-band — on any machine without the
+        // tokenizer, which is a devDependency.
+        expect(classify_size(3518, false)).toEqual({ over: false, unresolved: true });
+    });
+
+    it('a proxy reading whose whole error band clears the ceiling IS a breach', () => {
+        // Unresolved must not swallow a real breach: the band has to fall
+        // entirely on one side before the gate says anything.
+        const clearlyOver = Math.ceil(RICH_MAX_TOKENS * (1 + PROXY_ERROR_MARGIN)) + 50;
+        expect(classify_size(clearlyOver, false)).toEqual({ over: true, unresolved: false });
+    });
+
+    it('a proxy reading whose whole band sits under the ceiling is clean', () => {
+        const clearlyUnder = Math.floor(RICH_MAX_TOKENS * (1 - PROXY_ERROR_MARGIN)) - 50;
+        expect(classify_size(clearlyUnder, false)).toEqual({ over: false, unresolved: false });
+    });
+
+    it('the margin is symmetric — both edges of the band are unresolved', () => {
+        expect(classify_size(RICH_MAX_TOKENS - 1, false).unresolved).toBe(true);
+        expect(classify_size(RICH_MAX_TOKENS + 1, false).unresolved).toBe(true);
     });
 });

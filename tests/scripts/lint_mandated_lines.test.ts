@@ -51,11 +51,72 @@ describe('lint_mandated_lines — the two checkable obligations', () => {
         expect(v.findings.map((f) => f.code)).toEqual(['intent-slots']);
     });
 
-    it('rejects an authorization line that quotes nothing', () => {
+    it('rejects an authorization line that quotes nothing — including one with an apostrophe in it', () => {
         // A paraphrase is the agent restating its own conclusion, which is
-        // exactly what carrying the user's own words exists to prevent.
-        const v = checkReport('Pushed to origin.\n\nAuthorization: the user asked for a push earlier\n');
-        expect(v.findings.map((f) => f.code)).toEqual(['authorization-quote']);
+        // exactly what carrying the user's own words exists to prevent. The
+        // apostrophe case is the one the first version got wrong: a possessive
+        // satisfied a bare quote-character class, so this exact sentence — the
+        // documentation-is-not-authorization case the contract denies — passed.
+        for (const line of [
+            'Authorization: the user asked for a push earlier',
+            "Authorization: the user's roadmap step says to push",
+            'Authorization: per the plan, a push was expected',
+        ]) {
+            const v = checkReport(`Pushed to origin.\n\n${line}\n`);
+            expect(v.findings.map((f) => f.code), line).toEqual(['authorization-quote']);
+        }
+    });
+
+    it('accepts every quotation shape a real user quote arrives in', () => {
+        for (const q of ['"push it"', '\u201cpush it\u201d', '\u2018push it\u2019', "'push it'"]) {
+            const v = checkReport(`Pushed to origin.\n\nAuthorization: ${q} (this turn)\n`);
+            expect(v.findings, q).toEqual([]);
+        }
+    });
+
+    it('ignores lines inside a fenced block — a quoted example is not an emission', () => {
+        // The contract's own § Brevity illustration contains well-formed lines.
+        // Without fence stripping, quoting it satisfied both obligations while
+        // the run had emitted neither.
+        const report = [
+            'Fixed the parser and pushed to origin.',
+            '',
+            'Here is the contract example, for reference:',
+            '```',
+            'Intent: a · b · c',
+            'Authorization: "do it"',
+            '```',
+        ].join('\n');
+        expect(checkReport(report).findings.map((f) => f.code).sort()).toEqual([
+            'missing-authorization',
+            'missing-intent',
+        ]);
+    });
+
+    it('reads a soft-wrapped intent line as one line', () => {
+        // The contract's canonical example wraps across two blockquote lines.
+        // A one-physical-line capture read it as two slots, so the document's
+        // own model-correct artifact failed its own checker.
+        const wrapped =
+            '> Intent: parseDate returns null on an empty string · the failing test expects\n' +
+            '> a thrown RangeError · the spec says empty input is a caller error.';
+        expect(checkReport(`Fixed it.\n\n${wrapped}\n`).findings).toEqual([]);
+    });
+
+    it('validates EVERY intent line, not just the first', () => {
+        // Checking only the first made the verdict depend on line order.
+        const good = 'Intent: a · b · c';
+        const bad = 'Intent: only one slot';
+        expect(checkReport(`Fixed two things.\n\n${good}\n${bad}\n`).findings).toHaveLength(1);
+        expect(checkReport(`Fixed two things.\n\n${bad}\n${good}\n`).findings).toHaveLength(1);
+    });
+
+    it('does not charge an obligation to a report that DENIES the action', () => {
+        // A trigger word inside "no code changed" is a report saying the
+        // opposite of what the trigger detects.
+        expect(checkReport('Reviewed the diff. No code changed and nothing was implemented.').owed).toEqual([]);
+        // …but a denial in one sentence does not excuse a claim in the next.
+        expect(checkReport('No code changed. Pushed the doc fix to origin.').owed).toContain('authorization');
     });
 
     it('owes both lines when a report does both things', () => {

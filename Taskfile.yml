@@ -140,6 +140,7 @@ tasks:
       - task: validate-decision-engine
       - task: validate-agent-settings
       - task: lint-settings-classes
+      - task: report-imperative-density
       - task: smoke-quickstart
       - task: check-examples-shape
       - task: lint-roadmap-complexity

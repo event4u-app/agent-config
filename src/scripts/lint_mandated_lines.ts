@@ -43,6 +43,8 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
+import { assertScanned, DeadScopeError } from './_lib/scan_scope.js';
+
 const _HERE = fileURLToPath(import.meta.url);
 const REPO_ROOT = path.resolve(path.dirname(_HERE), '..', '..');
 
@@ -75,11 +77,85 @@ export const OUTWARD_ACTION_TRIGGERS: readonly RegExp[] = [
     /\b(purchased|submitted|ordered)\b/i,
 ];
 
-/** `Intent: … · … · …` — three slots separated by the middle dot. */
-export const INTENT_RE = /^\s*(?:>\s*)?Intent(?:\s*\([^)]*\))?:\s*(.+)$/im;
+/** `Intent: … · … · …` — three slots separated by the middle dot. Global: EVERY line is validated. */
+export const INTENT_RE = /^[ \t]*(?:>[ \t]*)?Intent(?:[ \t]*\([^)]*\))?:[ \t]*(.+)$/gim;
 
 /** `Authorization: "…"` — carrying the user's own words. */
-export const AUTHORIZATION_RE = /^\s*(?:>\s*)?Authorization:\s*(.+)$/im;
+export const AUTHORIZATION_RE = /^[ \t]*(?:>[ \t]*)?Authorization:[ \t]*(.+)$/gim;
+
+/**
+ * A PAIRED quotation, not a stray quote character.
+ *
+ * The first version tested for any character in `["“”'']` and got both
+ * directions wrong: `the user's roadmap step says to push` passed on the
+ * possessive apostrophe — a paraphrase, and literally the
+ * documentation-is-not-authorization case the contract denies — while
+ * `‘push it and open the PR’` failed, because the typographic single quotes
+ * were not in the class at all. What the line must carry is a span somebody
+ * actually said, so the test is for an opening mark with a closing partner.
+ */
+const QUOTED_SPAN_RE = /"[^"]+"|“[^”]*”|‘[^’]*’|'[^']{2,}'|«[^»]+»|„[^“”]+[“”]/;
+
+/**
+ * Drop fenced blocks before matching.
+ *
+ * Without this, a report that QUOTES the contract's own merged-block example —
+ * which contains a well-formed Intent and Commit line — satisfies both
+ * obligations while having emitted neither. The contract's § Brevity
+ * illustration was, verbatim, a working bypass.
+ */
+export function stripFences(text: string): string {
+    const out: string[] = [];
+    let fence: string | null = null;
+    for (const line of text.split('\n')) {
+        const m = /^[ \t]*(`{3,}|~{3,})/.exec(line);
+        if (m !== null) {
+            const marker = (m[1] as string)[0] as string;
+            if (fence === null) fence = marker;
+            else if (fence === marker) fence = null;
+            out.push('');
+            continue;
+        }
+        out.push(fence === null ? line : '');
+    }
+    return out.join('\n');
+}
+
+/**
+ * Join a wrapped continuation onto its label line.
+ *
+ * The contract's own canonical Intent example wraps across two blockquote
+ * lines, and a one-physical-line capture read it as two slots — the document's
+ * model-correct artifact failed its own checker. A following line that does not
+ * start a new label and is not blank belongs to the line above it.
+ */
+export function unwrapLines(text: string): string {
+    const lines = text.split('\n');
+    const out: string[] = [];
+    for (const raw of lines) {
+        const isLabel = /^[ \t]*(?:>[ \t]*)?(?:Intent|Authorization|Commit|Pending|Sibling search)\b/i.test(raw);
+        const isBlank = raw.trim() === '';
+        const prev = out[out.length - 1];
+        if (!isLabel && !isBlank && prev !== undefined && prev.trim() !== '' &&
+            /^[ \t]*(?:>[ \t]*)?(?:Intent|Authorization|Commit|Pending|Sibling search)\b/i.test(prev)) {
+            out[out.length - 1] = `${prev.trimEnd()} ${raw.trim()}`;
+            continue;
+        }
+        out.push(raw);
+    }
+    return out.join('\n');
+}
+
+/**
+ * Sentences that DENY the action rather than claiming it.
+ *
+ * Narrow on purpose. A trigger word inside "no code changed" or "nothing was
+ * implemented" is a report saying the opposite of what the trigger detects, and
+ * charging it an obligation trains the reader to ignore the checker. This
+ * cannot be complete — negation is not a lexical property — and the residual is
+ * stated in the header rather than hidden.
+ */
+const DENIAL_RE = /\b(no|nothing|not|never|without)\b[^.]{0,40}$/i;
 
 /** The slot separator the contract specifies. */
 const SLOT_SEPARATOR = '·';
@@ -96,8 +172,21 @@ export interface Verdict {
     owed: string[];
 }
 
+/**
+ * Does any trigger fire on a sentence that is not denying it?
+ *
+ * Sentence-scoped so a denial in one sentence does not excuse a claim in the
+ * next: "No code changed. Pushed the doc fix." still owes the authorization
+ * line.
+ */
 function _fires(text: string, triggers: readonly RegExp[]): boolean {
-    return triggers.some((re) => re.test(text));
+    for (const sentence of text.split(/(?<=[.!?\n])/)) {
+        if (!triggers.some((re) => re.test(sentence))) continue;
+        const before = sentence.slice(0, sentence.search(triggers.find((re) => re.test(sentence)) as RegExp));
+        if (DENIAL_RE.test(before)) continue;
+        return true;
+    }
+    return false;
 }
 
 /**
@@ -111,13 +200,19 @@ export function checkReport(text: string): Verdict {
     const findings: Finding[] = [];
     const owed: string[] = [];
 
-    const claimsChange = _fires(text, BEHAVIOUR_CHANGE_TRIGGERS);
-    const claimsOutward = _fires(text, OUTWARD_ACTION_TRIGGERS);
+    // Fenced blocks are illustrations, not claims — and unwrapping puts a
+    // soft-wrapped continuation back on its label line before anything counts
+    // slots.
+    const prepared = unwrapLines(stripFences(text));
+
+    const claimsChange = _fires(prepared, BEHAVIOUR_CHANGE_TRIGGERS);
+    const claimsOutward = _fires(prepared, OUTWARD_ACTION_TRIGGERS);
 
     if (claimsChange) {
         owed.push('intent');
-        const m = INTENT_RE.exec(text);
-        if (m === null) {
+        INTENT_RE.lastIndex = 0;
+        const matches = [...prepared.matchAll(INTENT_RE)];
+        if (matches.length === 0) {
             findings.push({
                 code: 'missing-intent',
                 message:
@@ -125,22 +220,28 @@ export function checkReport(text: string): Verdict {
                     'Three slots: what the code does · what the failing check expects · what the spec says.',
             });
         } else {
-            const slots = (m[1] ?? '').split(SLOT_SEPARATOR).map((s) => s.trim()).filter((s) => s !== '');
-            if (slots.length < 3) {
-                findings.push({
-                    code: 'intent-slots',
-                    message:
-                        `the Intent line has ${String(slots.length)} slot(s), not 3. The three slots are the ` +
-                        'mechanism: when they disagree, the disagreement is the finding and the edit does not proceed. ' +
-                        `Separate them with '${SLOT_SEPARATOR}'.`,
-                });
+            // EVERY intent line is validated. Checking only the first made the
+            // verdict depend on line order, so one well-formed line satisfied a
+            // report claiming any number of behaviour changes.
+            for (const [i, m] of matches.entries()) {
+                const slots = (m[1] ?? '').split(SLOT_SEPARATOR).map((s) => s.trim()).filter((s) => s !== '');
+                if (slots.length < 3) {
+                    findings.push({
+                        code: 'intent-slots',
+                        message:
+                            `Intent line ${String(i + 1)} of ${String(matches.length)} has ${String(slots.length)} slot(s), not 3. ` +
+                            'The three slots are the mechanism: when they disagree, the disagreement is the finding ' +
+                            `and the edit does not proceed. Separate them with '${SLOT_SEPARATOR}'.`,
+                    });
+                }
             }
         }
     }
 
     if (claimsOutward) {
         owed.push('authorization');
-        const m = AUTHORIZATION_RE.exec(text);
+        AUTHORIZATION_RE.lastIndex = 0;
+        const m = AUTHORIZATION_RE.exec(prepared);
         if (m === null) {
             findings.push({
                 code: 'missing-authorization',
@@ -148,7 +249,7 @@ export function checkReport(text: string): Verdict {
                     'the report describes an irreversible outward action and carries no Authorization line. ' +
                     'Documentation is not authorization; completing the task is not authorization.',
             });
-        } else if (!/["“”'']/.test(m[1] ?? '')) {
+        } else if (!QUOTED_SPAN_RE.test(m[1] ?? '')) {
             findings.push({
                 code: 'authorization-quote',
                 message:
@@ -190,6 +291,21 @@ export function main(argv: readonly string[] = process.argv.slice(2)): number {
     if ('error' in input) {
         process.stderr.write(`${input.error}\n`);
         return 1;
+    }
+
+    // Scope assertion. An EMPTY report used to print "no obligations detected"
+    // and exit 0 — a piped-nothing reading as compliance, which is the
+    // false-green shape this repository has paid for four times. The unit is
+    // content lines, and zero of them is a dead scope rather than a clean run.
+    const contentLines = input.text.split('\n').filter((l) => l.trim() !== '').length;
+    try {
+        assertScanned({ gate: 'lint_mandated_lines', scanned: contentLines, units: 'report line(s)', roots: ['<stdin>'] });
+    } catch (e) {
+        if (e instanceof DeadScopeError) {
+            process.stderr.write(`❌  ${e.message}\n`);
+            return 1;
+        }
+        throw e;
     }
 
     const verdict = checkReport(input.text);

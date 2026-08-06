@@ -45,6 +45,14 @@ NO BLIND TRIAL-AND-ERROR. MAX 2 RETRIES PER APPROACH.
 - Do NOT modify code you do not fully understand — read it, trace the flow, then change it.
 - Multiple valid frameworks/patterns coexist (Tailwind + Flux, multiple form libs, competing state stores) → do NOT pick one silently — ask. See [`no blind implementation`](../../docs/guidelines/agent-infra/agent-interaction-and-decision-quality.md#2-no-blind-implementation).
 
+## The intent line, before a behaviour-changing edit
+
+Before an edit that changes behaviour, emit the **intent line**: what the code
+does · what the failing check expects · what the specification says. When the
+three disagree, the disagreement is the finding and the edit does not proceed.
+Shape, the other four mandated lines, and the pre-send sweep:
+[`mandated-lines`](../contexts/execution/mandated-lines.md).
+
 ## Where the answer lives — and saying so when it lives nowhere
 
 Route by **where the answer actually is**: the code, a config, a live probe, a

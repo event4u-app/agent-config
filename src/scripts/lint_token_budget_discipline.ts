@@ -14,9 +14,9 @@
  *    (3,500 tokens, ADR-217). Measured with the exact BPE tokenizer
  *    where `js-tiktoken` resolves and with the character proxy where it does
  *    not; the gate says which. A proxy measurement sitting within its own
- *    error margin of a band boundary is reported UNRESOLVED rather than
- *    silently classified — the proxy runs ~5 % off per file, and a number
- *    that close to a boundary has not decided anything.
+ *    error margin of the ceiling is reported UNRESOLVED rather than silently
+ *    classified — the proxy runs ~5 % off per file IN EITHER DIRECTION, and a
+ *    reading whose error band straddles the ceiling has not decided anything.
  *
  * The band was documentation until ADR-217: the ceiling described no artifact
  * that existed (measured max 3,331 of a declared 5,000), so nothing ever
@@ -101,13 +101,22 @@ export interface RichSize {
  * makes trivial.
  */
 export function classify_size(tokens: number, exact: boolean): { over: boolean; unresolved: boolean } {
-    const margin = exact ? 0 : Math.ceil(tokens * PROXY_ERROR_MARGIN);
-    const over = tokens > RICH_MAX_TOKENS;
-    // Only a NON-verdict is unresolved: a proxy reading that already breaches
-    // is reported as a breach, because the margin cannot rescue it into range
-    // without also being able to push it further out.
-    const nearCeiling = !over && tokens + margin > RICH_MAX_TOKENS;
-    return { over, unresolved: !exact && nearCeiling };
+    if (exact) {
+        return { over: tokens > RICH_MAX_TOKENS, unresolved: false };
+    }
+    // A proxy reading is a band around the truth, and the band is SYMMETRIC.
+    // The first version applied the margin upward only — guarding a proxy that
+    // reads low — while the measured error on the largest artifact runs the
+    // other way: 3,518 by proxy against 3,331 exact, reading 5.3 % HIGH. That
+    // version therefore hard-failed the one artifact ADR-217 rules in-band,
+    // on any machine without the tokenizer (`js-tiktoken` is a devDependency).
+    //
+    // So: a proxy verdict counts only when the WHOLE band falls on one side of
+    // the ceiling. A band straddling it is `unresolved` — which is a finding,
+    // but one that says "measure properly" rather than "this is too big".
+    const margin = Math.ceil(tokens * PROXY_ERROR_MARGIN);
+    const straddles = tokens - margin <= RICH_MAX_TOKENS && tokens + margin > RICH_MAX_TOKENS;
+    return { over: !straddles && tokens - margin > RICH_MAX_TOKENS, unresolved: straddles };
 }
 
 /** `token_budget_class` value from a SKILL.md's YAML frontmatter, or null. */

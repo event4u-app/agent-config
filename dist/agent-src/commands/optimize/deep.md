@@ -207,7 +207,7 @@ refinement loop asks the removal question as deliberately as the addition one:
 **is there an artifact here that should stop existing?**
 
 The disposition and the six simplify signals are specified once, in
-[`decision-review` § Removal is a disposition](../../../../skills/decision-review/SKILL.md);
+[`decision-review` § Removal is a disposition](../../skills/decision-review/SKILL.md);
 this command applies them rather than restating them. The fork that matters
 here: a rule the agent consistently fails to follow gets **structural
 enforcement or deletion**, never a louder restatement — and non-adherence is the
