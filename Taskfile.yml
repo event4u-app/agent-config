@@ -97,6 +97,7 @@ tasks:
       - task: check-reach-channels
       - task: check-reach-prescriptions
       - task: check-reach-staleness
+      - task: check-corpus-staleness
       - task: check-refs
       - task: check-no-conflict-markers
       - task: check-secret-leak

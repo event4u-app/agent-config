@@ -548,16 +548,38 @@ function reviewerPrompt(args: {
     ].join('\n');
 }
 
+/**
+ * The findings skeleton, carrying `prompt_hash`.
+ *
+ * The contract's most dangerous residual is the PROMPT channel (§ 5): the
+ * dispatcher fixes the reviewer's inputs but not the instructions wrapped around
+ * them, so "a hash-verified artefact is not evidence of an unbiased review" — its
+ * recorded case zero is an honest-null whose prompt stated prior rounds were
+ * clean, where a later unsteered round on the identical scope found seven
+ * defects.
+ *
+ * Writing the hash of the prompt THIS dispatcher built makes the channel
+ * attributable: the artefact now records which prompt produced it, so a review
+ * run against a different prompt is distinguishable from one run against the
+ * dispatcher's. `--verify` re-derives it from the same inputs and compares.
+ *
+ * It does not CLOSE the residual and is not sold as doing so: the same host that
+ * authors a steered prompt could hash the steered text. The gain is an
+ * attributable record where there was none, which is what turns the audit trail
+ * (§ 2.7, round records are never edited in place) into something a contradicting
+ * later round can be checked against.
+ */
 function findingsSkeleton(args: {
     slug: string;
     headSha: string;
     scopeHash: string;
     reviewedDate: string;
     manifest: string;
+    promptHash: string;
 }): string {
     return [
         `# Findings: ${args.slug}`,
-        `<!-- completion-review: v1 | reviewed: ${args.reviewedDate} | scope: ${args.scopeHash} | diff: ${args.headSha} | reviewer: r2-fresh-subagent-${args.slug} -->`,
+        `<!-- completion-review: v1 | reviewed: ${args.reviewedDate} | scope: ${args.scopeHash} | diff: ${args.headSha} | reviewer: r2-fresh-subagent-${args.slug} | prompt_hash: ${args.promptHash} -->`,
         '',
         args.manifest,
         '',
@@ -890,7 +912,14 @@ function runDispatch(args: Args): number {
         acHash: hashes.ac_hash,
         dispatched,
     });
-    const skeleton = findingsSkeleton({ slug, headSha, scopeHash: hashes.scope_hash, reviewedDate, manifest });
+    const skeleton = findingsSkeleton({
+        slug,
+        headSha,
+        scopeHash: hashes.scope_hash,
+        reviewedDate,
+        manifest,
+        promptHash: sha256(promptText),
+    });
 
     fs.mkdirSync(inputDirAbs, { recursive: true });
     fs.writeFileSync(path.join(inputDirAbs, 'diff.patch'), scopeDiffText, 'utf-8');

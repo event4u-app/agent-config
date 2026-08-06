@@ -115,6 +115,21 @@
   rationale: Deterministic template pages; review-then-commit flow (nothing here is the artifact)
 
 # ---------------------------------------------------------------------------
+# Self-improvement proposals (TRACKED — listed for classification, not ignored)
+# ---------------------------------------------------------------------------
+
+- path: /agents/proposals/
+  scope: both
+  policy: tracked
+  writer: learning-to-rule-or-skill skill (drafts) → upstream-contribute (PR)
+  rationale: |
+    Proposal drafts must be committed — the proposal-drift workflow reads their
+    stage: frontmatter in CI, and upstream-contribute opens a PR from them. Listed
+    here because agents-layout.md requires every new top-level agents/ entry to
+    appear in this manifest; the entry is inert for the gitignore gate, which reads
+    policy: ignored only.
+
+# ---------------------------------------------------------------------------
 # Ghostwriter profiles
 # ---------------------------------------------------------------------------
 

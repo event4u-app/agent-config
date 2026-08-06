@@ -18,10 +18,12 @@ import {
     EXIT_BLOCK,
     EXIT_WARN,
     _build_envelope,
+    _concern_matches_tool,
     _fallback_yaml,
     _load_yaml,
     _maybe_capture_payload,
     _parse_concern_stdout,
+    _payload_tool_name,
     _reduce,
     _resolve_concerns,
     _severity_for,
@@ -226,5 +228,66 @@ describe('dispatch_hook — _load_yaml', () => {
         expect(m['schema_version']).toBe(1);
         expect(typeof m['concerns']).toBe('object');
         expect(typeof m['platforms']).toBe('object');
+    });
+});
+
+describe('_concern_matches_tool — the per-concern `tools:` filter', () => {
+    it('absent, "*", malformed, or empty all mean "every event"', () => {
+        // Fail toward RUNNING the concern: a filter that cannot be read must
+        // never be the thing that silences a guard.
+        expect(_concern_matches_tool({ name: 'c' }, 'Bash')).toBe(true);
+        expect(_concern_matches_tool({ name: 'c', tools: null }, 'Bash')).toBe(true);
+        expect(_concern_matches_tool({ name: 'c', tools: ['*'] }, 'Bash')).toBe(true);
+        expect(_concern_matches_tool({ name: 'c', tools: 'Bash' }, 'Bash')).toBe(true);
+        expect(_concern_matches_tool({ name: 'c', tools: [] }, 'Bash')).toBe(true);
+        expect(_concern_matches_tool({ name: 'c', tools: [1, 2] }, 'Bash')).toBe(true);
+    });
+
+    it('filters exactly on the declared names', () => {
+        const c = { name: 'code-graph-nudge', tools: ['Grep', 'Glob', 'Read'] };
+        expect(_concern_matches_tool(c, 'Grep')).toBe(true);
+        expect(_concern_matches_tool(c, 'Read')).toBe(true);
+        expect(_concern_matches_tool(c, 'Bash')).toBe(false);
+        expect(_concern_matches_tool(c, 'Write')).toBe(false);
+        // Exact, not prefix or case-insensitive — a tool namespace is literal.
+        expect(_concern_matches_tool(c, 'grep')).toBe(false);
+        expect(_concern_matches_tool(c, 'GrepTool')).toBe(false);
+    });
+
+    it('a NON-tool event is never filtered', () => {
+        // session_start / stop carry no tool_name. A key that only describes
+        // tool events must not silently skip a lifecycle concern.
+        const c = { name: 'c', tools: ['Grep'] };
+        expect(_concern_matches_tool(c, '')).toBe(true);
+    });
+});
+
+describe('_payload_tool_name', () => {
+    it('reads the host tool name and degrades to "" on any other shape', () => {
+        expect(_payload_tool_name({ payload: { tool_name: 'Bash' } })).toBe('Bash');
+        expect(_payload_tool_name({ payload: {} })).toBe('');
+        expect(_payload_tool_name({ payload: { tool_name: 7 } })).toBe('');
+        expect(_payload_tool_name({})).toBe('');
+        expect(_payload_tool_name({ payload: 'raw' })).toBe('');
+    });
+});
+
+describe('the shipped manifest filter matches its concern source', () => {
+    it("code-graph-nudge's tools: list is exactly the set the hook branches on", () => {
+        // A manifest list that drifts from the hook's own branches is a silently
+        // disabled concern. Pinned against the source, not against a copy of it.
+        const manifest = _load_yaml(path.join(REPO_ROOT, 'src', 'scripts', 'hook_manifest.yaml'));
+        const concerns = (manifest as Record<string, Record<string, Record<string, unknown>>>)['concerns'];
+        const declared = concerns?.['code-graph-nudge']?.['tools'];
+        expect(declared).toEqual(['Grep', 'Glob', 'Read']);
+
+        const src = fs.readFileSync(
+            path.join(REPO_ROOT, 'src', 'scripts', 'hooks', 'code_graph_nudge_hook.ts'),
+            'utf-8',
+        );
+        const branched = new Set(
+            [...src.matchAll(/name === '([A-Za-z]+)'/g)].map((m) => m[1] as string),
+        );
+        expect([...branched].sort()).toEqual([...(declared as string[])].sort());
     });
 });

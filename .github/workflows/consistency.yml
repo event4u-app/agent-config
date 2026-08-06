@@ -396,6 +396,12 @@ jobs:
       - name: Lint settings A/B/C classes (every template leaf is classified)
         run: task lint-settings-classes
 
+      # Same reason, and it is why the sibling `check-reach-staleness` has been
+      # local-only since it shipped: registering a gate in `taskfiles/*.yml` and
+      # in the `ci:` list gives it zero remote reach.
+      - name: Corpus staleness + CSV integrity (declared cadence, declared columns)
+        run: task check-corpus-staleness
+
       - name: Cloud bundle dry-run (source invariants)
         run: task ci-cloud-bundle
 

@@ -101,6 +101,33 @@ describe('citation rule on synthetic corpora (tmp dir — never a tracked path)'
         expect(is_threshold_statement('Extract a props-only UI shell when used 3+ times')).toBe(true);
         expect(is_threshold_statement('Componentize at ≥4 repeats')).toBe(true);
     });
+
+    it('the word-form count branch fires — the hole the cardinal branch left open', () => {
+        // The count is the ADVERB: no numeral, no repetition-noun, so the
+        // cardinal branch cannot see it. This was the most natural English
+        // phrasing of the bar and the one shape that passed the gate silently.
+        expect(is_threshold_statement('Extract when duplicated twice.')).toBe(true);
+        expect(is_threshold_statement('the abstraction is earned once the shape repeats twice')).toBe(true);
+        expect(is_threshold_statement('extract only when the logic recurs thrice')).toBe(true);
+        expect(is_threshold_statement('componentize when duplicated only once')).toBe(true);
+    });
+
+    it('the word-form branch stays verb-anchored — measured false positives stay quiet', () => {
+        // Real block from gated-reach/SKILL.md: a reddit-parsing gotcha about
+        // duplicate DOM ids, in a bullet run that separately contains
+        // "extraction" in the unrelated yt-dlp sense. A wider verb set
+        // (appears|occurs|used) fired here on vocabulary coincidence alone —
+        // this is the case that narrowed the set.
+        expect(
+            is_threshold_statement(
+                'A thread page carries 135 thing_t1_ divs but only 134 distinct ids — ' +
+                    'one id appears twice, once as the real comment and once as a stub. ' +
+                    'A passing --version probe does not mean extraction works.',
+            ),
+        ).toBe(false);
+        // A bare adverb near an extraction verb is not a threshold either.
+        expect(is_threshold_statement('run the extraction script twice to confirm')).toBe(false);
+    });
 });
 
 describe('split_blocks', () => {

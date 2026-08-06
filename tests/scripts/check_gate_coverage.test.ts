@@ -18,6 +18,7 @@ import {
     classify,
     count_gate_scripts,
     enforced_manifest_ids,
+    list_self_test_non_adopters,
     list_unhardened_gates,
     cross_check,
     load_manifest,
@@ -380,6 +381,67 @@ describe('classify — unavailable: prerequisite absent, not silence', () => {
         // key entirely when the manifest does not declare it.
         const { unavailable_exit: _omitted, ...strict } = spec;
         expect(classify(strict, null, false, 2).verdict).toBe('silent');
+    });
+});
+
+describe('self-test ratchet — registered gates that cannot prove discrimination', () => {
+    it('adoption is the import OR a reasoned exemption, nothing else', () => {
+        const dir = mkdtempSync(join(tmpdir(), 'selftest-'));
+        try {
+            writeFileSync(
+                join(dir, 'lint_adopts.ts'),
+                "import { runSelfTest } from './_lib/gate_self_test.js';\n",
+            );
+            writeFileSync(join(dir, 'lint_exempt.ts'), '// self-test-exempt: pure formatter, no verdict\n');
+            writeFileSync(join(dir, 'lint_bare.ts'), 'export function main() { return 0; }\n');
+            // A marker with no reason is not an exemption — same discipline as
+            // `// no-index:` and `// ledger-exempt:`.
+            writeFileSync(join(dir, 'lint_bare_marker.ts'), '// self-test-exempt:\n');
+
+            const ids = new Set(['lint_adopts', 'lint_exempt', 'lint_bare', 'lint_bare_marker']);
+            expect(list_self_test_non_adopters(dir, ids)).toEqual(['lint_bare', 'lint_bare_marker']);
+        } finally {
+            rmSync(dir, { recursive: true, force: true });
+        }
+    });
+
+    it('a registered id with no readable script counts as a non-adopter', () => {
+        // Fail toward exposure: a manifest row pointing at nothing cannot have
+        // proven anything, and silently dropping it would let a deleted gate
+        // lower the count.
+        const dir = mkdtempSync(join(tmpdir(), 'selftest-missing-'));
+        try {
+            expect(list_self_test_non_adopters(dir, new Set(['lint_ghost']))).toEqual(['lint_ghost']);
+        } finally {
+            rmSync(dir, { recursive: true, force: true });
+        }
+    });
+
+    it('the population is the manifest, so padding it cannot game the count', () => {
+        // Every id measured comes from `enforced_manifest_ids()`, i.e. rows that
+        // are `enforced` AND carry a floor ≥ 1. Adding a row to move this number
+        // means accepting a floor — the opposite of gaming.
+        const ids = enforced_manifest_ids();
+        const missing = list_self_test_non_adopters();
+        expect(ids.size).toBeGreaterThan(0);
+        expect(missing.length).toBeLessThanOrEqual(ids.size);
+        for (const id of missing) expect(ids.has(id)).toBe(true);
+    });
+
+    it('the count is a NON-adopter count — it can rise, and the target is 0', () => {
+        // The shape distinction this ratchet exists to honour: an adoption
+        // percentage can never regress, so it grades the solution instead of the
+        // problem (see report_hardening_ratchet's own comment in the same file).
+        const dir = mkdtempSync(join(tmpdir(), 'selftest-rise-'));
+        try {
+            writeFileSync(join(dir, 'lint_a.ts'), "import './_lib/gate_self_test.js';\n");
+            expect(list_self_test_non_adopters(dir, new Set(['lint_a']))).toEqual([]);
+            // A NEW registered gate with no self-test raises the count.
+            writeFileSync(join(dir, 'lint_b.ts'), 'export function main() { return 0; }\n');
+            expect(list_self_test_non_adopters(dir, new Set(['lint_a', 'lint_b']))).toEqual(['lint_b']);
+        } finally {
+            rmSync(dir, { recursive: true, force: true });
+        }
     });
 });
 

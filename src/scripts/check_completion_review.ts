@@ -79,6 +79,34 @@ export interface Marker {
     /** Branch-head sha at review time. Provenance only, NEVER compared. */
     diffSha: string;
     reviewer: string;
+    /**
+     * OPTIONAL — the implementing session, so `author ≠ reviewer` becomes
+     * checkable instead of merely stated.
+     *
+     * The contract already says `reviewer:` is "never the implementing session"
+     * (§ 2.1), but with no `author` field there was nothing to compare it to, so
+     * the sentence was a convention with no enforcement behind it. Optional on
+     * purpose: every committed artefact under `agents/evidence/reviews/` carries
+     * the four-field v1 shape and § 2.7 forbids editing round records in place,
+     * so a REQUIRED field would have been a migration event for the whole
+     * evidence corpus. Absent → nothing to check, exactly as before.
+     */
+    author?: string;
+    /**
+     * OPTIONAL — sha256 of the reviewer prompt the dispatcher built.
+     *
+     * Addresses the contract's own most dangerous residual (§ 5, "the prompt
+     * channel"): the dispatcher fixes the reviewer's *inputs* but not the
+     * *instructions* wrapped around them, so "a hash-verified artefact is not
+     * evidence of an unbiased review". Recording the prompt's hash makes the
+     * channel auditable — a steered prompt no longer leaves the artefact
+     * indistinguishable from an unsteered one.
+     *
+     * It does NOT close the residual, and this file does not claim it does: the
+     * hash is written by the same host that authors the prompt. What it buys is
+     * an attributable record instead of an absent one.
+     */
+    promptHash?: string;
 }
 
 export interface HonestNull {
@@ -288,20 +316,52 @@ export function isCodePath(p: string): boolean {
     return CODE_EXTENSIONS.has(base.slice(dot + 1));
 }
 
+/**
+ * The header grammar, with two OPTIONAL trailing fields.
+ *
+ * Field order stays fixed and the four v1 fields stay required, so every
+ * committed artefact parses unchanged — the extension is additive, not a version
+ * bump. `reviewer`'s capture already excludes `|`, which is what lets a further
+ * `| author: …` follow it without being swallowed.
+ */
 const MARKER_RE =
-    /^<!--\s*completion-review:\s*v1\s*\|\s*reviewed:\s*(\d{4}-\d{2}-\d{2})\s*\|\s*scope:\s*([0-9a-fA-F]{64})\s*\|\s*diff:\s*([0-9a-fA-F]{7,40})\s*\|\s*reviewer:\s*(\S(?:[^|>]*[^|>\s])?)\s*-->$/;
+    /^<!--\s*completion-review:\s*v1\s*\|\s*reviewed:\s*(\d{4}-\d{2}-\d{2})\s*\|\s*scope:\s*([0-9a-fA-F]{64})\s*\|\s*diff:\s*([0-9a-fA-F]{7,40})\s*\|\s*reviewer:\s*(\S(?:[^|>]*[^|>\s])?)(?:\s*\|\s*author:\s*(\S(?:[^|>]*[^|>\s])?))?(?:\s*\|\s*prompt_hash:\s*([0-9a-fA-F]{64}))?\s*-->$/;
 
 export function parseMarkerLine(line: string): Marker | null {
     const m = MARKER_RE.exec(line.trim());
     if (!m) {
         return null;
     }
-    return {
+    const marker: Marker = {
         reviewed: m[1] as string,
         scope: (m[2] as string).toLowerCase(),
         diffSha: (m[3] as string).toLowerCase(),
         reviewer: (m[4] as string).trim(),
     };
+    if (m[5] !== undefined) {
+        marker.author = m[5].trim();
+    }
+    if (m[6] !== undefined) {
+        marker.promptHash = m[6].toLowerCase();
+    }
+    return marker;
+}
+
+/**
+ * `author ≠ reviewer` — the check the field exists to make possible.
+ *
+ * Comparison is case-insensitive and whitespace-trimmed, because the ids are
+ * free-form strings a human or a dispatcher types, and `claude/host` vs
+ * `Claude/Host` is the same session by any reading. Deliberately NOT normalised
+ * further (no stripping of suffixes, no fuzzy match): a gate that guesses two
+ * different ids are "really" the same principal would start failing legitimate
+ * reviews, which is the failure direction that gets a gate ignored.
+ */
+export function authorIsReviewer(marker: Marker): boolean {
+    if (marker.author === undefined) {
+        return false;
+    }
+    return marker.author.trim().toLowerCase() === marker.reviewer.trim().toLowerCase();
 }
 
 const HONEST_NULL_RE = /^\*\*Honest-null:\*\* 0 findings, scope ([0-9a-fA-F]{64}), reviewed (\d{4}-\d{2}-\d{2})$/;
@@ -785,7 +845,24 @@ function evaluate(input: EvalInput): Violation[] {
                 detail:
                     'completion-review header marker malformed — expected ' +
                     '`<!-- completion-review: v1 | reviewed: YYYY-MM-DD | scope: <64-hex scope hash> | ' +
-                    'diff: <sha> | reviewer: <id> -->`',
+                    'diff: <sha> | reviewer: <id> -->`, optionally followed by ' +
+                    '`| author: <id>` and `| prompt_hash: <64-hex>`',
+            });
+        }
+        // §2.1: `reviewer:` is "never the implementing session". With an
+        // `author:` present that sentence becomes checkable — a review the
+        // author performed on their own change is the self-review the whole
+        // two-gate design exists to prevent. Only fires when the field is
+        // there, so no committed v1 artefact is retroactively broken.
+        if (art.marker !== null && authorIsReviewer(art.marker)) {
+            violations.push({
+                kind: 'author-is-reviewer',
+                file,
+                detail:
+                    `author: ${art.marker.author ?? ''} equals reviewer: ${art.marker.reviewer} — ` +
+                    'the contract requires a fresh reviewer context, never the implementing ' +
+                    'session (§ 2.1). Dispatch a reviewer, or drop the author field if it was ' +
+                    'filled in by mistake.',
             });
         }
         for (const detail of art.malformedLines) {
