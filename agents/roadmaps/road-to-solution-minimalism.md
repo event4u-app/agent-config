@@ -441,8 +441,16 @@ file is the inflation the repo's own complexity budget forbids.
 
 ## Phase 3 — Pinned public-repo benchmark (the proof exhibit)
 
-Blocked on `benchmark-spend-authorization` (needs the S0.3 cost sheet) and on
-the standing model-id verification blocker.
+Blocked on [`benchmark-spend-authorization`](#blocker-benchmark-spend-authorization)
+— the structured entry under § Blockers, which the S0.3 cost sheet exists to be
+granted against.
+
+The second gate this note used to name — "the standing model-id verification
+blocker" — **no longer exists**: delta #3 closed it on 2026-08-05
+(`bench_ab_task_runner.run_live` records `models_seen` from the envelope's
+`modelUsage`, and `main` refuses a bare alias with exit 2 before any spend). The
+clause is struck rather than reworded, because a roadmap that cites a resolved
+blocker as standing overstates its own gating.
 
 > **Halted 2026-08-02 — the whole phase, with the cost sheet now in hand.** Two
 > independent gates, either of which alone stops it:
@@ -477,23 +485,52 @@ the standing model-id verification blocker.
 > written. Full evidence, delta table, and price inputs:
 > [`solution-minimalism-phase0-spikes § S0.3`](../evidence/investigations/solution-minimalism-phase0-spikes.md).
 
-- [ ] **Repo:** one public OSS repo pinned at a SHA. A second repo on this
+- [ ] **Repo:** one public OSS repo pinned at a SHA. <!-- blocked-by: benchmark-spend-authorization --> A second repo on this
       package's home stack is optional and cost-gated.
       *Verify:* the SHA is recorded in the pinned report.
-- [ ] **Tasks:** deliberately mixed — over-build-trap tickets **and** irreducible
+- [ ] **Tasks:** deliberately mixed <!-- blocked-by: benchmark-spend-authorization --> — over-build-trap tickets **and** irreducible
       CRUD **and** this package's own discipline family — so the report can show
       where the effect lives and where it is honestly zero.
       *Verify:* the per-task table shows both.
-- [ ] **Arms:** vanilla · package (ladder off) · package + ladder ·
+- [x] **Arms:** vanilla · package (ladder off) · package + ladder ·
       **bare-principle control** (the seven-word prompt, F6 — isolates what the
       routed floors add over the naked principle; its safety-tier result is the
       exhibit for why the floors exist) · inert-prose placebo.
       *Verify:* per-trial injection audit in both directions for every arm.
-      <!-- OPEN 2026-08-05, but the VERIFY half now exists: the both-directions
-      audit shipped with delta #1 (`_lib/bench_ab_activation.activation_verdict`
-      + `audit_activation`, wired into `bench_ab_v2_run` as an exit-2 gate). What
-      remains is the STEP body — `ARMS` still lacks a `package + ladder` arm and
-      the bare-principle control, and those are arm definitions, not audit work. -->
+      <!-- verify: npx vitest run tests/scripts/bench_ab_v2_run.test.ts -->
+      All five arms now exist in `ARMS`; 29 assertions green.
+      **"package (ladder off)" needed an interpretation, and it is a measurement,
+      not a reading.** Phase 1 shipped the ladder *into*
+      `improve-before-implement`, so there is no build of the package without it —
+      but that rule is `type: auto`, `tier: 2b`, `alwaysApply: false`, triggered on
+      the keywords `refactor|implement|migration`, and absent from
+      `dist/router.json`'s preloaded tier lists. So under `package` the ladder
+      reaches the model **only when a task's own wording happens to trip a
+      keyword** — per-task, unmeasured. That is finding F1's failure class, where a
+      null cannot be told apart from an activation gap. The pair therefore ships
+      as: `package` = the shipped reality (trigger-dependent), `package-ladder` =
+      the identical config with the ladder rule body injected via sysprompt so it
+      is guaranteed in context. The contrast measures the ladder, not the trigger
+      set. A projection-level ablation arm would measure the same thing more
+      directly and is a bigger change than an arm definition; it is not needed for
+      this contrast to be valid.
+      **The bare-principle text is authored here, not borrowed.** F6's exact
+      seven words are recorded nowhere in this tree, and reproducing an external
+      prompt verbatim is what `code-provenance` forbids — so the arm ships a
+      re-derived one-sentence principle. Nothing about its function depends on the
+      exact wording: its job is to be floor-free and small, and the tests assert
+      exactly that (no floor routed, no ladder rung, one line, < 200 chars).
+      **One audit-shape decision, surfaced rather than smuggled.** The cross-arm
+      direction of the audit requires a lift arm's prompt footprint to sit ≥ 1.2×
+      above its paired vanilla run, which catches a treatment surface that
+      collapsed to baseline. A one-sentence arm has no such lift by construction,
+      so including it would fail legitimate runs — the failure the ratio's own
+      calibration note warns about from the other side. `bare-principle` therefore
+      declares `min_lift_ratio: null`, which narrows its audit to the **text**
+      direction; that direction is checked both ways and pinned by tests, so the
+      arm is never unaudited. `lift_audit_arms` is exported for exactly this
+      reason: the exclusion set is asserted, not trusted, because silently
+      widening it would be a reach reduction in the gate.
 
 - [ ] **Endpoints:** added lines from `git diff`; tokens as the **sum** of
       input + cache + output (a metric mismatch here is the known reporting
@@ -503,7 +540,7 @@ the standing model-id verification blocker.
       existing mechanism before writing new code (rubric-judged, k=2)?
       *Verify:* the search-adherence endpoint is defined and pre-registered
       before the first paid run; a size-only report does not satisfy this step.
-- [ ] **Hygiene:** escalation ladder self-test → 10-task smoke → k=3 → full,
+- [ ] **Hygiene:** escalation ladder self-test → 10-task smoke → k=3 → full, <!-- blocked-by: benchmark-spend-authorization -->
       **publishing nothing below full** (F4); paired non-parametric tests;
       errored pairs dropped from both arms.
       *Verify:* the report states which tier it is from.
@@ -710,7 +747,7 @@ it. None is a step in this roadmap.
       the scorer discriminates. Contract-level, deterministic, no model call —
       the find-the-plant half is stated as needing a scored eval run rather than
       claimed.
-- [ ] Phase 3 either reports from the full tier with every pre-registered
+- [ ] Phase 3 either reports from the full tier with every pre-registered <!-- blocked-by: benchmark-spend-authorization -->
       endpoint — added lines **paired** with cognitive complexity, plus
       search-adherence and the safety tier — or publishes the null; no number
       appears anywhere except rendered from the pinned report.
@@ -724,3 +761,38 @@ it. None is a step in this roadmap.
       on the `flatten-longer` fixture); the *benchmark* scorer this criterion
       names cannot exist before delta #11.
 - [ ] All quality gates pass — see `quality-tools`.
+
+## Blockers
+
+This section was **missing while the roadmap was halted**, which is a defect in
+how the roadmap reports itself rather than a detail: the generated dashboard
+reads `### blocker:` as its only parse anchor, so it published **0 blockers** for
+a roadmap whose only open phase had been stopped for four days by a gate only the
+user can clear. A gate recorded as prose is invisible to every consumer of the
+dashboard — including the next agent screening for "what can be worked on now",
+which is exactly the reader that must not be misled.
+
+### blocker: benchmark-spend-authorization
+
+- **Status:** open
+- **Owner:** user
+- **Blocks:** Phase 3 — Pinned public-repo benchmark (the proof exhibit)
+- **What to do:**
+  1. Read the cost sheet in
+     [`solution-minimalism-phase0-spikes § S0.3`](../evidence/investigations/solution-minimalism-phase0-spikes.md):
+     30 tasks × 4 arms × 3 seeds on sonnet ≈ 360 runs ≈ 180M tokens ≈
+     **$150–250 as a floor**, higher on a real OSS repo.
+  2. Decide the grant, and state the ceiling you are granting. The sweep enforces
+     it: `--max-usd <ceiling>` aborts the sweep through the `collect_records`
+     guard (delta #4), and an unpriceable model plus `--max-usd` is refused rather
+     than silently uncapped.
+  3. Note what the grant does **not** buy on its own: deltas #10 (~30 hand-written
+     oracles) and #11 (the cognitive-complexity endpoint) are still absent, and
+     the metric-pair acceptance criterion cannot report a pass without #11. The
+     grant unblocks the run; it does not unblock the harness.
+- **Resolved when:** the user states a spend ceiling for the Phase-3 sweep, or
+  cancels Phase 3 against the cost sheet.
+
+Firing a paid external run without that grant is a Hard-Floor action
+([`non-destructive-by-default`](../../src/rules/non-destructive-by-default.md));
+no autonomy setting, execution contract, or roadmap step lifts it.

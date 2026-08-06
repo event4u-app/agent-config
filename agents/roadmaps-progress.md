@@ -2,14 +2,14 @@
 
 > Auto-generated — do not edit. Regenerate with `task roadmap-progress` or by running the `update_roadmap_progress` script for your install; rewritten on every roadmap create / execute / completion change (timestamp lives in git history).
 >
-> 17 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **17** open blockers
+> 17 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **18** open blockers
 
 ## Overall
 
-**125 / 215 steps done · 58%**
+**126 / 215 steps done · 59%**
 
 ```text
-███████████████████████░░░░░░░░░░░░░░░░░   58%
+████████████████████████░░░░░░░░░░░░░░░░   59%
 ```
 
 ## Open roadmaps
@@ -26,7 +26,7 @@
 | 8 | [road-to-rule-coherence-followup.md](roadmaps/road-to-rule-coherence-followup.md) | 5 | 9 | 8 | 1 | 0 | 0 | [2](#blockers-road-to-rule-coherence-followup) | █░░░░░░░░░ 11% |
 | 9 | [road-to-scale-history-bench-run.md](roadmaps/road-to-scale-history-bench-run.md) | 1 | 2 | 2 | 0 | 0 | 0 | [1](#blockers-road-to-scale-history-bench-run) | ░░░░░░░░░░ 0% |
 | 10 | [road-to-skill-ecosystem-gate-integrity.md](roadmaps/road-to-skill-ecosystem-gate-integrity.md) | 7 | 43 | 3 | 40 | 0 | 0 | [1](#blockers-road-to-skill-ecosystem-gate-integrity) | █████████░ 93% |
-| 11 | [road-to-solution-minimalism.md](roadmaps/road-to-solution-minimalism.md) | 4 | 36 | 12 | 23 | 0 | 1 | 0 | ███████░░░ 66% |
+| 11 | [road-to-solution-minimalism.md](roadmaps/road-to-solution-minimalism.md) | 4 | 36 | 11 | 24 | 0 | 1 | [1](#blockers-road-to-solution-minimalism) | ███████░░░ 69% |
 | 12 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 6 | 3 | 0 | 0 | [1](#blockers-road-to-subagent-value-realization-followup) | ███░░░░░░░ 33% |
 | 13 | [road-to-surface-consolidation.md](roadmaps/road-to-surface-consolidation.md) | 3 | 14 | 1 | 12 | 1 | 0 | [2](#blockers-road-to-surface-consolidation) | █████████░ 92% |
 | 14 | [road-to-tier-removal.md](roadmaps/road-to-tier-removal.md) | 4 | 8 | 2 | 6 | 0 | 0 | [1](#blockers-road-to-tier-removal) | ████████░░ 75% |
@@ -248,14 +248,33 @@ _1 blocker resolved._
 
 ### [road-to-solution-minimalism.md](roadmaps/road-to-solution-minimalism.md)
 
-**Road to solution minimalism — a first-class discipline against over-building** — 23 / 35 done (66%)
+**Road to solution minimalism — a first-class discipline against over-building** — 24 / 35 done (69%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
 | 0 | Verification spikes (read-only, no authoring) | ✅ done | 0 | 3 | 0 | 0 | 100% |
 | 1 | The ladder, as rule text | ✅ done | 0 | 12 | 0 | 1 | 100% |
 | 2 | Over-build review lens | ✅ done | 0 | 4 | 0 | 0 | 100% |
-| 3 | Pinned public-repo benchmark (the proof exhibit) | 🟡 in progress | 12 | 4 | 0 | 0 | 25% |
+| 3 | Pinned public-repo benchmark (the proof exhibit) | 🟡 in progress | 11 | 5 | 0 | 0 | 31% |
+
+<a id="blockers-road-to-solution-minimalism"></a>
+**Blockers**
+
+- **benchmark-spend-authorization** (owner: user) — blocks Phase 3 — Pinned public-repo benchmark (the proof exhibit)
+  - **What to do:**
+    1. Read the cost sheet in
+    [`solution-minimalism-phase0-spikes § S0.3`](../evidence/investigations/solution-minimalism-phase0-spikes.md):
+    30 tasks × 4 arms × 3 seeds on sonnet ≈ 360 runs ≈ 180M tokens ≈
+    **$150–250 as a floor**, higher on a real OSS repo.
+    2. Decide the grant, and state the ceiling you are granting. The sweep enforces
+    it: `--max-usd <ceiling>` aborts the sweep through the `collect_records`
+    guard (delta #4), and an unpriceable model plus `--max-usd` is refused rather
+    than silently uncapped.
+    3. Note what the grant does **not** buy on its own: deltas #10 (~30 hand-written
+    oracles) and #11 (the cognitive-complexity endpoint) are still absent, and
+    the metric-pair acceptance criterion cannot report a pass without #11. The
+    grant unblocks the run; it does not unblock the harness.
+  - **Resolved when:** the user states a spend ceiling for the Phase-3 sweep, or cancels Phase 3 against the cost sheet.
 
 ### [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md)
 
