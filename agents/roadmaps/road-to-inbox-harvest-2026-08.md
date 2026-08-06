@@ -62,12 +62,39 @@ ask, and a large already-built fraction.
   a second one.
   - Acceptance: `src/scripts/schemas/review-findings.schema.json` exists and
     both tracks validate against it; Markdown becomes a rendering of the JSON.
-- [ ] **P1.2 Wire the existing `risk_class` into the plan gates.** The
-  adaptive-ceremony complaint ("too much ceremony for a one-file change") is
-  real, and the classifier **already exists** at
-  `work_engine/scoring/decision_engine.ts` — it is simply not connected to
-  `planning.risk_review` / `completion_review`. An adapter, not a subsystem, and
-  explicitly not a new `plan:doctor` command: the CLI budget has zero headroom.
+- [-] **P1.2 CANCELLED — the premise does not exist.** Six findings, measured
+  against the tree before any adapter was written; AI council 2/2 (option A1).
+  1. There is **no classifier** at `work_engine/scoring/decision_engine.ts` —
+     that file is a *consumer* of `risk_class`. The producer is
+     `derive_risk_class` in `work_engine/scoring/decision_trace.ts:82-103`.
+  2. That producer returns `low` when its input is falsy or non-iterable and
+     `medium` when it is an iterable with `count > 0`. **It never returns
+     `high`.** Operationally it answers "are there any changes at all".
+  3. `risk_class` lives entirely inside the *consumer-installed work-engine
+     template* namespace. **Zero** of the six plan-gate scripts reference it
+     (`lint_plan_risk_register`, `check_completion_review`,
+     `dispatch_r2_reviewer`, `check_review_dispositions`,
+     `check_finding_dispositions`, `self_review_gate`).
+  4. `docs/contracts/plan-review-gates.md` has **no** risk-routing or
+     adaptive-ceremony section — there is nothing to extend. The applicability
+     escape that does exist is the § 2.4 skip declaration, and it is binary
+     (code / no-code), not graded.
+  5. **P4.3 in this same roadmap already cancelled risk routing** as "unproven,
+     and the direction-asymmetry evidence behind them is not verifiable here".
+  6. So the only available build was an adapter mapping a two-valued producer —
+     effectively "the diff is non-empty" — onto the gates. The council named that
+     directly: it would create the *illusion* of adaptive ceremony while
+     delivering none of it, which is worse than nothing.
+  - The adaptive-ceremony complaint stays real and stays unaddressed. What it
+    needs is a graded classifier the plan gates own, which is a new subsystem —
+    explicitly what this step said it was not.
+  - **Original step text**, kept verbatim so the cancellation is auditable
+    against the claim it refutes: *"The adaptive-ceremony complaint ('too much
+    ceremony for a one-file change') is real, and the classifier already exists
+    at `work_engine/scoring/decision_engine.ts` — it is simply not connected to
+    `planning.risk_review` / `completion_review`. An adapter, not a subsystem,
+    and explicitly not a new `plan:doctor` command: the CLI budget has zero
+    headroom."*
 - [x] **P1.3 Ratchet `gate_self_test` adoption.** It exists with 4 adopters
   against 27 registered gates. Add adoption as a column in `gate-coverage.yml`
   and ratchet it. No new gate — a column on the existing one.
@@ -107,10 +134,40 @@ ask, and a large already-built fraction.
 Source: `agents/tmp.old/loops-feature.txt`. A finished roadmap in house style;
 its central gap is verified in code.
 
-- [ ] **P2.1 Phase 0 null-scope check first.** `recursive-verification` carries a
-  TERMINAL honest null. The file's deterministic-vs-critic distinction is a
-  legitimate reason the null may not bind here — but that argument is made
-  *before* building, not after.
+- [x] **P2.1 Phase 0 null-scope check — DONE, and the null does NOT bind P2.2.**
+  The argument, made before building (which is the whole point of this step) and
+  grounded in the published measurement rather than in the file's own framing:
+  - **What the null measured.** `docs/benchmark.md` § "Recursive
+    self-verification (ADR-106)": weak host `claude-haiku-4-5`, `capH-debug`
+    family, **deterministic scorer-as-critic**, `max_depth=1`, n=54 paired.
+    Capability 87% vs 87% (McNemar p=1.0); discipline 0.852 vs 0.861 (Wilcoxon
+    p=0.79, 3 discordant pairs against the ≥6 the gate required). ADR-106 gate
+    FALSIFIED. The model-critic variant was closed by council reasoning, not
+    measurement, with "Recursion-as-a-class is closed".
+  - **Why P2.2 is a different mechanism, in one line.** The measured arm ADDS a
+    critic to decide whether an attempt was good enough. P2.2 adds no critic:
+    the red is already a deterministic verdict the engine holds in hand
+    (`directives/backend/test.ts` reaches `_blocked_on_bad_verdict` because the
+    test verdict is literally `failed`). There is no judgement to be null about.
+  - **The null's decisive argument inverts here.** Its killer finding was that
+    recursion fired on 8/29 tasks and produced differentiated output on 4/29,
+    because with the rules active the first attempt already passes the critic
+    **72%** of the time — so cost scaled with all tasks and benefit sat in the
+    ~28% tail. A red-check retry fires **only** on a red: zero cost on the
+    passing majority, all of it on the tail. Same arithmetic, opposite sign.
+  - **What the null DOES bind: the falsification shape.** "Recursion is
+    redundant with the always-on rules" is the outcome a self-fix loop must be
+    able to discover about itself. P2.2 therefore keeps its pre-registered
+    ≥50% halt reduction with revert-not-narrate, and the no-progress floor the
+    `recursive-verification` skill already states in prose ("two consecutive
+    attempts score identical on the deterministic scorer; further depth cannot
+    help, so stop") is adopted as a hard floor rather than left as guidance.
+  - Scope boundary recorded in the skill itself so the next reader cannot
+    misapply the null to a deterministic retry.
+  - **Original step text:** *"`recursive-verification` carries a TERMINAL honest
+    null. The file's deterministic-vs-critic distinction is a legitimate reason
+    the null may not bind here — but that argument is made before building, not
+    after."* Confirmed: that distinction is the load-bearing one, and it holds.
 - [ ] **P2.2 Executable DoD + bounded self-fix loop.** Verified gap: the work
   engine halts to `Outcome.BLOCKED` on a red check with **no attempt counter**,
   so every red costs a user round-trip. Needs `dod.schema.json`, a `dod[]` slot
