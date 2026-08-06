@@ -136,11 +136,12 @@ Read `subagents.adversarial_council` from `.agent-settings.yml` (default
 
 - `off` (default): skip silently.
 - `ask`: when the diff is explicitly high-risk (security, tenant, migration,
-  public API), offer it (in the user's language):
-
-  > 1. Run the adversarial verification council on this high-risk diff? (distinct-model skeptics red-team for finding coverage)
-  > 2. Skip — the five internal judges are enough
-
+  public API), offer it — in the shape
+  [`settings-ask-protocol`](../../../../rules/settings-ask-protocol.md) fixes,
+  which supplies the four slots, the one-question budget, and the storage line
+  (not persisted: `subagents.adversarial_council` is class C). What only this
+  command knows is *why now*: the diff is high-risk, and the offer is a paid
+  distinct-model red-team for finding coverage against the five internal judges.
 - `on`: run it automatically on a high-risk diff.
 
 When run, dispatch the

@@ -48,7 +48,10 @@ THE SAME MINUS THE QUOTA WIN.
    tier <t>`); a 429/quota error trips `tripCooldown` for that tier and
    falls back per the relation — never a retry loop. Under
    `budget_routing: ask`, the FIRST budget-motivated downshift of a session
-   is confirmed once; `auto` proceeds silently. Every budget-routed
+   is confirmed once, in the shape
+   [`settings-ask-protocol`](../../rules/settings-ask-protocol.md) fixes and
+   without persisting the answer (`subagents.budget_routing` is class C);
+   `auto` proceeds silently. Every budget-routed
    dispatch emits one `orchestration_record` line (tier + provenance-tagged
    token delta) so realized savings are measured, not asserted.
 

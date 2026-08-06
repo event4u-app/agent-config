@@ -31,9 +31,12 @@ TO THE FULL FRUGALITY CANON (telegraph-speak, thin-projector).
 | `rich` | Must be declared + justified | **Exempt** | **Never trimmed** | 2000–3500 tokens |
 
 Read `tokens.rich_skills` from `.agent-settings.yml` (default `on`) to determine
-whether rich skills may load in full. If `off`, treat them as
-`standard`. If `ask`, surface the estimated token delta (≈ skill file size in
-chars / 4) and wait for user confirmation; cache the answer for the session.
+whether rich skills may load in full. If `off`, treat them as `standard`. If
+`ask`, the question's shape is
+[`settings-ask-protocol`](settings-ask-protocol.md)'s, not this rule's; what only
+this rule knows is the number to put in it — the estimated token delta, ≈ skill
+file size in chars / 4. The answer is cached for the session and never persisted
+(`tokens.rich_skills` is class C).
 
 ## Requirements for `token_budget_class: rich`
 
