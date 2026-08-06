@@ -107,6 +107,29 @@ These skills are approved `rich` by this roadmap's council:
 | `accessibility-auditor` | WCAG criteria are non-negotiable detail; every criterion has a testable condition + failure mode; compression loses the test procedures |
 | `design-system-capture` (Phase 6) | Writes + maintains DESIGN.md + PRODUCT.md; needs full templates + worked examples to generate useful artifacts |
 
+## Rich artifacts lead with a non-negotiable band
+
+```
+A RICH-CLASS ARTIFACT OPENS WITH THE SECTION THAT OUTRANKS THE REST OF ITS
+OWN DOCUMENT, THEN THE REASONING LAYER.
+A LONG REFERENCE READ PARTIALLY MUST LOSE THE REASONING, NEVER THE OBLIGATION.
+```
+
+The `rich` exemption buys length, and length buys the risk that a reader stops
+early. Ordering is the mitigation available at authoring time: put the
+load-bearing fraction first, so a partial read loses the part that was
+explanation rather than the part that was binding.
+
+This is a **precedence claim inside one document**, not a claim over other
+artifacts — a rich skill's leading band outranks that skill's own later
+sections and nothing else. Cross-artifact precedence is the authority index's
+job.
+
+It mitigates partial reading. It does **not** answer whether the artifact should
+be shorter — that is the ceiling, gated below, and the two controls are
+independent: an artifact can sit comfortably under the ceiling and still bury
+its obligation on line 300.
+
 ## The size band is measured, and only its ceiling is gated
 
 The `rich` band is **2,000–3,500 tokens** ([ADR-217](../docs/decisions/ADR-217-rich-class-band-measured-and-enforced.md)).
