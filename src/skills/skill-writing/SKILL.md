@@ -530,6 +530,61 @@ tool skill*, **never** a new skill per pitfall and never a generated grid (see
 [`size-enforcement`](../../rules/size-enforcement.md) § Per-tool pitfall
 content).
 
+## Upstream-version-notes section (optional pattern, wrapped fast-moving tools)
+
+A skill that wraps an external tool is written against one version of it. When
+the tool renames a flag, restructures its report, or drops a subcommand, the
+skill does not fail loudly — it fails as **the agent concluding the skill is
+wrong**, or, worse, inventing the removed surface so its own instructions still
+make sense. Both are silent.
+
+For a skill wrapping a tool that moves faster than this package's release
+cadence, add `## Upstream version notes` carrying exactly three things:
+
+1. **The version this skill was written against, and the date it was checked.**
+   A version alone rots into a claim nobody can date.
+2. **What was renamed** — old → new, one line each. This is the row that stops
+   an agent inventing a flag that no longer exists.
+3. **How to read older output** — the agent will meet reports from earlier
+   versions in logs, issues and fixtures, and needs to know which fields moved
+   rather than guessing.
+
+State briefly what is **unchanged** too. "The subcommand set is unchanged since
+X" is what lets an agent trust the rest of the skill after finding one stale
+flag, instead of second-guessing every instruction that follows.
+
+Scope floor — add it only where drift is **observed**, never anticipated. A
+version-notes block on a stable tool is maintenance with no reader, and a stale
+one is worse than none: it is a dated claim that is now false.
+
+## Security-constraints section (required pattern, script-bearing skills)
+
+A skill that ships an executable script carries its constraints in the
+always-loaded rules — `tool-safety`, `runtime-safety`, `lethal-trifecta-guard`.
+That holds while the skill is read inside this suite. It stops holding the
+moment the script travels: vendored into a consumer, copied into another
+project, or run by an agent whose rule set is not ours. The constraints stay
+behind; the script does not.
+
+So a skill with anything under its `scripts/` directory states them **on the
+artifact**, in a `## Security constraints` section:
+
+- **What it may touch** — the paths and hosts it legitimately reads or writes.
+  Naming the boundary is what makes an overreach reviewable.
+- **What it must never do** — the prohibitions specific to THIS script, not a
+  restatement of the general rules. "Never writes outside the target directory"
+  is checkable; "follows security best practice" is not.
+- **Its default-invocation behaviour** — read-only or mutating. A script that
+  mutates on a bare invocation already violates the `## Do NOT` list below; if
+  it is gated behind a flag, name the flag here.
+- **What it sends outbound, if anything** — the egress leg of the lethal
+  trifecta. A script with no network access says so in four words, and that
+  sentence is the cheapest possible answer to a reviewer's first question.
+
+This duplicates the rules on purpose, and the duplication is the point: the
+rules are the enforcement, the section is what survives the artifact leaving
+their reach.
+
 ## Do NOT
 
 * Write documentation-style, pointer-only, or too-broad skills ("Laravel skill", "Django skill")

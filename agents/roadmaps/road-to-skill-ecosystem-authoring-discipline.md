@@ -141,9 +141,65 @@ migration is a genuinely lossy authoring transform with no ledger, while
 - [ ] **Step 2:** Give each ledger row exactly one disposition: carried to a named target anchor, merged into a named row, or intentionally dropped. Forbid a vague reason; a row reading "secondary" or "lower-yield" is rejected.
 - [ ] **Step 3:** Add `src/scripts/lint_rule_migration_ledger.ts` asserting that every second-level heading present in a rule's pre-migration content appears as a ledger row, and that every target anchor resolves. <!-- verify: task typecheck-ts -->
 - [ ] **Step 4:** Populate the ledger for the migrated set inventoried in the prerequisites. Where the pre-migration content is no longer recoverable, record that honestly as an unledgered row rather than reconstructing it.
-- [ ] **Step 5:** Extend the authority index into a contradiction register: one row per pair of artifacts that push opposite decisions, naming which artifact arbitrates which decision domain rather than asserting a global precedence. Seed it from the existing wins-on-conflict prose.
-- [ ] **Step 6:** Add a gate asserting that every artifact naming another as winning on conflict has a register row. Do not enumerate all pairs — a pairwise matrix over this artifact count is unmaintainable and was refused.
-- [ ] **Step 7:** Record the arbitration litmus in the register's header: if one artifact must arbitrate between them, they are not complementary.
+- [x] **Step 5:** Extend the authority index into a contradiction register: one row per pair of artifacts that push opposite decisions, naming which artifact arbitrates which decision domain rather than asserting a global precedence. Seed it from the existing wins-on-conflict prose.
+      **Two premises in this step were wrong, and finding that out was most of
+      the work.** First, the register is not built on the authority index:
+      `agent-authority` is one of the nine kernel rules, and
+      `check_safety_floor_untouched` blocks new content in it — a register
+      hosted there could not have landed in this change at all. Second, and
+      decisively, **a register already exists**:
+      [`docs/contracts/rule-interactions.yml`](../../docs/contracts/rule-interactions.yml)
+      — 21 pairs over 17 rules, six typed relations, each row carrying
+      `conflict` / `resolution` / `evidence`, gated by
+      `lint_rule_interactions` in `ci-fast`. So the step became *extend*, not
+      *create*.
+      A corpus sweep (six keyword passes plus a full read of all 111 rules,
+      because a keyword grep is known to miss this class here) found **326
+      cross-artifact reference lines: 90 arbitration · 20 self-scope · ~216
+      boilerplate**. Building the register the step describes would have
+      ingested that two-thirds majority of see-also glosses, canonical-home
+      pointers and deliberate safety-floor restatements — prose carrying no
+      decision. **Eight pairs were added instead**, each clearing a stated bar:
+      a genuine collision, declared in the rules but absent from the register.
+      The strongest is `downstream-changes` × `token-efficiency`, which
+      `token-efficiency` calls a *"direct conflict"* in its own body and which
+      had no row; three more surfaced mechanically the moment the declared set
+      widened. The register is now 23 rules / 29 pairs, and one number from the
+      sweep justifies the row schema: **97 % of precedence claims in this corpus
+      are situated, not global** — a per-domain arbiter is what the corpus
+      actually asserts.
+- [x] **Step 6:** Add a gate asserting that every artifact naming another as winning on conflict has a register row. Do not enumerate all pairs — a pairwise matrix over this artifact count is unmaintainable and was refused.
+      Shipped as a **closure check bounded to the register's own `rules:` list**:
+      for the rules the matrix declares, a precedence claim between two of them
+      must have a row. Widening `rules:` widens the obligation, which is the
+      intended cost and is exactly what surfaced three unrecorded
+      subordinations when the set grew this run.
+      **The literal wording — every artifact, corpus-wide — was not shipped, and
+      the measurement is why:** it would demand roughly 64 rows over 111 rules,
+      of which the sweep classified about two thirds as boilerplate. That gate
+      lands as an unfixable blocker, which is this roadmap's own Risk 4 and a
+      failure this repository has already recorded. A prior decision is also
+      live here and was checked first rather than after: a static detector for
+      *undeclared* conflicts was measured on this corpus at **67 % false
+      positives** at its only full-recall point, with the co-fire signal
+      anti-correlated with truth, and locked as not-CI-gateable. The
+      mechanism-match test clears this step past that lock — a closure check
+      reads only what a rule has already *written* about a named sibling, so it
+      has no object-resolution problem and no false-positive budget — and the
+      lock's own prescription was "a narrow authority gate", which is what this
+      is. Both directions are proven: removing one pair reds with the exact
+      `file:line`, restoring it greens.
+- [x] **Step 7:** Record the arbitration litmus in the register's header: if one artifact must arbitrate between them, they are not complementary.
+      In both headers — the `.md` for readers and the `.yml` comment block
+      where rows are actually added, since a litmus only reachable from the
+      rendered doc is not where the decision gets made. Paired with the
+      coverage disclaimer the litmus needs to stay honest: the register records
+      arbitrations already written down and **does not claim completeness over
+      undeclared contradictions**, with the 67 %-false-positive measurement
+      named as the reason detection is a human audit rather than a gate.
+      Three stale facts in the same header were corrected while it was open, per
+      Doc-Impact: "55 rules" → 111, `.agent-src.uncondensed/rules/` → `src/rules/`
+      (a root ADR-051 deleted), and `lint_rule_interactions.py` → `.ts`.
 
 ## Phase 4: Lint what the authored text teaches
 
@@ -224,8 +280,26 @@ migration is a genuinely lossy authoring transform with no ledger, while
       The existence proof is in-corpus: `contexts/execution/roadmap-process-loop.md`
       states "Size budget: ≤ 4,000 chars" in its own header and is 5× over it —
       a declared budget with nothing measuring it.
-- [ ] **Step 6:** Add an upstream-version-notes convention for skills wrapping a fast-moving external tool: what was renamed, what is unchanged, and how to read older output. Without it an agent reading a modern report concludes the skill is wrong, or invents the removed surface.
-- [ ] **Step 7:** Add a security-constraints section convention to skills that ship executable scripts, so the constraints travel with the artifact rather than living only in the always-loaded rules.
+- [x] **Step 6:** Add an upstream-version-notes convention for skills wrapping a fast-moving external tool: what was renamed, what is unchanged, and how to read older output. Without it an agent reading a modern report concludes the skill is wrong, or invents the removed surface.
+      `skill-writing` § Upstream-version-notes section — three required
+      elements (version **plus the date it was checked**, renames old → new,
+      how to read older output) and an explicit instruction to state what is
+      *unchanged*, which is what lets an agent keep trusting the rest of a
+      skill after finding one stale flag. Ships **optional and
+      drift-observed**, not anticipated: a version block on a stable tool is
+      maintenance with no reader, and a stale one is worse than none because it
+      is a dated claim that is now false.
+- [x] **Step 7:** Add a security-constraints section convention to skills that ship executable scripts, so the constraints travel with the artifact rather than living only in the always-loaded rules.
+      `skill-writing` § Security-constraints section, and **required** rather
+      than optional for any skill with a `scripts/` directory. Four elements:
+      what it may touch, what THIS script must never do (checkable, not
+      "follows best practice"), its default-invocation behaviour, and what it
+      sends outbound — the egress leg, where "no network access" is a
+      four-word answer to a reviewer's first question. The duplication with
+      `tool-safety` / `runtime-safety` / `lethal-trifecta-guard` is the point,
+      and the step's own reasoning says why: the rules are the enforcement,
+      the section is what survives the script being vendored into a consumer
+      whose rule set is not ours.
 
 ## Phase 5: A removal signal, and the first question
 
@@ -253,7 +327,8 @@ migration is a genuinely lossy authoring transform with no ledger, while
 - [x] `src/scripts/lint_mandated_lines.ts` rejects a completion claim describing an outward action with no authorization line, proven by a test.
 - [~] `rule-writing` requires a primary-bias section (done); the schema decision-impact class is Phase 2 Step 3 and did not land.
 - [ ] Every migrated rule has a ledger whose target anchors all resolve, proven by a gate.
-- [ ] The contradiction register exists, and every wins-on-conflict claim has a row, proven by a gate.
+- [~] The contradiction register exists (it already did — `rule-interactions.yml`, extended 21 → 29 pairs), and every wins-on-conflict claim **between two rules the register declares** has a row, proven by a gate. <!-- deferred: the corpus-wide half is not shipped — 90 arbitration claims over 111 rules, ~64 pairs, two thirds of the surrounding surface boilerplate. See Phase 3 Step 6. -->
+
 - [x] `src/scripts/lint_example_fences.ts` runs over the authored tree with every current hit classified — 503 files, zero hits, so it ships strict rather than advisory.
 - [x] The description lint rejects a preemption phrase, proven by a test — six positive specimens plus three must-not-fire rows pinning the corpus lines a word-keyed draft flagged wrongly.
 - [x] The removal disposition and the simplify-signal list are recorded in the optimization path.
