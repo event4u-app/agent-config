@@ -540,6 +540,27 @@ blocker as standing overstates its own gating.
       existing mechanism before writing new code (rubric-judged, k=2)?
       *Verify:* the search-adherence endpoint is defined and pre-registered
       before the first paid run; a size-only report does not satisfy this step.
+      <!-- verify: npx vitest run tests/scripts/bench_ab_v2_stats.test.ts -->
+      **Partially delivered, and staying open on purpose — the named *Verify* is
+      satisfied but it is necessary, not sufficient.** Search-adherence and the
+      safety tier are now defined and pre-registered as T5 and T4 in
+      [`ab-v2-phase3-PREREG.md`](../../internal/bench/ab-v2-phase3-PREREG.md), which
+      is exactly what this step's Verify asks for. Four of the seven endpoints are
+      live: added lines and wall-clock were already there, tokens-as-**sum** landed
+      with delta #2, and **cost landed here** (delta #6) — `cost_by_arm` prices the
+      four buckets separately from `pricing.yaml`, because a blended rate over a
+      token total is a different number and the buckets differ in price by up to
+      125×. Two properties worth naming: an unpriceable model yields `null`, never
+      `0` (a zero reads as "this arm was free", which is a different claim from
+      "we cannot price it"), and Table 3b prints how many days old the prices are
+      **measured against the report's own stamp**, so re-rendering a fixed artefact
+      cannot change its numbers. The suite pins the 50×-apart mix case, the
+      errored-run exclusion, the unpriceable direction, and the age arithmetic.
+      **Not delivered:** the safety-tier and search-adherence *scorers* (both are
+      rubric-judged, so both need model calls and their own oracles), and the
+      complexity endpoint (delta #11). Flipping this step because its Verify passes
+      would repeat the mistake refused one step down for Reproducibility — a step's
+      Verify is a check on the step, not a substitute for it.
 - [ ] **Hygiene:** escalation ladder self-test → 10-task smoke → k=3 → full, <!-- blocked-by: benchmark-spend-authorization -->
       **publishing nothing below full** (F4); paired non-parametric tests;
       errored pairs dropped from both arms.

@@ -99,6 +99,9 @@ project.
   the harness can no longer produce the specific invalid null it produced once.
 - `tokens_breakdown` on every trial (delta #2), model-id verification (delta #3),
   a sweep-level `--max-usd` abort (delta #4), attrition reporting (delta #5).
+- A bucket-priced cost sheet in the report (delta #6) — Table 3b, with the price
+  sourcing date and its age against the report's own stamp. An unpriceable model
+  reports `null`, never `0`.
 - Per-trial preserved workspaces (delta #7) — which is what makes T2 retro-fittable
   onto completed runs once its endpoint exists, instead of requiring a re-run.
 - A no-network `--mode selftest` (delta #8) and
