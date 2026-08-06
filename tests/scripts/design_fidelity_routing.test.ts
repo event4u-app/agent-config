@@ -182,7 +182,46 @@ export const ROUTING_MATRIX: readonly Row[] = [
         baseline: false,
     },
 
+    // --- Class 4: the artifact arrives as a link or a directory ------------
+    {
+        id: 'none-capability-url',
+        klass: 'en',
+        // A published artifact is handed over as a capability URL, not a file.
+        prompt: 'Here you go: https://claude.site/artifacts/8f2c1e40-aaaa-bbbb-cccc-1234567890ab',
+        open_files: [],
+        routes: true,
+        baseline: false,
+    },
+    {
+        id: 'none-design-system-dir',
+        klass: 'none',
+        prompt: 'Can you do this?',
+        open_files: ['.claude/design-system/tokens.json'],
+        routes: true,
+        baseline: false,
+    },
+
     // --- Near-misses: must stay silent ------------------------------------
+    {
+        id: 'near-claude-ai-chat-link',
+        klass: 'en',
+        // The host alone is a conversation reference, not a spec. A keyword on
+        // the bare domain would fire on every pasted chat link.
+        prompt: 'I pasted this from https://claude.ai/chat/abcd — what do you think?',
+        open_files: [],
+        routes: false,
+        baseline: false,
+    },
+    {
+        id: 'near-generic-design-system-dir',
+        klass: 'none',
+        // `design-system/` is a normal source folder in a large fraction of
+        // frontend repos; only the vendor-scoped `.claude/` prefix is a handover.
+        prompt: 'Can you do this?',
+        open_files: ['packages/design-system/src/Button.tsx'],
+        routes: false,
+        baseline: false,
+    },
     {
         id: 'near-artifacts-plural-unrelated',
         klass: 'en',
