@@ -7,7 +7,7 @@ visibility: internal
 sub: inbox
 cluster: analyze
 skills: [learning-to-rule-or-skill, roadmap-writing, decision-review]
-description: Analyze a dropped inbox artifact (external review, prompt, spec, transcript) against the current tree, verify every claim it makes, map what survives onto this suite's own artefact types, and emit a roadmap per surviving file.
+description: Analyze a dropped inbox artifact (review, prompt, spec, transcript) against the current tree, verify every claim it makes, map what survives onto this suite's artefact types, emit a roadmap each.
 argument-hint: "[<file> | <dir>] [--triage-only] [--no-roadmap] [--keep-inbox]"
 suggestion:
   eligible: false

@@ -24,7 +24,7 @@ Artefacts that maintain this package (agent-config itself).
 - **`agents-user-review`** — List buffered observations from the project-local and global observation buffers with numbered options to inspect or accept individually.
 - **`agents-user-show`** — Read-only render of the effective (merged) user profile — global profile.md plus project .agent-user.md. --audit renders the global layer raw for delete/revoke decisions.
 - **`agents-user-update`** — Open .agent-user.md in the user's IDE for manual edit; validates schema and 100-line cap on save.
-- **`analyze-inbox`** — Analyze a dropped inbox artifact (external review, prompt, spec, transcript) against the current tree, verify every claim it makes, map what survives onto this suite's own artefact types, and emit a roadmap per surviving file.
+- **`analyze-inbox`** — Analyze a dropped inbox artifact (review, prompt, spec, transcript) against the current tree, verify every claim it makes, map what survives onto this suite's artefact types, emit a roadmap each.
 - **`analyze-reference-repo`** — Analyze an external reference repository (competitor, inspiration, peer) and produce a structured comparison + adoption plan for this project.
 - **`bug`** — Bug orchestrator — routes to investigate (root cause) and fix (plan + implement)
 - **`bug-fix`** — Plan and implement a bug fix — based on investigation, with quality checks and test verification
