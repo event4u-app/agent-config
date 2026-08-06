@@ -7,13 +7,13 @@ Framework-neutral engineering hygiene — git, tests, reviews.
 - **id**: `engineering-base`
 - **owner**: engineering
 - **requires**: —
-- **artefacts**: 117
+- **artefacts**: 118
 
 ## Commands (1)
 
 - **`mission-upgrade`** — Gated Laravel major-version upgrade mission — provisional branch, breaking-change catalog, size-tier surfaced, git-as-rollback. Never auto-commits or auto-PRs.
 
-## Rules (28)
+## Rules (29)
 
 - **`active-remediation`** — Spotted an issue (security gap, missing test, bad code, duplication, stale idiom) — never ignore: small→fix inline, bigger→ask, many→follow-up PR
 - **`broken-access-control`** — Endpoint/query on user/tenant data — authenticated ≠ authorized: server-derived ownership/tenant/role + negative tests (401/non-owner/cross-tenant)
@@ -27,6 +27,7 @@ Framework-neutral engineering hygiene — git, tests, reviews.
 - **`docker-commands`** — Running PHP inside Docker — artisan, composer, phpstan, rector, ecs, phpunit, tests, migrations, any CLI tool
 - **`downstream-changes`** — After EVERY code edit, find ALL downstream changes — callers, tests, imports, types, documentation
 - **`engineering-safety-floor`** — Production/infra/security/external-system output — blast radius + rollback; Hard-Floor never autonomous
+- **`evaluator-independence`** — Commissioning a review/judge/blind-pass on your own work — never author the verdict, never narrow the scope, record the prompt with the result
 - **`git-history-discipline`** — Git history — no unasked rebase/squash/amend; never drop foreign commits; pushed rewrite → re-push same turn
 - **`improve-before-implement`** — Before features or architectural changes — validate against existing code, challenge weak requirements
 - **`lethal-trifecta-guard`** — Skill/command/tool mixing private-data access + untrusted content + external comms — break one leg before shipping

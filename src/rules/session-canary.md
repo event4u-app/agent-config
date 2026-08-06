@@ -67,13 +67,34 @@ name it and suggest a fresh session or `/agent-handoff`, per
 - The greeting never substitutes for substance — it prefixes the answer, it is
   not the answer.
 
-## Enforcement
+## Enforcement — per session, NOT per task
 
 > **Enforced by:** [`scripts/session_canary_hook.ts`](../../scripts/session_canary_hook.ts)
 > (`session_start`, all hook-capable hosts) — injects the `<session-canary>`
 > contract block into every new session, so a fresh conversation cannot start
 > without it. **Copilot fallback:** no hook surface — this rule is the only
 > carrier; re-read it when the trigger fires.
+
+**The gap this leaves, stated because it was measured.** The injection fires on
+`session_start`. The obligation above is *per task* — every new task inside a
+live session opens by addressing the user by name. Nothing re-injects at a task
+boundary, so from the second task onward the contract is model-carried like any
+other prose.
+
+A conformance audit of 30 sessions (2026-08-06) measured the result: the opening
+canary was **dropped on roughly 13 of 15 task starts**; where it did fire it was
+often only in the closing summary; and on two occasions the emitted name was not
+the configured one — the hook resolved `Matze` correctly from the settings chain
+and the reply said `Mathias`. The honesty clause below ("if you notice you
+dropped it, say so") was invoked **zero** times across the whole sample.
+
+So: the greeting is enforced for the first reply of a session and for nothing
+else. That is the honest reach. No per-task gate ships here, because the audit
+found no harm from the drop beyond the loss of the signal itself — and inventing
+a mechanism for a degradation signal whose absence nobody acted on would be the
+mechanism-without-a-failure-mode this repo's own principle forbids. What the
+drop *does* mean is that the canary cannot currently be relied on as the
+degradation detector its own rationale describes.
 
 ## See also
 
