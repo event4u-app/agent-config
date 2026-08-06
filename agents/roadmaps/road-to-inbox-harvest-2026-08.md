@@ -277,12 +277,40 @@ before the file was written*.
   - `lint_hook_manifest` validates the key (a typo or empty list fails the
     build) because the dispatcher fails toward *running* the concern — an
     unvalidated filter would look like it works while filtering nothing.
-- [ ] **P5.4 `check_corpus_staleness.ts`** (from `better-frontend.txt`). The
+- [x] **P5.4 `check_corpus_staleness.ts`** (from `better-frontend.txt`). The
   design corpus pins a commit last checked **2026-06-07** and declares
   `refresh_cadence: quarterly` with **zero enforcement**. Clone
   `check_reach_staleness.ts`. Pair it with a CSV integrity gate in
   `corpus-grounding/scripts/schema_validator.ts`, which today never opens a CSV
   — that gate must land *before* any re-vendor, not after.
+  - Both claims confirmed. `design-intelligence/data/manifest.json` pins
+    `last_checked: 2026-06-07` against `refresh_cadence: quarterly`, and **five**
+    manifests share that date (`accessibility-auditor`, `api-design`, `database`,
+    `design-intelligence`, `threat-modeling`); `brand` declares the cadence with
+    `upstream: null` and is exempt by declaration. `schema_validator.ts` touches
+    the filesystem exactly three times and never opens a corpus file — it
+    computes a CSV path, refuses an escape, and stops.
+  - **Shipped as one gate, not two.** The staleness half and the integrity half
+    read the same manifest and would otherwise parse it twice; a second script
+    to keep in sync is a second drift source. Seven violation classes:
+    `stale-corpus`, `future-date`, `unparseable-date`,
+    `attribution-date-mismatch`, `missing-csv`, `empty-csv`, `missing-column`.
+    Measured on the real tree: 6 manifests, **40 CSVs opened**, clean.
+  - **Two deliberate design calls.** The quarterly bound is **100** days, not 90:
+    a quarter is ~91, so a cadence met on its due date would red the maintainer
+    who honoured it. And a header-only CSV counts as `empty-csv`, because zero
+    rows reads exactly like a clean corpus.
+  - **It carries a `--self-test` because the ratchet demanded one.** Registering
+    it in `gate-coverage.yml` adds it to the enforced population that
+    `gate-self-test:registered-non-adopters` measures, so shipping without one
+    would have taken the count 24 → 25 and redded CI. 7 cases, 5 rejecting. That
+    is P1.3's ratchet doing its job on the first gate written after it landed.
+  - **Wired to a workflow, not only to `task ci`.** `task ci` is invoked by no
+    workflow — which is exactly why the template `check-reach-staleness` has been
+    local-only since it shipped. The `--today` pin in the coverage row is
+    deliberate: unpinned, that row flips red on 2026-09-15 with no diff behind
+    it. The unpinned calendar check is the workflow step, and it is *meant* to
+    red when the cadence is genuinely missed.
 - [x] **P5.5 `agents/proposals/` does not exist** (from `hermes.txt`). Two
   artefacts name it as an output path. One directory closes a dangling contract.
 - [~] **P5.6 God-file LOC ratchet** (from `crytical-analysis.txt`). Seven files

@@ -44,7 +44,7 @@
 # ----------------------------------------------------------
 # 240 `lint_*` / `check_*` / `audit_*` scripts live under `src/scripts/`
 # (the count is computed, not asserted — `check_gate_coverage.count_gate_scripts`).
-# **31 of them emit the machine-readable `scanned: <N>` line under their
+# **32 of them emit the machine-readable `scanned: <N>` line under their
 # CI-identical argv, and all 31 are listed below.** The manifest is therefore
 # complete with respect to its own contract, and covers ~13 % of the population.
 #
@@ -599,3 +599,31 @@ gates:
       check_kernel_prefix_stability). The canary is what distinguishes that from
       a gate scanning nothing — it plants the removal-permitting class with no
       evidence and the gate reds.
+
+  - id: check_corpus_staleness
+    argv: ["--quiet", "--today", "2026-08-06"]
+    min_scanned: 5
+    corpus: "src/skills/*/data/manifest.json — grounding-corpus manifests (6 at baseline; brand, database, accessibility-auditor, api-design, design-intelligence, threat-modeling)"
+    status: enforced
+    canary:
+      class: missing-declared-csv
+      path: src/skills/zz-canary-corpus/data/manifest.json
+      content: |
+        {
+          "manifest_version": 1,
+          "refresh_cadence": "quarterly",
+          "upstream": { "last_checked": "2026-07-01" },
+          "domains": { "d": { "file": "nope.csv", "search_cols": ["a"], "output_cols": ["b"] } }
+        }
+    note: >
+      `--today` is PINNED in argv on purpose, and it is the whole reason this
+      gate is testable at all: the five upstream-vendored corpora share
+      `last_checked: 2026-06-07`, so an unpinned reference date makes this row
+      flip from green to red on 2026-09-15 with no diff behind it. The pinned
+      date keeps the coverage guard measuring COVERAGE; the real calendar check
+      is the workflow step, which runs unpinned and is meant to red when the
+      cadence is actually missed. Changing the pin is how you re-baseline after a
+      re-vendor, and it should be visible in a diff.
+      The canary plants a manifest whose declared CSV does not exist — the exact
+      gap `corpus-grounding/scripts/schema_validator.ts` leaves open, since it
+      computes the path and never opens the file.
