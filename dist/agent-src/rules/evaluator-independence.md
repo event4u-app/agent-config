@@ -18,6 +18,8 @@ workspaces: [engineering]
 packs: [engineering-base]
 enforced_by:
   - "hook:evidence-independence"
+collision_ok:
+  "honest null": "this rule asks how a recorded null was PRODUCED; decision-revisit-gate asks whether it may be REVISITED — different decision points on the same artefact"
 ---
 
 # Evaluator Independence

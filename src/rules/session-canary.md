@@ -75,25 +75,16 @@ name it and suggest a fresh session or `/agent-handoff`, per
 > without it. **Copilot fallback:** no hook surface — this rule is the only
 > carrier; re-read it when the trigger fires.
 
-**The gap this leaves, stated because it was measured.** The injection fires on
-`session_start`. The obligation above is *per task* — every new task inside a
-live session opens by addressing the user by name. Nothing re-injects at a task
-boundary, so from the second task onward the contract is model-carried like any
-other prose.
+**The gap, stated because it was measured.** The injection fires on
+`session_start`; the obligation is per *task*. Nothing re-injects at a task
+boundary, so from the second task on the contract is model-carried.
 
-A conformance audit of 30 sessions (2026-08-06) measured the result: the opening
-canary was **dropped on roughly 13 of 15 task starts**; where it did fire it was
-often only in the closing summary; and on two occasions the emitted name was not
-the configured one — the hook resolved `Matze` correctly from the settings chain
-and the reply said `Mathias`. The honesty clause below ("if you notice you
-dropped it, say so") was invoked **zero** times across the whole sample.
-
-So: the greeting is enforced for the first reply of a session and for nothing
-else. That is the honest reach. No per-task gate ships here, because the audit
-found no harm from the drop beyond the loss of the signal itself — and inventing
-a mechanism for a degradation signal whose absence nobody acted on would be the
-mechanism-without-a-failure-mode this repo's own principle forbids. What the
-drop *does* mean is that the canary cannot currently be relied on as the
+Conformance audit, 30 sessions, 2026-08-06: opening canary dropped on ~13 of 15
+task starts, often present only in the closing summary, twice carrying a name
+the settings chain did not resolve; the honesty clause fired zero times. No
+per-task gate ships — the audit found no harm beyond the lost signal, and a
+mechanism for a signal whose absence nobody acted on has no failure mode to
+match. The consequence stands: this canary cannot currently be relied on as the
 degradation detector its own rationale describes.
 
 ## See also

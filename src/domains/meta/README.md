@@ -7,9 +7,9 @@ Artefacts that maintain this package (agent-config itself).
 - **id**: `meta`
 - **owner**: agent-config-maintainer
 - **requires**: engineering-base
-- **artefacts**: 290
+- **artefacts**: 291
 
-## Commands (151)
+## Commands (152)
 
 - **`agent-handoff`** — Pick a recent session, generate a handoff from its transcript, and seed a fresh session with it — or summarize the live conversation for copy-paste.
 - **`agent-status`** — Show current conversation stats — message count, token costs, task progress, next freshness check.
@@ -24,6 +24,7 @@ Artefacts that maintain this package (agent-config itself).
 - **`agents-user-review`** — List buffered observations from the project-local and global observation buffers with numbered options to inspect or accept individually.
 - **`agents-user-show`** — Read-only render of the effective (merged) user profile — global profile.md plus project .agent-user.md. --audit renders the global layer raw for delete/revoke decisions.
 - **`agents-user-update`** — Open .agent-user.md in the user's IDE for manual edit; validates schema and 100-line cap on save.
+- **`analyze-conformance`** — Audit recent local sessions for rule violations — deterministic scan plus subagent passes over the transcripts, root-cause each class, and emit a roadmap that mechanises what is mechanisable.
 - **`analyze-inbox`** — Analyze a dropped inbox artifact (review, prompt, spec, transcript) against the current tree, verify every claim it makes, map what survives onto this suite's artefact types, emit a roadmap each.
 - **`analyze-reference-repo`** — Analyze an external reference repository (competitor, inspiration, peer) and produce a structured comparison + adoption plan for this project.
 - **`bug`** — Bug orchestrator — routes to investigate (root cause) and fix (plan + implement)

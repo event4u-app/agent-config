@@ -60,33 +60,19 @@ NOT ON THE PRESENCE OF A NUMBERED LIST.
 A TRAILING FREE-TEXT OFFER IS AN ASK. A BARE YES/NO IS AN ASK.
 ```
 
-Measured, and the measurement is unusually clean: a conformance audit of 30
-sessions (2026-08-06) found that **every** malformed ask was a one-line
-parenthetical or a trailing free-text offer — *"sag Bescheid, wenn ich die drei
-Zeilen mitnehmen soll"*, *"Soll ich das so umsetzen?"*, *"Sag Bescheid, ob ich
-beides angehen soll."* The same sessions formatted their **large** asks
-perfectly, with a neutral block and a single bolded recommendation line. One of
-those parentheticals produced a genuine two-questions-per-turn violation the
-user then answered as two.
+Measured (30-session conformance audit, 2026-08-06): **every** malformed ask was
+a one-line parenthetical or a trailing free-text offer — *"sag Bescheid, wenn
+ich die drei Zeilen mitnehmen soll"*, *"Soll ich das so umsetzen?"* — while the
+same sessions formatted their **large** asks perfectly. So the rule is being
+read as *if numbered options, then a recommendation line*. It is the other way
+round, and an ask that feels too small for a block is exactly the one that
+escapes the format. Three further caught shapes: a contentless filler option; an
+inline `(Empfohlen)` tag **beside** the recommendation line (the dual source
+Iron Law 1 forbids); an option set answerable only as `1,3,4`.
 
-The pattern says the rule is being read as *if numbered options, then a
-recommendation line*. It is the other way round: **a decision handed to the user
-requires the block**, and an ask that feels too small for one is exactly the ask
-that escapes the format. Three further shapes the same audit caught:
-
-- a filler option with no content ("2. Nein, anders vorgehen") to satisfy the
-  format while carrying no alternative;
-- an inline `(Empfohlen)` tag inside an option **plus** the recommendation line —
-  the dual source Iron Law 1 exists to make impossible;
-- an option set that was partly additive and partly exclusive, so the user had to
-  answer `1,3,4`.
-
-**No gate ships for this.** `check_reply_consistency` scans authored markdown,
-never a chat draft, and no gate sees a reply before it is sent. This section
-is prose against a failure that prose already failed to prevent once — which is
-why the next step is measurement, not a stronger adjective:
-`agent-config conformance:behavior` deliberately does **not** score ask-shape, so
-if this wording does not move the rate, that is a finding and not a silence.
+**No gate ships for this** — `check_reply_consistency` scans authored markdown,
+never a chat draft. `conformance:behavior` deliberately does not score ask-shape,
+so an unmoved rate is a finding rather than a silence.
 
 ## Mechanics — rationale, failure modes, format details, examples
 
