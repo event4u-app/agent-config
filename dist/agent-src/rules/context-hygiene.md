@@ -81,6 +81,9 @@ A mandated analysis/audit/review protocol is exactly the case that legitimately 
 - **Undeclared reading keeps 3-warn / 5-abort.** Unchanged.
 - **A declared protocol raises the abort to 8 read-only turns** — and never suspends it. "Non-bypassable" narrows to **no *silent* bypass**: a declared protocol is not silent.
 
+> **The 8 is provisional (n=1).** It comes from a single observed run — the coherence audit that motivated this clause needed 8+ read turns and was the protocol working, not a loop. That is a plausible number without a reproducible derivation, which is the same failure class as the "17 rules carry absolutes" figure this rule's own roadmap refuted. It is stated here rather than presented as measured.
+> **Revisit-if:** declared-protocol read counts have been observed across enough real sessions to take a p95 — then set the cap from that distribution and drop this note. Not a schedule; a trigger.
+
 A declaration is only valid when it states, before the reading starts, all three of:
 
 1. **the analysis goal**, falsifiably ("map every call chain that writes to the audit table" — not "understand the code");

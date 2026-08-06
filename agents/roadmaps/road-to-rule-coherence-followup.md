@@ -89,6 +89,26 @@ preparing the evidence is in scope; an agent flipping the default is not.
   rewrite. Two more share the reply-position root cause already declared for
   the other two.
 
+## Phase 5 — Retire the two provisional numbers
+
+Both are plausible figures without a reproducible derivation — the failure class
+the parent roadmap exposed in the "17 rules carry absolutes" claim and then
+committed twice more itself.
+
+- [ ] **F5.1 Set the declared-protocol read cap from data, not from n=1.** The
+  cap of 8 in `context-hygiene` comes from a single observed run and is marked
+  provisional in the rule body with a revisit trigger. Record declared-protocol
+  read counts across real sessions, then set the cap at p95 and drop the note.
+  - Acceptance: the cap cites a distribution and an n; the provisional note is
+    removed in the same change.
+- [ ] **F5.2 Decide what the absoluta figure is FOR, then cite accordingly.**
+  `src/scripts/measure_rule_absoluta.ts` now re-derives all three readings
+  (strict 79 · loose 97 · structural 94 of 111). Nothing currently depends on
+  the number — the lattice it refuted is already cut — so the open question is
+  whether any future artefact should cite it at all, and if so which reading.
+  - Acceptance: either a named consumer with a stated reading, or a decision
+    that the census stays a diagnostic with no cited figure.
+
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-08-06 | reviewer: claude/host -->
 | Rank | Item | Risk type | Description | Mitigation | Anchored under |
