@@ -1,6 +1,6 @@
 # agent-config — Public Catalog
 
-Consumer-facing catalog of all **696 public artefacts** shipped by
+Consumer-facing catalog of all **697 public artefacts** shipped by
 this package. Internal package-maintenance rules and deprecation shims
 are excluded.
 
@@ -431,7 +431,7 @@ are excluded.
 | rule | [`user-interrupt-priority`](../dist/agent-src/rules/user-interrupt-priority.md) | auto | New user instruction mid-flight — STOP the current task, run the new one in full, ASK before resuming |
 | rule | [`verify-before-complete`](../dist/agent-src/rules/verify-before-complete.md) | always | Verify before completion — run tests and quality tools before claiming done |
 
-## Commands (194)
+## Commands (195)
 
 | kind | name | cluster | description |
 |---|---|---|---|
@@ -452,6 +452,7 @@ are excluded.
 | command | [`analytics-prune`](../dist/agent-src/commands/analytics/prune.md) | cluster: analytics | Drop events older than the 90-day retention window from the local analytics log. Atomic and idempotent. |
 | command | [`analytics-show`](../dist/agent-src/commands/analytics/show.md) | cluster: analytics | Render top prompts, launcher → completion rate per role, average session length, and knowledge-source usage from the local analytics log. |
 | command | [`analyze`](../dist/agent-src/commands/analyze.md) | cluster: analyze | Analysis orchestrator — confidence-weighted suggester that routes to postmortem, premortem, decision-review, near-miss, incident, reference-repo, or inbox-artifact analysis. |
+| command | [`analyze-conformance`](../dist/agent-src/commands/analyze/conformance.md) | cluster: analyze | Audit recent local sessions for rule violations — deterministic scan plus subagent passes over the transcripts, root-cause each class, and emit a roadmap that mechanises what is mechanisable. |
 | command | [`analyze-decision`](../dist/agent-src/commands/analyze/decision.md) | cluster: analyze | Audit a past architectural decision — restate what was chosen and why, compare original assumptions against reality now, produce a verdict (still valid / needs amendment / superseded). |
 | command | [`analyze-inbox`](../dist/agent-src/commands/analyze/inbox.md) | cluster: analyze | Analyze a dropped inbox artifact (review, prompt, spec, transcript) against the current tree, verify every claim it makes, map what survives onto this suite's artefact types, emit a roadmap each. |
 | command | [`analyze-incident`](../dist/agent-src/commands/analyze/incident.md) | cluster: analyze | Full incident flow — incident-commander coordination, then RCA via root-cause-frameworks, then a blame-free write-up via blameless-post-mortem, ending with an incident-learnings candidate. |
