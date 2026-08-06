@@ -4,9 +4,16 @@
  *
  * Ported from the retired Python `src/scripts/bench_ab_v2_stats.py` (ADR-200 Python→TS
  * migration). Mirrors the CLI contract EXACTLY: positional `report` arg, the
- * `--json` / `--markdown PATH` flags, exit codes (0 ok / 1 no report found),
- * byte-identical stdout/stderr, byte-identical analysis JSON, and byte-identical
- * rendered markdown. No behaviour changes.
+ * `--json` / `--markdown PATH` flags, exit codes (0 ok / 1 no report found), and
+ * byte-identical stdout/stderr.
+ *
+ * The port itself introduced no behaviour change. Since then ONE additive change
+ * has landed, named here so the paragraph above stops reading as a standing
+ * promise it no longer keeps: S0.3 **delta #6** adds a `cost` block to the
+ * analysis JSON and a `Table 3b` to the rendered markdown (see `cost_by_arm`).
+ * Both are additions — every pre-existing key and table is untouched, and
+ * consumers that read named keys (`render_benchmark_composite`,
+ * `render_benchmark_md`, `bench_ab_diff`) are unaffected.
  *
  * Reads a v2 paired report (bench_ab_v2_run.py output) and computes, for each
  * arm comparison, paired significance + effect size on:
@@ -29,11 +36,15 @@ import * as path from 'node:path';
 import process from 'node:process';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
+import { cost_usd, tier_for_model, type TierRates } from './_lib/bench_ab_activation.js';
+import { load_pricing } from './_lib/bench_cost.js';
+
 const _HERE = fileURLToPath(import.meta.url);
 
 // bench_ab_v2_stats.ts → parents[2] is repo root (script lives in src/scripts/).
 const REPO_ROOT = path.resolve(path.dirname(_HERE), '..', '..');
 const REPORTS_DIR = path.join(REPO_ROOT, 'internal', 'bench', 'reports', 'ab-v2');
+const PRICING_PATH = path.join(REPO_ROOT, 'internal', 'bench', 'pricing.yaml');
 
 type Dict = Record<string, unknown>;
 
@@ -442,6 +453,89 @@ export function mean_tokens_by_arm(records: Dict[], arms: string[]): Dict {
     return out;
 }
 
+// ── delta #6 — the cost sheet ───────────────────────────────────────────────
+//
+// Table 3 reports mean TOKENS, which is not a cost: the four usage buckets differ
+// in price by up to 125×, so a run that is mostly cache-read and a run that is
+// mostly output can share a token total and differ in dollars by two orders of
+// magnitude. S0.3's own estimate carries a ~10× spread on the treatment arm for
+// exactly this reason, and it names closing that spread as this delta.
+//
+// The inputs already exist and are reused rather than rebuilt: `tokens_breakdown`
+// on every trial (delta #2), `cost_usd` which prices the buckets separately, and
+// `tier_for_model` (both delta #4). What was missing was wiring them into the
+// REPORT, so the cost axis was priceable per run and unpriced per arm.
+
+/** Per-arm cost, priced bucket-by-bucket, plus the provenance of the prices. */
+export function cost_by_arm(records: Dict[], arms: string[], model: string | null, pricingPath: string): Dict {
+    const [rates, sourced_on] = load_pricing(pricingPath);
+    const tier = model ? tier_for_model(model) : null;
+    const tier_rates: TierRates | null = tier && rates[tier] ? (rates[tier] as TierRates) : null;
+
+    const per_arm: Dict = {};
+    for (const arm of arms) {
+        let n = 0;
+        let total = 0;
+        const buckets = { input: 0, output: 0, cache_write: 0, cache_read: 0 };
+        for (const rec of records) {
+            const armRuns = _dictOr(rec['arms'])[arm];
+            for (const r of Array.isArray(armRuns) ? (armRuns as Dict[]) : []) {
+                // Same exclusion as the token axis: an errored or truncated run's
+                // usage is capped by the budget, not representative of the work.
+                if (_pyTruthy(r['errored'])) {
+                    continue;
+                }
+                n += 1;
+                const b = (r['tokens_breakdown'] ?? {}) as Record<string, unknown>;
+                buckets.input += _orZero(b['input_tokens']);
+                buckets.output += _orZero(b['output_tokens']);
+                buckets.cache_write += _orZero(b['cache_creation_input_tokens']);
+                buckets.cache_read += _orZero(b['cache_read_input_tokens']);
+                if (tier_rates) {
+                    total += cost_usd(b as never, tier_rates);
+                }
+            }
+        }
+        per_arm[arm] = {
+            n,
+            // `null` rather than 0 when the model is unpriceable: a zero would
+            // read as "this arm was free", which is a different claim from "we
+            // cannot price it". pricing.yaml's own contract says surface the gap.
+            total_usd: tier_rates ? PF(_pyRound(total, 4)) : null,
+            mean_usd: tier_rates && n ? PF(_pyRound(total / n, 4)) : null,
+            tokens_by_bucket: buckets,
+        };
+    }
+
+    return {
+        tier: tier ?? 'unknown',
+        priced: tier_rates !== null,
+        pricing_sourced_on: sourced_on,
+        per_arm,
+    };
+}
+
+/**
+ * Whole days between the price sourcing date and the report's own stamp.
+ *
+ * Measured against the STAMP, not against today: a report is a fixed artefact, so
+ * re-rendering it must not change the number. Returns null when either date is
+ * unreadable — an invented age would be worse than an absent one.
+ */
+export function pricing_age_days(sourced_on: string | null, stamp: string | null): number | null {
+    if (!sourced_on || !stamp) {
+        return null;
+    }
+    const src = Date.parse(sourced_on.slice(0, 10));
+    // Report stamps are `YYYY-MM-DDTHH-MM-SSZ` — the time separators are dashes,
+    // so only the date half is parseable without rewriting it.
+    const rep = Date.parse(stamp.slice(0, 10));
+    if (Number.isNaN(src) || Number.isNaN(rep)) {
+        return null;
+    }
+    return Math.floor((rep - src) / 86_400_000);
+}
+
 export function bucket_rates(records: Dict[], arms: string[]): Dict {
     const out: Dict = {};
     for (const arm of arms) {
@@ -482,6 +576,7 @@ export function analyse(payload: Dict): Dict {
         comparisons: comps,
         status_buckets: bucket_rates(records, arms),
         mean_tokens: mean_tokens_by_arm(records, arms),
+        cost: cost_by_arm(records, arms, payload['model'] ? String(payload['model']) : null, PRICING_PATH),
     };
 }
 
@@ -640,6 +735,50 @@ export function to_markdown(analysis: Dict, payload: Dict): string {
         L.push('|---|---|---|---|');
         L.push(`| mean tokens | ${_thousands(tb)} | ${_thousands(tt)} | ${_thousandsSigned(tt - tb)} |`);
         L.push('');
+
+        // Delta #6 — the dollar half of the cost axis. Tokens above are a volume;
+        // these are a price, and the two rank arms differently because the four
+        // usage buckets differ in cost by up to 125×.
+        const cost = _dictOr(a['cost']);
+        const costArms = _dictOr(cost['per_arm']);
+        const cb = _dictOr(costArms[String(cmp['arm_baseline'])]);
+        const ct = _dictOr(costArms[String(cmp['arm_treatment'])]);
+        L.push('### Table 3b — cost axis in dollars (bucket-priced, non-errored)');
+        L.push('');
+        if (!_pyTruthy(cost['priced'])) {
+            L.push(
+                `> **Unpriced.** No pricing row matches model \`${_pyStr(a['model'])}\` ` +
+                    `(tier \`${_pyStr(cost['tier'])}\`), so no dollar figure is shown. This is a ` +
+                    'gap, not a zero — add the row to `internal/bench/pricing.yaml` rather than ' +
+                    'reading the absence as "free".',
+            );
+        } else {
+            L.push('| metric | baseline | treatment | Δ |');
+            L.push('|---|---|---|---|');
+            L.push(
+                `| mean USD/run | ${_usd(cb['mean_usd'])} | ${_usd(ct['mean_usd'])} ` +
+                    `| ${_usdSigned(_pyFloat(ct['mean_usd']) - _pyFloat(cb['mean_usd']))} |`,
+            );
+            L.push(
+                `| total USD | ${_usd(cb['total_usd'])} | ${_usd(ct['total_usd'])} ` +
+                    `| ${_usdSigned(_pyFloat(ct['total_usd']) - _pyFloat(cb['total_usd']))} |`,
+            );
+            L.push('');
+            const age = pricing_age_days(
+                cost['pricing_sourced_on'] ? String(cost['pricing_sourced_on']) : null,
+                a['stamp'] ? String(a['stamp']) : null,
+            );
+            const src = cost['pricing_sourced_on'] ? String(cost['pricing_sourced_on']) : 'unknown';
+            L.push(
+                `> Priced per bucket (input / output / cache-write / cache-read) at the ` +
+                    `\`${_pyStr(cost['tier'])}\` tier, sourced ${src}` +
+                    (age === null ? '' : ` — **${age} days before this report**`) +
+                    '. A blended rate over the token total is not an approximation of this, it is ' +
+                    'a different number. Stale prices make these figures stale: re-source them ' +
+                    'before quoting a dollar amount.',
+            );
+        }
+        L.push('');
         const at = _dictOr(cmp['attrition']);
         L.push('### Table 4 — attrition (dropped pairs are not missing-at-random)');
         L.push('');
@@ -736,6 +875,20 @@ function _thousandsSigned(n: number): string {
     const t = _pyIntTrunc(n);
     const body = _pyThousands(t);
     return t < 0 ? body : `+${body}`;
+}
+
+/**
+ * Render a cost cell — `n/a` when the model could not be priced, never `$0.00`.
+ *
+ * Unwraps through `_pyFloat` because the analysis carries costs as `PyFloat`
+ * (a plain `{value}` wrapper with no `valueOf`), so `Number(cell)` yields NaN.
+ */
+function _usd(v: unknown): string {
+    return v === null || v === undefined ? 'n/a' : `$${_pyFloat(v).toFixed(4)}`;
+}
+
+function _usdSigned(n: number): string {
+    return `${n >= 0 ? '+' : '-'}$${Math.abs(n).toFixed(4)}`;
 }
 
 /** `mt.get(arm, {}).get("mean_tokens", 0)`. */

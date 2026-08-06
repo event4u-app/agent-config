@@ -27,6 +27,14 @@ import {
     trajectory_metrics,
     injected_text,
     hardened_blocks_text,
+    bare_principle_text,
+    ladder_rule_text,
+    lift_audit_arms,
+    workspace_dir,
+    selftest_run,
+    selftest_usage,
+    ARMS,
+    CODEX_VALID_ARMS,
     checkpoint_key,
     run_key,
     freeze_result,
@@ -39,6 +47,7 @@ import {
     type CheckpointIO,
 } from '../../src/scripts/bench_ab_v2_run.js';
 import type { ScoreResultV2 } from '../../src/scripts/_lib/bench_ab_scoring_v2.js';
+import { activation_verdict, audit_activation, expected_injection } from '../../src/scripts/_lib/bench_ab_activation.js';
 
 const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..');
 const SCRIPTS = path.join(REPO_ROOT, 'src', 'scripts');
@@ -105,6 +114,148 @@ describe('bench_ab_v2_run — pure helpers', () => {
         const placebo = injected_text('hardened-placebo', 2000) as string;
         expect(placebo.length).toBe(hardened_blocks_text().length);
         expect(placebo).not.toContain('HARD CONSTRAINT');
+    });
+
+    // ── road-to-solution-minimalism Phase 3, Arms step ──────────────────────
+    //
+    // The two arms the step names and `ARMS` lacked. Every assertion here is a
+    // property of the arm's PURPOSE, not a snapshot of its text: the
+    // bare-principle arm's job is to be floor-free and small, the ladder arm's job
+    // is to carry the projected rule rather than a restatement of it.
+
+    it('bare-principle: one short sentence, no floor vocabulary, no ladder rungs', () => {
+        const bare = injected_text('bare-principle', 2000);
+        expect(bare).toBe(bare_principle_text());
+        const text = bare as string;
+
+        // Small by construction — this is finding F6's control, so it must not
+        // smuggle in a second treatment. One sentence, no line breaks.
+        expect(text.length).toBeLessThan(200);
+        expect(text).not.toContain('\n');
+
+        // Floor-free is the whole point: the arm exists to measure what the
+        // ROUTED floors add over the naked principle, so it may not route any.
+        for (const floor of [
+            'engineering-safety-floor',
+            'security-sensitive-stop',
+            'senior-engineering-discipline',
+            'scale-discipline',
+            'HARD CONSTRAINT',
+        ]) {
+            expect(text).not.toContain(floor);
+        }
+        // Nor may it carry the ladder's own rungs — that would make it a second
+        // ladder arm rather than a control.
+        for (const rung of ['reuse-in-repo', 'native platform', 'stdlib']) {
+            expect(text.toLowerCase()).not.toContain(rung.toLowerCase());
+        }
+    });
+
+    it('package-ladder: injects the PROJECTED ladder rule, not a restatement', () => {
+        const injected = injected_text('ladder', 2000);
+        expect(injected).toBe(ladder_rule_text());
+        const text = injected as string;
+
+        // Read from `dist/agent-src/rules/improve-before-implement.md`, so it must
+        // carry that rule's own ladder section — if the projection ever stopped
+        // carrying the ladder, this arm would be measuring the wrong thing and
+        // this assertion is what says so.
+        expect(text).toContain('solution-size ladder');
+        expect(text).toContain('reuse-in-repo');
+        // Substantially larger than the bare control — the contrast between the
+        // two arms is the measurement, so a collapse of that contrast is a bug.
+        expect(text.length).toBeGreaterThan(bare_principle_text().length * 5);
+    });
+
+    it('ARMS: the two new arms use the channels their purpose requires', () => {
+        // Plugin ON + text injection: the ladder is guaranteed in context rather
+        // than left to `improve-before-implement`'s keyword triggers.
+        expect(ARMS['package-ladder']).toEqual({ setting_sources: null, inject: 'ladder' });
+        // Plugin scoped AWAY + text injection: no floors reach the model.
+        expect(ARMS['bare-principle']).toEqual({
+            setting_sources: 'project,local',
+            inject: 'bare-principle',
+            min_lift_ratio: null,
+        });
+    });
+
+    it('lift_audit_arms: excludes the tiny-treatment arm, keeps every real lift arm', () => {
+        const selected = lift_audit_arms(['vanilla', 'package', 'package-ladder', 'bare-principle', 'placebo']);
+
+        // Baseline is never its own lift arm.
+        expect(selected).not.toContain('vanilla');
+        // A deliberately minimal treatment cannot show footprint lift; requiring
+        // it would fail legitimate runs.
+        expect(selected).not.toContain('bare-principle');
+        // Every arm that DOES carry a real surface stays audited — this is the
+        // half that must not silently shrink.
+        expect(selected).toContain('package');
+        expect(selected).toContain('package-ladder');
+        expect(selected).toContain('placebo');
+
+        // An unknown arm name is not silently promoted into the audit set.
+        expect(lift_audit_arms(['no-such-arm'])).toEqual([]);
+    });
+
+    it('bare-principle stays audited: the text direction fires BOTH ways for it', () => {
+        // The point of the `min_lift_ratio: null` opt-out is that it narrows the
+        // audit to the text channel — never that it removes the arm from auditing.
+        // Both directions are asserted here so neither an always-firing nor a
+        // never-firing audit passes.
+        const spec = ARMS['bare-principle'];
+        expect(spec).toBeDefined();
+        const expected = expected_injection(spec as NonNullable<typeof spec>);
+        expect(expected).toBe('text');
+
+        const usage = {
+            input_tokens: 900,
+            output_tokens: 100,
+            cache_read_input_tokens: 0,
+            cache_creation_input_tokens: 0,
+        };
+        // Declared a text injection and carried none → violation.
+        expect(
+            activation_verdict({ expected, tokens_breakdown: usage, injected_chars: 0, errored: false }).verdict,
+        ).toBe('violation');
+        // Declared one and carried it → ok.
+        expect(
+            activation_verdict({
+                expected,
+                tokens_breakdown: usage,
+                injected_chars: bare_principle_text().length,
+                errored: false,
+            }).verdict,
+        ).toBe('ok');
+    });
+
+    it('CODEX_VALID_ARMS: the pure-injection arm carries to codex, the plugin one does not', () => {
+        expect(CODEX_VALID_ARMS).toContain('bare-principle');
+        expect(CODEX_VALID_ARMS).not.toContain('package-ladder');
+    });
+
+    // ── delta #7 — one preserved workspace per trial ─────────────────────────
+
+    it('workspace_dir: distinct per task AND arm AND seed', () => {
+        const a = workspace_dir('t1', 'vanilla', 0);
+        const variants = [
+            workspace_dir('t2', 'vanilla', 0), // different task
+            workspace_dir('t1', 'package', 0), // different arm
+            workspace_dir('t1', 'vanilla', 1), // different seed
+        ];
+        // The old key was task-only, so the last two of these collided with `a`
+        // and every arm/seed of a task overwrote the previous one's evidence.
+        for (const v of variants) {
+            expect(v).not.toBe(a);
+        }
+        expect(new Set([a, ...variants]).size).toBe(4);
+    });
+
+    it('workspace_dir: an arm name cannot escape the work root', () => {
+        const evil = workspace_dir('t1', '../../etc', 0);
+        // Arm names reach this as a path segment; separators must not survive.
+        expect(path.basename(evil)).toBe(evil.slice(evil.lastIndexOf(path.sep) + 1));
+        expect(evil).not.toContain(`..${path.sep}`);
+        expect(path.resolve(evil).startsWith(path.resolve(path.dirname(evil)))).toBe(true);
     });
 
     it('status_bucket: completed / budget_limit / task_limit / validation_failed', () => {
@@ -395,5 +546,126 @@ describe('bench_ab_v2_run — measurement integrity', () => {
         );
         expect(aborted).toBeNull();
         expect(executed).toBe(4);
+    });
+});
+
+// ── delta #8 — the no-network selftest ──────────────────────────────────────
+//
+// The mode's whole claim is "runs green with no network and no key", so the
+// end-to-end test strips the credentials from the child env rather than trusting
+// that nothing reached for them.
+
+describe('bench_ab_v2_run — selftest mode', () => {
+    const NO_CREDS: NodeJS.ProcessEnv = {
+        ANTHROPIC_API_KEY: undefined,
+        CLAUDE_CODE_OAUTH_TOKEN: undefined,
+        ANTHROPIC_AUTH_TOKEN: undefined,
+    };
+
+    it('exits 0 with no key and marks the report unpublishable', () => {
+        const r = runTs(
+            [
+                '--mode',
+                'selftest',
+                '--arms',
+                'vanilla,package,package-ladder,bare-principle,placebo',
+                '--seeds',
+                '2',
+                '--limit',
+                '2',
+                '--model',
+                'claude-sonnet-4-5-20250929',
+                '--no-checkpoint',
+            ],
+            NO_CREDS,
+        );
+        expect(r.status).toBe(0);
+        expect(r.stdout).toContain('SELFTEST');
+        expect(r.stdout).toContain('not publishable');
+
+        // The report path is named so a selftest artefact cannot be mistaken for a
+        // measured one, and the payload says the same thing independently.
+        const m = /internal\/bench\/reports\/ab-v2\/([^\s]+\.json)/.exec(r.stdout);
+        expect(m).not.toBeNull();
+        const file = path.join(REPO_ROOT, 'internal', 'bench', 'reports', 'ab-v2', (m as RegExpExecArray)[1] as string);
+        expect(path.basename(file)).toContain('-selftest');
+
+        const payload = JSON.parse(fs.readFileSync(file, 'utf-8')) as Record<string, unknown>;
+        expect(payload['tier']).toBe('selftest');
+        expect(payload['synthetic']).toBe(true);
+
+        const audit = payload['activation_audit'] as Record<string, unknown>;
+        // The audit RAN (it is not vacuous) and passed.
+        expect(audit['violations']).toEqual([]);
+        expect(audit['checked']).toBeGreaterThan(0);
+
+        // Delta #7 end-to-end: one preserved workspace per (task, arm, seed).
+        // Under the old task-only key this set would have had one element.
+        const records = payload['records'] as Record<string, unknown>[];
+        const workspaces: string[] = [];
+        let syntheticRuns = 0;
+        for (const rec of records) {
+            for (const runs of Object.values(rec['arms'] as Record<string, Record<string, unknown>[]>)) {
+                for (const run of runs) {
+                    workspaces.push(String(run['workspace']));
+                    if (run['synthetic'] === true) {
+                        syntheticRuns += 1;
+                    }
+                }
+            }
+        }
+        expect(workspaces).toHaveLength(2 * 5 * 2);
+        expect(new Set(workspaces).size).toBe(workspaces.length);
+        // Every trial is stamped synthetic, so no single run can be quoted as real.
+        expect(syntheticRuns).toBe(workspaces.length);
+
+        fs.rmSync(file, { force: true });
+    });
+
+    it('selftest_usage: lift arms clear the audit ratio, the bare control cannot', () => {
+        const base = selftest_usage('vanilla', 0, 2000);
+        const basePt = base.input_tokens + base.cache_read_input_tokens + base.cache_creation_input_tokens;
+
+        for (const arm of ['package', 'package-ladder', 'placebo']) {
+            const u = selftest_usage(arm, 0, 2000);
+            const pt = u.input_tokens + u.cache_read_input_tokens + u.cache_creation_input_tokens;
+            expect(pt / basePt).toBeGreaterThan(1.2);
+        }
+        // This is the measured reason `bare-principle` declares min_lift_ratio:
+        // null — its footprint sits just above baseline, so a lift check on it
+        // would fail a perfectly healthy run.
+        const bare = selftest_usage('bare-principle', 0, 2000);
+        const barePt = bare.input_tokens + bare.cache_read_input_tokens + bare.cache_creation_input_tokens;
+        expect(barePt / basePt).toBeLessThan(1.2);
+    });
+
+    it('the selftest audit fires in the FAILURE direction too', () => {
+        // A selftest that can only ever be observed passing proves nothing. Force
+        // a plugin arm to collapse to baseline and assert the audit catches it —
+        // the same violation a disabled or version-drifted plugin would produce in
+        // a live sweep.
+        const task = { id: 'trapA-overeng-01', fixture: 'fixtures-v2/trapA-overeng-01' };
+        const opts = { model: 'claude-sonnet-4-5-20250929', max_budget: null, timeout: 30, placebo_chars: 2000, sp_dir: os.tmpdir() };
+        const collapsed = (_arm: string, seed: number) => ({
+            input_tokens: 1000,
+            output_tokens: 200 + seed,
+            cache_read_input_tokens: 0,
+            cache_creation_input_tokens: 0,
+        });
+
+        const records = [
+            {
+                id: task.id,
+                arms: {
+                    vanilla: [{ ...selftest_run(task, 'vanilla', { ...opts, seed: 0 }), seed: 0 }],
+                    package: [{ ...selftest_run(task, 'package', { ...opts, seed: 0 }, collapsed), seed: 0 }],
+                },
+            },
+        ];
+        const audit = audit_activation(records, { baseline_arm: 'vanilla', lift_arms: lift_audit_arms(['vanilla', 'package']) });
+        expect(audit.checked).toBe(1);
+        expect(audit.violations).toHaveLength(1);
+        expect(audit.violations[0]?.kind).toBe('collapsed-to-baseline');
+        expect(audit.violations[0]?.arm).toBe('package');
     });
 });

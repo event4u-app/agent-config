@@ -1,0 +1,110 @@
+# Reproducing an `ab-v2` paired sweep
+
+One page, on purpose. It exists because the record shows the harshest critic of a
+benchmark becomes its most-cited validator once handed a reproduction path — so
+the path is a first-class deliverable of `road-to-solution-minimalism` Phase 3,
+not an afterthought written once someone asks.
+
+## Start here — the run that costs nothing
+
+```bash
+npx tsx src/scripts/bench_ab_v2_run.ts \
+  --mode selftest \
+  --arms vanilla,package,package-ladder,bare-principle,placebo \
+  --seeds 2 --limit 2 \
+  --model claude-sonnet-4-5-20250929 \
+  --no-checkpoint
+```
+
+Exits 0 with **no network and no API key**. It substitutes exactly one thing —
+the model call — and runs the fixture clone, the deterministic scorer, the
+per-trial activation stamp, the cross-arm audit, the report writer and every exit
+code for real. So a green selftest tells you the harness works; it tells you
+nothing about the hypothesis, and its report says so in three places (`tier:
+selftest`, `synthetic: true`, `-selftest` in the filename, plus a `synthetic: true`
+stamp on every trial record).
+
+`--mode dry-run` is not this. It prints a run count and returns before all of the
+above — useful for checking arithmetic, useless for checking the harness.
+
+## The three exit codes
+
+| Code | Meaning |
+|---|---|
+| 0 | sweep completed and the activation audit found nothing |
+| 1 | bad invocation or missing host CLI (unknown arm, arm invalid for `--host codex`, `claude` not found) |
+| 2 | **refused or invalid** — a bare model alias, an unpriceable model under `--max-usd`, a sweep-budget abort, or an activation-audit violation |
+
+Exit 2 always still writes the report: an invalid sweep already cost money and its
+raw runs stay inspectable. The exit code is what makes it non-ignorable, so never
+read a report without reading the code that produced it.
+
+## What the activation audit checks, and in which direction
+
+Two directions, because one trial cannot see both:
+
+- **Per trial (text channel).** An arm that declares an injection must carry one;
+  an arm that declares none must not. Stamped on every record as `activation`.
+- **Across arms (footprint).** A lift arm's prompt footprint must sit at least
+  `ACTIVATION_MIN_LIFT_RATIO` (1.2) above its paired `vanilla` run. This catches a
+  treatment surface that **collapsed to baseline** — a disabled or version-drifted
+  plugin, which is how this harness once produced a full set of invalid nulls that
+  looked identical to real ones.
+
+`bare-principle` opts out of the footprint direction only (`min_lift_ratio: null`
+on its `ArmSpec`): its treatment is one sentence, so it has no lift to show and a
+ratio check there would fail healthy runs. Its text direction still runs both
+ways. `lift_audit_arms` is exported so the exclusion set is asserted by tests
+rather than trusted.
+
+## Offline re-scoring
+
+Every trial preserves its own workspace, keyed `task__arm__seedN` under
+`$TMPDIR/agent-config-bench-v2-clones/`, and records that path as `workspace` on
+the trial. This is what makes a new endpoint retro-fittable onto an
+already-completed sweep instead of requiring a re-run: the diff a trial produced
+is still on disk.
+
+Two consequences worth knowing before you rely on it:
+
+- Workspaces live in the OS temp directory, so they survive the sweep but not
+  necessarily a reboot. Copy them out before re-scoring a run you care about.
+- A resumed or repeated trial re-clones from the pristine fixture, so the
+  workspace always reflects the LAST execution of that (task, arm, seed).
+
+## Resume
+
+Checkpointing is on by default. The key is derived from corpus, model, seeds,
+arms, budget, timeout, host and the task-id list, so a sweep resumes only into an
+identical configuration — change any of those and you get a fresh run rather than
+a silently mixed one. `--fresh` discards a checkpoint; `--no-checkpoint` disables
+it. A completed sweep deletes its own checkpoint so no residue steers a later run.
+
+## Cost control
+
+`--budget` is **per run** (default 1.0). `--max-usd` is the **sweep** cap: prices
+come from `internal/bench/pricing.yaml`, the four token buckets are priced
+separately (they differ by up to 125×, so a blended rate is a different number,
+not an approximation), and the first run that crosses the cap aborts the sweep
+with exit 2. A model with no pricing row plus `--max-usd` is **refused**, never
+silently uncapped.
+
+## What a paid run additionally needs — and does not have yet
+
+A full-tier Phase-3 run is **not** reproducible from this document alone, and
+saying so is part of the path:
+
+- **The spend grant** is the user's (`benchmark-spend-authorization` in the
+  roadmap). Firing a paid external run without it is a Hard-Floor action.
+- **A pinned external repo** (S0.3 delta #9) does not exist: the corpus carries no
+  `repo`/`sha` keys and the fixtures are self-contained in-repo trees. So there is
+  currently **no SHA to pin**, and any report claiming one would be wrong.
+- **Task oracles against that repo** (delta #10, sized large) do not exist. A
+  harness pointed at a real repo with no oracles runs nothing, which is why #9 and
+  #10 ship together.
+- **A cognitive-complexity endpoint** (delta #11, sized large) does not exist
+  anywhere in the tree, and Phase 3's acceptance is a metric *pair* — so the phase
+  cannot report a pass without it, at any price.
+
+Until those land, the honest reproducible surface is the selftest plus offline
+re-scoring of whatever sweeps exist.

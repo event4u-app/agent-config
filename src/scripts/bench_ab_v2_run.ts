@@ -95,6 +95,25 @@ interface ArmSpec {
     setting_sources: string | null;
     inject: string | null; // None | "rdp" | "placebo"
     recursive?: boolean; // ADR-106 D₂ arm: depth-bounded attempt→critic→re-attempt loop
+    /**
+     * Per-arm override for the footprint-lift audit, or `null` to declare that
+     * lift is **not a valid signal** for this arm.
+     *
+     * `audit_activation`'s cross-arm direction catches a treatment surface that
+     * COLLAPSED to baseline, by requiring the arm's prompt footprint to sit at
+     * least `ACTIVATION_MIN_LIFT_RATIO` above the paired vanilla run. That test
+     * presupposes a treatment surface large enough to move the footprint. An arm
+     * whose treatment is deliberately *minimal* — `bare-principle` is one
+     * sentence — has no lift to detect, so including it would fail legitimate
+     * runs: the exact failure the ratio's own calibration note warns about.
+     *
+     * `null` narrows the audit for that arm to the per-trial TEXT direction,
+     * which is checked both ways (`activation_verdict`: a text arm must carry an
+     * injection, a non-text arm must not). It never leaves the arm unaudited —
+     * and `bench_ab_v2_run.test.ts` pins both halves, so neither an
+     * always-firing nor a never-firing audit passes.
+     */
+    min_lift_ratio?: number | null;
 }
 
 // Arm -> (setting_sources, inject) where inject ∈ {None, "rdp", "placebo"}.
@@ -118,6 +137,28 @@ interface ArmSpec {
 // shipped `balanced` router profile (which does NOT include downstream-changes
 // — tier_2 — so this arm also tests whether that profile cut loses the lift).
 // Both are opt-in: NOT in the default arm list; existing runs unchanged.
+//
+// `package-ladder` / `bare-principle` (road-to-solution-minimalism Phase 3 — the
+// two arms its Arms step names and `ARMS` lacked). Also opt-in, so existing runs
+// and golden-parity outputs are unchanged.
+//
+// `package-ladder` is NOT redundant with `package`, and the reason is measurable
+// rather than stylistic: the ladder ships inside `improve-before-implement`,
+// which is `type: auto`, `tier: 2b`, `alwaysApply: false`, keyword-triggered on
+// `refactor|implement|migration`, and is absent from `dist/router.json`'s
+// preloaded tier lists. So under `package` the ladder reaches the model only when
+// a task's own wording happens to trip one of those keywords — unmeasured, and
+// per-task. That is finding F1's failure class exactly (an activation gap that a
+// null cannot be distinguished from), which is why the pair is: `package` = the
+// shipped reality, `package-ladder` = the same config with the ladder rule body
+// injected via sysprompt so it is guaranteed in context. The contrast measures
+// the ladder, not the trigger set.
+//
+// `bare-principle` is finding F6's control: the naked principle with NO floors
+// routed, plugin scoped away. Its text is authored HERE and is deliberately not
+// the external source's own prompt — per `code-provenance`, a borrowed prompt is
+// re-derived rather than copied, and the arm's job is to be a floor-free
+// principle statement, not a specific artefact.
 export const ARMS: Record<string, ArmSpec> = {
     vanilla: { setting_sources: 'project,local', inject: null },
     package: { setting_sources: null, inject: null },
@@ -128,6 +169,8 @@ export const ARMS: Record<string, ArmSpec> = {
     'hardened-placebo': { setting_sources: null, inject: 'hardened-placebo' },
     'rules-kernel-dc': { setting_sources: 'project,local', inject: 'rules-kernel-dc' },
     'rules-balanced': { setting_sources: 'project,local', inject: 'rules-balanced' },
+    'package-ladder': { setting_sources: null, inject: 'ladder' },
+    'bare-principle': { setting_sources: 'project,local', inject: 'bare-principle', min_lift_ratio: null },
 };
 
 /**
@@ -202,7 +245,71 @@ export function rules_subset_text(subset: 'rules-kernel-dc' | 'rules-balanced'):
     return bodies.join('\n\n---\n\n');
 }
 
+/**
+ * The `bare-principle` arm's whole treatment — finding F6's control.
+ *
+ * One sentence, no floors, no routing, no ladder rungs. It exists so the
+ * benchmark can separate "the principle" from "the principle with this package's
+ * safety floors routed behind it": F6 measured a bare critic prompt nearly
+ * matching a full minimalism artefact on size *while being the only arm that
+ * dropped a safety guard*, so a report without this arm asserts the floors'
+ * contribution instead of measuring it.
+ *
+ * Authored here on purpose. The external source's own prompt is not reproduced —
+ * `code-provenance` requires a conscious borrow to be re-derived rather than
+ * copied, and nothing about the arm's function depends on its exact wording.
+ * Deterministic (no interpolation) so the injected bytes are stable per checkout.
+ */
+export function bare_principle_text(): string {
+    return 'Prefer the smallest solution that fully solves the stated problem; do not add what was not asked for.';
+}
+
+/**
+ * The ladder rule body, read from the projection — the `package-ladder` arm.
+ *
+ * Reads `dist/agent-src/rules/improve-before-implement.md`, the same source
+ * `rules_subset_text` uses, so the injected text is exactly the rule the package
+ * would load if its keyword triggers fired. Reading the projection rather than
+ * restating the ladder keeps the arm honest: a hand-copied summary would measure
+ * the summary.
+ */
+export function ladder_rule_text(): string {
+    return fs.readFileSync(path.join(RULES_DIR, 'improve-before-implement.md'), 'utf-8').trim();
+}
+
+/**
+ * Which arms the cross-arm FOOTPRINT-lift direction of the activation audit
+ * applies to.
+ *
+ * Three exclusions, each for a different reason:
+ * - `vanilla` is the baseline the ratio is measured against.
+ * - an arm with no treatment surface (`expected_injection === 'none'`) has no
+ *   lift to require.
+ * - an arm declaring `min_lift_ratio: null` has a treatment too small for lift to
+ *   be a signal at all (see `ArmSpec.min_lift_ratio`); requiring one there fails
+ *   legitimate runs. Its per-trial TEXT direction is unaffected and still runs
+ *   both ways.
+ *
+ * Pure and exported so the exclusion set is asserted rather than trusted — a
+ * silent widening of it would be a reach reduction in the audit.
+ */
+export function lift_audit_arms(arms: readonly string[]): string[] {
+    return arms.filter((a) => {
+        const spec = ARMS[a] as ArmSpec | undefined;
+        if (!spec || a === 'vanilla') {
+            return false;
+        }
+        return expected_injection(spec) !== 'none' && spec.min_lift_ratio !== null;
+    });
+}
+
 export function injected_text(inject: string | null, placebo_chars: number): string | null {
+    if (inject === 'bare-principle') {
+        return bare_principle_text();
+    }
+    if (inject === 'ladder') {
+        return ladder_rule_text();
+    }
     if (inject === 'rdp') {
         return v1.system_prompt_for('with-rdp');
     }
@@ -222,10 +329,38 @@ export function injected_text(inject: string | null, placebo_chars: number): str
     return null;
 }
 
-/** Copy the task's pristine fixture into a throwaway working clone. */
-export function reset_fixture(task: Dict): [string, string] {
+/**
+ * Workspace directory for one trial — delta #7 of the S0.3 spike.
+ *
+ * Keyed by `task|arm|seed`, not by task alone. The old task-only key meant every
+ * arm and every seed of a task reused ONE directory that the next trial deleted,
+ * so at the end of a sweep exactly one workspace survived per task — the last one
+ * written, with no record of which arm or seed it belonged to.
+ *
+ * That is not a tidiness problem. Phase 3's anti-golfing gate is specified as
+ * retro-fittable onto already-completed runs by offline re-scoring, and the
+ * roadmap calls that gate cheap *because* the workspaces are preserved. Under the
+ * old key there was nothing to re-score, so the claim was false. A distinct
+ * directory per trial is what makes it true.
+ *
+ * `arm` is sanitised because arm names are used verbatim as a path segment and
+ * one of them would otherwise be free to escape the root.
+ */
+export function workspace_dir(task_id: string, arm: string, seed: number): string {
+    const safe_arm = arm.replace(/[^A-Za-z0-9._-]/g, '_');
+    return path.join(WORK_ROOT, `${task_id}__${safe_arm}__seed${seed}`);
+}
+
+/**
+ * Copy the task's pristine fixture into this trial's own working clone.
+ *
+ * The clone is re-created from the fixture on every call, so a resumed or
+ * repeated trial still starts pristine — the per-trial key changes *which*
+ * directory that is, never whether it is clean.
+ */
+export function reset_fixture(task: Dict, arm: string, seed: number): [string, string] {
     const fixture = path.join(FIXTURES_ROOT, String(task['fixture']));
-    const dest = path.join(WORK_ROOT, String(task['id']));
+    const dest = workspace_dir(String(task['id']), arm, seed);
     if (fs.existsSync(dest)) {
         fs.rmSync(dest, { recursive: true, force: true });
     }
@@ -277,6 +412,13 @@ interface RunOneOpts {
     sp_dir: string;
     max_depth?: number | null; // recursion arm only — hard cap on correction rounds (default 1)
     host?: string; // 'claude' (default) | 'codex' — P2 non-Claude replication (ADR-110 roadmap Phase 4)
+    /**
+     * Trial seed — delta #7. Part of the workspace key, so each (task, arm, seed)
+     * gets its own preserved clone. Defaults to 0 so an existing caller that does
+     * not thread it still gets a stable, arm-scoped directory rather than the old
+     * task-only collision.
+     */
+    seed?: number;
 }
 
 // ── codex host adapter (P2 non-Claude weak-host replication) ────────────────
@@ -302,6 +444,10 @@ export const CODEX_VALID_ARMS: readonly string[] = [
     'placebo',
     'rules-kernel-dc',
     'rules-balanced',
+    // Pure-injection, so it carries to a non-Claude host unchanged. Its
+    // plugin-bearing sibling `package-ladder` deliberately is NOT here — it
+    // depends on the real plugin, which this host cannot load.
+    'bare-principle',
 ];
 
 export function codex_executable(): string | null {
@@ -505,7 +651,7 @@ export function run_one(task: Dict, arm: string, opts: RunOneOpts): Dict {
         return run_one_recursive(task, opts);
     }
     const host = opts.host ?? 'claude';
-    const [clone, fixture] = reset_fixture(task);
+    const [clone, fixture] = reset_fixture(task, arm, opts.seed ?? 0);
     const sp_text = injected_text(spec.inject, opts.placebo_chars);
     let run: Dict;
     if (host === 'codex') {
@@ -539,6 +685,10 @@ export function run_one(task: Dict, arm: string, opts: RunOneOpts): Dict {
         discipline_pass: score.discipline_pass,
         metrics: trajectory_metrics(run, score),
         injected_chars: sp_text ? sp_text.length : 0,
+        // Delta #7 — where this trial's evidence lives. Recorded on the trial
+        // rather than recomputed later, so an offline re-scorer reads the path the
+        // sweep actually used instead of re-deriving a key that may have changed.
+        workspace: clone,
         ...integrity_fields(run, spec, sp_text ? sp_text.length : 0, opts.model),
     };
 }
@@ -567,6 +717,96 @@ export interface RecursiveAttempt {
  * threading). Whether recursion actually lifts capability/discipline is the
  * empirical question the live `bench:ab` run answers — not asserted here.
  */
+// ── delta #8 — the no-network selftest ──────────────────────────────────────
+//
+// `--mode dry-run` printed a run count and returned before the CLI check, the
+// fixtures, the scorer, the activation audit and the report writer — so it could
+// not tell a working harness from a broken one. The roadmap's Reproducibility
+// step asks for a `--selftest` that "runs green with no network and no key", and
+// a mode that exercises nothing cannot answer that.
+//
+// `--mode selftest` substitutes EXACTLY ONE thing: the model call. Fixture
+// cloning, the deterministic scorer, the per-trial activation stamp, the
+// cross-arm audit, the report writer and every exit code run for real. What it
+// therefore proves is the harness, not the hypothesis — and that is the whole
+// distinction between a self-test and a measurement.
+
+/**
+ * Deterministic synthetic usage for one selftest trial.
+ *
+ * Derived from the arm's real treatment size rather than invented, so the
+ * footprint relationships the activation audit reads are the ones the arm
+ * actually implies: a plugin-bearing arm shows the package's footprint, a text arm
+ * shows its injection, and `vanilla` shows neither.
+ *
+ * The plugin figure is a stand-in for a surface this process cannot observe
+ * without the real CLI. It is deliberately far above `ACTIVATION_MIN_LIFT_RATIO`
+ * so a selftest failure means the wiring is broken, never that a synthetic
+ * constant drifted under a threshold.
+ */
+export function selftest_usage(arm: string, seed: number, placebo_chars: number): TokensBreakdown {
+    const spec = ARMS[arm] as ArmSpec | undefined;
+    const injected = spec ? (injected_text(spec.inject, placebo_chars)?.length ?? 0) : 0;
+    const plugin = spec && spec.setting_sources === null ? 4000 : 0;
+    return {
+        input_tokens: 1000 + plugin + Math.floor(injected / 4),
+        output_tokens: 200 + seed,
+        cache_read_input_tokens: 0,
+        cache_creation_input_tokens: 0,
+    };
+}
+
+/**
+ * One selftest trial — the real pipeline around a synthetic model call.
+ *
+ * `usage_fn` is injectable so a test can force the failure directions (a
+ * collapsed footprint, a model mismatch) and assert that the audit still fires.
+ * Without that seam the selftest could only ever be observed passing, which is
+ * the "gate that scans nothing" shape this repo's own discipline warns about.
+ */
+export function selftest_run(
+    task: Dict,
+    arm: string,
+    opts: RunOneOpts,
+    usage_fn: (arm: string, seed: number, placebo_chars: number) => TokensBreakdown = selftest_usage,
+): Dict {
+    const spec = ARMS[arm] as ArmSpec;
+    const seed = opts.seed ?? 0;
+    // Real fixture clone — this is also what exercises delta #7's per-trial key.
+    const [clone, fixture] = reset_fixture(task, arm, seed);
+    const sp_text = injected_text(spec.inject, opts.placebo_chars);
+    const run: Dict = {
+        errored: false,
+        reason: null,
+        transcript: `selftest transcript · ${String(task['id'])} · ${arm} · seed ${seed}`,
+        num_turns: 1,
+        wall_time_seconds: 0,
+        tokens: 0,
+        tokens_breakdown: usage_fn(arm, seed, opts.placebo_chars),
+        // The synthetic envelope bills exactly the pinned model, so `model_check`
+        // passes for a healthy run and fails if the pin is ever dropped.
+        models_seen: opts.model ? [opts.model] : [],
+    };
+    // Real scorer — no model call, reads the fixture and the clone off disk.
+    const score = scoring.score_task_v2(task, {
+        fixture_root: fixture,
+        clone_root: clone,
+        transcript: String(run['transcript'] ?? ''),
+    });
+    return {
+        errored: false,
+        reason: null,
+        synthetic: true,
+        capability_pass: score.capability_pass,
+        discipline_score: new PyFloat(score.discipline_score),
+        discipline_pass: score.discipline_pass,
+        metrics: trajectory_metrics(run, score),
+        injected_chars: sp_text ? sp_text.length : 0,
+        workspace: clone,
+        ...integrity_fields(run, spec, sp_text ? sp_text.length : 0, opts.model),
+    };
+}
+
 export function run_one_recursive(
     task: Dict,
     opts: RunOneOpts,
@@ -577,7 +817,9 @@ export function run_one_recursive(
     const makeAttempt =
         attemptFn ??
         ((depth: number, priorVerdict: string | null): RecursiveAttempt => {
-            const [clone, fixture] = reset_fixture(task);
+            // Each correction round gets its own preserved workspace too — a
+            // depth-2 attempt must not overwrite the depth-1 evidence.
+            const [clone, fixture] = reset_fixture(task, `package-recursive-d${depth}`, opts.seed ?? 0);
             let sp_file: string | null = null;
             if (priorVerdict) {
                 sp_file = path.join(opts.sp_dir, `.sp-recursive-${depth}.txt`);
@@ -941,7 +1183,11 @@ export function main(argv: string[] | null = null): number {
         return 0;
     }
 
-    if (v1.claude_executable() === null) {
+    const selftest = args.mode === 'selftest';
+
+    // The selftest exists to run with no network and no key, so requiring the
+    // host CLI here would defeat it. Every other gate below still applies.
+    if (!selftest && v1.claude_executable() === null) {
         process.stderr.write('claude CLI not found\n');
         return 1;
     }
@@ -988,15 +1234,18 @@ export function main(argv: string[] | null = null): number {
         tasks,
         arms,
         args.seeds,
-        (task, _arm, _seed) =>
-            run_one(task, _arm, {
+        (task, _arm, _seed) => {
+            const runOpts: RunOneOpts = {
                 model: args.model,
                 max_budget,
                 timeout: args.timeout,
                 placebo_chars,
                 sp_dir,
                 host: args.host,
-            }),
+                seed: _seed,
+            };
+            return selftest ? selftest_run(task, _arm, runOpts) : run_one(task, _arm, runOpts);
+        },
         ckpt,
         undefined,
         (r) => budget.add(r['tokens_breakdown'] as TokensBreakdown | undefined),
@@ -1006,8 +1255,7 @@ export function main(argv: string[] | null = null): number {
     // the paired plugin direction needs the whole record set, so it cannot be a
     // per-trial check alone. `vanilla` is the baseline; every arm that is
     // supposed to carry a surface the baseline lacks is a lift arm.
-    const lift_arms = arms.filter((a) => a !== 'vanilla' && expected_injection(ARMS[a] as ArmSpec) !== 'none');
-    const audit = audit_activation(records, { baseline_arm: 'vanilla', lift_arms });
+    const audit = audit_activation(records, { baseline_arm: 'vanilla', lift_arms: lift_audit_arms(arms) });
 
     const stamp = v1.utc_stamp();
     const payload: Dict = {
@@ -1022,6 +1270,12 @@ export function main(argv: string[] | null = null): number {
         placebo_chars,
         corpus: 'ab-trackb-v2',
         host: args.host,
+        // Hygiene (F4/F7): a selftest report must be unmistakable for a measured
+        // one. Both the tier marker and the filename say so, because a number is
+        // only ever allowed to render from a report and this report's numbers are
+        // synthetic by construction.
+        tier: selftest ? 'selftest' : 'live',
+        synthetic: selftest,
         activation_audit: {
             checked: audit.checked,
             skipped: audit.skipped,
@@ -1030,7 +1284,7 @@ export function main(argv: string[] | null = null): number {
         aborted: aborted ?? null,
         records,
     };
-    const out = path.join(REPORTS_DIR, `${stamp}-ab-v2-paired.json`);
+    const out = path.join(REPORTS_DIR, `${stamp}-ab-v2-paired${selftest ? '-selftest' : ''}.json`);
     fs.writeFileSync(out, _jsonDumps(_toJson(payload), 2) + '\n');
     // The paired report now holds everything — retire the checkpoint so a
     // finished sweep leaves no residue and a later identical sweep starts fresh.
@@ -1039,7 +1293,9 @@ export function main(argv: string[] | null = null): number {
     }
     process.stdout.write(
         `bench_ab_v2: wrote ${_relToRootPosix(out)} ` +
-            `(${records.length} tasks, ${total} runs, spend $${budget.spent_usd.toFixed(2)})\n`,
+            `(${records.length} tasks, ${total} runs, ` +
+            (selftest ? 'SELFTEST — synthetic runs, no spend, not publishable' : `spend $${budget.spent_usd.toFixed(2)}`) +
+            `)\n`,
     );
 
     // The report is always written — an aborted or integrity-failed sweep still
@@ -1102,7 +1358,7 @@ function parse_args(argv: string[]): ParsedArgs {
         checkpoint: true,
         fresh: false,
     };
-    const usage = `usage: ${prog} [-h] [--arms ARMS] [--seeds SEEDS] [--tasks TASKS] [--limit LIMIT] [--model MODEL] [--budget BUDGET] [--max-usd MAX_USD] [--timeout TIMEOUT] [--mode {live,dry-run}] [--host {claude,codex}] [--no-checkpoint] [--fresh]\n`;
+    const usage = `usage: ${prog} [-h] [--arms ARMS] [--seeds SEEDS] [--tasks TASKS] [--limit LIMIT] [--model MODEL] [--budget BUDGET] [--max-usd MAX_USD] [--timeout TIMEOUT] [--mode {live,dry-run,selftest}] [--host {claude,codex}] [--no-checkpoint] [--fresh]\n`;
     const argErr = (msg: string): never => {
         process.stderr.write(usage);
         process.stderr.write(`${prog}: error: ${msg}\n`);
@@ -1161,7 +1417,7 @@ function parse_args(argv: string[]): ParsedArgs {
         } else if (a.startsWith('--timeout=')) {
             out.timeout = _pyInt(a.slice('--timeout='.length), '--timeout');
         } else if (a === '--mode') {
-            out.mode = _choice(need(i, '--mode'), '--mode', ['live', 'dry-run'], argErr);
+            out.mode = _choice(need(i, '--mode'), '--mode', ['live', 'dry-run', 'selftest'], argErr);
             i += 1;
         } else if (a === '--host') {
             out.host = _choice(need(i, '--host'), '--host', ['claude', 'codex'], argErr);
@@ -1169,7 +1425,7 @@ function parse_args(argv: string[]): ParsedArgs {
         } else if (a.startsWith('--host=')) {
             out.host = _choice(a.slice('--host='.length), '--host', ['claude', 'codex'], argErr);
         } else if (a.startsWith('--mode=')) {
-            out.mode = _choice(a.slice('--mode='.length), '--mode', ['live', 'dry-run'], argErr);
+            out.mode = _choice(a.slice('--mode='.length), '--mode', ['live', 'dry-run', 'selftest'], argErr);
         } else if (a === '--no-checkpoint') {
             out.checkpoint = false;
         } else if (a === '--fresh') {
