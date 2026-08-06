@@ -88,17 +88,42 @@ migration is a genuinely lossy authoring transform with no ledger, while
 ## Prerequisites
 
 - [x] **Step 1:** Sweep record committed.
-- [ ] **Step 2:** Inventory the rules carrying a body-migrated line and their target context files, so Phase 3 ledgers a real set rather than a guessed one.
+- [x] **Step 2:** Inventory the rules carrying a body-migrated line and their target context files, so Phase 3 ledgers a real set rather than a guessed one.
+      Measured: **44 rules, not "roughly thirty"** — 45 target references, all
+      resolving. Recorded in
+      [`rule-migration-inventory-2026-08`](../settings/contexts/rule-migration-inventory-2026-08.md),
+      which also carries the five findings that change how Phase 3 must be
+      built: `git log --follow` misses the migration commit for 24 of them, 20
+      pre-migration bodies exist **only on unmerged side branches** (harvest
+      before any branch prune), four rules were born thin and need a third
+      disposition value, the ledger gate must key on heading text rather than
+      level, and nine rules were thinned in more than one event.
 
 ## Phase 1: Forced artifacts at the decision point
 
-- [ ] **Step 1:** Add the mandated-line contract to `contexts/execution/`: a small closed set of verbatim lines the run must emit, each bound to a specific decision point rather than to a topic. Seed it with the four the sweep validated — the intent line before a behaviour-changing edit, the authorization line before an irreversible outward action, the pending line when a prescribed follow-up was deliberately not taken, and the sibling-search line after a defect fix.
-- [ ] **Step 2:** Specify the intent line as a three-slot statement: what the code does, what the failing check expects, and what the specification says. State the load-bearing consequence: when the three disagree, the disagreement is the finding and the edit does not proceed.
-- [ ] **Step 3:** Specify the authorization line as carrying the user's own words. State the two denials explicitly: documentation is not authorization, and completing the task is not authorization. This is the mandated-line form of the one-shot-authorization rule this package already carries as prose.
-- [ ] **Step 4:** Add the pre-send sweep: before a reply that claims completion, check each owed line against what the run actually did and add any that is owed and missing. Fire only when something is owed; a reply owing nothing passes untouched. This is the same shape as the existing roadmap-sync and cheap-question pre-send checks, so it adds a step rather than a mechanism.
-- [ ] **Step 5:** Add `src/scripts/lint_mandated_lines.ts` as the deterministic half: given a run report, assert that a report claiming a behaviour change carries an intent line and that a report describing an outward action carries an authorization line. <!-- verify: task typecheck-ts -->
-- [ ] **Step 6:** Add the defect-pattern search to `downstream-changes`: a defect found in one place is presumed to recur until searched. Name the exact wrong construct, search the tree, and report the count and the file list. The existing own-orphan sweep greps identifiers the diff stopped referencing; nothing greps for the defect pattern itself.
-- [ ] **Step 7:** Add the answer-location routing clause to `think-before-action`: when the answer exists only in the agent's own inference with nothing to open or look up, say so rather than dressing a guess in process, and name the detour in the report. A silent detour is indistinguishable from a skipped step, and this package's rules say "be rigorous" often enough that the costume-rigor failure is a live risk here.
+- [x] **Step 1:** Add the mandated-line contract to `contexts/execution/`: a small closed set of verbatim lines the run must emit, each bound to a specific decision point rather than to a topic. Seed it with the four the sweep validated — the intent line before a behaviour-changing edit, the authorization line before an irreversible outward action, the pending line when a prescribed follow-up was deliberately not taken, and the sibling-search line after a defect fix.
+      **Decided (blocker `mandated-line-set`, council 2026-08-06): FIVE lines.**
+      The four above are kept, and a **commit line** is added — the council was
+      2/2 that the commit surface is exactly the prose-to-mandated-artifact
+      transformation the measurement supports. Its three slots are the
+      authorization and its exact scope, that the staged set matches the
+      intended edit, and that nothing unintended is staged; it is a separate
+      line rather than a variant of the authorization line because a commit
+      with a stray file is authorized and still wrong. **The brevity
+      interaction is resolved by three constraints, recorded in the contract:**
+      one sentence per line, emitted at the decision point and never as a
+      trailing checklist, and two or more owed lines merged into one block in
+      execution order. **The transfer risk is recorded with its detector:** the
+      4-of-4 result came from one source on contradiction-detection tasks, so
+      the contract names the cheap observation — how often an emitted intent
+      line's three slots actually disagree. If they never do, the line is
+      decorating decisions already made and the set shrinks.
+- [x] **Step 2:** Specify the intent line as a three-slot statement: what the code does, what the failing check expects, and what the specification says. State the load-bearing consequence: when the three disagree, the disagreement is the finding and the edit does not proceed.
+- [x] **Step 3:** Specify the authorization line as carrying the user's own words. State the two denials explicitly: documentation is not authorization, and completing the task is not authorization. This is the mandated-line form of the one-shot-authorization rule this package already carries as prose.
+- [x] **Step 4:** Add the pre-send sweep: before a reply that claims completion, check each owed line against what the run actually did and add any that is owed and missing. Fire only when something is owed; a reply owing nothing passes untouched. This is the same shape as the existing roadmap-sync and cheap-question pre-send checks, so it adds a step rather than a mechanism.
+- [x] **Step 5:** Add `src/scripts/lint_mandated_lines.ts` as the deterministic half: given a run report, assert that a report claiming a behaviour change carries an intent line and that a report describing an outward action carries an authorization line. <!-- verify: task typecheck-ts -->
+- [x] **Step 6:** Add the defect-pattern search to `downstream-changes`: a defect found in one place is presumed to recur until searched. Name the exact wrong construct, search the tree, and report the count and the file list. The existing own-orphan sweep greps identifiers the diff stopped referencing; nothing greps for the defect pattern itself.
+- [x] **Step 7:** Add the answer-location routing clause to `think-before-action`: when the answer exists only in the agent's own inference with nothing to open or look up, say so rather than dressing a guess in process, and name the detour in the report. A silent detour is indistinguishable from a skipped step, and this package's rules say "be rigorous" often enough that the costume-rigor failure is a live risk here.
 
 ## Phase 2: Rule and skill authoring sections
 
@@ -166,23 +191,39 @@ migration is a genuinely lossy authoring transform with no ledger, while
 ## Blockers
 
 ### blocker: mandated-line-set
-- **Status:** open
+- **Status:** resolved
 - **Owner:** user
 - **Blocks:** Phase 1 — Forced artifacts at the decision point
 - **What to do:**
   1. Confirm the four mandated lines are the right set, and whether a fifth is wanted for the commit surface. Every mandated line is text the agent must emit in a user-facing reply, so the set is a communication decision as much as a governance one.
   2. Note the tension to weigh: this package's reply-brevity rule treats long replies as a failure mode, and four mandated lines add fixed length to any reply that owes them.
-- **Resolved when:** the set is named in Phase 1 Step 1 and the brevity interaction is recorded.
+- **Resolved when:** resolved 2026-08-06. The set is five lines, named in Phase 1
+  Step 1 above and specified in
+  [`mandated-lines`](../../src/agent-src/contexts/execution/mandated-lines.md);
+  the brevity interaction is resolved there by three constraints rather than by
+  a note. Routed to the AI council rather than held: the question is a
+  judgement call about communication shape, which is what a council adjudicates
+  — no external human action was required to answer it.
 
 ### blocker: rich-class-band-question
-- **Status:** open
+- **Status:** resolved
 - **Owner:** user
 - **Blocks:** Phase 2 — Rule and skill authoring sections
 - **What to do:**
   1. Read § R1 of the sweep record. A published measurement over 7,308 trajectories places this package's declared rich size band inside the diminishing-returns zone, and above roughly 5,000 tokens in the measured degradation zone.
   2. Phase 2 Step 5 adds an internal precedence band to rich-class artifacts, which mitigates partial reading but does not answer whether the band itself should move.
   3. Decide: measure real tokenisation first and revisit, or leave the bands and treat the precedence band as the mitigation.
-- **Resolved when:** the decision is recorded, either as an architecture decision record or as an explicit no-change with the reason.
+- **Resolved when:** resolved 2026-08-06 as
+  [`ADR-217`](../../docs/decisions/ADR-217-rich-class-band-measured-and-enforced.md).
+  Measured before deciding, with the exact BPE instrument that already existed
+  in-tree: four rich artifacts, largest **3,331** tokens, character proxy
+  accurate to 1.5 % in aggregate. **Nothing was in the degradation zone and the
+  band was enforced by nothing** — so the ceiling drops 5,000 → 3,500 and
+  becomes a real gate. The floor stays documented and ungated, because running
+  the check once found a 1,931-token artifact legitimately holding the class:
+  `rich` buys exemption from condensation, which is a claim about what
+  compression would lose, and the published study supplies a ceiling, not a
+  minimum.
 
 ## Risk Register
 
