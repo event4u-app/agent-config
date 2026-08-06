@@ -16,10 +16,18 @@
  *    `abstraction-thresholds` (the canon citation). A bare number is drift.
  *    A heading is its own block; a threshold-stating heading is satisfied
  *    when the block immediately below it carries the citation.
- * 2. PINNING — the six deliberate sites are pinned to their current
- *    number + scope (SITES), and the canon's four table rows are pinned
- *    (CANON_ROWS). Changing either side without the other is a finding:
- *    the canon and its citing sites move together or not at all.
+ * 2. PINNING — every deliberate site is pinned to its current scope
+ *    (SITES), and the canon's four table rows are pinned (CANON_ROWS).
+ *    Changing either side without the other is a finding: the canon and
+ *    its citing sites move together or not at all.
+ *
+ *    The site COUNT is deliberately not written here. This comment and
+ *    the one above `check_pins` both said "six" while `SITES` held seven
+ *    (two entries share `component-oriented-and-oop-development.md`, so
+ *    six distinct files became seven pins). Nothing pinned the literal —
+ *    the test derives its expectation from `SITES.length` — so the number
+ *    was free to rot, and did. Read the count off `SITES`; do not restate
+ *    it in prose that no gate checks.
  *
  * ## Regex tuning record (2026-08-03, measured against the real tree)
  *
@@ -65,12 +73,37 @@ export const CANON_CITATION = 'abstraction-thresholds';
 export const THRESHOLD_VERB = /\b(extract\w*|componenti[sz]\w*|abstraction)\b/i;
 
 /**
- * … and (b) states a numeric repetition bar. Three branches:
+ * … and (b) states a numeric repetition bar. Four branches:
  * cardinal count + repetition-noun · ordinal (repetition|occurrence only —
- * see the tuning record above) · `≥ N` + repetition-noun.
+ * see the tuning record above) · `≥ N` + repetition-noun · a repetition VERB
+ * carrying its count as a word-form adverb (`once` / `twice` / `thrice`).
+ *
+ * The fourth branch closes a measured hole: "extract when duplicated twice"
+ * states a real numeric bar and matched NOTHING. The cardinal branch needs a
+ * numeral from its own alternation immediately before a repetition-noun, and in
+ * that phrasing the count IS the adverb — there is no numeral and no noun. So
+ * the most natural English phrasing of the bar was the one shape that passed
+ * the gate silently.
+ *
+ * It is verb-anchored on purpose. A bare `\b(once|twice|thrice)\b` would fire on
+ * any block that happens to say "run it twice" near the word "extract"; binding
+ * the adverb to a duplication verb keeps the qualitative prose the tuning record
+ * protects finding-free, and adds no allowlist.
+ *
+ * The verb set is narrow because a wider one was MEASURED and rejected. A first
+ * cut also accepted `appears|occurs|used`, ran against the real tree, and
+ * returned exactly one hit: `gated-reach/SKILL.md`'s reddit-parsing gotcha, "one
+ * id **appears twice**, once as the real comment and once as a … stub". Its block
+ * is the whole Gotcha bullet list, which separately contains "extraction" — in
+ * the yt-dlp sense, an unrelated meaning of the word. Both halves fired on
+ * vocabulary coincidence. Dropping the three weak verbs kills that hit without an
+ * allowlist and still catches the reported phrasing (`duplicat\w+` covers
+ * "duplicated twice"). Widening the verb set again means re-measuring: the block
+ * granularity is blank-line-coarse, so a weak verb only has to co-occur with a
+ * homonym of "extract" somewhere in the same paragraph run.
  */
 export const NUMERIC_REPETITION =
-    /(\b(one|two|three|four|five|\d+)\s*(\+|×|x)?\s*(real\s+)?(repetitions?|repeats?|times|uses?|duplications?|occurrences?)\b)|(\b(second|third|fourth)\s+(real\s+)?(repetitions?|occurrences?)\b)|(≥\s*\d+\s*(real\s+)?(repetitions?|repeats?|times|uses?|duplications?|occurrences?))/i;
+    /(\b(one|two|three|four|five|\d+)\s*(\+|×|x)?\s*(real\s+)?(repetitions?|repeats?|times|uses?|duplications?|occurrences?)\b)|(\b(second|third|fourth)\s+(real\s+)?(repetitions?|occurrences?)\b)|(≥\s*\d+\s*(real\s+)?(repetitions?|repeats?|times|uses?|duplications?|occurrences?))|(\b(duplicat\w+|repeat\w+|recur\w+)\s+(only\s+)?(once|twice|thrice)\b)/i;
 
 /** The canon's four table rows — all must match CANON_FILE. */
 export const CANON_ROWS: ReadonlyArray<{ row: RegExp; why: string }> = [
@@ -249,7 +282,7 @@ export function scan_citations(repoRoot: string): { findings: Finding[]; scanned
     return { findings, scanned };
 }
 
-/** Bidirectional pins: canon rows + the six citing sites. */
+/** Bidirectional pins: canon rows + every citing site in SITES. */
 export function check_pins(repoRoot: string): Finding[] {
     const findings: Finding[] = [];
 
