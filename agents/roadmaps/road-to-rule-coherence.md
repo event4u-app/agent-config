@@ -388,13 +388,26 @@ not rot back in.
   human adjudication. Every candidate gets a disposition: rewrite, exclude,
   pack-scope, or `no-conflict` with a reason. Not wired to CI.
   - Acceptance: every one of the 227 carries a written disposition.
-- [ ] **P2.5 The one defensible mechanical gate — authority, not opposition.**
-  Assert that every pair of rules *both* claiming non-bypassable authority over
-  a shared trigger surface has an entry in `agent-authority`'s precedence
-  table. Deterministic, no object-resolution problem, **3 candidates** at the
-  measured operating point. This is the narrow half worth automating.
-  - Acceptance: gate named `check_*`, uses `reportScanned()`, registered in all
-    four CI surfaces; 3 candidates triaged.
+- [x] **P2.5 Authority conflicts — the 3 candidates fixed; the gate deliberately
+  NOT built.** Council round 2 (Q4, both members) rejected a permanent CI gate
+  for a 3-finding corpus: it would be a frozen-corpus gate that can only ever
+  block, in a repo already burned by that shape. One member proposed a
+  PR-only variant, which this repo has no mechanism for — everything runs in
+  CI — so building one would be the sprawl both warned against.
+  **Measured:** 11 rules claim non-bypassable authority; `agent-authority`
+  arbitrates 6. Of the unarbitrated claimants, `delegation-policy` and
+  `low-impact-corpus-privacy-floor` already defer explicitly in prose, leaving
+  exactly 3 genuine collisions — all now declared:
+  - `ndd-x-engineering-safety-floor` (`restates`) — two rules opened with the
+    identical sentence "HARD FLOOR OVERRIDES EVERYTHING" over the same
+    deploy/prod-trunk surface, with no stated order.
+  - `context-hygiene-x-autonomous-execution` (`gates`) — the read-loop abort
+    declares itself unliftable by a mandate; the mandate says keep going.
+  - `secret-guard-x-commit-policy` (`gates`) — one rule forbids the commit
+    question, the other mandates one on a credential match.
+  - Matrix: 9 rules / 14 pairs → **14 / 19** across this roadmap.
+  - **Revisit-if:** a new rule PR introduces a fourth unarbitrated authority
+    claimant. That is the trigger to reconsider automation — not a count.
 
 ## Phase 3 — Human-gated: selection and measurement
 

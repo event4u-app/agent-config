@@ -35,6 +35,9 @@ rules:
   - direct-answers
   - no-cheap-questions
   - user-interrupt-priority
+  - engineering-safety-floor
+  - context-hygiene
+  - secret-vcs-guard
 
 pairs:
 
@@ -317,3 +320,72 @@ pairs:
       - .agent-src.uncondensed/rules/user-interrupt-priority.md#the-iron-law
       - .agent-src.uncondensed/rules/no-cheap-questions.md#iron-law-4--no-continuation-prompts-under-autonomous-mandate
       - src/agent-src/contexts/execution/cheap-question-mechanics.md
+
+  - id: ndd-x-engineering-safety-floor
+    rules: [non-destructive-by-default, engineering-safety-floor]
+    relation: restates
+    conflict: >-
+      Both open with an unqualified supremacy claim over the same surface.
+      `non-destructive-by-default`: "HARD FLOOR OVERRIDES EVERYTHING."
+      `engineering-safety-floor`: "HARD FLOOR OVERRIDES EVERYTHING. DEPLOY,
+      MERGE-TO-PROD-TRUNK, PROD DATA / INFRA, BULK DESTRUCTIVE — EXPLICIT
+      USER CONFIRMATION ON THIS TURN." Read cold, two rules assert final
+      authority over deploys and prod-trunk merges with no stated order.
+    resolution: >-
+      `non-destructive-by-default` is canonical; `engineering-safety-floor`
+      restates its triggers for the engineering surface and adds the
+      evidence the user needs to judge the call — blast radius, rollback
+      path, pre-flight checks, observability, named risk owner. Its own
+      body already says so ("This rule does not lift the Hard Floor — it
+      surfaces the engineering-shaped evidence"), which is why this is a
+      restatement rather than a contest. Declared so the ordering is
+      machine-readable instead of inferable only by reading both bodies.
+    evidence:
+      - .agent-src.uncondensed/rules/non-destructive-by-default.md#the-iron-law
+      - .agent-src.uncondensed/rules/engineering-safety-floor.md#iron-law--production-infra-and-bulk-destructive-moves-are-never-autonomous
+
+  - id: context-hygiene-x-autonomous-execution
+    rules: [context-hygiene, autonomous-execution]
+    relation: gates
+    conflict: >-
+      `autonomous-execution` grants a standing mandate to keep working
+      without trivial questions. `context-hygiene`'s read-loop abort fires
+      at 5 read-only turns and declares itself "Non-bypassable: an
+      autonomous mandate does **not** lift the abort". So the mandate says
+      continue and the abort says stop, on the same turn, with neither
+      naming the other.
+    resolution: >-
+      `context-hygiene` gates: the abort holds and the mandate does not lift
+      it. That is deliberate — the abort is the safety net that keeps
+      autonomy from becoming a token sink, so a rule that autonomy could
+      switch off would be worthless. What the mandate DOES lift is the
+      cheap-question floor around it: the agent stops and states what it
+      has, rather than asking permission to continue reading. The declared
+      read protocol (goal + expected count + output shape) raises the abort
+      to 8 turns for legible analysis work instead of suspending it.
+    evidence:
+      - .agent-src.uncondensed/rules/context-hygiene.md#read-loop-detection--the-15--25-rule
+      - .agent-src.uncondensed/rules/autonomous-execution.md#validation-loop-budget--hard-cap-n3-per-target
+
+  - id: secret-guard-x-commit-policy
+    rules: [secret-vcs-guard, commit-policy]
+    relation: gates
+    conflict: >-
+      `commit-policy` names four exceptions under which committing is
+      allowed and forbids even asking about it otherwise.
+      `secret-vcs-guard` requires a STOP-and-ask on a high-confidence
+      credential match at exactly the moment a commit is authorized —
+      "NEVER SILENTLY COMMIT A SECRET. NEVER SILENTLY STRIP ONE." One rule
+      forbids the commit question; the other mandates one.
+    resolution: >-
+      `secret-vcs-guard` gates every commit path, including an authorized
+      one. `commit-policy`'s "never ask about committing" bans the
+      permission question ("should I commit?"), not a safety surface: the
+      secret prompt is not asking whether to commit, it is reporting that
+      the staged content contains a live credential and that committing it
+      is irreversible. Same shape as the `no-pr-progress-comments` safety
+      carve-out. The commit proceeds only on an explicit user choice, and
+      the agent never auto-strips.
+    evidence:
+      - .agent-src.uncondensed/rules/secret-vcs-guard.md#the-iron-law
+      - .agent-src.uncondensed/rules/commit-policy.md#never-ask-about-committing
