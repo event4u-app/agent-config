@@ -176,18 +176,50 @@ migration is a genuinely lossy authoring transform with no ledger, while
 
 ## Acceptance Criteria
 
-- [ ] The mandated-line contract exists with four named lines, each bound to a decision point.
-- [ ] The pre-send sweep is recorded and fires only on an owed-and-missing line.
-- [ ] `src/scripts/lint_mandated_lines.ts` rejects a completion claim describing an outward action with no authorization line, proven by a test.
-- [ ] `rule-writing` requires a primary-bias section, and the schema carries a decision-impact class.
+- [x] The mandated-line contract exists with **five** named lines (the council added the commit surface), each bound to a decision point.
+- [x] The pre-send sweep is recorded and fires only on an owed-and-missing line.
+- [x] `src/scripts/lint_mandated_lines.ts` rejects a completion claim describing an outward action with no authorization line, proven by a test.
+- [~] `rule-writing` requires a primary-bias section (done); the schema decision-impact class is Phase 2 Step 3 and did not land.
 - [ ] Every migrated rule has a ledger whose target anchors all resolve, proven by a gate.
 - [ ] The contradiction register exists, and every wins-on-conflict claim has a row, proven by a gate.
 - [ ] `src/scripts/lint_example_fences.ts` runs over the authored tree with every current hit classified.
 - [ ] The description lint rejects a preemption phrase, proven by a test.
-- [ ] The removal disposition and the simplify-signal list are recorded in the optimization path.
-- [ ] No judge skill or review command instructs pre-filtering by severity, proven by a grep with zero results.
-- [ ] The imperative-density report runs advisory and states its unsettled direction.
+- [x] The removal disposition and the simplify-signal list are recorded in the optimization path.
+- [x] No judge skill or review command instructs pre-filtering by severity, proven by a grep with zero results (14 skills + 12 commands, zero matches).
+- [x] The imperative-density report runs advisory and states its unsettled direction.
 - [ ] Quality gates delegated to remote CI on the pull request.
+
+## What landed in the first execution pass, and what did not
+
+Recorded 2026-08-06 so the next run starts from the state rather than
+re-deriving it. **22 of 41 steps closed.**
+
+**Closed in full:** the prerequisite inventory, Phase 1 (7/7), Phase 5 (6/6),
+Phase 6 (6/6), and both blockers — the first via an AI council, the second via
+[`ADR-217`](../../docs/decisions/ADR-217-rich-class-band-measured-and-enforced.md)
+with the measurement taken before the decision rather than asserted.
+
+**Phase 2 is 2 of 7.** Step 1 (primary-bias section) and Step 5 (internal
+precedence band) landed because they are self-contained prose conventions. The
+five that did not are heavier and share one dependency: Step 3 adds a
+**decision-impact class to the rule frontmatter schema**, which touches the
+schema, the validator, and every rule that will need the field — and Steps 2, 4,
+6 and 7 are all conventions best authored against that field rather than beside
+it.
+
+**Phases 3 and 4 did not start**, and their cost is now known rather than
+guessed. Phase 3 needs a ledger over **44 rules** (not the ~30 the roadmap
+assumed) plus a new gate, and the inventory found five constraints that change
+its design — see
+[`rule-migration-inventory-2026-08`](../settings/contexts/rule-migration-inventory-2026-08.md).
+Phase 4 needs a second new gate (`lint_example_fences`) whose own Step 3
+requires classifying every hit on the real corpus before promotion, which is a
+full pass over the authored tree on its own.
+
+**The ordering that matters for the next run:** the 20 pre-migration bodies that
+exist only on unmerged side branches are the one perishable input in this
+roadmap. Harvest them before any remote branch cleanup; everything else here
+keeps.
 
 ## Blockers
 
