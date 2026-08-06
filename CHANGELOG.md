@@ -303,6 +303,39 @@ Entry-shape contract: [`docs/contracts/CHANGELOG-conventions.md`](docs/contracts
 > that forces a new era split (`# Era: 9.24.x`, etc.) — see
 > [`docs/contracts/CHANGELOG-conventions.md § Era splits`](docs/contracts/CHANGELOG-conventions.md).
 
+## [9.24.0](https://github.com/event4u-app/agent-config/compare/9.23.0...9.24.0) (2026-08-06)
+
+### Release highlights
+
+<!-- Curated head: fill before merge, keep it under 10 lines, and leave `_none_` where it is genuinely the answer. The generated log below is unchanged. -->
+- **Behaviour changes:** _auto-derived, rewrite before merge:_ rule/schema diffs, breaking commits or removed public surface in cb126e8, f908f19.
+- **Default changes + migration:** _none_
+- **Security and correctness:** _none_
+- **Honest nulls:** _auto-derived, rewrite before merge:_ commits carrying an honest-null marker in 7a1ca1b.
+- **Known limitations:** _none_
+
+### Features
+
+* **commands:** add /analyze:inbox — verify a dropped artifact before planning on it ([fa7b278](https://github.com/event4u-app/agent-config/commit/fa7b278507d61606232ba47da0393915a178ea1f))
+* **scripts:** make the absoluta census reproducible, and correct its own number ([de96a36](https://github.com/event4u-app/agent-config/commit/de96a36d89e7b08c49744d01361ce05a269d4225))
+
+### Bug Fixes
+
+* **index:** regenerate the artefact index and catalog after the description edit ([c1f306b](https://github.com/event4u-app/agent-config/commit/c1f306b01cdbaabe9a349a3fbdcea127254bd0ae))
+* **preflight:** run the skill linter CI runs, so its failures never reach CI ([755e050](https://github.com/event4u-app/agent-config/commit/755e0508ad21dafad3c61b5ce507a572c2f5088e))
+* **command:** bring the analyze-inbox description under the 200-char cap ([f72573b](https://github.com/event4u-app/agent-config/commit/f72573b7f8ce2fa83eea2671bc6142253f020182))
+* **docs:** repair the broken install-profile example; keep dead ends in handoffs ([7a1ca1b](https://github.com/event4u-app/agent-config/commit/7a1ca1b5f4c88e1288235b272416fe55d521d8ac))
+* **adr:** give ADR-218 the required frontmatter and a review_trigger ([854d3ef](https://github.com/event4u-app/agent-config/commit/854d3efdd83ab678189c7d6ccf3fd7850efdcaad))
+
+### Documentation
+
+* **create-pr:** resolve the duplicate 4d heading and its ambiguous refs ([315d6fe](https://github.com/event4u-app/agent-config/commit/315d6fe64eea7e39cd2b14a9ac57a2d2ac585654))
+* **roadmap:** harvest 16 inbox artifacts — mostly into cancellations ([de84205](https://github.com/event4u-app/agent-config/commit/de842055f439b9f3ea0d2d979059e1d6a8dae18c))
+* **rules:** act on council round 3 — falsifiable trigger, honest bound, ADR-218 ([cb126e8](https://github.com/event4u-app/agent-config/commit/cb126e88c3dd4d58bed92fe168bd090ee83d6a99))
+* **rules:** mark the declared-protocol cap provisional, propagate the census correction ([f908f19](https://github.com/event4u-app/agent-config/commit/f908f19c3463a0d19607637cfffa4393899177f8))
+
+Tests: 11309 (+10 since 9.23.0)
+
 ## [9.23.0](https://github.com/event4u-app/agent-config/compare/9.22.0...9.23.0) (2026-08-06)
 
 ### Release highlights
