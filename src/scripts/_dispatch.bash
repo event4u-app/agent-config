@@ -124,6 +124,7 @@ Tier 1 — power-user (release shape, audit, migration):
                              user-authored files; persists standing consent
                              (install.auto_converge) on first use.
                              Flags: --dry-run | --yes
+  conformance:behavior       Replay local transcripts through the mechanised conformance checks
   conformance                Consumer conformance contract: doctor --ci +
                              installed-and-firing checks. Exits non-zero on
                              a failed check.
@@ -1219,6 +1220,16 @@ cmd_analyze_session() {
   exec_ts "$PACKAGE_ROOT/src/scripts/_cli/cmd_analyze_session.ts" "$@"
 }
 
+# `agent-config conformance:behavior` — replay the local transcript store
+# through the four MECHANISED conformance checks (language pin, git
+# authorization, vacuous evidence, evidence steering). Report, not gate:
+# exit 0 unless the store is unreadable. See src/scripts/conformance_scan.ts.
+cmd_conformance_behavior() {
+  local script
+  script="$(resolve_script "src/scripts/conformance_scan.ts" "dist/agent-src/scripts/conformance_scan.ts")"
+  exec_ts "$script" "$@"
+}
+
 # `agent-config handoff` — pick a recent session, generate a deterministic
 # handoff into agents/runtime/state/handoff-context.md, optionally --launch a
 # fresh host session. See scripts/_cli/cmd_handoff.ts.
@@ -1240,6 +1251,7 @@ main() {
     graph-explain)           cmd_graph_explain "$@" ;;
     benchmark)               cmd_benchmark "$@" ;;
     code-graph)              cmd_code_graph "$@" ;;
+    conformance:behavior)    cmd_conformance_behavior "$@" ;;
     roadmap:progress)        cmd_roadmap_progress "$@" ;;
     roadmap:progress-check)  cmd_roadmap_progress_check "$@" ;;
     roadmap:archive)         cmd_roadmap_archive "$@" ;;
