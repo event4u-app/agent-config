@@ -252,6 +252,22 @@ function _run(): number {
         );
     }
 
+    const declaredPairKeys = new Set<string>();
+    for (const pair of pairs) {
+        if (_isPlainDict(pair) && Array.isArray(pair['rules']) && pair['rules'].length === 2) {
+            declaredPairKeys.add(_sorted(pair['rules'] as string[]).join('|'));
+        }
+    }
+    for (const gap of closureGaps(declared_rules as string[], declaredPairKeys)) {
+        errors.push(
+            `\`${gap.a}\` states precedence over \`${gap.b}\` at ${gap.cite} — both rules are ` +
+                'declared in this matrix, so the pair needs a row. The register is authoritative ' +
+                'for the set it covers; an internally incomplete register is worse than a small ' +
+                'one, because a reader who finds two covered rules and no row between them ' +
+                'concludes there is no interaction.',
+        );
+    }
+
     if (errors.length > 0) {
         fail(errors);
     }
@@ -262,6 +278,80 @@ function _run(): number {
         );
     }
     return 0;
+}
+
+/**
+ * Precedence verbs — the vocabulary a rule uses to say another rule governs.
+ *
+ * Scoped deliberately to declarations of ORDER between two named rules, not to
+ * conflict detection. A static detector of *undeclared* conflicts was measured
+ * on this corpus and killed: 67 % false positives at the only full-recall
+ * operating point, with the co-fire signal anti-correlated with truth. This is
+ * the other half of that verdict — it reads only what a rule has already
+ * WRITTEN about a named sibling, so there is no object-resolution problem and
+ * no false-positive budget to defend.
+ */
+const PRECEDENCE_VERB =
+    /\bwins on conflict\b|\bwins\b|\boutranks?\b|\boverrid\w+\b|\btakes precedence\b|\bsupersed\w+\b|\bis (?:junior|senior|subordinate) to\b|\bsubordinate to\b|\bdefers? to\b|\bnever lift\w*\b|\bnever overrid\w+\b|\bholds regardless\b|\bprecedes\b/i;
+
+export interface ClosureGap {
+    readonly a: string;
+    readonly b: string;
+    readonly cite: string;
+}
+
+/**
+ * Pairs where one declared rule states precedence over another declared rule
+ * and the matrix has no row for them.
+ *
+ * The scope is the matrix's OWN `rules:` list, and that bound is the design.
+ * Asserting the same over all 111 rules would demand roughly 64 rows, and a
+ * corpus sweep classified about two thirds of the cross-artifact reference
+ * surface as see-also glosses, canonical-home pointers and deliberate
+ * safety-floor restatements — prose carrying no decision. A gate that ingested
+ * those would land as an unfixable blocker, which this repository has already
+ * recorded as a failure mode. Bounding to the declared set makes the register
+ * answerable for what it claims and silent about what it does not, which is
+ * the honest shape.
+ */
+export function closureGaps(
+    declaredRules: readonly string[],
+    declaredPairKeys: ReadonlySet<string>,
+    rootDir: string = ROOT,
+): ClosureGap[] {
+    const covered = declaredRules.filter((r) => typeof r === 'string');
+    const gaps: ClosureGap[] = [];
+    const emitted = new Set<string>();
+    for (const a of [...covered].sort()) {
+        const file = path.join(rootDir, 'src', 'rules', `${a}.md`);
+        let lines: string[];
+        try {
+            lines = fs.readFileSync(file, 'utf-8').split(/\r\n|\r|\n/);
+        } catch {
+            continue;
+        }
+        for (let i = 0; i < lines.length; i++) {
+            const line = lines[i] as string;
+            if (!PRECEDENCE_VERB.test(line)) {
+                continue;
+            }
+            for (const b of covered) {
+                if (b === a) {
+                    continue;
+                }
+                if (!new RegExp(`(?<![\\w-])${b}(?![\\w-])`).test(line)) {
+                    continue;
+                }
+                const key = [a, b].sort().join('|');
+                if (declaredPairKeys.has(key) || emitted.has(key)) {
+                    continue;
+                }
+                emitted.add(key);
+                gaps.push({ a, b, cite: `src/rules/${a}.md:${String(i + 1)}` });
+            }
+        }
+    }
+    return gaps;
 }
 
 function _setDiff(a: Set<string>, b: Set<string>): Set<string> {

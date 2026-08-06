@@ -1,14 +1,28 @@
 # Rule-Interaction Matrix
 # -----------------------
-# Machine-readable contract for how the package's `always` rules relate
-# when more than one fires on the same turn. Linted by
-# `scripts/lint_rule_interactions.py`. Rendered diagram in
+# Machine-readable contract for how the package's rules relate when more
+# than one fires on the same turn. Linted by
+# `src/scripts/lint_rule_interactions.ts`. Rendered diagram, the coverage
+# disclaimer, and the arbitration litmus in
 # `docs/contracts/rule-interactions.md`.
+#
+# THE LITMUS, because it decides `relation` and belongs where rows are added:
+#   If one artifact must ARBITRATE between them, they are not complementary.
+# A pair needing no arbiter is `complements`, and the row says so. A pair a
+# turn cannot satisfy both ways needs a named winner AND a named decision
+# domain — which kind of decision it governs, never a global rank.
+#
+# COVERAGE: this file records arbitration decisions already written down. It
+# does NOT claim completeness over undeclared contradictions; a static
+# detector for those was measured on this corpus at 67% false positives and
+# rejected. The linter enforces one closure property instead: for the rules
+# declared below, a precedence claim between two of them must have a row.
 #
 # Schema:
 #   version: integer
 #   rules: list of rule slugs that participate in any interaction (each
-#     must exist as `.agent-src.uncondensed/rules/<slug>.md`)
+#     must exist as `src/rules/<slug>.md`). Adding a slug here WIDENS the
+#     closure obligation above — that is the intended cost.
 #   pairs: list of pairwise interactions
 #     - id:        kebab-case stable identifier
 #       rules:     [senior, junior] — `senior` wins on conflict
@@ -41,6 +55,12 @@ rules:
   - fast-path-marker-visibility
   - role-mode-adherence
   - session-canary
+  - token-efficiency
+  - downstream-changes
+  - minimal-safe-diff
+  - active-remediation
+  - cross-source-consistency
+  - design-fidelity
 
 pairs:
 
@@ -435,3 +455,150 @@ pairs:
     evidence:
       - .agent-src.uncondensed/rules/direct-answers.md#iron-law-3--brevity-by-default
       - .agent-src.uncondensed/rules/role-mode-adherence.md
+
+  - id: autonomous-execution-x-user-interrupt-priority
+    rules: [user-interrupt-priority, autonomous-execution]
+    relation: overrides
+    conflict: >-
+      A standing autonomy directive is active and the user sends a NEW
+      instruction mid-flight. Autonomy says keep working without asking;
+      user-interrupt-priority says stop the current task, run the new one, and
+      ask before resuming.
+    resolution: >-
+      The interrupt wins. Autonomy suppresses TRIVIAL workflow questions; it
+      never authorizes ignoring a fresh instruction or silently resuming the
+      interrupted task afterwards. Both rules already say so in prose — this
+      row exists because the register covered both rules while omitting the one
+      pair between them, which is the closure gap `lint_rule_interactions`
+      now checks for.
+    evidence:
+      - src/rules/user-interrupt-priority.md#the-iron-law
+      - src/rules/autonomous-execution.md#user-interrupts-override-the-current-task
+
+  - id: downstream-changes-x-token-efficiency
+    rules: [downstream-changes, token-efficiency]
+    relation: narrows
+    conflict: >-
+      A rename or signature change requires reading every caller, test and
+      import. `token-efficiency` forbids calling the same tool more than twice
+      in a row with similar parameters, which an N-file sweep exceeds
+      immediately.
+    resolution: >-
+      An enumerated file set is ONE operation, not N repetitions. The ceiling
+      counts repetition WITHOUT NEW INFORMATION — the same target re-read
+      hoping for a different answer. A declared set whose members were known
+      before the first call returns different content every time and is
+      exempt. `token-efficiency` names this conflict as "direct" in its own
+      body; the register row is what makes the resolution findable from either
+      side rather than only from the rule that happened to mention it.
+    evidence:
+      - src/rules/token-efficiency.md#enumerated-file-sets-are-one-operation-not-n-repetitions
+      - src/rules/downstream-changes.md#the-iron-law
+
+  - id: downstream-changes-x-context-hygiene
+    rules: [downstream-changes, context-hygiene]
+    relation: narrows
+    conflict: >-
+      Same collision as the `token-efficiency` pair, against a second ceiling:
+      `context-hygiene`'s tool-loop detector treats more than two same-tool
+      calls in a row as a loop, which a downstream-caller sweep trips.
+    resolution: >-
+      Identical carve-out, stated independently in both rules: "similar
+      parameters" is the load-bearing phrase, and walking N declared distinct
+      targets is one operation whose parameters differ every call. Recorded as
+      its own row rather than folded into the `token-efficiency` one because
+      the two ceilings are separate mechanisms — satisfying one does not
+      satisfy the other, and a reader hitting the loop detector will not think
+      to look under token efficiency.
+    evidence:
+      - src/rules/context-hygiene.md#tool-loop-detection
+      - src/rules/downstream-changes.md#the-iron-law
+
+  - id: minimal-safe-diff-x-active-remediation
+    rules: [minimal-safe-diff, active-remediation]
+    relation: gates
+    conflict: >-
+      The agent passes a real defect — dead code, a missing check, duplication
+      — that sits outside the stated task. `active-remediation` says never
+      ignore it; `minimal-safe-diff` says every line in the diff must trace to
+      the task.
+    resolution: >-
+      `minimal-safe-diff` bounds the fix, `active-remediation` bounds the
+      silence. Small AND task-aligned (all five fix-now conditions) → fix it in
+      the same change with its test. Anything wider → note it, finish the task,
+      ask afterwards; never a drive-by edit and never a silent drop. The one
+      interrupt is a live cross-user or cross-tenant exposure, which is
+      surfaced immediately regardless of size.
+    evidence:
+      - src/rules/active-remediation.md#the-iron-law
+      - src/rules/minimal-safe-diff.md#own-orphan-cleanup
+
+  - id: cross-source-consistency-x-design-fidelity
+    rules: [cross-source-consistency, design-fidelity]
+    relation: gates
+    conflict: >-
+      Ticket text and an attached mockup disagree, and the agent is about to
+      build UI. `design-fidelity` says the provided artifact is the spec and
+      must be built 1:1; `cross-source-consistency` says a contradiction
+      between two present sources must be surfaced before proceeding.
+    resolution: >-
+      They fire in sequence, not in competition. `cross-source-consistency`
+      runs FIRST, at decision time — "the text says X, the mockup says Y,
+      which wins?" Once the user resolves it, `design-fidelity` governs
+      build-time fidelity against whichever source won. Building 1:1 from an
+      unresolved contradiction is the failure both rules exist to prevent.
+    evidence:
+      - src/rules/cross-source-consistency.md#how-to-surface-it-subordinate-to-the-ask-discipline
+      - src/rules/design-fidelity.md#the-iron-law
+
+  - id: ask-when-uncertain-x-cross-source-consistency
+    rules: [ask-when-uncertain, cross-source-consistency]
+    relation: gates
+    conflict: >-
+      Two present sources disagree AND the turn already owes a clarifying
+      question. `cross-source-consistency` requires the discrepancy be
+      surfaced; `ask-when-uncertain` allows exactly one question per turn.
+    resolution: >-
+      The discrepancy folds into the SAME turn's single question. All
+      discrepancies for one artefact batch into ONE numbered-options block;
+      a second question block is never emitted. One-question-per-turn is the
+      canonical constraint and the discrepancy is a payload inside it, not an
+      exemption from it.
+    evidence:
+      - src/rules/cross-source-consistency.md#how-to-surface-it-subordinate-to-the-ask-discipline
+      - src/rules/ask-when-uncertain.md#iron-law--one-question-per-turn-always
+
+  - id: scope-control-x-cross-source-consistency
+    rules: [scope-control, cross-source-consistency]
+    relation: gates
+    conflict: >-
+      The spec is silent on a behaviour that is clearly required (a holiday
+      shift, an empty state). `cross-source-consistency` calls this a
+      silent-but-needed discrepancy; whether the agent may simply ADD the
+      behaviour is a scope question.
+    resolution: >-
+      `scope-control` is the permission authority. An inferred-but-unspecified
+      behaviour is a scope expansion, so it is asked, never added silently —
+      obvious-to-the-agent is not the same as in-scope.
+      `cross-source-consistency` decides that the gap must be surfaced;
+      `scope-control` decides that it may not be closed unilaterally.
+    evidence:
+      - src/rules/cross-source-consistency.md#how-to-surface-it-subordinate-to-the-ask-discipline
+      - src/rules/scope-control.md
+
+  - id: context-hygiene-x-token-efficiency
+    rules: [context-hygiene, token-efficiency]
+    relation: restates
+    conflict: >-
+      Both rules cap consecutive same-tool calls at two, and both must exempt
+      an enumerated multi-file sweep. Two ceilings with one carve-out stated
+      twice drift apart the moment one side is edited.
+    resolution: >-
+      The carve-out is identical by intent and each rule says so — the
+      discriminator is "did the previous call change what I know", not the
+      tool name. Recorded as a `restates` pair so the duplication is declared
+      rather than accidental: an edit to either carve-out that is not mirrored
+      is now a visible divergence between two rules the register pairs.
+    evidence:
+      - src/rules/context-hygiene.md#tool-loop-detection
+      - src/rules/token-efficiency.md#enumerated-file-sets-are-one-operation-not-n-repetitions
