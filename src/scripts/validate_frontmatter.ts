@@ -32,6 +32,12 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import { parse as parseYaml } from 'yaml';
 
 import { artefact_roots } from './_lib/agent_src.js';
+import { KERNEL_RULE_ID_SET } from './_lib/kernel_rules.js';
+import {
+    frequency_prose_conflicts,
+    has_frequency_override,
+    is_frequency,
+} from './_lib/obligation_frequency.js';
 
 // Free-form YAML value alias. The lenient subset parser produces strings,
 // numbers, booleans, the empty string, nested objects, and arrays of those.
@@ -807,6 +813,65 @@ function pyListRepr(values: YamlValue[]): string {
     return `[${values.map((v) => pyRepr(v)).join(', ')}]`;
 }
 
+/**
+ * Rule-only checks for `obligation_frequency` — the field the coverage join
+ * reads.
+ *
+ * Two obligations, at two severities:
+ *
+ *  - **Required, as an error.** A rule with no declared period cannot be joined
+ *    against its carrier's firing frequency, so the audit reports it
+ *    `unclassified` — which is a hole in the finding, not a pass. Making it
+ *    mandatory at authoring time is the pin: a NEW rule with a per-turn
+ *    obligation and no turn-carrier is caught here rather than in a later audit.
+ *
+ *  - **Prose agreement, as a warning.** A keyword heuristic will be noisy, so it
+ *    never fails a build.
+ *
+ * The nine kernel rules are exempt, and the exemption is DERIVED from
+ * `_lib/kernel_rules.ts` — the same locked set `block_kernel_rule_writes.ts`
+ * enforces. They are not exempt because kernel rules are special; they are
+ * exempt because that guard denies the write, so requiring the field would make
+ * `task ci` unsatisfiable for any agent. Deriving it rather than hand-listing it
+ * closes the exemption automatically: the moment a rule leaves the kernel, the
+ * field becomes required with no edit here.
+ */
+export function check_obligation_frequency(
+    filePath: string,
+    text: string,
+    data: Record<string, YamlValue>,
+): SchemaError[] {
+    const id = path.basename(filePath).replace(/\.md$/, '');
+    if (KERNEL_RULE_ID_SET.has(id)) return [];
+
+    const declared = data['obligation_frequency'];
+    if (!is_frequency(declared)) {
+        return [
+            new SchemaError(
+                '$.obligation_frequency',
+                'required',
+                "Missing required property 'obligation_frequency' — how often this rule's " +
+                    'obligation comes due. Without it check_enforcement_coverage cannot join ' +
+                    "the rule against its carrier's firing frequency and reports it unclassified.",
+            ),
+        ];
+    }
+    if (has_frequency_override(text)) return [];
+
+    const conflicts = frequency_prose_conflicts(text, declared);
+    if (conflicts.length === 0) return [];
+    return [
+        new SchemaError(
+            '$.obligation_frequency',
+            'frequency-prose-drift',
+            `declared '${declared}', but the prose reads as ${conflicts.join(' / ')} — ` +
+                'either the declaration or the prose moved. Silence an audited mismatch with a ' +
+                '`# frequency-override: <reason>` comment in the frontmatter.',
+            'warning',
+        ),
+    ];
+}
+
 // --- CLI entry point -------------------------------------------------------
 
 /** Yield `[artefact_type, path]` pairs for all lintable artefacts. */
@@ -931,6 +996,9 @@ export function _main(argv: string[]): number {
             // (road-to-abstraction-reduction.md Phase 1).
             apply_schema_defaults(data, schema);
             const errors = validate(data, schema);
+            if (artefactType === 'rule') {
+                errors.push(...check_obligation_frequency(p, text, data));
+            }
             const fatal = errors.filter((e) => e.severity === 'error');
             const warnings = errors.filter((e) => e.severity === 'warning');
             if (fatal.length > 0) {

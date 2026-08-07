@@ -13,6 +13,8 @@ load_context:
   - "contexts/contracts/artifact-engagement-flow.md"
 workspaces: [agent-config-maintainer, engineering]
 packs: [meta]
+# obligation: "After a `/implement-ticket` or `/work` phase-step, emit one telemetry call" — src/rules/artifact-engagement-recording.md:22
+obligation_frequency: "per-task"
 ---
 
 <!-- cloud_safe: noop -->

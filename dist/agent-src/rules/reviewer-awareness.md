@@ -13,6 +13,8 @@ routes_to:
 workspaces: [agent-config-maintainer, engineering]
 packs: [meta]
 roles: [reviewer]
+# obligation: "Anchor reviewer choice in paths and risk, never seniority" — src/rules/reviewer-awareness.md:20
+obligation_frequency: "per-commit"
 ---
 
 # Reviewer Awareness

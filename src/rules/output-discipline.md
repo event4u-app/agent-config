@@ -12,6 +12,8 @@ workspaces: [engineering]
 packs: [engineering-base]
 enforced_by:
   - "validator:src/scripts/lint_output_slop.ts"
+# obligation: "NEVER EMIT PLACEHOLDER PROSE IN GENERATED CODE OR UI." — src/rules/output-discipline.md:22
+obligation_frequency: "per-edit"
 ---
 
 # Output Discipline

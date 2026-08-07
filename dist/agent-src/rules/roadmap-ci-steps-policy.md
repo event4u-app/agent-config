@@ -30,6 +30,8 @@ packs: [meta]
 roles: [planner]
 collision_ok:
   "agents/roadmaps/": "roadmap steps must not schedule CI-shaped gates"
+# obligation: "ROADMAPS MUST NOT SCHEDULE FULL-PIPELINE CI STEPS" — src/rules/roadmap-ci-steps-policy.md:41
+obligation_frequency: "per-edit"
 ---
 
 # Roadmap CI-Steps Policy

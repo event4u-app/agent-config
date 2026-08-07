@@ -24,6 +24,8 @@ applies_to_user_types:
 self_contained: true
 workspaces: [engineering]
 packs: [meta]
+# obligation: "A QUESTION ASKS FOR AN ANSWER. IT IS NOT AUTHORIZATION TO ACT." — src/rules/question-not-instruction.md:32
+obligation_frequency: "per-turn"
 ---
 
 # Question Is Not an Instruction

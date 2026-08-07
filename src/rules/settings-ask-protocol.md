@@ -25,6 +25,10 @@ enforced_by:
   - "none"
 collision_ok:
   "canary_name": "the nickname ask is this protocol's canonical B-class instance — session-canary owns what the NAME then does and which layers already supply it, this rule owns how it is asked for and where the answer goes"
+# obligation: "AT MOST ONE SETTINGS QUESTION PER COMMAND EXECUTION. NEVER TWO." — src/rules/settings-ask-protocol.md:39
+obligation_frequency: "per-task"
+# frequency-override: the per-turn phrase at line 175 is a See-also cross-reference to
+# ask-when-uncertain's rule, not this rule's own obligation, which is per command execution.
 ---
 
 # Settings-Ask Protocol

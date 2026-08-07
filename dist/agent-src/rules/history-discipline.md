@@ -19,6 +19,8 @@ workspaces: [engineering]
 packs: [history-discipline]
 trust:
   level: professional
+# obligation: "MUTATIONS ON AUDIT-SCOPED DATA EMIT WHO / WHAT / WHEN. ALWAYS." — src/rules/history-discipline.md:35
+obligation_frequency: "per-edit"
 ---
 
 # History Discipline

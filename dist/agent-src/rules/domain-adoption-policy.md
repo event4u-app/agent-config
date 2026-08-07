@@ -18,6 +18,8 @@ workspaces: [agent-config-maintainer]
 packs: [meta]
 collision_ok:
   "src/skills/": "a skill in a fresh vertical is exactly the domain-gate surface"
+# obligation: "NEVER OPEN A NEW DOMAIN TRACK WITHOUT THE THREE GATES." — src/rules/domain-adoption-policy.md:38
+obligation_frequency: "per-task"
 ---
 
 # Domain Adoption Policy

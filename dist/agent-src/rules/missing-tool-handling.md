@@ -9,6 +9,8 @@ routes_to:
   - "guideline:agent-infra/missing-tool-handling"
 workspaces: [agent-config-maintainer, construction, engineering, finance, founder, gtm, legal-review-prep, ops, product, small-business]
 packs: [meta]
+# obligation: "A CLI tool the task genuinely needs is not installed → STOP and ask" — src/rules/missing-tool-handling.md:16
+obligation_frequency: "per-event"
 ---
 
 # Missing Tool Handling

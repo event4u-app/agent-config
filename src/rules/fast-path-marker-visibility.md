@@ -14,6 +14,8 @@ validator_ignore:
 self_contained: true
 workspaces: [agent-config-maintainer, engineering]
 packs: [meta]
+# obligation: "EVERY LOW-IMPACT COUNCIL FAST-PATH REPLY OPENS WITH THE EXACT MARKER." — src/rules/fast-path-marker-visibility.md:30
+obligation_frequency: "per-turn"
 ---
 
 # Fast-Path Marker Visibility

@@ -42,6 +42,8 @@ workspaces: [agent-config-maintainer, construction, engineering, finance, founde
 packs: [meta]
 collision_ok:
   "review this contract": "contract review is advisory-shaped — the not-legal-advice footer floor"
+# obligation: "EVERY ADVISORY-SHAPED DRAFT SHIPS WITH THE MATCHING "NOT X ADVICE" DISCLAIMER" — src/rules/domain-safety-disclaimer.md:52
+obligation_frequency: "per-task"
 ---
 
 # Domain Safety — Advisory Disclaimer

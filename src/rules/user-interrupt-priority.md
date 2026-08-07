@@ -18,6 +18,8 @@ load_context:
 self_contained: true
 workspaces: [agent-config-maintainer, construction, engineering, finance, founder, gtm, legal-review-prep, ops, product, small-business]
 packs: [meta]
+# obligation: "Classify every user turn" — src/rules/user-interrupt-priority.md:38
+obligation_frequency: "per-turn"
 ---
 
 # User-Interrupt Priority

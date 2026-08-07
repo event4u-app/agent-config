@@ -23,6 +23,8 @@ collision_ok:
   "controller": "controllers return user data — the ownership/tenant check floor"
   "endpoint": "every data-returning endpoint needs the three negative tests"
   "tenant": "cross-tenant isolation is this rule's core subject"
+# obligation: "Writing/modifying any endpoint, route, query, or serializer that returns … …" — src/rules/broken-access-control.md:55
+obligation_frequency: "per-edit"
 ---
 
 # Broken Access Control

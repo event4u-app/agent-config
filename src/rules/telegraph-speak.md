@@ -7,6 +7,8 @@ workspaces: [agent-config-maintainer]
 packs: [meta]
 enforced_by:
   - "observer:maintainer-review"
+# obligation: "Post-rewrite validator runs on every reply when `speak_scope != off`" — src/rules/telegraph-speak.md:66
+obligation_frequency: "per-turn"
 ---
 
 # Telegraph Speak

@@ -9,6 +9,8 @@ triggers:
   - keyword: "convention"
 workspaces: [agent-config-maintainer, engineering]
 packs: [meta]
+# obligation: "Always check the relevant guideline before writing or reviewing code." — src/rules/guidelines.md:16
+obligation_frequency: "per-edit"
 ---
 
 # Guidelines

@@ -12,6 +12,8 @@ workspaces: [agent-config-maintainer, construction, engineering, finance, founde
 packs: [meta]
 enforced_by:
   - "hook:context-hygiene"
+# obligation: "EVERY TURN MUST EDIT, RUN, OR ASK." — src/rules/context-hygiene.md:67
+obligation_frequency: "per-turn"
 ---
 
 # Context Hygiene

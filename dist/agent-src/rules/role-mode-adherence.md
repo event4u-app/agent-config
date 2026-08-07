@@ -9,6 +9,8 @@ triggers:
 self_contained: true
 workspaces: [agent-config-maintainer, construction, engineering, finance, founder, gtm, legal-review-prep, ops, product, small-business]
 packs: [meta]
+# obligation: "When active, every closing output MUST use the contract fields" — src/rules/role-mode-adherence.md:23
+obligation_frequency: "per-turn"
 ---
 
 # Role Mode Adherence

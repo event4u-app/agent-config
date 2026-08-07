@@ -5,6 +5,8 @@ description: "Creating or editing rules, skills, commands, guidelines, AGENTS.md
 alwaysApply: false
 workspaces: [agent-config-maintainer]
 packs: [meta]
+# obligation: "If a component grows too large … split or refactor." — src/rules/size-enforcement.md:21
+obligation_frequency: "per-edit"
 ---
 
 # size-enforcement

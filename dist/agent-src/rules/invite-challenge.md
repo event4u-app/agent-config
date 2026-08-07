@@ -12,6 +12,8 @@ triggers:
 self_contained: true
 workspaces: [agent-config-maintainer, engineering]
 packs: [meta]
+# obligation: "One challenge per plan, not per step." — src/rules/invite-challenge.md:62
+obligation_frequency: "per-task"
 ---
 
 # invite-challenge

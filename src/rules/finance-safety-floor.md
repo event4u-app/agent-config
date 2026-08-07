@@ -33,6 +33,8 @@ packs: [finance-basic, finance-advanced]
 trust:
   level: advisory
   human_review_required: true
+# obligation: "Every finance-pack deliverable … ends with the disclosure footer" — src/rules/finance-safety-floor.md:53
+obligation_frequency: "per-task"
 ---
 
 # Finance Safety Floor

@@ -38,6 +38,16 @@ import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import { assertScanned, DeadScopeError } from './_lib/scan_scope.js';
+import { KERNEL_RULE_ID_SET } from './_lib/kernel_rules.js';
+import {
+    carrier_frequency_by_platform,
+    covers,
+    covers_any,
+    is_frequency,
+    parse_hook_platforms,
+    type Frequency,
+    type PlatformBinding,
+} from './_lib/obligation_frequency.js';
 
 const _HERE = path.dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = path.resolve(_HERE, '..', '..');
@@ -73,6 +83,25 @@ export type Resolution =
     | 'missing'         // declared target does not exist at all
     | 'none';           // honest, recorded gap
 
+/**
+ * Whether the carrier's firing set covers the obligation's — the question
+ * `effective` does not answer.
+ *
+ * `covered`      — some declared carrier covers the obligation on every
+ *                  hook-capable platform.
+ * `gap`          — at least one hook-capable platform where no declared carrier
+ *                  covers it. `gap_platforms` names them.
+ * `declared-gap` — the rule declares `enforced_by: none`; the gap is stated in
+ *                  the rule's own text, so it is honest, not a defect.
+ * `unclassified` — no `obligation_frequency` to join against. The nine kernel
+ *                  rules sit here: `block_kernel_rule_writes.ts` denies agent
+ *                  writes to them, so the field cannot be populated by the same
+ *                  pass that populated the other 105.
+ * `unmeasured`   — the rule declares no carrier at all; model-carried by design,
+ *                  making no claim this join could falsify.
+ */
+export type FrequencyVerdict = 'covered' | 'gap' | 'declared-gap' | 'unclassified' | 'unmeasured';
+
 export interface RuleCoverage {
     id: string;
     tier: string;
@@ -82,6 +111,21 @@ export interface RuleCoverage {
     /** Strongest resolution, by the ordering in `RANK`. */
     effective: Resolution;
     notes: string[];
+    /** Declared obligation period (frontmatter), or null when undeclared. */
+    obligation_frequency: Frequency | null;
+    /**
+     * Carrier period per hook-capable platform — never a single scalar.
+     *
+     * A scalar is wrong twice over: copilot has no hook surface at all, so a
+     * weakest-platform collapse turns one platform property into a finding on
+     * every hook-carried rule; and cline maps `stop` from `TaskCancel`, so the
+     * same slot means per-turn on six platforms and per-interruption there. Both
+     * are invisible in one number.
+     */
+    carrier_frequency: Record<string, string> | null;
+    frequency_verdict: FrequencyVerdict;
+    /** Hook-capable platforms where no declared carrier covers the obligation. */
+    gap_platforms: string[];
 }
 
 /** Strength order — a rule is credited with its strongest resolving backstop. */
@@ -396,14 +440,92 @@ export function strongest(resolutions: Resolution[]): Resolution {
     return best;
 }
 
+// ----------------------------------------------------------- frequency join
+
+/**
+ * Join a rule's declared obligation period against its carriers' firing periods.
+ *
+ * Runs per hook-capable platform, never as one scalar. A rule is covered only
+ * when SOME declared carrier covers it on EVERY hook-capable platform; the
+ * platforms where none does are named, because "uncovered on windsurf" and
+ * "uncovered everywhere" are different findings with different fixes.
+ *
+ * `validator:` / `test:` carriers are SWEEP carriers — they fire once and read
+ * the whole tree, so their reach is bounded by what lands in an artefact rather
+ * than by how often they run. Modelling them as per-commit point carriers would
+ * make every `validator:`-carried rule with a per-edit obligation a finding at
+ * once: one modelling error rendered as a fifth of the corpus.
+ */
+export function join_frequency(
+    obligation: Frequency | null,
+    declared: string[],
+    binding: PlatformBinding,
+    is_kernel: boolean,
+): {
+    verdict: FrequencyVerdict;
+    carrier_frequency: Record<string, string> | null;
+    gap_platforms: string[];
+} {
+    if (obligation === null) {
+        return {
+            verdict: is_kernel ? 'unclassified' : 'unclassified',
+            carrier_frequency: null,
+            gap_platforms: [],
+        };
+    }
+    if (declared.length === 0) {
+        return { verdict: 'unmeasured', carrier_frequency: null, gap_platforms: [] };
+    }
+    if (declared.every((d) => d === 'none')) {
+        return { verdict: 'declared-gap', carrier_frequency: null, gap_platforms: [] };
+    }
+
+    const has_sweep = declared.some((d) => d.startsWith('validator:') || d.startsWith('test:'));
+    const hook_concerns = declared
+        .filter((d) => d.startsWith('hook:'))
+        .map((d) => d.slice('hook:'.length));
+
+    const per_platform: Record<string, string> = {};
+    const gap_platforms: string[] = [];
+
+    for (const platform of binding.slots.keys()) {
+        if (binding.fallback_only.has(platform)) continue;
+
+        let covered = false;
+        const seen: Frequency[] = [];
+
+        if (has_sweep && covers({ frequency: 'per-commit', mode: 'sweep' }, obligation)) {
+            covered = true;
+        }
+        for (const concern of hook_concerns) {
+            for (const f of carrier_frequency_by_platform(concern, binding)[platform] ?? []) {
+                if (!seen.includes(f)) seen.push(f);
+            }
+        }
+        if (covers_any(seen, obligation)) covered = true;
+
+        per_platform[platform] =
+            seen.length > 0 ? seen.join('+') : has_sweep ? 'sweep' : 'absent';
+        if (!covered) gap_platforms.push(platform);
+    }
+
+    return {
+        verdict: gap_platforms.length === 0 ? 'covered' : 'gap',
+        carrier_frequency: per_platform,
+        gap_platforms,
+    };
+}
+
 // -------------------------------------------------------------------- report
 
 export function collect(): RuleCoverage[] {
     const ci_corpus = load_corpus(WORKFLOW_DIRS);
     const local_corpus = load_corpus(TASK_DIRS, TASK_FILES);
-    const hooks = fs.existsSync(HOOK_MANIFEST)
-        ? parse_hook_manifest(fs.readFileSync(HOOK_MANIFEST, 'utf-8'))
-        : new Map<string, boolean>();
+    const manifest_text = fs.existsSync(HOOK_MANIFEST)
+        ? fs.readFileSync(HOOK_MANIFEST, 'utf-8')
+        : '';
+    const hooks = manifest_text ? parse_hook_manifest(manifest_text) : new Map<string, boolean>();
+    const binding = parse_hook_platforms(manifest_text);
     const exists = (rel: string): boolean => fs.existsSync(path.join(REPO_ROOT, rel));
     // Seeded separately so the umbrella expansion answers "reachable from CI"
     // rather than "reachable from anything". The expansion itself was correct;
@@ -425,14 +547,27 @@ export function collect(): RuleCoverage[] {
             resolutions.push(resolution);
             if (note) notes.push(note);
         }
+        const id = name.replace(/\.md$/, '');
+        const raw_freq = fm['obligation_frequency'];
+        const obligation: Frequency | null = is_frequency(raw_freq) ? raw_freq : null;
+        const { verdict, carrier_frequency, gap_platforms } = join_frequency(
+            obligation,
+            declared,
+            binding,
+            KERNEL_RULE_ID_SET.has(id),
+        );
         out.push({
-            id: name.replace(/\.md$/, ''),
+            id,
             tier: String(fm['tier'] ?? '—'),
             type: String(fm['type'] ?? '—'),
             declared,
             resolutions,
             effective: strongest(resolutions),
             notes,
+            obligation_frequency: obligation,
+            carrier_frequency,
+            frequency_verdict: verdict,
+            gap_platforms,
         });
     }
     return out;
@@ -450,6 +585,16 @@ export interface Summary {
     missing: number;
     undeclared: number;
     blocking_pct: number;
+    /**
+     * Rules whose declared carrier does not fire often enough to cover their
+     * declared obligation, on at least one hook-capable platform. The number
+     * this roadmap exists to produce — and the one `--check` ratchets, because
+     * `blocking` cannot see it: `session-canary` is declared, wired, firing, and
+     * in this bucket.
+     */
+    frequency_gap: number;
+    /** Rules with no `obligation_frequency` to join — the nine kernel rules. */
+    frequency_unclassified: number;
 }
 
 export function summarise(rows: RuleCoverage[]): Summary {
@@ -466,6 +611,8 @@ export function summarise(rows: RuleCoverage[]): Summary {
         missing: count((r) => r.effective === 'missing'),
         undeclared: rows.length - declared.length,
         blocking_pct: rows.length === 0 ? 0 : Math.round((blocking / rows.length) * 1000) / 10,
+        frequency_gap: count((r) => r.frequency_verdict === 'gap'),
+        frequency_unclassified: count((r) => r.frequency_verdict === 'unclassified'),
     };
 }
 
@@ -513,9 +660,13 @@ function main(argv: string[]): number {
                 {
                     _doc:
                         'Enforcement-coverage baseline. `blocking` counts rules whose strongest ' +
-                        'enforced_by resolves to something that can fail a build. Coverage is a ' +
-                        'ratchet: --check fails when blocking falls or unwired rises. Regenerate ' +
-                        'intentionally with --write-baseline when the change is the point.',
+                        'enforced_by resolves to something that can fail a build. `frequency_gap` ' +
+                        'counts rules whose carrier does not fire often enough to cover their ' +
+                        'declared obligation on some hook-capable platform — a rule can be ' +
+                        'blocking and in that bucket at once. Coverage is a ratchet: --check fails ' +
+                        'when blocking falls, or unwired / local_only / missing / frequency_gap ' +
+                        'rises. Regenerate intentionally with --write-baseline when the change is ' +
+                        'the point.',
                     summary,
                 },
                 null,
@@ -543,6 +694,27 @@ function main(argv: string[]): number {
         );
     }
 
+    lines.push(
+        `  frequency: ${summary.frequency_gap} gap · ${summary.frequency_unclassified} unclassified ` +
+            `(kernel — block_kernel_rule_writes denies the field)`,
+    );
+
+    const gaps = rows.filter((r) => r.frequency_verdict === 'gap');
+    if (gaps.length > 0) {
+        lines.push('');
+        lines.push('  frequency gaps — carrier fires, but not often enough:');
+        for (const r of gaps) {
+            const where =
+                r.gap_platforms.length === Object.keys(r.carrier_frequency ?? {}).length
+                    ? 'every hook-capable platform'
+                    : r.gap_platforms.join(', ');
+            lines.push(
+                `    · ${r.id}: obligation ${r.obligation_frequency}, carrier ` +
+                    `${r.declared.join(' + ')} — uncovered on ${where}`,
+            );
+        }
+    }
+
     const problems = rows.filter((r) => r.notes.length > 0);
     if (problems.length > 0) {
         lines.push('');
@@ -568,6 +740,15 @@ function main(argv: string[]): number {
         }
         if (summary.unwired > base.unwired) {
             regressions.push(`unwired declarations rose: ${base.unwired} → ${summary.unwired}`);
+        }
+        // The bucket `blocking` structurally cannot see: a rule can be declared,
+        // wired, firing and still mis-slotted. `??` tolerates a pre-frequency
+        // baseline so the field's own introduction does not red the ratchet.
+        if (summary.frequency_gap > (base.frequency_gap ?? Number.POSITIVE_INFINITY)) {
+            regressions.push(
+                `frequency gaps rose: ${base.frequency_gap} → ${summary.frequency_gap} ` +
+                    `(a rule's carrier no longer fires often enough for its obligation)`,
+            );
         }
         // A validator dropping out of a workflow back into taskfile-only is the
         // exact regression this split was built to name. Without this line the

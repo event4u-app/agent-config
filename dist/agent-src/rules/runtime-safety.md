@@ -10,6 +10,8 @@ triggers:
 self_contained: true
 workspaces: [agent-config-maintainer, engineering]
 packs: [meta]
+# obligation: "No execution without declared intent in frontmatter" — src/rules/runtime-safety.md:32
+obligation_frequency: "per-edit"
 ---
 
 # Runtime Safety

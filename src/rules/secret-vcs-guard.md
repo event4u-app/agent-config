@@ -27,6 +27,8 @@ enforced_by:
   - "validator:src/scripts/check_secret_leak.ts"
 collision_ok:
   "commit": "committing is the credential-leak moment this guard exists for"
+# obligation: "NEVER WRITE A CREDENTIAL INTO A TRACKED (OR TO-BE-TRACKED) FILE" — src/rules/secret-vcs-guard.md:43
+obligation_frequency: "per-edit"
 ---
 
 # Secret-in-VCS Guard

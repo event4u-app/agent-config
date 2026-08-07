@@ -28,6 +28,8 @@ workspaces: [engineering]
 packs: [engineering-base]
 collision_ok:
   "migration": "a prod migration is a hard-floor evidence surface (rollback path, blast radius)"
+# obligation: "Before any deploy, prod-trunk merge, schema migration, or infra change" — src/rules/engineering-safety-floor.md:49
+obligation_frequency: "per-commit"
 ---
 
 # Engineering Safety Floor

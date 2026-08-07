@@ -12,6 +12,8 @@ workspaces: [agent-config-maintainer, construction, engineering, finance, founde
 packs: [meta]
 enforced_by:
   - "hook:session-canary"
+# obligation: "the first reply of every new task" — src/rules/session-canary.md:31
+obligation_frequency: "per-task"
 collision_ok:
   "canary_name": "this rule owns what the NAME does once set and which of the three layers already supplies it; settings-ask-protocol owns how it is asked for and where the answer goes"
 ---

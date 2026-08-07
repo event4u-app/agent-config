@@ -8,6 +8,8 @@ workspaces: [agent-config-maintainer, construction, engineering, finance, founde
 packs: [meta]
 triggers:
   - phrase: "reporting progress"
+# obligation: "STATE THE GOAL ONCE. TIE EACH TURN BACK TO IT." — src/rules/communication-through-line.md:20
+obligation_frequency: "per-turn"
 ---
 
 # Communication Through-Line

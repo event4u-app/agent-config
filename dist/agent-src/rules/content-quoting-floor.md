@@ -9,6 +9,8 @@ triggers:
 self_contained: true
 workspaces: [agent-config-maintainer, construction, engineering, finance, founder, gtm, legal-review-prep, ops, product, small-business]
 packs: [meta]
+# obligation: "NO VERBATIM QUOTE EXCEEDS 15 WORDS. ONE QUOTE PER SOURCE PER DELIVERABLE." — src/rules/content-quoting-floor.md:19
+obligation_frequency: "per-event"
 ---
 
 # Content Quoting Floor

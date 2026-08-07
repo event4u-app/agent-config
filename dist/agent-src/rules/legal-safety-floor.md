@@ -31,6 +31,8 @@ trust:
 collision_ok:
   "controller": "'controller' is a GDPR role term (controller/processor) in the legal pack"
   "review this contract": "the legal-pack contract-review gate — both floors must fire"
+# obligation: "Every legal-pack deliverable carries, in the body (not a footnote)" — src/rules/legal-safety-floor.md:103
+obligation_frequency: "per-task"
 ---
 <!-- agent-config:human-review-banner -->
 > HUMAN REVIEW REQUIRED · trust: advisory · owner: unknown

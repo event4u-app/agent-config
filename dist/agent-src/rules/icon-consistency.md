@@ -16,6 +16,8 @@ applies_to_user_types:
 self_contained: true
 workspaces: [engineering]
 packs: [frontend-design]
+# obligation: "new component, new screen, icon prop, import of an icon library" — src/rules/icon-consistency.md:41
+obligation_frequency: "per-edit"
 ---
 
 # Icon Consistency

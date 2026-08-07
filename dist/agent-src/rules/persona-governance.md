@@ -27,6 +27,8 @@ workspaces: [agent-config-maintainer]
 packs: [meta]
 enforced_by:
   - "validator:src/scripts/lint_persona_governance.ts"
+# obligation: "Fires on creating, editing, or proposing a persona (review lens)" — src/rules/persona-governance.md:41
+obligation_frequency: "per-edit"
 ---
 
 # Persona Governance

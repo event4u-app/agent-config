@@ -18,6 +18,8 @@ install:
   removable: true
 collision_ok:
   "phpstan": "phpstan findings are the PHP pattern floor's own quality surface"
+# obligation: "PHP: strict types, named comparisons, early returns, Eloquent conventions" — src/rules/php-coding.md:25
+obligation_frequency: "per-edit"
 ---
 
 # Php Coding

@@ -10,6 +10,8 @@ routes_to:
   - "skill:copilot-config"
 workspaces: [agent-config-maintainer, engineering]
 packs: [meta]
+# obligation: "Body migrated to `skill:copilot-config`." — src/rules/copilot-routing.md:19
+obligation_frequency: "none"
 ---
 
 # Copilot Routing

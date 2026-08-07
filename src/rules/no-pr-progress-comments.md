@@ -10,6 +10,8 @@ triggers:
 self_contained: true
 workspaces: [agent-config-maintainer, engineering]
 packs: [meta]
+# obligation: "NEVER POST UNSOLICITED PROGRESS / STATUS / CI-FIX COMMENTS ON A PR" — src/rules/no-pr-progress-comments.md:20
+obligation_frequency: "per-commit"
 ---
 
 # No Unsolicited PR Progress Comments

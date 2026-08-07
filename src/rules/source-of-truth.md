@@ -16,6 +16,8 @@ enforced_by:
   - "validator:src/scripts/check_condensation.ts"
 collision_ok:
   ".augment/": "the projection is read-only — edits belong in src/"
+# obligation: "NEVER CREATE OR EDIT FILES IN ANY GENERATED PROJECTION" — src/rules/source-of-truth.md:44
+obligation_frequency: "per-edit"
 ---
 
 # Source of Truth

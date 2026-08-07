@@ -20,6 +20,8 @@ routes_to:
   - "skill:subagent-orchestration"
 workspaces: [engineering]
 packs: [engineering-base]
+# obligation: "WHEN THE ACTIVATION GATE CLEARS, DECOMPOSE THE TASK, TIER-SIZE EACH SLICE" — src/rules/delegation-policy.md:35
+obligation_frequency: "per-task"
 ---
 
 # Delegation Policy

@@ -36,6 +36,8 @@ workspaces: [engineering]
 packs: [engineering-base, frontend-design]
 collision_ok:
   "mockup": "a provided mockup is the spec — 1:1 fidelity floor"
+# obligation: "BUILD IT 1:1. NEVER SWAP FONTS, CONTROLS, COMPONENTS, LAYOUT, SPACING" — src/rules/design-fidelity.md:58
+obligation_frequency: "per-edit"
 ---
 
 # Design Fidelity

@@ -16,6 +16,8 @@ trust:
 install:
   default: false
   removable: true
+# obligation: "Symfony-flavoured PHP → load the `symfony-workflow` skill" — src/rules/symfony-routing.md:23
+obligation_frequency: "none"
 ---
 
 # Symfony Routing

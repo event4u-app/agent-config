@@ -20,6 +20,8 @@ packs: [engineering-base]
 collision_ok:
   "refactor": "refactors churn comments — the keep/drop discipline applies"
   "implement": "fresh implementation is where over-commenting lands"
+# obligation: "Writing/editing code — a comment states a WHY or constraint the code cannot…" — src/rules/code-comment-discipline.md:5
+obligation_frequency: "per-edit"
 ---
 
 # Code Comment Discipline

@@ -25,6 +25,8 @@ collision_ok:
   "implement": "implementation = the invisible-controls checklist"
   "endpoint": "endpoint row of the surface-to-controls table"
   "component": "component work = generalize + reuse duty"
+# obligation: "Any turn that writes, generates, or modifies code" — src/rules/senior-engineering-discipline.md:69
+obligation_frequency: "per-edit"
 ---
 
 # Senior Engineering Discipline

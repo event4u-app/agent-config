@@ -20,6 +20,12 @@ enforced_by:
   - "hook:evidence-independence"
 collision_ok:
   "honest null": "this rule asks how a recorded null was PRODUCED; decision-revisit-gate asks whether it may be REVISITED — different decision points on the same artefact"
+# obligation: dispatching an evaluator is a tool call, and the guard is a pre_tool_use
+# concern that reads that prompt — src/rules/evaluator-independence.md:81
+obligation_frequency: "per-edit"
+# frequency-override: line 70 states a per-turn clause ("one evaluation per turn"),
+# but the guard counts it AT the dispatch, which is a tool call — a per-edit point
+# carrier sees every dispatch, so it carries the per-turn cap too.
 ---
 
 # Evaluator Independence

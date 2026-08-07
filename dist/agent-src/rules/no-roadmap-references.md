@@ -22,6 +22,8 @@ enforced_by:
   - "validator:src/scripts/check_council_references.ts"
 collision_ok:
   "agents/roadmaps/": "roadmap edits are where transient-ref links get written"
+# obligation: "NEVER LINK TO A SPECIFIC FILE IN agents/roadmaps/" — src/rules/no-roadmap-references.md:47
+obligation_frequency: "per-edit"
 ---
 
 # No Transient References from Stable Artifacts

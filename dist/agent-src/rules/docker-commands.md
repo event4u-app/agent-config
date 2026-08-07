@@ -15,6 +15,8 @@ collision_ok:
   "artisan": "artisan runs inside the project container, never on the host"
   "composer": "composer runs inside the project container"
   "docker": "its own core subject"
+# obligation: "Run PHP / artisan / composer / phpstan / rector / ecs / phpunit inside the …" — src/rules/docker-commands.md:22
+obligation_frequency: "per-edit"
 ---
 
 # Docker Commands

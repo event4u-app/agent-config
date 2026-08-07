@@ -20,6 +20,8 @@ collision_ok:
   "artisan": "artisan is a Laravel-flavoured PHP routing cue — load the laravel skill"
   "eloquent": "eloquent is a Laravel routing cue"
   "formrequest": "FormRequest is a Laravel routing cue"
+# obligation: "Body migrated to `skill:laravel`." — src/rules/laravel-routing.md:29
+obligation_frequency: "none"
 ---
 
 # Laravel Routing
