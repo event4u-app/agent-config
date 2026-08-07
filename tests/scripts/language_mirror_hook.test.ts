@@ -14,6 +14,7 @@ import { beforeEach, describe, expect, it } from "vitest";
 import {
   classify,
   instructionText,
+  isSyntheticPrompt,
   nextState,
   noticeText,
   pinText,
@@ -22,6 +23,50 @@ import {
   MIN_MARKERS,
   systemLocaleVerdict,
 } from "../../src/scripts/language_mirror_hook.js";
+
+// Round-5 audit: the live state file read `language: "en", source: "prompt",
+// prompt_chars: 6627, de_markers: 0, en_markers: 63` in a German session. Those
+// 6,627 characters were a background-task notification, not a human prompt.
+describe("isSyntheticPrompt", () => {
+  const NOTIFICATION = [
+    "[SYSTEM NOTIFICATION - NOT USER INPUT]",
+    "This is an automated background-task event, NOT a message from the user.",
+    "<task-notification>",
+    "<status>completed</status>",
+    "</task-notification>",
+  ].join("\n");
+
+  it("recognises the harness shapes that reach user_prompt_submit", () => {
+    expect(isSyntheticPrompt(NOTIFICATION)).toBe(true);
+    expect(isSyntheticPrompt("<task-notification>\n<task-id>x</task-id>")).toBe(true);
+    expect(isSyntheticPrompt("<system-reminder>\nsomething\n</system-reminder>")).toBe(true);
+    expect(isSyntheticPrompt("<local-command-caveat>\nx\n</local-command-caveat>")).toBe(true);
+  });
+
+  it("does not fire on a human prompt, including one that quotes a notification", () => {
+    expect(isSyntheticPrompt("analysiere unsere letzten 30 chats im detail")).toBe(false);
+    expect(isSyntheticPrompt("why did I get a [SYSTEM NOTIFICATION - NOT USER INPUT] here?")).toBe(
+      false,
+    );
+  });
+
+  it("leaves a German pin untouched when a synthetic English turn arrives", () => {
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), "lang-mirror-synth-"));
+    const german = "Bitte prüfe die Roadmap und sage mir, welche Phase als nächste dran ist.";
+    run(JSON.stringify({ session_id: "s1", payload: { prompt: german } }), {
+      consumer_root: dir,
+    });
+    const afterHuman = JSON.parse(fs.readFileSync(path.join(dir, STATE_FILE), "utf8"));
+    expect(afterHuman.language).toBe("de");
+
+    run(JSON.stringify({ session_id: "s1", payload: { prompt: NOTIFICATION } }), {
+      consumer_root: dir,
+    });
+    const afterSynthetic = JSON.parse(fs.readFileSync(path.join(dir, STATE_FILE), "utf8"));
+    expect(afterSynthetic.language).toBe("de");
+    expect(afterSynthetic.detected_at).toBe(afterHuman.detected_at);
+  });
+});
 
 /** The maintainer's real prompt from the worst-case session (451 chars, de=16/en=0). */
 const REAL_GERMAN_PROMPT =

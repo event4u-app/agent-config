@@ -169,6 +169,25 @@ describe("commandOp", () => {
     expect(commandOp("git status --porcelain")).toBeNull();
     expect(commandOp("npm run test")).toBeNull();
   });
+
+  // Round-5 audit (2026-08-07): the separator split was not quote-aware, so a
+  // quoted alternation was cut into a segment beginning with the op literal.
+  // Measured live three times, once blocking the probe that proved the fix.
+  it("does not treat a separator inside quotes as a shell separator", () => {
+    expect(commandOp(`grep -n -E "foo|npm publish|bar" docs/`)).toBeNull();
+    expect(commandOp(`rg "npm publish" --glob '*.md'`)).toBeNull();
+    expect(commandOp(`grep -rn "gh pr merge|gh release create" src/`)).toBeNull();
+    expect(invokedSegments(`grep -E "a|npm publish|b" x`)).toEqual([
+      `grep -E "a|npm publish|b" x`,
+    ]);
+  });
+
+  it("still splits on unquoted separators after the quote fix", () => {
+    expect(commandOp("ls | npm publish")).toBe("publish");
+    expect(commandOp("echo hi & npm publish")).toBe("publish");
+    expect(commandOp("false || npm publish")).toBe("publish");
+    expect(invokedSegments("ls | npm publish")).toEqual(["ls", "npm publish"]);
+  });
 });
 
 describe("extractCommand", () => {

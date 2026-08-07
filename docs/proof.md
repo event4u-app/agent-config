@@ -272,12 +272,13 @@ Pure projection of what the repo already knows — the `enforced_by`
 resolution (`check_enforcement_coverage`) and the claims ledger
 (`docs/CLAIMS.md`). No new taxonomy, zero hand-written rows.
 
-**Axis 1 — enforcement level per rule.** 114 rules · 15 blocking (13.2%) · 8 observer · 0 local-only · 86 undeclared (no `enforced_by` yet).
+**Axis 1 — enforcement level per rule.** 114 rules · 15 blocking (13.2%) · 8 observer · 0 local-only · 84 undeclared (no `enforced_by` yet).
 
 | Rule | Effective level | Declared backstop(s) |
 |---|---|---|
 | `code-provenance` | none | `none` |
 | `context-hygiene` | observer | `hook:context-hygiene` |
+| `design-review-after-ui-write` | none | `none` |
 | `evaluator-independence` | observer | `hook:evidence-independence` |
 | `framework-neutrality-in-generic-skills` | validator | `validator:src/scripts/lint_framework_leakage.ts` |
 | `git-history-discipline` | hook | `hook:block-no-verify` |
@@ -302,10 +303,11 @@ resolution (`check_enforcement_coverage`) and the claims ledger
 | `telegraph-speak` | observer | `observer:maintainer-review` |
 | `token-optimizer-maintenance` | validator | `validator:src/scripts/check_token_optimizer_freshness.ts` |
 | `tool-safety` | validator | `validator:src/scripts/lint_agent_security.ts` |
+| `ui-audit-gate` | none | `none` |
 | `untrusted-input-defense` | none | `none` |
 | `verify-before-complete` | observer | `hook:verify-before-complete` |
 
-Undeclared rules (86) carry no row — an honest gap beats a false claim.
+Undeclared rules (84) carry no row — an honest gap beats a false claim.
 
 **Axis 2 — evidence form per public claim.** 49 ledger entries · 40 backed · 7 unbacked inventory · 2 resolved-null.
 
