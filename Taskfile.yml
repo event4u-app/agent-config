@@ -222,6 +222,7 @@ tasks:
       - task: check-council-references
       - task: lint-one-off-age
       - task: check-ownership-matrix
+      - task: check-settings-reference
       - task: check-reply-consistency
       - task: check-iron-law-prominence
       - task: check-rule-invariants
