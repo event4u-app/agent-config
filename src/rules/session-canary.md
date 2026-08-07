@@ -97,8 +97,32 @@ on ~13 of 15 task starts, often present only in the closing summary, twice
 carrying a name the settings chain did not resolve; the honesty clause fired
 zero times. The frequency join in `check_enforcement_coverage.ts` now reports the
 carrier as covering the obligation — which is a claim about firing, not about
-compliance. Whether the miss rate actually falls is not yet measured, and this
-paragraph will say so until a second audit runs.
+compliance.
+
+**What the second audit found: the carrier fires and compliance did not
+follow.** Conformance round 5, 2026-08-07, reading the five highest-turn
+sessions with the carrier bound per turn: opening canary dropped on **24 of 29**
+task starts, the honesty clause fired **0** times, and the wrong name was
+emitted **twice** — "Mathias", which resolves from no layer of the chain
+(`identity.name` is `Matze`, `git config user.name` is `matze4u`), i.e. inferred
+from the ambient environment rather than read from settings. 24/29 against the
+earlier 13/15 is not a fall, and the two windows are not identical, so they are
+stated side by side rather than as a trend — but nothing here supports the claim
+that the miss rate moved. A reminder in context is therefore not a mechanism for
+this obligation: at higher frequency it is the same request, more often.
+
+**What the next mechanism has to be.** Not another injection. It has to be able
+to **refuse** — a check at delivery (`stop` is block-capable on this host, so a
+refused turn-end continues in the same turn) that rejects a task-start reply
+carrying no greeting. Proposed, not shipped; until it is, this obligation is
+model-carried in practice, whatever the frequency join reports.
+
+**The wrong-name half needs nothing, and that is worth stating.** The beat
+already carries the resolved value — `build_canary_reminder` emits
+`Canary active for "<name>"`, and the hook no-ops when no layer resolves a name —
+and both wrong-name occurrences predate it: 2026-08-04, where the per-turn beat
+landed 2026-08-06. The inference path they measure is already closed, so a third
+audit should not re-open it.
 
 **Two declared gaps, neither papered over.** On **Augment** there is no
 `user_prompt_submit` slot; its `stop` fires *after* the reply, so injecting

@@ -42,6 +42,16 @@ export interface Violation {
   session: string;
   at: string;
   detail: string;
+  /**
+   * Language-pin only. Assistant turns since the last genuine user prompt, and
+   * whether a compaction boundary fell in between. Together they separate the
+   * two failures the round-5 audit found hiding under one count: a pin that was
+   * ABSENT because compaction removed it, and a pin that was PRESENT and
+   * ignored. The first is a state defect; the second is non-compliance, and
+   * only the second is unfixable by re-injection.
+   */
+  turns_since_prompt?: number;
+  compaction_since_prompt?: boolean;
 }
 
 export interface SessionReport {
@@ -165,6 +175,12 @@ export function scanSession(sessionId: string, lines: string[]): SessionReport {
   let authorized = new Set<GitOp>();
   let sawPending = false;
   let evaluationsThisTurn = 0;
+  // Round-5 provenance for language violations. The round-5 audit could only
+  // separate "the pin was absent" from "the pin was ignored" by reconstructing
+  // both facts from the raw store afterwards; recording them here is what makes
+  // that split reproducible against a future corpus instead of re-argued.
+  let turnsSincePrompt = 0;
+  let compactionSincePrompt = false;
 
   for (const line of lines) {
     if (!line.trim()) {
@@ -196,13 +212,29 @@ export function scanSession(sessionId: string, lines: string[]): SessionReport {
       continue;
     }
 
+    // A compaction boundary removes context the pin lived in. It is not a turn
+    // and it is not a prompt, but it changes what the model can still see — so
+    // it is recorded, not skipped silently.
+    if (entry["type"] === "system" && entry["subtype"] === "compact_boundary") {
+      compactionSincePrompt = true;
+      continue;
+    }
+
     const ut = userText(entry);
     if (ut !== null) {
+      // A compaction SUMMARY arrives as a `user` entry. Treating it as a chat
+      // message would let its language reset the pin — the exact defect class
+      // that made the first detector report 303 instead of 626.
+      if (entry["isCompactSummary"] === true) {
+        continue;
+      }
       if (isInjectedBody(ut)) {
         // Not a chat message — it changes neither the pin nor the ledger.
         continue;
       }
       report.user_turns += 1;
+      turnsSincePrompt = 0;
+      compactionSincePrompt = false;
       const c = classify(ut);
       if (c.language !== "und") {
         pinned = c.language;
@@ -222,6 +254,7 @@ export function scanSession(sessionId: string, lines: string[]): SessionReport {
     const prose = assistantText(entry);
     if (prose !== null) {
       report.assistant_turns += 1;
+      turnsSincePrompt += 1;
       if (pinned === "de") {
         const first = prose.split("\n").find((l) => l.trim()) ?? "";
         if (HARNESS_TEXT.test(first.trim())) {
@@ -234,6 +267,8 @@ export function scanSession(sessionId: string, lines: string[]): SessionReport {
             session: sessionId,
             at,
             detail: `German pin, English reply opener: "${first.slice(0, 110)}"`,
+            turns_since_prompt: turnsSincePrompt,
+            compaction_since_prompt: compactionSincePrompt,
           });
         }
       }

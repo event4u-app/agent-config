@@ -122,6 +122,25 @@ Reach for a mechanism only where the failure mode was measured. A gate for a
 class nobody was harmed by is the mechanism-without-a-failure-mode this repo
 forbids.
 
+**What round 5 measured about the choice itself** — the first post-fix reading,
+2026-08-07, 27 sessions:
+
+| carrier class | bound at | before | after |
+|---|---|---:|---:|
+| BLOCKING (unauthorized irreversible git op) | `pre_tool_use` | 8 | **0** |
+| BLOCKING (evaluator prompt pre-loading its verdict) | `pre_tool_use` | 1 | **0** |
+| advisory state injection (language mirror) | `user_prompt_submit` | 555 | **19** |
+| advisory (verification claimed on empty output) | `post_tool_use` | 4 | **1** |
+
+Both blocking carriers reached zero. Neither advisory carrier did. This is a
+prior on the table above, not a law: the post-fix corpus is one session and
+roughly 600 assistant turns, and the two classes also differ in what they are
+asked to catch. But where a class has already failed with its fact **verifiably
+in context** — round 5 confirmed the language pin present on the turns that
+violated it — raising the injection frequency is the same mechanism, not a new
+one. Two council members called that theatre independently. Prefer the refusal,
+or take the honest downgrade.
+
 ### 4 — Council (unless `--no-council`)
 
 Route the class list and the proposed mechanisms to the AI council. Ask it

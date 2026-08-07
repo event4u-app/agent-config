@@ -14,6 +14,12 @@ tasks:
       full `task ci` and belongs in the post-CI loop.
       Parity with CI is enforced by `task check-ci-local-parity`.
     cmds:
+      # FIRST, and the order is the whole point: this gate reads the host rule
+      # trees as they stand, and check_bridge_derivation below REGENERATES them.
+      # Run after it and the five-week-stale projection it exists to catch
+      # (.claude/rules holding 92 of 108 rules, last generated 2026-07-05) has
+      # already been repaired in-place and the check is a fixpoint. 0.7s measured.
+      - ./scripts-run src/scripts/check_rule_projection_integrity --quiet
       - ./scripts-run src/scripts/check_bridge_derivation
       - ./scripts-run src/scripts/check_host_loadability --root .
       - ./scripts-run src/scripts/check_bundle_path_leakage
@@ -1345,6 +1351,16 @@ tasks:
     silent: true
     desc: Generated bridge trees derive from src/ — symlink targets valid, regeneration is a fixpoint (skill-quality-gates Phase 4). Regenerates .claude/.cursor/.windsurf/.augment as a side effect.
     cmd: ./scripts-run src/scripts/check_bridge_derivation
+
+  check-rule-projection-integrity:
+    silent: true
+    desc: |
+      Host rule trees (.claude/rules, .cursor/rules, .clinerules) are complete
+      against the generator's own emit plan and no entry is older than the
+      dist/ rule it points at — conformance-round5 Phase 1.1/1.2. Pure read: it
+      does NOT regenerate, which is what lets it see a stale tree at all.
+      Run it BEFORE anything that regenerates.
+    cmd: ./scripts-run src/scripts/check_rule_projection_integrity {{.CLI_ARGS}}
 
   smoke-host-loadability:
     silent: true
