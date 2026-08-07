@@ -8,6 +8,7 @@ import {
     transcriptDirFor,
     extract,
     summarize,
+    toEmitted,
 } from '../../src/scripts/orchestration_backfill.js';
 
 /**
@@ -126,6 +127,22 @@ describe('extract', () => {
             // Nothing from the seeded prompt/description ('d' / 'p') survives:
             // the only string-valued fields are ids, enums and derived labels.
             expect(JSON.stringify(d)).not.toContain('"d"');
+        }
+    });
+
+    it('drops the pairing key from the emitted shape, so no opaque host id lands on disk', () => {
+        // Regression: the host tool_use_id is a high-entropy opaque token and
+        // check_secret_leak flagged 17 of them as candidate credentials. The
+        // fix is a type-level projection, not an allow-list, so this asserts
+        // the emitted shape rather than the detector's opinion of it.
+        const { dispatches } = extract(seedCorpus());
+        for (const d of dispatches) {
+            expect(Object.keys(d)).toContain('tool_use_id'); // still available internally
+            const emitted = toEmitted(d);
+            expect(Object.keys(emitted)).not.toContain('tool_use_id');
+            // The analytical fields survive the projection intact.
+            expect(Object.keys(emitted)).toContain('family');
+            expect(Object.keys(emitted)).toContain('cost_provenance');
         }
     });
 

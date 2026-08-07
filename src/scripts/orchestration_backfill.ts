@@ -246,6 +246,25 @@ export function extract(dir: string): Extraction {
     return { dispatches, sessions_scanned: files.length, unparseable_lines: unparseable };
 }
 
+/**
+ * The shape that actually gets written to disk.
+ *
+ * `tool_use_id` is pairing plumbing: it exists to match a dispatch to its
+ * result during extraction and has no analytical role afterwards. It is
+ * dropped at the TYPE level rather than scrubbed at write time, because the
+ * host ids are high-entropy opaque tokens and `check_secret_leak` flags them
+ * as candidate credentials — correctly, in the sense that it cannot know they
+ * are not. Emitting a field only to allow-list it downstream is the worse
+ * trade: the artifact does not need it.
+ */
+export type EmittedDispatch = Omit<BackfilledDispatch, 'tool_use_id'>;
+
+/** Project an extracted dispatch onto the emitted shape. */
+export function toEmitted(d: BackfilledDispatch): EmittedDispatch {
+    const { tool_use_id: _pairingKey, ...rest } = d;
+    return rest;
+}
+
 /** Per-family roll-up. Medians, never means — one 530k outlier should not carry a family. */
 export function summarize(dispatches: BackfilledDispatch[]): Record<string, unknown> {
     const byFamily = new Map<string, number[]>();
@@ -320,7 +339,7 @@ function main(argv: string[]): number {
     if (outArg >= 0 && argv[outArg + 1] !== undefined) {
         const lines = dispatches
             .filter((d) => d.cost_provenance === 'measured')
-            .map((d) => JSON.stringify({ input_kind: 'orchestration', orchestration: d }))
+            .map((d) => JSON.stringify({ input_kind: 'orchestration', orchestration: toEmitted(d) }))
             .join('\n');
         writeFileSync(argv[outArg + 1]!, lines === '' ? '' : `${lines}\n`, 'utf8');
         process.stderr.write(
