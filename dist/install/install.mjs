@@ -10206,7 +10206,7 @@ function unwrapRef(root) {
 function flattenSurface(schema, version) {
   const entries = {};
   const walk = (node, prefix) => {
-    if (node.type === "object" && node.properties !== void 0) {
+    if (node.type === "object" && node.properties !== void 0 && Object.keys(node.properties).length > 0) {
       for (const key of Object.keys(node.properties).sort()) {
         const child = node.properties[key];
         walk(child, prefix === "" ? key : `${prefix}.${key}`);
