@@ -17,6 +17,8 @@ triggers:
 self_contained: true
 workspaces: [agent-config-maintainer, engineering, gtm]
 packs: [ai-video]
+# obligation: line 31
+obligation_frequency: "per-event"
 ---
 
 # Media Sync — Ground Truth Is the Audio

@@ -20,6 +20,12 @@ enforced_by:
   - "hook:evidence-independence"
 collision_ok:
   "honest null": "this rule asks how a recorded null was PRODUCED; decision-revisit-gate asks whether it may be REVISITED — different decision points on the same artefact"
+# obligation: dispatching an evaluator is a tool call, and the guard is a pre_tool_use
+# concern that reads that prompt — src/rules/evaluator-independence.md:81
+obligation_frequency: "per-edit"
+# frequency-override: line 70 states a per-turn clause ("one evaluation per turn"),
+# but the guard counts it AT the dispatch, which is a tool call — a per-edit point
+# carrier sees every dispatch, so it carries the per-turn cap too.
 ---
 
 # Evaluator Independence
@@ -85,11 +91,15 @@ pre-loaded verdict, and **blocks** a second *self-scoped* evaluation dispatch in
 the same turn; it **warns** on the first. It reads the prompt the agent is about
 to send, so items 1 and 4 above are mechanically enforced.
 
-Two limits, stated because round 2 measured them. The pre-loaded-verdict list is
+Three limits, stated because they were measured. The pre-loaded-verdict list is
 a **phrase list**, so a paraphrase evades it — it catches recurrences of known
-steering wording, not steering as such. And the turn boundary is the
+steering wording, not steering as such. The turn boundary is the
 authorization ledger's `detected_at` stamp, because the envelope carries no turn
-id; with no ledger yet, the counter falls back to session scope.
+id; with no ledger yet, the counter falls back to session scope. And the slot
+itself is not universal: `pre_tool_use` exists on **three** hosts — augment,
+claude, cowork. On cursor, cline, windsurf, gemini and copilot this guard has
+nowhere to bind, so items 1 and 4 join 2 and 3 as model-carried there. The
+frequency join in `check_enforcement_coverage.ts` reports exactly that set.
 
 Items 2 and 3 — an honestly chosen scope, and recording the prompt with the
 verdict — are **not** enforced by anything. A narrowed scope is not decidable

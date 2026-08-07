@@ -10,6 +10,8 @@ workspaces: [agent-config-maintainer, engineering]
 packs: [meta]
 enforced_by:
   - "validator:src/scripts/lint_agent_security.ts"
+# obligation: line 19
+obligation_frequency: "per-edit"
 ---
 
 # Tool Safety

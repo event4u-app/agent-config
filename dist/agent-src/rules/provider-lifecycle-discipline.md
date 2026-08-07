@@ -30,6 +30,8 @@ collision_ok:
   "/audio:": "provider-tier gate for audio providers"
   "/video:": "provider-tier gate for video providers"
   "scripts/ai-image/adapters/": "adapter edits are the lifecycle contract's surface"
+# obligation: line 41
+obligation_frequency: "per-event"
 ---
 
 # Provider Lifecycle Discipline

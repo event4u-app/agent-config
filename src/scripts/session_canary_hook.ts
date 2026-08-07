@@ -184,6 +184,29 @@ export function sanitize_name(raw: string | null): string {
   return name.slice(0, 64);
 }
 
+/**
+ * The per-turn reminder — one line, deliberately not the full contract.
+ *
+ * The obligation is per TASK; the injection was per SESSION. No host has a
+ * per-task slot (Cline maps TaskStart/TaskResume onto `session_start`; Claude
+ * Code has no task event), so the reachable covering period is per-turn, which
+ * is a strict superset. The measured consequence of leaving it at session scope:
+ * a 30-session audit found the opening canary dropped on ~13 of 15 task starts.
+ *
+ * Re-injecting the ~800-char contract every turn would buy that coverage at
+ * roughly 40× the tokens over a long session, so the full block stays at
+ * `session_start` and this line carries the beat. Over-firing a greeting is a
+ * visible, cheap failure; under-firing is the silent one being fixed.
+ */
+export function build_canary_reminder(name: string): string {
+    return (
+        `<session-canary-beat>Canary active for "${name}": if this turn STARTS A NEW TASK,` +
+        ` open by addressing them by name. Same task as the last turn → do not re-greet.` +
+        ` A reply that lands work still ends with ONE summary (PR URL last).` +
+        `</session-canary-beat>`
+    );
+}
+
 export function build_canary_block(name: string): string {
   return [
     `<session-canary settings-key="personal.canary_name">`,
@@ -219,9 +242,15 @@ export function main(): number {
   }
   const env: JsonObject = _isObject(envelope) ? envelope : {};
 
-  // Only session_start carries context-injection semantics; other events no-op.
+  // Two injection points, two payloads. `session_start` carries the full
+  // contract once; `user_prompt_submit` carries the one-line beat, because the
+  // obligation is per task and session scope cannot reach it. Every other event
+  // no-ops — notably `stop`, where re-injecting would fire after the reply the
+  // reminder was meant to shape.
   const event = env["event"];
-  if (typeof event === "string" && event !== "" && event !== "session_start") {
+  const slot =
+    typeof event === "string" && event !== "" ? event : "session_start";
+  if (slot !== "session_start" && slot !== "user_prompt_submit") {
     return EXIT_ALLOW;
   }
 
@@ -235,7 +264,10 @@ export function main(): number {
     `${JSON.stringify({
       decision: "allow",
       reason: `session-canary: active for "${name}" (${layer})`,
-      context: build_canary_block(name),
+      context:
+        slot === "session_start"
+          ? build_canary_block(name)
+          : build_canary_reminder(name),
     })}\n`,
   );
   return EXIT_ALLOW;

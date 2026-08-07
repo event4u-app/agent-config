@@ -27,6 +27,8 @@ applies_to_user_types:
   - "gtm"
 workspaces: [agent-config-maintainer, construction, engineering, finance, founder, gtm, legal-review-prep, ops, product, small-business]
 packs: [meta]
+# obligation: line 47
+obligation_frequency: "per-turn"
 ---
 
 # Domain Safety — Data Retention

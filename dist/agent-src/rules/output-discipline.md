@@ -12,6 +12,8 @@ workspaces: [engineering]
 packs: [engineering-base]
 enforced_by:
   - "validator:src/scripts/lint_output_slop.ts"
+# obligation: line 22
+obligation_frequency: "per-edit"
 ---
 
 # Output Discipline

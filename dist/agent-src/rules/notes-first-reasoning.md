@@ -17,6 +17,8 @@ workspaces: [agent-config-maintainer, engineering]
 packs: [meta]
 collision_ok:
   "debug": "debug hypotheses belong in the session notes file"
+# obligation: line 35
+obligation_frequency: "per-turn"
 ---
 
 # Notes-First Reasoning

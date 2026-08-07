@@ -31,6 +31,8 @@ trust:
 collision_ok:
   "controller": "'controller' is a GDPR role term (controller/processor) in the legal pack"
   "review this contract": "the legal-pack contract-review gate — both floors must fire"
+# obligation: line 103
+obligation_frequency: "per-task"
 ---
 
 # Legal Safety Floor

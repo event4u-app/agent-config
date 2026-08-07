@@ -11,6 +11,8 @@ triggers:
 self_contained: true
 workspaces: [engineering]
 packs: [engineering-base]
+# obligation: line 30
+obligation_frequency: "per-edit"
 ---
 
 # Downstream Changes

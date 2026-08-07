@@ -10,6 +10,8 @@ routes_to:
   - "skill:upstream-contribute"
 workspaces: [agent-config-maintainer, engineering]
 packs: [meta]
+# obligation: line 17
+obligation_frequency: "per-task"
 ---
 
 # Upstream Proposal

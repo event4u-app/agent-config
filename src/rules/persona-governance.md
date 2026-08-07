@@ -27,6 +27,8 @@ workspaces: [agent-config-maintainer]
 packs: [meta]
 enforced_by:
   - "validator:src/scripts/lint_persona_governance.ts"
+# obligation: line 41
+obligation_frequency: "per-edit"
 ---
 
 # Persona Governance

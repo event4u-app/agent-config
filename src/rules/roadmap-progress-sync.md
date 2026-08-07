@@ -16,6 +16,8 @@ enforced_by:
   - "hook:roadmap-progress"
 collision_ok:
   "agents/roadmaps/": "any roadmap touch regenerates the dashboard, same response"
+# obligation: line 26
+obligation_frequency: "per-edit"
 ---
 
 # Roadmap Progress Sync

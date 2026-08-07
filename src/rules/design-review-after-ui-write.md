@@ -18,6 +18,8 @@ collision_ok:
   "design token": "same surface, opposite side: ui-audit-gate inventories tokens before the write, this reviews what the write emitted"
   "resources/views/": "both halves of one UI loop fire on the same path — audit before, review after; neither substitutes for the other"
   "resources/js/": "both halves of one UI loop fire on the same path — audit before, review after; neither substitutes for the other"
+# obligation: line 37
+obligation_frequency: "per-edit"
 ---
 
 # Design Review After UI Write

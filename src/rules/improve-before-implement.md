@@ -20,6 +20,8 @@ collision_ok:
   "migration": "a migration is a significant behavioural change — the pre-implementation checks apply"
   "refactor": "refactor = significant change; the demand gate + three checks apply"
   "implement": "its own core trigger — pre-implementation validation"
+# obligation: line 45
+obligation_frequency: "per-task"
 ---
 
 # Improve Before Implement

@@ -17,6 +17,8 @@ enforced_by:
   - "hook:minimal-safe-diff"
 collision_ok:
   "fix": "a fix is the smallest change that solves the stated problem"
+# obligation: line 25
+obligation_frequency: "per-edit"
 ---
 
 # Minimal Safe Diff

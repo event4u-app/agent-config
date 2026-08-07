@@ -19,6 +19,8 @@ workspaces: [agent-config-maintainer]
 packs: [meta]
 enforced_by:
   - "validator:src/scripts/check_token_optimizer_freshness.ts"
+# obligation: line 29
+obligation_frequency: "per-commit"
 ---
 
 # Token Optimizer Maintenance

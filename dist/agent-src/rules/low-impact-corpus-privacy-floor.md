@@ -10,6 +10,8 @@ triggers:
 self_contained: true
 workspaces: [agent-config-maintainer]
 packs: [meta]
+# obligation: line 28
+obligation_frequency: "per-edit"
 ---
 
 # Low-Impact Corpus — Privacy Floor

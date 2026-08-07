@@ -24,6 +24,8 @@ applies_to_user_types:
 self_contained: true
 workspaces: [engineering]
 packs: [meta]
+# obligation: line 32
+obligation_frequency: "per-turn"
 ---
 
 # Question Is Not an Instruction

@@ -154,6 +154,11 @@
       },
       "description": "What mechanically enforces this rule. `validator:<script>` and `test:<path>` must resolve on disk AND be wired into a taskfile, workflow, or the hook manifest — a script that exists but runs nowhere resolves to unwired, not covered. `hook:<name>` must be registered in hook_manifest.yaml with fail_closed: true; a hook that never blocks is `observer:`, not `validator:`. `none` is legal and counted — an honest gap beats a false claim. Resolved, not trusted, by check_enforcement_coverage.ts."
     },
+    "obligation_frequency": {
+      "type": "string",
+      "enum": ["per-edit", "per-turn", "per-task", "per-session", "per-event", "per-commit", "per-file-write", "none"],
+      "description": "How often this rule's obligation comes due — the question `enforced_by` does not answer. `enforced_by` asks *does something carry this*; a carrier can be wired, reachable and firing and still fire in the wrong slot (session-canary: a per-task obligation carried by a session_start hook, measured dropped on ~13 of 15 task starts while counting as enforced). Joined against the carrier's per-slot-and-platform firing frequency by check_enforcement_coverage.ts. The value set is a FOREST, not a chain — three roots that never cover one another: lifecycle (`per-turn` > `per-task` > `per-session`), repository-write (`per-commit`, `per-file-write`), and external-event (`per-event`). `per-edit` is a fourth, incomparable-to-`per-turn` case: pre/post_tool_use fire per tool call, so a conversational turn with no tool call fires them zero times. `none` = no recurring obligation (a pointer or reference rule). Required on every non-kernel rule by validate_frontmatter.ts; the nine kernel rules are exempt because block_kernel_rule_writes.ts denies agent writes to them, and that exemption is derived from _lib/kernel_rules.ts so it closes itself the moment a rule leaves the kernel."
+    },
     "trust": {
       "type": "object",
       "additionalProperties": false,

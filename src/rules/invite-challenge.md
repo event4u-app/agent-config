@@ -12,6 +12,8 @@ triggers:
 self_contained: true
 workspaces: [agent-config-maintainer, engineering]
 packs: [meta]
+# obligation: line 62
+obligation_frequency: "per-task"
 ---
 
 # invite-challenge

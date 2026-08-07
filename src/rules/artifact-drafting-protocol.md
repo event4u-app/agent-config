@@ -14,6 +14,8 @@ routes_to:
   - "guideline:agent-infra/artifact-drafting-protocol-mechanics"
 workspaces: [agent-config-maintainer, engineering]
 packs: [meta]
+# obligation: line 41
+obligation_frequency: "per-task"
 ---
 
 # Artifact Drafting Protocol

@@ -23,6 +23,8 @@ trust:
   confidence: medium
 install:
   removable: true
+# obligation: line 30
+obligation_frequency: "per-session"
 ---
 
 # Linked-Projects Onboarding Gate

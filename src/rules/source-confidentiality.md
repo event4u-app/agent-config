@@ -23,6 +23,8 @@ collision_ok:
   "src/skills/": "skill prose must not name derivation sources"
   "src/rules/": "rule prose must not name derivation sources"
   "agents/roadmaps/": "harvest/comparison roadmaps stay anonymized"
+# obligation: line 46
+obligation_frequency: "per-edit"
 ---
 
 # Source Confidentiality

@@ -21,6 +21,8 @@ packs: [engineering-base]
 roles: [developer, reviewer, tester, po, incident, planner]
 enforced_by:
   - "none"
+# obligation: line 38
+obligation_frequency: "per-edit"
 ---
 
 # Code Provenance

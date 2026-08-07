@@ -13,6 +13,8 @@ routes_to:
 workspaces: [agent-config-maintainer, engineering]
 packs: [meta]
 roles: [reviewer]
+# obligation: line 20
+obligation_frequency: "per-commit"
 ---
 
 # Reviewer Awareness

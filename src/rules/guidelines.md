@@ -9,6 +9,8 @@ triggers:
   - keyword: "convention"
 workspaces: [agent-config-maintainer, engineering]
 packs: [meta]
+# obligation: line 16
+obligation_frequency: "per-edit"
 ---
 
 # Guidelines

@@ -10,6 +10,8 @@ triggers:
 self_contained: true
 workspaces: [agent-config-maintainer, engineering]
 packs: [meta]
+# obligation: line 20
+obligation_frequency: "per-commit"
 ---
 
 # No Unsolicited PR Progress Comments

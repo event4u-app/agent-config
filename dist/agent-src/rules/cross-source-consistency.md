@@ -26,6 +26,8 @@ packs: [engineering-base, product-basic]
 collision_ok:
   "mockup": "a mockup is a second source — discrepancy check against the ticket text"
   "screenshot": "a screenshot is a second source — discrepancy check"
+# obligation: line 71
+obligation_frequency: "per-task"
 ---
 
 # Cross-Source Consistency

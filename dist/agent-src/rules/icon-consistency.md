@@ -16,6 +16,8 @@ applies_to_user_types:
 self_contained: true
 workspaces: [engineering]
 packs: [frontend-design]
+# obligation: line 41
+obligation_frequency: "per-edit"
 ---
 
 # Icon Consistency

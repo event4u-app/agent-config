@@ -20,6 +20,8 @@ packs: [engineering-base]
 collision_ok:
   "endpoint": "an unconfirmed endpoint shape needs evidence before code"
   "schema": "a DB schema is the canonical structure to verify from a real source"
+# obligation: line 44
+obligation_frequency: "per-edit"
 ---
 
 # Source Discovery — evidence before structure

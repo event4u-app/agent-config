@@ -19,6 +19,8 @@ workspaces: [agent-config-maintainer]
 packs: [meta]
 collision_ok:
   ".augment/": "portability + sync floors for the .augment tree"
+# obligation: line 28
+obligation_frequency: "per-edit"
 ---
 
 # Augment Edit Discipline

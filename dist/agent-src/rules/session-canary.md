@@ -12,6 +12,11 @@ workspaces: [agent-config-maintainer, construction, engineering, finance, founde
 packs: [meta]
 enforced_by:
   - "hook:session-canary"
+# obligation: line 31
+obligation_frequency: "per-task"
+# frequency-override: the per-turn phrases in the body describe the CARRIER
+# (a per-turn beat is the closest reachable cover for a per-task obligation),
+# not the obligation itself, which is still the first reply of each new task.
 collision_ok:
   "canary_name": "this rule owns what the NAME does once set and which of the three layers already supplies it; settings-ask-protocol owns how it is asked for and where the answer goes"
 ---
@@ -69,25 +74,38 @@ name it and suggest a fresh session or `/agent-handoff`, per
 - The greeting never substitutes for substance — it prefixes the answer, it is
   not the answer.
 
-## Enforcement — per session, NOT per task
+## Enforcement — per turn, which is the closest reachable cover for per task
 
-> **Enforced by:** [`scripts/session_canary_hook.ts`](../../scripts/session_canary_hook.ts)
-> (`session_start`, all hook-capable hosts) — injects the `<session-canary>`
-> contract block into every new session, so a fresh conversation cannot start
-> without it. **Copilot fallback:** no hook surface — this rule is the only
-> carrier; re-read it when the trigger fires.
+> **Enforced by:** [`scripts/session_canary_hook.ts`](../../scripts/session_canary_hook.ts),
+> bound in **two** slots. `session_start` injects the full `<session-canary>`
+> contract once, so a fresh conversation cannot start without it.
+> `user_prompt_submit` injects a one-line beat every turn, which is what
+> actually reaches a task boundary.
 
-**The gap, stated because it was measured.** The injection fires on
-`session_start`; the obligation is per *task*. Nothing re-injects at a task
-boundary, so from the second task on the contract is model-carried.
+**Why two slots, and why not one.** The obligation is per *task*. No host has a
+per-task slot — Cline maps `TaskStart`/`TaskResume` onto `session_start`, and
+Claude Code has no task event at all — so "move the carrier to the right slot"
+was never available. Per-turn is a strict superset of per-task and is reachable,
+which is the whole argument: over-firing a greeting is a visible, cheap failure;
+under-firing is the silent one. The full contract stays at session scope because
+re-injecting ~800 characters every turn would buy the same coverage at roughly
+40× the tokens over a long session.
 
-Conformance audit, 30 sessions, 2026-08-06: opening canary dropped on ~13 of 15
-task starts, often present only in the closing summary, twice carrying a name
-the settings chain did not resolve; the honesty clause fired zero times. No
-per-task gate ships — the audit found no harm beyond the lost signal, and a
-mechanism for a signal whose absence nobody acted on has no failure mode to
-match. The consequence stands: this canary cannot currently be relied on as the
-degradation detector its own rationale describes.
+**What that fixed, stated because it was measured.** Conformance audit, 30
+sessions, 2026-08-06, under session-scope-only injection: opening canary dropped
+on ~13 of 15 task starts, often present only in the closing summary, twice
+carrying a name the settings chain did not resolve; the honesty clause fired
+zero times. The frequency join in `check_enforcement_coverage.ts` now reports the
+carrier as covering the obligation — which is a claim about firing, not about
+compliance. Whether the miss rate actually falls is not yet measured, and this
+paragraph will say so until a second audit runs.
+
+**Two declared gaps, neither papered over.** On **Augment** there is no
+`user_prompt_submit` slot; its `stop` fires *after* the reply, so injecting
+there could not shape the reply the reminder is for, and counting it would be
+exactly the over-credit the frequency audit exists to remove. Augment therefore
+reports as an open gap rather than as covered. **Copilot** has no hook surface at
+all — this rule is the only carrier there; re-read it when the trigger fires.
 
 ## See also
 

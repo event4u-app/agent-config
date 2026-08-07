@@ -20,6 +20,8 @@ routes_to:
   - "skill:subagent-orchestration"
 workspaces: [engineering]
 packs: [engineering-base]
+# obligation: line 35
+obligation_frequency: "per-task"
 ---
 
 # Delegation Policy

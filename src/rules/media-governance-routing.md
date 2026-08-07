@@ -36,6 +36,8 @@ collision_ok:
   "/audio:": "routes the media policy layer for audio surfaces"
   "/video:": "routes the media policy layer for video surfaces"
   "likeness": "likeness prompts must load the policy layer before generation"
+# obligation: line 46
+obligation_frequency: "per-event"
 ---
 
 # Media Governance Routing

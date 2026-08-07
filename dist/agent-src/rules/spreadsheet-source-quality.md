@@ -14,6 +14,8 @@ workspaces:
   - finance
 packs:
   - finance-basic
+# obligation: line 49
+obligation_frequency: "per-edit"
 ---
 
 # Spreadsheet Source Quality

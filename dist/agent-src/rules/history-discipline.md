@@ -19,6 +19,8 @@ workspaces: [engineering]
 packs: [history-discipline]
 trust:
   level: professional
+# obligation: line 35
+obligation_frequency: "per-edit"
 ---
 
 # History Discipline

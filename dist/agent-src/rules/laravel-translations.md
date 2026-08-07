@@ -16,6 +16,8 @@ trust:
 install:
   default: false
   removable: true
+# obligation: line 23
+obligation_frequency: "per-edit"
 ---
 
 # Laravel Translations

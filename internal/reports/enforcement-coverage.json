@@ -1,14 +1,16 @@
 {
-  "_doc": "Enforcement-coverage baseline. `blocking` counts rules whose strongest enforced_by resolves to something that can fail a build. Coverage is a ratchet: --check fails when blocking falls or unwired rises. Regenerate intentionally with --write-baseline when the change is the point.",
+  "_doc": "Enforcement-coverage baseline. `blocking` counts rules whose strongest enforced_by resolves to something that can fail a build. `frequency_gap` counts rules whose carrier does not fire often enough to cover their declared obligation on some hook-capable platform — a rule can be blocking and in that bucket at once. Coverage is a ratchet: --check fails when blocking falls, or unwired / local_only / missing / frequency_gap rises. Regenerate intentionally with --write-baseline when the change is the point.",
   "summary": {
-    "total": 110,
-    "declared": 25,
+    "total": 114,
+    "declared": 28,
     "blocking": 15,
     "local_only": 0,
-    "observer": 7,
+    "observer": 8,
     "unwired": 0,
     "missing": 0,
-    "undeclared": 85,
-    "blocking_pct": 13.6
+    "undeclared": 86,
+    "blocking_pct": 13.2,
+    "frequency_gap": 8,
+    "frequency_unclassified": 9
   }
 }

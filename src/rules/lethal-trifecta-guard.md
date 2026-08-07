@@ -20,6 +20,8 @@ enforced_by:
 collision_ok:
   "src/skills/": "skill authoring reviews tool grants and the egress leg"
   "src/agent-src/commands/": "command authoring reviews the three trifecta legs"
+# obligation: line 60
+obligation_frequency: "per-edit"
 ---
 
 # Lethal-Trifecta Guard

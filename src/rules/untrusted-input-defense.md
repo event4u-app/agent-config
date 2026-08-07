@@ -19,6 +19,8 @@ workspaces: [engineering]
 packs: [engineering-base]
 enforced_by:
   - "none"
+# obligation: line 38
+obligation_frequency: "per-event"
 ---
 
 <!-- security-lint: allow instruction-smuggling "defense rule: quotes role-takeover phrases (ignore previous instructions, you are now, <IMPORTANT>) to teach refusal" -->

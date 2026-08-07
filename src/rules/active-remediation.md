@@ -18,6 +18,8 @@ workspaces: [engineering]
 packs: [engineering-base]
 collision_ok:
   "refactor": "an explicit clean-up/refactor ask is the remediation ladder's own trigger"
+# obligation: line 51
+obligation_frequency: "per-edit"
 ---
 
 # Active Remediation

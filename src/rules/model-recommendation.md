@@ -13,6 +13,8 @@ routes_to:
   - "guideline:agent-infra/model-recommendation"
 workspaces: [agent-config-maintainer, construction, engineering, finance, founder, gtm, legal-review-prep, ops, product, small-business]
 packs: [meta]
+# obligation: line 4
+obligation_frequency: "per-task"
 ---
 
 # Model Recommendation

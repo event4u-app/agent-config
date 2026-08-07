@@ -120,9 +120,50 @@ describe("session_canary_hook", () => {
     expect(stdout.trim()).toBe("");
   });
 
-  it("no-ops on a non-session_start event even when configured", () => {
+  it("no-ops on a non-injection event even when configured", () => {
     const root = makeWorkspace(SETTINGS_WITH_NAME);
     const { stdout, status } = run({ event: "post_tool_use", workspace_root: root });
+    expect(status).toBe(0);
+    expect(stdout.trim()).toBe("");
+  });
+
+  // The obligation is per TASK and no host has a per-task slot, so the carrier
+  // reaches it through the per-turn slot — a strict superset. Session scope
+  // alone measured a ~13-of-15 miss rate on task starts.
+  it("injects the one-line beat on user_prompt_submit", () => {
+    const root = makeWorkspace(SETTINGS_WITH_NAME);
+    const { stdout, status } = run({ event: "user_prompt_submit", workspace_root: root });
+    expect(status).toBe(0);
+    const out = JSON.parse(stdout);
+    expect(out.decision).toBe("allow");
+    expect(out.context).toContain("<session-canary-beat>");
+    expect(out.context).toContain('"Mathias"');
+    expect(out.context).toContain("NEW TASK");
+  });
+
+  it("keeps the per-turn payload far smaller than the session_start contract", () => {
+    // Re-injecting the full contract every turn would buy the same coverage at
+    // roughly 40x the tokens over a long session — the reason for two payloads
+    // rather than one slot move.
+    const root = makeWorkspace(SETTINGS_WITH_NAME);
+    const full = JSON.parse(run({ event: "session_start", workspace_root: root }).stdout);
+    const beat = JSON.parse(run({ event: "user_prompt_submit", workspace_root: root }).stdout);
+    expect(beat.context.length).toBeLessThan(full.context.length / 2);
+  });
+
+  it("still no-ops on stop — injecting after the reply cannot shape it", () => {
+    // Augment has no user_prompt_submit; its `stop` fires after the reply, so
+    // binding there would look like coverage without being any. The rule
+    // declares Augment as an open gap instead.
+    const root = makeWorkspace(SETTINGS_WITH_NAME);
+    const { stdout, status } = run({ event: "stop", workspace_root: root });
+    expect(status).toBe(0);
+    expect(stdout.trim()).toBe("");
+  });
+
+  it("beats are silent when the canary is unconfigured", () => {
+    const root = makeWorkspace(null);
+    const { stdout, status } = run({ event: "user_prompt_submit", workspace_root: root });
     expect(status).toBe(0);
     expect(stdout.trim()).toBe("");
   });
