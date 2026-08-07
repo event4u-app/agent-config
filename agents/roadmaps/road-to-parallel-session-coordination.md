@@ -212,6 +212,19 @@ criterion is unreachable — the screen would only ever see null slugs.
       reads like a guarantee. The register *write* is hook-carried and real; the
       register *read in the screen* is not, and the two must not look alike.
 
+## Risk Register
+<!-- risk-review: v1 | reviewed: 2026-08-07 | reviewer: claude/host -->
+| Rank | Item | Risk type | Description | Mitigation | Anchored under |
+|------|------|-----------|-------------|------------|----------------|
+| 1 | The TTL expires an active session | implementation | Too short a TTL makes a long-running session invisible to session B — which is exactly the collision this roadmap exists to prevent, now caused by the fix rather than the gap | TTL derived from the real inter-turn gap distribution per host, with long idle stretches excluded from the calibration set; unknown hosts get a conservative default that holds claims too long rather than dropping them | Phase 1 — measure what the design depends on |
+| 2 | A crashed session squats on a claim | implementation | Too long a TTL, or a missing `session_end`, leaves a roadmap blocked for hours with no live session behind it | Liveness rests on heartbeat + TTL alone, so the crash path IS the TTL path; deregistration is a best-effort optimisation that only frees the claim sooner | Phase 2 — layout and liveness |
+| 3 | `stop` is mistaken for session end | implementation | Deregistering on `stop` would mark a session dead after its first reply on Claude Code, where the native `Stop` fires per assistant reply | Deregistration bound to `session_end` only; `stop` is a second heartbeat carrier. Pinned by an acceptance criterion and by the frequency lattice shipped in the obligation-carrier audit, which now models this slot per platform | Phase 3 — write the register |
+| 4 | The heartbeat obligation reads as covered when it is not | implementation | This roadmap adds a per-turn obligation; on Augment there is no `user_prompt_submit`, so a naive coverage read would report it green on a host that cannot carry it | The obligation-carrier audit landed first, precisely so `obligation_frequency` + the per-platform join surface this before two sessions collide | Prerequisites |
+| 5 | Idle is indistinguishable from crashed | product | A session left open over lunch stops heartbeating, expires, and releases its claim although the user returns | Accepted and declared. No hook-based heartbeat can tell them apart; the collision question catches the rest. The limit must reach user-facing documentation, not only the design note | Phase 2 — layout and liveness |
+| 6 | The register is read as a mutex | product | Two sessions can claim in the same millisecond; a later feature built on it as if exclusive would be silently wrong | Stated in the shipped artefact, not only in this roadmap | Phase 2 — layout and liveness |
+| 7 | The roadmap-claim screen is model-carried | implementation | `/roadmap:next` is command markdown, so the screen runs because the model reads the instruction — the register *write* is hook-carried and real, the *read* is not | Declared honestly in the command, in the shape the six `enforced_by: none` rules use, rather than left as prose that reads like a guarantee | Phase 5 — close the claim window, and declare its carrier |
+| 8 | Growth or rotation defects in the store | implementation | An append-only log grows one record per turn per session and loses heartbeats to an unlinked inode when rotated under live appenders | One file per session, one writer each, atomicity from write-temp + rename; JSONL kept only as a fallback for a filesystem without atomic rename | Phase 2 — layout and liveness |
+
 ## Council convergence (2026-08-07 · anthropic/claude-sonnet-4-5, openai/gpt-4o · $0.08)
 
 Both members reviewed the locked design decisions. Converged, and folded in above:
