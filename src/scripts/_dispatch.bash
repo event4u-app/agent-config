@@ -579,6 +579,18 @@ cmd_mcp_run() {
   exec_ts "$server_main" "$@"
 }
 
+# Shared session register (road-to-parallel-session-coordination). Resolved from
+# PACKAGE_ROOT, not the consumer projection: the CLI imports the register library
+# under src/scripts/_lib/, which is package-internal and never shipped into
+# dist/agent-src/scripts/. Same shape as cmd_settings_set.
+cmd_sessions_list() {
+  exec_ts "$PACKAGE_ROOT/src/scripts/sessions_cli.ts" list "$@"
+}
+
+cmd_sessions_claim() {
+  exec_ts "$PACKAGE_ROOT/src/scripts/sessions_cli.ts" claim "$@"
+}
+
 cmd_roadmap_progress() {
   local script
   script="$(resolve_script "dist/agent-src/scripts/update_roadmap_progress.ts" ".augment/scripts/update_roadmap_progress.ts")"
@@ -1252,6 +1264,8 @@ main() {
     benchmark)               cmd_benchmark "$@" ;;
     code-graph)              cmd_code_graph "$@" ;;
     conformance:behavior)    cmd_conformance_behavior "$@" ;;
+    sessions:list)           cmd_sessions_list "$@" ;;
+    sessions:claim)          cmd_sessions_claim "$@" ;;
     roadmap:progress)        cmd_roadmap_progress "$@" ;;
     roadmap:progress-check)  cmd_roadmap_progress_check "$@" ;;
     roadmap:archive)         cmd_roadmap_archive "$@" ;;
