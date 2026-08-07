@@ -1108,6 +1108,36 @@ function _scoped_rule_basenames(): string[] {
         .sort((a, b) => (a < b ? -1 : a > b ? 1 : 0));
 }
 
+/**
+ * The emit plan of {@link generate_rule_symlinks}: active tool dir → the exact
+ * rule basenames it projects there.
+ *
+ * Exported so a completeness gate can assert a host rule tree matches the
+ * generator WITHOUT regenerating it. That distinction is the whole point:
+ * `check_bridge_derivation` regenerates and then diffs, so it can only ever see
+ * a fixpoint, and a five-week-stale tree on a working checkout is invisible to
+ * it. A gate that reads the tree as it stands needs the expected set from
+ * somewhere, and every other candidate source is wrong in a way that
+ * propagates: a hand-maintained array goes obsolete silently, and
+ * `dist/agent-src/rules/` over-counts by the ADR-004 `type: manual` rules these
+ * trees deliberately omit (113 files, 5 manual, 108 projected).
+ *
+ * `generate_rule_symlinks` consumes this too, so there is one emit plan rather
+ * than a gate's reconstruction of one.
+ */
+export function projected_rule_trees(
+    user_home: string = process.env['HOME'] ?? os.homedir(),
+): Record<string, string[]> {
+    const rules = _scoped_rule_basenames();
+    const dedup_on = _read_projection_scope_dedup();
+    const out: Record<string, string[]> = {};
+    for (const tool_dir of Object.keys(_filter_tool_dirs(TOOL_DIRS))) {
+        const skip = dedup_on ? _dedupable_rules(tool_dir, rules, user_home) : new Set<string>();
+        out[tool_dir] = rules.filter((r) => !skip.has(r));
+    }
+    return out;
+}
+
 export function generate_rule_symlinks(): number {
     const rules = _scoped_rule_basenames();
     const tool_dirs = _filter_tool_dirs(TOOL_DIRS);
@@ -1130,14 +1160,18 @@ export function generate_rule_symlinks(): number {
         );
     }
 
-    const dedup_on = _read_projection_scope_dedup();
     const user_home = process.env['HOME'] ?? os.homedir();
+    // Read the emit plan from the exported function rather than recomputing the
+    // dedup skip here, so the gate that asserts this tree is complete and the
+    // code that writes it cannot disagree.
+    const plan = projected_rule_trees(user_home);
     const skipped_per_tool: Record<string, Set<string>> = {};
 
     let total = 0;
     for (const [tool_dir, rel_prefix] of Object.entries(tool_dirs)) {
         const target_dir = path.join(MODULE_STATE.PROJECT_ROOT, tool_dir);
-        const skip = dedup_on ? _dedupable_rules(tool_dir, rules, user_home) : new Set<string>();
+        const emit_here = new Set(plan[tool_dir] ?? rules);
+        const skip = new Set(rules.filter((r) => !emit_here.has(r)));
         skipped_per_tool[tool_dir] = skip;
         _mkdirp(target_dir);
         // Clean stale symlinks — a rule that became de-duplicable this run is
