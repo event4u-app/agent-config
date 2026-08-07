@@ -90,6 +90,7 @@ import * as installed_tools from '../_lib/installed_tools.js';
 import * as user_global_paths from '../_lib/user_global_paths.js';
 import * as global_deploy_inventory from '../_lib/global_deploy_inventory.js';
 import { censusDuplicateScope } from '../_lib/duplicate_scope_census.js';
+import { git_common_dir } from '../_lib/git_common_dir.js';
 import * as sync_gitattributes from '../sync_gitattributes.js';
 import {
     PROJECT_ROOT_ENV,
@@ -897,27 +898,11 @@ const _PLACEHOLDER_EMAIL_RE = /^(t@t\.t|.*@example\.(com|org)|.*@localhost)$/i;
 const _PLACEHOLDER_NAME_RE = /^(t|test|user|nobody|x)$/i;
 
 export function _git_config_path(project_root: string): string | null {
-    const gd = path.join(project_root, '.git');
-    try {
-        const st = fs.statSync(gd);
-        if (st.isDirectory()) {
-            return path.join(gd, 'config');
-        }
-        // Worktree: `.git` is a file "gitdir: <path>".
-        const m = readText(gd).match(/^gitdir:\s*(.+)\s*$/m);
-        if (m === null) {
-            return null;
-        }
-        const gdPath = path.resolve(project_root, m[1]!.trim());
-        const commondirFile = path.join(gdPath, 'commondir');
-        if (pathExists(commondirFile)) {
-            const common = path.resolve(gdPath, readText(commondirFile).trim());
-            return path.join(common, 'config');
-        }
-        return path.join(gdPath, 'config');
-    } catch {
-        return null;
-    }
+    // The `.git`-file / `commondir` walk this used to inline now lives in
+    // `_lib/git_common_dir.ts`, so the session register and this check cannot
+    // drift into two different answers to "where is the common dir".
+    const common = git_common_dir(project_root);
+    return common === null ? null : path.join(common, 'config');
 }
 
 function _parse_git_user(configText: string): { name: string | null; email: string | null } {
