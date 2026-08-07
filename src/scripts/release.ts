@@ -700,13 +700,84 @@ export function _failed_checks_report(names: readonly string[]): string {
     return lines.join('\n');
 }
 
+/** Rounds of re-watching before an absent required check is called absent. */
+const _NO_CHECKS_ROUNDS = 10;
+/** Delay between those rounds — 10 × 60 s ≈ 10 minutes of tolerance. */
+const _NO_CHECKS_DELAY_MS = 60_000;
+
 /**
- * Watch PR checks and tolerate the 'no checks' case.
+ * Required status-check contexts for a branch, parsed from
+ * `gh api repos/{owner}/{repo}/rules/branches/{branch}`.
+ *
+ * That endpoint is the one that answers the question here: this repo protects
+ * `main` with a RULESET, and the classic `/branches/main/protection` API
+ * answers "Branch not protected" for it — so a check built on the classic
+ * endpoint would conclude "no required checks" and wave everything through.
+ *
+ * Any parse or shape surprise yields [] — the caller then behaves exactly as
+ * it did before this function existed.
+ */
+export function _required_contexts_from_rules(json: string): string[] {
+    let parsed: unknown;
+    try {
+        parsed = JSON.parse(json);
+    } catch {
+        return [];
+    }
+    if (!Array.isArray(parsed)) return [];
+    const out: string[] = [];
+    for (const rule of parsed) {
+        const r = rule as { type?: unknown; parameters?: { required_status_checks?: unknown } };
+        if (r.type !== 'required_status_checks') continue;
+        const checks = r.parameters?.required_status_checks;
+        if (!Array.isArray(checks)) continue;
+        for (const c of checks) {
+            const ctx = (c as { context?: unknown }).context;
+            if (typeof ctx === 'string' && ctx !== '') out.push(ctx);
+        }
+    }
+    return out;
+}
+
+export type NoChecksAction = 'retry' | 'accept' | 'die';
+
+/**
+ * What to do when `gh pr checks` reports no checks at all.
+ *
+ * The old code had one answer — accept — for two situations it could not tell
+ * apart: a repo that configures no required checks (nothing will ever arrive,
+ * accepting is correct) and a repo whose checks have simply not been
+ * dispatched yet (accepting merges, tags and publishes unvalidated).
+ *
+ * The branch's own protection rules separate them. Required contexts declared
+ * ⇒ something IS expected, so absence means not-yet, and the answer is to wait
+ * and finally to refuse. None declared ⇒ the pre-existing tolerance stands.
+ */
+export function _no_checks_action(
+    required: readonly string[],
+    round: number,
+    maxRounds: number = _NO_CHECKS_ROUNDS,
+): NoChecksAction {
+    if (required.length === 0) return 'accept';
+    return round < maxRounds ? 'retry' : 'die';
+}
+
+/**
+ * Watch PR checks and tolerate the 'no checks' case ONLY where it is tolerable.
  *
  * `gh pr checks --watch` exits 1 both on real failures and when no checks are
- * reported at all (no workflow triggered, no required checks configured in
- * branch protection). The latter must not block the release — we warn and
- * continue. Real failures still die.
+ * reported at all. Real failures still die.
+ *
+ * Measured 2026-08-06/07: during a critical GitHub Actions incident
+ * (15:22–02:04 UTC, webhook triggers throttled from 20:34) `pull_request`
+ * events were delivered 15–30 minutes late. The five-second grace period below
+ * expires long before that, so the old unconditional accept would have tagged
+ * `main` and published to npm without a single check having run. It did not
+ * only because `main` happened to be independently green.
+ *
+ * So the tolerance is now conditional on the branch declaring no required
+ * checks. Where it declares some, absence is treated as latency: re-watch, and
+ * refuse rather than release blind.
  *
  * A short grace period gives GitHub time to register workflow runs on a
  * freshly-pushed branch.
@@ -721,41 +792,76 @@ function watch_pr_checks(branch: string): void {
             // busy-wait stand-in for time.sleep(5) without an event-loop yield.
         }
     }
-    // The branch is passed explicitly — `gh` inferring the PR from HEAD
-    // resolved to `main` mid-run once (2026-08-03, 9.16.0 resume) and the
-    // whole release died on "no pull requests found for branch main".
-    const proc = run(['gh', 'pr', 'checks', branch, '--watch'], {
-        check: false,
-        capture: true,
-    });
-    const output = ((proc.stdout || '') + (proc.stderr || '')).trim();
-    const returncode = proc.returncode;
-    if (returncode === 0) {
-        if (output) {
-            process.stdout.write(output + '\n');
+    // Rounds exist only for the no-checks-yet case below; every other outcome
+    // returns or dies on the first pass, exactly as before.
+    for (let round = 0; ; round++) {
+        // The branch is passed explicitly — `gh` inferring the PR from HEAD
+        // resolved to `main` mid-run once (2026-08-03, 9.16.0 resume) and the
+        // whole release died on "no pull requests found for branch main".
+        const proc = run(['gh', 'pr', 'checks', branch, '--watch'], {
+            check: false,
+            capture: true,
+        });
+        const output = ((proc.stdout || '') + (proc.stderr || '')).trim();
+        const returncode = proc.returncode;
+        if (returncode === 0) {
+            if (output) {
+                process.stdout.write(output + '\n');
+            }
+            return;
         }
-        return;
+        if (output.toLowerCase().includes('no checks reported')) {
+            const rules = run(
+                ['gh', 'api', `repos/{owner}/{repo}/rules/branches/${MAIN_BRANCH}`],
+                { check: false, capture: true },
+            );
+            const required = _required_contexts_from_rules(rules.stdout ?? '');
+            const action = _no_checks_action(required, round, _NO_CHECKS_ROUNDS);
+
+            if (action === 'accept') {
+                process.stdout.write(`⚠️  ${output}\n`);
+                process.stdout.write(
+                    '   Continuing without check validation — configure required ' +
+                        'checks in branch protection to enforce this gate.\n',
+                );
+                return;
+            }
+            if (action === 'retry') {
+                process.stdout.write(
+                    `⏳  no checks reported yet, but ${MAIN_BRANCH} requires ` +
+                        `${String(required.length)} (${required.join(', ')}) — ` +
+                        `waiting (${String(round + 1)}/${String(_NO_CHECKS_ROUNDS)})\n`,
+                );
+                if (_exec_override === null) {
+                    const until = Date.now() + _NO_CHECKS_DELAY_MS;
+                    while (Date.now() < until) {
+                        // blocking wait, same shape as the grace period above
+                    }
+                }
+                continue;
+            }
+            die(
+                `no checks reported for ${branch} after ` +
+                    `${String(_NO_CHECKS_ROUNDS)} rounds, but ${MAIN_BRANCH} requires ` +
+                    `${required.join(', ')}. Refusing to merge, tag and publish ` +
+                    'unvalidated — GitHub may be delaying event delivery (check ' +
+                    'githubstatus.com). Re-run with `task release -- --resume --yes` ' +
+                    'once the checks appear.',
+            );
+        }
+        if (output) {
+            process.stderr.write(output + '\n');
+        }
+        const summary = run(['gh', 'pr', 'checks', branch, '--json', 'name,bucket'], {
+            check: false,
+            capture: true,
+        });
+        const report = _failed_checks_report(_failed_check_names(summary.stdout ?? ''));
+        if (report) {
+            process.stderr.write(report + '\n');
+        }
+        die(`PR checks failed (exit ${returncode})`);
     }
-    if (output.toLowerCase().includes('no checks reported')) {
-        process.stdout.write(`⚠️  ${output}\n`);
-        process.stdout.write(
-            '   Continuing without check validation — configure required ' +
-                'checks in branch protection to enforce this gate.\n',
-        );
-        return;
-    }
-    if (output) {
-        process.stderr.write(output + '\n');
-    }
-    const summary = run(['gh', 'pr', 'checks', branch, '--json', 'name,bucket'], {
-        check: false,
-        capture: true,
-    });
-    const report = _failed_checks_report(_failed_check_names(summary.stdout ?? ''));
-    if (report) {
-        process.stderr.write(report + '\n');
-    }
-    die(`PR checks failed (exit ${returncode})`);
 }
 
 /**
