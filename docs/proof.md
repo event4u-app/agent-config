@@ -145,7 +145,7 @@ We also publish our **debt**: 7 claim(s) are logged as
 allowed to carry a marker in public prose. Hiding them would be the
 opposite of the point.
 
-And our **nulls**: 2 claim(s) are `resolved-null` —
+And our **nulls**: 3 claim(s) are `resolved-null` —
 measured, the threshold was missed, and the entry is closed rather than
 left open forever. A null that stays filed as pending debt is a claim
 quietly waiting to be re-argued.
@@ -309,7 +309,7 @@ resolution (`check_enforcement_coverage`) and the claims ledger
 
 Undeclared rules (84) carry no row — an honest gap beats a false claim.
 
-**Axis 2 — evidence form per public claim.** 49 ledger entries · 40 backed · 7 unbacked inventory · 2 resolved-null.
+**Axis 2 — evidence form per public claim.** 50 ledger entries · 40 backed · 7 unbacked inventory · 3 resolved-null.
 
 | Claim id | Kind | Status | Evidence pointer |
 |---|---|---|---|
@@ -347,6 +347,7 @@ Undeclared rules (84) carry no row — an honest gap beats a false claim.
 | `lexical-ranking-lift` | quant | backed | `exec:measure_lexical_ranking -> 0` |
 | `no-runtime-daemon` | qual | backed | `docs/contracts/no-runtime-boundary.md#file-first, no-runtime suite` |
 | `orchestration-dispatch-net-win` | comparative | unbacked | `PRE-REGISTERED 2026-07-11 (road-to-orchestration-scope-decision Phase 1 — no goalpost-moving after the numbers land). Falsification criteria fixed BEFORE data: (1) held quality is deterministic, scored by `src/scripts/check_quality_regression.ts` thresholds — a token/wall win that degrades output below the regression threshold FAILS the claim; (2) negative control — `pv-02-negative-control` must NOT trigger dispatch (a classifier that fires on everything is a cost leak, not a win); (3) win metric — ≥15% reduction in token-or-wall on `orch-02`+`orch-03` vs the single-agent baseline, read from `agents/runtime/state/audit/*.jsonl` orchestration lines through `gateVerdict()` / `resolveShippedDefault()`. Binds to a resolving report once ≥20 real `ask`-mode telemetry lines exist (Phase 2 — maintainer-run; the corpus `--run` agent-spawn is gated out of auto-mode). PROVE → flip to backed for the proven family only; DROP → renewed honest-null, keep `ask`, demote orchestration from the public value proposition.` |
+| `orchestration-observed-dispatch-cost` | comparative | resolved-null | `internal/bench/orchestration/backfill-2026-08-07-verdict.md#honest null` |
 | `persona-identity-placebo-null` | quant | backed | `internal/bench/reports/persona-placebo.json#honest-null` |
 | `plan-gates-measurement-protocol` | quant | unbacked | `docs/contracts/plan-review-gates.md#Advisory window (Stage A, verdict #20)` |
 | `positioning-honest-nulls` | qual | backed | `docs/benchmark.md#honest` |

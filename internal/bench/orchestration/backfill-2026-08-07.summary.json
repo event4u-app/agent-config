@@ -1,0 +1,53 @@
+{
+  "schema_version": 1,
+  "source_corpus": "-Users-mathiasberg-projects-galawork-galawork-packages-event4u-agent-config",
+  "sessions_scanned": 103,
+  "unparseable_lines": 0,
+  "dispatches_total": 370,
+  "dispatches_with_measured_cost": 39,
+  "dispatches_without_cost": 331,
+  "async_launches": 326,
+  "cost_coverage_ratio": 0.1054,
+  "families": {
+    "read-only-fanout": {
+      "n": 15,
+      "power": "reportable",
+      "median_tokens": 113245,
+      "min_tokens": 62266,
+      "max_tokens": 346322,
+      "sum_tokens": 2507870
+    },
+    "verdict-judge": {
+      "n": 20,
+      "power": "reportable",
+      "median_tokens": 164018,
+      "min_tokens": 50744,
+      "max_tokens": 300091,
+      "sum_tokens": 3349201
+    },
+    "ordered-steps": {
+      "n": 1,
+      "power": "UNDERPOWERED",
+      "median_tokens": 312210,
+      "min_tokens": 312210,
+      "max_tokens": 312210,
+      "sum_tokens": 312210
+    },
+    "unclassified": {
+      "n": 3,
+      "power": "UNDERPOWERED",
+      "median_tokens": 527320,
+      "min_tokens": 272812,
+      "max_tokens": 530508,
+      "sum_tokens": 1330640
+    }
+  },
+  "models": {
+    "claude-opus-4-8[1m]": 27,
+    "claude-haiku-4-5-20251001": 1,
+    "claude-opus-5[1m]": 6,
+    "claude-sonnet-5": 4,
+    "claude-fable-5": 1
+  },
+  "baseline_note": "No in-session counterfactual exists on disk. token_delta is NOT computed here; any downstream comparison must name its own baseline method and stamp it estimated."
+}
