@@ -14,9 +14,46 @@ import {
     _extract_command,
     _git_base,
     _is_blocked,
+    _looks_like_git_invocation,
     _split_subcommands,
     shlexSplit,
 } from '../../../src/scripts/hooks/block_no_verify.js';
+
+// Round-5 audit (2026-08-07). The fail-closed branch tested `/\bgit\b/` against
+// the raw command string, so a mention was indistinguishable from an invocation.
+// Measured: a heredoc write naming `git-history-discipline`, with apostrophes
+// breaking shlex, was refused although no git ran.
+describe('_looks_like_git_invocation', () => {
+    const REFUSED = [
+        "mkdir -p /tmp/x && cat > /tmp/x/notes.md <<'EOF'\n",
+        "- rule git-history-discipline: round-1's reason didn't hold\n",
+        '- see the git-authorization ledger\nEOF\necho saved',
+    ].join('');
+
+    it('does not fire on a mention with no git in command position', () => {
+        expect(_looks_like_git_invocation(REFUSED)).toBe(false);
+        expect(_looks_like_git_invocation('echo "don\'t"')).toBe(false);
+        expect(
+            _looks_like_git_invocation("cat > f.md <<'E'\ngit commit --no-verify isn't ok\nE"),
+        ).toBe(false);
+    });
+
+    it('still fires on a real invocation in any command position', () => {
+        expect(_looks_like_git_invocation('git commit -m "don\'t"')).toBe(true);
+        expect(_looks_like_git_invocation('echo hi && git push --no-verify')).toBe(true);
+        expect(_looks_like_git_invocation('GIT_DIR=x git status')).toBe(true);
+        expect(_looks_like_git_invocation('/usr/bin/git commit -m "x"')).toBe(true);
+    });
+
+    it('recurses into a sh -c payload — the bypass the narrowing would have opened', () => {
+        expect(_looks_like_git_invocation(`bash -c "git commit --no-verify -m 'x'"`)).toBe(true);
+    });
+
+    it('end to end: the refused command passes, a real --no-verify still blocks', () => {
+        expect(_check_command(REFUSED)[0]).toBe(false);
+        expect(_check_command('git commit --no-verify -m "x"')[0]).toBe(true);
+    });
+});
 
 
 

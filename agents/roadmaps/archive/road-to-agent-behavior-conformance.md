@@ -10,6 +10,17 @@ status: ready
 > transcript digests plus a deterministic detector over the raw JSONL.
 > Council: 2026-08-06, 2 members.
 
+> **Correction, added after the fact.** This roadmap reads as if its phases
+> worked when they merged. They did not. Round 2 found two of them inert: an
+> exit code collided with the dispatcher's severity ladder, so refusals were
+> reduced to advisory context, and the language pin reached the model on no path
+> at all. Round 3 found the repaired pin still not loaded, because the hook
+> bundle was untracked and no task built it. Rounds 2 and 3 repaired both;
+> neither amended this file, which is why the correction sits here rather than in
+> the phases below. The first measurement taken *after* those repairs — and what
+> it says about advisory versus blocking carriers — is in
+> `road-to-conformance-round5.md`.
+
 ## The finding that decides the shape of this roadmap
 
 Every rule violated below was **fully in the agent's context, at full strength, on

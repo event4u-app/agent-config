@@ -7,10 +7,14 @@
  *
  * WHY THIS EXISTS — the measured defect, not a general reminder.
  *
- * A conformance audit of 30 sessions (2026-08-06) found ~470 assistant turns
+ * A conformance audit of 30 sessions (2026-08-06) found assistant turns
  * answering a German prompt in English, across 11 sessions, three of them a
- * 100 % English run. The obvious reading is "the model ignored a rule". The
- * transcripts say otherwise:
+ * 100 % English run. The count this comment first carried, ~470, was an early
+ * intermediate figure and is superseded: that audit's own final baseline is
+ * **626**, and conformance round 5 (2026-08-07) measures **641** over an
+ * overlapping-but-not-identical 30-session window. Both are published side by
+ * side rather than treated as a trend, because the windows differ. The obvious
+ * reading is "the model ignored a rule". The transcripts say otherwise:
  *
  *   **47 skill- and slash-command bodies arrive in the `user` role** across 21
  *   of the 30 sessions. In the worst session the last user-role content before
@@ -272,9 +276,9 @@ export function pinText(language: Exclude<Verdict, "und">, source: PinSource = "
     `lines, and the recommendation label under any numbered-options block.\n\n` +
     `This pin exists because the trigger is not observable from the transcript ` +
     `alone: slash-command and skill bodies arrive in the user role and can be ` +
-    `long and English, which is what drove ~470 wrong-language turns in the ` +
-    `sessions this hook was built from. Tool output, file contents, and an ` +
-    `injected skill body are NOT the trigger — this pin is.\n` +
+    `long and English, which is what drove the 626 wrong-language turns measured ` +
+    `in the 30-session audit this hook was built from. Tool output, file ` +
+    `contents, and an injected skill body are NOT the trigger — this pin is.\n` +
     `</language-pin>`
   );
 }
@@ -372,6 +376,12 @@ export function run(
   if (!prompt) {
     return EXIT_ALLOW;
   }
+  // A harness-generated turn is not a chat message. Leave the pin untouched —
+  // the same reasoning as an undetermined prompt below, and for the same reason
+  // this hook exists at all.
+  if (isSyntheticPrompt(prompt)) {
+    return EXIT_ALLOW;
+  }
 
   const session_id = typeof envelope["session_id"] === "string" ? envelope["session_id"] : "";
   const target = path.join(options.consumer_root, STATE_FILE);
@@ -411,6 +421,46 @@ export function run(
     return EXIT_WARN;
   }
   return EXIT_ALLOW;
+}
+
+/**
+ * Is this "prompt" a harness-generated turn rather than something the human typed?
+ *
+ * MEASURED, IN THIS HOOK'S OWN AUDIT (round 5, 2026-08-07). The state file read
+ * mid-session:
+ *
+ *   { "language": "en", "source": "prompt", "prompt_chars": 6627,
+ *     "de_markers": 0, "en_markers": 63 }
+ *
+ * No human wrote those 6,627 characters. They were a background-task completion
+ * notification, injected as a user turn, which `user_prompt_submit` sees and this
+ * hook classified as the trigger — flipping a German session to `en` for every
+ * later turn, and recording `source: "prompt"`, a false provenance claim.
+ *
+ * This is the SAME defect the hook was built to remove: non-chat content read as
+ * the trigger. The header above explains at length why a skill body must not set
+ * the pin; `user_prompt_submit` was chosen because "a skill body never reaches
+ * it". Synthetic turns do reach it, so the event alone was never sufficient — the
+ * content test has to exist too.
+ *
+ * The markers are structural, not linguistic: the harness stamps these turns
+ * with fixed envelope tags. Matching prose would misfire on a human quoting a
+ * notification; matching the tags cannot, because a human typing `<task-notification>`
+ * is quoting, and a quote does not open at character zero of the turn.
+ *
+ * Deliberately conservative: an unrecognised synthetic shape falls through and
+ * pins as before. Under-filtering keeps today's behaviour; over-filtering would
+ * silently stop pinning real prompts, which is the worse failure.
+ */
+export function isSyntheticPrompt(prompt: string): boolean {
+  const head = prompt.trimStart().slice(0, 400);
+  return (
+    head.startsWith("[SYSTEM NOTIFICATION - NOT USER INPUT]") ||
+    head.startsWith("<task-notification>") ||
+    head.startsWith("<system-reminder>") ||
+    head.startsWith("<local-command-caveat>") ||
+    /^\[SYSTEM NOTIFICATION\b/.test(head)
+  );
 }
 
 export function main(argv?: string[]): number {
