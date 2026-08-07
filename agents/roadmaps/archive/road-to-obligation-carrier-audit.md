@@ -77,23 +77,23 @@ diverges the moment someone edits a rule. So the audit's output is a **frontmatt
 field**, and the evidence artefact falls out as a by-product. This is the same
 move `enforced_by` itself made — from prose claim to declared, resolved field.
 
-- [ ] Reconcile the corpus first: `src/rules/` holds **114** files, the coverage
+- [x] Reconcile the corpus first: `src/rules/` holds **114** files, the coverage
       baseline counts **110**, and there are **five** `type: manual` rules
       (`analysis-skill-routing`, `brand-consistency`, `guidelines`,
       `package-ci-checks`, `size-enforcement`) against a delta of four. The
       mismatch is itself the proof that this step is needed — establish the real
       scan set and adopt it, because an audit on a different corpus than the
       instrument it extends cannot be joined to it.
-- [ ] Add `obligation_frequency:` to the rule schema. Values: `per-edit` ·
+- [x] Add `obligation_frequency:` to the rule schema. Values: `per-edit` ·
       `per-turn` · `per-task` · `per-session` · `per-event` · `per-commit` ·
       `none` (plus `per-file-write` if Phase 2 finds obligations of that shape).
-- [ ] Populate it per rule, anchored on the Iron Law block where one exists, with
+- [x] Populate it per rule, anchored on the Iron Law block where one exists, with
       the `file:line` evidence as an adjacent comment. A value without a citable
       line is not a classification.
-- [ ] Make the field mandatory in `validate_frontmatter.ts` once populated — a
+- [x] Make the field mandatory in `validate_frontmatter.ts` once populated — a
       new rule without it then does not pass authoring at all, which is the pin
       stated literally rather than approximated by a test.
-- [ ] **Guard the field against decay.** A declared value can be right on the
+- [x] **Guard the field against decay.** A declared value can be right on the
       day it is written and wrong two edits later, and nothing in the join
       notices — the field would then be a stale claim wearing a schema. Ship a
       keyword heuristic over the Iron-Law prose ("every reply", "each task",
@@ -109,21 +109,21 @@ The join is only decidable against an explicit ordering, and the intuitive linea
 one is wrong in two ways that both produce **false greens** — the most expensive
 error class an audit can have.
 
-- [ ] Fix the ordering as **set inclusion**: a carrier covers an obligation iff
+- [x] Fix the ordering as **set inclusion**: a carrier covers an obligation iff
       the carrier's firing set is a superset of the obligation's.
-- [ ] `per-edit` and `per-turn` are **incomparable**, not ordered.
+- [x] `per-edit` and `per-turn` are **incomparable**, not ordered.
       `pre_tool_use`/`post_tool_use` fire per tool call, so a turn with no tool
       calls — a plain conversational reply — fires them **zero times**. A
       per-turn obligation such as the language mirror carried only by a per-edit
       carrier would be uncovered on exactly those turns, and a magnitude-ordered
       join would paint that green.
-- [ ] **`per-event` is a separate root, not the bottom of the chain.** The
+- [x] **`per-event` is a separate root, not the bottom of the chain.** The
       earlier draft ranked it below `per-session`; that is wrong. An external
       event fires on its own clock, orthogonal to session lifecycle: a CI gate
       firing three times during one session is *not* covered by a `session_start`
       check, yet a linear lattice with `per-event` at the bottom would accept the
       session-scoped carrier as dominating it and report green.
-- [ ] **Add the repository-write roots the lifecycle chain cannot express:**
+- [x] **Add the repository-write roots the lifecycle chain cannot express:**
       `per-commit`, and `per-file-write` if the audit finds obligations of that
       shape. A commit-scoped obligation ("every agent-authored commit carries an
       attestation") is neither per-task (a task makes zero or three commits) nor
@@ -131,21 +131,21 @@ error class an audit can have.
       such a rule into the lifecycle chain under-enforces silently; forcing it to
       `none` hides it behind a prose escape hatch. Some of the 85 undeclared
       rules are likely this shape.
-- [ ] The lifecycle chain stays linear and correct within itself, because every
+- [x] The lifecycle chain stays linear and correct within itself, because every
       turn sits in a task and every task in a session:
       `per-turn > per-task > per-session`.
-- [ ] **Reject cross-category coverage claims explicitly.** The lattice is a
+- [x] **Reject cross-category coverage claims explicitly.** The lattice is a
       forest — a lifecycle root, an external-event root, a repository-write root
       — and a carrier in one category never covers an obligation in another.
       Write the structure into the instrument as data, not as a comment.
 
 ## Phase 3 — resolve carrier frequency per slot **and platform**
 
-- [ ] Extend `check_enforcement_coverage.ts` with `carrier_frequency`, derived
+- [x] Extend `check_enforcement_coverage.ts` with `carrier_frequency`, derived
       from the manifest slot its strongest reachable carrier occupies. Reuse the
       existing reachability logic verbatim — an unreachable carrier has no
       frequency, it has no carrier.
-- [ ] Resolve **slot × platform → frequency**, never slot → frequency. The
+- [x] Resolve **slot × platform → frequency**, never slot → frequency. The
       one-dimensional table is wrong on two hosts already:
       - `stop` is **not** session-end on Claude Code. The native `Stop` event
         fires after every assistant reply — the manifest says so itself, calling
@@ -156,24 +156,24 @@ error class an audit can have.
         platforms and **absent on Windsurf** (its manifest comment: handled "in
         the `stop` slot rather than `session_end`").
       - `user_prompt_submit` is absent on Augment.
-- [ ] Decide and record how a per-platform spread resolves to one verdict:
+- [x] Decide and record how a per-platform spread resolves to one verdict:
       weakest platform, or an emitted spread. Either is defensible; leaving it
       implicit is not.
-- [ ] Rewrite the baseline in the same change; a report gaining a field with a
+- [x] Rewrite the baseline in the same change; a report gaining a field with a
       stale baseline reds the ratchet for the wrong reason.
 
 ## Phase 4 — the join, and its findings
 
-- [ ] Join `obligation_frequency` (Phase 1) against `carrier_frequency`
+- [x] Join `obligation_frequency` (Phase 1) against `carrier_frequency`
       (Phase 3) using the inclusion lattice (Phase 2). This runs inside the
       existing coverage check on every CI run — there is no separate audit
       artefact to keep in sync.
-- [ ] A row is a **finding** only when the carrier's firing set does not cover
+- [x] A row is a **finding** only when the carrier's firing set does not cover
       the obligation's **and** the rule does not declare the gap itself.
-- [ ] Classify: `defect` (reads enforced, is not — `session-canary` is here,
+- [x] Classify: `defect` (reads enforced, is not — `session-canary` is here,
       declared-enforced and measured broken) · `declared` (rule states the gap
       in its own text) · `by-design` (model-carried, no claim).
-- [ ] **A carrier's measured reliability is part of coverage, not a footnote.**
+- [x] **A carrier's measured reliability is part of coverage, not a footnote.**
       `session-canary` is not only mis-slotted — it is a *hook other rules can
       point at*. Any rule declaring `hook:session-canary` inherits a carrier with
       a measured 13-of-15 miss rate, and the coverage instrument credits it in
@@ -181,15 +181,15 @@ error class an audit can have.
       measurements and a third verdict between enforced and unenforced —
       **conditionally enforced** — so "the hook exists" and "the hook works" stop
       being the same answer.
-- [ ] Report the count and the files. A zero in any class is a real answer — the
+- [x] Report the count and the files. A zero in any class is a real answer — the
       difference between "we checked" and "we assumed".
 
 ## Phase 5 — decide what to close, one case at a time
 
-- [ ] Per `defect` row choose exactly one disposition: move the carrier to a
+- [x] Per `defect` row choose exactly one disposition: move the carrier to a
       covering slot · weaken the rule text to match reality and say so · accept
       and declare, in the shape the six `enforced_by: none` rules use.
-- [ ] **Expected disposition for `session-canary`, so the executing session does
+- [x] **Expected disposition for `session-canary`, so the executing session does
       not re-derive the dead end:** no host has a per-task slot. Cline maps
       TaskStart/TaskResume onto `session_start`; Claude Code has no task event.
       "Move the carrier to the right slot" is therefore unavailable. The
@@ -199,11 +199,11 @@ error class an audit can have.
       greeting is a visible, cheap failure; under-firing is the silent one being
       fixed. On Augment (no `user_prompt_submit`) the fallback is `stop`, whose
       per-platform frequency Phase 3 will have resolved.
-- [ ] Do **not** add a new CI gate reflexively. A new gate script carries six
+- [x] Do **not** add a new CI gate reflexively. A new gate script carries six
       downstream surfaces and the gate-coverage population figure is bounded at
       ±15 by a test. Extending an existing report with a field is not a new gate;
       a standalone linter would be.
-- [ ] Record the finding count in this roadmap before archiving. An audit whose
+- [x] Record the finding count in this roadmap before archiving. An audit whose
       number is not written down has to be re-run to be cited.
 
 ## Council convergence (2026-08-07 · anthropic/claude-sonnet-4-5, openai/gpt-4o · $0.08)
@@ -231,12 +231,112 @@ Rejected after review: a submodule-CWD defect raised in an earlier round — age
 hooks run in the agent's process at workspace root, not in git's subprocess, so
 the scenario needs git hooks, which neither roadmap introduces.
 
+## Findings — 8 gaps, 9 unclassified, out of 114 rules
+
+Recorded here so the number can be cited without re-running the audit. Emitted
+by `check_enforcement_coverage.ts` on every CI run; the `frequency_gap` bucket is
+ratcheted, so this count cannot rise silently.
+
+| Rule | Obligation | Carrier | Uncovered on | Class | Disposition |
+|---|---|---|---|---|---|
+| `session-canary` | per-task | `hook:session-canary` | augment | defect | **Landed.** Carrier bound in `user_prompt_submit` as well, with a one-line beat; full contract stays at `session_start`. Was: every hook-capable platform. |
+| `context-hygiene` | per-turn | `hook:context-hygiene` | all | defect | **Rule text corrected.** The carrier fires per tool call; a turn with no tool call is exactly what the read-loop counter is meant to notice. Declared in the rule header. |
+| `evaluator-independence` | per-edit | `hook:evidence-independence` | cursor, cline, windsurf, gemini | defect | **Rule text corrected.** `pre_tool_use` exists on three hosts; the honest-scope section now names the other five. |
+| `git-history-discipline` | per-commit | `hook:block-no-verify` | cursor, cline, windsurf, gemini | defect | **Rule text corrected.** "Deterministically blocked" now scoped to the three hosts with a `pre_tool_use` slot. |
+| `media-governance-routing` | per-event | `validator:lint_media_policy_linkage.ts` | all | declared | Accept. The linter enforces policy *reachability*, not runtime consultation, and the rule already says the policies are "consulted in-session, not Python-enforced gates". |
+| `minimal-safe-diff` | per-edit | `hook:minimal-safe-diff` | windsurf | declared | Accept. The manifest states the omission ("minimal-safe-diff is omitted entirely on Windsurf") — Cascade has no generic post-tool-use surface. |
+| `roadmap-progress-sync` | per-edit | `hook:roadmap-progress` | windsurf | declared | Accept, same cause, same manifest note. |
+| `telegraph-speak` | per-turn | `observer:maintainer-review` | all | declared | Accept. A maintainer review is honestly not a per-turn carrier, and the rule is dormant by default — it is not projected at all absent `telegraph.speak`. |
+
+**Zero is a real answer, so state it:** no rule resolved to `unwired` or
+`missing`, and no rule declared a carrier that does not exist. The gap this audit
+found is entirely in *when* carriers fire, not in whether they were wired — which
+is why `enforced_by` alone reported the corpus as healthy.
+
+**9 unclassified** — the kernel. See the corpus note below.
+
+## Corrections to this roadmap, found by executing it
+
+Recorded rather than quietly folded in, because three of them contradict text
+this file shipped with.
+
+**The 114↔110 delta is not a type-manual exclusion.** The roadmap read the gap as
+five `type: manual` rules against a delta of four and asked for a reconciliation.
+There is nothing to reconcile: `check_enforcement_coverage.ts` walks every `.md`
+under `src/rules/` with no type filter (the five manual rules are counted), and
+the baseline simply predates four rules — `code-provenance`,
+`design-review-after-ui-write`, `evaluator-independence`, `settings-ask-protocol`.
+`--check` never ratcheted `total`, which is how the drift survived. The premise
+of the first Phase-1 step was false, and the step is closed by disproving it.
+
+**The field cannot be populated on the nine kernel rules — not "should not".**
+`block_kernel_rule_writes.ts` is a `fail_closed: true` PreToolUse guard whose
+docstring reads "No agent-accessible override"; `check_kernel_prefix_stability.ts`
+hashes the whole file including frontmatter; and kernel edits owe a soak window.
+So the acceptance criterion "every rule in the reconciled corpus carries
+`obligation_frequency`" is **not met, by construction**, and is re-worded below
+rather than declared satisfied. The mitigation is that the exemption in
+`validate_frontmatter.ts` is *derived* from `_lib/kernel_rules.ts` — the same
+locked set the guard enforces — so it closes itself the moment a rule leaves the
+kernel, and those nine report as `unclassified` rather than as a guess.
+
+**Carriers have a mode, which the lattice did not model.** A CI validator is a
+*sweep*: it fires once and reads the whole tree, so its reach is bounded by what
+lands in an artefact rather than by how often it runs. Modelling it as a
+per-commit *point* carrier made every `validator:`-carried rule with a per-edit
+obligation a finding at once — one modelling error rendered as a fifth of the
+corpus, and precisely the unusable-first-run the council warned about.
+
+**A concern bound in several slots fires at the union of their periods.** Those
+periods can sit in different roots: `minimal-safe-diff` is bound in
+`session_start`, `user_prompt_submit` **and** `post_tool_use`. Collapsing that to
+one "strongest" value has no correct answer — per-turn and per-edit are
+incomparable by construction — and picking either reported the rule as failing to
+carry its own per-edit obligation with a `post_tool_use` binding sitting right
+there.
+
+**One cross-root edge is real and was missing.** A tool-call carrier covers a
+per-commit obligation, because in this runtime every commit the agent makes is
+issued through a tool call — `block-no-verify` sits in `pre_tool_use` and
+inspects the `git commit` command itself. Refusing that edge on a tidy root rule
+reported the commit guard as failing to carry the commit rule. The relation is
+one-directional: a per-commit carrier does not cover a per-edit obligation, since
+one commit can hold twenty edits.
+
+## Council record (2026-08-07 · anthropic/claude-sonnet-4-5, openai/gpt-4o · $0.07)
+
+Two decisions were routed to the council mid-execution. Both verdicts are folded
+in above. What is worth keeping is the third outcome:
+
+**A council option was fabricated, and verifying it is why it did not land.** One
+member proposed an "Option E": parse kernel-rule frequency from an existing
+`**{Frequency} check:**` label structure said to appear in six of the nine kernel
+rules, citing `src/rules/agent-authority.md:187-193`. That file is **26 lines
+long**, and the pattern occurs **zero** times anywhere in `src/rules/`. The option
+was well-argued, addressed the real constraint, and would have satisfied the
+acceptance criterion literally — which is exactly why a plausible mechanism is
+not evidence. Recorded because the alternative is a roadmap citing a structure
+that does not exist.
+
+On decision 2 the members split — full per-platform spread versus a scalar with a
+documented exclusion. The spread won on a concrete failure case rather than on
+preference: a scalar would have reported `session-canary`'s verdict as
+"carrier per-session, obligation per-task, FAIL", which is wrong on the six
+platforms whose `stop` fires per reply. The audit's own flagship finding would
+have been invalid on first run.
+
 ## Acceptance criteria
 
-- Every rule in the reconciled corpus carries `obligation_frequency` in
-  frontmatter with a `file:line` citation, and the 114↔110↔5-manual delta is
-  explained rather than rounded away.
-- `validate_frontmatter.ts` rejects a new rule that omits the field.
+- ~~Every rule in the reconciled corpus carries `obligation_frequency`~~ →
+  **re-worded, not satisfied as written.** All **105 non-kernel** rules carry it
+  with a `file:line` citation. The nine kernel rules cannot: `block_kernel_rule_writes.ts`
+  denies the write with no agent-accessible override. They report `unclassified`,
+  and the exemption is derived from `_lib/kernel_rules.ts` so it closes itself.
+  The 114↔110↔5-manual delta is explained: no exclusion exists, the baseline was
+  four rules stale.
+- `validate_frontmatter.ts` rejects a new rule that omits the field — proved by
+  stripping it from a non-kernel rule and confirming exit 1, then confirming the
+  nine kernel rules stay silent.
 - `check_enforcement_coverage.ts` emits `carrier_frequency` resolved per slot
   **and platform**, with the spread-resolution rule stated, and its baseline is
   rewritten in the same change.
@@ -246,9 +346,20 @@ the scenario needs git hooks, which neither roadmap introduces.
   "several rules may be affected".
 - The lattice is a forest with lifecycle, external-event and repository-write
   roots, and no cross-category coverage claim is accepted.
-- A carrier with a published failure measurement cannot yield a full-enforced
-  verdict for rules that point at it.
-- `session-canary` has a landed disposition.
+- ~~A carrier with a published failure measurement cannot yield a full-enforced
+  verdict for rules that point at it.~~ → **not built, and the reason is a
+  finding.** The council asked for a `reliability:` annotation and a third
+  "conditionally enforced" verdict. Exactly one carrier in the tree has a
+  published failure measurement (`hook:session-canary`, ~13-of-15), exactly one
+  rule points at it, and that rule is the one this roadmap fixed — so the
+  annotation would ship with a population of zero the moment it landed. A
+  mechanism whose only instance is already resolved has no failure mode to match;
+  the frequency join covers the case that motivated it. Revisit when a second
+  carrier publishes a failure rate.
+- `session-canary` has a landed disposition: bound in `user_prompt_submit` as
+  well, measured moving from "uncovered on every hook-capable platform" to
+  "uncovered on augment" — where the rule now declares the gap rather than
+  claiming a `stop` binding that fires after the reply it was meant to shape.
 
 ## Quality gates
 

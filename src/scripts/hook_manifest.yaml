@@ -298,12 +298,21 @@ concerns:
     args: []
     fail_closed: false
     severity: blocking
-  # session_start canary injection — deterministic carrier for the
+  # Canary injection — deterministic carrier for the
   # session-canary rule (greet-by-name at task start + reply-close markers
   # as a user-observable context-degradation signal). Gated on
   # `personal.canary_name` in .agent-settings.yml (empty = clean no-op),
   # so unconfigured consumers pay nothing. Emits a `context` block the
   # dispatcher forwards on session_start (hot-context mechanism).
+  # Bound in TWO slots on purpose: session_start carries the full contract once,
+  # user_prompt_submit carries a one-line beat. The obligation is per TASK and no
+  # host has a per-task slot (Cline maps TaskStart/TaskResume onto session_start;
+  # Claude Code has no task event), so per-turn — a strict superset — is the
+  # reachable covering period. Session scope alone measured a ~13-of-15 miss rate
+  # on task starts. Augment has no user_prompt_submit and is a DECLARED gap: its
+  # `stop` fires after the reply, so injecting there could not shape the reply the
+  # reminder is for, and counting it would be exactly the over-credit this pairing
+  # was added to remove.
   # Never blocks. fail_closed: false.
   session-canary:
     script: src/scripts/session_canary_hook.ts
@@ -323,7 +332,7 @@ platforms:
     session_start:    [chat-history, hot-context, handoff-context, session-canary, first-run-gate, onboarding-gate, verify-before-complete, minimal-safe-diff, profile-staleness, wrapper-freshness, surface-probe]
     session_end:      [chat-history, memory-learn]
     stop:             [chat-history, hot-context, verify-before-complete, team-review-gate]
-    user_prompt_submit: [chat-history, verify-before-complete, minimal-safe-diff, language-mirror, git-authorization]
+    user_prompt_submit: [chat-history, verify-before-complete, minimal-safe-diff, language-mirror, git-authorization, session-canary]
     pre_tool_use:     [block-no-verify, block-unauthorized-git, evidence-independence, block-kernel-rule-writes, block-config-weakening, rtk-wrap, design-slop, code-graph-nudge]
     post_tool_use:    [chat-history, roadmap-progress, context-hygiene, verify-before-complete, minimal-safe-diff, injection-scan, pr-url-reminder]
 
@@ -345,7 +354,7 @@ platforms:
     session_start:    [chat-history, hot-context, handoff-context, session-canary, first-run-gate, onboarding-gate, verify-before-complete, minimal-safe-diff, profile-staleness, wrapper-freshness, surface-probe]
     session_end:      [chat-history, memory-learn]
     stop:             [chat-history, hot-context, verify-before-complete]
-    user_prompt_submit: [chat-history, verify-before-complete, minimal-safe-diff, language-mirror, git-authorization]
+    user_prompt_submit: [chat-history, verify-before-complete, minimal-safe-diff, language-mirror, git-authorization, session-canary]
     pre_tool_use:     [block-no-verify, block-unauthorized-git, evidence-independence, block-kernel-rule-writes, block-config-weakening, rtk-wrap, design-slop, code-graph-nudge]
     post_tool_use:    [chat-history, roadmap-progress, context-hygiene, verify-before-complete, minimal-safe-diff, injection-scan, pr-url-reminder]
 
@@ -360,7 +369,7 @@ platforms:
     session_start:      [chat-history, hot-context, handoff-context, session-canary, first-run-gate, onboarding-gate, verify-before-complete, minimal-safe-diff, profile-staleness, wrapper-freshness, surface-probe]
     session_end:        [chat-history, memory-learn]
     stop:               [chat-history, hot-context, verify-before-complete]
-    user_prompt_submit: [chat-history, verify-before-complete, minimal-safe-diff, language-mirror, git-authorization]
+    user_prompt_submit: [chat-history, verify-before-complete, minimal-safe-diff, language-mirror, git-authorization, session-canary]
     post_tool_use:      [chat-history, roadmap-progress, context-hygiene, verify-before-complete, minimal-safe-diff, injection-scan, pr-url-reminder]
 
   # Phase 7.6 — Cline. Hooks live under `.clinerules/hooks/<HookName>`
@@ -375,7 +384,7 @@ platforms:
     session_start:      [chat-history, hot-context, handoff-context, session-canary, first-run-gate, onboarding-gate, verify-before-complete, minimal-safe-diff, profile-staleness, wrapper-freshness, surface-probe]
     session_end:        [chat-history, memory-learn]
     stop:               [chat-history, hot-context, verify-before-complete]
-    user_prompt_submit: [chat-history, verify-before-complete, minimal-safe-diff, language-mirror, git-authorization]
+    user_prompt_submit: [chat-history, verify-before-complete, minimal-safe-diff, language-mirror, git-authorization, session-canary]
     post_tool_use:      [chat-history, roadmap-progress, context-hygiene, verify-before-complete, minimal-safe-diff, injection-scan, pr-url-reminder]
 
   # Phase 7.7 — Windsurf (Cascade). Hooks live at `.windsurf/hooks.json`
@@ -395,7 +404,7 @@ platforms:
     stop:               [chat-history, hot-context, verify-before-complete]
     # language-mirror IS bound here: unlike minimal-safe-diff it needs only the
     # user_prompt_submit slot, which Windsurf has.
-    user_prompt_submit: [chat-history, verify-before-complete, language-mirror, git-authorization]
+    user_prompt_submit: [chat-history, verify-before-complete, language-mirror, git-authorization, session-canary]
 
   # Phase 7.8 — Gemini CLI. Hooks live at `.gemini/settings.json`
   # (project) or `~/.gemini/settings.json` (user). Per Gemini docs
@@ -411,7 +420,7 @@ platforms:
     session_start:      [chat-history, hot-context, handoff-context, session-canary, first-run-gate, onboarding-gate, verify-before-complete, minimal-safe-diff, profile-staleness, wrapper-freshness, surface-probe]
     session_end:        [chat-history, memory-learn]
     stop:               [chat-history, hot-context, verify-before-complete]
-    user_prompt_submit: [chat-history, verify-before-complete, minimal-safe-diff, language-mirror, git-authorization]
+    user_prompt_submit: [chat-history, verify-before-complete, minimal-safe-diff, language-mirror, git-authorization, session-canary]
     post_tool_use:      [chat-history, roadmap-progress, context-hygiene, verify-before-complete, minimal-safe-diff, injection-scan, pr-url-reminder]
 
   # Phase 7.9 — Copilot has no hook surface. Concerns route through

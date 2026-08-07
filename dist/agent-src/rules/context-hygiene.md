@@ -23,6 +23,14 @@ obligation_frequency: "per-turn"
 > `agents/state/context-hygiene.json` (tool-call count, loop signal,
 > freshness milestones at 20/40/60); the prose below is the spec the
 > hook implements and the agent-side fallback.
+>
+> **What the slot cannot reach.** The carrier fires per *tool call*; the
+> read-loop law below is per *turn*. A turn that makes no tool call fires it
+> zero times — and a reply with no tool call is exactly the shape the read-loop
+> counter is trying to notice. So the counters are hook-carried and the
+> every-turn obligation is model-carried, on every host. Named here because the
+> frequency join in `check_enforcement_coverage.ts` reports it, and a rule whose
+> header says "enforced by" without that sentence reads as a guarantee it is not.
 
 ## Conversation Freshness
 
