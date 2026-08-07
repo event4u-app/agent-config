@@ -66,6 +66,48 @@ describe('flattenSurface', () => {
         const s = flattenSurface(wrapped, '8.0.0');
         expect(Object.keys(s.entries)).toHaveLength(3);
     });
+
+    // `z.object({}).passthrough()` emits `properties: {}` — defined but empty.
+    // Recursing on the mere presence of the key walked zero children and
+    // emitted nothing, so a free-form map vanished from the surface entirely:
+    // `subagents.host_capabilities` was classified in the settings contract,
+    // present in the template, and absent from every snapshot and delta.
+    it('treats a free-form map (empty properties) as a LEAF, not a group', () => {
+        const schema = {
+            type: 'object',
+            properties: {
+                subagents: {
+                    type: 'object',
+                    properties: {
+                        host_capabilities: {
+                            type: 'object',
+                            properties: {},
+                            default: {},
+                            description: 'Override of the host-capability manifest',
+                        },
+                        auto: { type: 'string', default: 'on' },
+                    },
+                },
+            },
+        };
+        const s = flattenSurface(schema, '8.0.0');
+        expect(Object.keys(s.entries).sort()).toEqual([
+            'subagents.auto', 'subagents.host_capabilities',
+        ]);
+        expect(s.entries['subagents.host_capabilities']).toMatchObject({
+            type: 'object',
+            default: {},
+            description: 'Override of the host-capability manifest',
+        });
+    });
+
+    // The contrast case — without it the assertion above would also pass on a
+    // flattener that never recursed at all.
+    it('still recurses into an object that has at least one property', () => {
+        const s = flattenSurface(SCHEMA_V1, '8.0.0');
+        expect(Object.keys(s.entries)).toContain('personal.autonomy');
+        expect(Object.keys(s.entries)).not.toContain('personal');
+    });
 });
 
 describe('computeSurfaceDelta', () => {

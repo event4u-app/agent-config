@@ -217,6 +217,16 @@ tasks:
     desc: Verify the committed ownership matrix matches a fresh regeneration (CI gate)
     cmd: ./scripts-run src/scripts/generate_ownership_matrix --check
 
+  generate-settings-reference:
+    silent: true
+    desc: Regenerate the settings reference page (docs/settings-reference.md)
+    cmd: ./scripts-run src/scripts/generate_settings_reference
+
+  check-settings-reference:
+    silent: true
+    desc: Verify the committed settings reference matches a fresh regeneration (CI gate)
+    cmd: ./scripts-run src/scripts/generate_settings_reference --check
+
   roadmap-progress:
     silent: true
     desc: Regenerate agents/roadmaps-progress.md from all open roadmaps

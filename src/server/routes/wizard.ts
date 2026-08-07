@@ -27,7 +27,16 @@ import { z } from 'zod';
 import { settingsSchema } from '../schemas/settings.js';
 import { userIdentitySchema } from '../../shared/userMd/schema.js';
 import { composeUserIdentity } from '../../shared/userMd/utils.js';
-import { mergeIntoTemplate, parseYaml, replaceScalar } from '../io/yamlIO.js';
+import {
+    mergeIntoTemplate,
+    parseYaml,
+    readPath,
+    renderSparseSettings,
+    replaceScalar,
+    substituteTemplatePlaceholders,
+    writePath,
+} from '../io/yamlIO.js';
+import { carveOutKeys } from '../../shared/settingsCarveOut.js';
 import { commitMulti, type CommitPayload } from '../io/atomicMultiWrite.js';
 import { writeAtomic } from '../io/atomicWrite.js';
 import { detectInstalledTools, knownToolIds } from '../../install/toolDetection.js';
@@ -237,6 +246,49 @@ async function writeState(root: string, state: WizardState): Promise<void> {
 
 async function readTemplate(packageRoot: string): Promise<string> {
     return fs.readFile(join(packageRoot, 'src', 'config', 'agent-settings.template.yml'), 'utf8');
+}
+
+/**
+ * The body a FRESH install writes: the answers the wizard actually collected,
+ * plus the carve-out keys whose absence would not resolve to their documented
+ * default (`road-to-zero-ceremony-settings` Phase 3, and the audit under
+ * `agents/evidence/analysis/`).
+ *
+ * Carve-out VALUES are read out of the template, never restated in the
+ * carve-out list — so the always-written set cannot drift from the defaults it
+ * exists to protect.
+ */
+export function sparseSettingsValues(
+    templateBody: string,
+    answers: Record<string, unknown>,
+): Record<string, unknown> {
+    // The template ships `__PLACEHOLDER__` tokens the installer fills from the
+    // profile preset. Reading it raw would write the literal token into the
+    // user's file — invisible to a test that compares template against output,
+    // because the token is in both.
+    const template = parseYaml(substituteTemplatePlaceholders(templateBody));
+    const values: Record<string, unknown> = {};
+    for (const key of carveOutKeys()) {
+        const value = readPath(template, key);
+        if (value !== undefined) writePath(values, key, value);
+    }
+    // The user's own answers outrank a carved-out default for the same key.
+    for (const [key, value] of Object.entries(answers)) values[key] = value;
+    return values;
+}
+
+/**
+ * An EXISTING settings file is honoured as-is (Phase 3 step 4): the wizard's
+ * answers are patched into the user's own document instead of the template, so
+ * nothing the user wrote is dropped. Returns `null` when no file is there,
+ * which is the fresh-install path above.
+ */
+async function readExistingSettingsBody(writeRoot: string): Promise<string | null> {
+    try {
+        return await fs.readFile(join(writeRoot, SETTINGS_REL), 'utf8');
+    } catch {
+        return null;
+    }
 }
 
 /**
@@ -1307,7 +1359,15 @@ export function wizardRoute(opts: WizardRouteOptions & { packageRoot: string }):
 
             try {
                 const template = await readTemplate(opts.packageRoot);
-                const settingsBody = mergeIntoTemplate(template, settingsParsed.data as Record<string, unknown>);
+                const answers = settingsParsed.data as Record<string, unknown>;
+                // Phase 3: a fresh install gets a SPARSE file — the decisions
+                // made, plus the carve-out keys. An existing file is patched in
+                // place so the user's own entries survive; it is never rebuilt
+                // from the template, which is what used to clobber them.
+                const existingBody = await readExistingSettingsBody(effectiveWriteRoot);
+                const settingsBody = existingBody === null
+                    ? renderSparseSettings(sparseSettingsValues(template, answers))
+                    : mergeIntoTemplate(existingBody, answers);
                 const identityBody = identityParsed && identityParsed.success
                     ? composeUserIdentity(identityParsed.data as Record<string, unknown>)
                     : null;

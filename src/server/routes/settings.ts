@@ -22,7 +22,7 @@ import { dirname, join } from 'node:path';
 import type { ZodIssue } from 'zod';
 import { zodToJsonSchema } from 'zod-to-json-schema';
 import { settingsSchema } from '../schemas/settings.js';
-import { parseYaml, mergeIntoTemplate, diffValues, deepMerge } from '../io/yamlIO.js';
+import { parseYaml, mergeIntoTemplate, diffValues, deepMerge, TEMPLATE_PLACEHOLDER_DEFAULTS } from '../io/yamlIO.js';
 import { writeAtomic } from '../io/atomicWrite.js';
 import { sharedWriteTarget, resolveThroughSymlinks } from '../io/sharedWriteCheck.js';
 import { PACKAGE_ROOT } from '../../cli/paths.js';
@@ -104,17 +104,6 @@ const SHARED_WRITE_MESSAGE =
 // Keep this map in lockstep with the template — any new `__*__` placeholder
 // added there must get its default here, or `settingsSchema.safeParse` on
 // the merged defaults will reject the first save.
-const TEMPLATE_PLACEHOLDER_DEFAULTS: Readonly<Record<string, string>> = {
-    __RULE_LOADING_TIER__: 'balanced',
-    // Successor knob (ADR-110). P2-verdict council 2026-07-07: the
-    // balanced-heritage default is `auto` — lift only where measured
-    // (vendor-granular unknown_defaults in src/config/host-capabilities.yml).
-    __DISCIPLINE_PROFILE__: 'auto',
-    __USER_TYPE__: '',
-    __CHAT_HISTORY_FREQUENCY__: 'per_turn',
-    __CHAT_HISTORY_MAX_SIZE_KB__: '2048',
-    __CHAT_HISTORY_ON_OVERFLOW__: 'rotate',
-};
 
 // Computed once — Zod → JSON Schema conversion is pure and the schema is static.
 const SETTINGS_JSON_SCHEMA = zodToJsonSchema(settingsSchema, {

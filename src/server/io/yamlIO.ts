@@ -130,6 +130,93 @@ export function mergeIntoTemplate(templateBody: string, newValues: Record<string
     return body;
 }
 
+/**
+ * Placeholders the shipped template carries, and the value each resolves to
+ * when nothing has substituted it. The installer fills these from the chosen
+ * profile preset; anything reading the template directly must substitute them
+ * too, or it writes a literal `__PLACEHOLDER__` into the user's file.
+ */
+export const TEMPLATE_PLACEHOLDER_DEFAULTS: Readonly<Record<string, string>> = {
+    __RULE_LOADING_TIER__: 'balanced',
+    // Successor knob (ADR-110). P2-verdict council 2026-07-07: the
+    // balanced-heritage default is `auto` — lift only where measured
+    // (vendor-granular unknown_defaults in src/config/host-capabilities.yml).
+    __DISCIPLINE_PROFILE__: 'auto',
+    __USER_TYPE__: '',
+    __CHAT_HISTORY_FREQUENCY__: 'per_turn',
+    __CHAT_HISTORY_MAX_SIZE_KB__: '2048',
+    __CHAT_HISTORY_ON_OVERFLOW__: 'rotate',
+};
+
+/** Replace every known template placeholder with its default value. */
+export function substituteTemplatePlaceholders(body: string): string {
+    let rendered = body;
+    for (const [placeholder, value] of Object.entries(TEMPLATE_PLACEHOLDER_DEFAULTS)) {
+        rendered = rendered.replaceAll(placeholder, value);
+    }
+    return rendered;
+}
+
+/** Read one dotted path out of a parsed settings tree. `undefined` when absent. */
+export function readPath(root: Record<string, unknown>, dotted: string): unknown {
+    let node: unknown = root;
+    for (const segment of dotted.split('.')) {
+        if (node === null || typeof node !== 'object' || Array.isArray(node)) return undefined;
+        node = (node as Record<string, unknown>)[segment];
+    }
+    return node;
+}
+
+/** Write one dotted path into a settings tree, creating intermediate objects. */
+export function writePath(root: Record<string, unknown>, dotted: string, value: unknown): void {
+    const segments = dotted.split('.');
+    const leaf = segments.pop();
+    if (leaf === undefined) return;
+    let node = root;
+    for (const segment of segments) {
+        const next = node[segment];
+        if (next === null || typeof next !== 'object' || Array.isArray(next)) {
+            const created: Record<string, unknown> = {};
+            node[segment] = created;
+            node = created;
+        } else {
+            node = next as Record<string, unknown>;
+        }
+    }
+    node[leaf] = value;
+}
+
+/**
+ * Render a SPARSE settings document — the decisions actually made, and nothing
+ * else (`road-to-zero-ceremony-settings` Phase 3).
+ *
+ * The counterpart to `mergeIntoTemplate`, which returns the whole 1,233-line
+ * template with the answers patched in. Here the template is consulted only as
+ * the value source for the carve-out keys; it is never copied into the output.
+ *
+ * Comment preservation is not a concern in this direction, because there are no
+ * template comments to preserve — the long-form explanation those comments used
+ * to carry now lives in the generated `docs/settings-reference.md`, which the
+ * header points at.
+ */
+export function renderSparseSettings(values: Record<string, unknown>): string {
+    const header = [
+        '# Your settings — a record of decisions, not a copy of the defaults.',
+        '#',
+        '# Every key absent from this file resolves to its documented default.',
+        '# The full key list, with defaults and explanations, is generated at',
+        '# docs/settings-reference.md — this file stays small on purpose.',
+        '#',
+        '# How each entry was decided is recorded beside it in',
+        '# `.agent-settings.provenance.json`.',
+        '',
+    ].join('\n');
+    const body = Object.keys(values).length === 0
+        ? ''
+        : yamlDump(values, { lineWidth: -1, sortKeys: true });
+    return `${header}${body}`;
+}
+
 export function diffValues(
     before: Record<string, unknown>,
     after: Record<string, unknown>,

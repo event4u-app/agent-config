@@ -84,7 +84,13 @@ function unwrapRef(root: JsonSchemaNode): JsonSchemaNode {
 export function flattenSurface(schema: JsonSchemaNode, version: string): SettingsSurface {
     const entries: Record<string, SurfaceEntry> = {};
     const walk = (node: JsonSchemaNode, prefix: string): void => {
-        if (node.type === 'object' && node.properties !== undefined) {
+        // `properties: {}` — a free-form map such as `z.object({}).passthrough()` —
+        // is a LEAF, per this function's own contract above. Recursing on the
+        // mere presence of the key walked zero children and emitted nothing, so
+        // the key vanished from the surface: `subagents.host_capabilities` was
+        // classified in the settings contract, present in the template, and
+        // absent from every snapshot and upgrade delta.
+        if (node.type === 'object' && node.properties !== undefined && Object.keys(node.properties).length > 0) {
             for (const key of Object.keys(node.properties).sort()) {
                 const child = node.properties[key] as JsonSchemaNode;
                 walk(child, prefix === '' ? key : `${prefix}.${key}`);
