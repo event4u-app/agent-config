@@ -1,0 +1,268 @@
+---
+complexity: lightweight
+status: ready
+---
+
+# Road to parallel-session coordination — a second session should know the first one exists
+
+**Goal:** make a starting session detect another live session's branch and
+roadmap claim before it begins work, via a shared per-session register in the git
+common dir kept alive by a per-turn heartbeat, and turn a collision into a
+question instead of a conflict.
+
+## Context
+
+Parallel work in this repo is not hypothetical. `road-to-worktree-hygiene`
+measured **249 worktrees, 40 GB, 692 local branches** — one per feature branch,
+accumulated because sessions run side by side. What does not exist is any way for
+two of those sessions to know about each other.
+
+Three findings, each verified against HEAD:
+
+1. **Runtime state is per-worktree, not per-repo.** Concerns run with
+   `CWD = envelope.workspace_root` and resolve `agents/runtime/state/` relative
+   to it (`src/scripts/hooks/dispatch_hook.ts` ~line 560). In a worktree that is
+   the worktree path, so `hot-context.md`, `context-hygiene.json` and
+   `rule-trips.json` are isolated copies. Two sessions in two worktrees share
+   nothing.
+2. **The scope lock is local-only.** `worktree-lifecycle` already has the right
+   idea — a `.worktree-scope.md` declaring which paths a worktree owns — but it
+   is written untracked *inside* the worktree and no other session reads it. The
+   declaration exists, the lookup does not.
+3. **`/roadmap:next` has a claim window.** Its live screen excludes any roadmap
+   whose slug matches an **open PR's** branch. Correct, and late: between
+   "session A picks the roadmap" and "session A's PR exists" there is an
+   unguarded interval in which session B screens the same roadmap as free.
+
+### Why this is not a memory feature
+
+The obvious reading — "let agents write what they are doing into memory" — is the
+wrong store, deliberately. Memory is curated, durable, and indexed into every
+session. "Who is working on what right now" is transient, machine-read, and wrong
+within the hour. Putting it there degrades the index that currently works. The
+register is a separate, disposable surface — and because it is disposable by
+declaration, it owes no history, which Phase 2's layout choice depends on.
+
+### The shared surface, and the resolution that already exists
+
+`git rev-parse --git-common-dir` resolves to the **same** directory from every
+worktree of a repo. A register there is shared by construction: no new directory,
+no sync step, no generator, never tracked.
+
+Resolving that path is **not** new code: `src/scripts/_cli/cmd_doctor.ts`
+(~lines 912-914) already reads the `commondir` file and resolves it against the
+git dir. Reuse that resolution rather than writing a second one — a repo with two
+different answers to "where is the common dir" is a bug waiting for a symlinked
+parent, exactly the class of defect the worktree cleanup work already hit once.
+
+### `stop` is not session end — the correction this design turns on
+
+On Claude Code the native `Stop` event fires **after every assistant reply**, not
+at session end; the manifest says so itself, describing the `stop` write as a
+"deterministic … overwrite of hot-context.md" — a working-memory refresh per
+reply. On Cline `stop` is mapped from `TaskCancel`. True session end is the
+separate `session_end` slot, present on six platforms and **absent on Windsurf**
+(its manifest comment: handled "in the `stop` slot rather than `session_end`").
+
+Consequence for this design: deregistering on `stop` would mark a session dead
+after its first reply, while it is working. Deregistration therefore belongs on
+`session_end`, and `stop` becomes a **second heartbeat carrier**. That reframes
+correctness usefully: **liveness rests on heartbeat + TTL alone; deregistration
+is a best-effort optimisation that frees a claim sooner.** The crash path already
+*is* the TTL path, so Windsurf's missing `session_end` costs latency, not
+correctness.
+
+## Prerequisites
+
+- `src/scripts/hook_manifest.yaml` — `session_start`, `user_prompt_submit`,
+  `stop` and `session_end` all exist already; this adds a concern to existing
+  slots, never a slot.
+- `src/scripts/_cli/cmd_doctor.ts` — the existing common-dir resolution.
+- `src/scripts/worktree_cleanup_check.ts` — the existing liveness notion and the
+  measurement trap Phase 2 must not repeat.
+- The `chat-history` JSONL — already written in the per-turn slot on every host,
+  carrying timestamps; it is the measurement source for the TTL.
+
+## Phase 1 — measure what the design depends on
+
+- [ ] Confirm empirically that `agents/runtime/state/` differs per worktree:
+      start a session in two worktrees, compare resolved state paths. The claim
+      is read off a code comment and has not been observed.
+- [ ] Confirm `git rev-parse --git-common-dir` returns an identical, writable
+      path from the main checkout and from a worktree, **including through a
+      symlinked parent** — the cleanup work already found that git reports
+      realpaths and a symlinked ancestor mis-classified conventional worktrees.
+- [ ] **Derive the TTL from data, not taste — and per host, not globally.**
+      Extract the inter-turn gap distribution from the `chat-history` JSONL over
+      a real working week, **split by host**. One global number fails in both
+      directions: dominated by the slowest host it lets a crashed Claude Code
+      session squat on a claim for ten times the normal turn gap; taken from the
+      fastest host it expires active sessions on platforms where "turn" is
+      proxied by a coarser event. "Turn" is not the same quantity on eight hosts
+      — Augment proxies it through `stop`, and editor-centric hosts log fewer
+      chat turns than they have working minutes.
+- [ ] Exclude long idle stretches from the calibration set before taking the
+      percentile — an overnight gap in the log is not a turn cadence, and left in
+      it drags the tail far enough to make the TTL meaningless.
+- [ ] **Probe Augment's `stop` frequency.** Augment has no `user_prompt_submit`
+      but does have `stop`. If its `stop` fires per reply, the heartbeat gap on
+      that platform closes by itself; if it fires once, the gap is real and gets
+      documented. Do not assume either way.
+- [ ] Measure the claim window on `/roadmap:next`: from roadmap selection to PR
+      creation, in a real run. Under a minute makes the register a nice-to-have;
+      an hour makes it the point.
+
+## Phase 2 — layout and liveness
+
+- [ ] **Choose the layout, default: one file per session.**
+      `<common-dir>/agent-sessions/<session_id>.json`, heartbeat overwrites its
+      own file via write-temp + rename. Each file has exactly one writer, so
+      there is no concurrent-write case at all: atomicity comes from rename, the
+      file never grows, compaction does not exist, the reader does `readdir` plus
+      N small reads, and cleanup is `unlink` of expired files during the
+      `session_start` read. The append-only JSONL alternative buys concurrency
+      safety this layout does not need, and pays for it with unbounded growth
+      (one record per turn per session once heartbeating), a rotation problem
+      (rotating under live appenders loses heartbeats to the unlinked inode —
+      the classic logrotate defect), and fold-the-whole-file reads. Keep JSONL
+      only as the fallback if Phase 1 finds a target filesystem without atomic
+      rename — in practice, none. A separate append-only audit log alongside the
+      per-session files was considered and rejected: it re-imports the growth and
+      rotation problems to buy post-mortem history the register has already
+      declared worthless.
+- [ ] Define the record: `session_id`, worktree path, branch, roadmap slug (or
+      null), started-at, last-seen.
+- [ ] **Heartbeat `last-seen` every turn.** Without a writer that updates it,
+      `last-seen` equals `started-at` and the TTL is unresolvable: short → a
+      long-running active session expires mid-work and goes invisible to session
+      B, which is precisely the collision this prevents; long → a crashed session
+      blocks roadmaps for hours. Carriers: `user_prompt_submit` (all hosts but
+      Augment) and `stop` (all hosts, per reply on Claude Code).
+- [ ] Store the TTL as a per-host map, not a constant, and give an unknown host
+      a conservative default plus a logged warning — a new host must degrade to
+      "claims held slightly too long", never to "active sessions vanish".
+- [ ] Rule out file mtime as the liveness signal explicitly. The cleanup work hit
+      this: plain `git status` refreshes the on-disk index and bumped the very
+      mtime read as liveness, moving 10 worktrees from safe to live between
+      consecutive runs. A heartbeat *inside the record* has no such coupling —
+      nothing else writes it.
+- [ ] **Declare the two accepted limits**, in the same honesty register as the
+      "not a mutex" note below:
+      - *Idle is indistinguishable from crashed.* A session left open over lunch
+        does not heartbeat, expires, and releases its claim although the user
+        returns. No hook-based heartbeat can tell that apart from a crash. The
+        collision question catches the rest: when they resume, the *other*
+        session sees revived heartbeats at its next start. **This limit belongs
+        in user-facing documentation, not only in the design note** — someone
+        needs to know that walking away for longer than the TTL means another
+        session may claim their branch.
+      - *This is advisory, not a mutex.* Two sessions can claim in the same
+        millisecond. State it in the artefact so nobody later builds on it as if
+        it were exclusive.
+
+## Phase 3 — write the register
+
+- [ ] Register on `session_start`: write the file. Fail-open — a session that
+      cannot write the register still starts.
+- [ ] Heartbeat on `user_prompt_submit` and on `stop`: rewrite `last-seen`.
+- [ ] **Re-read the mutable fields on every heartbeat, never carry the start
+      value forward.** The branch changes mid-session via checkout — one
+      `git rev-parse --abbrev-ref HEAD` per heartbeat keeps it true.
+- [ ] Deregister on `session_end` where the slot exists (six platforms; not
+      Windsurf). Best-effort by design: correctness rests on heartbeat + TTL, so
+      a missing `session_end` costs claim-release latency and nothing else.
+- [ ] Do **not** deregister on `stop` — on Claude Code that would kill the
+      session's own record after its first reply.
+
+## Phase 4 — bridge the roadmap claim, or Phase 5 reads an empty field
+
+The record carries a roadmap slug, but the roadmap is chosen **mid-session** by
+`/roadmap:next`. At registration the slug is always null, and a hook is a script:
+it does not know what the model picked. Without a bridge the third acceptance
+criterion is unreachable — the screen would only ever see null slugs.
+
+- [ ] Bridge via a state file the heartbeat reads: `/roadmap:next` writes the
+      chosen slug into `agents/runtime/state/`, and the next heartbeat lifts it
+      into the record. Preferred over having the command call the register
+      directly — the claim lands at most one turn later, and the model never
+      needs to know the register path or format.
+- [ ] Treat a write the command performs as model-carried and declare it as such
+      (see Phase 5's honesty step); the heartbeat half is hook-carried and real.
+
+## Phase 5 — close the claim window, and declare its carrier
+
+- [ ] Add the register read to the live remote screen of `/roadmap:next`,
+      alongside `gh pr list`. A roadmap claimed by a live session is excluded
+      from the candidate set exactly as an open-PR roadmap is.
+- [ ] Keep the exclusion reasons distinguishable: "taken by open PR" and
+      "claimed by a live session" are different states with different recovery.
+- [ ] On `session_start`, read the register, drop expired entries, and inject
+      live foreign sessions as context — the delivery mechanism `hot-context`
+      already uses, so no new injection path is invented.
+- [ ] Collision rule: the starting session's branch matches a live foreign claim
+      → ask **once**, numbered options per `user-interaction`: join the same
+      branch, or spawn a worktree. Never decide silently, in either direction.
+      It fires only on an actual live claim — never a routine "are you sure" at
+      every start, per `no-cheap-questions`.
+- [ ] **Declare this step's enforcement honestly.** `/roadmap:next` is a command
+      markdown, not a script — the screen runs because the model reads the
+      instruction. That is a model-carried obligation, i.e. exactly the shape the
+      obligation-carrier audit exists to find. Say so in the command, in the form
+      the six `enforced_by: none` rules use, rather than leaving a prose step that
+      reads like a guarantee. The register *write* is hook-carried and real; the
+      register *read in the screen* is not, and the two must not look alike.
+
+## Council convergence (2026-08-07 · anthropic/claude-sonnet-4-5, openai/gpt-4o · $0.08)
+
+Both members reviewed the locked design decisions. Converged, and folded in above:
+
+- **One file per session is the right layout.** The rotation-under-live-appenders
+  failure is decisive against JSONL; the lost history costs nothing the register
+  claims to provide.
+- **The TTL cannot be one number.** "Turn" is a platform-dependent quantity across
+  eight hosts, so a global P99 is dominated by the slowest host — a crashed
+  session on a fast host would then squat on a claim for ten times the normal
+  turn gap. Per-host derivation, conservative default for unknown hosts.
+- **Heartbeat + TTL is the correct correctness basis**, and the idle-vs-crashed
+  limit is acceptable for an advisory register — provided it reaches users, not
+  only the design note.
+- **Roadmap 1 first**, with a concrete failure case: without the frequency field,
+  this roadmap's own per-turn heartbeat obligation would be reported green by the
+  coverage instrument on a host whose slot coverage does not actually carry it,
+  and the gap would surface only after two sessions had already collided.
+
+Divergence, recorded rather than resolved: the second member saw value in
+shipping the register first for earlier user benefit. A concrete platform-spread
+failure case outweighs a generic value argument, so the order stands.
+
+## Acceptance criteria
+
+- Two sessions started in different worktrees each see the other in their
+  injected start context.
+- Starting a session on a branch another live session holds produces one
+  numbered-options question and no silent proceed.
+- A session that picks a roadmap mid-run has that slug visible in the register
+  within one turn, and `/roadmap:next` in another session skips it before any PR
+  exists — the window measured in Phase 1 is closed.
+- A session active longer than the TTL stays visible (heartbeat) **and** a
+  crashed session's entry disappears by TTL without manual cleanup — both hold
+  simultaneously, and neither depends on file mtime.
+- No session marks itself dead while still working (the `stop`-is-not-session-end
+  trap) on any platform.
+- The idle-vs-crashed limit and the advisory-not-mutex property are written into
+  the shipped artefact, not only into this roadmap.
+- The TTL is stored per host, derived from a calibration set with long idle
+  stretches excluded, and an unknown host degrades to holding claims slightly too
+  long rather than to vanishing sessions.
+- The register is never tracked by git, and its absence degrades the session to
+  today's behaviour rather than blocking it.
+
+## Quality gates
+
+Targeted only — the remote CI on the PR is the authoritative full gate.
+
+```bash
+npx tsx src/scripts/lint_roadmap_complexity.ts
+npx tsx src/scripts/validate_frontmatter.ts
+npx vitest run tests/scripts/<new-register-test>.test.ts
+```
