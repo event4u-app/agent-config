@@ -211,18 +211,6 @@ _1 blocker resolved._
     `wc -l agents/runtime/state/audit/$(date +%Y-%m).jsonl`. Resume at ≥20.
   - **Resolved when:** the current-month audit log holds ≥20 orchestration lines.
 
-### [road-to-parallel-session-coordination.md](roadmaps/road-to-parallel-session-coordination.md)
-
-**Road to parallel-session coordination — a second session should know the first one exists** — 0 / 24 done (0%)
-
-| # | Phase | State | Open | Done | Deferred | Cancelled | % |
-|---|---|---|---:|---:|---:|---:|---:|
-| 1 | measure what the design depends on | ⬜ not started | 6 | 0 | 0 | 0 | 0% |
-| 2 | layout and liveness | ⬜ not started | 6 | 0 | 0 | 0 | 0% |
-| 3 | write the register | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
-| 4 | bridge the roadmap claim, or Phase 5 reads an empty field | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
-| 5 | close the claim window, and declare its carrier | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
-
 ### [road-to-rule-coherence-followup.md](roadmaps/road-to-rule-coherence-followup.md)
 
 **Follow-up to road-to-rule-coherence** — 1 / 9 done (11%)
