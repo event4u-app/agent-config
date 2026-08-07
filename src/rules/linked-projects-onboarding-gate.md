@@ -23,7 +23,7 @@ trust:
   confidence: medium
 install:
   removable: true
-# obligation: "prompt the developer once to opt it into scope" — src/rules/linked-projects-onboarding-gate.md:30
+# obligation: line 30
 obligation_frequency: "per-session"
 ---
 

@@ -11,7 +11,7 @@ triggers:
 self_contained: true
 workspaces: [agent-config-maintainer, construction, engineering, finance, founder, gtm, legal-review-prep, ops, product, small-business]
 packs: [meta]
-# obligation: "NEVER load full command output into context." — src/rules/token-efficiency.md:21
+# obligation: line 21
 obligation_frequency: "per-edit"
 ---
 

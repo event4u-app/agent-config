@@ -22,7 +22,7 @@ collision_ok:
   "/image:": "rights/likeness gate on the image-generation surface"
   "likeness": "its own core subject — the rights gate"
   "scripts/ai-image/adapters/": "adapter edits touch the likeness-gated generation path"
-# obligation: "NEVER GENERATE A REAL PERSON'S LIKENESS … WITHOUT EXPLICIT RIGHTS/CONSENT" — src/rules/image-likeness-and-rights.md:32
+# obligation: line 32
 obligation_frequency: "per-event"
 ---
 

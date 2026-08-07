@@ -27,7 +27,7 @@ workspaces: [agent-config-maintainer, construction, engineering, finance, founde
 packs: [meta]
 collision_ok:
   "screenshot": "a screenshot shipping into docs is the PII/anonymization gate"
-# obligation: "A DATA-BEARING SCREENSHOT EMBED IS GATED PER non-destructive-by-default" — src/rules/doc-screenshot-hygiene.md:49
+# obligation: line 49
 obligation_frequency: "per-event"
 ---
 

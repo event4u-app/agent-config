@@ -10,7 +10,7 @@ triggers:
 self_contained: true
 workspaces: [agent-config-maintainer]
 packs: [meta]
-# obligation: "Write gate — every intake append to the corpus" — src/rules/low-impact-corpus-privacy-floor.md:28
+# obligation: line 28
 obligation_frequency: "per-edit"
 ---
 

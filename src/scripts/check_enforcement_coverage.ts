@@ -460,18 +460,13 @@ export function join_frequency(
     obligation: Frequency | null,
     declared: string[],
     binding: PlatformBinding,
-    is_kernel: boolean,
 ): {
     verdict: FrequencyVerdict;
     carrier_frequency: Record<string, string> | null;
     gap_platforms: string[];
 } {
     if (obligation === null) {
-        return {
-            verdict: is_kernel ? 'unclassified' : 'unclassified',
-            carrier_frequency: null,
-            gap_platforms: [],
-        };
+        return { verdict: 'unclassified', carrier_frequency: null, gap_platforms: [] };
     }
     if (declared.length === 0) {
         return { verdict: 'unmeasured', carrier_frequency: null, gap_platforms: [] };
@@ -554,8 +549,17 @@ export function collect(): RuleCoverage[] {
             obligation,
             declared,
             binding,
-            KERNEL_RULE_ID_SET.has(id),
         );
+        // Say WHY a row is unclassified. For the nine kernel rules the answer is
+        // structural rather than an authoring lapse — block_kernel_rule_writes
+        // denies the write — and a reader who cannot tell those apart will read
+        // the same bucket as either "expected" or "someone forgot".
+        if (verdict === 'unclassified' && KERNEL_RULE_ID_SET.has(id)) {
+            notes.push(
+                'no obligation_frequency: kernel rule, and block_kernel_rule_writes denies ' +
+                    'the write with no agent-accessible override',
+            );
+        }
         out.push({
             id,
             tier: String(fm['tier'] ?? '—'),

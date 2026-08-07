@@ -10,7 +10,7 @@ routes_to:
   - "skill:analysis-skill-router"
 workspaces: [agent-config-maintainer, engineering]
 packs: [meta]
-# obligation: "Body migrated to `skill:analysis-skill-router`" — src/rules/analysis-skill-routing.md:19
+# obligation: line 19
 obligation_frequency: "none"
 ---
 

@@ -10,7 +10,7 @@ triggers:
 self_contained: true
 workspaces: [agent-config-maintainer, engineering]
 packs: [meta]
-# obligation: "EXTERNAL REFERENCE NAMED → DEEP-DIVE FIRST." — src/rules/external-reference-deep-dive.md:20
+# obligation: line 20
 obligation_frequency: "per-task"
 ---
 

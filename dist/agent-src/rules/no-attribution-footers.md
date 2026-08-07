@@ -8,7 +8,7 @@ triggers:
 self_contained: true
 workspaces: [agent-config-maintainer, construction, engineering, finance, founder, gtm, legal-review-prep, ops, product, small-business]
 packs: [meta]
-# obligation: "NEVER ADD ATTRIBUTION FOOTERS TO USER-OWNED ARTIFACTS." — src/rules/no-attribution-footers.md:18
+# obligation: line 18
 obligation_frequency: "per-commit"
 ---
 

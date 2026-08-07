@@ -11,7 +11,7 @@ routes_to:
   - "skill:devcontainer"
 workspaces: [agent-config-maintainer, engineering]
 packs: [meta]
-# obligation: "Body migrated to `skill:devcontainer`." — src/rules/devcontainer-routing.md:20
+# obligation: line 20
 obligation_frequency: "none"
 ---
 

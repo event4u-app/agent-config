@@ -10,7 +10,7 @@ routes_to:
   - "skill:lint-skills"
 workspaces: [agent-config-maintainer]
 packs: [meta]
-# obligation: "Run `task ci` locally and confirm green before pushing or opening a PR" — src/rules/package-ci-checks.md:17
+# obligation: line 17
 obligation_frequency: "per-commit"
 ---
 

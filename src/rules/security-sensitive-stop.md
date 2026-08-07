@@ -26,7 +26,7 @@ enforced_by:
   - "none"
 collision_ok:
   "tenant": "tenancy is a threat-model-before-edit surface"
-# obligation: "A SECURITY-SENSITIVE SURFACE IS THREAT-MODELLED BEFORE THE FIRST EDIT" — src/rules/security-sensitive-stop.md:36
+# obligation: line 36
 obligation_frequency: "per-edit"
 ---
 

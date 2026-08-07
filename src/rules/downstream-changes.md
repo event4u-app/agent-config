@@ -11,7 +11,7 @@ triggers:
 self_contained: true
 workspaces: [engineering]
 packs: [engineering-base]
-# obligation: "After EVERY code edit, find ALL downstream changes needed." — src/rules/downstream-changes.md:30
+# obligation: line 30
 obligation_frequency: "per-edit"
 ---
 

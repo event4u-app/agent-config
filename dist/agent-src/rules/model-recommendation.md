@@ -13,7 +13,7 @@ routes_to:
   - "guideline:agent-infra/model-recommendation"
 workspaces: [agent-config-maintainer, construction, engineering, finance, founder, gtm, legal-review-prep, ops, product, small-business]
 packs: [meta]
-# obligation: "Task start, type switch, or skill/command with a model_tier" — src/rules/model-recommendation.md:4
+# obligation: line 4
 obligation_frequency: "per-task"
 ---
 

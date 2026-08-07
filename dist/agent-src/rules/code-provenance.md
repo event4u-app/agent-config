@@ -21,7 +21,7 @@ packs: [engineering-base]
 roles: [developer, reviewer, tester, po, incident, planner]
 enforced_by:
   - "none"
-# obligation: "ANY CONSCIOUS BORROW … REQUIRES A PROVENANCE LEDGER ENTRY" — src/rules/code-provenance.md:38
+# obligation: line 38
 obligation_frequency: "per-edit"
 ---
 

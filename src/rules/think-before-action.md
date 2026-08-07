@@ -22,7 +22,7 @@ collision_ok:
   "implement": "analyze-first floor on any implementation"
   "debug": "targeted inspection over brute force while debugging"
   "fix": "no blind trial-and-error on fixes — max 2 retries"
-# obligation: "Before an edit that changes behaviour, emit the intent line" — src/rules/think-before-action.md:50
+# obligation: line 50
 obligation_frequency: "per-edit"
 ---
 

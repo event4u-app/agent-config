@@ -43,7 +43,7 @@ collision_ok:
   "formrequest": "FormRequest named in a generic artifact is leakage — the lint surface"
   "phpstan": "phpstan named in a generic artifact is leakage — the lint surface"
   "rector": "rector named in a generic artifact is leakage — the lint surface"
-# obligation: "This rule fires on edits under `src/skills/`, `src/rules/`" — src/rules/framework-neutrality-in-generic-skills.md:65
+# obligation: line 65
 obligation_frequency: "per-edit"
 ---
 

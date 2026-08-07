@@ -14,7 +14,7 @@ workspaces:
   - finance
 packs:
   - finance-basic
-# obligation: "Entering, updating, or charting financial figures in a spreadsheet / model" — src/rules/spreadsheet-source-quality.md:49
+# obligation: line 49
 obligation_frequency: "per-edit"
 ---
 

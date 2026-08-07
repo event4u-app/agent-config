@@ -14,7 +14,7 @@ routes_to:
   - "guideline:agent-infra/artifact-drafting-protocol-mechanics"
 workspaces: [agent-config-maintainer, engineering]
 packs: [meta]
-# obligation: "Fires once per creation task, not once per edit." — src/rules/artifact-drafting-protocol.md:41
+# obligation: line 41
 obligation_frequency: "per-task"
 ---
 

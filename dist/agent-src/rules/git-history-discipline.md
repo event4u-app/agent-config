@@ -23,7 +23,7 @@ workspaces: [engineering]
 packs: [engineering-base]
 enforced_by:
   - "hook:block-no-verify"
-# obligation: "NEVER REBASE, SQUASH, FIXUP, OR AMEND PUBLISHED OR LOCAL HISTORY" — src/rules/git-history-discipline.md:35
+# obligation: line 35
 obligation_frequency: "per-commit"
 ---
 

@@ -27,7 +27,7 @@ applies_to_user_types:
   - "gtm"
 workspaces: [agent-config-maintainer, construction, engineering, finance, founder, gtm, legal-review-prep, ops, product, small-business]
 packs: [meta]
-# obligation: "Required surface in every finance-retention answer" — src/rules/domain-safety-retention.md:47
+# obligation: line 47
 obligation_frequency: "per-turn"
 ---
 

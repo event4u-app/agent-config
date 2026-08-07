@@ -17,7 +17,7 @@ triggers:
 self_contained: true
 workspaces: [agent-config-maintainer, engineering]
 packs: [meta]
-# obligation: "NEVER ADD DECORATIVE EMOJIS TO PR / ISSUE / COMMIT TITLES" — src/rules/no-decorative-emojis-in-git-surfaces.md:27
+# obligation: line 27
 obligation_frequency: "per-commit"
 ---
 

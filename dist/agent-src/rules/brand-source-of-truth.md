@@ -20,7 +20,7 @@ applies_to_user_types:
 self_contained: true
 workspaces: [engineering]
 packs: [brand]
-# obligation: "EVERY EMITTED COLOUR, TYPE, SPACING, AND VOICE CHOICE TRACES TO A BRAND TOKEN" — src/rules/brand-source-of-truth.md:51
+# obligation: line 51
 obligation_frequency: "per-edit"
 ---
 

@@ -10,7 +10,7 @@ workspaces: [agent-config-maintainer]
 packs: [meta]
 collision_ok:
   "src/rules/": "the always-vs-auto choice fires on every rule edit"
-# obligation: "Choose `always` vs `auto` per the governance table" — src/rules/rule-type-governance.md:17
+# obligation: line 17
 obligation_frequency: "per-edit"
 ---
 

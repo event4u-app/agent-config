@@ -35,7 +35,7 @@ trust:
   human_review_required: true
 collision_ok:
   "category": "'category' is positioning vocabulary (category design) in the strategy pack"
-# obligation: "Every strategy deliverable … ends with the disclosure footer" — src/rules/strategy-safety-floor.md:55
+# obligation: line 55
 obligation_frequency: "per-task"
 ---
 <!-- agent-config:human-review-banner -->

@@ -10,7 +10,7 @@ routes_to:
   - "skill:upstream-contribute"
 workspaces: [agent-config-maintainer, engineering]
 packs: [meta]
-# obligation: "After creating or significantly improving a skill / rule / guideline / command" — src/rules/upstream-proposal.md:17
+# obligation: line 17
 obligation_frequency: "per-task"
 ---
 

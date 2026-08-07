@@ -19,7 +19,7 @@ workspaces: [agent-config-maintainer]
 packs: [meta]
 enforced_by:
   - "validator:src/scripts/check_token_optimizer_freshness.ts"
-# obligation: "EDIT A CITED ASSET → UPDATE THE TOKEN-OPTIMIZER ROW IN THE SAME COMMIT." — src/rules/token-optimizer-maintenance.md:29
+# obligation: line 29
 obligation_frequency: "per-commit"
 ---
 

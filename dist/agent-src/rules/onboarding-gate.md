@@ -11,7 +11,7 @@ workspaces: [agent-config-maintainer, construction, engineering, finance, founde
 packs: [meta]
 enforced_by:
   - "hook:onboarding-gate"
-# obligation: "First turn of a project: if `onboarding.onboarded` is false" — src/rules/onboarding-gate.md:18
+# obligation: line 18
 obligation_frequency: "per-session"
 ---
 

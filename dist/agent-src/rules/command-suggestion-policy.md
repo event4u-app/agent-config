@@ -11,7 +11,7 @@ load_context:
   - "../contexts/contracts/command-suggestion-flow.md"
 workspaces: [agent-config-maintainer, construction, engineering, finance, founder, gtm, legal-review-prep, ops, product, small-business]
 packs: [meta]
-# obligation: "When the user's prompt matches an eligible slash command, surface it" — src/rules/command-suggestion-policy.md:18
+# obligation: line 18
 obligation_frequency: "per-turn"
 ---
 

@@ -13,7 +13,7 @@ triggers:
 self_contained: true
 workspaces: [agent-config-maintainer, construction, engineering, finance, founder, gtm, legal-review-prep, ops, product, small-business]
 packs: [meta]
-# obligation: "Ask-or-act on a workflow step — trivial-vs-blocking, autonomy opt-in, commi…" — src/rules/autonomous-execution.md:4
+# obligation: line 4
 obligation_frequency: "per-turn"
 ---
 

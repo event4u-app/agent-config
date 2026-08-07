@@ -13,7 +13,7 @@ triggers:
 self_contained: true
 workspaces: [agent-config-maintainer, construction, engineering, finance, founder, gtm, legal-review-prep, ops, product, small-business]
 packs: [meta]
-# obligation: "EVERY REPLY WITH NUMBERED OPTIONS RUNS THE SELF-CHECK. NO EXCEPTIONS." — src/rules/user-interaction.md:40
+# obligation: line 40
 obligation_frequency: "per-turn"
 ---
 

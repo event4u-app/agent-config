@@ -17,7 +17,7 @@ triggers:
 self_contained: true
 workspaces: [agent-config-maintainer, engineering, gtm]
 packs: [ai-video]
-# obligation: "MAP → SIGN-OFF → RENDER. NO BLIND BATCHES." — src/rules/media-sync-ground-truth.md:31
+# obligation: line 31
 obligation_frequency: "per-event"
 ---
 

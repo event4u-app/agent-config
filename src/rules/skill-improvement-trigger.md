@@ -10,7 +10,7 @@ routes_to:
   - "skill:skill-improvement-pipeline"
 workspaces: [agent-config-maintainer, engineering]
 packs: [meta]
-# obligation: "After a meaningful task, trigger the post-task learning capture" — src/rules/skill-improvement-trigger.md:17
+# obligation: line 17
 obligation_frequency: "per-task"
 ---
 

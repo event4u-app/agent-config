@@ -42,7 +42,7 @@ applies_to_user_types:
   - "all"
 workspaces: [agent-config-maintainer, construction, engineering, finance, founder, gtm, legal-review-prep, ops, product, small-business]
 packs: [meta]
-# obligation: "NO RAW DIRECT IDENTIFIER IN ANY AI-GENERATED DRAFT, LOG LINE, OR EXPORT." — src/rules/domain-safety-pii.md:52
+# obligation: line 52
 obligation_frequency: "per-task"
 ---
 

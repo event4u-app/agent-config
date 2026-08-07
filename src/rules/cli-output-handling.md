@@ -35,7 +35,7 @@ collision_ok:
   "composer": "composer output is verbose — rtk wrap applies"
   "docker": "docker output is verbose — rtk wrap applies"
   "rector": "rector output is verbose — rtk wrap applies"
-# obligation: "Wrap verbose CLI output with `rtk` when installed" — src/rules/cli-output-handling.md:42
+# obligation: line 42
 obligation_frequency: "per-edit"
 ---
 

@@ -15,7 +15,7 @@ packs: [meta]
 enforced_by:
   - "validator:src/scripts/check_condensation.ts"
   - "validator:src/scripts/skill_linter.ts"
-# obligation: "When transforming any agent artifact (merge, refactor, condense, split)" — src/rules/preservation-guard.md:22
+# obligation: line 22
 obligation_frequency: "per-edit"
 ---
 

@@ -13,7 +13,7 @@ workspaces: [agent-config-maintainer, engineering]
 packs: [meta]
 collision_ok:
   "controller": "thin-handler floor on controller work"
-# obligation: "Fires on new files, classes, controllers, modules, or any structural decision" — src/rules/architecture.md:26
+# obligation: line 26
 obligation_frequency: "per-edit"
 ---
 

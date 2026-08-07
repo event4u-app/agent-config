@@ -17,7 +17,7 @@ applies_to_user_types:
 self_contained: true
 workspaces: [engineering]
 packs: [meta]
-# obligation: "QUERY IT FIRST FOR CODEBASE-STRUCTURE QUESTIONS. GREP IS THE FALLBACK" — src/rules/external-code-graph-interop.md:37
+# obligation: line 37
 obligation_frequency: "per-turn"
 ---
 

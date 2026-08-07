@@ -12,7 +12,7 @@ workspaces: [engineering]
 packs: [engineering-base]
 collision_ok:
   "commit": "format floor for every commit message"
-# obligation: "Use Conventional Commits (`feat:`, `fix:`, `chore:` …)" — src/rules/commit-conventions.md:19
+# obligation: line 19
 obligation_frequency: "per-commit"
 ---
 

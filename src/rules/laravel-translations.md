@@ -16,7 +16,7 @@ trust:
 install:
   default: false
   removable: true
-# obligation: "Use `__()`/`trans()` with language keys for every user-visible string" — src/rules/laravel-translations.md:23
+# obligation: line 23
 obligation_frequency: "per-edit"
 ---
 

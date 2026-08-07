@@ -10,7 +10,7 @@ applies_to_user_types:
 self_contained: true
 workspaces: [engineering]
 packs: [brand]
-# obligation: "Body merged into `brand-source-of-truth` § Iron Law 2" — src/rules/brand-consistency.md:20
+# obligation: line 20
 obligation_frequency: "none"
 ---
 
