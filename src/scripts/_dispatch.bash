@@ -177,6 +177,10 @@ Tier 2 — maintenance / internal (hooks, MCP, memory, telemetry):
                              projection (from the pinned token baseline). Flags: --format
   code-graph                 Deterministic code-graph engine (ADR-124, Class A).
                              Usage: code-graph build|validate|detect|query|explain|affected|path [options]
+  sessions:list              List live agent sessions on this repository (shared
+                             session register). Flags: --json
+  sessions:claim             Claim a roadmap for this session so other sessions skip
+                             it; --release clears the claim
   roadmap:progress           Regenerate agents/roadmaps-progress.md from open roadmaps
   roadmap:progress-check     Fail if agents/roadmaps-progress.md is stale (for CI)
   roadmap:archive            Archive completed roadmaps (branch-touched by default;
