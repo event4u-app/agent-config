@@ -329,6 +329,61 @@ function _is_blocked(git_tokens: string[]): [boolean, string] {
     return [false, ''];
 }
 
+/**
+ * Does an unparseable command plausibly INVOKE git?
+ *
+ * The fail-closed branch below used to test `/\bgit\b/` against the raw command
+ * string. That is a mention, not an invocation, and the difference is not
+ * academic: measured in the round-5 audit (2026-08-07), a
+ * `mkdir -p … && cat > notes.md <<HEREDOC … HEREDOC` with no git anywhere in
+ * command position was refused, because the heredoc body named rules such as
+ * `git-history-discipline` and contained apostrophes — so shlex failed and the
+ * substring matched. The message's own remedy (`git commit -F <file>`) could not
+ * apply, because there was no commit.
+ *
+ * Fail-closed is still the right posture for the case it was written for: a
+ * genuinely unparseable command that DOES invoke git. So the test moves from
+ * "the string contains git" to "some command position is git", with heredoc
+ * bodies removed first — the same data-not-command distinction
+ * `block_unauthorized_git` already makes.
+ *
+ * Deliberately regex-shaped rather than tokenised: shlex has already failed by
+ * the time this runs, so no reliable token stream exists. It therefore stays
+ * conservative — a `git` at the head of any line or after any separator counts,
+ * quoted or not.
+ */
+export function _looks_like_git_invocation(cmd: string, depth = 0): boolean {
+    if (depth > 3) {
+        return false;
+    }
+    const withoutHeredocs = cmd.replace(
+        /<<-?\s*(['"]?)([A-Za-z_][A-Za-z0-9_]*)\1[\s\S]*?^\s*\2\s*$/gm,
+        '<<HEREDOC',
+    );
+    for (const rawSeg of withoutHeredocs.split(/\n|;|&&|\|\||\||&|\$\(|`/)) {
+        // Drop leading env assignments: `GIT_DIR=x git status`.
+        const seg = rawSeg
+            .trim()
+            .replace(/^(?:[A-Za-z_][A-Za-z0-9_]*=(?:"[^"]*"|'[^']*'|\S*)\s+)+/, '');
+        // A `sh -c '<payload>'` payload IS command context — recurse, or the
+        // narrowing above would open a bypass this guard did not have before.
+        // Caught by the adversarial case, not by review.
+        const wrapped =
+            /^(?:\S*\/)?(?:ba|z|k)?sh\s+-[a-z]*c\s+(?:"([^"]*)"|'([^']*)'|(\S+))/.exec(seg);
+        if (wrapped !== null) {
+            if (_looks_like_git_invocation(wrapped[1] ?? wrapped[2] ?? wrapped[3] ?? '', depth + 1)) {
+                return true;
+            }
+            continue;
+        }
+        // Command position: optional path prefix, then `git` as its own word.
+        if (/^(?:\S*\/)?git(?:\s|$)/.test(seg)) {
+            return true;
+        }
+    }
+    return false;
+}
+
 /** Return (blocked, reason). Fail-closed on parse error for git commands. */
 function _check_command(cmd: string): [boolean, string] {
     let tokens: string[];
@@ -336,7 +391,7 @@ function _check_command(cmd: string): [boolean, string] {
         tokens = shlexSplit(cmd);
     } catch (e) {
         if (e instanceof ShlexError) {
-            if (/\bgit\b/.test(cmd)) {
+            if (_looks_like_git_invocation(cmd)) {
                 return [
                     true,
                     'command parse failed (shlex) on a git-containing command — fail-closed (git-history-discipline). \n'

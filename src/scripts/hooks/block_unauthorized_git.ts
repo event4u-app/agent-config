@@ -144,6 +144,62 @@ export function extractCommand(envelope: JsonObject): string | null {
 }
 
 /**
+ * Split on shell separators that are OUTSIDE quotes.
+ *
+ * Separators recognised, matching the raw regex this replaces: newline, `;`,
+ * `&&`, `||`, `|`, `&`. A separator inside `'…'` or `"…"` is a literal, so it
+ * does not split. Backslash escapes the next character outside single quotes,
+ * per POSIX.
+ *
+ * Deliberately NOT a full tokeniser. `shlexSplit` in `block_no_verify` throws on
+ * an unbalanced quote, which is the right behaviour for a guard that fail-closes;
+ * this guard must classify every command it sees, including a malformed one. So
+ * an unterminated quote here degrades to "the rest of the string is quoted",
+ * which yields one segment starting at the real command word — the conservative
+ * outcome, since the command word is what `commandOp` matches on.
+ */
+export function splitOutsideQuotes(command: string): string[] {
+  const parts: string[] = [];
+  let cur = "";
+  let quote: '"' | "'" | null = null;
+  for (let i = 0; i < command.length; i += 1) {
+    const ch = command[i] as string;
+    if (quote !== null) {
+      cur += ch;
+      if (ch === quote) {
+        quote = null;
+      } else if (ch === "\\" && quote === '"' && i + 1 < command.length) {
+        cur += command[i + 1] as string;
+        i += 1;
+      }
+      continue;
+    }
+    if (ch === '"' || ch === "'") {
+      quote = ch;
+      cur += ch;
+      continue;
+    }
+    if (ch === "\\" && i + 1 < command.length) {
+      cur += ch + (command[i + 1] as string);
+      i += 1;
+      continue;
+    }
+    if (ch === "\n" || ch === ";" || ch === "|" || ch === "&") {
+      // `&&` and `||` are two-character separators; consume the pair.
+      if ((ch === "|" || ch === "&") && command[i + 1] === ch) {
+        i += 1;
+      }
+      parts.push(cur);
+      cur = "";
+      continue;
+    }
+    cur += ch;
+  }
+  parts.push(cur);
+  return parts;
+}
+
+/**
  * Split a shell command into the segments that are actually INVOKED.
  *
  * A substring match over the whole command string is wrong, and measurably so:
@@ -159,6 +215,16 @@ export function extractCommand(envelope: JsonObject): string | null {
  * Quoted payloads are NOT simply discarded — `sh -c "npm publish"` really does
  * publish. Those are unwrapped and re-split, so closing the false positive does
  * not open a bypass.
+ *
+ * The separator split is QUOTE-AWARE, and that is not a refinement — it is the
+ * same false-positive class the paragraph above describes, surviving in the one
+ * place the round-2 fix did not reach. Measured in the round-5 audit
+ * (2026-08-07): a read-only `grep -n -E "…|npm publish|…"` was refused with
+ * "Blocked: `publish` with no authorization in this turn's prompt", because a
+ * raw `split` on `|` cut the quoted alternation into a segment beginning with
+ * `npm`. A `|` inside quotes is data, exactly like a heredoc body; only an
+ * unquoted one is a pipe. Splitting outside quotes closes that without
+ * discarding quoted payloads, so `sh -c "npm publish"` still unwraps below.
  */
 export function invokedSegments(command: string, depth = 0): string[] {
   if (depth > 3) {
@@ -172,7 +238,7 @@ export function invokedSegments(command: string, depth = 0): string[] {
     /<<-?\s*(['"]?)([A-Za-z_][A-Za-z0-9_]*)\1[\s\S]*?^\s*\2\s*$/gm,
     "<<HEREDOC",
   );
-  for (const raw of withoutHeredocs.split(/\n|;|&&|\|\||\||&/)) {
+  for (const raw of splitOutsideQuotes(withoutHeredocs)) {
     let seg = raw.trim();
     if (!seg) {
       continue;
