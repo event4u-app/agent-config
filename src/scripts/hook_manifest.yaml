@@ -319,20 +319,52 @@ concerns:
     args: []
     fail_closed: false
     severity: advisory
+  # Shared per-session register (road-to-parallel-session-coordination) — writes
+  # this session into <git-common-dir>/agent-sessions/<session_id>.json so every
+  # other worktree of the repo can see it, and on session_start injects the live
+  # foreign sessions as a `context` block (hot-context mechanism).
+  #
+  # Bound in FOUR slots, with deliberately asymmetric meanings:
+  #   session_start        → register + prune expired + inject foreign sessions
+  #   user_prompt_submit   → heartbeat (pre-reply carrier)
+  #   stop                 → heartbeat (post-reply carrier), NOT deregistration
+  #   session_end          → deregister
+  #
+  # `stop` is per-turn, not session end: on Claude Code the native Stop fires
+  # after every assistant reply (see _lib/obligation_frequency.ts), so
+  # deregistering there would kill a live session's own record after its first
+  # reply. The ONE exception is Cline, whose stop is TaskCancel and whose
+  # session_end is TaskComplete — a cancelled Cline task reaches neither, so it
+  # would leak its claim until TTL. That exception is an explicit platform
+  # allow-list in _lib/session_register.ts, never a condition computed from the
+  # frequency lattice: a future platform must be added by a human, deliberately.
+  #
+  # Correctness rests on heartbeat + TTL alone; deregistration only frees a claim
+  # sooner. So Windsurf's missing session_end costs latency, not correctness.
+  # Declared non-carriers: copilot (no hook surface), cursor CLI (per-turn slots
+  # are IDE-only), cowork (slots wired, lifecycle events inert) — a session there
+  # registers but expires by TTL rather than heartbeating, and the concern says so
+  # on stderr rather than letting the coverage join read green.
+  # Never blocks. fail_closed: false.
+  session-register:
+    script: src/scripts/session_register_hook.ts
+    args: []
+    fail_closed: false
+    severity: advisory
 
 platforms:
   augment:
-    session_start:    [chat-history, hot-context, handoff-context, session-canary, first-run-gate, onboarding-gate, verify-before-complete, minimal-safe-diff, profile-staleness, wrapper-freshness, surface-probe]
-    session_end:      [chat-history, memory-learn]
-    stop:             [chat-history, hot-context, verify-before-complete]
+    session_start:    [chat-history, hot-context, handoff-context, session-canary, first-run-gate, onboarding-gate, verify-before-complete, minimal-safe-diff, profile-staleness, wrapper-freshness, surface-probe, session-register]
+    session_end:      [chat-history, memory-learn, session-register]
+    stop:             [chat-history, hot-context, verify-before-complete, session-register]
     pre_tool_use:     [block-no-verify, block-unauthorized-git, evidence-independence, block-kernel-rule-writes, block-config-weakening, rtk-wrap, design-slop, code-graph-nudge]
     post_tool_use:    [chat-history, roadmap-progress, context-hygiene, verify-before-complete, minimal-safe-diff, injection-scan, pr-url-reminder]
 
   claude:
-    session_start:    [chat-history, hot-context, handoff-context, session-canary, first-run-gate, onboarding-gate, verify-before-complete, minimal-safe-diff, profile-staleness, wrapper-freshness, surface-probe]
-    session_end:      [chat-history, memory-learn]
-    stop:             [chat-history, hot-context, verify-before-complete, team-review-gate]
-    user_prompt_submit: [chat-history, verify-before-complete, minimal-safe-diff, language-mirror, git-authorization, session-canary]
+    session_start:    [chat-history, hot-context, handoff-context, session-canary, first-run-gate, onboarding-gate, verify-before-complete, minimal-safe-diff, profile-staleness, wrapper-freshness, surface-probe, session-register]
+    session_end:      [chat-history, memory-learn, session-register]
+    stop:             [chat-history, hot-context, verify-before-complete, team-review-gate, session-register]
+    user_prompt_submit: [chat-history, verify-before-complete, minimal-safe-diff, language-mirror, git-authorization, session-canary, session-register]
     pre_tool_use:     [block-no-verify, block-unauthorized-git, evidence-independence, block-kernel-rule-writes, block-config-weakening, rtk-wrap, design-slop, code-graph-nudge]
     post_tool_use:    [chat-history, roadmap-progress, context-hygiene, verify-before-complete, minimal-safe-diff, injection-scan, pr-url-reminder]
 
@@ -351,10 +383,10 @@ platforms:
   # Decision matrix + upstream blockers tracked in
   # agents/settings/contexts/chat-history-platform-hooks.md § Cowork.
   cowork:
-    session_start:    [chat-history, hot-context, handoff-context, session-canary, first-run-gate, onboarding-gate, verify-before-complete, minimal-safe-diff, profile-staleness, wrapper-freshness, surface-probe]
-    session_end:      [chat-history, memory-learn]
-    stop:             [chat-history, hot-context, verify-before-complete]
-    user_prompt_submit: [chat-history, verify-before-complete, minimal-safe-diff, language-mirror, git-authorization, session-canary]
+    session_start:    [chat-history, hot-context, handoff-context, session-canary, first-run-gate, onboarding-gate, verify-before-complete, minimal-safe-diff, profile-staleness, wrapper-freshness, surface-probe, session-register]
+    session_end:      [chat-history, memory-learn, session-register]
+    stop:             [chat-history, hot-context, verify-before-complete, session-register]
+    user_prompt_submit: [chat-history, verify-before-complete, minimal-safe-diff, language-mirror, git-authorization, session-canary, session-register]
     pre_tool_use:     [block-no-verify, block-unauthorized-git, evidence-independence, block-kernel-rule-writes, block-config-weakening, rtk-wrap, design-slop, code-graph-nudge]
     post_tool_use:    [chat-history, roadmap-progress, context-hygiene, verify-before-complete, minimal-safe-diff, injection-scan, pr-url-reminder]
 
@@ -366,10 +398,10 @@ platforms:
   # IDE-only — CLI-only users fall back to /checkpoint per
   # agents/settings/contexts/chat-history-platform-hooks.md.
   cursor:
-    session_start:      [chat-history, hot-context, handoff-context, session-canary, first-run-gate, onboarding-gate, verify-before-complete, minimal-safe-diff, profile-staleness, wrapper-freshness, surface-probe]
-    session_end:        [chat-history, memory-learn]
-    stop:               [chat-history, hot-context, verify-before-complete]
-    user_prompt_submit: [chat-history, verify-before-complete, minimal-safe-diff, language-mirror, git-authorization, session-canary]
+    session_start:      [chat-history, hot-context, handoff-context, session-canary, first-run-gate, onboarding-gate, verify-before-complete, minimal-safe-diff, profile-staleness, wrapper-freshness, surface-probe, session-register]
+    session_end:        [chat-history, memory-learn, session-register]
+    stop:               [chat-history, hot-context, verify-before-complete, session-register]
+    user_prompt_submit: [chat-history, verify-before-complete, minimal-safe-diff, language-mirror, git-authorization, session-canary, session-register]
     post_tool_use:      [chat-history, roadmap-progress, context-hygiene, verify-before-complete, minimal-safe-diff, injection-scan, pr-url-reminder]
 
   # Phase 7.6 — Cline. Hooks live under `.clinerules/hooks/<HookName>`
@@ -381,10 +413,10 @@ platforms:
   # both map to session_start. TaskCancel maps to stop because the
   # session is interrupted with partial state (mirrors Augment Stop).
   cline:
-    session_start:      [chat-history, hot-context, handoff-context, session-canary, first-run-gate, onboarding-gate, verify-before-complete, minimal-safe-diff, profile-staleness, wrapper-freshness, surface-probe]
-    session_end:        [chat-history, memory-learn]
-    stop:               [chat-history, hot-context, verify-before-complete]
-    user_prompt_submit: [chat-history, verify-before-complete, minimal-safe-diff, language-mirror, git-authorization, session-canary]
+    session_start:      [chat-history, hot-context, handoff-context, session-canary, first-run-gate, onboarding-gate, verify-before-complete, minimal-safe-diff, profile-staleness, wrapper-freshness, surface-probe, session-register]
+    session_end:        [chat-history, memory-learn, session-register]
+    stop:               [chat-history, hot-context, verify-before-complete, session-register]
+    user_prompt_submit: [chat-history, verify-before-complete, minimal-safe-diff, language-mirror, git-authorization, session-canary, session-register]
     post_tool_use:      [chat-history, roadmap-progress, context-hygiene, verify-before-complete, minimal-safe-diff, injection-scan, pr-url-reminder]
 
   # Phase 7.7 — Windsurf (Cascade). Hooks live at `.windsurf/hooks.json`
@@ -400,11 +432,11 @@ platforms:
   # surface to record verification commands; documented limitation).
   # minimal-safe-diff is omitted entirely on Windsurf for the same reason.
   windsurf:
-    session_start:      [chat-history, hot-context, handoff-context, session-canary, first-run-gate, onboarding-gate, verify-before-complete, profile-staleness, wrapper-freshness, surface-probe]
-    stop:               [chat-history, hot-context, verify-before-complete]
+    session_start:      [chat-history, hot-context, handoff-context, session-canary, first-run-gate, onboarding-gate, verify-before-complete, profile-staleness, wrapper-freshness, surface-probe, session-register]
+    stop:               [chat-history, hot-context, verify-before-complete, session-register]
     # language-mirror IS bound here: unlike minimal-safe-diff it needs only the
     # user_prompt_submit slot, which Windsurf has.
-    user_prompt_submit: [chat-history, verify-before-complete, language-mirror, git-authorization, session-canary]
+    user_prompt_submit: [chat-history, verify-before-complete, language-mirror, git-authorization, session-canary, session-register]
 
   # Phase 7.8 — Gemini CLI. Hooks live at `.gemini/settings.json`
   # (project) or `~/.gemini/settings.json` (user). Per Gemini docs
@@ -417,10 +449,10 @@ platforms:
   # turn-check semantics. AfterAgent fires when the agent loop ends
   # — this is our `stop` slot.
   gemini:
-    session_start:      [chat-history, hot-context, handoff-context, session-canary, first-run-gate, onboarding-gate, verify-before-complete, minimal-safe-diff, profile-staleness, wrapper-freshness, surface-probe]
-    session_end:        [chat-history, memory-learn]
-    stop:               [chat-history, hot-context, verify-before-complete]
-    user_prompt_submit: [chat-history, verify-before-complete, minimal-safe-diff, language-mirror, git-authorization, session-canary]
+    session_start:      [chat-history, hot-context, handoff-context, session-canary, first-run-gate, onboarding-gate, verify-before-complete, minimal-safe-diff, profile-staleness, wrapper-freshness, surface-probe, session-register]
+    session_end:        [chat-history, memory-learn, session-register]
+    stop:               [chat-history, hot-context, verify-before-complete, session-register]
+    user_prompt_submit: [chat-history, verify-before-complete, minimal-safe-diff, language-mirror, git-authorization, session-canary, session-register]
     post_tool_use:      [chat-history, roadmap-progress, context-hygiene, verify-before-complete, minimal-safe-diff, injection-scan, pr-url-reminder]
 
   # Phase 7.9 — Copilot has no hook surface. Concerns route through
