@@ -45,12 +45,23 @@ export type DispatchFamily =
     | 'verdict-judge'
     | 'unclassified';
 
+/**
+ * One backfilled dispatch.
+ *
+ * PII/leak-exclusion by construction: the host's free-text `description` and
+ * `prompt` are read to CLASSIFY and are then dropped — no field here can carry
+ * free-form content. This is not fastidiousness: the first real run emitted a
+ * historical task description carrying a denylisted external-source name and
+ * tripped `check_no_external_sources`. A type that cannot hold arbitrary text
+ * has no scrubber to fail, which is the same principle
+ * `artifact-engagement-recording` states for telemetry events. Never widen
+ * this with a `description` / `notes` / `payload` field.
+ */
 export interface BackfilledDispatch {
     session_id: string;
     tool_use_id: string;
     timestamp: string | null;
     subagent_type: string | null;
-    description: string | null;
     family: DispatchFamily;
     family_signal: string;
     resolved_model: string | null;
@@ -133,7 +144,7 @@ export function extract(dir: string): Extraction {
     for (const file of files) {
         const sessionId = file.replace(/\.jsonl$/, '');
         // tool_use_id → the dispatch we are still waiting on a result for.
-        const pending = new Map<string, Partial<BackfilledDispatch> & { prompt: string | null }>();
+        const pending = new Map<string, Partial<BackfilledDispatch> & { prompt: string | null; description: string | null }>();
         const emitted = new Map<string, BackfilledDispatch>();
 
         for (const line of readFileSync(join(dir, file), 'utf8').split('\n')) {
@@ -195,7 +206,6 @@ export function extract(dir: string): Extraction {
                 tool_use_id: resultId,
                 timestamp: head.timestamp ?? null,
                 subagent_type: head.subagent_type ?? null,
-                description: head.description ?? null,
                 family,
                 family_signal: signal,
                 resolved_model: typeof result.resolvedModel === 'string' ? result.resolvedModel : null,
@@ -221,7 +231,6 @@ export function extract(dir: string): Extraction {
                 tool_use_id: id,
                 timestamp: head.timestamp ?? null,
                 subagent_type: head.subagent_type ?? null,
-                description: head.description ?? null,
                 family,
                 family_signal: signal,
                 resolved_model: null,

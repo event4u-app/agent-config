@@ -8,7 +8,7 @@ import {
     transcriptDirFor,
     extract,
     summarize,
-} from '../../src/scripts/orchestration_backfill.ts';
+} from '../../src/scripts/orchestration_backfill.js';
 
 /**
  * Assertions derive expected values from the inputs rather than pinning the
@@ -111,6 +111,24 @@ describe('extract', () => {
         expect(orphan.cost_provenance).toBe('absent');
     });
 
+    it('emits no free-text field, so an emitted line cannot carry a leaked name', () => {
+        // Regression: the first real run emitted a historical task description
+        // carrying a denylisted external-source name and tripped
+        // check_no_external_sources. The fix is structural — the emitted type
+        // has no field able to hold arbitrary host text — so this asserts the
+        // ABSENCE of such fields rather than that one string got scrubbed.
+        const { dispatches } = extract(seedCorpus());
+        const freeText = ['description', 'prompt', 'notes', 'payload', 'extra', 'body'];
+        for (const d of dispatches) {
+            for (const field of freeText) {
+                expect(Object.keys(d)).not.toContain(field);
+            }
+            // Nothing from the seeded prompt/description ('d' / 'p') survives:
+            // the only string-valued fields are ids, enums and derived labels.
+            expect(JSON.stringify(d)).not.toContain('"d"');
+        }
+    });
+
     it('returns an empty extraction for a missing corpus instead of throwing', () => {
         const out = extract(join(tmpdir(), 'obf-does-not-exist'));
         expect(out.dispatches).toEqual([]);
@@ -124,7 +142,6 @@ describe('summarize', () => {
         tool_use_id: `t${tokens}`,
         timestamp: null,
         subagent_type: null,
-        description: null,
         family,
         family_signal: 'x',
         resolved_model: 'm',
