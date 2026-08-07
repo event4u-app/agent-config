@@ -303,6 +303,93 @@ Entry-shape contract: [`docs/contracts/CHANGELOG-conventions.md`](docs/contracts
 > that forces a new era split (`# Era: 9.24.x`, etc.) — see
 > [`docs/contracts/CHANGELOG-conventions.md § Era splits`](docs/contracts/CHANGELOG-conventions.md).
 
+## [9.26.0](https://github.com/event4u-app/agent-config/compare/9.25.0...9.26.0) (2026-08-07)
+
+### Release highlights
+
+<!-- Curated head: fill before merge, keep it under 10 lines, and leave `_none_` where it is genuinely the answer. The generated log below is unchanged. -->
+- **Behaviour changes:** _auto-derived, rewrite before merge:_ rule/schema diffs, breaking commits or removed public surface in 17c3716, 27e6649, f352c7a, 8fdcc7b, 581dfa0, a396442 +1 more.
+- **Default changes + migration:** _auto-derived, rewrite before merge:_ commits naming a default, migration or migrate in 3bae006.
+- **Security and correctness:** _none_
+- **Honest nulls:** _auto-derived, rewrite before merge:_ commits carrying an honest-null marker in cefcd37.
+- **Known limitations:** _none_
+
+### Features
+
+* **memory:** gate the session-end learning hook on the recorded consent ([79a6aa8](https://github.com/event4u-app/agent-config/commit/79a6aa892f2d772254ef91c0b19cb93007da2d70))
+* **settings:** resolve the nickname prefill through the documented chain ([e98a7cb](https://github.com/event4u-app/agent-config/commit/e98a7cba5cc76ccd62ab7b84be4b2a2b749d96e5))
+* **bench:** price the cost axis per token bucket in the v2 report ([b234b3e](https://github.com/event4u-app/agent-config/commit/b234b3e7076d401f9201610545528097e84490f2))
+* **bench:** preserve per-trial workspaces and add a real no-network selftest ([12df43b](https://github.com/event4u-app/agent-config/commit/12df43bc6e1ac2be87e62128accc00d1296db991))
+* **bench:** add the package-ladder and bare-principle arms ([c3f1c31](https://github.com/event4u-app/agent-config/commit/c3f1c316c270aa166ed3164165a02c083345319c))
+* **gates:** assert every authored skill REACHES the Claude tree, not just that it parses ([c42b1ad](https://github.com/event4u-app/agent-config/commit/c42b1adb2afb237d45182a59af705ef64eb4fe66))
+* **settings:** make the provenance stamp decide something, and condense the rule ([27e6649](https://github.com/event4u-app/agent-config/commit/27e664999a8894e1b146a556fa114daee3511676))
+* **settings:** normalise the just-in-time settings ask and compute its budget ([f352c7a](https://github.com/event4u-app/agent-config/commit/f352c7aea72beab330f1abd625041f7bcb46df3a))
+* **language-mirror:** fall back to the system locale on a terse first prompt ([784ee64](https://github.com/event4u-app/agent-config/commit/784ee64307086a28e9657b0a0ae5ae2fac94309a))
+* **gates:** fail the pre-push chain when the running hook bundle predates its sources ([a829a7c](https://github.com/event4u-app/agent-config/commit/a829a7cb50fac0fe02fc4af80c7083a890312913))
+* **review:** one findings schema both tracks validate against ([581dfa0](https://github.com/event4u-app/agent-config/commit/581dfa079ee333edcba920b464a19c11542db4c8))
+* **review:** make prompt provenance and author-vs-reviewer checkable ([cefcd37](https://github.com/event4u-app/agent-config/commit/cefcd37ae8a4b0ee5e42ee0514e9b09399f98870))
+* **gate:** enforce the corpus refresh cadence and open the CSVs nobody opened ([c946769](https://github.com/event4u-app/agent-config/commit/c9467697823b5a0b82d8f3e4b4d34c8bd8fe813f))
+* **rules:** close the write side of the UI loop ([a396442](https://github.com/event4u-app/agent-config/commit/a396442da455b6e02afddacc87c462f80b198499))
+* **hooks:** per-concern tools: filter, applied by the dispatcher ([28a8f96](https://github.com/event4u-app/agent-config/commit/28a8f96ee413083e3f451f1bf49b5588483ae9aa))
+* **gate:** ratchet gate_self_test adoption as a shrink-only non-adopter count ([99e3656](https://github.com/event4u-app/agent-config/commit/99e36560c208904510bc0525122ad2549d697bea))
+* **agents:** create agents/proposals — the directory seven artefacts pointed at ([64717a9](https://github.com/event4u-app/agent-config/commit/64717a96680cc70d3de7c4dd9a853d92952fbb53))
+* **design:** route a capability URL and a design-system dir to design-fidelity ([85b1562](https://github.com/event4u-app/agent-config/commit/85b1562c193f9eaf6ed63f8692f79e0b9d2eda3f))
+* **commands:** add /roadmap:next — screen, select, then ship a roadmap ([459211c](https://github.com/event4u-app/agent-config/commit/459211cadcc7682f26c8b081ac6c87c2a4712e46))
+
+### Bug Fixes
+
+* **release:** stop masking every push failure as a moved remote ref ([47faa19](https://github.com/event4u-app/agent-config/commit/47faa19e080bbe27c3cd8dfeb0bee67a10acfbf8))
+* **settings:** retract an overclaim and take the fork off the request path ([2139b17](https://github.com/event4u-app/agent-config/commit/2139b174c8e4afad3f7294bfc196ad0e79801cec))
+* **settings:** close the R2 review findings on the prefill and the pins ([fe35e63](https://github.com/event4u-app/agent-config/commit/fe35e63702661f34e55345c5c4fa7e2cd6b34fa4))
+* **tests:** narrow the ARMS lookup for noUncheckedIndexedAccess ([3b3e1b1](https://github.com/event4u-app/agent-config/commit/3b3e1b14ee8bb588004410d901835d35649b2544))
+* **roadmaps:** make solution-minimalism report its own spend gate ([3d9ceef](https://github.com/event4u-app/agent-config/commit/3d9ceef6153ed6df35292bf74d9a48b1e83dd982))
+* **cli:** both routing commands were dead through the shipped binary ([c2b38e2](https://github.com/event4u-app/agent-config/commit/c2b38e2263e9b27401ea38bb2782b0d7532c4527))
+* **gates:** emit the freshness verdict via stdout, not console.log ([fa06eea](https://github.com/event4u-app/agent-config/commit/fa06eea18620e671f3c09ac877cb094c6022c0aa))
+* **hooks:** design-slop read the tool fields where the dispatcher does not put them ([3ca190f](https://github.com/event4u-app/agent-config/commit/3ca190f0b2364c785f791dc106086209d86f1983))
+* **ci:** close the five surfaces this change reds, one of them a real gate gap ([c7c25ff](https://github.com/event4u-app/agent-config/commit/c7c25ffc1eac8f8b73776c5655f35af42f9eb9f7))
+* **conformance:** round 2 — the shipped gates did not fire, and four reasons were wrong ([8fdcc7b](https://github.com/event4u-app/agent-config/commit/8fdcc7b9d2de7c3239af7e809e86933e41cf44e2))
+* **gate:** close the word-form count hole in lint_abstraction_thresholds ([d5c294c](https://github.com/event4u-app/agent-config/commit/d5c294c4cf547696bf452a385ea0935b191283cd))
+* **video:** refuse --crossfade instead of silently delivering a hard cut ([6eea400](https://github.com/event4u-app/agent-config/commit/6eea4000146d1de2c8de703e046aa8072e9e4d96))
+* **ci:** close the two count-and-fixture surfaces a new sub-command reds ([f8d9566](https://github.com/event4u-app/agent-config/commit/f8d9566ca568c45c18cb2ec62d72492eaecf7570))
+
+### Reverts
+
+* **gates:** drop the skill-completeness check — its premise is false and it blocks the release ([5473a92](https://github.com/event4u-app/agent-config/commit/5473a925e13989fc6ba382145ab20c485dae2995))
+
+### Documentation
+
+* **roadmap:** reopen step 4.2 — the prefill shipped, the ask did not ([5fb6c05](https://github.com/event4u-app/agent-config/commit/5fb6c053a587440749af0b6d29b37c00fc1c03d1))
+* **roadmap:** close Phases 4 and 5 from evidence, re-encode the blocked steps ([2c70288](https://github.com/event4u-app/agent-config/commit/2c70288e372254be0cd0a23acfdd76f3b1318cb1))
+* **bench:** add the ab-v2 reproduce path and the Phase-3 pre-registration ([bb0ad48](https://github.com/event4u-app/agent-config/commit/bb0ad480deddf4ee3739d80d795a6c8546de9ffc))
+* cancel P1.2 on measurement, close the P2.1 null-scope check ([81fce51](https://github.com/event4u-app/agent-config/commit/81fce5189b88b9d64051cbf9d58e4322a783ca57))
+* **roadmap:** close P1.3 and P5.3 with their measured departures ([1c101db](https://github.com/event4u-app/agent-config/commit/1c101db9a045cc0b298927ef3d8d2622e8ec6625))
+* **roadmap:** close the four verified-fix steps of the inbox harvest ([b0cd2f4](https://github.com/event4u-app/agent-config/commit/b0cd2f4773b0f9a97135ecc5ff2432e0ae2513ab))
+
+### Refactoring
+
+* **settings:** point the four bespoke ask sites at the shared protocol ([17c3716](https://github.com/event4u-app/agent-config/commit/17c371647eddc5945dbbcc03e1cb2e698c63cf55))
+
+### Tests
+
+* **settings:** pin the ask-shaped settings migration ([3bae006](https://github.com/event4u-app/agent-config/commit/3bae00676daa7ae0e8c195fd2b6e00a2a25c60bb))
+
+### Chores
+
+* **ci:** retrigger pull_request event delivery ([a20088f](https://github.com/event4u-app/agent-config/commit/a20088f328d533827fac1de60273a3f206aceef1))
+* **roadmaps:** record the cost endpoint against the Endpoints step ([a3585ad](https://github.com/event4u-app/agent-config/commit/a3585ad7152b64fbe250ea294d242ab5a86a693b))
+* **roadmaps:** close the thresholds step, record the reproducibility residue ([39a93d3](https://github.com/event4u-app/agent-config/commit/39a93d33a3e69b132f643fe97380e2a7804d1acb))
+* **reports:** refresh the originality report round 2 left stale ([a65f929](https://github.com/event4u-app/agent-config/commit/a65f92939bae5b170a3cf58464579ccf774c5a9e))
+* regenerate router.json after the trunk merge ([0af3e84](https://github.com/event4u-app/agent-config/commit/0af3e8425106ccc395be79f66faacc3f8b45a5b1))
+* regenerate router.json and the routed-rule count for the new rule ([f262b83](https://github.com/event4u-app/agent-config/commit/f262b83fdba6b71905b03333fd93f657ae0905a3))
+* regenerate the tool trees and indices for the new rule ([2788940](https://github.com/event4u-app/agent-config/commit/2788940cc55326e125c2000ad3cf0e90fe2b5c51))
+* **router:** regenerate router.json for the two new design-fidelity triggers ([20aee52](https://github.com/event4u-app/agent-config/commit/20aee52cb1d440d77ec4b9e712164addfd0a83de))
+
+### Other
+
+* **settings:** record the R2 findings, and announce the Iron Law 3 recurrence ([63e2f09](https://github.com/event4u-app/agent-config/commit/63e2f094c57c77ec18ecf4cf449e7682597be29f))
+
+Tests: 11643 (+200 since 9.25.0)
+
 ## [9.25.0](https://github.com/event4u-app/agent-config/compare/9.24.0...9.25.0) (2026-08-06)
 
 ### Release highlights
