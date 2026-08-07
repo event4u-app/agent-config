@@ -42,16 +42,46 @@ git fetch origin --prune
 git ls-tree --name-only origin/main agents/roadmaps/          # still active?
 git ls-tree --name-only origin/main agents/roadmaps/archive/   # already closed?
 gh pr list --state open --json number,title,headRefName        # in flight?
+agent-config sessions:list --json                              # claimed right now?
 ```
 
 Excluded from the candidate set: `template.md`, `archive/`,
 `skipped/`, `later/`, anything with `status: draft` whose promotion
-trigger has not fired, and any roadmap whose slug matches an **open
-PR's** branch — that one is taken.
+trigger has not fired, and:
+
+| Exclusion | Source | What it means | Recovery |
+|---|---|---|---|
+| **taken by an open PR** | `gh pr list` — a roadmap slug matching an open PR's branch | The work is done or nearly done and is waiting on review | Review or merge that PR; the roadmap archives inside it |
+| **claimed by a live session** | `sessions:list` — a live record whose `roadmap_slug` matches | Another session is working on it *right now*, before any PR exists | Nothing to do — it releases on that session's end, or by TTL |
+
+Keep the two distinguishable in the reported screen. They are different
+states with different recovery, and collapsing them into "unavailable"
+loses the only information that tells the user whether to wait for a
+review or simply pick something else.
 
 A roadmap completes by an archive move **inside its merging PR**, so a
 local checkout can show a closed roadmap as open. That is why this step
 precedes the screen instead of following it.
+
+The session read closes a window the PR check cannot. Measured over the 14
+most recent merged feature PRs, the gap between a branch's first commit and
+its PR is a median of **18.5 minutes** and a maximum of **67** — and that is a
+*lower bound*, since the clock starts at roadmap selection, strictly earlier
+than the first commit. For that whole interval the PR check reports the
+roadmap as free. Measurement:
+`agents/evidence/analysis/parallel-session-register-phase1.md`.
+
+```
+THE REGISTER *WRITE* IS HOOK-CARRIED AND DETERMINISTIC.
+THIS *READ* IS NOT. THE TWO MUST NOT LOOK ALIKE.
+```
+
+This screen runs because the model read this instruction — there is no gate
+that fires it, and none that notices when it is skipped. It is a
+model-carried obligation in exactly the shape the `enforced_by: none` rules
+declare, and it is stated here rather than left as prose that reads like a
+guarantee. What IS deterministic: the heartbeat that writes the register, the
+TTL expiry, and `sessions:list` itself once invoked.
 
 ### 2. Screen the survivors — five disqualifiers
 
@@ -107,6 +137,31 @@ GOODHART MOVE THIS PACKAGE'S OWN DISCIPLINE FORBIDS.
   disqualifier) and stop. Suggest
   [`/roadmap:create`](create.md) or a blocker the user can clear. Do
   not manufacture a pick.
+
+### 3b. Claim the pick, so the next session's screen sees it
+
+```bash
+agent-config sessions:claim <roadmap-slug>
+```
+
+Immediately after the pick, before any branch or commit. This writes the slug
+into `agents/runtime/state/roadmap-claim.json`; the next heartbeat lifts it into
+this session's register record, so another session's step 1 excludes it **within
+one turn** and long before a PR exists.
+
+Routing the claim through a state file rather than having this command write the
+register directly is deliberate: the roadmap is picked mid-session by the model,
+a hook is a script and cannot know what was picked, and this way the model never
+needs to know the register's path or format. The cost is that the claim lands at
+most one turn late.
+
+Same honesty boundary as the screen above: **this write is model-carried.** The
+verb is deterministic once invoked, and nothing forces the invocation. A skipped
+claim degrades to today's behaviour — the PR check still catches the roadmap once
+a PR exists — so the failure mode is a re-opened window, not a wrong result.
+
+`agent-config sessions:claim --release` drops the claim if the run is abandoned
+before the session ends; otherwise `session_end` clears the whole record.
 
 ### 4. Workspace — branch by default, worktree on request
 
@@ -176,7 +231,13 @@ AT THE MOMENT OF THE CLAIM IS AN UNVERIFIED CLAIM.
 - **One roadmap per invocation.** Never chain a second pick after the
   first closes — the user re-invokes.
 - **The screen is reported, not just used.** State which candidates were
-  disqualified and on what, so the pick is auditable.
+  disqualified and on what, so the pick is auditable — and keep
+  "taken by open PR" and "claimed by a live session" distinguishable.
+- **A live foreign claim is not a merge conflict to resolve.** It excludes the
+  roadmap from *this* pick and nothing more. Never override it, and never treat
+  the register as a lock: it is advisory, two sessions can claim in the same
+  millisecond, and an idle session disappears from it although its user returns
+  ([`parallel-sessions`](../../../../docs/guides/parallel-sessions.md)).
 - **A judgement-call blocker goes to the council, not to the user.**
   A human-ACTION blocker goes to neither — it disqualifies.
 - **No merge, ever.** The PR is opened for review; merging is
@@ -192,3 +253,4 @@ AT THE MOMENT OF THE CLAIM IS AN UNVERIFIED CLAIM.
 - [`/worktree:create`](../../worktree/create.md) — the `--worktree` path
 - [`/create-pr`](../../git/pr/create.md) — delivery + the CI wait contract
 - [`roadmap-process-loop`](../../contexts/execution/roadmap-process-loop.md) — canonical mechanics
+- [`parallel-sessions`](../../../../docs/guides/parallel-sessions.md) — what the session register does, its TTLs, and the two limits it does not hide
