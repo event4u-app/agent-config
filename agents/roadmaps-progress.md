@@ -2,14 +2,14 @@
 
 > Auto-generated — do not edit. Regenerate with `task roadmap-progress` or by running the `update_roadmap_progress` script for your install; rewritten on every roadmap create / execute / completion change (timestamp lives in git history).
 >
-> 17 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **18** open blockers
+> 17 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **17** open blockers
 
 ## Overall
 
-**133 / 218 steps done · 61%**
+**136 / 218 steps done · 62%**
 
 ```text
-████████████████████████░░░░░░░░░░░░░░░░   61%
+█████████████████████████░░░░░░░░░░░░░░░   62%
 ```
 
 ## Open roadmaps
@@ -32,7 +32,7 @@
 | 14 | [road-to-tier-removal.md](roadmaps/road-to-tier-removal.md) | 4 | 8 | 2 | 6 | 0 | 0 | [1](#blockers-road-to-tier-removal) | ████████░░ 75% |
 | 15 | [road-to-ui-track-integrity-followup.md](roadmaps/road-to-ui-track-integrity-followup.md) | 1 | 10 | 10 | 0 | 0 | 0 | [2](#blockers-road-to-ui-track-integrity-followup) | ░░░░░░░░░░ 0% |
 | 16 | [road-to-worktree-hygiene.md](roadmaps/road-to-worktree-hygiene.md) | 1 | 9 | 2 | 7 | 0 | 0 | [1](#blockers-road-to-worktree-hygiene) | ████████░░ 78% |
-| 17 | [road-to-zero-ceremony-settings.md](roadmaps/road-to-zero-ceremony-settings.md) | 5 | 19 | 4 | 14 | 1 | 0 | [1](#blockers-road-to-zero-ceremony-settings) | ████████░░ 78% |
+| 17 | [road-to-zero-ceremony-settings.md](roadmaps/road-to-zero-ceremony-settings.md) | 5 | 19 | 1 | 17 | 1 | 0 | 0 | █████████░ 94% |
 
 ---
 
@@ -429,55 +429,15 @@ _1 blocker resolved._
 
 ### [road-to-zero-ceremony-settings.md](roadmaps/road-to-zero-ceremony-settings.md)
 
-**Road to zero-ceremony settings — the user's file records decisions, the template stays the defaults source** — 14 / 18 done (78%)
+**Road to zero-ceremony settings — the user's file records decisions, the template stays the defaults source** — 17 / 18 done (94%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
 | 1 | The taxonomy contract | ✅ done | 0 | 4 | 0 | 0 | 100% |
 | 2 | The writer | ✅ done | 0 | 3 | 1 | 0 | 100% |
-| 3 | The user file becomes sparse | 🟡 in progress | 3 | 1 | 0 | 0 | 25% |
+| 3 | The user file becomes sparse | ✅ done | 0 | 4 | 0 | 0 | 100% |
 | 4 | First run: one question, one notice | 🟡 in progress | 1 | 2 | 0 | 0 | 67% |
 | 5 | The JIT protocol | ✅ done | 0 | 4 | 0 | 0 | 100% |
-
-<a id="blockers-road-to-zero-ceremony-settings"></a>
-**Blockers**
-
-- **absent-is-not-default-for-projection-mode** (owner: maintainer) — blocks Phase 3 steps 1, 3, and 4 — step 2 (keep the template as the package-internal defaults source) is independent and already closed — and Phase 4 by inheritance
-  - **What to do:**
-    consumer contradicts that **deliberately**, so the sparse file cannot ship
-    until the exceptions are enumerated and carved out.
-    `src/scripts/install.ts:3404 _resolve_scoped_projection` reads
-    `_resolve_global_settings_doc() ?? _load_default_settings(package_root)` and
-    then `projection['mode'] === 'scoped' ? 'scoped' : 'legacy-all'`. The template
-    fallback applies only when **no global settings file exists at all**. Once a
-    file exists — which is the case the moment the wizard has run — an absent
-    `projection.mode` resolves to `legacy-all`, **not** to the template's
-    `scoped`. `_resolve_global_rule_scope` (`:3429`) documents the same rule in
-    prose: *"an existing global settings doc is authoritative, and only a
-    genuinely fresh machine falls through to the packaged template."*
-    So dropping `projection.mode` from the materialised file would silently flip
-    every consumer from scoped to unscoped rule projection — every rule installed,
-    for everyone, with no signal. That is the roadmap's own Risk 1 materialised,
-    found by looking rather than by shipping.
-    The work this blocker gates, in order:
-    1. Audit every key for absent-vs-default semantics. `projection.mode` is one
-    confirmed case; `runtime.active_packs` is read by the same function and is
-    the obvious second candidate. The audit is mechanical — grep each C-class
-    key's readers for a `?? default` / `=== value ? … : fallback` shape — but it
-    has to be done before, not after.
-    2. Give the sparse emitter an **always-written** set for the keys whose
-    absence means something other than their default, with the reason recorded
-    per key.
-    3. Only then change `src/server/routes/wizard.ts:1310`.
-    4. In the SAME change, dispose of the one remaining `[~]` (Phase 2 step 2).
-    Closing Phase 3 takes `count_open` back to 0 with that item still
-    deferred, which re-fires Iron Law 3 as a repo-wide commit refusal with no
-    agent-side bypass — the deadlock this roadmap already hit once, recorded
-    under § Glyph re-encoding. Announced here so the next contributor meets it
-    in the plan rather than in a blocked commit.
-  - **Resolved when:** the absent-vs-default audit exists, every key whose absence changes behaviour is either carved out or fixed at its reader, and `tests/install/settings_materialisation.test.ts` pins a fresh install whose file is sparse AND whose resolved rule scope is unchanged — and step 4 above has disposed of the remaining `[~]` in the same change.
-
-_1 blocker resolved._
 
 ---
 
