@@ -14,6 +14,9 @@ enforced_by:
   - "hook:session-canary"
 # obligation: "the first reply of every new task" — src/rules/session-canary.md:31
 obligation_frequency: "per-task"
+# frequency-override: the per-turn phrases in the body describe the CARRIER
+# (a per-turn beat is the closest reachable cover for a per-task obligation),
+# not the obligation itself, which is still the first reply of each new task.
 collision_ok:
   "canary_name": "this rule owns what the NAME does once set and which of the three layers already supplies it; settings-ask-protocol owns how it is asked for and where the answer goes"
 ---
