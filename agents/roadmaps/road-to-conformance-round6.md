@@ -235,23 +235,38 @@ specified, and matching `description:` prose instead is exactly the FC-8-shaped
 prose-matching the draft's own next step forbade — the contradiction sat two
 steps apart in one file, and no gate would have caught it.
 
-Second measurement, same pass: **8 of 288 skills** carry a deterministic
-`MUST`/`NEVER`/`ALWAYS` at line start. The draft pre-authorised the exit at a
-threshold of five, so 8 clears it — but it clears it while covering **2.8 %** of
-the corpus, which is not the same thing as a working instrument.
+Second measurement, same pass: **30 of 288 skills** (10.4 %) carry a
+deterministic `MUST`/`NEVER`/`ALWAYS`. The draft pre-authorised the exit at a
+threshold of five, so 30 clears it comfortably — but it clears it while covering
+a tenth of the corpus, which is not the same thing as a working instrument.
+
+**Corrected during execution, and the correction is the argument for the
+script.** This roadmap first reported **8**. That figure came from an ad-hoc grep
+anchored at line start with no list prefix, so every `- MUST` and `**NEVER**` was
+invisible to it. The census script counts them and reports 30. Both figures stay
+published per the instrument lock; the reason is mechanical and re-runnable,
+which is precisely why a one-off grep is not an instrument. Round 5 corrected
+three of its own numbers; this is the fourth in the series, and the first one
+where the replacement is a committed tool rather than a better command line.
 
 So the deliverable inverts. The honest answer to "are skills followed?" is not a
 rate; it is that today's frontmatter cannot support the question, and the census
 is what says so.
 
-- [ ] 3.1 Publish the census as the primary finding: 288 skills, **0** with
-  machine-readable triggers, **8** with a deterministic obligation. Skill
-  activation is not measurable against the shipped frontmatter, and no number
-  should be reported as if it were.
+- [x] 3.1 Publish the census as the primary finding — **shipped** as
+  `src/scripts/report_skill_activation.ts`, advisory, registered as a named task
+  and deliberately not wired into a pipeline (the convention `report_imperative_density`
+  set). Measured: 288 skills, **0** with a machine-matchable trigger key, **30**
+  with a deterministic obligation, and **31 invocations of 6 distinct skills**
+  across 59 sessions and 33 654 assistant turns in three stores. The script
+  prints an explicit unmeasurable verdict while no skill declares a trigger, and
+  a test pins that it never prints an activation rate — a rate would be exactly
+  the theatre the conformance scan's scope lock forbids, which is also why this
+  lives outside that scan.
 - [ ] 3.2 Build the one class that *is* buildable — **SK-2 loaded-but-violated**:
   a skill body is in context and a deterministic obligation stated in it is
   violated in a later assistant turn of the same session. Scope it explicitly to
-  the 8 skills, and name them, so the coverage is legible rather than implied.
+  the 30 named skills, so the coverage is legible rather than implied.
 - [ ] 3.3 Validate before believing any number: hand-read every flagged turn of
   the first run and publish precision. A detector that cannot state its
   false-positive rate ships as detection-only and this roadmap says so.
@@ -379,9 +394,10 @@ attributed rather than absorbed.
 - [ ] The hook-surface residue is settled by measurement, in either direction.
 - [ ] The re-measured language count is published beside 578 and 641 with the
   mechanical reason for the delta.
-- [ ] The skill census is published (288 / 0 with triggers / 8 with a
-  deterministic obligation), SK-2 publishes a count with a stated precision over
-  the named 8, and no activation number is reported at all.
+- [x] The skill census is published (288 / 0 with triggers / **30** with a
+  deterministic obligation, the 8 corrected with its reason), and no activation
+  rate is reported at all — pinned by a test.
+- [ ] SK-2 publishes a count with a stated precision over the named 30.
 - [ ] The volume hypothesis has a pre-registered threshold and a published
   result, null or not.
 - [ ] No enforcement claim in this roadmap's diff exceeds what a shipped

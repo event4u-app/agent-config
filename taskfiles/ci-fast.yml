@@ -729,6 +729,11 @@ tasks:
     desc: Advisory imperative-density ratio over authored rules and skills — gates on nothing; direction unsettled per the sweep record § R2
     cmd: ./scripts-run src/scripts/report_imperative_density
 
+  report-skill-activation:
+    silent: true
+    desc: "Advisory skill-activation census (round-6 Phase 3.1) — shipped skills vs machine-matchable triggers vs actual invocations; gates on nothing and prints no rate, because none is available"
+    cmd: ./scripts-run src/scripts/report_skill_activation {{.CLI_ARGS}}
+
   lint-settings-classes:
     silent: true
     desc: Every settings-template leaf carries an A/B/C class in docs/contracts/settings-classes.md (road-to-zero-ceremony-settings Phase 1)
