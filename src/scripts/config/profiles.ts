@@ -130,7 +130,17 @@ function _load_yaml(p: string): Dict {
     return _isPlainDict(data) ? (data as Dict) : {};
 }
 
-function _profile_file(project_root: string, profile_id: string): string {
+/**
+ * The file `resolve_profile` will read for `profile_id`, or the legacy path
+ * when no candidate exists.
+ *
+ * Exported because a probe that reports "which profile is active" must name
+ * the file the resolver actually used. Re-deriving that path in the caller is
+ * how the two answers drift apart, which is the defect class
+ * `road-to-capability-answerability` exists to close — so there is exactly one
+ * implementation and both the resolver and `packs:active` call it.
+ */
+export function profile_file(project_root: string, profile_id: string): string {
     const legacy = path.join(project_root, PROFILES_DIRNAME, `${profile_id}.yml`);
     if (_exists(legacy)) {
         return legacy;
@@ -230,11 +240,11 @@ export function resolve_profile(params: {
         }
         return _build_resolved(
             DEFAULT_PROFILE_ID,
-            _load_yaml(_profile_file(params.project_root, DEFAULT_PROFILE_ID)),
+            _load_yaml(profile_file(params.project_root, DEFAULT_PROFILE_ID)),
             { source: SOURCE_DEFAULT },
         );
     }
-    const yaml_path = _profile_file(params.project_root, profile_id);
+    const yaml_path = profile_file(params.project_root, profile_id);
     if (!_exists(yaml_path)) {
         throw new ProfileError(
             `profile.id=${_repr(profile_id)} (${source}) but ${yaml_path} not found`,

@@ -29,7 +29,7 @@ obligation_frequency: "per-edit"
 A precedence rule plus its validation gate (merged from the former
 `brand-consistency` rule, 2026-08-04 — the pair shared triggers and one
 subject). When a consumer already has a brand — registered tokens
-(`.tokens.json`), a voice profile, a brand guide — that brand is authoritative
+(`tokens.json`), a voice profile, a brand guide — that brand is authoritative
 for the run. The curated `brand` corpus (archetypes, colour psychology, type
 principles) is a **gap-filler**, never an override.
 
@@ -55,10 +55,32 @@ OR A VOICE RULE. A VALUE THAT TRACES TO NEITHER IS OFF-BRAND.
 NEVER SHIP AN ASSET THE ACTIVE BRAND CANNOT ACCOUNT FOR.
 ```
 
+## Where the brand actually lives — and how to check
+
+```
+NEVER INFER BRAND PRESENCE FROM A FILENAME. RUN `agent-config brand:status`.
+THE FILE IS `tokens.json`, NEVER `.tokens.json` — A DOT-PREFIXED FILE IS READ BY NOTHING.
+```
+
+The resolver searches exactly four paths under the project root, in this order,
+first hit wins (`BRAND_TOKEN_PATHS`, the UI scaffold directive):
+
+1. `tokens.json`
+2. `assets/tokens.json`
+3. `resources/tokens.json`
+4. `agents/settings/brand/tokens.json`
+
+`agent-config brand:status` reports which one holds a file, or that none does —
+and separately flags a dot-prefixed `.tokens.json`, which is the file a reader
+of this rule's earlier wording would plausibly have created and which nothing
+reads. Absent is a real answer: it means the greenfield branch below, not a
+misconfiguration.
+
 ## Precedence order
 
-1. **Consumer brand profile** — registered `.tokens.json`, voice profile, brand
-   guide, or a confirmed `brand-strategy` / `brand-identity` constraint set.
+1. **Consumer brand profile** — a registered `tokens.json` at one of the four
+   paths above, a voice profile, a brand guide, or a confirmed `brand-strategy`
+   / `brand-identity` constraint set.
 2. **This run's confirmed decisions** — selections the human signed off this session.
 3. **The brand corpus** — archetype / colour / type / messaging defaults, used
    only where 1 and 2 are silent, and always surfaced as corpus-sourced.
@@ -66,7 +88,7 @@ NEVER SHIP AN ASSET THE ACTIVE BRAND CANNOT ACCOUNT FOR.
 ## What the gate covers
 
 - **Colour / type / spacing** in generated UI or assets that is not one of the
-  active brand tokens (from `state.ui_design` or the consumer's `.tokens.json`).
+  active brand tokens (from `state.ui_design` or the consumer's `tokens.json`).
   A raw hex / font / px value with no token behind it is off-brand.
 - **Copy and microcopy** whose register contradicts the active voice profile
   (e.g. playful copy under an authoritative `Ruler` voice).
@@ -79,7 +101,7 @@ NEVER SHIP AN ASSET THE ACTIVE BRAND CANNOT ACCOUNT FOR.
 - **Precedence half:** any brand decision while a consumer brand profile is
   present — to keep the corpus from quietly replacing a value the brand already
   defines.
-- **Gate half:** a brand layer is active for the run (a `.tokens.json` /
+- **Gate half:** a brand layer is active for the run (a `tokens.json` /
   `state.ui_design` brand profile or a confirmed `brand-strategy` /
   `brand-identity` constraint set) AND a UI / copy / asset is being emitted or
   reviewed.
@@ -114,6 +136,11 @@ for the full Brand-mode vs Product-mode discriminator.
 - [`brand-consistency`](brand-consistency.md) — pointer stub; its body lives here since the 2026-08-04 merge.
 - [`brand`](../skills/brand/SKILL.md) — the gap-fill corpus this rule subordinates to consumer brand.
 - [`brand-identity`](../skills/brand-identity/SKILL.md) — defines the tokens the gate validates against.
-- [`brand-to-tokens`](../skills/brand-to-tokens/SKILL.md) — emits the DTCG `.tokens.json` source of truth.
+- [`brand-to-tokens`](../skills/brand-to-tokens/SKILL.md) — emits the DTCG token
+  source of truth. **Known contradiction, recorded not resolved:** that skill's
+  prose says to author `.tokens.json` while the only resolver in the tree reads
+  `tokens.json`, so a consumer following it literally produces a file nothing
+  loads. The authoring name is a consumer-visible decision and is not changed
+  here; `brand:status` surfaces the mismatch at the moment it matters.
 - [`design-intelligence`](../skills/design-intelligence/SKILL.md) — the "audit findings outrank corpus" precedent the gate mirrors.
 - [`docs/guidelines/design-modes.md`](../docs/guidelines/design-modes.md) — brand vs product register discriminator and routing.

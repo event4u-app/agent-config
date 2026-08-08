@@ -110,19 +110,87 @@ of Phase 1 until the decision lands.
 
 Ordered by whether a wrong guess is silent, which is the ranking that matters.
 
-- [ ] 2.1 `packs:active` — which packs are active here, and from which file. Five
+- [x] 2.1 `packs:active` — which packs are active here, and from which file. Five
   safety floors currently say "auto-activates when pack X is installed" with no
   way to check, and the shipped default makes them project regardless.
-- [ ] 2.2 `settings:get <key>` — value plus the resolved source path. The
+  <!-- Shipped as `src/scripts/_cli/cmd_packs_active.ts`. The verb reports the
+  resolved profile id, its source layer, the pack list, and the file the body
+  was read from — via the resolver's own `profile_file`, now exported rather
+  than re-derived, so the probe cannot drift from what `resolve_profile` did.
+  It also names the DEGRADED branch (settings file present, no `profile.id` →
+  default id with an empty body: zero packs, zero personas), confirmed by a
+  real run against a scratch project rather than by reading the code. -->
+
+  **Measured while building it:** the degraded branch is not hypothetical — it
+  fires on any project that has a settings file and never set `profile.id`, and
+  in that state every pack-gated rule is inert while `packs ls` still lists the
+  full catalogue. That is the "looks authoritative, answers a different
+  question" failure the table's row 3 predicted.
+- [x] 2.2 `settings:get <key>` — value plus the resolved source path. The
   computation already exists and has no caller; this exposes it. It is also the
   general answer to the settings-key variants, which is why it outranks fixing
   them one by one.
-- [ ] 2.3 `mcp:available` — which servers and tools are reachable now, as opposed
+  <!-- Shipped as `src/scripts/_cli/cmd_settings_get.ts`, delegating to
+  `iter_setting_overrides` — the caller-less function the roadmap named — rather
+  than re-walking the cascade, so the probe cannot disagree with the loader.
+  Reports value · winning source file · the full layer chain · class (via
+  `classOfPath`, so a C-class map's children inherit their fence) · the template
+  default · and two warnings the roadmap's own analysis implies: the carve-out
+  divergence, and the silent whitelist drop. -->
+
+  **Two things beyond the step text.** (1) The verb reports the **silent
+  user-global drop**: `load_agent_settings` filters that layer through
+  `MERGEABLE_KEYS` and discards the rest without a word, so a key set there has
+  no error, no warning, and no effect. Verified on a real case —
+  `install.auto_converge` is in the live user-global file and is discarded.
+  (2) **Credential redaction**, which the roadmap does not ask for: a general
+  settings reader is a general secret reader by default, and the user-global
+  file on the machine this was built on holds `secrets.link_encryption_key`.
+  Values on credential-shaped paths are masked; presence and source are still
+  reported, so the verb still answers the question.
+- [x] 2.3 `mcp:available` — which servers and tools are reachable now, as opposed
   to which are configured. Keep the two apart in the output; conflating them is
   the current defect.
-- [ ] 2.4 Brand-layer presence: state the canonical path in the rule that depends
+  <!-- Shipped as `src/scripts/_cli/cmd_mcp_available.ts`. Prints three labelled
+  sections: servers declared in `mcp.json`, whether each one's command resolves
+  to an executable, and the static `TOOL_REGISTRY` allowlist — which is not MCP
+  at all and is marked as such. Confirmed on the live tree: 1 declared server, a
+  2-entry tool registry, and the `mcp` skill's prose table, which is a fourth
+  number none of the three produce. -->
+
+  **The step said "reachable" and the verb deliberately does not say that.** It
+  performs no MCP handshake, so it reports `launchable` — the command resolves
+  to an executable on `PATH` — and prints, in the output itself, that this is
+  strictly weaker than "the server responds". Claiming reachability from a
+  `PATH` lookup would be the same defect Phase 1.2 exists to fix, committed in a
+  new verb. Remote (`url`) servers are reported as declared-but-unprobed rather
+  than fetched: a read-only status verb must not grow an egress leg
+  (`lethal-trifecta-guard`). An unparseable `mcp.json` exits 1 rather than
+  reporting "no servers" — a declaration that does not parse is a failure to
+  answer, not an answer.
+- [x] 2.4 Brand-layer presence: state the canonical path in the rule that depends
   on it, then a probe. The path is stated nowhere at all today, not even in a
   lazily-loaded surface.
+  <!-- `brand-source-of-truth` now carries the four canonical paths in
+  precedence order, imported from the only resolver (`BRAND_TOKEN_PATHS`), plus
+  `agent-config brand:status` (`src/scripts/_cli/cmd_brand_status.ts`), which
+  reports which path holds a file or that none does. The probe IMPORTS the path
+  list rather than restating it. -->
+
+  **The path was not merely unstated — the stated filename was wrong.** The rule
+  named `.tokens.json`, with a leading dot, in four places; the resolver searches
+  `tokens.json`, without one. A consumer following the rule literally authors a
+  file nothing can load, and no surface reports it. The rule is corrected and
+  `brand:status` flags a dot-prefixed file explicitly, because "no brand" and "a
+  brand file nothing reads" need opposite actions.
+
+  **Not swept, deliberately.** The exact construct <code>&#96;.tokens.json&#96;</code> appears
+  **43 times across 15 files** (skills, contracts, one ADR). That is not sloppy
+  prose in one rule: the AUTHORING side (`brand-to-tokens`: "Author
+  `.tokens.json`") and the READING side (the resolver) disagree about the
+  filename, so picking one renames a file consumers may already have. That is a
+  consumer-visible decision, not a cleanup, and it is recorded in the deferred
+  table rather than taken here.
 
 ## Phase 3 — Make the answers reachable without knowing they exist
 
@@ -182,6 +250,8 @@ half a fix.
 | `cmd_quota` reading a removed `ai_council` block | Real, adjacent, and found while fixing the council instance. It needs its own change and its own test; folding it in would mix a bug fix with a behaviour question about where quota config should live. |
 | Skill-body sweep for further instances | The rule corpus was swept exhaustively; ~290 skill bodies were not. More instances are likely there, and the count above is therefore a floor, not a total. |
 | Running the probes to confirm the code-path conclusions | The sweep was read-only. The rank-1 "false on every stock install" is a code-path reading, not an observed run — 1.2 is where that gets executed rather than argued. |
+| The `.tokens.json` ↔ `tokens.json` naming split (43 sites, 15 files) | Found while doing 2.4. The authoring surface (`brand-to-tokens`) and the reading surface (`BRAND_TOKEN_PATHS`) name different files, so this is a rename decision with consumer-visible reach, not a prose sweep. `brand-source-of-truth` is corrected because it is 2.4's own target and its two halves would otherwise contradict each other; `brand:status` reports the mismatch wherever it occurs. Picking the surviving name is a maintainer call. |
+| A second profile resolver | `src/scripts/config/profiles.ts` resolves `<root>/profiles/<id>.yml` via `artefact_roots()`, while `src/cli/commands/profiles.ts` reads `src/profiles/<id>.yaml` — different directory, different extension. Same shape as the table's five adjacent path defects, found while building 2.1, and outside the four this roadmap enumerated. |
 
 ## Acceptance criteria
 
