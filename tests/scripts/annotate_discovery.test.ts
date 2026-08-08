@@ -105,10 +105,20 @@ describe('annotate_discovery — CLI (tsx)', () => {
         // script only requires the file to live somewhere under SRC.
         const probeDir = path.join(SRC, '_probe8g');
         if (!fs.existsSync(probeDir)) {
+            // `recursive` may create SRC as well, and removing only the probe
+            // dir leaves an empty `.agent-src.uncondensed/` behind.
+            // `sweep_dead_scan_roots` classifies a scan root as dead BY
+            // ABSENCE, so that empty directory un-kills a shipped finding, its
+            // ledger disposition goes stale, and the gate exits 3 — in a test
+            // file that has nothing to do with either.
+            const srcExisted = fs.existsSync(SRC);
             fs.mkdirSync(probeDir, { recursive: true });
             restores.push(() => {
                 try {
                     fs.rmSync(probeDir, { recursive: true, force: true });
+                    if (!srcExisted && fs.existsSync(SRC) && fs.readdirSync(SRC).length === 0) {
+                        fs.rmdirSync(SRC);
+                    }
                 } catch {
                     /* leave */
                 }

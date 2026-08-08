@@ -39,9 +39,30 @@ describe('lint_command_verbs.check', () => {
     // afterwards. Names are `_py2ts_test_*` to avoid colliding with real
     // commands and to be obviously disposable.
     const written: string[] = [];
+    /**
+     * Directories this suite had to CREATE, innermost first.
+     *
+     * Removing only the files left an empty `.agent-src.uncondensed/commands/`
+     * in the repo root, and that is not cosmetic: `sweep_dead_scan_roots`
+     * classifies a scan root as dead BY ABSENCE, so an empty directory un-kills
+     * the `check_reply_consistency.ts:.agent-src.uncondensed` finding, its
+     * ledger disposition goes stale, and the gate exits 3. It read as a local
+     * quirk for months because the two suites landed in different vitest
+     * shards; vitest shards by file COUNT, so adding ONE unrelated test file
+     * re-partitions every shard and can co-locate them — at which point the
+     * false red reaches CI. A test that writes into the tracked tree owns the
+     * whole artifact, directories included.
+     */
+    const createdDirs: string[] = [];
     function writeCmd(rel: string, body: string): void {
         const abs = path.join(REPO_ROOT, rel);
-        fs.mkdirSync(path.dirname(abs), { recursive: true });
+        const dir = path.dirname(abs);
+        // Collected DEEPEST first, which is the order they can be removed in:
+        // an outer directory is not empty until its child is gone.
+        for (let d = dir; !fs.existsSync(d) && d.startsWith(REPO_ROOT) && d !== REPO_ROOT; d = path.dirname(d)) {
+            createdDirs.push(d);
+        }
+        fs.mkdirSync(dir, { recursive: true });
         fs.writeFileSync(abs, body, 'utf-8');
         written.push(abs);
     }
@@ -49,6 +70,17 @@ describe('lint_command_verbs.check', () => {
         for (const abs of written.splice(0)) {
             if (fs.existsSync(abs)) {
                 fs.rmSync(abs, { force: true });
+            }
+        }
+        // Innermost first, and only while still empty — never remove a
+        // directory that already held something.
+        for (const dir of createdDirs.splice(0)) {
+            try {
+                if (fs.existsSync(dir) && fs.readdirSync(dir).length === 0) {
+                    fs.rmdirSync(dir);
+                }
+            } catch {
+                // Best effort: a cleanup failure must not mask a real assertion.
             }
         }
     });
