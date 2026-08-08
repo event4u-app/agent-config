@@ -153,6 +153,8 @@ Tier 1 — power-user (release shape, audit, migration):
                              Usage: council:run <question> --output <path> --confirm
   council:render             Re-render a saved council responses JSON to markdown
                              Usage: council:render <responses.json>
+  council:status             Is a council configured, and from which file — zero spend
+                             Usage: council:status
 EOF
   fi
 
