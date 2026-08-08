@@ -526,15 +526,18 @@ review.
 
 ## Acceptance criteria
 
-- [ ] Phase 1's gate fails on the current working checkout (92 of 108) and passes
+- [x] Phase 1's gate fails on the current working checkout (92 of 108) and passes
   after a regeneration — proving it detects the condition that motivated it.
-- [ ] Both commands that were refused in this session run without being blocked,
+- [x] Both commands that were refused in this session run without being blocked,
   and the positive-case tests still refuse the real prohibitions.
-- [ ] Phase 3's concern fires on the measured promissory closings, does not fire
-  on the measured legitimate hand-backs, and cannot block a turn-end twice.
-- [ ] Every enforcement claim this roadmap touches is either backed by a shipped
+- [ ] **BLOCKED on `stop-refusal-own-pr`, not open.** Phase 3's concern fires on
+  the measured promissory closings, does not fire on the measured legitimate
+  hand-backs, and cannot block a turn-end twice. Nothing was built, so nothing is
+  claimed; marked here by round 6 Phase 5.1 so an untouched list stops reading as
+  unverified work.
+- [x] Every enforcement claim this roadmap touches is either backed by a shipped
   mechanism or states plainly that it is model-carried.
-- [ ] No kernel rule text is modified. `verify-before-complete` carries FC-5's
+- [x] No kernel rule text is modified. `verify-before-complete` carries FC-5's
   obligation and stays untouched; the mechanism lives in the hook.
-- [ ] The corrected era-split number and the superseded one both appear in this
+- [x] The corrected era-split number and the superseded one both appear in this
   roadmap, per the instrument lock.

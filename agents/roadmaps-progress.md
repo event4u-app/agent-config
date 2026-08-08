@@ -6,10 +6,10 @@
 
 ## Overall
 
-**161 / 279 steps done · 58%**
+**171 / 280 steps done · 61%**
 
 ```text
-███████████████████████░░░░░░░░░░░░░░░░░   58%
+████████████████████████░░░░░░░░░░░░░░░░   61%
 ```
 
 ## Open roadmaps
@@ -17,8 +17,8 @@
 | # | Roadmap | Phases | Steps | Open | Done | Deferred | Cancelled | Blocker | Progress |
 |---|---|---:|---:|---:|---:|---:|---:|---:|---|
 | 1 | [road-to-ci-native-release-first-run.md](roadmaps/road-to-ci-native-release-first-run.md) | 2 | 8 | 8 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
-| 2 | [road-to-conformance-round5.md](roadmaps/road-to-conformance-round5.md) | 6 | 31 | 17 | 14 | 0 | 0 | [1](#blockers-road-to-conformance-round5) | ████░░░░░░ 45% |
-| 3 | [road-to-conformance-round6.md](roadmaps/road-to-conformance-round6.md) | 6 | 30 | 19 | 11 | 0 | 0 | [2](#blockers-road-to-conformance-round6) | ████░░░░░░ 37% |
+| 2 | [road-to-conformance-round5.md](roadmaps/road-to-conformance-round5.md) | 6 | 31 | 12 | 19 | 0 | 0 | [1](#blockers-road-to-conformance-round5) | ██████░░░░ 61% |
+| 3 | [road-to-conformance-round6.md](roadmaps/road-to-conformance-round6.md) | 6 | 31 | 15 | 16 | 0 | 0 | [2](#blockers-road-to-conformance-round6) | █████░░░░░ 52% |
 | 4 | [road-to-council-blind-review.md](roadmaps/road-to-council-blind-review.md) | 3 | 6 | 2 | 3 | 0 | 1 | 0 | ██████░░░░ 60% |
 | 5 | [road-to-gated-reach-followup.md](roadmaps/road-to-gated-reach-followup.md) | 1 | 12 | 12 | 0 | 0 | 0 | [1](#blockers-road-to-gated-reach-followup) | ░░░░░░░░░░ 0% |
 | 6 | [road-to-inbox-harvest-2026-08.md](roadmaps/road-to-inbox-harvest-2026-08.md) | 5 | 21 | 1 | 11 | 4 | 5 | [2](#blockers-road-to-inbox-harvest-2026-08) | █████████░ 92% |
@@ -51,7 +51,7 @@
 
 ### [road-to-conformance-round5.md](roadmaps/road-to-conformance-round5.md)
 
-**Road to conformance round 5 — the first post-fix measurement, and what it says about mechanism class** — 14 / 31 done (45%)
+**Road to conformance round 5 — the first post-fix measurement, and what it says about mechanism class** — 19 / 31 done (61%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
@@ -60,7 +60,7 @@
 | 3 | The refusal class at `stop`, carrying two detectors | ⬜ not started | 6 | 0 | 0 | 0 | 0% |
 | 4 | FC-7: the canary's name must come from the settings chain, not the environment | ✅ done | 0 | 2 | 0 | 0 | 100% |
 | 5 | Honest downgrades and the published measurement | ✅ done | 0 | 5 | 0 | 0 | 100% |
-| 6 | The language carrier: one real defect, one refused non-fix | 🟡 in progress | 9 | 2 | 0 | 0 | 18% |
+| 6 | The language carrier: one real defect, one refused non-fix | 🟡 in progress | 4 | 7 | 0 | 0 | 64% |
 
 <a id="blockers-road-to-conformance-round5"></a>
 **Blockers**
@@ -73,16 +73,16 @@
 
 ### [road-to-conformance-round6.md](roadmaps/road-to-conformance-round6.md)
 
-**Road to conformance round 6 — the guard regress I shipped, the unmeasured half, and the therapy that has not started** — 11 / 30 done (37%)
+**Road to conformance round 6 — the guard regress I shipped, the unmeasured half, and the therapy that has not started** — 16 / 31 done (52%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
 | 1 | Close the regress, then the standing hole | ✅ done | 0 | 6 | 0 | 0 | 100% |
 | 2 | One trigger definition, both directions | ✅ done | 0 | 4 | 0 | 0 | 100% |
-| 3 | Skills: the census IS the finding | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
+| 3 | Skills: the census IS the finding | 🟡 in progress | 2 | 2 | 0 | 0 | 50% |
 | 4 | The volume question, answered differently than planned | 🟡 in progress | 4 | 1 | 0 | 0 | 20% |
-| 5 | Close round 5's own accounting | ⬜ not started | 1 | 0 | 0 | 0 | 0% |
-| 6 | What this roadmap will not do | ⬜ not started | 10 | 0 | 0 | 0 | 0% |
+| 5 | Close round 5's own accounting | ✅ done | 0 | 1 | 0 | 0 | 100% |
+| 6 | What this roadmap will not do | 🟡 in progress | 9 | 2 | 0 | 0 | 18% |
 
 <a id="blockers-road-to-conformance-round6"></a>
 **Blockers**

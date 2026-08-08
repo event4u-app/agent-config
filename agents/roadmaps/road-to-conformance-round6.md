@@ -333,10 +333,49 @@ So the deliverable inverts. The honest answer to "are skills followed?" is not a
 rate; it is that today's frontmatter cannot support the question, and the census
 is what says so.
 
-- [ ] 3.1 Publish the census as the primary finding: 288 skills, **0** with
+- [x] 3.1 Publish the census as the primary finding: 288 skills, **0** with
   machine-readable triggers, **8** with a deterministic obligation. Skill
   activation is not measurable against the shipped frontmatter, and no number
   should be reported as if it were.
+
+#### The census, re-derived — and one of its two numbers does not reproduce
+
+Both counts re-run against 288 skill directories at this commit. The commands
+are in the table so the next reader does not have to guess the definition, which
+is the whole problem with the second row.
+
+| claim | published | re-derived | command |
+|---|---:|---:|---|
+| skills | 288 | **288** | `ls -d src/skills/*/` |
+| carrying a `triggers:` frontmatter key | 0 | **0** | `grep -l '^triggers:' */SKILL.md`, minus documentation examples |
+| carrying a line-start deterministic obligation | 8 | **7** | `grep -lE '^[[:space:]]*(MUST\|NEVER\|ALWAYS)\b' */SKILL.md` |
+
+**The `triggers:` row survives a scare and is confirmed at 0.** A naive grep
+returns 1 — `rule-writing/SKILL.md:195` — but that file's frontmatter ends at
+line 10, and line 195 sits inside a worked example showing the frontmatter shape
+a *rule* carries. The published claim was right; the first re-derivation was not.
+
+**The obligation row does not reproduce, and the reason is the finding.** The
+number is definition-sensitive across a range no reader can guess:
+
+| definition | count |
+|---|---:|
+| first non-whitespace token is `MUST` / `NEVER` / `ALWAYS` | **7** |
+| strict line start, no leading whitespace | 6 |
+| additionally allowing a bold or list marker (`**MUST**`, `- NEVER`) | 29 |
+
+Published as **7**, with the command stated, because a census whose number moves
+with an unstated regex is the same false completeness this round is about — and
+the original 8 was published without one. The seven: `ai-council`,
+`frontend-render-security`, `gated-reach`, `motion-choreographer`,
+`quality-tools`, `requesting-code-review`, `sql-writing`.
+
+7 still clears the threshold of five that Phase 3 pre-authorised, so the exit
+does not change — but it clears it while covering **2.4 %** of the corpus, not
+2.8 %, and the spread to 29 under a marker-tolerant reading is the more useful
+number: there is no stable machine-readable definition of a skill obligation at
+all. That is what makes activation unmeasurable against the shipped frontmatter,
+and it is a stronger statement than either count alone.
 - [ ] 3.2 Build the one class that *is* buildable — **SK-2 loaded-but-violated**:
   a skill body is in context and a deterministic obligation stated in it is
   violated in a later assistant turn of the same session. Scope it explicitly to
@@ -344,10 +383,19 @@ is what says so.
 - [ ] 3.3 Validate before believing any number: hand-read every flagged turn of
   the first run and publish precision. A detector that cannot state its
   false-positive rate ships as detection-only and this roadmap says so.
-- [ ] 3.4 Do **not** build a missed-activation detector over `description:`
+- [x] 3.4 Do **not** build a missed-activation detector over `description:`
   prose, and record the refusal here so round 7 does not propose it as new.
   Adding `triggers:` to 288 skills is a separate scope with its own blast radius;
   it is named in the deferred table, not smuggled in as a sub-step.
+  <!-- Refusal stands, and 3.1's re-derivation strengthens it: the obligation
+  count moves 6 → 7 → 29 with the regex, so prose matching would not merely be
+  FC-8-shaped, it would have no stable denominator to report against. -->
+
+  **3.2 and 3.3 stay open, and the census is now their input rather than their
+  motivation.** SK-2 is scoped to the seven skills named above, not eight. Note
+  for whoever builds it: the corpus is 2.4 % of the surface, so 3.3's
+  hand-validation is cheap and its precision figure will be the whole of what
+  the detector can honestly claim.
 
 ## Phase 4 — The volume question, answered differently than planned
 
@@ -395,7 +443,7 @@ step neither the plan nor the council's options contained (4.5).
 
 ## Phase 5 — Close round 5's own accounting
 
-- [ ] 5.1 Walk round 5's six acceptance criteria. Check the ones its shipped
+- [x] 5.1 Walk round 5's six acceptance criteria. Check the ones its shipped
   phases satisfy — the stale-tree case has a pinned test, the refused commands
   have regression tests, no kernel rule was modified, both era numbers are
   published. Mark the Phase-3-dependent ones as blocked rather than leaving them
@@ -403,14 +451,42 @@ step neither the plan nor the council's options contained (4.5).
   unverified even where it is not, and this round is the proof: an independent
   reviewer had to re-derive what those criteria would have recorded.
 
+#### Round 5's acceptance list, walked and marked
+
+Each verdict below is a command run at this commit, not a reading of round 5's
+prose. The criteria are checked in `road-to-conformance-round5.md` itself; this
+table is the evidence for those marks.
+
+| # | criterion | verdict | evidence |
+|---|---|---|---|
+| 1 | the projection gate fails on a stale checkout and passes after regeneration | **met** | Both halves observed in one session: `task check-rule-projection-integrity` exited 1 naming 3 stale entries, `task generate-tools` ran, the gate then reported `324 planned / 324 scanned / 0 skipped` and exited 0. |
+| 2 | both wrongly-refused commands run, and the real prohibitions still refuse | **met** | The `grep -E` alternation and the apostrophe-bearing heredoc both exit 0 against `block_unauthorized_git` AND `block_no_verify`. The prohibitions still refuse — 43 + 74 tests, and this round's own vector table adds the stronger half: every command bash actually executes is blocked. |
+| 3 | Phase 3's turn-end concern fires correctly and cannot block twice | **blocked** | `stop-refusal-decision`. Nothing was built, so nothing is claimed. Explicitly blocked rather than left open, which is what 5.1 exists to fix. |
+| 4 | every enforcement claim is backed by a shipped mechanism or says it is model-carried | **met** | Round 5's Phase 5 shipped the honesty pass. This round adds two of its own: both guard headers now name what they do NOT see, and Phase 3's census publishes the command behind each count. |
+| 5 | no kernel rule text modified; `verify-before-complete` untouched | **met** | `git log -- src/rules/verify-before-complete.md` since round 5 opened returns nothing. Holds for this round too — no kernel rule is in either diff. |
+| 6 | the corrected era number and the superseded one both appear | **met** | 303, 578, 626 and 641 all present in round 5. This round extends the series rather than replacing it: 577 → 622 with the mechanical reason, in § 2.4. |
+
+Four met, one blocked, and criterion 3 is the only one that needed a decision
+rather than work. That is the honest shape of round 5 — and it is a materially
+better result than the "all six untouched" the reviewer found, which is the
+whole reason this step existed.
+
 ## Phase 6 — What this roadmap will not do
 
-- [ ] 6.1 No new advisory carrier ships for any measured class. The round-5
+- [x] 6.1 No new advisory carrier ships for any measured class. The round-5
   result (a fresh pin ignored at distance 1) stands, as does the council's
   refusal of frequency-as-mechanism. Recorded so round 7 does not re-propose it.
-- [ ] 6.2 No enforcement work beyond Phase 1's repair happens before the
-  stop-refusal blocker resolves. Inventing a third mechanism class to route
-  around a parked decision is how a blocker becomes a silent drop.
+  <!-- Held. This round ships two repairs (Phase 1, Phase 2) and three
+  measurements; no advisory carrier was added, and the one place it would have
+  been tempting — 2.2's paste net — became a change to an EXISTING classifier
+  rather than a new reminder. -->
+- [ ] **BLOCKED on `stop-refusal-decision`.** 6.2 No enforcement work beyond
+  Phase 1's repair happens before the stop-refusal blocker resolves. Inventing a
+  third mechanism class to route around a parked decision is how a blocker
+  becomes a silent drop.
+  <!-- Held so far and worth stating explicitly, because Phase 1 shipped real
+  enforcement: every line of it repairs a guard that already existed, and no new
+  blocking surface was registered. -->
 
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-08-08 | reviewer: claude/host -->
@@ -471,7 +547,18 @@ attributed rather than absorbed.
 - [ ] The skill census is published (288 / 0 with triggers / 8 with a
   deterministic obligation), SK-2 publishes a count with a stated precision over
   the named 8, and no activation number is reported at all.
-- [ ] The volume hypothesis has a pre-registered threshold and a published
-  result, null or not.
+- [x] The volume hypothesis is **cancelled, not deferred**, with M5's natural
+  experiment as the reason, and forward per-project capture (4.5) replaces the
+  test so the falsifier stays observable.
+  <!-- Rewritten. As published this criterion demanded "a pre-registered
+  threshold and a published result", which step 4.4 had already been cancelled
+  for — the council's own words were "pre-registering post-hoc is theater". An
+  acceptance list that can only be satisfied by doing the thing the roadmap
+  decided not to do is a contradiction two sections apart in one file, and it is
+  the same shape Phase 3 caught in its own first draft. Found by the pre-run
+  screen, corrected here. -->
+- [ ] 4.5's forward capture is live: per-project violation rates recorded from
+  this round onward, and a fourth project outside the 9.1-39.2 % band is
+  detectable when it appears.
 - [ ] No enforcement claim in this roadmap's diff exceeds what a shipped
   mechanism backs.
