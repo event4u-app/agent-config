@@ -10,10 +10,38 @@ parent_roadmap: road-to-token-saving
 > anthropic/claude-sonnet-4-5 + openai/gpt-4o, unanimous).** 34 of 36 steps
 > done; both remaining items are the SAME council-parked Phase 4 (rules-as-skills
 > falsification probe, parked by verdict 2026-07-07 with its design locked).
-> **Resume when** its recorded promotion trigger fires: `discipline_profile:
-> essential` baseline has landed AND thin un-deferral is actually scheduled
-> (HUMAN-MEASUREMENT resumed). Open `[ ]` items are intentionally kept open —
-> parked whole, neither silently executed nor silently deleted.
+> **Resume trigger — restated 2026-08-08 (P0.4 of
+> `road-to-rule-delivery-integrity`). Owner: maintainer.**
+> **Resume when P2.1 of `road-to-rule-delivery-integrity` closes** — the
+> catalogue-logging falsifier that measures whether a skill's *description*
+> reaches the model at all. That is the only precondition the two remaining
+> steps actually have: a rules-as-skills falsification probe is uninterpretable
+> while the delivery of the surface it moves rules *onto* is unmeasured (live
+> census: 288 skills shipped, 4 ever invoked, and the report itself declines to
+> produce a rate).
+>
+> The **previous** trigger — "`discipline_profile: essential` baseline has landed
+> AND thin un-deferral is actually scheduled" — is retired, for two measured
+> reasons, both in `road-to-rule-delivery-integrity` § Verified problem statement
+> item 3. First, it is partly already true and unobservably so: the template
+> ships `auto` (`src/server/io/yamlIO.ts:144`) and an absent key resolves to
+> `essential` (`src/shared/settingsCarveOut.ts:73`), so "the essential baseline"
+> has no single landing event to wait for. Second and decisively, a discipline
+> profile names the **always-honoured** rule surface
+> (`src/scripts/compile_router.ts:266-272`) while this roadmap's own levers act on
+> the **projected file set**, which is filtered by workspace and pack only
+> (`src/scripts/condense.ts:1092-1099`) — so the flip could land in full and
+> change nothing this roadmap is waiting for. It was waiting on a gate that does
+> not open its door, and that gate is itself maintainer-blocked
+> (`road-to-rule-coherence-followup.md:38` F1.1).
+>
+> Context, not prerequisites: `road-to-rule-delivery-integrity` (owns the
+> Claude Code delivery gap and the duplicate-layer defect this roadmap's Phase 2
+> did not cover) and `road-to-rule-coherence-followup` (owns the default-flip
+> decision, which is no longer this roadmap's blocker).
+>
+> Open `[ ]` items are intentionally kept open — parked whole, neither silently
+> executed nor silently deleted.
 >
 > Close the structural gaps the thin-projection work does not touch:
 > (1) **consumer scoping** — originally 63 of 95 shipped rules were
