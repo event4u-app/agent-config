@@ -324,62 +324,68 @@ specified, and matching `description:` prose instead is exactly the FC-8-shaped
 prose-matching the draft's own next step forbade — the contradiction sat two
 steps apart in one file, and no gate would have caught it.
 
-Second measurement, same pass: **8 of 288 skills** carry a deterministic
-`MUST`/`NEVER`/`ALWAYS` at line start. The draft pre-authorised the exit at a
-threshold of five, so 8 clears it — but it clears it while covering **2.8 %** of
-the corpus, which is not the same thing as a working instrument.
+Second measurement, same pass: **30 of 288 skills** (10.4 %) carry a
+deterministic `MUST`/`NEVER`/`ALWAYS`. The draft pre-authorised the exit at a
+threshold of five, so 30 clears it comfortably — but it clears it while covering
+a tenth of the corpus, which is not the same thing as a working instrument.
+
+**Corrected during execution, and the correction is the argument for the
+script.** This roadmap first reported **8**. That figure came from an ad-hoc grep
+anchored at line start with no list prefix, so every `- MUST` and `**NEVER**` was
+invisible to it. The census script counts them and reports 30. Both figures stay
+published per the instrument lock; the reason is mechanical and re-runnable,
+which is precisely why a one-off grep is not an instrument. Round 5 corrected
+three of its own numbers; this is the fourth in the series, and the first one
+where the replacement is a committed tool rather than a better command line.
 
 So the deliverable inverts. The honest answer to "are skills followed?" is not a
 rate; it is that today's frontmatter cannot support the question, and the census
 is what says so.
 
-- [x] 3.1 Publish the census as the primary finding: 288 skills, **0** with
-  machine-readable triggers, **8** with a deterministic obligation. Skill
-  activation is not measurable against the shipped frontmatter, and no number
-  should be reported as if it were.
+- [x] 3.1 Publish the census as the primary finding — **shipped** as
+  `src/scripts/report_skill_activation.ts`, advisory, registered as a named task
+  and deliberately not wired into a pipeline (the convention `report_imperative_density`
+  set). Measured: 288 skills, **0** with a machine-matchable trigger key, **30**
+  with a deterministic obligation, and **31 invocations of 6 distinct skills**
+  across 59 sessions and 33 654 assistant turns in three stores. The script
+  prints an explicit unmeasurable verdict while no skill declares a trigger, and
+  a test pins that it never prints an activation rate — a rate would be exactly
+  the theatre the conformance scan's scope lock forbids, which is also why this
+  lives outside that scan.
 
-#### The census, re-derived — and one of its two numbers does not reproduce
+#### Why the obligation count moved 8 → 30, re-derived independently
 
-Both counts re-run against 288 skill directories at this commit. The commands
-are in the table so the next reader does not have to guess the definition, which
-is the whole problem with the second row.
+Two sessions measured this census concurrently and got different numbers, which
+is the most direct evidence available for what the census is actually saying.
+Both re-run against 288 skill directories at this commit:
 
-| claim | published | re-derived | command |
-|---|---:|---:|---|
-| skills | 288 | **288** | `ls -d src/skills/*/` |
-| carrying a `triggers:` frontmatter key | 0 | **0** | `grep -l '^triggers:' */SKILL.md`, minus documentation examples |
-| carrying a line-start deterministic obligation | 8 | **7** | `grep -lE '^[[:space:]]*(MUST\|NEVER\|ALWAYS)\b' */SKILL.md` |
+| definition | count |
+|---|---:|
+| the shipped script's regex — leading whitespace, optional `-`/`*` marker, optional `**` | **30** |
+| first non-whitespace token is `MUST` / `NEVER` / `ALWAYS`, no marker allowed | **7** |
+| the roadmap's originally published figure | 8 — reproduces under **neither** |
+
+**The finding is the spread, not either endpoint.** The originally published 8
+carried no regex, and no reading recovers it: a marker-tolerant definition gives
+30, a strict one gives 7. The shipped script is the right resolution precisely
+because its definition lives in code (`DETERMINISTIC_RE`) where it can be
+disagreed with, rather than in prose where it cannot. **30 is the number of
+record**, and 3.2's scope follows it.
 
 **The `triggers:` row survives a scare and is confirmed at 0.** A naive grep
 returns 1 — `rule-writing/SKILL.md:195` — but that file's frontmatter ends at
 line 10, and line 195 sits inside a worked example showing the frontmatter shape
 a *rule* carries. The published claim was right; the first re-derivation was not.
 
-**The obligation row does not reproduce, and the reason is the finding.** The
-number is definition-sensitive across a range no reader can guess:
-
-| definition | count |
-|---|---:|
-| first non-whitespace token is `MUST` / `NEVER` / `ALWAYS` | **7** |
-| strict line start, no leading whitespace | 6 |
-| additionally allowing a bold or list marker (`**MUST**`, `- NEVER`) | 29 |
-
-Published as **7**, with the command stated, because a census whose number moves
-with an unstated regex is the same false completeness this round is about — and
-the original 8 was published without one. The seven: `ai-council`,
-`frontend-render-security`, `gated-reach`, `motion-choreographer`,
-`quality-tools`, `requesting-code-review`, `sql-writing`.
-
-7 still clears the threshold of five that Phase 3 pre-authorised, so the exit
-does not change — but it clears it while covering **2.4 %** of the corpus, not
-2.8 %, and the spread to 29 under a marker-tolerant reading is the more useful
-number: there is no stable machine-readable definition of a skill obligation at
-all. That is what makes activation unmeasurable against the shipped frontmatter,
-and it is a stronger statement than either count alone.
+That there is no stable machine-readable definition of a skill obligation — a
+4× spread between two defensible readings — is a stronger basis for "activation
+is not measurable against the shipped frontmatter" than any single count, and it
+was found by two independent measurements disagreeing rather than by either one
+alone.
 - [ ] 3.2 Build the one class that *is* buildable — **SK-2 loaded-but-violated**:
   a skill body is in context and a deterministic obligation stated in it is
   violated in a later assistant turn of the same session. Scope it explicitly to
-  the 8 skills, and name them, so the coverage is legible rather than implied.
+  the 30 named skills, so the coverage is legible rather than implied.
 - [ ] 3.3 Validate before believing any number: hand-read every flagged turn of
   the first run and publish precision. A detector that cannot state its
   false-positive rate ships as detection-only and this roadmap says so.
@@ -392,10 +398,11 @@ and it is a stronger statement than either count alone.
   FC-8-shaped, it would have no stable denominator to report against. -->
 
   **3.2 and 3.3 stay open, and the census is now their input rather than their
-  motivation.** SK-2 is scoped to the seven skills named above, not eight. Note
-  for whoever builds it: the corpus is 2.4 % of the surface, so 3.3's
-  hand-validation is cheap and its precision figure will be the whole of what
-  the detector can honestly claim.
+  motivation.** SK-2 is scoped to the **30** the shipped script names, under its
+  own `DETERMINISTIC_RE`. Note for whoever builds it: that is 10.4 % of the
+  surface, so 3.3's hand-validation is still tractable and its precision figure
+  will be the whole of what the detector can honestly claim — and the scope is
+  legible only because the definition is in code rather than in prose.
 
 ## Phase 4 — The volume question, answered differently than planned
 
@@ -544,9 +551,10 @@ attributed rather than absorbed.
 - [ ] The hook-surface residue is settled by measurement, in either direction.
 - [ ] The re-measured language count is published beside 578 and 641 with the
   mechanical reason for the delta.
-- [ ] The skill census is published (288 / 0 with triggers / 8 with a
-  deterministic obligation), SK-2 publishes a count with a stated precision over
-  the named 8, and no activation number is reported at all.
+- [x] The skill census is published (288 / 0 with triggers / **30** with a
+  deterministic obligation, the 8 corrected with its reason), and no activation
+  rate is reported at all — pinned by a test.
+- [ ] SK-2 publishes a count with a stated precision over the named 30.
 - [x] The volume hypothesis is **cancelled, not deferred**, with M5's natural
   experiment as the reason, and forward per-project capture (4.5) replaces the
   test so the falsifier stays observable.
@@ -556,7 +564,8 @@ attributed rather than absorbed.
   acceptance list that can only be satisfied by doing the thing the roadmap
   decided not to do is a contradiction two sections apart in one file, and it is
   the same shape Phase 3 caught in its own first draft. Found by the pre-run
-  screen, corrected here. -->
+  screen, corrected here — and it survived the concurrent Phase-3 branch, which
+  carried the stale wording forward unchanged. -->
 - [ ] 4.5's forward capture is live: per-project violation rates recorded from
   this round onward, and a fourth project outside the 9.1-39.2 % band is
   detectable when it appears.

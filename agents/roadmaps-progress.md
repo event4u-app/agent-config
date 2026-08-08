@@ -6,7 +6,7 @@
 
 ## Overall
 
-**171 / 280 steps done · 61%**
+**172 / 281 steps done · 61%**
 
 ```text
 ████████████████████████░░░░░░░░░░░░░░░░   61%
@@ -18,7 +18,7 @@
 |---|---|---:|---:|---:|---:|---:|---:|---:|---|
 | 1 | [road-to-ci-native-release-first-run.md](roadmaps/road-to-ci-native-release-first-run.md) | 2 | 8 | 8 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 2 | [road-to-conformance-round5.md](roadmaps/road-to-conformance-round5.md) | 6 | 31 | 12 | 19 | 0 | 0 | [1](#blockers-road-to-conformance-round5) | ██████░░░░ 61% |
-| 3 | [road-to-conformance-round6.md](roadmaps/road-to-conformance-round6.md) | 6 | 31 | 15 | 16 | 0 | 0 | [2](#blockers-road-to-conformance-round6) | █████░░░░░ 52% |
+| 3 | [road-to-conformance-round6.md](roadmaps/road-to-conformance-round6.md) | 6 | 32 | 15 | 17 | 0 | 0 | [2](#blockers-road-to-conformance-round6) | █████░░░░░ 53% |
 | 4 | [road-to-council-blind-review.md](roadmaps/road-to-council-blind-review.md) | 3 | 6 | 2 | 3 | 0 | 1 | 0 | ██████░░░░ 60% |
 | 5 | [road-to-gated-reach-followup.md](roadmaps/road-to-gated-reach-followup.md) | 1 | 12 | 12 | 0 | 0 | 0 | [1](#blockers-road-to-gated-reach-followup) | ░░░░░░░░░░ 0% |
 | 6 | [road-to-inbox-harvest-2026-08.md](roadmaps/road-to-inbox-harvest-2026-08.md) | 5 | 21 | 1 | 11 | 4 | 5 | [2](#blockers-road-to-inbox-harvest-2026-08) | █████████░ 92% |
@@ -73,7 +73,7 @@
 
 ### [road-to-conformance-round6.md](roadmaps/road-to-conformance-round6.md)
 
-**Road to conformance round 6 — the guard regress I shipped, the unmeasured half, and the therapy that has not started** — 16 / 31 done (52%)
+**Road to conformance round 6 — the guard regress I shipped, the unmeasured half, and the therapy that has not started** — 17 / 32 done (53%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
@@ -82,7 +82,7 @@
 | 3 | Skills: the census IS the finding | 🟡 in progress | 2 | 2 | 0 | 0 | 50% |
 | 4 | The volume question, answered differently than planned | 🟡 in progress | 4 | 1 | 0 | 0 | 20% |
 | 5 | Close round 5's own accounting | ✅ done | 0 | 1 | 0 | 0 | 100% |
-| 6 | What this roadmap will not do | 🟡 in progress | 9 | 2 | 0 | 0 | 18% |
+| 6 | What this roadmap will not do | 🟡 in progress | 9 | 3 | 0 | 0 | 25% |
 
 <a id="blockers-road-to-conformance-round6"></a>
 **Blockers**
