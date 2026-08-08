@@ -4,14 +4,24 @@
 // the council ruled that measuring un-mechanised rules post-hoc is theatre, so
 // the check set must stay locked to the four shipped gates. `render` pins that
 // in the output, and the totals key set pins it structurally.
-import { describe, expect, it } from "vitest";
+import * as fs from "node:fs";
+import * as os from "node:os";
+import * as path from "node:path";
+
+import { afterEach, describe, expect, it } from "vitest";
 
 import {
+  BAND_MIN_TURNS,
+  bandVerdict,
   isInjectedBody,
+  measureDelivered,
+  recordRate,
   render,
   scanSession,
+  storeKey,
   userText,
   assistantText,
+  type RateRecord,
   type ScanReport,
 } from "../../src/scripts/conformance_scan.js";
 
@@ -158,6 +168,21 @@ describe("render", () => {
         "evidence-steering": 1,
       },
       per_session: [{ session: "abc", user_turns: 1, assistant_turns: 9, violations: [] }],
+      delivered: {
+        project: { dir: "/tmp/p", files: 2, tokens: 100 },
+        global: { dir: "/tmp/g", files: 3, tokens: 200 },
+        union_tokens: 300,
+      },
+      rate: {
+        store_key: "deadbeefcafe",
+        sessions: 1,
+        assistant_turns: 9,
+        language_pin: 3,
+        rate_pct: 33.3,
+        band: "corpus-too-small",
+        delivered_project_tokens: 100,
+        delivered_global_tokens: 200,
+      },
     };
     const out = render(report);
     for (const k of ["language-pin", "git-authorization", "vacuous-evidence", "evidence-steering"]) {
@@ -166,5 +191,236 @@ describe("render", () => {
     // The scope disclaimer is part of the contract, not decoration.
     expect(out).toMatch(/NOT measured/);
     expect(out).toMatch(/session-canary/);
+  });
+});
+
+// ── Delivered payload + forward capture (round-6 Phase 4.3 / 4.5) ───────────
+//
+// Two properties matter more than the numbers. The payload figure must be
+// labelled a scan-time reading, because the step asked for a per-session one and
+// the transcript cannot supply it. And the forward series must be incapable of
+// carrying a project path: `store_key` is a digest precisely because the real
+// store slug is `-Users-<realname>-projects-<client>-…`.
+
+const tmps: string[] = [];
+
+function tmp(): string {
+  const d = fs.mkdtempSync(path.join(os.tmpdir(), "conf-scan-"));
+  tmps.push(d);
+  return d;
+}
+
+afterEach(() => {
+  while (tmps.length) {
+    fs.rmSync(tmps.pop() as string, { recursive: true, force: true });
+  }
+});
+
+describe("measureDelivered", () => {
+  it("counts each carrier separately and sums the union", () => {
+    const root = tmp();
+    const p = path.join(root, "project");
+    const g = path.join(root, "global");
+    fs.mkdirSync(p);
+    fs.mkdirSync(g);
+    fs.writeFileSync(path.join(p, "a.md"), "x".repeat(400), "utf8");
+    fs.writeFileSync(path.join(g, "a.md"), "y".repeat(800), "utf8");
+    fs.writeFileSync(path.join(g, "b.md"), "z".repeat(400), "utf8");
+    // Not a rule — must not be counted by either carrier.
+    fs.writeFileSync(path.join(g, "notes.txt"), "q".repeat(4000), "utf8");
+
+    const d = measureDelivered(p, g);
+    expect(d.project).toMatchObject({ files: 1, tokens: 100 });
+    expect(d.global).toMatchObject({ files: 2, tokens: 300 });
+    expect(d.union_tokens).toBe(400);
+  });
+
+  it("reports an absent carrier as zero rather than throwing", () => {
+    const root = tmp();
+    const d = measureDelivered(path.join(root, "nope"), path.join(root, "also-nope"));
+    expect(d.union_tokens).toBe(0);
+  });
+
+  it("follows a symlinked entry to the bytes the host actually reads", () => {
+    // A project-scope rule tree is symlinks into dist/. lstat would report ~50
+    // bytes per rule and make the whole payload vanish.
+    const root = tmp();
+    const target = path.join(root, "real.md");
+    const p = path.join(root, "project");
+    fs.mkdirSync(p);
+    fs.writeFileSync(target, "x".repeat(4000), "utf8");
+    fs.symlinkSync(target, path.join(p, "linked.md"));
+
+    expect(measureDelivered(p, path.join(root, "nope")).project.tokens).toBe(1000);
+  });
+});
+
+describe("storeKey", () => {
+  it("leaks no part of the path it keys", () => {
+    const key = storeKey("/Users/realname/.claude/projects/-Users-realname-projects-acme-client");
+    expect(key).toMatch(/^[0-9a-f]{12}$/);
+    for (const leak of ["realname", "acme", "Users", "projects"]) {
+      expect(key).not.toContain(leak);
+    }
+  });
+
+  it("is stable for the same store and different across stores", () => {
+    expect(storeKey("/a/b")).toBe(storeKey("/a/b"));
+    expect(storeKey("/a/b")).not.toBe(storeKey("/a/c"));
+  });
+
+  it("keys the resolved path, so two spellings of one store do not split the series", () => {
+    expect(storeKey("/a/b")).toBe(storeKey("/a/./b"));
+  });
+});
+
+describe("bandVerdict", () => {
+  it("refuses a verdict below the smallest corpus the band came from", () => {
+    // The instrument's own first run: 4.1% over 606 turns would have announced
+    // the falsifier on its second day of existence.
+    expect(bandVerdict(4.1, 606)).toBe("corpus-too-small");
+    expect(bandVerdict(26.7, BAND_MIN_TURNS - 1)).toBe("corpus-too-small");
+  });
+
+  it("reproduces M5's own reading for this package as inside the band", () => {
+    expect(bandVerdict(26.7, 2193)).toBe("inside");
+  });
+
+  it("fires outside the band in both directions on a comparable corpus", () => {
+    expect(bandVerdict(4.1, 3000)).toBe("outside");
+    expect(bandVerdict(55.0, 3000)).toBe("outside");
+  });
+
+  it("treats the band edges as inside, since they are observed values not thresholds", () => {
+    expect(bandVerdict(9.1, 3000)).toBe("inside");
+    expect(bandVerdict(39.2, 3000)).toBe("inside");
+  });
+});
+
+describe("recordRate", () => {
+  const rate: RateRecord = {
+    store_key: "0123456789ab",
+    sessions: 27,
+    assistant_turns: 2193,
+    language_pin: 585,
+    rate_pct: 26.7,
+    band: "inside",
+    delivered_project_tokens: 101626,
+    delivered_global_tokens: 102402,
+  };
+
+  it("appends one line per run and creates the directory", () => {
+    const file = path.join(tmp(), "nested", "series.jsonl");
+    recordRate(file, "T1", rate);
+    recordRate(file, "T2", rate);
+    const lines = fs.readFileSync(file, "utf8").trim().split("\n");
+    expect(lines).toHaveLength(2);
+    expect(JSON.parse(lines[0] as string)).toMatchObject({ measured_at: "T1", store_key: "0123456789ab" });
+  });
+
+  it("writes no field capable of holding a path, a prompt, or a session id", () => {
+    const file = path.join(tmp(), "series.jsonl");
+    recordRate(file, "T", rate);
+    const rec = JSON.parse(fs.readFileSync(file, "utf8").trim()) as Record<string, unknown>;
+    expect(Object.keys(rec).sort()).toEqual(
+      [
+        "assistant_turns",
+        "band",
+        "delivered_global_tokens",
+        "delivered_project_tokens",
+        "language_pin",
+        "measured_at",
+        "rate_pct",
+        "sessions",
+        "store_key",
+      ].sort(),
+    );
+    // Privacy is a property of the schema shape, not of a scrubbing pass that
+    // could fail — so the assertion is on the key set, exhaustively.
+    for (const v of Object.values(rec)) {
+      expect(typeof v === "string" || typeof v === "number").toBe(true);
+    }
+  });
+});
+
+describe("render — the payload block", () => {
+  function reportWith(band: RateRecord["band"], turns: number): ScanReport {
+    return {
+      scanned_at: "T",
+      store: "/tmp/store",
+      sessions: 1,
+      totals: { "language-pin": 1, "git-authorization": 0, "vacuous-evidence": 0, "evidence-steering": 0 },
+      per_session: [{ session: "abc", user_turns: 1, assistant_turns: turns, violations: [] }],
+      delivered: {
+        project: { dir: "/tmp/p", files: 110, tokens: 101626 },
+        global: { dir: "/tmp/g", files: 112, tokens: 102402 },
+        union_tokens: 204027,
+      },
+      rate: {
+        store_key: "aaaaaaaaaaaa",
+        sessions: 1,
+        assistant_turns: turns,
+        language_pin: 1,
+        rate_pct: 1,
+        band,
+        delivered_project_tokens: 101626,
+        delivered_global_tokens: 102402,
+      },
+    };
+  }
+
+  it("labels the payload a scan-time reading, never a per-session one", () => {
+    const out = render(reportWith("inside", 3000));
+    expect(out).toMatch(/not per-session/);
+    expect(out).toMatch(/NOT recoverable/);
+  });
+
+  it("names the worktree confound only when it actually reports out-of-band", () => {
+    expect(render(reportWith("outside", 3000))).toMatch(/Store novelty is not project novelty/);
+    // On an in-band run the caveat is noise; on a too-small corpus there is no
+    // claim to caveat.
+    expect(render(reportWith("inside", 3000))).not.toMatch(/Store novelty/);
+    expect(render(reportWith("corpus-too-small", 606))).not.toMatch(/Store novelty/);
+  });
+});
+
+// ── One trigger definition, both directions (round-6 Phase 2.1) ─────────────
+//
+// Round 6's third acceptance criterion asks for a shared import AND "a test that
+// feeds both the same input". The import half was already true — `hook` and
+// `scanner` both take `isSyntheticPrompt` from `_lib/prompt_shape.ts`. This is
+// the other half: one entry, both surfaces, asserted to agree. Without it the
+// criterion rests on a code reading, and a shared import can still be bypassed
+// on one side by an earlier branch.
+describe("hook and scanner classify the same entry identically", () => {
+  const SYNTHETIC =
+    "[SYSTEM NOTIFICATION - NOT USER INPUT]\n" +
+    "This is an automated background-task event, NOT a message from the user.";
+
+  it("agrees that a harness-generated turn is synthetic and is not a user turn", async () => {
+    const { isSyntheticPrompt } = await import("../../src/scripts/language_mirror_hook.js");
+    const { isSyntheticPrompt: fromLib } = await import("../../src/scripts/_lib/prompt_shape.js");
+
+    // Same function, reached through the two surfaces that must not diverge.
+    expect(isSyntheticPrompt).toBe(fromLib);
+    expect(isSyntheticPrompt(SYNTHETIC)).toBe(true);
+
+    // And the scanner acts on that verdict: the entry does not become a user
+    // turn, so it cannot move the language pin. This is the +45 correction of
+    // § 2.4 — before it, such a turn set `pinned = "en"` and every English reply
+    // after it counted as CONFORMING.
+    const r = scanSession("s", [
+      user(GERMAN_PROMPT),
+      user(SYNTHETIC),
+      assistant("I'll start by reading the roadmap."),
+    ]);
+    expect(r.user_turns).toBe(1);
+    expect(r.violations.map((v) => v.check)).toEqual(["language-pin"]);
+  });
+
+  it("agrees that a genuine German prompt is NOT synthetic", async () => {
+    const { isSyntheticPrompt } = await import("../../src/scripts/language_mirror_hook.js");
+    expect(isSyntheticPrompt(GERMAN_PROMPT)).toBe(false);
+    expect(scanSession("s", [user(GERMAN_PROMPT), assistant("Ich lese die Roadmap.")]).user_turns).toBe(1);
   });
 });
