@@ -299,16 +299,26 @@ export function main(argv?: readonly string[]): number {
     let projectDir = path.join(REPO_ROOT, PROJECT_RULES);
     let globalDir = path.join(os.homedir(), GLOBAL_RULES);
     let sourceDir = path.join(REPO_ROOT, PROJECTION_SOURCE);
+    // A value must not itself be a flag. `--project --global /x` otherwise
+    // resolves a directory literally named `--global` and silently drops `/x`,
+    // reporting "tree does not exist" instead of a usage error — the flag-VALUE
+    // half of the hole this file's own test closes on the flag-NAME half.
+    const value = (i: number): string | null => {
+        const v = args[i + 1];
+        return v === undefined || v.startsWith('-') ? null : v;
+    };
     for (let i = 0; i < args.length; i += 1) {
         const a = args[i];
-        if (a === '--project' && args[i + 1] !== undefined) {
-            projectDir = path.resolve(args[i + 1] as string);
-            i += 1;
-        } else if (a === '--global' && args[i + 1] !== undefined) {
-            globalDir = path.resolve(args[i + 1] as string);
-            i += 1;
-        } else if (a === '--source' && args[i + 1] !== undefined) {
-            sourceDir = path.resolve(args[i + 1] as string);
+        if (a === '--project' || a === '--global' || a === '--source') {
+            const v = value(i);
+            if (v === null) {
+                process.stderr.write(`report_carrier_divergence: ${a} needs a directory\n`);
+                return 1;
+            }
+            const resolved = path.resolve(v);
+            if (a === '--project') projectDir = resolved;
+            else if (a === '--global') globalDir = resolved;
+            else sourceDir = resolved;
             i += 1;
         } else if (a === '--help' || a === '-h') {
             process.stdout.write(

@@ -13,6 +13,7 @@ import { afterEach, describe, expect, it } from "vitest";
 import {
   BAND_MIN_TURNS,
   bandVerdict,
+  DEFAULT_RATE_SERIES,
   isInjectedBody,
   measureDelivered,
   recordRate,
@@ -169,8 +170,8 @@ describe("render", () => {
       },
       per_session: [{ session: "abc", user_turns: 1, assistant_turns: 9, violations: [] }],
       delivered: {
-        project: { dir: "/tmp/p", files: 2, tokens: 100 },
-        global: { dir: "/tmp/g", files: 3, tokens: 200 },
+        project: { dir: "/tmp/p", present: true, files: 2, tokens: 100 },
+        global: { dir: "/tmp/g", present: true, files: 3, tokens: 200 },
         union_tokens: 300,
       },
       rate: {
@@ -352,8 +353,8 @@ describe("render — the payload block", () => {
       totals: { "language-pin": 1, "git-authorization": 0, "vacuous-evidence": 0, "evidence-steering": 0 },
       per_session: [{ session: "abc", user_turns: 1, assistant_turns: turns, violations: [] }],
       delivered: {
-        project: { dir: "/tmp/p", files: 110, tokens: 101626 },
-        global: { dir: "/tmp/g", files: 112, tokens: 102402 },
+        project: { dir: "/tmp/p", present: true, files: 110, tokens: 101626 },
+        global: { dir: "/tmp/g", present: true, files: 112, tokens: 102402 },
         union_tokens: 204027,
       },
       rate: {
@@ -422,5 +423,67 @@ describe("hook and scanner classify the same entry identically", () => {
     const { isSyntheticPrompt } = await import("../../src/scripts/language_mirror_hook.js");
     expect(isSyntheticPrompt(GERMAN_PROMPT)).toBe(false);
     expect(scanSession("s", [user(GERMAN_PROMPT), assistant("Ich lese die Roadmap.")]).user_turns).toBe(1);
+  });
+});
+
+// ── R2 completion-review repairs (2026-08-08) ──────────────────────────────
+
+describe("rate_pct and band cannot contradict each other", () => {
+  it("derives the band from the value that is published, not from an unrounded one", () => {
+    // A raw 9.0588…% used to persist rate_pct: 9.1 beside band: "outside", and
+    // print "9.1%" directly above "OUTSIDE the 9.1-39.2% band". The band verdict
+    // IS the declared falsifier for the cancelled volume test, so a rounding
+    // artefact could announce a fourth out-of-band project.
+    const raw = (100 * 181) / 2000; // 9.05
+    expect(Number(raw.toFixed(1))).toBe(9.1);
+    expect(bandVerdict(Number(raw.toFixed(1)), 2000)).toBe("inside");
+    // The unrounded value is what used to be compared, and it disagrees.
+    expect(bandVerdict(raw, 2000)).toBe("outside");
+  });
+});
+
+describe("measureDelivered — absent is not a measured zero", () => {
+  it("marks a carrier absent rather than reporting 0 tokens for it", () => {
+    const root = tmp();
+    const p = path.join(root, "project");
+    fs.mkdirSync(p);
+    fs.writeFileSync(path.join(p, "a.md"), "x".repeat(400), "utf8");
+
+    const d = measureDelivered(p, path.join(root, "no-global"));
+    expect(d.project).toMatchObject({ present: true, tokens: 100 });
+    expect(d.global).toMatchObject({ present: false, files: 0, tokens: 0 });
+  });
+
+  it("says ABSENT in the report instead of printing a zero row", () => {
+    const root = tmp();
+    const report = {
+      scanned_at: "T",
+      store: "/tmp/s",
+      sessions: 1,
+      totals: { "language-pin": 0, "git-authorization": 0, "vacuous-evidence": 0, "evidence-steering": 0 },
+      per_session: [{ session: "a", user_turns: 1, assistant_turns: 3000, violations: [] }],
+      delivered: measureDelivered(path.join(root, "nope"), path.join(root, "also-nope")),
+      rate: {
+        store_key: "aaaaaaaaaaaa",
+        sessions: 1,
+        assistant_turns: 3000,
+        language_pin: 0,
+        rate_pct: 0,
+        band: "outside" as const,
+        delivered_project_tokens: 0,
+        delivered_global_tokens: 0,
+      },
+    };
+    expect(render(report)).toMatch(/ABSENT — not a measured zero/);
+  });
+});
+
+describe("DEFAULT_RATE_SERIES", () => {
+  it("is absolute, so --record lands in the ignored tree from any cwd", () => {
+    // Relative, it created a fresh agents/runtime/state/ subtree wherever the
+    // process happened to start — outside the ignore rule the docstring cites,
+    // and splitting a series whose whole purpose is comparability.
+    expect(path.isAbsolute(DEFAULT_RATE_SERIES)).toBe(true);
+    expect(DEFAULT_RATE_SERIES.endsWith(path.join("agents", "runtime", "state", "conformance-rates.jsonl"))).toBe(true);
   });
 });

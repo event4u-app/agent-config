@@ -59,6 +59,7 @@ import * as path from 'node:path';
 import process from 'node:process';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
+import { entryText, isSidechain, toolUses as _toolUses } from './_lib/transcript_entry.js';
 import { censusSkills, DETERMINISTIC_RE, SKILLS_ROOT } from './report_skill_activation.js';
 
 const _HERE = fileURLToPath(import.meta.url);
@@ -98,8 +99,16 @@ const CMD_HEADS = new Set([
  * Where a line stops stating the prohibition and starts stating the remedy.
  * Everything after the first pivot is prescriptive, so an artefact there is the
  * fix, not the offence.
+ *
+ * DELIBERATELY NOT a bare `use` / `instead`. A first draft matched those anywhere
+ * in the line, which inverts the very polarity the pivot exists to get right:
+ * *"NEVER use `X`"* puts the pivot BEFORE the artefact, so the forbidden thing
+ * would be classified `prescribed` and silently dropped from the mechanisable
+ * set — biasing this report's own headline ratio downward. A pivot is a
+ * punctuation break (dash, arrow, semicolon) or a remedy phrase that follows one,
+ * never a verb that can appear inside the prohibition itself.
  */
-const PIVOT_RE = /\s—\s|\s–\s|\buse\b|\binstead\b|→/;
+const PIVOT_RE = /\s—\s|\s–\s|→|;\s|\s—use\b|\buse instead\b/;
 
 export type Polarity = 'forbidden' | 'prescribed';
 
@@ -115,8 +124,15 @@ export interface ObligationCensus {
     /** The 30 (or however many the census names today). */
     skills: string[];
     totalLines: number;
-    /** Artefact-bearing, either polarity. */
+    /** Artefact-bearing, either polarity. One entry per ARTEFACT. */
     withArtefact: Obligation[];
+    /**
+     * Obligation LINES carrying at least one artefact. Kept separate from
+     * `withArtefact.length` because a line can name two, and dividing an
+     * artefact count by a line count and calling it a share of lines overstates
+     * the coverage this report exists to be honest about.
+     */
+    linesWithArtefact: number;
     /** The mechanisable subset — what this detector can actually test. */
     forbidden: Obligation[];
     prescribed: Obligation[];
@@ -151,6 +167,7 @@ export function extractObligations(repoRoot: string): ObligationCensus {
         skills: census.withDeterministicObligation,
         totalLines: 0,
         withArtefact: [],
+        linesWithArtefact: 0,
         forbidden: [],
         prescribed: [],
     };
@@ -168,7 +185,11 @@ export function extractObligations(repoRoot: string): ObligationCensus {
             out.totalLines += 1;
             const pivot = PIVOT_RE.exec(line);
             const head = pivot === null ? line : line.slice(0, pivot.index);
-            for (const a of _artefacts(line)) {
+            const found = _artefacts(line);
+            if (found.length > 0) {
+                out.linesWithArtefact += 1;
+            }
+            for (const a of found) {
                 const polarity: Polarity = head.includes(`\`${a.artefact}\``) ? 'forbidden' : 'prescribed';
                 const ob: Obligation = { skill, line, artefact: a.artefact, kind: a.kind, polarity };
                 out.withArtefact.push(ob);
@@ -183,22 +204,20 @@ export function extractObligations(repoRoot: string): ObligationCensus {
 
 type Entry = Record<string, unknown>;
 
-function _isObject(v: unknown): v is Record<string, unknown> {
-    return typeof v === 'object' && v !== null && !Array.isArray(v);
-}
-
-/** Tool calls in an assistant entry, flattened to name + input. */
-function _toolUses(entry: Entry): Array<{ name: string; input: Record<string, unknown> }> {
-    const msg = entry['message'];
-    const content = _isObject(msg) ? msg['content'] : null;
-    if (!Array.isArray(content)) return [];
-    const out: Array<{ name: string; input: Record<string, unknown> }> = [];
-    for (const part of content) {
-        if (!_isObject(part) || part['type'] !== 'tool_use') continue;
-        const name = typeof part['name'] === 'string' ? part['name'] : '';
-        out.push({ name, input: _isObject(part['input']) ? part['input'] : {} });
-    }
-    return out;
+/**
+ * Parse a session once. Both passes below need the same entries, and parsing the
+ * file three times for one report is the kind of waste that also invites the two
+ * passes to disagree about what they read.
+ */
+function _parseSession(lines: readonly string[]): Array<Entry | null> {
+    return lines.map((line) => {
+        if (!line.trim()) return null;
+        try {
+            return JSON.parse(line) as Entry;
+        } catch {
+            return null;
+        }
+    });
 }
 
 /** Tools that WRITE. A read must never satisfy a "never hand-edit" obligation. */
@@ -225,24 +244,28 @@ const SKILL_BODY_RE = /Base directory for this skill:\s*\S*?\/skills\/([A-Za-z0-
  * normalised to its skill stem so both spellings resolve to one key.
  */
 export function loadedSkills(lines: readonly string[]): Map<string, number> {
+    return loadedSkillsFrom(_parseSession(lines));
+}
+
+/** As `loadedSkills`, over already-parsed entries. */
+export function loadedSkillsFrom(entries: ReadonlyArray<Entry | null>): Map<string, number> {
     const first = new Map<string, number>();
     const note = (name: string, at: number): void => {
         const key = name.replace(/:/g, '-');
         if (!first.has(key)) first.set(key, at);
     };
-    lines.forEach((line, i) => {
-        if (!line.trim()) return;
-        let entry: Entry;
-        try {
-            entry = JSON.parse(line) as Entry;
-        } catch {
-            return;
-        }
+    entries.forEach((entry, i) => {
+        // A sidechain turn did not happen in the main thread. Counting one lets a
+        // skill loaded inside a subagent be paired with an edit made outside it,
+        // which breaks the ordering premise that separates SK-2 from a grep.
+        if (entry === null || isSidechain(entry)) return;
         if (entry['type'] === 'user') {
-            const msg = entry['message'];
-            const content = _isObject(msg) ? msg['content'] : null;
-            const text = typeof content === 'string' ? content : null;
-            const m = text === null ? null : SKILL_BODY_RE.exec(text);
+            // `entryText`, not a string-only read: measured in one 30-session
+            // store, ALL 41 injected skill bodies arrive as content blocks and
+            // none as a bare string, so a string-only reader detects zero of
+            // them — and a detector with an empty loaded-set returns no findings,
+            // which is indistinguishable from compliance.
+            const m = SKILL_BODY_RE.exec(entryText(entry));
             if (m !== null) note(m[1] as string, i);
             return;
         }
@@ -269,8 +292,22 @@ export interface Flag {
     evidence: string;
 }
 
-function _inputText(input: Record<string, unknown>): string {
-    return Object.values(input)
+/**
+ * Which input fields name the TARGET of the act, per kind.
+ *
+ * Concatenating every string value would match a forbidden path that appears in
+ * `new_string` / `old_string` / `content` — i.e. flag an edit to some other file
+ * whose text merely MENTIONS `docs/THIRD-PARTY-NOTICES.md` as hand-editing it.
+ * The obligation is about the target, so only target-bearing fields are read; the
+ * same reasoning excludes a `description` that quotes a forbidden command.
+ */
+const PATH_FIELDS = ['file_path', 'path', 'filePath', 'notebook_path', 'target_file'] as const;
+const COMMAND_FIELDS = ['command', 'cmd'] as const;
+
+function _targetText(input: Record<string, unknown>, kind: 'path' | 'command'): string {
+    const fields = kind === 'path' ? PATH_FIELDS : COMMAND_FIELDS;
+    return fields
+        .map((f) => input[f])
         .filter((v): v is string => typeof v === 'string')
         .join('\n');
 }
@@ -280,26 +317,20 @@ export function scanSessionForViolations(
     lines: readonly string[],
     forbidden: readonly Obligation[],
 ): Flag[] {
-    const loaded = loadedSkills(lines);
+    const entries = _parseSession(lines);
+    const loaded = loadedSkillsFrom(entries);
     if (loaded.size === 0) return [];
     const relevant = forbidden.filter((o) => loaded.has(o.skill));
     if (relevant.length === 0) return [];
 
     const flags: Flag[] = [];
-    lines.forEach((line, i) => {
-        if (!line.trim()) return;
-        let entry: Entry;
-        try {
-            entry = JSON.parse(line) as Entry;
-        } catch {
-            return;
-        }
+    entries.forEach((entry, i) => {
+        if (entry === null || isSidechain(entry)) return;
         if (entry['type'] !== 'assistant') return;
         for (const t of _toolUses(entry)) {
             const isWrite = WRITE_TOOLS.has(t.name);
             const isShell = SHELL_TOOLS.has(t.name);
             if (!isWrite && !isShell) continue;
-            const text = _inputText(t.input);
             for (const o of relevant) {
                 const loadedAt = loaded.get(o.skill) as number;
                 // "in a LATER assistant turn" — the load must precede the act,
@@ -308,6 +339,7 @@ export function scanSessionForViolations(
                 if (i <= loadedAt) continue;
                 if (o.kind === 'path' && !isWrite) continue;
                 if (o.kind === 'command' && !isShell) continue;
+                const text = _targetText(t.input, o.kind);
                 if (!text.includes(o.artefact)) continue;
                 const at = text.indexOf(o.artefact);
                 flags.push({
@@ -352,9 +384,12 @@ export function scanStore(repoRoot: string, store: string, limit: number): Sk2Re
         files = fs
             .readdirSync(store)
             .filter((f) => f.endsWith('.jsonl'))
-            .map((f) => path.join(store, f))
-            .sort((a, b) => fs.statSync(b).mtimeMs - fs.statSync(a).mtimeMs)
-            .slice(0, limit);
+            // mtime read ONCE per file, not twice per comparison — a comparator
+            // that stats is O(n log n) syscalls for an O(n) fact.
+            .map((f) => ({ p: path.join(store, f), m: fs.statSync(path.join(store, f)).mtimeMs }))
+            .sort((a, b) => b.m - a.m)
+            .slice(0, limit)
+            .map((x) => x.p);
     } catch {
         return report;
     }
@@ -362,7 +397,8 @@ export function scanStore(repoRoot: string, store: string, limit: number): Sk2Re
     for (const file of files) {
         const lines = fs.readFileSync(file, 'utf-8').split('\n');
         const id = path.basename(file).replace(/\.jsonl$/, '').slice(0, 8);
-        if (loadedSkills(lines).size > 0) report.sessionsWithASkill += 1;
+        const entries = _parseSession(lines);
+        if (loadedSkillsFrom(entries).size > 0) report.sessionsWithASkill += 1;
         report.flags.push(...scanSessionForViolations(id, lines, census.forbidden));
     }
     return report;
@@ -381,12 +417,13 @@ export function render(r: Sk2Report): string {
     lines.push(`    skills with a deterministic obligation   ${c.skills.length}`);
     lines.push(`    obligation lines in them                 ${c.totalLines}`);
     lines.push(
-        `    …naming a concrete artefact              ${c.withArtefact.length} (${_pct(c.withArtefact.length, c.totalLines)})`,
+        `    …LINES naming a concrete artefact        ${c.linesWithArtefact} (${_pct(c.linesWithArtefact, c.totalLines)})`,
     );
+    lines.push(`    …artefacts named across those lines      ${c.withArtefact.length}`);
     lines.push(`    …of those, the FORBIDDEN artefact        ${c.forbidden.length}`);
     lines.push(`    …the PRESCRIBED alternative (excluded)   ${c.prescribed.length}`);
     lines.push(
-        `    testable without judgement               ${c.forbidden.length} of ${c.totalLines} (${_pct(c.forbidden.length, c.totalLines)})`,
+        `    testable without judgement               ${c.forbidden.length} artefact(s) over ${c.totalLines} obligation line(s)`,
     );
     lines.push('');
     lines.push('  The other lines are deterministic in wording and need a reading to test');

@@ -6,7 +6,7 @@
 
 ## Overall
 
-**190 / 302 steps done · 63%**
+**189 / 301 steps done · 63%**
 
 ```text
 █████████████████████████░░░░░░░░░░░░░░░   63%
@@ -19,7 +19,7 @@
 | 1 | [road-to-capability-answerability.md](roadmaps/road-to-capability-answerability.md) | 4 | 19 | 19 | 0 | 0 | 0 | [1](#blockers-road-to-capability-answerability) | ░░░░░░░░░░ 0% |
 | 2 | [road-to-ci-native-release-first-run.md](roadmaps/road-to-ci-native-release-first-run.md) | 2 | 8 | 8 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 3 | [road-to-conformance-round5.md](roadmaps/road-to-conformance-round5.md) | 6 | 31 | 10 | 21 | 0 | 0 | [1](#blockers-road-to-conformance-round5) | ███████░░░ 68% |
-| 4 | [road-to-conformance-round6.md](roadmaps/road-to-conformance-round6.md) | 6 | 34 | 1 | 33 | 0 | 0 | [2](#blockers-road-to-conformance-round6) | ██████████ 97% |
+| 4 | [road-to-conformance-round6.md](roadmaps/road-to-conformance-round6.md) | 6 | 34 | 1 | 32 | 0 | 1 | [2](#blockers-road-to-conformance-round6) | ██████████ 97% |
 | 5 | [road-to-council-blind-review.md](roadmaps/road-to-council-blind-review.md) | 3 | 6 | 2 | 3 | 0 | 1 | 0 | ██████░░░░ 60% |
 | 6 | [road-to-gated-reach-followup.md](roadmaps/road-to-gated-reach-followup.md) | 1 | 12 | 12 | 0 | 0 | 0 | [1](#blockers-road-to-gated-reach-followup) | ░░░░░░░░░░ 0% |
 | 7 | [road-to-inbox-harvest-2026-08.md](roadmaps/road-to-inbox-harvest-2026-08.md) | 5 | 21 | 1 | 11 | 4 | 5 | [2](#blockers-road-to-inbox-harvest-2026-08) | █████████░ 92% |
@@ -99,14 +99,14 @@
 
 ### [road-to-conformance-round6.md](roadmaps/road-to-conformance-round6.md)
 
-**Road to conformance round 6 — the guard regress I shipped, the unmeasured half, and the therapy that has not started** — 33 / 34 done (97%)
+**Road to conformance round 6 — the guard regress I shipped, the unmeasured half, and the therapy that has not started** — 32 / 33 done (97%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
 | 1 | Close the regress, then the standing hole | ✅ done | 0 | 6 | 0 | 0 | 100% |
 | 2 | One trigger definition, both directions | ✅ done | 0 | 4 | 0 | 0 | 100% |
 | 3 | Skills: the census IS the finding | ✅ done | 0 | 4 | 0 | 0 | 100% |
-| 4 | The volume question, answered differently than planned | ✅ done | 0 | 5 | 0 | 0 | 100% |
+| 4 | The volume question, answered differently than planned | ✅ done | 0 | 4 | 0 | 1 | 100% |
 | 5 | Close round 5's own accounting | ✅ done | 0 | 1 | 0 | 0 | 100% |
 | 6 | What this roadmap will not do | 🟡 in progress | 1 | 13 | 0 | 0 | 93% |
 

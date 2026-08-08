@@ -505,13 +505,20 @@ step neither the plan nor the council's options contained (4.5).
 
 Round 5 published *"91 rules load twice, **in two different versions**"*, and
 round 6 wrote its next step on top of that. Re-measured at this commit with the
-shipped report, over all 244 pairs the two carriers share:
+shipped report, over all 107 pairs the two carriers share:
 
 | class | count | what it means |
 |---|---:|---|
 | byte-identical | 0 | expected — the installer stamps every file it writes |
 | differ ONLY in `package:` / `source_path:` | **107** | the installer's own provenance keys; bodies byte-equal |
 | differ in BODY | **0** | no rule's two copies say different things |
+
+<!-- The denominator read 244 in the first draft of this section — the
+gate-script population from § 4.1's registration note, carried across from an
+unrelated measurement into this one. Caught by the R2 completion review, which is
+the second time in this roadmap that a figure was right in the table and wrong in
+the sentence introducing it. -->
+
 
 So "two different versions" describes the **bytes** and not the **text**, and the
 distinction is the whole load: a provenance stamp cannot contradict anything. The
@@ -592,7 +599,7 @@ Filed as the successor's first item, with the grep that found it.
   <!-- Shipped, and NOT per-session — the one word in this step that cannot be
   honoured. § 4.3 below carries the reason and the first readings. The flip stays
   a human gate; nothing here decides it. -->
-- [x] 4.4 **Cancelled — the hypothesis test does not run, and M5 is why.**
+- [-] 4.4 **Cancelled — the hypothesis test does not run, and M5 is why.**
   Council 2026-08-08, unanimous across both members: the natural experiment
   already falsified the ordering, and a pre-registration written *after* its
   numbers are known is not blind. One member said so directly — "pre-registering
@@ -862,3 +869,61 @@ maintainer decision, unchanged, and nothing here routed around it. The successor
 first item is named in § 4.2: `autonomous-execution` asserts unqualified
 tool-call-time enforcement of a guard that binds on 3 of 8 hosts, which is a
 kernel-rule edit and therefore its own PR with its own soak.
+
+## R2 completion review — 14 findings, all real, and the one that mattered
+
+Dispatched via `dispatch_r2_reviewer.ts` (tooling-authored prompt, `prompt_hash`
+recorded in the findings header — the property that makes a self-commissioned
+review admissible at all per `evaluator-independence`). One fresh subagent, no
+implementation context. **14 findings: 1 high, 7 medium, 6 low. Every one was
+real; all 14 are fixed in this branch.**
+
+**The high one is the reason to run these reviews.** `loadedSkills` read
+`message.content` only when it was a `string`. Measured after the finding landed,
+in one 30-session store:
+
+| user-entry content shape | entries | injected skill bodies |
+|---|---:|---:|
+| bare string | 1 440 | **0** |
+| array of content blocks | 23 907 | **41** |
+
+So the reader saw **none** of them, and the failure was invisible by construction:
+an empty loaded-set returns no flags, which is indistinguishable from compliance.
+§ 3.3 had just published "0 flags over 137 sessions" and called the fixtures its
+discrimination proof — and the fixtures could not catch this, because the test
+helper emitted the string shape only. Six passing cases, all exercising the one
+branch that worked.
+
+**What the repair moved.** The shape logic now lives in
+`_lib/transcript_entry.ts`, shared with the scanner that already handled both
+(the two readers disagreeing about the same field was the root, not the symptom).
+Sessions-with-a-skill goes **12 → 13** in the main store and **55 of 137** across
+all stores; flags stay **0**. So the null holds, and it now rests on a reader that
+can see the population.
+
+**My own verification mistake, recorded because it is the transferable part.** I
+confirmed the marker existed with `grep -oh "Base directory for this skill"` over
+the raw JSONL — which matches raw text and says nothing about the parse path. A
+grep over the file is not evidence about the code that reads it.
+
+**The other 13, by class.** Two self-contradicting outputs (`rate_pct` persisted
+rounded while `band` compared the unrounded value, so a raw 9.06 could print
+"9.1%" above "OUTSIDE the 9.1-39.2% band" — the declared falsifier fired by a
+rounding artefact; and this section's own denominator read 244, a figure carried
+in from § 4.1's unrelated gate-script count). Two cwd-relative resolutions (the
+project carrier silently recording 0 tokens with no presence flag; the series path
+landing outside the ignore rule whose coverage its docstring claims). Two
+over-broad matchers (a forbidden path matched inside `new_string`, so editing any
+file that *mentions* it counted as hand-editing it; and `PIVOT_RE`'s bare `use`
+inverting polarity on "NEVER use `X`" — the guard against dropping a forbidden
+artefact, dropping forbidden artefacts). Two missing sidechain exclusions. Then
+I/O waste, a flag-value parsing hole this same diff guarded elsewhere, a share-of-
+lines label over an artefact count, a docstring narrower than its function, a test
+coupled to one shipped skill's prose, and step 4.4 checked `[x]` while its own text
+says **cancelled** (now `[-]`, the glyph the vocabulary reserves for it — in the
+roadmap whose Phase 5 exists to correct exactly that accounting).
+
+Nine new fixtures cover the classes the first suite could not: the block shape end
+to end, both sidechain paths, replacement-text and description over-match, the
+"NEVER use `X`" phrasing, the rounded-vs-unrounded band, absent-vs-zero carriers,
+and the flag-value position.

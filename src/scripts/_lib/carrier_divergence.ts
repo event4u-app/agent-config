@@ -43,7 +43,20 @@ export const OWNERSHIP_KEYS = ['package', 'source_path'] as const;
 
 export type PairVerdict = 'identical' | 'provenance-only' | 'body-diff';
 
-/** Drop the ownership stamp lines, whatever their position in the frontmatter. */
+/**
+ * Drop the ownership stamp lines, wherever they appear in the FILE.
+ *
+ * Not scoped to the frontmatter, and the docstring says so because the scope is
+ * wider than the intent. Two reasons it stays this way: `install.ts` writes the
+ * keys without any guarantee about fence position, and `scope_dedup.test.ts`
+ * deliberately pins the fence-less shape (a stamp with no `---` around it) as the
+ * install condition. Residual risk, stated rather than hidden: a rule body that
+ * contains a line literally starting `package:` or `source_path:` — a YAML
+ * example, an indent-free config snippet — has that line removed from both sides,
+ * so a genuine difference confined to such a line would read `provenance-only`
+ * instead of `body-diff`. Measured over the shipped corpus: no rule body carries
+ * one. Re-check that before treating the class as impossible rather than absent.
+ */
 export function stripOwnershipKeys(text: string): string {
     return text
         .split('\n')

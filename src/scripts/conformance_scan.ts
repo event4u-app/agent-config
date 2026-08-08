@@ -34,6 +34,7 @@ import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
 import { censusRuleDir } from "./_lib/carrier_divergence.js";
+import { entryText, isSidechain } from "./_lib/transcript_entry.js";
 
 import { classify } from "./language_mirror_hook.js";
 import { isSyntheticPrompt } from "./_lib/prompt_shape.js";
@@ -41,6 +42,19 @@ import { classifyAuthorization, type GitOp } from "./git_authorization_hook.js";
 import { BLOCK_OPS, commandOp } from "./hooks/block_unauthorized_git.js";
 import { isVacuousOutput, isCiPoll, pendingCount } from "./before_complete_hook.js";
 import { isEvaluationPrompt, isSelfScoped, preloadedVerdict } from "./hooks/evidence_independence.js";
+
+/**
+ * This module's own repo root, NOT `process.cwd()`.
+ *
+ * Both the project carrier and the rate series are anchored here. Resolving them
+ * against the cwd made a run from any subdirectory record
+ * `delivered_project_tokens: 0` and append the series to a fresh
+ * `agents/runtime/state/` tree at that location — outside the ignore rule whose
+ * coverage the docstring claims, and silently splitting a series whose whole
+ * point is comparability. Under the bundled CLI `import.meta.url` still resolves
+ * inside the package, which is the tree whose rules are being measured.
+ */
+const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "..");
 
 export interface Violation {
   check: "language-pin" | "git-authorization" | "vacuous-evidence" | "evidence-steering";
@@ -84,8 +98,16 @@ export interface SessionReport {
  * one mechanism rather than two.
  */
 export interface DeliveredPayload {
-  project: { dir: string; files: number; tokens: number };
-  global: { dir: string; files: number; tokens: number };
+  /**
+   * `present` distinguishes a measured zero from a carrier that is not there.
+   * Without it a run from the wrong directory records `tokens: 0`, halves
+   * `union_tokens`, and persists a record indistinguishable from a real reading
+   * into a series whose entire purpose is comparability over time. The sibling
+   * `report_carrier_divergence` carries the same flag and refuses to substitute a
+   * different tree; this is the same refusal.
+   */
+  project: { dir: string; present: boolean; files: number; tokens: number };
+  global: { dir: string; present: boolean; files: number; tokens: number };
   /** What a machine carrying BOTH carriers pays — the figure M5 compared across projects. */
   union_tokens: number;
 }
@@ -153,20 +175,14 @@ function _isObject(v: unknown): v is Record<string, unknown> {
 
 /** Text of a user-role entry, or null when it is not a real chat message. */
 export function userText(entry: Entry): string | null {
-  if (entry["type"] !== "user" || entry["isSidechain"] === true) {
+  if (entry["type"] !== "user" || isSidechain(entry)) {
     return null;
   }
-  const msg = entry["message"];
-  const content = _isObject(msg) ? msg["content"] : undefined;
-  let text = "";
-  if (typeof content === "string") {
-    text = content;
-  } else if (Array.isArray(content)) {
-    text = content
-      .filter((b) => _isObject(b) && b["type"] === "text")
-      .map((b) => String((b as Record<string, unknown>)["text"] ?? ""))
-      .join("\n");
-  }
+  // Shape handling moved to `_lib/transcript_entry.ts` so a second reader of the
+  // same field cannot get it wrong. It already did once, in this branch: a
+  // string-only reader saw 0 of the 41 injected skill bodies in this store,
+  // because they all arrive as content blocks.
+  const text = entryText(entry);
   if (!text.trim()) {
     return null;
   }
@@ -178,20 +194,10 @@ export function userText(entry: Entry): string | null {
 
 /** Assistant prose, or null. */
 export function assistantText(entry: Entry): string | null {
-  if (entry["type"] !== "assistant" || entry["isSidechain"] === true) {
+  if (entry["type"] !== "assistant" || isSidechain(entry)) {
     return null;
   }
-  const msg = entry["message"];
-  const content = _isObject(msg) ? msg["content"] : undefined;
-  if (!Array.isArray(content)) {
-    return null;
-  }
-  const text = content
-    .filter((b) => _isObject(b) && b["type"] === "text")
-    .map((b) => String((b as Record<string, unknown>)["text"] ?? ""))
-    .join("\n")
-    .trim();
-  return text || null;
+  return entryText(entry).trim() || null;
 }
 
 /** Tool-use blocks from an assistant entry. */
@@ -416,7 +422,13 @@ export function scanSession(sessionId: string, lines: string[]): SessionReport {
  * because the series is per-machine observation, and committing it would publish
  * the project set `storeKey` exists to hide.
  */
-export const DEFAULT_RATE_SERIES = path.join("agents", "runtime", "state", "conformance-rates.jsonl");
+export const DEFAULT_RATE_SERIES = path.join(
+  REPO_ROOT,
+  "agents",
+  "runtime",
+  "state",
+  "conformance-rates.jsonl",
+);
 
 /** Default Claude Code transcript store for a project directory. */
 export function defaultStore(projectDir: string): string {
@@ -438,8 +450,18 @@ export function measureDelivered(projectRulesDir: string, globalRulesDir: string
   const p = censusRuleDir(projectRulesDir);
   const g = censusRuleDir(globalRulesDir);
   return {
-    project: { dir: projectRulesDir, files: p.files, tokens: _tokens(p.chars) },
-    global: { dir: globalRulesDir, files: g.files, tokens: _tokens(g.chars) },
+    project: {
+      dir: projectRulesDir,
+      present: fs.existsSync(projectRulesDir),
+      files: p.files,
+      tokens: _tokens(p.chars),
+    },
+    global: {
+      dir: globalRulesDir,
+      present: fs.existsSync(globalRulesDir),
+      files: g.files,
+      tokens: _tokens(g.chars),
+    },
     union_tokens: _tokens(p.chars + g.chars),
   };
 }
@@ -492,9 +514,14 @@ export function scanStore(store: string, limit: number): ScanReport {
 
   const assistant_turns = per_session.reduce((n, s) => n + s.assistant_turns, 0);
   const language_pin = totals["language-pin"] ?? 0;
-  const rate_pct = assistant_turns === 0 ? 0 : (100 * language_pin) / assistant_turns;
+  // Round ONCE, then use the rounded value for both the record and the verdict.
+  // Rounding after the comparison lets a raw 9.06 persist `rate_pct: 9.1` beside
+  // `band: "outside"`, and print "9.1%" directly above "OUTSIDE the 9.1-39.2%
+  // band" — a rounding artefact announcing the declared falsifier.
+  const rate_pct =
+    assistant_turns === 0 ? 0 : Number(((100 * language_pin) / assistant_turns).toFixed(1));
   const delivered = measureDelivered(
-    path.join(process.cwd(), ".claude", "rules"),
+    path.join(REPO_ROOT, ".claude", "rules"),
     path.join(process.env["HOME"] ?? os.homedir(), ".claude", "rules"),
   );
 
@@ -510,7 +537,7 @@ export function scanStore(store: string, limit: number): ScanReport {
       sessions: per_session.length,
       assistant_turns,
       language_pin,
-      rate_pct: Number(rate_pct.toFixed(1)),
+      rate_pct,
       band: bandVerdict(rate_pct, assistant_turns),
       delivered_project_tokens: delivered.project.tokens,
       delivered_global_tokens: delivered.global.tokens,
@@ -555,8 +582,12 @@ export function render(report: ScanReport): string {
   const d = report.delivered;
   lines.push("");
   lines.push("  Delivered rule text (chars/4, carriers as they stand NOW — not per-session):");
-  lines.push(`    project  ${String(d.project.files).padStart(4)} rules  ${String(d.project.tokens).padStart(7)} tok`);
-  lines.push(`    global   ${String(d.global.files).padStart(4)} rules  ${String(d.global.tokens).padStart(7)} tok`);
+  const carrier = (label: string, c: { present: boolean; files: number; tokens: number }): string =>
+    c.present
+      ? `    ${label}  ${String(c.files).padStart(4)} rules  ${String(c.tokens).padStart(7)} tok`
+      : `    ${label}  ABSENT — not a measured zero, this carrier does not exist here`;
+  lines.push(carrier("project", d.project));
+  lines.push(carrier("global ", d.global));
   lines.push(`    union                  ${String(d.union_tokens).padStart(7)} tok`);
   lines.push("    A session's own payload is NOT recoverable: the transcript records no system");
   lines.push("    or tools field, and the carriers change under the sessions. This is one");

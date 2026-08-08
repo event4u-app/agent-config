@@ -216,3 +216,16 @@ describe('the report is advisory and must stay that way', () => {
         expect(render(d)).toMatch(/Re-run it, do not cite it/);
     });
 });
+
+// ── R2 completion-review repair (2026-08-08) ───────────────────────────────
+
+describe('flag VALUES are not paths either', () => {
+    it('rejects a flag in the value position instead of resolving it as a directory', () => {
+        // `--project --global /x` used to resolve a directory literally named
+        // `--global` and silently drop `/x`, then report "tree does not exist" —
+        // a usage error dressed as a measurement. The flag-NAME half of this hole
+        // was already closed; this is the flag-VALUE half.
+        expect(main(['--project', '--global', '/x'])).toBe(1);
+        expect(main(['--project'])).toBe(1);
+    });
+});

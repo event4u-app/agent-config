@@ -82,13 +82,16 @@ describe('extractObligations — derived from the shipped skills, never a list',
         }
     });
 
-    it('classifies the prescribed alternative as prescribed, not as the offence', () => {
-        // `using-git-worktrees`: "NEVER `rm -rf` a worktree — use `git worktree
-        // remove`". A naive extraction lifts the remedy and flags the fix.
+    it('never classifies a corpus artefact as both forbidden and prescribed', () => {
+        // The polarity mechanism itself is pinned on synthetic lines below, so
+        // this assertion deliberately names no shipped skill: hard-coding one
+        // corpus member's wording makes an unrelated skill edit red this file
+        // with a message pointing at the detector.
         const c = extractObligations(REPO_ROOT);
-        const remedy = c.prescribed.find((o) => o.artefact.startsWith('git worktree'));
-        expect(remedy, 'the worktree remedy must be classified prescribed').toBeDefined();
-        expect(c.forbidden.map((o) => o.artefact)).not.toContain('git worktree remove');
+        const forbidden = new Set(c.forbidden.map((o) => `${o.skill}:${o.artefact}`));
+        for (const o of c.prescribed) {
+            expect(forbidden.has(`${o.skill}:${o.artefact}`)).toBe(false);
+        }
     });
 
     it('does not count a bare prose absolute as artefact-bearing', () => {
@@ -224,5 +227,165 @@ describe('the report is advisory and leads with coverage', () => {
         const r = scanStore(REPO_ROOT, store, 10);
         expect(r.sessions).toBe(2);
         expect(r.sessionsWithASkill).toBe(1);
+    });
+});
+
+// ── R2 completion-review repairs (2026-08-08) ──────────────────────────────
+//
+// Every case below pins a defect the fixtures above could NOT have caught,
+// which is the point: the first suite proved the detector fires and still left
+// the loaded-set reader broken for the only shape the real store uses.
+
+/** The shape the store actually stores: content BLOCKS, not a bare string. */
+function skillBodyBlocks(name: string): string {
+    return JSON.stringify({
+        type: 'user',
+        message: {
+            content: [
+                { type: 'text', text: `Base directory for this skill: /Users/x/.claude/skills/${name}\n` },
+            ],
+        },
+    });
+}
+
+describe('loadedSkills — the content shape that actually occurs', () => {
+    it('detects a skill body delivered as content BLOCKS, not only as a string', () => {
+        // Measured in one 30-session store: 0 injected skill bodies arrive as a
+        // bare string and 41 arrive as blocks. A string-only reader therefore
+        // detected NONE of them, and an empty loaded-set returns no findings —
+        // indistinguishable from compliance.
+        expect(loadedSkills([skillBodyBlocks('rtk-output-filtering')]).has('rtk-output-filtering')).toBe(
+            true,
+        );
+    });
+
+    it('still detects the string shape, so the repair is additive', () => {
+        expect(loadedSkills([skillBody('rtk-output-filtering')]).has('rtk-output-filtering')).toBe(true);
+    });
+
+    it('ignores a sidechain turn — a subagent load is not a main-thread load', () => {
+        const side = JSON.stringify({
+            type: 'user',
+            isSidechain: true,
+            message: { content: [{ type: 'text', text: 'Base directory for this skill: /x/skills/ai-council' }] },
+        });
+        expect(loadedSkills([side]).size).toBe(0);
+    });
+
+    it('flags a violation reached through the block shape end to end', () => {
+        const flags = scanSessionForViolations(
+            's',
+            [
+                skillBodyBlocks('license-compliance-credits'),
+                assistant([{ name: 'Edit', input: { file_path: 'docs/THIRD-PARTY-NOTICES.md' } }]),
+            ],
+            [FORBIDDEN_PATH],
+        );
+        expect(flags).toHaveLength(1);
+    });
+});
+
+describe('scanSessionForViolations — what the target fields exclude', () => {
+    it('does NOT flag a forbidden path that appears only in replacement TEXT', () => {
+        // Editing some other file whose content mentions the path is not
+        // hand-editing it. Concatenating every string input value made it one.
+        const flags = scanSessionForViolations(
+            's',
+            [
+                skillBodyBlocks('license-compliance-credits'),
+                assistant([
+                    {
+                        name: 'Edit',
+                        input: {
+                            file_path: 'docs/README.md',
+                            new_string: 'see docs/THIRD-PARTY-NOTICES.md for the notices',
+                        },
+                    },
+                ]),
+            ],
+            [FORBIDDEN_PATH],
+        );
+        expect(flags).toEqual([]);
+    });
+
+    it('does NOT flag a forbidden command quoted in a tool description', () => {
+        const flags = scanSessionForViolations(
+            's',
+            [
+                skillBodyBlocks('rtk-output-filtering'),
+                assistant([
+                    { name: 'Bash', input: { command: 'echo hi', description: 'why not cargo install rtk' } },
+                ]),
+            ],
+            [FORBIDDEN_CMD],
+        );
+        expect(flags).toEqual([]);
+    });
+
+    it('ignores a sidechain assistant turn as the violating act', () => {
+        const sideEdit = JSON.stringify({
+            type: 'assistant',
+            isSidechain: true,
+            message: {
+                content: [
+                    { type: 'tool_use', name: 'Edit', input: { file_path: 'docs/THIRD-PARTY-NOTICES.md' } },
+                ],
+            },
+        });
+        expect(
+            scanSessionForViolations('s', [skillBodyBlocks('license-compliance-credits'), sideEdit], [
+                FORBIDDEN_PATH,
+            ]),
+        ).toEqual([]);
+    });
+});
+
+describe('polarity — the pivot must not swallow the prohibition', () => {
+    it('keeps "NEVER use `X`" forbidden', () => {
+        // A bare `use` anywhere in the line put the pivot BEFORE the artefact and
+        // classified the forbidden thing as the remedy — silently shrinking the
+        // mechanisable set this report publishes as its headline.
+        const root = tmpdir();
+        const skills = path.join(root, 'src', 'skills', 'fixture-skill');
+        fs.mkdirSync(skills, { recursive: true });
+        fs.writeFileSync(
+            path.join(skills, 'SKILL.md'),
+            '---\nname: fixture-skill\ndescription: x\n---\n\n- NEVER use `cargo install rtk` for this.\n',
+            'utf8',
+        );
+        const c = extractObligations(root);
+        expect(c.forbidden.map((o) => o.artefact)).toContain('cargo install rtk');
+        expect(c.prescribed).toEqual([]);
+    });
+
+    it('still classifies a dash-introduced remedy as prescribed', () => {
+        const root = tmpdir();
+        const skills = path.join(root, 'src', 'skills', 'fixture-skill');
+        fs.mkdirSync(skills, { recursive: true });
+        fs.writeFileSync(
+            path.join(skills, 'SKILL.md'),
+            '---\nname: fixture-skill\ndescription: x\n---\n\n* NEVER hand-roll it — use `git worktree remove`.\n',
+            'utf8',
+        );
+        const c = extractObligations(root);
+        expect(c.prescribed.map((o) => o.artefact)).toContain('git worktree remove');
+        expect(c.forbidden).toEqual([]);
+    });
+
+    it('counts artefact-bearing LINES apart from artefacts, so the ratio is honest', () => {
+        const root = tmpdir();
+        const skills = path.join(root, 'src', 'skills', 'fixture-skill');
+        fs.mkdirSync(skills, { recursive: true });
+        fs.writeFileSync(
+            path.join(skills, 'SKILL.md'),
+            '---\nname: fixture-skill\ndescription: x\n---\n\n' +
+                '- NEVER touch `docs/a.md` or `docs/b.md`.\n' +
+                '- NEVER be impolite.\n',
+            'utf8',
+        );
+        const c = extractObligations(root);
+        expect(c.totalLines).toBe(2);
+        expect(c.withArtefact).toHaveLength(2); // two artefacts…
+        expect(c.linesWithArtefact).toBe(1); // …on ONE line
     });
 });
