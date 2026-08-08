@@ -238,23 +238,78 @@ length of the text actually typed. Phase 2.3 does exactly that and nothing more.
 
 ## Phase 2 — One trigger definition, both directions
 
-- [ ] 2.1 Extract the synthetic-prompt predicate into a shared module and apply
+- [x] 2.1 Extract the synthetic-prompt predicate into a shared module and apply
   it in `conformance_scan.ts` alongside `isCompactSummary` and `isInjectedBody`.
   Hook and scanner must classify the same entry identically, or every future era
   split argues about two different populations.
-- [ ] 2.2 Give the **hook** the net it lacks: a prompt whose bulk is pasted
+  <!-- `src/scripts/_lib/prompt_shape.ts`. The hook re-exports it so its tested
+  surface is unchanged; the scanner imports it. -->
+- [x] 2.2 Give the **hook** the net it lacks: a prompt whose bulk is pasted
   foreign-language content must not pin to the paste. The scanner's heuristic
   (`length > 2500 && english`) is the wrong shape for a bidirectional test —
   derive the rule from the human-authored fraction, not from a hard-coded
   language. This is the defect that fired on the review's own session.
-- [ ] 2.3 Settle the residue named above: record the prompt length the hook
+  <!-- Shipped as lead-first classification: the typed span above the first
+  pasted document decides, and only an undetermined lead falls through to the
+  whole body. Names no language, so it resolves German-over-English-paste and
+  English-over-German-paste by the same step; both pinned. -->
+- [x] 2.3 Settle the residue named above: record the prompt length the hook
   receives for one slash-command turn, compare against the typed text, and
   publish the answer. If the host does prepend the wrapper, 2.1's predicate
   needs a strip-then-classify branch; if it does not, the null closes the
   question permanently.
-- [ ] 2.4 Re-run `conformance:behavior --limit 30` after 2.1-2.2 and publish the
+- [x] 2.4 Re-run `conformance:behavior --limit 30` after 2.1-2.2 and publish the
   delta against 578, whatever its sign. Per the instrument lock the superseded
   figures stay in the table beside it.
+
+### 2.3 — the answer, and it is a null
+
+The falsifier ran on the turn that opened this session's work: a
+`/roadmap:next im working tree` invocation, 15 characters typed, against a
+12 224-character command body.
+
+| payload | chars | classifier verdict |
+|---|---:|---|
+| the typed text alone | 15 | `und` — 1 de marker, 0 en |
+| wrapper + command body | 12 273 | `en` — 1 de marker, 254 en |
+
+The pin that turn resolved **German**. An `und` verdict leaves the previous pin
+standing, which is what German requires; an `en` verdict would have flipped it
+and every later turn with it. So the host does **not** prepend the slash-command
+wrapper or body to `payload.prompt`, and 2.1's predicate needs no
+strip-then-classify branch. Both classifier versions were run on both payloads
+and agree, so the answer does not depend on this round's own change.
+
+The question is closed permanently rather than deferred: the observation is
+direct, not an inference about the host.
+
+### 2.4 — the delta, decomposed rather than attributed
+
+Same store (27 sessions), same `--limit 30`, both halves isolated by disabling
+one at a time.
+
+| state | language-pin |
+|---|---:|
+| published, round 5 | 578 |
+| today's corpus, neither change | **577** |
+| + synthetic-turn skip (2.1) | **622** (+45) |
+| + lead-first classification (2.2) | **622** (+0) |
+
+The 578 → 577 step is corpus drift of one turn, not a code effect.
+
+**The mechanical reason for +45, which is a correction and not noise.** A
+harness-generated user turn is English and was read as a chat message, so it set
+`pinned = "en"`, and every English assistant turn after it counted as
+CONFORMING. The scanner was under-reporting, and it was under-reporting exactly
+the population the hook has skipped since round 5 — the divergence 2.1 closes
+was not neutral, it was flattering. 622 is the first figure both surfaces agree
+on.
+
+**2.2 contributes zero on this corpus, and that is published rather than
+buried.** The paste-dominance defect is real — it fired on a live session and
+both directions are pinned in the suite — but across ~2 280 assistant turns it
+moves no count. The mechanism is right and its measured magnitude here is null;
+a future round should not re-derive it as new evidence.
 
 ## Phase 3 — Skills: the census IS the finding
 

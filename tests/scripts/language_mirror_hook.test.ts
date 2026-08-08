@@ -50,6 +50,45 @@ describe("isSyntheticPrompt", () => {
     );
   });
 
+  // Round 6, Phase 2.2 — the OTHER direction, which had no net on either side.
+  // This fired on the session that received the round-6 review: the pin read
+  // English because an English draft was pasted below German prose.
+  describe("a pasted document does not out-vote the typed lead", () => {
+    const ENGLISH_DOC = [
+      "# Road to something",
+      "",
+      "This roadmap describes the work that is to be done and the reasons that we",
+      "have for doing it, and it goes on at considerable length about all of them.",
+      "The point of this fixture is that it is much longer than the instruction and",
+      "it is entirely in English, so a whole-body count would resolve to English.",
+    ].join("\n");
+    const GERMAN_DOC = [
+      "# Fahrplan für etwas",
+      "",
+      "Dieser Fahrplan beschreibt die Arbeit, die zu erledigen ist, und die Gründe,",
+      "die wir dafür haben, und er tut das mit einer ganzen Menge an Worten.",
+      "Der Sinn dieser Vorlage ist, dass sie viel länger ist als die Anweisung und",
+      "vollständig auf Deutsch, sodass eine Zählung über alles Deutsch ergäbe.",
+    ].join("\n");
+
+    it("pins to the German instruction above an English paste", () => {
+      const prompt = `Bitte schau dir das mal an und sag mir was du davon hältst:\n\n${ENGLISH_DOC}`;
+      expect(classify(prompt).language).toBe("de");
+    });
+
+    it("pins to the English instruction above a German paste — same rule, no language named", () => {
+      const prompt = `Please take a look at this and tell me what you think of it:\n\n${GERMAN_DOC}`;
+      expect(classify(prompt).language).toBe("en");
+    });
+
+    it("falls back to the whole body when the lead decides nothing", () => {
+      // No document marker and no determinate lead: behaviour is unchanged from
+      // before the net existed. That fallback is what keeps this conservative.
+      expect(classify("ok").language).toBe("und");
+      expect(classify("bitte mach das nochmal und prüfe die Regeln").language).toBe("de");
+    });
+  });
+
   it("leaves a German pin untouched when a synthetic English turn arrives", () => {
     const dir = fs.mkdtempSync(path.join(os.tmpdir(), "lang-mirror-synth-"));
     const german = "Bitte prüfe die Roadmap und sage mir, welche Phase als nächste dran ist.";
