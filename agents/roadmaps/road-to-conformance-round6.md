@@ -126,6 +126,7 @@ Every row was executed against a worktree at `2daf29871`. The three rows marked
 | Point 6 · skills are not measured at all | **Confirmed.** Skills appear in the conformance scan only as bodies to exclude. |
 | Point 7 · the volume interaction was never discussed | **Confirmed, with different numbers — changed.** Measured here: the project projection goes from ~76 300 tokens (92 rules) to **~99 500** (108 rules), so restoring the 21 rules added **~23 200 tokens** to that carrier; union across both carriers moves ~176 000 → **~199 300**. The review cites a ~207 000 figure from another measurement; not reproduced, not adopted. |
 | Point 8 · round 5 merged with its acceptance list untouched | **Confirmed.** All six criteria are `[ ]` and the roadmap is unarchived at HEAD. |
+| — · a third defect in #1208, found by someone else | **Not from the review; found while merging.** PR #1211, `fix(gates): a zero-tool checkout is an absent surface, not a dead scan scope`, repairs the projection gate #1208 shipped: a checkout with no host tool trees was classified as a dead scan scope — which errors — instead of an absent surface. The `assertScanned` discipline was applied to the wrong condition. Counted here because this roadmap's opening claim is about what #1208 shipped, and an audit that lists only the defects a reviewer handed it is not counting. |
 
 ### M5 — the cross-project control group, and the null it produced
 
