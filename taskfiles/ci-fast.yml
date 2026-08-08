@@ -744,6 +744,16 @@ tasks:
     desc: "Advisory skill-activation census (round-6 Phase 3.1) — shipped skills vs machine-matchable triggers vs actual invocations; gates on nothing and prints no rate, because none is available"
     cmd: ./scripts-run src/scripts/report_skill_activation {{.CLI_ARGS}}
 
+  report-skill-obligation-violations:
+    silent: true
+    desc: "Advisory SK-2 loaded-but-violated (round-6 Phase 3.2) — a skill body was in context and a mechanisable obligation stated in it was violated later in the same session; leads with its coverage ratio (3 of 110 obligation lines are testable without judgement) and gates on nothing"
+    cmd: ./scripts-run src/scripts/report_skill_obligation_violations {{.CLI_ARGS}}
+
+  report-carrier-divergence:
+    silent: true
+    desc: "Advisory cross-carrier rule divergence (round-5 Phase 1.3) — which rules the project projection and the machine-global install deliver differently, by name; gates on nothing, because a checkout ahead of its own global install is the normal development state"
+    cmd: ./scripts-run src/scripts/report_carrier_divergence {{.CLI_ARGS}}
+
   lint-settings-classes:
     silent: true
     desc: Every settings-template leaf carries an A/B/C class in docs/contracts/settings-classes.md (road-to-zero-ceremony-settings Phase 1)
