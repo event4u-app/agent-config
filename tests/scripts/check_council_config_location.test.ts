@@ -197,3 +197,95 @@ describe('check_council_config_location — golden parity (real repo)', () => {
         expect(a.status, a.stderr).not.toBeNull();
     });
 });
+
+// ── §4 always-loaded carrier check ─────────────────────────────────
+// Regression cover for the defect this check exists to catch: a correct
+// resolver, a correct skill and a green §1–§3, yet consumer sessions still
+// claimed "council not configured (no `.agent-settings.yml`)" because the
+// user-global fact reached no always-loaded surface.
+
+const CARRIER_RULE = [
+    '---',
+    'type: "auto"',
+    'triggers:',
+    '  - keyword: "council"',
+    'workspaces: [engineering, product]',
+    '---',
+    '',
+    'Config lives at `~/.event4u/agent-config/settings/.ai-council.yml`.',
+    'NEVER INFER "NOT CONFIGURED" from a missing project file.',
+    '',
+].join('\n');
+// The reach reference §4 compares against; narrower than it → violation.
+const REACH_REF = ['---', 'type: "always"', 'workspaces: [engineering, product]', '---', ''].join(
+    '\n',
+);
+
+describe('check_council_config_location — §4 always-loaded carrier', () => {
+    let tmp: string;
+    beforeEach(() => {
+        tmp = mkTmp();
+    });
+    afterEach(() => {
+        fs.rmSync(tmp, { recursive: true, force: true });
+    });
+
+    it('out of scope: no src/rules/ at all → exit 0 (consumer / fixture tree)', () => {
+        write(tmp, 'src/skills/ai-council/SKILL.md', 'Council notes.\n');
+        expect(runTs(tmp).status).toBe(0);
+    });
+
+    // A council surface must exist in every fixture below, or the scan-scope
+    // guard exits 1 first and the assertion would pass for the wrong reason.
+    function withSurface(root: string): void {
+        write(root, 'src/skills/ai-council/SKILL.md', 'Council notes.\n');
+    }
+
+    it('violation: a rule layer with no carrier → exit 1', () => {
+        withSurface(tmp);
+        write(tmp, 'src/rules/unrelated.md', '---\ntype: "auto"\n---\n\nSomething else.\n');
+        const r = runTs(tmp);
+        expect(r.status).toBe(1);
+        expect(r.stdout).toContain('no always-loaded rule carries the council user-global fact');
+    });
+
+    it('violation: two of three markers is not a carrier → exit 1', () => {
+        withSurface(tmp);
+        write(
+            tmp,
+            'src/rules/half.md',
+            '---\ntype: "auto"\ntriggers:\n  - keyword: "council"\n---\n\n' +
+                'Config lives at `~/.event4u/agent-config/settings/.ai-council.yml`.\n',
+        );
+        const r = runTs(tmp);
+        expect(r.status).toBe(1);
+        expect(r.stdout).toContain('no always-loaded rule carries the council user-global fact');
+    });
+
+    it('clean: a full carrier with kernel-wide reach → exit 0', () => {
+        write(tmp, 'src/rules/council-availability.md', CARRIER_RULE);
+        write(tmp, 'src/rules/direct-answers.md', REACH_REF);
+        expect(runTs(tmp).status).toBe(0);
+    });
+
+    it('violation: carrier scoped narrower than the reach reference → exit 1', () => {
+        write(
+            tmp,
+            'src/rules/council-availability.md',
+            CARRIER_RULE.replace('workspaces: [engineering, product]', 'workspaces: [engineering]'),
+        );
+        write(tmp, 'src/rules/direct-answers.md', REACH_REF);
+        const r = runTs(tmp);
+        expect(r.status).toBe(1);
+        expect(r.stdout).toContain('scoped more narrowly');
+        expect(r.stdout).toContain('product');
+    });
+
+    it('real repo: the carrier exists and §4 scope is live (not silently empty)', async () => {
+        const mod = await import('../../src/scripts/check_council_config_location.js');
+        // Scope liveness — a skipped §4 would also return zero findings.
+        expect(fs.existsSync(path.join(REPO_ROOT, 'src', 'rules'))).toBe(true);
+        expect([...mod.iter_files(REPO_ROOT, [mod.RULES_GLOB])].length).toBeGreaterThan(0);
+        expect(mod.find_carrier_violations(REPO_ROOT)).toEqual([]);
+    });
+});

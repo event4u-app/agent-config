@@ -153,6 +153,13 @@ Tier 1 — power-user (release shape, audit, migration):
                              Usage: council:run <question> --output <path> --confirm
   council:render             Re-render a saved council responses JSON to markdown
                              Usage: council:render <responses.json>
+  council:status             Report whether an AI council is configured, and from where
+                             (no API call, no spend)
+  self-repair:status         List queued agent-config defect records (read-only)
+  self-repair:release        Publish one defect record — a PR when the fix can be
+                             pushed, else an issue. Running it is your Hard-Floor
+                             confirmation.
+                             Usage: self-repair:release <fingerprint> [--dry-run]
 EOF
   fi
 
@@ -1047,6 +1054,17 @@ cmd_council() {
   exec_ts "$script" "$sub" "$@"
 }
 
+# `self-repair:{status,release}` — the queued-defect reader and the single
+# gated outward step. `release` publishes (a PR, else an issue); running it IS
+# the user's Hard-Floor confirmation, which is why nothing else in the loop
+# may publish on its own.
+cmd_self_repair() {
+  local sub="$1"; shift || true
+  local script
+  script="$(resolve_script "src/scripts/self_repair_cli.ts")" || return 1
+  exec_ts "$script" "$sub" "$@"
+}
+
 # `use --profile=<id>` — switch the active experience/profile. Writes
 # profile.id into the canonical .agent-settings.yml; the explicit
 # profile-switch seam named by ADR-040 (road-to-6.0.0-a Step 8).
@@ -1311,6 +1329,9 @@ main() {
     council:estimate)        cmd_council estimate "$@" ;;
     council:run)             cmd_council run "$@" ;;
     council:render)          cmd_council render "$@" ;;
+    council:status)         cmd_council status "$@" ;;
+    self-repair:status)      cmd_self_repair status "$@" ;;
+    self-repair:release)     cmd_self_repair release "$@" ;;
     update)                  cmd_update "$@" ;;
     upgrade)                 cmd_upgrade "$@" ;;
     refresh)                 cmd_refresh "$@" ;;
