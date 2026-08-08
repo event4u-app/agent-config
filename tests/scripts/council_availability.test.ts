@@ -141,3 +141,58 @@ describe("run", () => {
     expect(run("{not json", { env: {} })).toBe(0);
   });
 });
+
+/**
+ * The refusal messages are load-bearing. Measured across 10 sessions in one
+ * consumer project: the agent reasoned from `.agent-settings.yml` six times and
+ * substituted a weaker path — and one session copied the user-global config INTO
+ * the project tree, because the CLI's own error said that was where the switch
+ * lived. An error from the authoritative tool manufactures belief; these pin that
+ * it points at the real file.
+ */
+describe("council refusal messages", () => {
+  const SRC = path.resolve(__dirname, "..", "..", "src", "scripts", "council_cli.ts");
+  const src = fs.readFileSync(SRC, "utf8");
+
+  function refusalStrings(): string[] {
+    // Only the throw-site message literals, not comments or the status output.
+    // Concatenation joins are collapsed first: a message split across `' + '`
+    // must still match a phrase the reader sees as contiguous, or this test
+    // would pass again the moment someone rewraps a line.
+    const out: string[] = [];
+    const re = /new CouncilDisabledError\(([\s\S]*?)\);/g;
+    let m: RegExpExecArray | null;
+    while ((m = re.exec(src)) !== null) {
+      out.push((m[1] as string).replace(/['"`]\s*\+\s*['"`]/g, ""));
+    }
+    return out;
+  }
+
+  it("no refusal message tells the reader the switch lives in .agent-settings.yml", () => {
+    const offenders = refusalStrings().filter((s) => s.includes("agent-settings.yml"));
+    expect(offenders).toEqual([]);
+  });
+
+  // Narrow on purpose: a refusal that tells the reader WHERE to change a setting
+  // must name the real file. The "every enabled member was skipped" refusal is
+  // deliberately exempt — it reports a per-member skip reason and points at the
+  // stderr SKIP entries, so it directs nobody to a config file at all.
+  it("every refusal that directs the reader to a config names the real one", () => {
+    const directing = refusalStrings().filter(
+      (s) => /flip it on|enable at least one|not enabled in/.test(s),
+    );
+    expect(directing.length).toBe(3);
+    for (const s of directing) {
+      expect(s).toContain("COUNCIL_CONFIG_USER_GLOBAL_REL");
+    }
+    expect(directing.some((s) => s.includes("council:status"))).toBe(true);
+    expect(directing.some((s) => s.includes("ADR-104"))).toBe(true);
+  });
+
+  it("the skip refusal stays free of config directions — it reports a reason, not a location", () => {
+    const skip = refusalStrings().filter((s) => s.includes("was skipped"));
+    expect(skip.length).toBe(1);
+    expect(skip[0]).not.toContain("COUNCIL_CONFIG_USER_GLOBAL_REL");
+    expect(skip[0]).toContain("SKIP entries");
+  });
+});

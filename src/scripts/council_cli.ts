@@ -560,9 +560,22 @@ function build_members(settings: Dict, opts: BuildMembersOptions = {}): External
 
     const ai = _isDict(settings) ? ((settings['ai_council'] as Dict) || {}) : {};
     if (!_pyBool(ai['enabled'])) {
+        // The file this message names is load-bearing, and it named the wrong one
+        // for months. Measured across 10 sessions in one consumer project: the
+        // agent reasoned from `.agent-settings.yml` six times, concluded no
+        // council existed, and substituted a weaker path — and one session
+        // "fixed" it by COPYING the user-global config into the project tree,
+        // because this message told it that was where the switch lived. An error
+        // from the authoritative tool is the strongest signal in the room; when
+        // it points at the wrong file it does not merely fail to help, it
+        // manufactures the wrong belief. Name the real path (ADR-104: always
+        // user-global, never project-local) and name the verb that reports it.
         throw new CouncilDisabledError(
-            'ai_council.enabled is false in .agent-settings.yml — ' +
-                'flip it on before invoking council:* commands.',
+            `enabled is false in the council config (${COUNCIL_CONFIG_USER_GLOBAL_REL} ` +
+                'under the user-global agent-config root) — flip it on before invoking ' +
+                'council:* commands. This config is NEVER project-local (ADR-104), so do ' +
+                'not look for it, or create it, in the project tree. ' +
+                '`agent-config council:status` prints the resolved path.',
         );
     }
     const members_cfg = (ai['members'] as Dict) || {};
@@ -610,7 +623,8 @@ function build_members(settings: Dict, opts: BuildMembersOptions = {}): External
             if (name in siblings) {
                 throw new CouncilDisabledError(
                     `--siblings targets member ${_pyReprStr(name)} but it is not ` +
-                        `enabled in .agent-settings.yml (ai_council.members.${name}.enabled).`,
+                        `enabled in the council config (members.${name}.enabled in ` +
+                        `${COUNCIL_CONFIG_USER_GLOBAL_REL} under the user-global root).`,
                 );
             }
             continue;
@@ -716,8 +730,10 @@ function build_members(settings: Dict, opts: BuildMembersOptions = {}): External
             );
         }
         throw new CouncilDisabledError(
-            'no council member has `enabled: true` — enable at least one in ' +
-                '.agent-settings.yml under ai_council.members.*.',
+            'no council member has `enabled: true` — enable at least one under ' +
+                `members.* in ${COUNCIL_CONFIG_USER_GLOBAL_REL} (user-global root; ` +
+                'never the project tree, ADR-104). `agent-config council:status` ' +
+                'prints the resolved path.',
         );
     }
     return members;
