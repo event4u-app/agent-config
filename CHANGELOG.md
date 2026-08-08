@@ -348,6 +348,7 @@ Entry-shape contract: [`docs/contracts/CHANGELOG-conventions.md`](docs/contracts
 * **rules:** pay for the citation with a line number, not a quoted sentence ([e82cc1f](https://github.com/event4u-app/agent-config/commit/e82cc1f4d032578b1e5749ceb6756d6a82beeaf7))
 * **canary:** bind the carrier to a slot that reaches a task boundary ([b3b5ee7](https://github.com/event4u-app/agent-config/commit/b3b5ee75e95ac7be3908529f3d52c5d47432d6bb))
 * **settings-surface:** treat a free-form map as a leaf, not an empty group ([7a68cb7](https://github.com/event4u-app/agent-config/commit/7a68cb785ccff4bf190c01b5c52927f1fd94fbeb))
+* **gates:** a zero-tool checkout is an absent surface, not a dead scan scope ([2828561](https://github.com/event4u-app/agent-config/commit/28285610d22c340460b02be675047efdbe24c8ac))
 
 ### Documentation
 
