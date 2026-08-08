@@ -6,7 +6,7 @@
 
 ## Overall
 
-**150 / 300 steps done · 50%**
+**151 / 302 steps done · 50%**
 
 ```text
 ████████████████████░░░░░░░░░░░░░░░░░░░░   50%
@@ -18,7 +18,7 @@
 |---|---|---:|---:|---:|---:|---:|---:|---:|---|
 | 1 | [road-to-ci-native-release-first-run.md](roadmaps/road-to-ci-native-release-first-run.md) | 2 | 8 | 8 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 2 | [road-to-conformance-round5.md](roadmaps/road-to-conformance-round5.md) | 6 | 31 | 17 | 14 | 0 | 0 | [1](#blockers-road-to-conformance-round5) | ████░░░░░░ 45% |
-| 3 | [road-to-conformance-round6.md](roadmaps/road-to-conformance-round6.md) | 6 | 27 | 27 | 0 | 0 | 0 | [2](#blockers-road-to-conformance-round6) | ░░░░░░░░░░ 0% |
+| 3 | [road-to-conformance-round6.md](roadmaps/road-to-conformance-round6.md) | 6 | 29 | 28 | 1 | 0 | 0 | [2](#blockers-road-to-conformance-round6) | ░░░░░░░░░░ 3% |
 | 4 | [road-to-council-blind-review.md](roadmaps/road-to-council-blind-review.md) | 3 | 6 | 2 | 3 | 0 | 1 | 0 | ██████░░░░ 60% |
 | 5 | [road-to-gated-reach-followup.md](roadmaps/road-to-gated-reach-followup.md) | 1 | 12 | 12 | 0 | 0 | 0 | [1](#blockers-road-to-gated-reach-followup) | ░░░░░░░░░░ 0% |
 | 6 | [road-to-inbox-harvest-2026-08.md](roadmaps/road-to-inbox-harvest-2026-08.md) | 5 | 21 | 1 | 11 | 4 | 5 | [2](#blockers-road-to-inbox-harvest-2026-08) | █████████░ 92% |
@@ -74,14 +74,14 @@
 
 ### [road-to-conformance-round6.md](roadmaps/road-to-conformance-round6.md)
 
-**Road to conformance round 6 — the guard regress I shipped, the unmeasured half, and the therapy that has not started** — 0 / 27 done (0%)
+**Road to conformance round 6 — the guard regress I shipped, the unmeasured half, and the therapy that has not started** — 1 / 29 done (3%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
 | 1 | Close the regress, then the standing hole | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
 | 2 | One trigger definition, both directions | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
-| 3 | Skills get an instrument at all | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
-| 4 | The volume question stops being deferred | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
+| 3 | Skills: the census IS the finding | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
+| 4 | The volume question, answered differently than planned | 🟡 in progress | 4 | 1 | 0 | 0 | 20% |
 | 5 | Close round 5's own accounting | ⬜ not started | 1 | 0 | 0 | 0 | 0% |
 | 6 | What this roadmap will not do | ⬜ not started | 10 | 0 | 0 | 0 | 0% |
 
@@ -91,15 +91,12 @@
 - **stop-refusal-decision** (owner: maintainer) — blocks round-5 Phase 3 (3.1-3.6), round-5 Phase 6.1, and Phase 6.2 below
   - **What to do:**
   - **Resolved when:** the decision is recorded; if affirmative, the refusal concern has merged in its own PR with its own soak period.
-- **command-substitution-posture** (owner: maintainer) — blocks Phase 1.4
+- **command-substitution-posture** (owner: was maintainer; delegated to the council for plan-shaping questions) — blocks nothing — Phase 1.4 now carries the resolved design
   - **What to do:**
-    guard. (a) Treat a `BLOCK_OP` literal inside a substitution as an invocation,
-    accepting false positives on `echo "$(cat notes-about-npm-publish.md)"`.
-    (b) Fail-closed on any substitution containing a `BLOCK_OP` literal, with the
-    guard message naming the workaround. (c) Document the exclusion and claim
-    nothing. Doing nothing silently is not on the list, because the guard headers
-    currently imply coverage they do not have.
-  - **Resolved when:** the posture is recorded in both guard headers and Phase 1.4 implements it or states the exclusion.
+    **inside** the substitution by command position. A substitution whose command
+    word is a blocked op is an invocation and is refused; a substitution that
+    merely *mentions* one in an argument is not. Implementing it is Phase 1.4.
+  - **Resolved when:** ✅ recorded here and in Phase 1.4.
 
 ### [road-to-council-blind-review.md](roadmaps/road-to-council-blind-review.md)
 

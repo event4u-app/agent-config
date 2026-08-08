@@ -61,20 +61,55 @@ neither advisory carrier did, and 19 violations survived a pin one turn away.
 Nothing in this roadmap substitutes for that decision, and Phase 6.2 exists to
 stop a future round from inventing a third mechanism class to route around it.
 
+**Council recommendation, recorded as advisory — it is not the authorization.**
+2026-08-08, both members chose the same option: build it, behind an explicit
+opt-in setting **defaulting to off**, so the mechanism exists and soaks before it
+binds. Reasoning as given: two prior hook-severity mistakes plus a turn-end blast
+radius make default-on uninsurable, while default-off costs nothing to have. The
+decision stays with the maintainer because a concern that can refuse every
+session's turn-end is a safety-surface change, and a chat-delegated council
+verdict is not the gate that authorises one. What changes is the *default* this
+blocker resolves toward, not who resolves it.
+
+**A design hole the council found in the proposal itself, which the blocker must
+now carry:** the re-entrancy guard is specified ("a refused turn-end cannot
+loop") and unverified. What happens when the refusal *itself* triggers the
+turn-end event? Two shapes were named — a refused turn bypasses all hooks, or a
+flag is checked before every hook fires — and the proposal picks neither. A soak
+period would discover the answer the expensive way. So: whichever option the
+maintainer chooses, the guard's re-entrancy shape has to be stated and tested
+before the concern is registered, not after.
+
 ### blocker: command-substitution-posture
 
-- **Status:** open — new this round
-- **Owner:** maintainer
-- **Blocks:** Phase 1.4
-- **What to do:** choose the posture for `$(…)` and backtick payloads reaching a
-  guard. (a) Treat a `BLOCK_OP` literal inside a substitution as an invocation,
-  accepting false positives on `echo "$(cat notes-about-npm-publish.md)"`.
-  (b) Fail-closed on any substitution containing a `BLOCK_OP` literal, with the
-  guard message naming the workaround. (c) Document the exclusion and claim
-  nothing. Doing nothing silently is not on the list, because the guard headers
-  currently imply coverage they do not have.
-- **Resolved when:** the posture is recorded in both guard headers and Phase 1.4
-  implements it or states the exclusion.
+- **Status:** **resolved** 2026-08-08 by council, on a measurable difference
+  rather than a majority
+- **Owner:** was maintainer; delegated to the council for plan-shaping questions
+- **Blocks:** nothing — Phase 1.4 now carries the resolved design
+- **What to do:** nothing further to decide. The resolution is: classify
+  **inside** the substitution by command position. A substitution whose command
+  word is a blocked op is an invocation and is refused; a substitution that
+  merely *mentions* one in an argument is not. Implementing it is Phase 1.4.
+- **Resolved when:** ✅ recorded here and in Phase 1.4.
+
+**How the split was resolved.** The council divided: one member proposed
+fail-closed on any substitution containing a blocked literal, the other argued
+that over-blocks and proposed repairing the detector instead. Neither was adopted
+on authority. The falsifiable difference is one case — *a substitution whose
+command word is harmless but whose argument names a blocked op*, e.g.
+`echo "$(grep -c 'npm publish' package.json)"`. Fail-closed refuses it; the
+detector repair does not.
+
+The guards already answer that question in their own contract: `commandOp`
+"matches per invoked segment and only when the segment BEGINS with the tool — a
+mention inside an argument is not an invocation." Applying the existing rule one
+level deeper is consistency, not taste, so the detector repair wins.
+
+One correction to the council's own reasoning, recorded because a verdict adopted
+with a broken example is cover: the member arguing against fail-closed cited
+`grep "git push" file.txt` as the false positive. That command contains no
+substitution at all, so neither posture fires on it. The argument is right and
+the example was wrong — the real case is the nested-`grep` one above.
 
 ## What was verified, and what came out differently
 
@@ -91,6 +126,36 @@ Every row was executed against a worktree at `2daf29871`. The three rows marked
 | Point 6 · skills are not measured at all | **Confirmed.** Skills appear in the conformance scan only as bodies to exclude. |
 | Point 7 · the volume interaction was never discussed | **Confirmed, with different numbers — changed.** Measured here: the project projection goes from ~76 300 tokens (92 rules) to **~99 500** (108 rules), so restoring the 21 rules added **~23 200 tokens** to that carrier; union across both carriers moves ~176 000 → **~199 300**. The review cites a ~207 000 figure from another measurement; not reproduced, not adopted. |
 | Point 8 · round 5 merged with its acceptance list untouched | **Confirmed.** All six criteria are `[ ]` and the roadmap is unarchived at HEAD. |
+
+### M5 — the cross-project control group, and the null it produced
+
+Found during the challenge pass, from data that already existed. The suite is
+installed **machine-globally**, so every project on this machine receives the
+~112-rule global carrier; only this project also has a per-project projection.
+Other projects are therefore a single-carrier control group, and nobody had
+looked.
+
+| project | carriers | sessions | assistant turns | language violations | rate | German-prompt share | asst turns / prompt |
+|---|---|---:|---:|---:|---:|---:|---:|
+| `private/capisco` | global only, ~100k | 10 | 1 978 | 775 | **39.2 %** | 89.0 % | 14.2 |
+| `private/agent-switch` | global only, ~100k | 19 | 3 368 | 308 | **9.1 %** | 87.8 % | 9.1 |
+| this package | both, ~199k | 27 | 2 280 | 578 | **25.4 %** | 80.2 % | 9.0 |
+| `private` (parent dir) | global only | 2 | 77 | 1 | 1.3 % | — | — |
+
+Same instrument for all four, via `conformance:behavior --store`. The obvious
+confound is largely ruled out: a project with more German prompts has more
+violatable turns, but all three sit at 80-89 %. The two projects with
+near-identical turns-per-prompt (9.1 and 9.0) differ in rate by 2.8×.
+
+**Neither carrier volume nor autonomy ratio orders the three.** The
+single-carrier condition contains both the worst rate and the best. n = 3, and n
+cannot cheaply be raised — only three projects have a corpus worth measuring, and
+the largest private one holds 19 sessions, so "the last 30 chats per project" is
+not a satisfiable request there.
+
+This is exploratory, computed after seeing the data, and it is **not** the
+pre-registered test. What it does is remove the motivating prior from the phase
+that planned that test — see Phase 4.
 
 ### The residue on the refuted point
 
@@ -120,10 +185,17 @@ length of the text actually typed. Phase 2.3 does exactly that and nothing more.
   quotes, backticks, `sh -c "$(…)"`, and an env-assignment-prefixed
   substitution. Record the measured outcome for every vector **including the
   ones deliberately left open** — a vector table with only the fixed rows is the
-  same false-completeness this round is about.
-- [ ] 1.4 Implement the substitution posture the blocker resolves, in **both**
-  guards. `block_no_verify`'s `$(` handling is unreachable exactly when it is
-  needed, so fixing one guard would leave the git-shaped variants open.
+  same false-completeness this round is about. The council named the cost this
+  step exists to pay: a fail-closed posture cannot be confirmed by reading the
+  splitter, so every row's ground truth comes from running a shell against the
+  same input, as the round-5 regress was established.
+- [ ] 1.4 Implement the resolved substitution design in **both** guards: extract
+  each `$(…)` / backtick payload and classify it by **command position**, so
+  `$(git push --force …)` is an invocation and `$(grep -c 'npm publish' f)` is
+  not. `block_no_verify`'s `$(` split is unreachable exactly when it is needed —
+  it lives in the fail-closed branch that a well-formed command never enters — so
+  repairing one guard would leave the git-shaped variants open. Pin both: the
+  invocation blocks, the quoting mention does not.
 - [ ] 1.5 Amend both guard headers. They currently claim the quote fix "does not
   discard quoted payloads, so `sh -c "npm publish"` still unwraps" — true, and
   incomplete in a way that reads as coverage. State the substitution exclusion
@@ -149,34 +221,60 @@ length of the text actually typed. Phase 2.3 does exactly that and nothing more.
   delta against 578, whatever its sign. Per the instrument lock the superseded
   figures stay in the table beside it.
 
-## Phase 3 — Skills get an instrument at all
+## Phase 3 — Skills: the census IS the finding
 
 The original complaint names rules **and** skills. Six rounds in, skills have
 been measured exactly never — they enter the scan only as bodies to exclude.
-With 288 skills shipped, adherence is an unbacked claim, which is the precise
-condition round 5 spent a phase deleting from rules.
 
-- [ ] 3.1 Define two deliberately narrow classes. **SK-1 missed activation**: a
-  turn matches a skill's own frontmatter triggers and no activation appears in
-  the transcript. **SK-2 loaded-but-violated**: a skill body is in context and a
-  deterministic obligation stated in it — a MUST with an observable surface — is
-  violated in a later assistant turn of the same session.
-- [ ] 3.2 Validate the instrument before believing any number: hand-read every
-  flagged turn of the first run and publish precision. A detector that cannot
-  state its false-positive rate ships as detection-only and this roadmap says so.
-- [ ] 3.3 Bound the scope honestly. Semantic obligations ("write idiomatic X")
-  are FC-8-shaped and stay out. If fewer than five skills carry a deterministic
-  obligation, **publish that as the finding** — it would mean skill compliance is
-  currently unmeasurable, which is itself an answer to the original question and
-  a better one than a number nobody can check.
+**This phase was rewritten by the challenge pass, against its own first draft.**
+The draft defined a missed-activation detector as "a turn matches a skill's own
+**frontmatter triggers**". Measured: **0 of 288 skills carry a `triggers:` key**;
+all 288 carry only a `description:`. So that detector was unbuildable as
+specified, and matching `description:` prose instead is exactly the FC-8-shaped
+prose-matching the draft's own next step forbade — the contradiction sat two
+steps apart in one file, and no gate would have caught it.
 
-## Phase 4 — The volume question stops being deferred
+Second measurement, same pass: **8 of 288 skills** carry a deterministic
+`MUST`/`NEVER`/`ALWAYS` at line start. The draft pre-authorised the exit at a
+threshold of five, so 8 clears it — but it clears it while covering **2.8 %** of
+the corpus, which is not the same thing as a working instrument.
+
+So the deliverable inverts. The honest answer to "are skills followed?" is not a
+rate; it is that today's frontmatter cannot support the question, and the census
+is what says so.
+
+- [ ] 3.1 Publish the census as the primary finding: 288 skills, **0** with
+  machine-readable triggers, **8** with a deterministic obligation. Skill
+  activation is not measurable against the shipped frontmatter, and no number
+  should be reported as if it were.
+- [ ] 3.2 Build the one class that *is* buildable — **SK-2 loaded-but-violated**:
+  a skill body is in context and a deterministic obligation stated in it is
+  violated in a later assistant turn of the same session. Scope it explicitly to
+  the 8 skills, and name them, so the coverage is legible rather than implied.
+- [ ] 3.3 Validate before believing any number: hand-read every flagged turn of
+  the first run and publish precision. A detector that cannot state its
+  false-positive rate ships as detection-only and this roadmap says so.
+- [ ] 3.4 Do **not** build a missed-activation detector over `description:`
+  prose, and record the refusal here so round 7 does not propose it as new.
+  Adding `triggers:` to 288 skills is a separate scope with its own blast radius;
+  it is named in the deferred table, not smuggled in as a sub-step.
+
+## Phase 4 — The volume question, answered differently than planned
 
 Round 5 measured the condition and deferred the fix. Then its Phase 1 pushed the
 delivered volume up by ~23 200 tokens on the project carrier. If instruction
 volume contributes to non-compliance, round 5 made delivery correct and volume
 worse in the same change — and never said so, because the interaction appears
-nowhere in that roadmap. The hypothesis is cheap to test and untested.
+nowhere in that roadmap.
+
+**The plan for this phase was to pre-register and test that. It does not run.**
+M5 above is a natural experiment that already existed and nobody had looked at:
+the single-carrier condition contains both the worst rate and the best, the
+language-mix confound is ruled out, and two projects with identical
+turns-per-prompt differ 2.8×. What survives is everything that stood on its own
+merit — two rules whose delivered copies make opposite claims, an invisible
+divergence, and a token instrument a separate pending decision needs — plus one
+step neither the plan nor the council's options contained (4.5).
 
 - [ ] 4.1 Land round-5 Phase 1.3 (cross-carrier divergence report, advisory) and
   1.4 (ledger registration plus the non-empty-scan confirmation). Both are open
@@ -189,10 +287,21 @@ nowhere in that roadmap. The hypothesis is cheap to test and untested.
   total rule-text tokens reaching context, split by carrier. This is the
   instrument the `essential` default-flip has been waiting on. The flip itself
   is a human gate and is not decided here.
-- [ ] 4.4 Pre-register the volume hypothesis **before** 4.3 produces numbers:
-  state the threshold and the comparison, then look. If the split shows nothing,
-  publish the null — the volume theory loses its strongest support, which
-  redirects round 7 rather than embarrassing it.
+- [x] 4.4 **Cancelled — the hypothesis test does not run, and M5 is why.**
+  Council 2026-08-08, unanimous across both members: the natural experiment
+  already falsified the ordering, and a pre-registration written *after* its
+  numbers are known is not blind. One member said so directly — "pre-registering
+  post-hoc is theater". Cancelled rather than deferred: a deferral implies the
+  same test is still the right one, and it is not.
+- [ ] 4.5 **The step both members added that was in no option.** Dropping the
+  test without adding forward instrumentation closes the investigation
+  permanently, because the project-identity variable cannot be recovered
+  retroactively. So: record per-project violation rates from this round onward,
+  keyed by store, alongside the delivered-token figure from 4.3. Both members
+  independently named Q1 as the decision most likely to be wrong in hindsight,
+  and both named the same early-warning signal — **a fourth project falling
+  outside the observed 9.1-39.2 % band**. That is the falsifier; without 4.5
+  nobody would ever see it.
 
 ## Phase 5 — Close round 5's own accounting
 
@@ -220,11 +329,28 @@ nowhere in that roadmap. The hypothesis is cheap to test and untested.
 | 1 | The Phase 1 repair re-opens the round-5 false positive | implementation | The grep alternation must stay allowed while ANSI-C quoting becomes blockable; both pull on the same splitter, and last round the trade went the wrong way silently | Both commands are pinned in one suite so neither can regress alone, and 1.2's posture applies only when quotes do not balance — which the grep case's do. The vector table in 1.3 makes the trade legible instead of implied | Phase 1 |
 | 2 | Phase 1 is reasoned safe again and is not | implementation | The rank-1 risk last round was written down and shipped anyway, because the argument for safety was inverted and nobody tested the argument | No posture in Phase 1 ships on an argument alone: each is pinned by a vector whose ground truth was established by running bash, not by reading the splitter | Phase 1 |
 | 3 | Substitution posture (a) floods with false positives | product | BLOCK_OP literals inside substitutions occur legitimately in docs-grep and heredoc-adjacent commands, and a noisy blocking guard teaches bypass | The blocker exists so the trade is chosen rather than defaulted; whichever posture loses is recorded with its measured cost from 1.3's table | Blockers |
-| 4 | SK-1/SK-2 have no precision floor | implementation | Skill triggers are prose; a matcher over prose invites the FC-8 trap the series has avoided for five rounds | 3.2 makes hand-validation a gate on publication, and 3.3 pre-authorises the honest exit — "unmeasurable" is a publishable finding | Phase 3 |
-| 5 | The volume hypothesis is confirmed by construction | implementation | Choosing the threshold after seeing the data turns a measurement into a narrative, which is the exact failure the instrument lock was written for | 4.4 pre-registers threshold and comparison before 4.3 runs | Phase 4 |
-| 6 | This round also ships zero enforcement | product | Phases 1-5 are repair and instruments. If the stop-refusal blocker stays open, round 6 repeats round 5's shape at higher cost | Stated in the opening rather than discovered at the end; 6.2 makes the dependency explicit. The blocker carries an owner, an action and a resolution condition | Blockers |
-| 7 | Re-measurement moves the headline count a fourth time | product | 2.4 will change 578 in some direction, and a series whose number moves every round invites disbelief in all of them | Every figure stays published side by side with its mechanical reason; 2.1's cause is a shared function, checkable by someone who was not here | Phase 2 |
-| 8 | Phase 2.2 over-corrects and stops pinning real prompts | implementation | A bidirectional net on the hook could suppress the pin on a legitimately long or quote-heavy prompt, which fails silently | The measured 0/1 540 null bounds the risk on the transcript surface, and 2.3 settles the hook surface before 2.2's rule is finalised rather than after | Phase 2 |
+| 4 | The skill census reads as an excuse rather than a finding | product | "Not measurable" is exactly what a team says when it does not want to measure, so a census published in place of a rate has to carry its own proof | The census is two counts anyone can re-run — `triggers:` keys present in 288 skill frontmatters, and line-start deterministic obligations — and 3.4 records the refused shortcut by name so the absence of a rate is visibly a choice with a reason | Phase 3 |
+| 5 | SK-2 has no precision floor | implementation | A detector over 8 skills can still produce confident nonsense, and a small corpus makes a bad rate look precise | 3.3 makes hand-validation a gate on publication, and 3.2 requires the 8 to be named so coverage is legible rather than implied | Phase 3 |
+| 6 | Cancelling the volume test closes the investigation for good | product | The project-identity variable cannot be recovered retroactively, so dropping the test without adding forward capture means a later reversal has no data to reverse onto. Both council members independently named this the decision most likely to be wrong in hindsight | 4.5 captures per-project rates from this round onward and names the falsifier both members converged on — a fourth project outside the observed 9.1-39.2 % band. The cancellation is recorded as cancelled, not deferred, so nobody re-runs the same non-blind test | Phase 4 |
+| 7 | This round also ships zero enforcement | product | Phases 1-5 are repair and instruments. If the stop-refusal blocker stays open, round 6 repeats round 5's shape at higher cost | Stated in the opening rather than discovered at the end; 6.2 makes the dependency explicit. The blocker carries an owner, an action and a resolution condition | Blockers |
+| 8 | Re-measurement moves the headline count a fourth time | product | 2.4 will change 578 in some direction, and a series whose number moves every round invites disbelief in all of them | Every figure stays published side by side with its mechanical reason; 2.1's cause is a shared function, checkable by someone who was not here | Phase 2 |
+| 9 | Phase 2.2 over-corrects and stops pinning real prompts | implementation | A bidirectional net on the hook could suppress the pin on a legitimately long or quote-heavy prompt, which fails silently | The measured 0/1 540 null bounds the risk on the transcript surface, and 2.3 settles the hook surface before 2.2's rule is finalised rather than after | Phase 2 |
+
+## Council convergence (2026-08-08 · anthropic/claude-sonnet-4-5, openai/gpt-4o · peer-review round)
+
+Four decisions were routed to the council after the maintainer delegated
+plan-shaping questions to it. Verdicts and how each landed:
+
+| question | verdict | disposition here |
+|---|---|---|
+| The volume hypothesis after M5's null | **unanimous: drop the test** | Adopted. 4.4 cancelled, and 4.5 added — a step neither the options nor the plan contained. |
+| Fail-closed on unbalanced quotes | **unanimous: adopt** | Adopted as Phase 1.2. One member flagged developer frustration on malformed input as the residual cost; recorded, not treated as a blocker, because the alternative leaves an executable bypass. |
+| Command substitution | **split** | Resolved on the falsifiable difference, not the majority — see the blocker above. One member's supporting example was wrong and that is recorded with the fix. |
+| The turn-end refusal | **unanimous: build behind opt-in, default off** | Recorded as **advisory only**. The blocker stays maintainer-owned; a council verdict does not authorise a safety-surface change. The council also found an unverified re-entrancy hole in the proposal, now a precondition on that blocker. |
+
+Two things the council added that no option offered: forward per-project capture
+(4.5) and the re-entrancy specification requirement. Both are in, and both are
+attributed rather than absorbed.
 
 ## Measured, deferred, and why
 
@@ -235,6 +361,8 @@ nowhere in that roadmap. The hypothesis is cheap to test and untested.
 | `essential` default flip | 4.3 builds the instrument the decision needs. The decision is a human gate and stays one. |
 | General dedup of the 91 divergent pairs | 4.2 takes only the two contradictions. A body-keyed dedup changes projection semantics and needs 4.3's numbers to justify its own blast radius. |
 | Semantic skill obligations beyond deterministic MUSTs | FC-8-shaped; the round-1 reasoning stands. |
+| Adding `triggers:` frontmatter to the 288 skills | This is what would make a missed-activation detector possible, and it is a 288-file surface change with its own blast radius and its own linter/schema consequences. Named here rather than smuggled into Phase 3 as a sub-step. The census in 3.1 is what justifies opening it later, or not. |
+| A missed-activation detector over `description:` prose | Refused, not deferred. It is the only way to get a number without the frontmatter change, and it is precisely the prose-matching the same phase forbids. 3.4 records the refusal so it does not return as a fresh idea. |
 | Full shell parsing in the guards | Explicitly not attempted. The guards classify, they do not interpret, and the posture blocker is what bounds what classification promises. |
 | Over-filter branch in `isSyntheticPrompt` | Refuted: 0 of 1 540 entries. Only the hook-surface residue survives, and 2.3 is the whole of the work it justifies. |
 | The review's ~207 000-token budget figure | Not reproduced. This roadmap uses its own ~199 300 union measurement and says which method produced it. |
@@ -250,8 +378,9 @@ nowhere in that roadmap. The hypothesis is cheap to test and untested.
 - [ ] The hook-surface residue is settled by measurement, in either direction.
 - [ ] The re-measured language count is published beside 578 and 641 with the
   mechanical reason for the delta.
-- [ ] SK-1/SK-2 publish counts with a stated precision, or publish
-  "unmeasurable" with the frontmatter census that shows why.
+- [ ] The skill census is published (288 / 0 with triggers / 8 with a
+  deterministic obligation), SK-2 publishes a count with a stated precision over
+  the named 8, and no activation number is reported at all.
 - [ ] The volume hypothesis has a pre-registered threshold and a published
   result, null or not.
 - [ ] No enforcement claim in this roadmap's diff exceeds what a shipped
