@@ -32,6 +32,7 @@ import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
 import { classify } from "./language_mirror_hook.js";
+import { isSyntheticPrompt } from "./_lib/prompt_shape.js";
 import { classifyAuthorization, type GitOp } from "./git_authorization_hook.js";
 import { BLOCK_OPS, commandOp } from "./hooks/block_unauthorized_git.js";
 import { isVacuousOutput, isCiPoll, pendingCount } from "./before_complete_hook.js";
@@ -226,6 +227,13 @@ export function scanSession(sessionId: string, lines: string[]): SessionReport {
       // message would let its language reset the pin — the exact defect class
       // that made the first detector report 303 instead of 626.
       if (entry["isCompactSummary"] === true) {
+        continue;
+      }
+      // A harness-generated turn is not a chat message. The HOOK has skipped
+      // these since round 5 and this scanner did not, so the two were measuring
+      // different populations while reporting one number. Same predicate, one
+      // module, so they cannot drift again.
+      if (isSyntheticPrompt(ut)) {
         continue;
       }
       if (isInjectedBody(ut)) {

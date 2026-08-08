@@ -19,17 +19,30 @@ own Risk Register named that exact failure class as rank 1.**
 The quote-awareness fix traded one false positive for two false negatives. Both
 directions measured, same vectors, same probe, the two code states side by side:
 
-| vector | pre-#1208 | at `2daf29871` |
-|---|---|---|
-| `echo $'don\'t' && npm publish` | **blocked** (`commandOp: publish`) | **allowed** (`null`) |
-| `echo 'oops && npm publish` (unterminated quote) | **blocked** | **allowed** |
-| `echo "$(npm publish)"` | allowed | allowed — pre-existing |
-| the round-5 grep alternation | blocked — the false positive | allowed — the fix working |
+| vector | pre-#1208 | at `2daf29871` | bash executes the op? |
+|---|---|---|---|
+| `echo $'don\'t' && npm publish` | **blocked** (`commandOp: publish`) | **allowed** (`null`) | **yes** |
+| `echo 'oops && npm publish` (unterminated quote) | **blocked** | **allowed** | **no** — syntax error |
+| `echo "$(npm publish)"` | allowed | allowed — pre-existing | **yes** |
+| the round-5 grep alternation | blocked — the false positive | allowed — the fix working | no |
 
 Exposure is every `BLOCK_OP` with no second net: `npm|pnpm|yarn publish`,
 `gh release create`, `gh pr merge`. Git-shaped variants stay covered, verified:
 `$'…'` also breaks `block_no_verify`'s shlex, and `_looks_like_git_invocation`
 splits without quote awareness, so a `git push` in the tail is still seen.
+
+**Correction, measured while implementing Phase 1 — the fourth column above is
+new and one row moves out of the exposure set.** The unterminated-quote vector
+is a regression in classification and **not** an executable bypass: bash refuses
+the whole command with `unexpected EOF while looking for matching quote`, so
+nothing after the separator runs. The live exposure is ANSI-C quoting and
+command substitution. Blocking the unbalanced case stays right — 1.2's own
+argument is that a false positive on input bash refuses to run is cheap — but it
+is defence in depth, not the hole. The instrument matters here and is recorded
+because it was wrong the first time: stdout cannot detect a substitution's
+execution, since the substitution consumes it, and that first harness reported
+"not run" for `sh -c "$(…)"` and `FOO=1 $(…)`, both of which do run. Ground
+truth for every row now comes from a file side effect.
 
 **Why the adversarial suite missed it, stated precisely, because "we needed more
 test cases" is the comfortable version and it is not what happened.** The suite
@@ -171,17 +184,20 @@ length of the text actually typed. Phase 2.3 does exactly that and nothing more.
 
 ## Phase 1 — Close the regress, then the standing hole
 
-- [ ] 1.1 `splitOutsideQuotes`: recognise `$'` as a quote opener with C-style
+- [x] 1.1 `splitOutsideQuotes`: recognise `$'` as a quote opener with C-style
   escape semantics (`\'` does not close it) and `$"` as `"`. Pin the exact
   measured command; it must classify as `publish` and block.
-- [ ] 1.2 Replace the unterminated-quote posture. Today the tail becomes one
+- [x] 1.2 Replace the unterminated-quote posture. Today the tail becomes one
   quoted segment, which is permissive for the reason named above. Instead
   re-split the tail **without** quote awareness and classify every segment. A
   false positive on input bash would itself refuse to run is acceptable; a false
   negative on input bash *does* run is the failure the guard exists for. Pin
   `echo 'oops && npm publish` as blocked, and the round-5 grep alternation as
   still allowed — its quotes balance, so this branch never sees it.
-- [ ] 1.3 Extend the adversarial suite with the full vector set: `$'…'`,
+  <!-- Shipped as specified. Only the segments completed BEFORE the unclosed
+  opener keep their quote-aware split; the trailing one is re-read with
+  separators live. -->
+- [x] 1.3 Extend the adversarial suite with the full vector set: `$'…'`,
   unterminated single and double quotes, substitutions inside and outside double
   quotes, backticks, `sh -c "$(…)"`, and an env-assignment-prefixed
   substitution. Record the measured outcome for every vector **including the
@@ -190,37 +206,110 @@ length of the text actually typed. Phase 2.3 does exactly that and nothing more.
   step exists to pay: a fail-closed posture cannot be confirmed by reading the
   splitter, so every row's ground truth comes from running a shell against the
   same input, as the round-5 regress was established.
-- [ ] 1.4 Implement the resolved substitution design in **both** guards: extract
+  <!-- `ROUND6_VECTORS` (16 rows, each carrying its measured `bashRuns`) and
+  `ROUND6_OPEN_VECTORS` (2 rows) in tests/scripts/git_authorization.test.ts. One
+  test asserts the invariant directly: no vector bash executes classifies null. -->
+- [x] 1.4 Implement the resolved substitution design in **both** guards: extract
   each `$(…)` / backtick payload and classify it by **command position**, so
   `$(git push --force …)` is an invocation and `$(grep -c 'npm publish' f)` is
   not. `block_no_verify`'s `$(` split is unreachable exactly when it is needed —
   it lives in the fail-closed branch that a well-formed command never enters — so
   repairing one guard would leave the git-shaped variants open. Pin both: the
   invocation blocks, the quoting mention does not.
-- [ ] 1.5 Amend both guard headers. They currently claim the quote fix "does not
+  <!-- `substitutionPayloads` is exported from block_unauthorized_git and
+  imported by block_no_verify, so the two cannot drift. Heredoc bodies are
+  stripped before extraction, or a backtick in a commit message would re-open
+  the round-5 false positive from the other side. -->
+- [x] 1.5 Amend both guard headers. They currently claim the quote fix "does not
   discard quoted payloads, so `sh -c "npm publish"` still unwraps" — true, and
   incomplete in a way that reads as coverage. State the substitution exclusion
   until 1.4 lands.
+  <!-- 1.4 landed in the same change, so there is no substitution exclusion to
+  state. Both headers now carry the residue that IS real — variable indirection
+  and xargs — under an explicit "what this guard does not see". -->
+- [x] 1.6 **Added while measuring 1.3, not in the original plan.** Three of the
+  five vectors the suite found open are the same two mechanisms Phase 1 already
+  implements, not shell interpretation: `eval` is `sh -c` by another name,
+  `<(…)` is a substitution, and quotes inside the command word (`np''m publish`)
+  are removed by the shell before lookup. All three execute under bash and were
+  classified `null`. Closed here rather than filed, because leaving a vector open
+  in the same file that just added an "everything bash runs is blocked" assertion
+  would make that assertion false on the day it shipped.
 
 ## Phase 2 — One trigger definition, both directions
 
-- [ ] 2.1 Extract the synthetic-prompt predicate into a shared module and apply
+- [x] 2.1 Extract the synthetic-prompt predicate into a shared module and apply
   it in `conformance_scan.ts` alongside `isCompactSummary` and `isInjectedBody`.
   Hook and scanner must classify the same entry identically, or every future era
   split argues about two different populations.
-- [ ] 2.2 Give the **hook** the net it lacks: a prompt whose bulk is pasted
+  <!-- `src/scripts/_lib/prompt_shape.ts`. The hook re-exports it so its tested
+  surface is unchanged; the scanner imports it. -->
+- [x] 2.2 Give the **hook** the net it lacks: a prompt whose bulk is pasted
   foreign-language content must not pin to the paste. The scanner's heuristic
   (`length > 2500 && english`) is the wrong shape for a bidirectional test —
   derive the rule from the human-authored fraction, not from a hard-coded
   language. This is the defect that fired on the review's own session.
-- [ ] 2.3 Settle the residue named above: record the prompt length the hook
+  <!-- Shipped as lead-first classification: the typed span above the first
+  pasted document decides, and only an undetermined lead falls through to the
+  whole body. Names no language, so it resolves German-over-English-paste and
+  English-over-German-paste by the same step; both pinned. -->
+- [x] 2.3 Settle the residue named above: record the prompt length the hook
   receives for one slash-command turn, compare against the typed text, and
   publish the answer. If the host does prepend the wrapper, 2.1's predicate
   needs a strip-then-classify branch; if it does not, the null closes the
   question permanently.
-- [ ] 2.4 Re-run `conformance:behavior --limit 30` after 2.1-2.2 and publish the
+- [x] 2.4 Re-run `conformance:behavior --limit 30` after 2.1-2.2 and publish the
   delta against 578, whatever its sign. Per the instrument lock the superseded
   figures stay in the table beside it.
+
+### 2.3 — the answer, and it is a null
+
+The falsifier ran on the turn that opened this session's work: a
+`/roadmap:next im working tree` invocation, 15 characters typed, against a
+12 224-character command body.
+
+| payload | chars | classifier verdict |
+|---|---:|---|
+| the typed text alone | 15 | `und` — 1 de marker, 0 en |
+| wrapper + command body | 12 273 | `en` — 1 de marker, 254 en |
+
+The pin that turn resolved **German**. An `und` verdict leaves the previous pin
+standing, which is what German requires; an `en` verdict would have flipped it
+and every later turn with it. So the host does **not** prepend the slash-command
+wrapper or body to `payload.prompt`, and 2.1's predicate needs no
+strip-then-classify branch. Both classifier versions were run on both payloads
+and agree, so the answer does not depend on this round's own change.
+
+The question is closed permanently rather than deferred: the observation is
+direct, not an inference about the host.
+
+### 2.4 — the delta, decomposed rather than attributed
+
+Same store (27 sessions), same `--limit 30`, both halves isolated by disabling
+one at a time.
+
+| state | language-pin |
+|---|---:|
+| published, round 5 | 578 |
+| today's corpus, neither change | **577** |
+| + synthetic-turn skip (2.1) | **622** (+45) |
+| + lead-first classification (2.2) | **622** (+0) |
+
+The 578 → 577 step is corpus drift of one turn, not a code effect.
+
+**The mechanical reason for +45, which is a correction and not noise.** A
+harness-generated user turn is English and was read as a chat message, so it set
+`pinned = "en"`, and every English assistant turn after it counted as
+CONFORMING. The scanner was under-reporting, and it was under-reporting exactly
+the population the hook has skipped since round 5 — the divergence 2.1 closes
+was not neutral, it was flattering. 622 is the first figure both surfaces agree
+on.
+
+**2.2 contributes zero on this corpus, and that is published rather than
+buried.** The paste-dominance defect is real — it fired on a live session and
+both directions are pinned in the suite — but across ~2 280 assistant turns it
+moves no count. The mechanism is right and its measured magnitude here is null;
+a future round should not re-derive it as new evidence.
 
 ## Phase 3 — Skills: the census IS the finding
 
@@ -263,6 +352,36 @@ is what says so.
   a test pins that it never prints an activation rate — a rate would be exactly
   the theatre the conformance scan's scope lock forbids, which is also why this
   lives outside that scan.
+
+#### Why the obligation count moved 8 → 30, re-derived independently
+
+Two sessions measured this census concurrently and got different numbers, which
+is the most direct evidence available for what the census is actually saying.
+Both re-run against 288 skill directories at this commit:
+
+| definition | count |
+|---|---:|
+| the shipped script's regex — leading whitespace, optional `-`/`*` marker, optional `**` | **30** |
+| first non-whitespace token is `MUST` / `NEVER` / `ALWAYS`, no marker allowed | **7** |
+| the roadmap's originally published figure | 8 — reproduces under **neither** |
+
+**The finding is the spread, not either endpoint.** The originally published 8
+carried no regex, and no reading recovers it: a marker-tolerant definition gives
+30, a strict one gives 7. The shipped script is the right resolution precisely
+because its definition lives in code (`DETERMINISTIC_RE`) where it can be
+disagreed with, rather than in prose where it cannot. **30 is the number of
+record**, and 3.2's scope follows it.
+
+**The `triggers:` row survives a scare and is confirmed at 0.** A naive grep
+returns 1 — `rule-writing/SKILL.md:195` — but that file's frontmatter ends at
+line 10, and line 195 sits inside a worked example showing the frontmatter shape
+a *rule* carries. The published claim was right; the first re-derivation was not.
+
+That there is no stable machine-readable definition of a skill obligation — a
+4× spread between two defensible readings — is a stronger basis for "activation
+is not measurable against the shipped frontmatter" than any single count, and it
+was found by two independent measurements disagreeing rather than by either one
+alone.
 - [ ] 3.2 Build the one class that *is* buildable — **SK-2 loaded-but-violated**:
   a skill body is in context and a deterministic obligation stated in it is
   violated in a later assistant turn of the same session. Scope it explicitly to
@@ -270,10 +389,20 @@ is what says so.
 - [ ] 3.3 Validate before believing any number: hand-read every flagged turn of
   the first run and publish precision. A detector that cannot state its
   false-positive rate ships as detection-only and this roadmap says so.
-- [ ] 3.4 Do **not** build a missed-activation detector over `description:`
+- [x] 3.4 Do **not** build a missed-activation detector over `description:`
   prose, and record the refusal here so round 7 does not propose it as new.
   Adding `triggers:` to 288 skills is a separate scope with its own blast radius;
   it is named in the deferred table, not smuggled in as a sub-step.
+  <!-- Refusal stands, and 3.1's re-derivation strengthens it: the obligation
+  count moves 6 → 7 → 29 with the regex, so prose matching would not merely be
+  FC-8-shaped, it would have no stable denominator to report against. -->
+
+  **3.2 and 3.3 stay open, and the census is now their input rather than their
+  motivation.** SK-2 is scoped to the **30** the shipped script names, under its
+  own `DETERMINISTIC_RE`. Note for whoever builds it: that is 10.4 % of the
+  surface, so 3.3's hand-validation is still tractable and its precision figure
+  will be the whole of what the detector can honestly claim — and the scope is
+  legible only because the definition is in code rather than in prose.
 
 ## Phase 4 — The volume question, answered differently than planned
 
@@ -321,7 +450,7 @@ step neither the plan nor the council's options contained (4.5).
 
 ## Phase 5 — Close round 5's own accounting
 
-- [ ] 5.1 Walk round 5's six acceptance criteria. Check the ones its shipped
+- [x] 5.1 Walk round 5's six acceptance criteria. Check the ones its shipped
   phases satisfy — the stale-tree case has a pinned test, the refused commands
   have regression tests, no kernel rule was modified, both era numbers are
   published. Mark the Phase-3-dependent ones as blocked rather than leaving them
@@ -329,14 +458,42 @@ step neither the plan nor the council's options contained (4.5).
   unverified even where it is not, and this round is the proof: an independent
   reviewer had to re-derive what those criteria would have recorded.
 
+#### Round 5's acceptance list, walked and marked
+
+Each verdict below is a command run at this commit, not a reading of round 5's
+prose. The criteria are checked in `road-to-conformance-round5.md` itself; this
+table is the evidence for those marks.
+
+| # | criterion | verdict | evidence |
+|---|---|---|---|
+| 1 | the projection gate fails on a stale checkout and passes after regeneration | **met** | Both halves observed in one session: `task check-rule-projection-integrity` exited 1 naming 3 stale entries, `task generate-tools` ran, the gate then reported `324 planned / 324 scanned / 0 skipped` and exited 0. |
+| 2 | both wrongly-refused commands run, and the real prohibitions still refuse | **met** | The `grep -E` alternation and the apostrophe-bearing heredoc both exit 0 against `block_unauthorized_git` AND `block_no_verify`. The prohibitions still refuse — 43 + 74 tests, and this round's own vector table adds the stronger half: every command bash actually executes is blocked. |
+| 3 | Phase 3's turn-end concern fires correctly and cannot block twice | **blocked** | `stop-refusal-decision`. Nothing was built, so nothing is claimed. Explicitly blocked rather than left open, which is what 5.1 exists to fix. |
+| 4 | every enforcement claim is backed by a shipped mechanism or says it is model-carried | **met** | Round 5's Phase 5 shipped the honesty pass. This round adds two of its own: both guard headers now name what they do NOT see, and Phase 3's census publishes the command behind each count. |
+| 5 | no kernel rule text modified; `verify-before-complete` untouched | **met** | `git log -- src/rules/verify-before-complete.md` since round 5 opened returns nothing. Holds for this round too — no kernel rule is in either diff. |
+| 6 | the corrected era number and the superseded one both appear | **met** | 303, 578, 626 and 641 all present in round 5. This round extends the series rather than replacing it: 577 → 622 with the mechanical reason, in § 2.4. |
+
+Four met, one blocked, and criterion 3 is the only one that needed a decision
+rather than work. That is the honest shape of round 5 — and it is a materially
+better result than the "all six untouched" the reviewer found, which is the
+whole reason this step existed.
+
 ## Phase 6 — What this roadmap will not do
 
-- [ ] 6.1 No new advisory carrier ships for any measured class. The round-5
+- [x] 6.1 No new advisory carrier ships for any measured class. The round-5
   result (a fresh pin ignored at distance 1) stands, as does the council's
   refusal of frequency-as-mechanism. Recorded so round 7 does not re-propose it.
-- [ ] 6.2 No enforcement work beyond Phase 1's repair happens before the
-  stop-refusal blocker resolves. Inventing a third mechanism class to route
-  around a parked decision is how a blocker becomes a silent drop.
+  <!-- Held. This round ships two repairs (Phase 1, Phase 2) and three
+  measurements; no advisory carrier was added, and the one place it would have
+  been tempting — 2.2's paste net — became a change to an EXISTING classifier
+  rather than a new reminder. -->
+- [ ] **BLOCKED on `stop-refusal-decision`.** 6.2 No enforcement work beyond
+  Phase 1's repair happens before the stop-refusal blocker resolves. Inventing a
+  third mechanism class to route around a parked decision is how a blocker
+  becomes a silent drop.
+  <!-- Held so far and worth stating explicitly, because Phase 1 shipped real
+  enforcement: every line of it repairs a guard that already existed, and no new
+  blocking surface was registered. -->
 
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-08-08 | reviewer: claude/host -->
@@ -398,7 +555,19 @@ attributed rather than absorbed.
   deterministic obligation, the 8 corrected with its reason), and no activation
   rate is reported at all — pinned by a test.
 - [ ] SK-2 publishes a count with a stated precision over the named 30.
-- [ ] The volume hypothesis has a pre-registered threshold and a published
-  result, null or not.
+- [x] The volume hypothesis is **cancelled, not deferred**, with M5's natural
+  experiment as the reason, and forward per-project capture (4.5) replaces the
+  test so the falsifier stays observable.
+  <!-- Rewritten. As published this criterion demanded "a pre-registered
+  threshold and a published result", which step 4.4 had already been cancelled
+  for — the council's own words were "pre-registering post-hoc is theater". An
+  acceptance list that can only be satisfied by doing the thing the roadmap
+  decided not to do is a contradiction two sections apart in one file, and it is
+  the same shape Phase 3 caught in its own first draft. Found by the pre-run
+  screen, corrected here — and it survived the concurrent Phase-3 branch, which
+  carried the stale wording forward unchanged. -->
+- [ ] 4.5's forward capture is live: per-project violation rates recorded from
+  this round onward, and a fourth project outside the 9.1-39.2 % band is
+  detectable when it appears.
 - [ ] No enforcement claim in this roadmap's diff exceeds what a shipped
   mechanism backs.

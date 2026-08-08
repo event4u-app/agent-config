@@ -14,7 +14,17 @@ tasks:
       full `task ci` and belongs in the post-CI loop.
       Parity with CI is enforced by `task check-ci-local-parity`.
     cmds:
-      # FIRST, and the order is the whole point: this gate reads the host rule
+      # Before anything reads the tree: is the tree even current? Measured
+      # 2026-08-08 — a branch cut from a fetch at the start of a ninety-minute
+      # run pushed into a `main` that had moved twice, one of the merges
+      # shipping the same roadmap phase the branch was implementing. Every other
+      # gate here inspects local content and none of them can see that. One
+      # `git ls-remote`, ~0.3s, and it asks the SERVER rather than the tracking
+      # ref — comparing against the local ref would reproduce the stale reading
+      # that caused the incident. No-op in CI, where the forge owns mergeability.
+      - ./scripts-run src/scripts/check_branch_freshness --quiet
+      # FIRST among the content gates, and the order is the whole point: this
+      # gate reads the host rule
       # trees as they stand, and check_bridge_derivation below REGENERATES them.
       # Run after it and the five-week-stale projection it exists to catch
       # (.claude/rules holding 92 of 108 rules, last generated 2026-07-05) has

@@ -20,12 +20,21 @@
  *   2 — warn  (not used by this guard)
  *
  * No ALLOW_NO_VERIFY-style env bypass is provided. See src/rules/git-history-discipline.md
+ *
+ * WHAT THIS GUARD DOES NOT SEE. Command substitutions ARE now checked — see
+ * `_check_command` for why they were not, and why the well-formed case was the
+ * unprotected one. What remains uncovered is an invocation whose command word
+ * only exists at runtime (`P=commit; git $P --no-verify` via indirection, or a
+ * word composed by `xargs`). Those execute under bash and are not classified
+ * here. Stated rather than left implied: this file's own round-5 defect was a
+ * docstring that described coverage it did not have.
  */
 
 import * as fs from 'node:fs';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import * as path from 'node:path';
 import { readHookStdin } from './hook_stdin.js';
+import { substitutionPayloads } from './block_unauthorized_git.js';
 
 const _HERE = fileURLToPath(import.meta.url);
 
@@ -384,8 +393,36 @@ export function _looks_like_git_invocation(cmd: string, depth = 0): boolean {
     return false;
 }
 
-/** Return (blocked, reason). Fail-closed on parse error for git commands. */
-function _check_command(cmd: string): [boolean, string] {
+/**
+ * Return (blocked, reason). Fail-closed on parse error for git commands.
+ *
+ * COMMAND SUBSTITUTIONS ARE CHECKED SEPARATELY, and the reason they were not is
+ * the shape of the hole: this file does split on `$(` and backtick, but only
+ * inside `_looks_like_git_invocation`, which runs exclusively in the
+ * shlex-failure branch. A well-formed `echo "$(git commit --no-verify)"` parses
+ * cleanly, so shlex succeeds, the substitution stays inside one token, and
+ * `_git_base` never sees git. The more parseable the command, the less it was
+ * protected. Classification inside the payload is by command position, so a
+ * substitution that INVOKES git is checked and one that merely names it in an
+ * argument is not — matching what `block_unauthorized_git` does one level up.
+ *
+ * Heredoc bodies are removed before extraction: a backtick or `$(` inside a
+ * commit message being written to a file is data, and feeding it back through
+ * this function is exactly the false positive the round-5 repair closed.
+ */
+function _check_command(cmd: string, depth = 0): [boolean, string] {
+    if (depth <= 3) {
+        const withoutHeredocs = cmd.replace(
+            /<<-?\s*(['"]?)([A-Za-z_][A-Za-z0-9_]*)\1[\s\S]*?^\s*\2\s*$/gm,
+            '<<HEREDOC',
+        );
+        for (const payload of substitutionPayloads(withoutHeredocs)) {
+            const [blocked, reason] = _check_command(payload, depth + 1);
+            if (blocked) {
+                return [true, reason];
+            }
+        }
+    }
     let tokens: string[];
     try {
         tokens = shlexSplit(cmd);

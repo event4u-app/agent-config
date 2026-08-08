@@ -74,6 +74,7 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 
 import { atomic_write_json } from "./hooks/state_io.js";
 import { readHookStdin } from "./hooks/hook_stdin.js";
+import { humanAuthoredLead, isSyntheticPrompt } from "./_lib/prompt_shape.js";
 
 const EXIT_ALLOW = 0;
 // Severity is taken from the EXIT CODE, not from the `decision` field in the
@@ -162,8 +163,32 @@ export function instructionText(prompt: string): string {
 }
 
 
+/**
+ * Classify a prompt, reading the TYPED LEAD before the whole body.
+ *
+ * `instructionText` removes output-shaped pastes — traces, diffs, `remote:`
+ * lines. It does not remove the other paste shape, which looks like prose: a
+ * document pasted whole under its own headings below one typed sentence. That
+ * gap is not hypothetical; it fired on the session that received the round-6
+ * review, pinning English because an English draft sat under German prose.
+ *
+ * So the lead is classified first, and only if it is undetermined does the full
+ * text decide. This is bidirectional by construction — it names no language, and
+ * an English instruction over a German paste resolves to English by the same
+ * step. The fallback is what keeps it conservative: a prompt with no document
+ * marker classifies exactly as it did before.
+ */
 export function classify(prompt: string): Classification {
   const text = instructionText(prompt);
+  const lead = humanAuthoredLead(text);
+  const leadVerdict = _score(lead);
+  if (leadVerdict.language !== "und") {
+    return leadVerdict;
+  }
+  return _score(text);
+}
+
+function _score(text: string): Classification {
   const de = (text.match(DE_MARKERS) ?? []).length;
   const en = (text.match(EN_MARKERS) ?? []).length;
   if (de < MIN_MARKERS && en < MIN_MARKERS) {
@@ -424,44 +449,12 @@ export function run(
 }
 
 /**
- * Is this "prompt" a harness-generated turn rather than something the human typed?
- *
- * MEASURED, IN THIS HOOK'S OWN AUDIT (round 5, 2026-08-07). The state file read
- * mid-session:
- *
- *   { "language": "en", "source": "prompt", "prompt_chars": 6627,
- *     "de_markers": 0, "en_markers": 63 }
- *
- * No human wrote those 6,627 characters. They were a background-task completion
- * notification, injected as a user turn, which `user_prompt_submit` sees and this
- * hook classified as the trigger — flipping a German session to `en` for every
- * later turn, and recording `source: "prompt"`, a false provenance claim.
- *
- * This is the SAME defect the hook was built to remove: non-chat content read as
- * the trigger. The header above explains at length why a skill body must not set
- * the pin; `user_prompt_submit` was chosen because "a skill body never reaches
- * it". Synthetic turns do reach it, so the event alone was never sufficient — the
- * content test has to exist too.
- *
- * The markers are structural, not linguistic: the harness stamps these turns
- * with fixed envelope tags. Matching prose would misfire on a human quoting a
- * notification; matching the tags cannot, because a human typing `<task-notification>`
- * is quoting, and a quote does not open at character zero of the turn.
- *
- * Deliberately conservative: an unrecognised synthetic shape falls through and
- * pins as before. Under-filtering keeps today's behaviour; over-filtering would
- * silently stop pinning real prompts, which is the worse failure.
+ * Re-exported from the shared module so this hook and `conformance_scan` cannot
+ * classify the same entry differently. It lived here, and the scanner never
+ * imported it — that divergence is what Phase 2.1 of round 6 closes. Kept as a
+ * named export because it is part of this module's tested surface.
  */
-export function isSyntheticPrompt(prompt: string): boolean {
-  const head = prompt.trimStart().slice(0, 400);
-  return (
-    head.startsWith("[SYSTEM NOTIFICATION - NOT USER INPUT]") ||
-    head.startsWith("<task-notification>") ||
-    head.startsWith("<system-reminder>") ||
-    head.startsWith("<local-command-caveat>") ||
-    /^\[SYSTEM NOTIFICATION\b/.test(head)
-  );
-}
+export { isSyntheticPrompt };
 
 export function main(argv?: string[]): number {
   const args = argv ?? process.argv.slice(2);
