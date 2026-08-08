@@ -42,10 +42,10 @@ describe('lint_command_verbs.check', () => {
     /**
      * Directories this suite had to CREATE, innermost first.
      *
-     * Removing only the files left an empty `.agent-src.uncondensed/commands/`
-     * in the repo root, and that is not cosmetic: `sweep_dead_scan_roots`
+     * Removing only the files left an empty retired-container directory in the
+     * repo root, and that is not cosmetic: `sweep_dead_scan_roots`
      * classifies a scan root as dead BY ABSENCE, so an empty directory un-kills
-     * the `check_reply_consistency.ts:.agent-src.uncondensed` finding, its
+     * the `check_reply_consistency.ts` dead-root finding, its
      * ledger disposition goes stale, and the gate exits 3. It read as a local
      * quirk for months because the two suites landed in different vitest
      * shards; vitest shards by file COUNT, so adding ONE unrelated test file
