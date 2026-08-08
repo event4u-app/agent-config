@@ -38,6 +38,23 @@
  * Exit codes (dispatcher contract): 0 allow · 2 block (stderr carries the
  * reason on block-capable events) — the dispatcher's `host_semantics`
  * translation owns the per-platform mapping.
+ *
+ * WHAT THIS GUARD DOES NOT SEE — stated because the previous version of this
+ * header stated only what it covers, and a coverage claim that omits its
+ * residue reads as completeness. The classifier reads the command TEXT; it does
+ * not interpret the shell. So an invocation whose command word is assembled at
+ * runtime is not classified, measured and still open:
+ *
+ *   P=publish; npm $P           — variable indirection
+ *   echo publish | xargs npm    — the command word is composed by xargs
+ *
+ * Both execute under bash. Closing them needs a different mechanism than a
+ * longer pattern, and `Measured, deferred, and why` in the round-6 roadmap
+ * draws that line deliberately. Covered, by contrast, and each pinned by a
+ * vector whose ground truth came from running bash rather than from reading
+ * this file: ANSI-C and locale quoting, unbalanced quotes, command and process
+ * substitution in every position tried, `sh -c` and `eval` payloads, env
+ * assignment prefixes, and quotes inside the command word.
  */
 import fs from "node:fs";
 import path from "node:path";
@@ -153,25 +170,54 @@ export function extractCommand(envelope: JsonObject): string | null {
  *
  * Deliberately NOT a full tokeniser. `shlexSplit` in `block_no_verify` throws on
  * an unbalanced quote, which is the right behaviour for a guard that fail-closes;
- * this guard must classify every command it sees, including a malformed one. So
- * an unterminated quote here degrades to "the rest of the string is quoted",
- * which yields one segment starting at the real command word — the conservative
- * outcome, since the command word is what `commandOp` matches on.
+ * this guard must classify every command it sees, including a malformed one.
+ *
+ * THE UNTERMINATED-QUOTE POSTURE IS FAIL-CLOSED, AND THE ARGUMENT FOR THE
+ * PREVIOUS ONE WAS INVERTED. Round 5 shipped this docstring: "an unterminated
+ * quote here degrades to 'the rest of the string is quoted', which yields one
+ * segment starting at the real command word — the conservative outcome". It is
+ * the opposite. In `echo 'oops && npm publish` the surviving segment's command
+ * word is `echo`, so everything after `&&` is swallowed and the publish is never
+ * seen. Measured, not reasoned: that command was blocked before #1208 and
+ * allowed after it. So an unbalanced quote now re-splits the trailing segment
+ * WITHOUT quote awareness and classifies every piece. A false positive on input
+ * bash would itself refuse to run is acceptable; a false negative on input bash
+ * does run is the failure this guard exists for.
+ *
+ * ANSI-C quoting (`$'…'`) is a distinct opener, and treating its `$` as ordinary
+ * text was the second half of the same regress. In `$'don\'t'` the `\'` does NOT
+ * close the quote — C escape semantics apply inside — so a plain single-quote
+ * reading closes early, re-opens on the trailing `'`, and swallows the tail.
+ * `$"…"` is locale translation and behaves as `"…"`.
  */
 export function splitOutsideQuotes(command: string): string[] {
   const parts: string[] = [];
   let cur = "";
-  let quote: '"' | "'" | null = null;
+  // `$'` is tracked distinctly from `'` because only it honours `\` escapes.
+  let quote: '"' | "'" | "$'" | null = null;
   for (let i = 0; i < command.length; i += 1) {
     const ch = command[i] as string;
     if (quote !== null) {
+      if (quote === "$'" && ch === "\\" && i + 1 < command.length) {
+        // C-style escape: `\'` is a literal quote, not a terminator.
+        cur += ch + (command[i + 1] as string);
+        i += 1;
+        continue;
+      }
       cur += ch;
-      if (ch === quote) {
+      if (ch === (quote === "$'" ? "'" : quote)) {
         quote = null;
       } else if (ch === "\\" && quote === '"' && i + 1 < command.length) {
         cur += command[i + 1] as string;
         i += 1;
       }
+      continue;
+    }
+    // `$'…'` / `$"…"` — the `$` belongs to the opener, not to the payload.
+    if (ch === "$" && (command[i + 1] === "'" || command[i + 1] === '"')) {
+      quote = command[i + 1] === "'" ? "$'" : '"';
+      cur += ch + (command[i + 1] as string);
+      i += 1;
       continue;
     }
     if (ch === '"' || ch === "'") {
@@ -195,8 +241,91 @@ export function splitOutsideQuotes(command: string): string[] {
     }
     cur += ch;
   }
+  if (quote !== null) {
+    // Unbalanced: the trailing segment carries an opener that never closed, so
+    // its separators were read as data. Re-read them as separators. Segments
+    // completed BEFORE the opener keep their quote-aware split — the round-5
+    // false positive (a `grep -E` alternation) balances its quotes and never
+    // reaches this branch.
+    parts.push(...splitIgnoringQuotes(cur));
+    return parts;
+  }
   parts.push(cur);
   return parts;
+}
+
+/**
+ * Separator split with no quote awareness at all — the fail-closed fallback for
+ * a command whose quotes do not balance. Backslash still escapes, because a
+ * `\|` is a literal pipe under every reading.
+ */
+function splitIgnoringQuotes(fragment: string): string[] {
+  const parts: string[] = [];
+  let cur = "";
+  for (let i = 0; i < fragment.length; i += 1) {
+    const ch = fragment[i] as string;
+    if (ch === "\\" && i + 1 < fragment.length) {
+      cur += ch + (fragment[i + 1] as string);
+      i += 1;
+      continue;
+    }
+    if (ch === "\n" || ch === ";" || ch === "|" || ch === "&") {
+      if ((ch === "|" || ch === "&") && fragment[i + 1] === ch) {
+        i += 1;
+      }
+      parts.push(cur);
+      cur = "";
+      continue;
+    }
+    cur += ch;
+  }
+  parts.push(cur);
+  return parts;
+}
+
+/**
+ * Extract the payload of every command substitution in a segment — `$(…)` with
+ * balanced parentheses, and backtick form.
+ *
+ * An unterminated substitution yields everything to the end of the segment
+ * rather than nothing: the same fail-closed direction the quote posture takes.
+ */
+export function substitutionPayloads(segment: string): string[] {
+  const out: string[] = [];
+  for (let i = 0; i < segment.length; i += 1) {
+    const ch = segment[i];
+    if (ch === "\\") {
+      i += 1;
+      continue;
+    }
+    // `$(…)` command substitution and `<(…)` / `>(…)` process substitution:
+    // different syntax, same fact — the parenthesised payload is a command that
+    // runs. Measured: `cat <(npm publish)` executes the publish.
+    if ((ch === "$" || ch === "<" || ch === ">") && segment[i + 1] === "(") {
+      let open = 1;
+      let j = i + 2;
+      const start = j;
+      for (; j < segment.length && open > 0; j += 1) {
+        const c = segment[j];
+        if (c === "\\") {
+          j += 1;
+        } else if (c === "(") {
+          open += 1;
+        } else if (c === ")") {
+          open -= 1;
+        }
+      }
+      out.push(segment.slice(start, open === 0 ? j - 1 : segment.length));
+      i = j - 1;
+      continue;
+    }
+    if (ch === "`") {
+      const end = segment.indexOf("`", i + 1);
+      out.push(segment.slice(i + 1, end === -1 ? segment.length : end));
+      i = end === -1 ? segment.length : end;
+    }
+  }
+  return out;
 }
 
 /**
@@ -245,13 +374,33 @@ export function invokedSegments(command: string, depth = 0): string[] {
     }
     // Drop leading env assignments: `FOO=bar BAZ=1 npm publish`.
     seg = seg.replace(/^(?:[A-Za-z_][A-Za-z0-9_]*=(?:"[^"]*"|'[^']*'|\S*)\s+)+/, "");
+    // A command substitution is an invocation in its own right, and it runs
+    // whether or not the enclosing segment's command word is harmless:
+    // `echo "$(npm publish)"` publishes. Classify INSIDE the substitution by
+    // command position, so the substitution that *invokes* a blocked op is
+    // refused and the one that merely *mentions* it in an argument
+    // (`echo "$(grep -c 'npm publish' f)"`) is not — the same rule `commandOp`
+    // already applies one level up, applied one level deeper.
+    for (const payload of substitutionPayloads(seg)) {
+      out.push(...invokedSegments(payload, depth + 1));
+    }
     // Unwrap `sh -c '<payload>'` / `bash -c "<payload>"` and recurse.
     const wrapped = /^(?:\S*\/)?(?:ba|z|k)?sh\s+-[a-z]*c\s+(?:"([^"]*)"|'([^']*)'|(\S+))/.exec(seg);
     if (wrapped) {
       out.push(...invokedSegments(wrapped[1] ?? wrapped[2] ?? wrapped[3] ?? "", depth + 1));
       continue;
     }
-    out.push(seg);
+    // `eval` is the same shape as `sh -c`: its argument is command context, and
+    // it takes the rest of the segment rather than one word.
+    const evaled = /^eval\s+(?:"([^"]*)"|'([^']*)'|(.+))$/.exec(seg);
+    if (evaled) {
+      out.push(...invokedSegments(evaled[1] ?? evaled[2] ?? evaled[3] ?? "", depth + 1));
+      continue;
+    }
+    // Quotes inside the command WORD are removed by the shell before it looks
+    // the command up, so `np''m publish` invokes npm. Strip them from the head
+    // only — an argument's quotes are data and stay.
+    out.push(seg.replace(/^(\S+)/, (w) => w.replace(/['"]/g, "")));
   }
   return out;
 }

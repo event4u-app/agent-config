@@ -19,17 +19,30 @@ own Risk Register named that exact failure class as rank 1.**
 The quote-awareness fix traded one false positive for two false negatives. Both
 directions measured, same vectors, same probe, the two code states side by side:
 
-| vector | pre-#1208 | at `2daf29871` |
-|---|---|---|
-| `echo $'don\'t' && npm publish` | **blocked** (`commandOp: publish`) | **allowed** (`null`) |
-| `echo 'oops && npm publish` (unterminated quote) | **blocked** | **allowed** |
-| `echo "$(npm publish)"` | allowed | allowed — pre-existing |
-| the round-5 grep alternation | blocked — the false positive | allowed — the fix working |
+| vector | pre-#1208 | at `2daf29871` | bash executes the op? |
+|---|---|---|---|
+| `echo $'don\'t' && npm publish` | **blocked** (`commandOp: publish`) | **allowed** (`null`) | **yes** |
+| `echo 'oops && npm publish` (unterminated quote) | **blocked** | **allowed** | **no** — syntax error |
+| `echo "$(npm publish)"` | allowed | allowed — pre-existing | **yes** |
+| the round-5 grep alternation | blocked — the false positive | allowed — the fix working | no |
 
 Exposure is every `BLOCK_OP` with no second net: `npm|pnpm|yarn publish`,
 `gh release create`, `gh pr merge`. Git-shaped variants stay covered, verified:
 `$'…'` also breaks `block_no_verify`'s shlex, and `_looks_like_git_invocation`
 splits without quote awareness, so a `git push` in the tail is still seen.
+
+**Correction, measured while implementing Phase 1 — the fourth column above is
+new and one row moves out of the exposure set.** The unterminated-quote vector
+is a regression in classification and **not** an executable bypass: bash refuses
+the whole command with `unexpected EOF while looking for matching quote`, so
+nothing after the separator runs. The live exposure is ANSI-C quoting and
+command substitution. Blocking the unbalanced case stays right — 1.2's own
+argument is that a false positive on input bash refuses to run is cheap — but it
+is defence in depth, not the hole. The instrument matters here and is recorded
+because it was wrong the first time: stdout cannot detect a substitution's
+execution, since the substitution consumes it, and that first harness reported
+"not run" for `sh -c "$(…)"` and `FOO=1 $(…)`, both of which do run. Ground
+truth for every row now comes from a file side effect.
 
 **Why the adversarial suite missed it, stated precisely, because "we needed more
 test cases" is the comfortable version and it is not what happened.** The suite
@@ -171,17 +184,20 @@ length of the text actually typed. Phase 2.3 does exactly that and nothing more.
 
 ## Phase 1 — Close the regress, then the standing hole
 
-- [ ] 1.1 `splitOutsideQuotes`: recognise `$'` as a quote opener with C-style
+- [x] 1.1 `splitOutsideQuotes`: recognise `$'` as a quote opener with C-style
   escape semantics (`\'` does not close it) and `$"` as `"`. Pin the exact
   measured command; it must classify as `publish` and block.
-- [ ] 1.2 Replace the unterminated-quote posture. Today the tail becomes one
+- [x] 1.2 Replace the unterminated-quote posture. Today the tail becomes one
   quoted segment, which is permissive for the reason named above. Instead
   re-split the tail **without** quote awareness and classify every segment. A
   false positive on input bash would itself refuse to run is acceptable; a false
   negative on input bash *does* run is the failure the guard exists for. Pin
   `echo 'oops && npm publish` as blocked, and the round-5 grep alternation as
   still allowed — its quotes balance, so this branch never sees it.
-- [ ] 1.3 Extend the adversarial suite with the full vector set: `$'…'`,
+  <!-- Shipped as specified. Only the segments completed BEFORE the unclosed
+  opener keep their quote-aware split; the trailing one is re-read with
+  separators live. -->
+- [x] 1.3 Extend the adversarial suite with the full vector set: `$'…'`,
   unterminated single and double quotes, substitutions inside and outside double
   quotes, backticks, `sh -c "$(…)"`, and an env-assignment-prefixed
   substitution. Record the measured outcome for every vector **including the
@@ -190,17 +206,35 @@ length of the text actually typed. Phase 2.3 does exactly that and nothing more.
   step exists to pay: a fail-closed posture cannot be confirmed by reading the
   splitter, so every row's ground truth comes from running a shell against the
   same input, as the round-5 regress was established.
-- [ ] 1.4 Implement the resolved substitution design in **both** guards: extract
+  <!-- `ROUND6_VECTORS` (16 rows, each carrying its measured `bashRuns`) and
+  `ROUND6_OPEN_VECTORS` (2 rows) in tests/scripts/git_authorization.test.ts. One
+  test asserts the invariant directly: no vector bash executes classifies null. -->
+- [x] 1.4 Implement the resolved substitution design in **both** guards: extract
   each `$(…)` / backtick payload and classify it by **command position**, so
   `$(git push --force …)` is an invocation and `$(grep -c 'npm publish' f)` is
   not. `block_no_verify`'s `$(` split is unreachable exactly when it is needed —
   it lives in the fail-closed branch that a well-formed command never enters — so
   repairing one guard would leave the git-shaped variants open. Pin both: the
   invocation blocks, the quoting mention does not.
-- [ ] 1.5 Amend both guard headers. They currently claim the quote fix "does not
+  <!-- `substitutionPayloads` is exported from block_unauthorized_git and
+  imported by block_no_verify, so the two cannot drift. Heredoc bodies are
+  stripped before extraction, or a backtick in a commit message would re-open
+  the round-5 false positive from the other side. -->
+- [x] 1.5 Amend both guard headers. They currently claim the quote fix "does not
   discard quoted payloads, so `sh -c "npm publish"` still unwraps" — true, and
   incomplete in a way that reads as coverage. State the substitution exclusion
   until 1.4 lands.
+  <!-- 1.4 landed in the same change, so there is no substitution exclusion to
+  state. Both headers now carry the residue that IS real — variable indirection
+  and xargs — under an explicit "what this guard does not see". -->
+- [x] 1.6 **Added while measuring 1.3, not in the original plan.** Three of the
+  five vectors the suite found open are the same two mechanisms Phase 1 already
+  implements, not shell interpretation: `eval` is `sh -c` by another name,
+  `<(…)` is a substitution, and quotes inside the command word (`np''m publish`)
+  are removed by the shell before lookup. All three execute under bash and were
+  classified `null`. Closed here rather than filed, because leaving a vector open
+  in the same file that just added an "everything bash runs is blocked" assertion
+  would make that assertion false on the day it shipped.
 
 ## Phase 2 — One trigger definition, both directions
 

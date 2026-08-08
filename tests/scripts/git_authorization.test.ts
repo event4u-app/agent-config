@@ -190,6 +190,84 @@ describe("commandOp", () => {
   });
 });
 
+/**
+ * Round-6 adversarial vector table.
+ *
+ * `bashRuns` is MEASURED, not reasoned: each vector was run with a harmless
+ * stand-in for the blocked op and a file side effect as the detector. Stdout was
+ * the first detector tried and it was wrong — a substitution's stdout is
+ * consumed by the substitution, so `sh -c "$(…)"` and `FOO=1 $(…)` reported
+ * "not run" for operations that do run. The round-5 regress is exactly what
+ * happens when a posture is argued rather than executed, so the ground truth
+ * here comes from bash.
+ *
+ * The `bashRuns: false` rows with a non-null `op` are ACCEPTED FALSE POSITIVES:
+ * their quotes do not balance, so bash refuses the whole command with a syntax
+ * error and nothing executes. Blocking them costs a malformed command a retry;
+ * allowing the class costs an executable bypass.
+ */
+const ROUND6_VECTORS: ReadonlyArray<{ cmd: string; op: GitOp | null; bashRuns: boolean }> = [
+  // — the regress #1208 introduced, both halves —
+  { cmd: String.raw`echo $'don\'t' && npm publish`, op: "publish", bashRuns: true },
+  { cmd: `echo $"hi" && gh pr merge 12`, op: "pr-merge", bashRuns: true },
+  { cmd: `echo 'oops && npm publish`, op: "publish", bashRuns: false },
+  { cmd: `echo "oops && gh pr merge 3`, op: "pr-merge", bashRuns: false },
+  // — command substitution, the standing hole #1208 did not open and did not close —
+  { cmd: `echo "$(npm publish)"`, op: "publish", bashRuns: true },
+  { cmd: `echo $(npm publish)`, op: "publish", bashRuns: true },
+  { cmd: "echo `npm publish`", op: "publish", bashRuns: true },
+  { cmd: `sh -c "$(npm publish)"`, op: "publish", bashRuns: true },
+  { cmd: `sh -c '$(npm publish)'`, op: "publish", bashRuns: true },
+  { cmd: `FOO=1 $(gh release create v1)`, op: "release", bashRuns: true },
+  { cmd: `cat <(npm publish)`, op: "publish", bashRuns: true },
+  { cmd: `eval "npm publish"`, op: "publish", bashRuns: true },
+  { cmd: `np''m publish`, op: "publish", bashRuns: true },
+  // — classification INSIDE the substitution is by command position: a mention
+  //   in an argument is not an invocation, one level down as one level up —
+  { cmd: `echo "$(grep -c 'npm publish' package.json)"`, op: null, bashRuns: false },
+  { cmd: `grep -n -E "foo|npm publish|bar" file.txt`, op: null, bashRuns: false },
+  { cmd: `printf '{"cmd":"npm publish"}'`, op: null, bashRuns: false },
+];
+
+/**
+ * Vectors bash RUNS and this guard does NOT classify — recorded because a table
+ * holding only the rows that were fixed is the same false completeness this
+ * round is about.
+ *
+ * Both need the shell's own runtime to resolve what the command word will be,
+ * which is the line `Measured, deferred, and why` draws at "full shell parsing
+ * in the guards": the guards classify, they do not interpret. Closing these
+ * needs a different mechanism, not a longer regex.
+ */
+const ROUND6_OPEN_VECTORS: ReadonlyArray<{ cmd: string; why: string }> = [
+  { cmd: `P=publish; npm $P`, why: "variable indirection — the op is not literal in the text" },
+  { cmd: `echo publish | xargs npm`, why: "xargs composes the command word at runtime" },
+];
+
+describe("commandOp — round-6 adversarial vectors", () => {
+  it.each(ROUND6_VECTORS)("classifies $cmd as $op", ({ cmd, op }) => {
+    expect(commandOp(cmd)).toBe(op);
+  });
+
+  it("blocks every vector bash actually executes", () => {
+    const escaped = ROUND6_VECTORS.filter((v) => v.bashRuns && commandOp(v.cmd) === null);
+    expect(escaped.map((v) => v.cmd)).toEqual([]);
+  });
+
+  it("keeps the round-5 false positive allowed while the regress is blocked", () => {
+    // Both pull on the same splitter; last round the trade went the wrong way
+    // silently. Pinned together so neither can move alone.
+    expect(commandOp(`grep -n -E "foo|npm publish|bar" docs/`)).toBeNull();
+    expect(commandOp(String.raw`echo $'don\'t' && npm publish`)).toBe("publish");
+  });
+
+  it("records the vectors that remain open rather than implying coverage", () => {
+    for (const { cmd, why } of ROUND6_OPEN_VECTORS) {
+      expect(commandOp(cmd), `${cmd} — ${why}`).toBeNull();
+    }
+  });
+});
+
 describe("extractCommand", () => {
   it("reads the command out of a Claude-shaped envelope", () => {
     expect(
