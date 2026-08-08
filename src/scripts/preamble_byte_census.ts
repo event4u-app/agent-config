@@ -44,6 +44,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import * as YAML from 'yaml';
 
 import { resolveGlobalProfilePath } from './_lib/agent_user_profile.js';
+import { censusRuleDir, type RuleDirCensus } from './_lib/carrier_divergence.js';
 import { DEFAULT_PROJECTS_ROOT, scanTranscripts } from './_lib/cc_transcript.js';
 import { censusDuplicateScope } from './_lib/duplicate_scope_census.js';
 import { computeColdStarts } from './cache_realization_report.js';
@@ -71,26 +72,14 @@ function readCharsIfExists(p: string): number {
 
 // ── source 1/2: rule directories ────────────────────────────────────────
 
-export interface RuleDirCensus {
-    files: number;
-    chars: number;
-}
-
-export function censusRuleDir(dir: string): RuleDirCensus {
-    if (!fs.existsSync(dir)) return { files: 0, chars: 0 };
-    let files = 0;
-    let chars = 0;
-    for (const name of fs.readdirSync(dir)) {
-        if (!name.endsWith('.md')) continue;
-        try {
-            chars += fs.statSync(path.join(dir, name)).size;
-            files += 1;
-        } catch {
-            // Unreadable entry — skip rather than fail the whole census.
-        }
-    }
-    return { files, chars };
-}
+// Moved to `_lib/carrier_divergence.ts` when `conformance_scan` needed the same
+// count (round-6 Phase 4.3): that module is on a bundled CLI path and this one
+// pulls `yaml` plus the cold-start report, so importing this file to reach fifteen
+// lines of `statSync` was the wrong direction. Re-exported so every existing
+// caller keeps its import and there is still one definition. Imported as well as
+// re-exported: a bare `export … from` does not bind the name in this module's own
+// scope, and this file uses both below.
+export { censusRuleDir, type RuleDirCensus };
 
 export interface PerRuleCost {
     file: string;

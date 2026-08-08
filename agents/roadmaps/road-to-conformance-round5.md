@@ -253,15 +253,51 @@ prose is the entire mechanism, and there the absence is the failure.
 - [x] 1.2 Extend the same gate with a **freshness** assertion: no rule in
   `dist/agent-src/rules/` may be newer than the projection entry that points at
   it. This is the check that would have caught a five-week-stale tree.
-- [ ] 1.3 Add a cross-carrier **divergence report**: compare the project tree
+- [x] 1.3 Add a cross-carrier **divergence report**: compare the project tree
   against the machine-global install by body (frontmatter stripped) and name
   every rule whose two copies disagree. Advisory, not blocking — a maintainer
   developing the package is legitimately ahead of their own global install; the
   point is that the condition becomes visible instead of silent.
-- [ ] 1.4 Register 1.1-1.3 in the gate ledger and the CI task list, and confirm
+  <!-- Shipped as `src/scripts/report_carrier_divergence.ts`, task
+  `report-carrier-divergence`, advisory, 17 tests. Two departures from the text,
+  both forced by measurement. (1) The project carrier is `.claude/rules`, NOT
+  `dist/agent-src/rules/`: the global installer delivers the five ADR-004
+  `type: manual` rules and the project projection omits them, so anchoring on
+  dist reports those five as *shared* when only one carrier delivers them. (2)
+  "by body (frontmatter stripped)" would have hidden the answer — stripping ALL
+  frontmatter also strips the installer's `package:`/`source_path:` stamp AND
+  every real frontmatter change. The report strips only the two ownership keys,
+  which is what separates an install stamp from a content difference; the
+  comparison now lives in `_lib/carrier_divergence.ts` shared with
+  `measure_scope_dedup`, so the two cannot drift. -->
+  <!-- The step's own premise, re-measured: see round 6 § 4.1-4.2. This roadmap
+  claimed "91 rules load twice, in two different versions"; all 91 differed by
+  exactly the two ownership keys and ZERO differed in body. -->
+- [x] 1.4 Register 1.1-1.3 in the gate ledger and the CI task list, and confirm
   the new gate actually scans a non-empty set (the repo's own
   `assertScanned` discipline — a gate that examines zero files must not exit 0
   silently).
+  <!-- Walked as three commands, not as a reading. GATE LEDGER: adopted —
+  `check_rule_projection_integrity` constructs `GateLedger`, plans every
+  (tree × rule) pair and terminates each one, and `check_gate_completeness` does
+  not list it among the non-adopters. CI TASK LIST: `task
+  check-rule-projection-integrity` in taskfiles/ci-fast.yml plus a step in
+  .github/workflows/consistency.yml; `check_ci_local_parity` reports no
+  undeclared drift (260 CI / 235 local / 26 declared CI-only / 1 local-only).
+  1.3 is registered as `task report-carrier-divergence` and deliberately NOT
+  wired into a blocking pipeline — the `report_*` convention, because a checkout
+  ahead of its own global install is normal. NON-EMPTY SCAN: `assertScanned`,
+  measured 330 entries across 3 trees.
+  ONE HALF REFUSED, WITH THE REASON IN PLACE: the gate is not added to
+  `src/config/gate-coverage.yml`. `agents/.agent-tools.yml` is
+  `skip-worktree`-masked to `tools: []` on a maintainer checkout, so the same
+  gate emits 330 in CI and 0 there; a real floor reds locally, a `min_scanned: 0`
+  floor is the false-count shape that file rejects, and `unavailable_exit` cannot
+  express it because the empty case must keep exiting 0 (blocking there is what
+  PR #1211 repaired). Recorded in the manifest header alongside a measured
+  correction to its own backstop claim — the unregistered-emitter test matches
+  only the inline `process.stdout.write` shape, so it is blind to the 175 of 244
+  gates that emit through `assertScanned`, i.e. to the shape the repo recommends. -->
 
 ## Phase 2 — Stop the two guards refusing read-only commands
 

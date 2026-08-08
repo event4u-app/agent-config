@@ -27,9 +27,14 @@
  * store. It answers "did the shipped gates have anything to bite on?" —
  * which is also the only honest way to find out whether they help.
  */
+import { createHash } from "node:crypto";
 import fs from "node:fs";
+import os from "node:os";
 import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
+
+import { censusRuleDir } from "./_lib/carrier_divergence.js";
+import { entryText, isSidechain } from "./_lib/transcript_entry.js";
 
 import { classify } from "./language_mirror_hook.js";
 import { isSyntheticPrompt } from "./_lib/prompt_shape.js";
@@ -37,6 +42,19 @@ import { classifyAuthorization, type GitOp } from "./git_authorization_hook.js";
 import { BLOCK_OPS, commandOp } from "./hooks/block_unauthorized_git.js";
 import { isVacuousOutput, isCiPoll, pendingCount } from "./before_complete_hook.js";
 import { isEvaluationPrompt, isSelfScoped, preloadedVerdict } from "./hooks/evidence_independence.js";
+
+/**
+ * This module's own repo root, NOT `process.cwd()`.
+ *
+ * Both the project carrier and the rate series are anchored here. Resolving them
+ * against the cwd made a run from any subdirectory record
+ * `delivered_project_tokens: 0` and append the series to a fresh
+ * `agents/runtime/state/` tree at that location — outside the ignore rule whose
+ * coverage the docstring claims, and silently splitting a series whose whole
+ * point is comparability. Under the bundled CLI `import.meta.url` still resolves
+ * inside the package, which is the tree whose rules are being measured.
+ */
+const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "..");
 
 export interface Violation {
   check: "language-pin" | "git-authorization" | "vacuous-evidence" | "evidence-steering";
@@ -62,12 +80,98 @@ export interface SessionReport {
   violations: Violation[];
 }
 
+/**
+ * Rule text reaching context, per carrier — round-6 Phase 4.3, and the
+ * instrument the `essential` default-flip decision has been waiting on. Token
+ * basis: chars/4, the same estimate `preamble_byte_census` and
+ * `measure_scope_dedup` use, so the three numbers are comparable.
+ *
+ * MEASURED AT SCAN TIME, NOT PER SESSION — and the step asked for per-session.
+ * The delivered payload is a property of the CARRIERS ON DISK, and the
+ * transcript records none of it (verified in `preamble_byte_census`: a
+ * transcript carries `message.usage` counts and response content, no system or
+ * tools field). The carriers also change under the sessions — this round alone
+ * added three rules and refreshed the global install. So attaching today's
+ * figure to a session from three weeks ago would be a fabrication dressed as a
+ * per-session measurement, and the honest shape is one reading per scan run
+ * plus the forward series 4.5 records. That correction is why 4.3 and 4.5 are
+ * one mechanism rather than two.
+ */
+export interface DeliveredPayload {
+  /**
+   * `present` distinguishes a measured zero from a carrier that is not there.
+   * Without it a run from the wrong directory records `tokens: 0`, halves
+   * `union_tokens`, and persists a record indistinguishable from a real reading
+   * into a series whose entire purpose is comparability over time. The sibling
+   * `report_carrier_divergence` carries the same flag and refuses to substitute a
+   * different tree; this is the same refusal.
+   */
+  project: { dir: string; present: boolean; files: number; tokens: number };
+  global: { dir: string; present: boolean; files: number; tokens: number };
+  /** What a machine carrying BOTH carriers pays — the figure M5 compared across projects. */
+  union_tokens: number;
+}
+
+/**
+ * The band M5 observed across the only three stores with a corpus worth
+ * measuring (`private/capisco` 39.2 %, this package 25.4 %,
+ * `private/agent-switch` 9.1 %). Both council members independently named the
+ * same falsifier for cancelling the volume test: **a fourth project falling
+ * outside this band**. It is a constant here, with its source, because a
+ * falsifier nobody can evaluate is not one.
+ */
+export const OBSERVED_BAND = { low: 9.1, high: 39.2 } as const;
+
+/**
+ * The smallest corpus the band was derived from — `private/capisco`, 1 978
+ * assistant turns. NOT a chosen threshold: a rate computed over materially fewer
+ * turns is not comparable to the three that defined the band, and declaring it
+ * out-of-band would fire the falsifier on corpus size rather than on behaviour.
+ *
+ * The first run of this instrument proved the point: the worktree's own store
+ * read 4.1 % over 606 turns and would have announced the falsifier on its second
+ * day of existence.
+ */
+export const BAND_MIN_TURNS = 1978;
+
+export type BandVerdict = "inside" | "outside" | "corpus-too-small";
+
+/** Round-6 Phase 4.5 — the forward-capture record for one scan run. */
+export interface RateRecord {
+  /** Not the store path: a stable digest of it. See `storeKey`. */
+  store_key: string;
+  sessions: number;
+  assistant_turns: number;
+  language_pin: number;
+  rate_pct: number;
+  /** `outside` is the falsifier firing; `corpus-too-small` is not a reading. */
+  band: BandVerdict;
+  /**
+   * `null` when the scanned store is NOT this repo's own — `measureDelivered` is
+   * always anchored on this checkout, so pairing another project's rate with
+   * these tokens would persist a figure that belongs to neither. Cross-project
+   * `--record` is exactly the use 4.5 exists for, so the mismatch would have been
+   * the common case rather than an edge one.
+   */
+  delivered_project_tokens: number | null;
+  delivered_global_tokens: number | null;
+}
+
+export function bandVerdict(rate_pct: number, assistant_turns: number): BandVerdict {
+  if (assistant_turns < BAND_MIN_TURNS) {
+    return "corpus-too-small";
+  }
+  return rate_pct >= OBSERVED_BAND.low && rate_pct <= OBSERVED_BAND.high ? "inside" : "outside";
+}
+
 export interface ScanReport {
   scanned_at: string;
   store: string;
   sessions: number;
   totals: Record<string, number>;
   per_session: SessionReport[];
+  delivered: DeliveredPayload;
+  rate: RateRecord;
 }
 
 type Entry = Record<string, unknown>;
@@ -78,20 +182,14 @@ function _isObject(v: unknown): v is Record<string, unknown> {
 
 /** Text of a user-role entry, or null when it is not a real chat message. */
 export function userText(entry: Entry): string | null {
-  if (entry["type"] !== "user" || entry["isSidechain"] === true) {
+  if (entry["type"] !== "user" || isSidechain(entry)) {
     return null;
   }
-  const msg = entry["message"];
-  const content = _isObject(msg) ? msg["content"] : undefined;
-  let text = "";
-  if (typeof content === "string") {
-    text = content;
-  } else if (Array.isArray(content)) {
-    text = content
-      .filter((b) => _isObject(b) && b["type"] === "text")
-      .map((b) => String((b as Record<string, unknown>)["text"] ?? ""))
-      .join("\n");
-  }
+  // Shape handling moved to `_lib/transcript_entry.ts` so a second reader of the
+  // same field cannot get it wrong. It already did once, in this branch: a
+  // string-only reader saw 0 of the 41 injected skill bodies in this store,
+  // because they all arrive as content blocks.
+  const text = entryText(entry);
   if (!text.trim()) {
     return null;
   }
@@ -103,20 +201,10 @@ export function userText(entry: Entry): string | null {
 
 /** Assistant prose, or null. */
 export function assistantText(entry: Entry): string | null {
-  if (entry["type"] !== "assistant" || entry["isSidechain"] === true) {
+  if (entry["type"] !== "assistant" || isSidechain(entry)) {
     return null;
   }
-  const msg = entry["message"];
-  const content = _isObject(msg) ? msg["content"] : undefined;
-  if (!Array.isArray(content)) {
-    return null;
-  }
-  const text = content
-    .filter((b) => _isObject(b) && b["type"] === "text")
-    .map((b) => String((b as Record<string, unknown>)["text"] ?? ""))
-    .join("\n")
-    .trim();
-  return text || null;
+  return entryText(entry).trim() || null;
 }
 
 /** Tool-use blocks from an assistant entry. */
@@ -336,11 +424,69 @@ export function scanSession(sessionId: string, lines: string[]): SessionReport {
   return report;
 }
 
+/**
+ * Where `--record` appends by default. Under the gitignored `agents/runtime/`
+ * because the series is per-machine observation, and committing it would publish
+ * the project set `storeKey` exists to hide.
+ */
+export const DEFAULT_RATE_SERIES = path.join(
+  REPO_ROOT,
+  "agents",
+  "runtime",
+  "state",
+  "conformance-rates.jsonl",
+);
+
 /** Default Claude Code transcript store for a project directory. */
 export function defaultStore(projectDir: string): string {
   // Claude Code slugs BOTH separators and dots: /Users/x/.claude → -Users-x--claude.
   const slug = projectDir.replace(/[/.]/g, "-");
   return path.join(process.env["HOME"] ?? "", ".claude", "projects", slug);
+}
+
+/** chars/4, the estimate every other payload measurement in this repo uses. */
+function _tokens(chars: number): number {
+  return Math.round(chars / 4);
+}
+
+/**
+ * Measure what each carrier delivers. Defaults are the two real carriers; both
+ * are injectable so a test never reads the developer's home.
+ */
+export function measureDelivered(projectRulesDir: string, globalRulesDir: string): DeliveredPayload {
+  const p = censusRuleDir(projectRulesDir);
+  const g = censusRuleDir(globalRulesDir);
+  return {
+    project: {
+      dir: projectRulesDir,
+      present: fs.existsSync(projectRulesDir),
+      files: p.files,
+      tokens: _tokens(p.chars),
+    },
+    global: {
+      dir: globalRulesDir,
+      present: fs.existsSync(globalRulesDir),
+      files: g.files,
+      tokens: _tokens(g.chars),
+    },
+    union_tokens: _tokens(p.chars + g.chars),
+  };
+}
+
+/**
+ * A stable, non-reversible key for a store — NEVER the path.
+ *
+ * The store path is `-Users-<realname>-projects-<client>-…`: a real name, a
+ * directory layout, and often a customer identifier. `domain-safety-pii` §
+ * Surface 3 forbids exporting a direct identifier and
+ * `low-impact-corpus-privacy-floor` names project-rooted paths outright, so the
+ * forward series is keyed on a digest. It still answers the only question 4.5
+ * asks of it — "is this the same project as last time, and is a FOURTH one
+ * outside the band" — because equality and novelty survive hashing while the
+ * identity does not.
+ */
+export function storeKey(store: string): string {
+  return createHash("sha256").update(path.resolve(store)).digest("hex").slice(0, 12);
 }
 
 export function scanStore(store: string, limit: number): ScanReport {
@@ -373,13 +519,57 @@ export function scanStore(store: string, limit: number): ScanReport {
     }
   }
 
+  const assistant_turns = per_session.reduce((n, s) => n + s.assistant_turns, 0);
+  const language_pin = totals["language-pin"] ?? 0;
+  // Round ONCE, then use the rounded value for both the record and the verdict.
+  // Rounding after the comparison lets a raw 9.06 persist `rate_pct: 9.1` beside
+  // `band: "outside"`, and print "9.1%" directly above "OUTSIDE the 9.1-39.2%
+  // band" — a rounding artefact announcing the declared falsifier.
+  const rate_pct =
+    assistant_turns === 0 ? 0 : Number(((100 * language_pin) / assistant_turns).toFixed(1));
+  const delivered = measureDelivered(
+    path.join(REPO_ROOT, ".claude", "rules"),
+    path.join(process.env["HOME"] ?? os.homedir(), ".claude", "rules"),
+  );
+  const ownStore = path.resolve(store) === path.resolve(defaultStore(REPO_ROOT));
+
   return {
     scanned_at: new Date().toISOString(),
     store,
     sessions: per_session.length,
     totals,
     per_session,
+    delivered,
+    rate: {
+      store_key: storeKey(store),
+      sessions: per_session.length,
+      assistant_turns,
+      language_pin,
+      rate_pct,
+      band: bandVerdict(rate_pct, assistant_turns),
+      // Only attach the carrier figures when the rate and the carriers describe
+      // the same project.
+      delivered_project_tokens: ownStore ? delivered.project.tokens : null,
+      delivered_global_tokens: ownStore ? delivered.global.tokens : null,
+    },
   };
+}
+
+/**
+ * Append one scan's rate record — round-6 Phase 4.5's forward capture.
+ *
+ * PII-exclusion-by-construction, the shape `artifact-engagement-recording`
+ * applies to telemetry: `RateRecord` has NO field able to hold a path, a prompt,
+ * a session id, or any free text, so there is no scrubber here that could fail.
+ * Keep it that way — never widen it with a `note` or `extra`.
+ *
+ * Default destination is under the gitignored `agents/runtime/`, because the
+ * series is per-machine observation and committing it would publish the very
+ * project set the key exists to hide.
+ */
+export function recordRate(file: string, scanned_at: string, rate: RateRecord): void {
+  fs.mkdirSync(path.dirname(file), { recursive: true });
+  fs.appendFileSync(file, `${JSON.stringify({ measured_at: scanned_at, ...rate })}\n`, "utf8");
 }
 
 export function render(report: ScanReport): string {
@@ -399,6 +589,45 @@ export function render(report: ScanReport): string {
       lines.push(`    ${s.session}  ${s.violations.length} across ${s.assistant_turns} turns`);
     }
   }
+  const d = report.delivered;
+  lines.push("");
+  lines.push("  Delivered rule text (chars/4, carriers as they stand NOW — not per-session):");
+  const carrier = (label: string, c: { present: boolean; files: number; tokens: number }): string =>
+    c.present
+      ? `    ${label}  ${String(c.files).padStart(4)} rules  ${String(c.tokens).padStart(7)} tok`
+      : `    ${label}  ABSENT — not a measured zero, this carrier does not exist here`;
+  lines.push(carrier("project", d.project));
+  lines.push(carrier("global ", d.global));
+  lines.push(`    union                  ${String(d.union_tokens).padStart(7)} tok`);
+  lines.push("    A session's own payload is NOT recoverable: the transcript records no system");
+  lines.push("    or tools field, and the carriers change under the sessions. This is one");
+  lines.push("    reading; the series below is what makes it interpretable over time.");
+  lines.push("");
+  lines.push(
+    `  language-pin rate  ${report.rate.rate_pct.toFixed(1)}%  ` +
+      `(${report.rate.language_pin} of ${report.rate.assistant_turns} assistant turns)`,
+  );
+  if (report.rate.band === "corpus-too-small") {
+    lines.push(
+      `    Not compared: ${report.rate.assistant_turns} turns is below the ${BAND_MIN_TURNS} of the`,
+    );
+    lines.push("    smallest corpus the band was derived from, so a verdict here would be about");
+    lines.push("    corpus size, not behaviour.");
+  } else if (report.rate.band === "inside") {
+    lines.push(
+      `    Inside the observed ${OBSERVED_BAND.low}-${OBSERVED_BAND.high}% band (M5, n=3).`,
+    );
+  } else {
+    lines.push(
+      `    ⚠️  OUTSIDE the observed ${OBSERVED_BAND.low}-${OBSERVED_BAND.high}% band (M5, n=3).`,
+    );
+    lines.push("    This is the falsifier both council members named when the volume test was");
+    lines.push("    cancelled: a project outside the band is the signal that the cancellation");
+    lines.push("    was wrong. It is a reason to look, not a defect in this run.");
+    lines.push("    CHECK FIRST that this is a different PROJECT: a git worktree gets its own");
+    lines.push("    transcript store under the same project, so a store-keyed series counts it");
+    lines.push("    as new. Store novelty is not project novelty.");
+  }
   lines.push("");
   lines.push("  Scanned checks are exactly the mechanised ones. Ask-shape, session-canary,");
   lines.push("  promissory closings and checkbox batching are left as prose and NOT measured.");
@@ -411,6 +640,7 @@ export function main(argv?: string[]): number {
   let limit = 30;
   let json = false;
   let out: string | null = null;
+  let record: string | null = null;
   for (let i = 0; i < args.length; i += 1) {
     const a = args[i];
     if (a === "--store" && args[i + 1] !== undefined) {
@@ -421,6 +651,13 @@ export function main(argv?: string[]): number {
       json = true;
     } else if (a === "--output" && args[i + 1] !== undefined) {
       out = args[++i] as string;
+    } else if (a === "--record") {
+      // Opt-in, and a bare `--record` takes the default path rather than
+      // swallowing the next flag as a filename.
+      record =
+        args[i + 1] !== undefined && !(args[i + 1] as string).startsWith("-")
+          ? (args[++i] as string)
+          : DEFAULT_RATE_SERIES;
     }
   }
   const resolved = store ?? defaultStore(process.cwd());
@@ -431,6 +668,9 @@ export function main(argv?: string[]): number {
   const report = scanStore(resolved, Number.isFinite(limit) && limit > 0 ? limit : 30);
   if (out) {
     fs.writeFileSync(out, `${JSON.stringify(report, null, 2)}\n`, "utf8");
+  }
+  if (record) {
+    recordRate(record, report.scanned_at, report.rate);
   }
   // fs.writeSync, not process.stdout.write: `process.exit()` below does not
   // flush an async pipe write, so `--json | jq` reproducibly received a

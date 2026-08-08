@@ -25,6 +25,7 @@ import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
 
+import { comparePair } from './_lib/carrier_divergence.js';
 import { censusRuleDir } from './preamble_byte_census.js';
 
 const REPO_ROOT = path.resolve(path.dirname(new URL(import.meta.url).pathname), '..', '..');
@@ -91,17 +92,15 @@ function dedupableCount(userDir: string, sourceDir: string): { skipped: number; 
  * perfect version alignment. Classifying the two apart is what turns "0/110"
  * from a puzzle into an answer: `provenanceOnly == total` means aligning
  * versions would buy exactly nothing.
+ *
+ * The three-way comparison now lives in `_lib/carrier_divergence.ts` because a
+ * second surface needs it (`report_carrier_divergence`, round-5 Phase 1.3). The
+ * DIRECTORY WALK stays here and stays anchored on `sourceDir`: this harness asks
+ * how many installed twins the dedup could skip, which is a question about the
+ * projection's own rules, not about the union of both carriers. Only the
+ * comparison is shared — that is the part that must not drift, and it is also
+ * the part `scope_dedup.test.ts` pins.
  */
-const OWNERSHIP_KEYS = ['package', 'source_path'] as const;
-
-function stripOwnershipKeys(buf: Buffer): string {
-    return buf
-        .toString('utf-8')
-        .split('\n')
-        .filter((line) => !OWNERSHIP_KEYS.some((k) => line.startsWith(`${k}:`)))
-        .join('\n');
-}
-
 interface ReachabilitySplit {
     total: number;
     identical: number;
@@ -130,9 +129,16 @@ function classifyReachability(userDir: string, sourceDir: string): ReachabilityS
             continue;
         }
         const b = fs.readFileSync(path.join(sourceDir, entry));
-        if (a.equals(b)) split.identical += 1;
-        else if (stripOwnershipKeys(a) === stripOwnershipKeys(b)) split.provenanceOnly += 1;
-        else split.bodyDiff += 1;
+        switch (comparePair(a, b)) {
+            case 'identical':
+                split.identical += 1;
+                break;
+            case 'provenance-only':
+                split.provenanceOnly += 1;
+                break;
+            default:
+                split.bodyDiff += 1;
+        }
     }
     return split;
 }

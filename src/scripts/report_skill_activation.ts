@@ -66,7 +66,7 @@ const TRIGGER_KEYS = ['triggers:', 'trigger_description:', 'file_pattern:', 'pat
  * "consider") is excluded on purpose: it is the FC-8 class, and counting it here
  * would inflate the only number in this census that bounds what SK-2 can cover.
  */
-const DETERMINISTIC_RE = /^\s*(?:[-*]\s*)?(?:\*\*)?(MUST|NEVER|ALWAYS)\b/m;
+export const DETERMINISTIC_RE = /^\s*(?:[-*]\s*)?(?:\*\*)?(MUST|NEVER|ALWAYS)\b/m;
 
 export interface SkillCensus {
   total: number;

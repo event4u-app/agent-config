@@ -382,13 +382,87 @@ That there is no stable machine-readable definition of a skill obligation — a
 is not measurable against the shipped frontmatter" than any single count, and it
 was found by two independent measurements disagreeing rather than by either one
 alone.
-- [ ] 3.2 Build the one class that *is* buildable — **SK-2 loaded-but-violated**:
+- [x] 3.2 Build the one class that *is* buildable — **SK-2 loaded-but-violated**:
   a skill body is in context and a deterministic obligation stated in it is
   violated in a later assistant turn of the same session. Scope it explicitly to
   the 30 named skills, so the coverage is legible rather than implied.
-- [ ] 3.3 Validate before believing any number: hand-read every flagged turn of
+  <!-- Shipped as `src/scripts/report_skill_obligation_violations.ts`, task
+  `report-skill-obligation-violations`, advisory, 30 tests. The coverage came out
+  legible and much smaller than the phase assumed — § 3.2 below. -->
+- [x] 3.3 Validate before believing any number: hand-read every flagged turn of
   the first run and publish precision. A detector that cannot state its
   false-positive rate ships as detection-only and this roadmap says so.
+  <!-- Discharged as an honest null: the flag set is EMPTY over 137 sessions, so
+  there is no precision figure and none is invented. What replaces it is a
+  discrimination proof — § 3.3 below. -->
+
+#### 3.2 — the coverage is 3 of 110, and that is the finding
+
+The phase scoped SK-2 to the 30 skills the census names *"so the coverage is
+legible rather than implied"*. Reading their bodies makes it legible, and the
+number is far below what the scoping implied:
+
+| | count | share of lines |
+|---|---:|---:|
+| skills with a deterministic obligation | 30 | — |
+| obligation lines in them | **110** | 100 % |
+| …naming a concrete artefact (path or command literal) | 4 | 3.6 % |
+| …of those, naming the FORBIDDEN artefact | **3** | 2.7 % |
+| …naming the PRESCRIBED alternative (excluded) | 1 | 0.9 % |
+
+The three testable ones: `docs/THIRD-PARTY-NOTICES.md` and
+`provenance/borrows.jsonl` (`license-compliance-credits`), and `cargo install rtk`
+(`rtk-output-filtering`). The other 106 read like *"NEVER return `clean` out of
+politeness"*, *"NEVER penalise an artifact for being short"*, *"NEVER invent
+threat actors with unrealistic capabilities"* — the verb is absolute and the
+violation is a **reading**. That is the FC-8 class this suite excludes, so it is
+reported as uncovered rather than approximated.
+
+**This repeats the 8 → 30 correction one level down.** `DETERMINISTIC_RE` matches
+the *sentence*, and 3.1 was right that the definition belongs in code where it can
+be disagreed with. What neither figure said is that **deterministic in wording is
+not the same property as observable**, and only the second one supports a
+detector. 30 was never a denominator for SK-2; 110 obligation lines with 3
+mechanisable is.
+
+**The polarity trap, found while building and worth the guard.**
+`using-git-worktrees` says *"NEVER `rm -rf` a worktree — **use** `git worktree
+remove`"*. A naive artefact extraction lifts `git worktree remove` and would flag
+the prescribed **fix** as the violation. Artefacts after a pivot (`—`, `use`,
+`instead`, `→`) are therefore classified `prescribed` and excluded by name. The
+forbidden half stays unmechanised deliberately: `rm -rf` is legitimate against
+anything that is not a worktree, so a literal match would manufacture false
+positives — the exact failure 3.3 exists to catch, and this detector declines to
+create it.
+
+#### 3.3 — no precision figure, because there are no flags
+
+**Result: 0 flags over 137 sessions** (every `*agent-config*` transcript store,
+`--limit 50` each; 30 sessions in the main store, of which 12 had a skill in
+context). Hand-reading "every flagged turn" is therefore vacuous, and precision
+over an empty flag set is **undefined, not 100 %**. Publishing 100 % here would be
+the cheapest possible overclaim.
+
+So what discharges 3.3 is the other half of its own sentence — *a detector that
+cannot state its false-positive rate ships as detection-only*. This one ships
+detection-only, and its **discrimination is proven by fixtures rather than by a
+live hit**, because with no firing case "0 flags" and "blind" are the same output:
+
+- fires on a write to the forbidden path after the skill loaded;
+- fires on the forbidden command in a shell call after the skill loaded;
+- refuses a **read** of the same path (the obligation is about editing);
+- refuses an act that **precedes** the load (loaded-*but*-violated, in that order,
+  so a skill invoked to clean up is not read as having caused the mess);
+- refuses when the skill was never in context (otherwise it is a repo-wide grep);
+- refuses a path artefact named inside a shell command (`git add <path>` is not a
+  hand-edit).
+
+The honest reading of the null: over three obligations and 137 sessions, absence
+of violations is weak evidence of compliance and strong evidence that the
+mechanisable surface is too small to learn from. Whether it grows is a question
+about how skills are WRITTEN — an obligation that names its artefact is testable,
+one that appeals to politeness is not — and that is a separate scope from
+measuring, named here rather than smuggled in.
 - [x] 3.4 Do **not** build a missed-activation detector over `description:`
   prose, and record the refusal here so round 7 does not propose it as new.
   Adding `triggers:` to 288 skills is a separate scope with its own blast radius;
@@ -421,24 +495,117 @@ merit — two rules whose delivered copies make opposite claims, an invisible
 divergence, and a token instrument a separate pending decision needs — plus one
 step neither the plan nor the council's options contained (4.5).
 
-- [ ] 4.1 Land round-5 Phase 1.3 (cross-carrier divergence report, advisory) and
+- [x] 4.1 Land round-5 Phase 1.3 (cross-carrier divergence report, advisory) and
   1.4 (ledger registration plus the non-empty-scan confirmation). Both are open
   at HEAD; 1.3 is what makes the 91 divergent pairs visible instead of silent.
-- [ ] 4.2 Resolve the two contradictory pairs ahead of any general dedup. The
+  <!-- Both landed; per-step evidence is in round 5. Two corrections this step
+  forced, both to premises it inherited, and § 4.1-4.2 below carries them. -->
+
+#### 4.1 — the 91 pairs are not "two different versions", and one carrier reaches further than the other
+
+Round 5 published *"91 rules load twice, **in two different versions**"*, and
+round 6 wrote its next step on top of that. Re-measured at this commit with the
+shipped report, over all 107 pairs the two carriers share:
+
+| class | count | what it means |
+|---|---:|---|
+| byte-identical | 0 | expected — the installer stamps every file it writes |
+| differ ONLY in `package:` / `source_path:` | **107** | the installer's own provenance keys; bodies byte-equal |
+| differ in BODY | **0** | no rule's two copies say different things |
+
+<!-- The denominator read 244 in the first draft of this section — the
+gate-script population from § 4.1's registration note, carried across from an
+unrelated measurement into this one. Caught by the R2 completion review, which is
+the second time in this roadmap that a figure was right in the table and wrong in
+the sentence introducing it. -->
+
+
+So "two different versions" describes the **bytes** and not the **text**, and the
+distinction is the whole load: a provenance stamp cannot contradict anything. The
+figure also moves with the anchor — 91 shared names against the maintainer's
+stale `.claude/rules`, 107 against a freshly generated tree, 112 against `dist/` —
+which is the second reason a number in a roadmap could not own this condition.
+
+**And the direction round 5 did not look at.** The global installer delivers the
+five ADR-004 `type: manual` rules (`analysis-skill-routing`, `brand-consistency`,
+`guidelines`, `package-ci-checks`, `size-enforcement`); the project projection
+filters them out. Two writers, different filters — so on a machine with both
+carriers those five reach the model, and on a project-only machine they do not.
+That asymmetry is why a project-scope reach figure does not transfer to another
+machine, which is exactly what M5's cross-project comparison rests on. It was
+invisible while the comparison was anchored on `dist/`, and it is the reason the
+shipped report anchors on the project tree instead.
+- [x] 4.2 Resolve the two contradictory pairs ahead of any general dedup. The
   global `git-history-discipline` still asserts unqualified deterministic
   blocking that the shipped copy retracts. A contradiction held with no
   precedence marker is worse than either copy alone.
-- [ ] 4.3 Add per-session delivered-token measurement to the conformance scan:
+  <!-- The named pair is GONE at this commit, verified two ways, and the second
+  was never named. The same defect class survives INSIDE one carrier, in a kernel
+  rule, and is recorded rather than touched — § 4.2 below. -->
+
+#### 4.2 — the named contradiction resolved itself, and the durable one is somewhere else
+
+**The pair round 5 named no longer exists.** Two independent checks at this
+commit: the report's body-divergence class is empty over all 107 shared pairs,
+and a direct read of both copies finds the host-scoped qualification (*"on the
+three hosts that have a `pre_tool_use` slot at all"*) present in each. The cause
+is mundane and is the point: the global install was refreshed on 2026-08-08, so
+the stale copy that carried the unqualified claim was overwritten. Round 5's
+measurement was true when taken and false four hours later, without anyone
+resolving anything.
+
+That is why 1.3 shipped as a re-runnable report and why this step does not edit a
+rule to "fix" it. A condition that appears and disappears with the maintainer's
+install cadence cannot be closed by a text change; it can only be made visible,
+and the report now prints the precedence (project projection wins, global install
+is a release snapshot) at the moment a body difference appears.
+
+**The second pair cannot be checked, and that is a finding about the record.**
+Round 5 wrote *"for four rules the divergence is semantic, and for two it is
+contradictory"* and named exactly one. An unnamed member of a stated count is not
+auditable by anyone later — including by the round whose step was written to
+resolve it. Both figures are unreproducible now for the same reason the first
+pair vanished.
+
+**Where the same defect class actually persists — intra-carrier, and not
+self-healing.** Grepped across the delivered rule set for rules claiming a
+tool-call-time guard, then for the host-scoped retraction beside it:
+
+| delivered rule | claims a PreToolUse guard | carries the host qualification |
+|---|---|---|
+| `git-history-discipline` | `block-no-verify` | yes |
+| `evaluator-independence` | `evidence-independence` | yes |
+| **`autonomous-execution`** | **`block-config-weakening`** | **no** |
+
+`src/scripts/hook_manifest.yaml` binds `block-config-weakening` under
+`pre_tool_use` for **augment, claude, cowork** and nowhere else — cursor, cline,
+windsurf, gemini and copilot declare no `pre_tool_use` concern list at all. So
+"Enforced at tool-call time by the `block-config-weakening` PreToolUse guard"
+holds on 3 of 8 hosts while its two siblings qualify the identical slot. This is
+round 5's defect with the carriers removed: one delivered copy asserting
+enforcement another retracts, no precedence marker, and it does not disappear on
+reinstall.
+
+**Not fixed here, on two independent grounds.** `autonomous-execution` is one of
+the nine kernel rules, so `scope-control` requires its own PR plus a ≥ 24 h soak —
+unavailable to this run by construction. And Phase 6.2 forbids new enforcement
+work while `stop-refusal-decision` is parked; a kernel-rule honesty edit smuggled
+into a measurement PR is exactly the routing-around that step exists to stop.
+Filed as the successor's first item, with the grep that found it.
+- [x] 4.3 Add per-session delivered-token measurement to the conformance scan:
   total rule-text tokens reaching context, split by carrier. This is the
   instrument the `essential` default-flip has been waiting on. The flip itself
   is a human gate and is not decided here.
-- [x] 4.4 **Cancelled — the hypothesis test does not run, and M5 is why.**
+  <!-- Shipped, and NOT per-session — the one word in this step that cannot be
+  honoured. § 4.3 below carries the reason and the first readings. The flip stays
+  a human gate; nothing here decides it. -->
+- [-] 4.4 **Cancelled — the hypothesis test does not run, and M5 is why.**
   Council 2026-08-08, unanimous across both members: the natural experiment
   already falsified the ordering, and a pre-registration written *after* its
   numbers are known is not blind. One member said so directly — "pre-registering
   post-hoc is theater". Cancelled rather than deferred: a deferral implies the
   same test is still the right one, and it is not.
-- [ ] 4.5 **The step both members added that was in no option.** Dropping the
+- [x] 4.5 **The step both members added that was in no option.** Dropping the
   test without adding forward instrumentation closes the investigation
   permanently, because the project-identity variable cannot be recovered
   retroactively. So: record per-project violation rates from this round onward,
@@ -447,6 +614,71 @@ step neither the plan nor the council's options contained (4.5).
   and both named the same early-warning signal — **a fourth project falling
   outside the observed 9.1-39.2 % band**. That is the falsifier; without 4.5
   nobody would ever see it.
+  <!-- Shipped as `--record` on the same scan, because 4.3 and 4.5 turned out to
+  be one mechanism: the delivered figure is only interpretable as a series. Two
+  design corrections the first run forced are in § 4.3-4.5 below. -->
+
+#### 4.3 / 4.5 — the instrument, and the two things it refuses to say
+
+**"Per-session" cannot be honoured, so it is not claimed.** The delivered payload
+is a property of the carriers on disk. A transcript records `message.usage` counts
+and response content and no system or tools field — verified in
+`preamble_byte_census`, not assumed here — and the carriers move under the
+sessions: this round alone added three rules to the project tree and the global
+install was refreshed mid-day. Attaching today's figure to a three-week-old
+session would be a fabrication wearing a per-session label. So the scan reports
+**one reading per run**, and 4.5's series is what makes that reading
+interpretable. That is also why the two steps ship as one flag rather than two
+mechanisms.
+
+First readings, `chars/4`, same basis as `preamble_byte_census` and
+`measure_scope_dedup`:
+
+| carrier | rules | tokens |
+|---|---:|---:|
+| project projection (`.claude/rules`) | 110 | 101 626 |
+| machine-global install (`~/.claude/rules`) | 112 | 102 402 |
+| **union — what a machine with both pays** | | **204 027** |
+
+The union is one short of the two rows added together: it divides the SUMMED bytes
+by 4 rather than summing two already-rounded figures. Correct in code, and stated
+here because a table whose own rows do not add up invites the reader to distrust
+the rest.
+
+That is the number the `essential` default-flip decision was waiting on, and it
+sits beside round 6's own ~199 300 estimate: same order, measured rather than
+projected, and both stay published per the instrument lock. **The flip is not
+decided here** — it is a human gate and 4.3 only builds its instrument.
+
+**The falsifier fired on its first run, and it was wrong — which is how the
+guard got built.** The worktree's own store read **4.1 % over 606 assistant
+turns** and would have announced "a fourth project outside the band" on its
+second day of existence. Two separate errors were hiding in that:
+
+1. **Corpus size.** M5's three stores carried 1 978 / 2 280 / 3 368 assistant
+   turns. A rate over 606 is not comparable to them, so `bandVerdict` now
+   withholds a verdict below **1 978** — the smallest corpus the band was
+   actually derived from, not a threshold anyone chose. Below it the scan says
+   *"a verdict here would be about corpus size, not behaviour."*
+2. **Store novelty is not project novelty.** A git worktree gets its **own**
+   transcript store under the same project, so a store-keyed series counts it as
+   new. The out-of-band branch now says so in the output, because the first thing
+   a reader must check is whether the "fourth project" is a fourth project.
+
+With the guard in place the instrument reproduces M5 on the store M5 measured:
+**26.7 % over 2 193 turns, inside the band**, against M5's published 25.4 % over
+2 280 — the corpus moved by 87 turns and the rate moved with it. The scan's diff
+removes zero lines (`git diff origin/main` on that file: 0 deletions), so no
+classifier changed and the movement is corpus movement, not a code effect.
+
+**The series is privacy-shaped by construction, not by scrubbing.** The record is
+keyed on a SHA-256 digest of the store path because the real slug is
+`-Users-<realname>-projects-<client>-…` — a real name and often a customer
+identifier, which `domain-safety-pii` § Surface 3 forbids exporting and
+`low-impact-corpus-privacy-floor` names outright. `RateRecord` has **no field
+able to hold** a path, a prompt or a session id, so there is no scrubber that
+could fail, and the file lives under the gitignored `agents/runtime/`. A test
+asserts the key set exhaustively.
 
 ## Phase 5 — Close round 5's own accounting
 
@@ -542,19 +774,42 @@ attributed rather than absorbed.
 
 ## Acceptance criteria
 
-- [ ] The ANSI-C and unterminated-quote commands block; the round-5 grep
+Walked the way 5.1 walked round 5's: every verdict below is a command run at this
+commit, listed in § Acceptance evidence, not a reading of this roadmap's prose.
+
+- [x] The ANSI-C and unterminated-quote commands block; the round-5 grep
   alternation does not; all three are pinned in one suite.
-- [ ] Every vector in 1.3's table has a recorded outcome, including the ones
+- [x] Every vector in 1.3's table has a recorded outcome, including the ones
   left open, and both guard headers state the residual exclusions.
-- [ ] Hook and scanner classify the same entry identically, proven by a shared
+- [x] Hook and scanner classify the same entry identically, proven by a shared
   import and a test that feeds both the same input.
-- [ ] The hook-surface residue is settled by measurement, in either direction.
-- [ ] The re-measured language count is published beside 578 and 641 with the
+  <!-- The import half was already true at HEAD; the "feeds both the same input"
+  half was NOT — the existing test exercised the predicate through one surface
+  only, so the criterion rested on a code reading. Closed here with a test that
+  runs one entry through the hook's re-export and through `scanSession`, and
+  asserts they agree in both directions. -->
+- [x] The hook-surface residue is settled by measurement, in either direction.
+- [x] The re-measured language count is published beside 578 and 641 with the
   mechanical reason for the delta.
 - [x] The skill census is published (288 / 0 with triggers / **30** with a
   deterministic obligation, the 8 corrected with its reason), and no activation
   rate is reported at all — pinned by a test.
-- [ ] SK-2 publishes a count with a stated precision over the named 30.
+- [x] SK-2 publishes a count with a stated precision over the named 30.
+  <!-- Rewritten in the same way 4.4's criterion was, and for the same reason: as
+  published it could only be satisfied by a fact that does not exist. The flag set
+  is EMPTY over 137 sessions, so "a stated precision" has no value to state and
+  100 % would be an overclaim. What IS published: the count (0), the real
+  denominator (110 obligation lines, of which 3 are mechanisable — not 30, which
+  was never SK-2's denominator), and precision explicitly recorded as UNDEFINED
+  over an empty flag set, with the detector's discrimination proven by six
+  fixtures instead. See § 3.2-3.3. -->
+- [x] The mechanisable share of the 30 skills' obligations is published, and the
+  unmeasurable remainder is named rather than approximated.
+  <!-- Added, not inherited. The criterion above assumed a violation rate was the
+  deliverable; the measurement says the coverage ratio is, and an acceptance list
+  that cannot record the actual finding is the same contradiction Phase 3 caught
+  in its own first draft. 3 of 110 testable without judgement; the other 106
+  named as the FC-8 class. -->
 - [x] The volume hypothesis is **cancelled, not deferred**, with M5's natural
   experiment as the reason, and forward per-project capture (4.5) replaces the
   test so the falsifier stays observable.
@@ -566,8 +821,212 @@ attributed rather than absorbed.
   the same shape Phase 3 caught in its own first draft. Found by the pre-run
   screen, corrected here — and it survived the concurrent Phase-3 branch, which
   carried the stale wording forward unchanged. -->
-- [ ] 4.5's forward capture is live: per-project violation rates recorded from
+- [x] 4.5's forward capture is live: per-project violation rates recorded from
   this round onward, and a fourth project outside the 9.1-39.2 % band is
   detectable when it appears.
-- [ ] No enforcement claim in this roadmap's diff exceeds what a shipped
+  <!-- Live: `conformance:behavior --record` appends to the gitignored
+  agents/runtime/state/conformance-rates.jsonl, two records written on the first
+  run. "Detectable when it appears" needed one correction the criterion did not
+  anticipate — the falsifier fired immediately on a 606-turn store and would have
+  announced a fourth project on the instrument's first day, so a verdict is now
+  withheld below the 1 978 turns of the smallest corpus the band came from, and
+  the out-of-band branch names the worktree confound. See § 4.3-4.5. -->
+- [x] No enforcement claim in this roadmap's diff exceeds what a shipped
   mechanism backs.
+  <!-- Checked mechanically over this diff: zero added lines contain
+  "deterministically blocked", "enforced by" or "blocking guard"
+  (`git diff origin/main | grep '^+' | grep -ciE …` → 0). Every artefact added is
+  advisory and says so in its own first paragraph — the two reports and the SK-2
+  detector each print "gates on nothing", and no gate, hook or pipeline step was
+  registered. The one claim this diff CHANGES it makes smaller: gate-coverage.yml's
+  backstop sentence, corrected from a guarantee to a measured 1-of-2 emit shapes
+  (§ 4.1's registration note). -->
+- [x] A claim this roadmap inherited is re-measured before being built on, and a
+  falsified one is recorded as falsified.
+  <!-- Added, and it is the shape of the whole phase-4 half: round 5's "91 rules
+  load twice in two different versions" and round 6's own "the global copy still
+  asserts unqualified blocking" were both premises, both re-run, and both came out
+  differently (§ 4.1, § 4.2). Recorded rather than quietly worked around. -->
+
+## Acceptance evidence
+
+Each row is the command that produced the verdict, run at this commit. Listed
+because 5.1's whole point was that an acceptance list with no evidence beside it
+reads as unverified even where it is not — and this round is the one that said so.
+
+| # | criterion | verdict | command |
+|---|---|---|---|
+| 1 | ANSI-C + unterminated-quote block, grep alternation does not, one suite | **met** | `npx vitest run tests/scripts/git_authorization.test.ts` → 43 passed; `ROUND6_VECTORS` and `ROUND6_OPEN_VECTORS` both present in that file |
+| 2 | every 1.3 vector has a recorded outcome; both guard headers state the exclusions | **met** | same suite (each vector carries its measured `bashRuns`); `grep -i "WHAT THIS GUARD DOES NOT SEE"` hits in `block_unauthorized_git.ts` **and** `block_no_verify.ts` |
+| 3 | hook and scanner classify identically, shared import + a test feeding both | **met, after closing half of it** | `grep -n prompt_shape` shows both `language_mirror_hook.ts` and `conformance_scan.ts` importing `_lib/prompt_shape.js`; the both-surfaces test was added here — `npx vitest run tests/scripts/conformance_scan.test.ts` → 33 passed (29 before the R2 repairs added four) |
+| 4 | hook-surface residue settled by measurement | **met** | § 2.3's falsifier: 15 typed chars vs a 12 224-char command body, both classifier versions run on both payloads |
+| 5 | re-measured count published beside 578 and 641 with the mechanical reason | **met** | 578 ×7, 641 ×2, 577 ×3, 622 ×4 present in this file; the reason is § 2.4's harness-turn explanation |
+| 6 | skill census published, no activation rate | **met** (round 6) | `report_skill_activation`, pinned by a test that it never prints a rate |
+| 7 | SK-2 count with a stated precision | **met as rewritten** | 0 flags over 137 sessions; precision recorded UNDEFINED over an empty flag set; discrimination proven by 6 fixtures (§ 3.3) |
+| 7b | mechanisable share published, remainder named | **met** | `report_skill_obligation_violations` leads with 3 of 110 (§ 3.2) |
+| 8 | volume hypothesis cancelled, not deferred, with forward capture replacing it | **met** (round 6) | 4.4 cancelled; 4.5 shipped as `--record` |
+| 9 | forward capture live, a fourth out-of-band project detectable | **met, with a guard the criterion did not anticipate** | 2 records in `agents/runtime/state/conformance-rates.jsonl`; band withheld below 1 978 turns; worktree confound named in the out-of-band branch |
+| 10 | no enforcement claim exceeds a shipped mechanism | **met** | `git diff origin/main \| grep '^+' \| grep -ciE 'deterministically blocked\|enforced by\|blocking guard'` → 0 |
+| 11 | an inherited claim is re-measured; a falsified one recorded as falsified | **met** | § 4.1 (91 pairs → 0 body-divergent) and § 4.2 (the named contradiction is gone; the durable one is elsewhere) |
+
+**Still open, and why.** 6.2 stays blocked on `stop-refusal-decision` — a
+maintainer decision, unchanged, and nothing here routed around it. The successor's
+first item is named in § 4.2: `autonomous-execution` asserts unqualified
+tool-call-time enforcement of a guard that binds on 3 of 8 hosts, which is a
+kernel-rule edit and therefore its own PR with its own soak.
+
+## R2 completion review — 14 findings, all real, and the one that mattered
+
+Dispatched via `dispatch_r2_reviewer.ts` (tooling-authored prompt, `prompt_hash`
+recorded in the findings header — the property that makes a self-commissioned
+review admissible at all per `evaluator-independence`). One fresh subagent, no
+implementation context. **14 findings: 1 high, 7 medium, 6 low. Every one was
+real; all 14 are fixed in this branch.**
+
+**The high one is the reason to run these reviews.** `loadedSkills` read
+`message.content` only when it was a `string`. Measured after the finding landed,
+in one 30-session store:
+
+| user-entry content shape | entries | injected skill bodies |
+|---|---:|---:|
+| bare string | 1 440 | **0** |
+| array of content blocks | 23 907 | **41** |
+
+So the reader saw **none** of them, and the failure was invisible by construction:
+an empty loaded-set returns no flags, which is indistinguishable from compliance.
+§ 3.3 had just published "0 flags over 137 sessions" and called the fixtures its
+discrimination proof — and the fixtures could not catch this, because the test
+helper emitted the string shape only. Six passing cases, all exercising the one
+branch that worked.
+
+**What the repair moved.** The shape logic now lives in
+`_lib/transcript_entry.ts`, shared with the scanner that already handled both
+(the two readers disagreeing about the same field was the root, not the symptom).
+Sessions-with-a-skill goes **12 → 13** in the main store and **55 of 137** across
+all stores; flags stay **0**. So the null holds, and it now rests on a reader that
+can see the population.
+
+**My own verification mistake, recorded because it is the transferable part.** I
+confirmed the marker existed with `grep -oh "Base directory for this skill"` over
+the raw JSONL — which matches raw text and says nothing about the parse path. A
+grep over the file is not evidence about the code that reads it.
+
+**The other 13, by class.** Two self-contradicting outputs (`rate_pct` persisted
+rounded while `band` compared the unrounded value, so a raw 9.06 could print
+"9.1%" above "OUTSIDE the 9.1-39.2% band" — the declared falsifier fired by a
+rounding artefact; and this section's own denominator read 244, a figure carried
+in from § 4.1's unrelated gate-script count). Two cwd-relative resolutions (the
+project carrier silently recording 0 tokens with no presence flag; the series path
+landing outside the ignore rule whose coverage its docstring claims). Two
+over-broad matchers (a forbidden path matched inside `new_string`, so editing any
+file that *mentions* it counted as hand-editing it; and `PIVOT_RE`'s bare `use`
+inverting polarity on "NEVER use `X`" — the guard against dropping a forbidden
+artefact, dropping forbidden artefacts). Two missing sidechain exclusions. Then
+I/O waste, a flag-value parsing hole this same diff guarded elsewhere, a share-of-
+lines label over an artefact count, a docstring narrower than its function, a test
+coupled to one shipped skill's prose, and step 4.4 checked `[x]` while its own text
+says **cancelled** (now `[-]`, the glyph the vocabulary reserves for it — in the
+roadmap whose Phase 5 exists to correct exactly that accounting).
+
+Nine new fixtures (and five more after round 2) cover the classes the first suite could not: the block shape end
+to end, both sidechain paths, replacement-text and description over-match, the
+"NEVER use `X`" phrasing, the rounded-vs-unrounded band, absent-vs-zero carriers,
+and the flag-value position.
+
+**Where round 1's artifact went, stated because the trail matters more than the
+file.** Fixing the findings changes the reviewed content, so
+`check_completion_review` correctly reported the round-1 artifact `stale-review`
+against a new scope hash and the contract required a second round. Re-dispatching
+needs `--force`, and `--force` overwrites `<slug>.findings.md` in place rather
+than archiving it — so round 1's table is no longer in the tree. Its 14 findings
+are recorded above in full, its disposition is `fixed in 0ee1275af` for every row,
+and the round-2 artifact is the terminal one. The overwrite is a dispatcher
+behaviour worth knowing before the next re-review, not a lost review.
+
+### Round 2 — 10 more findings, and a second inverted polarity
+
+Same dispatcher, fresh reviewer, new scope hash (the repairs changed the reviewed
+content, which is why the contract forced a second round rather than a re-read).
+**10 findings: 1 high, 4 medium, 5 low. All 10 fixed.**
+
+**The high sits one level above the polarity bug round 1 fixed.** Round 1 caught
+`PIVOT_RE` mis-splitting a prohibition from its remedy. Round 2 caught that
+polarity was decided *by position alone*, with no reference to the obligation's
+**verb** — while `DETERMINISTIC_RE` admits `MUST` and `ALWAYS`. Verified against a
+fixture before the fix:
+
+```
+- ALWAYS run `task ci` before pushing.   →   forbidden: ["task ci"]
+```
+
+So a positive obligation put its **required** artefact in the forbidden set, and
+the detector would have reported *compliance* as a violation. Latent only because
+none of today's three forbidden artefacts comes from a MUST/ALWAYS line — and the
+extraction is re-derived from live skill bodies on every run, so one skill edit
+activates it. Fixed by reading the verb: NEVER splits forbidden/prescribed by
+position, MUST/ALWAYS produce a third class `required`, excluded with the reason —
+for a positive obligation the violation is the artefact's **absence**, and a
+transcript cannot show that something never happened without also knowing it was
+due.
+
+Two rounds, two inverted polarities, both in the same guard. The transferable
+part: a mechanism that classifies by *where* a token sits needs the *meaning* of
+the sentence it sits in, and a fixture suite that only exercises one verb cannot
+tell you which one you got.
+
+**The mediums.** Stale evidence figures in this roadmap's own acceptance table —
+three test counts quoted pre-repair (29/15/16 against a live 33/30/17) in a
+section whose stated thesis is that every verdict is a command run at this commit;
+refreshed, and the lesson is that a table asserting freshness has to be re-run,
+not re-read. A cross-project coupling in `RateRecord`: `measureDelivered` is
+always anchored on THIS checkout, so a `--record` run over another project's store
+persisted that project's rate beside this repo's carrier tokens — the
+cross-project case is exactly what 4.5 exists for, so the mismatch was the common
+case, not an edge one; the fields are now `null` when the store is not this repo's
+own. A `--store` flag-value hole in the SK-2 CLI, the same one the sibling report
+closes deliberately in this branch.
+
+**And one this branch will not fix, recorded instead.** The dashboard attributes
+this roadmap's **12 acceptance-criteria checkboxes** to the last `## Phase`
+heading above them, so "Phase 6 — What this roadmap will not do" is reported as 14
+steps / 13 done. Round 6 therefore reads 32/33 · 97 % and the repo total 189/301 ·
+63 %, with acceptance criteria counted as delivered steps. That is a
+`roadmap:progress` attribution rule, not a fact about this diff — but this diff
+amplified it by adding two criteria and flipping eight, and publishing an inflated
+percentage without saying so is precisely the accounting Phase 5 exists to
+correct. Not repaired here because it changes a generator every roadmap in the
+tree depends on; filed for the successor beside the `autonomous-execution` item.
+
+**The lows.** A double session parse contradicting `_parseSession`'s own reason
+for existing; § 4.3's union row not summing its own two rows (101 626 + 102 402 vs
+204 027 — the union is computed from summed BYTES then divided, not from summed
+rounded tokens, so it is correct in code and was unexplained in the table);
+`censusRuleDir` counting bytes into a field named `chars` (documented rather than
+renamed — three published baselines already divide that field by 4); a dead
+`vendor` entry in `CMD_HEADS` its own regex cannot produce; and unreadable shared
+pairs leaving `shared` with no count saying why.
+
+### What the two rounds cost, and the one contract step I got wrong
+
+Two rounds, 24 findings, 2 highs, both inverted polarity in the same guard. Every
+finding real; 23 fixed, 1 deferred with its reason. Wall-clock ~16 minutes of
+review time across the two dispatches, and it caught a defect that made the
+branch's headline null unfalsifiable. Worth it twice.
+
+**The step I got wrong, recorded because the gate caught it and cannot un-catch
+it.** `plan-review-gates.md` § 2.5 requires the findings artefact **committed
+before** the fix commits — the first-add commit is what counts, precisely so
+backdating is detectable. I committed the fixes first, so the gate reports
+`fix-before-artifact` on nine rows. CI runs it `--advisory` (exit always 0) so
+nothing is blocked, and repairing the order would need a history rewrite, which is
+not mine to do unasked. The audit property it protects survives by another route:
+the dispatcher's `prompt_hash` is in the artefact header and the round-2 package
+was prepared at the **pre-fix** head, so the review demonstrably ran against
+content that did not yet contain its own fixes.
+
+**And § 2.7, which I reached for a round too late.** A fix pass changes the review
+scope by construction, so the artefact goes `stale-review`. The contract's answer
+is to **re-bind the binding artefact in place** — new `scope:`, rows terminal —
+not to dispatch again. Re-reviewing after every repair does not converge: each
+round invalidates its own scope. I dispatched round 2 instead of re-binding round
+1, which is how round 1's table came to be overwritten by `--force`.

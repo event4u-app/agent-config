@@ -82,6 +82,30 @@ is exactly why it is trustworthy and exactly why it is not sufficient.
 
 `--scan-only` stops here.
 
+The report also carries the **delivered rule payload** split by carrier (project
+projection vs machine-global install, chars/4) and the store's **language-pin
+rate** against the 9.1-39.2 % band M5 observed — round-6 Phase 4.3/4.5. Two
+readings of that block, both deliberate:
+
+- The payload is measured from the carriers **as they stand at scan time**, never
+  per session. A transcript records no system or tools field and the carriers
+  change under the sessions, so a per-session figure would be a fabrication.
+- The band verdict is withheld below 1 978 assistant turns — the smallest corpus
+  the band was derived from — so it reports on behaviour rather than on corpus
+  size.
+
+```bash
+agent-config conformance:behavior --record            # append to the default series
+agent-config conformance:behavior --record <path>     # or a path you choose
+```
+
+`--record` is the forward capture: one line per run into the gitignored
+`agents/runtime/state/conformance-rates.jsonl`, keyed by a **digest** of the
+store path rather than the path itself (the real slug carries a real name and
+often a customer identifier). The record has no field able to hold a path, a
+prompt, or a session id. Without it the project-identity variable cannot be
+recovered later, which is why cancelling the volume test required adding it.
+
 ### 2 — Read the transcripts (subagent fan-out)
 
 The scan cannot see a rule that has no gate: an ask handed over as a trailing
