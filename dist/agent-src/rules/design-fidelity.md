@@ -72,6 +72,9 @@ decisions already made — treat it like brand tokens, not like inspiration.
 ## Strictness — set by `design.fidelity_mode`
 
 Read `design.fidelity_mode` from `.agent-settings.yml`. Missing → `strict`.
+That file is the project layer of a cascade that starts user-global, so "missing"
+means missing from **every** layer — `agent-config settings:get
+design.fidelity_mode` reports the value and the file it came from.
 
 | Mode | Behaviour |
 |---|---|

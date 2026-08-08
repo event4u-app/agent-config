@@ -199,17 +199,83 @@ lesson the reported failure taught, and the council fix applies it: a
 `session_start` concern carries the availability fact, and the verb re-checks on
 demand.
 
-- [ ] 3.1 Point every rule that claims hook-backed enforcement at `hooks:status`.
+- [x] 3.1 Point every rule that claims hook-backed enforcement at `hooks:status`.
   The verb exists and is referenced by **zero** rules, which is why a rule can
   claim deterministic blocking on a host where the guard has nowhere to bind.
-- [ ] 3.2 For each capability whose absence changes behaviour, decide once
+  <!-- 0 → 7 rules now name the verb: autonomous-execution, context-hygiene,
+  evaluator-independence, external-code-graph-interop, git-history-discipline,
+  self-repair-loop, session-canary. -->
+
+  **The named successor item is closed here, and the premise was re-measured
+  rather than inherited.** `autonomous-execution` asserted *"Enforced at
+  tool-call time by the `block-config-weakening` PreToolUse guard"* with no host
+  qualification. Counted from `hook_manifest.yaml`: **8** platforms are declared,
+  a `pre_tool_use` concern list exists on exactly **3** (augment, claude,
+  cowork). The claim now carries that qualification, matching what
+  `git-history-discipline` and `evaluator-independence` already said about the
+  identical slot.
+
+  **A correction to the inherited note:** that item was deferred previously as
+  "a kernel rule → own PR + ≥24 h soak". It is **not** kernel. The authoritative
+  list is `KERNEL_RULE_IDS` in `src/scripts/_lib/kernel_rules.ts` — nine ids, and
+  `autonomous-execution` is not among them; `kernel-membership.md` names it only
+  as a *swap candidate* ("if swap accepted"). So no soak applies and the fix
+  lands here.
+
+  **One candidate deliberately not touched:** `domain-safety-pii` matches a
+  PreToolUse grep, but its mention describes a hook that does **not** exist yet
+  ("that is the trigger for a dedicated `legal-privilege-guard` PreToolUse
+  hook"). It claims no current enforcement, so pointing it at `hooks:status`
+  would answer a question it never asks.
+- [x] 3.2 For each capability whose absence changes behaviour, decide once
   whether it is a fact worth carrying at `session_start` or a check worth naming
   in the rule. Carrying costs context on every session; naming costs an inference
   the agent may not make. Record the choice per capability rather than applying
   one answer to all four.
-- [ ] 3.3 Fix the mental model at its source: the ten rules that name
+  <!-- Recorded in `docs/contracts/capability-answerability.md`: a per-capability
+  table with the reason for each side of the trade, plus the revisit bar. -->
+
+  **Outcome: one carry, four names, one conditional carry, one blocked.** Council
+  stays carried (it earned it through a repeated real failure). Settings is
+  `name` because carrying ~140 leaves is not a trade-off but an impossibility.
+  MCP is `name` because the live session already receives its real tool list —
+  the verb answers an authoring question instead. Brand and hook-binding are
+  `name` because each is only relevant inside a specific rule, which now states
+  the check. Host subagent-spawn is **undecided on purpose**: it depends on the
+  open `host-capability-default-flip`, and choosing the carry before the
+  semantics would be recording a preference, not a decision.
+
+  **The one non-obvious answer:** packs is a **conditional** carry — emit nothing
+  in the healthy case, emit loudly only when resolution is degraded. That shape
+  is recorded as the decision; **the concern is not implemented here**, so today
+  packs remains a named check via `packs:active`. Stated rather than left to be
+  discovered as a gap.
+
+  **The revisit bar is empirical, not architectural:** flip a `name` to a `carry`
+  when the same wrong guess has been observed twice. Carrying costs tokens every
+  session with certainty, so it should be bought with evidence rather than with
+  the suspicion that somebody might one day guess wrong.
+- [x] 3.3 Fix the mental model at its source: the ten rules that name
   `.agent-settings.yml` bare. Each gets the resolution chain or a pointer to it,
   because "settings are project-local" is a belief the corpus currently teaches.
+  <!-- Verified after the edit: zero rules now name the file without also naming
+  the cascade. Each pointer also names the concrete `settings:get <key>` call for
+  that rule's own key, so the check is one paste rather than one inference. -->
+
+  **The count was 11, not 10, and 2 already carried the chain.** Measured
+  directly rather than inherited: 11 rules name `.agent-settings.yml`;
+  `council-availability` and `session-canary` already state the user-global chain,
+  and `source-confidentiality` already says "resolved project-then-global" — a
+  phrasing the roadmap's own grep for "user-global" would have missed. So **8**
+  rules were edited, not ten. None is a kernel rule (checked against
+  `KERNEL_RULE_IDS`, not against the prose in `kernel-membership.md`), so no soak
+  applies.
+
+  **One pointer carries more than the chain.** `roadmap-ci-steps-policy` reads
+  `quality.local_auto_run`, which is the inverted-polarity carve-out: an absent
+  key resolves to `true` at its reader and therefore DISABLES the gate the
+  template arms. Naming only the cascade there would have been true and still
+  misleading, so that rule states both.
 
 ## Phase 4 — The adjacent path defects that make the intuitive file wrong
 

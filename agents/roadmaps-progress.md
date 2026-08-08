@@ -6,17 +6,17 @@
 
 ## Overall
 
-**193 / 301 steps done · 64%**
+**196 / 301 steps done · 65%**
 
 ```text
-██████████████████████████░░░░░░░░░░░░░░   64%
+██████████████████████████░░░░░░░░░░░░░░   65%
 ```
 
 ## Open roadmaps
 
 | # | Roadmap | Phases | Steps | Open | Done | Deferred | Cancelled | Blocker | Progress |
 |---|---|---:|---:|---:|---:|---:|---:|---:|---|
-| 1 | [road-to-capability-answerability.md](roadmaps/road-to-capability-answerability.md) | 4 | 19 | 15 | 4 | 0 | 0 | [1](#blockers-road-to-capability-answerability) | ██░░░░░░░░ 21% |
+| 1 | [road-to-capability-answerability.md](roadmaps/road-to-capability-answerability.md) | 4 | 19 | 12 | 7 | 0 | 0 | [1](#blockers-road-to-capability-answerability) | ████░░░░░░ 37% |
 | 2 | [road-to-ci-native-release-first-run.md](roadmaps/road-to-ci-native-release-first-run.md) | 2 | 8 | 8 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 3 | [road-to-conformance-round5.md](roadmaps/road-to-conformance-round5.md) | 6 | 31 | 10 | 21 | 0 | 0 | [1](#blockers-road-to-conformance-round5) | ███████░░░ 68% |
 | 4 | [road-to-conformance-round6.md](roadmaps/road-to-conformance-round6.md) | 6 | 34 | 1 | 32 | 0 | 1 | [2](#blockers-road-to-conformance-round6) | ██████████ 97% |
@@ -43,13 +43,13 @@
 
 ### [road-to-capability-answerability.md](roadmaps/road-to-capability-answerability.md)
 
-**Road to capability answerability — twelve places the agent must guess whether a capability exists** — 4 / 19 done (21%)
+**Road to capability answerability — twelve places the agent must guess whether a capability exists** — 7 / 19 done (37%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
 | 1 | The worst instance, once its semantics are decided | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
 | 2 | Answerability for the gaps with no probe at all | ✅ done | 0 | 4 | 0 | 0 | 100% |
-| 3 | Make the answers reachable without knowing they exist | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
+| 3 | Make the answers reachable without knowing they exist | ✅ done | 0 | 3 | 0 | 0 | 100% |
 | 4 | The adjacent path defects that make the intuitive file wrong | ⬜ not started | 9 | 0 | 0 | 0 | 0% |
 
 <a id="blockers-road-to-capability-answerability"></a>

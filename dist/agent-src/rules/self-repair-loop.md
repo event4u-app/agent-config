@@ -91,6 +91,9 @@ gates — blocking a turn-end on a heuristic is the failure mode the
 enforcement-projection null warns about. Detection is hook-carried, analysis and
 fix model-carried; only the privacy gate and route choice are deterministic.
 Nothing claims a defect *will* be caught — only that a caught one is not dropped.
+Whether the hook is bound at all on this host is `agent-config hooks:status`; on
+a host with no matching slot the detection half does not run and only the
+model-carried half remains.
 
 ## See also
 

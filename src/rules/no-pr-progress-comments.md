@@ -25,7 +25,9 @@ EXCEPTION: USER-INVOKED FLOWS ALWAYS RUN.
 EXCEPTION: USER EXPLICITLY ASKED FOR IT THIS TURN.
 ```
 
-Reading `.agent-settings.yml`:
+Reading `.agent-settings.yml` — the project layer of a cascade that starts
+user-global, so "not set" means not set on any layer; `agent-config settings:get
+personal.pr_progress_comments` reports the value and the file it came from:
 
 - Missing key / not set → treat as `false`.
 - `personal.pr_progress_comments: false` (default) → gate fires.
