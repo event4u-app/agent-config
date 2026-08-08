@@ -107,6 +107,7 @@ export const REGISTRY: readonly CommandEntry[] = [
     { name: 'council:estimate', disposition: 'delegate', synopsis: 'Pre-call council cost preview (no API call, no spend).' },
     { name: 'council:run', disposition: 'delegate', synopsis: 'Run the AI council (requires --confirm to spend).' },
     { name: 'council:render', disposition: 'delegate', synopsis: 'Re-render a saved council responses JSON to markdown.' },
+    { name: 'council:status', disposition: 'delegate', synopsis: 'Is a council configured, and from which file — zero spend, no inference.' },
     { name: 'eval:record', disposition: 'native', synopsis: 'Record a live trigger-eval result into a corpus manifest (corpus-refresh DoD, ADR-061 §6).' },
 ] as const;
 

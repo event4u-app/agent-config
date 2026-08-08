@@ -63,6 +63,8 @@ import { format_install_hints } from './ai_council/cli_hints.js';
 import {
     type AdvisorConfig,
     type CouncilConfig,
+    COUNCIL_CONFIG_ENV,
+    COUNCIL_CONFIG_USER_GLOBAL_REL,
     CouncilConfigError,
     load_council_config,
     resolve_api_key,
@@ -558,9 +560,22 @@ function build_members(settings: Dict, opts: BuildMembersOptions = {}): External
 
     const ai = _isDict(settings) ? ((settings['ai_council'] as Dict) || {}) : {};
     if (!_pyBool(ai['enabled'])) {
+        // The file this message names is load-bearing, and it named the wrong one
+        // for months. Measured across 10 sessions in one consumer project: the
+        // agent reasoned from `.agent-settings.yml` six times, concluded no
+        // council existed, and substituted a weaker path — and one session
+        // "fixed" it by COPYING the user-global config into the project tree,
+        // because this message told it that was where the switch lived. An error
+        // from the authoritative tool is the strongest signal in the room; when
+        // it points at the wrong file it does not merely fail to help, it
+        // manufactures the wrong belief. Name the real path (ADR-104: always
+        // user-global, never project-local) and name the verb that reports it.
         throw new CouncilDisabledError(
-            'ai_council.enabled is false in .agent-settings.yml — ' +
-                'flip it on before invoking council:* commands.',
+            `enabled is false in the council config (${COUNCIL_CONFIG_USER_GLOBAL_REL} ` +
+                'under the user-global agent-config root) — flip it on before invoking ' +
+                'council:* commands. This config is NEVER project-local (ADR-104), so do ' +
+                'not look for it, or create it, in the project tree. ' +
+                '`agent-config council:status` prints the resolved path.',
         );
     }
     const members_cfg = (ai['members'] as Dict) || {};
@@ -608,7 +623,8 @@ function build_members(settings: Dict, opts: BuildMembersOptions = {}): External
             if (name in siblings) {
                 throw new CouncilDisabledError(
                     `--siblings targets member ${_pyReprStr(name)} but it is not ` +
-                        `enabled in .agent-settings.yml (ai_council.members.${name}.enabled).`,
+                        `enabled in the council config (members.${name}.enabled in ` +
+                        `${COUNCIL_CONFIG_USER_GLOBAL_REL} under the user-global root).`,
                 );
             }
             continue;
@@ -714,8 +730,10 @@ function build_members(settings: Dict, opts: BuildMembersOptions = {}): External
             );
         }
         throw new CouncilDisabledError(
-            'no council member has `enabled: true` — enable at least one in ' +
-                '.agent-settings.yml under ai_council.members.*.',
+            'no council member has `enabled: true` — enable at least one under ' +
+                `members.* in ${COUNCIL_CONFIG_USER_GLOBAL_REL} (user-global root; ` +
+                'never the project tree, ADR-104). `agent-config council:status` ' +
+                'prints the resolved path.',
         );
     }
     return members;
@@ -1855,6 +1873,95 @@ function _emit_shadow_slo_banner(): void {
     }
 }
 
+/**
+ * `council:status` — answer "is a council configured, and from where" without
+ * spending anything, so no caller has to infer it from a filename.
+ *
+ * WHY THIS EXISTS. Measured 2026-08-08: an agent working in a consumer project
+ * announced "Kein Council konfiguriert (keine `.agent-settings.yml`)" and
+ * substituted a weaker subagent fan-out. The council was configured the whole
+ * time, user-globally. The inference was wrong twice over — the council config
+ * has not lived in `.agent-settings.yml` since the Phase-0 migration, and per
+ * ADR-104 the project tree is **never** searched, so the presence or absence of
+ * any project file says nothing at all about council availability.
+ *
+ * The guidance was not missing: `/council default` states this emphatically in
+ * four places. But a command file only loads when the command is invoked, and
+ * the agent was deciding *whether a capability existed* — a question it reached
+ * before invoking anything. The always-loaded layer says "when the council is
+ * enabled" and never says how to find out.
+ *
+ * So the fix is not more prose. It is a check that costs nothing to run and
+ * leaves nothing to infer. Exit is always 0 — this reports a state, it does not
+ * gate — and the verdict line is machine-greppable in both directions.
+ */
+export function cmd_status(args: Args, opts: { env?: Record<string, string | undefined> } = {}): number {
+    const env = opts.env ?? process.env;
+    const override = env[COUNCIL_CONFIG_ENV];
+    const path_ = resolve_config_path(REPO_ROOT, { env: env as never });
+    const exists = fs.existsSync(String(path_));
+    const provenance = override ? `${COUNCIL_CONFIG_ENV} override` : 'user-global';
+
+    let cfg: CouncilConfig | null = null;
+    let parse_error: string | null = null;
+    if (exists) {
+        try {
+            cfg = load_council_config(path_);
+        } catch (exc) {
+            parse_error = exc instanceof Error ? exc.message : String(exc);
+        }
+    }
+
+    const enabledMembers = cfg === null ? [] : [...cfg.members.entries()].filter(([, m]) => m.enabled);
+    // "Configured" deliberately means: a readable file whose `enabled` is true and
+    // which has at least one enabled member. A file that parses but enables
+    // nothing is the case a caller most needs told apart from a missing file,
+    // because only one of the two is fixed by writing a config.
+    const configured = cfg !== null && cfg.enabled && enabledMembers.length > 0;
+
+    if (_getattr(args, 'json', false)) {
+        _stdout(
+            `${JSON.stringify({
+                configured,
+                path: String(path_),
+                exists,
+                provenance,
+                enabled: cfg?.enabled ?? null,
+                members_total: cfg === null ? null : cfg.members.size,
+                members_enabled: cfg === null ? null : enabledMembers.length,
+                member_names: enabledMembers.map(([n]) => n),
+                parse_error,
+                project_tree_consulted: false,
+            })}\n`,
+        );
+        return 0;
+    }
+
+    _stdout(`council:status · ${configured ? 'CONFIGURED' : 'NOT CONFIGURED'}\n`);
+    _stdout(`  config path      ${String(path_)}\n`);
+    _stdout(`  resolved by      ${provenance}\n`);
+    _stdout(`  file exists      ${exists ? 'yes' : 'no'}\n`);
+    if (parse_error !== null) {
+        _stdout(`  parse error      ${parse_error}\n`);
+    }
+    if (cfg !== null) {
+        _stdout(`  enabled          ${cfg.enabled ? 'yes' : 'no'}\n`);
+        _stdout(`  members          ${enabledMembers.length} enabled of ${cfg.members.size}\n`);
+        if (enabledMembers.length > 0) {
+            _stdout(`                   ${enabledMembers.map(([n]) => n).join(', ')}\n`);
+        }
+    }
+    _stdout('\n');
+    _stdout('  The project tree is NEVER consulted (ADR-104). No project file —\n');
+    _stdout('  `.agent-settings.yml` included — indicates council availability in\n');
+    _stdout('  either direction. Do not infer it from one; run this instead.\n');
+    if (!configured) {
+        _stdout(`\n  To configure: write ${COUNCIL_CONFIG_USER_GLOBAL_REL} under the user-global\n`);
+        _stdout('  agent-config root, with `enabled: true` and at least one enabled member.\n');
+    }
+    return 0;
+}
+
 function _apply_solo_dispatch(members: ExternalAIClient[]): [ExternalAIClient[], string | null] {
     let cfg: CouncilConfig;
     try {
@@ -2826,13 +2933,15 @@ interface Args {
     // shadow-report
     log: string | null;
     window_days: number;
+    // status
+    json: boolean;
 }
 
-const _SUBCOMMANDS = ['estimate', 'run', 'debate', 'render', 'replay', 'quota', 'shadow-report'];
+const _SUBCOMMANDS = ['estimate', 'run', 'debate', 'render', 'replay', 'quota', 'shadow-report', 'status'];
 
 const _TOP_USAGE =
     `usage: ${_PROG} [-h]\n` +
-    `                            {estimate,run,debate,render,replay,quota,shadow-report}\n` +
+    `                            {estimate,run,debate,render,replay,quota,shadow-report,status}\n` +
     `                            ...\n`;
 
 function _topError(message: string): never {
@@ -2886,6 +2995,7 @@ function _defaultArgs(): Args {
         reset: null,
         log: null,
         window_days: 7,
+        json: false,
     };
 }
 
@@ -3007,6 +3117,12 @@ function _specsFor(cmd: string): { positionals: string[]; opts: OptSpec[]; requi
                     { flag: '--log', takesValue: true, apply: (o, v) => (o.log = v) },
                     { flag: '--window-days', takesValue: true, isInt: true, apply: (o, v) => (o.window_days = v === null ? 7 : parseInt(v, 10)) },
                 ],
+                requiredOpts: [],
+            };
+        case 'status':
+            return {
+                positionals: [],
+                opts: [{ flag: '--json', takesValue: false, apply: (o) => (o.json = true) }],
                 requiredOpts: [],
             };
         default:
@@ -3212,6 +3328,9 @@ function main(argv: string[] | null = null): number {
         }
         if (args.cmd === 'shadow-report') {
             return cmd_shadow_report(args);
+        }
+        if (args.cmd === 'status') {
+            return cmd_status(args);
         }
     } catch (exc) {
         if (exc instanceof CouncilDisabledError) {

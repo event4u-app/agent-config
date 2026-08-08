@@ -34,10 +34,17 @@
  */
 import { execFileSync } from "node:child_process";
 import fs from "node:fs";
+import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
+import { runGateCli, runSelfTest, type SelfTestCase } from "./_lib/gate_self_test.js";
+import { reportScanned } from "./_lib/scan_scope.js";
+
 const DEFAULT_BASE = "main";
+const SELF_TEST_MIN_CASES = 3;
+const SELF_TEST_MIN_REJECT = 1;
+const SCRIPT_REL = "src/scripts/check_branch_freshness.ts";
 
 function git(args: string[]): string | null {
   try {
@@ -76,28 +83,124 @@ export function containsCommit(sha: string): boolean | null {
   }
 }
 
+/**
+ * Build a throwaway origin + working clone, and optionally let a SECOND clone
+ * push so the working clone's tracking ref goes stale without it noticing.
+ *
+ * The stale-tracking-ref case is the whole point. A fixture that only advances
+ * the remote via the same clone would leave `origin/main` correct locally, and a
+ * gate reading the tracking ref would pass it — which is exactly the false green
+ * this gate exists to remove.
+ */
+function buildFixture(root: string, opts: { advanceRemote: boolean }): string {
+  const origin = path.join(root, "origin.git");
+  const work = path.join(root, "work");
+  fs.mkdirSync(origin, { recursive: true });
+  const g = (args: string[], at: string): void => {
+    execFileSync("git", args, { cwd: at, stdio: "ignore" });
+  };
+  const write = (at: string, name: string, body: string): void => {
+    fs.writeFileSync(path.join(at, name), body);
+    g(["add", "-A"], at);
+    g(["-c", "user.email=t@t", "-c", "user.name=t", "commit", "-m", name], at);
+  };
+  g(["init", "--bare", "-b", DEFAULT_BASE], origin);
+  g(["init", "-b", DEFAULT_BASE, work], root);
+  g(["remote", "add", "origin", origin], work);
+  write(work, "a.txt", "one");
+  g(["push", "-u", "origin", DEFAULT_BASE], work);
+  g(["checkout", "-b", "feat/x"], work);
+  write(work, "b.txt", "two");
+  if (opts.advanceRemote) {
+    const other = path.join(root, "other");
+    g(["clone", origin, other], root);
+    write(other, "c.txt", "three");
+    g(["push"], other);
+  }
+  return work;
+}
+
+export function selfTest(repoRoot: string): number {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "cbf-selftest-"));
+  const run = (advanceRemote: boolean, onBase: boolean): number => {
+    const dir = fs.mkdtempSync(path.join(root, "case-"));
+    const work = buildFixture(dir, { advanceRemote });
+    if (onBase) {
+      execFileSync("git", ["checkout", DEFAULT_BASE], { cwd: work, stdio: "ignore" });
+    }
+    // The child must not inherit a CI flag, or every case would no-op green.
+    delete process.env["CI"];
+    delete process.env["GITHUB_ACTIONS"];
+    return runGateCli(repoRoot, SCRIPT_REL, ["--quiet"], work);
+  };
+  const cases: SelfTestCase[] = [
+    {
+      name: "a branch whose tracking ref is stale while the remote has moved is REFUSED",
+      expect: "reject",
+      run: () => run(true, false),
+    },
+    {
+      name: "a branch containing the remote base passes",
+      expect: "accept",
+      run: () => run(false, false),
+    },
+    {
+      name: "standing on the base branch itself is a no-op, not a refusal",
+      expect: "accept",
+      run: () => run(false, true),
+    },
+  ];
+  try {
+    return runSelfTest({
+      gate: "check_branch_freshness",
+      cases,
+      minCases: SELF_TEST_MIN_CASES,
+      minRejectCases: SELF_TEST_MIN_REJECT,
+    });
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+}
+
+/**
+ * Publish the scan scope: how many remote base refs this run actually resolved.
+ *
+ * One when the server answered, zero on every path that legitimately has
+ * nothing to ask — each with its reason, because a gate reporting success over
+ * an empty scope is the false green this repo keeps finding, and "there was
+ * nothing to check" and "I checked and it was fine" must not print the same.
+ */
+function scanReport(scanned: number, allowEmpty?: string): void {
+  reportScanned({
+    gate: "check_branch_freshness",
+    scanned,
+    units: "remote base ref(s)",
+    roots: ["origin"],
+    ...(allowEmpty === undefined ? {} : { allowEmpty }),
+  });
+}
+
 export function main(argv: string[] = process.argv.slice(2)): number {
+  if (argv.includes("--self-test")) {
+    return selfTest(path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", ".."));
+  }
   const quiet = argv.includes("--quiet");
   const baseArg = argv.indexOf("--base");
   const base = baseArg >= 0 ? (argv[baseArg + 1] ?? DEFAULT_BASE) : DEFAULT_BASE;
 
   // CI merges or refuses on the server; a second opinion here would be noise.
   if (process.env["CI"] === "true" || process.env["GITHUB_ACTIONS"] === "true") {
-    if (!quiet) {
-      process.stdout.write("check_branch_freshness: no-op in CI — the forge owns mergeability." + "\n");
-    }
+    scanReport(0, "no-op in CI — the forge owns mergeability, and a second opinion here is noise");
     return 0;
   }
 
   const branch = git(["rev-parse", "--abbrev-ref", "HEAD"]);
   if (branch === null || branch === "HEAD") {
-    process.stdout.write("check_branch_freshness: detached HEAD — nothing to compare. NO-OP." + "\n");
+    scanReport(0, "detached HEAD — there is no branch whose freshness could be asked");
     return 0;
   }
   if (branch === base) {
-    if (!quiet) {
-      process.stdout.write(`check_branch_freshness: on ${base} itself — nothing to compare.` + "\n");
-    }
+    scanReport(0, `standing on ${base} itself — a branch cannot be behind itself`);
     return 0;
   }
 
@@ -106,6 +209,7 @@ export function main(argv: string[] = process.argv.slice(2)): number {
     // Loud, not silent. An offline run has not verified the invariant, and a
     // gate that passes on an invariant it never evaluated is the false green
     // this repo keeps finding.
+    scanReport(0, `origin/${base} unreachable — reported NOT VERIFIED rather than green`);
     process.stdout.write(
       `check_branch_freshness: could not reach origin/${base} — NOT VERIFIED (offline?). ` +
         "Re-run before pushing.\n",
@@ -113,6 +217,7 @@ export function main(argv: string[] = process.argv.slice(2)): number {
     return 0;
   }
 
+  scanReport(1);
   if (containsCommit(sha) === true) {
     if (!quiet) {
       process.stdout.write(`✅  branch is current with origin/${base} (${sha.slice(0, 9)})` + "\n");
