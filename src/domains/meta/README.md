@@ -242,7 +242,7 @@ Artefacts that maintain this package (agent-config itself).
 - **`agent-docs-writing`** — Use when reading, creating, or updating agent documentation, module docs, roadmaps, or AGENTS.md. Understands the full .augment/, agents/, and copilot-instructions structure.
 - **`agents-md-thin-root`** — Use when editing AGENTS.md (package root) or templates/AGENTS.md (consumer) — enforces Thin-Root contract: hard char ceilings, ≥40% pointer ratio, mandatory emergency-triage block.
 - **`ai-council`** — Use when polling external AIs (OpenAI, Anthropic) outside the host session for a neutral second opinion on a roadmap, diff, prompt, or file set — or 'cross-check with another model'.
-- **`analysis-autonomous-mode`** — ONLY when user explicitly requests autonomous analysis, deep investigation, multi-step research, or 'dig into this end-to-end without asking me each step' — NOT for normal feature work.
+- **`analysis-autonomous-mode`** — Autonomous multi-step investigation — deep research carried end-to-end without per-step approval; explicit request only, never for normal feature work.
 - **`analysis-skill-router`** — Use when picking which analysis or project-analysis-* skill fits a request — routes by scope, framework, and symptom — even if the user just says 'analyze this' or 'dig into the codebase'.
 - **`check-refs`** — Use when verifying cross-references between skills, rules, commands, guidelines, and context documents are not broken after edits, renames, or deletions.
 - **`code-intelligence`** — Route codebase-structure questions (who calls X, where used, what imports, change-impact) to a code-graph first, grep fallback. Triggers 'who calls', 'where is this used', 'call graph'.
@@ -282,7 +282,7 @@ Artefacts that maintain this package (agent-config itself).
 - **`module-management`** — Use when working within any module under `modules.root_paths` from `.agent-project-settings.yml` — Laravel HMVC, Symfony DDD-lite, Node monorepo, Python src/, Go internal/, or a custom path.
 - **`override-management`** — Creates and manages project-level overrides for shared skills, rules, and commands — extending or replacing originals from .augment/ with project-specific behavior in agents/overrides/.
 - **`pdf-tools`** — Use when creating, merging, splitting, filling, or extracting from a PDF — library-per-task, output validated. Triggers on 'merge these PDFs', 'fill this PDF form', 'split the PDF', 'create a PDF'.
-- **`persona-improvement`** — ONLY when the user explicitly asks to refine a persona from recent corrections — persona analog of skill-improvement-pipeline; tightens a persona's Unique Questions, governance-gated.
+- **`persona-improvement`** — Refine a persona from recent corrections — tightens its Unique Questions, governance-gated; explicit request only. Skill analog → skill-improvement-pipeline.
 - **`persona-writing`** — Use when creating or editing a persona in src/agent-src/personas/ — voice / focus / unique questions / output expectations — even when the user just says 'add a reviewer voice for X'.
 - **`project-docs`** — Use when looking for project-specific documentation. Knows which docs exist in agents/reference/docs/ and agents/settings/contexts/ and maps work areas to relevant docs.
 - **`prompt-engineering-patterns`** — Use when designing production-LLM prompts — few-shot, chain-of-thought, system prompts, templates, self-verification — distinct from prompt-optimizer and refine-prompt.
@@ -302,8 +302,8 @@ Artefacts that maintain this package (agent-config itself).
 - **`rule-writing`** — Use when creating or editing a rule in src/rules/ — trigger wording, always vs auto classification, size budget — even when the user just says 'add a rule for X'.
 - **`screenshot-hygiene`** — Use when creating and embedding a documentation screenshot — detect and redact sensitive data, human-gate data-bearing shots before ship. Triggers 'screenshot for docs', 'screenshot admin panel'.
 - **`script-writing`** — Use when adding or editing any script under `scripts/` — `--quiet`, `_lib/script_output`, silent Taskfile wiring, Iron-Law carve-outs; fires on 'add a check script for X'.
-- **`sequential-thinking`** — ONLY when user explicitly requests: step-by-step reasoning, structured problem decomposition, or iterative analysis. NOT for regular coding tasks.
-- **`skill-improvement-pipeline`** — ONLY when user explicitly requests: run the skill improvement pipeline after a learning was detected. Orchestrates capture, classify, create, validate, and apply.
+- **`sequential-thinking`** — Structured step-by-step problem decomposition and iterative analysis; explicit request only, never for regular coding tasks, and at most once per task.
+- **`skill-improvement-pipeline`** — Run the skill-improvement pipeline after a learning was detected — capture, classify, create, validate, apply; explicit request only.
 - **`skill-management`** — Use when condensing, decondenseing, refactoring, or improving existing skills. Covers the full skill lifecycle from verbose → sharp → maintained.
 - **`skill-reviewer`** — Use when reviewing, auditing, or optimizing skills — validates against the 7 Skill Killers checklist and produces fix recommendations.
 - **`skill-writing`** — Use when deciding 'should this be a skill or a rule?', creating/improving/reviewing agent skills, SKILL.md frontmatter, or procedure sections — even without saying 'skill-writing'.

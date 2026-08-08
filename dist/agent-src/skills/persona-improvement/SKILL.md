@@ -1,7 +1,7 @@
 ---
 model_tier: inherit
 name: persona-improvement
-description: "ONLY when the user explicitly asks to refine a persona from recent corrections — persona analog of skill-improvement-pipeline; tightens a persona's Unique Questions, governance-gated."
+description: "Refine a persona from recent corrections — tightens its Unique Questions, governance-gated; explicit request only. Skill analog → skill-improvement-pipeline."
 domain: process
 execution:
   type: assisted
