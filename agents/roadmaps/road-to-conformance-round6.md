@@ -1005,3 +1005,28 @@ rounded tokens, so it is correct in code and was unexplained in the table);
 renamed — three published baselines already divide that field by 4); a dead
 `vendor` entry in `CMD_HEADS` its own regex cannot produce; and unreadable shared
 pairs leaving `shared` with no count saying why.
+
+### What the two rounds cost, and the one contract step I got wrong
+
+Two rounds, 24 findings, 2 highs, both inverted polarity in the same guard. Every
+finding real; 23 fixed, 1 deferred with its reason. Wall-clock ~16 minutes of
+review time across the two dispatches, and it caught a defect that made the
+branch's headline null unfalsifiable. Worth it twice.
+
+**The step I got wrong, recorded because the gate caught it and cannot un-catch
+it.** `plan-review-gates.md` § 2.5 requires the findings artefact **committed
+before** the fix commits — the first-add commit is what counts, precisely so
+backdating is detectable. I committed the fixes first, so the gate reports
+`fix-before-artifact` on nine rows. CI runs it `--advisory` (exit always 0) so
+nothing is blocked, and repairing the order would need a history rewrite, which is
+not mine to do unasked. The audit property it protects survives by another route:
+the dispatcher's `prompt_hash` is in the artefact header and the round-2 package
+was prepared at the **pre-fix** head, so the review demonstrably ran against
+content that did not yet contain its own fixes.
+
+**And § 2.7, which I reached for a round too late.** A fix pass changes the review
+scope by construction, so the artefact goes `stale-review`. The contract's answer
+is to **re-bind the binding artefact in place** — new `scope:`, rows terminal —
+not to dispatch again. Re-reviewing after every repair does not converge: each
+round invalidates its own scope. I dispatched round 2 instead of re-binding round
+1, which is how round 1's table came to be overwritten by `--force`.
