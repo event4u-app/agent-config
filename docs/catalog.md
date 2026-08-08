@@ -1,6 +1,6 @@
 # agent-config — Public Catalog
 
-Consumer-facing catalog of all **700 public artefacts** shipped by
+Consumer-facing catalog of all **701 public artefacts** shipped by
 this package. Internal package-maintenance rules and deprecation shims
 are excluded.
 
@@ -316,7 +316,7 @@ are excluded.
 | skill | [`wireframe`](../dist/agent-src/skills/wireframe/SKILL.md) | official | Explore a flow or layout with 3+ disposable lo-fi greyscale wireframes on a named axis, before any hi-fi work. Use when the user wants to sketch directions or explore structure. |
 | skill | [`worktree-lifecycle`](../dist/agent-src/skills/worktree-lifecycle/SKILL.md) | official | Use when governing a worktree across its whole life — scope-lock declaration, merge-readiness status, scoped verification, and safe cleanup that refuses while unique unmerged commits exist. |
 
-## Rules (112)
+## Rules (113)
 
 | kind | name | type | description |
 |---|---|---|---|
@@ -342,6 +342,7 @@ are excluded.
 | rule | [`content-quoting-floor`](../dist/agent-src/rules/content-quoting-floor.md) | auto | Cap verbatim quoting from external sources — 15 words max per quote, one quote per source, never a complete short work, paraphrase by default |
 | rule | [`context-hygiene`](../dist/agent-src/rules/context-hygiene.md) | auto | Debugging, fixing errors, or long conversations — 3-failure stop rule, tool-loop detection, fresh-chat triggers |
 | rule | [`copilot-routing`](../dist/agent-src/rules/copilot-routing.md) | auto | Configuring GitHub Copilot (copilot-instructions.md, PR-review patterns) — route to copilot-config |
+| rule | [`council-availability`](../dist/agent-src/rules/council-availability.md) | auto | Council availability is decided by the CLI resolver, never by the project tree — .agent-settings.yml is not the council config |
 | rule | [`cross-source-consistency`](../dist/agent-src/rules/cross-source-consistency.md) | auto | Two sources disagree (ticket text vs mockup, spec silent on a needed behavior, spec vs code) → surface + ask before proceeding, never silently guess |
 | rule | [`decision-revisit-gate`](../dist/agent-src/rules/decision-revisit-gate.md) | auto | Beneficial change blocked by a lock (honest-null, don't-relitigate memory, budget canon, ADR) — surface a council re-evaluation offer, never drop |
 | rule | [`delegation-policy`](../dist/agent-src/rules/delegation-policy.md) | auto | Delegable multi-part work + auto-orchestration on — decompose, tier-size, dispatch to subagents instead of in-session |

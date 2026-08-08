@@ -1,6 +1,6 @@
 # Agent-Config Internal Index
 
-Maintainer-facing index of all **701 artefacts** in this package.
+Maintainer-facing index of all **702 artefacts** in this package.
 Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
 
 > **Regenerate:** `./scripts-run src/scripts/generate_index`
@@ -300,7 +300,7 @@ Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
 | skill | [`wireframe`](../src/skills/wireframe/SKILL.md) | official | Explore a flow or layout with 3+ disposable lo-fi greyscale wireframes on a named axis, before any hi-fi work. Use when the user wants to sketch directions or explore structure. |
 | skill | [`worktree-lifecycle`](../src/skills/worktree-lifecycle/SKILL.md) | official | Use when governing a worktree across its whole life — scope-lock declaration, merge-readiness status, scoped verification, and safe cleanup that refuses while unique unmerged commits exist. |
 
-## Rules (113)
+## Rules (114)
 
 | kind | name | type | description |
 |---|---|---|---|
@@ -326,6 +326,7 @@ Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
 | rule | [`content-quoting-floor`](../src/rules/content-quoting-floor.md) | auto | Cap verbatim quoting from external sources — 15 words max per quote, one quote per source, never a complete short work, paraphrase by default |
 | rule | [`context-hygiene`](../src/rules/context-hygiene.md) | auto | Debugging, fixing errors, or long conversations — 3-failure stop rule, tool-loop detection, fresh-chat triggers |
 | rule | [`copilot-routing`](../src/rules/copilot-routing.md) | auto | Configuring GitHub Copilot (copilot-instructions.md, PR-review patterns) — route to copilot-config |
+| rule | [`council-availability`](../src/rules/council-availability.md) | auto | Council availability is decided by the CLI resolver, never by the project tree — .agent-settings.yml is not the council config |
 | rule | [`cross-source-consistency`](../src/rules/cross-source-consistency.md) | auto | Two sources disagree (ticket text vs mockup, spec silent on a needed behavior, spec vs code) → surface + ask before proceeding, never silently guess |
 | rule | [`decision-revisit-gate`](../src/rules/decision-revisit-gate.md) | auto | Beneficial change blocked by a lock (honest-null, don't-relitigate memory, budget canon, ADR) — surface a council re-evaluation offer, never drop |
 | rule | [`delegation-policy`](../src/rules/delegation-policy.md) | auto | Delegable multi-part work + auto-orchestration on — decompose, tier-size, dispatch to subagents instead of in-session |
