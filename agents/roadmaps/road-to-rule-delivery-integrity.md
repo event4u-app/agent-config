@@ -489,8 +489,21 @@ in the revision above**, four of them in the modified form the verdict names.
 | 10 | Line-specific citations | `accept` | applied; matches this repo's own `file:line` evidence discipline |
 | 11 | 90-day decision procedure | `accept-with-modification` | three-branch procedure and the "from authoring" anchor applied; the weighted phase-percentage formula is **rejected** as over-engineering for a risk row |
 
-### Predecessor council trace
+### Council provenance
 
-`agents/runtime/council/responses/road-to-rule-delivery-integrity-roadmap.json` (this run).
-Necessity check: borderline (necessary=5 / unnecessary=5), proceeded on the
-user's explicit request. Cost: estimated $0.4333, actual $0.1682.
+Run 2026-08-08 · deep tier · 3 rounds · members `anthropic/claude-sonnet-4-5`
+and `openai/gpt-4o` · necessity check borderline (necessary=5 / unnecessary=5),
+proceeded on the maintainer's explicit request · cost estimated \$0.4333, actual
+\$0.1682.
+
+The response JSON is deliberately **not** linked. Council artefacts under
+`agents/runtime/council/` are gitignored, local-only, and auto-pruned after
+`ai_council.session_retention_days` — a path there rots by design, which is what
+`no-roadmap-references` § council clause forbids. The convergence, the
+divergence, the host verdicts and the four rejected sub-points are inlined above,
+which is the durable form.
+
+**Noted for the maintainer:** `/roadmap:ai-council` § 4 instructs the agent to
+append exactly the forbidden `Predecessor council trace` path. Following the
+command produced the violation `check_council_references` then caught. The
+command and the rule disagree; the rule is right, so the command needs the fix.
