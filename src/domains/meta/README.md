@@ -7,7 +7,7 @@ Artefacts that maintain this package (agent-config itself).
 - **id**: `meta`
 - **owner**: agent-config-maintainer
 - **requires**: engineering-base
-- **artefacts**: 293
+- **artefacts**: 294
 
 ## Commands (153)
 
@@ -165,7 +165,7 @@ Artefacts that maintain this package (agent-config itself).
 - **`worktree-status`** — List active worktrees — ownership (scope lock), dirty state, ahead/behind, merge-readiness incl. verification evidence
 - **`worktree-verify`** — Run the scoped verification for a worktree's declared change — narrow probes matched to the diff, never the full CI pipeline
 
-## Rules (66)
+## Rules (67)
 
 - **`agent-authority`** — Priority Index for the four authority rules — Hard Floor → Permission Gate → Commit Default → Trivial-vs-Blocking; read first, route to canonical rule
 - **`analysis-skill-routing`** — When choosing an analysis skill, route to the narrowest matching skill instead of defaulting to broad analysis
@@ -181,6 +181,7 @@ Artefacts that maintain this package (agent-config itself).
 - **`content-quoting-floor`** — Cap verbatim quoting from external sources — 15 words max per quote, one quote per source, never a complete short work, paraphrase by default
 - **`context-hygiene`** — Debugging, fixing errors, or long conversations — 3-failure stop rule, tool-loop detection, fresh-chat triggers
 - **`copilot-routing`** — Configuring GitHub Copilot (copilot-instructions.md, PR-review patterns) — route to copilot-config
+- **`council-availability`** — Council availability is decided by the CLI resolver, never by the project tree — .agent-settings.yml is not the council config
 - **`decision-revisit-gate`** — Beneficial change blocked by a lock (honest-null, don't-relitigate memory, budget canon, ADR) — surface a council re-evaluation offer, never drop
 - **`devcontainer-routing`** — Wiring DevContainers/Codespaces (devcontainer.json, features, ports) — route to the devcontainer skill
 - **`direct-answers`** — Always — direct, unembellished answers. No flattery, no invented facts (verify load-bearing claims, otherwise ask). Emojis only as functional markers. Brevity is the default.
