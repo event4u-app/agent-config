@@ -74,7 +74,8 @@
  * and their `.md` entries, which is where the measured defect was.
  *
  * CLI: `--root <path>` (default: this repo) · `--quiet` suppresses the
- * per-target ledger line. Exit 0 = complete and fresh, 1 = any gap, any stale
+ * per-target ledger line. Exit 0 = complete and fresh, or no tool active at all
+ * (announced on stderr — see `auditRuleProjection`); 1 = any gap, any stale
  * entry, a ledger accounting error, or a dead scan scope.
  */
 import * as fs from 'node:fs';
@@ -137,16 +138,41 @@ export function auditRuleProjection(
         ledger.plan(rules.map((r) => `${tree}/${r}`));
     }
 
-    // The planned set is every (tree × rule) pair. Zero means either the emit
-    // plan is empty — no rule reached `dist/agent-src/rules/`, or every tool is
-    // deactivated — and in both cases this gate would print a green checkmark
-    // over an assertion it never evaluated. Thrown, not returned: `findings` is
-    // the drift channel and a dead scope is not drift.
+    // The planned set is every (tree × rule) pair, and zero has TWO causes that
+    // are not the same defect. `projected_rule_trees()` returns one key per
+    // ACTIVE tool dir, so the key count is the discriminator:
+    //
+    //   - keys > 0, rules == 0 → the rule corpus is dead. No rule reached
+    //     `dist/agent-src/rules/`, or every scope filter rejected every rule,
+    //     and a green checkmark here would cover an assertion never evaluated.
+    //     This still throws.
+    //   - keys == 0 → `agents/.agent-tools.yml` selects zero tools, which
+    //     `_active_tools()` honours by design. There is no projection surface
+    //     in this checkout, so there is nothing to be stale or missing. That is
+    //     an absent optional surface, not a moved root.
+    //
+    // Conflating the two made the gate unsatisfiable on a supported config: it
+    // runs FIRST in the pre-push `preflight` chain, so a maintainer who
+    // deactivates the per-tool trees (they duplicate a globally installed
+    // `~/.claude`) could not push at all, with no fix available short of the
+    // env escape hatch. A gate whose only compliant path is to change an
+    // unrelated setting is not a gate. `main()` prints the skip explicitly —
+    // the empty case must be LOUD, never a silent green.
+    const noActiveTree = Object.keys(expected).length === 0;
     assertScanned({
         gate: 'check_rule_projection_integrity',
         scanned: Object.values(expected).reduce((n, rules) => n + rules.length, 0),
         units: 'projected rule entries',
         roots: [DIST_RULES, ...Object.keys(expected)],
+        ...(noActiveTree
+            ? {
+                  allowEmpty:
+                      'OPTIONAL_INPUT: no host rule tree is active — agents/.agent-tools.yml ' +
+                      'selects zero tools, so the surface this gate audits does not exist in ' +
+                      'this checkout. With one or more active tools the emit plan carries the ' +
+                      'full rule set by construction, so a dead dist/agent-src/rules/ still fails here.',
+              }
+            : {}),
     });
 
     for (const [tree, rules] of Object.entries(expected)) {
@@ -266,6 +292,19 @@ export function main(argv?: readonly string[]): number {
             return 1;
         }
         throw exc;
+    }
+
+    // Zero active trees is a legitimate config (see `auditRuleProjection`), but
+    // it means this run audited nothing. Say so on its own line instead of
+    // letting the success line below report "0 entries across 0 trees", which
+    // reads as a pass to every human and every log scraper.
+    if (Object.keys(audit.treePresent).length === 0) {
+        process.stderr.write(
+            '⚠️  check_rule_projection_integrity: no host rule tree is active ' +
+                '(agents/.agent-tools.yml selects zero tools) — nothing to audit. This gate ' +
+                'has teeth only where a tool is active; CI activates all eight.\n',
+        );
+        return 0;
     }
 
     const lines = renderFindings(audit);
