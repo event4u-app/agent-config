@@ -90,6 +90,32 @@
 # silently fall behind again (that omission is exactly how `check_site_links`
 # reported green over a stale build for weeks).
 #
+# THAT BACKSTOP COVERS ONE OF THE TWO EMIT SHAPES — measured 2026-08-08 under
+# round-6 Phase 4.1, and corrected here rather than left as a claim the file
+# cannot support. The test's detector is a literal-source regex:
+# `/(?:process\.(?:stdout|stderr)\.write|lines\.push)\(\s*`scanned: \$\{/`. A gate
+# that emits through `_lib/scan_scope.ts` — `assertScanned()` / `reportScanned()`,
+# which is the shape this repo tells a gate author to use — writes the line from
+# inside the library, so its own source never matches and the test cannot see it.
+# Live split: **1 unregistered gate emits the inline shape (`check_gate_coverage`
+# itself), and 175 of 244 gate scripts emit through the helper.** So for the
+# recommended shape the sentence above is false, and the list CAN fall behind.
+#
+# Not widened here, deliberately. Widening the regex to include the helper turns
+# 175 gates into findings in one diff, and the paragraph below already states why
+# that is not a one-line-per-gate job: their unit would have to be INVENTED, which
+# is a per-gate judgement. `check_rule_projection_integrity` (conformance-round5
+# Phase 1.1/1.2) is a worked example of the blocker — it emits 330 through
+# `assertScanned`, but `agents/.agent-tools.yml` is `skip-worktree`-masked to
+# `tools: []` on a maintainer checkout, so the same gate legitimately emits 0
+# there. A real floor would red locally and a `min_scanned: 0` floor is the
+# false-count shape this file rejects, and `unavailable_exit` cannot express it
+# because the empty case must keep exiting 0 (it runs first in the pre-push
+# `preflight` chain and blocking there is what PR #1211 repaired). It is therefore
+# NOT registered, with the reason, rather than registered with a floor that cannot
+# hold. Its ledger half is discharged: it adopts `_lib/gate_ledger.ts`, so
+# `check_gate_completeness` already counts it as an adopter.
+#
 # CANARY (road-to-gates-that-can-fail Phase 7)
 # --------------------------------------------
 # Coverage proves a gate READ something. It cannot prove the gate can still FAIL.
