@@ -108,6 +108,8 @@ export const REGISTRY: readonly CommandEntry[] = [
     { name: 'council:run', disposition: 'delegate', synopsis: 'Run the AI council (requires --confirm to spend).' },
     { name: 'council:render', disposition: 'delegate', synopsis: 'Re-render a saved council responses JSON to markdown.' },
     { name: 'eval:record', disposition: 'native', synopsis: 'Record a live trigger-eval result into a corpus manifest (corpus-refresh DoD, ADR-061 §6).' },
+    { name: 'self-repair:status', disposition: 'delegate', synopsis: 'List queued agent-config defect records (read-only).' },
+    { name: 'self-repair:release', disposition: 'delegate', synopsis: 'Publish one defect record as a PR, or an issue when a PR is impossible (Hard-Floor gated).' },
 ] as const;
 
 export function findCommand(name: string): CommandEntry | undefined {
