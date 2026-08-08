@@ -312,6 +312,75 @@ Entry-shape contract: [`docs/contracts/CHANGELOG-conventions.md`](docs/contracts
 > that forces a new era split (`# Era: 9.28.x`, etc.) — see
 > [`docs/contracts/CHANGELOG-conventions.md § Era splits`](docs/contracts/CHANGELOG-conventions.md).
 
+## [9.27.0](https://github.com/event4u-app/agent-config/compare/9.26.0...9.27.0) (2026-08-07)
+
+### Release highlights
+
+<!-- Curated head: fill before merge, keep it under 10 lines, and leave `_none_` where it is genuinely the answer. The generated log below is unchanged. -->
+- **Behaviour changes:** _auto-derived, rewrite before merge:_ rule/schema diffs, breaking commits or removed public surface in 6b06006, e82cc1f, b3b5ee7, dd89970.
+- **Default changes + migration:** _auto-derived, rewrite before merge:_ commits naming a default, migration or migrate in 6d1af3a.
+- **Security and correctness:** _none_
+- **Honest nulls:** _auto-derived, rewrite before merge:_ commits carrying an honest-null marker in 8e6765b, 6208186, f60bd6a.
+- **Known limitations:** _none_
+
+### Features
+
+* **orchestration:** backfill telemetry from the host transcript corpus ([ed28a6d](https://github.com/event4u-app/agent-config/commit/ed28a6d8aa62b3c5fc30525e5bd356c6e3c83945))
+* **conformance:** record pin distance and compaction per language violation ([b103537](https://github.com/event4u-app/agent-config/commit/b103537c69020d1bb81698a389d1dc9d97e0a145))
+* **gates:** assert rule-projection completeness and freshness ([e42ea1d](https://github.com/event4u-app/agent-config/commit/e42ea1d7fdbbaf0d87ff37d4efd40ff3d96d97f8))
+* **roadmap-next:** close the claim window, and say who carries the check ([9617664](https://github.com/event4u-app/agent-config/commit/9617664291d51176dceafbdf0ac68608dcffd0d7))
+* **cli:** sessions:list and sessions:claim ([44d5eba](https://github.com/event4u-app/agent-config/commit/44d5eba9f88e2f52c534aa1f8f350ba1a89c4eeb))
+* **hooks:** bind the register, and keep stop out of deregistration ([736f4e1](https://github.com/event4u-app/agent-config/commit/736f4e1255641a8997b2bd8f9753ac4232ccbcda))
+* **sessions:** the shared per-session register, with its measured TTL ([6ab61fd](https://github.com/event4u-app/agent-config/commit/6ab61fda9d7e7faa22fc4d33325c02c05363b6ef))
+* **rules:** declare how often each obligation comes due, and join it ([dd89970](https://github.com/event4u-app/agent-config/commit/dd89970afb7cc82846caf9c6e0029ddc73176874))
+* **coverage:** the lattice that says whether a carrier fires often enough ([53d501e](https://github.com/event4u-app/agent-config/commit/53d501e9860b0f72d3d78df8f6a7cfc0eff16245))
+* **settings:** a fresh install writes 35 lines, not 1,360 ([8504ca8](https://github.com/event4u-app/agent-config/commit/8504ca880d8c5bc5c921add50f7a7fc0b39ee03d))
+* **settings:** audit absent-vs-default, and carve out the nine keys that diverge ([6d1af3a](https://github.com/event4u-app/agent-config/commit/6d1af3aba30d5378510fc2659532f9ad16be7b37))
+
+### Bug Fixes
+
+* **orchestration:** drop the pairing key from the emitted line ([d10004a](https://github.com/event4u-app/agent-config/commit/d10004a9e7d2efd1dab9597c1cd364f4d176d38c))
+* **orchestration:** drop free-text fields from backfilled lines ([bdf976f](https://github.com/event4u-app/agent-config/commit/bdf976f1223a2e601a3eb613d9c94f933a56837e))
+* **hooks:** the language pin no longer treats a synthetic turn as a prompt ([439c20e](https://github.com/event4u-app/agent-config/commit/439c20e00721ed9a238f69478fbd807a58d5fe23))
+* **hooks:** two git guards stop refusing read-only commands ([17c5fa5](https://github.com/event4u-app/agent-config/commit/17c5fa57441a095276bfe8e8b46a57152f1a1353))
+* **cli:** list the sessions verbs in usage() too ([d4f4429](https://github.com/event4u-app/agent-config/commit/d4f44290f2c8f18b27cfbfac35a5002b88a9e8e2))
+* **release:** stop treating "no checks reported" as a pass when checks ARE required ([1af0f03](https://github.com/event4u-app/agent-config/commit/1af0f0316f39191603d5031145153e209e1778ad))
+* **rules:** pay for the citation with a line number, not a quoted sentence ([e82cc1f](https://github.com/event4u-app/agent-config/commit/e82cc1f4d032578b1e5749ceb6756d6a82beeaf7))
+* **canary:** bind the carrier to a slot that reaches a task boundary ([b3b5ee7](https://github.com/event4u-app/agent-config/commit/b3b5ee75e95ac7be3908529f3d52c5d47432d6bb))
+* **settings-surface:** treat a free-form map as a leaf, not an empty group ([7a68cb7](https://github.com/event4u-app/agent-config/commit/7a68cb785ccff4bf190c01b5c52927f1fd94fbeb))
+
+### Documentation
+
+* **roadmap:** conformance round 6, starting with the regress round 5 shipped ([353cac1](https://github.com/event4u-app/agent-config/commit/353cac1d9e71d38eaa97a891fb037f47e7299e1a))
+* **proof:** regenerate the derived page after the CLAIMS entry ([6660a23](https://github.com/event4u-app/agent-config/commit/6660a231e08d41aea39e597a85843d0d0cda1e9d))
+* **roadmap:** archive road-to-orchestrator-first-execution, stopped at Phase 2 ([b24a991](https://github.com/event4u-app/agent-config/commit/b24a991d603fc9beea0e26a1252ef766059298c8))
+* **orchestration:** record the observed-dispatch measurement and its verdict ([8e6765b](https://github.com/event4u-app/agent-config/commit/8e6765bc7fb05f6602abc998d231b270721accdf))
+* **claims:** pre-register and resolve orchestration-observed-dispatch-cost ([6208186](https://github.com/event4u-app/agent-config/commit/6208186fe6393f5a98c6b9d90ae2138959724590))
+* **proof:** re-render after the two enforced_by declarations ([7e36dbb](https://github.com/event4u-app/agent-config/commit/7e36dbb009a06d51cbcbb0d92167954e9adb64d3))
+* **roadmap:** give conformance round 5 its Risk Register ([7e837bb](https://github.com/event4u-app/agent-config/commit/7e837bb8c85d78631effdf8e18f96762e779dab3))
+* **roadmap:** conformance round 5, the first post-fix measurement ([95d4db9](https://github.com/event4u-app/agent-config/commit/95d4db9d9c971778f583c7081c7277d1f4ba661e))
+* **rules:** replace two unmeasured enforcement claims with the measurement ([6b06006](https://github.com/event4u-app/agent-config/commit/6b0600608a33a56f35e7ec76ab6c5ba60711249f))
+* **roadmap:** archive parallel-session-coordination with its measurements ([f60bd6a](https://github.com/event4u-app/agent-config/commit/f60bd6a3fba74e669a6361724070ce9d6d037b7b))
+* **roadmap:** give the parallel-session plan its Risk Register ([f13ebba](https://github.com/event4u-app/agent-config/commit/f13ebba5a4f7856b5be0acdd19244e86adaca126))
+* **roadmap:** add the obligation-carrier audit and the parallel-session register ([20391f6](https://github.com/event4u-app/agent-config/commit/20391f62f2c6c3f294467481956b1b2d2b0f9255))
+* **roadmap:** close Phase 3, resolve the blocker, and say why 4.2 stays open ([2ba1e78](https://github.com/event4u-app/agent-config/commit/2ba1e7894ded9571f38dbe12de1680b4f1db57fd))
+* **settings:** generate the settings reference the shrinking file no longer carries ([9e34b23](https://github.com/event4u-app/agent-config/commit/9e34b238523187f4ae7c9826c8bef6e4b89efe8d))
+
+### Refactoring
+
+* **git:** extract the common-dir resolution so it has one answer ([1f04331](https://github.com/event4u-app/agent-config/commit/1f04331dd2f81c64a5217f843ddbcf49f2d9be9b))
+
+### Build
+
+* **install:** refresh the installer bundle for the surface-flattener fix ([cc4ae5e](https://github.com/event4u-app/agent-config/commit/cc4ae5e5e20b51d681686258b0cc6411d0218c05))
+
+### Chores
+
+* **budgets:** move cli_help_command_count 86 to 88 for the sessions verbs ([c8ba2c3](https://github.com/event4u-app/agent-config/commit/c8ba2c34edd5bcda97d2c5cab85a3dcf2055f8de))
+* **sync:** re-project session-canary after the frequency-override note ([d68c02f](https://github.com/event4u-app/agent-config/commit/d68c02f4e18233cf1c51146cc56dcc01f8d9cc53))
+
+Tests: 11750 (+107 since 9.26.0)
+
 # Era: pre-4.0.0 — archived
 
 > All entries from `3.2.0` and `3.3.0` live in
