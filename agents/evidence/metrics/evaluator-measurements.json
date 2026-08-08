@@ -1,12 +1,12 @@
 {
     "schema_version": 1,
     "_comment": "Written by src/scripts/record_evaluator_measurements.mjs, invoked from src/scripts/evaluator_umbrella.sh when UMBRELLA_RECORD=1 (the nightly). check_evaluator_budgets.ts --recorded compares a fresh measurement set against this file; a contradiction on a DETERMINISTIC metric warns on main and fails on release. Do not hand-edit — refresh it from a real run.",
-    "recorded_at": "2026-08-08T08:51:01.234Z",
-    "git_sha": "bf00135202a3ac84814a0324947dbecc57172bfd",
+    "recorded_at": "2026-08-08T09:04:23.036Z",
+    "git_sha": "83e81ae48dc463d17f82edd89edd821f8b7fdb35",
     "run_url": null,
-    "conditions": "Refresh for the 88 -> 90 cli_help_command_count move (self-repair:status + self-repair:release, road-to-self-repair Phase 1). Re-measured locally via the pinned registry-enumeration method: 90. mcp_public_tool_count carried at 19 — this PR touches no MCP surface, and the live probe needs a built dist/mcp/server.mjs which a worktree does not carry.",
+    "conditions": "Refresh for the 89 -> 91 cli_help_command_count move (self-repair:status + self-repair:release), merged with the +1 council:status move on the same branch. Re-measured locally via the pinned registry-enumeration method: 91. mcp_public_tool_count carried at 19 — this branch touches no MCP surface.",
     "measurements": {
-        "cli_help_command_count": 90,
+        "cli_help_command_count": 91,
         "mcp_public_tool_count": 19
     }
 }

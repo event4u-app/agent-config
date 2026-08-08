@@ -50,9 +50,20 @@ as provisional (best-effort, agent-written, not human-reviewed).
 
 **Sharing boundary.** Curated YAML (`agents/memory/<type>/*.yml`) is
 **committed** — it is the team-shared layer. Raw intake
-(`agents/memory/intake/*.jsonl`) is **gitignored, local scratch** — only
-entries promoted to curated get shared. `retrieve()` still reads local
-intake (low-confidence tier); it just never reaches the team repo unpromoted.
+(`agents/memory/intake/*.jsonl`) is **gitignored, local scratch** in a
+consumer project — only entries promoted to curated get shared. `retrieve()`
+still reads local intake (low-confidence tier); it just never reaches the team
+repo unpromoted.
+
+> **Which repo you are in changes this one line.** In a **consumer project**
+> intake is gitignored — the shipped block in `src/config/gitignore-block.txt`
+> lists `/agents/memory/intake/`. In **this package's own repo** it is
+> **tracked** and union-merged, because here intake is part of the corpus
+> under test; `agents/memory/intake/README.md` says so ("Local + tracked").
+> Both are correct in their own context, and the sentence above states the
+> consumer one. Read unconditionally, it makes a maintainer treat tracked
+> intake files as a mistake, and it makes a consumer who follows the
+> directory's README commit raw signals by accident.
 
 ## The status helper
 

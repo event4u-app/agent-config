@@ -88,6 +88,17 @@ describe('self-repair — council-availability detector', () => {
         expect(f).toBeNull();
     });
 
+    it('accepts the purpose-built council:status verb as the probe', () => {
+        expect(
+            detectCouncilClaim(
+                turn({
+                    reply: 'Kein Council konfiguriert — der Resolver meldet NOT CONFIGURED.',
+                    toolCommands: ['Bash agent-config council:status'],
+                }),
+            ),
+        ).toBeNull();
+    });
+
     it('stays silent on a reply that merely discusses the council', () => {
         expect(
             detectCouncilClaim(turn({ reply: 'Der Council hat zwei Member und lief sauber durch.' })),

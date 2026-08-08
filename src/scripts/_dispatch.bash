@@ -153,6 +153,8 @@ Tier 1 — power-user (release shape, audit, migration):
                              Usage: council:run <question> --output <path> --confirm
   council:render             Re-render a saved council responses JSON to markdown
                              Usage: council:render <responses.json>
+  council:status             Report whether an AI council is configured, and from where
+                             (no API call, no spend)
   self-repair:status         List queued agent-config defect records (read-only)
   self-repair:release        Publish one defect record — a PR when the fix can be
                              pushed, else an issue. Running it is your Hard-Floor
@@ -1327,6 +1329,7 @@ main() {
     council:estimate)        cmd_council estimate "$@" ;;
     council:run)             cmd_council run "$@" ;;
     council:render)          cmd_council render "$@" ;;
+    council:status)         cmd_council status "$@" ;;
     self-repair:status)      cmd_self_repair status "$@" ;;
     self-repair:release)     cmd_self_repair release "$@" ;;
     update)                  cmd_update "$@" ;;

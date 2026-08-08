@@ -148,7 +148,8 @@ export function detectUserReport(prompt: string): DefectFinding | null {
 // answer is correct behaviour.
 const COUNCIL_CLAIM_RE =
     /\b(kein|keine|no)\b[^.!?\n]{0,40}\bcouncil\b[^.!?\n]{0,60}\b(konfiguriert|verfügbar|configured|available|infra)\b/i;
-const COUNCIL_PROBE_RE = /council[:_](estimate|run|cli)|council_cli|AI_COUNCIL_CONFIG/i;
+const COUNCIL_PROBE_RE =
+    /council[:_](status|estimate|run|cli)|council_cli|AI_COUNCIL_CONFIG/i;
 
 /** Detector 1 — "council not configured" asserted without asking the resolver. */
 export function detectCouncilClaim(turn: TurnSnapshot): DefectFinding | null {

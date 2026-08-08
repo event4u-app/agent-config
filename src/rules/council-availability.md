@@ -42,14 +42,15 @@ NEVER PRESENT A SUBAGENT FAN-OUT AS A COUNCIL.
 ## The probe — free, works in any directory
 
 ```bash
-agent-config council:estimate <file> --input-mode prompt   # no API call, no spend
+agent-config council:status     # no API call, no spend
 ```
 
-A member line (`members=N (billable=N)`) means the council **is** configured.
-The probe reads a file, not an inline question. Inside this package's own
-checkout the repo-local entry is
-`./scripts-run src/scripts/council_cli {estimate|quota}`; `quota` is the
-readiness probe there.
+It prints `CONFIGURED` or `NOT CONFIGURED`, the resolved config path, which
+layer resolved it, and the enabled member count. Inside this package's own
+checkout the repo-local entry is `./scripts-run src/scripts/council_cli status`.
+`council:estimate <file> --input-mode prompt` answers the same question as a
+side effect of a cost preview, but `status` is the purpose-built verb — prefer
+it.
 
 ## What does NOT decide availability
 
