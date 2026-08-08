@@ -7,7 +7,7 @@ Artefacts that maintain this package (agent-config itself).
 - **id**: `meta`
 - **owner**: agent-config-maintainer
 - **requires**: engineering-base
-- **artefacts**: 293
+- **artefacts**: 295
 
 ## Commands (153)
 
@@ -165,7 +165,7 @@ Artefacts that maintain this package (agent-config itself).
 - **`worktree-status`** — List active worktrees — ownership (scope lock), dirty state, ahead/behind, merge-readiness incl. verification evidence
 - **`worktree-verify`** — Run the scoped verification for a worktree's declared change — narrow probes matched to the diff, never the full CI pipeline
 
-## Rules (66)
+## Rules (68)
 
 - **`agent-authority`** — Priority Index for the four authority rules — Hard Floor → Permission Gate → Commit Default → Trivial-vs-Blocking; read first, route to canonical rule
 - **`analysis-skill-routing`** — When choosing an analysis skill, route to the narrowest matching skill instead of defaulting to broad analysis
@@ -181,6 +181,7 @@ Artefacts that maintain this package (agent-config itself).
 - **`content-quoting-floor`** — Cap verbatim quoting from external sources — 15 words max per quote, one quote per source, never a complete short work, paraphrase by default
 - **`context-hygiene`** — Debugging, fixing errors, or long conversations — 3-failure stop rule, tool-loop detection, fresh-chat triggers
 - **`copilot-routing`** — Configuring GitHub Copilot (copilot-instructions.md, PR-review patterns) — route to copilot-config
+- **`council-availability`** — Council availability is decided by the CLI resolver, never by the project tree — .agent-settings.yml is not the council config
 - **`decision-revisit-gate`** — Beneficial change blocked by a lock (honest-null, don't-relitigate memory, budget canon, ADR) — surface a council re-evaluation offer, never drop
 - **`devcontainer-routing`** — Wiring DevContainers/Codespaces (devcontainer.json, features, ports) — route to the devcontainer skill
 - **`direct-answers`** — Always — direct, unembellished answers. No flattery, no invented facts (verify load-bearing claims, otherwise ask). Emojis only as functional markers. Brevity is the default.
@@ -217,6 +218,7 @@ Artefacts that maintain this package (agent-config itself).
 - **`role-mode-adherence`** — When roles.active_role is set — closing outputs must match mode contract and emit structured mode marker
 - **`rule-type-governance`** — Creating/editing rules, or auditing rule types — decides when a rule should be always vs auto
 - **`runtime-safety`** — Skill declares execution metadata — enforce safety constraints for assisted/automated execution types
+- **`self-repair-loop`** — An observed defect in the agent's own behaviour becomes a queued record and a fix against agent-config — never a silent shrug
 - **`session-canary`** — personal.canary_name set — open every new task by name (liveness canary); keep the reply-close markers alive (ONE end-summary, PR URL last)
 - **`settings-ask-protocol`** — Asking the user about a setting — one question per command execution, a fixed four-slot shape, and the key's class decides where the answer goes
 - **`size-enforcement`** — Creating or editing rules, skills, commands, guidelines, AGENTS.md, or copilot-instructions.md — enforce size and scope limits

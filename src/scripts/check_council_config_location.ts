@@ -37,6 +37,14 @@
  *      (ADR-104); any project-tree path is drift. Corrective mentions ("is
  *      ignored", "never read", "no project-local", "superseded") pass on the
  *      same line. (PATH_CHECK_GLOBS)
+ *   4. NO always-loaded carrier for the user-global fact. §1–§3 keep the tree
+ *      honest but say nothing about REACH: before this check the fact lived
+ *      only in `src/skills/ai-council/SKILL.md`, a skill body that reaches
+ *      context only on activation, so consumer sessions repeatedly inferred
+ *      "council not configured" from a missing `.agent-settings.yml` while the
+ *      council was configured all along. §4 requires one rule under
+ *      `src/rules/` to carry the fact and to project at least as widely as the
+ *      kernel reference. (RULES_GLOB)
  *
  * Escape hatch: a line carrying `<!-- council-config-allowed -->` is exempt
  * (for a legitimate non-council `.agent-settings.yml` reference, e.g.
@@ -64,6 +72,7 @@ const SCAN_GLOBS = [
     'src/domains/meta/council/**/*.md',
     'src/domains/product-basic/roadmap/ai-council/**/*.md',
     'src/skills/ai-council/**/*.md',
+    'src/rules/council-availability.md',
     'docs/contracts/ai-council-config.md',
 ] as const;
 
@@ -104,6 +113,35 @@ const PROJECT_PATH_COUNCIL_RE =
 // corrective and is allowed.
 const PATH_NEGATION_RE =
     /\b(not|never|removed|no\s+longer|neither|instead|ignored|superseded|no\s+project-local|not\s+read|does\s+not\s+read)\b/i;
+
+// ── §4 always-loaded carrier check ─────────────────────────────────
+// The user-global fact is useless where the agent cannot see it. Before this
+// check the fact lived only in `src/skills/ai-council/SKILL.md` — a skill body
+// that only reaches context on activation — so consumer sessions repeatedly
+// inferred "council not configured" from a missing `.agent-settings.yml` and
+// substituted a subagent fan-out while the council was configured all along.
+// §4 pins the fix: at least one rule under `src/rules/` must carry the fact,
+// declare a council trigger, and project at least as widely as the kernel.
+const RULES_GLOB = 'src/rules/**/*.md';
+// Reference for the reach requirement: a carrier scoped more narrowly than an
+// always-loaded kernel rule would not reach the consumer repos that failed.
+const REACH_REFERENCE_RULE = 'src/rules/direct-answers.md';
+const WORKSPACES_RE = /^workspaces:\s*\[([^\]]*)\]/m;
+// The three markers a carrier must show, all in the same file.
+const CARRIER_MARKERS = [
+    {
+        re: /^\s*-\s*keyword:\s*"council"\s*$/m,
+        what: 'a `- keyword: "council"` trigger',
+    },
+    {
+        re: /~\/\.event4u\/agent-config\/settings\/\.ai-council\.yml/,
+        what: 'the one real user-global config path',
+    },
+    {
+        re: /NEVER\s+INFER\s+"NOT\s+CONFIGURED"/i,
+        what: 'the never-infer-from-project-files obligation',
+    },
+] as const;
 
 /**
  * Mirror Python `str.lstrip()` — strips all leading Unicode whitespace.
@@ -318,6 +356,84 @@ function find_path_violations(root: string): string[] {
     return findings;
 }
 
+/** Parse a rule's `workspaces: [a, b, c]` frontmatter line into a set. */
+function _workspaces(text: string): Set<string> {
+    const m = WORKSPACES_RE.exec(text);
+    if (m === null) {
+        return new Set<string>();
+    }
+    return new Set(
+        m[1]!
+            .split(',')
+            .map((s) => s.trim().replace(/^["']|["']$/g, ''))
+            .filter((s) => s.length > 0),
+    );
+}
+
+/**
+ * §4 — the user-global fact must have an always-loaded carrier (reach check).
+ *
+ * A correct resolver, a correct skill, and a green §1–§3 still left consumer
+ * sessions claiming "council not configured" — because the fact reached no
+ * always-loaded surface. This check fails when no rule under `src/rules/`
+ * carries it, and when every carrier that does is scoped more narrowly than
+ * the kernel reference (i.e. would not reach the consumer repos that failed).
+ */
+function find_carrier_violations(root: string): string[] {
+    // Scope guard: only a tree that HAS a rule layer can carry the fact. A
+    // consumer checkout or a tmp fixture without `src/rules/` is out of scope,
+    // exactly as a missing `src/skills/ai-council/` is for §1. The real-repo
+    // test asserts this scope is live here, so the skip cannot go unnoticed.
+    if (!_isDir(path.join(root, 'src', 'rules'))) {
+        return [];
+    }
+    const rules = [...iter_files(root, [RULES_GLOB])];
+    if (rules.length === 0) {
+        return [
+            `${RULES_GLOB}: \`src/rules/\` exists but resolved to no files — ` +
+                'the council user-global fact is unpinned.',
+        ];
+    }
+    const carriers = rules.filter((p) => {
+        const text = fs.readFileSync(p, 'utf-8');
+        return CARRIER_MARKERS.every((m) => m.re.test(text));
+    });
+    if (carriers.length === 0) {
+        return [
+            'src/rules/: no always-loaded rule carries the council user-global ' +
+                'fact. One rule must show all of — ' +
+                CARRIER_MARKERS.map((m) => m.what).join('; ') +
+                '. Without it the fact lives only in ' +
+                '`src/skills/ai-council/SKILL.md`, whose body reaches context ' +
+                'only on skill activation.',
+        ];
+    }
+    const refPath = path.join(root, REACH_REFERENCE_RULE);
+    if (!_isFile(refPath)) {
+        return [];
+    }
+    const refWs = _workspaces(fs.readFileSync(refPath, 'utf-8'));
+    if (refWs.size === 0) {
+        return [];
+    }
+    const findings: string[] = [];
+    for (const p of carriers) {
+        const missing = [...refWs].filter(
+            (w) => !_workspaces(fs.readFileSync(p, 'utf-8')).has(w),
+        );
+        if (missing.length > 0) {
+            findings.push(
+                `${_relPosix(root, p)}: council carrier is scoped more narrowly ` +
+                    `than \`${REACH_REFERENCE_RULE}\` — missing workspace(s): ` +
+                    `${missing.join(', ')}. A carrier the consumer never receives ` +
+                    'is exactly the gap this check exists to close.',
+            );
+        }
+    }
+    // One carrier with full reach is enough; only report when none has it.
+    return findings.length === carriers.length ? findings : [];
+}
+
 function main(): number {
     const root = process.cwd();
     // PATH_CHECK_GLOBS is the superset of both passes, so its resolution is the
@@ -338,7 +454,11 @@ function main(): number {
         }
         throw exc;
     }
-    const findings = [...find_violations(root), ...find_path_violations(root)];
+    const findings = [
+        ...find_violations(root),
+        ...find_path_violations(root),
+        ...find_carrier_violations(root),
+    ];
     if (findings.length) {
         process.stdout.write('❌  Council config-location violations:\n\n');
         for (const f of findings) {
@@ -396,5 +516,9 @@ export {
     iter_files,
     find_violations,
     find_path_violations,
+    find_carrier_violations,
+    RULES_GLOB,
+    REACH_REFERENCE_RULE,
+    CARRIER_MARKERS,
     main,
 };

@@ -1,11 +1,11 @@
 {
   "token_method": "tokens_gpt: exact (tiktoken cl100k_base); tokens_claude: proxy (chars/3.6)",
   "metrics": {
-    "eager_rule_load": 96775,
-    "thin_rule_load": 15376,
+    "eager_rule_load": 101670,
+    "thin_rule_load": 15561,
     "skill_descriptions": 12341,
     "command_descriptions": 6244,
     "mcp_schemas": 4174
   },
-  "rebaseline_note": "eager_rule_load 92621 -> 96775, itemised rather than silently raised. +4154 total. Of that, 2170 is the new settings-ask-protocol rule (attribution verified, not assumed: trimming it by 2143 chars moved the surface by exactly 488 tokens, so the rule counts into eager_rule_load in full). The remaining 1984 is inherited growth from #1191, #1194 and #1195, all merged after the previous anchor. At the moment this PR branched, origin/main already left only 982 tokens of headroom under the 5% cliff, and the first draft of the new rule crossed it by 11 tokens. The response was to trim the rule, not to raise the tolerance: at 10911 chars it was the LARGEST rule in the tree (previous maximum 8382) and over the size-enforcement line at 206 lines. It now sits at 8708 chars / 2170 tokens, level with the existing largest. Re-anchoring here because +4.5% against the old anchor leaves ~0.5% for the next PR, which is the no-new-rule-of-any-size-can-land state the previous note recorded."
+  "rebaseline_note": "eager_rule_load 96775 -> 101670, itemised rather than silently raised. +4895 total. Attribution VERIFIED by measurement, not assumed: moving the two new rules out of src/rules/ and re-running sync + the meter gives 99567, so 2103 tokens are the new rules (council-availability 3875 chars, self-repair-loop ~4600 chars — both well under the 8708-char largest-rule mark, so size-enforcement does not ask for more trimming) and the remaining 2792 is inherited growth that arrived with main after the previous anchor. As in the 92621 -> 96775 re-anchor, the branch found little headroom left: main had already spent 2792 of the 4839-token allowance, leaving 2047 for two rules needing 2103 — over by 56. The response was still to trim first, not to raise the tolerance: both rules were condensed twice (10202 -> 8692 -> 8651 chars, 348 + 41 tokens) before this note was written, and the second trim's diminishing return is what established that prose was no longer the cost. Re-anchoring here because +5.1% against the old anchor otherwise blocks two rules whose own share is +2.2%."
 }
