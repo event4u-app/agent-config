@@ -259,7 +259,7 @@ prose is the entire mechanism, and there the absence is the failure.
   developing the package is legitimately ahead of their own global install; the
   point is that the condition becomes visible instead of silent.
   <!-- Shipped as `src/scripts/report_carrier_divergence.ts`, task
-  `report-carrier-divergence`, advisory, 16 tests. Two departures from the text,
+  `report-carrier-divergence`, advisory, 17 tests. Two departures from the text,
   both forced by measurement. (1) The project carrier is `.claude/rules`, NOT
   `dist/agent-src/rules/`: the global installer delivers the five ADR-004
   `type: manual` rules and the project projection omits them, so anchoring on

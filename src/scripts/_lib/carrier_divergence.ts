@@ -83,6 +83,20 @@ export function comparePair(a: Buffer, b: Buffer): PairVerdict {
 
 export interface RuleDirCensus {
     files: number;
+    /**
+     * BYTES, not characters — `statSync().size`. The name is kept because every
+     * consumer of this figure (`preamble_byte_census`, `measure_scope_dedup`, the
+     * conformance scan) already divides it by 4 under that name, and one honest
+     * docstring beats a rename that would silently move three published baselines.
+     *
+     * The gap is measured, not assumed: over the 110-rule project tree, 406 502
+     * bytes against 402 823 characters — **0.91 %** overhead from the em-dashes,
+     * arrows and status glyphs the prose uses. So the published token estimate
+     * reads 101 626 where a character basis gives 100 706. Under 1 % and in the
+     * conservative direction for a payload figure, which is why it is documented
+     * rather than repaired; re-measure before quoting it as negligible on a corpus
+     * with more non-ASCII than this one.
+     */
     chars: number;
 }
 

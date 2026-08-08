@@ -107,6 +107,12 @@ export interface CarrierDivergence {
     projectOnly: string[];
     globalOnly: string[];
     /**
+     * Shared names whose copies could not both be read (a dangling symlink from a
+     * half-finished install). Counted rather than dropped: a pair that silently
+     * leaves `shared` makes every other number in the report unaccounted for.
+     */
+    unreadable: string[];
+    /**
      * Rules the projection source carries, the global carrier delivers, and the
      * project projection omits by design (`type: manual`). A subset of
      * `globalOnly`, separated so the expected half does not read as drift.
@@ -168,6 +174,7 @@ export function compareCarriers(
         bodyDiff: [],
         projectOnly: [],
         globalOnly: [],
+        unreadable: [],
         manualOnlyGlobal: [],
     };
     const project = new Set(_listRules(projectDir));
@@ -197,8 +204,11 @@ export function compareCarriers(
         } catch {
             // An unreadable copy is not a body difference and must not be
             // reported as one — a permission error would otherwise manufacture
-            // the only class this report asks a reader to act on.
+            // the only class this report asks a reader to act on. It is still
+            // NAMED: a pair that just disappears from `shared` leaves the ledger
+            // short with nothing saying why.
             out.shared -= 1;
+            out.unreadable.push(rule);
             continue;
         }
         if (verdict === 'identical') out.identical.push(rule);
@@ -235,6 +245,11 @@ export function render(d: CarrierDivergence): string {
     lines.push(`    byte-identical                     ${d.identical.length}`);
     lines.push(`    differ ONLY in the install stamp   ${d.provenanceOnly.length}`);
     lines.push(`    differ in BODY                     ${d.bodyDiff.length}`);
+    if (d.unreadable.length > 0) {
+        lines.push(`    unreadable on one side             ${d.unreadable.length}  (${d.unreadable.join(', ')})`);
+        lines.push('      Not counted as shared and NOT a body difference — a dangling entry is');
+        lines.push('      a broken install, not a disagreement about content.');
+    }
     lines.push(`  present at project scope only        ${d.projectOnly.length}`);
     lines.push(`  present at global scope only         ${d.globalOnly.length}`);
     lines.push('');

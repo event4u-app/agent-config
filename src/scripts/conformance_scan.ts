@@ -146,8 +146,15 @@ export interface RateRecord {
   rate_pct: number;
   /** `outside` is the falsifier firing; `corpus-too-small` is not a reading. */
   band: BandVerdict;
-  delivered_project_tokens: number;
-  delivered_global_tokens: number;
+  /**
+   * `null` when the scanned store is NOT this repo's own — `measureDelivered` is
+   * always anchored on this checkout, so pairing another project's rate with
+   * these tokens would persist a figure that belongs to neither. Cross-project
+   * `--record` is exactly the use 4.5 exists for, so the mismatch would have been
+   * the common case rather than an edge one.
+   */
+  delivered_project_tokens: number | null;
+  delivered_global_tokens: number | null;
 }
 
 export function bandVerdict(rate_pct: number, assistant_turns: number): BandVerdict {
@@ -524,6 +531,7 @@ export function scanStore(store: string, limit: number): ScanReport {
     path.join(REPO_ROOT, ".claude", "rules"),
     path.join(process.env["HOME"] ?? os.homedir(), ".claude", "rules"),
   );
+  const ownStore = path.resolve(store) === path.resolve(defaultStore(REPO_ROOT));
 
   return {
     scanned_at: new Date().toISOString(),
@@ -539,8 +547,10 @@ export function scanStore(store: string, limit: number): ScanReport {
       language_pin,
       rate_pct,
       band: bandVerdict(rate_pct, assistant_turns),
-      delivered_project_tokens: delivered.project.tokens,
-      delivered_global_tokens: delivered.global.tokens,
+      // Only attach the carrier figures when the rate and the carriers describe
+      // the same project.
+      delivered_project_tokens: ownStore ? delivered.project.tokens : null,
+      delivered_global_tokens: ownStore ? delivered.global.tokens : null,
     },
   };
 }

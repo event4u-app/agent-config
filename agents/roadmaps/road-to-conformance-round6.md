@@ -387,7 +387,7 @@ alone.
   violated in a later assistant turn of the same session. Scope it explicitly to
   the 30 named skills, so the coverage is legible rather than implied.
   <!-- Shipped as `src/scripts/report_skill_obligation_violations.ts`, task
-  `report-skill-obligation-violations`, advisory, 15 tests. The coverage came out
+  `report-skill-obligation-violations`, advisory, 30 tests. The coverage came out
   legible and much smaller than the phase assumed — § 3.2 below. -->
 - [x] 3.3 Validate before believing any number: hand-read every flagged turn of
   the first run and publish precision. A detector that cannot state its
@@ -640,6 +640,11 @@ First readings, `chars/4`, same basis as `preamble_byte_census` and
 | machine-global install (`~/.claude/rules`) | 112 | 102 402 |
 | **union — what a machine with both pays** | | **204 027** |
 
+The union is one short of the two rows added together: it divides the SUMMED bytes
+by 4 rather than summing two already-rounded figures. Correct in code, and stated
+here because a table whose own rows do not add up invites the reader to distrust
+the rest.
+
 That is the number the `essential` default-flip decision was waiting on, and it
 sits beside round 6's own ~199 300 estimate: same order, measured rather than
 projected, and both stay published per the instrument lock. **The flip is not
@@ -853,7 +858,7 @@ reads as unverified even where it is not — and this round is the one that said
 |---|---|---|---|
 | 1 | ANSI-C + unterminated-quote block, grep alternation does not, one suite | **met** | `npx vitest run tests/scripts/git_authorization.test.ts` → 43 passed; `ROUND6_VECTORS` and `ROUND6_OPEN_VECTORS` both present in that file |
 | 2 | every 1.3 vector has a recorded outcome; both guard headers state the exclusions | **met** | same suite (each vector carries its measured `bashRuns`); `grep -i "WHAT THIS GUARD DOES NOT SEE"` hits in `block_unauthorized_git.ts` **and** `block_no_verify.ts` |
-| 3 | hook and scanner classify identically, shared import + a test feeding both | **met, after closing half of it** | `grep -n prompt_shape` shows both `language_mirror_hook.ts` and `conformance_scan.ts` importing `_lib/prompt_shape.js`; the both-surfaces test was added here — `npx vitest run tests/scripts/conformance_scan.test.ts` → 29 passed |
+| 3 | hook and scanner classify identically, shared import + a test feeding both | **met, after closing half of it** | `grep -n prompt_shape` shows both `language_mirror_hook.ts` and `conformance_scan.ts` importing `_lib/prompt_shape.js`; the both-surfaces test was added here — `npx vitest run tests/scripts/conformance_scan.test.ts` → 33 passed (29 before the R2 repairs added four) |
 | 4 | hook-surface residue settled by measurement | **met** | § 2.3's falsifier: 15 typed chars vs a 12 224-char command body, both classifier versions run on both payloads |
 | 5 | re-measured count published beside 578 and 641 with the mechanical reason | **met** | 578 ×7, 641 ×2, 577 ×3, 622 ×4 present in this file; the reason is § 2.4's harness-turn explanation |
 | 6 | skill census published, no activation rate | **met** (round 6) | `report_skill_activation`, pinned by a test that it never prints a rate |
@@ -923,7 +928,80 @@ coupled to one shipped skill's prose, and step 4.4 checked `[x]` while its own t
 says **cancelled** (now `[-]`, the glyph the vocabulary reserves for it — in the
 roadmap whose Phase 5 exists to correct exactly that accounting).
 
-Nine new fixtures cover the classes the first suite could not: the block shape end
+Nine new fixtures (and five more after round 2) cover the classes the first suite could not: the block shape end
 to end, both sidechain paths, replacement-text and description over-match, the
 "NEVER use `X`" phrasing, the rounded-vs-unrounded band, absent-vs-zero carriers,
 and the flag-value position.
+
+**Where round 1's artifact went, stated because the trail matters more than the
+file.** Fixing the findings changes the reviewed content, so
+`check_completion_review` correctly reported the round-1 artifact `stale-review`
+against a new scope hash and the contract required a second round. Re-dispatching
+needs `--force`, and `--force` overwrites `<slug>.findings.md` in place rather
+than archiving it — so round 1's table is no longer in the tree. Its 14 findings
+are recorded above in full, its disposition is `fixed in 0ee1275af` for every row,
+and the round-2 artifact is the terminal one. The overwrite is a dispatcher
+behaviour worth knowing before the next re-review, not a lost review.
+
+### Round 2 — 10 more findings, and a second inverted polarity
+
+Same dispatcher, fresh reviewer, new scope hash (the repairs changed the reviewed
+content, which is why the contract forced a second round rather than a re-read).
+**10 findings: 1 high, 4 medium, 5 low. All 10 fixed.**
+
+**The high sits one level above the polarity bug round 1 fixed.** Round 1 caught
+`PIVOT_RE` mis-splitting a prohibition from its remedy. Round 2 caught that
+polarity was decided *by position alone*, with no reference to the obligation's
+**verb** — while `DETERMINISTIC_RE` admits `MUST` and `ALWAYS`. Verified against a
+fixture before the fix:
+
+```
+- ALWAYS run `task ci` before pushing.   →   forbidden: ["task ci"]
+```
+
+So a positive obligation put its **required** artefact in the forbidden set, and
+the detector would have reported *compliance* as a violation. Latent only because
+none of today's three forbidden artefacts comes from a MUST/ALWAYS line — and the
+extraction is re-derived from live skill bodies on every run, so one skill edit
+activates it. Fixed by reading the verb: NEVER splits forbidden/prescribed by
+position, MUST/ALWAYS produce a third class `required`, excluded with the reason —
+for a positive obligation the violation is the artefact's **absence**, and a
+transcript cannot show that something never happened without also knowing it was
+due.
+
+Two rounds, two inverted polarities, both in the same guard. The transferable
+part: a mechanism that classifies by *where* a token sits needs the *meaning* of
+the sentence it sits in, and a fixture suite that only exercises one verb cannot
+tell you which one you got.
+
+**The mediums.** Stale evidence figures in this roadmap's own acceptance table —
+three test counts quoted pre-repair (29/15/16 against a live 33/30/17) in a
+section whose stated thesis is that every verdict is a command run at this commit;
+refreshed, and the lesson is that a table asserting freshness has to be re-run,
+not re-read. A cross-project coupling in `RateRecord`: `measureDelivered` is
+always anchored on THIS checkout, so a `--record` run over another project's store
+persisted that project's rate beside this repo's carrier tokens — the
+cross-project case is exactly what 4.5 exists for, so the mismatch was the common
+case, not an edge one; the fields are now `null` when the store is not this repo's
+own. A `--store` flag-value hole in the SK-2 CLI, the same one the sibling report
+closes deliberately in this branch.
+
+**And one this branch will not fix, recorded instead.** The dashboard attributes
+this roadmap's **12 acceptance-criteria checkboxes** to the last `## Phase`
+heading above them, so "Phase 6 — What this roadmap will not do" is reported as 14
+steps / 13 done. Round 6 therefore reads 32/33 · 97 % and the repo total 189/301 ·
+63 %, with acceptance criteria counted as delivered steps. That is a
+`roadmap:progress` attribution rule, not a fact about this diff — but this diff
+amplified it by adding two criteria and flipping eight, and publishing an inflated
+percentage without saying so is precisely the accounting Phase 5 exists to
+correct. Not repaired here because it changes a generator every roadmap in the
+tree depends on; filed for the successor beside the `autonomous-execution` item.
+
+**The lows.** A double session parse contradicting `_parseSession`'s own reason
+for existing; § 4.3's union row not summing its own two rows (101 626 + 102 402 vs
+204 027 — the union is computed from summed BYTES then divided, not from summed
+rounded tokens, so it is correct in code and was unexplained in the table);
+`censusRuleDir` counting bytes into a field named `chars` (documented rather than
+renamed — three published baselines already divide that field by 4); a dead
+`vendor` entry in `CMD_HEADS` its own regex cannot produce; and unreadable shared
+pairs leaving `shared` with no count saying why.

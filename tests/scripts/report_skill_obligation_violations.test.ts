@@ -15,6 +15,7 @@ import { afterEach, describe, expect, it } from 'vitest';
 import {
     extractObligations,
     loadedSkills,
+    main,
     render,
     scanSessionForViolations,
     scanStore,
@@ -54,6 +55,7 @@ function assistant(tools: Array<{ name: string; input: Record<string, unknown> }
 const FORBIDDEN_PATH: Obligation = {
     skill: 'license-compliance-credits',
     line: '- NEVER hand-edit `docs/THIRD-PARTY-NOTICES.md`.',
+    verb: 'NEVER',
     artefact: 'docs/THIRD-PARTY-NOTICES.md',
     kind: 'path',
     polarity: 'forbidden',
@@ -61,6 +63,7 @@ const FORBIDDEN_PATH: Obligation = {
 const FORBIDDEN_CMD: Obligation = {
     skill: 'rtk-output-filtering',
     line: '**NEVER `cargo install rtk`**',
+    verb: 'NEVER',
     artefact: 'cargo install rtk',
     kind: 'command',
     polarity: 'forbidden',
@@ -387,5 +390,55 @@ describe('polarity — the pivot must not swallow the prohibition', () => {
         expect(c.totalLines).toBe(2);
         expect(c.withArtefact).toHaveLength(2); // two artefacts…
         expect(c.linesWithArtefact).toBe(1); // …on ONE line
+    });
+});
+
+
+describe('polarity reads the VERB, not only the position', () => {
+    function fixture(body: string): string {
+        const root = tmpdir();
+        const dir = path.join(root, 'src', 'skills', 'fixture-skill');
+        fs.mkdirSync(dir, { recursive: true });
+        fs.writeFileSync(
+            path.join(dir, 'SKILL.md'),
+            `---\nname: fixture-skill\ndescription: x\n---\n\n${body}\n`,
+            'utf8',
+        );
+        return root;
+    }
+
+    it('never classifies a MUST/ALWAYS artefact as forbidden', () => {
+        // Verified before the fix: `ALWAYS run \`task ci\`` produced
+        // forbidden: ["task ci"], so the detector would have flagged COMPLIANCE
+        // as a violation of an obligation that requires it.
+        const c = extractObligations(fixture('- ALWAYS run `task ci` before pushing.'));
+        expect(c.forbidden).toEqual([]);
+        expect(c.required.map((o) => o.artefact)).toEqual(['task ci']);
+        expect(c.required[0]?.verb).toBe('ALWAYS');
+    });
+
+    it('treats a MUST line the same way', () => {
+        const c = extractObligations(fixture('- MUST run `npm test` first.'));
+        expect(c.forbidden).toEqual([]);
+        expect(c.required.map((o) => o.verb)).toEqual(['MUST']);
+    });
+
+    it('keeps a NEVER line forbidden, so the repair is not a blanket exclusion', () => {
+        const c = extractObligations(fixture('- NEVER run `cargo install rtk`.'));
+        expect(c.forbidden.map((o) => o.artefact)).toEqual(['cargo install rtk']);
+        expect(c.required).toEqual([]);
+    });
+
+    it('excludes required artefacts from what the detector tests', () => {
+        const root = fixture('- ALWAYS run `task ci` before pushing.');
+        const c = extractObligations(root);
+        // Nothing to scan for: the census carries the artefact, the forbidden set
+        // does not, so no session can be flagged on it.
+        expect(scanSessionForViolations('s', [], c.forbidden)).toEqual([]);
+    });
+
+    it('rejects a flag in the --store value position', () => {
+        expect(main(['--store', '--json'])).toBe(1);
+        expect(main(['--limit', '--json'])).toBe(1);
     });
 });

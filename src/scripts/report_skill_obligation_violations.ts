@@ -92,8 +92,9 @@ const CMD_HEADS = new Set([
     'gh',
     'python3',
     'docker',
-    'vendor',
 ]);
+// `vendor` was here and is unreachable: CMD_RE's token class excludes `/`, so
+// `vendor/bin/phpunit` can never match. A head that cannot fire reads as coverage.
 
 /**
  * Where a line stops stating the prohibition and starts stating the remedy.
@@ -110,11 +111,26 @@ const CMD_HEADS = new Set([
  */
 const PIVOT_RE = /\s—\s|\s–\s|→|;\s|\s—use\b|\buse instead\b/;
 
-export type Polarity = 'forbidden' | 'prescribed';
+/**
+ * `forbidden` — a NEVER line's own artefact: its appearance IS the violation.
+ * `prescribed` — the remedy a NEVER line points at instead.
+ * `required` — a MUST / ALWAYS line's artefact. NOT testable here, and the
+ *   distinction is load-bearing rather than tidy: for a positive obligation the
+ *   violation is the artefact's **absence**, and a transcript cannot show that
+ *   something never happened without also knowing it was due. Deciding polarity
+ *   from position alone put `ALWAYS run \`task ci\`` into `forbidden`, so the
+ *   detector would have flagged *compliance* as a violation. Verified against a
+ *   fixture before the fix: `forbidden: ["task ci"]`.
+ */
+export type Polarity = 'forbidden' | 'prescribed' | 'required';
+
+/** The absolute a line opens with — the verb that decides what its artefact means. */
+export type ObligationVerb = 'NEVER' | 'MUST' | 'ALWAYS';
 
 export interface Obligation {
     skill: string;
     line: string;
+    verb: ObligationVerb;
     artefact: string;
     kind: 'path' | 'command';
     polarity: Polarity;
@@ -136,6 +152,14 @@ export interface ObligationCensus {
     /** The mechanisable subset — what this detector can actually test. */
     forbidden: Obligation[];
     prescribed: Obligation[];
+    /** MUST / ALWAYS artefacts: required, and their violation is unobservable here. */
+    required: Obligation[];
+}
+
+/** The absolute the line opens with. Defaults to NEVER only if none matched. */
+function _verb(line: string): ObligationVerb {
+    const m = /\b(NEVER|MUST|ALWAYS)\b/.exec(line);
+    return (m?.[1] as ObligationVerb | undefined) ?? 'NEVER';
 }
 
 function _artefacts(line: string): Array<{ artefact: string; kind: 'path' | 'command' }> {
@@ -170,6 +194,7 @@ export function extractObligations(repoRoot: string): ObligationCensus {
         linesWithArtefact: 0,
         forbidden: [],
         prescribed: [],
+        required: [],
     };
     for (const skill of census.withDeterministicObligation) {
         let text: string;
@@ -183,6 +208,7 @@ export function extractObligations(repoRoot: string): ObligationCensus {
         for (const raw of body.match(OBLIGATION_LINE_RE) ?? []) {
             const line = raw.trim();
             out.totalLines += 1;
+            const verb = _verb(line);
             const pivot = PIVOT_RE.exec(line);
             const head = pivot === null ? line : line.slice(0, pivot.index);
             const found = _artefacts(line);
@@ -190,10 +216,21 @@ export function extractObligations(repoRoot: string): ObligationCensus {
                 out.linesWithArtefact += 1;
             }
             for (const a of found) {
-                const polarity: Polarity = head.includes(`\`${a.artefact}\``) ? 'forbidden' : 'prescribed';
-                const ob: Obligation = { skill, line, artefact: a.artefact, kind: a.kind, polarity };
+                // The VERB decides what the artefact means; position only splits a
+                // prohibition from its remedy. Reading position alone classified
+                // `ALWAYS run \`task ci\`` as forbidden — the detector would have
+                // reported compliance as a violation.
+                const polarity: Polarity =
+                    verb === 'NEVER'
+                        ? head.includes(`\`${a.artefact}\``)
+                            ? 'forbidden'
+                            : 'prescribed'
+                        : 'required';
+                const ob: Obligation = { skill, line, verb, artefact: a.artefact, kind: a.kind, polarity };
                 out.withArtefact.push(ob);
-                (polarity === 'forbidden' ? out.forbidden : out.prescribed).push(ob);
+                if (polarity === 'forbidden') out.forbidden.push(ob);
+                else if (polarity === 'prescribed') out.prescribed.push(ob);
+                else out.required.push(ob);
             }
         }
     }
@@ -316,8 +353,12 @@ export function scanSessionForViolations(
     session: string,
     lines: readonly string[],
     forbidden: readonly Obligation[],
+    parsed?: ReadonlyArray<Entry | null>,
 ): Flag[] {
-    const entries = _parseSession(lines);
+    // `parsed` lets `scanStore` reuse the single pass it already made — without it
+    // the file is parsed twice per session, which contradicts `_parseSession`'s
+    // own reason for existing.
+    const entries = parsed ?? _parseSession(lines);
     const loaded = loadedSkillsFrom(entries);
     if (loaded.size === 0) return [];
     const relevant = forbidden.filter((o) => loaded.has(o.skill));
@@ -399,7 +440,7 @@ export function scanStore(repoRoot: string, store: string, limit: number): Sk2Re
         const id = path.basename(file).replace(/\.jsonl$/, '').slice(0, 8);
         const entries = _parseSession(lines);
         if (loadedSkillsFrom(entries).size > 0) report.sessionsWithASkill += 1;
-        report.flags.push(...scanSessionForViolations(id, lines, census.forbidden));
+        report.flags.push(...scanSessionForViolations(id, lines, census.forbidden, entries));
     }
     return report;
 }
@@ -422,6 +463,7 @@ export function render(r: Sk2Report): string {
     lines.push(`    …artefacts named across those lines      ${c.withArtefact.length}`);
     lines.push(`    …of those, the FORBIDDEN artefact        ${c.forbidden.length}`);
     lines.push(`    …the PRESCRIBED alternative (excluded)   ${c.prescribed.length}`);
+    lines.push(`    …REQUIRED by a MUST/ALWAYS (excluded)    ${c.required.length}`);
     lines.push(
         `    testable without judgement               ${c.forbidden.length} artefact(s) over ${c.totalLines} obligation line(s)`,
     );
@@ -441,6 +483,15 @@ export function render(r: Sk2Report): string {
         lines.push('  Excluded as prescriptive (the artefact is the remedy, not the offence):');
         for (const o of c.prescribed) {
             lines.push(`    [${o.skill}] ${o.artefact}`);
+        }
+        lines.push('');
+    }
+    if (c.required.length > 0) {
+        lines.push('  Excluded as REQUIRED — a MUST/ALWAYS line, so its violation is the');
+        lines.push('  artefact being ABSENT, and a transcript cannot show that something never');
+        lines.push('  happened without also knowing it was due:');
+        for (const o of c.required) {
+            lines.push(`    [${o.skill}] ${o.verb} ${o.artefact}`);
         }
         lines.push('');
     }
@@ -466,11 +517,28 @@ export function main(argv?: readonly string[]): number {
     const stores: string[] = [];
     for (let i = 0; i < args.length; i += 1) {
         const a = args[i];
-        if (a === '--limit' && args[i + 1] !== undefined) {
-            limit = Number.parseInt(args[i + 1] as string, 10);
+        // A value must not itself be a flag: `--store --json` otherwise reads
+        // `--json` as a store path and reports 0 sessions, silently. The sibling
+        // report closes the same hole in this branch.
+        const value = (at: number): string | null => {
+            const v = args[at + 1];
+            return v === undefined || v.startsWith('-') ? null : v;
+        };
+        if (a === '--limit') {
+            const v = value(i);
+            if (v === null) {
+                process.stderr.write('report_skill_obligation_violations: --limit needs a number\n');
+                return 1;
+            }
+            limit = Number.parseInt(v, 10);
             i += 1;
-        } else if (a === '--store' && args[i + 1] !== undefined) {
-            stores.push(args[i + 1] as string);
+        } else if (a === '--store') {
+            const v = value(i);
+            if (v === null) {
+                process.stderr.write('report_skill_obligation_violations: --store needs a path\n');
+                return 1;
+            }
+            stores.push(v);
             i += 1;
         } else if (a === '--json') {
             json = true;
