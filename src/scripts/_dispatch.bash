@@ -177,6 +177,10 @@ Tier 2 — maintenance / internal (hooks, MCP, memory, telemetry):
                              projection (from the pinned token baseline). Flags: --format
   code-graph                 Deterministic code-graph engine (ADR-124, Class A).
                              Usage: code-graph build|validate|detect|query|explain|affected|path [options]
+  sessions:list              List live agent sessions on this repository (shared
+                             session register). Flags: --json
+  sessions:claim             Claim a roadmap for this session so other sessions skip
+                             it; --release clears the claim
   roadmap:progress           Regenerate agents/roadmaps-progress.md from open roadmaps
   roadmap:progress-check     Fail if agents/roadmaps-progress.md is stale (for CI)
   roadmap:archive            Archive completed roadmaps (branch-touched by default;
@@ -577,6 +581,18 @@ cmd_mcp_run() {
     exit 1
   fi
   exec_ts "$server_main" "$@"
+}
+
+# Shared session register (road-to-parallel-session-coordination). Resolved from
+# PACKAGE_ROOT, not the consumer projection: the CLI imports the register library
+# under src/scripts/_lib/, which is package-internal and never shipped into
+# dist/agent-src/scripts/. Same shape as cmd_settings_set.
+cmd_sessions_list() {
+  exec_ts "$PACKAGE_ROOT/src/scripts/sessions_cli.ts" list "$@"
+}
+
+cmd_sessions_claim() {
+  exec_ts "$PACKAGE_ROOT/src/scripts/sessions_cli.ts" claim "$@"
 }
 
 cmd_roadmap_progress() {
@@ -1252,6 +1268,8 @@ main() {
     benchmark)               cmd_benchmark "$@" ;;
     code-graph)              cmd_code_graph "$@" ;;
     conformance:behavior)    cmd_conformance_behavior "$@" ;;
+    sessions:list)           cmd_sessions_list "$@" ;;
+    sessions:claim)          cmd_sessions_claim "$@" ;;
     roadmap:progress)        cmd_roadmap_progress "$@" ;;
     roadmap:progress-check)  cmd_roadmap_progress_check "$@" ;;
     roadmap:archive)         cmd_roadmap_archive "$@" ;;

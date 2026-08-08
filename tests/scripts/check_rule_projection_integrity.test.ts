@@ -29,9 +29,9 @@ import * as path from 'node:path';
 
 import { describe, expect, it } from 'vitest';
 
-import { projected_rule_trees } from '../../src/scripts/condense.js';
+import { _resetStateForTest, projected_rule_trees } from '../../src/scripts/condense.js';
 import { DeadScopeError } from '../../src/scripts/_lib/scan_scope.js';
-import { auditRuleProjection, renderFindings } from '../../src/scripts/check_rule_projection_integrity.js';
+import { auditRuleProjection, main, renderFindings } from '../../src/scripts/check_rule_projection_integrity.js';
 
 const REPO_ROOT = path.resolve(__dirname, '..', '..');
 const TREE = '.claude/rules';
@@ -124,20 +124,75 @@ describe('an empty scan root does not silently pass', () => {
         expect(() => auditRuleProjection(root, { [TREE]: [] })).toThrow(DeadScopeError);
     });
 
-    it('throws when the expected map itself is empty (every tool deactivated)', () => {
+    it('still throws when a tree IS active but plans no rule', () => {
+        // The discriminator, from the failing side: an active tool whose emit
+        // plan is empty means the rule corpus died, and that must stay fatal.
+        // If the zero-tool carve-out below were keyed on the rule count instead
+        // of the tree count, this case would be silenced with it.
         const root = makeRoot(['alpha.md']);
-        expect(() => auditRuleProjection(root, {})).toThrow(DeadScopeError);
+        expect(() => auditRuleProjection(root, { [TREE]: [], '.clinerules': [] })).toThrow(DeadScopeError);
+    });
+});
+
+describe('a checkout with every tool deactivated is skipped, not failed', () => {
+    // `agents/.agent-tools.yml` may legitimately select zero tools — the
+    // maintainer config that avoids duplicating a globally installed `~/.claude`.
+    // `projected_rule_trees()` then returns `{}`, and this gate runs FIRST in the
+    // pre-push chain: treating that as a dead scope made `git push` impossible on
+    // a supported config, which is the defect this pair pins.
+    it('does not throw when the expected map is empty (no active tool)', () => {
+        const root = makeRoot(['alpha.md']);
+        const audit = auditRuleProjection(root, {});
+        expect(audit.findings).toEqual([]);
+        expect(audit.treePresent).toEqual({});
+        expect(audit.ledger.finalize().planned).toBe(0);
+    });
+
+    it('exits 0 through the CLI and announces the skip on stderr', () => {
+        // Silence would be indistinguishable from a real pass — the false-green
+        // class `_lib/scan_scope.ts` exists to prevent — so the announcement is
+        // part of the contract. Driven end-to-end through `main()` because the
+        // exit code is what the pre-push chain reads.
+        const root = makeRoot(['alpha.md'], []);
+        fs.mkdirSync(path.join(root, 'agents'), { recursive: true });
+        fs.writeFileSync(path.join(root, 'agents', '.agent-tools.yml'), 'tools: []\n', 'utf-8');
+
+        const chunks: string[] = [];
+        const original = process.stderr.write.bind(process.stderr);
+        process.stderr.write = ((c: string | Uint8Array) => {
+            chunks.push(String(c));
+            return true;
+        }) as typeof process.stderr.write;
+        let code: number;
+        try {
+            code = main(['--root', root, '--quiet']);
+        } finally {
+            process.stderr.write = original;
+            // `main` repoints condense's MODULE_STATE at `--root`; leaving it
+            // there would make the repo-corpus tests below audit a tmp dir.
+            _resetStateForTest();
+        }
+        expect(code).toBe(0);
+        expect(chunks.join('')).toContain('no host rule tree is active');
     });
 });
 
 describe('the expected set comes from the generator, not from dist/ verbatim', () => {
     const distRules = path.join(REPO_ROOT, 'dist', 'agent-src', 'rules');
 
+    // These two read the REAL repo's emit plan, which is empty when
+    // `agents/.agent-tools.yml` selects zero tools — a supported local config
+    // (it avoids duplicating a globally installed `~/.claude`). Asserting
+    // `size > 50` there fails on the config rather than on a defect. CI commits
+    // all eight tools, so both keep their teeth where the corpus exists; a
+    // change that empties the committed list is a visible one-line diff.
+    const planEmpty = Object.keys(projected_rule_trees()).length === 0;
+
     function isManual(rule: string): boolean {
         return /^type:\s*["']?manual["']?\s*$/m.test(fs.readFileSync(path.join(distRules, rule), 'utf-8'));
     }
 
-    it('omits every ADR-004 `type: manual` rule and includes every other one', () => {
+    it.skipIf(planEmpty)('omits every ADR-004 `type: manual` rule and includes every other one', () => {
         const plan = projected_rule_trees();
         const projected = new Set(plan[TREE] ?? []);
         expect(projected.size).toBeGreaterThan(50);
@@ -151,7 +206,7 @@ describe('the expected set comes from the generator, not from dist/ verbatim', (
         expect(missing, 'every non-manual dist rule belongs to the emit plan').toEqual([]);
     });
 
-    it('plans the same rule set for every active host rule tree', () => {
+    it.skipIf(planEmpty)('plans the same rule set for every active host rule tree', () => {
         const plan = projected_rule_trees();
         const trees = Object.keys(plan);
         expect(trees).toContain(TREE);

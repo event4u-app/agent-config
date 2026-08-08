@@ -85,14 +85,14 @@ correctness.
 
 ## Phase 1 — measure what the design depends on
 
-- [ ] Confirm empirically that `agents/runtime/state/` differs per worktree:
+- [x] Confirm empirically that `agents/runtime/state/` differs per worktree:
       start a session in two worktrees, compare resolved state paths. The claim
       is read off a code comment and has not been observed.
-- [ ] Confirm `git rev-parse --git-common-dir` returns an identical, writable
+- [x] Confirm `git rev-parse --git-common-dir` returns an identical, writable
       path from the main checkout and from a worktree, **including through a
       symlinked parent** — the cleanup work already found that git reports
       realpaths and a symlinked ancestor mis-classified conventional worktrees.
-- [ ] **Derive the TTL from data, not taste — and per host, not globally.**
+- [x] **Derive the TTL from data, not taste — and per host, not globally.**
       Extract the inter-turn gap distribution from the `chat-history` JSONL over
       a real working week, **split by host**. One global number fails in both
       directions: dominated by the slowest host it lets a crashed Claude Code
@@ -101,20 +101,20 @@ correctness.
       proxied by a coarser event. "Turn" is not the same quantity on eight hosts
       — Augment proxies it through `stop`, and editor-centric hosts log fewer
       chat turns than they have working minutes.
-- [ ] Exclude long idle stretches from the calibration set before taking the
+- [x] Exclude long idle stretches from the calibration set before taking the
       percentile — an overnight gap in the log is not a turn cadence, and left in
       it drags the tail far enough to make the TTL meaningless.
-- [ ] **Probe Augment's `stop` frequency.** Augment has no `user_prompt_submit`
+- [x] **Probe Augment's `stop` frequency.** Augment has no `user_prompt_submit`
       but does have `stop`. If its `stop` fires per reply, the heartbeat gap on
       that platform closes by itself; if it fires once, the gap is real and gets
       documented. Do not assume either way.
-- [ ] Measure the claim window on `/roadmap:next`: from roadmap selection to PR
+- [x] Measure the claim window on `/roadmap:next`: from roadmap selection to PR
       creation, in a real run. Under a minute makes the register a nice-to-have;
       an hour makes it the point.
 
 ## Phase 2 — layout and liveness
 
-- [ ] **Choose the layout, default: one file per session.**
+- [x] **Choose the layout, default: one file per session.**
       `<common-dir>/agent-sessions/<session_id>.json`, heartbeat overwrites its
       own file via write-temp + rename. Each file has exactly one writer, so
       there is no concurrent-write case at all: atomicity comes from rename, the
@@ -130,23 +130,23 @@ correctness.
       per-session files was considered and rejected: it re-imports the growth and
       rotation problems to buy post-mortem history the register has already
       declared worthless.
-- [ ] Define the record: `session_id`, worktree path, branch, roadmap slug (or
+- [x] Define the record: `session_id`, worktree path, branch, roadmap slug (or
       null), started-at, last-seen.
-- [ ] **Heartbeat `last-seen` every turn.** Without a writer that updates it,
+- [x] **Heartbeat `last-seen` every turn.** Without a writer that updates it,
       `last-seen` equals `started-at` and the TTL is unresolvable: short → a
       long-running active session expires mid-work and goes invisible to session
       B, which is precisely the collision this prevents; long → a crashed session
       blocks roadmaps for hours. Carriers: `user_prompt_submit` (all hosts but
       Augment) and `stop` (all hosts, per reply on Claude Code).
-- [ ] Store the TTL as a per-host map, not a constant, and give an unknown host
+- [x] Store the TTL as a per-host map, not a constant, and give an unknown host
       a conservative default plus a logged warning — a new host must degrade to
       "claims held slightly too long", never to "active sessions vanish".
-- [ ] Rule out file mtime as the liveness signal explicitly. The cleanup work hit
+- [x] Rule out file mtime as the liveness signal explicitly. The cleanup work hit
       this: plain `git status` refreshes the on-disk index and bumped the very
       mtime read as liveness, moving 10 worktrees from safe to live between
       consecutive runs. A heartbeat *inside the record* has no such coupling —
       nothing else writes it.
-- [ ] **Declare the two accepted limits**, in the same honesty register as the
+- [x] **Declare the two accepted limits**, in the same honesty register as the
       "not a mutex" note below:
       - *Idle is indistinguishable from crashed.* A session left open over lunch
         does not heartbeat, expires, and releases its claim although the user
@@ -162,16 +162,16 @@ correctness.
 
 ## Phase 3 — write the register
 
-- [ ] Register on `session_start`: write the file. Fail-open — a session that
+- [x] Register on `session_start`: write the file. Fail-open — a session that
       cannot write the register still starts.
-- [ ] Heartbeat on `user_prompt_submit` and on `stop`: rewrite `last-seen`.
-- [ ] **Re-read the mutable fields on every heartbeat, never carry the start
+- [x] Heartbeat on `user_prompt_submit` and on `stop`: rewrite `last-seen`.
+- [x] **Re-read the mutable fields on every heartbeat, never carry the start
       value forward.** The branch changes mid-session via checkout — one
       `git rev-parse --abbrev-ref HEAD` per heartbeat keeps it true.
-- [ ] Deregister on `session_end` where the slot exists (six platforms; not
+- [x] Deregister on `session_end` where the slot exists (six platforms; not
       Windsurf). Best-effort by design: correctness rests on heartbeat + TTL, so
       a missing `session_end` costs claim-release latency and nothing else.
-- [ ] Do **not** deregister on `stop` — on Claude Code that would kill the
+- [x] Do **not** deregister on `stop` — on Claude Code that would kill the
       session's own record after its first reply.
 
 ## Phase 4 — bridge the roadmap claim, or Phase 5 reads an empty field
@@ -181,30 +181,30 @@ The record carries a roadmap slug, but the roadmap is chosen **mid-session** by
 it does not know what the model picked. Without a bridge the third acceptance
 criterion is unreachable — the screen would only ever see null slugs.
 
-- [ ] Bridge via a state file the heartbeat reads: `/roadmap:next` writes the
+- [x] Bridge via a state file the heartbeat reads: `/roadmap:next` writes the
       chosen slug into `agents/runtime/state/`, and the next heartbeat lifts it
       into the record. Preferred over having the command call the register
       directly — the claim lands at most one turn later, and the model never
       needs to know the register path or format.
-- [ ] Treat a write the command performs as model-carried and declare it as such
+- [x] Treat a write the command performs as model-carried and declare it as such
       (see Phase 5's honesty step); the heartbeat half is hook-carried and real.
 
 ## Phase 5 — close the claim window, and declare its carrier
 
-- [ ] Add the register read to the live remote screen of `/roadmap:next`,
+- [x] Add the register read to the live remote screen of `/roadmap:next`,
       alongside `gh pr list`. A roadmap claimed by a live session is excluded
       from the candidate set exactly as an open-PR roadmap is.
-- [ ] Keep the exclusion reasons distinguishable: "taken by open PR" and
+- [x] Keep the exclusion reasons distinguishable: "taken by open PR" and
       "claimed by a live session" are different states with different recovery.
-- [ ] On `session_start`, read the register, drop expired entries, and inject
+- [x] On `session_start`, read the register, drop expired entries, and inject
       live foreign sessions as context — the delivery mechanism `hot-context`
       already uses, so no new injection path is invented.
-- [ ] Collision rule: the starting session's branch matches a live foreign claim
+- [x] Collision rule: the starting session's branch matches a live foreign claim
       → ask **once**, numbered options per `user-interaction`: join the same
       branch, or spawn a worktree. Never decide silently, in either direction.
       It fires only on an actual live claim — never a routine "are you sure" at
       every start, per `no-cheap-questions`.
-- [ ] **Declare this step's enforcement honestly.** `/roadmap:next` is a command
+- [x] **Declare this step's enforcement honestly.** `/roadmap:next` is a command
       markdown, not a script — the screen runs because the model reads the
       instruction. That is a model-carried obligation, i.e. exactly the shape the
       obligation-carrier audit exists to find. Say so in the command, in the form
@@ -247,6 +247,57 @@ Both members reviewed the locked design decisions. Converged, and folded in abov
 Divergence, recorded rather than resolved: the second member saw value in
 shipping the register first for earlier user benefit. A concrete platform-spread
 failure case outweighs a generic value argument, so the order stands.
+
+## Council convergence — round 2, on what Phase 1 measured (2026-08-07 · anthropic/claude-sonnet-4-5, openai/gpt-4o · $0.43)
+
+Three Phase-1 findings disturbed a locked decision. Both members converged on
+all three, and corrected the implementation proposal twice.
+
+- **TTL from the raw, unfiltered p99 — confirmed.** The idle filter that Phase 1
+  mandates characterises turn cadence correctly and is the wrong basis for an
+  expiry, because the gaps it drops occur *inside* live sessions.
+- **The per-host map ships, but named as what it is.** `TTL_MEASURED_SECONDS`
+  (one entry) plus `TTL_DEFAULT_SECONDS`, not a table implying eight measured
+  hosts. Six empty slots would be speculation wearing a data structure.
+- **The unknown-host default moved down, 24 h → 12 h.** Correction against the
+  proposal: the evidence for a wide spread is a 4× range within one host, which
+  does not justify a 6× extrapolation, and a full day makes the register useless
+  on an unmeasured host — a crashed session would block a claim until tomorrow.
+- **Cline deregisters on `stop` via an explicit platform allow-list.** Correction
+  against the proposal, which was to compute the condition from
+  `slot_frequency(...) === 'per-event'`. Both members rejected that: a future
+  platform typed `per-event` would silently acquire deregistration behaviour in
+  a code path whose failure mode is *a live session deleting its own claim*. A
+  human adds the line deliberately, or the platform keeps the safe default. The
+  general rule — `stop` is a heartbeat carrier, never deregistration — is
+  unchanged, and TTL remains the correctness basis on Cline too.
+- **The lattice's false greens are declared, not fixed here.** Widening
+  `Frequency` with a reachability dimension touches every consumer and every
+  rule's frontmatter, plainly outside a register roadmap. Both members endorsed
+  the scope call and both independently asked for the reachable set to be
+  explicit in the register's own artefact — shipped as
+  `HEARTBEAT_REACHABLE_PLATFORMS`, which names cursor-CLI, cowork and copilot by
+  their absence.
+
+**One round-1 premise the measurement does not support**, corrected here rather
+than left standing two sections apart. Round 1 held that a single global TTL "is
+dominated by the slowest host". The data does not test that claim, and the only
+fragment touching it points the other way: pooling two hosts moved the kept p95
+to a value *between* them, not up to the slower one, because the faster host
+contributed more samples — pooling is a sample-weighted mixture, not a max.
+Recorded as unsupported rather than refuted; n is far too small to settle it. The
+per-host map survives regardless, because its justification never depended on
+that claim: an unmeasured host needs a conservative default either way.
+
+One member's reframing, adopted: the lattice is not lying. It answers "does a
+structural slot exist"; the register needs "will this actually fire". Those are
+different questions, and the fix is to ask the right one of the right component
+rather than to make the lattice answer both.
+
+Recorded and NOT adopted: both members proposed extending the lattice with a
+`KNOWN_UNREACHABLE` map in the same change. It is the correct eventual fix and
+it is a different roadmap — the register does not need it to be honest, because
+it declares its own reachable set.
 
 ## Acceptance criteria
 
