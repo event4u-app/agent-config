@@ -23,7 +23,7 @@ Last refreshed: 2026-06-23. Decided in
 Resolved once per session, cached. Safe default = all-false.
 
 ```json
-{ "schema_version": 1, "subagent_spawn": false, "parallel_spawn": false, "status_polling": false, "separate_quota_pool": false }
+{ "schema_version": 1, "subagent_spawn": false, "parallel_spawn": false, "status_polling": false, "separate_quota_pool": false, "worker_respawn": false }
 ```
 
 Full semantics: [`host-capability-manifest`](../../src/agent-src/contexts/execution/host-capability-manifest.md).

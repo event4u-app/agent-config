@@ -2,15 +2,15 @@
   "$schema": "https://json-schema.org/draft-07/schema#",
   "$id": "https://event4u.dev/agent-config/schemas/subagent-status.json",
   "title": "Subagent Status Envelope",
-  "description": "Required wire format for every implementer or judge subagent return. Loaded by /do-and-judge, /do-in-steps, and the subagent-orchestration skill. Hand-validated by tests/test_subagent_status_schema.py (no jsonschema runtime dep).",
+  "description": "Required wire format for every implementer or judge subagent return. Loaded by /do-and-judge, /do-in-steps, and the subagent-orchestration skill. No jsonschema runtime dep — the authoritative validators are src/scripts/_lib/subagent_response.ts (body) and src/scripts/_lib/subagent_capsule.ts (CHECKPOINT capsule), covered by tests/scripts/_lib_subagent_response.test.ts and tests/scripts/_lib_subagent_capsule.test.ts.",
   "type": "object",
   "required": ["status", "summary"],
   "additionalProperties": false,
   "properties": {
     "status": {
       "type": "string",
-      "enum": ["DONE", "DONE_WITH_CONCERNS", "NEEDS_CONTEXT", "BLOCKED"],
-      "description": "DONE = work shipped, gate green. DONE_WITH_CONCERNS = work shipped but caller must read concerns[]. NEEDS_CONTEXT = paused, blocking_question[] must be answered. BLOCKED = halted, blocking_reason describes why no path forward."
+      "enum": ["DONE", "DONE_WITH_CONCERNS", "NEEDS_CONTEXT", "BLOCKED", "CHECKPOINT"],
+      "description": "DONE = work shipped, gate green. DONE_WITH_CONCERNS = work shipped but caller must read concerns[]. NEEDS_CONTEXT = paused, blocking_question[] must be answered. BLOCKED = halted, blocking_reason describes why no path forward. CHECKPOINT = the worker reached its budget watermark and hands off a state capsule; done/remaining/generation are required."
     },
     "summary": {
       "type": "string",
@@ -40,6 +40,60 @@
     "next_action": {
       "type": "string",
       "description": "What the caller does now. Optional; orchestrator infers from status when omitted."
+    },
+    "generation": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "CHECKPOINT only. Generation index in the recycling chain; the first dispatch is 1."
+    },
+    "done": {
+      "type": "array",
+      "maxItems": 40,
+      "items": {"type": "string", "minLength": 1, "maxLength": 200, "pattern": "^[^\\n\\r]*$"},
+      "description": "CHECKPOINT only. What is finished — ref tokens (file:line, id, path), never bodies."
+    },
+    "remaining": {
+      "type": "array",
+      "maxItems": 40,
+      "items": {"type": "string", "minLength": 1, "maxLength": 240, "pattern": "^[^\\n\\r]*$"},
+      "description": "CHECKPOINT only. What is left, one short line each."
+    },
+    "decisions": {
+      "type": "array",
+      "maxItems": 40,
+      "items": {"type": "string", "minLength": 1, "maxLength": 240, "pattern": "^[^\\n\\r]*$"},
+      "description": "CHECKPOINT only. Choices already made that the successor must not silently re-open."
+    },
+    "open_risks": {
+      "type": "array",
+      "maxItems": 40,
+      "items": {"type": "string", "minLength": 1, "maxLength": 240, "pattern": "^[^\\n\\r]*$"},
+      "description": "CHECKPOINT only. Risks still open at handoff."
+    },
+    "touched_files": {
+      "type": "array",
+      "maxItems": 40,
+      "items": {"type": "string", "minLength": 1, "maxLength": 200, "pattern": "^[^\\n\\r]*$"},
+      "description": "CHECKPOINT only. Paths / file:line this generation touched — never diffs."
+    },
+    "assumptions": {
+      "type": "array",
+      "maxItems": 40,
+      "description": "Stated premises the successor inherits instead of re-deriving. Valid on a CHECKPOINT capsule AND on a completed worker result — unstated assumptions are the first thing compression drops.",
+      "items": {
+        "type": "object",
+        "required": ["statement", "basis", "epistemic_state"],
+        "additionalProperties": false,
+        "properties": {
+          "statement": {"type": "string", "minLength": 1, "maxLength": 240, "pattern": "^[^\\n\\r]*$"},
+          "basis": {"type": "string", "minLength": 1, "maxLength": 200, "pattern": "^[^\\n\\r]*$", "description": "Ref token the premise rests on."},
+          "epistemic_state": {
+            "type": "string",
+            "enum": ["verified", "assumed", "gap"],
+            "description": "The Evidence-Report buckets from evidence-discipline.md — the capsule does not get a private grading scale."
+          }
+        }
+      }
     }
   },
   "allOf": [
@@ -58,6 +112,10 @@
     {
       "if": {"properties": {"status": {"const": "BLOCKED"}}, "required": ["status"]},
       "then": {"required": ["blocking_reason"]}
+    },
+    {
+      "if": {"properties": {"status": {"const": "CHECKPOINT"}}, "required": ["status"]},
+      "then": {"required": ["done", "remaining", "generation"]}
     }
   ]
 }

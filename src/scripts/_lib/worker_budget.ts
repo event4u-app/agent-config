@@ -35,6 +35,24 @@ export function budgetForTier(tier: Tier, sessionTier: Exclude<Tier, 'inherit'> 
     return MAX_TOKENS_PER_WORKER[effective];
 }
 
+/**
+ * Fraction of the stop-loss budget at which a worker emits its CHECKPOINT
+ * capsule (road-to-worker-generation-recycling, Phase 1).
+ *
+ * The headroom IS the mechanism: a worker at 100 % of its budget cannot
+ * summarise itself, so the watermark sits below the kill line rather than on
+ * it. A start value, not a tuned one — Phase 1 measures it in shadow against a
+ * second trigger arm before anything acts on it, and `blocker:
+ * capsule-quality-near-budget` exists because a bad watermark and a bad
+ * mechanism look identical from one sample.
+ */
+export const CAPSULE_WATERMARK_FRACTION = 0.8;
+
+/** Token count at which a worker of this tier emits its capsule. */
+export function watermarkForTier(tier: Tier, sessionTier: Exclude<Tier, 'inherit'> = 'high'): number {
+    return Math.floor(budgetForTier(tier, sessionTier) * CAPSULE_WATERMARK_FRACTION);
+}
+
 /** Where the orchestrator should send the task after a budget hit. */
 export type NextRung = 'primitive' | 'higher-tier-subagent' | 'in-session';
 
@@ -64,19 +82,36 @@ export interface BudgetEvaluation {
     budget_hit: boolean;
     consumed: number;
     budget: number;
+    /** Token count at which the CHECKPOINT capsule is due (below the kill line). */
+    watermark: number;
+    /** Consumption reached the watermark but not yet the stop-loss. */
+    watermark_hit: boolean;
     reason: string;
 }
 
-/** Evaluate consumption against the worker's budget. */
+/**
+ * Evaluate consumption against the worker's budget.
+ *
+ * Two lines, not one: the **watermark** (emit a capsule, still working) and the
+ * **stop-loss** (return a partial result, stop). A budget hit implies the
+ * watermark was passed, so `watermark_hit` marks the band BETWEEN them — the
+ * only window in which a capsule can still be written.
+ */
 export function evaluateWorkerBudget(consumed: number, budget: number): BudgetEvaluation {
     const hit = consumed >= budget;
+    const watermark = Math.floor(budget * CAPSULE_WATERMARK_FRACTION);
+    const watermarkHit = !hit && consumed >= watermark;
     return {
         budget_hit: hit,
         consumed,
         budget,
+        watermark,
+        watermark_hit: watermarkHit,
         reason: hit
             ? `budget hit (${consumed} >= ${budget}) — return partial result + escalation flag, stop exploring`
-            : `within budget (${consumed} < ${budget})`,
+            : watermarkHit
+              ? `watermark reached (${consumed} >= ${watermark}) — emit a CHECKPOINT capsule while there is headroom to write one`
+              : `within budget (${consumed} < ${budget})`,
     };
 }
 

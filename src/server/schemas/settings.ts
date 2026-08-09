@@ -354,7 +354,7 @@ export const settingsSchema = z.object({
             'Per-tier model map for downshift routing. Each empty value uses the tier runtime default (no vendor model baked in).',
         ),
         host_capabilities: z.object({}).passthrough().default({}).describe(
-            'Optional override of the host-capability manifest (subagent_spawn / parallel_spawn / status_polling / separate_quota_pool). Any field set wins; omitted fields fall back to the all-false safe default. Empty = the agent resolves the manifest from host knowledge.',
+            'Optional override of the host-capability manifest (subagent_spawn / parallel_spawn / status_polling / separate_quota_pool / worker_respawn). Any field set wins; omitted fields fall back to the all-false safe default. Empty = the agent resolves the manifest from host knowledge.',
         ),
         implementer_model: z.string().default('').describe(
             'Override the model the orchestrator dispatches to subagents that write code (e.g. claude-sonnet-4, gpt-5). Empty (default) = inherit the session\'s primary model — cheapest and usually right.',
