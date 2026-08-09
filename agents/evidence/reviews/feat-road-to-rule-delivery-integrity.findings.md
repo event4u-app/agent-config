@@ -1,5 +1,5 @@
 # Findings: feat-road-to-rule-delivery-integrity
-<!-- completion-review: v1 | reviewed: 2026-08-09 | scope: 20633db46a6e2af17d94485836211d3dcbda3dd77cac8e5c5c9465c44b53211a | diff: 5db59bc4410488eb22717c8d0606b8eca10bcfa4 | reviewer: r2-fresh-subagent-feat-road-to-rule-delivery-integrity | prompt_hash: 76747690c71ae92b97ead98fffe5d0cb424f4940dddfb0d4732d931022e3de23 -->
+<!-- completion-review: v1 | reviewed: 2026-08-09 | scope: 97fdd5ed5f1219df5f2fe1e4aef35487f9e01b864341b17894cb8e93091448ab | diff: 5db59bc4410488eb22717c8d0606b8eca10bcfa4 | reviewer: r2-fresh-subagent-feat-road-to-rule-delivery-integrity | prompt_hash: 76747690c71ae92b97ead98fffe5d0cb424f4940dddfb0d4732d931022e3de23 -->
 
 <!-- context-manifest: v1
 inputs:
