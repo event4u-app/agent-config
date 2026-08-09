@@ -4,7 +4,7 @@
 <!-- context-manifest: v1
 inputs:
   diff_sha: 5db59bc4410488eb22717c8d0606b8eca10bcfa4
-  scope_hash: 20633db46a6e2af17d94485836211d3dcbda3dd77cac8e5c5c9465c44b53211a
+  scope_hash: 97fdd5ed5f1219df5f2fe1e4aef35487f9e01b864341b17894cb8e93091448ab
   roadmap: agents/roadmaps/road-to-rule-delivery-integrity.md
   roadmap_hash: 42376eea0024e3bfd1db285c32f718b1aa49646482ae834b9c8f21181d0c281d
   ac_hash: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
