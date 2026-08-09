@@ -2,13 +2,10 @@
 import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
-import { fileURLToPath } from 'node:url';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import * as ags from '../../src/scripts/_lib/agent_settings';
 import * as user_global_paths from '../../src/scripts/_lib/user_global_paths';
-
-const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
 
 const tmp_dirs: string[] = [];
 const saved_env: Array<[string, string | undefined]> = [];
@@ -291,12 +288,20 @@ describe('load_agent_settings — default paths', () => {
 
 describe('MERGEABLE_KEYS', () => {
     it('is the documented exact list', () => {
+        // Exact-list pin: widening the user-global surface requires an ADR, and
+        // this assertion is that requirement in executable form. `personal.ide`
+        // and `personal.pr_comment_bot_icon` were added by ADR-219 — the list had
+        // frozen at the PRE-migration spellings (`ide`, `personal.bot_icon`),
+        // so it whitelisted names the template does not have while filtering out
+        // the names it does.
         expect(ags.MERGEABLE_KEYS).toEqual([
             'name',
             'ide',
+            'personal.ide',
             'rule_loading_tier',
             'memory.cadence',
             'personal.bot_icon',
+            'personal.pr_comment_bot_icon',
             'personal.autonomy',
             'telegraph.speak_scope',
             'knowledge.global_sharing.enabled',
@@ -307,6 +312,18 @@ describe('MERGEABLE_KEYS', () => {
             'knowledge.global_sharing.freshness.hypothesis_after_days',
             'knowledge.global_sharing.freshness.stale_after_days',
         ]);
+    });
+
+    it('keeps the legacy spelling beside every migrated one (ADR-219 is additive)', () => {
+        // The repair must not become a regression for a user-global file that
+        // still uses the pre-migration name.
+        for (const [legacy, current] of [
+            ['ide', 'personal.ide'],
+            ['personal.bot_icon', 'personal.pr_comment_bot_icon'],
+        ] as const) {
+            expect(ags.MERGEABLE_KEYS).toContain(legacy);
+            expect(ags.MERGEABLE_KEYS).toContain(current);
+        }
     });
 });
 

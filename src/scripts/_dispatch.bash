@@ -73,6 +73,12 @@ TS-shell native (run via the installed `agent-config` binary):
   ui:serve                   Start the local UI server (127.0.0.1, auto-picked port)
   workspaces ls              List workspaces from the discovery manifest
   packs ls                   List packs from the discovery manifest
+  brand:status               Is a consumer brand layer present, and at which of the
+                             four canonical tokens.json paths. Flags a dot-prefixed
+                             .tokens.json, which nothing reads.
+  packs:active               Which packs are active HERE, and from which file.
+                             Names the degraded case (settings file without a
+                             profile.id → zero packs) that nothing else reports.
   commands [ls|explain]      List/explain the command surface from the discovery manifest
   mcp-server                 Turnkey read-only stdio MCP server (no repo clone; ADR-085)
   doctor-shell               Probe the TS-shell environment
@@ -170,6 +176,9 @@ Tier 2 — maintenance / internal (hooks, MCP, memory, telemetry):
   mcp:render                 Render mcp.json → .cursor/mcp.json, .windsurf/mcp.json
                              (pass --claude-desktop to also write user-scope config)
   mcp:check                  Dry-run mcp:render; exit non-zero if targets are stale
+  mcp:available              What is declared in mcp.json, whether each server's
+                             command is launchable, and the separate static tool
+                             registry. No handshake — says so in the output.
   mcp:setup                  Verify the tsx runtime + MCP server module and
                              print the client config snippet
                              (one-line MCP server onboarding; idempotent)
@@ -206,6 +215,9 @@ Tier 2 — maintenance / internal (hooks, MCP, memory, telemetry):
                              ~/.event4u/agent-config/ (the global-only consumer surface,
                              ADR-020). Idempotent; --force overwrites a non-empty global
                              file, --dry-run lists intended copies with zero writes.
+  settings:get               Read one setting: its value, the file it came from, its
+                             class, and whether "absent" differs from the default.
+                             Usage: settings:get <key> [--json]
   settings:set               Set one setting in the global file. Refuses every class-C
                              (guarded) key from docs/contracts/settings-classes.md, and
                              refuses everything when that contract is unreadable.
@@ -600,6 +612,26 @@ cmd_sessions_list() {
 
 cmd_sessions_claim() {
   exec_ts "$PACKAGE_ROOT/src/scripts/sessions_cli.ts" claim "$@"
+}
+
+# Capability probes (road-to-capability-answerability). All three resolve from
+# PACKAGE_ROOT rather than the consumer projection: each imports package-internal
+# libraries under src/scripts/_lib/ or src/shared/, which are never projected into
+# dist/agent-src/scripts/. Same shape as cmd_settings_set.
+cmd_packs_active() {
+  exec_ts "$PACKAGE_ROOT/src/scripts/_cli/cmd_packs_active.ts" "$@"
+}
+
+cmd_settings_get() {
+  exec_ts "$PACKAGE_ROOT/src/scripts/_cli/cmd_settings_get.ts" "$@"
+}
+
+cmd_mcp_available() {
+  exec_ts "$PACKAGE_ROOT/src/scripts/_cli/cmd_mcp_available.ts" "$@"
+}
+
+cmd_brand_status() {
+  exec_ts "$PACKAGE_ROOT/src/scripts/_cli/cmd_brand_status.ts" "$@"
 }
 
 cmd_roadmap_progress() {
@@ -1288,6 +1320,10 @@ main() {
     conformance:behavior)    cmd_conformance_behavior "$@" ;;
     sessions:list)           cmd_sessions_list "$@" ;;
     sessions:claim)          cmd_sessions_claim "$@" ;;
+    packs:active)            cmd_packs_active "$@" ;;
+    settings:get)            cmd_settings_get "$@" ;;
+    mcp:available)           cmd_mcp_available "$@" ;;
+    brand:status)            cmd_brand_status "$@" ;;
     roadmap:progress)        cmd_roadmap_progress "$@" ;;
     roadmap:progress-check)  cmd_roadmap_progress_check "$@" ;;
     roadmap:archive)         cmd_roadmap_archive "$@" ;;

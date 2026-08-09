@@ -43,7 +43,7 @@ obligation_frequency: "per-task"
 
 # Strategy Safety Floor
 
-Domain safety floor for founder-strategy artefacts (vision, positioning, competitive moats, market entry, OKR trees, build-vs-buy). Auto-activates when `pack-founder-strategy` is installed.
+Domain safety floor for founder-strategy artefacts (vision, positioning, competitive moats, market entry, OKR trees, build-vs-buy). Auto-activates when `pack-founder-strategy` is installed — `agent-config packs:active` says whether it is, and names the degraded case where zero packs load and this floor cannot activate at all.
 
 ## Iron Law — strategy is a frame, not a verdict
 

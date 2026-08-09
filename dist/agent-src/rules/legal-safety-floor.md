@@ -39,7 +39,7 @@ obligation_frequency: "per-task"
 
 # Legal Safety Floor
 
-Domain safety floor for the `legal-review-prep` pack (contract/NDA/DPA review, legal triage). Auto-activates when `pack-legal-review-prep` is installed. Sibling to `finance-safety-floor` / `strategy-safety-floor`. Every output is a **draft to PREPARE for attorney review**, never legal advice. Operating mechanics migrated to [`legal-practice-profile § Legal safety floor`](../skills/legal-practice-profile/SKILL.md) (per P4 of `road-to-kernel-and-router`) — the Iron Laws below stay here.
+Domain safety floor for the `legal-review-prep` pack (contract/NDA/DPA review, legal triage). Auto-activates when `pack-legal-review-prep` is installed — `agent-config packs:active` says whether it is, and names the degraded case where zero packs load and this floor cannot activate at all. Sibling to `finance-safety-floor` / `strategy-safety-floor`. Every output is a **draft to PREPARE for attorney review**, never legal advice. Operating mechanics migrated to [`legal-practice-profile § Legal safety floor`](../skills/legal-practice-profile/SKILL.md) (per P4 of `road-to-kernel-and-router`) — the Iron Laws below stay here.
 
 ## Iron Law — no final legal call
 

@@ -70,7 +70,8 @@ AND the repo contains a detectable index:
   routing skill: `agent-config code-graph detect|query|affected|path` over the
   native engine or a consumer-shipped index, grep as the stated fallback. On
   hook-capable hosts the PreToolUse `code-graph` nudge surfaces this once per
-  session; on instruction-file hosts this rule is the surface.
+  session; on instruction-file hosts this rule is the surface. Which of the two
+  you are on is `agent-config hooks:status`, not a guess from the host name.
 - [`discovery_graph`](../scripts/discovery_graph.ts) — this suite's OWN artefact
   relation-graph (`affected`/`explain`); the external code-graph is the
   *source-code* analogue this rule defers to for code questions.

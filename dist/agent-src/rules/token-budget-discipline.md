@@ -32,7 +32,9 @@ TO THE FULL FRUGALITY CANON (telegraph-speak, thin-projector).
 | `standard` | — | Balanced condensation | Not trimmed if priority ≥ 60 | 500–2000 tokens |
 | `rich` | Must be declared + justified | **Exempt** | **Never trimmed** | 2000–3500 tokens |
 
-Read `tokens.rich_skills` from `.agent-settings.yml` (default `on`) to determine
+Read `tokens.rich_skills` from `.agent-settings.yml` (default `on`) — the project
+layer of a cascade that starts user-global, so `agent-config settings:get
+tokens.rich_skills` is the read that answers it, file included — to determine
 whether rich skills may load in full. If `off`, treat them as `standard`. If
 `ask`, the question's shape is
 [`settings-ask-protocol`](settings-ask-protocol.md)'s, not this rule's; what only

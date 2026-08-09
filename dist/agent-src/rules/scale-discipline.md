@@ -33,7 +33,9 @@ obligation_frequency: "per-edit"
 # Scale Discipline
 
 Pack floor for the `scale-discipline` pack (default-off; auto-activates
-when the pack is installed). AI agents produce functionally correct but
+when the pack is installed — `agent-config packs:active` says whether it is,
+and names the degraded case where zero packs load and this floor cannot
+activate at all). AI agents produce functionally correct but
 scale-hostile persistence code — this rule binds the failure classes to
 deterministic pattern lints where possible and to review advice where not.
 

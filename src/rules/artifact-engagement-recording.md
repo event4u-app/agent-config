@@ -23,7 +23,10 @@ obligation_frequency: "per-task"
 
 **Iron Law.** After a `/implement-ticket` or `/work` phase-step, emit one
 `telemetry:record` call with consulted + applied ids when telemetry is
-enabled. Default-off; opt-in via `.agent-settings.yml`. Zero overhead when
+enabled. Default-off; opt-in via `.agent-settings.yml` — which is the **project
+layer of a cascade that starts user-global**, so never read a value or its
+absence from that file alone; `agent-config settings:get <key>` reports the
+value and the file it actually came from. Zero overhead when
 disabled. Recording contract + privacy floor:
 [`contexts/contracts/artifact-engagement-flow.md`](../contexts/contracts/artifact-engagement-flow.md).
 

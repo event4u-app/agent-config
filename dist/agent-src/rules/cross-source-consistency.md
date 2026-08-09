@@ -61,6 +61,9 @@ OBVIOUS-TO-THE-AGENT ≠ IN-SCOPE.
 a ticket/spec that carries a second source (an attachment, a code reality, or an
 internal contradiction), gated by `consistency.cross_source` in
 `.agent-settings.yml` (`on` default · `auto` = high-confidence only · `off` = inert).
+That file is the project layer of a cascade that starts user-global — never read
+the setting or its absence from it alone; `agent-config settings:get
+consistency.cross_source` reports the value and the file it came from.
 
 **Does NOT fire** on a single clear source with no second source to compare
 against (that is plain vagueness — it belongs to `ask-when-uncertain`), on

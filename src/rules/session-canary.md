@@ -80,7 +80,8 @@ name it and suggest a fresh session or `/agent-handoff`, per
 > bound in **two** slots. `session_start` injects the full `<session-canary>`
 > contract once, so a fresh conversation cannot start without it.
 > `user_prompt_submit` injects a one-line beat every turn, which is what
-> actually reaches a task boundary.
+> actually reaches a task boundary. Both bindings are manifest facts; whether
+> they are live on this install is `agent-config hooks:status`.
 
 **Why two slots, and why not one.** The obligation is per *task*. No host has a
 per-task slot — Cline maps `TaskStart`/`TaskResume` onto `session_start`, and
