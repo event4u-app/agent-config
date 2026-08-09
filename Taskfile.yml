@@ -145,6 +145,7 @@ tasks:
       - task: validate-decision-engine
       - task: validate-agent-settings
       - task: lint-settings-classes
+      - task: lint-no-activation-gates
       - task: report-imperative-density
       - task: smoke-quickstart
       - task: check-examples-shape

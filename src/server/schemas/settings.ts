@@ -331,17 +331,8 @@ export const settingsSchema = z.object({
         }).default({}),
     }).default({}),
     subagents: z.object({
-        enabled: z.boolean().default(true).describe(
-            'Global master switch for the subagent layer. true (default) = available; false = fully disabled (the canonical kill-switch — no auto-dispatch, no routing, everything runs in-session).',
-        ),
-        auto: z.enum(['off', 'ask', 'on']).default('on').describe(
-            'Automatic-dispatch mode. off = subagents only via explicit command. ask = classify the task and ask once before dispatching. on = auto-dispatch delegable tasks (surface the choice in one line). Shipped default is on on subagent-capable hosts (flipped from ask 2026-07-09, ADR-117), off elsewhere; no-op where the host has no subagent primitive.',
-        ),
         downshift: z.boolean().default(true).describe(
             'Route delegable sub-tasks to the lowest-capable model tier (cost + speed via model downshift). false = every subagent runs on the session tier.',
-        ),
-        budget_routing: z.enum(['ask', 'auto', 'off']).default('ask').describe(
-            'Budget-aware cheap-request delegation (docs/contracts/budget-routing.md): pick the cheapest classifier-adequate tier WITH available budget (cost.budgets.per_tier); cheap exhausted but strong funded → strong tier; all exhausted → session model + notice. Work is never blocked to save money; the session model is never switched (delegation with a model override). ask = confirm the first budget-motivated downshift per session (default). auto = apply silently with telemetry. off = today\'s behavior (single-flip rollback). Distinct from downshift: that is the quality/cost knob, this is the resource-availability gate.',
         ),
         quota_arbitrage: z.boolean().default(true).describe(
             'Prefer a separate quota-pool model for delegable sub-tasks where the host manifest reports one. Optional bonus only — identical behaviour (minus the quota win) where unsupported. Never load-bearing.',
@@ -352,9 +343,6 @@ export const settingsSchema = z.object({
             high: z.string().default('').describe('Model alias for high-tier sub-tasks. Empty = the tier runtime default.'),
         }).default({}).describe(
             'Per-tier model map for downshift routing. Each empty value uses the tier runtime default (no vendor model baked in).',
-        ),
-        host_capabilities: z.object({}).passthrough().default({}).describe(
-            'Optional override of the host-capability manifest (subagent_spawn / parallel_spawn / status_polling / separate_quota_pool). Any field set wins; omitted fields fall back to the all-false safe default. Empty = the agent resolves the manifest from host knowledge.',
         ),
         implementer_model: z.string().default('').describe(
             'Override the model the orchestrator dispatches to subagents that write code (e.g. claude-sonnet-4, gpt-5). Empty (default) = inherit the session\'s primary model — cheapest and usually right.',
@@ -375,14 +363,11 @@ export const settingsSchema = z.object({
         ),
     }),
     ai_team: z.object({
-        enabled: z.boolean().default(false).describe(
-            'Master switch for the /team cross-model review family (docs/contracts/ai-team-config.md). false (default) = commands are never suggested and every invocation refuses with an enable pointer. true = the family is live; individual gates (allow_delegate) still apply.',
-        ),
         model: z.string().default('auto').describe(
             "Model handed to the codex CLI. 'auto' (default) = pass no --model flag so the CLI's own default applies — tracks the subscription's current strongest model instead of pinning a stale ID. Any other value passes through verbatim as `--model <value>`.",
         ),
         allow_delegate: z.boolean().default(false).describe(
-            'Second opt-in for the only wrapper that delegates write access (/team:delegate). false (default) = delegate refuses even when ai_team.enabled is true. Both keys must be true before delegation is reachable.',
+            'Second opt-in for the only wrapper that delegates write access (/team:delegate). false (default) = delegate refuses even when /team itself is available. Availability (codex CLI installed + authenticated) is necessary but not sufficient — this key must ALSO be true before delegation is reachable.',
         ),
         max_calls_per_day: z.number().int().min(0).default(50).describe(
             'Per-day cap on team calls, read against the EXISTING cli_call_budget openai bucket (~/.event4u/agent-config/cli-calls.json, daily UTC reset) — one subscription, one counter, never a parallel count. 0 = block all team calls.',
@@ -398,7 +383,15 @@ export const settingsSchema = z.object({
                 'Circuit-breaker bound: after this many CONSECUTIVE BLOCK verdicts in one session, a visible notice is injected exactly once and the managed layer stops re-blocking — the user decides, never an infinite Claude↔Codex loop. An ALLOW verdict resets the counter. Positive integer.',
             ),
         }).default({ managed: false, max_consecutive_blocks: 3 }),
-    }).default({ enabled: false, model: 'auto', allow_delegate: false, max_calls_per_day: 50, suppress_setup_hint: false, review_gate: { managed: false, max_consecutive_blocks: 3 } }),
+    }).default({ model: 'auto', allow_delegate: false, max_calls_per_day: 50, suppress_setup_hint: false, review_gate: { managed: false, max_consecutive_blocks: 3 } }),
+    emergency: z.object({
+        orchestration_halt: z.boolean().default(false).describe(
+            'The one audited incident switch over the always-on orchestration stack (subagents, council, team). NOT an activation gate: false (default) = the stack runs normally. true = halted; arming requires no ceremony. Disarming (returning to false) requires orchestration_halt_justification to be a non-empty string. Both transitions emit one telemetry line.',
+        ),
+        orchestration_halt_justification: z.string().default('').describe(
+            'Required non-empty before orchestration_halt may return to false. Ignored while arming the halt.',
+        ),
+    }).default({ orchestration_halt: false, orchestration_halt_justification: '' }),
     onboarding: z.object({
         onboarded: z.boolean().default(false).describe(
             'Set to true once the developer has completed `agent-config setup`. The onboarding-gate rule blocks the first turn of every chat until this is true. Toggle back to false to re-trigger the wizard.',

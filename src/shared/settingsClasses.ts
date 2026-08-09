@@ -130,11 +130,12 @@ export function isConservativeDefault(value: unknown): boolean {
 /**
  * Dotted leaf paths of a parsed settings tree.
  *
- * A leaf is anything that is not a NON-EMPTY map. An empty map is a real
- * configurable value with a real default (`subagents.host_capabilities: {}`),
- * so it is a leaf — one more than the template↔schema parity walk produces.
- * That divergence is deliberate: a key the parity walk skips is exactly the
- * key that would otherwise reach the writer with no class.
+ * A leaf is anything that is not a NON-EMPTY map. An empty map (e.g. an
+ * optional override object with every field left unset) is a real
+ * configurable value with a real default, so it is a leaf — one more than
+ * the template↔schema parity walk produces. That divergence is deliberate: a
+ * key the parity walk skips is exactly the key that would otherwise reach
+ * the writer with no class.
  */
 export function settingsLeafPaths(value: unknown, prefix = ''): string[] {
     if (typeof value !== 'object' || value === null || Array.isArray(value)) {
@@ -164,10 +165,11 @@ export function getSettingsLeaf(root: unknown, dotted: string): unknown {
  *
  * An exact row wins. Failing that, the longest classified prefix does: a
  * class-C key whose value is a MAP has children that never appear in a flattened
- * diff under the key's own name, so `subagents.host_capabilities.subagent_spawn`
- * must inherit the C on `subagents.host_capabilities` rather than read as
- * unclassified. Returns `undefined` when nothing on the path is classified —
- * and every caller treats that as guarded, not as free.
+ * diff under the key's own name (e.g. a hypothetical `foo.overrides: {}` with a
+ * class-C row on `foo.overrides` itself), so `foo.overrides.some_field` must
+ * inherit the C on `foo.overrides` rather than read as unclassified. Returns
+ * `undefined` when nothing on the path is classified — and every caller
+ * treats that as guarded, not as free.
  */
 export function classOfPath(
     index: ReadonlyMap<string, SettingsClass>,

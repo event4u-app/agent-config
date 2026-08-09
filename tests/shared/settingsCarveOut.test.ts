@@ -43,7 +43,6 @@ describe('settings carve-out set', () => {
             'projection.mode',
             'projection.rule_workspaces',
             'quality.local_auto_run',
-            'subagents.auto',
         ]);
     });
 

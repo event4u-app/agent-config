@@ -231,7 +231,8 @@ cost:
     # separate tier cap — the global ceilings above still apply and the
     # budget-routing relation works purely off them. Set a value to cap one
     # tier (e.g. cheap: 10 keeps haiku-class delegation under $10/day-window
-    # of the ledger). Consumed by subagents.budget_routing below.
+    # of the ledger). Informational since the budget_routing key was removed
+    # (always-on orchestration): routing is judgment-ladder-driven.
     per_tier:
       cheap: null
       medium: null
@@ -743,59 +744,26 @@ code_style:
 
 # --- Subagent orchestration ---
 #
-# Controls model selection, parallelism, and AUTOMATIC orchestration for
-# subagent-based workflows (/do-and-judge, /do-in-steps, /judge, and the
-# auto-dispatch layer). Empty values fall back to the runtime defaults
-# described in .augment/contexts/subagent-configuration.md and
+# Always-on orchestration (road-to-always-on-orchestration Phase 1): the
+# subagent layer carries no per-run on/off setting. `subagents.enabled`,
+# `subagents.auto`, and `subagents.host_capabilities` were REMOVED — a fresh
+# install with this section untouched still activates auto-dispatch on any
+# host whose capability probe reports a subagent primitive. Capability is a
+# fact resolved from the host (registry + a live environment probe), never a
+# setting; the one surviving incident-only control is `emergency.
+# orchestration_halt` below. A leftover `subagents.enabled` / `subagents.auto`
+# / `subagents.host_capabilities` key from an older install is ignored (one
+# deprecation-warning line on load, per-key, per run).
+#
+# What remains below tunes HOW a delegated sub-task runs, never WHETHER the
+# layer exists. Empty values fall back to the runtime defaults described in
+# .augment/contexts/subagent-configuration.md and
 # .augment/contexts/execution/auto-orchestration-activation.md.
 subagents:
-  # Global master switch for the whole subagent layer.
-  # true (default) = the layer is available; false = fully disabled, the
-  # canonical kill-switch (no auto-dispatch, no model routing, in-session only).
-  enabled: true
-
-  # Automatic-dispatch mode:  off | ask | on
-  #
-  # off = never auto-dispatch; subagents only via an explicit command.
-  # ask = classify the task; when delegable, ask once before dispatching.
-  # on  = auto-dispatch delegable tasks without asking (surface the choice
-  #       in one line).
-  #
-  # SHIPPED default is `on` on hosts whose capability manifest reports
-  # `subagent_spawn: true`, and `off` on hosts without a subagent primitive.
-  # Auto-dispatch stays a no-op wherever the manifest reports
-  # `subagent_spawn: false`, regardless of this value.
-  #
-  # The default was `ask` until 2026-07-09, when it was flipped to `on` after a
-  # re-evaluation (agents/settings/contexts/orchestration-default-flip-verdict.md
-  # § 2026-07-09; ADR-117). The flip rests on a bounded-downside argument, NOT a
-  # passed benchmark: delegable slices are already cost-routed to the cheapest
-  # capable tier, classification fires only on real structural signals (never
-  # unstructured or tiny work), and every return is verified — so `on` cannot
-  # delegate frontier-priced or speculative work. `resolveShippedDefault()`
-  # remains the telemetry-driven DEMOTION gate: a measured regression demotes
-  # back to `ask`.
-  auto: "on"
-
   # Route delegable sub-tasks to the lowest-capable model tier (cost + speed
   # via model downshift). true (default) = downshift per declared model_tier;
   # false = every subagent runs on the session tier.
   downshift: true
-
-  # Budget-aware cheap-request delegation (docs/contracts/budget-routing.md).
-  # Picks the cheapest CLASSIFIER-ADEQUATE tier that has available budget
-  # (cost.budgets.per_tier above); cheap exhausted but strong funded → strong
-  # tier; everything exhausted → session model + notice. Work is never
-  # blocked to save money, and the session model is never switched — routing
-  # happens as delegation with a model override. DISTINCT from `downshift`
-  # above: downshift is the quality/cost trade-off knob, budget_routing is
-  # the resource-availability gate (council 2026-08-03).
-  #   ask  = (default) first budget-motivated downshift of a session asks once
-  #   auto = apply the relation silently (telemetry line per routed request)
-  #   off  = today's behavior; single-flip rollback — QUOTE it ("off") when
-  #          editing: bare off is YAML-1.1 boolean false (readers coerce, but
-  #          the quoted form is the unambiguous one, same as `auto: "on"`)
-  budget_routing: ask
 
   # Prefer a separate-quota-pool model for delegable sub-tasks WHERE the host
   # manifest reports `separate_quota_pool: true` (e.g. a subscription whose
@@ -810,12 +778,6 @@ subagents:
     lite: ""
     medium: ""
     high: ""
-
-  # Optional host-capability override (see
-  # .augment/contexts/execution/host-capability-manifest.md). Any field set
-  # here wins; any field omitted falls back to the all-false safe default.
-  # Leave empty to let the agent resolve the manifest from host knowledge.
-  host_capabilities: {}
 
   # Model for implementer subagents (empty = same tier as the session model)
   implementer_model: ""
@@ -878,17 +840,23 @@ worktrees:
 
 # --- AI Team (cross-model strong-pair review — /team family) ---
 #
-# Governs the default-off `/team` capability family: one strong external
-# model (via the codex CLI, subscription-authed) reviews inside the repo —
-# the depth complement to the council's breadth. Schema + validation
-# contract: `docs/contracts/ai-team-config.md`. The loader
-# (`src/scripts/ai_team/config.ts`) rejects unknown keys fail-closed.
+# One strong external model (via the codex CLI, subscription-authed)
+# reviews inside the repo — the depth complement to the council's breadth.
+# Schema + validation contract: `docs/contracts/ai-team-config.md`. The
+# loader (`src/scripts/ai_team/config.ts`) rejects unknown keys fail-closed.
+#
+# Always-on orchestration (road-to-always-on-orchestration Phase 1, Step
+# 1.3): `/team` carries no per-run on/off setting — `enabled` was REMOVED.
+# A fresh install with this section untouched still surfaces `/team` when
+# the codex CLI resolves on $PATH AND some auth for it is detectable
+# (subscription login, API key, key file, or env key); otherwise every
+# invocation degrades with one clear "codex CLI not available" line
+# instead of a silent enabled:false refusal. Verify with `agent-config
+# doctor --check team`. The one surviving incident-only control is
+# `emergency.orchestration_halt` below. A leftover `enabled` key from an
+# older install is accepted and ignored (one deprecation-warning line on
+# load, per run).
 ai_team:
-  # Master switch. false (default) = /team commands are never suggested
-  # and every invocation refuses with an enable pointer; true = the
-  # family is live (individual gates below still apply).
-  enabled: false
-
   # Model handed to the codex CLI. 'auto' (default) = pass NO --model
   # flag, the codex CLI's own default applies — this tracks the
   # subscription's current strongest model instead of pinning a stale
@@ -897,8 +865,9 @@ ai_team:
 
   # Second opt-in for the ONLY wrapper that delegates write access
   # (/team:delegate → the plugin's native-Codex worker). false (default)
-  # = delegate refuses with an enable pointer even when ai_team.enabled
-  # is true. Both keys must be true before delegation is reachable.
+  # = delegate refuses even when /team itself is available. Availability
+  # (codex CLI installed + authenticated) is necessary but not
+  # sufficient — this key must ALSO be true before delegation is reachable.
   allow_delegate: false
 
   # Per-day cap on team calls. Team calls count into the EXISTING
@@ -933,6 +902,23 @@ ai_team:
     # infinite Claude↔Codex loop. An ALLOW verdict resets the counter.
     # Positive integer.
     max_consecutive_blocks: 3
+
+# --- Emergency orchestration halt (the one incident-only kill switch) ---
+#
+# NOT an activation gate — see docs/contracts/settings-classes.md § "The one
+# exception". The always-on orchestration stack (subagents, council, team)
+# has no per-layer on/off setting; this is the single audited switch that
+# survives, for incident response only.
+emergency:
+  # false (default) = the stack runs normally. Flipping this to true requires
+  # no ceremony — incidents are urgent. Flipping it back to false requires
+  # `orchestration_halt_justification` below to be a non-empty string; both
+  # transitions emit one telemetry line (enum/bool fields only).
+  orchestration_halt: false
+
+  # Required non-empty before `orchestration_halt` may return to false.
+  # Ignored while the halt is being armed (arming is ceremony-free).
+  orchestration_halt_justification: ""
 
 # --- Onboarding ---
 #

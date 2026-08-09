@@ -28,8 +28,7 @@ explanation lives now that the file no longer carries it as comments.
 
 | Key | Class | Type | Default | Allowed values | What it does |
 |---|---|---|---|---|---|
-| `ai_team.allow_delegate` | C | boolean | `false` |  | Second opt-in for the only wrapper that delegates write access (/team:delegate). false (default) = delegate refuses even when ai_team.enabled is true. Both keys must be true before delegation is reachable. |
-| `ai_team.enabled` | C | boolean | `false` |  | Master switch for the /team cross-model review family (docs/contracts/ai-team-config.md). false (default) = commands are never suggested and every invocation refuses with an enable pointer. true = the family is live; individual gates (allow_delegate) still apply. |
+| `ai_team.allow_delegate` | C | boolean | `false` |  | Second opt-in for the only wrapper that delegates write access (/team:delegate). false (default) = delegate refuses even when /team itself is available. Availability (codex CLI installed + authenticated) is necessary but not sufficient — this key must ALSO be true before delegation is reachable. |
 | `ai_team.max_calls_per_day` | C | integer | `50` |  | Per-day cap on team calls, read against the EXISTING cli_call_budget openai bucket (~/.event4u/agent-config/cli-calls.json, daily UTC reset) — one subscription, one counter, never a parallel count. 0 = block all team calls. |
 | `ai_team.model` | C | string | `"auto"` |  | Model handed to the codex CLI. 'auto' (default) = pass no --model flag so the CLI's own default applies — tracks the subscription's current strongest model instead of pinning a stale ID. Any other value passes through verbatim as `--model <value>`. |
 | `ai_team.review_gate.managed` | C | boolean | `false` |  | Managed governance of the codex plugin's Stop-hook Review Gate (road-to-team-mode Phase 4). false (default) = byte-identical pre-Phase-4 behavior: no counting, no circuit breaker. true = count consecutive BLOCK verdicts per session and trip the circuit breaker at max_consecutive_blocks. |
@@ -119,6 +118,13 @@ explanation lives now that the file no longer carries it as comments.
 | Key | Class | Type | Default | Allowed values | What it does |
 |---|---|---|---|---|---|
 | `eloquent.access_style` | A | string | `"getters_setters"` | `getters_setters` · `get_attribute` · `magic_properties` | How the agent writes Laravel Eloquent property access. getters_setters = explicit getName() / setName() methods (most refactor-safe). get_attribute = $model->getAttribute("name") (verbose but explicit). magic_properties = $model->name (idiomatic but harder to grep). |
+
+## emergency
+
+| Key | Class | Type | Default | Allowed values | What it does |
+|---|---|---|---|---|---|
+| `emergency.orchestration_halt` | C | boolean | `false` |  | The one audited incident switch over the always-on orchestration stack (subagents, council, team). NOT an activation gate: false (default) = the stack runs normally. true = halted; arming requires no ceremony. Disarming (returning to false) requires orchestration_halt_justification to be a non-empty string. Both transitions emit one telemetry line. |
+| `emergency.orchestration_halt_justification` | C | string | `""` |  | Required non-empty before orchestration_halt may return to false. Ignored while arming the halt. |
 
 ## explain
 
@@ -288,11 +294,7 @@ explanation lives now that the file no longer carries it as comments.
 | Key | Class | Type | Default | Allowed values | What it does |
 |---|---|---|---|---|---|
 | `subagents.adversarial_council` | C | string | `"off"` | `off` · `ask` · `on` | Opt-in adversarial-verification-council mode (subagent-orchestration Mode 9, ADR-122). off (default) = never runs; ask = offer it on an explicit high-risk change; on = auto-run on high-risk changes. Advisory only — a panel of distinct-model skeptics red-teams a real change for defect FINDING coverage and NEVER auto-gates it (Hard Floor). Stays default-off until the adversarial-council-finding-coverage claim is backed. |
-| `subagents.auto` | C | string | `"on"` | `off` · `ask` · `on` | Automatic-dispatch mode. off = subagents only via explicit command. ask = classify the task and ask once before dispatching. on = auto-dispatch delegable tasks (surface the choice in one line). Shipped default is on on subagent-capable hosts (flipped from ask 2026-07-09, ADR-117), off elsewhere; no-op where the host has no subagent primitive. |
-| `subagents.budget_routing` | C | string | `"ask"` | `ask` · `auto` · `off` | Budget-aware cheap-request delegation (docs/contracts/budget-routing.md): pick the cheapest classifier-adequate tier WITH available budget (cost.budgets.per_tier); cheap exhausted but strong funded → strong tier; all exhausted → session model + notice. Work is never blocked to save money; the session model is never switched (delegation with a model override). ask = confirm the first budget-motivated downshift per session (default). auto = apply silently with telemetry. off = today's behavior (single-flip rollback). Distinct from downshift: that is the quality/cost knob, this is the resource-availability gate. |
 | `subagents.downshift` | C | boolean | `true` |  | Route delegable sub-tasks to the lowest-capable model tier (cost + speed via model downshift). false = every subagent runs on the session tier. |
-| `subagents.enabled` | C | boolean | `true` |  | Global master switch for the subagent layer. true (default) = available; false = fully disabled (the canonical kill-switch — no auto-dispatch, no routing, everything runs in-session). |
-| `subagents.host_capabilities` | C | object | `{}` |  | Optional override of the host-capability manifest (subagent_spawn / parallel_spawn / status_polling / separate_quota_pool). Any field set wins; omitted fields fall back to the all-false safe default. Empty = the agent resolves the manifest from host knowledge. |
 | `subagents.implementer_model` | C | string | `""` |  | Override the model the orchestrator dispatches to subagents that write code (e.g. claude-sonnet-4, gpt-5). Empty (default) = inherit the session's primary model — cheapest and usually right. |
 | `subagents.judge_model` | C | string | `""` |  | Override the model used for review / judge subagents that critique implementer output. Empty (default) = one tier above the implementer model — picks up nuance the implementer missed. |
 | `subagents.max_parallel` | C | integer | `3` |  | Hard cap on subagents running in parallel during /do-in-parallel, /do-competitively, and /judge runs. Raise for faster fan-out, lower if you hit rate limits or want lower token spend. |
