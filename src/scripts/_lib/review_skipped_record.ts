@@ -14,15 +14,31 @@
  * `orchestration` — "Unknown trailing fields are forward-compat extensions;
  * readers MUST NOT raise on them."
  *
- * PRIVACY BY CONSTRUCTION: the ONLY `review_skipped` field is `diff_lines`,
- * a non-negative integer count. There is no field capable of holding a file
+ * PRIVACY BY CONSTRUCTION: the `review_skipped` object carries `diff_lines`
+ * (a non-negative integer count) and `mutation_measure` (a closed 2-value
+ * enum — never free text). There is no field capable of holding a file
  * path, a prompt, or any free-form content — never add one (mirrors
  * `domain-safety-pii` § Surface 2 / the `artifact-engagement` event shape).
  */
 
+/**
+ * Whether `diff_lines` is an exact sum or a guaranteed-over-threshold
+ * approximation (`end_review_nudge_hook.ts`'s `UNTRACKED_FILE_CAP` path —
+ * past that many untracked non-doc files, the hook refuses to spawn one
+ * `git diff --no-index` subprocess per file and reports a value merely
+ * guaranteed to exceed the fire threshold, not an exact count). Mixing
+ * exact and approximated counts in this telemetry stream, unlabeled, would
+ * corrupt any future blocking-threshold calibration that reads it — hence
+ * this field, rather than folding the approximation silently into
+ * `diff_lines`.
+ */
+export type MutationMeasure = 'exact' | 'capped_approximation';
+
 export interface ReviewSkippedInput {
     /** Non-doc tracked-file mutation size that triggered the nudge (count only). */
     diff_lines: number;
+    /** Whether `diff_lines` is exact or a capped approximation — see above. */
+    mutation_measure: MutationMeasure;
     /** ISO-8601 UTC timestamp; caller supplies (keeps this fn pure/deterministic). */
     ts: string;
     /** Stable id (ULID, UUID, or content hash); caller supplies. */
@@ -56,6 +72,9 @@ export function buildReviewSkippedLine(input: ReviewSkippedInput): BuiltReviewSk
     if (!isNonNegInt(input.diff_lines)) {
         errors.push('diff_lines must be a non-negative integer');
     }
+    if (input.mutation_measure !== 'exact' && input.mutation_measure !== 'capped_approximation') {
+        errors.push('mutation_measure must be "exact" or "capped_approximation"');
+    }
     if (!input.ts) errors.push('ts (ISO-8601 UTC) is required');
     if (!input.id) errors.push('id (ULID, UUID, or content hash) is required');
 
@@ -76,7 +95,7 @@ export function buildReviewSkippedLine(input: ReviewSkippedInput): BuiltReviewSk
         persona: null,
         input_kind: 'prompt',
         type: 'note',
-        review_skipped: { diff_lines: input.diff_lines },
+        review_skipped: { diff_lines: input.diff_lines, mutation_measure: input.mutation_measure },
     };
 
     return { line, errors: [] };

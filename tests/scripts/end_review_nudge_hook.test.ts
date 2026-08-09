@@ -26,11 +26,14 @@ import {
     gitNumstatRows,
     hasFiredThisSession,
     isDocPath,
+    isSafeTranscriptPath,
     MUTATION_LINE_THRESHOLD,
     nonDocMutatedLines,
     parseNumstat,
     scanTranscriptForReviewer,
     totalNonDocMutatedLines,
+    totalNonDocMutatedLinesWithMeasure,
+    TRANSCRIPT_SCAN_MAX_BYTES,
     UNTRACKED_FILE_CAP,
     untrackedFileLineCount,
     untrackedNonDocFiles,
@@ -148,6 +151,91 @@ describe('untrackedNonDocFiles / untrackedFileLineCount / totalNonDocMutatedLine
     });
 });
 
+// ── mutation_measure: the cap changes an exact sum into an approximation ──
+
+describe('totalNonDocMutatedLinesWithMeasure — exact vs capped_approximation', () => {
+    it('reports "exact" when the untracked-file count stays at or under the cap', () => {
+        const dir = makeRepo();
+        mutateCodeFile(dir, 10);
+        fs.writeFileSync(path.join(dir, 'new-module.ts'), 'export const x = 1;\n');
+        const measured = totalNonDocMutatedLinesWithMeasure(dir);
+        expect(measured.measure).toBe('exact');
+        expect(measured.lines).toBe(totalNonDocMutatedLines(dir));
+    });
+
+    it('reports "capped_approximation" past UNTRACKED_FILE_CAP, matching the guaranteed-over-threshold value', () => {
+        const dir = makeRepo();
+        for (let i = 0; i < UNTRACKED_FILE_CAP + 1; i++) {
+            fs.writeFileSync(path.join(dir, `file-${i}.ts`), 'export const x = 1;\n');
+        }
+        const measured = totalNonDocMutatedLinesWithMeasure(dir);
+        expect(measured.measure).toBe('capped_approximation');
+        expect(measured.lines).toBe(totalNonDocMutatedLines(dir));
+        expect(measured.lines).toBeGreaterThan(MUTATION_LINE_THRESHOLD);
+    });
+});
+
+// ── Gate finding fd47df62: validate a transcript_path BEFORE any read ────
+
+describe('isSafeTranscriptPath (gate finding fd47df62 hardening)', () => {
+    it('rejects a path that does not end in .jsonl', () => {
+        const home = fs.mkdtempSync(path.join(os.tmpdir(), 'transcript-guard-home-'));
+        tmp_dirs.push(home);
+        const p = path.join(home, 'transcript.txt');
+        fs.writeFileSync(p, '{}\n');
+        expect(isSafeTranscriptPath(p, { homeDir: home })).toBe(false);
+    });
+
+    it('accepts a .jsonl path that resolves under the given home directory', () => {
+        const home = fs.mkdtempSync(path.join(os.tmpdir(), 'transcript-guard-home-'));
+        tmp_dirs.push(home);
+        const p = path.join(home, 'transcript.jsonl');
+        fs.writeFileSync(p, '{}\n');
+        expect(isSafeTranscriptPath(p, { homeDir: home })).toBe(true);
+    });
+
+    it('rejects a .jsonl path that resolves OUTSIDE the given home directory', () => {
+        const home = fs.mkdtempSync(path.join(os.tmpdir(), 'transcript-guard-home-'));
+        tmp_dirs.push(home);
+        const elsewhere = fs.mkdtempSync(path.join(os.tmpdir(), 'transcript-guard-elsewhere-'));
+        tmp_dirs.push(elsewhere);
+        const p = path.join(elsewhere, 'transcript.jsonl');
+        fs.writeFileSync(p, '{}\n');
+        expect(isSafeTranscriptPath(p, { homeDir: home })).toBe(false);
+    });
+
+    it('rejects a symlink that lives INSIDE home but resolves OUTSIDE it', () => {
+        const home = fs.mkdtempSync(path.join(os.tmpdir(), 'transcript-guard-home-'));
+        tmp_dirs.push(home);
+        const elsewhere = fs.mkdtempSync(path.join(os.tmpdir(), 'transcript-guard-elsewhere-'));
+        tmp_dirs.push(elsewhere);
+        const real = path.join(elsewhere, 'transcript.jsonl');
+        fs.writeFileSync(real, '{}\n');
+        const link = path.join(home, 'transcript.jsonl');
+        fs.symlinkSync(real, link);
+        expect(isSafeTranscriptPath(link, { homeDir: home })).toBe(false);
+    });
+
+    it('rejects a .jsonl file over an injected size cap, accepts it under a larger one', () => {
+        const home = fs.mkdtempSync(path.join(os.tmpdir(), 'transcript-guard-home-'));
+        tmp_dirs.push(home);
+        const p = path.join(home, 'transcript.jsonl');
+        fs.writeFileSync(p, 'x'.repeat(64));
+        expect(isSafeTranscriptPath(p, { homeDir: home, maxBytes: 16 })).toBe(false);
+        expect(isSafeTranscriptPath(p, { homeDir: home, maxBytes: 128 })).toBe(true);
+    });
+
+    it('rejects a nonexistent path without throwing', () => {
+        const home = fs.mkdtempSync(path.join(os.tmpdir(), 'transcript-guard-home-'));
+        tmp_dirs.push(home);
+        expect(isSafeTranscriptPath(path.join(home, 'missing.jsonl'), { homeDir: home })).toBe(false);
+    });
+
+    it('the default maxBytes export matches the production 50 MB cap', () => {
+        expect(TRANSCRIPT_SCAN_MAX_BYTES).toBe(50 * 1024 * 1024);
+    });
+});
+
 function toolUseLine(name: string, input: Record<string, unknown>): string {
     return JSON.stringify({
         type: 'assistant',
@@ -235,7 +323,7 @@ describe('scanTranscriptForReviewer', () => {
 describe('deriveSessionKey / hasFiredThisSession (F2)', () => {
     it('derives a stable, hex-shaped key from session_id', () => {
         const key = deriveSessionKey({ session_id: 'sess-abc' }, {});
-        expect(key).toMatch(/^[a-f0-9]{16}$/);
+        expect(key).toMatch(/^[a-f0-9]{64}$/);
         expect(deriveSessionKey({ session_id: 'sess-abc' }, {})).toBe(key); // deterministic
     });
 
@@ -247,7 +335,7 @@ describe('deriveSessionKey / hasFiredThisSession (F2)', () => {
 
     it('falls back to payload.transcript_path when session_id is absent', () => {
         const key = deriveSessionKey({}, { transcript_path: '/tmp/some/transcript.jsonl' });
-        expect(key).toMatch(/^[a-f0-9]{16}$/);
+        expect(key).toMatch(/^[a-f0-9]{64}$/);
     });
 
     it('hasFiredThisSession is false before any marker is written, for a fresh repo', () => {
@@ -326,8 +414,17 @@ function envelopeJson(workspaceRoot: string, transcriptPath?: string): string {
     });
 }
 
-function runHook(cwd: string, stdin: string): { status: number; stdout: string; stderr: string } {
-    const r = spawnSync(TSX, [HOOK], { encoding: 'utf8', cwd, input: stdin });
+function runHook(
+    cwd: string,
+    stdin: string,
+    extraEnv: Record<string, string> = {},
+): { status: number; stdout: string; stderr: string } {
+    const r = spawnSync(TSX, [HOOK], {
+        encoding: 'utf8',
+        cwd,
+        input: stdin,
+        env: { ...process.env, ...extraEnv },
+    });
     return { status: r.status ?? 1, stdout: r.stdout ?? '', stderr: r.stderr ?? '' };
 }
 
@@ -368,9 +465,12 @@ describe('end_review_nudge_hook — stop-concern E2E (via tsx)', () => {
         expect(events).toHaveLength(1);
         expect(events[0]?.['type']).toBe('note');
         expect(events[0]?.['outcome']).toBe('skipped');
-        expect((events[0]?.['review_skipped'] as { diff_lines: number }).diff_lines).toBe(
-            MUTATION_LINE_THRESHOLD + 20,
-        );
+        const reviewSkipped = events[0]?.['review_skipped'] as {
+            diff_lines: number;
+            mutation_measure: string;
+        };
+        expect(reviewSkipped.diff_lines).toBe(MUTATION_LINE_THRESHOLD + 20);
+        expect(reviewSkipped.mutation_measure).toBe('exact');
     });
 
     it('F2: a second Stop event in the SAME session stays silent — the nudge fires once per session', () => {
@@ -438,10 +538,59 @@ describe('end_review_nudge_hook — stop-concern E2E (via tsx)', () => {
                 description: 'blind adversarial review of the diff before claiming done',
             }),
         ]);
-        const r = runHook(dir, envelopeJson(dir, transcript));
+        // HOME=dir: the transcript lives under `dir` (via `writeTranscript`),
+        // and `isSafeTranscriptPath` requires the path to resolve under
+        // `os.homedir()` — real transcripts live under `~/.claude/projects`,
+        // not under `workspace_root`, so this fixture must fake HOME to
+        // land the temp-dir transcript "inside home" for the check to pass.
+        const r = runHook(dir, envelopeJson(dir, transcript), { HOME: dir });
         expect(r.status, r.stderr).toBe(0);
         expect(r.stdout).toBe('');
         expect(readTelemetryLines(dir)).toEqual([]);
+    });
+
+    it('gate fd47df62: a non-.jsonl transcript_path is never read — scan skipped, hook fires anyway', () => {
+        const dir = makeRepo();
+        mutateCodeFile(dir, MUTATION_LINE_THRESHOLD + 20);
+        // A SEPARATE directory used as HOME — the transcript is written
+        // there, never inside `dir` (workspace_root), so it can never itself
+        // register as an untracked mutation in `dir`'s own git diff.
+        const fakeHome = fs.mkdtempSync(path.join(os.tmpdir(), 'fd47df62-fakehome-'));
+        tmp_dirs.push(fakeHome);
+        // Wrong extension on purpose — carries a review-shaped tool_use that
+        // WOULD suppress the nudge if it were ever read. It must not be.
+        const transcript = path.join(fakeHome, 'transcript.txt');
+        fs.writeFileSync(
+            transcript,
+            `${toolUseLine('Agent', { description: 'blind adversarial review of the diff' })}\n`,
+        );
+        const r = runHook(dir, envelopeJson(dir, transcript), { HOME: fakeHome });
+        expect(r.status, r.stderr).toBe(2);
+        const parsed = JSON.parse(r.stdout.trim()) as { additional_context: string };
+        expect(parsed.additional_context).toBe(buildAdvisoryLine(MUTATION_LINE_THRESHOLD + 20));
+        expect(readTelemetryLines(dir)).toHaveLength(1);
+    });
+
+    it('gate fd47df62: a transcript_path OUTSIDE HOME is never read — scan skipped, hook fires anyway', () => {
+        const dir = makeRepo();
+        mutateCodeFile(dir, MUTATION_LINE_THRESHOLD + 20);
+        const fakeHome = fs.mkdtempSync(path.join(os.tmpdir(), 'fd47df62-fakehome-'));
+        tmp_dirs.push(fakeHome);
+        // The transcript lives in a THIRD directory — neither `dir`
+        // (workspace_root, so it never pollutes the mutation count) nor
+        // `fakeHome` (so the home-prefix check must reject it).
+        const elsewhere = fs.mkdtempSync(path.join(os.tmpdir(), 'fd47df62-elsewhere-'));
+        tmp_dirs.push(elsewhere);
+        const transcript = path.join(elsewhere, 'transcript.jsonl');
+        fs.writeFileSync(
+            transcript,
+            `${toolUseLine('Agent', { description: 'blind adversarial review of the diff' })}\n`,
+        );
+        const r = runHook(dir, envelopeJson(dir, transcript), { HOME: fakeHome });
+        expect(r.status, r.stderr).toBe(2);
+        const parsed = JSON.parse(r.stdout.trim()) as { additional_context: string };
+        expect(parsed.additional_context).toBe(buildAdvisoryLine(MUTATION_LINE_THRESHOLD + 20));
+        expect(readTelemetryLines(dir)).toHaveLength(1);
     });
 
     it('malformed (non-JSON) stdin in a clean repo → silent exit 0, never crashes', () => {
