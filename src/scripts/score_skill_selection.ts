@@ -20,13 +20,13 @@
  *     fail = (a) <  0.80  AND  (b) <  0.80   →  cluster needs `routes_to`
  *
  * REPOINTED 2026-08-09 (P2.2 of road-to-rule-delivery-integrity). The original
- * read `.agent-src.uncondensed/skills`, faithfully replicating a `.py` twin —
- * but ADR-051 retired that tree as dead legacy and it does not exist in this
- * checkout. A scorer pointed at a missing directory does not fail: its glob
- * yields nothing, every fixture scores against an empty skill set, and the
- * output is a baseline of silent zeros. That is worse than an error, because a
- * baseline is exactly what P2.2's pre-registered criteria compare against — the
- * measurement would have been void and would have looked fine.
+ * read the uncondensed legacy skills tree, faithfully replicating a `.py` twin —
+ * but ADR-051 retired that tree as dead and it does not exist in this checkout.
+ * A scorer pointed at a missing directory does not fail: its glob yields
+ * nothing, every fixture scores against an empty skill set, and the output is a
+ * baseline of silent zeros. That is worse than an error, because a baseline is
+ * exactly what P2.2's pre-registered criteria compare against — the measurement
+ * would have been void and would have looked fine.
  *
  * Now reads `SRC_SKILLS()` from the shared resolver. `dist/agent-src/skills`
  * would be equally valid (ADR-201 makes the projection a byte-exact copy, so
