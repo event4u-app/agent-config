@@ -429,3 +429,10 @@ metacharacters and repo escape, including the right-hand side of `--flag=value`.
 - evidence: docs/contracts/plan-review-gates.md#Advisory window (Stage A, verdict #20)
 - status: unbacked
 - last_verified: 2026-08-04
+
+### claim: critic-protocol-load-bearing-ab
+- claim: PRE-REGISTERED 2026-08-09, BEFORE any run (road-to-judgment-and-forensic-evidence Phase 2; thresholds, prompts, and scorer semantics frozen at registration and not adjusted after the numbers land). On the frozen adversarial-council corpus (internal/bench/adversarial-council/corpus.json, built 2026-07-21 — 12 defect fixtures + 3 controversial-but-correct clean controls), the `load_bearing` critic protocol — one independent single-shot review per vendor (anthropic claude-sonnet-4-5 + openai gpt-4o, direct client calls, strict JSON; NEVER council_cli transport, per the adversarial-council-finding-coverage measurement-artifact note) — achieves, PER VENDOR: (1) false-positive rate < 50% on the 3 clean controls AND (2) true-positive retention >= 80% of the legacy skeptic arm's TP count on the 12 defect fixtures, both arms measured in the same run. Both conditions, both vendors, or the arm does not promote; `legacy` stays the default in either case (promotion is a separate human decision on top of a passing result). Scoring is the existing deterministic scorer (caughtDefect: defect-file basename + category-family match; isFalsePositive: any non-low-confidence finding on a clean control) applied IDENTICALLY to both arms on findings only; the protocol's verdict field is published as a secondary signal, and a "flawed" verdict with empty findings is counted separately as `incoherent` (per the 2026-08-09 council design pass), never as a TP catch and never as an FP. Mechanism hypothesis, stated so it can be wrong: a critic that cannot return "this holds" cannot have an FP rate below 100% by construction; the protocol makes "holds" a positive, defensible output. Published in both directions regardless of outcome.
+- kind: quant
+- evidence: internal/bench/adversarial-council/runs/critic-protocol-ab-report.json
+- status: unbacked
+- last_verified: 2026-08-09
