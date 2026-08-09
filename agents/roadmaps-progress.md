@@ -6,17 +6,17 @@
 
 ## Overall
 
-**177 / 294 steps done · 60%**
+**189 / 294 steps done · 64%**
 
 ```text
-████████████████████████░░░░░░░░░░░░░░░░   60%
+██████████████████████████░░░░░░░░░░░░░░   64%
 ```
 
 ## Open roadmaps
 
 | # | Roadmap | Phases | Steps | Open | Done | Deferred | Cancelled | Blocker | Progress |
 |---|---|---:|---:|---:|---:|---:|---:|---:|---|
-| 1 | [road-to-always-on-orchestration.md](roadmaps/road-to-always-on-orchestration.md) | 7 | 36 | 13 | 23 | 0 | 0 | [5](#blockers-road-to-always-on-orchestration) | ██████░░░░ 64% |
+| 1 | [road-to-always-on-orchestration.md](roadmaps/road-to-always-on-orchestration.md) | 7 | 36 | 1 | 35 | 0 | 0 | [5](#blockers-road-to-always-on-orchestration) | ██████████ 97% |
 | 2 | [road-to-capability-answerability.md](roadmaps/road-to-capability-answerability.md) | 4 | 19 | 5 | 14 | 0 | 0 | [1](#blockers-road-to-capability-answerability) | ███████░░░ 74% |
 | 3 | [road-to-ci-native-release-first-run.md](roadmaps/road-to-ci-native-release-first-run.md) | 2 | 8 | 8 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 4 | [road-to-conformance-round5.md](roadmaps/road-to-conformance-round5.md) | 6 | 31 | 10 | 21 | 0 | 0 | [1](#blockers-road-to-conformance-round5) | ███████░░░ 68% |
@@ -44,7 +44,7 @@
 
 ### [road-to-always-on-orchestration.md](roadmaps/road-to-always-on-orchestration.md)
 
-**Road to always-on orchestration — subagents, council, and team stop being features and become how this suite works** — 23 / 36 done (64%)
+**Road to always-on orchestration — subagents, council, and team stop being features and become how this suite works** — 35 / 36 done (97%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
@@ -54,7 +54,7 @@
 | 4 | verdict handoff + the wiring the resolved blocker was waiting for | ✅ done | 0 | 3 | 0 | 0 | 100% |
 | 5 | team readiness: verify first, doctrine second | 🟡 in progress | 1 | 3 | 0 | 0 | 75% |
 | 6 | the measurement that replaces the switch | ✅ done | 0 | 2 | 0 | 0 | 100% |
-| 7 | what this roadmap will not do | ⬜ not started | 12 | 0 | 0 | 0 | 0% |
+| 7 | what this roadmap will not do | ✅ done | 0 | 12 | 0 | 0 | 100% |
 
 <a id="blockers-road-to-always-on-orchestration"></a>
 **Blockers**
@@ -88,7 +88,7 @@
   - **What to do:**
     run the 5.1 spike, then bind the concerns with the same fail-open
     discipline as the #1223 set.
-  - **Resolved when:** payload evidence exists and the concerns ship, or teams leave the experimental state and this re-cuts.
+  - **Resolved when:** payload evidence exists and the concerns ship, or teams leave the experimental state and this re-cuts. - **Probed 2026-08-09:** `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS` is unset on this host — condition unchanged, 5.4 stays open.
 - **cross-vendor-worker-slices** (owner: maintainer) — blocks routing ordinary work slices to second-vendor CLI workers (huge-context analysis, independence-critical review — Source G shape)
   - **What to do:**
     exist; before any cross-vendor worker ships, write the direction policy
