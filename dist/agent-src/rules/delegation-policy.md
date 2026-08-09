@@ -77,11 +77,35 @@ primitive → run in-session (clean no-op).
    ordered slice never dispatches before its declared parent's return is
    verified. Both per
    [`subagent-steering`](../contexts/execution/subagent-steering.md).
-6. **Record** telemetry after each dispatch — run `orchestration_record`
-   (one validated line: spawn_count, token_delta + provenance, tier, task_class)
-   per [`orchestration-telemetry`](../contexts/execution/orchestration-telemetry.md)
-   § Emit. This is the agent-behavioral capture the savings report reads;
-   skipping it leaves the value-of-orchestration question unmeasured.
+6. **Record** telemetry after each dispatch — on hook-capable hosts the
+   `orchestration-record` concern (`post_tool_use`) emits the line
+   deterministically for every Agent/Task completion; on hosts without the
+   slot, run `orchestration_record` yourself (one validated line: spawn_count,
+   token_delta + provenance, tier, task_class) per
+   [`orchestration-telemetry`](../contexts/execution/orchestration-telemetry.md)
+   § Emit. Measured before the hook existed: 1 of 370 dispatches captured —
+   the model-carried path alone leaves the value question unmeasured.
+
+## Carriers — how this rule reaches a session (and what stays model-carried)
+
+No host runs the tier-2 rule router, so this file's triggers alone never load
+it. The obligation travels on three carriers instead: the always-loaded
+AGENTS.md line (delegate-by-default + end-review), the `delegation-nudge`
+concern on `user_prompt_submit` (runs `classifyTask` on cheap prompt signals
+and injects a one-line verdict ONLY when the classifier says
+`do-in-parallel`/`do-in-steps` — silence otherwise; delivery on
+`user_prompt_submit` is end-to-end verified), and the `end-review-nudge`
+concern on `stop` (ONE `review_skipped` telemetry line per mutating
+no-review session — verified; its advisory line reaches the dispatcher
+output, but host-side forwarding of stop-slot context to the model is
+unverified, so the model-facing end-review carrier is the AGENTS.md line
+plus this telemetry). The
+capability gate itself resolves from the committed host registry in
+`src/scripts/_lib/host_capability.ts` (settings override wins). What stays
+model-carried, honestly: the decomposition itself, the per-return
+verification, and every dispatch on hosts without hook slots. The nudges are
+advisory by design — whether they change behaviour is measured by the
+telemetry, not assumed.
 
 ## Scope — does NOT
 

@@ -150,9 +150,16 @@ conformant audit-log-v1 line from the counts you already have:
   [--first-pass-success true|false] [--escalated true|false]
 ```
 
-A capture **hook** is the wrong tool here: the PostToolUse payload carries no
-subagent token usage — only the orchestrator sees it (via the run result) — and
-a hook would reverse the 2026-06-30 no-hook decision. Reader:
+A capture **hook** is now the primary path where the host has a
+`post_tool_use` slot: the 2026-08-07 transcript backfill measured that
+SYNCHRONOUS dispatch results DO carry `resolvedModel` / `totalTokens` /
+`usage` — the 2026-06-30 "payload carries no usage" premise held only for
+async dispatches, which stay metrics-absent. The `orchestration-record`
+concern (`src/scripts/hooks/orchestration_record_hook.ts`, registered in
+`hook_manifest.yaml`) emits the line deterministically on every Agent/Task
+completion; measured model-carried capture before it existed was 1 of 370
+dispatches (0.27 %). The CLI above stays for hosts without the slot and for
+orchestrator-side records the hook cannot see. Reader:
 `src/scripts/orchestration_savings_report.ts`.
 
 **`token_delta` sourcing priority:**
