@@ -1,0 +1,22 @@
+# Findings: orchestrator-discipline-closeout
+<!-- completion-review: v1 | reviewed: 2026-08-09 | scope: 1afc84fff2c43d262d971fe64d593c016988fd1ac156955bf3ba5b31dc9cd024 | diff: e01b6f284affa9bab5ec323e1c9c415962366fb7 | reviewer: r2-fresh-subagent-orchestrator-discipline-closeout | prompt_hash: 04673167ce35b51776114c546c68d7aafd99ca60ba56e529d29a8aabad7e74d7 -->
+
+<!-- context-manifest: v1
+inputs:
+  diff_sha: e01b6f284affa9bab5ec323e1c9c415962366fb7
+  scope_hash: 1afc84fff2c43d262d971fe64d593c016988fd1ac156955bf3ba5b31dc9cd024
+  roadmap: none
+  roadmap_hash: none
+  ac_hash: none
+excluded: [session-history, agents/runtime, implementation-context]
+tools: [git-diff-branch-scoped, file-read-branch-paths]
+dispatched: 2026-08-09T10:30:00Z
+-->
+
+| # | Severity | File:Line | Finding | Status | Reason/Ref |
+|---|----------|-----------|---------|--------|------------|
+| 1 | medium | src/scripts/routing_doctor.ts:518 | The two-readers disagreement is removed in one direction and created in the other. `platform` is never detected from the environment — `main()` hard-defaults it to `"claude"` and only `--platform` overrides it. Since :220 now keys capability resolution on that same string, `routing:doctor` run with no flag on a non-Claude host reports the Claude registry row (`subagent_spawn: true`) while `delegation_nudge_hook`, which reads the real envelope `platform`, resolves `false` for that host. The docstring's claim at :197-198 ("mirrors exactly what the delegation layer would resolve") is false for that invocation, and `_render` (:483) prints only the resolved boolean with no indication that it came from an assumed platform rather than an observed one — so the misdiagnosis is unfalsifiable from the output. | open | |
+| 2 | medium | tests/scripts/routing_doctor.test.ts:167 | The added comment claims "the two cases below pin both halves of the resolution order, so a future edit cannot re-introduce the disagreement by touching only one reader", but neither new case discriminates the settings-override half. The pre-existing test at :141-166 writes `host_capabilities.subagent_spawn: true` on platform `claude` — a value the committed registry now also yields — so its assertion passes even if the override argument were dropped. The two new cases (:174 registry-hit, :189 registry-miss) both run with no settings file. Net effect: deleting `sub["host_capabilities"]` from the `resolveHostCapabilities` call at routing_doctor.ts:220 leaves all three doctor tests green. A discriminating case (override `false` on a known host, or override `true` on an unknown host) is missing. | open | |
+| 3 | medium | agents/roadmaps/archive/road-to-orchestrator-discipline-carriers.md:320 | The roadmap is archived with all three blockers still `Status: open`, and the dashboard drops them from tracking in the same change (`agents/roadmaps-progress.md:5`, open blockers 24 → 21; the `blockers-road-to-orchestrator-discipline-carriers` section deleted). `f4-full-blocking-decision` is not inert: it is cited as the owner of the unverified stop-slot delivery question by Phase 5's own exit note (:332) and by AC-5 (:534-536). After archival no tracked surface enumerates it, so an open decision that other shipped text defers to becomes invisible. | open | |
+| 4 | low | src/scripts/routing_doctor.ts:213 | The new third parameter is declared optional (`platform?`, a nullable string union) on an exported function whose own docstring (:201-202) states "It must be threaded in, not defaulted here". Omitting the argument silently reproduces the exact pre-fix behaviour (registry skipped → all-false) instead of failing to compile. A required parameter would make the regression this change fixes uncompilable rather than merely discouraged by a comment. | open | |
+| 5 | low | agents/roadmaps/archive/road-to-orchestrator-discipline-carriers.md:351 | Acceptance criterion 1 is checked `[x]` while its own verification note (:485-488) records that the `ask` verdict it asserts holds only for the no-settings-file case, and that a consumer carrying the shipped template (`auto: "on"`) lands on `dispatch` instead. The criterion text still reads "A fresh clone … the fresh-clone verdict is `ask`", and the test that pins it (tests/scripts/routing_doctor.test.ts:174) uses an empty tmpdir rather than an installed tree — so criterion, evidence, and test disagree about what "fresh clone" denotes. | open | |
