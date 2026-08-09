@@ -56,15 +56,17 @@ parallel subagents **by default** and keep working while they run (async), rathe
 than blocking on each return — intervene only if one goes off track. Engage per
 [`rdp-gate`](../../contexts/execution/rdp-gate.md).
 
-### Settings-gated auto-dispatch
+### Always-on auto-dispatch
 
 "By default" is governed by the [`delegation-policy`](../../rules/delegation-policy.md)
 rule — the single source of the auto-trigger. It gates on the activation context
 ([`auto-orchestration-activation`](../../contexts/execution/auto-orchestration-activation.md)):
-dispatch only when `subagents.enabled`, `subagents.auto != off`, the host
+dispatch only when `emergency.orchestration_halt` is not set, the host
 manifest reports `subagent_spawn: true`, and the task is classified delegable.
-`auto: ask` → ask once; `auto: on` → surface mode + per-subtask tiers in one
-line; any gate failing → in-session no-op. Never lifts a safety floor.
+A matched signal → dispatch, surfacing mode + per-subtask tiers in one line;
+an ambiguous verdict → ask, always; any gate failing → in-session no-op.
+There is no more per-layer on/off setting (always-on orchestration). Never
+lifts a safety floor.
 
 ## Worker-prompt contract
 
@@ -326,7 +328,7 @@ After every auto-dispatched run, write one audit-log-v1 line
 never hand-author the JSON. Line shape, field semantics, recorder
 invocation, and `token_delta` sourcing priority →
 [`orchestration-telemetry` § Emit procedure](../../agent-src/contexts/execution/orchestration-telemetry.md).
-Skip emit when `subagents.enabled: false` or `spawn_count == 0`
+Skip emit when `emergency.orchestration_halt` is set or `spawn_count == 0`
 (in-session run).
 
 ## Gotcha

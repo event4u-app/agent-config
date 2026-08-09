@@ -23,7 +23,7 @@ import {
     type TaskSignals,
 } from './auto_dispatch.js';
 
-const ON: ActivationInputs = { enabled: true, auto: 'on', subagent_spawn: true };
+const ON: ActivationInputs = { halted: false, subagent_spawn: true };
 
 /** Corpus signals transcribed from each task's documented "Classification signal". */
 const CORPUS: Array<{

@@ -27,16 +27,16 @@ repo. On Claude Code hosts it delegates to the official plugin's
 `/codex:rescue`. This is the **only wrapper that delegates write access**,
 so it carries a second opt-in on top of the family gate.
 
-### 1. Gate — `ai_team.enabled`
+### 1. Gate — `/team` availability
 
-Read `ai_team.enabled` from `.agent-settings.yml`. Missing or `false` →
-print the enable pointer from `/team` (master) § "Default-off gate" and
-**STOP**.
+Run the availability check from `/team` (master) § "Availability gate":
+codex CLI + auth, and `emergency.orchestration_halt`. Either check fails →
+print the matching block and **STOP**.
 
 ### 2. Gate — `ai_team.allow_delegate` (second opt-in)
 
 Read `ai_team.allow_delegate`. Missing or `false` (the shipped default) →
-refuse with the enable pointer and **STOP**:
+refuse with the opt-in pointer and **STOP**:
 
 > `/team delegate` is disabled (`ai_team.allow_delegate: false`, the
 > default). It is the only team-mode wrapper that hands **write access** to
@@ -44,15 +44,15 @@ refuse with the enable pointer and **STOP**:
 >
 > ```yaml
 > ai_team:
->   enabled: true
 >   allow_delegate: true
 > ```
 >
 > Key reference: `docs/contracts/ai-team-config.md`.
 
 Deterministic mirror of gates 1+2: `npx tsx src/scripts/ai_team/team_dispatch.ts
---delegate-gate` exits non-zero (with the pointer on stderr) unless BOTH flags
-are true — run it instead of hand-parsing the YAML when a shell is available.
+--delegate-gate` exits non-zero (with the pointer on stderr) unless `/team`
+is available AND `allow_delegate` is true — run it instead of hand-parsing
+the YAML when a shell is available.
 
 ### 3. Gate — plugin presence (fail closed)
 
@@ -91,14 +91,15 @@ opens a PR on top of them.
 ## Output format
 
 - The plugin's rescue/delegation result, verbatim.
-- Gate failures print exactly one block (enable pointer, allow_delegate
-  refusal, or fail-closed block) and stop.
+- Gate failures print exactly one block (availability/halt block,
+  allow_delegate refusal, or fail-closed block) and stop.
 
 ## Do NOT
 
-- Do NOT run when `ai_team.enabled` is false — enable pointer, stop.
+- Do NOT run when `/team` is unavailable (codex CLI/auth missing) or
+  halted — matching block, stop.
 - Do NOT run when `ai_team.allow_delegate` is false — refusal block, stop.
-  Never treat `enabled: true` alone as delegate authorization.
+  Never treat availability alone as delegate authorization.
 - Do NOT reimplement the worker inline when the plugin is absent — fail
   closed with the doctor pointer.
 - Do NOT commit, push, or open a PR over the worker's edits — review is the

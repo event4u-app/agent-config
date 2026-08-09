@@ -144,11 +144,14 @@ dashboards alone look fine while quality regresses.
 ## Kill-switch
 
 ```
-subagents.enabled: false   (or  subagents.auto: off)
+emergency.orchestration_halt: true
 ```
 
-A single, no-deploy settings flip fully disables the layer (`isLayerDisabled()`).
-This is the canonical disable — no code change, effective on the next run.
+A single, no-deploy settings flip fully disables the layer (`isLayerDisabled()`)
+for the duration of an incident — the one audited switch that survives
+always-on orchestration (road-to-always-on-orchestration Phase 1;
+`docs/contracts/settings-classes.md` § "The one exception"). Disarming it
+requires a non-empty `emergency.orchestration_halt_justification`.
 
 ## Reference implementation
 

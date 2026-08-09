@@ -15,7 +15,7 @@ type: orchestrator
 suggestion:
   eligible: true
   trigger_description: "second model, GPT drüberschauen lassen, cross-model review, review gate, let another strong model check the diff, team review"
-  trigger_context: "ai_team.enabled is true AND the user wants a second strong model to review the actual working-tree diff with repo access (depth) — not a neutral artefact opinion (that is /council)"
+  trigger_context: "/team is available (codex CLI installed + authenticated, not halted) AND the user wants a second strong model to review the actual working-tree diff with repo access (depth) — not a neutral artefact opinion (that is /council)"
 workspaces:
   - agent-config-maintainer
 packs:
@@ -55,25 +55,33 @@ pre-registered benchmark (§ No-claims note).
 | Model choice | Mid-tier default (cost decision) | Strongest available — `ai_team.model: 'auto'` defers to the CLI default |
 | Write access | Never (text only; one opt-in PR comment under `pr`) | Read-only by default; `/team delegate` is the single write path, behind a second opt-in |
 
-## Default-off gate — check FIRST, before anything else
+## Availability gate — check FIRST, before anything else
 
-Read `ai_team.enabled` from `.agent-settings.yml`. Missing key or `false`
-(the shipped default) → print the enable pointer and **STOP**. Do not route,
-do not suggest a sub-command, do not probe for the plugin:
+`/team` carries no on/off setting — `ai_team.enabled` was REMOVED
+(road-to-always-on-orchestration Phase 1, Step 1.3). Availability is a FACT
+resolved from the machine: the codex CLI must resolve on `$PATH`, AND some
+auth for it must be detectable (subscription login, API key, key file, or
+env key) — the same check `agent-config doctor --check team` runs. Missing
+either → print the degrade line and **STOP**. Do not route, do not suggest
+a sub-command, do not probe for the plugin:
 
-> Team mode is disabled (`ai_team.enabled: false`, the default).
-> Enable it in `.agent-settings.yml`:
->
-> ```yaml
-> ai_team:
->   enabled: true
-> ```
->
-> Key reference: `docs/contracts/ai-team-config.md`. Then run
-> `agent-config doctor --check team` to verify plugin + auth setup.
+> codex CLI not available — `/team` needs the codex CLI installed and
+> authenticated. Install: `npm install -g @openai/codex`, then run
+> `codex login`. Verify with `agent-config doctor --check team`.
+
+Also check the one incident switch: `emergency.orchestration_halt: true`
+in `.agent-settings.yml` halts `/team` along with the rest of the always-on
+orchestration stack (subagents, council, team). Halted → print:
+
+> `/team` is halted (`emergency.orchestration_halt: true`) — the always-on
+> orchestration stack is paused for incident response. Resume: set
+> `orchestration_halt: false` with a non-empty
+> `orchestration_halt_justification` in `.agent-settings.yml`.
 
 Every sub-command repeats this check independently — the gate holds even when
-a wrapper is invoked directly.
+a wrapper is invoked directly. A leftover `ai_team.enabled` key from an
+older install is ignored (one deprecation-warning line on load) — it no
+longer gates anything.
 
 ## Sub-commands
 
@@ -89,7 +97,8 @@ rather than routing to an in-suite skill — the second column names that target
 
 ## Dispatch
 
-1. Run the default-off gate above. Disabled → enable pointer, stop.
+1. Run the availability gate above. Unavailable or halted → the matching
+   one-line block, stop.
 2. Parse the user's argument: `/team <sub-command> [args]`.
 3. Look up the sub-command in the table above; load the routed file and
    follow its `## Instructions` verbatim with the remaining args.
@@ -106,7 +115,7 @@ When the official plugin is absent on a Claude Code host, every wrapper
 fails **closed** with the doctor remediation pointer — never a silent no-op,
 never an inline reimplementation of the plugin:
 
-> ❌ Team mode is enabled, but the official plugin is not installed on this
+> ❌ `/team` is available, but the official plugin is not installed on this
 > Claude Code host. `/team <sub>` fails closed — it never reimplements the
 > plugin inline and never silently no-ops.
 >
@@ -156,4 +165,5 @@ measured improvement.
 - `adversarial-review` skill — the free single-model first rung below
   `/team adversarial`.
 - `docs/contracts/ai-team-config.md` — the `ai_team` settings block
-  (`enabled`, `model`, `allow_delegate`, `max_calls_per_day`).
+  (`model`, `allow_delegate`, `max_calls_per_day`) and the availability
+  contract (codex CLI + auth, `emergency.orchestration_halt`).

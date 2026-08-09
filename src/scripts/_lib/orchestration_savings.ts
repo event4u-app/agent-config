@@ -212,7 +212,7 @@ export function aggregateOrchestrationSavings(
 
     // Honest caveats — always attached so a consumer never over-reads the number.
     if (report.dispatches === 0) {
-        report.notes.push('No orchestration telemetry yet (0 dispatches). Data accrues as `subagents.auto: on` delegates real slices (recorded via orchestration_record).');
+        report.notes.push('No orchestration telemetry yet (0 dispatches). Data accrues as delegable slices dispatch (always-on orchestration; recorded via orchestration_record).');
     } else {
         report.notes.push('Token counts are MEASURED but blind to the downshift rate win (same tokens on a cheaper tier ≈ same count). The MODELED cost-% below captures that axis.');
         if (report.by_provenance.estimated.dispatches > 0) {

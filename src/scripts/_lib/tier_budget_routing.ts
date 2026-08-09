@@ -43,7 +43,12 @@ export interface PickTierInputs {
     adequate_tier: BudgetTier;
     /** Per-tier budget state, complete over TIER_ORDER. */
     budgets: Record<BudgetTier, TierBudgetState>;
-    /** subagents.budget_routing setting. */
+    /**
+     * Caller-supplied switch. Formerly sourced from the `subagents.budget_routing`
+     * settings key, deleted by always-on orchestration (Phase 1) — this
+     * function has no production caller today, so the field stays as the
+     * DESIGNED input shape; a future wiring supplies its own source.
+     */
     routing_switch: BudgetRoutingSwitch;
     /** Estimated cost of the dispatch (USD) for the availability check. */
     estimated_cost_usd: number;

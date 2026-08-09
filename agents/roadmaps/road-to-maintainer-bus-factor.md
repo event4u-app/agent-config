@@ -200,9 +200,9 @@ trailing-90-day reviewer count is tracked and reported truthfully.
 > exist), but the repo-admin half (enabling branch protection to require
 > Code-Owner review) and the written-steps-only live dry-run are maintainer
 > actions, left open. Criterion 1 (the dogfooded self-review gate) is OPEN —
-> Phase 1 is blocked on `self-review-gate-cost` (a live AI-review CI workflow
-> needs the maintainer's API-secret + per-PR budget + block-vs-advise teeth
-> decision; not safely shippable blind). The inheritability + honest-reporting
+> its former blocker `self-review-gate-cost` is RESOLVED (2026-07-10, see
+> the blocker record below); what remains is the wiring work itself, not an
+> unblocking decision. The inheritability + honest-reporting
 > slice is complete; the gate + admin + human-dry-run remain. Roadmap stays open.
 
 ## Blockers

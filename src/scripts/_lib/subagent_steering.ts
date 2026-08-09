@@ -26,14 +26,19 @@ export const GUARDRAILS = {
     user_override_rate: 0.3,
 } as const;
 
+/**
+ * Always-on orchestration (road-to-always-on-orchestration Phase 1) removed
+ * the `enabled`/`auto` settings this state used to carry — the only
+ * surviving switch is the audited incident halt.
+ */
 export interface LayerState {
-    enabled: boolean;
-    auto: 'off' | 'ask' | 'on';
+    /** `emergency.orchestration_halt`. */
+    halted: boolean;
 }
 
-/** The kill-switch: layer is disabled when the master switch is off or auto is off. */
+/** The kill-switch: layer is disabled only during an active emergency halt. */
 export function isLayerDisabled(state: LayerState): boolean {
-    return !state.enabled || state.auto === 'off';
+    return state.halted;
 }
 
 /** N=3 per-target budget: halt once consecutive failed attempts reach the cap. */

@@ -196,17 +196,18 @@ describe('modes — the four-layer precedence chain, both shapes', () => {
 });
 
 describe('modes — the two defaults are distinct and both documented', () => {
-    it('the built-in fallback is the free transport, not the billable one', () => {
+    it('the built-in fallback is the free transport, not the billable/auto one', () => {
         // A caller who supplied no transport preference has not asked to spend
-        // money. The loader's `defaults.mode` default (`api`) is a different
-        // layer and is asserted in config.test.ts.
+        // money. The loader's `defaults.mode` default (`auto`, since
+        // road-to-always-on-orchestration Phase 3.1) is a different layer.
         expect(DEFAULT_MODE).toBe('manual');
         expect(resolve_mode('anthropic')).toBe('manual');
     });
 
     it('the loader default only reaches the resolver as an explicit global', () => {
-        // Once a config file exists, `defaults.mode` is always populated, so
-        // layer 3 wins and the built-in fallback is not consulted.
-        expect(resolve_mode('anthropic', { globalMode: 'api' })).toBe('api');
+        // Once a config file exists, `defaults.mode` is always populated
+        // (`auto` since the Phase 3.1 flip), so layer 3 wins and the built-in
+        // fallback is not consulted.
+        expect(resolve_mode('anthropic', { globalMode: 'auto' })).toBe('auto');
     });
 });

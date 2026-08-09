@@ -29,11 +29,11 @@ attacker — a second strong model with repo access instead of the host model
 critiquing itself. Use it as the **escalation rung**: single-model
 self-review found nothing, or the stakes are high.
 
-### 1. Gate — `ai_team.enabled`
+### 1. Gate — `/team` availability
 
-Read `ai_team.enabled` from `.agent-settings.yml`. Missing or `false` →
-print the enable pointer from `/team` (master) § "Default-off gate" and
-**STOP**.
+Run the availability check from `/team` (master) § "Availability gate":
+codex CLI + auth, and `emergency.orchestration_halt`. Either check fails →
+print the matching block and **STOP**.
 
 ### 2. Gate — plugin presence (fail closed)
 
@@ -73,12 +73,13 @@ on quota exhaustion surface the transport's refusal, do not retry.
 ## Output format
 
 - The plugin's adversarial findings, verbatim.
-- Gate failures print exactly one block (enable pointer or fail-closed
-  block) and stop.
+- Gate failures print exactly one block (availability/halt block or
+  fail-closed block) and stop.
 
 ## Do NOT
 
-- Do NOT run when `ai_team.enabled` is false — enable pointer, stop.
+- Do NOT run when `/team` is unavailable (codex CLI/auth missing) or
+  halted — matching block, stop.
 - Do NOT reimplement the adversarial pass inline when the plugin is absent —
   fail closed with the doctor pointer.
 - Do NOT skip the free first rung reflexively — the single-model

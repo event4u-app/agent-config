@@ -15,7 +15,12 @@
 //     responses/) cannot run without editing the twin. The rounds chain's
 //     reachable surface — `cmd_run` without `--confirm` returns 0 before any
 //     output write — is covered here; the confirm-write variants are noted as
-//     blocked-by-export, not silently skipped.
+//     blocked-by-export, not silently skipped. The one exception:
+//     `_postRunQuorum` — the pure post-run presence/quorum re-derivation
+//     `cmd_run --confirm` calls right after `consult()` — IS exported, so it
+//     is tested directly against constructed `members`/`responses` fixtures
+//     (the `_postRunQuorum` describe block below), without going through
+//     `cmd_run`'s file-write path at all.
 //   • `build_members` siblings POSITIVE fan-out (constructs N real API clients)
 //     needs the `AnthropicClient` ctor to accept a key; the Python test
 //     monkeypatches `council_cli.AnthropicClient`, which in TS is an import
@@ -34,12 +39,18 @@ import {
     ExternalAIClient,
 } from '../../../src/scripts/ai_council/clients.js';
 import type { Price, PriceTable } from '../../../src/scripts/ai_council/pricing.js';
+import type { EnvironmentReport } from '../../../src/scripts/_lib/environment_detector.js';
+import { load_council_config } from '../../../src/scripts/ai_council/config.js';
+import type { QuorumResult } from '../../../src/scripts/ai_council/quorum.js';
 import {
     CouncilDisabledError,
     build_members,
     cmd_debate,
+    cmd_render,
     cmd_run,
     _parse_siblings_overrides,
+    _synthesize_ai_council_block,
+    _postRunQuorum,
 } from '../../../src/scripts/council_cli.js';
 
 
@@ -305,6 +316,425 @@ describe('build_members siblings validation', () => {
     });
 });
 
+// ── build_members — mode: auto (road-to-always-on-orchestration Phase 3.1) ──
+//
+// Regression cover for the break a predecessor session reproduced live: the
+// loader default flipped `defaults.mode` from `'api'` to `'auto'`
+// (`config.ts::_build_defaults`), but this file's hand-rolled
+// `mode === 'api' | 'cli' | 'manual'` switch had no `'auto'` case — every
+// enabled member fell through to the final `else` and killed the whole
+// invocation, even on a config that never named a transport at all.
+// `environment_report` is the test-only DI knob (mirrors the existing
+// `settings`/`members`/`table` pattern on `cmd_run`/`cmd_estimate`) that lets
+// these tests exercise the `auto` chain deterministically instead of poking
+// real `$PATH` / `$HOME` / env-key state that differs per machine and per CI
+// run.
+
+/** No CLI binary, no auth, no key — every provider is unresolvable via `auto`. */
+function emptyReport(): EnvironmentReport {
+    return { hosts: [], auth: [], keys: [] };
+}
+
+const _TEST_KEY_VAR = 'COUNCIL_CLI_TEST_KEY';
+
+describe('build_members — mode: auto', () => {
+    afterEach(() => {
+        delete process.env[_TEST_KEY_VAR];
+    });
+
+    it('resolves via the api-key rung instead of throwing on the literal mode=auto', () => {
+        process.env[_TEST_KEY_VAR] = 'sk-test-key';
+        const settings = {
+            ai_council: {
+                enabled: true,
+                mode: 'auto',
+                members: {
+                    anthropic: {
+                        enabled: true,
+                        model: 'claude-sonnet-4-5',
+                        api_key_ref: `env:${_TEST_KEY_VAR}`,
+                    },
+                },
+            },
+        };
+        const members = build_members(settings, { environment_report: emptyReport() });
+        expect(members).toHaveLength(1);
+        expect((members[0] as { transport?: string }).transport).toBe('api');
+    });
+
+    it('records absent (with a machine-readable AbsentReason) rather than crashing when nothing resolves', () => {
+        const settings = {
+            ai_council: {
+                enabled: true,
+                mode: 'auto',
+                members: { anthropic: { enabled: true, model: 'claude-sonnet-4-5' } },
+            },
+        };
+        const skipped: Record<string, unknown>[] = [];
+        // Every enabled member ends up absent, so this still throws — but with
+        // the graded-degradation reason, never the old "no transport — mode=auto"
+        // crash that fired regardless of whether the member could ever work.
+        expect(() =>
+            build_members(settings, { environment_report: emptyReport(), skipped }),
+        ).toThrow(/no council member could be constructed/);
+        expect(skipped).toHaveLength(1);
+        expect(skipped[0]?.['member']).toBe('anthropic');
+        expect(skipped[0]?.['reason']).toBe('no_binary');
+    });
+
+    it('one absent + one present member: the pass continues instead of being killed, and quorum concludes (majority of 2 = 1)', () => {
+        process.env[_TEST_KEY_VAR] = 'sk-test-key';
+        const settings = {
+            ai_council: {
+                enabled: true,
+                mode: 'auto',
+                members: {
+                    anthropic: {
+                        enabled: true,
+                        model: 'claude-sonnet-4-5',
+                        api_key_ref: `env:${_TEST_KEY_VAR}`,
+                    },
+                    openai: { enabled: true, model: 'gpt-4o' },
+                },
+            },
+        };
+        const skipped: Record<string, unknown>[] = [];
+        const quorum_out: { result: QuorumResult | null } = { result: null };
+        const members = build_members(settings, {
+            environment_report: emptyReport(),
+            skipped,
+            quorum_out,
+        });
+        expect(members.map((m) => m.name)).toEqual(['anthropic']);
+        expect(skipped).toHaveLength(1);
+        expect(skipped[0]?.['member']).toBe('openai');
+        expect(skipped[0]?.['reason']).toBe('no_binary');
+        expect(quorum_out.result).toEqual({
+            status: 'concluded',
+            threshold: 1,
+            total: 2,
+            present: 1,
+        });
+    });
+
+    it('an explicit `quorum: 2` makes the same partial pass INCONCLUSIVE instead of concluded', () => {
+        process.env[_TEST_KEY_VAR] = 'sk-test-key';
+        const settings = {
+            ai_council: {
+                enabled: true,
+                mode: 'auto',
+                quorum: 2,
+                members: {
+                    anthropic: {
+                        enabled: true,
+                        model: 'claude-sonnet-4-5',
+                        api_key_ref: `env:${_TEST_KEY_VAR}`,
+                    },
+                    openai: { enabled: true, model: 'gpt-4o' },
+                },
+            },
+        };
+        const quorum_out: { result: QuorumResult | null } = { result: null };
+        build_members(settings, { environment_report: emptyReport(), quorum_out });
+        expect(quorum_out.result).toEqual({
+            status: 'inconclusive',
+            threshold: 2,
+            total: 2,
+            present: 1,
+        });
+    });
+
+    // m2 fix (independent-review finding): `resolveMemberTransport`'s `auto`
+    // chain defaults `apiKeyPresent` to "a key-file or env-key auth record
+    // exists for this provider" (`hasSource` over the environment report)
+    // whenever the member config carries no explicit `api_key_ref` at all.
+    // gemini's OWN construction contract is stricter — `_construct_api_member`
+    // requires an EXPLICIT `api_key_ref` and refuses the legacy-fallback other
+    // providers get. A generic `GEMINI_API_KEY`-shaped env record (detected by
+    // the environment report, injected here to avoid depending on this
+    // machine's real env) satisfying the permissive auto-chain read while
+    // `api_key_ref` was never configured used to throw `CouncilDisabledError`
+    // UNCAUGHT — killing the whole pass instead of marking gemini absent.
+    it('gemini resolves transport=api via a generic env-key record but has no configured api_key_ref: absent, pass continues', () => {
+        process.env[_TEST_KEY_VAR] = 'sk-test-key';
+        const settings = {
+            ai_council: {
+                enabled: true,
+                mode: 'auto',
+                members: {
+                    anthropic: {
+                        enabled: true,
+                        model: 'claude-sonnet-4-5',
+                        api_key_ref: `env:${_TEST_KEY_VAR}`,
+                    },
+                    gemini: { enabled: true, model: 'gemini-2.5-pro' },
+                },
+            },
+        };
+        const reportWithGeminiEnvKey: EnvironmentReport = {
+            hosts: [],
+            auth: [{ provider: 'gemini', source: 'env-key', evidence: 'env:GEMINI_API_KEY' }],
+            keys: [],
+        };
+        const skipped: Record<string, unknown>[] = [];
+        const members = build_members(settings, {
+            environment_report: reportWithGeminiEnvKey,
+            skipped,
+        });
+        expect(members.map((m) => m.name)).toEqual(['anthropic']);
+        expect(skipped).toHaveLength(1);
+        expect(skipped[0]?.['member']).toBe('gemini');
+        expect(skipped[0]?.['reason']).toBe('no_auth');
+        expect(skipped[0]?.['detail']).toMatch(/api_key_ref/);
+    });
+});
+
+// ── _synthesize_ai_council_block — quorum forwarding ───────────────────
+//
+// `config.ts::_build_config` already validated `cfg.quorum`, but the
+// synthesized block never forwarded it — `build_members` always saw
+// `ai['quorum'] === undefined` and silently fell back to `'majority'`
+// regardless of what the user configured.
+
+describe('_synthesize_ai_council_block — quorum', () => {
+    it('forwards a configured integer quorum into the synthesized block', () => {
+        const dir = mkTmp();
+        const yamlPath = path.join(dir, '.ai-council.yml');
+        fs.writeFileSync(
+            yamlPath,
+            [
+                'enabled: true',
+                'defaults:',
+                '  mode: api',
+                'cost_budget:',
+                '  max_total_usd: 20.0',
+                'quorum: 2',
+                'members:',
+                '  anthropic:',
+                '    enabled: true',
+                '    model: claude-x',
+                '    api_key_ref: env:ANTHROPIC_KEY',
+                '',
+            ].join('\n'),
+            'utf-8',
+        );
+        const cfg = load_council_config(yamlPath);
+        expect(cfg.quorum).toBe(2);
+        const synthesized = _synthesize_ai_council_block(cfg);
+        expect(synthesized['quorum']).toBe(2);
+    });
+
+    it('defaults to majority when the config omits quorum', () => {
+        const dir = mkTmp();
+        const yamlPath = path.join(dir, '.ai-council.yml');
+        fs.writeFileSync(
+            yamlPath,
+            [
+                'enabled: true',
+                'defaults:',
+                '  mode: api',
+                'cost_budget:',
+                '  max_total_usd: 20.0',
+                'members:',
+                '  anthropic:',
+                '    enabled: true',
+                '    model: claude-x',
+                '    api_key_ref: env:ANTHROPIC_KEY',
+                '',
+            ].join('\n'),
+            'utf-8',
+        );
+        const cfg = load_council_config(yamlPath);
+        const synthesized = _synthesize_ai_council_block(cfg);
+        expect(synthesized['quorum']).toBe('majority');
+    });
+});
+
+// ── cmd_render — handoff round-trip (road-to-always-on-orchestration Phase 4.1) ──
+//
+// `cmd_run` writes `payload['handoff']`; `cmd_render` reads it back and
+// forwards it to `render()`. This exercises that round-trip at the file
+// boundary WITHOUT going through `cmd_run --confirm` — `_validate_council_output_path`
+// pins `cmd_run`'s own `--output` under the repo's real
+// `agents/runtime/council/responses/` (not monkeypatchable, per the
+// faithful-port scope note at the top of this file), but `cmd_render`'s
+// `--responses` INPUT carries no such restriction, so a hand-built payload
+// under `mkTmp()` is a faithful, disk-isolated proxy for what `cmd_run` would
+// have written.
+
+function captureStdout(fn: () => number): { rc: number; out: string } {
+    const captured: string[] = [];
+    const origWrite = process.stdout.write.bind(process.stdout);
+    process.stdout.write = ((chunk: string | Uint8Array): boolean => {
+        captured.push(typeof chunk === 'string' ? chunk : Buffer.from(chunk).toString('utf-8'));
+        return true;
+    }) as typeof process.stdout.write;
+    let rc: number;
+    try {
+        rc = fn();
+    } finally {
+        process.stdout.write = origWrite;
+    }
+    return { rc, out: captured.join('') };
+}
+
+describe('cmd_render — handoff round-trip', () => {
+    it('a payload carrying a populated handoff block renders the Handoff section', () => {
+        const dir = mkTmp();
+        const responsesPath = path.join(dir, 'responses.json');
+        fs.writeFileSync(
+            responsesPath,
+            JSON.stringify({
+                schema_version: 1,
+                mode: 'prompt',
+                responses: [{ provider: 'anthropic', model: 'claude-x', input_tokens: 1, output_tokens: 1, latency_ms: 1, error: null, text: 'hi' }],
+                handoff: {
+                    decision: 'ship now',
+                    rejected_alternatives: [{ option: 'wait a sprint', reason: 'backed by 0 member(s), weight 0.00 of 1.33 needed to conclude' }],
+                    constraints: null,
+                },
+            }),
+            'utf-8',
+        );
+        const { rc, out } = captureStdout(() => cmd_render({ responses: responsesPath } as Args));
+        expect(rc).toBe(0);
+        expect(out).toContain('### Handoff');
+        expect(out).toContain('**Decision:** ship now');
+        expect(out).toContain('- **wait a sprint** — backed by 0 member(s), weight 0.00 of 1.33 needed to conclude');
+    });
+
+    it('a payload with no `handoff` key at all (pre-Phase-4.1 artefact) renders byte-identically — no Handoff section', () => {
+        const dir = mkTmp();
+        const responsesPath = path.join(dir, 'responses.json');
+        fs.writeFileSync(
+            responsesPath,
+            JSON.stringify({
+                schema_version: 1,
+                mode: 'prompt',
+                responses: [{ provider: 'anthropic', model: 'claude-x', input_tokens: 1, output_tokens: 1, latency_ms: 1, error: null, text: 'hi' }],
+            }),
+            'utf-8',
+        );
+        const { rc, out } = captureStdout(() => cmd_render({ responses: responsesPath } as Args));
+        expect(rc).toBe(0);
+        expect(out).not.toContain('Handoff');
+    });
+
+    it('an honest all-null handoff (attempted, nothing structured found) renders no Handoff section either', () => {
+        const dir = mkTmp();
+        const responsesPath = path.join(dir, 'responses.json');
+        fs.writeFileSync(
+            responsesPath,
+            JSON.stringify({
+                schema_version: 1,
+                mode: 'prompt',
+                stance_tally: true,
+                responses: [{ provider: 'anthropic', model: 'claude-x', input_tokens: 1, output_tokens: 1, latency_ms: 1, error: null, text: 'no stance line here' }],
+                handoff: { decision: null, rejected_alternatives: null, constraints: null },
+            }),
+            'utf-8',
+        );
+        const { rc, out } = captureStdout(() => cmd_render({ responses: responsesPath } as Args));
+        expect(rc).toBe(0);
+        expect(out).not.toContain('Handoff');
+        // the underlying Vote Tally block still shows the (unresolved) split —
+        // handoff being empty does not suppress the rest of the report.
+        expect(out).toContain('### Vote Tally');
+    });
+});
+
+// ── cmd_render — quorum / absent_members round-trip (M4, independent-review finding) ──
+//
+// `cmd_run` writes `payload['quorum']` (Phase 3.3) and `payload['absent_members']`
+// (Phase 3.2), but `cmd_render` never read either back — the same
+// forwarded-handoff gap the block above closes for `handoff`, now closed for
+// the graded-degradation fields too.
+
+describe('cmd_render — quorum/absent_members round-trip', () => {
+    it('a payload carrying quorum + absent_members renders both sections', () => {
+        const dir = mkTmp();
+        const responsesPath = path.join(dir, 'responses.json');
+        fs.writeFileSync(
+            responsesPath,
+            JSON.stringify({
+                schema_version: 1,
+                mode: 'prompt',
+                responses: [{ provider: 'anthropic', model: 'claude-x', input_tokens: 1, output_tokens: 1, latency_ms: 1, error: null, text: 'hi' }],
+                quorum: { status: 'inconclusive', threshold: 2, total: 3, present: 1 },
+                absent_members: [
+                    { member: 'openai', reason: 'timeout', detail: 'timeout' },
+                    { member: 'gemini', reason: 'quota', detail: 'cli_quota_exhausted' },
+                ],
+            }),
+            'utf-8',
+        );
+        const { rc, out } = captureStdout(() => cmd_render({ responses: responsesPath } as Args));
+        expect(rc).toBe(0);
+        expect(out).toContain('**Quorum:** 1/3 present, needed 2 — INCONCLUSIVE — release gate holds.');
+        expect(out).toContain('### Absent Members');
+        expect(out).toContain('openai');
+        expect(out).toContain('gemini');
+    });
+
+    it('a payload with no `quorum`/`absent_members` keys at all (pre-Phase-3.2/3.3 artefact) renders byte-identically — no Quorum/Absent section', () => {
+        const dir = mkTmp();
+        const responsesPath = path.join(dir, 'responses.json');
+        fs.writeFileSync(
+            responsesPath,
+            JSON.stringify({
+                schema_version: 1,
+                mode: 'prompt',
+                responses: [{ provider: 'anthropic', model: 'claude-x', input_tokens: 1, output_tokens: 1, latency_ms: 1, error: null, text: 'hi' }],
+            }),
+            'utf-8',
+        );
+        const { rc, out } = captureStdout(() => cmd_render({ responses: responsesPath } as Args));
+        expect(rc).toBe(0);
+        expect(out).not.toContain('Quorum');
+        expect(out).not.toContain('Absent Members');
+    });
+
+    it('a malformed absent_members entry (missing `detail`) is dropped, not thrown', () => {
+        const dir = mkTmp();
+        const responsesPath = path.join(dir, 'responses.json');
+        fs.writeFileSync(
+            responsesPath,
+            JSON.stringify({
+                schema_version: 1,
+                mode: 'prompt',
+                responses: [{ provider: 'anthropic', model: 'claude-x', input_tokens: 1, output_tokens: 1, latency_ms: 1, error: null, text: 'hi' }],
+                absent_members: [{ member: 'openai' }, { member: 'gemini', reason: 'timeout', detail: 'timeout' }],
+            }),
+            'utf-8',
+        );
+        const { rc, out } = captureStdout(() => cmd_render({ responses: responsesPath } as Args));
+        expect(rc).toBe(0);
+        expect(out).toContain('### Absent Members');
+        expect(out).not.toContain('openai');
+        expect(out).toContain('gemini');
+    });
+
+    it('a legacy `reason` outside the AbsentReason enum (e.g. "unavailable") still renders the row, with a null reason', () => {
+        const dir = mkTmp();
+        const responsesPath = path.join(dir, 'responses.json');
+        fs.writeFileSync(
+            responsesPath,
+            JSON.stringify({
+                schema_version: 1,
+                mode: 'prompt',
+                responses: [{ provider: 'anthropic', model: 'claude-x', input_tokens: 1, output_tokens: 1, latency_ms: 1, error: null, text: 'hi' }],
+                absent_members: [{ member: 'openai', reason: 'unavailable', detail: 'exit_1' }],
+            }),
+            'utf-8',
+        );
+        const { rc, out } = captureStdout(() => cmd_render({ responses: responsesPath } as Args));
+        expect(rc).toBe(0);
+        expect(out).toContain('### Absent Members');
+        expect(out).toContain('openai');
+        expect(out).toContain('exit_1');
+    });
+});
+
 // ── cmd_run — estimate-only path (no --confirm, returns before output write) ──
 
 describe('cmd_run', () => {
@@ -339,6 +769,61 @@ describe('cmd_run', () => {
         expect(rc).toBe(0);
         expect(fs.existsSync(out_path)).toBe(false);
         expect(captured.join('')).toContain('No --confirm flag');
+    });
+});
+
+// ── _postRunQuorum — quorum measures usable responses, not construction (M3) ──
+//
+// `cmd_run --confirm` calls this right after `consult()` returns, so
+// `members[i]` and `responses[i]` are always index-aligned in production —
+// the fixtures below preserve that alignment. Regression target: a member
+// that CONSTRUCTED fine (so `build_members`'s pre-run quorum counted it
+// `present`) but whose `ask()` call failed mid-flight must NOT count as
+// present here.
+
+describe('_postRunQuorum', () => {
+    it('both members error → inconclusive (majority of 2 = 1, present = 0)', () => {
+        const members = [
+            new StubMember('anthropic', 'claude-x', new CouncilResponse({ provider: 'anthropic', model: 'claude-x', text: '', error: 'auth_expired' })),
+            new StubMember('openai', 'gpt-x', new CouncilResponse({ provider: 'openai', model: 'gpt-x', text: '', error: 'timeout' })),
+        ];
+        const responses = members.map((m) => m.ask());
+        const { quorum, absent } = _postRunQuorum(members, responses, {});
+        expect(quorum).toEqual({ status: 'inconclusive', threshold: 1, total: 2, present: 0 });
+        expect(absent).toEqual([
+            { member: 'anthropic', reason: 'no_auth', detail: 'auth_expired' },
+            { member: 'openai', reason: 'timeout', detail: 'timeout' },
+        ]);
+    });
+
+    it('one error (quota) + one ok → concluded (majority of 2 = 1, present = 1), absent carries the quota mapping', () => {
+        const members = [
+            new StubMember('anthropic', 'claude-x', new CouncilResponse({ provider: 'anthropic', model: 'claude-x', text: 'a real answer' })),
+            new StubMember('openai', 'gpt-x', new CouncilResponse({ provider: 'openai', model: 'gpt-x', text: '', error: 'cli_quota_exhausted' })),
+        ];
+        const responses = members.map((m) => m.ask());
+        const { quorum, absent } = _postRunQuorum(members, responses, {});
+        expect(quorum).toEqual({ status: 'concluded', threshold: 1, total: 2, present: 1 });
+        expect(absent).toEqual([{ member: 'openai', reason: 'quota', detail: 'cli_quota_exhausted' }]);
+    });
+
+    it('a missing response entry (index past the end of `responses`) counts as absent, never as present', () => {
+        const members = [new StubMember('anthropic', 'claude-x', new CouncilResponse({ provider: 'anthropic', model: 'claude-x', text: 'ok' }))];
+        const { quorum, absent } = _postRunQuorum(members, [], {});
+        expect(quorum).toEqual({ status: 'inconclusive', threshold: 1, total: 1, present: 0 });
+        expect(absent).toEqual([{ member: 'anthropic', reason: 'unavailable', detail: 'no response' }]);
+    });
+
+    it('an explicit `quorum: 2` over 3 members with 2 present is still inconclusive (2 < 2 is false, so this is concluded) — sanity on the setting passthrough', () => {
+        const members = [
+            new StubMember('anthropic', 'claude-x', new CouncilResponse({ provider: 'anthropic', model: 'claude-x', text: 'ok' })),
+            new StubMember('openai', 'gpt-x', new CouncilResponse({ provider: 'openai', model: 'gpt-x', text: 'ok' })),
+            new StubMember('gemini', 'gemini-x', new CouncilResponse({ provider: 'gemini', model: 'gemini-x', text: '', error: 'exit_1' })),
+        ];
+        const responses = members.map((m) => m.ask());
+        const { quorum, absent } = _postRunQuorum(members, responses, { quorum: 2 });
+        expect(quorum).toEqual({ status: 'concluded', threshold: 2, total: 3, present: 2 });
+        expect(absent).toEqual([{ member: 'gemini', reason: 'unavailable', detail: 'exit_1' }]);
     });
 });
 

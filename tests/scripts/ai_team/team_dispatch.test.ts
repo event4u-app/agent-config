@@ -15,6 +15,7 @@ import {
     record_cli_call,
     type SubprocessResult,
 } from '../../../src/scripts/ai_council/clients';
+import { ORCHESTRATION_HALT_MESSAGE, type TeamAvailability } from '../../../src/scripts/ai_team/availability';
 import { build_ai_team_config } from '../../../src/scripts/ai_team/config';
 import {
     assert_delegate_allowed,
@@ -31,6 +32,22 @@ import {
     TeamReviewCliClient,
     truncation_marker,
 } from '../../../src/scripts/ai_team/team_dispatch';
+
+/**
+ * `/team`'s availability is now a codex-CLI/auth FACT
+ * (`ai_team/availability.ts`), not a settings flag — every
+ * `run_team_review` / `assert_delegate_allowed` call in this file injects
+ * this fixed-available override (and `halted: false`) so the transport
+ * tests below exercise the FAKE git/codex seams, never this test runner's
+ * real machine state (which may or may not have the codex CLI installed).
+ * The dedicated "availability gate" describe blocks inject the OPPOSITE
+ * (`available: false` / `halted: true`) to test the gate itself.
+ */
+const AVAILABLE: TeamAvailability = { available: true, reason: null };
+const UNAVAILABLE: TeamAvailability = {
+    available: false,
+    reason: 'codex CLI not available — /team needs the codex CLI installed and authenticated.',
+};
 
 const tmp_dirs: string[] = [];
 
@@ -70,9 +87,13 @@ function fake_git(overrides: Partial<Record<string, string>> = {}): {
     return { run, calls };
 }
 
-/** Enabled config with a tunable ceiling. */
+/**
+ * Baseline `/team` config with a tunable ceiling. `/team`'s on/off state
+ * is no longer a config field (see `AVAILABLE` above) — this only builds
+ * the remaining `AiTeamConfig` (model, allow_delegate, quota, review_gate).
+ */
 function enabled_config(extra: Record<string, unknown> = {}) {
-    return build_ai_team_config({ enabled: true, ...extra });
+    return build_ai_team_config({ ...extra });
 }
 
 /** Fake codex client: real TeamReviewCliClient with `_runSubprocess` patched. */
@@ -191,6 +212,8 @@ describe('render_capability_delta_header', () => {
             { cli_calls_path: path.join(make_tmp(), 'cli-calls.json') },
         );
         run_team_review({
+            availability: AVAILABLE,
+            halted: false,
             config: enabled_config(),
             run_git: run,
             make_client: () => client,
@@ -204,6 +227,8 @@ describe('render_capability_delta_header', () => {
         const lines: string[] = [];
         const { run } = fake_git();
         run_team_review({
+            availability: AVAILABLE,
+            halted: false,
             config: enabled_config(),
             run_git: run,
             manual: true,
@@ -213,49 +238,131 @@ describe('render_capability_delta_header', () => {
     });
 });
 
-// === fail-closed config gate ===============================================
+// === fail-closed availability gate =========================================
+// road-to-always-on-orchestration Phase 1, Step 1.3: `ai_team.enabled` was
+// DELETED. `run_team_review` is now fail-closed on two independent facts —
+// `emergency.orchestration_halt` and codex CLI/auth availability — checked
+// via the injected `halted` / `availability` test seams, never a real probe.
 
-describe('run_team_review — fail-closed when disabled', () => {
-    it('enabled: false (default) → TeamDisabledError with the enable pointer, no git call', () => {
+describe('run_team_review — fail-closed availability gate', () => {
+    it('unavailable (no codex CLI/auth) → TeamDisabledError with the availability reason, no git call', () => {
         const { run, calls } = fake_git();
         expect(() =>
-            run_team_review({ config: build_ai_team_config({}), run_git: run, out: () => {} }),
+            run_team_review({
+                config: enabled_config(),
+                availability: UNAVAILABLE,
+                halted: false,
+                run_git: run,
+                out: () => {},
+            }),
         ).toThrow(TeamDisabledError);
         expect(calls).toEqual([]); // gate fires before any repo access
         try {
-            run_team_review({ config: build_ai_team_config({}), run_git: run, out: () => {} });
+            run_team_review({
+                config: enabled_config(),
+                availability: UNAVAILABLE,
+                halted: false,
+                run_git: run,
+                out: () => {},
+            });
         } catch (exc) {
-            expect((exc as Error).message).toContain('ai_team.enabled: true');
-            expect((exc as Error).message).toContain('.agent-settings.yml');
+            expect((exc as Error).message).toBe(UNAVAILABLE.reason);
         }
+    });
+
+    it('halted (emergency.orchestration_halt) → TeamDisabledError with the halt message, no git call, no availability probe consulted', () => {
+        const { run, calls } = fake_git();
+        expect(() =>
+            run_team_review({
+                config: enabled_config(),
+                availability: AVAILABLE, // even when available, halted wins
+                halted: true,
+                run_git: run,
+                out: () => {},
+            }),
+        ).toThrow(TeamDisabledError);
+        expect(calls).toEqual([]); // gate fires before any repo access
+        try {
+            run_team_review({
+                config: enabled_config(),
+                availability: AVAILABLE,
+                halted: true,
+                run_git: run,
+                out: () => {},
+            });
+        } catch (exc) {
+            expect((exc as Error).message).toBe(ORCHESTRATION_HALT_MESSAGE);
+        }
+    });
+
+    it('available + not halted → gate opens (proceeds to the repo-context bundle)', () => {
+        const { run, calls } = fake_git();
+        expect(() =>
+            run_team_review({
+                config: enabled_config(),
+                availability: AVAILABLE,
+                halted: false,
+                manual: true,
+                run_git: run,
+                out: () => {},
+            }),
+        ).not.toThrow();
+        expect(calls.length).toBeGreaterThan(0); // the gate let the bundle build run
     });
 });
 
 // === delegate double gate ==================================================
+// `assert_delegate_allowed` mirrors the same availability gate, THEN checks
+// `ai_team.allow_delegate` — the one config field that still gates anything.
 
 describe('assert_delegate_allowed — /team:delegate double gate', () => {
-    it('enabled: false (default) → TeamDisabledError; allow_delegate alone never opens the gate', () => {
-        expect(() => assert_delegate_allowed(build_ai_team_config({}))).toThrow(TeamDisabledError);
+    it('unavailable → TeamDisabledError; allow_delegate alone never opens the gate', () => {
         expect(() =>
-            assert_delegate_allowed(build_ai_team_config({ allow_delegate: true })),
+            assert_delegate_allowed(enabled_config(), null, { availability: UNAVAILABLE, halted: false }),
+        ).toThrow(TeamDisabledError);
+        expect(() =>
+            assert_delegate_allowed(enabled_config({ allow_delegate: true }), null, {
+                availability: UNAVAILABLE,
+                halted: false,
+            }),
         ).toThrow(TeamDisabledError);
     });
 
-    it('enabled: true + allow_delegate: false (default) → TeamDelegateDisabledError with the opt-in pointer', () => {
-        expect(() => assert_delegate_allowed(build_ai_team_config({ enabled: true }))).toThrow(
-            TeamDelegateDisabledError,
-        );
+    it('halted → TeamDisabledError with the halt message, even when otherwise available and allow_delegate is true', () => {
+        expect(() =>
+            assert_delegate_allowed(enabled_config({ allow_delegate: true }), null, {
+                availability: AVAILABLE,
+                halted: true,
+            }),
+        ).toThrow(TeamDisabledError);
         try {
-            assert_delegate_allowed(build_ai_team_config({ enabled: true }));
+            assert_delegate_allowed(enabled_config({ allow_delegate: true }), null, {
+                availability: AVAILABLE,
+                halted: true,
+            });
+        } catch (exc) {
+            expect((exc as Error).message).toBe(ORCHESTRATION_HALT_MESSAGE);
+        }
+    });
+
+    it('available + not halted + allow_delegate: false (default) → TeamDelegateDisabledError with the opt-in pointer', () => {
+        expect(() =>
+            assert_delegate_allowed(enabled_config(), null, { availability: AVAILABLE, halted: false }),
+        ).toThrow(TeamDelegateDisabledError);
+        try {
+            assert_delegate_allowed(enabled_config(), null, { availability: AVAILABLE, halted: false });
         } catch (exc) {
             expect((exc as Error).message).toContain('ai_team.allow_delegate: true');
             expect((exc as Error).message).toContain('write access');
         }
     });
 
-    it('both true → gate opens (no throw)', () => {
+    it('available + not halted + allow_delegate: true → gate opens (no throw)', () => {
         expect(() =>
-            assert_delegate_allowed(build_ai_team_config({ enabled: true, allow_delegate: true })),
+            assert_delegate_allowed(enabled_config({ allow_delegate: true }), null, {
+                availability: AVAILABLE,
+                halted: false,
+            }),
         ).not.toThrow();
     });
 });
@@ -268,6 +375,8 @@ describe('run_team_review — manual mode', () => {
         const { run } = fake_git();
         const lines: string[] = [];
         const result = run_team_review({
+            availability: AVAILABLE,
+            halted: false,
             config: enabled_config(),
             run_git: run,
             manual: true,
@@ -322,6 +431,8 @@ describe('run_team_review — envelope (happy parse)', () => {
             { model: 'auto', cli_calls_path: p, max_calls_per_day: 50 },
         );
         const result = run_team_review({
+            availability: AVAILABLE,
+            halted: false,
             config: enabled_config({ max_calls_per_day: 50 }),
             run_git: run,
             make_client: () => client,
@@ -363,6 +474,8 @@ describe('run_team_review — envelope (happy parse)', () => {
             { cli_calls_path: p },
         );
         const result = run_team_review({
+            availability: AVAILABLE,
+            halted: false,
             config: enabled_config(),
             run_git: run,
             make_client: () => client,
@@ -387,6 +500,8 @@ describe('run_team_review — envelope (happy parse)', () => {
             { cli_calls_path: p },
         );
         const result = run_team_review({
+            availability: AVAILABLE,
+            halted: false,
             config: enabled_config(),
             run_git: run,
             make_client: () => client,
@@ -410,6 +525,8 @@ describe('run_team_review — envelope (unparseable output)', () => {
             { cli_calls_path: p },
         );
         const result = run_team_review({
+            availability: AVAILABLE,
+            halted: false,
             config: enabled_config(),
             run_git: run,
             make_client: () => client,
@@ -471,6 +588,8 @@ describe('run_team_review — auth failure (shared _AUTH_FAILURE_PATTERNS)', () 
             { cli_calls_path: p },
         );
         const result = run_team_review({
+            availability: AVAILABLE,
+            halted: false,
             config: enabled_config(),
             run_git: run,
             make_client: () => client,
@@ -493,6 +612,8 @@ describe('run_team_review — auth failure (shared _AUTH_FAILURE_PATTERNS)', () 
             { cli_calls_path: p },
         );
         const result = run_team_review({
+            availability: AVAILABLE,
+            halted: false,
             config: enabled_config(),
             run_git: run,
             make_client: () => client,
@@ -517,6 +638,8 @@ describe('run_team_review — shared quota bucket', () => {
             { cli_calls_path: p, max_calls_per_day: 2 },
         );
         const result = run_team_review({
+            availability: AVAILABLE,
+            halted: false,
             config: enabled_config({ max_calls_per_day: 2 }),
             run_git: run,
             make_client: () => client,
@@ -540,6 +663,8 @@ describe('run_team_review — shared quota bucket', () => {
             { cli_calls_path: p, max_calls_per_day: 50 },
         );
         run_team_review({
+            availability: AVAILABLE,
+            halted: false,
             config: enabled_config(),
             run_git: run,
             make_client: () => client,
@@ -618,6 +743,8 @@ describe('team-review-status.json schema', () => {
             { cli_calls_path: p },
         );
         const result = run_team_review({
+            availability: AVAILABLE,
+            halted: false,
             config: enabled_config(),
             run_git: run,
             make_client: () => client,

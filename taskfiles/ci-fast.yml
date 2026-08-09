@@ -772,6 +772,15 @@ tasks:
     desc: Every settings-template leaf carries an A/B/C class in docs/contracts/settings-classes.md (road-to-zero-ceremony-settings Phase 1)
     cmd: ./scripts-run src/scripts/lint_settings_classes {{.QUIET_FLAG}}
 
+  lint-no-activation-gates:
+    silent: true
+    desc: |
+      Always-on orchestration (road-to-always-on-orchestration Phase 1): the
+      settings template may never reintroduce a per-layer on/off switch for
+      subagents, council, or team — only the one audited incident switch
+      (emergency.orchestration_halt) survives.
+    cmd: ./scripts-run src/scripts/lint_no_activation_gates {{.QUIET_FLAG}}
+
   lint-empty-roadmaps:
     silent: true
     desc: Reject empty (0-byte / whitespace-only) roadmap files under agents/roadmaps/ — backstop against auto-commit 0-byte stubs

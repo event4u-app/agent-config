@@ -36,6 +36,7 @@ import {
 } from '../../../src/scripts/ai_council/orchestrator.js';
 import { load_prices } from '../../../src/scripts/ai_council/pricing.js';
 import { ANTI_CONFORMITY_DIRECTIVE } from '../../../src/scripts/ai_council/prompts.js';
+import { EMPTY_HANDOFF } from '../../../src/scripts/ai_council/handoff.js';
 
 // Records the user_prompt each round so a test can observe what reached a member.
 class CapturingMock extends ExternalAIClient {
@@ -666,5 +667,117 @@ describe('A3 cross-round read unlock — stable prefix + volatile suffix', () =>
         const s = split.splits[1];
         expect(s).not.toBeNull();
         expect(`${s!.stable}${s!.suffix}`).toBe(legacy.prompts[1]);
+    });
+});
+
+// ── road-to-always-on-orchestration Phase 3.2/3.3 — render() additions ───
+
+describe('render — absent_members / quorum sections (Phase 3.2/3.3)', () => {
+    const rs = [new CouncilResponse({ provider: 'anthropic', model: 'm', text: 'pos', latency_ms: 1 })];
+
+    it('omitting both options renders byte-identically to today', () => {
+        const withoutOpts = render(rs, {});
+        const withNulls = render(rs, { absent_members: null, quorum: null });
+        expect(withNulls).toBe(withoutOpts);
+        expect(withoutOpts).not.toContain('Absent Members');
+        expect(withoutOpts).not.toContain('Quorum');
+    });
+
+    it('an empty absent_members array renders nothing new either', () => {
+        expect(render(rs, { absent_members: [] })).not.toContain('Absent Members');
+    });
+
+    it('a populated absent_members list appends a trailing section naming each member and reason', () => {
+        const out = render(rs, {
+            absent_members: [
+                { member: 'openai', reason: 'no_binary', detail: 'codex is not on PATH' },
+                { member: 'gemini', reason: null, detail: 'unclassified' },
+            ],
+        });
+        expect(out).toContain('### Absent Members');
+        expect(out).toContain('**openai** (no_binary) — codex is not on PATH');
+        expect(out).toContain('**gemini** — unclassified');
+        expect(out).not.toContain('gemini** (null)');
+    });
+
+    it('a concluded quorum renders a plain one-liner', () => {
+        const out = render(rs, {
+            quorum: { status: 'concluded', threshold: 1, total: 2, present: 2 },
+        });
+        expect(out).toContain('**Quorum:** 2/2 present, needed 1 — concluded.');
+    });
+
+    it('an inconclusive quorum visibly names the release-gate hold', () => {
+        const out = render(rs, {
+            quorum: { status: 'inconclusive', threshold: 1, total: 2, present: 0 },
+        });
+        expect(out).toContain('INCONCLUSIVE — release gate holds');
+    });
+
+    it('quorum renders before the absent-members section when both are present', () => {
+        const out = render(rs, {
+            quorum: { status: 'inconclusive', threshold: 1, total: 2, present: 0 },
+            absent_members: [{ member: 'openai', reason: 'timeout', detail: 'call timed out' }],
+        });
+        const quorumIdx = out.indexOf('**Quorum:**');
+        const absentIdx = out.indexOf('### Absent Members');
+        expect(quorumIdx).toBeGreaterThan(-1);
+        expect(absentIdx).toBeGreaterThan(quorumIdx);
+    });
+});
+
+// ── road-to-always-on-orchestration Phase 4.1 — verdict handoff envelope ──
+
+describe('render — handoff section (Phase 4.1)', () => {
+    const rs = [new CouncilResponse({ provider: 'anthropic', model: 'm', text: 'pos', latency_ms: 1 })];
+
+    it('omitting the option renders byte-identically to today', () => {
+        const withoutOpt = render(rs, {});
+        const withNull = render(rs, { handoff: null });
+        expect(withNull).toBe(withoutOpt);
+        expect(withoutOpt).not.toContain('Handoff');
+    });
+
+    it('an all-null envelope (nothing structured this pass) renders nothing new either', () => {
+        expect(render(rs, { handoff: EMPTY_HANDOFF })).not.toContain('Handoff');
+    });
+
+    it('a populated envelope appends a Handoff section right after the synthesis slot', () => {
+        const out = render(rs, {
+            handoff: {
+                decision: 'ship now',
+                rejected_alternatives: [{ option: 'wait a sprint', reason: 'backed by 0 member(s), weight 0.00 of 1.33 needed to conclude' }],
+                constraints: ['must ship behind a feature flag'],
+            },
+        });
+        expect(out).toContain('### Handoff');
+        expect(out).toContain('**Decision:** ship now');
+        expect(out).toContain('- **wait a sprint** — backed by 0 member(s), weight 0.00 of 1.33 needed to conclude');
+        expect(out).toContain('- must ship behind a feature flag');
+        const synthesisIdx = out.indexOf('## Convergence / Divergence');
+        const handoffIdx = out.indexOf('### Handoff');
+        const quorumIdx = out.indexOf('**Quorum:**');
+        expect(handoffIdx).toBeGreaterThan(synthesisIdx);
+        // Handoff sits BEFORE the trailing quorum/absent bookkeeping when both
+        // are supplied — closest to the synthesis it was extracted from.
+        expect(render(rs, {
+            handoff: { decision: 'x', rejected_alternatives: null, constraints: null },
+            quorum: { status: 'concluded', threshold: 1, total: 1, present: 1 },
+        }).indexOf('### Handoff')).toBeLessThan(
+            render(rs, {
+                handoff: { decision: 'x', rejected_alternatives: null, constraints: null },
+                quorum: { status: 'concluded', threshold: 1, total: 1, present: 1 },
+            }).indexOf('**Quorum:**'),
+        );
+        expect(quorumIdx).toBe(-1); // this render() call passed no quorum option
+    });
+
+    it('a decision with no rejected alternatives or constraints says so honestly, not silently', () => {
+        const out = render(rs, {
+            handoff: { decision: 'ship now', rejected_alternatives: null, constraints: null },
+        });
+        expect(out).toContain('**Decision:** ship now');
+        expect(out).toContain('**Rejected alternatives:** none recorded.');
+        expect(out).toContain('**Constraints:** none recorded.');
     });
 });

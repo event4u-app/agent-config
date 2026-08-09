@@ -2,7 +2,7 @@
 
 > Auto-generated — do not edit. Regenerate with `task roadmap-progress` or by running the `update_roadmap_progress` script for your install; rewritten on every roadmap create / execute / completion change (timestamp lives in git history).
 >
-> 20 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **19** open blockers
+> 21 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **24** open blockers
 
 ## Overall
 
@@ -40,6 +40,61 @@
 ---
 
 ## Per-roadmap phase breakdown
+
+### [road-to-always-on-orchestration.md](roadmaps/road-to-always-on-orchestration.md)
+
+**Road to always-on orchestration — subagents, council, and team stop being features and become how this suite works** — 23 / 36 done (64%)
+
+| # | Phase | State | Open | Done | Deferred | Cancelled | % |
+|---|---|---|---:|---:|---:|---:|---:|
+| 1 | settings teardown, contract first | ✅ done | 0 | 6 | 0 | 0 | 100% |
+| 2 | one judgment ladder instead of three scattered classifiers | ✅ done | 0 | 5 | 0 | 0 | 100% |
+| 3 | CLI-first shipped as the default transport, quorum-resilient | ✅ done | 0 | 4 | 0 | 0 | 100% |
+| 4 | verdict handoff + the wiring the resolved blocker was waiting for | ✅ done | 0 | 3 | 0 | 0 | 100% |
+| 5 | team readiness: verify first, doctrine second | 🟡 in progress | 1 | 3 | 0 | 0 | 75% |
+| 6 | the measurement that replaces the switch | ✅ done | 0 | 2 | 0 | 0 | 100% |
+| 7 | what this roadmap will not do | ⬜ not started | 12 | 0 | 0 | 0 | 0% |
+
+<a id="blockers-road-to-always-on-orchestration"></a>
+**Blockers**
+
+- **gate-council-auto-dispatch** (owner: maintainer) — blocks auto-firing the council at the release-gate escalation
+  - **What to do:**
+    verified in real passes) and the F6/F4 + council-attendance telemetry has
+    a usable window, wire the gate escalation to dispatch the pass itself
+    (quorum rules from 3.3; inconclusive holds). Guards named by council:
+    loop protection, metered-fallback cap via `cost_budget`, latency budget,
+    unactioned-verdict kill criterion (6.2).
+  - **Resolved when:** the wiring lands citing the soak evidence, or the telemetry says auto-fire adds nothing and the gate stays recommend-only.
+- **point-of-action-carrier** (owner: maintainer) — blocks any pre-tool-use mid-session delegation carrier + escalation ladder (Sources E/H harvest)
+  - **What to do:**
+    closed the identity request as NOT_PLANNED; the per-agent-permission fix
+    landed with unverified scope — probe a real host). No discriminator → the
+    carrier ships only with scope reduction (source-file writes above a size
+    threshold, generous exemptions) or not at all. Pre-registered null: "no
+    discriminator" is publishable and does not block this roadmap.
+  - **Resolved when:** the spike note exists and the build/no-build decision cites it plus the F3-lite adoption telemetry.
+- **f4-full-stop-block** (owner: maintainer) — blocks single-shot stop-block continuation for the end-review obligation
+  - **What to do:**
+    verified facts: `additionalContext` on Stop IS documented at exit 0 (the
+    advisory path may already reach the model — verify live first), and
+    `stop_hook_active` is gone from the docs, so the loop guard must be a
+    self-built session-scoped marker (the end-review once-per-session state is
+    the template). Calibrate the threshold on `review_skipped` telemetry
+    (`exact` lines only).
+  - **Resolved when:** live delivery evidence exists and the block/advisory decision cites the telemetry distribution.
+- **team-telemetry-behind-flag** (owner: maintainer) — blocks Phase 5.4 (team telemetry concerns, TaskCompleted artifact-check)
+  - **What to do:**
+    run the 5.1 spike, then bind the concerns with the same fail-open
+    discipline as the #1223 set.
+  - **Resolved when:** payload evidence exists and the concerns ship, or teams leave the experimental state and this re-cuts.
+- **cross-vendor-worker-slices** (owner: maintainer) — blocks routing ordinary work slices to second-vendor CLI workers (huge-context analysis, independence-critical review — Source G shape)
+  - **What to do:**
+    exist; before any cross-vendor worker ships, write the direction policy
+    (which vendor may review which, what may be sent — extending the existing
+    egress discipline), then add the two resolver entries (report-only
+    workers).
+  - **Resolved when:** the policy artefact exists and the resolver entries cite it.
 
 ### [road-to-capability-answerability.md](roadmaps/road-to-capability-answerability.md)
 

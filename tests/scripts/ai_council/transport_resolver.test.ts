@@ -13,9 +13,12 @@ import * as path from 'node:path';
 import {
     MidFlightFallback,
     VALID_TRANSPORT_MODES,
+    absentReasonFromCliFailure,
     classifyCliFailure,
     isFallbackEligible,
+    resolveMemberTransport,
     resolveTransport,
+    type AbsentReason,
     type CliFailureClass,
 } from '../../../src/scripts/ai_council/transport_resolver.js';
 import {
@@ -386,5 +389,131 @@ describe('mid-flight fallback — both directions pinned', () => {
         expect(first.attempt('anthropic', 'auth_rejected')).toBe('api');
         const second = new MidFlightFallback();
         expect(second.attempt('anthropic', 'auth_rejected')).toBe('api');
+    });
+});
+
+// ── road-to-always-on-orchestration Phase 3.2 — graded degradation ──────
+
+describe('absentReason — static auto-chain classification', () => {
+    it('is null for every available result', () => {
+        for (const [, machine] of MACHINES) {
+            for (const mode of ['api', 'manual', 'cli', 'auto'] as const) {
+                const r = resolveTransport({ provider: 'anthropic', mode, report: machine });
+                if (r.available) {
+                    expect(r.absentReason).toBeNull();
+                }
+            }
+        }
+    });
+
+    it('classifies bare (no binary, no key) as no_binary', () => {
+        const r = resolveTransport({ provider: 'anthropic', mode: 'auto', report: BARE });
+        expect(r.available).toBe(false);
+        expect(r.absentReason).toBe('no_binary');
+    });
+
+    it('classifies a credential with no resolvable binary as no_binary', () => {
+        const authNoBinary = report({ auth: [auth('anthropic', 'cli-subscription')] });
+        const r = resolveTransport({ provider: 'anthropic', mode: 'auto', report: authNoBinary });
+        expect(r.available).toBe(false);
+        expect(r.absentReason).toBe('no_binary');
+    });
+
+    it('classifies a resolvable-but-unauthenticated binary with no key as no_auth', () => {
+        const binaryNoAuth = report({ hosts: [host('claude-code', '/usr/local/bin/claude')] });
+        const r = resolveTransport({ provider: 'anthropic', mode: 'auto', report: binaryNoAuth });
+        expect(r.available).toBe(false);
+        expect(r.absentReason).toBe('no_auth');
+    });
+
+    it('is null for the "unknown mode" validation-error path — a config bug, not a missing-capability finding', () => {
+        const r = resolveTransport({ provider: 'anthropic', mode: 'bogus', report: MIXED });
+        expect(r.available).toBe(false);
+        expect(r.absentReason).toBeNull();
+    });
+});
+
+describe('absentReasonFromCliFailure — mid-flight mapping onto the same enum', () => {
+    const CASES: ReadonlyArray<readonly [CliFailureClass, AbsentReason | null]> = [
+        ['binary_missing', 'no_binary'],
+        ['auth_rejected', 'no_auth'],
+        ['timeout', 'timeout'],
+        ['quota_exhausted', 'quota'],
+        ['cli_unsupported', null],
+        ['server_error', null],
+        ['other', null],
+    ];
+
+    for (const [failure, expected] of CASES) {
+        it(`maps ${failure} → ${String(expected)}`, () => {
+            expect(absentReasonFromCliFailure(failure)).toBe(expected);
+        });
+    }
+});
+
+// ── road-to-always-on-orchestration Phase 3.1 — the reconciliation ──────
+
+describe('resolveMemberTransport — the reconciled entry point', () => {
+    it('resolves the same concrete transport as calling resolve_mode then resolveTransport by hand', () => {
+        for (const [, machine] of MACHINES) {
+            for (const provider of knownProviders()) {
+                const combined = resolveMemberTransport({
+                    provider,
+                    report: machine,
+                    globalMode: 'auto',
+                });
+                const direct = resolveTransport({ provider, mode: 'auto', report: machine });
+                expect(combined.configuredMode).toBe('auto');
+                expect(combined.transport).toBe(direct.transport);
+                expect(combined.available).toBe(direct.available);
+                expect(combined.absentReason).toBe(direct.absentReason);
+                expect(combined.billing).toBe(direct.billing);
+            }
+        }
+    });
+
+    it('expands the literal `auto` a bare mode-switch would choke on — the gap this function closes', () => {
+        // council_cli.ts::build_members has no `mode === 'auto'` branch today;
+        // this is the reconciled path that DOES expand it, on the cli-only
+        // fixture where auto should pick the cli rung.
+        const r = resolveMemberTransport({ provider: 'anthropic', report: CLI_ONLY, globalMode: 'auto' });
+        expect(r.configuredMode).toBe('auto');
+        expect(r.transport).toBe('cli');
+        expect(r.available).toBe(true);
+    });
+
+    it('honours the full four-layer precedence (invocation > member > global > built-in)', () => {
+        const r = resolveMemberTransport({
+            provider: 'anthropic',
+            report: BARE,
+            invocationMode: 'manual',
+            memberSettings: { mode: 'api' },
+            globalMode: 'cli',
+        });
+        expect(r.configuredMode).toBe('manual');
+        expect(r.transport).toBe('manual');
+        expect(r.available).toBe(true);
+    });
+
+    it('falls to the built-in `manual` fallback when no layer supplies anything', () => {
+        const r = resolveMemberTransport({ provider: 'anthropic', report: BARE });
+        expect(r.configuredMode).toBe('manual');
+        expect(r.transport).toBe('manual');
+    });
+
+    it('passes an explicit apiKeyPresent through to the underlying auto chain', () => {
+        const r = resolveMemberTransport({
+            provider: 'gemini',
+            report: BARE,
+            globalMode: 'auto',
+            apiKeyPresent: true,
+        });
+        expect(r.transport).toBe('api');
+    });
+
+    it('rejects an invalid configured mode the same way resolve_mode does', () => {
+        expect(() =>
+            resolveMemberTransport({ provider: 'anthropic', report: BARE, globalMode: 'bogus' }),
+        ).toThrow(/expected one of/);
     });
 });

@@ -2,7 +2,7 @@
 import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import * as ags from '../../src/scripts/_lib/agent_settings';
 import * as user_global_paths from '../../src/scripts/_lib/user_global_paths';
@@ -1221,5 +1221,66 @@ describe('find_project_root_with_trace', () => {
         expect(root).toBeNull();
         expect(anchor).toBeNull();
         expect(trace.every((r) => r.reason.startsWith('legacy:'))).toBe(true);
+    });
+});
+
+// --- removed always-on-orchestration keys (road-to-always-on-orchestration Phase 1) ---
+
+describe('load_agent_settings — removed always-on-orchestration keys deprecation warning', () => {
+    it('warns once on stderr for a leftover key, then stays silent for the same key in this process', () => {
+        const tmp = make_tmp();
+        const project = write_file(path.join(tmp, 'project.yml'), 'subagents:\n  enabled: false\n');
+        const spy = vi.spyOn(process.stderr, 'write').mockImplementation(() => true);
+        try {
+            ags.load_agent_settings({
+                project_path: project,
+                user_global_path: path.join(tmp, 'missing.yml'),
+            });
+            expect(spy).toHaveBeenCalledTimes(1);
+            expect(String(spy.mock.calls[0]?.[0])).toBe(
+                'subagents.enabled was removed (always-on orchestration); ignored.\n',
+            );
+            spy.mockClear();
+            ags.load_agent_settings({
+                project_path: project,
+                user_global_path: path.join(tmp, 'missing.yml'),
+            });
+            expect(spy).not.toHaveBeenCalled();
+        } finally {
+            spy.mockRestore();
+        }
+    });
+
+    it('never warns when no removed key is present', () => {
+        const tmp = make_tmp();
+        const project = write_file(path.join(tmp, 'project.yml'), 'ide: nvim\n');
+        const spy = vi.spyOn(process.stderr, 'write').mockImplementation(() => true);
+        try {
+            ags.load_agent_settings({
+                project_path: project,
+                user_global_path: path.join(tmp, 'missing.yml'),
+            });
+            expect(spy).not.toHaveBeenCalled();
+        } finally {
+            spy.mockRestore();
+        }
+    });
+
+    it('warns for a leftover ai_team.enabled — deleted in Step 1.3 (availability is a codex CLI/auth fact now)', () => {
+        const tmp = make_tmp();
+        const project = write_file(path.join(tmp, 'project.yml'), 'ai_team:\n  enabled: true\n');
+        const spy = vi.spyOn(process.stderr, 'write').mockImplementation(() => true);
+        try {
+            ags.load_agent_settings({
+                project_path: project,
+                user_global_path: path.join(tmp, 'missing.yml'),
+            });
+            expect(spy).toHaveBeenCalledTimes(1);
+            expect(String(spy.mock.calls[0]?.[0])).toBe(
+                'ai_team.enabled was removed (always-on orchestration); ignored.\n',
+            );
+        } finally {
+            spy.mockRestore();
+        }
     });
 });

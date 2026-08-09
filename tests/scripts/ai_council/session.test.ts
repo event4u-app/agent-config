@@ -11,9 +11,13 @@ import * as path from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
 
 import {
+    SessionManifest,
     prune_old_artifacts,
     prune_old_sessions,
+    save,
 } from '../../../src/scripts/ai_council/session.js';
+import { CouncilResponse } from '../../../src/scripts/ai_council/clients.js';
+import { evaluateQuorum } from '../../../src/scripts/ai_council/quorum.js';
 
 // ── tmp-dir bookkeeping ────────────────────────────────────────────────────
 const _tmpDirs: string[] = [];
@@ -60,5 +64,81 @@ describe('session.prune_old_artifacts — unit', () => {
         const removed = prune_old_artifacts(base, 7, { now: new Date(NOW_MS) });
         expect(removed).toEqual([]);
         expect(fs.existsSync(tsDir)).toBe(true);
+    });
+});
+
+// ── road-to-always-on-orchestration Phase 3.2/3.3 — save() additions ─────
+
+function readManifest(sessionDir: string): Record<string, unknown> {
+    return JSON.parse(fs.readFileSync(path.join(sessionDir, 'manifest.json'), 'utf-8')) as Record<
+        string,
+        unknown
+    >;
+}
+
+describe('session.save — absent_members / quorum (Phase 3.2/3.3)', () => {
+    it('omitting both writes an empty array and a null — same shape an old caller always got, plus two keys', () => {
+        const base = mkTmp();
+        const manifest = new SessionManifest({
+            mode: 'prompt',
+            artefact: '<inline>',
+            original_ask: 'hi',
+            members: ['anthropic/claude-x'],
+        });
+        const responses = [new CouncilResponse({ provider: 'anthropic', model: 'claude-x', text: 'ok' })];
+        const dir = save({ manifest, responses, sessions_dir: base, retention_days: 0 });
+        const payload = readManifest(dir);
+        expect(payload['absent_members']).toEqual([]);
+        expect(payload['quorum']).toBeNull();
+    });
+
+    it('serialises populated absent_members with their machine-readable reason', () => {
+        const base = mkTmp();
+        const manifest = new SessionManifest({
+            mode: 'prompt',
+            artefact: '<inline>',
+            original_ask: 'hi',
+            members: ['anthropic/claude-x'],
+            absent_members: [
+                { member: 'openai', reason: 'no_binary', detail: 'codex is not on PATH' },
+                { member: 'gemini', reason: null, detail: 'unclassified failure' },
+            ],
+        });
+        const responses = [new CouncilResponse({ provider: 'anthropic', model: 'claude-x', text: 'ok' })];
+        const dir = save({ manifest, responses, sessions_dir: base, retention_days: 0 });
+        const payload = readManifest(dir);
+        expect(payload['absent_members']).toEqual([
+            { member: 'openai', reason: 'no_binary', detail: 'codex is not on PATH' },
+            { member: 'gemini', reason: null, detail: 'unclassified failure' },
+        ]);
+    });
+
+    it('serialises an inconclusive quorum verdict', () => {
+        const base = mkTmp();
+        const quorum = evaluateQuorum(2, 0);
+        const manifest = new SessionManifest({
+            mode: 'prompt',
+            artefact: '<inline>',
+            original_ask: 'hi',
+            members: [],
+            quorum,
+        });
+        const dir = save({ manifest, responses: [], sessions_dir: base, retention_days: 0 });
+        const payload = readManifest(dir);
+        expect(payload['quorum']).toEqual({ status: 'inconclusive', threshold: 1, total: 2, present: 0 });
+    });
+
+    it('a caller-supplied `extra` key still wins over the new fields on a name collision', () => {
+        const base = mkTmp();
+        const manifest = new SessionManifest({
+            mode: 'prompt',
+            artefact: '<inline>',
+            original_ask: 'hi',
+            members: [],
+            extra: { quorum: 'overridden-by-extra' },
+        });
+        const dir = save({ manifest, responses: [], sessions_dir: base, retention_days: 0 });
+        const payload = readManifest(dir);
+        expect(payload['quorum']).toBe('overridden-by-extra');
     });
 });

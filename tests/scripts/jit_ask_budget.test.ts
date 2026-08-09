@@ -186,11 +186,11 @@ describe('the key lists are DERIVED from the class contract, not snapshotted', (
         }
     });
 
-    it('the two keys the rule calls ship-as-ask really do default to ask', () => {
+    it('the one key the rule calls ship-as-ask really does default to ask', () => {
         // The rule distinguishes "ships as ask" from "can be set to ask". That
         // distinction is a claim about the template and must be checked, or it
         // becomes a comfortable fiction after the next default flip.
-        for (const key of ['subagents.budget_routing', 'worktrees.mode']) {
+        for (const key of ['worktrees.mode']) {
             expect(declaredDefault(key), `${key} default cell`).toMatch(/ask/);
         }
     });
@@ -310,9 +310,9 @@ describe('planSettingsAsks — what never reaches the ask path', () => {
     const defaultOf = (): unknown => false;
 
     it('skips a C key — its runtime ask is a different mechanism', () => {
-        const plan = planSettingsAsks(['subagents.auto'], classes(), defaultOf);
+        const plan = planSettingsAsks(['subagents.adversarial_council'], classes(), defaultOf);
         expect(plan.ask).toBeNull();
-        expect(plan.skipped).toEqual([{ key: 'subagents.auto', reason: 'class-c-guarded' }]);
+        expect(plan.skipped).toEqual([{ key: 'subagents.adversarial_council', reason: 'class-c-guarded' }]);
     });
 
     it('skips an A key — it resolves to its default and is never asked', () => {
@@ -452,21 +452,20 @@ describe('consentVerdict — a value is not a decision', () => {
 });
 
 describe('the migration — every ask-shaped setting routes to the protocol', () => {
-    // Phase 5 step 3. The migration was performed and pinned by nothing: a
-    // rewrite of any of these four files could restore its bespoke ask prose and
-    // no gate would notice, which is how a universalised pattern quietly
-    // re-fragments. The two absences at the end are the load-bearing half —
-    // without them this suite would also pass if someone "migrated" the two keys
-    // the rule deliberately routes elsewhere.
+    // Phase 5 step 3 (narrowed by road-to-always-on-orchestration Phase 1,
+    // which deleted `subagents.auto` and `subagents.budget_routing` — the two
+    // sites that used to own them, `delegation-policy.md` and
+    // `subagent-routing.md`, no longer need to defer an ask-shaped setting
+    // that does not exist any more). The migration was performed and pinned
+    // by nothing: a rewrite of either of these two remaining files could
+    // restore its bespoke ask prose and no gate would notice, which is how a
+    // universalised pattern quietly re-fragments. The two absences at the end
+    // are the load-bearing half — without them this suite would also pass if
+    // someone "migrated" the two keys the rule deliberately routes elsewhere.
 
-    /** The four sites the protocol owns, and the key each one carries. */
+    /** The two sites the protocol owns, and the key each one carries. */
     const MIGRATED: ReadonlyArray<readonly [string, string]> = [
         ['src/rules/token-budget-discipline.md', 'tokens.rich_skills'],
-        ['src/rules/delegation-policy.md', 'subagents.auto'],
-        [
-            'src/agent-src/contexts/execution/subagent-routing.md',
-            'subagents.budget_routing',
-        ],
         [
             'src/domains/engineering-base/review/changes/command.md',
             'subagents.adversarial_council',
@@ -486,9 +485,12 @@ describe('the migration — every ask-shaped setting routes to the protocol', ()
      * `null` rather than `lines.length`, because the two cases need different
      * assertions and collapsing them is how this check silently weakens: with
      * no boundary, "in the body" degenerates to plain presence — exactly the
-     * check the block rejects as insufficient. One of the four files
-     * (`subagent-routing.md`) genuinely has no see-also section, so this is a
-     * live case, not a hypothetical.
+     * check the block rejects as insufficient. Both remaining MIGRATED files
+     * carry a `## See also` section today, so the `null` branch is currently
+     * unexercised by this corpus — kept for the file that had none
+     * (`subagent-routing.md`, removed from MIGRATED when its ask-shaped
+     * setting was deleted) and for whichever file next joins the list without
+     * one.
      */
     function seeAlsoBoundary(lines: readonly string[]): number | null {
         let boundary: number | null = null;

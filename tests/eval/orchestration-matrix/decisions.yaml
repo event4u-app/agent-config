@@ -8,50 +8,38 @@
 # tests/scripts/orchestration_routing_matrix.test.ts against the real libs.
 
 classify:
-  - name: activation gate — subagents disabled short-circuits in-session
+  - name: activation gate — emergency halt short-circuits in-session
     signals: { size_estimate: 10, ordered_plan: true }
-    activation: { enabled: false, auto: "on", subagent_spawn: true }
-    expect: { delegable: false, action: in-session, mode: null }
-  - name: activation gate — auto off short-circuits in-session
-    signals: { size_estimate: 10, ordered_plan: true }
-    activation: { enabled: true, auto: "off", subagent_spawn: true }
+    activation: { halted: true, subagent_spawn: true }
     expect: { delegable: false, action: in-session, mode: null }
   - name: activation gate — host without subagent_spawn stays in-session
     signals: { size_estimate: 10, independent_slices: 4 }
-    activation: { enabled: true, auto: "on", subagent_spawn: false }
+    activation: { halted: false, subagent_spawn: false }
     expect: { delegable: false, action: in-session, mode: null }
   - name: near-miss — trivial task below the size floor never delegates
     signals: { size_estimate: 1, independent_slices: 4 }
-    activation: { enabled: true, auto: "on", subagent_spawn: true }
+    activation: { halted: false, subagent_spawn: true }
     expect: { delegable: false, action: in-session, mode: null }
-  - name: ordered plan dispatches do-in-steps under auto=on
+  - name: ordered plan dispatches do-in-steps (always-on, no mode setting)
     signals: { size_estimate: 8, ordered_plan: true }
-    activation: { enabled: true, auto: "on", subagent_spawn: true }
+    activation: { halted: false, subagent_spawn: true }
     expect: { delegable: true, action: dispatch, mode: do-in-steps }
   - name: declared parallelizable files dispatches do-in-parallel
     signals: { size_estimate: 8, parallelizable: files }
-    activation: { enabled: true, auto: "on", subagent_spawn: true }
+    activation: { halted: false, subagent_spawn: true }
     expect: { delegable: true, action: dispatch, mode: do-in-parallel }
   - name: independent slices >= 2 dispatch do-in-parallel
     signals: { size_estimate: 6, independent_slices: 5 }
-    activation: { enabled: true, auto: "on", subagent_spawn: true }
+    activation: { halted: false, subagent_spawn: true }
     expect: { delegable: true, action: dispatch, mode: do-in-parallel }
   - name: near-miss — a single slice is not a parallel signal
     signals: { size_estimate: 6, independent_slices: 1 }
-    activation: { enabled: true, auto: "on", subagent_spawn: true }
-    expect: { delegable: false, action: in-session, mode: null }
-  - name: near-miss — ambiguity under auto=on never spawns speculatively
-    signals: { size_estimate: 9 }
-    activation: { enabled: true, auto: "on", subagent_spawn: true }
-    expect: { delegable: false, action: in-session, mode: null }
-  - name: ambiguity under auto=ask escalates to ask, not to a spawn
-    signals: { size_estimate: 9 }
-    activation: { enabled: true, auto: ask, subagent_spawn: true }
+    activation: { halted: false, subagent_spawn: true }
     expect: { delegable: false, action: ask, mode: null }
-  - name: delegable signal under auto=ask still asks before dispatching
-    signals: { size_estimate: 8, parallelizable: steps }
-    activation: { enabled: true, auto: ask, subagent_spawn: true }
-    expect: { delegable: true, action: ask, mode: do-in-steps }
+  - name: near-miss — ambiguity is always an ask verdict, never a speculative spawn
+    signals: { size_estimate: 9 }
+    activation: { halted: false, subagent_spawn: true }
+    expect: { delegable: false, action: ask, mode: null }
 
 tier:
   - name: read-only fan-out infers lite

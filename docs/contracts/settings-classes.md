@@ -129,18 +129,51 @@ larger set; it is the set that passes both halves.
 | `personal.canary_name` | un-inferrable, and answering arms the session-degradation canary; one keypress to accept the prefill | `""` (canary dark) |
 | `memory.learn_on_session_end` | it turns on automatic memory writes at the end of every session — a standing write the user should authorise | `false` |
 
+## The one exception — `emergency.orchestration_halt`
+
+The always-on-orchestration doctrine (subagents, council, team) deletes every
+per-layer on/off setting: `subagents.enabled`, `subagents.auto`, and
+`subagents.host_capabilities` are gone from the template, and the layer
+activates on any capable host with an EMPTY settings file. One switch survives
+that deletion on purpose, and it is not the same shape wearing a different
+name.
+
+```
+ON-BY-DEFAULT, NOT OFF-BY-DEFAULT. ABSENT OR false MEANS THE STACK RUNS.
+ARMING THE HALT IS CEREMONY-FREE — INCIDENTS ARE URGENT.
+DISARMING IT REQUIRES A NON-EMPTY orchestration_halt_justification.
+INCIDENT-RESPONSE USE ONLY.
+```
+
+**Enforcement, stated honestly (`enforced_by: none`).** The settings file is
+hand-edited YAML — no machine sits on the write path, so the
+justification-on-disarm rule and any per-transition telemetry are
+MODEL-CARRIED conventions, not checked gates (the same honesty stance as
+`security-sensitive-stop`). What IS checked: readers treat only strict
+`true` as halted, and the `no-activation-gates` lint prevents the switch
+from ever growing activation siblings. An agent editing this key follows
+the convention; a human editing it is the owner exercising it.
+
+The distinguishing test against "an activation gate under a new name": an
+activation gate is symmetric — flipping it either way costs the same nothing,
+and its purpose is to let a capability sit unused by default. This switch is
+asymmetric by convention — cheap to arm during an incident, costed (a stated
+reason) to disarm, never a silent preference. `subagents.downshift`, `subagents.quota_arbitrage`, and
+`subagents.model_map` are unaffected by the deletion — they tune HOW a
+dispatch runs, not WHETHER the layer exists, so they keep their own C rows.
+
 ## Counts
 
 | Class | Keys |
 |---|---|
 | A — preference | 27 |
 | B — consent | 3 |
-| C — guarded | 110 |
-| **Total** | **140** |
+| C — guarded | 107 |
+| **Total** | **137** |
 
 The total is every leaf in the template, where *leaf* means anything that is not
-a **non-empty** map. An empty map (`subagents.host_capabilities: {}`) is a real
-configurable value with a real default, so it is a leaf here — one row more than
+a **non-empty** map. An empty map (like the former `subagents.host_capabilities: {}`) is a real
+configurable value with a real default, so such keys count as leaves here — one row more than
 the template↔schema parity test walks, deliberately, because a key with no
 class is exactly what this contract exists to prevent.
 
@@ -229,27 +262,24 @@ Rows follow template order, so a diff against the template reads straight down.
 | `screenshots.forbid_terminal_capture` | C | `true` | kill-switch over the highest-leak capture path |
 | `screenshots.data_bearing_gate` | C | `"on"` | the human-confirmation gate over a published egress |
 | `code_style.docblocks` | A | `minimal` | code convention |
-| `subagents.enabled` | C | `true` | kill-switch for the whole subagent layer |
-| `subagents.auto` | C | `"on"` | dispatches work without asking |
 | `subagents.downshift` | C | `true` | routes to another model tier, which is spend and quality |
-| `subagents.budget_routing` | C | `ask` | the budget-aware routing gate |
 | `subagents.quota_arbitrage` | C | `true` | spends from a separate quota pool |
 | `subagents.model_map.lite` | C | `""` | names an external model endpoint |
 | `subagents.model_map.medium` | C | `""` | names an external model endpoint |
 | `subagents.model_map.high` | C | `""` | names an external model endpoint |
-| `subagents.host_capabilities` | C | `{}` | overrides the host capability manifest |
 | `subagents.implementer_model` | C | `""` | names an external model endpoint |
 | `subagents.judge_model` | C | `""` | names an external model endpoint |
 | `subagents.max_parallel` | C | `3` | parallelism cap, and therefore a spend rate |
 | `subagents.adversarial_council` | C | `"off"` | governs a paid verification step |
 | `worktrees.mode` | C | `ask` | standing permission for autonomous worktree creation |
-| `ai_team.enabled` | C | `false` | authorises paid external CLI calls |
 | `ai_team.model` | C | `auto` | names an external model |
 | `ai_team.allow_delegate` | C | `false` | grants an external tool write access to the repository |
 | `ai_team.max_calls_per_day` | C | `50` | quota cap on a shared budget |
 | `ai_team.suppress_setup_hint` | A | `false` | hint cosmetics |
 | `ai_team.review_gate.managed` | C | `false` | governs an upstream review gate |
 | `ai_team.review_gate.max_consecutive_blocks` | C | `3` | circuit-breaker threshold |
+| `emergency.orchestration_halt` | C | `false` | the one audited incident switch over the always-on orchestration stack — see § The one exception above |
+| `emergency.orchestration_halt_justification` | C | `""` | required non-empty before the halt may be lifted; an audit-trail field |
 | `onboarding.onboarded` | C | `false` | flipping it bypasses the onboarding gate |
 | `commands.auto_detect` | C | `enabled` | kill-switch for orchestrator auto-detection |
 | `commands.suggestion.enabled` | A | `true` | a convenience layer; governs no gate and no spend |

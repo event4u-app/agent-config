@@ -1,0 +1,271 @@
+#!/usr/bin/env tsx
+/**
+ * Team-event payload shape spike (Phase 5.1, road-to-always-on-orchestration).
+ *
+ * `TaskCreated` / `TaskCompleted` / `TeammateIdle` are documented Claude Code
+ * hook events (agent teams, behind `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS`),
+ * but this repo has never observed a real payload for any of them — the
+ * shapes are documented, not verified. This script is manually startable
+ * ONLY: it is never wired into `hook_manifest.yaml` / `hooks.json`. A
+ * maintainer points a hook command at it (or pipes a captured payload) to
+ * record a SHAPE — field names + JS/JSON types — and never a value.
+ * Privacy by construction: the recursive walk below inspects `typeof` /
+ * `Array.isArray`, nothing else, so there is no code path that could copy a
+ * value into the written report.
+ *
+ * SCOPE OF THE PRIVACY CLAIM (stated honestly, per independent review): the
+ * claim above holds for a payload whose OWN keys are static field names —
+ * true of the three documented envelopes this script targets
+ * (`TaskCreated` / `TaskCompleted` / `TeammateIdle`), where a key is always
+ * a schema name like `task_id` or `teammate_name`. It does NOT hold for a
+ * payload with dynamically-named keys — a map keyed by a file path, a
+ * person's name, or any other runtime value — because `extractShape` walks
+ * `Object.keys()` and records each key verbatim as a "field name". A
+ * dynamic key is not a field name; it is a value wearing a field name's
+ * clothes, and this script would write it into the tracked report exactly
+ * as it would refuse to write a value. Point this script only at the three
+ * documented shapes (or another envelope you have separately confirmed has
+ * static keys) — never at an undocumented payload that might carry a
+ * dynamically-keyed map.
+ *
+ * Usage (only meaningful with the experimental flag set):
+ *
+ *     echo '<payload-json>' | \
+ *       CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1 npx tsx src/scripts/team_events_spike.ts [EventName]
+ *
+ * `EventName` is optional; if omitted, the payload's own `hook_event_name` /
+ * `event` / `eventName` / `event_name` / `type` field is read and matched
+ * against the three known `TEAM_EVENT_NAMES` — an unrecognised value falls
+ * back to `unlabeled-event` rather than copying the raw (payload-supplied)
+ * string into the report, which would itself be writing a value under the
+ * cover of a "name".
+ *
+ * Without the flag: clean one-line skip, exit 0, stdin is never touched.
+ *
+ * Output: appends one dated section per capture to
+ * `agents/evidence/analysis/team-event-shapes.md`.
+ */
+import * as fs from 'node:fs';
+import * as path from 'node:path';
+import { fileURLToPath, pathToFileURL } from 'node:url';
+
+const _HERE = fileURLToPath(import.meta.url);
+const ROOT = path.resolve(path.dirname(_HERE), '..', '..');
+const OUT_FILE = path.join(ROOT, 'agents', 'evidence', 'analysis', 'team-event-shapes.md');
+
+export const FLAG = 'CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS';
+export const TEAM_EVENT_NAMES = ['TaskCreated', 'TaskCompleted', 'TeammateIdle'] as const;
+
+export interface ShapeEntry {
+    path: string;
+    type: string;
+}
+
+/** JS/JSON type of a value. Reads only `typeof` / `Array.isArray` — never the value. */
+function _typeOf(value: unknown): string {
+    if (value === null) return 'null';
+    if (Array.isArray(value)) return 'array';
+    return typeof value; // 'string' | 'number' | 'boolean' | 'object' | 'undefined'
+}
+
+/**
+ * Walk a parsed JSON payload and record field-name + type only.
+ *
+ * This never returns, prints, or embeds a value — recursion is driven
+ * entirely by structural type and object keys.
+ */
+export function extractShape(value: unknown, prefix = ''): ShapeEntry[] {
+    const entries: ShapeEntry[] = [];
+    const t = _typeOf(value);
+    if (prefix !== '') {
+        entries.push({ path: prefix, type: t });
+    }
+    if (t === 'array') {
+        // An event payload's arrays are homogeneous lists, not fixed tuples —
+        // merge every element's shape under one `[]` path (deduped below).
+        for (const item of value as unknown[]) {
+            entries.push(...extractShape(item, `${prefix}[]`));
+        }
+        return entries;
+    }
+    if (t === 'object') {
+        const obj = value as Record<string, unknown>;
+        for (const key of Object.keys(obj).sort()) {
+            entries.push(...extractShape(obj[key], prefix === '' ? key : `${prefix}.${key}`));
+        }
+    }
+    return entries;
+}
+
+/** De-duplicate by path+type — an array's elements repeat the same shape. */
+function _dedupe(entries: ShapeEntry[]): ShapeEntry[] {
+    const seen = new Set<string>();
+    const out: ShapeEntry[] = [];
+    for (const e of entries) {
+        const key = `${e.path}\u0000${e.type}`;
+        if (seen.has(key)) continue;
+        seen.add(key);
+        out.push(e);
+    }
+    return out;
+}
+
+/**
+ * Best-effort event-name inference from the payload's own envelope.
+ *
+ * m4 fix (independent-review finding): the envelope field this reads
+ * (`hook_event_name` / `event` / `type` / …) carries a payload-SUPPLIED
+ * string — copying it verbatim into the recorded report is exactly the
+ * "copy a value into the report" this script otherwise refuses to do
+ * (see the module header's privacy claim). Matched against the known
+ * `TEAM_EVENT_NAMES` allowlist instead: a recognised name is safe to
+ * record because it is drawn from three publicly documented, stable
+ * literals, never from the untrusted payload string itself; anything
+ * else returns `null` and the caller falls back to the fixed literal
+ * `'unlabeled-event'`.
+ */
+export function inferEventName(payload: unknown): string | null {
+    if (payload === null || typeof payload !== 'object' || Array.isArray(payload)) return null;
+    const obj = payload as Record<string, unknown>;
+    const known = new Set<string>(TEAM_EVENT_NAMES);
+    for (const key of ['hook_event_name', 'event', 'eventName', 'event_name', 'type']) {
+        const v = obj[key];
+        if (typeof v === 'string' && known.has(v)) return v;
+    }
+    return null;
+}
+
+/** Render one capture as a Markdown section — field names + types only. */
+export function renderShapeReport(eventName: string, entries: ShapeEntry[], observedAt: string): string {
+    const deduped = _dedupe(entries);
+    const rows = deduped.map((e) => `| \`${e.path}\` | ${e.type} |`).join('\n');
+    const table = rows === '' ? '_(empty payload — no fields observed)_' : `| Field | Type |\n|---|---|\n${rows}`;
+    return [`## ${eventName} — observed ${observedAt}`, '', table, ''].join('\n');
+}
+
+function _printGuide(): void {
+    process.stdout.write(
+        [
+            'team-event shape spike (manual, not hook-bound)',
+            '',
+            `${FLAG} is set — recording.`,
+            '',
+            `Observed events: ${TEAM_EVENT_NAMES.join(', ')}`,
+            '',
+            'Pipe one captured JSON payload on stdin — values are never written,',
+            'only field names + types:',
+            '',
+            `  echo '<payload-json>' | ${FLAG}=1 npx tsx src/scripts/team_events_spike.ts [EventName]`,
+            '',
+            `Shapes append to ${path.relative(ROOT, OUT_FILE)}.`,
+            '',
+        ].join('\n'),
+    );
+}
+
+async function _readStdin(): Promise<string> {
+    const chunks: Buffer[] = [];
+    // `for await` streams stdin — a synchronous `readFileSync(0)` EAGAINs
+    // past the pipe buffer on a large payload; this has no such ceiling.
+    for await (const chunk of process.stdin) {
+        chunks.push(chunk as Buffer);
+    }
+    return Buffer.concat(chunks).toString('utf-8');
+}
+
+export interface RunResult {
+    skipped: boolean;
+    reason?: string;
+    eventName?: string;
+    entryCount?: number;
+    outFile?: string;
+}
+
+export interface RunOptions {
+    argv?: string[];
+    env?: NodeJS.ProcessEnv;
+    readStdin?: () => Promise<string>;
+    writeReport?: (section: string) => void;
+    now?: () => string;
+}
+
+/**
+ * Orchestrates the spike. Every side effect is injectable so tests never
+ * touch the real environment, stdin, or the tracked report file.
+ */
+export async function run(opts?: RunOptions): Promise<RunResult> {
+    const env = opts?.env ?? process.env;
+    const argv = opts?.argv ?? process.argv.slice(2);
+    const readStdin = opts?.readStdin ?? _readStdin;
+    const now = opts?.now ?? (() => new Date().toISOString());
+    const writeReport =
+        opts?.writeReport ??
+        ((section: string) => {
+            fs.mkdirSync(path.dirname(OUT_FILE), { recursive: true });
+            fs.appendFileSync(OUT_FILE, section, 'utf-8');
+        });
+
+    if (!env[FLAG]) {
+        const reason = `${FLAG} is not set — teams are experimental and unavailable; skipping.`;
+        process.stdout.write(`${reason}\n`);
+        return { skipped: true, reason };
+    }
+
+    _printGuide();
+    const raw = (await readStdin()).trim();
+    if (raw === '') {
+        const reason = 'no payload received on stdin — nothing recorded.';
+        process.stdout.write(`${reason}\n`);
+        return { skipped: true, reason };
+    }
+
+    let payload: unknown;
+    try {
+        payload = JSON.parse(raw);
+    } catch (e) {
+        const reason = `invalid JSON on stdin: ${(e as Error).message}`;
+        process.stderr.write(`team_events_spike: ${reason}\n`);
+        return { skipped: true, reason };
+    }
+
+    const eventName = argv[0] ?? inferEventName(payload) ?? 'unlabeled-event';
+    const entries = extractShape(payload);
+    const section = renderShapeReport(eventName, entries, now());
+    writeReport(`\n${section}`);
+    const count = _dedupe(entries).length;
+    process.stdout.write(`recorded ${count} field shape(s) for ${eventName} -> ${path.relative(ROOT, OUT_FILE)}\n`);
+    return { skipped: false, eventName, entryCount: count, outFile: OUT_FILE };
+}
+
+function _isCliEntry(): boolean {
+    if (process.argv[1] === undefined) {
+        return false;
+    }
+    const argvUrl = pathToFileURL(path.resolve(process.argv[1])).href;
+    if (import.meta.url === argvUrl) {
+        return true;
+    }
+    // A symlinked invocation (e.g. via an installed `.augment/` projection)
+    // makes the raw URLs differ; compare realpaths so the entry guard still
+    // fires when run through a symlink.
+    try {
+        const here = fs.realpathSync(fileURLToPath(import.meta.url));
+        const argv = fs.realpathSync(path.resolve(process.argv[1]));
+        return here === argv;
+    } catch {
+        return false;
+    }
+}
+
+if (_isCliEntry() || process.argv[1] === _HERE) {
+    run()
+        .then(() => {
+            // Observational spike, never a gate — always exit 0 on a
+            // completed run (skip or record alike).
+            process.exit(0);
+        })
+        .catch((e: unknown) => {
+            process.stderr.write(`team_events_spike: ${(e as Error).message}\n`);
+            process.exit(1);
+        });
+}

@@ -1050,7 +1050,7 @@ function _check_lockfile_freshness(manifest: Dict): Dict {
 }
 
 /** `shutil.which(name)` — first PATH hit (with PATHEXT on win32). */
-function shutilWhich(name: string): string | null {
+export function shutilWhich(name: string): string | null {
     if (path.dirname(name) !== '.' && (name.includes('/') || name.includes('\\'))) {
         // Has a path component: check directly.
         return isExecutableFile(name) ? name : null;
@@ -2065,6 +2065,31 @@ function osErrorStr(exc: unknown): string {
 const _CLI_PROVIDER_META: Readonly<Record<string, readonly [string, boolean]>> =
     PROVIDER_CLI_META;
 
+/**
+ * m5 fix (independent-review finding) — `MemberConfig.mode` is the RAW
+ * per-member override only (`config.ts::_build_member` never writes the
+ * `defaults.mode`-resolved value back onto it); a member that never sets
+ * `mode:` locally has `member.mode === null` regardless of what the
+ * council's global default is. `defaults.mode` shipped `'auto'` as its own
+ * default (road-to-always-on-orchestration Phase 3.1), so the common,
+ * unconfigured case for every member is `null` here — and `auto` may
+ * legitimately resolve to the `cli` rung, exactly the case
+ * `config.ts::_build_member`'s own binary-override validation already
+ * accounts for ("`auto` may resolve to the cli rung, so a binary override
+ * is legitimate there too"). A check gated on the literal `mode === 'cli'`
+ * misses every `auto`/unset member, honouring neither its binary override
+ * nor its quota — silently, for the majority default shape.
+ */
+function _effectiveMemberMode(member: ai_council_config.MemberConfig, cfg: ai_council_config.CouncilConfig): string {
+    return member.mode ?? cfg.defaults.mode;
+}
+
+/** True when `member` might run over CLI transport — `cli` pinned, or `auto` (which may resolve to it). */
+function _mayRunOverCli(member: ai_council_config.MemberConfig, cfg: ai_council_config.CouncilConfig): boolean {
+    const mode = _effectiveMemberMode(member, cfg);
+    return mode === 'cli' || mode === 'auto';
+}
+
 function _check_council_cli(project_root: string): Dict {
     // Python wraps the council-module import in a try/except ImportError so a
     // broken council install degrades to a `warn` instead of crashing doctor.
@@ -2097,7 +2122,7 @@ function _check_council_cli(project_root: string): Dict {
     }
     const cli_members: Array<[string, ai_council_config.MemberConfig]> = [];
     for (const [name, m] of cfg.members.entries()) {
-        if (m.enabled && m.mode === 'cli' && name in _CLI_PROVIDER_META) {
+        if (m.enabled && _mayRunOverCli(m, cfg) && name in _CLI_PROVIDER_META) {
             cli_members.push([name, m]);
         }
     }
@@ -2216,11 +2241,12 @@ function _codex_home(): string {
 
 /**
  * Codex binary name for the team check — REUSES the council probe's binary
- * discovery: when a council config exists and declares an enabled cli-mode
- * `openai` member with a `binary` override, honour it; else the provider
- * default from `_CLI_PROVIDER_META` (`codex`). Never throws — an unreadable
- * or invalid council config falls back to the default binary (the council-cli
- * check owns reporting that problem).
+ * discovery: when a council config exists and declares an enabled `openai`
+ * member whose effective mode is `cli` (pinned) OR `auto` (may resolve to
+ * `cli` — see `_mayRunOverCli`) with a `binary` override, honour it; else
+ * the provider default from `_CLI_PROVIDER_META` (`codex`). Never throws —
+ * an unreadable or invalid council config falls back to the default binary
+ * (the council-cli check owns reporting that problem).
  */
 function _team_codex_binary_name(project_root: string): string {
     const default_bin = (_CLI_PROVIDER_META['openai'] as [string, boolean])[0];
@@ -2236,19 +2262,10 @@ function _team_codex_binary_name(project_root: string): string {
         return default_bin;
     }
     const member = cfg.members.get('openai');
-    if (member && member.enabled && member.mode === 'cli' && member.binary) {
+    if (member && member.enabled && _mayRunOverCli(member, cfg) && member.binary) {
         return member.binary;
     }
     return default_bin;
-}
-
-/** Settings-flag coercion shared with the tier-usage check (bool or string). */
-function _settings_flag(val: unknown): boolean {
-    if (typeof val === 'boolean') return val;
-    if (typeof val === 'string') {
-        return ['true', 'yes', 'on', '1'].includes(val.trim().toLowerCase());
-    }
-    return false;
 }
 
 /**
@@ -2364,9 +2381,16 @@ function _read_ai_team_block(project_root: string): Dict {
  *     loop bound (`max_consecutive_blocks`, Phase 4 — unbuilt) is absent
  *     → WARN.
  *
- * Absent feature ≠ broken feature: with `ai_team` absent or disabled the
- * check reports ok ("team mode not configured (default-off)"); WARN fires
- * only on failing sub-signals or inconsistent half-configured states.
+ * Availability, not a setting (road-to-always-on-orchestration Phase 1,
+ * Step 1.3): `ai_team.enabled` was DELETED — `/team`'s on/off state is the
+ * codex binary + auth facts (a) computes below, mirroring
+ * `checkCodexAvailability()` (`src/scripts/ai_team/availability.ts`).
+ * Absent feature ≠ broken feature: with BOTH the binary and auth absent the
+ * check reports ok ("team unavailable (default) — codex CLI not
+ * installed") — a normal starting state, not a misconfiguration; WARN
+ * fires only when something was set up PARTWAY (binary without auth, a
+ * managed Review-Gate with an invalid bound, …) or a real sub-signal
+ * fails.
  */
 // ---------------------------------------------------------------------------
 // detection check (road-to-zero-ceremony-detection Phases 3 + 4)
@@ -2526,36 +2550,11 @@ function _check_detection(project_root: string): Dict {
 
 function _check_team(project_root: string): Dict {
     const ai_team = _read_ai_team_block(project_root);
-    const enabled = _settings_flag(ai_team['enabled']);
     const gateRaw = ai_team['review_gate'];
     const gate =
         typeof gateRaw === 'object' && gateRaw !== null && !Array.isArray(gateRaw)
             ? (gateRaw as Dict)
             : {};
-    const gate_managed = _settings_flag(gate['managed']);
-
-    if (!enabled) {
-        if (gate_managed) {
-            return {
-                id: 'team',
-                status: 'warn',
-                message:
-                    'half-configured: ai_team.review_gate.managed is on but ' +
-                    'ai_team.enabled is false — the gate never runs',
-                remedy:
-                    'set `ai_team.enabled: true` in .agent-settings.yml, or ' +
-                    'remove `ai_team.review_gate.managed`',
-            };
-        }
-        return {
-            id: 'team',
-            status: 'ok',
-            message: 'team mode not configured (default-off)',
-            remedy:
-                'opt in via `ai_team.enabled: true` in .agent-settings.yml, ' +
-                'then re-run `agent-config doctor --check team`',
-        };
-    }
 
     const remedies: string[] = [];
 
@@ -2563,7 +2562,8 @@ function _check_team(project_root: string): Dict {
     const binary_name = _team_codex_binary_name(project_root);
     const binary_resolved = shutilWhich(binary_name);
     const binary_glyph = binary_resolved !== null ? '✅' : '❌';
-    if (binary_resolved === null) {
+    const binary_missing = binary_resolved === null;
+    if (binary_missing) {
         remedies.push('install the codex CLI: `npm install -g @openai/codex`');
     }
 
@@ -2613,7 +2613,8 @@ function _check_team(project_root: string): Dict {
     // (c) Review-Gate governance (Phase 4) — logic lives in
     // src/scripts/ai_team/review_gate.ts (upstream gate probe + WARN
     // states, incl. plugin-gate-on-while-unmanaged with the quoted
-    // upstream cost warning).
+    // upstream cost warning). Independent of /team's own availability —
+    // `managed` governs the codex PLUGIN's own Stop-hook loop.
     const gate_signal = review_gate_doctor_signal(project_root, gate);
     const gate_str = gate_signal.gate_str;
     remedies.push(...gate_signal.remedies);
@@ -2621,6 +2622,21 @@ function _check_team(project_root: string): Dict {
     const detail =
         `codex binary ${binary_glyph} (${binary_name}) · ` +
         `${auth_str} · ${plugin_str} · ${gate_str}`;
+
+    if (binary_missing && !authed) {
+        // Neither the binary nor auth is present — /team simply is not set
+        // up on this machine yet. CLI-first doctrine (road-to-always-on-
+        // orchestration Phase 1, Step 1.3): this is a normal starting
+        // state, not a misconfiguration — still surface the full detail
+        // (e.g. a `review_gate.managed` left on) so nothing is hidden.
+        return {
+            id: 'team',
+            status: 'ok',
+            message: `team unavailable (default) — codex CLI not installed · ${detail}`,
+            remedy: remedies.join('; '),
+        };
+    }
+
     if (remedies.length > 0) {
         return {
             id: 'team',
@@ -2632,7 +2648,7 @@ function _check_team(project_root: string): Dict {
     return {
         id: 'team',
         status: 'ok',
-        message: `team mode enabled · ${detail}`,
+        message: `team available · ${detail}`,
         remedy: '',
     };
 }
@@ -3556,6 +3572,7 @@ export {
     _foreign_records,
     _check_scope,
     _check_manifest_integrity,
+    _team_codex_binary_name,
     _check_lockfile_freshness,
     _check_global_binary,
     _check_claude_plugin,

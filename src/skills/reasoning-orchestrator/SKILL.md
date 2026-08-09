@@ -82,7 +82,8 @@ Each link **delegates** to the artifact that owns it (no duplication):
    ([`complexity-first-planning`](../complexity-first-planning/SKILL.md)); dispatch
    independent subtasks async ([`subagent-orchestration` § RDP](../subagent-orchestration/SKILL.md)),
    auto-triggered by the [`delegation-policy`](../../rules/delegation-policy.md) rule
-   (gates on `subagents.enabled`/`auto` + host manifest).
+   (gates on the emergency incident switch + host manifest — always-on
+   orchestration carries no per-layer on/off setting).
 5. **audit** — check progress against real tool results
    ([`verify-before-complete`](../../rules/verify-before-complete.md)).
 6. **verify** — fresh-context verifier on the structural-complexity gate

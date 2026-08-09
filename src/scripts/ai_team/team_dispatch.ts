@@ -18,11 +18,20 @@
  * instead of live repo access, no background jobs, explicitly worse than the
  * plugin — pointing Claude-Code users back to the Phase 2 plugin path.
  *
- * Governance reuse (Phase 3 Step 3): same `ai_team` config (fail-closed when
- * `enabled: false`), same `cli_call_budget` openai quota bucket (the gate and
- * the recording both live in `CliClient.ask` — no new counter), same
- * `_AUTH_FAILURE_PATTERNS` classification. `--manual` renders the bundle
- * between `═` rules for paste-into-web usage — no call, no quota.
+ * Governance reuse (Phase 3 Step 3): same `ai_team` config, same
+ * `cli_call_budget` openai quota bucket (the gate and the recording both
+ * live in `CliClient.ask` — no new counter), same `_AUTH_FAILURE_PATTERNS`
+ * classification. `--manual` renders the bundle between `═` rules for
+ * paste-into-web usage — no call, no quota.
+ *
+ * Availability (road-to-always-on-orchestration Phase 1, Step 1.3):
+ * `ai_team.enabled` was DELETED. Every dispatch entry point below is
+ * fail-closed on TWO facts instead — `emergency.orchestration_halt` (the
+ * one audited incident switch over the always-on stack) and
+ * `checkCodexAvailability()` (codex CLI + auth presence,
+ * `./availability.js`) — never a settings flag. `ai_team.allow_delegate`
+ * is unchanged: a second, write-access opt-in that stacks ON TOP of
+ * availability in `assert_delegate_allowed`.
  *
  * The review system prompt is derived from the adversarial-review findings
  * shape of an Apache-2.0 upstream — attribution in the repo-root NOTICE file.
@@ -38,6 +47,12 @@ import {
     load_cli_call_counts,
     OpenAICliClient,
 } from '../ai_council/clients.js';
+import {
+    checkCodexAvailability,
+    isOrchestrationHalted,
+    ORCHESTRATION_HALT_MESSAGE,
+    type TeamAvailability,
+} from './availability.js';
 import { AI_TEAM_MODEL_AUTO, type AiTeamConfig, load_ai_team_config } from './config.js';
 
 // ── errors ──────────────────────────────────────────────────────────────
@@ -51,50 +66,67 @@ export class TeamDispatchError extends Error {
 }
 
 /**
- * Raised when `ai_team.enabled` is false — the fail-closed gate.
- * The message carries the enable pointer; callers print it verbatim.
+ * Raised when `/team` is unavailable — either `emergency.orchestration_halt`
+ * is set, or the codex CLI / auth availability check
+ * (`checkCodexAvailability`) failed. `reason` is the one-line message the
+ * relevant check produced; callers print it verbatim. There is no more
+ * settings flag behind this — see the module docstring.
  */
 export class TeamDisabledError extends TeamDispatchError {
-    constructor() {
-        super(
-            'team mode is disabled (`ai_team.enabled: false`, the shipped default). ' +
-                'Set `ai_team.enabled: true` in `.agent-settings.yml` to opt in — ' +
-                'see docs/contracts/ai-team-config.md.',
-        );
+    constructor(reason: string) {
+        super(reason);
         this.name = 'TeamDisabledError';
     }
 }
 
 /**
- * Thrown by `assert_delegate_allowed` when `ai_team.enabled` is true but the
+ * Thrown by `assert_delegate_allowed` when `/team` is available but the
  * second opt-in (`ai_team.allow_delegate`) is not. `/team delegate` is the
  * only wrapper that hands WRITE access to the second model, so it is
- * double-gated; `enabled: true` alone is never delegate authorization.
+ * double-gated; availability alone is never delegate authorization.
  */
 export class TeamDelegateDisabledError extends TeamDispatchError {
     constructor() {
         super(
             '`/team delegate` is disabled (`ai_team.allow_delegate: false`, the shipped ' +
                 'default). It is the only team-mode wrapper that hands write access to ' +
-                'the second model, so it needs its own opt-in: set both ' +
-                '`ai_team.enabled: true` and `ai_team.allow_delegate: true` in ' +
-                '`.agent-settings.yml` — see docs/contracts/ai-team-config.md.',
+                'the second model, so it needs its own opt-in: set ' +
+                '`ai_team.allow_delegate: true` in `.agent-settings.yml` (once /team ' +
+                'itself is available — codex CLI installed and authenticated) — see ' +
+                'docs/contracts/ai-team-config.md.',
         );
         this.name = 'TeamDelegateDisabledError';
     }
 }
 
+/** Test seams for the two availability facts (`assert_delegate_allowed`, `run_team_review`). */
+export interface TeamAvailabilityOverrides {
+    /** Default: `checkCodexAvailability()` — the real, cached, zero-spend probe. */
+    availability?: TeamAvailability;
+    /** Default: `isOrchestrationHalted(undefined, cwd)` — reads the real settings cascade. */
+    halted?: boolean;
+}
+
 /**
  * Deterministic mirror of the `/team delegate` double gate: throws
- * `TeamDisabledError` unless `ai_team.enabled`, then
+ * `TeamDisabledError` when halted or `/team` is unavailable, then
  * `TeamDelegateDisabledError` unless `ai_team.allow_delegate`. The command
  * doc's prose gates instruct the agent; this guard is the machine-checkable
  * contract (`--delegate-gate` CLI mode) tests pin against.
  */
-export function assert_delegate_allowed(config?: AiTeamConfig, cwd?: string | null): void {
+export function assert_delegate_allowed(
+    config?: AiTeamConfig,
+    cwd?: string | null,
+    overrides: TeamAvailabilityOverrides = {},
+): void {
     const cfg = config ?? load_ai_team_config({ cwd: cwd ?? null });
-    if (!cfg.enabled) {
-        throw new TeamDisabledError();
+    const halted = overrides.halted ?? isOrchestrationHalted(undefined, cwd ?? null);
+    if (halted) {
+        throw new TeamDisabledError(ORCHESTRATION_HALT_MESSAGE);
+    }
+    const availability = overrides.availability ?? checkCodexAvailability(cwd ?? undefined);
+    if (!availability.available) {
+        throw new TeamDisabledError(availability.reason ?? 'codex CLI not available.');
     }
     if (!cfg.allow_delegate) {
         throw new TeamDelegateDisabledError();
@@ -511,6 +543,10 @@ export interface RunTeamReviewOptions {
     cli_calls_path?: string | null;
     /** Sink for user-facing output; default `process.stdout`. */
     out?: (line: string) => void;
+    /** Test seam: override the availability check (default: the real, cached probe). */
+    availability?: TeamAvailability;
+    /** Test seam: override the halted flag (default: read from the settings cascade). */
+    halted?: boolean;
 }
 
 function _quota_snapshot(config: AiTeamConfig, cli_calls_path: string | null): TeamReviewQuota {
@@ -564,16 +600,22 @@ function _envelope_from_response(
 /**
  * Run the multi-host team-review fallback.
  *
- * Order of operations is the contract: (1) fail-closed config gate,
- * (2) capability-delta header at the top, (3) read-only bundle,
- * (4) manual render OR one synchronous `codex exec` call through the shared
- * quota/auth machinery, (5) envelope emission. Throws `TeamDisabledError`
- * when `ai_team.enabled` is false — never a silent no-op.
+ * Order of operations is the contract: (1) fail-closed availability gate —
+ * halted, then codex CLI/auth — (2) capability-delta header at the top,
+ * (3) read-only bundle, (4) manual render OR one synchronous `codex exec`
+ * call through the shared quota/auth machinery, (5) envelope emission.
+ * Throws `TeamDisabledError` when halted or unavailable — never a silent
+ * no-op.
  */
 export function run_team_review(opts: RunTeamReviewOptions = {}): TeamReviewRunResult {
     const config = opts.config ?? load_ai_team_config({ cwd: opts.cwd ?? null });
-    if (!config.enabled) {
-        throw new TeamDisabledError();
+    const halted = opts.halted ?? isOrchestrationHalted(undefined, opts.cwd ?? null);
+    if (halted) {
+        throw new TeamDisabledError(ORCHESTRATION_HALT_MESSAGE);
+    }
+    const availability = opts.availability ?? checkCodexAvailability(opts.cwd ?? undefined);
+    if (!availability.available) {
+        throw new TeamDisabledError(availability.reason ?? 'codex CLI not available.');
     }
     const out = opts.out ?? ((line: string): void => void process.stdout.write(`${line}\n`));
 
