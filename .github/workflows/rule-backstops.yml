@@ -100,6 +100,12 @@ jobs:
       - name: output-discipline (placeholder prose)
         run: ./scripts-run src/scripts/lint_output_slop
 
+      # The hidden attempt→critic→re-attempt loop is falsified (TERMINAL null);
+      # correction is always visible. Shipped guidance directing a silent
+      # re-run or the concealment of a detected miss is a defect, not a style.
+      - name: never-silent (no directed silent re-run / concealment)
+        run: ./scripts-run src/scripts/lint_never_silent
+
       # `already-complied-with` is the class that permits deleting a rule, so
       # it is the one that carries an evidence bar.
       - name: decision-impact (evidence bar on the removal-permitting class)
