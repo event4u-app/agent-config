@@ -38,8 +38,16 @@ export type DefectClass =
     | 'council-availability-claim'
     | 'language-mirror';
 
-/** How far a record may travel outward. */
-export type EgressRoute = 'pull-request' | 'issue' | 'local-only';
+/**
+ * How far a record may travel outward.
+ *
+ * `fork-pull-request` is the consumer path: no write access upstream, so the
+ * fix goes to a fork and the PR is cross-repo. It is a separate route rather
+ * than a flag on `pull-request` because the steps differ (a fork has to exist
+ * first) and because the old two-way split is what let a consumer be routed
+ * into a push it could never perform.
+ */
+export type EgressRoute = 'pull-request' | 'fork-pull-request' | 'issue' | 'local-only';
 
 export interface DefectFinding {
     defect_class: DefectClass;
@@ -56,6 +64,13 @@ export interface DefectRecord extends DefectFinding {
     last_seen: string;
     occurrences: number;
     status: 'open' | 'released';
+    /**
+     * Egress legs that were attempted and did not succeed, from the most recent
+     * `release` run. Present so a record that stayed `open` says WHY without
+     * anyone re-running the command — see {@link EgressAttempt} for why this is
+     * structured rather than the captured stderr.
+     */
+    egress_attempts?: EgressAttempt[];
 }
 
 /** One finished turn, as much of it as a hook can observe. */
@@ -125,8 +140,38 @@ const COMPLAINT_PATTERNS: readonly RegExp[] = [
     /\byou (worked|did (it|that)) (wrong|incorrectly)\b/i,
 ];
 
+/**
+ * Turns that CONTAIN a complaint pattern and are not complaints.
+ *
+ * Measured, not imagined: before this list, `detectUserReport` fired on all
+ * four of these, including `"das ist fine, du hast nichts falsch gemacht"` —
+ * an absolution scored as an accusation. The cause is that the complaint
+ * patterns key on `du hast … nicht|falsch` and `you didn't`, and German and
+ * English both build exculpation out of exactly those words.
+ *
+ * A false fire is worse than a miss here: it opens a defect record, which
+ * becomes a queue line, which becomes a PR against a defect nobody has. So this
+ * check runs FIRST and wins.
+ */
+const EXCULPATION_PATTERNS: readonly RegExp[] = [
+    // A hedged question, not an accusation: "du hast nicht zufällig …?"
+    /\bnicht zufällig\b/i,
+    // Explicit absolution: "du hast nichts falsch gemacht", "war kein Fehler"
+    /\bnichts falsch\b/i,
+    /\bkein fehler\b/i,
+    // English absolution: "you didn't need to", "you didn't have to"
+    /\byou (didn'?t|did not) (need|have) to\b/i,
+    // "it's fine" / "that's fine" / "alles gut" / "passt schon"
+    /\b(it'?s|that'?s) fine\b/i,
+    /\balles gut\b/i,
+    /\bpasst (schon|so)\b/i,
+];
+
 /** Intake path 1 — the user says the agent worked wrongly. */
 export function detectUserReport(prompt: string): DefectFinding | null {
+    if (EXCULPATION_PATTERNS.some((re) => re.test(prompt))) {
+        return null;
+    }
     for (const re of COMPLAINT_PATTERNS) {
         const m = re.exec(prompt);
         if (m !== null) {
@@ -281,28 +326,73 @@ export function mergeRecord(
 
 // ── egress ─────────────────────────────────────────────────────────
 
+/**
+ * What this machine may actually do with the upstream repository.
+ *
+ * This replaced a `canPush: boolean` that was computed from remote
+ * *existence* — `git remote` returning any name at all. Every consumer who
+ * cloned the public repo has a remote and no write access, so the boolean read
+ * `true` for exactly the population the issue fallback exists to serve, the
+ * route came out `pull-request`, and the run died at `git push`. The three
+ * states below are the ones that pick different routes, so they are the ones
+ * the type carries.
+ */
+export type PushRights =
+    /** Write access to the upstream repo itself. */
+    | 'upstream'
+    /** No write access, but the repo allows forks — the real consumer path. */
+    | 'fork-only'
+    /** Neither. Nothing can be pushed from here. */
+    | 'none';
+
 export interface EgressCapability {
     /** An agent-config source checkout the fix can be authored in. */
     hasAgentConfigCheckout: boolean;
     /** `gh` is installed AND authenticated. */
     ghAuthenticated: boolean;
-    /** The checkout can push a branch to the remote. */
-    canPush: boolean;
+    /** What this machine may push, probed rather than inferred. */
+    pushRights: PushRights;
 }
 
 /**
- * Route selection, exactly as specified: a pull request when the fix can be
- * authored and pushed, an issue when it cannot, and a local record when
- * nothing can leave the machine.
+ * Route selection. A pull request when the fix can be authored and pushed
+ * upstream, a fork-based pull request when it can only be pushed to a fork, an
+ * issue when it cannot be pushed at all, and a local record when nothing can
+ * leave the machine.
  */
 export function chooseEgressRoute(cap: EgressCapability): EgressRoute {
-    if (cap.hasAgentConfigCheckout && cap.ghAuthenticated && cap.canPush) {
-        return 'pull-request';
+    if (!cap.ghAuthenticated) {
+        return 'local-only';
     }
-    if (cap.ghAuthenticated) {
-        return 'issue';
+    if (cap.hasAgentConfigCheckout) {
+        if (cap.pushRights === 'upstream') {
+            return 'pull-request';
+        }
+        if (cap.pushRights === 'fork-only') {
+            return 'fork-pull-request';
+        }
     }
-    return 'local-only';
+    return 'issue';
+}
+
+/**
+ * One attempted egress step and how it ended.
+ *
+ * Deliberately NOT the command's stderr. The record type carries no field
+ * capable of holding free-form content — that is what makes its privacy floor
+ * a property of the schema rather than of a scrubber that can fail
+ * (`domain-safety-pii` § Surface 2, and the same principle the telemetry event
+ * is built on). A git or gh failure message routinely contains an absolute
+ * path, a remote URL, and sometimes a username, so persisting it would put
+ * exactly the content the floor excludes into the one artefact that leaves the
+ * machine. The step and the outcome are what a reader needs to see the ladder
+ * ran; the raw text goes to the operator's terminal, where it is already.
+ */
+export interface EgressAttempt {
+    route: EgressRoute;
+    /** Which leg of the ladder: `push`, `fork`, `pr`, `issue`. */
+    step: 'push' | 'fork' | 'pr' | 'issue';
+    outcome: 'failed' | 'timeout';
 }
 
 /** The PR / issue body. Deterministic — same record, same bytes. */

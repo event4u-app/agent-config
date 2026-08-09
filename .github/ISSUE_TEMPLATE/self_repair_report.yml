@@ -1,0 +1,102 @@
+name: Self-repair report
+description: A defect in how the agent itself behaved, filed by the self-repair loop.
+title: "fix(self-repair): <defect class> — <N>x observed"
+labels: ["self-repair"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        This form is the structured intake for `agent-config self-repair:release`.
+        The loop fills it from a local defect record; a human can also fill it by
+        hand after `agent-config self-repair:status`.
+
+        **Why the fields are separate rather than one prose box:** reports from
+        independent installs have to cluster by `fingerprint` so a defect seen
+        once on five machines is visibly one defect and not five. That needs the
+        fingerprint in its own field, not buried in a paragraph — and it needs no
+        telemetry, because the person filing is the one who decided to file.
+
+        **What this form must never contain:** a prompt, a file body, a project
+        path, or a username. The record type the loop fills this from has no
+        field capable of carrying them, and the evidence span is sanitized at
+        capture. If you are filling this by hand, hold the same line.
+  - type: input
+    id: defect_class
+    attributes:
+      label: Defect class
+      description: The record's `defect_class` — the stable name for this kind of miss.
+      placeholder: council-availability-claim
+    validations:
+      required: true
+  - type: input
+    id: fingerprint
+    attributes:
+      label: Fingerprint
+      description: >-
+        The record's `fingerprint`. This is the clustering key — reports sharing
+        it are the same defect, whoever filed them.
+      placeholder: 5f2c9a1e
+    validations:
+      required: true
+  - type: dropdown
+    id: source
+    attributes:
+      label: Intake
+      description: Did a user say so, or did a detector fire?
+      options:
+        - user-reported
+        - self-detected
+    validations:
+      required: true
+  - type: input
+    id: occurrences
+    attributes:
+      label: Occurrences
+      description: How many times this fingerprint was seen on this machine.
+      placeholder: "3"
+    validations:
+      required: true
+  - type: input
+    id: seen
+    attributes:
+      label: Seen
+      description: >-
+        First and last observation, as the report renders them — `once (<ts>)` or
+        `<N>× (<first> → <last>)`.
+      placeholder: 3× (2026-08-01T09:00:00.000Z → 2026-08-09T17:00:00.000Z)
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Evidence
+      description: >-
+        The sanitized evidence span, capped at 160 characters by the capture. Home
+        paths and e-mail addresses are already replaced. Do not paste a transcript.
+      placeholder: Kein Council konfiguriert — ich nutze stattdessen Subagenten.
+    validations:
+      required: true
+  - type: textarea
+    id: suggested_surface
+    attributes:
+      label: Which surface failed
+      description: >-
+        The rule, skill, gate, or missing carrier that allowed the behaviour. A
+        report with no named surface is an apology, not a defect report.
+      placeholder: src/rules/council-availability.md — the probe was never run.
+    validations:
+      required: true
+  - type: dropdown
+    id: route
+    attributes:
+      label: Route this arrived by
+      description: >-
+        Which rung of the egress ladder filed this. `issue` here means the fix
+        could not be pushed from the reporting machine — the report is not
+        accompanied by a patch.
+      options:
+        - issue
+        - pull-request
+        - fork-pull-request
+    validations:
+      required: true

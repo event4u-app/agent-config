@@ -11,7 +11,13 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 
-import { type DefectFinding, type DefectRecord, fingerprint, mergeRecord } from './self_repair.js';
+import {
+    type DefectFinding,
+    type DefectRecord,
+    type EgressAttempt,
+    fingerprint,
+    mergeRecord,
+} from './self_repair.js';
 
 export const STORE_REL = path.join('agents', 'runtime', 'self-repair');
 
@@ -94,7 +100,34 @@ export function markReleased(root: string, fp: string, now: string): DefectRecor
     if (rec === null) {
         return null;
     }
+    // A successful release clears any failed attempts from an earlier run: the
+    // record travelled, so the ladder's history is no longer the reason it sits
+    // in the queue. Leaving them would make a released record read as failed.
     const next: DefectRecord = { ...rec, status: 'released', last_seen: now };
+    delete next.egress_attempts;
+    writeRecord(root, next);
+    return next;
+}
+
+/**
+ * Persist the ladder's failed legs on a record that stayed `open`.
+ *
+ * The status is NOT changed — an exhausted ladder leaves the record exactly
+ * where it was, which is the point: nothing was published, so nothing is
+ * released. Attempts replace rather than append, because the interesting
+ * question is why the LAST run failed, and an append-forever list is unbounded
+ * growth in a file nobody prunes.
+ */
+export function recordEgressAttempts(
+    root: string,
+    fp: string,
+    attempts: readonly EgressAttempt[],
+): DefectRecord | null {
+    const rec = readRecord(root, fp);
+    if (rec === null) {
+        return null;
+    }
+    const next: DefectRecord = { ...rec, egress_attempts: [...attempts] };
     writeRecord(root, next);
     return next;
 }

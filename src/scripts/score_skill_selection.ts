@@ -19,10 +19,22 @@
  *     pass = (a) >= 0.90  OR  (b) >= 0.95
  *     fail = (a) <  0.80  AND  (b) <  0.80   →  cluster needs `routes_to`
  *
- * NOTE: the .py reads the legacy `.agent-src.uncondensed/skills` literal;
- * this faithful twin replicates it byte-for-byte. When inputs are missing
- * the .py raises an uncaught FileNotFoundError → exit 1; this twin mirrors
- * that by throwing.
+ * REPOINTED 2026-08-09 (P2.2 of road-to-rule-delivery-integrity). The original
+ * read `.agent-src.uncondensed/skills`, faithfully replicating a `.py` twin —
+ * but ADR-051 retired that tree as dead legacy and it does not exist in this
+ * checkout. A scorer pointed at a missing directory does not fail: its glob
+ * yields nothing, every fixture scores against an empty skill set, and the
+ * output is a baseline of silent zeros. That is worse than an error, because a
+ * baseline is exactly what P2.2's pre-registered criteria compare against — the
+ * measurement would have been void and would have looked fine.
+ *
+ * Now reads `SRC_SKILLS()` from the shared resolver. `dist/agent-src/skills`
+ * would be equally valid (ADR-201 makes the projection a byte-exact copy, so
+ * the frontmatter is identical); `src/` is chosen because it is the source of
+ * truth and is present even before a sync.
+ *
+ * When inputs are missing the original raised an uncaught FileNotFoundError →
+ * exit 1; this twin mirrors that by throwing.
  */
 
 import * as fs from 'node:fs';
@@ -30,12 +42,14 @@ import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { parse as parseYaml } from 'yaml';
 
+import { SRC_SKILLS } from './_lib/agent_src.js';
+
 const _HERE = fileURLToPath(import.meta.url);
 // src/scripts/score_skill_selection.ts → parents[2] is the repo root.
 const REPO_ROOT = path.resolve(path.dirname(_HERE), '..', '..');
 const FIXTURES = path.join(REPO_ROOT, 'tests', 'fixtures', 'skill_selection', 'fixtures.yml');
 const CLUSTERS = path.join(REPO_ROOT, 'agents', 'reports', 'skill-collision-clusters.json');
-const SKILLS_DIR = path.join(REPO_ROOT, '.agent-src.uncondensed', 'skills');
+const SKILLS_DIR = SRC_SKILLS();
 const DEFAULT_OUT = path.join(REPO_ROOT, 'agents', 'reports', 'skill-selection-accuracy.json');
 
 const PASS_A = 0.9;

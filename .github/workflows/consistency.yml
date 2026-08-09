@@ -174,6 +174,19 @@ jobs:
         # derivation sources; a second regeneration changes nothing.
         run: ./scripts-run src/scripts/check_bridge_derivation
 
+      - name: Never-silent — no shipped artefact directs a concealed miss
+        # road-to-rule-delivery-integrity P4.4. Description passes, direction
+        # fails: the discriminator is whether the negation stands BEFORE the
+        # phrase, which is what keeps the self-repair-loop Iron Law green.
+        run: ./scripts-run src/scripts/lint_never_silent
+
+      - name: Detector corpus — three fixture classes per self-repair detector
+        # road-to-rule-delivery-integrity P4.3. Precision and recall are separate
+        # obligations: a detector carrying only `fire` cases looks perfect while
+        # opening records on praise, which is what detectUserReport did until the
+        # hardening landed. A missing class fails.
+        run: ./scripts-run src/scripts/check_detector_corpus
+
       - name: Supported-tools matrix ↔ adapter registry
         run: ./scripts-run src/scripts/lint_supported_tools_matrix
 
