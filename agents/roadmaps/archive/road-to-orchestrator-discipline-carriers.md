@@ -292,6 +292,16 @@ made on measured data rather than on hope.
 
 ## Blockers
 
+> **All three are still open at archival, and this file is no longer a tracked
+> surface for them.** The archival sweep checks open steps and deferred items,
+> not open blockers, so closing the roadmap silently dropped three
+> maintainer-owned decisions from the dashboard's count. They are carried
+> forward verbatim in
+> `agents/settings/contexts/orchestrator-carriers-open-decisions.md`, which is
+> what shipped artifacts cite — a stable artifact may not cite this file
+> (`no-roadmap-references`). Recorded during closeout, surfaced by the R2
+> completion review rather than by the sweep.
+
 ### blocker: user-instruction-compliance
 
 - **Status:** open
@@ -348,11 +358,22 @@ made on measured data rather than on hope.
 
 ## Acceptance criteria
 
-- [x] A fresh clone on this host resolves `subagent_spawn: true` from the
-      committed registry with no manual settings; with `subagents.auto: on`
-      a 3-slice probe classifies as `dispatch` (absent settings resolve to
-      `ask` — there is no defaults layer — so the fresh-clone verdict is
-      `ask`, which is the gate OPEN, not the gate closed).
+- [x] A clone with NO settings file, on this host, resolves
+      `subagent_spawn: true` from the committed registry with no manual
+      settings; with `subagents.auto: on` a 3-slice probe classifies as
+      `dispatch`, and with no settings file at all it classifies as `ask`
+      (there is no defaults layer, so absent coerces to `ask`) — which is the
+      gate OPEN, not the gate closed.
+      <!-- Wording amended during closeout, R2 finding 5: the criterion said
+      "a fresh clone", which denotes two different states that disagree about
+      the verdict. A clone with no settings file lands on `ask`; an INSTALL
+      carrying the shipped template lands on `dispatch`, because the template
+      sets `auto: "on"`. Both are verified below and both are correct — only
+      the phrase was ambiguous, and the test pins the no-settings-file case
+      with an empty tmpdir. Naming the state the criterion actually asserts
+      is a clarification, not a moved goalpost: the parenthetical already
+      scoped it to the absent-settings coercion. -->
+
       <!-- Verified by live probe against the real modules, with no settings
       file in scope: host `claude` → `subagent_spawn: true`; unknown host →
       `false`; a `{}` override still zeroes everything (whole-object override

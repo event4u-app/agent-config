@@ -7,8 +7,12 @@
  * every session self-attested "CI green, ready for review". This concern
  * fires the advisory obligation at the exact moment a mutating session ends
  * without one, and counts the skip deterministically (hook-carried, not
- * model-carried) so a future blocking decision (blocker
- * `f4-full-blocking-decision`) has a measured distribution to cite.
+ * model-carried) so a future blocking decision has a measured distribution to
+ * cite. That decision — its threshold AND the stop-slot delivery question
+ * underneath it — is open and maintainer-owned; it is recorded in
+ * `agents/settings/contexts/orchestrator-carriers-open-decisions.md` § 1.
+ * It used to be cited here as blocker `f4-full-blocking-decision`, which
+ * stopped resolving the moment its roadmap was archived.
  *
  * Fires ONLY when BOTH hold:
  *   (a) the session mutated tracked, non-doc files beyond
