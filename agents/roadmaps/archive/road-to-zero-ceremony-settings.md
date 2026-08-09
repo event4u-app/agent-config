@@ -153,7 +153,7 @@ outside C.
       caller, stamping `source` and a timestamp, echoing each write as one loud
       line.
       <!-- verify: npx vitest run tests/scripts/settings_set.test.ts -->
-- [~] Effective-value resolution (sparse file → template defaults) sits behind
+- [-] Effective-value resolution (sparse file → template defaults) sits behind
       the existing settings read path, so every consumer stays oblivious.
       <!-- verify: npx vitest run tests/server/schemas/parity.test.ts -->
       **Deferred — the premise is only half true, and closing the other half is
@@ -187,6 +187,15 @@ outside C.
       change**, and by then the council's cancel-with-successor is the likely
       right answer, because at that point the roadmap really is archiving. See
       the blocker below, which now carries this as part of its resolution.
+      **Disposed 2026-08-09 — transferred, with maintainer approval via the
+      Iron-Law-3 resolution menu.** The roadmap really is archiving now (the
+      last open step closed on the council's condition), so the
+      cancel-with-successor path fires exactly as this note predicted: the
+      scripts-family defaults-layer work moves to
+      `road-to-scripts-settings-defaults.md` (active tree, `status: ready`),
+      which carries the `load_agent_settings` precedence facts and the
+      `MERGEABLE_KEYS`/ADR constraint from this note. Marked `[-]` here because
+      the work leaves this file; it is not dropped.
 - [x] Refuse C-class writes server-side in the GUI's write route too — the CLI
       refusal must not be the only fence.
       <!-- verify: npx vitest run tests/server/routes/settings.test.ts -->
@@ -278,7 +287,7 @@ because absent means default in both directions.
       fresher than any stored one. Consequence for this phase's exit criterion:
       language contributes **zero** entries to the settings file, so "at most two
       entries" is satisfied by the nickname alone.
-- [ ] Ask the nickname once, prefilled from git user name then `$USER`, so
+- [x] Ask the nickname once, prefilled from git user name then `$USER`, so
       accepting is one keypress; answering activates the session canary the
       package already ships dark.
       **The prefill half shipped; the ASK half did not, so the box stays open.**
@@ -321,6 +330,15 @@ because absent means default in both directions.
       Phase 5 precedent above, which is checkable.
       **What closing this needs:** the two entry-count cases, then `[x]` plus the
       criterion amendment below.
+      **Closed 2026-08-09 on the council's own condition.** The two entry-count
+      cases are pinned in `tests/scripts/first_run.test.ts` § "entry count — the
+      file a first run leaves behind": zero entries (a non-interactive first run
+      plans no ask, so the sanctioned writer never runs and no file exists) and
+      exactly one entry (answering the nickname writes `personal.canary_name` as
+      the file's only leaf, provenance `jit-answer` in the sidecar, no template
+      opinion riding along). The criterion amendment below is applied in the
+      same change.
+      <!-- verify: npx vitest run tests/scripts/first_run.test.ts -->
 - [x] Skip cleanly in non-TTY, CI, and headless contexts: no file, defaults,
       no questions, ever.
       <!-- verify: npx vitest run tests/scripts/first_run.test.ts -->
@@ -338,26 +356,27 @@ because absent means default in both directions.
       4 step 3" — **this is that note**; it did not exist until now, which is
       itself one of the dangling citations under Findings below.
 
-**Exit criteria:** a fresh interactive session asks exactly one question and
-prints exactly one auto-set notice; a non-TTY session asks nothing; the
-resulting file has at most two entries, each with provenance.
-**Status of these criteria, 2026-08-07 — NOT met, and the phase is not done.**
-Two of the three criteria are unreachable as *code* under decisions taken since
-they were written, and saying so beats quietly passing the phase:
+**Exit criteria (amended 2026-08-09, per council B: amend):** a fresh
+interactive session asks exactly one question (agent-carried per
+`settings-ask-protocol`, `enforced_by: none`); a non-TTY session asks nothing
+(pinned by 16 cases); the resulting file has at most ONE entry, with provenance.
+**Status, 2026-08-09 — met.** The history of the amendment, kept because it
+carries decisions:
 - *"asks exactly one question"* — there is no chat-side ask trigger and there
   will not be one: the protocol is `enforced_by: none`, so the ask is
   agent-carried on every host. `planSettingsAsks` computes WHICH key gets the
-  question and is imported only by its tests. Step 2 stays `[ ]` for this.
-  **Amendment, drafted and NOT yet applied (council B: amend).** The criterion
-  should read *"a fresh interactive session asks exactly one question
-  (agent-carried per `settings-ask-protocol`, `enforced_by: none`); a non-TTY
-  session asks nothing (pinned by 16 cases); the resulting file has at most ONE
-  entry, with provenance."* It is drafted rather than applied because the
-  entry-count half is not yet pinned by a test, and amending a criterion to a
-  claim nothing verifies trades one unverified statement for another.
-- *"at most two entries"* — language contributes zero entries (no settings key,
-  per the council decision on step 1), so the reachable maximum is one.
-- *"a non-TTY session asks nothing"* — this one IS met, and pinned by 16 cases.
+  question and is imported only by its tests. Step 2 was held open for this
+  until the council's condition below was met.
+  **Amendment applied 2026-08-09 (council B: amend, condition met).** It had
+  been drafted rather than applied because the entry-count half was not yet
+  pinned by a test, and amending a criterion to a claim nothing verifies trades
+  one unverified statement for another. The pin now exists:
+  `tests/scripts/first_run.test.ts` § "entry count — the file a first run
+  leaves behind" (exactly-one-entry and zero-entries, both green).
+- *"at most two entries"* (the pre-amendment wording) — language contributes
+  zero entries (no settings key, per the council decision on step 1), so the
+  reachable maximum is one; the amended criterion says ONE.
+- *"a non-TTY session asks nothing"* — met, and pinned by 16 cases.
 **Rollback:** disable the first-run trigger; the canary stays dark as today.
 
 ## Phase 5 — The JIT protocol
