@@ -1,0 +1,63 @@
+name: Self-repair report
+description: >-
+  A defect in the agent's own behaviour, recorded by the agent-config
+  self-repair loop. Reports from independent installs cluster by fingerprint —
+  search for yours before filing.
+title: 'fix(self-repair): <defect class> — <N>x observed'
+labels:
+  - self-repair
+body:
+  - type: markdown
+    attributes:
+      value: >-
+        The fields below mirror the self-repair defect record one-to-one, so a
+        report rendered by `agent-config self-repair:release` round-trips
+        through this form without rewriting. The evidence span must already be
+        capture-time sanitized — no project paths, prompts, or file contents.
+  - type: dropdown
+    id: defect_class
+    attributes:
+      label: Defect class
+      description: One class = one detector (`DefectClass` in `src/scripts/_lib/self_repair.ts`).
+      options:
+        - user-reported
+        - council-availability-claim
+        - language-mirror
+    validations:
+      required: true
+  - type: input
+    id: fingerprint
+    attributes:
+      label: Fingerprint
+      description: >-
+        From `agent-config self-repair:status` — the shape-normalized record id
+        that lets independent installs cluster without telemetry.
+      placeholder: 3f9a1c2b4d5e6f70
+    validations:
+      required: true
+  - type: input
+    id: occurrences
+    attributes:
+      label: Occurrence count
+      description: How often this fingerprint was observed on this install.
+      placeholder: '3'
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Evidence span
+      description: >-
+        The short sanitized span from the record — never raw transcript text.
+      render: text
+    validations:
+      required: true
+  - type: textarea
+    id: suggested_surface
+    attributes:
+      label: What the fix should address
+      description: >-
+        One line naming the rule, skill, or gate whose absence allowed the
+        behaviour.
+    validations:
+      required: true

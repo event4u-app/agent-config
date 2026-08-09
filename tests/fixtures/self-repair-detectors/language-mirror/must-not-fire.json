@@ -1,0 +1,38 @@
+[
+  {
+    "name": "de-pinned turn opening in German — correct behaviour",
+    "turn": {
+      "prompt": "",
+      "reply": "Der Fix ist fertig, die Tests sind grün und der Build läuft stabil durch.",
+      "toolCommands": [],
+      "pinnedLanguage": "de"
+    }
+  },
+  {
+    "name": "mixed opening that still carries the pinned language — too ambiguous to fire",
+    "turn": {
+      "prompt": "",
+      "reply": "Der Deploy ist durch — the pipeline reported success and the tests are green, alles gut soweit im Build.",
+      "toolCommands": [],
+      "pinnedLanguage": "de"
+    }
+  },
+  {
+    "name": "no pin — nothing to compare against",
+    "turn": {
+      "prompt": "",
+      "reply": "The fix is complete and the tests are green, so you can review the change now.",
+      "toolCommands": [],
+      "pinnedLanguage": null
+    }
+  },
+  {
+    "name": "short opening — too little signal to judge",
+    "turn": {
+      "prompt": "",
+      "reply": "Done.",
+      "toolCommands": [],
+      "pinnedLanguage": "de"
+    }
+  }
+]

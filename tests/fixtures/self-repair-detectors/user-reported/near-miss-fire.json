@@ -1,0 +1,18 @@
+[
+  {
+    "name": "complaint phrased as an overlooked-half report, unlike the canonical wording",
+    "turn": {
+      "prompt": "Du hast schon wieder die Hälfte der Dateien übersehen!",
+      "reply": "",
+      "toolCommands": []
+    }
+  },
+  {
+    "name": "English complaint about an omission, not about a wrong result",
+    "turn": {
+      "prompt": "you failed to update the callers, again",
+      "reply": "",
+      "toolCommands": []
+    }
+  }
+]

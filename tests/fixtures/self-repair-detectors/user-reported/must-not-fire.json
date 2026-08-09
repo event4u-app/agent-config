@@ -1,0 +1,30 @@
+[
+  {
+    "name": "curious question that matches the complaint shape (roadmap-mandated)",
+    "turn": {
+      "prompt": "du hast nicht zufällig die alte Config noch offen?",
+      "reply": "",
+      "toolCommands": []
+    }
+  },
+  {
+    "name": "reassurance, not a complaint (roadmap-mandated)",
+    "turn": {
+      "prompt": "you didn't need to run that, it's fine",
+      "reply": "",
+      "toolCommands": []
+    }
+  },
+  {
+    "name": "agreement that superficially names the agent",
+    "turn": { "prompt": "du hast recht, das passt", "reply": "", "toolCommands": [] }
+  },
+  {
+    "name": "complaint about the CODE, not about the agent's conduct",
+    "turn": {
+      "prompt": "the test is wrong because the fixture is stale",
+      "reply": "",
+      "toolCommands": []
+    }
+  }
+]
