@@ -248,16 +248,47 @@ made on measured data rather than on hope.
 
 ## Phase 7 — what this roadmap will not do
 
-- [ ] 7.1 No kernel promotion of `delegation-policy` (council CUT: no router
+- [x] 7.1 No kernel promotion of `delegation-policy` (council CUT: no router
       fires it; the AGENTS.md line + hooks are the reach mechanism).
-- [ ] 7.2 No blocking gate anywhere in this PR — every new concern is
+      <!-- Verified: `dist/router.json` `kernel` array holds exactly the nine
+      pre-existing ids (agent-authority, ask-when-uncertain, commit-policy,
+      direct-answers, language-and-tone, no-cheap-questions,
+      non-destructive-by-default, scope-control, verify-before-complete) —
+      `delegation-policy` is not among them, and its own frontmatter is
+      unchanged at `type: "auto"` / `tier: "2b"`. Kernel count stays 9, so the
+      kernel-prefix byte-stability gate has nothing to re-anchor. -->
+- [x] 7.2 No blocking gate anywhere in this PR — every new concern is
       host-facing exit 0 on every path (dispatcher-internal `warn` included).
       A future blocking proposal must cite the F4-lite telemetry distribution.
-- [ ] 7.3 No cross-session coordination mechanism (see blocker — different
+      <!-- Verified three ways. (a) Static: grep for `decision: "block"`,
+      `exit(1)`, `process.exit(1)`, `exitCode = 1` across all three new hook
+      files returns ZERO hits. (b) Mechanism: `host_semantics.emitFor`'s
+      `severity === "warn"` branch returns `{ exit: 0, … }` unconditionally
+      and never consults the block-capable-events set. (c) Manifest: all
+      three concerns carry `fail_closed: false` + `severity: advisory`.
+      Empirically confirmed through `dist/hooks/dispatch.js`: a firing
+      delegation-nudge prompt and a non-firing one both produce host exit 0. -->
+- [x] 7.3 No cross-session coordination mechanism (see blocker — different
       bug class: session registry / file-overlap detection, not delegation).
-- [ ] 7.4 No claim that the nudges change behaviour — that is what the F6 +
+      <!-- Verified against the merged change's own file list (21 files): the
+      committed capability registry, the two AGENTS.md surfaces, the
+      delegation-policy rule + its projection, the orchestration-telemetry
+      context, three hook files + their registrations, two record libs, four
+      test files. Nothing touches `session_register`, and no file-overlap or
+      files-touched mechanism was added. The pre-existing session-register
+      concern is untouched — which is what leaves blocker `cross-session-dedup`
+      genuinely open rather than silently half-built. -->
+- [x] 7.4 No claim that the nudges change behaviour — that is what the F6 +
       F4-lite telemetry exists to measure; the null (nudges ignored like the
       canary) is a pre-authorised outcome that removes the nudge concerns.
+      <!-- Verified: an over-claim grep (improve|guarantee|will change|changes
+      behaviour|ensures|enforces) over AGENTS.md, the consumer template and
+      `src/rules/delegation-policy.md` returns ZERO hits, and the rule states
+      the opposite in its own words — "The nudges are advisory by design —
+      whether they change behaviour is measured by the telemetry, not
+      assumed." The pre-authorised null is written down HERE (this line) and
+      reinforced by risk-register row 1, both authored before any behaviour
+      data exists — which is the ordering the declaration actually demands. -->
 
 ## Blockers
 
@@ -317,23 +348,113 @@ made on measured data rather than on hope.
 
 ## Acceptance criteria
 
-- [ ] A fresh clone on this host resolves `subagent_spawn: true` from the
+- [x] A fresh clone on this host resolves `subagent_spawn: true` from the
       committed registry with no manual settings; with `subagents.auto: on`
       a 3-slice probe classifies as `dispatch` (absent settings resolve to
       `ask` — there is no defaults layer — so the fresh-clone verdict is
       `ask`, which is the gate OPEN, not the gate closed).
-- [ ] AGENTS.md and the consumer template state both obligations and pass the
+      <!-- Verified by live probe against the real modules, with no settings
+      file in scope: host `claude` → `subagent_spawn: true`; unknown host →
+      `false`; a `{}` override still zeroes everything (whole-object override
+      semantics, intended); an array override correctly falls through to the
+      registry. `classifyTask({independent_slices: 3})` → `dispatch` under
+      `auto: on`, `ask` under absent `auto` — delegable in both, i.e. the gate
+      open. 41 tests green (`_lib_host_capability` 21 + `_lib_auto_dispatch` 20).
+
+      DEFECT FOUND AND FIXED WHILE VERIFYING THIS: `routing_doctor.ts` was
+      never migrated to the registry — it resolved via `normalizeHostManifest`
+      alone, so on a fresh clone the DIAGNOSTIC a user runs to check delegation
+      reported `subagent_spawn: false` / `in-session` while the hook path
+      reported `true` / `ask`. Two readers of one fact disagreeing is worse
+      than either answer. Fixed here by threading the already-present
+      `--platform` option into `collect_orchestration` and calling
+      `resolveHostCapabilities`; the pre-existing test that pinned the wrong
+      value is split into a known-host and an unknown-host case so neither
+      half can silently regress. Sibling search for the same construct:
+      `normalizeHostManifest` had exactly ONE production call site outside its
+      own module (this one) — now zero; both production readers go through
+      `resolveHostCapabilities`.
+
+      NOT claimed: that the live envelope on this host actually carries
+      `platform: "claude"`. The registry is keyed on that string and the code
+      path is correct given it, but no `.claude/settings.json` registers the
+      dispatcher in this worktree, so the runtime fact is outside this
+      checkout. Also worth stating plainly: the shipped template sets
+      `auto: "on"`, so a consumer WITH the installed settings file lands on
+      `dispatch`, not on the `ask` this criterion describes — the `ask` branch
+      is the no-settings-file case only. -->
+- [x] AGENTS.md and the consumer template state both obligations and pass the
       thin-root contract.
-- [ ] An in-session Agent dispatch produces an `orchestration_record` line
+      <!-- Verified: `AGENTS.md:31` — "subagents take independent-slice work,
+      not serial; no mutating session ends without neutral review" — and
+      `src/agent-src/templates/AGENTS.md:21` — "dispatch independent-slice
+      tasks to subagents instead of serial work; a mutating session ends after
+      a neutral cross-model review". Both obligations present in both files;
+      the dist projection matches the template byte-for-byte.
+      `./scripts-run src/scripts/lint_agents_md` exits 0. Two INFORMATIONAL
+      warns (package root 2980 chars vs WARN cap 2800; template 2473 vs 2300)
+      — the script's own contract exits non-zero only on FAIL. Hazard worth
+      recording rather than hiding: both files now sit ~1% under the FAIL cap
+      (3000 / 2500), so the next sentence added to either breaks CI.
+      `spotcheck_thin_root.ts` was NOT run — it is a live paid council with no
+      deterministic verdict, so it is a human-invoked check, not evidence. -->
+- [x] An in-session Agent dispatch produces an `orchestration_record` line
       with zero model involvement; a non-Agent tool call produces none.
-- [ ] A delegable-shaped prompt receives exactly one injected verdict line; a
+      <!-- Verified by probe, both directly and through the real
+      `dist/hooks/dispatch.js` (run as-is, never rebuilt — it is a live hook
+      path): an `Agent` completion appends exactly ONE JSONL line to
+      `agents/runtime/state/audit/<YYYY-MM>.jsonl`; a `Read` completion
+      appends none and creates no file at all; garbage stdin exits 0 without
+      crashing or writing. Host exit 0 on every path. Zero model involvement
+      by construction — the concern is pure node, no LLM call anywhere.
+      27 tests green. Probe hazard for whoever re-runs this: the dispatcher
+      resolves consumer root from process cwd, not from the payload's `cwd`,
+      so a scratch-root probe run through the full dispatcher writes into the
+      repo's (gitignored) `agents/runtime/` — the tracked tree stayed clean,
+      verified by identical `git status --porcelain` before and after. -->
+- [x] A delegable-shaped prompt receives exactly one injected verdict line; a
       non-delegable prompt receives none; no new concern can reach the host
       as anything but exit 0.
-- [ ] A mutating no-review session produces exactly one `review_skipped`
+      <!-- Verified end-to-end through `dist/hooks/dispatch.js` on `claude`:
+      "fix the failing tests in these 6 files: …" → host exit 0 with
+      `hookSpecificOutput.additionalContext` carrying exactly one
+      `<delegation-nudge>` block ("do-in-parallel (6 slices, lite tier
+      recommended)"), appended after the pre-existing language-mirror pin;
+      "why does X happen?" → host exit 0, additionalContext carries the
+      language-mirror pin and ZERO delegation-nudge content. The
+      dispatcher-internal exit 2 (`warn`) never surfaces as a host exit code.
+      44 tests green. Scope of the exit-0 claim, stated honestly: probed on
+      `claude` on those two paths; other platforms' trampolines and the
+      async-launch ack branch were not probed. -->
+- [x] A mutating no-review session produces exactly one `review_skipped`
       telemetry event (per session), and the advisory line is present in the
       dispatcher output on `stop`; doc-only sessions stay silent. (Whether
       the host forwards stop-slot context to the model is an open question
       owned by blocker `f4-full-blocking-decision` — not claimed here.)
-- [ ] Every touched doc claims only what the shipped mechanisms check; the
+      <!-- Verified by the concern's own E2E suite, which runs the real hook
+      via tsx rather than asserting on mocks — 36 tests green, covering every
+      sub-claim of this criterion by name: mutation over threshold + no
+      reviewer → advisory line AND one `review_skipped` line; a second Stop in
+      the SAME session → silent (the once-per-session gate); doc-only diff →
+      silent, no telemetry; reviewer ran → silent even over threshold;
+      malformed stdin → silent exit 0; a non-stop event → strict no-op; and
+      under replay mode the advisory fires while neither telemetry nor the
+      session marker is written. The host-forwarding half stays unclaimed, as
+      written — it is the same open question the rule text and the blocker
+      both already record. -->
+- [x] Every touched doc claims only what the shipped mechanisms check; the
       null outcome for the nudge layer is written down before any behaviour
       data exists.
+      <!-- Verified: over-claim grep across AGENTS.md, the consumer template
+      and `src/rules/delegation-policy.md` returns zero hits. The rule names
+      every shipped carrier (committed registry, AGENTS.md line, the three
+      concerns), separates verified delivery (`user_prompt_submit`,
+      end-to-end) from unverified (`stop`-slot host forwarding), states what
+      stays model-carried — "the decomposition itself, the per-return
+      verification, and every dispatch on hosts without hook slots" — and
+      cites its own measured baseline (1 of 370 captured) rather than a
+      projected improvement. The pre-authorised null lives at 7.4 above.
+      One honest gap: no user-facing doc mentions the two nudges, so the
+      carrier disclosure exists only in the rule file. That is consistent —
+      neither is a settable `hooks.*` key — but it is a single point of
+      disclosure, not a redundant one. -->
