@@ -1,0 +1,10 @@
+[
+  {
+    "name": "the canonical #1218 defect — claim asserted, resolver never consulted",
+    "turn": {
+      "prompt": "",
+      "reply": "Kein Council konfiguriert (keine .agent-settings.yml) — ich nutze stattdessen Subagenten.",
+      "toolCommands": ["git status", "grep -rn council ."]
+    }
+  }
+]

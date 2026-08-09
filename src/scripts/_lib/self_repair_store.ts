@@ -94,7 +94,35 @@ export function markReleased(root: string, fp: string, now: string): DefectRecor
     if (rec === null) {
         return null;
     }
+    // A successful release supersedes any earlier failed attempts.
     const next: DefectRecord = { ...rec, status: 'released', last_seen: now };
+    delete next.release_errors;
+    writeRecord(root, next);
+    return next;
+}
+
+/**
+ * A release attempt exhausted the whole egress ladder: keep the record open
+ * and attach every failed step so the next `self-repair:status` shows what
+ * went wrong. Errors arrive pre-sanitized (the CLI runs them through
+ * `sanitizeEvidence` — command output can carry local paths).
+ */
+export function attachReleaseErrors(
+    root: string,
+    fp: string,
+    errors: string[],
+    now: string,
+): DefectRecord | null {
+    const rec = readRecord(root, fp);
+    if (rec === null) {
+        return null;
+    }
+    const next: DefectRecord = {
+        ...rec,
+        status: 'open',
+        last_seen: now,
+        release_errors: errors,
+    };
     writeRecord(root, next);
     return next;
 }
