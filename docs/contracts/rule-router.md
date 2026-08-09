@@ -16,10 +16,41 @@ by the ADR-200 py2ts migration; paths updated 2026-08-03. -->
 The kernel (9 rules, ≤ 26k chars per ADR-002) loads on every session.
 Every other rule must declare **when it activates** and **which
 artifacts (skills / guidelines) carry the body**. The router compiles
-those declarations into a deterministic lookup table that host agents
-read once at session start.
+those declarations into a deterministic lookup table.
 
 Kernel rules never appear in the router — they are unconditional.
+
+### What reads `router.json` — and what does not
+
+```
+THE ROUTER IS A COMPILE-TIME SOURCE FOR HOST-NATIVE EMISSION AND LINT TOOLING.
+NO HOST AGENT PERFORMS A RUNTIME LOOKUP AGAINST IT.
+```
+
+This paragraph replaced a sentence that said host agents *"read [the table]
+once at session start"* (retired 2026-08-08, P3.3 of
+`road-to-rule-delivery-integrity`). No host does. Measured: `dist/router.json`
+has 20 consumers across lint, eval, telemetry and prepack scripts, and **zero**
+under `src/scripts/hooks/` — no hook slot loads it, and no slot injects
+trigger-matched rule bodies. Describing a lookup nobody performs is the posture
+ADR-127 rejects: a promised check that does not run is decoration, and a
+documented mechanism that does not exist is the same defect one layer up.
+
+The router earns its place as a **compile-time** artifact: it is what the
+per-host emitters and the lint / eval / telemetry surfaces read. Activation
+itself is per-host, and the mechanism differs per host:
+
+| Host | How a non-kernel rule activates | Emitter |
+|---|---|---|
+| Cursor | `globs:` + `alwaysApply:` in the emitted `.mdc` | `_emit_cursor_mdc` (`condense.ts`) |
+| Windsurf | `trigger: glob \| model_decision` | `_emit_windsurf_rule` (`condense.ts`) |
+| Claude Code | `paths:` frontmatter on the file in `.claude/rules/`; a rule **without** `paths:` loads unconditionally at launch | none yet — P3.1 of `road-to-rule-delivery-integrity`; contract fixture: `agents/evidence/analysis/claude-code-rules-dir-contract.md` |
+| Everything else | the projected file set is the activation surface; no per-host scoping key is known | — |
+
+The Claude Code row is the load-bearing gap: the host **does** support scoping
+and the suite does not emit it, so every projected rule there is standing
+context. Anything that reads this contract to decide whether a trigger "works"
+must read the row for the host in question, not the router.
 
 ## Frontmatter schema
 

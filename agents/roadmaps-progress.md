@@ -2,11 +2,11 @@
 
 > Auto-generated — do not edit. Regenerate with `task roadmap-progress` or by running the `update_roadmap_progress` script for your install; rewritten on every roadmap create / execute / completion change (timestamp lives in git history).
 >
-> 21 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **24** open blockers
+> 22 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **24** open blockers
 
 ## Overall
 
-**212 / 334 steps done · 63%**
+**221 / 349 steps done · 63%**
 
 ```text
 █████████████████████████░░░░░░░░░░░░░░░   63%
@@ -28,15 +28,16 @@
 | 10 | [road-to-orchestration-scope-decision.md](roadmaps/road-to-orchestration-scope-decision.md) | 4 | 10 | 6 | 4 | 0 | 0 | [1](#blockers-road-to-orchestration-scope-decision) | ████░░░░░░ 40% |
 | 11 | [road-to-orchestrator-discipline-carriers.md](roadmaps/road-to-orchestrator-discipline-carriers.md) | 7 | 33 | 10 | 23 | 0 | 0 | [3](#blockers-road-to-orchestrator-discipline-carriers) | ███████░░░ 70% |
 | 12 | [road-to-rule-coherence-followup.md](roadmaps/road-to-rule-coherence-followup.md) | 5 | 9 | 8 | 1 | 0 | 0 | [2](#blockers-road-to-rule-coherence-followup) | █░░░░░░░░░ 11% |
-| 13 | [road-to-scale-history-bench-run.md](roadmaps/road-to-scale-history-bench-run.md) | 1 | 2 | 2 | 0 | 0 | 0 | [1](#blockers-road-to-scale-history-bench-run) | ░░░░░░░░░░ 0% |
-| 14 | [road-to-skill-ecosystem-gate-integrity.md](roadmaps/road-to-skill-ecosystem-gate-integrity.md) | 7 | 43 | 3 | 40 | 0 | 0 | [1](#blockers-road-to-skill-ecosystem-gate-integrity) | █████████░ 93% |
-| 15 | [road-to-solution-minimalism.md](roadmaps/road-to-solution-minimalism.md) | 4 | 36 | 10 | 25 | 0 | 1 | [1](#blockers-road-to-solution-minimalism) | ███████░░░ 71% |
-| 16 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 6 | 3 | 0 | 0 | [1](#blockers-road-to-subagent-value-realization-followup) | ███░░░░░░░ 33% |
-| 17 | [road-to-surface-consolidation.md](roadmaps/road-to-surface-consolidation.md) | 3 | 14 | 1 | 12 | 1 | 0 | [2](#blockers-road-to-surface-consolidation) | █████████░ 92% |
-| 18 | [road-to-tier-removal.md](roadmaps/road-to-tier-removal.md) | 4 | 8 | 2 | 6 | 0 | 0 | [1](#blockers-road-to-tier-removal) | ████████░░ 75% |
-| 19 | [road-to-ui-track-integrity-followup.md](roadmaps/road-to-ui-track-integrity-followup.md) | 1 | 10 | 10 | 0 | 0 | 0 | [2](#blockers-road-to-ui-track-integrity-followup) | ░░░░░░░░░░ 0% |
-| 20 | [road-to-worktree-hygiene.md](roadmaps/road-to-worktree-hygiene.md) | 1 | 9 | 2 | 7 | 0 | 0 | [1](#blockers-road-to-worktree-hygiene) | ████████░░ 78% |
-| 21 | [road-to-zero-ceremony-settings.md](roadmaps/road-to-zero-ceremony-settings.md) | 5 | 19 | 1 | 17 | 1 | 0 | 0 | █████████░ 94% |
+| 13 | [road-to-rule-delivery-integrity.md](roadmaps/road-to-rule-delivery-integrity.md) | 5 | 17 | 6 | 9 | 1 | 1 | 0 | ██████░░░░ 60% |
+| 14 | [road-to-scale-history-bench-run.md](roadmaps/road-to-scale-history-bench-run.md) | 1 | 2 | 2 | 0 | 0 | 0 | [1](#blockers-road-to-scale-history-bench-run) | ░░░░░░░░░░ 0% |
+| 15 | [road-to-skill-ecosystem-gate-integrity.md](roadmaps/road-to-skill-ecosystem-gate-integrity.md) | 7 | 43 | 3 | 40 | 0 | 0 | [1](#blockers-road-to-skill-ecosystem-gate-integrity) | █████████░ 93% |
+| 16 | [road-to-solution-minimalism.md](roadmaps/road-to-solution-minimalism.md) | 4 | 36 | 10 | 25 | 0 | 1 | [1](#blockers-road-to-solution-minimalism) | ███████░░░ 71% |
+| 17 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 6 | 3 | 0 | 0 | [1](#blockers-road-to-subagent-value-realization-followup) | ███░░░░░░░ 33% |
+| 18 | [road-to-surface-consolidation.md](roadmaps/road-to-surface-consolidation.md) | 3 | 14 | 1 | 12 | 1 | 0 | [2](#blockers-road-to-surface-consolidation) | █████████░ 92% |
+| 19 | [road-to-tier-removal.md](roadmaps/road-to-tier-removal.md) | 4 | 8 | 2 | 6 | 0 | 0 | [1](#blockers-road-to-tier-removal) | ████████░░ 75% |
+| 20 | [road-to-ui-track-integrity-followup.md](roadmaps/road-to-ui-track-integrity-followup.md) | 1 | 10 | 10 | 0 | 0 | 0 | [2](#blockers-road-to-ui-track-integrity-followup) | ░░░░░░░░░░ 0% |
+| 21 | [road-to-worktree-hygiene.md](roadmaps/road-to-worktree-hygiene.md) | 1 | 9 | 2 | 7 | 0 | 0 | [1](#blockers-road-to-worktree-hygiene) | ████████░░ 78% |
+| 22 | [road-to-zero-ceremony-settings.md](roadmaps/road-to-zero-ceremony-settings.md) | 5 | 19 | 1 | 17 | 1 | 0 | 0 | █████████░ 94% |
 
 ---
 
@@ -303,6 +304,18 @@ _1 blocker resolved._
     human-judged production measurement, so a real claim needs human judging at
     adequate N.
   - **Resolved when:** thresholds are pre-registered here and the run is authorized, or F2.1 is cancelled and the preset ships documentation-only.
+
+### [road-to-rule-delivery-integrity.md](roadmaps/road-to-rule-delivery-integrity.md)
+
+**Road to rule delivery integrity — rules that arrive once, scoped, and provably** — 9 / 15 done (60%)
+
+| # | Phase | State | Open | Done | Deferred | Cancelled | % |
+|---|---|---|---:|---:|---:|---:|---:|
+| 0 | Decision gate: probe the premise, then decide | ✅ done | 0 | 5 | 0 | 0 | 100% |
+| 1 | Deliver the corpus once | ✅ done | 0 | 2 | 0 | 0 | 100% |
+| 2 | Close the census's own falsifier | ✅ done | 0 | 1 | 1 | 0 | 100% |
+| 3 | Host-native scoping for Claude Code | 🟡 in progress | 2 | 1 | 0 | 1 | 33% |
+| 4 | Self-repair loop: close the verified gap | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
 
 ### [road-to-scale-history-bench-run.md](roadmaps/road-to-scale-history-bench-run.md)
 

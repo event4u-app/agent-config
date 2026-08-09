@@ -14,3 +14,32 @@ augment_workspace_guidelines:
   total_cap_chars: 64000
   warn_threshold: 0.85
   fail_threshold: 0.95
+
+standing_rule_delivery:
+  # The rule bytes a Claude Code session actually receives, summed across BOTH
+  # layers the host loads (`~/.claude/rules/` and `<project>/.claude/rules/`) —
+  # gated by `check_standing_rule_delivery.ts`.
+  #
+  # Derivation, measured 2026-08-08 (exact BPE, cl100k_base, via
+  # `src/scripts/_lib/token_count.ts`) and recorded in
+  # `agents/evidence/analysis/standing-rule-delivery-topologies.md`:
+  #
+  #   both layers loaded  176,354 tok   ← the defect this gate catches
+  #   global layer alone  101,247 tok
+  #   project layer alone  75,107 tok
+  #
+  # So the useful band is 101,247 … 176,354: below it a complete single layer
+  # would fail, above it the doubled corpus would pass. 110,000 sits in that
+  # band with ~9% headroom over the larger single layer.
+  #
+  # This is NOT the coherence-followup's pre-registered ≤ 30k always-on figure.
+  # That one measures the always-HONOURED set, which a discipline profile trims;
+  # this measures the PROJECTED file set, which no profile trims
+  # (compile_router.ts:266-272 vs condense.ts:1092-1099). 101,247 → 30,000 needs
+  # `paths:` scoping plus the digest, not dedup.
+  total_cap_tokens: 110000
+  warn_threshold: 0.85
+  # Every raise needs a stated cause naming which rule added the tokens and why.
+  # `check_standing_rule_delivery` fails on an empty or placeholder reason, so a
+  # silent baseline bump is not available.
+  cap_raise_reason: 'initial cap — derived from the 2026-08-08 six-topology measurement (P0.3), never raised'
