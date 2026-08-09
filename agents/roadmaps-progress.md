@@ -2,14 +2,14 @@
 
 > Auto-generated — do not edit. Regenerate with `task roadmap-progress` or by running the `update_roadmap_progress` script for your install; rewritten on every roadmap create / execute / completion change (timestamp lives in git history).
 >
-> 20 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **21** open blockers
+> 23 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **26** open blockers
 
 ## Overall
 
-**189 / 301 steps done · 63%**
+**198 / 366 steps done · 54%**
 
 ```text
-█████████████████████████░░░░░░░░░░░░░░░   63%
+██████████████████████░░░░░░░░░░░░░░░░░░   54%
 ```
 
 ## Open roadmaps
@@ -23,19 +23,22 @@
 | 5 | [road-to-council-blind-review.md](roadmaps/road-to-council-blind-review.md) | 3 | 6 | 2 | 3 | 0 | 1 | 0 | ██████░░░░ 60% |
 | 6 | [road-to-gated-reach-followup.md](roadmaps/road-to-gated-reach-followup.md) | 1 | 12 | 12 | 0 | 0 | 0 | [1](#blockers-road-to-gated-reach-followup) | ░░░░░░░░░░ 0% |
 | 7 | [road-to-inbox-harvest-2026-08.md](roadmaps/road-to-inbox-harvest-2026-08.md) | 5 | 21 | 1 | 11 | 4 | 5 | [2](#blockers-road-to-inbox-harvest-2026-08) | █████████░ 92% |
-| 8 | [road-to-kernel-question-triangle.md](roadmaps/road-to-kernel-question-triangle.md) | 1 | 3 | 3 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
-| 9 | [road-to-maintainer-bus-factor.md](roadmaps/road-to-maintainer-bus-factor.md) | 4 | 12 | 5 | 7 | 0 | 0 | [1](#blockers-road-to-maintainer-bus-factor) | ██████░░░░ 58% |
-| 10 | [road-to-orchestration-scope-decision.md](roadmaps/road-to-orchestration-scope-decision.md) | 4 | 10 | 6 | 4 | 0 | 0 | [1](#blockers-road-to-orchestration-scope-decision) | ████░░░░░░ 40% |
-| 11 | [road-to-rule-coherence-followup.md](roadmaps/road-to-rule-coherence-followup.md) | 5 | 9 | 8 | 1 | 0 | 0 | [2](#blockers-road-to-rule-coherence-followup) | █░░░░░░░░░ 11% |
-| 12 | [road-to-scale-history-bench-run.md](roadmaps/road-to-scale-history-bench-run.md) | 1 | 2 | 2 | 0 | 0 | 0 | [1](#blockers-road-to-scale-history-bench-run) | ░░░░░░░░░░ 0% |
-| 13 | [road-to-skill-ecosystem-gate-integrity.md](roadmaps/road-to-skill-ecosystem-gate-integrity.md) | 7 | 43 | 3 | 40 | 0 | 0 | [1](#blockers-road-to-skill-ecosystem-gate-integrity) | █████████░ 93% |
-| 14 | [road-to-solution-minimalism.md](roadmaps/road-to-solution-minimalism.md) | 4 | 36 | 10 | 25 | 0 | 1 | [1](#blockers-road-to-solution-minimalism) | ███████░░░ 71% |
-| 15 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 6 | 3 | 0 | 0 | [1](#blockers-road-to-subagent-value-realization-followup) | ███░░░░░░░ 33% |
-| 16 | [road-to-surface-consolidation.md](roadmaps/road-to-surface-consolidation.md) | 3 | 14 | 1 | 12 | 1 | 0 | [2](#blockers-road-to-surface-consolidation) | █████████░ 92% |
-| 17 | [road-to-tier-removal.md](roadmaps/road-to-tier-removal.md) | 4 | 8 | 2 | 6 | 0 | 0 | [1](#blockers-road-to-tier-removal) | ████████░░ 75% |
-| 18 | [road-to-ui-track-integrity-followup.md](roadmaps/road-to-ui-track-integrity-followup.md) | 1 | 10 | 10 | 0 | 0 | 0 | [2](#blockers-road-to-ui-track-integrity-followup) | ░░░░░░░░░░ 0% |
-| 19 | [road-to-worktree-hygiene.md](roadmaps/road-to-worktree-hygiene.md) | 1 | 9 | 2 | 7 | 0 | 0 | [1](#blockers-road-to-worktree-hygiene) | ████████░░ 78% |
-| 20 | [road-to-zero-ceremony-settings.md](roadmaps/road-to-zero-ceremony-settings.md) | 5 | 19 | 1 | 17 | 1 | 0 | 0 | █████████░ 94% |
+| 8 | [road-to-judgment-and-forensic-evidence.md](roadmaps/road-to-judgment-and-forensic-evidence.md) | 5 | 28 | 28 | 0 | 0 | 0 | [2](#blockers-road-to-judgment-and-forensic-evidence) | ░░░░░░░░░░ 0% |
+| 9 | [road-to-kernel-question-triangle.md](roadmaps/road-to-kernel-question-triangle.md) | 1 | 3 | 3 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+| 10 | [road-to-maintainer-bus-factor.md](roadmaps/road-to-maintainer-bus-factor.md) | 4 | 12 | 5 | 7 | 0 | 0 | [1](#blockers-road-to-maintainer-bus-factor) | ██████░░░░ 58% |
+| 11 | [road-to-orchestration-scope-decision.md](roadmaps/road-to-orchestration-scope-decision.md) | 4 | 10 | 6 | 4 | 0 | 0 | [1](#blockers-road-to-orchestration-scope-decision) | ████░░░░░░ 40% |
+| 12 | [road-to-rule-coherence-followup.md](roadmaps/road-to-rule-coherence-followup.md) | 5 | 9 | 8 | 1 | 0 | 0 | [2](#blockers-road-to-rule-coherence-followup) | █░░░░░░░░░ 11% |
+| 13 | [road-to-rule-delivery-integrity.md](roadmaps/road-to-rule-delivery-integrity.md) | 5 | 17 | 6 | 9 | 1 | 1 | 0 | ██████░░░░ 60% |
+| 14 | [road-to-scale-history-bench-run.md](roadmaps/road-to-scale-history-bench-run.md) | 1 | 2 | 2 | 0 | 0 | 0 | [1](#blockers-road-to-scale-history-bench-run) | ░░░░░░░░░░ 0% |
+| 15 | [road-to-skill-ecosystem-gate-integrity.md](roadmaps/road-to-skill-ecosystem-gate-integrity.md) | 7 | 43 | 3 | 40 | 0 | 0 | [1](#blockers-road-to-skill-ecosystem-gate-integrity) | █████████░ 93% |
+| 16 | [road-to-solution-minimalism.md](roadmaps/road-to-solution-minimalism.md) | 4 | 36 | 10 | 25 | 0 | 1 | [1](#blockers-road-to-solution-minimalism) | ███████░░░ 71% |
+| 17 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 6 | 3 | 0 | 0 | [1](#blockers-road-to-subagent-value-realization-followup) | ███░░░░░░░ 33% |
+| 18 | [road-to-surface-consolidation.md](roadmaps/road-to-surface-consolidation.md) | 3 | 14 | 1 | 12 | 1 | 0 | [2](#blockers-road-to-surface-consolidation) | █████████░ 92% |
+| 19 | [road-to-tier-removal.md](roadmaps/road-to-tier-removal.md) | 4 | 8 | 2 | 6 | 0 | 0 | [1](#blockers-road-to-tier-removal) | ████████░░ 75% |
+| 20 | [road-to-ui-track-integrity-followup.md](roadmaps/road-to-ui-track-integrity-followup.md) | 1 | 10 | 10 | 0 | 0 | 0 | [2](#blockers-road-to-ui-track-integrity-followup) | ░░░░░░░░░░ 0% |
+| 21 | [road-to-worker-generation-recycling.md](roadmaps/road-to-worker-generation-recycling.md) | 4 | 22 | 22 | 0 | 0 | 0 | [3](#blockers-road-to-worker-generation-recycling) | ░░░░░░░░░░ 0% |
+| 22 | [road-to-worktree-hygiene.md](roadmaps/road-to-worktree-hygiene.md) | 1 | 9 | 2 | 7 | 0 | 0 | [1](#blockers-road-to-worktree-hygiene) | ████████░░ 78% |
+| 23 | [road-to-zero-ceremony-settings.md](roadmaps/road-to-zero-ceremony-settings.md) | 5 | 19 | 1 | 17 | 1 | 0 | 0 | █████████░ 94% |
 
 ---
 
@@ -181,6 +184,38 @@
     rules warn about.
   - **Resolved when:** the files are deleted, or a reason to keep them is recorded.
 
+### [road-to-judgment-and-forensic-evidence.md](roadmaps/road-to-judgment-and-forensic-evidence.md)
+
+**Road to judgment and forensic evidence — one protocol against a measured defect, one evidence source git already holds** — 0 / 28 done (0%)
+
+| # | Phase | State | Open | Done | Deferred | Cancelled | % |
+|---|---|---|---:|---:|---:|---:|---:|
+| 1 | Pre-mortem as a roadmap authoring artefact | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
+| 2 | Council critic protocol A/B against the measured defect | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
+| 3 | Forensic analyzers as a read-only pack | ⬜ not started | 6 | 0 | 0 | 0 | 0% |
+| 4 | Skill attestation, last and behind its own record | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
+| 5 | What this roadmap will not do | ⬜ not started | 9 | 0 | 0 | 0 | 0% |
+
+<a id="blockers-road-to-judgment-and-forensic-evidence"></a>
+**Blockers**
+
+- **memory-and-perception-capacity** (owner: maintainer) — blocks whether the two remaining harvests become roadmaps at all
+  - **What to do:**
+    epistemic states on stored claims, a memory lint gate, crystallisation) and
+    the web-perception harvest (sufficiency-based stopping, content pruning before
+    ingestion) get roadmaps. Both were verified and are partly real. Two facts
+    belong in the decision: the crystallisation phase and the perception
+    checkpoint phase both consume a capsule format that does not exist yet
+    (`road-to-worker-generation-recycling` Phase 0 creates it), and there are
+    already more than twenty open roadmaps against one maintainer.
+  - **Resolved when:** the decision is recorded — roadmap, `later/`, or dropped — for each of the two independently.
+- **dispatch-ambiguity-gate-dependency** (owner: maintainer) — blocks the ambiguity-gate item, which is deliberately in no phase here
+  - **What to do:**
+    misinterpretation multiplies across N workers — which presumes the
+    orchestrator-only posture that a pre-registered stopping rule cancelled on
+    2026-08-07. Decide the posture first; the gate is downstream of it.
+  - **Resolved when:** `blocker: orchestrator-only-mode-decision` in `road-to-worker-generation-recycling` is resolved.
+
 ### [road-to-kernel-question-triangle.md](roadmaps/road-to-kernel-question-triangle.md)
 
 **Road to the kernel question-triangle amendment — one line, human-applied** — 0 / 3 done (0%)
@@ -260,6 +295,18 @@ _1 blocker resolved._
     human-judged production measurement, so a real claim needs human judging at
     adequate N.
   - **Resolved when:** thresholds are pre-registered here and the run is authorized, or F2.1 is cancelled and the preset ships documentation-only.
+
+### [road-to-rule-delivery-integrity.md](roadmaps/road-to-rule-delivery-integrity.md)
+
+**Road to rule delivery integrity — rules that arrive once, scoped, and provably** — 9 / 15 done (60%)
+
+| # | Phase | State | Open | Done | Deferred | Cancelled | % |
+|---|---|---|---:|---:|---:|---:|---:|
+| 0 | Decision gate: probe the premise, then decide | ✅ done | 0 | 5 | 0 | 0 | 100% |
+| 1 | Deliver the corpus once | ✅ done | 0 | 2 | 0 | 0 | 100% |
+| 2 | Close the census's own falsifier | ✅ done | 0 | 1 | 1 | 0 | 100% |
+| 3 | Host-native scoping for Claude Code | 🟡 in progress | 2 | 1 | 0 | 1 | 33% |
+| 4 | Self-repair loop: close the verified gap | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
 
 ### [road-to-scale-history-bench-run.md](roadmaps/road-to-scale-history-bench-run.md)
 
@@ -482,6 +529,41 @@ _1 blocker resolved._
     and chose the named blocker over a re-scope that changes a pre-registered
     input.
   - **Resolved when:** either a host-renderable framework lane exists (a build/serve step for the React lane, landed for its own reason) **or** a supported generic-lane override exists — at which point the re-scope is recorded as a dated amendment in `internal/bench/corpora/ui-track-integrity-PREREG.md` and Measurement B becomes executable.
+
+### [road-to-worker-generation-recycling.md](roadmaps/road-to-worker-generation-recycling.md)
+
+**Road to worker-generation recycling — a worker at its budget hands off instead of dying** — 0 / 22 done (0%)
+
+| # | Phase | State | Open | Done | Deferred | Cancelled | % |
+|---|---|---|---:|---:|---:|---:|---:|
+| 0 | The capsule schema, before anything emits one | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
+| 1 | Emit in shadow, measure the trigger | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
+| 2 | The recycling loop | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
+| 3 | Evidence gate: confirm, scope, or record the null | ⬜ not started | 10 | 0 | 0 | 0 | 0% |
+
+<a id="blockers-road-to-worker-generation-recycling"></a>
+**Blockers**
+
+- **capsule-quality-near-budget** (owner: maintainer) — blocks Phase 2
+  - **What to do:**
+    capsule a successor can work from with no re-briefing. If capsules degrade,
+    move the watermark down (75 / 70 %) before concluding that recycling fails —
+    a bad watermark and a bad mechanism look identical from one sample.
+  - **Resolved when:** 3/3 successors reach a usable state from the capsule alone.
+- **host-worker-respawn** (owner: maintainer) — blocks Phase 2
+  - **What to do:**
+    fresh-spawn mid-task, and add the field if it cannot. Hosts without it degrade
+    to stop-loss, loudly.
+  - **Resolved when:** the manifest field exists and the recycling path reads it.
+- **orchestrator-only-mode-decision** (owner: maintainer) — blocks nothing in this roadmap — recorded so the decision is not lost
+  - **What to do:**
+    in the main session is re-opened. It was cancelled 2026-08-07 by a
+    pre-registered stopping rule, on a claim about token/quality wins. The inbox
+    source argues a DIFFERENT claim — stability — and explicitly accepts the
+    overhead as a maintainer preference. A preference is legitimate; a re-scoped
+    claim invented after the numbers is not. If it re-opens, it re-opens as a
+    stated stance with its own pre-registration, in its own roadmap.
+  - **Resolved when:** the decision is recorded either way.
 
 ### [road-to-worktree-hygiene.md](roadmaps/road-to-worktree-hygiene.md)
 

@@ -2,7 +2,7 @@
 model_tier: high
 context: large
 name: project-analyzer
-description: "ONLY when user asks for single-pass tech-stack detection or `agents/evidence/analysis/` write-up. Deep multi-pass audit → `universal-project-analysis`. Raw primitives → `project-analysis-core`."
+description: "Single-pass tech-stack detection with an agents/evidence/analysis/ write-up; explicit request only. Deep multi-pass audit → universal-project-analysis. Raw primitives → project-analysis-core."
 domain: discovery
 workspaces:
   - engineering

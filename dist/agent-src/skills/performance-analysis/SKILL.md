@@ -1,7 +1,7 @@
 ---
 model_tier: high
 name: performance-analysis
-description: "ONLY when user explicitly requests: performance audit, bottleneck analysis, or N+1 query detection. NOT for regular feature work."
+description: "Performance audit — bottleneck profiling, N+1 query detection, hot-path analysis; explicit request only, not part of regular feature work."
 personas:
   - performance-engineer
 domain: discovery

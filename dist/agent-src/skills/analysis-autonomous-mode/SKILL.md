@@ -1,7 +1,7 @@
 ---
 model_tier: high
 name: analysis-autonomous-mode
-description: "ONLY when user explicitly requests autonomous analysis, deep investigation, multi-step research, or 'dig into this end-to-end without asking me each step' — NOT for normal feature work."
+description: "Autonomous multi-step investigation — deep research carried end-to-end without per-step approval; explicit request only, never for normal feature work."
 domain: discovery
 workspaces:
   - agent-config-maintainer

@@ -1,7 +1,7 @@
 ---
 model_tier: high
 name: sequential-thinking
-description: "ONLY when user explicitly requests: step-by-step reasoning, structured problem decomposition, or iterative analysis. NOT for regular coding tasks."
+description: "Structured step-by-step problem decomposition and iterative analysis; explicit request only, never for regular coding tasks, and at most once per task."
 domain: process
 workspaces:
   - agent-config-maintainer
