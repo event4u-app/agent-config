@@ -47,6 +47,14 @@ tasks:
       # four such fixes ran nowhere for a full session. Sub-second (38 stats).
       # In CI it declares a loud no-op — a fresh checkout has no bundle — rather
       # than passing silently on an invariant it never evaluated.
+      # The healer runs FIRST: the staleness the gate catches is a routine
+      # consequence of any hook-source merge (dist/ is untracked), and on
+      # 2026-08-09 it blocked the 9.28.0 release push. The healer rebuilds
+      # SAFELY (build to .new → probe the dispatcher → atomic rename), which
+      # removes the gate's documented never-build hazard; the gate behind it
+      # then verifies the fixpoint and still reds if the heal failed. In CI
+      # both are no-ops — a fresh checkout has no bundle.
+      - ./scripts-run src/scripts/rebuild_hook_bundle
       - ./scripts-run src/scripts/check_hook_bundle_freshness
       - ./scripts-run src/scripts/lint_regression
       # Same argv the CI `skill-lint` job runs. NOT chosen for speed — both

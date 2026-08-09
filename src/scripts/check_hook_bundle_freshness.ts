@@ -31,7 +31,10 @@
  * WHAT IT DOES NOT DO: it never builds. Building into a live hook path is a
  * documented hazard in this repo (an esbuild run that overwrites the
  * dispatcher a running hook is executing can wedge the tool loop), so the
- * remedy is printed for a human to run deliberately.
+ * remedy is printed for a human to run deliberately. The SAFE rebuild
+ * (build to .new → probe → atomic rename) lives in `rebuild_hook_bundle.ts`,
+ * which preflight runs right before this gate — so a red here means the heal
+ * itself failed or was bypassed, not merely that a merge landed.
  *
  * Exit codes: 0 = fresh, or no self-hosted bundle to check · 1 = stale.
  */
