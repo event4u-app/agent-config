@@ -14,5 +14,13 @@
       "reply": "",
       "toolCommands": []
     }
+  },
+  {
+    "name": "a pleasantry in one clause must not mute the complaint in the next (R2 finding #2)",
+    "turn": {
+      "prompt": "Alles gut mit dem Deploy, aber du hast schon wieder die Hälfte der Dateien übersehen!",
+      "reply": "",
+      "toolCommands": []
+    }
   }
 ]

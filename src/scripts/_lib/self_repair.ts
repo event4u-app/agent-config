@@ -147,8 +147,10 @@ const COMPLAINT_PATTERNS: readonly RegExp[] = [
 ];
 
 // Phrasings that MATCH a complaint pattern but are not complaints — a curious
-// question or a reassurance. Checked first; a hit silences the intake. These
-// are the must-not-fire class of the detector corpus gate.
+// question or a reassurance. Scoped to the matched span (± a small margin),
+// never the whole prompt: a pleasantry in one clause must not mute a genuine
+// complaint in another (R2 finding #2). These feed the must-not-fire class of
+// the detector corpus gate.
 const COMPLAINT_EXONERATIONS: readonly RegExp[] = [
     /\bdu hast nicht zufällig\b/i,
     /\bhast du nicht zufällig\b/i,
@@ -157,14 +159,29 @@ const COMPLAINT_EXONERATIONS: readonly RegExp[] = [
     /\b(kein problem|passt schon|alles gut)\b/i,
 ];
 
+/** How far (chars) an exoneration may sit from the complaint span it excuses. */
+const EXONERATION_MARGIN = 12;
+
+function spanExonerated(prompt: string, start: number, end: number): boolean {
+    for (const ex of COMPLAINT_EXONERATIONS) {
+        const g = new RegExp(ex.source, ex.flags.includes('g') ? ex.flags : `${ex.flags}g`);
+        let m: RegExpExecArray | null;
+        while ((m = g.exec(prompt)) !== null) {
+            const s = m.index;
+            const e = m.index + m[0].length;
+            if (e >= start - EXONERATION_MARGIN && s <= end + EXONERATION_MARGIN) {
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
 /** Intake path 1 — the user says the agent worked wrongly. */
 export function detectUserReport(prompt: string): DefectFinding | null {
-    if (COMPLAINT_EXONERATIONS.some((re) => re.test(prompt))) {
-        return null;
-    }
     for (const re of COMPLAINT_PATTERNS) {
         const m = re.exec(prompt);
-        if (m !== null) {
+        if (m !== null && !spanExonerated(prompt, m.index, m.index + m[0].length)) {
             return {
                 defect_class: 'user-reported',
                 source: 'user-reported',

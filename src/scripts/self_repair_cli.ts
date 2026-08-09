@@ -78,9 +78,10 @@ export type Runner = (cmd: string, args: string[], cwd?: string) => RunResult;
 
 function run(cmd: string, args: string[], cwd?: string): RunResult {
     const r = spawnSync(cmd, args, { cwd, encoding: 'utf-8', timeout: EGRESS_STEP_TIMEOUT_MS });
-    const timedOut =
-        (r.error as NodeJS.ErrnoException | undefined)?.code === 'ETIMEDOUT' ||
-        r.signal === 'SIGTERM';
+    // Only spawnSync's own ETIMEDOUT counts: a child killed externally by
+    // SIGTERM is a failure, not a timeout, and recording it as "timed out"
+    // points the next debugging session at the wrong cause (R2 finding #3).
+    const timedOut = (r.error as NodeJS.ErrnoException | undefined)?.code === 'ETIMEDOUT';
     return {
         ok: r.status === 0 && !timedOut,
         out: `${r.stdout ?? ''}${r.stderr ?? ''}`,
@@ -294,6 +295,7 @@ function tryPullRequest(
  * attached (sanitized — command output can carry local paths).
  */
 export function executeRelease(
+    record: DefectRecord,
     plan: ReleasePlan,
     probe: Probe,
     repo: string,
@@ -330,6 +332,11 @@ export function executeRelease(
     }
 
     if (plan.route === 'pull-request' || plan.route === 'issue') {
+        // Re-render for the rung actually taken: a plan that degraded from
+        // pull-request must not file an issue whose body claims
+        // `Route: pull-request` (R2 finding #4).
+        const issueBody =
+            plan.route === 'issue' ? plan.body : renderReport(record, 'issue');
         const issue = deps.runner('gh', [
             'issue',
             'create',
@@ -338,7 +345,7 @@ export function executeRelease(
             '--title',
             plan.title,
             '--body',
-            plan.body,
+            issueBody,
         ]);
         if (issue.ok) {
             process.stdout.write(`${issue.out}`);
@@ -403,7 +410,7 @@ function releaseCmd(root: string, argv: string[]): number {
     }
 
     const deps: ReleaseDeps = { runner: run, now: () => new Date().toISOString() };
-    const outcome = executeRelease(plan, probe, repo, deps);
+    const outcome = executeRelease(record, plan, probe, repo, deps);
 
     for (const a of outcome.attempts) {
         process.stderr.write(`  FAIL  ${a.detail}\n`);

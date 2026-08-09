@@ -61,7 +61,7 @@ const CONCEAL_RES: readonly RegExp[] = [
  * line before the phrase that matches.
  */
 const DESCRIPTION_MARKERS =
-    /\b(?:never|niemals|no|kein\w*|forbidden|must not|do(?:es)? not|don'?t|won'?t|cannot|can not|falsified|benchmarked|anti-?pattern|violation|banned|prohibited|refus\w*|stays out|is the failure|non-goal|disguis\w*|mask\w*|not\b)/i;
+    /\b(?:never|niemals|no\b|kein\w*|forbidden|must not|do(?:es)? not|don'?t|won'?t|cannot|can not|falsified|benchmarked|anti-?pattern|violation|banned|prohibited|refus\w*|stays out|is the failure|non-goal|disguis\w*|mask\w*|not\b)/i;
 
 export interface Violation {
     readonly file: string;
@@ -173,6 +173,11 @@ export function selfTest(): number {
                     name: 'a directive to conceal a detected failure is rejected',
                     expect: 'reject',
                     run: () => run(mk('If the gate fails, suppress the error and continue as if it passed.')),
+                },
+                {
+                    name: 'a no-prefixed word (Note:, now) does not exonerate a directive — R2 finding #1',
+                    expect: 'reject',
+                    run: () => run(mk('Note: silently re-run the suite after fixing.')),
                 },
                 {
                     name: 'prose that FORBIDS the mechanism passes — describing is how the corpus teaches',

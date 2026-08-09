@@ -83,6 +83,18 @@ describe('self-repair — user-report intake', () => {
         const f = detectUserReport('du hast die Sprache ignoriert')!;
         expect(f.source).toBe('user-reported');
     });
+
+    it('a pleasantry far from the complaint span does not mute it (R2 #2)', () => {
+        const f = detectUserReport(
+            'Alles gut mit dem Deploy, aber du hast schon wieder die Hälfte der Dateien übersehen!',
+        );
+        expect(f?.defect_class).toBe('user-reported');
+    });
+
+    it('an exoneration overlapping the matched span still silences the intake', () => {
+        expect(detectUserReport('du hast nicht zufällig die alte Config noch offen?')).toBeNull();
+        expect(detectUserReport("you didn't need to run that, it's fine")).toBeNull();
+    });
 });
 
 describe('self-repair — council-availability detector', () => {
@@ -359,9 +371,9 @@ function scriptedRunner(
     };
 }
 
-function planFor(probe: Probe): ReleasePlan {
+function recAndPlan(probe: Probe): { rec: DefectRecord; plan: ReleasePlan } {
     const rec = mergeRecord(null, detectUserReport('du hast das falsch gemacht')!, NOW);
-    return planRelease(rec, probe, '/tmp');
+    return { rec, plan: planRelease(rec, probe, '/tmp') };
 }
 
 const okBranch = (cmd: string, args: string[]): Partial<RunResult> | undefined =>
@@ -429,7 +441,8 @@ describe('self-repair — egress ladder', () => {
             return undefined;
         }, log);
         const probe = fullProbe({ canFork: true });
-        const outcome = executeRelease(planFor(probe), probe, 'up/stream', deps(runner));
+        const { rec, plan } = recAndPlan(probe);
+        const outcome = executeRelease(rec, plan, probe, 'up/stream', deps(runner));
         expect(outcome.published).toBe('issue');
         expect(log.some((l) => l.startsWith('gh issue create'))).toBe(true);
         expect(outcome.attempts.map((a) => a.step)).toEqual(['push-upstream', 'fork-ensure']);
@@ -451,7 +464,8 @@ describe('self-repair — egress ladder', () => {
             return undefined;
         }, log);
         const probe = fullProbe();
-        const outcome = executeRelease(planFor(probe), probe, 'up/stream', deps(runner));
+        const { rec, plan } = recAndPlan(probe);
+        const outcome = executeRelease(rec, plan, probe, 'up/stream', deps(runner));
         expect(outcome.published).toBe('issue');
         expect(outcome.attempts[0]?.detail).toContain('timed out after 30s');
     });
@@ -472,7 +486,8 @@ describe('self-repair — egress ladder', () => {
             return undefined;
         }, log);
         const probe = fullProbe({ canPushUpstream: false });
-        const outcome = executeRelease(planFor(probe), probe, 'up/stream', deps(runner));
+        const { rec, plan } = recAndPlan(probe);
+        const outcome = executeRelease(rec, plan, probe, 'up/stream', deps(runner));
         expect(outcome.published).toBe('pull-request');
         expect(log.some((l) => l.startsWith('gh repo fork up/stream'))).toBe(true);
         expect(log.some((l) => l.includes('remote add self-repair-fork'))).toBe(true);
@@ -501,7 +516,7 @@ describe('self-repair — egress ladder', () => {
         }, []);
         const probe = fullProbe();
         const plan = planRelease(rec, probe, tmp);
-        const outcome = executeRelease(plan, probe, 'up/stream', deps(runner));
+        const outcome = executeRelease(rec, plan, probe, 'up/stream', deps(runner));
         expect(outcome.published).toBeNull();
         expect(outcome.attempts).toHaveLength(3);
         expect(outcome.attempts.map((a) => a.step)).toEqual([
@@ -521,6 +536,30 @@ describe('self-repair — egress ladder', () => {
         fs.rmSync(tmp, { recursive: true, force: true });
     });
 
+    it('a degraded issue carries a body rendered for the issue route, not the planned one (R2 #4)', () => {
+        const log: string[] = [];
+        const runner = scriptedRunner((cmd, args) => {
+            const b = okBranch(cmd, args);
+            if (b) {
+                return b;
+            }
+            if (cmd === 'git' && args[0] === 'push') {
+                return { ok: false, out: 'permission denied' };
+            }
+            if (cmd === 'gh' && args[0] === 'repo' && args[1] === 'fork') {
+                return { ok: false, out: 'forking disabled' };
+            }
+            return undefined;
+        }, log);
+        const probe = fullProbe();
+        const { rec, plan } = recAndPlan(probe);
+        const outcome = executeRelease(rec, plan, probe, 'up/stream', deps(runner));
+        expect(outcome.published).toBe('issue');
+        const issueCall = log.find((l) => l.startsWith('gh issue create'))!;
+        expect(issueCall).toContain('**Route:** issue');
+        expect(issueCall).not.toContain('**Route:** pull-request');
+    });
+
     it('a branch-check failure is a precondition stop, not a silent issue downgrade', () => {
         const runner = scriptedRunner((cmd, args) => {
             if (cmd === 'git' && args[0] === 'branch') {
@@ -529,7 +568,8 @@ describe('self-repair — egress ladder', () => {
             return undefined;
         }, []);
         const probe = fullProbe();
-        const outcome = executeRelease(planFor(probe), probe, 'up/stream', deps(runner));
+        const { rec, plan } = recAndPlan(probe);
+        const outcome = executeRelease(rec, plan, probe, 'up/stream', deps(runner));
         expect(outcome.published).toBeNull();
         expect(outcome.attempts.map((a) => a.step)).toEqual(['branch-check']);
     });
