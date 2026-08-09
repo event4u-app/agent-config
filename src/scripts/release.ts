@@ -1073,6 +1073,78 @@ function _tag_exists_remote(tag: string): boolean {
     return r.returncode === 0;
 }
 
+/**
+ * True when git rejected a tag push because the ref already exists on the
+ * remote. Wording pinned from the real failure (2026-08-09, 9.28.0 — two
+ * concurrent resume runs, the loser crashed):
+ *
+ *     ! [remote rejected]  9.28.0 -> 9.28.0 (cannot lock ref 'refs/tags/9.28.0': reference already exists)
+ *
+ * plus the `[rejected] … (already exists)` variant git emits when the local
+ * and remote tag objects differ.
+ */
+export function _is_tag_already_exists(stderr: string, stdout: string): boolean {
+    const text = `${stderr}\n${stdout}`;
+    return /\[(?:remote )?rejected\]/i.test(text) && /already exists/i.test(text);
+}
+
+/** Peeled commit the remote tag points at, or null when the tag is absent. */
+function _remote_tag_commit(tag: string): string | null {
+    const r = run(['git', 'ls-remote', REMOTE, `refs/tags/${tag}`, `refs/tags/${tag}^{}`], {
+        check: false,
+        capture: true,
+    });
+    if (r.returncode !== 0) return null;
+    const lines = r.stdout.trim().split('\n').filter(Boolean);
+    if (lines.length === 0) return null;
+    // An annotated tag lists the tag object AND the peeled `^{}` commit — the
+    // peeled line wins so the comparison is commit-vs-commit regardless of
+    // whether the two runs minted distinct tag objects for the same commit.
+    const peeled = lines.find((l) => l.trimEnd().endsWith('^{}'));
+    return (peeled ?? (lines[0] as string)).split('\t')[0] ?? null;
+}
+
+/**
+ * Push a tag, tolerating exactly ONE failure: the concurrent-release race.
+ * `_tag_exists_remote` in step 8 is a live check, but between it and this
+ * push a parallel `task release` run can land the same tag (measured
+ * 2026-08-09, 9.28.0). When the remote tag already points at the same commit
+ * as the local one, the repository IS in the desired state — continue. Any
+ * other rejection, and a same-name tag on a DIFFERENT commit, stays fatal
+ * with the push output as the error.
+ */
+function _push_tag(tag: string): void {
+    const first = run(['git', 'push', REMOTE, tag], { check: false, capture: true });
+    if (first.returncode === 0) {
+        process.stdout.write(first.stdout);
+        process.stderr.write(first.stderr);
+        return;
+    }
+    if (_is_tag_already_exists(first.stderr, first.stdout)) {
+        const remote = _remote_tag_commit(tag);
+        const local = git(['rev-list', '-n', '1', tag], { capture: true });
+        if (remote !== null && remote === local) {
+            process.stdout.write(
+                `↻  tag ${tag} already on ${REMOTE} at the same commit — a parallel run pushed it; continuing\n`,
+            );
+            return;
+        }
+        process.stdout.write(first.stdout);
+        process.stderr.write(first.stderr);
+        die(
+            `tag ${tag} exists on ${REMOTE} pointing at ${remote ?? '<unreadable>'} while the local tag ` +
+                `points at ${local} — refusing to overwrite a published tag; ` +
+                'delete the wrong one deliberately and re-run',
+        );
+    }
+    process.stdout.write(first.stdout);
+    process.stderr.write(first.stderr);
+    die(
+        `push of tag ${tag} failed (exit ${first.returncode}) — ` +
+            'the push output above is the real error (a pre-push gate, credentials, or protection)',
+    );
+}
+
 /** Most recent PR (any state) with `release/X.Y.Z` as head, or null. */
 function _pr_for_branch(branch: string): Record<string, unknown> | null {
     const r = run(
@@ -2029,7 +2101,7 @@ function execute(
             _step(8, total, `Tag ${plan.target} already on ${REMOTE} — skip`);
         } else {
             _step(8, total, `Tag ${plan.target} exists locally — push only`);
-            run(['git', 'push', REMOTE, plan.target]);
+            _push_tag(plan.target);
         }
     } else {
         // Sequencing is load-bearing (release-truth Phase 1, council
@@ -2047,7 +2119,7 @@ function execute(
             );
         }
         run(['git', 'tag', '-a', plan.target, '-m', tag_message_from_section(merged!.body, plan.target)]);
-        run(['git', 'push', REMOTE, plan.target]);
+        _push_tag(plan.target);
     }
 
     // ─── 9. GitHub Release ──────────────────────────────────────────────────
