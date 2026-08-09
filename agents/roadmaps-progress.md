@@ -6,10 +6,10 @@
 
 ## Overall
 
-**180 / 283 steps done · 64%**
+**184 / 283 steps done · 65%**
 
 ```text
-██████████████████████████░░░░░░░░░░░░░░   64%
+██████████████████████████░░░░░░░░░░░░░░   65%
 ```
 
 ## Open roadmaps
@@ -26,7 +26,7 @@
 | 8 | [road-to-maintainer-bus-factor.md](roadmaps/road-to-maintainer-bus-factor.md) | 4 | 12 | 5 | 7 | 0 | 0 | [1](#blockers-road-to-maintainer-bus-factor) | ██████░░░░ 58% |
 | 9 | [road-to-orchestration-scope-decision.md](roadmaps/road-to-orchestration-scope-decision.md) | 4 | 10 | 6 | 4 | 0 | 0 | [1](#blockers-road-to-orchestration-scope-decision) | ████░░░░░░ 40% |
 | 10 | [road-to-rule-coherence-followup.md](roadmaps/road-to-rule-coherence-followup.md) | 5 | 9 | 8 | 1 | 0 | 0 | [2](#blockers-road-to-rule-coherence-followup) | █░░░░░░░░░ 11% |
-| 11 | [road-to-rule-delivery-integrity.md](roadmaps/road-to-rule-delivery-integrity.md) | 5 | 17 | 6 | 9 | 1 | 1 | 0 | ██████░░░░ 60% |
+| 11 | [road-to-rule-delivery-integrity.md](roadmaps/road-to-rule-delivery-integrity.md) | 5 | 17 | 2 | 13 | 1 | 1 | 0 | █████████░ 87% |
 | 12 | [road-to-scale-history-bench-run.md](roadmaps/road-to-scale-history-bench-run.md) | 1 | 2 | 2 | 0 | 0 | 0 | [1](#blockers-road-to-scale-history-bench-run) | ░░░░░░░░░░ 0% |
 | 13 | [road-to-skill-ecosystem-gate-integrity.md](roadmaps/road-to-skill-ecosystem-gate-integrity.md) | 7 | 43 | 3 | 40 | 0 | 0 | [1](#blockers-road-to-skill-ecosystem-gate-integrity) | █████████░ 93% |
 | 14 | [road-to-solution-minimalism.md](roadmaps/road-to-solution-minimalism.md) | 4 | 36 | 10 | 25 | 0 | 1 | [1](#blockers-road-to-solution-minimalism) | ███████░░░ 71% |
@@ -237,7 +237,7 @@ _1 blocker resolved._
 
 ### [road-to-rule-delivery-integrity.md](roadmaps/road-to-rule-delivery-integrity.md)
 
-**Road to rule delivery integrity — rules that arrive once, scoped, and provably** — 9 / 15 done (60%)
+**Road to rule delivery integrity — rules that arrive once, scoped, and provably** — 13 / 15 done (87%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
@@ -245,7 +245,7 @@ _1 blocker resolved._
 | 1 | Deliver the corpus once | ✅ done | 0 | 2 | 0 | 0 | 100% |
 | 2 | Close the census's own falsifier | ✅ done | 0 | 1 | 1 | 0 | 100% |
 | 3 | Host-native scoping for Claude Code | 🟡 in progress | 2 | 1 | 0 | 1 | 33% |
-| 4 | Self-repair loop: close the verified gap | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
+| 4 | Self-repair loop: close the verified gap | ✅ done | 0 | 4 | 0 | 0 | 100% |
 
 ### [road-to-scale-history-bench-run.md](roadmaps/road-to-scale-history-bench-run.md)
 

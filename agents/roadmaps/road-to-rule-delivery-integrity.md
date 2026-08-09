@@ -337,7 +337,7 @@ so the user never notices the miss — stays out. It was built, benchmarked and
 falsified: `src/skills/recursive-verification/SKILL.md:44` records the 2026-07-28
 honest null as TERMINAL. Correction is always visible.
 
-- [ ] **P4.1 Fork-aware egress with a pre-flight probe and per-step timeouts.**
+- [x] **P4.1 Fork-aware egress with a pre-flight probe and per-step timeouts.**
       `self_repair_cli.ts:77` computes `canPush` as
       `run('git', ['remote'], checkout).out.trim().length > 0` — remote
       *existence*, not push *rights*. Any consumer who cloned the public repo has
@@ -352,11 +352,17 @@ honest null as TERMINAL. Correction is always visible.
       no-auth / privacy-refusal); a mocked push failure and a mocked timeout each
       produce an issue attempt within the same invocation; a mocked triple failure
       leaves the record `open` with all three errors recorded.
-- [ ] **P4.2 Structured upstream intake.** A GitHub issue form with defect class,
+      <!-- done 2026-08-09: `probeUpstreamRights` reads `gh api repos/<repo>` → permissions.push + allow_forking (the `git remote` heuristic is gone); `chooseEgress` returns {route, pushVia} with the fork rung; `executeRelease` runs the ladder upstream-push → fork (gh repo fork → whoami → remote add → push → cross-repo PR with --head) → issue → open-with-errors, every step under EGRESS_STEP_TIMEOUT_MS=30s (spawnSync timeout); `attachReleaseErrors` keeps the record open with sanitized errors, markReleased clears them. Route matrix (all 5 named cases), push-fail→issue, timeout→issue, fork-path, triple-failure (3 errors recorded), branch-check precondition stop: tests/scripts/self_repair.test.ts — 52 tests green; typecheck-ts + eslint exit 0. -->
+      <!-- deviation, stated: a branch-check failure (fix not on its own branch) is a precondition STOP, not an issue downgrade — degrading there would file an issue while an authored fix exists locally, dropping the fix. The ladder engages from the push onward, which is what the step's own failure list names. -->
+
+- [x] **P4.2 Structured upstream intake.** A GitHub issue form with defect class,
       fingerprint, occurrence count and evidence span, plus a label, so reports
       from independent installs cluster by fingerprint without any telemetry.
       *Verify:* `renderReport` output round-trips through the form's fields.
-- [ ] **P4.3 Detector corpus gate with three fixture classes.** Precision and
+      <!-- done 2026-08-09: .github/ISSUE_TEMPLATE/self_repair_report.yml (form, label `self-repair`, field ids = the record's structured fields) + `parseReport` as the executable inverse of `renderReport`. Round-trip pinned both ways: parseReport(renderReport(rec)) == rec's fields (1x and Nx occurrences), form ids == ParsedReport keys, dropdown options == DEFECT_CLASSES (a new detector class without a form extension is now a red test). 58 tests green. -->
+      <!-- open maintainer step, stated: the `self-repair` label does not exist on the upstream repo yet (checked via `gh label list`); GitHub silently drops unknown labels on form submit. Creating it is a one-click repo mutation that rides with the PR review, not an agent action. -->
+
+- [x] **P4.3 Detector corpus gate with three fixture classes.** Precision and
       recall are separate obligations and need separate fixtures:
       **fire** — a recorded real failure the detector must catch ·
       **near-miss-fire** — a real failure that looks unlike the canonical one and
@@ -367,10 +373,17 @@ honest null as TERMINAL. Correction is always visible.
       *"you didn't need to, it's fine"* are **must-not-fire**.
       *Verify:* a detector missing any one class reds the gate; current detectors
       carry all three and are green.
-- [ ] **P4.4 Never-silent lint.** No shipped rule, skill or command may direct a
+      <!-- done 2026-08-09: DETECTOR_REGISTRY in _lib/self_repair.ts is now the single list runDetectors AND the gate iterate; corpus under tests/fixtures/self-repair-detectors/<class>/{fire,near-miss-fire,must-not-fire}.json; gate = tests/scripts/self_repair_detector_corpus.test.ts (CI runs the vitest suite in tests.yml) — missing/empty class per registered detector reds it, orphan corpus dirs red it, the two roadmap-mandated must-not-fire prompts are pinned by name. Complaint hardening: COMPLAINT_EXONERATIONS silences "nicht zufällig"/"didn't need to, it's fine" shapes before the complaint match. 70 tests green. -->
+      <!-- deviation, stated: the gate is a structural vitest test over the registry, not a seventh lint_* script — the detectors are TS functions the fixtures exercise directly, CI carries the suite, and a standalone gate script would re-buy the six-surface registration (gate-coverage header figures, ledger ratchet, taskfile/workflow parity) for no additional failure mode. -->
+      <!-- found by the near-miss class while building it, fixed: JS \b is ASCII-only, so the leading \b before the complaint alternation made "übersehen" (umlaut-initial) a DEAD branch — no boundary exists between a space and "ü". Defect-pattern search over src/scripts: exactly 1 site, no other \b-before-umlaut-initial construct in the tree. -->
+
+- [x] **P4.4 Never-silent lint.** No shipped rule, skill or command may direct a
       silent re-run or concealment of a detected miss, with an allowlist for prose
       that *describes* the falsified mechanism.
       *Verify:* seeded violation fixture reds the gate; current corpus green.
+      <!-- done 2026-08-09: src/scripts/lint_never_silent.ts over src/rules + src/skills + src/agent-src/commands (444 artefacts). Two directive families (silent re-run · conceal-the-miss); describe-vs-direct decided per line+preceding-line via negation/falsification markers, plus an explicit <!--never-silent-allow--> escape. Self-test 5/5 (2 seeded violations red the gate, forbidding prose and the allow-marker pass); live corpus green. Registered: taskfiles/ci-fast.yml + Taskfile.yml ci list + rule-backstops.yml step (CI-identical bare argv); adopts GateLedger (completeness ratchet unchanged at its pre-existing 224) + reportScanned. check_ci_local_parity green. -->
+      <!-- classified before wiring, per this repo's shape-gate discipline: the first corpus run returned 4 hits, all four descriptions (a prohibition with bare "No", and three bullet continuations whose "Do NOT" sat on the previous physical line) — fixed by widening the marker set (no/kein/disguise/mask) and checking the preceding line, not by allowlisting the files. -->
+
 
 ## Success criteria
 
