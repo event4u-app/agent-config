@@ -20,6 +20,21 @@ status: ready
 
 > Council provenance (inline per no-roadmap-references): 2026-08-08, members
 > anthropic/claude-sonnet-4-5 + openai/gpt-4o, prompt mode, $0.075 actual.
+> Second pass 2026-08-09 (post-merge, same members, $0.095): the release
+> gate escalated the 3538-line diff to a full council review, which the
+> merge had skipped; the catch-up ran over the security-critical core
+> (end_review_nudge + telemetry shape IN FULL — the 50 KB bundle ceiling
+> forced that scope; the rest was covered by the pre-merge in-session
+> reviewer + two gate lenses). Verdict: path validation on
+> transcript_path is mandatory and the fd47df62 high-to-low downgrade is
+> sound only WITH it; the 16-hex session-key truncation is a telemetry-
+> integrity defect (collisions suppress counts — use full SHA-256); the
+> once-per-session dedupe undercounts multi-phase sessions and the bias
+> must be recorded before any blocking calibration; privacy shape
+> confirmed robust. One council suggestion rejected with reason: prefix-
+> validating under workspace_root would reject every real transcript
+> (they live under the user home, not the workspace) — the shipped check
+> is home-prefix + .jsonl + size cap.
 > Convergent verdict: ship F5 + F1 + F6 first (F6 explicitly promoted ahead of
 > the nudges — without deterministic telemetry the nudges' effect is
 > unmeasurable); F3 and F4 only as conditional, advisory LITE variants (the
@@ -192,6 +207,11 @@ made on measured data rather than on hope.
       reach the host as a block, independent of `host_semantics`.
 - [x] 4.4 Tests: matching prompt shapes inject the verdict line; ordinary
       prompts inject nothing; classifier errors degrade to silence.
+      Recorded per gate finding 1ba56660: the signal floors (3 unique
+      files, 3 ordered-plan lines) are POST-HOC choices made from review
+      false-positives, not pre-registered stopping rules — the telemetry
+      measures their precision, and the pre-authorised null (7.4) already
+      covers their removal.
       <!-- verify: npx vitest run tests/scripts/delegation_nudge_hook.test.ts -->
 
 **Exit:** a prompt like "fix the failing tests in these 6 files" produces an injected `do-in-parallel (6 slices, lite tier)` line; "why does X happen?" produces nothing.
@@ -300,11 +320,16 @@ made on measured data rather than on hope.
   for UserPromptSubmit/SessionStart/PostToolUse but not Stop, so the
   advisory line's model delivery on `stop` is unverified — the documented
   model-reaching mechanism on Stop is `decision: "block"` + reason, which
-  is exactly the blocking tier this blocker gates.
+  is exactly the blocking tier this blocker gates. Two recorded biases the
+  calibration MUST account for (council 2026-08-09): once-per-session
+  dedupe undercounts multi-phase sessions (only the first threshold
+  crossing is recorded — set a conservative, higher threshold), and
+  `mutation_measure: capped_approximation` lines are floor values, not
+  measurements — calibrate on `exact` lines only.
 - **Resolved when:** threshold decision recorded with the telemetry cited.
 
 ## Risk Register
-<!-- risk-review: v1 | reviewed: 2026-08-08 | reviewer: claude/host -->
+<!-- risk-review: v1 | reviewed: 2026-08-09 | reviewer: claude/host -->
 | Rank | Item | Risk type | Description | Mitigation | Anchored under |
 |------|------|-----------|-------------|------------|----------------|
 | 1 | The nudges repeat the canary failure | product | The only measured per-turn carrier (session-canary) produced 24/29 misses; injected advice may simply be ignored again and the whole nudge layer becomes token cost without behaviour change | 4.2 makes injection conditional (silence by default) so the cost is near-zero on non-delegable turns, and 7.4 pre-authorises the null that removes the concerns; F6 telemetry is shipped first so the effect is measurable at all | Phase 4 |

@@ -274,7 +274,12 @@ _1 blocker resolved._
     for UserPromptSubmit/SessionStart/PostToolUse but not Stop, so the
     advisory line's model delivery on `stop` is unverified — the documented
     model-reaching mechanism on Stop is `decision: "block"` + reason, which
-    is exactly the blocking tier this blocker gates.
+    is exactly the blocking tier this blocker gates. Two recorded biases the
+    calibration MUST account for (council 2026-08-09): once-per-session
+    dedupe undercounts multi-phase sessions (only the first threshold
+    crossing is recorded — set a conservative, higher threshold), and
+    `mutation_measure: capped_approximation` lines are floor values, not
+    measurements — calibrate on `exact` lines only.
   - **Resolved when:** threshold decision recorded with the telemetry cited.
 
 ### [road-to-rule-coherence-followup.md](roadmaps/road-to-rule-coherence-followup.md)
