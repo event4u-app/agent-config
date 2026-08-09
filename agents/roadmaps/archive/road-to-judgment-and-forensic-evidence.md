@@ -131,7 +131,10 @@ machine-derived evidence — or record the honest null for each independently.
       bench_critic_protocol.ts carries (a),(b),(c) plus the council-added
       failure-scenario forcing function (design pass anthropic+openai
       2026-08-09: assumption tied to named file+function, "holds" as a
-      completed review, one-shot kept). -->
+      completed review, one-shot kept). Honest scope, also in the contract
+      doc: the key's only consumer today is the bench harness — no runtime
+      surface reads it, and none will until a passing arm is promoted, which
+      this run did not produce. -->
 - [x] 2.2 The discriminating property is constraint (a): a correct plan HAS a
       load-bearing assumption that survives inspection, and the protocol must
       permit saying so. A critic that cannot return "this holds" cannot have a

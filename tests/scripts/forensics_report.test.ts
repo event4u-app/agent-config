@@ -9,7 +9,7 @@
  * commit skip, and the cross-module finding class (step 3.6).
  */
 import { execFileSync, spawnSync } from 'node:child_process';
-import { mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
@@ -86,14 +86,28 @@ describe('forensics_report — byte-stable determinism on the frozen fixture', (
         });
     });
 
-    it('emitted findings are non-blocking by construction (kind/severity)', () => {
+    it('emitted findings are non-blocking by construction and schema-valid ids', () => {
         const report = JSON.parse(readFileSync(EXPECTED, 'utf8')) as Parameters<typeof toFindings>[0];
-        const out = toFindings(report) as { findings: { kind: string; severity: string }[] };
+        const out = toFindings(report) as { findings: { finding_id: string; kind: string; severity: string }[] };
         expect(out.findings.length).toBeGreaterThan(0);
         for (const f of out.findings) {
             expect(f.kind).toBe('correctness');
             expect(['low', 'medium']).toContain(f.severity);
+            // review-findings.schema.json pins finding_id to ^[0-9a-f]{12}$
+            expect(f.finding_id).toMatch(/^[0-9a-f]{12}$/);
         }
+    });
+
+    it('an empty scan with --out and --findings-out writes NO files', () => {
+        const dir = mkdtempSync(join(tmpdir(), 'forensics-empty-out-'));
+        const emptyLog = join(dir, 'empty.txt');
+        writeFileSync(emptyLog, '');
+        const out = join(dir, 'report.json');
+        const findings = join(dir, 'findings.json');
+        const r = runCli(['--log-file', emptyLog, '--out', out, '--findings-out', findings]);
+        expect(r.status).not.toBe(0);
+        expect(existsSync(out)).toBe(false);
+        expect(existsSync(findings)).toBe(false);
     });
 });
 
@@ -129,10 +143,28 @@ describe('forensics_report — unit surface', () => {
     });
 });
 
-describe('forensics_report — live git path smoke', () => {
-    it('runs over a real single-commit range in this repo', () => {
-        const head = execFileSync('git', ['rev-parse', 'HEAD'], { encoding: 'utf8', cwd: REPO_ROOT }).trim();
-        const r = runCli(['--range', `${head}~1..${head}`]);
+describe('forensics_report — live git path smoke (hermetic synthetic repo)', () => {
+    // Deliberately NOT this repo's own history: CI checkouts are shallow
+    // (HEAD~1 unresolvable) and a merge-commit HEAD makes any HEAD~1..HEAD
+    // range span the whole merged PR. A throwaway repo pins both.
+    it('runs the real git-log path over a synthetic two-commit repo', () => {
+        const dir = mkdtempSync(join(tmpdir(), 'forensics-git-'));
+        const git = (...args: string[]): string =>
+            execFileSync('git', args, { encoding: 'utf8', cwd: dir });
+        git('init', '-q');
+        git('config', 'user.email', 'fixture@example.com');
+        git('config', 'user.name', 'fixture');
+        writeFileSync(join(dir, 'a.ts'), 'const a = 1;\n');
+        git('add', '.');
+        git('commit', '-q', '-m', 'c1');
+        writeFileSync(join(dir, 'a.ts'), 'const a = 2;\n');
+        git('add', '.');
+        git('commit', '-q', '-m', 'c2');
+        const r = spawnSync(
+            'npx',
+            ['tsx', join(REPO_ROOT, 'src/scripts/forensics_report.ts'), '--range', 'HEAD~1..HEAD'],
+            { encoding: 'utf8', cwd: dir },
+        );
         expect(r.status).toBe(0);
         expect(r.stdout).toMatch(/"commits": 1/);
     });

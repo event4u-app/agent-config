@@ -312,8 +312,10 @@ function scoreVendor(items: CorpusItem[], reviews: Reviews, vendor: Vendor): Ven
     const load_bearing = armScore('load_bearing');
     const tp_retention = legacy.tp > 0 ? load_bearing.tp / legacy.tp : null;
     const fp_pass = load_bearing.fp_rate < FP_CEILING;
-    // A legacy TP of 0 leaves retention undefined; pre-registered reading:
-    // retention cannot be shown against a zero baseline → tp_pass false.
+    // A legacy TP of 0 leaves retention undefined. NOT part of the frozen
+    // registration (which is silent on a zero baseline) — a conservative
+    // in-code rule, unexercised in the recorded run (legacy TP was 10 and 5):
+    // retention unshowable against a zero baseline → tp_pass false.
     const tp_pass = tp_retention !== null && tp_retention >= TP_RETENTION_FLOOR;
     return { legacy, load_bearing, tp_retention, fp_pass, tp_pass, promotes: fp_pass && tp_pass };
 }

@@ -540,7 +540,14 @@ confirm interactive); a successful repair replaces the member's round entry.
 ### Critic protocol (road-to-judgment-and-forensic-evidence Phase 2)
 
 - `critic_protocol` (`"legacy" | "load_bearing"`, top-level, default
-  `"legacy"`) — which critic posture adversarial/skeptic review passes use.
+  `"legacy"`) — the declared critic posture for adversarial/skeptic review
+  passes. HONEST SCOPE: today the only consumer is the A/B bench harness
+  (`bench_critic_protocol.ts`, which runs both arms regardless of the
+  configured value); no runtime surface reads the key yet, and none will
+  until a passing arm is promoted — which the 2026-08-09 run did not do.
+  Setting `load_bearing` therefore changes no shipped behaviour; the key
+  exists so the selection surface and its default were fixed in the same
+  change as the pre-registered experiment.
   - `legacy` — the shipped free-hunt skeptic ("assume this may hide a subtle
     defect; hunt for it"). Measured defect on record: 100 % false-positive
     rate on the frozen controversial-but-correct clean controls
