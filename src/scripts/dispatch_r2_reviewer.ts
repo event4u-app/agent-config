@@ -927,7 +927,17 @@ function runDispatch(args: Args): number {
     fs.mkdirSync(inputDirAbs, { recursive: true });
     fs.writeFileSync(path.join(inputDirAbs, 'diff.patch'), scopeDiffText, 'utf-8');
     if (roadmapText !== null) {
-        fs.writeFileSync(path.join(inputDirAbs, 'roadmap.md'), roadmapText, 'utf-8');
+        // The snapshot lands under agents/evidence/, which check_references
+        // walks, while the live roadmap layer is deliberately excluded from
+        // that gate — so a roadmap that legitimately quotes a nonexistent
+        // path (e.g. documenting a hallucinated council citation) would red
+        // CI through its own review snapshot. The header exemption keeps the
+        // snapshot verbatim below the marker; roadmap_hash binds the LIVE
+        // file and is unaffected. Found by the zcs-close CI run, 2026-08-09.
+        const snapshotHeader =
+            '<!-- check-refs: skip -->\n' +
+            '<!-- verbatim roadmap snapshot for the R2 reviewer; the live roadmap layer is excluded from check_references, and a snapshot must not fail a gate its source is exempt from -->\n';
+        fs.writeFileSync(path.join(inputDirAbs, 'roadmap.md'), snapshotHeader + roadmapText, 'utf-8');
     }
     fs.writeFileSync(path.join(inputDirAbs, 'acceptance-criteria.md'), acText ?? '', 'utf-8');
     fs.writeFileSync(path.join(inputDirAbs, 'prompt.md'), promptText, 'utf-8');

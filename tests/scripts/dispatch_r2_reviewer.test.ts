@@ -155,7 +155,16 @@ describe('dispatch_r2_reviewer — package + skeleton', () => {
         // Package files land under <repo>/<out-dir>/<slug>.review-input/.
         const inputDir = path.join(repo, OUT, `${SLUG}.review-input`);
         expect(fs.readFileSync(path.join(inputDir, 'diff.patch'), 'utf-8')).toBe(diff);
-        expect(fs.readFileSync(path.join(inputDir, 'roadmap.md'), 'utf-8')).toBe(ROADMAP);
+        // The snapshot is the roadmap verbatim BELOW a check-refs exemption
+        // header: the copy lives under a directory check_references walks,
+        // while the live roadmap layer is excluded — a roadmap legitimately
+        // quoting a nonexistent path (a documented hallucinated citation)
+        // must not red CI through its own snapshot. roadmap_hash stays bound
+        // to the LIVE text (asserted above), never the stamped copy.
+        const snapshot = fs.readFileSync(path.join(inputDir, 'roadmap.md'), 'utf-8');
+        const snapshotLines = snapshot.split('\n');
+        expect(snapshotLines[0]).toBe('<!-- check-refs: skip -->');
+        expect(snapshot.endsWith(ROADMAP)).toBe(true);
         expect(fs.readFileSync(path.join(inputDir, 'acceptance-criteria.md'), 'utf-8')).toBe(ac);
         const prompt = fs.readFileSync(path.join(inputDir, 'prompt.md'), 'utf-8');
         expect(prompt).toContain('Review only — write no code, fix nothing.');
