@@ -1,9 +1,18 @@
 ---
 complexity: structural
-status: ready
+status: later
 ---
 
 # Road to worker-generation recycling — a worker at its budget hands off instead of dying
+
+> **Parked in `later/` (2026-08-09).** Phases 0-1 shipped (PR #1228); every open
+> step is gated on something outside this roadmap: Phase 2 on the maintainer
+> blockers `host-worker-respawn` (its open half IS step 2.1),
+> `capsule-quality-near-budget` (3 real long-task cases) and
+> `orchestrator-only-mode-decision`; Phase 3 on ≥ 20 real recycling lines.
+> Building Phase 2 now would also confound Phase 1's shadow measurement by
+> construction. **Resume when** the maintainer blockers are resolved and
+> Phase 1's exit gate (≥ 30 shadow capsules from real dispatches) has data.
 
 > Today a worker that reaches its tier budget is killed by stop-loss and its
 > partial work returns as an envelope the orchestrator has to re-brief from.
