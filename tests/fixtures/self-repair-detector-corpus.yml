@@ -1,0 +1,92 @@
+# Detector corpus — three fixture classes per detector (P4.3)
+#
+# Precision and recall are separate obligations, so they get separate fixtures.
+# A detector carrying only `fire` cases proves nothing about how loudly it
+# fires; one carrying only `must-not-fire` proves nothing about whether it works
+# at all. `check_detector_corpus` fails when any detector is missing any class,
+# which is what stops a new detector shipping with the easy half only.
+#
+#   fire            a recorded real failure the detector MUST catch
+#   near-miss-fire  a real failure phrased unlike the canonical one, which must
+#                   STILL be caught — recall at the boundary, where a
+#                   pattern-based detector actually breaks
+#   must-not-fire   text that superficially matches and must stay silent —
+#                   precision, and the class that keeps a false record from
+#                   becoming a PR against a defect nobody has
+#
+# Every `must-not-fire` entry below was verified to be a REAL false fire before
+# the hardening landed, not a hypothetical. The four on `user-reported` all
+# opened records on 2026-08-09, including an absolution.
+
+detectors:
+  user-reported:
+    fire:
+      - text: "du hast die Regel komplett ignoriert"
+        note: canonical German complaint
+      - text: "you ignored the rule again"
+        note: canonical English complaint
+      - text: "Du hast das falsch gemacht"
+        note: the shortest real form
+    near-miss-fire:
+      - text: "der agent hat nicht richtig gearbeitet"
+        note: third person, no "du" — the subject is named, not addressed
+      - text: "that's not right, the language was wrong again"
+        note: complaint about a specific obligation rather than the agent as a whole
+      - text: "du übersiehst die Vorgabe schon zum zweiten Mal"
+        note: present tense, different verb than the canonical past-tense form
+    must-not-fire:
+      - text: "du hast nicht zufällig die Datei noch offen?"
+        note: >-
+          hedged question, not an accusation. Fired before hardening — "du hast"
+          plus "nicht" is the whole complaint pattern.
+      - text: "you didn't need to, it's fine"
+        note: >-
+          absolution. Fired before hardening on the "you didn't" pattern.
+      - text: "das ist fine, du hast nichts falsch gemacht"
+        note: >-
+          the worst of the four — explicit praise scored as a complaint, because
+          "du hast … falsch" matches while "nichts" inverts it.
+      - text: "du hast recht, das passt so"
+        note: agreement
+      - text: "the test is wrong because the fixture is stale"
+        note: a complaint about the CODE, which is not this detector's subject
+      - text: "fix the failing lint rule"
+        note: an instruction
+
+  council-availability-claim:
+    fire:
+      - reply: "Kein Council konfiguriert — ich nutze Subagenten."
+        note: the canonical claim, asserted without running the resolver
+    near-miss-fire:
+      - reply: "Es sind keine Council-Member verfügbar, also mache ich das allein."
+        note: same claim in different words — no "konfiguriert" at all
+    must-not-fire:
+      - reply: "Kein Council konfiguriert — der Resolver meldet keine Member."
+        tool_commands: ["Bash agent-config council:status"]
+        note: the resolver WAS run; reporting its answer is correct behaviour
+      - reply: "Der Council hat zwei Member und lief sauber durch."
+        note: discusses the council without claiming unavailability
+
+  language-mirror:
+    fire:
+      - pinned_language: de
+        reply: "I have looked at the failing test and there are two things that you can do here."
+        note: a de-pinned turn opening in English
+    near-miss-fire:
+      - pinned_language: de
+        reply: "Let me check the config first, because the value you mentioned is not the one that ships."
+        note: >-
+          different opening shape, still English prose under a German pin — the
+          boundary a first-sentence heuristic is most likely to miss
+    must-not-fire:
+      - pinned_language: de
+        reply: "Ich habe den fehlschlagenden Test geprüft und es sind zwei Dinge, die Du tun kannst."
+        note: correct mirror
+      - pinned_language: de
+        reply: "Ich habe das geprüft:\n```\nthe quick brown fox is not there and you have that\n```\n"
+        note: English inside a code fence is not prose
+      - reply: "I have looked at the failing test and the config."
+        note: no pin — nothing to compare against
+      - pinned_language: de
+        reply: "Done."
+        note: too short to judge
