@@ -6,10 +6,10 @@
 
 ## Overall
 
-**228 / 344 steps done · 66%**
+**231 / 344 steps done · 67%**
 
 ```text
-██████████████████████████░░░░░░░░░░░░░░   66%
+███████████████████████████░░░░░░░░░░░░░   67%
 ```
 
 ## Open roadmaps
@@ -23,7 +23,7 @@
 | 5 | [road-to-council-blind-review.md](roadmaps/road-to-council-blind-review.md) | 3 | 6 | 2 | 3 | 0 | 1 | 0 | ██████░░░░ 60% |
 | 6 | [road-to-gated-reach-followup.md](roadmaps/road-to-gated-reach-followup.md) | 1 | 12 | 12 | 0 | 0 | 0 | [1](#blockers-road-to-gated-reach-followup) | ░░░░░░░░░░ 0% |
 | 7 | [road-to-inbox-harvest-2026-08.md](roadmaps/road-to-inbox-harvest-2026-08.md) | 5 | 21 | 1 | 11 | 4 | 5 | [2](#blockers-road-to-inbox-harvest-2026-08) | █████████░ 92% |
-| 8 | [road-to-judgment-and-forensic-evidence.md](roadmaps/road-to-judgment-and-forensic-evidence.md) | 5 | 28 | 12 | 16 | 0 | 0 | [2](#blockers-road-to-judgment-and-forensic-evidence) | ██████░░░░ 57% |
+| 8 | [road-to-judgment-and-forensic-evidence.md](roadmaps/road-to-judgment-and-forensic-evidence.md) | 5 | 28 | 9 | 19 | 0 | 0 | [2](#blockers-road-to-judgment-and-forensic-evidence) | ███████░░░ 68% |
 | 9 | [road-to-kernel-question-triangle.md](roadmaps/road-to-kernel-question-triangle.md) | 1 | 3 | 3 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 10 | [road-to-maintainer-bus-factor.md](roadmaps/road-to-maintainer-bus-factor.md) | 4 | 12 | 5 | 7 | 0 | 0 | [1](#blockers-road-to-maintainer-bus-factor) | ██████░░░░ 58% |
 | 11 | [road-to-orchestration-scope-decision.md](roadmaps/road-to-orchestration-scope-decision.md) | 4 | 10 | 6 | 4 | 0 | 0 | [1](#blockers-road-to-orchestration-scope-decision) | ████░░░░░░ 40% |
@@ -185,14 +185,14 @@
 
 ### [road-to-judgment-and-forensic-evidence.md](roadmaps/road-to-judgment-and-forensic-evidence.md)
 
-**Road to judgment and forensic evidence — one protocol against a measured defect, one evidence source git already holds** — 16 / 28 done (57%)
+**Road to judgment and forensic evidence — one protocol against a measured defect, one evidence source git already holds** — 19 / 28 done (68%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
 | 1 | Pre-mortem as a roadmap authoring artefact | ✅ done | 0 | 5 | 0 | 0 | 100% |
 | 2 | Council critic protocol A/B against the measured defect | ✅ done | 0 | 5 | 0 | 0 | 100% |
 | 3 | Forensic analyzers as a read-only pack | ✅ done | 0 | 6 | 0 | 0 | 100% |
-| 4 | Skill attestation, last and behind its own record | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
+| 4 | Skill attestation, last and behind its own record | ✅ done | 0 | 3 | 0 | 0 | 100% |
 | 5 | What this roadmap will not do | ⬜ not started | 9 | 0 | 0 | 0 | 0% |
 
 <a id="blockers-road-to-judgment-and-forensic-evidence"></a>

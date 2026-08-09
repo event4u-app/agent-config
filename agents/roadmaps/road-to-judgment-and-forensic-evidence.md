@@ -214,15 +214,26 @@ machine-derived evidence — or record the honest null for each independently.
 
 ## Phase 4 — Skill attestation, last and behind its own record
 
-- [ ] 4.1 Specify an optional `attest` capability: a skill declaring it states
+- [x] 4.1 Specify an optional `attest` capability: a skill declaring it states
       its own invocation in a fixed form, making non-invocation and silent skip
       detectable in a transcript — the skill-layer analogue of a gate publishing
       its scan count.
-- [ ] 4.2 Write the ADR first. This edits the authoring standard used by every
+      <!-- done 2026-08-09: specified in ADR-220 — `attest: true` frontmatter
+      opt-in, fixed line `[skill-attest] <name>` at first application per
+      reply; authoring-standard edit ships with the first adopter, not
+      speculatively. -->
+- [x] 4.2 Write the ADR first. This edits the authoring standard used by every
       pack, and the honest scope note belongs in the record: a self-reported
       attestation is evidence that a skill said it ran, never that it ran.
-- [ ] 4.3 Build the transcript-scanning check only after the ADR lands, and only
+      <!-- done 2026-08-09: ADR-220-skill-invocation-attestation, accepted; the
+      self-report limitation is a fenced block in the ADR's own text, per the
+      acceptance criterion. Index regenerated, frontmatter gate green. -->
+- [x] 4.3 Build the transcript-scanning check only after the ADR lands, and only
       if the ADR concludes the signal is worth the surface.
+      <!-- done 2026-08-09: the ADR concludes the signal is NOT yet worth the
+      surface (no writer exists → the reader would measure nothing); the check
+      is deliberately not built, and the ADR's review_trigger names the two
+      concrete reopen conditions. -->
 
 **Exit:** ADR merged with the self-report limitation stated in it; the check exists only if the ADR says so.
 **Rollback:** no capability ships before the ADR, so the rollback is not writing it.
