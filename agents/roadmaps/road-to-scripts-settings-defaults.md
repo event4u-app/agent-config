@@ -22,8 +22,13 @@ keys from the template defaults layer, pinned by
 (`load_agent_settings`) has **no defaults layer at all** — `_DEFAULTS` is `{}`,
 and the tree is sparse-tolerant only because every consumer supplies its own
 fallback at the read site. That is not the same guarantee: a consumer that
-forgets its fallback breaks on a sparse file, and nine keys are already
-documented where absent ≠ the template default.
+forgets its fallback breaks on a sparse file, and nothing pins that the
+fallbacks which do exist agree with the template default. (The nine documented
+absent-≠-default keys are NOT scripts-family evidence — they belong to the
+wizard-materialised file's own readers, the server/installer family, and are
+already carved out there; the parent roadmap proves the scripts family never
+read that file. The scripts-family divergences are unaudited — auditing them
+is exactly Phase 1.)
 
 Why this is its own roadmap rather than a step in the parent: giving the
 scripts family a template-defaults layer means touching `load_agent_settings`,
@@ -46,10 +51,11 @@ the resolved value of any key that is present today, and without weakening the
   and the governing ADR. Emit the comparison as an Evidence Report in
   `agents/evidence/analysis/` (per `source-discovery-gate`) so the convergence
   decision is made on cited lines, not memory.
-- [ ] Enumerate every scripts-family read site with its own fallback and the
-  nine documented absent-≠-default keys; classify which fallbacks agree with
-  the template default and which silently diverge (those are the live defects
-  this roadmap exists to catch).
+- [ ] Enumerate every scripts-family read site with its own fallback; classify
+  which fallbacks agree with the template default and which silently diverge
+  (those are the live defects this roadmap exists to catch — the scripts-family
+  divergence set is unaudited; the nine keys the parent documented belong to
+  the server/installer family and are only the shape to look for, not the list).
 
 ## Phase 2 — The defaults layer, behind the existing read path
 
@@ -65,6 +71,17 @@ the resolved value of any key that is present today, and without weakening the
   — a silent divergence is the defect, an explained one is a decision.
   *Verify:* the Phase-1 classification table has zero unexplained divergences
   left; the full test suite stays green.
+
+## Risk Register
+
+<!-- risk-review: v1 | reviewed: 2026-08-09 | reviewer: claude/host -->
+
+| Rank | Item | Risk type | Description | Mitigation | Anchored under |
+|------|------|-----------|-------------|------------|----------------|
+| 1 | Silent behaviour change on existing installs | implementation | A read-site fallback that disagrees with the template default answers differently once the defaults layer exists below it — the consumer sees a new value with no code change of its own. | Phase 1 classifies every fallback as agree/diverge BEFORE the layer lands; the Phase-2 test pins that every key present in a populated file resolves identically before and after. | Phase 1 — Map the divergence |
+| 2 | Defaults layer wired at the wrong precedence end | implementation | `load_agent_settings` precedence is the inverse of the server's; a layer inserted at the wrong end silently outranks a real user layer instead of sitting below everything. | The Evidence Report maps both chains side by side before any edit; the parity-style test asserts a populated layer always beats the default on both families. | Phase 2 — The defaults layer |
+| 3 | `MERGEABLE_KEYS` whitelist weakened as a side effect | implementation | The whitelist and its ADR are exactly the kind of constraint a convergence change finds inconvenient; loosening it in passing would be a recorded-failure-class gate weakening. | Acceptance criterion pins untouched-or-own-recorded-decision; any change there is a separate ADR, never a hunk in this diff. | Acceptance criteria |
+| 4 | A deliberate divergence retired as if it were drift | product | Some read-site fallbacks may intentionally differ from the template default; deleting them uniformly converts a decision into a regression. | Phase 2 keeps intentional divergences with an inline reason; the exit condition is zero UNEXPLAINED divergences, not zero divergences. | Phase 2 — The defaults layer |
 
 ## Acceptance criteria
 

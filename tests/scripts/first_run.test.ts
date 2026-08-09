@@ -201,9 +201,16 @@ describe('entry count — the file a first run leaves behind', () => {
     // The 2026-08-07 council ruled the nickname step done ON CONDITION that this
     // claim is pinned by a test — a first-run file with exactly one entry, and
     // one with zero — rather than amended into another unverified statement.
-    // These are those two cases, composed end-to-end: the plan decides whether
-    // an ask exists, and `settings:set --source jit-answer` is the only writer
-    // the protocol sanctions for an answered ask.
+    //
+    // The ask itself is agent-carried (`enforced_by: none`), so no production
+    // caller connects the plan to the writer. What CAN be pinned mechanically
+    // is the protocol's write rule — "exactly the answered ask is written,
+    // `--source jit-answer`; a silent default writes nothing" — executed here
+    // over the real plan and the real writer. That makes both cases
+    // falsifiable: a planner that starts carrying an ask in a non-interactive
+    // context, or a write rule that starts persisting silent defaults, fails
+    // the zero-entries file assertions; a writer that lets template opinions
+    // ride along fails the exactly-one leaf count.
     const NOW = '2026-08-09T00:00:00Z';
     let root: string;
 
@@ -224,32 +231,48 @@ describe('entry count — the file a first run leaves behind', () => {
         );
     }
 
+    /**
+     * The protocol's write rule, executed literally: the answered ask — and
+     * ONLY the answered ask — reaches `settings:set --source jit-answer`.
+     * Silent defaults and skipped keys never touch the writer.
+     */
+    function executeFirstRun(
+        probe: { interactive: boolean },
+        answers: Record<string, string>,
+    ): ReturnType<typeof planSettingsAsks> {
+        const plan = planSettingsAsks(THREE_B, classes(), defaultOf, new Set(), probe);
+        if (plan.ask !== null && plan.ask in answers) {
+            const res = runSettingsSet({
+                key: plan.ask,
+                rawValue: answers[plan.ask] as string,
+                source: 'jit-answer',
+                root,
+                packageRoot: PACKAGE_ROOT,
+                now: NOW,
+                dryRun: false,
+            });
+            expect(res.code).toBe(0);
+        }
+        return plan;
+    }
+
     it('zero entries: a first run that answers nothing never creates the file', () => {
-        const plan = planSettingsAsks(THREE_B, classes(), defaultOf, new Set(), {
-            interactive: false,
+        // The answer IS available — what must keep the file from existing is
+        // the plan carrying no ask, not the answer being missing. A planner
+        // regression that asks non-interactively writes the file and fails here.
+        const plan = executeFirstRun({ interactive: false }, {
+            'personal.canary_name': 'Matze',
         });
-        // No ask → no answered ask → the sanctioned writer is never invoked,
-        // and the user's global settings file simply does not come to exist.
         expect(plan.ask).toBeNull();
         expect(fs.existsSync(settingsFilePath(root))).toBe(false);
         expect(fs.existsSync(provenanceFilePath(root))).toBe(false);
     });
 
     it('exactly one entry: answering the nickname writes that leaf and nothing else', () => {
-        const plan = planSettingsAsks(THREE_B, classes(), defaultOf, new Set(), {
-            interactive: true,
+        const plan = executeFirstRun({ interactive: true }, {
+            'personal.canary_name': 'Matze',
         });
         expect(plan.ask).toBe('personal.canary_name');
-        const res = runSettingsSet({
-            key: 'personal.canary_name',
-            rawValue: 'Matze',
-            source: 'jit-answer',
-            root,
-            packageRoot: PACKAGE_ROOT,
-            now: NOW,
-            dryRun: false,
-        });
-        expect(res.code).toBe(0);
         const file = parseYaml(fs.readFileSync(settingsFilePath(root), 'utf-8'));
         // Exactly ONE leaf entry, and it is the decision that was made — no
         // template opinion rides along into the user's file.

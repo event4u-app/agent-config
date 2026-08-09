@@ -630,6 +630,15 @@ describe('dispatch_r2_reviewer — pure helpers', () => {
         expect(extractAcceptanceCriteria('# X\n\n## Phase 1\n- [ ] a\n')).toBe('');
     });
 
+    it('extractAcceptanceCriteria matches the heading case-insensitively', () => {
+        // The tree carries both `## Acceptance Criteria` and `## Acceptance
+        // criteria`; the case-sensitive version extracted an empty file for the
+        // latter and stamped ac_hash with the SHA-256 of the empty string —
+        // found by the zcs-close R2 review (2026-08-09), pinned here.
+        const lower = '# X\n\n## Acceptance criteria\n\n- crit A\n\n## Next\n';
+        expect(extractAcceptanceCriteria(lower)).toContain('- crit A');
+    });
+
     it('reviewScopeDiffArgs excludes every gate-owned evidence path from the reviewed scope', () => {
         const argv = reviewScopeDiffArgs('origin/main');
         // Asserted as structure, not as a frozen array: the byte-stability flag

@@ -350,7 +350,10 @@ export function extractAcceptanceCriteria(roadmapText: string): string {
     const lines = roadmapText.split('\n');
     let start = -1;
     for (let i = 0; i < lines.length; i++) {
-        if (/^## Acceptance Criteria\s*$/.test(lines[i] as string)) {
+        // Case-insensitive: the tree carries both `## Acceptance Criteria` and
+        // `## Acceptance criteria`; a case-sensitive match silently extracted
+        // nothing for the latter (found by the zcs-close R2 review, 2026-08-09).
+        if (/^## acceptance criteria\s*$/i.test(lines[i] as string)) {
             start = i;
             break;
         }

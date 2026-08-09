@@ -514,6 +514,17 @@ here rather than done, per halt condition 4.
    agent-carried (`enforced_by: none`) — but it means the non-interactive skip
    is proven for a gate nothing consults. `consentVerdict` is no longer in this
    list.
+5. **The `source: manual` migration stamp is a recorded non-adoption, not
+   deferred work** (the follow-up Phase 3 step 4 promised this section, written
+   at archive time 2026-08-09 after the zcs-close R2 review flagged the dangling
+   citation). The step's own reasoning cuts against shipping it: stamping
+   entries the tool never wrote "would write a provenance file claiming
+   decisions the user never made". Honouring the existing file as-is IS shipped
+   and pinned; the stamp is bookkeeping whose honest form does not exist under
+   the current provenance vocabulary. If anyone wants it later, that is a new
+   decision about the vocabulary (e.g. a distinct `pre-existing` source value),
+   never a silent write of `manual` — the acceptance criterion is amended
+   accordingly rather than left contradicting this.
 
 ## Blockers
 
@@ -609,7 +620,11 @@ here rather than done, per halt condition 4.
   the template↔schema parity gate and the installer placeholder invariant are
   both still green — pinned in the same change, not asserted.
 - An existing populated settings file upgrades with zero behaviour change and
-  is stamped `source: manual`.
+  is stamped `source: manual`. *(Amended 2026-08-09 at archive time: the
+  upgrade-as-is half is shipped and pinned; the `source: manual` stamp is a
+  recorded NON-adoption — stamping entries the tool never wrote would fabricate
+  provenance. See § Findings item 5 for the reasoning and the condition under
+  which a stamp could return.)*
 - A fresh interactive session asks exactly one question; a non-TTY session asks
   none.
 - No command execution ever asks more than one settings question; a planted
