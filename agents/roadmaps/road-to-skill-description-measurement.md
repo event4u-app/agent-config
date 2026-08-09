@@ -105,9 +105,10 @@ renegotiated by the outcome.
   post-rewrite tree state, produced by the same protocol.
 
 ## Risk Register
+<!-- risk-review: v1 | reviewed: 2026-08-09 | reviewer: claude/host -->
 
 | Rank | Item | Risk type | Description | Mitigation | Anchored under |
 |------|------|-----------|-------------|------------|----------------|
-| 1 | The baseline is taken against the wrong tree state | measurement | The pre-rewrite state must exclude the 9 rewrites but include the scorer repoint, or the two runs differ in more than the variable under test | 1.1 records the tree state it measured; 1.2 asserts scorer and fixture parity | Phase 1.1 / 1.2 |
-| 2 | A single-number target invites Goodharting | measurement | A selector is probabilistic; one pre-registered floor would invite tuning the fixtures instead of the descriptions | Three criteria, all of which must hold, including a per-skill degradation ceiling | Phase 1.3 |
-| 3 | The null is quietly dropped | evidence | A rewrite that did not move the instrument is the least satisfying outcome and the easiest to leave unpublished | 1.4 makes publishing the null a step with its own verify clause | Phase 1.4 |
+| 1 | The baseline is taken against the wrong tree state | implementation | The pre-rewrite state must exclude the 9 rewrites but include the scorer repoint, or the two runs differ in more than the variable under test | 1.1 records the tree state it measured; 1.2 asserts scorer and fixture parity | Phase 1 |
+| 2 | A single-number target invites Goodharting | implementation | A selector is probabilistic; one pre-registered floor would invite tuning the fixtures instead of the descriptions | Three criteria, all of which must hold, including a per-skill degradation ceiling | Phase 1 |
+| 3 | The null is quietly dropped | implementation | A rewrite that did not move the instrument is the least satisfying outcome and the easiest to leave unpublished | 1.4 makes publishing the null a step with its own verify clause | Phase 1 |
