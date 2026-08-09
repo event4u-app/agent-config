@@ -162,6 +162,17 @@
   size_class: small
   default_install: false
 
+- id: forensics
+  label: Forensic Evidence
+  description: Machine-derived release evidence from git history alone — hotspot risk (change frequency x complexity) and change-coupling analyzers; deterministic, read-only, advisory to the release findings pipeline.
+  workspaces: [engineering]
+  requires: [engineering-base]
+  trust_level_default: experimental
+  surface_tier: lab
+  domain: engineering
+  size_class: small
+  default_install: false
+
 - id: python
   label: Python
   description: Python-language patterns.

@@ -183,7 +183,7 @@ metacharacters and repo escape, including the right-hand side of `--flag=value`.
 - last_verified: 2026-07-25
 
 ### claim: skill-count
-- claim: 288 skills.
+- claim: 289 skills.
 - kind: quant
 - evidence: exec:check_artefact_count_messaging -> 0
 - status: backed
@@ -340,7 +340,7 @@ metacharacters and repo escape, including the right-hand side of `--flag=value`.
 - last_verified: 2026-08-03
 
 ### claim: default-install-context-cost
-- claim: The scoped-projection default for new installs ships 217 of 288 skills (untagged core plus engineering/maintainer packs), an approximately 25% reduction of the skill-catalog surface (a reduction of 71 projected entries; the token figures measured 2026-07-27 at the then-283-skill catalog were about 577k to about 428k approximated tokens and are NOT rescaled here). Both figures are generated, not typed: reproduce them with `./scripts-run src/scripts/count_scoped_projection`, which partitions the canonical skill catalog with the same predicate `install.ts` applies when it prunes a real tree.
+- claim: The scoped-projection default for new installs ships 218 of 289 skills (untagged core plus engineering/maintainer packs), an approximately 25% reduction of the skill-catalog surface (a reduction of 71 projected entries; the token figures measured 2026-07-27 at the then-283-skill catalog were about 577k to about 428k approximated tokens and are NOT rescaled here). Both figures are generated, not typed: reproduce them with `./scripts-run src/scripts/count_scoped_projection`, which partitions the canonical skill catalog with the same predicate `install.ts` applies when it prunes a real tree.
 - kind: quant
 - evidence: exec:update_counts --check -> 0
 - status: backed
@@ -429,6 +429,21 @@ metacharacters and repo escape, including the right-hand side of `--flag=value`.
 - evidence: docs/contracts/plan-review-gates.md#Advisory window (Stage A, verdict #20)
 - status: unbacked
 - last_verified: 2026-08-04
+
+### claim: critic-protocol-load-bearing-ab
+- claim: PRE-REGISTERED 2026-08-09, BEFORE any run (road-to-judgment-and-forensic-evidence Phase 2; thresholds, prompts, and scorer semantics frozen at registration and not adjusted after the numbers land). On the frozen adversarial-council corpus (internal/bench/adversarial-council/corpus.json, built 2026-07-21 — 12 defect fixtures + 3 controversial-but-correct clean controls), the `load_bearing` critic protocol — one independent single-shot review per vendor (anthropic claude-sonnet-4-5 + openai gpt-4o, direct client calls, strict JSON; NEVER council_cli transport, per the adversarial-council-finding-coverage measurement-artifact note) — achieves, PER VENDOR: (1) false-positive rate < 50% on the 3 clean controls AND (2) true-positive retention >= 80% of the legacy skeptic arm's TP count on the 12 defect fixtures, both arms measured in the same run. Both conditions, both vendors, or the arm does not promote; `legacy` stays the default in either case (promotion is a separate human decision on top of a passing result). Scoring is the existing deterministic scorer (caughtDefect: defect-file basename + category-family match; isFalsePositive: any non-low-confidence finding on a clean control) applied IDENTICALLY to both arms on findings only; the protocol's verdict field is published as a secondary signal, and a "flawed" verdict with empty findings is counted separately as `incoherent` (per the 2026-08-09 council design pass), never as a TP catch and never as an FP. Mechanism hypothesis, stated so it can be wrong: a critic that cannot return "this holds" cannot have an FP rate below 100% by construction; the protocol makes "holds" a positive, defensible output. Published in both directions regardless of outcome.
+- kind: quant
+- evidence: internal/bench/adversarial-council/runs/critic-protocol-ab-report.json
+- status: resolved-null
+- last_verified: 2026-08-09
+- resolution: RESOLVED 2026-08-09, same day as registration, run AFTER the registration commit — NO PROMOTION, published in both directions. anthropic/claude-sonnet-4-5: the load_bearing arm PASSES both thresholds — FP 1/3 (33%) vs legacy 3/3 (100%, replicating the measured defect in the same run), TP retention exactly 0.80 (8/12 vs legacy 10/12). openai/gpt-4o: the load_bearing arm FAILS the retention floor in the most instructive way available — 0/12 defects caught, verdict "holds" on 14 of 15 fixtures, and the single "flawed" verdict (inv-02) missed the ground truth, so TP stays 0/12 — blanket approval in effect, the roadmap risk-register rank-2 risk materialized on the weaker model; FP 0/3 passes trivially as a side effect of approving nearly everything. Per the frozen registration (both conditions, both vendors) the arm does not promote; critic_protocol stays legacy. What survives: the mechanism hypothesis holds on the strong model (permitting "holds" cut FP from 100% to 33% at the exact retention floor) and is falsified in its general form — the permission to approve is only safe where the model retains defect-finding under the protocol. Run artifacts: internal/bench/adversarial-council/runs/critic-protocol-ab-{report.json,trace.txt}.
+
+### claim: forensics-pack-value
+- claim: PRE-REGISTERED 2026-08-09 (road-to-judgment-and-forensic-evidence Phase 3.5), BEFORE any release has been scored. Across the next 3 releases of this package, the machine-derived forensics findings (hotspot + change-coupling deltas from src/scripts/forensics_report.ts, ingested advisory into agents/evidence/release-findings/<version>.json) surface at least 2 confirmed unique findings — findings the manual release review missed or contradicts, confirmed by the maintainer's disposition on the ledger entry. >= 2 confirmed unique findings across the 3 releases promotes the forensics pack to a standing release-review input; zero confirmed unique findings closes it as an on-demand tool (the pack stays installable, the per-release wiring is dropped). 1 confirmed finding = the question extends one further release, once, then resolves on the same rule. The counting surface is the disposition field on the ledger entries, not this ledger.
+- kind: quant
+- evidence: agents/evidence/release-findings/
+- status: unbacked
+- last_verified: 2026-08-09
 
 ### claim: worker-capsule-trigger-arm
 - claim: A worker that reaches an emission trigger below its stop-loss budget can hand off a CHECKPOINT capsule a successor generation works from, and one of the two candidate triggers — the 80% token watermark or novelty-per-step saturation — is measurably the better emission point.

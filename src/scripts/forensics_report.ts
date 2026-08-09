@@ -1,0 +1,333 @@
+/**
+ * Forensic analyzers — hotspot risk + change coupling from `git log` alone
+ * (road-to-judgment-and-forensic-evidence Phase 3; pack `forensics`,
+ * default-off, read-only, advisory).
+ *
+ * Two deterministic analyzers over a PINNED revision range:
+ *
+ *   hotspot(file)   = norm(change_frequency) × norm(complexity)
+ *                     complexity = LOC + total indentation units (tabs = 1,
+ *                     4 spaces = 1) of the file in the working tree — a cheap,
+ *                     language-agnostic indentation proxy, documented rather
+ *                     than clever. A hotspot is a place to LOOK, never a code
+ *                     quality verdict (both inputs can be correct for a file).
+ *
+ *   coupling(A,B)   = co_changes(A,B) / min(changes(A), changes(B))
+ *                     over commits with ≤ max_commit_files files (bulk sweeps
+ *                     poison coupling; skipped commits are counted in the
+ *                     report, never silently dropped).
+ *
+ *   boundary_contradictions — coupling pairs ABOVE the threshold whose files
+ *   live in different top-level modules. Recorded as a finding CLASS (the
+ *   intended boundaries and the actual change pattern disagree), not as a
+ *   failure — per the roadmap's step 3.6.
+ *
+ * Determinism bar (step 3.3): byte-stable output on a frozen fixture — same
+ * inputs, same bytes. Inputs are the git log for the pinned range plus file
+ * metrics; `--log-file` + `--metrics-file` inject both for fixture tests, so
+ * the analyzer's whole pipeline is exercised without a live repo. All maps
+ * are sorted before emission; scores are rounded to 4 decimals.
+ *
+ * Advisory wiring (step 3.4): `--findings-out` emits
+ * review-findings.schema.json-shaped items with kind `correctness` and
+ * severity `low|medium` — non-blocking by construction in
+ * `check_finding_dispositions.isBlocking` — for ingestion into the existing
+ * release findings ledger (`check_finding_dispositions --ingest`).
+ *
+ * Gaming risk: an empty scan (dead range, wrong cwd) yielding a green "no
+ * hotspots" report — mitigated by the shared scan-scope helper: zero scanned
+ * commits throws (DeadScopeError), it never publishes an empty finding set
+ * (step 3.2). Residual: a range that is real but trivially small still
+ * produces low-signal output; the report publishes commit + file counts so a
+ * reader can judge the denominator.
+ */
+// ledger-exempt: on-demand advisory analyzer, not a CI gate — the report JSON
+// itself carries the full denominator (scanned commits/files) per run.
+import * as fs from 'node:fs';
+import { createHash } from 'node:crypto';
+import { execFileSync } from 'node:child_process';
+
+import { reportScanned } from './_lib/scan_scope.js';
+
+interface Params {
+    max_commit_files: number;
+    coupling_threshold: number;
+    min_cochanges: number;
+    top_hotspots: number;
+}
+const DEFAULTS: Params = {
+    max_commit_files: 50,
+    coupling_threshold: 0.5,
+    min_cochanges: 3,
+    top_hotspots: 25,
+};
+
+interface Commit {
+    hash: string;
+    files: string[];
+}
+
+/** Parse `git log --pretty=format:'C %H' --name-only` output. */
+export function parseLog(text: string): Commit[] {
+    const commits: Commit[] = [];
+    let current: Commit | null = null;
+    for (const raw of text.split('\n')) {
+        const line = raw.trimEnd();
+        if (line.startsWith('C ')) {
+            if (current) commits.push(current);
+            current = { hash: line.slice(2).trim(), files: [] };
+        } else if (line.length > 0 && current) {
+            current.files.push(line);
+        }
+    }
+    if (current) commits.push(current);
+    return commits;
+}
+
+function gitLog(range: string): string {
+    return execFileSync('git', ['log', '--pretty=format:C %H', '--name-only', range], {
+        encoding: 'utf8',
+        maxBuffer: 256 * 1024 * 1024,
+    });
+}
+
+/** LOC + indentation units — the documented complexity proxy. */
+export function complexityOf(content: string): number {
+    const lines = content.split('\n');
+    let indent = 0;
+    for (const l of lines) {
+        const m = /^[\t ]*/.exec(l);
+        const ws = m ? m[0] : '';
+        let units = 0;
+        let spaces = 0;
+        for (const ch of ws) {
+            if (ch === '\t') units += 1;
+            else spaces += 1;
+        }
+        units += Math.floor(spaces / 4);
+        indent += units;
+    }
+    return lines.length + indent;
+}
+
+function liveComplexity(file: string): number | null {
+    try {
+        const st = fs.statSync(file);
+        if (!st.isFile()) return null;
+        const buf = fs.readFileSync(file);
+        if (buf.includes(0)) return null; // binary
+        return complexityOf(buf.toString('utf8'));
+    } catch {
+        return null; // deleted / renamed away — frequency without complexity
+    }
+}
+
+function round4(n: number): number {
+    return Math.round(n * 10000) / 10000;
+}
+
+/** First path segment — the module boundary the router treats as independent. */
+export function moduleOf(file: string): string {
+    const parts = file.split('/');
+    if (parts.length >= 2 && (parts[0] === 'src' || parts[0] === 'tests' || parts[0] === 'docs')) {
+        return `${parts[0]}/${parts[1] ?? ''}`;
+    }
+    return parts[0] ?? file;
+}
+
+interface Hotspot {
+    file: string;
+    changes: number;
+    complexity: number | null;
+    score: number;
+}
+interface CouplingPair {
+    a: string;
+    b: string;
+    co_changes: number;
+    changes_a: number;
+    changes_b: number;
+    coupling: number;
+    cross_module: boolean;
+}
+
+export interface Report {
+    mode: string;
+    range: string;
+    params: Params;
+    scanned: { commits: number; commits_skipped_bulk: number; files: number };
+    hotspots: Hotspot[];
+    coupling: CouplingPair[];
+    boundary_contradictions: CouplingPair[];
+}
+
+export function analyze(
+    commits: Commit[],
+    params: Params,
+    complexity: (file: string) => number | null,
+    range: string,
+    mode: string,
+): Report {
+    const changes = new Map<string, number>();
+    const co = new Map<string, number>();
+    let skipped = 0;
+    for (const c of commits) {
+        const files = [...new Set(c.files)].sort();
+        if (files.length > params.max_commit_files) {
+            skipped++;
+            continue;
+        }
+        for (const f of files) changes.set(f, (changes.get(f) ?? 0) + 1);
+        for (let i = 0; i < files.length; i++) {
+            for (let j = i + 1; j < files.length; j++) {
+                const key = `${files[i]}\u0000${files[j]}`;
+                co.set(key, (co.get(key) ?? 0) + 1);
+            }
+        }
+    }
+
+    const files = [...changes.keys()].sort();
+    const complexities = new Map<string, number | null>();
+    for (const f of files) complexities.set(f, complexity(f));
+    let maxChanges = 0;
+    for (const v of changes.values()) if (v > maxChanges) maxChanges = v;
+    let maxComplexity = 0;
+    for (const v of complexities.values()) if (v !== null && v > maxComplexity) maxComplexity = v;
+
+    const hotspots: Hotspot[] = files
+        .map((f) => {
+            const ch = changes.get(f) ?? 0;
+            const cx = complexities.get(f) ?? null;
+            const score =
+                cx === null || maxChanges === 0 || maxComplexity === 0
+                    ? 0
+                    : round4((ch / maxChanges) * (cx / maxComplexity));
+            return { file: f, changes: ch, complexity: cx, score };
+        })
+        .filter((h) => h.score > 0)
+        .sort((a, b) => b.score - a.score || a.file.localeCompare(b.file))
+        .slice(0, params.top_hotspots);
+
+    const coupling: CouplingPair[] = [];
+    for (const [key, n] of [...co.entries()].sort()) {
+        if (n < params.min_cochanges) continue;
+        const [a, b] = key.split('\u0000') as [string, string];
+        const ca = changes.get(a) ?? 0;
+        const cb = changes.get(b) ?? 0;
+        const denom = Math.min(ca, cb);
+        if (denom === 0) continue;
+        const strength = round4(n / denom);
+        if (strength < params.coupling_threshold) continue;
+        coupling.push({
+            a,
+            b,
+            co_changes: n,
+            changes_a: ca,
+            changes_b: cb,
+            coupling: strength,
+            cross_module: moduleOf(a) !== moduleOf(b),
+        });
+    }
+    coupling.sort((x, y) => y.coupling - x.coupling || x.a.localeCompare(y.a) || x.b.localeCompare(y.b));
+
+    return {
+        mode,
+        range,
+        params,
+        scanned: {
+            commits: commits.length - skipped,
+            commits_skipped_bulk: skipped,
+            files: files.length,
+        },
+        hotspots,
+        coupling,
+        boundary_contradictions: coupling.filter((p) => p.cross_module),
+    };
+}
+
+/** Same id convention as self_review_gate.findingId — the schema pins ^[0-9a-f]{12}$. */
+function forensicsFindingId(kind: string, title: string, file: string): string {
+    return createHash('sha256').update(`${kind}|${title}|${file}`).digest('hex').slice(0, 12);
+}
+
+/** Findings-schema-shaped advisory items — non-blocking by construction. */
+export function toFindings(report: Report): Record<string, unknown> {
+    const findings: Record<string, unknown>[] = [];
+    for (const h of report.hotspots.slice(0, 10)) {
+        const title = `hotspot: ${h.file} (score ${String(h.score)})`;
+        findings.push({
+            finding_id: forensicsFindingId('correctness', title, h.file),
+            severity: 'low',
+            kind: 'correctness',
+            title,
+            detail: `${String(h.changes)} changes in range × complexity ${String(h.complexity ?? 'n/a')} — a place to look, not a quality verdict.`,
+            file: h.file,
+        });
+    }
+    for (const p of report.boundary_contradictions) {
+        const title = `boundary contradiction: ${p.a} <-> ${p.b} (coupling ${String(p.coupling)})`;
+        findings.push({
+            finding_id: forensicsFindingId('correctness', title, p.a),
+            severity: 'medium',
+            kind: 'correctness',
+            title,
+            detail: `Cross-module co-change ${String(p.co_changes)}/${String(Math.min(p.changes_a, p.changes_b))} above threshold ${String(report.params.coupling_threshold)} — the intended module boundary and the actual change pattern disagree. A finding class, not a failure.`,
+            file: p.a,
+        });
+    }
+    return { schema_version: 1, findings };
+}
+
+function stringifyReport(report: Report): string {
+    return JSON.stringify(report, null, 2) + '\n';
+}
+
+function argValue(argv: string[], flag: string): string | null {
+    const i = argv.indexOf(flag);
+    return i >= 0 ? (argv[i + 1] ?? null) : null;
+}
+
+function main(argv: string[]): number {
+    const range = argValue(argv, '--range');
+    const logFile = argValue(argv, '--log-file');
+    const metricsFile = argValue(argv, '--metrics-file');
+    const outFile = argValue(argv, '--out');
+    const findingsOut = argValue(argv, '--findings-out');
+    if (!range && !logFile) {
+        process.stderr.write(
+            'usage: forensics_report (--range <rev-range> | --log-file <fixture>) [--metrics-file <json>] [--out <file>] [--findings-out <file>]\n',
+        );
+        return 2;
+    }
+    const params: Params = { ...DEFAULTS };
+    const text = logFile ? fs.readFileSync(logFile, 'utf8') : gitLog(range as string);
+    const commits = parseLog(text);
+    let complexity: (file: string) => number | null = liveComplexity;
+    if (metricsFile) {
+        const metrics = JSON.parse(fs.readFileSync(metricsFile, 'utf8')) as Record<string, number>;
+        complexity = (f) => (Object.prototype.hasOwnProperty.call(metrics, f) ? metrics[f]! : null);
+    }
+    const report = analyze(commits, params, complexity, range ?? `log-file:${logFile ?? ''}`, 'run');
+
+    // Loud-fail on an empty scan BEFORE anything is written — a report over
+    // nothing is not a report, and it must not exist on disk either (throws
+    // DeadScopeError when zero commits were analyzed).
+    reportScanned({
+        gate: 'forensics_report',
+        scanned: report.scanned.commits,
+        units: 'commit(s)',
+        roots: [range ?? (logFile as string)],
+    });
+
+    const json = stringifyReport(report);
+    if (outFile) fs.writeFileSync(outFile, json);
+    process.stdout.write(json);
+    if (findingsOut) fs.writeFileSync(findingsOut, JSON.stringify(toFindings(report), null, 2) + '\n');
+    return 0;
+}
+
+if (import.meta.url === `file://${process.argv[1]}`) {
+    process.exit(main(process.argv.slice(2)));
+}
+
+export { main };
