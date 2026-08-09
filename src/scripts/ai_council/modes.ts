@@ -33,21 +33,36 @@
  * conflated them. They are now named separately:
  *
  * - **Loader default** — when a config file omits `defaults.mode` entirely,
- *   `config.ts::_build_defaults` fills `api`. Unchanged; this is what every
- *   real config observes, because the loader always populates the key.
+ *   `config.ts::_build_defaults` fills `auto` (road-to-always-on-orchestration
+ *   Phase 3.1 — CLI-first is now the owner-set transport doctrine; before this
+ *   flip the loader default was `api`). This is what every real config
+ *   observes, because the loader always populates the key.
  * - **Built-in fallback** — when NO layer supplies a mode at all (a settings
  *   dict handed straight to the resolver, no config file involved), the answer
  *   is `manual`, below. That is the fail-closed direction the no-silent-spend
  *   Iron Law requires: a caller who supplied no transport preference has not
  *   asked to spend money, so the free transport wins.
+ *
+ * ### Why `DEFAULT_MODE` did NOT flip to `auto` alongside the loader default
+ *
+ * `auto` still resolves to a paying rung (the api fallback) when no CLI is
+ * usable — it is a routing rule, not a free transport. `DEFAULT_MODE` is only
+ * reached by a caller that bypasses the config loader entirely (no
+ * `.ai-council.yml`, a hand-built settings dict handed straight to
+ * `resolve_mode`/`resolve_modes`). Flipping it to `auto` would let such a
+ * caller spend money on a config that never asked for `auto` in the first
+ * place — the same no-silent-spend violation the built-in fallback exists to
+ * prevent. Every real, file-backed config always has `defaults.mode`
+ * populated by the loader (now `auto`), so `DEFAULT_MODE` is never consulted
+ * on that path — verified in modes.test.ts and config.test.ts.
  */
 
 export const VALID_MODES: ReadonlySet<string> = new Set(['api', 'manual', 'cli', 'auto']);
 
 /**
  * Built-in fallback when no layer supplies a mode. `manual` — free, no key,
- * no spend. NOT the same as the loader's `defaults.mode` default (`api`); see
- * the module header.
+ * no spend. NOT the same as the loader's `defaults.mode` default (`auto`
+ * since road-to-always-on-orchestration Phase 3.1); see the module header.
  */
 export const DEFAULT_MODE = 'manual';
 

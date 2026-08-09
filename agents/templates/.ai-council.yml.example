@@ -65,21 +65,30 @@ defaults:
   #            reason. `manual` is NEVER part of the auto chain (it would
   #            always "succeed" and silently turn every call into a
   #            copy-paste request) — it stays an explicit opt-in.
-  #            OPT-IN: `auto` is not the shipped default. Switching to it
-  #            moves spend from per-token dollars onto your subscription
-  #            quota, so it is a decision you take, not one you inherit.
-  #            Set `cli_call_budget` below before you flip it.
+  #            THE SHIPPED DEFAULT (road-to-always-on-orchestration
+  #            Phase 3.1 — CLI-first is the owner-set transport doctrine):
+  #            ride the vendor CLI under your subscription first, fall to
+  #            the metered API only where no CLI resolves. Pin `manual` /
+  #            `api` / `cli` here (or per-member below) to override it.
+  #            `cli_call_budget` below ships populated with a generous
+  #            per-provider guard so this default never runs your
+  #            subscription quota uncapped.
   #
   # Precedence: invocation flag > per-member mode > defaults.mode >
   # built-in. Two DIFFERENT defaults sit at the bottom, and they are not
   # the same thing:
-  #   · omit `defaults.mode` entirely and the loader fills "api" — that is
-  #     what every real config file observes.
+  #   · omit `defaults.mode` entirely and the loader fills "auto" (was
+  #     "api" before the Phase 3.1 flip) — that is what every real config
+  #     file observes.
   #   · the resolver's built-in fallback, reached only when no layer at all
   #     supplies a mode (a settings dict handed straight to the resolver,
   #     no config file involved), is "manual" — free, no key. A caller who
-  #     named no transport has not asked to spend money.
-  mode: api
+  #     named no transport has not asked to spend money. This did NOT flip
+  #     alongside the loader default: `auto` still resolves to a paying
+  #     rung when no CLI is usable, so flipping this too would let a
+  #     caller that bypassed the config file spend money on a preference
+  #     it never stated.
+  mode: auto
 
   # Default number of debate rounds per /council invocation.
   #
@@ -179,26 +188,34 @@ debate:
     threshold_usd: 1.00
     show_per_member: true
 
-# Per-day call-count guard for `mode: cli` members. The standard
-# `cost_budget` block skips CLI calls because they are billable=False —
-# but provider subscriptions still carry their own quotas (Claude Pro
-# 5h windows, ChatGPT Plus message caps, Gemini free-tier per-day
-# limits). Opt into a per-provider cap; default unset = unlimited from
-# this loader's perspective.
+# Per-day call-count guard for `mode: cli` / `mode: auto` members. The
+# standard `cost_budget` block skips CLI calls because they are
+# billable=False — but provider subscriptions still carry their own quotas
+# (Claude Pro 5h windows, ChatGPT Plus message caps, Gemini free-tier
+# per-day limits). The loader SHIPS EVERY known provider populated at
+# 50/day by default (road-to-always-on-orchestration Phase 3.4) — a config
+# that omits this block entirely, or omits one provider from the map
+# below, still gets that floor for the missing entries. It is a GUARD
+# against an always-on `auto` default silently exhausting a subscription's
+# plan quota, not a brake — override a provider explicitly to tighten it
+# (worked example below) or loosen it further.
 #
 # Counter state persists at ~/.event4u/agent-config/cli-calls.json
 # with daily UTC reset. Wired by Phase 1 of the CLI-transport roadmap.
 #
-# SHIPPED POPULATED, deliberately: `mode: auto` prefers the cli rung, so
-# shipping that path with no quota guard would miss the point. The caps
-# below are sized from the worst case one invocation can cost — a deep
-# debate is at most `debate_max_rounds` (4) calls per member — so 24
-# permits roughly six full deep debates per provider per day before the
-# guard fires. That is well inside a Pro-tier window while still bounding
-# a runaway loop, and failures count too (a wedged CLI cannot burn the
-# whole budget retrying). Gemini's free tier is the tightest, hence the
-# lower cap. Raise them if you consult heavily; `council:quota` reports
-# usage and `council:quota --reset` clears the day.
+# The three entries below TIGHTEN the 50/day floor, deliberately: `mode:
+# auto` prefers the cli rung, so a config that consults heavily wants a
+# number sized to its own worst case, not the generic guard. Sized from
+# the worst case one invocation can cost — a deep debate is at most
+# `debate_max_rounds` (4) calls per member — so 24 permits roughly six
+# full deep debates per provider per day before the guard fires. That is
+# well inside a Pro-tier window while still bounding a runaway loop, and
+# failures count too (a wedged CLI cannot burn the whole budget retrying).
+# Gemini's free tier is the tightest, hence the lower cap. xai and
+# perplexity are left unlisted here and so keep the loader's 50/day floor —
+# raise or lower any of the five if you consult heavily or want a tighter
+# rein; `council:quota` reports usage and `council:quota --reset` clears
+# the day.
 cli_call_budget:
   max_calls_per_day:
     anthropic: 24
@@ -206,6 +223,20 @@ cli_call_budget:
     gemini: 16
   # Warn once usage crosses this fraction of a cap (0..1).
   warn_at: 0.8
+
+# Quorum for a council pass to CONCLUDE (road-to-always-on-orchestration
+# Phase 3.3). Default "majority" resolves to ceil(n / 2) enabled members —
+# a SIMPLE majority, deliberately not "more than half": at n=2 that is
+# 1-of-2, because requiring 2-of-2 turns any single absent member into a
+# deadlocked release gate. Below quorum the pass is `inconclusive` and, at
+# a release gate, HOLDS for a human — never silently downgraded to
+# advisory. Set an explicit integer to require a fixed count instead:
+#
+#   quorum: 2
+#
+# See docs/contracts/ai-council-config.md § Quorum for the full resolver
+# contract and the manifest.json / rendered-report fields it feeds.
+quorum: majority
 
 # Per-member configuration — you decide what may spend; detection tells
 # you what is already here.

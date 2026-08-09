@@ -303,9 +303,15 @@ describe('load_council_config — validation errors', () => {
 
     it('enabled api-mode member without api_key_ref fails', () => {
         const tmp = make_tmp();
+        // Explicit `mode: api` — road-to-always-on-orchestration Phase 3.1
+        // flipped the implicit `defaults.mode` default to `auto`, under
+        // which a missing `api_key_ref` is not fatal (the auto chain may
+        // still resolve to the key-free `cli` rung). This test targets the
+        // api-mode-specific rule, so it pins the mode it means to exercise
+        // rather than relying on the (now different) default.
         const p = write_yaml(
             tmp,
-            'enabled: false\nmembers:\n  anthropic:\n    enabled: true\n    model: m\n',
+            'enabled: false\nmembers:\n  anthropic:\n    enabled: true\n    model: m\n    mode: api\n',
         );
         expect(() => cfg.load_council_config(p)).toThrow(/api_key_ref/);
     });
@@ -621,5 +627,147 @@ describe('cost_budget.daily_limit_usd — the rolling 24h cap (and the ledger sw
         const tmp = make_tmp();
         const payload = MINIMAL_VALID.replace('  max_total_usd: 20.0', '  max_total_usd: 20.0\n  daily_limit_usd: -1');
         expect(() => cfg.load_council_config(write_yaml(tmp, payload))).toThrow(/daily_limit_usd must be >= 0/u);
+    });
+});
+
+// === road-to-always-on-orchestration Phase 3.1 — CLI-first shipped default ===
+
+describe('defaults.mode — CLI-first is the shipped default (Phase 3.1)', () => {
+    it('defaults to auto when the config omits `defaults` entirely', () => {
+        const tmp = make_tmp();
+        const payload = 'enabled: true\nmembers:\n  anthropic:\n    enabled: false\n';
+        const c = cfg.load_council_config(write_yaml(tmp, payload));
+        expect(c.defaults.mode).toBe('auto');
+    });
+
+    it('defaults to auto when `defaults:` is present but `mode:` is omitted', () => {
+        const tmp = make_tmp();
+        const payload = 'enabled: true\ndefaults:\n  min_rounds: 3\nmembers:\n  anthropic:\n    enabled: false\n';
+        const c = cfg.load_council_config(write_yaml(tmp, payload));
+        expect(c.defaults.mode).toBe('auto');
+    });
+
+    it('a member with no explicit mode inherits the default (per-member mode stays null)', () => {
+        const tmp = make_tmp();
+        const payload =
+            'enabled: true\nmembers:\n  anthropic:\n    enabled: true\n    model: claude-x\n    binary: claude\n';
+        const c = cfg.load_council_config(write_yaml(tmp, payload));
+        expect(c.members.get('anthropic')!.mode).toBeNull();
+    });
+
+    it('an auto-mode enabled member with no api_key_ref does not fail load — auto may resolve to cli', () => {
+        const tmp = make_tmp();
+        const payload = 'enabled: true\nmembers:\n  anthropic:\n    enabled: true\n    model: claude-x\n';
+        expect(() => cfg.load_council_config(write_yaml(tmp, payload))).not.toThrow();
+    });
+
+    it('a pinned `mode: api` member still requires api_key_ref — the flip never relaxes an explicit pin', () => {
+        const tmp = make_tmp();
+        const payload =
+            'enabled: true\nmembers:\n  anthropic:\n    enabled: true\n    model: claude-x\n    mode: api\n';
+        expect(() => cfg.load_council_config(write_yaml(tmp, payload))).toThrow(/api_key_ref/);
+    });
+
+    it('a pinned `mode: manual` or `mode: cli` member is unaffected by the default flip', () => {
+        const tmp = make_tmp();
+        for (const mode of ['manual', 'cli']) {
+            const payload = `enabled: true\nmembers:\n  anthropic:\n    enabled: true\n    model: claude-x\n    mode: ${mode}\n`;
+            const c = cfg.load_council_config(write_yaml(tmp, payload));
+            expect(c.members.get('anthropic')!.mode).toBe(mode);
+        }
+    });
+});
+
+// === road-to-always-on-orchestration Phase 3.3 — quorum ===
+
+describe('quorum — config validation (Phase 3.3)', () => {
+    it('defaults to "majority" when omitted', () => {
+        const tmp = make_tmp();
+        const c = cfg.load_council_config(write_yaml(tmp, MINIMAL_VALID));
+        expect(c.quorum).toBe('majority');
+    });
+
+    it('accepts an explicit "majority"', () => {
+        const tmp = make_tmp();
+        const payload = `${MINIMAL_VALID}quorum: majority\n`;
+        const c = cfg.load_council_config(write_yaml(tmp, payload));
+        expect(c.quorum).toBe('majority');
+    });
+
+    it('accepts a positive integer', () => {
+        const tmp = make_tmp();
+        const payload = `${MINIMAL_VALID}quorum: 2\n`;
+        const c = cfg.load_council_config(write_yaml(tmp, payload));
+        expect(c.quorum).toBe(2);
+    });
+
+    it('rejects zero', () => {
+        const tmp = make_tmp();
+        const payload = `${MINIMAL_VALID}quorum: 0\n`;
+        expect(() => cfg.load_council_config(write_yaml(tmp, payload))).toThrow(/quorum.*integer >= 1/);
+    });
+
+    it('rejects a negative integer', () => {
+        const tmp = make_tmp();
+        const payload = `${MINIMAL_VALID}quorum: -1\n`;
+        expect(() => cfg.load_council_config(write_yaml(tmp, payload))).toThrow(/quorum.*integer >= 1/);
+    });
+
+    it('rejects an unrecognised string', () => {
+        const tmp = make_tmp();
+        const payload = `${MINIMAL_VALID}quorum: all\n`;
+        expect(() => cfg.load_council_config(write_yaml(tmp, payload))).toThrow(/quorum.*majority/);
+    });
+
+    it('rejects a boolean', () => {
+        const tmp = make_tmp();
+        const payload = `${MINIMAL_VALID}quorum: true\n`;
+        expect(() => cfg.load_council_config(write_yaml(tmp, payload))).toThrow(/quorum/);
+    });
+
+    it('rejects a float', () => {
+        const tmp = make_tmp();
+        const payload = `${MINIMAL_VALID}quorum: 1.5\n`;
+        expect(() => cfg.load_council_config(write_yaml(tmp, payload))).toThrow(/quorum/);
+    });
+});
+
+// === road-to-always-on-orchestration Phase 3.4 — cli_call_budget per-provider defaults ===
+
+describe('cli_call_budget.max_calls_per_day — generous per-provider defaults (Phase 3.4)', () => {
+    it('ships every known provider populated (50/day) when the block is entirely absent', () => {
+        const tmp = make_tmp();
+        const c = cfg.load_council_config(write_yaml(tmp, MINIMAL_VALID));
+        const caps = c.cli_call_budget.max_calls_per_day;
+        expect(caps.get('anthropic')).toBe(50);
+        expect(caps.get('openai')).toBe(50);
+        expect(caps.get('gemini')).toBe(50);
+        expect(caps.get('xai')).toBe(50);
+        expect(caps.get('perplexity')).toBe(50);
+    });
+
+    it('an explicit per-provider entry overrides just that provider, leaving the rest at the default', () => {
+        const tmp = make_tmp();
+        const payload = `${MINIMAL_VALID}cli_call_budget:\n  max_calls_per_day:\n    anthropic: 5\n`;
+        const c = cfg.load_council_config(write_yaml(tmp, payload));
+        const caps = c.cli_call_budget.max_calls_per_day;
+        expect(caps.get('anthropic')).toBe(5);
+        expect(caps.get('openai')).toBe(50);
+        expect(caps.get('perplexity')).toBe(50);
+    });
+
+    it('an explicit 0 (deliberately no calls allowed) is honoured, not treated as "use the default"', () => {
+        const tmp = make_tmp();
+        const payload = `${MINIMAL_VALID}cli_call_budget:\n  max_calls_per_day:\n    anthropic: 0\n`;
+        const c = cfg.load_council_config(write_yaml(tmp, payload));
+        expect(c.cli_call_budget.max_calls_per_day.get('anthropic')).toBe(0);
+    });
+
+    it('still rejects an unknown provider and a negative value', () => {
+        const tmp = make_tmp();
+        const badProvider = `${MINIMAL_VALID}cli_call_budget:\n  max_calls_per_day:\n    bogus: 5\n`;
+        expect(() => cfg.load_council_config(write_yaml(tmp, badProvider))).toThrow(/unknown/);
+        const badValue = `${MINIMAL_VALID}cli_call_budget:\n  max_calls_per_day:\n    anthropic: -1\n`;
+        expect(() => cfg.load_council_config(write_yaml(tmp, badValue))).toThrow(/non-negative integer/);
     });
 });

@@ -1052,9 +1052,12 @@ export class SubprocessError extends Error {
  * `~/.event4u/agent-config/cli-calls.json` and resets on UTC date rollover.
  *
  * Subclass contract:
- * - `name`: provider key (`anthropic`, `openai`, `gemini`, …).
- * - `default_binary`: executable name resolved via PATH when the member-level
- *   `binary:` field is not set.
+ * - `super(opts, { name, default_binary })`: `name` is the provider key
+ *   (`anthropic`, `openai`, `gemini`, …); `default_binary` is the executable
+ *   resolved via PATH when the member-level `binary:` field is not set. Both
+ *   are passed explicitly to `super()` — not read off subclass instance
+ *   fields — because a subclass's own field initializers run only AFTER this
+ *   `super()` call returns.
  * - `_build_command(system_prompt, user_prompt, max_tokens)`: return the argv.
  * - `_parse_output(stdout, stderr)`: return a partial `CouncilResponse`.
  *
@@ -1097,8 +1100,22 @@ export abstract class CliClient extends ExternalAIClient {
         'usage limit',
     ];
 
-    constructor(opts: CliClientOptions & { model: string }) {
+    /**
+     * `identity` carries the subclass constants (`name`, `default_binary`)
+     * that construction validates against. They are passed explicitly rather
+     * than read off `this.name` / `this.default_binary` because subclass
+     * instance-field initializers (`override default_binary = 'claude'`,
+     * declared in the subclass body) run only AFTER this `super()` call
+     * returns — reading them here, before that happens, would always see the
+     * base class's own field defaults (`''`), not the subclass override.
+     */
+    constructor(
+        opts: CliClientOptions & { model: string },
+        identity: { name: string; default_binary: string },
+    ) {
         super();
+        this.name = identity.name;
+        this.default_binary = identity.default_binary;
         this.model = opts.model;
         this.timeout_seconds = opts.timeout_seconds ?? DEFAULT_CLI_TIMEOUT_SECONDS;
         this.max_calls_per_day = opts.max_calls_per_day ?? null;
@@ -1353,19 +1370,20 @@ export abstract class CliClient extends ExternalAIClient {
  * collides with argv length limits.
  */
 export class AnthropicCliClient extends CliClient {
-    override name = 'anthropic';
-    override default_binary = 'claude';
     override subscription_label = 'claude-pro';
 
     constructor(opts: CliClientOptions = {}) {
-        super({
-            model: opts.model ?? DEFAULT_ANTHROPIC_CLI_MODEL,
-            binary: opts.binary,
-            timeout_seconds: opts.timeout_seconds,
-            max_calls_per_day: opts.max_calls_per_day,
-            warn_at: opts.warn_at,
-            cli_calls_path: opts.cli_calls_path,
-        });
+        super(
+            {
+                model: opts.model ?? DEFAULT_ANTHROPIC_CLI_MODEL,
+                binary: opts.binary,
+                timeout_seconds: opts.timeout_seconds,
+                max_calls_per_day: opts.max_calls_per_day,
+                warn_at: opts.warn_at,
+                cli_calls_path: opts.cli_calls_path,
+            },
+            { name: 'anthropic', default_binary: 'claude' },
+        );
     }
 
     protected override _build_command(
@@ -1446,8 +1464,6 @@ export class AnthropicCliClient extends CliClient {
  * token usage in `usage.input_tokens` / `usage.output_tokens`.
  */
 export class OpenAICliClient extends CliClient {
-    override name = 'openai';
-    override default_binary = 'codex';
     override subscription_label = 'chatgpt-plus';
 
     static override _AUTH_FAILURE_PATTERNS: readonly string[] = [
@@ -1458,14 +1474,17 @@ export class OpenAICliClient extends CliClient {
     ];
 
     constructor(opts: CliClientOptions = {}) {
-        super({
-            model: opts.model ?? DEFAULT_OPENAI_CLI_MODEL,
-            binary: opts.binary,
-            timeout_seconds: opts.timeout_seconds,
-            max_calls_per_day: opts.max_calls_per_day,
-            warn_at: opts.warn_at,
-            cli_calls_path: opts.cli_calls_path,
-        });
+        super(
+            {
+                model: opts.model ?? DEFAULT_OPENAI_CLI_MODEL,
+                binary: opts.binary,
+                timeout_seconds: opts.timeout_seconds,
+                max_calls_per_day: opts.max_calls_per_day,
+                warn_at: opts.warn_at,
+                cli_calls_path: opts.cli_calls_path,
+            },
+            { name: 'openai', default_binary: 'codex' },
+        );
     }
 
     protected override _build_command(
@@ -1569,8 +1588,6 @@ export class OpenAICliClient extends CliClient {
  * stdin to dodge argv limits.
  */
 export class GeminiCliClient extends CliClient {
-    override name = 'gemini';
-    override default_binary = 'gemini';
     override subscription_label = 'gemini-pro';
 
     static override _AUTH_FAILURE_PATTERNS: readonly string[] = [
@@ -1581,14 +1598,17 @@ export class GeminiCliClient extends CliClient {
     ];
 
     constructor(opts: CliClientOptions = {}) {
-        super({
-            model: opts.model ?? DEFAULT_GEMINI_CLI_MODEL,
-            binary: opts.binary,
-            timeout_seconds: opts.timeout_seconds,
-            max_calls_per_day: opts.max_calls_per_day,
-            warn_at: opts.warn_at,
-            cli_calls_path: opts.cli_calls_path,
-        });
+        super(
+            {
+                model: opts.model ?? DEFAULT_GEMINI_CLI_MODEL,
+                binary: opts.binary,
+                timeout_seconds: opts.timeout_seconds,
+                max_calls_per_day: opts.max_calls_per_day,
+                warn_at: opts.warn_at,
+                cli_calls_path: opts.cli_calls_path,
+            },
+            { name: 'gemini', default_binary: 'gemini' },
+        );
     }
 
     protected override _build_command(
@@ -1686,8 +1706,6 @@ export class GeminiCliClient extends CliClient {
  * heuristically (chars / 4) for the audit-trail.
  */
 export class XAICliClient extends CliClient {
-    override name = 'xai';
-    override default_binary = 'grok';
     override billable = true; // community CLI consumes an API key — billable applies
 
     static override _AUTH_FAILURE_PATTERNS: readonly string[] = [
@@ -1698,14 +1716,17 @@ export class XAICliClient extends CliClient {
     ];
 
     constructor(opts: CliClientOptions = {}) {
-        super({
-            model: opts.model ?? DEFAULT_XAI_MODEL,
-            binary: opts.binary,
-            timeout_seconds: opts.timeout_seconds,
-            max_calls_per_day: opts.max_calls_per_day,
-            warn_at: opts.warn_at,
-            cli_calls_path: opts.cli_calls_path,
-        });
+        super(
+            {
+                model: opts.model ?? DEFAULT_XAI_MODEL,
+                binary: opts.binary,
+                timeout_seconds: opts.timeout_seconds,
+                max_calls_per_day: opts.max_calls_per_day,
+                warn_at: opts.warn_at,
+                cli_calls_path: opts.cli_calls_path,
+            },
+            { name: 'xai', default_binary: 'grok' },
+        );
     }
 
     protected override _build_command(
@@ -1752,8 +1773,6 @@ export class XAICliClient extends CliClient {
  * Invokes `perplexity -p <prompt>`. Output is plain text — no JSON envelope.
  */
 export class PerplexityCliClient extends CliClient {
-    override name = 'perplexity';
-    override default_binary = 'perplexity';
     override billable = true; // community CLI consumes an API key — billable applies
 
     static override _AUTH_FAILURE_PATTERNS: readonly string[] = [
@@ -1764,14 +1783,17 @@ export class PerplexityCliClient extends CliClient {
     ];
 
     constructor(opts: CliClientOptions = {}) {
-        super({
-            model: opts.model ?? DEFAULT_PERPLEXITY_MODEL,
-            binary: opts.binary,
-            timeout_seconds: opts.timeout_seconds,
-            max_calls_per_day: opts.max_calls_per_day,
-            warn_at: opts.warn_at,
-            cli_calls_path: opts.cli_calls_path,
-        });
+        super(
+            {
+                model: opts.model ?? DEFAULT_PERPLEXITY_MODEL,
+                binary: opts.binary,
+                timeout_seconds: opts.timeout_seconds,
+                max_calls_per_day: opts.max_calls_per_day,
+                warn_at: opts.warn_at,
+                cli_calls_path: opts.cli_calls_path,
+            },
+            { name: 'perplexity', default_binary: 'perplexity' },
+        );
     }
 
     protected override _build_command(

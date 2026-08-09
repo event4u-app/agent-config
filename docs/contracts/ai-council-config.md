@@ -73,7 +73,7 @@ breadcrumb there points at this contract.
 ```yaml
 enabled: <bool>                 # master switch, required
 defaults:                       # per-invocation defaults, required
-  mode: <"api" | "manual" | "cli" | "auto">   # "auto" is opt-in; see Transport modes
+  mode: <"api" | "manual" | "cli" | "auto">   # "auto" is the SHIPPED default; see Transport modes
   min_rounds: <int >= 1>
   deep_min_rounds: <int >= min_rounds>
   max_output_tokens: <int >= 0>           # 0 widens to provider ceiling
@@ -84,10 +84,11 @@ cost_budget:                    # hard caps per /council invocation, required
   max_output_tokens: <int >= 0>           # 0 disables this cap
   max_calls: <int >= 0>                   # 0 disables this cap
   max_total_usd: <number >= 0>            # 0 disables the USD ceiling — applies to billable transports: all `mode: api`, plus `mode: cli` for xai/perplexity (community CLIs that still consume the API key). Does NOT apply to vendor-official `mode: cli` (anthropic/openai/gemini) or to `mode: manual`
-cli_call_budget:                # optional; per-day call-count guard for mode: cli members
+cli_call_budget:                # optional; per-day call-count guard for mode: cli/auto members
   max_calls_per_day:
-    <provider>: <int >= 0>                # opt-in per provider; default unset = unlimited
+    <provider>: <int >= 0>                # per-provider override; SHIPS POPULATED at 50/day for every known provider — see "cli_call_budget defaults" below
   warn_at: <float in [0.0, 1.0]>          # default 0.8 — pre-run summary line prefixes "⚠️" once used/limit >= warn_at (step-8 D4)
+quorum: <"majority" | int >= 1>  # optional, default "majority"; see "Quorum" below
 members:                        # per-provider blocks, at least one enabled
   <provider>:
     enabled: <bool>
@@ -133,7 +134,7 @@ see [Two defaults, not one](#two-defaults-not-one) for what sits at the bottom.
 | `manual` | Copy & paste — the human transports prompt + reply between the agent and an external chat surface. | No | None — human-in-the-loop | n/a |
 | `api` | SDK call against a stored key, per-token billing on the provider's API. | Yes | `api_key_ref` (env or 0600 file) | `cost_budget` (full) |
 | `cli` | Shell out to a locally-installed provider CLI. For `anthropic` / `openai` / `gemini` this runs under the user's subscription auth and is `billable=False`. For `xai` / `perplexity` (community wrappers) the CLI consumes the same API key as `mode: api` and remains `billable=True`. | Mixed — see below | CLI-managed OAuth (vendor) or API key in CLI env (community) | Vendor: `cli_call_budget.max_calls_per_day` only · Community: full `cost_budget` |
-| `auto` | Not a transport — a selection rule. Per provider per invocation: the CLI binary resolves AND a credential is present → `cli`; else a key resolves → `api`; else the member is unavailable with a one-line reason. `manual` is never in the chain. **Opt-in, never the shipped default.** | Inherited from the selected rung's provider + credential — never from the fact that `auto` chose it | Whatever the selected rung needs | The selected rung's gate |
+| `auto` | Not a transport — a selection rule. Per provider per invocation: the CLI binary resolves AND a credential is present → `cli`; else a key resolves → `api`; else the member is unavailable with a one-line reason. `manual` is never in the chain. **The SHIPPED default** (road-to-always-on-orchestration Phase 3.1 — CLI-first is the owner-set transport doctrine). A pinned `manual` / `api` / `cli` on `defaults.mode` or a per-member `mode:` still overrides it. | Inherited from the selected rung's provider + credential — never from the fact that `auto` chose it | Whatever the selected rung needs | The selected rung's gate |
 
 #### `auto` — the selection rule
 
@@ -171,12 +172,18 @@ different layers. They are now named separately:
 
 | Layer | When it applies | Value |
 |---|---|---|
-| **Loader default** for `defaults.mode` | The config file omits the key. `config.ts::_build_defaults` fills it, so every real config observes this. | `api` |
+| **Loader default** for `defaults.mode` | The config file omits the key. `config.ts::_build_defaults` fills it, so every real config observes this. | `auto` (was `api` before road-to-always-on-orchestration Phase 3.1) |
 | **Built-in fallback** in the resolver | No layer supplies a mode at all — a settings dict handed straight to `resolve_mode`, no config file involved. | `manual` |
 
 The built-in fallback is the free transport by design: a caller who named no
 transport has not asked to spend money (`modes.ts::DEFAULT_MODE`, pinned in
-`tests/scripts/ai_council/modes.test.ts`).
+`tests/scripts/ai_council/modes.test.ts`). It did **not** flip alongside the
+loader default: `auto` still resolves to a paying rung (`api`) when no CLI is
+usable, so flipping the built-in fallback too would let a caller that bypassed
+the config loader entirely spend money on a preference it never stated — the
+exact violation the fallback exists to prevent. Every real, file-backed
+config always has `defaults.mode` populated (now `auto`), so this fallback is
+never reached on that path.
 
 Both shapes of the global key resolve. `council_cli.ts` synthesizes the loaded
 config into a block whose global mode sits at the top level (`mode`), while a
@@ -210,9 +217,15 @@ Implications:
 - **Subscription quotas:** Claude Pro 5h usage windows, ChatGPT Plus
   message caps, Gemini free-tier per-day limits all live outside this
   loader's view. `cli_call_budget.max_calls_per_day.<provider>` lets the
-  user opt into a per-day cap; counter state persists at
+  user override a per-provider cap; counter state persists at
   `~/.event4u/agent-config/cli-calls.json` with daily UTC reset (wired in
-  Phase 1 of the CLI-transport roadmap).
+  Phase 1 of the CLI-transport roadmap). **SHIPS POPULATED at 50/day for
+  every known provider** (road-to-always-on-orchestration Phase 3.4) — before
+  this an unlisted provider ran uncapped, which is exactly the failure mode
+  an always-on `auto` default needs a guard against. 50/day is a GUARD, not a
+  brake: sized well above normal use, so an explicit override is only needed
+  to tighten it (see the shipped `.ai-council.yml.example` for a
+  worked-example tighter sizing) or to loosen it further.
 - **Omitting `model:` for a vendor `cli` member is a PIN, not "latest".**
   Each vendor CLI client (`anthropic` / `openai` / `gemini`) falls back to a
   dedicated `DEFAULT_*_CLI_MODEL` constant when `model` is unset
@@ -224,15 +237,171 @@ Implications:
   diverge — `openai` API `gpt-4o` vs CLI `gpt-5` is the proof.
 - **Quota observability (step-8 D1, D4):** every `council run` /
   `council debate` prints a one-line `council:quota · <provider>
-  used/limit · …` summary before the first member fires. Only
-  providers with a configured `max_calls_per_day` cap appear; uncapped
-  providers are omitted (no false sense of metering). When
-  `used / max_calls_per_day >= cli_call_budget.warn_at` (default
-  `0.8`) the line is prefixed `⚠️` and lists the providers near the
+  used/limit · …` summary before the first member fires. Every provider now
+  carries a cap by default (Phase 3.4's 50/day floor), so every provider
+  appears in this line unless a caller explicitly zeroes its cap out via
+  `max_calls_per_day.<provider>: 0` (an intentional "no calls" pin, not an
+  omission). When `used / max_calls_per_day >= cli_call_budget.warn_at`
+  (default `0.8`) the line is prefixed `⚠️` and lists the providers near the
   limit on the next line. The standalone `agent-config council
   quota` subcommand dumps the same state plus the configured caps,
   and `--reset <provider> --confirm` clears today's counter for that
   provider.
+
+### Quorum (Phase 3.3, road-to-always-on-orchestration)
+
+`quorum` (top-level, optional, default `"majority"`) is the number of
+enabled members a pass needs to CONCLUDE. Below that threshold the pass is
+`inconclusive` rather than a partial answer treated as complete — and at a
+release gate, `inconclusive` HOLDS the gate for a human review; it is never
+silently downgraded to advisory.
+
+`"majority"` resolves to `ceil(n / 2)` for `n` enabled members — a SIMPLE
+majority, deliberately **not** the stricter "more than half"
+(`floor(n / 2) + 1`). The two definitions diverge exactly at `n = 2`: simple
+majority needs 1-of-2, the stricter reading needs 2-of-2. Council-verified
+2026-08-09: 2-of-2 turns any single absent member into a deadlocked release
+gate, which is the failure mode this default is built to avoid. A fixed
+integer `quorum: <k>` overrides `"majority"` outright and is clamped to
+`[1, n]` by the resolver (never structurally unwinnable, never trivially met).
+
+Implemented in `src/scripts/ai_council/quorum.ts`
+(`resolveQuorumThreshold` / `evaluateQuorum`) — a pure function pair; the
+caller supplies its own count of enabled members (`n`) and members that
+actually produced a usable response (`present`). The verdict surfaces in
+both artefact halves:
+
+- **`manifest.json`** (`session.ts::save()`) carries a structured
+  `quorum: {status, threshold, total, present} | null` field — machine-readable,
+  `null` when the caller never evaluated one (e.g. a single-member solo
+  dispatch has nothing to conclude quorum over).
+- **The rendered report** (`orchestrator.ts::render()`) prepends one line —
+  `**Quorum:** <present>/<total> present, needed <threshold> — concluded.` or
+  `… — INCONCLUSIVE — release gate holds.` — right before the trailing
+  Absent Members section (below), when the caller supplies a verdict.
+  Omitting the option renders byte-identically to before this field existed.
+
+**Attendance is telemetry, never a silent drop.** A member that never
+produced a response still needs to be accounted for somewhere — see
+"Graded degradation" below; quorum counts `present` against the total
+regardless of *why* a member is missing.
+
+**The live `council:run` / `council:estimate` path (Phase 3.1 reconciliation).**
+The paragraph above describes `session.ts::save()`'s `manifest.json` — a
+second, currently-unwired artefact writer. The artefact the shipped `/council`
+CLI actually produces is a different file:
+`agents/runtime/council/responses/*.json` (`council_cli.ts::cmd_run`). That
+path carries the SAME verdict shape, via `build_members`'s own `quorum_out`
+out-parameter (`total_enabled` = enabled member-config entries this pass
+considered, `present` = `total_enabled` minus every entry that ended up
+`absent`, below) — surfaced as `payload['quorum']` in the JSON artefact and a
+`council:quorum · <present>/<total> present, needed <threshold> — <verdict>.`
+stdout line on `council:run`/`council:estimate`. `build_members` is also the
+place `resolve_mode`'s literal `'auto'` value is expanded into a concrete
+transport (`resolveMemberTransport`, road-to-always-on-orchestration
+Phase 3.1) — before this reconciliation, EVERY invocation on the shipped
+`auto` default (`config.ts::_build_defaults`) threw `no transport —
+mode=auto` instead of resolving cli → api → absent.
+
+### Graded degradation — absent members (Phase 3.2, road-to-always-on-orchestration)
+
+A member that never produced a usable response — no CLI binary and no key
+(`resolveTransport`'s `auto`-chain failure), or a call that started and then
+timed out / hit an exhausted `cli_call_budget` quota mid-run — is recorded as
+`absent` with a machine-readable `reason`, never silently dropped from the
+pass. `src/scripts/ai_council/transport_resolver.ts` exports the shared
+vocabulary:
+
+```ts
+type AbsentReason = 'no_binary' | 'no_auth' | 'timeout' | 'quota';
+```
+
+`no_binary` / `no_auth` come from `resolveTransport`'s static resolution (the
+member never got a transport at all); `timeout` / `quota` come from
+`absentReasonFromCliFailure`, which maps the existing mid-flight
+`CliFailureClass` (`classifyCliFailure`) onto the same four values for a
+call that WAS attempted and then failed. A failure class outside this
+four-value enum (`cli_unsupported`, `server_error`, `other`) maps to `null`
+— the caller falls back to the raw failure detail rather than
+mis-classifying it into a bucket that doesn't fit.
+
+Both artefact halves carry the same record shape
+(`{member, reason, detail}`):
+
+- **`manifest.json`** — `absent_members: [...]`, empty array when the caller
+  never populates it (an old caller's manifest keeps its existing shape plus
+  this one always-present, possibly-empty key).
+- **The rendered report** — a trailing `### Absent Members` section, one row
+  per absent member (`- **<member>** (<reason>) — <detail>`), omitted
+  entirely when the list is empty.
+
+The `council:run` / `council:estimate` responses artefact (see the Quorum
+section above) carries the same shape as `payload['absent_members']` — the
+`skipped` array `build_members` populates — omitted entirely when nothing was
+absent, and additionally echoed to stdout via `format_install_hints`.
+
+### Handoff envelope (Phase 4.1, road-to-always-on-orchestration)
+
+A council verdict is a machine-readable work order, not only a report a
+human reads and re-types into whatever executes next. `HandoffEnvelope`
+(`src/scripts/ai_council/handoff.ts`) is that bridge:
+
+```ts
+interface RejectedAlternative {
+    option: string;
+    reason: string;
+}
+interface HandoffEnvelope {
+    decision: string | null;
+    rejected_alternatives: readonly RejectedAlternative[] | null;
+    constraints: readonly string[] | null;
+}
+```
+
+**The honesty constraint.** Every field is independently `null` when there
+is no STRUCTURED source to populate it from — never a fabricated guess. The
+only structured decision source this codebase has today is the option-level
+stance tally (`stance_tally.ts`, opt-in via `ai_council.stance_tally.enabled`,
+Phase 1): a chairman's prose synthesis, the default template, and
+consensus-scoring's qualitative Strong/Findings/Minority buckets are all
+free-text or non-decisional shapes with nothing to extract a `decision`
+field from without parsing prose. So:
+
+- Stance tally never ran, or it ran and SPLIT (no option cleared the ⅔
+  threshold) → every field is `null` (`buildHandoffFromStanceTally`'s
+  `EMPTY_HANDOFF`).
+- Stance tally concluded → `decision` is the winning option's label;
+  `rejected_alternatives` lists every other non-abstain option the tally
+  counted, each with a `reason` built strictly from that option's OWN tally
+  numbers (`backed by <n> member(s), weight <w> of <threshold> needed to
+  conclude`) — a factual restatement of the tally, never a narrative guess
+  at member motivation.
+- `constraints` is always `null` — no structured "binding constraint" source
+  exists anywhere in the current synthesis pipeline yet (a dealbreaker count
+  describes objection PRESSURE on an option, not a named constraint on the
+  winner).
+
+**Where it lands** — additive, byte-identical when absent, same shape as the
+quorum / absent-members fields above:
+
+- **The responses artefact** (`agents/runtime/council/responses/*.json`,
+  `cmd_run`) — `payload['handoff']` is ALWAYS written (a stable key beats a
+  conditionally-present one for a machine consumer), even when every field
+  is `null`.
+- **The rendered report** (`orchestrator.ts::render()`, `opts.handoff`) — a
+  `### Handoff` section right after the Convergence/Divergence slot, ahead
+  of the de-anonymization map and the trailing quorum/absent-members
+  bookkeeping. Rendered ONLY when at least one field is non-`null`
+  (`isEmptyHandoff`) — an all-null envelope has nothing worth a section for,
+  the same "only show when there's substance" call `### Absent Members`
+  makes. Present but partial (e.g. a `decision` with no rejected
+  alternatives) still renders every field, with an honest "none recorded."
+  line for whichever are `null` — never silently dropped.
+- **`council:render`** re-derives the section from a saved payload's
+  `payload['handoff']` (`_deserialise_handoff`), so re-rendering an OLD
+  artefact written before this field existed — no `handoff` key at all —
+  produces byte-identical output; a payload carrying the honest all-null
+  envelope also renders nothing new, by the same `isEmptyHandoff` check.
 
 ### Persistent events log (step-8 D3)
 
@@ -892,14 +1061,16 @@ as comments and the loader enforces them.
     USD ceiling does not apply; subscription quotas are guarded by
     `cli_call_budget.max_calls_per_day` instead.
   - `auto` = pick one of the above per provider per invocation (cli → api →
-    unavailable); `manual` is never in the chain. Opt-in, never the shipped
-    default — flipping it would move an existing user's spend from per-token
-    dollars onto subscription quota with no config edit on their part.
+    unavailable); `manual` is never in the chain. **The shipped default**
+    (road-to-always-on-orchestration Phase 3.1, CLI-first doctrine) — a
+    pinned `manual` / `api` / `cli` on `defaults.mode` or a per-member
+    `mode:` still overrides it.
 
   Precedence: per-invocation flag > per-member override > defaults > built-in
-  fallback. The loader fills `defaults.mode` with `api` when the key is absent;
-  the resolver's built-in fallback, reached only when no layer supplies a mode
-  at all, is `manual`. See [Two defaults, not one](#two-defaults-not-one).
+  fallback. The loader fills `defaults.mode` with `auto` when the key is
+  absent; the resolver's built-in fallback, reached only when no layer
+  supplies a mode at all, is `manual`. See
+  [Two defaults, not one](#two-defaults-not-one).
 - **Tokens never stored in this yml.** Keys live in 0600 files
   (`~/.event4u/agent-config/<provider>.key`, installed via
   `bash scripts/install_<provider>_key.sh` for providers that ship an
@@ -959,6 +1130,8 @@ error) when any of these hold:
     value is not one of `{"off", "educate", "block"}`. Unknown lens keys
     are accepted (forward-compatible) but never silently rewrite the
     global default.
+14. `quorum` is set and is neither the literal string `"majority"` nor a
+    positive integer (`>= 1`) — road-to-always-on-orchestration Phase 3.3.
 
 ## Migration footprint (Phase 0)
 

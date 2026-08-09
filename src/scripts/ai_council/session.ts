@@ -46,6 +46,24 @@ import { PyFloat, py_json_dumps_indent2 } from '../_lib/security_lint.js';
 import { pyRound } from '../_lib/value_ladder.js';
 import { CouncilResponse } from './clients.js';
 import { render } from './orchestrator.js';
+import type { AbsentReason } from './transport_resolver.js';
+import type { QuorumResult } from './quorum.js';
+
+/**
+ * A member that produced no usable response this pass
+ * (road-to-always-on-orchestration Phase 3.2) — never constructed (no CLI +
+ * no key), or constructed but lost mid-run (timeout, quota exhaustion). The
+ * caller assembling the manifest is the one that knows which; this record
+ * only carries what it decided.
+ */
+export interface AbsentMemberRecord {
+    /** Provider name (or "provider/model" — whatever the caller's roster used). */
+    readonly member: string;
+    /** Machine-readable bucket, or `null` when the failure did not classify. */
+    readonly reason: AbsentReason | null;
+    /** Human-readable detail — the CLI-hints / install-instructions text. */
+    readonly detail: string;
+}
 
 // src/scripts/ai_council/session.py → parents[3] == repo root.
 const _HERE = fileURLToPath(import.meta.url);
@@ -76,6 +94,19 @@ export class SessionManifest {
     rounds: number;
     cost_usd_estimated: number;
     cost_usd_actual: number;
+    /**
+     * Members that never produced a usable response this pass (Phase 3.2).
+     * Empty by default — a caller that never populates it (every caller
+     * before this field existed) writes the same manifest shape it always
+     * did, plus one empty array.
+     */
+    absent_members: AbsentMemberRecord[];
+    /**
+     * Quorum verdict for this pass (Phase 3.3), or `null` when the caller
+     * did not evaluate one (e.g. a single-member solo dispatch, where
+     * quorum has nothing to say).
+     */
+    quorum: QuorumResult | null;
     extra: Record<string, unknown>;
 
     constructor(opts: {
@@ -86,6 +117,8 @@ export class SessionManifest {
         rounds?: number;
         cost_usd_estimated?: number;
         cost_usd_actual?: number;
+        absent_members?: AbsentMemberRecord[];
+        quorum?: QuorumResult | null;
         extra?: Record<string, unknown>;
     }) {
         this.mode = opts.mode;
@@ -95,6 +128,8 @@ export class SessionManifest {
         this.rounds = opts.rounds ?? 1;
         this.cost_usd_estimated = opts.cost_usd_estimated ?? 0.0;
         this.cost_usd_actual = opts.cost_usd_actual ?? 0.0;
+        this.absent_members = opts.absent_members ?? [];
+        this.quorum = opts.quorum ?? null;
         // Python dataclass uses `field(default_factory=dict)` — each instance
         // gets its own fresh dict.
         this.extra = opts.extra ?? {};
@@ -504,6 +539,15 @@ export function save(opts: {
         responses_per_round: rounds_data.map((round_responses) =>
             round_responses.map((r) => _serialise_response(r)),
         ),
+        // Phase 3.2/3.3 — graded degradation + quorum, both machine-readable.
+        // Empty array / `null` when the caller never populated them, so an
+        // old caller's manifest keeps its existing keys plus these two.
+        absent_members: manifest.absent_members.map((a) => ({
+            member: a.member,
+            reason: a.reason,
+            detail: a.detail,
+        })),
+        quorum: manifest.quorum,
         ...manifest.extra,
     };
 

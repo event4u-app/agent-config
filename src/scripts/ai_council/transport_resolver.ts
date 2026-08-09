@@ -48,9 +48,21 @@ import {
     type BillingClass,
     type EnvironmentReport,
 } from '../_lib/environment_detector.js';
+import { resolve_mode } from './modes.js';
 
 /** A concrete transport a member can actually run on. `auto` is not one. */
 export type Transport = 'api' | 'manual' | 'cli';
+
+/**
+ * Machine-readable reason a member is `absent` from a pass
+ * (road-to-always-on-orchestration Phase 3.2). The static half — `no_binary`
+ * / `no_auth` — is decided here, at resolution time, before any provider
+ * call is attempted. The runtime half — `timeout` / `quota` — only exists
+ * once a call was actually attempted and failed; see
+ * `absentReasonFromCliFailure` below for the mapping FROM the mid-flight
+ * `CliFailureClass` a caller already classifies its errors into.
+ */
+export type AbsentReason = 'no_binary' | 'no_auth' | 'timeout' | 'quota';
 
 /** The accepted values of the `mode` key, including the resolver-only `auto`. */
 export const VALID_TRANSPORT_MODES: ReadonlySet<string> = new Set([
@@ -73,6 +85,16 @@ export interface ResolvedTransport {
     readonly makesProviderCall: boolean;
     /** One-line reason. Non-empty exactly when `available` is false. */
     readonly reason: string | null;
+    /**
+     * Machine-readable classification of `reason`, for a pass artifact that
+     * needs to bucket absent members without parsing prose (Phase 3.2).
+     * Non-null for the two STATIC auto-chain failures this function can
+     * classify (`no_binary` / `no_auth`); `null` when `available` is true,
+     * and also `null` for the "unknown mode" validation-error path below —
+     * that is a config bug, not a missing-capability finding, so it does not
+     * belong in this enum.
+     */
+    readonly absentReason: AbsentReason | null;
 }
 
 export interface ResolveTransportOptions {
@@ -149,6 +171,7 @@ export function resolveTransport(opts: ResolveTransportOptions): ResolvedTranspo
             authSource,
             makesProviderCall: false,
             reason: null,
+            absentReason: null,
         };
     }
 
@@ -160,6 +183,7 @@ export function resolveTransport(opts: ResolveTransportOptions): ResolvedTranspo
             authSource,
             makesProviderCall: true,
             reason: null,
+            absentReason: null,
         };
     }
 
@@ -185,6 +209,7 @@ export function resolveTransport(opts: ResolveTransportOptions): ResolvedTranspo
             authSource,
             makesProviderCall: true,
             reason: null,
+            absentReason: null,
         };
     }
 
@@ -197,16 +222,80 @@ export function resolveTransport(opts: ResolveTransportOptions): ResolvedTranspo
             authSource,
             makesProviderCall: true,
             reason: null,
+            absentReason: null,
         };
     }
 
-    return unavailable(provider, billing, autoUnavailableReason(provider, binary, cliAuthed));
+    return unavailable(
+        provider,
+        billing,
+        autoUnavailableReason(provider, binary, cliAuthed),
+        classifyStaticAbsentReason(binary),
+    );
+}
+
+export interface ResolveMemberTransportOptions {
+    readonly provider: string;
+    /** The single read-only environment report `resolveTransport` needs. */
+    readonly report: EnvironmentReport;
+    /** e.g. `/council mode:manual`. Highest precedence layer. */
+    readonly invocationMode?: string | null;
+    /** The member's own config sub-dict (`ai_council.members.<name>`). */
+    readonly memberSettings?: ReadonlyMap<string, unknown> | Record<string, unknown> | null;
+    /** `ai_council.mode` / `defaults.mode`, already extracted by the caller. */
+    readonly globalMode?: string | null;
+    readonly binaryOverride?: string | null;
+    readonly apiKeyPresent?: boolean;
+}
+
+export interface ResolvedMemberTransport extends ResolvedTransport {
+    /** The mode `resolve_mode` chose BEFORE any `auto` expansion. */
+    readonly configuredMode: string;
+}
+
+/**
+ * The single reconciled entry point for "given this member's config, what
+ * transport does it actually run on" (road-to-always-on-orchestration
+ * Phase 3.1). Composes `modes.ts::resolve_mode` (which layer decided the
+ * mode) with `resolveTransport` (what `auto` expands to on THIS machine) so
+ * a caller never has to replicate either step by hand.
+ *
+ * This exists because the two functions previously lived at arm's length:
+ * `resolve_mode` can legitimately return the literal string `'auto'`, and
+ * nothing forced a caller to then route that value through
+ * `resolveTransport` — a hand-rolled `mode === 'api' | 'cli' | 'manual'`
+ * switch (the shape `council_cli.ts::build_members` still uses today) has
+ * no `'auto'` case and treats it as an unrecognised transport instead of
+ * expanding it. `resolveMemberTransport` is the fix: there is no longer a
+ * gap between "which mode was configured" and "which transport that becomes"
+ * for any caller that uses it instead of the two functions separately.
+ */
+export function resolveMemberTransport(
+    opts: ResolveMemberTransportOptions,
+): ResolvedMemberTransport {
+    const configuredMode = resolve_mode(opts.provider, {
+        invocationMode: opts.invocationMode ?? null,
+        memberSettings: opts.memberSettings ?? null,
+        globalMode: opts.globalMode ?? null,
+    });
+    const resolved = resolveTransport({
+        provider: opts.provider,
+        mode: configuredMode,
+        report: opts.report,
+        binaryOverride: opts.binaryOverride ?? null,
+        // `exactOptionalPropertyTypes` rejects an explicit `undefined` for an
+        // optional-boolean field, so the key is omitted entirely rather than
+        // forwarded as `apiKeyPresent: undefined`.
+        ...(opts.apiKeyPresent !== undefined ? { apiKeyPresent: opts.apiKeyPresent } : {}),
+    });
+    return { ...resolved, configuredMode };
 }
 
 function unavailable(
     _provider: string,
     billing: BillingClass,
     reason: string,
+    absentReason: AbsentReason | null = null,
 ): ResolvedTransport {
     return {
         available: false,
@@ -217,7 +306,19 @@ function unavailable(
         authSource: null,
         makesProviderCall: false,
         reason,
+        absentReason,
     };
+}
+
+/**
+ * `no_binary` when the CLI binary itself never resolved (whether or not a
+ * credential was found — a credential with nothing to run it against is
+ * still "the binary is missing" from the caller's point of view); `no_auth`
+ * when the binary IS present but neither the cli-auth nor the key rung
+ * resolved. Mirrors `autoUnavailableReason`'s three-way branch below.
+ */
+function classifyStaticAbsentReason(binary: string | null): AbsentReason {
+    return binary === null ? 'no_binary' : 'no_auth';
 }
 
 /** The one-line reason `auto` prints when no rung resolved. */
@@ -296,6 +397,31 @@ export function classifyCliFailure(raw: string): CliFailureClass {
 /** True when `failure` is eligible to fall through to the `api` rung. */
 export function isFallbackEligible(failure: CliFailureClass): boolean {
     return FALLBACK_ELIGIBLE.has(failure);
+}
+
+/**
+ * Maps a mid-flight `CliFailureClass` (a call was actually attempted and
+ * failed) onto the same `AbsentReason` enum a static resolution failure
+ * uses (road-to-always-on-orchestration Phase 3.2/3.4), so a pass artifact
+ * can bucket every absent member — whether it never got a transport at all
+ * or lost one partway through — under one vocabulary. Returns `null` for a
+ * failure class outside the four-value enum (`cli_unsupported`,
+ * `server_error`, `other`); a caller falls back to the raw failure detail
+ * for those rather than mis-classifying them.
+ */
+export function absentReasonFromCliFailure(failure: CliFailureClass): AbsentReason | null {
+    switch (failure) {
+        case 'binary_missing':
+            return 'no_binary';
+        case 'auth_rejected':
+            return 'no_auth';
+        case 'timeout':
+            return 'timeout';
+        case 'quota_exhausted':
+            return 'quota';
+        default:
+            return null;
+    }
 }
 
 /**

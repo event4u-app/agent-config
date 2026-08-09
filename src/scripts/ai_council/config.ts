@@ -21,9 +21,12 @@
  *    a locally-installed CLI under subscription auth (free for
  *    first-party CLIs, billable for community wrappers); `auto` = pick
  *    per provider per invocation (cli → api → unavailable), resolved by
- *    `transport_resolver.ts`. `auto` is opt-in — it is never the shipped
- *    default, because flipping it would move an existing user's spend
- *    from per-token dollars onto subscription quota with no config edit.
+ *    `transport_resolver.ts`. `auto` is the SHIPPED DEFAULT
+ *    (road-to-always-on-orchestration Phase 3.1 — CLI-first is the
+ *    owner-set transport doctrine: ride the vendor CLI under subscription
+ *    auth first, fall to the metered API only where no CLI resolves).
+ *    `manual` and a pinned `api`/`cli` remain valid explicit per-member or
+ *    per-invocation overrides — `auto` never displaces one.
  * 3. `members.<name>` keys are restricted to the known provider set.
  * 4. `cost_budget.*` numeric fields are >= 0.
  * 5. Enabled members carry a non-empty `model` and `api_key_ref` when
@@ -37,7 +40,18 @@
  * 8. `binary:` is only valid when the member's effective mode is `cli` or
  *    `auto` (auto may resolve to the cli rung);
  *    `cli_call_budget.max_calls_per_day.<provider>` keys must be valid
- *    providers.
+ *    providers. `max_calls_per_day` SHIPS POPULATED with a generous
+ *    per-provider default (50/day, road-to-always-on-orchestration
+ *    Phase 3.4) for every known provider — a guard against a silent
+ *    always-on pass exhausting a subscription's plan quota, not a brake;
+ *    an explicit per-provider entry overrides just that provider's default.
+ * 9. `quorum` ∈ {`"majority"`, a positive integer} (default `"majority"`,
+ *    road-to-always-on-orchestration Phase 3.3). `"majority"` at n members
+ *    resolves to `ceil(n / 2)` — a SIMPLE majority, deliberately NOT
+ *    "more than half": at n=2 that is 1-of-2, because 2-of-2 turns any
+ *    single absent member into a deadlocked release gate (council-verified
+ *    2026-08-09). See `quorum.ts` for the resolver a caller applies to its
+ *    own present/total member counts.
  *
  * Parity notes (intentional, documented):
  *   - YAML is parsed with `yaml` (npm) at `version: '1.1'`, matching
@@ -562,6 +576,15 @@ export interface CliCallBudgetConfig {
     readonly warn_at: number;
 }
 
+/**
+ * `"majority"` (default) or a positive integer k — the number of members a
+ * pass needs to conclude (road-to-always-on-orchestration Phase 3.3). See
+ * `quorum.ts::resolveQuorumThreshold` for how a caller turns this into a
+ * concrete threshold against its own total-member count, and the module
+ * docstring rule 9 for why `"majority"` is `ceil(n / 2)`, not `> n / 2`.
+ */
+export type QuorumSetting = 'majority' | number;
+
 export interface CouncilConfig {
     readonly enabled: boolean;
     readonly defaults: DefaultsConfig;
@@ -570,6 +593,7 @@ export interface CouncilConfig {
     readonly advisors: ReadonlyMap<string, AdvisorConfig>;
     readonly consensus_scoring: ConsensusScoringConfig;
     readonly cli_call_budget: CliCallBudgetConfig;
+    readonly quorum: QuorumSetting;
     readonly necessity_classifier: NecessityClassifierConfig;
     readonly model_downgrade: ModelDowngradeConfig;
     readonly debate: DebateConfig;
@@ -796,6 +820,7 @@ export function _build_config(raw: Dict, source_path: PathLike): CouncilConfig {
     const cli_call_budget = _build_cli_call_budget(
         _asDict(_getOr(raw, 'cli_call_budget', {})),
     );
+    const quorum = _build_quorum(_get(raw, 'quorum', 'majority'));
     const necessity_classifier = _build_necessity_classifier(
         _asDict(_getOr(raw, 'necessity_classifier', {})),
     );
@@ -843,6 +868,7 @@ export function _build_config(raw: Dict, source_path: PathLike): CouncilConfig {
         advisors,
         consensus_scoring: consensus,
         cli_call_budget,
+        quorum,
         necessity_classifier,
         model_downgrade,
         debate,
@@ -1427,7 +1453,11 @@ function _build_defaults(d: Dict): DefaultsConfig {
     if (!_isDict(d)) {
         throw new CouncilConfigError('`defaults` must be a mapping.');
     }
-    const mode = _get(d, 'mode', 'api');
+    // road-to-always-on-orchestration Phase 3.1: CLI-first is the shipped
+    // default (was `api`) — see the module docstring rule 2. `manual` and a
+    // pinned `api`/`cli` remain valid overrides at every layer resolve_mode
+    // checks; this only changes what a config that never sets `mode` gets.
+    const mode = _get(d, 'mode', 'auto');
     if (!(_isStr(mode) && _VALID_MODES.has(mode))) {
         throw new CouncilConfigError(
             `defaults.mode=${_pyRepr(mode)} not in ${_sortedListRepr(_VALID_MODES)}.`,
@@ -1630,7 +1660,13 @@ function _build_cost_budget(d: Dict): CostBudgetConfig {
 function _build_member(
     name: string,
     cfg: Dict,
-    default_mode = 'api',
+    // road-to-always-on-orchestration Phase 3.1: kept in sync with
+    // `_build_defaults`'s `auto` default for consistency. The sole call site
+    // (`_build_config`) always passes `defaults.mode` explicitly, so this
+    // parameter default is unreachable on the live path today; it exists so
+    // a future caller that omits the third argument observes the same
+    // doctrine rather than silently reverting to the retired `api` default.
+    default_mode = 'auto',
 ): MemberConfig {
     if (!_VALID_PROVIDERS.has(name)) {
         throw new CouncilConfigError(
@@ -1775,6 +1811,18 @@ function _build_member(
     };
 }
 
+/**
+ * Generous per-provider guard for `mode: cli` / `mode: auto` members
+ * (road-to-always-on-orchestration Phase 3.4). Before this default the map
+ * shipped empty and an unlisted provider ran uncapped — a plan-quota guard
+ * that only existed if the user remembered to opt in. Every known provider
+ * now carries this floor unless a config entry overrides it; sized as a
+ * GUARD against silent quota exhaustion on an always-on pass, not a brake on
+ * normal use (see the template's own worked-example sizing for the
+ * reasoning behind a TIGHTER per-provider number).
+ */
+const _DEFAULT_CLI_CALLS_PER_DAY = 50;
+
 function _build_cli_call_budget(d: Dict): CliCallBudgetConfig {
     if (!_isDict(d)) {
         throw new CouncilConfigError('`cli_call_budget` must be a mapping.');
@@ -1786,6 +1834,9 @@ function _build_cli_call_budget(d: Dict): CliCallBudgetConfig {
         );
     }
     const caps = new Map<string, number>();
+    for (const provider of _VALID_PROVIDERS) {
+        caps.set(provider, _DEFAULT_CLI_CALLS_PER_DAY);
+    }
     for (const [provider, value] of Object.entries(raw_caps)) {
         if (!_VALID_PROVIDERS.has(provider)) {
             throw new CouncilConfigError(
@@ -1815,6 +1866,19 @@ function _build_cli_call_budget(d: Dict): CliCallBudgetConfig {
         );
     }
     return { max_calls_per_day: caps, warn_at };
+}
+
+function _build_quorum(raw: Json): QuorumSetting {
+    if (raw === 'majority') {
+        return 'majority';
+    }
+    if (_isInt(raw) && !_isBool(raw) && (raw as number) >= 1) {
+        return raw as number;
+    }
+    throw new CouncilConfigError(
+        `\`quorum\`=${_pyRepr(raw)} must be 'majority' or an integer >= 1 ` +
+            `(got ${_pyTypeName(raw)}).`,
+    );
 }
 
 function _build_advisor(name: string, cfg: Dict): AdvisorConfig {
