@@ -1,10 +1,10 @@
 # Findings: orchestrator-discipline-closeout
-<!-- completion-review: v1 | reviewed: 2026-08-09 | scope: e39a84fe432983e4a935512d1c4fb2e0d9f6706284cf4ca9f98eb5adce15af52 | diff: e01b6f284affa9bab5ec323e1c9c415962366fb7 | reviewer: r2-fresh-subagent-orchestrator-discipline-closeout | prompt_hash: 04673167ce35b51776114c546c68d7aafd99ca60ba56e529d29a8aabad7e74d7 -->
+<!-- completion-review: v1 | reviewed: 2026-08-09 | scope: 53f24f59f7dd6d19b122f9e010af5808b17a5c65a080215729ea9c1ec5bc156d | diff: e01b6f284affa9bab5ec323e1c9c415962366fb7 | reviewer: r2-fresh-subagent-orchestrator-discipline-closeout | prompt_hash: 04673167ce35b51776114c546c68d7aafd99ca60ba56e529d29a8aabad7e74d7 -->
 
 <!-- context-manifest: v1
 inputs:
   diff_sha: e01b6f284affa9bab5ec323e1c9c415962366fb7
-  scope_hash: e39a84fe432983e4a935512d1c4fb2e0d9f6706284cf4ca9f98eb5adce15af52
+  scope_hash: 53f24f59f7dd6d19b122f9e010af5808b17a5c65a080215729ea9c1ec5bc156d
   roadmap: none
   roadmap_hash: none
   ac_hash: none
@@ -29,7 +29,20 @@ dispatched: 2026-08-09T10:30:00Z
      reviewer actually read. The contract calls that field provenance and never
      compares it, and advancing it would misstate which tree was reviewed. So
      the pair is honest by construction: scope says what this verdict is bound
-     to now, diff says what was in front of the reviewer then. -->
+     to now, diff says what was in front of the reviewer then.
+
+     SECOND re-bind, 2026-08-09, after merging origin/main (#1224 landed on the
+     same roadmap and the same two hook files). What the reviewer did NOT see,
+     named rather than absorbed silently:
+       - #1224's own code, which carries its own review and council pass on its
+         own PR — merged-in upstream, not this branch's delta;
+       - two documentation corrections the merge forced here: the calibration
+         biases folded into the carried-forward decisions note, and acceptance
+         criterion 5's test count restated 36 → 47.
+     Both are prose, neither changes a shipped code path, and re-dispatching a
+     review over an accepted verdict to cover two doc lines would buy less than
+     it costs. This paragraph exists so a reader can tell that from the record
+     instead of inferring it from an unchanged hash. -->
 
 | # | Severity | File:Line | Finding | Status | Reason/Ref |
 |---|----------|-----------|---------|--------|------------|
