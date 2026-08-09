@@ -210,9 +210,12 @@ outside Claude Code has feature parity.
 `codex` binary + auth and, on Claude Code hosts, the Codex plugin, and
 prints the exact remediation command for anything missing.
 
-**Default off.** Team mode ships disabled (`ai_team.enabled: false` in
-`.agent-settings.yml`); no team command runs and no cross-model call is
-made until you opt in.
+**Availability, not a setting.** `/team` carries no on/off flag — it
+becomes available the moment the `codex` CLI is installed and
+authenticated (`agent-config doctor --check team` verifies both); until
+then every invocation degrades with one clear line. The one incident-only
+override is `emergency.orchestration_halt` (halts subagents, council, and
+team together).
 
 **No lift claim.** Whether cross-model team review catches more real
 defects than single-model adversarial self-review is **unproven** — the

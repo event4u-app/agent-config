@@ -3,6 +3,15 @@
 Status: v1, accepted with road-to-tested-routing Phase 7 (design locked by
 AI council, claude-sonnet-4-5 + gpt-4o, 2026-08-03).
 
+> **Amendment (road-to-always-on-orchestration Phase 1).** The
+> `subagents.budget_routing` settings key named throughout this contract was
+> DELETED — always-on orchestration carries no per-layer on/off setting.
+> `pickTier` (the decision layer this contract specifies) has no production
+> caller today, so every mention below documents the DESIGNED relation, not
+> a currently wired one; wiring it is a later phase of that roadmap, and the
+> council-side `cli_call_budget`/`cost_budget` caps are the ones that replace
+> the settings-gated ask/auto/off switch this page still describes.
+
 ## The relation (binding)
 
 A delegable request routes to the **cheapest tier the classifier marks

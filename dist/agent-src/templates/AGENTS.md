@@ -1,6 +1,6 @@
 # {{project_name}}
 
-<!-- Fill placeholders or run `/agents init`; delete after. Capability bullets, not paths. Recipes: `.augment/contexts/contracts/agents-md-anatomy.md`. -->
+<!-- Fill placeholders or run `/agents init`; delete after. Recipes: `.augment/contexts/contracts/agents-md-anatomy.md`. -->
 
 > {{project_description}}
 
@@ -8,8 +8,8 @@
 
 | Layer | Location | Edits |
 |---|---|---|
-| Installed package | `.augment/`, `dist/agent-src/` | hands-off — managed by `event4u/agent-config` |
-| Project layer | `agents/`, `agents/overrides/`, `.agent-settings.yml` | your customizations and config |
+| Installed package | `.augment/`, `dist/agent-src/` | managed by `event4u/agent-config` |
+| Project layer | `agents/`, `agents/overrides/`, `.agent-settings.yml` | your customizations |
 
 ## Pointers
 
@@ -18,7 +18,7 @@
 - **Skills (on-demand expertise)** — domain skills surfaced by description, invoked on trigger match: [`.augment/skills/`](.augment/skills/).
 - **Commands (workflows)** — slash-commands the agent runs end-to-end (`/work`, `/create-pr`, …): [`.augment/commands/`](.augment/commands/).
 - **Project-specific docs** — your own architecture notes, roadmaps, sessions, contexts: [`agents/`](agents/).
-- **Delegation & review** — dispatch independent-slice tasks to subagents instead of serial work; a mutating session ends after a neutral cross-model review: [`delegation-policy`](.augment/rules/delegation-policy.md).
+- **Delegation & review** — dispatch independent-slice tasks to subagents instead of serial work; in a team (host-flag gated) the lead coordinates, teammates implement; a mutating session ends after a neutral cross-model review: [`delegation-policy`](.augment/rules/delegation-policy.md).
 
 ## Emergency triage — read this when nothing else is reachable
 

@@ -23,7 +23,7 @@ Last refreshed: 2026-06-23. Decided in
 Resolved once per session, cached. Safe default = all-false.
 
 ```json
-{ "schema_version": 1, "subagent_spawn": false, "parallel_spawn": false, "status_polling": false, "separate_quota_pool": false }
+{ "schema_version": 1, "subagent_spawn": false, "parallel_spawn": false, "status_polling": false, "separate_quota_pool": false, "agent_teams": false }
 ```
 
 Full semantics: [`host-capability-manifest`](../../src/agent-src/contexts/execution/host-capability-manifest.md).
@@ -54,8 +54,11 @@ Full semantics: [`orchestration-telemetry`](../../src/agent-src/contexts/executi
 Auto-dispatch is attempted only when:
 
 ```
-subagents.enabled AND subagents.auto != off AND manifest.subagent_spawn AND task-is-delegable
+emergency.orchestration_halt != true AND manifest.subagent_spawn AND task-is-delegable
 ```
+
+(always-on orchestration, road-to-always-on-orchestration Phase 1: there is
+no more `subagents.enabled`/`subagents.auto` setting.)
 
 Any failing → in-session. Full gate:
 [`auto-orchestration-activation`](../../src/agent-src/contexts/execution/auto-orchestration-activation.md).

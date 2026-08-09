@@ -34,7 +34,7 @@ Two legs, one exit code:
 | `router-pointers` | the installed rule index is intact | any rule id or `routes_to` target does not resolve on disk |
 | `hook-dispatcher` | hooks actually fire on this host | the dispatcher errors on a synthetic `session_start` / `stop` envelope |
 | `lean-projection` | `lean_projection.mode` matches reality | projected non-kernel rules contradict the configured mode |
-| `host-manifest` | `subagents.host_capabilities` is well-formed | unknown keys / non-boolean values (typo guard) |
+| `host-manifest` | a leftover `subagents.host_capabilities` override is flagged deprecated | never fails — the key is inert (always-on orchestration resolves capability from a probe/registry only) |
 
 Every check returns `ok` / `warn` / `fail` / `skipped` with a one-line
 remedy. `skipped` means "not applicable here", never "silently passed".
