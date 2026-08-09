@@ -77,6 +77,7 @@ import * as installed_lock from './_lib/installed_lock.js';
 import * as scoped_projection from './_lib/scoped_projection.js';
 import * as surface_tiers from './_lib/surface_tiers.js';
 import * as global_deploy_inventory from './_lib/global_deploy_inventory.js';
+import * as rule_layer_overlap from './_lib/rule_layer_overlap.js';
 import * as installed_tools from './_lib/installed_tools.js';
 import { collect_drift, format_drift_report } from './_lib/install_drift.js';
 import * as user_global_paths from './_lib/user_global_paths.js';
@@ -2113,6 +2114,137 @@ interface Options {
     no_ui: boolean;
     dry_run: boolean;
     apply_payload: string | null;
+    /**
+     * Which rule layer owns the corpus when both `~/.claude/rules/` and
+     * `<project>/.claude/rules/` would carry it.
+     *
+     * `global` | `project` keep that layer and suppress the other via the host's
+     * `claudeMdExcludes`; `both-acknowledged` keeps both and pays the doubled
+     * standing context knowingly. `null` (absent) with an overlap detected is a
+     * refusal, not a default — see `_gate_rule_layer_overlap`.
+     */
+    layer: string | null;
+}
+
+/** Valid `--layer` values. Mirrors `rule_layer_overlap.LayerChoice`. */
+export const RULE_LAYER_CHOICES: readonly string[] = ['global', 'project', 'both-acknowledged'];
+
+/**
+ * Suppress one rules directory via the host's own `claudeMdExcludes`, written
+ * into `.claude/settings.local.json`.
+ *
+ * `local`, not `settings.json`: the choice is per-machine (it depends on what
+ * else that machine has installed), so it must not land on the shared tree.
+ * The merge APPENDS — `claudeMdExcludes` arrays merge across settings layers, so
+ * replacing the array would drop another layer's exclusions. Re-running is a
+ * no-op. **Nothing is deleted or rewritten outside this one JSON key.**
+ */
+function _suppress_rule_layer(project_root: string, suppress_dir: string): void {
+    const target = path.join(project_root, '.claude', 'settings.local.json');
+    const existing = pathExists(target) ? read_json_file(target) : {};
+    // Realpath before building the glob. `claudeMdExcludesGlob` stays pure and
+    // only normalizes, and `path.resolve` does NOT dereference symlinks — so on a
+    // symlinked home or checkout (macOS `/var` → `/private/var`; the host docs
+    // explicitly support reaching a file through a symlinked project path) the
+    // glob would name a path the host never reports and the exclusion would
+    // silently match nothing. An unresolvable path falls back to the literal.
+    let real_dir = suppress_dir;
+    try {
+        real_dir = fs.realpathSync(suppress_dir);
+    } catch {
+        real_dir = suppress_dir;
+    }
+    const entry = rule_layer_overlap.claudeMdExcludesGlob(real_dir);
+    const merged = rule_layer_overlap.mergeClaudeMdExcludes(existing['claudeMdExcludes'], entry);
+    if (JSON.stringify(existing['claudeMdExcludes'] ?? null) === JSON.stringify(merged)) return;
+    write_json_file(target, { ...existing, claudeMdExcludes: merged });
+    success(`.claude/settings.local.json: claudeMdExcludes += ${entry}`);
+}
+
+/**
+ * Refuse to create a silently doubled rule corpus.
+ *
+ * Claude Code loads `~/.claude/rules/` and `<project>/.claude/rules/` **both**,
+ * user layer first, with no dedup — a rule in both sits in standing context
+ * twice. Measured on a maintainer machine 2026-08-08: 91 shared rules, 176,354
+ * exact-BPE tokens standing, 74,137 of them redundant. Evidence +
+ * host-contract citations:
+ * `agents/evidence/analysis/standing-rule-delivery-topologies.md`.
+ *
+ * Contract:
+ *
+ * - **No overlap** → silent pass. The common case pays nothing.
+ * - **Overlap and no `--layer`** → print the overlap and every flag value, then
+ *   return `false`. The caller exits non-zero. An overlap is not something to
+ *   resolve by guessing; a wrong guess either doubles the context or hides a
+ *   layer the user wanted.
+ * - **Overlap and `--layer`** → apply it. `global` / `project` keep that layer
+ *   and suppress the other; `both-acknowledged` keeps both and states the cost.
+ * - **Divergent bodies** → warn and refuse even WITH a `--layer`, unless the
+ *   choice is `both-acknowledged`. Suppressing a layer whose copies differ
+ *   drops whatever only the suppressed copy carried; that is a lost obligation,
+ *   not a saved token.
+ *
+ * This function never deletes and never rewrites a rule file. Deleting a user's
+ * `~/.claude/rules/` would be a Hard-Floor action per
+ * `non-destructive-by-default`, so no path here can reach one.
+ *
+ * **Known limitation — `--dry-run` does not exercise this gate.** `main()`
+ * returns from `_dry_run_summary` before scope and tools are resolved, so the
+ * call site below is unreachable in a dry run. The `dry_run` parameter is
+ * therefore always `false` today; it is kept because it states the correct
+ * contract for the day the dry-run summary moves, and because a suppression
+ * write during a dry run would be the wrong behaviour whatever the ordering.
+ * Surfacing the overlap in the dry-run report needs scope resolution hoisted
+ * above that early return — a `main()` restructure, deliberately not bundled
+ * here. Tests therefore call this function directly rather than through the CLI.
+ */
+export function _gate_rule_layer_overlap(
+    project_root: string,
+    layer: string | null,
+    dry_run: boolean,
+): boolean {
+    const global_dir = path.join(os.homedir(), '.claude', 'rules');
+    const project_dir = path.join(project_root, '.claude', 'rules');
+    const g = rule_layer_overlap.readRuleLayer(global_dir);
+    const p = rule_layer_overlap.readRuleLayer(project_dir);
+    if (g === null || p === null) return true; // only one layer exists — nothing to double
+    const report = rule_layer_overlap.compareLayers(g.files, p.files);
+    if (report.overlap.length === 0) return true;
+
+    if (layer === null) {
+        warn(
+            `rule layers overlap: ${report.overlap.length} rule(s) are in BOTH `
+                + `${global_dir} and ${project_dir}, so Claude Code loads them twice `
+                + `(${report.redundant_chars} chars of standing context per session).`,
+        );
+        info('Pick which layer owns the corpus — no file is deleted either way:');
+        info(`  --layer=global              keep ${global_dir}, suppress the project one`);
+        info(`  --layer=project             keep ${project_dir}, suppress the global one`);
+        info('  --layer=both-acknowledged   keep both and pay the doubled context knowingly');
+        return false;
+    }
+
+    const action = rule_layer_overlap.decideLayerAction(
+        report,
+        layer as rule_layer_overlap.LayerChoice,
+        global_dir,
+        project_dir,
+    );
+    if (action.refresh_required && action.suppress_dir !== null) {
+        warn(
+            `${report.divergent.length} shared rule(s) differ in body between the two layers `
+                + `(${report.divergent.slice(0, 5).join(', ')}${report.divergent.length > 5 ? ', …' : ''}). `
+                + 'Suppressing a layer now would drop whatever only that copy carries. '
+                + 'Re-run the projection first, or pass --layer=both-acknowledged.',
+        );
+        return false;
+    }
+    info(action.note);
+    if (action.suppress_dir !== null && !dry_run) {
+        _suppress_rule_layer(project_root, action.suppress_dir);
+    }
+    return true;
 }
 
 function _resolve_scope(
@@ -3849,6 +3981,7 @@ const USAGE =
     '                  [--tools TOOLS] [--ai AI] [--packs PACKS] [--core-only]\n' +
     '                  [--no-smoke] [--global]\n' +
     '                  [--scope {project,global,prompt,auto}]\n' +
+    '                  [--layer {global,project,both-acknowledged}]\n' +
     '                  [--custom-path CUSTOM_PATH] [--offline] [--minimal]\n' +
     '                  [--interactive] [--no-ui] [--dry-run]\n' +
     '                  [--apply-payload APPLY_PAYLOAD]\n';
@@ -3884,6 +4017,7 @@ const _VALUE_FLAGS: Record<string, keyof Options> = {
     '--scope': 'scope',
     '--custom-path': 'custom_path',
     '--apply-payload': 'apply_payload',
+    '--layer': 'layer',
 };
 
 function _argError(msg: string): never {
@@ -3920,6 +4054,7 @@ function parse_options(argv: string[]): Options {
         no_ui: false,
         dry_run: false,
         apply_payload: null,
+        layer: null,
     };
 
     const positionals: string[] = [];
@@ -3958,6 +4093,12 @@ function parse_options(argv: string[]): Options {
                 _argError(
                     `argument --scope: invalid choice: '${value}' ` +
                         "(choose from 'project', 'global', 'prompt', 'auto')",
+                );
+            }
+            if (flag === '--layer' && !RULE_LAYER_CHOICES.includes(value)) {
+                _argError(
+                    `argument --layer: invalid choice: '${value}' ` +
+                        `(choose from ${RULE_LAYER_CHOICES.map((c) => `'${c}'`).join(', ')})`,
                 );
             }
             opts[valueDest] = value;
@@ -4730,6 +4871,16 @@ function main(argv: string[]): number {
     let parsed_tools = _parse_tools(opts.tools);
     const tools_was_all = _tools_was_all(opts.tools);
     parsed_tools = _validate_scope(parsed_tools, scope, tools_was_all);
+
+    // Refuse a silently doubled Claude Code rule corpus. Runs before EITHER
+    // scope branch writes: a global install can double an existing project layer
+    // and a project install can double an existing global one, and the gate
+    // reads both directories regardless of which one this run is about to write.
+    // Claude-only, because `claudeMdExcludes` and the two-rules-dir load order
+    // are that host's semantics — a cursor-only install is not affected.
+    if (parsed_tools.has('claude-code') && !_gate_rule_layer_overlap(detect_root, opts.layer, opts.dry_run)) {
+        return 2;
+    }
 
     const wizard_handoff = _wizard_should_launch(opts)[0];
 

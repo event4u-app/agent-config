@@ -1,7 +1,7 @@
 ---
 model_tier: high
 name: adversarial-review
-description: "ONLY on a request for adversarial review, devil's advocate, stress-test, or honest critique ('poke holes', 'be brutal', 'was hältst du davon') — NOT routine code/design review."
+description: "Adversarial critique — devil's advocate, stress-test, honest teardown ('poke holes', 'be brutal', 'was hältst du davon'); explicit request only. Routine code or design review → code-review."
 personas:
   - critical-challenger
 domain: quality

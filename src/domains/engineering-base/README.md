@@ -48,7 +48,7 @@ Framework-neutral engineering hygiene — git, tests, reviews.
 ## Skills (88)
 
 - **`accessibility-auditor`** — Use when reviewing UI for accessibility — WCAG 2.2 AA, keyboard nav, focus, ARIA, contrast, screen-reader semantics — even on 'is this a11y-OK?' or 'mach das barrierefrei'.
-- **`adversarial-review`** — ONLY on a request for adversarial review, devil's advocate, stress-test, or honest critique ('poke holes', 'be brutal', 'was hältst du davon') — NOT routine code/design review.
+- **`adversarial-review`** — Adversarial critique — devil's advocate, stress-test, honest teardown ('poke holes', 'be brutal', 'was hältst du davon'); explicit request only. Routine code or design review → code-review.
 - **`agent-security-review`** — Use for an adversarial red-team / blue-team / auditor review of an AI agent's CONFIG + behaviour (rules, skills, MCP, hooks, permissions) — attack-chain → defensive-gap list, not a code audit.
 - **`ai-code-blindspots`** — Before finishing any code (endpoint, query, migration, render, file, infra, dependency, test) — the senior pre-ship checklist of invisible cross-cutting controls AI omits, with backstop greps
 - **`api-design`** — Use when designing APIs, planning endpoints, REST conventions, versioning, or deprecation — even when the user just says 'expose this as an endpoint' without naming API design.
@@ -97,20 +97,20 @@ Framework-neutral engineering hygiene — git, tests, reviews.
 - **`openapi`** — Use when documenting APIs — OpenAPI/Swagger, PHP attributes, Redocly validation, versioned specs — even when the user just says 'document this endpoint' without naming OpenAPI.
 - **`overbuild-review-lens`** — Use when a diff builds more than the task needs — code that should not exist, a dependency the platform already covers, or a clever form where a flat one reads better. Deletion-hunting, not quality.
 - **`performance`** — Use when optimizing application performance — caching strategies, eager loading, query optimization, Redis patterns, or background job design.
-- **`performance-analysis`** — ONLY when user explicitly requests: performance audit, bottleneck analysis, or N+1 query detection. NOT for regular feature work.
+- **`performance-analysis`** — Performance audit — bottleneck profiling, N+1 query detection, hot-path analysis; explicit request only, not part of regular feature work.
 - **`playwright-architect`** — Use when shaping a Playwright suite — locator strategy, Page Object boundaries, fixture composition, flake-prevention architecture, CI-vs-local split — even on 'design our E2E tests'.
 - **`playwright-testing`** — Use when writing Playwright E2E tests — browser automation, visual regression testing, Page Objects, fixtures, and reliable test patterns.
 - **`privacy-review`** — Use when reviewing data flows, support macros, refund templates for GDPR/CCPA/HIPAA fit — regime, consent, PII redaction (email, order-id), breach triage. Triggers 'is this GDPR-safe', 'PII redact'.
 - **`project-analysis-core`** — Raw discovery primitives — project discovery, version resolution, docs loading, architecture mapping, execution flow. Called by `universal-project-analysis`. Single-pass scan → `project-analyzer`.
 - **`project-analysis-hypothesis-driven`** — Use when a bug has multiple plausible causes across layers — competing hypotheses, validation loops, evidence-based conclusions — even when the user just says 'why is this happening?'.
-- **`project-analyzer`** — ONLY when user asks for single-pass tech-stack detection or `agents/evidence/analysis/` write-up. Deep multi-pass audit → `universal-project-analysis`. Raw primitives → `project-analysis-core`.
+- **`project-analyzer`** — Single-pass tech-stack detection with an agents/evidence/analysis/ write-up; explicit request only. Deep multi-pass audit → universal-project-analysis. Raw primitives → project-analysis-core.
 - **`quality-tools`** — Use when PHPStan, Rector, or ECS output appears — "phpstan says mixed", type errors, "fix code style", "run rector" — even when Eloquent/Laravel/model code is also mentioned.
 - **`receiving-code-review`** — Use when processing code review feedback (bot or human) before changing anything — triages, verifies, and pushes back with technical reasoning — even when the user just says 'fix the comments'.
 - **`requesting-code-review`** — Use when asking for a review or creating a PR — self-review first, frame the right context, test plan included — even when the user just says 'open a PR' or 'ready to merge'.
 - **`risk-officer`** — Use when surfacing and prioritising risk before commit — blast-radius framing, mitigations, residual-risk verdict — even if the user just says 'what could go wrong here?'.
 - **`secrets-management`** — Use when picking a secrets store, designing rotation, or wiring scanning gates — multi-cloud (Vault, AWS, Azure, GCP), CI, and Kubernetes — decision framework, provider deep-dives externalized.
 - **`security`** — Use when applying security best practices — authentication, authorization, CSRF protection, input sanitization, rate limiting, or secure coding — stack-agnostic.
-- **`security-audit`** — ONLY when user explicitly requests: security audit, vulnerability scan, or penetration test review. NOT for regular feature work.
+- **`security-audit`** — Security audit — vulnerability scan, pentest review, attack-surface sweep; explicit request only, not regular feature work. Pre-implementation threat pass → threat-modeling.
 - **`security-maturity-assessment`** — Use when the user wants a security-maturity scorecard / posture assessment of a module — category ratings with evidence, not a vulnerability hunt. Also on 'wie sicher ist dieses Modul aufgestellt?'
 - **`sentry-integration`** — Use when the user shares a Sentry URL, says "check Sentry", or wants to investigate production errors. Uses Sentry MCP tools for deep analysis.
 - **`source-discovery`** — Use BEFORE planning/coding against a DB schema, API/GraphQL shape, DTO/Model/Entity, or vendor package — read the real source, emit an Evidence Report, stop inventing fields.
@@ -130,7 +130,7 @@ Framework-neutral engineering hygiene — git, tests, reviews.
 - **`traefik`** — Use when setting up Traefik as a local reverse proxy — real domains on 127.0.0.1, trusted HTTPS via mkcert, automatic service discovery, and multi-project routing.
 - **`ui-apply-generic`** — Use when implementing a UI brief on a stack with no framework executor — Svelte, Astro, Angular, plain HTML. Carries the stack-independent contract; idiom comes from the stack corpus.
 - **`ui-component-architect`** — Use when shaping a UI component tree — composition vs inheritance, slot patterns, prop API design, controlled vs uncontrolled, polymorphic — even on 'split this component'.
-- **`universal-project-analysis`** — ONLY when user asks for deep multi-pass codebase audit — orchestrator routing to `project-analysis-core` + framework-specific `project-analysis-*`. Single-pass scan → `project-analyzer`.
+- **`universal-project-analysis`** — Deep multi-pass codebase audit — orchestrates project-analysis-core plus the framework-specific project-analysis-*; explicit request only. Single-pass scan → project-analyzer.
 - **`using-git-worktrees`** — Use when starting parallel work in isolation from the current branch — spawn a git worktree with ignore-safety checks and a clean test baseline — even when the user says 'try this on the side'.
 - **`validate-feature-fit`** — Validate whether a feature request fits the existing codebase — check for duplicates, contradictions, scope creep, and architectural misfit
 - **`verify-completion-evidence`** — Use when claiming 'done', suggesting a commit, push, or PR — runs the evidence gate so completion claims come from fresh output in this message, not memory or earlier runs.

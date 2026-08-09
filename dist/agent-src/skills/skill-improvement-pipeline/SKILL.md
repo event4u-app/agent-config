@@ -1,7 +1,7 @@
 ---
 model_tier: inherit
 name: skill-improvement-pipeline
-description: "ONLY when user explicitly requests: run the skill improvement pipeline after a learning was detected. Orchestrates capture, classify, create, validate, and apply."
+description: "Run the skill-improvement pipeline after a learning was detected — capture, classify, create, validate, apply; explicit request only."
 domain: process
 execution:
   type: assisted

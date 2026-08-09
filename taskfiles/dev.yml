@@ -118,3 +118,19 @@ tasks:
       - agent-config install --allow-headless
       - 'echo "→ GLOBAL agent-config now = RELEASE @event4u/agent-config@$(npm view @event4u/agent-config version 2>/dev/null)"'
       - 'echo "  switch back to the working tree: task install:use-dev"'
+
+  dev:standing-rule-delivery:
+    desc: |
+      How many rule tokens does a session on THIS machine actually receive?
+      Sums both layers Claude Code loads (~/.claude/rules/ and
+      .claude/rules/), names the overlap, and fails over the cap in
+      src/config/budgets.yml.
+      Local-only on purpose: `.claude/rules/` is gitignored and no CI leg
+      performs a user-scope install, so on a runner BOTH inputs are empty —
+      in CI this gate could only be green-by-blindness. The enforced layer is
+      the installer gate, which refuses to CREATE the doubled state.
+      Over the cap? `agent-config install --layer=global|project` suppresses
+      one layer via claudeMdExcludes without deleting a file.
+      Usage:
+      task dev:standing-rule-delivery
+    cmd: ./scripts-run src/scripts/check_standing_rule_delivery

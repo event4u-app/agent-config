@@ -1,7 +1,7 @@
 ---
 model_tier: high
 name: security-audit
-description: "ONLY when user explicitly requests: security audit, vulnerability scan, or penetration test review. NOT for regular feature work."
+description: "Security audit — vulnerability scan, pentest review, attack-surface sweep; explicit request only, not regular feature work. Pre-implementation threat pass → threat-modeling."
 domain: quality
 parallelizable: files
 workspaces:
