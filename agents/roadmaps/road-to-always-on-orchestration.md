@@ -284,16 +284,29 @@ before any behaviour data exists.
 
 ## Phase 7 — what this roadmap will not do
 
-- [ ] 7.1 No swarm topologies, queens, bidding, neural routing, consensus
+- [x] 7.1 No swarm topologies, queens, bidding, neural routing, consensus
       protocols beyond quorum (two surveys behind this verdict now).
-- [ ] 7.2 No auto-rollback of any agent's output.
-- [ ] 7.3 No hard tool-deny on the main session and no point-of-action
+      <!-- verified 2026-08-09: grep over src/scripts/*.ts finds no such
+      construct — the only hit is lint_never_silent.ts PROSE that forbids it. -->
+- [x] 7.2 No auto-rollback of any agent's output.
+      <!-- verified 2026-08-09: zero auto-rollback hits in src/scripts. -->
+- [x] 7.3 No hard tool-deny on the main session and no point-of-action
       pre-tool-use ladder yet — both wait on the discrimination spike and
       telemetry (blockers below).
-- [ ] 7.4 No statusline/HUD work — no substrate exists; revisit only if one
+      <!-- verified 2026-08-09: hook_manifest.yaml pre_tool_use chains carry
+      only the pre-existing guards (block-no-verify, block-unauthorized-git,
+      evidence-independence, block-kernel-rule-writes, block-config-weakening,
+      rtk-wrap, design-slop, code-graph-nudge) — no delegation carrier, no
+      escalation ladder. -->
+- [x] 7.4 No statusline/HUD work — no substrate exists; revisit only if one
       lands.
-- [ ] 7.5 No new settings beyond the emergency switch; the lint makes this
+      <!-- verified 2026-08-09: no statusline/HUD surface in src/scripts;
+      the one grep hit is an unrelated `statusLines` local variable. -->
+- [x] 7.5 No new settings beyond the emergency switch; the lint makes this
       a property, not a promise.
+      <!-- verified 2026-08-09: lint_no_activation_gates green over the
+      137-leaf template; self-test proves red on subagents.enabled /
+      subagents.auto / council.enabled / ai_team.auto fixtures (7/7). -->
 
 ## Blockers
 
@@ -353,6 +366,8 @@ before any behaviour data exists.
   discipline as the #1223 set.
 - **Resolved when:** payload evidence exists and the concerns ship, or
   teams leave the experimental state and this re-cuts.
+- **Probed 2026-08-09:** `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS` is unset on
+  this host — condition unchanged, 5.4 stays open.
 
 ### blocker: cross-vendor-worker-slices
 
@@ -383,21 +398,64 @@ before any behaviour data exists.
 
 ## Acceptance criteria
 
-- [ ] A fresh install with an EMPTY `.agent-settings.yml` resolves
+- [x] A fresh install with an EMPTY `.agent-settings.yml` resolves
       spawn-capable on this host (probe/registry), and the judgment ladder
       returns a verdict for a probe task — no activation key exists to set.
-- [ ] The settings-classes contract contains no row for a deleted key, keeps
+      <!-- verified 2026-08-09, live probe against a scratch dir with a
+      0-byte .agent-settings.yml: loader returns an object; the shipped
+      template enumerates 137 leaves with ZERO matching
+      (subagents|ai_team|council).(enabled|auto); probeHostCapabilities
+      ('claude') → subagent_spawn=true from the registry; classifyLadder on a
+      3-independent-files probe task → {rung: 2, verdict: "subagent",
+      mode: "do-in-parallel"}. -->
+- [x] The settings-classes contract contains no row for a deleted key, keeps
       `ai_team.allow_delegate`, and documents the emergency switch with the
       incident-response semantics.
-- [ ] `no-activation-gates` lint is green on the tree and red on a fixture
+      <!-- verified 2026-08-09: zero table rows for deleted keys;
+      ai_team.allow_delegate row present (C, false); emergency switch has its
+      own § plus two C rows incl. the justification field. One drift found
+      and fixed in the same change: the "governs writes, not asks" paragraph
+      still cited the deleted subagents.auto/budget_routing as live ask-enum
+      carriers ("six" → "four"). -->
+- [x] `no-activation-gates` lint is green on the tree and red on a fixture
       reintroducing `subagents.enabled`.
-- [ ] The ladder's committed table and the cheapest-sufficient-model table
+      <!-- verified 2026-08-09: tree run green over all 137 template leaves
+      (dead scan root would exit 1); --self-test 7/7 — subagents.enabled,
+      subagents.auto, council.enabled, ai_team.enabled, ai_team.auto all
+      reject with exit 1; vitest suite 4/4. -->
+- [x] The ladder's committed table and the cheapest-sufficient-model table
       are in the delegation-policy context; the nudge line cites a rung.
-- [ ] A council pass on this host runs CLI-first with the reconciled chain,
+      <!-- verified 2026-08-09: auto-dispatch-classification.md carries the
+      rung table (lines ~69-76) and the escalation-criteria tier table
+      (~118-124: verify-fail, ≥5 files/200 lines, architecture, security —
+      exactly step 2.4's four criteria); delegation_nudge_hook.ts renders
+      `rung-N: dispatch …` in its injected line. -->
+- [x] A council pass on this host runs CLI-first with the reconciled chain,
       names each member's transport in the artifact, and concludes at
       majority quorum with absentees recorded.
-- [ ] Every telemetry-consuming behaviour (gate auto-dispatch, stop-block,
+      <!-- verified 2026-08-09, two real passes (artifacts local-only under
+      agents/runtime/council/responses/, gitignored by design):
+      (1) default pass honoured this install's explicit `defaults.mode: api`
+      pin — the per-install rollback Phase 3 names; (2) an auto-mode pass via
+      $AI_COUNCIL_CONFIG: openai resolved transport=cli
+      (subscription_label chatgpt-plus, billable=false), hit its
+      cli_call_budget (54/50) and was recorded cli_quota_exhausted —
+      degrading to the quorum path, NOT to metered API; anthropic resolved
+      api per the resolver's documented keychain limitation (claude CLI
+      stores its credential outside the filesystem); quorum concluded at
+      threshold 1 (majority, n=2) with present=1/2 recorded. Both artifacts
+      name every member's transport in metadata.transport. -->
+- [x] Every telemetry-consuming behaviour (gate auto-dispatch, stop-block,
       point-of-action carrier, team telemetry) exists ONLY as a blocker with
       its enabling evidence named — none is half-shipped.
-- [ ] All external systems appear as Sources A–H only; the external-sources
+      <!-- verified 2026-08-09: no release-gate council dispatch wiring in
+      src/scripts (the only "auto-fire" hit is the unrelated debate-repair
+      confirm); end_review_nudge_hook never reports block severity (its own
+      doc line 170); no pre_tool_use delegation carrier in the manifest;
+      team events exist only as team_events_spike.ts, flag-gated with a
+      clean exit-0 skip. All four have named blockers below. -->
+- [x] All external systems appear as Sources A–H only; the external-sources
       gate is green.
+      <!-- verified 2026-08-09: check_no_external_sources exit 0 (checked
+      unpiped); this roadmap references the survey exclusively as Sources
+      A–H with the mapping in the local-only consumed-inbox file. -->

@@ -27,9 +27,9 @@ raise a spend ceiling, empty an allowlist, or switch off a gate.
 **It governs writes, not reads.** Every class is readable by everything. A C
 class does not hide a value; it refuses to let a non-human change it.
 
-**It governs writes, not asks.** Six settings ship an `ask` value in their own
-enum (`tokens.rich_skills`, `subagents.auto`, `subagents.budget_routing`,
-`subagents.adversarial_council`, `worktrees.mode`, `decision_engine.on_block`).
+**It governs writes, not asks.** Four settings ship an `ask` value in their own
+enum (`tokens.rich_skills`, `subagents.adversarial_council`, `worktrees.mode`,
+`decision_engine.on_block`).
 Those are C-class here, and that is not a contradiction: the class says who may
 *persist* a new value; the `ask` value says what happens *at runtime* when the
 setting is already set to `ask`. A C-class key set to `ask` still produces a
