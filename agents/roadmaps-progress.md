@@ -2,11 +2,11 @@
 
 > Auto-generated — do not edit. Regenerate with `task roadmap-progress` or by running the `update_roadmap_progress` script for your install; rewritten on every roadmap create / execute / completion change (timestamp lives in git history).
 >
-> 20 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **21** open blockers
+> 21 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **24** open blockers
 
 ## Overall
 
-**189 / 301 steps done · 63%**
+**212 / 334 steps done · 63%**
 
 ```text
 █████████████████████████░░░░░░░░░░░░░░░   63%
@@ -26,16 +26,17 @@
 | 8 | [road-to-kernel-question-triangle.md](roadmaps/road-to-kernel-question-triangle.md) | 1 | 3 | 3 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 9 | [road-to-maintainer-bus-factor.md](roadmaps/road-to-maintainer-bus-factor.md) | 4 | 12 | 5 | 7 | 0 | 0 | [1](#blockers-road-to-maintainer-bus-factor) | ██████░░░░ 58% |
 | 10 | [road-to-orchestration-scope-decision.md](roadmaps/road-to-orchestration-scope-decision.md) | 4 | 10 | 6 | 4 | 0 | 0 | [1](#blockers-road-to-orchestration-scope-decision) | ████░░░░░░ 40% |
-| 11 | [road-to-rule-coherence-followup.md](roadmaps/road-to-rule-coherence-followup.md) | 5 | 9 | 8 | 1 | 0 | 0 | [2](#blockers-road-to-rule-coherence-followup) | █░░░░░░░░░ 11% |
-| 12 | [road-to-scale-history-bench-run.md](roadmaps/road-to-scale-history-bench-run.md) | 1 | 2 | 2 | 0 | 0 | 0 | [1](#blockers-road-to-scale-history-bench-run) | ░░░░░░░░░░ 0% |
-| 13 | [road-to-skill-ecosystem-gate-integrity.md](roadmaps/road-to-skill-ecosystem-gate-integrity.md) | 7 | 43 | 3 | 40 | 0 | 0 | [1](#blockers-road-to-skill-ecosystem-gate-integrity) | █████████░ 93% |
-| 14 | [road-to-solution-minimalism.md](roadmaps/road-to-solution-minimalism.md) | 4 | 36 | 10 | 25 | 0 | 1 | [1](#blockers-road-to-solution-minimalism) | ███████░░░ 71% |
-| 15 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 6 | 3 | 0 | 0 | [1](#blockers-road-to-subagent-value-realization-followup) | ███░░░░░░░ 33% |
-| 16 | [road-to-surface-consolidation.md](roadmaps/road-to-surface-consolidation.md) | 3 | 14 | 1 | 12 | 1 | 0 | [2](#blockers-road-to-surface-consolidation) | █████████░ 92% |
-| 17 | [road-to-tier-removal.md](roadmaps/road-to-tier-removal.md) | 4 | 8 | 2 | 6 | 0 | 0 | [1](#blockers-road-to-tier-removal) | ████████░░ 75% |
-| 18 | [road-to-ui-track-integrity-followup.md](roadmaps/road-to-ui-track-integrity-followup.md) | 1 | 10 | 10 | 0 | 0 | 0 | [2](#blockers-road-to-ui-track-integrity-followup) | ░░░░░░░░░░ 0% |
-| 19 | [road-to-worktree-hygiene.md](roadmaps/road-to-worktree-hygiene.md) | 1 | 9 | 2 | 7 | 0 | 0 | [1](#blockers-road-to-worktree-hygiene) | ████████░░ 78% |
-| 20 | [road-to-zero-ceremony-settings.md](roadmaps/road-to-zero-ceremony-settings.md) | 5 | 19 | 1 | 17 | 1 | 0 | 0 | █████████░ 94% |
+| 11 | [road-to-orchestrator-discipline-carriers.md](roadmaps/road-to-orchestrator-discipline-carriers.md) | 7 | 33 | 10 | 23 | 0 | 0 | [3](#blockers-road-to-orchestrator-discipline-carriers) | ███████░░░ 70% |
+| 12 | [road-to-rule-coherence-followup.md](roadmaps/road-to-rule-coherence-followup.md) | 5 | 9 | 8 | 1 | 0 | 0 | [2](#blockers-road-to-rule-coherence-followup) | █░░░░░░░░░ 11% |
+| 13 | [road-to-scale-history-bench-run.md](roadmaps/road-to-scale-history-bench-run.md) | 1 | 2 | 2 | 0 | 0 | 0 | [1](#blockers-road-to-scale-history-bench-run) | ░░░░░░░░░░ 0% |
+| 14 | [road-to-skill-ecosystem-gate-integrity.md](roadmaps/road-to-skill-ecosystem-gate-integrity.md) | 7 | 43 | 3 | 40 | 0 | 0 | [1](#blockers-road-to-skill-ecosystem-gate-integrity) | █████████░ 93% |
+| 15 | [road-to-solution-minimalism.md](roadmaps/road-to-solution-minimalism.md) | 4 | 36 | 10 | 25 | 0 | 1 | [1](#blockers-road-to-solution-minimalism) | ███████░░░ 71% |
+| 16 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 6 | 3 | 0 | 0 | [1](#blockers-road-to-subagent-value-realization-followup) | ███░░░░░░░ 33% |
+| 17 | [road-to-surface-consolidation.md](roadmaps/road-to-surface-consolidation.md) | 3 | 14 | 1 | 12 | 1 | 0 | [2](#blockers-road-to-surface-consolidation) | █████████░ 92% |
+| 18 | [road-to-tier-removal.md](roadmaps/road-to-tier-removal.md) | 4 | 8 | 2 | 6 | 0 | 0 | [1](#blockers-road-to-tier-removal) | ████████░░ 75% |
+| 19 | [road-to-ui-track-integrity-followup.md](roadmaps/road-to-ui-track-integrity-followup.md) | 1 | 10 | 10 | 0 | 0 | 0 | [2](#blockers-road-to-ui-track-integrity-followup) | ░░░░░░░░░░ 0% |
+| 20 | [road-to-worktree-hygiene.md](roadmaps/road-to-worktree-hygiene.md) | 1 | 9 | 2 | 7 | 0 | 0 | [1](#blockers-road-to-worktree-hygiene) | ████████░░ 78% |
+| 21 | [road-to-zero-ceremony-settings.md](roadmaps/road-to-zero-ceremony-settings.md) | 5 | 19 | 1 | 17 | 1 | 0 | 0 | █████████░ 94% |
 
 ---
 
@@ -232,6 +233,48 @@ _1 blocker resolved._
     the post-ADR-117 default (`subagents.auto: on`), then check
     `wc -l agents/runtime/state/audit/$(date +%Y-%m).jsonl`. Resume at ≥20.
   - **Resolved when:** the current-month audit log holds ≥20 orchestration lines.
+
+### [road-to-orchestrator-discipline-carriers.md](roadmaps/road-to-orchestrator-discipline-carriers.md)
+
+**Road to orchestrator discipline carriers — the delegation obligation and the end-review obligation get mechanisms that reach real sessions** — 23 / 33 done (70%)
+
+| # | Phase | State | Open | Done | Deferred | Cancelled | % |
+|---|---|---|---:|---:|---:|---:|---:|
+| 1 | F5: committed host-capability registry | ✅ done | 0 | 4 | 0 | 0 | 100% |
+| 2 | F1: the obligation reaches the always-loaded surface | ✅ done | 0 | 3 | 0 | 0 | 100% |
+| 3 | F6: deterministic orchestration telemetry | ✅ done | 0 | 4 | 0 | 0 | 100% |
+| 4 | F3-lite: conditional delegation nudge (advisory, decision-support only) | ✅ done | 0 | 4 | 0 | 0 | 100% |
+| 5 | F4-lite: end-review carrier on stop (advisory + telemetry, not blocking) | ✅ done | 0 | 4 | 0 | 0 | 100% |
+| 6 | honest documentation and downstream sync | ✅ done | 0 | 4 | 0 | 0 | 100% |
+| 7 | what this roadmap will not do | ⬜ not started | 10 | 0 | 0 | 0 | 0% |
+
+<a id="blockers-road-to-orchestrator-discipline-carriers"></a>
+**Blockers**
+
+- **user-instruction-compliance** (owner: maintainer) — blocks nothing in this roadmap — separate bug class
+  - **What to do:**
+    AI council" instruction and produced 2 dispatches in minute 5 and zero
+    council runs. Diagnose whether it is a planning-execution gap (agent
+    acknowledges, then forgets) or a directive-priority gap (efficiency
+    instinct outranks user voice) by tracing the instruction through that
+    transcript, then decide the mechanism (commitment-check hook vs directive
+    escalation).
+  - **Resolved when:** the diagnosis is recorded and a mechanism decision made.
+- **cross-session-dedup** (owner: maintainer) — blocks nothing in this roadmap — different mechanism class
+  - **What to do:**
+  - **Resolved when:** decision recorded — build, defer, or drop.
+- **f4-full-blocking-decision** (owner: maintainer) — blocks any blocking end-review gate
+  - **What to do:**
+    distribution of `review_skipped` events, decide the block threshold (the
+    council's working hypothesis: high-risk diff lines, differentiated from
+    doc/test-only churn) and whether the block lands in the new concern or in
+    the existing `team-review-gate` managed tier. Same decision owns the
+    stop-slot DELIVERY question: Claude Code documents `additionalContext`
+    for UserPromptSubmit/SessionStart/PostToolUse but not Stop, so the
+    advisory line's model delivery on `stop` is unverified — the documented
+    model-reaching mechanism on Stop is `decision: "block"` + reason, which
+    is exactly the blocking tier this blocker gates.
+  - **Resolved when:** threshold decision recorded with the telemetry cited.
 
 ### [road-to-rule-coherence-followup.md](roadmaps/road-to-rule-coherence-followup.md)
 
