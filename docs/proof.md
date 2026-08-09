@@ -140,7 +140,7 @@ guidelines, personas) are **generated from source and CI-drift-checked**:
 fails the build on any count-shaped prose mention that drifts from the
 source count — or on two different numbers for the same artefact kind.
 
-We also publish our **debt**: 7 claim(s) are logged as
+We also publish our **debt**: 8 claim(s) are logged as
 `unbacked` inventory in the ledger — not yet bound, and therefore not
 allowed to carry a marker in public prose. Hiding them would be the
 opposite of the point.
@@ -311,7 +311,7 @@ resolution (`check_enforcement_coverage`) and the claims ledger
 
 Undeclared rules (84) carry no row — an honest gap beats a false claim.
 
-**Axis 2 — evidence form per public claim.** 50 ledger entries · 40 backed · 7 unbacked inventory · 3 resolved-null.
+**Axis 2 — evidence form per public claim.** 51 ledger entries · 40 backed · 8 unbacked inventory · 3 resolved-null.
 
 | Claim id | Kind | Status | Evidence pointer |
 |---|---|---|---|
@@ -365,6 +365,7 @@ Undeclared rules (84) carry no row — an honest gap beats a false claim.
 | `team-defect-finding-null` | quant | backed | `internal/bench/reports/defect-finding.json#honest_null` |
 | `utilization-window-decidability` | comparative | unbacked | `PRE-REGISTERED 2026-07-12 (road-to-feedback-8.11-2 Phase 0 — no goalpost-moving after the numbers land; criteria at `docs/design/utilization-window-criteria.md`). Floor fixed BEFORE data: >=100 task boundaries AND >=2 hosts (or the documented degraded form) AND >=45 elapsed days; decision rules D1 (loaded-never-consulted -> retirement-candidate list), D2 (consulted-never-applied <10% applied-ratio at >=5 consultations -> trigger-review queue), D3 (above floor -> >=1 named decision per kind or a recorded why-not), D4 (below floor after one extension -> honest null, lifecycle/ledger gates stay closed). Kernel + safety floors exempt by construction.` |
 | `wedge-hollow-detection` | quant | backed | `internal/bench/orchestration/pv-a3-results.md#token_delta_provenance: measured` |
+| `worker-capsule-trigger-arm` | comparative | unbacked | `PRE-REGISTERED 2026-08-09 (road-to-worker-generation-recycling Phase 1.4 — registered BEFORE the first shadow capsule is read; the mechanism ships shadow-only, so no capsule has been scored at registration time). CAPSULE-QUALITY RUBRIC, fixed here, five binary criteria scored 0-5 per capsule — (1) `remaining[]` names every open item the task still needs, no silent drops; (2) `decisions[]` names each choice a successor would otherwise silently re-open; (3) `assumptions[]` is non-empty and every entry carries a resolving `basis` ref; (4) every `done[]` ref resolves to a real file/line; (5) a successor briefed on the ORIGINAL brief plus the capsule alone takes a first action that neither repeats completed work nor asks for a re-brief. ADOPTION MARGIN, fixed BEFORE data: an arm is adopted only if, on paired samples from the same runs, it fires at a median of >= 2 steps earlier AND its capsules score >= 4/5 on the rubric with no regression against the other arm; an arm that wins on earliness while dropping below 4/5 is NOT adopted, because an earlier bad capsule is worse than a later good one. Sample floor: >= 30 shadow capsules with BOTH trigger points recorded (`watermark_step`, `saturation_step`, `trigger_arm_earlier` on the `orchestration_record` line). Instrument: `src/scripts/_lib/capsule_trigger.ts` (`compareTriggers`, `earlierArm`), term-frequency only, no embeddings. HONEST-NULL consequence, pre-authorised: BOTH arms losing (neither reaches 4/5, or the margin is not met) is a publishable result that closes the mechanism as default-off — it is the expected-value outcome given the standing `orchestration-observed-dispatch-cost` null, and it must be cheap to record. Token delta is reported as a pair with quality and is explicitly NOT the claim.` |
 
 ## 5. Verify it yourself
 
