@@ -312,6 +312,105 @@ Entry-shape contract: [`docs/contracts/CHANGELOG-conventions.md`](docs/contracts
 > that forces a new era split (`# Era: 9.28.x`, etc.) — see
 > [`docs/contracts/CHANGELOG-conventions.md § Era splits`](docs/contracts/CHANGELOG-conventions.md).
 
+## [9.28.0](https://github.com/event4u-app/agent-config/compare/9.27.0...9.28.0) (2026-08-09)
+
+### Release highlights
+
+<!-- Curated head: fill before merge, keep it under 10 lines, and leave `_none_` where it is genuinely the answer. The generated log below is unchanged. -->
+- **Behaviour changes:** _auto-derived, rewrite before merge:_ rule/schema diffs, breaking commits or removed public surface in 63825ba, 9cd21cb, ae6f30e, 3d684ef, 909235c, 103a22b +2 more.
+- **Default changes + migration:** _none_
+- **Security and correctness:** _none_
+- **Honest nulls:** _auto-derived, rewrite before merge:_ commits carrying an honest-null marker in 2837fb7.
+- **Known limitations:** _none_
+
+### Features
+
+* **hooks:** register the three orchestrator-discipline concerns ([b170fbc](https://github.com/event4u-app/agent-config/commit/b170fbc9c8a90bdb69ba97929a8c13b08c90ccb3))
+* **hooks:** advisory end-review-nudge concern on stop ([3d2c1a0](https://github.com/event4u-app/agent-config/commit/3d2c1a0bc1087960d634e1d489867da78069ed8c))
+* **hooks:** conditional delegation-nudge concern on user_prompt_submit ([761b793](https://github.com/event4u-app/agent-config/commit/761b793ad2e9a9371ade2272848e2d7aa856faae))
+* **hooks:** deterministic orchestration-record concern on post_tool_use ([36e24c9](https://github.com/event4u-app/agent-config/commit/36e24c936e8e05281220574fbe9e924bd787c152))
+* **host-capability:** committed registry for known hosts ([04e31f7](https://github.com/event4u-app/agent-config/commit/04e31f7c6274815db376fd545869f4bb80a3d225))
+* **cli:** four capability probes for the gaps that had none ([909235c](https://github.com/event4u-app/agent-config/commit/909235ce713beaafec0dc0560ae21d47fca3df2e))
+* **scripts:** measure the rule tokens a session actually receives ([406f986](https://github.com/event4u-app/agent-config/commit/406f98647fe3fca8a25cfa8f7a2e447f787bd5a6))
+* **install:** refuse to create a silently doubled rule corpus ([9f2608f](https://github.com/event4u-app/agent-config/commit/9f2608f8da62ccf4ba2873845e4117b61cb91280))
+* **rules:** detect when the rule corpus is delivered twice ([d9b6618](https://github.com/event4u-app/agent-config/commit/d9b6618c96f1cc0a328ac5e677ef16eb340b0c84))
+* **scripts:** SK-2 loaded-but-violated, and the 3-of-110 coverage that is the finding ([2837fb7](https://github.com/event4u-app/agent-config/commit/2837fb7c1f44b303f97a6eb61c497679f36020ae))
+* **conformance:** delivered rule payload by carrier, and the forward rate series ([78c19fd](https://github.com/event4u-app/agent-config/commit/78c19fdb1af6c02e81802da33f2e593e2599b9e1))
+* **scripts:** name the rules the two carriers deliver differently ([cc6c8fb](https://github.com/event4u-app/agent-config/commit/cc6c8fbd307e4dc65ee4716208cd50084b32cf36))
+* **wiring:** bind the self-repair concern and register its two CLI verbs ([a619cfc](https://github.com/event4u-app/agent-config/commit/a619cfc982965fb77a5c02f8480108be80661c92))
+* **rules:** the self-repair loop as an always-loaded obligation ([cb8d560](https://github.com/event4u-app/agent-config/commit/cb8d56076ac09b351a565216b98a68789acd5e60))
+* **self-repair:** detect agent defects and queue them as fixable records ([76b95ec](https://github.com/event4u-app/agent-config/commit/76b95ec7a524d482f333b701015f0a490cc4907d))
+* **gate:** fail when no always-loaded rule carries the council user-global fact ([a56f28b](https://github.com/event4u-app/agent-config/commit/a56f28bf436c24b8f803711fa546ba713412c5c3))
+* **rules:** carry the council user-global fact on the always-loaded surface ([36a0e4c](https://github.com/event4u-app/agent-config/commit/36a0e4cc6af6e83a47d120718a0fed7b5abb13cb))
+* **gates:** refuse a push from a branch behind its base, asked of the remote ([bbdac53](https://github.com/event4u-app/agent-config/commit/bbdac539f5f3f2c8e86113f2a6a3a184a253a239))
+* **report:** skill-activation census — the unmeasurable half, measured ([5719fd0](https://github.com/event4u-app/agent-config/commit/5719fd09e723bc7988fc0e90719c46d8a5f222f1))
+
+### Bug Fixes
+
+* **routing-doctor:** report whether the platform was observed or assumed ([2c176b2](https://github.com/event4u-app/agent-config/commit/2c176b212021bc05421233cb724677d4a1e44697))
+* **routing-doctor:** resolve host capabilities through the committed registry ([9875177](https://github.com/event4u-app/agent-config/commit/9875177b73b65810eaae9e2c1a8f2c66c8648da3))
+* **hooks:** harden transcript read, full session key, mutation-measure flag ([c908bbf](https://github.com/event4u-app/agent-config/commit/c908bbf41c944a9564dfd0efc9198472693a7f36))
+* **ci:** ADR frontmatter and three consumer paths the reference gate read as repo paths ([9cd21cb](https://github.com/event4u-app/agent-config/commit/9cd21cb4182c205205b49f352c0a1745e11ff33e))
+* **build:** rebuild the install bundle for the settings-cascade change ([dbcb658](https://github.com/event4u-app/agent-config/commit/dbcb658c51a31b7af028f0d745db4d23b3b5bf35))
+* **settings:** four adjacent path defects that made the intuitive file wrong ([ae6f30e](https://github.com/event4u-app/agent-config/commit/ae6f30ee29c3e79bff20501adbfd394489de53df))
+* **build:** rebuild the committed install bundle for the install.ts change ([0d362ce](https://github.com/event4u-app/agent-config/commit/0d362ce2242debe7fffc798e457fcad02a0e6426))
+* **roadmap:** conform the Risk Register to the R1 gate grammar ([8a4f388](https://github.com/event4u-app/agent-config/commit/8a4f388c67d5351bbea7c76faf631dbd40a5aa29))
+* **roadmap:** inline the council provenance instead of linking a path that rots ([5268154](https://github.com/event4u-app/agent-config/commit/5268154d686717d7ff64deb059c78779607c27b6))
+* **skills:** lead nine descriptions with what they do, not with the guard ([bee0a72](https://github.com/event4u-app/agent-config/commit/bee0a72f90c97c67b57a949ac3c0d85756ad4db8))
+* **scripts:** repair the round-2 review findings, incl. a second inverted polarity ([6ab06f7](https://github.com/event4u-app/agent-config/commit/6ab06f759c02774f02f37dd5b85aaf6009da44d4))
+* **scripts:** repair all 14 R2 completion-review findings ([0ee1275](https://github.com/event4u-app/agent-config/commit/0ee1275af82ae1dfbe1f0e6eaa48337e71905aa1))
+* **rules:** condense both new rules and re-anchor the token baseline ([103a22b](https://github.com/event4u-app/agent-config/commit/103a22b10c8830e87bf28ab0dddebf02d6354f85))
+* **tests:** name the retired container by role, not by its dead literal path ([d7147ce](https://github.com/event4u-app/agent-config/commit/d7147ce2f4940c7095c94c91e731243a6c0ee495))
+* **cli:** list council:status in usage(), the trunk was red without it ([1ca2ad0](https://github.com/event4u-app/agent-config/commit/1ca2ad00648533595d1d48794fd551c6e4e437d6))
+* **tests:** two suites left directories in the tracked tree, and a third gate read them ([df70f14](https://github.com/event4u-app/agent-config/commit/df70f1436a325d0da2167f86ea464ee4ea074556))
+* **council:** the refusal messages named the wrong config file ([62c6872](https://github.com/event4u-app/agent-config/commit/62c6872fe4647bc057835466414268cbf6da6971))
+* **council:** stop the agent inferring council availability from a project file ([45f46b5](https://github.com/event4u-app/agent-config/commit/45f46b521ec4cb16a6d3d22c8a0db3009a68ea84))
+* **conformance:** one trigger definition, and the count it was hiding ([8e131b4](https://github.com/event4u-app/agent-config/commit/8e131b41371a25255193702a23fd5820490db415))
+* **hooks:** block what bash runs, not what the splitter finds readable ([bbc9b11](https://github.com/event4u-app/agent-config/commit/bbc9b11a949e2b6aad074fa11723d75609423b23))
+
+### Documentation
+
+* **review:** re-bind the R2 findings scope after the main merge ([8c85ea0](https://github.com/event4u-app/agent-config/commit/8c85ea05c707c0a379d3f8caf7c8c53d09df05fe))
+* **review:** re-bind the R2 findings after the fix pass ([6728b67](https://github.com/event4u-app/agent-config/commit/6728b679853a9c4aea691d8348d060a4c892469d))
+* **contexts:** carry the three open orchestrator-carrier decisions forward ([3c17c11](https://github.com/event4u-app/agent-config/commit/3c17c11f7246b0f2eb95e3e5904e9b43c0270b07))
+* **review:** R2 completion-review findings for the closeout branch ([8217034](https://github.com/event4u-app/agent-config/commit/82170344f6fef8457c22ce125aa5adf51801a9fb))
+* **roadmap:** close orchestrator-discipline-carriers on measured evidence ([e01b6f2](https://github.com/event4u-app/agent-config/commit/e01b6f284affa9bab5ec323e1c9c415962366fb7))
+* **roadmap:** post-merge council pass, fd47df62 disposition, calibration biases ([ed8710d](https://github.com/event4u-app/agent-config/commit/ed8710d47bab07b4e428eac8f18b5560315d204e))
+* **hooks:** correct stale cowork binding claim in delegation-nudge header ([d2f6e99](https://github.com/event4u-app/agent-config/commit/d2f6e99bf1a0ac11d0365f7854cab9177ff6692f))
+* **roadmap:** orchestrator-discipline-carriers - measured defect, council pass, honest exits ([9a1798c](https://github.com/event4u-app/agent-config/commit/9a1798c6692f4c99c8cfcd418dbd2a9b1178b9cc))
+* state the delegation and end-review obligations where sessions read ([63825ba](https://github.com/event4u-app/agent-config/commit/63825ba757524bbded04cf58e787585b4e3699e9))
+* **rules:** make the capability answers reachable without knowing they exist ([3d684ef](https://github.com/event4u-app/agent-config/commit/3d684ef1403541fb707ec2a47026320dc734ae82))
+* **roadmap:** the delivery-integrity roadmap, its council pass, and where it halts ([cd33314](https://github.com/event4u-app/agent-config/commit/cd333144c3a6636dd4209aa3c24e22b12484de77))
+* **evidence:** three measurements behind the delivery findings ([cdf5b3f](https://github.com/event4u-app/agent-config/commit/cdf5b3f45165d374148ff87a3ba3240216c0d167))
+* **contracts:** the router is compile-time, and no host reads it at runtime ([b1fdc72](https://github.com/event4u-app/agent-config/commit/b1fdc72a152d9d8250e713d8b5b8b482e3bd1acf))
+* **roadmaps:** record what the two review rounds cost and the contract step I got wrong ([1e51900](https://github.com/event4u-app/agent-config/commit/1e51900fb143eb939bd8917d982ce76ff9fe6252))
+* **reviews:** commit the binding completion-review artefact, re-bound to the shipping scope ([82e5909](https://github.com/event4u-app/agent-config/commit/82e5909e6ea5289b5f856f6343d38408e653b84b))
+* **roadmaps:** close round 6 phases 3-4, and record the premises that came out false ([dc9b6b0](https://github.com/event4u-app/agent-config/commit/dc9b6b0a68ae3df99b1eee37d65bfc54edfd2d18))
+* **gates:** the unregistered-emitter backstop covers one of the two emit shapes ([a032f0c](https://github.com/event4u-app/agent-config/commit/a032f0ccc2aceabf15ea92e1fcc86aa439d76e5f))
+* **memory:** say which repo the intake sharing-boundary line describes ([466bdfc](https://github.com/event4u-app/agent-config/commit/466bdfcd050e58c47bef38a29fe7f24be59ffb51))
+* **roadmap:** twelve places the agent must guess whether a capability exists ([9453c16](https://github.com/event4u-app/agent-config/commit/9453c162fd78f31f257eaea4dd5db68ff4513056))
+* **roadmap:** the census, round 5 accounting, and a criterion that contradicted its own cancelled step ([3bac223](https://github.com/event4u-app/agent-config/commit/3bac22325f16287511c0f8dc3345a798cb0d47f6))
+* **archive:** file superseded substrate-adoption roadmap ([f435453](https://github.com/event4u-app/agent-config/commit/f435453d3faa882a657b21475f467b13b332831e))
+* **roadmap:** record the third #1208 defect, found by PR #1211 not by the review ([25d2d12](https://github.com/event4u-app/agent-config/commit/25d2d12e6f1c7ea56e7e99ba3fffd294638c3be5))
+* **roadmap:** fold the challenge pass and four council verdicts into round 6 ([01f3286](https://github.com/event4u-app/agent-config/commit/01f3286d91ee34d155a175ce687679181602f838))
+
+### Refactoring
+
+* **scripts:** one definition of the cross-carrier rule comparison ([0a22a90](https://github.com/event4u-app/agent-config/commit/0a22a901fc95ed13e28afc44ce9f84fba9c7c5e2))
+
+### Chores
+
+* **tests:** drop dead subprocess scaffolding the changed-files lint surfaced ([2f786b9](https://github.com/event4u-app/agent-config/commit/2f786b91c31724561761a9489d118c3ccb50c7a6))
+* **index:** regenerate index and catalog for the nine rewritten descriptions ([593330f](https://github.com/event4u-app/agent-config/commit/593330ff34e60711b40562b38e8eb880b45cc6c8))
+* **tasks:** register the two new advisory reports as named tasks ([033732c](https://github.com/event4u-app/agent-config/commit/033732c56499f081ae614eed37a3fe43657bc01f))
+* **generated:** reproject the council-availability rule after the probe rewrite ([9bac533](https://github.com/event4u-app/agent-config/commit/9bac533be54adad9f1d5bbe4b3965cbcf3c010eb))
+* **generated:** counts, index, catalog, router, proof for the self-repair rule ([83e81ae](https://github.com/event4u-app/agent-config/commit/83e81ae48dc463d17f82edd89edd821f8b7fdb35))
+* **generated:** router_rules count 108 -> 109 for the new routed rule ([bf00135](https://github.com/event4u-app/agent-config/commit/bf00135202a3ac84814a0324947dbecc57172bfd))
+* **generated:** regenerate index, catalog, and router for the new rule ([188c434](https://github.com/event4u-app/agent-config/commit/188c4346428c7754b434bc86c4c3dfa8c8b203ee))
+* **budgets:** record the 88 to 89 CLI verb move for council:status ([fa7404b](https://github.com/event4u-app/agent-config/commit/fa7404bf9483d241cd5d245cbc872cfd5406d851))
+
+Tests: 12141 (+391 since 9.27.0)
+
 ## [9.27.0](https://github.com/event4u-app/agent-config/compare/9.26.0...9.27.0) (2026-08-07)
 
 ### Release highlights
