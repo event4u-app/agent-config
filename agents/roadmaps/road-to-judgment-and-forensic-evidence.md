@@ -121,51 +121,93 @@ machine-derived evidence — or record the honest null for each independently.
 
 ## Phase 2 — Council critic protocol A/B against the measured defect
 
-- [ ] 2.1 Implement the protocol as an alternative critic prompt behind
+- [x] 2.1 Implement the protocol as an alternative critic prompt behind
       `council.critic_protocol: legacy | load_bearing` (default `legacy`). The
       protocol must (a) name the single load-bearing assumption, (b) state the
       cost of what is being avoided, (c) state what someone who already
       succeeded at a comparable thing would do differently.
-- [ ] 2.2 The discriminating property is constraint (a): a correct plan HAS a
+      <!-- done 2026-08-09: top-level `critic_protocol` key in .ai-council.yml
+      (config.ts + validation + tests + contract section); prompt in
+      bench_critic_protocol.ts carries (a),(b),(c) plus the council-added
+      failure-scenario forcing function (design pass anthropic+openai
+      2026-08-09: assumption tied to named file+function, "holds" as a
+      completed review, one-shot kept). -->
+- [x] 2.2 The discriminating property is constraint (a): a correct plan HAS a
       load-bearing assumption that survives inspection, and the protocol must
       permit saying so. A critic that cannot return "this holds" cannot have a
       false-positive rate below 100 % by construction — that is the mechanism
       hypothesis, stated so it can be wrong.
-- [ ] 2.3 Pre-register in `docs/CLAIMS.md` BEFORE any run: FP < 50 % on the
+      <!-- done 2026-08-09: stated verbatim in the CLAIMS registration; the run
+      graded it — holds on the strong model (FP 100%→33%), falsified in its
+      general form (gpt-4o collapsed to blanket approval). -->
+- [x] 2.3 Pre-register in `docs/CLAIMS.md` BEFORE any run: FP < 50 % on the
       frozen controversial-but-correct control set AND ≥ 80 % true-positive
       retention on known-flawed controls. Both thresholds, or the arm does not
       promote.
-- [ ] 2.4 Run both arms on the frozen set. Publish both directions.
+      <!-- done 2026-08-09: claim critic-protocol-load-bearing-ab, committed
+      with the frozen harness BEFORE the run (own commit). -->
+- [x] 2.4 Run both arms on the frozen set. Publish both directions.
       <!-- verify: ./scripts-run src/scripts/check_claims --quiet -->
-- [ ] 2.5 The prompt author is not the prompt's judge: the control set is
+      <!-- done 2026-08-09: NO PROMOTION — anthropic passes both thresholds
+      (FP 1/3, retention 0.80), openai fails retention (0/12, blanket
+      approval). Both directions published in the claim resolution + runs/
+      critic-protocol-ab-{report.json,trace.txt}. check_claims green. -->
+- [x] 2.5 The prompt author is not the prompt's judge: the control set is
       frozen, the thresholds are registered first, and neither is adjusted after
       the numbers land.
+      <!-- done 2026-08-09: registration commit precedes the run in this
+      branch's history; corpus untouched; the incoherent-category scoring rule
+      was fixed in the registration text, not after the numbers. -->
 
 **Exit:** both arms scored on the same frozen set against thresholds fixed before the first run.
 **Rollback:** `legacy` is the default throughout; the alternative arm is a config value away from gone.
 
 ## Phase 3 — Forensic analyzers as a read-only pack
 
-- [ ] 3.1 Implement two deterministic analyzers in a default-off pack:
+- [x] 3.1 Implement two deterministic analyzers in a default-off pack:
       hotspot risk (normalised change frequency × normalised complexity) and
       change coupling (`co_changes(A,B) / min(changes(A), changes(B))`). Inputs
       are `git log` and file metrics — no external dependency, no network.
-- [ ] 3.2 Emit machine-readable JSON with a scan count through the shared
+      <!-- done 2026-08-09: src/scripts/forensics_report.ts; pack `forensics`
+      (default_install: false, surface_tier: lab) with skill forensics-report;
+      ADR-013 vocabulary amended in the same PR. Complexity proxy documented:
+      LOC + indentation units. -->
+- [x] 3.2 Emit machine-readable JSON with a scan count through the shared
       scan-scope helper, so an analyzer that reads nothing fails loudly instead
       of publishing an empty finding set.
       <!-- verify: ./scripts-run src/scripts/check_gate_coverage --quiet -->
-- [ ] 3.3 Byte-stable output on a frozen fixture repository — the same
+      <!-- done 2026-08-09: reportScanned/assertScanned — zero analyzed commits
+      throws DeadScopeError (tested); check_gate_coverage green, and the
+      emitter-registration test (44/44) confirms no unregistered emission. -->
+- [x] 3.3 Byte-stable output on a frozen fixture repository — the same
       determinism bar the condensation pipeline holds.
-- [ ] 3.4 Wire the output as **advisory** to the release-review surface that
+      <!-- done 2026-08-09: frozen fixture log + metrics under
+      internal/bench/forensics/; test asserts byte-identity across runs AND
+      against the committed expected-report.json (11/11 green). -->
+- [x] 3.4 Wire the output as **advisory** to the release-review surface that
       exists. Name that surface in the step when it is written; do not plan
       against a remembered one.
-- [ ] 3.5 Pre-register the value question: across 3 releases, do the
+      <!-- done 2026-08-09: the surface that exists is the release findings
+      pipeline — review-findings.schema.json-shaped items via --findings-out,
+      ingested by check_finding_dispositions --ingest into
+      agents/evidence/release-findings/<version>.json (the ledger the
+      release-PR "Blocking review findings dispositioned" job reads). Emitted
+      kinds are correctness/low|medium — non-blocking in isBlocking by
+      construction. Documented in the forensics-report skill. -->
+- [x] 3.5 Pre-register the value question: across 3 releases, do the
       machine-derived findings surface anything the manual review missed, or
       contradict it? ≥ 2 confirmed unique findings promotes the pack to a
       standing input; zero closes it as an on-demand tool.
-- [ ] 3.6 Cross-module coupling above a stated threshold between areas the
+      <!-- done 2026-08-09: claim forensics-pack-value in docs/CLAIMS.md,
+      registered before any release is scored; 1-finding tie-break rule
+      stated at registration. -->
+- [x] 3.6 Cross-module coupling above a stated threshold between areas the
       router treats as independent is a contradiction between intended and
       actual boundaries — record it as a finding class, not as a failure.
+      <!-- done 2026-08-09: boundary_contradictions[] in the report (threshold
+      0.5, min support 3, modules = top-level path segments), emitted as the
+      finding class forensics-boundary-* with severity medium — advisory,
+      never a failure. Tested on the fixture. -->
 
 **Exit:** both analyzers deterministic on the fixture; three releases scored against the pre-registered question.
 **Rollback:** the pack is default-off and read-only; removing it changes no shipped behaviour.
