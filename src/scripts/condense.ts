@@ -1174,11 +1174,27 @@ export function generate_rule_symlinks(): number {
         const skip = new Set(rules.filter((r) => !emit_here.has(r)));
         skipped_per_tool[tool_dir] = skip;
         _mkdirp(target_dir);
-        // Clean stale symlinks — a rule that became de-duplicable this run is
+        // Clean stale entries — a rule that became de-duplicable this run is
         // stale at project scope too, so it has to go with the rest.
+        //
+        // Symlink-only was correct while every tool dir was a symlink tree. Two
+        // paths now write REAL files (`thin` mode, and the Claude emitter
+        // below), and a stale real file is invisible to an `_isSymlink` test —
+        // so a renamed or newly de-duplicable rule would leave its body behind,
+        // loaded unconditionally, forever.
+        //
+        // Ownership test for a real file: its basename is an agent-config rule
+        // in the projection source. A consumer's own hand-written rule is only
+        // touched if it collides with one of ours by name, in which case it was
+        // already being overwritten.
         for (const item of _iterdirSorted(target_dir)) {
             const name = path.basename(item);
-            if (_isSymlink(item) && (!rules.includes(name) || skip.has(name)) && name !== 'README.md') {
+            if (name === 'README.md') {
+                continue;
+            }
+            const is_ours =
+                _isSymlink(item) || _isFile(path.join(MODULE_STATE.RULES_SOURCE, name));
+            if (is_ours && (!rules.includes(name) || skip.has(name))) {
                 fs.unlinkSync(item);
             }
         }
@@ -1192,6 +1208,11 @@ export function generate_rule_symlinks(): number {
             }
             if (thin_files !== null) {
                 _writeText(link, thin_files[rule] as string);
+            } else if (tool_dir === '.claude/rules') {
+                // Host-native activation (P3.1): emit the rule with the host's
+                // own `paths:` key instead of symlinking agent-config
+                // frontmatter this host does not read.
+                _emit_claude_rule(path.join(MODULE_STATE.RULES_SOURCE, rule), link);
             } else {
                 fs.symlinkSync(path.join(rel_prefix, rule), link);
             }
@@ -1351,6 +1372,145 @@ export function _emit_windsurf_rule(source: string, target: string): void {
         '',
         _pyRstrip(body) + '\n',
     ];
+    _mkdirp(path.dirname(target));
+    _writeText(target, lines.join('\n'));
+}
+
+/**
+ * A brace group the host expands, versus an agent-config placeholder that only
+ * LOOKS like one.
+ *
+ * `path_prefix: "{module_root}/"` in `roadmap-ci-steps-policy` is resolved by
+ * this suite from `modules.root_paths`. Emitted verbatim into a host `paths:`
+ * list it is a brace group with no comma, which the host expands to the literal
+ * string `{module_root}` — a pattern that matches no file. The rule would then
+ * reach the model **never** instead of on-demand, and nothing would say so: the
+ * probed contract records this exact degradation as silent
+ * (`claude-code-rules-dir-contract.md` § constraints).
+ *
+ * Dropping the pattern is fail-safe in the one direction that matters. A rule
+ * left with no pattern at all carries no `paths:` key and loads
+ * unconditionally — the status quo, not a regression. A rule carrying a
+ * no-op pattern is invisible.
+ *
+ * The discriminator is the comma, not a placeholder allowlist: `{ts,tsx}` is a
+ * real alternation, `{module_root}` cannot be one.
+ */
+export function _is_unresolved_placeholder(pattern: string): boolean {
+    for (const m of pattern.matchAll(/\{([^}]*)\}/g)) {
+        if (!(m[1] as string).includes(',')) {
+            return true;
+        }
+    }
+    return false;
+}
+
+/**
+ * `[` opens a bracket expression for the host. An unparseable one makes that
+ * pattern match nothing while the rule's other patterns keep working — so a
+ * literal `[` in a trigger is escaped rather than trusted.
+ */
+export function _escape_claude_bracket(pattern: string): string {
+    return pattern.replace(/\[/g, '\\[');
+}
+
+/**
+ * Expanded-pattern cost of one glob: the product of its brace alternations.
+ * The host budgets a rule's whole `paths:` list at 1,000 expanded patterns and
+ * 4 MiB, and a list over budget is used UNEXPANDED — braces then match
+ * literally, i.e. nothing. Counting keeps the emitter under the cliff instead
+ * of discovering it as a silent no-op.
+ */
+export function _expanded_pattern_count(pattern: string): number {
+    let n = 1;
+    for (const m of pattern.matchAll(/\{([^}]*)\}/g)) {
+        n *= (m[1] as string).split(',').length;
+    }
+    return n;
+}
+
+/** Host-documented budget for one rule's whole `paths:` list. */
+export const CLAUDE_PATHS_PATTERN_BUDGET = 1000;
+
+export interface ClaudePathsPlan {
+    /** Patterns to emit under `paths:`, in declaration order. */
+    globs: string[];
+    /** Patterns deliberately not emitted, with the reason a reader can act on. */
+    dropped: { pattern: string; reason: 'unresolved-placeholder' | 'over-budget' }[];
+}
+
+/**
+ * Derive the host's `paths:` list for one rule, with every drop recorded.
+ *
+ * Kernel / always-apply rules get an EMPTY list on purpose: absent `paths:` is
+ * how this host says "load unconditionally", which is exactly what an Iron-Law
+ * rule needs. Scoping one would be a correctness regression dressed as a byte
+ * saving — and the same contract notes path-scoped rules are not re-injected
+ * after `/compact`, so an obligation that must survive compaction cannot be
+ * path-scoped at all.
+ */
+export function _claude_paths_plan(meta: Record<string, unknown>): ClaudePathsPlan {
+    const always_apply = Boolean(meta['alwaysApply'] || meta['type'] === 'always');
+    if (always_apply) {
+        return { globs: [], dropped: [] };
+    }
+    const globs: string[] = [];
+    const dropped: ClaudePathsPlan['dropped'] = [];
+    let spent = 0;
+    for (const raw of derive_trigger_globs(meta)) {
+        if (_is_unresolved_placeholder(raw)) {
+            dropped.push({ pattern: raw, reason: 'unresolved-placeholder' });
+            continue;
+        }
+        const cost = _expanded_pattern_count(raw);
+        if (spent + cost > CLAUDE_PATHS_PATTERN_BUDGET) {
+            dropped.push({ pattern: raw, reason: 'over-budget' });
+            continue;
+        }
+        spent += cost;
+        globs.push(_escape_claude_bracket(raw));
+    }
+    return { globs, dropped };
+}
+
+/**
+ * Emit a Claude Code rule carrying the host's OWN activation key.
+ *
+ * Sibling of {@link _emit_cursor_mdc} and {@link _emit_windsurf_rule}, and the
+ * third member of a set that had two. `.claude/rules` was a symlink projection
+ * of `dist/agent-src/rules`, which carried agent-config's own frontmatter
+ * vocabulary (`type`, `tier`, `triggers`, `alwaysApply`, …) into a host that
+ * reads **none** of it — so every rule loaded unconditionally and the corpus
+ * arrived in full every session.
+ *
+ * Emitted frontmatter is therefore `paths:` and nothing else: the one key the
+ * probed contract records as read by this host. A rule with no path-shaped
+ * trigger gets no frontmatter at all rather than a block the host ignores —
+ * keys that do nothing are bytes in every session's standing context.
+ *
+ * The body is copied byte-for-byte from the projection source (ADR-201's
+ * copy-plus-rewrite discipline); only the frontmatter is host-shaped.
+ */
+export function _emit_claude_rule(source: string, target: string): void {
+    const [meta, body] = _parse_frontmatter(_readText(source));
+    const plan = _claude_paths_plan(meta);
+    for (const d of plan.dropped) {
+        _print(
+            `  ⚠️  ${path.basename(target)}: dropped \`paths:\` pattern ${JSON.stringify(d.pattern)} (${d.reason}) — ` +
+                (plan.globs.length > 0
+                    ? 'the rule keeps its other patterns'
+                    : 'the rule now loads unconditionally'),
+        );
+    }
+    const lines: string[] = [];
+    if (plan.globs.length > 0) {
+        lines.push('---', 'paths:');
+        for (const g of plan.globs) {
+            lines.push(`  - ${_yaml_scalar(g)}`);
+        }
+        lines.push('---', '');
+    }
+    lines.push(_pyRstrip(body) + '\n');
     _mkdirp(path.dirname(target));
     _writeText(target, lines.join('\n'));
 }

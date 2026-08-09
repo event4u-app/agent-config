@@ -31,6 +31,13 @@ tasks:
       # already been repaired in-place and the check is a fixpoint. 0.7s measured.
       - ./scripts-run src/scripts/check_rule_projection_integrity --quiet
       - ./scripts-run src/scripts/check_bridge_derivation
+      # Detector corpus: every self-repair detector carries all three fixture
+      # classes AND every fixture behaves as its class says. Cheap (pure
+      # functions over a 22-entry YAML corpus, no I/O beyond the one read).
+      - ./scripts-run src/scripts/check_detector_corpus
+      # No shipped artefact may DIRECT a silent re-run — the mechanism was
+      # benchmarked and falsified (recursive-verification, TERMINAL 2026-07-28).
+      - ./scripts-run src/scripts/lint_never_silent
       - ./scripts-run src/scripts/check_host_loadability --root .
       - ./scripts-run src/scripts/check_bundle_path_leakage
       - ./scripts-run src/scripts/check_installer_import_purity
@@ -1408,6 +1415,18 @@ tasks:
       does NOT regenerate, which is what lets it see a stale tree at all.
       Run it BEFORE anything that regenerates.
     cmd: ./scripts-run src/scripts/check_rule_projection_integrity {{.CLI_ARGS}}
+
+  check-detector-corpus:
+    silent: true
+    desc: |
+      Every self-repair detector carries all three fixture classes — `fire`,
+      `near-miss-fire`, `must-not-fire` — and every fixture behaves as its class
+      says (road-to-rule-delivery-integrity P4.3). Precision and recall fail in
+      opposite directions, so a corpus with only the easy half hides the other:
+      before this gate, `detectUserReport` fired on "das ist fine, du hast
+      nichts falsch gemacht" — an absolution scored as a complaint. A detector
+      missing any class is a failure, not a warning.
+    cmd: ./scripts-run src/scripts/check_detector_corpus {{.CLI_ARGS}}
 
   smoke-host-loadability:
     silent: true

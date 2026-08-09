@@ -157,6 +157,17 @@ const COMPLAINT_EXONERATIONS: readonly RegExp[] = [
     /\byou didn'?t (need|have) to\b/i,
     /\bit'?s fine\b/i,
     /\b(kein problem|passt schon|alles gut)\b/i,
+    // Explicit absolution INSIDE the complaint span, which is why it has to be
+    // its own entry rather than relying on a neighbouring pleasantry: in
+    // "das ist fine, du hast nichts falsch gemacht" the matched span is
+    // `du hast nichts falsch`, and the `it's fine` above sits outside the
+    // ± EXONERATION_MARGIN window — correctly, since that margin exists to stop
+    // a pleasantry in one clause muting a complaint in another. `nichts falsch`
+    // is not a neighbouring pleasantry: it is the negation of the complaint
+    // itself. Caught by the detector-corpus gate, which flagged this exact
+    // string as a must-not-fire fixture that fired (PR #1231).
+    /\bnichts falsch\b/i,
+    /\bkein fehler\b/i,
 ];
 
 /** How far (chars) an exoneration may sit from the complaint span it excuses. */
