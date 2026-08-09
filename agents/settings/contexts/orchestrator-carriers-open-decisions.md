@@ -31,6 +31,18 @@ first:
   high-risk diff lines, differentiated from doc/test-only churn — and whether
   the block lands in the `end-review-nudge` concern or in the existing
   `team-review-gate` managed tier.
+- **Two biases the calibration MUST account for** (council 2026-08-09, landed
+  in #1224 after this note's first draft). Both push the measured
+  distribution DOWNWARD, so calibrating naively on it sets the block
+  threshold too low:
+  - the once-per-session dedupe undercounts multi-phase sessions — only the
+    first threshold crossing is ever recorded, so a long session that
+    mutates repeatedly contributes one event, not many. Compensate with a
+    conservative, higher threshold rather than by removing the dedupe.
+  - `mutation_measure: capped_approximation` lines are floor values, not
+    measurements — past the untracked-file cap the hook reports a number
+    guaranteed to clear the threshold instead of counting. Calibrate on
+    `exact` lines only.
 - **The delivery question underneath it.** Claude Code documents
   `additionalContext` for `UserPromptSubmit` / `SessionStart` / `PostToolUse`,
   but **not** for `Stop`. So the advisory line's model-facing delivery on the

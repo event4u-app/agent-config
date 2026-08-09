@@ -92,6 +92,35 @@
  *     silently missed no-review session is the defect this concern exists
  *     to catch).
  *
+ * ### Transcript-path hardening (gate finding fd47df62)
+ *
+ * `payload.transcript_path` is HOST-SUPPLIED, untrusted input, and this
+ * concern would otherwise `fs.readFileSync` it unconditionally. Before any
+ * read, `isSafeTranscriptPath` requires ALL of: (a) the path ends in
+ * `.jsonl` — the one extension a real transcript ever carries; (b) the path
+ * RESOLVES (`fs.realpathSync`, following any symlink) to somewhere under
+ * `os.homedir()` — real transcripts live under `~/.claude/projects/**`
+ * (`cache_realization_report.ts`, `mine_session.ts`, `orchestration_backfill.ts`
+ * all hard-code that root), never under `workspace_root`; a `workspace_root`
+ * prefix check would reject EVERY legitimate transcript and make this
+ * concern fire on every qualifying Stop instead of only when a reviewer
+ * genuinely didn't run; (c) the resolved file's size
+ * (`fs.statSync`) is at or under `TRANSCRIPT_SCAN_MAX_BYTES` (50 MB) — past
+ * that the scan is skipped rather than reading an unbounded file into
+ * memory. ANY validation failure resolves the SAME way an unreadable
+ * transcript already resolved pre-hardening: the scan is skipped and
+ * `reviewerRan` stays `false` — i.e. it favours firing, exactly the recall
+ * bias stated above for the missing-`transcript_path` case, never a crash
+ * and never a silent "reviewer ran" false positive.
+ *
+ * A TOCTOU/symlink race between the `realpathSync` check and the later
+ * `readFileSync` call exists in principle, but opens no new channel: the
+ * once-per-session marker derived from this same path
+ * (`deriveSessionKey`) hashes the path STRING, never reads or emits file
+ * content, so the worst case a race could still produce is the same 1-bit
+ * fire/no-fire outcome this concern already exposes by design — never a
+ * content leak.
+ *
  * ## Once-per-session fire gate (F2) — and the cost ordering that protects it (F12)
  *
  * Every `stop` event re-evaluates the SAME session's diff and transcript, so
@@ -156,15 +185,18 @@
  * actually deliver (`language_mirror_hook.ts`), not the one that shares this
  * concern's `stop` slot but does not deliver.
  *
- * PLATFORM SCOPE — bound only on `claude` and `cowork` in the manifest.
+ * PLATFORM SCOPE — bound only on `claude` in the manifest.
  * `host_semantics.VERIFIED_PLATFORMS` covers only `claude` (the "never
- * blocks" proof above). `cowork` is included because
+ * blocks" proof above). `cowork` is DELIBERATELY NOT bound (F10, review) —
  * `scripts/hooks/cowork-dispatcher.sh` discards the dispatcher's exit code
- * and stdout unconditionally (`>/dev/null 2>&1 || true; exit 0`), so no exit
- * code choice there can ever reach the host as a block, independent of
- * `host_semantics` — and the same trampoline's own header comment states
- * Cowork's `Stop` event carries `transcript_path`, matching what this
- * concern reads. Cursor / Cline / Windsurf / Gemini are deliberately NOT
+ * and stdout unconditionally (`>/dev/null 2>&1 || true; exit 0`), and this
+ * concern's entire delivery depends on `additional_context` reaching the
+ * model via stdout at the verified exit-2 warn path — a delivery that
+ * trampoline makes structurally impossible. The payload shape was never the
+ * blocker here: that same trampoline's own header comment states Cowork's
+ * `Stop` event does carry `transcript_path`, matching what this concern
+ * reads — the exit/stdout discard is what makes binding it dead weight, not
+ * a missing field. Cursor / Cline / Windsurf / Gemini are deliberately NOT
  * added: none was inspected for the same discard property, their `stop`
  * payload shape for `transcript_path` is undocumented here, and extending an
  * exit-2 warn onto an unverified propagation path is exactly the
@@ -172,17 +204,18 @@
  *
  * CONTRACT: never blocks THE ACTUAL TURN. The DISPATCHER-INTERNAL exit is 2
  * on a fire (never 1/BLOCK, never >=3), `fail_closed: false`; the HOST-FACING
- * exit on `claude`/`cowork` is 0 either way, per the proof above. Doc-only
+ * exit on `claude` is 0 either way, per the proof above. Doc-only
  * diffs, a reviewer having run, or any unreadable/malformed input all
  * resolve to silence (dispatcher-internal exit 0), not a crash.
  */
 import { spawnSync } from 'node:child_process';
 import * as crypto from 'node:crypto';
 import * as fs from 'node:fs';
+import * as os from 'node:os';
 import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
-import { buildReviewSkippedLine } from '../_lib/review_skipped_record.js';
+import { buildReviewSkippedLine, type MutationMeasure } from '../_lib/review_skipped_record.js';
 import { unwrap, type JsonObject, type JsonValue } from './envelope.js';
 import { readHookStdin } from './hook_stdin.js';
 import { atomic_write_json, is_replay_mode } from './state_io.js';
@@ -198,11 +231,56 @@ export const MUTATION_LINE_THRESHOLD = 50;
  */
 export const UNTRACKED_FILE_CAP = 20;
 
+/**
+ * Transcript-scan size cap (gate finding fd47df62 — see the file header's
+ * "Transcript-path hardening" section). Past this many bytes,
+ * `isSafeTranscriptPath` refuses the path and the scan is skipped.
+ */
+export const TRANSCRIPT_SCAN_MAX_BYTES = 50 * 1024 * 1024; // 50 MB
+
+/**
+ * Validate a `transcript_path` BEFORE any `fs.readFileSync` of it (gate
+ * finding fd47df62). All three checks must pass:
+ *   (a) the path ends in `.jsonl`;
+ *   (b) it RESOLVES (`fs.realpathSync`, following any symlink) to a
+ *       location under `homeDir` (defaults to `os.homedir()` — injectable
+ *       for tests; production callers never override it — real transcripts
+ *       live under `~/.claude/projects/**`, never under `workspace_root`,
+ *       see the file header for why the prefix check is home, not
+ *       workspace);
+ *   (c) its resolved size is at or under `maxBytes` (defaults to
+ *       `TRANSCRIPT_SCAN_MAX_BYTES` — injectable for tests only).
+ *
+ * Never throws — a missing file, a broken symlink, or any `fs` error all
+ * resolve to `false` (refuse), matching this hook's fail-open-to-firing
+ * contract for every other unreadable-transcript case.
+ */
+export function isSafeTranscriptPath(
+    rawPath: string,
+    opts: { homeDir?: string; maxBytes?: number } = {},
+): boolean {
+    if (!rawPath || !/\.jsonl$/i.test(rawPath)) return false;
+    const homeDir = opts.homeDir ?? os.homedir();
+    const maxBytes = opts.maxBytes ?? TRANSCRIPT_SCAN_MAX_BYTES;
+    try {
+        const realHome = fs.realpathSync(homeDir);
+        const realPath = fs.realpathSync(rawPath);
+        const relative = path.relative(realHome, realPath);
+        if (relative === '' || relative.startsWith('..') || path.isAbsolute(relative)) {
+            return false;
+        }
+        const { size } = fs.statSync(realPath);
+        return size <= maxBytes;
+    } catch {
+        return false;
+    }
+}
+
 // Severity is taken from the EXIT CODE, not from the `decision` field in the
 // stdout payload — mirrors `language_mirror_hook.ts`. A warn verdict is
 // reported at exit 2 so `host_semantics.emitFor` reduces it to severity
 // `"warn"` and forwards `additional_context`; see the file header for why
-// this exit code never actually blocks the turn on `claude`/`cowork`.
+// this exit code never actually blocks the turn on `claude`.
 const EXIT_WARN = 2;
 
 /** One `git diff --numstat` row: added/deleted line counts + the path. */
@@ -308,6 +386,14 @@ export function untrackedFileLineCount(cwd: string, relPath: string): number {
     }
 }
 
+/** Result of {@link totalNonDocMutatedLinesWithMeasure}. */
+export interface MutationMeasurement {
+    lines: number;
+    /** Whether `lines` is exact, or a capped, guaranteed-over-threshold
+     * approximation (`UNTRACKED_FILE_CAP` path) — see that function. */
+    measure: MutationMeasure;
+}
+
 /**
  * Total non-doc mutated lines across BOTH tracked (`git diff --numstat
  * HEAD`) and untracked (`git ls-files --others --exclude-standard`) files —
@@ -316,19 +402,31 @@ export function untrackedFileLineCount(cwd: string, relPath: string): number {
  * function refuses to spawn one `git diff --no-index` subprocess per file
  * (an unbounded loop) and instead returns a value GUARANTEED to be over
  * `MUTATION_LINE_THRESHOLD` — "many new files this session" is itself
- * sufficient signal, no exact count needed.
+ * sufficient signal, no exact count needed. `measure` records WHICH of
+ * those two shapes the returned `lines` value is, so a consumer (the
+ * `review_skipped` telemetry line, via `main()`) never mixes exact and
+ * approximated counts in one unlabeled stream.
  */
-export function totalNonDocMutatedLines(cwd: string): number {
+export function totalNonDocMutatedLinesWithMeasure(cwd: string): MutationMeasurement {
     const trackedLines = nonDocMutatedLines(gitNumstatRows(cwd));
     const untracked = untrackedNonDocFiles(cwd);
     if (untracked.length > UNTRACKED_FILE_CAP) {
-        return MUTATION_LINE_THRESHOLD + 1 + trackedLines;
+        return { lines: MUTATION_LINE_THRESHOLD + 1 + trackedLines, measure: 'capped_approximation' };
     }
     const untrackedLines = untracked.reduce(
         (sum, relPath) => sum + untrackedFileLineCount(cwd, relPath),
         0,
     );
-    return trackedLines + untrackedLines;
+    return { lines: trackedLines + untrackedLines, measure: 'exact' };
+}
+
+/**
+ * Backward-compatible, lines-only view of
+ * {@link totalNonDocMutatedLinesWithMeasure} — kept for callers (and tests)
+ * that only need the count, not which measure produced it.
+ */
+export function totalNonDocMutatedLines(cwd: string): number {
+    return totalNonDocMutatedLinesWithMeasure(cwd).lines;
 }
 
 function isObject(v: unknown): v is JsonObject {
@@ -431,11 +529,16 @@ export function buildAdvisoryLine(diffLines: number): string {
  * does for its own per-call JSONL append (F5, review) — a fixture-replay run
  * must never write real telemetry, and this write had no such guard.
  */
-export function appendReviewSkippedTelemetry(workspaceRoot: string, diffLines: number): void {
+export function appendReviewSkippedTelemetry(
+    workspaceRoot: string,
+    diffLines: number,
+    mutationMeasure: MutationMeasure,
+): void {
     if (is_replay_mode()) return;
     const ts = new Date().toISOString();
     const { line, errors } = buildReviewSkippedLine({
         diff_lines: diffLines,
+        mutation_measure: mutationMeasure,
         ts,
         id: crypto.randomUUID(),
     });
@@ -466,13 +569,24 @@ function sessionStateFile(workspaceRoot: string, sessionKey: string): string {
  * back to `payload.transcript_path` for a legacy/raw-payload invocation
  * that carries no `session_id` at all. HASHED, never stored raw, so the
  * marker filename can never leak a real transcript path.
+ *
+ * FULL digest, not truncated (council finding, this task): a 64-bit
+ * truncation (16 hex chars) makes birthday collisions between unrelated
+ * sessions non-negligible at the population sizes this hook will
+ * accumulate over time — a collision silently merges two sessions' fire
+ * gates, undercounting `review_skipped` telemetry and biasing any future
+ * blocking-threshold calibration downward. The full 256-bit hex digest
+ * makes that collision probability negligible; the classification risk
+ * this key carries is a 1-bit fire/no-fire outcome (see the file header's
+ * "Transcript-path hardening" section), never file content, so there is no
+ * privacy cost to keeping the full digest.
  */
 export function deriveSessionKey(envelope: JsonObject, payload: JsonObject): string {
     const raw =
         str(envelope['session_id'] as JsonValue | undefined) ||
         str((payload['transcript_path'] ?? payload['transcriptPath']) as JsonValue | undefined);
     const material = raw || 'unknown-session';
-    return crypto.createHash('sha256').update(material).digest('hex').slice(0, 16);
+    return crypto.createHash('sha256').update(material).digest('hex');
 }
 
 /**
@@ -519,8 +633,11 @@ export function main(): number {
         String(envelope['workspace_root'] ?? '').trim() || process.cwd();
 
     let diffLines: number;
+    let mutationMeasure: MutationMeasure;
     try {
-        diffLines = totalNonDocMutatedLines(workspace_root);
+        const measured = totalNonDocMutatedLinesWithMeasure(workspace_root);
+        diffLines = measured.lines;
+        mutationMeasure = measured.measure;
     } catch {
         return 0; // fail-open — never block the agent loop
     }
@@ -542,7 +659,12 @@ export function main(): number {
         (payload['transcript_path'] ?? payload['transcriptPath']) as JsonValue | undefined,
     ).trim();
     let reviewerRan = false;
-    if (transcriptPath) {
+    // Gate finding fd47df62: validate BEFORE reading — see the file header's
+    // "Transcript-path hardening" section. A path that fails validation
+    // (wrong extension, resolves outside home, oversized) is treated exactly
+    // like an unreadable transcript below: the scan is skipped and
+    // `reviewerRan` stays `false`, resolving toward firing, not silence.
+    if (transcriptPath && isSafeTranscriptPath(transcriptPath)) {
         try {
             reviewerRan = scanTranscriptForReviewer(fs.readFileSync(transcriptPath, 'utf-8'));
         } catch {
@@ -561,7 +683,7 @@ export function main(): number {
     markFiredThisSession(workspace_root, sessionKey, new Date().toISOString());
 
     try {
-        appendReviewSkippedTelemetry(workspace_root, diffLines);
+        appendReviewSkippedTelemetry(workspace_root, diffLines, mutationMeasure);
     } catch {
         // never let a telemetry failure block or fail the turn
     }
