@@ -2,14 +2,14 @@
 
 > Auto-generated — do not edit. Regenerate with `task roadmap-progress` or by running the `update_roadmap_progress` script for your install; rewritten on every roadmap create / execute / completion change (timestamp lives in git history).
 >
-> 21 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **25** open blockers
+> 24 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **32** open blockers
 
 ## Overall
 
-**206 / 308 steps done · 67%**
+**206 / 408 steps done · 50%**
 
 ```text
-███████████████████████████░░░░░░░░░░░░░   67%
+████████████████████░░░░░░░░░░░░░░░░░░░░   50%
 ```
 
 ## Open roadmaps
@@ -34,9 +34,12 @@
 | 16 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 6 | 3 | 0 | 0 | [1](#blockers-road-to-subagent-value-realization-followup) | ███░░░░░░░ 33% |
 | 17 | [road-to-surface-consolidation.md](roadmaps/road-to-surface-consolidation.md) | 3 | 14 | 1 | 12 | 1 | 0 | [2](#blockers-road-to-surface-consolidation) | █████████░ 92% |
 | 18 | [road-to-tier-removal.md](roadmaps/road-to-tier-removal.md) | 4 | 8 | 2 | 6 | 0 | 0 | [1](#blockers-road-to-tier-removal) | ████████░░ 75% |
-| 19 | [road-to-ui-track-integrity-followup.md](roadmaps/road-to-ui-track-integrity-followup.md) | 1 | 10 | 10 | 0 | 0 | 0 | [2](#blockers-road-to-ui-track-integrity-followup) | ░░░░░░░░░░ 0% |
-| 20 | [road-to-worktree-hygiene.md](roadmaps/road-to-worktree-hygiene.md) | 1 | 9 | 2 | 7 | 0 | 0 | [1](#blockers-road-to-worktree-hygiene) | ████████░░ 78% |
-| 21 | [road-to-zero-ceremony-settings.md](roadmaps/road-to-zero-ceremony-settings.md) | 5 | 19 | 1 | 17 | 1 | 0 | 0 | █████████░ 94% |
+| 19 | [road-to-token-economy-cache.md](roadmaps/road-to-token-economy-cache.md) | 7 | 38 | 38 | 0 | 0 | 0 | [2](#blockers-road-to-token-economy-cache) | ░░░░░░░░░░ 0% |
+| 20 | [road-to-token-economy-dispatch.md](roadmaps/road-to-token-economy-dispatch.md) | 7 | 36 | 36 | 0 | 0 | 0 | [3](#blockers-road-to-token-economy-dispatch) | ░░░░░░░░░░ 0% |
+| 21 | [road-to-token-economy-recycling.md](roadmaps/road-to-token-economy-recycling.md) | 5 | 26 | 26 | 0 | 0 | 0 | [2](#blockers-road-to-token-economy-recycling) | ░░░░░░░░░░ 0% |
+| 22 | [road-to-ui-track-integrity-followup.md](roadmaps/road-to-ui-track-integrity-followup.md) | 1 | 10 | 10 | 0 | 0 | 0 | [2](#blockers-road-to-ui-track-integrity-followup) | ░░░░░░░░░░ 0% |
+| 23 | [road-to-worktree-hygiene.md](roadmaps/road-to-worktree-hygiene.md) | 1 | 9 | 2 | 7 | 0 | 0 | [1](#blockers-road-to-worktree-hygiene) | ████████░░ 78% |
+| 24 | [road-to-zero-ceremony-settings.md](roadmaps/road-to-zero-ceremony-settings.md) | 5 | 19 | 1 | 17 | 1 | 0 | 0 | █████████░ 94% |
 
 ---
 
@@ -470,6 +473,111 @@ _1 blocker resolved._
     `build_discovery_manifest.ts`, publish it, and let that date pass. The council
     ruled the date itself is not an agent decision.
   - **Resolved when:** a concrete `sunset` date is published in the manifest's `tier` deprecation entry AND that date has passed with no external breakage reported — at which point Phase 3 records the confirmation and Phase 4's external half becomes executable.
+
+### [road-to-token-economy-cache.md](roadmaps/road-to-token-economy-cache.md)
+
+**Road to token-economy — cache: the per-session overhead gets a budget, a stable prefix delta, and a machine on the write path** — 0 / 38 done (0%)
+
+| # | Phase | State | Open | Done | Deferred | Cancelled | % |
+|---|---|---|---:|---:|---:|---:|---:|
+| 1 | per-slot injection anatomy: the narrow delta observation | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
+| 2 | byte-stability for the non-kernel remainder | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
+| 3 | the injection budget: the latency file's twin | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
+| 4 | deterministic output caps where rtk does not reach | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
+| 5 | edit-shape advisory: pay for the diff, not the file | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
+| 6 | turn and re-read economy: stop re-paying for what the session already has | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
+| 7 | what this roadmap will not do | ⬜ not started | 15 | 0 | 0 | 0 | 0% |
+
+<a id="blockers-road-to-token-economy-cache"></a>
+**Blockers**
+
+- **pretooluse-rewrite-semantics** (owner: maintainer) — blocks Phase 4.2 shipping as a rewrite (vs. advisory-only)
+  - **What to do:**
+    PreToolUse hook can modify the command payload (vs. only allow/deny/
+    annotate), and that the modification is visible to the model in the tool
+    call record. No modification capability → 4.2 degrades to an advisory
+    line naming the capped variant, and the cap table becomes a
+    model-carried convention with its adoption measured.
+  - **Resolved when:** the probe transcript exists and 4.2's mechanism cites it.
+- **repeat-injection-census** (owner: maintainer) — blocks Phase 3.3 scope (which concerns get the idempotency gate first)
+  - **What to do:**
+    concern fire frequency and byte volume (the 3.2 harness in record-only
+    mode). The census ranks the repeaters by measured load; 3.3 targets the
+    top of that list instead of a guessed set.
+  - **Resolved when:** the census note exists and 3.3's target list cites it.
+
+### [road-to-token-economy-dispatch.md](roadmaps/road-to-token-economy-dispatch.md)
+
+**Road to token-economy — dispatch: the always-on stack stops paying the full harness price per spawn** — 0 / 36 done (0%)
+
+| # | Phase | State | Open | Done | Deferred | Cancelled | % |
+|---|---|---|---:|---:|---:|---:|---:|
+| 1 | measure the floor before touching it | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
+| 2 | a role axis in the hook manifest | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
+| 3 | worker thin projection, cut where the data says | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
+| 4 | rung 0.5: ask, don't spawn | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
+| 5 | model tiering stops being advisory | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
+| 6 | the envelope is the only return channel | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
+| 7 | what this roadmap will not do | ⬜ not started | 14 | 0 | 0 | 0 | 0% |
+
+<a id="blockers-road-to-token-economy-dispatch"></a>
+**Blockers**
+
+- **fork-spawn-cache-verification** (owner: maintainer) — blocks any strengthening of the shipped fork-vs-subagent ordering rule into a "prefer fork" DEFAULT
+  - **What to do:**
+    in cache-economy Phase 4, which shipped the rule as "ordering, not
+    default") says a fork reuses the parent's prompt cache on its first
+    request while a fresh spawn holds a separate cache; this repo has never
+    observed it live. Run a two-arm live probe (fork vs fresh, identical
+    task, token accounting from the transcript ledger via `cc_transcript.ts`),
+    record both numbers.
+  - **Resolved when:** the probe note exists; doctrine cites it or the null (no measurable difference) is published and the ordering rule stays as-is.
+- **worker-chain-host-delivery** (owner: maintainer) — blocks Phase 2 shipping as more than manifest prose
+  - **What to do:**
+    actually executes the settings-installed hook chains and sees the
+    wrapper's env var (the upstream agent-identity request is closed
+    NOT_PLANNED; our lineage detection is self-built). If subagent sessions
+    bypass `user_prompt_submit` entirely, Phase 2's win shrinks to the
+    session_start/stop slots — measure, then cut the phase to what the host
+    delivers.
+  - **Resolved when:** a probe transcript shows which slots fire in a worker session, and Phase 2's step list cites it.
+- **reviewer-tier-quality-floor** (owner: maintainer) — blocks Phase 5.3 default-shipping (reviewer on small tier)
+  - **What to do:**
+    comparison on real review tasks from the `review_skipped`-driven reviewer
+    dispatches: small-tier vs main-model verdict agreement + missed-defect
+    count. Pre-registered null: "small tier misses materially more" is
+    publishable and pins the reviewer to the main model with the evidence
+    attached.
+  - **Resolved when:** the comparison note exists and 5.3's default cites it.
+
+### [road-to-token-economy-recycling.md](roadmaps/road-to-token-economy-recycling.md)
+
+**Road to token-economy — recycling: deliberate envelope-mediated fresh starts instead of lossy auto-compaction** — 0 / 26 done (0%)
+
+| # | Phase | State | Open | Done | Deferred | Cancelled | % |
+|---|---|---|---:|---:|---:|---:|---:|
+| 1 | measure the end-of-life we actually have | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
+| 2 | the recycle envelope: state, never summary | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
+| 3 | the threshold and the advisory carrier | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
+| 4 | statusline integration (optional, cross-repo) | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
+| 5 | what this roadmap will not do | ⬜ not started | 13 | 0 | 0 | 0 | 0% |
+
+<a id="blockers-road-to-token-economy-recycling"></a>
+**Blockers**
+
+- **compaction-marker-shape** (owner: maintainer) — blocks Phase 1.1 auto-compact incidence field
+  - **What to do:**
+    a compaction event looks like in the transcript file (marker, summary
+    block shape, anything greppable) and pin the detector to observed
+    reality with a fixture. A host update changing the shape must fail the
+    fixture, not silently zero the metric (never-silent discipline).
+  - **Resolved when:** the detector + fixture exist from an observed real compaction.
+- **statusline-substrate** (owner: maintainer) — blocks Phase 4 only
+  - **What to do:**
+    design shipping. No work in this repo beyond the read-surface file until
+    it does. Explicitly NOT a blocker for roadmap closure — Phases 1–3 + 5
+    close without it.
+  - **Resolved when:** the statusline exists and 4.1 lands, or this roadmap closes with Phase 4 recorded as lapsed-optional.
 
 ### [road-to-ui-track-integrity-followup.md](roadmaps/road-to-ui-track-integrity-followup.md)
 
