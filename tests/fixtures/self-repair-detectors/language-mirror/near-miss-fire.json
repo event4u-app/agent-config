@@ -1,0 +1,20 @@
+[
+  {
+    "name": "wrong-language prose hiding behind a leading code fence — the fence is stripped, the violation stands",
+    "turn": {
+      "prompt": "",
+      "reply": "```ts\nconst x = 1;\n```\nThe fix is complete and the tests are green, so you can review the change now.",
+      "toolCommands": [],
+      "pinnedLanguage": "de"
+    }
+  },
+  {
+    "name": "en-pinned turn opening in German — the mirror fails in both directions",
+    "turn": {
+      "prompt": "",
+      "reply": "Der Fix ist fertig und die Tests sind grün, du kannst die Änderung jetzt reviewen.",
+      "toolCommands": [],
+      "pinnedLanguage": "en"
+    }
+  }
+]

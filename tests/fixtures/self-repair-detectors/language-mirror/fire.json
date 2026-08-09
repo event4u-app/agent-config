@@ -1,0 +1,11 @@
+[
+  {
+    "name": "de-pinned turn opening in plain English",
+    "turn": {
+      "prompt": "",
+      "reply": "Sure, here is the summary of the change you asked for. The tests are green and the build is stable for now.",
+      "toolCommands": [],
+      "pinnedLanguage": "de"
+    }
+  }
+]

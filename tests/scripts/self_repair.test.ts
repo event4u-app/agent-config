@@ -9,8 +9,11 @@ import * as os from 'node:os';
 import * as path from 'node:path';
 import { beforeEach, afterEach, describe, expect, it } from 'vitest';
 
+import { parse as parseYaml } from 'yaml';
+
 import {
-    chooseEgressRoute,
+    chooseEgress,
+    DEFECT_CLASSES,
     type DefectRecord,
     detectCouncilClaim,
     detectLanguageMirror,
@@ -18,19 +21,32 @@ import {
     egressBlockedReason,
     fingerprint,
     mergeRecord,
+    parseReport,
     renderReport,
     runDetectors,
     sanitizeEvidence,
     type TurnSnapshot,
 } from '../../src/scripts/_lib/self_repair.js';
 import {
+    attachReleaseErrors,
     listRecords,
     markReleased,
     openRecords,
     upsertFinding,
 } from '../../src/scripts/_lib/self_repair_store.js';
 import { buildQueueLine, readTurn } from '../../src/scripts/self_repair_hook.js';
-import { capabilityOf, planRelease, titleFor } from '../../src/scripts/self_repair_cli.js';
+import {
+    capabilityOf,
+    executeRelease,
+    planRelease,
+    type Probe,
+    probeMachine,
+    type ReleaseDeps,
+    type ReleasePlan,
+    type Runner,
+    type RunResult,
+    titleFor,
+} from '../../src/scripts/self_repair_cli.js';
 
 const NOW = '2026-08-08T10:00:00.000Z';
 const LATER = '2026-08-08T11:00:00.000Z';
@@ -66,6 +82,18 @@ describe('self-repair — user-report intake', () => {
     it('marks the record as user-reported, not self-detected', () => {
         const f = detectUserReport('du hast die Sprache ignoriert')!;
         expect(f.source).toBe('user-reported');
+    });
+
+    it('a pleasantry far from the complaint span does not mute it (R2 #2)', () => {
+        const f = detectUserReport(
+            'Alles gut mit dem Deploy, aber du hast schon wieder die Hälfte der Dateien übersehen!',
+        );
+        expect(f?.defect_class).toBe('user-reported');
+    });
+
+    it('an exoneration overlapping the matched span still silences the intake', () => {
+        expect(detectUserReport('du hast nicht zufällig die alte Config noch offen?')).toBeNull();
+        expect(detectUserReport("you didn't need to run that, it's fine")).toBeNull();
     });
 });
 
@@ -222,45 +250,60 @@ describe('self-repair — record identity', () => {
     });
 });
 
-describe('self-repair — egress routing', () => {
-    it('opens a PR when the fix can be authored and pushed', () => {
+describe('self-repair — egress routing (route matrix)', () => {
+    it('upstream-write: direct PR when the probe shows real push rights', () => {
         expect(
-            chooseEgressRoute({
+            chooseEgress({
                 hasAgentConfigCheckout: true,
                 ghAuthenticated: true,
-                canPush: true,
+                canPushUpstream: true,
+                canFork: true,
             }),
-        ).toBe('pull-request');
+        ).toEqual({ route: 'pull-request', pushVia: 'upstream' });
+    });
+
+    it('fork-only: PR via fork when authenticated without upstream push', () => {
+        expect(
+            chooseEgress({
+                hasAgentConfigCheckout: true,
+                ghAuthenticated: true,
+                canPushUpstream: false,
+                canFork: true,
+            }),
+        ).toEqual({ route: 'pull-request', pushVia: 'fork' });
+    });
+
+    it('auth-no-push: issue when neither upstream push nor fork is possible', () => {
+        expect(
+            chooseEgress({
+                hasAgentConfigCheckout: true,
+                ghAuthenticated: true,
+                canPushUpstream: false,
+                canFork: false,
+            }),
+        ).toEqual({ route: 'issue', pushVia: null });
     });
 
     it('falls back to an issue when no checkout exists — the consumer case', () => {
         expect(
-            chooseEgressRoute({
+            chooseEgress({
                 hasAgentConfigCheckout: false,
                 ghAuthenticated: true,
-                canPush: false,
+                canPushUpstream: false,
+                canFork: true,
             }),
-        ).toBe('issue');
+        ).toEqual({ route: 'issue', pushVia: null });
     });
 
-    it('falls back to an issue when the checkout cannot push', () => {
+    it('no-auth: stays local when nothing can reach GitHub', () => {
         expect(
-            chooseEgressRoute({
-                hasAgentConfigCheckout: true,
-                ghAuthenticated: true,
-                canPush: false,
-            }),
-        ).toBe('issue');
-    });
-
-    it('stays local when nothing can reach GitHub', () => {
-        expect(
-            chooseEgressRoute({
+            chooseEgress({
                 hasAgentConfigCheckout: true,
                 ghAuthenticated: false,
-                canPush: true,
+                canPushUpstream: true,
+                canFork: true,
             }),
-        ).toBe('local-only');
+        ).toEqual({ route: 'local-only', pushVia: null });
     });
 
     it('renders a deterministic report that names route and occurrences', () => {
@@ -271,29 +314,333 @@ describe('self-repair — egress routing', () => {
         expect(a).toContain(rec.fingerprint);
     });
 
-    it('a privacy refusal downgrades the plan to local-only even with full capability', () => {
+    it('privacy-refusal: downgrades the plan to local-only even with full capability', () => {
         const rec: DefectRecord = {
             ...mergeRecord(null, detectUserReport('du hast das falsch gemacht')!, NOW),
             evidence: 'reach me at real.person@example-corp.de',
         };
-        const plan = planRelease(
-            rec,
-            { agentConfigCheckout: '/tmp/x', ghAuthenticated: true, canPush: true },
-            '/tmp',
-        );
+        const plan = planRelease(rec, fullProbe(), '/tmp');
         expect(plan.route).toBe('local-only');
+        expect(plan.pushVia).toBeNull();
         expect(plan.blocked).not.toBeNull();
     });
 
     it('maps a probe onto the capability shape', () => {
         expect(
-            capabilityOf({ agentConfigCheckout: '/x', ghAuthenticated: false, canPush: true }),
-        ).toEqual({ hasAgentConfigCheckout: true, ghAuthenticated: false, canPush: true });
+            capabilityOf({
+                agentConfigCheckout: '/x',
+                ghAuthenticated: false,
+                canPushUpstream: true,
+                canFork: false,
+            }),
+        ).toEqual({
+            hasAgentConfigCheckout: true,
+            ghAuthenticated: false,
+            canPushUpstream: true,
+            canFork: false,
+        });
     });
 
     it('titles the report by class and occurrence count', () => {
         const rec = mergeRecord(null, detectUserReport('du hast das falsch gemacht')!, NOW);
         expect(titleFor(rec)).toContain('user-reported');
+    });
+});
+
+// ── egress ladder execution ────────────────────────────────────────
+
+function fullProbe(overrides: Partial<Probe> = {}): Probe {
+    return {
+        agentConfigCheckout: '/tmp/checkout',
+        ghAuthenticated: true,
+        canPushUpstream: true,
+        canFork: true,
+        ...overrides,
+    };
+}
+
+/** Scripted runner: matches each call against a step table, records the log. */
+function scriptedRunner(
+    script: (cmd: string, args: string[]) => Partial<RunResult> | undefined,
+    log: string[],
+): Runner {
+    return (cmd, args) => {
+        log.push(`${cmd} ${args.join(' ')}`);
+        const hit = script(cmd, args) ?? {};
+        return { ok: true, out: '', timedOut: false, ...hit };
+    };
+}
+
+function recAndPlan(probe: Probe): { rec: DefectRecord; plan: ReleasePlan } {
+    const rec = mergeRecord(null, detectUserReport('du hast das falsch gemacht')!, NOW);
+    return { rec, plan: planRelease(rec, probe, '/tmp') };
+}
+
+const okBranch = (cmd: string, args: string[]): Partial<RunResult> | undefined =>
+    cmd === 'git' && args[0] === 'branch' ? { out: 'fix/some-defect\n' } : undefined;
+
+describe('self-repair — probe of actual push rights', () => {
+    it('reads permissions.push and allow_forking from the repo API, not `git remote`', () => {
+        const log: string[] = [];
+        const runner = scriptedRunner((cmd, args) => {
+            if (cmd === 'gh' && args[0] === 'api') {
+                return { out: '{"permissions":{"push":false},"allow_forking":true}' };
+            }
+            return undefined;
+        }, log);
+        const probe = probeMachine({}, '/nowhere', runner, 'event4u-app/agent-config');
+        expect(probe.canPushUpstream).toBe(false);
+        expect(probe.canFork).toBe(true);
+        expect(log.some((l) => l.startsWith('gh api repos/event4u-app/agent-config'))).toBe(true);
+        expect(log.some((l) => l.startsWith('git remote'))).toBe(false);
+    });
+
+    it('answers false for both when the API call fails — degrade, never guess', () => {
+        const runner = scriptedRunner((cmd, args) => {
+            if (cmd === 'gh' && args[0] === 'api') {
+                return { ok: false, out: 'HTTP 404' };
+            }
+            return undefined;
+        }, []);
+        const probe = probeMachine({}, '/nowhere', runner, 'x/y');
+        expect(probe.canPushUpstream).toBe(false);
+        expect(probe.canFork).toBe(false);
+    });
+
+    it('skips the rights probe entirely when gh is unauthenticated', () => {
+        const log: string[] = [];
+        const runner = scriptedRunner((cmd, args) => {
+            if (cmd === 'gh' && args[0] === 'auth') {
+                return { ok: false, out: 'not logged in' };
+            }
+            return undefined;
+        }, log);
+        const probe = probeMachine({}, '/nowhere', runner, 'x/y');
+        expect(probe.ghAuthenticated).toBe(false);
+        expect(probe.canFork).toBe(false);
+        expect(log.some((l) => l.startsWith('gh api'))).toBe(false);
+    });
+});
+
+describe('self-repair — egress ladder', () => {
+    const deps = (runner: Runner): ReleaseDeps => ({ runner, now: () => LATER });
+
+    it('a failed upstream push degrades to an issue attempt in the same invocation', () => {
+        const log: string[] = [];
+        const runner = scriptedRunner((cmd, args) => {
+            const b = okBranch(cmd, args);
+            if (b) {
+                return b;
+            }
+            if (cmd === 'git' && args[0] === 'push') {
+                return { ok: false, out: 'remote: permission denied' };
+            }
+            if (cmd === 'gh' && args[0] === 'repo' && args[1] === 'fork') {
+                return { ok: false, out: 'forking disabled' };
+            }
+            return undefined;
+        }, log);
+        const probe = fullProbe({ canFork: true });
+        const { rec, plan } = recAndPlan(probe);
+        const outcome = executeRelease(rec, plan, probe, 'up/stream', deps(runner));
+        expect(outcome.published).toBe('issue');
+        expect(log.some((l) => l.startsWith('gh issue create'))).toBe(true);
+        expect(outcome.attempts.map((a) => a.step)).toEqual(['push-upstream', 'fork-ensure']);
+    });
+
+    it('a timed-out push degrades exactly like a failed one', () => {
+        const log: string[] = [];
+        const runner = scriptedRunner((cmd, args) => {
+            const b = okBranch(cmd, args);
+            if (b) {
+                return b;
+            }
+            if (cmd === 'git' && args[0] === 'push') {
+                return { ok: false, out: '', timedOut: true };
+            }
+            if (cmd === 'gh' && args[0] === 'repo' && args[1] === 'fork') {
+                return { ok: false, out: 'nope' };
+            }
+            return undefined;
+        }, log);
+        const probe = fullProbe();
+        const { rec, plan } = recAndPlan(probe);
+        const outcome = executeRelease(rec, plan, probe, 'up/stream', deps(runner));
+        expect(outcome.published).toBe('issue');
+        expect(outcome.attempts[0]?.detail).toContain('timed out after 30s');
+    });
+
+    it('fork-only capability pushes to the fork and opens a cross-repo PR', () => {
+        const log: string[] = [];
+        const runner = scriptedRunner((cmd, args) => {
+            const b = okBranch(cmd, args);
+            if (b) {
+                return b;
+            }
+            if (cmd === 'gh' && args[0] === 'api' && args[1] === 'user') {
+                return { out: 'consumer-login\n' };
+            }
+            if (cmd === 'git' && args[0] === 'remote' && args[1] === 'get-url') {
+                return { ok: false, out: 'no such remote' };
+            }
+            return undefined;
+        }, log);
+        const probe = fullProbe({ canPushUpstream: false });
+        const { rec, plan } = recAndPlan(probe);
+        const outcome = executeRelease(rec, plan, probe, 'up/stream', deps(runner));
+        expect(outcome.published).toBe('pull-request');
+        expect(log.some((l) => l.startsWith('gh repo fork up/stream'))).toBe(true);
+        expect(log.some((l) => l.includes('remote add self-repair-fork'))).toBe(true);
+        expect(log.some((l) => l.startsWith('git push -u self-repair-fork'))).toBe(true);
+        expect(log.some((l) => l.includes('--head consumer-login:fix/some-defect'))).toBe(true);
+    });
+
+    it('a triple failure (push → fork → issue) leaves all three errors recorded', () => {
+        const tmp = mkTmp();
+        const rec = upsertFinding(tmp, detectUserReport('du hast das falsch gemacht')!, NOW);
+        const runner = scriptedRunner((cmd, args) => {
+            const b = okBranch(cmd, args);
+            if (b) {
+                return b;
+            }
+            if (cmd === 'git' && args[0] === 'push') {
+                return { ok: false, out: 'permission denied' };
+            }
+            if (cmd === 'gh' && args[0] === 'repo' && args[1] === 'fork') {
+                return { ok: false, out: 'forking disabled' };
+            }
+            if (cmd === 'gh' && args[0] === 'issue') {
+                return { ok: false, out: 'API rate limit' };
+            }
+            return undefined;
+        }, []);
+        const probe = fullProbe();
+        const plan = planRelease(rec, probe, tmp);
+        const outcome = executeRelease(rec, plan, probe, 'up/stream', deps(runner));
+        expect(outcome.published).toBeNull();
+        expect(outcome.attempts).toHaveLength(3);
+        expect(outcome.attempts.map((a) => a.step)).toEqual([
+            'push-upstream',
+            'fork-ensure',
+            'issue-create',
+        ]);
+
+        const stored = attachReleaseErrors(
+            tmp,
+            rec.fingerprint,
+            outcome.attempts.map((a) => sanitizeEvidence(a.detail)),
+            LATER,
+        );
+        expect(stored?.status).toBe('open');
+        expect(stored?.release_errors).toHaveLength(3);
+        fs.rmSync(tmp, { recursive: true, force: true });
+    });
+
+    it('a degraded issue carries a body rendered for the issue route, not the planned one (R2 #4)', () => {
+        const log: string[] = [];
+        const runner = scriptedRunner((cmd, args) => {
+            const b = okBranch(cmd, args);
+            if (b) {
+                return b;
+            }
+            if (cmd === 'git' && args[0] === 'push') {
+                return { ok: false, out: 'permission denied' };
+            }
+            if (cmd === 'gh' && args[0] === 'repo' && args[1] === 'fork') {
+                return { ok: false, out: 'forking disabled' };
+            }
+            return undefined;
+        }, log);
+        const probe = fullProbe();
+        const { rec, plan } = recAndPlan(probe);
+        const outcome = executeRelease(rec, plan, probe, 'up/stream', deps(runner));
+        expect(outcome.published).toBe('issue');
+        const issueCall = log.find((l) => l.startsWith('gh issue create'))!;
+        expect(issueCall).toContain('**Route:** issue');
+        expect(issueCall).not.toContain('**Route:** pull-request');
+    });
+
+    it('a branch-check failure is a precondition stop, not a silent issue downgrade', () => {
+        const runner = scriptedRunner((cmd, args) => {
+            if (cmd === 'git' && args[0] === 'branch') {
+                return { out: 'main\n' };
+            }
+            return undefined;
+        }, []);
+        const probe = fullProbe();
+        const { rec, plan } = recAndPlan(probe);
+        const outcome = executeRelease(rec, plan, probe, 'up/stream', deps(runner));
+        expect(outcome.published).toBeNull();
+        expect(outcome.attempts.map((a) => a.step)).toEqual(['branch-check']);
+    });
+
+    it('a successful release clears earlier attached errors', () => {
+        const tmp = mkTmp();
+        const rec = upsertFinding(tmp, detectUserReport('du hast das falsch gemacht')!, NOW);
+        attachReleaseErrors(tmp, rec.fingerprint, ['push-upstream: permission denied'], NOW);
+        const released = markReleased(tmp, rec.fingerprint, LATER);
+        expect(released?.status).toBe('released');
+        expect(released?.release_errors).toBeUndefined();
+        fs.rmSync(tmp, { recursive: true, force: true });
+    });
+});
+
+describe('self-repair — structured upstream intake (issue form)', () => {
+    const FORM_PATH = path.resolve(process.cwd(), '.github/ISSUE_TEMPLATE/self_repair_report.yml');
+
+    interface FormElement {
+        type: string;
+        id?: string;
+        attributes?: { options?: string[] };
+    }
+
+    function loadForm(): { labels: string[]; body: FormElement[] } {
+        return parseYaml(fs.readFileSync(FORM_PATH, 'utf-8')) as {
+            labels: string[];
+            body: FormElement[];
+        };
+    }
+
+    it('renderReport round-trips through the form fields — single occurrence', () => {
+        const rec = mergeRecord(null, detectUserReport('du hast das falsch gemacht')!, NOW);
+        const parsed = parseReport(renderReport(rec, 'issue'));
+        expect(parsed).toEqual({
+            defect_class: rec.defect_class,
+            fingerprint: rec.fingerprint,
+            occurrences: 1,
+            evidence: rec.evidence,
+            suggested_surface: rec.suggested_surface,
+        });
+    });
+
+    it('renderReport round-trips through the form fields — repeated occurrences', () => {
+        const first = mergeRecord(null, detectUserReport('du hast das falsch gemacht')!, NOW);
+        const rec = mergeRecord(first, detectUserReport('du hast das falsch gemacht')!, LATER);
+        const parsed = parseReport(renderReport(rec, 'pull-request'));
+        expect(parsed?.occurrences).toBe(2);
+        expect(parsed?.fingerprint).toBe(rec.fingerprint);
+    });
+
+    it('the form collects exactly the parsed-report fields', () => {
+        const ids = loadForm()
+            .body.filter((e) => e.type !== 'markdown')
+            .map((e) => e.id);
+        const rec = mergeRecord(null, detectUserReport('x you ignored the rule')!, NOW);
+        const parsed = parseReport(renderReport(rec, 'issue'))!;
+        expect(ids.sort()).toEqual(Object.keys(parsed).sort());
+    });
+
+    it('the dropdown options mirror the DefectClass union', () => {
+        const dropdown = loadForm().body.find((e) => e.id === 'defect_class');
+        expect(dropdown?.attributes?.options).toEqual([...DEFECT_CLASSES]);
+    });
+
+    it('the form applies the clustering label', () => {
+        expect(loadForm().labels).toContain('self-repair');
+    });
+
+    it('parseReport refuses a body that is not a self-repair report', () => {
+        expect(parseReport('## Some other issue\n\nfree text')).toBeNull();
     });
 });
 

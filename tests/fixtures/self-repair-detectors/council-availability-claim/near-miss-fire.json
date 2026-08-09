@@ -1,0 +1,18 @@
+[
+  {
+    "name": "English phrasing, availability instead of configuration, weaker-path substitution",
+    "turn": {
+      "prompt": "",
+      "reply": "There is no AI council available in this session, so I'll poll subagents instead.",
+      "toolCommands": ["ls agents/"]
+    }
+  },
+  {
+    "name": "infra phrasing instead of configured/available",
+    "turn": {
+      "prompt": "",
+      "reply": "No council infra here — falling back to a single-model pass.",
+      "toolCommands": []
+    }
+  }
+]

@@ -1,0 +1,10 @@
+[
+  {
+    "name": "canonical German complaint",
+    "turn": { "prompt": "du hast das falsch gemacht", "reply": "", "toolCommands": [] }
+  },
+  {
+    "name": "canonical English complaint",
+    "turn": { "prompt": "you ignored the rule again", "reply": "", "toolCommands": [] }
+  }
+]
