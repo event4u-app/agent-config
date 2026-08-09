@@ -39,7 +39,7 @@ obligation_frequency: "per-task"
 
 # Finance Safety Floor
 
-Domain safety floor for finance-pack artefacts (cash, runway, valuation, scenario, unit economics, forecasting). Auto-activates when `pack-finance-basic` or `pack-finance-advanced` is installed.
+Domain safety floor for finance-pack artefacts (cash, runway, valuation, scenario, unit economics, forecasting). Auto-activates when `pack-finance-basic` or `pack-finance-advanced` is installed — `agent-config packs:active` says whether it is, and names the degraded case where zero packs load and this floor cannot activate at all.
 
 ## Iron Law — no final investment recommendation
 

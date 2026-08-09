@@ -191,13 +191,60 @@ export function DEFAULT_USER_GLOBAL_FILE(): string {
     return user_global_paths.write_target(USER_GLOBAL_FILENAME);
 }
 
-/** Return the active user-global settings path with legacy fallback. */
-function _resolve_user_global_file(): string {
-    const found = user_global_paths.resolve_with_fallback(USER_GLOBAL_FILENAME);
-    if (found !== null) {
-        return found;
+/**
+ * The canonical user-global settings file — `<event4u_root>/settings/.agent-settings.yml`.
+ *
+ * This is what the GUI settings route, the wizard route, and the installer all
+ * write, mirroring the project layer's `agents/settings/.agent-settings.yml`
+ * convention. Until `road-to-capability-answerability` 4.1 the loader did not
+ * read it at all: three writers, one reader, and the reader was looking at the
+ * other file. Every value a user set through the only surfaces that write it was
+ * therefore inert, silently — the exact shape of defect this roadmap closes.
+ */
+export const USER_GLOBAL_CANONICAL_RELATIVE = 'settings/.agent-settings.yml';
+
+/**
+ * Every user-global settings file to merge, in precedence order (later wins).
+ *
+ * Two entries, deliberately, rather than a replacement:
+ *
+ * - the FLAT `agent-settings.yml` stays first because it is not dead. It is the
+ *   file `link_crypto.ts` reads directly for `secrets.link_encryption_key`, and
+ *   dropping it from the cascade would change behaviour for anyone who put a
+ *   whitelisted key there;
+ * - the CANONICAL `settings/.agent-settings.yml` is layered ON TOP, so the file
+ *   the writers actually produce wins per key.
+ *
+ * Additive by construction: nothing that resolved before resolves differently
+ * unless the canonical file sets that key, and the user-global layer is filtered
+ * through {@link MERGEABLE_KEYS} downstream regardless — so the reachable blast
+ * radius is those keys, not the whole document.
+ */
+export function user_global_settings_paths(): string[] {
+    const paths: string[] = [];
+    const flat = user_global_paths.resolve_with_fallback(USER_GLOBAL_FILENAME);
+    if (flat !== null) {
+        paths.push(flat);
     }
-    return DEFAULT_USER_GLOBAL_FILE();
+    const canonical = user_global_paths.resolve_with_fallback(USER_GLOBAL_CANONICAL_RELATIVE);
+    if (canonical !== null) {
+        paths.push(canonical);
+    }
+    if (paths.length === 0) {
+        paths.push(DEFAULT_USER_GLOBAL_FILE());
+    }
+    return paths;
+}
+
+/**
+ * Return the active user-global settings path with legacy fallback.
+ *
+ * The HIGHEST-precedence existing file, so callers that want a single path (a
+ * report, an error message) name the one that actually decided the value.
+ */
+function _resolve_user_global_file(): string {
+    const paths = user_global_settings_paths();
+    return paths[paths.length - 1] as string;
 }
 
 /**
@@ -206,11 +253,25 @@ function _resolve_user_global_file(): string {
  * the user-global file. Adding a key requires an ADR.
  */
 export const MERGEABLE_KEYS: readonly string[] = [
+    // `name`, `ide` and `personal.bot_icon` are the PRE-MIGRATION spellings.
+    // `install.ts` migrates `ide` → `personal.ide` and `pr_comment_bot_icon`
+    // into its `personal.` home, and this list was never moved with them — so
+    // the whitelist named keys the template does not have while the keys it
+    // does have were filtered out silently. A user setting either preference
+    // user-globally got no error, no warning, and no effect
+    // (road-to-capability-answerability 4.3, ADR-219).
+    //
+    // Both spellings are listed rather than replaced: a legacy file that still
+    // uses the old name keeps working, and nothing that resolved before
+    // resolves differently. `name` has no reader anywhere and no template key;
+    // it is kept only so this change stays purely additive.
     'name',
     'ide',
+    'personal.ide',
     'rule_loading_tier',
     'memory.cadence',
     'personal.bot_icon',
+    'personal.pr_comment_bot_icon',
     'personal.autonomy',
     'telegraph.speak_scope',
     // Knowledge-card global cross-project sharing is a USER-GLOBAL setting
@@ -676,8 +737,12 @@ export function load_agent_settings(
     const verbose = options.verbose ?? false;
     const cwd = options.cwd ?? null;
 
-    const user_global_raw =
-        _read_yaml(user_global_path ? user_global_path : _resolve_user_global_file()) ?? {};
+    // An explicit path is a caller override (tests, tooling) and stays single;
+    // otherwise every user-global file merges in precedence order.
+    const user_global_raw: SettingsDict = {};
+    for (const p of user_global_path ? [user_global_path] : user_global_settings_paths()) {
+        _deep_merge(user_global_raw, _read_yaml(p) ?? {});
+    }
 
     const [user_global_filtered, ignored] = _filter_whitelist(user_global_raw, MERGEABLE_KEYS);
     if (verbose && ignored.length > 0) {
@@ -923,14 +988,15 @@ export function* iter_setting_overrides(
     const user_global_path = options.user_global_path ?? null;
     const cwd = options.cwd ?? null;
 
-    const user_global_path_resolved = user_global_path
-        ? user_global_path
-        : _resolve_user_global_file();
-    const user_global_raw = _read_yaml(user_global_path_resolved) ?? {};
-    const [user_global_filtered] = _filter_whitelist(user_global_raw, MERGEABLE_KEYS);
-    if (Object.keys(user_global_filtered).length > 0) {
-        for (const key of _leaf_paths(user_global_filtered)) {
-            yield [key, _get_dotted(user_global_filtered, key), user_global_path_resolved];
+    // One yield PER FILE, not one per merged user-global layer: the whole point
+    // of this generator is that the third element names the file that set the
+    // value, and collapsing two user-global files into one would attribute a
+    // value to a file that does not contain it.
+    for (const p of user_global_path ? [user_global_path] : user_global_settings_paths()) {
+        const raw = _read_yaml(p) ?? {};
+        const [filtered] = _filter_whitelist(raw, MERGEABLE_KEYS);
+        for (const key of _leaf_paths(filtered)) {
+            yield [key, _get_dotted(filtered, key), p];
         }
     }
 

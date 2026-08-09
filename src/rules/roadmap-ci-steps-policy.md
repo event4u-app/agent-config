@@ -45,7 +45,10 @@ AND EXECUTION MUST SKIP THEM INLINE WITH [-] AND A REASON.
 ```
 
 When autonomous local-CI runs are disabled in `.agent-settings.yml`
-(`quality.local_auto_run: false` — the shipped template default), every
+(`quality.local_auto_run: false` — the shipped template default; that file is the
+project layer of a cascade that starts user-global, and this key is one where an
+ABSENT value resolves to `true` at its reader and therefore DISABLES this gate —
+`agent-config settings:get quality.local_auto_run` reports both facts), every
 full-pipeline gate run during roadmap work is wasted wall-clock and
 tokens — the remote CI on the PR is the authoritative gate. Roadmaps must
 neither schedule nor execute those gates locally. New CI gates and

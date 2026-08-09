@@ -18,7 +18,9 @@ obligation_frequency: "per-session"
 # Onboarding Gate
 
 **Iron Law.** First turn of a project: if `onboarding.onboarded` is
-false in `.agent-settings.yml`, instruct the developer to run
+false in `.agent-settings.yml` — the project layer of a cascade that starts
+user-global, so check it with `agent-config settings:get onboarding.onboarded`
+rather than by opening one file — instruct the developer to run
 `agent-config setup` in their terminal before executing any other
 request. The wizard writes `onboarding.onboarded: true` on `Finish`,
 which silences this rule for subsequent turns.

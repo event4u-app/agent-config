@@ -99,7 +99,8 @@ id; with no ledger yet, the counter falls back to session scope. And the slot
 itself is not universal: `pre_tool_use` exists on **three** hosts — augment,
 claude, cowork. On cursor, cline, windsurf, gemini and copilot this guard has
 nowhere to bind, so items 1 and 4 join 2 and 3 as model-carried there. The
-frequency join in `check_enforcement_coverage.ts` reports exactly that set.
+frequency join in `check_enforcement_coverage.ts` reports exactly that set, and
+`agent-config hooks:status` answers it for the host you are on right now.
 
 Items 2 and 3 — an honestly chosen scope, and recording the prompt with the
 verdict — are **not** enforced by anything. A narrowed scope is not decidable

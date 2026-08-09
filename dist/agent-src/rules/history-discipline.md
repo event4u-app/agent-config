@@ -26,7 +26,9 @@ obligation_frequency: "per-edit"
 # History Discipline
 
 Pack floor for the `history-discipline` pack (default-off; auto-activates
-when the pack is installed). Agents get history wrong in both directions:
+when the pack is installed — `agent-config packs:active` says whether it is,
+and names the degraded case where zero packs load and this floor cannot
+activate at all). Agents get history wrong in both directions:
 missing entirely on data that needs it, or over-built as event sourcing
 where a row-level log suffices — and audit tables that themselves grow
 without bound.
