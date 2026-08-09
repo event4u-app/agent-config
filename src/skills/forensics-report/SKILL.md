@@ -66,6 +66,10 @@ install:
 
 ## Output format
 
+1. Lead with the scanned denominator (`scanned.commits` / `scanned.files`, including skipped bulk commits) — a reader must be able to judge the sample before the findings.
+2. Present hotspots and coupling as ranked tables with the score interpretation line ("a place to look, not a quality verdict") attached.
+3. When `--findings-out` was used, state the ingest command and the ledger path the findings landed in.
+
 Deterministic JSON with these fields:
 
 | Field | Meaning |

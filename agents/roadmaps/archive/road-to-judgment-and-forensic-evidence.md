@@ -240,14 +240,23 @@ machine-derived evidence — or record the honest null for each independently.
 
 ## Phase 5 — What this roadmap will not do
 
-- [ ] 5.1 No "golden prompt" text is imported anywhere. Behaviour is configured
+- [x] 5.1 No "golden prompt" text is imported anywhere. Behaviour is configured
       through rules with gates, not through pasted preambles.
-- [ ] 5.2 No narrated chain-of-thought is added to worker outputs. It would
+      <!-- done 2026-08-09: verified — the load_bearing protocol prompt is
+      authored in this repo against the council design pass; no source prompt
+      text appears in any shipped artifact. -->
+- [x] 5.2 No narrated chain-of-thought is added to worker outputs. It would
       regress kernel budget discipline directly, and this repo asks workers for
       evidence rather than narration. A future proposal must cite this line and
       bring budget arithmetic.
-- [ ] 5.3 No external numbers from any source in this harvest enter a claim, a
+      <!-- done 2026-08-09: nothing in this roadmap's diff touches worker
+      output shape; the attest line (ADR-220) is one fixed greppable token,
+      explicitly not narration, and ships only with a first adopter. -->
+- [x] 5.3 No external numbers from any source in this harvest enter a claim, a
       doc, or a commit message without resolving to a primary source first.
+      <!-- done 2026-08-09: swept the shipped artifacts — the source's +30%
+      effect size, "98/100", and "4-9x" appear nowhere; every number in the
+      CLAIMS entries is internally measured in this branch's own runs. -->
 
 ## Pre-mortem
 
@@ -323,9 +332,15 @@ Phase-2 run):
 
 ## Acceptance criteria
 
-- [ ] The council A/B publishes both arms against thresholds registered before the first run, in either direction.
-- [ ] No number, effectiveness score, or defect-rate claim from any source in this harvest appears in a claim, doc, or commit message unresolved to a primary source.
-- [ ] The forensics analyzers are byte-stable on a fixture and publish a scan count; an empty scan fails loudly.
-- [ ] Every source item appears in the gap table with exactly one verdict — nothing is adopted without one, and nothing cut is quietly reintroduced in a phase.
-- [ ] The attestation ADR states the self-report limitation in its own text, not in a linked file.
-- [ ] Each pre-registered gate in this roadmap has a written null outcome that removes or closes the mechanism, not one that defers it.
+- [x] The council A/B publishes both arms against thresholds registered before the first run, in either direction.
+      <!-- critic-protocol-load-bearing-ab: registration commit precedes the run; result NO PROMOTION, both directions in the resolution. -->
+- [x] No number, effectiveness score, or defect-rate claim from any source in this harvest appears in a claim, doc, or commit message unresolved to a primary source.
+      <!-- swept: +30% / 98-of-100 / 4-9x appear nowhere in shipped artifacts. -->
+- [x] The forensics analyzers are byte-stable on a fixture and publish a scan count; an empty scan fails loudly.
+      <!-- tests/scripts/forensics_report.test.ts: byte-identity vs committed expected (11/11); empty log throws DeadScopeError. -->
+- [x] Every source item appears in the gap table with exactly one verdict — nothing is adopted without one, and nothing cut is quietly reintroduced in a phase.
+      <!-- gap table above: 11 rows, one verdict each; the cut items (Socratic mode, dollar-cost, socio-technical, source numbers) have no phase presence. -->
+- [x] The attestation ADR states the self-report limitation in its own text, not in a linked file.
+      <!-- ADR-220 § "The self-report limitation — stated here, not in a linked file" (fenced block). -->
+- [x] Each pre-registered gate in this roadmap has a written null outcome that removes or closes the mechanism, not one that defers it.
+      <!-- 1.4: below 2/4 → skill stays default-off + unrecommended (gate passed 3/4); Phase 2: threshold miss → no promotion, legacy stays (taken); 3.5: zero confirmed findings → pack closes as on-demand tool. -->

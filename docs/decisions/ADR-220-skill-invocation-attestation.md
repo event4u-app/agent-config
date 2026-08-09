@@ -109,7 +109,8 @@ must carry this paragraph's limitation in its own text.
 
 ## References
 
-- `agents/roadmaps/road-to-judgment-and-forensic-evidence.md` — Phase 4.
+- The `road-to-judgment-and-forensic-evidence` roadmap (Phase 4) — archived in
+  the roadmap layer; this record outlives it.
 - `src/scripts/_lib/scan_scope.ts` — the gate-layer analogue (`scanned: <N>`).
 - `docs/CLAIMS.md` — the enforcement-projection / reminder-injection nulls
   establishing the self-report boundary this ADR restates.
