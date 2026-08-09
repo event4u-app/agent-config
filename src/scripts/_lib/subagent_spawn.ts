@@ -13,6 +13,8 @@
 
 import * as crypto from 'node:crypto';
 
+import { CAPSULE_WATERMARK_FRACTION } from './worker_budget.js';
+
 export type RoleMode = 'developer' | 'reviewer' | 'tester' | 'po' | 'incident' | 'planner';
 
 const ROLE_MODES: ReadonlySet<string> = new Set<RoleMode>([
@@ -55,6 +57,12 @@ export interface SpawnBrief {
     knowledge_refs: string[];
     /** Per-worker token stop-loss; null = unset (legacy dispatch). */
     max_tokens_per_worker: number | null;
+    /**
+     * Token count at which the worker emits a CHECKPOINT capsule — DERIVED from
+     * `max_tokens_per_worker`, never set independently, so the watermark cannot
+     * drift away from the budget it sits under. Null when no budget is set.
+     */
+    capsule_watermark: number | null;
     warnings: string[];
 }
 
@@ -112,6 +120,10 @@ export function composeSpawnBrief(sel: SpawnSelection): SpawnBrief {
         personas,
         knowledge_refs,
         max_tokens_per_worker,
+        capsule_watermark:
+            max_tokens_per_worker === null
+                ? null
+                : Math.floor(max_tokens_per_worker * CAPSULE_WATERMARK_FRACTION),
         warnings,
     };
 }
@@ -133,6 +145,7 @@ export function serializeSpawnPayload(brief: SpawnBrief): string {
         profile: brief.profile,
         personas: brief.personas,
         max_tokens_per_worker: brief.max_tokens_per_worker,
+        capsule_watermark: brief.capsule_watermark,
     });
     const variableTail = JSON.stringify({
         task: brief.task,

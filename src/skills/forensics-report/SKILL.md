@@ -7,6 +7,7 @@ workspaces:
   - engineering
 packs:
   - forensics
+lifecycle: experimental
 trust:
   level: experimental
 install:
@@ -36,7 +37,7 @@ install:
 2. **Run the report:**
 
    ```bash
-   ./scripts-run src/scripts/forensics_report --range vPREV..vNEW --out report.json
+   npx tsx node_modules/@event4u/agent-config/src/scripts/forensics_report.ts --range vPREV..vNEW --out report.json
    ```
 
    Two deterministic, git-log-based analyzers run, read-only and offline:
@@ -48,7 +49,7 @@ install:
    `--findings-out findings.json`, then ingest via
 
    ```bash
-   ./scripts-run src/scripts/check_finding_dispositions --ingest findings.json --release X.Y.Z
+   npx tsx node_modules/@event4u/agent-config/src/scripts/check_finding_dispositions.ts --ingest findings.json --release X.Y.Z
    ```
 
    which appends to the existing ledger at
@@ -83,7 +84,7 @@ Deterministic JSON with these fields:
 | `boundary_contradictions[]` | cross-module coupling hits above threshold |
 
 Findings emitted via `--findings-out` conform to
-`src/scripts/schemas/review-findings.schema.json` (`kind: correctness`,
+`review-findings.schema.json` (shipped with the package; `kind: correctness`,
 `severity: low|medium`).
 
 ## Gotchas
@@ -109,5 +110,5 @@ Findings emitted via `--findings-out` conform to
 
 ## See also
 
-- `src/scripts/forensics_report.ts` — the analyzer implementation.
+- `forensics_report.ts` (this package's scripts tree; consumer path `node_modules/@event4u/agent-config/src/scripts/forensics_report.ts`) — the analyzer implementation.
 - `docs/CLAIMS.md` — the pre-registered `forensics-pack-value` question.

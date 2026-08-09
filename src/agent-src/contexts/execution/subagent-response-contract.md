@@ -41,6 +41,60 @@ refs-not-bodies floor as `evidence_refs`. Validator:
 `worker_budget.validateWorkerPartialResult` — the orchestrator never adopts an
 invalid partial return.
 
+## Stated assumptions — `assumptions[]`
+
+Both the result body above and the CHECKPOINT capsule below may carry:
+
+```json
+{ "statement": "<one line>", "basis": "<ref token>", "epistemic_state": "verified | assumed | gap" }
+```
+
+The vocabulary is the **Evidence-Report buckets** from
+[`evidence-discipline`](evidence-discipline.md#evidence-report--the-discovery-output)
+— pinned once, in `subagent_capsule.EPISTEMIC_STATES`, and deliberately not a
+private scale: a capsule that graded its premises differently from the rest of
+the suite would fork the vocabulary every other surface reasons in.
+
+Absent `assumptions[]` means **not recorded** — never "no assumptions were
+made". Unstated premises are the first thing compression drops, which is
+exactly why the field exists on the handoff surface.
+
+## CHECKPOINT capsule — the generation handoff
+
+`CHECKPOINT` is the fifth envelope status. A worker that reaches its budget
+**watermark** (below the stop-loss line, so it still has the headroom to
+summarise itself) returns a capsule instead of running on to be killed:
+
+```json
+{
+  "status": "CHECKPOINT",
+  "summary": "<one or two sentences>",
+  "generation": 1,
+  "done": ["file:line | id | path"],
+  "remaining": ["<one short line each>"],
+  "decisions": ["<choices the successor must not silently re-open>"],
+  "open_risks": ["<still open at handoff>"],
+  "touched_files": ["path | file:line"],
+  "assumptions": [{ "statement": "", "basis": "", "epistemic_state": "verified" }]
+}
+```
+
+**Transcript-exclusion by construction.** Every field is a ref token, a single
+short line, or a count; array entries are capped so a transcript cannot be
+reached by accumulation either. There is no field a raw transcript fits in —
+and that is load-bearing, not stylistic: the claim under test is whether a
+successor can work from the *capsule*, which is unmeasurable the moment raw
+context can ride along. Validator:
+[`subagent_capsule.validateCapsule`](../../../../src/scripts/_lib/subagent_capsule.ts);
+the orchestrator never briefs a successor from an invalid capsule.
+
+**Status today: additive and off.** Nothing reads a capsule. Emission is
+shadow-only (the worker still runs to stop-loss exactly as before) and the
+synthesis duties below have no `CHECKPOINT` branch, so the measurement is not
+confounded by the mechanism it is measuring. The recycling loop that consumes a
+capsule is gated behind `blocker: host-worker-respawn` and
+`blocker: capsule-quality-near-budget`.
+
 ## Orchestrator synthesis duties
 
 ```

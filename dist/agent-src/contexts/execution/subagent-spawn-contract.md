@@ -64,6 +64,31 @@ ADR-109 response contract — it replaces nothing. Live evidence
 (2026-07-28): four lookup-class workers burned 280–327k tokens each on tasks
 a deterministic primitive answers for <1k.
 
+### Capsule watermark — the line below the kill line
+
+The budget now carries **two** lines. `capsule_watermark` sits at
+`CAPSULE_WATERMARK_FRACTION` (0.8) of `max_tokens_per_worker` and is **derived**
+from it in `composeSpawnBrief`, never set independently — a watermark that could
+drift away from the budget it sits under is a watermark nobody can reason about.
+Reaching it means: emit a `CHECKPOINT` capsule
+([response contract](subagent-response-contract.md#checkpoint-capsule--the-generation-handoff))
+**while there is still headroom to write one**. A worker at 100 % of its budget
+cannot summarise itself; that headroom is the entire mechanism.
+
+`evaluateWorkerBudget` reports the band between the two lines as
+`watermark_hit` — the only window in which a capsule can be written at all.
+
+**Shadow only, today.** The worker still runs on to the stop-loss and still
+returns the `BLOCKED` partial result exactly as before; the capsule is recorded,
+never acted on. Behaviour is unchanged on purpose, so the Phase-1 measurement is
+not confounded by the mechanism it is measuring. A second candidate trigger —
+novelty-per-step saturation
+([`capsule_trigger.ts`](../../../../src/scripts/_lib/capsule_trigger.ts),
+term-frequency, no embeddings) — is logged alongside it, and the paired
+comparison is pre-registered as `worker-capsule-trigger-arm` in
+[`docs/CLAIMS.md`](../../../../docs/CLAIMS.md) with both arms losing as an
+explicitly publishable outcome.
+
 ## Bundle resolver — bind to the existing surfaces
 
 The brief is **resolved**, not hand-built. `resolveBundle(slice)` maps a task

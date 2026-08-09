@@ -2,14 +2,14 @@
 
 > Auto-generated — do not edit. Regenerate with `task roadmap-progress` or by running the `update_roadmap_progress` script for your install; rewritten on every roadmap create / execute / completion change (timestamp lives in git history).
 >
-> 21 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **21** open blockers
+> 22 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **24** open blockers
 
 ## Overall
 
-**212 / 316 steps done · 67%**
+**224 / 338 steps done · 66%**
 
 ```text
-███████████████████████████░░░░░░░░░░░░░   67%
+██████████████████████████░░░░░░░░░░░░░░   66%
 ```
 
 ## Open roadmaps
@@ -35,8 +35,9 @@
 | 17 | [road-to-surface-consolidation.md](roadmaps/road-to-surface-consolidation.md) | 3 | 14 | 1 | 12 | 1 | 0 | [2](#blockers-road-to-surface-consolidation) | █████████░ 92% |
 | 18 | [road-to-tier-removal.md](roadmaps/road-to-tier-removal.md) | 4 | 8 | 2 | 6 | 0 | 0 | [1](#blockers-road-to-tier-removal) | ████████░░ 75% |
 | 19 | [road-to-ui-track-integrity-followup.md](roadmaps/road-to-ui-track-integrity-followup.md) | 1 | 10 | 10 | 0 | 0 | 0 | [2](#blockers-road-to-ui-track-integrity-followup) | ░░░░░░░░░░ 0% |
-| 20 | [road-to-worktree-hygiene.md](roadmaps/road-to-worktree-hygiene.md) | 1 | 9 | 2 | 7 | 0 | 0 | [1](#blockers-road-to-worktree-hygiene) | ████████░░ 78% |
-| 21 | [road-to-zero-ceremony-settings.md](roadmaps/road-to-zero-ceremony-settings.md) | 5 | 19 | 1 | 17 | 1 | 0 | 0 | █████████░ 94% |
+| 20 | [road-to-worker-generation-recycling.md](roadmaps/road-to-worker-generation-recycling.md) | 4 | 22 | 10 | 12 | 0 | 0 | [3](#blockers-road-to-worker-generation-recycling) | ██████░░░░ 55% |
+| 21 | [road-to-worktree-hygiene.md](roadmaps/road-to-worktree-hygiene.md) | 1 | 9 | 2 | 7 | 0 | 0 | [1](#blockers-road-to-worktree-hygiene) | ████████░░ 78% |
+| 22 | [road-to-zero-ceremony-settings.md](roadmaps/road-to-zero-ceremony-settings.md) | 5 | 19 | 1 | 17 | 1 | 0 | 0 | █████████░ 94% |
 
 ---
 
@@ -495,6 +496,41 @@ _1 blocker resolved._
     and chose the named blocker over a re-scope that changes a pre-registered
     input.
   - **Resolved when:** either a host-renderable framework lane exists (a build/serve step for the React lane, landed for its own reason) **or** a supported generic-lane override exists — at which point the re-scope is recorded as a dated amendment in `internal/bench/corpora/ui-track-integrity-PREREG.md` and Measurement B becomes executable.
+
+### [road-to-worker-generation-recycling.md](roadmaps/road-to-worker-generation-recycling.md)
+
+**Road to worker-generation recycling — a worker at its budget hands off instead of dying** — 12 / 22 done (55%)
+
+| # | Phase | State | Open | Done | Deferred | Cancelled | % |
+|---|---|---|---:|---:|---:|---:|---:|
+| 0 | The capsule schema, before anything emits one | ✅ done | 0 | 4 | 0 | 0 | 100% |
+| 1 | Emit in shadow, measure the trigger | ✅ done | 0 | 4 | 0 | 0 | 100% |
+| 2 | The recycling loop | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
+| 3 | Evidence gate: confirm, scope, or record the null | 🟡 in progress | 6 | 4 | 0 | 0 | 40% |
+
+<a id="blockers-road-to-worker-generation-recycling"></a>
+**Blockers**
+
+- **capsule-quality-near-budget** (owner: maintainer) — blocks Phase 2
+  - **What to do:**
+    capsule a successor can work from with no re-briefing. If capsules degrade,
+    move the watermark down (75 / 70 %) before concluding that recycling fails —
+    a bad watermark and a bad mechanism look identical from one sample.
+  - **Resolved when:** 3/3 successors reach a usable state from the capsule alone.
+- **host-worker-respawn** (owner: maintainer) — blocks Phase 2
+  - **What to do:**
+    fresh-spawn mid-task, and add the field if it cannot. Hosts without it degrade
+    to stop-loss, loudly.
+  - **Resolved when:** the manifest field exists and the recycling path reads it. - **Progress 2026-08-09 — half done, and only half.** It could not: the manifest had four booleans and none of them expressed respawn. `worker_respawn` now exists on `HostCapabilityManifest`, in the safe default, in the normalizer, and in the settings-override surface — **`false` on every host, including `claude`**, per the registry's own standing rule that a field goes `true` only when the capability is OBSERVED, never inferred from spawn and kill existing separately. A test pins that false. The second half ("the recycling path reads it") is Phase 2.1 and cannot land while `capsule-quality-near-budget` is open, so this blocker stays **open**.
+- **orchestrator-only-mode-decision** (owner: maintainer) — blocks nothing in this roadmap — recorded so the decision is not lost
+  - **What to do:**
+    in the main session is re-opened. It was cancelled 2026-08-07 by a
+    pre-registered stopping rule, on a claim about token/quality wins. The inbox
+    source argues a DIFFERENT claim — stability — and explicitly accepts the
+    overhead as a maintainer preference. A preference is legitimate; a re-scoped
+    claim invented after the numbers is not. If it re-opens, it re-opens as a
+    stated stance with its own pre-registration, in its own roadmap.
+  - **Resolved when:** the decision is recorded either way.
 
 ### [road-to-worktree-hygiene.md](roadmaps/road-to-worktree-hygiene.md)
 
