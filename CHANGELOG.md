@@ -312,6 +312,72 @@ Entry-shape contract: [`docs/contracts/CHANGELOG-conventions.md`](docs/contracts
 > that forces a new era split (`# Era: 9.28.x`, etc.) — see
 > [`docs/contracts/CHANGELOG-conventions.md § Era splits`](docs/contracts/CHANGELOG-conventions.md).
 
+## [9.29.0](https://github.com/event4u-app/agent-config/compare/9.28.0...9.29.0) (2026-08-09)
+
+### Release highlights
+
+<!-- Curated head: fill before merge, keep it under 10 lines, and leave `_none_` where it is genuinely the answer. The generated log below is unchanged. -->
+- **Behaviour changes:** _auto-derived, rewrite before merge:_ rule/schema diffs, breaking commits or removed public surface in 1a2dd51, 0304406, 1008212.
+- **Default changes + migration:** _auto-derived, rewrite before merge:_ commits naming a default, migration or migrate in 51088bd, 2590391, b7b4cb0.
+- **Security and correctness:** _none_
+- **Honest nulls:** _none_
+- **Known limitations:** _none_
+
+### Features
+
+* **team:** availability replaces the master switch; teams readiness ([a94a91a](https://github.com/event4u-app/agent-config/commit/a94a91a30b916909c391939320ae4fb2b04e0b31))
+* **council:** CLI-first shipped default, quorum, absent members, handoff ([51088bd](https://github.com/event4u-app/agent-config/commit/51088bdaaf3633c4918ea05182c5becf65593cf2))
+* **dispatch:** judgment ladder replaces the activation gate ([1a2dd51](https://github.com/event4u-app/agent-config/commit/1a2dd5177b02b9ca752588a022d8a72c6afe51f5))
+* **settings:** activation gates die, one audited incident switch survives ([0304406](https://github.com/event4u-app/agent-config/commit/0304406a536e29d66f44ce19f5f0187383b8af4e))
+* **ci:** lint_never_silent - no shipped guidance may direct a silent re-run ([c7b3d83](https://github.com/event4u-app/agent-config/commit/c7b3d8382ac34a992727c1a042cc65298e56adaa))
+* **self-repair:** fork-aware egress ladder, issue form, detector corpus gate ([5b50807](https://github.com/event4u-app/agent-config/commit/5b5080710e9800bbb4e1eec5773d9c5ff79de866))
+* **self-repair:** fork-aware egress, detector corpus gate, never-silent lint ([4e046aa](https://github.com/event4u-app/agent-config/commit/4e046aa5d992cbefa31717430bd05a9e37798f4f))
+* **rules:** emit Claude Code rules with the host-native paths key ([872c267](https://github.com/event4u-app/agent-config/commit/872c267589995668bfbfffdc2c0128b9d89532dd))
+* **forensics:** read-only forensic analyzers as a default-off pack (Phase 3) ([b7b4cb0](https://github.com/event4u-app/agent-config/commit/b7b4cb05e2247737786e96ff52cf4d739dff68c4))
+* **bench:** critic-protocol A/B result — no promotion, published both directions (Phase 2) ([bc0054b](https://github.com/event4u-app/agent-config/commit/bc0054b8406dc6fe280fcca7b10104547e2380b1))
+* **council:** critic_protocol config + pre-registered load_bearing A/B harness (Phase 2, pre-run) ([e75ae51](https://github.com/event4u-app/agent-config/commit/e75ae514b765205a2f86c5ffaae40a5c81523d87))
+* **hosts:** add worker_respawn to the host-capability manifest ([a30102d](https://github.com/event4u-app/agent-config/commit/a30102d0f30d197ced06248c5712722006032447))
+* **subagents:** emit the capsule at a budget watermark, in shadow ([572d280](https://github.com/event4u-app/agent-config/commit/572d28066be1871f43242056af175ddbd023002c))
+* **subagents:** add the CHECKPOINT capsule as the worker handoff shape ([8340f5e](https://github.com/event4u-app/agent-config/commit/8340f5e11219c296030084432e9f403818552df9))
+* **premortem:** four-part failure register + optional roadmap Pre-mortem section (Phase 1) ([da95e9e](https://github.com/event4u-app/agent-config/commit/da95e9e4880394ab06ea0aaf818e893c695d4657))
+
+### Bug Fixes
+
+* **build:** rebuild the committed install bundle for the settings teardown ([6d9e667](https://github.com/event4u-app/agent-config/commit/6d9e6672bee69178d0ce8d86bd574e248abca54b))
+* **spike:** escape the shape-key separator instead of a raw NUL byte ([1dd9a28](https://github.com/event4u-app/agent-config/commit/1dd9a281d5fc38ce228a04035a43a35b295114e5))
+* **self-repair:** resolve the four R2 completion-review findings ([3474bf7](https://github.com/event4u-app/agent-config/commit/3474bf797321a99e5a7dd5a484a70a8a8748add6))
+* **roadmap:** risk-register marker, allowed risk types, resolvable anchors ([f06f6ed](https://github.com/event4u-app/agent-config/commit/f06f6edb1f9f3b08c4763c542e789272f4dbd091))
+* **scorer:** repoint skill-selection scoring at the live skills tree ([589b2c3](https://github.com/event4u-app/agent-config/commit/589b2c3e11eaf64a32e7bc7269807b3a9af648a2))
+* **ci:** unlink the ADR-217 body link that can never resolve in the dist projection ([1008212](https://github.com/event4u-app/agent-config/commit/100821272c9254d4aae70876c9bfa65af67d1d4d))
+* **forensics:** review findings — schema-valid finding ids, fail-before-write, hermetic smoke test, honest config scope ([0509647](https://github.com/event4u-app/agent-config/commit/050964793ec76e0100199a59fefd5b8cc4ad59e4))
+* **release:** tolerate the concurrent tag-push race in step 8 ([049e8b2](https://github.com/event4u-app/agent-config/commit/049e8b24296a97f946c4597418cfd79457018e3c))
+* **hooks:** self-heal a stale hook bundle in preflight instead of blocking the push ([9256633](https://github.com/event4u-app/agent-config/commit/9256633996be6d86e09df8c288837a8970d456e7))
+
+### Documentation
+
+* **council:** describe the runtime responses artefact without the pruned path literal ([04e8a0f](https://github.com/event4u-app/agent-config/commit/04e8a0feecb2fc19326f9abf894cf49f38424c6b))
+* **roadmap:** always-on orchestration - verified claims, council cut, honest blockers ([d202556](https://github.com/event4u-app/agent-config/commit/d202556efa32376c4fc5fedba7fb95414cb4f4b4))
+* always-on doctrine reaches the always-loaded surfaces ([9eead89](https://github.com/event4u-app/agent-config/commit/9eead8923e604f584541afbdac6d1feac3b02e5c))
+* **review:** re-derive the context-manifest scope_hash for the re-bound round (contract 5 header-manifest agreement) ([2ebdb87](https://github.com/event4u-app/agent-config/commit/2ebdb87f0286a167d24cc26b3a658306274748c6))
+* **review:** add fix-commit refs to the four resolved R2 findings ([9adbf83](https://github.com/event4u-app/agent-config/commit/9adbf83bcb530db4d702d4ff9425f685124b8a2f))
+* **review:** re-bind R2 findings to the post-fix review scope (contract 2.1 in-place re-bind) ([752c29c](https://github.com/event4u-app/agent-config/commit/752c29cf11a66ded030bff60aeac45763c36c2ed))
+* **review:** R2 completion-review findings for feat/road-to-rule-delivery-integrity (1 medium, 3 low, all open) ([0267568](https://github.com/event4u-app/agent-config/commit/02675686ef102552a80ce35861e1c5c094fb3f31))
+* **roadmap:** close rule-delivery-integrity, migrate the measurement out ([2590391](https://github.com/event4u-app/agent-config/commit/25903915772394a776b069991e3d939bcf3f0e70))
+* **adr:** ADR-220 skill invocation attestation — specified, check deferred (Phase 4) ([c8f3dbb](https://github.com/event4u-app/agent-config/commit/c8f3dbb31762a7df7ef3abf7ef70f1e17741afa4))
+* **roadmap:** land phases 0 and 1 of worker-generation recycling ([06c7347](https://github.com/event4u-app/agent-config/commit/06c7347b49809a81b7ee169f42e3c742e5211812))
+* **claims:** pre-register the capsule trigger-arm comparison ([2acfc56](https://github.com/event4u-app/agent-config/commit/2acfc56982d257331243094d2a580ca4f5926c6c))
+
+### Chores
+
+* **roadmap:** close Phase 4 of road-to-rule-delivery-integrity ([5db59bc](https://github.com/event4u-app/agent-config/commit/5db59bc4410488eb22717c8d0606b8eca10bcfa4))
+* **roadmap:** park round-6 and worker-generation-recycling in later/ ([e5ebedc](https://github.com/event4u-app/agent-config/commit/e5ebedcd9ba0b3ddaba10938af74fcab9d79f03a))
+* **generated:** regenerate proof.md + CAPABILITIES.yaml for the 289th skill post-merge ([d0f348d](https://github.com/event4u-app/agent-config/commit/d0f348d0b75b507d10199941185969a633563f63))
+* **roadmap:** close Phase 5 + acceptance criteria — roadmap fully closed ([c993660](https://github.com/event4u-app/agent-config/commit/c9936607fe77e06f1b510a3ee3ccf8390f49a8d6))
+* **generated:** rebuild the install bundle for the settings-schema change ([5b1260d](https://github.com/event4u-app/agent-config/commit/5b1260de7b889a16e94a5e5d5bc6f22f23dc558e))
+* **generated:** regenerate proof.md for the new ledger entry ([76ab0a9](https://github.com/event4u-app/agent-config/commit/76ab0a9e1ccdb09e436f562c1cf8416989d921ef))
+
+Tests: 12438 (+297 since 9.28.0)
+
 ## [9.28.0](https://github.com/event4u-app/agent-config/compare/9.27.0...9.28.0) (2026-08-09)
 
 ### Release highlights

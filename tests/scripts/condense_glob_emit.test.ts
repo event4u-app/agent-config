@@ -14,8 +14,14 @@ import * as path from "node:path";
 import { afterAll, describe, expect, it } from "vitest";
 
 import {
+  CLAUDE_PATHS_PATTERN_BUDGET,
+  _claude_paths_plan,
+  _emit_claude_rule,
   _emit_cursor_mdc,
   _emit_windsurf_rule,
+  _escape_claude_bracket,
+  _expanded_pattern_count,
+  _is_unresolved_placeholder,
   derive_trigger_globs,
 } from "../../src/scripts/condense.js";
 
@@ -138,5 +144,162 @@ describe("_emit_windsurf_rule — trigger/globs snapshot", () => {
     const out = fs.readFileSync(target, "utf-8");
     expect(out).toContain("trigger: always_on");
     expect(out).toContain("globs: \n");
+  });
+});
+
+// ── P3.1: Claude Code `paths:` emitter ───────────────────────────────
+//
+// One fixture per trigger shape, per the step's own verify clause, plus the
+// three degradations the probed host contract records as SILENT: an
+// agent-config placeholder that looks like a brace group, an unescaped `[`,
+// and a pattern list over the host's expansion budget. Each of those makes a
+// pattern match nothing, which would take a rule from "loads on demand" to
+// "never reaches the model" with no error anywhere.
+
+const PLACEHOLDER_FM = `type: "auto"
+tier: "2a"
+alwaysApply: false
+description: "Roadmap CI steps"
+triggers:
+  - path_prefix: "agents/roadmaps/"
+  - path_prefix: "{module_root}/"
+  - keyword: "task ci"`;
+
+const PLACEHOLDER_ONLY_FM = `type: "auto"
+alwaysApply: false
+description: "Placeholder only"
+triggers:
+  - path_prefix: "{module_root}/"`;
+
+describe("_is_unresolved_placeholder — the comma is the discriminator", () => {
+  it("treats a comma-less brace group as a placeholder", () => {
+    expect(_is_unresolved_placeholder("{module_root}/**")).toBe(true);
+    expect(_is_unresolved_placeholder("{agent_folder}/x")).toBe(true);
+  });
+
+  it("treats a real alternation as a glob", () => {
+    expect(_is_unresolved_placeholder("src/**/*.{ts,tsx}")).toBe(false);
+    expect(_is_unresolved_placeholder("resources/views/**")).toBe(false);
+  });
+});
+
+describe("_expanded_pattern_count", () => {
+  it("multiplies brace alternations and defaults to 1", () => {
+    expect(_expanded_pattern_count("src/**")).toBe(1);
+    expect(_expanded_pattern_count("src/**/*.{ts,tsx}")).toBe(2);
+    expect(_expanded_pattern_count("{a,b}/{c,d,e}")).toBe(6);
+  });
+});
+
+describe("_escape_claude_bracket", () => {
+  it("escapes a literal [ so it cannot open a bracket expression", () => {
+    expect(_escape_claude_bracket("docs/[draft]/**")).toBe("docs/\\[draft]/**");
+    expect(_escape_claude_bracket("src/**")).toBe("src/**");
+  });
+});
+
+describe("_claude_paths_plan", () => {
+  it("drops an unresolved placeholder and records why", () => {
+    const plan = _claude_paths_plan({
+      triggers: [{ path_prefix: "agents/roadmaps/" }, { path_prefix: "{module_root}/" }],
+    });
+    expect(plan.globs).toEqual(["agents/roadmaps/**"]);
+    expect(plan.dropped).toEqual([
+      { pattern: "{module_root}/**", reason: "unresolved-placeholder" },
+    ]);
+  });
+
+  it("keeps an always-apply rule unscoped even when it has path triggers", () => {
+    const plan = _claude_paths_plan({
+      type: "always",
+      triggers: [{ path_prefix: "src/" }],
+    });
+    expect(plan.globs).toEqual([]);
+    expect(plan.dropped).toEqual([]);
+  });
+
+  it("drops a pattern that would cross the host expansion budget", () => {
+    // One 1001-way alternation cannot fit a 1000-pattern budget.
+    const wide = `{${Array.from({ length: CLAUDE_PATHS_PATTERN_BUDGET + 1 }, (_, i) => `a${String(i)}`).join(",")}}`;
+    const plan = _claude_paths_plan({
+      triggers: [{ path_prefix: "src/" }, { file_pattern: wide }],
+    });
+    expect(plan.globs).toEqual(["src/**"]);
+    expect(plan.dropped).toEqual([{ pattern: wide, reason: "over-budget" }]);
+  });
+});
+
+describe("_emit_claude_rule — frontmatter carries `paths:` and nothing else", () => {
+  /** Frontmatter keys present in the emitted file, or null when there is none. */
+  function emittedKeys(out: string): string[] | null {
+    if (!out.startsWith("---\n")) return null;
+    const end = out.indexOf("\n---", 3);
+    const block = out.slice(4, end + 1);
+    return block
+      .split("\n")
+      .filter((l) => /^[A-Za-z_][A-Za-z0-9_]*:/.test(l))
+      .map((l) => (l.split(":")[0] as string));
+  }
+
+  it("path_prefix triggers become a paths list, one entry per glob", () => {
+    const src = writeRule("ui-audit-gate-c", UI_AUDIT_FM);
+    const target = path.join(tmp, "out", "ui-audit-gate-c.md");
+    _emit_claude_rule(src, target);
+    const out = fs.readFileSync(target, "utf-8");
+    expect(out).toBe(
+      '---\npaths:\n  - "resources/views/**"\n  - "resources/js/**"\n---\n\nBody.\n',
+    );
+    expect(emittedKeys(out)).toEqual(["paths"]);
+  });
+
+  it("file_pattern maps verbatim", () => {
+    const src = writeRule("php-rule-c", FILE_PATTERN_FM);
+    const target = path.join(tmp, "out", "php-rule-c.md");
+    _emit_claude_rule(src, target);
+    expect(fs.readFileSync(target, "utf-8")).toBe('---\npaths:\n  - "*.php"\n---\n\nBody.\n');
+  });
+
+  it("keyword-only rules get NO frontmatter — absent paths is how the host says load-always", () => {
+    const src = writeRule("keyword-only-c", KEYWORD_ONLY_FM);
+    const target = path.join(tmp, "out", "keyword-only-c.md");
+    _emit_claude_rule(src, target);
+    const out = fs.readFileSync(target, "utf-8");
+    expect(out).toBe("Body.\n");
+    expect(emittedKeys(out)).toBeNull();
+  });
+
+  it("kernel rules get NO frontmatter, so they load unconditionally", () => {
+    const src = writeRule("kernel-rule-c", ALWAYS_FM);
+    const target = path.join(tmp, "out", "kernel-rule-c.md");
+    _emit_claude_rule(src, target);
+    expect(fs.readFileSync(target, "utf-8")).toBe("Body.\n");
+  });
+
+  it("a placeholder is dropped while the rule keeps its real pattern", () => {
+    const src = writeRule("roadmap-ci-c", PLACEHOLDER_FM);
+    const target = path.join(tmp, "out", "roadmap-ci-c.md");
+    _emit_claude_rule(src, target);
+    const out = fs.readFileSync(target, "utf-8");
+    expect(out).toContain('  - "agents/roadmaps/**"');
+    expect(out).not.toContain("module_root");
+  });
+
+  it("a rule whose ONLY pattern is a placeholder degrades to unconditional, never to invisible", () => {
+    const src = writeRule("placeholder-only-c", PLACEHOLDER_ONLY_FM);
+    const target = path.join(tmp, "out", "placeholder-only-c.md");
+    _emit_claude_rule(src, target);
+    const out = fs.readFileSync(target, "utf-8");
+    // No `paths:` at all — the rule still reaches the model. A literal
+    // `{module_root}` pattern would have matched no file, i.e. never.
+    expect(out).toBe("Body.\n");
+  });
+
+  it("carries the body byte-for-byte, frontmatter aside", () => {
+    const body = "# Title\n\nLine one.\n\n```ts\nconst a = 1;\n```\n";
+    const src = writeRule("body-fidelity-c", FILE_PATTERN_FM, body);
+    const target = path.join(tmp, "out", "body-fidelity-c.md");
+    _emit_claude_rule(src, target);
+    const out = fs.readFileSync(target, "utf-8");
+    expect(out.endsWith(body)).toBe(true);
   });
 });
