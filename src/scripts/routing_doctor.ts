@@ -53,7 +53,7 @@ import {
 import * as hooks_status from "./hooks_status.js";
 import { load_agent_settings } from "./_lib/agent_settings.js";
 import {
-  normalizeHostManifest,
+  resolveHostCapabilities,
   type HostCapabilityManifest,
 } from "./_lib/host_capability.js";
 import {
@@ -106,6 +106,19 @@ export interface OrchestrationReport {
   /** cost.budgets.per_tier ceilings + live cool-down state per tier. */
   tier_budgets: Record<string, { ceiling_usd: number | null; cooldown_until_ms: number }>;
   host_manifest: HostCapabilityManifest;
+  /**
+   * The host identifier the capability registry was keyed on, and whether it
+   * was OBSERVED (given via `--platform`) or merely ASSUMED (the CLI default).
+   *
+   * The doctor has no host detection: `main()` defaults to `claude`. Once
+   * capability resolution keys on that string, an assumed platform produces a
+   * confident-looking `subagent_spawn` for a host the user may not be on —
+   * so the assumption is reported next to the value it decided, and a reader
+   * can falsify it. Without this pair the misdiagnosis is invisible in the
+   * output, which is worse than the pre-registry bug it replaced.
+   */
+  host_platform: string;
+  host_platform_assumed: boolean;
   /** Verdict of the real activation gate for a canonical delegable probe. */
   activation: { action: string; reason: string };
   cost_budgets: Record<string, unknown>;
@@ -194,18 +207,40 @@ export interface DoctorReport {
 /**
  * Orchestration-routing state: settings gates, host capability, budget
  * inputs, and (optionally) a dry-run classification for a sample prompt.
- * Read-only — mirrors exactly what the delegation layer would resolve.
+ * Read-only — it mirrors what the delegation layer resolves FOR `platform`.
+ * That qualifier is load-bearing: the hook reads its platform off a real
+ * envelope, this function is told one, and the two agree only when the
+ * caller was told the truth (see `platform_assumed`).
+ *
+ * `platform` is the host identifier the committed capability registry is
+ * keyed on — the same string a hook envelope's `platform` field carries.
+ * It is REQUIRED, not optional: resolving through `normalizeHostManifest`
+ * alone (as this function did until the registry landed) skips the registry
+ * row entirely, so on a fresh clone with no `subagents.host_capabilities`
+ * override the doctor reported `subagent_spawn: false` while
+ * `delegation_nudge_hook` — which does call `resolveHostCapabilities` —
+ * reported `true`. Two readers of one fact disagreeing is worse than either
+ * answer, and the diagnostic is the one a user runs precisely to check the
+ * other. A required parameter makes that regression uncompilable; an
+ * optional one only discourages it in a comment, and a comment has never
+ * failed a build.
+ *
+ * `platform_assumed` says whether the caller OBSERVED the host or guessed
+ * it. It is not decoration: keying the registry on a guessed host is how
+ * this function would trade the bug it fixed for a mirrored one.
  */
 export function collect_orchestration(
   workspace_root: string,
   sample_prompt: string | null,
+  platform: string,
+  platform_assumed: boolean,
 ): OrchestrationReport {
   const settings = load_agent_settings({ cwd: workspace_root });
   const sub = (settings["subagents"] ?? {}) as Record<string, unknown>;
   const enabled = sub["enabled"] !== false;
   const auto = typeof sub["auto"] === "string" ? (sub["auto"] as string) : "ask";
   const downshift = sub["downshift"] !== false;
-  const host_manifest = normalizeHostManifest(sub["host_capabilities"]);
+  const host_manifest = resolveHostCapabilities(platform, sub["host_capabilities"]);
   const activationInputs: ActivationInputs = {
     enabled,
     auto: (auto === "on" || auto === "off" ? auto : "ask") as ActivationInputs["auto"],
@@ -260,6 +295,8 @@ export function collect_orchestration(
     budget_routing,
     tier_budgets,
     host_manifest,
+    host_platform: platform,
+    host_platform_assumed: platform_assumed,
     activation: { action: probe.action, reason: probe.reason },
     cost_budgets,
     ledger_present,
@@ -410,6 +447,15 @@ function _freshness(no_freshness: boolean): FreshnessReport {
 
 export function collect_report(options: {
   platform: string;
+  /**
+   * True when `platform` is the CLI's fallback rather than a value the caller
+   * observed or passed. Optional so existing callers keep compiling, and
+   * defaulting to `true` on purpose: a caller that did not say where the
+   * platform came from has not established that it observed one, and the
+   * conservative reading is the one that shows the caveat rather than the one
+   * that hides it.
+   */
+  platform_assumed?: boolean;
   workspace_root: string;
   no_freshness: boolean;
   classify?: string | null;
@@ -440,7 +486,12 @@ export function collect_report(options: {
     chain: chain.map((c) => c.name),
     gates,
     freshness: _freshness(options.no_freshness),
-    orchestration: collect_orchestration(options.workspace_root, options.classify ?? null),
+    orchestration: collect_orchestration(
+      options.workspace_root,
+      options.classify ?? null,
+      options.platform,
+      options.platform_assumed ?? true,
+    ),
     bridge_table,
   };
 }
@@ -466,9 +517,18 @@ function _render(report: DoctorReport): string {
   const o = report.orchestration;
   lines.push(
     `Orchestration: enabled=${o.enabled} · auto=${o.auto} · downshift=${o.downshift} · ` +
-      `budget_routing=${o.budget_routing} · subagent_spawn=${o.host_manifest.subagent_spawn} · ` +
+      `budget_routing=${o.budget_routing} · subagent_spawn=${o.host_manifest.subagent_spawn} ` +
+      `(host=${o.host_platform}${o.host_platform_assumed ? ", ASSUMED" : ", observed"}) · ` +
       `ledger=${o.ledger_present ? "present" : "absent"}`,
   );
+  if (o.host_platform_assumed) {
+    // Without this line the reader cannot tell a measured capability from one
+    // the registry produced for a host nobody checked they were on.
+    lines.push(
+      `  ⚠️ host not detected — '${o.host_platform}' is this command's default, ` +
+        `and the capability registry is keyed on it. Pass --platform <host> to check another.`,
+    );
+  }
   const tierBits = Object.entries(o.tier_budgets).map(([t, s]) => {
     const cap = s.ceiling_usd === null ? "no cap" : `$${s.ceiling_usd}`;
     const cool = s.cooldown_until_ms > 0 ? " COOLING" : "";
@@ -499,7 +559,11 @@ function _render(report: DoctorReport): string {
 
 export function main(argv?: string[]): number {
   const args = argv ?? process.argv.slice(2);
+  // The default is a guess, and since the capability registry is keyed on it
+  // the guess now decides `subagent_spawn`. Track where the value came from so
+  // the report can say so — there is no host detection here to replace it with.
   let platform = "claude";
+  let platform_assumed = true;
   let workspace_root = process.cwd();
   let json = false;
   let strict = false;
@@ -509,6 +573,7 @@ export function main(argv?: string[]): number {
     const a = args[i];
     if (a === "--platform" && args[i + 1]) {
       platform = String(args[(i += 1)]);
+      platform_assumed = false;
     } else if (a === "--workspace" && args[i + 1]) {
       workspace_root = path.resolve(String(args[(i += 1)]));
     } else if (a === "--classify" && args[i + 1]) {
@@ -521,7 +586,13 @@ export function main(argv?: string[]): number {
       no_freshness = true;
     }
   }
-  const report = collect_report({ platform, workspace_root, no_freshness, classify });
+  const report = collect_report({
+    platform,
+    platform_assumed,
+    workspace_root,
+    no_freshness,
+    classify,
+  });
   if (json) {
     process.stdout.write(`${JSON.stringify(report as unknown as JsonValue, null, 2)}\n`);
   } else {
