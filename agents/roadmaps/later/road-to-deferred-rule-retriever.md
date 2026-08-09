@@ -16,6 +16,12 @@ complexity: medium
 > `rules_carried`/`rules_used` per-worker audit fields shipped by
 > `road-to-lean-agent-init` (2026-07-28): a sustained low usage quota
 > (rules carried but not applied) IS the datum this condition asks for.
+> **Producer registered (2026-08-10):** `road-to-token-economy-dispatch`
+> Phase 1.3 registered `rules_efficiency` (median `rules_used/rules_carried`,
+> low-quota bar 0.2) in `src/config/dispatch-economy-metrics.json` with the
+> report command `./scripts-run src/scripts/dispatch_economy_report` — one
+> measurement, two consumers; condition (c) reads that metric's sustained
+> value, no new instrumentation needed.
 >
 > **Gate (1) HAS FIRED — as an honest null (2026-07-28).** The first native
 > engine's Phase-5 verdict is published: the code graph measured recall

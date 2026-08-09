@@ -136,7 +136,7 @@ widens by evidence.
       source rather than trust). Selection and pointers only — a prose
       transcript summary is schema-invalid by construction (the series'
       anti-summarisation stance, enforced here as a validator rule, not a
-      convention). <!-- verify: task test -- --filter=checkpoint_schema -->
+      convention). <!-- verify: npx vitest run checkpoint_schema -->
 - [ ] 2.2 Producer command `session:recycle` — validates, writes the
       envelope to the runtime state dir, prints the exact resume
       instruction. Deterministic, no model step in the write path beyond
@@ -151,7 +151,7 @@ widens by evidence.
       equal against an uninterrupted control run. This is the correctness
       gate for the schema — a field whose absence changes the outcome is a
       missing field, found here and not in production.
-      <!-- verify: task test -- --filter=recycle_roundtrip -->
+      <!-- verify: npx vitest run recycle_roundtrip -->
 
 **Exit:** a session can end on purpose and its successor provably completes the task; the envelope carries state, not summary, validator-enforced.
 **Rollback:** schema version step back; the producer command is additive.

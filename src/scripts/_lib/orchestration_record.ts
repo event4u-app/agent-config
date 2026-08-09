@@ -98,6 +98,18 @@ export interface RecordInput {
     /** Rules the worker actually applied/cited (count of the envelope's
      *  `rules_applied`-equivalent on the worker side). Counts only. */
     rules_used?: number | null | undefined;
+    // ── dispatch-economy additive fields (road-to-token-economy-dispatch
+    //    Phase 1.1). `init_tokens` above (lean-init) is the spawn-payload
+    //    half; `work_tokens` is the delta from first worker turn to envelope
+    //    close. Both are counts; the pair's provenance rides
+    //    `floor_provenance` exactly like `token_delta_provenance` tags
+    //    `token_delta`. ──
+    /** Tokens the worker consumed AFTER init (delta to envelope close). */
+    work_tokens?: number | null | undefined;
+    /** Provenance of the init/work pair: 'measured' (transcript ledger via
+     *  cc_transcript) or 'estimated'. Defaults to 'estimated' when either
+     *  field is present without a tag. */
+    floor_provenance?: Provenance | null | undefined;
     // ── capsule shadow-measurement fields (road-to-worker-generation-recycling
     //    Phase 1.2). SHADOW ONLY: the worker still runs to stop-loss, nothing
     //    reads a capsule. All counts / enums — a capsule's CONTENT never
@@ -239,8 +251,12 @@ export function buildOrchestrationLine(input: RecordInput): BuiltLine {
     for (const [key, v] of [
         ['rules_carried', input.rules_carried],
         ['rules_used', input.rules_used],
+        ['work_tokens', input.work_tokens],
     ] as const) {
         if (v != null && (!isInt(v) || v < 0)) errors.push(`${key} must be a non-negative integer count`);
+    }
+    if (input.floor_provenance != null && !PROVENANCES.includes(input.floor_provenance)) {
+        errors.push(`floor_provenance must be one of ${PROVENANCES.join(' | ')} (or omitted)`);
     }
     if (
         input.rules_carried != null &&
@@ -298,6 +314,10 @@ export function buildOrchestrationLine(input: RecordInput): BuiltLine {
         origin: input.origin ?? null,
         rules_carried: input.rules_carried ?? null,
         rules_used: input.rules_used ?? null,
+        // dispatch-economy additive fields — readers ignore unknowns per audit-log-v1
+        work_tokens: input.work_tokens ?? null,
+        floor_provenance:
+            input.floor_provenance ?? (input.init_tokens != null || input.work_tokens != null ? 'estimated' : null),
         // capsule shadow-measurement — readers ignore unknowns per audit-log-v1
         capsule_emitted: input.capsule_emitted ?? null,
         capsule_entries: input.capsule_entries ?? null,

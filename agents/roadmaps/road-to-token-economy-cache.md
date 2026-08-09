@@ -158,7 +158,7 @@ discipline the latency budget already established for wall-clock.
       volatile markers (timestamps, session/run IDs, counters, absolute
       local paths) inside the layer and its generators. Self-test proves
       red on a fixture injecting `new Date().toISOString()` into a rule
-      template. <!-- verify: task test -- --filter=static_layer_stability -->
+      template. <!-- verify: npx vitest run static_layer_stability -->
 - [ ] 2.3 Generated always-loaded artifacts NOT already covered by
       `compile_router --check` become build-deterministic: two consecutive
       builds from the same tree produce byte-identical output (sorted
@@ -184,7 +184,7 @@ discipline the latency budget already established for wall-clock.
       chains against fixture payloads, counts emitted
       `additionalContext`/`reason` bytes per concern, compares against the
       budget — CI gate red on breach, exactly the latency harness shape.
-      <!-- verify: task test -- --filter=bench_hook_injection -->
+      <!-- verify: npx vitest run bench_hook_injection -->
 - [ ] 3.3 Idempotency discipline for repeat-slot concerns: a concern whose
       injection would byte-duplicate its own earlier injection in the same
       session emits nothing (session-scoped marker, the end-review-nudge
@@ -255,7 +255,7 @@ discipline the latency budget already established for wall-clock.
       naming the earlier read and the ranged-read alternative. Advisory
       first, never a block — a stale-ledger false positive on a block would
       corrupt work; the escalation decision waits on the 6.4 telemetry.
-      <!-- verify: task test -- --filter=reread_guard -->
+      <!-- verify: npx vitest run reread_guard -->
 - [ ] 6.2 Post-edit scope hint: a full-file Read immediately following this
       session's own Edit/Write to the same path gets the same advisory
       shape pointing at a ranged re-read of the edited hunk. Generated/dist

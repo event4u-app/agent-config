@@ -66,6 +66,8 @@ v1 forward-compat rule on unknown fields).
 | `origin` | string \| null | **Lean-init extension (council Q5 segregation).** Id-shaped sample tag (`lean-init-2026`) keeping lean-init efficiency lines cleanly separable from the `road-to-orchestration-scope-decision` sample. `null` = untagged line. Never free-form. |
 | `rules_carried` | int \| null | **Lean-init extension (L6 demand signal).** Rules in the worker's scoped projection — the carried set. With `rules_used`, yields the per-worker rule-usage quota the parked `later/road-to-deferred-rule-retriever` resume condition asks for ("are worker rules actually carried unused?"). `null` = not measured. Counts only. |
 | `rules_used` | int \| null | **Lean-init extension (L6 demand signal).** Rules the worker actually applied/cited. Validation: never exceeds `rules_carried`. `null` = not measured. Counts only. |
+| `work_tokens` | int \| null | **Dispatch-economy extension.** Tokens the worker consumed AFTER init — the delta from first worker turn to envelope close. With `init_tokens`, yields the `dispatch_floor` ratio (`src/config/dispatch-economy-metrics.json`). Sourced from the transcript ledger (`_lib/cc_transcript.ts` `billable_input` semantics) by the report/backfill, never model-estimated without the tag below. `null` = not measured. |
+| `floor_provenance` | enum \| null | **Dispatch-economy extension.** Provenance of the `init_tokens`/`work_tokens` pair: `measured` (transcript ledger) · `estimated`. Auto-defaults to `estimated` when either field is present untagged — mirrors `token_delta_provenance`. `null` = neither field present. |
 
 These routing + cost fields are additive and optional — a line without them is
 still a valid orchestration line; readers ignore unknown fields per the v1

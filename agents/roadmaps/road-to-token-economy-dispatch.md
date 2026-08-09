@@ -88,13 +88,19 @@ result and the projection widens by evidence, not by fear.
       routing surface this roadmap extends downward. 13 open boxes remain
       in `road-to-always-on-orchestration.md` (non-goals + acceptance
       verification); implementer confirms none blocks the ladder surface.
-- [ ] `orchestration_record` (F6) live on `post_tool_use` — the telemetry
+- [x] `orchestration_record` (F6) live on `post_tool_use` — the telemetry
       carrier Phase 1 consumes (`src/scripts/_lib/orchestration_record.ts`
       exists; implementer verifies the hook binding fires on this host via
-      `agent-config hooks:status`).
-- [ ] `rules_carried`/`rules_used` audit fields (lean-agent-init) still
+      `agent-config hooks:status`). <!-- verified 2026-08-10: manifest binds
+      orchestration-record on post_tool_use for augment/claude/cowork/cursor;
+      this repo's project-level .claude/settings.json is absent but the
+      user-global install carries the chains (hooks demonstrably fire) -->
+- [x] `rules_carried`/`rules_used` audit fields (lean-agent-init) still
       emitted on worker envelopes — implementer verifies the fields survive
-      the #1235 reader migration before Phase 1 cites them.
+      the #1235 reader migration before Phase 1 cites them. <!-- verified
+      2026-08-10: _lib/orchestration_record.ts:97-100 validates + emits both;
+      CLI flags --rules-carried/--rules-used; doc rows in
+      orchestration-telemetry.md -->
 
 ## Context (verified against tree 2026-08-10 during inbox analysis, do not relitigate)
 
@@ -151,27 +157,42 @@ result and the projection widens by evidence, not by fear.
 
 ## Phase 1 — measure the floor before touching it
 
-- [ ] 1.1 Extend the `orchestration_record` line (additive, schema-versioned)
+- [x] 1.1 Extend the `orchestration_record` line (additive, schema-versioned)
       with `init_tokens` (context size at first worker turn) and
       `work_tokens` (delta to envelope close) — provenance-tagged like the
       existing token delta; hook-carried, never model-carried. Source the
       counts from the transcript-usage lib
       (`src/scripts/_lib/cc_transcript.ts`, `billable_input` semantics,
       message.id+requestId dedupe) — never from `input_tokens` alone.
-      <!-- verify: task test -- --filter=orchestration_record -->
-- [ ] 1.2 REGISTER metric `dispatch_floor`: median `init_tokens` per role
+      <!-- verify: npx vitest run orchestration_record -->
+      <!-- done 2026-08-10: init_tokens PRE-EXISTED (lean-init); added
+      work_tokens + floor_provenance to _lib/orchestration_record.ts, CLI
+      flags, doc rows; 47 tests green -->
+- [x] 1.2 REGISTER metric `dispatch_floor`: median `init_tokens` per role
       (worker, reviewer) and ratio `init_tokens / work_tokens`. Baseline is
       cache-economy's 2026-07-30 census (median cold start 235.5k; C-1
       69.7%), re-run on the post-9.29 tree. Committed threshold before new
       data exists: a sustained median ratio > 1 for rung-1 workers means
       the projection (Phase 3) is mandatory, not optional; a ratio < 0.15
       after Phase 3 ships is the success criterion.
-- [ ] 1.3 REGISTER metric `rules_efficiency`: `rules_used / rules_carried`
+      <!-- done 2026-08-10: src/config/dispatch-economy-metrics.json +
+      src/scripts/dispatch_economy_report.ts. Ratio is COST-shaped
+      (weightedInputUnits: read 0.1x, write 1.25x/2x) — raw billable ratio is
+      unmeetable by construction (measured 0.02 on legs whose weighted ratio
+      is 0.21). First live reading (14d window, includes pre-9.29 sessions):
+      median init 251.0k (baseline 235.5k — the floor GREW), weighted ratio
+      0.21, single-run projection-mandatory signal false -->
+- [x] 1.3 REGISTER metric `rules_efficiency`: `rules_used / rules_carried`
       per worker envelope (fields from lean-agent-init). Sustained low quota
       is simultaneously (a) the cut-line evidence for Phase 3 and (b) the
       demand-signal datum `road-to-deferred-rule-retriever` gate (2c) asks
       for — one measurement, two consumers, recorded in both roadmaps.
-- [ ] 1.4 Honest-null path written down: if the re-measured floor on the
+      <!-- done 2026-08-10: registered in dispatch-economy-metrics.json
+      (low-quota bar 0.2); producer note added to
+      later/road-to-deferred-rule-retriever.md gate (2c). Live reading:
+      0 envelopes carry the pair yet — data accumulates from real
+      dispatches -->
+- [x] 1.4 Honest-null path written down: if the re-measured floor on the
       post-9.29 tree is materially smaller than the cache-economy census,
       phases 3–5 downgrade to blockers citing the null, and the null is
       publishable in `docs/benchmark.md`.
@@ -185,7 +206,7 @@ result and the projection widens by evidence, not by fear.
       orchestrator | worker` (default `orchestrator` — every existing chain
       is byte-identical under the default; a missing role key changes
       nothing). The generator and registry-parity tests extend to the new
-      axis. <!-- verify: task test -- --filter=hook_manifest -->
+      axis. <!-- verify: npx vitest run hook_manifest -->
 - [ ] 2.2 The dispatch wrapper marks worker spawns (env var
       `AGENT_CONFIG_SESSION_ROLE=worker`; the recursive-dispatch guard's
       lineage detection is the shared implementation — one detector, two
@@ -234,7 +255,7 @@ result and the projection widens by evidence, not by fear.
       reconciled transport chain (#1235 Phase 3): one prompt, one answer, no
       harness, no session, honest-∅ when no transport resolves. CLI-first
       billing classification applies unchanged.
-      <!-- verify: task test -- --filter=ask_transport -->
+      <!-- verify: npx vitest run ask_transport -->
 - [ ] 4.2 The judgment ladder gains rung 0.5 between deterministic scripts
       and the first spawn: single bounded *question* (classification, small
       verification, one-file semantic lookup that the code-graph null left
@@ -277,7 +298,7 @@ result and the projection widens by evidence, not by fear.
 - [ ] 6.1 Worker results land on disk (runtime artifact dir, gitignored);
       the CHECKPOINT envelope carries path + verdict + the bounded summary —
       committed max envelope size, lint-checked in the envelope validator.
-      <!-- verify: task test -- --filter=envelope -->
+      <!-- verify: npx vitest run envelope -->
 - [ ] 6.2 The orchestrator's dispatch skill instructs result consumption
       from the artifact path on demand, never wholesale transcript
       ingestion; the subagent-orchestration skill's examples update to the

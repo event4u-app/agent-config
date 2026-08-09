@@ -1,0 +1,36 @@
+{
+    "_comment": "Registered metrics for road-to-token-economy-dispatch Phase 1 (registered BEFORE any reduction lever ships — the budget-ownership discipline of hook-latency-budget.json / preamble-payload-budget.json). Baseline anchor: road-to-cache-economy census 2026-07-30 (median subagent cold start 235.5k tokens written-or-uncached, C-1 cold-start dominance 69.7%). Thresholds are the roadmap's committed numbers; changing one is a PR citing evidence, never a drive-by edit.",
+    "schema_version": 1,
+    "registered_at": "2026-08-10",
+    "owner": "maintainer",
+    "review_by": "2026-11-10",
+    "metrics": {
+        "dispatch_floor": {
+            "definition": "Median init_tokens per role (worker, reviewer) and the COST-shaped init/work ratio per dispatched leg. init_tokens = billable_input of the leg's FIRST assistant record (raw — comparable to the cache-economy 235.5k baseline); work_tokens = leg total billable_input minus init_tokens. The RATIO is computed on weighted input units (read 0.1x, 5m write 1.25x, 1h write 2.0x — _lib/cc_transcript.ts weightedInputUnits), NOT raw billable_input: raw counts every later turn's cache-read re-transmission at full weight, which makes the 'more spent loading than working' threshold unmeetable by construction (measured live 2026-08-10: raw ratio 0.02 on the same legs). billable_input = input_tokens + cache_read_input_tokens + cache_creation_input_tokens (never usage.input_tokens alone).",
+            "source": "Primary: transcript ledger via src/scripts/_lib/cc_transcript.ts (per-agentId legs, message.id+requestId dedupe). Secondary: audit-log orchestration lines carrying init_tokens/work_tokens with floor_provenance=measured.",
+            "role_attribution": "HONEST LIMITATION until the role axis (Phase 2) ships: transcripts carry no session role, so all subagent legs report as role=worker; reviewer legs are attributed from audit-line agent_combo where present. The report states which attribution produced each number.",
+            "thresholds": {
+                "projection_mandatory_ratio": 1.0,
+                "_projection_mandatory": "sustained median init/work ratio > 1.0 for rung-1 workers over a review window makes Phase 3 (worker thin projection) mandatory, not optional",
+                "success_ratio_after_projection": 0.15,
+                "_success": "median ratio < 0.15 after Phase 3 ships is the roadmap's registered success criterion"
+            },
+            "baseline": {
+                "cold_start_median_tokens": 235500,
+                "cold_start_write_volume_share_pct": 69.7,
+                "at": "2026-07-30",
+                "source": "road-to-cache-economy first-party measurement (14-day window, host CC 2.1.220); re-measure on the post-9.29 tree is Phase 1's first report run"
+            }
+        },
+        "rules_efficiency": {
+            "definition": "rules_used / rules_carried per worker envelope (fields shipped by road-to-lean-agent-init, validated in _lib/orchestration_record.ts). Sustained low quota is simultaneously the Phase 3 cut-line evidence AND the demand-signal datum later/road-to-deferred-rule-retriever gate (2c) asks for — one measurement, two consumers.",
+            "source": "Audit-log orchestration lines (agents/runtime/state/audit/*.jsonl) where both fields are non-null.",
+            "thresholds": {
+                "low_quota_signal": 0.2,
+                "_low_quota": "a sustained median quota below 0.2 over the review window is the cut-line evidence Phase 3.1 requires (>= 2 weeks of data) and the retriever gate's demand signal"
+            }
+        }
+    },
+    "honest_null_consequence": "If the re-measured floor on the post-9.29 tree is materially smaller than the cache-economy baseline (roadmap step 1.4), phases 3-5 of road-to-token-economy-dispatch downgrade to blockers citing the null, and the null is published in docs/benchmark.md. A metric nobody re-runs by review_by is treated as the latency file's fossilization failure: the report command below is the re-verification procedure.",
+    "report_command": "./scripts-run src/scripts/dispatch_economy_report [--format text|json] [--root <transcripts>] [--audit-dir <dir>] [--max-age-days 14]"
+}
