@@ -80,6 +80,31 @@ For each top failure mode (sorted by L × I from `risk-officer`):
    rollout strategy that reduces the likelihood of this failure mode. Keep it
    executable; flag as `accept` if no practical guardrail exists.
 
+### 3b. Compress into the four-part failure register
+
+When the pre-mortem accompanies a plan artefact (a roadmap, an ADR, a design
+doc), compress the analysis into the **four-part failure register** — the
+fixed, comparable shape the roadmap template's optional `## Pre-mortem`
+section consumes:
+
+1. **Three most probable causes of death, ranked** — one paragraph each,
+   naming the concrete mechanism by which the plan most plausibly dies.
+   Mechanisms, not topics: "the gate's two inputs are unmeasurable from this
+   corpus" is a cause; "measurement risk" is not.
+2. **One untested hidden dependency** — the assumption the plan relies on but
+   never tests.
+3. **One modification that makes failure survivable** — a concrete plan change
+   that converts a fatal outcome into a recoverable one.
+4. **One tripwire metric with a horizon** — a measurable signal plus a
+   threshold and deadline that says early that cause #1 is materializing.
+
+The register was validated blind against this repo's own closed nulls
+(3 of 4 registers named the actual failure cause at rank 1 —
+`agents/evidence/analysis/premortem-blind-retro-validation.md`). The hits were
+all failures of *measurability*; the miss was a mechanism that worked but
+added nothing — weight the register toward "can this experiment answer its
+question" and state redundancy risks explicitly.
+
 ### 4. Optional memory write-back
 
 If the analysis surfaces a pattern worth preserving for future decisions:
@@ -96,7 +121,11 @@ If the analysis surfaces a pattern worth preserving for future decisions:
 1. **Ranked prospective failure modes** — L × I ordered list (from `risk-officer`)
 2. **Early-warning signal per failure mode** — concrete, observable indicator
 3. **Preventive guardrails** — one per failure mode (or `accept` with rationale)
-4. **Optional memory candidate** — drafted to `/memory propose` if the pattern
+4. **Four-part failure register** (when accompanying a plan artefact) — three
+   ranked causes of death · one untested hidden dependency · one
+   survivable-failure modification · one tripwire metric with a horizon
+   (step 3b; feeds the roadmap template's optional `## Pre-mortem` section)
+5. **Optional memory candidate** — drafted to `/memory propose` if the pattern
    clears the admission gate (≥ 2 distinct file paths OR ≥ 3 future decisions)
 
 ## Do NOT

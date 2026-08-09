@@ -1,0 +1,386 @@
+{
+  "mode": "run",
+  "corpus": "internal/bench/adversarial-council/corpus.json",
+  "claim": "critic-protocol-load-bearing-ab (docs/CLAIMS.md, pre-registered 2026-08-09)",
+  "protocol": "both arms single-shot per vendor over all 15 items; FP on findings only, identical scorer both arms; verdict secondary; flawed+empty findings = incoherent",
+  "thresholds": {
+    "fp_ceiling": 0.5,
+    "tp_retention_floor": 0.8
+  },
+  "per_vendor": {
+    "anthropic": {
+      "legacy": {
+        "tp": 10,
+        "fp": 3,
+        "fp_rate": 1,
+        "incoherent": 0,
+        "holds_on_clean": 0,
+        "caught_ids": [
+          "mfi-02",
+          "mfi-03",
+          "inv-01",
+          "inv-02",
+          "sec-01",
+          "sec-02",
+          "sec-03",
+          "state-01",
+          "state-02",
+          "state-03"
+        ],
+        "fp_ids": [
+          "clean-01",
+          "clean-02",
+          "clean-03"
+        ]
+      },
+      "load_bearing": {
+        "tp": 8,
+        "fp": 1,
+        "fp_rate": 0.3333333333333333,
+        "incoherent": 0,
+        "holds_on_clean": 2,
+        "caught_ids": [
+          "mfi-02",
+          "mfi-03",
+          "inv-02",
+          "sec-01",
+          "sec-02",
+          "sec-03",
+          "state-01",
+          "state-03"
+        ],
+        "fp_ids": [
+          "clean-03"
+        ]
+      },
+      "tp_retention": 0.8,
+      "fp_pass": true,
+      "tp_pass": true,
+      "promotes": true
+    },
+    "openai": {
+      "legacy": {
+        "tp": 5,
+        "fp": 1,
+        "fp_rate": 0.3333333333333333,
+        "incoherent": 0,
+        "holds_on_clean": 0,
+        "caught_ids": [
+          "mfi-02",
+          "inv-02",
+          "sec-01",
+          "sec-03",
+          "state-02"
+        ],
+        "fp_ids": [
+          "clean-03"
+        ]
+      },
+      "load_bearing": {
+        "tp": 0,
+        "fp": 0,
+        "fp_rate": 0,
+        "incoherent": 0,
+        "holds_on_clean": 3,
+        "caught_ids": [],
+        "fp_ids": []
+      },
+      "tp_retention": 0,
+      "fp_pass": true,
+      "tp_pass": false,
+      "promotes": false
+    }
+  },
+  "verdict": {
+    "promotes": false,
+    "direction": "at least one threshold missed",
+    "default_unchanged": "legacy stays the default regardless (config critic_protocol)"
+  },
+  "detail": {
+    "mfi-01": {
+      "is_clean": false,
+      "legacy_anthropic": {
+        "findings": 1,
+        "verdict": null
+      },
+      "legacy_openai": {
+        "findings": 1,
+        "verdict": null
+      },
+      "load_bearing_anthropic": {
+        "findings": 1,
+        "verdict": "flawed"
+      },
+      "load_bearing_openai": {
+        "findings": 0,
+        "verdict": "holds"
+      }
+    },
+    "mfi-02": {
+      "is_clean": false,
+      "legacy_anthropic": {
+        "findings": 1,
+        "verdict": null
+      },
+      "legacy_openai": {
+        "findings": 1,
+        "verdict": null
+      },
+      "load_bearing_anthropic": {
+        "findings": 1,
+        "verdict": "flawed"
+      },
+      "load_bearing_openai": {
+        "findings": 0,
+        "verdict": "holds"
+      }
+    },
+    "mfi-03": {
+      "is_clean": false,
+      "legacy_anthropic": {
+        "findings": 1,
+        "verdict": null
+      },
+      "legacy_openai": {
+        "findings": 1,
+        "verdict": null
+      },
+      "load_bearing_anthropic": {
+        "findings": 1,
+        "verdict": "flawed"
+      },
+      "load_bearing_openai": {
+        "findings": 0,
+        "verdict": "holds"
+      }
+    },
+    "inv-01": {
+      "is_clean": false,
+      "legacy_anthropic": {
+        "findings": 1,
+        "verdict": null
+      },
+      "legacy_openai": {
+        "findings": 0,
+        "verdict": null
+      },
+      "load_bearing_anthropic": {
+        "findings": 1,
+        "verdict": "flawed"
+      },
+      "load_bearing_openai": {
+        "findings": 0,
+        "verdict": "holds"
+      }
+    },
+    "inv-02": {
+      "is_clean": false,
+      "legacy_anthropic": {
+        "findings": 1,
+        "verdict": null
+      },
+      "legacy_openai": {
+        "findings": 1,
+        "verdict": null
+      },
+      "load_bearing_anthropic": {
+        "findings": 1,
+        "verdict": "flawed"
+      },
+      "load_bearing_openai": {
+        "findings": 1,
+        "verdict": "flawed"
+      }
+    },
+    "inv-03": {
+      "is_clean": false,
+      "legacy_anthropic": {
+        "findings": 1,
+        "verdict": null
+      },
+      "legacy_openai": {
+        "findings": 1,
+        "verdict": null
+      },
+      "load_bearing_anthropic": {
+        "findings": 0,
+        "verdict": "holds"
+      },
+      "load_bearing_openai": {
+        "findings": 0,
+        "verdict": "holds"
+      }
+    },
+    "sec-01": {
+      "is_clean": false,
+      "legacy_anthropic": {
+        "findings": 1,
+        "verdict": null
+      },
+      "legacy_openai": {
+        "findings": 1,
+        "verdict": null
+      },
+      "load_bearing_anthropic": {
+        "findings": 1,
+        "verdict": "flawed"
+      },
+      "load_bearing_openai": {
+        "findings": 0,
+        "verdict": "holds"
+      }
+    },
+    "sec-02": {
+      "is_clean": false,
+      "legacy_anthropic": {
+        "findings": 1,
+        "verdict": null
+      },
+      "legacy_openai": {
+        "findings": 1,
+        "verdict": null
+      },
+      "load_bearing_anthropic": {
+        "findings": 1,
+        "verdict": "flawed"
+      },
+      "load_bearing_openai": {
+        "findings": 0,
+        "verdict": "holds"
+      }
+    },
+    "sec-03": {
+      "is_clean": false,
+      "legacy_anthropic": {
+        "findings": 1,
+        "verdict": null
+      },
+      "legacy_openai": {
+        "findings": 1,
+        "verdict": null
+      },
+      "load_bearing_anthropic": {
+        "findings": 1,
+        "verdict": "flawed"
+      },
+      "load_bearing_openai": {
+        "findings": 0,
+        "verdict": "holds"
+      }
+    },
+    "state-01": {
+      "is_clean": false,
+      "legacy_anthropic": {
+        "findings": 1,
+        "verdict": null
+      },
+      "legacy_openai": {
+        "findings": 0,
+        "verdict": null
+      },
+      "load_bearing_anthropic": {
+        "findings": 1,
+        "verdict": "flawed"
+      },
+      "load_bearing_openai": {
+        "findings": 0,
+        "verdict": "holds"
+      }
+    },
+    "state-02": {
+      "is_clean": false,
+      "legacy_anthropic": {
+        "findings": 1,
+        "verdict": null
+      },
+      "legacy_openai": {
+        "findings": 1,
+        "verdict": null
+      },
+      "load_bearing_anthropic": {
+        "findings": 2,
+        "verdict": "flawed"
+      },
+      "load_bearing_openai": {
+        "findings": 0,
+        "verdict": "holds"
+      }
+    },
+    "state-03": {
+      "is_clean": false,
+      "legacy_anthropic": {
+        "findings": 3,
+        "verdict": null
+      },
+      "legacy_openai": {
+        "findings": 3,
+        "verdict": null
+      },
+      "load_bearing_anthropic": {
+        "findings": 2,
+        "verdict": "flawed"
+      },
+      "load_bearing_openai": {
+        "findings": 0,
+        "verdict": "holds"
+      }
+    },
+    "clean-01": {
+      "is_clean": true,
+      "legacy_anthropic": {
+        "findings": 1,
+        "verdict": null
+      },
+      "legacy_openai": {
+        "findings": 0,
+        "verdict": null
+      },
+      "load_bearing_anthropic": {
+        "findings": 0,
+        "verdict": "holds"
+      },
+      "load_bearing_openai": {
+        "findings": 0,
+        "verdict": "holds"
+      }
+    },
+    "clean-02": {
+      "is_clean": true,
+      "legacy_anthropic": {
+        "findings": 1,
+        "verdict": null
+      },
+      "legacy_openai": {
+        "findings": 0,
+        "verdict": null
+      },
+      "load_bearing_anthropic": {
+        "findings": 0,
+        "verdict": "holds"
+      },
+      "load_bearing_openai": {
+        "findings": 0,
+        "verdict": "holds"
+      }
+    },
+    "clean-03": {
+      "is_clean": true,
+      "legacy_anthropic": {
+        "findings": 1,
+        "verdict": null
+      },
+      "legacy_openai": {
+        "findings": 1,
+        "verdict": null
+      },
+      "load_bearing_anthropic": {
+        "findings": 1,
+        "verdict": "flawed"
+      },
+      "load_bearing_openai": {
+        "findings": 0,
+        "verdict": "holds"
+      }
+    }
+  }
+}

@@ -251,6 +251,20 @@ Templates for roadmap files stored in `agents/roadmaps/` or `{module_root}/{Modu
     `status: draft` roadmaps are exempt until flipped to ready. Enforced
     by `lint_plan_risk_register` at pre-push + CI.
 
+25. **`## Pre-mortem` is optional — and only worth having when it is a
+    forecast.** A roadmap MAY carry a `## Pre-mortem` section holding the
+    four-part failure register from the
+    [`premortem`](../skills/premortem/SKILL.md) skill (three ranked causes
+    of death · one untested hidden dependency · one survivable-failure
+    modification · one tripwire metric with a horizon). It is deliberately
+    NOT required: a failure register written to satisfy a template stops
+    being a forecast, and boilerplate in a failure register is worse than
+    its absence. Include it when the plan is heavy or irreversible enough
+    that a named tripwire changes behaviour; omit it entirely otherwise —
+    never ship an empty or perfunctory one. Distinct from rule 24's Risk
+    Register: the register ranks *known* risks with mitigations; the
+    pre-mortem imagines the *whole plan dead* and reconstructs why.
+
 ---
 
 ## Quality Gates (remote CI by default)
@@ -356,6 +370,15 @@ complexity: lightweight
 ## Notes
 
 {Optional: edge cases, decisions, links to related docs.}
+
+<!-- ## Pre-mortem — INCLUDE ONLY when the plan is heavy or irreversible
+     enough that a failure forecast changes behaviour (rule 25). OMIT
+     entirely otherwise — a perfunctory register is worse than none.
+     Shape: the four-part failure register from the premortem skill.
+1. Causes of death, ranked: {three, one paragraph each — mechanisms, not topics}
+2. Untested hidden dependency: {the assumption the plan never tests}
+3. Survivable-failure modification: {one concrete plan change}
+4. Tripwire: {metric + threshold + horizon that says cause #1 is materializing} -->
 
 <!-- ## Provenance — INCLUDE ONLY for source-derived / harvest / capability-adoption
      roadmaps (rule 19). OMIT entirely for internally-originated roadmaps —

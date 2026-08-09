@@ -1,0 +1,72 @@
+{
+  "mode": "run",
+  "range": "log-file:internal/bench/forensics/fixture-log.txt",
+  "params": {
+    "max_commit_files": 50,
+    "coupling_threshold": 0.5,
+    "min_cochanges": 3,
+    "top_hotspots": 25
+  },
+  "scanned": {
+    "commits": 7,
+    "commits_skipped_bulk": 1,
+    "files": 4
+  },
+  "hotspots": [
+    {
+      "file": "src/scripts/a.ts",
+      "changes": 6,
+      "complexity": 200,
+      "score": 0.5
+    },
+    {
+      "file": "src/skills/x/SKILL.md",
+      "changes": 3,
+      "complexity": 400,
+      "score": 0.5
+    },
+    {
+      "file": "src/scripts/b.ts",
+      "changes": 3,
+      "complexity": 100,
+      "score": 0.125
+    },
+    {
+      "file": "docs/notes.md",
+      "changes": 1,
+      "complexity": 50,
+      "score": 0.0208
+    }
+  ],
+  "coupling": [
+    {
+      "a": "src/scripts/a.ts",
+      "b": "src/scripts/b.ts",
+      "co_changes": 3,
+      "changes_a": 6,
+      "changes_b": 3,
+      "coupling": 1,
+      "cross_module": false
+    },
+    {
+      "a": "src/scripts/a.ts",
+      "b": "src/skills/x/SKILL.md",
+      "co_changes": 3,
+      "changes_a": 6,
+      "changes_b": 3,
+      "coupling": 1,
+      "cross_module": true
+    }
+  ],
+  "boundary_contradictions": [
+    {
+      "a": "src/scripts/a.ts",
+      "b": "src/skills/x/SKILL.md",
+      "co_changes": 3,
+      "changes_a": 6,
+      "changes_b": 3,
+      "coupling": 1,
+      "cross_module": true
+    }
+  ]
+}

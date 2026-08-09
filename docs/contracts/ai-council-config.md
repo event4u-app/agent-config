@@ -116,6 +116,7 @@ lenses:                         # Phase 9 — optional, per-lens overrides
     decision_replay:
       enabled: <bool>
       include_member_arguments: <bool>
+critic_protocol: <"legacy" | "load_bearing">  # optional, default "legacy" — critic posture for adversarial/skeptic review passes
 ```
 
 Supported `<provider>` keys: `anthropic`, `openai`, `gemini`, `xai`,
@@ -535,6 +536,34 @@ skipped in every mode); manual-transport members follow the same policy. The rep
 round 2+, ≤ 1 repair per member per round, dispatched via the CLI's
 `_make_repair_confirm` transport (auto-fire under `--auto-continue`, one-line
 confirm interactive); a successful repair replaces the member's round entry.
+
+### Critic protocol (road-to-judgment-and-forensic-evidence Phase 2)
+
+- `critic_protocol` (`"legacy" | "load_bearing"`, top-level, default
+  `"legacy"`) — the declared critic posture for adversarial/skeptic review
+  passes. HONEST SCOPE: today the only consumer is the A/B bench harness
+  (`bench_critic_protocol.ts`, which runs both arms regardless of the
+  configured value); no runtime surface reads the key yet, and none will
+  until a passing arm is promoted — which the 2026-08-09 run did not do.
+  Setting `load_bearing` therefore changes no shipped behaviour; the key
+  exists so the selection surface and its default were fixed in the same
+  change as the pre-registered experiment.
+  - `legacy` — the shipped free-hunt skeptic ("assume this may hide a subtle
+    defect; hunt for it"). Measured defect on record: 100 % false-positive
+    rate on the frozen controversial-but-correct clean controls
+    (`internal/bench/adversarial-council/corpus.json`, run 2026-07-21).
+  - `load_bearing` — a fixed four-step protocol: state the invariant and name
+    the single load-bearing assumption (tied to a named file/function), state
+    the concrete failure scenario if it broke, state the cost of what the code
+    is avoiding, then inspect the assumption and return `holds` (empty
+    findings) or `flawed` (concrete findings). The discriminating property is
+    that the protocol can return "this holds" as a completed review.
+  - The A/B against the measured defect is pre-registered in `docs/CLAIMS.md`
+    (`critic-protocol-load-bearing-ab`) and run by
+    `src/scripts/bench_critic_protocol.ts` (`--mock` validates the pipeline in
+    both directions without spend; `--run` is maintainer spend-gated). The
+    default stays `legacy` regardless of the outcome — promotion is a
+    separate, human decision.
 
 ### Decision resolution by impact (Phase 10, ask-user routing)
 

@@ -50,6 +50,8 @@ const ADR_PACKS: ReadonlySet<string> = new Set<string>([
     'legal-review-prep',
     // road-to-scale-and-history-discipline Phase 1/3 (ADR-013 amendment, same PR).
     'scale-discipline', 'history-discipline',
+    // road-to-judgment-and-forensic-evidence Phase 3 (ADR-013 amendment, same PR).
+    'forensics',
 ]);
 
 // ADR-010 non-overlap reservations.
