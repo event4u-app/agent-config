@@ -165,10 +165,32 @@ describe("collect_orchestration (via collect_report)", () => {
     expect(o.sample?.lookup_primitive).toBe("code-graph-query");
   });
 
-  it("safe-defaults to no subagent primitive and reports the deciding gate", () => {
+  // Regression: the doctor resolved capabilities through `normalizeHostManifest`
+  // alone, which skips the committed registry. On a fresh clone that made the
+  // diagnostic report `subagent_spawn: false` while `delegation_nudge_hook` —
+  // which calls `resolveHostCapabilities` — reported `true` for the same host.
+  // The two cases below pin both halves of the resolution order, so a future
+  // edit cannot re-introduce the disagreement by touching only one reader.
+  it("resolves a KNOWN host from the committed registry with no settings at all", () => {
     const ws = tmpDir("routing-doctor-ws-");
     const report = collect_report({
       platform: "claude",
+      workspace_root: ws,
+      no_freshness: true,
+    });
+    const o = report.orchestration;
+    expect(o.host_manifest.subagent_spawn).toBe(true);
+    // Absent `subagents.auto` coerces to `ask` — there is no defaults layer —
+    // so the fresh-clone verdict is the gate OPEN in ask-mode, not closed.
+    expect(o.auto).toBe("ask");
+    expect(o.activation.action).toBe("ask");
+    expect(o.sample).toBeNull();
+  });
+
+  it("safe-defaults to no subagent primitive on an UNKNOWN host and reports the deciding gate", () => {
+    const ws = tmpDir("routing-doctor-ws-");
+    const report = collect_report({
+      platform: "no-such-host",
       workspace_root: ws,
       no_freshness: true,
     });

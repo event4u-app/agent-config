@@ -53,7 +53,7 @@ import {
 import * as hooks_status from "./hooks_status.js";
 import { load_agent_settings } from "./_lib/agent_settings.js";
 import {
-  normalizeHostManifest,
+  resolveHostCapabilities,
   type HostCapabilityManifest,
 } from "./_lib/host_capability.js";
 import {
@@ -195,17 +195,29 @@ export interface DoctorReport {
  * Orchestration-routing state: settings gates, host capability, budget
  * inputs, and (optionally) a dry-run classification for a sample prompt.
  * Read-only — mirrors exactly what the delegation layer would resolve.
+ *
+ * `platform` is the host identifier the committed capability registry is
+ * keyed on — the same string a hook envelope's `platform` field carries.
+ * It must be threaded in, not defaulted here: resolving through
+ * `normalizeHostManifest` alone (as this function did until the registry
+ * landed) skips the registry row entirely, so on a fresh clone with no
+ * `subagents.host_capabilities` override the doctor reported
+ * `subagent_spawn: false` while `delegation_nudge_hook` — which does call
+ * `resolveHostCapabilities` — reported `true`. Two readers of one fact
+ * disagreeing is worse than either answer, and the diagnostic is the one a
+ * user runs precisely to check the other.
  */
 export function collect_orchestration(
   workspace_root: string,
   sample_prompt: string | null,
+  platform?: string | null,
 ): OrchestrationReport {
   const settings = load_agent_settings({ cwd: workspace_root });
   const sub = (settings["subagents"] ?? {}) as Record<string, unknown>;
   const enabled = sub["enabled"] !== false;
   const auto = typeof sub["auto"] === "string" ? (sub["auto"] as string) : "ask";
   const downshift = sub["downshift"] !== false;
-  const host_manifest = normalizeHostManifest(sub["host_capabilities"]);
+  const host_manifest = resolveHostCapabilities(platform, sub["host_capabilities"]);
   const activationInputs: ActivationInputs = {
     enabled,
     auto: (auto === "on" || auto === "off" ? auto : "ask") as ActivationInputs["auto"],
@@ -440,7 +452,11 @@ export function collect_report(options: {
     chain: chain.map((c) => c.name),
     gates,
     freshness: _freshness(options.no_freshness),
-    orchestration: collect_orchestration(options.workspace_root, options.classify ?? null),
+    orchestration: collect_orchestration(
+      options.workspace_root,
+      options.classify ?? null,
+      options.platform,
+    ),
     bridge_table,
   };
 }
