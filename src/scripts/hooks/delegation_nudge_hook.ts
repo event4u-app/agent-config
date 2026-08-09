@@ -57,20 +57,25 @@
  * slot, on effectively every prompt carrying language markers) run in
  * production today without ever blocking a turn.
  *
- * PLATFORM SCOPE — bound only on `claude` and `cowork` in the manifest (not
- * the full `language-mirror` platform list). `host_semantics.VERIFIED_PLATFORMS`
+ * PLATFORM SCOPE — bound only on `claude` in the manifest (not the full
+ * `language-mirror` platform list). `host_semantics.VERIFIED_PLATFORMS`
  * covers only `claude`, so `claude` is the one platform where the "never
  * blocks" claim above is verified against documented, testable behaviour.
- * `cowork` is included because `scripts/hooks/cowork-dispatcher.sh` discards
- * the dispatcher's exit code and stdout unconditionally
- * (`>/dev/null 2>&1 || true; exit 0`), so no exit code choice there can ever
- * reach the host as a block — independent of `host_semantics`. Cursor / Cline /
- * Windsurf / Gemini are deliberately NOT added here: their trampolines were
- * not inspected for the same discard property, and extending the exit-2
- * pattern to an unverified propagation path is exactly the speculative
- * mapping `host_semantics.ts`'s own header calls out as "the same class of
- * bug this module exists to remove". `language-mirror`'s existing broader
- * binding is a pre-existing fact this change does not touch or relitigate.
+ * `cowork` is DELIBERATELY NOT bound (F10, review) — `scripts/hooks/
+ * cowork-dispatcher.sh` discards the dispatcher's exit code and stdout
+ * unconditionally (`>/dev/null 2>&1 || true; exit 0`), and this concern's
+ * entire delivery depends on `additional_context` reaching the model via
+ * stdout at the verified exit-2 warn path — a delivery that trampoline makes
+ * structurally impossible regardless of platform. Binding it there would be
+ * dead weight: the concern still runs (settings read, classifier,
+ * activation resolution), still costs the dispatch, and its entire output
+ * is thrown away for nothing. Cursor / Cline / Windsurf / Gemini are
+ * deliberately NOT added here either: their trampolines were not inspected
+ * for the same discard property, and extending the exit-2 pattern to an
+ * unverified propagation path is exactly the speculative mapping
+ * `host_semantics.ts`'s own header calls out as "the same class of bug this
+ * module exists to remove". `language-mirror`'s existing broader binding is
+ * a pre-existing fact this change does not touch or relitigate.
  */
 import fs from "node:fs";
 import path from "node:path";
