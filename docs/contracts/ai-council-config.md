@@ -291,7 +291,7 @@ regardless of *why* a member is missing.
 The paragraph above describes `session.ts::save()`'s `manifest.json` — a
 second, currently-unwired artefact writer. The artefact the shipped `/council`
 CLI actually produces is a different file:
-`agents/runtime/council/responses/*.json` (`council_cli.ts::cmd_run`). That
+the gitignored, auto-pruned per-run responses JSON (the `--output` file `council_cli.ts::cmd_run` writes under the council runtime directory). That
 path carries the SAME verdict shape, via `build_members`'s own `quorum_out`
 out-parameter (`total_enabled` = enabled member-config entries this pass
 considered, `present` = `total_enabled` minus every entry that ended up
@@ -385,7 +385,7 @@ field from without parsing prose. So:
 **Where it lands** — additive, byte-identical when absent, same shape as the
 quorum / absent-members fields above:
 
-- **The responses artefact** (`agents/runtime/council/responses/*.json`,
+- **The responses artefact** (the gitignored, auto-pruned per-run responses JSON (`cmd_run`’s `--output` file),
   `cmd_run`) — `payload['handoff']` is ALWAYS written (a stable key beats a
   conditionally-present one for a machine consumer), even when every field
   is `null`.
