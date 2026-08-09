@@ -1,11 +1,6 @@
 # {{project_name}}
 
-<!--
-  Fill placeholders or run `/agents init`, then delete this
-  comment. Iron Law — capability bullets, not path lists; paths rot.
-  Tool stubs (`CLAUDE.md`, `GEMINI.md`, `.cursorrules`) link here.
-  Anatomy + recipes: `.augment/contexts/contracts/agents-md-anatomy.md`.
--->
+<!-- Fill placeholders or run `/agents init`; delete after. Capability bullets, not paths. Recipes: `.augment/contexts/contracts/agents-md-anatomy.md`. -->
 
 > {{project_description}}
 
@@ -18,11 +13,12 @@
 
 ## Pointers
 
-- **Filling out this AGENTS.md** — section templates, capability bullets, multi-agent entry flow, monorepo per-package layout: [`.augment/contexts/contracts/consumer-agents-md-guide.md`](.augment/contexts/contracts/consumer-agents-md-guide.md).
-- **Behavior rules (always active)** — [`.augment/rules/`](.augment/rules/). Kernel rules are **immutable** — never propose an edit; tighten-only via the override registry.
-- **Skills (on-demand expertise)** — domain skills surfaced by description; invoked when their trigger fires: [`.augment/skills/`](.augment/skills/).
-- **Commands (workflows)** — slash-commands the agent runs end-to-end (`/work`, `/implement-ticket`, `/commit`, `/create-pr`, …): [`.augment/commands/`](.augment/commands/).
+- **Filling out this AGENTS.md** — section templates, capability bullets, multi-agent entry flow, monorepo layout: [`consumer-agents-md-guide`](.augment/contexts/contracts/consumer-agents-md-guide.md).
+- **Behavior rules (always active)** — [`.augment/rules/`](.augment/rules/). Kernel rules are **immutable**; tighten only via the override registry.
+- **Skills (on-demand expertise)** — domain skills surfaced by description, invoked on trigger match: [`.augment/skills/`](.augment/skills/).
+- **Commands (workflows)** — slash-commands the agent runs end-to-end (`/work`, `/create-pr`, …): [`.augment/commands/`](.augment/commands/).
 - **Project-specific docs** — your own architecture notes, roadmaps, sessions, contexts: [`agents/`](agents/).
+- **Delegation & review** — dispatch independent-slice tasks to subagents instead of serial work; a mutating session ends after a neutral cross-model review: [`delegation-policy`](.augment/rules/delegation-policy.md).
 
 ## Emergency triage — read this when nothing else is reachable
 

@@ -374,6 +374,54 @@ concerns:
     args: []
     fail_closed: false
     severity: advisory
+  # road-to-orchestrator-discipline-carriers Phase 3 (F6) — deterministic
+  # PostToolUse orchestration-telemetry capture. Fires only on an Agent/Task
+  # tool-use completion (the two observed subagent-dispatch tool names) and
+  # appends one `orchestration_record` line — no model step, replacing the
+  # measured 0.27% model-carried capture rate for future dispatches. Silent
+  # on every path (never writes to stdout); exit 0 always, including a
+  # malformed envelope or a write failure. fail_closed: false.
+  orchestration-record:
+    script: src/scripts/hooks/orchestration_record_hook.ts
+    args: []
+    fail_closed: false
+    severity: advisory
+    tools: [Agent, Task]
+  # road-to-orchestrator-discipline-carriers Phase 4 (F3-lite) — conditional
+  # delegation nudge. Extracts cheap structural signals from the SUBMITTED
+  # prompt (enumerated file lists, "for each"/"alle …" shapes, explicit slice
+  # counts, ordered-plan markers, multi-deliverable conjunctions), classifies
+  # via `classifyTask`, and — only on a positive do-in-parallel/do-in-steps
+  # verdict — reports `{decision:"warn", reason, additional_context}` at exit
+  # 2, mirroring `language-mirror`'s shipped delivery pattern so the verdict
+  # line actually reaches `hookSpecificOutput.additionalContext` on the
+  # verified `claude` platform. Silence is the anti-canary default: no
+  # enumerated signal → no injection at all. Never blocks the turn — see the
+  # hook's file header for the `host_semantics.emitFor` proof. fail_closed:
+  # false.
+  delegation-nudge:
+    script: src/scripts/hooks/delegation_nudge_hook.ts
+    args: []
+    fail_closed: false
+    severity: advisory
+  # road-to-orchestrator-discipline-carriers Phase 5 (F4-lite) — end-review
+  # nudge. Fires ONLY when the session mutated tracked+untracked, non-doc
+  # files beyond MUTATION_LINE_THRESHOLD (50 lines; untracked files added
+  # post-review, F6) AND no reviewer ran this session (scanned from the
+  # Stop payload's `transcript_path`) AND this session has not already
+  # fired once (F2 — a once-per-session gate; state under
+  # agents/runtime/state/end-review-nudge/, gitignored). On fire, reports
+  # `{decision:"warn", reason, additional_context}` at exit 2 (same delivery
+  # pattern as `language-mirror`/`delegation-nudge` above) and appends one
+  # `review_skipped` telemetry line — hook-carried, not model-carried — so a
+  # future blocking decision has a measured distribution to cite. Never
+  # blocks the turn — see the hook's file header for the `host_semantics.
+  # emitFor` proof. fail_closed: false.
+  end-review-nudge:
+    script: src/scripts/hooks/end_review_nudge_hook.ts
+    args: []
+    fail_closed: false
+    severity: advisory
 
 platforms:
   augment:
@@ -381,15 +429,15 @@ platforms:
     session_end:      [chat-history, memory-learn, session-register]
     stop:             [chat-history, hot-context, verify-before-complete, self-repair, session-register]
     pre_tool_use:     [block-no-verify, block-unauthorized-git, evidence-independence, block-kernel-rule-writes, block-config-weakening, rtk-wrap, design-slop, code-graph-nudge]
-    post_tool_use:    [chat-history, roadmap-progress, context-hygiene, verify-before-complete, minimal-safe-diff, injection-scan, pr-url-reminder]
+    post_tool_use:    [chat-history, roadmap-progress, context-hygiene, verify-before-complete, minimal-safe-diff, injection-scan, pr-url-reminder, orchestration-record]
 
   claude:
     session_start:    [chat-history, hot-context, handoff-context, session-canary, council-availability, first-run-gate, onboarding-gate, verify-before-complete, minimal-safe-diff, profile-staleness, wrapper-freshness, surface-probe, session-register]
     session_end:      [chat-history, memory-learn, session-register]
-    stop:             [chat-history, hot-context, verify-before-complete, team-review-gate, self-repair, session-register]
-    user_prompt_submit: [chat-history, verify-before-complete, minimal-safe-diff, language-mirror, git-authorization, session-canary, self-repair, session-register]
+    stop:             [chat-history, hot-context, verify-before-complete, team-review-gate, end-review-nudge, self-repair, session-register]
+    user_prompt_submit: [chat-history, verify-before-complete, minimal-safe-diff, language-mirror, delegation-nudge, git-authorization, session-canary, self-repair, session-register]
     pre_tool_use:     [block-no-verify, block-unauthorized-git, evidence-independence, block-kernel-rule-writes, block-config-weakening, rtk-wrap, design-slop, code-graph-nudge]
-    post_tool_use:    [chat-history, roadmap-progress, context-hygiene, verify-before-complete, minimal-safe-diff, injection-scan, pr-url-reminder]
+    post_tool_use:    [chat-history, roadmap-progress, context-hygiene, verify-before-complete, minimal-safe-diff, injection-scan, pr-url-reminder, orchestration-record]
 
   # Cowork — the Claude desktop app's local-agent-mode runtime, built
   # on top of the Claude Code CLI. Same lifecycle vocabulary, same
@@ -408,10 +456,20 @@ platforms:
   cowork:
     session_start:    [chat-history, hot-context, handoff-context, session-canary, council-availability, first-run-gate, onboarding-gate, verify-before-complete, minimal-safe-diff, profile-staleness, wrapper-freshness, surface-probe, session-register]
     session_end:      [chat-history, memory-learn, session-register]
+    # end-review-nudge and delegation-nudge are DELIBERATELY NOT bound on
+    # this platform (F10, review) — cowork-dispatcher.sh's own header states
+    # it "always exit[s] 0" and its dispatch line discards the dispatcher's
+    # exit code AND stdout unconditionally (`>/dev/null 2>&1 || true`). Both
+    # concerns' delivery depends entirely on `additional_context` reaching
+    # the model via stdout at the verified exit-2 warn path — a delivery this
+    # trampoline makes structurally impossible regardless of which platform
+    # is later verified to forward it. Binding them here would be dead
+    # weight: the concern still runs (git diff, transcript scan, classifier),
+    # still costs the dispatch, and its entire output is thrown away.
     stop:             [chat-history, hot-context, verify-before-complete, self-repair, session-register]
     user_prompt_submit: [chat-history, verify-before-complete, minimal-safe-diff, language-mirror, git-authorization, session-canary, self-repair, session-register]
     pre_tool_use:     [block-no-verify, block-unauthorized-git, evidence-independence, block-kernel-rule-writes, block-config-weakening, rtk-wrap, design-slop, code-graph-nudge]
-    post_tool_use:    [chat-history, roadmap-progress, context-hygiene, verify-before-complete, minimal-safe-diff, injection-scan, pr-url-reminder]
+    post_tool_use:    [chat-history, roadmap-progress, context-hygiene, verify-before-complete, minimal-safe-diff, injection-scan, pr-url-reminder, orchestration-record]
 
   # Phase 7.5 — Cursor. `.cursor/hooks.json` (project) is read by the
   # IDE and CLI; `~/.cursor/hooks.json` (user) is opt-in via
@@ -425,7 +483,7 @@ platforms:
     session_end:        [chat-history, memory-learn, session-register]
     stop:               [chat-history, hot-context, verify-before-complete, self-repair, session-register]
     user_prompt_submit: [chat-history, verify-before-complete, minimal-safe-diff, language-mirror, git-authorization, session-canary, self-repair, session-register]
-    post_tool_use:      [chat-history, roadmap-progress, context-hygiene, verify-before-complete, minimal-safe-diff, injection-scan, pr-url-reminder]
+    post_tool_use:      [chat-history, roadmap-progress, context-hygiene, verify-before-complete, minimal-safe-diff, injection-scan, pr-url-reminder, orchestration-record]
 
   # Phase 7.6 — Cline. Hooks live under `.clinerules/hooks/<HookName>`
   # (project, no file extension, must be executable per Cline docs) or
@@ -440,7 +498,7 @@ platforms:
     session_end:        [chat-history, memory-learn, session-register]
     stop:               [chat-history, hot-context, verify-before-complete, self-repair, session-register]
     user_prompt_submit: [chat-history, verify-before-complete, minimal-safe-diff, language-mirror, git-authorization, session-canary, self-repair, session-register]
-    post_tool_use:      [chat-history, roadmap-progress, context-hygiene, verify-before-complete, minimal-safe-diff, injection-scan, pr-url-reminder]
+    post_tool_use:      [chat-history, roadmap-progress, context-hygiene, verify-before-complete, minimal-safe-diff, injection-scan, pr-url-reminder, orchestration-record]
 
   # Phase 7.7 — Windsurf (Cascade). Hooks live at `.windsurf/hooks.json`
   # (project) or `~/.codeium/windsurf/hooks.json` (user). Cascade has
@@ -476,7 +534,7 @@ platforms:
     session_end:        [chat-history, memory-learn, session-register]
     stop:               [chat-history, hot-context, verify-before-complete, self-repair, session-register]
     user_prompt_submit: [chat-history, verify-before-complete, minimal-safe-diff, language-mirror, git-authorization, session-canary, self-repair, session-register]
-    post_tool_use:      [chat-history, roadmap-progress, context-hygiene, verify-before-complete, minimal-safe-diff, injection-scan, pr-url-reminder]
+    post_tool_use:      [chat-history, roadmap-progress, context-hygiene, verify-before-complete, minimal-safe-diff, injection-scan, pr-url-reminder, orchestration-record]
 
   # Phase 7.9 — Copilot has no hook surface. Concerns route through
   # rule-only fallback; the dispatcher silently no-ops on --platform copilot.

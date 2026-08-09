@@ -41,7 +41,10 @@ import {
     type RouteTaken,
 } from './_lib/orchestration_record.js';
 
-const DEFAULT_DIR = 'agents/runtime/state/audit';
+// Exported so other writers of the same audit-log-v1 orchestration line
+// (e.g. orchestration_record_hook.ts, the deterministic PostToolUse capture)
+// target the exact same directory instead of duplicating the literal.
+export const DEFAULT_DIR = 'agents/runtime/state/audit';
 
 type Flags = Record<string, string | boolean>;
 
