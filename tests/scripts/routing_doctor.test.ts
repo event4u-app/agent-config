@@ -169,8 +169,15 @@ describe("collect_orchestration (via collect_report)", () => {
   // alone, which skips the committed registry. On a fresh clone that made the
   // diagnostic report `subagent_spawn: false` while `delegation_nudge_hook` —
   // which calls `resolveHostCapabilities` — reported `true` for the same host.
-  // The two cases below pin both halves of the resolution order, so a future
-  // edit cannot re-introduce the disagreement by touching only one reader.
+  //
+  // Three cases, because two were not enough: registry-hit and registry-miss
+  // both run with no settings file, so between them they never exercise the
+  // override argument at all. The pre-existing test above does pass an override
+  // — but it passes `subagent_spawn: true` on `claude`, the same value the
+  // registry now yields, so it agrees with itself whether or not the override
+  // is read. Deleting `sub["host_capabilities"]` from the call site left all
+  // three of those green. The override case below is the one that goes red:
+  // it asserts a value the registry CANNOT produce for that host.
   it("resolves a KNOWN host from the committed registry with no settings at all", () => {
     const ws = tmpDir("routing-doctor-ws-");
     const report = collect_report({
@@ -185,6 +192,47 @@ describe("collect_orchestration (via collect_report)", () => {
     expect(o.auto).toBe("ask");
     expect(o.activation.action).toBe("ask");
     expect(o.sample).toBeNull();
+  });
+
+  it("lets an explicit settings override BEAT the committed registry row", () => {
+    const ws = tmpDir("routing-doctor-ws-");
+    // `claude` is a registry hit for `subagent_spawn: true`. Asserting `false`
+    // here is only reachable through the override argument, so this case fails
+    // the moment the call site stops passing `sub["host_capabilities"]`.
+    fs.writeFileSync(
+      path.join(ws, ".agent-settings.yml"),
+      ["subagents:", "  host_capabilities:", "    subagent_spawn: false", ""].join("\n"),
+      "utf-8",
+    );
+    const report = collect_report({
+      platform: "claude",
+      workspace_root: ws,
+      no_freshness: true,
+    });
+    const o = report.orchestration;
+    expect(o.host_manifest.subagent_spawn).toBe(false);
+    expect(o.activation.action).toBe("in-session");
+    expect(o.activation.reason).toContain("subagent_spawn");
+  });
+
+  it("reports whether the platform was observed or assumed", () => {
+    const ws = tmpDir("routing-doctor-ws-");
+    // Keying the registry on a guessed host is how the fixed bug comes back
+    // mirrored, so the guess is part of the report, not just of the CLI.
+    const assumed = collect_report({
+      platform: "claude",
+      workspace_root: ws,
+      no_freshness: true,
+    });
+    expect(assumed.orchestration.host_platform).toBe("claude");
+    expect(assumed.orchestration.host_platform_assumed).toBe(true);
+    const observed = collect_report({
+      platform: "claude",
+      platform_assumed: false,
+      workspace_root: ws,
+      no_freshness: true,
+    });
+    expect(observed.orchestration.host_platform_assumed).toBe(false);
   });
 
   it("safe-defaults to no subagent primitive on an UNKNOWN host and reports the deciding gate", () => {
