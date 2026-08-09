@@ -1,0 +1,21 @@
+# Findings: feat-road-to-rule-delivery-integrity
+<!-- completion-review: v1 | reviewed: 2026-08-09 | scope: 20633db46a6e2af17d94485836211d3dcbda3dd77cac8e5c5c9465c44b53211a | diff: 5db59bc4410488eb22717c8d0606b8eca10bcfa4 | reviewer: r2-fresh-subagent-feat-road-to-rule-delivery-integrity | prompt_hash: 76747690c71ae92b97ead98fffe5d0cb424f4940dddfb0d4732d931022e3de23 -->
+
+<!-- context-manifest: v1
+inputs:
+  diff_sha: 5db59bc4410488eb22717c8d0606b8eca10bcfa4
+  scope_hash: 20633db46a6e2af17d94485836211d3dcbda3dd77cac8e5c5c9465c44b53211a
+  roadmap: agents/roadmaps/road-to-rule-delivery-integrity.md
+  roadmap_hash: 42376eea0024e3bfd1db285c32f718b1aa49646482ae834b9c8f21181d0c281d
+  ac_hash: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+excluded: [session-history, agents/runtime, implementation-context]
+tools: [git-diff-branch-scoped, file-read-branch-paths]
+dispatched: 2026-08-09T19:00:42Z
+-->
+
+| # | Severity | File:Line | Finding | Status | Reason/Ref |
+|---|----------|-----------|---------|--------|------------|
+| 1 | medium | src/scripts/lint_never_silent.ts:64 | `DESCRIPTION_MARKERS` contains a bare `no` alternative without a trailing boundary (`…\|niemals\|no\|kein\w*\|…`), so ANY word beginning with "no" (now, note, nothing, normal, notify, …) on the matching line OR the preceding line classifies a directive as description and exonerates it. Verified: `"Note: silently re-run the suite after fixing."` and `"…silently re-run the turn now…"` both match `SILENT_RERUN_RES` yet pass the gate, while the same sentence without such a word is correctly rejected. The trailing `not\b` alternative is unreachable (bare `no` already matches every "not"), which indicates `no\b` was intended — a one-character fix. The gate's recall is substantially weaker than P4.4 specifies; the self-test's seeded violations avoid the hole by accident. | open | |
+| 2 | low | src/scripts/_lib/self_repair.ts:162 | `COMPLAINT_EXONERATIONS` is applied prompt-wide before any complaint match: one hit anywhere returns `null` for the whole intake. `\b(kein problem\|passt schon\|alles gut)\b` and `\bit'?s fine\b` are common conversational fragments, so a genuine complaint co-occurring with a pleasantry is muted — verified: `"Alles gut mit dem Deploy, aber du hast schon wieder die Hälfte der Dateien übersehen!"` (the near-miss-fire fixture's own complaint shape) is silenced. The exoneration should be scoped to the matched complaint span/proximity, not the entire prompt; the corpus has no combined-case fixture, so the gate does not catch this. Consistent with the stated precision-over-recall bias, hence low. | open | |
+| 3 | low | src/scripts/self_repair_cli.ts:83 | `run()` reports `timedOut` when `r.signal === 'SIGTERM'` regardless of cause. `spawnSync` already sets `error.code === 'ETIMEDOUT'` on its own timeout, so the signal check only adds misattribution: a child killed externally by SIGTERM (OS, supervisor, Ctrl-C-adjacent teardown) is recorded as `"timed out after 30s"` in the attempt detail and the persisted `release_errors`, pointing the next debugging session at the wrong cause. Dropping the signal clause (or checking it only together with the error) preserves the intended behaviour. | open | |
+| 4 | low | src/scripts/self_repair_cli.ts:195 | `planRelease` renders the body once with `renderReport(record, choice.route)`; when the ladder later degrades within the same call (route `pull-request` → published `issue`), the filed issue carries `- **Route:** pull-request` in its body — a self-describing artefact that names a route it did not take. `parseReport` does not read the Route line, so clustering is unaffected, but the published record is internally inconsistent; re-rendering the body for the rung actually taken (or at issue-create time) would keep it truthful. | open | |
