@@ -827,18 +827,42 @@ describe('clients — _classify_stderr parity', () => {
 });
 
 // ── CLI construction failures ──────────────────────────────────────────
+
+// Places a fake executable named `binaryName` on PATH for the duration of
+// `fn`, then restores the previous PATH — even if `fn` throws. This exercises
+// the REAL `default_binary` → `_which(...)` resolution path (no `binary:`
+// override), which is the exact seam that stayed untested while every other
+// construction test in this file pinned `binary: '/bin/echo'` and never
+// exercised subclass default-binary resolution at all.
+function withFakeBinaryOnPath<T>(binaryName: string, fn: () => T): T {
+    const dir = mkTmp();
+    const bin = path.join(dir, binaryName);
+    fs.writeFileSync(bin, '#!/bin/sh\nexit 0\n');
+    fs.chmodSync(bin, 0o755);
+    const prevPath = process.env.PATH;
+    process.env.PATH = `${dir}${path.delimiter}${prevPath ?? ''}`;
+    try {
+        return fn();
+    } finally {
+        process.env.PATH = prevPath;
+    }
+}
+
 describe('clients — CliClient construction', () => {
     it('missing binary on PATH → CliClientError', () => {
-        expect(() => new AnthropicCliClient({ binary: undefined })).toThrow(/not found on PATH|no `default_binary`/);
-        // Use a binary name that cannot exist on PATH.
-        let threw = false;
+        // Deterministic regardless of what happens to be installed on the
+        // machine running this suite: force PATH empty so `claude` genuinely
+        // cannot resolve, instead of depending on the ambient environment
+        // (which is what let this test pass "by accident" under the
+        // default_binary construction-order bug — see the regression block
+        // above for the fix this guards).
+        const prevPath = process.env.PATH;
+        process.env.PATH = '';
         try {
-            new AnthropicCliClient({});
-        } catch (e) {
-            threw = e instanceof Error && /not found on PATH/.test((e as Error).message);
+            expect(() => new AnthropicCliClient({ binary: undefined })).toThrow(/not found on PATH/);
+        } finally {
+            process.env.PATH = prevPath;
         }
-        // Either claude is installed (no throw) or it threw with the PATH message.
-        expect(typeof threw).toBe('boolean');
     });
 
     it('explicit binary path bypasses PATH resolution', () => {
@@ -852,6 +876,48 @@ describe('clients — CliClient construction', () => {
     it('community CLI subclasses are billable=true', () => {
         expect(new XAICliClient({ binary: '/x' }).billable).toBe(true);
         expect(new PerplexityCliClient({ binary: '/p' }).billable).toBe(true);
+    });
+
+    // Regression: subclass instance-field initializers (`override default_binary
+    // = 'codex'`) run only AFTER the base `CliClient` constructor's `super()`
+    // call returns — so a naive `this.default_binary` read inside that base
+    // constructor always saw the base class's own '' default, and construction
+    // through the default_binary path (no `binary:` override) ALWAYS threw
+    // "no `default_binary` set on subclass", even with the real CLI installed.
+    // One case per CLI subclass — the defect recurred identically in all five.
+    const CLI_SUBCLASSES: Array<{
+        Ctor: new (opts: Record<string, unknown>) => CliClient;
+        binaryName: string;
+        memberName: string;
+    }> = [
+        { Ctor: AnthropicCliClient, binaryName: 'claude', memberName: 'anthropic' },
+        { Ctor: OpenAICliClient, binaryName: 'codex', memberName: 'openai' },
+        { Ctor: GeminiCliClient, binaryName: 'gemini', memberName: 'gemini' },
+        { Ctor: XAICliClient, binaryName: 'grok', memberName: 'xai' },
+        { Ctor: PerplexityCliClient, binaryName: 'perplexity', memberName: 'perplexity' },
+    ];
+    for (const { Ctor, binaryName, memberName } of CLI_SUBCLASSES) {
+        it(`${memberName}: constructs via default_binary resolution when \`binary:\` is omitted`, () => {
+            withFakeBinaryOnPath(binaryName, () => {
+                const c = new Ctor({});
+                expect(c.binary.endsWith(path.sep + binaryName)).toBe(true);
+                expect(c.name).toBe(memberName);
+            });
+        });
+    }
+
+    it('binary-not-found error names the actual member (not an empty `this.name`)', () => {
+        // No fake binary on PATH — force the "not found on PATH" branch, which
+        // is the one that reads `this.name` for the settings-path hint. Before
+        // the fix, that read was ALSO subject to the same base-constructor
+        // field-initialization-order bug and always printed `members..binary:`.
+        const prevPath = process.env.PATH;
+        process.env.PATH = '';
+        try {
+            expect(() => new OpenAICliClient({})).toThrow(/members\.openai\.binary:/);
+        } finally {
+            process.env.PATH = prevPath;
+        }
     });
 });
 

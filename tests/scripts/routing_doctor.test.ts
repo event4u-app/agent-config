@@ -138,19 +138,8 @@ describe("collect_report", () => {
 });
 
 describe("collect_orchestration (via collect_report)", () => {
-  it("reports settings gates, host manifest, and a dry-run classification", () => {
+  it("reports host manifest and a dry-run classification with an EMPTY settings file (always-on)", () => {
     const ws = tmpDir("routing-doctor-ws-");
-    fs.writeFileSync(
-      path.join(ws, ".agent-settings.yml"),
-      [
-        "subagents:",
-        '  auto: "on"',
-        "  host_capabilities:",
-        "    subagent_spawn: true",
-        "",
-      ].join("\n"),
-      "utf-8",
-    );
     const report = collect_report({
       platform: "claude",
       workspace_root: ws,
@@ -158,7 +147,7 @@ describe("collect_orchestration (via collect_report)", () => {
       classify: "Who calls resolveSubagentRouting?",
     });
     const o = report.orchestration;
-    expect(o.auto).toBe("on");
+    expect(o.halted).toBe(false);
     expect(o.host_manifest.subagent_spawn).toBe(true);
     expect(o.activation.action).toBe("dispatch");
     expect(o.sample?.lookup_route).toBe("primitive");
@@ -168,16 +157,7 @@ describe("collect_orchestration (via collect_report)", () => {
   // Regression: the doctor resolved capabilities through `normalizeHostManifest`
   // alone, which skips the committed registry. On a fresh clone that made the
   // diagnostic report `subagent_spawn: false` while `delegation_nudge_hook` —
-  // which calls `resolveHostCapabilities` — reported `true` for the same host.
-  //
-  // Three cases, because two were not enough: registry-hit and registry-miss
-  // both run with no settings file, so between them they never exercise the
-  // override argument at all. The pre-existing test above does pass an override
-  // — but it passes `subagent_spawn: true` on `claude`, the same value the
-  // registry now yields, so it agrees with itself whether or not the override
-  // is read. Deleting `sub["host_capabilities"]` from the call site left all
-  // three of those green. The override case below is the one that goes red:
-  // it asserts a value the registry CANNOT produce for that host.
+  // which calls `probeHostCapabilities` — reported `true` for the same host.
   it("resolves a KNOWN host from the committed registry with no settings at all", () => {
     const ws = tmpDir("routing-doctor-ws-");
     const report = collect_report({
@@ -187,18 +167,15 @@ describe("collect_orchestration (via collect_report)", () => {
     });
     const o = report.orchestration;
     expect(o.host_manifest.subagent_spawn).toBe(true);
-    // Absent `subagents.auto` coerces to `ask` — there is no defaults layer —
-    // so the fresh-clone verdict is the gate OPEN in ask-mode, not closed.
-    expect(o.auto).toBe("ask");
-    expect(o.activation.action).toBe("ask");
+    expect(o.halted).toBe(false);
+    // Always-on: a matched delegable signal (the canonical probe) dispatches
+    // unconditionally — there is no more `subagents.auto` mode to fall back to.
+    expect(o.activation.action).toBe("dispatch");
     expect(o.sample).toBeNull();
   });
 
-  it("lets an explicit settings override BEAT the committed registry row", () => {
+  it("a leftover subagents.host_capabilities override no longer applies (always-on: capability is probe/registry-only)", () => {
     const ws = tmpDir("routing-doctor-ws-");
-    // `claude` is a registry hit for `subagent_spawn: true`. Asserting `false`
-    // here is only reachable through the override argument, so this case fails
-    // the moment the call site stops passing `sub["host_capabilities"]`.
     fs.writeFileSync(
       path.join(ws, ".agent-settings.yml"),
       ["subagents:", "  host_capabilities:", "    subagent_spawn: false", ""].join("\n"),
@@ -210,9 +187,28 @@ describe("collect_orchestration (via collect_report)", () => {
       no_freshness: true,
     });
     const o = report.orchestration;
-    expect(o.host_manifest.subagent_spawn).toBe(false);
+    // The stale key is ignored — `claude`'s registry row still wins.
+    expect(o.host_manifest.subagent_spawn).toBe(true);
+    expect(o.activation.action).toBe("dispatch");
+  });
+
+  it("emergency.orchestration_halt closes the activation gate on a known, capable host", () => {
+    const ws = tmpDir("routing-doctor-ws-");
+    fs.writeFileSync(
+      path.join(ws, ".agent-settings.yml"),
+      ["emergency:", "  orchestration_halt: true", ""].join("\n"),
+      "utf-8",
+    );
+    const report = collect_report({
+      platform: "claude",
+      workspace_root: ws,
+      no_freshness: true,
+    });
+    const o = report.orchestration;
+    expect(o.halted).toBe(true);
+    expect(o.host_manifest.subagent_spawn).toBe(true);
     expect(o.activation.action).toBe("in-session");
-    expect(o.activation.reason).toContain("subagent_spawn");
+    expect(o.activation.reason).toContain("orchestration_halt");
   });
 
   it("reports whether the platform was observed or assumed", () => {
@@ -261,9 +257,8 @@ describe("budget-routing delivery evidence (review Finding 2)", () => {
     );
   }
 
-  it("WARNs when budget_routing is bound but zero dispatches carry a tier decision", () => {
+  it("WARNs when dispatches are recorded but zero carry a tier decision (always-on: no gating setting)", () => {
     const ws = tmpDir("routing-doctor-ws-");
-    fs.writeFileSync(path.join(ws, ".agent-settings.yml"), "subagents:\n  budget_routing: ask\n", "utf-8");
     auditFixture(ws, [
       { id: "a", spawn_count: 3, task_class: "read-only-fanout" },
       { id: "b", spawn_count: 1, task_class: "mechanical-covered" },
@@ -276,7 +271,6 @@ describe("budget-routing delivery evidence (review Finding 2)", () => {
 
   it("stays silent when tier-carrying lines exist", () => {
     const ws = tmpDir("routing-doctor-ws-");
-    fs.writeFileSync(path.join(ws, ".agent-settings.yml"), "subagents:\n  budget_routing: ask\n", "utf-8");
     auditFixture(ws, [
       { id: "a", spawn_count: 2, tier: "cheap", tier_source: "inferred" },
       { id: "b", spawn_count: 1, task_class: "synthesis" },
@@ -286,10 +280,8 @@ describe("budget-routing delivery evidence (review Finding 2)", () => {
     expect(report.orchestration.delivery.budget_evidence_lines).toBe(1);
   });
 
-  it("budget_routing: off disables the check entirely", () => {
+  it("stays silent when there is nothing recorded at all", () => {
     const ws = tmpDir("routing-doctor-ws-");
-    fs.writeFileSync(path.join(ws, ".agent-settings.yml"), "subagents:\n  budget_routing: off\n", "utf-8");
-    auditFixture(ws, [{ id: "a", spawn_count: 2 }]);
     const report = collect_report({ platform: "claude", workspace_root: ws, no_freshness: true });
     expect(report.orchestration.delivery.warning).toBe("");
     expect(report.orchestration.delivery.eligible_dispatches).toBe(0);

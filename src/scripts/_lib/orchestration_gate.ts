@@ -14,6 +14,14 @@
  *
  * This helper decides; it never runs the measurement. The signal is realized
  * orchestration telemetry, aggregated + evaluated out of band.
+ *
+ * **Amendment (road-to-always-on-orchestration Phase 1).** `subagents.auto`
+ * was DELETED as a settings key — always-on orchestration carries no
+ * per-layer on/off setting to demote. `resolveShippedDefault` (the
+ * `subagents.auto`-specific half below) has no production caller today and
+ * is kept as a historical record of the demotion mechanism, not a live
+ * decision path; `resolveRecursiveDefault` (the `verification.recursive`
+ * half) is unaffected by this deletion.
  */
 
 export interface BenchmarkResult {

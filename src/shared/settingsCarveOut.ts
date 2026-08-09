@@ -58,16 +58,6 @@ export const SETTINGS_CARVE_OUT: readonly CarveOutKey[] = [
             + 'an absent list widens the projection instead of narrowing it.',
     },
     {
-        key: 'subagents.auto',
-        reader: 'src/scripts/routing_doctor.ts:206',
-        absentResolvesTo: 'ask',
-        reason:
-            'The reader falls back to `ask` while the template ships `on`. Carved out '
-            + 'rather than fixed at the reader because the doctor reports what the '
-            + 'RESOLVED configuration is; changing its fallback would make the report '
-            + 'disagree with what the other readers actually do.',
-    },
-    {
         key: 'discipline_profile',
         reader: 'work_engine/_lib/agent_settings.ts:1263',
         absentResolvesTo: 'essential, unconditionally',

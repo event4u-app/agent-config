@@ -1,6 +1,6 @@
 # event4u/agent-config
 
-> Shared skill / rule / command suite for AI coding tools. No app runtime. AGENTS.md of the **package itself**.
+> Shared skill / rule / command suite for AI coding tools. No app runtime.
 
 ## Source of truth
 
@@ -9,10 +9,10 @@ Edit `src/` only (`skills`, `rules`, `agent-src`). `task sync` + `task generate-
 ## Working on this repo
 
 ```bash
-task sync            # dist/agent-src/, .augment/
-task generate-tools  # .claude/, .cursor/, .clinerules/, .windsurfrules
-task ci              # full pipeline, green before PR
-# maintainer: AGENT_CONFIG_DEV_MODE=1 -> --scope=project (docs/maintainers/dev-mode.md)
+task sync # dist/agent-src/, .augment/
+task generate-tools # .claude/, .cursor/, .clinerules/, .windsurfrules
+task ci # full pipeline, green before PR
+# dev: AGENT_CONFIG_DEV_MODE=1 -> --scope=project (docs/maintainers/dev-mode.md)
 ```
 
 ## Pointers
@@ -28,7 +28,7 @@ task ci              # full pipeline, green before PR
 - **Discovery** — workspaces/packs: [`ADR-013`](docs/decisions/ADR-013-discovery-frontmatter-contract.md) + [`customization`](docs/customization.md).
 - **Root & `agents/` layout** — `src/` = source ([`ADR-050`](docs/decisions/ADR-050-workspace-vs-package-root-boundary.md)); contract: [`agents-layout`](docs/contracts/agents-layout.md).
 - **Security** — [`SECURITY.md`](SECURITY.md); [`docs/threat-model.md`](docs/threat-model.md).
-- **Delegate & review**: subagents take independent-slice work, not serial; no mutating session ends without neutral review — [`delegation-policy`](dist/agent-src/rules/delegation-policy.md).
+- **Delegate & review**: subagents take independent-slice work, not serial; in a team (host-flag gated) the lead coordinates, teammates implement; no mutating session ends without neutral review — [`delegation-policy`](dist/agent-src/rules/delegation-policy.md).
 
 ## Emergency triage — when nothing else is reachable
 

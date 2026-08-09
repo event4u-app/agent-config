@@ -10,7 +10,9 @@
  *   (b) router-pointers      — dist/router.json ids + routes_to resolve on disk
  *   (c) hook-dispatcher      — dispatcher answers synthetic session_start/stop
  *   (d) lean-projection      — lean_projection.mode matches projected artifacts
- *   (e) host-manifest        — subagents.host_capabilities parses strictly
+ *   (e) host-manifest        — a leftover subagents.host_capabilities override
+ *                              is deprecated + ignored (always-on orchestration
+ *                              resolves capability from a probe/registry only)
  *
  * All checks are deterministic — no LLM, no network. Exit contract:
  *   0 = every check ok/skipped (warns allowed) and doctor --ci green
@@ -421,14 +423,6 @@ export function _check_lean_projection(
 // Check (e) — host-capability manifest parses strictly + matches detection.
 // ---------------------------------------------------------------------------
 
-const HOST_MANIFEST_KEYS = new Set([
-    'schema_version',
-    'subagent_spawn',
-    'parallel_spawn',
-    'status_polling',
-    'separate_quota_pool',
-]);
-
 export function _check_host_manifest(projectRoot: string): Dict {
     const detected = Object.entries(detectToolPresence(projectRoot))
         .filter(([, v]) => v === true)
@@ -441,7 +435,7 @@ export function _check_host_manifest(projectRoot: string): Dict {
         return {
             id: 'host-manifest',
             status: 'ok',
-            message: `no .agent-settings.yml — safe-default manifest applies (${detectedNote})`,
+            message: `no .agent-settings.yml — host capability is always probe/registry-resolved (${detectedNote})`,
             remedy: '',
         };
     }
@@ -462,44 +456,22 @@ export function _check_host_manifest(projectRoot: string): Dict {
         return {
             id: 'host-manifest',
             status: 'ok',
-            message: `no host_capabilities override — safe-default manifest applies (${detectedNote})`,
+            message: `no host_capabilities override — host capability is always probe/registry-resolved (${detectedNote})`,
             remedy: '',
         };
     }
-    if (typeof manifest !== 'object' || Array.isArray(manifest)) {
-        return {
-            id: 'host-manifest',
-            status: 'fail',
-            message: 'subagents.host_capabilities is not a mapping',
-            remedy: 'use the four boolean fields from the host-capability manifest contract',
-        };
-    }
-    const problems: string[] = [];
-    for (const [key, value] of Object.entries(manifest as Dict)) {
-        if (!HOST_MANIFEST_KEYS.has(key)) {
-            problems.push(`unknown key '${key}'`);
-            continue;
-        }
-        if (key === 'schema_version') {
-            if (value !== 1) problems.push(`schema_version must be 1 (got ${JSON.stringify(value)})`);
-            continue;
-        }
-        if (typeof value !== 'boolean') {
-            problems.push(`'${key}' must be boolean (got ${JSON.stringify(value)})`);
-        }
-    }
-    if (problems.length > 0) {
-        return {
-            id: 'host-manifest',
-            status: 'fail',
-            message: `host_capabilities malformed: ${problems.slice(0, 4).join('; ')}`,
-            remedy: 'only schema_version:1 + four boolean capability fields are valid',
-        };
-    }
+    // Always-on orchestration (road-to-always-on-orchestration Phase 1)
+    // deleted `subagents.host_capabilities` as a live override — capability
+    // now resolves ONLY from the host probe/registry. A leftover key is
+    // therefore inert: its shape no longer matters, so this no longer fails
+    // on an unknown key or a non-boolean value — there is nothing left for a
+    // malformed override to break.
     return {
         id: 'host-manifest',
         status: 'ok',
-        message: `host_capabilities override parses strictly (${detectedNote})`,
+        message:
+            `subagents.host_capabilities is deprecated and ignored — host capability is ` +
+            `always probe/registry-resolved (${detectedNote})`,
         remedy: '',
     };
 }

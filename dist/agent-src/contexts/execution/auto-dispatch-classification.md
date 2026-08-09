@@ -44,8 +44,10 @@ dwarfs the work). Below the floor → in-session.
 
 - Trivial / single-step edits below the size floor.
 - Tasks with cross-step shared mutable state that cannot be sliced.
-- Anything that fails to match a signal above → **no-op** (in-session),
-  or **ask** when `subagents.auto == ask` and the shape is borderline.
+- Anything that fails to match a signal above, once past the activation gate
+  and the size floor, is **ambiguous** → **ask**, always — a verdict to the
+  user, never a speculative spawn (always-on orchestration: there is no more
+  `subagents.auto` setting to route this on).
 
 ## Mode selection summary
 
@@ -54,6 +56,76 @@ dwarfs the work). Below the floor → in-session.
 | `parallelizable: steps` / ordered plan | `do-in-steps` |
 | `parallelizable: files\|independent` / independent slices | `do-in-parallel` |
 | change needing verification (any of the above) | implementer + cross-model judge per the `subagent-orchestration` Iron Law |
+
+## Judgment ladder (Phase 2 — road-to-always-on-orchestration)
+
+One committed table replacing three scattered classification surfaces
+(the delegable-signal rules above, ad-hoc "should this be a team" calls,
+and the absence of any council-routing signal on the task side). Resolver:
+[`judgment_ladder.ts`](../../../../src/scripts/_lib/judgment_ladder.ts)
+(`classifyLadder`) — a WRAPPER around `classifyTask`, never a replacement:
+rungs 1 and 2 ARE `classifyTask`'s existing dispatch verdict.
+
+| Rung | Shape signals | Resolves to |
+|---|---|---|
+| 0 | mechanical transform, no semantics (rename / codemod / formatter-run / bulk search-and-replace), OR a lookup-class match (§ Lookup-class rung above) | deterministic script, no spawn |
+| 1 | single bounded read-heavy slice (`classifyTask` structurally cannot see this — it requires ≥2 slices, an ordered plan, or a declared `parallelizable` value) | one subagent, `lite` tier |
+| 2 | enumerable independent slices, or an ordered plan (`classifyTask` dispatch: `do-in-parallel` / `do-in-steps` both land here in this v1 — see the resolver's doc comment for why) | parallel subagents, downshifted |
+| 3 | slices that must communicate (cross-layer work, a review-with-challenge shape, an explicit shared task list) | team — only when the host reports `agent_teams: true`; else degrades to whatever `classifyTask` resolves on the same signals (usually rung 2), with a recorded `degraded_from: 3` line — never a fabricated slice count |
+| 4 | judgment under disagreement (a design decision, a proposed security downgrade, a release-gate escalation) | council |
+| ∅ | interactive-approval-required (caller-stated), trivial (below the size floor), or ambiguous | in-session; ambiguity is an `ask` VERDICT, never a speculative spawn |
+
+```
+AMBIGUITY NEVER SPAWNS. RUNG 0 NEVER SPAWNS EITHER — IT NEVER NEEDED TO.
+A MATCHED RUNG-3/4 SIGNAL WITHOUT ITS HOST PRECONDITION DEGRADES,
+RECORDED — IT NEVER SILENTLY DROPS TO ∅.
+```
+
+**Resolution order is fixed and documented on `classifyLadder` itself**:
+interactive-approval-required → rung 0 → recursive-dispatch guard →
+activation gate → rung 4 → rung 3 (+ degrade) → rungs 1/2. Two signals
+matching the same text resolve deterministically on this order, never on
+evaluation-order accident.
+
+**Recursive-dispatch guard (2.3) — honest scope.** No verified host
+discriminator exists for "is this classification running inside a
+subagent/teammate session" — this roadmap's own `point-of-action-carrier`
+blocker records the upstream PreToolUse agent-identity request as closed
+NOT_PLANNED, and no field in this repo's hook envelope carries session
+lineage. The guard is therefore a CALLER-SUPPLIED fact
+(`insideSubagentSession`), never a `process.env` probe for an unverified
+variable name — the same "no discriminator is publishable" null the
+`point-of-action-carrier` blocker already names. When set, it resolves ∅
+(in-session) for rungs 1-4; rung 0 is exempt (it never spawns).
+
+**Relationship to the council's own necessity gate.** Rung 4's three
+signals (design decision / security downgrade / release-gate escalation)
+are a deliberately narrow, TASK-side vocabulary — NOT an import of
+`ai_council/necessity.ts`'s broader `NECESSARY_TRIGGERS`
+(architecture/tradeoff/ambiguity/strategic). That module stays the
+council's own necessity gate (its `off|educate|block|warn-only` modes are
+the council-side surface); this resolver only decides whether a TASK
+should route to rung 4 in the first place.
+
+## Cheapest-sufficient-model table (Phase 2.4 — the ladder's tie-breaker)
+
+Once a slice resolves to rung 1 or 2, this table is the tie-breaker
+`classifyLadder`'s caller consults for the concrete tier — `lite` by
+default, escalating only on a named criterion. Consolidates mechanisms that
+already exist elsewhere in this contract set; this table is the ONE place
+that lists them side by side.
+
+| Escalation criterion | Tier | Basis |
+|---|---|---|
+| (none — default) | `lite` | the downshift default (`subagent-routing.md`) |
+| Slice failed verification on its current tier | next tier up (`lite`→`medium`→`medium`→`high`) | [`subagent-steering`](subagent-steering.md) § Verify-fail escalation cascade |
+| Slice touches ≥ 5 files (or > 200 lines) | `medium` | the ticket-bundle `lite` size floor (`docs/contracts/ticket-bundle-format.md`) |
+| Architecture-shaped slice (structural/boundary decision — the same shape as rung 4's design-decision signal, one level down in stakes) | `medium` | [`subagent-modes-detail`](subagent-modes-detail.md) § Severity-conditioned team composition |
+| Security-sensitive slice (auth, tenant, secrets, billing — `security-sensitive-stop`'s surface table) | `high` | [`subagent-modes-detail`](subagent-modes-detail.md) § Critical severity row |
+
+Criteria are independent and additive in the obvious way (a slice matching
+two rows takes the higher of the two tiers); this table never lowers a
+tier `inferSliceTier` (§ below) already raised.
 
 ## Per-slice tier inference (v1.5 — deterministic, task-TYPE-keyed)
 
@@ -174,8 +246,22 @@ and the lookup corpus in
 [`src/scripts/_lib/auto_dispatch.corpus.test.ts`](../../../../src/scripts/_lib/auto_dispatch.corpus.test.ts)
 (`LOOKUP_CORPUS` — the four live-observed shapes + negative controls).
 
+The judgment ladder (§ above) is encoded in
+[`src/scripts/_lib/judgment_ladder.ts`](../../../../src/scripts/_lib/judgment_ladder.ts)
+(`classifyLadder`, plus the rung-0/1/3/4 signal-detection functions), covered
+by
+[`tests/scripts/_lib_judgment_ladder.test.ts`](../../../../tests/scripts/_lib_judgment_ladder.test.ts)
+(every rung, the rung-3 degrade path, the recursive-dispatch guard, and every
+∅ case). The delegation-nudge hook
+([`delegation_nudge_hook.ts`](../../../../src/scripts/hooks/delegation_nudge_hook.ts))
+is its first production caller — its injected line cites the resolved rung
+(`rung-2: dispatch do-in-parallel …`), scoped to the subagent dispatch rungs
+(1/2); a rung-0/3/4 verdict stays silent on this carrier until Phase 3/4 give
+team/council their own.
+
 ## Related
 
 - [`auto-orchestration-activation`](auto-orchestration-activation.md) — the enable/auto/manifest gate that runs before classification.
 - [`subagent-orchestration`](../../skills/subagent-orchestration/SKILL.md) — the modes this selects.
 - [`autonomous-execution`](../../rules/autonomous-execution.md) — the N=3 budget any LLM-classification v2 must respect.
+- [`orchestration-telemetry`](orchestration-telemetry.md) § Registered always-on metrics — the judgment-ladder precision metric this ladder feeds.

@@ -42,7 +42,6 @@ parity test).
 
 ```yaml
 ai_team:
-  enabled: <bool>                 # master switch, default false
   model: <string>                 # default 'auto'
   allow_delegate: <bool>          # second opt-in for the write path, default false
   max_calls_per_day: <int >= 0>   # default 50; counts into the shared openai bucket
@@ -52,22 +51,36 @@ ai_team:
     max_consecutive_blocks: <int >= 1>  # default 3; circuit-breaker loop bound
 ```
 
+> **Availability is CLI-first, not a setting (road-to-always-on-orchestration
+> Phase 1, Step 1.3).** `enabled` — the former master switch — was DELETED.
+> `/team`'s on/off state is now a FACT resolved from the machine, the same
+> doctrine already applied to the subagent and council layers: the codex CLI
+> binary must resolve on `$PATH`, AND some auth for it must be detectable
+> (subscription login, API key, key file, or env key) —
+> `src/scripts/ai_team/availability.ts:checkCodexAvailability`. Missing
+> either → every `/team` invocation degrades with one clear line instead of
+> a silent `enabled: false` refusal. `emergency.orchestration_halt` (the one
+> audited incident switch over the always-on stack — subagents, council,
+> team) also gates every entry point. A leftover `enabled` key from an
+> older install is accepted and ignored by the loader (never rejected as
+> unknown) and surfaces a one-line deprecation warning from
+> `load_agent_settings`.
+
 > **Disposition (2026-07-28, honest-null survivor).** The team-mode outcome
 > benchmark never produced a measured lift (spend-gated, unrun — the feature
-> ships without a quality claim). `enabled: false` stays the bound default;
-> deprecation notice at the next major, removal the major after, unless
-> external evidence (a consumer-filed outcome case) appears first. Team mode
-> is NOT sold as a verified quality mechanism — its honest value is workflow
-> convenience for operators who already run the codex CLI.
+> ships without a quality claim). Deprecation notice at the next major,
+> removal the major after, unless external evidence (a consumer-filed
+> outcome case) appears first. Team mode is NOT sold as a verified quality
+> mechanism — its honest value is workflow convenience for operators who
+> already run the codex CLI.
 
 | Key | Type | Default | Semantics |
 |---|---|---|---|
-| `enabled` | bool | `false` | Master switch. `false` = `/team` commands are never suggested and every invocation refuses with an enable pointer — byte-identical to pre-feature behavior. `true` = the family is live; per-command gates below still apply. |
 | `model` | string | `'auto'` | Model handed to the codex CLI. `'auto'` = pass **no** `--model` flag; the codex CLI's own default applies. Any other value passes through **verbatim** as `--model <value>`. |
-| `allow_delegate` | bool | `false` | Second opt-in for the **only** wrapper that delegates write access (`/team:delegate`). Refuses with an enable pointer until BOTH `enabled` and `allow_delegate` are `true`. |
+| `allow_delegate` | bool | `false` | Second opt-in for the **only** wrapper that delegates write access (`/team:delegate`). Refuses until BOTH `/team` is available (codex CLI installed + authenticated, not halted) AND `allow_delegate` is `true`. |
 | `max_calls_per_day` | int ≥ 0 | `50` | Per-day ceiling on team calls, read against the **shared** `cli_call_budget` openai bucket (see § Quota). `0` blocks all team calls. |
 | `suppress_setup_hint` | bool | `false` | Suppress the one-line wizard/init recommendation to install the codex plugin on Claude-Code hosts. Cosmetic only. |
-| `review_gate.managed` | bool | `false` | Managed governance of the codex plugin's Stop-hook Review Gate (Phase 4). `false` = no counting, no circuit breaker — the Stop path is byte-identical to pre-Phase-4 dispatch. `true` = consecutive BLOCK verdicts are counted per session (first-line `ALLOW:`/`BLOCK:` contract of the gate transcript; anything else is honestly `UNKNOWN` and never counted) and the circuit breaker trips at the bound. |
+| `review_gate.managed` | bool | `false` | Managed governance of the codex plugin's Stop-hook Review Gate (Phase 4). `false` = no counting, no circuit breaker — the Stop path is byte-identical to pre-Phase-4 dispatch. `true` = consecutive BLOCK verdicts are counted per session (first-line `ALLOW:`/`BLOCK:` contract of the gate transcript; anything else is honestly `UNKNOWN` and never counted) and the circuit breaker trips at the bound. Independent of `/team`'s own availability — governs the codex PLUGIN's own Stop-hook loop, which upstream runs regardless of our codex-CLI-availability check. |
 | `review_gate.max_consecutive_blocks` | int ≥ 1 | `3` | Circuit-breaker bound. At this many CONSECUTIVE BLOCKs in one session a visible notice is injected **exactly once** and the managed layer stops re-blocking — the user decides, never an infinite Claude↔Codex loop. An ALLOW verdict resets the counter. Unknown keys inside `review_gate` are rejected fail-closed, same as the parent block. |
 
 ### Why `model: 'auto'` instead of a pinned ID
@@ -196,21 +209,24 @@ Plugin text is summarized INTO the envelope and preserved verbatim beneath — n
 
 1. `ai_team` is present but not a mapping,
 2. any **unknown key** appears under `ai_team` (a typo must never
-   silently disable a gate),
-3. `enabled` / `allow_delegate` / `suppress_setup_hint` is not a boolean,
+   silently disable a gate) — `enabled` is the one deliberate exception:
+   a deleted key, accepted and ignored (see § Availability above),
+3. `allow_delegate` / `suppress_setup_hint` is not a boolean,
 4. `model` is not a non-empty string,
 5. `max_calls_per_day` is not a non-negative integer (booleans rejected).
 
 An **absent** `ai_team` block is not an error — it yields the defaults
-(`AI_TEAM_DEFAULTS`) and the feature stays off.
+(`AI_TEAM_DEFAULTS`).
 
-## Default-off posture
+## Availability posture
 
-Every team-mode capability is default-off. With the block absent or
-`enabled: false`, all paths are byte-identical to pre-feature behavior:
-no command suggestions, no wrapper execution, no quota consumption, no
-wizard nagging beyond the single suppressible setup hint.
-`/team:delegate` is doubly gated (`enabled` AND `allow_delegate`).
+`/team`'s availability is a codex-CLI/auth fact, not a setting (see
+§ Availability above). With the codex CLI absent or unauthenticated, or
+`emergency.orchestration_halt: true`, every path degrades to a one-line
+refusal — no wrapper execution, no quota consumption. Wizard nagging is
+independently suppressible via `suppress_setup_hint`. `/team:delegate` is
+doubly gated: `/team` must be AVAILABLE, and `allow_delegate` must be
+`true`.
 
 ## No-claims constraint
 

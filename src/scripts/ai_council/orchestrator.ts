@@ -69,6 +69,9 @@ import {
 import { count_dissenters, dissent_quota_met, is_near_duplicate } from './debate_gates.js';
 import { parse_stance_line, render_vote_tally, tally_stances } from './stance_tally.js';
 import { CHAIRMAN_FIELDS_ADDENDUM, render_deanonymization_block } from './blind_review.js';
+import type { AbsentReason } from './transport_resolver.js';
+import type { QuorumResult } from './quorum.js';
+import { isEmptyHandoff, type HandoffEnvelope } from './handoff.js';
 
 // ── Python-format / stdlib parity helpers ────────────────────────────────
 //
@@ -1811,6 +1814,38 @@ export interface RenderOptions {
      * directly in `chairman.text`. Default `null` → byte-identical.
      */
     blind?: { label_to_source: ReadonlyMap<string, string> } | null;
+    /**
+     * Phase 3.2 (road-to-always-on-orchestration): members that produced no
+     * usable response this pass, rendered as a trailing section so the
+     * human-readable report shows the same graded-degradation picture the
+     * session manifest carries structurally. Default `null`/empty →
+     * byte-identical — no existing caller passes this, so no existing
+     * output changes.
+     */
+    absent_members?: readonly RenderAbsentMember[] | null;
+    /**
+     * Phase 3.3: this pass's quorum verdict, rendered as one line right
+     * before the absent-members section (or standalone when there is
+     * nothing absent to report). Default `null` → byte-identical.
+     */
+    quorum?: QuorumResult | null;
+    /**
+     * Phase 4.1: the verdict → handoff envelope, rendered as a `### Handoff`
+     * section right after the Convergence/Divergence slot — closest to the
+     * synthesis it was extracted from, ahead of the trailing quorum/absent
+     * bookkeeping. Rendered only when at least one field is non-`null`
+     * (`isEmptyHandoff` — an all-null envelope has nothing worth a section
+     * for, same "only show when there's substance" call `absent_members`
+     * makes). Default `null` → byte-identical.
+     */
+    handoff?: HandoffEnvelope | null;
+}
+
+/** The minimal shape `render()` needs for one absent-member row. */
+export interface RenderAbsentMember {
+    readonly member: string;
+    readonly reason: AbsentReason | null;
+    readonly detail: string;
 }
 
 /**
@@ -1918,12 +1953,82 @@ export function render(responses: CouncilResponse[], opts: RenderOptions = {}): 
         blocks.push(render_vote_tally(tally));
     }
     blocks.push(`## Convergence / Divergence\n\n${body}`);
+    // Phase 4.1: closest to the synthesis it was extracted from — ahead of
+    // the de-anonymization map and the trailing quorum/absent bookkeeping.
+    // An all-null envelope renders nothing (`isEmptyHandoff`), so a caller
+    // that always attaches one (the common shape once a producer wires
+    // this in) does not spam every response with "nothing to hand off".
+    if (opts.handoff && !isEmptyHandoff(opts.handoff)) {
+        blocks.push(_render_handoff(opts.handoff));
+    }
     if (blind !== null) {
         // Ü1: de-anonymization AFTER the synthesis slot — blind is only at
         // decision time, never the archive.
         blocks.push(render_deanonymization_block('### De-anonymization map', blind.label_to_source));
     }
+    // Phase 3.2/3.3: trailing, opt-in sections — absent no caller passes
+    // either option, so the join below adds nothing and every existing
+    // render() output stays byte-identical.
+    if (opts.quorum) {
+        blocks.push(_render_quorum_line(opts.quorum));
+    }
+    const absent = opts.absent_members ?? [];
+    if (absent.length > 0) {
+        blocks.push(_render_absent_members(absent));
+    }
     return blocks.join('\n\n---\n\n');
+}
+
+/** One line naming the k-of-n outcome — machine-parseable, human-readable. */
+function _render_quorum_line(q: QuorumResult): string {
+    const verdict = q.status === 'concluded' ? 'concluded' : 'INCONCLUSIVE — release gate holds';
+    return `**Quorum:** ${q.present}/${q.total} present, needed ${q.threshold} — ${verdict}.`;
+}
+
+/**
+ * `### Absent Members` — one row per member that never produced a usable
+ * response this pass, naming the machine-readable reason when classified.
+ */
+function _render_absent_members(absent: readonly RenderAbsentMember[]): string {
+    const lines = ['### Absent Members', ''];
+    for (const a of absent) {
+        const tag = a.reason !== null ? ` (${a.reason})` : '';
+        lines.push(`- **${a.member}**${tag} — ${a.detail}`);
+    }
+    return lines.join('\n');
+}
+
+/**
+ * `### Handoff` — the verdict → work-order envelope (Phase 4.1). Only
+ * called once the caller already confirmed `!isEmptyHandoff(h)`, so at
+ * least one field is populated; the other two still render their own
+ * honest "none recorded" line rather than being silently dropped, so a
+ * reader sees exactly what this pass did and did not extract.
+ */
+function _render_handoff(h: HandoffEnvelope): string {
+    const lines = ['### Handoff', ''];
+    lines.push(`**Decision:** ${h.decision ?? 'none recorded — no structured verdict this pass.'}`);
+    lines.push('');
+    if (h.rejected_alternatives !== null && h.rejected_alternatives.length > 0) {
+        lines.push('**Rejected alternatives:**');
+        lines.push('');
+        for (const alt of h.rejected_alternatives) {
+            lines.push(`- **${alt.option}** — ${alt.reason}`);
+        }
+    } else {
+        lines.push('**Rejected alternatives:** none recorded.');
+    }
+    lines.push('');
+    if (h.constraints !== null && h.constraints.length > 0) {
+        lines.push('**Constraints:**');
+        lines.push('');
+        for (const c of h.constraints) {
+            lines.push(`- ${c}`);
+        }
+    } else {
+        lines.push('**Constraints:** none recorded.');
+    }
+    return lines.join('\n');
 }
 
 /**

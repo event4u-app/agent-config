@@ -12,9 +12,14 @@
  * instruction lifts that floor. Running this command IS the user's word.
  *
  * Route selection follows the spec exactly: a pull request when the fix can be
- * authored and pushed, an issue when it cannot, and a local record when nothing
- * can leave the machine. `--dry-run` prints the resolved route and the rendered
- * body and touches no network — that is the path the tests drive.
+ * authored and pushed — directly when the pre-flight probe shows upstream push
+ * rights, via fork → cross-repo PR when it does not — an issue when it cannot,
+ * and a local record when nothing can leave the machine. Once publishing was
+ * authorized, failures degrade down the ladder WITHIN the same call (push/PR
+ * failure or 30 s timeout → issue; issue failure → the record stays open with
+ * the errors attached) — degrading never widens what leaves the machine, only
+ * the vehicle. `--dry-run` prints the resolved route and the rendered body and
+ * touches no network — that is the path the tests drive.
  *
  * Fail-closed on privacy: the record's own text goes through the audited
  * privacy floor before anything leaves the machine, and a refusal downgrades
@@ -26,34 +31,30 @@ import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import {
-    chooseEgressRoute,
+    chooseEgress,
     type DefectRecord,
-    type EgressAttempt,
     type EgressCapability,
     type EgressRoute,
-    type PushRights,
     egressBlockedReason,
+    type PushVia,
     renderReport,
+    sanitizeEvidence,
 } from './_lib/self_repair.js';
 import {
+    attachReleaseErrors,
     listRecords,
     markReleased,
     openRecords,
     readRecord,
-    recordEgressAttempts,
 } from './_lib/self_repair_store.js';
 
 export const UPSTREAM_REPO = 'event4u-app/agent-config';
 
 /**
- * The label the intake form applies and the CLI sets. Reports from independent
- * installs cluster by `fingerprint`; this label is what makes the whole set
- * findable in the first place, with no telemetry — the person filing decided to.
+ * Per-step ceiling for every network-touching egress step. A hung `git push`
+ * or `gh` call degrades down the ladder instead of hanging the release.
  */
-export const SELF_REPAIR_LABEL = 'self-repair';
-
-/** The structured intake form the `issue` route is designed to fill. */
-export const SELF_REPAIR_FORM_REL = '.github/ISSUE_TEMPLATE/self_repair_report.yml';
+export const EGRESS_STEP_TIMEOUT_MS = 30_000;
 
 const EXIT_OK = 0;
 const EXIT_FAIL = 1;
@@ -62,16 +63,9 @@ const EXIT_FAIL = 1;
 export interface Probe {
     agentConfigCheckout: string | null;
     ghAuthenticated: boolean;
-    pushRights: PushRights;
+    canPushUpstream: boolean;
+    canFork: boolean;
 }
-
-/**
- * Every egress leg is bounded. An unbounded `git push` or `gh pr create` on a
- * hostile network hangs the one command the whole loop is gated on, and the
- * operator's only recourse is Ctrl-C — which leaves the record unmarked and the
- * ladder unrun. 30 s per step, per the step spec.
- */
-export const EGRESS_TIMEOUT_MS = 30_000;
 
 export interface RunResult {
     ok: boolean;
@@ -79,21 +73,21 @@ export interface RunResult {
     timedOut: boolean;
 }
 
-/** Command runner shape, so the ladder can be driven without a network. */
-export type Exec = (cmd: string, args: string[], cwd?: string, timeoutMs?: number) => RunResult;
+/** Injectable command runner — tests script it, production shells out. */
+export type Runner = (cmd: string, args: string[], cwd?: string) => RunResult;
 
-const run: Exec = (cmd, args, cwd, timeoutMs) => {
-    const r = spawnSync(cmd, args, {
-        cwd,
-        encoding: 'utf-8',
-        ...(timeoutMs === undefined ? {} : { timeout: timeoutMs }),
-    });
-    // spawnSync signals a timeout kill via `error.code === 'ETIMEDOUT'`; the
-    // exit status is null in that case, so `ok` alone cannot tell a timeout from
-    // a plain failure — and the two take different lines in the record.
+function run(cmd: string, args: string[], cwd?: string): RunResult {
+    const r = spawnSync(cmd, args, { cwd, encoding: 'utf-8', timeout: EGRESS_STEP_TIMEOUT_MS });
+    // Only spawnSync's own ETIMEDOUT counts: a child killed externally by
+    // SIGTERM is a failure, not a timeout, and recording it as "timed out"
+    // points the next debugging session at the wrong cause (R2 finding #3).
     const timedOut = (r.error as NodeJS.ErrnoException | undefined)?.code === 'ETIMEDOUT';
-    return { ok: r.status === 0, out: `${r.stdout ?? ''}${r.stderr ?? ''}`, timedOut };
-};
+    return {
+        ok: r.status === 0 && !timedOut,
+        out: `${r.stdout ?? ''}${r.stderr ?? ''}`,
+        timedOut,
+    };
+}
 
 /**
  * Where the fix can be authored. `AGENT_CONFIG_SOURCE` wins; otherwise the CWD
@@ -115,70 +109,62 @@ export function findAgentConfigCheckout(env: NodeJS.ProcessEnv, cwd: string): st
 }
 
 /**
- * Probe what this machine may actually push — the pre-flight the route
- * selection needs and did not have.
- *
- * The replaced heuristic asked `git remote` and treated any answer as write
- * access. That is true for every clone of a public repo, so the route came out
- * `pull-request` for precisely the consumers who cannot push, and the run died
- * at `git push` with the record still open.
- *
- * `permissions.push` on the repo object is the authoritative answer for the
- * authenticated user; `allow_forking` decides whether the fallback path exists
- * at all. Both are one bounded API call. On any failure the answer is `none`,
- * which routes to an issue — the conservative direction, since an issue always
- * works when `gh` is authenticated and a wrong `upstream` guess wastes the
- * user's one gated keystroke.
+ * Pre-flight probe of ACTUAL push rights, not remote existence. `git remote`
+ * returning a name proves only that the repo was cloned — every consumer of
+ * the public repo has that and no write access. `gh api repos/<repo>` returns
+ * the authenticated viewer's `permissions.push` and the repo's `allow_forking`,
+ * which are the two facts the route actually depends on. An unreachable or
+ * unauthenticated API answers `false` for both — the ladder then degrades to
+ * an issue rather than failing at push time.
  */
-export function probePushRights(
-    checkout: string | null,
+export function probeUpstreamRights(
+    runner: Runner,
     repo: string,
-    exec: Exec = run,
-): PushRights {
-    if (checkout === null) {
-        return 'none';
+): { canPushUpstream: boolean; canFork: boolean } {
+    const r = runner('gh', ['api', `repos/${repo}`]);
+    if (!r.ok) {
+        return { canPushUpstream: false, canFork: false };
     }
-    const perm = exec(
-        'gh',
-        ['api', `repos/${repo}`, '--jq', '.permissions.push'],
-        checkout,
-        EGRESS_TIMEOUT_MS,
-    );
-    if (perm.ok && perm.out.trim() === 'true') {
-        return 'upstream';
+    try {
+        const parsed: unknown = JSON.parse(r.out);
+        const meta = parsed as {
+            permissions?: { push?: boolean };
+            allow_forking?: boolean;
+        };
+        return {
+            canPushUpstream: meta.permissions?.push === true,
+            canFork: meta.allow_forking !== false,
+        };
+    } catch {
+        return { canPushUpstream: false, canFork: false };
     }
-    const forkable = exec(
-        'gh',
-        ['api', `repos/${repo}`, '--jq', '.allow_forking'],
-        checkout,
-        EGRESS_TIMEOUT_MS,
-    );
-    if (forkable.ok && forkable.out.trim() === 'true') {
-        return 'fork-only';
-    }
-    return 'none';
 }
 
 export function probeMachine(
     env: NodeJS.ProcessEnv,
     cwd: string,
+    runner: Runner = run,
     repo: string = UPSTREAM_REPO,
-    exec: Exec = run,
 ): Probe {
     const checkout = findAgentConfigCheckout(env, cwd);
-    const gh = exec('gh', ['auth', 'status'], undefined, EGRESS_TIMEOUT_MS);
-    // No `gh` auth means no API call can answer the rights question, and the
-    // route is `local-only` regardless — so skip the probe rather than spend two
-    // timeouts learning nothing.
-    const pushRights = gh.ok ? probePushRights(checkout, repo, exec) : 'none';
-    return { agentConfigCheckout: checkout, ghAuthenticated: gh.ok, pushRights };
+    const gh = runner('gh', ['auth', 'status']);
+    const rights = gh.ok
+        ? probeUpstreamRights(runner, repo)
+        : { canPushUpstream: false, canFork: false };
+    return {
+        agentConfigCheckout: checkout,
+        ghAuthenticated: gh.ok,
+        canPushUpstream: rights.canPushUpstream,
+        canFork: gh.ok && rights.canFork,
+    };
 }
 
 export function capabilityOf(probe: Probe): EgressCapability {
     return {
         hasAgentConfigCheckout: probe.agentConfigCheckout !== null,
         ghAuthenticated: probe.ghAuthenticated,
-        pushRights: probe.pushRights,
+        canPushUpstream: probe.canPushUpstream,
+        canFork: probe.canFork,
     };
 }
 
@@ -189,6 +175,7 @@ export function titleFor(record: DefectRecord): string {
 
 export interface ReleasePlan {
     route: EgressRoute;
+    pushVia: PushVia | null;
     blocked: string | null;
     title: string;
     body: string;
@@ -197,9 +184,177 @@ export interface ReleasePlan {
 /** Pure: everything `release` decides before it touches the network. */
 export function planRelease(record: DefectRecord, probe: Probe, repoRoot: string): ReleasePlan {
     const blocked = egressBlockedReason(record, repoRoot);
-    const route: EgressRoute =
-        blocked !== null ? 'local-only' : chooseEgressRoute(capabilityOf(probe));
-    return { route, blocked, title: titleFor(record), body: renderReport(record, route) };
+    const choice =
+        blocked !== null
+            ? { route: 'local-only' as const, pushVia: null }
+            : chooseEgress(capabilityOf(probe));
+    return {
+        route: choice.route,
+        pushVia: choice.pushVia,
+        blocked,
+        title: titleFor(record),
+        body: renderReport(record, choice.route),
+    };
+}
+
+// ── egress ladder execution ────────────────────────────────────────
+
+/** One egress step's outcome — kept for the record when the ladder exhausts. */
+export interface EgressAttempt {
+    step: string;
+    ok: boolean;
+    detail: string;
+}
+
+export interface ReleaseOutcome {
+    /** What actually got published, or null when the whole ladder failed. */
+    published: 'pull-request' | 'issue' | null;
+    attempts: EgressAttempt[];
+}
+
+export interface ReleaseDeps {
+    runner: Runner;
+    now: () => string;
+}
+
+const FORK_REMOTE = 'self-repair-fork';
+
+function failDetail(step: string, r: RunResult): string {
+    return r.timedOut
+        ? `${step}: timed out after ${EGRESS_STEP_TIMEOUT_MS / 1000}s`
+        : `${step}: ${r.out.trim() || 'failed'}`;
+}
+
+/**
+ * Push the fix branch — directly, or via fork → cross-repo PR — then open the
+ * PR. Returns null on success; on any step failure or timeout returns the
+ * failed attempt so the caller degrades down the ladder.
+ */
+function tryPullRequest(
+    plan: ReleasePlan,
+    probe: Probe,
+    repo: string,
+    branch: string,
+    via: PushVia,
+    deps: ReleaseDeps,
+): EgressAttempt | null {
+    const checkout = probe.agentConfigCheckout!;
+    let prHead: string | null = null;
+
+    if (via === 'upstream') {
+        const pushed = deps.runner('git', ['push', '-u', 'origin', branch], checkout);
+        if (!pushed.ok) {
+            return { step: 'push-upstream', ok: false, detail: failDetail('push-upstream', pushed) };
+        }
+    } else {
+        const forked = deps.runner('gh', ['repo', 'fork', repo, '--clone=false']);
+        if (!forked.ok) {
+            return { step: 'fork-ensure', ok: false, detail: failDetail('fork-ensure', forked) };
+        }
+        const who = deps.runner('gh', ['api', 'user', '--jq', '.login']);
+        if (!who.ok || who.out.trim().length === 0) {
+            return { step: 'whoami', ok: false, detail: failDetail('whoami', who) };
+        }
+        const login = who.out.trim();
+        const repoName = repo.split('/')[1] ?? repo;
+        const hasRemote = deps.runner('git', ['remote', 'get-url', FORK_REMOTE], checkout);
+        if (!hasRemote.ok) {
+            const added = deps.runner(
+                'git',
+                ['remote', 'add', FORK_REMOTE, `https://github.com/${login}/${repoName}.git`],
+                checkout,
+            );
+            if (!added.ok) {
+                return { step: 'fork-remote', ok: false, detail: failDetail('fork-remote', added) };
+            }
+        }
+        const pushed = deps.runner('git', ['push', '-u', FORK_REMOTE, branch], checkout);
+        if (!pushed.ok) {
+            return { step: 'push-fork', ok: false, detail: failDetail('push-fork', pushed) };
+        }
+        prHead = `${login}:${branch}`;
+    }
+
+    const prArgs = ['pr', 'create', '--repo', repo, '--title', plan.title, '--body', plan.body];
+    if (prHead !== null) {
+        prArgs.push('--head', prHead);
+    }
+    const pr = deps.runner('gh', prArgs, checkout);
+    if (!pr.ok) {
+        return { step: 'pr-create', ok: false, detail: failDetail('pr-create', pr) };
+    }
+    process.stdout.write(`${pr.out}`);
+    return null;
+}
+
+/**
+ * The egress ladder, executed within ONE `release` call: direct push → fork
+ * push → issue → open-with-errors. Every rung is separately timed out; a rung
+ * that fails degrades to the next instead of aborting the release. When the
+ * whole ladder fails, the record stays `open` with every failed attempt
+ * attached (sanitized — command output can carry local paths).
+ */
+export function executeRelease(
+    record: DefectRecord,
+    plan: ReleasePlan,
+    probe: Probe,
+    repo: string,
+    deps: ReleaseDeps,
+): ReleaseOutcome {
+    const attempts: EgressAttempt[] = [];
+
+    if (plan.route === 'pull-request') {
+        const checkout = probe.agentConfigCheckout!;
+        const branch = deps.runner('git', ['branch', '--show-current'], checkout).out.trim();
+        if (!branch || branch === 'main') {
+            // Precondition, not an egress failure: the authored fix exists and
+            // must ride its own branch — an issue instead would drop the fix.
+            attempts.push({
+                step: 'branch-check',
+                ok: false,
+                detail:
+                    'the fix must sit on its own branch in the agent-config checkout ' +
+                    `(currently: ${branch || 'detached'})`,
+            });
+            return { published: null, attempts };
+        }
+        const ladder: PushVia[] =
+            plan.pushVia === 'upstream' && probe.canFork
+                ? ['upstream', 'fork']
+                : [plan.pushVia ?? 'upstream'];
+        for (const via of ladder) {
+            const failed = tryPullRequest(plan, probe, repo, branch, via, deps);
+            if (failed === null) {
+                return { published: 'pull-request', attempts };
+            }
+            attempts.push(failed);
+        }
+    }
+
+    if (plan.route === 'pull-request' || plan.route === 'issue') {
+        // Re-render for the rung actually taken: a plan that degraded from
+        // pull-request must not file an issue whose body claims
+        // `Route: pull-request` (R2 finding #4).
+        const issueBody =
+            plan.route === 'issue' ? plan.body : renderReport(record, 'issue');
+        const issue = deps.runner('gh', [
+            'issue',
+            'create',
+            '--repo',
+            repo,
+            '--title',
+            plan.title,
+            '--body',
+            issueBody,
+        ]);
+        if (issue.ok) {
+            process.stdout.write(`${issue.out}`);
+            return { published: 'issue', attempts };
+        }
+        attempts.push({ step: 'issue-create', ok: false, detail: failDetail('issue-create', issue) });
+    }
+
+    return { published: null, attempts };
 }
 
 function statusCmd(root: string): number {
@@ -238,7 +393,8 @@ function releaseCmd(root: string, argv: string[]): number {
     const probe = probeMachine(process.env, process.cwd());
     const plan = planRelease(record, probe, root);
 
-    process.stdout.write(`self-repair:release ${fp} -> route=${plan.route}\n`);
+    const via = plan.pushVia !== null ? ` via=${plan.pushVia}` : '';
+    process.stdout.write(`self-repair:release ${fp} -> route=${plan.route}${via}\n`);
     if (plan.blocked !== null) {
         process.stdout.write(`  WARN  ${plan.blocked}\n`);
     }
@@ -246,161 +402,32 @@ function releaseCmd(root: string, argv: string[]): number {
         process.stdout.write(`\n--- ${plan.title} ---\n${plan.body}\n`);
         return EXIT_OK;
     }
-
-    const outcome = performEgress(record, plan, probe, repo);
-    for (const line of outcome.log) {
-        process.stdout.write(`${line}\n`);
-    }
-    if (outcome.published) {
-        markReleased(root, fp, new Date().toISOString());
+    if (plan.route === 'local-only') {
+        process.stdout.write(
+            '  Nothing published. The record stays in agents/runtime/self-repair/.\n',
+        );
         return EXIT_OK;
     }
-    if (outcome.attempts.length > 0) {
-        recordEgressAttempts(root, fp, outcome.attempts);
+
+    const deps: ReleaseDeps = { runner: run, now: () => new Date().toISOString() };
+    const outcome = executeRelease(record, plan, probe, repo, deps);
+
+    for (const a of outcome.attempts) {
+        process.stderr.write(`  FAIL  ${a.detail}\n`);
     }
-    return outcome.attempts.length > 0 ? EXIT_FAIL : EXIT_OK;
-}
-
-export interface EgressOutcome {
-    /** Did anything actually leave the machine? */
-    published: boolean;
-    /** Failed legs, in the order attempted. Empty when nothing was tried. */
-    attempts: EgressAttempt[];
-    /** Operator-facing lines, including raw command output. */
-    log: string[];
-}
-
-/**
- * Run the egress ladder, degrading WITHIN the same invocation.
- *
- * The previous shape returned a failure exit code at the first bad step, so a
- * push that failed — the normal outcome for a consumer, given the route bug
- * above — ended the run with nothing published and nothing recorded. The user
- * had spent their one gated keystroke and got no report anywhere.
- *
- * The ladder now falls: push/PR failure or timeout attempts an issue, and an
- * issue failure leaves the record `open` with the failed legs attached. Every
- * step is bounded by {@link EGRESS_TIMEOUT_MS}.
- */
-export function performEgress(
-    record: DefectRecord,
-    plan: ReleasePlan,
-    probe: Probe,
-    repo: string,
-    exec: Exec = run,
-): EgressOutcome {
-    const attempts: EgressAttempt[] = [];
-    const log: string[] = [];
-
-    /** Record one failed leg and say which failure it was. */
-    const fail = (step: EgressAttempt['step'], r: RunResult): void => {
-        attempts.push({ route: plan.route, step, outcome: r.timedOut ? 'timeout' : 'failed' });
-        log.push(
-            r.timedOut
-                ? `  TIMEOUT  ${step} exceeded ${String(EGRESS_TIMEOUT_MS / 1000)}s`
-                : `  FAILED   ${step}`,
+    if (outcome.published === null) {
+        const errors = outcome.attempts.map((a) => sanitizeEvidence(a.detail));
+        attachReleaseErrors(root, fp, errors, deps.now());
+        process.stderr.write(
+            '  The egress ladder is exhausted; the record stays open with the errors attached.\n',
         );
-        if (r.out.trim()) {
-            log.push(r.out.trimEnd());
-        }
-    };
-
-    /** Last rung: an issue always works when `gh` is authenticated. */
-    const tryIssue = (): boolean => {
-        const body = renderReport(record, 'issue');
-        const r = exec(
-            'gh',
-            [
-                'issue',
-                'create',
-                '--repo',
-                repo,
-                '--title',
-                plan.title,
-                '--body',
-                body,
-                // The label the intake form applies, set here too so a
-                // CLI-filed report clusters with a hand-filed one.
-                '--label',
-                SELF_REPAIR_LABEL,
-            ],
-            undefined,
-            EGRESS_TIMEOUT_MS,
-        );
-        if (r.ok) {
-            log.push(r.out.trimEnd(), '  Fell back to an issue — the fix is not attached.');
-            return true;
-        }
-        fail('issue', r);
-        return false;
-    };
-
-    if (plan.route === 'local-only') {
-        log.push('  Nothing published. The record stays in agents/runtime/self-repair/.');
-        return { published: false, attempts, log };
+        return EXIT_FAIL;
     }
-
-    if (plan.route === 'issue') {
-        return { published: tryIssue(), attempts, log };
+    if (outcome.published !== plan.route) {
+        process.stdout.write(`  Degraded to ${outcome.published} after failed attempt(s).\n`);
     }
-
-    // Both PR routes need a branch that is not the trunk.
-    const checkout = probe.agentConfigCheckout;
-    if (checkout === null) {
-        log.push('  No agent-config checkout — cannot author a fix here.');
-        return { published: tryIssue(), attempts, log };
-    }
-    const branch = exec('git', ['branch', '--show-current'], checkout, EGRESS_TIMEOUT_MS).out.trim();
-    if (!branch || branch === 'main') {
-        log.push(
-            '  The fix must sit on its own branch in the agent-config checkout ' +
-                `(currently: ${branch || 'detached'}).`,
-        );
-        return { published: tryIssue(), attempts, log };
-    }
-
-    // The consumer path: a fork has to exist before anything can be pushed to
-    // it. `--remote` gives the push target a name; an existing fork makes this
-    // a no-op rather than an error.
-    let pushRemote = 'origin';
-    if (plan.route === 'fork-pull-request') {
-        const forked = exec(
-            'gh',
-            ['repo', 'fork', repo, '--remote', '--remote-name', 'fork'],
-            checkout,
-            EGRESS_TIMEOUT_MS,
-        );
-        if (!forked.ok) {
-            fail('fork', forked);
-            return { published: tryIssue(), attempts, log };
-        }
-        pushRemote = 'fork';
-    }
-
-    const pushed = exec(
-        'git',
-        ['push', '-u', pushRemote, branch],
-        checkout,
-        EGRESS_TIMEOUT_MS,
-    );
-    if (!pushed.ok) {
-        fail('push', pushed);
-        return { published: tryIssue(), attempts, log };
-    }
-
-    // A cross-repo PR needs `--head owner:branch`; `gh` resolves the owner from
-    // the fork remote, so `--head` alone with the fork's login is enough.
-    const prArgs = ['pr', 'create', '--repo', repo, '--title', plan.title, '--body', plan.body];
-    if (plan.route === 'fork-pull-request') {
-        prArgs.push('--head', branch);
-    }
-    const pr = exec('gh', prArgs, checkout, EGRESS_TIMEOUT_MS);
-    if (!pr.ok) {
-        fail('pr', pushed.ok ? pr : pushed);
-        return { published: tryIssue(), attempts, log };
-    }
-    log.push(pr.out.trimEnd());
-    return { published: true, attempts, log };
+    markReleased(root, fp, deps.now());
+    return EXIT_OK;
 }
 
 export function main(argv: readonly string[]): number {

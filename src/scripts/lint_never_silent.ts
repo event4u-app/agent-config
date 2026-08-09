@@ -1,202 +1,276 @@
-#!/usr/bin/env node
+#!/usr/bin/env tsx
 /**
- * Never-silent lint (P4.4 of road-to-rule-delivery-integrity).
+ * lint_never_silent — no shipped guidance may direct a silent re-run or the
+ * concealment of a detected miss.
  *
- * No shipped rule, skill, or command may DIRECT a silent re-run or the
- * concealment of a detected miss. The mechanism was built, benchmarked and
- * falsified — `src/skills/recursive-verification/SKILL.md` records the
- * 2026-07-28 honest null as TERMINAL — so guidance that resurrects it is guidance
- * against a measured verdict. Correction is always visible.
+ * The hidden `attempt → critic → re-attempt` mechanism — silently re-running a
+ * turn so the user never notices the miss — was built, benchmarked and
+ * falsified (capability Δ = 0; council verdict TERMINAL, recorded in
+ * `src/skills/recursive-verification/SKILL.md`). The self-repair loop pins
+ * "correction is always visible" as a non-goal boundary. This gate keeps that
+ * boundary mechanical: a rule, skill, or command that *directs* an agent to
+ * silently re-run, or to hide a detected failure, is a CI failure — while
+ * prose that *describes* or *forbids* the falsified mechanism stays legal,
+ * because describing the failure mode is how the corpus teaches against it.
  *
- * ── Why this is not a plain phrase grep ──────────────────────────────
+ * The describe-vs-direct split is decided per matching line:
+ *   - a line carrying a negation / prohibition / falsification marker
+ *     ("never", "forbidden", "must not", "falsified", "violation", …) is a
+ *     DESCRIPTION and passes;
+ *   - a line carrying an explicit `<!-- never-silent-allow: <reason> -->`
+ *     marker (same line or the line above) passes;
+ *   - anything else that matches is a DIRECTIVE and fails.
  *
- * The corpus's only hit is `self-repair-loop.md`:
- *
- *     CORRECT THE TURN OPENLY IN FRONT OF THE USER. NEVER RE-RUN IT SILENTLY
- *     TO HIDE THE MISS.
- *
- * which is the PROHIBITION, not the instruction. A gate that flagged it would
- * fail on the one artefact stating the rule it enforces — and the obvious
- * repair, allowlisting that path, would then let a real directive land in the
- * same file unnoticed. So the discriminator is grammatical: a directive phrase
- * accompanied by a negation or non-goal marker is DESCRIPTION; the same phrase
- * standing alone is a DIRECTIVE.
- *
- * The marker escape (`<!-- never-silent-ok: <reason> -->`) exists for prose the
- * heuristic cannot read, and requires a stated reason — a bare marker is
- * rejected, which is the same anti-degenerate-pass shape the ledger exemption
- * uses.
+ * Exit codes: 0 = clean, 1 = violations, 2 = usage.
  */
 import * as fs from 'node:fs';
+import * as os from 'node:os';
 import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
-import { assertScanned } from './_lib/scan_scope.js';
+import { GateLedger } from './_lib/gate_ledger.js';
+import { runGateCli, runSelfTest } from './_lib/gate_self_test.js';
+import { reportScanned } from './_lib/scan_scope.js';
 
-const GATE = 'lint_never_silent';
+const SCRIPTS_DIR = path.dirname(fileURLToPath(import.meta.url));
+const REAL_REPO_ROOT = path.dirname(path.dirname(SCRIPTS_DIR));
 
-export const SCAN_ROOTS = [
-    path.join('src', 'rules'),
-    path.join('src', 'skills'),
-    path.join('src', 'agent-src', 'commands'),
-] as const;
+/** The shipped-guidance surfaces the ban covers, relative to the repo root. */
+export const SCAN_ROOTS = ['src/rules', 'src/skills', 'src/agent-src/commands'] as const;
 
-/** Phrases that, unqualified, direct a silent re-run or a concealed miss. */
-export const DIRECTIVE_PATTERNS: readonly RegExp[] = [
-    /\bsilently re-?run\b/i,
-    /\bre-?run (?:it |the turn )?(?:silently|quietly)\b/i,
-    /\bquietly (?:retry|re-?run|redo)\b/i,
-    /\bhide the miss\b/i,
-    /\bconceal(?:ment of)? (?:the |a )?(?:miss|defect|failure|error)\b/i,
-    /\bwithout (?:telling|informing|surfacing (?:it )?to) the user\b/i,
-    /\bohne es zu erwähnen\b/i,
+export const ALLOW_MARKER = 'never-silent-allow:';
+
+/**
+ * The two directive families the falsified mechanism decomposes into:
+ * re-running without telling, and concealing what was detected.
+ */
+const SILENT_RERUN_RES: readonly RegExp[] = [
+    /\bsilent(?:ly)?\s+(?:re-?run|re-?runs|re-?attempt|retry|retries|re-?execute)\b/i,
+    /\b(?:re-?run|re-?attempt|retry|re-?execute)\b[^.\n]{0,40}\bsilently\b/i,
+];
+const CONCEAL_RES: readonly RegExp[] = [
+    /\b(?:hide|conceal|paper over|cover up|suppress)\b[^.\n]{0,50}\b(?:miss(?:es)?|failure|mistake|error|defect|violation)\b/i,
 ];
 
 /**
- * Markers that turn a directive phrase into a description of one.
- *
- * Read over the text BEFORE the match — never the whole window — and the
- * asymmetry is the entire discriminator, found by a seeded fixture rather than
- * by reasoning:
- *
- *     NEVER re-run it silently to hide the miss.        prohibition  (negation before)
- *     silently re-run so the user never sees it.        DIRECTIVE    (negation after)
- *
- * A window-wide search calls the second one description too, because "never
- * sees it" is the directive's PURPOSE rather than its prohibition. Position is
- * what separates them, so position is what the check reads.
- *
- * The lookback still spans lines, because a prohibition routinely names its
- * subject one line below the negation — the pinned non-goal in this roadmap's
- * Phase 4 does exactly that.
+ * A matching line that also carries one of these is prose ABOUT the mechanism —
+ * a prohibition, a description of the falsified variant, or a named failure
+ * mode — never a directive to perform it. Checked on the matching line AND the
+ * line above it: markdown wraps sentences, so the negation of a bullet like
+ * "Do NOT promise zero flake; … disguises silent retries" can sit one physical
+ * line before the phrase that matches.
  */
-export const NEGATION_MARKERS: readonly RegExp[] = [
-    /\bnever\b/i,
-    /\bmust not\b/i,
-    /\bdo not\b/i,
-    /\bforbidden\b/i,
-    /\bprohibited\b/i,
-    /\bnon-goal\b/i,
-    /\bfalsified\b/i,
-    /\bstays out\b/i,
-    /\brefuse[sd]?\b/i,
-    /\bis a violation\b/i,
-    /\bnicht\b/i,
-    /\bnie\b/i,
-];
-
-export const OK_MARKER_RE = /<!--\s*never-silent-ok:\s*(.+?)\s*-->/;
-
-/** Lines of context searched ABOVE a hit for a negation marker. */
-const WINDOW = 2;
+const DESCRIPTION_MARKERS =
+    /\b(?:never|niemals|no\b|kein\w*|forbidden|must not|do(?:es)? not|don'?t|won'?t|cannot|can not|falsified|benchmarked|anti-?pattern|violation|banned|prohibited|refus\w*|stays out|is the failure|non-goal|disguis\w*|mask\w*|not\b)/i;
 
 export interface Violation {
-    file: string;
-    line: number;
-    text: string;
+    readonly file: string;
+    readonly line: number;
+    readonly text: string;
+    readonly family: 'silent-rerun' | 'conceal-miss';
 }
 
-/** Pure: audit one file's lines. Exported so a test can seed a violation. */
-export function auditLines(file: string, lines: readonly string[]): Violation[] {
+function matchFamily(line: string): Violation['family'] | null {
+    if (SILENT_RERUN_RES.some((re) => re.test(line))) {
+        return 'silent-rerun';
+    }
+    if (CONCEAL_RES.some((re) => re.test(line))) {
+        return 'conceal-miss';
+    }
+    return null;
+}
+
+/** Pure per-file check — exported so the corpus behaviour is unit-testable. */
+export function checkText(file: string, text: string): Violation[] {
     const out: Violation[] = [];
-    for (let i = 0; i < lines.length; i += 1) {
-        const raw = lines[i] as string;
-        // Strip the exemption marker before ANY matching: its own name contains
-        // "never", so leaving it in makes every marked line read as a
-        // prohibition — a marker that exempts itself regardless of its reason.
-        const line = raw.replace(OK_MARKER_RE, '');
-        let at = -1;
-        for (const re of DIRECTIVE_PATTERNS) {
-            const m = re.exec(line);
-            if (m !== null && (at === -1 || m.index < at)) {
-                at = m.index;
+    const lines = text.split('\n');
+    for (let i = 0; i < lines.length; i++) {
+        const line = lines[i]!;
+        const family = matchFamily(line);
+        if (family === null) {
+            continue;
+        }
+        const prev = i > 0 ? lines[i - 1]! : '';
+        if (DESCRIPTION_MARKERS.test(line) || DESCRIPTION_MARKERS.test(prev)) {
+            continue;
+        }
+        if (line.includes(ALLOW_MARKER) || prev.includes(ALLOW_MARKER)) {
+            continue;
+        }
+        out.push({ file, line: i + 1, text: line.trim(), family });
+    }
+    return out;
+}
+
+function collectMarkdown(root: string): string[] {
+    const out: string[] = [];
+    const walk = (dir: string): void => {
+        let entries: fs.Dirent[];
+        try {
+            entries = fs.readdirSync(dir, { withFileTypes: true });
+        } catch {
+            return;
+        }
+        for (const e of entries) {
+            const p = path.join(dir, e.name);
+            if (e.isDirectory()) {
+                walk(p);
+            } else if (e.isFile() && e.name.endsWith('.md')) {
+                out.push(p);
             }
         }
-        if (at === -1) {
-            continue;
-        }
-        const marker = OK_MARKER_RE.exec(raw);
-        if (marker !== null && (marker[1] ?? '').trim().length > 3) {
-            continue;
-        }
-        const from = Math.max(0, i - WINDOW);
-        const before = [...lines.slice(from, i), line.slice(0, at)].join(' ');
-        if (NEGATION_MARKERS.some((re) => re.test(before))) {
-            continue;
-        }
-        out.push({ file, line: i + 1, text: raw.trim().slice(0, 120) });
-    }
-    return out;
+    };
+    walk(root);
+    return out.sort();
 }
 
-function walk(dir: string): string[] {
-    if (!fs.existsSync(dir)) {
-        return [];
-    }
-    const out: string[] = [];
-    for (const e of fs.readdirSync(dir, { withFileTypes: true }).sort((a, b) =>
-        a.name < b.name ? -1 : 1,
-    )) {
-        const p = path.join(dir, e.name);
-        if (e.isDirectory()) {
-            out.push(...walk(p));
-        } else if (e.isFile() && p.endsWith('.md')) {
-            out.push(p);
+function parseArgs(argv: readonly string[]): { quiet: boolean } {
+    let quiet = false;
+    for (const a of argv) {
+        if (a === '--quiet') {
+            quiet = true;
+        } else if (a === '-h' || a === '--help') {
+            process.stdout.write('usage: lint_never_silent [--quiet]\n');
+            process.exit(0);
+        } else {
+            process.stderr.write(`lint_never_silent: unrecognized argument: ${a}\n`);
+            process.exit(2);
         }
     }
-    return out;
+    return { quiet };
 }
 
-export function main(repoRoot: string = process.cwd()): number {
-    const files = SCAN_ROOTS.flatMap((r) => walk(path.join(repoRoot, r)));
+export function selfTest(): number {
+    const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'lns-'));
+    const mk = (body: string): string => {
+        const root = fs.mkdtempSync(path.join(tmp, 'repo-'));
+        const p = path.join(root, 'src', 'rules', 'r.md');
+        fs.mkdirSync(path.dirname(p), { recursive: true });
+        fs.writeFileSync(p, `# R\n\n${body}\n`, 'utf-8');
+        return root;
+    };
+    const run = (root: string): number => {
+        process.env['LINT_NEVER_SILENT_ROOT'] = root;
+        try {
+            return runGateCli(REAL_REPO_ROOT, 'src/scripts/lint_never_silent.ts', ['--quiet'], root);
+        } finally {
+            delete process.env['LINT_NEVER_SILENT_ROOT'];
+        }
+    };
+    try {
+        return runSelfTest({
+            gate: 'lint_never_silent',
+            minCases: 3,
+            minRejectCases: 2,
+            cases: [
+                {
+                    name: 'a directive to silently re-run the turn is rejected',
+                    expect: 'reject',
+                    run: () =>
+                        run(mk('On a detected miss, silently re-run the turn and present the corrected answer.')),
+                },
+                {
+                    name: 'a directive to conceal a detected failure is rejected',
+                    expect: 'reject',
+                    run: () => run(mk('If the gate fails, suppress the error and continue as if it passed.')),
+                },
+                {
+                    name: 'a no-prefixed word (Note:, now) does not exonerate a directive — R2 finding #1',
+                    expect: 'reject',
+                    run: () => run(mk('Note: silently re-run the suite after fixing.')),
+                },
+                {
+                    name: 'prose that FORBIDS the mechanism passes — describing is how the corpus teaches',
+                    expect: 'accept',
+                    run: () =>
+                        run(mk('NEVER silently re-run the turn — that mechanism was built and falsified.')),
+                },
+                {
+                    name: 'an explicit allow-marker passes',
+                    expect: 'accept',
+                    run: () =>
+                        run(mk('<!-- never-silent-allow: negative example in documentation -->\nsilently re-run the turn')),
+                },
+                {
+                    name: 'a clean rule passes',
+                    expect: 'accept',
+                    run: () => run(mk('Verify with the real tool and surface the result to the user.')),
+                },
+            ],
+        });
+    } finally {
+        fs.rmSync(tmp, { recursive: true, force: true });
+    }
+}
+
+export function main(argv?: readonly string[]): number {
+    const raw = argv ?? process.argv.slice(2);
+    if (raw.includes('--self-test')) {
+        return selfTest();
+    }
+    const args = parseArgs(raw);
+    const root = process.env['LINT_NEVER_SILENT_ROOT'] ?? REAL_REPO_ROOT;
+
+    const ledger = new GateLedger('lint_never_silent');
     const violations: Violation[] = [];
-    for (const f of files) {
-        const rel = path.relative(repoRoot, f);
-        violations.push(...auditLines(rel, fs.readFileSync(f, 'utf-8').split('\n')));
+    let scanned = 0;
+    for (const rel of SCAN_ROOTS) {
+        for (const file of collectMarkdown(path.join(root, rel))) {
+            ledger.plan(file);
+            const found = checkText(path.relative(root, file), fs.readFileSync(file, 'utf-8'));
+            scanned += 1;
+            if (found.length > 0) {
+                violations.push(...found);
+                ledger.fail(file, `${String(found.length)} never-silent directive(s)`);
+            } else {
+                ledger.complete(file);
+            }
+        }
     }
-
-    assertScanned({
-        gate: GATE,
-        scanned: files.length,
-        units: 'shipped rule / skill / command files',
-        roots: [...SCAN_ROOTS],
-    });
 
     if (violations.length > 0) {
-        process.stderr.write(`${GATE}: ${String(violations.length)} violation(s)\n\n`);
+        process.stderr.write(`❌  lint_never_silent: ${String(violations.length)} violation(s):\n`);
         for (const v of violations) {
-            process.stderr.write(`  ${v.file}:${String(v.line)}  ${v.text}\n`);
+            process.stderr.write(
+                `  • ${v.file}:${String(v.line)} [${v.family}] ${v.text}\n` +
+                    '    Shipped guidance must not direct a silent re-run or the concealment of a\n' +
+                    '    detected miss (the mechanism is falsified — correction is always visible).\n' +
+                    `    Describing/forbidding it is fine; mark a deliberate negative example with\n` +
+                    `    <!-- ${ALLOW_MARKER} <reason> --> on or above the line.\n`,
+            );
         }
-        process.stderr.write(
-            '\nA shipped artefact may not DIRECT a silent re-run or a concealed miss —\n' +
-                'the mechanism was benchmarked and falsified (recursive-verification, TERMINAL\n' +
-                '2026-07-28), and correction is always visible. If the prose DESCRIBES the\n' +
-                'falsified mechanism rather than instructing it, either phrase it with the\n' +
-                'negation it deserves or add `<!-- never-silent-ok: <reason> -->` on the line.\n',
-        );
-        return 1;
+    } else if (!args.quiet) {
+        process.stdout.write(`✅  never-silent clean — ${String(scanned)} shipped artefact(s).\n`);
     }
 
-    process.stdout.write(
-        `✅  ${GATE}: ${String(files.length)} shipped artefact(s), no silent-rerun directive\n`,
-    );
-    return 0;
+    ledger.report();
+    reportScanned({
+        gate: 'lint_never_silent',
+        scanned,
+        units: 'markdown artefact(s)',
+        roots: [...SCAN_ROOTS],
+    });
+    return violations.length > 0 ? 1 : 0;
 }
 
-function isCliEntry(): boolean {
-    const argv1 = process.argv[1];
-    if (argv1 === undefined) {
+const _HERE = fileURLToPath(import.meta.url);
+function _isCliEntry(): boolean {
+    if (process.argv[1] === undefined) {
         return false;
+    }
+    if (import.meta.url === pathToFileURL(path.resolve(process.argv[1])).href) {
+        return true;
     }
     try {
         return (
-            fs.realpathSync(fileURLToPath(import.meta.url)) === fs.realpathSync(path.resolve(argv1))
+            fs.realpathSync(fileURLToPath(import.meta.url)) ===
+            fs.realpathSync(path.resolve(process.argv[1]))
         );
     } catch {
-        return pathToFileURL(argv1).href === import.meta.url;
+        return false;
     }
 }
 
-if (isCliEntry()) {
+if (_isCliEntry() || process.argv[1] === _HERE) {
     process.exit(main());
 }

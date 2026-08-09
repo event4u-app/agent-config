@@ -1,0 +1,26 @@
+[
+  {
+    "name": "complaint phrased as an overlooked-half report, unlike the canonical wording",
+    "turn": {
+      "prompt": "Du hast schon wieder die Hälfte der Dateien übersehen!",
+      "reply": "",
+      "toolCommands": []
+    }
+  },
+  {
+    "name": "English complaint about an omission, not about a wrong result",
+    "turn": {
+      "prompt": "you failed to update the callers, again",
+      "reply": "",
+      "toolCommands": []
+    }
+  },
+  {
+    "name": "a pleasantry in one clause must not mute the complaint in the next (R2 finding #2)",
+    "turn": {
+      "prompt": "Alles gut mit dem Deploy, aber du hast schon wieder die Hälfte der Dateien übersehen!",
+      "reply": "",
+      "toolCommands": []
+    }
+  }
+]

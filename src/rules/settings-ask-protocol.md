@@ -7,7 +7,6 @@ triggers:
   - keyword: "settings:set"
   - keyword: "canary_name"
   - keyword: "rich_skills"
-  - keyword: "budget_routing"
   - keyword: "adversarial_council"
   - keyword: "learn_on_session_end"
   - keyword: "open_edited_files"
@@ -34,7 +33,7 @@ obligation_frequency: "per-task"
 # Settings-Ask Protocol
 
 A settings question is the one ask where the agent poses the question *and* owns
-where the answer goes. Nine keys can produce one, in two mechanisms that look
+where the answer goes. Seven keys can produce one, in two mechanisms that look
 identical from outside and differ completely underneath.
 
 ## The Iron Law
@@ -70,7 +69,7 @@ How long it stays cached in working state is the key's own business, and several
 keys state their own scope. Reading the C path as "re-ask every execution" would
 turn a fence against illegal writes into a source of extra questions.
 
-## The nine keys
+## The seven keys
 
 **Class B — persist once**: `personal.canary_name` ·
 `personal.open_edited_files` · `memory.learn_on_session_end`. Each ships a
@@ -78,10 +77,12 @@ conservative default (`""`, `false`, `false`), so absent is indistinguishable
 from *no* and never from *yes*.
 
 **Class C carrying an `ask` value in its own enum** — a runtime question whose
-answer dies with the run: `subagents.budget_routing` and `worktrees.mode` (both
-**ship** as `ask`), plus `tokens.rich_skills`, `subagents.auto`,
-`subagents.adversarial_council`, `decision_engine.on_block` (which can be set to
-`ask` by a human but do not ship that way).
+answer dies with the run: `worktrees.mode` (**ships** as `ask`), plus
+`tokens.rich_skills`, `subagents.adversarial_council`, `decision_engine.on_block`
+(which can be set to `ask` by a human but do not ship that way). Always-on
+orchestration (road-to-always-on-orchestration Phase 1) deleted
+`subagents.auto` and `subagents.budget_routing` — the layer no longer carries a
+setting for this protocol to route.
 
 ## The budget
 

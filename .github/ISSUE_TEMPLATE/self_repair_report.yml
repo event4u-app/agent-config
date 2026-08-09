@@ -1,31 +1,28 @@
 name: Self-repair report
-description: A defect in how the agent itself behaved, filed by the self-repair loop.
-title: "fix(self-repair): <defect class> — <N>x observed"
-labels: ["self-repair"]
+description: >-
+  A defect in the agent's own behaviour, recorded by the agent-config
+  self-repair loop. Reports from independent installs cluster by fingerprint —
+  search for yours before filing.
+title: 'fix(self-repair): <defect class> — <N>x observed'
+labels:
+  - self-repair
 body:
   - type: markdown
     attributes:
-      value: |
-        This form is the structured intake for `agent-config self-repair:release`.
-        The loop fills it from a local defect record; a human can also fill it by
-        hand after `agent-config self-repair:status`.
-
-        **Why the fields are separate rather than one prose box:** reports from
-        independent installs have to cluster by `fingerprint` so a defect seen
-        once on five machines is visibly one defect and not five. That needs the
-        fingerprint in its own field, not buried in a paragraph — and it needs no
-        telemetry, because the person filing is the one who decided to file.
-
-        **What this form must never contain:** a prompt, a file body, a project
-        path, or a username. The record type the loop fills this from has no
-        field capable of carrying them, and the evidence span is sanitized at
-        capture. If you are filling this by hand, hold the same line.
-  - type: input
+      value: >-
+        The fields below mirror the self-repair defect record one-to-one, so a
+        report rendered by `agent-config self-repair:release` round-trips
+        through this form without rewriting. The evidence span must already be
+        capture-time sanitized — no project paths, prompts, or file contents.
+  - type: dropdown
     id: defect_class
     attributes:
       label: Defect class
-      description: The record's `defect_class` — the stable name for this kind of miss.
-      placeholder: council-availability-claim
+      description: One class = one detector (`DefectClass` in `src/scripts/_lib/self_repair.ts`).
+      options:
+        - user-reported
+        - council-availability-claim
+        - language-mirror
     validations:
       required: true
   - type: input
@@ -33,70 +30,34 @@ body:
     attributes:
       label: Fingerprint
       description: >-
-        The record's `fingerprint`. This is the clustering key — reports sharing
-        it are the same defect, whoever filed them.
-      placeholder: 5f2c9a1e
-    validations:
-      required: true
-  - type: dropdown
-    id: source
-    attributes:
-      label: Intake
-      description: Did a user say so, or did a detector fire?
-      options:
-        - user-reported
-        - self-detected
+        From `agent-config self-repair:status` — the shape-normalized record id
+        that lets independent installs cluster without telemetry.
+      placeholder: 3f9a1c2b4d5e6f70
     validations:
       required: true
   - type: input
     id: occurrences
     attributes:
-      label: Occurrences
-      description: How many times this fingerprint was seen on this machine.
-      placeholder: "3"
-    validations:
-      required: true
-  - type: input
-    id: seen
-    attributes:
-      label: Seen
-      description: >-
-        First and last observation, as the report renders them — `once (<ts>)` or
-        `<N>× (<first> → <last>)`.
-      placeholder: 3× (2026-08-01T09:00:00.000Z → 2026-08-09T17:00:00.000Z)
+      label: Occurrence count
+      description: How often this fingerprint was observed on this install.
+      placeholder: '3'
     validations:
       required: true
   - type: textarea
     id: evidence
     attributes:
-      label: Evidence
+      label: Evidence span
       description: >-
-        The sanitized evidence span, capped at 160 characters by the capture. Home
-        paths and e-mail addresses are already replaced. Do not paste a transcript.
-      placeholder: Kein Council konfiguriert — ich nutze stattdessen Subagenten.
+        The short sanitized span from the record — never raw transcript text.
+      render: text
     validations:
       required: true
   - type: textarea
     id: suggested_surface
     attributes:
-      label: Which surface failed
+      label: What the fix should address
       description: >-
-        The rule, skill, gate, or missing carrier that allowed the behaviour. A
-        report with no named surface is an apology, not a defect report.
-      placeholder: src/rules/council-availability.md — the probe was never run.
-    validations:
-      required: true
-  - type: dropdown
-    id: route
-    attributes:
-      label: Route this arrived by
-      description: >-
-        Which rung of the egress ladder filed this. `issue` here means the fix
-        could not be pushed from the reporting machine — the report is not
-        accompanied by a patch.
-      options:
-        - issue
-        - pull-request
-        - fork-pull-request
+        One line naming the rule, skill, or gate whose absence allowed the
+        behaviour.
     validations:
       required: true

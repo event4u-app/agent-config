@@ -18,6 +18,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import { project_settings_path, resolve_project_root } from './_lib/agent_settings.js';
 import { load_agent_settings } from './_lib/agent_settings.js';
+import { detectEnvironment, type EnvironmentReport } from './_lib/environment_detector.js';
 
 import {
     BundleTooLarge,
@@ -63,6 +64,7 @@ import { format_install_hints } from './ai_council/cli_hints.js';
 import {
     type AdvisorConfig,
     type CouncilConfig,
+    type QuorumSetting,
     COUNCIL_CONFIG_ENV,
     COUNCIL_CONFIG_USER_GLOBAL_REL,
     CouncilConfigError,
@@ -71,7 +73,10 @@ import {
     resolve_config_path,
 } from './ai_council/config.js';
 import { AuthCache, select_solo_member } from './ai_council/solo_dispatch.js';
-import { InvalidModeError, resolve_global_mode, resolve_mode } from './ai_council/modes.js';
+import { InvalidModeError, resolve_global_mode } from './ai_council/modes.js';
+import { resolveMemberTransport } from './ai_council/transport_resolver.js';
+import { absentReasonFromCliFailure, classifyCliFailure, type AbsentReason } from './ai_council/transport_resolver.js';
+import { evaluateQuorum, type QuorumResult } from './ai_council/quorum.js';
 import { appendEvent } from './ai_council/events_log.js';
 import {
     type ClassificationResult,
@@ -82,7 +87,8 @@ import {
     educate_message,
 } from './ai_council/necessity.js';
 import type {
-    DebateCheckpoint} from './ai_council/orchestrator.js';
+    DebateCheckpoint,
+    RenderAbsentMember} from './ai_council/orchestrator.js';
 import {
     ConsensusResult,
     CostBudget,
@@ -128,6 +134,8 @@ import {
     render_deanonymization_block,
     with_chairman_fields,
 } from './ai_council/blind_review.js';
+import { tally_stances } from './ai_council/stance_tally.js';
+import { buildHandoffFromStanceTally, type HandoffEnvelope } from './ai_council/handoff.js';
 
 // ── argparse-style exit plumbing ────────────────────────────────────
 // Mirror CPython argparse: a `prog: error: …` line on stderr + exit 2.
@@ -503,6 +511,13 @@ function _synthesize_ai_council_block(cfg: CouncilConfig): Dict {
             max_calls_per_day: _mapToObject(cfg.cli_call_budget.max_calls_per_day),
             warn_at: cfg.cli_call_budget.warn_at,
         },
+        // Phase 3.3 (road-to-always-on-orchestration): was validated by
+        // `_build_config`/`_build_quorum` but never forwarded into the
+        // synthesized block, so `build_members` always saw `undefined` and
+        // silently fell back to `'majority'` regardless of the user's
+        // configured `quorum: <k>`. Additive key — callers that never read
+        // it observe no change.
+        quorum: cfg.quorum,
         necessity_classifier: {
             enabled: cfg.necessity_classifier.enabled,
             mode: cfg.necessity_classifier.mode,
@@ -550,6 +565,118 @@ interface BuildMembersOptions {
     model_overrides?: Record<string, string> | null;
     siblings_overrides?: Record<string, string[]> | null;
     skipped?: Dict[] | null;
+    /**
+     * Out-param (road-to-always-on-orchestration Phase 3.3): when supplied,
+     * `.result` is populated with this call's quorum verdict — enabled
+     * members vs. the count actually constructed (an "absent" push into
+     * `skipped` counts against it same as a hard construction failure).
+     * The object is mutated in place so a caller declares it once and reads
+     * it after `build_members` returns; `.result` stays `null` when the
+     * caller passes no ref, matching `SessionManifest.quorum`'s own
+     * "null = never evaluated" convention.
+     */
+    quorum_out?: { result: QuorumResult | null } | null;
+    /**
+     * Test-only injection point, mirroring the `settings`/`members`/`table`
+     * DI pattern the CLI commands already use. Production callers never set
+     * this — `build_members` falls back to the real, process-memoised
+     * `detectEnvironment()` — but a fixed `EnvironmentReport` is what lets a
+     * unit test exercise the `auto` chain (present / absent / quorum)
+     * deterministically instead of poking real `$PATH` / `$HOME` / env-key
+     * state that differs per machine and per CI run.
+     */
+    environment_report?: EnvironmentReport | null;
+}
+
+/**
+ * The member's own `api_key_ref`, resolved directly — never the generic
+ * per-provider environment guess `resolveTransport`'s `auto` chain falls
+ * back to. A member with a non-default ref (`env:MY_CUSTOM_KEY`, a renamed
+ * key file) would otherwise read as keyless even when it is fully
+ * configured. Returns `undefined` when no ref is set at all, letting
+ * `resolveMemberTransport` fall through to its own generic detection.
+ */
+function _member_api_key_present(cfg: Dict): boolean | undefined {
+    const ref = cfg['api_key_ref'];
+    if (typeof ref !== 'string' || ref.trim() === '') {
+        return undefined;
+    }
+    try {
+        resolve_api_key(ref);
+        return true;
+    } catch {
+        return false;
+    }
+}
+
+/**
+ * `ai['quorum']` as forwarded by `_synthesize_ai_council_block` (already
+ * validated by `config.ts::_build_quorum` on that path) — or, for a caller
+ * that hands `build_members` a hand-built dict bypassing the loader
+ * entirely, a defensive re-check that fails soft to `'majority'` rather
+ * than throwing. `build_members` is not the config-validation layer;
+ * `evaluateQuorum` degrades an unrecognisable setting toward
+ * `inconclusive`, never toward a false `concluded`, so failing soft here
+ * costs nothing on the safety side.
+ */
+function _quorum_setting_from(ai: Dict): QuorumSetting {
+    const raw = ai['quorum'];
+    if (raw === 'majority') {
+        return 'majority';
+    }
+    if (typeof raw === 'number' && Number.isInteger(raw) && raw >= 1) {
+        return raw;
+    }
+    return 'majority';
+}
+
+/**
+ * Re-derive quorum AFTER the provider calls, over what was actually USABLE —
+ * never what merely CONSTRUCTED (M3, independent-review finding). `members`
+ * and `responses` must be index-aligned (`consult()`'s own contract: one
+ * `CouncilResponse` per member, from the final round); `members.length` is
+ * the `n` — deliberately the roster that actually ran (post `--single` /
+ * `--siblings` filtering), never the full config roster a filtered run
+ * never attempted. A response carrying `.error` (or a missing response
+ * entry altogether) counts as absent, classified through the same
+ * `AbsentReason` vocabulary a static (pre-call) resolution failure uses, so
+ * one artefact buckets every absence — construction-time and mid-flight —
+ * under one taxonomy.
+ */
+function _postRunQuorum(
+    members: ExternalAIClient[],
+    responses: CouncilResponse[],
+    ai_cfg: Dict,
+): { quorum: QuorumResult; absent: Dict[] } {
+    const absent: Dict[] = [];
+    let present = 0;
+    for (let i = 0; i < members.length; i++) {
+        const m = members[i] as ExternalAIClient;
+        const r = responses[i];
+        if (r !== undefined && !r.error) {
+            present += 1;
+            continue;
+        }
+        const raw = r?.error ?? 'no response';
+        const failure = classifyCliFailure(raw);
+        absent.push({
+            member: m.name,
+            reason: absentReasonFromCliFailure(failure) ?? 'unavailable',
+            detail: raw,
+        });
+    }
+    return { quorum: evaluateQuorum(members.length, present, _quorum_setting_from(ai_cfg)), absent };
+}
+
+/**
+ * One-line k-of-n banner, mirrored from `orchestrator.ts::_render_quorum_line`
+ * but for the CLI's own stdout stream rather than the rendered report —
+ * "attendance is telemetry, never a silent drop" applies to the estimate
+ * preview too, not only to a completed pass.
+ */
+function _format_quorum_line(q: QuorumResult): string {
+    const verdict = q.status === 'concluded' ? 'concluded' : 'INCONCLUSIVE — release gate holds';
+    return `council:quorum · ${q.present}/${q.total} present, needed ${q.threshold} — ${verdict}.`;
 }
 
 function build_members(settings: Dict, opts: BuildMembersOptions = {}): ExternalAIClient[] {
@@ -557,6 +684,12 @@ function build_members(settings: Dict, opts: BuildMembersOptions = {}): External
     const model_overrides = opts.model_overrides ?? null;
     const siblings_overrides = opts.siblings_overrides ?? null;
     const skipped = opts.skipped ?? null;
+    const quorum_out = opts.quorum_out ?? null;
+    // Read-only, per-process-memoised (`detectEnvironment` caches the
+    // no-argument call) — cheap to call once per `build_members` invocation.
+    // A caller may inject a fixed report (tests only); production leaves
+    // this unset.
+    const report = opts.environment_report ?? detectEnvironment();
 
     const ai = _isDict(settings) ? ((settings['ai_council'] as Dict) || {}) : {};
     if (!_pyBool(ai['enabled'])) {
@@ -617,6 +750,18 @@ function build_members(settings: Dict, opts: BuildMembersOptions = {}): External
         );
     }
     const members: ExternalAIClient[] = [];
+    // Enabled member-config ENTRIES this pass considered — the `n` in
+    // quorum's k-of-n. One entry always resolves to exactly one of: a
+    // successful construction (>=1 pushed client; siblings fan-out still
+    // counts as one entry), or exactly one absent count — never both, never
+    // neither — so `total_enabled - absent_count` is `present` without a
+    // second pass over `members`. `absent_count` is tracked independently of
+    // the caller-optional `skipped` out-param (which may be `null` when a
+    // caller wants `quorum_out` without the human-readable skip list) —
+    // counting `skipped.length` instead silently overcounted `present` for
+    // that caller shape.
+    let total_enabled = 0;
+    let absent_count = 0;
     for (const name of Object.keys(members_cfg)) {
         const cfg = ((members_cfg[name] as Dict) || {}) as Dict;
         if (!_pyBool(cfg['enabled'])) {
@@ -629,15 +774,34 @@ function build_members(settings: Dict, opts: BuildMembersOptions = {}): External
             }
             continue;
         }
-        const mode = resolve_mode(name, {
+        total_enabled += 1;
+        // road-to-always-on-orchestration Phase 3.1: the single reconciled
+        // entry point — composes `resolve_mode` (which layer decided the
+        // mode) with `resolveTransport` (what `auto` expands to on THIS
+        // machine). The hand-rolled `mode === 'api' | 'cli' | 'manual'`
+        // switch this replaces had no `'auto'` case, so every invocation
+        // broke the moment the loader default flipped `api` → `auto`
+        // (`config.ts::_build_defaults`) — every member fell through to the
+        // final `else` below and killed the whole pass.
+        const api_key_present = _member_api_key_present(cfg);
+        const resolved = resolveMemberTransport({
+            provider: name,
+            report,
             invocationMode: invocation_mode,
             memberSettings: cfg,
             globalMode: global_mode ?? null,
+            binaryOverride: (cfg['binary'] as string | null) ?? null,
+            // `exactOptionalPropertyTypes` rejects an explicit `undefined` —
+            // see `resolveMemberTransport`'s own forwarding call for the
+            // same pattern.
+            ...(api_key_present !== undefined ? { apiKeyPresent: api_key_present } : {}),
         });
         if (name in siblings) {
-            if (mode !== 'api') {
+            if (resolved.transport !== 'api') {
                 throw new CouncilDisabledError(
-                    `--siblings requires mode=api for member ${_pyReprStr(name)} (got ${_pyReprStr(mode)}).`,
+                    `--siblings requires mode=api for member ${_pyReprStr(name)} ` +
+                        `(configured mode=${_pyReprStr(resolved.configuredMode)}, resolved transport=` +
+                        `${_pyReprStr(resolved.transport ?? 'none')}).`,
                 );
             }
             const api_key_ref = (cfg['api_key_ref'] as string | null) ?? null;
@@ -658,19 +822,69 @@ function build_members(settings: Dict, opts: BuildMembersOptions = {}): External
             }
             continue;
         }
+        if (resolved.transport === null) {
+            // Phase 3.2 — graded degradation: a member whose transport
+            // resolves to ∅ (no CLI + no key under `auto`) is recorded
+            // `absent` with a machine-readable `AbsentReason` and the pass
+            // continues, instead of killing the whole invocation the way
+            // the old unconditional `else { throw }` below did.
+            const detail = resolved.reason ?? `member ${name} has no available transport`;
+            const entry: Dict = {
+                member: name,
+                reason: resolved.absentReason ?? 'unavailable',
+                detail,
+            };
+            absent_count += 1;
+            if (skipped !== null) {
+                skipped.push(entry);
+            }
+            _stderr(`[council] SKIP ${name}: ${detail}\n`);
+            continue;
+        }
         const model = (overrides[name] as string | undefined) || (cfg['model'] as string | undefined) || null;
-        if (mode === 'api' && _API_PROVIDERS.has(name)) {
-            members.push(
-                _construct_api_member(name, model, {
-                    api_key_ref: (cfg['api_key_ref'] as string | null) ?? null,
-                    // Council opts in explicitly (client-default OFF); on unless
-                    // the operator sets `prompt_cache: false`.
-                    enable_prompt_cache: cfg['prompt_cache'] !== false,
-                    // road-to-cache-economy Phase 4 — see the siblings branch above.
-                    prompt_cache_ttl: (cfg['prompt_cache_ttl'] as '5m' | '1h' | undefined) ?? undefined,
-                }),
-            );
-        } else if (mode === 'cli' && _CLI_PROVIDERS.has(name)) {
+        if (resolved.transport === 'api' && _API_PROVIDERS.has(name)) {
+            // m2 fix (independent-review finding) — `resolveMemberTransport`'s
+            // `auto` chain treats "a key-file or env-key auth record exists
+            // for this provider" as sufficient to resolve transport=`api`
+            // (its own default `apiKeyPresent` read off the environment
+            // report, used whenever the member config carries no explicit
+            // `api_key_ref` at all — see `_member_api_key_present` above,
+            // which returns `undefined`, not `false`, in exactly that case).
+            // But gemini/xai/perplexity's OWN construction contract is
+            // stricter: `_construct_api_member` requires an EXPLICIT
+            // `api_key_ref` for those three and refuses the legacy-fallback
+            // path other providers get, throwing `CouncilDisabledError`. A
+            // generic env var (e.g. `GEMINI_API_KEY` set for an unrelated
+            // tool) satisfying the permissive auto-chain read while
+            // `api_key_ref` was never wired into the council config is
+            // exactly this mismatch — previously an UNCAUGHT throw here
+            // killed the entire pass. Same catch-and-skip shape the CLI
+            // branch below already uses for its own construction failure.
+            try {
+                members.push(
+                    _construct_api_member(name, model, {
+                        api_key_ref: (cfg['api_key_ref'] as string | null) ?? null,
+                        // Council opts in explicitly (client-default OFF); on unless
+                        // the operator sets `prompt_cache: false`.
+                        enable_prompt_cache: cfg['prompt_cache'] !== false,
+                        // road-to-cache-economy Phase 4 — see the siblings branch above.
+                        prompt_cache_ttl: (cfg['prompt_cache_ttl'] as '5m' | '1h' | undefined) ?? undefined,
+                    }),
+                );
+            } catch (exc) {
+                if (!(exc instanceof CouncilDisabledError)) {
+                    throw exc;
+                }
+                const detail = exc.message;
+                const entry: Dict = { member: name, reason: 'no_auth', detail };
+                absent_count += 1;
+                if (skipped !== null) {
+                    skipped.push(entry);
+                }
+                _stderr(`[council] SKIP ${name}: ${detail}\n`);
+                continue;
+            }
+        } else if (resolved.transport === 'cli' && _CLI_PROVIDERS.has(name)) {
             try {
                 members.push(
                     _construct_cli_member(name, model, {
@@ -696,29 +910,31 @@ function build_members(settings: Dict, opts: BuildMembersOptions = {}): External
                     reason: 'binary_missing',
                     detail,
                 };
+                absent_count += 1;
                 if (skipped !== null) {
                     skipped.push(entry);
                 }
                 _stderr(`[council] SKIP ${name}: ${detail}\n`);
                 continue;
             }
-        } else if (mode === 'cli') {
+        } else if (resolved.transport === 'cli') {
             throw new CouncilDisabledError(
                 `member ${_pyReprStr(name)} resolves to mode=cli but no CLI client is ` +
                     `wired (known: ${_pyReprStrList(_pySortedStr(_CLI_PROVIDERS))}).`,
             );
-        } else if (mode === 'manual') {
+        } else if (resolved.transport === 'manual') {
             members.push(new ManualClient({ name, model: model || 'manual' }));
-        } else if (mode === 'playwright') {
-            throw new CouncilDisabledError(
-                `member ${_pyReprStr(name)} resolves to mode=playwright (Phase 2c, not wired).`,
-            );
         } else {
             throw new CouncilDisabledError(
-                `member ${_pyReprStr(name)} has no transport — mode=${mode}, ` +
-                    `name not in ${_pyReprStrList(_pySortedStr(_API_PROVIDERS))}.`,
+                `member ${_pyReprStr(name)} has no transport — resolved=${_pyReprStr(resolved.transport)}, ` +
+                    `configured mode=${_pyReprStr(resolved.configuredMode)}, name not in ` +
+                    `${_pyReprStrList(_pySortedStr(_API_PROVIDERS))}.`,
             );
         }
+    }
+    if (quorum_out !== null) {
+        const present = total_enabled - absent_count;
+        quorum_out.result = evaluateQuorum(total_enabled, present, _quorum_setting_from(ai));
     }
     if (members.length === 0) {
         if (skipped && skipped.length > 0) {
@@ -1334,6 +1550,105 @@ function _objToMap(o: Dict): Map<string, string> {
     return m;
 }
 
+/**
+ * Phase 4.1 — read a persisted `handoff` block back off a saved responses
+ * JSON. Defensive against a payload written before this field existed
+ * (`undefined`) and against a malformed one (a non-string `decision`, a
+ * `rejected_alternatives` entry missing `option`/`reason`) — either
+ * degrades that one field to `null` rather than throwing; a stale or
+ * hand-edited artefact never blocks a re-render.
+ */
+function _deserialise_handoff(data: unknown): HandoffEnvelope | null {
+    if (!_isDict(data)) {
+        return null;
+    }
+    const d = data as Dict;
+    const decision = typeof d['decision'] === 'string' ? (d['decision'] as string) : null;
+    const rawAlts = d['rejected_alternatives'];
+    const alts = Array.isArray(rawAlts)
+        ? (rawAlts as unknown[])
+              .filter(
+                  (a): a is Dict =>
+                      _isDict(a) && typeof (a as Dict)['option'] === 'string' && typeof (a as Dict)['reason'] === 'string',
+              )
+              .map((a) => ({ option: a['option'] as string, reason: a['reason'] as string }))
+        : [];
+    const rawConstraints = d['constraints'];
+    const constraints = Array.isArray(rawConstraints)
+        ? (rawConstraints as unknown[]).filter((c): c is string => typeof c === 'string')
+        : [];
+    return {
+        decision,
+        rejected_alternatives: alts.length > 0 ? alts : null,
+        constraints: constraints.length > 0 ? constraints : null,
+    };
+}
+
+const _VALID_ABSENT_REASONS: ReadonlySet<AbsentReason> = new Set([
+    'no_binary',
+    'no_auth',
+    'timeout',
+    'quota',
+]);
+
+/**
+ * M4 (independent-review finding) — `cmd_run` writes `payload['quorum']` /
+ * `payload['absent_members']` (Phase 3.2/3.3), but `cmd_render` never read
+ * either back, so a `council:render` off a saved payload silently dropped
+ * the graded-degradation picture the JSON already carried — same shape as
+ * the `handoff` round-trip gap `_deserialise_handoff` above closes. Same
+ * defensive style: a payload written before these fields existed, or a
+ * malformed entry, degrades to `null`/a shorter list rather than throwing —
+ * a stale or hand-edited artefact never blocks a re-render. `reason` values
+ * outside the `AbsentReason` enum (e.g. `build_members`'s own
+ * `'unavailable'`/`'binary_missing'` skip reasons, which predate and are
+ * broader than the enum `render()` types against) degrade to `null` — the
+ * `member`/`detail` text still renders either way.
+ */
+function _deserialise_absent_members(data: unknown): readonly RenderAbsentMember[] | null {
+    if (!Array.isArray(data)) {
+        return null;
+    }
+    const out: RenderAbsentMember[] = [];
+    for (const entry of data) {
+        if (!_isDict(entry)) {
+            continue;
+        }
+        const d = entry as Dict;
+        const member = d['member'];
+        const detail = d['detail'];
+        if (typeof member !== 'string' || typeof detail !== 'string') {
+            continue;
+        }
+        const raw = d['reason'];
+        const reason = typeof raw === 'string' && _VALID_ABSENT_REASONS.has(raw as AbsentReason)
+            ? (raw as AbsentReason)
+            : null;
+        out.push({ member, reason, detail });
+    }
+    return out.length > 0 ? out : null;
+}
+
+function _deserialise_quorum(data: unknown): QuorumResult | null {
+    if (!_isDict(data)) {
+        return null;
+    }
+    const d = data as Dict;
+    const status = d['status'];
+    const threshold = d['threshold'];
+    const total = d['total'];
+    const present = d['present'];
+    if (
+        (status !== 'concluded' && status !== 'inconclusive') ||
+        typeof threshold !== 'number' ||
+        typeof total !== 'number' ||
+        typeof present !== 'number'
+    ) {
+        return null;
+    }
+    return { status, threshold, total, present };
+}
+
 // ── round / depth / token resolution ────────────────────────────────
 
 function _resolve_rounds(args: Args, ai_cfg: Dict): number {
@@ -1380,12 +1695,14 @@ function cmd_estimate(
     const advisor_plans = _build_advisor_plans(ai_cfg, REPO_ROOT);
     const explicit_overrides = _parse_model_overrides(_getattr<string[] | null>(args, 'model', null));
     const skipped: Dict[] = [];
+    const quorum_out: { result: QuorumResult | null } = { result: null };
     if (members === null) {
         members = build_members(settings, {
             invocation_mode: args.mode_override,
             model_overrides: _advisor_model_overrides(advisor_plans, explicit_overrides),
             siblings_overrides: _parse_siblings_overrides(_getattr<string[] | null>(args, 'siblings', null)),
             skipped,
+            quorum_out,
         });
     }
     if (table === null) {
@@ -1423,6 +1740,9 @@ function cmd_estimate(
     }
     if (skipped.length > 0) {
         _stdout(format_install_hints(skipped) + '\n');
+    }
+    if (quorum_out.result !== null) {
+        _stdout(_format_quorum_line(quorum_out.result) + '\n');
     }
     _stdout(
         format_estimate_table(billable, estimates, {
@@ -2035,12 +2355,14 @@ function cmd_run(
     const advisor_plans = _build_advisor_plans(ai_cfg, REPO_ROOT);
     const explicit_overrides = _parse_model_overrides(_getattr<string[] | null>(args, 'model', null));
     const skipped: Dict[] = [];
+    const quorum_out: { result: QuorumResult | null } = { result: null };
     if (members === null) {
         members = build_members(settings, {
             invocation_mode: args.mode_override,
             model_overrides: _advisor_model_overrides(advisor_plans, explicit_overrides),
             siblings_overrides: _parse_siblings_overrides(_getattr<string[] | null>(args, 'siblings', null)),
             skipped,
+            quorum_out,
         });
     }
     if (_getattr(args, 'single', false)) {
@@ -2102,6 +2424,9 @@ function cmd_run(
     }
     if (skipped.length > 0) {
         _stdout(format_install_hints(skipped) + '\n');
+    }
+    if (quorum_out.result !== null) {
+        _stdout(_format_quorum_line(quorum_out.result) + '\n');
     }
     _stdout(
         format_estimate_table(billable, estimates, {
@@ -2198,6 +2523,38 @@ function cmd_run(
             stance_repairs.push(r);
         },
     });
+    // M3 fix (independent-review finding) — quorum measures MEMBERS THAT
+    // ACTUALLY PRODUCED A USABLE RESPONSE, per `quorum.ts`'s own docstring
+    // ("at least k of n enabled members produced a usable response"). Before
+    // this, `quorum_out.result` stayed the PRE-RUN value `build_members`
+    // set — constructibility, not usability: a member that constructed fine
+    // and then failed mid-flight (auth expired, timeout, quota exhausted)
+    // still counted as `present`, so a pass with every provider erroring
+    // could still report `concluded`. `_postRunQuorum` re-derives presence
+    // over `responses` (index-aligned with `members` — `consult()`'s own
+    // contract, one `CouncilResponse` per member from the final round) and
+    // this overwrites BOTH the shared `quorum_out` out-param (the
+    // payload-construction code below already reads it) and `skipped`
+    // (mid-flight failures appended to the same array construction-time
+    // skips already populate, so `payload['absent_members']` needs no
+    // separate wiring either).
+    const post_run = _postRunQuorum(members, responses, ai_cfg);
+    quorum_out.result = post_run.quorum;
+    skipped.push(...post_run.absent);
+    // Phase 4.1 — verdict → handoff envelope. Same tally `render()` computes
+    // internally for the Vote Tally block (mirrored here, not imported from
+    // there, because `render()` re-derives it from the SAVED payload on a
+    // later `council:render` — this pass needs its own copy to WRITE into
+    // the payload in the first place). `buildHandoffFromStanceTally` returns
+    // the honest all-null envelope when stance tally never ran or split, so
+    // this is always additive, never a fabricated decision.
+    const handoff: HandoffEnvelope = buildHandoffFromStanceTally(
+        stance_tally_on
+            ? tally_stances(
+                  responses.filter((r) => !r.error).map((r) => ({ member: `${r.provider}:${r.model}`, text: r.text })),
+              )
+            : null,
+    );
     const persona_labels = build_persona_labels(advisor_plans, billable);
     const peer_review = _maybe_run_peer_review(
         ai_cfg,
@@ -2279,6 +2636,21 @@ function cmd_run(
     if (blind_review_map !== null) {
         payload['blind_review_map'] = _mapToObject(blind_review_map);
     }
+    // Phase 3.3 — the response artefact carries the same k-of-n verdict the
+    // stdout banner already showed; a `null` (no ref supplied) writes
+    // nothing, so a caller that never asks for quorum sees no schema change.
+    if (quorum_out.result !== null) {
+        payload['quorum'] = quorum_out.result;
+    }
+    // Phase 3.2 — machine-readable graded degradation alongside the
+    // stdout `format_install_hints` banner; empty when nothing was absent.
+    if (skipped.length > 0) {
+        payload['absent_members'] = skipped;
+    }
+    // Phase 4.1 — always written (a stable key beats a conditionally-present
+    // one for a machine consumer), even when every field is `null`: the
+    // work-order envelope for whatever executes on this verdict next.
+    payload['handoff'] = handoff;
     const out_path = _validate_council_output_path(args.output as string, {
         kind: 'responses',
         subcommand: 'run',
@@ -2708,6 +3080,9 @@ function cmd_render(args: Args): number {
         chairman: _isDict(payload['chairman'])
             ? (payload['chairman'] as { member: string | null; annotation: string; text: string | null })
             : null,
+        handoff: _deserialise_handoff(payload['handoff']),
+        absent_members: _deserialise_absent_members(payload['absent_members']),
+        quorum: _deserialise_quorum(payload['quorum']),
     });
     if (_getattr<string | null>(args, 'output', null)) {
         const out_path = _validate_council_output_path(args.output as string, {
@@ -3403,5 +3778,6 @@ export {
     _parse_model_overrides,
     _parse_siblings_overrides,
     _synthesize_ai_council_block,
+    _postRunQuorum,
     CouncilDisabledError,
 };

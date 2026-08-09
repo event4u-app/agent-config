@@ -273,20 +273,42 @@ describe('_check_host_manifest', () => {
     it('is ok with no settings file (safe defaults)', () => {
         const proj = join(tmp, 'p1');
         mkdirSync(proj);
-        expect(_check_host_manifest(proj)['status']).toBe('ok');
+        const res = _check_host_manifest(proj);
+        expect(res['status']).toBe('ok');
+        // m6 fix (independent-review finding): the message used to say
+        // "safe-default manifest applies" — stale wording from before
+        // always-on orchestration deleted the settings-based manifest as a
+        // live override (host capability is now probe/registry-resolved
+        // ONLY, regardless of settings state). Pin the corrected wording so
+        // it cannot silently regress to the old phrasing.
+        expect(String(res['message'])).toContain('host capability is always probe/registry-resolved');
+        expect(String(res['message'])).not.toContain('safe-default manifest');
     });
 
-    it('is ok with a valid override', () => {
+    it('is ok with a settings file present but no host_capabilities key at all', () => {
+        const proj = join(tmp, 'p1b');
+        mkdirSync(proj);
+        writeFileSync(join(proj, '.agent-settings.yml'), 'personal:\n  autonomy: auto\n');
+        const res = _check_host_manifest(proj);
+        expect(res['status']).toBe('ok');
+        expect(String(res['message'])).toContain('no host_capabilities override');
+        expect(String(res['message'])).toContain('host capability is always probe/registry-resolved');
+        expect(String(res['message'])).not.toContain('safe-default manifest');
+    });
+
+    it('is ok with a leftover well-formed override (deprecated, ignored)', () => {
         const proj = join(tmp, 'p2');
         mkdirSync(proj);
         writeFileSync(
             join(proj, '.agent-settings.yml'),
             'subagents:\n  host_capabilities:\n    schema_version: 1\n    subagent_spawn: true\n',
         );
-        expect(_check_host_manifest(proj)['status']).toBe('ok');
+        const res = _check_host_manifest(proj);
+        expect(res['status']).toBe('ok');
+        expect(String(res['message'])).toContain('deprecated and ignored');
     });
 
-    it('SABOTAGE: fails on an unknown key (typo guard)', () => {
+    it('is ALSO ok with a malformed leftover override — the shape no longer matters', () => {
         const proj = join(tmp, 'p3');
         mkdirSync(proj);
         writeFileSync(
@@ -294,18 +316,18 @@ describe('_check_host_manifest', () => {
             'subagents:\n  host_capabilities:\n    subagent_spwan: true\n',
         );
         const res = _check_host_manifest(proj);
-        expect(res['status']).toBe('fail');
-        expect(String(res['message'])).toContain('subagent_spwan');
+        expect(res['status']).toBe('ok');
+        expect(String(res['message'])).toContain('deprecated and ignored');
     });
 
-    it('SABOTAGE: fails on a non-boolean capability value', () => {
+    it('is ok with a non-boolean capability value in the leftover override', () => {
         const proj = join(tmp, 'p4');
         mkdirSync(proj);
         writeFileSync(
             join(proj, '.agent-settings.yml'),
             'subagents:\n  host_capabilities:\n    subagent_spawn: "yes"\n',
         );
-        expect(_check_host_manifest(proj)['status']).toBe('fail');
+        expect(_check_host_manifest(proj)['status']).toBe('ok');
     });
 });
 

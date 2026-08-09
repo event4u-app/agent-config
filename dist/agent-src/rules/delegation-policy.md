@@ -46,16 +46,18 @@ Only when the activation gate from
 [`auto-orchestration-activation`](../contexts/execution/auto-orchestration-activation.md)
 clears — all of:
 
-- `subagents.enabled` **and** `subagents.auto != off`,
+- `emergency.orchestration_halt` is not set,
 - the host-capability manifest reports `subagent_spawn: true`,
 - the task is classified **delegable** per
   [`auto-dispatch-classification`](../contexts/execution/auto-dispatch-classification.md)
   (≥1 independent, well-specified slice above the size floor).
 
-`subagents.auto: ask` → ask once before dispatching, in the shape
-[`settings-ask-protocol`](settings-ask-protocol.md) fixes (the answer is not
-persisted — `subagents.auto` is class C); `auto: on` → surface the chosen mode
-+ per-subtask tiers in one line. Any gate failing, or `auto: off`, or no host
+Always-on orchestration (road-to-always-on-orchestration Phase 1) removed the
+`subagents.enabled`/`subagents.auto` settings this used to gate on — there is
+no more per-layer on/off setting. A matched delegable signal → dispatch,
+surfacing the chosen mode + per-subtask tiers in one line, never silent. An
+AMBIGUOUS verdict (no enumerated signal matched) → **ask**, always — a verdict
+to the user, never a speculative spawn. The emergency halt, or no host
 primitive → run in-session (clean no-op).
 
 ## What it makes binding
@@ -100,8 +102,10 @@ no-review session — verified; its advisory line reaches the dispatcher
 output, but host-side forwarding of stop-slot context to the model is
 unverified, so the model-facing end-review carrier is the AGENTS.md line
 plus this telemetry). The
-capability gate itself resolves from the committed host registry in
-`src/scripts/_lib/host_capability.ts` (settings override wins). What stays
+capability gate itself resolves from the committed host registry merged with a
+live environment probe in `src/scripts/_lib/host_capability.ts`
+(`probeHostCapabilities` — capability is a fact about the host, never a
+settings override). What stays
 model-carried, honestly: the decomposition itself, the per-return
 verification, and every dispatch on hosts without hook slots. The nudges are
 advisory by design — whether they change behaviour is measured by the

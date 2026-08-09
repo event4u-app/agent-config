@@ -762,7 +762,65 @@ export function load_agent_settings(
             _deep_merge(merged, layer);
         }
     }
+    _warn_removed_always_on_keys(merged);
     return merged;
+}
+
+/**
+ * Settings keys deleted by the always-on-orchestration doctrine
+ * (road-to-always-on-orchestration Phase 1 for the `subagents.*` keys;
+ * Phase 1 Step 1.3 for `ai_team.enabled`). A leftover value from an older
+ * install is ignored — never applied by any reader — and surfaced with ONE
+ * deprecation line per key per process run (stderr; the exit code never
+ * changes).
+ *
+ * `ai_team.enabled` joined this list in Step 1.3: the `/team` family's
+ * availability is now a codex-CLI/auth FACT
+ * (`src/scripts/ai_team/availability.ts`), the same doctrine already
+ * applied to `subagents.*` below, not a settings flag. The `ai_team`
+ * config loader (`src/scripts/ai_team/config.ts`) separately accepts a
+ * leftover `enabled` key without failing closed, so this warning is the
+ * only surfaced signal of the deletion.
+ */
+const REMOVED_ALWAYS_ON_KEYS: readonly string[] = [
+    'subagents.enabled',
+    'subagents.auto',
+    'subagents.host_capabilities',
+    'subagents.budget_routing',
+    'ai_team.enabled',
+];
+
+/** Keys already warned about in THIS process — the "once per run" dedupe. */
+const _warnedRemovedAlwaysOnKeys = new Set<string>();
+
+/** Read one dotted path out of a merged settings tree; `undefined` when absent. */
+function _readDottedSettingsPath(root: SettingsDict, dotted: string): SettingsValue {
+    let node: SettingsValue = root;
+    for (const part of dotted.split('.')) {
+        if (typeof node !== 'object' || node === null || Array.isArray(node)) {
+            return undefined;
+        }
+        node = (node as SettingsDict)[part];
+    }
+    return node;
+}
+
+/**
+ * Warn once per process, on stderr, for every {@link REMOVED_ALWAYS_ON_KEYS}
+ * still present in a resolved settings tree. Never throws, never changes
+ * what the caller does with `merged` — a pure notification side effect.
+ */
+function _warn_removed_always_on_keys(merged: SettingsDict): void {
+    for (const key of REMOVED_ALWAYS_ON_KEYS) {
+        if (_warnedRemovedAlwaysOnKeys.has(key)) {
+            continue;
+        }
+        if (_readDottedSettingsPath(merged, key) === undefined) {
+            continue;
+        }
+        _warnedRemovedAlwaysOnKeys.add(key);
+        process.stderr.write(`${key} was removed (always-on orchestration); ignored.\n`);
+    }
 }
 
 /**

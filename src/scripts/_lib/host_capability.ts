@@ -1,9 +1,9 @@
 /**
  * Host-capability manifest normalizer + committed capability registry.
  *
- * Pure, no-I/O helper that takes a partial / unknown object (typically the
- * `subagents.host_capabilities` override from `.agent-settings.yml`, or the
- * agent's own host-knowledge object) and returns a fully-populated manifest.
+ * Pure, no-I/O helper that takes a partial / unknown object (an explicit
+ * caller-supplied override, or the agent's own host-knowledge object) and
+ * returns a fully-populated manifest.
  *
  * Contract — see `src/agent-src/contexts/execution/host-capability-manifest.md`:
  *
@@ -16,14 +16,23 @@
  * adds a resolution order in front of the safe default so a fresh install on
  * a KNOWN host does not ship delegation dead by default:
  *
- *   explicit `subagents.host_capabilities` override (wins, whole-object,
- *   unchanged semantics) → committed registry row for the detected host
- *   (`HOST_CAPABILITY_REGISTRY`) → `SAFE_DEFAULT` (all false).
+ *   explicit override (wins, whole-object, unchanged semantics) → committed
+ *   registry row for the detected host (`HOST_CAPABILITY_REGISTRY`) →
+ *   `SAFE_DEFAULT` (all false).
  *
  * The registry lists only OBSERVED capabilities for a host this repo has
  * actually measured (see the roadmap's transcript evidence) — never a
  * speculative entry for a host nobody has verified.
+ *
+ * `probeHostCapabilities` (road-to-always-on-orchestration Phase 1) is the
+ * production entry point as of this change: capability is a FACT about the
+ * host, never a settings decision, so the former `subagents.host_capabilities`
+ * settings override was deleted. `resolveHostCapabilities`'s `override`
+ * parameter stays for back-compat (tests, and any caller that genuinely has a
+ * host-knowledge object of its own) — no production caller passes a
+ * settings-derived value into it any more.
  */
+import process from 'node:process';
 
 /** Resolved host-capability manifest. All booleans, `schema_version` fixed at 1. */
 export interface HostCapabilityManifest {
@@ -32,6 +41,15 @@ export interface HostCapabilityManifest {
     parallel_spawn: boolean;
     status_polling: boolean;
     separate_quota_pool: boolean;
+    /**
+     * Claude Code's experimental multi-instance Agent Teams primitive
+     * (`CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS`). Resolved ONLY by
+     * {@link probeHostCapabilities}'s live environment probe — the registry
+     * and `normalizeHostManifest` never infer it from a host id, because
+     * this repo has not observed the flag's shape on any host, only its
+     * documented existence.
+     */
+    agent_teams: boolean;
     /**
      * The host can kill a running worker and spawn a fresh one that continues
      * the SAME task mid-flight — the primitive worker-generation recycling
@@ -53,6 +71,7 @@ const SAFE_DEFAULT: HostCapabilityManifest = {
     parallel_spawn: false,
     status_polling: false,
     separate_quota_pool: false,
+    agent_teams: false,
     worker_respawn: false,
 };
 
@@ -80,6 +99,7 @@ export function normalizeHostManifest(input: unknown): HostCapabilityManifest {
         parallel_spawn: asBool(src.parallel_spawn),
         status_polling: asBool(src.status_polling),
         separate_quota_pool: asBool(src.separate_quota_pool),
+        agent_teams: asBool(src.agent_teams),
         worker_respawn: asBool(src.worker_respawn),
     };
 }
@@ -153,4 +173,27 @@ export function resolveHostCapabilities(
         return { ...SAFE_DEFAULT };
     }
     return { ...SAFE_DEFAULT, ...row, schema_version: 1 };
+}
+
+/**
+ * Probe the effective host-capability manifest for `hostId` from OBSERVABLE
+ * FACTS ONLY (road-to-always-on-orchestration Phase 1) — the committed
+ * registry row for the host, merged with a live environment probe. This is
+ * the production entry point: capability is a fact about the host, never a
+ * settings decision, so there is no override parameter here (that stays on
+ * {@link resolveHostCapabilities} for back-compat callers only).
+ *
+ * The one probed fact today: `agent_teams` resolves `true` when
+ * `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS` is set (any non-empty value) in the
+ * process environment — the one host fact this repo can observe about Claude
+ * Code's documented-but-unshipped-by-default multi-instance Agent Teams
+ * primitive. A registry row can also carry `agent_teams: true` directly for a
+ * host where it is unconditionally available; the two sources OR together —
+ * a probe never turns a registry-granted capability back off.
+ */
+export function probeHostCapabilities(hostId: string | null | undefined): HostCapabilityManifest {
+    const base = resolveHostCapabilities(hostId);
+    const flag = process.env.CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS;
+    const probedAgentTeams = typeof flag === 'string' && flag !== '';
+    return { ...base, agent_teams: base.agent_teams || probedAgentTeams };
 }

@@ -39,15 +39,19 @@ export type DefectClass =
     | 'language-mirror';
 
 /**
- * How far a record may travel outward.
- *
- * `fork-pull-request` is the consumer path: no write access upstream, so the
- * fix goes to a fork and the PR is cross-repo. It is a separate route rather
- * than a flag on `pull-request` because the steps differ (a fork has to exist
- * first) and because the old two-way split is what let a consumer be routed
- * into a push it could never perform.
+ * Runtime mirror of `DefectClass`, in declaration order. The upstream issue
+ * form's dropdown (`.github/ISSUE_TEMPLATE/self_repair_report.yml`) is pinned
+ * against this list by test, so adding a detector class without extending the
+ * form is a red test, not silent drift.
  */
-export type EgressRoute = 'pull-request' | 'fork-pull-request' | 'issue' | 'local-only';
+export const DEFECT_CLASSES: readonly DefectClass[] = [
+    'user-reported',
+    'council-availability-claim',
+    'language-mirror',
+];
+
+/** How far a record may travel outward. */
+export type EgressRoute = 'pull-request' | 'issue' | 'local-only';
 
 export interface DefectFinding {
     defect_class: DefectClass;
@@ -65,12 +69,11 @@ export interface DefectRecord extends DefectFinding {
     occurrences: number;
     status: 'open' | 'released';
     /**
-     * Egress legs that were attempted and did not succeed, from the most recent
-     * `release` run. Present so a record that stayed `open` says WHY without
-     * anyone re-running the command — see {@link EgressAttempt} for why this is
-     * structured rather than the captured stderr.
+     * Failed egress attempts from the most recent `release` call, sanitized at
+     * write time. Local-only bookkeeping: `renderReport` never includes them,
+     * so they cannot widen what leaves the machine.
      */
-    egress_attempts?: EgressAttempt[];
+    release_errors?: string[];
 }
 
 /** One finished turn, as much of it as a hook can observe. */
@@ -130,7 +133,10 @@ export function egressBlockedReason(record: DefectRecord, repoRoot?: string | nu
 // An agent-directed complaint, not a complaint about the code. Deliberately
 // narrow: a spurious record becomes a spurious PR, so precision beats recall.
 const COMPLAINT_PATTERNS: readonly RegExp[] = [
-    /\bdu hast\b[^.!?]{0,60}\b(nicht|falsch|vergessen|ignoriert|übersehen)\b/i,
+    // No \b before the alternation: JS \b is ASCII-only, so a leading umlaut
+    // ("übersehen") never sits on a word boundary — the corpus gate's
+    // near-miss class caught that as a dead alternation branch.
+    /\bdu hast\b[^.!?]{0,60}(nicht|falsch|vergessen|ignoriert|übersehen)\b/i,
     /\bdu (ignorierst|übersiehst)\b/i,
     /\b(das|es) (war|ist) (aber )?falsch\b/i,
     /\bhat nicht (richtig|korrekt) (gearbeitet|funktioniert)\b/i,
@@ -140,41 +146,53 @@ const COMPLAINT_PATTERNS: readonly RegExp[] = [
     /\byou (worked|did (it|that)) (wrong|incorrectly)\b/i,
 ];
 
-/**
- * Turns that CONTAIN a complaint pattern and are not complaints.
- *
- * Measured, not imagined: before this list, `detectUserReport` fired on all
- * four of these, including `"das ist fine, du hast nichts falsch gemacht"` —
- * an absolution scored as an accusation. The cause is that the complaint
- * patterns key on `du hast … nicht|falsch` and `you didn't`, and German and
- * English both build exculpation out of exactly those words.
- *
- * A false fire is worse than a miss here: it opens a defect record, which
- * becomes a queue line, which becomes a PR against a defect nobody has. So this
- * check runs FIRST and wins.
- */
-const EXCULPATION_PATTERNS: readonly RegExp[] = [
-    // A hedged question, not an accusation: "du hast nicht zufällig …?"
-    /\bnicht zufällig\b/i,
-    // Explicit absolution: "du hast nichts falsch gemacht", "war kein Fehler"
+// Phrasings that MATCH a complaint pattern but are not complaints — a curious
+// question or a reassurance. Scoped to the matched span (± a small margin),
+// never the whole prompt: a pleasantry in one clause must not mute a genuine
+// complaint in another (R2 finding #2). These feed the must-not-fire class of
+// the detector corpus gate.
+const COMPLAINT_EXONERATIONS: readonly RegExp[] = [
+    /\bdu hast nicht zufällig\b/i,
+    /\bhast du nicht zufällig\b/i,
+    /\byou didn'?t (need|have) to\b/i,
+    /\bit'?s fine\b/i,
+    /\b(kein problem|passt schon|alles gut)\b/i,
+    // Explicit absolution INSIDE the complaint span, which is why it has to be
+    // its own entry rather than relying on a neighbouring pleasantry: in
+    // "das ist fine, du hast nichts falsch gemacht" the matched span is
+    // `du hast nichts falsch`, and the `it's fine` above sits outside the
+    // ± EXONERATION_MARGIN window — correctly, since that margin exists to stop
+    // a pleasantry in one clause muting a complaint in another. `nichts falsch`
+    // is not a neighbouring pleasantry: it is the negation of the complaint
+    // itself. Caught by the detector-corpus gate, which flagged this exact
+    // string as a must-not-fire fixture that fired (PR #1231).
     /\bnichts falsch\b/i,
     /\bkein fehler\b/i,
-    // English absolution: "you didn't need to", "you didn't have to"
-    /\byou (didn'?t|did not) (need|have) to\b/i,
-    // "it's fine" / "that's fine" / "alles gut" / "passt schon"
-    /\b(it'?s|that'?s) fine\b/i,
-    /\balles gut\b/i,
-    /\bpasst (schon|so)\b/i,
 ];
+
+/** How far (chars) an exoneration may sit from the complaint span it excuses. */
+const EXONERATION_MARGIN = 12;
+
+function spanExonerated(prompt: string, start: number, end: number): boolean {
+    for (const ex of COMPLAINT_EXONERATIONS) {
+        const g = new RegExp(ex.source, ex.flags.includes('g') ? ex.flags : `${ex.flags}g`);
+        let m: RegExpExecArray | null;
+        while ((m = g.exec(prompt)) !== null) {
+            const s = m.index;
+            const e = m.index + m[0].length;
+            if (e >= start - EXONERATION_MARGIN && s <= end + EXONERATION_MARGIN) {
+                return true;
+            }
+        }
+    }
+    return false;
+}
 
 /** Intake path 1 — the user says the agent worked wrongly. */
 export function detectUserReport(prompt: string): DefectFinding | null {
-    if (EXCULPATION_PATTERNS.some((re) => re.test(prompt))) {
-        return null;
-    }
     for (const re of COMPLAINT_PATTERNS) {
         const m = re.exec(prompt);
-        if (m !== null) {
+        if (m !== null && !spanExonerated(prompt, m.index, m.index + m[0].length)) {
             return {
                 defect_class: 'user-reported',
                 source: 'user-reported',
@@ -267,11 +285,38 @@ export function detectLanguageMirror(turn: TurnSnapshot): DefectFinding | null {
     };
 }
 
+/** One registered detector — the unit the corpus gate enumerates. */
+export interface RegisteredDetector {
+    defect_class: DefectClass;
+    source: DefectSource;
+    detect: (turn: TurnSnapshot) => DefectFinding | null;
+}
+
+/**
+ * The detector registry — the single list both `runDetectors` and the corpus
+ * gate (`tests/scripts/self_repair_detector_corpus.test.ts`) iterate. A
+ * detector added here without its three fixture classes (fire /
+ * near-miss-fire / must-not-fire) is a red test, not a silently untested
+ * code path.
+ */
+export const DETECTOR_REGISTRY: readonly RegisteredDetector[] = [
+    {
+        defect_class: 'user-reported',
+        source: 'user-reported',
+        detect: (turn) => detectUserReport(turn.prompt),
+    },
+    { defect_class: 'council-availability-claim', source: 'self-detected', detect: detectCouncilClaim },
+    { defect_class: 'language-mirror', source: 'self-detected', detect: detectLanguageMirror },
+];
+
 /** Run every self-detected detector over a finished turn. */
 export function runDetectors(turn: TurnSnapshot): DefectFinding[] {
     const out: DefectFinding[] = [];
-    for (const d of [detectCouncilClaim, detectLanguageMirror]) {
-        const f = d(turn);
+    for (const d of DETECTOR_REGISTRY) {
+        if (d.source !== 'self-detected') {
+            continue;
+        }
+        const f = d.detect(turn);
         if (f !== null) {
             out.push(f);
         }
@@ -326,73 +371,48 @@ export function mergeRecord(
 
 // ── egress ─────────────────────────────────────────────────────────
 
-/**
- * What this machine may actually do with the upstream repository.
- *
- * This replaced a `canPush: boolean` that was computed from remote
- * *existence* — `git remote` returning any name at all. Every consumer who
- * cloned the public repo has a remote and no write access, so the boolean read
- * `true` for exactly the population the issue fallback exists to serve, the
- * route came out `pull-request`, and the run died at `git push`. The three
- * states below are the ones that pick different routes, so they are the ones
- * the type carries.
- */
-export type PushRights =
-    /** Write access to the upstream repo itself. */
-    | 'upstream'
-    /** No write access, but the repo allows forks — the real consumer path. */
-    | 'fork-only'
-    /** Neither. Nothing can be pushed from here. */
-    | 'none';
-
 export interface EgressCapability {
     /** An agent-config source checkout the fix can be authored in. */
     hasAgentConfigCheckout: boolean;
     /** `gh` is installed AND authenticated. */
     ghAuthenticated: boolean;
-    /** What this machine may push, probed rather than inferred. */
-    pushRights: PushRights;
+    /**
+     * The authenticated user has push permission on the UPSTREAM repo — a
+     * pre-flight probe of actual rights (`gh api repos/<repo>` →
+     * `.permissions.push`), never an inference from `git remote` existing.
+     * A consumer who cloned the public repo has a remote and no write access;
+     * the old heuristic classified exactly that machine as push-capable.
+     */
+    canPushUpstream: boolean;
+    /** The upstream repo allows forking and the user is authenticated. */
+    canFork: boolean;
 }
 
-/**
- * Route selection. A pull request when the fix can be authored and pushed
- * upstream, a fork-based pull request when it can only be pushed to a fork, an
- * issue when it cannot be pushed at all, and a local record when nothing can
- * leave the machine.
- */
-export function chooseEgressRoute(cap: EgressCapability): EgressRoute {
-    if (!cap.ghAuthenticated) {
-        return 'local-only';
-    }
-    if (cap.hasAgentConfigCheckout) {
-        if (cap.pushRights === 'upstream') {
-            return 'pull-request';
-        }
-        if (cap.pushRights === 'fork-only') {
-            return 'fork-pull-request';
-        }
-    }
-    return 'issue';
-}
+/** Where a pull-request route pushes its branch. */
+export type PushVia = 'upstream' | 'fork';
 
-/**
- * One attempted egress step and how it ended.
- *
- * Deliberately NOT the command's stderr. The record type carries no field
- * capable of holding free-form content — that is what makes its privacy floor
- * a property of the schema rather than of a scrubber that can fail
- * (`domain-safety-pii` § Surface 2, and the same principle the telemetry event
- * is built on). A git or gh failure message routinely contains an absolute
- * path, a remote URL, and sometimes a username, so persisting it would put
- * exactly the content the floor excludes into the one artefact that leaves the
- * machine. The step and the outcome are what a reader needs to see the ladder
- * ran; the raw text goes to the operator's terminal, where it is already.
- */
-export interface EgressAttempt {
+export interface EgressChoice {
     route: EgressRoute;
-    /** Which leg of the ladder: `push`, `fork`, `pr`, `issue`. */
-    step: 'push' | 'fork' | 'pr' | 'issue';
-    outcome: 'failed' | 'timeout';
+    /** Set only when `route === 'pull-request'`. */
+    pushVia: PushVia | null;
+}
+
+/**
+ * Route selection, exactly as specified: a pull request when the fix can be
+ * authored and pushed (directly, or via fork → cross-repo PR), an issue when
+ * it cannot, and a local record when nothing can leave the machine.
+ */
+export function chooseEgress(cap: EgressCapability): EgressChoice {
+    if (cap.hasAgentConfigCheckout && cap.ghAuthenticated && cap.canPushUpstream) {
+        return { route: 'pull-request', pushVia: 'upstream' };
+    }
+    if (cap.hasAgentConfigCheckout && cap.ghAuthenticated && cap.canFork) {
+        return { route: 'pull-request', pushVia: 'fork' };
+    }
+    if (cap.ghAuthenticated) {
+        return { route: 'issue', pushVia: null };
+    }
+    return { route: 'local-only', pushVia: null };
 }
 
 /** The PR / issue body. Deterministic — same record, same bytes. */
@@ -429,4 +449,41 @@ export function renderReport(record: DefectRecord, route: EgressRoute): string {
         'machine. No project paths, prompts, or file contents are included by',
         'construction — the record type has no field that can carry them.',
     ].join('\n');
+}
+
+/** The structured fields the upstream intake form collects. */
+export interface ParsedReport {
+    defect_class: string;
+    fingerprint: string;
+    occurrences: number;
+    evidence: string;
+    suggested_surface: string;
+}
+
+/**
+ * Inverse of `renderReport` for the structured fields — the round-trip that
+ * pins the rendered body to the upstream issue form: every field the form
+ * collects is recoverable from a rendered report, so a `release` body and a
+ * manually-filed form carry the same clustering keys (fingerprint above all).
+ */
+export function parseReport(body: string): ParsedReport | null {
+    const cls = /^## Self-repair report — `([^`]+)`$/m.exec(body)?.[1];
+    const fp = /^- \*\*Fingerprint:\*\* `([^`]+)`$/m.exec(body)?.[1];
+    const seen = /^- \*\*Seen:\*\* (.+)$/m.exec(body)?.[1];
+    const evidence = /^### Evidence\n\n> (.*)$/m.exec(body)?.[1];
+    const surface = /### What the fix should address\n\n([\s\S]*?)\n\n---/.exec(body)?.[1];
+    if (!cls || !fp || !seen || evidence === undefined || !surface) {
+        return null;
+    }
+    const occurrences = seen.startsWith('once') ? 1 : Number(/^(\d+)×/.exec(seen)?.[1] ?? Number.NaN);
+    if (!Number.isFinite(occurrences)) {
+        return null;
+    }
+    return {
+        defect_class: cls,
+        fingerprint: fp,
+        occurrences,
+        evidence,
+        suggested_surface: surface.trim(),
+    };
 }

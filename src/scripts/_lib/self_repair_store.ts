@@ -11,13 +11,7 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 
-import {
-    type DefectFinding,
-    type DefectRecord,
-    type EgressAttempt,
-    fingerprint,
-    mergeRecord,
-} from './self_repair.js';
+import { type DefectFinding, type DefectRecord, fingerprint, mergeRecord } from './self_repair.js';
 
 export const STORE_REL = path.join('agents', 'runtime', 'self-repair');
 
@@ -100,34 +94,35 @@ export function markReleased(root: string, fp: string, now: string): DefectRecor
     if (rec === null) {
         return null;
     }
-    // A successful release clears any failed attempts from an earlier run: the
-    // record travelled, so the ladder's history is no longer the reason it sits
-    // in the queue. Leaving them would make a released record read as failed.
+    // A successful release supersedes any earlier failed attempts.
     const next: DefectRecord = { ...rec, status: 'released', last_seen: now };
-    delete next.egress_attempts;
+    delete next.release_errors;
     writeRecord(root, next);
     return next;
 }
 
 /**
- * Persist the ladder's failed legs on a record that stayed `open`.
- *
- * The status is NOT changed — an exhausted ladder leaves the record exactly
- * where it was, which is the point: nothing was published, so nothing is
- * released. Attempts replace rather than append, because the interesting
- * question is why the LAST run failed, and an append-forever list is unbounded
- * growth in a file nobody prunes.
+ * A release attempt exhausted the whole egress ladder: keep the record open
+ * and attach every failed step so the next `self-repair:status` shows what
+ * went wrong. Errors arrive pre-sanitized (the CLI runs them through
+ * `sanitizeEvidence` — command output can carry local paths).
  */
-export function recordEgressAttempts(
+export function attachReleaseErrors(
     root: string,
     fp: string,
-    attempts: readonly EgressAttempt[],
+    errors: string[],
+    now: string,
 ): DefectRecord | null {
     const rec = readRecord(root, fp);
     if (rec === null) {
         return null;
     }
-    const next: DefectRecord = { ...rec, egress_attempts: [...attempts] };
+    const next: DefectRecord = {
+        ...rec,
+        status: 'open',
+        last_seen: now,
+        release_errors: errors,
+    };
     writeRecord(root, next);
     return next;
 }

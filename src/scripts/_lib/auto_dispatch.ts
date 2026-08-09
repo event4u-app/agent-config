@@ -7,19 +7,24 @@
  * Decides whether a task is delegable to subagents and which
  * `subagent-orchestration` mode fits — with NO per-turn LLM meta-call.
  *
+ * Always-on orchestration (road-to-always-on-orchestration Phase 1): there is
+ * no more `subagents.enabled` / `subagents.auto` setting gating this. The
+ * layer activates on any host reporting a subagent primitive, unless the one
+ * audited incident switch (`emergency.orchestration_halt`) is set.
+ *
  * Contract highlights:
  * - A task is delegable only on an enumerated structural signal.
  * - Trivial tasks below the size floor never delegate.
- * - Ambiguity → `ask` (when `auto == 'ask'`) or in-session, never speculative
- *   spawn.
- * - The activation gate (`enabled`, `auto != off`, `subagent_spawn`) runs
- *   first; any failure short-circuits to in-session.
+ * - A matched signal always DISPATCHES (there is no more ask-before-dispatch
+ *   mode); an AMBIGUOUS verdict (no enumerated signal matched) is always an
+ *   `ask` VERDICT to the user, never a speculative spawn.
+ * - The activation gate (`halted`, `subagent_spawn`) runs first; any failure
+ *   short-circuits to in-session.
  */
 
 /** Minimum task-size estimate (exclusive) below which a task never delegates. */
 export const SIZE_FLOOR = 1;
 
-export type AutoMode = 'off' | 'ask' | 'on';
 export type DispatchMode = 'do-in-steps' | 'do-in-parallel';
 export type DispatchAction = 'dispatch' | 'ask' | 'in-session';
 
@@ -35,10 +40,14 @@ export interface TaskSignals {
     size_estimate: number;
 }
 
-/** Activation inputs resolved from settings + the host-capability manifest. */
+/**
+ * Activation inputs resolved from the emergency incident switch + the
+ * host-capability manifest. No `enabled`/`auto` fields — always-on
+ * orchestration carries no per-layer setting to resolve them from.
+ */
 export interface ActivationInputs {
-    enabled: boolean;
-    auto: AutoMode;
+    /** `emergency.orchestration_halt` — the one audited incident switch. */
+    halted: boolean;
     subagent_spawn: boolean;
 }
 
@@ -59,8 +68,7 @@ function inSession(reason: string): Classification {
  */
 export function classifyTask(signals: TaskSignals, activation: ActivationInputs): Classification {
     // ── Activation gate — any failure short-circuits to in-session ──
-    if (!activation.enabled) return inSession('subagents.enabled is false');
-    if (activation.auto === 'off') return inSession('subagents.auto is off');
+    if (activation.halted) return inSession('emergency.orchestration_halt is set');
     if (!activation.subagent_spawn) return inSession('host has no subagent_spawn primitive');
 
     // ── Size floor — trivial tasks never delegate ──
@@ -82,16 +90,13 @@ export function classifyTask(signals: TaskSignals, activation: ActivationInputs)
     }
 
     if (mode === null) {
-        // No enumerated signal matched → ambiguous. Ask under `ask`, else in-session.
-        if (activation.auto === 'ask') {
-            return { delegable: false, action: 'ask', mode: null, reason: 'no delegable signal — borderline, ask' };
-        }
-        return inSession('no enumerated delegable signal matched');
+        // No enumerated signal matched → ambiguous. Always an `ask` VERDICT —
+        // there is no more setting under which this silently stays in-session.
+        return { delegable: false, action: 'ask', mode: null, reason: 'no delegable signal — borderline, ask' };
     }
 
-    // Matched a signal. Dispatch under `on`, ask under `ask`.
-    const action: DispatchAction = activation.auto === 'on' ? 'dispatch' : 'ask';
-    return { delegable: true, action, mode, reason };
+    // Matched a signal → always dispatch (always-on: no ask-before-dispatch mode).
+    return { delegable: true, action: 'dispatch', mode, reason };
 }
 
 // ── Lookup-class routing (L0 — road-to-lean-agent-init) ──

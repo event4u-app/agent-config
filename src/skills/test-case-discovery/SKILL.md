@@ -61,7 +61,7 @@ Generate ≥ 1 concrete case per HIGH dimension, plus the happy path. Enforce th
 
 Widen the list with a second pair of eyes:
 
-- **Subagent path** — when the host supports subagent spawn and subagents are enabled (`subagents.enabled`, `subagents.auto` ≠ off): spawn **one** subagent with an adversarial lens — *"Behavior: {sentence}. Case list so far: {list}. As a security researcher / SRE / chaos engineer: which non-obvious failure mode or abuse vector is missing?"* On security-critical surfaces a **second** subagent with a different lens is allowed; more is waste. Merge only novel cases.
+- **Subagent path** — when the host supports subagent spawn and no emergency halt is set (always-on orchestration: there is no more per-layer on/off setting): spawn **one** subagent with an adversarial lens — *"Behavior: {sentence}. Case list so far: {list}. As a security researcher / SRE / chaos engineer: which non-obvious failure mode or abuse vector is missing?"* On security-critical surfaces a **second** subagent with a different lens is allowed; more is waste. Merge only novel cases.
 - **Degraded path (mandatory when no subagent runs)** — a self-review pass with an explicit lens shift: re-walk step 2 asking *"what breaks in production? what would an attacker try?"* and emit the same output shape (1–2 additional cases, or explicitly "none found").
 
 Unavailability of subagents never skips this step — it only switches the path.

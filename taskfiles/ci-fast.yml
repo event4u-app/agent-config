@@ -555,6 +555,11 @@ tasks:
     desc: "Fail on placeholder prose in the package's own authored artefacts (Lorem ipsum, `// rest of component`, `for brevity`, TODO-implement stubs) — the CI net the output-discipline rule has always claimed and, until now, did not have"
     cmd: ./scripts-run src/scripts/lint_output_slop
 
+  lint-never-silent:
+    silent: true
+    desc: "No shipped rule, skill, or command may direct a silent re-run or the concealment of a detected miss — the hidden attempt→critic→re-attempt mechanism is falsified (ADR-106 gate, TERMINAL null) and correction is always visible. Prose that describes or forbids the mechanism stays legal (road-to-rule-delivery-integrity P4.4)"
+    cmd: ./scripts-run src/scripts/lint_never_silent
+
   lint-spawn-payload:
     silent: true
     desc: "WARN-ONLY — makes the subagent-spawn-contract.md Iron Law (never bulk-dump context into a subagent) deterministic: per-tier payload size cap, no inline knowledge_refs bodies, no uncut >40-line file dumps, over JSON spawn fixtures + golden-transcript spawn payloads (road-to-lean-agent-init Phase 3). Promotion path: add --strict once caps hold across a clean observation window"
@@ -773,6 +778,15 @@ tasks:
     silent: true
     desc: Every settings-template leaf carries an A/B/C class in docs/contracts/settings-classes.md (road-to-zero-ceremony-settings Phase 1)
     cmd: ./scripts-run src/scripts/lint_settings_classes {{.QUIET_FLAG}}
+
+  lint-no-activation-gates:
+    silent: true
+    desc: |
+      Always-on orchestration (road-to-always-on-orchestration Phase 1): the
+      settings template may never reintroduce a per-layer on/off switch for
+      subagents, council, or team — only the one audited incident switch
+      (emergency.orchestration_halt) survives.
+    cmd: ./scripts-run src/scripts/lint_no_activation_gates {{.QUIET_FLAG}}
 
   lint-empty-roadmaps:
     silent: true
@@ -1413,18 +1427,6 @@ tasks:
       nichts falsch gemacht" — an absolution scored as a complaint. A detector
       missing any class is a failure, not a warning.
     cmd: ./scripts-run src/scripts/check_detector_corpus {{.CLI_ARGS}}
-
-  lint-never-silent:
-    silent: true
-    desc: |
-      No shipped rule, skill or command may DIRECT a silent re-run or the
-      concealment of a detected miss (road-to-rule-delivery-integrity P4.4). The
-      mechanism was built, benchmarked and falsified — recursive-verification
-      records the 2026-07-28 honest null as TERMINAL — so guidance reviving it
-      argues against a measured verdict. Not a phrase grep: a directive phrase
-      with a negation BEFORE it is a prohibition and passes, which is how the
-      Iron Law in self-repair-loop.md stays green while a real directive reds.
-    cmd: ./scripts-run src/scripts/lint_never_silent {{.CLI_ARGS}}
 
   smoke-host-loadability:
     silent: true

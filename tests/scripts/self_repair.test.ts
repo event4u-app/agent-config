@@ -9,8 +9,11 @@ import * as os from 'node:os';
 import * as path from 'node:path';
 import { beforeEach, afterEach, describe, expect, it } from 'vitest';
 
+import { parse as parseYaml } from 'yaml';
+
 import {
-    chooseEgressRoute,
+    chooseEgress,
+    DEFECT_CLASSES,
     type DefectRecord,
     detectCouncilClaim,
     detectLanguageMirror,
@@ -18,33 +21,32 @@ import {
     egressBlockedReason,
     fingerprint,
     mergeRecord,
+    parseReport,
     renderReport,
     runDetectors,
     sanitizeEvidence,
     type TurnSnapshot,
 } from '../../src/scripts/_lib/self_repair.js';
 import {
+    attachReleaseErrors,
     listRecords,
     markReleased,
     openRecords,
-    readRecord,
-    recordEgressAttempts,
     upsertFinding,
 } from '../../src/scripts/_lib/self_repair_store.js';
 import { buildQueueLine, readTurn } from '../../src/scripts/self_repair_hook.js';
 import {
-    type Exec,
-    type Probe,
-    type RunResult,
-    SELF_REPAIR_FORM_REL,
-    SELF_REPAIR_LABEL,
     capabilityOf,
-    performEgress,
+    executeRelease,
     planRelease,
-    probePushRights,
+    type Probe,
+    probeMachine,
+    type ReleaseDeps,
+    type ReleasePlan,
+    type Runner,
+    type RunResult,
     titleFor,
 } from '../../src/scripts/self_repair_cli.js';
-import * as YAML from 'yaml';
 
 const NOW = '2026-08-08T10:00:00.000Z';
 const LATER = '2026-08-08T11:00:00.000Z';
@@ -80,6 +82,18 @@ describe('self-repair — user-report intake', () => {
     it('marks the record as user-reported, not self-detected', () => {
         const f = detectUserReport('du hast die Sprache ignoriert')!;
         expect(f.source).toBe('user-reported');
+    });
+
+    it('a pleasantry far from the complaint span does not mute it (R2 #2)', () => {
+        const f = detectUserReport(
+            'Alles gut mit dem Deploy, aber du hast schon wieder die Hälfte der Dateien übersehen!',
+        );
+        expect(f?.defect_class).toBe('user-reported');
+    });
+
+    it('an exoneration overlapping the matched span still silences the intake', () => {
+        expect(detectUserReport('du hast nicht zufällig die alte Config noch offen?')).toBeNull();
+        expect(detectUserReport("you didn't need to run that, it's fine")).toBeNull();
     });
 });
 
@@ -236,59 +250,60 @@ describe('self-repair — record identity', () => {
     });
 });
 
-describe('self-repair — egress routing', () => {
-    // The five-state route matrix P4.1 requires. The row that did not exist
-    // before is `fork-only`: the old capability carried `canPush: boolean`
-    // computed from remote EXISTENCE, so every consumer who cloned the public
-    // repo scored `true`, routed to `pull-request`, and died at `git push`.
-    it('opens a PR when the fix can be authored and pushed upstream', () => {
+describe('self-repair — egress routing (route matrix)', () => {
+    it('upstream-write: direct PR when the probe shows real push rights', () => {
         expect(
-            chooseEgressRoute({
+            chooseEgress({
                 hasAgentConfigCheckout: true,
                 ghAuthenticated: true,
-                pushRights: 'upstream',
+                canPushUpstream: true,
+                canFork: true,
             }),
-        ).toBe('pull-request');
+        ).toEqual({ route: 'pull-request', pushVia: 'upstream' });
     });
 
-    it('opens a fork PR when the repo is forkable but not writable — the consumer path', () => {
+    it('fork-only: PR via fork when authenticated without upstream push', () => {
         expect(
-            chooseEgressRoute({
+            chooseEgress({
                 hasAgentConfigCheckout: true,
                 ghAuthenticated: true,
-                pushRights: 'fork-only',
+                canPushUpstream: false,
+                canFork: true,
             }),
-        ).toBe('fork-pull-request');
+        ).toEqual({ route: 'pull-request', pushVia: 'fork' });
     });
 
-    it('falls back to an issue when no checkout exists', () => {
+    it('auth-no-push: issue when neither upstream push nor fork is possible', () => {
         expect(
-            chooseEgressRoute({
+            chooseEgress({
+                hasAgentConfigCheckout: true,
+                ghAuthenticated: true,
+                canPushUpstream: false,
+                canFork: false,
+            }),
+        ).toEqual({ route: 'issue', pushVia: null });
+    });
+
+    it('falls back to an issue when no checkout exists — the consumer case', () => {
+        expect(
+            chooseEgress({
                 hasAgentConfigCheckout: false,
                 ghAuthenticated: true,
-                pushRights: 'fork-only',
+                canPushUpstream: false,
+                canFork: true,
             }),
-        ).toBe('issue');
+        ).toEqual({ route: 'issue', pushVia: null });
     });
 
-    it('falls back to an issue when authenticated but nothing can be pushed', () => {
+    it('no-auth: stays local when nothing can reach GitHub', () => {
         expect(
-            chooseEgressRoute({
-                hasAgentConfigCheckout: true,
-                ghAuthenticated: true,
-                pushRights: 'none',
-            }),
-        ).toBe('issue');
-    });
-
-    it('stays local when nothing can reach GitHub', () => {
-        expect(
-            chooseEgressRoute({
+            chooseEgress({
                 hasAgentConfigCheckout: true,
                 ghAuthenticated: false,
-                pushRights: 'upstream',
+                canPushUpstream: true,
+                canFork: true,
             }),
-        ).toBe('local-only');
+        ).toEqual({ route: 'local-only', pushVia: null });
     });
 
     it('renders a deterministic report that names route and occurrences', () => {
@@ -299,17 +314,14 @@ describe('self-repair — egress routing', () => {
         expect(a).toContain(rec.fingerprint);
     });
 
-    it('a privacy refusal downgrades the plan to local-only even with full capability', () => {
+    it('privacy-refusal: downgrades the plan to local-only even with full capability', () => {
         const rec: DefectRecord = {
             ...mergeRecord(null, detectUserReport('du hast das falsch gemacht')!, NOW),
             evidence: 'reach me at real.person@example-corp.de',
         };
-        const plan = planRelease(
-            rec,
-            { agentConfigCheckout: '/tmp/x', ghAuthenticated: true, pushRights: 'upstream' },
-            '/tmp',
-        );
+        const plan = planRelease(rec, fullProbe(), '/tmp');
         expect(plan.route).toBe('local-only');
+        expect(plan.pushVia).toBeNull();
         expect(plan.blocked).not.toBeNull();
     });
 
@@ -318,18 +330,317 @@ describe('self-repair — egress routing', () => {
             capabilityOf({
                 agentConfigCheckout: '/x',
                 ghAuthenticated: false,
-                pushRights: 'upstream',
+                canPushUpstream: true,
+                canFork: false,
             }),
         ).toEqual({
             hasAgentConfigCheckout: true,
             ghAuthenticated: false,
-            pushRights: 'upstream',
+            canPushUpstream: true,
+            canFork: false,
         });
     });
 
     it('titles the report by class and occurrence count', () => {
         const rec = mergeRecord(null, detectUserReport('du hast das falsch gemacht')!, NOW);
         expect(titleFor(rec)).toContain('user-reported');
+    });
+});
+
+// ── egress ladder execution ────────────────────────────────────────
+
+function fullProbe(overrides: Partial<Probe> = {}): Probe {
+    return {
+        agentConfigCheckout: '/tmp/checkout',
+        ghAuthenticated: true,
+        canPushUpstream: true,
+        canFork: true,
+        ...overrides,
+    };
+}
+
+/** Scripted runner: matches each call against a step table, records the log. */
+function scriptedRunner(
+    script: (cmd: string, args: string[]) => Partial<RunResult> | undefined,
+    log: string[],
+): Runner {
+    return (cmd, args) => {
+        log.push(`${cmd} ${args.join(' ')}`);
+        const hit = script(cmd, args) ?? {};
+        return { ok: true, out: '', timedOut: false, ...hit };
+    };
+}
+
+function recAndPlan(probe: Probe): { rec: DefectRecord; plan: ReleasePlan } {
+    const rec = mergeRecord(null, detectUserReport('du hast das falsch gemacht')!, NOW);
+    return { rec, plan: planRelease(rec, probe, '/tmp') };
+}
+
+const okBranch = (cmd: string, args: string[]): Partial<RunResult> | undefined =>
+    cmd === 'git' && args[0] === 'branch' ? { out: 'fix/some-defect\n' } : undefined;
+
+describe('self-repair — probe of actual push rights', () => {
+    it('reads permissions.push and allow_forking from the repo API, not `git remote`', () => {
+        const log: string[] = [];
+        const runner = scriptedRunner((cmd, args) => {
+            if (cmd === 'gh' && args[0] === 'api') {
+                return { out: '{"permissions":{"push":false},"allow_forking":true}' };
+            }
+            return undefined;
+        }, log);
+        const probe = probeMachine({}, '/nowhere', runner, 'event4u-app/agent-config');
+        expect(probe.canPushUpstream).toBe(false);
+        expect(probe.canFork).toBe(true);
+        expect(log.some((l) => l.startsWith('gh api repos/event4u-app/agent-config'))).toBe(true);
+        expect(log.some((l) => l.startsWith('git remote'))).toBe(false);
+    });
+
+    it('answers false for both when the API call fails — degrade, never guess', () => {
+        const runner = scriptedRunner((cmd, args) => {
+            if (cmd === 'gh' && args[0] === 'api') {
+                return { ok: false, out: 'HTTP 404' };
+            }
+            return undefined;
+        }, []);
+        const probe = probeMachine({}, '/nowhere', runner, 'x/y');
+        expect(probe.canPushUpstream).toBe(false);
+        expect(probe.canFork).toBe(false);
+    });
+
+    it('skips the rights probe entirely when gh is unauthenticated', () => {
+        const log: string[] = [];
+        const runner = scriptedRunner((cmd, args) => {
+            if (cmd === 'gh' && args[0] === 'auth') {
+                return { ok: false, out: 'not logged in' };
+            }
+            return undefined;
+        }, log);
+        const probe = probeMachine({}, '/nowhere', runner, 'x/y');
+        expect(probe.ghAuthenticated).toBe(false);
+        expect(probe.canFork).toBe(false);
+        expect(log.some((l) => l.startsWith('gh api'))).toBe(false);
+    });
+});
+
+describe('self-repair — egress ladder', () => {
+    const deps = (runner: Runner): ReleaseDeps => ({ runner, now: () => LATER });
+
+    it('a failed upstream push degrades to an issue attempt in the same invocation', () => {
+        const log: string[] = [];
+        const runner = scriptedRunner((cmd, args) => {
+            const b = okBranch(cmd, args);
+            if (b) {
+                return b;
+            }
+            if (cmd === 'git' && args[0] === 'push') {
+                return { ok: false, out: 'remote: permission denied' };
+            }
+            if (cmd === 'gh' && args[0] === 'repo' && args[1] === 'fork') {
+                return { ok: false, out: 'forking disabled' };
+            }
+            return undefined;
+        }, log);
+        const probe = fullProbe({ canFork: true });
+        const { rec, plan } = recAndPlan(probe);
+        const outcome = executeRelease(rec, plan, probe, 'up/stream', deps(runner));
+        expect(outcome.published).toBe('issue');
+        expect(log.some((l) => l.startsWith('gh issue create'))).toBe(true);
+        expect(outcome.attempts.map((a) => a.step)).toEqual(['push-upstream', 'fork-ensure']);
+    });
+
+    it('a timed-out push degrades exactly like a failed one', () => {
+        const log: string[] = [];
+        const runner = scriptedRunner((cmd, args) => {
+            const b = okBranch(cmd, args);
+            if (b) {
+                return b;
+            }
+            if (cmd === 'git' && args[0] === 'push') {
+                return { ok: false, out: '', timedOut: true };
+            }
+            if (cmd === 'gh' && args[0] === 'repo' && args[1] === 'fork') {
+                return { ok: false, out: 'nope' };
+            }
+            return undefined;
+        }, log);
+        const probe = fullProbe();
+        const { rec, plan } = recAndPlan(probe);
+        const outcome = executeRelease(rec, plan, probe, 'up/stream', deps(runner));
+        expect(outcome.published).toBe('issue');
+        expect(outcome.attempts[0]?.detail).toContain('timed out after 30s');
+    });
+
+    it('fork-only capability pushes to the fork and opens a cross-repo PR', () => {
+        const log: string[] = [];
+        const runner = scriptedRunner((cmd, args) => {
+            const b = okBranch(cmd, args);
+            if (b) {
+                return b;
+            }
+            if (cmd === 'gh' && args[0] === 'api' && args[1] === 'user') {
+                return { out: 'consumer-login\n' };
+            }
+            if (cmd === 'git' && args[0] === 'remote' && args[1] === 'get-url') {
+                return { ok: false, out: 'no such remote' };
+            }
+            return undefined;
+        }, log);
+        const probe = fullProbe({ canPushUpstream: false });
+        const { rec, plan } = recAndPlan(probe);
+        const outcome = executeRelease(rec, plan, probe, 'up/stream', deps(runner));
+        expect(outcome.published).toBe('pull-request');
+        expect(log.some((l) => l.startsWith('gh repo fork up/stream'))).toBe(true);
+        expect(log.some((l) => l.includes('remote add self-repair-fork'))).toBe(true);
+        expect(log.some((l) => l.startsWith('git push -u self-repair-fork'))).toBe(true);
+        expect(log.some((l) => l.includes('--head consumer-login:fix/some-defect'))).toBe(true);
+    });
+
+    it('a triple failure (push → fork → issue) leaves all three errors recorded', () => {
+        const tmp = mkTmp();
+        const rec = upsertFinding(tmp, detectUserReport('du hast das falsch gemacht')!, NOW);
+        const runner = scriptedRunner((cmd, args) => {
+            const b = okBranch(cmd, args);
+            if (b) {
+                return b;
+            }
+            if (cmd === 'git' && args[0] === 'push') {
+                return { ok: false, out: 'permission denied' };
+            }
+            if (cmd === 'gh' && args[0] === 'repo' && args[1] === 'fork') {
+                return { ok: false, out: 'forking disabled' };
+            }
+            if (cmd === 'gh' && args[0] === 'issue') {
+                return { ok: false, out: 'API rate limit' };
+            }
+            return undefined;
+        }, []);
+        const probe = fullProbe();
+        const plan = planRelease(rec, probe, tmp);
+        const outcome = executeRelease(rec, plan, probe, 'up/stream', deps(runner));
+        expect(outcome.published).toBeNull();
+        expect(outcome.attempts).toHaveLength(3);
+        expect(outcome.attempts.map((a) => a.step)).toEqual([
+            'push-upstream',
+            'fork-ensure',
+            'issue-create',
+        ]);
+
+        const stored = attachReleaseErrors(
+            tmp,
+            rec.fingerprint,
+            outcome.attempts.map((a) => sanitizeEvidence(a.detail)),
+            LATER,
+        );
+        expect(stored?.status).toBe('open');
+        expect(stored?.release_errors).toHaveLength(3);
+        fs.rmSync(tmp, { recursive: true, force: true });
+    });
+
+    it('a degraded issue carries a body rendered for the issue route, not the planned one (R2 #4)', () => {
+        const log: string[] = [];
+        const runner = scriptedRunner((cmd, args) => {
+            const b = okBranch(cmd, args);
+            if (b) {
+                return b;
+            }
+            if (cmd === 'git' && args[0] === 'push') {
+                return { ok: false, out: 'permission denied' };
+            }
+            if (cmd === 'gh' && args[0] === 'repo' && args[1] === 'fork') {
+                return { ok: false, out: 'forking disabled' };
+            }
+            return undefined;
+        }, log);
+        const probe = fullProbe();
+        const { rec, plan } = recAndPlan(probe);
+        const outcome = executeRelease(rec, plan, probe, 'up/stream', deps(runner));
+        expect(outcome.published).toBe('issue');
+        const issueCall = log.find((l) => l.startsWith('gh issue create'))!;
+        expect(issueCall).toContain('**Route:** issue');
+        expect(issueCall).not.toContain('**Route:** pull-request');
+    });
+
+    it('a branch-check failure is a precondition stop, not a silent issue downgrade', () => {
+        const runner = scriptedRunner((cmd, args) => {
+            if (cmd === 'git' && args[0] === 'branch') {
+                return { out: 'main\n' };
+            }
+            return undefined;
+        }, []);
+        const probe = fullProbe();
+        const { rec, plan } = recAndPlan(probe);
+        const outcome = executeRelease(rec, plan, probe, 'up/stream', deps(runner));
+        expect(outcome.published).toBeNull();
+        expect(outcome.attempts.map((a) => a.step)).toEqual(['branch-check']);
+    });
+
+    it('a successful release clears earlier attached errors', () => {
+        const tmp = mkTmp();
+        const rec = upsertFinding(tmp, detectUserReport('du hast das falsch gemacht')!, NOW);
+        attachReleaseErrors(tmp, rec.fingerprint, ['push-upstream: permission denied'], NOW);
+        const released = markReleased(tmp, rec.fingerprint, LATER);
+        expect(released?.status).toBe('released');
+        expect(released?.release_errors).toBeUndefined();
+        fs.rmSync(tmp, { recursive: true, force: true });
+    });
+});
+
+describe('self-repair — structured upstream intake (issue form)', () => {
+    const FORM_PATH = path.resolve(process.cwd(), '.github/ISSUE_TEMPLATE/self_repair_report.yml');
+
+    interface FormElement {
+        type: string;
+        id?: string;
+        attributes?: { options?: string[] };
+    }
+
+    function loadForm(): { labels: string[]; body: FormElement[] } {
+        return parseYaml(fs.readFileSync(FORM_PATH, 'utf-8')) as {
+            labels: string[];
+            body: FormElement[];
+        };
+    }
+
+    it('renderReport round-trips through the form fields — single occurrence', () => {
+        const rec = mergeRecord(null, detectUserReport('du hast das falsch gemacht')!, NOW);
+        const parsed = parseReport(renderReport(rec, 'issue'));
+        expect(parsed).toEqual({
+            defect_class: rec.defect_class,
+            fingerprint: rec.fingerprint,
+            occurrences: 1,
+            evidence: rec.evidence,
+            suggested_surface: rec.suggested_surface,
+        });
+    });
+
+    it('renderReport round-trips through the form fields — repeated occurrences', () => {
+        const first = mergeRecord(null, detectUserReport('du hast das falsch gemacht')!, NOW);
+        const rec = mergeRecord(first, detectUserReport('du hast das falsch gemacht')!, LATER);
+        const parsed = parseReport(renderReport(rec, 'pull-request'));
+        expect(parsed?.occurrences).toBe(2);
+        expect(parsed?.fingerprint).toBe(rec.fingerprint);
+    });
+
+    it('the form collects exactly the parsed-report fields', () => {
+        const ids = loadForm()
+            .body.filter((e) => e.type !== 'markdown')
+            .map((e) => e.id);
+        const rec = mergeRecord(null, detectUserReport('x you ignored the rule')!, NOW);
+        const parsed = parseReport(renderReport(rec, 'issue'))!;
+        expect(ids.sort()).toEqual(Object.keys(parsed).sort());
+    });
+
+    it('the dropdown options mirror the DefectClass union', () => {
+        const dropdown = loadForm().body.find((e) => e.id === 'defect_class');
+        expect(dropdown?.attributes?.options).toEqual([...DEFECT_CLASSES]);
+    });
+
+    it('the form applies the clustering label', () => {
+        expect(loadForm().labels).toContain('self-repair');
+    });
+
+    it('parseReport refuses a body that is not a self-repair report', () => {
+        expect(parseReport('## Some other issue\n\nfree text')).toBeNull();
     });
 });
 
@@ -410,289 +721,5 @@ describe('self-repair — hook', () => {
         const line = buildQueueLine(3, 'user-reported');
         expect(line).toContain('3 open');
         expect(line).toContain('agents/runtime/self-repair/');
-    });
-});
-
-// ── P4.1: push-rights probe + the egress ladder ──────────────────────
-//
-// The ladder is driven through an injected Exec, so no test touches a network,
-// a git remote, or the `gh` binary. What is asserted is the property the step
-// names: a failure or a timeout on any leg produces an issue attempt WITHIN the
-// same invocation, and an exhausted ladder leaves the record open with its
-// failed legs attached.
-
-const OK: RunResult = { ok: true, out: 'done', timedOut: false };
-const BAD: RunResult = { ok: false, out: 'permission denied', timedOut: false };
-const SLOW: RunResult = { ok: false, out: '', timedOut: true };
-
-/** An Exec that answers per matched argv substring, defaulting to OK. */
-function execFor(routes: { match: string; result: RunResult }[]): { exec: Exec; calls: string[] } {
-    const calls: string[] = [];
-    const exec: Exec = (cmd, args) => {
-        const line = `${cmd} ${args.join(' ')}`;
-        calls.push(line);
-        for (const r of routes) {
-            if (line.includes(r.match)) return r.result;
-        }
-        return OK;
-    };
-    return { exec, calls };
-}
-
-const PROBE_UPSTREAM: Probe = {
-    agentConfigCheckout: '/tmp/checkout',
-    ghAuthenticated: true,
-    pushRights: 'upstream',
-};
-
-function planFor(route: DefectRecord extends never ? never : Parameters<typeof performEgress>[1]['route']) {
-    return { route, blocked: null, title: 'fix(self-repair): x', body: 'BODY' };
-}
-
-function aRecord(): DefectRecord {
-    return mergeRecord(null, detectUserReport('du hast das falsch gemacht')!, NOW);
-}
-
-describe('probePushRights — rights, not remote existence', () => {
-    it('reads upstream write access from the repo permissions', () => {
-        const { exec } = execFor([{ match: '.permissions.push', result: { ...OK, out: 'true\n' } }]);
-        expect(probePushRights('/tmp/c', 'o/r', exec)).toBe('upstream');
-    });
-
-    it('falls to fork-only when push is denied but the repo allows forks', () => {
-        const { exec } = execFor([
-            { match: '.permissions.push', result: { ...OK, out: 'false\n' } },
-            { match: '.allow_forking', result: { ...OK, out: 'true\n' } },
-        ]);
-        expect(probePushRights('/tmp/c', 'o/r', exec)).toBe('fork-only');
-    });
-
-    it('is none when neither push nor forking is available', () => {
-        const { exec } = execFor([
-            { match: '.permissions.push', result: { ...OK, out: 'false\n' } },
-            { match: '.allow_forking', result: { ...OK, out: 'false\n' } },
-        ]);
-        expect(probePushRights('/tmp/c', 'o/r', exec)).toBe('none');
-    });
-
-    it('is none without a checkout, and never calls out', () => {
-        const { exec, calls } = execFor([]);
-        expect(probePushRights(null, 'o/r', exec)).toBe('none');
-        expect(calls).toEqual([]);
-    });
-
-    it('is none — not upstream — when the API call itself fails', () => {
-        const { exec } = execFor([{ match: 'gh api', result: BAD }]);
-        expect(probePushRights('/tmp/c', 'o/r', exec)).toBe('none');
-    });
-});
-
-describe('performEgress — the ladder degrades inside one invocation', () => {
-    it('publishes a PR on the happy path', () => {
-        const { exec, calls } = execFor([
-            { match: 'branch --show-current', result: { ...OK, out: 'fix/x\n' } },
-        ]);
-        const out = performEgress(aRecord(), planFor('pull-request'), PROBE_UPSTREAM, 'o/r', exec);
-        expect(out.published).toBe(true);
-        expect(out.attempts).toEqual([]);
-        expect(calls.some((c) => c.startsWith('git push'))).toBe(true);
-        expect(calls.some((c) => c.includes('pr create'))).toBe(true);
-    });
-
-    it('a failed push attempts an issue in the SAME invocation', () => {
-        const { exec, calls } = execFor([
-            { match: 'branch --show-current', result: { ...OK, out: 'fix/x\n' } },
-            { match: 'git push', result: BAD },
-        ]);
-        const out = performEgress(aRecord(), planFor('pull-request'), PROBE_UPSTREAM, 'o/r', exec);
-        expect(out.published).toBe(true);
-        expect(out.attempts).toEqual([{ route: 'pull-request', step: 'push', outcome: 'failed' }]);
-        expect(calls.some((c) => c.includes('issue create'))).toBe(true);
-    });
-
-    it('a timed-out push is recorded as a timeout, not a plain failure', () => {
-        const { exec } = execFor([
-            { match: 'branch --show-current', result: { ...OK, out: 'fix/x\n' } },
-            { match: 'git push', result: SLOW },
-        ]);
-        const out = performEgress(aRecord(), planFor('pull-request'), PROBE_UPSTREAM, 'o/r', exec);
-        expect(out.attempts[0]).toEqual({
-            route: 'pull-request',
-            step: 'push',
-            outcome: 'timeout',
-        });
-        expect(out.published).toBe(true);
-    });
-
-    it('the fork route forks first and pushes to the fork remote', () => {
-        const { exec, calls } = execFor([
-            { match: 'branch --show-current', result: { ...OK, out: 'fix/x\n' } },
-        ]);
-        const out = performEgress(
-            aRecord(),
-            planFor('fork-pull-request'),
-            { ...PROBE_UPSTREAM, pushRights: 'fork-only' },
-            'o/r',
-            exec,
-        );
-        expect(out.published).toBe(true);
-        expect(calls.some((c) => c.includes('repo fork'))).toBe(true);
-        expect(calls.some((c) => c === 'git push -u fork fix/x')).toBe(true);
-    });
-
-    it('a failed fork degrades to an issue without attempting a push', () => {
-        const { exec, calls } = execFor([
-            { match: 'branch --show-current', result: { ...OK, out: 'fix/x\n' } },
-            { match: 'repo fork', result: BAD },
-        ]);
-        const out = performEgress(
-            aRecord(),
-            planFor('fork-pull-request'),
-            { ...PROBE_UPSTREAM, pushRights: 'fork-only' },
-            'o/r',
-            exec,
-        );
-        expect(out.attempts[0]?.step).toBe('fork');
-        expect(calls.some((c) => c.startsWith('git push'))).toBe(false);
-        expect(out.published).toBe(true);
-    });
-
-    it('a triple failure publishes nothing and returns every failed leg', () => {
-        const { exec } = execFor([
-            { match: 'branch --show-current', result: { ...OK, out: 'fix/x\n' } },
-            { match: 'repo fork', result: BAD },
-            { match: 'issue create', result: SLOW },
-        ]);
-        const out = performEgress(
-            aRecord(),
-            planFor('fork-pull-request'),
-            { ...PROBE_UPSTREAM, pushRights: 'fork-only' },
-            'o/r',
-            exec,
-        );
-        expect(out.published).toBe(false);
-        expect(out.attempts).toEqual([
-            { route: 'fork-pull-request', step: 'fork', outcome: 'failed' },
-            { route: 'fork-pull-request', step: 'issue', outcome: 'timeout' },
-        ]);
-    });
-
-    it('local-only publishes nothing and attempts nothing', () => {
-        const { exec, calls } = execFor([]);
-        const out = performEgress(aRecord(), planFor('local-only'), PROBE_UPSTREAM, 'o/r', exec);
-        expect(out.published).toBe(false);
-        expect(out.attempts).toEqual([]);
-        expect(calls).toEqual([]);
-    });
-
-    it('a trunk branch degrades to an issue instead of pushing to main', () => {
-        const { exec, calls } = execFor([
-            { match: 'branch --show-current', result: { ...OK, out: 'main\n' } },
-        ]);
-        const out = performEgress(aRecord(), planFor('pull-request'), PROBE_UPSTREAM, 'o/r', exec);
-        expect(calls.some((c) => c.startsWith('git push'))).toBe(false);
-        expect(out.published).toBe(true);
-    });
-});
-
-describe('recordEgressAttempts — structured, and never a raw error string', () => {
-    let root: string;
-    beforeEach(() => {
-        root = mkTmp();
-    });
-    afterEach(() => fs.rmSync(root, { recursive: true, force: true }));
-
-    it('attaches failed legs and leaves the record open', () => {
-        const rec = upsertFinding(root, detectUserReport('du hast das falsch gemacht')!, NOW);
-        recordEgressAttempts(root, rec.fingerprint, [
-            { route: 'pull-request', step: 'push', outcome: 'failed' },
-            { route: 'pull-request', step: 'issue', outcome: 'timeout' },
-        ]);
-        const back = readRecord(root, rec.fingerprint)!;
-        expect(back.status).toBe('open');
-        expect(back.egress_attempts).toHaveLength(2);
-        // The whole point of the shape: no field can carry a path, a URL or a
-        // username, so the privacy floor holds by construction.
-        const serialised = JSON.stringify(back.egress_attempts);
-        expect(serialised).not.toContain('/');
-        expect(serialised).not.toContain('permission denied');
-    });
-
-    it('a successful release clears earlier failed legs', () => {
-        const rec = upsertFinding(root, detectUserReport('du hast das falsch gemacht')!, NOW);
-        recordEgressAttempts(root, rec.fingerprint, [
-            { route: 'issue', step: 'issue', outcome: 'failed' },
-        ]);
-        markReleased(root, rec.fingerprint, LATER);
-        const back = readRecord(root, rec.fingerprint)!;
-        expect(back.status).toBe('released');
-        expect(back.egress_attempts).toBeUndefined();
-    });
-});
-
-// ── P4.2: the structured intake form round-trips the report ──────────
-
-describe('self-repair intake form', () => {
-    const formPath = path.join(process.cwd(), SELF_REPAIR_FORM_REL);
-    const form = YAML.parse(fs.readFileSync(formPath, 'utf-8')) as {
-        labels: string[];
-        body: { type: string; id?: string; attributes: Record<string, unknown> }[];
-    };
-    const fieldIds = form.body.filter((b) => b.id !== undefined).map((b) => b.id as string);
-
-    it('carries the label the CLI sets, so hand-filed and CLI-filed reports cluster', () => {
-        expect(form.labels).toContain(SELF_REPAIR_LABEL);
-    });
-
-    it('has exactly one field per piece of information the report renders', () => {
-        // The round-trip contract: no form field asks for something the record
-        // cannot supply, and no rendered fact lacks a field to land in.
-        expect(new Set(fieldIds)).toEqual(
-            new Set([
-                'defect_class',
-                'fingerprint',
-                'source',
-                'occurrences',
-                'seen',
-                'evidence',
-                'suggested_surface',
-                'route',
-            ]),
-        );
-    });
-
-    it('every required field has a value in a rendered report', () => {
-        const rec: DefectRecord = {
-            ...mergeRecord(null, detectUserReport('du hast das falsch gemacht')!, NOW),
-            suggested_surface: 'src/rules/council-availability.md — probe never run',
-        };
-        const report = renderReport(rec, 'issue');
-        // Each field maps to a fact that must be recoverable from the report.
-        expect(report).toContain(rec.defect_class);
-        expect(report).toContain(rec.fingerprint);
-        expect(report).toContain('user-reported');
-        expect(report).toContain(rec.evidence);
-        expect(report).toContain(rec.suggested_surface);
-        expect(report).toContain('issue');
-        expect(report).toContain(rec.first_seen);
-    });
-
-    it('the fingerprint field is required — it is the clustering key', () => {
-        const fp = form.body.find((b) => b.id === 'fingerprint');
-        expect((fp?.attributes['label'] as string).toLowerCase()).toContain('fingerprint');
-        expect((fp as unknown as { validations: { required: boolean } }).validations.required).toBe(
-            true,
-        );
-    });
-
-    it('the route dropdown offers every EgressRoute that can file an issue', () => {
-        const route = form.body.find((b) => b.id === 'route');
-        const options = route?.attributes['options'] as string[];
-        expect(options).toEqual(
-            expect.arrayContaining(['issue', 'pull-request', 'fork-pull-request']),
-        );
-        // `local-only` must NOT be offered: by definition nothing left the machine,
-        // so a local-only report cannot exist as an issue.
-        expect(options).not.toContain('local-only');
     });
 });

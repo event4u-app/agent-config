@@ -106,6 +106,7 @@ tasks:
       - task: check-subagent-floor
       - task: lint-override-kernel-guard
       - task: lint-output-slop
+      - task: lint-never-silent
       - task: lint-example-fences
       - task: lint-rule-migration-ledger
       - task: lint-decision-impact
@@ -145,6 +146,7 @@ tasks:
       - task: validate-decision-engine
       - task: validate-agent-settings
       - task: lint-settings-classes
+      - task: lint-no-activation-gates
       - task: report-imperative-density
       - task: smoke-quickstart
       - task: check-examples-shape

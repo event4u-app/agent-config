@@ -1,9 +1,9 @@
 # Host-Capability Manifest
 
-Resolved once per session by the **agent** (not a long-running process) and
-cached for the rest of the session. Tells the orchestration layer which
-subagent primitives the current host actually exposes, so auto-dispatch never
-attempts a primitive the host cannot run.
+Resolved once per session (via `probeHostCapabilities`, not a long-running
+process) and cached for the rest of the session. Tells the orchestration
+layer which subagent primitives the current host actually exposes, so
+auto-dispatch never attempts a primitive the host cannot run.
 
 ## Schema
 
@@ -15,19 +15,30 @@ A single JSON object, `schema_version: 1`:
   "subagent_spawn": false,
   "parallel_spawn": false,
   "status_polling": false,
-  "separate_quota_pool": false
+  "separate_quota_pool": false,
+  "agent_teams": false
 }
 ```
 
 ## Resolution
 
-The agent fills the manifest from two inputs, in order:
+`probeHostCapabilities(hostId)` (`src/scripts/_lib/host_capability.ts`) fills
+the manifest from OBSERVABLE FACTS ONLY — capability is a fact about the
+host, never a configuration decision (always-on orchestration, Phase 1):
 
-1. The agent's own knowledge of the **current host** and its documented
-   subagent primitives.
-2. An **optional** settings override `subagents.host_capabilities` in
-   `.agent-settings.yml`. Any field present there wins for that field; any
-   field omitted falls back to the safe default below.
+1. The committed `HOST_CAPABILITY_REGISTRY` row for the detected host — the
+   agent's own knowledge of documented subagent primitives.
+2. A live environment probe merged on top: `agent_teams` resolves `true`
+   when `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS` is set in the process
+   environment — the one host fact this repo can observe about Claude
+   Code's experimental multi-instance Agent Teams feature.
+3. `SAFE_DEFAULT` (all `false`) for an unrecognized host or an unset probe.
+
+`resolveHostCapabilities(hostId, override?)` still accepts an optional
+whole-object override for tests and back-compat callers, but no production
+caller passes a settings-derived override into it any more — the former
+`subagents.host_capabilities` settings key was removed. A leftover key in a
+consumer's `.agent-settings.yml` is ignored.
 
 The manifest is resolved once and cached — the agent does not re-resolve it
 mid-session.
@@ -40,10 +51,9 @@ AN UNKNOWN HOST IS ASSUMED TO HAVE NO SUBAGENT PRIMITIVE.
 A MISSING OR INVALID FIELD IS false, NEVER true.
 ```
 
-This is a hard rule. When the host is unrecognized, or a field is absent /
-malformed in the override, the field resolves to `false`. The orchestration
-layer then degrades to in-session execution rather than attempting an
-unsupported primitive.
+This is a hard rule. When the host is unrecognized, or a probed fact is
+absent, the field resolves to `false`. The orchestration layer then degrades
+to in-session execution rather than attempting an unsupported primitive.
 
 ## Fields
 
@@ -53,6 +63,7 @@ unsupported primitive.
 | `parallel_spawn` | bool | Concurrent dispatch of multiple subagents. `false` → delegation is serial, one subagent at a time. |
 | `status_polling` | bool | Monitoring running subagents (progress / completion checks). `false` → fire-and-collect only, no mid-run polling. |
 | `separate_quota_pool` | bool | Quota-arbitrage bonus (Phase 2) — subagents draw from a distinct quota pool than the session. `false` → assume shared quota. |
+| `agent_teams` | bool | Claude Code's experimental multi-instance Agent Teams primitive (`CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS`). `false` → the [judgment ladder](auto-dispatch-classification.md#judgment-ladder-phase-2--road-to-always-on-orchestration)'s rung 3 (team) degrades to parallel subagents, recorded as `degraded_from: 3`. |
 
 A field being `true` is a **precondition**, not a mandate: `parallel_spawn:
 true` permits concurrency but the dispatch cap still applies (see

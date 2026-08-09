@@ -142,8 +142,8 @@ Artefacts that maintain this package (agent-config itself).
 - **`team-knowledge`** — Team-knowledge orchestrator — routes to consolidate and bootstrap
 - **`team-knowledge-bootstrap`** — One-shot deterministic seed for a fresh project's knowledge layer — stages template pages from real config/directory detection, never LLM-invented claims. Review-then-commit.
 - **`team-knowledge-consolidate`** — Review pending typed knowledge-observation events and file them into agents/knowledge/ pages as a human-reviewed batch — never writes without approval.
-- **`team-review`** — Thin wrapper — cross-model review of the current diff via the official plugin (/codex:review). Gated on ai_team.enabled; fails closed when the plugin is absent.
-- **`team-status`** — Thin wrapper — plugin job status via /codex:status plus a quota block (shared openai counter vs team + council ceilings). Gated on ai_team.enabled; fails closed without the plugin.
+- **`team-review`** — Thin wrapper — cross-model review of the current diff via the official plugin (/codex:review). Gated on /team availability (codex CLI + auth); fails closed when the plugin is absent.
+- **`team-status`** — Thin wrapper — plugin job status via /codex:status plus a quota block (shared openai counter vs team + council ceilings). Gated on codex CLI/auth availability; fails closed without the plugin.
 - **`tests`** — Tests orchestrator — routes to create, execute, e2e-plan, e2e-heal
 - **`tests-create`** — Write meaningful tests for the current branch — stack-adaptive (pest / phpunit / vitest / jest / pytest / …)
 - **`tests-e2e-heal`** — Find, debug, and fix failing Playwright E2E tests

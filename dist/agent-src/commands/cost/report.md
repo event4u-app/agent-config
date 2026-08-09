@@ -159,8 +159,8 @@ If no orchestration lines exist yet (telemetry capture not yet running or
 no delegated dispatches this month), surface:
 
 > No orchestration telemetry yet — subagent dispatches begin writing to
-> `agents/runtime/state/audit/YYYY-MM.jsonl` once `subagents.enabled: true`
-> and a dispatch runs.
+> `agents/runtime/state/audit/YYYY-MM.jsonl` once a dispatch runs (always-on
+> orchestration: the layer has no per-run on/off setting any more).
 
 Skip this step entirely if the user did not ask about orchestration telemetry
 and there is no `agents/runtime/state/audit/` directory.

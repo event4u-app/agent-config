@@ -6,7 +6,7 @@ argument-hint: "[--background]"
 pack: meta
 tier: 2
 visibility: internal
-description: Thin wrapper — cross-model review of the current diff via the official plugin (/codex:review). Gated on ai_team.enabled; fails closed when the plugin is absent.
+description: Thin wrapper — cross-model review of the current diff via the official plugin (/codex:review). Gated on /team availability (codex CLI + auth); fails closed when the plugin is absent.
 cluster: team
 sub: review
 suggestion:
@@ -26,11 +26,11 @@ Thin wrapper: cross-model review of the current change. On Claude Code hosts
 it delegates verbatim to the official plugin's `/codex:review` — this wrapper
 owns only the governance gates around it.
 
-### 1. Gate — `ai_team.enabled`
+### 1. Gate — `/team` availability
 
-Read `ai_team.enabled` from `.agent-settings.yml`. Missing or `false` →
-print the enable pointer from `/team` (master) § "Default-off gate" and
-**STOP**. No plugin probe, no partial run.
+Run the availability check from `/team` (master) § "Availability gate":
+codex CLI + auth, and `emergency.orchestration_halt`. Either check fails →
+print the matching block and **STOP**. No plugin probe, no partial run.
 
 ### 2. Gate — plugin presence (fail closed)
 
@@ -65,12 +65,13 @@ refusal, do not retry.
 ## Output format
 
 - The plugin's review, verbatim.
-- Nothing else on success; gate failures print exactly one block (enable
-  pointer or fail-closed block) and stop.
+- Nothing else on success; gate failures print exactly one block
+  (availability/halt block or fail-closed block) and stop.
 
 ## Do NOT
 
-- Do NOT run when `ai_team.enabled` is false — enable pointer, stop.
+- Do NOT run when `/team` is unavailable (codex CLI/auth missing) or
+  halted — matching block, stop.
 - Do NOT reimplement the review inline when the plugin is absent — fail
   closed with the doctor pointer.
 - Do NOT edit files, commit, push, or open a PR — this wrapper is read-only.

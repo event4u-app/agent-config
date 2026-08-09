@@ -1,0 +1,26 @@
+[
+  {
+    "name": "same claim, but the resolver WAS consulted — reporting its answer is correct",
+    "turn": {
+      "prompt": "",
+      "reply": "Kein Council konfiguriert — agent-config council:status meldet NOT CONFIGURED.",
+      "toolCommands": ["agent-config council:status"]
+    }
+  },
+  {
+    "name": "a positive availability statement — no absence claim at all",
+    "turn": {
+      "prompt": "",
+      "reply": "Das Council ist konfiguriert: 2 Mitglieder (anthropic, openai).",
+      "toolCommands": []
+    }
+  },
+  {
+    "name": "a reply that merely discusses the council feature",
+    "turn": {
+      "prompt": "",
+      "reply": "Die Council-Konfiguration liegt user-global; das Projekt wird nie durchsucht.",
+      "toolCommands": []
+    }
+  }
+]
