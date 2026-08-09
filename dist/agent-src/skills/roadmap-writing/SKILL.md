@@ -183,6 +183,18 @@ breakdown. Full shape: [`templates/roadmaps.md` rule 20](../../agent-src/templat
 Omit the section entirely when the roadmap has no such gate; run the
 § 4c gate-test before adding one.
 
+### 5b2. Pre-mortem — optional, only when it is a forecast
+
+A heavy or irreversible plan MAY carry a `## Pre-mortem` section holding
+the four-part failure register from [`premortem`](../premortem/SKILL.md)
+(three ranked causes of death · one untested hidden dependency · one
+survivable-failure modification · one tripwire metric with a horizon).
+Optional by design — a register written to satisfy a template stops being
+a forecast ([`templates/roadmaps.md` rule 25](../../agent-src/templates/roadmaps.md)).
+Include it when a named tripwire would change behaviour; omit it entirely
+otherwise. Distinct from § 5c's Risk Register: that ranks known risks with
+mitigations; the pre-mortem imagines the whole plan dead and reconstructs why.
+
 ### 5c. Risk review (Gate R1) — after draft, before save
 
 - Ready (non-draft) plan → `## Risk Register` before save, self-review; seed
