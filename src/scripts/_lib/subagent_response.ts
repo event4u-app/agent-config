@@ -9,6 +9,8 @@
  * Contract: `src/agent-src/contexts/execution/subagent-response-contract.md`.
  */
 
+import { validateAssumption, type CapsuleAssumption } from './subagent_capsule.js';
+
 export type Confidence = 'low' | 'medium' | 'high';
 
 export interface Finding {
@@ -25,6 +27,14 @@ export interface SubagentResponse {
     risks: string[];
     confidence: Confidence;
     handoff: string;
+    /**
+     * Premises the worker acted on, `{statement, basis, epistemic_state}` —
+     * the same shape and the same validator as the CHECKPOINT capsule
+     * (`subagent_capsule.ts`), so the completed-result and handoff surfaces
+     * cannot drift apart. Optional: absent means not recorded, which is not
+     * the same claim as "no assumptions were made".
+     */
+    assumptions?: CapsuleAssumption[];
 }
 
 const CONFIDENCE: ReadonlySet<string> = new Set<Confidence>(['low', 'medium', 'high']);
@@ -52,6 +62,15 @@ export function validateResponse(input: unknown): ValidationResult {
             const refs = f?.evidence_refs;
             if (refs && refs.some((x) => typeof x !== 'string' || x.includes('\n'))) {
                 errors.push(`finding[${i}] evidence_refs must be ref tokens, not bodies`);
+            }
+        }
+    }
+    if (r.assumptions !== undefined) {
+        if (!Array.isArray(r.assumptions)) {
+            errors.push('assumptions must be an array of {statement, basis, epistemic_state}');
+        } else {
+            for (const [i, a] of (r.assumptions as unknown[]).entries()) {
+                errors.push(...validateAssumption(a, `assumptions[${i}]`));
             }
         }
     }

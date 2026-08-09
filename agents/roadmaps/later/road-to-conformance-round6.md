@@ -1,12 +1,21 @@
 ---
 complexity: structural
-status: ready
+status: later
 ---
 
 # Road to conformance round 6 — the guard regress I shipped, the unmeasured half, and the therapy that has not started
 
-> Source: an independent review of merged PR #1208 (`2daf29871`), received
-> 2026-08-08, re-verified here against a worktree at that exact merge commit.
+> **Parked in `later/` (2026-08-09).** Every phase and all acceptance criteria
+> are closed; the single open step (6.2) is blocked on
+> `blocker: stop-refusal-decision` — a maintainer decision carried unchanged
+> from round 5. **Resume when** that decision is recorded: a negative decision
+> closes 6.2 and archives the roadmap; an affirmative one resumes once the
+> refusal concern has merged in its own PR and soaked, per the blocker's own
+> resolution condition.
+
+> Source (consumed inbox): `agents/tmp.old/ci-fixes.txt` — an independent review
+> of merged PR #1208 (`2daf29871`), received 2026-08-08, re-verified here
+> against a worktree at that exact merge commit.
 > Nothing below is adopted from the review on its word: every claim was
 > re-executed, and three of them came out differently — one refuted outright.
 > Predecessor: `road-to-conformance-round5.md` (still open at HEAD).

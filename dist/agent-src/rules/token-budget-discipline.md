@@ -139,7 +139,7 @@ its obligation on line 300.
 
 ## The size band is measured, and only its ceiling is gated
 
-The `rich` band is **2,000–3,500 tokens** ([ADR-217](../docs/decisions/ADR-217-rich-class-band-measured-and-enforced.md)).
+The `rich` band is **2,000–3,500 tokens** (ADR-217, `docs/decisions/ADR-217-rich-class-band-measured-and-enforced.md`).
 It was 2,000–5,000 and enforced by nothing until that record: measured with the
 exact BPE tokenizer, the largest rich artifact in the tree is 3,331 tokens, so
 the old ceiling described no artifact that existed. An unused permission costs

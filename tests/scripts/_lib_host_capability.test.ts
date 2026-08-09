@@ -33,6 +33,7 @@ const ALL_FALSE: HostCapabilityManifest = {
     status_polling: false,
     separate_quota_pool: false,
     agent_teams: false,
+    worker_respawn: false,
 };
 
 describe('normalizeHostManifest — safe default', () => {
@@ -84,6 +85,7 @@ describe('normalizeHostManifest — valid full input', () => {
                 parallel_spawn: true,
                 status_polling: true,
                 separate_quota_pool: true,
+                worker_respawn: true,
             }),
         ).toEqual({
             schema_version: 1,
@@ -92,6 +94,7 @@ describe('normalizeHostManifest — valid full input', () => {
             status_polling: true,
             separate_quota_pool: true,
             agent_teams: false,
+            worker_respawn: true,
         });
     });
 
@@ -117,10 +120,15 @@ describe('resolveHostCapabilities — registry hit', () => {
         });
     });
 
-    it('registry row fields not observed (polling, quota) stay false', () => {
+    it('registry row fields not observed (polling, quota, respawn) stay false', () => {
         const manifest = resolveHostCapabilities('claude');
         expect(manifest.status_polling).toBe(false);
         expect(manifest.separate_quota_pool).toBe(false);
+        // worker_respawn is false on EVERY host until the kill + fresh-spawn
+        // primitive is observed on one. Flipping it by inference — spawn exists,
+        // kill exists, therefore respawn exists — is the thing this assertion
+        // forbids; recycling degrades to stop-loss until someone measures it.
+        expect(manifest.worker_respawn).toBe(false);
     });
 });
 

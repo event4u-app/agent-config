@@ -16,6 +16,8 @@
  *     [--route-taken primitive|subagent] [--budget-hit true|false] [--correctness-match true|false] \
  *     [--cache-hit true|false] [--origin lean-init-2026] \
  *     [--rules-carried 32] [--rules-used 5] \
+ *     [--capsule-emitted true|false] [--capsule-entries 9] \
+ *     [--watermark-step 8] [--saturation-step 4] [--trigger-arm-earlier watermark|saturation|tie] \
  *     [--dir <audit-dir>] [--dry-run]
  *
  * Read by `src/scripts/orchestration_savings_report.ts`.
@@ -39,6 +41,7 @@ import {
     type LineOutcome,
     type RecordInput,
     type RouteTaken,
+    type TriggerArm,
 } from './_lib/orchestration_record.js';
 
 // Exported so other writers of the same audit-log-v1 orchestration line
@@ -141,6 +144,11 @@ export function main(argv: string[] = process.argv.slice(2)): number {
         origin: str(flags, 'origin'),
         rules_carried: int(flags, 'rules-carried'),
         rules_used: int(flags, 'rules-used'),
+        capsule_emitted: bool(flags, 'capsule-emitted'),
+        capsule_entries: int(flags, 'capsule-entries'),
+        watermark_step: int(flags, 'watermark-step'),
+        saturation_step: int(flags, 'saturation-step'),
+        trigger_arm_earlier: str(flags, 'trigger-arm-earlier') as TriggerArm | undefined,
         phase: str(flags, 'phase') as LinePhase | undefined,
         outcome: str(flags, 'outcome') as LineOutcome | undefined,
         confidence_band: str(flags, 'confidence-band') as Band | undefined,

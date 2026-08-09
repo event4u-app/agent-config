@@ -50,6 +50,18 @@ export interface HostCapabilityManifest {
      * documented existence.
      */
     agent_teams: boolean;
+    /**
+     * The host can kill a running worker and spawn a fresh one that continues
+     * the SAME task mid-flight — the primitive worker-generation recycling
+     * needs (road-to-worker-generation-recycling, `blocker: host-worker-respawn`).
+     *
+     * `false` on every host today, deliberately: like `status_polling` and
+     * `separate_quota_pool`, this field is set `true` only once the capability
+     * is OBSERVED on a host, never by inference from the fact that spawning and
+     * killing both exist separately. A host without it degrades to today's
+     * stop-loss behaviour — loudly, never silently.
+     */
+    worker_respawn: boolean;
 }
 
 /** Safe default — unknown host assumes no subagent primitive. */
@@ -60,6 +72,7 @@ const SAFE_DEFAULT: HostCapabilityManifest = {
     status_polling: false,
     separate_quota_pool: false,
     agent_teams: false,
+    worker_respawn: false,
 };
 
 /** Coerce one field: only a strict boolean `true` survives; everything else is `false`. */
@@ -87,6 +100,7 @@ export function normalizeHostManifest(input: unknown): HostCapabilityManifest {
         status_polling: asBool(src.status_polling),
         separate_quota_pool: asBool(src.separate_quota_pool),
         agent_teams: asBool(src.agent_teams),
+        worker_respawn: asBool(src.worker_respawn),
     };
 }
 

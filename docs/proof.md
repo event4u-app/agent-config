@@ -51,7 +51,7 @@ evidence pointer, or `task check-claims` fails the build.
 | 196 commands. | quant | `exec:check_artefact_count_messaging -> 0` | ✅ |
 | A MEASURED-BUT-NOT-SHIPPED experiment — the thin rule projection reduced eager rule load 78,513 → 13,881 GPT-tokens (whole always-loaded projection 98,529 → 33,897, ~65.6%), but FAILED the quality gate (thin win-rate 36.2% vs required 48%) and does not ship; it un-defers only behind `discipline_profile: essential`. Shipped behavior does NOT include this reduction. Method: `agent-config benchmark` over the pinned token baseline; the baseline is the honest "what the user pays if everything loads eagerly", NOT a synthetic full-corpus strawman (council Q4); quality gate per the Phase-0 paired judge run. | quant | `internal/bench/reports/token-baseline.json#eager_rule_load` | ✅ |
 | The first cross-vendor parity pass (5 orchestration-corpus tasks × 2 vendors × 3 repeats, identical prompts via the council transport, $0.16) measured real per-host finding-count differences — claude-sonnet-4-5 surfaced ~2× the findings of gpt-4o on the multi-file analysis task (median 11 vs 5) while both vendors were identical on the planted hollow-implementation task (2 vs 2) and perfectly silent on the clean-code negative control (0 vs 0, no spurious findings). The per-task `finding_floor` values are calibrated from the cross-host lower envelope and the gate is armed. | quant | `internal/bench/reports/parity-count.json#min over hosts of median` | ✅ |
-| The scoped-projection default for new installs ships 217 of 288 skills (untagged core plus engineering/maintainer packs), an approximately 25% reduction of the skill-catalog surface (a reduction of 71 projected entries; the token figures measured 2026-07-27 at the then-283-skill catalog were about 577k to about 428k approximated tokens and are NOT rescaled here). Both figures are generated, not typed: reproduce them with `./scripts-run src/scripts/count_scoped_projection`, which partitions the canonical skill catalog with the same predicate `install.ts` applies when it prunes a real tree. | quant | `exec:update_counts --check -> 0` | ✅ |
+| The scoped-projection default for new installs ships 218 of 289 skills (untagged core plus engineering/maintainer packs), an approximately 25% reduction of the skill-catalog surface (a reduction of 71 projected entries; the token figures measured 2026-07-27 at the then-283-skill catalog were about 577k to about 428k approximated tokens and are NOT rescaled here). Both figures are generated, not typed: reproduce them with `./scripts-run src/scripts/count_scoped_projection`, which partitions the canonical skill catalog with the same predicate `install.ts` applies when it prunes a real tree. | quant | `exec:update_counts --check -> 0` | ✅ |
 | On a weak host (claude-haiku-4-5) the package produces a significant, placebo-controlled discipline lift on scope/downstream traps; on a strong host the same measurement is a published null — the package transplants discipline a weak model lacks, not model intelligence. | quant | `docs/benchmark.md#weak-host-specific` | ✅ |
 | The non-coding domain skills (finance/founder/ops/content) are forged on TS/PHP and labeled unvalidated until they pass a sourced domain-truth fixture; no public prose implies proven domain correctness, and the validated count is CI-ratcheted. | qual | `exec:domain_soundness_status --check -> 0` | ✅ |
 | The validated non-coding domain-skill count is pinned and CI-ratcheted at a maintainer-set floor (9 of 20 default-surface skills carry a sourced `evals/domain-truth.json` fixture at pin time, 2026-07-11 — 5 deterministic, keys from cited formulas; 4 rubric, criteria matching a named external practice); the floor only rises via a maintainer `--write-floor` after a new sourced fixture lands. | quant | `exec:domain_soundness_status -> 0` | ✅ |
@@ -81,7 +81,7 @@ evidence pointer, or `task check-claims` fails the build.
 | Scope de-duplication of the rule projection removes 38.0% of the median cold-start payload (87,677 of 230,556 tokens) against a pre-registered 15% bar. CONDITION, inseparable from the number: that figure is FIXTURE-MEASURED on byte-identical global and project projections, and it is **currently unreachable for production installs** — the installer stamps ownership metadata (`package:` / `source_path:`) onto every installed rule unconditionally, so the two scopes are produced by two writers with deliberately different output, the byte-identity gate correctly refuses to dedup, and the recipient set is empty. The mechanism works; the saving is not realised by any consumer today. | quant | `agents/settings/contexts/cache-economy-refusals.md#Honest null — scope de-duplication is measured but` | ✅ |
 | On a deterministic multi-session recall corpus, the memory substrate produces a measured, placebo-controlled recall lift — memory-on 27/27 vs no-memory 10/27 and vs equal-byte placebo 9/27 (claude-haiku-4-5, n=9 tasks x 3 seeds, sign test p=0.031 for BOTH pairings). Scoped honestly: this is the context-value upper bound (perfect retrieval on a one-fact-per-task corpus), not retrieval precision under a large store. | quant | `internal/bench/reports/second-brain-delta.json` | ✅ |
 | Every artifact the package ships — source AND the condensed projection that reaches consumers — is machine-scanned in CI for hidden-Unicode, mixed-script-confusable, and instruction-smuggling payloads (the rules-file-backdoor class); a finding blocks the release before `npm publish`, not just the merge. | qual | `exec:lint_agent_security -> 0` | ✅ |
-| 288 skills. | quant | `exec:check_artefact_count_messaging -> 0` | ✅ |
+| 289 skills. | quant | `exec:check_artefact_count_messaging -> 0` | ✅ |
 | Removes only its own keys from a shared host config (matched by JSON-pointer + SHA-256), never a neighbour tool's entries. | qual | `docs/contracts/install-layout.md#JSON-pointer` | ✅ |
 | On the pre-registered 12-fixture defect-finding corpus (three arms, deterministic file-level recall, codex reviewer gpt-5.5), the cross-model team-review arm produced NO recall lift over single-model self-review — all three arms recalled every planted defect (Δ = 0, H1 not met). Honest null, ceiling-limited (recall 1.00 everywhere: the seeded defects are too obvious to discriminate the arms on recall); the only non-null signal is a single self-review false positive on the controversial-but-correct control vs 0 for team/council. No cross-model quality/lift claim binds; team mode stays workflow-value-only. Re-open: a judge-survivable-subtlety corpus or a new model generation. | quant | `internal/bench/reports/defect-finding.json#honest_null` | ✅ |
 | On the A3 orchestration eval (deterministic verify, measured token deltas), the production-validator subagent returned the correct verdict on both fixtures — NOT READY with the exact `file:line` citation on a planted hollow implementation, READY with zero spurious findings on the clean control — while consuming ~45k fewer tokens than the inline-host baseline on each task. Scope: two planted fixtures on a Claude Code host, not a broad hit-rate. | quant | `internal/bench/orchestration/pv-a3-results.md#token_delta_provenance: measured` | ✅ |
@@ -140,12 +140,12 @@ guidelines, personas) are **generated from source and CI-drift-checked**:
 fails the build on any count-shaped prose mention that drifts from the
 source count — or on two different numbers for the same artefact kind.
 
-We also publish our **debt**: 7 claim(s) are logged as
+We also publish our **debt**: 9 claim(s) are logged as
 `unbacked` inventory in the ledger — not yet bound, and therefore not
 allowed to carry a marker in public prose. Hiding them would be the
 opposite of the point.
 
-And our **nulls**: 3 claim(s) are `resolved-null` —
+And our **nulls**: 4 claim(s) are `resolved-null` —
 measured, the threshold was missed, and the entry is closed rather than
 left open forever. A null that stays filed as pending debt is a claim
 quietly waiting to be re-argued.
@@ -166,11 +166,11 @@ shipping theater; the full per-cell data is committed at
 `internal/bench/reports/persona-placebo.json`.
 
 **Behavioural-eval coverage — the honest baseline.** Skill *quality* is only
-as good as its measurement. Today **42 of 288** skills carry a behavioural
+as good as its measurement. Today **42 of 289** skills carry a behavioural
 `evals.json`; the highest-traffic / highest-cost tiers (default-surface +
 `rich` + routers) are **fully covered (35 of 35)**, the long tail
-(7 of 253) is not. We publish that gap rather than imply
-"288 evaluated skills": coverage is measured per tier
+(7 of 254) is not. We publish that gap rather than imply
+"289 evaluated skills": coverage is measured per tier
 (`./scripts-run src/scripts/skill_eval_coverage`), **CI-ratcheted so it can
 only rise**, and the priority tiers carry a hard **tier floor**: every
 rich / default-surface / router skill MUST have a behavioural eval or an
@@ -311,7 +311,7 @@ resolution (`check_enforcement_coverage`) and the claims ledger
 
 Undeclared rules (84) carry no row — an honest gap beats a false claim.
 
-**Axis 2 — evidence form per public claim.** 50 ledger entries · 40 backed · 7 unbacked inventory · 3 resolved-null.
+**Axis 2 — evidence form per public claim.** 53 ledger entries · 40 backed · 9 unbacked inventory · 4 resolved-null.
 
 | Claim id | Kind | Status | Evidence pointer |
 |---|---|---|---|
@@ -322,6 +322,7 @@ Undeclared rules (84) carry no row — an honest gap beats a false claim.
 | `command-count` | quant | backed | `exec:check_artefact_count_messaging -> 0` |
 | `context-token-reduction` | quant | backed | `internal/bench/reports/token-baseline.json#eager_rule_load` |
 | `council-vs-solo-baseline` | comparative | unbacked | `PRE-REGISTERED 2026-07-12 (road-to-feedback-8.11 Phase 3 — no goalpost-moving after the numbers land; design at `docs/design/council-vs-solo-baseline.md`). Falsification criteria fixed BEFORE data: (1) quality = blind post-hoc grading against known ground-truth dispositions, two blind judges, admissible only at Cohen's κ ≥ 0.60 (reuse `check_quality_regression.ts` kappa machinery); (2) the five feedback-proposed admission dimensions are recorded per decision AT pre-registration, so "≥2-of-5" is a testable post-hoc correlate, never a pre-imposed gate; (3) NO lift on any subset (overall, per impact class, per dimension stratum) → honest null, deliberation-protocol phases stop (maintenance-only), recorded in road-to-opt-council-deliberation; lift on a subset → admission criteria derived FROM that subset's characteristics. Execution is spend-gated (user confirms rendered estimate in-session); shadow-log was absent/empty at design time — zero prior council-vs-solo data exists.` |
+| `critic-protocol-load-bearing-ab` | quant | resolved-null | `internal/bench/adversarial-council/runs/critic-protocol-ab-report.json` |
 | `cross-model-parity-count` | quant | backed | `internal/bench/reports/parity-count.json#min over hosts of median` |
 | `cross-source-consistency-precision` | quant | unbacked | `PRE-REGISTERED 2026-07-28 (road-to-feedback-9.2.0-followups Phase 1 — no goalpost-moving after the numbers land). Falsification criteria fixed BEFORE data: (1) fixtures + expected actions are pinned in `internal/bench/corpora/honesty-false-premise.yaml` (shared with the honesty bench, extended-not-forked); (2) the scorer is `src/scripts/bench_cross_source_eval.ts` (ask\|proceed\|warn classification, forbidden-assumption + over-firing checks) — precision = correctly-surfaced discrepancies / all surfaced; over-firing = asks on negative controls / negative controls; (3) the run needs real model responses per fixture (paid, maintainer-gated spend) — this entry stands as documented debt until that run lands; (4) HONEST NULL consequence bound: precision < 85% or over-firing > 5% → loosen the rule's default (`consistency.cross_source: on` → `auto`) or tighten its confidence tiers — never silently keep firing. This binds the weaker-evidenced default-on rule to a measurement like every other default-flip.` |
 | `default-install-context-cost` | quant | backed | `exec:update_counts --check -> 0` |
@@ -334,6 +335,7 @@ Undeclared rules (84) carry no row — an honest gap beats a false claim.
 | `enforcement-coverage-resolved` | quant | backed | `exec:check_enforcement_coverage --check -> 0` |
 | `essential-tier-cost-factor` | quant | backed | `docs/benchmark.md#REPLICATION FAILED` |
 | `eval-coverage-ratcheted` | qual | backed | `exec:skill_eval_coverage --check -> 0` |
+| `forensics-pack-value` | quant | unbacked | `agents/evidence/release-findings/` |
 | `gated-platform-reads` | quant | backed | `docs/benchmark.md#ship-gated-reach` |
 | `governance-adjacent-properties` | quant | backed | `internal/bench/reports/governance-invariants.json#adjacent_properties` |
 | `governance-aggregation-refusal-invariance` | quant | backed | `internal/bench/reports/governance-invariants.json#s0_1_aggregation_steerability` |
@@ -365,6 +367,7 @@ Undeclared rules (84) carry no row — an honest gap beats a false claim.
 | `team-defect-finding-null` | quant | backed | `internal/bench/reports/defect-finding.json#honest_null` |
 | `utilization-window-decidability` | comparative | unbacked | `PRE-REGISTERED 2026-07-12 (road-to-feedback-8.11-2 Phase 0 — no goalpost-moving after the numbers land; criteria at `docs/design/utilization-window-criteria.md`). Floor fixed BEFORE data: >=100 task boundaries AND >=2 hosts (or the documented degraded form) AND >=45 elapsed days; decision rules D1 (loaded-never-consulted -> retirement-candidate list), D2 (consulted-never-applied <10% applied-ratio at >=5 consultations -> trigger-review queue), D3 (above floor -> >=1 named decision per kind or a recorded why-not), D4 (below floor after one extension -> honest null, lifecycle/ledger gates stay closed). Kernel + safety floors exempt by construction.` |
 | `wedge-hollow-detection` | quant | backed | `internal/bench/orchestration/pv-a3-results.md#token_delta_provenance: measured` |
+| `worker-capsule-trigger-arm` | comparative | unbacked | `PRE-REGISTERED 2026-08-09 (road-to-worker-generation-recycling Phase 1.4 — registered BEFORE the first shadow capsule is read; the mechanism ships shadow-only, so no capsule has been scored at registration time). CAPSULE-QUALITY RUBRIC, fixed here, five binary criteria scored 0-5 per capsule — (1) `remaining[]` names every open item the task still needs, no silent drops; (2) `decisions[]` names each choice a successor would otherwise silently re-open; (3) `assumptions[]` is non-empty and every entry carries a resolving `basis` ref; (4) every `done[]` ref resolves to a real file/line; (5) a successor briefed on the ORIGINAL brief plus the capsule alone takes a first action that neither repeats completed work nor asks for a re-brief. ADOPTION MARGIN, fixed BEFORE data: an arm is adopted only if, on paired samples from the same runs, it fires at a median of >= 2 steps earlier AND its capsules score >= 4/5 on the rubric with no regression against the other arm; an arm that wins on earliness while dropping below 4/5 is NOT adopted, because an earlier bad capsule is worse than a later good one. Sample floor: >= 30 shadow capsules with BOTH trigger points recorded (`watermark_step`, `saturation_step`, `trigger_arm_earlier` on the `orchestration_record` line). Instrument: `src/scripts/_lib/capsule_trigger.ts` (`compareTriggers`, `earlierArm`), term-frequency only, no embeddings. HONEST-NULL consequence, pre-authorised: BOTH arms losing (neither reaches 4/5, or the margin is not met) is a publishable result that closes the mechanism as default-off — it is the expected-value outcome given the standing `orchestration-observed-dispatch-cost` null, and it must be cheap to record. Token delta is reported as a pair with quality and is explicitly NOT the claim.` |
 
 ## 5. Verify it yourself
 

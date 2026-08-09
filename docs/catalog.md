@@ -1,13 +1,13 @@
 # agent-config — Public Catalog
 
-Consumer-facing catalog of all **702 public artefacts** shipped by
+Consumer-facing catalog of all **703 public artefacts** shipped by
 this package. Internal package-maintenance rules and deprecation shims
 are excluded.
 
 > **Regenerate:** `./scripts-run src/scripts/generate_index`
 > Auto-generated — do not edit manually.
 
-## Skills (288)
+## Skills (289)
 
 > **Behavioural-eval coverage is measured, not implied.** A skill is
 > behaviourally evaluated only if it ships `evals/evals.json`; most do
@@ -121,6 +121,7 @@ are excluded.
 | skill | [`flux`](../dist/agent-src/skills/flux/SKILL.md) | official | Use when the project uses `livewire/flux` — dispatched by `directives/ui/{apply,review,polish}.ts`. Covers Flux components, slots, variants, and form primitives. |
 | skill | [`forecast-accuracy`](../dist/agent-src/skills/forecast-accuracy/SKILL.md) | official | Use when constructing the forecast call — commit / best-case / pipeline categorisation, deal-level evidence test, accuracy retro-loop. Triggers on 'build the forecast', 'why does our commit miss'. |
 | skill | [`forecasting`](../dist/agent-src/skills/forecasting/SKILL.md) | official | Use when constructing the finance-side forecast — top-down vs bottom-up shape, confidence bands, retro-loop. Triggers on 'build the forecast model', 'reconcile top-down with bottom-up'. |
+| skill | [`forensics-report`](../dist/agent-src/skills/forensics-report/SKILL.md) | official | Use when a release review needs machine-derived evidence from git history — hotspot risk and change-coupling analyzers. Triggers on 'hotspot', 'what changes together', 'release forensics'. |
 | skill | [`form-handler`](../dist/agent-src/skills/form-handler/SKILL.md) | official | Use when designing or reviewing a form — validation timing, error display, submission lifecycle, optimistic UI, dirty/pristine state, idempotency — even on 'why does submit double-fire?'. |
 | skill | [`frontend-render-security`](../dist/agent-src/skills/frontend-render-security/SKILL.md) | official | Writing/reviewing client-side UI (React/Vue/vanilla) — insecure-render + client-trust gaps AI ships: XSS via innerHTML, client secrets, client-only auth, CORS wildcard, token in localStorage |
 | skill | [`fundraising-narrative`](../dist/agent-src/skills/fundraising-narrative/SKILL.md) | official | Use when shaping a capital-raise pitch — why-now / why-us / why-this framing, market-size reasoning, traction-story construction. Triggers on 'tighten the pitch', 'why-now is weak'. |

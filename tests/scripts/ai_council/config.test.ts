@@ -218,6 +218,24 @@ describe('load_council_config — happy path', () => {
         expect(c.debate_gates.enabled).toBe(true);
     });
 
+    it('critic_protocol defaults to legacy', () => {
+        const c = cfg.load_council_config(write_yaml(make_tmp(), MINIMAL_VALID));
+        expect(c.critic_protocol).toBe('legacy');
+    });
+
+    it('critic_protocol: load_bearing is honoured', () => {
+        const payload = `${MINIMAL_VALID}\ncritic_protocol: load_bearing\n`;
+        const c = cfg.load_council_config(write_yaml(make_tmp(), payload));
+        expect(c.critic_protocol).toBe('load_bearing');
+    });
+
+    it('critic_protocol rejects unknown values', () => {
+        const payload = `${MINIMAL_VALID}\ncritic_protocol: freeform\n`;
+        expect(() => cfg.load_council_config(write_yaml(make_tmp(), payload))).toThrow(
+            /critic_protocol.*not in/,
+        );
+    });
+
     it('per-member mode override precedence', () => {
         const tmp = make_tmp();
         const payload = `enabled: true

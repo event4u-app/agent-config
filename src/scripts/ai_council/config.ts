@@ -602,6 +602,7 @@ export interface CouncilConfig {
     readonly chairman: ChairmanConfig;
     readonly debate_gates: DebateGatesConfig;
     readonly restate: RestateConfig;
+    readonly critic_protocol: CriticProtocol;
     readonly decision_resolution: DecisionResolutionConfig;
     readonly routing: RoutingConfig;
     readonly low_impact: LowImpactConfig;
@@ -846,6 +847,7 @@ export function _build_config(raw: Dict, source_path: PathLike): CouncilConfig {
         'debate_gates',
     );
     const restate = _build_restate(_asDict(_getOr(raw, 'restate', {})), 'restate');
+    const critic_protocol = _build_critic_protocol(_getOr(raw, 'critic_protocol', 'legacy'));
     const decision_resolution = _build_decision_resolution(
         _asDict(_getOr(raw, 'decision_resolution', {})),
     );
@@ -877,6 +879,7 @@ export function _build_config(raw: Dict, source_path: PathLike): CouncilConfig {
         chairman,
         debate_gates,
         restate,
+        critic_protocol,
         decision_resolution,
         routing,
         low_impact,
@@ -1139,6 +1142,27 @@ function _build_restate(d: Dict, scope: string): RestateConfig {
         throw new CouncilConfigError(`\`${scope}.enabled\` must be a bool.`);
     }
     return { enabled: Boolean(enabled) };
+}
+
+/**
+ * `critic_protocol` (road-to-judgment-and-forensic-evidence Phase 2) — which
+ * critic posture adversarial/skeptic review passes use. `legacy` is the
+ * shipped free-hunt skeptic; `load_bearing` is the fixed protocol that must
+ * name the single load-bearing assumption and may return "holds". Default
+ * `legacy` regardless of the A/B outcome (promotion is a separate decision).
+ */
+export type CriticProtocol = 'legacy' | 'load_bearing';
+
+const _VALID_CRITIC_PROTOCOLS: ReadonlySet<string> = new Set(['legacy', 'load_bearing']);
+
+function _build_critic_protocol(v: unknown): CriticProtocol {
+    if (v === undefined || v === null) return 'legacy';
+    if (!(_isStr(v) && _VALID_CRITIC_PROTOCOLS.has(v))) {
+        throw new CouncilConfigError(
+            `\`critic_protocol\`=${_pyRepr(v)} not in ${_sortedListRepr(_VALID_CRITIC_PROTOCOLS)}.`,
+        );
+    }
+    return v as CriticProtocol;
 }
 
 const _VALID_RESOLUTION_MODES: ReadonlySet<string> = new Set([
