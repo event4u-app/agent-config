@@ -1,0 +1,530 @@
+# Rule activation dispositions — the keyword/phrase-only residue
+#
+# Produced by P3.2 of `road-to-rule-delivery-integrity`. One recorded
+# disposition per non-kernel rule that has NO path-shaped trigger, i.e. every
+# rule the Claude Code emitter (P3.1) writes with no `paths:` key and which
+# therefore still loads unconditionally at project scope.
+#
+# The residue is MEASURED, not estimated: it is the set `.claude/rules/*.md`
+# emitted with no frontmatter, minus the 9 kernel rules (`type: "always"`).
+# Reproduce it with `task generate-tools` and:
+#
+#   for f in .claude/rules/*.md; do b=$(basename "$f");
+#     head -1 "$f" | grep -q '^---$' && continue
+#     grep -q '^type: "always"' "src/rules/$b" && continue
+#     echo "$b"; done
+#
+# Measured 2026-08-09: 110 rules emitted · 25 carry `paths:` · 85 unconditional
+# · 9 of those are kernel → residue = 76. Every one has a row below.
+#
+# ── Vocabulary, and one documented deviation ─────────────────────────
+#
+# The step specifies three dispositions: `digest` (a one-to-three-line
+# obligation in a single always-on digest, body demoted to `type: manual`),
+# `skill` (body behind a SKILL.md), `drop`. A fourth — `keep` — is recorded
+# here, and the reason is a finding rather than a convenience:
+#
+#   38 of the 76 are classed `stay` by
+#   `docs/guidelines/agent-infra/rule-body-migration-inventory.md`, whose
+#   criterion is that the non-Iron-Law body IS the enforcement surface — a
+#   table, a literal-string marker set, a short numbered check — that does not
+#   shrink usefully by relocating. Demoting such a body to `type: manual` would
+#   remove the enforcement surface from context, which is the exact defect this
+#   roadmap exists to repair. `digest` would be a lie about what happened to
+#   them, `skill` is barred (below), and `drop` is false.
+#
+# `keep` therefore means: stays always-on and monolithic, deliberately, with a
+# named reason. It is not a deferral and not a pending item.
+#
+# ── Why `skill` has zero rows ────────────────────────────────────────
+#
+# Not an omission — a direct consequence of Phase 2. P2.1 measured that 5 of 8
+# sampled catalogue entries reached the model with NO description while 414/414
+# installed skills carry one on disk: the loss is host-side
+# (`agents/evidence/analysis/skill-catalogue-description-delivery.md`). A
+# `skill` disposition therefore risks turning an always-loaded obligation into
+# an unreachable one, which is why P2.1's own consequence note reads "`digest`
+# becomes the default for anything load-bearing". Assigning `skill` rows to
+# satisfy a vocabulary would be Goodharting the table against the evidence that
+# produced it.
+#
+# ── Why `drop` has zero rows ─────────────────────────────────────────
+#
+# No rule in the residue was found to carry no live obligation. The closest
+# candidates are the 7 `tier: "mechanical-already"` rules, where a script
+# enforces and the body documents — but ADR-004 already adjudicated those and
+# recorded them as `stay`, and a rule whose body is the documentation of a live
+# gate is not dead. Zero is the measured answer, reported as such.
+#
+# ── What this file is NOT ────────────────────────────────────────────
+#
+# It records dispositions; it does not implement them. No body is demoted to
+# `type: manual` by this file, and no digest exists yet. Building the always-on
+# digest and demoting the 30 `digest` bodies is downstream work, gated on the
+# digest surface existing — which nothing in this roadmap creates.
+#
+# Fields: `body_class` / `class_source` carry the provenance of the judgement,
+# so a reader can tell an inventory classification from one made here.
+
+residue_measured: 2026-08-09
+residue_count: 76
+kernel_excluded: 9
+scoped_by_paths_key: 25
+
+dispositions:
+  - rule: active-remediation
+    disposition: digest
+    body_class: migrate
+    class_source: inventory
+    tier: "2b"
+    body_lines: 70
+  - rule: architecture
+    disposition: digest
+    body_class: migrate
+    class_source: inventory
+    tier: "3"
+    body_lines: 61
+  - rule: artifact-drafting-protocol
+    disposition: digest
+    body_class: migrate
+    class_source: inventory
+    tier: "2a"
+    body_lines: 63
+  - rule: artifact-engagement-recording
+    disposition: digest
+    body_class: thin
+    class_source: inventory
+    tier: "mechanical-already"
+    body_lines: 57
+  - rule: autonomous-execution
+    disposition: digest
+    body_class: thin
+    class_source: inventory
+    tier: "3"
+    body_lines: 83
+  - rule: brand-source-of-truth
+    disposition: keep
+    body_class: stay
+    class_source: inventory
+    tier: "2a"
+    body_lines: 146
+  - rule: broken-access-control
+    disposition: digest
+    body_class: thin
+    class_source: inventory
+    tier: "2a"
+    body_lines: 72
+  - rule: cli-output-handling
+    disposition: digest
+    body_class: thin
+    class_source: inventory
+    tier: "2a"
+    body_lines: 47
+  - rule: code-comment-discipline
+    disposition: digest
+    body_class: migrate
+    class_source: inventory
+    tier: "2b"
+    body_lines: 68
+  - rule: code-provenance
+    disposition: keep
+    body_class: stay
+    class_source: classified-here
+    tier: "2a"
+    body_lines: 111
+  - rule: command-suggestion-policy
+    disposition: keep
+    body_class: stay
+    class_source: inventory
+    tier: "mechanical-already"
+    body_lines: 49
+  - rule: commit-conventions
+    disposition: digest
+    body_class: thin
+    class_source: inventory
+    tier: "2a"
+    body_lines: 24
+  - rule: communication-through-line
+    disposition: keep
+    body_class: stay
+    class_source: inventory
+    tier: "2b"
+    body_lines: 44
+  - rule: content-quoting-floor
+    disposition: keep
+    body_class: stay
+    class_source: inventory
+    tier: "2a"
+    body_lines: 89
+  - rule: context-hygiene
+    disposition: digest
+    body_class: migrate
+    class_source: inventory
+    tier: "1"
+    body_lines: 113
+  - rule: copilot-routing
+    disposition: digest
+    body_class: thin
+    class_source: inventory
+    tier: "3"
+    body_lines: 22
+  - rule: council-availability
+    disposition: keep
+    body_class: stay
+    class_source: classified-here
+    tier: "2a"
+    body_lines: 93
+  - rule: cross-source-consistency
+    disposition: keep
+    body_class: stay
+    class_source: classified-here
+    tier: "2a"
+    body_lines: 99
+  - rule: decision-revisit-gate
+    disposition: digest
+    body_class: migrate
+    class_source: inventory
+    tier: "2b"
+    body_lines: 62
+  - rule: delegation-policy
+    disposition: keep
+    body_class: stay
+    class_source: inventory
+    tier: "2b"
+    body_lines: 123
+  - rule: devcontainer-routing
+    disposition: digest
+    body_class: thin
+    class_source: inventory
+    tier: "3"
+    body_lines: 23
+  - rule: docker-commands
+    disposition: digest
+    body_class: thin
+    class_source: inventory
+    tier: "3"
+    body_lines: 27
+  - rule: domain-safety-disclaimer
+    disposition: keep
+    body_class: stay
+    class_source: inventory
+    tier: "2a"
+    body_lines: 122
+  - rule: domain-safety-pii
+    disposition: keep
+    body_class: stay
+    class_source: inventory
+    tier: "2a"
+    body_lines: 169
+  - rule: domain-safety-retention
+    disposition: keep
+    body_class: stay
+    class_source: inventory
+    tier: "2a"
+    body_lines: 89
+  - rule: downstream-changes
+    disposition: keep
+    body_class: stay
+    class_source: inventory
+    tier: "2b"
+    body_lines: 148
+  - rule: engineering-safety-floor
+    disposition: keep
+    body_class: stay
+    class_source: inventory
+    tier: "2a"
+    body_lines: 95
+  - rule: evaluator-independence
+    disposition: keep
+    body_class: stay
+    class_source: classified-here
+    tier: "2a"
+    body_lines: 122
+  - rule: external-code-graph-interop
+    disposition: keep
+    body_class: stay
+    class_source: inventory
+    tier: "2a"
+    body_lines: 79
+  - rule: external-reference-deep-dive
+    disposition: keep
+    body_class: stay
+    class_source: inventory
+    tier: "2b"
+    body_lines: 66
+  - rule: fast-path-marker-visibility
+    disposition: keep
+    body_class: stay
+    class_source: inventory
+    tier: "1"
+    body_lines: 85
+  - rule: finance-safety-floor
+    disposition: keep
+    body_class: stay
+    class_source: inventory
+    tier: "2a"
+    body_lines: 104
+  - rule: git-history-discipline
+    disposition: digest
+    body_class: thin
+    class_source: inventory
+    tier: "2a"
+    body_lines: 87
+  - rule: history-discipline
+    disposition: keep
+    body_class: stay
+    class_source: classified-here
+    tier: "2a"
+    body_lines: 84
+  - rule: icon-consistency
+    disposition: keep
+    body_class: stay
+    class_source: inventory
+    tier: "2a"
+    body_lines: 55
+  - rule: improve-before-implement
+    disposition: digest
+    body_class: migrate
+    class_source: inventory
+    tier: "2b"
+    body_lines: 79
+  - rule: invite-challenge
+    disposition: keep
+    body_class: stay
+    class_source: inventory
+    tier: "2b"
+    body_lines: 71
+  - rule: laravel-routing
+    disposition: digest
+    body_class: thin
+    class_source: inventory
+    tier: "3"
+    body_lines: 32
+  - rule: legal-safety-floor
+    disposition: keep
+    body_class: stay
+    class_source: inventory
+    tier: "2a"
+    body_lines: 139
+  - rule: media-governance-routing
+    disposition: keep
+    body_class: stay
+    class_source: inventory
+    tier: "2a"
+    body_lines: 93
+  - rule: media-sync-ground-truth
+    disposition: keep
+    body_class: stay
+    class_source: inventory
+    tier: "2a"
+    body_lines: 77
+  - rule: minimal-safe-diff
+    disposition: digest
+    body_class: migrate
+    class_source: inventory
+    tier: "2a"
+    body_lines: 92
+  - rule: missing-tool-handling
+    disposition: digest
+    body_class: thin
+    class_source: inventory
+    tier: "2a"
+    body_lines: 21
+  - rule: model-recommendation
+    disposition: digest
+    body_class: thin
+    class_source: inventory
+    tier: "2a"
+    body_lines: 25
+  - rule: no-attribution-footers
+    disposition: keep
+    body_class: stay
+    class_source: inventory
+    tier: "3"
+    body_lines: 55
+  - rule: no-decorative-emojis-in-git-surfaces
+    disposition: keep
+    body_class: stay
+    class_source: inventory
+    tier: "3"
+    body_lines: 116
+  - rule: no-pr-progress-comments
+    disposition: keep
+    body_class: stay
+    class_source: inventory
+    tier: "2a"
+    body_lines: 108
+  - rule: notes-first-reasoning
+    disposition: keep
+    body_class: stay
+    class_source: inventory
+    tier: "2b"
+    body_lines: 73
+  - rule: output-discipline
+    disposition: keep
+    body_class: stay
+    class_source: inventory
+    tier: "2a"
+    body_lines: 94
+  - rule: prefer-enums-over-literals
+    disposition: keep
+    body_class: stay
+    class_source: inventory
+    tier: "2b"
+    body_lines: 69
+  - rule: preservation-guard
+    disposition: keep
+    body_class: stay
+    class_source: inventory
+    tier: "2b"
+    body_lines: 106
+  - rule: question-not-instruction
+    disposition: keep
+    body_class: stay
+    class_source: inventory
+    tier: "1"
+    body_lines: 79
+  - rule: reviewer-awareness
+    disposition: digest
+    body_class: thin
+    class_source: inventory
+    tier: "2a"
+    body_lines: 30
+  - rule: role-mode-adherence
+    disposition: keep
+    body_class: stay
+    class_source: inventory
+    tier: "2a"
+    body_lines: 61
+  - rule: runtime-safety
+    disposition: keep
+    body_class: stay
+    class_source: inventory
+    tier: "2b"
+    body_lines: 52
+  - rule: scale-discipline
+    disposition: keep
+    body_class: stay
+    class_source: classified-here
+    tier: "2a"
+    body_lines: 99
+  - rule: secret-vcs-guard
+    disposition: keep
+    body_class: stay
+    class_source: classified-here
+    tier: "2a"
+    body_lines: 108
+  - rule: security-sensitive-stop
+    disposition: keep
+    body_class: stay
+    class_source: inventory
+    tier: "2a"
+    body_lines: 129
+  - rule: self-repair-loop
+    disposition: keep
+    body_class: stay
+    class_source: classified-here
+    tier: "2a"
+    body_lines: 103
+  - rule: senior-engineering-discipline
+    disposition: keep
+    body_class: stay
+    class_source: inventory
+    tier: "2b"
+    body_lines: 88
+  - rule: session-canary
+    disposition: digest
+    body_class: migrate
+    class_source: classified-here
+    tier: "2a"
+    body_lines: 139
+  - rule: skill-improvement-trigger
+    disposition: digest
+    body_class: thin
+    class_source: inventory
+    tier: "2a"
+    body_lines: 22
+  - rule: slash-command-routing-policy
+    disposition: digest
+    body_class: thin
+    class_source: inventory
+    tier: "1"
+    body_lines: 23
+  - rule: source-discovery-gate
+    disposition: keep
+    body_class: stay
+    class_source: inventory
+    tier: "2b"
+    body_lines: 99
+  - rule: spreadsheet-source-quality
+    disposition: keep
+    body_class: stay
+    class_source: inventory
+    tier: "2a"
+    body_lines: 64
+  - rule: strategy-safety-floor
+    disposition: keep
+    body_class: stay
+    class_source: inventory
+    tier: "2a"
+    body_lines: 108
+  - rule: symfony-routing
+    disposition: digest
+    body_class: thin
+    class_source: inventory
+    tier: "3"
+    body_lines: 28
+  - rule: think-before-action
+    disposition: digest
+    body_class: thin
+    class_source: inventory
+    tier: "2b"
+    body_lines: 97
+  - rule: token-budget-discipline
+    disposition: keep
+    body_class: stay
+    class_source: inventory
+    tier: "2a"
+    body_lines: 170
+  - rule: token-efficiency
+    disposition: digest
+    body_class: thin
+    class_source: inventory
+    tier: "2a"
+    body_lines: 57
+  - rule: token-optimizer-maintenance
+    disposition: keep
+    body_class: stay
+    class_source: inventory
+    tier: "2a"
+    body_lines: 73
+  - rule: tool-safety
+    disposition: keep
+    body_class: stay
+    class_source: inventory
+    tier: "2b"
+    body_lines: 76
+  - rule: untrusted-input-defense
+    disposition: digest
+    body_class: migrate
+    class_source: inventory
+    tier: "2a"
+    body_lines: 84
+  - rule: upstream-proposal
+    disposition: digest
+    body_class: thin
+    class_source: inventory
+    tier: "2a"
+    body_lines: 22
+  - rule: user-interaction
+    disposition: digest
+    body_class: thin
+    class_source: inventory
+    tier: "3"
+    body_lines: 96
+  - rule: user-interrupt-priority
+    disposition: keep
+    body_class: stay
+    class_source: inventory
+    tier: "2a"
+    body_lines: 60

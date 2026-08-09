@@ -6,10 +6,10 @@
 
 ## Overall
 
-**224 / 338 steps done · 66%**
+**226 / 338 steps done · 67%**
 
 ```text
-██████████████████████████░░░░░░░░░░░░░░   66%
+███████████████████████████░░░░░░░░░░░░░   67%
 ```
 
 ## Open roadmaps
@@ -27,7 +27,7 @@
 | 9 | [road-to-maintainer-bus-factor.md](roadmaps/road-to-maintainer-bus-factor.md) | 4 | 12 | 5 | 7 | 0 | 0 | [1](#blockers-road-to-maintainer-bus-factor) | ██████░░░░ 58% |
 | 10 | [road-to-orchestration-scope-decision.md](roadmaps/road-to-orchestration-scope-decision.md) | 4 | 10 | 6 | 4 | 0 | 0 | [1](#blockers-road-to-orchestration-scope-decision) | ████░░░░░░ 40% |
 | 11 | [road-to-rule-coherence-followup.md](roadmaps/road-to-rule-coherence-followup.md) | 5 | 9 | 8 | 1 | 0 | 0 | [2](#blockers-road-to-rule-coherence-followup) | █░░░░░░░░░ 11% |
-| 12 | [road-to-rule-delivery-integrity.md](roadmaps/road-to-rule-delivery-integrity.md) | 5 | 17 | 6 | 9 | 1 | 1 | 0 | ██████░░░░ 60% |
+| 12 | [road-to-rule-delivery-integrity.md](roadmaps/road-to-rule-delivery-integrity.md) | 5 | 17 | 4 | 11 | 1 | 1 | 0 | ███████░░░ 73% |
 | 13 | [road-to-scale-history-bench-run.md](roadmaps/road-to-scale-history-bench-run.md) | 1 | 2 | 2 | 0 | 0 | 0 | [1](#blockers-road-to-scale-history-bench-run) | ░░░░░░░░░░ 0% |
 | 14 | [road-to-skill-ecosystem-gate-integrity.md](roadmaps/road-to-skill-ecosystem-gate-integrity.md) | 7 | 43 | 3 | 40 | 0 | 0 | [1](#blockers-road-to-skill-ecosystem-gate-integrity) | █████████░ 93% |
 | 15 | [road-to-solution-minimalism.md](roadmaps/road-to-solution-minimalism.md) | 4 | 36 | 10 | 25 | 0 | 1 | [1](#blockers-road-to-solution-minimalism) | ███████░░░ 71% |
@@ -265,14 +265,14 @@ _1 blocker resolved._
 
 ### [road-to-rule-delivery-integrity.md](roadmaps/road-to-rule-delivery-integrity.md)
 
-**Road to rule delivery integrity — rules that arrive once, scoped, and provably** — 9 / 15 done (60%)
+**Road to rule delivery integrity — rules that arrive once, scoped, and provably** — 11 / 15 done (73%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
 | 0 | Decision gate: probe the premise, then decide | ✅ done | 0 | 5 | 0 | 0 | 100% |
 | 1 | Deliver the corpus once | ✅ done | 0 | 2 | 0 | 0 | 100% |
 | 2 | Close the census's own falsifier | ✅ done | 0 | 1 | 1 | 0 | 100% |
-| 3 | Host-native scoping for Claude Code | 🟡 in progress | 2 | 1 | 0 | 1 | 33% |
+| 3 | Host-native scoping for Claude Code | ✅ done | 0 | 3 | 0 | 1 | 100% |
 | 4 | Self-repair loop: close the verified gap | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
 
 ### [road-to-scale-history-bench-run.md](roadmaps/road-to-scale-history-bench-run.md)
