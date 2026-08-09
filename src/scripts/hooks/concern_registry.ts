@@ -54,6 +54,9 @@ import { main as blockConfigWeakeningMain } from './block_config_weakening.js';
 import { main as rtkWrapMain } from './rtk_wrap_hook.js';
 import { main as designSlopMain } from './design_slop_hook.js';
 import { main as codeGraphNudgeMain } from './code_graph_nudge_hook.js';
+import { main as orchestrationRecordMain } from './orchestration_record_hook.js';
+import { main as delegationNudgeMain } from './delegation_nudge_hook.js';
+import { main as endReviewNudgeMain } from './end_review_nudge_hook.js';
 
 /** A concern `main` — argv-taking or not; both shapes exist. */
 export type ConcernMain = (argv?: string[]) => number | undefined | void;
@@ -90,4 +93,7 @@ export const CONCERN_REGISTRY: Readonly<Record<string, ConcernMain>> = {
     'src/scripts/hooks/rtk_wrap_hook.ts': rtkWrapMain as ConcernMain,
     'src/scripts/hooks/design_slop_hook.ts': designSlopMain as ConcernMain,
     'src/scripts/hooks/code_graph_nudge_hook.ts': codeGraphNudgeMain as ConcernMain,
+    'src/scripts/hooks/orchestration_record_hook.ts': orchestrationRecordMain as ConcernMain,
+    'src/scripts/hooks/delegation_nudge_hook.ts': delegationNudgeMain as ConcernMain,
+    'src/scripts/hooks/end_review_nudge_hook.ts': endReviewNudgeMain as ConcernMain,
 };

@@ -2,14 +2,14 @@
 
 > Auto-generated — do not edit. Regenerate with `task roadmap-progress` or by running the `update_roadmap_progress` script for your install; rewritten on every roadmap create / execute / completion change (timestamp lives in git history).
 >
-> 23 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **26** open blockers
+> 22 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **24** open blockers
 
 ## Overall
 
-**198 / 366 steps done · 54%**
+**221 / 349 steps done · 63%**
 
 ```text
-██████████████████████░░░░░░░░░░░░░░░░░░   54%
+█████████████████████████░░░░░░░░░░░░░░░   63%
 ```
 
 ## Open roadmaps
@@ -23,10 +23,10 @@
 | 5 | [road-to-council-blind-review.md](roadmaps/road-to-council-blind-review.md) | 3 | 6 | 2 | 3 | 0 | 1 | 0 | ██████░░░░ 60% |
 | 6 | [road-to-gated-reach-followup.md](roadmaps/road-to-gated-reach-followup.md) | 1 | 12 | 12 | 0 | 0 | 0 | [1](#blockers-road-to-gated-reach-followup) | ░░░░░░░░░░ 0% |
 | 7 | [road-to-inbox-harvest-2026-08.md](roadmaps/road-to-inbox-harvest-2026-08.md) | 5 | 21 | 1 | 11 | 4 | 5 | [2](#blockers-road-to-inbox-harvest-2026-08) | █████████░ 92% |
-| 8 | [road-to-judgment-and-forensic-evidence.md](roadmaps/road-to-judgment-and-forensic-evidence.md) | 5 | 28 | 28 | 0 | 0 | 0 | [2](#blockers-road-to-judgment-and-forensic-evidence) | ░░░░░░░░░░ 0% |
-| 9 | [road-to-kernel-question-triangle.md](roadmaps/road-to-kernel-question-triangle.md) | 1 | 3 | 3 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
-| 10 | [road-to-maintainer-bus-factor.md](roadmaps/road-to-maintainer-bus-factor.md) | 4 | 12 | 5 | 7 | 0 | 0 | [1](#blockers-road-to-maintainer-bus-factor) | ██████░░░░ 58% |
-| 11 | [road-to-orchestration-scope-decision.md](roadmaps/road-to-orchestration-scope-decision.md) | 4 | 10 | 6 | 4 | 0 | 0 | [1](#blockers-road-to-orchestration-scope-decision) | ████░░░░░░ 40% |
+| 8 | [road-to-kernel-question-triangle.md](roadmaps/road-to-kernel-question-triangle.md) | 1 | 3 | 3 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+| 9 | [road-to-maintainer-bus-factor.md](roadmaps/road-to-maintainer-bus-factor.md) | 4 | 12 | 5 | 7 | 0 | 0 | [1](#blockers-road-to-maintainer-bus-factor) | ██████░░░░ 58% |
+| 10 | [road-to-orchestration-scope-decision.md](roadmaps/road-to-orchestration-scope-decision.md) | 4 | 10 | 6 | 4 | 0 | 0 | [1](#blockers-road-to-orchestration-scope-decision) | ████░░░░░░ 40% |
+| 11 | [road-to-orchestrator-discipline-carriers.md](roadmaps/road-to-orchestrator-discipline-carriers.md) | 7 | 33 | 10 | 23 | 0 | 0 | [3](#blockers-road-to-orchestrator-discipline-carriers) | ███████░░░ 70% |
 | 12 | [road-to-rule-coherence-followup.md](roadmaps/road-to-rule-coherence-followup.md) | 5 | 9 | 8 | 1 | 0 | 0 | [2](#blockers-road-to-rule-coherence-followup) | █░░░░░░░░░ 11% |
 | 13 | [road-to-rule-delivery-integrity.md](roadmaps/road-to-rule-delivery-integrity.md) | 5 | 17 | 6 | 9 | 1 | 1 | 0 | ██████░░░░ 60% |
 | 14 | [road-to-scale-history-bench-run.md](roadmaps/road-to-scale-history-bench-run.md) | 1 | 2 | 2 | 0 | 0 | 0 | [1](#blockers-road-to-scale-history-bench-run) | ░░░░░░░░░░ 0% |
@@ -36,9 +36,8 @@
 | 18 | [road-to-surface-consolidation.md](roadmaps/road-to-surface-consolidation.md) | 3 | 14 | 1 | 12 | 1 | 0 | [2](#blockers-road-to-surface-consolidation) | █████████░ 92% |
 | 19 | [road-to-tier-removal.md](roadmaps/road-to-tier-removal.md) | 4 | 8 | 2 | 6 | 0 | 0 | [1](#blockers-road-to-tier-removal) | ████████░░ 75% |
 | 20 | [road-to-ui-track-integrity-followup.md](roadmaps/road-to-ui-track-integrity-followup.md) | 1 | 10 | 10 | 0 | 0 | 0 | [2](#blockers-road-to-ui-track-integrity-followup) | ░░░░░░░░░░ 0% |
-| 21 | [road-to-worker-generation-recycling.md](roadmaps/road-to-worker-generation-recycling.md) | 4 | 22 | 22 | 0 | 0 | 0 | [3](#blockers-road-to-worker-generation-recycling) | ░░░░░░░░░░ 0% |
-| 22 | [road-to-worktree-hygiene.md](roadmaps/road-to-worktree-hygiene.md) | 1 | 9 | 2 | 7 | 0 | 0 | [1](#blockers-road-to-worktree-hygiene) | ████████░░ 78% |
-| 23 | [road-to-zero-ceremony-settings.md](roadmaps/road-to-zero-ceremony-settings.md) | 5 | 19 | 1 | 17 | 1 | 0 | 0 | █████████░ 94% |
+| 21 | [road-to-worktree-hygiene.md](roadmaps/road-to-worktree-hygiene.md) | 1 | 9 | 2 | 7 | 0 | 0 | [1](#blockers-road-to-worktree-hygiene) | ████████░░ 78% |
+| 22 | [road-to-zero-ceremony-settings.md](roadmaps/road-to-zero-ceremony-settings.md) | 5 | 19 | 1 | 17 | 1 | 0 | 0 | █████████░ 94% |
 
 ---
 
@@ -184,38 +183,6 @@
     rules warn about.
   - **Resolved when:** the files are deleted, or a reason to keep them is recorded.
 
-### [road-to-judgment-and-forensic-evidence.md](roadmaps/road-to-judgment-and-forensic-evidence.md)
-
-**Road to judgment and forensic evidence — one protocol against a measured defect, one evidence source git already holds** — 0 / 28 done (0%)
-
-| # | Phase | State | Open | Done | Deferred | Cancelled | % |
-|---|---|---|---:|---:|---:|---:|---:|
-| 1 | Pre-mortem as a roadmap authoring artefact | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
-| 2 | Council critic protocol A/B against the measured defect | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
-| 3 | Forensic analyzers as a read-only pack | ⬜ not started | 6 | 0 | 0 | 0 | 0% |
-| 4 | Skill attestation, last and behind its own record | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
-| 5 | What this roadmap will not do | ⬜ not started | 9 | 0 | 0 | 0 | 0% |
-
-<a id="blockers-road-to-judgment-and-forensic-evidence"></a>
-**Blockers**
-
-- **memory-and-perception-capacity** (owner: maintainer) — blocks whether the two remaining harvests become roadmaps at all
-  - **What to do:**
-    epistemic states on stored claims, a memory lint gate, crystallisation) and
-    the web-perception harvest (sufficiency-based stopping, content pruning before
-    ingestion) get roadmaps. Both were verified and are partly real. Two facts
-    belong in the decision: the crystallisation phase and the perception
-    checkpoint phase both consume a capsule format that does not exist yet
-    (`road-to-worker-generation-recycling` Phase 0 creates it), and there are
-    already more than twenty open roadmaps against one maintainer.
-  - **Resolved when:** the decision is recorded — roadmap, `later/`, or dropped — for each of the two independently.
-- **dispatch-ambiguity-gate-dependency** (owner: maintainer) — blocks the ambiguity-gate item, which is deliberately in no phase here
-  - **What to do:**
-    misinterpretation multiplies across N workers — which presumes the
-    orchestrator-only posture that a pre-registered stopping rule cancelled on
-    2026-08-07. Decide the posture first; the gate is downstream of it.
-  - **Resolved when:** `blocker: orchestrator-only-mode-decision` in `road-to-worker-generation-recycling` is resolved.
-
 ### [road-to-kernel-question-triangle.md](roadmaps/road-to-kernel-question-triangle.md)
 
 **Road to the kernel question-triangle amendment — one line, human-applied** — 0 / 3 done (0%)
@@ -267,6 +234,48 @@ _1 blocker resolved._
     the post-ADR-117 default (`subagents.auto: on`), then check
     `wc -l agents/runtime/state/audit/$(date +%Y-%m).jsonl`. Resume at ≥20.
   - **Resolved when:** the current-month audit log holds ≥20 orchestration lines.
+
+### [road-to-orchestrator-discipline-carriers.md](roadmaps/road-to-orchestrator-discipline-carriers.md)
+
+**Road to orchestrator discipline carriers — the delegation obligation and the end-review obligation get mechanisms that reach real sessions** — 23 / 33 done (70%)
+
+| # | Phase | State | Open | Done | Deferred | Cancelled | % |
+|---|---|---|---:|---:|---:|---:|---:|
+| 1 | F5: committed host-capability registry | ✅ done | 0 | 4 | 0 | 0 | 100% |
+| 2 | F1: the obligation reaches the always-loaded surface | ✅ done | 0 | 3 | 0 | 0 | 100% |
+| 3 | F6: deterministic orchestration telemetry | ✅ done | 0 | 4 | 0 | 0 | 100% |
+| 4 | F3-lite: conditional delegation nudge (advisory, decision-support only) | ✅ done | 0 | 4 | 0 | 0 | 100% |
+| 5 | F4-lite: end-review carrier on stop (advisory + telemetry, not blocking) | ✅ done | 0 | 4 | 0 | 0 | 100% |
+| 6 | honest documentation and downstream sync | ✅ done | 0 | 4 | 0 | 0 | 100% |
+| 7 | what this roadmap will not do | ⬜ not started | 10 | 0 | 0 | 0 | 0% |
+
+<a id="blockers-road-to-orchestrator-discipline-carriers"></a>
+**Blockers**
+
+- **user-instruction-compliance** (owner: maintainer) — blocks nothing in this roadmap — separate bug class
+  - **What to do:**
+    AI council" instruction and produced 2 dispatches in minute 5 and zero
+    council runs. Diagnose whether it is a planning-execution gap (agent
+    acknowledges, then forgets) or a directive-priority gap (efficiency
+    instinct outranks user voice) by tracing the instruction through that
+    transcript, then decide the mechanism (commitment-check hook vs directive
+    escalation).
+  - **Resolved when:** the diagnosis is recorded and a mechanism decision made.
+- **cross-session-dedup** (owner: maintainer) — blocks nothing in this roadmap — different mechanism class
+  - **What to do:**
+  - **Resolved when:** decision recorded — build, defer, or drop.
+- **f4-full-blocking-decision** (owner: maintainer) — blocks any blocking end-review gate
+  - **What to do:**
+    distribution of `review_skipped` events, decide the block threshold (the
+    council's working hypothesis: high-risk diff lines, differentiated from
+    doc/test-only churn) and whether the block lands in the new concern or in
+    the existing `team-review-gate` managed tier. Same decision owns the
+    stop-slot DELIVERY question: Claude Code documents `additionalContext`
+    for UserPromptSubmit/SessionStart/PostToolUse but not Stop, so the
+    advisory line's model delivery on `stop` is unverified — the documented
+    model-reaching mechanism on Stop is `decision: "block"` + reason, which
+    is exactly the blocking tier this blocker gates.
+  - **Resolved when:** threshold decision recorded with the telemetry cited.
 
 ### [road-to-rule-coherence-followup.md](roadmaps/road-to-rule-coherence-followup.md)
 
@@ -529,41 +538,6 @@ _1 blocker resolved._
     and chose the named blocker over a re-scope that changes a pre-registered
     input.
   - **Resolved when:** either a host-renderable framework lane exists (a build/serve step for the React lane, landed for its own reason) **or** a supported generic-lane override exists — at which point the re-scope is recorded as a dated amendment in `internal/bench/corpora/ui-track-integrity-PREREG.md` and Measurement B becomes executable.
-
-### [road-to-worker-generation-recycling.md](roadmaps/road-to-worker-generation-recycling.md)
-
-**Road to worker-generation recycling — a worker at its budget hands off instead of dying** — 0 / 22 done (0%)
-
-| # | Phase | State | Open | Done | Deferred | Cancelled | % |
-|---|---|---|---:|---:|---:|---:|---:|
-| 0 | The capsule schema, before anything emits one | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
-| 1 | Emit in shadow, measure the trigger | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
-| 2 | The recycling loop | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
-| 3 | Evidence gate: confirm, scope, or record the null | ⬜ not started | 10 | 0 | 0 | 0 | 0% |
-
-<a id="blockers-road-to-worker-generation-recycling"></a>
-**Blockers**
-
-- **capsule-quality-near-budget** (owner: maintainer) — blocks Phase 2
-  - **What to do:**
-    capsule a successor can work from with no re-briefing. If capsules degrade,
-    move the watermark down (75 / 70 %) before concluding that recycling fails —
-    a bad watermark and a bad mechanism look identical from one sample.
-  - **Resolved when:** 3/3 successors reach a usable state from the capsule alone.
-- **host-worker-respawn** (owner: maintainer) — blocks Phase 2
-  - **What to do:**
-    fresh-spawn mid-task, and add the field if it cannot. Hosts without it degrade
-    to stop-loss, loudly.
-  - **Resolved when:** the manifest field exists and the recycling path reads it.
-- **orchestrator-only-mode-decision** (owner: maintainer) — blocks nothing in this roadmap — recorded so the decision is not lost
-  - **What to do:**
-    in the main session is re-opened. It was cancelled 2026-08-07 by a
-    pre-registered stopping rule, on a claim about token/quality wins. The inbox
-    source argues a DIFFERENT claim — stability — and explicitly accepts the
-    overhead as a maintainer preference. A preference is legitimate; a re-scoped
-    claim invented after the numbers is not. If it re-opens, it re-opens as a
-    stated stance with its own pre-registration, in its own roadmap.
-  - **Resolved when:** the decision is recorded either way.
 
 ### [road-to-worktree-hygiene.md](roadmaps/road-to-worktree-hygiene.md)
 
