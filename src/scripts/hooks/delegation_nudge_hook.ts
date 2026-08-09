@@ -10,12 +10,15 @@
  * prompt. This concern is the missing signal producer: it extracts cheap,
  * regex-only structural signals from the SUBMITTED prompt text (enumerated
  * file lists, "for each"/"alle …" shapes, explicit slice counts, ordered-plan
- * markers, multi-deliverable conjunctions), feeds them to `classifyTask`
- * together with the REAL activation gate (settings + host-capability
- * manifest, resolved via `resolveHostCapabilities(hostId, override)` —
- * the F5 committed registry, with the `subagents.host_capabilities`
- * settings override winning outright when present — the same order
- * `routing_doctor.collect_orchestration` uses), and — only on a positive
+ * markers, multi-deliverable conjunctions), feeds them to the judgment
+ * ladder (`_lib/judgment_ladder.ts`, which wraps `classifyTask` — see the
+ * JUDGMENT-LADDER CITATION note below) together with the REAL activation
+ * gate (the emergency incident switch +
+ * the host-capability manifest, resolved via `probeHostCapabilities(hostId)`
+ * — the F5 committed registry merged with observable environment facts;
+ * always-on orchestration removed the `subagents.host_capabilities` settings
+ * override — the same source `routing_doctor.collect_orchestration` uses),
+ * and — only on a positive
  * `do-in-parallel` / `do-in-steps` verdict — injects
  * ONE line naming the mode, the slice count, and a tier recommendation for
  * the slices (`resolveSubagentRouting`'s first production caller, applied
@@ -26,6 +29,17 @@
  * deliberate — a per-turn reminder that fires on every turn is exactly the
  * canary shape that measured a 24/29 miss rate; this concern only ever speaks
  * when it has a concrete, falsifiable verdict to report.
+ *
+ * JUDGMENT-LADDER CITATION (road-to-always-on-orchestration Phase 2.4). The
+ * verdict now comes from `_lib/judgment_ladder.ts::classifyLadder` (which
+ * WRAPS `classifyTask` rather than replacing it) instead of calling
+ * `classifyTask` directly, and the injected line names the resolved rung
+ * (`rung-2: dispatch 6 lite slices …`). This concern stays scoped to the
+ * SUBAGENT dispatch rungs (1/2) — a rung-0 script verdict, a rung-3/4
+ * team/council escalation, and the silent ∅ (ask/in-session) verdicts all
+ * resolve to silence here exactly as before this concern cited the ladder
+ * at all; team and council get their own carrier once Phase 3/4 give them
+ * one.
  *
  * DELIVERY PATH — fixed to mirror `language_mirror_hook.ts` (found while
  * building this concern; the original `{decision:"allow", context:…}` shape
@@ -82,13 +96,9 @@ import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { readHookStdin } from "./hook_stdin.js";
 import { load_agent_settings } from "../_lib/agent_settings.js";
-import { resolveHostCapabilities } from "../_lib/host_capability.js";
-import {
-  classifyTask,
-  type ActivationInputs,
-  type Classification,
-  type TaskSignals,
-} from "../_lib/auto_dispatch.js";
+import { probeHostCapabilities } from "../_lib/host_capability.js";
+import type { ActivationInputs, Classification, TaskSignals } from "../_lib/auto_dispatch.js";
+import { classifyLadder, type LadderRung } from "../_lib/judgment_ladder.js";
 import { resolveSubagentRouting, type Tier } from "../_lib/subagent_routing.js";
 import { isSyntheticPrompt } from "../_lib/prompt_shape.js";
 
@@ -265,11 +275,11 @@ export function extractTaskSignals(text: string): ExtractedSignals {
 
 /**
  * `hostId` is the caller-supplied platform identifier (the envelope's own
- * `platform` field, e.g. `"claude"`) — `resolveHostCapabilities` resolves the
- * committed registry row for it. The settings-level
- * `subagents.host_capabilities` override, when present, still wins outright
- * over the registry (per `host_capability.ts § Resolution` — an explicit
- * consumer override is never second-guessed by a committed default).
+ * `platform` field, e.g. `"claude"`) — `probeHostCapabilities` resolves the
+ * committed registry row for it, merged with observable environment facts.
+ * Always-on orchestration (road-to-always-on-orchestration Phase 1):
+ * capability is a fact about the host, never a settings decision, so there
+ * is no more `subagents.host_capabilities` override to read here.
  */
 export function resolveActivation(
   workspace_root: string,
@@ -278,19 +288,20 @@ export function resolveActivation(
   activation: ActivationInputs;
   downshift: boolean;
   separate_quota_pool: boolean;
+  /** Host-capability manifest's `agent_teams` field — the ladder's rung-3 precondition. */
+  agentTeams: boolean;
 } {
   const settings = load_agent_settings({ cwd: workspace_root }) as Record<string, unknown>;
+  const emergency = (settings["emergency"] ?? {}) as Record<string, unknown>;
+  const halted = emergency["orchestration_halt"] === true;
+  const host_manifest = probeHostCapabilities(hostId);
   const sub = (settings["subagents"] ?? {}) as Record<string, unknown>;
-  const enabled = sub["enabled"] !== false;
-  const rawAuto = sub["auto"];
-  const auto: ActivationInputs["auto"] =
-    rawAuto === "on" || rawAuto === "off" ? rawAuto : "ask";
-  const host_manifest = resolveHostCapabilities(hostId, sub["host_capabilities"]);
   const downshift = sub["downshift"] !== false;
   return {
-    activation: { enabled, auto, subagent_spawn: host_manifest.subagent_spawn },
+    activation: { halted, subagent_spawn: host_manifest.subagent_spawn },
     downshift,
     separate_quota_pool: host_manifest.separate_quota_pool,
+    agentTeams: host_manifest.agent_teams,
   };
 }
 
@@ -313,14 +324,25 @@ export function recommendSliceTier(downshift: boolean, separate_quota_pool: bool
   return decision.tier;
 }
 
+/**
+ * `rung` names the resolved judgment-ladder rung (2.4): `null` renders as
+ * `rung-?` — this concern only ever calls it for a `subagent` verdict
+ * (rung 1 or 2), so `null` is unreachable in production and exists only so
+ * the function stays total for direct unit-test callers.
+ */
 export function buildNudgeLine(
+  rung: LadderRung,
   classification: Classification,
   sliceCount: number,
   tier: Tier,
 ): string {
   const unit = sliceCount === 1 ? "slice" : "slices";
+  const rungLabel = rung === null ? "rung-?" : `rung-${rung}`;
+  // Rung 1 (single bounded slice) carries no do-in-steps/do-in-parallel
+  // mode of its own — `classification.mode` is `null` for that shape.
+  const modeLabel = classification.mode ?? "single-slice";
   return (
-    `<delegation-nudge>classifyTask verdict for this prompt: ${classification.mode} ` +
+    `<delegation-nudge>${rungLabel}: dispatch ${modeLabel} ` +
     `(${sliceCount} ${unit}, ${tier} tier recommended). Consider dispatching via ` +
     `subagent-orchestration instead of doing every slice in-session — ` +
     `${classification.reason}.</delegation-nudge>`
@@ -331,13 +353,15 @@ export interface NudgeResult {
   classification: Classification;
   sliceCount: number;
   tier: Tier;
+  /** The judgment-ladder rung this verdict resolved to (2.4) — 1 or 2 only, this concern's scope. */
+  rung: LadderRung;
 }
 
 /**
  * Full pipeline: prompt text + workspace root + host id → a positive nudge
- * verdict, or `null` when nothing should be injected (no signal, activation
- * gate closed, or an internal error — all three degrade to the same silent
- * outcome).
+ * verdict, or `null` when nothing should be injected (no signal, a rung-0/3/4
+ * verdict out of this concern's scope, activation gate closed, or an
+ * internal error — all degrade to the same silent outcome).
  */
 export function classifyPrompt(
   prompt: string,
@@ -346,16 +370,26 @@ export function classifyPrompt(
 ): NudgeResult | null {
   try {
     const { signals, sliceCountForLine } = extractTaskSignals(prompt);
-    const { activation, downshift, separate_quota_pool } = resolveActivation(
+    const { activation, downshift, separate_quota_pool, agentTeams } = resolveActivation(
       workspace_root,
       hostId,
     );
-    const classification = classifyTask(signals, activation);
-    if (classification.mode === null) {
-      return null; // no enumerated signal, or the activation gate closed first
+    const ladder = classifyLadder({ taskText: prompt, signals, activation, agentTeams });
+    if (ladder.verdict !== "subagent") {
+      return null; // rung-0 script, rung-3/4 team/council, or ∅ ask/in-session — out of scope here
     }
     const tier = recommendSliceTier(downshift, separate_quota_pool);
-    return { classification, sliceCount: sliceCountForLine, tier };
+    // Rung 1 (single bounded slice) has no explicit slice count of its own —
+    // extractTaskSignals never produces one for that shape — so the line
+    // always names it as exactly one slice.
+    const sliceCount = ladder.rung === 1 ? 1 : sliceCountForLine;
+    const classification: Classification = {
+      delegable: true,
+      action: "dispatch",
+      mode: ladder.mode ?? null,
+      reason: ladder.reason,
+    };
+    return { classification, sliceCount, tier, rung: ladder.rung };
   } catch {
     return null; // classifier/settings error → silence, never a crash-to-block
   }
@@ -415,8 +449,8 @@ export function main(): number {
   process.stdout.write(
     `${JSON.stringify({
       decision: "warn",
-      reason: `delegation-nudge: ${result.classification.mode} verdict (${result.sliceCount} slices, ${result.tier} tier)`,
-      additional_context: buildNudgeLine(result.classification, result.sliceCount, result.tier),
+      reason: `delegation-nudge: rung-${result.rung} verdict (${result.sliceCount} slices, ${result.tier} tier)`,
+      additional_context: buildNudgeLine(result.rung, result.classification, result.sliceCount, result.tier),
     })}\n`,
   );
   return EXIT_WARN;

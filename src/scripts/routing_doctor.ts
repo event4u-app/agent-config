@@ -53,7 +53,7 @@ import {
 import * as hooks_status from "./hooks_status.js";
 import { load_agent_settings } from "./_lib/agent_settings.js";
 import {
-  resolveHostCapabilities,
+  probeHostCapabilities,
   type HostCapabilityManifest,
 } from "./_lib/host_capability.js";
 import {
@@ -99,10 +99,9 @@ export interface FreshnessReport {
 }
 
 export interface OrchestrationReport {
-  enabled: boolean;
-  auto: string;
+  /** `emergency.orchestration_halt` — the one audited incident switch. */
+  halted: boolean;
   downshift: boolean;
-  budget_routing: string;
   /** cost.budgets.per_tier ceilings + live cool-down state per tier. */
   tier_budgets: Record<string, { ceiling_usd: number | null; cooldown_until_ms: number }>;
   host_manifest: HostCapabilityManifest;
@@ -141,22 +140,19 @@ export interface OrchestrationReport {
 }
 
 /**
- * Adherence ≠ delivery: budget routing binds via policy prose, so the
- * doctor checks the DELIVERY evidence — orchestration audit lines that
- * carry a tier decision. Eligible dispatches recorded while
- * `budget_routing != off` but ZERO tier-carrying lines → WARN with the
- * exact reason. Read-only over agents/runtime/state/audit/*.jsonl; no
- * new state. This closes the same blind-spot class the session-canary
- * incident exposed (policy present, delivery silently absent).
+ * Adherence ≠ delivery: budget-aware tier routing has no on/off setting any
+ * more (always-on orchestration removed `subagents.budget_routing`), so the
+ * doctor always checks the DELIVERY evidence — orchestration audit lines
+ * that carry a tier decision. Dispatches recorded with ZERO tier-carrying
+ * lines → WARN with the exact reason. Read-only over
+ * agents/runtime/state/audit/*.jsonl; no new state. This closes the same
+ * blind-spot class the session-canary incident exposed (policy present,
+ * delivery silently absent).
  */
 export function check_budget_delivery(
   workspace_root: string,
-  budget_routing: string,
 ): OrchestrationReport["delivery"] {
   const out = { eligible_dispatches: 0, budget_evidence_lines: 0, warning: "" };
-  if (budget_routing === "off") {
-    return out;
-  }
   const auditDir = path.join(workspace_root, "agents", "runtime", "state", "audit");
   let files: string[] = [];
   try {
@@ -188,7 +184,7 @@ export function check_budget_delivery(
   }
   if (out.eligible_dispatches > 0 && out.budget_evidence_lines === 0) {
     out.warning =
-      `budget_routing=${budget_routing} is policy-bound but shows no delivery evidence: ` +
+      `budget-aware tier routing shows no delivery evidence: ` +
       `${out.eligible_dispatches} orchestration dispatch(es) recorded, 0 carry a tier decision — ` +
       `the relation may not be running (adherence != delivery)`;
   }
@@ -237,17 +233,16 @@ export function collect_orchestration(
 ): OrchestrationReport {
   const settings = load_agent_settings({ cwd: workspace_root });
   const sub = (settings["subagents"] ?? {}) as Record<string, unknown>;
-  const enabled = sub["enabled"] !== false;
-  const auto = typeof sub["auto"] === "string" ? (sub["auto"] as string) : "ask";
+  const emergency = (settings["emergency"] ?? {}) as Record<string, unknown>;
+  const halted = emergency["orchestration_halt"] === true;
   const downshift = sub["downshift"] !== false;
-  const host_manifest = resolveHostCapabilities(platform, sub["host_capabilities"]);
+  const host_manifest = probeHostCapabilities(platform);
   const activationInputs: ActivationInputs = {
-    enabled,
-    auto: (auto === "on" || auto === "off" ? auto : "ask") as ActivationInputs["auto"],
+    halted,
     subagent_spawn: host_manifest.subagent_spawn,
   };
   // Canonical delegable probe: the gate verdict shows which activation
-  // layer (settings / host primitive) decides on THIS installation.
+  // layer (emergency halt / host primitive) decides on THIS installation.
   const probe = classifyTask(
     { size_estimate: 5, independent_slices: 3 },
     activationInputs,
@@ -256,14 +251,6 @@ export function collect_orchestration(
   const cost_budgets = (cost["budgets"] ?? {}) as Record<string, unknown>;
   const tracking_dir = path.join(workspace_root, "agents", "cost-tracking");
   const ledger_present = fs.existsSync(path.join(tracking_dir, "sessions.jsonl"));
-  // YAML 1.1 trap: an unquoted `off` parses as boolean false — coerce it
-  // back to the enum string so the check honors the user's intent.
-  const budget_routing =
-    sub["budget_routing"] === false
-      ? "off"
-      : typeof sub["budget_routing"] === "string"
-        ? (sub["budget_routing"] as string)
-        : "ask";
   const per_tier = (cost_budgets["per_tier"] ?? {}) as Record<string, unknown>;
   const cooldowns = readCooldowns(tracking_dir);
   const tier_budgets: OrchestrationReport["tier_budgets"] = {};
@@ -289,10 +276,8 @@ export function collect_orchestration(
     };
   }
   return {
-    enabled,
-    auto,
+    halted,
     downshift,
-    budget_routing,
     tier_budgets,
     host_manifest,
     host_platform: platform,
@@ -301,7 +286,7 @@ export function collect_orchestration(
     cost_budgets,
     ledger_present,
     sample,
-    delivery: check_budget_delivery(workspace_root, budget_routing),
+    delivery: check_budget_delivery(workspace_root),
   };
 }
 
@@ -516,8 +501,8 @@ function _render(report: DoctorReport): string {
   lines.push("");
   const o = report.orchestration;
   lines.push(
-    `Orchestration: enabled=${o.enabled} · auto=${o.auto} · downshift=${o.downshift} · ` +
-      `budget_routing=${o.budget_routing} · subagent_spawn=${o.host_manifest.subagent_spawn} ` +
+    `Orchestration: halted=${o.halted} · downshift=${o.downshift} · ` +
+      `subagent_spawn=${o.host_manifest.subagent_spawn} ` +
       `(host=${o.host_platform}${o.host_platform_assumed ? ", ASSUMED" : ", observed"}) · ` +
       `ledger=${o.ledger_present ? "present" : "absent"}`,
   );

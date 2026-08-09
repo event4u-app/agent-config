@@ -3,15 +3,11 @@ import { describe, expect, it } from 'vitest';
 import { MAX_ATTEMPTS_PER_TARGET, MAX_CONSECUTIVE_TYPE_FAILURES, breachedGuardrails, budgetHalt, isLayerDisabled, escalateOnVerifyFail, escalationPromotionCandidates, readOrchestrationMetrics, readTierRoutingMetrics, sliceDispatchAllowed, verifyPassDrift, typeStop } from '../../src/scripts/_lib/subagent_steering.js';
 
 describe('isLayerDisabled — kill-switch', () => {
-    it('master switch off → disabled', () => {
-        expect(isLayerDisabled({ enabled: false, auto: 'on' })).toBe(true);
+    it('emergency halt on → disabled', () => {
+        expect(isLayerDisabled({ halted: true })).toBe(true);
     });
-    it('auto off → disabled', () => {
-        expect(isLayerDisabled({ enabled: true, auto: 'off' })).toBe(true);
-    });
-    it('enabled + auto on/ask → active', () => {
-        expect(isLayerDisabled({ enabled: true, auto: 'on' })).toBe(false);
-        expect(isLayerDisabled({ enabled: true, auto: 'ask' })).toBe(false);
+    it('no halt → active', () => {
+        expect(isLayerDisabled({ halted: false })).toBe(false);
     });
 });
 

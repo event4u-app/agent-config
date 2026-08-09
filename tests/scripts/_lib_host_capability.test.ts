@@ -16,8 +16,11 @@
 // activation gate itself — not just the manifest shape — is exercised.
 import { describe, expect, it } from 'vitest';
 
+import { afterEach, beforeEach } from 'vitest';
+
 import {
     normalizeHostManifest,
+    probeHostCapabilities,
     resolveHostCapabilities,
     type HostCapabilityManifest,
 } from '../../src/scripts/_lib/host_capability.js';
@@ -29,6 +32,7 @@ const ALL_FALSE: HostCapabilityManifest = {
     parallel_spawn: false,
     status_polling: false,
     separate_quota_pool: false,
+    agent_teams: false,
 };
 
 describe('normalizeHostManifest — safe default', () => {
@@ -87,6 +91,7 @@ describe('normalizeHostManifest — valid full input', () => {
             parallel_spawn: true,
             status_polling: true,
             separate_quota_pool: true,
+            agent_teams: false,
         });
     });
 
@@ -197,8 +202,7 @@ describe('resolveHostCapabilities — end-to-end via classifyTask', () => {
     it('a delegable probe dispatches on the detected host with no settings override', () => {
         const manifest = resolveHostCapabilities('claude');
         const activation: ActivationInputs = {
-            enabled: true,
-            auto: 'on',
+            halted: false,
             subagent_spawn: manifest.subagent_spawn,
         };
         const verdict = classifyTask(
@@ -211,8 +215,7 @@ describe('resolveHostCapabilities — end-to-end via classifyTask', () => {
     it('the same probe stays in-session on an unrecognized host (all-false default)', () => {
         const manifest = resolveHostCapabilities('some-unrecognized-host');
         const activation: ActivationInputs = {
-            enabled: true,
-            auto: 'on',
+            halted: false,
             subagent_spawn: manifest.subagent_spawn,
         };
         const verdict = classifyTask(
@@ -221,5 +224,56 @@ describe('resolveHostCapabilities — end-to-end via classifyTask', () => {
         );
         expect(verdict.action).toBe('in-session');
         expect(verdict.reason).toBe('host has no subagent_spawn primitive');
+    });
+});
+
+describe('probeHostCapabilities — registry merged with live environment facts', () => {
+    const ENV_KEY = 'CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS';
+    let prev: string | undefined;
+
+    beforeEach(() => {
+        prev = process.env[ENV_KEY];
+        delete process.env[ENV_KEY];
+    });
+
+    afterEach(() => {
+        if (prev === undefined) {
+            delete process.env[ENV_KEY];
+        } else {
+            process.env[ENV_KEY] = prev;
+        }
+    });
+
+    it('agent_teams stays false when the env flag is unset', () => {
+        expect(probeHostCapabilities('claude').agent_teams).toBe(false);
+    });
+
+    it('agent_teams resolves true when the env flag is set (any non-empty value)', () => {
+        process.env[ENV_KEY] = '1';
+        expect(probeHostCapabilities('claude').agent_teams).toBe(true);
+    });
+
+    it('an empty-string env value does NOT count as set', () => {
+        process.env[ENV_KEY] = '';
+        expect(probeHostCapabilities('claude').agent_teams).toBe(false);
+    });
+
+    it('still resolves the committed registry row for the other fields', () => {
+        const manifest = probeHostCapabilities('claude');
+        expect(manifest.subagent_spawn).toBe(true);
+        expect(manifest.parallel_spawn).toBe(true);
+    });
+
+    it('an unknown host falls back to the safe default plus the env probe', () => {
+        process.env[ENV_KEY] = '1';
+        expect(probeHostCapabilities('some-unrecognized-host')).toEqual({
+            ...ALL_FALSE,
+            agent_teams: true,
+        });
+    });
+
+    it('takes NO settings-derived override — probeHostCapabilities has no such parameter', () => {
+        // Type-level proof: probeHostCapabilities(hostId) is single-arity.
+        expect(probeHostCapabilities.length).toBe(1);
     });
 });

@@ -216,6 +216,24 @@ condition outright. No consumer of `payload_hash` or `cache_hit` may wire a
 measure→adjust step off them — no default flip, no tier change, no dispatch
 throttle. They are read-only diagnostic fields.
 
+## Registered always-on metrics and kill criteria (pre-registered 2026-08-09)
+
+The always-on orchestration doctrine fixes "the stack is always available"
+and moves falsifiability into its TRIGGERS. Registered before any behaviour
+data existed, so later readings cannot be fitted to a desired outcome:
+
+| Metric | Source | Kill/tighten criterion (per layer, applied by evidence-bearing PR, never a settings flag) |
+|---|---|---|
+| Dispatch rate per delegable verdict | `orchestration_record` vs nudge/ladder verdict lines | A layer whose verdicts are measurably ignored gets its trigger set tightened or the injected line removed |
+| Judgment-ladder precision (verdict vs what the session did) | ladder verdict telemetry joined with dispatch/team records | A rung below registered precision at review gets its signal set tightened; a rung nobody hits gets removed |
+| Council fire rate + unactioned-verdict rate | pass artifacts + handoff adoption | Unactioned-verdict rate is the kill criterion for any auto-fire trigger |
+| Per-session quota burn per provider | transport/attendance records | Sustained quota exhaustion tightens `cli_call_budget` defaults, never re-introduces an activation gate |
+| Metered-fallback spend | billing-classified transport records | Target trends to ~0 on CLI hosts; a rising trend is a transport-resolution defect to fix, not a reason to disable |
+
+Review discipline: each criterion is evaluated against an accumulation
+window (the gated blockers name their own windows); a reading below the bar
+removes or tightens THE TRIGGER, and the removal PR cites the numbers.
+
 ## Related
 
 - [`audit-log-v1`](../../../../docs/contracts/audit-log-v1.md) — the frozen

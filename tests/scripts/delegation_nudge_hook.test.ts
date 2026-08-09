@@ -248,14 +248,15 @@ describe("extractTaskSignals", () => {
 });
 
 describe("buildNudgeLine", () => {
-  it("renders the mode, slice count, and tier verbatim", () => {
+  it("renders the rung, mode, slice count, and tier verbatim", () => {
     const line = buildNudgeLine(
+      2,
       { delegable: true, action: "dispatch", mode: "do-in-parallel", reason: "independent slices (6)" },
       6,
       "lite",
     );
     expect(line).toBe(
-      "<delegation-nudge>classifyTask verdict for this prompt: do-in-parallel " +
+      "<delegation-nudge>rung-2: dispatch do-in-parallel " +
         "(6 slices, lite tier recommended). Consider dispatching via " +
         "subagent-orchestration instead of doing every slice in-session — " +
         "independent slices (6).</delegation-nudge>",
@@ -264,11 +265,32 @@ describe("buildNudgeLine", () => {
 
   it("uses the singular unit for exactly one slice", () => {
     const line = buildNudgeLine(
+      2,
       { delegable: true, action: "ask", mode: "do-in-steps", reason: "ordered-plan structure" },
       1,
       "medium",
     );
     expect(line).toContain("(1 slice, medium tier recommended)");
+  });
+
+  it("rung 1 (no mode) renders as a single-slice dispatch", () => {
+    const line = buildNudgeLine(
+      1,
+      { delegable: true, action: "dispatch", mode: null, reason: "single bounded read-heavy slice" },
+      1,
+      "lite",
+    );
+    expect(line).toContain("rung-1: dispatch single-slice (1 slice, lite tier recommended)");
+  });
+
+  it("an unresolved rung renders as rung-? (unreachable in production, kept total for direct callers)", () => {
+    const line = buildNudgeLine(
+      null,
+      { delegable: true, action: "dispatch", mode: "do-in-parallel", reason: "independent slices (6)" },
+      6,
+      "lite",
+    );
+    expect(line).toContain("rung-?: dispatch do-in-parallel");
   });
 });
 
@@ -282,6 +304,7 @@ describe("classifyPrompt — activation + verdict wiring", () => {
     );
     expect(result).not.toBeNull();
     expect(result?.classification.mode).toBe("do-in-parallel");
+    expect(result?.rung).toBe(2);
     expect(result?.sliceCount).toBe(6);
     expect(result?.tier).toBe("lite");
   });
@@ -296,9 +319,23 @@ describe("classifyPrompt — activation + verdict wiring", () => {
     expect(result).toBeNull();
   });
 
-  it("an explicit host_capabilities override with subagent_spawn:false beats the registry row", () => {
+  it("a leftover subagents.host_capabilities override no longer applies (always-on: capability is probe/registry-only)", () => {
     const root = makeWorkspace(
       ["subagents:", "  host_capabilities:", "    subagent_spawn: false", ""].join("\n"),
+    );
+    const result = classifyPrompt(
+      "fix the failing tests in these 6 files: a.ts b.ts c.ts d.ts e.ts f.ts",
+      root,
+      "claude",
+    );
+    // The stale key is ignored — claude's registry row still wins.
+    expect(result).not.toBeNull();
+    expect(result?.classification.mode).toBe("do-in-parallel");
+  });
+
+  it("emergency.orchestration_halt closes the gate even on a known, capable host", () => {
+    const root = makeWorkspace(
+      ["emergency:", "  orchestration_halt: true", ""].join("\n"),
     );
     const result = classifyPrompt(
       "fix the failing tests in these 6 files: a.ts b.ts c.ts d.ts e.ts f.ts",
@@ -316,6 +353,17 @@ describe("classifyPrompt — activation + verdict wiring", () => {
   it("F7: a 2-file rename prompt returns null even with the gate open (negative test)", () => {
     const root = makeWorkspace(null);
     expect(classifyPrompt("rename a.ts to b.ts", root, "claude")).toBeNull();
+  });
+
+  // Regression (judgment_ladder rung-1 size-floor bypass): a short single-
+  // slice read-heavy prompt matches rung 1's regex, but `extractTaskSignals`
+  // gives it no multi-slice signal → `size_estimate: 0`, at/below
+  // `SIZE_FLOOR`. Before the fix, rung 1 fired anyway and this prompt
+  // injected a "1 slice, lite tier" nudge for what is, structurally, a
+  // trivial ask.
+  it("rung-1 size-floor regression: a short single-slice review prompt returns null (no injection)", () => {
+    const root = makeWorkspace(null);
+    expect(classifyPrompt("review this diff", root, "claude")).toBeNull();
   });
 });
 
@@ -419,6 +467,18 @@ describe("delegation_nudge_hook — end-to-end (Phase 4.4)", () => {
       platform: "claude",
       workspace_root: root,
       prompt: "rename a.ts to b.ts",
+    });
+    expect(status).toBe(0);
+    expect(stdout.trim()).toBe("");
+  });
+
+  it("rung-1 size-floor regression (negative test): 'review this diff' injects nothing", () => {
+    const root = makeWorkspace(null);
+    const { stdout, status } = run({
+      event: "user_prompt_submit",
+      platform: "claude",
+      workspace_root: root,
+      prompt: "review this diff",
     });
     expect(status).toBe(0);
     expect(stdout.trim()).toBe("");

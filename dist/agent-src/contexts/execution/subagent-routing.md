@@ -36,24 +36,26 @@ THE SAME MINUS THE QUOTA WIN.
    the tier/model choice is unchanged. This is the only place the
    "Sonnet-has-its-own-allowance" idea lives, and it lives as a runtime-detected
    flag, never as portable prose.
-4. **Budget routing** (`subagents.budget_routing != off`,
+4. **Budget routing** (design:
    [`budget-routing` contract](../../../../docs/contracts/budget-routing.md)) →
-   AFTER the tier resolves per 1–3, apply the budget relation via
-   `pickTier` (`src/scripts/_lib/tier_budget_routing.ts`): cheapest
+   AFTER the tier resolves per 1–3, the budget relation via `pickTier`
+   (`src/scripts/_lib/tier_budget_routing.ts`) would apply: cheapest
    classifier-adequate tier WITH available budget; that tier exhausted or
    cooling → next tier up with budget; all unavailable → session model +
    surfaced one-line notice. Work is never blocked to save money. Before
    the dispatch is created, acquire the atomic reserve
    (`acquireBudgetPermit`; check state via `node src/scripts/cost/budget.mjs
    tier <t>`); a 429/quota error trips `tripCooldown` for that tier and
-   falls back per the relation — never a retry loop. Under
-   `budget_routing: ask`, the FIRST budget-motivated downshift of a session
-   is confirmed once, in the shape
-   [`settings-ask-protocol`](../../rules/settings-ask-protocol.md) fixes and
-   without persisting the answer (`subagents.budget_routing` is class C);
-   `auto` proceeds silently. Every budget-routed
-   dispatch emits one `orchestration_record` line (tier + provenance-tagged
-   token delta) so realized savings are measured, not asserted.
+   falls back per the relation — never a retry loop.
+   `subagents.budget_routing` was removed as a settings key (always-on
+   orchestration, road-to-always-on-orchestration Phase 1: no per-layer
+   on/off switch survives) — `pickTier` has NO production caller today, so
+   this point documents the DESIGNED relation, not a currently wired one;
+   wiring it is a later phase of that roadmap (council-side
+   `cli_call_budget`/`cost_budget` are the caps that replace the settings
+   gate). Every budget-routed dispatch, once wired, would emit one
+   `orchestration_record` line (tier + provenance-tagged token delta) so
+   realized savings are measured, not asserted.
 
 **Cache trade-off (road-to-cache-economy Phase 4).** A tier downshift changes
 the sub-task's model, and the prompt cache is keyed by `(model, prefix)` — so
