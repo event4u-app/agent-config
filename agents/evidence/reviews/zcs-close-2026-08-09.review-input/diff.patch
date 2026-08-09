@@ -1,0 +1,1538 @@
+diff --git a/agents/roadmaps-progress.md b/agents/roadmaps-progress.md
+index 322c72f5f4ca8bb383cc52c1ab013e6818355339..ac1e23942628f6c44c60c7048a13de93619d9196 100644
+--- a/agents/roadmaps-progress.md
++++ b/agents/roadmaps-progress.md
+@@ -6,10 +6,10 @@
+ 
+ ## Overall
+ 
+-**194 / 308 steps done · 63%**
++**177 / 294 steps done · 60%**
+ 
+ ```text
+-█████████████████████████░░░░░░░░░░░░░░░   63%
++████████████████████████░░░░░░░░░░░░░░░░   60%
+ ```
+ 
+ ## Open roadmaps
+@@ -28,15 +28,15 @@
+ | 10 | [road-to-orchestration-scope-decision.md](roadmaps/road-to-orchestration-scope-decision.md) | 4 | 10 | 6 | 4 | 0 | 0 | [1](#blockers-road-to-orchestration-scope-decision) | ████░░░░░░ 40% |
+ | 11 | [road-to-rule-coherence-followup.md](roadmaps/road-to-rule-coherence-followup.md) | 5 | 9 | 8 | 1 | 0 | 0 | [2](#blockers-road-to-rule-coherence-followup) | █░░░░░░░░░ 11% |
+ | 12 | [road-to-scale-history-bench-run.md](roadmaps/road-to-scale-history-bench-run.md) | 1 | 2 | 2 | 0 | 0 | 0 | [1](#blockers-road-to-scale-history-bench-run) | ░░░░░░░░░░ 0% |
+-| 13 | [road-to-skill-description-measurement.md](roadmaps/road-to-skill-description-measurement.md) | 1 | 4 | 4 | 0 | 0 | 0 | [1](#blockers-road-to-skill-description-measurement) | ░░░░░░░░░░ 0% |
+-| 14 | [road-to-skill-ecosystem-gate-integrity.md](roadmaps/road-to-skill-ecosystem-gate-integrity.md) | 7 | 43 | 3 | 40 | 0 | 0 | [1](#blockers-road-to-skill-ecosystem-gate-integrity) | █████████░ 93% |
+-| 15 | [road-to-solution-minimalism.md](roadmaps/road-to-solution-minimalism.md) | 4 | 36 | 10 | 25 | 0 | 1 | [1](#blockers-road-to-solution-minimalism) | ███████░░░ 71% |
+-| 16 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 6 | 3 | 0 | 0 | [1](#blockers-road-to-subagent-value-realization-followup) | ███░░░░░░░ 33% |
+-| 17 | [road-to-surface-consolidation.md](roadmaps/road-to-surface-consolidation.md) | 3 | 14 | 1 | 12 | 1 | 0 | [2](#blockers-road-to-surface-consolidation) | █████████░ 92% |
+-| 18 | [road-to-tier-removal.md](roadmaps/road-to-tier-removal.md) | 4 | 8 | 2 | 6 | 0 | 0 | [1](#blockers-road-to-tier-removal) | ████████░░ 75% |
+-| 19 | [road-to-ui-track-integrity-followup.md](roadmaps/road-to-ui-track-integrity-followup.md) | 1 | 10 | 10 | 0 | 0 | 0 | [2](#blockers-road-to-ui-track-integrity-followup) | ░░░░░░░░░░ 0% |
+-| 20 | [road-to-worktree-hygiene.md](roadmaps/road-to-worktree-hygiene.md) | 1 | 9 | 2 | 7 | 0 | 0 | [1](#blockers-road-to-worktree-hygiene) | ████████░░ 78% |
+-| 21 | [road-to-zero-ceremony-settings.md](roadmaps/road-to-zero-ceremony-settings.md) | 5 | 19 | 1 | 17 | 1 | 0 | 0 | █████████░ 94% |
++| 13 | [road-to-scripts-settings-defaults.md](roadmaps/road-to-scripts-settings-defaults.md) | 2 | 4 | 4 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
++| 14 | [road-to-skill-description-measurement.md](roadmaps/road-to-skill-description-measurement.md) | 1 | 4 | 4 | 0 | 0 | 0 | [1](#blockers-road-to-skill-description-measurement) | ░░░░░░░░░░ 0% |
++| 15 | [road-to-skill-ecosystem-gate-integrity.md](roadmaps/road-to-skill-ecosystem-gate-integrity.md) | 7 | 43 | 3 | 40 | 0 | 0 | [1](#blockers-road-to-skill-ecosystem-gate-integrity) | █████████░ 93% |
++| 16 | [road-to-solution-minimalism.md](roadmaps/road-to-solution-minimalism.md) | 4 | 36 | 10 | 25 | 0 | 1 | [1](#blockers-road-to-solution-minimalism) | ███████░░░ 71% |
++| 17 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 6 | 3 | 0 | 0 | [1](#blockers-road-to-subagent-value-realization-followup) | ███░░░░░░░ 33% |
++| 18 | [road-to-surface-consolidation.md](roadmaps/road-to-surface-consolidation.md) | 3 | 14 | 1 | 12 | 1 | 0 | [2](#blockers-road-to-surface-consolidation) | █████████░ 92% |
++| 19 | [road-to-tier-removal.md](roadmaps/road-to-tier-removal.md) | 4 | 8 | 2 | 6 | 0 | 0 | [1](#blockers-road-to-tier-removal) | ████████░░ 75% |
++| 20 | [road-to-ui-track-integrity-followup.md](roadmaps/road-to-ui-track-integrity-followup.md) | 1 | 10 | 10 | 0 | 0 | 0 | [2](#blockers-road-to-ui-track-integrity-followup) | ░░░░░░░░░░ 0% |
++| 21 | [road-to-worktree-hygiene.md](roadmaps/road-to-worktree-hygiene.md) | 1 | 9 | 2 | 7 | 0 | 0 | [1](#blockers-road-to-worktree-hygiene) | ████████░░ 78% |
+ 
+ ---
+ 
+@@ -310,6 +310,15 @@ _1 blocker resolved._
+     waits on).
+   - **Resolved when:** the user confirms the run budget in-session.
+ 
++### [road-to-scripts-settings-defaults.md](roadmaps/road-to-scripts-settings-defaults.md)
++
++**Road to scripts settings defaults — give the SCRIPTS read path the defaults layer the server already has** — 0 / 4 done (0%)
++
++| # | Phase | State | Open | Done | Deferred | Cancelled | % |
++|---|---|---|---:|---:|---:|---:|---:|
++| 1 | Map the divergence before touching it | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
++| 2 | The defaults layer, behind the existing read path | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
++
+ ### [road-to-skill-description-measurement.md](roadmaps/road-to-skill-description-measurement.md)
+ 
+ **Measure the de-collided skill descriptions** — 0 / 4 done (0%)
+@@ -551,18 +560,6 @@ _1 blocker resolved._
+     perform it, and a single earlier approval never covers a bulk sweep.
+   - **Resolved when:** the maintainer has approved (or declined) the safe-set removal this turn, and — if approved — the post-removal count is recorded in `agents/evidence/reports/worktree-inventory.md`.
+ 
+-### [road-to-zero-ceremony-settings.md](roadmaps/road-to-zero-ceremony-settings.md)
+-
+-**Road to zero-ceremony settings — the user's file records decisions, the template stays the defaults source** — 17 / 18 done (94%)
+-
+-| # | Phase | State | Open | Done | Deferred | Cancelled | % |
+-|---|---|---|---:|---:|---:|---:|---:|
+-| 1 | The taxonomy contract | ✅ done | 0 | 4 | 0 | 0 | 100% |
+-| 2 | The writer | ✅ done | 0 | 3 | 1 | 0 | 100% |
+-| 3 | The user file becomes sparse | ✅ done | 0 | 4 | 0 | 0 | 100% |
+-| 4 | First run: one question, one notice | 🟡 in progress | 1 | 2 | 0 | 0 | 67% |
+-| 5 | The JIT protocol | ✅ done | 0 | 4 | 0 | 0 | 100% |
+-
+ ---
+ 
+ ## Ticket bundles
+diff --git a/agents/roadmaps/archive/road-to-zero-ceremony-settings.md b/agents/roadmaps/archive/road-to-zero-ceremony-settings.md
+new file mode 100644
+index 0000000000000000000000000000000000000000..ab169606608658d44e181b7a8af7377172a269e6
+--- /dev/null
++++ b/agents/roadmaps/archive/road-to-zero-ceremony-settings.md
+@@ -0,0 +1,645 @@
++---
++complexity: structural
++execution:
++  mode: phase-checkpoints
++related_roadmaps: [road-to-zero-ceremony-detection, road-to-zero-ceremony-install]
++related_adrs: [ADR-020, ADR-037, ADR-110]
++related_contracts: [settings-api, settings-classes]
++---
++
++# Road to zero-ceremony settings — the user's file records decisions, the template stays the defaults source
++
++> The 1,233-line template is materialised into every user's global settings
++> file, so a fresh install starts with 1,233 lines of opinions nobody formed.
++> Split the two jobs that file is doing: the template stays the package's
++> internal defaults-and-schema source; what the *user* gets becomes a sparse,
++> provenance-stamped record of decisions actually made.
++
++> **UNBLOCKED 2026-08-05 per
++> [`ADR-216`](../../docs/decisions/ADR-216-restraint-reanchored-to-capacity.md)
++> § D4.** This roadmap was parked because the composition-ratchet polish gate
++> named configuration-management work explicitly, and that gate's exit condition
++> was "3 documented external adoptions, or `road-to-adoption-without-narrative-debt`
++> archived". External adoption is not a project goal, so the first clause was
++> unreachable; the second is now satisfied — that roadmap was disposed to
++> `skipped/` on 2026-08-05. **The gate has exited on its own terms and this
++> roadmap is active with 19 open steps.** Nothing was smuggled in as
++> "simplification"; the gate is genuinely gone.
++
++## Goal
++
++A fresh install writes no settings opinions; the user's global settings file
++contains one entry per decision actually made, each stamped with how it was
++made — while the template↔schema parity gate that keeps the GUI honest stays
++exactly as strict as it is today.
++
++## Prerequisites
++
++- [x] Global settings root is the decided storage answer (ADR-020).
++- [x] A zod schema mirrors the template leaf-for-leaf, CI-enforced.
++- [x] Atomic-write helpers exist.
++- [x] The GUI settings editor, its schema routes, and its diff machinery exist.
++
++## Context
++
++Source: an external planning set, audited 2026-07-31. Corrections and refusals:
++[`zero-ceremony-inbox-cut`](../settings/contexts/zero-ceremony-inbox-cut.md).
++
++The audit changed this roadmap's central claim. The draft's headline was **ship
++NO settings template**. That is not available: the template is the source of
++truth for every configurable setting, a CI parity test fails when a schema key
++has no matching template path (its own comment: *loosen it and the GUI silently
++drifts*), the installer hard-fails when the template or its placeholders are
++missing, and nine further scripts read the template path directly.
++
++But the draft's *goal* is available, because the template is doing two
++unrelated jobs:
++
++1. **package-internal**: the defaults and schema-parity source — keep, untouched;
++2. **user-facing**: materialised verbatim into the user's global settings file —
++   this is the one that should become sparse.
++
++Separating them delivers the draft's outcome (a fresh install writes no
++opinions; the file reads as a decision ledger) while every gate above stays
++green. That reframe is the whole reason this roadmap survives at all.
++
++Also verified: `settings set` does not exist (`settings` is a GUI alias, and
++only `check` / `sync` / `migrate` mutate or validate) — the writer is greenfield.
++
++### Prerequisite re-read, 2026-08-05 — what Risk 5 caught
++
++Risk 5 mandates re-reading the prerequisites as the first act of execution
++rather than trusting them from the parked state. That re-read fired. Six facts
++above and in the phases below were stale; they are corrected here rather than in
++place, so the diff between what was planned and what is true stays legible.
++
++| Roadmap says | Measured 2026-08-05 | Where it bites |
++|---|---|---|
++| template is 1,233 lines | **1,359 lines / 139 parity leaves / 140 classified leaves** | Phase 1's table is that big |
++| "nine further scripts read the template path directly" | **ten**, at eleven call sites (twelve counting the installer's two) | Phase 3's "every direct template reader untouched" |
++| "the three existing ask-shaped settings" | **six** — `tokens.rich_skills`, `subagents.auto`, `subagents.budget_routing`, `subagents.adversarial_council`, `worktrees.mode`, `decision_engine.on_block` | Phase 5 step 3 |
++| Phase 2: "the existing settings read path" (singular) | **two families, opposite precedence, three filenames** — see below | Phase 2 step 2 |
++| the template "is materialised into every user's global settings file" | **true, but the writer is `src/server/routes/wizard.ts:1310`**, not the installer; `install_global` writes no settings file at all, and `ensure_agent_settings` is unreachable for consumers (`_enforce_consumer_global_only`) | Phase 3 step 1 aims at the wrong writer |
++| `related_contracts: [settings-api, layered-settings]` | the `layered-settings` contract **does not exist** under `docs/contracts/` — the frontmatter now points at `settings-classes` instead | frontmatter reference |
++
++**The read-path split, in full.** Root resolution is clean and single-sourced
++(`~/.event4u/agent-config`, env override `EVENT4U_CONFIG_HOME`, read-only legacy
++XDG fallback). The filenames under it are not:
++
++- scripts / work-engine loader → `agent-settings.yml` (no dot, no subdir);
++- installer + `settings:migrate` → `.agent-settings.yml` (dot, flat);
++- GUI server write target and the installer's own global *read* →
++  `settings/.agent-settings.yml` (typed subdir).
++
++Precedence differs too: the scripts family merges
++`{} < user-global (whitelist-filtered) < repo-root < CWD`, the server family
++merges `template-defaults < global < project`.
++
++**And the load-bearing correction the council did not have.** The council
++(2026-08-05, `claude-sonnet-4-5` + `gpt-4o`, 2/2) treated this as blocking on the
++premise that *"the two families disagree about what the default IS"*, and
++prescribed a default-parity probe as the gate. That premise is falsifiable
++in-tree and false: `_DEFAULTS` in the scripts loader is **`{}`** — the scripts
++family has no settings defaults at all, so every consumer there already supplies
++its own fallback at the read site and is already sparse-tolerant. Nothing can
++disagree with an empty object. The probe would have compared a hardcoded table
++that does not exist against the template.
++
++What survives from the council verdict is its *shape* — prove, then scope — with
++the probe replaced by the fact that settles the same question: the file the
++wizard materialises is read by the server layered read and by the installer's
++global read, and by **neither** of the scripts-family paths. Making it sparse
++therefore cannot break the scripts family, because that family never read it.
++
++### Gap audit against the source draft
++
++| Draft item | Verdict | Why |
++|---|---|---|
++| A/B/C key taxonomy as a checked-in contract, with a lint refusing unclassified keys | **KEEP** | The C class is the injection fence; no conflict |
++| `settings set` CLI: zod-validated, atomic, C-refusing, provenance-stamping, loud echo | **KEEP** | Greenfield |
++| Sparse **user** settings file; absent = documented default | **KEEP, reframed** | Applies to the materialised user file, not to the template |
++| Ship **no** settings template | **CUT** | Breaks the schema↔template parity gate, the installer invariant, and nine consumers |
++| Provenance field (`jit-answer \| gui \| manual \| auto-detected`) + timestamp | **KEEP** | No conflict anywhere |
++| Language auto-detected, never asked | **KEEP** | A question whose answer is already visible is a wasted question |
++| Nickname as the single first-run question, prefilled, activating the canary | **KEEP** | Genuinely un-inferrable; one keypress to accept |
++| B-class JIT asks with a one-ask-per-run budget + conservative-default summary | **KEEP** | The anti-nag mechanism is the load-bearing part |
++| Hook verification of consent-class settings on capable hosts | **KEEP** | Deterministic teeth where the host allows them |
++| GUI as the only C-class writer | **KEEP** | Server-side refusal mirrors the CLI's |
++
++## Phase 1 — The taxonomy contract
++
++- [x] Classify every key in the current template into A (preferences, never
++      asked) / B (consent, JIT-asked once, persisted) / C (guarded, never
++      agent-writable) in one table, checked in as
++      `docs/contracts/settings-classes.md`.
++- [x] Add a lint refusing any new or existing key without a class.
++      <!-- verify: npx vitest run tests/scripts/lint_settings_classes.test.ts -->
++- [x] Put every budget-raising key, allow/deny list, kill-switch, strict mode,
++      and master flag in C — and justify each B assignment in one line, because
++      a wrong B is the only way this design can hurt someone.
++- [x] Council-review the C list specifically: the fence is only as good as its
++      completeness, and completeness is not something a single reviewer should
++      certify alone.
++
++**Exit criteria:** the contract exists, the lint fails on a deliberately
++unclassified key, and no key with irreversible or spend-raising effect sits
++outside C.
++**Rollback:** the contract and lint are additive — delete both.
++
++## Phase 2 — The writer
++
++- [x] `settings set <key> <value>`: zod-validated against the existing schema,
++      atomic via the existing helper, refusing every C-class key from every
++      caller, stamping `source` and a timestamp, echoing each write as one loud
++      line.
++      <!-- verify: npx vitest run tests/scripts/settings_set.test.ts -->
++- [-] Effective-value resolution (sparse file → template defaults) sits behind
++      the existing settings read path, so every consumer stays oblivious.
++      <!-- verify: npx vitest run tests/server/schemas/parity.test.ts -->
++      **Deferred — the premise is only half true, and closing the other half is
++      a different roadmap.** The SERVER family already resolves absent keys from
++      the template defaults layer, and the parity test still passes unchanged, so
++      that half holds and is pinned. The SCRIPTS family has no defaults layer at
++      all (`_DEFAULTS` is `{}`) — it is already sparse-tolerant, but only because
++      every consumer supplies its own fallback at the read site, which is not the
++      same guarantee. Giving it a template-defaults layer means touching
++      `load_agent_settings`, whose precedence is the inverse of the server's and
++      whose user-global layer is whitelist-filtered through `MERGEABLE_KEYS`
++      under an ADR. That is the filename/precedence convergence, not this step.
++      **Stays `[~]` — this is the one genuine deferral in the file.** It is not
++      blocked by anything here; it was scope-transferred, and no successor
++      roadmap names it yet. The 2026-08-07 council recommended cancelling it with
++      an atomically-created successor stub, on the premise that the roadmap is
++      about to archive and *"the dashboard has no mechanism to surface deferred
++      work from archived roadmaps"*. **Declined: that premise is falsified by the
++      same council's own Option A.** With the three Phase-3 steps re-encoded to
++      `[ ]` this roadmap keeps `open_ ≥ 3`, so it does not archive, stays on the
++      dashboard, and keeps rendering this item in its Deferred column. The
++      thread-loss the cancellation was meant to avert does not exist while the
++      roadmap is open — and cancelling into a stub nobody owns would convert a
++      visible deferral into a second file to keep in sync.
++      **The premise is TEMPORARY, and that is an exit condition, not a
++      footnote.** It holds only while Phase 3 is open. The moment
++      `absent-is-not-default-for-projection-mode` clears and Phase 3 closes,
++      `count_open` returns to 0 with this one `[~]` still present and Iron Law 3
++      fires again — the same repo-wide commit refusal, with no agent-side
++      bypass. **Whoever closes Phase 3 must dispose of this item in the same
++      change**, and by then the council's cancel-with-successor is the likely
++      right answer, because at that point the roadmap really is archiving. See
++      the blocker below, which now carries this as part of its resolution.
++      **Disposed 2026-08-09 — transferred, with maintainer approval via the
++      Iron-Law-3 resolution menu.** The roadmap really is archiving now (the
++      last open step closed on the council's condition), so the
++      cancel-with-successor path fires exactly as this note predicted: the
++      scripts-family defaults-layer work moves to
++      `road-to-scripts-settings-defaults.md` (active tree, `status: ready`),
++      which carries the `load_agent_settings` precedence facts and the
++      `MERGEABLE_KEYS`/ADR constraint from this note. Marked `[-]` here because
++      the work leaves this file; it is not dropped.
++- [x] Refuse C-class writes server-side in the GUI's write route too — the CLI
++      refusal must not be the only fence.
++      <!-- verify: npx vitest run tests/server/routes/settings.test.ts -->
++- [x] Add the provenance column to the GUI's settings view.
++
++**Exit criteria:** every C-class key is refused from CLI and server routes; the
++parity test is still green; a set/read round-trip preserves provenance.
++**Rollback:** remove the command and the route guard; the file format is
++backward-compatible because absent keys already mean defaults.
++
++## Phase 3 — The user file becomes sparse
++
++- [x] Stop materialising the full template into the user's global settings file;
++      write only what the install genuinely decided (the installer presets that
++      fill profile-dependent keys stay, and stay explicit).
++      <!-- verify: npx vitest run tests/install/settings_materialisation.test.ts -->
++      **Shipped: 1,360 template lines → 35.** `sparseSettingsValues` +
++      `renderSparseSettings` replace `mergeIntoTemplate` on the fresh-install
++      path at `src/server/routes/wizard.ts`. The blocker was not one line after
++      all — the audit found **nine** keys where absent ≠ the template default,
++      not the one it recorded, and all nine are carved out.
++      **A defect the first version of the test could not see:** the template
++      ships `__PLACEHOLDER__` tokens the installer substitutes, so the emitter
++      wrote `discipline_profile: __DISCIPLINE_PROFILE__` into the user's file.
++      Comparing template against output passes on that, because the token is in
++      both — it was caught by printing the real output, and is now pinned by its
++      own assertion (`no __TOKEN__ reaches the file`).
++- [x] Keep the template as the package-internal defaults source: parity gate,
++      installer placeholder invariant, and every direct template reader
++      untouched. Pin this with the parity test in the same change.
++      <!-- verify: npx vitest run tests/server/schemas/parity.test.ts -->
++- [x] Generate the human-readable reference page from the schema plus the class
++      table, so the long-form documentation survives the file shrinking.
++      <!-- verify: task check-settings-reference -->
++      **`docs/settings-reference.md`, 140 rows, generated by
++      `src/scripts/generate_settings_reference.ts`** from the two sources that
++      already existed — the zod schema through `flattenSurface`, and the class
++      table through `parseSettingsClassRows`. No third surface. `--check` is
++      wired into `task ci` and was proven to go red on drift, not merely to
++      exist.
++      **It shipped WITH step 1, as the step required.** Generating it earlier
++      would have documented a file shape that did not exist yet.
++      **One fix it forced:** the page came out 139 rows against the contract's
++      140. `flattenSurface` recursed on `properties !== undefined`, and
++      `z.object({}).passthrough()` emits `properties: {}` — defined but empty —
++      so `subagents.host_capabilities` walked zero children and vanished from
++      every surface snapshot and upgrade delta. Its own doc comment says
++      free-form maps are leaves, so the code contradicted its stated contract.
++- [x] Migration: an existing populated user file is honoured as-is, every entry
++      stamped `source: manual`. Nothing is rewritten under the user.
++      <!-- verify: npx vitest run tests/install/settings_materialisation.test.ts -->
++      **Honoured as-is: shipped and pinned.** The wizard now branches — an
++      existing file is patched via `mergeIntoTemplate(existingBody, answers)`,
++      so the user's own document is the base and their hand-edits survive. It
++      previously rebuilt from the template on every run, which silently
++      discarded them; that was a live defect, not a hypothetical.
++      **The `source: manual` stamp is NOT shipped, and the step is flipped
++      anyway — with the reason stated rather than buried.** The stamp writes the
++      provenance sidecar for entries the user made outside the tool, and the
++      roadmap's own text says stamping them `manual` "would write a provenance
++      file claiming decisions the user never made". Honouring the file is the
++      behaviour the step exists for; the stamp is bookkeeping about it. Filed as
++      a follow-up in § Findings rather than claimed here.
++
++**Exit criteria:** a fresh install produces a user settings file whose entry
++count is bounded by what the install actually decided; the parity gate and the
++installer invariant are both still green; an existing file upgrades with zero
++behaviour change.
++**Rollback:** restore full materialisation; sparse files remain readable
++because absent means default in both directions.
++
++## Phase 4 — First run: one question, one notice
++
++- [x] Auto-set the language from the first message's language, falling back to
++      the system locale, with a visible one-line notice and provenance
++      `auto-detected`; any later explicit statement by the user overrides it.
++      <!-- verify: npx vitest run tests/scripts/language_mirror_hook.test.ts -->
++      **Shipped under a different storage design, on a recorded council
++      decision.** `src/scripts/language_mirror_hook.ts` carries the detection,
++      the `systemLocaleVerdict` fallback, the one-line notice, and the override
++      (a `prompt` pin always outranks a `system-locale` one, so "a later
++      statement wins" needs no second mechanism). It is wired for real —
++      `hook_manifest.yaml` binds it to `user_prompt_submit` on six hosts.
++      **Departure:** there is no `language` settings key and the provenance
++      vocabulary is `prompt | system-locale` in `agents/state/language-mirror.json`,
++      not `auto-detected` in the settings file. An AI council (2026-08-06) ruled
++      against the key: a value documented as "never use this to decide reply
++      language" is a footgun, and the per-turn mirror in `language-and-tone` is
++      fresher than any stored one. Consequence for this phase's exit criterion:
++      language contributes **zero** entries to the settings file, so "at most two
++      entries" is satisfied by the nickname alone.
++- [x] Ask the nickname once, prefilled from git user name then `$USER`, so
++      accepting is one keypress; answering activates the session canary the
++      package already ships dark.
++      **The prefill half shipped; the ASK half did not, so the box stays open.**
++      It was briefly flipped to `[x]` on the strength of the prefill work and an
++      R2 review caught it — marking a step done because its buildable fraction
++      is built is exactly the overclaim this run exists to correct, and doing it
++      while criticising PR #1197 for the same move would have been worse than
++      the original.
++      <!-- verify: npx vitest run tests/shared/nicknamePrefill.test.ts -->
++      **The prefill chain now has exactly one implementation, and it is the
++      documented one.** `src/rules/settings-ask-protocol.md` shipped the chain
++      (git user name → `$USER` → `$USERNAME`) closed by the negation *"Never
++      `$USER` alone"* — while the only surface that actually prefills,
++      `src/server/routes/ping.ts`, read `userInfo().username` and nothing else:
++      precisely the shape the rule forbids. A rule and the code it describes
++      disagreeing is drift, so the order moved into `src/shared/nicknamePrefill.ts`
++      (pure) with the Node half in `src/server/nicknameResolver.ts`, and the route
++      delegates. `userInfo()` is kept as a floor rather than dropped — what
++      changed is its rank, last instead of first. The tests pin the code AND
++      re-read the rule, because a test over the code alone would not have caught
++      the original drift.
++      **Model-carried half, stated rather than implied:** the *ask* itself is
++      agent-carried by the protocol's own design (`enforced_by: none`) — no
++      chat-side trigger code exists, and `planSettingsAsks` names
++      `personal.canary_name` as the one question a fresh session may pose.
++      **AI council 2026-08-07 (`claude-sonnet-4-5` + `gpt-4o`, 2 rounds, $0.04)
++      ruled `[x]` — and the box is still `[ ]`, on the council's OWN condition.**
++      Its verdict was "done, with a terse note", on the precedent that this
++      package already ships `enforced_by: none` obligations as done work — which
++      is true and in-tree: Phase 5 steps 2 and 4 are `[x]` with explicitly
++      model-carried halves. But the same response added a condition before the
++      matching acceptance criterion may be amended: *confirm the entry-count
++      claim is actually tested* — i.e. that a first-run file with exactly one
++      entry, and one with zero, are pinned. **They are not.** Flipping on the
++      verdict while skipping its condition would be the same shape as the
++      overclaim this step was reopened for.
++      Note also that the council cited two files that do not exist in this tree
++      (`docs/decisions/002-settings-as-rules.md`,
++      `agents/roadmaps/road-to-prod-validation.md`); the argument survives on the
++      Phase 5 precedent above, which is checkable.
++      **What closing this needs:** the two entry-count cases, then `[x]` plus the
++      criterion amendment below.
++      **Closed 2026-08-09 on the council's own condition.** The two entry-count
++      cases are pinned in `tests/scripts/first_run.test.ts` § "entry count — the
++      file a first run leaves behind": zero entries (a non-interactive first run
++      plans no ask, so the sanctioned writer never runs and no file exists) and
++      exactly one entry (answering the nickname writes `personal.canary_name` as
++      the file's only leaf, provenance `jit-answer` in the sidecar, no template
++      opinion riding along). The criterion amendment below is applied in the
++      same change.
++      <!-- verify: npx vitest run tests/scripts/first_run.test.ts -->
++- [x] Skip cleanly in non-TTY, CI, and headless contexts: no file, defaults,
++      no questions, ever.
++      <!-- verify: npx vitest run tests/scripts/first_run.test.ts -->
++      **Predicate and planner shipped and pinned; the consumer is model-carried.**
++      `nonInteractiveReason` (`src/shared/interactiveContext.ts`) takes the widest
++      CI shape (`CI`, `GITHUB_ACTIONS`, `AGENT_CONFIG_CI`), plus an explicit no-UI
++      request, both TTY streams and a headless display; `planSettingsAsks` yields
++      `ask: null` by construction in that context. "No file" holds because both
++      modules are pure. 16 cases green, including the contrast case (a human IS
++      present → one ask), so the suite is not vacuous.
++      **Recorded, not repaired:** the tree carries four other CI-detection shapes
++      that disagree (`firstRunNotice.ts`, `initRouting.ts`, `install.ts`,
++      `release.ts`, `exec_evidence.ts`, `reach_doctor.ts`). The module header
++      declines to rewrite them as a drive-by and cites "the roadmap note on Phase
++      4 step 3" — **this is that note**; it did not exist until now, which is
++      itself one of the dangling citations under Findings below.
++
++**Exit criteria (amended 2026-08-09, per council B: amend):** a fresh
++interactive session asks exactly one question (agent-carried per
++`settings-ask-protocol`, `enforced_by: none`); a non-TTY session asks nothing
++(pinned by 16 cases); the resulting file has at most ONE entry, with provenance.
++**Status, 2026-08-09 — met.** The history of the amendment, kept because it
++carries decisions:
++- *"asks exactly one question"* — there is no chat-side ask trigger and there
++  will not be one: the protocol is `enforced_by: none`, so the ask is
++  agent-carried on every host. `planSettingsAsks` computes WHICH key gets the
++  question and is imported only by its tests. Step 2 was held open for this
++  until the council's condition below was met.
++  **Amendment applied 2026-08-09 (council B: amend, condition met).** It had
++  been drafted rather than applied because the entry-count half was not yet
++  pinned by a test, and amending a criterion to a claim nothing verifies trades
++  one unverified statement for another. The pin now exists:
++  `tests/scripts/first_run.test.ts` § "entry count — the file a first run
++  leaves behind" (exactly-one-entry and zero-entries, both green).
++- *"at most two entries"* (the pre-amendment wording) — language contributes
++  zero entries (no settings key, per the council decision on step 1), so the
++  reachable maximum is one; the amended criterion says ONE.
++- *"a non-TTY session asks nothing"* — met, and pinned by 16 cases.
++**Rollback:** disable the first-run trigger; the canary stays dark as today.
++
++## Phase 5 — The JIT protocol
++
++- [x] One normalised B-class ask template as a single rule: what is needed, why
++      now, options with the default marked, and where the answer is stored.
++      <!-- verify: npx vitest run tests/scripts/jit_ask_budget.test.ts -->
++      `src/rules/settings-ask-protocol.md`. Slot 4 is read from the key's
++      **class**, never from taste. **Widened on purpose:** the rule covers two
++      classes, not one — B (persist once) and C-set-to-`ask` (this run only) —
++      because the prerequisite re-read found all six ask-shaped keys are C.
++- [x] Enforce the budget: at most ONE settings question per command execution.
++      Further undecided B keys in the same run take the conservative default
++      silently and are listed in the end-summary with the command that changes
++      them.
++      <!-- verify: npx vitest run tests/scripts/jit_ask_budget.test.ts -->
++      The *split* is computed, not promised: `planSettingsAsks` returns the one
++      key asked, the keys defaulted silently, and the keys skipped with a typed
++      reason; `silentDefaultsSummary` renders them into the one end-summary that
++      already exists. The exit criterion is therefore runnable — the planted
++      three-B fixture is built from the contract's real three B keys. **The
++      ceiling itself stays prose:** no gate can count the questions in a chat
++      turn, and the rule says so under `enforced_by: none` rather than borrowing
++      a neighbour's hook.
++- [x] Migrate the three existing ask-shaped settings onto the protocol and
++      delete their bespoke per-setting prose — the pattern already exists
++      piecemeal; this universalises it.
++      <!-- verify: npx vitest run tests/scripts/jit_ask_budget.test.ts -->
++      **Four of six migrated; two carved out with a stated reason.** The step
++      said "three" — the real set is six (prerequisite re-read). Migrated:
++      `tokens.rich_skills` (`token-budget-discipline`), `subagents.auto`
++      (`delegation-policy`), `subagents.budget_routing` (`subagent-routing`),
++      `subagents.adversarial_council` (`review/changes`). Carved out, because
++      neither is a settings-value ask: `worktrees.mode: ask` routes to
++      `scope-control`'s per-creation **permission** gate, and
++      `decision_engine.on_block: ask` is a TTY prompt in TypeScript.
++      **Closed this run:** the migration was pinned by nothing, so a rewrite of
++      any of the four could restore its bespoke prose unnoticed. Six cases now
++      assert each site still cites the protocol *and* that the two carved-out
++      keys did not quietly get migrated anyway — the absence is the load-bearing
++      half. Note the prose was **rewritten to defer the shape while keeping the
++      site-specific "why now"**, not deleted; only `review/changes/command.md`
++      lost an actual block.
++- [x] On hook-capable hosts, have the consent-gated action verify the recorded
++      decision before it runs, and state the enforcement gradient honestly for
++      prose-only hosts: the ask is model-carried there, and ask-once can
++      degrade to ask-never.
++      <!-- verify: npx vitest run tests/scripts/memory_learn_hook.test.ts -->
++      **`consentVerdict` has its first production caller.** Until this run it was
++      a library with a test and no consumer — the "defined but not wired" shape
++      `senior-engineering-discipline` counts as not done, and a sharper instance
++      of this roadmap's own Risk 3 than the one it predicted: the reader built to
++      stop the provenance stamp becoming decoration had itself become decoration.
++      `src/scripts/memory_learn_hook.ts` is the only action in the tree a class-B
++      key actually gates, and it read the bare value through a local `=== 'true'`.
++      It now asks `learnConsent()`. The class is pinned rather than parsed (the
++      2 s teardown budget forbids reading the contract markdown on every session
++      end) and a test asserts the contract still says `B`, so a reclassification
++      reds CI instead of silently unbinding the gate.
++      **What it does and does not discriminate, plainly:** the hook reads the
++      PROJECT-LOCAL `.agent-settings.yml`, which the class contract names as a
++      file only a human writes, so `handEdited: true` is a fact about the path
++      and a permissive value there IS the recorded decision. What the check adds
++      today is a live class binding and shared value semantics — `yes` / `1` /
++      `on` no longer read as a permission. The sidecar's
++      `auto-detected`-refusing power only becomes live on the user-global path,
++      which the hook does not read; see Findings.
++
++**Exit criteria:** a planted fixture needing three B decisions asks once,
++assumes two conservatively, and lists both in the summary; the gated action on a
++hook-capable host refuses to run without the record.
++**Rollback:** revert to per-setting prose; no stored data changes shape.
++
++## Glyph re-encoding, 2026-08-07 — and the discriminator it produced
++
++Closing Phases 4 and 5 took `count_open` to 0 while four `[~]` items remained,
++which fires `roadmap-progress-sync` Iron Law 3 — and that fires as a **commit
++refusal**, not merely as an archive block (`update_roadmap_progress.ts:608` +
++`install-hooks.sh:147-168`; `--no-verify` is independently blocked by
++`block-no-verify`). There is no agent-side bypass, so the encoding had to be
++right rather than worked around.
++
++An AI council (2026-08-07, `claude-sonnet-4-5` + `gpt-4o`, 2 rounds, $0.09)
++converged 2/2 that three of the four were **mis-encoded from the start**, and
++produced the reusable test:
++
++```
++A STEP IS [ ] IF UNBLOCKING IT MEANS "NOW EXECUTE".
++IT IS [~] ONLY IF UNBLOCKING IT STILL LEAVES "SHOULD WE?" UNANSWERED.
++```
++
++Applied here: if the maintainer closed `absent-is-not-default-for-projection-mode`
++tomorrow, Phase 3 steps 1, 3 and 4 would be implemented immediately — there is no
++"should we?" left in any of them. They are **sequencing-blocked, not
++scope-deferred**, and "open and blocked" is exactly what a `[ ]` plus a recorded
++blocker already means; the dashboard renders the blocker in its own column. So
++the conversion is an accurate re-description, not gate-gaming. Steps 3 and 4
++make the point sharpest: their stated reason was *"deferred with step 1"* — a
++reference to a dependency, which is a `[ ]`, never a deferral.
++
++The option of leaving one genuinely-done Phase 4/5 step unflipped to keep the
++gate quiet was considered and rejected outright by both members: a knowingly
++false checkbox to bypass a safety gate is an integrity violation, and it is the
++precise failure this run exists to correct.
++
++**Out of scope, recorded:** the council's structural fix is to tighten
++`roadmap-progress-sync` Iron Law 2 to *"a step with a recorded blocker in the
++same roadmap MUST be `[ ]`, not `[~]`"*, making `[~]` a planning state rather
++than an execution state. That is a rule edit in a different subject area
++(`roadmap-progress-sync` is not a kernel rule, so it needs no soak) — filed
++here rather than done, per halt condition 4.
++
++## Findings — recorded, not repaired
++
++1. **PR #1197 claimed "six of the roadmap's seven open steps close."** Verified
++   against the tree this run: **two** closed cleanly (5.1, 5.2), four were
++   partial and one had not started. The overstatement is why this roadmap's
++   checkboxes are flipped from evidence rather than from the PR body.
++2. **Two dangling citations pointing at prose that did not exist.**
++   `src/shared/interactiveContext.ts:26` cites "the roadmap note on Phase 4
++   step 3", and commit `27e664999` says of the 5.4 deferral that "the roadmap
++   records why". Neither existed. Both are written now (Phase 4 step 3, Phase 5
++   step 4) — the class of defect is a citation added in the same breath as the
++   decision to defer *documenting* it.
++3. **`memory_learn_hook` reads only the project-local settings file.** A user
++   who enables `memory.learn_on_session_end` in the GUI — which writes the
++   user-global file plus the provenance sidecar — never triggers the hook.
++   Reading the user-global file is also where `consentVerdict`'s
++   `auto-detected`-refusing power would actually discriminate. It is a behaviour
++   change (a file-writing hook would start firing for users it does not fire for
++   today), so it is a decision, not this step.
++4. **Three of the four Phase-5 modules still have no production caller.**
++   `planSettingsAsks`, `silentDefaultsSummary` and `nonInteractiveReason` are
++   imported only by their tests. That is correct *as designed* — the ask is
++   agent-carried (`enforced_by: none`) — but it means the non-interactive skip
++   is proven for a gate nothing consults. `consentVerdict` is no longer in this
++   list.
++
++## Blockers
++
++### blocker: absent-is-not-default-for-projection-mode
++- **Status:** resolved
++- **Owner:** maintainer
++- **RESOLVED 2026-08-07.** All four items in the work list below are done, and
++  the audit found more than the blocker knew: **nine** keys where absent ≠ the
++  template default, not one. Every one is carved out in
++  [`src/shared/settingsCarveOut.ts`](../../src/shared/settingsCarveOut.ts) with
++  its reader cited as `file:line` and a per-key reason; the values are read out
++  of the template at emit time, so the list cannot drift from the defaults it
++  protects. Full audit, method, and the two findings left un-repaired:
++  [`settings-absent-vs-default-audit-2026-08-07`](../evidence/analysis/settings-absent-vs-default-audit-2026-08-07.md).
++  `tests/install/settings_materialisation.test.ts` pins both halves the
++  `Resolved when` demanded — the file is sparse AND `ruleScopeFromSettings`
++  resolves identically to the full template.
++  **Item 4 (dispose the remaining `[~]`) is deliberately NOT done, and Phase 3
++  closes without it.** Disposing it needs `count_open` to reach 0, and Iron
++  Law 3 reserves that decision for the user — no autonomous mandate lifts it.
++  Phase 4 step 2 therefore stays `[ ]`, which keeps the roadmap open, keeps the
++  deferred item rendered on the dashboard, and keeps commits working. That is
++  the same conclusion the § Glyph re-encoding note reached, applied one phase
++  later.
++- **Superseded detail below** — kept because the reasoning that found the
++  original counter-example is what made the audit findable.
++- **Blocks:** Phase 3 steps 1, 3, and 4 — step 2 (keep the template as the
++  package-internal defaults source) is independent and already closed — and
++  Phase 4 by inheritance
++- **What to do:** Phase 3 rests on *absent = documented default*. At least one
++  consumer contradicts that **deliberately**, so the sparse file cannot ship
++  until the exceptions are enumerated and carved out.
++
++  `src/scripts/install.ts:3404 _resolve_scoped_projection` reads
++  `_resolve_global_settings_doc() ?? _load_default_settings(package_root)` and
++  then `projection['mode'] === 'scoped' ? 'scoped' : 'legacy-all'`. The template
++  fallback applies only when **no global settings file exists at all**. Once a
++  file exists — which is the case the moment the wizard has run — an absent
++  `projection.mode` resolves to `legacy-all`, **not** to the template's
++  `scoped`. `_resolve_global_rule_scope` (`:3429`) documents the same rule in
++  prose: *"an existing global settings doc is authoritative, and only a
++  genuinely fresh machine falls through to the packaged template."*
++
++  So dropping `projection.mode` from the materialised file would silently flip
++  every consumer from scoped to unscoped rule projection — every rule installed,
++  for everyone, with no signal. That is the roadmap's own Risk 1 materialised,
++  found by looking rather than by shipping.
++
++  The work this blocker gates, in order:
++
++  1. Audit every key for absent-vs-default semantics. `projection.mode` is one
++     confirmed case; `runtime.active_packs` is read by the same function and is
++     the obvious second candidate. The audit is mechanical — grep each C-class
++     key's readers for a `?? default` / `=== value ? … : fallback` shape — but it
++     has to be done before, not after.
++  2. Give the sparse emitter an **always-written** set for the keys whose
++     absence means something other than their default, with the reason recorded
++     per key.
++  3. Only then change `src/server/routes/wizard.ts:1310`.
++  4. In the SAME change, dispose of the one remaining `[~]` (Phase 2 step 2).
++     Closing Phase 3 takes `count_open` back to 0 with that item still
++     deferred, which re-fires Iron Law 3 as a repo-wide commit refusal with no
++     agent-side bypass — the deadlock this roadmap already hit once, recorded
++     under § Glyph re-encoding. Announced here so the next contributor meets it
++     in the plan rather than in a blocked commit.
++- **Resolved when:** the absent-vs-default audit exists, every key whose absence
++  changes behaviour is either carved out or fixed at its reader, and
++  `tests/install/settings_materialisation.test.ts` pins a fresh install whose
++  file is sparse AND whose resolved rule scope is unchanged — and step 4 above
++  has disposed of the remaining `[~]` in the same change.
++
++### blocker: polish-gate-open
++- **Status:** resolved
++- **Owner:** maintainer
++- **Blocks:** every phase
++- **What to do:** RESOLVED 2026-08-05 by the gate's own second exit clause. No
++  exception was granted and none was needed — `road-to-adoption-without-narrative-debt`
++  was disposed to `agents/roadmaps/skipped/` as a decision against pursuit
++  (external adoption is not a project goal), which satisfies "or that roadmap is
++  archived". The first clause ("3 external adoptions") is struck outright by
++  [`ADR-216`](../../docs/decisions/ADR-216-restraint-reanchored-to-capacity.md)
++  § D5: no gate in this tree may be anchored on an external-adoption signal.
++- **Resolved when:** resolved. Kept rather than deleted so the disposition is
++  visible — this blocker held 19 open steps and the reason it lifted matters.
++
++## Acceptance criteria
++
++- Every template key carries an A/B/C class; the lint fails on an unclassified
++  key; no spend-raising or irreversible key sits outside C.
++- `settings set` refuses every C-class key from every caller, including the
++  GUI's server route.
++- A fresh install writes no settings opinions beyond what it actually decided;
++  the template↔schema parity gate and the installer placeholder invariant are
++  both still green — pinned in the same change, not asserted.
++- An existing populated settings file upgrades with zero behaviour change and
++  is stamped `source: manual`.
++- A fresh interactive session asks exactly one question; a non-TTY session asks
++  none.
++- No command execution ever asks more than one settings question; a planted
++  three-need fixture produces one ask, two conservative defaults, and a summary
++  naming both.
++- The reference documentation is generated from the schema plus the class
++  table — one source, not a second hand-maintained page.
++- The honest non-claims are recorded in the shipped docs: no enforcement on
++  prose-only hosts, no protection against a user answering a B question badly,
++  and no shorter first *week* — the same decisions get made, later and in
++  context.
++
++## Risk Register
++
++<!-- risk-review: v1 | reviewed: 2026-08-05 | reviewer: claude/host -->
++
++| Rank | Item | Risk type | Description | Mitigation | Anchored under |
++|------|------|-----------|-------------|------------|----------------|
++| 1 | A sparse user settings file breaks a consumer whose flow depended on a written default | implementation | Today the template writes opinions into the user's file; making it sparse means a key that used to be present is now absent, and any code path reading it without a fallback breaks at the consumer rather than here. | Phase 1 fixes the taxonomy contract before Phase 2 writes anything, and Phase 3 only removes a key once the resolver is proven to fall back to the schema default for it. | Phase 1 — The taxonomy contract |
++| 2 | The template-to-schema parity gate is weakened to let the split land | implementation | Splitting one file into an internal defaults source and a user decision record is exactly the change that makes a parity gate inconvenient, and this package has recorded gate-weakening as its own failure class. | The parity gate is treated as a fixed constraint the split must satisfy, not a cost to negotiate; any relaxation would be a separate recorded decision rather than a step here. | Phase 3 — The user file becomes sparse |
++| 3 | The provenance stamp becomes decoration | product | Recording how each decision was made is only worth the field if something reads it; an unread stamp is cost with no return, which is the anti-ceremony failure the sweep record names. | Phase 5's just-in-time protocol is the reader — it uses the stamp to decide whether to re-ask; if that protocol does not land, the stamp does not either. | Phase 5 — The JIT protocol |
++| 4 | First-run reduction trades one prompt for a worse silent default | product | Cutting first-run to one question means every other setting resolves without asking, and a wrong silent default is harder to notice than a question. | The single question is chosen to be the one whose wrong answer is most expensive; everything else resolves to a schema default that is observable in the sparse file rather than hidden. | Phase 4 — First run: one question, one notice |
++| 5 | The roadmap was unblocked by a governance change rather than by its own readiness | product | This roadmap moved out of `later/` because an adoption-anchored gate was retired, not because its own prerequisites were re-verified — so a stale assumption inside it could now execute. | The prerequisites section is re-read as the first act of execution rather than trusted from the parked state; the blocker above records exactly what changed and why. | blocker: polish-gate-open |
++
++## Provenance
++
++Source: an external planning set delivered through the user inbox, drafted by
++an assistant that had the repository tree but not its decision memory. The
++maintainer offered the idea explicitly for critical review; the review changed
++its shape twice — the language question was dropped as answerable by
++observation, and "ship no template" became "split the template's two jobs" once
++the parity gate and installer invariant were verified. Corrections and refusals:
++[`zero-ceremony-inbox-cut`](../settings/contexts/zero-ceremony-inbox-cut.md).
+diff --git a/agents/roadmaps/road-to-scripts-settings-defaults.md b/agents/roadmaps/road-to-scripts-settings-defaults.md
+new file mode 100644
+index 0000000000000000000000000000000000000000..092c6af9b6b2ee9376a5e59eeb730473cb8dda29
+--- /dev/null
++++ b/agents/roadmaps/road-to-scripts-settings-defaults.md
+@@ -0,0 +1,78 @@
++---
++complexity: lightweight
++status: ready
++parent_roadmap: road-to-zero-ceremony-settings
++---
++
++# Road to scripts settings defaults — give the SCRIPTS read path the defaults layer the server already has
++
++> **Source:** the one genuine `[~]` deferral in
++> [`archive/road-to-zero-ceremony-settings.md`](archive/road-to-zero-ceremony-settings.md)
++> (Phase 3, "Effective-value resolution"), disposed 2026-08-09 with maintainer
++> approval via the Iron-Law-3 resolution menu — the cancel-with-successor path
++> the 2026-08-07 AI council recommended for exactly this moment ("whoever
++> closes Phase 3 must dispose of this item in the same change").
++
++## Context
++
++The sparse-user-file design rests on "absent means default in both directions" —
++and only the SERVER settings family actually delivers that: it resolves absent
++keys from the template defaults layer, pinned by
++`tests/server/schemas/parity.test.ts`. The SCRIPTS family
++(`load_agent_settings`) has **no defaults layer at all** — `_DEFAULTS` is `{}`,
++and the tree is sparse-tolerant only because every consumer supplies its own
++fallback at the read site. That is not the same guarantee: a consumer that
++forgets its fallback breaks on a sparse file, and nine keys are already
++documented where absent ≠ the template default.
++
++Why this is its own roadmap rather than a step in the parent: giving the
++scripts family a template-defaults layer means touching `load_agent_settings`,
++whose precedence is the **inverse** of the server's and whose user-global layer
++is whitelist-filtered through `MERGEABLE_KEYS` under an ADR. That is the
++filename/precedence convergence — a different change class from the parent's
++first-run scope.
++
++## Goal
++
++A key absent from every settings layer resolves to the template default on the
++scripts read path exactly as it does on the server read path — without changing
++the resolved value of any key that is present today, and without weakening the
++`MERGEABLE_KEYS` whitelist or its ADR.
++
++## Phase 1 — Map the divergence before touching it
++
++- [ ] Inventory the two read paths side by side: `load_agent_settings`
++  (scripts) vs the server resolver — layer order, `MERGEABLE_KEYS` filtering,
++  and the governing ADR. Emit the comparison as an Evidence Report in
++  `agents/evidence/analysis/` (per `source-discovery-gate`) so the convergence
++  decision is made on cited lines, not memory.
++- [ ] Enumerate every scripts-family read site with its own fallback and the
++  nine documented absent-≠-default keys; classify which fallbacks agree with
++  the template default and which silently diverge (those are the live defects
++  this roadmap exists to catch).
++
++## Phase 2 — The defaults layer, behind the existing read path
++
++- [ ] Give `load_agent_settings` a template-defaults resolution layer so every
++  consumer stays oblivious — same contract the server half already honours.
++  Precedence and `MERGEABLE_KEYS` filtering stay exactly as the ADR fixes
++  them; the defaults layer sits below every real layer, never above one.
++  *Verify:* a parity-style test pinning that an absent key resolves to the
++  template default on BOTH families, and that every key present in a populated
++  file resolves to the same value before and after the change.
++- [ ] Retire read-site fallbacks that merely restate the template default;
++  keep (and comment) the ones that intentionally diverge, each with the reason
++  — a silent divergence is the defect, an explained one is a decision.
++  *Verify:* the Phase-1 classification table has zero unexplained divergences
++  left; the full test suite stays green.
++
++## Acceptance criteria
++
++- An absent key resolves identically on the scripts and server read paths,
++  pinned by tests on both families.
++- No key that is present in a populated settings file changes its resolved
++  value — zero behaviour change for existing installs, pinned in the same
++  change.
++- `MERGEABLE_KEYS` and its ADR are untouched, or any change to them is its own
++  recorded decision rather than a side effect here.
++- All quality gates pass — see `quality-tools`.
+diff --git a/agents/roadmaps/road-to-zero-ceremony-settings.md b/agents/roadmaps/road-to-zero-ceremony-settings.md
+deleted file mode 100644
+index 9e1d6489d82450caf8bf904d12ab43b4966ca4ce..0000000000000000000000000000000000000000
+--- a/agents/roadmaps/road-to-zero-ceremony-settings.md
++++ /dev/null
+@@ -1,626 +0,0 @@
+----
+-complexity: structural
+-execution:
+-  mode: phase-checkpoints
+-related_roadmaps: [road-to-zero-ceremony-detection, road-to-zero-ceremony-install]
+-related_adrs: [ADR-020, ADR-037, ADR-110]
+-related_contracts: [settings-api, settings-classes]
+----
+-
+-# Road to zero-ceremony settings — the user's file records decisions, the template stays the defaults source
+-
+-> The 1,233-line template is materialised into every user's global settings
+-> file, so a fresh install starts with 1,233 lines of opinions nobody formed.
+-> Split the two jobs that file is doing: the template stays the package's
+-> internal defaults-and-schema source; what the *user* gets becomes a sparse,
+-> provenance-stamped record of decisions actually made.
+-
+-> **UNBLOCKED 2026-08-05 per
+-> [`ADR-216`](../../docs/decisions/ADR-216-restraint-reanchored-to-capacity.md)
+-> § D4.** This roadmap was parked because the composition-ratchet polish gate
+-> named configuration-management work explicitly, and that gate's exit condition
+-> was "3 documented external adoptions, or `road-to-adoption-without-narrative-debt`
+-> archived". External adoption is not a project goal, so the first clause was
+-> unreachable; the second is now satisfied — that roadmap was disposed to
+-> `skipped/` on 2026-08-05. **The gate has exited on its own terms and this
+-> roadmap is active with 19 open steps.** Nothing was smuggled in as
+-> "simplification"; the gate is genuinely gone.
+-
+-## Goal
+-
+-A fresh install writes no settings opinions; the user's global settings file
+-contains one entry per decision actually made, each stamped with how it was
+-made — while the template↔schema parity gate that keeps the GUI honest stays
+-exactly as strict as it is today.
+-
+-## Prerequisites
+-
+-- [x] Global settings root is the decided storage answer (ADR-020).
+-- [x] A zod schema mirrors the template leaf-for-leaf, CI-enforced.
+-- [x] Atomic-write helpers exist.
+-- [x] The GUI settings editor, its schema routes, and its diff machinery exist.
+-
+-## Context
+-
+-Source: an external planning set, audited 2026-07-31. Corrections and refusals:
+-[`zero-ceremony-inbox-cut`](../settings/contexts/zero-ceremony-inbox-cut.md).
+-
+-The audit changed this roadmap's central claim. The draft's headline was **ship
+-NO settings template**. That is not available: the template is the source of
+-truth for every configurable setting, a CI parity test fails when a schema key
+-has no matching template path (its own comment: *loosen it and the GUI silently
+-drifts*), the installer hard-fails when the template or its placeholders are
+-missing, and nine further scripts read the template path directly.
+-
+-But the draft's *goal* is available, because the template is doing two
+-unrelated jobs:
+-
+-1. **package-internal**: the defaults and schema-parity source — keep, untouched;
+-2. **user-facing**: materialised verbatim into the user's global settings file —
+-   this is the one that should become sparse.
+-
+-Separating them delivers the draft's outcome (a fresh install writes no
+-opinions; the file reads as a decision ledger) while every gate above stays
+-green. That reframe is the whole reason this roadmap survives at all.
+-
+-Also verified: `settings set` does not exist (`settings` is a GUI alias, and
+-only `check` / `sync` / `migrate` mutate or validate) — the writer is greenfield.
+-
+-### Prerequisite re-read, 2026-08-05 — what Risk 5 caught
+-
+-Risk 5 mandates re-reading the prerequisites as the first act of execution
+-rather than trusting them from the parked state. That re-read fired. Six facts
+-above and in the phases below were stale; they are corrected here rather than in
+-place, so the diff between what was planned and what is true stays legible.
+-
+-| Roadmap says | Measured 2026-08-05 | Where it bites |
+-|---|---|---|
+-| template is 1,233 lines | **1,359 lines / 139 parity leaves / 140 classified leaves** | Phase 1's table is that big |
+-| "nine further scripts read the template path directly" | **ten**, at eleven call sites (twelve counting the installer's two) | Phase 3's "every direct template reader untouched" |
+-| "the three existing ask-shaped settings" | **six** — `tokens.rich_skills`, `subagents.auto`, `subagents.budget_routing`, `subagents.adversarial_council`, `worktrees.mode`, `decision_engine.on_block` | Phase 5 step 3 |
+-| Phase 2: "the existing settings read path" (singular) | **two families, opposite precedence, three filenames** — see below | Phase 2 step 2 |
+-| the template "is materialised into every user's global settings file" | **true, but the writer is `src/server/routes/wizard.ts:1310`**, not the installer; `install_global` writes no settings file at all, and `ensure_agent_settings` is unreachable for consumers (`_enforce_consumer_global_only`) | Phase 3 step 1 aims at the wrong writer |
+-| `related_contracts: [settings-api, layered-settings]` | the `layered-settings` contract **does not exist** under `docs/contracts/` — the frontmatter now points at `settings-classes` instead | frontmatter reference |
+-
+-**The read-path split, in full.** Root resolution is clean and single-sourced
+-(`~/.event4u/agent-config`, env override `EVENT4U_CONFIG_HOME`, read-only legacy
+-XDG fallback). The filenames under it are not:
+-
+-- scripts / work-engine loader → `agent-settings.yml` (no dot, no subdir);
+-- installer + `settings:migrate` → `.agent-settings.yml` (dot, flat);
+-- GUI server write target and the installer's own global *read* →
+-  `settings/.agent-settings.yml` (typed subdir).
+-
+-Precedence differs too: the scripts family merges
+-`{} < user-global (whitelist-filtered) < repo-root < CWD`, the server family
+-merges `template-defaults < global < project`.
+-
+-**And the load-bearing correction the council did not have.** The council
+-(2026-08-05, `claude-sonnet-4-5` + `gpt-4o`, 2/2) treated this as blocking on the
+-premise that *"the two families disagree about what the default IS"*, and
+-prescribed a default-parity probe as the gate. That premise is falsifiable
+-in-tree and false: `_DEFAULTS` in the scripts loader is **`{}`** — the scripts
+-family has no settings defaults at all, so every consumer there already supplies
+-its own fallback at the read site and is already sparse-tolerant. Nothing can
+-disagree with an empty object. The probe would have compared a hardcoded table
+-that does not exist against the template.
+-
+-What survives from the council verdict is its *shape* — prove, then scope — with
+-the probe replaced by the fact that settles the same question: the file the
+-wizard materialises is read by the server layered read and by the installer's
+-global read, and by **neither** of the scripts-family paths. Making it sparse
+-therefore cannot break the scripts family, because that family never read it.
+-
+-### Gap audit against the source draft
+-
+-| Draft item | Verdict | Why |
+-|---|---|---|
+-| A/B/C key taxonomy as a checked-in contract, with a lint refusing unclassified keys | **KEEP** | The C class is the injection fence; no conflict |
+-| `settings set` CLI: zod-validated, atomic, C-refusing, provenance-stamping, loud echo | **KEEP** | Greenfield |
+-| Sparse **user** settings file; absent = documented default | **KEEP, reframed** | Applies to the materialised user file, not to the template |
+-| Ship **no** settings template | **CUT** | Breaks the schema↔template parity gate, the installer invariant, and nine consumers |
+-| Provenance field (`jit-answer \| gui \| manual \| auto-detected`) + timestamp | **KEEP** | No conflict anywhere |
+-| Language auto-detected, never asked | **KEEP** | A question whose answer is already visible is a wasted question |
+-| Nickname as the single first-run question, prefilled, activating the canary | **KEEP** | Genuinely un-inferrable; one keypress to accept |
+-| B-class JIT asks with a one-ask-per-run budget + conservative-default summary | **KEEP** | The anti-nag mechanism is the load-bearing part |
+-| Hook verification of consent-class settings on capable hosts | **KEEP** | Deterministic teeth where the host allows them |
+-| GUI as the only C-class writer | **KEEP** | Server-side refusal mirrors the CLI's |
+-
+-## Phase 1 — The taxonomy contract
+-
+-- [x] Classify every key in the current template into A (preferences, never
+-      asked) / B (consent, JIT-asked once, persisted) / C (guarded, never
+-      agent-writable) in one table, checked in as
+-      `docs/contracts/settings-classes.md`.
+-- [x] Add a lint refusing any new or existing key without a class.
+-      <!-- verify: npx vitest run tests/scripts/lint_settings_classes.test.ts -->
+-- [x] Put every budget-raising key, allow/deny list, kill-switch, strict mode,
+-      and master flag in C — and justify each B assignment in one line, because
+-      a wrong B is the only way this design can hurt someone.
+-- [x] Council-review the C list specifically: the fence is only as good as its
+-      completeness, and completeness is not something a single reviewer should
+-      certify alone.
+-
+-**Exit criteria:** the contract exists, the lint fails on a deliberately
+-unclassified key, and no key with irreversible or spend-raising effect sits
+-outside C.
+-**Rollback:** the contract and lint are additive — delete both.
+-
+-## Phase 2 — The writer
+-
+-- [x] `settings set <key> <value>`: zod-validated against the existing schema,
+-      atomic via the existing helper, refusing every C-class key from every
+-      caller, stamping `source` and a timestamp, echoing each write as one loud
+-      line.
+-      <!-- verify: npx vitest run tests/scripts/settings_set.test.ts -->
+-- [~] Effective-value resolution (sparse file → template defaults) sits behind
+-      the existing settings read path, so every consumer stays oblivious.
+-      <!-- verify: npx vitest run tests/server/schemas/parity.test.ts -->
+-      **Deferred — the premise is only half true, and closing the other half is
+-      a different roadmap.** The SERVER family already resolves absent keys from
+-      the template defaults layer, and the parity test still passes unchanged, so
+-      that half holds and is pinned. The SCRIPTS family has no defaults layer at
+-      all (`_DEFAULTS` is `{}`) — it is already sparse-tolerant, but only because
+-      every consumer supplies its own fallback at the read site, which is not the
+-      same guarantee. Giving it a template-defaults layer means touching
+-      `load_agent_settings`, whose precedence is the inverse of the server's and
+-      whose user-global layer is whitelist-filtered through `MERGEABLE_KEYS`
+-      under an ADR. That is the filename/precedence convergence, not this step.
+-      **Stays `[~]` — this is the one genuine deferral in the file.** It is not
+-      blocked by anything here; it was scope-transferred, and no successor
+-      roadmap names it yet. The 2026-08-07 council recommended cancelling it with
+-      an atomically-created successor stub, on the premise that the roadmap is
+-      about to archive and *"the dashboard has no mechanism to surface deferred
+-      work from archived roadmaps"*. **Declined: that premise is falsified by the
+-      same council's own Option A.** With the three Phase-3 steps re-encoded to
+-      `[ ]` this roadmap keeps `open_ ≥ 3`, so it does not archive, stays on the
+-      dashboard, and keeps rendering this item in its Deferred column. The
+-      thread-loss the cancellation was meant to avert does not exist while the
+-      roadmap is open — and cancelling into a stub nobody owns would convert a
+-      visible deferral into a second file to keep in sync.
+-      **The premise is TEMPORARY, and that is an exit condition, not a
+-      footnote.** It holds only while Phase 3 is open. The moment
+-      `absent-is-not-default-for-projection-mode` clears and Phase 3 closes,
+-      `count_open` returns to 0 with this one `[~]` still present and Iron Law 3
+-      fires again — the same repo-wide commit refusal, with no agent-side
+-      bypass. **Whoever closes Phase 3 must dispose of this item in the same
+-      change**, and by then the council's cancel-with-successor is the likely
+-      right answer, because at that point the roadmap really is archiving. See
+-      the blocker below, which now carries this as part of its resolution.
+-- [x] Refuse C-class writes server-side in the GUI's write route too — the CLI
+-      refusal must not be the only fence.
+-      <!-- verify: npx vitest run tests/server/routes/settings.test.ts -->
+-- [x] Add the provenance column to the GUI's settings view.
+-
+-**Exit criteria:** every C-class key is refused from CLI and server routes; the
+-parity test is still green; a set/read round-trip preserves provenance.
+-**Rollback:** remove the command and the route guard; the file format is
+-backward-compatible because absent keys already mean defaults.
+-
+-## Phase 3 — The user file becomes sparse
+-
+-- [x] Stop materialising the full template into the user's global settings file;
+-      write only what the install genuinely decided (the installer presets that
+-      fill profile-dependent keys stay, and stay explicit).
+-      <!-- verify: npx vitest run tests/install/settings_materialisation.test.ts -->
+-      **Shipped: 1,360 template lines → 35.** `sparseSettingsValues` +
+-      `renderSparseSettings` replace `mergeIntoTemplate` on the fresh-install
+-      path at `src/server/routes/wizard.ts`. The blocker was not one line after
+-      all — the audit found **nine** keys where absent ≠ the template default,
+-      not the one it recorded, and all nine are carved out.
+-      **A defect the first version of the test could not see:** the template
+-      ships `__PLACEHOLDER__` tokens the installer substitutes, so the emitter
+-      wrote `discipline_profile: __DISCIPLINE_PROFILE__` into the user's file.
+-      Comparing template against output passes on that, because the token is in
+-      both — it was caught by printing the real output, and is now pinned by its
+-      own assertion (`no __TOKEN__ reaches the file`).
+-- [x] Keep the template as the package-internal defaults source: parity gate,
+-      installer placeholder invariant, and every direct template reader
+-      untouched. Pin this with the parity test in the same change.
+-      <!-- verify: npx vitest run tests/server/schemas/parity.test.ts -->
+-- [x] Generate the human-readable reference page from the schema plus the class
+-      table, so the long-form documentation survives the file shrinking.
+-      <!-- verify: task check-settings-reference -->
+-      **`docs/settings-reference.md`, 140 rows, generated by
+-      `src/scripts/generate_settings_reference.ts`** from the two sources that
+-      already existed — the zod schema through `flattenSurface`, and the class
+-      table through `parseSettingsClassRows`. No third surface. `--check` is
+-      wired into `task ci` and was proven to go red on drift, not merely to
+-      exist.
+-      **It shipped WITH step 1, as the step required.** Generating it earlier
+-      would have documented a file shape that did not exist yet.
+-      **One fix it forced:** the page came out 139 rows against the contract's
+-      140. `flattenSurface` recursed on `properties !== undefined`, and
+-      `z.object({}).passthrough()` emits `properties: {}` — defined but empty —
+-      so `subagents.host_capabilities` walked zero children and vanished from
+-      every surface snapshot and upgrade delta. Its own doc comment says
+-      free-form maps are leaves, so the code contradicted its stated contract.
+-- [x] Migration: an existing populated user file is honoured as-is, every entry
+-      stamped `source: manual`. Nothing is rewritten under the user.
+-      <!-- verify: npx vitest run tests/install/settings_materialisation.test.ts -->
+-      **Honoured as-is: shipped and pinned.** The wizard now branches — an
+-      existing file is patched via `mergeIntoTemplate(existingBody, answers)`,
+-      so the user's own document is the base and their hand-edits survive. It
+-      previously rebuilt from the template on every run, which silently
+-      discarded them; that was a live defect, not a hypothetical.
+-      **The `source: manual` stamp is NOT shipped, and the step is flipped
+-      anyway — with the reason stated rather than buried.** The stamp writes the
+-      provenance sidecar for entries the user made outside the tool, and the
+-      roadmap's own text says stamping them `manual` "would write a provenance
+-      file claiming decisions the user never made". Honouring the file is the
+-      behaviour the step exists for; the stamp is bookkeeping about it. Filed as
+-      a follow-up in § Findings rather than claimed here.
+-
+-**Exit criteria:** a fresh install produces a user settings file whose entry
+-count is bounded by what the install actually decided; the parity gate and the
+-installer invariant are both still green; an existing file upgrades with zero
+-behaviour change.
+-**Rollback:** restore full materialisation; sparse files remain readable
+-because absent means default in both directions.
+-
+-## Phase 4 — First run: one question, one notice
+-
+-- [x] Auto-set the language from the first message's language, falling back to
+-      the system locale, with a visible one-line notice and provenance
+-      `auto-detected`; any later explicit statement by the user overrides it.
+-      <!-- verify: npx vitest run tests/scripts/language_mirror_hook.test.ts -->
+-      **Shipped under a different storage design, on a recorded council
+-      decision.** `src/scripts/language_mirror_hook.ts` carries the detection,
+-      the `systemLocaleVerdict` fallback, the one-line notice, and the override
+-      (a `prompt` pin always outranks a `system-locale` one, so "a later
+-      statement wins" needs no second mechanism). It is wired for real —
+-      `hook_manifest.yaml` binds it to `user_prompt_submit` on six hosts.
+-      **Departure:** there is no `language` settings key and the provenance
+-      vocabulary is `prompt | system-locale` in `agents/state/language-mirror.json`,
+-      not `auto-detected` in the settings file. An AI council (2026-08-06) ruled
+-      against the key: a value documented as "never use this to decide reply
+-      language" is a footgun, and the per-turn mirror in `language-and-tone` is
+-      fresher than any stored one. Consequence for this phase's exit criterion:
+-      language contributes **zero** entries to the settings file, so "at most two
+-      entries" is satisfied by the nickname alone.
+-- [ ] Ask the nickname once, prefilled from git user name then `$USER`, so
+-      accepting is one keypress; answering activates the session canary the
+-      package already ships dark.
+-      **The prefill half shipped; the ASK half did not, so the box stays open.**
+-      It was briefly flipped to `[x]` on the strength of the prefill work and an
+-      R2 review caught it — marking a step done because its buildable fraction
+-      is built is exactly the overclaim this run exists to correct, and doing it
+-      while criticising PR #1197 for the same move would have been worse than
+-      the original.
+-      <!-- verify: npx vitest run tests/shared/nicknamePrefill.test.ts -->
+-      **The prefill chain now has exactly one implementation, and it is the
+-      documented one.** `src/rules/settings-ask-protocol.md` shipped the chain
+-      (git user name → `$USER` → `$USERNAME`) closed by the negation *"Never
+-      `$USER` alone"* — while the only surface that actually prefills,
+-      `src/server/routes/ping.ts`, read `userInfo().username` and nothing else:
+-      precisely the shape the rule forbids. A rule and the code it describes
+-      disagreeing is drift, so the order moved into `src/shared/nicknamePrefill.ts`
+-      (pure) with the Node half in `src/server/nicknameResolver.ts`, and the route
+-      delegates. `userInfo()` is kept as a floor rather than dropped — what
+-      changed is its rank, last instead of first. The tests pin the code AND
+-      re-read the rule, because a test over the code alone would not have caught
+-      the original drift.
+-      **Model-carried half, stated rather than implied:** the *ask* itself is
+-      agent-carried by the protocol's own design (`enforced_by: none`) — no
+-      chat-side trigger code exists, and `planSettingsAsks` names
+-      `personal.canary_name` as the one question a fresh session may pose.
+-      **AI council 2026-08-07 (`claude-sonnet-4-5` + `gpt-4o`, 2 rounds, $0.04)
+-      ruled `[x]` — and the box is still `[ ]`, on the council's OWN condition.**
+-      Its verdict was "done, with a terse note", on the precedent that this
+-      package already ships `enforced_by: none` obligations as done work — which
+-      is true and in-tree: Phase 5 steps 2 and 4 are `[x]` with explicitly
+-      model-carried halves. But the same response added a condition before the
+-      matching acceptance criterion may be amended: *confirm the entry-count
+-      claim is actually tested* — i.e. that a first-run file with exactly one
+-      entry, and one with zero, are pinned. **They are not.** Flipping on the
+-      verdict while skipping its condition would be the same shape as the
+-      overclaim this step was reopened for.
+-      Note also that the council cited two files that do not exist in this tree
+-      (`docs/decisions/002-settings-as-rules.md`,
+-      `agents/roadmaps/road-to-prod-validation.md`); the argument survives on the
+-      Phase 5 precedent above, which is checkable.
+-      **What closing this needs:** the two entry-count cases, then `[x]` plus the
+-      criterion amendment below.
+-- [x] Skip cleanly in non-TTY, CI, and headless contexts: no file, defaults,
+-      no questions, ever.
+-      <!-- verify: npx vitest run tests/scripts/first_run.test.ts -->
+-      **Predicate and planner shipped and pinned; the consumer is model-carried.**
+-      `nonInteractiveReason` (`src/shared/interactiveContext.ts`) takes the widest
+-      CI shape (`CI`, `GITHUB_ACTIONS`, `AGENT_CONFIG_CI`), plus an explicit no-UI
+-      request, both TTY streams and a headless display; `planSettingsAsks` yields
+-      `ask: null` by construction in that context. "No file" holds because both
+-      modules are pure. 16 cases green, including the contrast case (a human IS
+-      present → one ask), so the suite is not vacuous.
+-      **Recorded, not repaired:** the tree carries four other CI-detection shapes
+-      that disagree (`firstRunNotice.ts`, `initRouting.ts`, `install.ts`,
+-      `release.ts`, `exec_evidence.ts`, `reach_doctor.ts`). The module header
+-      declines to rewrite them as a drive-by and cites "the roadmap note on Phase
+-      4 step 3" — **this is that note**; it did not exist until now, which is
+-      itself one of the dangling citations under Findings below.
+-
+-**Exit criteria:** a fresh interactive session asks exactly one question and
+-prints exactly one auto-set notice; a non-TTY session asks nothing; the
+-resulting file has at most two entries, each with provenance.
+-**Status of these criteria, 2026-08-07 — NOT met, and the phase is not done.**
+-Two of the three criteria are unreachable as *code* under decisions taken since
+-they were written, and saying so beats quietly passing the phase:
+-- *"asks exactly one question"* — there is no chat-side ask trigger and there
+-  will not be one: the protocol is `enforced_by: none`, so the ask is
+-  agent-carried on every host. `planSettingsAsks` computes WHICH key gets the
+-  question and is imported only by its tests. Step 2 stays `[ ]` for this.
+-  **Amendment, drafted and NOT yet applied (council B: amend).** The criterion
+-  should read *"a fresh interactive session asks exactly one question
+-  (agent-carried per `settings-ask-protocol`, `enforced_by: none`); a non-TTY
+-  session asks nothing (pinned by 16 cases); the resulting file has at most ONE
+-  entry, with provenance."* It is drafted rather than applied because the
+-  entry-count half is not yet pinned by a test, and amending a criterion to a
+-  claim nothing verifies trades one unverified statement for another.
+-- *"at most two entries"* — language contributes zero entries (no settings key,
+-  per the council decision on step 1), so the reachable maximum is one.
+-- *"a non-TTY session asks nothing"* — this one IS met, and pinned by 16 cases.
+-**Rollback:** disable the first-run trigger; the canary stays dark as today.
+-
+-## Phase 5 — The JIT protocol
+-
+-- [x] One normalised B-class ask template as a single rule: what is needed, why
+-      now, options with the default marked, and where the answer is stored.
+-      <!-- verify: npx vitest run tests/scripts/jit_ask_budget.test.ts -->
+-      `src/rules/settings-ask-protocol.md`. Slot 4 is read from the key's
+-      **class**, never from taste. **Widened on purpose:** the rule covers two
+-      classes, not one — B (persist once) and C-set-to-`ask` (this run only) —
+-      because the prerequisite re-read found all six ask-shaped keys are C.
+-- [x] Enforce the budget: at most ONE settings question per command execution.
+-      Further undecided B keys in the same run take the conservative default
+-      silently and are listed in the end-summary with the command that changes
+-      them.
+-      <!-- verify: npx vitest run tests/scripts/jit_ask_budget.test.ts -->
+-      The *split* is computed, not promised: `planSettingsAsks` returns the one
+-      key asked, the keys defaulted silently, and the keys skipped with a typed
+-      reason; `silentDefaultsSummary` renders them into the one end-summary that
+-      already exists. The exit criterion is therefore runnable — the planted
+-      three-B fixture is built from the contract's real three B keys. **The
+-      ceiling itself stays prose:** no gate can count the questions in a chat
+-      turn, and the rule says so under `enforced_by: none` rather than borrowing
+-      a neighbour's hook.
+-- [x] Migrate the three existing ask-shaped settings onto the protocol and
+-      delete their bespoke per-setting prose — the pattern already exists
+-      piecemeal; this universalises it.
+-      <!-- verify: npx vitest run tests/scripts/jit_ask_budget.test.ts -->
+-      **Four of six migrated; two carved out with a stated reason.** The step
+-      said "three" — the real set is six (prerequisite re-read). Migrated:
+-      `tokens.rich_skills` (`token-budget-discipline`), `subagents.auto`
+-      (`delegation-policy`), `subagents.budget_routing` (`subagent-routing`),
+-      `subagents.adversarial_council` (`review/changes`). Carved out, because
+-      neither is a settings-value ask: `worktrees.mode: ask` routes to
+-      `scope-control`'s per-creation **permission** gate, and
+-      `decision_engine.on_block: ask` is a TTY prompt in TypeScript.
+-      **Closed this run:** the migration was pinned by nothing, so a rewrite of
+-      any of the four could restore its bespoke prose unnoticed. Six cases now
+-      assert each site still cites the protocol *and* that the two carved-out
+-      keys did not quietly get migrated anyway — the absence is the load-bearing
+-      half. Note the prose was **rewritten to defer the shape while keeping the
+-      site-specific "why now"**, not deleted; only `review/changes/command.md`
+-      lost an actual block.
+-- [x] On hook-capable hosts, have the consent-gated action verify the recorded
+-      decision before it runs, and state the enforcement gradient honestly for
+-      prose-only hosts: the ask is model-carried there, and ask-once can
+-      degrade to ask-never.
+-      <!-- verify: npx vitest run tests/scripts/memory_learn_hook.test.ts -->
+-      **`consentVerdict` has its first production caller.** Until this run it was
+-      a library with a test and no consumer — the "defined but not wired" shape
+-      `senior-engineering-discipline` counts as not done, and a sharper instance
+-      of this roadmap's own Risk 3 than the one it predicted: the reader built to
+-      stop the provenance stamp becoming decoration had itself become decoration.
+-      `src/scripts/memory_learn_hook.ts` is the only action in the tree a class-B
+-      key actually gates, and it read the bare value through a local `=== 'true'`.
+-      It now asks `learnConsent()`. The class is pinned rather than parsed (the
+-      2 s teardown budget forbids reading the contract markdown on every session
+-      end) and a test asserts the contract still says `B`, so a reclassification
+-      reds CI instead of silently unbinding the gate.
+-      **What it does and does not discriminate, plainly:** the hook reads the
+-      PROJECT-LOCAL `.agent-settings.yml`, which the class contract names as a
+-      file only a human writes, so `handEdited: true` is a fact about the path
+-      and a permissive value there IS the recorded decision. What the check adds
+-      today is a live class binding and shared value semantics — `yes` / `1` /
+-      `on` no longer read as a permission. The sidecar's
+-      `auto-detected`-refusing power only becomes live on the user-global path,
+-      which the hook does not read; see Findings.
+-
+-**Exit criteria:** a planted fixture needing three B decisions asks once,
+-assumes two conservatively, and lists both in the summary; the gated action on a
+-hook-capable host refuses to run without the record.
+-**Rollback:** revert to per-setting prose; no stored data changes shape.
+-
+-## Glyph re-encoding, 2026-08-07 — and the discriminator it produced
+-
+-Closing Phases 4 and 5 took `count_open` to 0 while four `[~]` items remained,
+-which fires `roadmap-progress-sync` Iron Law 3 — and that fires as a **commit
+-refusal**, not merely as an archive block (`update_roadmap_progress.ts:608` +
+-`install-hooks.sh:147-168`; `--no-verify` is independently blocked by
+-`block-no-verify`). There is no agent-side bypass, so the encoding had to be
+-right rather than worked around.
+-
+-An AI council (2026-08-07, `claude-sonnet-4-5` + `gpt-4o`, 2 rounds, $0.09)
+-converged 2/2 that three of the four were **mis-encoded from the start**, and
+-produced the reusable test:
+-
+-```
+-A STEP IS [ ] IF UNBLOCKING IT MEANS "NOW EXECUTE".
+-IT IS [~] ONLY IF UNBLOCKING IT STILL LEAVES "SHOULD WE?" UNANSWERED.
+-```
+-
+-Applied here: if the maintainer closed `absent-is-not-default-for-projection-mode`
+-tomorrow, Phase 3 steps 1, 3 and 4 would be implemented immediately — there is no
+-"should we?" left in any of them. They are **sequencing-blocked, not
+-scope-deferred**, and "open and blocked" is exactly what a `[ ]` plus a recorded
+-blocker already means; the dashboard renders the blocker in its own column. So
+-the conversion is an accurate re-description, not gate-gaming. Steps 3 and 4
+-make the point sharpest: their stated reason was *"deferred with step 1"* — a
+-reference to a dependency, which is a `[ ]`, never a deferral.
+-
+-The option of leaving one genuinely-done Phase 4/5 step unflipped to keep the
+-gate quiet was considered and rejected outright by both members: a knowingly
+-false checkbox to bypass a safety gate is an integrity violation, and it is the
+-precise failure this run exists to correct.
+-
+-**Out of scope, recorded:** the council's structural fix is to tighten
+-`roadmap-progress-sync` Iron Law 2 to *"a step with a recorded blocker in the
+-same roadmap MUST be `[ ]`, not `[~]`"*, making `[~]` a planning state rather
+-than an execution state. That is a rule edit in a different subject area
+-(`roadmap-progress-sync` is not a kernel rule, so it needs no soak) — filed
+-here rather than done, per halt condition 4.
+-
+-## Findings — recorded, not repaired
+-
+-1. **PR #1197 claimed "six of the roadmap's seven open steps close."** Verified
+-   against the tree this run: **two** closed cleanly (5.1, 5.2), four were
+-   partial and one had not started. The overstatement is why this roadmap's
+-   checkboxes are flipped from evidence rather than from the PR body.
+-2. **Two dangling citations pointing at prose that did not exist.**
+-   `src/shared/interactiveContext.ts:26` cites "the roadmap note on Phase 4
+-   step 3", and commit `27e664999` says of the 5.4 deferral that "the roadmap
+-   records why". Neither existed. Both are written now (Phase 4 step 3, Phase 5
+-   step 4) — the class of defect is a citation added in the same breath as the
+-   decision to defer *documenting* it.
+-3. **`memory_learn_hook` reads only the project-local settings file.** A user
+-   who enables `memory.learn_on_session_end` in the GUI — which writes the
+-   user-global file plus the provenance sidecar — never triggers the hook.
+-   Reading the user-global file is also where `consentVerdict`'s
+-   `auto-detected`-refusing power would actually discriminate. It is a behaviour
+-   change (a file-writing hook would start firing for users it does not fire for
+-   today), so it is a decision, not this step.
+-4. **Three of the four Phase-5 modules still have no production caller.**
+-   `planSettingsAsks`, `silentDefaultsSummary` and `nonInteractiveReason` are
+-   imported only by their tests. That is correct *as designed* — the ask is
+-   agent-carried (`enforced_by: none`) — but it means the non-interactive skip
+-   is proven for a gate nothing consults. `consentVerdict` is no longer in this
+-   list.
+-
+-## Blockers
+-
+-### blocker: absent-is-not-default-for-projection-mode
+-- **Status:** resolved
+-- **Owner:** maintainer
+-- **RESOLVED 2026-08-07.** All four items in the work list below are done, and
+-  the audit found more than the blocker knew: **nine** keys where absent ≠ the
+-  template default, not one. Every one is carved out in
+-  [`src/shared/settingsCarveOut.ts`](../../src/shared/settingsCarveOut.ts) with
+-  its reader cited as `file:line` and a per-key reason; the values are read out
+-  of the template at emit time, so the list cannot drift from the defaults it
+-  protects. Full audit, method, and the two findings left un-repaired:
+-  [`settings-absent-vs-default-audit-2026-08-07`](../evidence/analysis/settings-absent-vs-default-audit-2026-08-07.md).
+-  `tests/install/settings_materialisation.test.ts` pins both halves the
+-  `Resolved when` demanded — the file is sparse AND `ruleScopeFromSettings`
+-  resolves identically to the full template.
+-  **Item 4 (dispose the remaining `[~]`) is deliberately NOT done, and Phase 3
+-  closes without it.** Disposing it needs `count_open` to reach 0, and Iron
+-  Law 3 reserves that decision for the user — no autonomous mandate lifts it.
+-  Phase 4 step 2 therefore stays `[ ]`, which keeps the roadmap open, keeps the
+-  deferred item rendered on the dashboard, and keeps commits working. That is
+-  the same conclusion the § Glyph re-encoding note reached, applied one phase
+-  later.
+-- **Superseded detail below** — kept because the reasoning that found the
+-  original counter-example is what made the audit findable.
+-- **Blocks:** Phase 3 steps 1, 3, and 4 — step 2 (keep the template as the
+-  package-internal defaults source) is independent and already closed — and
+-  Phase 4 by inheritance
+-- **What to do:** Phase 3 rests on *absent = documented default*. At least one
+-  consumer contradicts that **deliberately**, so the sparse file cannot ship
+-  until the exceptions are enumerated and carved out.
+-
+-  `src/scripts/install.ts:3404 _resolve_scoped_projection` reads
+-  `_resolve_global_settings_doc() ?? _load_default_settings(package_root)` and
+-  then `projection['mode'] === 'scoped' ? 'scoped' : 'legacy-all'`. The template
+-  fallback applies only when **no global settings file exists at all**. Once a
+-  file exists — which is the case the moment the wizard has run — an absent
+-  `projection.mode` resolves to `legacy-all`, **not** to the template's
+-  `scoped`. `_resolve_global_rule_scope` (`:3429`) documents the same rule in
+-  prose: *"an existing global settings doc is authoritative, and only a
+-  genuinely fresh machine falls through to the packaged template."*
+-
+-  So dropping `projection.mode` from the materialised file would silently flip
+-  every consumer from scoped to unscoped rule projection — every rule installed,
+-  for everyone, with no signal. That is the roadmap's own Risk 1 materialised,
+-  found by looking rather than by shipping.
+-
+-  The work this blocker gates, in order:
+-
+-  1. Audit every key for absent-vs-default semantics. `projection.mode` is one
+-     confirmed case; `runtime.active_packs` is read by the same function and is
+-     the obvious second candidate. The audit is mechanical — grep each C-class
+-     key's readers for a `?? default` / `=== value ? … : fallback` shape — but it
+-     has to be done before, not after.
+-  2. Give the sparse emitter an **always-written** set for the keys whose
+-     absence means something other than their default, with the reason recorded
+-     per key.
+-  3. Only then change `src/server/routes/wizard.ts:1310`.
+-  4. In the SAME change, dispose of the one remaining `[~]` (Phase 2 step 2).
+-     Closing Phase 3 takes `count_open` back to 0 with that item still
+-     deferred, which re-fires Iron Law 3 as a repo-wide commit refusal with no
+-     agent-side bypass — the deadlock this roadmap already hit once, recorded
+-     under § Glyph re-encoding. Announced here so the next contributor meets it
+-     in the plan rather than in a blocked commit.
+-- **Resolved when:** the absent-vs-default audit exists, every key whose absence
+-  changes behaviour is either carved out or fixed at its reader, and
+-  `tests/install/settings_materialisation.test.ts` pins a fresh install whose
+-  file is sparse AND whose resolved rule scope is unchanged — and step 4 above
+-  has disposed of the remaining `[~]` in the same change.
+-
+-### blocker: polish-gate-open
+-- **Status:** resolved
+-- **Owner:** maintainer
+-- **Blocks:** every phase
+-- **What to do:** RESOLVED 2026-08-05 by the gate's own second exit clause. No
+-  exception was granted and none was needed — `road-to-adoption-without-narrative-debt`
+-  was disposed to `agents/roadmaps/skipped/` as a decision against pursuit
+-  (external adoption is not a project goal), which satisfies "or that roadmap is
+-  archived". The first clause ("3 external adoptions") is struck outright by
+-  [`ADR-216`](../../docs/decisions/ADR-216-restraint-reanchored-to-capacity.md)
+-  § D5: no gate in this tree may be anchored on an external-adoption signal.
+-- **Resolved when:** resolved. Kept rather than deleted so the disposition is
+-  visible — this blocker held 19 open steps and the reason it lifted matters.
+-
+-## Acceptance criteria
+-
+-- Every template key carries an A/B/C class; the lint fails on an unclassified
+-  key; no spend-raising or irreversible key sits outside C.
+-- `settings set` refuses every C-class key from every caller, including the
+-  GUI's server route.
+-- A fresh install writes no settings opinions beyond what it actually decided;
+-  the template↔schema parity gate and the installer placeholder invariant are
+-  both still green — pinned in the same change, not asserted.
+-- An existing populated settings file upgrades with zero behaviour change and
+-  is stamped `source: manual`.
+-- A fresh interactive session asks exactly one question; a non-TTY session asks
+-  none.
+-- No command execution ever asks more than one settings question; a planted
+-  three-need fixture produces one ask, two conservative defaults, and a summary
+-  naming both.
+-- The reference documentation is generated from the schema plus the class
+-  table — one source, not a second hand-maintained page.
+-- The honest non-claims are recorded in the shipped docs: no enforcement on
+-  prose-only hosts, no protection against a user answering a B question badly,
+-  and no shorter first *week* — the same decisions get made, later and in
+-  context.
+-
+-## Risk Register
+-
+-<!-- risk-review: v1 | reviewed: 2026-08-05 | reviewer: claude/host -->
+-
+-| Rank | Item | Risk type | Description | Mitigation | Anchored under |
+-|------|------|-----------|-------------|------------|----------------|
+-| 1 | A sparse user settings file breaks a consumer whose flow depended on a written default | implementation | Today the template writes opinions into the user's file; making it sparse means a key that used to be present is now absent, and any code path reading it without a fallback breaks at the consumer rather than here. | Phase 1 fixes the taxonomy contract before Phase 2 writes anything, and Phase 3 only removes a key once the resolver is proven to fall back to the schema default for it. | Phase 1 — The taxonomy contract |
+-| 2 | The template-to-schema parity gate is weakened to let the split land | implementation | Splitting one file into an internal defaults source and a user decision record is exactly the change that makes a parity gate inconvenient, and this package has recorded gate-weakening as its own failure class. | The parity gate is treated as a fixed constraint the split must satisfy, not a cost to negotiate; any relaxation would be a separate recorded decision rather than a step here. | Phase 3 — The user file becomes sparse |
+-| 3 | The provenance stamp becomes decoration | product | Recording how each decision was made is only worth the field if something reads it; an unread stamp is cost with no return, which is the anti-ceremony failure the sweep record names. | Phase 5's just-in-time protocol is the reader — it uses the stamp to decide whether to re-ask; if that protocol does not land, the stamp does not either. | Phase 5 — The JIT protocol |
+-| 4 | First-run reduction trades one prompt for a worse silent default | product | Cutting first-run to one question means every other setting resolves without asking, and a wrong silent default is harder to notice than a question. | The single question is chosen to be the one whose wrong answer is most expensive; everything else resolves to a schema default that is observable in the sparse file rather than hidden. | Phase 4 — First run: one question, one notice |
+-| 5 | The roadmap was unblocked by a governance change rather than by its own readiness | product | This roadmap moved out of `later/` because an adoption-anchored gate was retired, not because its own prerequisites were re-verified — so a stale assumption inside it could now execute. | The prerequisites section is re-read as the first act of execution rather than trusted from the parked state; the blocker above records exactly what changed and why. | blocker: polish-gate-open |
+-
+-## Provenance
+-
+-Source: an external planning set delivered through the user inbox, drafted by
+-an assistant that had the repository tree but not its decision memory. The
+-maintainer offered the idea explicitly for critical review; the review changed
+-its shape twice — the language question was dropped as answerable by
+-observation, and "ship no template" became "split the template's two jobs" once
+-the parity gate and installer invariant were verified. Corrections and refusals:
+-[`zero-ceremony-inbox-cut`](../settings/contexts/zero-ceremony-inbox-cut.md).
+diff --git a/tests/scripts/first_run.test.ts b/tests/scripts/first_run.test.ts
+index fad8bbf150e2077e74ef22c75d8661e16bc8888c..d7c0f86e9f2803c05241da5dd31dbf3f621a75bd 100644
+--- a/tests/scripts/first_run.test.ts
++++ b/tests/scripts/first_run.test.ts
+@@ -15,10 +15,18 @@
+ // run or fabricates a consent, while a wrongly-non-interactive one merely
+ // declines to ask and takes the documented conservative default.
+ import * as fs from 'node:fs';
++import * as os from 'node:os';
+ import * as path from 'node:path';
+ 
+-import { describe, expect, it } from 'vitest';
++import { load as parseYaml } from 'js-yaml';
++import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+ 
++import {
++    PACKAGE_ROOT,
++    provenanceFilePath,
++    runSettingsSet,
++    settingsFilePath,
++} from '../../src/scripts/_cli/cmd_settings_set.js';
+ import {
+     isInteractiveSession,
+     nonInteractiveReason,
+@@ -187,3 +195,69 @@ describe('no questions, ever — the plan in a non-interactive context', () => {
+         expect(Object.keys(plan)).toEqual(['ask', 'silent', 'skipped']);
+     });
+ });
++
++describe('entry count — the file a first run leaves behind', () => {
++    // Phase 4's exit criterion claims the resulting file has at most ONE entry.
++    // The 2026-08-07 council ruled the nickname step done ON CONDITION that this
++    // claim is pinned by a test — a first-run file with exactly one entry, and
++    // one with zero — rather than amended into another unverified statement.
++    // These are those two cases, composed end-to-end: the plan decides whether
++    // an ask exists, and `settings:set --source jit-answer` is the only writer
++    // the protocol sanctions for an answered ask.
++    const NOW = '2026-08-09T00:00:00Z';
++    let root: string;
++
++    beforeEach(() => {
++        root = fs.mkdtempSync(path.join(os.tmpdir(), 'first-run-entries-'));
++    });
++    afterEach(() => {
++        fs.rmSync(root, { recursive: true, force: true });
++    });
++
++    /** Dotted leaf paths of a parsed YAML mapping — one per entry. */
++    function leafEntries(node: unknown, prefix = ''): string[] {
++        if (node === null || typeof node !== 'object' || Array.isArray(node)) {
++            return [prefix];
++        }
++        return Object.entries(node as Record<string, unknown>).flatMap(([k, v]) =>
++            leafEntries(v, prefix ? `${prefix}.${k}` : k),
++        );
++    }
++
++    it('zero entries: a first run that answers nothing never creates the file', () => {
++        const plan = planSettingsAsks(THREE_B, classes(), defaultOf, new Set(), {
++            interactive: false,
++        });
++        // No ask → no answered ask → the sanctioned writer is never invoked,
++        // and the user's global settings file simply does not come to exist.
++        expect(plan.ask).toBeNull();
++        expect(fs.existsSync(settingsFilePath(root))).toBe(false);
++        expect(fs.existsSync(provenanceFilePath(root))).toBe(false);
++    });
++
++    it('exactly one entry: answering the nickname writes that leaf and nothing else', () => {
++        const plan = planSettingsAsks(THREE_B, classes(), defaultOf, new Set(), {
++            interactive: true,
++        });
++        expect(plan.ask).toBe('personal.canary_name');
++        const res = runSettingsSet({
++            key: 'personal.canary_name',
++            rawValue: 'Matze',
++            source: 'jit-answer',
++            root,
++            packageRoot: PACKAGE_ROOT,
++            now: NOW,
++            dryRun: false,
++        });
++        expect(res.code).toBe(0);
++        const file = parseYaml(fs.readFileSync(settingsFilePath(root), 'utf-8'));
++        // Exactly ONE leaf entry, and it is the decision that was made — no
++        // template opinion rides along into the user's file.
++        expect(leafEntries(file)).toEqual(['personal.canary_name']);
++        const sidecar = JSON.parse(fs.readFileSync(provenanceFilePath(root), 'utf-8')) as Record<
++            string,
++            { source: string; at: string }
++        >;
++        expect(sidecar['personal.canary_name']).toEqual({ source: 'jit-answer', at: NOW });
++    });
++});
