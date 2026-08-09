@@ -9841,19 +9841,42 @@ var USER_GLOBAL_FILENAME = "agent-settings.yml";
 function DEFAULT_USER_GLOBAL_FILE() {
   return write_target(USER_GLOBAL_FILENAME);
 }
-function _resolve_user_global_file() {
-  const found = resolve_with_fallback(USER_GLOBAL_FILENAME);
-  if (found !== null) {
-    return found;
+var USER_GLOBAL_CANONICAL_RELATIVE = "settings/.agent-settings.yml";
+function user_global_settings_paths() {
+  const paths = [];
+  const flat = resolve_with_fallback(USER_GLOBAL_FILENAME);
+  if (flat !== null) {
+    paths.push(flat);
   }
-  return DEFAULT_USER_GLOBAL_FILE();
+  const canonical = resolve_with_fallback(USER_GLOBAL_CANONICAL_RELATIVE);
+  if (canonical !== null) {
+    paths.push(canonical);
+  }
+  if (paths.length === 0) {
+    paths.push(DEFAULT_USER_GLOBAL_FILE());
+  }
+  return paths;
 }
 var MERGEABLE_KEYS = [
+  // `name`, `ide` and `personal.bot_icon` are the PRE-MIGRATION spellings.
+  // `install.ts` migrates `ide` → `personal.ide` and `pr_comment_bot_icon`
+  // into its `personal.` home, and this list was never moved with them — so
+  // the whitelist named keys the template does not have while the keys it
+  // does have were filtered out silently. A user setting either preference
+  // user-globally got no error, no warning, and no effect
+  // (road-to-capability-answerability 4.3, ADR-219).
+  //
+  // Both spellings are listed rather than replaced: a legacy file that still
+  // uses the old name keeps working, and nothing that resolved before
+  // resolves differently. `name` has no reader anywhere and no template key;
+  // it is kept only so this change stays purely additive.
   "name",
   "ide",
+  "personal.ide",
   "rule_loading_tier",
   "memory.cadence",
   "personal.bot_icon",
+  "personal.pr_comment_bot_icon",
   "personal.autonomy",
   "telegraph.speak_scope",
   // Knowledge-card global cross-project sharing is a USER-GLOBAL setting
@@ -10067,7 +10090,10 @@ function load_agent_settings(options = {}) {
   const user_global_path = options.user_global_path ?? null;
   const verbose = options.verbose ?? false;
   const cwd = options.cwd ?? null;
-  const user_global_raw = _read_yaml(user_global_path ? user_global_path : _resolve_user_global_file()) ?? {};
+  const user_global_raw = {};
+  for (const p of user_global_path ? [user_global_path] : user_global_settings_paths()) {
+    _deep_merge(user_global_raw, _read_yaml(p) ?? {});
+  }
   const [user_global_filtered, ignored] = _filter_whitelist(user_global_raw, MERGEABLE_KEYS);
   if (verbose && ignored.length > 0) {
     logger.info(
