@@ -52,6 +52,7 @@ import {
     _check_detection,
     _detection_report,
     _reset_detection_memo,
+    _team_codex_binary_name,
 } from '../../../src/scripts/_cli/cmd_doctor.js';
 import { resetEnvironmentCache } from '../../../src/scripts/_lib/environment_detector.js';
 import { runInProc } from '../../_lib/run_in_process.js';
@@ -648,21 +649,42 @@ describe('doctor — team check', () => {
         );
     }
     const CODEX_PLUGIN_ENTRY = { 'codex@openai-codex': [{ scope: 'user', enabled: true }] };
+    // A leftover `ai_team.enabled` key is accepted-and-ignored by the config
+    // loader (Step 1.3) — kept here only to prove that leftover has zero
+    // effect on the check; `/team`'s availability is the codex binary/auth
+    // facts below, never this key.
     const ENABLED = 'ai_team:\n  enabled: true\n';
 
-    it('ai_team absent → ok "not configured (default-off)"', () => {
+    it('ai_team absent, no codex binary/auth → ok "unavailable (default)"', () => {
         withTeamEnv(
             () => {},
             (t) => {
                 const res = _check_team(t.root);
                 expect(res['status']).toBe('ok');
-                expect(res['message']).toBe('team mode not configured (default-off)');
-                expect(res['remedy']).toContain('ai_team.enabled: true');
+                expect(res['message']).toContain('team unavailable (default)');
+                expect(res['message']).toContain('codex CLI not installed');
+                expect(res['remedy']).toContain('npm install -g @openai/codex');
+                expect(res['remedy']).toContain('codex login');
             },
         );
     });
 
-    it('enabled + binary + auth + plugin all green → ok', () => {
+    it('no .agent-settings.yml at all, codex binary + auth present → ok "available" (availability is a CLI fact, not a setting)', () => {
+        withTeamEnv(
+            (t) => {
+                fakeCodex(t);
+                codexAuth(t);
+                claudeHost(t, CODEX_PLUGIN_ENTRY);
+            },
+            (t) => {
+                const res = _check_team(t.root);
+                expect(res['status'], String(res['message'])).toBe('ok');
+                expect(res['message']).toContain('team available');
+            },
+        );
+    });
+
+    it('a leftover ai_team.enabled has no effect — binary + auth + plugin all green → ok', () => {
         withTeamEnv(
             (t) => {
                 settings(t, ENABLED);
@@ -673,7 +695,7 @@ describe('doctor — team check', () => {
             (t) => {
                 const res = _check_team(t.root);
                 expect(res['status'], String(res['message'])).toBe('ok');
-                expect(res['message']).toContain('team mode enabled');
+                expect(res['message']).toContain('team available');
                 expect(res['message']).toContain('codex binary ✅');
                 expect(res['message']).toContain('codex auth ✅');
                 expect(res['message']).toContain('codex plugin ✅');
@@ -1018,16 +1040,20 @@ describe('doctor — team check', () => {
         );
     });
 
-    it('half-configured: gate managed while ai_team disabled → warn', () => {
+    it('gate managed while codex CLI is not installed → still ok (unavailable), gate detail still shown', () => {
+        // Not "half-configured" anymore — there is no `enabled` toggle to be
+        // half-set against. `review_gate.managed` governs the upstream
+        // codex PLUGIN's own Stop-hook loop, independent of whether our own
+        // /team wrapper's codex-CLI path is set up.
         withTeamEnv(
             (t) => {
                 settings(t, 'ai_team:\n  enabled: false\n  review_gate:\n    managed: true\n');
             },
             (t) => {
                 const res = _check_team(t.root);
-                expect(res['status']).toBe('warn');
-                expect(res['message']).toContain('half-configured');
-                expect(res['remedy']).toContain('ai_team.enabled: true');
+                expect(res['status'], String(res['message'])).toBe('ok');
+                expect(res['message']).toContain('team unavailable (default)');
+                expect(res['message']).toContain('review-gate on');
             },
         );
     });
@@ -1043,7 +1069,121 @@ describe('doctor — team check', () => {
                     EVENT4U_CONFIG_HOME: t.home,
                 });
                 expect(res.status).toBe(0);
-                expect(res.stdout).toContain('team mode not configured (default-off)');
+                expect(res.stdout).toContain('team unavailable (default)');
+            },
+        );
+    });
+
+    // m5 fix (independent-review finding): `MemberConfig.mode` is the RAW
+    // per-member override only — a member that never sets `mode:` locally
+    // reads `null` here regardless of `defaults.mode` (which itself
+    // defaults to `'auto'`). Before the fix, `_team_codex_binary_name`
+    // (and `_check_council_cli`'s own member filter) gated the `binary:`
+    // read on the literal `mode === 'cli'` and silently ignored it for
+    // every `auto`/unset member — the common, unconfigured shape.
+    function writeCouncilAt(t: TeamEnv, body: string): string {
+        const councilPath = path.join(t.home, 'settings', '.ai-council.yml');
+        fs.mkdirSync(path.dirname(councilPath), { recursive: true });
+        fs.writeFileSync(councilPath, body);
+        return councilPath;
+    }
+
+    it('_team_codex_binary_name honours a `binary:` override under an unset (defaults.mode: auto) member mode', () => {
+        withTeamEnv(
+            (t) => {
+                const customBin = path.join(t.bin, 'my-custom-codex');
+                fs.writeFileSync(customBin, '#!/bin/sh\nexit 0\n');
+                fs.chmodSync(customBin, 0o755);
+                writeCouncilAt(
+                    t,
+                    [
+                        'enabled: true',
+                        'members:',
+                        '  openai:',
+                        '    enabled: true',
+                        '    model: gpt-5',
+                        `    binary: ${customBin}`,
+                    ].join('\n'),
+                );
+            },
+            (t) => {
+                const customBin = path.join(t.bin, 'my-custom-codex');
+                expect(_team_codex_binary_name(t.root)).toBe(customBin);
+            },
+        );
+    });
+
+    it('_team_codex_binary_name honours a `binary:` override under an EXPLICIT `mode: auto` member', () => {
+        withTeamEnv(
+            (t) => {
+                const customBin = path.join(t.bin, 'my-custom-codex');
+                fs.writeFileSync(customBin, '#!/bin/sh\nexit 0\n');
+                fs.chmodSync(customBin, 0o755);
+                writeCouncilAt(
+                    t,
+                    [
+                        'enabled: true',
+                        'members:',
+                        '  openai:',
+                        '    enabled: true',
+                        '    model: gpt-5',
+                        '    mode: auto',
+                        `    binary: ${customBin}`,
+                    ].join('\n'),
+                );
+            },
+            (t) => {
+                const customBin = path.join(t.bin, 'my-custom-codex');
+                expect(_team_codex_binary_name(t.root)).toBe(customBin);
+            },
+        );
+    });
+
+    it('_check_team resolves ✅ for a custom-named binary under an auto-mode member (was invisible before the fix)', () => {
+        withTeamEnv(
+            (t) => {
+                const customBin = path.join(t.bin, 'my-custom-codex');
+                fs.writeFileSync(customBin, '#!/bin/sh\nexit 0\n');
+                fs.chmodSync(customBin, 0o755);
+                writeCouncilAt(
+                    t,
+                    [
+                        'enabled: true',
+                        'members:',
+                        '  openai:',
+                        '    enabled: true',
+                        '    model: gpt-5',
+                        `    binary: ${customBin}`,
+                    ].join('\n'),
+                );
+                codexAuth(t);
+            },
+            (t) => {
+                const customBin = path.join(t.bin, 'my-custom-codex');
+                const res = _check_team(t.root);
+                expect(res['message']).toContain(`codex binary ✅ (${customBin})`);
+            },
+        );
+    });
+
+    it('a `mode: api` member (no binary override possible — the schema forbids one on a non-cli/auto mode) keeps the provider default binary name', () => {
+        withTeamEnv(
+            (t) => {
+                writeCouncilAt(
+                    t,
+                    [
+                        'enabled: true',
+                        'members:',
+                        '  openai:',
+                        '    enabled: true',
+                        '    model: gpt-5',
+                        '    mode: api',
+                        '    api_key_ref: env:COUNCIL_CLI_TEST_KEY',
+                    ].join('\n'),
+                );
+            },
+            (t) => {
+                expect(_team_codex_binary_name(t.root)).toBe('codex');
             },
         );
     });

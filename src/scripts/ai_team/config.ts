@@ -4,23 +4,36 @@
  *
  * Mirrors the fail-closed validation posture of the council loader
  * (`src/scripts/ai_council/config.ts`) at a fraction of its surface: the
- * `ai_team` block has five flat keys and no nested sub-schemas, so this
- * loader is deliberately lean — defaults, per-key type checks, and hard
- * unknown-key rejection. Contract: `docs/contracts/ai-team-config.md`.
+ * `ai_team` block has a handful of flat keys and no nested sub-schemas
+ * beyond `review_gate`, so this loader is deliberately lean — defaults,
+ * per-key type checks, and hard unknown-key rejection. Contract:
+ * `docs/contracts/ai-team-config.md`.
  *
  * Unlike the council (ALWAYS user-global `.ai-council.yml`, ADR-104),
  * `ai_team` lives in the PROJECT settings cascade (`.agent-settings.yml`
- * via `load_agent_settings`) — team mode is a per-project posture
- * (default-off), not a per-developer credential store; the codex CLI
- * carries the subscription auth itself.
+ * via `load_agent_settings`) — team mode is a per-project posture, not a
+ * per-developer credential store; the codex CLI carries the subscription
+ * auth itself.
+ *
+ * `enabled` — the former master on/off switch — was DELETED
+ * (road-to-always-on-orchestration Phase 1, Step 1.3): `/team`'s
+ * availability is now a FACT resolved from the machine (codex CLI on
+ * `$PATH` + detectable auth — `src/scripts/ai_team/availability.ts`), not
+ * a settings flag, matching the doctrine already applied to the
+ * subagent/council layers. A leftover `enabled` key from an older install
+ * is accepted-and-ignored here (never rejected as unknown, never applied
+ * by any reader) so an existing project's `.agent-settings.yml` does not
+ * start failing `/team` outright; `load_agent_settings` still surfaces the
+ * one-line deprecation warning for it (`_lib/agent_settings.ts`).
  *
  * Validation contract (all enforced at load time, fail-closed):
  *
- * 1. `ai_team` absent → defaults (feature off). Non-mapping → error.
+ * 1. `ai_team` absent → defaults. Non-mapping → error.
  * 2. Unknown keys under `ai_team` are rejected — a typo must never
  *    silently disable a gate (`allow_delegate` misspelled = delegation
- *    stays off AND the load fails loudly).
- * 3. `enabled`, `allow_delegate`, `suppress_setup_hint` are booleans.
+ *    stays off AND the load fails loudly). `enabled` is the one
+ *    deliberate exception: accepted, untyped, ignored (see above).
+ * 3. `allow_delegate`, `suppress_setup_hint` are booleans.
  * 4. `model` is a non-empty string. `'auto'` = pass no `--model` flag
  *    (the codex CLI default applies); any other value passes through
  *    verbatim.
@@ -47,7 +60,6 @@ export interface AiTeamReviewGateConfig {
 }
 
 export interface AiTeamConfig {
-    readonly enabled: boolean;
     readonly model: string;
     readonly allow_delegate: boolean;
     readonly max_calls_per_day: number;
@@ -63,7 +75,6 @@ export const AI_TEAM_REVIEW_GATE_DEFAULTS: AiTeamReviewGateConfig = Object.freez
 
 /** Shipped defaults — byte-parity with `src/config/agent-settings.template.yml`. */
 export const AI_TEAM_DEFAULTS: AiTeamConfig = Object.freeze({
-    enabled: false,
     model: 'auto',
     allow_delegate: false,
     max_calls_per_day: 50,
@@ -79,13 +90,20 @@ export const AI_TEAM_DEFAULTS: AiTeamConfig = Object.freeze({
 export const AI_TEAM_MODEL_AUTO = 'auto';
 
 const _KNOWN_KEYS: ReadonlySet<string> = new Set([
-    'enabled',
     'model',
     'allow_delegate',
     'max_calls_per_day',
     'suppress_setup_hint',
     'review_gate',
 ]);
+
+/**
+ * Deleted key accepted-and-ignored for migration grace (see module docstring).
+ * Never added to `_KNOWN_KEYS` — it carries no validated type and is never
+ * read into `AiTeamConfig`; it exists in this set only so the unknown-key
+ * loop below does not fail-closed an existing project's leftover value.
+ */
+const _DELETED_KEYS: ReadonlySet<string> = new Set(['enabled']);
 
 const _KNOWN_REVIEW_GATE_KEYS: ReadonlySet<string> = new Set([
     'managed',
@@ -175,6 +193,9 @@ export function build_ai_team_config(raw: unknown): AiTeamConfig {
     }
 
     for (const key of Object.keys(raw)) {
+        if (_DELETED_KEYS.has(key)) {
+            continue; // deleted, accepted-and-ignored — see module docstring.
+        }
         if (!_KNOWN_KEYS.has(key)) {
             throw new TeamConfigError(
                 `ai_team.${key}: unknown key; valid: ` +
@@ -183,7 +204,6 @@ export function build_ai_team_config(raw: unknown): AiTeamConfig {
         }
     }
 
-    const enabled = _requireBool(raw, 'enabled', AI_TEAM_DEFAULTS.enabled);
     const allow_delegate = _requireBool(raw, 'allow_delegate', AI_TEAM_DEFAULTS.allow_delegate);
     const suppress_setup_hint = _requireBool(
         raw,
@@ -216,7 +236,7 @@ export function build_ai_team_config(raw: unknown): AiTeamConfig {
 
     const review_gate = _build_review_gate('review_gate' in raw ? raw['review_gate'] : undefined);
 
-    return { enabled, model, allow_delegate, max_calls_per_day, suppress_setup_hint, review_gate };
+    return { model, allow_delegate, max_calls_per_day, suppress_setup_hint, review_gate };
 }
 
 /**

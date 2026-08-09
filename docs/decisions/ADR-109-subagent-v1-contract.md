@@ -234,6 +234,23 @@ byte-budget check (an arbitrary threshold on a system prompt is cargo-cult).
 extended-thinking models' output — claude-fable-5 returned 3191 output tokens as
 empty text. Fixed to join all text-type blocks.)*
 
+## Amendment 3 (2026-08-09) — teammate execution gap (docs-verified)
+
+Teammate execution gap (docs-verified 2026-08-09): a definition run as a
+teammate honours `tools` + `model` but NOT `skills`/`mcpServers`; definitions
+whose correctness depends on a skill surface must not be team-dispatched until
+upstream closes the gap.
+
+- **Consequence for this contract:** §4's cross-host degradation table and §2's
+  banned-fields list already assume no in-process skill loading for a
+  dispatched unit; this gap extends the same restriction to Claude Code's own
+  native team-dispatch path (agent teams, behind
+  `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS`), not just to the non-CC degraded
+  projection.
+- **Not a status change.** This amendment records a verified host limitation
+  found by re-checking current host documentation; it does not reopen the
+  contract or alter `status: accepted`.
+
 ## References
 
 - Council debate 2026-07-04 (claude-sonnet-4-5 + gpt-4o, 2 rounds).

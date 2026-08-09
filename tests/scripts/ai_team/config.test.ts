@@ -32,10 +32,9 @@ afterEach(() => {
 // === defaults ==============================================================
 
 describe('build_ai_team_config — defaults', () => {
-    it('absent block (undefined) → shipped defaults, feature off', () => {
+    it('absent block (undefined) → shipped defaults', () => {
         const c = build_ai_team_config(undefined);
         expect(c).toEqual(AI_TEAM_DEFAULTS);
-        expect(c.enabled).toBe(false);
         expect(c.model).toBe(AI_TEAM_MODEL_AUTO);
         expect(c.allow_delegate).toBe(false);
         expect(c.max_calls_per_day).toBe(50);
@@ -53,18 +52,27 @@ describe('build_ai_team_config — defaults', () => {
     });
 
     it('partial block keeps defaults for absent keys', () => {
-        const c = build_ai_team_config({ enabled: true });
-        expect(c.enabled).toBe(true);
+        const c = build_ai_team_config({ allow_delegate: true });
         expect(c.model).toBe('auto');
-        expect(c.allow_delegate).toBe(false);
+        expect(c.allow_delegate).toBe(true);
         expect(c.max_calls_per_day).toBe(50);
         expect(c.suppress_setup_hint).toBe(false);
         expect(c.review_gate).toEqual({ managed: false, max_consecutive_blocks: 3 });
     });
 
+    it('a leftover `enabled` key is accepted and has zero effect — deleted, Step 1.3', () => {
+        // road-to-always-on-orchestration Phase 1, Step 1.3: `enabled` was
+        // the former master switch. It is now accepted-and-ignored (never
+        // rejected as unknown, never applied) so an older install's
+        // leftover key does not fail-closed `/team` outright.
+        const c = build_ai_team_config({ enabled: true, allow_delegate: true });
+        expect(c).not.toHaveProperty('enabled');
+        expect(c.allow_delegate).toBe(true);
+        expect(c.model).toBe('auto');
+    });
+
     it('full valid block round-trips', () => {
         const c = build_ai_team_config({
-            enabled: true,
             model: 'gpt-5.5',
             allow_delegate: true,
             max_calls_per_day: 7,
@@ -72,7 +80,6 @@ describe('build_ai_team_config — defaults', () => {
             review_gate: { managed: true, max_consecutive_blocks: 5 },
         });
         expect(c).toEqual({
-            enabled: true,
             model: 'gpt-5.5',
             allow_delegate: true,
             max_calls_per_day: 7,
@@ -90,7 +97,6 @@ describe('build_ai_team_config — defaults', () => {
             'utf-8',
         );
         expect(template).toMatch(/^ai_team:$/m);
-        expect(template).toMatch(/^ {2}enabled: false$/m);
         expect(template).toMatch(/^ {2}model: auto$/m);
         expect(template).toMatch(/^ {2}allow_delegate: false$/m);
         expect(template).toMatch(/^ {2}max_calls_per_day: 50$/m);
@@ -98,6 +104,15 @@ describe('build_ai_team_config — defaults', () => {
         expect(template).toMatch(/^ {2}review_gate:$/m);
         expect(template).toMatch(/^ {4}managed: false$/m);
         expect(template).toMatch(/^ {4}max_consecutive_blocks: 3$/m);
+
+        // Scoped negative check: no `enabled` key inside the `ai_team:`
+        // block specifically (the template has OTHER unrelated
+        // `  enabled: …` keys under other top-level sections — a bare
+        // `/^ {2}enabled: /m` would false-positive on those).
+        const block_match = /^ai_team:\n([\s\S]*?)(?=^\S|\z)/m.exec(template);
+        expect(block_match).not.toBeNull();
+        const ai_team_block = block_match?.[1] ?? '';
+        expect(ai_team_block).not.toMatch(/^ {2}enabled: /m);
     });
 });
 
@@ -207,7 +222,7 @@ describe('build_ai_team_config — type errors', () => {
         expect(() => build_ai_team_config(true)).toThrow(TeamConfigError);
     });
 
-    it.each(['enabled', 'allow_delegate', 'suppress_setup_hint'] as const)(
+    it.each(['allow_delegate', 'suppress_setup_hint'] as const)(
         '%s must be a boolean',
         (key) => {
             expect(() => build_ai_team_config({ [key]: 'true' })).toThrow(
@@ -216,6 +231,15 @@ describe('build_ai_team_config — type errors', () => {
             expect(() => build_ai_team_config({ [key]: 1 })).toThrow(TeamConfigError);
         },
     );
+
+    it('a leftover `enabled` key of ANY shape never throws — deleted keys skip type validation entirely', () => {
+        // Unlike a genuine unknown/typo'd key (which fails loudly), the
+        // deleted `enabled` key is unconditionally ignored — including a
+        // malformed value an older, buggier install might have written.
+        expect(build_ai_team_config({ enabled: 'true' })).toEqual(AI_TEAM_DEFAULTS);
+        expect(build_ai_team_config({ enabled: 1 })).toEqual(AI_TEAM_DEFAULTS);
+        expect(build_ai_team_config({ enabled: null })).toEqual(AI_TEAM_DEFAULTS);
+    });
 
     it('model must be a non-empty string', () => {
         expect(() => build_ai_team_config({ model: '' })).toThrow(
@@ -246,9 +270,8 @@ describe('build_ai_team_config — type errors', () => {
 describe('load_ai_team_config', () => {
     it('reads the ai_team block from an injected settings dict', () => {
         const c = load_ai_team_config({
-            settings: { ai_team: { enabled: true, model: 'gpt-5.4' } },
+            settings: { ai_team: { model: 'gpt-5.4' } },
         });
-        expect(c.enabled).toBe(true);
         expect(c.model).toBe('gpt-5.4');
     });
 
@@ -258,7 +281,7 @@ describe('load_ai_team_config', () => {
         );
     });
 
-    it('reads the block from a real .agent-settings.yml via the cascade', () => {
+    it('reads the block from a real .agent-settings.yml via the cascade, ignoring a leftover `enabled`', () => {
         const tmp = make_tmp();
         fs.writeFileSync(
             path.join(tmp, '.agent-settings.yml'),
@@ -266,7 +289,7 @@ describe('load_ai_team_config', () => {
             'utf-8',
         );
         const c = load_ai_team_config({ cwd: tmp });
-        expect(c.enabled).toBe(true);
+        expect(c).not.toHaveProperty('enabled');
         expect(c.max_calls_per_day).toBe(3);
         expect(c.model).toBe('auto');
     });
@@ -274,10 +297,10 @@ describe('load_ai_team_config', () => {
     // --- malformed-settings red paths (PR-#924 advisory finding) ----------
     //
     // Contract: a broken settings file must resolve to the SAFE defaults
-    // (enabled: false, allow_delegate: false) or fail loudly — team mode is
-    // NEVER silently enabled by unparseable or mis-typed input.
+    // (allow_delegate: false) or fail loudly — team mode is NEVER silently
+    // opened up by unparseable or mis-typed input.
 
-    it('unparseable YAML settings file → safe defaults, feature stays off', () => {
+    it('unparseable YAML settings file → safe defaults', () => {
         const tmp = make_tmp();
         // Unclosed flow sequence — the yaml parser rejects this outright;
         // the settings cascade degrades the whole layer to {} (fail-safe).
@@ -288,7 +311,6 @@ describe('load_ai_team_config', () => {
         );
         const c = load_ai_team_config({ cwd: tmp });
         expect(c).toEqual(AI_TEAM_DEFAULTS);
-        expect(c.enabled).toBe(false);
         expect(c.allow_delegate).toBe(false);
     });
 
@@ -322,16 +344,14 @@ describe('load_ai_team_config', () => {
         );
     });
 
-    it('enabled as a truthy STRING → throws, feature never turns on', () => {
+    it('a malformed leftover `enabled` value in a real settings file never throws — deleted key, Step 1.3', () => {
         const tmp = make_tmp();
         fs.writeFileSync(
             path.join(tmp, '.agent-settings.yml'),
             'ai_team:\n  enabled: "on"\n',
             'utf-8',
         );
-        expect(() => load_ai_team_config({ cwd: tmp })).toThrow(
-            /`ai_team\.enabled` must be a boolean/,
-        );
+        expect(load_ai_team_config({ cwd: tmp })).toEqual(AI_TEAM_DEFAULTS);
     });
 
     it('invalid block in the settings file fails loudly', () => {
@@ -380,7 +400,7 @@ describe('quota — shared openai bucket read/increment', () => {
 
     it('ai_team.max_calls_per_day is enforceable against the shared count', () => {
         const state = path.join(make_tmp(), 'cli-calls.json');
-        const cfg = build_ai_team_config({ enabled: true, max_calls_per_day: 2 });
+        const cfg = build_ai_team_config({ max_calls_per_day: 2 });
         record_cli_call('openai', state);
         record_cli_call('openai', state);
         const used = load_cli_call_counts(state)['openai'] ?? 0;

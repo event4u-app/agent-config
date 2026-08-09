@@ -141,7 +141,11 @@ describe('team_review_gate_hook — stop-concern call-site (E2E via tsx)', () =>
         );
     });
 
-    it('enabled: false dominates managed: true → strict no-op (the !enabled disjunct)', () => {
+    it('a leftover ai_team.enabled: false does NOT suppress managed governance (decoupled, Step 1.3)', () => {
+        // `ai_team.enabled` was deleted; `managed` no longer stacks behind it.
+        // A leftover `enabled: false` from an older install is accepted and
+        // ignored by the config loader — it must not silently disable the
+        // Review-Gate counter, which is governed by `managed` alone.
         const env = make_env(
             false,
             'ai_team:\n  enabled: false\n  review_gate:\n    managed: true\n    max_consecutive_blocks: 3\n',
@@ -149,13 +153,16 @@ describe('team_review_gate_hook — stop-concern call-site (E2E via tsx)', () =>
         seed_gate_job(env, 'task-1', 'BLOCK: something', '2026-07-12T10:00:00Z');
         const r = run_stop(env);
         expect(r.status, r.stderr).toBe(0);
-        expect(r.stdout).toBe('');
+        expect(r.stdout).toBe(''); // one BLOCK — below the bound, no notice yet
+        // State + ledger ARE written — governance is active despite `enabled: false`.
         expect(
             fs.existsSync(path.join(env.root, 'agents', 'runtime', 'state', 'team-review-gate.json')),
-        ).toBe(false);
-        expect(fs.existsSync(path.join(env.root, 'agents', 'runtime', 'team', 'events.log'))).toBe(
-            false,
-        );
+        ).toBe(true);
+        const ledger = fs
+            .readFileSync(path.join(env.root, 'agents', 'runtime', 'team', 'events.log'), 'utf-8')
+            .trim();
+        expect(ledger).toContain('"verdict":"BLOCK"');
+        expect(ledger).toContain('"counter":"1/3"');
     });
 
     it('managed: 3 consecutive BLOCKs → circuit breaker on stdout exactly once; dedupe on a stale job', () => {

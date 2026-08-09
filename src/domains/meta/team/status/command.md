@@ -5,7 +5,7 @@ disable-model-invocation: true
 pack: meta
 tier: 2
 visibility: internal
-description: Thin wrapper — plugin job status via /codex:status plus a quota block (shared openai counter vs team + council ceilings). Gated on ai_team.enabled; fails closed without the plugin.
+description: Thin wrapper — plugin job status via /codex:status plus a quota block (shared openai counter vs team + council ceilings). Gated on codex CLI/auth availability; fails closed without the plugin.
 cluster: team
 sub: status
 suggestion:
@@ -25,11 +25,11 @@ Thin wrapper: team-mode status. On Claude Code hosts it delegates to the
 official plugin's `/codex:status` and appends **our** quota block —
 the one piece of state the plugin does not know about.
 
-### 1. Gate — `ai_team.enabled`
+### 1. Gate — `/team` availability
 
-Read `ai_team.enabled` from `.agent-settings.yml`. Missing or `false` →
-print the enable pointer from `/team` (master) § "Default-off gate" and
-**STOP**.
+Run the availability check from `/team` (master) § "Availability gate":
+codex CLI + auth, and `emergency.orchestration_halt`. Either check fails →
+print the matching block and **STOP**.
 
 ### 2. Gate — plugin presence (fail closed)
 
@@ -102,12 +102,13 @@ compatibility).
   ceilings + per-path OPEN/BLOCKED verdict).
 - Any `team.gate: BLOCK n/N` ledger lines, verbatim, after the quota
   block — only when present.
-- Gate failures print exactly one block (enable pointer or fail-closed
-  block) and stop.
+- Gate failures print exactly one block (availability/halt block or
+  fail-closed block) and stop.
 
 ## Do NOT
 
-- Do NOT run when `ai_team.enabled` is false — enable pointer, stop.
+- Do NOT run when `/team` is unavailable (codex CLI/auth missing) or
+  halted — matching block, stop.
 - Do NOT fabricate a count when the counter file is unreadable — print
   `Quota: unavailable (<reason>)` instead of a guessed number.
 - Do NOT write to `cli-calls.json` — the transport owns the counter; this
