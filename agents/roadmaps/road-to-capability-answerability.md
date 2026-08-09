@@ -283,18 +283,107 @@ These are not inference burdens; they are mismatches that guarantee the inferenc
 fails. Listed because fixing the reasoning while leaving these in place would be
 half a fix.
 
-- [ ] 4.1 The one agent-reachable settings writer persists to a path the loader
+- [x] 4.1 The one agent-reachable settings writer persists to a path the loader
   does not read. Worse, it writes into the directory the council config lives in,
   which is how a wrong mental model gets reinforced by a real file appearing in
   the wrong place.
-- [ ] 4.2 The onboarding gate reads the legacy repo-root path and treats "file
+  <!-- Fixed on the READER side, additively: `user_global_settings_paths()` now
+  returns both user-global files in precedence order and `load_agent_settings` /
+  `iter_setting_overrides` merge them. Pinned by
+  `tests/lib/user_global_settings_paths.test.ts`; the 97 existing
+  `agent_settings` tests stay green. -->
+
+  **Measured, not read: it is three writers against one reader, and the reader
+  was the outlier.** `src/server/routes/settings.ts`, `src/server/routes/wizard.ts`
+  and `src/scripts/install.ts` all write
+  `<event4u_root>/settings/.agent-settings.yml`; `load_agent_settings` read
+  `<event4u_root>/agent-settings.yml`. On the machine this was built on the first
+  file is **58 KB** of real decisions dated 2026-08-04 and the second is **107
+  bytes** dated 2026-07-08. So every value set through the only surfaces that
+  write settings was inert — silently.
+
+  **Fixed on the reader, not the writer, and additively.** Moving the writer
+  would have meant changing three writers and relocating every existing user's
+  file. The flat file also is not dead: `link_crypto.ts` reads it **directly**
+  for `secrets.link_encryption_key`, so removing it from the cascade would have
+  broken key resolution. It stays first; the canonical file layers on top and
+  wins per key.
+
+  **Blast radius, stated rather than hoped:** the user-global layer is filtered
+  through `MERGEABLE_KEYS`, so of the ~140 leaves in that 58 KB file exactly the
+  **14 whitelisted** ones become reachable. Confirmed live — `personal.autonomy`
+  now resolves to the value the wizard wrote, where before the same read returned
+  "not set in any settings file". This is a real behaviour change for every
+  consumer whose canonical file sets a whitelisted key, and it is the change that
+  makes the documented behaviour true.
+- [x] 4.2 The onboarding gate reads the legacy repo-root path and treats "file
   missing" as "do not block", so an Iron-Law gate never fires on a canonically
   installed consumer.
-- [ ] 4.3 A whitelisted settings key does not match the template's real key name,
+  <!-- `onboarding_gate_hook.ts` now resolves through `SETTINGS_CANDIDATES`
+  (canonical `agents/settings/.agent-settings.yml` before the legacy root file)
+  via the exported `resolve_settings_path`. The 10 existing tests stay green;
+  4 new ones pin the canonical hit, the precedence, the legacy-only case, and the
+  missing case. -->
+
+  **The missing-file branch is left as it is, deliberately.** "No settings file
+  at all → do not block" is the documented pre-rule/cloud carve-out the rule
+  itself states, so it is not a bug. The defect was purely the path: the hook
+  built `<root>/.agent-settings.yml` while the canonical project file is
+  `agents/settings/.agent-settings.yml`, so a correctly installed consumer took
+  the missing branch every time. Fixing the path makes the existing carve-out
+  mean what it says instead of swallowing every install.
+
+  One detail worth stating: when neither file exists the resolver now returns the
+  **canonical** path rather than the legacy one, so the state file names the file
+  a consumer should create.
+- [x] 4.3 A whitelisted settings key does not match the template's real key name,
   so a user-global value is silently dropped.
-- [ ] 4.4 The settings-classes contract asserts "a sparse file means absent =
+  <!-- `personal.ide` and `personal.pr_comment_bot_icon` added to
+  `MERGEABLE_KEYS`, legacy spellings kept. Recorded as ADR-219 because the list's
+  own comment says widening it requires one; the exact-list pin in
+  `tests/lib/agent_settings.test.ts` is that requirement in executable form and
+  was updated with the ADR cited, plus a test that the additive property holds. -->
+
+  **Not one key — three, and the cause is a migration the whitelist never
+  followed.** `install.ts` carries a migration map that moved `ide` →
+  `personal.ide` and `pr_comment_bot_icon` into its `personal.` home;
+  `MERGEABLE_KEYS` stayed at the pre-migration spellings. So it protected names
+  the template does not have (`ide`, `personal.bot_icon`, and `name`, which has
+  **no reader anywhere** and no template key) while filtering out the names it
+  does. `personal.pr_comment_bot_icon` is documented as *"Personal preference —
+  each developer decides"*, which is exactly the shape that is supposed to be
+  user-global and was the one shape it could not be.
+
+  **Additive on purpose:** both spellings are listed rather than swapped, so a
+  user-global file still using a pre-migration name keeps resolving. `name` is
+  kept despite being dead — removing it is a narrowing change and does not belong
+  bundled into this one.
+
+  **Named as not-fixed:** the migration map and the whitelist remain two lists
+  that can drift apart again. A gate asserting every whitelist entry is either in
+  the template or explicitly marked legacy would stop the next occurrence; it is
+  not built here.
+- [x] 4.4 The settings-classes contract asserts "a sparse file means absent =
   default"; the defaults map is empty, so no code implements it. Either implement
   it or delete the claim.
+  <!-- Claim deleted and replaced with what is actually true, in
+  `docs/contracts/settings-classes.md` § half one. `lint_settings_classes` still
+  green (140 keys, A=27 B=3 C=110); `settings_set` consumers unchanged. -->
+
+  **Deleted, not implemented — and the choice is not a shortcut.** Implementing a
+  defaults layer would mean loading the template as a base layer so every absent
+  key resolves to its shipped default. That is precisely what
+  `src/shared/settingsCarveOut.ts` documents as **false for nine keys**, where a
+  reader deliberately resolves absent to something else. Implementing the claim
+  would therefore have changed behaviour on every install *and* made the
+  carve-out module incoherent.
+
+  What actually makes half one hold is the **reader**, not a defaults layer: each
+  reader supplies its own fallback, and the lint guarantees the template value it
+  is expected to mirror is the conservative one. The contract now says that, and
+  names `quality.local_auto_run` as the case where the literal reading is
+  actively wrong — template `false` arms a gate, absent resolves to `true` and
+  disarms it.
 
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-08-08 | reviewer: claude/host -->
@@ -324,11 +413,52 @@ half a fix.
 - [ ] Every capability in the seven-row table either has a probe that answers it,
   or a rule that states the answer is unavailable and what the agent should do
   instead. No row is left implying coverage it does not have.
-- [ ] No probe ships without at least one rule or command referencing it; a verb
+  <!-- OPEN, and not closable here. Rows 2-7 are covered (council:status,
+  packs:active, mcp:available, hooks:status, brand:status, plus the design-review
+  rule's existing degradation disclosure). Row 1 — host subagent-spawn — is
+  exactly the row whose probe is dishonest, and fixing it IS step 1.2, blocked on
+  the maintainer's host-capability decision. Flipping this while row 1 still
+  implies coverage it does not have would be the overclaim the row describes. -->
+
+- [x] No probe ships without at least one rule or command referencing it; a verb
   nobody points at counts as unshipped.
+  <!-- Verified by count: packs:active 5 rules (the five pack floors that claim
+  auto-activation), settings:get 8, mcp:available 1 (tool-safety, which is where
+  the tool-registry-vs-MCP conflation lives), brand:status 1
+  (brand-source-of-truth), hooks:status 7. The Risk-1 failure mode — "a probe is
+  added and nothing points at it" — is the one this criterion exists to catch,
+  and it was caught: packs:active and mcp:available had only the contract until
+  this pass. -->
+
+  **Where the pointer went is part of the fix.** `packs:active` is named in the
+  five safety floors that say "auto-activates when pack X is installed" — the
+  exact sentences that were unverifiable — and each now also names the degraded
+  case in which the floor cannot activate at all. `mcp:available` is named in
+  `tool-safety` beside the tool-registry allowlist, because the registry and the
+  reachable MCP surface being the same thing is the belief that verb exists to
+  break.
 - [ ] The host-capability default is decided, and the template comment, the
   loader, and the reading rules agree — pinned by a test.
-- [ ] The ten rules naming `.agent-settings.yml` bare either carry the resolution
+  <!-- OPEN — blocked on `host-capability-default-flip` (Phase 1), a
+  consumer-visible default flip that is a maintainer decision by this repo's own
+  discipline. -->
+
+- [x] The ten rules naming `.agent-settings.yml` bare either carry the resolution
   chain or point at it.
-- [ ] The four adjacent path defects are fixed or each carries a stated reason for
+  <!-- Verified mechanically after the edit: iterating every rule that names the
+  file, zero lack a chain statement. The real count was 11, of which 3 already
+  carried it (see 3.3). -->
+
+- [x] The four adjacent path defects are fixed or each carries a stated reason for
   staying.
+  <!-- All four fixed, none deferred. 4.1 loader cascade (3 writers vs 1 reader,
+  fixed additively on the reader, pinned by a new test file). 4.2 onboarding-gate
+  path (canonical before legacy, 4 new tests, missing-file carve-out left intact
+  on purpose). 4.3 MERGEABLE_KEYS migration drift (ADR-219, additive, the
+  exact-list pin updated with the ADR cited). 4.4 the sparse-file claim deleted
+  rather than implemented, because implementing it would have contradicted the
+  nine-key carve-out and changed behaviour on every install. -->
+
+  Each also carries a stated non-goal: the migration-map-vs-whitelist drift gate
+  (4.3), the `name` key removal (4.3), and the defaults layer itself (4.4) are
+  named as not-built rather than left to be discovered.

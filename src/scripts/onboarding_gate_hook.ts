@@ -39,6 +39,45 @@ import { atomic_write_json } from "./hooks/state_io.js";
 import { readHookStdin } from "./hooks/hook_stdin.js";
 
 export const SETTINGS_FILE = ".agent-settings.yml";
+
+/**
+ * Project-relative settings locations, canonical first.
+ *
+ * The canonical project settings file is `agents/settings/.agent-settings.yml`;
+ * the repo-root file is a documented legacy fallback
+ * (`agent_settings.ts::project_settings_path`). This hook read ONLY the legacy
+ * path, so on a canonically installed consumer the file was always "missing" and
+ * the gate resolved to `settings_file_missing` → do not block. An Iron-Law gate
+ * that cannot fire on a correct install is not a gate.
+ *
+ * Inlined rather than imported: this module is deliberately dependency-free so
+ * it can run as a hook on every platform. The list is two entries and its source
+ * of truth is named above.
+ */
+export const SETTINGS_CANDIDATES: readonly string[] = [
+  path.join("agents", "settings", SETTINGS_FILE),
+  SETTINGS_FILE,
+];
+
+/**
+ * First existing settings file under `consumer_root`, canonical before legacy.
+ *
+ * Falls back to the CANONICAL path when neither exists, so the "missing" branch
+ * reports the file a consumer should create rather than the one they should not.
+ */
+export function resolve_settings_path(consumer_root: string): string {
+  for (const rel of SETTINGS_CANDIDATES) {
+    const candidate = path.join(consumer_root, rel);
+    try {
+      if (fs.statSync(candidate).isFile()) {
+        return candidate;
+      }
+    } catch {
+      continue;
+    }
+  }
+  return path.join(consumer_root, SETTINGS_CANDIDATES[0] as string);
+}
 // NOTE: the Python docstring says `agents/runtime/state/`, but the code
 // constant is `agents/state/`. Replicated verbatim — this is a latent
 // docstring/code divergence in the retired Python implementation (ADR-200 § replicate
@@ -141,7 +180,7 @@ export function run(options: {
 }): number {
   const { consumer_root } = options;
   const verbose = options.verbose ?? false;
-  const settings_path = path.join(consumer_root, SETTINGS_FILE);
+  const settings_path = resolve_settings_path(consumer_root);
   let settings_present = false;
   try {
     settings_present = fs.statSync(settings_path).isFile();

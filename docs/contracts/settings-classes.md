@@ -78,14 +78,35 @@ AND THE ASK FIRES ONLY WHEN THE USER'S OWN REQUEST NEEDS THE SETTING —
 NEVER AT A MOMENT THE AGENT CHOSE.
 ```
 
-**Half one — the conservative default.** A sparse settings file means *absent =
-default*. If a B key shipped with the permissive value as its default, then
-"never asked" and "answered yes" would be indistinguishable, and the ask would
-be decoration on a decision already made in the user's name. Under this
-invariant an unanswered B key is always the safe value, and the ask is the only
-path to the permissive one. `lint_settings_classes` enforces this half
-mechanically: a B row whose template default is not `false` / `""` / `0` / `[]`
-/ `null` / `{}` fails the build.
+**Half one — the conservative default.** If a B key shipped with the permissive
+value as its default, then "never asked" and "answered yes" would be
+indistinguishable, and the ask would be decoration on a decision already made in
+the user's name. Under this invariant an unanswered B key is always the safe
+value, and the ask is the only path to the permissive one.
+`lint_settings_classes` enforces this half mechanically: a B row whose template
+default is not `false` / `""` / `0` / `[]` / `null` / `{}` fails the build.
+
+> **There is no defaults layer, and this contract used to imply one.** The
+> sentence here previously read *"a sparse settings file means absent =
+> default"*. No code implements that: `_DEFAULTS` in
+> `src/scripts/_lib/agent_settings.ts` is `{}`, so the merged settings contain
+> exactly what some file set and nothing else. What makes half one hold is not a
+> defaults layer but the **reader** — each reader supplies its own fallback, and
+> the lint above guarantees the template value a reader is expected to mirror is
+> the conservative one.
+>
+> That distinction is load-bearing rather than pedantic, because the two are not
+> equivalent for every key. Nine keys are carved out in
+> [`src/shared/settingsCarveOut.ts`](../../src/shared/settingsCarveOut.ts) where
+> a reader deliberately resolves an absent key to something **other** than the
+> template default — `quality.local_auto_run` is the sharp one: the template
+> ships `false`, which ARMS a gate, and an absent key resolves to `true` at its
+> reader, which disarms it. Under a literal "absent = default" reading that key
+> would be safe, and it is not.
+>
+> `agent-config settings:get <key>` reports both facts — the value with the file
+> that set it, and the carve-out warning when absent is not the default. Use it
+> rather than reasoning from this contract about what an absent key does.
 
 **Half two — who picks the moment.** The council review below found the hole in
 half one: an agent free to choose *when* to ask can engineer consent. Asking
