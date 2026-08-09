@@ -1,8 +1,23 @@
-# ADR-219 — `MERGEABLE_KEYS` follows the key migration it was left behind by
+---
+adr: 219
+status: accepted
+date: 2026-08-08
+decision: mergeable-keys-follow-the-migration
+supersedes: —
+superseded_by: —
+phase: road-to-capability-answerability — step 4.3
+type: structural
+review_trigger: >-
+  Reopen when a THIRD key is found whose whitelist spelling does not match the
+  template — two was drift, three is a mechanism problem, and at that point the
+  answer is the gate this ADR declined to build (assert every MERGEABLE_KEYS
+  entry is either present in the template or explicitly marked legacy) rather
+  than a fourth hand-added pair. Also reopen if either legacy spelling is ever
+  observed in a real user-global file, since the additive branch exists only to
+  protect that case and its absence would make the duplicates removable.
+---
 
-- **Status:** Accepted
-- **Date:** 2026-08-08
-- **Context roadmap:** capability answerability, step 4.3
+# ADR-219 — `MERGEABLE_KEYS` follows the key migration it was left behind by
 
 ## Context
 

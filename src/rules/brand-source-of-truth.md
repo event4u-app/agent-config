@@ -68,7 +68,7 @@ first hit wins (`BRAND_TOKEN_PATHS`, the UI scaffold directive):
 1. `tokens.json`
 2. `assets/tokens.json`
 3. `resources/tokens.json`
-4. `agents/settings/brand/tokens.json`
+4. `agents/settings/brand/tokens.json` <!-- ref-ignore -->
 
 `agent-config brand:status` reports which one holds a file, or that none does —
 and separately flags a dot-prefixed `.tokens.json`, which is the file a reader

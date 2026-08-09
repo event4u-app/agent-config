@@ -320,7 +320,7 @@ half a fix.
   missing" as "do not block", so an Iron-Law gate never fires on a canonically
   installed consumer.
   <!-- `onboarding_gate_hook.ts` now resolves through `SETTINGS_CANDIDATES`
-  (canonical `agents/settings/.agent-settings.yml` before the legacy root file)
+  (canonical `agents/settings/.agent-settings.yml` before the legacy root file) <!-- ref-ignore -->
   via the exported `resolve_settings_path`. The 10 existing tests stay green;
   4 new ones pin the canonical hit, the precedence, the legacy-only case, and the
   missing case. -->
@@ -329,7 +329,7 @@ half a fix.
   at all → do not block" is the documented pre-rule/cloud carve-out the rule
   itself states, so it is not a bug. The defect was purely the path: the hook
   built `<root>/.agent-settings.yml` while the canonical project file is
-  `agents/settings/.agent-settings.yml`, so a correctly installed consumer took
+  `agents/settings/.agent-settings.yml`, so a correctly installed consumer took <!-- ref-ignore -->
   the missing branch every time. Fixing the path makes the existing carve-out
   mean what it says instead of swallowing every install.
 
