@@ -2,13 +2,10 @@
 import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
-import { fileURLToPath } from 'node:url';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import * as ags from '../../src/scripts/_lib/agent_settings';
 import * as user_global_paths from '../../src/scripts/_lib/user_global_paths';
-
-const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
 
 const tmp_dirs: string[] = [];
 const saved_env: Array<[string, string | undefined]> = [];

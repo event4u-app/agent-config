@@ -89,7 +89,6 @@ export function resolveOnPath(command: string, pathEnv: string, cwd: string): st
     for (const candidate of candidates) {
         try {
             const stat = fs.statSync(candidate);
-            // eslint-disable-next-line no-bitwise
             if (stat.isFile() && (stat.mode & 0o111) !== 0) return candidate;
         } catch {
             continue;

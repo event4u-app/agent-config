@@ -2,7 +2,6 @@
 import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
-import { fileURLToPath } from 'node:url';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import {
@@ -12,15 +11,6 @@ import {
     STATE_DIR,
     STATE_FILE,
 } from '../../../src/scripts/onboarding_gate_hook.js';
-
-const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..', '..');
-const TS_SCRIPT = path.join(REPO_ROOT, 'src', 'scripts', 'onboarding_gate_hook.ts');
-const TSX_BIN = path.join(
-    REPO_ROOT,
-    'node_modules',
-    '.bin',
-    process.platform === 'win32' ? 'tsx.cmd' : 'tsx',
-);
 
 function state(root: string): Record<string, unknown> {
     return JSON.parse(fs.readFileSync(path.join(root, STATE_FILE), 'utf8'));
@@ -171,7 +161,3 @@ describe('onboarding_gate — read_onboarded / state writer', () => {
     });
 });
 
-interface RunResult {
-    status: number | null;
-    state: Record<string, unknown> | null;
-}
