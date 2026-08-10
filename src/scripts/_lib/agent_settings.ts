@@ -9,6 +9,7 @@
  *
  * Resolution order (deepest wins; user-global is whitelist-filtered only):
  *
+ *   N+1. `src/config/agent-settings.template.yml`     (shipped defaults; base)
  *   N.   `~/.event4u/agent-config/agent-settings.yml` (user-global; whitelist only)
  *   N-1. `<repo-root>/.agent-settings.yml`            (project-wide; all keys)
  *   N-2. `<intermediate-dir>/.agent-settings.yml`     (subsystem-scoped; all keys)
@@ -36,13 +37,22 @@
  * - YAML parse failure / unreadable file → defaults, logged at WARNING.
  * - Missing files → defaults.
  * - No file is ever created or written by this module.
+ *
+ * The template-defaults base ({@link template_defaults}) gives this path the
+ * guarantee the server read path already had: a key absent from every layer
+ * resolves to its shipped default rather than `undefined`. Two sets are
+ * excluded from it — the `settingsCarveOut` keys, whose absence deliberately
+ * means something else, and placeholder-valued leaves the installer fills.
+ * An unreadable template degrades to the pre-existing empty-defaults behaviour.
  */
 import { createRequire } from 'node:module';
 import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 import * as user_global_paths from './user_global_paths.js';
+import { carveOutKeys } from '../../shared/settingsCarveOut.js';
 import type * as YamlModule from 'yaml';
 
 // ESM has no `require`; `createRequire(import.meta.url)` restores it so the
@@ -286,7 +296,106 @@ export const MERGEABLE_KEYS: readonly string[] = [
     'knowledge.global_sharing.freshness.stale_after_days',
 ];
 
-const _DEFAULTS: SettingsDict = {};
+/** The shipped template, relative to the package root. */
+const TEMPLATE_RELATIVE = path.join('src', 'config', 'agent-settings.template.yml');
+
+/**
+ * Package root: `src/scripts/_lib/agent_settings.ts` → three levels up.
+ * Same idiom as `cli_wrapper.ts:28`, and it holds in an installed consumer
+ * too because `src/config/` ships (`package.json` `files[]`).
+ */
+const _PACKAGE_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..', '..');
+
+/** Default template path — overridable per call for tests. */
+export function default_template_path(): string {
+    return path.join(_PACKAGE_ROOT, TEMPLATE_RELATIVE);
+}
+
+/**
+ * A leaf whose template value is still an installer placeholder
+ * (`__RULE_LOADING_TIER__`, `__CHAT_HISTORY_FREQUENCY__`, …). The installer
+ * substitutes these from the chosen profile preset; the template alone does
+ * not carry a usable default, so the defaults layer must not inject one.
+ *
+ * Matched by shape rather than against `TEMPLATE_PLACEHOLDER_DEFAULTS`
+ * (`src/server/io/yamlIO.ts:139`) on purpose: the scripts family does not
+ * import from the server family, and a duplicated map would be one more thing
+ * that can drift. A new placeholder is covered the day it is added.
+ */
+function _is_placeholder(value: SettingsValue): boolean {
+    return typeof value === 'string' && /^__[A-Z0-9_]+__$/.test(value);
+}
+
+/**
+ * Prune a parsed template into the tree the defaults layer may contribute:
+ * every placeholder-valued leaf and every carve-out key removed, and any
+ * branch that empties out as a result dropped with them.
+ */
+function _prune_template(tree: SettingsDict, excluded: ReadonlySet<string>, prefix = ''): SettingsDict {
+    const out: SettingsDict = {};
+    for (const [key, value] of Object.entries(tree)) {
+        const dotted = prefix === '' ? key : `${prefix}.${key}`;
+        if (excluded.has(dotted) || _is_placeholder(value)) {
+            continue;
+        }
+        if (_is_plain_dict(value)) {
+            const child = _prune_template(value as SettingsDict, excluded, dotted);
+            if (Object.keys(child).length > 0) {
+                out[key] = child;
+            }
+            continue;
+        }
+        out[key] = value;
+    }
+    return out;
+}
+
+/** Parsed-and-pruned template, memoised for the default path only. */
+let _template_defaults_cache: SettingsDict | null = null;
+
+/**
+ * The template-defaults layer — the base every real settings layer sits on.
+ *
+ * Gives the scripts read path the guarantee the server read path already has:
+ * a key absent from every layer resolves to its shipped default instead of
+ * `undefined`. Two exclusions, both load-bearing:
+ *
+ * - **Carve-out keys** (`src/shared/settingsCarveOut.ts`). For these an absent
+ *   key deliberately resolves to something other than the template default,
+ *   and injecting the default here would flip existing installs — precisely
+ *   the silent narrowing that module exists to prevent (`settingsCarveOut.ts:18-21`).
+ * - **Placeholder-valued leaves**, which carry no default until the installer
+ *   substitutes them.
+ *
+ * Tolerant like the rest of this module: an unreadable or malformed template
+ * yields `{}`, i.e. exactly the pre-existing no-defaults behaviour.
+ *
+ * The result is a full `_deepcopy`, never `_deep_copy_defaults`. The latter is
+ * built on `_deep_merge`, which assigns a nested value by REFERENCE whenever
+ * the destination has no dict at that key — so its "copy" of a fresh `{}`
+ * shares every sub-tree with the source. The caller then merges the real
+ * layers into that shared sub-tree and silently rewrites the cache: the first
+ * settings file read in a process would become the defaults every later read
+ * sees. The predecessor `_DEFAULTS` was `{}`, so the hazard existed but had
+ * nothing to poison; a populated base makes it live.
+ */
+export function template_defaults(template_path?: string): SettingsDict {
+    const use_cache = template_path === undefined;
+    if (use_cache && _template_defaults_cache !== null) {
+        return _deepcopy(_template_defaults_cache);
+    }
+    const parsed = _read_yaml(template_path ?? default_template_path()) ?? {};
+    const pruned = _prune_template(parsed, new Set(carveOutKeys()));
+    if (use_cache) {
+        _template_defaults_cache = pruned;
+    }
+    return _deepcopy(pruned);
+}
+
+/** Drop the memoised template — tests only; production reads it once per process. */
+export function _reset_template_defaults_cache(): void {
+    _template_defaults_cache = null;
+}
 
 /**
  * Defaults applied by `get_modules_config` when a key is absent from both
@@ -730,12 +839,17 @@ export function load_agent_settings(
         user_global_path?: string | null;
         verbose?: boolean;
         cwd?: string | null;
+        template_path?: string | null;
     } = {},
 ): SettingsDict {
     const project_path = options.project_path ?? null;
     const user_global_path = options.user_global_path ?? null;
     const verbose = options.verbose ?? false;
     const cwd = options.cwd ?? null;
+    // Same caller-override contract as `project_path` / `user_global_path`:
+    // a test or tool that pins every other input can pin the defaults base
+    // too, and point it at a nonexistent file to isolate the cascade.
+    const template_path = options.template_path ?? null;
 
     // An explicit path is a caller override (tests, tooling) and stays single;
     // otherwise every user-global file merges in precedence order.
@@ -754,7 +868,10 @@ export function load_agent_settings(
 
     const cascade = _resolve_cascade_paths(cwd, project_path);
 
-    const merged: SettingsDict = _deep_copy_defaults(_DEFAULTS);
+    // Template defaults sit BELOW every real layer — never above one. The
+    // precedence here is the inverse of the server family's, so the order of
+    // these three statements is the whole contract.
+    const merged: SettingsDict = template_defaults(template_path ?? undefined);
     _deep_merge(merged, user_global_filtered);
     for (const p of cascade) {
         const layer = _read_yaml(p) ?? {};

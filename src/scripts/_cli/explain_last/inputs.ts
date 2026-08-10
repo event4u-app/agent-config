@@ -132,6 +132,19 @@ export function build(project_root: string): Record<string, unknown> | null {
         rule_loading_tier = null;
     }
     let rule_loading_tier_source = _pyTruthy(rule_loading_tier) ? 'user' : 'default';
+    // The one read-site divergence from the template that is NOT a
+    // `settingsCarveOut` row, so it is explained here instead
+    // (`road-to-scripts-settings-defaults` Phase 1, § 2 of the Evidence Report).
+    // The template ships `rule_loading_tier: __RULE_LOADING_TIER__` — an
+    // installer placeholder, not a value — so the template-defaults layer in
+    // `load_agent_settings` deliberately does not inject it and an absent key
+    // arrives here as `undefined`. `balanced` is therefore this reader's own
+    // default, matching what the installer substitutes.
+    // The second arm is the deliberate part: a settings file that still
+    // literally contains the placeholder is a BROKEN install, and this reports
+    // it as `source: default` — i.e. the trace looks healthy. Surfacing it
+    // instead would be a reporting change beyond this roadmap's scope; it is
+    // recorded rather than silently kept.
     if (!_pyTruthy(rule_loading_tier) || rule_loading_tier === '__RULE_LOADING_TIER__') {
         rule_loading_tier = _DEFAULT_RULE_LOADING_TIER;
         rule_loading_tier_source = 'default';
