@@ -83,6 +83,17 @@ Read `docker-compose.yml` / `compose.yaml` to discover the actual service names.
 - Use `make console` for interactive shell access.
 - Use `make console-xdebug` for Xdebug container access.
 
+### Tooling detection
+
+Which test runner and quality commands exist depends on the project shape.
+Check for `artisan` in the project root before picking one:
+
+- **Laravel** (`artisan` present) — `php artisan test`, `vendor/bin/phpstan analyse`, `vendor/bin/rector process`
+- **Plain Composer** (no `artisan`) — `vendor/bin/phpunit`, `vendor/bin/phpstan analyse`, `vendor/bin/rector process`
+
+Either way the command runs inside the container:
+`docker compose exec -T <php-service> <command>`.
+
 ### Image building
 
 - Production images use `target: pro` — no dev dependencies.
