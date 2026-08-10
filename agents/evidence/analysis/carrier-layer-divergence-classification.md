@@ -18,11 +18,23 @@ Against the taxonomy the phase names:
 | Class | Count | Verdict |
 |---|---:|---|
 | The global copy is an **older release** of the same rule (a refresh closes it) | **0** | Empty. No global copy carries superseded prose. |
-| The project copy is **generated differently** (the generator is the fix) | **109** | The whole set — but the prescribed remedy does not apply, see below. |
+| The project copy is **generated differently** (the generator is the fix) | **109 — but read the next row before quoting this number** | The label fits; its parenthesis does not. There is no generator defect. |
 | The two carry **genuinely different obligations** (a content decision) | **0** | Empty. Nothing to surface, nothing to decide. |
 
+**The taxonomy has no bucket for what these 109 actually are, so the honest
+label is a fourth one:** *a deliberate two-writer metadata policy* — 109, of
+which **24 are actionable** on `paths:` (next subsection) and **85 are inert**.
+Stated as its own row rather than left as a footnote on the third, because the
+number 109 travels: quoted alone under the heading "generator-difference" it
+reads as *109 generator defects*, which is the opposite of the finding. Anywhere
+this total appears — the acceptance criteria, the Phase 1 step comment — it
+appears with the refutation attached.
+
 **All 109 pairs carry byte-identical prose.** The entire difference is the YAML
-frontmatter block. Two writers apply two frontmatter policies to the same rule:
+frontmatter block — which is not the same as "the difference does not matter":
+for **24** of them the block disagrees about `paths:`, the one key this host
+reads, and that changes when the rule loads. Two writers apply two frontmatter
+policies to the same rule:
 
 - `generate-tools` emits a real file carrying **only** `paths:`, and only where a
   rule is path-scoped — 25 of 110 files in this checkout. The other 85 carry no
@@ -42,7 +54,41 @@ installer needs its vocabulary and its ownership stamp for agent-config's own
 tooling (uninstall attribution, and the `type: manual` filter this very report
 reads from the projection source).
 
-The 109, by name — one class, so the list is flat:
+### The actionable 24 — `paths:` disagrees, so the load SCHEDULE disagrees
+
+Identical prose is not the same as identical delivery, and this subsection exists
+because the first version of this document said it was. `paths` is the **one**
+frontmatter key this host reads. With it, a rule fires when a matching file is
+read and is **not** re-injected after `/compact`. Without it, the rule loads
+unconditionally at launch.
+
+Measured: **24 of the 109** carry `paths:` in the project copy and **0** in the
+global copy — `grep -l '^paths:' ~/.claude/rules/*.md` returns zero across all
+114 files. So on any machine carrying both layers, the always-on global copy
+**defeats the project copy's scoping**: an obligation someone deliberately
+scoped to a subtree is delivered on every turn instead, and nothing says so.
+
+augment-edit-discipline, design-fidelity, design-review-after-ui-write,
+doc-screenshot-hygiene, domain-adoption-policy,
+framework-neutrality-in-generic-skills, image-likeness-and-rights,
+laravel-translations, lethal-trifecta-guard, linked-projects-onboarding-gate,
+low-impact-corpus-privacy-floor, markdown-safe-codeblocks, no-roadmap-references,
+onboarding-gate, persona-governance, php-coding, provider-lifecycle-discipline,
+roadmap-ci-steps-policy, roadmap-progress-sync, rule-type-governance,
+settings-ask-protocol, skill-quality, source-confidentiality, ui-audit-gate.
+
+The direction of the error matters for how urgent this is: the rules are
+delivered **more** often than intended, not less, so no obligation goes missing —
+it is a payload and precision cost, not a governance hole. Both report surfaces
+now print this subset as `ACT ON THESE` with the rules named, and the
+clean-prose line explicitly refuses to read as an all-clear while it is open.
+Whether the installer should emit `paths:` is a consumer-visible behaviour
+question and is **not** decided here.
+
+### All 109, by name
+
+One class, so the list is flat. The 24 named above are a **subset** of this list,
+not a separate population — subtract them for the 85 inert pairs:
 
 active-remediation, agent-authority, architecture, artifact-drafting-protocol,
 artifact-engagement-recording, ask-when-uncertain, augment-edit-discipline,
@@ -120,20 +166,30 @@ obligation is ambiguous, and no rule can have a claim retracted by one copy and
 re-asserted by the other. The duplication is real and measured; the ambiguity is
 not.
 
-What remains is a delivery-cost item — and the instrument that measures it says,
-in its own header, that it must never acquire a threshold, for the same reason
-`report_skill_activation` must not. Two independent recorded findings say the
-same thing from the other direction: a carrier-comparison figure may diagnose a
-stale install and nothing more, and the parent roadmap routed this measurement
-out of its blockers as evidence-deciding-nothing. That reading holds.
+**But "no correctness hole" is not "nothing to act on", and the first version of
+this document conflated the two.** 24 of the 109 disagree on `paths:`, so the two
+carriers deliver the same text on different schedules and the global copy
+un-scopes what the project copy scoped. That is a real delivery defect with
+identical prose — smaller than the one the roadmap claimed, in the safe direction
+(over-delivery, never a missing obligation), and not zero.
 
-The defect actually worth repairing was therefore **in the instrument, not in
-the carriers**: a metadata-only difference was being reported as body
-divergence, i.e. as the one class the report tells a reader to act on. That is
-the precise failure the same function already refuses to commit for an
-unreadable copy ("a permission error would otherwise manufacture the only class
-this report asks a reader to act on"). It now has a fourth class,
-`frontmatter-only`, reported as a count with its explanation.
+What remains beyond those 24 is a delivery-cost item — and the instrument that
+measures it says, in its own header, that it must never acquire a threshold, for
+the same reason `report_skill_activation` must not. Two independent recorded
+findings say the same thing from the other direction: a carrier-comparison figure
+may diagnose a stale install and nothing more, and the parent roadmap routed this
+measurement out of its blockers as evidence-deciding-nothing. That reading holds
+for the inert 85.
+
+The other defect worth repairing was **in the instrument**: a metadata-only
+difference was being reported as body divergence, i.e. as the one class the
+report tells a reader to act on. That is the precise failure the same function
+already refuses to commit for an unreadable copy ("a permission error would
+otherwise manufacture the only class this report asks a reader to act on"). It
+now has a `frontmatter-only` class **plus** the `paths:` subset broken out of it,
+because a class that lumped the 24 in with the 85 would have replaced one wrong
+answer with another — an inert label on a live difference instead of an alarming
+label on an inert one.
 
 ## Why two earlier readings of the same commit disagreed
 
@@ -168,13 +224,17 @@ reading.
   the standing-delivery gate, so it is recorded here rather than changed under
   this roadmap. Direction of the error is stated: the published payload figure
   is conservative (too high), not optimistic.
-- **Phase 3's safety precondition is now met, ahead of its measurement.** The
-  phase order exists because suppressing a *divergent* copy drops whatever
-  obligations only that copy carried. With prose identical across all 109,
-  suppression is a no-op on content — which is what Phase 2 was supposed to
-  establish and what this reading establishes directly. The measurement itself
-  still needs the maintainer machine, so the phase stays blocked; only its
-  premise is discharged.
+- **Phase 3's safety precondition is met for CONTENT, and which layer gets
+  suppressed now matters.** The phase order exists because suppressing a
+  *divergent* copy drops whatever obligations only that copy carried. With prose
+  identical across all 109, suppression is a no-op **on content** — which is what
+  Phase 2 was supposed to establish and what this reading establishes directly.
+  It is **not** a no-op on load schedule, and the direction is opposite for the
+  two choices: suppressing the **global** layer restores the project layer's
+  `paths:` scoping for the 24, while suppressing the **project** layer makes the
+  always-on delivery permanent. Phase 3 must therefore state which layer it
+  suppressed, not just the token delta. The measurement still needs the
+  maintainer machine, so the phase stays blocked.
 - **Convergence is point-in-time.** The global layer is a release snapshot, so
   today's reading says nothing about the next release. That was already named in
   the roadmap's risk register and is not repaired here.
@@ -182,7 +242,8 @@ reading.
 ## What a re-run should show
 
 On a freshly regenerated checkout against a global install at or behind this
-commit: `differ in PROSE 0`, `differ ONLY in frontmatter` equal to the shared
+commit: `differ in PROSE 0`, `of which disagree on \`paths:\`` at 24 until the
+installer question is decided, `differ ONLY in frontmatter` equal to the shared
 count, and the flat class list above. A non-zero prose count on a later reading
 is a real finding and means a rule's governed text genuinely diverged — that is
 the number to act on, and the only one.

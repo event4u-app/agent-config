@@ -22,8 +22,16 @@
  * provenance-only difference survives even a perfect version alignment. Keeping
  * it apart from class 3 is what turns a bare "0 identical twins" into an answer:
  * `provenanceOnly == shared` means aligning versions would buy nothing, and
- * `bodyDiff > 0` means the two carriers are delivering different text — the only
- * class where a reader has to act.
+ * `bodyDiff > 0` means the two carriers are delivering different bytes.
+ *
+ * `bodyDiff > 0` is NOT the same as "a reader has to act", and an earlier version
+ * of this paragraph said it was. Measured 2026-08-10: all 109 shared rules
+ * classified `bodyDiff` and NONE of them differed in prose. The reader-facing
+ * split lives in `report_carrier_divergence`, which subdivides this class into
+ * prose divergence (act), a `paths:`-scope disagreement (act — it changes WHEN a
+ * rule loads), and a metadata-only difference (do not act). The three-way split
+ * below stays three-way on purpose: it is the DEDUP predicate, and every class
+ * here is a real byte difference.
  *
  * NOT A LICENCE TO DEDUP. Classifying a pair `provenance-only` says the bodies
  * match; it does NOT say the rule is safe to drop from one carrier. Byte-identity
@@ -81,24 +89,47 @@ export function comparePair(a: Buffer, b: Buffer): PairVerdict {
     return 'body-diff';
 }
 
-/**
- * Drop a leading YAML frontmatter block, returning the prose the host actually
- * delivers.
- *
- * A file with no `---` fence, or an unterminated one, is returned unchanged —
- * the same tolerance `report_carrier_divergence`'s own `type:` reader applies,
- * because a malformed fence must not silently swallow a rule's whole text.
- */
-export function stripFrontmatter(text: string): string {
-    if (!text.startsWith('---')) return text;
-    const end = text.indexOf('\n---', 3);
-    if (end === -1) return text;
-    const afterFence = text.indexOf('\n', end + 1);
-    return afterFence === -1 ? '' : text.slice(afterFence + 1);
+/** One rule file, split at its frontmatter fence. */
+export interface FrontmatterSplit {
+    /** `true` only when a terminated `---` fence was actually found. */
+    hadFrontmatter: boolean;
+    /** The fence block WITHOUT its delimiters, or `''` when there is none. */
+    frontmatter: string;
+    /** Everything after the fence — the prose the host delivers. */
+    body: string;
 }
 
 /**
- * Do the two copies carry the same governed PROSE, ignoring frontmatter?
+ * THE fence parser. One definition, for the reason the header gives: a second
+ * copy is how two surfaces drift into disagreeing about what frontmatter is.
+ *
+ * An absent or UNTERMINATED fence yields `hadFrontmatter: false` and the whole
+ * text as body. That is deliberate and it is the safe direction: a malformed
+ * fence must not silently swallow a rule's governed text. Note this is the
+ * OPPOSITE of what a naive `type:` reader does — treating the whole file as
+ * frontmatter — and that asymmetry was a live inconsistency between this
+ * function and `report_carrier_divergence._ruleType` until the latter was moved
+ * onto this parser.
+ */
+export function splitFrontmatter(text: string): FrontmatterSplit {
+    if (!text.startsWith('---')) return { hadFrontmatter: false, frontmatter: '', body: text };
+    const end = text.indexOf('\n---', 3);
+    if (end === -1) return { hadFrontmatter: false, frontmatter: '', body: text };
+    const afterFence = text.indexOf('\n', end + 1);
+    return {
+        hadFrontmatter: true,
+        frontmatter: text.slice(3, end),
+        body: afterFence === -1 ? '' : text.slice(afterFence + 1),
+    };
+}
+
+/** The prose a rule file delivers, with any frontmatter block removed. */
+export function stripFrontmatter(text: string): string {
+    return splitFrontmatter(text).body;
+}
+
+/**
+ * Is the ONLY difference between these two copies inside the frontmatter block?
  *
  * WHY THIS IS SEPARATE FROM `comparePair`, AND MUST STAY SEPARATE
  * --------------------------------------------------------------
@@ -109,23 +140,63 @@ export function stripFrontmatter(text: string): string {
  * strict. `measure_scope_dedup` asks exactly that question and its arithmetic
  * stays untouched.
  *
- * This answers the different, reader-facing question `report_carrier_divergence`
- * asks: *must a human act on this pair*. Measured 2026-08-10 over the live
- * carriers at commit `a5b2f4cb7`: 109 shared rules, **0** byte-identical, **109**
- * classified `body-diff` — and after this strip, **0** of the 109 differ in
- * prose. The whole divergence was the metadata block. Reporting that as body
- * divergence manufactures the one class the report tells a reader to act on,
- * which is precisely the failure `compareCarriers` already refuses to commit for
- * an unreadable copy.
+ * WHAT IT PROVES, EXACTLY — AND WHY NOT `trim()`
+ * ---------------------------------------------
+ * Two conditions, both required:
  *
- * Edge trimming only, on purpose: the frontmatter fence leaves the two sides one
- * leading newline apart, and that is not a content difference. Internal
- * whitespace and line endings are NOT normalized — a CRLF-vs-LF body stays a
- * prose difference, so this stays no softer than the dedup predicate on the text
- * the host reads.
+ *   1. at least one side actually HAD a frontmatter block. Without this the
+ *      predicate would answer "the prose matches" for a pair with no frontmatter
+ *      anywhere, and the caller would print "differs only in frontmatter" about
+ *      a difference that is not in any frontmatter.
+ *   2. the bodies match after removing LEADING newlines only. The fence
+ *      necessarily leaves the stripped side one newline ahead, so that one
+ *      character is a parsing artefact. A `trim()` would additionally absorb a
+ *      TRAILING difference, which is a real byte difference no fence explains —
+ *      and it was measured to be unnecessary: all 109 live pairs on 2026-08-10
+ *      matched on leading-only, 0 needed a trailing trim.
+ *
+ * Nothing else is normalized. Internal whitespace and line endings stay
+ * significant, so a CRLF-vs-LF body is still a prose difference and this stays
+ * no softer than the dedup predicate on the text the host reads.
  */
 export function proseEqual(a: string, b: string): boolean {
-    return stripFrontmatter(a).trim() === stripFrontmatter(b).trim();
+    const sa = splitFrontmatter(a);
+    const sb = splitFrontmatter(b);
+    if (!sa.hadFrontmatter && !sb.hadFrontmatter) return false;
+    const leading = /^\n+/;
+    return sa.body.replace(leading, '') === sb.body.replace(leading, '');
+}
+
+/**
+ * The `paths:` block of a rule's frontmatter, normalized, or `null` when absent.
+ *
+ * `paths` is the ONE frontmatter key this host reads
+ * (`agents/evidence/analysis/claude-code-rules-dir-contract.md`), and it decides
+ * WHEN a rule loads: with it, the rule fires when a matching file is read and is
+ * not re-injected after `/compact`; without it, the rule loads unconditionally
+ * at launch. So two carriers that disagree here deliver the same text on
+ * different schedules, which a reader must act on even though the prose is
+ * identical. Measured 2026-08-10: 24 of the 109 shared rules carry `paths:` in
+ * the project copy and NONE in the global copy, so on a machine with both the
+ * always-on global copy defeats the project copy's scoping for all 24.
+ *
+ * Normalization is deliberately shallow — the key line plus its indented
+ * continuation, whitespace-collapsed. It answers "do these two agree" and is not
+ * a YAML parser; a reordered list reads as a difference, which is the
+ * conservative direction for a report that asks a human to look.
+ */
+export function frontmatterPaths(text: string): string | null {
+    const { hadFrontmatter, frontmatter } = splitFrontmatter(text);
+    if (!hadFrontmatter) return null;
+    const lines = frontmatter.split('\n');
+    const start = lines.findIndex((l) => /^paths:/.test(l));
+    if (start === -1) return null;
+    const block = [lines[start] as string];
+    for (const line of lines.slice(start + 1)) {
+        if (/^\s/.test(line) && line.trim() !== '') block.push(line);
+        else break;
+    }
+    return block.map((l) => l.trim()).join(' ');
 }
 
 export interface RuleDirCensus {

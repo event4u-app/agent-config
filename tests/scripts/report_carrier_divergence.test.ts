@@ -16,7 +16,9 @@ import { afterEach, describe, expect, it } from 'vitest';
 
 import {
     comparePair,
+    frontmatterPaths,
     proseEqual,
+    splitFrontmatter,
     stripFrontmatter,
     stripOwnershipKeys,
 } from '../../src/scripts/_lib/carrier_divergence.js';
@@ -118,7 +120,104 @@ describe('frontmatter-only is not prose divergence', () => {
     });
 
     it('keeps CRLF-vs-LF a prose difference, so it is no softer than the dedup predicate', () => {
+        // No frontmatter on either side, so the predicate refuses regardless —
+        // asserted through the frontmatter-bearing shape too, below.
         expect(proseEqual('one\r\ntwo\n', 'one\ntwo\n')).toBe(false);
+        expect(proseEqual('---\na: 1\n---\n\none\r\ntwo\n', 'one\ntwo\n')).toBe(false);
+    });
+
+    it('refuses a pair with NO frontmatter on either side, whatever the prose', () => {
+        // Otherwise the caller prints "differs only in the frontmatter block"
+        // about a pair in which no frontmatter exists — both halves false.
+        expect(proseEqual('same\n', 'same\n')).toBe(false);
+    });
+
+    it('tolerates the leading newline the fence leaves, and NOT a trailing difference', () => {
+        // The fence necessarily leaves the stripped side one newline ahead: that
+        // one character is a parsing artefact. A trailing difference is a real
+        // byte difference no fence explains, and `trim()` would have absorbed it —
+        // measured unnecessary (all 109 live pairs matched leading-only).
+        expect(proseEqual('---\na: 1\n---\n\nbody\n', 'body\n')).toBe(true);
+        expect(proseEqual('---\na: 1\n---\n\nbody\n', 'body')).toBe(false);
+        expect(proseEqual('---\na: 1\n---\n\nbody\n\n\n', 'body\n')).toBe(false);
+    });
+
+    it('splitFrontmatter treats an unterminated fence as no frontmatter, not as all frontmatter', () => {
+        const bad = '---\ntype: "always"\nno closing fence\n';
+        expect(splitFrontmatter(bad)).toEqual({
+            hadFrontmatter: false,
+            frontmatter: '',
+            body: bad,
+        });
+        const good = splitFrontmatter('---\na: 1\n---\n\nbody\n');
+        expect(good.hadFrontmatter).toBe(true);
+        expect(good.frontmatter).toBe('\na: 1');
+        expect(good.body).toBe('\nbody\n');
+    });
+});
+
+// ── the `paths:` subset — same prose, different load schedule ───────────────
+//
+// `paths` is the ONE frontmatter key this host reads, and it decides WHEN a rule
+// loads. Measured 2026-08-10: 24 of the 109 carry it in the project copy and
+// NONE in the global copy, so the always-on global copy defeats the project
+// copy's scoping. Reporting that as inert metadata was the review's high finding.
+describe('a paths: disagreement is actionable, not inert metadata', () => {
+    it('extracts the paths block, and nothing when the key or the fence is absent', () => {
+        expect(frontmatterPaths('---\npaths:\n  - "src/**"\n  - "docs/**"\nx: 1\n---\n\nb\n')).toBe(
+            'paths: - "src/**" - "docs/**"',
+        );
+        expect(frontmatterPaths('---\ntype: "always"\n---\n\nb\n')).toBeNull();
+        expect(frontmatterPaths('# no fence\n')).toBeNull();
+    });
+
+    it('flags the measured shape: paths on the project side, none on the global side', () => {
+        const root = tmpdir();
+        const project = writeRules(path.join(root, 'project'), {
+            'scoped.md': '---\npaths:\n  - "src/**"\n---\n\n# Scoped\n\nobey\n',
+            'plain.md': '# Plain\n\nobey\n',
+        });
+        const global = writeRules(path.join(root, 'global'), {
+            'scoped.md': '---\ntype: "always"\n---\n\n# Scoped\n\nobey\n',
+            'plain.md': '---\ntype: "always"\n---\n\n# Plain\n\nobey\n',
+        });
+
+        const d = compareCarriers(project, global);
+        expect(d.frontmatterOnly.sort()).toEqual(['plain.md', 'scoped.md']);
+        // A subset, so the counts stay reconcilable.
+        expect(d.pathsScopeDiff).toEqual(['scoped.md']);
+        expect(d.bodyDiff).toEqual([]);
+    });
+
+    it('does not flag a pair whose paths agree', () => {
+        const root = tmpdir();
+        const same = '---\npaths:\n  - "src/**"\n---\n\n# R\n\nobey\n';
+        const d = compareCarriers(
+            writeRules(path.join(root, 'project'), { 'r.md': same }),
+            writeRules(path.join(root, 'global'), {
+                'r.md': '---\npaths:\n  - "src/**"\ntype: "always"\n---\n\n# R\n\nobey\n',
+            }),
+        );
+        expect(d.frontmatterOnly).toEqual(['r.md']);
+        expect(d.pathsScopeDiff).toEqual([]);
+    });
+
+    it('renders it as actionable, names the rules, and refuses an all-clear', () => {
+        const root = tmpdir();
+        const d = compareCarriers(
+            writeRules(path.join(root, 'project'), {
+                'scoped.md': '---\npaths:\n  - "src/**"\n---\n\n# Scoped\n\nobey\n',
+            }),
+            writeRules(path.join(root, 'global'), {
+                'scoped.md': '---\ntype: "always"\n---\n\n# Scoped\n\nobey\n',
+            }),
+        );
+        const text = render(d);
+        expect(text).toMatch(/SCOPE DISAGREEMENT \(1\)/);
+        expect(text).toMatch(/ACT ON THESE/);
+        expect(text).toMatch(/- scoped\.md/);
+        // The clean-prose line must not read as all-clear while these are open.
+        expect(text).toMatch(/NOT an all-clear/);
     });
 
     it('does NOT relax comparePair — the dedup predicate stays byte-identity', () => {
