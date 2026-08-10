@@ -35,8 +35,8 @@
  * ignored, which is the failure `check-rule-invariants` already paid for once.
  * The point is that the condition becomes VISIBLE, not that it becomes illegal.
  *
- * THE THREE CLASSES, AND WHICH ONE A READER MUST ACT ON
- * ----------------------------------------------------
+ * THE FOUR CLASSES, AND WHICH ONE A READER MUST ACT ON
+ * ---------------------------------------------------
  *   body-diff        the two carriers deliver different PROSE. This is the class
  *                    round 5's contradiction lived in, and the only one that
  *                    needs a decision. What the host does about it: NOTHING —
