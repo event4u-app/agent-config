@@ -103,24 +103,24 @@ tree: `src/scripts/ai_council/events_log.ts:30` carries
 occurrences of `quorum`. A solo-concluded pass is downstream-identical to a
 full-attendance one.
 
-- [ ] **1.1 `quorum_result` event.** Extend `events_log.ts` with `status`,
+- [x] **1.1 `quorum_result` event.** Extend `events_log.ts` with `status`,
       `threshold`, `total`, `present`, `absent[]`. Emit at both `evaluateQuorum`
       call sites — `src/scripts/council_cli.ts:668` and `:937` (verified: exactly
       two, no third). Follow the two existing `appendEvent` emitters; bump
       `SCHEMA_VERSION` per that module's port-parity convention; fail-open.
       <!-- verify: task test -- --filter=events_log -->
-- [ ] **1.2 Use the real absent-reason vocabulary.** The draft writes
+- [x] **1.2 Use the real absent-reason vocabulary.** The draft writes
       `(binary_missing, quota, timeout, error)`; the tree has
       `AbsentReason = 'no_binary' | 'no_auth' | 'timeout' | 'quota'`
       (`transport_resolver.ts:65`) plus the runtime fallbacks `'unavailable'` and
       the literal `'binary_missing'`. Three of four drafted tokens are wrong.
       <!-- verify: task test -- --filter=transport_resolver -->
-- [ ] **1.3 `isSoloConcluded` as a derived predicate** in `quorum.ts` beside
+- [x] **1.3 `isSoloConcluded` as a derived predicate** in `quorum.ts` beside
       `evaluateQuorum` — deliberately **not** a third `QuorumStatus`; the two-state
       enum and `ceil(n/2)` stay untouched (the ceil-vs-floor divergence is a
       recorded decision at `quorum.ts:13-15`). Advisory render only; no gate
       behaviour change. <!-- verify: task test -- --filter=quorum -->
-- [ ] **1.4 Register the three omitted metrics** — attendance rate,
+- [x] **1.4 Register the three omitted metrics** — attendance rate,
       solo-conclusion rate, absent-reason distribution — in a **budget JSON**, not
       roadmap prose. `hook-token-budget.json` (definition / instrument / threshold
       / declared honest gap) and `recycle-threshold-budget.json` (`owner`,
@@ -168,7 +168,7 @@ or skill (the estate is at 116 / 289).
       the requested tier, so an alias or provider substitution corrupts both
       silently. Additive schema extension; ADR-035 is not changed, it is made
       honest. <!-- verify: task test -- --filter=clients -->
-- [ ] **3.2 Cache-rate table parity gate.** Two independent, un-cross-checked
+- [x] **3.2 Cache-rate table parity gate.** Two independent, un-cross-checked
       tables — `ai_council/pricing.ts:111-119` (multipliers) and
       `cost/track.mjs:42-46` (absolute per-tier USD) — with **different**
       model-matching strategies: exact-key vs substring. Neither package found
@@ -189,7 +189,7 @@ or skill (the estate is at 116 / 289).
       The ledger mechanism already exists with four pointer grammars; the gap is
       usage, not format. Ledger entries flow into `docs/proof.md` automatically.
       <!-- verify: ./scripts-run src/scripts/check_claims -->
-- [ ] **3.5 Scoped-Bash expressibility.** `subagent.schema.json:46-53` admits only
+- [x] **3.5 Scoped-Bash expressibility.** `subagent.schema.json:46-53` admits only
       the bare token `Bash`, so `Bash(npm run:*)` is inexpressible and the one
       shipped subagent holds a full shell — while `tool-safety` prescribes
       "prefer scoped-grant syntax over bare tool names" and
@@ -204,6 +204,19 @@ or skill (the estate is at 116 / 289).
       three**. A documented obligation with zero backing, which outranks adding
       checks for sections nothing declares yet. `skill_linter.ts --all` runs in
       0.70 s over 437 artefacts, so the budget is there.
+      **Measured 2026-08-11, and the measurement re-frames the step.** The
+      zero-enforcement half is confirmed exactly. Adoption is not: of **289**
+      skills, `Rationalizations` appears in **6**, `Non-negotiable` in **10**,
+      `Security-constraints` in **1**. A strict gate would fire on ~283 files
+      on day one — the shape that gets suppressed within a day and becomes the
+      allowlist-growth bypass `autonomous-execution` names, and the opposite of
+      the verified-empty corpus 3.8's gate shipped over. So this is not the
+      single-artefact extension the phase heading claims: it is a choice
+      between reading the three CONDITIONS in `skill-writing` and gating only
+      the skills that meet them, or accepting that the three "required" labels
+      are aspirational and saying so in the prose. Either is a design decision
+      with an owner, not a lint to add. Left open deliberately, with the number
+      that decides it.
       <!-- verify: ./scripts-run src/scripts/skill_linter --all -->
 - [ ] **3.7 Per-skill usage timestamps + archive-not-delete.** No `last_used`
       field exists anywhere. `janitor.ts:1-14` is the never-delete precedent
@@ -212,13 +225,28 @@ or skill (the estate is at 116 / 289).
       Metadata goes in a **sidecar**, not frontmatter: frontmatter across 405
       artefacts is the diff noise the payload-diet roadmap already contends with,
       and the budget-file precedent is sidecar-shaped.
-- [ ] **3.8 Dead CI path filters.** Live `paths:` entries that match nothing:
-      `.agent-src.uncondensed/**` (tree removed) in `tests.yml:20-21`,
-      `consistency.yml`, `skill-lint.yml:7`, `smoke.yml:17,19`; plus
-      `router.json` (`smoke.yml:20`), `templates/**`
-      (`smoke-public-install.yml:50`), `src/scripts/install.py` (`:42`). Also a
-      stale `heavy-tests` job reference at `tests.yml:237` and a "29 scenarios"
-      comment against 30 baselines. The source spec found a subset of this.
+- [x] **3.8 Dead CI path filters.** Landed, and the census found **20**, not
+      the 7 this step listed — one instance was a sample, not the population.
+      Four causes: a tree retired by ADR-051 (8 entries), a **gitignored**
+      projection that can never appear in a diff (4, a class this step missed
+      entirely), two paths moved by the Python-to-TS migration, and two bare
+      root paths whose real files sit under `src/`. Dead entries were deleted;
+      live-intent entries were **repointed**, not deleted — the manifest path,
+      the templates tree, and the router artefact all still matter under their
+      current names.
+      **The highest-severity hit was invisible to a hand census and only the
+      new gate found it:** `release-validation.yml` filtered on a root
+      `marketplace.json` that has never existed, so a version drift in the real
+      `.claude-plugin/marketplace.json` did not re-trigger the
+      `version-consistency` job whose whole purpose is catching that drift.
+      Also corrected: a comment naming a `heavy-tests` job that has never
+      existed (the real ones are `golden-tests` / `workspace-tests`), and a
+      "29 scenarios" comment against 30 live baselines.
+      Shipped with `lint_workflow_paths` — the gate this step's verify line
+      already named and which did not exist. **Strict on day one** over a
+      corpus verified empty (all 20 classified and repaired first), registered
+      across all six gate surfaces, and proven able to fail by a 5-case
+      self-test rather than by a green run.
       <!-- verify: ./scripts-run src/scripts/lint_workflow_paths -->
 
 ## Phase 4 — Cancelled against a lock
