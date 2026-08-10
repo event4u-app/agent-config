@@ -1,0 +1,12 @@
+{
+    "_comment": "Committed recycle threshold (road-to-token-economy-recycling Phase 3.1). ONE threshold, ONE constant: statically imported into the session-eol Stop-slot concern (esbuild folds it into the hook bundle, so consumers carry the same value — no runtime file resolution). Changing it is a PR citing evidence, never a drive-by edit; AGENT_RECYCLE_THRESHOLD_TOKENS overrides per-process (tests + emergency off via 0).",
+    "schema_version": 1,
+    "registered_at": "2026-08-10",
+    "owner": "maintainer",
+    "review_by": "2026-11-10",
+    "unit": "parsed transcript tokens — billable input (input + cache_read + cache_creation) of the last main-chain assistant record, per cc_transcript.ts",
+    "recycle_threshold_tokens": 800000,
+    "derivation": "agents/evidence/analysis/token-economy-recycling-phase1.md — ~p90 of 201 measured session-final sizes (807,937), 54% above the median healthy session (519,349), 15% below the minimum observed auto-compact trigger (941,636). Every one of the 23 sessions that auto-compacted in the baseline would have been advised first.",
+    "known_limitation": "All observed auto-compactions were 1M-window sessions (190 of 201 sessions run on the 1M window on this store). A <=200k-window session auto-compacts near ~160-206k and is never served by this threshold — revisit at review_by; a window-aware threshold needs a window signal the transcript does not carry explicitly.",
+    "honest_null_consequence": "If adoption stays near zero or recycled sessions verify WORSE than the long-session baseline (the registered post_recycle_verify_fail_vs_baseline metric), the result is published and this threshold or the envelope schema revises by evidence in a PR — the claim never survives on vibes."
+}

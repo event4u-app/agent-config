@@ -145,7 +145,7 @@ fi
 # Roadmap dashboard sync — only fires when staged changes touch a roadmap
 # file or the dashboard itself, so unrelated commits stay fast.
 if git diff --cached --name-only | grep -qE '^agents/roadmaps(-progress\.md|/)'; then
-    ./scripts-run .augment/scripts/update_roadmap_progress --check
+    ./scripts-run src/scripts/roadmap_progress_hook --check
     rstatus=$?
     if [ $rstatus -ne 0 ]; then
         # The check fails for THREE distinct reasons and prints the real one
