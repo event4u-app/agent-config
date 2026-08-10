@@ -6,10 +6,10 @@
 
 ## Overall
 
-**168 / 317 steps done · 53%**
+**171 / 319 steps done · 54%**
 
 ```text
-█████████████████████░░░░░░░░░░░░░░░░░░░   53%
+██████████████████████░░░░░░░░░░░░░░░░░░   54%
 ```
 
 ## Open roadmaps
@@ -18,7 +18,7 @@
 |---|---|---:|---:|---:|---:|---:|---:|---:|---|
 | 1 | [road-to-always-on-orchestration.md](roadmaps/road-to-always-on-orchestration.md) | 7 | 36 | 1 | 35 | 0 | 0 | [5](#blockers-road-to-always-on-orchestration) | ██████████ 97% |
 | 2 | [road-to-capability-answerability.md](roadmaps/road-to-capability-answerability.md) | 4 | 19 | 5 | 14 | 0 | 0 | [1](#blockers-road-to-capability-answerability) | ███████░░░ 74% |
-| 3 | [road-to-carrier-layer-convergence.md](roadmaps/road-to-carrier-layer-convergence.md) | 3 | 7 | 7 | 0 | 0 | 0 | [1](#blockers-road-to-carrier-layer-convergence) | ░░░░░░░░░░ 0% |
+| 3 | [road-to-carrier-layer-convergence.md](roadmaps/road-to-carrier-layer-convergence.md) | 3 | 8 | 2 | 3 | 0 | 3 | [1](#blockers-road-to-carrier-layer-convergence) | ██████░░░░ 60% |
 | 4 | [road-to-ci-native-release-first-run.md](roadmaps/road-to-ci-native-release-first-run.md) | 2 | 8 | 8 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 5 | [road-to-cost-parity-0-program.md](roadmaps/road-to-cost-parity-0-program.md) | 4 | 23 | 23 | 0 | 0 | 0 | [1](#blockers-road-to-cost-parity-0-program) | ░░░░░░░░░░ 0% |
 | 6 | [road-to-cost-parity-3-handoff-envelope.md](roadmaps/road-to-cost-parity-3-handoff-envelope.md) | 4 | 28 | 28 | 0 | 0 | 0 | [2](#blockers-road-to-cost-parity-3-handoff-envelope) | ░░░░░░░░░░ 0% |
@@ -131,12 +131,12 @@
 
 ### [road-to-carrier-layer-convergence.md](roadmaps/road-to-carrier-layer-convergence.md)
 
-**Road to carrier-layer convergence — 109 rules arrive twice, none identical** — 0 / 7 done (0%)
+**Road to carrier-layer convergence — 109 rules arrive twice, none identical** — 3 / 5 done (60%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
-| 1 | Establish which layer is stale, per rule | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
-| 2 | Converge | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
+| 1 | Establish which layer is stale, per rule | ✅ done | 0 | 2 | 0 | 0 | 100% |
+| 2 | Converge | ✅ done | 0 | 1 | 0 | 3 | 100% |
 | 3 | Deduplicate, and prove the saving | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
 
 <a id="blockers-road-to-carrier-layer-convergence"></a>

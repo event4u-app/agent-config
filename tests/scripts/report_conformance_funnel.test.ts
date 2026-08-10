@@ -114,8 +114,13 @@ describe('all three axes render against whatever local data exists', () => {
         // the body-diff pair — both from the sources' own exports.
         expect(r.delivered.project.present).toBe(true);
         expect(r.divergence.bodyDiff).toEqual(['shared.md']);
-        expect(text).toMatch(/1 body-diff/);
-        expect(text).toMatch(/project projection is generated from src\/ at this commit/);
+        expect(text).toMatch(/1 prose-diff/);
+        // Was `project projection is generated from src/ at this commit`, i.e.
+        // the "newer copy wins" precedence claim. Corrected 2026-08-10: the host
+        // loads both layers at launch at equal priority with no precedence marker
+        // (claude-code-rules-dir-contract.md, host 2.1.226), so binding is
+        // undefined and recency is not precedence.
+        expect(text).toMatch(/UNDEFINED/);
 
         // Activation: the Skill call was counted as usage.
         expect(r.usage.invocations).toBe(1);

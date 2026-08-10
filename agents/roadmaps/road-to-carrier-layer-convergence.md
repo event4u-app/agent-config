@@ -20,6 +20,20 @@ parent_roadmap: road-to-feedback-9-29
 > the parent treated it as evidence-deciding-nothing, which is right for a diet
 > verdict and wrong for a delivery defect.
 
+> **CORRECTION, 2026-08-10 — half the premise above is false, and Phase 1 is what
+> falsified it.** All 109 pairs carry **byte-identical prose**; the entire
+> difference is the frontmatter block, which the host does not deliver. So there
+> is no correctness hole: no governed text differs, nothing is
+> binding-ambiguous, and no claim one copy retracts can be re-asserted by the
+> other. The duplication is real and the ambiguity is not. The defect that WAS
+> real sat in the instrument — a metadata-only difference was reported as body
+> divergence, i.e. as the one class the report tells a reader to act on — and it
+> is repaired under Phase 2. Classification, the cited precedence answer, and the
+> explanation of why two earlier readings of one commit disagreed:
+> [`agents/evidence/analysis/carrier-layer-divergence-classification.md`](../evidence/analysis/carrier-layer-divergence-classification.md).
+> The original claim is kept above rather than rewritten, so the trail from
+> premise to falsification stays readable.
+
 ## Goal
 
 Converge the two rule-carrier layers so a session receives each governed rule
@@ -49,15 +63,27 @@ maintainer machine, and no obligation lost in the process.
 
 ## Phase 1 — Establish which layer is stale, per rule
 
-- [ ] For each of the 109 divergent rules, classify the divergence: the global
+- [x] For each of the 109 divergent rules, classify the divergence: the global
       copy is an older release of the same rule (refresh closes it), the project
       copy is generated differently (the generator is the fix), or the two carry
       genuinely different obligations (a content decision, and the interesting
       case). Report counts per class — a single mixed bucket is not a finding. <!-- verify: report lists all 109 with a class and the per-class totals -->
-- [ ] Name the precedence rule the host actually applies when both layers carry
+      <!-- DONE 2026-08-10, commit a5b2f4cb7, freshly regenerated checkout.
+      Totals: refresh-closes-it 0 · generator-difference 109 ·
+      genuinely-different-obligation 0. All 109 listed flat (one class) in
+      carrier-layer-divergence-classification.md. All 109 carry byte-identical
+      prose; the whole difference is the frontmatter block. -->
+- [x] Name the precedence rule the host actually applies when both layers carry
       a rule of the same basename, from the host's own documentation or an
       observed load, never from inference — if it is unobservable, say so and
       treat every divergence as binding-undefined. <!-- verify: the precedence answer cites a doc section or an InstructionsLoaded observation -->
+      <!-- DONE 2026-08-10. Answer: the host applies NO precedence — rules
+      without a `paths` key load at launch with the same priority as CLAUDE.md,
+      no marker between the layers, so binding is UNDEFINED whenever the two
+      disagree. Cited to claude-code-rules-dir-contract.md (host 2.1.226: the
+      host's own docs plus a first-party observation), never inferred. Two
+      instruments were printing the opposite ("the project projection … and
+      wins"); both corrected under Phase 2. -->
 
 Exit criteria: every one of the 109 carries a class; the precedence question has
 a cited answer or an explicit unobservable verdict.
@@ -65,20 +91,58 @@ Rollback: report-only phase, nothing to revert.
 
 ## Phase 2 — Converge
 
-- [ ] Refresh the stale side for every rule in the refresh-closes-it class, so
+- [-] Refresh the stale side for every rule in the refresh-closes-it class, so
       the two copies become byte-identical. <!-- verify: report_carrier_divergence shows those rules as duplicate rather than divergent -->
-- [ ] For the generator-difference class, fix the generator so the projection is
+      <!-- SKIPPED 2026-08-10 — the class is measured EMPTY (0 of 109). No global
+      copy carries superseded prose, so there is no stale side to refresh. An
+      empty class is a real answer, not an unfinished step. -->
+- [-] For the generator-difference class, fix the generator so the projection is
       reproducible rather than patching the output. <!-- verify: task sync + generate-tools leaves no drift for those rules -->
-- [ ] For any genuinely-different-obligation rule, surface it as a decision
+      <!-- SKIPPED 2026-08-10 — the step's own verification PASSES with no change:
+      `task sync` + `task generate-tools` at a5b2f4cb7 leaves a clean tree, so the
+      projection is already reproducible and there is no generator defect to fix.
+      The 109 are a deliberate two-writer policy difference — `generate-tools`
+      emits only `paths:` because the host reads nothing else from the block;
+      `install.ts` writes the full vocabulary plus its ownership stamp because
+      agent-config's own tooling needs it. Making them byte-identical would mean
+      either shipping payload the host ignores or dropping metadata the installer
+      needs, so convergence-by-alignment is the wrong target here. The defect the
+      classification actually surfaced was in the instrument — see the step
+      below. -->
+- [-] For any genuinely-different-obligation rule, surface it as a decision
       rather than picking a side — this is the class where a silent choice loses
       a governed obligation. <!-- verify: each such rule is listed with both texts and no edit applied -->
+      <!-- SKIPPED 2026-08-10 — the class is measured EMPTY (0 of 109). No pair
+      carries different obligations, so there is nothing to surface and no side
+      to avoid picking. This is the class the phase called "the interesting
+      case"; it is empty, and that is the finding. -->
+- [x] **Added 2026-08-10, and the only convergence work that landed.** Repair the
+      instrument that reported a metadata-only difference as body divergence —
+      i.e. as the one class the report tells a reader to act on — and the
+      precedence claim both surfaces were printing. <!-- verify: report_carrier_divergence prints `differ in PROSE 0` + `differ ONLY in frontmatter 109`, states binding is UNDEFINED, and no surface claims the newer copy "wins"; pinned by tests -->
+      <!-- DONE: `proseEqual` + `stripFrontmatter` in _lib/carrier_divergence.ts
+      (deliberately NOT folded into `comparePair`, which stays byte-identity so
+      the dedup predicate is untouched); a fourth `frontmatter-only` class in
+      report_carrier_divergence; the same split and the corrected precedence
+      prose in report_conformance_funnel. Two existing tests pinned the false
+      "and wins" claim and were inverted with the citation in the test body. -->
 
 Exit criteria: `report_carrier_divergence` reports 0 divergent, or a stated
 remainder whose every member is a surfaced decision.
+<!-- MET 2026-08-10, in the terms the measurement forced: 0 PROSE-divergent, with
+a stated remainder of 109 frontmatter-only pairs whose cause is named in the
+report itself and which require no decision, because no governed text differs. -->
 Rollback: the refresh is regeneration from tracked sources, so revert is
 regeneration at the previous commit.
 
 ## Phase 3 — Deduplicate, and prove the saving
+
+> **Its safety precondition is discharged ahead of its measurement (2026-08-10).**
+> The phase order exists because suppressing a *divergent* copy drops whatever
+> obligations only that copy carried. Phase 1 measured the prose identical across
+> all 109, so suppression is already a no-op on content — the thing Phase 2 was
+> meant to establish. Only the before/after reading is still owed, and that needs
+> the maintainer machine, so the blocker stands unchanged.
 
 - [ ] With the layers converged, apply the single-layer suppression and record
       the delivered-token reading before and after on the same machine and the
@@ -112,9 +176,25 @@ suppressed layer restores the prior state.
 | 4 | The before/after pair measured across a moving tree | implementation | The project carrier is generated from `src/`, so two readings at different commits differ for reasons unrelated to deduplication and would read as a saving that is not one | Same machine, same commit, both readings recorded — the pin-your-SHA lesson the parent roadmap's own report had to learn twice | Phase 3 — Deduplicate, and prove the saving |
 | 5 | Convergence closes, then re-opens on the next release | product | The global layer is a release snapshot; refreshing it today says nothing about the next one, so the 109 could simply return | Out of scope here and named rather than hidden: a standing fix belongs to the install/release path, and this roadmap's exit criteria are point-in-time by design | Acceptance criteria |
 
+**Risk 3 materialized, and was the real defect (2026-08-10).** It warned that an
+*inferred* precedence answer would leave every later step resting on a guess.
+That is exactly what had already happened: two shipped surfaces printed "the
+project projection … and wins", which no host behaviour supports, and two tests
+pinned it. Rank 1 and Rank 2 did not materialize — both depended on a divergence
+class the measurement found empty.
+
 ## Acceptance criteria
 
-- All 109 divergent rules are classified, with per-class totals.
-- Divergence reaches 0, or every remaining member is a surfaced decision.
-- The delivered-token before/after pair is recorded at one commit on one machine.
-- No rule present before convergence is absent after deduplication.
+- **MET** — All 109 divergent rules are classified, with per-class totals
+  (0 refresh-closes-it · 109 generator-difference · 0 genuinely-different-obligation).
+- **MET** — Divergence reaches 0, or every remaining member is a surfaced decision:
+  0 prose-divergent, remainder 109 frontmatter-only with its cause stated in the
+  report and no decision owed, because no governed text differs.
+- **OPEN** — The delivered-token before/after pair is recorded at one commit on one
+  machine. Blocked on `b-convergence-machine`; its safety precondition is now
+  discharged (see Phase 3).
+- **OPEN** — No rule present before convergence is absent after deduplication.
+  Blocked with the reading above.
+- **Added, MET** — No surface claims a precedence the host does not implement. Both
+  carrier surfaces now state that binding is undefined when prose diverges, and
+  that the project copy's recency is not precedence.
