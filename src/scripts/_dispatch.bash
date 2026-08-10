@@ -204,6 +204,10 @@ Tier 2 — maintenance / internal (hooks, MCP, memory, telemetry):
   roadmap:progress-check     Fail if agents/roadmaps-progress.md is stale (for CI)
   roadmap:archive            Archive completed roadmaps (branch-touched by default;
                              --all for every complete one; --dry-run to preview)
+  gates                      Open decisions that need you, rendered as actions —
+                             roadmap blockers filtered by owner, most-unblocking
+                             first. Flags: --all (include maintainer/external),
+                             --json
   capabilities:index         Regenerate CAPABILITIES.yaml — the package coverage index
                              (capability area → coverage → backing skills/commands → gaps).
                              Pass --check to fail if stale (for CI). Reads src/ (package repo).
@@ -662,6 +666,12 @@ cmd_roadmap_progress_check() {
 cmd_roadmap_archive() {
   local script
   script="$(resolve_script "dist/agent-src/scripts/archive_completed_roadmaps.ts" ".augment/scripts/archive_completed_roadmaps.ts")"
+  exec_ts "$script" "$@"
+}
+
+cmd_gates() {
+  local script
+  script="$(resolve_script "dist/agent-src/scripts/roadmap_gates.ts" ".augment/scripts/roadmap_gates.ts")"
   exec_ts "$script" "$@"
 }
 
@@ -1339,6 +1349,7 @@ main() {
     roadmap:progress)        cmd_roadmap_progress "$@" ;;
     roadmap:progress-check)  cmd_roadmap_progress_check "$@" ;;
     roadmap:archive)         cmd_roadmap_archive "$@" ;;
+    gates)                   cmd_gates "$@" ;;
     capabilities:index)      cmd_capabilities_index "$@" ;;
     hooks:install)           cmd_hooks_install "$@" ;;
     keys:install-anthropic)  cmd_keys_install_anthropic "$@" ;;

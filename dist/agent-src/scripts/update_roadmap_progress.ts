@@ -398,14 +398,32 @@ function _blockerField(slice: string, label: string): string | null {
     return parts.length ? parts.join(' ') : null;
 }
 
-/** Lines under `- **What to do:**` up to the next `- **Field:**` marker. */
+/**
+ * The `- **What to do:**` text: the remainder of the marker line, plus every
+ * line under it up to the next `- **Field:**` marker.
+ *
+ * The marker line's own remainder is load-bearing and used to be dropped.
+ * Authors write both shapes — a numbered list under the marker, and prose that
+ * starts inline (`- **What to do:** the build work is done; only real …`) —
+ * and every *other* blocker field reads the inline part via `_blockerField`.
+ * Skipping it here truncated instructions mid-sentence in both the dashboard
+ * and `agent-config gates`, which is precisely the content those surfaces
+ * exist to deliver.
+ */
 function _blockerTodo(slice: string): string[] {
     const lines = _splitlines(slice);
-    const startIdx = lines.findIndex((l) => /^-[ \t]*\*\*What to do:\*\*/i.test(_strip(l)));
+    const markerRe = /^-[ \t]*\*\*What to do:\*\*[ \t]*(.*)$/i;
+    const startIdx = lines.findIndex((l) => markerRe.test(_strip(l)));
     if (startIdx === -1) {
         return [];
     }
     const out: string[] = [];
+    const inline = _stripComment(
+        (markerRe.exec(_strip(lines[startIdx] as string))?.[1] as string) ?? '',
+    );
+    if (inline) {
+        out.push(inline);
+    }
     for (let i = startIdx + 1; i < lines.length; i++) {
         const trimmed = _strip(lines[i] as string);
         if (BLOCKER_FIELD_RE.test(trimmed) || trimmed.startsWith('#')) {
@@ -458,16 +476,54 @@ function parse_blockers(raw_text: string): Blocker[] {
     }
     const legacyMatch = LEGACY_BLOCKED_UNTIL_RE.exec(text);
     if (legacyMatch) {
+        // The legacy note is a blockquote and routinely wraps over several
+        // `> ` lines. The regex captures one line, so the continuation used to
+        // be dropped and the instruction ended mid-sentence — the same defect
+        // `_blockerTodo` carried above. Walk the following quoted lines until
+        // the quote block ends.
+        const parts = [_strip(legacyMatch[1] as string)];
+        const allLines = _splitlines(text);
+        const noteIdx = allLines.findIndex((l) => LEGACY_BLOCKED_UNTIL_RE.test(_strip(l)));
+        for (let i = noteIdx + 1; noteIdx !== -1 && i < allLines.length; i++) {
+            const quoted = /^>[ \t]?(.*)$/.exec(_strip(allLines[i] as string));
+            if (!quoted) {
+                break;
+            }
+            const cont = _strip(quoted[1] as string);
+            if (cont === '') {
+                break;
+            }
+            parts.push(cont);
+        }
         blockers.push({
             id: 'legacy',
             status: 'open',
             owner: 'user',
             blocks: 'entire roadmap',
-            todo: [_strip(legacyMatch[1] as string)],
+            todo: [parts.join(' ')],
             resolvedWhen: 'condition described above clears',
         });
     }
     return blockers;
+}
+
+/**
+ * Does this blocker need the human at the keyboard, rather than the maintainer
+ * or an external party?
+ *
+ * Owner values in the wild are not the clean `user | maintainer | external`
+ * enum the template comment suggests — real entries carry qualifiers
+ * (`user (billable spend)`, `user / maintainer`, `maintainer (security role)`).
+ * Word-boundary matching on `user` keeps the qualified forms and rejects
+ * `maintainer`. A shared `user / maintainer` blocker deliberately counts as the
+ * user's: showing one decision too many costs a line, hiding one costs the wait.
+ *
+ * Lives here rather than in `roadmap_gates` because it is owner *semantics*,
+ * not presentation — the dashboard header and `agent-config gates` must agree
+ * on the split, and two copies of this regex would drift.
+ */
+function blocker_needs_user(owner: string): boolean {
+    return /\buser\b/i.test(owner);
 }
 
 function parse_roadmap(p: string, roadmap_root: string): RoadmapStats | null {
@@ -674,6 +730,14 @@ function render(roadmaps: RoadmapStats[], bundles: Bundle[] | null = null): stri
     const pending = pending_iron_law_3(roadmaps);
     const gated = merge_gated_pending(roadmaps);
     const total_open_blockers = roadmaps.reduce((s, r) => s + r.open_blockers.length, 0);
+    // The count alone answers "is something blocked", never "is it on me" —
+    // and the per-roadmap anchors make the owner split a manual read across the
+    // whole file. Name the user's share here and point at the command that
+    // renders those entries as actions.
+    const user_open_blockers = roadmaps.reduce(
+        (s, r) => s + r.open_blockers.filter((b) => blocker_needs_user(b.owner)).length,
+        0,
+    );
     const lines: string[] = [];
     lines.push('# Roadmap Progress\n');
     const header_meta =
@@ -682,7 +746,10 @@ function render(roadmaps: RoadmapStats[], bundles: Bundle[] | null = null): stri
         ' · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · ' +
         '[skipped/](roadmaps/skipped/) · [later/](roadmaps/later/)' +
         (total_open_blockers > 0
-            ? ` · **${total_open_blockers}** open blocker${total_open_blockers !== 1 ? 's' : ''}`
+            ? ` · **${total_open_blockers}** open blocker${total_open_blockers !== 1 ? 's' : ''}` +
+              (user_open_blockers > 0
+                  ? `, **${user_open_blockers}** need you → \`agent-config gates\``
+                  : '')
             : '') +
         '\n';
     lines.push(
@@ -1074,6 +1141,7 @@ export {
     is_roadmap_candidate,
     count_checkboxes,
     parse_blockers,
+    blocker_needs_user,
     parse_roadmap,
     bar,
     collect,

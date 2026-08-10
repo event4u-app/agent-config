@@ -25,6 +25,8 @@ import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
+import { parse_blockers } from '../../src/agent-src/scripts/update_roadmap_progress.js';
+
 // tests/scripts/update_roadmap_progress.test.ts → two levels up is the repo root.
 const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..');
 const TS_SCRIPT = path.join(REPO_ROOT, 'src', 'agent-src', 'scripts', 'update_roadmap_progress.ts');
@@ -430,5 +432,84 @@ describe('update_roadmap_progress — intent', () => {
         const ts = runTs(['--help'], tmp);
         expect(ts.status, 'exit').toBe(0);
         expect(ts.stdout.includes('usage: update_roadmap_progress.py')).toBe(true);
+    });
+});
+
+// Regression cover for two truncation defects in the blocker parser, both the
+// same shape: a field whose text may start on the marker line, read as if it
+// could only start on the line after. Both cut the user-facing instruction
+// mid-sentence — in the dashboard and in `agent-config gates`, which is the one
+// field those surfaces exist to deliver.
+describe('parse_blockers — instruction text is never truncated', () => {
+    it('keeps a "What to do:" that starts inline on the marker line', () => {
+        const text = [
+            '# Roadmap',
+            '',
+            '## Blockers',
+            '',
+            '### blocker: inline-prose',
+            '- **Status:** open',
+            '- **Owner:** user',
+            '- **Blocks:** Phase 2',
+            '- **What to do:** the build work is done; only real usage produces the',
+            '  telemetry. Use the agent on parallel tasks, then check the log.',
+            '- **Resolved when:** the log holds 20 lines',
+            '',
+        ].join('\n');
+        const [b] = parse_blockers(text);
+        expect(b?.todo.join(' ')).toBe(
+            'the build work is done; only real usage produces the telemetry. ' +
+                'Use the agent on parallel tasks, then check the log.',
+        );
+    });
+
+    it('still reads the classic list form written under the marker', () => {
+        const text = [
+            '## Blockers',
+            '',
+            '### blocker: list-form',
+            '- **Status:** open',
+            '- **Owner:** user',
+            '- **Blocks:** Phase 1',
+            '- **What to do:**',
+            '  1. First step.',
+            '  2. Second step.',
+            '- **Resolved when:** both steps land',
+            '',
+        ].join('\n');
+        const [b] = parse_blockers(text);
+        expect(b?.todo).toEqual(['1. First step.', '2. Second step.']);
+    });
+
+    it('keeps the continuation lines of a multi-line legacy blocked-until note', () => {
+        const text = [
+            '# Roadmap',
+            '',
+            '> Blocked until `yt-dlp` and a JavaScript runtime are installed by a human',
+            '> on the machine that runs this. The package never auto-installs — that is',
+            '> a contract, not a limitation to work around.',
+            '',
+            '## Phase 1 — Ship',
+            '- [ ] step',
+            '',
+        ].join('\n');
+        const [b] = parse_blockers(text);
+        expect(b?.id).toBe('legacy');
+        expect(b?.todo[0]).toBe(
+            '`yt-dlp` and a JavaScript runtime are installed by a human on the machine ' +
+                'that runs this. The package never auto-installs — that is a contract, ' +
+                'not a limitation to work around.',
+        );
+    });
+
+    it('stops the legacy note at the end of its quote block', () => {
+        const text = [
+            '> Blocked until the thing clears.',
+            '',
+            '> An unrelated later blockquote that must not be swallowed.',
+            '',
+        ].join('\n');
+        const [b] = parse_blockers(text);
+        expect(b?.todo[0]).toBe('the thing clears.');
     });
 });
