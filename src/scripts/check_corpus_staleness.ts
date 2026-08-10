@@ -49,6 +49,7 @@ import * as os from 'node:os';
 import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
+import { GateLedger } from './_lib/gate_ledger.js';
 import { runGateCli, runSelfTest } from './_lib/gate_self_test.js';
 import { assertScanned, DeadScopeError } from './_lib/scan_scope.js';
 
@@ -423,20 +424,32 @@ export interface RunResult {
     readonly corpora: number;
     /** CSVs actually opened, reported so "checked nothing" cannot read as clean. */
     readonly csvs: number;
+    /** Per-corpus completeness accounting — every discovered corpus reaches one outcome. */
+    readonly ledger: GateLedger;
 }
 
 export function run_checks(todayStamp: number, skillsDir: string = SKILLS_DIR): RunResult {
     const corpora = discover_corpora(skillsDir);
+    const ledger = new GateLedger('check_corpus_staleness');
+    ledger.plan(corpora.map((c) => c.slug));
     const findings: CorpusFinding[] = [];
     let csvs = 0;
     for (const corpus of corpora) {
-        findings.push(...check_staleness(corpus, todayStamp));
-        findings.push(...check_attribution_pin(corpus));
+        const found: CorpusFinding[] = [
+            ...check_staleness(corpus, todayStamp),
+            ...check_attribution_pin(corpus),
+        ];
         const csv = check_csv_integrity(corpus);
-        findings.push(...csv.findings);
+        found.push(...csv.findings);
         csvs += csv.opened;
+        findings.push(...found);
+        if (found.length > 0) {
+            ledger.fail(corpus.slug, `${String(found.length)} corpus finding(s)`);
+        } else {
+            ledger.complete(corpus.slug);
+        }
     }
-    return { findings, corpora: corpora.length, csvs };
+    return { findings, corpora: corpora.length, csvs, ledger };
 }
 
 const HELP = `check_corpus_staleness — offline staleness + CSV-integrity gate for the grounding corpora
@@ -651,6 +664,7 @@ export function main(argv: string[] = process.argv.slice(2)): number {
 
     // gate-coverage contract (src/config/gate-coverage.yml): corpora inspected.
     process.stdout.write(`scanned: ${String(result.corpora)}\n`);
+    result.ledger.report();
 
     if (result.findings.length > 0) {
         process.stdout.write(`❌  ${String(result.findings.length)} corpus finding(s):\n`);

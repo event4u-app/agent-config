@@ -32,6 +32,7 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
+// ledger-exempt: advisory report that gates on nothing BY DESIGN (exit 0 always, no threshold, no baseline entry, no gate-coverage row — see the header); there is no pass/fail outcome per target to account, and acquiring one would be the promotion this report must not undergo.
 const _HERE = fileURLToPath(import.meta.url);
 const REPO_ROOT = path.resolve(path.dirname(_HERE), '..', '..');
 

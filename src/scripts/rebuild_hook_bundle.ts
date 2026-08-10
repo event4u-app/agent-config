@@ -47,6 +47,7 @@ import { fileURLToPath } from "node:url";
 
 import { check } from "./check_hook_bundle_freshness.js";
 
+// ledger-exempt: self-heal builder, not a checker — one build → probe → atomic-rename transaction whose outcome is a single aggregate heal verdict; the per-source staleness accounting lives in check_hook_bundle_freshness, which carries the ledger.
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = path.resolve(HERE, "..", "..");
 const LIVE_REL = path.join("dist", "hooks", "dispatch.js");

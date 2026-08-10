@@ -41,6 +41,7 @@ import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { parse as parseYaml } from 'yaml';
 
+import { GateLedger } from './_lib/gate_ledger.js';
 import { runGateCli, runSelfTest } from './_lib/gate_self_test.js';
 import { reportScanned } from './_lib/scan_scope.js';
 
@@ -188,15 +189,26 @@ export function main(argv?: readonly string[]): number {
         names = [];
     }
 
+    // Per-rule completeness: every listed rule reaches exactly one outcome, so
+    // the frontmatter-less `continue` below is a named skip, not a silent one.
+    const ledger = new GateLedger('lint_decision_impact');
+    ledger.plan(names);
     const violations: Violation[] = [];
     let scanned = 0;
     for (const n of names) {
         const fm = frontmatterOf(fs.readFileSync(path.join(dir, n), 'utf-8'));
         if (fm === null) {
+            ledger.skip(n, 'not_applicable_kind');
             continue;
         }
         scanned += 1;
-        violations.push(...checkRule(n.slice(0, -3), fm));
+        const found = checkRule(n.slice(0, -3), fm);
+        violations.push(...found);
+        if (found.length > 0) {
+            ledger.fail(n, `${String(found.length)} issue(s)`);
+        } else {
+            ledger.complete(n);
+        }
     }
 
     if (violations.length > 0) {
@@ -214,6 +226,7 @@ export function main(argv?: readonly string[]): number {
         );
     }
 
+    ledger.report();
     reportScanned({
         gate: 'lint_decision_impact',
         scanned,

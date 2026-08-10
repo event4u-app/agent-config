@@ -28,6 +28,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import * as YAML from 'yaml';
 
+import { GateLedger } from './_lib/gate_ledger.js';
 import {
     type DefectFinding,
     type TurnSnapshot,
@@ -162,6 +163,22 @@ export function main(repoRoot: string = process.cwd()): number {
         units: 'detector fixtures',
         roots: [CORPUS_REL],
     });
+
+    // Per-detector completeness: every registered detector AND every corpus
+    // entry reaches exactly one outcome, so a detector silently absent from the
+    // loop above could not read as a pass.
+    const ledger = new GateLedger(GATE);
+    const names = [...new Set([...Object.keys(DETECTORS), ...Object.keys(corpus)])].sort();
+    ledger.plan(names);
+    const failing = new Set(findings.map((f) => f.detector));
+    for (const name of names) {
+        if (failing.has(name)) {
+            ledger.fail(name, 'corpus finding(s) against this detector');
+        } else {
+            ledger.complete(name);
+        }
+    }
+    ledger.report();
 
     if (findings.length > 0) {
         process.stderr.write(`${GATE}: ${String(findings.length)} finding(s)\n\n`);

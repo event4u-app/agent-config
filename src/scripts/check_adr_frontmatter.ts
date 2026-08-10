@@ -35,6 +35,7 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
+import { GateLedger } from './_lib/gate_ledger.js';
 import { assertScanned, DeadScopeError } from './_lib/scan_scope.js';
 
 const _HERE = path.dirname(fileURLToPath(import.meta.url));
@@ -101,48 +102,81 @@ export function trigger_is_meaningful(value: string): boolean {
     return true;
 }
 
-export function check(dir: string = ADR_DIR): AdrFinding[] {
+/** Every frontmatter finding for one ADR file. Pure — no I/O, no enumeration. */
+export function check_one(rel: string, text: string): AdrFinding[] {
+    const findings: AdrFinding[] = [];
+    const fm = parse_frontmatter(text);
+
+    if (fm === null) {
+        findings.push({ file: rel, level: 'error', message: 'no YAML frontmatter block' });
+        return findings;
+    }
+    for (const req of REQUIRED) {
+        if (!fm[req]) findings.push({ file: rel, level: 'error', message: `missing \`${req}\`` });
+    }
+    if (fm['status'] && !ALLOWED_STATUS.has(fm['status'])) {
+        findings.push({
+            file: rel,
+            level: 'error',
+            message: `status \`${fm['status']}\` is not one of: ${[...ALLOWED_STATUS].sort().join(', ')}`,
+        });
+    }
+
+    const date = fm['date'] ?? '';
+    const grandfathered = date !== '' && date < REVIEW_TRIGGER_SINCE;
+    const trigger = fm['review_trigger'];
+
+    if (!trigger) {
+        findings.push({
+            file: rel,
+            level: grandfathered ? 'warn' : 'error',
+            message: grandfathered
+                ? `no \`review_trigger\` (grandfathered — dated ${date}, before ${REVIEW_TRIGGER_SINCE})`
+                : `missing \`review_trigger\` — name the CONDITION that would reopen this decision`,
+        });
+    } else if (!trigger_is_meaningful(trigger)) {
+        findings.push({
+            file: rel,
+            level: grandfathered ? 'warn' : 'error',
+            message: `\`review_trigger\` is a cadence, not a condition: "${trigger}". A calendar review is ignored; an event fires.`,
+        });
+    }
+    return findings;
+}
+
+/**
+ * Check every ADR in `dir`, optionally recording per-file completeness.
+ *
+ * The candidate set is every `*.md` in the directory, not the `ADR-*.md` subset:
+ * the name filter used to be a bare `continue`, so a decision record saved as
+ * `adr-131-foo.md` (lower case) or `131-foo.md` left the corpus without a trace
+ * and the gate still printed a green line over the files it did read. It is now
+ * an out-of-scope outcome with a reason, and it prints.
+ *
+ * A `warn`-level finding resolves as `complete`: warnings are allowed by this
+ * gate's exit-code contract, so `fail` is reserved for what actually reds it.
+ */
+export function check(dir: string = ADR_DIR, ledger?: GateLedger): AdrFinding[] {
     const findings: AdrFinding[] = [];
     if (!fs.existsSync(dir)) return findings;
 
-    for (const name of fs.readdirSync(dir).sort()) {
-        if (!/^ADR-.*\.md$/.test(name)) continue;
-        const rel = path.relative(REPO_ROOT, path.join(dir, name));
-        const fm = parse_frontmatter(fs.readFileSync(path.join(dir, name), 'utf-8'));
+    const candidates = fs.readdirSync(dir).filter((n) => n.endsWith('.md')).sort();
+    ledger?.plan(candidates);
 
-        if (fm === null) {
-            findings.push({ file: rel, level: 'error', message: 'no YAML frontmatter block' });
+    for (const name of candidates) {
+        if (!/^ADR-.*\.md$/.test(name)) {
+            ledger?.outOfScope(name, 'not_applicable_kind');
             continue;
         }
-        for (const req of REQUIRED) {
-            if (!fm[req]) findings.push({ file: rel, level: 'error', message: `missing \`${req}\`` });
-        }
-        if (fm['status'] && !ALLOWED_STATUS.has(fm['status'])) {
-            findings.push({
-                file: rel,
-                level: 'error',
-                message: `status \`${fm['status']}\` is not one of: ${[...ALLOWED_STATUS].sort().join(', ')}`,
-            });
-        }
+        const rel = path.relative(REPO_ROOT, path.join(dir, name));
+        const own = check_one(rel, fs.readFileSync(path.join(dir, name), 'utf-8'));
+        findings.push(...own);
 
-        const date = fm['date'] ?? '';
-        const grandfathered = date !== '' && date < REVIEW_TRIGGER_SINCE;
-        const trigger = fm['review_trigger'];
-
-        if (!trigger) {
-            findings.push({
-                file: rel,
-                level: grandfathered ? 'warn' : 'error',
-                message: grandfathered
-                    ? `no \`review_trigger\` (grandfathered — dated ${date}, before ${REVIEW_TRIGGER_SINCE})`
-                    : `missing \`review_trigger\` — name the CONDITION that would reopen this decision`,
-            });
-        } else if (!trigger_is_meaningful(trigger)) {
-            findings.push({
-                file: rel,
-                level: grandfathered ? 'warn' : 'error',
-                message: `\`review_trigger\` is a cadence, not a condition: "${trigger}". A calendar review is ignored; an event fires.`,
-            });
+        const errors = own.filter((f) => f.level === 'error').length;
+        if (errors > 0) {
+            ledger?.fail(name, `${String(errors)} frontmatter error(s)`);
+        } else {
+            ledger?.complete(name);
         }
     }
     return findings;
@@ -150,10 +184,17 @@ export function check(dir: string = ADR_DIR): AdrFinding[] {
 
 function main(argv: string[]): number {
     const as_json = argv.includes('--json');
-    const findings = check();
-    const total = fs.existsSync(ADR_DIR)
-        ? fs.readdirSync(ADR_DIR).filter((f) => /^ADR-.*\.md$/.test(f)).length
-        : 0;
+    const ledger = new GateLedger('check_adr_frontmatter');
+    const findings = check(ADR_DIR, ledger);
+    // Finalized here, printed later by `report()` (which re-finalizes — the call
+    // is pure): the denominator is needed for the scope assertion below, which
+    // runs before any output. It is the ledger's own per-file accounting — the
+    // ADRs that actually reached a checked outcome — where it used to be a SECOND
+    // `readdirSync` of the same directory, independent of the loop that did the
+    // work, so the printed count could not disagree with the scan even when the
+    // scan had skipped files.
+    const tally = ledger.finalize();
+    const total = tally.completed + tally.failed;
 
     // `check()` returns findings, never a count, so a moved `docs/decisions/`
     // yields an empty list — reported as "0 ADR(s) · 0 error(s)" and green.
@@ -174,7 +215,9 @@ function main(argv: string[]): number {
     }
 
     if (as_json) {
-        process.stdout.write(JSON.stringify({ findings }, null, 2) + '\n');
+        // The tally rides in the payload rather than on stdout: `ledger.report()`
+        // would print beside the JSON and break every parser of this mode.
+        process.stdout.write(JSON.stringify({ findings, ledger: tally }, null, 2) + '\n');
         return 0;
     }
 
@@ -185,6 +228,7 @@ function main(argv: string[]): number {
         `ADR frontmatter: ${total} ADR(s) · ${errors.length} error(s) · ` +
             `${warns.length} grandfathered without a revisit condition\n`,
     );
+    ledger.report();
     for (const e of errors) process.stderr.write(`    ❌ ${e.file}: ${e.message}\n`);
 
     if (errors.length > 0) {
