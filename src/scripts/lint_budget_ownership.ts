@@ -15,6 +15,16 @@
  * are allowed but not required — the top-level owner/review_by covers the
  * file.
  *
+ * ROW-LEVEL schema, opt-in (road-to-cost-parity-0-program § 1.2b/1.3): a
+ * budget file that declares a `row_schema` block additionally has every row
+ * of every top-level array checked for the fields it names — in practice
+ * `source` (so a baseline figure without a traceable origin cannot enter the
+ * file) plus the three honest-null fields. The honest-null contract is the
+ * part that binds: a row that records a `revised_from` without a
+ * `revision_evidence` pointer fails the file, because a target that moved
+ * without published evidence is precisely the drift the clause exists to
+ * refuse. Files that declare no `row_schema` are untouched by this half.
+ *
  * Exit codes: 0 clean · 1 findings · 2 internal error.
  */
 import * as fs from 'node:fs';
@@ -37,6 +47,76 @@ export function checkBudgetDoc(relPath: string, doc: Record<string, unknown>): s
     const review = doc['review_by'];
     if (typeof review !== 'string' || !DATE_RE.test(review)) {
         errors.push(`${relPath}: missing/invalid top-level \`review_by\` (YYYY-MM-DD)`);
+    }
+    return errors;
+}
+
+const DEFAULT_ROW_FIELDS = [
+    'id',
+    'unit',
+    'baseline',
+    'source',
+    'revisable',
+    'revision_evidence',
+    'revised_from',
+];
+
+function isRow(value: unknown): value is Record<string, unknown> {
+    return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+/**
+ * Row-level checks for budget files that opt in via a `row_schema` block.
+ * Returns [] for every file that does not declare one.
+ */
+export function checkBudgetRows(relPath: string, doc: Record<string, unknown>): string[] {
+    const schema = doc['row_schema'];
+    if (!isRow(schema)) return [];
+
+    const declared = schema['required_row_fields'];
+    const required =
+        Array.isArray(declared) && declared.every((f) => typeof f === 'string')
+            ? (declared as string[])
+            : DEFAULT_ROW_FIELDS;
+
+    const errors: string[] = [];
+    if (typeof doc['schema_version'] !== 'number') {
+        errors.push(`${relPath}: \`row_schema\` declared but no numeric top-level \`schema_version\``);
+    }
+    if (typeof doc['registered_at'] !== 'string' || !DATE_RE.test(doc['registered_at'])) {
+        errors.push(`${relPath}: \`row_schema\` declared but no valid top-level \`registered_at\` (YYYY-MM-DD)`);
+    }
+
+    for (const [key, value] of Object.entries(doc)) {
+        if (!Array.isArray(value)) continue;
+        value.forEach((row, index) => {
+            if (!isRow(row)) return;
+            const id = typeof row['id'] === 'string' ? row['id'] : `#${index}`;
+            const where = `${relPath}: ${key}[${index}] (${id})`;
+
+            for (const field of required) {
+                if (!(field in row)) errors.push(`${where}: missing \`${field}\``);
+            }
+            if ('source' in row) {
+                const source = row['source'];
+                if (typeof source !== 'string' || source.trim() === '') {
+                    errors.push(`${where}: empty \`source\` — a baseline figure needs a traceable origin`);
+                }
+            }
+            if ('revisable' in row && row['revisable'] !== true) {
+                errors.push(`${where}: \`revisable\` must be true — an unrevisable target is not honest-null`);
+            }
+            // The honest-null contract: a moved target must publish what moved it.
+            const revisedFrom = row['revised_from'];
+            if (revisedFrom !== null && revisedFrom !== undefined) {
+                const evidence = row['revision_evidence'];
+                if (typeof evidence !== 'string' || evidence.trim() === '') {
+                    errors.push(
+                        `${where}: sets \`revised_from\` without a \`revision_evidence\` pointer — a revision without published evidence`,
+                    );
+                }
+            }
+        });
     }
     return errors;
 }
@@ -85,6 +165,7 @@ export function main(): number {
             continue;
         }
         errors.push(...checkBudgetDoc(rel, doc));
+        errors.push(...checkBudgetRows(rel, doc));
         const review = doc['review_by'];
         if (typeof review === 'string' && DATE_RE.test(review) && review < today) {
             process.stderr.write(

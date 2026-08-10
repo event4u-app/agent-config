@@ -1,0 +1,167 @@
+{
+    "_comment": "Committed target table for the road-to-cost-parity-* family (part 0, Phase 1). Registers what a session costs today, what the family is steering toward, and what the rule payload actually is PER HOST — the correction that matters most, because every diet target in the source drafts was set against one aggregate number that describes no host. Nothing here changes behaviour: no carrier ships for these thresholds (part 0 Phase 4.5), and no gate reads the target columns. What IS gated is the file's own shape — lint_budget_ownership rejects a row without a `source`, and rejects a `revised_from` without `revision_evidence`, so a number cannot enter or move without a traceable origin.",
+    "schema_version": 1,
+    "registered_at": "2026-08-10",
+    "owner": "maintainer",
+    "review_by": "2026-11-10",
+    "row_schema": {
+        "_comment": "Reading of part 0 § 1.2b: `schema_version` / `registered_at` / `owner` / `review_by` are FILE-level (as in every sibling budget file — a per-row copy would be four constants repeated N times), and every ROW carries `source` plus the three honest-null fields from § 1.3. The validator enforces exactly that split.",
+        "required_row_fields": ["id", "unit", "baseline", "source", "revisable", "revision_evidence", "revised_from"],
+        "honest_null_contract": "A target bends to a measurement, never to a preference. `revisable: true` says the number is revisable at all; `revised_from` records what it used to be once it moves; `revision_evidence` must then point at the evidence note that forced the move. The validator fails the file when `revised_from` is set and `revision_evidence` is empty — a revision without published evidence is the one form of drift this schema exists to refuse."
+    },
+    "measurement": {
+        "_comment": "Both measurement rules from part 0's Context are fields here, not prose: a rule that lives only in a paragraph is a rule the next author does not inherit.",
+        "measurement_date": "2026-08-10",
+        "commit": "c073d5732fb890bbf8b41ec879f62f651c7ba293",
+        "projection_regenerated": true,
+        "regeneration_command": "task sync && task generate-tools — verified no-op afterwards (git status clean), so the payload rows below measure the commit and not when someone last ran a generator",
+        "emitter_generation": "real, frontmatter-less projection files (25 of 110 .claude/rules entries carry a `paths:` block; the rest carry no frontmatter). NOT the older emitter that symlinked .claude/rules/* into dist/agent-src/rules/ and so inherited dist's full frontmatter. This is the THIRD variable behind the 92-vs-110 file-count spread: a projection count is a fact about which emitter last wrote the tree, on top of how stale that tree is.",
+        "carrier_divergence_admitted": false,
+        "carrier_divergence_reason": "report_carrier_divergence compares a globally installed carrier against the project projection on disk; both can be stale independently, so it measures relative cache staleness rather than any property of the source. It may diagnose a behind-the-times install; it may never gate a phase, and no row here is derived from it."
+    },
+    "session_cost_targets": [
+        {
+            "id": "median_final_context_tokens",
+            "unit": "billable input tokens of the last main-chain assistant record (per cc_transcript.ts)",
+            "baseline": 519349,
+            "interim": 300000,
+            "target": 200000,
+            "direction": "lower_is_better",
+            "source": "agents/evidence/analysis/token-economy-recycling-phase1.md:45 — median over 201 sessions with parseable final usage (:44) out of 205 non-empty (:10)",
+            "revisable": true,
+            "revision_evidence": "",
+            "revised_from": null
+        },
+        {
+            "id": "p90_final_context_tokens",
+            "unit": "billable input tokens of the last main-chain assistant record",
+            "baseline": 807937,
+            "interim": 550000,
+            "target": 400000,
+            "direction": "lower_is_better",
+            "source": "agents/evidence/analysis/token-economy-recycling-phase1.md:45 — same 201-session corpus",
+            "revisable": true,
+            "revision_evidence": "",
+            "revised_from": null
+        },
+        {
+            "id": "auto_compact_incidence",
+            "unit": "share of sessions with >= 1 auto-compaction event",
+            "baseline": 0.112,
+            "interim": 0.05,
+            "target": 0.0,
+            "direction": "lower_is_better",
+            "source": "agents/evidence/analysis/token-economy-recycling-phase1.md:59 — 23 of 205 sessions, 31 events (:60), all trigger:\"auto\"",
+            "revisable": true,
+            "revision_evidence": "",
+            "revised_from": null
+        },
+        {
+            "id": "late_early_per_call_cost_ratio",
+            "unit": "median billable input per call over the last 20 calls / the first 20 calls of a session",
+            "baseline": 2.1,
+            "interim": 1.6,
+            "target": 1.3,
+            "direction": "lower_is_better",
+            "source": "agents/evidence/analysis/token-economy-recycling-phase1.md:69-75 — 145 sessions with >= 200 main-chain calls; median early 279,859 vs late 594,985; p90 ratio 3.3x",
+            "revisable": true,
+            "revision_evidence": "",
+            "revised_from": null
+        }
+    ],
+    "payload_rows": [
+        {
+            "_comment": "Per host, never one number. The aggregate the source drafts dieted against (\"419 KB always-loaded layer\") describes no host that exists: it is the whole rule tree, and only 9 of 116 rules are type: always.",
+            "id": "src_rules_maintained",
+            "unit": "bytes across src/rules/*.md",
+            "baseline": 424896,
+            "files": 116,
+            "target_bytes": null,
+            "target_owner": "none — this is the maintained source, not a delivered payload; it shrinks only as a consequence of a diet elsewhere",
+            "source": "measured 2026-08-10 at commit c073d5732, post-regeneration (see `measurement`)",
+            "revisable": true,
+            "revision_evidence": "",
+            "revised_from": null
+        },
+        {
+            "id": "dist_agent_src_rules",
+            "unit": "bytes across dist/agent-src/rules/*.md",
+            "baseline": 420051,
+            "files": 115,
+            "target_bytes": null,
+            "target_owner": "none — the tracked projection source. It is the ONLY rule-payload figure that is stable across checkouts, because it is committed; every other row below is regenerated and therefore machine-dependent.",
+            "source": "measured 2026-08-10 at commit c073d5732, post-regeneration",
+            "revisable": true,
+            "revision_evidence": "",
+            "revised_from": null
+        },
+        {
+            "id": "augment_rules_payload",
+            "unit": "bytes across .augment/rules/*.md",
+            "baseline": 420051,
+            "files": 115,
+            "target_bytes": null,
+            "target_owner": "src/config/budgets.yml § standing_rule_delivery (total_cap_tokens 110000) already owns the delivered-rule ceiling. This family does not open a second, byte-denominated target for the same surface — a metric with two owners is a metric with none.",
+            "source": "measured 2026-08-10 at commit c073d5732, post-regeneration; mirrors dist/ by symlink",
+            "revisable": true,
+            "revision_evidence": "",
+            "revised_from": null
+        },
+        {
+            "id": "claude_rules_payload",
+            "unit": "bytes across .claude/rules/*.md",
+            "baseline": 339035,
+            "files": 110,
+            "target_bytes": null,
+            "target_owner": "src/config/budgets.yml § standing_rule_delivery — same ceiling, same reason as the augment row",
+            "source": "measured 2026-08-10 at commit c073d5732, post-regeneration; 25 of 110 files carry a `paths:` block, the rest none",
+            "revisable": true,
+            "revision_evidence": "",
+            "revised_from": null
+        },
+        {
+            "_comment": "CORRECTION to part 0's triage table, which recorded these two as \"~3 KB / ~0 KB\" and therefore as already-lean hosts needing no target. Re-measured post-regeneration they are 408 KB and 330 KB — a full payload each. The earlier reading is a stale-projection artefact of exactly the class measurement rule 1 warns about: both carriers are UNTRACKED and written only by `task generate-tools`, so a checkout that has not run it reads them as near-empty. Risk 3's mitigation (\"the lean hosts need no target\") does not survive the re-measure and is not encoded here.",
+            "id": "clinerules_payload",
+            "unit": "bytes across .clinerules/*.md",
+            "baseline": 417703,
+            "files": 111,
+            "target_bytes": null,
+            "target_owner": "unowned — a diet for this host belongs to the parked rule-payload part of this family, not to part 0",
+            "source": "measured 2026-08-10 at commit c073d5732, post-regeneration; untracked, generated by task generate-tools",
+            "revisable": true,
+            "revision_evidence": "",
+            "revised_from": null
+        },
+        {
+            "id": "windsurfrules_payload",
+            "unit": "bytes of the single .windsurfrules file",
+            "baseline": 338160,
+            "files": 1,
+            "target_bytes": null,
+            "target_owner": "unowned — see the clinerules row; same correction, same parked owner",
+            "source": "measured 2026-08-10 at commit c073d5732, post-regeneration; untracked, generated by task generate-tools",
+            "revisable": true,
+            "revision_evidence": "",
+            "revised_from": null
+        },
+        {
+            "id": "gemini_md_payload",
+            "unit": "bytes of GEMINI.md",
+            "baseline": 2982,
+            "files": 1,
+            "target_bytes": null,
+            "target_owner": "none — genuinely lean, and the only host in this table for which that is true. It is a pointer file, not a rule payload.",
+            "source": "measured 2026-08-10 at commit c073d5732, post-regeneration",
+            "revisable": true,
+            "revision_evidence": "",
+            "revised_from": null
+        }
+    ],
+    "anchors": {
+        "premium_band_tokens": 200000,
+        "rationale": "Above ~200k a session sits in the premium pricing band, which is why the median target is set there rather than at a round fraction of the baseline.",
+        "known_noise_problem": "187 of 205 observed sessions end at or above 200k, so a session-end hint at this threshold would fire on ~91% of sessions — a constant line, not an advisory. The 200k figure is a TARGET here and nothing else.",
+        "no_carrier_ships": "Part 0 § 4.5: no session-end advisory ships for this anchor. The existing 800k recycle threshold (src/config/recycle-threshold-budget.json) stays the only strong line, and any carrier for 200k is a separate, separately-argued change.",
+        "source": "agents/evidence/analysis/token-economy-recycling-phase1.md — session-final distribution (:45) over the 205-session corpus (:10)"
+    }
+}

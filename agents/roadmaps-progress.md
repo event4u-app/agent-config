@@ -162,37 +162,6 @@
 | 1 | Post-merge dry-run verification (carried from parent Phase 3) | ⬜ not started | 1 | 0 | 0 | 0 | 0% |
 | 2 | First real release + live drills (carried from parent Phase 4 + Phase 7) | ⬜ not started | 7 | 0 | 0 | 0 | 0% |
 
-### [road-to-cost-parity-0-program.md](roadmaps/road-to-cost-parity-0-program.md)
-
-**Road to cost parity — 0: the median session gets a measured target and the family gets its order** — 0 / 23 done (0%)
-
-| # | Phase | State | Open | Done | Deferred | Cancelled | % |
-|---|---|---|---:|---:|---:|---:|---:|
-| 1 | the target table, committed before any sibling lands | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
-| 2 | the execution order across the family | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
-| 3 | the small corrections this triage surfaced | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
-| 4 | what this roadmap will not do | ⬜ not started | 11 | 0 | 0 | 0 | 0% |
-
-<a id="blockers-road-to-cost-parity-0-program"></a>
-**Blockers**
-
-- **adherence-bench-spend** (owner: user) — blocks part 1's adherence-eval phase
-  - **What to do:**
-    two existing roadmaps already own an A/B bench of this
-    shape (`road-to-solution-minimalism.md` Phase 3, blocked on a
-    $150–250 floor; `road-to-rule-coherence-followup.md` F2.1, blocked on
-    `bench-spend-and-methodology`). The size-vs-adherence question is theirs;
-    part 1 must consume their result, not open a third bench.
-  - **Resolved when:** one of the two benches is authorized and run, or the question is recorded as a null.
-- **background-continuation-probe** (owner: maintainer) — blocks any continuation-offload step (none planned in this program) - **Inherited from:** `archive/road-to-cost-parity-3-handoff-envelope.md`, which closed with this blocker still open. Carried here rather than archived with it: part 3 blocked no step on it, so it could not hold that roadmap open — but archiving is the only moment the question could have silently left the tracked surface, and an open question that no artefact names again is one nobody will ever answer.
-  - **What to do:**
-    past the recycle threshold, the flow MAY hand remaining
-    work to a fresh background session seeded with the envelope instead of
-    asking the user to clear in place. Whether a background spawn reliably
-    receives and acts on a seeded envelope is host semantics and unverified.
-    Run a bounded two-arm probe on a live host before any step is written.
-  - **Resolved when:** a probe note records the observed seeding behaviour per host, and either a step is added citing it or the idea is recorded as a null.
-
 ### [road-to-council-blind-review.md](roadmaps/road-to-council-blind-review.md)
 
 **Council Blind Review — three small deliberation-protocol adoptions from an external five-advisor prompt pattern** — 3 / 5 done (60%)
