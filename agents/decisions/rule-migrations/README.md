@@ -49,9 +49,19 @@ left a live citation pointing at content that no longer exists — a command fil
 still refers readers to `docker-commands` for a tool-detection branch that is
 gone, `laravel-translations` is cited as the home of a key-format mandate it no
 longer states, and two files name `reviewer-awareness` as the home of a reviewer
-vocabulary that exists nowhere. Those dangling pointers are recorded here rather
-than repaired: the ledger's job is that the loss is **visible**, and repairing
-them is a change with its own scope.
+vocabulary that exists nowhere. Those dangling pointers were recorded here
+rather than repaired: the ledger's job is that the loss is **visible**, and
+repairing them is a change with its own scope.
+
+**That repair has since landed, and the rows above did not change.** The three
+dropped sections were recovered from `d4fe80e1c^` and re-homed in their declared
+`migrated_to` targets — tooling detection in `skill:docker`, the flat
+dot-notation key format in `skill:laravel`, the seven-role vocabulary in
+`skill:review-routing`, with the citations that pointed at the rules repointed
+at the content. The `dropped` dispositions stay `dropped` **on purpose**: they
+record what the migration transform did, and a later repair does not retroact
+into that history. The gate agrees — it asserts a `dropped` row names no target
+and explicitly does not assert that a heading should have been carried.
 
 ## Retention policy
 
