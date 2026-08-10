@@ -2,7 +2,7 @@
 
 > Auto-generated — do not edit. Regenerate with `task roadmap-progress` or by running the `update_roadmap_progress` script for your install; rewritten on every roadmap create / execute / completion change (timestamp lives in git history).
 >
-> 22 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **28** open blockers, **10** need you → `agent-config gates`
+> 22 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **29** open blockers, **10** need you → `agent-config gates`
 
 ## Overall
 
@@ -24,7 +24,7 @@
 | 6 | [road-to-cost-parity-3-handoff-envelope.md](roadmaps/road-to-cost-parity-3-handoff-envelope.md) | 4 | 28 | 28 | 0 | 0 | 0 | [2](#blockers-road-to-cost-parity-3-handoff-envelope) | ░░░░░░░░░░ 0% |
 | 7 | [road-to-council-blind-review.md](roadmaps/road-to-council-blind-review.md) | 3 | 6 | 2 | 3 | 0 | 1 | 0 | ██████░░░░ 60% |
 | 8 | [road-to-gated-reach-followup.md](roadmaps/road-to-gated-reach-followup.md) | 1 | 12 | 12 | 0 | 0 | 0 | [1](#blockers-road-to-gated-reach-followup) | ░░░░░░░░░░ 0% |
-| 9 | [road-to-inbox-harvest-2026-08.md](roadmaps/road-to-inbox-harvest-2026-08.md) | 5 | 21 | 1 | 11 | 4 | 5 | [2](#blockers-road-to-inbox-harvest-2026-08) | █████████░ 92% |
+| 9 | [road-to-inbox-harvest-2026-08.md](roadmaps/road-to-inbox-harvest-2026-08.md) | 5 | 21 | 1 | 11 | 4 | 5 | [3](#blockers-road-to-inbox-harvest-2026-08) | █████████░ 92% |
 | 10 | [road-to-kernel-question-triangle.md](roadmaps/road-to-kernel-question-triangle.md) | 1 | 3 | 3 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 11 | [road-to-maintainer-bus-factor.md](roadmaps/road-to-maintainer-bus-factor.md) | 4 | 12 | 5 | 7 | 0 | 0 | [1](#blockers-road-to-maintainer-bus-factor) | ██████░░░░ 58% |
 | 12 | [road-to-orchestration-scope-decision.md](roadmaps/road-to-orchestration-scope-decision.md) | 4 | 10 | 6 | 4 | 0 | 0 | [1](#blockers-road-to-orchestration-scope-decision) | ████░░░░░░ 40% |
@@ -267,6 +267,21 @@
     trigger. Reopening a recorded decision is a maintainer call under
     `decision-revisit-gate`, not something an agent does because a reviewer asked.
   - **Resolved when:** the decision is reopened with the trigger cited, or P1.4 is cancelled against it.
+- **self-fix-halt-telemetry** (owner: maintainer) — blocks P2.2's pre-registered criterion only — the build half is shipped and green, and nothing downstream waits on it.
+  - **What to do:**
+    the ≥50% halt reduction is a rate over real runs, and the work
+    engine records no halts. Either (a) emit one line per red-check halt (lane,
+    attempt, exit kind) into the existing audit stream and accumulate over real
+    usage — the same accumulation-takes-time shape as the
+    `road-to-subagent-value-realization-followup` telemetry blocker — then evaluate
+    the threshold against it; or (b) re-scope the pre-registration to the
+    structural claim that IS provable here (no red reaches the user on first
+    occurrence; every loop exit stays PARTIAL with the failure visible) and record
+    the run-level rate as an explicit non-claim. Both are maintainer calls: (a)
+    spends real sessions, (b) rewrites a pre-registration, and an agent rewriting
+    its own success criterion after building the thing is the exact move
+    `evaluator-independence` forbids.
+  - **Resolved when:** the threshold is evaluated against recorded halts, or the pre-registration is re-scoped with the non-claim recorded. - **Evidence:** `agents/evidence/analysis/self-fix-loop-halt-measurement.md`
 - **spent-inbox-artifacts-await-deletion** (owner: maintainer) — blocks nothing
   - **What to do:**
     four items are spent and should be removed by a human, since
