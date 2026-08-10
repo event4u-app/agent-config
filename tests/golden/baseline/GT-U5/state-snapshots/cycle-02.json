@@ -91,6 +91,7 @@
     "contract_confirmed": true
   },
   "stitch": null,
+  "self_fix": null,
   "halts": [],
   "persona": "senior-engineer",
   "memory": [],

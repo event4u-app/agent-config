@@ -97,6 +97,7 @@
   "ui_polish": null,
   "contract": null,
   "stitch": null,
+  "self_fix": null,
   "halts": [],
   "persona": "senior-engineer",
   "memory": [],

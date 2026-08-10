@@ -18,9 +18,12 @@
  *   `partial`. Matches the `Outcome` vocabulary used everywhere
  *   else in the flow.
  * - A `success` verdict advances the flow to `report`.
- * - A `blocked` or `partial` verdict halts with numbered options
- *   so the user decides whether to address the findings, override
- *   (rarely appropriate), or abort.
+ * - A `blocked` or `partial` verdict enters the bounded self-fix loop
+ *   (`./_self_fix.ts`): while attempts remain and the verdict signature
+ *   keeps changing, the fix is delegated by directive. An exhausted or
+ *   non-progressing loop exits `PARTIAL` with numbered options so the user
+ *   decides whether to take over, override (rarely appropriate), or abort.
+ *   The loop never turns a non-success verdict into `SUCCESS`.
  * - Optional keys (`confidence`, `findings`, `followups`) feed
  *   the delivery report.
  */
@@ -28,6 +31,7 @@
 import type { DeliveryState} from '../../delivery_state.js';
 import { type Any, Outcome, StepResult, agent_directive } from '../../delivery_state.js';
 import { resolve_policy } from '../../persona_policy.js';
+import { decide, partial_exit, record_attempt, retry_halt, unmet_dod, verdict_signature } from './_self_fix.js';
 
 const _ALLOWED_VERDICTS = ['success', 'blocked', 'partial'] as const;
 
@@ -52,7 +56,17 @@ export const AMBIGUITIES: ReadonlyArray<Record<string, string>> = [
         code: 'bad_verify_verdict',
         trigger: '`state.verify[\'verdict\']` is `blocked` or `partial`',
         resolution:
-            'address findings and re-run `/review-changes` — never bypass ' + '(see `verify-before-complete`)',
+            'bounded self-fix loop: agent directive `fix-failing-checks` ' +
+            'while attempts remain — never bypass ' + '(see `verify-before-complete`)',
+    },
+    {
+        code: 'self_fix_exhausted',
+        trigger:
+            'the self-fix budget for `verify` is spent, or two consecutive ' +
+            'attempts produced an identical verdict signature',
+        resolution:
+            'PARTIAL honest exit — the non-success verdict stays on the ' +
+            'surface; the user takes over, overrides, or aborts',
     },
 ];
 
@@ -145,19 +159,39 @@ function _blocked_on_shape(state: DeliveryState, issues: string[]): StepResult {
     });
 }
 
+/**
+ * Route a red review verdict through the bounded self-fix loop.
+ *
+ * Same shape as the `test` lane, separate counter: `autonomous-execution`
+ * resets its N=3 budget on a different validation target, and a review finding
+ * is not a failing test. `verify-before-complete` is unaffected — the loop
+ * cannot report completion, and its exhausted exit is PARTIAL with the
+ * non-success verdict still on the surface.
+ */
 function _blocked_on_bad_verdict(state: DeliveryState, verdict: Any): StepResult {
     const ticketId = _ticketId(state);
-    return new StepResult({
-        outcome: Outcome.BLOCKED,
-        questions: [
-            `> Ticket ${ticketId} — \`review-changes\` reported ` +
-                `\`${String(verdict)}\`. The delivery report cannot claim completion on a ` +
-                'non-success verdict (see `verify-before-complete`).',
-            '> 1. Address the findings and re-run `review-changes`',
-            '> 2. Continue anyway — override (NOT recommended)',
-            '> 3. Abort',
-        ],
-        message: `Ticket ${ticketId} verify verdict was \`${String(verdict)}\`, not success.`,
+    const signature = verdict_signature('verify', state.verify);
+    const decision = decide(state, 'verify', signature);
+
+    if (decision.kind === 'retry') {
+        record_attempt(state, 'verify', signature);
+        return retry_halt({
+            lane: 'verify',
+            ticket_id: ticketId,
+            verdict,
+            decision,
+            fix_hint: 'address the recorded findings, then re-run the four-judge review.',
+            rerun_directive: 'review-changes',
+        });
+    }
+
+    return partial_exit({
+        lane: 'verify',
+        ticket_id: ticketId,
+        verdict,
+        decision,
+        unmet: unmet_dod(state),
+        rerun_directive: 'review-changes',
     });
 }
 

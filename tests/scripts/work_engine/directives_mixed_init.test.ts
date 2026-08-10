@@ -84,6 +84,7 @@ describe('directives/mixed index — full directive-set summary', () => {
                 "prompt_unrefined",
                 "prompt_medium_confidence",
                 "prompt_low_confidence",
+                "malformed_dod",
                 "prompt_ui_intent"
               ],
               "report": [],
@@ -97,7 +98,8 @@ describe('directives/mixed index — full directive-set summary', () => {
                 "upstream_test_failed",
                 "empty_verify_delegate",
                 "malformed_verify",
-                "bad_verify_verdict"
+                "bad_verify_verdict",
+                "self_fix_exhausted"
               ]
             },
             "kinds": [

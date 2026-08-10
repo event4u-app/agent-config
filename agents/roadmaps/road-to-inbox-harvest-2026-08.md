@@ -204,6 +204,30 @@ its central gap is verified in code.
   on `refine`, an attempts/no-progress floor, and a PARTIAL honest exit.
   - Pre-registered: ≥50% halt reduction, or the loop is reverted rather than
     narrated.
+  - **BUILD HALF SHIPPED, MEASUREMENT HALF BLOCKED — step stays open on the
+    pre-registration, not on the code.** Shipped and test-pinned:
+    `src/scripts/schemas/dod.schema.json`; the `dod[]` shape gate on `refine`
+    (`malformed_dod`, checked on both envelope paths); the bounded loop in
+    `directives/backend/_self_fix.ts` wired into BOTH red lanes; ceiling 3 (the
+    `autonomous-execution` N=3 budget, per lane, because that rule resets on a
+    different validation target); a no-progress floor on two identical verdict
+    signatures, checked BEFORE the ceiling; volatile keys excluded from the
+    signature so `duration_ms` cannot fake progress; and the PARTIAL honest exit
+    that lists unproven `dod[]` items. 31 new assertions, 4 contract snapshots
+    updated, 738 work-engine tests green, `docs/contracts/implement-ticket-flow.md`
+    amended (state field + both ambiguity tables + two new sections).
+  - **Why it is not `[x]`:** the ≥50% is a run-level rate and the engine emits no
+    halt telemetry, so it is **unevaluated, not met** — and "unevaluated" does
+    not trigger the revert clause either, which fires on a measured miss.
+    Structurally, no red reaches the user on first occurrence in either lane
+    (before: 2 of 2 red exits were directive-free user halts; after: 0 of 2),
+    and the one locked golden replay that reaches a red verdict (`GT-3`) moved
+    its cycle-4 halt from a user question block to a delegated directive while
+    still finishing in 6 cycles at exit 0 — but that is n=1, and counting code
+    branches as halts would be reading the metric off the artefact built to
+    satisfy it. Full reasoning, including the two honest ways
+    forward: `agents/evidence/analysis/self-fix-loop-halt-measurement.md`.
+    → blocker `self-fix-halt-telemetry`.
 - [-] **P2.3 Host-primitive phase — CANCELLED on a false premise.** It asserts
   the host ships `/goal`, `/loop` and `/schedule`. `/loop` and `/schedule` exist;
   **`/goal` does not.** Reduce to a one-line ADR noting the host overlap.
@@ -417,6 +441,27 @@ before the file was written*.
   `decision-revisit-gate`, not something an agent does because a reviewer asked.
 - **Resolved when:** the decision is reopened with the trigger cited, or P1.4 is
   cancelled against it.
+
+### blocker: self-fix-halt-telemetry
+- **Status:** open
+- **Owner:** maintainer
+- **Blocks:** P2.2's pre-registered criterion only — the build half is shipped
+  and green, and nothing downstream waits on it.
+- **What to do:** the ≥50% halt reduction is a rate over real runs, and the work
+  engine records no halts. Either (a) emit one line per red-check halt (lane,
+  attempt, exit kind) into the existing audit stream and accumulate over real
+  usage — the same accumulation-takes-time shape as the
+  `road-to-subagent-value-realization-followup` telemetry blocker — then evaluate
+  the threshold against it; or (b) re-scope the pre-registration to the
+  structural claim that IS provable here (no red reaches the user on first
+  occurrence; every loop exit stays PARTIAL with the failure visible) and record
+  the run-level rate as an explicit non-claim. Both are maintainer calls: (a)
+  spends real sessions, (b) rewrites a pre-registration, and an agent rewriting
+  its own success criterion after building the thing is the exact move
+  `evaluator-independence` forbids.
+- **Resolved when:** the threshold is evaluated against recorded halts, or the
+  pre-registration is re-scoped with the non-claim recorded.
+- **Evidence:** `agents/evidence/analysis/self-fix-loop-halt-measurement.md`
 
 ### blocker: spent-inbox-artifacts-await-deletion
 - **Status:** open

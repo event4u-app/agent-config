@@ -50,10 +50,11 @@
     "test": "blocked"
   },
   "questions": [
-    "> Ticket GT-3-POW — tests reported `failed`. Verification cannot proceed on a non-success verdict.",
-    "> 1. Fix the failing tests and re-run `run-tests`",
-    "> 2. Continue anyway — override (NOT recommended)",
-    "> 3. Abort"
+    "@agent-directive: fix-failing-checks ticket=GT-3-POW lane=test attempt=1 ceiling=3",
+    "> Ticket GT-3-POW — `test` reported `failed`. Self-fix attempt 1 of 3.",
+    "> The verdict is deterministic, so the fix is delegated rather than asked: read the failing assertions, fix the cause, re-run the same filter.",
+    "> 1. Continue — fix the failures and re-run `run-tests`",
+    "> 2. Abort — stop this cycle and hand the failures back"
   ],
   "report": ""
 }

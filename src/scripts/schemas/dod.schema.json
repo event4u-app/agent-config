@@ -1,0 +1,45 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "dod.schema.json",
+  "title": "Executable definition of done",
+  "description": "The `dod[]` slot a refined ticket or prompt envelope may carry. `dod` is EXECUTABLE by construction: every item names the command that proves it, so the engine can report which items are still unproven without asking a human to interpret prose. Prose acceptance criteria stay where they are (`acceptance_criteria`) — this is the machine-checkable subset, not a replacement. The slot is OPTIONAL: a ticket without `dod` behaves exactly as before, which is why the `refine` gate validates the shape only when the key is present. Consumed by `work_engine/directives/backend/refine.ts` (shape gate) and reported by `work_engine/directives/backend/_self_fix.ts` at the PARTIAL exit.",
+  "type": "object",
+  "required": [
+    "dod"
+  ],
+  "additionalProperties": true,
+  "properties": {
+    "dod": {
+      "type": "array",
+      "description": "May be empty. An empty array means the author declared no machine-checkable done-condition, which is different from omitting the key: omission means the question was never asked. Both are legal and neither blocks.",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "check"
+        ],
+        "additionalProperties": true,
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Stable identifier, unique within the array. Used verbatim in the self-fix PARTIAL exit so a reader can match an unproven item back to the ticket without re-reading the whole envelope."
+          },
+          "check": {
+            "type": "string",
+            "minLength": 1,
+            "description": "The command that proves this item — a test filter, a linter invocation, a curl probe. Prose here defeats the point of the slot: the engine never runs it (the dispatcher spawns no subprocesses, per the delegation contract), it hands it to the agent, and an agent cannot run a sentence."
+          },
+          "description": {
+            "type": "string",
+            "description": "Optional human sentence for the halt surface. Absent is fine — `check` is already the falsifiable half."
+          },
+          "proven": {
+            "type": "boolean",
+            "description": "Set by the agent once `check` has actually been run green. Absent or `false` both mean unproven; the engine never infers `true` from a passing suite, because a suite passing is not evidence that THIS check ran."
+          }
+        }
+      }
+    }
+  }
+}

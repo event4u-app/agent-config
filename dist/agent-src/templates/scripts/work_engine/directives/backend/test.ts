@@ -17,10 +17,12 @@
  * - Must be a dict.
  * - Must carry a `verdict` key — one of `success`, `failed`,
  *   or `mixed` (targeted vs full-suite split). Anything else blocks.
- * - `failed` or `mixed` verdicts halt with the verdict as part of
- *   the surfaced message so the user decides whether to continue or
- *   stop. This follows the `verify-before-complete` rule: a bad test
- *   outcome must never be silently skipped.
+ * - `failed` or `mixed` verdicts enter the bounded self-fix loop
+ *   (`./_self_fix.ts`): the first attempts are delegated by directive, and an
+ *   exhausted or non-progressing loop exits `PARTIAL` with the verdict still
+ *   on the surface so the user decides whether to continue or stop. This
+ *   follows the `verify-before-complete` rule: a bad test outcome must never
+ *   be silently skipped, and the loop cannot report one as success.
  * - Optional keys (`targeted`, `full`, `duration_ms`,
  *   `followups`) feed the delivery report.
  */
@@ -28,6 +30,7 @@
 import type { DeliveryState} from '../../delivery_state.js';
 import { type Any, Outcome, StepResult, agent_directive } from '../../delivery_state.js';
 import { resolve_policy } from '../../persona_policy.js';
+import { decide, partial_exit, record_attempt, retry_halt, unmet_dod, verdict_signature } from './_self_fix.js';
 
 const _ALLOWED_VERDICTS = ['success', 'failed', 'mixed'] as const;
 
@@ -53,7 +56,18 @@ export const AMBIGUITIES: ReadonlyArray<Record<string, string>> = [
     {
         code: 'bad_test_verdict',
         trigger: '`state.tests[\'verdict\']` is `failed` or `mixed`',
-        resolution: 'fix failures and re-run, or abort',
+        resolution:
+            'bounded self-fix loop: agent directive `fix-failing-checks` ' +
+            'while attempts remain and the verdict signature keeps changing',
+    },
+    {
+        code: 'self_fix_exhausted',
+        trigger:
+            'the self-fix budget for `test` is spent, or two consecutive ' +
+            'attempts produced an identical verdict signature',
+        resolution:
+            'PARTIAL honest exit — the red verdict stays on the surface, ' +
+            'the user decides whether to take over, override, or abort',
     },
 ];
 
@@ -156,18 +170,39 @@ function _blocked_on_shape(state: DeliveryState, issues: string[]): StepResult {
     });
 }
 
+/**
+ * Route a red test verdict through the bounded self-fix loop.
+ *
+ * Before this loop existed the function below returned a directive-free
+ * BLOCKED — a user question block — so every red cost a user round-trip even
+ * when the failure was one the agent could fix unaided. Now the first attempts
+ * are delegated and only an exhausted or non-progressing loop reaches the
+ * user, as a PARTIAL that still carries the red verdict.
+ */
 function _blocked_on_bad_verdict(state: DeliveryState, verdict: Any): StepResult {
     const ticketId = _ticketId(state);
-    return new StepResult({
-        outcome: Outcome.BLOCKED,
-        questions: [
-            `> Ticket ${ticketId} — tests reported \`${String(verdict)}\`. ` +
-                'Verification cannot proceed on a non-success verdict.',
-            '> 1. Fix the failing tests and re-run `run-tests`',
-            '> 2. Continue anyway — override (NOT recommended)',
-            '> 3. Abort',
-        ],
-        message: `Ticket ${ticketId} test verdict was \`${String(verdict)}\`, not success.`,
+    const signature = verdict_signature('test', state.tests);
+    const decision = decide(state, 'test', signature);
+
+    if (decision.kind === 'retry') {
+        record_attempt(state, 'test', signature);
+        return retry_halt({
+            lane: 'test',
+            ticket_id: ticketId,
+            verdict,
+            decision,
+            fix_hint: 'read the failing assertions, fix the cause, re-run the same filter.',
+            rerun_directive: 'run-tests',
+        });
+    }
+
+    return partial_exit({
+        lane: 'test',
+        ticket_id: ticketId,
+        verdict,
+        decision,
+        unmet: unmet_dod(state),
+        rerun_directive: 'run-tests',
     });
 }
 

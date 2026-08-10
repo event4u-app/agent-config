@@ -23,12 +23,13 @@ function runTs(state: ConstructorParameters<typeof DeliveryState>[0]): string {
 const ok = { test: 'success' };
 
 describe('directives/backend/verify — AMBIGUITIES', () => {
-    it('declares the four surfaces in order', () => {
+    it('declares the five surfaces in order', () => {
         expect(AMBIGUITIES.map((a) => a.code)).toEqual([
             'upstream_test_failed',
             'empty_verify_delegate',
             'malformed_verify',
             'bad_verify_verdict',
+            'self_fix_exhausted',
         ]);
     });
 });
@@ -83,32 +84,34 @@ describe('directives/backend/verify — outcome contract', () => {
         `);
     });
 
-    it('blocked verdict → BLOCKED bad verdict', () => {
+    it('blocked verdict → self-fix attempt 1 delegated by directive', () => {
         expect(runTs({ ticket: { id: 'V-5' }, verify: { verdict: 'blocked' }, outcomes: ok })).toMatchInlineSnapshot(`
           "{
             "outcome": "blocked",
             "questions": [
-              "> Ticket V-5 — \`review-changes\` reported \`blocked\`. The delivery report cannot claim completion on a non-success verdict (see \`verify-before-complete\`).",
-              "> 1. Address the findings and re-run \`review-changes\`",
-              "> 2. Continue anyway — override (NOT recommended)",
-              "> 3. Abort"
+              "@agent-directive: fix-failing-checks ticket=V-5 lane=verify attempt=1 ceiling=3",
+              "> Ticket V-5 — \`verify\` reported \`blocked\`. Self-fix attempt 1 of 3.",
+              "> The verdict is deterministic, so the fix is delegated rather than asked: address the recorded findings, then re-run the four-judge review.",
+              "> 1. Continue — fix the failures and re-run \`review-changes\`",
+              "> 2. Abort — stop this cycle and hand the failures back"
             ],
-            "message": "Ticket V-5 verify verdict was \`blocked\`, not success."
+            "message": "Ticket V-5 verify verdict was \`blocked\`; self-fix attempt 1/3 delegated."
           }"
         `);
     });
 
-    it('partial verdict → BLOCKED bad verdict', () => {
+    it('partial verdict → self-fix attempt 1 delegated by directive', () => {
         expect(runTs({ ticket: { id: 'V-6' }, verify: { verdict: 'partial' }, outcomes: ok })).toMatchInlineSnapshot(`
           "{
             "outcome": "blocked",
             "questions": [
-              "> Ticket V-6 — \`review-changes\` reported \`partial\`. The delivery report cannot claim completion on a non-success verdict (see \`verify-before-complete\`).",
-              "> 1. Address the findings and re-run \`review-changes\`",
-              "> 2. Continue anyway — override (NOT recommended)",
-              "> 3. Abort"
+              "@agent-directive: fix-failing-checks ticket=V-6 lane=verify attempt=1 ceiling=3",
+              "> Ticket V-6 — \`verify\` reported \`partial\`. Self-fix attempt 1 of 3.",
+              "> The verdict is deterministic, so the fix is delegated rather than asked: address the recorded findings, then re-run the four-judge review.",
+              "> 1. Continue — fix the failures and re-run \`review-changes\`",
+              "> 2. Abort — stop this cycle and hand the failures back"
             ],
-            "message": "Ticket V-6 verify verdict was \`partial\`, not success."
+            "message": "Ticket V-6 verify verdict was \`partial\`; self-fix attempt 1/3 delegated."
           }"
         `);
     });

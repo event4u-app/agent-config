@@ -240,6 +240,21 @@
     trigger. Reopening a recorded decision is a maintainer call under
     `decision-revisit-gate`, not something an agent does because a reviewer asked.
   - **Resolved when:** the decision is reopened with the trigger cited, or P1.4 is cancelled against it.
+- **self-fix-halt-telemetry** (owner: maintainer) — blocks P2.2's pre-registered criterion only — the build half is shipped and green, and nothing downstream waits on it.
+  - **What to do:**
+    the ≥50% halt reduction is a rate over real runs, and the work
+    engine records no halts. Either (a) emit one line per red-check halt (lane,
+    attempt, exit kind) into the existing audit stream and accumulate over real
+    usage — the same accumulation-takes-time shape as the
+    `road-to-subagent-value-realization-followup` telemetry blocker — then evaluate
+    the threshold against it; or (b) re-scope the pre-registration to the
+    structural claim that IS provable here (no red reaches the user on first
+    occurrence; every loop exit stays PARTIAL with the failure visible) and record
+    the run-level rate as an explicit non-claim. Both are maintainer calls: (a)
+    spends real sessions, (b) rewrites a pre-registration, and an agent rewriting
+    its own success criterion after building the thing is the exact move
+    `evaluator-independence` forbids.
+  - **Resolved when:** the threshold is evaluated against recorded halts, or the pre-registration is re-scoped with the non-claim recorded. - **Evidence:** `agents/evidence/analysis/self-fix-loop-halt-measurement.md`
 - **spent-inbox-artifacts-await-deletion** (owner: maintainer) — blocks nothing
   - **What to do:**
     four items are spent and should be removed by a human, since
