@@ -182,18 +182,36 @@ rather than silently absorbed.
 - **Blocks:** Phase 3 Step 6 and Step 7, and the acceptance criterion that both
   new guidelines are cross-linked from `verify-before-complete`.
 - **What to do:** apply the two edits below to
-  `src/rules/verify-before-complete.md` in their OWN pull request, with the
-  ≥24 h kernel soak. `verify-before-complete` is one of the nine kernel rules
+  `src/rules/verify-before-complete.md` in their OWN pull request.
+  `verify-before-complete` is one of the nine kernel rules
   (`docs/contracts/kernel-membership.md`), and `scope-control § Kernel-rule
-  edits` requires one rule per PR plus the soak window — a guarantee no
-  autonomous mandate lifts. Batching them into this change would also risk the
-  kernel-prefix byte-stability gate, which local preflight does not catch.
+  edits` requires one rule per PR — a guarantee no autonomous mandate lifts.
+  Commit the re-anchored `internal/bench/reports/kernel-prefix.json` from
+  `./scripts-run src/scripts/check_kernel_prefix_stability --update-baseline`
+  in the same PR; the byte-stability gate stays red without it and local
+  preflight does not catch that.
+
+  **This is maintainer-applied end to end — an agent cannot author it**
+  (measured 2026-08-10, on the attempt). The `block-kernel-rule-writes`
+  PreToolUse guard in `src/scripts/hook_manifest.yaml` refuses every agent
+  write to a kernel rule outright: *"kernel rule verify-before-complete is
+  immutable — tighten-only via the override exception registry"*. Its own
+  message names the only legitimate bypass, and both branches are human acts
+  outside the session: go through the override exception registry, or disable
+  the guard entry. Same shape as `road-to-kernel-question-triangle`, whose
+  one-line kernel amendment is maintainer-owned for exactly this reason.
+  So the residual gate here is the **write guard**, not a waiting period —
+  which is worth stating because the ≥24 h is a *spacing* constraint between
+  merges of consecutive kernel-rule PRs, and it is already satisfied: the last
+  merge touching any of the nine kernel rules was 2026-07-31 (`d74f1238a`).
+  A screen that reads the 24 h as an unstarted soak will wrongly conclude this
+  roadmap is one merge away from closing.
 
   1. **Step 6 — the ease tripwire.** Add to the `## Red flags — STOP
      immediately` list:
 
      > - A verification that was **far easier than expected** — check the path
-     >   before believing the result, per [`false-green`](../docs/guidelines/agent-infra/false-green.md)
+     >   before believing the result, per [`false-green`](../../docs/guidelines/agent-infra/false-green.md)
 
      The existing red flags track confidence *wording* ("should pass", "seems
      fine") and not *ease*; every false green catalogued in `false-green.md`
@@ -201,14 +219,33 @@ rather than silently absorbed.
 
   2. **Step 7 — the cross-links.** Add to `## Verification commands`:
 
-     > Authoring a new gate → [`gate-authoring`](../docs/guidelines/agent-infra/gate-authoring.md).
+     > Authoring a new gate → [`gate-authoring`](../../docs/guidelines/agent-infra/gate-authoring.md).
      > Ways a green result can be false, with detection commands →
-     > [`false-green`](../docs/guidelines/agent-infra/false-green.md).
+     > [`false-green`](../../docs/guidelines/agent-infra/false-green.md).
 
-     Then update the `verify-before-complete` row in
-     `src/skills/token-optimizer/SKILL.md` in the same PR, per
-     `token-optimizer-maintenance` (the rule's summary changes, so the catalog
-     row must too).
+     **Link depth corrected 2026-08-10.** Both drafts above originally said
+     `../docs/…`. From a source file under `src/rules/` that resolves to
+     `src/docs/`, which **does not exist**; `../../docs/` reaches the real
+     repo-root `docs/`. The two-level form is also what the majority of
+     `src/rules/` uses when it links a guideline, `direct-answers` (the other
+     kernel rule in that set) included — though three rules do carry the
+     one-level form, so the tree is not unanimous and the filesystem is the
+     deciding evidence, not the count.
+
+     **No gate catches this, which is why the source form has to be right.**
+     Probed by canary the same day: a deliberately nonexistent
+     `../../docs/guidelines/agent-infra/<bogus>.md` appended to a roadmap left
+     `check_references` at rc=0 over 1118 scanned references — it did not
+     resolve the path at all. So "the reference checker is green" is not
+     evidence that either form works, in either direction.
+
+     **No `token-optimizer` edit rides along** — this instruction previously
+     said to update the `verify-before-complete` row in
+     `src/skills/token-optimizer/SKILL.md` per `token-optimizer-maintenance`.
+     There is no such row: the catalog does not carry `verify-before-complete`,
+     and that rule's cited-asset list does not name this file, so the
+     maintenance obligation never fires. Do not invent a row to satisfy it —
+     that would add a catalog entry nobody asked for.
 
 - **Resolved when:** both edits are merged and the soak has elapsed. Everything
   else in Phase 3 — both guidelines, the lifecycle, the gaming-risk block, and
