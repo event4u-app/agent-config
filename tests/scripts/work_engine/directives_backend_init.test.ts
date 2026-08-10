@@ -90,6 +90,7 @@ describe('directives/backend index — summary contract', () => {
                 "prompt_unrefined",
                 "prompt_medium_confidence",
                 "prompt_low_confidence",
+                "malformed_dod",
                 "prompt_ui_intent",
               ],
               "report": [],
@@ -98,12 +99,14 @@ describe('directives/backend index — summary contract', () => {
                 "empty_tests_delegate",
                 "malformed_tests",
                 "bad_test_verdict",
+                "self_fix_exhausted",
               ],
               "verify": [
                 "upstream_test_failed",
                 "empty_verify_delegate",
                 "malformed_verify",
                 "bad_verify_verdict",
+                "self_fix_exhausted",
               ],
             },
             "kinds": [

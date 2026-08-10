@@ -29,7 +29,7 @@ function runTs(state: ConstructorParameters<typeof DeliveryState>[0]): {
 }
 
 describe('directives/backend/refine — AMBIGUITIES', () => {
-    it('declares the seven surfaces in order', () => {
+    it('declares the eight surfaces in order', () => {
         expect(AMBIGUITIES.map((a) => a.code)).toEqual([
             'missing_id',
             'trivial_title',
@@ -37,6 +37,7 @@ describe('directives/backend/refine — AMBIGUITIES', () => {
             'prompt_unrefined',
             'prompt_medium_confidence',
             'prompt_low_confidence',
+            'malformed_dod',
             'prompt_ui_intent',
         ]);
     });

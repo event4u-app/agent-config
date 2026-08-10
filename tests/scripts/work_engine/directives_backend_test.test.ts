@@ -23,12 +23,13 @@ function runTs(state: ConstructorParameters<typeof DeliveryState>[0]): string {
 const ok = { implement: 'success' };
 
 describe('directives/backend/test — AMBIGUITIES', () => {
-    it('declares the four surfaces in order', () => {
+    it('declares the five surfaces in order', () => {
         expect(AMBIGUITIES.map((a) => a.code)).toEqual([
             'upstream_implement_failed',
             'empty_tests_delegate',
             'malformed_tests',
             'bad_test_verdict',
+            'self_fix_exhausted',
         ]);
     });
 });
@@ -98,32 +99,34 @@ describe('directives/backend/test — outcome contract', () => {
         `);
     });
 
-    it('failed verdict → BLOCKED bad verdict', () => {
+    it('failed verdict → self-fix attempt 1 delegated by directive', () => {
         expect(runTs({ ticket: { id: 'T-6' }, tests: { verdict: 'failed' }, outcomes: ok })).toMatchInlineSnapshot(`
           "{
             "outcome": "blocked",
             "questions": [
-              "> Ticket T-6 — tests reported \`failed\`. Verification cannot proceed on a non-success verdict.",
-              "> 1. Fix the failing tests and re-run \`run-tests\`",
-              "> 2. Continue anyway — override (NOT recommended)",
-              "> 3. Abort"
+              "@agent-directive: fix-failing-checks ticket=T-6 lane=test attempt=1 ceiling=3",
+              "> Ticket T-6 — \`test\` reported \`failed\`. Self-fix attempt 1 of 3.",
+              "> The verdict is deterministic, so the fix is delegated rather than asked: read the failing assertions, fix the cause, re-run the same filter.",
+              "> 1. Continue — fix the failures and re-run \`run-tests\`",
+              "> 2. Abort — stop this cycle and hand the failures back"
             ],
-            "message": "Ticket T-6 test verdict was \`failed\`, not success."
+            "message": "Ticket T-6 test verdict was \`failed\`; self-fix attempt 1/3 delegated."
           }"
         `);
     });
 
-    it('mixed verdict → BLOCKED bad verdict', () => {
+    it('mixed verdict → self-fix attempt 1 delegated by directive', () => {
         expect(runTs({ ticket: { id: 'T-7' }, tests: { verdict: 'mixed' }, outcomes: ok })).toMatchInlineSnapshot(`
           "{
             "outcome": "blocked",
             "questions": [
-              "> Ticket T-7 — tests reported \`mixed\`. Verification cannot proceed on a non-success verdict.",
-              "> 1. Fix the failing tests and re-run \`run-tests\`",
-              "> 2. Continue anyway — override (NOT recommended)",
-              "> 3. Abort"
+              "@agent-directive: fix-failing-checks ticket=T-7 lane=test attempt=1 ceiling=3",
+              "> Ticket T-7 — \`test\` reported \`mixed\`. Self-fix attempt 1 of 3.",
+              "> The verdict is deterministic, so the fix is delegated rather than asked: read the failing assertions, fix the cause, re-run the same filter.",
+              "> 1. Continue — fix the failures and re-run \`run-tests\`",
+              "> 2. Abort — stop this cycle and hand the failures back"
             ],
-            "message": "Ticket T-7 test verdict was \`mixed\`, not success."
+            "message": "Ticket T-7 test verdict was \`mixed\`; self-fix attempt 1/3 delegated."
           }"
         `);
     });
