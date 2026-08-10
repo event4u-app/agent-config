@@ -41,11 +41,19 @@ draft. What was cut, and why, is enumerated in
 § Context. Three cuts matter enough to restate here because they would
 otherwise be re-proposed:
 
-- **The `109 divergent deliveries` prerequisite was false.**
-  `report_carrier_divergence.ts` on main: 91 shared names, **0 differ in
-  body**, all differ only in the installer stamp. It also relitigated
+- **The `109 divergent deliveries` prerequisite is dropped, because the figure
+  measures cache staleness rather than the source.**
+  `report_carrier_divergence` compares a globally installed carrier against
+  the project projection on disk, and either can be stale independently — at
+  `3deb55443` a checkout with a stale 92-file projection reports 91 shared /
+  90 stamp-only / 1 body, and a freshly generated 110-file one reports 109 / 0
+  stamp-only / 109 body. "109 differ in body" therefore says the global install
+  is behind, not that the source diverged. Any before/after this roadmap
+  measures must be taken **in one checkout, post-regeneration, and stated with
+  which** — never used as a blocking bar. It also relitigated
   `dedup-reachability-refusal.md`, whose five reopen conditions are unmet.
-  There is no delivery corruption to fix before measuring.
+  There is no established delivery corruption to fix before measuring; if one
+  is ever established it needs a carrier-independent instrument first.
 - **The `201 KB` ownership matrix is already generated** — the file carries a
   *"Do not edit — regenerated"* header and `generate_ownership_matrix.ts`
   exists.

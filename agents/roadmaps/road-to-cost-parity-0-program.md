@@ -64,12 +64,29 @@ Recorded so no successor re-plans them:
   which derives the kernel set from it. Deleting it reds a shipped gate.
   The real finding is the inverse and is carried by part 1: because no host
   consumes the router at runtime, `type: auto` does not gate delivery.
-- **The `109 divergent duplicate deliveries` prerequisite is false.**
-  `report_carrier_divergence.ts` on main: 91 shared names, **0 differ in
-  body**, all 91 differ only in the installer stamp — the tool itself says
+- **The `109 divergent duplicate deliveries` prerequisite cannot be a
+  prerequisite — and the reason is a third thing, neither "the count is wrong"
+  nor "the measurement was contaminated".** `report_carrier_divergence`
+  compares a *globally installed* carrier against the *project projection on
+  disk*. Both can be stale, independently, so it measures the relative
+  staleness of two caches rather than any property of the source. Measured at
+  the same commit (`3deb55443`), same day, both trees freshly regenerated
+  where regeneration applies: the primary checkout reports **91 shared / 90
+  stamp-only / 1 body**, a second checkout reports **109 shared / 0 stamp-only
+  / 109 body**. The discriminator is the projection's own freshness — the
+  primary carries 92 projected rule files, the freshly generated tree carries
+  110 — so "109 differ in body" is a statement that the *global install* is
+  behind, not that the source diverged. This was itself verified the hard way:
+  the first explanation attempted here (seeded projection) survived exactly
+  until the tree was rebuilt from scratch and returned the same 109.
+  Consequence for this family: the figure may diagnose a stale install; it may
+  never gate a phase, and any before/after must name its checkout. The earlier
+  draft's error was upstream of the count — it amplified an adjacent
+  "0 byte-identical" line into a defect claim without asking *why* the bytes
+  differed, and for the stamp-only pairs the tool's own answer is
   *"NOT a defect"*. It also relitigates
-  `agents/settings/contexts/dedup-reachability-refusal.md`, whose five
-  reopen conditions are unmet.
+  `agents/settings/contexts/dedup-reachability-refusal.md`, whose five reopen
+  conditions are unmet — which stands independently of any count.
 - **The 201 KB ownership matrix is already generated.**
   `agents/settings/contexts/structural/file-ownership-matrix.md` carries a
   *"Do not edit — regenerated"* header and `generate_ownership_matrix.ts`
@@ -88,8 +105,8 @@ was set against one:
 | --- | --- | --- |
 | `src/rules/` (maintained) | 116 files / 413 KB / 171 MUST-NEVER-ALWAYS | 116 / 424 KB / 160 |
 | `dist/agent-src/rules/` (projection source) | 115 files / 409 KB | 419 KB |
-| `.augment/` payload | 115 files / 409 KB | — |
-| `.claude/rules/` payload | **92 files / 304 KB** | — |
+| `.augment/rules/` payload | 115 files / 409 KB | — |
+| `.claude/rules/` payload | **110 files / 330 KB** | — |
 | `.clinerules` / `.windsurfrules` payload | ~3 KB / ~0 KB | — |
 | rules by type | 9 `always` · 102 `auto` · 5 `manual` | "419 KB always-loaded" |
 | skills | 289 / 3.85 MB (112 KB frontmatter) | 289 / 3.85 MB (113 KB) |
@@ -103,9 +120,27 @@ verified exact, with one correction: the median is over **201** sessions with
 parseable final usage, not 205; and the 123 s auto-compact duration is a
 **single observed event**, not a distribution statistic.
 
-Baseline caveat: these figures were measured at `fea32452b`. `main` has moved
-since; the Phase-1 registration re-measures and pins whatever it finds, so the
-table above is the triage evidence and the registered file is the baseline.
+**Two measurement rules the Phase-1 registration inherits, both learned the
+hard way while producing this table.**
+
+1. **A projection count is only valid after a regeneration.** `.claude/rules/`
+   reads 92 files on a checkout whose projection is stale on disk and 110 after
+   a fresh `task generate-tools` at the same commit. The tracked
+   `dist/agent-src/rules/` figure (115 files / 409 KB) is the stable one
+   because it is committed; every per-host row must state that it was taken
+   post-regeneration, or it is measuring when someone last ran a generator.
+2. **A figure that compares two carrier trees measures their relative
+   staleness, not the source.** `report_carrier_divergence` returns
+   91/90-stamp/1-body against a checkout with a stale 92-file projection and
+   109/0-stamp/109-body against a freshly generated 110-file one, at the same
+   commit. Such figures may diagnose a behind-the-times install; they may
+   never gate a phase.
+
+Baseline caveat: the table's figures were taken 2026-08-10 across `fea32452b`
+and `3deb55443`. `main` moves faster than a review cycle — during this branch's
+own review two PRs landed — so Phase 1 re-measures and pins whatever it finds
+under the two rules above. The table is the triage evidence; the registered
+file is the baseline.
 
 ## Phase 1 — the target table, committed before any sibling lands
 
