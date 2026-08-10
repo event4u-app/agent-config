@@ -373,33 +373,44 @@ describe('host-capability contract ↔ interface parity', () => {
         'src/agent-src/contexts/execution/host-capability-manifest.md',
     );
 
+    /** First capture group of `re` in `text`, or a failed expectation naming what was missing. */
+    function capture(text: string, re: RegExp, what: string): string {
+        const found = re.exec(text)?.[1];
+        // A parse that finds nothing must fail loudly, never pass as "no drift".
+        expect(found, `${what} not found`).toBeTypeOf('string');
+        return found as string;
+    }
+
     /** Capability fields as DECLARED by the interface — the anchor everything mirrors. */
     function declaredFields(): string[] {
-        const body = fs
-            .readFileSync(SOURCE, 'utf-8')
-            .match(/export interface HostCapabilityManifest \{([\s\S]*?)\n\}/);
-        expect(body, 'HostCapabilityManifest interface not found in the source').not.toBeNull();
-        const fields = [...(body as RegExpMatchArray)[1].matchAll(/^ {4}(\w+):\s*boolean;/gm)].map(
-            (m) => m[1],
+        const body = capture(
+            fs.readFileSync(SOURCE, 'utf-8'),
+            /export interface HostCapabilityManifest \{([\s\S]*?)\n\}/,
+            'the HostCapabilityManifest interface',
         );
-        // A parse that finds nothing must fail loudly, not pass as "no drift".
+        const fields = [...body.matchAll(/^ {4}(\w+):\s*boolean;/gm)].flatMap((m) =>
+            m[1] === undefined ? [] : [m[1]],
+        );
         expect(fields.length).toBeGreaterThan(0);
         return fields;
     }
 
     it('every declared field has a row in the contract Fields table', () => {
         const contract = fs.readFileSync(CONTRACT, 'utf-8');
-        const documented = [...contract.matchAll(/^\|\s*`(\w+)`\s*\|\s*bool\s*\|/gm)].map(
-            (m) => m[1],
+        const documented = [...contract.matchAll(/^\|\s*`(\w+)`\s*\|\s*bool\s*\|/gm)].flatMap((m) =>
+            m[1] === undefined ? [] : [m[1]],
         );
+        expect(documented.length).toBeGreaterThan(0);
         expect([...documented].sort()).toEqual([...declaredFields()].sort());
     });
 
     it('every declared field appears in the contract schema example', () => {
-        const contract = fs.readFileSync(CONTRACT, 'utf-8');
-        const example = contract.match(/```json\n([\s\S]*?)```/);
-        expect(example, 'no json schema example found in the contract').not.toBeNull();
-        const parsed = JSON.parse((example as RegExpMatchArray)[1]) as Record<string, unknown>;
+        const example = capture(
+            fs.readFileSync(CONTRACT, 'utf-8'),
+            /```json\n([\s\S]*?)```/,
+            'the json schema example',
+        );
+        const parsed = JSON.parse(example) as Record<string, unknown>;
         for (const field of declaredFields()) {
             expect(Object.keys(parsed)).toContain(field);
         }
