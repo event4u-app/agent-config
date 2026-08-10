@@ -1,0 +1,1381 @@
+diff --git a/agents/roadmaps/archive/road-to-conformance-round5.md b/agents/roadmaps/archive/road-to-conformance-round5.md
+index b6a83e9138e3f547d775de1647d87ba7444e505f..fb747389faa765de364549224a0ce2d827d515e1 100644
+--- a/agents/roadmaps/archive/road-to-conformance-round5.md
++++ b/agents/roadmaps/archive/road-to-conformance-round5.md
+@@ -402,42 +402,60 @@ part twice is how a second detector becomes a second outage.
+   `language-and-tone` already states. Record measured precision per detector; a
+   detector that cannot clear a stated bar registers as detection-only and the
+   roadmap says so.
+-  <!-- MEASURED, and reproducible rather than asserted:
+-  `./scripts-run src/scripts/measure_turn_end_gate --store <claude transcript
+-  dir> --limit 30`, run 2026-08-09 over the SAME 30-session store round 5
+-  scanned — 2157 assistant turns.
+-
+-    detector A (promissory)  fires on   28 turns   1.3%
+-    detector B (language)    fires on  388 turns  18.0%
+-      of which the independent scanner also flagged   360
+-      fired where the scanner saw nothing              28
+-
+-  READ B FIRST, because it is the uncomfortable one. An 18% fire rate on a
+-  BLOCKING guard means roughly one refused turn in five and a half. That is not
+-  a false-positive rate — `conformance_scan` independently counted 408 language
+-  violations (18.9%) over the same window, and the two instruments agree on 360
+-  of this detector's 388 fires. The violations are real. But "real" and
+-  "shippable default-on" are different claims, and a mechanism that would have
+-  refused nearly a fifth of all turns is precisely the one the round-6 council
+-  said must soak behind an opt-in first. This measurement is the strongest
+-  single argument for the default-OFF decision recorded in 3.6, and it was taken
+-  BEFORE that decision could be rationalised by it.
++  <!-- SUPERSEDED 2026-08-10 by R2 finding 1. The figures below were WRONG in
++  unit and are kept, struck, because a corrected number that hides what it
++  replaced teaches nothing:
++
++    ~~2157 assistant turns · detector A 28 / 1.3% · detector B 388 / 18.0%
++      of which the scanner also flagged 360 · scanner-silent 28~~
++
++  The instrument scored every assistant ENTRY and labelled the result per turn,
++  while the gate only ever evaluates the LAST assistant text of a turn. So the
++  population was ~8.6x too large, detector A — a *closing*-paragraph detector by
++  construction — was scored over mid-turn prose, and the "agree on 360" cell was
++  per-session min/max arithmetic that reports disjoint findings of equal count
++  as full agreement (R2 finding 7).
++
++  CORRECTED, same command, same store, run 2026-08-10 after the instrument was
++  fixed to score one sample per turn:
++
++    30 sessions · 259 turns · 2228 assistant entries
++    detector A (promissory)  fires on 24 turns   9.3%
++    detector B (language)    fires on 39 turns  15.1%
++    scanner's own language total, for context only: 408 (NOT an agreement figure)
++
++  READ A FIRST, and note the correction cuts the other way from what a rewrite
++  would flatter: the dangerous figure was the OPTIMISTIC one. Detector A at
++  "1.3%" looked nearly free; per turn it refuses about one in eleven. Together
++  the two detectors would refuse roughly a quarter of all turns. That makes the
++  default-OFF decision recorded in 3.6 better supported than the original number
++  did, not worse — but the original number could not have supported it, because
++  it measured something else.
++
++  One thing the fix bought that the old number could not: 24 fires against the
++  audit's 20 turn-closings is now a comparison in the SAME unit, so it is worth
++  making at all. The earlier "28 vs 20, the same order" was two units.
++
++  The scanner total is reported beside these rates and NOT as an overlap: the two
++  instruments read different spans (its first prose line vs. this whole stripped
++  reply) and the script does no per-turn matching, so no agreement figure is
++  derivable from the two totals.
+ 
+   The 28 fire-where-the-scanner-saw-nothing turns are candidate false positives,
+-  NOT confirmed ones: the scanner reads the first prose line and this detector
+-  reads the whole stripped reply, so the instruments disagree in both directions
+-  (the scanner flagged 48 this detector did not). Neither set was hand-audited;
+-  saying so is cheaper than implying an audit that did not happen.
++  NOT confirmed ones — ~~the scanner flagged 48 this detector did not~~, another
++  cell derived from the same broken arithmetic and withdrawn with it. Neither set
++  was hand-audited; saying so is cheaper than implying an audit that did not
++  happen.
+ 
+   DETECTOR A HAS NO RECALL FIGURE, and the reason is structural rather than
+   lazy. `conformance_scan.ts` states in its own header that promissory closings
+   are "deliberately NOT scanned"; the round-5 audit's 20 occurrences came from
+   subagent transcript READING, so there is no machine-readable ground truth to
+-  score against and no way to re-derive those 20 spans. What can be said: the
+-  detector fires 28 times over the same window against the audit's reported 20 —
+-  the same order, slightly wider. Whether the extra 8 are additional true
+-  positives or false ones is unresolved, and this line is the honest form of
+-  that.
++  score against and no way to re-derive those 20 spans. What can be said, and
++  only since the per-turn fix: the detector fires **24** times over the same
++  window against the audit's reported 20 — the same unit at last, and close.
++  Whether the extra 4 are additional true positives or false ones is unresolved,
++  and this line is the honest form of that.
+ 
+   The step's literal ask — "must fire on the 20 measured occurrences" — is
+   therefore NOT satisfiable as written, and is recorded as such instead of being
+diff --git a/dist/install/install.mjs b/dist/install/install.mjs
+index 4f2b702b2c4a0963590d1591c56b7e14e28225ec..46b21e26a8a14dabd088a1a4208c495034f78f6c 100755
+--- a/dist/install/install.mjs
++++ b/dist/install/install.mjs
+@@ -14967,10 +14967,10 @@ var settingsSchema = external_exports.object({
+         "Stop-slot turn-end gate (road-to-conformance-round5 Phase 3). Default off, and it is the only concern that can REFUSE a turn-end rather than a tool call \u2014 so it soaks behind an explicit opt-in before it binds. Round 5 measured the reason: both blocking carriers reached zero violations, neither advisory carrier did, and 19 wrong-language replies survived a pin that had fired 26-35 seconds earlier. A refused turn continues in the SAME turn and is never refused twice."
+       ),
+       promissory: external_exports.boolean().default(true).describe(
+-        "Detector A of the turn-end gate: refuse a turn whose closing paragraph promises work not yet performed while asking the user nothing (20 measured occurrences). Inert while hooks.turn_end_gate.enabled is false."
++        "Detector A of the turn-end gate: refuse a turn whose closing paragraph promises work not yet performed while asking the user nothing (20 measured occurrences). Fires on 9.3% of turns over a 30-session corpus (24 of 259). Inert while hooks.turn_end_gate.enabled is false."
+       ),
+       language: external_exports.boolean().default(true).describe(
+-        "Detector B of the turn-end gate: refuse a turn whose user-visible prose is not in the pinned language, with fenced code, inline code, quoted tool output, tables, URLs, paths and identifiers excluded first (19 measured occurrences). Fires 18.0% of turns on the measured corpus, which is why the master switch is off by default. Inert while hooks.turn_end_gate.enabled is false."
++        "Detector B of the turn-end gate: refuse a turn whose user-visible prose is not in the pinned language, with fenced code, inline code, quoted tool output, tables, URLs, paths and identifiers excluded first (19 measured occurrences). Fires on 15.1% of turns over a 30-session corpus (39 of 259) \u2014 measured per turn, over the last assistant text, which is the population the gate actually inspects. That rate is why the master switch is off by default. Inert while hooks.turn_end_gate.enabled is false."
+       )
+     }).default({})
+   }),
+diff --git a/src/scripts/hooks/turn_end_gate_hook.ts b/src/scripts/hooks/turn_end_gate_hook.ts
+index ecd8af8eccd2b76a98f22a3cb7d3471c0e3d2a61..762b8bfd03d42c260b0711bbb3ae397ee2218efb 100644
+--- a/src/scripts/hooks/turn_end_gate_hook.ts
++++ b/src/scripts/hooks/turn_end_gate_hook.ts
+@@ -63,7 +63,13 @@ import * as fs from 'node:fs';
+ import * as path from 'node:path';
+ import { fileURLToPath, pathToFileURL } from 'node:url';
+ 
+-import { classify, STATE_FILE as LANGUAGE_STATE_FILE, type Verdict } from '../language_mirror_hook.js';
++import { load_agent_settings } from '../_lib/agent_settings.js';
++import {
++    classify,
++    isSyntheticPrompt,
++    STATE_FILE as LANGUAGE_STATE_FILE,
++    type Verdict,
++} from '../language_mirror_hook.js';
+ import { isSafeTranscriptPath } from './end_review_nudge_hook.js';
+ import { unwrap, type JsonObject, type JsonValue } from './envelope.js';
+ import { readHookStdin } from './hook_stdin.js';
+@@ -100,9 +106,26 @@ export interface Finding {
+ export function visibleProse(reply: string): string {
+     let text = reply;
+     // Fenced blocks, both ``` and ~~~ (markdown-safe-codeblocks ships both).
+-    text = text.replace(/^[ \t]*(`{3,}|~{3,})[\s\S]*?^[ \t]*\1[ \t]*$/gm, ' ');
+-    // An unterminated fence at the end of a reply — drop the tail.
+-    text = text.replace(/^[ \t]*(`{3,}|~{3,})[\s\S]*$/m, ' ');
++    //
++    // CommonMark allows the CLOSING fence to be LONGER than the opener, so a
++    // `\1` backreference does not match valid markdown. R2 finding 5 reproduced
++    // the consequence: on a three-tilde block closed with four, pass 1 missed
++    // and the greedy tail-drop below deleted the rest of the reply — including
++    // the closing paragraph detector A exists to read. Match the fence
++    // CHARACTER and require at least as many of it, per the spec.
++    text = text.replace(
++        /^[ \t]*(`{3,}|~{3,})[^\n]*\n[\s\S]*?^[ \t]*(?:`{3,}|~{3,})[ \t]*$/gm,
++        (block, opener: string) => {
++            const ch = opener[0]!;
++            // Only treat it as closed when the closer uses the SAME character
++            // and is not shorter — otherwise leave it to the tail-drop.
++            const closer = /(?:^|\n)[ \t]*([`~]{3,})[ \t]*$/.exec(block)?.[1] ?? '';
++            return closer[0] === ch && closer.length >= opener.length ? ' ' : block;
++        },
++    );
++    // A genuinely unterminated fence at the end of a reply — drop the tail.
++    // Reached only when the pass above left the block intact.
++    text = text.replace(/^[ \t]*(?:`{3,}|~{3,})[\s\S]*$/m, ' ');
+     // Inline code.
+     text = text.replace(/`[^`\n]*`/g, ' ');
+     // Block quotes — the shape quoted tool output takes.
+@@ -146,10 +169,16 @@ const PROMISSORY = [
+     /\bals n(ä|ae)chstes (werde|mache|baue|pr(ü|ue)fe) ich\b/i,
+     // German puts the infinitive at the END of the clause ("ich werde jetzt
+     // die Tests schreiben"), so the verb cannot be matched adjacent to
+-    // "werde" — it has to be looked for across the rest of the sentence. The
+-    // negative lookahead keeps a stated REFUSAL to act ("ich werde das nicht
+-    // anfassen") out: declining to do something is not a promise to do it.
+-    /\bich werde\b(?![^.!?\n]*\bnicht\b)[^.!?\n]*\b\w{3,}en\b/i,
++    // "werde" — it has to be looked for across the rest of the sentence.
++    //
++    // The lookahead excludes a stated REFUSAL to act: declining to do
++    // something is not a promise to do it. R2 finding 4 reproduced four live
++    // false refusals against the old `\bnicht\b`-only version — "Ich werde
++    // nichts anfassen" (no word boundary after `nicht`), "keine Tests
++    // schreiben", "niemals raten", and the passive non-promise "Ich werde
++    // gefragt, ob …". Each was a false refusal on a BLOCKING guard, which is
++    // the precision failure the council warning is about.
++    /\bich werde\b(?![^.!?\n]*\b(?:nicht|nichts|kein(?:e|en|em|er|es)?|niemals|nie)\b)(?![^.!?\n]*\b(?:gefragt|gebeten|informiert|benachrichtigt)\b)[^.!?\n]*\b\w{3,}en\b/i,
+     /\bI(?:'| wi)ll (report|let you know|update you|follow up)\b/i,
+     /\bI(?:'| wi)ll (now |then )?\w+ (it|that|this|next)\b/i,
+     /\bnext,? I(?:'| wi)ll\b/i,
+@@ -228,6 +257,23 @@ export function readLanguagePin(workspaceRoot: string): Verdict {
+  * Fires only when the classifier is CONFIDENT the prose is the other
+  * language. `classify` returns `und` below its marker floor, and `und`
+  * never fires — a short reply is not evidence of drift.
++ *
++ * WHAT IS ACTUALLY CLASSIFIED, stated accurately because R2 finding 9 caught
++ * this file claiming otherwise in three places. `visibleProse` strips code,
++ * quotes, tables, URLs and paths from the whole reply — but `classify` then
++ * applies `instructionText` (which drops output-shaped lines and their
++ * followers) and `humanAuthoredLead`, and RETURNS ON THE LEAD ALONE when the
++ * lead is determined. So in the common case the verdict comes from the reply's
++ * opening chunk, not from all of it, and indented prose is discarded before
++ * scoring.
++ *
++ * That is deliberately left as-is rather than swapped for a full-text scorer:
++ * sharing one classifier with `language_mirror_hook` is what stops the pin and
++ * the detector disagreeing about what language a turn is in, and changing the
++ * scoring surface would change the measured rate, which needs its own
++ * measurement rather than a quiet edit. What is fixed here is the CLAIM —
++ * including the one this function used to put in its own refusal text, where an
++ * inflated description of the evidence is worst.
+  */
+ export function detectLanguage(reply: string, pinned: Verdict): Finding | null {
+     if (pinned !== 'de' && pinned !== 'en') return null;
+@@ -239,9 +285,10 @@ export function detectLanguage(reply: string, pinned: Verdict): Finding | null {
+         detector: 'language',
+         evidence: prose.trim().slice(0, 120),
+         reason:
+-            `the pinned reply language is "${pinned}" but the user-visible prose classifies as ` +
+-            `"${verdict.language}" (${verdict.de_markers} de / ${verdict.en_markers} en markers, ` +
+-            'code, quotes, paths and identifiers already excluded)',
++            `the pinned reply language is "${pinned}" but the reply classifies as ` +
++            `"${verdict.language}" (${verdict.de_markers} de / ${verdict.en_markers} en markers; ` +
++            'code, quotes, tables, URLs and paths excluded, then scored lead-first ' +
++            'by the same classifier that sets the pin)',
+     };
+ }
+ 
+@@ -253,35 +300,68 @@ function stateDir(workspaceRoot: string): string {
+     return path.join(workspaceRoot, 'agents', 'runtime', 'state', 'turn-end-gate');
+ }
+ 
+-function stateFile(workspaceRoot: string, turnKey: string): string {
+-    return path.join(stateDir(workspaceRoot), `${turnKey}.json`);
+-}
+-
+ /**
+- * The turn's identity. Session id plus the last USER message — see the file
+- * header for why the reply must not be part of it.
++ * ONE file per session, not one per refused turn. R2 finding 17: per-turn files
++ * accumulated without bound and without a TTL, because "re-arms itself with no
++ * cleanup" described the key rotating, not the files being removed.
+  */
+-export function deriveTurnKey(sessionId: string, lastUserText: string): string {
+-    return crypto
+-        .createHash('sha256')
+-        .update(`${sessionId}\n${lastUserText}`)
+-        .digest('hex')
+-        .slice(0, 32);
++function sessionStateFile(workspaceRoot: string, sessionKey: string): string {
++    return path.join(stateDir(workspaceRoot), `${sessionKey}.json`);
++}
++
++export function deriveSessionKey(sessionId: string): string {
++    return crypto.createHash('sha256').update(sessionId).digest('hex').slice(0, 32);
+ }
+ 
+-export function alreadyRefusedThisTurn(workspaceRoot: string, turnKey: string): boolean {
++/**
++ * A turn's identity is its ORDINAL — how many genuine user prompts the
++ * transcript has carried — never the prompt's text.
++ *
++ * R2 findings 2 and 3 killed the text-keyed version, in both directions:
++ *
++ *   · keying on sha256(session + last user text) made every REPEAT of a prompt
++ *     collide with the earlier refused turn, so the second "weiter" / "ok" /
++ *     "1" was allowed unconditionally. Repeated short continuations are the
++ *     dominant prompt shape in the corpus this gate was built from, so the
++ *     gate disabled itself exactly where it was needed;
++ *   · taking the last user-role entry made the key drift WITHIN one turn,
++ *     because a compaction summary and a `<system-reminder>` both arrive in the
++ *     user role. A new key mid-turn re-arms the marker, which is the wedge
++ *     layer 2 exists to prevent on hosts that send no `stop_hook_active`.
++ *
++ * An ordinal over `isSyntheticPrompt`-filtered entries fixes both at once: it
++ * is distinct for every real turn regardless of what the user typed, and it
++ * does not move when the harness injects a user-role entry.
++ */
++export function alreadyRefusedTurn(
++    workspaceRoot: string,
++    sessionKey: string,
++    turnOrdinal: number,
++): boolean {
+     try {
+-        return fs.existsSync(stateFile(workspaceRoot, turnKey));
++        const raw = fs.readFileSync(sessionStateFile(workspaceRoot, sessionKey), 'utf-8');
++        const decoded: unknown = JSON.parse(raw);
++        if (typeof decoded === 'object' && decoded !== null && !Array.isArray(decoded)) {
++            return (decoded as Record<string, unknown>)['refused_turn'] === turnOrdinal;
++        }
+     } catch {
+-        return false;
++        // absent, unreadable, or malformed state means "not refused yet" —
++        // fail-open, per this hook's contract.
+     }
++    return false;
+ }
+ 
+-function markRefusedThisTurn(workspaceRoot: string, turnKey: string, detector: DetectorId): void {
++function markRefusedTurn(
++    workspaceRoot: string,
++    sessionKey: string,
++    turnOrdinal: number,
++    detector: DetectorId,
++): void {
+     if (is_replay_mode()) return;
+     try {
+-        atomic_write_json(stateFile(workspaceRoot, turnKey), {
++        atomic_write_json(sessionStateFile(workspaceRoot, sessionKey), {
+             refused_at: new Date().toISOString(),
++            refused_turn: turnOrdinal,
+             detector,
+         });
+     } catch {
+@@ -297,28 +377,48 @@ function markRefusedThisTurn(workspaceRoot: string, turnKey: string, detector: D
+ 
+ export interface TranscriptTail {
+     lastAssistant: string;
+-    lastUser: string;
++    /**
++     * How many GENUINE user prompts the transcript carries — harness-injected
++     * user-role entries excluded via `isSyntheticPrompt`. This is the turn's
++     * identity; see `alreadyRefusedTurn` for why the prompt's text is not.
++     */
++    turnOrdinal: number;
+ }
+ 
+ /**
+- * Last assistant text and last user text from a Claude JSONL transcript.
+- * Mirrors `chat_history._extract_claude_transcript_response` for the
+- * assistant half and adds the user half the turn key needs.
++ * The last assistant text, plus the turn ordinal, from a Claude JSONL
++ * transcript. Mirrors `chat_history._extract_claude_transcript_response` for
++ * the assistant half.
++ *
++ * `isSyntheticPrompt` is applied to every user-role entry — the same filter
++ * `language_mirror_hook` uses, and for the same reason it was added there
++ * (round-5 § 6.5): a background-task notification and a `<system-reminder>`
++ * both occupy the user role without being chat messages. Counting them would
++ * move the turn ordinal mid-turn, which is R2 finding 3.
+  */
+ export function readTranscriptTail(
+     transcriptPath: string,
+     opts: { homeDir?: string; maxBytes?: number } = {},
+ ): TranscriptTail {
+-    const empty: TranscriptTail = { lastAssistant: '', lastUser: '' };
++    const empty: TranscriptTail = { lastAssistant: '', turnOrdinal: 0 };
+     if (!transcriptPath || !isSafeTranscriptPath(transcriptPath, opts)) return empty;
+     let lines: string[];
+     try {
++        // R2 finding 12: `maxBytes` was accepted in the options type and never
++        // used, so the declared cap was decoration. It is enforced here as well
++        // as inside `isSafeTranscriptPath`, because this is the read it bounds.
++        // The whole file still has to be walked — the turn ordinal is a count
++        // over all entries, not something a tail can answer — so the cap is the
++        // guard, not an optimisation.
++        if (opts.maxBytes !== undefined && fs.statSync(transcriptPath).size > opts.maxBytes) {
++            return empty;
++        }
+         lines = fs.readFileSync(transcriptPath, 'utf-8').split('\n');
+     } catch {
+         return empty;
+     }
+     let lastAssistant = '';
+-    let lastUser = '';
++    let turnOrdinal = 0;
+     for (const rawLine of lines) {
+         const line = rawLine.trim();
+         if (!line) continue;
+@@ -336,10 +436,13 @@ export function readTranscriptTail(
+         if (typeof msg !== 'object' || msg === null || Array.isArray(msg)) continue;
+         const text = _messageText((msg as Record<string, unknown>)['content']);
+         if (text === null) continue;
+-        if (role === 'assistant') lastAssistant = text;
+-        else lastUser = text;
++        if (role === 'assistant') {
++            lastAssistant = text;
++        } else if (!isSyntheticPrompt(text)) {
++            turnOrdinal += 1;
++        }
+     }
+-    return { lastAssistant: lastAssistant.trim(), lastUser: lastUser.trim() };
++    return { lastAssistant: lastAssistant.trim(), turnOrdinal };
+ }
+ 
+ function _messageText(content: unknown): string | null {
+@@ -367,39 +470,52 @@ export interface GateSettings {
+ }
+ 
+ /**
+- * Read the three switches with a line walker rather than the full settings
+- * cascade: this concern runs on EVERY turn-end and is default-off, so the
+- * common path must not pay for a cascade load it will discard.
++ * YAML spellings a human writes for "on". The `yaml` package parses to the 1.2
++ * core schema, where `yes` is the STRING "yes" rather than a boolean — so a
++ * maintainer who writes `enabled: yes` means it, and a reader that silently
++ * treats it as off is the R2 finding-6b defect wearing a parser instead of a
++ * regex. Anything not in this set is off; there is no truthiness guessing.
++ */
++function _isOn(v: unknown): boolean | null {
++    if (typeof v === 'boolean') return v;
++    if (typeof v !== 'string') return null;
++    const s = v.trim().toLowerCase();
++    if (s === 'true' || s === 'yes' || s === 'on') return true;
++    if (s === 'false' || s === 'no' || s === 'off') return false;
++    return null;
++}
++
++/**
++ * Read the three switches through the real settings cascade.
++ *
++ * The previous version hand-walked `<workspaceRoot>/.agent-settings.yml` for
++ * speed, and R2 finding 6 found three defects in that trade: it ignored the
++ * user-global layer entirely (so a maintainer who opts in globally got no gate
++ * AND no diagnostic), its end-of-line-anchored regex read
++ * `enabled: true  # soak opt-in` as FALSE, and it accepted a `turn_end_gate:`
++ * block under ANY parent as ON because a text walker has no notion of a parent.
++ *
++ * The stated reason for skipping the cascade does not survive contact with the
++ * sibling concerns: `delegation-nudge` calls `load_agent_settings` on
++ * `user_prompt_submit`, i.e. every turn. Correctness on a gate that can refuse
++ * a turn-end outranks one settings read per turn-end.
+  */
+ export function readGateSettings(workspaceRoot: string): GateSettings {
+     const off: GateSettings = { enabled: false, promissory: true, language: true };
+-    let raw: string;
++    let settings: Record<string, unknown>;
+     try {
+-        raw = fs.readFileSync(path.join(workspaceRoot, '.agent-settings.yml'), 'utf-8');
++        settings = load_agent_settings({ cwd: workspaceRoot }) as Record<string, unknown>;
+     } catch {
+         return off;
+     }
+-    // Indent-aware: the block ends at the first line indented no deeper than
+-    // the header. A width-agnostic `^\S` terminator would swallow the next
+-    // sibling key and read ITS `enabled:` as ours.
+-    const lines = raw.split('\n');
+-    const headerIdx = lines.findIndex((l) => /^\s*turn_end_gate:\s*$/.test(l));
+-    if (headerIdx === -1) return off;
+-    const headerIndent = (lines[headerIdx]!.match(/^\s*/) ?? [''])[0].length;
+-    const body: string[] = [];
+-    for (const line of lines.slice(headerIdx + 1)) {
+-        if (line.trim() === '' || line.trimStart().startsWith('#')) continue;
+-        const indent = (line.match(/^\s*/) ?? [''])[0].length;
+-        if (indent <= headerIndent) break;
+-        body.push(line);
+-    }
++    const hooks = settings['hooks'];
++    if (typeof hooks !== 'object' || hooks === null || Array.isArray(hooks)) return off;
++    const block = (hooks as Record<string, unknown>)['turn_end_gate'];
++    if (typeof block !== 'object' || block === null || Array.isArray(block)) return off;
++    const gate = block as Record<string, unknown>;
+     const flag = (name: string, dflt: boolean): boolean => {
+-        const re = new RegExp(`^\\s+${name}:\\s*(true|false)\\s*$`);
+-        for (const line of body) {
+-            const m = line.match(re);
+-            if (m) return m[1] === 'true';
+-        }
+-        return dflt;
++        const v = _isOn(gate[name]);
++        return v === null ? dflt : v;
+     };
+     return {
+         enabled: flag('enabled', false),
+@@ -436,23 +552,20 @@ export function main(): number {
+     const transcriptPath = str(
+         (payload['transcript_path'] ?? payload['transcriptPath']) as JsonValue | undefined,
+     );
+-    // `AGENT_CONFIG_TRANSCRIPT_HOME` exists for the test harness only: real
+-    // transcripts live under `~/.claude/projects/**` and production never sets
+-    // it. Without it a test cannot exercise the path-safety check at all,
+-    // which would leave the one security-relevant branch unmeasured.
+-    const homeOverride = process.env['AGENT_CONFIG_TRANSCRIPT_HOME'];
+-    const { lastAssistant, lastUser } = readTranscriptTail(
+-        transcriptPath,
+-        homeOverride ? { homeDir: homeOverride } : {},
+-    );
++    // No override of the home-confinement check on the production path. R2
++    // finding 13: the previous `AGENT_CONFIG_TRANSCRIPT_HOME` widened the one
++    // security-relevant predicate in this hook, and an env var that relaxes a
++    // path-confinement check IS a bypass of it, whatever the comment says. The
++    // tests set `HOME` on the spawned process instead — `os.homedir()` honours
++    // it — so the branch is still exercised with no product-code seam.
++    const { lastAssistant, turnOrdinal } = readTranscriptTail(transcriptPath);
+     if (!lastAssistant) return EXIT_ALLOW;
+ 
+-    // Layer 2 — the turn-keyed marker. Reply-independent by construction.
+-    const turnKey = deriveTurnKey(
++    // Layer 2 — keyed on the turn's ORDINAL, never on the prompt's text.
++    const sessionKey = deriveSessionKey(
+         str(envelope['session_id'] as JsonValue | undefined) || 'unknown-session',
+-        lastUser,
+     );
+-    if (alreadyRefusedThisTurn(workspaceRoot, turnKey)) return EXIT_ALLOW;
++    if (alreadyRefusedTurn(workspaceRoot, sessionKey, turnOrdinal)) return EXIT_ALLOW;
+ 
+     const findings: Finding[] = [];
+     if (settings.promissory) {
+@@ -465,7 +578,7 @@ export function main(): number {
+     }
+     if (findings.length === 0) return EXIT_ALLOW;
+ 
+-    markRefusedThisTurn(workspaceRoot, turnKey, findings[0]!.detector);
++    markRefusedTurn(workspaceRoot, sessionKey, turnOrdinal, findings[0]!.detector);
+ 
+     const lines = findings.map(
+         (f) => `  · ${f.detector}: ${f.reason}\n    evidence: ${JSON.stringify(f.evidence)}`,
+diff --git a/src/scripts/language_mirror_hook.ts b/src/scripts/language_mirror_hook.ts
+index 8a6169f68e040f2cdbcf57f0292c9a7a900db9a5..42933dd9d1ec2b383797ce19cee6939c16d888e7 100644
+--- a/src/scripts/language_mirror_hook.ts
++++ b/src/scripts/language_mirror_hook.ts
+@@ -72,7 +72,7 @@ import fs from "node:fs";
+ import path from "node:path";
+ import { fileURLToPath, pathToFileURL } from "node:url";
+ 
+-import { atomic_write_json } from "./hooks/state_io.js";
++import { atomic_write_json, atomic_write_text, is_replay_mode } from "./hooks/state_io.js";
+ import { readHookStdin } from "./hooks/hook_stdin.js";
+ import { humanAuthoredLead, isSyntheticPrompt } from "./_lib/prompt_shape.js";
+ 
+@@ -92,7 +92,21 @@ export const STATE_FILE = path.join("agents", "state", "language-mirror.json");
+  * re-emit that follows it (round-5 § 6.1). Its existence — not a counter — is
+  * what bounds the re-injection to ONE per compaction event.
+  */
+-export const PIN_LOST_MARKER = path.join("agents", "state", "language-mirror.pin-lost");
++export const PIN_LOST_DIR = path.join("agents", "state", "language-mirror.pin-lost");
++
++/**
++ * Per-SESSION marker path. R2 finding 10: a single shared marker made the
++ * mechanism cross-talk between concurrent sessions — the normal shape for this
++ * repo's worktree workflow. Session B's next `post_tool_use` consumed the marker
++ * session A's compaction had set, so A never got the one re-emit that is the
++ * whole point of the mechanism, and B got a pin notice derived from whichever
++ * session last wrote the shared state. An empty id degrades to a literal
++ * bucket rather than colliding silently.
++ */
++export function pinLostMarker(session_id: string): string {
++  const safe = (session_id || "unknown-session").replace(/[^A-Za-z0-9._-]/g, "_");
++  return path.join(PIN_LOST_DIR, `${safe}.marker`);
++}
+ 
+ type JsonValue = string | number | boolean | null | JsonValue[] | { [k: string]: JsonValue };
+ type JsonObject = { [k: string]: JsonValue };
+@@ -387,29 +401,41 @@ function _extractPrompt(payload: JsonObject): string {
+   return "";
+ }
+ 
+-/** Record that compaction is about to drop the context copy of the pin. */
+-export function _setPinLost(consumer_root: string): void {
++/** The envelope's session id, or a literal bucket when the host sends none. */
++function _sessionId(envelope: JsonObject): string {
++  const v = envelope["session_id"];
++  return typeof v === "string" && v.trim() !== "" ? v : "unknown-session";
++}
++
++/**
++ * Record that compaction is about to drop the context copy of the pin.
++ *
++ * R2 finding 14: this used to write with a raw `mkdirSync` + `writeFileSync`,
++ * bypassing both conventions the surrounding code follows — the module's own
++ * atomic writer, and the `is_replay_mode()` guard that keeps a replayed event
++ * from mutating live state. A replayed compaction wrote the marker for real.
++ */
++export function _setPinLost(consumer_root: string, session_id: string): void {
++  if (is_replay_mode()) return;
+   try {
+-    const target = path.join(consumer_root, PIN_LOST_MARKER);
+-    fs.mkdirSync(path.dirname(target), { recursive: true });
+-    fs.writeFileSync(target, new Date().toISOString());
++    atomic_write_text(path.join(consumer_root, pinLostMarker(session_id)), new Date().toISOString());
+   } catch {
+     // Observability only — a failed marker write costs one un-restored pin,
+     // never a broken turn.
+   }
+ }
+ 
+-export function _pinLost(consumer_root: string): boolean {
++export function _pinLost(consumer_root: string, session_id: string): boolean {
+   try {
+-    return fs.existsSync(path.join(consumer_root, PIN_LOST_MARKER));
++    return fs.existsSync(path.join(consumer_root, pinLostMarker(session_id)));
+   } catch {
+     return false;
+   }
+ }
+ 
+-function _clearPinLost(consumer_root: string): void {
++function _clearPinLost(consumer_root: string, session_id: string): void {
+   try {
+-    fs.rmSync(path.join(consumer_root, PIN_LOST_MARKER), { force: true });
++    fs.rmSync(path.join(consumer_root, pinLostMarker(session_id)), { force: true });
+   } catch {
+     // If it cannot be cleared the next tool call re-emits once more. One
+     // duplicate line is the failure mode; a loop is not, because the marker
+@@ -422,8 +448,8 @@ function _clearPinLost(consumer_root: string): void {
+  * and only when a pin actually exists — an absent or undetermined pin is not
+  * an obligation, and inventing one here would be worse than the gap.
+  */
+-export function _reEmitAfterCompaction(consumer_root: string): number {
+-  if (!_pinLost(consumer_root)) {
++export function _reEmitAfterCompaction(consumer_root: string, session_id: string): number {
++  if (!_pinLost(consumer_root, session_id)) {
+     return EXIT_ALLOW;
+   }
+   const previous = _loadState(path.join(consumer_root, STATE_FILE));
+@@ -431,7 +457,7 @@ export function _reEmitAfterCompaction(consumer_root: string): number {
+   const source: PinSource = previous.source === "system-locale" ? "system-locale" : "prompt";
+   // Clear FIRST: if the write below throws, the marker must not survive to
+   // re-fire on every subsequent tool call — that is the shape § 6.2 refuses.
+-  _clearPinLost(consumer_root);
++  _clearPinLost(consumer_root, session_id);
+   if (language !== "de" && language !== "en") {
+     return EXIT_ALLOW;
+   }
+@@ -479,11 +505,11 @@ export function run(
+   // and this marker is the entire difference between the two.
+   const event = typeof envelope["event"] === "string" ? envelope["event"] : "";
+   if (event === "pre_compact") {
+-    _setPinLost(options.consumer_root);
++    _setPinLost(options.consumer_root, _sessionId(envelope));
+     return EXIT_ALLOW;
+   }
+   if (event === "post_tool_use") {
+-    return _reEmitAfterCompaction(options.consumer_root);
++    return _reEmitAfterCompaction(options.consumer_root, _sessionId(envelope));
+   }
+ 
+   const prompt = _extractPrompt(payload);
+diff --git a/src/scripts/measure_turn_end_gate.ts b/src/scripts/measure_turn_end_gate.ts
+index fd68a39b63c8b5cda4a62aa261dd181047bda3e6..6d7540a7722d90066099289e04ed3378749b0e37 100644
+--- a/src/scripts/measure_turn_end_gate.ts
++++ b/src/scripts/measure_turn_end_gate.ts
+@@ -11,37 +11,61 @@
+  *
+  * What it measures, and what it deliberately does NOT:
+  *
+- *   · FIRE RATE of each detector over every assistant turn in the window.
+- *   · For detector B, the CROSS-TAB against `conformance_scan`'s own
+- *     independent language check. That scanner reads only the first prose
+- *     line and this detector reads the whole stripped reply, so the two are
+- *     related instruments, not the same one — which is exactly what makes
+- *     the disagreement cells informative.
++ *   · FIRE RATE of each detector PER TURN, over the last assistant text of the
++ *     turn — the population the shipped gate inspects. R2 finding 1: the first
++ *     version scored every assistant ENTRY and published the result as a
++ *     per-turn rate, which inflated the population ~8.6x and scored a
++ *     closing-paragraph detector over mid-turn prose.
++ *   · The independent scanner's own language total, printed for CONTEXT only.
++ *     It is not an agreement figure and no overlap is claimed from it: the two
++ *     instruments read different spans (its first prose line; this one strips
++ *     code/quotes/paths from the reply and then scores lead-first via the same
++ *     classifier), and this script does no per-turn matching between them.
++ *     R2 finding 7 removed the per-session min/max arithmetic that used to
++ *     report disjoint findings of equal count as full agreement.
+  *   · It does NOT compute recall against the 20 promissory occurrences the
+  *     round-5 audit reported. Those came from subagent transcript READING;
+  *     `conformance_scan.ts` states in its own header that promissory
+  *     closings are "deliberately NOT scanned", so there is no machine-
+  *     readable ground truth to score against. Claiming a recall figure here
+  *     would invent one.
++ *   · KNOWN RESIDUAL, R2 finding 8, not fixed here: this script re-derives the
++ *     language pin with `classify` per user entry, while the gate reads the pin
++ *     `language_mirror_hook` persisted — which also applies a system-locale
++ *     fallback and a keep-previous rule. Where those diverge, a turn can move
++ *     between "pinned de", "pinned en" and "no obligation", so detector B's
++ *     rate here is close to but not identical with the gate's. Reaching parity
++ *     means reusing `nextState`, which is a larger change than a measurement
++ *     correction and would itself need re-measuring.
+  *
+  * Usage:
+  *   ./scripts-run src/scripts/measure_turn_end_gate --store <dir> [--limit N]
+  */
+ import * as fs from 'node:fs';
+ import * as path from 'node:path';
++import { fileURLToPath, pathToFileURL } from 'node:url';
+ 
+ import { classify } from './language_mirror_hook.js';
+ import { assistantText, isInjectedBody, scanSession, userText } from './conformance_scan.js';
+ import { detectLanguage, detectPromissory } from './hooks/turn_end_gate_hook.js';
+ 
+ interface Counts {
+-    assistant_turns: number;
++    /**
++     * TURNS, not entries. R2 finding 1: the first version incremented a counter
++     * named `assistant_turns` on every assistant entry and ran both detectors on
++     * each one, while the gate only ever evaluates the LAST assistant text of a
++     * turn. A turn with k prose entries contributed k samples to the instrument
++     * and 1 to the gate, so the published "18.0% of turns" was a per-ENTRY rate
++     * wearing a per-turn label — and detector A, a closing-paragraph detector by
++     * construction, was being scored over mid-turn prose.
++     */
++    turns: number;
++    /** Assistant entries seen — kept only to show the ratio the old bug hid. */
++    assistant_entries: number;
+     promissory_fires: number;
+     language_fires: number;
+-    /** Detector B fired AND the scanner also flagged that session-turn. */
+-    language_agree: number;
+-    /** Detector B fired where the scanner saw nothing — candidate false positives. */
+-    language_only: number;
++    /** The independent scanner's own per-session language total, for context. */
++    scanner_language: number;
+     sessions: number;
+ }
+ 
+@@ -68,11 +92,11 @@ function sessionFiles(store: string, limit: number): string[] {
+ 
+ export function measure(store: string, limit: number): Counts {
+     const c: Counts = {
+-        assistant_turns: 0,
++        turns: 0,
++        assistant_entries: 0,
+         promissory_fires: 0,
+         language_fires: 0,
+-        language_agree: 0,
+-        language_only: 0,
++        scanner_language: 0,
+         sessions: 0,
+     };
+ 
+@@ -86,20 +110,36 @@ export function measure(store: string, limit: number): Counts {
+         c.sessions += 1;
+         const sessionId = path.basename(file).slice(0, 8);
+ 
+-        // The scanner's independent verdict for this session, keyed by the
+-        // timestamp-free count of language violations. Used only as a
+-        // cross-tab total, never as ground truth for this detector.
+-        let scannerLanguage = 0;
++        // The independent scanner's own language total for this session,
++        // reported side by side and NOT as agreement — see the header for why
++        // no overlap is derivable from two totals (R2 finding 7).
++        //
++        // A throw is surfaced, not swallowed to zero: swallowing silently
++        // reclassified a whole session's fires as scanner-disagreements.
+         try {
+-            scannerLanguage = scanSession(sessionId, lines).violations.filter(
++            c.scanner_language += scanSession(sessionId, lines).violations.filter(
+                 (v) => v.check === 'language-pin',
+             ).length;
+-        } catch {
+-            scannerLanguage = 0;
++        } catch (err) {
++            process.stderr.write(
++                `measure-turn-end-gate: scanSession failed for ${sessionId} — excluded from the scanner total: ${String(err)}\n`,
++            );
+         }
+ 
+         let pinned: 'de' | 'en' | 'und' = 'und';
+-        let myLanguage = 0;
++        // The LAST assistant text since the last genuine user prompt. This is
++        // the population the gate inspects; anything else is a different
++        // measurement wearing the same label (R2 finding 1).
++        let pendingReply: string | null = null;
++        let pendingPin: 'de' | 'en' | 'und' = 'und';
++
++        const scoreTurn = (): void => {
++            if (pendingReply === null) return;
++            c.turns += 1;
++            if (detectPromissory(pendingReply) !== null) c.promissory_fires += 1;
++            if (detectLanguage(pendingReply, pendingPin) !== null) c.language_fires += 1;
++            pendingReply = null;
++        };
+ 
+         for (const raw of lines) {
+             let entry: Record<string, unknown>;
+@@ -113,8 +153,10 @@ export function measure(store: string, limit: number): Counts {
+             if (u !== null) {
+                 // A background-task notification occupies the user role but is
+                 // not a chat message — the exact shape that made the language
+-                // defect invisible. It must never move the pin.
++                // defect invisible. It must never move the pin, and it must not
++                // close a turn either.
+                 if (!isInjectedBody(u)) {
++                    scoreTurn(); // the previous turn ends here
+                     const verdict = classify(u);
+                     if (verdict.language !== 'und') pinned = verdict.language;
+                 }
+@@ -123,39 +165,39 @@ export function measure(store: string, limit: number): Counts {
+ 
+             const a = assistantText(entry);
+             if (a === null || a.trim() === '') continue;
+-            c.assistant_turns += 1;
+-
+-            if (detectPromissory(a) !== null) c.promissory_fires += 1;
+-            if (detectLanguage(a, pinned) !== null) {
+-                c.language_fires += 1;
+-                myLanguage += 1;
+-            }
++            c.assistant_entries += 1;
++            // Overwrite: only the last one in the turn is the gate's input.
++            pendingReply = a;
++            pendingPin = pinned;
+         }
+-
+-        const agree = Math.min(myLanguage, scannerLanguage);
+-        c.language_agree += agree;
+-        c.language_only += Math.max(0, myLanguage - scannerLanguage);
++        scoreTurn(); // the transcript's final turn
+     }
+ 
+     return c;
+ }
+ 
+ export function render(c: Counts): string {
+-    const pct = (n: number): string =>
+-        c.assistant_turns === 0 ? '0.0' : ((100 * n) / c.assistant_turns).toFixed(1);
++    const pct = (n: number): string => (c.turns === 0 ? '0.0' : ((100 * n) / c.turns).toFixed(1));
+     return [
+-        `measure-turn-end-gate · ${c.sessions} sessions · ${c.assistant_turns} assistant turns`,
++        `measure-turn-end-gate · ${c.sessions} sessions · ${c.turns} turns · ${c.assistant_entries} assistant entries`,
+         '',
+         `  detector A (promissory)  fires on ${c.promissory_fires} turns  (${pct(c.promissory_fires)}%)`,
+         `  detector B (language)    fires on ${c.language_fires} turns  (${pct(c.language_fires)}%)`,
+-        `    of which the independent scanner also flagged: ${c.language_agree}`,
+-        `    fired where the scanner saw nothing:           ${c.language_only}`,
+         '',
+-        '  The second line is the one that matters for a BLOCKING guard: those are',
+-        '  the turns this detector would have refused and the other instrument would',
+-        '  not. They are candidate false positives, not confirmed ones — the two',
+-        '  instruments read different spans (first prose line vs. whole stripped',
+-        '  reply), so disagreement is expected in both directions.',
++        '  Rates are per TURN, over the last assistant text of each turn — the same',
++        '  population the shipped gate inspects. The entry count is printed beside',
++        '  the turn count because the first version of this script scored every',
++        '  assistant ENTRY and labelled the result per-turn; the gap between the two',
++        '  numbers is the size of that error.',
++        '',
++        `  For context only, the independent scanner's own language total: ${c.scanner_language}`,
++        '    NOT an agreement figure. The two instruments read different spans (its',
++        '    first prose line vs. this stripped, lead-first-scored reply) and this',
++        '    script does no',
++        '    per-turn matching between them, so no overlap can be claimed from these',
++        '    two totals — the previous version claimed one from per-session min/max',
++        '    arithmetic, which reports disjoint findings of equal count as full',
++        '    agreement.',
+         '',
+         '  No recall figure for detector A: promissory closings are not machine-',
+         '  scanned anywhere in this tree, so there is no ground truth to score.',
+@@ -170,7 +212,18 @@ export function main(argv: string[] = process.argv.slice(2)): number {
+             store = argv[i + 1]!;
+             i += 1;
+         } else if (argv[i] === '--limit' && argv[i + 1] !== undefined) {
+-            limit = parseInt(argv[i + 1]!, 10);
++            // R2 finding 15: an unvalidated parseInt made `--limit abc` yield
++            // NaN, `slice(0, NaN)` return nothing, and the script exit 2 with
++            // "no .jsonl sessions under <store>" — a real input error reported
++            // as a missing corpus.
++            const parsed = Number.parseInt(argv[i + 1]!, 10);
++            if (!Number.isFinite(parsed) || parsed < 1) {
++                process.stderr.write(
++                    `measure-turn-end-gate: --limit must be a positive integer, got ${JSON.stringify(argv[i + 1])}\n`,
++                );
++                return 2;
++            }
++            limit = parsed;
+             i += 1;
+         }
+     }
+@@ -189,6 +242,30 @@ export function main(argv: string[] = process.argv.slice(2)): number {
+     return 0;
+ }
+ 
+-if (process.argv[1] !== undefined && process.argv[1].includes('measure_turn_end_gate')) {
++// Bundle-safety, same guard as the sibling hook. R2 finding 15: a substring
++// test on argv[1] auto-runs the module when esbuild inlines it into a bundle,
++// where every module shares the bundle's `import.meta.url`.
++declare const __AGENT_CONFIG_BUNDLE__: boolean | undefined;
++function _isCliEntry(): boolean {
++    if (typeof __AGENT_CONFIG_BUNDLE__ !== 'undefined' && __AGENT_CONFIG_BUNDLE__) {
++        return false;
++    }
++    if (process.argv[1] === undefined) {
++        return false;
++    }
++    const argvUrl = pathToFileURL(path.resolve(process.argv[1])).href;
++    if (import.meta.url === argvUrl) {
++        return true;
++    }
++    try {
++        const here = fs.realpathSync(fileURLToPath(import.meta.url));
++        const argv = fs.realpathSync(path.resolve(process.argv[1]));
++        return here === argv;
++    } catch {
++        return false;
++    }
++}
++
++if (_isCliEntry()) {
+     process.exit(main());
+ }
+diff --git a/src/server/schemas/settings.ts b/src/server/schemas/settings.ts
+index 1b4b49d79092d74ca5f8fc92b395861584c394bd..bf3a2508b6510d264ca13edb5e523ebc5e8ca385 100644
+--- a/src/server/schemas/settings.ts
++++ b/src/server/schemas/settings.ts
+@@ -525,10 +525,10 @@ export const settingsSchema = z.object({
+                 'Stop-slot turn-end gate (road-to-conformance-round5 Phase 3). Default off, and it is the only concern that can REFUSE a turn-end rather than a tool call — so it soaks behind an explicit opt-in before it binds. Round 5 measured the reason: both blocking carriers reached zero violations, neither advisory carrier did, and 19 wrong-language replies survived a pin that had fired 26-35 seconds earlier. A refused turn continues in the SAME turn and is never refused twice.',
+             ),
+             promissory: z.boolean().default(true).describe(
+-                'Detector A of the turn-end gate: refuse a turn whose closing paragraph promises work not yet performed while asking the user nothing (20 measured occurrences). Inert while hooks.turn_end_gate.enabled is false.',
++                'Detector A of the turn-end gate: refuse a turn whose closing paragraph promises work not yet performed while asking the user nothing (20 measured occurrences). Fires on 9.3% of turns over a 30-session corpus (24 of 259). Inert while hooks.turn_end_gate.enabled is false.',
+             ),
+             language: z.boolean().default(true).describe(
+-                'Detector B of the turn-end gate: refuse a turn whose user-visible prose is not in the pinned language, with fenced code, inline code, quoted tool output, tables, URLs, paths and identifiers excluded first (19 measured occurrences). Fires 18.0% of turns on the measured corpus, which is why the master switch is off by default. Inert while hooks.turn_end_gate.enabled is false.',
++                'Detector B of the turn-end gate: refuse a turn whose user-visible prose is not in the pinned language, with fenced code, inline code, quoted tool output, tables, URLs, paths and identifiers excluded first (19 measured occurrences). Fires on 15.1% of turns over a 30-session corpus (39 of 259) — measured per turn, over the last assistant text, which is the population the gate actually inspects. That rate is why the master switch is off by default. Inert while hooks.turn_end_gate.enabled is false.',
+             ),
+         }).default({}),
+     }),
+diff --git a/tests/scripts/language_mirror_hook.test.ts b/tests/scripts/language_mirror_hook.test.ts
+index 3b9305b49b11b634015b0cf2cccdb086f4606cfd..074cb36b1fc07af70d524235fb040d75607d4886 100644
+--- a/tests/scripts/language_mirror_hook.test.ts
++++ b/tests/scripts/language_mirror_hook.test.ts
+@@ -448,18 +448,18 @@ describe("run — the locale fallback end to end", () => {
+ // is what these tests are about — not the injection.
+ // ---------------------------------------------------------------------------
+ 
+-function compactEnvelope(): string {
+-  return JSON.stringify({ event: "pre_compact", session_id: "s1", platform: "claude", payload: {} });
++function compactEnvelope(session_id = "s1"): string {
++  return JSON.stringify({ event: "pre_compact", session_id, platform: "claude", payload: {} });
+ }
+ 
+-function toolEnvelope(): string {
+-  return JSON.stringify({ event: "post_tool_use", session_id: "s1", platform: "claude", payload: {} });
++function toolEnvelope(session_id = "s1"): string {
++  return JSON.stringify({ event: "post_tool_use", session_id, platform: "claude", payload: {} });
+ }
+ 
+ describe("the compaction boundary (6.1)", () => {
+   it("pre_compact writes the marker and emits nothing itself", () => {
+     expect(run(compactEnvelope(), { consumer_root: tmp })).toBe(0);
+-    expect(_pinLost(tmp)).toBe(true);
++    expect(_pinLost(tmp, "s1")).toBe(true);
+   });
+ 
+   it("post_tool_use re-emits the pin ONCE, then goes quiet", () => {
+@@ -473,7 +473,7 @@ describe("the compaction boundary (6.1)", () => {
+     // injection per compaction EVENT, not one per call.
+     expect(run(toolEnvelope(), { consumer_root: tmp })).toBe(0);
+     expect(run(toolEnvelope(), { consumer_root: tmp })).toBe(0);
+-    expect(_pinLost(tmp)).toBe(false);
++    expect(_pinLost(tmp, "s1")).toBe(false);
+   });
+ 
+   it("post_tool_use is silent when no compaction happened — the common path", () => {
+@@ -486,7 +486,21 @@ describe("the compaction boundary (6.1)", () => {
+     expect(run(toolEnvelope(), { consumer_root: tmp })).toBe(0);
+     // The marker is still consumed, so a missing pin cannot arm a permanent
+     // re-fire on every later tool call.
+-    expect(_pinLost(tmp)).toBe(false);
++    expect(_pinLost(tmp, "s1")).toBe(false);
++  });
++
++  it("R2-10: one session cannot consume another session's marker", () => {
++    // A single shared marker made this cross-talk between concurrent sessions —
++    // the normal shape for this repo's worktree workflow. Session B used to
++    // consume the marker A's compaction set, so A never got its one re-emit.
++    run(envelope("Bitte mach weiter mit der Analyse und den Tests."), { consumer_root: tmp });
++    run(compactEnvelope("session-A"), { consumer_root: tmp });
++
++    // B has had no compaction, so B stays silent and must not clear A's marker.
++    expect(run(toolEnvelope("session-B"), { consumer_root: tmp })).toBe(0);
++    // A still gets exactly its one re-emit.
++    expect(run(toolEnvelope("session-A"), { consumer_root: tmp })).toBe(2);
++    expect(run(toolEnvelope("session-A"), { consumer_root: tmp })).toBe(0);
+   });
+ 
+   it("pre_compact does not disturb the pin it is protecting", () => {
+diff --git a/tests/scripts/turn_end_gate_hook.test.ts b/tests/scripts/turn_end_gate_hook.test.ts
+index f358d783403a8fcb964c4c94db6739d43acd9037..cadefdc45247a2e757f0288086541f219ca42029 100644
+--- a/tests/scripts/turn_end_gate_hook.test.ts
++++ b/tests/scripts/turn_end_gate_hook.test.ts
+@@ -20,12 +20,13 @@ import * as os from 'node:os';
+ import * as path from 'node:path';
+ import { fileURLToPath } from 'node:url';
+ 
+-import { afterAll, describe, expect, it } from 'vitest';
++import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+ 
+ import {
++    alreadyRefusedTurn,
+     detectLanguage,
+     detectPromissory,
+-    deriveTurnKey,
++    deriveSessionKey,
+     finalParagraph,
+     readGateSettings,
+     readLanguagePin,
+@@ -42,6 +43,26 @@ const TSX = path.join(
+ );
+ 
+ const tmp_dirs: string[] = [];
++
++/**
++ * `readGateSettings` now goes through the real settings cascade, whose
++ * user-global layer resolves under `EVENT4U_CONFIG_HOME` (its own documented
++ * override) or `os.homedir()`. Without this the in-process tests would read the
++ * DEVELOPER's global settings and pass or fail on their machine's state —
++ * exactly the non-hermetic shape this repo has been bitten by before.
++ */
++let _priorConfigHome: string | undefined;
++beforeAll(() => {
++    const empty = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'teg-global-')));
++    tmp_dirs.push(empty);
++    _priorConfigHome = process.env['EVENT4U_CONFIG_HOME'];
++    process.env['EVENT4U_CONFIG_HOME'] = empty;
++});
++afterAll(() => {
++    if (_priorConfigHome === undefined) delete process.env['EVENT4U_CONFIG_HOME'];
++    else process.env['EVENT4U_CONFIG_HOME'] = _priorConfigHome;
++});
++
+ afterAll(() => {
+     for (const d of tmp_dirs) {
+         try {
+@@ -294,8 +315,6 @@ describe('settings — default OFF, detectors ON within it (roadmap 3.6)', () =>
+     });
+ 
+     it('a SIBLING section’s `enabled:` is never read as ours', () => {
+-        // The indent-aware walker exists for exactly this: a width-agnostic
+-        // terminator would run past the block and pick up the next key's flag.
+         const s = readGateSettings(
+             makeWorkspace(
+                 'hooks:\n  turn_end_gate:\n    promissory: false\n  injection_scan:\n    enabled: true\n',
+@@ -304,6 +323,49 @@ describe('settings — default OFF, detectors ON within it (roadmap 3.6)', () =>
+         expect(s.enabled).toBe(false);
+         expect(s.promissory).toBe(false);
+     });
++
++    // --- R2 finding 6: three ways the hand-rolled walker mis-resolved it -----
++
++    it('R2-6b: a trailing comment does not turn the switch OFF', () => {
++        // `^\s+enabled:\s*(true|false)\s*$` required end-of-line, so a
++        // maintainer who annotated their opt-in silently got no gate.
++        const s = readGateSettings(
++            makeWorkspace('hooks:\n  turn_end_gate:\n    enabled: true  # soak opt-in\n'),
++        );
++        expect(s.enabled).toBe(true);
++    });
++
++    it('R2-6b: the YAML boolean `yes` means yes', () => {
++        // The `yaml` package parses to the 1.2 core schema where `yes` is the
++        // STRING "yes", so a parser alone does not fix this — the reader has to
++        // accept the spelling a human actually writes.
++        const s = readGateSettings(makeWorkspace('hooks:\n  turn_end_gate:\n    enabled: yes\n'));
++        expect(s.enabled).toBe(true);
++    });
++
++    it('R2-6b: `off` / `no` mean off, and an unknown value falls back to the default', () => {
++        expect(
++            readGateSettings(makeWorkspace('hooks:\n  turn_end_gate:\n    enabled: no\n')).enabled,
++        ).toBe(false);
++        // Not a recognised spelling ⇒ the conservative default, never a guess.
++        expect(
++            readGateSettings(makeWorkspace('hooks:\n  turn_end_gate:\n    enabled: maybe\n'))
++                .enabled,
++        ).toBe(false);
++    });
++
++    it('R2-6c: a `turn_end_gate:` block under the WRONG parent never arms the gate', () => {
++        // The text walker had no notion of a parent, so a top-level block or one
++        // under any other key armed a concern that can refuse a turn-end.
++        expect(readGateSettings(makeWorkspace('turn_end_gate:\n  enabled: true\n')).enabled).toBe(
++            false,
++        );
++        expect(
++            readGateSettings(
++                makeWorkspace('quality:\n  turn_end_gate:\n    enabled: true\n'),
++            ).enabled,
++        ).toBe(false);
++    });
+ });
+ 
+ describe('language pin', () => {
+@@ -352,12 +414,20 @@ function makeGateWorkspace(): { dir: string; home: string } {
+     return { dir, home };
+ }
+ 
+-function writeTranscript(home: string, userText: string, assistantText: string): string {
+-    const file = path.join(home, `transcript-${Math.abs(hashish(assistantText))}.jsonl`);
++/**
++ * Write a transcript. `userTexts` is EVERY user-role entry in order, so a test
++ * can control the turn ordinal — and can include a harness-shaped entry to
++ * prove it does not count.
++ */
++function writeTranscript(home: string, userTexts: string[], assistantText: string): string {
++    const file = path.join(
++        home,
++        `transcript-${Math.abs(hashish(userTexts.join('|') + assistantText))}.jsonl`,
++    );
+     fs.writeFileSync(
+         file,
+         [
+-            JSON.stringify({ type: 'user', message: { content: userText } }),
++            ...userTexts.map((t) => JSON.stringify({ type: 'user', message: { content: t } })),
+             JSON.stringify({
+                 type: 'assistant',
+                 message: { content: [{ type: 'text', text: assistantText }] },
+@@ -391,12 +461,27 @@ function envelopeJson(
+     });
+ }
+ 
++/**
++ * `HOME` is the fake home, which does two things at once and is why the hook
++ * needs no test-only seam of its own (R2 finding 13 removed the old
++ * `AGENT_CONFIG_TRANSCRIPT_HOME`): `os.homedir()` honours it, so the
++ * transcript-confinement check is exercised against a temp root, AND the
++ * settings cascade resolves its user-global layer under that same root, which
++ * keeps these tests hermetic against the developer's real global settings.
++ * `EVENT4U_CONFIG_HOME` is the cascade's own documented test override, set as a
++ * belt for the same reason.
++ */
+ function runHook(cwd: string, stdin: string, home: string): Run {
+     const r = spawnSync(TSX, [HOOK], {
+         encoding: 'utf8',
+         cwd,
+         input: stdin,
+-        env: { ...process.env, AGENT_CONFIG_TRANSCRIPT_HOME: home },
++        env: {
++            ...process.env,
++            HOME: home,
++            USERPROFILE: home,
++            EVENT4U_CONFIG_HOME: path.join(home, '.event4u', 'agent-config'),
++        },
+     });
+     return { status: r.status ?? 1, stdout: r.stdout ?? '', stderr: r.stderr ?? '' };
+ }
+@@ -407,7 +492,7 @@ const CLEAN = 'Der Branch steht, die Tests sind grün, mehr war nicht zu tun.';
+ describe('the gate, end to end', () => {
+     it('refuses a promissory closing with exit 1 and the reason on STDERR', () => {
+         const { dir, home } = makeGateWorkspace();
+-        const t = writeTranscript(home, 'mach weiter', PROMISE);
++        const t = writeTranscript(home, ['mach weiter'], PROMISE);
+         const r = runHook(dir, envelopeJson(dir, t), home);
+ 
+         expect(r.status, r.stderr).toBe(1); // dispatcher-internal EXIT_BLOCK
+@@ -419,7 +504,7 @@ describe('the gate, end to end', () => {
+ 
+     it('lets a clean turn end, silently', () => {
+         const { dir, home } = makeGateWorkspace();
+-        const t = writeTranscript(home, 'mach weiter', CLEAN);
++        const t = writeTranscript(home, ['mach weiter'], CLEAN);
+         const r = runHook(dir, envelopeJson(dir, t), home);
+         expect(r.status, r.stderr).toBe(0);
+         expect(r.stderr).toBe('');
+@@ -429,7 +514,7 @@ describe('the gate, end to end', () => {
+         const dir = makeWorkspace(); // no settings file at all
+         const home = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'turn-end-gate-home-')));
+         tmp_dirs.push(home);
+-        const t = writeTranscript(home, 'mach weiter', PROMISE);
++        const t = writeTranscript(home, ['mach weiter'], PROMISE);
+         const r = runHook(dir, envelopeJson(dir, t), home);
+         expect(r.status, r.stderr).toBe(0);
+     });
+@@ -438,7 +523,7 @@ describe('the gate, end to end', () => {
+ 
+     it('LAYER 1: `stop_hook_active` alone stops a second refusal', () => {
+         const { dir, home } = makeGateWorkspace();
+-        const t = writeTranscript(home, 'mach weiter', PROMISE);
++        const t = writeTranscript(home, ['mach weiter'], PROMISE);
+         // No prior run, so no state marker exists — only the host flag can
+         // be doing the work here.
+         const r = runHook(dir, envelopeJson(dir, t, { stop_hook_active: true }), home);
+@@ -448,7 +533,7 @@ describe('the gate, end to end', () => {
+ 
+     it('LAYER 2: the turn marker alone stops a second refusal, even on a NEW reply', () => {
+         const { dir, home } = makeGateWorkspace();
+-        const first = runHook(dir, envelopeJson(dir, writeTranscript(home, 'mach weiter', PROMISE)), home);
++        const first = runHook(dir, envelopeJson(dir, writeTranscript(home, ['mach weiter'], PROMISE)), home);
+         expect(first.status, first.stderr).toBe(1);
+ 
+         // The model answered the refusal with a DIFFERENT reply that still
+@@ -456,7 +541,7 @@ describe('the gate, end to end', () => {
+         // `stop_hook_active` is deliberately absent, so layer 2 is on its own.
+         const second = runHook(
+             dir,
+-            envelopeJson(dir, writeTranscript(home, 'mach weiter', 'Ok.\n\nIch melde mich gleich.')),
++            envelopeJson(dir, writeTranscript(home, ['mach weiter'], 'Ok.\n\nIch melde mich gleich.')),
+             home,
+         );
+         expect(second.status, second.stderr).toBe(0);
+@@ -465,17 +550,75 @@ describe('the gate, end to end', () => {
+ 
+     it('a NEW user prompt re-arms the gate — the marker must not wedge the session', () => {
+         const { dir, home } = makeGateWorkspace();
+-        const first = runHook(dir, envelopeJson(dir, writeTranscript(home, 'erster prompt', PROMISE)), home);
++        const first = runHook(dir, envelopeJson(dir, writeTranscript(home, ['erster prompt'], PROMISE)), home);
+         expect(first.status, first.stderr).toBe(1);
+ 
+         const nextTurn = runHook(
+             dir,
+-            envelopeJson(dir, writeTranscript(home, 'zweiter prompt', PROMISE)),
++            envelopeJson(dir, writeTranscript(home, ['erster prompt', 'zweiter prompt'], PROMISE)),
+             home,
+         );
+         expect(nextTurn.status, nextTurn.stderr).toBe(1);
+     });
+ 
++    // --- R2 finding 2: the regression the old test could not see -------------
++
++    it('R2-2: a REPEATED prompt text still gets refused — the key is the turn, not the text', () => {
++        // The text-keyed version resolved the second identical prompt to the
++        // SAME key as the first refused turn and allowed it unconditionally.
++        // "weiter" / "ok" / "1" are the dominant prompt shape in the corpus
++        // this gate was built from, so that bug disabled the gate exactly where
++        // it was meant to work. Both turns below carry byte-identical text.
++        const { dir, home } = makeGateWorkspace();
++
++        const first = runHook(dir, envelopeJson(dir, writeTranscript(home, ['weiter'], PROMISE)), home);
++        expect(first.status, first.stderr).toBe(1);
++
++        const second = runHook(
++            dir,
++            envelopeJson(dir, writeTranscript(home, ['weiter', 'weiter'], PROMISE)),
++            home,
++        );
++        expect(second.status, second.stderr).toBe(1);
++    });
++
++    it('R2-3: a harness-injected user entry does NOT re-arm the gate mid-turn', () => {
++        // A compaction summary and a `<system-reminder>` both arrive in the
++        // user role. Counting them moved the key WITHIN one turn, minting a
++        // fresh marker and letting the same turn be refused twice on any host
++        // that sends no `stop_hook_active` — the wedge layer 2 exists to stop.
++        const { dir, home } = makeGateWorkspace();
++        const synthetic = `<system-reminder>\n${'This is harness text, not a chat message. '.repeat(80)}\n</system-reminder>`;
++
++        const first = runHook(dir, envelopeJson(dir, writeTranscript(home, ['weiter'], PROMISE)), home);
++        expect(first.status, first.stderr).toBe(1);
++
++        const afterInjection = runHook(
++            dir,
++            envelopeJson(dir, writeTranscript(home, ['weiter', synthetic], PROMISE)),
++            home,
++        );
++        expect(afterInjection.status, afterInjection.stderr).toBe(0);
++        expect(afterInjection.stderr).toBe('');
++    });
++
++    it('R2-17: refusal state is ONE file per session, not one per refused turn', () => {
++        const { dir, home } = makeGateWorkspace();
++        for (const prompts of [['a'], ['a', 'b'], ['a', 'b', 'c']]) {
++            runHook(dir, envelopeJson(dir, writeTranscript(home, prompts, PROMISE)), home);
++        }
++        const stateDir = path.join(dir, 'agents', 'runtime', 'state', 'turn-end-gate');
++        // `.json` only — `atomic_write_json` leaves its own `.dispatcher.lock`
++        // beside the payload, and counting directory entries would make this
++        // assert the writer's internals rather than the state shape.
++        const files = fs.existsSync(stateDir)
++            ? fs.readdirSync(stateDir).filter((f) => f.endsWith('.json'))
++            : [];
++        // Three refused turns, one session ⇒ exactly one state file. The old
++        // per-turn files accumulated with no TTL and nothing pruned them.
++        expect(files).toHaveLength(1);
++    });
++
+     it('an unreadable transcript lets the turn END — never a wedge', () => {
+         const { dir, home } = makeGateWorkspace();
+         const r = runHook(dir, envelopeJson(dir, path.join(home, 'does-not-exist.jsonl')), home);
+@@ -533,7 +676,9 @@ function runDispatcher(workspace: string, transcriptPath: string, home: string):
+             env: {
+                 ...process.env,
+                 AGENT_CONFIG_PACKAGE_ROOT: REPO_ROOT,
+-                AGENT_CONFIG_TRANSCRIPT_HOME: home,
++                HOME: home,
++                USERPROFILE: home,
++                EVENT4U_CONFIG_HOME: path.join(home, '.event4u', 'agent-config'),
+             },
+         },
+     );
+@@ -543,14 +688,14 @@ function runDispatcher(workspace: string, transcriptPath: string, home: string):
+ describe('claude stop — the refusal actually reaches the host', () => {
+     it('exits 2, not 1 — exit 1 on stop would let the turn end anyway', () => {
+         const { dir, home } = makeGateWorkspace();
+-        const t = writeTranscript(home, 'mach weiter', PROMISE);
++        const t = writeTranscript(home, ['mach weiter'], PROMISE);
+         const r = runDispatcher(dir, t, home);
+         expect(r.status, `stderr: ${r.stderr.slice(0, 600)}`).toBe(2);
+     });
+ 
+     it('puts the concern’s OWN reason on stderr, not a generic label', () => {
+         const { dir, home } = makeGateWorkspace();
+-        const t = writeTranscript(home, 'mach weiter', PROMISE);
++        const t = writeTranscript(home, ['mach weiter'], PROMISE);
+         const r = runDispatcher(dir, t, home);
+         expect(r.stderr).toContain('turn-end-gate');
+         expect(r.stderr).not.toBe('blocked by agent-config hook policy\n');
+@@ -558,24 +703,91 @@ describe('claude stop — the refusal actually reaches the host', () => {
+ 
+     it('a clean turn ends with 0 through the same path', () => {
+         const { dir, home } = makeGateWorkspace();
+-        const t = writeTranscript(home, 'mach weiter', CLEAN);
++        const t = writeTranscript(home, ['mach weiter'], CLEAN);
+         const r = runDispatcher(dir, t, home);
+         expect(r.status, `stderr: ${r.stderr.slice(0, 600)}`).toBe(0);
+     });
+ });
+ 
+-describe('the turn key', () => {
+-    it('is the same for the same turn and different across turns', () => {
+-        expect(deriveTurnKey('s', 'prompt A')).toBe(deriveTurnKey('s', 'prompt A'));
+-        expect(deriveTurnKey('s', 'prompt A')).not.toBe(deriveTurnKey('s', 'prompt B'));
+-        expect(deriveTurnKey('s1', 'prompt A')).not.toBe(deriveTurnKey('s2', 'prompt A'));
++describe('the turn identity — ordinal, never text (R2 findings 2 + 3)', () => {
++    it('the session key depends on the session and nothing else', () => {
++        expect(deriveSessionKey('s1')).toBe(deriveSessionKey('s1'));
++        expect(deriveSessionKey('s1')).not.toBe(deriveSessionKey('s2'));
+     });
+ 
+-    it('does NOT depend on the reply — that is the whole point', () => {
+-        // If the reply were part of the key, a refused turn would mint a new
+-        // key on its next reply and could be refused forever.
+-        const a = deriveTurnKey('s', 'prompt');
+-        const b = deriveTurnKey('s', 'prompt');
+-        expect(a).toBe(b);
++    it('the marker matches only the ordinal it was written for', () => {
++        const dir = makeWorkspace();
++        const key = deriveSessionKey('s1');
++        fs.mkdirSync(path.join(dir, 'agents', 'runtime', 'state', 'turn-end-gate'), {
++            recursive: true,
++        });
++        fs.writeFileSync(
++            path.join(dir, 'agents', 'runtime', 'state', 'turn-end-gate', `${key}.json`),
++            JSON.stringify({ refused_turn: 3, detector: 'promissory' }),
++        );
++        expect(alreadyRefusedTurn(dir, key, 3)).toBe(true);
++        expect(alreadyRefusedTurn(dir, key, 4)).toBe(false);
++        // A different session never reads another session's marker.
++        expect(alreadyRefusedTurn(dir, deriveSessionKey('s2'), 3)).toBe(false);
++    });
++
++    it('absent or malformed state means not-refused — fail-open, never a wedge', () => {
++        const dir = makeWorkspace();
++        const key = deriveSessionKey('s1');
++        expect(alreadyRefusedTurn(dir, key, 1)).toBe(false);
++        fs.mkdirSync(path.join(dir, 'agents', 'runtime', 'state', 'turn-end-gate'), {
++            recursive: true,
++        });
++        fs.writeFileSync(
++            path.join(dir, 'agents', 'runtime', 'state', 'turn-end-gate', `${key}.json`),
++            '{ not json',
++        );
++        expect(alreadyRefusedTurn(dir, key, 1)).toBe(false);
++    });
++});
++
++describe('R2 finding 4 — a stated refusal to act is not a promise', () => {
++    // Each of these fired on the shipped regex, whose lookahead excluded only
++    // the literal `nicht`. All four are live false refusals on a BLOCKING
++    // guard: none is caught by HANDBACK and none carries a `?`.
++    const NEGATIONS = [
++        'Fertig.\n\nIch werde nichts anfassen.',
++        'Fertig.\n\nIch werde keine Tests schreiben.',
++        'Fertig.\n\nIch werde niemals raten.',
++        'Fertig.\n\nIch werde nie ungefragt pushen.',
++        'Fertig.\n\nIch werde gefragt, ob die Regeln passen.',
++    ];
++
++    it('does not fire on any of them', () => {
++        const wrong = NEGATIONS.filter((r) => detectPromissory(r) !== null);
++        expect(wrong, `false refusals: ${JSON.stringify(wrong, null, 2)}`).toEqual([]);
++    });
++
++    it('still fires on the affirmative form — the fix must not disarm the detector', () => {
++        expect(detectPromissory('Fertig.\n\nIch werde jetzt die Tests schreiben.')).not.toBeNull();
++    });
++});
++
++describe('R2 finding 5 — CommonMark allows a LONGER closing fence', () => {
++    it('a longer closing fence does not delete the reply tail', () => {
++        // Pass 1 used a `\1` backreference, so a three-tilde block closed with
++        // four did not match, and the greedy tail-drop then removed everything
++        // after it — including the closing paragraph detector A must read.
++        const reply = ['Vorher.', '~~~ts', 'const x = 1;', '~~~~', '', 'Ich melde mich, sobald die CI grün ist.'].join('\n');
++        expect(visibleProse(reply)).toContain('Ich melde mich');
++        expect(visibleProse(reply)).not.toContain('const x');
++        expect(detectPromissory(reply)).not.toBeNull();
++    });
++
++    it('same for a three-backtick block closed with six', () => {
++        const reply = ['Vorher.', '```ts', 'const y = 2;', '``````', '', 'Als nächstes baue ich den Rest.'].join('\n');
++        expect(visibleProse(reply)).toContain('Als nächstes');
++        expect(visibleProse(reply)).not.toContain('const y');
++    });
++
++    it('a genuinely unterminated fence still drops the tail', () => {
++        const prose = visibleProse('Vorher.\n\n```ts\nconst leak = "LEAK_MUST_VANISH";');
++        expect(prose).toContain('Vorher.');
++        expect(prose).not.toContain('LEAK_MUST_VANISH');
+     });
+ });
