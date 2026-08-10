@@ -97,6 +97,21 @@ and `agents/settings/contexts/orchestration-default-flip-verdict.md`).
   2026-07-08: adoption claim, kept separate from this internal telemetry
   work). Its Phase 2 inherits this roadmap's telemetry blocker.
 
+## Risk Register
+<!-- risk-review: v1 | reviewed: 2026-08-10 | reviewer: claude/host -->
+
+Added 2026-08-10 with the measured telemetry state below; every row is a way the
+new numbers can be **mis**read, because a cleared count on a blocker that still
+stands is exactly the shape that invites a wrong resume.
+
+| Rank | Item | Risk type | Description | Mitigation | Anchored under |
+|------|------|-----------|-------------|------------|----------------|
+| 1 | The cleared line count is read as "unblocked" | implementation | The blocker's literal condition (≥ 20 lines) is met at 99, so a screen that reads only the resolution line concludes Phase 1 is resumable and runs Step 2 against settings arms the tree deleted | The blocker records count-met / value-not in the same block as the condition, and Step 2 carries its own premise-stale note naming the deleted keys | Phase 1 |
+| 2 | The null value fields are "fixed" by emitting a fabricated delta | product | `token_delta: 0` looks like a bug, and the cheapest way to make it non-zero is to compute a number the layer cannot source — which would put manufactured evidence into a published aggregate | The hook's own reasoning (no post-hoc baseline; absolute cost rides `dispatch_tokens` on sync completions only) is quoted at the acceptance criterion, so the honest path is a host probe, not an emitter edit | Acceptance criteria |
+| 3 | The pre-registered criterion is re-scoped by whoever measured it | product | Once the measurement fails, rewriting the criterion to what the data can support is the `evaluator-independence` failure — the author of the work grading it | The end-state note states re-scoping is a maintainer act and names what a re-scope would have to concede (the net-delta claim as an explicit non-claim) | Acceptance criteria |
+| 4 | The aggregate keeps being read as a value verdict | product | `orchestration_savings_report` currently prints a net of tokens *added* at a 1 % measured share, assembled from one July line; quoted without provenance it reads as evidence that orchestration loses | The blocker records the field-level nulls and the n=1 provenance, so any figure taken from that report carries its own disclaimer | Phase 2 |
+| 5 | More usage is mistaken for progress | implementation | The obvious response to a blocked measurement is to accumulate more dispatches, which cannot help while every line's value fields are null by construction | The blocker states plainly that raising the line count will not move the exit criterion | Phase 1 |
+
 ## Acceptance Criteria
 
 - [ ] A real orchestrated dispatch emits a captured, reportable telemetry line with a sourced `token_delta`; `breachedGuardrails` reads live telemetry.
