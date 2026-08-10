@@ -11,6 +11,16 @@ description: Use before declaring a feature done or a PR ready. Audits that no m
 # reviewer-tier-quality-floor comparison (road-to-token-economy-dispatch
 # Phase 5.3) — never downshift this by hand-feel.
 model_tier: inherit
+# `Bash` stays UNSCOPED, deliberately, now that the schema can express
+# `Bash(npm test:*)`. Step 3 of the procedure below is "find evidence the real
+# path executed" — against whatever dependency and whatever runner the consumer
+# project happens to use. A portable suite cannot enumerate those command
+# families, and a scope that guesses wrong makes the validator report a missing
+# run it was merely forbidden to attempt: the worst failure available to a gate
+# whose output is a READY line. Read/Grep/Glob are read-only and the body
+# forbids modifying code. Reviewed against tool-safety Least Agency — the
+# narrowest grant that still satisfies the task, which is not the same as the
+# narrowest grant.
 tools:
   - Read
   - Grep

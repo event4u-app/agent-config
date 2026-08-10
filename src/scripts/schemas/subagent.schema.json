@@ -49,9 +49,10 @@
       "uniqueItems": true,
       "items": {
         "type": "string",
-        "enum": ["Read", "Write", "Edit", "Grep", "Glob", "Bash", "WebFetch", "WebSearch", "NotebookEdit"]
+        "pattern": "^(Read|Write|Edit|Grep|Glob|Bash|WebFetch|WebSearch|NotebookEdit)(\\([^()]+\\))?$"
       },
-      "description": "Enum-validated at build time against the Claude Code tool set, so a bad value fails CI rather than producing broken `.claude/agents/` YAML in the user's IDE."
+      "description": "A tool grant: one of the Claude Code tool names, optionally scoped — `Bash(npm test:*)` grants one command family where a bare `Bash` grants a shell. The base name stays closed, so a typo still fails CI rather than producing broken `.claude/agents/` YAML in the user's IDE; only the optional `(...)` suffix is new. Prefer the narrowest grant the task actually needs, per tool-safety Least Agency.",
+      "$comment": "Was a bare enum, which made the scoped-grant syntax `tool-safety` prescribes literally inexpressible here — a schema forbidding what the rule asks for. skill.schema.json's allowed_tools permits that syntax by validating nothing at all; this pattern permits it while keeping the base-name guarantee that made the enum worth having."
     },
     "trust": {
       "type": "object",
