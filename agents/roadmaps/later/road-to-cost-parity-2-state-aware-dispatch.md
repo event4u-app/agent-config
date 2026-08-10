@@ -1,6 +1,6 @@
 ---
 complexity: lightweight
-status: ready
+status: later
 execution:
   mode: phase-checkpoints
 ---
@@ -13,6 +13,18 @@ execution:
 > builds that resolver and records its snapshots, and stops there: the three
 > modifier rows the source draft wanted are each forbidden by a standing
 > decision, named below rather than attempted.
+
+> **Parked in `later/` (2026-08-10 — AI-council convergence, maintainer pick).**
+> Both council members independently recommended deferring this part until a
+> blocked roadmap clears. Its own gate is the orchestration claim queue:
+> `road-to-orchestration-scope-decision.md` holds the rule that exactly one
+> orchestration claim is open at a time and resumes at ≥ 20 real orchestration
+> audit lines, of which 1 exists.
+> **Resume when EITHER:** (a) the orchestration claim queue is free and the
+> ≥ 20-audit-line bar is met, or (b) the maintainer authorizes Phase 1 alone —
+> the resolver plus the record-only soak change no verdict by construction and
+> are buildable today against substrates that already ship, so they do not
+> require the queue; only a later comparison would.
 
 ## Goal
 
@@ -334,18 +346,18 @@ remembers deciding.
   subagent makes sense — and if it does not get better, drop it"* (external
   LLM ideation), consumed inbox
   `agents/tmp.old/better-subagent-orchestration.txt`; anonymized per
-  [`source-confidentiality`](../../src/rules/source-confidentiality.md).
+  [`source-confidentiality`](../../../src/rules/source-confidentiality.md).
   Link via `src/scripts/_lib/link_crypto.ts decrypt`:
   ENC1:Lbi3WHnpd3ev5lRuiUUn+k5gOvOKcewkScdjaTgsn73kA1j8QvnyXDJH2Is2M7smNnrhHAAAYHy+FO3kpJcOaQ==
 - Gap-table: see
-  [`road-to-cost-parity-0-program.md`](road-to-cost-parity-0-program.md)
+  [`road-to-cost-parity-0-program.md`](../road-to-cost-parity-0-program.md)
   § Context. The directive's own condition — *"if it does not get better,
   drop it"* — is honoured directly: four of the draft's five components are
   dropped in Phase 4 with the lock that forbids each, and the one that
   survives ships behind a record-only soak.
 - Council: **anthropic/claude-sonnet-4-5 + openai/gpt-4o, 2026-08-10, 2 rounds**
   (`--prompt-mode pr`). Convergence is inlined once, in
-  [`road-to-cost-parity-0-program.md`](road-to-cost-parity-0-program.md)
+  [`road-to-cost-parity-0-program.md`](../road-to-cost-parity-0-program.md)
   § Provenance, rather than restated per sibling. What it changed here is marked
   in the phases above; what it recorded and did **not** apply is the
   family-scope question (open parts 0 and 3 now, defer 1 and 2), which is the

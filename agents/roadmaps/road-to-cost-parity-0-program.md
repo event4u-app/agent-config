@@ -9,9 +9,10 @@ execution:
 
 > The typical session ends at 519k tokens of context and runs its second half
 > at ~2× per-call cost. This roadmap fixes the target, records what the
-> per-host rule payload actually is, and orders the three sibling roadmaps —
-> after cutting the ~60 % of the source drafts that was already built,
-> already parked, or forbidden by a standing lock.
+> per-host rule payload actually is, and orders the family — two parts active,
+> two parked in `later/` on the council's convergence — after cutting the ~60 %
+> of the source drafts that was already built, already owned, or forbidden by a
+> standing lock.
 
 ## Goal
 
@@ -39,8 +40,8 @@ The headline is how little survived.
 | --- | --- | --- |
 | dispatch economy | **87 % already shipped** — 27 of 31 steps are `[x]` on `archive/road-to-token-economy-dispatch.md` (PR #1237) or already parked in `later/road-to-token-economy-dispatch-followup.md` | `road-to-cost-parity-3-handoff-envelope.md` (4 surviving steps) |
 | cost-quality parity | **Premise refuted.** It sequenced four "open" roadmaps: three are archived and two of the three names never existed. Its WIP cap, metric-expiry mechanic and release dimension are each separately blocked (below) | this file — target table + ordering only |
-| estate maintenance | **~40 % already covered or done, ~25 % collides with maintainer-blocked work.** Its only hard prerequisite is `never-true` *and* relitigates a standing refusal | `road-to-cost-parity-1-rule-payload-diet.md` (the unowned residue) |
-| state-aware dispatch | **Heavy overlap.** Its central premise ("the ladder is shape-only") is false, and 3 of its 5 components are lock-conflicted | `road-to-cost-parity-2-state-aware-dispatch.md` (the resolver only) |
+| estate maintenance | **~40 % already covered or done, ~25 % collides with maintainer-blocked work.** Its only hard prerequisite is `never-true` *and* relitigates a standing refusal | `later/road-to-cost-parity-1-rule-payload-diet.md` (the unowned residue, parked) |
+| state-aware dispatch | **Heavy overlap.** Its central premise ("the ladder is shape-only") is false, and 3 of its 5 components are lock-conflicted | `later/road-to-cost-parity-2-state-aware-dispatch.md` (the resolver only, parked) |
 
 ### CUT — verified already-built, already-parked, or lock-forbidden
 
@@ -204,15 +205,19 @@ file is the baseline.
 
 ## Phase 2 — the execution order across the family
 
-- [ ] 2.1 Record the committed order, and that it points at real owners:
-      **(a)** part 3 (handoff envelope) Phase 1 first — a located
-      one-module defect with fixtures, cheapest real win in the family;
-      **(b)** part 1 (rule-payload diet) Phase 1 census, which is the only
-      unowned estate work;
-      **(c)** part 2 (state-aware dispatch) Phase 1 resolver, buildable now
-      against substrates that already exist;
-      **(d)** everything else in parts 1 and 2 waits on the blockers those
-      files name — visible sequencing, never silent waiting.
+- [ ] 2.1 Record the committed order. Only two members of this family are
+      **active**; the council converged on that split and the maintainer
+      applied it:
+      **(a)** part 3 (handoff envelope) Phase 1 first — a located one-module
+      defect with fixtures, the cheapest real win in the family;
+      **(b)** this roadmap's Phase 1 (the target registration) and Phase 3
+      (the three triage corrections), both unblocked;
+      **(c)** parts 1 and 2 are parked in
+      `agents/roadmaps/later/` with explicit resume conditions — part 1 on the
+      utilization sweep, the live trigger eval, or a standalone-pilot
+      authorization; part 2 on the orchestration claim queue or a Phase-1-only
+      authorization. Neither is backlog the dashboard will try to execute, and
+      neither rots: each names when it comes back.
 - [ ] 2.2 Record what this family does **not** own, with the owner named:
       command-surface consolidation → `road-to-surface-consolidation.md`
       (active, 1 open step, time-gated); `tier:` field removal →
@@ -321,8 +326,9 @@ listed here rather than in a sibling because none belongs to a programme.
       files returns only intentional historical references.
 - [ ] Every CUT entry in the Context section cites the lock or evidence file
       that justifies it — verifiable by following each path.
-- [ ] The family's three siblings exist and each carries its own blockers;
-      no sibling plans a step this file lists under Phase 4.
+- [ ] The family's three siblings exist and each carries its own blockers; the
+      two parked ones live under `later/` with `status: later` and a resume
+      condition, and no sibling plans a step this file lists under Phase 4.
 
 ## Provenance
 
@@ -346,8 +352,9 @@ listed here rather than in a sibling because none belongs to a programme.
   - **Family scope — both members: open parts 0 and 3 now, defer parts 1 and 2**
     until one blocked roadmap clears. Rationale: a backlog that is ~60 % blocked
     is a diagnosis rather than a number, and shipping the two unblocked parts
-    proves the queue moves before blocked scope is added. Recorded here as a
-    maintainer decision, **not applied** — all four are open in this cut.
+    proves the queue moves before blocked scope is added. **Applied** — the
+    maintainer took this option, so parts 1 and 2 ship parked in `later/` with
+    resume conditions and only parts 0 and 3 are active.
   - **Lock deferrals — both: grounded, obey them**, with one live exception both
     raised independently: a *brake* and a *dispatch-probability weight* may not
     be the same shape, since the contract forbids blocking work to save money
@@ -366,6 +373,6 @@ listed here rather than in a sibling because none belongs to a programme.
     (part 2 § 1.3), replace the ambiguous no-new-prose promise with a byte
     ceiling (part 1 § 6.8), and measure the norm-line payload delta before
     Phase 3 continues (part 1 § 3.5c).
-  - One member's summary verdict was `REQUEST_CHANGES` on opening all four. The
-    technical changes are applied; the family-scope question is the
-    maintainer's and is open.
+  - One member's summary verdict was `REQUEST_CHANGES` on opening all four.
+    Both the technical changes and the scope verdict are applied, so the
+    condition that verdict named is met.
