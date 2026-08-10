@@ -16,7 +16,8 @@ A single JSON object, `schema_version: 1`:
   "parallel_spawn": false,
   "status_polling": false,
   "separate_quota_pool": false,
-  "agent_teams": false
+  "agent_teams": false,
+  "worker_respawn": false
 }
 ```
 
@@ -64,10 +65,40 @@ to in-session execution rather than attempting an unsupported primitive.
 | `status_polling` | bool | Monitoring running subagents (progress / completion checks). `false` → fire-and-collect only, no mid-run polling. |
 | `separate_quota_pool` | bool | Quota-arbitrage bonus (Phase 2) — subagents draw from a distinct quota pool than the session. `false` → assume shared quota. |
 | `agent_teams` | bool | Claude Code's experimental multi-instance Agent Teams primitive (`CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS`). `false` → the [judgment ladder](auto-dispatch-classification.md#judgment-ladder-phase-2--road-to-always-on-orchestration)'s rung 3 (team) degrades to parallel subagents, recorded as `degraded_from: 3`. |
+| `worker_respawn` | bool | The host can kill a running worker and spawn a fresh one that continues the SAME task mid-flight. `false` on every host today, deliberately — set `true` only once OBSERVED, never by inference from spawning and killing existing separately. `false` → degrade to stop-loss behaviour, loudly. |
 
 A field being `true` is a **precondition**, not a mandate: `parallel_spawn:
 true` permits concurrency but the dispatch cap still applies (see
 `subagents.max_parallel` in subagent-configuration.md).
+
+## Provenance — "probe" is a misnomer for five of the six fields
+
+```
+NEVER READ A false FIELD AS "THIS HOST CANNOT DO IT".
+A REGISTRY ROW IS A COMMITTED OBSERVATION, NOT A LIVE CHECK.
+A default FIELD MEANS NOBODY ANSWERED — RENDERED AS false BECAUSE THAT IS THE
+SAFE DEGRADATION, NOT BECAUSE ANYTHING WAS MEASURED.
+```
+
+The six booleans look alike and are not. `HOST_CAPABILITY_REGISTRY` holds
+exactly one row today, so on every other host **all six** fields are the safe
+default — and `agent_teams` is the only field any live check touches. The name
+`probeHostCapabilities` says "detected" about values that were mostly asserted
+at authoring time.
+
+`describeHostCapabilities(hostId)` returns the same manifest plus a
+`sources` map naming, per field, which of the three answered:
+
+| Source | Means | Re-checked at run time |
+|---|---|---|
+| `registry` | this repo observed the capability on this host once and committed it to the table | no |
+| `live-probe` | established in THIS process, from the environment | yes |
+| `default` | nothing answered; `SAFE_DEFAULT` applied | n/a |
+
+`agent-config routing:doctor [--platform <host>]` prints it. Read the
+provenance before treating a `false` as a host limitation: on an unrecognized
+host every field is `default`, which is an absence of knowledge and not a
+measurement.
 
 ## Related
 

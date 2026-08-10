@@ -6,10 +6,10 @@
 
 ## Overall
 
-**171 / 287 steps done · 60%**
+**175 / 287 steps done · 61%**
 
 ```text
-████████████████████████░░░░░░░░░░░░░░░░   60%
+████████████████████████░░░░░░░░░░░░░░░░   61%
 ```
 
 ## Open roadmaps
@@ -17,7 +17,7 @@
 | # | Roadmap | Phases | Steps | Open | Done | Deferred | Cancelled | Blocker | Progress |
 |---|---|---:|---:|---:|---:|---:|---:|---:|---|
 | 1 | [road-to-always-on-orchestration.md](roadmaps/road-to-always-on-orchestration.md) | 7 | 36 | 1 | 35 | 0 | 0 | [5](#blockers-road-to-always-on-orchestration) | ██████████ 97% |
-| 2 | [road-to-capability-answerability.md](roadmaps/road-to-capability-answerability.md) | 4 | 19 | 5 | 14 | 0 | 0 | [1](#blockers-road-to-capability-answerability) | ███████░░░ 74% |
+| 2 | [road-to-capability-answerability.md](roadmaps/road-to-capability-answerability.md) | 4 | 19 | 1 | 18 | 0 | 0 | [1](#blockers-road-to-capability-answerability) | ██████████ 95% |
 | 3 | [road-to-carrier-layer-convergence.md](roadmaps/road-to-carrier-layer-convergence.md) | 3 | 8 | 2 | 3 | 0 | 3 | [1](#blockers-road-to-carrier-layer-convergence) | ██████░░░░ 60% |
 | 4 | [road-to-ci-native-release-first-run.md](roadmaps/road-to-ci-native-release-first-run.md) | 2 | 8 | 8 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 5 | [road-to-cost-parity-0-program.md](roadmaps/road-to-cost-parity-0-program.md) | 4 | 23 | 23 | 0 | 0 | 0 | [1](#blockers-road-to-cost-parity-0-program) | ░░░░░░░░░░ 0% |
@@ -104,29 +104,33 @@
 
 ### [road-to-capability-answerability.md](roadmaps/road-to-capability-answerability.md)
 
-**Road to capability answerability — twelve places the agent must guess whether a capability exists** — 14 / 19 done (74%)
+**Road to capability answerability — twelve places the agent must guess whether a capability exists** — 18 / 19 done (95%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
-| 1 | The worst instance, once its semantics are decided | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
+| 1 | The worst instance, once its semantics are decided | ✅ done | 0 | 3 | 0 | 0 | 100% |
 | 2 | Answerability for the gaps with no probe at all | ✅ done | 0 | 4 | 0 | 0 | 100% |
 | 3 | Make the answers reachable without knowing they exist | ✅ done | 0 | 3 | 0 | 0 | 100% |
-| 4 | The adjacent path defects that make the intuitive file wrong | 🟡 in progress | 2 | 7 | 0 | 0 | 78% |
+| 4 | The adjacent path defects that make the intuitive file wrong | 🟡 in progress | 1 | 8 | 0 | 0 | 89% |
 
 <a id="blockers-road-to-capability-answerability"></a>
 **Blockers**
 
-- **host-capability-default-flip** (owner: maintainer) — blocks Phase 1 (all steps)
+- **host-capability-default-flip** (owner: maintainer) — blocks the third acceptance criterion only. It no longer blocks 1.1, 1.2 or 1.3 — the decision those steps were waiting to *apply* has been taken and merged, so applying it is no longer a blocked act. Narrowed on measured evidence, not on judgement; the evidence is below.
   - **What to do:**
-    decide what an empty `host_capabilities: {}` means. The
-    template comment says "leave empty to let the agent resolve the manifest from
-    host knowledge"; the loader coerces every absent field to `false`, i.e. *no
-    capability*. Those are opposite semantics for the shipped default, and the
-    difference decides whether the subagent-orchestration layer is on or off for
-    every consumer. Options: make the empty case mean agent-resolved (behaviour
-    change on every install), keep all-false and correct the comment plus every
-    rule that reads the manifest, or add a third explicit state.
-  - **Resolved when:** the decision is recorded and the template comment, the loader, and the reading rules agree.
+    confirm (or reject) the supersession. The decision this blocker
+    asked for was made under `road-to-always-on-orchestration` Phase 1, which chose
+    the **second** of the three options this blocker itself listed — keep all-false,
+    correct the comment, fix every reader — and went further by deleting the
+    settings key outright. Measured on `origin/main` at `c3a30060a`:
+    `subagents.host_capabilities` is **absent from the shipped template** (the
+    template's own comment says it "was REMOVED" and that a leftover key from an
+    older install "is ignored"), absent from the settings schema, and absent from
+    the production code path (`probeHostCapabilities` resolves from a committed
+    host registry plus a live environment probe, and a test pins its arity at 1 so
+    no override parameter can return). There is no empty `host_capabilities: {}`
+    left to assign semantics to.
+  - **Resolved when:** the maintainer answers the scope question below. The original wording — "the decision is recorded and the template comment, the loader, and the reading rules agree" — is satisfied for production behaviour and, as of this change, for the documents that describe it.
 
 ### [road-to-carrier-layer-convergence.md](roadmaps/road-to-carrier-layer-convergence.md)
 

@@ -14,11 +14,16 @@
 // registry cases below lock that order; the end-to-end block feeds a
 // resolved manifest straight into `classifyTask` (auto_dispatch.ts) so the
 // activation gate itself — not just the manifest shape — is exercised.
+import fs from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+
 import { describe, expect, it } from 'vitest';
 
 import { afterEach, beforeEach } from 'vitest';
 
 import {
+    describeHostCapabilities,
     normalizeHostManifest,
     probeHostCapabilities,
     resolveHostCapabilities,
@@ -283,5 +288,139 @@ describe('probeHostCapabilities — registry merged with live environment facts'
     it('takes NO settings-derived override — probeHostCapabilities has no such parameter', () => {
         // Type-level proof: probeHostCapabilities(hostId) is single-arity.
         expect(probeHostCapabilities.length).toBe(1);
+    });
+});
+
+// road-to-capability-answerability Phase 1.2 — six booleans that look alike
+// and are not. A `false` from the safe default records "nobody answered";
+// a `false` from a registry row would record "checked, absent". Collapsing
+// the two is the defect the provenance map exists to stop.
+describe('describeHostCapabilities — per-field provenance', () => {
+    const SAVED = process.env.CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS;
+
+    beforeEach(() => {
+        delete process.env.CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS;
+    });
+
+    afterEach(() => {
+        if (SAVED === undefined) {
+            delete process.env.CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS;
+        } else {
+            process.env.CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS = SAVED;
+        }
+    });
+
+    it('attributes the registry row fields to `registry` and the rest to `default`', () => {
+        expect(describeHostCapabilities('claude').sources).toEqual({
+            subagent_spawn: 'registry',
+            parallel_spawn: 'registry',
+            status_polling: 'default',
+            separate_quota_pool: 'default',
+            agent_teams: 'default',
+            worker_respawn: 'default',
+        });
+    });
+
+    it('an unrecognized host attributes EVERY field to `default` — an absence of knowledge', () => {
+        const { manifest, sources } = describeHostCapabilities('some-unrecognized-host');
+        expect(Object.values(sources).every((s) => s === 'default')).toBe(true);
+        // The all-false values are the safe degradation, not a measurement —
+        // which is exactly why the provenance has to travel with them.
+        expect(manifest).toEqual(ALL_FALSE);
+    });
+
+    it('attributes agent_teams to `live-probe` only when the environment flag set it', () => {
+        expect(describeHostCapabilities('claude').sources.agent_teams).toBe('default');
+        process.env.CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS = '1';
+        expect(describeHostCapabilities('claude').sources.agent_teams).toBe('live-probe');
+        expect(describeHostCapabilities('claude').manifest.agent_teams).toBe(true);
+    });
+
+    it('a null / undefined host is `default` throughout, never a crash', () => {
+        for (const host of [null, undefined]) {
+            const { manifest, sources } = describeHostCapabilities(host);
+            expect(manifest).toEqual(ALL_FALSE);
+            expect(Object.values(sources).every((s) => s === 'default')).toBe(true);
+        }
+    });
+
+    it('the manifest half CANNOT drift from probeHostCapabilities — same host, same object', () => {
+        // Two readers of one fact disagreeing is worse than either answer:
+        // the provenance readout is the surface a user runs to check the
+        // value the delegation layer gated on, so it must BE that value.
+        for (const host of ['claude', 'cursor', 'some-unrecognized-host']) {
+            expect(describeHostCapabilities(host).manifest).toEqual(probeHostCapabilities(host));
+        }
+        process.env.CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS = 'on';
+        expect(describeHostCapabilities('claude').manifest).toEqual(probeHostCapabilities('claude'));
+    });
+});
+
+// road-to-capability-answerability Phase 1.3 — the template/loader half of
+// "the three agree" is already pinned elsewhere (`lint_no_activation_gates`
+// fails the build if the shipped template reintroduces a subagent activation
+// key, and routing_doctor + delegation_nudge_hook each pin that a leftover
+// `subagents.host_capabilities` override no longer applies). What NOTHING
+// pinned is the drift that actually shipped: the interface declared six
+// capability fields while the contract documented five, so `worker_respawn`
+// existed in code and in no document a reader would consult.
+describe('host-capability contract ↔ interface parity', () => {
+    const HERE = path.dirname(fileURLToPath(import.meta.url));
+    const REPO_ROOT = path.resolve(HERE, '..', '..');
+    const SOURCE = path.join(REPO_ROOT, 'src/scripts/_lib/host_capability.ts');
+    const CONTRACT = path.join(
+        REPO_ROOT,
+        'src/agent-src/contexts/execution/host-capability-manifest.md',
+    );
+
+    /** First capture group of `re` in `text`, or a failed expectation naming what was missing. */
+    function capture(text: string, re: RegExp, what: string): string {
+        const found = re.exec(text)?.[1];
+        // A parse that finds nothing must fail loudly, never pass as "no drift".
+        expect(found, `${what} not found`).toBeTypeOf('string');
+        return found as string;
+    }
+
+    /** Capability fields as DECLARED by the interface — the anchor everything mirrors. */
+    function declaredFields(): string[] {
+        const body = capture(
+            fs.readFileSync(SOURCE, 'utf-8'),
+            /export interface HostCapabilityManifest \{([\s\S]*?)\n\}/,
+            'the HostCapabilityManifest interface',
+        );
+        const fields = [...body.matchAll(/^ {4}(\w+):\s*boolean;/gm)].flatMap((m) =>
+            m[1] === undefined ? [] : [m[1]],
+        );
+        expect(fields.length).toBeGreaterThan(0);
+        return fields;
+    }
+
+    it('every declared field has a row in the contract Fields table', () => {
+        const contract = fs.readFileSync(CONTRACT, 'utf-8');
+        const documented = [...contract.matchAll(/^\|\s*`(\w+)`\s*\|\s*bool\s*\|/gm)].flatMap((m) =>
+            m[1] === undefined ? [] : [m[1]],
+        );
+        expect(documented.length).toBeGreaterThan(0);
+        expect([...documented].sort()).toEqual([...declaredFields()].sort());
+    });
+
+    it('every declared field appears in the contract schema example', () => {
+        const example = capture(
+            fs.readFileSync(CONTRACT, 'utf-8'),
+            /```json\n([\s\S]*?)```/,
+            'the json schema example',
+        );
+        const parsed = JSON.parse(example) as Record<string, unknown>;
+        for (const field of declaredFields()) {
+            expect(Object.keys(parsed)).toContain(field);
+        }
+    });
+
+    it('the runtime provenance map covers exactly the declared fields', () => {
+        // Guards the second drift axis: the field list the provenance walk
+        // uses is hand-written, so it can fall behind the interface too.
+        expect(Object.keys(describeHostCapabilities('claude').sources).sort()).toEqual(
+            [...declaredFields()].sort(),
+        );
     });
 });
