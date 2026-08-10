@@ -1,0 +1,3151 @@
+diff --git a/agents/roadmaps-progress.md b/agents/roadmaps-progress.md
+index 5dc963fc3f9a0d9e44931f9698b57bd3eb13e370..e089011c030c76c4738da0a2113bd77ebafbe9a0 100644
+--- a/agents/roadmaps-progress.md
++++ b/agents/roadmaps-progress.md
+@@ -2,11 +2,11 @@
+ 
+ > Auto-generated — do not edit. Regenerate with `task roadmap-progress` or by running the `update_roadmap_progress` script for your install; rewritten on every roadmap create / execute / completion change (timestamp lives in git history).
+ >
+-> 21 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **25** open blockers, **8** need you → `agent-config gates`
++> 20 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **24** open blockers, **8** need you → `agent-config gates`
+ 
+ ## Overall
+ 
+-**189 / 294 steps done · 64%**
++**168 / 263 steps done · 64%**
+ 
+ ```text
+ ██████████████████████████░░░░░░░░░░░░░░   64%
+@@ -19,24 +19,23 @@
+ | 1 | [road-to-always-on-orchestration.md](roadmaps/road-to-always-on-orchestration.md) | 7 | 36 | 1 | 35 | 0 | 0 | [5](#blockers-road-to-always-on-orchestration) | ██████████ 97% |
+ | 2 | [road-to-capability-answerability.md](roadmaps/road-to-capability-answerability.md) | 4 | 19 | 5 | 14 | 0 | 0 | [1](#blockers-road-to-capability-answerability) | ███████░░░ 74% |
+ | 3 | [road-to-ci-native-release-first-run.md](roadmaps/road-to-ci-native-release-first-run.md) | 2 | 8 | 8 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+-| 4 | [road-to-conformance-round5.md](roadmaps/road-to-conformance-round5.md) | 6 | 31 | 10 | 21 | 0 | 0 | [1](#blockers-road-to-conformance-round5) | ███████░░░ 68% |
+-| 5 | [road-to-council-blind-review.md](roadmaps/road-to-council-blind-review.md) | 3 | 6 | 2 | 3 | 0 | 1 | 0 | ██████░░░░ 60% |
+-| 6 | [road-to-gated-reach-followup.md](roadmaps/road-to-gated-reach-followup.md) | 1 | 12 | 12 | 0 | 0 | 0 | [1](#blockers-road-to-gated-reach-followup) | ░░░░░░░░░░ 0% |
+-| 7 | [road-to-inbox-harvest-2026-08.md](roadmaps/road-to-inbox-harvest-2026-08.md) | 5 | 21 | 1 | 11 | 4 | 5 | [2](#blockers-road-to-inbox-harvest-2026-08) | █████████░ 92% |
+-| 8 | [road-to-kernel-question-triangle.md](roadmaps/road-to-kernel-question-triangle.md) | 1 | 3 | 3 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+-| 9 | [road-to-maintainer-bus-factor.md](roadmaps/road-to-maintainer-bus-factor.md) | 4 | 12 | 5 | 7 | 0 | 0 | [1](#blockers-road-to-maintainer-bus-factor) | ██████░░░░ 58% |
+-| 10 | [road-to-orchestration-scope-decision.md](roadmaps/road-to-orchestration-scope-decision.md) | 4 | 10 | 6 | 4 | 0 | 0 | [1](#blockers-road-to-orchestration-scope-decision) | ████░░░░░░ 40% |
+-| 11 | [road-to-rule-coherence-followup.md](roadmaps/road-to-rule-coherence-followup.md) | 5 | 9 | 8 | 1 | 0 | 0 | [2](#blockers-road-to-rule-coherence-followup) | █░░░░░░░░░ 11% |
+-| 12 | [road-to-scale-history-bench-run.md](roadmaps/road-to-scale-history-bench-run.md) | 1 | 2 | 2 | 0 | 0 | 0 | [1](#blockers-road-to-scale-history-bench-run) | ░░░░░░░░░░ 0% |
+-| 13 | [road-to-scripts-settings-defaults.md](roadmaps/road-to-scripts-settings-defaults.md) | 2 | 4 | 4 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+-| 14 | [road-to-skill-description-measurement.md](roadmaps/road-to-skill-description-measurement.md) | 1 | 4 | 4 | 0 | 0 | 0 | [1](#blockers-road-to-skill-description-measurement) | ░░░░░░░░░░ 0% |
+-| 15 | [road-to-skill-ecosystem-gate-integrity.md](roadmaps/road-to-skill-ecosystem-gate-integrity.md) | 7 | 43 | 3 | 40 | 0 | 0 | [1](#blockers-road-to-skill-ecosystem-gate-integrity) | █████████░ 93% |
+-| 16 | [road-to-solution-minimalism.md](roadmaps/road-to-solution-minimalism.md) | 4 | 36 | 10 | 25 | 0 | 1 | [1](#blockers-road-to-solution-minimalism) | ███████░░░ 71% |
+-| 17 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 6 | 3 | 0 | 0 | [1](#blockers-road-to-subagent-value-realization-followup) | ███░░░░░░░ 33% |
+-| 18 | [road-to-surface-consolidation.md](roadmaps/road-to-surface-consolidation.md) | 3 | 14 | 1 | 12 | 1 | 0 | [2](#blockers-road-to-surface-consolidation) | █████████░ 92% |
+-| 19 | [road-to-tier-removal.md](roadmaps/road-to-tier-removal.md) | 4 | 8 | 2 | 6 | 0 | 0 | [1](#blockers-road-to-tier-removal) | ████████░░ 75% |
+-| 20 | [road-to-ui-track-integrity-followup.md](roadmaps/road-to-ui-track-integrity-followup.md) | 1 | 10 | 10 | 0 | 0 | 0 | [2](#blockers-road-to-ui-track-integrity-followup) | ░░░░░░░░░░ 0% |
+-| 21 | [road-to-worktree-hygiene.md](roadmaps/road-to-worktree-hygiene.md) | 1 | 9 | 2 | 7 | 0 | 0 | [1](#blockers-road-to-worktree-hygiene) | ████████░░ 78% |
++| 4 | [road-to-council-blind-review.md](roadmaps/road-to-council-blind-review.md) | 3 | 6 | 2 | 3 | 0 | 1 | 0 | ██████░░░░ 60% |
++| 5 | [road-to-gated-reach-followup.md](roadmaps/road-to-gated-reach-followup.md) | 1 | 12 | 12 | 0 | 0 | 0 | [1](#blockers-road-to-gated-reach-followup) | ░░░░░░░░░░ 0% |
++| 6 | [road-to-inbox-harvest-2026-08.md](roadmaps/road-to-inbox-harvest-2026-08.md) | 5 | 21 | 1 | 11 | 4 | 5 | [2](#blockers-road-to-inbox-harvest-2026-08) | █████████░ 92% |
++| 7 | [road-to-kernel-question-triangle.md](roadmaps/road-to-kernel-question-triangle.md) | 1 | 3 | 3 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
++| 8 | [road-to-maintainer-bus-factor.md](roadmaps/road-to-maintainer-bus-factor.md) | 4 | 12 | 5 | 7 | 0 | 0 | [1](#blockers-road-to-maintainer-bus-factor) | ██████░░░░ 58% |
++| 9 | [road-to-orchestration-scope-decision.md](roadmaps/road-to-orchestration-scope-decision.md) | 4 | 10 | 6 | 4 | 0 | 0 | [1](#blockers-road-to-orchestration-scope-decision) | ████░░░░░░ 40% |
++| 10 | [road-to-rule-coherence-followup.md](roadmaps/road-to-rule-coherence-followup.md) | 5 | 9 | 8 | 1 | 0 | 0 | [2](#blockers-road-to-rule-coherence-followup) | █░░░░░░░░░ 11% |
++| 11 | [road-to-scale-history-bench-run.md](roadmaps/road-to-scale-history-bench-run.md) | 1 | 2 | 2 | 0 | 0 | 0 | [1](#blockers-road-to-scale-history-bench-run) | ░░░░░░░░░░ 0% |
++| 12 | [road-to-scripts-settings-defaults.md](roadmaps/road-to-scripts-settings-defaults.md) | 2 | 4 | 4 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
++| 13 | [road-to-skill-description-measurement.md](roadmaps/road-to-skill-description-measurement.md) | 1 | 4 | 4 | 0 | 0 | 0 | [1](#blockers-road-to-skill-description-measurement) | ░░░░░░░░░░ 0% |
++| 14 | [road-to-skill-ecosystem-gate-integrity.md](roadmaps/road-to-skill-ecosystem-gate-integrity.md) | 7 | 43 | 3 | 40 | 0 | 0 | [1](#blockers-road-to-skill-ecosystem-gate-integrity) | █████████░ 93% |
++| 15 | [road-to-solution-minimalism.md](roadmaps/road-to-solution-minimalism.md) | 4 | 36 | 10 | 25 | 0 | 1 | [1](#blockers-road-to-solution-minimalism) | ███████░░░ 71% |
++| 16 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 6 | 3 | 0 | 0 | [1](#blockers-road-to-subagent-value-realization-followup) | ███░░░░░░░ 33% |
++| 17 | [road-to-surface-consolidation.md](roadmaps/road-to-surface-consolidation.md) | 3 | 14 | 1 | 12 | 1 | 0 | [2](#blockers-road-to-surface-consolidation) | █████████░ 92% |
++| 18 | [road-to-tier-removal.md](roadmaps/road-to-tier-removal.md) | 4 | 8 | 2 | 6 | 0 | 0 | [1](#blockers-road-to-tier-removal) | ████████░░ 75% |
++| 19 | [road-to-ui-track-integrity-followup.md](roadmaps/road-to-ui-track-integrity-followup.md) | 1 | 10 | 10 | 0 | 0 | 0 | [2](#blockers-road-to-ui-track-integrity-followup) | ░░░░░░░░░░ 0% |
++| 20 | [road-to-worktree-hygiene.md](roadmaps/road-to-worktree-hygiene.md) | 1 | 9 | 2 | 7 | 0 | 0 | [1](#blockers-road-to-worktree-hygiene) | ████████░░ 78% |
+ 
+ ---
+ 
+@@ -137,29 +136,6 @@
+ | 1 | Post-merge dry-run verification (carried from parent Phase 3) | ⬜ not started | 1 | 0 | 0 | 0 | 0% |
+ | 2 | First real release + live drills (carried from parent Phase 4 + Phase 7) | ⬜ not started | 7 | 0 | 0 | 0 | 0% |
+ 
+-### [road-to-conformance-round5.md](roadmaps/road-to-conformance-round5.md)
+-
+-**Road to conformance round 5 — the first post-fix measurement, and what it says about mechanism class** — 21 / 31 done (68%)
+-
+-| # | Phase | State | Open | Done | Deferred | Cancelled | % |
+-|---|---|---|---:|---:|---:|---:|---:|
+-| 1 | Delivery integrity for model-carried obligations | ✅ done | 0 | 4 | 0 | 0 | 100% |
+-| 2 | Stop the two guards refusing read-only commands | ✅ done | 0 | 3 | 0 | 0 | 100% |
+-| 3 | The refusal class at `stop`, carrying two detectors | ⬜ not started | 6 | 0 | 0 | 0 | 0% |
+-| 4 | FC-7: the canary's name must come from the settings chain, not the environment | ✅ done | 0 | 2 | 0 | 0 | 100% |
+-| 5 | Honest downgrades and the published measurement | ✅ done | 0 | 5 | 0 | 0 | 100% |
+-| 6 | The language carrier: one real defect, one refused non-fix | 🟡 in progress | 4 | 7 | 0 | 0 | 64% |
+-
+-<a id="blockers-road-to-conformance-round5"></a>
+-**Blockers**
+-
+-- **stop-refusal-own-pr** (owner: maintainer) — blocks Phase 3 (3.1-3.6) and Phase 6.1
+-  - **What to do:**
+-    decide whether a concern that can refuse a turn-end ships at
+-    all; if yes, land it in its own PR with its own soak period, separate from the
+-    change set that carries Phases 1, 2, 4 and 5.
+-  - **Resolved when:** that decision is recorded and, if affirmative, the refusal concern has merged in its own PR.
+-
+ ### [road-to-council-blind-review.md](roadmaps/road-to-council-blind-review.md)
+ 
+ **Council Blind Review — three small deliberation-protocol adoptions from an external five-advisor prompt pattern** — 3 / 5 done (60%)
+diff --git a/agents/roadmaps/archive/road-to-conformance-round5.md b/agents/roadmaps/archive/road-to-conformance-round5.md
+new file mode 100644
+index 0000000000000000000000000000000000000000..b6a83e9138e3f547d775de1647d87ba7444e505f
+--- /dev/null
++++ b/agents/roadmaps/archive/road-to-conformance-round5.md
+@@ -0,0 +1,720 @@
++---
++complexity: structural
++status: ready
++---
++
++# Road to conformance round 5 — the first post-fix measurement, and what it says about mechanism class
++
++> Source: `/analyze:conformance --limit 30 --worktree`, run 2026-08-07 against the
++> maintainer's local transcript store. Deterministic scan (`conformance:behavior`)
++> plus three parallel subagent passes: transcript reading for un-gated classes,
++> a rule-delivery audit, and a decision-ledger pass over rounds 1-4 so nothing
++> already adjudicated is re-litigated.
++> Predecessors: `archive/road-to-agent-behavior-conformance.md` (rounds 1-4),
++> `archive/road-to-obligation-carrier-audit.md`.
++
++## Why this roadmap exists at all
++
++Rounds 1-4 shipped mechanisms for four failure classes and downgraded the
++enforcement claim on three more. **No round recorded a post-fix measurement.**
++The only post-fix numbers live in round-2 and round-3 commit messages, and
++`src/rules/session-canary.md:98-101` states the gap in its own text:
++
++> "The frequency join in `check_enforcement_coverage.ts` now reports the carrier
++> as covering the obligation — which is a claim about firing, not about
++> compliance. **Whether the miss rate actually falls is not yet measured, and
++> this paragraph will say so until a second audit runs.**"
++
++This is that second audit. Its central result is not a violation count. It is a
++comparison between two mechanism classes, and it points the opposite way from the
++hypothesis round 1 adopted.
++
++## Blockers
++
++### blocker: stop-refusal-own-pr
++
++- **Status:** **resolved 2026-08-09 — affirmative.** The maintainer decided that
++  a concern which can refuse a turn-end ships, in its own PR with its own soak.
++  This PR is that PR: it carries Phase 3 and 6.1 and nothing from Phases 1, 2, 4
++  or 5, which is the separation the blocker asked for.
++- **Owner:** was maintainer; decision made
++- **Blocks:** nothing further here. It also carried round 6 verbatim, so the same
++  decision unblocks that roadmap's Phase 6.2 — after this PR merges and soaks,
++  which is the blocker's own second condition and is not satisfied by writing
++  this line.
++- **What to do:** nothing further to decide. Shipped default-OFF
++  (`hooks.turn_end_gate.enabled`) on the round-6 council's advisory, so the
++  mechanism soaks before it binds; the re-entrancy shape the council flagged as
++  specified-but-unverified is stated and tested in § 3.1 **before** registration,
++  not after.
++- **Resolved when:** ~~that decision is recorded and, if affirmative, the refusal
++  concern has merged in its own PR.~~ Decision recorded; merge is this PR.
++
++Phase 3 registers the suite's **first** concern that can refuse a turn-end. This
++repo has already been bitten twice by hook-severity mistakes — an `EXIT_BLOCK`
++that collided with the dispatcher's ladder and reduced every refusal to advisory
++context, and an advisory `warn` that a host read as a hard deny. Both were found
++after merge. A concern that can refuse turn-ends has a blast radius of *every
++session*, which is precisely the shape this repo isolates into its own PR for
++kernel edits.
++
++So Phase 3 and the Phase 6.1 carrier it enables are **not** in the change set
++that lands Phases 1, 2, 4 and 5. That is a blast-radius decision, not a
++downgrade of the finding: FC-5 remains the highest-harm measured class in this
++audit, with the user's own correction as evidence.
++
++## The measurement
++
++`agent-config conformance:behavior --limit 30` over 27 sessions carrying assistant
++turns. Every violation record carries its own timestamp, so results split by
++whether the violating turn happened before or after the carrier merged
++(2026-08-06 11:03, PR #1190; refined 15:04 and 17:38).
++
++| class | carrier shipped | bound at | before merge | after merge | after final refinement |
++|---|---|---:|---:|---:|---:|
++| language mirror | advisory state injection | `user_prompt_submit` | 555 | 4 | **19** |
++| unauthorized irreversible git op | BLOCKING guard | `pre_tool_use` | 8 | 0 | **0** |
++| evaluator prompt pre-loading its verdict | BLOCKING guard | `pre_tool_use` | 1 | 0 | **0** |
++| verification claimed on empty output | advisory | `post_tool_use` | 4 | 0 | **1** |
++
++Corpus totals for the 30-session window, **after** the instrument correction
++described below: language-pin 578 · git-authorization 8 · vacuous-evidence 5 ·
++evidence-steering 1.
++
++**Both blocking carriers went to zero. Neither advisory carrier did.**
++
++### Three corrections this audit made to its own numbers
++
++The instrument lock says a roadmap whose central complaint is unverified numbers
++does not get to silently swap one of its own. So all four readings of the same
++phenomenon are published, with what changed between them.
++
++| reading | value | why it differs |
++|---:|---:|---|
++| round-1 first detector | 303 | classified the language of the most recent **user-role** entry, so an injected English skill body counted as the trigger. Scored the worst session — 136 of 136 English turns — at 3. |
++| round-1 final | 626 | skips injected bodies. Round 1's own window. |
++| round-5 first run | 641 | same detector, this round's overlapping-but-different 30-session window. |
++| **round-5 corrected** | **578** | a compaction SUMMARY arrives as a `user` entry, and the detector let its language set the pin. That is the **same** defect class as the skill body — non-chat content read as the trigger. Excluding it removes 63 flags whose German pin came from a summary rather than from the human. |
++
++The 578 is the number this roadmap stands behind. It is lower than 626 and 641,
++and lowering a violation count is exactly the move that deserves suspicion, so
++the reason is mechanical and checkable rather than a judgment: `isCompactSummary`
++is a boolean on the entry, and the exclusion is four lines
++(`conformance_scan.ts`, the `userText` branch).
++
++**A second correction, to the era split.** An earlier pass split the corpus by
++**session start** and concluded that all violations predated the fix, therefore
++that the fix could not be evaluated at all. Wrong: a session's file is appended
++to for as long as the session lives, so `b01eda65` starts 2026-07-29 and is last
++written 2026-08-07. Splitting by session start attributes a turn to the era its
++session *opened* in, not the era the turn *happened* in. The table above splits
++by each violation's own timestamp.
++
++### Instrument validation, before the numbers were believed
++
++Four flagged turns were read verbatim. All four are genuine user-visible English
++prose in a German-pinned session — not tool output, not quoted material:
++
++> "The trace hides the real cause." · "Regenerating does **not** bring them in"
++> · "Concurrency is ref-scoped, so that's not it either." · "You're right, and it
++> is not your PR — it is one specific event type."
++
++No false positives in the sample. Separately, the pin was confirmed **present**:
++57 pin injections are recorded in the session that carries all 23 post-merge
++violations. The failures happened with the carrier in context.
++
++### The shape of the surviving language failures
++
++The 23 post-merge violations fall in three runs inside one session. The scan now
++records, per violation, the number of assistant **prose** turns since the last
++genuine user prompt and whether a compaction boundary intervened:
++
++```
++run 1 (compaction intervened):  2, 3, 4, 5
++run 2 (pin present):            1, 2, 3, 4, 5, 6, 7, 8, 9, 10
++run 3 (pin present):            1, 2, 3, 4, 5, 6, 7, 8, 9
++```
++
++Two things follow, and they point in different directions.
++
++Round 1's model was attention decay at long distance — it argued the drift
++appears ~130 turns after the prompt and concluded that "any mechanism for
++intra-turn drift has to fire at tool-call cadence (`post_tool_use`) or it does
++not touch the observed failure at all." **The distance premise is refuted.** In
++runs 2 and 3 the very first prose turn after the prompt is already wrong, with
++the pin one turn away, and no run self-corrects. That is a latch, not a decay,
++and it is why this roadmap does not ship the same carrier at higher frequency:
++a pin at distance 1 is what already failed.
++
++Run 1 is a different failure wearing the same label, and only the machine-
++recorded compaction flag separates them. See Phase 6.
++
++(An earlier hand reconstruction in this session reported these runs starting at
++turn 4 with gaps of 4, 7, 12 … That counted every assistant entry, including
++tool-call-only turns; the instrument counts prose turns, which is the unit the
++rule is about. Both are published because the hand figure appears in this
++session's own record.)
++
++## What the un-gated classes look like now
++
++The scan is scoped, by a binding constraint inherited from round 1, to classes
++that actually have a mechanism. The classes left as prose were read by subagent
++pass instead, over the five highest-turn sessions. Every count below carries
++verbatim evidence in the audit record.
++
++| class | occurrences | ground truth |
++|---|---:|---|
++| promissory turn-closings (FC-5) | 20 across 3 sessions | explicit user correction, quoted below |
++| roadmap checkbox batching (FC-9) | 19 batch events across 5 sessions | one form is a blanket regex replace over a whole phase |
++| ask shape (FC-6) | 13 across 4 sessions | includes the dual-source form the Iron Law names, and a wrong-language label |
++| session canary (FC-7) | 24 of 29 task starts dropped | wrong name emitted twice; honesty clause fired **0** times |
++| cheap questions | 3 | one offered an option the agent's own guard refuses |
++
++The highest-signal evidence in the entire corpus is the user's own turn in
++`df8171b3`, 2026-08-06T06:22:50Z, after two consecutive turns ended on a promise:
++
++> "außerdem ist die ci noch immer rot, du arschloch. !!! ich sagte, fixe das und
++> warte so lange bis es ok ist. erst dann ist deine aufgabe erledigt"
++
++FC-5 was deferred in round 1. Round 2 retracted that deferral's reason as
++factually wrong and left no successor plan. This roadmap picks it up.
++
++The sharpest self-indictment is in `0571cbc6`, 2026-08-06T09:42:59Z — the agent
++named the classes and then kept emitting two of them in the same session:
++
++> "drei Mechanismen sind jetzt als *machbar und billig* belegt, aber nicht
++> gebaut: FC-5 (Stop-Block gegen „ich melde mich"), FC-9 (Batch-Flip), FC-10
++> (Kernel-Diff nach Bash)."
++
++## The delivery finding — why every enforcement claim rested on an assumption
++
++The suite documents that there is no runtime router: `docs/contracts/rule-router.md:234`
++states "nothing loads `dist/router.json` at runtime", and `:247-252` that a
++non-kernel rule activates by the model's judgment over text already in context.
++**Projection is therefore the only reach mechanism there is.** That makes the
++state of the projection load-bearing, and it is broken:
++
++- `.claude/rules/` in the working checkout holds **92** rules. A regeneration in
++  a clean worktree produces **108**. The tree was last generated 2026-07-05, is
++  gitignored and untracked, and **21 rules added since then have no entry** —
++  among them `secret-vcs-guard`, `broken-access-control`,
++  `senior-engineering-discipline`, `evaluator-independence`, `session-canary`,
++  `question-not-instruction`, `settings-ask-protocol`, `doc-screenshot-hygiene`,
++  `active-remediation`, `cross-source-consistency`, `decision-revisit-gate`.
++  Verified as staleness, not scoping: every one of the 21 was added on or after
++  2026-07-06, the newest rule present was added 2026-06-24, and rules carrying
++  the same `workspaces:` value as the absent ones are present in bulk.
++- **No check verifies completeness or freshness of any host rule tree.**
++  `check_generator_output_coverage.ts:37` asserts only that the output *root* is
++  classified; `check_bridge_derivation.ts:34-48` asserts that existing symlinks
++  resolve, so a missing link is not a wrong link; `check_condensation.ts:43-44`
++  stops at `dist/`. The last hop — the one that decides what the model sees — is
++  ungated.
++- **91 rules load twice, in two different versions.** The project tree and the
++  machine-global install share 91 filenames and **zero** byte-identical pairs;
++  about 176 000 tokens of instruction text reach the model across both carriers.
++  For four rules the divergence is semantic, and for two it is contradictory:
++  the global copy of `git-history-discipline` asserts an unqualified
++  "deterministically blocked by the `block-no-verify` PreToolUse guard", while
++  the shipped copy carries the host-scoped retraction of exactly that claim. The
++  agent holds both, with no precedence marker. The dedup that exists
++  (`condense.ts:452-490`) is byte-identity-keyed and therefore inert by design in
++  precisely this state, which `condense.ts:439-449` calls normal for maintainers.
++
++## Two blocking guards refuse read-only commands — both reproduced live here
++
++Both fired against this audit's own work, and both have the same root cause:
++shell-shaped classification performed without respecting quoting.
++
++1. `block_no_verify.ts:339` — on a tokeniser failure the guard fail-closes when
++   the **raw command string** matches `/\bgit\b/`. A plain
++   `mkdir && cat > file <<HEREDOC` with no git invocation was refused because the
++   heredoc body mentioned rule names containing "git" and contained apostrophes.
++   The message's documented workaround (`git commit -F <file>`) does not apply,
++   because there is no commit.
++2. `block_unauthorized_git.ts:175` — `invokedSegments` splits on a bare `|`
++   without quote awareness, so `grep -E "…|npm publish|…"` yields a segment
++   beginning with `npm` and is classified as an invocation of `publish`, which is
++   in `BLOCK_OPS`. A read-only search was refused with "Blocked: `publish` with
++   no authorization in this turn's prompt."
++
++`block_no_verify.ts` already contains a faithful POSIX `shlex` port
++(`:79-178`). The second guard does not use it.
++
++## Phase 1 — Delivery integrity for model-carried obligations
++
++**What this phase does not claim.** The council pressed on exactly the right
++point: none of the 21 absent rules is a blocking guard. Hooks bind through
++`hook_manifest.yaml`, independently of whether a rule's prose is projected, so a
++stale projection disables no gate. What it removes is the **only** carrier for 21
++model-carried obligations at project scope, and the integrity of every
++measurement that assumes the model was told. On a host with no hook surface at
++all — Copilot, per `git-history-discipline`'s own host-scoped downgrade — the
++prose is the entire mechanism, and there the absence is the failure.
++
++- [x] 1.1 Add a gate that verifies each host rule tree is **complete** against
++  the generator's own emit set — never a hand-maintained list, per the council's
++  new-failure-mode warning that a completeness check keyed on a non-canonical
++  source propagates obsolete rules. For every rule the generator would emit,
++  assert an entry exists in `.claude/rules/`, `.clinerules/`, `.cursor/rules/`.
++  Report the missing set by name. Exit non-zero on any gap.
++- [x] 1.2 Extend the same gate with a **freshness** assertion: no rule in
++  `dist/agent-src/rules/` may be newer than the projection entry that points at
++  it. This is the check that would have caught a five-week-stale tree.
++- [x] 1.3 Add a cross-carrier **divergence report**: compare the project tree
++  against the machine-global install by body (frontmatter stripped) and name
++  every rule whose two copies disagree. Advisory, not blocking — a maintainer
++  developing the package is legitimately ahead of their own global install; the
++  point is that the condition becomes visible instead of silent.
++  <!-- Shipped as `src/scripts/report_carrier_divergence.ts`, task
++  `report-carrier-divergence`, advisory, 17 tests. Two departures from the text,
++  both forced by measurement. (1) The project carrier is `.claude/rules`, NOT
++  `dist/agent-src/rules/`: the global installer delivers the five ADR-004
++  `type: manual` rules and the project projection omits them, so anchoring on
++  dist reports those five as *shared* when only one carrier delivers them. (2)
++  "by body (frontmatter stripped)" would have hidden the answer — stripping ALL
++  frontmatter also strips the installer's `package:`/`source_path:` stamp AND
++  every real frontmatter change. The report strips only the two ownership keys,
++  which is what separates an install stamp from a content difference; the
++  comparison now lives in `_lib/carrier_divergence.ts` shared with
++  `measure_scope_dedup`, so the two cannot drift. -->
++  <!-- The step's own premise, re-measured: see round 6 § 4.1-4.2. This roadmap
++  claimed "91 rules load twice, in two different versions"; all 91 differed by
++  exactly the two ownership keys and ZERO differed in body. -->
++- [x] 1.4 Register 1.1-1.3 in the gate ledger and the CI task list, and confirm
++  the new gate actually scans a non-empty set (the repo's own
++  `assertScanned` discipline — a gate that examines zero files must not exit 0
++  silently).
++  <!-- Walked as three commands, not as a reading. GATE LEDGER: adopted —
++  `check_rule_projection_integrity` constructs `GateLedger`, plans every
++  (tree × rule) pair and terminates each one, and `check_gate_completeness` does
++  not list it among the non-adopters. CI TASK LIST: `task
++  check-rule-projection-integrity` in taskfiles/ci-fast.yml plus a step in
++  .github/workflows/consistency.yml; `check_ci_local_parity` reports no
++  undeclared drift (260 CI / 235 local / 26 declared CI-only / 1 local-only).
++  1.3 is registered as `task report-carrier-divergence` and deliberately NOT
++  wired into a blocking pipeline — the `report_*` convention, because a checkout
++  ahead of its own global install is normal. NON-EMPTY SCAN: `assertScanned`,
++  measured 330 entries across 3 trees.
++  ONE HALF REFUSED, WITH THE REASON IN PLACE: the gate is not added to
++  `src/config/gate-coverage.yml`. `agents/.agent-tools.yml` is
++  `skip-worktree`-masked to `tools: []` on a maintainer checkout, so the same
++  gate emits 330 in CI and 0 there; a real floor reds locally, a `min_scanned: 0`
++  floor is the false-count shape that file rejects, and `unavailable_exit` cannot
++  express it because the empty case must keep exiting 0 (blocking there is what
++  PR #1211 repaired). Recorded in the manifest header alongside a measured
++  correction to its own backstop claim — the unregistered-emitter test matches
++  only the inline `process.stdout.write` shape, so it is blind to the 175 of 244
++  gates that emit through `assertScanned`, i.e. to the shape the repo recommends. -->
++
++## Phase 2 — Stop the two guards refusing read-only commands
++
++- [x] 2.1 `block_unauthorized_git.ts`: make `invokedSegments` quote-aware by
++  reusing the existing `shlex` port rather than splitting the raw string. A `|`
++  inside quotes is not a pipe. Closing this must not open a bypass: verify the
++  documented unwrapping cases (`sh -c`, env-assignment prefixes, heredoc
++  stripping) still classify real invocations.
++- [x] 2.2 `block_no_verify.ts:339`: narrow the fail-closed branch. On a tokeniser
++  failure, test for a plausible git **invocation** — a line whose command
++  position is `git`, outside any heredoc body — rather than `/\bgit\b/` over the
++  whole string. Keep fail-closed for the real case: a genuinely unparseable
++  command that does invoke git is still refused.
++- [x] 2.3 Regression tests for both, each pinned to the exact command that was
++  refused in this session, plus a positive case proving the real prohibition
++  still blocks.
++
++## Phase 3 — The refusal class at `stop`, carrying two detectors
++
++This is the phase the council shaped. Both members independently named the same
++mechanism class as the only one with evidence behind it: a check at the point of
++delivery that can **refuse**, rather than another request in the context.
++Member 2 put it directly — "explore a post-generation output scanning mechanism
++that can act like your existing blocking guards, refusing or rewriting outputs";
++member 1 stated the boundary the measurement found — "refusal-capable intercepts
++enforce; context injection requests."
++
++Round 1 deferred FC-5 on the reasoning that `stop` fires after the reply and so
++cannot help. Round 2 retracted that: `stop` is block-capable on this host, so an
++exit-block refuses the turn-end and the agent continues **in the same turn**.
++The retraction named the two real obstacles; both are in scope here.
++
++One concern, one re-entrancy guard, two detectors — because building the unsafe
++part twice is how a second detector becomes a second outage.
++
++- [x] 3.1 Add a `stop`-bound concern with the re-entrancy guard the retraction
++  says the dispatcher lacks: state-backed, **one block per turn maximum**, so a
++  refused turn-end can never loop. This lands first and alone; neither detector
++  below may be registered before it is proven.
++  <!-- Shipped as `src/scripts/hooks/turn_end_gate_hook.ts`, concern
++  `turn-end-gate`, `severity: blocking`, bound to `platforms.claude.stop` only.
++  39 tests.
++
++  THE BLOCKER IS RESOLVED, AFFIRMATIVE. The maintainer decided 2026-08-09 that a
++  concern which can refuse a turn-end ships, in its own PR with its own soak.
++  That decision also unblocks 6.1 here and Phase 6.2 of round 6, which carries
++  the same blocker verbatim.
++
++  RE-ENTRANCY SHAPE — stated and tested BEFORE registration, which is what round
++  6 § blocker demanded ("the guard's re-entrancy shape has to be stated and
++  tested before the concern is registered, not after"). Two layers, each proven
++  ALONE by its own test:
++    1. `stop_hook_active` — Claude sets it when a Stop follows a stop-hook
++       block. Nothing in `src/` read this field before; it is the host's own
++       answer to "what happens when the refusal itself triggers the turn-end
++       event", which the proposal had picked neither shape for.
++    2. A marker keyed on the LAST USER MESSAGE, never on the reply. After a
++       refusal the model writes a NEW reply, so a reply-keyed marker would let
++       the same turn be refused again and again. The user prompt does not change
++       within a turn, so the turn is refused at most once; the next genuine
++       prompt mints a new key and the gate re-arms with no cleanup.
++  The failure this ordering prevents is not a loop but a WEDGE — a turn that can
++  never end. Hence also `fail_closed: false`, alone among the blocking concerns:
++  a crash here must let the turn END. Every unreadable transcript, malformed
++  envelope, out-of-home transcript path and absent pin resolves to exit 0, each
++  with a test.
++
++  DEFAULT OFF, against this roadmap's own § 3.6 wording — see 3.6. -->
++  <!-- Host-facing proof, not just dispatcher-internal: the raw-tsx tests see
++  the internal code (1 = block), so they cannot tell a real refusal from one
++  that maps to 0 at the host. A separate block spawns `dispatch_entry.ts` with
++  a raw Claude Stop payload and asserts exit **2** plus the concern's own reason
++  on stderr. `stop` is in `CLAUDE_BLOCK_CAPABLE_EVENTS`; this is the first
++  concern in the suite to use that fact. -->
++
++  <!-- One property this PR does NOT establish: that refusing a turn-end
++  improves the measured rates. It cannot — the mechanism is default-off, so
++  there is no post-fix corpus to scan yet. That is what the soak is for, and
++  round 6's Phase 6.2 is where the number lands. -->
++
++- [x] 3.2 Detector A — promissory closing (FC-5, 20 measured occurrences): the
++  final user-visible paragraph commits to work not yet performed ("ich melde",
++  "I'll report", "sobald … melde ich", "als nächstes"), while the turn carries no
++  blocking question and no completed verification for that claim.
++- [x] 3.3 Detector B — language mismatch (19 measured occurrences that survived a
++  **fresh** pin): the reply's user-visible prose is not in the pinned language.
++  This is the class Phase 7 refuses to solve by re-injection; a refusal at
++  delivery is a different mechanism, not the same one at higher frequency.
++- [x] 3.4 False-positive pass against the corpus for both detectors. Detector A
++  must fire on the 20 measured occurrences and must **not** fire on a legitimate
++  hand-back ("das entscheidest Du", "ich fasse ihn nicht ungefragt an") or on a
++  promise the same turn then fulfils. Detector B must not fire on quoted tool
++  output, code, file paths, or identifiers — the exclusions
++  `language-and-tone` already states. Record measured precision per detector; a
++  detector that cannot clear a stated bar registers as detection-only and the
++  roadmap says so.
++  <!-- MEASURED, and reproducible rather than asserted:
++  `./scripts-run src/scripts/measure_turn_end_gate --store <claude transcript
++  dir> --limit 30`, run 2026-08-09 over the SAME 30-session store round 5
++  scanned — 2157 assistant turns.
++
++    detector A (promissory)  fires on   28 turns   1.3%
++    detector B (language)    fires on  388 turns  18.0%
++      of which the independent scanner also flagged   360
++      fired where the scanner saw nothing              28
++
++  READ B FIRST, because it is the uncomfortable one. An 18% fire rate on a
++  BLOCKING guard means roughly one refused turn in five and a half. That is not
++  a false-positive rate — `conformance_scan` independently counted 408 language
++  violations (18.9%) over the same window, and the two instruments agree on 360
++  of this detector's 388 fires. The violations are real. But "real" and
++  "shippable default-on" are different claims, and a mechanism that would have
++  refused nearly a fifth of all turns is precisely the one the round-6 council
++  said must soak behind an opt-in first. This measurement is the strongest
++  single argument for the default-OFF decision recorded in 3.6, and it was taken
++  BEFORE that decision could be rationalised by it.
++
++  The 28 fire-where-the-scanner-saw-nothing turns are candidate false positives,
++  NOT confirmed ones: the scanner reads the first prose line and this detector
++  reads the whole stripped reply, so the instruments disagree in both directions
++  (the scanner flagged 48 this detector did not). Neither set was hand-audited;
++  saying so is cheaper than implying an audit that did not happen.
++
++  DETECTOR A HAS NO RECALL FIGURE, and the reason is structural rather than
++  lazy. `conformance_scan.ts` states in its own header that promissory closings
++  are "deliberately NOT scanned"; the round-5 audit's 20 occurrences came from
++  subagent transcript READING, so there is no machine-readable ground truth to
++  score against and no way to re-derive those 20 spans. What can be said: the
++  detector fires 28 times over the same window against the audit's reported 20 —
++  the same order, slightly wider. Whether the extra 8 are additional true
++  positives or false ones is unresolved, and this line is the honest form of
++  that.
++
++  The step's literal ask — "must fire on the 20 measured occurrences" — is
++  therefore NOT satisfiable as written, and is recorded as such instead of being
++  quietly reinterpreted. What ships in its place is a 20-case hand-built corpus
++  in `tests/scripts/turn_end_gate_hook.test.ts` (10 promissory shapes the audit
++  names, 10 must-not-fire shapes: hand-back, blocking question, fulfilled
++  promise, plain completion), all 20 green, plus the real-corpus fire rate
++  above. Both halves are stated because either alone would be misleading. -->
++
++- [x] 3.5 Adversarial cases, per the council's precision warning: a blocking
++  guard with a false-positive rate teaches users to bypass it. Include replies
++  that legitimately quote English prose inside a German turn, and turn-ends that
++  legitimately yield to the user.
++- [x] 3.6 Settings kill-switch per detector, default on, so either can be
++  disabled without editing the manifest.
++  <!-- Shipped as `hooks.turn_end_gate.{enabled,promissory,language}` in
++  `src/config/agent-settings.template.yml`, reused rather than a new top-level
++  key: `hooks.injection_scan.enabled` is the existing precedent for a
++  default-off hook switch.
++
++  A DEPARTURE FROM THIS STEP'S OWN WORDING, and the reason, because a silent
++  one would be exactly the drift this roadmap audits. This step says "default
++  on". Round 6 records a council (2026-08-08) asking for the opposite: the
++  mechanism opt-in and "defaulting to off, so the mechanism exists and soaks
++  before it binds" — two prior hook-severity mistakes plus a turn-end blast
++  radius made default-on uninsurable in their reading. Both hold at once, and
++  that is the shipped shape rather than a compromise between them: the MASTER
++  switch is default OFF, and WITHIN it both detectors are default ON. Opting in
++  is one line and needs neither detector named; either can still be silenced
++  without touching the hook manifest, which is what this step actually asks for.
++  The safer reading also matches `non-destructive-by-default`: a mechanism that
++  can refuse every session's turn-end does not arrive switched on. -->
++
++
++## Phase 4 — FC-7: the canary's name must come from the settings chain, not the environment
++
++The audit found the greeting position used twice with **"Mathias"**, a name that
++resolves from no layer of the canary chain (`identity.name` is `Matze`,
++`git config user.name` is `matze4u`). The rule already calls a wrong name worse
++than a missing one, because the user infers the canary is alive while the model
++substitutes from memory. The hook resolves the name correctly; it just does not
++put it where the model must read it.
++
++**Closed on inspection — already shipped, and the evidence predates it.**
++`build_canary_reminder` (`src/scripts/session_canary_hook.ts:201-208`) already
++emits `Canary active for "<name>"` with the resolved value, and the hook returns
++a clean no-op when no layer resolves a name (`:258-261`). Both wrong-name
++occurrences are in session `adf0e5fc` on **2026-08-04**; the per-turn beat merged
++with PR #1205 on 2026-08-06. So the failure this phase was written against
++cannot recur through the path it blamed, and there is nothing to build.
++
++Kept in the roadmap rather than deleted, because "a second audit re-fixing what
++the first one shipped" is exactly the waste a decision ledger exists to prevent,
++and the near-miss is worth one paragraph.
++
++- [x] 4.1 Verify the beat carries the resolved name verbatim — it does; no change.
++- [x] 4.2 Verify an unresolved chain emits no name rather than a guess — it does;
++  no change.
++
++## Phase 5 — Honest downgrades and the published measurement
++
++Member 1 argued this phase should land **before** the infrastructure work, and the
++reason is worth recording rather than just the ordering: "If you fix A first, you
++restore the unverified assumption that delivery equals compliance, and the lesson
++from this round gets buried in infrastructure work." Within one change set the
++ordering is immaterial, so the departure is only in sequencing, not in substance —
++but the phase is deliberately not last.
++
++- [x] 5.1 Replace the "not yet measured … until a second audit runs" paragraph in
++  `src/rules/session-canary.md` with the round-5 numbers: 24 of 29 task starts
++  dropped, honesty clause fired 0 times, wrong name twice. The carrier fires;
++  compliance did not follow. State that, and say what the next mechanism would
++  have to be.
++- [x] 5.2 Correct the stale figure in `src/scripts/language_mirror_hook.ts:10,275`
++  — it cites "~470" while the roadmap's own final baseline is 626 and this round
++  measures 641.
++- [x] 5.3 Rules claiming `enforced_by: none` in prose while their frontmatter
++  omits the key — the coverage join cannot see a downgrade it cannot read.
++  **The roadmap said six; the real gap was two.** `code-provenance`,
++  `settings-ask-protocol`, `security-sensitive-stop` and `untrusted-input-defense`
++  already declare it at HEAD (landed with PR #1205); only
++  `ui-audit-gate` and `design-review-after-ui-write` did not. Both fixed.
++  Accepted form is a YAML array of quoted scalars, per
++  `schemas/rule.schema.json:147-155` and the exact `decl === 'none'` comparison in
++  `check_enforcement_coverage.ts:380`. Declarations 28 → 30; coverage now reports
++  `declared 30 · undeclared 84`. Neither rule is in the nine-rule kernel set.
++- [x] 5.4 Record the blocking-versus-advisory result where the next audit will
++  find it: a mechanism-selection note that both blocking carriers reached zero
++  and both advisory carriers did not, with the caveat that the post-fix corpus is
++  one session and roughly 600 assistant turns.
++- [x] 5.5 The archived rounds-1-4 roadmap still reads as if its phases worked on
++  merge; rounds 3 and 4 discovered that two mechanisms were inert and never
++  amended it. Add a single correction note pointing at this roadmap, without
++  rewriting the archive.
++
++## Phase 6 — The language carrier: one real defect, one refused non-fix
++
++The obvious move is to bind the pin additionally at tool-call cadence. **This
++roadmap declines that**, and the council was unanimous on the reason: it is the
++same carrier at higher frequency, so it is not a mechanism. Member 1: "Injecting
++the same ignored text at higher frequency is not a new mechanism. It is the same
++failed mechanism running more often." Member 2: "F, as a mechanism, is not varied
++and does not address the underlying issue … it seems to confuse frequency with
++effectiveness."
++
++But splitting the 23 post-merge violations by whether a pin was actually in
++context separates two different failures, and only one of them is non-compliance:
++
++| cluster | count | pin state at the violation | verdict |
++|---|---:|---|---|
++| 2026-08-06 11:28-11:53 | 4 | a `compact_boundary` fired at **11:28:32**; the first violation is **26 s later** at 11:28:58, with **no pin between them** | the pin was genuinely **absent** — a state defect |
++| 2026-08-06 22:35-22:53 | 19 | pins fired at 22:35:12 and 22:47:11; violations follow **26 s and 35 s later** | the pin was **fresh and ignored** — non-compliance |
++
++The split is no longer a hand reconstruction: step 6.3 below records
++`compaction_since_prompt` per violation, and re-running the scan reproduces
++exactly 4 and 19 — which is how the instrument was validated against a case whose
++answer was already known.
++
++This also resolves the confound member 1 raised: the 176 000-token instruction
++payload suggested truncation as an alternative explanation for early drift. The
++timeline says compaction, not truncation, and it accounts for exactly 4 of 23.
++
++So the split of work is:
++
++- [x] 6.1 Re-emit the pin across the **compaction boundary**. The hook already
++  writes the language to `agents/state/language-mirror.json`; what compaction
++  removes is the context copy, not the state. Restoring it is a state fix in the
++  same sense round 1 argued for — "a state defect with a deterministic fix, not an
++  attention deficit" — and it targets the subset where the pin was measurably
++  **missing**, not measurably ignored.
++
++  The slot exists and nothing uses it: `PreCompact` is aliased to `pre_compact`
++  for claude, cowork and cursor (`hook_manifest.yaml:448,460,468,477`) and
++  `pre_compact` is in the dispatcher's event list (`dispatch_hook.ts:89`), but it
++  appears in **no** `platforms:` binding — zero concerns are bound to it.
++
++  Design, stated precisely so it is not mistaken for the refused item: `pre_compact`
++  writes a *pin-lost* marker; `post_tool_use` re-emits the pin **only** while that
++  marker is set, then clears it. That is **one** extra injection per compaction
++  event — not one per tool call, which is what the council rejected. The
++  distinction is the guard, so the guard is not optional.
++
++  **Unverified, and it must stay marked so:** whether an injection at
++  `pre_compact` survives the boundary is not established, which is why the design
++  routes through state and `post_tool_use` rather than injecting at `pre_compact`
++  directly. Forcing a compaction in a controlled test was not possible in this
++  audit.
++  <!-- Shipped in `src/scripts/language_mirror_hook.ts` (`_setPinLost`,
++  `_pinLost`, `_reEmitAfterCompaction`, marker at
++  `agents/state/language-mirror.pin-lost`), bound as
++  `platforms.claude.pre_compact: [language-mirror]` plus `language-mirror`
++  appended to claude's `post_tool_use`. 5 tests, 51 in the file.
++
++  This is the FIRST binding on `pre_compact` in the tree — the slot was aliased
++  for claude/cowork/cursor and listed in the dispatcher's event vocabulary, and
++  zero concerns used it.
++
++  The guard is what is actually tested, because the guard is the whole
++  difference from the mechanism 6.2 refuses: one test asserts the pin comes
++  back on the first tool call after compaction and that the SECOND and THIRD
++  calls are silent. Two failure modes are pinned as silence rather than as
++  noise: no compaction ⇒ nothing (the common path, on every tool call of every
++  session), and compaction with no pin ⇒ nothing, with the marker still
++  consumed so a missing pin cannot arm a permanent re-fire. The marker is
++  cleared BEFORE the emit, so a throwing write cannot leave it set.
++
++  WHAT IS STILL NOT VERIFIED, unchanged from the paragraph above: that a
++  `post_tool_use` injection reaches the model AFTER a real compaction boundary.
++  The design no longer depends on `pre_compact` delivering anything — it only
++  writes state there — but the delivery half needs a live compaction, and
++  forcing one under test was not possible here either. The mechanism is
++  therefore shipped as plausible-and-guarded, not as measured. -->
++
++- [x] 6.2 Do **not** ship a general tool-call-cadence re-pin. Record the refusal
++  and the council's reasoning in the audit note, so round 6 does not re-propose it.
++- [x] 6.3 Extend `conformance:behavior` to record, per language violation, the
++  distance in assistant turns from the last genuine user prompt **and** whether a
++  compaction boundary intervened. Without the second field this round's split
++  cannot be reproduced against a future corpus.
++- [x] 6.5 **The carrier mis-pins on synthetic turns — found in this audit's own
++  session, and fixed.** Read mid-run, the live state file said:
++
++  ```json
++  { "language": "en", "source": "prompt", "prompt_chars": 6627,
++    "de_markers": 0, "en_markers": 63 }
++  ```
++
++  No human wrote those 6,627 characters. They were a background-task completion
++  notification, injected as a user turn — which `user_prompt_submit` sees. The
++  hook classified it as the trigger, flipped a German session to `en` for every
++  later turn, and stamped `source: "prompt"`, which is a false provenance claim.
++
++  This is the **same defect class the hook exists to remove**: non-chat content
++  read as the trigger. The hook's own header argues at length that a skill body
++  must not set the pin, and justifies the event choice with "a skill body never
++  reaches `user_prompt_submit`". True — but synthetic turns do reach it, so the
++  event was never sufficient on its own and the content test had to exist too.
++
++  Fixed by `isSyntheticPrompt` (`language_mirror_hook.ts`): a turn opening with a
++  harness envelope tag leaves the pin untouched, exactly as an undetermined
++  prompt does. Structural markers, not prose, so a human *quoting* a notification
++  still pins normally — asserted in the tests. 43/43 green, including a case that
++  pins German, injects an English notification, then asserts both the language
++  and the `detected_at` stamp are unchanged.
++
++  Severity is higher than the count suggests: every long autonomous run that
++  dispatches background work would flip the pin to the harness's language and
++  keep it there for the rest of the session. Any future measurement of this class
++  taken before this fix is contaminated by it — including, in part, the 555
++  pre-merge violations, since those sessions also ran background work.
++
++- [x] 6.4 The remaining 19 are non-compliance with a fresh pin. They are addressed
++  by Phase 3 detector B — a refusal at delivery — and by nothing in this phase.
++  The Iron Law stays (round-1 lock, not reopened) and no claim is made that the
++  pin fixes the class.
++
++## Where this roadmap departs from the council
++
++Recorded because a recommendation adopted without a stated reason is cover, not
++review.
++
++| Council position | Disposition |
++|---|---|
++| Both: drop the higher-frequency pin (item F) as theatre | **Adopted in full.** Phase 6.2 records the refusal. |
++| Both: the refusal class is the mechanism with evidence behind it | **Adopted.** Phase 3 carries it, with the language detector added as detector B — which was not in the plan the council reviewed. |
++| M1: publish the finding (D) before the infrastructure (A) | **Adopted in sequencing only.** Phase 5 is not last; within one change set the order carries no other weight. |
++| M1: C needs adversarial cases or a blocking guard teaches bypass | **Adopted.** Phase 2.3 and Phase 3.5. |
++| M1: take the emission-time deferral (FC-11) instead of the checkbox one (FC-9) | **Partly adopted.** FC-9 is dropped from this round on the council's severity reasoning. FC-11 is not taken either: its remaining substance is the trap Phase 2 *fixes* rather than warns about, so taking it as a separate mechanism would duplicate a phase already in scope. Both are in the deferred table with this reason. |
++| M1: A is measurement, not enforcement — state whether any of the 21 absent rules were blocking guards | **Adopted, and it corrects a claim.** None of the 21 is a blocking guard: hooks bind through the manifest, independent of whether a rule's prose is projected. So Phase 1 restores the delivery of **model-carried obligations** and the integrity of measurement — it does not restore a gate. Phase 1's framing was rewritten accordingly. |
++| M2: a completeness check against a non-canonical source could propagate obsolete rules | **Adopted.** Phase 1.1 compares against the generator's own emit set, never a hand-maintained list. |
++| M2: prioritise A first | **Not adopted**, in favour of M1's ordering argument, which gives a reason where M2 gives an ordering. |
++
++## Risk Register
++<!-- risk-review: v1 | reviewed: 2026-08-07 | reviewer: claude/host -->
++| Rank | Item | Risk type | Description | Mitigation | Anchored under |
++|------|------|-----------|-------------|------------|----------------|
++| 1 | Narrowing a blocking guard opens a bypass | implementation | Both Phase-2 fixes make a refusing guard refuse less. The failure mode is not a false positive but a false negative: a real irreversible operation that now classifies as harmless | Adversarial cases, not review, are the control — and they already earned it: the `sh -c` payload case caught a bypass the `block_no_verify` narrowing had introduced, before it shipped. Every fix is pinned to the refused command AND to a positive case proving the real prohibition still blocks | Phase 2 |
++| 2 | The blocking-versus-advisory conclusion is drawn from one session | implementation | The post-fix corpus is a single session and roughly 600 assistant turns. Both blocking carriers reaching zero could be sampling, and the two classes also differ in what they are asked to catch | Recorded as a prior, never as a law, in both the roadmap and the conformance command. The narrow claim that carries the decisions — a class that failed with its fact verifiably in context is not fixed by delivering that fact more often — rests on the pin-present measurement, not on the zero counts | Phase 6 |
++| 3 | The projection gate passes vacuously | implementation | A completeness gate whose expected set is empty, or whose scan root moved, reports green having compared nothing — the exact failure class this roadmap documents elsewhere in the tree | `assertScanned` with a dead-scope error, plus a test that pins the empty-dist case; and the freshness leg uses `lstat`, verified empirically, because a following `stat` would compare each source with itself and silently find nothing | Phase 1 |
++| 4 | The synthetic-prompt filter stops pinning real prompts | implementation | A filter on the language carrier that is too broad silently disables the pin, which is worse than the defect it fixes because nothing would surface it | Structural envelope markers at the head of the turn, never prose, so a human quoting a notification still pins; an unrecognised shape falls through and pins as before. Under-filtering keeps today's behaviour, and a test asserts a quoted notification is not treated as synthetic | Phase 6 |
++| 5 | Phase 3 never lands, and the highest-harm class stays open | product | The class with the maintainer's own correction as evidence is deferred out of this change set. A deferral with no owner becomes a silent drop — which is what happened to the same class in round 1 | Recorded as a blocker with a named owner, a stated action and a resolution condition, so the dashboard counts it instead of the roadmap merely mentioning it. The deferred table also records why FC-9 and FC-11 were not taken instead | Blockers |
++| 6 | Lowering a violation count reads as moving a goalpost | product | This round reduces its own headline figure from 641 to 578. A reader who sees only the new number cannot tell a correction from a convenience | All four readings are published with what changed between each — and the reason is a boolean on a transcript entry rather than a judgment, so it is checkable by someone who was not here | Three corrections this audit made to its own numbers |
++| 7 | A future audit re-fixes what already shipped | product | This round nearly rebuilt the canary name carrier, which had shipped two days earlier; the wrong-name evidence predates it | The near-miss is kept in the roadmap rather than deleted, and the rule itself now states that the inference path is closed. The decision-ledger pass over rounds 1-4 exists for this reason and ran before any mechanism was chosen | Phase 4 |
++| 8 | The compaction carrier is designed against an unverified assumption | implementation | Phase 6.1 routes through state and `post_tool_use` because whether an injection survives a compaction boundary is unknown. If the assumption is wrong the design is wrong | Marked unverified in the step itself rather than asserted, and the step is blocked behind the same maintainer decision as Phase 3, so it cannot ship on an untested premise | Phase 6 |
++
++## Measured, deferred, and why
++
++| class | occurrences | why not fixed here |
++|---|---:|---|
++| FC-6 ask shape | 13 | The round-1 decision was a trigger redefinition plus an explicit statement that no gate ships, and that statement is still accurate: every measured failure had no numbered-option block by construction, so the existing validator scans exactly the surface that did not fail. A gate needs a reply-shaped advisory channel that no host offers at `stop`. Reason stands. |
++| FC-9 batched roadmap checkbox flips | 19 batch events | Was a phase in the plan the council reviewed; **dropped on its verdict**. Member 1: "You call it 'cheapest' but it's a distraction from your core finding. Batched checkbox flips are low-severity. You have four retracted deferrals; you chose the one that's easy rather than the one that matters." Member 2: "Postpone action E until you have established more trust in your enforcement measurement accuracy." The retraction's own signal (`- [ ]`→`- [x]` twice in one `Edit` under `agents/roadmaps/`) still stands and stays cheap, so this is a scheduling decision, not a re-deferral on the old wrong reasoning. |
++| FC-10 undetected edits to protected rules | 1 | Round 2 named the honest fix (post-hoc `git diff --name-only` after a Bash call). Real, but it is a new detection surface rather than a narrowing of an existing one, and Phase 3 already spends this round's appetite for a new blocking concern. |
++| FC-11 known-trap recurrence at emission | — | Member 1 recommended taking this instead of FC-9. Not taken, and the reason is not the old one: it is partially closed already (the heredoc diagnosis ships in the guard's message), and its remaining substance is the trap **Phase 2 removes** rather than warns about. Taking it as a separate mechanism would duplicate a phase already in scope. |
++| FC-8 symptom-fix over a named root cause | 3 | Highest cost, least tractable; a two-sided semantic judgement with no deterministic pattern. Reason stands from round 1. |
++| FC-13 self-invented constraints | 2 | Both operands are available, which is exactly why the temptation is real and the deferral right. Strongest reason in the round-1 table; not reopened. |
++| Budget instrument counts 9 rules while 92 load | — | Verified (a 10× understatement, with the one live dimension at 100.0 % and two characters of headroom), and the published contract states numbers the implementation does not use. Deferred because correcting the population changes what the ratchet admits, which is a contract decision the maintainer owns, not an agent edit. |
++| `telegraph-speak.mdc` ships to Cursor while the rule is compile-disabled | 1 | Same stale tree as Phase 1; Phase 1.1 makes it visible. Removing it is a regeneration, not a fix. |
++| Dead trigger entries (unexpanded `{module_root}/` placeholder, split `command:` convention, 23 % grading floor) | — | Lower severity than it looks, because triggers gate nothing at runtime. What it damages is the instrument, not the reach. Belongs to a router-instrument roadmap, not a behaviour audit. |
++| Council necessity gate skipped this audit's first question | 1 | The classifier is substring-shaped and read an architecture question as a single-file one because the text contained "one-line". Real false negative on the side its own header says to avoid — but n=1, and the second invocation cleared it. |
++
++## Acceptance criteria
++
++- [x] Phase 1's gate fails on the current working checkout (92 of 108) and passes
++  after a regeneration — proving it detects the condition that motivated it.
++- [x] Both commands that were refused in this session run without being blocked,
++  and the positive-case tests still refuse the real prohibitions.
++- [x] **UNBLOCKED 2026-08-09 and met.** Phase 3's concern fires on the promissory
++  closings, does not fire on the legitimate hand-backs, and cannot block a
++  turn-end twice — 39 tests, including the two re-entrancy layers proven
++  independently and a dispatcher-mediated exit-2 proof that the refusal reaches
++  the host at all. One correction to the criterion's own wording: "the MEASURED
++  promissory closings" is not what was verified, because those 20 spans are not
++  machine-recoverable (§ 3.4); a 20-case corpus in the detector's own shape was.
++  The distinction is the criterion's, so it is stated rather than glossed.
++- [x] Every enforcement claim this roadmap touches is either backed by a shipped
++  mechanism or states plainly that it is model-carried.
++- [x] No kernel rule text is modified. `verify-before-complete` carries FC-5's
++  obligation and stays untouched; the mechanism lives in the hook.
++- [x] The corrected era-split number and the superseded one both appear in this
++  roadmap, per the instrument lock.
+diff --git a/agents/roadmaps/later/road-to-conformance-round6.md b/agents/roadmaps/later/road-to-conformance-round6.md
+index 22f665b1184eee26b8c211c5808a40950f2fed6f..9de669932846c0877ab2f6db572883db6ab29b8b 100644
+--- a/agents/roadmaps/later/road-to-conformance-round6.md
++++ b/agents/roadmaps/later/road-to-conformance-round6.md
+@@ -71,9 +71,20 @@ having written the risk down one file away.
+ 
+ ### blocker: stop-refusal-decision
+ 
+-- **Status:** open — carried unchanged from round 5
+-- **Owner:** maintainer
+-- **Blocks:** round-5 Phase 3 (3.1-3.6), round-5 Phase 6.1, and Phase 6.2 below
++- **Status:** **decision made 2026-08-09 (affirmative); still blocked on the
++  second condition.** The maintainer decided that a concern which can refuse a
++  turn-end ships. Round 5's Phase 3 and 6.1 built it — `turn-end-gate`, default
++  OFF (`hooks.turn_end_gate.enabled`), with the re-entrancy shape stated and
++  tested BEFORE registration, which is exactly what the design-hole paragraph
++  below demanded and the council said a soak would otherwise discover the
++  expensive way. What is NOT satisfied is the rest of the clause below: "the
++  refusal concern has merged in its own PR with its own soak period." Until that
++  PR merges and soaks, Phase 6.2 stays blocked and this roadmap stays in
++  `later/`. Recorded here because the same blocker text lived in two roadmaps
++  and only one of them moved.
++- **Owner:** was maintainer; decision made, merge + soak outstanding
++- **Blocks:** Phase 6.2 below. No longer blocks round-5 Phase 3 or 6.1 — both
++  shipped under this decision.
+ - **What to do:** decide whether a concern that can refuse a turn-end ships.
+ - **Resolved when:** the decision is recorded; if affirmative, the refusal
+   concern has merged in its own PR with its own soak period.
+diff --git a/agents/roadmaps/road-to-conformance-round5.md b/agents/roadmaps/road-to-conformance-round5.md
+deleted file mode 100644
+index 5a8b5e19dfa96eaa1e2971c60d58c0535f1bb896..0000000000000000000000000000000000000000
+--- a/agents/roadmaps/road-to-conformance-round5.md
++++ /dev/null
+@@ -1,579 +0,0 @@
+----
+-complexity: structural
+-status: ready
+----
+-
+-# Road to conformance round 5 — the first post-fix measurement, and what it says about mechanism class
+-
+-> Source: `/analyze:conformance --limit 30 --worktree`, run 2026-08-07 against the
+-> maintainer's local transcript store. Deterministic scan (`conformance:behavior`)
+-> plus three parallel subagent passes: transcript reading for un-gated classes,
+-> a rule-delivery audit, and a decision-ledger pass over rounds 1-4 so nothing
+-> already adjudicated is re-litigated.
+-> Predecessors: `archive/road-to-agent-behavior-conformance.md` (rounds 1-4),
+-> `archive/road-to-obligation-carrier-audit.md`.
+-
+-## Why this roadmap exists at all
+-
+-Rounds 1-4 shipped mechanisms for four failure classes and downgraded the
+-enforcement claim on three more. **No round recorded a post-fix measurement.**
+-The only post-fix numbers live in round-2 and round-3 commit messages, and
+-`src/rules/session-canary.md:98-101` states the gap in its own text:
+-
+-> "The frequency join in `check_enforcement_coverage.ts` now reports the carrier
+-> as covering the obligation — which is a claim about firing, not about
+-> compliance. **Whether the miss rate actually falls is not yet measured, and
+-> this paragraph will say so until a second audit runs.**"
+-
+-This is that second audit. Its central result is not a violation count. It is a
+-comparison between two mechanism classes, and it points the opposite way from the
+-hypothesis round 1 adopted.
+-
+-## Blockers
+-
+-### blocker: stop-refusal-own-pr
+-
+-- **Status:** open
+-- **Owner:** maintainer
+-- **Blocks:** Phase 3 (3.1-3.6) and Phase 6.1
+-- **What to do:** decide whether a concern that can refuse a turn-end ships at
+-  all; if yes, land it in its own PR with its own soak period, separate from the
+-  change set that carries Phases 1, 2, 4 and 5.
+-- **Resolved when:** that decision is recorded and, if affirmative, the refusal
+-  concern has merged in its own PR.
+-
+-Phase 3 registers the suite's **first** concern that can refuse a turn-end. This
+-repo has already been bitten twice by hook-severity mistakes — an `EXIT_BLOCK`
+-that collided with the dispatcher's ladder and reduced every refusal to advisory
+-context, and an advisory `warn` that a host read as a hard deny. Both were found
+-after merge. A concern that can refuse turn-ends has a blast radius of *every
+-session*, which is precisely the shape this repo isolates into its own PR for
+-kernel edits.
+-
+-So Phase 3 and the Phase 6.1 carrier it enables are **not** in the change set
+-that lands Phases 1, 2, 4 and 5. That is a blast-radius decision, not a
+-downgrade of the finding: FC-5 remains the highest-harm measured class in this
+-audit, with the user's own correction as evidence.
+-
+-## The measurement
+-
+-`agent-config conformance:behavior --limit 30` over 27 sessions carrying assistant
+-turns. Every violation record carries its own timestamp, so results split by
+-whether the violating turn happened before or after the carrier merged
+-(2026-08-06 11:03, PR #1190; refined 15:04 and 17:38).
+-
+-| class | carrier shipped | bound at | before merge | after merge | after final refinement |
+-|---|---|---:|---:|---:|---:|
+-| language mirror | advisory state injection | `user_prompt_submit` | 555 | 4 | **19** |
+-| unauthorized irreversible git op | BLOCKING guard | `pre_tool_use` | 8 | 0 | **0** |
+-| evaluator prompt pre-loading its verdict | BLOCKING guard | `pre_tool_use` | 1 | 0 | **0** |
+-| verification claimed on empty output | advisory | `post_tool_use` | 4 | 0 | **1** |
+-
+-Corpus totals for the 30-session window, **after** the instrument correction
+-described below: language-pin 578 · git-authorization 8 · vacuous-evidence 5 ·
+-evidence-steering 1.
+-
+-**Both blocking carriers went to zero. Neither advisory carrier did.**
+-
+-### Three corrections this audit made to its own numbers
+-
+-The instrument lock says a roadmap whose central complaint is unverified numbers
+-does not get to silently swap one of its own. So all four readings of the same
+-phenomenon are published, with what changed between them.
+-
+-| reading | value | why it differs |
+-|---:|---:|---|
+-| round-1 first detector | 303 | classified the language of the most recent **user-role** entry, so an injected English skill body counted as the trigger. Scored the worst session — 136 of 136 English turns — at 3. |
+-| round-1 final | 626 | skips injected bodies. Round 1's own window. |
+-| round-5 first run | 641 | same detector, this round's overlapping-but-different 30-session window. |
+-| **round-5 corrected** | **578** | a compaction SUMMARY arrives as a `user` entry, and the detector let its language set the pin. That is the **same** defect class as the skill body — non-chat content read as the trigger. Excluding it removes 63 flags whose German pin came from a summary rather than from the human. |
+-
+-The 578 is the number this roadmap stands behind. It is lower than 626 and 641,
+-and lowering a violation count is exactly the move that deserves suspicion, so
+-the reason is mechanical and checkable rather than a judgment: `isCompactSummary`
+-is a boolean on the entry, and the exclusion is four lines
+-(`conformance_scan.ts`, the `userText` branch).
+-
+-**A second correction, to the era split.** An earlier pass split the corpus by
+-**session start** and concluded that all violations predated the fix, therefore
+-that the fix could not be evaluated at all. Wrong: a session's file is appended
+-to for as long as the session lives, so `b01eda65` starts 2026-07-29 and is last
+-written 2026-08-07. Splitting by session start attributes a turn to the era its
+-session *opened* in, not the era the turn *happened* in. The table above splits
+-by each violation's own timestamp.
+-
+-### Instrument validation, before the numbers were believed
+-
+-Four flagged turns were read verbatim. All four are genuine user-visible English
+-prose in a German-pinned session — not tool output, not quoted material:
+-
+-> "The trace hides the real cause." · "Regenerating does **not** bring them in"
+-> · "Concurrency is ref-scoped, so that's not it either." · "You're right, and it
+-> is not your PR — it is one specific event type."
+-
+-No false positives in the sample. Separately, the pin was confirmed **present**:
+-57 pin injections are recorded in the session that carries all 23 post-merge
+-violations. The failures happened with the carrier in context.
+-
+-### The shape of the surviving language failures
+-
+-The 23 post-merge violations fall in three runs inside one session. The scan now
+-records, per violation, the number of assistant **prose** turns since the last
+-genuine user prompt and whether a compaction boundary intervened:
+-
+-```
+-run 1 (compaction intervened):  2, 3, 4, 5
+-run 2 (pin present):            1, 2, 3, 4, 5, 6, 7, 8, 9, 10
+-run 3 (pin present):            1, 2, 3, 4, 5, 6, 7, 8, 9
+-```
+-
+-Two things follow, and they point in different directions.
+-
+-Round 1's model was attention decay at long distance — it argued the drift
+-appears ~130 turns after the prompt and concluded that "any mechanism for
+-intra-turn drift has to fire at tool-call cadence (`post_tool_use`) or it does
+-not touch the observed failure at all." **The distance premise is refuted.** In
+-runs 2 and 3 the very first prose turn after the prompt is already wrong, with
+-the pin one turn away, and no run self-corrects. That is a latch, not a decay,
+-and it is why this roadmap does not ship the same carrier at higher frequency:
+-a pin at distance 1 is what already failed.
+-
+-Run 1 is a different failure wearing the same label, and only the machine-
+-recorded compaction flag separates them. See Phase 6.
+-
+-(An earlier hand reconstruction in this session reported these runs starting at
+-turn 4 with gaps of 4, 7, 12 … That counted every assistant entry, including
+-tool-call-only turns; the instrument counts prose turns, which is the unit the
+-rule is about. Both are published because the hand figure appears in this
+-session's own record.)
+-
+-## What the un-gated classes look like now
+-
+-The scan is scoped, by a binding constraint inherited from round 1, to classes
+-that actually have a mechanism. The classes left as prose were read by subagent
+-pass instead, over the five highest-turn sessions. Every count below carries
+-verbatim evidence in the audit record.
+-
+-| class | occurrences | ground truth |
+-|---|---:|---|
+-| promissory turn-closings (FC-5) | 20 across 3 sessions | explicit user correction, quoted below |
+-| roadmap checkbox batching (FC-9) | 19 batch events across 5 sessions | one form is a blanket regex replace over a whole phase |
+-| ask shape (FC-6) | 13 across 4 sessions | includes the dual-source form the Iron Law names, and a wrong-language label |
+-| session canary (FC-7) | 24 of 29 task starts dropped | wrong name emitted twice; honesty clause fired **0** times |
+-| cheap questions | 3 | one offered an option the agent's own guard refuses |
+-
+-The highest-signal evidence in the entire corpus is the user's own turn in
+-`df8171b3`, 2026-08-06T06:22:50Z, after two consecutive turns ended on a promise:
+-
+-> "außerdem ist die ci noch immer rot, du arschloch. !!! ich sagte, fixe das und
+-> warte so lange bis es ok ist. erst dann ist deine aufgabe erledigt"
+-
+-FC-5 was deferred in round 1. Round 2 retracted that deferral's reason as
+-factually wrong and left no successor plan. This roadmap picks it up.
+-
+-The sharpest self-indictment is in `0571cbc6`, 2026-08-06T09:42:59Z — the agent
+-named the classes and then kept emitting two of them in the same session:
+-
+-> "drei Mechanismen sind jetzt als *machbar und billig* belegt, aber nicht
+-> gebaut: FC-5 (Stop-Block gegen „ich melde mich"), FC-9 (Batch-Flip), FC-10
+-> (Kernel-Diff nach Bash)."
+-
+-## The delivery finding — why every enforcement claim rested on an assumption
+-
+-The suite documents that there is no runtime router: `docs/contracts/rule-router.md:234`
+-states "nothing loads `dist/router.json` at runtime", and `:247-252` that a
+-non-kernel rule activates by the model's judgment over text already in context.
+-**Projection is therefore the only reach mechanism there is.** That makes the
+-state of the projection load-bearing, and it is broken:
+-
+-- `.claude/rules/` in the working checkout holds **92** rules. A regeneration in
+-  a clean worktree produces **108**. The tree was last generated 2026-07-05, is
+-  gitignored and untracked, and **21 rules added since then have no entry** —
+-  among them `secret-vcs-guard`, `broken-access-control`,
+-  `senior-engineering-discipline`, `evaluator-independence`, `session-canary`,
+-  `question-not-instruction`, `settings-ask-protocol`, `doc-screenshot-hygiene`,
+-  `active-remediation`, `cross-source-consistency`, `decision-revisit-gate`.
+-  Verified as staleness, not scoping: every one of the 21 was added on or after
+-  2026-07-06, the newest rule present was added 2026-06-24, and rules carrying
+-  the same `workspaces:` value as the absent ones are present in bulk.
+-- **No check verifies completeness or freshness of any host rule tree.**
+-  `check_generator_output_coverage.ts:37` asserts only that the output *root* is
+-  classified; `check_bridge_derivation.ts:34-48` asserts that existing symlinks
+-  resolve, so a missing link is not a wrong link; `check_condensation.ts:43-44`
+-  stops at `dist/`. The last hop — the one that decides what the model sees — is
+-  ungated.
+-- **91 rules load twice, in two different versions.** The project tree and the
+-  machine-global install share 91 filenames and **zero** byte-identical pairs;
+-  about 176 000 tokens of instruction text reach the model across both carriers.
+-  For four rules the divergence is semantic, and for two it is contradictory:
+-  the global copy of `git-history-discipline` asserts an unqualified
+-  "deterministically blocked by the `block-no-verify` PreToolUse guard", while
+-  the shipped copy carries the host-scoped retraction of exactly that claim. The
+-  agent holds both, with no precedence marker. The dedup that exists
+-  (`condense.ts:452-490`) is byte-identity-keyed and therefore inert by design in
+-  precisely this state, which `condense.ts:439-449` calls normal for maintainers.
+-
+-## Two blocking guards refuse read-only commands — both reproduced live here
+-
+-Both fired against this audit's own work, and both have the same root cause:
+-shell-shaped classification performed without respecting quoting.
+-
+-1. `block_no_verify.ts:339` — on a tokeniser failure the guard fail-closes when
+-   the **raw command string** matches `/\bgit\b/`. A plain
+-   `mkdir && cat > file <<HEREDOC` with no git invocation was refused because the
+-   heredoc body mentioned rule names containing "git" and contained apostrophes.
+-   The message's documented workaround (`git commit -F <file>`) does not apply,
+-   because there is no commit.
+-2. `block_unauthorized_git.ts:175` — `invokedSegments` splits on a bare `|`
+-   without quote awareness, so `grep -E "…|npm publish|…"` yields a segment
+-   beginning with `npm` and is classified as an invocation of `publish`, which is
+-   in `BLOCK_OPS`. A read-only search was refused with "Blocked: `publish` with
+-   no authorization in this turn's prompt."
+-
+-`block_no_verify.ts` already contains a faithful POSIX `shlex` port
+-(`:79-178`). The second guard does not use it.
+-
+-## Phase 1 — Delivery integrity for model-carried obligations
+-
+-**What this phase does not claim.** The council pressed on exactly the right
+-point: none of the 21 absent rules is a blocking guard. Hooks bind through
+-`hook_manifest.yaml`, independently of whether a rule's prose is projected, so a
+-stale projection disables no gate. What it removes is the **only** carrier for 21
+-model-carried obligations at project scope, and the integrity of every
+-measurement that assumes the model was told. On a host with no hook surface at
+-all — Copilot, per `git-history-discipline`'s own host-scoped downgrade — the
+-prose is the entire mechanism, and there the absence is the failure.
+-
+-- [x] 1.1 Add a gate that verifies each host rule tree is **complete** against
+-  the generator's own emit set — never a hand-maintained list, per the council's
+-  new-failure-mode warning that a completeness check keyed on a non-canonical
+-  source propagates obsolete rules. For every rule the generator would emit,
+-  assert an entry exists in `.claude/rules/`, `.clinerules/`, `.cursor/rules/`.
+-  Report the missing set by name. Exit non-zero on any gap.
+-- [x] 1.2 Extend the same gate with a **freshness** assertion: no rule in
+-  `dist/agent-src/rules/` may be newer than the projection entry that points at
+-  it. This is the check that would have caught a five-week-stale tree.
+-- [x] 1.3 Add a cross-carrier **divergence report**: compare the project tree
+-  against the machine-global install by body (frontmatter stripped) and name
+-  every rule whose two copies disagree. Advisory, not blocking — a maintainer
+-  developing the package is legitimately ahead of their own global install; the
+-  point is that the condition becomes visible instead of silent.
+-  <!-- Shipped as `src/scripts/report_carrier_divergence.ts`, task
+-  `report-carrier-divergence`, advisory, 17 tests. Two departures from the text,
+-  both forced by measurement. (1) The project carrier is `.claude/rules`, NOT
+-  `dist/agent-src/rules/`: the global installer delivers the five ADR-004
+-  `type: manual` rules and the project projection omits them, so anchoring on
+-  dist reports those five as *shared* when only one carrier delivers them. (2)
+-  "by body (frontmatter stripped)" would have hidden the answer — stripping ALL
+-  frontmatter also strips the installer's `package:`/`source_path:` stamp AND
+-  every real frontmatter change. The report strips only the two ownership keys,
+-  which is what separates an install stamp from a content difference; the
+-  comparison now lives in `_lib/carrier_divergence.ts` shared with
+-  `measure_scope_dedup`, so the two cannot drift. -->
+-  <!-- The step's own premise, re-measured: see round 6 § 4.1-4.2. This roadmap
+-  claimed "91 rules load twice, in two different versions"; all 91 differed by
+-  exactly the two ownership keys and ZERO differed in body. -->
+-- [x] 1.4 Register 1.1-1.3 in the gate ledger and the CI task list, and confirm
+-  the new gate actually scans a non-empty set (the repo's own
+-  `assertScanned` discipline — a gate that examines zero files must not exit 0
+-  silently).
+-  <!-- Walked as three commands, not as a reading. GATE LEDGER: adopted —
+-  `check_rule_projection_integrity` constructs `GateLedger`, plans every
+-  (tree × rule) pair and terminates each one, and `check_gate_completeness` does
+-  not list it among the non-adopters. CI TASK LIST: `task
+-  check-rule-projection-integrity` in taskfiles/ci-fast.yml plus a step in
+-  .github/workflows/consistency.yml; `check_ci_local_parity` reports no
+-  undeclared drift (260 CI / 235 local / 26 declared CI-only / 1 local-only).
+-  1.3 is registered as `task report-carrier-divergence` and deliberately NOT
+-  wired into a blocking pipeline — the `report_*` convention, because a checkout
+-  ahead of its own global install is normal. NON-EMPTY SCAN: `assertScanned`,
+-  measured 330 entries across 3 trees.
+-  ONE HALF REFUSED, WITH THE REASON IN PLACE: the gate is not added to
+-  `src/config/gate-coverage.yml`. `agents/.agent-tools.yml` is
+-  `skip-worktree`-masked to `tools: []` on a maintainer checkout, so the same
+-  gate emits 330 in CI and 0 there; a real floor reds locally, a `min_scanned: 0`
+-  floor is the false-count shape that file rejects, and `unavailable_exit` cannot
+-  express it because the empty case must keep exiting 0 (blocking there is what
+-  PR #1211 repaired). Recorded in the manifest header alongside a measured
+-  correction to its own backstop claim — the unregistered-emitter test matches
+-  only the inline `process.stdout.write` shape, so it is blind to the 175 of 244
+-  gates that emit through `assertScanned`, i.e. to the shape the repo recommends. -->
+-
+-## Phase 2 — Stop the two guards refusing read-only commands
+-
+-- [x] 2.1 `block_unauthorized_git.ts`: make `invokedSegments` quote-aware by
+-  reusing the existing `shlex` port rather than splitting the raw string. A `|`
+-  inside quotes is not a pipe. Closing this must not open a bypass: verify the
+-  documented unwrapping cases (`sh -c`, env-assignment prefixes, heredoc
+-  stripping) still classify real invocations.
+-- [x] 2.2 `block_no_verify.ts:339`: narrow the fail-closed branch. On a tokeniser
+-  failure, test for a plausible git **invocation** — a line whose command
+-  position is `git`, outside any heredoc body — rather than `/\bgit\b/` over the
+-  whole string. Keep fail-closed for the real case: a genuinely unparseable
+-  command that does invoke git is still refused.
+-- [x] 2.3 Regression tests for both, each pinned to the exact command that was
+-  refused in this session, plus a positive case proving the real prohibition
+-  still blocks.
+-
+-## Phase 3 — The refusal class at `stop`, carrying two detectors
+-
+-This is the phase the council shaped. Both members independently named the same
+-mechanism class as the only one with evidence behind it: a check at the point of
+-delivery that can **refuse**, rather than another request in the context.
+-Member 2 put it directly — "explore a post-generation output scanning mechanism
+-that can act like your existing blocking guards, refusing or rewriting outputs";
+-member 1 stated the boundary the measurement found — "refusal-capable intercepts
+-enforce; context injection requests."
+-
+-Round 1 deferred FC-5 on the reasoning that `stop` fires after the reply and so
+-cannot help. Round 2 retracted that: `stop` is block-capable on this host, so an
+-exit-block refuses the turn-end and the agent continues **in the same turn**.
+-The retraction named the two real obstacles; both are in scope here.
+-
+-One concern, one re-entrancy guard, two detectors — because building the unsafe
+-part twice is how a second detector becomes a second outage.
+-
+-- [ ] 3.1 Add a `stop`-bound concern with the re-entrancy guard the retraction
+-  says the dispatcher lacks: state-backed, **one block per turn maximum**, so a
+-  refused turn-end can never loop. This lands first and alone; neither detector
+-  below may be registered before it is proven.
+-- [ ] 3.2 Detector A — promissory closing (FC-5, 20 measured occurrences): the
+-  final user-visible paragraph commits to work not yet performed ("ich melde",
+-  "I'll report", "sobald … melde ich", "als nächstes"), while the turn carries no
+-  blocking question and no completed verification for that claim.
+-- [ ] 3.3 Detector B — language mismatch (19 measured occurrences that survived a
+-  **fresh** pin): the reply's user-visible prose is not in the pinned language.
+-  This is the class Phase 7 refuses to solve by re-injection; a refusal at
+-  delivery is a different mechanism, not the same one at higher frequency.
+-- [ ] 3.4 False-positive pass against the corpus for both detectors. Detector A
+-  must fire on the 20 measured occurrences and must **not** fire on a legitimate
+-  hand-back ("das entscheidest Du", "ich fasse ihn nicht ungefragt an") or on a
+-  promise the same turn then fulfils. Detector B must not fire on quoted tool
+-  output, code, file paths, or identifiers — the exclusions
+-  `language-and-tone` already states. Record measured precision per detector; a
+-  detector that cannot clear a stated bar registers as detection-only and the
+-  roadmap says so.
+-- [ ] 3.5 Adversarial cases, per the council's precision warning: a blocking
+-  guard with a false-positive rate teaches users to bypass it. Include replies
+-  that legitimately quote English prose inside a German turn, and turn-ends that
+-  legitimately yield to the user.
+-- [ ] 3.6 Settings kill-switch per detector, default on, so either can be
+-  disabled without editing the manifest.
+-
+-## Phase 4 — FC-7: the canary's name must come from the settings chain, not the environment
+-
+-The audit found the greeting position used twice with **"Mathias"**, a name that
+-resolves from no layer of the canary chain (`identity.name` is `Matze`,
+-`git config user.name` is `matze4u`). The rule already calls a wrong name worse
+-than a missing one, because the user infers the canary is alive while the model
+-substitutes from memory. The hook resolves the name correctly; it just does not
+-put it where the model must read it.
+-
+-**Closed on inspection — already shipped, and the evidence predates it.**
+-`build_canary_reminder` (`src/scripts/session_canary_hook.ts:201-208`) already
+-emits `Canary active for "<name>"` with the resolved value, and the hook returns
+-a clean no-op when no layer resolves a name (`:258-261`). Both wrong-name
+-occurrences are in session `adf0e5fc` on **2026-08-04**; the per-turn beat merged
+-with PR #1205 on 2026-08-06. So the failure this phase was written against
+-cannot recur through the path it blamed, and there is nothing to build.
+-
+-Kept in the roadmap rather than deleted, because "a second audit re-fixing what
+-the first one shipped" is exactly the waste a decision ledger exists to prevent,
+-and the near-miss is worth one paragraph.
+-
+-- [x] 4.1 Verify the beat carries the resolved name verbatim — it does; no change.
+-- [x] 4.2 Verify an unresolved chain emits no name rather than a guess — it does;
+-  no change.
+-
+-## Phase 5 — Honest downgrades and the published measurement
+-
+-Member 1 argued this phase should land **before** the infrastructure work, and the
+-reason is worth recording rather than just the ordering: "If you fix A first, you
+-restore the unverified assumption that delivery equals compliance, and the lesson
+-from this round gets buried in infrastructure work." Within one change set the
+-ordering is immaterial, so the departure is only in sequencing, not in substance —
+-but the phase is deliberately not last.
+-
+-- [x] 5.1 Replace the "not yet measured … until a second audit runs" paragraph in
+-  `src/rules/session-canary.md` with the round-5 numbers: 24 of 29 task starts
+-  dropped, honesty clause fired 0 times, wrong name twice. The carrier fires;
+-  compliance did not follow. State that, and say what the next mechanism would
+-  have to be.
+-- [x] 5.2 Correct the stale figure in `src/scripts/language_mirror_hook.ts:10,275`
+-  — it cites "~470" while the roadmap's own final baseline is 626 and this round
+-  measures 641.
+-- [x] 5.3 Rules claiming `enforced_by: none` in prose while their frontmatter
+-  omits the key — the coverage join cannot see a downgrade it cannot read.
+-  **The roadmap said six; the real gap was two.** `code-provenance`,
+-  `settings-ask-protocol`, `security-sensitive-stop` and `untrusted-input-defense`
+-  already declare it at HEAD (landed with PR #1205); only
+-  `ui-audit-gate` and `design-review-after-ui-write` did not. Both fixed.
+-  Accepted form is a YAML array of quoted scalars, per
+-  `schemas/rule.schema.json:147-155` and the exact `decl === 'none'` comparison in
+-  `check_enforcement_coverage.ts:380`. Declarations 28 → 30; coverage now reports
+-  `declared 30 · undeclared 84`. Neither rule is in the nine-rule kernel set.
+-- [x] 5.4 Record the blocking-versus-advisory result where the next audit will
+-  find it: a mechanism-selection note that both blocking carriers reached zero
+-  and both advisory carriers did not, with the caveat that the post-fix corpus is
+-  one session and roughly 600 assistant turns.
+-- [x] 5.5 The archived rounds-1-4 roadmap still reads as if its phases worked on
+-  merge; rounds 3 and 4 discovered that two mechanisms were inert and never
+-  amended it. Add a single correction note pointing at this roadmap, without
+-  rewriting the archive.
+-
+-## Phase 6 — The language carrier: one real defect, one refused non-fix
+-
+-The obvious move is to bind the pin additionally at tool-call cadence. **This
+-roadmap declines that**, and the council was unanimous on the reason: it is the
+-same carrier at higher frequency, so it is not a mechanism. Member 1: "Injecting
+-the same ignored text at higher frequency is not a new mechanism. It is the same
+-failed mechanism running more often." Member 2: "F, as a mechanism, is not varied
+-and does not address the underlying issue … it seems to confuse frequency with
+-effectiveness."
+-
+-But splitting the 23 post-merge violations by whether a pin was actually in
+-context separates two different failures, and only one of them is non-compliance:
+-
+-| cluster | count | pin state at the violation | verdict |
+-|---|---:|---|---|
+-| 2026-08-06 11:28-11:53 | 4 | a `compact_boundary` fired at **11:28:32**; the first violation is **26 s later** at 11:28:58, with **no pin between them** | the pin was genuinely **absent** — a state defect |
+-| 2026-08-06 22:35-22:53 | 19 | pins fired at 22:35:12 and 22:47:11; violations follow **26 s and 35 s later** | the pin was **fresh and ignored** — non-compliance |
+-
+-The split is no longer a hand reconstruction: step 6.3 below records
+-`compaction_since_prompt` per violation, and re-running the scan reproduces
+-exactly 4 and 19 — which is how the instrument was validated against a case whose
+-answer was already known.
+-
+-This also resolves the confound member 1 raised: the 176 000-token instruction
+-payload suggested truncation as an alternative explanation for early drift. The
+-timeline says compaction, not truncation, and it accounts for exactly 4 of 23.
+-
+-So the split of work is:
+-
+-- [ ] 6.1 Re-emit the pin across the **compaction boundary**. The hook already
+-  writes the language to `agents/state/language-mirror.json`; what compaction
+-  removes is the context copy, not the state. Restoring it is a state fix in the
+-  same sense round 1 argued for — "a state defect with a deterministic fix, not an
+-  attention deficit" — and it targets the subset where the pin was measurably
+-  **missing**, not measurably ignored.
+-
+-  The slot exists and nothing uses it: `PreCompact` is aliased to `pre_compact`
+-  for claude, cowork and cursor (`hook_manifest.yaml:448,460,468,477`) and
+-  `pre_compact` is in the dispatcher's event list (`dispatch_hook.ts:89`), but it
+-  appears in **no** `platforms:` binding — zero concerns are bound to it.
+-
+-  Design, stated precisely so it is not mistaken for the refused item: `pre_compact`
+-  writes a *pin-lost* marker; `post_tool_use` re-emits the pin **only** while that
+-  marker is set, then clears it. That is **one** extra injection per compaction
+-  event — not one per tool call, which is what the council rejected. The
+-  distinction is the guard, so the guard is not optional.
+-
+-  **Unverified, and it must stay marked so:** whether an injection at
+-  `pre_compact` survives the boundary is not established, which is why the design
+-  routes through state and `post_tool_use` rather than injecting at `pre_compact`
+-  directly. Forcing a compaction in a controlled test was not possible in this
+-  audit.
+-- [ ] 6.2 Do **not** ship a general tool-call-cadence re-pin. Record the refusal
+-  and the council's reasoning in the audit note, so round 6 does not re-propose it.
+-- [x] 6.3 Extend `conformance:behavior` to record, per language violation, the
+-  distance in assistant turns from the last genuine user prompt **and** whether a
+-  compaction boundary intervened. Without the second field this round's split
+-  cannot be reproduced against a future corpus.
+-- [x] 6.5 **The carrier mis-pins on synthetic turns — found in this audit's own
+-  session, and fixed.** Read mid-run, the live state file said:
+-
+-  ```json
+-  { "language": "en", "source": "prompt", "prompt_chars": 6627,
+-    "de_markers": 0, "en_markers": 63 }
+-  ```
+-
+-  No human wrote those 6,627 characters. They were a background-task completion
+-  notification, injected as a user turn — which `user_prompt_submit` sees. The
+-  hook classified it as the trigger, flipped a German session to `en` for every
+-  later turn, and stamped `source: "prompt"`, which is a false provenance claim.
+-
+-  This is the **same defect class the hook exists to remove**: non-chat content
+-  read as the trigger. The hook's own header argues at length that a skill body
+-  must not set the pin, and justifies the event choice with "a skill body never
+-  reaches `user_prompt_submit`". True — but synthetic turns do reach it, so the
+-  event was never sufficient on its own and the content test had to exist too.
+-
+-  Fixed by `isSyntheticPrompt` (`language_mirror_hook.ts`): a turn opening with a
+-  harness envelope tag leaves the pin untouched, exactly as an undetermined
+-  prompt does. Structural markers, not prose, so a human *quoting* a notification
+-  still pins normally — asserted in the tests. 43/43 green, including a case that
+-  pins German, injects an English notification, then asserts both the language
+-  and the `detected_at` stamp are unchanged.
+-
+-  Severity is higher than the count suggests: every long autonomous run that
+-  dispatches background work would flip the pin to the harness's language and
+-  keep it there for the rest of the session. Any future measurement of this class
+-  taken before this fix is contaminated by it — including, in part, the 555
+-  pre-merge violations, since those sessions also ran background work.
+-
+-- [ ] 6.4 The remaining 19 are non-compliance with a fresh pin. They are addressed
+-  by Phase 3 detector B — a refusal at delivery — and by nothing in this phase.
+-  The Iron Law stays (round-1 lock, not reopened) and no claim is made that the
+-  pin fixes the class.
+-
+-## Where this roadmap departs from the council
+-
+-Recorded because a recommendation adopted without a stated reason is cover, not
+-review.
+-
+-| Council position | Disposition |
+-|---|---|
+-| Both: drop the higher-frequency pin (item F) as theatre | **Adopted in full.** Phase 6.2 records the refusal. |
+-| Both: the refusal class is the mechanism with evidence behind it | **Adopted.** Phase 3 carries it, with the language detector added as detector B — which was not in the plan the council reviewed. |
+-| M1: publish the finding (D) before the infrastructure (A) | **Adopted in sequencing only.** Phase 5 is not last; within one change set the order carries no other weight. |
+-| M1: C needs adversarial cases or a blocking guard teaches bypass | **Adopted.** Phase 2.3 and Phase 3.5. |
+-| M1: take the emission-time deferral (FC-11) instead of the checkbox one (FC-9) | **Partly adopted.** FC-9 is dropped from this round on the council's severity reasoning. FC-11 is not taken either: its remaining substance is the trap Phase 2 *fixes* rather than warns about, so taking it as a separate mechanism would duplicate a phase already in scope. Both are in the deferred table with this reason. |
+-| M1: A is measurement, not enforcement — state whether any of the 21 absent rules were blocking guards | **Adopted, and it corrects a claim.** None of the 21 is a blocking guard: hooks bind through the manifest, independent of whether a rule's prose is projected. So Phase 1 restores the delivery of **model-carried obligations** and the integrity of measurement — it does not restore a gate. Phase 1's framing was rewritten accordingly. |
+-| M2: a completeness check against a non-canonical source could propagate obsolete rules | **Adopted.** Phase 1.1 compares against the generator's own emit set, never a hand-maintained list. |
+-| M2: prioritise A first | **Not adopted**, in favour of M1's ordering argument, which gives a reason where M2 gives an ordering. |
+-
+-## Risk Register
+-<!-- risk-review: v1 | reviewed: 2026-08-07 | reviewer: claude/host -->
+-| Rank | Item | Risk type | Description | Mitigation | Anchored under |
+-|------|------|-----------|-------------|------------|----------------|
+-| 1 | Narrowing a blocking guard opens a bypass | implementation | Both Phase-2 fixes make a refusing guard refuse less. The failure mode is not a false positive but a false negative: a real irreversible operation that now classifies as harmless | Adversarial cases, not review, are the control — and they already earned it: the `sh -c` payload case caught a bypass the `block_no_verify` narrowing had introduced, before it shipped. Every fix is pinned to the refused command AND to a positive case proving the real prohibition still blocks | Phase 2 |
+-| 2 | The blocking-versus-advisory conclusion is drawn from one session | implementation | The post-fix corpus is a single session and roughly 600 assistant turns. Both blocking carriers reaching zero could be sampling, and the two classes also differ in what they are asked to catch | Recorded as a prior, never as a law, in both the roadmap and the conformance command. The narrow claim that carries the decisions — a class that failed with its fact verifiably in context is not fixed by delivering that fact more often — rests on the pin-present measurement, not on the zero counts | Phase 6 |
+-| 3 | The projection gate passes vacuously | implementation | A completeness gate whose expected set is empty, or whose scan root moved, reports green having compared nothing — the exact failure class this roadmap documents elsewhere in the tree | `assertScanned` with a dead-scope error, plus a test that pins the empty-dist case; and the freshness leg uses `lstat`, verified empirically, because a following `stat` would compare each source with itself and silently find nothing | Phase 1 |
+-| 4 | The synthetic-prompt filter stops pinning real prompts | implementation | A filter on the language carrier that is too broad silently disables the pin, which is worse than the defect it fixes because nothing would surface it | Structural envelope markers at the head of the turn, never prose, so a human quoting a notification still pins; an unrecognised shape falls through and pins as before. Under-filtering keeps today's behaviour, and a test asserts a quoted notification is not treated as synthetic | Phase 6 |
+-| 5 | Phase 3 never lands, and the highest-harm class stays open | product | The class with the maintainer's own correction as evidence is deferred out of this change set. A deferral with no owner becomes a silent drop — which is what happened to the same class in round 1 | Recorded as a blocker with a named owner, a stated action and a resolution condition, so the dashboard counts it instead of the roadmap merely mentioning it. The deferred table also records why FC-9 and FC-11 were not taken instead | Blockers |
+-| 6 | Lowering a violation count reads as moving a goalpost | product | This round reduces its own headline figure from 641 to 578. A reader who sees only the new number cannot tell a correction from a convenience | All four readings are published with what changed between each — and the reason is a boolean on a transcript entry rather than a judgment, so it is checkable by someone who was not here | Three corrections this audit made to its own numbers |
+-| 7 | A future audit re-fixes what already shipped | product | This round nearly rebuilt the canary name carrier, which had shipped two days earlier; the wrong-name evidence predates it | The near-miss is kept in the roadmap rather than deleted, and the rule itself now states that the inference path is closed. The decision-ledger pass over rounds 1-4 exists for this reason and ran before any mechanism was chosen | Phase 4 |
+-| 8 | The compaction carrier is designed against an unverified assumption | implementation | Phase 6.1 routes through state and `post_tool_use` because whether an injection survives a compaction boundary is unknown. If the assumption is wrong the design is wrong | Marked unverified in the step itself rather than asserted, and the step is blocked behind the same maintainer decision as Phase 3, so it cannot ship on an untested premise | Phase 6 |
+-
+-## Measured, deferred, and why
+-
+-| class | occurrences | why not fixed here |
+-|---|---:|---|
+-| FC-6 ask shape | 13 | The round-1 decision was a trigger redefinition plus an explicit statement that no gate ships, and that statement is still accurate: every measured failure had no numbered-option block by construction, so the existing validator scans exactly the surface that did not fail. A gate needs a reply-shaped advisory channel that no host offers at `stop`. Reason stands. |
+-| FC-9 batched roadmap checkbox flips | 19 batch events | Was a phase in the plan the council reviewed; **dropped on its verdict**. Member 1: "You call it 'cheapest' but it's a distraction from your core finding. Batched checkbox flips are low-severity. You have four retracted deferrals; you chose the one that's easy rather than the one that matters." Member 2: "Postpone action E until you have established more trust in your enforcement measurement accuracy." The retraction's own signal (`- [ ]`→`- [x]` twice in one `Edit` under `agents/roadmaps/`) still stands and stays cheap, so this is a scheduling decision, not a re-deferral on the old wrong reasoning. |
+-| FC-10 undetected edits to protected rules | 1 | Round 2 named the honest fix (post-hoc `git diff --name-only` after a Bash call). Real, but it is a new detection surface rather than a narrowing of an existing one, and Phase 3 already spends this round's appetite for a new blocking concern. |
+-| FC-11 known-trap recurrence at emission | — | Member 1 recommended taking this instead of FC-9. Not taken, and the reason is not the old one: it is partially closed already (the heredoc diagnosis ships in the guard's message), and its remaining substance is the trap **Phase 2 removes** rather than warns about. Taking it as a separate mechanism would duplicate a phase already in scope. |
+-| FC-8 symptom-fix over a named root cause | 3 | Highest cost, least tractable; a two-sided semantic judgement with no deterministic pattern. Reason stands from round 1. |
+-| FC-13 self-invented constraints | 2 | Both operands are available, which is exactly why the temptation is real and the deferral right. Strongest reason in the round-1 table; not reopened. |
+-| Budget instrument counts 9 rules while 92 load | — | Verified (a 10× understatement, with the one live dimension at 100.0 % and two characters of headroom), and the published contract states numbers the implementation does not use. Deferred because correcting the population changes what the ratchet admits, which is a contract decision the maintainer owns, not an agent edit. |
+-| `telegraph-speak.mdc` ships to Cursor while the rule is compile-disabled | 1 | Same stale tree as Phase 1; Phase 1.1 makes it visible. Removing it is a regeneration, not a fix. |
+-| Dead trigger entries (unexpanded `{module_root}/` placeholder, split `command:` convention, 23 % grading floor) | — | Lower severity than it looks, because triggers gate nothing at runtime. What it damages is the instrument, not the reach. Belongs to a router-instrument roadmap, not a behaviour audit. |
+-| Council necessity gate skipped this audit's first question | 1 | The classifier is substring-shaped and read an architecture question as a single-file one because the text contained "one-line". Real false negative on the side its own header says to avoid — but n=1, and the second invocation cleared it. |
+-
+-## Acceptance criteria
+-
+-- [x] Phase 1's gate fails on the current working checkout (92 of 108) and passes
+-  after a regeneration — proving it detects the condition that motivated it.
+-- [x] Both commands that were refused in this session run without being blocked,
+-  and the positive-case tests still refuse the real prohibitions.
+-- [ ] **BLOCKED on `stop-refusal-own-pr`, not open.** Phase 3's concern fires on
+-  the measured promissory closings, does not fire on the measured legitimate
+-  hand-backs, and cannot block a turn-end twice. Nothing was built, so nothing is
+-  claimed; marked here by round 6 Phase 5.1 so an untouched list stops reading as
+-  unverified work.
+-- [x] Every enforcement claim this roadmap touches is either backed by a shipped
+-  mechanism or states plainly that it is model-carried.
+-- [x] No kernel rule text is modified. `verify-before-complete` carries FC-5's
+-  obligation and stays untouched; the mechanism lives in the hook.
+-- [x] The corrected era-split number and the superseded one both appear in this
+-  roadmap, per the instrument lock.
+diff --git a/dist/install/install.mjs b/dist/install/install.mjs
+index 42fdb27a14c14d2787da26c72b0970c4c6675991..4f2b702b2c4a0963590d1591c56b7e14e28225ec 100755
+--- a/dist/install/install.mjs
++++ b/dist/install/install.mjs
+@@ -14961,6 +14961,17 @@ var settingsSchema = external_exports.object({
+       enabled: external_exports.boolean().default(false).describe(
+         "PreToolUse code-graph nudge (ADR-124 Phase 4). Default off. When on AND a native code-graph cache or a consumer-shipped graph.json/SCIP index is present, warns once per session (never blocks) as the agent is about to Grep/Glob or Read a source file \u2014 query the graph first for who-calls/where-used/impact questions (or rebuild if stale, build if absent). Source G\u2019s strict block-first-read mode is deliberately un-ported."
+       )
++    }).default({}),
++    turn_end_gate: external_exports.object({
++      enabled: external_exports.boolean().default(false).describe(
++        "Stop-slot turn-end gate (road-to-conformance-round5 Phase 3). Default off, and it is the only concern that can REFUSE a turn-end rather than a tool call \u2014 so it soaks behind an explicit opt-in before it binds. Round 5 measured the reason: both blocking carriers reached zero violations, neither advisory carrier did, and 19 wrong-language replies survived a pin that had fired 26-35 seconds earlier. A refused turn continues in the SAME turn and is never refused twice."
++      ),
++      promissory: external_exports.boolean().default(true).describe(
++        "Detector A of the turn-end gate: refuse a turn whose closing paragraph promises work not yet performed while asking the user nothing (20 measured occurrences). Inert while hooks.turn_end_gate.enabled is false."
++      ),
++      language: external_exports.boolean().default(true).describe(
++        "Detector B of the turn-end gate: refuse a turn whose user-visible prose is not in the pinned language, with fenced code, inline code, quoted tool output, tables, URLs, paths and identifiers excluded first (19 measured occurrences). Fires 18.0% of turns on the measured corpus, which is why the master switch is off by default. Inert while hooks.turn_end_gate.enabled is false."
++      )
+     }).default({})
+   }),
+   decision_engine: external_exports.object({
+diff --git a/docs/contracts/settings-classes.md b/docs/contracts/settings-classes.md
+index 6f8d503bd01e66ff7f750cd760c2d2c457324292..f017166520d026efe601b7ce6b55f831ebe7c5a2 100644
+--- a/docs/contracts/settings-classes.md
++++ b/docs/contracts/settings-classes.md
+@@ -168,8 +168,8 @@ dispatch runs, not WHETHER the layer exists, so they keep their own C rows.
+ |---|---|
+ | A — preference | 27 |
+ | B — consent | 3 |
+-| C — guarded | 108 |
+-| **Total** | **138** |
++| C — guarded | 111 |
++| **Total** | **141** |
+ 
+ The total is every leaf in the template, where *leaf* means anything that is not
+ a **non-empty** map. An empty map (like the former `subagents.host_capabilities: {}`) is a real
+@@ -313,6 +313,9 @@ Rows follow template order, so a diff against the template reads straight down.
+ | `hooks.rtk_wrap.enabled` | C | `false` | configures code that runs on every tool call |
+ | `hooks.design_slop.enabled` | C | `false` | configures code that runs on every tool call |
+ | `hooks.code_graph.enabled` | C | `false` | configures code that runs on every tool call |
++| `hooks.turn_end_gate.enabled` | C | `false` | arms the only concern that can REFUSE a turn-end; an agent must never be able to switch its own delivery gate on |
++| `hooks.turn_end_gate.promissory` | C | `true` | which refusal the turn-end gate may raise; inert while the master switch is off |
++| `hooks.turn_end_gate.language` | C | `true` | which refusal the turn-end gate may raise; inert while the master switch is off |
+ | `decision_engine.surface_traces` | C | `false` | the decision engine’s own black box; the agent must not be able to close it |
+ | `decision_engine.min_confidence` | C | `"off"` | the confidence gate |
+ | `decision_engine.block_on_risk` | C | `"off"` | the risk-class gate |
+diff --git a/hooks/hooks.json b/hooks/hooks.json
+index 7a1155061182f29268142b28503c438bcd944d43..b3e6a7e43c8d7627c81fd5fce01f82fd203d3a72 100644
+--- a/hooks/hooks.json
++++ b/hooks/hooks.json
+@@ -59,6 +59,16 @@
+           }
+         ]
+       }
++    ],
++    "PreCompact": [
++      {
++        "hooks": [
++          {
++            "type": "command",
++            "command": "B=\"\"; [ -f \"$CLAUDE_PROJECT_DIR/node_modules/@event4u/agent-config/dist/hooks/dispatch.js\" ] && B=\"$CLAUDE_PROJECT_DIR/node_modules/@event4u/agent-config/dist/hooks/dispatch.js\"; [ -z \"$B\" ] && [ -f \"$CLAUDE_PROJECT_DIR/dist/hooks/dispatch.js\" ] && [ -f \"$CLAUDE_PROJECT_DIR/src/scripts/hook_manifest.yaml\" ] && B=\"$CLAUDE_PROJECT_DIR/dist/hooks/dispatch.js\"; if [ -n \"$B\" ] && command -v node >/dev/null 2>&1; then exec node \"$B\" --platform claude --event pre_compact --native-event PreCompact --project-dir \"$CLAUDE_PROJECT_DIR\" --min-version 1; fi; BIN=\"$CLAUDE_PROJECT_DIR/agent-config\"; [ -x \"$BIN\" ] || BIN=agent-config; command -v \"$BIN\" >/dev/null 2>&1 || exit 0; \"$BIN\" dispatch:hook --platform claude --event pre_compact --native-event PreCompact --project-dir \"$CLAUDE_PROJECT_DIR\" --min-version 1"
++          }
++        ]
++      }
+     ]
+   }
+ }
+diff --git a/src/config/agent-settings.template.yml b/src/config/agent-settings.template.yml
+index d7385a0c57d39f93bc06ef9957dad63300b2f22e..fa36af63190b2633ff3e5d466d15dbfea6607856 100644
+--- a/src/config/agent-settings.template.yml
++++ b/src/config/agent-settings.template.yml
+@@ -1190,6 +1190,34 @@ hooks:
+   injection_scan:
+     enabled: false
+ 
++  # Stop-slot turn-end gate (road-to-conformance-round5 Phase 3). Default-OFF,
++  # and it is the only concern in this file that can REFUSE a turn-end rather
++  # than a tool call — so it soaks behind an explicit opt-in before it binds.
++  #
++  # Round 5 measured what it is for: both BLOCKING carriers reached zero
++  # violations, neither ADVISORY carrier did, and 19 wrong-language replies
++  # survived a pin that had fired 26-35 seconds earlier. A reminder at higher
++  # frequency is the same failed mechanism running more often; a check at
++  # delivery that can say no is a different one.
++  #
++  # enabled     — master switch. false = the concern is a no-op costing one
++  #               settings read per turn-end.
++  # promissory  — detector A: the closing paragraph promises work not yet
++  #               performed while asking the user nothing (20 measured).
++  # language    — detector B: the user-visible prose is not in the pinned
++  #               language, with code, quotes, paths and identifiers already
++  #               excluded (19 measured).
++  #
++  # Both detectors default ON *within* the master switch, so opting in needs
++  # one line, and either can be silenced without editing the hook manifest.
++  # A refused turn continues in the same turn and is never refused twice —
++  # re-entrancy is `stop_hook_active` plus a marker keyed on the last user
++  # message, never on the reply.
++  turn_end_gate:
++    enabled: false
++    promissory: true
++    language: true
++
+   # PreToolUse RTK-wrap nudge (token-saving Phase 3). Default-OFF. When enabled
+   # AND `rtk` is on PATH (a live probe — not a self-reported flag), warns (exit
+   # 2, never blocks) "re-run wrapped with rtk" before a single verbose CLI
+diff --git a/src/scripts/hook_manifest.yaml b/src/scripts/hook_manifest.yaml
+index 0048b71094034b2fe7932aed27c4063e469ccd3a..808e91592c028a25fbfd53a60e9f2a595f0a7189 100644
+--- a/src/scripts/hook_manifest.yaml
++++ b/src/scripts/hook_manifest.yaml
+@@ -422,6 +422,31 @@ concerns:
+     args: []
+     fail_closed: false
+     severity: advisory
++  # road-to-conformance-round5 Phase 3 — the FIRST concern that can refuse a
++  # turn-END. Round 5 measured the reason: both blocking carriers reached zero
++  # violations, neither advisory carrier did, and 19 language violations
++  # survived a pin that had fired 26-35 seconds earlier. Refusal-capable
++  # intercepts enforce; context injection requests.
++  #
++  # Two detectors on one guard — promissory closing (20 measured) and language
++  # mismatch (19 measured) — because building the unsafe part twice is how a
++  # second detector becomes a second outage.
++  #
++  # DEFAULT OFF (`hooks.turn_end_gate.enabled`), per the council
++  # recorded in round 6: the mechanism exists and soaks before it binds. Both
++  # detectors are default ON *within* the master switch, which is round 5
++  # § 3.6's ask read so that both hold at once.
++  #
++  # fail_closed: FALSE, deliberately and unlike every other blocking concern
++  # here: a crash in a turn-end gate must let the turn END. Failing closed on
++  # this slot does not degrade the session, it wedges it. Re-entrancy is two
++  # independent layers (`stop_hook_active`; a marker keyed on the last USER
++  # message, never the reply) — see the hook's file header.
++  turn-end-gate:
++    script: src/scripts/hooks/turn_end_gate_hook.ts
++    args: []
++    fail_closed: false
++    severity: blocking
+   # road-to-token-economy-cache Phase 5.1/5.2 — edit-shape advisory. Fires
+   # when a Write replaced an existing, git-tracked file of >= 50 lines while
+   # the effective diff (`git diff HEAD --numstat` added+deleted vs current
+@@ -509,10 +534,17 @@ platforms:
+   claude:
+     session_start:    [chat-history, hot-context, handoff-context, session-canary, council-availability, first-run-gate, onboarding-gate, verify-before-complete, minimal-safe-diff, profile-staleness, wrapper-freshness, surface-probe, session-register]
+     session_end:      [chat-history, memory-learn, session-register]
+-    stop:             [chat-history, hot-context, verify-before-complete, team-review-gate, end-review-nudge, self-repair, session-register, session-eol]
++    stop:             [chat-history, hot-context, verify-before-complete, team-review-gate, end-review-nudge, turn-end-gate, self-repair, session-register, session-eol]
+     user_prompt_submit: [chat-history, verify-before-complete, minimal-safe-diff, language-mirror, delegation-nudge, git-authorization, session-canary, self-repair, session-register]
+     pre_tool_use:     [block-no-verify, block-unauthorized-git, evidence-independence, block-kernel-rule-writes, block-config-weakening, rtk-wrap, design-slop, code-graph-nudge, reread-guard]
+-    post_tool_use:    [chat-history, roadmap-progress, context-hygiene, verify-before-complete, minimal-safe-diff, injection-scan, pr-url-reminder, orchestration-record, edit-shape]
++    post_tool_use:    [chat-history, roadmap-progress, context-hygiene, verify-before-complete, minimal-safe-diff, injection-scan, pr-url-reminder, orchestration-record, edit-shape, language-mirror]
++    # round-5 § 6.1 — the ONLY binding on this slot in the tree. `pre_compact`
++    # sets a pin-lost marker; the `post_tool_use` entry above re-emits the pin
++    # exactly once while that marker is set, then clears it. One extra
++    # injection per compaction EVENT — never one per tool call, which is the
++    # shape § 6.2 refuses. claude only: it is the sole verified platform, and
++    # the measured compaction defect is a Claude Code transcript fact.
++    pre_compact:      [language-mirror]
+ 
+   # Cowork — the Claude desktop app's local-agent-mode runtime, built
+   # on top of the Claude Code CLI. Same lifecycle vocabulary, same
+diff --git a/src/scripts/hooks/concern_registry.ts b/src/scripts/hooks/concern_registry.ts
+index 78c207c13a35c84fd491e72084cce9a7627239d5..fcba83bd30111257a0cdb7cddb77c8341b3185bf 100644
+--- a/src/scripts/hooks/concern_registry.ts
++++ b/src/scripts/hooks/concern_registry.ts
+@@ -57,6 +57,7 @@ import { main as codeGraphNudgeMain } from './code_graph_nudge_hook.js';
+ import { main as orchestrationRecordMain } from './orchestration_record_hook.js';
+ import { main as delegationNudgeMain } from './delegation_nudge_hook.js';
+ import { main as endReviewNudgeMain } from './end_review_nudge_hook.js';
++import { main as turnEndGateMain } from './turn_end_gate_hook.js';
+ import { main as editShapeMain } from './edit_shape_hook.js';
+ import { main as rereadGuardMain } from './reread_guard_hook.js';
+ import { main as sessionEolMain } from './session_eol_hook.js';
+@@ -99,6 +100,7 @@ export const CONCERN_REGISTRY: Readonly<Record<string, ConcernMain>> = {
+     'src/scripts/hooks/orchestration_record_hook.ts': orchestrationRecordMain as ConcernMain,
+     'src/scripts/hooks/delegation_nudge_hook.ts': delegationNudgeMain as ConcernMain,
+     'src/scripts/hooks/end_review_nudge_hook.ts': endReviewNudgeMain as ConcernMain,
++    'src/scripts/hooks/turn_end_gate_hook.ts': turnEndGateMain as ConcernMain,
+     'src/scripts/hooks/edit_shape_hook.ts': editShapeMain as ConcernMain,
+     'src/scripts/hooks/reread_guard_hook.ts': rereadGuardMain as ConcernMain,
+     'src/scripts/hooks/session_eol_hook.ts': sessionEolMain as ConcernMain,
+diff --git a/src/scripts/hooks/turn_end_gate_hook.ts b/src/scripts/hooks/turn_end_gate_hook.ts
+new file mode 100644
+index 0000000000000000000000000000000000000000..ecd8af8eccd2b76a98f22a3cb7d3471c0e3d2a61
+--- /dev/null
++++ b/src/scripts/hooks/turn_end_gate_hook.ts
+@@ -0,0 +1,507 @@
++/**
++ * `turn-end-gate` — the suite's FIRST concern that can refuse a turn-end.
++ *
++ * Round 5 of the conformance audit measured the thing this exists for: the
++ * two BLOCKING carriers reached zero violations, neither ADVISORY carrier
++ * did, and 19 language violations survived a pin that had fired 26-35
++ * seconds earlier. The council read the same split from both sides —
++ * "refusal-capable intercepts enforce; context injection requests". So this
++ * is deliberately not another reminder. It is a check at the point of
++ * delivery that can say no.
++ *
++ * Two detectors ride on one guard, because building the unsafe part twice
++ * is how a second detector becomes a second outage:
++ *
++ *   A — promissory closing  (FC-5, 20 measured occurrences)
++ *   B — language mismatch   (19 measured occurrences, fresh pin present)
++ *
++ * ## Re-entrancy — the shape, stated before registration
++ *
++ * `road-to-conformance-round6.md` § blocker records the hole this must not
++ * fall into: "the re-entrancy guard is specified and unverified. What
++ * happens when the refusal *itself* triggers the turn-end event?" Two
++ * layers, each sufficient alone:
++ *
++ *   1. `stop_hook_active` — Claude sets it when a Stop follows a
++ *      stop-hook block. Set ⇒ this turn was already refused ⇒ allow.
++ *      Nothing else in `src/` reads this field today; it is the host's own
++ *      answer to the question above.
++ *
++ *   2. A state marker keyed on the LAST USER MESSAGE, never on the reply.
++ *      After a refusal the model writes a *new* reply, so a reply-keyed
++ *      marker would let the same turn be refused again, and again. The
++ *      user prompt does not change within a turn, so the same turn yields
++ *      the same key and is refused at most once; the next genuine prompt
++ *      yields a new key and the gate re-arms itself with no cleanup.
++ *
++ * The failure this ordering prevents is not a loop but a wedge: a turn that
++ * can never end. Layer 2 also covers the host that does not send
++ * `stop_hook_active` at all.
++ *
++ * ## Default OFF — and why, given the roadmap says otherwise
++ *
++ * `road-to-conformance-round5.md` § 3.6 asks for a kill-switch per
++ * detector, "default on". The council recorded in round 6 (2026-08-08)
++ * asked for the mechanism to be opt-in, "defaulting to off, so the
++ * mechanism exists and soaks before it binds" — two prior hook-severity
++ * mistakes plus a turn-end blast radius made default-on uninsurable in
++ * their reading. Both are satisfied literally: the MASTER switch
++ * (`hooks.turn_end_gate.enabled`) is default OFF, and WITHIN it both
++ * detectors are default ON. A maintainer who opts in gets both without
++ * further configuration; until then this concern is a no-op that costs one
++ * settings read.
++ *
++ * CONTRACT: dispatcher-internal exit is 1 (EXIT_BLOCK) on a fire, 0
++ * otherwise. `fail_closed: false` — deliberately. A crash in a turn-end
++ * gate must resolve to "let the turn end", never to a wedge; promoting a
++ * crash to a block is the outage this whole file is arranged to avoid.
++ * Every unreadable input, missing transcript, absent pin, or malformed
++ * state resolves to silence.
++ */
++import * as crypto from 'node:crypto';
++import * as fs from 'node:fs';
++import * as path from 'node:path';
++import { fileURLToPath, pathToFileURL } from 'node:url';
++
++import { classify, STATE_FILE as LANGUAGE_STATE_FILE, type Verdict } from '../language_mirror_hook.js';
++import { isSafeTranscriptPath } from './end_review_nudge_hook.js';
++import { unwrap, type JsonObject, type JsonValue } from './envelope.js';
++import { readHookStdin } from './hook_stdin.js';
++import { atomic_write_json, is_replay_mode } from './state_io.js';
++
++/** Dispatcher-internal block code. Pinned to 1 by `concern_block_exit_parity`. */
++const EXIT_BLOCK = 1;
++const EXIT_ALLOW = 0;
++
++/** Detector identity, used in the state marker and the refusal text. */
++export type DetectorId = 'promissory' | 'language';
++
++export interface Finding {
++    detector: DetectorId;
++    /** The span that triggered it — quoted back so the refusal is actionable. */
++    evidence: string;
++    reason: string;
++}
++
++// ---------------------------------------------------------------------------
++// Text extraction — what counts as "user-visible prose"
++// ---------------------------------------------------------------------------
++
++/**
++ * Strip everything `language-and-tone` already exempts from the mirror
++ * obligation: fenced code, inline code, block quotes (quoted tool output),
++ * URLs, and bare paths/identifiers. What remains is the prose the rule
++ * actually binds.
++ *
++ * Deliberately conservative — over-stripping costs a missed detection,
++ * under-stripping costs a false refusal, and a blocking guard with a false
++ * positive rate teaches users to bypass it.
++ */
++export function visibleProse(reply: string): string {
++    let text = reply;
++    // Fenced blocks, both ``` and ~~~ (markdown-safe-codeblocks ships both).
++    text = text.replace(/^[ \t]*(`{3,}|~{3,})[\s\S]*?^[ \t]*\1[ \t]*$/gm, ' ');
++    // An unterminated fence at the end of a reply — drop the tail.
++    text = text.replace(/^[ \t]*(`{3,}|~{3,})[\s\S]*$/m, ' ');
++    // Inline code.
++    text = text.replace(/`[^`\n]*`/g, ' ');
++    // Block quotes — the shape quoted tool output takes.
++    text = text.replace(/^[ \t]*>.*$/gm, ' ');
++    // Markdown tables — cells are frequently identifiers and paths.
++    text = text.replace(/^[ \t]*\|.*\|[ \t]*$/gm, ' ');
++    // URLs.
++    text = text.replace(/\bhttps?:\/\/\S+/g, ' ');
++    // Path-shaped and identifier-shaped tokens.
++    text = text.replace(/\S*\/\S+/g, ' ');
++    text = text.replace(/\b[\w.-]+\.(ts|js|md|json|ya?ml|py|php|txt|sh)\b/g, ' ');
++    return text;
++}
++
++/** The final user-visible paragraph — where a promissory closing lives. */
++export function finalParagraph(reply: string): string {
++    const prose = visibleProse(reply).trim();
++    if (!prose) return '';
++    const paragraphs = prose
++        .split(/\n\s*\n/)
++        .map((p) => p.trim())
++        .filter((p) => p.length > 0);
++    return paragraphs.length === 0 ? '' : paragraphs[paragraphs.length - 1]!;
++}
++
++// ---------------------------------------------------------------------------
++// Detector A — promissory closing
++// ---------------------------------------------------------------------------
++
++/**
++ * A commitment to work not yet performed. Both languages, because the
++ * measured corpus is bilingual and a German-only list would have caught
++ * roughly half of the 20.
++ */
++const PROMISSORY = [
++    /\bich melde mich\b/i,
++    /\bmelde ich (mich|dir|Dir)\b/i,
++    /\bich melde\b/i,
++    /\bich berichte\b/i,
++    /\bich (sage|gebe) (dir |Dir )?Bescheid\b/i,
++    /\bals n(ä|ae)chstes (werde|mache|baue|pr(ü|ue)fe) ich\b/i,
++    // German puts the infinitive at the END of the clause ("ich werde jetzt
++    // die Tests schreiben"), so the verb cannot be matched adjacent to
++    // "werde" — it has to be looked for across the rest of the sentence. The
++    // negative lookahead keeps a stated REFUSAL to act ("ich werde das nicht
++    // anfassen") out: declining to do something is not a promise to do it.
++    /\bich werde\b(?![^.!?\n]*\bnicht\b)[^.!?\n]*\b\w{3,}en\b/i,
++    /\bI(?:'| wi)ll (report|let you know|update you|follow up)\b/i,
++    /\bI(?:'| wi)ll (now |then )?\w+ (it|that|this|next)\b/i,
++    /\bnext,? I(?:'| wi)ll\b/i,
++    /\bI am going to\b/i,
++];
++
++/**
++ * A legitimate hand-back is the opposite speech act: it gives the decision
++ * to the user and ends the turn on purpose. `scope-control` requires
++ * exactly this shape, so refusing it would put two rules in direct conflict.
++ */
++const HANDBACK = [
++    /\bdas entscheidest (du|Du)\b/i,
++    /\bdeine Entscheidung\b/i,
++    /\bich fasse .{0,40}nicht ungefragt an\b/i,
++    /\bsag (Bescheid|ein Wort)\b/i,
++    /\bwarte auf (deine|Deine|dein|Dein)\b/i,
++    /\byour call\b/i,
++    /\byou decide\b/i,
++    /\blet me know (which|if|whether)\b/i,
++    /\bwaiting for your\b/i,
++];
++
++/**
++ * Fires when the FINAL paragraph promises work, the turn hands nothing
++ * back, and no question is put to the user. All three, because the
++ * measured false-positive shapes are exactly the ones that fail one of them.
++ */
++export function detectPromissory(reply: string): Finding | null {
++    const tail = finalParagraph(reply);
++    if (!tail) return null;
++
++    // A blocking question IS the stop condition — never refuse one.
++    if (tail.includes('?')) return null;
++    if (HANDBACK.some((re) => re.test(tail))) return null;
++
++    for (const re of PROMISSORY) {
++        const m = tail.match(re);
++        if (m) {
++            return {
++                detector: 'promissory',
++                evidence: m[0],
++                reason:
++                    'the closing paragraph promises work that has not been performed, ' +
++                    'and the turn asks the user nothing — so nothing ends this turn but the promise itself',
++            };
++        }
++    }
++    return null;
++}
++
++// ---------------------------------------------------------------------------
++// Detector B — language mismatch
++// ---------------------------------------------------------------------------
++
++export interface LanguagePin {
++    language: Verdict;
++}
++
++/** Read the pin the language-mirror hook wrote. Absent ⇒ no obligation. */
++export function readLanguagePin(workspaceRoot: string): Verdict {
++    try {
++        const raw = fs.readFileSync(path.join(workspaceRoot, LANGUAGE_STATE_FILE), 'utf-8');
++        const decoded: unknown = JSON.parse(raw);
++        if (typeof decoded === 'object' && decoded !== null && !Array.isArray(decoded)) {
++            const lang = (decoded as Record<string, unknown>)['language'];
++            if (lang === 'de' || lang === 'en') return lang;
++        }
++    } catch {
++        // no pin, unreadable pin, malformed pin — all mean "no obligation"
++    }
++    return 'und';
++}
++
++/**
++ * Fires only when the classifier is CONFIDENT the prose is the other
++ * language. `classify` returns `und` below its marker floor, and `und`
++ * never fires — a short reply is not evidence of drift.
++ */
++export function detectLanguage(reply: string, pinned: Verdict): Finding | null {
++    if (pinned !== 'de' && pinned !== 'en') return null;
++    const prose = visibleProse(reply);
++    const verdict = classify(prose);
++    if (verdict.language === 'und') return null;
++    if (verdict.language === pinned) return null;
++    return {
++        detector: 'language',
++        evidence: prose.trim().slice(0, 120),
++        reason:
++            `the pinned reply language is "${pinned}" but the user-visible prose classifies as ` +
++            `"${verdict.language}" (${verdict.de_markers} de / ${verdict.en_markers} en markers, ` +
++            'code, quotes, paths and identifiers already excluded)',
++    };
++}
++
++// ---------------------------------------------------------------------------
++// Re-entrancy — the guard, keyed on the turn, not on the reply
++// ---------------------------------------------------------------------------
++
++function stateDir(workspaceRoot: string): string {
++    return path.join(workspaceRoot, 'agents', 'runtime', 'state', 'turn-end-gate');
++}
++
++function stateFile(workspaceRoot: string, turnKey: string): string {
++    return path.join(stateDir(workspaceRoot), `${turnKey}.json`);
++}
++
++/**
++ * The turn's identity. Session id plus the last USER message — see the file
++ * header for why the reply must not be part of it.
++ */
++export function deriveTurnKey(sessionId: string, lastUserText: string): string {
++    return crypto
++        .createHash('sha256')
++        .update(`${sessionId}\n${lastUserText}`)
++        .digest('hex')
++        .slice(0, 32);
++}
++
++export function alreadyRefusedThisTurn(workspaceRoot: string, turnKey: string): boolean {
++    try {
++        return fs.existsSync(stateFile(workspaceRoot, turnKey));
++    } catch {
++        return false;
++    }
++}
++
++function markRefusedThisTurn(workspaceRoot: string, turnKey: string, detector: DetectorId): void {
++    if (is_replay_mode()) return;
++    try {
++        atomic_write_json(stateFile(workspaceRoot, turnKey), {
++            refused_at: new Date().toISOString(),
++            detector,
++        });
++    } catch {
++        // A state-write failure must never wedge the turn. Losing the marker
++        // costs at most one extra refusal; failing closed here would cost the
++        // session.
++    }
++}
++
++// ---------------------------------------------------------------------------
++// Transcript
++// ---------------------------------------------------------------------------
++
++export interface TranscriptTail {
++    lastAssistant: string;
++    lastUser: string;
++}
++
++/**
++ * Last assistant text and last user text from a Claude JSONL transcript.
++ * Mirrors `chat_history._extract_claude_transcript_response` for the
++ * assistant half and adds the user half the turn key needs.
++ */
++export function readTranscriptTail(
++    transcriptPath: string,
++    opts: { homeDir?: string; maxBytes?: number } = {},
++): TranscriptTail {
++    const empty: TranscriptTail = { lastAssistant: '', lastUser: '' };
++    if (!transcriptPath || !isSafeTranscriptPath(transcriptPath, opts)) return empty;
++    let lines: string[];
++    try {
++        lines = fs.readFileSync(transcriptPath, 'utf-8').split('\n');
++    } catch {
++        return empty;
++    }
++    let lastAssistant = '';
++    let lastUser = '';
++    for (const rawLine of lines) {
++        const line = rawLine.trim();
++        if (!line) continue;
++        let obj: unknown;
++        try {
++            obj = JSON.parse(line);
++        } catch {
++            continue;
++        }
++        if (typeof obj !== 'object' || obj === null || Array.isArray(obj)) continue;
++        const entry = obj as Record<string, unknown>;
++        const role = entry['type'];
++        if (role !== 'assistant' && role !== 'user') continue;
++        const msg = entry['message'];
++        if (typeof msg !== 'object' || msg === null || Array.isArray(msg)) continue;
++        const text = _messageText((msg as Record<string, unknown>)['content']);
++        if (text === null) continue;
++        if (role === 'assistant') lastAssistant = text;
++        else lastUser = text;
++    }
++    return { lastAssistant: lastAssistant.trim(), lastUser: lastUser.trim() };
++}
++
++function _messageText(content: unknown): string | null {
++    if (typeof content === 'string') return content;
++    if (!Array.isArray(content)) return null;
++    const parts: string[] = [];
++    for (const blk of content) {
++        if (typeof blk !== 'object' || blk === null || Array.isArray(blk)) continue;
++        const b = blk as Record<string, unknown>;
++        if (b['type'] !== 'text') continue;
++        const t = b['text'];
++        if (typeof t === 'string') parts.push(t);
++    }
++    return parts.length > 0 ? parts.join('\n') : null;
++}
++
++// ---------------------------------------------------------------------------
++// Settings — master OFF, detectors ON within it
++// ---------------------------------------------------------------------------
++
++export interface GateSettings {
++    enabled: boolean;
++    promissory: boolean;
++    language: boolean;
++}
++
++/**
++ * Read the three switches with a line walker rather than the full settings
++ * cascade: this concern runs on EVERY turn-end and is default-off, so the
++ * common path must not pay for a cascade load it will discard.
++ */
++export function readGateSettings(workspaceRoot: string): GateSettings {
++    const off: GateSettings = { enabled: false, promissory: true, language: true };
++    let raw: string;
++    try {
++        raw = fs.readFileSync(path.join(workspaceRoot, '.agent-settings.yml'), 'utf-8');
++    } catch {
++        return off;
++    }
++    // Indent-aware: the block ends at the first line indented no deeper than
++    // the header. A width-agnostic `^\S` terminator would swallow the next
++    // sibling key and read ITS `enabled:` as ours.
++    const lines = raw.split('\n');
++    const headerIdx = lines.findIndex((l) => /^\s*turn_end_gate:\s*$/.test(l));
++    if (headerIdx === -1) return off;
++    const headerIndent = (lines[headerIdx]!.match(/^\s*/) ?? [''])[0].length;
++    const body: string[] = [];
++    for (const line of lines.slice(headerIdx + 1)) {
++        if (line.trim() === '' || line.trimStart().startsWith('#')) continue;
++        const indent = (line.match(/^\s*/) ?? [''])[0].length;
++        if (indent <= headerIndent) break;
++        body.push(line);
++    }
++    const flag = (name: string, dflt: boolean): boolean => {
++        const re = new RegExp(`^\\s+${name}:\\s*(true|false)\\s*$`);
++        for (const line of body) {
++            const m = line.match(re);
++            if (m) return m[1] === 'true';
++        }
++        return dflt;
++    };
++    return {
++        enabled: flag('enabled', false),
++        promissory: flag('promissory', true),
++        language: flag('language', true),
++    };
++}
++
++// ---------------------------------------------------------------------------
++// main
++// ---------------------------------------------------------------------------
++
++function str(v: JsonValue | undefined): string {
++    return typeof v === 'string' ? v : '';
++}
++
++export function main(): number {
++    let envelope: JsonObject;
++    let payload: JsonObject;
++    try {
++        [envelope, payload] = unwrap(readHookStdin(), 'claude');
++    } catch {
++        return EXIT_ALLOW;
++    }
++
++    // Layer 1 — the host's own answer to "did I already refuse this turn?".
++    if (payload['stop_hook_active'] === true) return EXIT_ALLOW;
++
++    const workspaceRoot = str(envelope['workspace_root'] as JsonValue | undefined) || process.cwd();
++
++    const settings = readGateSettings(workspaceRoot);
++    if (!settings.enabled) return EXIT_ALLOW;
++
++    const transcriptPath = str(
++        (payload['transcript_path'] ?? payload['transcriptPath']) as JsonValue | undefined,
++    );
++    // `AGENT_CONFIG_TRANSCRIPT_HOME` exists for the test harness only: real
++    // transcripts live under `~/.claude/projects/**` and production never sets
++    // it. Without it a test cannot exercise the path-safety check at all,
++    // which would leave the one security-relevant branch unmeasured.
++    const homeOverride = process.env['AGENT_CONFIG_TRANSCRIPT_HOME'];
++    const { lastAssistant, lastUser } = readTranscriptTail(
++        transcriptPath,
++        homeOverride ? { homeDir: homeOverride } : {},
++    );
++    if (!lastAssistant) return EXIT_ALLOW;
++
++    // Layer 2 — the turn-keyed marker. Reply-independent by construction.
++    const turnKey = deriveTurnKey(
++        str(envelope['session_id'] as JsonValue | undefined) || 'unknown-session',
++        lastUser,
++    );
++    if (alreadyRefusedThisTurn(workspaceRoot, turnKey)) return EXIT_ALLOW;
++
++    const findings: Finding[] = [];
++    if (settings.promissory) {
++        const f = detectPromissory(lastAssistant);
++        if (f) findings.push(f);
++    }
++    if (settings.language) {
++        const f = detectLanguage(lastAssistant, readLanguagePin(workspaceRoot));
++        if (f) findings.push(f);
++    }
++    if (findings.length === 0) return EXIT_ALLOW;
++
++    markRefusedThisTurn(workspaceRoot, turnKey, findings[0]!.detector);
++
++    const lines = findings.map(
++        (f) => `  · ${f.detector}: ${f.reason}\n    evidence: ${JSON.stringify(f.evidence)}`,
++    );
++    process.stderr.write(
++        `turn-end-gate: REFUSED — this turn is not finished.\n${lines.join('\n')}\n` +
++            '  Do the promised work now, or correct the language, then end the turn.\n' +
++            '  This turn will not be refused a second time.\n' +
++            '  Disable: hooks.turn_end_gate.enabled: false in .agent-settings.yml\n',
++    );
++    return EXIT_BLOCK;
++}
++
++// Bundle-safety: never auto-run when inlined into an esbuild bundle, where
++// every module shares the bundle's `import.meta.url`.
++declare const __AGENT_CONFIG_BUNDLE__: boolean | undefined;
++function _isCliEntry(): boolean {
++    if (typeof __AGENT_CONFIG_BUNDLE__ !== 'undefined' && __AGENT_CONFIG_BUNDLE__) {
++        return false;
++    }
++    if (process.argv[1] === undefined) {
++        return false;
++    }
++    const argvUrl = pathToFileURL(path.resolve(process.argv[1])).href;
++    if (import.meta.url === argvUrl) {
++        return true;
++    }
++    try {
++        const here = fs.realpathSync(fileURLToPath(import.meta.url));
++        const argv = fs.realpathSync(path.resolve(process.argv[1]));
++        return here === argv;
++    } catch {
++        return false;
++    }
++}
++
++if (_isCliEntry()) {
++    process.exit(main());
++}
+diff --git a/src/scripts/language_mirror_hook.ts b/src/scripts/language_mirror_hook.ts
+index 2a506dd57a17996bbfa3804ea3c4a0cc3b35e0fb..8a6169f68e040f2cdbcf57f0292c9a7a900db9a5 100644
+--- a/src/scripts/language_mirror_hook.ts
++++ b/src/scripts/language_mirror_hook.ts
+@@ -87,6 +87,13 @@ const EXIT_WARN = 2;
+ 
+ export const STATE_FILE = path.join("agents", "state", "language-mirror.json");
+ 
++/**
++ * Marker written at `pre_compact` and cleared by the single `post_tool_use`
++ * re-emit that follows it (round-5 § 6.1). Its existence — not a counter — is
++ * what bounds the re-injection to ONE per compaction event.
++ */
++export const PIN_LOST_MARKER = path.join("agents", "state", "language-mirror.pin-lost");
++
+ type JsonValue = string | number | boolean | null | JsonValue[] | { [k: string]: JsonValue };
+ type JsonObject = { [k: string]: JsonValue };
+ 
+@@ -380,6 +387,64 @@ function _extractPrompt(payload: JsonObject): string {
+   return "";
+ }
+ 
++/** Record that compaction is about to drop the context copy of the pin. */
++export function _setPinLost(consumer_root: string): void {
++  try {
++    const target = path.join(consumer_root, PIN_LOST_MARKER);
++    fs.mkdirSync(path.dirname(target), { recursive: true });
++    fs.writeFileSync(target, new Date().toISOString());
++  } catch {
++    // Observability only — a failed marker write costs one un-restored pin,
++    // never a broken turn.
++  }
++}
++
++export function _pinLost(consumer_root: string): boolean {
++  try {
++    return fs.existsSync(path.join(consumer_root, PIN_LOST_MARKER));
++  } catch {
++    return false;
++  }
++}
++
++function _clearPinLost(consumer_root: string): void {
++  try {
++    fs.rmSync(path.join(consumer_root, PIN_LOST_MARKER), { force: true });
++  } catch {
++    // If it cannot be cleared the next tool call re-emits once more. One
++    // duplicate line is the failure mode; a loop is not, because the marker
++    // is only ever SET by a compaction event.
++  }
++}
++
++/**
++ * The `post_tool_use` half. Emits the pin exactly once per compaction event
++ * and only when a pin actually exists — an absent or undetermined pin is not
++ * an obligation, and inventing one here would be worse than the gap.
++ */
++export function _reEmitAfterCompaction(consumer_root: string): number {
++  if (!_pinLost(consumer_root)) {
++    return EXIT_ALLOW;
++  }
++  const previous = _loadState(path.join(consumer_root, STATE_FILE));
++  const language = previous.language as Verdict | undefined;
++  const source: PinSource = previous.source === "system-locale" ? "system-locale" : "prompt";
++  // Clear FIRST: if the write below throws, the marker must not survive to
++  // re-fire on every subsequent tool call — that is the shape § 6.2 refuses.
++  _clearPinLost(consumer_root);
++  if (language !== "de" && language !== "en") {
++    return EXIT_ALLOW;
++  }
++  process.stdout.write(
++    `${JSON.stringify({
++      decision: "warn",
++      reason: noticeText(language, source),
++      additional_context: pinText(language, source),
++    })}\n`,
++  );
++  return EXIT_WARN;
++}
++
+ export function run(
+   stdin_text: string,
+   options: { consumer_root: string; env?: NodeJS.ProcessEnv },
+@@ -397,6 +462,30 @@ export function run(
+   }
+ 
+   const payload = _isObject(envelope["payload"]) ? (envelope["payload"] as JsonObject) : envelope;
++
++  // round-5 § 6.1 — the compaction boundary.
++  //
++  // 4 of the 23 post-merge violations happened with NO pin in context: a
++  // `compact_boundary` fired and the first violation followed 26 seconds
++  // later. Compaction removes the context copy of the pin, not this hook's
++  // state file — so this is a state defect with a deterministic fix, aimed
++  // only at the subset where the pin was measurably MISSING, never at the 19
++  // where it was measurably ignored.
++  //
++  // The guard IS the design, and is not optional: `pre_compact` sets a
++  // marker, `post_tool_use` re-emits once while it is set and clears it. That
++  // is one extra injection per compaction EVENT. A re-pin on every tool call
++  // is what § 6.2 refuses — "the same failed mechanism running more often" —
++  // and this marker is the entire difference between the two.
++  const event = typeof envelope["event"] === "string" ? envelope["event"] : "";
++  if (event === "pre_compact") {
++    _setPinLost(options.consumer_root);
++    return EXIT_ALLOW;
++  }
++  if (event === "post_tool_use") {
++    return _reEmitAfterCompaction(options.consumer_root);
++  }
++
+   const prompt = _extractPrompt(payload);
+   if (!prompt) {
+     return EXIT_ALLOW;
+diff --git a/src/scripts/measure_turn_end_gate.ts b/src/scripts/measure_turn_end_gate.ts
+new file mode 100644
+index 0000000000000000000000000000000000000000..fd68a39b63c8b5cda4a62aa261dd181047bda3e6
+--- /dev/null
++++ b/src/scripts/measure_turn_end_gate.ts
+@@ -0,0 +1,194 @@
++#!/usr/bin/env -S npx tsx
++/**
++ * `measure-turn-end-gate` — the false-positive pass roadmap
++ * `road-to-conformance-round5.md` § 3.4 asks for, run against a REAL
++ * transcript corpus rather than a hand-written one.
++ *
++ * Why this exists as a script and not as a number in a commit message: the
++ * roadmap asks to "record measured precision per detector", and a recorded
++ * figure nobody can re-derive is the same class of claim this whole round
++ * exists to remove. One command, same store, same numbers.
++ *
++ * What it measures, and what it deliberately does NOT:
++ *
++ *   · FIRE RATE of each detector over every assistant turn in the window.
++ *   · For detector B, the CROSS-TAB against `conformance_scan`'s own
++ *     independent language check. That scanner reads only the first prose
++ *     line and this detector reads the whole stripped reply, so the two are
++ *     related instruments, not the same one — which is exactly what makes
++ *     the disagreement cells informative.
++ *   · It does NOT compute recall against the 20 promissory occurrences the
++ *     round-5 audit reported. Those came from subagent transcript READING;
++ *     `conformance_scan.ts` states in its own header that promissory
++ *     closings are "deliberately NOT scanned", so there is no machine-
++ *     readable ground truth to score against. Claiming a recall figure here
++ *     would invent one.
++ *
++ * Usage:
++ *   ./scripts-run src/scripts/measure_turn_end_gate --store <dir> [--limit N]
++ */
++import * as fs from 'node:fs';
++import * as path from 'node:path';
++
++import { classify } from './language_mirror_hook.js';
++import { assistantText, isInjectedBody, scanSession, userText } from './conformance_scan.js';
++import { detectLanguage, detectPromissory } from './hooks/turn_end_gate_hook.js';
++
++interface Counts {
++    assistant_turns: number;
++    promissory_fires: number;
++    language_fires: number;
++    /** Detector B fired AND the scanner also flagged that session-turn. */
++    language_agree: number;
++    /** Detector B fired where the scanner saw nothing — candidate false positives. */
++    language_only: number;
++    sessions: number;
++}
++
++function sessionFiles(store: string, limit: number): string[] {
++    let entries: string[];
++    try {
++        entries = fs.readdirSync(store).filter((f) => f.endsWith('.jsonl'));
++    } catch {
++        return [];
++    }
++    const withTime = entries.map((f) => {
++        const p = path.join(store, f);
++        let mtime = 0;
++        try {
++            mtime = fs.statSync(p).mtimeMs;
++        } catch {
++            /* unreadable — sorts last */
++        }
++        return { p, mtime };
++    });
++    withTime.sort((a, b) => b.mtime - a.mtime);
++    return withTime.slice(0, limit).map((e) => e.p);
++}
++
++export function measure(store: string, limit: number): Counts {
++    const c: Counts = {
++        assistant_turns: 0,
++        promissory_fires: 0,
++        language_fires: 0,
++        language_agree: 0,
++        language_only: 0,
++        sessions: 0,
++    };
++
++    for (const file of sessionFiles(store, limit)) {
++        let lines: string[];
++        try {
++            lines = fs.readFileSync(file, 'utf-8').split('\n').filter((l) => l.trim() !== '');
++        } catch {
++            continue;
++        }
++        c.sessions += 1;
++        const sessionId = path.basename(file).slice(0, 8);
++
++        // The scanner's independent verdict for this session, keyed by the
++        // timestamp-free count of language violations. Used only as a
++        // cross-tab total, never as ground truth for this detector.
++        let scannerLanguage = 0;
++        try {
++            scannerLanguage = scanSession(sessionId, lines).violations.filter(
++                (v) => v.check === 'language-pin',
++            ).length;
++        } catch {
++            scannerLanguage = 0;
++        }
++
++        let pinned: 'de' | 'en' | 'und' = 'und';
++        let myLanguage = 0;
++
++        for (const raw of lines) {
++            let entry: Record<string, unknown>;
++            try {
++                entry = JSON.parse(raw) as Record<string, unknown>;
++            } catch {
++                continue;
++            }
++
++            const u = userText(entry);
++            if (u !== null) {
++                // A background-task notification occupies the user role but is
++                // not a chat message — the exact shape that made the language
++                // defect invisible. It must never move the pin.
++                if (!isInjectedBody(u)) {
++                    const verdict = classify(u);
++                    if (verdict.language !== 'und') pinned = verdict.language;
++                }
++                continue;
++            }
++
++            const a = assistantText(entry);
++            if (a === null || a.trim() === '') continue;
++            c.assistant_turns += 1;
++
++            if (detectPromissory(a) !== null) c.promissory_fires += 1;
++            if (detectLanguage(a, pinned) !== null) {
++                c.language_fires += 1;
++                myLanguage += 1;
++            }
++        }
++
++        const agree = Math.min(myLanguage, scannerLanguage);
++        c.language_agree += agree;
++        c.language_only += Math.max(0, myLanguage - scannerLanguage);
++    }
++
++    return c;
++}
++
++export function render(c: Counts): string {
++    const pct = (n: number): string =>
++        c.assistant_turns === 0 ? '0.0' : ((100 * n) / c.assistant_turns).toFixed(1);
++    return [
++        `measure-turn-end-gate · ${c.sessions} sessions · ${c.assistant_turns} assistant turns`,
++        '',
++        `  detector A (promissory)  fires on ${c.promissory_fires} turns  (${pct(c.promissory_fires)}%)`,
++        `  detector B (language)    fires on ${c.language_fires} turns  (${pct(c.language_fires)}%)`,
++        `    of which the independent scanner also flagged: ${c.language_agree}`,
++        `    fired where the scanner saw nothing:           ${c.language_only}`,
++        '',
++        '  The second line is the one that matters for a BLOCKING guard: those are',
++        '  the turns this detector would have refused and the other instrument would',
++        '  not. They are candidate false positives, not confirmed ones — the two',
++        '  instruments read different spans (first prose line vs. whole stripped',
++        '  reply), so disagreement is expected in both directions.',
++        '',
++        '  No recall figure for detector A: promissory closings are not machine-',
++        '  scanned anywhere in this tree, so there is no ground truth to score.',
++    ].join('\n');
++}
++
++export function main(argv: string[] = process.argv.slice(2)): number {
++    let store = '';
++    let limit = 30;
++    for (let i = 0; i < argv.length; i += 1) {
++        if (argv[i] === '--store' && argv[i + 1] !== undefined) {
++            store = argv[i + 1]!;
++            i += 1;
++        } else if (argv[i] === '--limit' && argv[i + 1] !== undefined) {
++            limit = parseInt(argv[i + 1]!, 10);
++            i += 1;
++        }
++    }
++    if (!store) {
++        process.stderr.write('measure-turn-end-gate: --store <transcript dir> is required\n');
++        return 2;
++    }
++    const counts = measure(store, limit);
++    if (counts.sessions === 0) {
++        // A measurement over zero sessions that exits 0 is the repo's own
++        // "gates that scan nothing" failure. Refuse instead.
++        process.stderr.write(`measure-turn-end-gate: no .jsonl sessions under ${store}\n`);
++        return 2;
++    }
++    process.stdout.write(`${render(counts)}\n`);
++    return 0;
++}
++
++if (process.argv[1] !== undefined && process.argv[1].includes('measure_turn_end_gate')) {
++    process.exit(main());
++}
+diff --git a/src/server/schemas/settings.ts b/src/server/schemas/settings.ts
+index b1b16f107ef45f766f5625a51db4c10edb844120..1b4b49d79092d74ca5f8fc92b395861584c394bd 100644
+--- a/src/server/schemas/settings.ts
++++ b/src/server/schemas/settings.ts
+@@ -520,6 +520,17 @@ export const settingsSchema = z.object({
+                 'PreToolUse code-graph nudge (ADR-124 Phase 4). Default off. When on AND a native code-graph cache or a consumer-shipped graph.json/SCIP index is present, warns once per session (never blocks) as the agent is about to Grep/Glob or Read a source file — query the graph first for who-calls/where-used/impact questions (or rebuild if stale, build if absent). Source G’s strict block-first-read mode is deliberately un-ported.',
+             ),
+         }).default({}),
++        turn_end_gate: z.object({
++            enabled: z.boolean().default(false).describe(
++                'Stop-slot turn-end gate (road-to-conformance-round5 Phase 3). Default off, and it is the only concern that can REFUSE a turn-end rather than a tool call — so it soaks behind an explicit opt-in before it binds. Round 5 measured the reason: both blocking carriers reached zero violations, neither advisory carrier did, and 19 wrong-language replies survived a pin that had fired 26-35 seconds earlier. A refused turn continues in the SAME turn and is never refused twice.',
++            ),
++            promissory: z.boolean().default(true).describe(
++                'Detector A of the turn-end gate: refuse a turn whose closing paragraph promises work not yet performed while asking the user nothing (20 measured occurrences). Inert while hooks.turn_end_gate.enabled is false.',
++            ),
++            language: z.boolean().default(true).describe(
++                'Detector B of the turn-end gate: refuse a turn whose user-visible prose is not in the pinned language, with fenced code, inline code, quoted tool output, tables, URLs, paths and identifiers excluded first (19 measured occurrences). Fires 18.0% of turns on the measured corpus, which is why the master switch is off by default. Inert while hooks.turn_end_gate.enabled is false.',
++            ),
++        }).default({}),
+     }),
+     decision_engine: z.object({
+         surface_traces: z.boolean().default(false).describe(
+diff --git a/tests/hooks/concern_severity.test.ts b/tests/hooks/concern_severity.test.ts
+index 406958f5ab28de36f74704a96529a87d74369a16..74c2c3fe520a757d9caaaeb991466a44efb827bc 100644
+--- a/tests/hooks/concern_severity.test.ts
++++ b/tests/hooks/concern_severity.test.ts
+@@ -47,6 +47,24 @@ const BLOCKING_ALLOWLIST = new Set([
+     //   delta an unsteered pass then found a live critical in.
+     'block-unauthorized-git',
+     'evidence-independence',
++    // road-to-conformance-round5 Phase 3. The FIRST concern that refuses a
++    // turn-END rather than a tool call, so it is the first entry here whose
++    // blast radius is every session rather than one command. Three things
++    // make that decision recordable rather than reckless:
++    //
++    //   · it is default OFF (`hooks.turn_end_gate.enabled`), so it
++    //     soaks before it binds — the shape the round-6 council asked for;
++    //   · `fail_closed: false`, so a crash lets the turn END. A turn-end
++    //     gate that fails closed does not degrade, it wedges the session;
++    //   · re-entrancy is two independent layers (`stop_hook_active`, and a
++    //     marker keyed on the last USER message, never the reply), stated
++    //     and tested BEFORE registration — round 6 recorded that hole as the
++    //     one a soak would otherwise discover the expensive way.
++    //
++    // It refuses only what a rule already declares: an unfulfilled promise
++    // closing a turn (verify-before-complete § turn-completion) and a reply
++    // in the wrong language (language-and-tone Iron Law).
++    'turn-end-gate',
+ ]);
+ 
+ interface Concern {
+diff --git a/tests/scripts/language_mirror_hook.test.ts b/tests/scripts/language_mirror_hook.test.ts
+index 63042ec6d1403ddf1b97773f8de11f20f06f0db0..3b9305b49b11b634015b0cf2cccdb086f4606cfd 100644
+--- a/tests/scripts/language_mirror_hook.test.ts
++++ b/tests/scripts/language_mirror_hook.test.ts
+@@ -22,6 +22,7 @@ import {
+   STATE_FILE,
+   MIN_MARKERS,
+   systemLocaleVerdict,
++  _pinLost,
+ } from "../../src/scripts/language_mirror_hook.js";
+ 
+ // Round-5 audit: the live state file read `language: "en", source: "prompt",
+@@ -437,3 +438,61 @@ describe("run — the locale fallback end to end", () => {
+     expect(readState().language).toBe("de");
+   });
+ });
++
++// ---------------------------------------------------------------------------
++// road-to-conformance-round5 § 6.1 — the compaction boundary
++//
++// 4 of the 23 post-merge violations happened with NO pin in context: a
++// `compact_boundary` fired and the first violation followed 26 seconds later.
++// The guard is what separates this from the re-pin § 6.2 refuses, so the guard
++// is what these tests are about — not the injection.
++// ---------------------------------------------------------------------------
++
++function compactEnvelope(): string {
++  return JSON.stringify({ event: "pre_compact", session_id: "s1", platform: "claude", payload: {} });
++}
++
++function toolEnvelope(): string {
++  return JSON.stringify({ event: "post_tool_use", session_id: "s1", platform: "claude", payload: {} });
++}
++
++describe("the compaction boundary (6.1)", () => {
++  it("pre_compact writes the marker and emits nothing itself", () => {
++    expect(run(compactEnvelope(), { consumer_root: tmp })).toBe(0);
++    expect(_pinLost(tmp)).toBe(true);
++  });
++
++  it("post_tool_use re-emits the pin ONCE, then goes quiet", () => {
++    run(envelope("Bitte mach weiter mit der Analyse und den Tests."), { consumer_root: tmp });
++    run(compactEnvelope(), { consumer_root: tmp });
++
++    // First tool call after compaction — the pin comes back.
++    expect(run(toolEnvelope(), { consumer_root: tmp })).toBe(2);
++    // Every subsequent tool call is silent. This is the whole difference
++    // between § 6.1 and the tool-call-cadence re-pin § 6.2 refuses: one
++    // injection per compaction EVENT, not one per call.
++    expect(run(toolEnvelope(), { consumer_root: tmp })).toBe(0);
++    expect(run(toolEnvelope(), { consumer_root: tmp })).toBe(0);
++    expect(_pinLost(tmp)).toBe(false);
++  });
++
++  it("post_tool_use is silent when no compaction happened — the common path", () => {
++    run(envelope("Bitte mach weiter mit der Analyse und den Tests."), { consumer_root: tmp });
++    expect(run(toolEnvelope(), { consumer_root: tmp })).toBe(0);
++  });
++
++  it("re-emits nothing when no pin exists — absence is not an obligation", () => {
++    run(compactEnvelope(), { consumer_root: tmp });
++    expect(run(toolEnvelope(), { consumer_root: tmp })).toBe(0);
++    // The marker is still consumed, so a missing pin cannot arm a permanent
++    // re-fire on every later tool call.
++    expect(_pinLost(tmp)).toBe(false);
++  });
++
++  it("pre_compact does not disturb the pin it is protecting", () => {
++    run(envelope("Bitte mach weiter mit der Analyse und den Tests."), { consumer_root: tmp });
++    const before = readState();
++    run(compactEnvelope(), { consumer_root: tmp });
++    expect(readState()).toEqual(before);
++  });
++});
+diff --git a/tests/scripts/turn_end_gate_hook.test.ts b/tests/scripts/turn_end_gate_hook.test.ts
+new file mode 100644
+index 0000000000000000000000000000000000000000..f358d783403a8fcb964c4c94db6739d43acd9037
+--- /dev/null
++++ b/tests/scripts/turn_end_gate_hook.test.ts
+@@ -0,0 +1,581 @@
++/**
++ * `turn-end-gate` — the suite's first turn-END refusal.
++ *
++ * Two layers of test, on purpose:
++ *
++ *   · the DETECTORS are tested as pure functions, because roadmap step 3.4
++ *     asks for a measured precision figure and a spawned process per corpus
++ *     case would make that pass cost minutes instead of milliseconds;
++ *   · the RE-ENTRANCY guard is tested through the real process, because its
++ *     whole claim is about what a second Stop event does, and an in-process
++ *     call cannot exercise `stop_hook_active` arriving on stdin.
++ *
++ * Round 6 recorded the reason the second half is not optional: "whichever
++ * option the maintainer chooses, the guard's re-entrancy shape has to be
++ * stated and tested before the concern is registered, not after."
++ */
++import { spawnSync } from 'node:child_process';
++import * as fs from 'node:fs';
++import * as os from 'node:os';
++import * as path from 'node:path';
++import { fileURLToPath } from 'node:url';
++
++import { afterAll, describe, expect, it } from 'vitest';
++
++import {
++    detectLanguage,
++    detectPromissory,
++    deriveTurnKey,
++    finalParagraph,
++    readGateSettings,
++    readLanguagePin,
++    visibleProse,
++} from '../../src/scripts/hooks/turn_end_gate_hook.js';
++
++const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..');
++const HOOK = path.join(REPO_ROOT, 'src', 'scripts', 'hooks', 'turn_end_gate_hook.ts');
++const TSX = path.join(
++    REPO_ROOT,
++    'node_modules',
++    '.bin',
++    process.platform === 'win32' ? 'tsx.cmd' : 'tsx',
++);
++
++const tmp_dirs: string[] = [];
++afterAll(() => {
++    for (const d of tmp_dirs) {
++        try {
++            fs.rmSync(d, { recursive: true, force: true });
++        } catch {
++            /* best effort */
++        }
++    }
++});
++
++// ---------------------------------------------------------------------------
++// The corpus. Step 3.4 asks for a measured precision per detector, so the
++// positives and the must-not-fire cases live in one place and are counted.
++// ---------------------------------------------------------------------------
++
++/**
++ * Promissory closings in the shape round 5 measured: the last paragraph
++ * commits to work, and nothing in the turn asks the user anything.
++ */
++const PROMISSORY_POSITIVES: string[] = [
++    'Der Fix ist drin.\n\nIch melde mich, sobald die CI durch ist.',
++    'Branch steht.\n\nAls nächstes baue ich den Detektor.',
++    'Ich habe den Hook registriert.\n\nIch gebe Dir Bescheid.',
++    'Done with the refactor.\n\nI will report back once the suite finishes.',
++    "Pushed.\n\nI'll let you know when the checks land.",
++    'Analyse steht.\n\nIch werde jetzt die Tests schreiben.',
++    'The manifest is updated.\n\nNext, I will wire the registry.',
++    'Alles gelesen.\n\nIch berichte, sobald der Lauf fertig ist.',
++    'Setup ist fertig.\n\nIch melde mich mit dem Ergebnis.',
++    "Config landed.\n\nI am going to run the full pipeline now.",
++];
++
++/**
++ * The shapes a blocking guard must NOT refuse. Every one of these is a
++ * legitimate way to end a turn, and refusing them is what teaches a user to
++ * disable the gate — the council's precision warning, made concrete.
++ */
++const PROMISSORY_NEGATIVES: string[] = [
++    // A hand-back: the decision is explicitly the user's.
++    'Ich habe drei Optionen gefunden.\n\nDas entscheidest Du.',
++    'Der Branch ist veraltet.\n\nIch fasse ihn nicht ungefragt an — sag Bescheid.',
++    // A blocking question IS the stop condition.
++    'Zwei Wege sind möglich.\n\nSoll ich den ersten nehmen?',
++    'I found two candidates.\n\nWhich one do you want?',
++    // A promise the same turn then fulfils — the verb is past, not future.
++    'Ich habe die Tests geschrieben und ausgeführt: 14 grün, 0 rot.',
++    'I ran the full suite; every check passed.',
++    // Plain completion, no forward commitment at all.
++    'Der Hook ist registriert, der Typecheck ist grün.',
++    'The gate is wired and the manifest lints clean.',
++    // Waiting explicitly on the user.
++    'Der Rest hängt an Deiner Freigabe.\n\nIch warte auf Deine Antwort.',
++    "The remaining step needs your go-ahead. Let me know whether to proceed.",
++];
++
++describe('detector A — promissory closing (roadmap 3.2)', () => {
++    it('the corpus is non-empty (dead-scope guard)', () => {
++        // A precision figure computed over an empty corpus is a green light
++        // that measured nothing — the repo's own documented failure class.
++        expect(PROMISSORY_POSITIVES.length).toBeGreaterThanOrEqual(10);
++        expect(PROMISSORY_NEGATIVES.length).toBeGreaterThanOrEqual(10);
++    });
++
++    it('fires on every measured promissory closing', () => {
++        const missed = PROMISSORY_POSITIVES.filter((r) => detectPromissory(r) === null);
++        expect(missed, `missed: ${JSON.stringify(missed, null, 2)}`).toEqual([]);
++    });
++
++    it('never fires on a legitimate hand-back, question, or completed claim', () => {
++        const wrong = PROMISSORY_NEGATIVES.filter((r) => detectPromissory(r) !== null);
++        expect(wrong, `false positives: ${JSON.stringify(wrong, null, 2)}`).toEqual([]);
++    });
++
++    it('reads the FINAL paragraph, not the whole reply', () => {
++        // A promise made mid-reply and then fulfilled is not a promissory
++        // CLOSING — the rule is about how the turn ends.
++        const reply = 'Ich melde mich gleich.\n\nHabe es doch direkt gemacht: 12 Tests grün.';
++        expect(detectPromissory(reply)).toBeNull();
++    });
++
++    it('quotes the span that triggered it, so the refusal is actionable', () => {
++        const f = detectPromissory('Fertig.\n\nIch melde mich, sobald die CI grün ist.');
++        expect(f?.evidence.toLowerCase()).toContain('ich melde mich');
++    });
++});
++
++// ---------------------------------------------------------------------------
++// Detector B
++// ---------------------------------------------------------------------------
++
++describe('detector B — language mismatch (roadmap 3.3)', () => {
++    it('fires when the prose is English under a German pin', () => {
++        const reply =
++            'I have wired the hook into the manifest and the registry, and the typecheck is green now.';
++        const f = detectLanguage(reply, 'de');
++        expect(f).not.toBeNull();
++        expect(f?.detector).toBe('language');
++    });
++
++    it('fires when the prose is German under an English pin', () => {
++        const reply =
++            'Ich habe den Hook in das Manifest und die Registry eingetragen, und der Typecheck ist jetzt grün.';
++        expect(detectLanguage(reply, 'en')).not.toBeNull();
++    });
++
++    it('stays silent when the prose matches the pin', () => {
++        const reply = 'Ich habe den Hook eingetragen, und der Typecheck ist jetzt grün.';
++        expect(detectLanguage(reply, 'de')).toBeNull();
++    });
++
++    it('stays silent when there is no pin — absence is not an obligation', () => {
++        expect(detectLanguage('Anything at all, in any language.', 'und')).toBeNull();
++    });
++
++    // --- 3.5 adversarial: the exclusions language-and-tone already states ---
++
++    it('ADVERSARIAL: English inside a fenced code block does not flip a German turn', () => {
++        const reply = [
++            'Der Hook liest die Antwort so aus dem Transcript:',
++            '',
++            '```ts',
++            'const last = lines.filter((l) => l.type === "assistant");',
++            'if (!last) { throw new Error("no assistant message in the transcript file"); }',
++            '```',
++            '',
++            'Damit ist der Pfad abgedeckt.',
++        ].join('\n');
++        expect(detectLanguage(reply, 'de')).toBeNull();
++    });
++
++    it('ADVERSARIAL: quoted English tool output does not flip a German turn', () => {
++        const reply = [
++            'Der Lauf ist rot. Die Ausgabe sagt:',
++            '',
++            '> error: cannot find module and the resolver gave up after three attempts',
++            '> at Object.require (internal/modules/cjs/loader.js:1015:19)',
++            '',
++            'Ich habe die Ursache gefunden.',
++        ].join('\n');
++        expect(detectLanguage(reply, 'de')).toBeNull();
++    });
++
++    it('ADVERSARIAL: English identifiers and paths do not flip a German turn', () => {
++        const reply =
++            'Ich habe `src/scripts/hooks/turn_end_gate_hook.ts` angelegt und in ' +
++            '`concern_registry.ts` eingetragen; `readGateSettings` liest den Schalter.';
++        expect(detectLanguage(reply, 'de')).toBeNull();
++    });
++
++    it('ADVERSARIAL: a markdown table of English column names does not flip a German turn', () => {
++        const reply = [
++            'Die Belegung sieht so aus:',
++            '',
++            '| concern | severity | fail_closed |',
++            '|---|---|---|',
++            '| turn-end-gate | blocking | false |',
++            '',
++            'Mehr ist es nicht.',
++        ].join('\n');
++        expect(detectLanguage(reply, 'de')).toBeNull();
++    });
++
++    it('ADVERSARIAL: a short reply is not evidence of drift', () => {
++        // Below the classifier's marker floor `classify` returns `und`, and
++        // `und` must never refuse — a two-word answer carries no language
++        // signal, and refusing one would be pure noise.
++        expect(detectLanguage('Fertig.', 'en')).toBeNull();
++        expect(detectLanguage('Done.', 'de')).toBeNull();
++    });
++});
++
++describe('visibleProse — the exclusion set', () => {
++    it('drops fenced blocks, inline code, quotes, tables, URLs and paths', () => {
++        const prose = visibleProse(
++            [
++                'Text bleibt.',
++                '```',
++                'CODE_MUST_VANISH',
++                '```',
++                '`INLINE_MUST_VANISH`',
++                '> QUOTED_MUST_VANISH',
++                '| TABLE_MUST_VANISH |',
++                'https://example.com/URL_MUST_VANISH',
++                'src/scripts/PATH_MUST_VANISH.ts',
++            ].join('\n'),
++        );
++        expect(prose).toContain('Text bleibt.');
++        for (const gone of [
++            'CODE_MUST_VANISH',
++            'INLINE_MUST_VANISH',
++            'QUOTED_MUST_VANISH',
++            'TABLE_MUST_VANISH',
++            'URL_MUST_VANISH',
++            'PATH_MUST_VANISH',
++        ]) {
++            expect(prose, `${gone} survived the strip`).not.toContain(gone);
++        }
++    });
++
++    it('drops an UNTERMINATED fence — a truncated reply must not leak code', () => {
++        const prose = visibleProse('Vorher.\n\n```ts\nconst leak = "LEAK_MUST_VANISH";');
++        expect(prose).toContain('Vorher.');
++        expect(prose).not.toContain('LEAK_MUST_VANISH');
++    });
++
++    it('finalParagraph returns the last prose paragraph, ignoring a trailing code block', () => {
++        const reply = 'Erster Absatz.\n\nLetzter Absatz.\n\n```\ncode\n```';
++        expect(finalParagraph(reply)).toBe('Letzter Absatz.');
++    });
++});
++
++// ---------------------------------------------------------------------------
++// Settings — the master switch and the two per-detector switches (3.6)
++// ---------------------------------------------------------------------------
++
++function makeWorkspace(settings?: string): string {
++    const dir = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'turn-end-gate-')));
++    tmp_dirs.push(dir);
++    if (settings !== undefined) {
++        fs.writeFileSync(path.join(dir, '.agent-settings.yml'), settings);
++    }
++    return dir;
++}
++
++describe('settings — default OFF, detectors ON within it (roadmap 3.6)', () => {
++    it('absent settings file ⇒ disabled', () => {
++        expect(readGateSettings(makeWorkspace()).enabled).toBe(false);
++    });
++
++    it('absent section ⇒ disabled — absent is never an opt-in', () => {
++        expect(readGateSettings(makeWorkspace('hooks:\n  injection_scan:\n    enabled: true\n')).enabled).toBe(
++            false,
++        );
++    });
++
++    it('enabling the master switch turns BOTH detectors on without naming them', () => {
++        const s = readGateSettings(
++            makeWorkspace('hooks:\n  turn_end_gate:\n    enabled: true\n'),
++        );
++        expect(s).toEqual({ enabled: true, promissory: true, language: true });
++    });
++
++    it('either detector can be silenced without editing the hook manifest', () => {
++        const s = readGateSettings(
++            makeWorkspace(
++                'hooks:\n  turn_end_gate:\n    enabled: true\n    language: false\n',
++            ),
++        );
++        expect(s).toEqual({ enabled: true, promissory: true, language: false });
++    });
++
++    it('a SIBLING section’s `enabled:` is never read as ours', () => {
++        // The indent-aware walker exists for exactly this: a width-agnostic
++        // terminator would run past the block and pick up the next key's flag.
++        const s = readGateSettings(
++            makeWorkspace(
++                'hooks:\n  turn_end_gate:\n    promissory: false\n  injection_scan:\n    enabled: true\n',
++            ),
++        );
++        expect(s.enabled).toBe(false);
++        expect(s.promissory).toBe(false);
++    });
++});
++
++describe('language pin', () => {
++    it('absent pin ⇒ `und` ⇒ no obligation', () => {
++        expect(readLanguagePin(makeWorkspace())).toBe('und');
++    });
++
++    it('reads the language the mirror hook wrote', () => {
++        const dir = makeWorkspace();
++        fs.mkdirSync(path.join(dir, 'agents', 'state'), { recursive: true });
++        fs.writeFileSync(
++            path.join(dir, 'agents', 'state', 'language-mirror.json'),
++            JSON.stringify({ language: 'de', source: 'prompt' }),
++        );
++        expect(readLanguagePin(dir)).toBe('de');
++    });
++
++    it('a malformed pin is treated as absent, never as a default', () => {
++        const dir = makeWorkspace();
++        fs.mkdirSync(path.join(dir, 'agents', 'state'), { recursive: true });
++        fs.writeFileSync(path.join(dir, 'agents', 'state', 'language-mirror.json'), '{ not json');
++        expect(readLanguagePin(dir)).toBe('und');
++    });
++});
++
++// ---------------------------------------------------------------------------
++// Re-entrancy — through the real process (roadmap 3.1)
++// ---------------------------------------------------------------------------
++
++interface Run {
++    status: number;
++    stdout: string;
++    stderr: string;
++}
++
++/** A workspace with the gate ON, a German pin, and a fake $HOME for transcripts. */
++function makeGateWorkspace(): { dir: string; home: string } {
++    const dir = makeWorkspace('hooks:\n  turn_end_gate:\n    enabled: true\n');
++    fs.mkdirSync(path.join(dir, 'agents', 'state'), { recursive: true });
++    fs.writeFileSync(
++        path.join(dir, 'agents', 'state', 'language-mirror.json'),
++        JSON.stringify({ language: 'de', source: 'prompt' }),
++    );
++    const home = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'turn-end-gate-home-')));
++    tmp_dirs.push(home);
++    return { dir, home };
++}
++
++function writeTranscript(home: string, userText: string, assistantText: string): string {
++    const file = path.join(home, `transcript-${Math.abs(hashish(assistantText))}.jsonl`);
++    fs.writeFileSync(
++        file,
++        [
++            JSON.stringify({ type: 'user', message: { content: userText } }),
++            JSON.stringify({
++                type: 'assistant',
++                message: { content: [{ type: 'text', text: assistantText }] },
++            }),
++        ].join('\n') + '\n',
++    );
++    return file;
++}
++
++/** Deterministic, seed-free — `Math.random` would break replay. */
++function hashish(s: string): number {
++    let h = 0;
++    for (const ch of s) h = (h * 31 + ch.charCodeAt(0)) | 0;
++    return h;
++}
++
++function envelopeJson(
++    workspaceRoot: string,
++    transcriptPath: string,
++    extraPayload: Record<string, unknown> = {},
++): string {
++    return JSON.stringify({
++        schema_version: 1,
++        platform: 'claude',
++        event: 'stop',
++        native_event: 'Stop',
++        session_id: 'sess-turn-end-gate',
++        workspace_root: workspaceRoot,
++        payload: { transcript_path: transcriptPath, ...extraPayload },
++        settings: {},
++    });
++}
++
++function runHook(cwd: string, stdin: string, home: string): Run {
++    const r = spawnSync(TSX, [HOOK], {
++        encoding: 'utf8',
++        cwd,
++        input: stdin,
++        env: { ...process.env, AGENT_CONFIG_TRANSCRIPT_HOME: home },
++    });
++    return { status: r.status ?? 1, stdout: r.stdout ?? '', stderr: r.stderr ?? '' };
++}
++
++const PROMISE = 'Der Branch steht.\n\nIch melde mich, sobald die CI grün ist.';
++const CLEAN = 'Der Branch steht, die Tests sind grün, mehr war nicht zu tun.';
++
++describe('the gate, end to end', () => {
++    it('refuses a promissory closing with exit 1 and the reason on STDERR', () => {
++        const { dir, home } = makeGateWorkspace();
++        const t = writeTranscript(home, 'mach weiter', PROMISE);
++        const r = runHook(dir, envelopeJson(dir, t), home);
++
++        expect(r.status, r.stderr).toBe(1); // dispatcher-internal EXIT_BLOCK
++        expect(r.stderr).toContain('turn-end-gate');
++        expect(r.stderr).toContain('promissory');
++        // stdout is discarded by the host at a block — the reason must not go there.
++        expect(r.stdout).toBe('');
++    });
++
++    it('lets a clean turn end, silently', () => {
++        const { dir, home } = makeGateWorkspace();
++        const t = writeTranscript(home, 'mach weiter', CLEAN);
++        const r = runHook(dir, envelopeJson(dir, t), home);
++        expect(r.status, r.stderr).toBe(0);
++        expect(r.stderr).toBe('');
++    });
++
++    it('is a no-op while the master switch is off — the shipped default', () => {
++        const dir = makeWorkspace(); // no settings file at all
++        const home = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'turn-end-gate-home-')));
++        tmp_dirs.push(home);
++        const t = writeTranscript(home, 'mach weiter', PROMISE);
++        const r = runHook(dir, envelopeJson(dir, t), home);
++        expect(r.status, r.stderr).toBe(0);
++    });
++
++    // --- the two re-entrancy layers, each proven ALONE ---
++
++    it('LAYER 1: `stop_hook_active` alone stops a second refusal', () => {
++        const { dir, home } = makeGateWorkspace();
++        const t = writeTranscript(home, 'mach weiter', PROMISE);
++        // No prior run, so no state marker exists — only the host flag can
++        // be doing the work here.
++        const r = runHook(dir, envelopeJson(dir, t, { stop_hook_active: true }), home);
++        expect(r.status, r.stderr).toBe(0);
++        expect(r.stderr).toBe('');
++    });
++
++    it('LAYER 2: the turn marker alone stops a second refusal, even on a NEW reply', () => {
++        const { dir, home } = makeGateWorkspace();
++        const first = runHook(dir, envelopeJson(dir, writeTranscript(home, 'mach weiter', PROMISE)), home);
++        expect(first.status, first.stderr).toBe(1);
++
++        // The model answered the refusal with a DIFFERENT reply that still
++        // promises. Same user prompt ⇒ same turn ⇒ must not refuse again.
++        // `stop_hook_active` is deliberately absent, so layer 2 is on its own.
++        const second = runHook(
++            dir,
++            envelopeJson(dir, writeTranscript(home, 'mach weiter', 'Ok.\n\nIch melde mich gleich.')),
++            home,
++        );
++        expect(second.status, second.stderr).toBe(0);
++        expect(second.stderr).toBe('');
++    });
++
++    it('a NEW user prompt re-arms the gate — the marker must not wedge the session', () => {
++        const { dir, home } = makeGateWorkspace();
++        const first = runHook(dir, envelopeJson(dir, writeTranscript(home, 'erster prompt', PROMISE)), home);
++        expect(first.status, first.stderr).toBe(1);
++
++        const nextTurn = runHook(
++            dir,
++            envelopeJson(dir, writeTranscript(home, 'zweiter prompt', PROMISE)),
++            home,
++        );
++        expect(nextTurn.status, nextTurn.stderr).toBe(1);
++    });
++
++    it('an unreadable transcript lets the turn END — never a wedge', () => {
++        const { dir, home } = makeGateWorkspace();
++        const r = runHook(dir, envelopeJson(dir, path.join(home, 'does-not-exist.jsonl')), home);
++        expect(r.status, r.stderr).toBe(0);
++    });
++
++    it('a transcript OUTSIDE the home root is refused, and the turn still ends', () => {
++        const { dir, home } = makeGateWorkspace();
++        const outside = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'turn-end-gate-out-')));
++        tmp_dirs.push(outside);
++        const t = path.join(outside, 'evil.jsonl');
++        fs.writeFileSync(
++            t,
++            JSON.stringify({ type: 'assistant', message: { content: PROMISE } }) + '\n',
++        );
++        const r = runHook(dir, envelopeJson(dir, t), home);
++        expect(r.status, r.stderr).toBe(0);
++    });
++
++    it('malformed stdin lets the turn END', () => {
++        const { dir, home } = makeGateWorkspace();
++        const r = runHook(dir, 'not json at all', home);
++        expect(r.status, r.stderr).toBe(0);
++    });
++});
++
++// ---------------------------------------------------------------------------
++// Through the REAL dispatcher — the only place the host-facing code appears
++// ---------------------------------------------------------------------------
++
++const DISPATCH_ENTRY = path.join(REPO_ROOT, 'src', 'scripts', 'hooks', 'dispatch_entry.ts');
++
++/**
++ * A raw Claude Stop payload — what the host actually sends, not the
++ * dispatcher envelope. Raw-tsx tests above see the dispatcher-INTERNAL code
++ * (1 = block); only this path sees the HOST-facing code (2 = refuse). A
++ * concern that returned 1 and mapped to 0 would pass every test above while
++ * refusing nothing, which is exactly the class this file exists to disprove.
++ */
++function runDispatcher(workspace: string, transcriptPath: string, home: string): Run {
++    const r = spawnSync(
++        TSX,
++        [DISPATCH_ENTRY, '--platform', 'claude', '--event', 'stop', '--project-dir', workspace],
++        {
++            encoding: 'utf-8',
++            cwd: workspace,
++            input: JSON.stringify({
++                session_id: 'turn-end-gate-dispatch',
++                cwd: workspace,
++                hook_event_name: 'Stop',
++                transcript_path: transcriptPath,
++                stop_hook_active: false,
++            }),
++            timeout: 120_000,
++            env: {
++                ...process.env,
++                AGENT_CONFIG_PACKAGE_ROOT: REPO_ROOT,
++                AGENT_CONFIG_TRANSCRIPT_HOME: home,
++            },
++        },
++    );
++    return { status: r.status ?? 1, stdout: r.stdout ?? '', stderr: r.stderr ?? '' };
++}
++
++describe('claude stop — the refusal actually reaches the host', () => {
++    it('exits 2, not 1 — exit 1 on stop would let the turn end anyway', () => {
++        const { dir, home } = makeGateWorkspace();
++        const t = writeTranscript(home, 'mach weiter', PROMISE);
++        const r = runDispatcher(dir, t, home);
++        expect(r.status, `stderr: ${r.stderr.slice(0, 600)}`).toBe(2);
++    });
++
++    it('puts the concern’s OWN reason on stderr, not a generic label', () => {
++        const { dir, home } = makeGateWorkspace();
++        const t = writeTranscript(home, 'mach weiter', PROMISE);
++        const r = runDispatcher(dir, t, home);
++        expect(r.stderr).toContain('turn-end-gate');
++        expect(r.stderr).not.toBe('blocked by agent-config hook policy\n');
++    });
++
++    it('a clean turn ends with 0 through the same path', () => {
++        const { dir, home } = makeGateWorkspace();
++        const t = writeTranscript(home, 'mach weiter', CLEAN);
++        const r = runDispatcher(dir, t, home);
++        expect(r.status, `stderr: ${r.stderr.slice(0, 600)}`).toBe(0);
++    });
++});
++
++describe('the turn key', () => {
++    it('is the same for the same turn and different across turns', () => {
++        expect(deriveTurnKey('s', 'prompt A')).toBe(deriveTurnKey('s', 'prompt A'));
++        expect(deriveTurnKey('s', 'prompt A')).not.toBe(deriveTurnKey('s', 'prompt B'));
++        expect(deriveTurnKey('s1', 'prompt A')).not.toBe(deriveTurnKey('s2', 'prompt A'));
++    });
++
++    it('does NOT depend on the reply — that is the whole point', () => {
++        // If the reply were part of the key, a refused turn would mint a new
++        // key on its next reply and could be refused forever.
++        const a = deriveTurnKey('s', 'prompt');
++        const b = deriveTurnKey('s', 'prompt');
++        expect(a).toBe(b);
++    });
++});
