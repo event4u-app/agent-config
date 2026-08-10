@@ -1,0 +1,91 @@
+{
+    "_comment": "Pre-registered hook-INJECTION byte budget (road-to-token-economy-cache Phase 3) — the latency file's twin: same discipline, different unit. Committed BEFORE any trimming lands; the budget is the acceptance bar, not a post-hoc fit. Bytes, not tokens, as the deterministic CI unit (no tokenizer dependency — roadmap non-goal 7.6); token-exact numbers appear only in ledger-based telemetry. Consumed by scripts/bench_hook_injection and its CI gate: a concern whose measured emission (reason + additional_context + context bytes) exceeds its row fails the build, and an EMITTING concern with no row fails the build — a new injector cannot ship without a budget row.",
+    "schema_version": 1,
+    "registered_at": "2026-08-10",
+    "owner": "maintainer",
+    "review_by": "2026-11-10",
+    "unit": "bytes of concern stdout payload fields (reason + additional_context + context) per fire",
+    "default_cap_bytes": 1024,
+    "per_concern_caps_bytes": {
+        "_comment": "Named exceptions above the default, each with its reason. Absent concern = default_cap_bytes.",
+        "hot-context": 4096,
+        "hot-context_reason": "400-word working-memory restore, session_start only — one-shot, not per-turn",
+        "handoff-context": 8192,
+        "handoff-context_reason": "consume-once handoff injection, deleted after delivery — the one legitimately large one-shot",
+        "session-canary": 2048,
+        "session-canary_reason": "full canary contract once at session_start; the per-turn beat is one line",
+        "language-mirror": 2048,
+        "language-mirror_reason": "the measured 626-wrong-turn failure class justifies a full-paragraph pin per turn",
+        "council-availability": 1536,
+        "council-availability_reason": "session_start availability block incl. resolved path + member list",
+        "session-register": 2048,
+        "session-register_reason": "collision listing scales with live sessions; capped, not unbounded",
+        "chat-history": 4096,
+        "chat-history_reason": "session_start restore block",
+        "edit-shape": 1024,
+        "edit-shape_reason": "one advisory line naming the cheaper edit primitive (roadmap 5.2: budget row from day one - the economy nudge must not itself become an economy problem)",
+        "reread-guard": 1024,
+        "reread-guard_reason": "one advisory line naming the earlier read / ranged alternative (roadmap 6.1)",
+        "session-eol": 1024,
+        "session-eol_reason": "one recycle-advisory line, once per session past the committed threshold (road-to-token-economy-recycling 3.2); recording itself emits nothing"
+    },
+    "per_slot_sum_caps_bytes": {
+        "_comment": "Cross-concern per-fire sum per slot (roadmap 3.1). session_start is one-time and may carry the restore payloads; per-turn slots stay tight.",
+        "session_start": 16384,
+        "user_prompt_submit": 4096,
+        "pre_tool_use": 2048,
+        "post_tool_use": 2048,
+        "stop": 2048,
+        "session_end": 1024,
+        "pre_compact": 2048,
+        "agent_error": 1024
+    },
+    "injection_load_metric": {
+        "definition": "Roadmap 3.4: total injected bytes per session and per turn, hook-carried. The census mode of bench_hook_injection (--record) appends counts-only lines to agents/runtime/state/injection-census.jsonl; the caps above are the thresholds; breach trend at review date decides tighten vs relax — by evidence, in a PR. The census is also the repeat-injection-census blocker's instrument (one instrumented week ranks the repeaters for the 3.3 idempotency gate).",
+        "privacy": "census lines carry {ts, slot, concern, bytes} — counts and ids only, never content"
+    },
+    "honest_null_consequence": "If real-session census data shows the caps are systematically wrong (either direction), the caps move by evidence in a PR at review date — never silently. A budget nobody benches is the fossilization failure this file's latency twin avoided via its CI harness; bench_hook_injection is wired into the same pipeline in the same phase.",
+    "advisory_adoption_metrics": {
+        "_comment": "Roadmap 5.3 + 6.4 registrations. These are BEHAVIOUR metrics (advisory adoption), not injection bytes - registered here because this file already carries the owner/review discipline for the same concerns.",
+        "owner": "maintainer",
+        "review_by": "2026-11-10",
+        "full_rewrite_small_diff_rate": {
+            "definition": "edit-shape fires / Write calls per session (the full-rewrite-with-small-diff rate). Kill criterion per the shipped nudge standard: a nudge whose verdicts are measurably ignored (adoption near zero over the review window, from conformance audits) gets its trigger tightened or the injected line removed.",
+            "instrument": "rule-trips.json warn counters (the dispatcher already counts every warn per concern) + conformance audits for adoption"
+        },
+        "duplicate_read_rate": {
+            "definition": "reread-guard fires / Read calls per session; re-read advisory adoption via conformance audits. Same kill standard.",
+            "instrument": "rule-trips.json warn counters per concern"
+        },
+        "unbounded_output_advisory_rate": {
+            "definition": "Roadmap 4.3 + 4.4 registration (advisory-degraded per the resolved pretooluse-rewrite-semantics blocker: no updatedInput in the v1 contract, so nothing caps and nothing can be bypassed - the demand signal is the fire count itself). rtk-wrap cap-advisory fires per session from the OUTPUT_CAP_TABLE branch; adoption (did the next run use a bounded form) via conformance audits. HONEST GAP: bytes-into-context from tool RESULTS is not instrumented anywhere (the census covers hook payloads only) - the pre/post bytes half of roadmap 4.4 is registered as unmeasurable until a tool-result byte counter exists.",
+            "instrument": "rule-trips.json warn counters for the rtk-wrap concern + conformance audits",
+            "threshold": "none committed before data - baseline first, threshold at review date"
+        },
+        "turns_per_task": {
+            "definition": "user_prompt_submit count keyed to the task envelope - the invisible multiplier (every turn re-pays the accumulated context at read rates).",
+            "instrument": "session-register / chat-history turn counters; HONEST GAP: no task-envelope key exists yet in those counters - the number is per-SESSION until a task key ships; registered with that stated limitation rather than silently redefined",
+            "threshold": "none committed before data - baseline first, threshold at review date"
+        },
+        "recycle_advisory_adoption": {
+            "definition": "road-to-token-economy-recycling 3.4: of the sessions where the session-eol recycle advisory fired, the share that actually recycled (a recycle-envelope.consumed.json produced by a successor session start). Kill standard as for the sibling nudges: adoption near zero over the review window means the advisory line is dead weight - tighten the trigger or remove the line.",
+            "instrument": "rule-trips.json warn counters for the session-eol concern (fires) + presence/turnover of agents/runtime/state/recycle-envelope.consumed.json and session-eol per-session state (recycles); conformance audits for the denominator detail",
+            "threshold": "none committed before data - baseline first, threshold at review date (2026-11-10)"
+        },
+        "auto_compact_incidence": {
+            "definition": "road-to-token-economy-recycling 3.4: sessions with >=1 auto compact_boundary event / all sessions, from the session-eol per-session counters (baseline: 11.2%, 23/205 sessions - agents/evidence/analysis/token-economy-recycling-phase1.md). TARGET DIRECTION: trends toward zero as recycle adoption rises; a flat or rising incidence with rising adoption falsifies the mechanism.",
+            "instrument": "session-eol state files (compactions[] counters) aggregated by session_eol_report; the marker-drift alarm in the same report guards the detector against silent host shape changes",
+            "threshold": "baseline 11.2%; direction-only target (down) until the review date"
+        },
+        "envelope_resume_success": {
+            "definition": "road-to-token-economy-recycling 3.4: successor sessions that completed the recycled task WITHOUT re-asking for state the envelope should have carried - i.e. the 2.1 not_carried_forward list staying honest (everything else was carried; the successor re-derived only what the list named).",
+            "instrument": "conformance audits over successor-session transcripts (the consumed envelope names the task; the audit checks the successor's first turns for state re-asks); HONEST GAP: no deterministic counter exists for 'had to re-ask' - this is audit-carried and registered as such",
+            "threshold": "none committed before data - baseline first, threshold at review date"
+        },
+        "post_recycle_verify_fail_vs_baseline": {
+            "definition": "road-to-token-economy-recycling 3.4, the falsifiable core: verify-fail rate of recycled successor sessions vs the long-session baseline. PUBLISH-IF-WORSE COMMITMENT, pre-registered before data exists: if recycled sessions verify WORSE, the result is published and the threshold (recycle-threshold-budget.json) or the envelope schema revises in a PR citing the numbers - the claim never survives on vibes.",
+            "instrument": "session-eol per-session state (recycled or not) joined with verify outcomes from conformance audits / review_skipped telemetry; HONEST GAP: transcripts carry no verify-outcome field, so the join is audit-carried until a verify-outcome counter ships",
+            "threshold": "comparison metric - no absolute threshold; verdict recorded at review date whichever way it went"
+        }
+    }
+}

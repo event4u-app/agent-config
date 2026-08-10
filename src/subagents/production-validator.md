@@ -2,6 +2,14 @@
 schema_version: subagent-v1
 name: production-validator
 description: Use before declaring a feature done or a PR ready. Audits that no mock, stub, fake, TODO, or placeholder remains on the shipped (non-test) path and that the change ran against real systems — not just green tests over hollow code.
+# model_tier cites the committed cheapest-sufficient-model table
+# (contexts/execution/auto-dispatch-classification.md § Phase 2.4): this
+# validator audits security-adjacent shipped paths before done-claims —
+# the table's security-sensitive row escalates such slices, so `inherit`
+# (session tier) is the table-consistent pin, NOT an unpinned default.
+# A small-tier default for reviewer-class definitions is gated on the
+# reviewer-tier-quality-floor comparison (road-to-token-economy-dispatch
+# Phase 5.3) — never downshift this by hand-feel.
 model_tier: inherit
 tools:
   - Read

@@ -41,6 +41,43 @@ comparison is like-for-like so the ratio is token-representative.
   estimate"), and this measurement is cited where agent-config speaks in
   its own voice.
 
+## Result (2026-08-10) — extended corpus (token-economy-cache Phase 4.1)
+
+> Scope of the extension: the corpus gained the top UNWRAPPED high-volume
+> classes named by the lean-agent-init diagnosis — a test-runner invocation
+> (vitest), a tree-wide grep, and a build command. **Selection basis is the
+> roadmap's own candidate list, not per-command session telemetry** — the
+> injection census instruments hook payloads, not tool output, so no
+> per-tool volume ranking exists yet. rtk 0.44.1, same machine, single run.
+
+| command | raw bytes | rtk bytes | saving |
+|---|---:|---:|---:|
+| `git status` | 613 | 257 | 58.1% |
+| `git log --oneline -50` | 4,287 | 4,280 | 0.2% |
+| `git log -10` | 5,997 | 2,901 | 51.6% |
+| `git diff --stat HEAD~5..HEAD` | 4,732 | 4,731 | 0.0% |
+| `git branch -a` | 32,852 | 25,282 | 23.0% |
+| `ls -la src/scripts` | 45,491 | 19,934 | 56.2% |
+| `npm ls --depth=0` | 1,042 | 1,041 | 0.1% |
+| `git show --stat HEAD` | 2,506 | 2,506 | 0.0% |
+| `npx vitest run <one file> --reporter=basic` | 376 | 372 | 1.1% |
+| `grep -rn "export function" src/scripts` | 301,927 | 21,499 | 92.9% |
+| `npm run build:cli` | 103 | 60 | 41.7% |
+| **TOTAL** | **399,926** | **82,863** | **79.3%** |
+
+Honest reading of the extension:
+
+- **The 79.3% total is dominated by one command class** — the tree-wide
+  grep (302 KB raw, 92.9% saved) carries most of the aggregate. Without
+  it the mixed corpus stays in the ~30% band of the 2026-07-28 run.
+- **Test-runner output is a near-passthrough** (1.1%): vitest's own
+  reporter is already compact at file granularity; rtk adds nothing
+  material there. Wrapping test runs is not where the savings live.
+- **Consequence:** the high-value wrap targets on this repo are
+  tree-wide search and directory/branch listings — exactly the verbose
+  classes; compact structured output (`--stat`, `--oneline`, `npm ls`)
+  passes through at ~0% in both runs.
+
 ## Reproduce
 
 ```bash

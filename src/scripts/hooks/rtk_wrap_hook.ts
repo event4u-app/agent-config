@@ -26,6 +26,11 @@
  *   - already `rtk …` wrapped, or piped / compound (`|`, `&&`, `||`, `;`)
  *   - any program not in the verbose-CLI allowlist
  *
+ * Second branch (token-economy-cache Phase 4.2, advisory-degraded): for
+ * commands rtk cannot wrap — an unbounded tree-wide search per the committed
+ * OUTPUT_CAP_TABLE below — emit a warn naming the bounded alternative. No
+ * rewrite, no truncation; see the table's comment for the degradation record.
+ *
  * Exit codes (dispatcher contract): 0 allow · 2 warn (+ JSON reason on stdout).
  */
 import fs from "node:fs";
@@ -175,6 +180,108 @@ export function classify(command: string): Eligibility {
   return { eligible: true, program };
 }
 
+// ── Unbounded-output cap ADVISORY (token-economy-cache Phase 4.2) ──────────
+// The roadmap step asked for a deterministic PreToolUse cap REWRITE; the v1
+// dispatcher contract carries no `updatedInput`, so per the roadmap's
+// pre-registered consequence this degrades to an ADVISORY: a committed
+// per-command cap table (this constant — rows individually removable,
+// per-row opt-out via `enabled`) and a warn naming the bounded alternative.
+// Nothing is ever truncated; ignoring the advisory IS the uncapped re-run,
+// and repeated fires in the dispatcher's warn counters are the demand
+// signal that calibrates the table. Table scope is evidence-bound: only the
+// class the 2026-08-10 corpus run measured (tree-wide search — 302 KB raw
+// vs 21 KB bounded on this repo; internal/bench/rtk-savings/RESULTS.md).
+export interface CapRow {
+  enabled: boolean;
+  /** long flags whose presence means the output is already bounded */
+  bounded_long_flags: readonly string[];
+  /** short-option letters (combined forms like `-rln` count) that bound output */
+  bounded_short_letters: string;
+  /** fire only when a recursive/tree-wide flag is present ("" = always tree-wide) */
+  recursive_short_letters: string;
+  recursive_long_flags: readonly string[];
+  hint: string;
+}
+
+export const OUTPUT_CAP_TABLE: Readonly<Record<string, CapRow>> = {
+  grep: {
+    enabled: true,
+    bounded_long_flags: ["--files-with-matches", "--count", "--max-count"],
+    bounded_short_letters: "lcm",
+    recursive_short_letters: "rR",
+    recursive_long_flags: ["--recursive", "--dereference-recursive"],
+    hint: "add `-l` (files only) or `-m 5` (per-file cap), or pipe through `| head -n 100`",
+  },
+  rg: {
+    enabled: true,
+    bounded_long_flags: ["--files-with-matches", "--count", "--max-count", "--count-matches"],
+    bounded_short_letters: "lcm",
+    recursive_short_letters: "",
+    recursive_long_flags: [],
+    hint: "add `-l` (files only) or `--max-count 5`, or pipe through `| head -n 100`",
+  },
+};
+
+/** Pipeline members that already bound or consume the stream. */
+const _BOUNDING_PROGRAMS: ReadonlySet<string> = new Set(["head", "tail", "wc", "rtk"]);
+
+function _shortLetters(token: string): string | null {
+  return /^-[A-Za-z]+$/.test(token) ? token.slice(1) : null;
+}
+
+function _hasAnyFlag(group: readonly string[], longFlags: readonly string[], shortLetters: string): boolean {
+  for (const t of group) {
+    if (longFlags.some((f) => t === f || t.startsWith(`${f}=`))) return true;
+    const letters = _shortLetters(t);
+    if (letters && shortLetters && [...shortLetters].some((c) => letters.includes(c))) return true;
+  }
+  return false;
+}
+
+export interface CapVerdict {
+  program: string;
+  hint: string;
+}
+
+/**
+ * An unbounded tree-wide search in the command (any pipeline segment) with no
+ * bounding flag and no bounding pipeline member → advisory verdict. Fail-open:
+ * parse errors and anything ambiguous return null.
+ */
+export function classifyCap(
+  command: string,
+  table: Readonly<Record<string, CapRow>> = OUTPUT_CAP_TABLE,
+): CapVerdict | null {
+  const cmd = command.trim();
+  if (!cmd) return null;
+  let tokens: string[];
+  try {
+    tokens = shlexSplit(cmd);
+  } catch (e) {
+    if (e instanceof ShlexError) return null;
+    throw e;
+  }
+  const groups = _split_subcommands(tokens);
+  let hit: CapVerdict | null = null;
+  for (const group of groups) {
+    let i = 0;
+    while (i < group.length && _is_env_assignment(group[i] as string)) i += 1;
+    const program = group[i];
+    if (!program) continue;
+    // A bounding consumer anywhere in the chain (head/tail/wc/rtk) → bounded.
+    if (_BOUNDING_PROGRAMS.has(program)) return null;
+    const row = table[program];
+    if (!row || !row.enabled) continue;
+    const needsRecursive = row.recursive_short_letters !== "" || row.recursive_long_flags.length > 0;
+    if (needsRecursive && !_hasAnyFlag(group, row.recursive_long_flags, row.recursive_short_letters)) {
+      continue; // single-file / non-tree invocation — not the measured class
+    }
+    if (_hasAnyFlag(group, row.bounded_long_flags, row.bounded_short_letters)) continue;
+    if (hit === null) hit = { program, hint: row.hint };
+  }
+  return hit;
+}
+
 function _readStdin(): string {
   return readHookStdin();
 }
@@ -203,6 +310,9 @@ export function main(): number {
         : ".";
   if (!_enabled(root)) return EXIT_ALLOW;
 
+  const command = _extract_command(envelope);
+  if (!command) return EXIT_ALLOW;
+
   // Deterministic gate: the live probe, NOT a self-reported flag — and an
   // IDENTITY probe, not bare presence: the `rtk` binary name collides with
   // the unrelated Rust Type Kit, and nudging the agent to wrap commands with
@@ -211,21 +321,30 @@ export function main(): number {
   // NOT — fail closed for behavior, fail open for the command itself.
   // Identity is cached user-globally keyed on the binary's path+mtime+size,
   // so the `rtk gain` probe runs once per installed binary, not per command.
-  if (!rtk_available()) return EXIT_ALLOW;
-  if (detectRtkCached().identity !== "token-killer") return EXIT_ALLOW;
+  if (rtk_available() && detectRtkCached().identity === "token-killer") {
+    const verdict = classify(command);
+    if (verdict.eligible) {
+      const reason =
+        `rtk is installed and wraps verbose CLI output (upstream reports 60–90% fewer output tokens). ` +
+        `Re-run wrapped: \`rtk ${command.trim()}\`. ` +
+        `(Skip for completeness-critical output like \`git diff\`.)`;
+      process.stdout.write(`${_jsonReason(reason)}\n`);
+      return EXIT_WARN;
+    }
+  }
 
-  const command = _extract_command(envelope);
-  if (!command) return EXIT_ALLOW;
-
-  const verdict = classify(command);
-  if (!verdict.eligible) return EXIT_ALLOW;
-
-  const reason =
-    `rtk is installed and wraps verbose CLI output (upstream reports 60–90% fewer output tokens). ` +
-    `Re-run wrapped: \`rtk ${command.trim()}\`. ` +
-    `(Skip for completeness-critical output like \`git diff\`.)`;
-  process.stdout.write(`${_jsonReason(reason)}\n`);
-  return EXIT_WARN;
+  // Cap advisory needs no rtk — it covers exactly the commands rtk cannot
+  // wrap (compound/piped, or outside its allowlist).
+  const cap = classifyCap(command);
+  if (cap) {
+    const reason =
+      `Unbounded \`${cap.program}\` output: a tree-wide search can return hundreds of KB into context ` +
+      `(measured here: 302 KB raw vs 21 KB bounded — internal/bench/rtk-savings/RESULTS.md). ` +
+      `Prefer a bounded form — ${cap.hint}. Re-running unbounded is fine when completeness is required.`;
+    process.stdout.write(`${_jsonReason(reason)}\n`);
+    return EXIT_WARN;
+  }
+  return EXIT_ALLOW;
 }
 
 // Bundle-safety: never auto-run when inlined into an esbuild bundle, where

@@ -350,6 +350,9 @@ export const settingsSchema = z.object({
         judge_model: z.string().default('').describe(
             'Override the model used for review / judge subagents that critique implementer output. Empty (default) = one tier above the implementer model — picks up nuance the implementer missed.',
         ),
+        model_ceiling: z.string().default('').describe(
+            'Session-wide model CEILING for subagents (spend cap). Empty (default) = no ceiling. When set, suite-owned CLI spawn wrappers export CLAUDE_CODE_SUBAGENT_MODEL to the sessions they launch. Class C: a human sets it; the agent never writes or infers one.',
+        ),
         max_parallel: z.number().int().min(1).default(3).describe(
             'Hard cap on subagents running in parallel during /do-in-parallel, /do-competitively, and /judge runs. Raise for faster fan-out, lower if you hit rate limits or want lower token spend.',
         ),

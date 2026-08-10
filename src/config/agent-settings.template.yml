@@ -786,6 +786,14 @@ subagents:
   # (empty = one tier above implementer: opus if sonnet, sonnet if haiku)
   judge_model: ""
 
+  # Session-wide model CEILING for subagents (token-economy-dispatch Phase
+  # 5.2). Empty (default) = no ceiling. When set (e.g. "claude-sonnet-4-5"),
+  # suite-owned CLI spawn wrappers export CLAUDE_CODE_SUBAGENT_MODEL to the
+  # sessions THEY launch — a spend cap on every subagent those sessions
+  # spawn. Class C: a human sets it; the agent never writes it and never
+  # infers one.
+  model_ceiling: ""
+
   # Maximum number of parallel subagent invocations
   # Integer, default 3. Set to 1 to serialize. Hard cap enforced by runtime.
   max_parallel: 3

@@ -197,6 +197,9 @@ Tier 2 — maintenance / internal (hooks, MCP, memory, telemetry):
                              session register). Flags: --json
   sessions:claim             Claim a roadmap for this session so other sessions skip
                              it; --release clears the claim
+  session:recycle            Validate + write the main-session recycle envelope
+                             (deliberate recycle instead of auto-compact). Flags:
+                             --file <json> | --template; default reads stdin
   roadmap:progress           Regenerate agents/roadmaps-progress.md from open roadmaps
   roadmap:progress-check     Fail if agents/roadmaps-progress.md is stale (for CI)
   roadmap:archive            Archive completed roadmaps (branch-touched by default;
@@ -612,6 +615,14 @@ cmd_sessions_list() {
 
 cmd_sessions_claim() {
   exec_ts "$PACKAGE_ROOT/src/scripts/sessions_cli.ts" claim "$@"
+}
+
+# Main-session recycle envelope producer (road-to-token-economy-recycling
+# Phase 2.2). PACKAGE_ROOT: imports src/scripts/_lib/ (capsule schema) and
+# src/scripts/hooks/state_io.ts, which are never projected into
+# dist/agent-src/scripts/.
+cmd_session_recycle() {
+  exec_ts "$PACKAGE_ROOT/src/scripts/_cli/cmd_session_recycle.ts" "$@"
 }
 
 # Capability probes (road-to-capability-answerability). All three resolve from
@@ -1320,6 +1331,7 @@ main() {
     conformance:behavior)    cmd_conformance_behavior "$@" ;;
     sessions:list)           cmd_sessions_list "$@" ;;
     sessions:claim)          cmd_sessions_claim "$@" ;;
+    session:recycle)         cmd_session_recycle "$@" ;;
     packs:active)            cmd_packs_active "$@" ;;
     settings:get)            cmd_settings_get "$@" ;;
     mcp:available)           cmd_mcp_available "$@" ;;

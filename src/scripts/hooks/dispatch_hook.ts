@@ -48,6 +48,7 @@ import {
   clearHookStdinOverride,
 } from "./hook_stdin.js";
 import { emitFor, type Severity } from "./host_semantics.js";
+import { resolveSessionRole, type SessionRole } from "../_lib/session_role.js";
 
 // Free-form JSON values flow through every helper here; a documented
 // alias keeps the surface honest without `any` (ADR-200 § strict TS).
@@ -305,12 +306,42 @@ export function _concern_matches_tool(concern: JsonObject, tool_name: string): b
 }
 
 /**
- * Return the ordered concern definitions for (platform, event).
+ * Role axis (road-to-token-economy-dispatch Phase 2): the set of concern
+ * names the given role drops. Empty for `orchestrator`, for a role without
+ * a manifest entry (fail-open, 2.4), and ALWAYS for `pre_tool_use` — the
+ * safety-guard slot is structurally undroppable (2.3); `lint_hook_manifest`
+ * additionally rejects a drop entry bound to that slot at CI time.
+ */
+export function _role_drop_set(
+  manifest: JsonObject,
+  role: string,
+  event: string,
+): Set<string> {
+  if (!role || role === "orchestrator" || event === "pre_tool_use") {
+    return new Set();
+  }
+  const rolesRaw = manifest["roles"];
+  const roleSpec = _isObject(rolesRaw) ? rolesRaw[role] : undefined;
+  if (!_isObject(roleSpec)) {
+    return new Set(); // unknown role → full chain (fail-open)
+  }
+  const drop = roleSpec["drop"];
+  if (!Array.isArray(drop)) {
+    return new Set();
+  }
+  return new Set(drop.filter((d): d is string => typeof d === "string"));
+}
+
+/**
+ * Return the ordered concern definitions for (platform, event) under the
+ * given session role (default `orchestrator` — byte-identical to the
+ * pre-role-axis behaviour).
  */
 export function _resolve_concerns(
   manifest: JsonObject,
   platform: string,
   event: string,
+  role: SessionRole = "orchestrator",
 ): ConcernDef[] {
   const platformsRaw = manifest["platforms"];
   const platforms = _isObject(platformsRaw) ? platformsRaw : {};
@@ -325,10 +356,14 @@ export function _resolve_concerns(
   if (!Array.isArray(names)) {
     return [];
   }
+  const dropped = _role_drop_set(manifest, role, event);
   const concernsRaw = manifest["concerns"];
   const concerns_def = _isObject(concernsRaw) ? concernsRaw : {};
   const out: ConcernDef[] = [];
   for (const name of names) {
+    if (typeof name === "string" && dropped.has(name)) {
+      continue; // role-dropped orchestrator-only concern
+    }
     const spec = typeof name === "string" ? concerns_def[name] : undefined;
     if (!spec || !_isObject(spec)) {
       process.stderr.write(
@@ -1035,12 +1070,14 @@ export function main(argv?: string[]): number {
 
   const payload_text = process.stdin.isTTY ? "" : _readStdin();
   _maybe_capture_payload(args, payload_text);
-  const concerns = _resolve_concerns(manifest, args.platform, args.event);
+  const session_role = resolveSessionRole(process.env);
+  const concerns = _resolve_concerns(manifest, args.platform, args.event, session_role);
 
   if (args.dry_run) {
     const plan = {
       platform: args.platform,
       event: args.event,
+      role: session_role,
       concerns: concerns.map((c) => c["name"]),
     };
     process.stdout.write(_py_json_dumps(plan, 2) + "\n");

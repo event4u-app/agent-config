@@ -422,22 +422,97 @@ concerns:
     args: []
     fail_closed: false
     severity: advisory
+  # road-to-token-economy-cache Phase 5.1/5.2 — edit-shape advisory. Fires
+  # when a Write replaced an existing, git-tracked file of >= 50 lines while
+  # the effective diff (`git diff HEAD --numstat` added+deleted vs current
+  # file lines) was <= 20% — one line naming the cheaper primitive (a
+  # targeted Edit pays for the diff, not the file). Thresholds are COMMITTED
+  # in the concern header. Once per session (F2-style marker under
+  # agents/runtime/state/edit-shape/). Reports `{decision:"warn", reason,
+  # additional_context}` at exit 2 (same verified delivery pattern as
+  # `delegation-nudge`); never blocks. Exempt: dist/**, */generated/*,
+  # *.lock, *.min.*, agents/runtime/**. fail_closed: false.
+  edit-shape:
+    script: src/scripts/hooks/edit_shape_hook.ts
+    args: []
+    fail_closed: false
+    severity: advisory
+    # Provable from the hook's own source: the only branch surface is
+    # `toolName !== 'Write'` — same cheap-filter discipline as
+    # `orchestration-record`'s [Agent, Task].
+    tools: [Write]
+  # road-to-token-economy-cache Phase 6.1/6.2 — re-read guard + post-edit
+  # scope hint. PreToolUse, ADVISORY ONLY (never exit 1 — a stale-ledger
+  # false positive on a block would corrupt work): a full-file Read of a
+  # path already fully read this session and unchanged since (mtime+size vs
+  # a session-scoped ledger under agents/runtime/state/reread-guard/ — paths
+  # and numbers only, never content), or a full-file Read right after this
+  # session's own Edit/Write to the same path, gets one advisory line naming
+  # the ranged-read alternative. Per-path once-per-session latch. Same
+  # exemption list as edit-shape. Delivery mirrors `delegation-nudge`
+  # (exit-2 warn never blocks on the verified `claude` platform).
+  # fail_closed: false.
+  reread-guard:
+    script: src/scripts/hooks/reread_guard_hook.ts
+    args: []
+    fail_closed: false
+    severity: advisory
+    # Provable from the hook's own source: READ_TOOLS ∪ WRITE_TOOLS.
+    tools: [Read, Edit, Write]
+  # road-to-token-economy-recycling Phases 1.1 / 3.2 / 4.2 — session
+  # end-of-life instrument + recycle advisory. Every Stop, incrementally
+  # folds the transcript's newly appended lines (payload `transcript_path`,
+  # validated like end-review-nudge) into counts-only per-session state
+  # under agents/runtime/state/session-eol/ (final context tokens via
+  # cc_transcript's billable-input definition, turn count, observed
+  # compaction events) and overwrites the machine-readable fill surface
+  # agents/runtime/state/context-fill.json. Past the committed recycle
+  # threshold (src/config/recycle-threshold-budget.json), injects ONE
+  # advisory line ONCE per session (F2) — `{decision:"warn", reason,
+  # additional_context}` at exit 2, the verified delivery pattern of
+  # end-review-nudge. Absent config or unreadable transcript is silence,
+  # never a block; hooks cannot inject /clear, so the recycle action itself
+  # is advisory-carried by design. fail_closed: false.
+  session-eol:
+    script: src/scripts/hooks/session_eol_hook.ts
+    args: []
+    fail_closed: false
+    severity: advisory
+
+# Role axis (road-to-token-economy-dispatch Phase 2). The dispatcher reads
+# AGENT_CONFIG_SESSION_ROLE (resolved via _lib/session_role.ts — set ONLY by
+# suite-owned CLI spawn wrappers, never guessed from host state) and applies
+# the role's `drop` list to every slot EXCEPT pre_tool_use: safety guards run
+# on every role, structurally — the resolver refuses pre_tool_use drops and
+# lint_hook_manifest rejects a drop entry bound to that slot.
+# Missing / unknown role → the full orchestrator chain, byte-identical to a
+# manifest without this block (fail-open, Phase 2.4).
+# Host limitation, pre-registered in the roadmap's worker-chain-host-delivery
+# blocker: in-process Agent-tool subagents inherit the host process env and
+# cannot be marked per-spawn; the axis binds where the suite launches a CLI
+# session itself.
+roles:
+  worker:
+    # Orchestrator-only concerns (Phase 2.3): a worker never talks to the
+    # user, never dispatches sub-workers, never runs the council, and its
+    # complaints route via the orchestrator.
+    drop: [delegation-nudge, end-review-nudge, council-availability, team-review-gate, self-repair, session-eol]
 
 platforms:
   augment:
     session_start:    [chat-history, hot-context, handoff-context, session-canary, council-availability, first-run-gate, onboarding-gate, verify-before-complete, minimal-safe-diff, profile-staleness, wrapper-freshness, surface-probe, session-register]
     session_end:      [chat-history, memory-learn, session-register]
     stop:             [chat-history, hot-context, verify-before-complete, self-repair, session-register]
-    pre_tool_use:     [block-no-verify, block-unauthorized-git, evidence-independence, block-kernel-rule-writes, block-config-weakening, rtk-wrap, design-slop, code-graph-nudge]
-    post_tool_use:    [chat-history, roadmap-progress, context-hygiene, verify-before-complete, minimal-safe-diff, injection-scan, pr-url-reminder, orchestration-record]
+    pre_tool_use:     [block-no-verify, block-unauthorized-git, evidence-independence, block-kernel-rule-writes, block-config-weakening, rtk-wrap, design-slop, code-graph-nudge, reread-guard]
+    post_tool_use:    [chat-history, roadmap-progress, context-hygiene, verify-before-complete, minimal-safe-diff, injection-scan, pr-url-reminder, orchestration-record, edit-shape]
 
   claude:
     session_start:    [chat-history, hot-context, handoff-context, session-canary, council-availability, first-run-gate, onboarding-gate, verify-before-complete, minimal-safe-diff, profile-staleness, wrapper-freshness, surface-probe, session-register]
     session_end:      [chat-history, memory-learn, session-register]
-    stop:             [chat-history, hot-context, verify-before-complete, team-review-gate, end-review-nudge, self-repair, session-register]
+    stop:             [chat-history, hot-context, verify-before-complete, team-review-gate, end-review-nudge, self-repair, session-register, session-eol]
     user_prompt_submit: [chat-history, verify-before-complete, minimal-safe-diff, language-mirror, delegation-nudge, git-authorization, session-canary, self-repair, session-register]
-    pre_tool_use:     [block-no-verify, block-unauthorized-git, evidence-independence, block-kernel-rule-writes, block-config-weakening, rtk-wrap, design-slop, code-graph-nudge]
-    post_tool_use:    [chat-history, roadmap-progress, context-hygiene, verify-before-complete, minimal-safe-diff, injection-scan, pr-url-reminder, orchestration-record]
+    pre_tool_use:     [block-no-verify, block-unauthorized-git, evidence-independence, block-kernel-rule-writes, block-config-weakening, rtk-wrap, design-slop, code-graph-nudge, reread-guard]
+    post_tool_use:    [chat-history, roadmap-progress, context-hygiene, verify-before-complete, minimal-safe-diff, injection-scan, pr-url-reminder, orchestration-record, edit-shape]
 
   # Cowork — the Claude desktop app's local-agent-mode runtime, built
   # on top of the Claude Code CLI. Same lifecycle vocabulary, same
@@ -468,8 +543,8 @@ platforms:
     # still costs the dispatch, and its entire output is thrown away.
     stop:             [chat-history, hot-context, verify-before-complete, self-repair, session-register]
     user_prompt_submit: [chat-history, verify-before-complete, minimal-safe-diff, language-mirror, git-authorization, session-canary, self-repair, session-register]
-    pre_tool_use:     [block-no-verify, block-unauthorized-git, evidence-independence, block-kernel-rule-writes, block-config-weakening, rtk-wrap, design-slop, code-graph-nudge]
-    post_tool_use:    [chat-history, roadmap-progress, context-hygiene, verify-before-complete, minimal-safe-diff, injection-scan, pr-url-reminder, orchestration-record]
+    pre_tool_use:     [block-no-verify, block-unauthorized-git, evidence-independence, block-kernel-rule-writes, block-config-weakening, rtk-wrap, design-slop, code-graph-nudge, reread-guard]
+    post_tool_use:    [chat-history, roadmap-progress, context-hygiene, verify-before-complete, minimal-safe-diff, injection-scan, pr-url-reminder, orchestration-record, edit-shape]
 
   # Phase 7.5 — Cursor. `.cursor/hooks.json` (project) is read by the
   # IDE and CLI; `~/.cursor/hooks.json` (user) is opt-in via
@@ -483,7 +558,7 @@ platforms:
     session_end:        [chat-history, memory-learn, session-register]
     stop:               [chat-history, hot-context, verify-before-complete, self-repair, session-register]
     user_prompt_submit: [chat-history, verify-before-complete, minimal-safe-diff, language-mirror, git-authorization, session-canary, self-repair, session-register]
-    post_tool_use:      [chat-history, roadmap-progress, context-hygiene, verify-before-complete, minimal-safe-diff, injection-scan, pr-url-reminder, orchestration-record]
+    post_tool_use:      [chat-history, roadmap-progress, context-hygiene, verify-before-complete, minimal-safe-diff, injection-scan, pr-url-reminder, orchestration-record, edit-shape]
 
   # Phase 7.6 — Cline. Hooks live under `.clinerules/hooks/<HookName>`
   # (project, no file extension, must be executable per Cline docs) or
@@ -498,7 +573,7 @@ platforms:
     session_end:        [chat-history, memory-learn, session-register]
     stop:               [chat-history, hot-context, verify-before-complete, self-repair, session-register]
     user_prompt_submit: [chat-history, verify-before-complete, minimal-safe-diff, language-mirror, git-authorization, session-canary, self-repair, session-register]
-    post_tool_use:      [chat-history, roadmap-progress, context-hygiene, verify-before-complete, minimal-safe-diff, injection-scan, pr-url-reminder, orchestration-record]
+    post_tool_use:      [chat-history, roadmap-progress, context-hygiene, verify-before-complete, minimal-safe-diff, injection-scan, pr-url-reminder, orchestration-record, edit-shape]
 
   # Phase 7.7 — Windsurf (Cascade). Hooks live at `.windsurf/hooks.json`
   # (project) or `~/.codeium/windsurf/hooks.json` (user). Cascade has
@@ -534,7 +609,7 @@ platforms:
     session_end:        [chat-history, memory-learn, session-register]
     stop:               [chat-history, hot-context, verify-before-complete, self-repair, session-register]
     user_prompt_submit: [chat-history, verify-before-complete, minimal-safe-diff, language-mirror, git-authorization, session-canary, self-repair, session-register]
-    post_tool_use:      [chat-history, roadmap-progress, context-hygiene, verify-before-complete, minimal-safe-diff, injection-scan, pr-url-reminder, orchestration-record]
+    post_tool_use:      [chat-history, roadmap-progress, context-hygiene, verify-before-complete, minimal-safe-diff, injection-scan, pr-url-reminder, orchestration-record, edit-shape]
 
   # Phase 7.9 — Copilot has no hook surface. Concerns route through
   # rule-only fallback; the dispatcher silently no-ops on --platform copilot.

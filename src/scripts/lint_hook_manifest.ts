@@ -318,6 +318,87 @@ function _check_dead_concerns(
   }
 }
 
+/**
+ * Role-axis validation (road-to-token-economy-dispatch Phase 2). Errors on:
+ *   - a `roles` block that is not a mapping of role → { drop: [names] }
+ *   - a drop entry naming an unknown concern
+ *   - a drop entry naming a concern bound to ANY platform's `pre_tool_use`
+ *     slot — the safety-guard slot is undroppable (Phase 2.3: "the manifest
+ *     diff must show zero pre_tool_use guard removals, CI-checked"). The
+ *     dispatcher also refuses pre_tool_use drops at runtime; this check
+ *     makes the attempt a red build instead of a silent no-op.
+ */
+export function _check_roles(
+  manifest: YamlObject,
+  concernNames: Set<string>,
+  errors: string[],
+): void {
+  const rolesRaw = manifest["roles"];
+  if (rolesRaw === undefined || rolesRaw === null) {
+    return; // no role axis — valid (every chain is the orchestrator default)
+  }
+  if (!isObject(rolesRaw)) {
+    errors.push(`roles: must be a mapping, got ${pyTypeName(rolesRaw)}`);
+    return;
+  }
+  // Concerns bound on any platform's pre_tool_use slot — the undroppable set.
+  const guardBound = new Set<string>();
+  const platformsRaw = manifest["platforms"];
+  if (isObject(platformsRaw)) {
+    for (const block of Object.values(platformsRaw)) {
+      if (!isObject(block)) continue;
+      const pre = block["pre_tool_use"];
+      if (Array.isArray(pre)) {
+        for (const n of pre) {
+          if (typeof n === "string") guardBound.add(n);
+        }
+      }
+    }
+  }
+  for (const [role, spec] of Object.entries(rolesRaw)) {
+    if (!isObject(spec)) {
+      errors.push(`roles.${role}: must be a mapping, got ${pyTypeName(spec)}`);
+      continue;
+    }
+    const drop = spec["drop"];
+    if (drop === undefined || drop === null) {
+      continue; // a role without a drop list is a no-op entry — allowed
+    }
+    if (!Array.isArray(drop)) {
+      errors.push(`roles.${role}: 'drop' must be a list, got ${pyTypeName(drop)}`);
+      continue;
+    }
+    for (const name of drop) {
+      if (typeof name !== "string" || !concernNames.has(name)) {
+        errors.push(`roles.${role}: drop entry '${String(name)}' is not a known concern`);
+        continue;
+      }
+      if (guardBound.has(name)) {
+        errors.push(
+          `roles.${role}: drop entry '${name}' is bound to a pre_tool_use slot — ` +
+            `safety guards are undroppable on every role`,
+        );
+      }
+      // Severity-based twin of the slot check (review hardening 2026-08-10):
+      // a fail_closed or non-advisory concern is guard-shaped regardless of
+      // which slot it binds to — dropping one from a role chain would be a
+      // safety removal wearing an economy label.
+      const concernsRaw = manifest["concerns"];
+      const spec = isObject(concernsRaw) ? concernsRaw[name] : undefined;
+      if (isObject(spec)) {
+        const advisory = String(spec["severity"] ?? "").trim().toLowerCase() === "advisory";
+        const failClosed = spec["fail_closed"] === true;
+        if (failClosed || !advisory) {
+          errors.push(
+            `roles.${role}: drop entry '${name}' is ${failClosed ? "fail_closed" : "not severity: advisory"} — ` +
+              `only advisory, fail-open concerns may be role-dropped`,
+          );
+        }
+      }
+    }
+  }
+}
+
 export function lint(manifestPath: string, strict: boolean): number {
   if (!_isFile(manifestPath)) {
     process.stderr.write(
@@ -342,6 +423,7 @@ export function lint(manifestPath: string, strict: boolean): number {
   const warnings: string[] = [];
   const concernNames = _check_concerns(manifest, errors);
   const bound = _check_platforms(manifest, concernNames, errors, warnings);
+  _check_roles(manifest, concernNames, errors);
   _check_aliases(manifest, errors);
   _check_orphan_trampolines(manifest, errors);
   _check_dead_concerns(concernNames, bound, warnings);
