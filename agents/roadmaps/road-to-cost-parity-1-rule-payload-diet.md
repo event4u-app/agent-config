@@ -1,0 +1,347 @@
+---
+complexity: structural
+status: ready
+execution:
+  mode: phase-checkpoints
+---
+
+# Road to cost parity — 1: the maintained estate shrinks where nothing else owns it
+
+> 289 skills and 116 rules must all stay true, reviewed and non-contradictory
+> regardless of what any session loads. This roadmap takes the part of that
+> problem no existing roadmap owns: skill-cluster consolidation, an authored
+> norm-line per surviving rule, and two small caps — and explicitly leaves
+> the command surface, the `tier:` field and the adherence bench to their
+> existing owners.
+
+## Goal
+
+The maintained skill count drops by cluster arithmetic with trigger accuracy
+held, every surviving rule carries an authored one-line normative core under
+a drift lint, and the two uncapped growth surfaces (CLI verbs, hook chain
+length) gain a census and a cap — with the nine write-denied kernel rules
+carved out by name and no shipped artefact deleted without its migration
+note.
+
+## Prerequisites
+
+- [x] `road-to-cost-parity-0-program.md` target table registered — this
+      roadmap's before/after numbers are measured against its pinned
+      baseline, not against a fresh measurement.
+- [ ] `road-to-surface-consolidation.md` Phase 3 utilization sweep has run
+      (time-gated, ~2026-08-26). Its KEEP/MERGE/DEMOTE/REMOVE mechanic over
+      commands is the instrument Phase 1's census reuses for skills — this
+      roadmap does not build a second one.
+
+## Context (verified against the tree 2026-08-10, do not relitigate)
+
+The scope below is what survived a claim-by-claim verification of the source
+draft. What was cut, and why, is enumerated in
+[`road-to-cost-parity-0-program.md`](road-to-cost-parity-0-program.md)
+§ Context. Three cuts matter enough to restate here because they would
+otherwise be re-proposed:
+
+- **The `109 divergent deliveries` prerequisite was false.**
+  `report_carrier_divergence.ts` on main: 91 shared names, **0 differ in
+  body**, all differ only in the installer stamp. It also relitigated
+  `dedup-reachability-refusal.md`, whose five reopen conditions are unmet.
+  There is no delivery corruption to fix before measuring.
+- **The `201 KB` ownership matrix is already generated** — the file carries a
+  *"Do not edit — regenerated"* header and `generate_ownership_matrix.ts`
+  exists.
+- **The core/pack split is ~85 % built.** All 289 skills already declare
+  `workspaces:`, `packs:` and `install.default`. Only the maintenance-promise
+  marker is missing, and that is one frontmatter field (Phase 5).
+
+Two facts shape how the rule work must be done:
+
+- **Nine kernel rules deny agent writes outright**
+  (`agent-authority`, `ask-when-uncertain`, `commit-policy`,
+  `direct-answers`, `language-and-tone`, `no-cheap-questions`,
+  `non-destructive-by-default`, `scope-control`, `verify-before-complete`),
+  and `scope-control § Kernel-rule edits` requires an own PR with ≥ 24 h
+  between merges. They are not dietable at tranche pace and are carved out
+  by name throughout.
+- **`preservation-guard` forbids stripping negation clauses.** The source
+  draft proposed restating `NEVER X` prohibitions as positive targets. That
+  is precisely what that rule's reject criteria name. Phase 3 therefore
+  writes norm-lines *alongside* rule bodies and never rewrites a prohibition.
+
+And one fact explains why the payload is worth attacking at all:
+`dist/router.json` has **no runtime host consumer**, so `type: auto` does not
+gate delivery — 92 of 116 rules reach a Claude session and all 115 reach an
+Augment session, regardless of the type field. The per-host numbers are in
+part 0's table.
+
+## Phase 1 — census with decided verdicts
+
+- [ ] 1.1 One census manifest at `agents/evidence/analysis/estate-census.md`
+      plus a machine-readable sibling: every skill and every non-kernel rule
+      gets a verdict — `keep` / `merge-into:<target>` / `pack:<name>` /
+      `delete` — with a one-line reason. A verdict is `pending` until
+      actually decided; `pending` is never silently read as `keep`.
+- [ ] 1.2 The census reuses `road-to-surface-consolidation.md` Phase 3's
+      verdict vocabulary and sweep mechanic rather than defining a second
+      one, and records in its header that commands are out of scope because
+      that roadmap owns them.
+- [ ] 1.3 Evidence columns cite real instruments and mark their own gaps:
+      `report_skill_activation` for skill usage (with its window depth
+      stated — see the blocker), `check_enforcement_coverage` for backstop
+      status (measured: 12.9 %, 15 of 116, 32 declared / 84 undeclared), and
+      git churn for staleness. A column with no data reads `absent`, never a
+      default.
+      <!-- verify: ./scripts-run src/scripts/check_enforcement_coverage --quiet -->
+- [ ] 1.4 A cheap-tier pass may draft verdicts and cluster mappings as
+      PR-reviewable proposals. Nothing model-drafted reaches a carrier
+      without a decided verdict in the census PR — drafting is an authoring
+      aid, and the anti-paraphrase doctrine holds for delivery.
+- [ ] 1.5 The nine kernel rules appear in the census with verdict
+      `keep (kernel, write-denied)` and no further processing — so a reader
+      sees they were considered, not skipped.
+
+**Exit:** every skill and non-kernel rule carries a decided, reasoned verdict with its evidence columns populated or explicitly `absent`.
+**Rollback:** the census is evidence; nothing has moved.
+
+## Phase 2 — skill-cluster consolidation, pilot first
+
+- [ ] 2.1 Pilot: the Laravel/PHP cluster, 25 skills → 1 skill + per-topic
+      reference files. Bodies move **byte-preserving** except for routing
+      glue; the merged `SKILL.md` routes by topic. Measured on the tranche:
+      frontmatter bytes delta, lint pass, and trigger accuracy against the
+      cluster's historical activation set within a committed margin.
+      <!-- verify: task lint-skills -->
+- [ ] 2.2 Consolidation is movement, not rewriting. Content edits are
+      separate PRs *after* the move, so the diff proves no norm was softened
+      in transit — `preservation-guard`'s own standard applied to skills.
+- [ ] 2.3 Each tranche ships with its migration note: merging 25 skills
+      deletes 24 published skill names, which breaks `packs/*.yml` entries
+      and every `requires_skills:` reference. The note enumerates the
+      renames and the tranche updates every reference in the same change.
+      <!-- verify: task check-refs -->
+- [ ] 2.4 Then, each with the same bar and its own revert:
+      `project-analysis-*` (10 → 1 + refs), `judge-*` (7 → 1 parameterised),
+      `brand*` (6 → 1), the image family (7 → 2), `readme*` (3 → 1).
+      Independent PRs; one bad merge reverts alone.
+- [ ] 2.5 A tranche whose trigger accuracy misses its margin reverts as a
+      tranche and the miss is published — a consolidation that breaks
+      activation converts frontmatter savings into silent capability loss,
+      and that trade is refused, not absorbed.
+
+**Exit:** maintained skill count drops by cluster arithmetic; every tranche has its accuracy comparison on record and its references updated.
+**Rollback:** per tranche, independently.
+
+## Phase 3 — authored norm-lines and sectioning, kernel carved out
+
+- [ ] 3.1 Every surviving **non-kernel** rule gains a frontmatter `norm:`
+      field: one authored line stating the rule's normative core,
+      lint-checked for presence and length, reviewed in the rule's own PR
+      like any other content. Explicitly not model-generated summarisation.
+- [ ] 3.2 A drift lint fails CI when a rule body changes without its `norm:`
+      being touched — the same shape as source-pointer freshness. Without it
+      an index line silently delivers a stale norm to every session.
+      <!-- verify: task test -- --filter=norm -->
+- [ ] 3.3 Prohibitions are preserved verbatim. Where a positive target
+      exists it is added as the `norm:` line; the `NEVER X` clause in the
+      body stays. `preservation-guard § Reject criteria` names stripping
+      negation clauses as a rejection, and this roadmap does not argue with
+      it.
+- [ ] 3.4 Marker-delimited `norm` / `rationale` / `examples` sections in
+      surviving non-kernel rules, lint-enforced. Any section-cut projection
+      lands in a separate output tree — never in `dist/agent-src/`, whose
+      byte-exactness invariant (`dist == rewrite(src)`) is asserted by
+      `check_condensation` and is not reopened here.
+      <!-- verify: task check-condensation -->
+- [ ] 3.5 The nine kernel rules are excluded from 3.1–3.4 by an explicit
+      named list, because `check_kernel_prefix_stability` asserts their
+      byte-prefix and a batch sweep including them reds it. If they are ever
+      to gain norm-lines it is nine separate PRs at ≥ 24 h spacing, which is
+      a maintainer decision and not planned here.
+      <!-- verify: task check-kernel-prefix-stability -->
+- [ ] 3.6 Report the norm inventory in CI — the MUST/NEVER/ALWAYS total
+      across survivors (measured baseline: 171 across 116 rules). Report
+      only; a cap on this layer already exists as a pre-registered target in
+      `road-to-rule-coherence-followup.md` and a second cap on the same
+      surface is refused.
+
+**Exit:** every non-kernel rule carries a lint-checked `norm:` line and section markers; the drift lint is red on a fixture editing a body without its norm; the kernel exclusion list is pinned by a test.
+**Rollback:** per rule; the fields are additive frontmatter and the projections are a separate tree.
+
+## Phase 4 — the two uncapped growth surfaces
+
+- [ ] 4.1 CLI verb census: no per-verb invocation telemetry exists (the
+      registry knows definitions, not calls). Add one record-only counter in
+      the CLI entry — additive, gitignored state — run it for the committed
+      window, then publish the census. No verb is sunset on a guess.
+- [ ] 4.2 The registry budget ratchets **down** after the census, using the
+      existing `check_cli_registry_budget_sync` machinery pointed the other
+      direction. Measured baseline: 97 verbs.
+      <!-- verify: ./scripts-run src/scripts/check_cli_registry_budget_sync --quiet -->
+- [ ] 4.3 Hook chain-length cap as a manifest lint: a new concern on a
+      capped slot must name the concern it replaces or merges into. Measured
+      baseline: 9 concerns on `user_prompt_submit` for claude, 7–8 on other
+      hosts — the cap is per host because the chains are.
+      <!-- verify: task test -- --filter=hook_manifest -->
+- [ ] 4.4 Each of the two caps names the mechanism it removes or replaces,
+      per `surface-consolidation-restraint.md`'s load-bearing rule that
+      growth of the mental surface is paid for by removal: 4.2 replaces
+      manual registry review, 4.3 replaces the manual chain audit.
+
+**Exit:** the verb census is published with per-verb counts, the registry budget is a downward ratchet, and the chain cap is red on a fixture adding an unpaired concern.
+**Rollback:** the counter is additive and gitignored; each cap is one config number.
+
+## Phase 5 — the maintenance promise and the contexts surface
+
+- [ ] 5.1 The `maintained:` frontmatter marker — the 15 % of the core/pack
+      split that is not already built. A pack marked `maintained: false` is
+      best-effort: no review dates, excluded from estate caps. Content is
+      preserved either way; what changes is the promise attached to it.
+- [ ] 5.2 Declare the maintained core as the engineering and
+      agent-governance workspaces, and record which packs take the
+      best-effort marker. Release notes list every move, because moving a
+      skill to `default: false` changes what an existing install receives.
+- [ ] 5.3 Contexts species separation, on the **shipped** surface:
+      `src/agent-src/contexts/` (measured 57 files / 381 KB) holds only
+      files with a live consumer; one-off harvest and cut notes relocate to
+      `agents/evidence/` with links updated.
+      <!-- verify: task check-refs -->
+- [ ] 5.4 State plainly in the census header that
+      `agents/settings/contexts/` (78 files / 725 KB) is **not** in
+      `package.json` `files[]` and ships to nobody — it is a maintainer
+      working directory. Tidying it is maintenance, not surface reduction,
+      and is not counted toward any payload target.
+
+**Exit:** the marker exists and is populated per pack; the shipped contexts directory contains only consumer-backed files; the non-shipped directory is documented as such.
+**Rollback:** the marker is one field; relocations are moves.
+
+## Phase 6 — what this roadmap will not do
+
+- [ ] 6.1 No command-surface work — `road-to-surface-consolidation.md` owns
+      it, is 92 % done, and has two live blockers this roadmap must not
+      close by absorption.
+- [ ] 6.2 No `tier:` field removal — `road-to-tier-removal.md` owns it and
+      is blocked on `trigger-set-amendment`, an act this roadmap does not
+      perform.
+- [ ] 6.3 No rule **deletion** — the cut-line from the `rules_used` window
+      belongs to `later/road-to-token-economy-dispatch-followup.md`. This
+      roadmap merges and annotates; it does not delete rules.
+- [ ] 6.4 No rule→skill migration. `road-to-solution-minimalism.md` F1
+      measured **zero** description-triggered skill self-activation across
+      ten sessions, which is why the ladder shipped as rule text. Moving
+      norms toward an instrument measured as inert needs that null rebutted
+      first, and rebutting it is not this roadmap's work.
+- [ ] 6.5 No adherence eval and no A/B bench — two existing roadmaps own
+      that question and both are spend-blocked (see part 0's blocker). This
+      roadmap consumes their result; it does not open a third bench.
+- [ ] 6.6 No frontmatter field deletion — `routes_to:` (62 rules),
+      `collision_ok:` (46), `self_contained:` (44) each need their readers
+      proven absent first, and `routes_to:` feeds the router that
+      `check_static_layer_stability` reads. A consumer audit is a
+      prerequisite for a future roadmap, not a step here.
+- [ ] 6.7 No new lint beyond the four enumerated (norm presence, norm drift,
+      section markers, chain-length cap) plus the two ratchet repoints. A
+      maintenance roadmap that grows the meta-estate refutes itself, and the
+      count is an acceptance criterion.
+
+## Blockers
+
+### blocker: skill-activation-window
+
+- **Status:** open
+- **Owner:** user
+- **Blocks:** Phase 1.3's skill-usage evidence column; Phase 2's
+  trigger-accuracy bars
+- **What to do:** `road-to-skill-description-measurement.md` is blocked on
+  `human-gated-live-trigger-eval` with the same gap under a different name —
+  its pre-registration (≥ 100 requests, ≥ 3 shapes, no skill degrading
+  > 20 %) is the bar Phase 2 needs. Recorded independently: 6 of 288 skills
+  have ever been invoked and 0 declare a trigger, and the host truncates the
+  injected catalogue, which is not measurable from transcripts. So the
+  activation instrument's depth on this store is unverified until that eval
+  runs.
+- **Resolved when:** the pilot tranche PR cites its activation baseline and
+  the window it was measured over.
+
+### blocker: consolidation-breaking-change-permission
+
+- **Status:** open
+- **Owner:** user
+- **Blocks:** Phase 2 tranches landing
+- **What to do:** merging a cluster deletes published skill names from
+  consumer trees — a consumer-facing breaking change under
+  `downstream-changes § Breaking changes`. Each tranche needs explicit
+  permission plus its migration note; the pilot's note is the template for
+  the rest.
+- **Resolved when:** the pilot tranche is authorized with its migration note
+  reviewed.
+
+### blocker: utilization-sweep-window
+
+- **Status:** open
+- **Owner:** maintainer
+- **Blocks:** Phase 1 census starting with real utilization data
+- **What to do:** `road-to-surface-consolidation.md` Phase 3's sweep is
+  time-gated to ~2026-08-26 and carries its own `repo-admin-and-usage`
+  blocker. The census reuses its mechanic, so it waits rather than building
+  a parallel one.
+- **Resolved when:** that sweep has run and its vocabulary is available to
+  reuse.
+
+## Risk Register
+<!-- risk-review: v1 | reviewed: 2026-08-10 | reviewer: claude/host -->
+
+| Rank | Item | Risk type | Description | Mitigation | Anchored under |
+|------|------|-----------|-------------|------------|----------------|
+| 1 | A merged cluster stops triggering where its parts did | product | Consolidation that breaks activation converts frontmatter savings into silent capability loss — the single most expensive way this roadmap can fail | Per-tranche trigger-accuracy bar against the historical activation set with a committed margin and tranche revert (2.1, 2.5); the description-measurement instrument is the existing tool; the activation window's own depth is a named blocker rather than an assumption | Phase 2 |
+| 2 | The norm-line drifts from the body it fronts | product | A stale index line delivers a wrong norm to every session — authored compression fails exactly like paraphrase if unmaintained | The drift lint (3.2) fails CI on a body edit without a norm touch; the norm is PR-reviewed content, not metadata; full text stays one load away | Phase 3 |
+| 3 | A kernel rule is caught in a batch sweep | implementation | `check_kernel_prefix_stability` asserts the nine rules' byte prefix; a sweep including them reds CI and the fix looks like the sweep was wrong | The exclusion list is explicit and named in 3.5, pinned by a test, and the nine appear in the census with a `write-denied` verdict so they are visibly considered rather than forgotten | Phase 3 |
+| 4 | Consolidation breaks a reference nobody grepped | implementation | `packs/*.yml`, `requires_skills:`, `.claude/skills/`, `.augment/` and `dist/` all carry skill names | 2.3 makes reference updates part of the tranche, `check-refs` is bound as its verification, and each tranche is an independent revert | Phase 2 |
+| 5 | The census stalls at `pending` and the roadmap reads as active | process | 400+ verdicts reviewed under fatigue either approve themselves or never finish | `pending` is a legal recorded state, so stalled and paced are distinguishable; verdicts land in reviewable batches with evidence columns; the pacing line lives in the census header | Phase 1 |
+| 6 | This roadmap grows the meta-estate it exists to shrink | process | Four new lints and two ratchet repoints are governance surface | 6.7 caps the count and makes it an acceptance criterion; 4.4 names the manual review each cap replaces, per the restraint lock | Phase 6 |
+| 7 | Tidying the non-shipped contexts directory is counted as a win | process | 725 KB is the larger number and the more tempting target, and it ships to nobody | 5.4 states the exclusion in the census header itself, and part 0's payload table separates shipped from project-local | Phase 5 |
+
+## Acceptance criteria
+
+- [ ] The census manifest exists with a decided verdict and reasoned
+      evidence columns for every skill and every non-kernel rule, the nine
+      kernel rules recorded as `write-denied`, and its header naming both
+      out-of-scope surfaces (commands, non-shipped contexts).
+- [ ] The Laravel pilot merged with its trigger-accuracy comparison and
+      migration note on record, plus at least three further clusters, each
+      with its own revert unexercised or exercised-and-published.
+- [ ] Every non-kernel rule carries a lint-checked `norm:` line and section
+      markers; the drift lint is provably red on a fixture editing a body
+      without its norm; the kernel exclusion is provably enforced.
+- [ ] `dist/agent-src/rules/` still satisfies `dist == rewrite(src)`
+      byte-for-byte after Phase 3 — the section-cut projection lives
+      elsewhere.
+- [ ] The CLI verb census is published with per-verb counts from real
+      invocation data, and the registry budget is a downward ratchet.
+- [ ] The chain-length cap is red on a fixture adding an unpaired concern to
+      a capped slot, per host.
+- [ ] The `maintained:` marker is populated per pack with the moves listed
+      in release notes.
+- [ ] The count of new lints introduced equals the four enumerated in 6.7 —
+      no more — and each names the manual review it replaces.
+- [ ] No file owned by `road-to-surface-consolidation.md`,
+      `road-to-tier-removal.md`,
+      `later/road-to-token-economy-dispatch-followup.md` or
+      `road-to-skill-description-measurement.md` was edited by this roadmap.
+
+## Provenance
+
+<!-- Source-derived per templates/roadmaps.md rule 19. -->
+
+- Source: maintainer analysis thread, 2026-08-10 (external LLM ideation),
+  consumed inbox `agents/tmp.old/median-tokenusage.txt`; anonymized per
+  [`source-confidentiality`](../../src/rules/source-confidentiality.md).
+  Link via `src/scripts/_lib/link_crypto.ts decrypt`:
+  ENC1:Lbi3WHnpd3ev5lRuiUUn+k5gOvOKcewkScdjaTgsn73kA1j8QvnyXDJH2Is2M7smNnrhHAAAYHy+FO3kpJcOaQ==
+- Gap-table: see
+  [`road-to-cost-parity-0-program.md`](road-to-cost-parity-0-program.md)
+  § Context — this file is the `KEEP` column of the estate draft, whose other
+  phases verified as already-built (matrix generation, pack split),
+  already-owned (commands, `tier:`, rule deletion, description sharpening,
+  adherence bench) or lock-conflicted (negation rewriting, kernel writes).
+- Council: **not run.** Part 0 § 2.4 routes this roadmap's three surviving
+  lock questions to a council pass before Phase 2 executes, rather than
+  recording a convergence that did not happen.
