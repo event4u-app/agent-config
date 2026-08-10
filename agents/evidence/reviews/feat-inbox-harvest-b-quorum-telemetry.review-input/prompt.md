@@ -21,8 +21,8 @@ Senior-engineer review of the branch diff. Search grid — hunt for:
 
 ## Inputs
 
-- diff: `diff.patch` — the review scope (branch head 12e0bc14f7813691c8708d25b6eb23c8bcf4f116, review
-  artefacts excluded), scope hash `f56b17ff0f70cff5639922440276c03362b99aedf4dea81ff60f51f90c7e5f09`
+- diff: `diff.patch` — the review scope (branch head baba417297bbb6db0d0d250785e3c049f7e33fd7, review
+  artefacts excluded), scope hash `97ba888abc816323ab67f03068932d1c611b4527c984da280b764c826f5a84ed`
 - roadmap under review: `roadmap.md` (Acceptance Criteria extracted to `acceptance-criteria.md`)
 
 Changed files:
@@ -56,5 +56,5 @@ Fill the findings table in `feat-inbox-harvest-b-quorum-telemetry.findings.md`:
   (contract §2.3):
 
 ```markdown
-**Honest-null:** 0 findings, scope f56b17ff0f70cff5639922440276c03362b99aedf4dea81ff60f51f90c7e5f09, reviewed <YYYY-MM-DD>
+**Honest-null:** 0 findings, scope 97ba888abc816323ab67f03068932d1c611b4527c984da280b764c826f5a84ed, reviewed <YYYY-MM-DD>
 ```
