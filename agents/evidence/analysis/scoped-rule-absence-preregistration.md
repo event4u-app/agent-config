@@ -3,10 +3,10 @@
 **Registered 2026-08-10, before any session was run.** Roadmap:
 `road-to-feedback-9-29`, Phase 3 step 1. This file lands in its own commit
 **before** either experiment session exists, so the registered-before-looking
-property is in the history. Registration commit: `<registration-commit>`
-(filled with the SHA of the commit that introduces this file, at commit time —
-the placeholder is the only edit this file receives after registration). The
-bar below is frozen: it is **not** edited after a session is run. If a run
+property is in the history. Registration commit: **`9321fb21e`** — the commit
+that introduced this file; the SHA is filled in afterwards because a placeholder
+cannot be its own commit's hash, and that fill is the ONLY edit this file
+receives after registration. The bar below is frozen: it is **not** edited after a session is run. If a run
 produces something interesting the bar excludes, that is recorded as an
 out-of-scope observation, never as a bar amendment.
 
@@ -218,8 +218,14 @@ the B′ escalation still fires.
   Until a session log exists whose instruction events were demonstrably captured,
   and its path is named in the run record, every run is outcome C by
   construction. This precedes the SHA fill and both sessions.
-- This file's registration commit is `<registration-commit>` (filled at commit
-  time). It **precedes** both sessions in history.
+- This file's registration commit is **`9321fb21e`** ("docs(evidence): pre-register
+  the scoped-rule absence experiment, and correct its headline"). It **precedes**
+  both sessions in history. The SHA was filled in a follow-up commit rather than
+  at introduction — a placeholder cannot be a commit's own hash — and an
+  independent council review caught it shipping unfilled, which would have left
+  the registered-before-looking property unprovable. The run protocol cites THIS
+  SHA; `git show 9321fb21e --stat` shows the file added with the bar already
+  frozen and the results table empty.
 - The run protocol REQUIRES the run record to (a) cite that SHA and (b) assert
   that **no corridor-matching session ran between registration and
   experiment** on the experiment machine. If that assertion cannot be made,
