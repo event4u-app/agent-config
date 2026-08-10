@@ -53,7 +53,7 @@ migration note.
 
 The scope below is what survived a claim-by-claim verification of the source
 draft. What was cut, and why, is enumerated in
-[`road-to-cost-parity-0-program.md`](../road-to-cost-parity-0-program.md)
+[`road-to-cost-parity-0-program.md`](../archive/road-to-cost-parity-0-program.md)
 § Context. Three cuts matter enough to restate here because they would
 otherwise be re-proposed:
 
@@ -444,14 +444,14 @@ part 0's table.
   Link via `src/scripts/_lib/link_crypto.ts decrypt`:
   ENC1:Lbi3WHnpd3ev5lRuiUUn+k5gOvOKcewkScdjaTgsn73kA1j8QvnyXDJH2Is2M7smNnrhHAAAYHy+FO3kpJcOaQ==
 - Gap-table: see
-  [`road-to-cost-parity-0-program.md`](../road-to-cost-parity-0-program.md)
+  [`road-to-cost-parity-0-program.md`](../archive/road-to-cost-parity-0-program.md)
   § Context — this file is the `KEEP` column of the estate draft, whose other
   phases verified as already-built (matrix generation, pack split),
   already-owned (commands, `tier:`, rule deletion, description sharpening,
   adherence bench) or lock-conflicted (negation rewriting, kernel writes).
 - Council: **anthropic/claude-sonnet-4-5 + openai/gpt-4o, 2026-08-10, 2 rounds**
   (`--prompt-mode pr`). Convergence is inlined once, in
-  [`road-to-cost-parity-0-program.md`](../road-to-cost-parity-0-program.md)
+  [`road-to-cost-parity-0-program.md`](../archive/road-to-cost-parity-0-program.md)
   § Provenance, rather than restated per sibling. What it changed here is marked
   in the phases above; what it recorded and did **not** apply is the
   family-scope question (open parts 0 and 3 now, defer 1 and 2), which is the
