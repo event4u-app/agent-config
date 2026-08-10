@@ -39,7 +39,7 @@ THEY PREVENT THE WHOLE ITEM. NEVER PLAN WORK OFF AN UNVERIFIED SNAPSHOT.
 | `council-q-renewal-foundation-p1.md` | consumed council question | **spent — user deletes** | Shipped verbatim; roadmap archived |
 | `council-q-always-budget-reveal.md` | consumed council question | **spent — user deletes** | Option B shipped verbatim |
 | `bench-local/` | bench ground truth + raw output | **spent — user deletes** | Null published, report committed, roadmap archived |
-| `packages-1.txt` | 40 bare GitHub URLs | **park** | Both harvest slots occupied; cap is gate-enforced |
+| `packages-1.txt` | 40 bare GitHub URLs | **park** | A 41-repo harvest exceeds maintainer capacity (ADR-216 § D3), and naming 40 sources in a tracked file runs against `source-confidentiality`. Correction (2026-08-10): the gate-enforced cap is **family-scoped** — `lint_roadmap_family_cap.ts` reads `FAMILY_PREFIX = 'road-to-skill-ecosystem-'` at occupancy 1 of 2 — so no slot was occupied and none is gate-enforced for a harvest under any other name |
 | `memory-mcp/` | complete unfiled roadmap pkg | **park** | Builds on the code-graph engine whose claim is a published null |
 
 The four large chat-log audits (`better-video.txt`, `hermes.txt`,
