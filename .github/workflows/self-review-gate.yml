@@ -67,7 +67,7 @@ jobs:
         # hashFiles() only sees GITHUB_WORKSPACE — gate on the file directly
         # and let a missing file (NEUTRAL run, no findings) be a clean no-op.
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: self-review-findings
           path: /tmp/self-review-findings.json
