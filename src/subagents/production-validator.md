@@ -11,6 +11,14 @@ description: Use before declaring a feature done or a PR ready. Audits that no m
 # reviewer-tier-quality-floor comparison (road-to-token-economy-dispatch
 # Phase 5.3) — never downshift this by hand-feel.
 model_tier: inherit
+# `Bash` is bare because subagent-v1 cannot express anything narrower: the
+# `tools` enum in src/scripts/schemas/subagent.schema.json admits only the nine
+# bare tool tokens, so the `Bash(<prefix>:*)` form `tool-safety` prescribes is
+# currently inexpressible here. The grant is load-bearing — this validator's job
+# is to "read, grep, run to verify, and report" (see the body below), and the
+# running is the half that distinguishes it from a reader. Widening the enum is
+# road-to-inbox-harvest-2026-08-b-dispatch-safety Phase 1; the pragma below goes
+# when that lands, and the scoped grant replaces this comment.
 tools:
   - Read
   - Grep
@@ -29,6 +37,7 @@ discovery:
 source: package
 ---
 
+<!-- security-lint: allow dangerous-frontmatter "subagent-v1 cannot express a scoped Bash grant: the tools enum in subagent.schema.json admits only bare tokens. The grant is load-bearing (this validator runs to verify, not just reads). Removed when road-to-inbox-harvest-2026-08-b-dispatch-safety Phase 1 widens the enum." -->
 You are the **Production Validator** — the last gate before "done".
 
 Your single question: **is the shipped code real, or does a green test hide a stub?**
