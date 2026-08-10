@@ -790,4 +790,67 @@ describe('R2 finding 5 — CommonMark allows a LONGER closing fence', () => {
         expect(prose).toContain('Vorher.');
         expect(prose).not.toContain('LEAK_MUST_VANISH');
     });
+
+    // --- round 2, finding 1: the regression the round-1 fix INTRODUCED --------
+
+    it('R2r2-1: a MIXED-character nested fence does not delete the reply tail', () => {
+        // `~~~` outer with ``` inner is the shape `markdown-safe-codeblocks`
+        // prescribes as its DEFAULT. The character-matching regex stopped at the
+        // inner ``` line, declined it on the mismatch, and the greedy tail-drop
+        // then removed everything from the opener onward — so the round-1 "fix"
+        // was WORSE than what it replaced on the more common input. Neither
+        // regex could get this right; the scanner can.
+        const reply = [
+            'Vorher.',
+            '~~~markdown',
+            'Beispiel für einen inneren Block:',
+            '```ts',
+            'const inner = 1;',
+            '```',
+            '~~~',
+            '',
+            'Ich melde mich, sobald die CI grün ist.',
+        ].join('\n');
+        const prose = visibleProse(reply);
+        expect(prose).toContain('Vorher.');
+        expect(prose).toContain('Ich melde mich');
+        expect(prose).not.toContain('const inner');
+        // And the closing paragraph is readable again, which is the point.
+        expect(detectPromissory(reply)).not.toBeNull();
+    });
+
+    it('R2r2-1: an inner fence of the SAME character does not close the block early', () => {
+        const reply = ['Vorher.', '````md', '```', 'inner_must_vanish', '```', '````', '', 'Fertig, nichts offen.'].join('\n');
+        const prose = visibleProse(reply);
+        expect(prose).not.toContain('inner_must_vanish');
+        expect(prose).toContain('Fertig');
+    });
+});
+
+describe('round 2, findings 15 + 16 — detector A precision and recall', () => {
+    it('R2r2-15: an umlaut infinitive is reachable', () => {
+        // `\\b\\w{3,}en\\b` could not reach `prüfen` / `lösen`: ü and ö are not
+        // `\\w`, so they create a word boundary. Verified against the literal
+        // regex before and after.
+        for (const r of [
+            'Fertig.\n\nIch werde die Datei prüfen.',
+            'Fertig.\n\nIch werde das lösen.',
+            'Fertig.\n\nIch werde die Regeln überfliegen.',
+        ]) {
+            expect(detectPromissory(r), r).not.toBeNull();
+        }
+    });
+
+    it('R2r2-16: a question mid-paragraph is no longer a one-character bypass', () => {
+        // `includes('?')` let any rhetorical or quoted question disable a
+        // blocking guard. Only a question that ENDS the paragraph is a hand-back.
+        const bypass = 'Fertig.\n\nWarum auch nicht? Ich melde mich, sobald die CI grün ist.';
+        expect(detectPromissory(bypass)).not.toBeNull();
+    });
+
+    it('R2r2-16: a real closing question still yields to the user', () => {
+        expect(detectPromissory('Zwei Wege sind möglich.\n\nSoll ich den ersten nehmen?')).toBeNull();
+        // Trailing quote/bracket after the mark still counts as a closing question.
+        expect(detectPromissory('Zwei Wege.\n\nWelchen nimmst Du (1 oder 2)?')).toBeNull();
+    });
 });

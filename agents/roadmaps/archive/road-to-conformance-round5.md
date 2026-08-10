@@ -416,35 +416,47 @@ part twice is how a second detector becomes a second outage.
   per-session min/max arithmetic that reports disjoint findings of equal count
   as full agreement (R2 finding 7).
 
-  CORRECTED, same command, same store, run 2026-08-10 after the instrument was
-  fixed to score one sample per turn:
+  CORRECTED, same command, run 2026-08-10 after the instrument was fixed to
+  score one sample per turn — and NOT the same store, which the first correction
+  wrongly claimed (R2 round 2, finding 5). The entry-counting path is unchanged
+  between runs, so an identical corpus must yield an identical count; 2157 then
+  2228 then 2252 proves the live transcript store grew under the measurement.
+  It is the same STORE PATH, sampled at three different times:
 
-    30 sessions · 259 turns · 2228 assistant entries
-    detector A (promissory)  fires on 24 turns   9.3%
-    detector B (language)    fires on 39 turns  15.1%
+    30 sessions · 185 turns · 2252 assistant entries
+    detector A (promissory)  fires on  5 turns   2.7%
+    detector B (language)    fires on 47 turns  25.4%
     scanner's own language total, for context only: 408 (NOT an agreement figure)
 
-  READ A FIRST, and note the correction cuts the other way from what a rewrite
-  would flatter: the dangerous figure was the OPTIMISTIC one. Detector A at
-  "1.3%" looked nearly free; per turn it refuses about one in eleven. Together
-  the two detectors would refuse roughly a quarter of all turns. That makes the
-  default-OFF decision recorded in 3.6 better supported than the original number
-  did, not worse — but the original number could not have supported it, because
-  it measured something else.
+  THE FIGURE MOVED TWICE UNDER ITS OWN CORRECTIONS, and that is the finding
+  rather than a footnote. Three readings of the same detector on the same store
+  path: A at 1.3% (per entry, wrong unit), 9.3% (per turn, turn boundary drawn by
+  `isInjectedBody`), 2.7% (per turn, boundary drawn by `isSyntheticPrompt` — the
+  filter the GATE uses, so the only one whose population matches the mechanism).
+  The last is the best-founded and is still provisional: it is one 30-session
+  sample of one maintainer's corpus, taken while the instrument was being
+  repaired. Treat it as an order of magnitude for the arming decision, not a
+  constant — which is why no rate ships in the consumer-facing setting
+  descriptions any more, only the command to re-derive one.
 
-  One thing the fix bought that the old number could not: 24 fires against the
-  audit's 20 turn-closings is now a comparison in the SAME unit, so it is worth
-  making at all. The earlier "28 vs 20, the same order" was two units.
+  READ B FIRST on the final reading: at 25.4% detector B would refuse about one
+  turn in four, which is the strongest argument in this file for the default-OFF
+  decision recorded in 3.6 — and it is an argument the ORIGINAL number could not
+  have made, because it measured a different population. Detector A lands at 2.7%
+  once the turn boundary is drawn by the filter the gate itself uses.
 
   The scanner total is reported beside these rates and NOT as an overlap: the two
-  instruments read different spans (its first prose line vs. this whole stripped
-  reply) and the script does no per-turn matching, so no agreement figure is
-  derivable from the two totals.
+  instruments read different spans (its first prose line vs. this stripped,
+  lead-first-scored reply) and the script does no per-turn matching, so no
+  agreement figure is derivable from the two totals.
 
-  The 28 fire-where-the-scanner-saw-nothing turns are candidate false positives,
-  NOT confirmed ones — ~~the scanner flagged 48 this detector did not~~, another
-  cell derived from the same broken arithmetic and withdrawn with it. Neither set
-  was hand-audited; saying so is cheaper than implying an audit that did not
+  ~~The 28 fire-where-the-scanner-saw-nothing turns~~ and ~~the 48 the scanner
+  flagged and this detector did not~~ are both WITHDRAWN, not merely struck in the
+  table above: both came from the same `Math.max(0, mine - scanner)` expression,
+  which is deleted. R2 round 2, finding 6 caught the first of them being struck
+  in one place and asserted as live prose in another — the corrected instrument
+  computes neither cell, so neither number exists to defend. Nothing here was
+  hand-audited either; saying so is cheaper than implying an audit that did not
   happen.
 
   DETECTOR A HAS NO RECALL FIGURE, and the reason is structural rather than
@@ -452,10 +464,13 @@ part twice is how a second detector becomes a second outage.
   are "deliberately NOT scanned"; the round-5 audit's 20 occurrences came from
   subagent transcript READING, so there is no machine-readable ground truth to
   score against and no way to re-derive those 20 spans. What can be said, and
-  only since the per-turn fix: the detector fires **24** times over the same
-  window against the audit's reported 20 — the same unit at last, and close.
-  Whether the extra 4 are additional true positives or false ones is unresolved,
-  and this line is the honest form of that.
+  only since the per-turn fix: the detector fires **5** times over this window
+  against the audit's reported 20 — the same unit at last, and now clearly BELOW
+  it rather than above. That is a recall question, not a precision one, and it is
+  unresolved: the audit's 20 spans are not recoverable, so there is nothing to
+  diff against. An earlier revision of this note claimed 24 and read the gap as
+  "slightly wider"; both the number and the direction were artefacts of a turn
+  boundary drawn by the wrong filter.
 
   The step's literal ask — "must fire on the 20 measured occurrences" — is
   therefore NOT satisfiable as written, and is recorded as such instead of being

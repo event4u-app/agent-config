@@ -45,8 +45,8 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
-import { classify } from './language_mirror_hook.js';
-import { assistantText, isInjectedBody, scanSession, userText } from './conformance_scan.js';
+import { classify, isSyntheticPrompt } from './language_mirror_hook.js';
+import { assistantText, scanSession, userText } from './conformance_scan.js';
 import { detectLanguage, detectPromissory } from './hooks/turn_end_gate_hook.js';
 
 interface Counts {
@@ -151,11 +151,13 @@ export function measure(store: string, limit: number): Counts {
 
             const u = userText(entry);
             if (u !== null) {
-                // A background-task notification occupies the user role but is
-                // not a chat message — the exact shape that made the language
-                // defect invisible. It must never move the pin, and it must not
-                // close a turn either.
-                if (!isInjectedBody(u)) {
+                // `isSyntheticPrompt`, the SAME filter the gate uses for the
+                // ordinal — not `isInjectedBody`. R2 round 2, finding 10: the
+                // two filters classify differently, and any entry they disagree
+                // about shifts this instrument's turn boundary away from the
+                // gate's own. Population parity is the entire point of this
+                // correction, so the filter has to be the same one.
+                if (!isSyntheticPrompt(u)) {
                     scoreTurn(); // the previous turn ends here
                     const verdict = classify(u);
                     if (verdict.language !== 'und') pinned = verdict.language;
@@ -193,8 +195,7 @@ export function render(c: Counts): string {
         `  For context only, the independent scanner's own language total: ${c.scanner_language}`,
         '    NOT an agreement figure. The two instruments read different spans (its',
         '    first prose line vs. this stripped, lead-first-scored reply) and this',
-        '    script does no',
-        '    per-turn matching between them, so no overlap can be claimed from these',
+        '    script does no per-turn matching between them, so no overlap can be claimed from these',
         '    two totals — the previous version claimed one from per-session min/max',
         '    arithmetic, which reports disjoint findings of equal count as full',
         '    agreement.',

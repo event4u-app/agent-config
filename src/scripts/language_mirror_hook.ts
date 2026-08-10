@@ -415,8 +415,29 @@ function _sessionId(envelope: JsonObject): string {
  * atomic writer, and the `is_replay_mode()` guard that keeps a replayed event
  * from mutating live state. A replayed compaction wrote the marker for real.
  */
+/**
+ * The pre-R2 layout wrote a single FILE at the path that is now a DIRECTORY.
+ * A consumer upgrading with a leftover legacy marker — compaction happened, no
+ * `post_tool_use` followed — hits `EEXIST` on the mkdir and `ENOTDIR` on the
+ * write (reproduced against Node), which the catch below swallows as
+ * "observability only". The failure would then be silent AND permanent for that
+ * root: `existsSync` always false, so the mechanism is dead with no diagnostic.
+ * One unlink at the moment of collision, and only when the path is a file.
+ */
+function _migrateLegacyMarker(consumer_root: string): void {
+  const legacy = path.join(consumer_root, PIN_LOST_DIR);
+  try {
+    if (fs.statSync(legacy).isFile()) {
+      fs.rmSync(legacy, { force: true });
+    }
+  } catch {
+    // Absent, already a directory, or unreadable — nothing to migrate.
+  }
+}
+
 export function _setPinLost(consumer_root: string, session_id: string): void {
   if (is_replay_mode()) return;
+  _migrateLegacyMarker(consumer_root);
   try {
     atomic_write_text(path.join(consumer_root, pinLostMarker(session_id)), new Date().toISOString());
   } catch {
@@ -434,6 +455,12 @@ export function _pinLost(consumer_root: string, session_id: string): boolean {
 }
 
 function _clearPinLost(consumer_root: string, session_id: string): void {
+  // R2 round 2, finding 8: the replay guard covered only the WRITE. A replayed
+  // `post_tool_use` therefore deleted a live marker it was forbidden to create,
+  // and the real session lost the single re-emit this whole mechanism exists to
+  // deliver — replay destroying live state while blocked from writing it, which
+  // is worse than either direction alone.
+  if (is_replay_mode()) return;
   try {
     fs.rmSync(path.join(consumer_root, pinLostMarker(session_id)), { force: true });
   } catch {

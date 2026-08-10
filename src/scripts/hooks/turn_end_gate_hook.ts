@@ -27,16 +27,30 @@
  *      Nothing else in `src/` reads this field today; it is the host's own
  *      answer to the question above.
  *
- *   2. A state marker keyed on the LAST USER MESSAGE, never on the reply.
- *      After a refusal the model writes a *new* reply, so a reply-keyed
- *      marker would let the same turn be refused again, and again. The
- *      user prompt does not change within a turn, so the same turn yields
- *      the same key and is refused at most once; the next genuine prompt
- *      yields a new key and the gate re-arms itself with no cleanup.
+ *   2. A per-session state file holding the ORDINAL of the last refused turn —
+ *      never the prompt's text, and never the reply. One file per session, not
+ *      one per refused turn.
+ *
+ *      The first version keyed on sha256(session_id + last user text) with a
+ *      file per turn, and R2 found that wrong in three directions at once: a
+ *      REPEATED prompt ("weiter", "ok", "1") collided with the earlier refused
+ *      turn and was allowed unconditionally; the key drifted WITHIN a turn
+ *      because a compaction summary, a `<system-reminder>` and a sidechain
+ *      prompt all arrive in the user role; and the files accumulated with no
+ *      TTL. The ordinal — a count of `isSyntheticPrompt`-filtered,
+ *      non-sidechain user entries — is distinct for every real turn whatever
+ *      the user typed, and stable across harness injections.
+ *
+ *      Still true and still worth stating: per-session files are bounded per
+ *      session but not pruned, so a long-lived workspace accumulates one small
+ *      file per session. No TTL ships here.
  *
  * The failure this ordering prevents is not a loop but a wedge: a turn that
  * can never end. Layer 2 also covers the host that does not send
- * `stop_hook_active` at all.
+ * `stop_hook_active` at all — with one honest limit: a host that sends no
+ * `session_id` either falls into a shared bucket where an unrelated session's
+ * matching ordinal reads as already-refused, so on such a host layer 2
+ * degrades to "may under-refuse" and layer 1 is the real guard.
  *
  * ## Default OFF — and why, given the roadmap says otherwise
  *
@@ -49,7 +63,7 @@
  * (`hooks.turn_end_gate.enabled`) is default OFF, and WITHIN it both
  * detectors are default ON. A maintainer who opts in gets both without
  * further configuration; until then this concern is a no-op that costs one
- * settings read.
+ * settings-cascade read per turn-end.
  *
  * CONTRACT: dispatcher-internal exit is 1 (EXIT_BLOCK) on a fire, 0
  * otherwise. `fail_closed: false` — deliberately. A crash in a turn-end
@@ -79,6 +93,16 @@ import { atomic_write_json, is_replay_mode } from './state_io.js';
 const EXIT_BLOCK = 1;
 const EXIT_ALLOW = 0;
 
+/**
+ * Transcript-read ceiling for this hook, passed at the call site in `main()`.
+ * Deliberately well under `isSafeTranscriptPath`'s own 50 MB refusal: the
+ * ordinal is a count over every entry, so the whole file is walked once per
+ * turn-end, and a session file grows for the life of the session. Past this the
+ * gate lets the turn end rather than pay an unbounded read — fail-open, like
+ * every other unreadable-transcript case here.
+ */
+export const TRANSCRIPT_READ_MAX_BYTES = 8 * 1024 * 1024; // 8 MB
+
 /** Detector identity, used in the state marker and the refusal text. */
 export type DetectorId = 'promissory' | 'language';
 
@@ -103,29 +127,56 @@ export interface Finding {
  * under-stripping costs a false refusal, and a blocking guard with a false
  * positive rate teaches users to bypass it.
  */
+/**
+ * Remove fenced code blocks, line by line, tracking open/close state.
+ *
+ * This is deliberately NOT a regex, and the reason is a measured regression.
+ * Two regex attempts each dropped a reply's whole tail on a different valid
+ * shape: a `\1` backreference misses CommonMark's longer closing fence (R2
+ * round 1, finding 5), and the character-matching replacement that fixed THAT
+ * stopped at the first closer-shaped line — so on a `~~~` block containing a
+ * ``` block, the inner line was taken for the closer, the replacer declined it
+ * on the character mismatch, and the greedy tail-drop then deleted everything
+ * from the opener onward (R2 round 2, finding 1). That mixed-character nesting
+ * is the shape `markdown-safe-codeblocks` prescribes as its DEFAULT, so the
+ * second attempt was worse than the first on the more common input.
+ *
+ * A scanner has the state a regex lacks. CommonMark, applied here:
+ *   · an opener may carry an info string; a closer may not;
+ *   · only a fence of the SAME character and at least the opener's length
+ *     closes the block — anything else inside it is content;
+ *   · an unterminated opener runs to end of input, so a truncated reply loses
+ *     its tail, which is the correct reading of a truncated reply.
+ */
+export function stripFencedBlocks(text: string): string {
+    const out: string[] = [];
+    let open: { ch: string; len: number } | null = null;
+    for (const line of text.split('\n')) {
+        const m = /^[ \t]{0,3}([`~]{3,})(.*)$/.exec(line);
+        if (open === null) {
+            if (m) {
+                open = { ch: m[1]![0]!, len: m[1]!.length };
+                out.push(' ');
+                continue;
+            }
+            out.push(line);
+            continue;
+        }
+        if (
+            m &&
+            m[1]![0] === open.ch &&
+            m[1]!.length >= open.len &&
+            (m[2] ?? '').trim() === ''
+        ) {
+            open = null;
+        }
+        // Everything between opener and closer is dropped, closer included.
+    }
+    return out.join('\n');
+}
+
 export function visibleProse(reply: string): string {
-    let text = reply;
-    // Fenced blocks, both ``` and ~~~ (markdown-safe-codeblocks ships both).
-    //
-    // CommonMark allows the CLOSING fence to be LONGER than the opener, so a
-    // `\1` backreference does not match valid markdown. R2 finding 5 reproduced
-    // the consequence: on a three-tilde block closed with four, pass 1 missed
-    // and the greedy tail-drop below deleted the rest of the reply — including
-    // the closing paragraph detector A exists to read. Match the fence
-    // CHARACTER and require at least as many of it, per the spec.
-    text = text.replace(
-        /^[ \t]*(`{3,}|~{3,})[^\n]*\n[\s\S]*?^[ \t]*(?:`{3,}|~{3,})[ \t]*$/gm,
-        (block, opener: string) => {
-            const ch = opener[0]!;
-            // Only treat it as closed when the closer uses the SAME character
-            // and is not shorter — otherwise leave it to the tail-drop.
-            const closer = /(?:^|\n)[ \t]*([`~]{3,})[ \t]*$/.exec(block)?.[1] ?? '';
-            return closer[0] === ch && closer.length >= opener.length ? ' ' : block;
-        },
-    );
-    // A genuinely unterminated fence at the end of a reply — drop the tail.
-    // Reached only when the pass above left the block intact.
-    text = text.replace(/^[ \t]*(?:`{3,}|~{3,})[\s\S]*$/m, ' ');
+    let text = stripFencedBlocks(reply);
     // Inline code.
     text = text.replace(/`[^`\n]*`/g, ' ');
     // Block quotes — the shape quoted tool output takes.
@@ -178,7 +229,19 @@ const PROMISSORY = [
     // schreiben", "niemals raten", and the passive non-promise "Ich werde
     // gefragt, ob …". Each was a false refusal on a BLOCKING guard, which is
     // the precision failure the council warning is about.
-    /\bich werde\b(?![^.!?\n]*\b(?:nicht|nichts|kein(?:e|en|em|er|es)?|niemals|nie)\b)(?![^.!?\n]*\b(?:gefragt|gebeten|informiert|benachrichtigt)\b)[^.!?\n]*\b\w{3,}en\b/i,
+    // `\p{L}` with the `u` flag, NOT `\w`: R2 round 2, finding 15 verified that
+    // `\b\w{3,}en\b` cannot reach an infinitive whose post-umlaut fragment is
+    // short, because `ü`/`ö`/`ä` are not `\w` and create a word boundary — so
+    // "prüfen" and "lösen" were silent while the comment above claimed the
+    // verb-final construction was handled.
+    //
+    // Honest about what this proxy matches: any word of 3+ letters ending in
+    // "en" within the clause, which is the infinitive in practice but also hits
+    // a plural noun ("die Zeilen zählen" matches on "Zeilen"). That is
+    // acceptable here — the clause already requires "ich werde" and excludes
+    // negations and passives, so a forward commitment is what remains — but it
+    // is a proxy for the infinitive, not a parse of one.
+    /\bich werde\b(?![^.!?\n]*\b(?:nicht|nichts|kein(?:e|en|em|er|es)?|niemals|nie)\b)(?![^.!?\n]*\b(?:gefragt|gebeten|informiert|benachrichtigt)\b)[^.!?\n]*(?<!\p{L})\p{L}{3,}en(?!\p{L})/iu,
     /\bI(?:'| wi)ll (report|let you know|update you|follow up)\b/i,
     /\bI(?:'| wi)ll (now |then )?\w+ (it|that|this|next)\b/i,
     /\bnext,? I(?:'| wi)ll\b/i,
@@ -211,8 +274,13 @@ export function detectPromissory(reply: string): Finding | null {
     const tail = finalParagraph(reply);
     if (!tail) return null;
 
-    // A blocking question IS the stop condition — never refuse one.
-    if (tail.includes('?')) return null;
+    // A blocking question IS the stop condition — never refuse one. But only a
+    // question that ENDS the paragraph is that: R2 round 2, finding 16 called
+    // `includes('?')` a one-character, trivially learnable bypass, since a
+    // rhetorical or quoted question anywhere alongside a promise disabled a
+    // blocking guard. The hand-back list below still covers the phrasings that
+    // yield without a question mark.
+    if (/\?["'’)\]]*\s*$/.test(tail)) return null;
     if (HANDBACK.some((re) => re.test(tail))) return null;
 
     for (const re of PROMISSORY) {
@@ -301,9 +369,16 @@ function stateDir(workspaceRoot: string): string {
 }
 
 /**
- * ONE file per session, not one per refused turn. R2 finding 17: per-turn files
- * accumulated without bound and without a TTL, because "re-arms itself with no
- * cleanup" described the key rotating, not the files being removed.
+ * ONE file per session, not one per refused turn. R2 round 1, finding 17:
+ * per-turn files accumulated without bound and without a TTL, because "re-arms
+ * itself with no cleanup" described the key rotating, not the files being
+ * removed.
+ *
+ * HALF of that is fixed and half is not, stated rather than implied (R2 round 2,
+ * finding 12): the per-turn MULTIPLICITY is gone, so a session no longer leaves
+ * one file per refused turn. There is still no TTL and no pruning, so a
+ * long-lived workspace accumulates one small file per session that ever had a
+ * turn refused. Adding expiry is new behaviour and belongs with its own test.
  */
 function sessionStateFile(workspaceRoot: string, sessionKey: string): string {
     return path.join(stateDir(workspaceRoot), `${sessionKey}.json`);
@@ -430,6 +505,11 @@ export function readTranscriptTail(
         }
         if (typeof obj !== 'object' || obj === null || Array.isArray(obj)) continue;
         const entry = obj as Record<string, unknown>;
+        // Sidechain entries are a SUBAGENT's conversation recorded in the same
+        // JSONL. A subagent prompt is a genuine-looking user-role text entry
+        // appended mid-turn, so counting it moves the ordinal within the turn —
+        // finding 3's failure class in a new shape (R2 round 2, finding 3).
+        if (entry['isSidechain'] === true) continue;
         const role = entry['type'];
         if (role !== 'assistant' && role !== 'user') continue;
         const msg = entry['message'];
@@ -558,10 +638,25 @@ export function main(): number {
     // path-confinement check IS a bypass of it, whatever the comment says. The
     // tests set `HOME` on the spawned process instead — `os.homedir()` honours
     // it — so the branch is still exercised with no product-code seam.
-    const { lastAssistant, turnOrdinal } = readTranscriptTail(transcriptPath);
+    // The cap is passed HERE, at the only production call site. R2 round 2,
+    // finding 7: enforcing it inside the function while `main()` called
+    // `readTranscriptTail(transcriptPath)` with no options left the guard dead
+    // in production while its comment claimed it was enforced — the same
+    // fixed-the-definition-not-the-caller shape as two other findings in that
+    // round, which is why this line exists rather than a default parameter.
+    const { lastAssistant, turnOrdinal } = readTranscriptTail(transcriptPath, {
+        maxBytes: TRANSCRIPT_READ_MAX_BYTES,
+    });
     if (!lastAssistant) return EXIT_ALLOW;
 
     // Layer 2 — keyed on the turn's ORDINAL, never on the prompt's text.
+    // A host that sends no `session_id` shares one bucket AND one small-integer
+    // ordinal namespace, so an unrelated session whose ordinal matches a stored
+    // `refused_turn` reads as already-refused and goes unguarded. R2 round 2,
+    // finding 16: the sibling hook documents its own bucket as degrading rather
+    // than colliding, and this one collides. It is named here rather than
+    // papered over — the degradation is toward UNDER-refusing, which is the safe
+    // direction, and layer 1 still covers the host that sends the flag.
     const sessionKey = deriveSessionKey(
         str(envelope['session_id'] as JsonValue | undefined) || 'unknown-session',
     );
