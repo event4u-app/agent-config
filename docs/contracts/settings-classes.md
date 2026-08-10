@@ -168,8 +168,8 @@ dispatch runs, not WHETHER the layer exists, so they keep their own C rows.
 |---|---|
 | A — preference | 27 |
 | B — consent | 3 |
-| C — guarded | 108 |
-| **Total** | **138** |
+| C — guarded | 111 |
+| **Total** | **141** |
 
 The total is every leaf in the template, where *leaf* means anything that is not
 a **non-empty** map. An empty map (like the former `subagents.host_capabilities: {}`) is a real
@@ -313,6 +313,9 @@ Rows follow template order, so a diff against the template reads straight down.
 | `hooks.rtk_wrap.enabled` | C | `false` | configures code that runs on every tool call |
 | `hooks.design_slop.enabled` | C | `false` | configures code that runs on every tool call |
 | `hooks.code_graph.enabled` | C | `false` | configures code that runs on every tool call |
+| `hooks.turn_end_gate.enabled` | C | `false` | arms the only concern that can REFUSE a turn-end; an agent must never be able to switch its own delivery gate on |
+| `hooks.turn_end_gate.promissory` | C | `true` | which refusal the turn-end gate may raise; inert while the master switch is off |
+| `hooks.turn_end_gate.language` | C | `true` | which refusal the turn-end gate may raise; inert while the master switch is off |
 | `decision_engine.surface_traces` | C | `false` | the decision engine’s own black box; the agent must not be able to close it |
 | `decision_engine.min_confidence` | C | `"off"` | the confidence gate |
 | `decision_engine.block_on_risk` | C | `"off"` | the risk-class gate |

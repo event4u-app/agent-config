@@ -71,9 +71,20 @@ having written the risk down one file away.
 
 ### blocker: stop-refusal-decision
 
-- **Status:** open — carried unchanged from round 5
-- **Owner:** maintainer
-- **Blocks:** round-5 Phase 3 (3.1-3.6), round-5 Phase 6.1, and Phase 6.2 below
+- **Status:** **decision made 2026-08-09 (affirmative); still blocked on the
+  second condition.** The maintainer decided that a concern which can refuse a
+  turn-end ships. Round 5's Phase 3 and 6.1 built it — `turn-end-gate`, default
+  OFF (`hooks.turn_end_gate.enabled`), with the re-entrancy shape stated and
+  tested BEFORE registration, which is exactly what the design-hole paragraph
+  below demanded and the council said a soak would otherwise discover the
+  expensive way. What is NOT satisfied is the rest of the clause below: "the
+  refusal concern has merged in its own PR with its own soak period." Until that
+  PR merges and soaks, Phase 6.2 stays blocked and this roadmap stays in
+  `later/`. Recorded here because the same blocker text lived in two roadmaps
+  and only one of them moved.
+- **Owner:** was maintainer; decision made, merge + soak outstanding
+- **Blocks:** Phase 6.2 below. No longer blocks round-5 Phase 3 or 6.1 — both
+  shipped under this decision.
 - **What to do:** decide whether a concern that can refuse a turn-end ships.
 - **Resolved when:** the decision is recorded; if affirmative, the refusal
   concern has merged in its own PR with its own soak period.

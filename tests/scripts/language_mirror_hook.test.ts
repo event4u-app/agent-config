@@ -22,6 +22,7 @@ import {
   STATE_FILE,
   MIN_MARKERS,
   systemLocaleVerdict,
+  _pinLost,
 } from "../../src/scripts/language_mirror_hook.js";
 
 // Round-5 audit: the live state file read `language: "en", source: "prompt",
@@ -435,5 +436,63 @@ describe("run — the locale fallback end to end", () => {
     expect(rc).toBe(2);
     // The pin is kept, not overwritten, and the locale does not leak in.
     expect(readState().language).toBe("de");
+  });
+});
+
+// ---------------------------------------------------------------------------
+// road-to-conformance-round5 § 6.1 — the compaction boundary
+//
+// 4 of the 23 post-merge violations happened with NO pin in context: a
+// `compact_boundary` fired and the first violation followed 26 seconds later.
+// The guard is what separates this from the re-pin § 6.2 refuses, so the guard
+// is what these tests are about — not the injection.
+// ---------------------------------------------------------------------------
+
+function compactEnvelope(): string {
+  return JSON.stringify({ event: "pre_compact", session_id: "s1", platform: "claude", payload: {} });
+}
+
+function toolEnvelope(): string {
+  return JSON.stringify({ event: "post_tool_use", session_id: "s1", platform: "claude", payload: {} });
+}
+
+describe("the compaction boundary (6.1)", () => {
+  it("pre_compact writes the marker and emits nothing itself", () => {
+    expect(run(compactEnvelope(), { consumer_root: tmp })).toBe(0);
+    expect(_pinLost(tmp)).toBe(true);
+  });
+
+  it("post_tool_use re-emits the pin ONCE, then goes quiet", () => {
+    run(envelope("Bitte mach weiter mit der Analyse und den Tests."), { consumer_root: tmp });
+    run(compactEnvelope(), { consumer_root: tmp });
+
+    // First tool call after compaction — the pin comes back.
+    expect(run(toolEnvelope(), { consumer_root: tmp })).toBe(2);
+    // Every subsequent tool call is silent. This is the whole difference
+    // between § 6.1 and the tool-call-cadence re-pin § 6.2 refuses: one
+    // injection per compaction EVENT, not one per call.
+    expect(run(toolEnvelope(), { consumer_root: tmp })).toBe(0);
+    expect(run(toolEnvelope(), { consumer_root: tmp })).toBe(0);
+    expect(_pinLost(tmp)).toBe(false);
+  });
+
+  it("post_tool_use is silent when no compaction happened — the common path", () => {
+    run(envelope("Bitte mach weiter mit der Analyse und den Tests."), { consumer_root: tmp });
+    expect(run(toolEnvelope(), { consumer_root: tmp })).toBe(0);
+  });
+
+  it("re-emits nothing when no pin exists — absence is not an obligation", () => {
+    run(compactEnvelope(), { consumer_root: tmp });
+    expect(run(toolEnvelope(), { consumer_root: tmp })).toBe(0);
+    // The marker is still consumed, so a missing pin cannot arm a permanent
+    // re-fire on every later tool call.
+    expect(_pinLost(tmp)).toBe(false);
+  });
+
+  it("pre_compact does not disturb the pin it is protecting", () => {
+    run(envelope("Bitte mach weiter mit der Analyse und den Tests."), { consumer_root: tmp });
+    const before = readState();
+    run(compactEnvelope(), { consumer_root: tmp });
+    expect(readState()).toEqual(before);
   });
 });

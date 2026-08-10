@@ -1190,6 +1190,34 @@ hooks:
   injection_scan:
     enabled: false
 
+  # Stop-slot turn-end gate (road-to-conformance-round5 Phase 3). Default-OFF,
+  # and it is the only concern in this file that can REFUSE a turn-end rather
+  # than a tool call — so it soaks behind an explicit opt-in before it binds.
+  #
+  # Round 5 measured what it is for: both BLOCKING carriers reached zero
+  # violations, neither ADVISORY carrier did, and 19 wrong-language replies
+  # survived a pin that had fired 26-35 seconds earlier. A reminder at higher
+  # frequency is the same failed mechanism running more often; a check at
+  # delivery that can say no is a different one.
+  #
+  # enabled     — master switch. false = the concern is a no-op costing one
+  #               settings read per turn-end.
+  # promissory  — detector A: the closing paragraph promises work not yet
+  #               performed while asking the user nothing (20 measured).
+  # language    — detector B: the user-visible prose is not in the pinned
+  #               language, with code, quotes, paths and identifiers already
+  #               excluded (19 measured).
+  #
+  # Both detectors default ON *within* the master switch, so opting in needs
+  # one line, and either can be silenced without editing the hook manifest.
+  # A refused turn continues in the same turn and is never refused twice —
+  # re-entrancy is `stop_hook_active` plus a marker keyed on the last user
+  # message, never on the reply.
+  turn_end_gate:
+    enabled: false
+    promissory: true
+    language: true
+
   # PreToolUse RTK-wrap nudge (token-saving Phase 3). Default-OFF. When enabled
   # AND `rtk` is on PATH (a live probe — not a self-reported flag), warns (exit
   # 2, never blocks) "re-run wrapped with rtk" before a single verbose CLI

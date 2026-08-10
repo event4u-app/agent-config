@@ -14961,6 +14961,17 @@ var settingsSchema = external_exports.object({
       enabled: external_exports.boolean().default(false).describe(
         "PreToolUse code-graph nudge (ADR-124 Phase 4). Default off. When on AND a native code-graph cache or a consumer-shipped graph.json/SCIP index is present, warns once per session (never blocks) as the agent is about to Grep/Glob or Read a source file \u2014 query the graph first for who-calls/where-used/impact questions (or rebuild if stale, build if absent). Source G\u2019s strict block-first-read mode is deliberately un-ported."
       )
+    }).default({}),
+    turn_end_gate: external_exports.object({
+      enabled: external_exports.boolean().default(false).describe(
+        "Stop-slot turn-end gate (road-to-conformance-round5 Phase 3). Default off, and it is the only concern that can REFUSE a turn-end rather than a tool call \u2014 so it soaks behind an explicit opt-in before it binds. Round 5 measured the reason: both blocking carriers reached zero violations, neither advisory carrier did, and 19 wrong-language replies survived a pin that had fired 26-35 seconds earlier. A refused turn continues in the SAME turn and is never refused twice."
+      ),
+      promissory: external_exports.boolean().default(true).describe(
+        "Detector A of the turn-end gate: refuse a turn whose closing paragraph promises work not yet performed while asking the user nothing (20 measured occurrences). Inert while hooks.turn_end_gate.enabled is false."
+      ),
+      language: external_exports.boolean().default(true).describe(
+        "Detector B of the turn-end gate: refuse a turn whose user-visible prose is not in the pinned language, with fenced code, inline code, quoted tool output, tables, URLs, paths and identifiers excluded first (19 measured occurrences). Fires 18.0% of turns on the measured corpus, which is why the master switch is off by default. Inert while hooks.turn_end_gate.enabled is false."
+      )
     }).default({})
   }),
   decision_engine: external_exports.object({

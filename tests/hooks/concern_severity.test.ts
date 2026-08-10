@@ -47,6 +47,24 @@ const BLOCKING_ALLOWLIST = new Set([
     //   delta an unsteered pass then found a live critical in.
     'block-unauthorized-git',
     'evidence-independence',
+    // road-to-conformance-round5 Phase 3. The FIRST concern that refuses a
+    // turn-END rather than a tool call, so it is the first entry here whose
+    // blast radius is every session rather than one command. Three things
+    // make that decision recordable rather than reckless:
+    //
+    //   · it is default OFF (`hooks.turn_end_gate.enabled`), so it
+    //     soaks before it binds — the shape the round-6 council asked for;
+    //   · `fail_closed: false`, so a crash lets the turn END. A turn-end
+    //     gate that fails closed does not degrade, it wedges the session;
+    //   · re-entrancy is two independent layers (`stop_hook_active`, and a
+    //     marker keyed on the last USER message, never the reply), stated
+    //     and tested BEFORE registration — round 6 recorded that hole as the
+    //     one a soak would otherwise discover the expensive way.
+    //
+    // It refuses only what a rule already declares: an unfulfilled promise
+    // closing a turn (verify-before-complete § turn-completion) and a reply
+    // in the wrong language (language-and-tone Iron Law).
+    'turn-end-gate',
 ]);
 
 interface Concern {

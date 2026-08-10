@@ -87,6 +87,13 @@ const EXIT_WARN = 2;
 
 export const STATE_FILE = path.join("agents", "state", "language-mirror.json");
 
+/**
+ * Marker written at `pre_compact` and cleared by the single `post_tool_use`
+ * re-emit that follows it (round-5 § 6.1). Its existence — not a counter — is
+ * what bounds the re-injection to ONE per compaction event.
+ */
+export const PIN_LOST_MARKER = path.join("agents", "state", "language-mirror.pin-lost");
+
 type JsonValue = string | number | boolean | null | JsonValue[] | { [k: string]: JsonValue };
 type JsonObject = { [k: string]: JsonValue };
 
@@ -380,6 +387,64 @@ function _extractPrompt(payload: JsonObject): string {
   return "";
 }
 
+/** Record that compaction is about to drop the context copy of the pin. */
+export function _setPinLost(consumer_root: string): void {
+  try {
+    const target = path.join(consumer_root, PIN_LOST_MARKER);
+    fs.mkdirSync(path.dirname(target), { recursive: true });
+    fs.writeFileSync(target, new Date().toISOString());
+  } catch {
+    // Observability only — a failed marker write costs one un-restored pin,
+    // never a broken turn.
+  }
+}
+
+export function _pinLost(consumer_root: string): boolean {
+  try {
+    return fs.existsSync(path.join(consumer_root, PIN_LOST_MARKER));
+  } catch {
+    return false;
+  }
+}
+
+function _clearPinLost(consumer_root: string): void {
+  try {
+    fs.rmSync(path.join(consumer_root, PIN_LOST_MARKER), { force: true });
+  } catch {
+    // If it cannot be cleared the next tool call re-emits once more. One
+    // duplicate line is the failure mode; a loop is not, because the marker
+    // is only ever SET by a compaction event.
+  }
+}
+
+/**
+ * The `post_tool_use` half. Emits the pin exactly once per compaction event
+ * and only when a pin actually exists — an absent or undetermined pin is not
+ * an obligation, and inventing one here would be worse than the gap.
+ */
+export function _reEmitAfterCompaction(consumer_root: string): number {
+  if (!_pinLost(consumer_root)) {
+    return EXIT_ALLOW;
+  }
+  const previous = _loadState(path.join(consumer_root, STATE_FILE));
+  const language = previous.language as Verdict | undefined;
+  const source: PinSource = previous.source === "system-locale" ? "system-locale" : "prompt";
+  // Clear FIRST: if the write below throws, the marker must not survive to
+  // re-fire on every subsequent tool call — that is the shape § 6.2 refuses.
+  _clearPinLost(consumer_root);
+  if (language !== "de" && language !== "en") {
+    return EXIT_ALLOW;
+  }
+  process.stdout.write(
+    `${JSON.stringify({
+      decision: "warn",
+      reason: noticeText(language, source),
+      additional_context: pinText(language, source),
+    })}\n`,
+  );
+  return EXIT_WARN;
+}
+
 export function run(
   stdin_text: string,
   options: { consumer_root: string; env?: NodeJS.ProcessEnv },
@@ -397,6 +462,30 @@ export function run(
   }
 
   const payload = _isObject(envelope["payload"]) ? (envelope["payload"] as JsonObject) : envelope;
+
+  // round-5 § 6.1 — the compaction boundary.
+  //
+  // 4 of the 23 post-merge violations happened with NO pin in context: a
+  // `compact_boundary` fired and the first violation followed 26 seconds
+  // later. Compaction removes the context copy of the pin, not this hook's
+  // state file — so this is a state defect with a deterministic fix, aimed
+  // only at the subset where the pin was measurably MISSING, never at the 19
+  // where it was measurably ignored.
+  //
+  // The guard IS the design, and is not optional: `pre_compact` sets a
+  // marker, `post_tool_use` re-emits once while it is set and clears it. That
+  // is one extra injection per compaction EVENT. A re-pin on every tool call
+  // is what § 6.2 refuses — "the same failed mechanism running more often" —
+  // and this marker is the entire difference between the two.
+  const event = typeof envelope["event"] === "string" ? envelope["event"] : "";
+  if (event === "pre_compact") {
+    _setPinLost(options.consumer_root);
+    return EXIT_ALLOW;
+  }
+  if (event === "post_tool_use") {
+    return _reEmitAfterCompaction(options.consumer_root);
+  }
+
   const prompt = _extractPrompt(payload);
   if (!prompt) {
     return EXIT_ALLOW;
