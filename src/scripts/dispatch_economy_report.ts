@@ -101,6 +101,14 @@ export interface Report {
         projection_mandatory_signal: boolean | null;
     };
     rules_efficiency: RulesEfficiency & { threshold_low_quota: number; low_quota_signal: boolean | null };
+    ask_economy: {
+        ask_lines: number;
+        adopted: number;
+        escalated: number;
+        threshold_escalation_kill: number;
+        /** null until asks exist; the registered verdict is a review-window call. */
+        escalation_kill_signal: boolean | null;
+    };
     notes: string[];
 }
 
@@ -155,6 +163,9 @@ interface AuditOrchestration {
     work_tokens?: unknown;
     floor_provenance?: unknown;
     agent_combo?: unknown;
+    route_taken?: unknown;
+    outcome?: unknown;
+    escalated?: unknown;
 }
 
 function isFiniteNonNegInt(v: unknown): v is number {
@@ -206,6 +217,7 @@ export function buildReport(opts: {
         metrics: {
             dispatch_floor: { thresholds: { projection_mandatory_ratio: number; success_ratio_after_projection: number } };
             rules_efficiency: { thresholds: { low_quota_signal: number } };
+            ask_economy: { thresholds: { escalation_kill: number } };
         };
     };
 
@@ -222,7 +234,15 @@ export function buildReport(opts: {
     const orchestrations = readAuditOrchestrations(opts.auditDir);
     const reviewerMeasured: { init: number; work: number }[] = [];
     const quotas: number[] = [];
+    let askLines = 0;
+    let askAdopted = 0;
+    let askEscalated = 0;
     for (const o of orchestrations) {
+        if (o.route_taken === 'ask') {
+            askLines += 1;
+            if (o.outcome === 'DONE') askAdopted += 1;
+            if (o.escalated === true) askEscalated += 1;
+        }
         if (isFiniteNonNegInt(o.rules_carried) && isFiniteNonNegInt(o.rules_used) && o.rules_carried > 0) {
             quotas.push(o.rules_used / o.rules_carried);
         }
@@ -278,6 +298,16 @@ export function buildReport(opts: {
             threshold_low_quota: lowQuota,
             low_quota_signal: medianQuota === null ? null : medianQuota < lowQuota,
         },
+        ask_economy: {
+            ask_lines: askLines,
+            adopted: askAdopted,
+            escalated: askEscalated,
+            threshold_escalation_kill: registration.metrics.ask_economy.thresholds.escalation_kill,
+            escalation_kill_signal:
+                askLines === 0
+                    ? null
+                    : askEscalated / askLines > registration.metrics.ask_economy.thresholds.escalation_kill,
+        },
         notes,
     };
 }
@@ -306,6 +336,11 @@ function renderText(r: Report): string {
     lines.push('rules_efficiency:');
     lines.push(
         `  envelopes with pair=${r.rules_efficiency.envelopes_with_pair} · median quota=${r.rules_efficiency.median_quota === null ? '—' : r.rules_efficiency.median_quota.toFixed(2)} · low-quota signal (< ${r.rules_efficiency.threshold_low_quota}): ${r.rules_efficiency.low_quota_signal === null ? 'no data' : String(r.rules_efficiency.low_quota_signal)}`,
+    );
+    lines.push('');
+    lines.push('ask_economy:');
+    lines.push(
+        `  ask lines=${r.ask_economy.ask_lines} · adopted=${r.ask_economy.adopted} · escalated=${r.ask_economy.escalated} · escalation-kill signal (> ${r.ask_economy.threshold_escalation_kill}): ${r.ask_economy.escalation_kill_signal === null ? 'no data' : String(r.ask_economy.escalation_kill_signal)}`,
     );
     lines.push('');
     for (const n of r.notes) lines.push(`note: ${n}`);

@@ -19,8 +19,10 @@
 import type { LookupClass } from './auto_dispatch.js';
 
 export type DispatchOutcome = 'DONE' | 'DONE_WITH_CONCERNS' | 'NEEDS_CONTEXT' | 'BLOCKED' | 'killed';
-/** Which route the lookup-class rung took (lean-init L0). */
-export type RouteTaken = 'primitive' | 'subagent';
+/** Which route the rung took: deterministic primitive (lean-init L0),
+ *  single-completion ask (token-economy-dispatch rung 0.5), or a full
+ *  subagent spawn. */
+export type RouteTaken = 'primitive' | 'subagent' | 'ask';
 export type VerifyMode = 'deterministic' | 'judge' | 'none';
 export type Provenance = 'measured' | 'estimated';
 export type TierChosen = 'lite' | 'medium' | 'high';
@@ -150,7 +152,7 @@ const TIER_SOURCES: readonly TierSource[] = ['static', 'inferred', 'inherit'];
 const BANDS: readonly Band[] = ['low', 'medium', 'high'];
 const PHASES: readonly LinePhase[] = ['refine', 'memory', 'analyze', 'plan', 'implement', 'test', 'verify', 'report'];
 const LOOKUP_CLASSES: readonly LookupClass[] = ['definition', 'references', 'string-existence', 'report-run'];
-const ROUTES_TAKEN: readonly RouteTaken[] = ['primitive', 'subagent'];
+const ROUTES_TAKEN: readonly RouteTaken[] = ['primitive', 'subagent', 'ask'];
 const TRIGGER_ARMS: readonly TriggerArm[] = ['watermark', 'saturation', 'tie'];
 /** Hex-only payload hash — a hash can never smuggle content (privacy by construction). */
 const PAYLOAD_HASH_RE = /^[a-f0-9]{8,64}$/i;
@@ -176,13 +178,15 @@ function isInt(n: unknown): n is number {
 export function buildOrchestrationLine(input: RecordInput): BuiltLine {
     const errors: string[] = [];
 
-    // A lookup-class primitive route is the ONE recordable zero-spawn event
-    // (lean-init L0): the routing decision itself is the datum the
-    // cost-reduction claim reads. Everything else with spawn_count 0 stays
-    // unrecordable in-session work.
-    const zeroSpawnPrimitive = input.route_taken === 'primitive' && input.spawn_count === 0;
-    if (!zeroSpawnPrimitive && (!isInt(input.spawn_count) || input.spawn_count < 1)) {
-        errors.push('spawn_count must be an integer ≥ 1 (0 = handled in-session, not a dispatch — do not record; exception: route_taken=primitive lookup routes record with spawn_count 0)');
+    // A lookup-class primitive route (lean-init L0) and a rung-0.5 ask route
+    // (token-economy-dispatch Phase 4) are the TWO recordable zero-spawn
+    // events: the routing decision itself is the datum the cost-reduction
+    // claim reads. Everything else with spawn_count 0 stays unrecordable
+    // in-session work.
+    const zeroSpawnRoute =
+        (input.route_taken === 'primitive' || input.route_taken === 'ask') && input.spawn_count === 0;
+    if (!zeroSpawnRoute && (!isInt(input.spawn_count) || input.spawn_count < 1)) {
+        errors.push('spawn_count must be an integer ≥ 1 (0 = handled in-session, not a dispatch — do not record; exception: route_taken=primitive|ask routes record with spawn_count 0)');
     }
     if (!isInt(input.token_delta)) errors.push('token_delta must be an integer (negative = net saved vs the in-session baseline)');
     if (input.task_size_estimate !== undefined && (!isInt(input.task_size_estimate) || input.task_size_estimate < 0)) {

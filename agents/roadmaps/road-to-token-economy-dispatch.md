@@ -246,50 +246,83 @@ result and the projection widens by evidence, not by fear.
 
 ## Phase 3 — worker thin projection, cut where the data says
 
-- [ ] 3.1 Role-marked worker spawns load the execution projection
+- [~] 3.1 Role-marked worker spawns load the execution projection
       (`contexts/execution/` + the rule subset Phase 1.3 shows workers
       actually use) instead of the full layer, via the existing
       thin-projection machinery (`project_thin_rules.ts`). Cut line
       committed as a manifest (reviewable, diffable), derived from ≥2 weeks
-      of `rules_used` data — never hand-feel.
-- [ ] 3.2 The reviewer role gets its own projection (review contexts +
+      of `rules_used` data — never hand-feel. <!-- deferred 2026-08-10:
+      data-window-gated by the roadmap's own contract (Risk 7) — the
+      rules_efficiency metric went live today with 0 envelopes; the cut
+      line needs >= 2 weeks of accumulation. Additionally host-scoped by
+      the worker-chain-host-delivery probe: the projection binds on
+      CLI-spawned sessions -->
+- [~] 3.2 The reviewer role gets its own projection (review contexts +
       safety floors); reviewer spawns from end-review-nudge are marked
-      `role: reviewer` by the same wrapper mechanism.
-- [ ] 3.3 Escape hatch, envelope-carried: a worker that hits a wall
+      `role: reviewer` by the same wrapper mechanism. <!-- deferred
+      2026-08-10: end-review reviewer spawns are Agent-tool spawns, which
+      the live probe showed cannot be env-marked on this host; the
+      `reviewer` enum value is reserved (session_role.ts) and fail-open
+      (full chain until a roles.reviewer manifest entry exists). Builds
+      with 3.1's window or a host per-spawn identity surface -->
+- [~] 3.3 Escape hatch, envelope-carried: a worker that hits a wall
       (`needs_context: <rule-id>`) records the miss in its CHECKPOINT
       envelope; the orchestrator may re-dispatch with the widened
       projection. Misses are telemetry (`projection_miss` lines) and feed
       the cut-line review — the projection widens by recorded evidence.
-- [ ] 3.4 REGISTER kill criterion: if worker verify-fail rate on projected
+      <!-- deferred 2026-08-10: builds WITH 3.1 — an escape hatch before
+      any projection exists has nothing to escape from -->
+- [x] 3.4 REGISTER kill criterion: if worker verify-fail rate on projected
       sessions exceeds the pre-projection baseline by a committed margin
       over the review window, the projection reverts for that rung and the
-      regression is published.
+      regression is published. <!-- done 2026-08-10: projection_quality in
+      dispatch-economy-metrics.json (kill margin +5pp over 2-week window),
+      registered BEFORE any projection exists -->
 
 **Exit:** `dispatch_floor` for rung-1 workers drops measurably (target from 1.2); worker correctness is monitored against a baseline, not assumed.
 **Rollback:** role resolves to full layer (2.4 path); the manifest is one revert.
 
 ## Phase 4 — rung 0.5: ask, don't spawn
 
-- [ ] 4.1 A single-completion primitive (`ask_transport.ts`) wraps the
+- [x] 4.1 A single-completion primitive (`ask_transport.ts`) wraps the
       reconciled transport chain (#1235 Phase 3): one prompt, one answer, no
       harness, no session, honest-∅ when no transport resolves. CLI-first
       billing classification applies unchanged.
       <!-- verify: npx vitest run ask_transport -->
-- [ ] 4.2 The judgment ladder gains rung 0.5 between deterministic scripts
+      <!-- done 2026-08-10: src/scripts/ask_transport.ts — reuses
+      council_cli.load_settings + build_members (transport chain + billing
+      unchanged); hard caps: one completion, no tools, no retry; exit 3 =
+      honest-null; every ask appends a route_taken=ask telemetry line
+      (spawn_count 0, origin dispatch-economy-2026) -->
+- [x] 4.2 The judgment ladder gains rung 0.5 between deterministic scripts
       and the first spawn: single bounded *question* (classification, small
       verification, one-file semantic lookup that the code-graph null left
       uncovered) resolves to ask, not spawn. Signals with the same
       regex-only discipline as the F3-lite extractor; ambiguity still
       resolves ∅/in-session — never a speculative ask that grows into a
       hidden agent loop (hard cap: one completion, no tool use, no retry
-      beyond the transport chain's own).
-- [ ] 4.3 The delegation-nudge line can cite rung 0.5 ("rung-0.5: ask, est.
+      beyond the transport chain's own). <!-- done 2026-08-10:
+      LadderRung gains 0.5; detectBoundedQuestion (regex-only, ambiguity
+      falls through) resolves in the below-floor branch. DESIGN NOTE from
+      test evidence: questions naming files/paths/repo objects are
+      EXCLUDED (a completion without tools cannot read them), and the
+      halt + recursive guard win over 0.5 -->
+- [x] 4.3 The delegation-nudge line can cite rung 0.5 ("rung-0.5: ask, est.
       <1k tokens") so the carrier stops nudging full spawns for
-      question-shaped slices.
-- [ ] 4.4 REGISTER metric: ask-vs-spawn substitution rate + ask answer
+      question-shaped slices. <!-- done 2026-08-10: buildNudgeLine carries
+      the rung-0.5 ask citation (spawn floor ~251k cited); the CARRIER
+      itself stays silent on user question prompts — the agent answers
+      in-session at zero marginal cost, and injecting there would be the
+      measured cosmetic-injection failure (24/29). Guarantee delivered:
+      a question-shaped prompt can never produce a spawn nudge
+      (test-pinned) -->
+- [x] 4.4 REGISTER metric: ask-vs-spawn substitution rate + ask answer
       adoption rate; kill criterion: if asks are measurably re-asked or
       escalated to spawns > committed threshold, the rung's signals tighten
-      or the rung dies — by evidence, in a PR.
+      or the rung dies — by evidence, in a PR. <!-- done 2026-08-10:
+      ask_economy in dispatch-economy-metrics.json (escalation kill 0.3);
+      dispatch_economy_report gained the ask section (lines/adopted/
+      escalated + kill signal) -->
 
 **Exit:** question-shaped slices have a sub-spawn path whose cost is two orders of magnitude below the floor; its precision is a registered number.
 **Rollback:** the rung resolves to rung 1 (today's behaviour); the resolver sits behind the existing ladder interface.
