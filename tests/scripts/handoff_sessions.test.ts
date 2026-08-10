@@ -14,8 +14,11 @@ import { derive_session_tag } from '../../src/scripts/chat_history.js';
 import {
     DEFAULT_CAP,
     encode_project_path,
+    is_substantive,
     list_handoff_sessions,
+    SUBSTANTIVE_TOKEN_FLOOR,
 } from '../../src/scripts/_cli/handoff_sessions.js';
+import { eolSessionKey, eolStateFile } from '../../src/scripts/_lib/session_eol.js';
 
 const FIXTURE_DIR = path.resolve(fileURLToPath(import.meta.url), '..', 'fixtures', 'handoff');
 
@@ -236,5 +239,141 @@ describe('list_handoff_sessions', () => {
         const sessions = list_handoff_sessions(baseOpts());
         expect(sessions).toHaveLength(1);
         expect(sessions[0]?.summary).toBe('the real prompt');
+    });
+});
+
+// ---------------------------------------------------------------------
+// Phase 1 — the enumeration fix: the issuing session and every session
+// holding nothing worth resuming are excluded, and every unknown LISTS.
+// ---------------------------------------------------------------------
+
+/** Write the counts-only session-eol state the enumeration reads. */
+function writeEolState(rawSessionId: string, counters: Record<string, unknown>): void {
+    const file = eolStateFile(repoDir, eolSessionKey(rawSessionId));
+    fs.mkdirSync(path.dirname(file), { recursive: true });
+    fs.writeFileSync(
+        file,
+        JSON.stringify({ schema_version: 1, counters, advisory_fired_at: null }),
+        'utf-8',
+    );
+}
+
+function idsFor(selfSessionId: string | null): string[] {
+    return list_handoff_sessions({ ...baseOpts(), selfSessionId }).map((s) => s.id);
+}
+
+describe('substantive-content + self-session filtering', () => {
+    it('filters an empty session — an assistant never answered in it', () => {
+        writeClaudeTranscript('empty-0001', ['just opened a chat']);
+        writeEolState('empty-0001', {
+            schema_version: 1,
+            turns: 1,
+            assistant_records: 0,
+            tool_calls: 0,
+            final_context_tokens: 0,
+        });
+        expect(idsFor(null)).toEqual([]);
+    });
+
+    it('filters the ISSUING session even when it is the richest candidate', () => {
+        writeClaudeTranscript('self-0001', ['the caller itself']);
+        writeEolState('self-0001', {
+            schema_version: 1,
+            turns: 12,
+            assistant_records: 40,
+            tool_calls: 30,
+            final_context_tokens: 500_000,
+        });
+        // Present for every other caller — so the exclusion is the only cause.
+        expect(idsFor(null)).toEqual(['self-0001']);
+        expect(idsFor('self-0001')).toEqual([]);
+    });
+
+    it('lists a one-turn session that made a tool call, whatever its size', () => {
+        writeClaudeTranscript('tool-0001', ['tiny but real']);
+        writeEolState('tool-0001', {
+            schema_version: 1,
+            turns: 1,
+            assistant_records: 1,
+            tool_calls: 1,
+            final_context_tokens: 500, // far below the floor — the tool arm carries it
+        });
+        expect(idsFor(null)).toEqual(['tool-0001']);
+    });
+
+    it('lists a session whose state is unreadable — fail-open, never data loss', () => {
+        writeClaudeTranscript('broken-0001', ['state got corrupted']);
+        const file = eolStateFile(repoDir, eolSessionKey('broken-0001'));
+        fs.mkdirSync(path.dirname(file), { recursive: true });
+        fs.writeFileSync(file, '{ not json at all', 'utf-8');
+        expect(idsFor(null)).toEqual(['broken-0001']);
+    });
+
+    it('lists a tool-call-free session once it clears the committed token floor', () => {
+        writeClaudeTranscript('talk-0001', ['discussion only']);
+        writeEolState('talk-0001', {
+            schema_version: 1,
+            turns: 4,
+            assistant_records: 4,
+            tool_calls: 0,
+            final_context_tokens: SUBSTANTIVE_TOKEN_FLOOR,
+        });
+        expect(idsFor(null)).toEqual(['talk-0001']);
+    });
+
+    it('resolves the issuing session from the env the host actually exports', () => {
+        // Pins the MEASURED variable names. A rename here silently disables
+        // the self-exclusion, which is exactly the defect Phase 1 repairs.
+        writeClaudeTranscript('env-0001', ['from the env']);
+        const prior = { agent: process.env.AGENT_SESSION_ID, cc: process.env.CLAUDE_CODE_SESSION_ID };
+        try {
+            delete process.env.AGENT_SESSION_ID;
+            process.env.CLAUDE_CODE_SESSION_ID = 'env-0001';
+            expect(list_handoff_sessions(baseOpts()).map((s) => s.id)).toEqual([]);
+            process.env.AGENT_SESSION_ID = 'env-0001';
+            delete process.env.CLAUDE_CODE_SESSION_ID;
+            expect(list_handoff_sessions(baseOpts()).map((s) => s.id)).toEqual([]);
+        } finally {
+            if (prior.agent === undefined) delete process.env.AGENT_SESSION_ID;
+            else process.env.AGENT_SESSION_ID = prior.agent;
+            if (prior.cc === undefined) delete process.env.CLAUDE_CODE_SESSION_ID;
+            else process.env.CLAUDE_CODE_SESSION_ID = prior.cc;
+        }
+    });
+
+    it('reads a state file written before tool_calls existed as unknown, not zero', () => {
+        writeClaudeTranscript('legacy-0001', ['written by an older writer']);
+        writeEolState('legacy-0001', {
+            schema_version: 1,
+            turns: 3,
+            assistant_records: 3,
+            final_context_tokens: 500, // below the floor; only "unknown" can save it
+        });
+        expect(idsFor(null)).toEqual(['legacy-0001']);
+    });
+});
+
+describe('is_substantive', () => {
+    const base = { schema_version: 1 as const, scanned_bytes: 0, turns: 1, compactions: [], compact_summaries: 0, bad_lines: 0, final_context_at: null };
+
+    it('lists on absent state', () => {
+        expect(is_substantive(null)).toBe(true);
+    });
+
+    it('requires at least one assistant record', () => {
+        expect(
+            is_substantive({ ...base, assistant_records: 0, tool_calls: 9, final_context_tokens: 999_999 }),
+        ).toBe(false);
+    });
+
+    it('filters an answered session that neither called a tool nor reached the floor', () => {
+        expect(
+            is_substantive({
+                ...base,
+                assistant_records: 2,
+                tool_calls: 0,
+                final_context_tokens: SUBSTANTIVE_TOKEN_FLOOR - 1,
+            }),
+        ).toBe(false);
     });
 });

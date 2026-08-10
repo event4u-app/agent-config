@@ -70,16 +70,16 @@ worth resuming.
 
 ## Phase 1 — the enumeration fix (independent, ships alone)
 
-- [ ] 1.1 `handoff_sessions.ts` applies `is_substantive`: the ISSUING
+- [x] 1.1 `handoff_sessions.ts` applies `is_substantive`: the ISSUING
       session is excluded by `session_id` unconditionally — never
       heuristically — and every other candidate requires ≥ 1 assistant turn
       AND (≥ 1 tool call OR parsed tokens ≥ a committed threshold), read
       from the existing session-eol counts-only state.
       <!-- verify: task test -- --filter=handoff_sessions -->
-- [ ] 1.2 Fail-open, stated in code: unreadable state **lists** rather than
+- [x] 1.2 Fail-open, stated in code: unreadable state **lists** rather than
       filters. A wrongly listed candidate is noise; a wrongly hidden one is
       data loss.
-- [ ] 1.3 Four fixtures pin the behaviour: empty session filtered,
+- [x] 1.3 Four fixtures pin the behaviour: empty session filtered,
       self-session filtered, one-turn-with-tool-use listed,
       unreadable-state listed.
       <!-- verify: task test -- --filter=handoff_sessions -->

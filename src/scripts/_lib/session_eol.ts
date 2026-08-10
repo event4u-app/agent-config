@@ -30,7 +30,9 @@
  * 50 MB `isSafeTranscriptPath` cap away.
  */
 
+import * as crypto from 'node:crypto';
 import * as fs from 'node:fs';
+import * as path from 'node:path';
 
 import { billableInputTokens } from './cc_transcript.js';
 
@@ -57,6 +59,13 @@ export interface EolCounters {
     turns: number;
     /** Main-chain assistant records carrying a `usage` block. */
     assistant_records: number;
+    /**
+     * Main-chain assistant records carrying at least one `tool_use` content
+     * block. Added after the initial schema, so a state file written before
+     * it is missing the key — readers MUST treat `undefined` as *unknown*,
+     * never as zero (`is_substantive` in `_cli/handoff_sessions.ts` does).
+     */
+    tool_calls: number;
     /** Billable input tokens of the LAST main-chain assistant record — the fill level. */
     final_context_tokens: number | null;
     /** `timestamp` of that record. */
@@ -75,6 +84,7 @@ export function emptyCounters(): EolCounters {
         scanned_bytes: 0,
         turns: 0,
         assistant_records: 0,
+        tool_calls: 0,
         final_context_tokens: null,
         final_context_at: null,
         compactions: [],
@@ -165,6 +175,21 @@ export function scanEolSlice(text: string, prior: EolCounters): EolCounters {
         }
         if (record['type'] === 'assistant') {
             const message = record['message'];
+            const content =
+                typeof message === 'object' && message !== null
+                    ? (message as Record<string, unknown>)['content']
+                    : undefined;
+            if (
+                Array.isArray(content) &&
+                content.some(
+                    (b) =>
+                        typeof b === 'object' &&
+                        b !== null &&
+                        (b as Record<string, unknown>)['type'] === 'tool_use',
+                )
+            ) {
+                next.tool_calls += 1;
+            }
             const usage =
                 typeof message === 'object' && message !== null
                     ? ((message as Record<string, unknown>)['usage'] as Record<string, unknown> | undefined)
@@ -182,6 +207,61 @@ export function scanEolSlice(text: string, prior: EolCounters): EolCounters {
         }
     }
     return next;
+}
+
+// ---------------------------------------------------------------------
+// State location — one derivation, shared by the writer (the Stop-slot
+// concern) and every reader (`agent-config handoff`).
+// ---------------------------------------------------------------------
+
+/** Directory holding the per-session counts-only state files. */
+export function eolStateDir(workspaceRoot: string): string {
+    return path.join(workspaceRoot, 'agents', 'runtime', 'state', 'session-eol');
+}
+
+/** Absolute path of one session's state file. */
+export function eolStateFile(workspaceRoot: string, sessionKey: string): string {
+    return path.join(eolStateDir(workspaceRoot), `${sessionKey}.json`);
+}
+
+/**
+ * The state-file key for a session: sha256 of the raw session id, or of the
+ * transcript path when no id is known. Hashed, never raw — the filename must
+ * not carry an identifier.
+ */
+export function eolSessionKey(raw: string | null | undefined): string {
+    return crypto.createHash('sha256').update(raw || 'unknown-session').digest('hex');
+}
+
+/**
+ * Counters as they come off DISK. `tool_calls` is optional here and required
+ * in `EolCounters` on purpose: a file written before that counter existed
+ * carries no key, and "the writer never counted" must stay distinguishable
+ * from "the writer counted zero".
+ */
+export type StoredEolCounters = Omit<EolCounters, 'tool_calls'> & { tool_calls?: number };
+
+/**
+ * Read one session's counters. Returns `null` for absent, unreadable, or
+ * mis-shaped state — the caller decides what that means, and every current
+ * caller fails OPEN (a wrongly listed session is noise; a wrongly hidden one
+ * is data loss).
+ */
+export function readEolCounters(
+    workspaceRoot: string,
+    sessionKey: string,
+): StoredEolCounters | null {
+    try {
+        const raw = fs.readFileSync(eolStateFile(workspaceRoot, sessionKey), 'utf-8');
+        const parsed = JSON.parse(raw) as Record<string, unknown>;
+        const counters = parsed['counters'];
+        if (typeof counters !== 'object' || counters === null || Array.isArray(counters)) {
+            return null;
+        }
+        return counters as StoredEolCounters;
+    } catch {
+        return null;
+    }
 }
 
 export interface NewLinesRead {

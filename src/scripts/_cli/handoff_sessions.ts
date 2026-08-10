@@ -19,6 +19,11 @@
  * De-dup: native-store sessions whose platform id maps (via
  * `derive_session_tag`) to a chat-history bucket are dropped — the
  * chat-history entry wins.
+ *
+ * Two exclusions then apply to the merged list (road-to-cost-parity-3
+ * Phase 1): the ISSUING session, by exact id and never heuristically, and
+ * every candidate holding nothing worth resuming (`is_substantive`). Both
+ * fail OPEN — an unknown lists.
  */
 
 import * as fs from 'node:fs';
@@ -26,9 +31,26 @@ import * as os from 'node:os';
 import * as path from 'node:path';
 
 import { derive_session_tag, list_sessions, read_entries } from '../chat_history.js';
+import { eolSessionKey, readEolCounters, type StoredEolCounters } from '../_lib/session_eol.js';
 
 export const DEFAULT_CAP = 15;
 const SUMMARY_SNIPPET_CHARS = 120;
+
+/**
+ * Committed substantive-content floor, in parsed transcript tokens (billable
+ * input of the last main-chain assistant record, per `cc_transcript.ts`) — the
+ * OR-arm for a session that produced real discussion without ever calling a
+ * tool.
+ *
+ * Derivation (`agents/evidence/analysis/handoff-substantive-threshold.md`,
+ * 217 sessions of the local Claude store, 2026-08-10): 206 of the 207 sessions
+ * carrying an assistant record also carry a `tool_use` block, so this arm
+ * serves the ~0.5 % tail and the hosts whose transcripts log no tool blocks at
+ * all. 10 000 sits **25× below** the p10 of real working sessions (254 939),
+ * so it cannot hide one, and above a single trivial exchange. Changing it is a
+ * PR citing evidence, never a drive-by edit.
+ */
+export const SUBSTANTIVE_TOKEN_FLOOR = 10_000;
 
 export type HandoffSource = 'chat-history' | 'claude-transcript' | 'codex-session';
 
@@ -55,6 +77,21 @@ export interface ListOptions {
     codexSessionsRoot?: string;
     /** Max sessions per source AND in the merged result. Default 15. */
     cap?: number;
+    /**
+     * The ISSUING session's id — excluded from the result unconditionally.
+     *
+     * Default: `AGENT_SESSION_ID` (this package's own envelope convention),
+     * else `CLAUDE_CODE_SESSION_ID`. The second name is **measured, not
+     * guessed**: a live Claude Code session (host 2026-08-10) exports
+     * `CLAUDE_CODE_SESSION_ID` into every Bash tool call and its value is the
+     * session uuid that also names the transcript file — a plausible-looking
+     * `CLAUDE_SESSION_ID` is not exported and would leave this filter inert.
+     *
+     * Pass `null` to disable (a caller that genuinely is not a session).
+     */
+    selfSessionId?: string | null;
+    /** Workspace root holding `agents/runtime/state/session-eol/`. Default: `cwd`. */
+    workspaceRoot?: string;
 }
 
 /** Mirrors the Claude Code project-dir naming: `/` and `.` → `-`. */
@@ -409,27 +446,98 @@ function _sort_key(s: HandoffSession): string {
 }
 
 /**
+ * Does this session hold anything worth resuming?
+ *
+ * `≥ 1 assistant turn AND (≥ 1 tool call OR parsed tokens ≥ the committed
+ * floor)`, read from the counts-only session-eol state.
+ *
+ * **Fail-open, deliberately** (Phase 1.2): absent, unreadable or mis-shaped
+ * state LISTS the candidate rather than filtering it, and a `tool_calls` key
+ * missing from a state file written before that counter existed reads as
+ * *unknown*, never as zero. A wrongly listed candidate is noise the user
+ * scrolls past; a wrongly hidden one is data loss they cannot even see.
+ */
+export function is_substantive(counters: StoredEolCounters | null): boolean {
+    if (counters === null) return true;
+    if (Number(counters.assistant_records ?? 0) < 1) return false;
+    if (counters.tool_calls === undefined) return true;
+    if (Number(counters.tool_calls) >= 1) return true;
+    return Number(counters.final_context_tokens ?? 0) >= SUBSTANTIVE_TOKEN_FLOOR;
+}
+
+function _derive_tag(id: string): string | null {
+    try {
+        return derive_session_tag(id);
+    } catch {
+        return null;
+    }
+}
+
+/**
+ * The state file is keyed on the RAW session id (or transcript path) the hook
+ * saw. A chat-history bucket carries only the derived tag, so the native scan
+ * — which holds both — supplies the raw identity for those buckets.
+ */
+function _counters_for(
+    session: HandoffSession,
+    byTag: Map<string, HandoffSession>,
+    workspaceRoot: string,
+): StoredEolCounters | null {
+    const native = session.source === 'chat-history' ? byTag.get(session.id) : session;
+    const candidates = [
+        ...(session.source === 'chat-history' ? [] : [session.id]),
+        native?.id,
+        native?.transcriptPath,
+    ];
+    for (const candidate of candidates) {
+        if (!candidate) continue;
+        const counters = readEolCounters(workspaceRoot, eolSessionKey(candidate));
+        if (counters !== null) return counters;
+    }
+    return null;
+}
+
+/**
  * Unified newest-first session list. Native-store sessions whose platform
  * id maps to an existing chat-history bucket are dropped (chat-history is
  * the primary source).
+ *
+ * Two exclusions apply to the merged list: the ISSUING session, by exact id
+ * (never heuristically — a heuristic here hides a session the user wanted),
+ * and every candidate `is_substantive` rejects.
  */
 export function list_handoff_sessions(opts: ListOptions = {}): HandoffSession[] {
     const cap = opts.cap ?? DEFAULT_CAP;
+    const workspaceRoot = opts.workspaceRoot ?? opts.cwd ?? process.cwd();
+    const selfId =
+        opts.selfSessionId === null
+            ? null
+            : (opts.selfSessionId ??
+              process.env.AGENT_SESSION_ID ??
+              process.env.CLAUDE_CODE_SESSION_ID ??
+              null);
+    const selfTag = selfId ? _derive_tag(selfId) : null;
+
     const primary = _chat_history_sessions(opts);
     const knownTags = new Set(primary.map((s) => s.id));
 
-    const native = [
+    const nativeAll = [
         ..._claude_transcript_sessions(opts, cap),
         ..._codex_sessions(opts, cap),
-    ].filter((s) => {
-        try {
-            return !knownTags.has(derive_session_tag(s.id));
-        } catch {
-            return true;
-        }
+    ];
+    const byTag = new Map<string, HandoffSession>();
+    for (const s of nativeAll) {
+        const tag = _derive_tag(s.id);
+        if (tag) byTag.set(tag, s);
+    }
+    const native = nativeAll.filter((s) => {
+        const tag = _derive_tag(s.id);
+        return tag === null || !knownTags.has(tag);
     });
 
     return [...primary, ...native]
+        .filter((s) => s.id !== selfId && (selfTag === null || s.id !== selfTag))
+        .filter((s) => is_substantive(_counters_for(s, byTag, workspaceRoot)))
         .sort((a, b) => (_sort_key(a) < _sort_key(b) ? 1 : _sort_key(a) > _sort_key(b) ? -1 : 0))
         .slice(0, cap);
 }
