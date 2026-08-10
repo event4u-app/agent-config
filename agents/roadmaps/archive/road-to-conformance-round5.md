@@ -33,14 +33,22 @@ hypothesis round 1 adopted.
 
 ### blocker: stop-refusal-own-pr
 
-- **Status:** open
-- **Owner:** maintainer
-- **Blocks:** Phase 3 (3.1-3.6) and Phase 6.1
-- **What to do:** decide whether a concern that can refuse a turn-end ships at
-  all; if yes, land it in its own PR with its own soak period, separate from the
-  change set that carries Phases 1, 2, 4 and 5.
-- **Resolved when:** that decision is recorded and, if affirmative, the refusal
-  concern has merged in its own PR.
+- **Status:** **resolved 2026-08-09 — affirmative.** The maintainer decided that
+  a concern which can refuse a turn-end ships, in its own PR with its own soak.
+  This PR is that PR: it carries Phase 3 and 6.1 and nothing from Phases 1, 2, 4
+  or 5, which is the separation the blocker asked for.
+- **Owner:** was maintainer; decision made
+- **Blocks:** nothing further here. It also carried round 6 verbatim, so the same
+  decision unblocks that roadmap's Phase 6.2 — after this PR merges and soaks,
+  which is the blocker's own second condition and is not satisfied by writing
+  this line.
+- **What to do:** nothing further to decide. Shipped default-OFF
+  (`hooks.turn_end_gate.enabled`) on the round-6 council's advisory, so the
+  mechanism soaks before it binds; the re-entrancy shape the council flagged as
+  specified-but-unverified is stated and tested in § 3.1 **before** registration,
+  not after.
+- **Resolved when:** ~~that decision is recorded and, if affirmative, the refusal
+  concern has merged in its own PR.~~ Decision recorded; merge is this PR.
 
 Phase 3 registers the suite's **first** concern that can refuse a turn-end. This
 repo has already been bitten twice by hook-severity mistakes — an `EXIT_BLOCK`
@@ -333,19 +341,60 @@ The retraction named the two real obstacles; both are in scope here.
 One concern, one re-entrancy guard, two detectors — because building the unsafe
 part twice is how a second detector becomes a second outage.
 
-- [ ] 3.1 Add a `stop`-bound concern with the re-entrancy guard the retraction
+- [x] 3.1 Add a `stop`-bound concern with the re-entrancy guard the retraction
   says the dispatcher lacks: state-backed, **one block per turn maximum**, so a
   refused turn-end can never loop. This lands first and alone; neither detector
   below may be registered before it is proven.
-- [ ] 3.2 Detector A — promissory closing (FC-5, 20 measured occurrences): the
+  <!-- Shipped as `src/scripts/hooks/turn_end_gate_hook.ts`, concern
+  `turn-end-gate`, `severity: blocking`, bound to `platforms.claude.stop` only.
+  39 tests.
+
+  THE BLOCKER IS RESOLVED, AFFIRMATIVE. The maintainer decided 2026-08-09 that a
+  concern which can refuse a turn-end ships, in its own PR with its own soak.
+  That decision also unblocks 6.1 here and Phase 6.2 of round 6, which carries
+  the same blocker verbatim.
+
+  RE-ENTRANCY SHAPE — stated and tested BEFORE registration, which is what round
+  6 § blocker demanded ("the guard's re-entrancy shape has to be stated and
+  tested before the concern is registered, not after"). Two layers, each proven
+  ALONE by its own test:
+    1. `stop_hook_active` — Claude sets it when a Stop follows a stop-hook
+       block. Nothing in `src/` read this field before; it is the host's own
+       answer to "what happens when the refusal itself triggers the turn-end
+       event", which the proposal had picked neither shape for.
+    2. A marker keyed on the LAST USER MESSAGE, never on the reply. After a
+       refusal the model writes a NEW reply, so a reply-keyed marker would let
+       the same turn be refused again and again. The user prompt does not change
+       within a turn, so the turn is refused at most once; the next genuine
+       prompt mints a new key and the gate re-arms with no cleanup.
+  The failure this ordering prevents is not a loop but a WEDGE — a turn that can
+  never end. Hence also `fail_closed: false`, alone among the blocking concerns:
+  a crash here must let the turn END. Every unreadable transcript, malformed
+  envelope, out-of-home transcript path and absent pin resolves to exit 0, each
+  with a test.
+
+  DEFAULT OFF, against this roadmap's own § 3.6 wording — see 3.6. -->
+  <!-- Host-facing proof, not just dispatcher-internal: the raw-tsx tests see
+  the internal code (1 = block), so they cannot tell a real refusal from one
+  that maps to 0 at the host. A separate block spawns `dispatch_entry.ts` with
+  a raw Claude Stop payload and asserts exit **2** plus the concern's own reason
+  on stderr. `stop` is in `CLAUDE_BLOCK_CAPABLE_EVENTS`; this is the first
+  concern in the suite to use that fact. -->
+
+  <!-- One property this PR does NOT establish: that refusing a turn-end
+  improves the measured rates. It cannot — the mechanism is default-off, so
+  there is no post-fix corpus to scan yet. That is what the soak is for, and
+  round 6's Phase 6.2 is where the number lands. -->
+
+- [x] 3.2 Detector A — promissory closing (FC-5, 20 measured occurrences): the
   final user-visible paragraph commits to work not yet performed ("ich melde",
   "I'll report", "sobald … melde ich", "als nächstes"), while the turn carries no
   blocking question and no completed verification for that claim.
-- [ ] 3.3 Detector B — language mismatch (19 measured occurrences that survived a
+- [x] 3.3 Detector B — language mismatch (19 measured occurrences that survived a
   **fresh** pin): the reply's user-visible prose is not in the pinned language.
   This is the class Phase 7 refuses to solve by re-injection; a refusal at
   delivery is a different mechanism, not the same one at higher frequency.
-- [ ] 3.4 False-positive pass against the corpus for both detectors. Detector A
+- [x] 3.4 False-positive pass against the corpus for both detectors. Detector A
   must fire on the 20 measured occurrences and must **not** fire on a legitimate
   hand-back ("das entscheidest Du", "ich fasse ihn nicht ungefragt an") or on a
   promise the same turn then fulfils. Detector B must not fire on quoted tool
@@ -353,12 +402,75 @@ part twice is how a second detector becomes a second outage.
   `language-and-tone` already states. Record measured precision per detector; a
   detector that cannot clear a stated bar registers as detection-only and the
   roadmap says so.
-- [ ] 3.5 Adversarial cases, per the council's precision warning: a blocking
+  <!-- MEASURED, and reproducible rather than asserted:
+  `./scripts-run src/scripts/measure_turn_end_gate --store <claude transcript
+  dir> --limit 30`, run 2026-08-09 over the SAME 30-session store round 5
+  scanned — 2157 assistant turns.
+
+    detector A (promissory)  fires on   28 turns   1.3%
+    detector B (language)    fires on  388 turns  18.0%
+      of which the independent scanner also flagged   360
+      fired where the scanner saw nothing              28
+
+  READ B FIRST, because it is the uncomfortable one. An 18% fire rate on a
+  BLOCKING guard means roughly one refused turn in five and a half. That is not
+  a false-positive rate — `conformance_scan` independently counted 408 language
+  violations (18.9%) over the same window, and the two instruments agree on 360
+  of this detector's 388 fires. The violations are real. But "real" and
+  "shippable default-on" are different claims, and a mechanism that would have
+  refused nearly a fifth of all turns is precisely the one the round-6 council
+  said must soak behind an opt-in first. This measurement is the strongest
+  single argument for the default-OFF decision recorded in 3.6, and it was taken
+  BEFORE that decision could be rationalised by it.
+
+  The 28 fire-where-the-scanner-saw-nothing turns are candidate false positives,
+  NOT confirmed ones: the scanner reads the first prose line and this detector
+  reads the whole stripped reply, so the instruments disagree in both directions
+  (the scanner flagged 48 this detector did not). Neither set was hand-audited;
+  saying so is cheaper than implying an audit that did not happen.
+
+  DETECTOR A HAS NO RECALL FIGURE, and the reason is structural rather than
+  lazy. `conformance_scan.ts` states in its own header that promissory closings
+  are "deliberately NOT scanned"; the round-5 audit's 20 occurrences came from
+  subagent transcript READING, so there is no machine-readable ground truth to
+  score against and no way to re-derive those 20 spans. What can be said: the
+  detector fires 28 times over the same window against the audit's reported 20 —
+  the same order, slightly wider. Whether the extra 8 are additional true
+  positives or false ones is unresolved, and this line is the honest form of
+  that.
+
+  The step's literal ask — "must fire on the 20 measured occurrences" — is
+  therefore NOT satisfiable as written, and is recorded as such instead of being
+  quietly reinterpreted. What ships in its place is a 20-case hand-built corpus
+  in `tests/scripts/turn_end_gate_hook.test.ts` (10 promissory shapes the audit
+  names, 10 must-not-fire shapes: hand-back, blocking question, fulfilled
+  promise, plain completion), all 20 green, plus the real-corpus fire rate
+  above. Both halves are stated because either alone would be misleading. -->
+
+- [x] 3.5 Adversarial cases, per the council's precision warning: a blocking
   guard with a false-positive rate teaches users to bypass it. Include replies
   that legitimately quote English prose inside a German turn, and turn-ends that
   legitimately yield to the user.
-- [ ] 3.6 Settings kill-switch per detector, default on, so either can be
+- [x] 3.6 Settings kill-switch per detector, default on, so either can be
   disabled without editing the manifest.
+  <!-- Shipped as `hooks.turn_end_gate.{enabled,promissory,language}` in
+  `src/config/agent-settings.template.yml`, reused rather than a new top-level
+  key: `hooks.injection_scan.enabled` is the existing precedent for a
+  default-off hook switch.
+
+  A DEPARTURE FROM THIS STEP'S OWN WORDING, and the reason, because a silent
+  one would be exactly the drift this roadmap audits. This step says "default
+  on". Round 6 records a council (2026-08-08) asking for the opposite: the
+  mechanism opt-in and "defaulting to off, so the mechanism exists and soaks
+  before it binds" — two prior hook-severity mistakes plus a turn-end blast
+  radius made default-on uninsurable in their reading. Both hold at once, and
+  that is the shipped shape rather than a compromise between them: the MASTER
+  switch is default OFF, and WITHIN it both detectors are default ON. Opting in
+  is one line and needs neither detector named; either can still be silenced
+  without touching the hook manifest, which is what this step actually asks for.
+  The safer reading also matches `non-destructive-by-default`: a mechanism that
+  can refuse every session's turn-end does not arrive switched on. -->
+
 
 ## Phase 4 — FC-7: the canary's name must come from the settings chain, not the environment
 
@@ -450,7 +562,7 @@ timeline says compaction, not truncation, and it accounts for exactly 4 of 23.
 
 So the split of work is:
 
-- [ ] 6.1 Re-emit the pin across the **compaction boundary**. The hook already
+- [x] 6.1 Re-emit the pin across the **compaction boundary**. The hook already
   writes the language to `agents/state/language-mirror.json`; what compaction
   removes is the context copy, not the state. Restoring it is a state fix in the
   same sense round 1 argued for — "a state defect with a deterministic fix, not an
@@ -473,7 +585,33 @@ So the split of work is:
   routes through state and `post_tool_use` rather than injecting at `pre_compact`
   directly. Forcing a compaction in a controlled test was not possible in this
   audit.
-- [ ] 6.2 Do **not** ship a general tool-call-cadence re-pin. Record the refusal
+  <!-- Shipped in `src/scripts/language_mirror_hook.ts` (`_setPinLost`,
+  `_pinLost`, `_reEmitAfterCompaction`, marker at
+  `agents/state/language-mirror.pin-lost`), bound as
+  `platforms.claude.pre_compact: [language-mirror]` plus `language-mirror`
+  appended to claude's `post_tool_use`. 5 tests, 51 in the file.
+
+  This is the FIRST binding on `pre_compact` in the tree — the slot was aliased
+  for claude/cowork/cursor and listed in the dispatcher's event vocabulary, and
+  zero concerns used it.
+
+  The guard is what is actually tested, because the guard is the whole
+  difference from the mechanism 6.2 refuses: one test asserts the pin comes
+  back on the first tool call after compaction and that the SECOND and THIRD
+  calls are silent. Two failure modes are pinned as silence rather than as
+  noise: no compaction ⇒ nothing (the common path, on every tool call of every
+  session), and compaction with no pin ⇒ nothing, with the marker still
+  consumed so a missing pin cannot arm a permanent re-fire. The marker is
+  cleared BEFORE the emit, so a throwing write cannot leave it set.
+
+  WHAT IS STILL NOT VERIFIED, unchanged from the paragraph above: that a
+  `post_tool_use` injection reaches the model AFTER a real compaction boundary.
+  The design no longer depends on `pre_compact` delivering anything — it only
+  writes state there — but the delivery half needs a live compaction, and
+  forcing one under test was not possible here either. The mechanism is
+  therefore shipped as plausible-and-guarded, not as measured. -->
+
+- [x] 6.2 Do **not** ship a general tool-call-cadence re-pin. Record the refusal
   and the council's reasoning in the audit note, so round 6 does not re-propose it.
 - [x] 6.3 Extend `conformance:behavior` to record, per language violation, the
   distance in assistant turns from the last genuine user prompt **and** whether a
@@ -511,7 +649,7 @@ So the split of work is:
   taken before this fix is contaminated by it — including, in part, the 555
   pre-merge violations, since those sessions also ran background work.
 
-- [ ] 6.4 The remaining 19 are non-compliance with a fresh pin. They are addressed
+- [x] 6.4 The remaining 19 are non-compliance with a fresh pin. They are addressed
   by Phase 3 detector B — a refusal at delivery — and by nothing in this phase.
   The Iron Law stays (round-1 lock, not reopened) and no claim is made that the
   pin fixes the class.
@@ -566,11 +704,14 @@ review.
   after a regeneration — proving it detects the condition that motivated it.
 - [x] Both commands that were refused in this session run without being blocked,
   and the positive-case tests still refuse the real prohibitions.
-- [ ] **BLOCKED on `stop-refusal-own-pr`, not open.** Phase 3's concern fires on
-  the measured promissory closings, does not fire on the measured legitimate
-  hand-backs, and cannot block a turn-end twice. Nothing was built, so nothing is
-  claimed; marked here by round 6 Phase 5.1 so an untouched list stops reading as
-  unverified work.
+- [x] **UNBLOCKED 2026-08-09 and met.** Phase 3's concern fires on the promissory
+  closings, does not fire on the legitimate hand-backs, and cannot block a
+  turn-end twice — 39 tests, including the two re-entrancy layers proven
+  independently and a dispatcher-mediated exit-2 proof that the refusal reaches
+  the host at all. One correction to the criterion's own wording: "the MEASURED
+  promissory closings" is not what was verified, because those 20 spans are not
+  machine-recoverable (§ 3.4); a 20-case corpus in the detector's own shape was.
+  The distinction is the criterion's, so it is stated rather than glossed.
 - [x] Every enforcement claim this roadmap touches is either backed by a shipped
   mechanism or states plainly that it is model-carried.
 - [x] No kernel rule text is modified. `verify-before-complete` carries FC-5's

@@ -422,6 +422,31 @@ concerns:
     args: []
     fail_closed: false
     severity: advisory
+  # road-to-conformance-round5 Phase 3 — the FIRST concern that can refuse a
+  # turn-END. Round 5 measured the reason: both blocking carriers reached zero
+  # violations, neither advisory carrier did, and 19 language violations
+  # survived a pin that had fired 26-35 seconds earlier. Refusal-capable
+  # intercepts enforce; context injection requests.
+  #
+  # Two detectors on one guard — promissory closing (20 measured) and language
+  # mismatch (19 measured) — because building the unsafe part twice is how a
+  # second detector becomes a second outage.
+  #
+  # DEFAULT OFF (`hooks.turn_end_gate.enabled`), per the council
+  # recorded in round 6: the mechanism exists and soaks before it binds. Both
+  # detectors are default ON *within* the master switch, which is round 5
+  # § 3.6's ask read so that both hold at once.
+  #
+  # fail_closed: FALSE, deliberately and unlike every other blocking concern
+  # here: a crash in a turn-end gate must let the turn END. Failing closed on
+  # this slot does not degrade the session, it wedges it. Re-entrancy is two
+  # independent layers (`stop_hook_active`; a marker keyed on the last USER
+  # message, never the reply) — see the hook's file header.
+  turn-end-gate:
+    script: src/scripts/hooks/turn_end_gate_hook.ts
+    args: []
+    fail_closed: false
+    severity: blocking
   # road-to-token-economy-cache Phase 5.1/5.2 — edit-shape advisory. Fires
   # when a Write replaced an existing, git-tracked file of >= 50 lines while
   # the effective diff (`git diff HEAD --numstat` added+deleted vs current
@@ -509,10 +534,17 @@ platforms:
   claude:
     session_start:    [chat-history, hot-context, handoff-context, session-canary, council-availability, first-run-gate, onboarding-gate, verify-before-complete, minimal-safe-diff, profile-staleness, wrapper-freshness, surface-probe, session-register]
     session_end:      [chat-history, memory-learn, session-register]
-    stop:             [chat-history, hot-context, verify-before-complete, team-review-gate, end-review-nudge, self-repair, session-register, session-eol]
+    stop:             [chat-history, hot-context, verify-before-complete, team-review-gate, end-review-nudge, turn-end-gate, self-repair, session-register, session-eol]
     user_prompt_submit: [chat-history, verify-before-complete, minimal-safe-diff, language-mirror, delegation-nudge, git-authorization, session-canary, self-repair, session-register]
     pre_tool_use:     [block-no-verify, block-unauthorized-git, evidence-independence, block-kernel-rule-writes, block-config-weakening, rtk-wrap, design-slop, code-graph-nudge, reread-guard]
-    post_tool_use:    [chat-history, roadmap-progress, context-hygiene, verify-before-complete, minimal-safe-diff, injection-scan, pr-url-reminder, orchestration-record, edit-shape]
+    post_tool_use:    [chat-history, roadmap-progress, context-hygiene, verify-before-complete, minimal-safe-diff, injection-scan, pr-url-reminder, orchestration-record, edit-shape, language-mirror]
+    # round-5 § 6.1 — the ONLY binding on this slot in the tree. `pre_compact`
+    # sets a pin-lost marker; the `post_tool_use` entry above re-emits the pin
+    # exactly once while that marker is set, then clears it. One extra
+    # injection per compaction EVENT — never one per tool call, which is the
+    # shape § 6.2 refuses. claude only: it is the sole verified platform, and
+    # the measured compaction defect is a Claude Code transcript fact.
+    pre_compact:      [language-mirror]
 
   # Cowork — the Claude desktop app's local-agent-mode runtime, built
   # on top of the Claude Code CLI. Same lifecycle vocabulary, same
