@@ -53,6 +53,26 @@ vocabulary that exists nowhere. Those dangling pointers are recorded here rather
 than repaired: the ledger's job is that the loss is **visible**, and repairing
 them is a change with its own scope.
 
+## Retention policy
+
+Standing policy, not a temporary state: **these ledgers are retained
+indefinitely.** The source-recovery rationale above is the reason — the
+pre-migration bodies for 20 of the 44 rules exist only in commits that are not
+ancestors of HEAD, so the headings recorded here are the only prune-proof
+record of what the transform touched. Deleting or archiving the ledgers would
+make the recorded losses invisible again, which is the exact state they were
+created to end.
+
+Two boundaries keep the policy honest:
+
+- **Never a second rule database.** `src/rules/` stays the sole source of
+  truth for what a rule says today; a ledger records only what the migration
+  transform did, once. Nothing routes through it at runtime and nothing ever
+  should.
+- **One consumer.** The files are consumed only by
+  `lint_rule_migration_ledger` (self-consistency + live-target checks). A new
+  reader is a design change, not a convenience.
+
 ## What the gate does not check
 
 Not the semantic quality of a `reason` (a closed denylist of known-empty

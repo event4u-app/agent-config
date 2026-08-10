@@ -37,6 +37,14 @@ seconds), then reveal the discipline behind it.
 > "verify it yourself" block reproduces all of it on a fresh checkout. If a claim
 > ever loses its binding, the build goes red.
 >
+> The same honesty runs against our own behaviour: the round-5 conformance
+> audit (2026-08-07) measured advisory context injection cutting
+> language-mirror violations 555 → 19 (−96.6%, not zero) while both blocking
+> guards went 8 → 0 and 1 → 0 — advisory reduces massively, only blocking
+> eliminates. (Ledger claim `conformance-advisory-vs-blocking`; evidence:
+> `src/domains/analysis-workbench/analyze/conformance/command.md`, carrier
+> table.)
+>
 > Try the one file. If it earns its place, the rest is `npx @event4u/agent-config init`.
 
 ## Placeholders to resolve before publishing

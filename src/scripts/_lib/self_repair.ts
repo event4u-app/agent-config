@@ -28,6 +28,7 @@
 import { createHash } from 'node:crypto';
 
 import { redact_low_impact_entry } from '../ai_council/redact_low_impact_entry.js';
+import { is_kernel_rule } from './kernel_rules.js';
 
 /** Where a record came from. */
 export type DefectSource = 'user-reported' | 'self-detected';
@@ -126,6 +127,199 @@ export function egressBlockedReason(record: DefectRecord, repoRoot?: string | nu
     }
     const kinds = result.violations.map((v) => v.category).join(', ');
     return `privacy floor refused the evidence (${kinds}) — record stays local`;
+}
+
+// ── may-not-modify deny-list ───────────────────────────────────────
+
+/**
+ * Surfaces self-repair may never target with a PATCH. Detection and reporting
+ * stay untouched — for a record targeting one of these, egress degrades to
+ * report-only: an issue (or the local record) is still allowed, the
+ * pull-request path refuses with the named reason.
+ *
+ * The point is structural: the loop that fixes the agent's own defects must
+ * not be a channel through which the agent loosens the floors it is bound by.
+ * Same posture as `block_kernel_rule_writes` (tool-call-time) and the settings
+ * class-C fence (write-time), applied to the one outward vehicle this loop
+ * owns. Nothing auto-applies a patch today; this keeps that true for the
+ * denied surfaces even when the PR path is otherwise available.
+ */
+export type DeniedSurface =
+    | 'kernel-rule'
+    | 'safety-floor-rule'
+    | 'settings-class-c'
+    | 'ci-enforcement'
+    | 'self-repair-policy';
+
+export interface PatchDenial {
+    surface: DeniedSurface;
+    /** The token in the record that matched. */
+    match: string;
+}
+
+/**
+ * Characters that decorate a token but never appear inside a real path, rule
+ * id, or settings key: markdown emphasis / strikethrough, autolink angle
+ * brackets, table pipes. They are removed ANYWHERE in the token, not just at
+ * its edges, so `src/rules/**scope-control**.md` reduces like `**…**` does.
+ */
+const DECORATION_RE = /[*~<>|]/g;
+
+/**
+ * Edge punctuation a sentence leaves on a token — sentence-final `.`, a `:`
+ * label separator, list/reference brackets, and underscore emphasis (`_` is
+ * stripped at the EDGES only: it is load-bearing inside `self_repair.ts`,
+ * `hook_manifest.yaml`, and every snake_case settings key).
+ */
+const EDGE_TRIM_RE = /^[.:[\]_]+|[.:[\]_]+$/g;
+
+/**
+ * Word-ish / path-ish tokens of a record's text, punctuation-stripped.
+ *
+ * `suggested_surface` is free-text the agent writes, and this repo's prose is
+ * saturated with `**bold**` file paths — so a tokenizer that only splits on
+ * whitespace-and-quotes lets ordinary markdown emphasis smuggle a denied
+ * surface past the scan (`**src/rules/scope-control.md**` read as ALLOWED
+ * while the same path bare read as DENIED). Both the raw token and its
+ * un-decorated form are emitted, and the edge trim runs AFTER the decoration
+ * strip so an unwrapped `**.github/workflows/ci.yml**` cannot keep a leading
+ * dot in front of the anchored `github/workflows/` match.
+ */
+function denyTokens(text: string): string[] {
+    const out: string[] = [];
+    for (const raw of text.split(/[\s,;()!?"'`]+/)) {
+        if (raw.length === 0) {
+            continue;
+        }
+        for (const candidate of new Set([raw, raw.replace(DECORATION_RE, '')])) {
+            const token = candidate.replace(EDGE_TRIM_RE, '');
+            if (token.length > 0) {
+                out.push(token);
+            }
+        }
+    }
+    return out;
+}
+
+/** Basename stem (no `.md`) of a path-or-id token. */
+function stemOf(token: string): string {
+    const base = token.replace(/\\/g, '/').split('/').pop() ?? token;
+    return base.replace(/\.md$/, '');
+}
+
+/** Dotted settings-key shape — `personal.autonomy`, `tokens.rich_skills`, … */
+const DOTTED_KEY_RE = /^[a-z0-9_]+(\.[a-z0-9_]+)+$/;
+
+/**
+ * The surfaces through which enforcement is actually armed or disarmed. A
+ * workflow file is only ONE of them, and in this repo it is not even the usual
+ * one — a new gate is registered in the taskfiles the workflow calls, and a
+ * tool-call-time guard is armed in the hook manifest. Each entry, and why it
+ * arms enforcement:
+ *
+ *   - `.github/workflows/` — the CI job definitions; deleting a step removes
+ *     the gate from every PR. (The leading dot is stripped by `denyTokens`, so
+ *     the match is on the segment pair, not the dotfile spelling.)
+ *   - `Taskfile.yml` / `taskfiles/*.yml` — the task graph the workflows invoke
+ *     (`task ci`, `task ci-fast`). A gate that is not listed here does not run,
+ *     however green the workflow looks.
+ *   - `src/scripts/hook_manifest.yaml` — the concern↔slot bindings. Unbinding
+ *     a concern disarms a PreToolUse guard without touching the guard's code.
+ *   - `src/scripts/hooks/` — the guard implementations themselves
+ *     (`block_no_verify`, `block_kernel_rule_writes`, `block_config_weakening`).
+ *   - `src/scripts/check_*.ts` / `src/scripts/lint_*.ts` — the gate scripts. A
+ *     loosened threshold or a narrowed scan root disarms the gate in place,
+ *     which is exactly the "gates that scan nothing exit green" failure.
+ *
+ * Deliberately NOT the whole of `src/scripts/`: that would deny nearly every
+ * legitimate repair this loop exists to file.
+ */
+function isCiEnforcementPath(token: string): boolean {
+    const t = token.replace(/\\/g, '/');
+    if (/(^|\/)github\/workflows\//.test(t)) {
+        return true;
+    }
+    if (/(^|\/)Taskfile(\.[a-z0-9_-]+)?\.ya?ml$/i.test(t)) {
+        return true;
+    }
+    if (/(^|\/)taskfiles\//.test(t)) {
+        return true;
+    }
+    if (/(^|\/)hook_manifest\.ya?ml$/.test(t)) {
+        return true;
+    }
+    if (/(^|\/)scripts\/hooks\//.test(t)) {
+        return true;
+    }
+    return /(^|\/)scripts\/(check|lint)_[a-z0-9_]+\.ts$/.test(t);
+}
+
+/**
+ * Is this record's fix aimed at a denied surface? Scans the two fields that
+ * name what the fix should change (`suggested_surface`) and what was observed
+ * (`evidence`). A match errs toward denial on purpose — the cost of a false
+ * positive is a report instead of a patch, still egress; the cost of a false
+ * negative is a patch channel into a safety floor.
+ *
+ * The kernel set resolves from `kernel_rules.ts` — the same canonical source
+ * `block_kernel_rule_writes` uses — never a copy that can drift. Settings
+ * class-C keys are matched against `classCKeys` when the caller can supply
+ * them (parsed from `docs/contracts/settings-classes.md`); the contract file
+ * itself is denied by path regardless, so an unreadable contract narrows the
+ * dynamic check without opening the fence's own definition to patching.
+ */
+export function patchDeniedSurface(
+    record: DefectFinding,
+    opts?: { classCKeys?: ReadonlySet<string> | null },
+): PatchDenial | null {
+    const classCKeys = opts?.classCKeys ?? null;
+    for (const token of denyTokens(`${record.suggested_surface}\n${record.evidence}`)) {
+        // Checked before `ci-enforcement` so a self-repair file that also lives
+        // under an enforcement path (`src/scripts/hooks/self_repair_hook.ts`)
+        // reports the more specific surface. Either way it is denied.
+        if (/self[-_]repair/i.test(token)) {
+            return { surface: 'self-repair-policy', match: token };
+        }
+        if (isCiEnforcementPath(token)) {
+            return { surface: 'ci-enforcement', match: token };
+        }
+        if (token.includes('settings-classes.md')) {
+            return { surface: 'settings-class-c', match: token };
+        }
+        if (is_kernel_rule(token)) {
+            return { surface: 'kernel-rule', match: token };
+        }
+        if (stemOf(token).endsWith('-safety-floor')) {
+            return { surface: 'safety-floor-rule', match: token };
+        }
+        if (classCKeys !== null && DOTTED_KEY_RE.test(token)) {
+            // Exact key first, then every classified ancestor down to the root
+            // segment — a class-C key whose value is a MAP has children that
+            // never appear under the key's own name.
+            const parts = token.split('.');
+            for (let end = parts.length; end > 0; end--) {
+                if (classCKeys.has(parts.slice(0, end).join('.'))) {
+                    return { surface: 'settings-class-c', match: token };
+                }
+            }
+        }
+    }
+    return null;
+}
+
+/** The named refusal the patch/PR path reports. Null = patch path allowed. */
+export function patchDeniedReason(
+    record: DefectFinding,
+    opts?: { classCKeys?: ReadonlySet<string> | null },
+): string | null {
+    const denial = patchDeniedSurface(record, opts);
+    if (denial === null) {
+        return null;
+    }
+    return (
+        `self-repair may not patch a ${denial.surface} surface (matched: ${denial.match}) — ` +
+        'the pull-request path is refused; the record egresses report-only (issue / local record)'
+    );
 }
 
 // ── detectors ──────────────────────────────────────────────────────

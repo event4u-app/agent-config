@@ -317,8 +317,8 @@ Entry-shape contract: [`docs/contracts/CHANGELOG-conventions.md`](docs/contracts
 ### Release highlights
 
 <!-- Curated head: fill before merge, keep it under 10 lines, and leave `_none_` where it is genuinely the answer. The generated log below is unchanged. -->
-- **Behaviour changes:** _auto-derived, rewrite before merge:_ rule/schema diffs, breaking commits or removed public surface in 1a2dd51, 0304406, 1008212.
-- **Default changes + migration:** _auto-derived, rewrite before merge:_ commits naming a default, migration or migrate in 51088bd, 2590391, b7b4cb0.
+- **Behaviour changes:** Always-on orchestration: a five-rung judgment ladder (deterministic script → single lite slice → parallel → team → council) replaces the activation gate — `classifyTask` drops the enabled/auto settings while the emergency halt and the host `subagent_spawn` capability remain, and ambiguity stays an ask verdict (1a2dd51). The activation settings (`subagents.enabled`/`auto`/`host_capabilities`/`budget_routing`, `ai_team.enabled`) leave the template, the zod schema and the settings-classes contract; `emergency.orchestration_halt` is the one surviving switch, and leftover keys warn once per process and are then ignored (0304406). The ADR-217 body link in token-budget-discipline becomes plain text because ADRs never ship into the dist projection, so the link could not resolve there (1008212).
+- **Default changes + migration:** The council's shipped transport default flips `api` → `auto` (CLI-first; explicitly configured modes unchanged), a pass now concludes at majority quorum with absent members carrying reasons, and a machine-readable handoff envelope is emitted — the same commit fixes the CLI-client construction defect that made every default-path CLI member throw (51088bd). The new read-only forensics analyzers ship as a default-off pack (`default_install: false`, surface tier lab) (b7b4cb0). 2590391 is roadmap bookkeeping only — the rule-delivery-integrity roadmap closes and its deferred measurement migrates to a successor roadmap; it changes no consumer-facing default.
 - **Security and correctness:** _none_
 - **Honest nulls:** _none_
 - **Known limitations:** _none_
@@ -383,10 +383,10 @@ Tests: 12438 (+297 since 9.28.0)
 ### Release highlights
 
 <!-- Curated head: fill before merge, keep it under 10 lines, and leave `_none_` where it is genuinely the answer. The generated log below is unchanged. -->
-- **Behaviour changes:** _auto-derived, rewrite before merge:_ rule/schema diffs, breaking commits or removed public surface in 63825ba, 9cd21cb, ae6f30e, 3d684ef, 909235c, 103a22b +2 more.
+- **Behaviour changes:** Two new always-loaded rules land — the self-repair loop (cb8d560) and the council-config-is-user-global fact (36a0e4c) — both later condensed to re-anchor the token baseline (103a22b), and AGENTS.md plus delegation-policy now carry the delegate-by-default and end-review obligations on the surface sessions actually read (63825ba). Settings resolution changes behaviour: the user-global loader now reads the canonical `settings/.agent-settings.yml` the wizard, server and installer write (previously silently inert), the onboarding gate checks the canonical project path so it can actually fire, and `MERGEABLE_KEYS` follows the key migration additively (ae6f30e, recorded as ADR-219). Four capability probes ship (`packs:active`, `settings:get`, `mcp:available`, `brand:status`) and rules are rewritten to name them plus `hooks:status` and the settings resolution chain (909235c, 3d684ef); 9cd21cb only fixes CI (ADR-219 frontmatter, three consumer-path ref-ignore markers) with no behaviour change.
 - **Default changes + migration:** _none_
 - **Security and correctness:** _none_
-- **Honest nulls:** _auto-derived, rewrite before merge:_ commits carrying an honest-null marker in 2837fb7.
+- **Honest nulls:** The SK-2 loaded-but-violated detector resolves its precision question as an honest null: 0 flags over 137 sessions makes precision over the flag set UNDEFINED, not 100%, so a 15-test discrimination proof replaces the number — and only 3 of the 110 skill-obligation lines are mechanically checkable, with the remainder reported uncovered rather than approximated (2837fb7).
 - **Known limitations:** _none_
 
 ### Features
@@ -482,10 +482,10 @@ Tests: 12141 (+391 since 9.27.0)
 ### Release highlights
 
 <!-- Curated head: fill before merge, keep it under 10 lines, and leave `_none_` where it is genuinely the answer. The generated log below is unchanged. -->
-- **Behaviour changes:** _auto-derived, rewrite before merge:_ rule/schema diffs, breaking commits or removed public surface in 6b06006, e82cc1f, b3b5ee7, dd89970.
-- **Default changes + migration:** _auto-derived, rewrite before merge:_ commits naming a default, migration or migrate in 6d1af3a.
+- **Behaviour changes:** Rule frontmatter gains an `obligation_frequency` field — 105 rules declare it with a file:line citation, the nine kernel rules report `unclassified` because the kernel-prefix hash and write guard forbid the edit, and the enforcement-coverage join now runs per hook-capable platform (dd89970); the obligation citations themselves shrink from quoted sentences to line pointers across the always-loaded surface after the +5% cost cliff fired (e82cc1f). The session-canary carrier is re-bound into two hook slots (full contract at `session_start`, a one-line beat per `user_prompt_submit`) and three rules scope their enforcement claims to the hosts whose slots can actually carry them (b3b5ee7); a second conformance audit is recorded in the rule — the carrier fires, compliance did not follow (24 of 29 task starts dropped the greeting) — and ui-audit-gate plus design-review-after-ui-write now declare `enforced_by: none` in frontmatter where their prose already said it (6b06006).
+- **Default changes + migration:** An absent-vs-default audit found nine settings keys where an absent value does not resolve to the template default — sharpest is `quality.local_auto_run`, where omitting the key silently disarms the gate the template arms; all nine are carved out as documented divergences read from the live template at emit time rather than fixed at their readers, so no migration is required and no default value changes (6d1af3a).
 - **Security and correctness:** _none_
-- **Honest nulls:** _auto-derived, rewrite before merge:_ commits carrying an honest-null marker in 8e6765b, 6208186, f60bd6a.
+- **Honest nulls:** The orchestration dispatch backfill (39 metric-bearing dispatches across 103 sessions) resolves to an honest null — every family verdict flips with the choice of baseline, both gate inputs are unmeasurable without a counterfactual, and telemetry capture ran at 0.27% (8e6765b); the pre-registered sibling claim orchestration-observed-dispatch-cost was resolved to the same null the day it was registered (6208186). The parallel-session-coordination archive records a further null: all 71 TTL records came from a single host, so no per-host TTL table could be derived and none was invented (f60bd6a).
 - **Known limitations:** _none_
 
 ### Features

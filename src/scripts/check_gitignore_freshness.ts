@@ -17,6 +17,7 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
+import { GateLedger, LedgerUsageError } from './_lib/gate_ledger.js';
 import { assertScanned, DeadScopeError } from './_lib/scan_scope.js';
 
 const _HERE = fileURLToPath(import.meta.url);
@@ -108,15 +109,48 @@ function main(argv?: readonly string[]): number {
 
     const missing: string[] = [];
 
-    for (const e of entries) {
-        if (e.policy !== 'ignored') continue;
-        if (e.scope !== 'consumer' && e.scope !== 'both') continue;
-        // Carve-out negations (path starts with !) are separately tracked
-        if (e.path.startsWith('!')) continue;
-        if (!blockLines.has(e.path)) {
-            missing.push(e.path);
+    // Per-entry completeness. Three of the four decisions below used to be bare
+    // `continue`s, so an entry whose `policy`/`scope` line failed to parse read
+    // as "correctly out of scope" and the success line still counted the rest.
+    // Each is now a recorded outcome with a reason, and the count printed below
+    // is the ledger's, not a second independent filter over the same list.
+    const ledger = new GateLedger('check_gitignore_freshness');
+    try {
+        ledger.plan(entries.map((e) => e.path));
+
+        for (const e of entries) {
+            if (e.policy !== 'ignored') {
+                ledger.outOfScope(e.path, 'not_applicable_kind');
+                continue;
+            }
+            if (e.scope !== 'consumer' && e.scope !== 'both') {
+                ledger.outOfScope(e.path, 'not_applicable_kind');
+                continue;
+            }
+            // Carve-out negations (path starts with !) are separately tracked
+            if (e.path.startsWith('!')) {
+                ledger.outOfScope(e.path, 'declared_exemption');
+                continue;
+            }
+            if (!blockLines.has(e.path)) {
+                missing.push(e.path);
+                ledger.fail(e.path, 'absent from gitignore-block.txt');
+            } else {
+                ledger.complete(e.path);
+            }
         }
+    } catch (err) {
+        // A path listed twice in the manifest makes the denominator wrong in the
+        // direction that hides work, so the ledger refuses it. That is a manifest
+        // defect, not a missing gitignore line: exit 2 ("the gate could not run"),
+        // never 1.
+        if (err instanceof LedgerUsageError) {
+            process.stderr.write(`❌  ${path.relative(REPO_ROOT, MANIFEST)}: ${err.message}\n`);
+            return 2;
+        }
+        throw err;
     }
+    const tally = ledger.report();
 
     if (missing.length > 0) {
         process.stdout.write(
@@ -134,7 +168,7 @@ function main(argv?: readonly string[]): number {
 
     if (!quiet) {
         process.stdout.write(
-            `✅  gitignore-block.txt covers all ${entries.filter((e) => e.policy === 'ignored' && (e.scope === 'consumer' || e.scope === 'both')).length} consumer-scoped ignored paths.\n`,
+            `✅  gitignore-block.txt covers all ${tally.completed + tally.failed} consumer-scoped ignored paths.\n`,
         );
     }
     return 0;

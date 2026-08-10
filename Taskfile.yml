@@ -149,6 +149,7 @@ tasks:
       - task: validate-agent-settings
       - task: lint-settings-classes
       - task: lint-no-activation-gates
+      - task: lint-rule-enforcement-declaration
       - task: report-imperative-density
       - task: smoke-quickstart
       - task: check-examples-shape

@@ -44,6 +44,8 @@ import { fileURLToPath } from "node:url";
 
 import { parse as parseYaml } from "yaml";
 
+// Single-quoted on purpose: check_gate_completeness detects ledger adoption by this exact import form.
+import { GateLedger } from './_lib/gate_ledger.js';
 import { reportScanned } from "./_lib/scan_scope.js";
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
@@ -134,6 +136,24 @@ export function main(argv: string[] = process.argv.slice(2)): number {
         }
       : {}),
   });
+
+  // Per-source completeness: every bundled source reaches exactly one outcome
+  // (fresh or stale), so a source silently dropped from the mtime sweep could
+  // not read as a pass. Nothing to plan when no self-hosted bundle exists.
+  if (!r.skipped) {
+    const ledger = new GateLedger("check_hook_bundle_freshness");
+    const sources = bundledSources(root);
+    ledger.plan(sources);
+    const staleSet = new Set(r.stale.map((s) => s.file));
+    for (const file of sources) {
+      if (staleSet.has(file)) {
+        ledger.fail(file, "source is newer than the built bundle");
+      } else {
+        ledger.complete(file);
+      }
+    }
+    ledger.report();
+  }
 
   // A gate that scans nothing must SAY it scanned nothing — a silent green
   // here is indistinguishable from a pass.

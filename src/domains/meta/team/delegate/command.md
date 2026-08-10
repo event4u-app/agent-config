@@ -1,6 +1,7 @@
 ---
 model_tier: inherit
 name: team-delegate
+type: orchestrator
 disable-model-invocation: true
 argument-hint: "<task>"
 pack: meta

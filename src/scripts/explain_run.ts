@@ -19,6 +19,14 @@
  *   4. Subagent dispatches in window — mode, tiers, token deltas,
  *      first_pass_success/escalated. Source: same audit-log-v1 files,
  *      `orchestration` sub-object.
+ *   4b. (opt-in via `--decision "<task text>"`) Dispatch-decision trace —
+ *      the judgment-ladder rung taken, every rung rejected with its
+ *      detector's own reason (why-not-team / why-not-council /
+ *      why-no-spawn), and the token/cost estimate from the most recent
+ *      matching orchestration-telemetry record. No record in window → an
+ *      honest "no telemetry record" line, never a fabricated estimate.
+ *      Sources: `_lib/judgment_ladder.ts::explainLadder` + the same
+ *      audit-log-v1 files as §4.
  *   5. Hook / loop / freshness state snapshot. Source:
  *      `agents/state/context-hygiene.json` (the code path the hook
  *      actually writes — see `context_hygiene_hook.ts::STATE_FILE`) or
@@ -39,7 +47,10 @@
  *   ./scripts-run src/scripts/explain_run \
  *     [--task <id>] [--since <ISO-8601>] \
  *     [--router <path>] [--audit-dir <path>] [--engagement <path>] \
- *     [--hygiene <path>] [--output <path>]
+ *     [--hygiene <path>] [--output <path>] \
+ *     [--decision "<task text>"] [--size-estimate <n>] [--slices <n>] \
+ *     [--ordered-plan] [--agent-teams] [--halted] [--no-spawn-primitive] \
+ *     [--inside-subagent] [--approval-required]
  *
  * Defaults: --router dist/router.json · --audit-dir agents/runtime/state/audit
  * · --engagement .agent-engagement.jsonl · --hygiene tries
@@ -51,6 +62,7 @@ import * as path from 'node:path';
 import { pathToFileURL } from 'node:url';
 
 import { EngagementSchemaError, parse_event, type EngagementEvent } from '../agent-src/templates/scripts/telemetry/engagement.js';
+import { explainLadder, type LadderExplanation, type LadderInputs } from './_lib/judgment_ladder.js';
 import { readAuditLines } from './orchestration_savings_report.js';
 
 // ── CLI ──────────────────────────────────────────────────────────────────
@@ -76,7 +88,48 @@ export interface Options {
     engagement: string;
     hygiene: string | null;
     output: string | null;
+    /**
+     * Dispatch-decision task text (§4b); null/absent → the section is not
+     * rendered. Optional (with the flags below) so pre-existing callers
+     * constructing `Options` literals stay source-compatible.
+     */
+    decision?: string | null;
+    /** Ladder signal flags — map 1:1 onto `LadderInputs`; nothing is inferred. */
+    sizeEstimate?: number;
+    slices?: number;
+    orderedPlan?: boolean;
+    agentTeams?: boolean;
+    halted?: boolean;
+    noSpawnPrimitive?: boolean;
+    insideSubagent?: boolean;
+    approvalRequired?: boolean;
 }
+
+const USAGE = `usage: explain_run [--task <id>] [--since <ISO-8601>] [--output <path>]
+                   [--decision "<task text>"] [--size-estimate <int>] [--slices <int>]
+                   [--ordered-plan] [--agent-teams] [--halted] [--no-spawn-primitive]
+                   [--inside-subagent] [--approval-required]
+
+Window:
+  --task <id>            restrict to one task id in the audit log
+  --since <ISO-8601>     cutoff timestamp / date
+  --output <path>        write the report to a file instead of stdout
+
+Dispatch decision (all optional; absent --decision omits the section):
+  --decision <text>      classify this task text through the judgment ladder and
+                         render the rung taken, the rungs rejected with their
+                         detector's reason, and the rungs never reached
+  --size-estimate <int>  size signal; at or below the floor nothing delegates
+  --slices <int>         number of independent slices
+  --ordered-plan         the slices are ordered, not independent
+  --agent-teams          the host reports the agent_teams capability
+  --halted               emergency.orchestration_halt is set
+  --no-spawn-primitive   the host has no subagent_spawn primitive
+  --inside-subagent      classification runs inside a subagent (recursive guard)
+  --approval-required    a human decision is pending; resolves before every rung
+
+Exit: 0 report rendered · 2 bad argument.
+`;
 
 function parseArgs(argv: string[]): Options {
     const opts: Options = {
@@ -87,6 +140,23 @@ function parseArgs(argv: string[]): Options {
         engagement: DEFAULT_ENGAGEMENT,
         hygiene: null,
         output: null,
+        decision: null,
+        sizeEstimate: 0,
+        slices: 0,
+        orderedPlan: false,
+        agentTeams: false,
+        halted: false,
+        noSpawnPrimitive: false,
+        insideSubagent: false,
+        approvalRequired: false,
+    };
+    const intValue = (flag: string, raw: string | undefined): number => {
+        const n = Number(raw);
+        if (raw === undefined || raw === '' || !Number.isInteger(n)) {
+            process.stderr.write(`explain_run: ${flag} requires an integer, got: ${raw ?? '(missing)'}\n`);
+            process.exit(2);
+        }
+        return n;
     };
     for (let i = 0; i < argv.length; i++) {
         const a = argv[i];
@@ -106,8 +176,38 @@ function parseArgs(argv: string[]): Options {
         else if (a.startsWith('--hygiene=')) opts.hygiene = a.slice('--hygiene='.length);
         else if (a === '--output') opts.output = next() ?? opts.output;
         else if (a.startsWith('--output=')) opts.output = a.slice('--output='.length);
-        else {
-            process.stderr.write(`explain_run: unrecognized argument: ${a}\n`);
+        else if (a === '--decision') {
+            const v = next();
+            // Exit rather than no-op: silently dropping the value produced a full
+            // report with the dispatch section absent and exit 0, so a typo read
+            // as "this run had no dispatch decision". `--size-estimate` already
+            // exits 2 on the same mistake; the flags now behave alike.
+            if (v === undefined || v === '') {
+                process.stderr.write('explain_run: --decision requires a value (the task text to classify)\n');
+                process.exit(2);
+            }
+            opts.decision = v;
+        } else if (a.startsWith('--decision=')) opts.decision = a.slice('--decision='.length);
+        else if (a === '--size-estimate') opts.sizeEstimate = intValue('--size-estimate', next());
+        else if (a.startsWith('--size-estimate=')) opts.sizeEstimate = intValue('--size-estimate', a.slice('--size-estimate='.length));
+        else if (a === '--slices') opts.slices = intValue('--slices', next());
+        else if (a.startsWith('--slices=')) opts.slices = intValue('--slices', a.slice('--slices='.length));
+        else if (a === '--ordered-plan') opts.orderedPlan = true;
+        else if (a === '--agent-teams') opts.agentTeams = true;
+        else if (a === '--halted') opts.halted = true;
+        else if (a === '--no-spawn-primitive') opts.noSpawnPrimitive = true;
+        else if (a === '--inside-subagent') opts.insideSubagent = true;
+        else if (a === '--approval-required') opts.approvalRequired = true;
+        else if (a === '--help' || a === '-h') {
+            process.stdout.write(USAGE);
+            process.exit(0);
+        } else {
+            // The usage text goes to stderr with the error, so a typo shows the
+            // whole surface rather than only the rejected token. Nine of these
+            // flags landed at once (the dispatch-decision trace); a script whose
+            // only discovery path is reading its source is a script whose flags
+            // do not exist for the person at the terminal.
+            process.stderr.write(`explain_run: unrecognized argument: ${a}\n\n${USAGE}`);
             process.exit(2);
         }
     }
@@ -486,6 +586,104 @@ function renderOrchestrationSection(opts: Options, auditDirExists: boolean, disp
     return out;
 }
 
+// ── Dispatch-decision trace (§4b — judgment ladder + telemetry estimate) ─
+
+/** Map the CLI signal flags 1:1 onto `LadderInputs` — nothing inferred. */
+export function ladderInputsFromOptions(opts: Options): LadderInputs {
+    return {
+        taskText: opts.decision ?? '',
+        signals: {
+            size_estimate: opts.sizeEstimate ?? 0,
+            independent_slices: opts.slices ?? 0,
+            ordered_plan: opts.orderedPlan ?? false,
+        },
+        activation: { halted: opts.halted ?? false, subagent_spawn: !(opts.noSpawnPrimitive ?? false) },
+        agentTeams: opts.agentTeams ?? false,
+        interactiveApprovalRequired: opts.approvalRequired ?? false,
+        insideSubagentSession: opts.insideSubagent ?? false,
+    };
+}
+
+/** Most recent dispatch line by `ts` (undefined ts sorts oldest). */
+export function latestDispatch(dispatches: ExplainAuditLine[]): ExplainAuditLine | null {
+    let latest: ExplainAuditLine | null = null;
+    let latestTs = Number.NEGATIVE_INFINITY;
+    for (const line of dispatches) {
+        const t = line.ts === undefined ? Number.NEGATIVE_INFINITY : Date.parse(line.ts);
+        const ts = Number.isFinite(t) ? t : Number.NEGATIVE_INFINITY;
+        if (latest === null || ts >= latestTs) {
+            latest = line;
+            latestTs = ts;
+        }
+    }
+    return latest;
+}
+
+function renderDecisionSection(
+    opts: Options,
+    explanation: LadderExplanation,
+    auditDirExists: boolean,
+    dispatches: ExplainAuditLine[],
+): string[] {
+    const out: string[] = [];
+    out.push('## Dispatch decision (judgment ladder)');
+    out.push(
+        `_Source: \`src/scripts/_lib/judgment_ladder.ts\` (\`explainLadder\`) over the \`--decision\` text + signal flags; token/cost estimate from \`${opts.auditDir}/*.jsonl\` orchestration telemetry_`,
+    );
+    out.push('');
+    out.push(`Decision text: ${JSON.stringify(opts.decision ?? '')}`);
+    const r = explanation.result;
+    const rungLabel = r.rung === null ? '∅ (never spawns)' : String(r.rung);
+    const modeSuffix = r.mode !== undefined && r.mode !== null ? ` (mode ${r.mode})` : '';
+    const degradedSuffix = r.degraded_from !== undefined ? ` [degraded from rung ${r.degraded_from}]` : '';
+    out.push(`Resolved: rung ${rungLabel} — verdict \`${r.verdict}\`${modeSuffix}${degradedSuffix} — ${r.reason}`);
+    out.push('');
+    out.push('### Ladder trail (priority order 0 → 4 → 3 → 2 → 1)');
+    out.push('');
+    out.push('| rung | resolves to | status | reason |');
+    out.push('|---|---|---|---|');
+    for (const step of explanation.trail) {
+        out.push(`| ${step.rung} | ${step.resolves_to} | ${step.status} | ${step.reason} |`);
+    }
+    if (explanation.no_spawn_reason !== undefined) {
+        out.push('');
+        out.push(`Why no spawn: ${explanation.no_spawn_reason}`);
+    }
+    out.push('');
+    out.push('### Token/cost estimate');
+    if (!auditDirExists) {
+        out.push(`no telemetry record — \`${opts.auditDir}\` absent; no token/cost estimate (a fabricated number would be worse than none)`);
+        return out;
+    }
+    const latest = latestDispatch(dispatches);
+    if (latest === null) {
+        out.push(`no telemetry record matches ${windowLabel(opts)}; no token/cost estimate (a fabricated number would be worse than none)`);
+        return out;
+    }
+    const o = latest.orchestration ?? {};
+    // NOT matched to this decision, and the label must say so. The record shape
+    // carries no key that ties a line to a decision text — `latestDispatch` sorts
+    // by `ts` alone — so calling it "matching" made an unrelated run's cost read
+    // as this decision's estimate, in a section whose own header promises never
+    // to fabricate one. Printing it is still useful (it is the freshest real
+    // measurement on this host); claiming correspondence was the defect.
+    out.push(
+        `most recent dispatch in ${windowLabel(opts)} — NOT matched to this decision ` +
+            `(the record carries no decision key; sorted by ts alone): ` +
+            `ts ${latest.ts ?? '(unset)'}, work_id ${latest.work_id ?? '(unset)'}, ` +
+            `token_delta ${o.token_delta ?? 0} (${o.token_delta_provenance ?? 'estimated'}), ` +
+            `mode ${o.dispatch_mode ?? '(unset)'}, tiers ${(o.tiers ?? []).join(',') || '(unset)'}`,
+    );
+    const resolved = explanation.result.verdict;
+    const recordMode = o.dispatch_mode;
+    if (recordMode !== undefined && resolved === 'in-session') {
+        out.push(
+            `  ⚠️  this decision resolves to \`${resolved}\` (no dispatch), so the mode above describes a different run.`,
+        );
+    }
+    return out;
+}
+
 function renderHygieneSection(hygiene: HygieneReadResult): string[] {
     const out: string[] = [];
     out.push('## Hook / loop state (context-hygiene)');
@@ -568,6 +766,10 @@ export function buildReport(opts: Options): string {
     out.push('');
     out.push(...renderOrchestrationSection(opts, auditDirExists, dispatches));
     out.push('');
+    if (opts.decision !== null && opts.decision !== undefined) {
+        out.push(...renderDecisionSection(opts, explainLadder(ladderInputsFromOptions(opts)), auditDirExists, dispatches));
+        out.push('');
+    }
     out.push(...renderHygieneSection(hygiene));
     out.push('');
     out.push(...renderParkedSection());

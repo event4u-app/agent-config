@@ -114,7 +114,7 @@ export function reasonIsStated(reason: string): boolean {
 }
 
 /** One measured layer. */
-interface LayerMeasure {
+export interface LayerMeasure {
     readonly label: string;
     readonly dir: string;
     readonly files: number;
@@ -122,17 +122,66 @@ interface LayerMeasure {
     readonly exact: boolean;
 }
 
-function measureLayer(label: string, dir: string): LayerMeasure | null {
-    const layer = rule_layer_overlap.readRuleLayer(dir);
-    if (layer === null) return null;
-    const joined = [...layer.files.values()].join('\n');
-    const m = measure(joined);
+function measureFiles(label: string, dir: string, files: ReadonlyMap<string, string>): LayerMeasure {
+    const m = measure([...files.values()].join('\n'));
+    return { label, dir, files: files.size, tokens: m.tokens_gpt, exact: m.tokens_gpt_exact };
+}
+
+/**
+ * The one measurement both the gate (`main` below) and the doctor surface
+ * (`routing_doctor`) consume — per-layer rule tokens, the overlap between the
+ * two layers, and which input the numbers came from. Exported so the doctor
+ * reuses it instead of growing a second, drifting copy.
+ */
+export interface StandingDeliveryMeasure {
+    /** Which input produced the numbers — see `instructionsLoadedRecord`. */
+    readonly input: 'instructions-loaded' | 'filesystem';
+    readonly layers: readonly LayerMeasure[];
+    /** Sum over present layers — what the session receives under the host's no-dedup contract. */
+    readonly received_tokens: number;
+    /** Rules present in BOTH layers (basename match). */
+    readonly overlap_rules: number;
+    readonly duplicate_rules: number;
+    readonly divergent_rules: number;
+    /** Tokens of the project-layer copies of overlapping rules — the doubled delivery. */
+    readonly overlap_tokens: number;
+    readonly exact: boolean;
+}
+
+/** Measure both layers once. `null` when neither directory exists (nothing installed). */
+export function measureStandingDelivery(
+    global_dir: string,
+    project_dir: string,
+    record_path: string,
+): StandingDeliveryMeasure | null {
+    const g = rule_layer_overlap.readRuleLayer(global_dir);
+    const p = rule_layer_overlap.readRuleLayer(project_dir);
+    if (g === null && p === null) return null;
+    const layers: LayerMeasure[] = [];
+    if (g !== null) layers.push(measureFiles('global', global_dir, g.files));
+    if (p !== null) layers.push(measureFiles('project', project_dir, p.files));
+    let overlap_rules = 0;
+    let duplicate_rules = 0;
+    let divergent_rules = 0;
+    let overlap_tokens = 0;
+    if (g !== null && p !== null) {
+        const r = rule_layer_overlap.compareLayers(g.files, p.files);
+        overlap_rules = r.overlap.length;
+        duplicate_rules = r.duplicate.length;
+        divergent_rules = r.divergent.length;
+        if (r.overlap.length > 0) {
+            overlap_tokens = measure(r.overlap.map((n) => p.files.get(n) ?? '').join('\n')).tokens_gpt;
+        }
+    }
     return {
-        label,
-        dir,
-        files: layer.files.size,
-        tokens: m.tokens_gpt,
-        exact: m.tokens_gpt_exact,
+        input: fs.existsSync(record_path) ? 'instructions-loaded' : 'filesystem',
+        layers,
+        received_tokens: layers.reduce((n, l) => n + l.tokens, 0),
+        overlap_rules,
+        duplicate_rules,
+        divergent_rules,
+        overlap_tokens,
+        exact: layers.every((l) => l.exact),
     };
 }
 
@@ -185,10 +234,12 @@ export function main(argv: readonly string[] = process.argv.slice(2)): number {
         return 1;
     }
 
-    const layers = [
-        measureLayer('global', path.join(os.homedir(), '.claude', 'rules')),
-        measureLayer('project', path.join(REPO_ROOT, '.claude', 'rules')),
-    ].filter((l): l is LayerMeasure => l !== null);
+    const measured = measureStandingDelivery(
+        path.join(os.homedir(), '.claude', 'rules'),
+        path.join(REPO_ROOT, '.claude', 'rules'),
+        instructionsLoadedRecord(REPO_ROOT),
+    );
+    const layers = measured?.layers ?? [];
 
     const scanned = layers.reduce((n, l) => n + l.files, 0);
     // Two zeroes that mean opposite things, and conflating them is how this gate
@@ -202,7 +253,7 @@ export function main(argv: readonly string[] = process.argv.slice(2)): number {
     // - **A layer directory that exists and holds no `.md`** — a projection that
     //   ran and produced nothing. That is blindness, not cleanliness, and it
     //   stays exit 3.
-    const no_layer_present = layers.length === 0;
+    const no_layer_present = measured === null;
     try {
         assertScanned({
             gate: PROG,
@@ -239,10 +290,7 @@ export function main(argv: readonly string[] = process.argv.slice(2)): number {
         return 0;
     }
 
-    const record = instructionsLoadedRecord(REPO_ROOT);
-    const input = fs.existsSync(record) ? 'instructions-loaded' : 'filesystem';
-    const total = layers.reduce((n, l) => n + l.tokens, 0);
-    const exact = layers.every((l) => l.exact);
+    const { input, received_tokens: total, exact } = measured;
 
     out(`${PROG} · input: ${input} · ${method_note()}\n`);
     if (input === 'filesystem') {
@@ -256,18 +304,11 @@ export function main(argv: readonly string[] = process.argv.slice(2)): number {
         out(`  ${l.label.padEnd(8)} ${String(l.files).padStart(4)} file(s)  ${String(l.tokens).padStart(8)} tok\n`);
     }
 
-    if (layers.length === 2) {
-        const g = rule_layer_overlap.readRuleLayer(layers[0]!.dir);
-        const p = rule_layer_overlap.readRuleLayer(layers[1]!.dir);
-        if (g !== null && p !== null) {
-            const r = rule_layer_overlap.compareLayers(g.files, p.files);
-            if (r.overlap.length > 0) {
-                out(
-                    `  overlap  ${String(r.overlap.length).padStart(4)} rule(s) in both layers `
-                        + `(${r.duplicate.length} duplicate, ${r.divergent.length} divergent)\n`,
-                );
-            }
-        }
+    if (measured.overlap_rules > 0) {
+        out(
+            `  overlap  ${String(measured.overlap_rules).padStart(4)} rule(s) in both layers `
+                + `(${measured.duplicate_rules} duplicate, ${measured.divergent_rules} divergent)\n`,
+        );
     }
 
     const pct = total / budget.total_cap_tokens;
