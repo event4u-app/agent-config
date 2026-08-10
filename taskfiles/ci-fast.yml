@@ -614,6 +614,16 @@ tasks:
     desc: "Per-spawn preamble payload ratchet — the deterministic in-repo payload (project-scope rules + skills catalog + project CLAUDE.md) may not grow past the pinned baseline + headroom. Every token here is re-written on EVERY subagent spawn, so growth is paid per spawn (road-to-cache-economy Phase 3, unblocked by C-3 at 38.0%)"
     cmd: ./scripts-run src/scripts/check_preamble_payload_budget
 
+  check-static-layer-stability:
+    silent: true
+    desc: "Static-layer hygiene lint — machine-volatile markers (home paths, uuid-shaped ids) in the NON-kernel always-loaded layer; the kernel prefix keeps its own drift guard. Phase-1 null downgraded the cache-ordering phase to exactly this lint (road-to-token-economy-cache 2.2; spike: agents/settings/contexts/cache-injection-anatomy.md)"
+    cmd: ./scripts-run src/scripts/check_static_layer_stability
+
+  bench-hook-injection:
+    silent: true
+    desc: "Hook-injection byte budget gate — every concern's emitted reason/additional_context/context bytes vs src/config/hook-token-budget.json (the latency budget's twin); an emitting concern over its row is a red build (road-to-token-economy-cache 3.2)"
+    cmd: ./scripts-run src/scripts/bench_hook_injection
+
   check-memory-replay:
     silent: true
     desc: "Memory-retrieval replay regression — the corpus-derived replay set's payload must stay within +5% of the pinned baseline (inert until internal/bench/reports/memory-retrieval-baseline.json exists; road-to-memory-retrieval-economy Phase 0)"

@@ -203,6 +203,23 @@ For each open step in the working set (scope-bound — see wrapper):
 
    Anti-pattern: `view step` → think → `view file A` → think →
    `view file B`. That's 3 round-trips for what should be 1.
+
+   Fire/no-fire pair (falsifiable — the discriminator is whether a
+   call's *input* depends on another call's *output*, never the count):
+
+   - **Fires (batch these):** a step says "update the hook, its test,
+     and the manifest entry" → `view src/scripts/hooks/foo_hook.ts` +
+     `view tests/scripts/foo_hook.test.ts` +
+     `view src/scripts/hook_manifest.yaml` are three independent reads
+     whose paths are all known BEFORE the first call — dispatch all
+     three in ONE parallel block. Issuing them serially is the
+     violation: each extra round-trip re-transmits the accumulated
+     context as input for zero new information.
+   - **Does NOT fire (stays serial):** `grep -rn "buildAdvisoryLine"
+     src/` → then `view <the file the grep found>`. The second call's
+     path IS the first call's output — batching would mean guessing the
+     path, and a guessed read is worse than a round-trip. Dependent
+     calls stay serial; only the independent remainder batches.
 2. Analyze the codebase for what the step requires.
 3. Decide and act — implement. **No "should I implement this?" prompt.**
 4. **Open question handling:**
