@@ -54,8 +54,9 @@ import {
 import * as hooks_status from "./hooks_status.js";
 import { load_agent_settings } from "./_lib/agent_settings.js";
 import {
-  probeHostCapabilities,
+  describeHostCapabilities,
   type HostCapabilityManifest,
+  type HostCapabilitySources,
 } from "./_lib/host_capability.js";
 import {
   classifyLookup,
@@ -124,6 +125,17 @@ export interface OrchestrationReport {
    */
   host_platform: string;
   host_platform_assumed: boolean;
+  /**
+   * Per-field provenance for `host_manifest` — `registry` (a committed
+   * observation about this host), `live-probe` (established in this process),
+   * or `default` (nothing answered; the all-false safe default applied).
+   *
+   * Without it the six booleans read alike, and `false` cannot be told apart
+   * from "no answer". That distinction is the whole difference between "this
+   * host cannot spawn subagents" and "nobody has ever checked this host" —
+   * and this command is the one a user runs precisely to find out which.
+   */
+  host_manifest_sources: HostCapabilitySources;
   /** Verdict of the real activation gate for a canonical delegable probe. */
   activation: { action: string; reason: string };
   cost_budgets: Record<string, unknown>;
@@ -326,7 +338,8 @@ export function collect_orchestration(
   const emergency = (settings["emergency"] ?? {}) as Record<string, unknown>;
   const halted = emergency["orchestration_halt"] === true;
   const downshift = sub["downshift"] !== false;
-  const host_manifest = probeHostCapabilities(platform);
+  const { manifest: host_manifest, sources: host_manifest_sources } =
+    describeHostCapabilities(platform);
   const activationInputs: ActivationInputs = {
     halted,
     subagent_spawn: host_manifest.subagent_spawn,
@@ -372,6 +385,7 @@ export function collect_orchestration(
     host_manifest,
     host_platform: platform,
     host_platform_assumed: platform_assumed,
+    host_manifest_sources,
     activation: { action: probe.action, reason: probe.reason },
     cost_budgets,
     ledger_present,
@@ -611,6 +625,15 @@ function _render(report: DoctorReport): string {
         `and the capability registry is keyed on it. Pass --platform <host> to check another.`,
     );
   }
+  const provenanceBits = Object.entries(o.host_manifest_sources).map(
+    ([field, src]) =>
+      `${field}=${o.host_manifest[field as keyof HostCapabilityManifest]}(${src})`,
+  );
+  lines.push(`  capability provenance: ${provenanceBits.join(" · ")}`);
+  lines.push(
+    `  registry = committed observation about this host, not a live check · ` +
+      `default = nobody answered, rendered as false`,
+  );
   const tierBits = Object.entries(o.tier_budgets).map(([t, s]) => {
     const cap = s.ceiling_usd === null ? "no cap" : `$${s.ceiling_usd}`;
     const cool = s.cooldown_until_ms > 0 ? " COOLING" : "";

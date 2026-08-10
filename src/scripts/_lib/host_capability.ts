@@ -31,6 +31,11 @@
  * parameter stays for back-compat (tests, and any caller that genuinely has a
  * host-knowledge object of its own) — no production caller passes a
  * settings-derived value into it any more.
+ *
+ * `describeHostCapabilities` (road-to-capability-answerability Phase 1.2) is
+ * the same resolution plus per-field provenance, because five of the six
+ * fields come from a committed table rather than from any live check and the
+ * `probe*` name says otherwise.
  */
 import process from 'node:process';
 
@@ -196,4 +201,78 @@ export function probeHostCapabilities(hostId: string | null | undefined): HostCa
     const flag = process.env.CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS;
     const probedAgentTeams = typeof flag === 'string' && flag !== '';
     return { ...base, agent_teams: base.agent_teams || probedAgentTeams };
+}
+
+/** Every manifest field that carries a capability answer (i.e. not `schema_version`). */
+export type CapabilityField = Exclude<keyof HostCapabilityManifest, 'schema_version'>;
+
+/**
+ * Where one field's resolved value came from.
+ *
+ * `registry` is deliberately NOT called "detected": a registry row is a
+ * capability this repo OBSERVED on that host once and then committed to a
+ * hardcoded table. It is an assertion about the host, checked at authoring
+ * time and never re-checked at run time. `live-probe` is the only value that
+ * was established in THIS process, from the environment. `default` means
+ * nothing answered and the all-false safe default applied.
+ */
+export type CapabilitySource = 'registry' | 'live-probe' | 'default';
+
+/** Per-field provenance for a resolved manifest. */
+export type HostCapabilitySources = Record<CapabilityField, CapabilitySource>;
+
+export interface HostCapabilityDescription {
+    manifest: HostCapabilityManifest;
+    sources: HostCapabilitySources;
+}
+
+const CAPABILITY_FIELDS: readonly CapabilityField[] = [
+    'subagent_spawn',
+    'parallel_spawn',
+    'status_polling',
+    'separate_quota_pool',
+    'agent_teams',
+    'worker_respawn',
+];
+
+/**
+ * Resolve the manifest AND say, per field, what answered it.
+ *
+ * `probeHostCapabilities` returns six booleans that look alike and are not:
+ * on the one host with a registry row, two of them come from a committed
+ * table, one can come from a live environment read, and the rest are the
+ * safe default — i.e. "we have no answer", rendered as `false`, which is
+ * indistinguishable from "we checked and it is absent". A caller deciding
+ * whether to trust `subagent_spawn: false` needs that difference, and the
+ * function name `probe*` actively suggests the wrong one.
+ *
+ * The manifest half delegates to {@link probeHostCapabilities} rather than
+ * re-deriving it, so a provenance readout can never disagree with the value
+ * the delegation layer actually gated on — the same
+ * two-readers-of-one-fact failure `routing_doctor` already records against
+ * its own pre-registry bug.
+ */
+export function describeHostCapabilities(
+    hostId: string | null | undefined,
+): HostCapabilityDescription {
+    const manifest = probeHostCapabilities(hostId);
+    const row =
+        hostId !== null && hostId !== undefined ? HOST_CAPABILITY_REGISTRY[hostId] : undefined;
+    const flag = process.env.CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS;
+    const probedAgentTeams = typeof flag === 'string' && flag !== '';
+
+    const sources = {} as HostCapabilitySources;
+    for (const field of CAPABILITY_FIELDS) {
+        // A row entry claims the field whatever its value: an explicit
+        // `false` in the table is an observation ("checked, absent"), which is
+        // a different fact from the default's "nobody answered".
+        if (row !== undefined && typeof row[field] === 'boolean') {
+            sources[field] = 'registry';
+        } else if (field === 'agent_teams' && probedAgentTeams) {
+            sources[field] = 'live-probe';
+        } else {
+            sources[field] = 'default';
+        }
+    }
+    return { manifest, sources };
 }
