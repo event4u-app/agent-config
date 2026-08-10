@@ -22,6 +22,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import { assertWatchlistResolves, DeadScopeError } from './_lib/scan_scope.js';
 
+// ledger-exempt: single-artefact prose scan — the whole corpus is the one file README.md, and every hit is a line offset inside it that the failure output already prints in full; there is no enumerated target collection whose members could be silently continued past, and the file-absent / wrong-cwd case is a hard failure via assertWatchlistResolves rather than a green run over zero targets.
 const _HERE = fileURLToPath(import.meta.url);
 
 const README = 'README.md';

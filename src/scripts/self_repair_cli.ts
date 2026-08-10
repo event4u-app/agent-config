@@ -34,12 +34,15 @@ import {
     chooseEgress,
     type DefectRecord,
     type EgressCapability,
+    type EgressChoice,
     type EgressRoute,
     egressBlockedReason,
+    patchDeniedReason,
     type PushVia,
     renderReport,
     sanitizeEvidence,
 } from './_lib/self_repair.js';
+import { buildSettingsClassIndex, parseSettingsClassRows } from '../shared/settingsClasses.js';
 import {
     attachReleaseErrors,
     listRecords,
@@ -177,21 +180,61 @@ export interface ReleasePlan {
     route: EgressRoute;
     pushVia: PushVia | null;
     blocked: string | null;
+    /**
+     * Non-null when the record targets a may-not-modify surface (kernel rules,
+     * safety floors, settings class C, CI enforcement, self-repair's own
+     * policy/code): the patch/PR path is refused with this reason and the
+     * route degrades to report-only. Detection and the issue path stay open.
+     */
+    patch_denied: string | null;
     title: string;
     body: string;
 }
 
+/**
+ * Class-C settings keys from the contract in the agent-config checkout, for
+ * the deny-list's dynamic key match. `null` when there is no checkout or the
+ * contract is unreadable — the deny-list's static path matches still apply.
+ */
+export function readClassCKeys(checkout: string | null): ReadonlySet<string> | null {
+    if (checkout === null) {
+        return null;
+    }
+    try {
+        const md = fs.readFileSync(
+            path.join(checkout, 'docs', 'contracts', 'settings-classes.md'),
+            'utf-8',
+        );
+        const index = buildSettingsClassIndex(parseSettingsClassRows(md));
+        return new Set([...index].filter(([, cls]) => cls === 'C').map(([key]) => key));
+    } catch {
+        return null;
+    }
+}
+
 /** Pure: everything `release` decides before it touches the network. */
-export function planRelease(record: DefectRecord, probe: Probe, repoRoot: string): ReleasePlan {
+export function planRelease(
+    record: DefectRecord,
+    probe: Probe,
+    repoRoot: string,
+    opts?: { classCKeys?: ReadonlySet<string> | null },
+): ReleasePlan {
     const blocked = egressBlockedReason(record, repoRoot);
-    const choice =
+    const patch_denied = blocked === null ? patchDeniedReason(record, opts) : null;
+    let choice: EgressChoice =
         blocked !== null
             ? { route: 'local-only' as const, pushVia: null }
             : chooseEgress(capabilityOf(probe));
+    if (patch_denied !== null && choice.route === 'pull-request') {
+        // chooseEgress only returns pull-request when gh is authenticated, so
+        // report-only degrades to an issue, never to a dropped record.
+        choice = { route: 'issue', pushVia: null };
+    }
     return {
         route: choice.route,
         pushVia: choice.pushVia,
         blocked,
+        patch_denied,
         title: titleFor(record),
         body: renderReport(record, choice.route),
     };
@@ -391,12 +434,17 @@ function releaseCmd(root: string, argv: string[]): number {
     const repoArg = argv.indexOf('--repo');
     const repo = repoArg >= 0 ? (argv[repoArg + 1] ?? UPSTREAM_REPO) : UPSTREAM_REPO;
     const probe = probeMachine(process.env, process.cwd());
-    const plan = planRelease(record, probe, root);
+    const plan = planRelease(record, probe, root, {
+        classCKeys: readClassCKeys(probe.agentConfigCheckout),
+    });
 
     const via = plan.pushVia !== null ? ` via=${plan.pushVia}` : '';
     process.stdout.write(`self-repair:release ${fp} -> route=${plan.route}${via}\n`);
     if (plan.blocked !== null) {
         process.stdout.write(`  WARN  ${plan.blocked}\n`);
+    }
+    if (plan.patch_denied !== null) {
+        process.stdout.write(`  DENY  ${plan.patch_denied}\n`);
     }
     if (dryRun) {
         process.stdout.write(`\n--- ${plan.title} ---\n${plan.body}\n`);

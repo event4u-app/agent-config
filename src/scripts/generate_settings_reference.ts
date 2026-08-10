@@ -43,6 +43,7 @@ import {
 } from '../shared/settingsClasses.js';
 import { flattenSurface, type SurfaceEntry } from '../shared/settingsSurface.js';
 
+// ledger-exempt: single-artifact generator — renders ONE derived page from the zod schema and byte-compares it against the committed copy in --check mode; the verdict is one aggregate drift comparison over the whole page, so per-target findings do not exist.
 const _HERE = path.dirname(fileURLToPath(import.meta.url));
 export const ROOT = path.resolve(_HERE, '..', '..');
 

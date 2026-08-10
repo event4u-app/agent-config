@@ -445,6 +445,13 @@ metacharacters and repo escape, including the right-hand side of `--flag=value`.
 - status: unbacked
 - last_verified: 2026-08-09
 
+### claim: conformance-advisory-vs-blocking
+- claim: On the first post-fix behaviour-conformance measurement (round 5, `/analyze:conformance --limit 30`, run 2026-08-07, every violation split by its own timestamp against the 2026-08-06 carrier merge), both BLOCKING `pre_tool_use` guards eliminated their classes — unauthorized irreversible git ops 8 → 0, evaluator prompt pre-loading its verdict 1 → 0 — while neither advisory carrier did: language-mirror violations fell 555 → 19 under advisory state injection at `user_prompt_submit` (−96.6%, not zero) and verification-claimed-on-empty-output fell 4 → 1 at `post_tool_use`. Advisory reduces massively; only blocking eliminates. Scope bounds, inseparable from the numbers: the post-fix corpus is ONE session (~600 assistant turns), so this is a recorded prior, not a law; the language pin was verified PRESENT on the violating post-fix turns (which is why higher injection frequency is refused as a fix); and the 555 pre-merge count is partly contaminated by the synthetic-turn mis-pin fixed in the same round (`isSyntheticPrompt`). NOT PRE-REGISTERED, and it could not have been: this is a post-hoc audit reading taken after the carrier landed, so no bar existed to freeze before the data. What stands in for pre-registration is that the one choice a post-hoc split could game — where before ends and after begins — was not chosen by the measurement: the boundary is the carrier merge's own commit timestamp (2026-08-06) and every violation is assigned by its own timestamp against it. The detector is deterministic and re-runnable over the same transcript store, so the numbers are reproducible rather than attested. Read it as a recorded prior, never as a pre-registered result; the sibling claim that DOES carry a frozen bar is the scoped-rule absence experiment, pre-registered precisely because its data does not exist yet.
+- kind: quant
+- evidence: src/domains/analysis-workbench/analyze/conformance/command.md#Both blocking carriers reached zero
+- status: backed
+- last_verified: 2026-08-10
+
 ### claim: worker-capsule-trigger-arm
 - claim: A worker that reaches an emission trigger below its stop-loss budget can hand off a CHECKPOINT capsule a successor generation works from, and one of the two candidate triggers — the 80% token watermark or novelty-per-step saturation — is measurably the better emission point.
 - kind: comparative

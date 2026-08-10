@@ -35,6 +35,7 @@
  * processes are the two freshness checks, both themselves read-only.
  */
 import fs from "node:fs";
+import os from "node:os";
 import path from "node:path";
 import { spawnSync } from "node:child_process";
 import { fileURLToPath, pathToFileURL } from "node:url";
@@ -62,6 +63,11 @@ import {
   type ActivationInputs,
 } from "./_lib/auto_dispatch.js";
 import { TIER_ORDER, readCooldowns } from "./_lib/tier_budget_routing.js";
+import {
+  instructionsLoadedRecord,
+  measureStandingDelivery,
+  type StandingDeliveryMeasure,
+} from "./check_standing_rule_delivery.js";
 
 const REPO_ROOT = path.resolve(
   path.dirname(fileURLToPath(import.meta.url)),
@@ -197,7 +203,91 @@ export interface DoctorReport {
   gates: GateReport[];
   freshness: FreshnessReport;
   orchestration: OrchestrationReport;
+  standing_delivery: StandingDeliveryMeasure | null;
   bridge_table: string;
+}
+
+/**
+ * Standing-rule-delivery savings for the doctor surface — the measurement is
+ * `check_standing_rule_delivery`'s, reused rather than re-derived, so the gate
+ * and the doctor can never report different numbers for the same layers.
+ * Read-only, like everything else here. `null` = no rule layer installed.
+ */
+export function collect_standing_delivery(
+  workspace_root: string,
+  global_rules_dir: string = path.join(os.homedir(), ".claude", "rules"),
+): StandingDeliveryMeasure | null {
+  return measureStandingDelivery(
+    global_rules_dir,
+    path.join(workspace_root, ".claude", "rules"),
+    instructionsLoadedRecord(workspace_root),
+  );
+}
+
+/**
+ * Render the delivery line in one of its states — scoped-clean (one layer,
+ * nothing duplicated) or both-layers-active (red, pointing at
+ * `install --layer`). Every number printed is one the measurement produced:
+ * the received total, the measured overlap, and the received-minus-overlap
+ * total suppression would leave. No baseline is invented for the layer that
+ * is not installed, so no percentage is derived from one either. The
+ * filesystem-vs-host-confirmed caveat is the gate's own honest-scope
+ * sentence, carried here so the doctor never claims the host confirmed what
+ * only the filesystem projects.
+ */
+export function render_standing_delivery(m: StandingDeliveryMeasure | null): string[] {
+  if (m === null) {
+    return [
+      "Standing delivery: no rule layer installed (neither ~/.claude/rules nor .claude/rules) — nothing delivered, nothing to save.",
+    ];
+  }
+  const lines: string[] = [];
+  if (m.layers.length === 2 && m.overlap_rules > 0) {
+    const scoped = m.received_tokens - m.overlap_tokens;
+    lines.push(
+      `⚠️ Standing delivery: both rule layers active — ${m.overlap_rules} rule(s) delivered twice ` +
+        `(~${m.overlap_tokens} tok). This session's host receives ${m.received_tokens} rule tokens; ` +
+        `scoped delivery would be ~${scoped} — run \`agent-config install --layer=<global|project>\`.`,
+    );
+    if (m.divergent_rules > 0) {
+      // Suppressing a layer whose copies differ drops whichever obligations only
+      // the suppressed copy carried — the same guard `decideLayerAction` applies.
+      lines.push(
+        `  ${m.divergent_rules} of the shared rule(s) differ in body — refresh before suppressing, ` +
+          "or obligations only the suppressed copy carries are lost.",
+      );
+    }
+  } else if (m.layers.length === 2) {
+    lines.push(
+      `Standing delivery: this session's host receives ${m.received_tokens} rule tokens across two ` +
+        "non-overlapping layers — nothing delivered twice, Δ0 to save.",
+    );
+  } else {
+    // One layer = the scoped state, and the honest report of it is the received
+    // total plus the measured fact that nothing is delivered twice.
+    //
+    // This line used to invent an "unscoped both-layers baseline" of
+    // `received × 2` and report the arithmetic consequence — which is always
+    // exactly 50%, for every non-zero input, i.e. a tautology dressed as a
+    // measurement. It also assumed the absent second layer would carry an
+    // identical corpus; the branch directly above exists because two installed
+    // layers can be wholly disjoint, so even with both present the doubling
+    // does not follow. A saving needs a second layer to measure against, and
+    // here there is none.
+    const layer = m.layers[0]?.label ?? "one";
+    lines.push(
+      `Standing delivery: this session's host receives ${m.received_tokens} rule tokens (scoped, ` +
+        `${layer} layer only); 0 tokens delivered twice — one layer is installed, so there is no ` +
+        "second layer to measure a saving against.",
+    );
+  }
+  if (m.input === "filesystem") {
+    lines.push(
+      "  note: filesystem projection, not host-confirmed — no InstructionsLoaded record; a rule " +
+        "projected but never loaded, or loaded from an unprojected layer, is invisible to this input.",
+    );
+  }
+  return lines;
 }
 
 /**
@@ -444,6 +534,8 @@ export function collect_report(options: {
   workspace_root: string;
   no_freshness: boolean;
   classify?: string | null;
+  /** Test seam: fixture global rules dir. Defaults to the real `~/.claude/rules`. */
+  global_rules_dir?: string;
 }): DoctorReport {
   const manifest = _load_yaml(MANIFEST_PATH);
   const chain = resolve_chain(manifest, options.platform);
@@ -477,6 +569,9 @@ export function collect_report(options: {
       options.platform,
       options.platform_assumed ?? true,
     ),
+    standing_delivery: options.global_rules_dir === undefined
+      ? collect_standing_delivery(options.workspace_root)
+      : collect_standing_delivery(options.workspace_root, options.global_rules_dir),
     bridge_table,
   };
 }
@@ -498,6 +593,8 @@ function _render(report: DoctorReport): string {
       (report.freshness.projection_detail ? ` (${report.freshness.projection_detail})` : "") +
       ` · dispatch bundle=${report.freshness.dispatch_bundle}`,
   );
+  lines.push("");
+  lines.push(...render_standing_delivery(report.standing_delivery));
   lines.push("");
   const o = report.orchestration;
   lines.push(

@@ -41,6 +41,7 @@ import { fileURLToPath } from "node:url";
 import { runGateCli, runSelfTest, type SelfTestCase } from "./_lib/gate_self_test.js";
 import { reportScanned } from "./_lib/scan_scope.js";
 
+// ledger-exempt: single remote-ref probe — the entire scope is ONE ls-remote answer (0 or 1 refs) resolved to one aggregate ancestor verdict, and every empty path already publishes its reason via reportScanned allowEmpty; there is no per-target collection to account.
 const DEFAULT_BASE = "main";
 const SELF_TEST_MIN_CASES = 3;
 const SELF_TEST_MIN_REJECT = 1;

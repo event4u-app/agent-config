@@ -39,6 +39,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import { assertScanned, DeadScopeError } from './_lib/scan_scope.js';
 
+// ledger-exempt: single folded-hash comparison — the ordered kernel bodies become ONE sha256 via compute_prefix, byte-compared against the single committed snapshot, so the gate has exactly one aggregate drift verdict and no per-rule outcome exists to record; a changed byte in any body is indistinguishable from a reorder by construction, which IS the invariant. The kernel-count scope floor is already asserted by assertScanned over dist/router.json.
 const _HERE = fileURLToPath(import.meta.url);
 const REPO_ROOT = path.resolve(path.dirname(_HERE), '..', '..');
 const ROUTER = path.join(REPO_ROOT, 'dist/router.json');

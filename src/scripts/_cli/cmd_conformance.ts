@@ -41,6 +41,7 @@ import { readRecentEntries } from '../../install/txlog.js';
 import { detectToolPresence } from '../../install/detect.js';
 import { resolvePackageRoot } from '../_lib/package_root.js';
 import { routeTargetPathsPosix } from '../router_target_paths.mjs';
+import { buildFunnel, render as renderFunnel } from '../report_conformance_funnel.js';
 import {
     _classify,
     _collect_manifest_entries,
@@ -532,16 +533,17 @@ export function appendConformanceReport(
 
 const USAGE =
     'usage: agent-config conformance [-h] [--project PROJECT] [--json]\n' +
-    '                                [--skip-dispatcher]\n';
+    '                                [--skip-dispatcher] [--funnel]\n';
 
 interface Options {
     project: string | null;
     json: boolean;
     skip_dispatcher: boolean;
+    funnel: boolean;
 }
 
 function _parse(argv: string[]): Options {
-    const opts: Options = { project: null, json: false, skip_dispatcher: false };
+    const opts: Options = { project: null, json: false, skip_dispatcher: false, funnel: false };
     let i = 0;
     while (i < argv.length) {
         const a = argv[i] as string;
@@ -551,6 +553,8 @@ function _parse(argv: string[]): Options {
         }
         if (a === '--json') {
             opts.json = true;
+        } else if (a === '--funnel') {
+            opts.funnel = true;
         } else if (a === '--skip-dispatcher') {
             opts.skip_dispatcher = true;
         } else if (a === '--project' || a.startsWith('--project=')) {
@@ -577,6 +581,17 @@ function _parse(argv: string[]): Options {
 
 function main(argv: string[] | null = null): number {
     const opts = _parse(argv !== null ? Array.from(argv) : process.argv.slice(2));
+
+    // `--funnel` — the delivery → activation → compliance report join
+    // (road-to-feedback-9-29 Phase 4.2). A REPORT, not a gate: it hangs off
+    // this verb so no new top-level verb enters the dispatcher registry, it
+    // skips the doctor/conformance legs entirely, and it always exits 0. It
+    // must never be wired into CI without a measured false-positive rate
+    // first — see the header of `report_conformance_funnel.ts`.
+    if (opts.funnel) {
+        print(renderFunnel(buildFunnel()));
+        return 0;
+    }
 
     let project_root: string;
     try {

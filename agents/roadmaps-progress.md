@@ -9,7 +9,7 @@
 **168 / 263 steps done · 64%**
 
 ```text
-██████████████████████████░░░░░░░░░░░░░░   64%
+█████████████████████████░░░░░░░░░░░░░░░   63%
 ```
 
 ## Open roadmaps
@@ -126,6 +126,26 @@
     change on every install), keep all-false and correct the comment plus every
     rule that reads the manifest, or add a third explicit state.
   - **Resolved when:** the decision is recorded and the template comment, the loader, and the reading rules agree.
+
+### [road-to-carrier-layer-convergence.md](roadmaps/road-to-carrier-layer-convergence.md)
+
+**Road to carrier-layer convergence — 109 rules arrive twice, none identical** — 0 / 7 done (0%)
+
+| # | Phase | State | Open | Done | Deferred | Cancelled | % |
+|---|---|---|---:|---:|---:|---:|---:|
+| 1 | Establish which layer is stale, per rule | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
+| 2 | Converge | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
+| 3 | Deduplicate, and prove the saving | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
+
+<a id="blockers-road-to-carrier-layer-convergence"></a>
+**Blockers**
+
+- **b-convergence-machine** (owner: user) — blocks Phase 3 only (Phases 1-2 are repo work)
+  - **What to do:**
+    Phase 3's before/after pair needs the maintainer machine,
+    since the two-layer topology is a property of the install rather than of the
+    repo. Run the reading, apply `install --layer`, run it again.
+  - **Resolved when:** both readings exist at a named commit.
 
 ### [road-to-ci-native-release-first-run.md](roadmaps/road-to-ci-native-release-first-run.md)
 
