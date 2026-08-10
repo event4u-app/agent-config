@@ -25,7 +25,7 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import type { QuorumStatus } from './quorum.js';
+import { isSoloConcluded, type QuorumResult } from './quorum.js';
 import type { AbsentReason } from './transport_resolver.js';
 
 /**
@@ -252,14 +252,37 @@ export interface QuorumAbsence {
     readonly reason: QuorumAbsentReason;
 }
 
+/**
+ * Which CLI path produced the line. `estimate` spends nothing — it is a cost
+ * preview — so every rate computed over these lines must exclude it, and it
+ * is recorded rather than suppressed so the exclusion is the consumer's
+ * explicit act instead of an invisible one.
+ */
+export type QuorumCommand = 'run' | 'estimate' | 'debate';
+
+/**
+ * `single` means `--single` filtered the roster down to one member BEFORE
+ * the pass ran. Without this field a deliberate solo dispatch is byte-identical
+ * to a configured one-member council, and the solo-conclusion rate cannot tell
+ * the two apart — which is the one distinction it exists to make.
+ */
+export type QuorumDispatch = 'full' | 'single';
+
 export interface QuorumEventInput {
     readonly lens: string;
     readonly invocation: string;
     readonly phase: QuorumEventPhase;
-    readonly status: QuorumStatus;
-    readonly threshold: number;
-    readonly total: number;
-    readonly present: number;
+    readonly command: QuorumCommand;
+    readonly dispatch: QuorumDispatch;
+    /**
+     * Enabled members in the config, BEFORE `--single` / `--siblings`
+     * filtering and before construction failures. `result.total` is the
+     * roster that survived; when the two differ, the gap is exactly the
+     * "council degraded by configuration" case a post_run-only reading is
+     * otherwise blind to.
+     */
+    readonly configuredTotal: number;
+    readonly result: QuorumResult;
     readonly absent: readonly QuorumAbsence[];
 }
 
@@ -288,11 +311,19 @@ export function appendQuorumEvent(
                 lens: input.lens,
                 invocation: input.invocation,
                 action: 'quorum_result',
-                verdict: input.status,
+                verdict: input.result.status,
                 phase: input.phase,
-                threshold: input.threshold,
-                total: input.total,
-                present: input.present,
+                command: input.command,
+                dispatch: input.dispatch,
+                threshold: input.result.threshold,
+                configured_total: input.configuredTotal,
+                total: input.result.total,
+                present: input.result.present,
+                // Written by the predicate, never re-derived from the numbers
+                // downstream: one definition of "concluded on a single voice",
+                // in `quorum.ts`, so a change to it cannot leave a consumer's
+                // copy silently stale.
+                solo: isSoloConcluded(input.result),
                 absent: input.absent.map((a) => ({ member: a.member, reason: a.reason })),
             },
             opts,

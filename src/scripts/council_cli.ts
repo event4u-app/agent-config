@@ -81,6 +81,8 @@ import {
     appendEvent,
     appendQuorumEvent,
     type QuorumAbsence,
+    type QuorumCommand,
+    type QuorumDispatch,
     type QuorumEventPhase,
 } from './ai_council/events_log.js';
 import {
@@ -582,6 +584,16 @@ interface BuildMembersOptions {
      */
     quorum_out?: { result: QuorumResult | null } | null;
     /**
+     * Which CLI path is constructing — recorded on the `pre_run` quorum
+     * event so a consumer can exclude the paths that never run a pass.
+     * `estimate` is a spend-free preview and `run` may still abort at the
+     * necessity or size-fit gate after this point, so a `pre_run` line is
+     * evidence that construction happened, never that a pass followed;
+     * attendance rates are computed over `post_run` lines for exactly that
+     * reason. Defaults to `run` for a caller that does not say.
+     */
+    command?: QuorumCommand;
+    /**
      * Test-only injection point, mirroring the `settings`/`members`/`table`
      * DI pattern the CLI commands already use. Production callers never set
      * this — `build_members` falls back to the real, process-memoised
@@ -655,16 +667,23 @@ function _emitQuorumEvent(
     phase: QuorumEventPhase,
     quorum: QuorumResult,
     absent: readonly Dict[],
-    ctx: { lens?: string; invocation?: string } = {},
+    ctx: {
+        command: QuorumCommand;
+        dispatch?: QuorumDispatch;
+        /** Enabled members before `--single` filtering; defaults to the roster that ran. */
+        configuredTotal?: number;
+        lens?: string;
+        invocation?: string;
+    },
 ): void {
     appendQuorumEvent({
         lens: ctx.lens ?? '',
         invocation: ctx.invocation ?? '',
         phase,
-        status: quorum.status,
-        threshold: quorum.threshold,
-        total: quorum.total,
-        present: quorum.present,
+        command: ctx.command,
+        dispatch: ctx.dispatch ?? 'full',
+        configuredTotal: ctx.configuredTotal ?? quorum.total,
+        result: quorum,
         absent: absent.map(
             (a): QuorumAbsence => ({
                 member: String(a['member'] ?? ''),
@@ -986,7 +1005,11 @@ function build_members(settings: Dict, opts: BuildMembersOptions = {}): External
         // here on purpose: neither is known at member-construction time,
         // and `invocation_mode` (api / cli / manual) is a different axis
         // that would read as the same field under a shared name.
-        _emitQuorumEvent('pre_run', quorum_out.result, absent_entries);
+        // `command` IS recorded, because a preview and an aborted run both
+        // reach this line and neither is a pass.
+        _emitQuorumEvent('pre_run', quorum_out.result, absent_entries, {
+            command: opts.command ?? 'run',
+        });
     }
     if (members.length === 0) {
         if (skipped && skipped.length > 0) {
@@ -1755,6 +1778,10 @@ function cmd_estimate(
             siblings_overrides: _parse_siblings_overrides(_getattr<string[] | null>(args, 'siblings', null)),
             skipped,
             quorum_out,
+            // A cost preview spends nothing and runs no pass. The line is
+            // still written — tagged, so a consumer excludes it deliberately
+            // instead of never learning it was there.
+            command: 'estimate',
         });
     }
     if (table === null) {
@@ -2590,6 +2617,12 @@ function cmd_run(
     // (mid-flight failures appended to the same array construction-time
     // skips already populate, so `payload['absent_members']` needs no
     // separate wiring either).
+    // The pre-run reading, before it is overwritten — `build_members` set it
+    // from `total_enabled`, i.e. the enabled roster before `--single` filtering
+    // and before any construction failure. Without carrying it forward, a pass
+    // with 3 configured members where 2 fail to construct and 1 answers emits
+    // `{total: 1, present: 1}` and reads as full attendance.
+    const configured_total = quorum_out.result?.total ?? null;
     const post_run = _postRunQuorum(members, responses, ai_cfg);
     quorum_out.result = post_run.quorum;
     skipped.push(...post_run.absent);
@@ -2598,6 +2631,12 @@ function cmd_run(
     // skips already went out under `phase: 'pre_run'` from `build_members`,
     // and merging them here would double-count a member absent in both.
     _emitQuorumEvent('post_run', post_run.quorum, post_run.absent, {
+        command: 'run',
+        // `--single` filtered the roster to one BEFORE the pass. Without this
+        // the line is byte-identical to a configured one-member council, and
+        // the solo-conclusion rate cannot make the one distinction it exists for.
+        dispatch: _getattr(args, 'single', false) ? 'single' : 'full',
+        ...(configured_total !== null ? { configuredTotal: configured_total } : {}),
         lens: question.mode,
         invocation: String(_getattr(args, 'invocation', 'agent')),
     });
@@ -2877,12 +2916,21 @@ function cmd_debate(
     const advisor_plans = _build_advisor_plans(ai_cfg, REPO_ROOT);
     const explicit_overrides = _parse_model_overrides(_getattr<string[] | null>(args, 'model', null));
     const skipped: Dict[] = [];
+    // Debate spends the same providers as `run`, so its attendance belongs in
+    // the same log. It carries the construction-time half only: there is no
+    // `_postRunQuorum` on this path, and adding one would need a usable-response
+    // definition for a multi-round debate that this change does not have. The
+    // gap is declared in quorum-attendance-budget.json rather than left for a
+    // reader to discover from a missing row.
+    const quorum_out: { result: QuorumResult | null } = { result: null };
     if (members === null) {
         members = build_members(settings, {
             invocation_mode: args.mode_override,
             model_overrides: _advisor_model_overrides(advisor_plans, explicit_overrides),
             siblings_overrides: _parse_siblings_overrides(_getattr<string[] | null>(args, 'siblings', null)),
             skipped,
+            quorum_out,
+            command: 'debate',
         });
     }
     if (table === null) {
