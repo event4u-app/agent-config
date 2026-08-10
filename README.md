@@ -126,6 +126,7 @@ is the proof. Browse it on the deployed docs site — the proof page is the prim
 [event4u-app.github.io/agent-config/proof/](https://event4u-app.github.io/agent-config/proof/).
 The honest comparison frame lives at
 [`docs/us-vs-the-category.md`](docs/us-vs-the-category.md).
+Freshest measured row: advisory context injection cut language-mirror violations 555 → 19 while the two blocking guards went 8 → 0 and 1 → 0 — advisory reduces massively, only blocking eliminates.<!-- claim:conformance-advisory-vs-blocking -->
 
 Maintaining a skills catalog yourself? The **anti-reskin gate** that blocks
 find-replace re-skin PRs here runs on your catalog too —

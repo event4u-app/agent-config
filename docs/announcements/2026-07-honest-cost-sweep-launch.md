@@ -33,6 +33,16 @@ What we measured, reproducible on a fresh checkout:
   eval behind its promise: correct verdict on both fixtures, exact
   `file:line` on the planted hollow implementation, zero spurious findings
   on the clean control. (Claim: `wedge-hollow-detection`.)
+- We measured our own enforcement mechanisms against our own transcripts
+  (round-5 conformance audit, 2026-08-07): advisory context injection cut
+  language-mirror violations 555 → 19 (−96.6%, not zero), while both
+  BLOCKING `pre_tool_use` guards eliminated their classes — 8 → 0
+  unauthorized irreversible git ops, 1 → 0 evaluator verdict pre-loading.
+  Advisory reduces massively; only blocking eliminates. One-session
+  post-fix corpus — published as a prior, not a law. (Claim:
+  `conformance-advisory-vs-blocking`; evidence:
+  `src/domains/analysis-workbench/analyze/conformance/command.md` § the
+  carrier table.)
 
 Verify it yourself, fresh checkout:
 
