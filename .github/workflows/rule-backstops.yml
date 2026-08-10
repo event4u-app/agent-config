@@ -122,6 +122,14 @@ jobs:
       - name: example fences (code examples vs the rules beside them)
         run: ./scripts-run src/scripts/lint_example_fences --strict
 
+      # A `paths:` filter naming a tree that no longer exists does not
+      # over-trigger — it never triggers, silently, while the job keeps showing
+      # its last real green. actionlint validates the schema (a string is a
+      # valid string) and no reference checker resolves a glob against the
+      # tree, so nothing saw the 20 dead entries this gate's census found.
+      - name: workflow path filters (do they still match anything?)
+        run: ./scripts-run src/scripts/lint_workflow_paths
+
       # Rules and skills are capped; the contexts and guidelines they route to
       # were not, which is where the always-loaded budget leaks back in as
       # on-demand bloat. Shrink-only ratchet at 4.

@@ -14,10 +14,8 @@ on:
   pull_request:
     branches: [main, master]
     paths:
-      - ".agent-src.uncondensed/rules/**"
       - "dist/agent-src/rules/**"
-      - ".agent-src.uncondensed/skills/**"
-      - "router.json"
+      - "dist/router.json"
       - "src/scripts/smoke/**"
       - "src/scripts/measure_rule_budget.ts"
       - "src/scripts/skill_linter.ts"
