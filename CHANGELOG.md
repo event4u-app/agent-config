@@ -321,6 +321,50 @@ Entry-shape contract: [`docs/contracts/CHANGELOG-conventions.md`](docs/contracts
 > that forces a new era split (`# Era: 9.32.x`, etc.) — see
 > [`docs/contracts/CHANGELOG-conventions.md § Era splits`](docs/contracts/CHANGELOG-conventions.md).
 
+## [9.31.0](https://github.com/event4u-app/agent-config/compare/9.30.0...9.31.0) (2026-08-10)
+
+### Release highlights
+
+<!-- Curated head: fill before merge, keep it under 10 lines, and leave `_none_` where it is genuinely the answer. The generated log below is unchanged. -->
+- **Behaviour changes:** _none_
+- **Default changes + migration:** _none_
+- **Security and correctness:** _none_
+- **Honest nulls:** _none_
+- **Known limitations:** _none_
+
+### Features
+
+* **settings:** give the scripts read path the template-defaults layer ([a67a640](https://github.com/event4u-app/agent-config/commit/a67a640cbf64262d07026853b7b5ead21b509e5d))
+
+### Bug Fixes
+
+* **carrier:** a frontmatter-only difference is not body divergence ([c48b6c8](https://github.com/event4u-app/agent-config/commit/c48b6c88cf274e3e24b0795d8fb4d19be7637557))
+* **hooks:** replace the fence regex with a scanner, and stop shipping a moving figure ([2fe01e7](https://github.com/event4u-app/agent-config/commit/2fe01e79804c37380e8c968b6efdf71b7d9d33fa))
+* **hooks:** per-session pin marker, atomic write, enforced read cap ([67abbb6](https://github.com/event4u-app/agent-config/commit/67abbb63028ab79fa6d04083523fbb6ffb9033c3))
+* **scripts:** measure the gate per TURN, and withdraw the figures that were not ([313e665](https://github.com/event4u-app/agent-config/commit/313e665354c1dd0512aceb21475dbc532f6b9ba5))
+* **hooks:** turn-end-gate — key the guard on the turn, not the prompt text ([b3392e6](https://github.com/event4u-app/agent-config/commit/b3392e60ceeae500b639040e8849b801fc661008))
+
+### Documentation
+
+* **carrier:** the header says three classes and there are now four ([1955234](https://github.com/event4u-app/agent-config/commit/195523465db8fabb84be3f4ad27f8293cf5e4ac5))
+* **evidence:** classify the 109 carrier divergences, and correct two records ([c2fc109](https://github.com/event4u-app/agent-config/commit/c2fc109f7ca30f621455a9a754803055a0b1a0d9))
+* **evidence:** map the scripts settings read path against the server one ([858a256](https://github.com/event4u-app/agent-config/commit/858a25646352fd3603800e5657527591a00e16ae))
+* **review:** record the R2 findings on the fix pass, before touching it ([65aee68](https://github.com/event4u-app/agent-config/commit/65aee68691d85bdba928b4de65f4e28025c80852))
+* **review:** record the R2 findings for turn-end-gate before fixing anything ([9f204c5](https://github.com/event4u-app/agent-config/commit/9f204c55a73a45bada0baa7925bc000df7bee912))
+
+### Build
+
+* **install:** rebuild the bundle without the worktree symlink poison ([741806c](https://github.com/event4u-app/agent-config/commit/741806c91a9774b1b521ae34487d271d0c5dee93))
+* **install:** refresh the committed install bundle ([7bbcfdc](https://github.com/event4u-app/agent-config/commit/7bbcfdce9355708ef6785ec640af64d23a5ac4a0))
+
+### Chores
+
+* **roadmap:** close carrier-layer-convergence Phases 1-2 on the measurement ([bc42809](https://github.com/event4u-app/agent-config/commit/bc42809689634578e52501470f299822624e15ae))
+* **roadmap:** archive road-to-scripts-settings-defaults, complete ([e3af4c5](https://github.com/event4u-app/agent-config/commit/e3af4c56c1149a96254f1e7e3c1807a8f53744b5))
+* **budget:** re-baseline the packed-tarball cap, 6.9 to 7.8, maintainer-decided ([04ca7d8](https://github.com/event4u-app/agent-config/commit/04ca7d84f93c33999b02361c9baa4e61a181a07c))
+
+Tests: 12729 (+38 since 9.30.0)
+
 # Era: pre-4.0.0 — archived
 
 > All entries from `3.2.0` and `3.3.0` live in
