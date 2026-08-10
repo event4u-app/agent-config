@@ -6,10 +6,10 @@
 
 ## Overall
 
-**178 / 365 steps done · 49%**
+**182 / 365 steps done · 50%**
 
 ```text
-████████████████████░░░░░░░░░░░░░░░░░░░░   49%
+████████████████████░░░░░░░░░░░░░░░░░░░░   50%
 ```
 
 ## Open roadmaps
@@ -24,7 +24,7 @@
 | 6 | [road-to-gated-reach-followup.md](roadmaps/road-to-gated-reach-followup.md) | 1 | 12 | 12 | 0 | 0 | 0 | [1](#blockers-road-to-gated-reach-followup) | ░░░░░░░░░░ 0% |
 | 7 | [road-to-inbox-harvest-2026-08-b-authoring-contract.md](roadmaps/road-to-inbox-harvest-2026-08-b-authoring-contract.md) | 6 | 25 | 15 | 0 | 1 | 9 | [1](#blockers-road-to-inbox-harvest-2026-08-b-authoring-contract) | ░░░░░░░░░░ 0% |
 | 8 | [road-to-inbox-harvest-2026-08-b-ci-economy.md](roadmaps/road-to-inbox-harvest-2026-08-b-ci-economy.md) | 5 | 24 | 21 | 0 | 2 | 1 | [2](#blockers-road-to-inbox-harvest-2026-08-b-ci-economy) | ░░░░░░░░░░ 0% |
-| 9 | [road-to-inbox-harvest-2026-08-b-council-integrity.md](roadmaps/road-to-inbox-harvest-2026-08-b-council-integrity.md) | 3 | 16 | 7 | 1 | 1 | 7 | [1](#blockers-road-to-inbox-harvest-2026-08-b-council-integrity) | █░░░░░░░░░ 12% |
+| 9 | [road-to-inbox-harvest-2026-08-b-council-integrity.md](roadmaps/road-to-inbox-harvest-2026-08-b-council-integrity.md) | 3 | 16 | 3 | 5 | 1 | 7 | [1](#blockers-road-to-inbox-harvest-2026-08-b-council-integrity) | ██████░░░░ 62% |
 | 10 | [road-to-inbox-harvest-2026-08-b-dispatch-safety.md](roadmaps/road-to-inbox-harvest-2026-08-b-dispatch-safety.md) | 4 | 21 | 14 | 0 | 1 | 6 | [1](#blockers-road-to-inbox-harvest-2026-08-b-dispatch-safety) | ░░░░░░░░░░ 0% |
 | 11 | [road-to-inbox-harvest-2026-08-b-estate-lifecycle.md](roadmaps/road-to-inbox-harvest-2026-08-b-estate-lifecycle.md) | 4 | 15 | 9 | 0 | 0 | 6 | [1](#blockers-road-to-inbox-harvest-2026-08-b-estate-lifecycle) | ░░░░░░░░░░ 0% |
 | 12 | [road-to-inbox-harvest-2026-08-b-install-lifecycle.md](roadmaps/road-to-inbox-harvest-2026-08-b-install-lifecycle.md) | 2 | 13 | 7 | 0 | 1 | 5 | [1](#blockers-road-to-inbox-harvest-2026-08-b-install-lifecycle) | ░░░░░░░░░░ 0% |
@@ -255,11 +255,11 @@
 
 ### [road-to-inbox-harvest-2026-08-b-council-integrity.md](roadmaps/road-to-inbox-harvest-2026-08-b-council-integrity.md)
 
-**Road to council-pass integrity** — 1 / 8 done (12%)
+**Road to council-pass integrity** — 5 / 8 done (62%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
-| 1 | Attendance becomes machine-readable | ⬜ not started | 5 | 0 | 1 | 0 | 0% |
+| 1 | Attendance becomes machine-readable | 🟡 in progress | 1 | 4 | 1 | 0 | 80% |
 | 2 | A verdict that disagrees with its own tally | ⬜ not started | 1 | 0 | 0 | 0 | 0% |
 | 3 | One duplicated defence, honestly scoped | 🟡 in progress | 1 | 1 | 0 | 7 | 50% |
 
