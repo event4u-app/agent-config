@@ -7374,7 +7374,7 @@ import * as fs18 from "node:fs";
 import * as os7 from "node:os";
 import * as path16 from "node:path";
 import process3 from "node:process";
-import { fileURLToPath as fileURLToPath4, pathToFileURL as pathToFileURL2 } from "node:url";
+import { fileURLToPath as fileURLToPath5, pathToFileURL as pathToFileURL2 } from "node:url";
 
 // src/scripts/_lib/json_pointers.ts
 import { createHash } from "node:crypto";
@@ -9793,6 +9793,64 @@ import { createRequire as createRequire2 } from "node:module";
 import * as fs12 from "node:fs";
 import * as os6 from "node:os";
 import * as path11 from "node:path";
+import { fileURLToPath as fileURLToPath2 } from "node:url";
+
+// src/shared/settingsCarveOut.ts
+var SETTINGS_CARVE_OUT = [
+  {
+    key: "projection.mode",
+    reader: "src/scripts/install.ts:3409 _resolve_scoped_projection",
+    absentResolvesTo: "legacy-all",
+    reason: "The template fallback applies only when NO global settings file exists. Once a file exists, an absent key means legacy-all by documented contract, so an existing install is never silently narrowed on upgrade."
+  },
+  {
+    key: "projection.rule_workspaces",
+    reader: "src/install/rule_scope.ts:96 ruleScopeFromSettings",
+    absentResolvesTo: "null \u2014 LEGACY_ALL, i.e. every rule ships including maintainer-only ones",
+    reason: "Same upgrade contract as projection.mode, and the failure is louder: an absent list widens the projection instead of narrowing it."
+  },
+  {
+    key: "discipline_profile",
+    reader: "work_engine/_lib/agent_settings.ts:1263",
+    absentResolvesTo: "essential, unconditionally",
+    reason: "The template ships `auto`, which resolves to `off` on any measured-null model, any non-Claude host, and any host exposing no model id. Absent skips that resolution entirely and loads the essential tier everywhere."
+  },
+  {
+    key: "chat_history.frequency",
+    reader: "src/scripts/chat_history.ts:1140",
+    absentResolvesTo: "per_phase",
+    reason: "Canonical substitution is `per_turn`. Absent gives coarser capture than the shipped default \u2014 an audit-thinning change, which the class contract's own test 8 (what can the attacker HIDE) names as the severe direction."
+  },
+  {
+    key: "profile.id",
+    reader: "src/scripts/config/profiles.ts:221 resolve_profile",
+    absentResolvesTo: "the id `developer`, but a DEGRADED profile \u2014 packs: [], personas: [], hints: []",
+    reason: "Exactly the projection.mode shape: the template default is honoured only when no settings file exists. With a file present the id resolves but its profile body does not load, so the install silently loses every pack and persona."
+  },
+  {
+    key: "quality.local_auto_run",
+    reader: "src/scripts/lint_roadmap_ci_steps.ts:106",
+    absentResolvesTo: "true \u2014 which DISABLES the CI-step gate",
+    reason: "Inverted polarity, and the most dangerous row in the set: the template ships `false`, which ARMS the gate. Omitting the key would disarm a quality gate for every fresh install while the reference page says it is on."
+  },
+  {
+    key: "onboarding.onboarded",
+    reader: "src/scripts/onboarding_gate_hook.ts:99",
+    absentResolvesTo: "gate skipped, as if onboarding had already completed",
+    reason: "Absent behaves like `onboarded: true`, not like the template default `false`. Omitting it would skip the onboarding gate on precisely the fresh installs the gate exists for."
+  },
+  {
+    key: "chat_history.enabled",
+    reader: "src/scripts/chat_history.ts:1025 _read_chat_history_enabled",
+    absentResolvesTo: "false",
+    reason: "The reader falls back to false while the template ships true. This one is privacy-shaped: fixing the reader would start recording history for every install whose file lacks the key. Writing it explicitly keeps the decision visible in the file the user can read."
+  }
+];
+function carveOutKeys() {
+  return SETTINGS_CARVE_OUT.map((c) => c.key);
+}
+
+// src/scripts/_lib/agent_settings.ts
 var _require2 = createRequire2(import.meta.url);
 var Logger = class {
   name = "scripts._lib.agent_settings";
@@ -9890,7 +9948,45 @@ var MERGEABLE_KEYS = [
   "knowledge.global_sharing.freshness.hypothesis_after_days",
   "knowledge.global_sharing.freshness.stale_after_days"
 ];
-var _DEFAULTS = {};
+var TEMPLATE_RELATIVE = path11.join("src", "config", "agent-settings.template.yml");
+var _PACKAGE_ROOT = path11.resolve(path11.dirname(fileURLToPath2(import.meta.url)), "..", "..", "..");
+function default_template_path() {
+  return path11.join(_PACKAGE_ROOT, TEMPLATE_RELATIVE);
+}
+function _is_placeholder(value) {
+  return typeof value === "string" && /^__[A-Z0-9_]+__$/.test(value);
+}
+function _prune_template(tree, excluded, prefix = "") {
+  const out = {};
+  for (const [key, value] of Object.entries(tree)) {
+    const dotted = prefix === "" ? key : `${prefix}.${key}`;
+    if (excluded.has(dotted) || _is_placeholder(value)) {
+      continue;
+    }
+    if (_is_plain_dict(value)) {
+      const child = _prune_template(value, excluded, dotted);
+      if (Object.keys(child).length > 0) {
+        out[key] = child;
+      }
+      continue;
+    }
+    out[key] = value;
+  }
+  return out;
+}
+var _template_defaults_cache = null;
+function template_defaults(template_path) {
+  const use_cache = template_path === void 0;
+  if (use_cache && _template_defaults_cache !== null) {
+    return _deepcopy(_template_defaults_cache);
+  }
+  const parsed = _read_yaml(template_path ?? default_template_path()) ?? {};
+  const pruned = _prune_template(parsed, new Set(carveOutKeys()));
+  if (use_cache) {
+    _template_defaults_cache = pruned;
+  }
+  return _deepcopy(pruned);
+}
 var ANCHOR_AGENT_SETTINGS = "agent-settings";
 var ANCHOR_AGENTS_DIR = "agents-dir";
 var ANCHOR_GIT = "git";
@@ -10090,6 +10186,7 @@ function load_agent_settings(options = {}) {
   const user_global_path = options.user_global_path ?? null;
   const verbose = options.verbose ?? false;
   const cwd = options.cwd ?? null;
+  const template_path = options.template_path ?? null;
   const user_global_raw = {};
   for (const p of user_global_path ? [user_global_path] : user_global_settings_paths()) {
     _deep_merge(user_global_raw, _read_yaml(p) ?? {});
@@ -10102,7 +10199,7 @@ function load_agent_settings(options = {}) {
     );
   }
   const cascade = _resolve_cascade_paths(cwd, project_path);
-  const merged = _deep_copy_defaults(_DEFAULTS);
+  const merged = template_defaults(template_path ?? void 0);
   _deep_merge(merged, user_global_filtered);
   for (const p of cascade) {
     const layer = _read_yaml(p) ?? {};
@@ -10238,10 +10335,18 @@ function _deep_merge(dst, src) {
     }
   }
 }
-function _deep_copy_defaults(src) {
-  const out = {};
-  _deep_merge(out, src);
-  return out;
+function _deepcopy(value) {
+  if (Array.isArray(value)) {
+    return value.map((v) => _deepcopy(v));
+  }
+  if (_is_plain_dict(value)) {
+    const out = {};
+    for (const [k, v] of Object.entries(value)) {
+      out[k] = _deepcopy(v);
+    }
+    return out;
+  }
+  return value;
 }
 function _is_plain_dict(value) {
   return typeof value === "object" && value !== null && !Array.isArray(value);
@@ -16436,16 +16541,16 @@ import { spawnSync } from "node:child_process";
 import * as fs17 from "node:fs";
 import * as path15 from "node:path";
 import process2 from "node:process";
-import { fileURLToPath as fileURLToPath3, pathToFileURL } from "node:url";
+import { fileURLToPath as fileURLToPath4, pathToFileURL } from "node:url";
 
 // src/scripts/_lib/package_root.ts
 import * as fs16 from "node:fs";
 import * as path14 from "node:path";
-import { fileURLToPath as fileURLToPath2 } from "node:url";
+import { fileURLToPath as fileURLToPath3 } from "node:url";
 var PACKAGE_NAME = "@event4u/agent-config";
 var MAX_ASCENT = 16;
 function resolvePackageRoot(fromUrlOrPath, legacyHops = 3) {
-  const start = fromUrlOrPath.startsWith("file:") ? fileURLToPath2(fromUrlOrPath) : fromUrlOrPath;
+  const start = fromUrlOrPath.startsWith("file:") ? fileURLToPath3(fromUrlOrPath) : fromUrlOrPath;
   const startDir = path14.dirname(start);
   let dir = startDir;
   for (let i = 0; i < MAX_ASCENT; i++) {
@@ -16486,7 +16591,7 @@ var LEGACY_SETTINGS_FILES = [".agent-settings.yml", ".agent-user.yml"];
 var LEGACY_STATE_FILENAME = ".implement-ticket-state.json";
 var LEGACY_STATE_V1_FILENAME = ".work-state.json";
 var LEGACY_AGENT_CONFIG_SHELL = "agent-config";
-var _HERE_DIR = path15.dirname(fileURLToPath3(import.meta.url));
+var _HERE_DIR = path15.dirname(fileURLToPath4(import.meta.url));
 var ArgparseExit = class extends Error {
   code;
   constructor(code) {
@@ -17138,7 +17243,7 @@ function main(argv = null, options = {}) {
   return _apply(project, out, err);
 }
 var _bundled = true;
-var _HERE = fileURLToPath3(import.meta.url);
+var _HERE = fileURLToPath4(import.meta.url);
 function _isCliEntry() {
   if (process2.argv[1] === void 0) {
     return false;
@@ -17148,7 +17253,7 @@ function _isCliEntry() {
     return true;
   }
   try {
-    const here = fs17.realpathSync(fileURLToPath3(import.meta.url));
+    const here = fs17.realpathSync(fileURLToPath4(import.meta.url));
     const argv = fs17.realpathSync(path15.resolve(process2.argv[1]));
     return here === argv;
   } catch {
@@ -17168,7 +17273,7 @@ if (!_bundled && (_isCliEntry() || process2.argv[1] === _HERE)) {
 }
 
 // src/scripts/install.ts
-var _HERE2 = fileURLToPath4(import.meta.url);
+var _HERE2 = fileURLToPath5(import.meta.url);
 var SystemExitError = class extends Error {
   constructor(code) {
     super(`system-exit-${code}`);

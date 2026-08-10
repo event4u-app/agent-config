@@ -52,6 +52,20 @@ function no_global(tmp: string): string {
     return path.join(tmp, 'no-such-global.yml');
 }
 
+/**
+ * A template path that does not exist, so the defaults layer contributes `{}`.
+ *
+ * The cascade tests below assert whole-object equality against the union of the
+ * FILES they wrote — that is what they are testing: precedence, the whitelist,
+ * and which keys survive the merge. The template-defaults base is a third,
+ * ambient input they never opted into, and letting it leak in would turn every
+ * exact-equality assertion into a restatement of the shipped template. Pinning
+ * it here is the same caller-override contract `project_path` and
+ * `user_global_path` already use. The layer itself is covered separately, in
+ * the `template_defaults` describe block.
+ */
+const NO_TEMPLATE = path.join(os.tmpdir(), 'ags-no-such-template.yml');
+
 beforeEach(() => {
     ags.logger.records.length = 0;
 });
@@ -95,6 +109,7 @@ describe('load_agent_settings — tolerance branches', () => {
     it('both files missing returns defaults', () => {
         const tmp = make_tmp();
         const result = ags.load_agent_settings({
+            template_path: NO_TEMPLATE,
             project_path: path.join(tmp, 'missing-project.yml'),
             user_global_path: path.join(tmp, 'missing-user.yml'),
         });
@@ -105,6 +120,7 @@ describe('load_agent_settings — tolerance branches', () => {
         const tmp = make_tmp();
         const user = write_file(path.join(tmp, 'user.yml'), 'name: Matze\nide: vscode\n');
         const result = ags.load_agent_settings({
+            template_path: NO_TEMPLATE,
             project_path: path.join(tmp, 'missing.yml'),
             user_global_path: user,
         });
@@ -118,6 +134,7 @@ describe('load_agent_settings — tolerance branches', () => {
             'name: Project\npipelines:\n  ci: true\n',
         );
         const result = ags.load_agent_settings({
+            template_path: NO_TEMPLATE,
             project_path: project,
             user_global_path: path.join(tmp, 'missing.yml'),
         });
@@ -128,7 +145,7 @@ describe('load_agent_settings — tolerance branches', () => {
         const tmp = make_tmp();
         const project = write_file(path.join(tmp, 'project.yml'), 'name: ProjectOnly\n');
         const bad = write_file(path.join(tmp, 'user.yml'), ': : : bad\n  - unclosed [\n');
-        const result = ags.load_agent_settings({ project_path: project, user_global_path: bad });
+        const result = ags.load_agent_settings({ project_path: project, user_global_path: bad, template_path: NO_TEMPLATE });
         expect(result).toEqual({ name: 'ProjectOnly' });
     });
 
@@ -136,7 +153,7 @@ describe('load_agent_settings — tolerance branches', () => {
         const tmp = make_tmp();
         const empty_user = write_file(path.join(tmp, 'user.yml'), '');
         const project = write_file(path.join(tmp, 'project.yml'), 'ide: nvim\n');
-        const result = ags.load_agent_settings({ project_path: project, user_global_path: empty_user });
+        const result = ags.load_agent_settings({ project_path: project, user_global_path: empty_user, template_path: NO_TEMPLATE });
         expect(result).toEqual({ ide: 'nvim' });
     });
 });
@@ -151,6 +168,7 @@ describe('load_agent_settings — whitelist filtering', () => {
             'name: Matze\npipelines:\n  skill_improvement: true\nroles:\n  active_role: developer\n',
         );
         const result = ags.load_agent_settings({
+            template_path: NO_TEMPLATE,
             project_path: path.join(tmp, 'missing.yml'),
             user_global_path: user,
         });
@@ -185,6 +203,7 @@ describe('load_agent_settings — whitelist filtering', () => {
             "personal:\n  bot_icon: '🤖'\n  autonomy: medium\n  theme: dark\n",
         );
         const result = ags.load_agent_settings({
+            template_path: NO_TEMPLATE,
             project_path: path.join(tmp, 'missing.yml'),
             user_global_path: user,
         });
@@ -209,7 +228,7 @@ describe('load_agent_settings — merge precedence', () => {
         const tmp = make_tmp();
         const project = write_file(path.join(tmp, 'project.yml'), 'name: ProjectMatze\n');
         const user = write_file(path.join(tmp, 'user.yml'), 'ide: vscode\nrule_loading_tier: lean\n');
-        const result = ags.load_agent_settings({ project_path: project, user_global_path: user });
+        const result = ags.load_agent_settings({ project_path: project, user_global_path: user, template_path: NO_TEMPLATE });
         expect(result).toEqual({ name: 'ProjectMatze', ide: 'vscode', rule_loading_tier: 'lean' });
     });
 
@@ -220,7 +239,7 @@ describe('load_agent_settings — merge precedence', () => {
             path.join(tmp, 'user.yml'),
             "personal:\n  bot_icon: '🤖'\n  autonomy: high\n",
         );
-        const result = ags.load_agent_settings({ project_path: project, user_global_path: user });
+        const result = ags.load_agent_settings({ project_path: project, user_global_path: user, template_path: NO_TEMPLATE });
         expect(result['personal']).toEqual({ bot_icon: '🦊', autonomy: 'high' });
     });
 });
@@ -280,7 +299,7 @@ describe('load_agent_settings — default paths', () => {
         // the default ./.agent-settings.yml is also absent.
         patch_env(user_global_paths.EVENT4U_HOME_ENV, path.join(tmp, 'empty-home'));
         chdir(tmp);
-        expect(ags.load_agent_settings()).toEqual({});
+        expect(ags.load_agent_settings({ template_path: NO_TEMPLATE })).toEqual({});
     });
 });
 
@@ -357,7 +376,7 @@ describe('load_agent_settings — in-project cascade', () => {
         init_git_dir(tmp);
         const project = write_file(path.join(tmp, 'project.yml'), 'name: ProjectMatze\n');
         const user = write_file(path.join(tmp, 'user.yml'), 'ide: vscode\n');
-        const result = ags.load_agent_settings({ project_path: project, user_global_path: user });
+        const result = ags.load_agent_settings({ project_path: project, user_global_path: user, template_path: NO_TEMPLATE });
         expect(result).toEqual({ name: 'ProjectMatze', ide: 'vscode' });
     });
 
@@ -366,7 +385,7 @@ describe('load_agent_settings — in-project cascade', () => {
         init_git_dir(tmp);
         write_file(path.join(tmp, '.agent-settings.yml'), 'name: RootMatze\nide: phpstorm\n');
         const deep = mkdirp(path.join(tmp, 'sub', 'deep'));
-        const result = ags.load_agent_settings({ user_global_path: path.join(tmp, 'no-user.yml'), cwd: deep });
+        const result = ags.load_agent_settings({ user_global_path: path.join(tmp, 'no-user.yml'), cwd: deep, template_path: NO_TEMPLATE });
         expect(result).toEqual({ name: 'RootMatze', ide: 'phpstorm' });
     });
 
@@ -376,7 +395,7 @@ describe('load_agent_settings — in-project cascade', () => {
         write_file(path.join(tmp, '.agent-settings.yml'), 'name: Root\nide: vscode\n');
         const sub = mkdirp(path.join(tmp, 'sub'));
         write_file(path.join(sub, '.agent-settings.yml'), 'ide: phpstorm\n');
-        const result = ags.load_agent_settings({ user_global_path: path.join(tmp, 'no-user.yml'), cwd: sub });
+        const result = ags.load_agent_settings({ user_global_path: path.join(tmp, 'no-user.yml'), cwd: sub, template_path: NO_TEMPLATE });
         expect(result).toEqual({ name: 'Root', ide: 'phpstorm' });
     });
 
@@ -386,7 +405,7 @@ describe('load_agent_settings — in-project cascade', () => {
         write_file(path.join(tmp, '.agent-settings.yml'), 'name: Root\nide: vscode\n');
         const deep = mkdirp(path.join(tmp, 'a', 'b', 'c'));
         write_file(path.join(deep, '.agent-settings.yml'), 'ide: nvim\n');
-        const result = ags.load_agent_settings({ user_global_path: path.join(tmp, 'no-user.yml'), cwd: deep });
+        const result = ags.load_agent_settings({ user_global_path: path.join(tmp, 'no-user.yml'), cwd: deep, template_path: NO_TEMPLATE });
         expect(result).toEqual({ name: 'Root', ide: 'nvim' });
     });
 
@@ -396,7 +415,7 @@ describe('load_agent_settings — in-project cascade', () => {
         const user = write_file(path.join(tmp, 'user.yml'), 'name: UserMatze\npipelines:\n  ci: true\n');
         write_file(path.join(tmp, '.agent-settings.yml'), 'ide: vscode\n');
         const deep = mkdirp(path.join(tmp, 'sub'));
-        const result = ags.load_agent_settings({ user_global_path: user, cwd: deep });
+        const result = ags.load_agent_settings({ user_global_path: user, cwd: deep, template_path: NO_TEMPLATE });
         expect(result).toEqual({ name: 'UserMatze', ide: 'vscode' });
         expect('pipelines' in result).toBe(false);
     });
@@ -407,7 +426,7 @@ describe('load_agent_settings — in-project cascade', () => {
         write_file(path.join(tmp, '.agent-settings.yml'), 'name: Root\n');
         const sub = mkdirp(path.join(tmp, 'sub'));
         write_file(path.join(sub, '.agent-settings.yml'), 'pipelines:\n  ci: false\nroles:\n  active: dev\n');
-        const result = ags.load_agent_settings({ user_global_path: path.join(tmp, 'no-user.yml'), cwd: sub });
+        const result = ags.load_agent_settings({ user_global_path: path.join(tmp, 'no-user.yml'), cwd: sub, template_path: NO_TEMPLATE });
         expect(result['pipelines']).toEqual({ ci: false });
         expect(result['roles']).toEqual({ active: 'dev' });
     });
@@ -421,7 +440,7 @@ describe('load_agent_settings — in-project cascade', () => {
         write_file(path.join(mid, '.agent-settings.yml'), 'rule_loading_tier: balanced\n');
         const deep = mkdirp(path.join(mid, 'deep'));
         write_file(path.join(deep, '.agent-settings.yml'), 'ide: nvim\n');
-        const result = ags.load_agent_settings({ user_global_path: user, cwd: deep });
+        const result = ags.load_agent_settings({ user_global_path: user, cwd: deep, template_path: NO_TEMPLATE });
         expect(result).toEqual({ name: 'RootName', rule_loading_tier: 'balanced', ide: 'nvim' });
     });
 
@@ -430,7 +449,7 @@ describe('load_agent_settings — in-project cascade', () => {
         init_git_file(tmp);
         write_file(path.join(tmp, '.agent-settings.yml'), 'name: SubmoduleRoot\n');
         const deep = mkdirp(path.join(tmp, 'sub'));
-        const result = ags.load_agent_settings({ user_global_path: path.join(tmp, 'no-user.yml'), cwd: deep });
+        const result = ags.load_agent_settings({ user_global_path: path.join(tmp, 'no-user.yml'), cwd: deep, template_path: NO_TEMPLATE });
         expect(result).toEqual({ name: 'SubmoduleRoot' });
     });
 
@@ -439,6 +458,7 @@ describe('load_agent_settings — in-project cascade', () => {
         const deep = mkdirp(path.join(tmp, 'sub'));
         write_file(path.join(deep, '.agent-settings.yml'), 'name: Local\n');
         const result = ags.load_agent_settings({
+            template_path: NO_TEMPLATE,
             project_path: path.join(deep, '.agent-settings.yml'),
             user_global_path: path.join(tmp, 'no-user.yml'),
             cwd: deep,

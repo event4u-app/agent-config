@@ -726,11 +726,11 @@ index 0000000000000000000000000000000000000000..ab169606608658d44e181b7a8af73771
 +observation, and "ship no template" became "split the template's two jobs" once
 +the parity gate and installer invariant were verified. Corrections and refusals:
 +[`zero-ceremony-inbox-cut`](../settings/contexts/zero-ceremony-inbox-cut.md).
-diff --git a/agents/roadmaps/road-to-scripts-settings-defaults.md b/agents/roadmaps/road-to-scripts-settings-defaults.md
+diff --git a/agents/roadmaps/archive/road-to-scripts-settings-defaults.md b/agents/roadmaps/archive/road-to-scripts-settings-defaults.md
 new file mode 100644
 index 0000000000000000000000000000000000000000..092c6af9b6b2ee9376a5e59eeb730473cb8dda29
 --- /dev/null
-+++ b/agents/roadmaps/road-to-scripts-settings-defaults.md
++++ b/agents/roadmaps/archive/road-to-scripts-settings-defaults.md
 @@ -0,0 +1,78 @@
 +---
 +complexity: lightweight
