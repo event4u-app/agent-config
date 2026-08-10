@@ -350,14 +350,14 @@ remembers deciding.
   Link via `src/scripts/_lib/link_crypto.ts decrypt`:
   ENC1:Lbi3WHnpd3ev5lRuiUUn+k5gOvOKcewkScdjaTgsn73kA1j8QvnyXDJH2Is2M7smNnrhHAAAYHy+FO3kpJcOaQ==
 - Gap-table: see
-  [`road-to-cost-parity-0-program.md`](../road-to-cost-parity-0-program.md)
+  [`road-to-cost-parity-0-program.md`](../archive/road-to-cost-parity-0-program.md)
   § Context. The directive's own condition — *"if it does not get better,
   drop it"* — is honoured directly: four of the draft's five components are
   dropped in Phase 4 with the lock that forbids each, and the one that
   survives ships behind a record-only soak.
 - Council: **anthropic/claude-sonnet-4-5 + openai/gpt-4o, 2026-08-10, 2 rounds**
   (`--prompt-mode pr`). Convergence is inlined once, in
-  [`road-to-cost-parity-0-program.md`](../road-to-cost-parity-0-program.md)
+  [`road-to-cost-parity-0-program.md`](../archive/road-to-cost-parity-0-program.md)
   § Provenance, rather than restated per sibling. What it changed here is marked
   in the phases above; what it recorded and did **not** apply is the
   family-scope question (open parts 0 and 3 now, defer 1 and 2), which is the

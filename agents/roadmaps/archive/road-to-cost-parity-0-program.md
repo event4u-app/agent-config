@@ -88,6 +88,12 @@ Recorded so no successor re-plans them:
   *"NOT a defect"*. It also relitigates
   `agents/settings/contexts/dedup-reachability-refusal.md`, whose five reopen
   conditions are unmet — which stands independently of any count.
+- **The judgment ladder is PR #1233, not #1235.** `#1235` is the
+  acceptance-verification commit that followed it. The mislabel entered via the
+  source drafts and propagated; corrected here and in part 2's prerequisites,
+  which is where a future reader arrives from. Archived roadmaps carrying the
+  same mislabel are deliberately **not** rewritten — an archived roadmap is a
+  record of what was planned, not a live claim (see § 3.2 for the scope).
 - **The 201 KB ownership matrix is already generated.**
   `agents/settings/contexts/structural/file-ownership-matrix.md` carries a
   *"Do not edit — regenerated"* header and `generate_ownership_matrix.ts`
@@ -158,18 +164,33 @@ file is the baseline.
 
 ## Phase 1 — the target table, committed before any sibling lands
 
-- [ ] 1.1 Register the family's target table in one budget file with full
+- [x] 1.1 Register the family's target table in one budget file with full
       budget-file discipline (`schema_version`, `registered_at`, owner,
       review date), the baseline column exactly as measured above:
       median final context 519,349 → interim ≤ 300k → target ≤ 200k;
       p90 807,937 → ≤ 550k → ≤ 400k; auto-compact incidence 11.2 % → ≤ 5 %
       → ~0 %; late/early per-call cost ratio 2.1× → ≤ 1.6× → ≤ 1.3×.
       <!-- verify: task test -- --filter=budget -->
-- [ ] 1.2 The payload rows are registered **per host**, not as one number —
+- [x] 1.2 The payload rows are registered **per host**, not as one number —
       `.claude/rules` 330 KB and `.augment/rules` 409 KB are separate rows with
       separate targets, and the ~3 KB hosts are recorded as already lean so
       no target implies work there.
-- [ ] 1.2b The registration is **validated, not just written.** The budget file
+      <!-- Seven rows registered in src/config/cost-parity-budget.json.
+      CORRECTION, and it is this step's main finding: the "~3 KB / ~0 KB lean
+      hosts" premise is FALSE. Re-measured post-regeneration at c073d5732,
+      `.clinerules/` is 111 files / 408 KB and `.windsurfrules` is 330 KB — a
+      full payload each. Both carriers are UNTRACKED and written only by
+      `task generate-tools`, so a checkout that has not run it reads them as
+      near-empty: the earlier figure is a stale-projection artefact of exactly
+      the class measurement rule 1 warns about, found by applying that rule to
+      the table that states it. Risk 3's mitigation ("the lean hosts need no
+      target") does not survive and is not encoded. GEMINI.md (2,982 B) is the
+      only genuinely lean host. Targets: the two rule-delivery rows point at
+      the EXISTING `budgets.yml § standing_rule_delivery` cap rather than
+      opening a second, byte-denominated target for one surface; the two
+      falsified-lean rows are recorded as unowned, since a diet for them
+      belongs to the parked rule-payload part, not to part 0. -->
+- [x] 1.2b The registration is **validated, not just written.** The budget file
       joins the existing budget-file schema check: every row carries
       `schema_version`, `registered_at`, owner, `review_by`, a `source`
       pointer for its baseline value, and the three honest-null fields from
@@ -182,7 +203,13 @@ file is the baseline.
       consumes it, are both deliverables of this step and are cited by path in
       the implementing PR.
       <!-- verify: task test -- --filter=budget -->
-- [ ] 1.3 The honest-null clause is **schema, not prose.** A sentence in a
+      <!-- Fixture: tests/fixtures/cost-parity-budget/revised-without-evidence.budget.json
+      (a `revised_from` with an empty `revision_evidence`). Consumed by
+      tests/scripts/lint_budget_ownership.test.ts § "row schema" — 7 cases, 4
+      of them RED. The row checks live in src/scripts/lint_budget_ownership.ts
+      (`checkBudgetRows`) and are OPT-IN via a `row_schema` block, so the seven
+      sibling budget files are untouched; the gate scans 8 configs and exits 0. -->
+- [x] 1.3 The honest-null clause is **schema, not prose.** A sentence in a
       config file is a comment no reader is obliged to honour, and this
       programme's whole claim is that numbers bend to measurements — so the
       bending is expressed as fields the gate can read. Each target row
@@ -194,7 +221,7 @@ file is the baseline.
       `revised_from` is set — a revision without published evidence fails the
       file, which is the only form of the clause that actually binds.
       <!-- verify: task test -- --filter=budget -->
-- [ ] 1.4 The 200k premium-band anchor is recorded with its rationale **and
+- [x] 1.4 The 200k premium-band anchor is recorded with its rationale **and
       its known noise problem**: 187 of 205 observed sessions end ≥ 200k, so
       a session-end hint at that threshold would fire on ~91 % of sessions.
       No advisory ships in this roadmap — the threshold is a target, and any
@@ -205,7 +232,7 @@ file is the baseline.
 
 ## Phase 2 — the execution order across the family
 
-- [ ] 2.1 Record the committed order. Only two members of this family are
+- [x] 2.1 Record the committed order. Only two members of this family are
       **active**; the council converged on that split and the maintainer
       applied it:
       **(a)** part 3 (handoff envelope) Phase 1 first — a located one-module
@@ -218,7 +245,7 @@ file is the baseline.
       authorization; part 2 on the orchestration claim queue or a Phase-1-only
       authorization. Neither is backlog the dashboard will try to execute, and
       neither rots: each names when it comes back.
-- [ ] 2.2 Record what this family does **not** own, with the owner named:
+- [x] 2.2 Record what this family does **not** own, with the owner named:
       command-surface consolidation → `road-to-surface-consolidation.md`
       (active, 1 open step, time-gated); `tier:` field removal →
       `road-to-tier-removal.md` (active, 2 open steps, blocked on
@@ -226,14 +253,23 @@ file is the baseline.
       `later/road-to-token-economy-dispatch-followup.md`; injection dedup →
       `later/road-to-token-economy-cache-followup.md`. None of these is
       absorbed, closed, or re-planned by this family.
-- [ ] 2.3 One shared evidence ledger at
+- [x] 2.3 One shared evidence ledger at
       `agents/evidence/analysis/cost-parity-ledger.md`: each landed phase in
       any family member appends its measured delta against the Phase-1
       baseline table. One running ledger instead of per-roadmap scatter.
-- [ ] 2.4 A council pass on part 1's lock conflicts is the recommended first
+- [x] 2.4 A council pass on part 1's lock conflicts is the recommended first
       action before part 1 Phase 2 executes — the diet's three collisions
       (preservation-guard vs. norm rewriting, kernel write-deny, the
       spend-blocked adherence bench) are decisions, not measurements.
+      <!-- Recorded as a standing recommendation in the ledger § 3, not
+      executed: part 1 is parked, and a council verdict on a roadmap nobody is
+      about to run is stale by the time it resumes. The step asks for the
+      recommendation to exist where the next reader will find it — that is the
+      ledger, which is also where the order and the non-ownership list live. -->
+      <!-- All four Phase-2 steps land in agents/evidence/analysis/cost-parity-ledger.md
+      as one artefact rather than three, which is the step's own "one running
+      ledger instead of per-roadmap scatter" applied to its own output. -->
+
 
 **Exit:** the order and the non-ownership list are recorded; the ledger file exists with its baseline row.
 **Rollback:** prose and one empty ledger.
@@ -243,14 +279,21 @@ file is the baseline.
 Each is a verified defect or drift found while checking the drafts. They are
 listed here rather than in a sibling because none belongs to a programme.
 
-- [ ] 3.1 `archive/road-to-conformance-round5.md` (around line 192) records
+- [x] 3.1 `archive/road-to-conformance-round5.md` (around line 192) records
       "nothing loads `dist/router.json` at runtime" — and that roadmap is now
       closed with zero open steps, so the finding is recorded nowhere that
       owns it. Move it to a recorded decision: the router is build-time
       infrastructure with ≥ 7 consumers, and the runtime-consumer question
       belongs to `later/road-to-deferred-rule-retriever.md`. One pointer
       line, so the finding stops reading as pending deletion.
-- [ ] 3.2 Correct the `#1235` mislabel, with the scope stated so the sweep is
+      <!-- Landed as agents/settings/contexts/router-json-build-time-infrastructure.md.
+      The consumer count was re-measured rather than copied: 70 tracked files
+      under src/scripts/, tests/, .github/ and the task runner reference
+      router.json — the step's "≥ 7" is a floor, not the figure. That tree IS
+      scanned by check_no_roadmap_refs, so the retriever roadmap is named
+      without a path; a link would have been the violation the rule exists for. -->
+
+- [x] 3.2 Correct the `#1235` mislabel, with the scope stated so the sweep is
       decidable rather than open-ended. The judgment ladder landed in PR
       **#1233**; `#1235` is the acceptance-verification commit.
       **In scope:** live artefacts under `src/`, `docs/` and non-archived
@@ -265,32 +308,68 @@ listed here rather than in a sibling because none belongs to a programme.
       is where a future reader arrives from. **Not in scope either:** commit
       messages and merged PR bodies, which cannot be corrected.
       <!-- verify: rg -n '#1235' src docs agents/roadmaps --glob '!archive/**' --glob '!later/**' --glob '!skipped/**' | head -20 -->
-- [ ] 3.3 Record the per-host payload table (Context above) into
+      <!-- Sweep run 2026-08-10 at c073d5732. Result: ZERO uncorrected
+      occurrences in scope. `src/` 0, `docs/` 0. Part 2's prerequisites already
+      carried the correction; the only gap was this roadmap's own Context,
+      which now carries it as a CUT-list entry. Every remaining hit is either
+      the correction itself, this step, or an archived roadmap the step
+      explicitly excludes. A zero is the real answer here and is reported as
+      one — it means the mislabel never reached a live artefact, not that
+      nobody looked. -->
+
+- [x] 3.3 Record the per-host payload table (Context above) into
       `agents/evidence/analysis/` so the next diet proposal starts from
       measured per-host numbers instead of one aggregate.
+      <!-- Landed as agents/evidence/analysis/rule-payload-per-host-2026-08-10.md
+      — re-measured at c073d5732 rather than copied from the Context table,
+      which is how the falsified "lean hosts" row was caught. -->
+
 
 **Exit:** the three corrections are landed and the router finding has a named owner.
 **Rollback:** per item; all three are documentation edits.
 
 ## Phase 4 — what this roadmap will not do
 
-- [ ] 4.1 No WIP cap and no roadmap-slot accounting — `ADR-133` rejected it
+> **Verified against the delivered diff, not asserted.** The change adds one
+> config file, one gate extension plus its tests and fixture, two evidence
+> notes and one project-local context. It touches **no** file under `src/rules/`
+> and adds no always-loaded prose, which is what makes 4.4 checkable rather
+> than promissory.
+
+- [x] 4.1 No WIP cap and no roadmap-slot accounting — `ADR-133` rejected it
       and this roadmap does not relitigate that.
-- [ ] 4.2 No `expires` field, no auto-demotion cycle — parked at N=1 by
-      council decision.
-- [ ] 4.3 No release-review dimension — the matrix it would extend does not
+- [x] 4.2 No `expires` field, no auto-demotion cycle — parked at N=1 by
+      council decision. <!-- The budget file's honest-null fields are the
+      opposite mechanism: a target revises on published evidence, on demand,
+      never on a timer. -->
+- [x] 4.3 No release-review dimension — the matrix it would extend does not
       exist, as a prior roadmap already recorded.
-- [ ] 4.4 No new always-loaded prose from this family's own governance. A
+- [x] 4.4 No new always-loaded prose from this family's own governance. A
       diet programme that fattens the layer refutes itself.
-- [ ] 4.5 No session-end advisory at 200k — see 1.4; the ~91 % firing rate
+      <!-- Delivered surfaces: src/config/*.json (config), src/scripts/ +
+      tests/ (gate), agents/evidence/analysis/ (records, never loaded),
+      agents/settings/contexts/ (on-demand, not always-loaded). Zero rule
+      files touched. -->
+- [x] 4.5 No session-end advisory at 200k — see 1.4; the ~91 % firing rate
       makes it a constant line, not an advisory, and `session-eol` sits in
       the `worker.drop` set with a ~24-test downstream surface.
+      <!-- The 200k anchor ships as a target row plus its known noise problem
+      in the budget file's `anchors` block, with `no_carrier_ships` stated
+      there as a field. No hook concern, no threshold constant. -->
+
 
 ## Blockers
 
+> **Both blockers below are open at archival, and both are re-homed rather than
+> archived with this file.** Neither blocked a step here, so neither could hold
+> the roadmap open — but archival is exactly the moment a question silently
+> leaves the tracked surface, which is the failure this roadmap inherited from
+> part 3. Both now live in `agents/evidence/analysis/cost-parity-ledger.md` § 5,
+> which is not archived, with owner and resolution condition intact.
+
 ### blocker: adherence-bench-spend
 
-- **Status:** open
+- **Status:** open — **re-homed to the cost-parity ledger § 5 at archival**
 - **Owner:** user
 - **Blocks:** part 1's adherence-eval phase
 - **What to do:** two existing roadmaps already own an A/B bench of this
@@ -303,7 +382,7 @@ listed here rather than in a sibling because none belongs to a programme.
 
 ### blocker: background-continuation-probe
 
-- **Status:** open
+- **Status:** open — **re-homed to the cost-parity ledger § 5 at archival**
 - **Owner:** maintainer
 - **Blocks:** any continuation-offload step (none planned in this program)
 - **Inherited from:** `archive/road-to-cost-parity-3-handoff-envelope.md`,
@@ -334,21 +413,46 @@ listed here rather than in a sibling because none belongs to a programme.
 
 ## Acceptance criteria
 
-- [ ] The budget file exists with the measured baseline column, per-host
+- [x] The budget file exists with the measured baseline column, per-host
       payload rows and the 200k noise note, and its honest-null clause is
       schema — `revisable` / `revision_evidence` / `revised_from` present on
       every row, with the validator provably red on a fixture that sets
       `revised_from` without evidence.
-- [ ] The execution order and the four named non-owners are recorded, and a
+      <!-- src/config/cost-parity-budget.json — 4 session-cost rows + 7
+      per-host payload rows + the `anchors` block carrying the ~91 %
+      firing-rate note. Red case proven by
+      tests/fixtures/cost-parity-budget/revised-without-evidence.budget.json;
+      11/11 in tests/scripts/lint_budget_ownership.test.ts, and the real gate
+      scans 8 configs at exit 0. -->
+- [x] The execution order and the four named non-owners are recorded, and a
       spot-check confirms none of the four is edited by any family member.
-- [ ] The ledger file exists and its first row is the pinned baseline.
-- [ ] All three Phase-3 corrections landed; a grep for `#1235` in tracked
+      <!-- Ledger §§ 1-2. Spot-check: this change edits none of the four. The
+      only family references to them are consumption or explicit non-goals —
+      part 1 lists two as its own Phase-6 non-goals and asserts in its
+      acceptance criteria that it edits no file they own; parts 0/2/3 name
+      them only as pointers. Zero steps in any member edit them. -->
+- [x] The ledger file exists and its first row is the pinned baseline.
+      <!-- agents/evidence/analysis/cost-parity-ledger.md § 4 — the first and
+      currently only row is the 2026-08-10 / c073d5732 baseline, with an
+      explicit "no delta exists" note, since a registration moves nothing. -->
+- [x] All three Phase-3 corrections landed; a grep for `#1235` in tracked
       files returns only intentional historical references.
-- [ ] Every CUT entry in the Context section cites the lock or evidence file
+      <!-- Verified: every surviving hit is the correction itself, this
+      roadmap's own steps, or an archived roadmap the 3.2 scope excludes. -->
+- [x] Every CUT entry in the Context section cites the lock or evidence file
       that justifies it — verifiable by following each path.
-- [ ] The family's three siblings exist and each carries its own blockers; the
+      <!-- All 17 cited paths followed and resolved (ADR-133, the two refusal
+      contexts, the ownership matrix + its generator, check_static_layer_stability,
+      the recycling evidence note, and the archive/later roadmaps). Zero misses. -->
+- [x] The family's three siblings exist and each carries its own blockers; the
       two parked ones live under `later/` with `status: later` and a resume
       condition, and no sibling plans a step this file lists under Phase 4.
+      <!-- part 1: status later, "Resume when ANY of" (:25), 3 blockers.
+      part 2: status later, "Resume when EITHER" (:23), 2 blockers. part 3:
+      archived, closed with its background-continuation-probe blocker open —
+      which is why this roadmap inherited it. Phase-4 check: a grep for
+      "WIP cap" / "expires" / "release-review dimension" / "session-end
+      advisory" across both parked siblings returns ZERO hits. -->
 
 ## Provenance
 
