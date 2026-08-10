@@ -21,7 +21,7 @@ afterEach(() => {
 
 function fakeClient(opts: { provider?: string; text?: string; error?: string | null; throws?: boolean }): ExternalAIClient {
     return {
-        provider: opts.provider ?? 'anthropic',
+        name: opts.provider ?? 'anthropic',
         ask(_system: string, _user: string): CouncilResponse {
             if (opts.throws) throw new Error('transport exploded');
             return new CouncilResponse({
@@ -182,12 +182,119 @@ describe('ladder rung 0.5 + nudge line (4.2/4.3)', () => {
 });
 
 describe('subagent model ceiling (Phase 5.2, class C)', () => {
-    it('resolves empty/absent to null and a set value verbatim — human-set only, never inferred', async () => {
+    it('resolves absent to null and a set value verbatim, memoised per cwd', async () => {
         const { _subagentModelCeiling, _resetModelCeilingMemo } = await import(
             '../../src/scripts/ai_council/clients.js'
         );
         _resetModelCeilingMemo();
-        // In this repo's settings the key is absent/empty → no ceiling.
-        expect(_subagentModelCeiling()).toBeNull();
+        // Absent: an empty temp project (no settings file anywhere below) → null.
+        const emptyCwd = path.join(tmp, 'empty-project');
+        fs.mkdirSync(emptyCwd, { recursive: true });
+        expect(_subagentModelCeiling(emptyCwd)).toBeNull();
+
+        // Set value verbatim, and per-cwd memoisation keeps projects apart.
+        const setCwd = path.join(tmp, 'capped-project');
+        fs.mkdirSync(setCwd, { recursive: true });
+        fs.writeFileSync(
+            path.join(setCwd, '.agent-settings.yml'),
+            'subagents:\n  model_ceiling: "claude-sonnet-4-5"\n',
+        );
+        expect(_subagentModelCeiling(setCwd)).toBe('claude-sonnet-4-5');
+        expect(_subagentModelCeiling(emptyCwd)).toBeNull(); // A's cap never leaks to B
+        _resetModelCeilingMemo();
+    });
+});
+
+describe('envelope size caps (Phase 6.1 — errors, never silent truncation)', () => {
+    it('accepts a bounded envelope with artifact_paths and rejects transcript-shaped ones', async () => {
+        const { validateResponse, MAX_SUMMARY_CHARS } = await import(
+            '../../src/scripts/_lib/subagent_response.js'
+        );
+        const ok = validateResponse({
+            summary: 'did the thing',
+            findings: [{ title: 'one finding', evidence_refs: ['src/a.ts:12'] }],
+            risks: ['one risk line'],
+            confidence: 'high',
+            handoff: 'nothing open',
+            artifact_paths: ['agents/runtime/artifacts/run-1/result.md'],
+        });
+        expect(ok.valid).toBe(true);
+
+        const oversized = validateResponse({
+            summary: 'x'.repeat(MAX_SUMMARY_CHARS + 1),
+            findings: [],
+            risks: [],
+            confidence: 'high',
+            handoff: 'ok',
+        });
+        expect(oversized.valid).toBe(false);
+        expect(oversized.errors.join(' ')).toMatch(/artifact_paths/);
+
+        const badPath = validateResponse({
+            summary: 's',
+            findings: [],
+            risks: [],
+            confidence: 'low',
+            handoff: 'h',
+            artifact_paths: ['multi\nline'],
+        });
+        expect(badPath.valid).toBe(false);
+        expect(badPath.errors.join(' ')).toMatch(/single-line path ref/);
+
+        const tooMany = validateResponse({
+            summary: 's',
+            findings: [],
+            risks: Array.from({ length: 41 }, (_, i) => `risk ${i}`),
+            confidence: 'low',
+            handoff: 'h',
+        });
+        expect(tooMany.valid).toBe(false);
+        expect(tooMany.errors.join(' ')).toMatch(/not a transcript/);
+    });
+});
+
+describe('return_channel_chars (Phase 6.3 — hook-carried count)', () => {
+    it('rides the orchestration line as a count and validates non-negative', async () => {
+        const { buildOrchestrationLine } = await import(
+            '../../src/scripts/_lib/orchestration_record.js'
+        );
+        const ok = buildOrchestrationLine({
+            spawn_count: 1,
+            token_delta: 0,
+            return_channel_chars: 4200,
+            ts: '2026-08-10T12:00:00.000Z',
+            id: 'rc-1',
+        });
+        expect(ok.errors).toEqual([]);
+        expect(ok.line!.orchestration).toMatchObject({ return_channel_chars: 4200 });
+        expect(
+            buildOrchestrationLine({
+                spawn_count: 1,
+                token_delta: 0,
+                return_channel_chars: -1,
+                ts: '2026-08-10T12:00:00.000Z',
+                id: 'rc-2',
+            }).errors.join(' '),
+        ).toMatch(/return_channel_chars/);
+    });
+
+    it('the hook derives it from sync results and leaves async acks null', async () => {
+        const { extractDispatchFacts, buildRecordInput } = await import(
+            '../../src/scripts/hooks/orchestration_record_hook.js'
+        );
+        const sync = extractDispatchFacts({
+            tool_name: 'Task',
+            tool_response: { resolvedModel: 'claude-sonnet-4-5', totalTokens: 900, result: 'abc' },
+        } as never);
+        expect(sync.returnChannelChars).toBeGreaterThan(0);
+        const input = buildRecordInput(sync, '2026-08-10T12:00:00.000Z', 'rc-3');
+        expect(input.return_channel_chars).toBe(sync.returnChannelChars);
+
+        const asyncAck = extractDispatchFacts({
+            tool_name: 'Task',
+            tool_response: { isAsync: true, status: 'async_launched' },
+        } as never);
+        expect(asyncAck.returnChannelChars).toBeNull();
+        expect(buildRecordInput(asyncAck, '2026-08-10T12:00:00.000Z', 'rc-4').return_channel_chars).toBeUndefined();
     });
 });

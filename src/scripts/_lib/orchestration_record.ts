@@ -108,6 +108,11 @@ export interface RecordInput {
     //    `token_delta`. ──
     /** Tokens the worker consumed AFTER init (delta to envelope close). */
     work_tokens?: number | null | undefined;
+    /** Chars the dispatch RETURNED into the orchestrator context (serialized
+     *  tool-result length on sync completions) — the Phase 6.3 detector for
+     *  "isolation win refunded through the return channel". A count, never
+     *  content. */
+    return_channel_chars?: number | null | undefined;
     /** Provenance of the init/work pair: 'measured' (transcript ledger via
      *  cc_transcript) or 'estimated'. Defaults to 'estimated' when either
      *  field is present without a tag. */
@@ -256,6 +261,7 @@ export function buildOrchestrationLine(input: RecordInput): BuiltLine {
         ['rules_carried', input.rules_carried],
         ['rules_used', input.rules_used],
         ['work_tokens', input.work_tokens],
+        ['return_channel_chars', input.return_channel_chars],
     ] as const) {
         if (v != null && (!isInt(v) || v < 0)) errors.push(`${key} must be a non-negative integer count`);
     }
@@ -320,6 +326,7 @@ export function buildOrchestrationLine(input: RecordInput): BuiltLine {
         rules_used: input.rules_used ?? null,
         // dispatch-economy additive fields — readers ignore unknowns per audit-log-v1
         work_tokens: input.work_tokens ?? null,
+        return_channel_chars: input.return_channel_chars ?? null,
         floor_provenance:
             input.floor_provenance ?? (input.init_tokens != null || input.work_tokens != null ? 'estimated' : null),
         // capsule shadow-measurement — readers ignore unknowns per audit-log-v1

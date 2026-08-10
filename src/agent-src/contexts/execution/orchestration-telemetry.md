@@ -68,6 +68,7 @@ v1 forward-compat rule on unknown fields).
 | `rules_used` | int \| null | **Lean-init extension (L6 demand signal).** Rules the worker actually applied/cited. Validation: never exceeds `rules_carried`. `null` = not measured. Counts only. |
 | `work_tokens` | int \| null | **Dispatch-economy extension.** Tokens the worker consumed AFTER init — the delta from first worker turn to envelope close. With `init_tokens`, yields the `dispatch_floor` ratio (`src/config/dispatch-economy-metrics.json`). Sourced from the transcript ledger (`_lib/cc_transcript.ts` `billable_input` semantics) by the report/backfill, never model-estimated without the tag below. `null` = not measured. |
 | `floor_provenance` | enum \| null | **Dispatch-economy extension.** Provenance of the `init_tokens`/`work_tokens` pair: `measured` (transcript ledger) · `estimated`. Auto-defaults to `estimated` when either field is present untagged — mirrors `token_delta_provenance`. `null` = neither field present. |
+| `return_channel_chars` | int \| null | **Dispatch-economy extension (Phase 6.3).** Serialized chars of the tool result returned into the orchestrator context (sync completions, hook-derived count — content never enters the record). Detector for "isolation win refunded through the return channel"; committed cap: `MAX_ENVELOPE_CHARS` (12,000) via `return_channel` in `dispatch-economy-metrics.json`. `null` = async ack. |
 
 These routing + cost fields are additive and optional — a line without them is
 still a valid orchestration line; readers ignore unknown fields per the v1

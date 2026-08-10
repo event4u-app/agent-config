@@ -109,6 +109,13 @@ export interface Report {
         /** null until asks exist; the registered verdict is a review-window call. */
         escalation_kill_signal: boolean | null;
     };
+    return_channel: {
+        lines_with_field: number;
+        median_chars: number | null;
+        envelope_cap_chars: number;
+        /** median above the committed envelope cap = transcript-shaped returns flowing back. */
+        cap_breach_signal: boolean | null;
+    };
     notes: string[];
 }
 
@@ -166,21 +173,45 @@ interface AuditOrchestration {
     route_taken?: unknown;
     outcome?: unknown;
     escalated?: unknown;
+    return_channel_chars?: unknown;
+    origin?: unknown;
 }
 
 function isFiniteNonNegInt(v: unknown): v is number {
     return typeof v === 'number' && Number.isInteger(v) && v >= 0;
 }
 
-/** Read every orchestration object out of the audit dir's monthly JSONL files. */
-export function readAuditOrchestrations(auditDir: string): AuditOrchestration[] {
+/**
+ * Read every orchestration object out of the audit dir's monthly JSONL files,
+ * honouring the same age window the transcript scan uses. Files are monthly,
+ * so the mtime filter (mtime updates on append) is the available granularity —
+ * a file whose LAST append is inside the window is read whole; per-line `ts`
+ * filtering then trims to the window exactly.
+ */
+export function readAuditOrchestrations(
+    auditDir: string,
+    opts: { maxAgeDays?: number; now?: Date } = {},
+): AuditOrchestration[] {
     if (!fs.existsSync(auditDir)) return [];
     const out: AuditOrchestration[] = [];
+    const cutoffMs =
+        opts.maxAgeDays !== undefined
+            ? (opts.now ?? new Date()).getTime() - opts.maxAgeDays * 24 * 60 * 60 * 1000
+            : null;
     let entries: string[];
     try {
         entries = fs.readdirSync(auditDir).filter((f) => f.endsWith('.jsonl')).sort();
     } catch {
         return [];
+    }
+    if (cutoffMs !== null) {
+        entries = entries.filter((f) => {
+            try {
+                return fs.statSync(path.join(auditDir, f)).mtimeMs >= cutoffMs;
+            } catch {
+                return false;
+            }
+        });
     }
     for (const f of entries) {
         let text: string;
@@ -192,10 +223,13 @@ export function readAuditOrchestrations(auditDir: string): AuditOrchestration[] 
         for (const line of text.split('\n')) {
             if (line.trim().length === 0) continue;
             try {
-                const parsed = JSON.parse(line) as { orchestration?: AuditOrchestration };
-                if (parsed.orchestration && typeof parsed.orchestration === 'object') {
-                    out.push(parsed.orchestration);
+                const parsed = JSON.parse(line) as { orchestration?: AuditOrchestration; ts?: unknown };
+                if (!parsed.orchestration || typeof parsed.orchestration !== 'object') continue;
+                if (cutoffMs !== null && typeof parsed.ts === 'string') {
+                    const t = Date.parse(parsed.ts);
+                    if (Number.isFinite(t) && t < cutoffMs) continue; // outside the window
                 }
+                out.push(parsed.orchestration);
             } catch {
                 continue;
             }
@@ -218,6 +252,7 @@ export function buildReport(opts: {
             dispatch_floor: { thresholds: { projection_mandatory_ratio: number; success_ratio_after_projection: number } };
             rules_efficiency: { thresholds: { low_quota_signal: number } };
             ask_economy: { thresholds: { escalation_kill: number } };
+            return_channel: { thresholds: { envelope_cap_chars: number } };
         };
     };
 
@@ -231,17 +266,31 @@ export function buildReport(opts: {
     const finiteRatios = legs.map((l) => l.ratio).filter((r): r is number => r !== null);
     const singleCall = legs.filter((l) => l.ratio === null).length;
 
-    const orchestrations = readAuditOrchestrations(opts.auditDir);
+    const orchestrations = readAuditOrchestrations(opts.auditDir, {
+        maxAgeDays: opts.maxAgeDays,
+        ...(opts.now !== undefined ? { now: opts.now } : {}),
+    });
     const reviewerMeasured: { init: number; work: number }[] = [];
     const quotas: number[] = [];
     let askLines = 0;
     let askAdopted = 0;
     let askEscalated = 0;
+    const returnChars: number[] = [];
     for (const o of orchestrations) {
         if (o.route_taken === 'ask') {
             askLines += 1;
             if (o.outcome === 'DONE') askAdopted += 1;
-            if (o.escalated === true) askEscalated += 1;
+        }
+        // Ask->spawn escalation is recorded on the CALLER's follow-up SPAWN
+        // line (route_taken=subagent, escalated=true, origin-tagged) — the
+        // ask line itself cannot know it was insufficient. Counting
+        // escalated on ask lines would make the registered kill criterion
+        // unmeasurable by construction (review finding, 2026-08-10).
+        if (o.route_taken === 'subagent' && o.escalated === true && o.origin === 'dispatch-economy-2026') {
+            askEscalated += 1;
+        }
+        if (isFiniteNonNegInt(o.return_channel_chars)) {
+            returnChars.push(o.return_channel_chars);
         }
         if (isFiniteNonNegInt(o.rules_carried) && isFiniteNonNegInt(o.rules_used) && o.rules_carried > 0) {
             quotas.push(o.rules_used / o.rules_carried);
@@ -308,6 +357,15 @@ export function buildReport(opts: {
                     ? null
                     : askEscalated / askLines > registration.metrics.ask_economy.thresholds.escalation_kill,
         },
+        return_channel: {
+            lines_with_field: returnChars.length,
+            median_chars: median(returnChars),
+            envelope_cap_chars: registration.metrics.return_channel.thresholds.envelope_cap_chars,
+            cap_breach_signal:
+                returnChars.length === 0
+                    ? null
+                    : (median(returnChars) ?? 0) > registration.metrics.return_channel.thresholds.envelope_cap_chars,
+        },
         notes,
     };
 }
@@ -336,6 +394,11 @@ function renderText(r: Report): string {
     lines.push('rules_efficiency:');
     lines.push(
         `  envelopes with pair=${r.rules_efficiency.envelopes_with_pair} · median quota=${r.rules_efficiency.median_quota === null ? '—' : r.rules_efficiency.median_quota.toFixed(2)} · low-quota signal (< ${r.rules_efficiency.threshold_low_quota}): ${r.rules_efficiency.low_quota_signal === null ? 'no data' : String(r.rules_efficiency.low_quota_signal)}`,
+    );
+    lines.push('');
+    lines.push('return_channel:');
+    lines.push(
+        `  lines=${r.return_channel.lines_with_field} · median chars=${r.return_channel.median_chars === null ? '—' : Math.round(r.return_channel.median_chars)} · cap-breach signal (> ${r.return_channel.envelope_cap_chars}): ${r.return_channel.cap_breach_signal === null ? 'no data' : String(r.return_channel.cap_breach_signal)}`,
     );
     lines.push('');
     lines.push('ask_economy:');

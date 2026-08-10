@@ -21,12 +21,38 @@ export interface Finding {
     mutating?: boolean;
 }
 
+// ── Committed envelope size caps (road-to-token-economy-dispatch Phase 6.1) ──
+// The envelope is the ONLY return channel: a worker's full result lands on
+// disk (runtime artifact dir, gitignored) and the envelope carries paths +
+// verdict + a BOUNDED summary. Without caps, transcript-shaped output flows
+// back into the orchestrator context and refunds the isolation win — the
+// measured spawn floor is ~251k tokens; a capped envelope is ≤ ~3k. Caps are
+// validator ERRORS, never silent truncation (never-silent discipline): an
+// oversized envelope is rejected loudly and the author shortens it.
+/** Max chars for the summary — bounded prose, not a transcript. */
+export const MAX_SUMMARY_CHARS = 2000;
+/** Max chars for one line-shaped field (handoff, a risk, a finding title). */
+export const MAX_RESPONSE_LINE_CHARS = 240;
+/** Max entries per array (findings, risks, artifact_paths) — mirrors the capsule. */
+export const MAX_RESPONSE_ENTRIES = 40;
+/** Max chars for one artifact path ref. Mirrors the capsule's ref cap. */
+export const MAX_ARTIFACT_REF_CHARS = 200;
+/** Committed max for the WHOLE serialized envelope (~3k tokens ceiling). */
+export const MAX_ENVELOPE_CHARS = 12000;
+
 export interface SubagentResponse {
     summary: string;
     findings: Finding[];
     risks: string[];
     confidence: Confidence;
     handoff: string;
+    /**
+     * Where the worker's FULL results live on disk (runtime artifact dir,
+     * gitignored) — the orchestrator consumes from these paths on demand,
+     * never via wholesale transcript ingestion (Phase 6.1/6.2). Ref tokens
+     * only, capped like every other array.
+     */
+    artifact_paths?: string[];
     /**
      * Premises the worker acted on, `{statement, basis, epistemic_state}` —
      * the same shape and the same validator as the CHECKPOINT capsule
@@ -73,6 +99,55 @@ export function validateResponse(input: unknown): ValidationResult {
                 errors.push(...validateAssumption(a, `assumptions[${i}]`));
             }
         }
+    }
+    // ── Committed size caps (Phase 6.1) — errors, never silent truncation ──
+    if (typeof r.summary === 'string' && r.summary.length > MAX_SUMMARY_CHARS) {
+        errors.push(`summary is ${r.summary.length} chars (max ${MAX_SUMMARY_CHARS}) — the envelope carries a bounded summary; the full result belongs on disk (artifact_paths)`);
+    }
+    if (typeof r.handoff === 'string' && r.handoff.length > MAX_RESPONSE_LINE_CHARS) {
+        errors.push(`handoff is ${r.handoff.length} chars (max ${MAX_RESPONSE_LINE_CHARS})`);
+    }
+    for (const [key, arr] of [
+        ['findings', r.findings],
+        ['risks', r.risks],
+        ['artifact_paths', r.artifact_paths],
+    ] as const) {
+        if (Array.isArray(arr) && arr.length > MAX_RESPONSE_ENTRIES) {
+            errors.push(`${key} carries ${arr.length} entries (max ${MAX_RESPONSE_ENTRIES}) — an envelope is a handoff, not a transcript`);
+        }
+    }
+    if (Array.isArray(r.risks)) {
+        for (const [i, risk] of (r.risks as unknown[]).entries()) {
+            if (typeof risk === 'string' && risk.length > MAX_RESPONSE_LINE_CHARS) {
+                errors.push(`risks[${i}] is ${risk.length} chars (max ${MAX_RESPONSE_LINE_CHARS})`);
+            }
+        }
+    }
+    if (Array.isArray(r.findings)) {
+        for (const [i, f] of (r.findings as Finding[]).entries()) {
+            if (f && typeof f.title === 'string' && f.title.length > MAX_RESPONSE_LINE_CHARS) {
+                errors.push(`finding[${i}] title is ${f.title.length} chars (max ${MAX_RESPONSE_LINE_CHARS})`);
+            }
+        }
+    }
+    if (r.artifact_paths !== undefined) {
+        if (!Array.isArray(r.artifact_paths)) {
+            errors.push('artifact_paths must be an array of path ref tokens');
+        } else {
+            for (const [i, p] of (r.artifact_paths as unknown[]).entries()) {
+                if (typeof p !== 'string' || p.includes('\n') || p.length > MAX_ARTIFACT_REF_CHARS) {
+                    errors.push(`artifact_paths[${i}] must be a single-line path ref ≤ ${MAX_ARTIFACT_REF_CHARS} chars`);
+                }
+            }
+        }
+    }
+    try {
+        const serialized = JSON.stringify(input);
+        if (serialized.length > MAX_ENVELOPE_CHARS) {
+            errors.push(`envelope serializes to ${serialized.length} chars (max ${MAX_ENVELOPE_CHARS}) — move content to disk and reference it via artifact_paths`);
+        }
+    } catch {
+        errors.push('envelope is not JSON-serializable');
     }
     return { valid: errors.length === 0, errors };
 }

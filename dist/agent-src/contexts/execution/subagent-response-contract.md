@@ -13,13 +13,23 @@ orchestrator synthesises and re-verifies.
   "findings": [{ "title": "", "evidence_refs": ["file:line | id | path"], "mutating": false }],
   "risks": [],
   "confidence": "low | medium | high",
-  "handoff": ""
+  "handoff": "",
+  "artifact_paths": ["<runtime artifact dir path — where the FULL result lives on disk>"]
 }
 ```
 
 - **Refs, not bodies.** `evidence_refs` are ref tokens (`file:line`, ids, paths),
   never inline content — same minimal-slice / privacy floor as the spawn contract.
 - `mutating` marks a finding whose action changes files/state (feeds the verify link).
+- **The envelope is the ONLY return channel** (token-economy-dispatch Phase 6):
+  a worker's full result lands on disk (runtime artifact dir, gitignored) and
+  `artifact_paths` names where; the orchestrator consumes from those paths on
+  demand, never via wholesale transcript ingestion. Committed size caps,
+  validator-ERRORED (never silent truncation): `summary` ≤ 2,000 chars ·
+  line-shaped fields (`handoff`, a risk, a finding title) ≤ 240 · arrays ≤ 40
+  entries · one artifact ref ≤ 200 · the whole serialized envelope ≤ 12,000
+  chars (~3k tokens against a measured ~251k spawn floor). Constants + checks:
+  `src/scripts/_lib/subagent_response.ts`.
 
 ## Budget-hit partial result
 

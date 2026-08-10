@@ -147,7 +147,7 @@ describe('buildReport', () => {
         expect(worker.single_call_legs).toBe(1);
         expect(worker.median_init_tokens).toBe(80000); // [100k, 50k, 80k] → 80k
         expect(worker.median_ratio_finite).toBeCloseTo(21.875); // [31.25, 12.5]
-        // 1.75 > 1.0 → the single-run projection-mandatory signal fires
+        // 21.875 > 1.0 → the single-run projection-mandatory signal fires
         expect(report.dispatch_floor.projection_mandatory_signal).toBe(true);
 
         const reviewer = report.dispatch_floor.roles.find((r) => r.role === 'reviewer')!;

@@ -13,7 +13,7 @@
  *     [--tiers sonnet,opus] [--agent-combo implementer,judge] [--wall-clock-ms 18500] [--dispatch-outcome DONE] \
  *     [--first-pass-success true|false] [--escalated true|false] \
  *     [--init-tokens 1200] [--payload-hash <hex8-64>] [--lookup-class definition|references|string-existence|report-run] \
- *     [--route-taken primitive|subagent] [--budget-hit true|false] [--correctness-match true|false] \
+ *     [--route-taken primitive|subagent|ask] [--budget-hit true|false] [--correctness-match true|false] \
  *     [--cache-hit true|false] [--origin lean-init-2026] \
  *     [--rules-carried 32] [--rules-used 5] \
  *     [--work-tokens 41000] [--floor-provenance measured|estimated] \

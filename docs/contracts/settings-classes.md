@@ -168,8 +168,8 @@ dispatch runs, not WHETHER the layer exists, so they keep their own C rows.
 |---|---|
 | A — preference | 27 |
 | B — consent | 3 |
-| C — guarded | 107 |
-| **Total** | **137** |
+| C — guarded | 108 |
+| **Total** | **138** |
 
 The total is every leaf in the template, where *leaf* means anything that is not
 a **non-empty** map. An empty map (like the former `subagents.host_capabilities: {}`) is a real

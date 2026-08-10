@@ -359,45 +359,60 @@ result and the projection widens by evidence, not by fear.
 
 ## Phase 6 — the envelope is the only return channel
 
-- [ ] 6.1 Worker results land on disk (runtime artifact dir, gitignored);
+- [x] 6.1 Worker results land on disk (runtime artifact dir, gitignored);
       the CHECKPOINT envelope carries path + verdict + the bounded summary —
       committed max envelope size, lint-checked in the envelope validator.
-      <!-- verify: npx vitest run envelope -->
-- [ ] 6.2 The orchestrator's dispatch skill instructs result consumption
+      <!-- verify: npx vitest run ask_transport subagent_response -->
+      <!-- done 2026-08-10: subagent_response.ts gains artifact_paths +
+      committed caps (summary 2000 · line 240 · arrays 40 · ref 200 ·
+      whole envelope 12000 chars), validator-ERRORED, never silent
+      truncation; contract doc updated. The CHECKPOINT capsule side was
+      already size-capped by construction (subagent_capsule.ts) -->
+- [x] 6.2 The orchestrator's dispatch skill instructs result consumption
       from the artifact path on demand, never wholesale transcript
       ingestion; the subagent-orchestration skill's examples update to the
-      envelope-only shape.
-- [ ] 6.3 REGISTER metric: orchestrator context growth per dispatch
+      envelope-only shape. <!-- done 2026-08-10: subagent-orchestration
+      SKILL.md § Status taxonomy carries the envelope-only return-channel
+      contract with the caps and the N-envelopes-not-N-transcripts rule -->
+- [x] 6.3 REGISTER metric: orchestrator context growth per dispatch
       (pre/post-turn delta at the dispatch tool-use, hook-carried). The
       isolation win refunded through the return channel is the failure this
-      number exists to catch.
+      number exists to catch. <!-- done 2026-08-10: return_channel_chars on
+      the orchestration line (hook-derived count on sync completions,
+      content never read); registered as return_channel in
+      dispatch-economy-metrics.json with the 12000-char envelope cap as the
+      breach threshold; report section live -->
 
 **Exit:** dispatching N workers grows the orchestrator context by N envelopes, not N transcripts.
 **Rollback:** envelope size lint relaxes; skill prose reverts.
 
 ## Phase 7 — what this roadmap will not do
 
-- [ ] 7.1 No rule-retrieval engine — `road-to-deferred-rule-retriever` keeps
+- [x] 7.1 No rule-retrieval engine — `road-to-deferred-rule-retriever` keeps
       its own gates; this roadmap only feeds gate (2c) with honest data.
-- [ ] 7.2 No second memory substrate, no blackboard beyond the existing
+- [x] 7.2 No second memory substrate, no blackboard beyond the existing
       anchored codebase memory + on-disk artifacts (Source J's swarm memory
       solves a multi-machine problem this suite measurably does not have).
-- [ ] 7.3 No nudge removal and no threshold change by hand-feel — the
+- [x] 7.3 No nudge removal and no threshold change by hand-feel — the
       end-review 50-line threshold (`MUTATION_LINE_THRESHOLD`,
       `end_review_nudge_hook.ts:224`) and delegation-nudge trigger set
       calibrate ONLY against their own registered telemetry
       (`review_skipped` distribution, dispatch-per-verdict rate), in the
       always-on roadmap's Phase 6 frame, not here.
-- [ ] 7.4 No fork-spawn doctrine beyond the shipped ordering rule before
+- [x] 7.4 No fork-spawn doctrine beyond the shipped ordering rule before
       live verification — see blocker.
-- [ ] 7.5 No compression/summarisation pipeline for rule prose — the cut
+- [x] 7.5 No compression/summarisation pipeline for rule prose — the cut
       (Phase 3) is selection, not paraphrase; paraphrased rules are
       unverifiable against their source and violate source-level
       verification culture.
-- [ ] 7.6 Nothing from the cache-economy refusal list re-enters
+- [x] 7.6 Nothing from the cache-economy refusal list re-enters
       (`agents/settings/contexts/cache-economy-refusals.md`): no cache-hit
       auto-tuning, no blanket 1h TTL, no interception proxy, no worktree
-      cache guidance.
+      cache guidance. <!-- verified at run end 2026-08-10: the diff carries
+      no ANTHROPIC_BASE_URL shim, no TTL parameter, no cache_hit-driven
+      tuning (cache_hit stays a recorded observation), no worktree
+      guidance; MUTATION_LINE_THRESHOLD and the delegation trigger set are
+      byte-untouched -->
 
 ## Blockers
 
@@ -468,23 +483,43 @@ result and the projection widens by evidence, not by fear.
 
 ## Acceptance criteria
 
-- [ ] `dispatch_floor` and `rules_efficiency` are registered metrics with
+- [~] `dispatch_floor` and `rules_efficiency` are registered metrics with
       committed thresholds, emitting from live dispatches, with at least one
       review-window verdict recorded (including the honest-null path).
-- [ ] A role-marked worker session on a live host demonstrably runs the
+      <!-- deferred 2026-08-10: registered + first live reading recorded
+      (median init 251.0k, weighted ratio 0.21, null did NOT fire); the
+      review-WINDOW verdict is due at the registered review date -->
+- [x] A role-marked worker session on a live host demonstrably runs the
       worker chain (probe transcript on record), and an unmarked session is
-      byte-identical to the pre-roadmap chain.
-- [ ] A rung-1 worker dispatched post-Phase-3 shows median `init_tokens`
+      byte-identical to the pre-roadmap chain. <!-- done 2026-08-10: live
+      dispatcher dry-run probes on this host (worker user_prompt_submit
+      9->7, stop drops end-review-nudge + team-review-gate, pre_tool_use
+      byte-identical); unmarked byte-identity test-pinned across every
+      platform x event -->
+- [~] A rung-1 worker dispatched post-Phase-3 shows median `init_tokens`
       reduced against the Phase-1 baseline by the registered target, with
-      verify-fail rate inside the registered margin.
-- [ ] A question-shaped slice resolves to rung 0.5 end-to-end (ladder
+      verify-fail rate inside the registered margin. <!-- deferred
+      2026-08-10: consumes Phase 3, which is data-window-gated -->
+- [x] A question-shaped slice resolves to rung 0.5 end-to-end (ladder
       verdict → ask transport → adopted answer) at the measured sub-spawn
-      cost, with substitution telemetry accumulating.
-- [ ] The end-review reviewer's default tier decision cites the
+      cost, with substitution telemetry accumulating. <!-- done 2026-08-10
+      LIVE: classifyLadder -> rung 0.5 (test-pinned) and a real ask over
+      the CLI transport answered a bounded question at 321 tokens total
+      (~780x below the 251k spawn floor); telemetry: ask lines=1 adopted=1
+      escalated=0 in the live report -->
+- [~] The end-review reviewer's default tier decision cites the
       `reviewer-tier-quality-floor` comparison note — whichever way it went.
-- [ ] Dispatching a two-worker rung-2 task grows the orchestrator context
+      <!-- deferred 2026-08-10: blocker open by design; production-validator
+      pin documents the gate -->
+- [~] Dispatching a two-worker rung-2 task grows the orchestrator context
       by two envelopes within the committed cap (6.3 metric on record).
-- [ ] No pre_tool_use guard is absent from any role chain (CI check green,
-      red on a fixture removing one).
-- [ ] Nothing on the cache-economy refusal list was rebuilt (anti-dump
+      <!-- deferred 2026-08-10: the metric + hook field are live; the
+      demonstration accumulates from real rung-2 dispatches in the review
+      window -->
+- [x] No pre_tool_use guard is absent from any role chain (CI check green,
+      red on a fixture removing one). <!-- done 2026-08-10: structural
+      (resolver refuses pre_tool_use drops) + lint_hook_manifest red on the
+      guard-drop fixture + parity test across all platforms/roles -->
+- [x] Nothing on the cache-economy refusal list was rebuilt (anti-dump
       check: grep the diff for proxy/TTL/auto-tuning mechanisms → zero).
+      <!-- verified 2026-08-10: see 7.6 annotation -->

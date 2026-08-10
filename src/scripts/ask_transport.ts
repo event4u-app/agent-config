@@ -122,14 +122,16 @@ export async function askOnce(prompt: string, opts: AskOptions = {}): Promise<As
     } catch {
         return _finish(null, 'none', opts); // disabled / unreadable config → ∅
     }
+    const memberName = (m: ExternalAIClient): string => {
+        const c = m as { name?: string; provider?: string };
+        return c.name || c.provider || 'unknown';
+    };
     const pick =
-        opts.member !== undefined
-            ? members.find((m) => (m as { provider?: string }).provider === opts.member)
-            : members[0];
+        opts.member !== undefined ? members.find((m) => memberName(m) === opts.member) : members[0];
     if (pick === undefined) {
         return _finish(null, opts.member ?? 'none', opts);
     }
-    const provider = (pick as { provider?: string }).provider ?? 'unknown';
+    const provider = memberName(pick);
 
     try {
         const response = pick.ask(opts.systemPrompt ?? DEFAULT_SYSTEM, trimmed);

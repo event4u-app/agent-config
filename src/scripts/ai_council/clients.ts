@@ -51,24 +51,30 @@ import { load_agent_settings } from '../_lib/agent_settings.js';
 // Session-wide subagent model ceiling (token-economy-dispatch Phase 5.2):
 // class-C setting, default absent, HUMAN-set only. When present, the CLI
 // spawn below exports CLAUDE_CODE_SUBAGENT_MODEL so the spawned vendor
-// session caps its own subagents' models. Memoised per process — the
-// setting is per-install, not per-call.
-let _modelCeilingMemo: string | null | undefined;
-export function _subagentModelCeiling(): string | null {
-    if (_modelCeilingMemo !== undefined) return _modelCeilingMemo;
+// session caps its own subagents' models. Memoised PER CWD, not per
+// process (review finding 2026-08-10): a long-lived server process may
+// serve several projects, and a single-slot memo would apply project A's
+// spend cap to project B's spawns. A human edit still needs a process
+// restart to be seen — acceptable for a per-install cap, stated here.
+const _modelCeilingMemo = new Map<string, string | null>();
+export function _subagentModelCeiling(cwd: string = process.cwd()): string | null {
+    const hit = _modelCeilingMemo.get(cwd);
+    if (hit !== undefined) return hit;
+    let ceiling: string | null;
     try {
-        const settings = load_agent_settings({ cwd: process.cwd() }) as Record<string, unknown>;
+        const settings = load_agent_settings({ cwd }) as Record<string, unknown>;
         const sub = (settings['subagents'] ?? {}) as Record<string, unknown>;
         const v = typeof sub['model_ceiling'] === 'string' ? sub['model_ceiling'].trim() : '';
-        _modelCeilingMemo = v.length > 0 ? v : null;
+        ceiling = v.length > 0 ? v : null;
     } catch {
-        _modelCeilingMemo = null; // unreadable settings → no ceiling (fail-open)
+        ceiling = null; // unreadable settings → no ceiling (fail-open)
     }
-    return _modelCeilingMemo;
+    _modelCeilingMemo.set(cwd, ceiling);
+    return ceiling;
 }
-/** Test seam: reset the per-process ceiling memo. */
+/** Test seam: reset the per-cwd ceiling memo. */
 export function _resetModelCeilingMemo(): void {
-    _modelCeilingMemo = undefined;
+    _modelCeilingMemo.clear();
 }
 import * as user_global_paths from '../_lib/user_global_paths.js';
 import { appendEvent } from './events_log.js';

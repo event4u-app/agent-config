@@ -365,7 +365,11 @@ export interface NudgeResult {
   classification: Classification;
   sliceCount: number;
   tier: Tier;
-  /** The judgment-ladder rung this verdict resolved to (2.4) — 0.5, 1, or 2, this concern's scope. */
+  /** The judgment-ladder rung this verdict resolved to (2.4) — 1 or 2 in
+   *  production today: classifyPrompt returns null for every non-subagent
+   *  verdict including rung 0.5 (the carrier stays silent on questions);
+   *  buildNudgeLine's 0.5 branch is vocabulary for orchestrator-facing
+   *  surfaces and direct callers. */
   rung: LadderRung;
 }
 

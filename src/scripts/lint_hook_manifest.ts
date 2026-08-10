@@ -379,6 +379,22 @@ export function _check_roles(
             `safety guards are undroppable on every role`,
         );
       }
+      // Severity-based twin of the slot check (review hardening 2026-08-10):
+      // a fail_closed or non-advisory concern is guard-shaped regardless of
+      // which slot it binds to — dropping one from a role chain would be a
+      // safety removal wearing an economy label.
+      const concernsRaw = manifest["concerns"];
+      const spec = isObject(concernsRaw) ? concernsRaw[name] : undefined;
+      if (isObject(spec)) {
+        const advisory = String(spec["severity"] ?? "").trim().toLowerCase() === "advisory";
+        const failClosed = spec["fail_closed"] === true;
+        if (failClosed || !advisory) {
+          errors.push(
+            `roles.${role}: drop entry '${name}' is ${failClosed ? "fail_closed" : "not severity: advisory"} — ` +
+              `only advisory, fail-open concerns may be role-dropped`,
+          );
+        }
+      }
     }
   }
 }
