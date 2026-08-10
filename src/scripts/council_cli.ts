@@ -76,8 +76,14 @@ import { AuthCache, select_solo_member } from './ai_council/solo_dispatch.js';
 import { InvalidModeError, resolve_global_mode } from './ai_council/modes.js';
 import { resolveMemberTransport } from './ai_council/transport_resolver.js';
 import { absentReasonFromCliFailure, classifyCliFailure, type AbsentReason } from './ai_council/transport_resolver.js';
-import { evaluateQuorum, type QuorumResult } from './ai_council/quorum.js';
-import { appendEvent } from './ai_council/events_log.js';
+import { evaluateQuorum, isSoloConcluded, type QuorumResult } from './ai_council/quorum.js';
+import {
+    appendEvent,
+    appendQuorumEvent,
+    type QuorumAbsentEntry,
+    type QuorumAbsentReason,
+    type QuorumStage,
+} from './ai_council/events_log.js';
 import {
     type ClassificationResult,
     type SizeFitVerdict,
@@ -649,6 +655,7 @@ function _postRunQuorum(
     ai_cfg: Dict,
 ): { quorum: QuorumResult; absent: Dict[] } {
     const absent: Dict[] = [];
+    const absent_entries: QuorumAbsentEntry[] = [];
     let present = 0;
     for (let i = 0; i < members.length; i++) {
         const m = members[i] as ExternalAIClient;
@@ -659,13 +666,39 @@ function _postRunQuorum(
         }
         const raw = r?.error ?? 'no response';
         const failure = classifyCliFailure(raw);
+        const reason: QuorumAbsentReason = absentReasonFromCliFailure(failure) ?? 'unavailable';
         absent.push({
             member: m.name,
-            reason: absentReasonFromCliFailure(failure) ?? 'unavailable',
+            reason,
             detail: raw,
         });
+        absent_entries.push({ member: m.name, reason });
     }
-    return { quorum: evaluateQuorum(members.length, present, _quorum_setting_from(ai_cfg)), absent };
+    const quorum = evaluateQuorum(members.length, present, _quorum_setting_from(ai_cfg));
+    _emitQuorumEvent(quorum, absent_entries, 'post_run');
+    return { quorum, absent };
+}
+
+/**
+ * Write one `quorum_result` line per evaluation. Fail-open lives inside
+ * `appendQuorumEvent`; this wrapper only carries the derived
+ * `solo_concluded` flag and the `detail`-free absent list, so the raw
+ * provider error strings in `absent` above cannot reach the log.
+ */
+function _emitQuorumEvent(
+    q: QuorumResult,
+    absent: readonly QuorumAbsentEntry[],
+    stage: QuorumStage,
+): void {
+    appendQuorumEvent({
+        status: q.status,
+        threshold: q.threshold,
+        total: q.total,
+        present: q.present,
+        absent,
+        stage,
+        solo_concluded: isSoloConcluded(q),
+    });
 }
 
 /**
@@ -762,6 +795,12 @@ function build_members(settings: Dict, opts: BuildMembersOptions = {}): External
     // that caller shape.
     let total_enabled = 0;
     let absent_count = 0;
+    // Collected independently of `skipped` for the same reason `absent_count`
+    // is: a caller may pass `skipped: null` while still asking for
+    // `quorum_out`. Reading the attendance record off `skipped` would emit an
+    // empty `absent[]` for that caller while `absent_count` said otherwise —
+    // the silent drop this telemetry exists to end.
+    const absent_entries: QuorumAbsentEntry[] = [];
     for (const name of Object.keys(members_cfg)) {
         const cfg = ((members_cfg[name] as Dict) || {}) as Dict;
         if (!_pyBool(cfg['enabled'])) {
@@ -829,11 +868,13 @@ function build_members(settings: Dict, opts: BuildMembersOptions = {}): External
             // continues, instead of killing the whole invocation the way
             // the old unconditional `else { throw }` below did.
             const detail = resolved.reason ?? `member ${name} has no available transport`;
+            const reason: QuorumAbsentReason = resolved.absentReason ?? 'unavailable';
             const entry: Dict = {
                 member: name,
-                reason: resolved.absentReason ?? 'unavailable',
+                reason,
                 detail,
             };
+            absent_entries.push({ member: name, reason });
             absent_count += 1;
             if (skipped !== null) {
                 skipped.push(entry);
@@ -910,6 +951,7 @@ function build_members(settings: Dict, opts: BuildMembersOptions = {}): External
                     reason: 'binary_missing',
                     detail,
                 };
+                absent_entries.push({ member: name, reason: 'binary_missing' });
                 absent_count += 1;
                 if (skipped !== null) {
                     skipped.push(entry);
@@ -934,7 +976,9 @@ function build_members(settings: Dict, opts: BuildMembersOptions = {}): External
     }
     if (quorum_out !== null) {
         const present = total_enabled - absent_count;
-        quorum_out.result = evaluateQuorum(total_enabled, present, _quorum_setting_from(ai));
+        const result = evaluateQuorum(total_enabled, present, _quorum_setting_from(ai));
+        quorum_out.result = result;
+        _emitQuorumEvent(result, absent_entries, 'construction');
     }
     if (members.length === 0) {
         if (skipped && skipped.length > 0) {

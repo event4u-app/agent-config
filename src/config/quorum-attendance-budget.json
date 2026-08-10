@@ -1,0 +1,45 @@
+{
+    "_comment": "Registered council-attendance metrics (road-to-inbox-harvest-2026-08-b Phase 1.4). Registered in the same change that ships the instrument (quorum_result, events_log schema v2) and BEFORE any of the three outcomes the quorum-solo-floor blocker chooses between — a threshold picked after seeing the rate is a threshold fitted to the rate. Every number below is pre-registered, not measured; the honest-gap field on each metric says so in its own words. Changing one is a PR citing evidence, never a drive-by edit.",
+    "schema_version": 1,
+    "registered_at": "2026-08-10",
+    "owner": "maintainer",
+    "review_by": "2026-11-10",
+    "instrument": {
+        "event": "events.log lines with action='quorum_result' (schema_version >= 2)",
+        "emitter": "src/scripts/ai_council/events_log.ts::appendQuorumEvent, called from the two evaluateQuorum sites in src/scripts/council_cli.ts (construction and post_run stages)",
+        "fields": "status, threshold, total, present, solo_concluded, stage, absent[{member, reason}]",
+        "privacy": "absent entries carry a member name and a closed-union reason token only — QuorumAbsentEntry has no field able to hold free-form text, so the raw provider error string both call sites hold alongside it cannot reach the log. Exclusion by construction, not by scrubbing.",
+        "double_counting": "one pass emits up to TWO lines (stage=construction, stage=post_run). Any rate below is computed over ONE stage, never both summed — post_run where a pass ran to completion, construction where it did not."
+    },
+    "metrics": {
+        "attendance_rate": {
+            "definition": "present / total per pass, over stage='post_run' lines. The share of configured members that actually produced a usable response.",
+            "instrument": "quorum_result.present and .total",
+            "threshold": {
+                "investigate_below": 0.75,
+                "_investigate": "a median attendance below 0.75 over the review window means the configured roster is not the roster that runs, and the config is describing a council that does not convene. Advisory — nothing gates on it."
+            },
+            "honest_gap": "There is no baseline. No quorum event existed before this change, so 0.75 is a pre-registered decision boundary and NOT a measured p50 or p90. The first report run establishes the baseline; if it lands far from 0.75 in either direction, the number moves by evidence in a PR and the original registration stays visible in git history."
+        },
+        "solo_conclusion_rate": {
+            "definition": "share of concluded passes where exactly one member was present (quorum.ts::isSoloConcluded), over stage='post_run' lines. The degradation reading filters total > 1; the unfiltered rate includes structurally-solo n=1 councils. Both are recoverable because the record carries total.",
+            "instrument": "quorum_result.solo_concluded, filtered on .total and .status",
+            "threshold": {
+                "null_below": 0.05,
+                "_null": "the quorum-solo-floor blocker's own pre-registration: a rate under 5% over the review window IS the null, and publishing it closes step 1.5 without adding a third member or a min_present floor. Above 5%, the blocker picks between its other two outcomes (a third CLI member, or gate-scoped min_present: 2)."
+            },
+            "honest_gap": "5% is the blocker's committed decision boundary, chosen before any pass was measured. It is a boundary, not a prediction. Note also what this rate CANNOT distinguish: a member absent because the operator never installed its binary (structural, expected) from one absent because a live call timed out (a real degradation). The absent_reason_distribution below is what separates them, which is why all three metrics are registered together and none of them is sufficient alone."
+        },
+        "absent_reason_distribution": {
+            "definition": "counts per reason token across absent[] entries, over both stages, reported separately per stage. Tokens: no_binary, no_auth, timeout, quota (AbsentReason, transport_resolver.ts) plus the runtime fallbacks unavailable and binary_missing.",
+            "instrument": "quorum_result.absent[].reason",
+            "threshold": {
+                "unclassified_share_ceiling": 0.1,
+                "_unclassified": "'unavailable' is the fallback written when absentReasonFromCliFailure cannot classify a failure. A sustained share above 10% means the classifier has a blind spot and the taxonomy needs a token, not that the councils are unhealthy — this ceiling measures the INSTRUMENT, deliberately, so the other two metrics cannot quietly rest on unclassified data."
+            },
+            "honest_gap": "The six tokens are the vocabulary the tree writes today. If a real distribution shows one token absorbing nearly everything, that is a finding about the classifier and not a threshold breach. No target distribution is registered, because there is no shape a healthy one is known to have."
+        }
+    },
+    "honest_null_consequence": "If the review window shows a solo-conclusion rate under 5%, the null is published with the same prominence a finding would get and step 1.5 closes against it — no third member, no min_present floor, no mechanism added to solve a problem the data says is not there. If attendance telemetry accumulates and nobody reads it by review_by, that is the fossilization failure this file's siblings name: the report is the re-verification procedure, and an unread instrument is a dead one.",
+    "report_command": "grep '\"action\":\"quorum_result\"' agents/runtime/council/events.log — no dedicated report script ships with the instrument, on purpose: one jq-able line format is cheaper than a reporter nobody runs, and a reporter written before any data exists would be fitted to imagined data."
+}

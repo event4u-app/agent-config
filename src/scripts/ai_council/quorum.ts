@@ -82,3 +82,25 @@ export function evaluateQuorum(
     const status: QuorumStatus = clampedPresent >= threshold ? 'concluded' : 'inconclusive';
     return { status, threshold, total, present: clampedPresent };
 }
+
+/**
+ * Was this pass concluded by a single member?
+ *
+ * A **derived predicate**, deliberately not a third `QuorumStatus`. The
+ * two-state enum and the `ceil(n/2)` threshold above are untouched: the
+ * ceil-vs-floor divergence is a recorded decision (see this module's header),
+ * and adding a status would make every existing `status === 'concluded'`
+ * check silently wrong at n=2. This answers a different question — not
+ * "did the pass conclude" but "how thin was the agreement that concluded
+ * it" — and the answer is advisory. Nothing gates on it.
+ *
+ * The reading at `total === 1`: a one-member council always concludes solo.
+ * That is structural, not degradation, and the predicate reports it as
+ * `true` anyway rather than hiding it behind a `total > 1` guard — a
+ * consumer computing the *degradation* rate filters on `total` itself,
+ * which the quorum record carries. Baking the filter in here would make the
+ * unfiltered number unrecoverable from the log.
+ */
+export function isSoloConcluded(result: QuorumResult): boolean {
+    return result.status === 'concluded' && result.present === 1;
+}

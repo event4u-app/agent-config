@@ -4,6 +4,7 @@ import { describe, expect, it } from 'vitest';
 
 import {
     evaluateQuorum,
+    isSoloConcluded,
     resolveQuorumThreshold,
 } from '../../../src/scripts/ai_council/quorum.js';
 
@@ -98,5 +99,42 @@ describe('evaluateQuorum', () => {
 
     it('n=0 (no members configured) concludes trivially — nothing to wait on', () => {
         expect(evaluateQuorum(0, 0).status).toBe('concluded');
+    });
+});
+
+describe('isSoloConcluded', () => {
+    it('the canonical case: n=2, one member present, pass still concluded', () => {
+        expect(isSoloConcluded(evaluateQuorum(2, 1))).toBe(true);
+    });
+
+    it('full attendance is not solo', () => {
+        expect(isSoloConcluded(evaluateQuorum(2, 2))).toBe(false);
+        expect(isSoloConcluded(evaluateQuorum(3, 3))).toBe(false);
+    });
+
+    it('two of three is concluded but not solo — the predicate counts present, not the margin', () => {
+        expect(isSoloConcluded(evaluateQuorum(3, 2))).toBe(false);
+    });
+
+    it('an inconclusive pass is never solo-concluded, however few were present', () => {
+        expect(isSoloConcluded(evaluateQuorum(3, 1))).toBe(false);
+        expect(isSoloConcluded(evaluateQuorum(2, 0))).toBe(false);
+    });
+
+    it('n=1 reports true — structural, and deliberately not hidden', () => {
+        // A one-member council always concludes solo. The predicate says so
+        // rather than filtering on total, so the unfiltered rate stays
+        // recoverable from the log; a degradation rate filters on `total`.
+        expect(isSoloConcluded(evaluateQuorum(1, 1))).toBe(true);
+    });
+
+    it('n=0 concludes with 0 present and is not solo', () => {
+        expect(isSoloConcluded(evaluateQuorum(0, 0))).toBe(false);
+    });
+
+    it('adds no state — it is derived purely from an existing QuorumResult', () => {
+        const r = evaluateQuorum(2, 1);
+        expect(isSoloConcluded(r)).toBe(isSoloConcluded({ ...r }));
+        expect(Object.keys(r).sort()).toEqual(['present', 'status', 'threshold', 'total']);
     });
 });

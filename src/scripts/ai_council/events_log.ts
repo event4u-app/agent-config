@@ -3,14 +3,26 @@
  *
  * Ported from the retired Python `src/scripts/ai_council/events_log.py` (ADR-200 —
  * Python→TS migration, Phase 1). Appends one JSON line per council event to
- * `<project_root>/agents/runtime/council/events.log`. Schema v1 carries the
+ * `<project_root>/agents/runtime/council/events.log`. The schema carries the
  * minimum needed to answer the "why did the council skip / block this?"
  * question at retro time without leaking prompt content.
+ *
+ * Schema v2 adds the `quorum_result` action (`appendQuorumEvent`), so that a
+ * solo-concluded pass is distinguishable from a full-attendance one. Before
+ * it, attendance was rendered into the pass artifact and nowhere else, and
+ * the two were downstream-identical in the log. The version bumped rather
+ * than the action being added silently, because a consumer that validates
+ * `action` against the v1 enum would otherwise see an unknown value with no
+ * signal that the schema moved.
  *
  * Privacy floor:
  *     `original_ask` is never written verbatim — the caller passes the raw
  *     string, and `appendEvent` writes `sha256(value)[:12]` as
- *     `original_ask_hash`.
+ *     `original_ask_hash`. The v2 quorum record goes one step further and is
+ *     PII-excluded *by construction*: `QuorumAbsentEntry` has no field able
+ *     to hold free-form text, so the raw provider error `detail` a caller
+ *     already carries alongside it cannot reach the log even by mistake.
+ *     A scrubber that could fail is replaced by a type that cannot.
  *
  * Kill-switch:
  *     `AGENT_CONFIG_NO_EVENTS_LOG=1` short-circuits `appendEvent` to a no-op.
@@ -25,14 +37,17 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-export const SCHEMA_VERSION = 1;
+import type { AbsentReason } from './transport_resolver.js';
 
-export type EventAction = 'proceed' | 'skip_necessity' | 'block_quota';
+export const SCHEMA_VERSION = 2;
+
+export type EventAction = 'proceed' | 'skip_necessity' | 'block_quota' | 'quorum_result';
 
 const _VALID_ACTIONS: ReadonlySet<string> = new Set([
     'proceed',
     'skip_necessity',
     'block_quota',
+    'quorum_result',
 ]);
 
 /**
@@ -213,6 +228,99 @@ export function appendEvent(
 /** Return the canonical events-log path (callers / tests). */
 export function defaultLogPath(): string {
     return _DEFAULT_LOG_PATH;
+}
+
+// ── quorum attendance (schema v2) ───────────────────────────────────
+
+/**
+ * The reason vocabulary an absent member is bucketed under.
+ *
+ * The static half is imported rather than restated: `AbsentReason` in
+ * `transport_resolver.ts` is the tree's own type and the only thing that may
+ * define those four tokens. The two additional literals are not invented
+ * here either — they are what the CLI actually writes today:
+ * `'unavailable'` is the runtime fallback at `council_cli.ts` when
+ * `absentReasonFromCliFailure` cannot classify a failure, and
+ * `'binary_missing'` is the construction-time literal a missing CLI binary
+ * produces. Any token outside this union is a caller bug, not a new bucket.
+ */
+export type QuorumAbsentReason = AbsentReason | 'unavailable' | 'binary_missing';
+
+/**
+ * One absent member, PII-excluded by construction.
+ *
+ * There is deliberately no `detail` field. Both call sites carry a raw
+ * provider error string next to `member` / `reason`, and that string is
+ * free-form text of unbounded shape — file paths, prompts echoed back by a
+ * provider, credentials in a malformed URL. A type that cannot hold it needs
+ * no scrubber and has no scrubber to fail. The reason token is what a rate
+ * is computed over; the prose was never the signal.
+ */
+export interface QuorumAbsentEntry {
+    readonly member: string;
+    readonly reason: QuorumAbsentReason;
+}
+
+/** Where in the pass lifecycle the quorum was evaluated. */
+export type QuorumStage = 'construction' | 'post_run';
+
+export interface QuorumEventInput {
+    /** `evaluateQuorum`'s verdict — the two-state enum, unchanged. */
+    readonly status: 'concluded' | 'inconclusive';
+    /** The concrete k this pass needed. */
+    readonly threshold: number;
+    /** Enabled members configured for this pass — the n. */
+    readonly total: number;
+    /** Members that produced a usable response. */
+    readonly present: number;
+    /** Absent members, one entry each. */
+    readonly absent: readonly QuorumAbsentEntry[];
+    /**
+     * `construction` — evaluated while building the member roster, before any
+     * provider call. `post_run` — re-derived over what was actually usable.
+     * Both are emitted; a consumer that counts a pass twice is reading the
+     * stage field wrong, not seeing a duplicate.
+     */
+    readonly stage: QuorumStage;
+    /** `isSoloConcluded(result)` — carried so no consumer re-derives it. */
+    readonly solo_concluded: boolean;
+}
+
+/**
+ * Append a `quorum_result` event. **Fail-open by contract**: never throws,
+ * never rejects a caller. Attendance telemetry that can abort a council pass
+ * is worse than no telemetry — the pass is the product, the record is the
+ * observation of it.
+ *
+ * Returns `true` when a line was written, `false` on the kill-switch or on
+ * any suppressed failure.
+ */
+export function appendQuorumEvent(
+    q: QuorumEventInput,
+    opts: AppendEventOptions = {},
+): boolean {
+    try {
+        return appendEvent(
+            {
+                lens: '',
+                invocation: '',
+                action: 'quorum_result',
+                verdict: q.status,
+                provider_caps: {},
+                status: q.status,
+                threshold: q.threshold,
+                total: q.total,
+                present: q.present,
+                solo_concluded: q.solo_concluded,
+                stage: q.stage,
+                absent: q.absent.map((a) => ({ member: a.member, reason: a.reason })),
+            },
+            opts,
+        );
+    } catch {
+        // Fail-open: an unwritable log never breaks a council pass.
+        return false;
+    }
 }
 
 // ── helpers ─────────────────────────────────────────────────────────
