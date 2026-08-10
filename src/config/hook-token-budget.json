@@ -21,7 +21,11 @@
         "session-register": 2048,
         "session-register_reason": "collision listing scales with live sessions; capped, not unbounded",
         "chat-history": 4096,
-        "chat-history_reason": "session_start restore block"
+        "chat-history_reason": "session_start restore block",
+        "edit-shape": 1024,
+        "edit-shape_reason": "one advisory line naming the cheaper edit primitive (roadmap 5.2: budget row from day one - the economy nudge must not itself become an economy problem)",
+        "reread-guard": 1024,
+        "reread-guard_reason": "one advisory line naming the earlier read / ranged alternative (roadmap 6.1)"
     },
     "per_slot_sum_caps_bytes": {
         "_comment": "Cross-concern per-fire sum per slot (roadmap 3.1). session_start is one-time and may carry the restore payloads; per-turn slots stay tight.",
@@ -38,5 +42,28 @@
         "definition": "Roadmap 3.4: total injected bytes per session and per turn, hook-carried. The census mode of bench_hook_injection (--record) appends counts-only lines to agents/runtime/state/injection-census.jsonl; the caps above are the thresholds; breach trend at review date decides tighten vs relax — by evidence, in a PR. The census is also the repeat-injection-census blocker's instrument (one instrumented week ranks the repeaters for the 3.3 idempotency gate).",
         "privacy": "census lines carry {ts, slot, concern, bytes} — counts and ids only, never content"
     },
-    "honest_null_consequence": "If real-session census data shows the caps are systematically wrong (either direction), the caps move by evidence in a PR at review date — never silently. A budget nobody benches is the fossilization failure this file's latency twin avoided via its CI harness; bench_hook_injection is wired into the same pipeline in the same phase."
+    "honest_null_consequence": "If real-session census data shows the caps are systematically wrong (either direction), the caps move by evidence in a PR at review date — never silently. A budget nobody benches is the fossilization failure this file's latency twin avoided via its CI harness; bench_hook_injection is wired into the same pipeline in the same phase.",
+    "advisory_adoption_metrics": {
+        "_comment": "Roadmap 5.3 + 6.4 registrations. These are BEHAVIOUR metrics (advisory adoption), not injection bytes - registered here because this file already carries the owner/review discipline for the same concerns.",
+        "owner": "maintainer",
+        "review_by": "2026-11-10",
+        "full_rewrite_small_diff_rate": {
+            "definition": "edit-shape fires / Write calls per session (the full-rewrite-with-small-diff rate). Kill criterion per the shipped nudge standard: a nudge whose verdicts are measurably ignored (adoption near zero over the review window, from conformance audits) gets its trigger tightened or the injected line removed.",
+            "instrument": "rule-trips.json warn counters (the dispatcher already counts every warn per concern) + conformance audits for adoption"
+        },
+        "duplicate_read_rate": {
+            "definition": "reread-guard fires / Read calls per session; re-read advisory adoption via conformance audits. Same kill standard.",
+            "instrument": "rule-trips.json warn counters per concern"
+        },
+        "unbounded_output_advisory_rate": {
+            "definition": "Roadmap 4.3 + 4.4 registration (advisory-degraded per the resolved pretooluse-rewrite-semantics blocker: no updatedInput in the v1 contract, so nothing caps and nothing can be bypassed - the demand signal is the fire count itself). rtk-wrap cap-advisory fires per session from the OUTPUT_CAP_TABLE branch; adoption (did the next run use a bounded form) via conformance audits. HONEST GAP: bytes-into-context from tool RESULTS is not instrumented anywhere (the census covers hook payloads only) - the pre/post bytes half of roadmap 4.4 is registered as unmeasurable until a tool-result byte counter exists.",
+            "instrument": "rule-trips.json warn counters for the rtk-wrap concern + conformance audits",
+            "threshold": "none committed before data - baseline first, threshold at review date"
+        },
+        "turns_per_task": {
+            "definition": "user_prompt_submit count keyed to the task envelope - the invisible multiplier (every turn re-pays the accumulated context at read rates).",
+            "instrument": "session-register / chat-history turn counters; HONEST GAP: no task-envelope key exists yet in those counters - the number is per-SESSION until a task key ships; registered with that stated limitation rather than silently redefined",
+            "threshold": "none committed before data - baseline first, threshold at review date"
+        }
+    }
 }

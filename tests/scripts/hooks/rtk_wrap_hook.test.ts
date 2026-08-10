@@ -9,7 +9,7 @@ import * as os from "node:os";
 import * as path from "node:path";
 import { afterAll, describe, expect, it } from "vitest";
 
-import { classify, rtk_available } from "../../../src/scripts/hooks/rtk_wrap_hook.js";
+import { classify, classifyCap, rtk_available } from "../../../src/scripts/hooks/rtk_wrap_hook.js";
 
 describe("rtk_wrap — classify (eligibility)", () => {
   it("flags a single verbose CLI command", () => {
@@ -57,6 +57,65 @@ describe("rtk_wrap — classify (eligibility)", () => {
 
   it("treats empty input as ineligible", () => {
     expect(classify("   ").eligible).toBe(false);
+  });
+});
+
+describe("rtk_wrap — classifyCap (unbounded-output advisory, Phase 4.2)", () => {
+  it("fires on an unbounded tree-wide grep", () => {
+    const r = classifyCap('grep -rn "export function" src/scripts');
+    expect(r).not.toBeNull();
+    expect(r?.program).toBe("grep");
+  });
+
+  it("fires on an unbounded rg (recursive by default)", () => {
+    expect(classifyCap("rg TODO src")?.program).toBe("rg");
+  });
+
+  it("stays silent on a non-recursive grep (not the measured class)", () => {
+    expect(classifyCap("grep foo file.txt")).toBeNull();
+  });
+
+  it("stays silent when a bounding flag is present (incl. combined shorts)", () => {
+    for (const cmd of [
+      "grep -rln foo src",
+      "grep -r --max-count=5 foo src",
+      "rg -l TODO src",
+      "rg --count TODO src",
+    ]) {
+      expect(classifyCap(cmd), cmd).toBeNull();
+    }
+  });
+
+  it("stays silent when the pipeline already bounds the stream", () => {
+    for (const cmd of [
+      'grep -rn foo src | head -n 100',
+      "rg TODO src | wc -l",
+      "rtk grep -rn foo src",
+    ]) {
+      expect(classifyCap(cmd), cmd).toBeNull();
+    }
+  });
+
+  it("fires inside a compound command (the class rtk cannot wrap)", () => {
+    expect(classifyCap("cd src && grep -rn foo .")?.program).toBe("grep");
+  });
+
+  it("honours the per-row opt-out", () => {
+    const table = {
+      grep: {
+        enabled: false,
+        bounded_long_flags: [],
+        bounded_short_letters: "",
+        recursive_short_letters: "",
+        recursive_long_flags: [],
+        hint: "",
+      },
+    } as const;
+    expect(classifyCap("grep -rn foo src", table)).toBeNull();
+  });
+
+  it("fails open on an unparseable command", () => {
+    expect(classifyCap('grep -rn "unterminated src')).toBeNull();
   });
 });
 

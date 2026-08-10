@@ -11,6 +11,15 @@ commands=(
   "ls -la src/scripts"
   "npm ls --depth=0"
   "git show --stat HEAD"
+  # ── token-economy-cache Phase 4.1 extension (2026-08-10): the top UNWRAPPED
+  #    high-volume classes the lean-agent-init diagnosis names (test runners,
+  #    tree-wide grep, build output). Selection basis: the roadmap's own
+  #    candidate list — no per-command session telemetry exists yet (the
+  #    injection census instruments hooks, not tool output); stated here per
+  #    the scoped-measurement honesty header in RESULTS.md.
+  "npx vitest run tests/scripts/bench_hook_injection.test.ts --reporter=basic"
+  "grep -rn \"export function\" src/scripts --include=*.ts"
+  "npm run build:cli"
 )
 printf "%-32s %10s %10s %8s\n" "command" "raw_bytes" "rtk_bytes" "saving%"
 total_raw=0; total_rtk=0
