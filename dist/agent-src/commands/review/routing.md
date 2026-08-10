@@ -59,9 +59,8 @@ changed-file list. The skill:
 4. Computes overall severity (`high` wins).
 5. Returns the structured block.
 
-If neither data file exists, the skill returns the generic fallback
-from [`reviewer-awareness`](../../rules/reviewer-awareness.md). That is
-valid output — do not invent owners.
+If neither data file exists, the skill returns the generic fallback from
+its own common role vocabulary. That is valid output — do not invent owners.
 
 ### 3. Present the result
 
@@ -121,7 +120,7 @@ After the block, ask:
 ## See also
 
 - [`review-routing`](../../skills/review-routing/SKILL.md) — the resolver
-- [`reviewer-awareness`](../../rules/reviewer-awareness.md) — role vocabulary + data-source rules
+- [`reviewer-awareness`](../../rules/reviewer-awareness.md) — the rule that routes here: paths and risk over seniority, primary + secondary on medium/high
 - [`review-routing-data-format`](../../../docs/guidelines/agent-infra/review-routing-data-format.md)
   — YAML schemas
 - [`create-pr-description`](../../skills/create-pr:description-only/SKILL.md) —

@@ -2,14 +2,14 @@
 
 > Auto-generated — do not edit. Regenerate with `task roadmap-progress` or by running the `update_roadmap_progress` script for your install; rewritten on every roadmap create / execute / completion change (timestamp lives in git history).
 >
-> 21 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **29** open blockers, **9** need you → `agent-config gates`
+> 29 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **38** open blockers, **9** need you → `agent-config gates`
 
 ## Overall
 
-**184 / 278 steps done · 66%**
+**190 / 365 steps done · 52%**
 
 ```text
-██████████████████████████░░░░░░░░░░░░░░   66%
+█████████████████████░░░░░░░░░░░░░░░░░░░   52%
 ```
 
 ## Open roadmaps
@@ -22,21 +22,29 @@
 | 4 | [road-to-ci-native-release-first-run.md](roadmaps/road-to-ci-native-release-first-run.md) | 2 | 8 | 8 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 5 | [road-to-council-blind-review.md](roadmaps/road-to-council-blind-review.md) | 3 | 6 | 2 | 3 | 0 | 1 | 0 | ██████░░░░ 60% |
 | 6 | [road-to-gated-reach-followup.md](roadmaps/road-to-gated-reach-followup.md) | 1 | 12 | 12 | 0 | 0 | 0 | [1](#blockers-road-to-gated-reach-followup) | ░░░░░░░░░░ 0% |
-| 7 | [road-to-inbox-harvest-2026-08-b.md](roadmaps/road-to-inbox-harvest-2026-08-b.md) | 4 | 26 | 5 | 9 | 1 | 11 | [3](#blockers-road-to-inbox-harvest-2026-08-b) | ██████░░░░ 64% |
-| 8 | [road-to-inbox-harvest-2026-08.md](roadmaps/road-to-inbox-harvest-2026-08.md) | 5 | 21 | 1 | 11 | 4 | 5 | [3](#blockers-road-to-inbox-harvest-2026-08) | █████████░ 92% |
-| 9 | [road-to-kernel-question-triangle.md](roadmaps/road-to-kernel-question-triangle.md) | 1 | 3 | 3 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
-| 10 | [road-to-maintainer-bus-factor.md](roadmaps/road-to-maintainer-bus-factor.md) | 4 | 12 | 5 | 7 | 0 | 0 | [1](#blockers-road-to-maintainer-bus-factor) | ██████░░░░ 58% |
-| 11 | [road-to-orchestration-scope-decision.md](roadmaps/road-to-orchestration-scope-decision.md) | 4 | 10 | 6 | 4 | 0 | 0 | [1](#blockers-road-to-orchestration-scope-decision) | ████░░░░░░ 40% |
-| 12 | [road-to-rule-coherence-followup.md](roadmaps/road-to-rule-coherence-followup.md) | 5 | 9 | 8 | 1 | 0 | 0 | [2](#blockers-road-to-rule-coherence-followup) | █░░░░░░░░░ 11% |
-| 13 | [road-to-scale-history-bench-run.md](roadmaps/road-to-scale-history-bench-run.md) | 1 | 2 | 2 | 0 | 0 | 0 | [1](#blockers-road-to-scale-history-bench-run) | ░░░░░░░░░░ 0% |
-| 14 | [road-to-skill-description-measurement.md](roadmaps/road-to-skill-description-measurement.md) | 1 | 4 | 4 | 0 | 0 | 0 | [1](#blockers-road-to-skill-description-measurement) | ░░░░░░░░░░ 0% |
-| 15 | [road-to-skill-ecosystem-gate-integrity.md](roadmaps/road-to-skill-ecosystem-gate-integrity.md) | 5 | 43 | 3 | 40 | 0 | 0 | [1](#blockers-road-to-skill-ecosystem-gate-integrity) | █████████░ 93% |
-| 16 | [road-to-solution-minimalism.md](roadmaps/road-to-solution-minimalism.md) | 4 | 36 | 10 | 25 | 0 | 1 | [1](#blockers-road-to-solution-minimalism) | ███████░░░ 71% |
-| 17 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 6 | 3 | 0 | 0 | [1](#blockers-road-to-subagent-value-realization-followup) | ███░░░░░░░ 33% |
-| 18 | [road-to-surface-consolidation.md](roadmaps/road-to-surface-consolidation.md) | 3 | 14 | 1 | 12 | 1 | 0 | [2](#blockers-road-to-surface-consolidation) | █████████░ 92% |
-| 19 | [road-to-tier-removal.md](roadmaps/road-to-tier-removal.md) | 4 | 8 | 2 | 6 | 0 | 0 | [1](#blockers-road-to-tier-removal) | ████████░░ 75% |
-| 20 | [road-to-ui-track-integrity-followup.md](roadmaps/road-to-ui-track-integrity-followup.md) | 1 | 10 | 10 | 0 | 0 | 0 | [2](#blockers-road-to-ui-track-integrity-followup) | ░░░░░░░░░░ 0% |
-| 21 | [road-to-worktree-hygiene.md](roadmaps/road-to-worktree-hygiene.md) | 1 | 9 | 2 | 7 | 0 | 0 | [1](#blockers-road-to-worktree-hygiene) | ████████░░ 78% |
+| 7 | [road-to-inbox-harvest-2026-08-b-authoring-contract.md](roadmaps/road-to-inbox-harvest-2026-08-b-authoring-contract.md) | 6 | 25 | 15 | 0 | 1 | 9 | [1](#blockers-road-to-inbox-harvest-2026-08-b-authoring-contract) | ░░░░░░░░░░ 0% |
+| 8 | [road-to-inbox-harvest-2026-08-b-ci-economy.md](roadmaps/road-to-inbox-harvest-2026-08-b-ci-economy.md) | 5 | 24 | 17 | 4 | 2 | 1 | [2](#blockers-road-to-inbox-harvest-2026-08-b-ci-economy) | ██░░░░░░░░ 19% |
+| 9 | [road-to-inbox-harvest-2026-08-b-council-integrity.md](roadmaps/road-to-inbox-harvest-2026-08-b-council-integrity.md) | 3 | 16 | 2 | 6 | 1 | 7 | [1](#blockers-road-to-inbox-harvest-2026-08-b-council-integrity) | ████████░░ 75% |
+| 10 | [road-to-inbox-harvest-2026-08-b-dispatch-safety.md](roadmaps/road-to-inbox-harvest-2026-08-b-dispatch-safety.md) | 4 | 21 | 13 | 1 | 1 | 6 | [1](#blockers-road-to-inbox-harvest-2026-08-b-dispatch-safety) | █░░░░░░░░░ 7% |
+| 11 | [road-to-inbox-harvest-2026-08-b-estate-lifecycle.md](roadmaps/road-to-inbox-harvest-2026-08-b-estate-lifecycle.md) | 4 | 15 | 9 | 0 | 0 | 6 | [1](#blockers-road-to-inbox-harvest-2026-08-b-estate-lifecycle) | ░░░░░░░░░░ 0% |
+| 12 | [road-to-inbox-harvest-2026-08-b-install-lifecycle.md](roadmaps/road-to-inbox-harvest-2026-08-b-install-lifecycle.md) | 2 | 13 | 7 | 0 | 1 | 5 | [1](#blockers-road-to-inbox-harvest-2026-08-b-install-lifecycle) | ░░░░░░░░░░ 0% |
+| 13 | [road-to-inbox-harvest-2026-08-b-ledger-truth.md](roadmaps/road-to-inbox-harvest-2026-08-b-ledger-truth.md) | 3 | 19 | 10 | 2 | 1 | 6 | [1](#blockers-road-to-inbox-harvest-2026-08-b-ledger-truth) | ██░░░░░░░░ 17% |
+| 14 | [road-to-inbox-harvest-2026-08-b-release-integrity.md](roadmaps/road-to-inbox-harvest-2026-08-b-release-integrity.md) | 5 | 25 | 12 | 0 | 1 | 12 | [3](#blockers-road-to-inbox-harvest-2026-08-b-release-integrity) | ░░░░░░░░░░ 0% |
+| 15 | [road-to-inbox-harvest-2026-08-b.md](roadmaps/road-to-inbox-harvest-2026-08-b.md) | 3 | 6 | 1 | 2 | 0 | 3 | [1](#blockers-road-to-inbox-harvest-2026-08-b) | ███████░░░ 67% |
+| 16 | [road-to-inbox-harvest-2026-08.md](roadmaps/road-to-inbox-harvest-2026-08.md) | 5 | 21 | 1 | 11 | 4 | 5 | [3](#blockers-road-to-inbox-harvest-2026-08) | █████████░ 92% |
+| 17 | [road-to-kernel-question-triangle.md](roadmaps/road-to-kernel-question-triangle.md) | 1 | 3 | 3 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+| 18 | [road-to-maintainer-bus-factor.md](roadmaps/road-to-maintainer-bus-factor.md) | 4 | 12 | 5 | 7 | 0 | 0 | [1](#blockers-road-to-maintainer-bus-factor) | ██████░░░░ 58% |
+| 19 | [road-to-orchestration-scope-decision.md](roadmaps/road-to-orchestration-scope-decision.md) | 4 | 10 | 6 | 4 | 0 | 0 | [1](#blockers-road-to-orchestration-scope-decision) | ████░░░░░░ 40% |
+| 20 | [road-to-rule-coherence-followup.md](roadmaps/road-to-rule-coherence-followup.md) | 5 | 9 | 8 | 1 | 0 | 0 | [2](#blockers-road-to-rule-coherence-followup) | █░░░░░░░░░ 11% |
+| 21 | [road-to-scale-history-bench-run.md](roadmaps/road-to-scale-history-bench-run.md) | 1 | 2 | 2 | 0 | 0 | 0 | [1](#blockers-road-to-scale-history-bench-run) | ░░░░░░░░░░ 0% |
+| 22 | [road-to-skill-description-measurement.md](roadmaps/road-to-skill-description-measurement.md) | 1 | 4 | 4 | 0 | 0 | 0 | [1](#blockers-road-to-skill-description-measurement) | ░░░░░░░░░░ 0% |
+| 23 | [road-to-skill-ecosystem-gate-integrity.md](roadmaps/road-to-skill-ecosystem-gate-integrity.md) | 5 | 43 | 3 | 40 | 0 | 0 | [1](#blockers-road-to-skill-ecosystem-gate-integrity) | █████████░ 93% |
+| 24 | [road-to-solution-minimalism.md](roadmaps/road-to-solution-minimalism.md) | 4 | 36 | 10 | 25 | 0 | 1 | [1](#blockers-road-to-solution-minimalism) | ███████░░░ 71% |
+| 25 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 6 | 3 | 0 | 0 | [1](#blockers-road-to-subagent-value-realization-followup) | ███░░░░░░░ 33% |
+| 26 | [road-to-surface-consolidation.md](roadmaps/road-to-surface-consolidation.md) | 3 | 14 | 1 | 12 | 1 | 0 | [2](#blockers-road-to-surface-consolidation) | █████████░ 92% |
+| 27 | [road-to-tier-removal.md](roadmaps/road-to-tier-removal.md) | 4 | 8 | 2 | 6 | 0 | 0 | [1](#blockers-road-to-tier-removal) | ████████░░ 75% |
+| 28 | [road-to-ui-track-integrity-followup.md](roadmaps/road-to-ui-track-integrity-followup.md) | 1 | 10 | 10 | 0 | 0 | 0 | [2](#blockers-road-to-ui-track-integrity-followup) | ░░░░░░░░░░ 0% |
+| 29 | [road-to-worktree-hygiene.md](roadmaps/road-to-worktree-hygiene.md) | 1 | 9 | 2 | 7 | 0 | 0 | [1](#blockers-road-to-worktree-hygiene) | ████████░░ 78% |
 
 ---
 
@@ -187,46 +195,233 @@
     `yt-dlp` and a JavaScript runtime are installed **by a human** on the machine that runs this. Execution starts when the condition clears. The package never auto-installs — that is a contract (`missing-tool-handling`), not a limitation to work around.
   - **Resolved when:** condition described above clears
 
-### [road-to-inbox-harvest-2026-08-b.md](roadmaps/road-to-inbox-harvest-2026-08-b.md)
+### [road-to-inbox-harvest-2026-08-b-authoring-contract.md](roadmaps/road-to-inbox-harvest-2026-08-b-authoring-contract.md)
 
-**Road to inbox harvest 2026-08-b** — 9 / 14 done (64%)
+**Road to an enforced authoring contract** — 0 / 15 done (0%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
-| 1 | The quorum-attendance defect | ✅ done | 0 | 4 | 1 | 0 | 100% |
-| 2 | Landed in this PR | ✅ done | 0 | 2 | 0 | 0 | 100% |
-| 3 | Single-artefact extensions | 🟡 in progress | 5 | 3 | 0 | 0 | 38% |
-| 4 | Cancelled against a lock | ⏭️ skipped | 0 | 0 | 0 | 11 | 0% |
+| 1 | Enforce the one required section whose population is decidable | ⬜ not started | 3 | 0 | 1 | 0 | 0% |
+| 2 | Extend the skill-writing pattern registry | ⬜ not started | 4 | 0 | 0 | 4 | 0% |
+| 3 | Failure signatures: a stable code, and a drill per row | ⬜ not started | 3 | 0 | 0 | 1 | 0% |
+| 4 | Bind the external research citations to the ledger | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
+| 5 | Hedge-word lint, diff-scoped, with a declared escalation stage | ⬜ not started | 2 | 0 | 0 | 1 | 0% |
+| 6 | Cancelled with citation | ⏭️ skipped | 0 | 0 | 0 | 3 | 0% |
+
+<a id="blockers-road-to-inbox-harvest-2026-08-b-authoring-contract"></a>
+**Blockers**
+
+- **conditional-section-population-key** (owner: maintainer) — blocks step 1.4 only. Phase 1 steps 1.1-1.3 (the script-bearing section and its gate), and all of Phases 2-7, proceed independently.
+  - **What to do:**
+    Decide between two options for
+    `## Rationalizations to reject` (`src/skills/skill-writing/SKILL.md:533`) and
+    `## Non-negotiable deliverable` (`:556`), whose populations are not decidable
+    from the tree. (1) Add a declarative skill-frontmatter key naming the pattern
+    a skill opts into — a schema change under
+    `src/scripts/schemas/skill.schema.json:8` `additionalProperties: false`, plus
+    the frontmatter validator and every generator reading skill frontmatter.
+    (2) Drop `required` from both headings so the label matches the enforcement
+    that exists, leaving them optional patterns like `:505` and `:592`.
+  - **Resolved when:** The maintainer records option 1 or option 2 in this blocker, and step 1.4 is rewritten as the concrete steps that option needs.
+
+### [road-to-inbox-harvest-2026-08-b-ci-economy.md](roadmaps/road-to-inbox-harvest-2026-08-b-ci-economy.md)
+
+**Road to CI Economy — cut the redundant full builds and re-anchor the cost artefacts to CI-recorded data** — 4 / 21 done (19%)
+
+| # | Phase | State | Open | Done | Deferred | Cancelled | % |
+|---|---|---|---:|---:|---:|---:|---:|
+| 0 | Re-anchor the two existing cost artefacts to CI-recorded data | ⬜ not started | 4 | 0 | 0 | 1 | 0% |
+| 1 | Free hygiene: dead filters, missing concurrency, stale comments, caches | 🟡 in progress | 3 | 4 | 0 | 0 | 57% |
+| 2 | The build fan-out: stop rebuilding the same 6 targets 13 times | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
+| 3 | The subprocess lever: extend in-process running, do not add a skill | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
+| 4 | Required-check-set changes (authored here, applied by the maintainer) | ⬜ not started | 1 | 0 | 2 | 0 | 0% |
+
+<a id="blockers-road-to-inbox-harvest-2026-08-b-ci-economy"></a>
+**Blockers**
+
+- **required-check-set-change** (owner: maintainer) — blocks step 4.2 only. Phases 0-3 and step 4.1 are not blocked — they change no required check, and ADR-222 is a proposal, not an enforcement change.
+  - **What to do:**
+    decide whether the macOS leg and the `npm audit` PR gate stay in
+    the required set, then apply the ruleset edit. Ruleset `17749383` currently
+    requires exactly one check, `Sync + Generate Tools Consistency`
+    (`docs/contracts/branch-protection-policy.md:59`); the write path is documented
+    at `branch-protection-policy.md:158`.
+  - **Resolved when:** ADR-222 is accepted and the ruleset's `required_status_checks` list matches the matrix in `branch-protection-policy.md`, with `ci-green-floor.md` and `release-pr-gating.md` updated in the same change.
+- **merge-queue-enablement** (owner: maintainer) — blocks step 4.3 only. Nothing else here depends on a merge queue.
+  - **What to do:**
+    decide whether to enable a GitHub merge queue for `main` — a
+    repo-admin setting that cannot be turned on from the tree.
+  - **Resolved when:** the merge queue is enabled on `main` and at least one workflow declares a `merge_group` trigger (currently zero across `.github/`).
+
+### [road-to-inbox-harvest-2026-08-b-council-integrity.md](roadmaps/road-to-inbox-harvest-2026-08-b-council-integrity.md)
+
+**Road to council-pass integrity** — 6 / 8 done (75%)
+
+| # | Phase | State | Open | Done | Deferred | Cancelled | % |
+|---|---|---|---:|---:|---:|---:|---:|
+| 1 | Attendance becomes machine-readable | ✅ done | 0 | 5 | 1 | 0 | 100% |
+| 2 | A verdict that disagrees with its own tally | ⬜ not started | 1 | 0 | 0 | 0 | 0% |
+| 3 | One duplicated defence, honestly scoped | 🟡 in progress | 1 | 1 | 0 | 7 | 50% |
+
+<a id="blockers-road-to-inbox-harvest-2026-08-b-council-integrity"></a>
+**Blockers**
+
+- **quorum-solo-floor** (owner: maintainer) — blocks 1.6 only. Phases 1.1–1.5, 2 and 3 ship and are useful without it.
+  - **What to do:**
+    the solo-conclusion rate is a rate over real passes, and no
+    event exists yet to accumulate it — which is why this is a blocker and not a
+    step. After 1.1 lands, pick between three pre-registered outcomes: (a) add a
+    third CLI member — `gemini` is already in `ai_council/cli_hints.ts:40-43` and
+    `ai_council/config.ts:78`, and `_lib/environment_detector.ts:138` records it as
+    `['gemini', false]` where the boolean is the community-wrapper flag documented
+    at `:127-133` (`false` = vendor-official CLI running under the user's own
+    subscription), so this option is spend-free on a host that has the binary;
+    (b) scope a `min_present: 2` floor to gate-class passes only; or (c) publish a
+    null if the rate is under 5 %. Tightening `ceil(n/2)` itself is out of scope —
+    `quorum.ts:13-19` records that divergence as a decision.
+  - **Resolved when:** one of the three outcomes is chosen against real attendance data, or 1.6 is cancelled against the published null.
+
+### [road-to-inbox-harvest-2026-08-b-dispatch-safety.md](roadmaps/road-to-inbox-harvest-2026-08-b-dispatch-safety.md)
+
+**Road to inbox harvest 2026-08-b — dispatch safety** — 1 / 14 done (7%)
+
+| # | Phase | State | Open | Done | Deferred | Cancelled | % |
+|---|---|---|---:|---:|---:|---:|---:|
+| 1 | Scoped tool grants | 🟡 in progress | 3 | 1 | 0 | 2 | 25% |
+| 2 | A confirmation primitive for staged irreversible actions | ⬜ not started | 3 | 0 | 1 | 0 | 0% |
+| 3 | Checkable handoff-envelope fields | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
+| 4 | Roles, lifecycles, and the two residues | ⬜ not started | 3 | 0 | 0 | 4 | 0% |
+
+<a id="blockers-road-to-inbox-harvest-2026-08-b-dispatch-safety"></a>
+**Blockers**
+
+- **confirmation-degraded-host-semantics** (owner: maintainer) — blocks step 2.4 only. Steps 2.1-2.3 are unblocked and land default-unbound; Phases 1, 3 and 4 are not blocked at all.
+  - **What to do:**
+    decide what a host without a `pre_tool_use` slot gets when a
+    `requires_confirmation` action is staged — a model-carried obligation stated as such,
+    or a refusal to stage at all — and whether the primitive is default-on or default-off
+    where the slot does exist.
+  - **Resolved when:** the decision is recorded (an ADR, or the ADR-109 amendment note from 1.4) and names both the degraded-host behaviour and the default.
+
+### [road-to-inbox-harvest-2026-08-b-estate-lifecycle.md](roadmaps/road-to-inbox-harvest-2026-08-b-estate-lifecycle.md)
+
+**Road to estate lifecycle reporting** — 0 / 9 done (0%)
+
+| # | Phase | State | Open | Done | Deferred | Cancelled | % |
+|---|---|---|---:|---:|---:|---:|---:|
+| 1 | The revisit offer | ⬜ not started | 1 | 0 | 0 | 0 | 0% |
+| 2 | The dormancy signal governance already mandates | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
+| 3 | Zero inbound references, on the graph that already exists | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
+| 4 | The graph's own observability | ⬜ not started | 2 | 0 | 0 | 6 | 0% |
+
+<a id="blockers-road-to-inbox-harvest-2026-08-b-estate-lifecycle"></a>
+**Blockers**
+
+- **estate-lifecycle-revisit-answer** (owner: maintainer) — blocks any step that would act on a report — a removal list, a cap change, or a new estate metadata field. Phases 2, 3 and 4 are NOT blocked: every step there is report-only, adds no frontmatter field, and moves no cap.
+  - **What to do:**
+    answer whether the maintained-estate framing in
+    `later/road-to-cost-parity-1-rule-payload-diet.md` reopens now, or stays parked
+    on its own resume conditions (`:24-30`). Separately: `governance.md:58-59` defers
+    a `last_reviewed:` field until a second maintainer exists — confirm that
+    condition still holds, since it is what makes Phase 2 derive rather than store.
+  - **Resolved when:** the answer is written into 1.1 with its date, and either the parked roadmap moves out of `later/` or 1.1 records that it stays.
+
+### [road-to-inbox-harvest-2026-08-b-install-lifecycle.md](roadmaps/road-to-inbox-harvest-2026-08-b-install-lifecycle.md)
+
+**Road to install lifecycle — every write recorded, org packs decided** — 0 / 7 done (0%)
+
+| # | Phase | State | Open | Done | Deferred | Cancelled | % |
+|---|---|---|---:|---:|---:|---:|---:|
+| 1 | record the three writes uninstall cannot undo | ⬜ not started | 5 | 0 | 0 | 1 | 0% |
+| 2 | put the org-pack question to the maintainer | ⬜ not started | 2 | 0 | 1 | 4 | 0% |
+
+<a id="blockers-road-to-inbox-harvest-2026-08-b-install-lifecycle"></a>
+**Blockers**
+
+- **org-pack-reopening** (owner: maintainer) — blocks step 2.3 only. Steps 2.1 and 2.2 are authoring and verification and are not blocked; all of Phase 1 is independent of the pack question entirely.
+  - **What to do:**
+    read the 2.1 brief and either decline (ADR-011 stands, 2.3 closes as
+    `- [-]`) or reopen by commissioning an ADR that answers the four ADR-088 § 3 questions
+    and reconciles the `agents/overrides/` `replace` mode.
+  - **Resolved when:** either 2.3 is marked `- [-]` citing a decline, or a new ADR exists with `status: accepted` amending ADR-011 and ADR-013 § packs.
+
+### [road-to-inbox-harvest-2026-08-b-ledger-truth.md](roadmaps/road-to-inbox-harvest-2026-08-b-ledger-truth.md)
+
+**Road to cost-ledger truth** — 2 / 12 done (17%)
+
+| # | Phase | State | Open | Done | Deferred | Cancelled | % |
+|---|---|---|---:|---:|---:|---:|---:|
+| 1 | Served-model truth | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
+| 2 | The rate tables cannot disagree | 🟡 in progress | 2 | 2 | 1 | 0 | 50% |
+| 3 | Two aggregation lines and a cache signature | ⬜ not started | 3 | 0 | 0 | 6 | 0% |
+
+<a id="blockers-road-to-inbox-harvest-2026-08-b-ledger-truth"></a>
+**Blockers**
+
+- **unknown-model-row-never-observed** (owner: maintainer) — blocks step 2.5 only. Steps 2.1-2.4 are unblocked — 2.4 is what makes an unknown-model row detectable in the first place, and Phases 1 and 3 do not touch this path.
+  - **What to do:**
+    after 2.4 ships, wait for the first `rate_missing` row in
+    `agents/cost-tracking/sessions.jsonl` and record its actual shape.
+  - **Resolved when:** at least one real `rate_missing` row exists and its field set is written down, so a backfill pass can be built against an observed shape rather than a guessed one.
+
+### [road-to-inbox-harvest-2026-08-b-release-integrity.md](roadmaps/road-to-inbox-harvest-2026-08-b-release-integrity.md)
+
+**Road to release-surface integrity** — 0 / 12 done (0%)
+
+| # | Phase | State | Open | Done | Deferred | Cancelled | % |
+|---|---|---|---:|---:|---:|---:|---:|
+| 1 | The release head cannot ship its own placeholder | ⬜ not started | 3 | 0 | 1 | 0 | 0% |
+| 2 | The carrier remainder, with its premise corrected | ⬜ not started | 1 | 0 | 0 | 2 | 0% |
+| 3 | Four flags over data that already exists | ⬜ not started | 4 | 0 | 0 | 1 | 0% |
+| 4 | Two real contract gaps | ⬜ not started | 2 | 0 | 0 | 2 | 0% |
+| 5 | Records, and the asks that need no work | ⬜ not started | 2 | 0 | 0 | 7 | 0% |
+
+<a id="blockers-road-to-inbox-harvest-2026-08-b-release-integrity"></a>
+**Blockers**
+
+- **release-head-cadence-decision** (owner: maintainer) — blocks step 1.4 only. Steps 1.1-1.3 proceed either way.
+  - **What to do:**
+    Pick exactly one — (a) hard-block the placeholder string in the
+    final release head, or (b) rewrite the head comment in
+    `docs/contracts/CHANGELOG-conventions.md` to document retro-curation as the real
+    cadence. Mutually exclusive, and hard-block was already CUT to a maintainer
+    decision at `archive/road-to-feedback-9-29.md:77`.
+  - **Resolved when:** (a) or (b) is named here and 1.2 records it in the contract.
+- **carrier-install-paths-decision** (owner: maintainer) — blocks the fix for the 24 `paths:` disagreements, which lives in `road-to-carrier-layer-convergence.md` Phase 3. Nothing here is blocked — 2.3 proceeds regardless.
+  - **What to do:**
+    Decide whether `install.ts` should emit `paths:` — consumer-
+    visible install behaviour and a default flip, so an ADR candidate and
+    maintainer-only. That roadmap explicitly declines to decide it (`:35`).
+  - **Resolved when:** An ADR records the decision and that roadmap's Phase 3 cites it.
+- **adr-221-acceptance** (owner: maintainer) — blocks nothing here. Named because four of the five reviews already treat host-native-first as settled doctrine while the record is not.
+  - **What to do:**
+    Accept or reject
+    `docs/decisions/ADR-221-host-native-first-ladder.md`, `status: proposed` at `:3`.
+    No code either way — the cheapest survivor in the source file.
+  - **Resolved when:** `status` is `accepted` or `rejected` and the index is regenerated.
+
+### [road-to-inbox-harvest-2026-08-b.md](roadmaps/road-to-inbox-harvest-2026-08-b.md)
+
+**Road to inbox harvest 2026-08-b** — 2 / 3 done (67%)
+
+| # | Phase | State | Open | Done | Deferred | Cancelled | % |
+|---|---|---|---:|---:|---:|---:|---:|
+| 1 | Landed in this PR | ✅ done | 0 | 2 | 0 | 0 | 100% |
+| 2 | The family | ⬜ not started | 1 | 0 | 0 | 0 | 0% |
+| 3 | Cancelled at batch level | ⏭️ skipped | 0 | 0 | 0 | 3 | 0% |
 
 <a id="blockers-road-to-inbox-harvest-2026-08-b"></a>
 **Blockers**
 
-- **quorum-solo-floor** (owner: maintainer) — blocks 1.5 only — 1.1–1.4 ship and are useful without it.
+- **harvest-b-execution-order** (owner: maintainer) — blocks 2.1 only. Every child roadmap is independently readable and independently executable; none waits on this.
   - **What to do:**
-    the solo-conclusion rate is a rate over real passes, and no
-    quorum event exists yet to accumulate it. After 1.1 lands, pick between three
-    pre-registered outcomes: add a third CLI member (`gemini` is already in
-    `cli_hints.ts:40-43` and `environment_detector.ts:138` marks it
-    **non-metered** — vendor-official CLI under the user's own subscription, so
-    this option is spend-free on a host with the binary); scope `min_present: 2`
-    to gate-class passes only; or publish a null under 5 %. Tightening `ceil(n/2)`
-    itself is out of scope — the ceil-vs-floor divergence is a recorded decision.
-  - **Resolved when:** one of the three outcomes is chosen against real attendance data, or 1.5 is cancelled against the null.
-- **release-head-cadence-decision** (owner: maintainer) — blocks 3.3
-  - **What to do:**
-    two mutually exclusive fixes. Either the final release head may
-    never carry the generator's placeholder (flip
-    `check_release_highlights.ts:205` to blocking), or the head comment is rewritten
-    to document retro-curation as the real cadence and the placeholder is legitimate
-    until then. The recurrence is verified — v9.32.0 carries it, v9.31.0 does not —
-    so doing neither leaves a known-recurring defect advisory.
-  - **Resolved when:** one of the two is chosen and the other recorded as rejected.
-- **adr-221-acceptance** (owner: maintainer) — blocks nothing in this roadmap; recorded because it was the cheapest survivor the release review surfaced and it needs no code.
-  - **What to do:**
-    `ADR-221-host-native-first-ladder.md:3` is `status: proposed`.
-    Four of five reviews treat host-native-first as settled doctrine. Accepting or
-    rejecting it is an owner decision, not an agent edit.
-  - **Resolved when:** the status field is `accepted` or `rejected`.
+    decide which of the eight siblings open now and which wait.
+    `-ledger-truth` Phase 1 and `-release-integrity` Phase 5 are the two cheapest
+    unblocked items in the batch. `-estate-lifecycle` and `-install-lifecycle` Phase 2
+    each open with a decision-revisit offer against an accepted or council-parked lock,
+    so they need an answer before any code. `-ci-economy` is the largest and its
+    Phase 0 spends CI minutes recording a baseline.
+  - **Resolved when:** the chosen order is written into 2.1 and the unchosen siblings are moved to `agents/roadmaps/later/` with a resume condition, per `lint_roadmap_later_disposition`.
 
 ### [road-to-inbox-harvest-2026-08.md](roadmaps/road-to-inbox-harvest-2026-08.md)
 
