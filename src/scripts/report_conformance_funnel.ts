@@ -146,15 +146,22 @@ export function render(r: FunnelReport): string {
         lines.push('    substituted with dist/, which would answer a different question.');
     } else {
         lines.push(
-            `    Divergence: ${d.shared} shared · ${d.bodyDiff.length} body-diff · ` +
+            `    Divergence: ${d.shared} shared · ${d.bodyDiff.length} prose-diff · ` +
+                `${d.frontmatterOnly.length} frontmatter-only · ` +
                 `${d.provenanceOnly.length} provenance-only · ${d.projectOnly.length} project-only · ` +
                 `${d.globalOnly.length} global-only` +
                 (d.manualOnlyGlobal.length > 0 ? ` (${d.manualOnlyGlobal.length} by design, ADR-004 manual)` : ''),
         );
         if (d.bodyDiff.length > 0) {
-            lines.push(`    BODY DIVERGENCE — both copies reach the model: ${d.bodyDiff.join(', ')}`);
-            lines.push('    Precedence: the project projection is generated from src/ at this commit');
-            lines.push('    and wins; the global install is a release snapshot.');
+            lines.push(`    PROSE DIVERGENCE — both copies reach the model: ${d.bodyDiff.join(', ')}`);
+            lines.push('    The host resolves nothing: both layers load at launch at the same');
+            lines.push('    priority with no precedence marker, so which text binds is UNDEFINED');
+            lines.push('    (claude-code-rules-dir-contract.md). The project copy is merely the');
+            lines.push('    newer one — recency, not precedence.');
+        }
+        if (d.frontmatterOnly.length > 0) {
+            lines.push(`    ${String(d.frontmatterOnly.length)} pair(s) differ only in frontmatter — prose byte-identical, nothing`);
+            lines.push('    to act on; the host delivers the prose without that block.');
         }
         if (d.unreadable.length > 0) {
             lines.push(`    Unreadable on one side (${d.unreadable.length}) — a broken install, not a disagreement.`);

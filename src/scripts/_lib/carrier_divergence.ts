@@ -81,6 +81,53 @@ export function comparePair(a: Buffer, b: Buffer): PairVerdict {
     return 'body-diff';
 }
 
+/**
+ * Drop a leading YAML frontmatter block, returning the prose the host actually
+ * delivers.
+ *
+ * A file with no `---` fence, or an unterminated one, is returned unchanged —
+ * the same tolerance `report_carrier_divergence`'s own `type:` reader applies,
+ * because a malformed fence must not silently swallow a rule's whole text.
+ */
+export function stripFrontmatter(text: string): string {
+    if (!text.startsWith('---')) return text;
+    const end = text.indexOf('\n---', 3);
+    if (end === -1) return text;
+    const afterFence = text.indexOf('\n', end + 1);
+    return afterFence === -1 ? '' : text.slice(afterFence + 1);
+}
+
+/**
+ * Do the two copies carry the same governed PROSE, ignoring frontmatter?
+ *
+ * WHY THIS IS SEPARATE FROM `comparePair`, AND MUST STAY SEPARATE
+ * --------------------------------------------------------------
+ * `comparePair` answers *can a byte-identity dedup skip this pair* — it is the
+ * dedup predicate, and a frontmatter difference is a real byte difference, so
+ * folding this in would relax the predicate that
+ * `agents/settings/contexts/dedup-reachability-refusal.md` deliberately keeps
+ * strict. `measure_scope_dedup` asks exactly that question and its arithmetic
+ * stays untouched.
+ *
+ * This answers the different, reader-facing question `report_carrier_divergence`
+ * asks: *must a human act on this pair*. Measured 2026-08-10 over the live
+ * carriers at commit `a5b2f4cb7`: 109 shared rules, **0** byte-identical, **109**
+ * classified `body-diff` — and after this strip, **0** of the 109 differ in
+ * prose. The whole divergence was the metadata block. Reporting that as body
+ * divergence manufactures the one class the report tells a reader to act on,
+ * which is precisely the failure `compareCarriers` already refuses to commit for
+ * an unreadable copy.
+ *
+ * Edge trimming only, on purpose: the frontmatter fence leaves the two sides one
+ * leading newline apart, and that is not a content difference. Internal
+ * whitespace and line endings are NOT normalized — a CRLF-vs-LF body stays a
+ * prose difference, so this stays no softer than the dedup predicate on the text
+ * the host reads.
+ */
+export function proseEqual(a: string, b: string): boolean {
+    return stripFrontmatter(a).trim() === stripFrontmatter(b).trim();
+}
+
 export interface RuleDirCensus {
     files: number;
     /**

@@ -37,14 +37,28 @@
  *
  * THE THREE CLASSES, AND WHICH ONE A READER MUST ACT ON
  * ----------------------------------------------------
- *   body-diff        the two carriers deliver different TEXT. This is the class
+ *   body-diff        the two carriers deliver different PROSE. This is the class
  *                    round 5's contradiction lived in, and the only one that
- *                    needs a decision. Precedence when it appears: the project
- *                    projection is generated from `src/` at the current commit,
- *                    so it is the newer copy and it wins; the global install is
- *                    a release snapshot. Printed with the report so the
- *                    precedence is read at the moment it matters rather than
- *                    looked up.
+ *                    needs a decision. What the host does about it: NOTHING —
+ *                    both copies load at launch with the same priority and no
+ *                    precedence marker between them, so the divergence is
+ *                    binding-undefined rather than resolved in either
+ *                    direction. Cited, not inferred:
+ *                    `agents/evidence/analysis/claude-code-rules-dir-contract.md`
+ *                    (host 2.1.226, first-party observation plus the host's own
+ *                    documentation). The project copy is the NEWER text, which
+ *                    is a fact about recency and not a precedence rule — the
+ *                    earlier wording of this header called it a win, and a
+ *                    reader acting on that would have believed the host resolves
+ *                    something it does not.
+ *   frontmatter-only the prose is byte-identical and only the metadata block
+ *                    differs. The host delivers the prose without that block, so
+ *                    nothing a reader must act on reaches the model differently.
+ *                    Split out because it was, measured, the ENTIRE content of
+ *                    the `body-diff` class: 109 of 109 on 2026-08-10. Left inside
+ *                    body-diff it manufactured the report's only actionable
+ *                    class out of a metadata difference — the same mistake the
+ *                    `unreadable` branch below already refuses to make.
  *   provenance-only  identical after removing the two installer ownership keys.
  *                    Structural, expected, and decided against closing —
  *                    `agents/settings/contexts/dedup-reachability-refusal.md`.
@@ -69,7 +83,7 @@ import * as path from 'node:path';
 import process from 'node:process';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
-import { comparePair, type PairVerdict } from './_lib/carrier_divergence.js';
+import { comparePair, type PairVerdict, proseEqual } from './_lib/carrier_divergence.js';
 
 const _HERE = fileURLToPath(import.meta.url);
 const REPO_ROOT = path.resolve(path.dirname(_HERE), '..', '..');
@@ -103,6 +117,13 @@ export interface CarrierDivergence {
     shared: number;
     identical: string[];
     provenanceOnly: string[];
+    /**
+     * Prose byte-identical, metadata block different. A real byte difference — so
+     * `comparePair` still calls it `body-diff` and the dedup predicate is
+     * unchanged — but not a difference in what the host delivers, so it is not
+     * something a reader has to act on.
+     */
+    frontmatterOnly: string[];
     bodyDiff: string[];
     projectOnly: string[];
     globalOnly: string[];
@@ -171,6 +192,7 @@ export function compareCarriers(
         shared: 0,
         identical: [],
         provenanceOnly: [],
+        frontmatterOnly: [],
         bodyDiff: [],
         projectOnly: [],
         globalOnly: [],
@@ -196,11 +218,12 @@ export function compareCarriers(
         }
         out.shared += 1;
         let verdict: PairVerdict;
+        let proseSame: boolean;
         try {
-            verdict = comparePair(
-                fs.readFileSync(path.join(projectDir, rule)),
-                fs.readFileSync(path.join(globalDir, rule)),
-            );
+            const projectCopy = fs.readFileSync(path.join(projectDir, rule));
+            const globalCopy = fs.readFileSync(path.join(globalDir, rule));
+            verdict = comparePair(projectCopy, globalCopy);
+            proseSame = proseEqual(projectCopy.toString('utf-8'), globalCopy.toString('utf-8'));
         } catch {
             // An unreadable copy is not a body difference and must not be
             // reported as one — a permission error would otherwise manufacture
@@ -213,6 +236,7 @@ export function compareCarriers(
         }
         if (verdict === 'identical') out.identical.push(rule);
         else if (verdict === 'provenance-only') out.provenanceOnly.push(rule);
+        else if (proseSame) out.frontmatterOnly.push(rule);
         else out.bodyDiff.push(rule);
     }
     return out;
@@ -244,7 +268,8 @@ export function render(d: CarrierDivergence): string {
     lines.push(`  shared rule names                    ${d.shared}`);
     lines.push(`    byte-identical                     ${d.identical.length}`);
     lines.push(`    differ ONLY in the install stamp   ${d.provenanceOnly.length}`);
-    lines.push(`    differ in BODY                     ${d.bodyDiff.length}`);
+    lines.push(`    differ ONLY in frontmatter         ${d.frontmatterOnly.length}`);
+    lines.push(`    differ in PROSE                    ${d.bodyDiff.length}`);
     if (d.unreadable.length > 0) {
         lines.push(`    unreadable on one side             ${d.unreadable.length}  (${d.unreadable.join(', ')})`);
         lines.push('      Not counted as shared and NOT a body difference — a dangling entry is');
@@ -255,13 +280,31 @@ export function render(d: CarrierDivergence): string {
     lines.push('');
 
     if (d.bodyDiff.length > 0) {
-        lines.push('  BODY DIVERGENCE — the two carriers deliver different text for these rules.');
-        lines.push('  Both copies reach the model, with no precedence marker between them, so a');
-        lines.push('  claim one copy retracts can be re-asserted by the other. PRECEDENCE: the');
-        lines.push('  project projection is generated from src/ at this commit and wins; the');
-        lines.push('  global install is a release snapshot. Close it by reinstalling the global');
-        lines.push('  copy, or by reading the project copy as authoritative.');
+        lines.push('  PROSE DIVERGENCE — the two carriers deliver different governed text for');
+        lines.push('  these rules. Both copies reach the model, and the host resolves NOTHING:');
+        lines.push('  rules without a `paths` key load at launch with the same priority as');
+        lines.push('  CLAUDE.md, with no precedence marker between the layers, so a claim one');
+        lines.push('  copy retracts can be re-asserted by the other and which text binds is');
+        lines.push('  UNDEFINED. Cited, not inferred — agents/evidence/analysis/');
+        lines.push('  claude-code-rules-dir-contract.md (host 2.1.226, the host\'s own docs plus');
+        lines.push('  a first-party observation). The project copy is the NEWER text, which is a');
+        lines.push('  fact about recency and NOT a host precedence rule: close the divergence by');
+        lines.push('  reinstalling the global copy, or decide which text binds — do not assume');
+        lines.push('  the newer one already won.');
         for (const r of d.bodyDiff) lines.push(`    - ${r}`);
+        lines.push('');
+    }
+
+    if (d.frontmatterOnly.length > 0) {
+        lines.push(`  ${String(d.frontmatterOnly.length)} pair(s) differ ONLY in the frontmatter block — prose byte-identical.`);
+        lines.push('  Not a governed-text difference and nothing to act on: the host delivers the');
+        lines.push('  prose without that block, and none of the keys in it is one this host reads');
+        lines.push('  (claude-code-rules-dir-contract.md: it reads `paths`, and agent-config\'s own');
+        lines.push('  vocabulary is not read at all). Two writers, two frontmatter policies —');
+        lines.push('  `generate-tools` emits `paths` where a rule is path-scoped and nothing');
+        lines.push('  otherwise; `install.ts` writes the full vocabulary plus its ownership stamp.');
+        lines.push('  Reported as a count on purpose: naming every pair would bury the class');
+        lines.push('  above, which is the one a reader must act on.');
         lines.push('');
     }
 
@@ -302,9 +345,14 @@ export function render(d: CarrierDivergence): string {
 
     if (d.bodyDiff.length === 0) {
         lines.push('');
-        lines.push('  No body divergence. The condition is transient — it returns whenever the');
-        lines.push('  checkout moves ahead of the installed release — so this is a reading of');
-        lines.push('  right now, not a property of the repo. Re-run it, do not cite it.');
+        lines.push('  No prose divergence — no rule\'s governed text differs between the carriers.');
+        lines.push('  The condition is transient — it returns whenever the checkout moves ahead of');
+        lines.push('  the installed release — so this is a reading of right now, not a property of');
+        lines.push('  the repo. Re-run it, do not cite it. That holds doubly here: the reading also');
+        lines.push('  depends on WHICH GENERATION of the emitter produced the project tree (a');
+        lines.push('  frontmatter-carrying symlink tree and a frontmatter-less real-file tree');
+        lines.push('  classify the same commit differently), so a number from another checkout is');
+        lines.push('  not comparable to this one.');
     }
     return lines.join('\n');
 }
