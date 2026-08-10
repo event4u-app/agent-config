@@ -788,6 +788,15 @@ tasks:
       (emergency.orchestration_halt) survives.
     cmd: ./scripts-run src/scripts/lint_no_activation_gates {{.QUIET_FLAG}}
 
+  lint-rule-enforcement-declaration:
+    silent: true
+    desc: |
+      enforced_by-declaration ratchet (road-to-feedback-9-29 Phase 1.4): a NEW
+      rule must declare its enforcement (validator/hook/test/observer or an
+      honest none + body gap line); the 84 legacy undeclared rules are
+      baselined in src/config/rule-enforcement-baseline.json, shrink-only.
+    cmd: ./scripts-run src/scripts/lint_rule_enforcement_declaration {{.QUIET_FLAG}}
+
   lint-empty-roadmaps:
     silent: true
     desc: Reject empty (0-byte / whitespace-only) roadmap files under agents/roadmaps/ — backstop against auto-commit 0-byte stubs

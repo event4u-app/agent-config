@@ -117,6 +117,21 @@ export interface SuppressionSpec {
      * migration to content anchors visible instead of aspirational.
      */
     driftKey?: { positionField: string; anchorField: string };
+    /**
+     * Accept this baseline as absent at the base ref — for the ONE change that
+     * introduces it, then removed.
+     *
+     * Without it a brand-new baseline is a permanent red: the ratchet compares
+     * against `origin/main`, where the file does not exist yet, and
+     * `ratchet_base_ref` is deliberately fail-closed there because
+     * absent-at-base and mistyped-path look identical from inside. Setting it
+     * makes the verdict `new_baseline` rather than growth, so the bootstrap
+     * entries are not each reported as a new hole.
+     *
+     * Remove the flag once the introducing commit is an ancestor of the base
+     * ref — leaving it set would silently accept a later mistyped path.
+     */
+    newInThisChange?: boolean;
     /** Why this list exists at all — printed with the count, so absence is visible. */
     what: string;
 }
@@ -198,6 +213,19 @@ export const SUPPRESSION_INVENTORY: readonly SuppressionSpec[] = [
         reasonField: 'note',
         growth: 'requires_falsifier',
         what: 'per-gate known-debt counts',
+    },
+    {
+        // The root IS the list — a bare array of rule filenames, so entries are
+        // content-keyed by construction and cannot drift on line numbers.
+        // `forbidden` growth is the whole point: this baseline exists so a NEW
+        // rule cannot join the silent set, and `lint_rule_enforcement_declaration`
+        // additionally fails when an entry stops being undeclared, so the list is
+        // shrink-only from both directions.
+        file: 'src/config/rule-enforcement-baseline.json',
+        listKey: null,
+        tier: 'string_list',
+        newInThisChange: true,
+        what: 'rules predating the enforced_by-declaration ratchet',
     },
 ];
 
@@ -367,6 +395,7 @@ export function main(): number {
                 baseRef,
                 repoRoot: REPO_ROOT,
                 entriesOf: (parsed) => entriesOfSpec(spec, parsed),
+                ...(spec.newInThisChange === true ? { allowNewBaseline: true } : {}),
             });
         } catch (exc) {
             if (exc instanceof BaseRefUnavailableError) {
