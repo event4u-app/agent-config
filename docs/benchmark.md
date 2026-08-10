@@ -919,3 +919,11 @@ header and in the roadmap rather than resolved away. Separately, `TOOL_REGISTRY`
 holds two entries and does not model the scoped-grant syntax `tool-safety`
 itself prefers, so the `(b)` fix closes self-certification where no human is in
 the loop and does not claim the registry is complete.
+
+## Cache-injection anatomy null (2026-08-10)
+
+The road-to-token-economy-cache Phase-1 spike invoked its pre-registered
+null: hook injections land post-prefix and the measured hit ratio is high
+(main 98.8% / subagent 97.3%, host CC 2.1.226), so the prefix-reordering
+phase downgraded to the hygiene lint. Numbers + method:
+`agents/settings/contexts/cache-injection-anatomy.md`.

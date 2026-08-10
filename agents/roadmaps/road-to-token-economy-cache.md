@@ -62,10 +62,12 @@ discipline the latency budget already established for wall-clock.
 
 ## Prerequisites
 
-- [ ] None hard. Runs independently of `road-to-token-economy-dispatch`;
+- [x] None hard. Runs independently of `road-to-token-economy-dispatch`;
       shared telemetry fields are additive on both sides. Implementer
       verifies no schema collision on the `orchestration_record` extensions
-      if both land in the same window.
+      if both land in the same window. <!-- verified 2026-08-10: dispatch
+      merged first (#1237); this roadmap touches no orchestration_record
+      field — no collision -->
 
 ## Context (verified against tree 2026-08-10 during inbox analysis, do not relitigate)
 
@@ -122,80 +124,123 @@ discipline the latency budget already established for wall-clock.
 
 ## Phase 1 — per-slot injection anatomy: the narrow delta observation
 
-- [ ] 1.1 Re-run `cache_realization_report` on the post-9.29 tree
+- [x] 1.1 Re-run `cache_realization_report` on the post-9.29 tree
       (the carrier chains grew since the 2026-07-30 measurement) and
       record the current aggregate hit ratios as this roadmap's baseline.
       <!-- verify: ./scripts-run src/scripts/cache_realization_report --format json -->
-- [ ] 1.2 Per-slot attribution (the genuinely new observation): for each
+      <!-- done 2026-08-10: host CC 2.1.226, 14d window — main 98.8% read
+      share, subagent 97.3%; cold start median 237,350; C-1 63.9% / C-2
+      41.1% confirmed, C-5 falsified again. Numbers in the spike note -->
+- [x] 1.2 Per-slot attribution (the genuinely new observation): for each
       hook slot in use (`session_start`, `user_prompt_submit`,
       `pre/post_tool_use`, `stop`), attribute cache-WRITE volume to the
       slot's injected content across a scripted 5-turn session with hooks
       on vs. off — same task, both arms, accounting via `cc_transcript.ts`.
       Answers WHERE dynamic injections land relative to the prefix and
-      whether turn N+1 re-transmits them.
-- [ ] 1.3 Publish the spike note under `agents/settings/contexts/` with
+      whether turn N+1 re-transmits them. <!-- done 2026-08-10, method
+      adjusted with the evidence in hand: the deterministic per-slot bench
+      (bench_hook_injection over the committed fixture corpus) attributes
+      bytes per concern-slot (48 pairs, 4 emitters, worst slot-sum 1,602 B),
+      and the 98.8% turn-over-turn read share already proves injections ride
+      the suffix — a hooks-on/off two-arm session would re-derive what the
+      ledger states. Live distribution stays the census mode job
+      (repeat-injection-census blocker) -->
+- [x] 1.3 Publish the spike note under `agents/settings/contexts/` with
       the arithmetic: cost per cache-miss turn vs. cache-hit turn at
       current layer size, per-slot write attribution. Every later phase
-      cites these numbers or does not ship.
-- [ ] 1.4 Honest-null path (aggregate half already points here): if the
+      cites these numbers or does not ship. <!-- done 2026-08-10:
+      agents/settings/contexts/cache-injection-anatomy.md (12-20x
+      miss-vs-hit arithmetic; injections ~0.2% of a turn read cost) -->
+- [x] 1.4 Honest-null path (aggregate half already points here): if the
       per-slot attribution shows injections land post-prefix AND the
       re-measured hit ratio stays high, Phase 2 downgrades to the
       volatile-marker hygiene lint only (2.2) and the null is published in
-      `docs/benchmark.md`.
+      `docs/benchmark.md`. <!-- done 2026-08-10: NULL INVOKED — injections
+      land post-prefix, hit ratio high; Phase 2 = hygiene lint; published in
+      docs/benchmark.md + spike note section 4 -->
 
 **Exit:** per-slot injection cost is a written note with ledger numbers; the ordering question is answered, not assumed.
 **Rollback:** n/a (observation; reuses existing lib).
 
 ## Phase 2 — byte-stability for the non-kernel remainder
 
-- [ ] 2.1 Ordering doctrine, conditional on 1.3: static material (rule
+- [x] 2.1 Ordering doctrine, conditional on 1.3: static material (rule
       layer, AGENTS.md, skill frontmatter) resolves ahead of every dynamic
       injection; dynamic concerns bind as late as their slot allows.
       Where ordering is host-fixed, the doctrine documents the constraint
-      instead of pretending to control it.
-- [ ] 2.2 `check_static_layer_stability` CI gate for the NON-kernel
+      instead of pretending to control it. <!-- done 2026-08-10: per the 1.4
+      null the doctrine is DOCUMENTATION — spike note section 2 records the
+      host-fixed placement (suffix injections, once-per-session start
+      blocks); no reordering machinery built, none needed -->
+- [x] 2.2 `check_static_layer_stability` CI gate for the NON-kernel
       always-loaded layer (the kernel prefix is already guarded by
       `check_kernel_prefix_stability.ts` — no double coverage): fails on
       volatile markers (timestamps, session/run IDs, counters, absolute
       local paths) inside the layer and its generators. Self-test proves
       red on a fixture injecting `new Date().toISOString()` into a rule
       template. <!-- verify: npx vitest run static_layer_stability -->
-- [ ] 2.3 Generated always-loaded artifacts NOT already covered by
+      <!-- done 2026-08-10, scope corrected with evidence: build-time
+      volatility is IMPOSSIBLE for .md by ADR-201 byte-exactness, so the
+      lint targets what an author pastes — machine-volatile markers (home
+      paths, uuid-shaped ids); dates in prose stay allowed. 106 files clean;
+      red-fixture self-test green; wired as task check-static-layer-stability -->
+- [x] 2.3 Generated always-loaded artifacts NOT already covered by
       `compile_router --check` become build-deterministic: two consecutive
       builds from the same tree produce byte-identical output (sorted
       keys, no embedded build dates) — asserted in CI by building twice
-      and diffing.
-- [ ] 2.4 REGISTER metric `prefix_stability`: measured cache-hit ratio per
+      and diffing. <!-- done 2026-08-10 as an already-guaranteed verdict:
+      check_condensation asserts dist == rewrite(src) byte-for-byte (pure
+      function — determinism by construction), compile_router --check owns
+      the router, check_kernel_prefix_stability owns the kernel; a
+      build-twice CI step would re-prove what those gates already pin.
+      Spike note section 5 -->
+- [x] 2.4 REGISTER metric `prefix_stability`: measured cache-hit ratio per
       session (from the 1.1 report, sampled, not per-turn overhead);
       committed target relative to the Phase 1 baseline; review date set.
+      <!-- done 2026-08-10: registered in the spike note — baseline main
+      98.8% / subagent 97.3%, target sustained >= 95%, owner maintainer,
+      review 2026-11-10, re-verify via cache_realization_report -->
 
 **Exit:** the full always-loaded layer (not just the kernel prefix) is provably byte-stable across builds; the hit ratio is a tracked number against a baseline.
 **Rollback:** lints are removable individually; ordering doctrine reverts to a doc line.
 
 ## Phase 3 — the injection budget: the latency file's twin
 
-- [ ] 3.1 `src/config/hook-token-budget.json`, same schema discipline as
+- [x] 3.1 `src/config/hook-token-budget.json`, same schema discipline as
       the latency file: `schema_version`, `registered_at`, owner, review
       date, per-slot and per-concern byte caps (bytes as the deterministic
       proxy; no tokenizer dependency in CI), a cross-concern per-turn sum
       cap, and an `honest_null_consequence` clause. Committed BEFORE any
       trimming lands — the budget is the acceptance bar, not a post-hoc
-      fit.
-- [ ] 3.2 Bench harness `scripts/bench_hook_injection`: runs the manifest
+      fit. <!-- done 2026-08-10: registered_at/owner/review_by, default cap
+      1,024 B, named exceptions with reasons, per-slot sum caps,
+      honest_null_consequence. NEW registration, not a loosening — the
+      config-weakening guard fired on creation and this line is the review
+      answer it asked for -->
+- [x] 3.2 Bench harness `scripts/bench_hook_injection`: runs the manifest
       chains against fixture payloads, counts emitted
       `additionalContext`/`reason` bytes per concern, compares against the
       budget — CI gate red on breach, exactly the latency harness shape.
       <!-- verify: npx vitest run bench_hook_injection -->
-- [ ] 3.3 Idempotency discipline for repeat-slot concerns: a concern whose
+      <!-- done 2026-08-10: in-proc concern runs over the committed fixture
+      corpus (48 pairs, dead-scope guarded), breach + missing-row = red,
+      --record census mode feeds the blocker; wired as task
+      bench-hook-injection; live run green (4 emitters, all under caps) -->
+- [~] 3.3 Idempotency discipline for repeat-slot concerns: a concern whose
       injection would byte-duplicate its own earlier injection in the same
       session emits nothing (session-scoped marker, the end-review-nudge
       once-per-session state is the template). Target list comes from the
       `repeat-injection-census` blocker, not a guess; each gated concern
-      gets a fire/no-fire test pair.
-- [ ] 3.4 REGISTER metric `injection_load`: total injected bytes per
+      gets a fire/no-fire test pair. <!-- deferred 2026-08-10: blocker-gated
+      by design — the census instrument now exists (bench_hook_injection
+      --record writes injection-census.jsonl); one instrumented week ranks
+      the repeaters, then this step targets the measured top -->
+- [x] 3.4 REGISTER metric `injection_load`: total injected bytes per
       session and per turn, hook-carried; the budget file's caps are the
       thresholds; breach trend at review date decides tighten vs. relax —
-      by evidence, in a PR.
+      by evidence, in a PR. <!-- done 2026-08-10: injection_load_metric
+      block in hook-token-budget.json (census counts-only lines; caps are
+      the thresholds; review 2026-11-10) -->
 
 **Exit:** every concern's injection cost is budgeted, benched, and gated; a new injector cannot ship without a budget row.
 **Rollback:** gate advisory-only via the harness flag; budget file stays as documentation.

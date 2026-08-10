@@ -1,0 +1,42 @@
+{
+    "_comment": "Pre-registered hook-INJECTION byte budget (road-to-token-economy-cache Phase 3) — the latency file's twin: same discipline, different unit. Committed BEFORE any trimming lands; the budget is the acceptance bar, not a post-hoc fit. Bytes, not tokens, as the deterministic CI unit (no tokenizer dependency — roadmap non-goal 7.6); token-exact numbers appear only in ledger-based telemetry. Consumed by scripts/bench_hook_injection and its CI gate: a concern whose measured emission (reason + additional_context + context bytes) exceeds its row fails the build, and an EMITTING concern with no row fails the build — a new injector cannot ship without a budget row.",
+    "schema_version": 1,
+    "registered_at": "2026-08-10",
+    "owner": "maintainer",
+    "review_by": "2026-11-10",
+    "unit": "bytes of concern stdout payload fields (reason + additional_context + context) per fire",
+    "default_cap_bytes": 1024,
+    "per_concern_caps_bytes": {
+        "_comment": "Named exceptions above the default, each with its reason. Absent concern = default_cap_bytes.",
+        "hot-context": 4096,
+        "hot-context_reason": "400-word working-memory restore, session_start only — one-shot, not per-turn",
+        "handoff-context": 8192,
+        "handoff-context_reason": "consume-once handoff injection, deleted after delivery — the one legitimately large one-shot",
+        "session-canary": 2048,
+        "session-canary_reason": "full canary contract once at session_start; the per-turn beat is one line",
+        "language-mirror": 2048,
+        "language-mirror_reason": "the measured 626-wrong-turn failure class justifies a full-paragraph pin per turn",
+        "council-availability": 1536,
+        "council-availability_reason": "session_start availability block incl. resolved path + member list",
+        "session-register": 2048,
+        "session-register_reason": "collision listing scales with live sessions; capped, not unbounded",
+        "chat-history": 4096,
+        "chat-history_reason": "session_start restore block"
+    },
+    "per_slot_sum_caps_bytes": {
+        "_comment": "Cross-concern per-fire sum per slot (roadmap 3.1). session_start is one-time and may carry the restore payloads; per-turn slots stay tight.",
+        "session_start": 16384,
+        "user_prompt_submit": 4096,
+        "pre_tool_use": 2048,
+        "post_tool_use": 2048,
+        "stop": 2048,
+        "session_end": 1024,
+        "pre_compact": 2048,
+        "agent_error": 1024
+    },
+    "injection_load_metric": {
+        "definition": "Roadmap 3.4: total injected bytes per session and per turn, hook-carried. The census mode of bench_hook_injection (--record) appends counts-only lines to agents/runtime/state/injection-census.jsonl; the caps above are the thresholds; breach trend at review date decides tighten vs relax — by evidence, in a PR. The census is also the repeat-injection-census blocker's instrument (one instrumented week ranks the repeaters for the 3.3 idempotency gate).",
+        "privacy": "census lines carry {ts, slot, concern, bytes} — counts and ids only, never content"
+    },
+    "honest_null_consequence": "If real-session census data shows the caps are systematically wrong (either direction), the caps move by evidence in a PR at review date — never silently. A budget nobody benches is the fossilization failure this file's latency twin avoided via its CI harness; bench_hook_injection is wired into the same pipeline in the same phase."
+}

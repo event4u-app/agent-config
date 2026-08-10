@@ -6,10 +6,10 @@
 
 ## Overall
 
-**189 / 358 steps done · 53%**
+**200 / 357 steps done · 56%**
 
 ```text
-█████████████████████░░░░░░░░░░░░░░░░░░░   53%
+██████████████████████░░░░░░░░░░░░░░░░░░   56%
 ```
 
 ## Open roadmaps
@@ -35,7 +35,7 @@
 | 17 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 6 | 3 | 0 | 0 | [1](#blockers-road-to-subagent-value-realization-followup) | ███░░░░░░░ 33% |
 | 18 | [road-to-surface-consolidation.md](roadmaps/road-to-surface-consolidation.md) | 3 | 14 | 1 | 12 | 1 | 0 | [2](#blockers-road-to-surface-consolidation) | █████████░ 92% |
 | 19 | [road-to-tier-removal.md](roadmaps/road-to-tier-removal.md) | 4 | 8 | 2 | 6 | 0 | 0 | [1](#blockers-road-to-tier-removal) | ████████░░ 75% |
-| 20 | [road-to-token-economy-cache.md](roadmaps/road-to-token-economy-cache.md) | 7 | 38 | 38 | 0 | 0 | 0 | [2](#blockers-road-to-token-economy-cache) | ░░░░░░░░░░ 0% |
+| 20 | [road-to-token-economy-cache.md](roadmaps/road-to-token-economy-cache.md) | 7 | 38 | 26 | 11 | 1 | 0 | [2](#blockers-road-to-token-economy-cache) | ███░░░░░░░ 30% |
 | 21 | [road-to-token-economy-recycling.md](roadmaps/road-to-token-economy-recycling.md) | 5 | 26 | 26 | 0 | 0 | 0 | [2](#blockers-road-to-token-economy-recycling) | ░░░░░░░░░░ 0% |
 | 22 | [road-to-ui-track-integrity-followup.md](roadmaps/road-to-ui-track-integrity-followup.md) | 1 | 10 | 10 | 0 | 0 | 0 | [2](#blockers-road-to-ui-track-integrity-followup) | ░░░░░░░░░░ 0% |
 | 23 | [road-to-worktree-hygiene.md](roadmaps/road-to-worktree-hygiene.md) | 1 | 9 | 2 | 7 | 0 | 0 | [1](#blockers-road-to-worktree-hygiene) | ████████░░ 78% |
@@ -484,13 +484,13 @@ _1 blocker resolved._
 
 ### [road-to-token-economy-cache.md](roadmaps/road-to-token-economy-cache.md)
 
-**Road to token-economy — cache: the per-session overhead gets a budget, a stable prefix delta, and a machine on the write path** — 0 / 38 done (0%)
+**Road to token-economy — cache: the per-session overhead gets a budget, a stable prefix delta, and a machine on the write path** — 11 / 37 done (30%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
-| 1 | per-slot injection anatomy: the narrow delta observation | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
-| 2 | byte-stability for the non-kernel remainder | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
-| 3 | the injection budget: the latency file's twin | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
+| 1 | per-slot injection anatomy: the narrow delta observation | ✅ done | 0 | 4 | 0 | 0 | 100% |
+| 2 | byte-stability for the non-kernel remainder | ✅ done | 0 | 4 | 0 | 0 | 100% |
+| 3 | the injection budget: the latency file's twin | ✅ done | 0 | 3 | 1 | 0 | 100% |
 | 4 | deterministic output caps where rtk does not reach | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
 | 5 | edit-shape advisory: pay for the diff, not the file | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
 | 6 | turn and re-read economy: stop re-paying for what the session already has | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
