@@ -2,7 +2,7 @@
 
 > Auto-generated — do not edit. Regenerate with `task roadmap-progress` or by running the `update_roadmap_progress` script for your install; rewritten on every roadmap create / execute / completion change (timestamp lives in git history).
 >
-> 22 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **27** open blockers
+> 22 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **27** open blockers, **8** need you → `agent-config gates`
 
 ## Overall
 
@@ -62,6 +62,7 @@
 
 - **gate-council-auto-dispatch** (owner: maintainer) — blocks auto-firing the council at the release-gate escalation
   - **What to do:**
+    after Phase 3 has soaked (transport reconciliation
     verified in real passes) and the F6/F4 + council-attendance telemetry has
     a usable window, wire the gate escalation to dispatch the pass itself
     (quorum rules from 3.3; inconclusive holds). Guards named by council:
@@ -70,6 +71,7 @@
   - **Resolved when:** the wiring lands citing the soak evidence, or the telemetry says auto-fire adds nothing and the gate stays recommend-only.
 - **point-of-action-carrier** (owner: maintainer) — blocks any pre-tool-use mid-session delegation carrier + escalation ladder (Sources E/H harvest)
   - **What to do:**
+    run the main-vs-subagent discrimination spike (upstream
     closed the identity request as NOT_PLANNED; the per-agent-permission fix
     landed with unverified scope — probe a real host). No discriminator → the
     carrier ships only with scope reduction (source-file writes above a size
@@ -78,6 +80,7 @@
   - **Resolved when:** the spike note exists and the build/no-build decision cites it plus the F3-lite adoption telemetry.
 - **f4-full-stop-block** (owner: maintainer) — blocks single-shot stop-block continuation for the end-review obligation
   - **What to do:**
+    carried from the carriers roadmap, upgraded by two
     verified facts: `additionalContext` on Stop IS documented at exit 0 (the
     advisory path may already reach the model — verify live first), and
     `stop_hook_active` is gone from the docs, so the loop guard must be a
@@ -87,11 +90,13 @@
   - **Resolved when:** live delivery evidence exists and the block/advisory decision cites the telemetry distribution.
 - **team-telemetry-behind-flag** (owner: maintainer) — blocks Phase 5.4 (team telemetry concerns, TaskCompleted artifact-check)
   - **What to do:**
+    when the experimental flag is on in a real environment,
     run the 5.1 spike, then bind the concerns with the same fail-open
     discipline as the #1223 set.
   - **Resolved when:** payload evidence exists and the concerns ship, or teams leave the experimental state and this re-cuts. - **Probed 2026-08-09:** `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS` is unset on this host — condition unchanged, 5.4 stays open.
 - **cross-vendor-worker-slices** (owner: maintainer) — blocks routing ordinary work slices to second-vendor CLI workers (huge-context analysis, independence-critical review — Source G shape)
   - **What to do:**
+    the drafts cited a direction-policy artefact that does not
     exist; before any cross-vendor worker ships, write the direction policy
     (which vendor may review which, what may be sent — extending the existing
     egress discipline), then add the two resolver entries (report-only
@@ -114,6 +119,7 @@
 
 - **host-capability-default-flip** (owner: maintainer) — blocks Phase 1 (all steps)
   - **What to do:**
+    decide what an empty `host_capabilities: {}` means. The
     template comment says "leave empty to let the agent resolve the manifest from
     host knowledge"; the loader coerces every absent field to `false`, i.e. *no
     capability*. Those are opposite semantics for the shipped default, and the
@@ -150,6 +156,7 @@
 
 - **stop-refusal-own-pr** (owner: maintainer) — blocks Phase 3 (3.1-3.6) and Phase 6.1
   - **What to do:**
+    decide whether a concern that can refuse a turn-end ships at
     all; if yes, land it in its own PR with its own soak period, separate from the
     change set that carries Phases 1, 2, 4 and 5.
   - **Resolved when:** that decision is recorded and, if affirmative, the refusal concern has merged in its own PR.
@@ -177,7 +184,7 @@
 
 - **legacy** (owner: user) — blocks entire roadmap
   - **What to do:**
-    `yt-dlp` and a JavaScript runtime are installed **by a human** on
+    `yt-dlp` and a JavaScript runtime are installed **by a human** on the machine that runs this. Execution starts when the condition clears. The package never auto-installs — that is a contract (`missing-tool-handling`), not a limitation to work around.
   - **Resolved when:** condition described above clears
 
 ### [road-to-inbox-harvest-2026-08.md](roadmaps/road-to-inbox-harvest-2026-08.md)
@@ -197,12 +204,14 @@
 
 - **deferred-finding-decision-reopen** (owner: maintainer) — blocks Phase 1
   - **What to do:**
+    P1.4 needs a stable-finding-id index that was explicitly
     declined at `check_review_dispositions.ts:16-22` with a named revisit
     trigger. Reopening a recorded decision is a maintainer call under
     `decision-revisit-gate`, not something an agent does because a reviewer asked.
   - **Resolved when:** the decision is reopened with the trigger cited, or P1.4 is cancelled against it.
 - **spent-inbox-artifacts-await-deletion** (owner: maintainer) — blocks nothing
   - **What to do:**
+    four items are spent and should be removed by a human, since
     the agent reports rather than deletes: both `council-q-*.md` files (answered
     and shipped verbatim), `bench-local/` (null published, roadmap archived), and
     the byte-identical `(1).md` duplicate plus `chat.txt` inside `memory-mcp/`.
@@ -236,6 +245,7 @@
 
 - **second-reviewer-availability** (owner: maintainer) — blocks Phase 4 (the >1 target only)
   - **What to do:**
+    a second human reviewer cannot be manufactured; this phase is
     opportunistic and gated on real external interest (couples to the adoption
     roadmap). Phases 1–3 do NOT depend on it — reviewability and inheritability are
     achievable solo.
@@ -259,6 +269,7 @@ _1 blocker resolved._
 
 - **real-orchestration-usage** (owner: user) — blocks Phase 2 (and thereby Phase 3's decision)
   - **What to do:**
+    the build work is done; only real delegable work produces the
     telemetry. Use the agent on genuinely parallel/ordered multi-file tasks under
     the post-ADR-117 default (`subagents.auto: on`), then check
     `wc -l agents/runtime/state/audit/$(date +%Y-%m).jsonl`. Resume at ≥20.
@@ -281,12 +292,14 @@ _1 blocker resolved._
 
 - **default-flip-release-gate** (owner: maintainer) — blocks Phase 1
   - **What to do:**
+    rule on whether the measured configuration becomes the shipped
     default. The evidence is prepared and cited in F1.1–F1.4; the settings
     template's own comment on `rule_packs` — "Do not set this from automation" —
     is why this cannot be an agent decision.
   - **Resolved when:** the maintainer merges the flip with the census attached, or records a decision to keep the current default and ship the preset as opt-in.
 - **bench-spend-and-methodology** (owner: maintainer) — blocks Phase 2
   - **What to do:**
+    authorize the A/B run and confirm the methodology. The council
     was explicit that an LLM-judged probe has no power against the original
     human-judged production measurement, so a real claim needs human judging at
     adequate N.
@@ -333,6 +346,7 @@ _1 blocker resolved._
 
 - **human-gated-live-trigger-eval** (owner: user) — blocks all of Phase 1 — 1.1 and 1.2 both need a live model run
   - **What to do:**
+    run the live trigger-eval to produce the predictions JSON for
     both tree states. It hard-aborts under automation on purpose, so an agent
     cannot supply it and must not simulate it. Substituting an AI rater would
     break the pre-registration.
@@ -357,6 +371,7 @@ _1 blocker resolved._
 
 - **kernel-cross-link-soak** (owner: maintainer) — blocks Phase 3 Step 6 and Step 7, and the acceptance criterion that both new guidelines are cross-linked from `verify-before-complete`.
   - **What to do:**
+    apply the two edits below to
     `src/rules/verify-before-complete.md` in their OWN pull request, with the
     ≥24 h kernel soak. `verify-before-complete` is one of the nine kernel rules
     (`docs/contracts/kernel-membership.md`), and `scope-control § Kernel-rule
@@ -449,9 +464,11 @@ _1 blocker resolved._
 
 - **repo-admin-and-usage** (owner: maintainer) — blocks branch-protection apply; utilization-driven MERGE/DEMOTE/HIDE/REMOVE of artefacts (needs loaded-vs-fired usage over the window); auto-tiering monitoring
   - **What to do:**
+    the branch-protection `gh api` is a repo-settings UI action; utilization removal needs real usage data before anything is deleted.
   - **Resolved when:** branch protection is on and the utilization window has produced a data-backed removal list.
 - **benchmark-spend** (owner: user) — blocks lazy-catalog A/B, team/adversarial-council benchmarks, the Unified Verification Router decision (gated on those verdicts)
   - **What to do:**
+    each is a spend-bearing (or corpus-gated) paid run; the verification-router only re-opens if utilization shows modes collapsing.
   - **Resolved when:** the maintainer authorizes the specific run with an estimate.
 
 _1 blocker resolved._
@@ -472,6 +489,7 @@ _1 blocker resolved._
 
 - **trigger-set-amendment** (owner: maintainer) — blocks Phase 3 (soak confirmation) and Phase 4 (the external removal half). Everything agent-executable is done: the audit, the internal `visibility` migration, and the reversibility analysis all landed 2026-07-28.
   - **What to do:**
+    the re-open trigger set is unsatisfiable as written (Trigger 1
     needs a sunset that was never set; Trigger 2 is impossible in a no-runtime
     package). [`ADR-137`](../../docs/decisions/ADR-137-amend-tier-removal-reopen-triggers.md)
     records the amendment: Trigger 2 is withdrawn as structurally impossible, and
@@ -498,6 +516,7 @@ _1 blocker resolved._
 
 - **compaction-marker-shape** (owner: maintainer) — blocks Phase 1.1 auto-compact incidence field
   - **What to do:**
+    host_semantics — verify on the current host version what
     a compaction event looks like in the transcript file (marker, summary
     block shape, anything greppable) and pin the detector to observed
     reality with a fixture. A host update changing the shape must fail the
@@ -505,6 +524,7 @@ _1 blocker resolved._
   - **Resolved when:** the detector + fixture exist from an observed real compaction.
 - **statusline-substrate** (owner: maintainer) — blocks Phase 4 only
   - **What to do:**
+    carried dependency on the agent-switch managed-statusline
     design shipping. No work in this repo beyond the read-surface file until
     it does. Explicitly NOT a blocker for roadmap closure — Phases 1–3 + 5
     close without it.
@@ -583,6 +603,7 @@ _1 blocker resolved._
 
 - **safe-set-removal-approval** (owner: user) — blocks Phase 1 step 3, and the last acceptance criterion
   - **What to do:**
+    review the prepared plan
     (`./scripts-run src/scripts/worktree_cleanup_check inventory --plan`) and
     approve, narrow, or decline the removal of the 143 safe worktrees and their
     fully-merged branches. Bulk deletion is a Hard-Floor action

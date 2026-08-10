@@ -71,6 +71,7 @@ export const REGISTRY: readonly CommandEntry[] = [
     { name: 'roadmap:progress', disposition: 'delegate', synopsis: 'Regenerate agents/roadmaps-progress.md from open roadmaps.' },
     { name: 'roadmap:progress-check', disposition: 'delegate', synopsis: 'Fail if agents/roadmaps-progress.md is stale (for CI).' },
     { name: 'roadmap:archive', disposition: 'delegate', synopsis: 'Archive completed roadmaps (PR-gate sweep).' },
+    { name: 'gates', disposition: 'delegate', synopsis: 'Open decisions that need you, as actions — owner-filtered roadmap blockers; --all, --json.' },
     { name: 'capabilities:index', disposition: 'delegate', synopsis: 'Regenerate CAPABILITIES.yaml (the package coverage index); --check for CI.' },
     { name: 'affected', disposition: 'delegate', synopsis: 'Artefacts related to <artefact> via the discovery relation-graph (BFS).' },
     { name: 'graph-explain', disposition: 'delegate', synopsis: 'Seed on a <concept>, expand 2 hops over the discovery relation-graph with a node budget.' },

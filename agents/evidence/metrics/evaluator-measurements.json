@@ -4,9 +4,9 @@
     "recorded_at": "2026-08-08T16:05:35.236Z",
     "git_sha": "25002ff44107c28f5b850932d3ae237899022a38",
     "run_url": null,
-    "conditions": "Refresh for the 91 -> 95 cli_help_command_count move (packs:active, settings:get, mcp:available, brand:status — road-to-capability-answerability Phase 2, the four capability probes). Re-measured locally twice via the pinned registry-enumeration method on the unchanged tree: 95/95. mcp_public_tool_count carried at 19 — this branch adds no MCP server tool.",
+    "conditions": "Refresh for the 95 -> 96 cli_help_command_count move (`gates` — the owner-filtered reader over the roadmap blocker fields the dashboard already parses but never separates by owner). Re-measured locally twice via the pinned registry-enumeration method on the unchanged tree: 96/96. mcp_public_tool_count carried at 19 — this branch adds no MCP server tool.",
     "measurements": {
-        "cli_help_command_count": 95,
+        "cli_help_command_count": 96,
         "mcp_public_tool_count": 19
     }
 }
