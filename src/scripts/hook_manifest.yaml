@@ -423,6 +423,25 @@ concerns:
     fail_closed: false
     severity: advisory
 
+# Role axis (road-to-token-economy-dispatch Phase 2). The dispatcher reads
+# AGENT_CONFIG_SESSION_ROLE (resolved via _lib/session_role.ts — set ONLY by
+# suite-owned CLI spawn wrappers, never guessed from host state) and applies
+# the role's `drop` list to every slot EXCEPT pre_tool_use: safety guards run
+# on every role, structurally — the resolver refuses pre_tool_use drops and
+# lint_hook_manifest rejects a drop entry bound to that slot.
+# Missing / unknown role → the full orchestrator chain, byte-identical to a
+# manifest without this block (fail-open, Phase 2.4).
+# Host limitation, pre-registered in the roadmap's worker-chain-host-delivery
+# blocker: in-process Agent-tool subagents inherit the host process env and
+# cannot be marked per-spawn; the axis binds where the suite launches a CLI
+# session itself.
+roles:
+  worker:
+    # Orchestrator-only concerns (Phase 2.3): a worker never talks to the
+    # user, never dispatches sub-workers, never runs the council, and its
+    # complaints route via the orchestrator.
+    drop: [delegation-nudge, end-review-nudge, council-availability, team-review-gate, self-repair]
+
 platforms:
   augment:
     session_start:    [chat-history, hot-context, handoff-context, session-canary, council-availability, first-run-gate, onboarding-gate, verify-before-complete, minimal-safe-diff, profile-staleness, wrapper-freshness, surface-probe, session-register]

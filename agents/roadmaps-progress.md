@@ -6,10 +6,10 @@
 
 ## Overall
 
-**210 / 408 steps done · 51%**
+**214 / 408 steps done · 52%**
 
 ```text
-████████████████████░░░░░░░░░░░░░░░░░░░░   51%
+█████████████████████░░░░░░░░░░░░░░░░░░░   52%
 ```
 
 ## Open roadmaps
@@ -35,7 +35,7 @@
 | 17 | [road-to-surface-consolidation.md](roadmaps/road-to-surface-consolidation.md) | 3 | 14 | 1 | 12 | 1 | 0 | [2](#blockers-road-to-surface-consolidation) | █████████░ 92% |
 | 18 | [road-to-tier-removal.md](roadmaps/road-to-tier-removal.md) | 4 | 8 | 2 | 6 | 0 | 0 | [1](#blockers-road-to-tier-removal) | ████████░░ 75% |
 | 19 | [road-to-token-economy-cache.md](roadmaps/road-to-token-economy-cache.md) | 7 | 38 | 38 | 0 | 0 | 0 | [2](#blockers-road-to-token-economy-cache) | ░░░░░░░░░░ 0% |
-| 20 | [road-to-token-economy-dispatch.md](roadmaps/road-to-token-economy-dispatch.md) | 7 | 36 | 32 | 4 | 0 | 0 | [3](#blockers-road-to-token-economy-dispatch) | █░░░░░░░░░ 11% |
+| 20 | [road-to-token-economy-dispatch.md](roadmaps/road-to-token-economy-dispatch.md) | 7 | 36 | 28 | 8 | 0 | 0 | [3](#blockers-road-to-token-economy-dispatch) | ██░░░░░░░░ 22% |
 | 21 | [road-to-token-economy-recycling.md](roadmaps/road-to-token-economy-recycling.md) | 5 | 26 | 26 | 0 | 0 | 0 | [2](#blockers-road-to-token-economy-recycling) | ░░░░░░░░░░ 0% |
 | 22 | [road-to-ui-track-integrity-followup.md](roadmaps/road-to-ui-track-integrity-followup.md) | 1 | 10 | 10 | 0 | 0 | 0 | [2](#blockers-road-to-ui-track-integrity-followup) | ░░░░░░░░░░ 0% |
 | 23 | [road-to-worktree-hygiene.md](roadmaps/road-to-worktree-hygiene.md) | 1 | 9 | 2 | 7 | 0 | 0 | [1](#blockers-road-to-worktree-hygiene) | ████████░░ 78% |
@@ -508,12 +508,12 @@ _1 blocker resolved._
 
 ### [road-to-token-economy-dispatch.md](roadmaps/road-to-token-economy-dispatch.md)
 
-**Road to token-economy — dispatch: the always-on stack stops paying the full harness price per spawn** — 4 / 36 done (11%)
+**Road to token-economy — dispatch: the always-on stack stops paying the full harness price per spawn** — 8 / 36 done (22%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
 | 1 | measure the floor before touching it | ✅ done | 0 | 4 | 0 | 0 | 100% |
-| 2 | a role axis in the hook manifest | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
+| 2 | a role axis in the hook manifest | ✅ done | 0 | 4 | 0 | 0 | 100% |
 | 3 | worker thin projection, cut where the data says | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
 | 4 | rung 0.5: ask, don't spawn | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
 | 5 | model tiering stops being advisory | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
@@ -532,15 +532,9 @@ _1 blocker resolved._
     task, token accounting from the transcript ledger via `cc_transcript.ts`),
     record both numbers.
   - **Resolved when:** the probe note exists; doctrine cites it or the null (no measurable difference) is published and the ordering rule stays as-is.
-- **worker-chain-host-delivery** (owner: maintainer) — blocks Phase 2 shipping as more than manifest prose
+- **worker-chain-host-delivery** (owner: maintainer) — blocks (was) Phase 2 shipping as more than manifest prose - **Probe result:** (a) An Agent-tool subagent's tool env is NOT distinguishable from the parent's: `CLAUDE_CODE_CHILD_SESSION=1` appears in BOTH (it marks the tool child process, not the session), and `CLAUDE_CODE_SESSION_ID` carries the PARENT id inside the subagent — no per-spawn env marking is possible on this host, and no observed discriminator exists (the judgment ladder's caller-supplied stance stands). (b) A subagent leg creates NO own dispatcher feedback-dir session (462 dirs before == after; newest = parent session) — subagent sessions have no own session_start/user_prompt_submit/stop slots. (c) Consequence, exactly the pre-registered cut: the role axis binds where the suite launches a separate CLI session itself — today the council CLI transport (`clients.ts`), which pays the full chain in every member session and is now marked `worker`. Agent-tool spawns keep the full chain until the host offers per-spawn identity (upstream NOT_PLANNED).
   - **What to do:**
-    actually executes the settings-installed hook chains and sees the
-    wrapper's env var (the upstream agent-identity request is closed
-    NOT_PLANNED; our lineage detection is self-built). If subagent sessions
-    bypass `user_prompt_submit` entirely, Phase 2's win shrinks to the
-    session_start/stop slots — measure, then cut the phase to what the host
-    delivers.
-  - **Resolved when:** a probe transcript shows which slots fire in a worker session, and Phase 2's step list cites it.
+  - **Resolved when:** ~~a probe transcript shows which slots fire in a worker session, and Phase 2's step list cites it.~~ Met — steps 2.2/2.3 cite the probe; contract section: hook-architecture-v1.md § roles axis.
 - **reviewer-tier-quality-floor** (owner: maintainer) — blocks Phase 5.3 default-shipping (reviewer on small tier)
   - **What to do:**
     comparison on real review tasks from the `review_skipped`-driven reviewer

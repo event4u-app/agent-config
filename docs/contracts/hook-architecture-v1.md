@@ -215,6 +215,38 @@ The filter is deliberately absent from the blocking PreToolUse guards, whose
 tool sets span host naming variants (`Bash` / `BashTool` / `launch-process` / …);
 a list that misses one variant silently disables a guard on that host.
 
+### Optional `roles:` axis — session-role chain thinning
+
+A top-level `roles:` block lets a marked session run a shorter chain
+(road-to-token-economy-dispatch Phase 2):
+
+```yaml
+roles:
+  worker:
+    drop: [delegation-nudge, end-review-nudge, council-availability, team-review-gate, self-repair]
+```
+
+Semantics (`_role_drop_set` / `_resolve_concerns` in `hooks/dispatch_hook.ts`;
+role read once per dispatch via `_lib/session_role.ts::resolveSessionRole`
+from `AGENT_CONFIG_SESSION_ROLE`):
+
+| Case | Effect |
+|---|---|
+| var unset / empty / unknown value | role `orchestrator` — chains byte-identical to a manifest without the block (fail-open) |
+| known role with manifest entry | the role's `drop` names are filtered out of every slot **except `pre_tool_use`** |
+| `pre_tool_use` | **never thinned, for any role** — the resolver refuses structurally, and `lint_hook_manifest` fails the build on a drop entry bound to that slot |
+| known role without a manifest entry (e.g. `reviewer` today) | full chain |
+
+The variable is set ONLY by suite-owned wrappers that launch a separate CLI
+session (today: the council CLI transport in `ai_council/clients.ts`). An
+in-process Agent-tool subagent shares the host process environment and cannot
+be marked per-spawn — probed live 2026-08-10: `CLAUDE_CODE_CHILD_SESSION=1`
+appears in BOTH parent and subagent tool environments (it marks the tool child
+process, not the session), and a subagent leg creates no own feedback-dir
+session — so no observed host discriminator exists, matching the judgment
+ladder's caller-supplied `insideSubagentSession` stance. `--dry-run` prints the
+resolved role alongside the concern plan.
+
 ## Concurrency — atomic state writes
 
 Concerns that write under `agents/runtime/state/` MUST use the pattern:

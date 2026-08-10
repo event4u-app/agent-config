@@ -202,25 +202,44 @@ result and the projection widens by evidence, not by fear.
 
 ## Phase 2 — a role axis in the hook manifest
 
-- [ ] 2.1 `hook_manifest.yaml` gains a second key axis: `role:
+- [x] 2.1 `hook_manifest.yaml` gains a second key axis: `role:
       orchestrator | worker` (default `orchestrator` — every existing chain
       is byte-identical under the default; a missing role key changes
       nothing). The generator and registry-parity tests extend to the new
       axis. <!-- verify: npx vitest run hook_manifest -->
-- [ ] 2.2 The dispatch wrapper marks worker spawns (env var
+      <!-- done 2026-08-10: top-level roles: block (worker.drop);
+      _role_drop_set + role param in _resolve_concerns (dispatch_hook.ts);
+      byte-identity under default pinned in hook_role_axis.test.ts across
+      every platform x event; host config unchanged (role is a RUNTIME
+      branch in the dispatcher, not an install-time split) -->
+- [x] 2.2 The dispatch wrapper marks worker spawns (env var
       `AGENT_CONFIG_SESSION_ROLE=worker`; the recursive-dispatch guard's
       lineage detection is the shared implementation — one detector, two
-      consumers, test-pinned equal).
-- [ ] 2.3 Worker chains drop orchestrator-only concerns: delegation-nudge,
+      consumers, test-pinned equal). <!-- done 2026-08-10: shared detector
+      _lib/session_role.ts consumed by dispatch_hook (chain resolution) AND
+      delegation_nudge_hook (feeds the ladder's caller-supplied
+      insideSubagentSession) — import-pinned in hook_role_axis.test.ts.
+      Marked spawn point: council CLI transport (clients.ts
+      _runSubprocess). SCOPE per live probe (see blocker): Agent-tool
+      subagents cannot be marked on this host -->
+- [x] 2.3 Worker chains drop orchestrator-only concerns: delegation-nudge,
       end-review-nudge, council-availability, team-review-gate, self-repair
       intake (complaints route via the orchestrator; a worker never talks to
       the user). Safety-floor hooks (block-no-verify, block-unauthorized-git,
       evidence-independence, kernel-write blocks, injection-scan) stay on
       EVERY role — the manifest diff must show zero pre_tool_use guard
-      removals, CI-checked.
-- [ ] 2.4 Fail-open discipline unchanged: an unset or unknown role resolves
+      removals, CI-checked. <!-- done 2026-08-10: pre_tool_use is
+      structurally undroppable (_role_drop_set returns empty for that slot)
+      AND lint_hook_manifest._check_roles fails the build on a drop entry
+      bound to any platform's pre_tool_use (red-on-fixture test in
+      hook_role_axis.test.ts); live dry-run shows worker user_prompt_submit
+      9->7 concerns, stop drops end-review-nudge + team-review-gate,
+      pre_tool_use byte-identical -->
+- [x] 2.4 Fail-open discipline unchanged: an unset or unknown role resolves
       to the full orchestrator chain — the thin path is the opt-in of the
-      marked spawn, never the accident of a missing variable.
+      marked spawn, never the accident of a missing variable. <!-- done
+      2026-08-10: unset/empty/unknown -> orchestrator (resolveSessionRole);
+      known role without manifest entry -> full chain; both test-pinned -->
 
 **Exit:** a marked worker session runs a visibly shorter chain; an unmarked session is byte-identical to today; no guard hook lost anywhere.
 **Rollback:** delete the role key; default-axis behaviour is the old behaviour.
@@ -355,18 +374,27 @@ result and the projection widens by evidence, not by fear.
 
 ### blocker: worker-chain-host-delivery
 
-- **Status:** open
+- **Status:** resolved (2026-08-10, live probe on claude/CC — this session)
 - **Owner:** maintainer
-- **Blocks:** Phase 2 shipping as more than manifest prose
-- **What to do:** verify on a live host that a spawned subagent session
-  actually executes the settings-installed hook chains and sees the
-  wrapper's env var (the upstream agent-identity request is closed
-  NOT_PLANNED; our lineage detection is self-built). If subagent sessions
-  bypass `user_prompt_submit` entirely, Phase 2's win shrinks to the
-  session_start/stop slots — measure, then cut the phase to what the host
-  delivers.
-- **Resolved when:** a probe transcript shows which slots fire in a worker
-  session, and Phase 2's step list cites it.
+- **Blocks:** (was) Phase 2 shipping as more than manifest prose
+- **Probe result:** (a) An Agent-tool subagent's tool env is NOT
+  distinguishable from the parent's: `CLAUDE_CODE_CHILD_SESSION=1` appears
+  in BOTH (it marks the tool child process, not the session), and
+  `CLAUDE_CODE_SESSION_ID` carries the PARENT id inside the subagent — no
+  per-spawn env marking is possible on this host, and no observed
+  discriminator exists (the judgment ladder's caller-supplied stance
+  stands). (b) A subagent leg creates NO own dispatcher feedback-dir
+  session (462 dirs before == after; newest = parent session) — subagent
+  sessions have no own session_start/user_prompt_submit/stop slots.
+  (c) Consequence, exactly the pre-registered cut: the role axis binds
+  where the suite launches a separate CLI session itself — today the
+  council CLI transport (`clients.ts`), which pays the full chain in every
+  member session and is now marked `worker`. Agent-tool spawns keep the
+  full chain until the host offers per-spawn identity (upstream
+  NOT_PLANNED).
+- **Resolved when:** ~~a probe transcript shows which slots fire in a worker
+  session, and Phase 2's step list cites it.~~ Met — steps 2.2/2.3 cite the
+  probe; contract section: hook-architecture-v1.md § roles axis.
 
 ### blocker: reviewer-tier-quality-floor
 

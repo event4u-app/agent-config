@@ -99,6 +99,7 @@ import { load_agent_settings } from "../_lib/agent_settings.js";
 import { probeHostCapabilities } from "../_lib/host_capability.js";
 import type { ActivationInputs, Classification, TaskSignals } from "../_lib/auto_dispatch.js";
 import { classifyLadder, type LadderRung } from "../_lib/judgment_ladder.js";
+import { resolveSessionRole } from "../_lib/session_role.js";
 import { resolveSubagentRouting, type Tier } from "../_lib/subagent_routing.js";
 import { isSyntheticPrompt } from "../_lib/prompt_shape.js";
 
@@ -374,7 +375,19 @@ export function classifyPrompt(
       workspace_root,
       hostId,
     );
-    const ladder = classifyLadder({ taskText: prompt, signals, activation, agentTeams });
+    // Recursive-dispatch guard input — the SHARED session-role detector
+    // (_lib/session_role.ts, "one detector, two consumers, test-pinned
+    // equal"): a session marked worker/reviewer by a suite-owned spawn
+    // wrapper never receives a delegation nudge. Unmarked sessions keep
+    // the documented gap (no host discriminator exists) — fail-open.
+    const sessionRole = resolveSessionRole(process.env);
+    const ladder = classifyLadder({
+      taskText: prompt,
+      signals,
+      activation,
+      agentTeams,
+      insideSubagentSession: sessionRole !== "orchestrator",
+    });
     if (ladder.verdict !== "subagent") {
       return null; // rung-0 script, rung-3/4 team/council, or ∅ ask/in-session — out of scope here
     }

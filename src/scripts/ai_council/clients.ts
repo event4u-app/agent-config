@@ -45,6 +45,7 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 
 import { hardenedSpawnEnv } from '../_lib/spawn_env.js';
+import { SESSION_ROLE_ENV } from '../_lib/session_role.js';
 import * as user_global_paths from '../_lib/user_global_paths.js';
 import { appendEvent } from './events_log.js';
 
@@ -1179,7 +1180,17 @@ export abstract class CliClient extends ExternalAIClient {
             // (loader preload, git *_COMMAND, NODE_OPTIONS, …) so an
             // attacker-influenced parent env cannot RCE via the spawned CLI
             // or a `git` it invokes internally.
-            env: hardenedSpawnEnv(),
+            // Role marking (token-economy-dispatch Phase 2.2): a council
+            // member CLI session is worker-class — it never talks to OUR
+            // user, never dispatches sub-workers, never runs a council.
+            // The spawned vendor CLI loads this repo's hook chains; the
+            // marker lets the dispatcher run the thinner worker chain
+            // (manifest `roles.worker.drop`; pre_tool_use guards are
+            // structurally exempt). This is the ONE in-tree spawn point
+            // that launches a separate CLI session today — Agent-tool
+            // subagents share the host process env and cannot be marked
+            // (probed live 2026-08-10; see _lib/session_role.ts).
+            env: hardenedSpawnEnv({ [SESSION_ROLE_ENV]: 'worker' }),
         };
         if (stdinPayload !== null) {
             spawnOpts.input = stdinPayload;
