@@ -70,7 +70,7 @@ import { count_dissenters, dissent_quota_met, is_near_duplicate } from './debate
 import { parse_stance_line, render_vote_tally, tally_stances } from './stance_tally.js';
 import { CHAIRMAN_FIELDS_ADDENDUM, render_deanonymization_block } from './blind_review.js';
 import type { AbsentReason } from './transport_resolver.js';
-import type { QuorumResult } from './quorum.js';
+import { isSoloConcluded, type QuorumResult } from './quorum.js';
 import { isEmptyHandoff, type HandoffEnvelope } from './handoff.js';
 
 // ── Python-format / stdlib parity helpers ────────────────────────────────
@@ -1979,10 +1979,19 @@ export function render(responses: CouncilResponse[], opts: RenderOptions = {}): 
     return blocks.join('\n\n---\n\n');
 }
 
-/** One line naming the k-of-n outcome — machine-parseable, human-readable. */
+/**
+ * One line naming the k-of-n outcome — machine-parseable, human-readable.
+ *
+ * The `solo` marker is the artifact half of the signal the `quorum_result`
+ * event carries in the log: a pass concluded by ONE voice otherwise reads
+ * identically to a full-attendance one, and the reader of a rendered pass is
+ * exactly who needs to see the difference. Derived through `isSoloConcluded`
+ * so the predicate keeps one definition and the renderer does not restate it.
+ */
 function _render_quorum_line(q: QuorumResult): string {
     const verdict = q.status === 'concluded' ? 'concluded' : 'INCONCLUSIVE — release gate holds';
-    return `**Quorum:** ${q.present}/${q.total} present, needed ${q.threshold} — ${verdict}.`;
+    const solo = isSoloConcluded(q) ? ' · **solo** — one voice concluded this pass' : '';
+    return `**Quorum:** ${q.present}/${q.total} present, needed ${q.threshold} — ${verdict}.${solo}`;
 }
 
 /**

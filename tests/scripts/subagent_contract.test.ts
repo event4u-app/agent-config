@@ -54,11 +54,44 @@ describe('subagent-v1 contract', () => {
         expect(errors.some((e) => e.path === '$.model_tier' && e.rule === 'enum')).toBe(true);
     });
 
+    // The base name is still closed — a typo must fail CI rather than reach a
+    // user's `.claude/agents/` YAML. What changed is HOW: the field moved from
+    // a bare enum to a pattern, so the scoped-grant syntax `tool-safety`
+    // prescribes became expressible at all. These assert the BEHAVIOUR (is it
+    // rejected, is it accepted) rather than which keyword did the rejecting,
+    // so the next representation change cannot red a test whose subject has
+    // not moved.
     it('rejects a tool outside the Claude Code tool set', () => {
         const data = _frontmatterOf(_UNIT);
         data.tools = ['Read', 'curl'];
         const errors = validate(data, schema);
-        expect(errors.some((e) => e.rule === 'enum' && e.path.startsWith('$.tools['))).toBe(true);
+        expect(errors.some((e) => e.path.startsWith('$.tools['))).toBe(true);
+    });
+
+    it('accepts a scoped grant — the syntax tool-safety asks for', () => {
+        const data = _frontmatterOf(_UNIT);
+        data.tools = ['Read', 'Bash(npm test:*)', 'Bash(git status:*)'];
+        const errors = validate(data, schema);
+        expect(errors.filter((e) => e.path.startsWith('$.tools['))).toEqual([]);
+    });
+
+    it('rejects a scope on a tool name that does not exist', () => {
+        // Scoping must not become a hole in the closed base-name set.
+        const data = _frontmatterOf(_UNIT);
+        data.tools = ['Frobnicate(anything:*)'];
+        const errors = validate(data, schema);
+        expect(errors.some((e) => e.path.startsWith('$.tools['))).toBe(true);
+    });
+
+    it('rejects a malformed scope', () => {
+        for (const bad of ['Bash(', 'Bash()', 'Bash(a)(b)', 'Bash (npm:*)']) {
+            const data = _frontmatterOf(_UNIT);
+            data.tools = [bad];
+            expect(
+                validate(data, schema).some((e) => e.path.startsWith('$.tools[')),
+                `expected ${bad} to be rejected`,
+            ).toBe(true);
+        }
     });
 
     it('rejects a missing required governance field', () => {

@@ -11,14 +11,16 @@ description: Use before declaring a feature done or a PR ready. Audits that no m
 # reviewer-tier-quality-floor comparison (road-to-token-economy-dispatch
 # Phase 5.3) — never downshift this by hand-feel.
 model_tier: inherit
-# `Bash` is bare because subagent-v1 cannot express anything narrower: the
-# `tools` enum in src/scripts/schemas/subagent.schema.json admits only the nine
-# bare tool tokens, so the `Bash(<prefix>:*)` form `tool-safety` prescribes is
-# currently inexpressible here. The grant is load-bearing — this validator's job
-# is to "read, grep, run to verify, and report" (see the body below), and the
-# running is the half that distinguishes it from a reader. Widening the enum is
-# road-to-inbox-harvest-2026-08-b-dispatch-safety Phase 1; the pragma below goes
-# when that lands, and the scoped grant replaces this comment.
+# `Bash` stays UNSCOPED, deliberately, now that the schema can express
+# `Bash(npm test:*)`. Step 3 of the procedure below is "find evidence the real
+# path executed" — against whatever dependency and whatever runner the consumer
+# project happens to use. A portable suite cannot enumerate those command
+# families, and a scope that guesses wrong makes the validator report a missing
+# run it was merely forbidden to attempt: the worst failure available to a gate
+# whose output is a READY line. Read/Grep/Glob are read-only and the body
+# forbids modifying code. Reviewed against tool-safety Least Agency — the
+# narrowest grant that still satisfies the task, which is not the same as the
+# narrowest grant.
 tools:
   - Read
   - Grep
@@ -37,7 +39,7 @@ discovery:
 source: package
 ---
 
-<!-- security-lint: allow dangerous-frontmatter "subagent-v1 cannot express a scoped Bash grant: the tools enum in subagent.schema.json admits only bare tokens. The grant is load-bearing (this validator runs to verify, not just reads). Removed when road-to-inbox-harvest-2026-08-b-dispatch-safety Phase 1 widens the enum." -->
+<!-- security-lint: allow dangerous-frontmatter "The unscoped Bash grant is deliberate and reasoned in the frontmatter comment above: a portable suite cannot enumerate a consumer project command families, and a scope that guesses wrong makes this validator report a missing run it was merely forbidden to attempt. Scoped grants ARE expressible since the schema pattern landed; this is a true positive by design, disposed here rather than narrowed." -->
 You are the **Production Validator** — the last gate before "done".
 
 Your single question: **is the shipped code real, or does a green test hide a stub?**

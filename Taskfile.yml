@@ -108,6 +108,7 @@ tasks:
       - task: lint-output-slop
       - task: lint-never-silent
       - task: lint-example-fences
+      - task: lint-workflow-paths
       - task: lint-rule-migration-ledger
       - task: lint-decision-impact
       - task: check-depth-budget

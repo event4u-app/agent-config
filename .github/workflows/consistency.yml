@@ -10,14 +10,12 @@ on:
     # workaround. Observed on PR #1063.
     types: [opened, synchronize, reopened, labeled, unlabeled]
     paths:
-      - ".agent-src.uncondensed/**"
       # `src/` is the source of truth and `dist/agent-src/` its projection; a PR
       # touching only these (e.g. a src/agent-src/scripts edit + its dist twin)
       # must still trigger the REQUIRED Consistency check or it deadlocks on
       # "Expected — Waiting for status to be reported".
       - "src/**"
       - "dist/agent-src/**"
-      - ".augment/**"
       - "agents/**"
       - ".claude-plugin/marketplace.json"
       - "src/scripts/condense.ts"
@@ -49,14 +47,12 @@ on:
       - main
       - master
     paths:
-      - ".agent-src.uncondensed/**"
       # `src/` is the source of truth and `dist/agent-src/` its projection; a PR
       # touching only these (e.g. a src/agent-src/scripts edit + its dist twin)
       # must still trigger the REQUIRED Consistency check or it deadlocks on
       # "Expected — Waiting for status to be reported".
       - "src/**"
       - "dist/agent-src/**"
-      - ".augment/**"
       - "agents/**"
       - ".claude-plugin/marketplace.json"
       - "src/scripts/condense.ts"

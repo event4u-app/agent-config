@@ -40,13 +40,16 @@
 #                visible, or it repeats the sin it exists to catch.
 #   canary       optional mutation recipe (Phase 7) — see CANARY below
 #
-# COVERAGE — THE HONEST DENOMINATOR (re-measured 2026-08-05)
+# COVERAGE — THE HONEST DENOMINATOR (re-measured 2026-08-10)
 # ----------------------------------------------------------
-# 240 `lint_*` / `check_*` / `audit_*` scripts live under `src/scripts/`
+# 251 `lint_*` / `check_*` / `audit_*` scripts live under `src/scripts/`
 # (the count is computed, not asserted — `check_gate_coverage.count_gate_scripts`).
-# **32 of them emit the machine-readable `scanned: <N>` line under their
-# CI-identical argv, and all 31 are listed below.** The manifest is therefore
+# **33 of them emit the machine-readable `scanned: <N>` line under their
+# CI-identical argv, and all 33 are listed below.** The manifest is therefore
 # complete with respect to its own contract, and covers ~13 % of the population.
+# (The 2026-08-05 reading said "32 … and all 31 are listed": the two halves of
+# one sentence disagreed by one, which is the drift this paragraph exists to
+# make visible. Both are recounted above, not adjusted toward each other.)
 #
 # Two revisions of this header have now gone stale the same way. It claimed
 # "8 of 211", then "22 of 223" while 26 entries were listed. Both halves drift
@@ -98,7 +101,7 @@
 # which is the shape this repo tells a gate author to use — writes the line from
 # inside the library, so its own source never matches and the test cannot see it.
 # Live split: **1 unregistered gate emits the inline shape (`check_gate_coverage`
-# itself), and 175 of 244 gate scripts emit through the helper.** So for the
+# itself), and 205 of 251 gate scripts emit through the helper.** So for the
 # recommended shape the sentence above is false, and the list CAN fall behind.
 #
 # Not widened here, deliberately. Widening the regex to include the helper turns
@@ -556,6 +559,42 @@ gates:
       that injected a violation INTO a real corpus file fired while the
       untouched original stayed clean. Floor at 450 against a live 503 leaves
       room for skill retirement without redding the change that retires one.
+
+  - id: lint_workflow_paths
+    argv: []
+    min_scanned: 20
+    corpus: "every workflow under .github/workflows (28 at baseline); the unit is the file, and each file's `paths:` / `paths-ignore:` entries are resolved against `git ls-files`"
+    status: enforced
+    canary:
+      class: undetected-antipattern
+      path: .github/workflows/zz-canary-workflow-paths.yml
+      content: |
+        name: Canary
+        on:
+          pull_request:
+            paths:
+              - "retired/tree/that/never/existed/**"
+        jobs:
+          noop:
+            runs-on: ubuntu-latest
+            steps:
+              - run: echo canary
+    note: >
+      Registered STRICT on day one for the same reason `lint_example_fences`
+      was, and on the same evidence standard: the classification pass ran
+      BEFORE the gate existed and returned **20 dead entries across 6 workflow
+      files**, each classified by hand into one of four causes — a tree retired
+      by ADR-051, a gitignored projection that can never appear in a diff, two
+      paths moved by the Python-to-TS migration, and bare root paths whose real
+      files sit under `src/`. All 20 were repaired in the change that added the
+      gate, so the corpus is verified empty rather than unexamined, and an
+      advisory gate over it could only ever be ignored. Floor at 20 against a
+      live 28 so retiring a workflow does not red the change that retires it.
+      Worth recording that the highest-severity hit was invisible to the hand
+      census and only the gate found it: `release-validation.yml` filtered on a
+      root `marketplace.json` that has never existed, so a version drift in the
+      real manifest did not re-trigger the `version-consistency` job whose
+      entire purpose is catching that drift.
 
   - id: check_depth_budget
     argv: []
