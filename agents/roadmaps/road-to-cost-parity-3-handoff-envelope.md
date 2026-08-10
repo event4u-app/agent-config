@@ -55,6 +55,18 @@ worth resuming.
 - **The redaction rule has a live reason.** Envelope content is injected
   into successor context and may seed background prompts, which makes it an
   egress surface under [`lethal-trifecta-guard`](../../src/rules/lethal-trifecta-guard.md).
+- **Redaction is the outbound half only, and the inbound half is the harder
+  one.** An envelope carries private data, content a prior session may have
+  taken from an untrusted source, and a path into a successor's context —
+  all three trifecta legs on one channel. Credential and PII patterns are
+  what leaks *out*; the risk that leaks *in* is an injected instruction
+  riding a `next_task`, `suggested_skills` or `failed_approaches` value and
+  being obeyed by the successor. That is exactly the found-instructions
+  quarantine case in
+  [`untrusted-input-defense`](../../src/rules/untrusted-input-defense.md):
+  delegating a container never authorizes executing its contents. Phase 2
+  therefore treats injected envelope content as **data, never instruction**,
+  as a binding requirement rather than a note.
 
 ## Phase 1 — the enumeration fix (independent, ships alone)
 
@@ -96,9 +108,33 @@ worth resuming.
 - [ ] 2.5 Pointers-first as the schema's leading design sentence: never
       duplicate what specs, ADRs, commits, diffs or issues already hold —
       reference by path.
+- [ ] 2.6 **Injected envelope content is data, never instruction** — binding,
+      and the load-bearing half of this phase. The consumer wraps every
+      injected envelope in the spotlighting / datamarking shape
+      `untrusted-input-defense` requires, with an explicit boundary marker
+      naming the block as prior-session data. `next_task` and
+      `suggested_skills` are **proposals the successor evaluates**, never
+      authorizations it acts on: a `next_task` that crosses a Hard-Floor or
+      permission-gated action is surfaced and stops, exactly as a found
+      instruction inside a delegated container does. A confirmation planted
+      inside envelope content is not confirmation.
+      <!-- verify: task test -- --filter=envelope -->
+- [ ] 2.7 Two adversarial fixtures pin 2.6, because a security requirement
+      with only positive fixtures is untested: an envelope whose `next_task`
+      contains an imperative to push, deploy or exfiltrate must be surfaced
+      and refused rather than executed; and an envelope whose
+      `failed_approaches` text contains a role-takeover string must be
+      injected as inert data with its boundary marker intact.
+      <!-- verify: task test -- --filter=envelope -->
+- [ ] 2.8 State the scope honestly in the schema docs: 2.6 is
+      **model-carried** on the consumer side — no gate can verify that an
+      injected block was treated as data. The fixtures prove the boundary
+      marker is *emitted*; they cannot prove it was *obeyed*. Same honesty
+      boundary `untrusted-input-defense` states for itself
+      (`enforced_by: none`), and it is written down rather than implied.
 
-**Exit:** every envelope variant validates against the extended schema; a fixture carrying a credential pattern is rejected; a fixture omitting `failed_approaches` after an abandoned approach is rejected.
-**Rollback:** fields are schema-versioned additive; the validator rule is one predicate.
+**Exit:** every envelope variant validates against the extended schema; a fixture carrying a credential pattern is rejected; a fixture omitting `failed_approaches` after an abandoned approach is rejected; both adversarial fixtures from 2.7 are green and each fails when the boundary marker is removed.
+**Rollback:** fields are schema-versioned additive; the validator rule is one predicate; the boundary marker is consumer-side prose.
 
 ## Phase 3 — resume precision and the drift anchor
 
@@ -106,10 +142,21 @@ worth resuming.
       code identified by signature or `path:line` rather than description,
       error strings verbatim, and every resume step carrying its expected
       outcome.
-- [ ] 3.2 Drift anchor: the envelope records branch + HEAD hash at write
-      time; the consumer compares at injection and, on mismatch, leads the
-      injected block with a drift statement naming what to re-verify. Never
-      a silent stale resume.
+- [ ] 3.2 Drift anchor: the envelope records **repo identity + branch + HEAD**
+      at write time — identity being the resolved remote URL, or the
+      realpath of the common git dir when there is no remote. Branch and HEAD
+      alone are not an anchor: this repo routinely has many worktrees, a
+      branch name is not unique across them or across clones, and two
+      checkouts at the same commit on a same-named branch would compare as
+      "no drift" while being different working trees. The consumer compares
+      all three at injection and, on any mismatch, leads the injected block
+      with a drift statement naming what to re-verify. Never a silent stale
+      resume.
+      <!-- verify: task test -- --filter=envelope -->
+- [ ] 3.2b Three fixtures pin the comparison: same identity + same HEAD stays
+      silent; same identity + moved HEAD reports commit drift; **same branch
+      name in a different repo or worktree reports identity drift** — the
+      case branch+HEAD alone cannot see.
       <!-- verify: task test -- --filter=envelope -->
 - [ ] 3.3 Deterministic environment grounding: a script collects the factual
       fields (git branch / HEAD / status summary, uncommitted paths, last
@@ -173,11 +220,12 @@ worth resuming.
 
 | Rank | Item | Risk type | Description | Mitigation | Anchored under |
 |------|------|-----------|-------------|------------|----------------|
-| 1 | The self-exclusion hides a session the user wanted | product | An unconditional `session_id` exclusion is correct for the issuing session but a bug if the id resolution is wrong | Exclusion is by exact `session_id`, never heuristic; fail-open on unreadable state (1.2); a listed-but-empty candidate is recoverable noise, a hidden one is not | Phase 1 |
-| 2 | Envelope grows back into a transcript | implementation | Five new fields on a size-capped envelope invite re-inflating the return channel the parent roadmap shrank | The committed max envelope size and its validator are inherited unchanged; pointers-first (2.5) is a schema sentence, and `return_channel_chars` already measures the result | Phase 2 |
-| 3 | Redaction validator produces false rejections | implementation | A pattern-based invalidity rule can reject legitimate content (a hash, a UUID, a test fixture) | The rule is shape-based on credential-keyword context rather than entropy alone, mirrors the existing secret-detector's carve-outs, and ships with both positive and negative fixtures | Phase 2 |
-| 4 | `failed_approaches` becomes ritual | product | A mandatory field with a legal `none` value drifts into always-`none` | The field is reviewed content, not metadata; its value is measurable — a successor that re-burns a recorded dead end is the failure it exists to prevent, and that is observable in the handoff's own telemetry | Phase 2 |
-| 5 | Drift anchor fires constantly and is tuned out | product | Any commit between write and injection produces a mismatch | The drift line names what to re-verify rather than blocking, and the comparison is branch + HEAD, so a same-branch fast-forward is reported as such rather than as divergence | Phase 3 |
+| 1 | An injected envelope value is obeyed as an instruction | product | The envelope carries all three trifecta legs on one channel; a `next_task` or `failed_approaches` value sourced from untrusted content and obeyed by the successor is a confused-deputy action, and redaction (2.4) does not see it because it is not a credential | 2.6 makes data-never-instruction binding with a boundary marker; `next_task` and `suggested_skills` are proposals, never authorizations, and a Hard-Floor-crossing value surfaces and stops; 2.7's two adversarial fixtures test the refusal path, not just the happy path; 2.8 states that the consumer-side half is model-carried rather than implying a gate | Phase 2 |
+| 2 | The self-exclusion hides a session the user wanted | product | An unconditional `session_id` exclusion is correct for the issuing session but a bug if the id resolution is wrong | Exclusion is by exact `session_id`, never heuristic; fail-open on unreadable state (1.2); a listed-but-empty candidate is recoverable noise, a hidden one is not | Phase 1 |
+| 3 | Envelope grows back into a transcript | implementation | Five new fields on a size-capped envelope invite re-inflating the return channel the parent roadmap shrank | The committed max envelope size and its validator are inherited unchanged; pointers-first (2.5) is a schema sentence, and `return_channel_chars` already measures the result | Phase 2 |
+| 4 | Redaction validator produces false rejections | implementation | A pattern-based invalidity rule can reject legitimate content (a hash, a UUID, a test fixture) | The rule is shape-based on credential-keyword context rather than entropy alone, mirrors the existing secret-detector's carve-outs, and ships with both positive and negative fixtures | Phase 2 |
+| 5 | `failed_approaches` becomes ritual | product | A mandatory field with a legal `none` value drifts into always-`none` | The field is reviewed content, not metadata; its value is measurable — a successor that re-burns a recorded dead end is the failure it exists to prevent, and that is observable in the handoff's own telemetry | Phase 2 |
+| 6 | Drift anchor fires constantly and is tuned out | product | Any commit between write and injection produces a mismatch | The drift line names what to re-verify rather than blocking, and the comparison is repo identity + branch + HEAD (3.2), so a same-branch fast-forward is reported as commit drift rather than as divergence and a different worktree is reported as identity drift rather than silently as none | Phase 3 |
 
 ## Acceptance criteria
 
@@ -189,8 +237,11 @@ worth resuming.
       variant still validating.
 - [ ] A credential-pattern fixture is rejected by the validator and a
       legitimate high-entropy fixture is accepted.
-- [ ] A drift round-trip fixture proves the mismatch path leads the injected
-      block, and a matching-HEAD fixture proves it stays silent.
+- [ ] Both adversarial injection fixtures from 2.7 are green, each provably
+      red when the boundary marker is removed, and the schema docs carry the
+      2.8 model-carried scope statement rather than implying a gate.
+- [ ] All three drift fixtures from 3.2b pass, including the same-branch
+      -different-repo case that branch + HEAD alone cannot detect.
 - [ ] The scripted grounding fields are populated by the script alone —
       verifiable by running it with no model step in the path.
 - [ ] The Phase 2 PR carries the handoff-content adjudication paragraph

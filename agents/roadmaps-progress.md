@@ -6,10 +6,10 @@
 
 ## Overall
 
-**168 / 373 steps done · 45%**
+**168 / 385 steps done · 44%**
 
 ```text
-██████████████████░░░░░░░░░░░░░░░░░░░░░░   45%
+██████████████████░░░░░░░░░░░░░░░░░░░░░░   44%
 ```
 
 ## Open roadmaps
@@ -20,9 +20,9 @@
 | 2 | [road-to-capability-answerability.md](roadmaps/road-to-capability-answerability.md) | 4 | 19 | 5 | 14 | 0 | 0 | [1](#blockers-road-to-capability-answerability) | ███████░░░ 74% |
 | 3 | [road-to-ci-native-release-first-run.md](roadmaps/road-to-ci-native-release-first-run.md) | 2 | 8 | 8 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 4 | [road-to-cost-parity-0-program.md](roadmaps/road-to-cost-parity-0-program.md) | 4 | 22 | 22 | 0 | 0 | 0 | [2](#blockers-road-to-cost-parity-0-program) | ░░░░░░░░░░ 0% |
-| 5 | [road-to-cost-parity-1-rule-payload-diet.md](roadmaps/road-to-cost-parity-1-rule-payload-diet.md) | 6 | 40 | 40 | 0 | 0 | 0 | [3](#blockers-road-to-cost-parity-1-rule-payload-diet) | ░░░░░░░░░░ 0% |
-| 6 | [road-to-cost-parity-2-state-aware-dispatch.md](roadmaps/road-to-cost-parity-2-state-aware-dispatch.md) | 4 | 25 | 25 | 0 | 0 | 0 | [2](#blockers-road-to-cost-parity-2-state-aware-dispatch) | ░░░░░░░░░░ 0% |
-| 7 | [road-to-cost-parity-3-handoff-envelope.md](roadmaps/road-to-cost-parity-3-handoff-envelope.md) | 4 | 23 | 23 | 0 | 0 | 0 | [2](#blockers-road-to-cost-parity-3-handoff-envelope) | ░░░░░░░░░░ 0% |
+| 5 | [road-to-cost-parity-1-rule-payload-diet.md](roadmaps/road-to-cost-parity-1-rule-payload-diet.md) | 6 | 45 | 45 | 0 | 0 | 0 | [3](#blockers-road-to-cost-parity-1-rule-payload-diet) | ░░░░░░░░░░ 0% |
+| 6 | [road-to-cost-parity-2-state-aware-dispatch.md](roadmaps/road-to-cost-parity-2-state-aware-dispatch.md) | 4 | 27 | 27 | 0 | 0 | 0 | [2](#blockers-road-to-cost-parity-2-state-aware-dispatch) | ░░░░░░░░░░ 0% |
+| 7 | [road-to-cost-parity-3-handoff-envelope.md](roadmaps/road-to-cost-parity-3-handoff-envelope.md) | 4 | 28 | 28 | 0 | 0 | 0 | [2](#blockers-road-to-cost-parity-3-handoff-envelope) | ░░░░░░░░░░ 0% |
 | 8 | [road-to-council-blind-review.md](roadmaps/road-to-council-blind-review.md) | 3 | 6 | 2 | 3 | 0 | 1 | 0 | ██████░░░░ 60% |
 | 9 | [road-to-gated-reach-followup.md](roadmaps/road-to-gated-reach-followup.md) | 1 | 12 | 12 | 0 | 0 | 0 | [1](#blockers-road-to-gated-reach-followup) | ░░░░░░░░░░ 0% |
 | 10 | [road-to-inbox-harvest-2026-08.md](roadmaps/road-to-inbox-harvest-2026-08.md) | 5 | 21 | 1 | 11 | 4 | 5 | [2](#blockers-road-to-inbox-harvest-2026-08) | █████████░ 92% |
@@ -172,16 +172,16 @@
 
 ### [road-to-cost-parity-1-rule-payload-diet.md](roadmaps/road-to-cost-parity-1-rule-payload-diet.md)
 
-**Road to cost parity — 1: the maintained estate shrinks where nothing else owns it** — 0 / 40 done (0%)
+**Road to cost parity — 1: the maintained estate shrinks where nothing else owns it** — 0 / 45 done (0%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
 | 1 | census with decided verdicts | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
-| 2 | skill-cluster consolidation, pilot first | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
+| 2 | skill-cluster consolidation, pilot first | ⬜ not started | 8 | 0 | 0 | 0 | 0% |
 | 3 | authored norm-lines and sectioning, kernel carved out | ⬜ not started | 6 | 0 | 0 | 0 | 0% |
-| 4 | the two uncapped growth surfaces | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
+| 4 | the two uncapped growth surfaces | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
 | 5 | the maintenance promise and the contexts surface | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
-| 6 | what this roadmap will not do | ⬜ not started | 16 | 0 | 0 | 0 | 0% |
+| 6 | what this roadmap will not do | ⬜ not started | 17 | 0 | 0 | 0 | 0% |
 
 <a id="blockers-road-to-cost-parity-1-rule-payload-diet"></a>
 **Blockers**
@@ -215,14 +215,14 @@
 
 ### [road-to-cost-parity-2-state-aware-dispatch.md](roadmaps/road-to-cost-parity-2-state-aware-dispatch.md)
 
-**Road to cost parity — 2: the dispatch decision gets session state as a recorded input** — 0 / 25 done (0%)
+**Road to cost parity — 2: the dispatch decision gets session state as a recorded input** — 0 / 27 done (0%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
 | 1 | the state resolver, deterministic reads only | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
-| 2 | populate the estimate field that already exists | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
+| 2 | populate the estimate field that already exists | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
 | 3 | record-only soak | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
-| 4 | what this roadmap will not do, and which lock forbids it | ⬜ not started | 13 | 0 | 0 | 0 | 0% |
+| 4 | what this roadmap will not do, and which lock forbids it | ⬜ not started | 14 | 0 | 0 | 0 | 0% |
 
 <a id="blockers-road-to-cost-parity-2-state-aware-dispatch"></a>
 **Blockers**
@@ -237,26 +237,29 @@
     so a comparison would be underpowered by construction even if the queue
     were free.
   - **Resolved when:** the audit-line bar is met and the queue holds one claim.
-- **per-role-floor-host-limitation** (owner: maintainer) — blocks any per-role element of the resolver's floor input
+- **per-role-floor-scope-decision** (owner: maintainer) — blocks any per-role element of the resolver's floor input. It does **not** block Phase 1 — the resolver ships worker-scoped by default (see below), so this gates the *scope claim*, not the work.
   - **What to do:**
-    this is a recorded host limitation, not a window.
-    `_lib/session_role.ts` cannot mark in-process Agent-tool subagents, so the
-    dominant path resolves `orchestrator` and reviewer legs read 0. Either the
-    host gains a marking primitive, or the resolver ships worker-role-only and
-    says so. Decide which, and record it — do not wait for data that cannot
-    arrive.
-  - **Resolved when:** the resolver's floor field documents either a working per-role source or an explicit worker-only scope.
+    `_lib/session_role.ts` cannot mark in-process Agent-tool
+    subagents, so the dominant path resolves `orchestrator` and reviewer legs
+    read 0 — which is why the fresh report shows 558 legs and zero reviewer
+    legs. That is a host limitation with no agent-side resolution. Pick one and
+    record it: **(a)** the resolver's floor field is documented worker-scoped
+    and the reviewer column is dropped rather than shipped empty, or **(b)** a
+    host marking primitive is pursued as its own work item with its own
+    roadmap. Absent an explicit pick, Phase 1 defaults to (a) so the roadmap
+    cannot stall on a decision that has a safe default.
+  - **Resolved when:** the resolver's floor field carries either an explicit `scope: worker` declaration (a), or a pointer to the work item pursuing the marking primitive (b) — recorded either way, never left implicit.
 
 ### [road-to-cost-parity-3-handoff-envelope.md](roadmaps/road-to-cost-parity-3-handoff-envelope.md)
 
-**Road to cost parity — 3: the handoff envelope carries what the successor actually needs** — 0 / 23 done (0%)
+**Road to cost parity — 3: the handoff envelope carries what the successor actually needs** — 0 / 28 done (0%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
 | 1 | the enumeration fix (independent, ships alone) | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
-| 2 | envelope contract upgrades | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
-| 3 | resume precision and the drift anchor | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
-| 4 | what this roadmap will not do | ⬜ not started | 11 | 0 | 0 | 0 | 0% |
+| 2 | envelope contract upgrades | ⬜ not started | 8 | 0 | 0 | 0 | 0% |
+| 3 | resume precision and the drift anchor | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
+| 4 | what this roadmap will not do | ⬜ not started | 12 | 0 | 0 | 0 | 0% |
 
 <a id="blockers-road-to-cost-parity-3-handoff-envelope"></a>
 **Blockers**

@@ -120,9 +120,18 @@ table above is the triage evidence and the registered file is the baseline.
       `.claude/rules` 304 KB and `.augment/` 409 KB are separate rows with
       separate targets, and the ~3 KB hosts are recorded as already lean so
       no target implies work there.
-- [ ] 1.3 Honest-null clause in the file itself: a target the data proves
-      wrong revises with the evidence published; the number bends to the
-      measurement.
+- [ ] 1.3 The honest-null clause is **schema, not prose.** A sentence in a
+      config file is a comment no reader is obliged to honour, and this
+      programme's whole claim is that numbers bend to measurements — so the
+      bending is expressed as fields the gate can read. Each target row
+      carries `revisable: true`, a `revision_evidence` pointer (empty until a
+      revision happens, then a path to the evidence note that forced it), and
+      a `revised_from` value once revised, so a target's history is machine
+      -visible. The budget-file validator requires the three fields to be
+      present and requires `revision_evidence` to be non-empty whenever
+      `revised_from` is set — a revision without published evidence fails the
+      file, which is the only form of the clause that actually binds.
+      <!-- verify: task test -- --filter=budget -->
 - [ ] 1.4 The 200k premium-band anchor is recorded with its rationale **and
       its known noise problem**: 187 of 205 observed sessions end ≥ 200k, so
       a session-end hint at that threshold would fire on ~91 % of sessions.
@@ -175,11 +184,21 @@ listed here rather than in a sibling because none belongs to a programme.
       infrastructure with ≥ 7 consumers, and the runtime-consumer question
       belongs to `later/road-to-deferred-rule-retriever.md`. One pointer
       line, so the finding stops reading as pending deletion.
-- [ ] 3.2 Correct the `#1235` mislabel where it appears in tracked files —
-      the judgment ladder landed in PR **#1233**; `#1235` is the acceptance
-      -verification commit. `archive/road-to-token-economy-dispatch.md`
-      carries the same mislabel and is the reference copy others cite.
-      <!-- verify: rg -n '#1235' agents/roadmaps docs src | head -20 -->
+- [ ] 3.2 Correct the `#1235` mislabel, with the scope stated so the sweep is
+      decidable rather than open-ended. The judgment ladder landed in PR
+      **#1233**; `#1235` is the acceptance-verification commit.
+      **In scope:** live artefacts under `src/`, `docs/` and non-archived
+      `agents/roadmaps/`, where the wrong number would mislead a reader
+      following it. **Out of scope:** anything under
+      `agents/roadmaps/archive/`, `later/` or `skipped/` — including
+      `archive/road-to-token-economy-dispatch.md`, which carries the same
+      mislabel and is the copy others cite. An archived roadmap is a record of
+      what was planned and is not rewritten; instead the correction lands once
+      in this roadmap's own Context and in
+      `road-to-cost-parity-2-state-aware-dispatch.md`'s prerequisites, which
+      is where a future reader arrives from. **Not in scope either:** commit
+      messages and merged PR bodies, which cannot be corrected.
+      <!-- verify: rg -n '#1235' src docs agents/roadmaps --glob '!archive/**' --glob '!later/**' --glob '!skipped/**' | head -20 -->
 - [ ] 3.3 Record the per-host payload table (Context above) into
       `agents/evidence/analysis/` so the next diet proposal starts from
       measured per-host numbers instead of one aggregate.
@@ -241,7 +260,10 @@ listed here rather than in a sibling because none belongs to a programme.
 ## Acceptance criteria
 
 - [ ] The budget file exists with the measured baseline column, per-host
-      payload rows, the honest-null clause, and the 200k noise note.
+      payload rows and the 200k noise note, and its honest-null clause is
+      schema — `revisable` / `revision_evidence` / `revised_from` present on
+      every row, with the validator provably red on a fixture that sets
+      `revised_from` without evidence.
 - [ ] The execution order and the four named non-owners are recorded, and a
       spot-check confirms none of the four is edited by any family member.
 - [ ] The ledger file exists and its first row is the pinned baseline.

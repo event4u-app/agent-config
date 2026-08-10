@@ -47,15 +47,23 @@ instead of the constant `0` it holds today. No verdict changes.
   in `_lib/auto_dispatch.ts` yields `in-session ("task below size floor")`
   and the ladder consumes it. This roadmap improves the *input* to that
   existing gate; it does not add a new one.
-- **The byte-based fill proxy was already falsified** — Pearson r = 0.387
-  over n = 194, recorded in `archive/road-to-token-economy-recycling.md`.
-  The shipped unit is parsed tokens, the committed threshold is 800,000
-  (`src/config/recycle-threshold-budget.json`), and the live surface is
-  `agents/runtime/state/context-fill.json`. Two limitations carry forward
-  and must be stated wherever the value is read: the file is written **at the
-  Stop slot only**, so a per-prompt read is up to one turn stale; and the
-  threshold budget records a `known_limitation` for sessions in a ≤ 200k
-  window.
+- **The byte-based fill proxy was already falsified, and this roadmap cites
+  the falsification rather than the conclusion.** The number is Pearson
+  r = 0.387 over n = 194, recorded at
+  `archive/road-to-token-economy-recycling.md:137` (with a second reference at
+  `:382`) as the closing annotation of the step that ran it — so the claim is
+  traceable to the measurement, not to a remembered verdict. Consequences the
+  resolver inherits: the shipped unit is **parsed tokens**, not bytes; the
+  committed threshold is 800,000 in
+  `src/config/recycle-threshold-budget.json`; and the live surface is
+  `agents/runtime/state/context-fill.json`. Two limitations carry forward and
+  must be stated wherever the value is read: the file is written **at the Stop
+  slot only**, so a per-prompt read is up to one turn stale; and the threshold
+  budget records a `known_limitation` for sessions in a ≤ 200k window.
+  Phase 1.1 re-reads the value from that surface at implementation time
+  rather than hardcoding any figure quoted here — every number in this
+  Context block was measured 2026-08-10 and carries that date, not a
+  guarantee.
 - **`work_tokens` and `init_tokens` are `null` on 100 % of local audit
   lines.** `dispatch_economy_report` derives the floor from the transcript
   ledger instead — measured on a fresh read: 558 legs over a 14-day window,
@@ -108,6 +116,16 @@ instead of the constant `0` it holds today. No verdict changes.
       transcript ledger `dispatch_economy_report` already reads (never from
       the null `work_tokens` audit field), per task classification, with
       honest-null gates: a class below its sample bar reports `absent`.
+- [ ] 2.1b **The sample bar is committed here: n ≥ 20 observations per
+      class.** It is not a fresh number — it adopts the ≥ 20-audit-line bar
+      `road-to-orchestration-scope-decision.md` already committed
+      (`:65`, `:110`) for orchestration claims, because this is the same
+      telemetry substrate answering a question of the same kind, and a second
+      bar on the same data would be a competing instrument. A class below 20
+      reports `absent` and inerts the estimate for that class, leaving today's
+      behaviour unchanged there. Recorded consequence: with 558 legs over the
+      observed window, some classifications will clear 20 and some will not —
+      partial coverage is the expected outcome, not a failure.
 - [ ] 2.2 Populate `task_size_estimate` — the field exists and is already a
       ladder gate, and it holds the constant `0` on 100 % of observed lines.
       Filling it from class medians makes the *existing* `SIZE_FLOOR` gate
@@ -202,19 +220,27 @@ this list.
   were free.
 - **Resolved when:** the audit-line bar is met and the queue holds one claim.
 
-### blocker: per-role-floor-host-limitation
+### blocker: per-role-floor-scope-decision
 
-- **Status:** open
+- **Status:** open — **a decision, not a window.** Nothing accrues while this
+  sits; no amount of elapsed time or telemetry resolves it, and it must not be
+  read as "waiting for data".
 - **Owner:** maintainer
-- **Blocks:** any per-role element of the resolver's floor input
-- **What to do:** this is a recorded host limitation, not a window.
-  `_lib/session_role.ts` cannot mark in-process Agent-tool subagents, so the
-  dominant path resolves `orchestrator` and reviewer legs read 0. Either the
-  host gains a marking primitive, or the resolver ships worker-role-only and
-  says so. Decide which, and record it — do not wait for data that cannot
-  arrive.
-- **Resolved when:** the resolver's floor field documents either a working
-  per-role source or an explicit worker-only scope.
+- **Blocks:** any per-role element of the resolver's floor input. It does
+  **not** block Phase 1 — the resolver ships worker-scoped by default (see
+  below), so this gates the *scope claim*, not the work.
+- **What to do:** `_lib/session_role.ts` cannot mark in-process Agent-tool
+  subagents, so the dominant path resolves `orchestrator` and reviewer legs
+  read 0 — which is why the fresh report shows 558 legs and zero reviewer
+  legs. That is a host limitation with no agent-side resolution. Pick one and
+  record it: **(a)** the resolver's floor field is documented worker-scoped
+  and the reviewer column is dropped rather than shipped empty, or **(b)** a
+  host marking primitive is pursued as its own work item with its own
+  roadmap. Absent an explicit pick, Phase 1 defaults to (a) so the roadmap
+  cannot stall on a decision that has a safe default.
+- **Resolved when:** the resolver's floor field carries either an explicit
+  `scope: worker` declaration (a), or a pointer to the work item pursuing the
+  marking primitive (b) — recorded either way, never left implicit.
 
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-08-10 | reviewer: claude/host -->
@@ -236,8 +262,12 @@ this list.
 - [ ] The benched p95 is recorded against the 250 ms `any_hook_event` budget,
       not the `pre_tool_use` budget.
 - [ ] `task_size_estimate` carries a ledger-derived median or an explicit
-      `absent` per classification, and a fixture proves a below-sample-bar
-      class reports `absent` and leaves today's behaviour unchanged.
+      `absent` per classification against the committed n ≥ 20 bar, and a
+      fixture proves a class at n = 19 reports `absent` and leaves today's
+      behaviour unchanged while a class at n = 20 does not.
+- [ ] The resolver's floor field carries an explicit scope declaration —
+      `scope: worker` or a pointer to the marking-primitive work item — so
+      the reviewer column is never shipped silently empty.
 - [ ] The two-week record-only soak completed with **zero** verdicts modified
       — verifiable from telemetry timestamps against the activation commit,
       because there is no activation commit.

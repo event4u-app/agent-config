@@ -116,11 +116,21 @@ throughput problem** — never open ten files at full depth in one pass.
 
 One pass per file, shallow, producing a table before any deep read:
 
-| file | genre | age | first-impression disposition |
+| file | genre | age | drafted-against | first-impression disposition |
 
 Genre is one of: **external-review · feature-spec · prompt/persona · transcript ·
 benchmark-output · council-artifact · scratch-note**. Age matters — compare the
 file's mtime against the tree's movement since.
+
+**Read the provenance line first — it is the cheapest column in the table.** An
+artifact may open with `drafted-against: <short-SHA>` or
+`drafted-at: <YYYY-MM-DD>` (optional by design — see
+[`agents-layout`](../../../../../docs/contracts/agents-layout.md) § Snapshot
+provenance). When a SHA is present, run `git log --oneline <SHA>..HEAD` **before**
+any deep read: what merged in that window is the set of claims that may be
+*stale rather than wrong*, and that is one command instead of a verification
+pass. Absent → the column reads `unstated`, which is the normal path and not a
+penalty.
 
 Kill early and say so. A file is a **`delete`** candidate when it is a consumed
 artifact of a finished process (a council question whose roadmap is archived, a
@@ -154,6 +164,17 @@ or mark it `unverifiable`.
 
 Expect a large `already-fixed` fraction on any file older than a few weeks. That
 is a successful outcome, not a wasted pass.
+
+**Separate stale from wrong, and say which.** `already-fixed` splits in two, and
+the split changes what you tell the user: **overtaken** (true when drafted, a
+later change shipped it) versus **never-true** (wrong at the drafting SHA too).
+With a `drafted-against` SHA the distinction is mechanical — the claim either
+falls inside `<SHA>..HEAD` or it does not. Report the two separately: a draft
+that was 87 % overtaken was not a bad draft, and a draft that was wrong at its
+own SHA is a different signal about its source. Two limits hold regardless: a
+SHA is **not** a clearance for claims about a third system (host behaviour,
+provider pricing, an external tool — those are `unverifiable` until probed), and
+the narrowed surface still gets verified, just not re-derived from zero.
 
 ### Phase 5 — Map survivors onto this suite's artefact types
 

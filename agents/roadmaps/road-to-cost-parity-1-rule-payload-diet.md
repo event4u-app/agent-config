@@ -107,9 +107,26 @@ part 0's table.
 - [ ] 2.1 Pilot: the Laravel/PHP cluster, 25 skills → 1 skill + per-topic
       reference files. Bodies move **byte-preserving** except for routing
       glue; the merged `SKILL.md` routes by topic. Measured on the tranche:
-      frontmatter bytes delta, lint pass, and trigger accuracy against the
-      cluster's historical activation set within a committed margin.
+      frontmatter bytes delta and lint pass.
       <!-- verify: task lint-skills -->
+- [ ] 2.1b **No trigger-accuracy bar is asserted until its instrument is
+      verified.** A bar needs a before, and there is no verified before: 6 of
+      288 skills have ever been invoked, 0 declare a trigger, the host
+      truncates the injected catalogue, and
+      `road-to-skill-description-measurement.md` — which owns the live eval
+      that would produce the baseline — is blocked on
+      `human-gated-live-trigger-eval` with the user as owner. Until that eval
+      runs, the pilot records activation **as an observation, not a gate**:
+      the tranche PR publishes the pre- and post-merge activation counts it
+      actually observed, with the window and its depth stated, and draws no
+      pass/fail conclusion from them. A bar over an unverified instrument
+      would be the unbacked-claim failure this repo has been burned by, in a
+      place where it also silently authorises capability loss.
+- [ ] 2.1c Once that eval has run, the bar adopts **its** pre-registration
+      rather than a fresh number — ≥ 100 requests, ≥ 3 shapes, no skill
+      degrading more than 20 % — because a second bar on the same question
+      would be a competing instrument. The adoption is one line in the
+      tranche template citing that roadmap.
 - [ ] 2.2 Consolidation is movement, not rewriting. Content edits are
       separate PRs *after* the move, so the diff proves no norm was softened
       in transit — `preservation-guard`'s own standard applied to skills.
@@ -118,16 +135,29 @@ part 0's table.
       and every `requires_skills:` reference. The note enumerates the
       renames and the tranche updates every reference in the same change.
       <!-- verify: task check-refs -->
-- [ ] 2.4 Then, each with the same bar and its own revert:
+- [ ] 2.3b The reference update is bound to a **gate, not to the note.**
+      `check-refs` proves no link is broken; it does not prove that a
+      *removed skill name* has no surviving referent, because a bare name in
+      `packs/*.yml` or a `requires_skills:` list is not a link. Add a check
+      that takes the tranche's removed-name set and fails on any surviving
+      occurrence across `src/`, `packs/`, the pack manifests and the
+      generated projections — red on a fixture that removes a skill and
+      leaves one `requires_skills:` entry behind. Without it the migration
+      note is a promise reviewed under fatigue.
+      <!-- verify: task test -- --filter=skill_rename -->
+- [ ] 2.4 Then, each with the same measurement discipline and its own revert:
       `project-analysis-*` (10 → 1 + refs), `judge-*` (7 → 1 parameterised),
       `brand*` (6 → 1), the image family (7 → 2), `readme*` (3 → 1).
       Independent PRs; one bad merge reverts alone.
-- [ ] 2.5 A tranche whose trigger accuracy misses its margin reverts as a
-      tranche and the miss is published — a consolidation that breaks
+- [ ] 2.5 Once 2.1c's bar exists, a tranche that misses its margin reverts as
+      a tranche and the miss is published — a consolidation that breaks
       activation converts frontmatter savings into silent capability loss,
-      and that trade is refused, not absorbed.
+      and that trade is refused, not absorbed. Before the bar exists, the
+      revert trigger is a **reported regression in the observed activation
+      counts** plus the maintainer's call, stated as such rather than dressed
+      as a threshold.
 
-**Exit:** maintained skill count drops by cluster arithmetic; every tranche has its accuracy comparison on record and its references updated.
+**Exit:** maintained skill count drops by cluster arithmetic; every tranche has its observed activation counts on record (or its bar comparison once 2.1c applies), the rename gate is green, and its references are updated.
 **Rollback:** per tranche, independently.
 
 ## Phase 3 — authored norm-lines and sectioning, kernel carved out
@@ -170,8 +200,20 @@ part 0's table.
 
 - [ ] 4.1 CLI verb census: no per-verb invocation telemetry exists (the
       registry knows definitions, not calls). Add one record-only counter in
-      the CLI entry — additive, gitignored state — run it for the committed
-      window, then publish the census. No verb is sunset on a guess.
+      the CLI entry — additive, gitignored state — then publish the census.
+      **The window is committed here, not left open:** ≥ 4 weeks, i.e. double
+      the ≥ 2-week floor the `rules_used` window already uses
+      (`later/road-to-token-economy-dispatch-followup.md`), because a verb is
+      invoked far more rarely than a rule is carried and the shorter floor
+      would under-sample by construction.
+- [ ] 4.1b The rule that keeps the window from being load-bearing, committed
+      with it: **zero invocations in the window is `no-data`, never `dead`.**
+      A verb reaching the census with no observations is reported as
+      unobserved and stays; only a verb with observations *below* the
+      committed floor is a sunset candidate. One maintainer's four weeks is
+      not evidence of a verb's uselessness, and a census that cannot
+      distinguish the two would sunset the rarest-but-load-bearing verbs
+      first.
 - [ ] 4.2 The registry budget ratchets **down** after the census, using the
       existing `check_cli_registry_budget_sync` machinery pointed the other
       direction. Measured baseline: 97 verbs.
@@ -291,7 +333,7 @@ part 0's table.
 
 | Rank | Item | Risk type | Description | Mitigation | Anchored under |
 |------|------|-----------|-------------|------------|----------------|
-| 1 | A merged cluster stops triggering where its parts did | product | Consolidation that breaks activation converts frontmatter savings into silent capability loss — the single most expensive way this roadmap can fail | Per-tranche trigger-accuracy bar against the historical activation set with a committed margin and tranche revert (2.1, 2.5); the description-measurement instrument is the existing tool; the activation window's own depth is a named blocker rather than an assumption | Phase 2 |
+| 1 | A merged cluster stops triggering where its parts did | product | Consolidation that breaks activation converts frontmatter savings into silent capability loss — the single most expensive way this roadmap can fail, and the instrument that would detect it is not yet verified | Sequenced honestly rather than papered over: no bar is asserted before its instrument exists (2.1b), tranches publish observed activation counts with their window depth instead, and the bar adopts the description-measurement roadmap's own pre-registration once that eval runs (2.1c); revert stays available per tranche throughout (2.5), and until the bar exists the revert trigger is a reported regression plus the maintainer's call rather than a fabricated threshold | Phase 2 |
 | 2 | The norm-line drifts from the body it fronts | product | A stale index line delivers a wrong norm to every session — authored compression fails exactly like paraphrase if unmaintained | The drift lint (3.2) fails CI on a body edit without a norm touch; the norm is PR-reviewed content, not metadata; full text stays one load away | Phase 3 |
 | 3 | A kernel rule is caught in a batch sweep | implementation | `check_kernel_prefix_stability` asserts the nine rules' byte prefix; a sweep including them reds CI and the fix looks like the sweep was wrong | The exclusion list is explicit and named in 3.5, pinned by a test, and the nine appear in the census with a `write-denied` verdict so they are visibly considered rather than forgotten | Phase 3 |
 | 4 | Consolidation breaks a reference nobody grepped | implementation | `packs/*.yml`, `requires_skills:`, `.claude/skills/`, `.augment/` and `dist/` all carry skill names | 2.3 makes reference updates part of the tranche, `check-refs` is bound as its verification, and each tranche is an independent revert | Phase 2 |
@@ -305,9 +347,13 @@ part 0's table.
       evidence columns for every skill and every non-kernel rule, the nine
       kernel rules recorded as `write-denied`, and its header naming both
       out-of-scope surfaces (commands, non-shipped contexts).
-- [ ] The Laravel pilot merged with its trigger-accuracy comparison and
-      migration note on record, plus at least three further clusters, each
-      with its own revert unexercised or exercised-and-published.
+- [ ] The Laravel pilot merged with its migration note and its **observed**
+      activation counts on record — window and depth stated, no pass/fail
+      claim unless 2.1c's instrument had already run — plus at least three
+      further clusters, each with its own revert unexercised or
+      exercised-and-published.
+- [ ] The removed-name gate from 2.3b exists and is provably red on a fixture
+      that deletes a skill and leaves one `requires_skills:` entry behind.
 - [ ] Every non-kernel rule carries a lint-checked `norm:` line and section
       markers; the drift lint is provably red on a fixture editing a body
       without its norm; the kernel exclusion is provably enforced.
@@ -315,7 +361,9 @@ part 0's table.
       byte-for-byte after Phase 3 — the section-cut projection lives
       elsewhere.
 - [ ] The CLI verb census is published with per-verb counts from real
-      invocation data, and the registry budget is a downward ratchet.
+      invocation data over the committed ≥ 4-week window, every unobserved
+      verb reported as `no-data` rather than as a sunset candidate, and the
+      registry budget is a downward ratchet.
 - [ ] The chain-length cap is red on a fixture adding an unpaired concern to
       a capped slot, per host.
 - [ ] The `maintained:` marker is populated per pack with the moves listed
