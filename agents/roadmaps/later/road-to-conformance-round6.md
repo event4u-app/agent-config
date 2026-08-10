@@ -580,6 +580,14 @@ install cadence cannot be closed by a text change; it can only be made visible,
 and the report now prints the precedence (project projection wins, global install
 is a release snapshot) at the moment a body difference appears.
 
+> **CORRECTED 2026-08-10 — that parenthetical was wrong and the report no longer
+> prints it.** The host applies no precedence at all: rules without a `paths` key
+> load at launch with the same priority as CLAUDE.md and no marker exists between
+> the layers, so binding is UNDEFINED when the two disagree (cited in
+> `agents/evidence/analysis/claude-code-rules-dir-contract.md`, host 2.1.226). The
+> project copy is merely the newer text — recency, not precedence. Kept rather
+> than rewritten so the trail is readable.
+
 **The second pair cannot be checked, and that is a finding about the record.**
 Round 5 wrote *"for four rules the divergence is semantic, and for two it is
 contradictory"* and named exactly one. An unnamed member of a stated count is not

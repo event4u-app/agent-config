@@ -46,6 +46,15 @@ Instrument B — `./scripts-run src/scripts/check_standing_rule_delivery`
   work measures; the fix on a maintainer machine is
   `agent-config install --layer=<global|project>` (suppression, not deletion) —
   tracked as blocker `b-machine-dedup` in the roadmap.
+  > **CORRECTION 2026-08-10 — "divergent" here means metadata, not drifted text.**
+  > All 109 pairs were re-measured at commit `a5b2f4cb7` and carry **byte-identical
+  > prose**; the whole difference is the frontmatter block, which the host does not
+  > deliver. So the double-delivery is real (both copies reach the model) and the
+  > *drift* is not: no governed text differs and nothing is binding-ambiguous.
+  > Read this line as a duplication figure only, never as a correctness finding.
+  > Classification, the cited precedence answer, and why a stale symlinked
+  > projection classifies the same commit as 91/90-stamp-only instead:
+  > [`carrier-layer-divergence-classification.md`](carrier-layer-divergence-classification.md).
 - Reference point: the external auditor measured 176,354 union tokens on
   2026-08-09 on the same machine class; today's readings are 190,873 (proxy A)
   / 186,536 (proxy B). The carriers moved between measurements (9.29.0 merge);
