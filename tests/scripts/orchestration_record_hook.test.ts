@@ -211,7 +211,7 @@ describe('orchestration_record_hook — malformed input never blocks (exit 0, si
 describe('buildRecordInput — pure mapping (no I/O)', () => {
     it('produces a valid RecordInput shape for a sync dispatch, reduced to a tier name', () => {
         const input = buildRecordInput(
-            { subagentType: 'Explore', resolvedModel: 'claude-sonnet-4-5-20250929', totalTokens: 42, totalDurationMs: 7, isAsync: false, isError: false },
+            { subagentType: 'Explore', resolvedModel: 'claude-sonnet-4-5-20250929', totalTokens: 42, totalDurationMs: 7, returnChannelChars: null, isAsync: false, isError: false },
             '2026-08-08T00:00:00.000Z',
             'fixed-id',
         );
@@ -231,7 +231,7 @@ describe('buildRecordInput — pure mapping (no I/O)', () => {
 
     it('omits tiers entirely when the resolved model matches no known family (F9)', () => {
         const input = buildRecordInput(
-            { subagentType: 'Explore', resolvedModel: 'some-unrecognised-model-id', totalTokens: 42, totalDurationMs: 7, isAsync: false, isError: false },
+            { subagentType: 'Explore', resolvedModel: 'some-unrecognised-model-id', totalTokens: 42, totalDurationMs: 7, returnChannelChars: null, isAsync: false, isError: false },
             '2026-08-08T00:00:00.000Z',
             'fixed-id',
         );
@@ -242,7 +242,7 @@ describe('buildRecordInput — pure mapping (no I/O)', () => {
         // Defence-in-depth: even a resolvedModel/totalTokens leaking through on
         // an async ack must not be recorded as if it were the real cost.
         const input = buildRecordInput(
-            { subagentType: null, resolvedModel: 'claude-sonnet-4-5', totalTokens: 999, totalDurationMs: 999, isAsync: true, isError: false },
+            { subagentType: null, resolvedModel: 'claude-sonnet-4-5', totalTokens: 999, totalDurationMs: 999, returnChannelChars: null, isAsync: true, isError: false },
             '2026-08-08T00:00:00.000Z',
             'fixed-id',
         );
