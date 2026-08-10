@@ -298,6 +298,7 @@ explanation lives now that the file no longer carries it as comments.
 | `subagents.implementer_model` | C | string | `""` |  | Override the model the orchestrator dispatches to subagents that write code (e.g. claude-sonnet-4, gpt-5). Empty (default) = inherit the session's primary model — cheapest and usually right. |
 | `subagents.judge_model` | C | string | `""` |  | Override the model used for review / judge subagents that critique implementer output. Empty (default) = one tier above the implementer model — picks up nuance the implementer missed. |
 | `subagents.max_parallel` | C | integer | `3` |  | Hard cap on subagents running in parallel during /do-in-parallel, /do-competitively, and /judge runs. Raise for faster fan-out, lower if you hit rate limits or want lower token spend. |
+| `subagents.model_ceiling` | C | string | `""` |  | Session-wide model CEILING for subagents (spend cap). Empty (default) = no ceiling. When set, suite-owned CLI spawn wrappers export CLAUDE_CODE_SUBAGENT_MODEL to the sessions they launch. Class C: a human sets it; the agent never writes or infers one. |
 | `subagents.model_map.high` | C | string | `""` |  | Model alias for high-tier sub-tasks. Empty = the tier runtime default. |
 | `subagents.model_map.lite` | C | string | `""` |  | Model alias for lite-tier sub-tasks. Empty = the tier runtime default. |
 | `subagents.model_map.medium` | C | string | `""` |  | Model alias for medium-tier sub-tasks. Empty = the tier runtime default. |

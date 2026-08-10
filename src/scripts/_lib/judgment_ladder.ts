@@ -37,14 +37,18 @@ import {
 } from './auto_dispatch.js';
 
 /** The five dispatch rungs, or `null` for the silent ∅ (in-session / ask). */
-export type LadderRung = 0 | 1 | 2 | 3 | 4 | null;
+export type LadderRung = 0 | 0.5 | 1 | 2 | 3 | 4 | null;
 
 export type LadderVerdict =
     | 'script' // rung 0 — deterministic transform/primitive, no spawn at all
     | 'subagent' // rung 1/2 — one, or several downshifted, subagent dispatch(es)
     | 'team' // rung 3 — communicating slices, dispatched via the host teams primitive
     | 'council' // rung 4 — contested judgment
-    | 'ask' // ∅ — ambiguous; a VERDICT to the user, never a speculative spawn
+    // 'ask' carries TWO shapes, split by rung (road-to-token-economy-dispatch
+    // Phase 4): rung 0.5 = a bounded question routed to ONE completion via
+    // `ask_transport` (no session, no tools, hard-capped — never the user);
+    // rung null = ambiguity, a VERDICT to the user, never a speculative spawn.
+    | 'ask'
     | 'in-session'; // ∅ — halted, no host primitive, trivial, approval-required, or recursive guard
 
 export interface LadderResult {
@@ -279,6 +283,62 @@ export function detectContestedJudgment(text: string): { matched: boolean; reaso
  * `point-of-action-carrier` blocker already names as its pre-registered
  * null ("no discriminator" is publishable and does not block this roadmap).
  */
+/**
+ * Rung-0.5 signal — a single bounded question (token-economy-dispatch 4.2).
+ *
+ * Deliberately conservative, regex-only (the F3-lite discipline): the cost
+ * of a false NEGATIVE is one avoidable spawn; the cost of a false POSITIVE
+ * is an ask that returns INSUFFICIENT_CONTEXT and gets escalated — which the
+ * registered `ask_economy` kill criterion counts against the rung. So every
+ * ambiguity falls through (no match), and four hard exclusions apply:
+ *
+ *   1. Multi-line prompts — a bounded question is one sentence.
+ *   2. Length > 240 chars — beyond that it is a briefing, not a question.
+ *   3. Imperative work verbs (fix/implement/write/…) — those are tasks.
+ *   4. No interrogative shape — must lead with an interrogative (EN/DE) and
+ *      end with `?`, OR be an explicit classify/categorize instruction
+ *      (the one imperative the roadmap names as ask-shaped).
+ */
+const _QUESTION_IMPERATIVE_RE =
+    /\b(fix|implement|refactor|build|create|write|add|update|delete|remove|rename|migrate|install|deploy|commit|push|merge|run|execute|generate|erstelle|baue|implementiere|schreibe|behebe)\b/i;
+const _QUESTION_LEAD_RE =
+    /^(is|are|does|do|did|can|could|should|would|will|which|what|why|how|when|where|who|whose|ist|sind|hat|haben|kann|welche[rs]?|was|warum|wie|wann|wo|wer)\b/i;
+const _CLASSIFY_LEAD_RE = /^(classify|categori[sz]e|klassifiziere)\b/i;
+const _QUESTION_MAX_LEN = 240;
+
+/** A question that names a file/repo object or a concrete path needs TOOLS —
+ *  a blind completion cannot read it, so it is never ask-shaped. */
+const _NEEDS_TOOLS_RE =
+    /\b(this|the|that|my|our)\s+(?:[\w-]+\s+){0,2}?(file|files|codebase|repo|repository|transcript|log|logs|diff|document|branch|pr|route|routes|schema|module|class|function|endpoint|test|tests)\b|[\w.-]+\/[\w.-]+|\b[\w-]+\.(ts|js|py|php|md|json|yaml|yml|sh|go|rs)\b/i;
+
+export function detectBoundedQuestion(taskText: string): { matched: boolean; reason: string } {
+    const text = taskText.trim();
+    if (!text || text.length > _QUESTION_MAX_LEN || text.includes('\n')) {
+        return { matched: false, reason: 'not-bounded' };
+    }
+    if (_NEEDS_TOOLS_RE.test(text)) {
+        return { matched: false, reason: 'references-tool-requiring-objects' };
+    }
+    // Classify-lead first: its PAYLOAD may quote work verbs ("classify this
+    // error: ETIMEDOUT on push") without being a work instruction itself.
+    if (_CLASSIFY_LEAD_RE.test(text)) {
+        return {
+            matched: true,
+            reason: 'bounded-question (classification) — rung-0.5 single completion via ask_transport, no session',
+        };
+    }
+    if (_QUESTION_IMPERATIVE_RE.test(text)) {
+        return { matched: false, reason: 'imperative-work-verb' };
+    }
+    if (_QUESTION_LEAD_RE.test(text) && text.endsWith('?')) {
+        return {
+            matched: true,
+            reason: 'bounded-question — rung-0.5 single completion via ask_transport, no session',
+        };
+    }
+    return { matched: false, reason: 'no-interrogative-shape' };
+}
+
 export function classifyLadder(inp: LadderInputs): LadderResult {
     if (inp.interactiveApprovalRequired === true) {
         return {
@@ -362,6 +422,18 @@ export function classifyLadder(inp: LadderInputs): LadderResult {
     // regex and dispatched a subagent anyway, silently bypassing the floor
     // `classifyTask` had just enforced one line above.
     if (inp.signals.size_estimate <= SIZE_FLOOR) {
+        // Rung 0.5 (token-economy-dispatch 4.2) — a SELF-CONTAINED bounded
+        // question below the floor is the one below-spawn shape with its own
+        // routing verdict: one completion via ask_transport (no session, no
+        // tools, hard-capped). This is an ORCHESTRATOR-facing routing datum —
+        // the delegation-nudge carrier deliberately stays silent on it (a
+        // user's question is answered in-session at zero marginal cost; see
+        // classifyPrompt). Questions referencing files/paths are excluded by
+        // the detector: a completion without tools cannot read them.
+        const question = detectBoundedQuestion(inp.taskText);
+        if (question.matched) {
+            return { rung: 0.5, verdict: 'ask', reason: question.reason };
+        }
         return {
             rung: null,
             verdict: classification.action === 'ask' ? 'ask' : 'in-session',

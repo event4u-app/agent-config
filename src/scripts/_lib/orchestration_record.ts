@@ -19,8 +19,10 @@
 import type { LookupClass } from './auto_dispatch.js';
 
 export type DispatchOutcome = 'DONE' | 'DONE_WITH_CONCERNS' | 'NEEDS_CONTEXT' | 'BLOCKED' | 'killed';
-/** Which route the lookup-class rung took (lean-init L0). */
-export type RouteTaken = 'primitive' | 'subagent';
+/** Which route the rung took: deterministic primitive (lean-init L0),
+ *  single-completion ask (token-economy-dispatch rung 0.5), or a full
+ *  subagent spawn. */
+export type RouteTaken = 'primitive' | 'subagent' | 'ask';
 export type VerifyMode = 'deterministic' | 'judge' | 'none';
 export type Provenance = 'measured' | 'estimated';
 export type TierChosen = 'lite' | 'medium' | 'high';
@@ -98,6 +100,23 @@ export interface RecordInput {
     /** Rules the worker actually applied/cited (count of the envelope's
      *  `rules_applied`-equivalent on the worker side). Counts only. */
     rules_used?: number | null | undefined;
+    // ── dispatch-economy additive fields (road-to-token-economy-dispatch
+    //    Phase 1.1). `init_tokens` above (lean-init) is the spawn-payload
+    //    half; `work_tokens` is the delta from first worker turn to envelope
+    //    close. Both are counts; the pair's provenance rides
+    //    `floor_provenance` exactly like `token_delta_provenance` tags
+    //    `token_delta`. ──
+    /** Tokens the worker consumed AFTER init (delta to envelope close). */
+    work_tokens?: number | null | undefined;
+    /** Chars the dispatch RETURNED into the orchestrator context (serialized
+     *  tool-result length on sync completions) — the Phase 6.3 detector for
+     *  "isolation win refunded through the return channel". A count, never
+     *  content. */
+    return_channel_chars?: number | null | undefined;
+    /** Provenance of the init/work pair: 'measured' (transcript ledger via
+     *  cc_transcript) or 'estimated'. Defaults to 'estimated' when either
+     *  field is present without a tag. */
+    floor_provenance?: Provenance | null | undefined;
     // ── capsule shadow-measurement fields (road-to-worker-generation-recycling
     //    Phase 1.2). SHADOW ONLY: the worker still runs to stop-loss, nothing
     //    reads a capsule. All counts / enums — a capsule's CONTENT never
@@ -138,7 +157,7 @@ const TIER_SOURCES: readonly TierSource[] = ['static', 'inferred', 'inherit'];
 const BANDS: readonly Band[] = ['low', 'medium', 'high'];
 const PHASES: readonly LinePhase[] = ['refine', 'memory', 'analyze', 'plan', 'implement', 'test', 'verify', 'report'];
 const LOOKUP_CLASSES: readonly LookupClass[] = ['definition', 'references', 'string-existence', 'report-run'];
-const ROUTES_TAKEN: readonly RouteTaken[] = ['primitive', 'subagent'];
+const ROUTES_TAKEN: readonly RouteTaken[] = ['primitive', 'subagent', 'ask'];
 const TRIGGER_ARMS: readonly TriggerArm[] = ['watermark', 'saturation', 'tie'];
 /** Hex-only payload hash — a hash can never smuggle content (privacy by construction). */
 const PAYLOAD_HASH_RE = /^[a-f0-9]{8,64}$/i;
@@ -164,13 +183,15 @@ function isInt(n: unknown): n is number {
 export function buildOrchestrationLine(input: RecordInput): BuiltLine {
     const errors: string[] = [];
 
-    // A lookup-class primitive route is the ONE recordable zero-spawn event
-    // (lean-init L0): the routing decision itself is the datum the
-    // cost-reduction claim reads. Everything else with spawn_count 0 stays
-    // unrecordable in-session work.
-    const zeroSpawnPrimitive = input.route_taken === 'primitive' && input.spawn_count === 0;
-    if (!zeroSpawnPrimitive && (!isInt(input.spawn_count) || input.spawn_count < 1)) {
-        errors.push('spawn_count must be an integer ≥ 1 (0 = handled in-session, not a dispatch — do not record; exception: route_taken=primitive lookup routes record with spawn_count 0)');
+    // A lookup-class primitive route (lean-init L0) and a rung-0.5 ask route
+    // (token-economy-dispatch Phase 4) are the TWO recordable zero-spawn
+    // events: the routing decision itself is the datum the cost-reduction
+    // claim reads. Everything else with spawn_count 0 stays unrecordable
+    // in-session work.
+    const zeroSpawnRoute =
+        (input.route_taken === 'primitive' || input.route_taken === 'ask') && input.spawn_count === 0;
+    if (!zeroSpawnRoute && (!isInt(input.spawn_count) || input.spawn_count < 1)) {
+        errors.push('spawn_count must be an integer ≥ 1 (0 = handled in-session, not a dispatch — do not record; exception: route_taken=primitive|ask routes record with spawn_count 0)');
     }
     if (!isInt(input.token_delta)) errors.push('token_delta must be an integer (negative = net saved vs the in-session baseline)');
     if (input.task_size_estimate !== undefined && (!isInt(input.task_size_estimate) || input.task_size_estimate < 0)) {
@@ -239,8 +260,13 @@ export function buildOrchestrationLine(input: RecordInput): BuiltLine {
     for (const [key, v] of [
         ['rules_carried', input.rules_carried],
         ['rules_used', input.rules_used],
+        ['work_tokens', input.work_tokens],
+        ['return_channel_chars', input.return_channel_chars],
     ] as const) {
         if (v != null && (!isInt(v) || v < 0)) errors.push(`${key} must be a non-negative integer count`);
+    }
+    if (input.floor_provenance != null && !PROVENANCES.includes(input.floor_provenance)) {
+        errors.push(`floor_provenance must be one of ${PROVENANCES.join(' | ')} (or omitted)`);
     }
     if (
         input.rules_carried != null &&
@@ -298,6 +324,11 @@ export function buildOrchestrationLine(input: RecordInput): BuiltLine {
         origin: input.origin ?? null,
         rules_carried: input.rules_carried ?? null,
         rules_used: input.rules_used ?? null,
+        // dispatch-economy additive fields — readers ignore unknowns per audit-log-v1
+        work_tokens: input.work_tokens ?? null,
+        return_channel_chars: input.return_channel_chars ?? null,
+        floor_provenance:
+            input.floor_provenance ?? (input.init_tokens != null || input.work_tokens != null ? 'estimated' : null),
         // capsule shadow-measurement — readers ignore unknowns per audit-log-v1
         capsule_emitted: input.capsule_emitted ?? null,
         capsule_entries: input.capsule_entries ?? null,

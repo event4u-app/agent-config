@@ -2,14 +2,14 @@
 
 > Auto-generated — do not edit. Regenerate with `task roadmap-progress` or by running the `update_roadmap_progress` script for your install; rewritten on every roadmap create / execute / completion change (timestamp lives in git history).
 >
-> 20 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **24** open blockers
+> 21 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **26** open blockers
 
 ## Overall
 
-**185 / 277 steps done · 67%**
+**168 / 289 steps done · 58%**
 
 ```text
-███████████████████████████░░░░░░░░░░░░░   67%
+███████████████████████░░░░░░░░░░░░░░░░░   58%
 ```
 
 ## Open roadmaps
@@ -27,15 +27,16 @@
 | 9 | [road-to-orchestration-scope-decision.md](roadmaps/road-to-orchestration-scope-decision.md) | 4 | 10 | 6 | 4 | 0 | 0 | [1](#blockers-road-to-orchestration-scope-decision) | ████░░░░░░ 40% |
 | 10 | [road-to-rule-coherence-followup.md](roadmaps/road-to-rule-coherence-followup.md) | 5 | 9 | 8 | 1 | 0 | 0 | [2](#blockers-road-to-rule-coherence-followup) | █░░░░░░░░░ 11% |
 | 11 | [road-to-scale-history-bench-run.md](roadmaps/road-to-scale-history-bench-run.md) | 1 | 2 | 2 | 0 | 0 | 0 | [1](#blockers-road-to-scale-history-bench-run) | ░░░░░░░░░░ 0% |
-| 12 | [road-to-skill-description-measurement.md](roadmaps/road-to-skill-description-measurement.md) | 1 | 4 | 4 | 0 | 0 | 0 | [1](#blockers-road-to-skill-description-measurement) | ░░░░░░░░░░ 0% |
-| 13 | [road-to-skill-ecosystem-gate-integrity.md](roadmaps/road-to-skill-ecosystem-gate-integrity.md) | 7 | 43 | 3 | 40 | 0 | 0 | [1](#blockers-road-to-skill-ecosystem-gate-integrity) | █████████░ 93% |
-| 14 | [road-to-solution-minimalism.md](roadmaps/road-to-solution-minimalism.md) | 4 | 36 | 10 | 25 | 0 | 1 | [1](#blockers-road-to-solution-minimalism) | ███████░░░ 71% |
-| 15 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 6 | 3 | 0 | 0 | [1](#blockers-road-to-subagent-value-realization-followup) | ███░░░░░░░ 33% |
-| 16 | [road-to-surface-consolidation.md](roadmaps/road-to-surface-consolidation.md) | 3 | 14 | 1 | 12 | 1 | 0 | [2](#blockers-road-to-surface-consolidation) | █████████░ 92% |
-| 17 | [road-to-tier-removal.md](roadmaps/road-to-tier-removal.md) | 4 | 8 | 2 | 6 | 0 | 0 | [1](#blockers-road-to-tier-removal) | ████████░░ 75% |
-| 18 | [road-to-ui-track-integrity-followup.md](roadmaps/road-to-ui-track-integrity-followup.md) | 1 | 10 | 10 | 0 | 0 | 0 | [2](#blockers-road-to-ui-track-integrity-followup) | ░░░░░░░░░░ 0% |
-| 19 | [road-to-worktree-hygiene.md](roadmaps/road-to-worktree-hygiene.md) | 1 | 9 | 2 | 7 | 0 | 0 | [1](#blockers-road-to-worktree-hygiene) | ████████░░ 78% |
-| 20 | [road-to-zero-ceremony-settings.md](roadmaps/road-to-zero-ceremony-settings.md) | 5 | 19 | 1 | 17 | 1 | 0 | 0 | █████████░ 94% |
+| 12 | [road-to-scripts-settings-defaults.md](roadmaps/road-to-scripts-settings-defaults.md) | 2 | 4 | 4 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+| 13 | [road-to-skill-description-measurement.md](roadmaps/road-to-skill-description-measurement.md) | 1 | 4 | 4 | 0 | 0 | 0 | [1](#blockers-road-to-skill-description-measurement) | ░░░░░░░░░░ 0% |
+| 14 | [road-to-skill-ecosystem-gate-integrity.md](roadmaps/road-to-skill-ecosystem-gate-integrity.md) | 7 | 43 | 3 | 40 | 0 | 0 | [1](#blockers-road-to-skill-ecosystem-gate-integrity) | █████████░ 93% |
+| 15 | [road-to-solution-minimalism.md](roadmaps/road-to-solution-minimalism.md) | 4 | 36 | 10 | 25 | 0 | 1 | [1](#blockers-road-to-solution-minimalism) | ███████░░░ 71% |
+| 16 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 6 | 3 | 0 | 0 | [1](#blockers-road-to-subagent-value-realization-followup) | ███░░░░░░░ 33% |
+| 17 | [road-to-surface-consolidation.md](roadmaps/road-to-surface-consolidation.md) | 3 | 14 | 1 | 12 | 1 | 0 | [2](#blockers-road-to-surface-consolidation) | █████████░ 92% |
+| 18 | [road-to-tier-removal.md](roadmaps/road-to-tier-removal.md) | 4 | 8 | 2 | 6 | 0 | 0 | [1](#blockers-road-to-tier-removal) | ████████░░ 75% |
+| 19 | [road-to-token-economy-recycling.md](roadmaps/road-to-token-economy-recycling.md) | 5 | 26 | 26 | 0 | 0 | 0 | [2](#blockers-road-to-token-economy-recycling) | ░░░░░░░░░░ 0% |
+| 20 | [road-to-ui-track-integrity-followup.md](roadmaps/road-to-ui-track-integrity-followup.md) | 1 | 10 | 10 | 0 | 0 | 0 | [2](#blockers-road-to-ui-track-integrity-followup) | ░░░░░░░░░░ 0% |
+| 21 | [road-to-worktree-hygiene.md](roadmaps/road-to-worktree-hygiene.md) | 1 | 9 | 2 | 7 | 0 | 0 | [1](#blockers-road-to-worktree-hygiene) | ████████░░ 78% |
 
 ---
 
@@ -287,6 +288,15 @@ _1 blocker resolved._
     waits on).
   - **Resolved when:** the user confirms the run budget in-session.
 
+### [road-to-scripts-settings-defaults.md](roadmaps/road-to-scripts-settings-defaults.md)
+
+**Road to scripts settings defaults — give the SCRIPTS read path the defaults layer the server already has** — 0 / 4 done (0%)
+
+| # | Phase | State | Open | Done | Deferred | Cancelled | % |
+|---|---|---|---:|---:|---:|---:|---:|
+| 1 | Map the divergence before touching it | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
+| 2 | The defaults layer, behind the existing read path | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
+
 ### [road-to-skill-description-measurement.md](roadmaps/road-to-skill-description-measurement.md)
 
 **Measure the de-collided skill descriptions** — 0 / 4 done (0%)
@@ -448,6 +458,35 @@ _1 blocker resolved._
     ruled the date itself is not an agent decision.
   - **Resolved when:** a concrete `sunset` date is published in the manifest's `tier` deprecation entry AND that date has passed with no external breakage reported — at which point Phase 3 records the confirmation and Phase 4's external half becomes executable.
 
+### [road-to-token-economy-recycling.md](roadmaps/road-to-token-economy-recycling.md)
+
+**Road to token-economy — recycling: deliberate envelope-mediated fresh starts instead of lossy auto-compaction** — 0 / 26 done (0%)
+
+| # | Phase | State | Open | Done | Deferred | Cancelled | % |
+|---|---|---|---:|---:|---:|---:|---:|
+| 1 | measure the end-of-life we actually have | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
+| 2 | the recycle envelope: state, never summary | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
+| 3 | the threshold and the advisory carrier | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
+| 4 | statusline integration (optional, cross-repo) | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
+| 5 | what this roadmap will not do | ⬜ not started | 13 | 0 | 0 | 0 | 0% |
+
+<a id="blockers-road-to-token-economy-recycling"></a>
+**Blockers**
+
+- **compaction-marker-shape** (owner: maintainer) — blocks Phase 1.1 auto-compact incidence field
+  - **What to do:**
+    a compaction event looks like in the transcript file (marker, summary
+    block shape, anything greppable) and pin the detector to observed
+    reality with a fixture. A host update changing the shape must fail the
+    fixture, not silently zero the metric (never-silent discipline).
+  - **Resolved when:** the detector + fixture exist from an observed real compaction.
+- **statusline-substrate** (owner: maintainer) — blocks Phase 4 only
+  - **What to do:**
+    design shipping. No work in this repo beyond the read-surface file until
+    it does. Explicitly NOT a blocker for roadmap closure — Phases 1–3 + 5
+    close without it.
+  - **Resolved when:** the statusline exists and 4.1 lands, or this roadmap closes with Phase 4 recorded as lapsed-optional.
+
 ### [road-to-ui-track-integrity-followup.md](roadmaps/road-to-ui-track-integrity-followup.md)
 
 **Road to UI-track integrity — follow-up: two measurements, one missing harness** — 0 / 10 done (0%)
@@ -527,18 +566,6 @@ _1 blocker resolved._
     (`non-destructive-by-default`): an agent may prepare and surface it, never
     perform it, and a single earlier approval never covers a bulk sweep.
   - **Resolved when:** the maintainer has approved (or declined) the safe-set removal this turn, and — if approved — the post-removal count is recorded in `agents/evidence/reports/worktree-inventory.md`.
-
-### [road-to-zero-ceremony-settings.md](roadmaps/road-to-zero-ceremony-settings.md)
-
-**Road to zero-ceremony settings — the user's file records decisions, the template stays the defaults source** — 17 / 18 done (94%)
-
-| # | Phase | State | Open | Done | Deferred | Cancelled | % |
-|---|---|---|---:|---:|---:|---:|---:|
-| 1 | The taxonomy contract | ✅ done | 0 | 4 | 0 | 0 | 100% |
-| 2 | The writer | ✅ done | 0 | 3 | 1 | 0 | 100% |
-| 3 | The user file becomes sparse | ✅ done | 0 | 4 | 0 | 0 | 100% |
-| 4 | First run: one question, one notice | 🟡 in progress | 1 | 2 | 0 | 0 | 67% |
-| 5 | The JIT protocol | ✅ done | 0 | 4 | 0 | 0 | 100% |
 
 ---
 

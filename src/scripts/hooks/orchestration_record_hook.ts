@@ -131,6 +131,11 @@ export interface DispatchFacts {
     /** Absolute measured tokens the dispatched slice consumed. `null` = not observed (async). */
     totalTokens: number | null;
     totalDurationMs: number | null;
+    /** Serialized LENGTH of the tool result — the chars this dispatch returned
+     *  into the orchestrator context (Phase 6.3 return-channel detector).
+     *  A COUNT derived from the result object; the content itself is never
+     *  read into the record (privacy by construction). `null` = async ack. */
+    returnChannelChars: number | null;
     isAsync: boolean;
     isError: boolean;
 }
@@ -199,7 +204,19 @@ export function extractDispatchFacts(payload: JsonObject): DispatchFacts {
     const isAsync = result !== null && (result['isAsync'] === true || result['status'] === 'async_launched');
     const isError = payload['is_error'] === true || payload['isError'] === true || (result !== null && result['is_error'] === true);
 
-    return { subagentType, resolvedModel, totalTokens, totalDurationMs, isAsync, isError };
+    // Phase 6.3 return-channel size: measured as the serialized LENGTH of the
+    // result object — a count; the content never enters the record. Async
+    // acks carry no result payload worth measuring (null, never fabricated).
+    let returnChannelChars: number | null = null;
+    if (result !== null && !isAsync) {
+        try {
+            returnChannelChars = JSON.stringify(result).length;
+        } catch {
+            returnChannelChars = null;
+        }
+    }
+
+    return { subagentType, resolvedModel, totalTokens, totalDurationMs, returnChannelChars, isAsync, isError };
 }
 
 /**
@@ -231,6 +248,7 @@ export function buildRecordInput(facts: DispatchFacts, ts: string, id: string): 
         }
         if (facts.totalTokens !== null) input.dispatch_tokens = facts.totalTokens;
         if (facts.totalDurationMs !== null) input.wall_clock_ms = facts.totalDurationMs;
+        if (facts.returnChannelChars !== null) input.return_channel_chars = facts.returnChannelChars;
     }
     // Async launch ack: every metric field stays absent (undefined → the
     // schema's own null/0 default) rather than fabricated from nothing.

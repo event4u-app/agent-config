@@ -171,3 +171,35 @@ describe('lean-init additive fields (road-to-lean-agent-init Phase 3, schema_ver
         expect(scope.origin).toBeNull();
     });
 });
+
+describe('dispatch-economy additive fields (road-to-token-economy-dispatch Phase 1.1, schema_version stays 1)', () => {
+    it('carries work_tokens + floor_provenance and validates both', () => {
+        const ok = buildOrchestrationLine({
+            ...BASE,
+            init_tokens: 235500,
+            work_tokens: 41000,
+            floor_provenance: 'measured',
+        });
+        expect(ok.errors).toEqual([]);
+        expect(ok.line!.orchestration).toMatchObject({
+            init_tokens: 235500,
+            work_tokens: 41000,
+            floor_provenance: 'measured',
+        });
+        expect(buildOrchestrationLine({ ...BASE, work_tokens: -5 }).errors.join(' ')).toMatch(/work_tokens/);
+        expect(buildOrchestrationLine({ ...BASE, work_tokens: 1.5 }).errors.join(' ')).toMatch(/work_tokens/);
+        expect(
+            buildOrchestrationLine({ ...BASE, floor_provenance: 'guessed' as never }).errors.join(' '),
+        ).toMatch(/floor_provenance/);
+    });
+
+    it('defaults floor_provenance to estimated when either half of the pair is present untagged', () => {
+        const initOnly = buildOrchestrationLine({ ...BASE, init_tokens: 1200 }).line!.orchestration as Record<string, unknown>;
+        expect(initOnly.floor_provenance).toBe('estimated');
+        const workOnly = buildOrchestrationLine({ ...BASE, work_tokens: 900 }).line!.orchestration as Record<string, unknown>;
+        expect(workOnly.floor_provenance).toBe('estimated');
+        const neither = buildOrchestrationLine(BASE).line!.orchestration as Record<string, unknown>;
+        expect(neither.floor_provenance).toBeNull();
+        expect(neither.work_tokens).toBeNull();
+    });
+});
