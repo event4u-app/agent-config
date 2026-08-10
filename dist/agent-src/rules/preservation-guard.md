@@ -26,6 +26,15 @@ the result must be **at least as strong** as the original.
 
 ## Iron Laws — every passage stays, telegraph is fine
 
+```
+EVERY PASSAGE STAYS — PARAGRAPH FOR PARAGRAPH, BULLET FOR BULLET, FENCE FOR FENCE.
+IRON LAW HEADINGS SURVIVE VERBATIM AT THEIR LEVEL. FENCED BLOCKS SURVIVE BYTE-FOR-BYTE.
+NEGATION CLAUSES (NO X / NEVER Y / NOT Z) STAY IN.
+NEVER WEAKEN: MUST STAYS MUST. ROUTING AND DECISION LOGIC STAY AS STRONG.
+NEVER BROADEN SCOPE BY MERGING UNRELATED WORKFLOWS.
+TELEGRAPH THE WORDING AS HARD AS YOU WANT — CONDENSE, NEVER DELETE, NEVER SOFTEN.
+```
+
 Sections marked **Iron Law** (any heading matching `# Iron Law`, `# Iron Laws`,
 `# The Iron Law`, at any heading level, including numbered variants like
 `Iron Law 1`, `Iron Law 2`) are **non-negotiable** and require the strictest
