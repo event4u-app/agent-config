@@ -20,16 +20,16 @@
  *
  * ## Measured, not assumed
  *
- * The census that motivated this gate found **19** dead entries across 5
- * workflow files in four classes: a retired tree (`.agent-src.uncondensed/**`,
- * ADR-051), a **gitignored** projection (`.augment/**`), two paths that moved
- * during the Python→TS migration (`src/scripts/install.py`, `templates/**`),
- * and two bare root paths whose real files live under `src/`. All 19 were
- * classified before this gate was written, and all 19 were repaired in the same
- * change — so the gate ships **strict** over a corpus verified empty, rather
- * than advisory over a corpus nobody looked at. A gate that reports zero
- * findings on a corpus it has never been proven able to fail on is blind, not
- * clean; `--self-test` is what separates those two.
+ * The census that motivated this gate found **20** dead entries across 6
+ * workflow files in four classes: a source tree retired by ADR-051, a
+ * **gitignored** projection tree (matched by no diff, ever), two paths that
+ * moved during the Python-to-TS migration, and two bare repo-root paths whose
+ * real files live under `src/`. All 20 were classified before this gate was
+ * written, and all 20 were repaired in the same change — so the gate ships
+ * **strict** over a corpus verified empty, rather than advisory over a corpus
+ * nobody looked at. A gate that reports zero findings on a corpus it has never
+ * been proven able to fail on is blind, not clean; `--self-test` is what
+ * separates those two.
  *
  * ## What counts as a match
  *
