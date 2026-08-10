@@ -157,6 +157,17 @@ Then add these **Laravel-specific** checks:
 - Extract reusable UI pieces into components/partials when it matches project patterns.
 - Escape output by default and use raw output only when safe and intentional.
 
+## Translations and language files
+
+- **Flat dot-notation keys only** — `'type.daily_report' => 'Daily Report'`.
+  Nested arrays (`'type' => ['daily_report' => …]`) are forbidden: they break
+  key referencing and make a one-line addition a nested diff.
+- Reference with the helper and the same flat key —
+  `__('report.type.daily_report')`, `__('email.report.created.subject', ['number' => $number])`.
+- Every key exists in **every** shipped locale. Adding to `lang/en/` without
+  `lang/de/` is a bug, not a TODO — the app ships to both audiences.
+- Never hardcode a user-visible string in PHP.
+
 ## What NOT to do
 
 - Do not put business logic into controllers, models, or Blade templates.
