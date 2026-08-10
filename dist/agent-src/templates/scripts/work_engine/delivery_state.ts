@@ -96,6 +96,7 @@ export class DeliveryState {
     contract: Record<string, Any> | null;
     stitch: Record<string, Any> | null;
     stack: Record<string, Any> | null;
+    self_fix: Record<string, Any> | null;
 
     constructor(args: {
         ticket: Record<string, Any>;
@@ -117,6 +118,7 @@ export class DeliveryState {
         contract?: Record<string, Any> | null;
         stitch?: Record<string, Any> | null;
         stack?: Record<string, Any> | null;
+        self_fix?: Record<string, Any> | null;
     }) {
         this.ticket = args.ticket;
         this.persona = args.persona ?? 'senior-engineer';
@@ -137,6 +139,10 @@ export class DeliveryState {
         this.contract = args.contract ?? null;
         this.stitch = args.stitch ?? null;
         this.stack = args.stack ?? null;
+        // Per-lane bounded-loop counters (`{test: {attempts, signatures[]}}`).
+        // `null` means no red check has been seen yet — distinct from `{}`,
+        // which means a lane record was created and then emptied.
+        this.self_fix = args.self_fix ?? null;
     }
 }
 

@@ -220,6 +220,7 @@ export class WorkState {
     ui_polish: Dict | null;
     contract: Dict | null;
     stitch: Dict | null;
+    self_fix: Dict | null;
     halts: Dict[];
     version: number;
     persona: string;
@@ -245,6 +246,7 @@ export class WorkState {
         ui_polish?: Dict | null;
         contract?: Dict | null;
         stitch?: Dict | null;
+        self_fix?: Dict | null;
         halts?: Dict[];
         version?: number;
         persona?: string;
@@ -269,6 +271,7 @@ export class WorkState {
         this.ui_polish = opts.ui_polish ?? null;
         this.contract = opts.contract ?? null;
         this.stitch = opts.stitch ?? null;
+        this.self_fix = opts.self_fix ?? null;
         this.halts = opts.halts ?? [];
         this.version = opts.version ?? SCHEMA_VERSION;
         this.persona = opts.persona ?? 'senior-engineer';
@@ -309,6 +312,7 @@ export function to_dict(state: WorkState): Dict {
     _validate_ui_polish(state.ui_polish);
     _validate_contract(state.contract);
     _validate_stitch(state.stitch);
+    _validate_self_fix(state.self_fix);
     _validate_halts(state.halts);
     return {
         version: state.version,
@@ -324,6 +328,7 @@ export function to_dict(state: WorkState): Dict {
         ui_polish: state.ui_polish,
         contract: state.contract,
         stitch: state.stitch,
+        self_fix: state.self_fix,
         halts: [...state.halts],
         persona: state.persona,
         memory: state.memory,
@@ -406,6 +411,9 @@ export function from_dict(payload: JsonValue): WorkState {
     const stitch = payload['stitch'] ?? null;
     _validate_stitch(stitch);
 
+    const self_fix = payload['self_fix'] ?? null;
+    _validate_self_fix(self_fix);
+
     const halts = 'halts' in payload ? payload['halts'] : [];
     _validate_halts(halts);
 
@@ -422,6 +430,7 @@ export function from_dict(payload: JsonValue): WorkState {
         ui_polish: _isDict(ui_polish) ? { ...ui_polish } : null,
         contract: _isDict(contract) ? { ...contract } : null,
         stitch: _isDict(stitch) ? { ...stitch } : null,
+        self_fix: _isDict(self_fix) ? { ...self_fix } : null,
         halts: Array.isArray(halts) ? ([...halts] as Dict[]) : [],
         version: version as number,
         persona: _get(payload, 'persona', 'senior-engineer') as string,
@@ -862,6 +871,71 @@ function _validate_ui_review(ui_review: JsonValue): void {
             throw new SchemaError(
                 'state.ui_review.preview.render_ok must be a boolean when present',
             );
+        }
+    }
+}
+
+/**
+ * Reject malformed `self_fix` envelopes; tolerate `null` and `{}`.
+ *
+ * `null` means no red check has been seen. Once populated, each key is a lane
+ * name (`test`, `verify`) whose record may carry `attempts` (a non-negative
+ * int) and `signatures` (a list of strings). As with `ui_polish`, the schema
+ * enforces only shape: the ceiling and the no-progress floor are the handler's
+ * business (`directives/backend/_self_fix.ts`), so a state file cannot decide
+ * how many attempts are allowed.
+ *
+ * `attempts` is validated but NOT bounded here on purpose. A file carrying
+ * `attempts: 99` is well-formed and simply exhausted — rejecting it would turn
+ * a spent budget into a crash, and the loop's whole point is a clean exit.
+ */
+function _validate_self_fix(self_fix: JsonValue): void {
+    if (self_fix === null) {
+        return;
+    }
+    if (!_isDict(self_fix)) {
+        throw new SchemaError(
+            `state.self_fix must be a JSON object or null; ` +
+                `got ${pyTypeName(self_fix)}`,
+        );
+    }
+    for (const [lane, record] of Object.entries(self_fix)) {
+        if (!_isDict(record)) {
+            throw new SchemaError(
+                `state.self_fix.${lane} must be a JSON object; ` +
+                    `got ${pyTypeName(record)}`,
+            );
+        }
+        if ('attempts' in record) {
+            const attempts = record['attempts'];
+            if (
+                typeof attempts !== 'number' ||
+                typeof attempts === 'boolean' ||
+                !Number.isInteger(attempts) ||
+                attempts < 0
+            ) {
+                throw new SchemaError(
+                    `state.self_fix.${lane}.attempts must be a non-negative ` +
+                        `integer when present; got ${pyRepr(attempts)}`,
+                );
+            }
+        }
+        if ('signatures' in record) {
+            const signatures = record['signatures'];
+            if (!Array.isArray(signatures)) {
+                throw new SchemaError(
+                    `state.self_fix.${lane}.signatures must be a list when ` +
+                        `present; got ${pyTypeName(signatures)}`,
+                );
+            }
+            for (const entry of signatures) {
+                if (typeof entry !== 'string') {
+                    throw new SchemaError(
+                        `state.self_fix.${lane}.signatures entries must be ` +
+                            `strings; got ${pyTypeName(entry)}`,
+                    );
+                }
+            }
         }
     }
 }

@@ -150,6 +150,7 @@ export function _to_delivery(work: WorkState): DeliveryState {
         contract: work.contract as Record<string, DeliveryAny> | null,
         stitch: work.stitch as Record<string, DeliveryAny> | null,
         stack: work.stack as Record<string, DeliveryAny> | null,
+        self_fix: work.self_fix as Record<string, DeliveryAny> | null,
     });
 }
 
@@ -182,6 +183,11 @@ export function _sync_back(work: WorkState, delivery: DeliveryState): void {
     work.contract = delivery.contract as Dict | null;
     work.stitch = delivery.stitch as Dict | null;
     work.stack = delivery.stack as Dict | null;
+    // Reassigned (not mutated) by `record_attempt`, so the defensive mirror
+    // above is load-bearing here rather than a no-op: without this line the
+    // attempt counter would reset on every dispatch and the loop would never
+    // reach either floor.
+    work.self_fix = delivery.self_fix as Dict | null;
 }
 
 /**
