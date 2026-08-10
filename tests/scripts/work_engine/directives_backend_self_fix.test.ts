@@ -30,7 +30,7 @@ import {
     Outcome,
     is_agent_directive,
 } from '../../../src/agent-src/templates/scripts/work_engine/delivery_state.js';
-import { WorkState, Input, from_dict, to_dict } from '../../../src/agent-src/templates/scripts/work_engine/state.js';
+import { WorkState, Input, type Dict, from_dict, to_dict } from '../../../src/agent-src/templates/scripts/work_engine/state.js';
 
 /** A red `test` lane state, ready to run. */
 function red_test_state(extra: Record<string, unknown> = {}): DeliveryState {
@@ -158,7 +158,8 @@ describe('test lane — the halt shape is the value claim', () => {
     it('the counter survives on the state so the next dispatch sees it', () => {
         const state = red_test_state();
         test_run(state);
-        expect((state.self_fix as Record<string, { attempts: number }>).test.attempts).toBe(1);
+        const lanes = state.self_fix as Record<string, { attempts: number } | undefined>;
+        expect(lanes.test?.attempts).toBe(1);
     });
 
     it('an unchanged verdict across dispatches exits PARTIAL, never SUCCESS', () => {
@@ -281,7 +282,7 @@ describe('refine — the dod[] shape gate', () => {
 });
 
 describe('state — self_fix survives the wire round-trip', () => {
-    function work(self_fix: Record<string, unknown> | null): WorkState {
+    function work(self_fix: Dict | null): WorkState {
         return new WorkState({ input: new Input('ticket', { id: 'SF-9' }), self_fix });
     }
 
