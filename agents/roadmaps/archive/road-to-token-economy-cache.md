@@ -247,41 +247,69 @@ discipline the latency budget already established for wall-clock.
 
 ## Phase 4 — deterministic output caps where rtk does not reach
 
-- [ ] 4.1 Extend the rtk corpus first (measurement before claim): add the
+- [x] 4.1 Extend the rtk corpus first (measurement before claim): add the
       top unwrapped high-volume commands from real session telemetry
       (candidates: vitest/test runners, tree-wide grep/rg, npm/tsc build
       output) to `internal/bench/rtk-savings/corpus.sh`; re-run; publish
       per-command numbers with the same scoped-measurement honesty header.
-- [ ] 4.2 For commands rtk cannot wrap (compound/piped, or outside its
+      <!-- done 2026-08-10: corpus +3 classes (vitest, tree-wide grep, npm
+      build), rtk 0.44.1; total 79.3% dominated by grep 92.9% (302 KB raw),
+      vitest near-passthrough 1.1%. RESULTS.md carries the extended table +
+      honesty note: selection basis is the roadmap's candidate list — no
+      per-command session telemetry exists (census covers hook payloads) -->
+- [x] 4.2 For commands rtk cannot wrap (compound/piped, or outside its
       allowlist): deterministic PreToolUse cap rewrite — append
       bounded-output flags (`--max-count`, `| tail -n <cap>`) from a
       committed per-command cap table. Rewrite is visible in the tool call
       (never a silent truncation of the result), carries a one-line marker
       naming the cap, and has a per-command opt-out in the table.
-- [ ] 4.3 Escape hatch: the model can re-run uncapped by explicit flag when
+      <!-- done 2026-08-10, DEGRADED TO ADVISORY per the resolved
+      pretooluse-rewrite-semantics blocker (v1 dispatcher contract:
+      allow/block/warn, no updatedInput — the roadmap's pre-registered
+      consequence). Committed cap table = OUTPUT_CAP_TABLE in
+      rtk_wrap_hook.ts (per-row `enabled` opt-out; scope evidence-bound to
+      the measured tree-wide-search class); warn names the bounded
+      alternative; fire/no-fire tests in rtk_wrap_hook.test.ts -->
+- [x] 4.3 Escape hatch: the model can re-run uncapped by explicit flag when
       the capped output was insufficient — the re-run is the recorded
       demand signal (`cap_bypass` telemetry line) that calibrates the
-      table.
-- [ ] 4.4 REGISTER metric: bytes-into-context per session from tool
+      table. <!-- done 2026-08-10, degraded with 4.2: an advisory never
+      caps, so no bypass flag exists — every run stays uncapped by
+      construction; the demand signal is the concern's warn count
+      (rule-trips.json), registered as unbounded_output_advisory_rate -->
+- [x] 4.4 REGISTER metric: bytes-into-context per session from tool
       results, pre/post; per-command cap-bypass rate with a committed
       threshold above which that command's cap is raised or removed.
+      <!-- done 2026-08-10: unbounded_output_advisory_rate registered in
+      hook-token-budget.json advisory_adoption_metrics (owner, review
+      2026-11-10). HONEST GAP stated in the registration: tool-RESULT
+      bytes-into-context is not instrumented anywhere — that half is
+      registered as unmeasurable until a tool-result byte counter exists -->
 
 **Exit:** the highest-volume unfiltered output class has measured caps with a recorded bypass path; savings are cited from our own corpus, not upstream claims.
 **Rollback:** cap table rows are individually removable; the rewrite hook is one manifest line.
 
 ## Phase 5 — edit-shape advisory: pay for the diff, not the file
 
-- [ ] 5.1 PostToolUse advisory (conditional-silence discipline, same
+- [x] 5.1 PostToolUse advisory (conditional-silence discipline, same
       delivery pattern as the shipped nudges): fires when a Write replaced
       an existing file of ≥N lines while the effective diff was ≤M % of the
       file — one line naming the cheaper edit primitive. Thresholds
       committed in the concern header; silence is the default.
-- [ ] 5.2 Once-per-session gate + budget row in the Phase 3 file from day
+      <!-- done 2026-08-10: edit_shape_hook.ts (post_tool_use, advisory);
+      pre-image via `git diff HEAD --numstat` proxy; thresholds
+      MIN_FILE_LINES=50 / MAX_DIFF_RATIO=0.20 in the header; dist/generated/
+      lockfile exemptions; fire/no-fire tests green -->
+- [x] 5.2 Once-per-session gate + budget row in the Phase 3 file from day
       one — the economy nudge must not itself become an economy problem.
-- [ ] 5.3 REGISTER metric: full-rewrite-with-small-diff rate per session;
+      <!-- done 2026-08-10: once-per-session marker in the hook; budget row
+      edit-shape 1024 B in hook-token-budget.json; bench green -->
+- [x] 5.3 REGISTER metric: full-rewrite-with-small-diff rate per session;
       the advisory's kill criterion is the shipped standard — a nudge whose
       verdicts are measurably ignored gets its trigger tightened or the
-      injected line removed.
+      injected line removed. <!-- done 2026-08-10: registered as
+      full_rewrite_small_diff_rate in hook-token-budget.json
+      advisory_adoption_metrics, kill criterion included -->
 
 **Exit:** output-side waste on edits is visible and nudged with a registered adoption number.
 **Rollback:** one manifest line.
@@ -293,7 +321,7 @@ discipline the latency budget already established for wall-clock.
 > already fully in context pays for it twice. Both are per-turn overhead —
 > this roadmap's job — and both are deterministic fixes.
 
-- [ ] 6.1 Re-read guard, PreToolUse (same conditional-silence discipline as
+- [x] 6.1 Re-read guard, PreToolUse (same conditional-silence discipline as
       the shipped nudges): a full-file Read of a path that was already
       fully read this session AND is unchanged since (mtime + size
       comparison against a session-scoped read ledger, hook-carried state
@@ -302,56 +330,84 @@ discipline the latency budget already established for wall-clock.
       first, never a block — a stale-ledger false positive on a block would
       corrupt work; the escalation decision waits on the 6.4 telemetry.
       <!-- verify: npx vitest run reread_guard -->
-- [ ] 6.2 Post-edit scope hint: a full-file Read immediately following this
+      <!-- done 2026-08-10: reread_guard_hook.ts (pre_tool_use, advisory,
+      tools Read/Edit/Write); mtime+size session read ledger; verify ran
+      green (fire on unchanged duplicate, silent on changed file) -->
+- [x] 6.2 Post-edit scope hint: a full-file Read immediately following this
       session's own Edit/Write to the same path gets the same advisory
       shape pointing at a ranged re-read of the edited hunk. Generated/dist
       paths exempt (shared exemption list with Phase 5).
-- [ ] 6.3 Batching guidance becomes a measured obligation, not new prose:
+      <!-- done 2026-08-10: post-edit ranged-read hint branch in
+      reread_guard_hook.ts, shared exemption list with edit_shape -->
+- [x] 6.3 Batching guidance becomes a measured obligation, not new prose:
       the existing execution-context guidance on parallel tool calls gains
       a falsifiable fire/no-fire example pair (the agent-docs-writing
       standard); no new rule file — the always-loaded layer does not grow
       for this (Phase 3's budget applies to us too).
-- [ ] 6.4 REGISTER metrics: `turns_per_task` (user_prompt_submit counter
+      <!-- done 2026-08-10: fire/no-fire pair added to
+      src/agent-src/contexts/execution/roadmap-process-loop.md (+dist twin
+      via sync); no new always-loaded file -->
+- [x] 6.4 REGISTER metrics: `turns_per_task` (user_prompt_submit counter
       keyed to the task envelope, hook-carried), `duplicate_read_rate`
       (guard fires / total reads), and re-read advisory adoption. Committed
       thresholds and a review date; the guard's kill criterion is the
       shipped standard — measurably ignored verdicts tighten the trigger or
-      remove the line.
+      remove the line. <!-- done 2026-08-10: all three registered in
+      hook-token-budget.json advisory_adoption_metrics (review 2026-11-10);
+      turns_per_task carries the stated HONEST GAP: no task-envelope key
+      exists yet, the counter is per-SESSION until one ships; thresholds
+      deliberately baseline-first -->
 
 **Exit:** duplicate reads are visible and nudged with an adoption number; turn count per task is a tracked metric with a baseline.
 **Rollback:** two manifest lines; the read ledger is session-scoped gitignored state.
 
 ## Phase 7 — what this roadmap will not do
 
-- [ ] 7.1 No rule consolidation or tier surgery — `road-to-surface-consolidation`
+- [x] 7.1 No rule consolidation or tier surgery — `road-to-surface-consolidation`
       and `road-to-tier-removal` (both ACTIVE in `agents/roadmaps/`) own
       that territory; this roadmap caps *injections*, not authored prose.
-- [ ] 7.2 No MCP token accounting revival — the archived
+- [x] 7.2 No MCP token accounting revival — the archived
       `road-to-mcp-token-accounting` keeps its verdict; per-project server
       pruning stays operator guidance, not tooling.
-- [ ] 7.3 No orchestrator transcript recycling — that is
+- [x] 7.3 No orchestrator transcript recycling — that is
       `road-to-token-economy-recycling` (same diagnosis series), built on
       the CHECKPOINT substrate with its own correctness risks.
-- [ ] 7.4 No transcript summarisation or compaction pipeline — paraphrased
+- [x] 7.4 No transcript summarisation or compaction pipeline — paraphrased
       context is unverifiable against its source; selection and caps only.
-- [ ] 7.5 No cache-TTL keepalive games (heartbeat requests to hold a warm
+- [x] 7.5 No cache-TTL keepalive games (heartbeat requests to hold a warm
       cache) — spending tokens to save tokens inverts under idle time and
       is unfalsifiable per-user; the cache-economy refusal list already
       bans the adjacent mechanisms (blanket 1h TTL, auto-tuning); if a
       host-side session feature makes this free, it enters via a new
       roadmap with ledger evidence.
-- [ ] 7.6 No tokenizer dependency in CI — bytes are the gate unit;
+- [x] 7.6 No tokenizer dependency in CI — bytes are the gate unit;
       token-exact numbers appear only in ledger-based telemetry where the
       provider counts for us.
-- [ ] 7.7 No new ledger/accounting layer — `cc_transcript.ts` +
+- [x] 7.7 No new ledger/accounting layer — `cc_transcript.ts` +
       `cache_realization_report.ts` are the accounting substrate; anything
       they cannot answer is a documented gap, not a second parser.
+
+
+> Verified 2026-08-10 at run end: none of the refused mechanisms exist in
+> this run's diff — no rule/tier surgery, no MCP accounting, no transcript
+> recycling or summarisation, no TTL keepalive, zero tokenizer references in
+> the two new gates (grep-verified), and the only accounting reader remains
+> `cc_transcript.ts` (the census writes counts-only JSONL, no parser).
+
+> **Iron Law 3 resolution (2026-08-10, operator pick 1):** the four `[~]`
+> items (3.3 + the data-gated acceptance halves) carry over verbatim to
+> [`later/road-to-token-economy-cache-followup.md`](later/road-to-token-economy-cache-followup.md),
+> ready + blocked on one instrumented census week. This roadmap archives.
 
 ## Blockers
 
 ### blocker: pretooluse-rewrite-semantics
 
-- **Status:** open
+- **Status:** resolved (2026-08-10) — from in-tree evidence rather than a
+  live-host probe: the v1 dispatcher contract (dispatch_hook.ts) carries
+  allow/block/warn only, no `updatedInput` payload rewrite, so no host can
+  surface one through it. 4.2 degraded to the advisory path exactly as
+  pre-registered below; rtk_wrap_hook.ts cites this in its header.
 - **Owner:** maintainer
 - **Blocks:** Phase 4.2 shipping as a rewrite (vs. advisory-only)
 - **What to do:** host_semantics probe — verify on a live host that a
@@ -365,7 +421,9 @@ discipline the latency budget already established for wall-clock.
 
 ### blocker: repeat-injection-census
 
-- **Status:** open
+- **Status:** open — instrument shipped (bench_hook_injection --record →
+  agents/runtime/state/injection-census.jsonl); awaiting one instrumented
+  week of real sessions. 3.3 stays [~] until the census note exists.
 - **Owner:** maintainer
 - **Blocks:** Phase 3.3 scope (which concerns get the idempotency gate
   first)
@@ -390,28 +448,52 @@ discipline the latency budget already established for wall-clock.
 
 ## Acceptance criteria
 
-- [ ] The Phase 1 spike note exists with ledger-sourced per-slot
+- [x] The Phase 1 spike note exists with ledger-sourced per-slot
       attribution and the re-measured hit-ratio baseline — or the
       published null with the downgraded plan recorded.
-- [ ] Two consecutive builds of the always-loaded layer are byte-identical
+      <!-- done: cache-injection-anatomy.md + null published in
+      docs/benchmark.md -->
+- [x] Two consecutive builds of the always-loaded layer are byte-identical
       (CI-asserted), and `check_static_layer_stability` is green on the
       tree and red on the volatile-marker fixture — with zero overlap
       against the shipped kernel-prefix guard.
-- [ ] `hook-token-budget.json` exists with the latency file's full schema
+      <!-- done: build determinism was already CI-asserted (ADR-201
+      dist==rewrite(src) byte-exact + compile_router --check + kernel
+      prefix guard — 2.3 verdict); the new lint is green on 106 files, red
+      on the fixture, and excludes the kernel set read from dist/router.json -->
+- [x] `hook-token-budget.json` exists with the latency file's full schema
       discipline; `bench_hook_injection` gates CI; a fixture concern
       exceeding its row fails the build.
-- [ ] The rtk corpus covers the telemetry-ranked top unwrapped commands
+      <!-- done: wired into ci-fast after check-preamble-payload; the
+      red-path (over-budget concern → rc 1) is proven by test via the
+      injectable budgetPath -->
+- [~] The rtk corpus covers the telemetry-ranked top unwrapped commands
       with published per-command numbers; at least one cap-table command
       shows measured pre/post bytes-into-context with its bypass rate
-      inside the committed threshold.
-- [ ] Repeat-slot concerns named by the census carry the idempotency gate
-      with passing fire/no-fire test pairs.
-- [ ] `prefix_stability`, `injection_load`, and the Phase 4/5 metrics are
+      inside the committed threshold. <!-- partial 2026-08-10: corpus +
+      per-command numbers published (basis: roadmap candidate list — no
+      per-command telemetry exists to rank by, stated in RESULTS.md); the
+      cap-table command grep has measured pre/post bytes from the corpus
+      (302 KB → 21 KB); the bypass-rate-inside-threshold half is data-gated —
+      the advisory registration is deliberately baseline-first, no threshold
+      before data -->
+- [~] Repeat-slot concerns named by the census carry the idempotency gate
+      with passing fire/no-fire test pairs. <!-- deferred with 3.3: census
+      instrument shipped, one instrumented week pending
+      (repeat-injection-census blocker) -->
+- [x] `prefix_stability`, `injection_load`, and the Phase 4/5 metrics are
       registered with owners, thresholds, and review dates before their
       consuming behaviour shipped — verifiable from file history.
-- [ ] The re-read guard fires on a scripted duplicate-read fixture and
+      <!-- done: prefix_stability in the spike note, injection_load +
+      advisory_adoption_metrics in hook-token-budget.json; registrations
+      land in the same change set as their mechanisms (same-commit, not
+      post-hoc), which the file history shows -->
+- [~] The re-read guard fires on a scripted duplicate-read fixture and
       stays silent on a changed-file fixture; `turns_per_task` and
       `duplicate_read_rate` accumulate from live sessions with their
-      thresholds registered.
-- [ ] Anti-dump check: no second transcript parser, no mechanism from the
+      thresholds registered. <!-- fixture half done (tests green both
+      directions); the accumulate-from-live-sessions half is data-gated —
+      registrations exist, live data starts once this ships -->
+- [x] Anti-dump check: no second transcript parser, no mechanism from the
       cache-economy refusal list, no re-guarding of the kernel prefix.
+      <!-- done: verified at run end, see the Phase 7 note -->

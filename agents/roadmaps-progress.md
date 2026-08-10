@@ -2,14 +2,14 @@
 
 > Auto-generated — do not edit. Regenerate with `task roadmap-progress` or by running the `update_roadmap_progress` script for your install; rewritten on every roadmap create / execute / completion change (timestamp lives in git history).
 >
-> 23 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **29** open blockers
+> 22 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **27** open blockers
 
 ## Overall
 
-**200 / 357 steps done · 56%**
+**189 / 320 steps done · 59%**
 
 ```text
-██████████████████████░░░░░░░░░░░░░░░░░░   56%
+████████████████████████░░░░░░░░░░░░░░░░   59%
 ```
 
 ## Open roadmaps
@@ -35,10 +35,9 @@
 | 17 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 6 | 3 | 0 | 0 | [1](#blockers-road-to-subagent-value-realization-followup) | ███░░░░░░░ 33% |
 | 18 | [road-to-surface-consolidation.md](roadmaps/road-to-surface-consolidation.md) | 3 | 14 | 1 | 12 | 1 | 0 | [2](#blockers-road-to-surface-consolidation) | █████████░ 92% |
 | 19 | [road-to-tier-removal.md](roadmaps/road-to-tier-removal.md) | 4 | 8 | 2 | 6 | 0 | 0 | [1](#blockers-road-to-tier-removal) | ████████░░ 75% |
-| 20 | [road-to-token-economy-cache.md](roadmaps/road-to-token-economy-cache.md) | 7 | 38 | 26 | 11 | 1 | 0 | [2](#blockers-road-to-token-economy-cache) | ███░░░░░░░ 30% |
-| 21 | [road-to-token-economy-recycling.md](roadmaps/road-to-token-economy-recycling.md) | 5 | 26 | 26 | 0 | 0 | 0 | [2](#blockers-road-to-token-economy-recycling) | ░░░░░░░░░░ 0% |
-| 22 | [road-to-ui-track-integrity-followup.md](roadmaps/road-to-ui-track-integrity-followup.md) | 1 | 10 | 10 | 0 | 0 | 0 | [2](#blockers-road-to-ui-track-integrity-followup) | ░░░░░░░░░░ 0% |
-| 23 | [road-to-worktree-hygiene.md](roadmaps/road-to-worktree-hygiene.md) | 1 | 9 | 2 | 7 | 0 | 0 | [1](#blockers-road-to-worktree-hygiene) | ████████░░ 78% |
+| 20 | [road-to-token-economy-recycling.md](roadmaps/road-to-token-economy-recycling.md) | 5 | 26 | 26 | 0 | 0 | 0 | [2](#blockers-road-to-token-economy-recycling) | ░░░░░░░░░░ 0% |
+| 21 | [road-to-ui-track-integrity-followup.md](roadmaps/road-to-ui-track-integrity-followup.md) | 1 | 10 | 10 | 0 | 0 | 0 | [2](#blockers-road-to-ui-track-integrity-followup) | ░░░░░░░░░░ 0% |
+| 22 | [road-to-worktree-hygiene.md](roadmaps/road-to-worktree-hygiene.md) | 1 | 9 | 2 | 7 | 0 | 0 | [1](#blockers-road-to-worktree-hygiene) | ████████░░ 78% |
 
 ---
 
@@ -481,38 +480,6 @@ _1 blocker resolved._
     `build_discovery_manifest.ts`, publish it, and let that date pass. The council
     ruled the date itself is not an agent decision.
   - **Resolved when:** a concrete `sunset` date is published in the manifest's `tier` deprecation entry AND that date has passed with no external breakage reported — at which point Phase 3 records the confirmation and Phase 4's external half becomes executable.
-
-### [road-to-token-economy-cache.md](roadmaps/road-to-token-economy-cache.md)
-
-**Road to token-economy — cache: the per-session overhead gets a budget, a stable prefix delta, and a machine on the write path** — 11 / 37 done (30%)
-
-| # | Phase | State | Open | Done | Deferred | Cancelled | % |
-|---|---|---|---:|---:|---:|---:|---:|
-| 1 | per-slot injection anatomy: the narrow delta observation | ✅ done | 0 | 4 | 0 | 0 | 100% |
-| 2 | byte-stability for the non-kernel remainder | ✅ done | 0 | 4 | 0 | 0 | 100% |
-| 3 | the injection budget: the latency file's twin | ✅ done | 0 | 3 | 1 | 0 | 100% |
-| 4 | deterministic output caps where rtk does not reach | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
-| 5 | edit-shape advisory: pay for the diff, not the file | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
-| 6 | turn and re-read economy: stop re-paying for what the session already has | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
-| 7 | what this roadmap will not do | ⬜ not started | 15 | 0 | 0 | 0 | 0% |
-
-<a id="blockers-road-to-token-economy-cache"></a>
-**Blockers**
-
-- **pretooluse-rewrite-semantics** (owner: maintainer) — blocks Phase 4.2 shipping as a rewrite (vs. advisory-only)
-  - **What to do:**
-    PreToolUse hook can modify the command payload (vs. only allow/deny/
-    annotate), and that the modification is visible to the model in the tool
-    call record. No modification capability → 4.2 degrades to an advisory
-    line naming the capped variant, and the cap table becomes a
-    model-carried convention with its adoption measured.
-  - **Resolved when:** the probe transcript exists and 4.2's mechanism cites it.
-- **repeat-injection-census** (owner: maintainer) — blocks Phase 3.3 scope (which concerns get the idempotency gate first)
-  - **What to do:**
-    concern fire frequency and byte volume (the 3.2 harness in record-only
-    mode). The census ranks the repeaters by measured load; 3.3 targets the
-    top of that list instead of a guessed set.
-  - **Resolved when:** the census note exists and 3.3's target list cites it.
 
 ### [road-to-token-economy-recycling.md](roadmaps/road-to-token-economy-recycling.md)
 
