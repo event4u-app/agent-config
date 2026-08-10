@@ -166,7 +166,7 @@ for them persuasively and will outlive this file in `tmp.old/`.
       or the structural reading.
 
 ## Risk Register
-<!-- risk-review: v1 | reviewed: 2026-08-10 | reviewer: claude/host -->
+<!-- risk-review: v1 | reviewed: 2026-08-11 | reviewer: claude/host -->
 
 | Rank | Item | Risk type | Description | Mitigation | Anchored under |
 |------|------|-----------|-------------|------------|----------------|
