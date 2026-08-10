@@ -1,3 +1,6 @@
+# CLOSED (2026-08-10): the migration this file drove is complete — kept as the disposition record, never re-opened for new rows.
+# Live consumers: none — grep over src/ and tests/ finds no reader; the only references are roadmap prose (road-to-feedback-9-29 + the archived road-to-rule-delivery-integrity).
+# New dispositions belong in the emitting rule's own frontmatter and the rule-migrations ledger, not here.
 # Rule activation dispositions — the keyword/phrase-only residue
 #
 # Produced by P3.2 of `road-to-rule-delivery-integrity`. One recorded

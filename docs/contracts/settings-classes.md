@@ -22,6 +22,18 @@ raise a spend ceiling, empty an allowlist, or switch off a gate.
 | **B — consent** | the agent, but only after ONE just-in-time ask that the user answered | **once**, then persisted with provenance. |
 | **C — guarded** | the GUI's write route or a hand-edit, by a human | never asked by the agent; **every agent write path refuses it.** |
 
+### The provenance sidecar's record shape
+
+"Persisted with provenance" means one record per dotted key in
+`settings/.agent-settings.provenance.json`, written by `settings:set` beside
+the value: `{ "source": "auto-detected" | "jit-answer" | "manual" | "gui",
+"at": "<ISO timestamp>" }`. For a class-B key the `at` stamp IS the grant
+time — the consent reader (`consentVerdict`) grants on `jit-answer` / `gui` /
+`manual` provenance, so source + timestamp together are the audit record of
+who consented and when. `expires_at` / `revoked_at` / contract-version fields
+stay deliberately unbuilt until a reader needs them — a field nothing reads is
+surface without a consumer.
+
 ## What the fence covers — and what it does not
 
 **It governs writes, not reads.** Every class is readable by everything. A C
