@@ -82,3 +82,23 @@ export function evaluateQuorum(
     const status: QuorumStatus = clampedPresent >= threshold ? 'concluded' : 'inconclusive';
     return { status, threshold, total, present: clampedPresent };
 }
+
+/**
+ * Did this pass conclude on a single voice?
+ *
+ * Derived — deliberately NOT a third `QuorumStatus`. `ceil(n / 2)` makes
+ * 1-of-2 a legitimate `concluded`, which is the intended behaviour (see the
+ * module header); this predicate does not dispute it, it only makes the
+ * shape visible so a reader can tell a one-member conclusion from a
+ * full-attendance one. Advisory render and telemetry only: no gate reads it,
+ * and nothing downstream may branch on it without its own decision record.
+ *
+ * `total` is deliberately NOT consulted. A council configured with a single
+ * member concludes solo by construction, and that is still a conclusion
+ * reached on one voice — collapsing it into "not solo" would hide exactly
+ * the passes a solo-conclusion rate is measured to find. A consumer that
+ * cares about the distinction reads `result.total` alongside.
+ */
+export function isSoloConcluded(result: QuorumResult): boolean {
+    return result.status === 'concluded' && result.present === 1;
+}

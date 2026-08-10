@@ -1,0 +1,822 @@
+diff --git a/agents/roadmaps-progress.md b/agents/roadmaps-progress.md
+index 7571d0b7ef4ae3dda997d2e96499bb38edc1b08f..054787fc90b38bfa5585cd1f2bc79e26e32cf30d 100644
+--- a/agents/roadmaps-progress.md
++++ b/agents/roadmaps-progress.md
+@@ -2,14 +2,14 @@
+ 
+ > Auto-generated — do not edit. Regenerate with `task roadmap-progress` or by running the `update_roadmap_progress` script for your install; rewritten on every roadmap create / execute / completion change (timestamp lives in git history).
+ >
+-> 22 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **31** open blockers, **10** need you → `agent-config gates`
++> 21 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **29** open blockers, **9** need you → `agent-config gates`
+ 
+ ## Overall
+ 
+-**177 / 301 steps done · 59%**
++**181 / 278 steps done · 65%**
+ 
+ ```text
+-████████████████████████░░░░░░░░░░░░░░░░   59%
++██████████████████████████░░░░░░░░░░░░░░   65%
+ ```
+ 
+ ## Open roadmaps
+@@ -20,24 +20,23 @@
+ | 2 | [road-to-capability-answerability.md](roadmaps/road-to-capability-answerability.md) | 4 | 19 | 1 | 18 | 0 | 0 | [1](#blockers-road-to-capability-answerability) | ██████████ 95% |
+ | 3 | [road-to-carrier-layer-convergence.md](roadmaps/road-to-carrier-layer-convergence.md) | 3 | 8 | 2 | 3 | 0 | 3 | [1](#blockers-road-to-carrier-layer-convergence) | ██████░░░░ 60% |
+ | 4 | [road-to-ci-native-release-first-run.md](roadmaps/road-to-ci-native-release-first-run.md) | 2 | 8 | 8 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+-| 5 | [road-to-cost-parity-0-program.md](roadmaps/road-to-cost-parity-0-program.md) | 4 | 23 | 23 | 0 | 0 | 0 | [2](#blockers-road-to-cost-parity-0-program) | ░░░░░░░░░░ 0% |
+-| 6 | [road-to-council-blind-review.md](roadmaps/road-to-council-blind-review.md) | 3 | 6 | 2 | 3 | 0 | 1 | 0 | ██████░░░░ 60% |
+-| 7 | [road-to-gated-reach-followup.md](roadmaps/road-to-gated-reach-followup.md) | 1 | 12 | 12 | 0 | 0 | 0 | [1](#blockers-road-to-gated-reach-followup) | ░░░░░░░░░░ 0% |
+-| 8 | [road-to-inbox-harvest-2026-08-b.md](roadmaps/road-to-inbox-harvest-2026-08-b.md) | 4 | 26 | 12 | 2 | 1 | 11 | [3](#blockers-road-to-inbox-harvest-2026-08-b) | █░░░░░░░░░ 14% |
+-| 9 | [road-to-inbox-harvest-2026-08.md](roadmaps/road-to-inbox-harvest-2026-08.md) | 5 | 21 | 1 | 11 | 4 | 5 | [3](#blockers-road-to-inbox-harvest-2026-08) | █████████░ 92% |
+-| 10 | [road-to-kernel-question-triangle.md](roadmaps/road-to-kernel-question-triangle.md) | 1 | 3 | 3 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+-| 11 | [road-to-maintainer-bus-factor.md](roadmaps/road-to-maintainer-bus-factor.md) | 4 | 12 | 5 | 7 | 0 | 0 | [1](#blockers-road-to-maintainer-bus-factor) | ██████░░░░ 58% |
+-| 12 | [road-to-orchestration-scope-decision.md](roadmaps/road-to-orchestration-scope-decision.md) | 4 | 10 | 6 | 4 | 0 | 0 | [1](#blockers-road-to-orchestration-scope-decision) | ████░░░░░░ 40% |
+-| 13 | [road-to-rule-coherence-followup.md](roadmaps/road-to-rule-coherence-followup.md) | 5 | 9 | 8 | 1 | 0 | 0 | [2](#blockers-road-to-rule-coherence-followup) | █░░░░░░░░░ 11% |
+-| 14 | [road-to-scale-history-bench-run.md](roadmaps/road-to-scale-history-bench-run.md) | 1 | 2 | 2 | 0 | 0 | 0 | [1](#blockers-road-to-scale-history-bench-run) | ░░░░░░░░░░ 0% |
+-| 15 | [road-to-skill-description-measurement.md](roadmaps/road-to-skill-description-measurement.md) | 1 | 4 | 4 | 0 | 0 | 0 | [1](#blockers-road-to-skill-description-measurement) | ░░░░░░░░░░ 0% |
+-| 16 | [road-to-skill-ecosystem-gate-integrity.md](roadmaps/road-to-skill-ecosystem-gate-integrity.md) | 7 | 43 | 3 | 40 | 0 | 0 | [1](#blockers-road-to-skill-ecosystem-gate-integrity) | █████████░ 93% |
+-| 17 | [road-to-solution-minimalism.md](roadmaps/road-to-solution-minimalism.md) | 4 | 36 | 10 | 25 | 0 | 1 | [1](#blockers-road-to-solution-minimalism) | ███████░░░ 71% |
+-| 18 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 6 | 3 | 0 | 0 | [1](#blockers-road-to-subagent-value-realization-followup) | ███░░░░░░░ 33% |
+-| 19 | [road-to-surface-consolidation.md](roadmaps/road-to-surface-consolidation.md) | 3 | 14 | 1 | 12 | 1 | 0 | [2](#blockers-road-to-surface-consolidation) | █████████░ 92% |
+-| 20 | [road-to-tier-removal.md](roadmaps/road-to-tier-removal.md) | 4 | 8 | 2 | 6 | 0 | 0 | [1](#blockers-road-to-tier-removal) | ████████░░ 75% |
+-| 21 | [road-to-ui-track-integrity-followup.md](roadmaps/road-to-ui-track-integrity-followup.md) | 1 | 10 | 10 | 0 | 0 | 0 | [2](#blockers-road-to-ui-track-integrity-followup) | ░░░░░░░░░░ 0% |
+-| 22 | [road-to-worktree-hygiene.md](roadmaps/road-to-worktree-hygiene.md) | 1 | 9 | 2 | 7 | 0 | 0 | [1](#blockers-road-to-worktree-hygiene) | ████████░░ 78% |
++| 5 | [road-to-council-blind-review.md](roadmaps/road-to-council-blind-review.md) | 3 | 6 | 2 | 3 | 0 | 1 | 0 | ██████░░░░ 60% |
++| 6 | [road-to-gated-reach-followup.md](roadmaps/road-to-gated-reach-followup.md) | 1 | 12 | 12 | 0 | 0 | 0 | [1](#blockers-road-to-gated-reach-followup) | ░░░░░░░░░░ 0% |
++| 7 | [road-to-inbox-harvest-2026-08-b.md](roadmaps/road-to-inbox-harvest-2026-08-b.md) | 4 | 26 | 8 | 6 | 1 | 11 | [3](#blockers-road-to-inbox-harvest-2026-08-b) | ████░░░░░░ 43% |
++| 8 | [road-to-inbox-harvest-2026-08.md](roadmaps/road-to-inbox-harvest-2026-08.md) | 5 | 21 | 1 | 11 | 4 | 5 | [3](#blockers-road-to-inbox-harvest-2026-08) | █████████░ 92% |
++| 9 | [road-to-kernel-question-triangle.md](roadmaps/road-to-kernel-question-triangle.md) | 1 | 3 | 3 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
++| 10 | [road-to-maintainer-bus-factor.md](roadmaps/road-to-maintainer-bus-factor.md) | 4 | 12 | 5 | 7 | 0 | 0 | [1](#blockers-road-to-maintainer-bus-factor) | ██████░░░░ 58% |
++| 11 | [road-to-orchestration-scope-decision.md](roadmaps/road-to-orchestration-scope-decision.md) | 4 | 10 | 6 | 4 | 0 | 0 | [1](#blockers-road-to-orchestration-scope-decision) | ████░░░░░░ 40% |
++| 12 | [road-to-rule-coherence-followup.md](roadmaps/road-to-rule-coherence-followup.md) | 5 | 9 | 8 | 1 | 0 | 0 | [2](#blockers-road-to-rule-coherence-followup) | █░░░░░░░░░ 11% |
++| 13 | [road-to-scale-history-bench-run.md](roadmaps/road-to-scale-history-bench-run.md) | 1 | 2 | 2 | 0 | 0 | 0 | [1](#blockers-road-to-scale-history-bench-run) | ░░░░░░░░░░ 0% |
++| 14 | [road-to-skill-description-measurement.md](roadmaps/road-to-skill-description-measurement.md) | 1 | 4 | 4 | 0 | 0 | 0 | [1](#blockers-road-to-skill-description-measurement) | ░░░░░░░░░░ 0% |
++| 15 | [road-to-skill-ecosystem-gate-integrity.md](roadmaps/road-to-skill-ecosystem-gate-integrity.md) | 5 | 43 | 3 | 40 | 0 | 0 | [1](#blockers-road-to-skill-ecosystem-gate-integrity) | █████████░ 93% |
++| 16 | [road-to-solution-minimalism.md](roadmaps/road-to-solution-minimalism.md) | 4 | 36 | 10 | 25 | 0 | 1 | [1](#blockers-road-to-solution-minimalism) | ███████░░░ 71% |
++| 17 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 6 | 3 | 0 | 0 | [1](#blockers-road-to-subagent-value-realization-followup) | ███░░░░░░░ 33% |
++| 18 | [road-to-surface-consolidation.md](roadmaps/road-to-surface-consolidation.md) | 3 | 14 | 1 | 12 | 1 | 0 | [2](#blockers-road-to-surface-consolidation) | █████████░ 92% |
++| 19 | [road-to-tier-removal.md](roadmaps/road-to-tier-removal.md) | 4 | 8 | 2 | 6 | 0 | 0 | [1](#blockers-road-to-tier-removal) | ████████░░ 75% |
++| 20 | [road-to-ui-track-integrity-followup.md](roadmaps/road-to-ui-track-integrity-followup.md) | 1 | 10 | 10 | 0 | 0 | 0 | [2](#blockers-road-to-ui-track-integrity-followup) | ░░░░░░░░░░ 0% |
++| 21 | [road-to-worktree-hygiene.md](roadmaps/road-to-worktree-hygiene.md) | 1 | 9 | 2 | 7 | 0 | 0 | [1](#blockers-road-to-worktree-hygiene) | ████████░░ 78% |
+ 
+ ---
+ 
+@@ -190,11 +189,11 @@
+ 
+ ### [road-to-inbox-harvest-2026-08-b.md](roadmaps/road-to-inbox-harvest-2026-08-b.md)
+ 
+-**Road to inbox harvest 2026-08-b** — 2 / 14 done (14%)
++**Road to inbox harvest 2026-08-b** — 6 / 14 done (43%)
+ 
+ | # | Phase | State | Open | Done | Deferred | Cancelled | % |
+ |---|---|---|---:|---:|---:|---:|---:|
+-| 1 | The quorum-attendance defect | ⬜ not started | 4 | 0 | 1 | 0 | 0% |
++| 1 | The quorum-attendance defect | ✅ done | 0 | 4 | 1 | 0 | 100% |
+ | 2 | Landed in this PR | ✅ done | 0 | 2 | 0 | 0 | 100% |
+ | 3 | Single-artefact extensions | ⬜ not started | 8 | 0 | 0 | 0 | 0% |
+ | 4 | Cancelled against a lock | ⏭️ skipped | 0 | 0 | 0 | 11 | 0% |
+diff --git a/agents/roadmaps/road-to-inbox-harvest-2026-08-b.md b/agents/roadmaps/road-to-inbox-harvest-2026-08-b.md
+index 3710f811e555f0a905577cf0a9708c2179c3df87..7229929cfc1d3d66eabd1d48b36de2d5eabeb726 100644
+--- a/agents/roadmaps/road-to-inbox-harvest-2026-08-b.md
++++ b/agents/roadmaps/road-to-inbox-harvest-2026-08-b.md
+@@ -103,29 +103,32 @@ tree: `src/scripts/ai_council/events_log.ts:30` carries
+ occurrences of `quorum`. A solo-concluded pass is downstream-identical to a
+ full-attendance one.
+ 
+-- [ ] **1.1 `quorum_result` event.** Extend `events_log.ts` with `status`,
++- [x] **1.1 `quorum_result` event.** Extend `events_log.ts` with `status`,
+       `threshold`, `total`, `present`, `absent[]`. Emit at both `evaluateQuorum`
+       call sites — `src/scripts/council_cli.ts:668` and `:937` (verified: exactly
+       two, no third). Follow the two existing `appendEvent` emitters; bump
+       `SCHEMA_VERSION` per that module's port-parity convention; fail-open.
+       <!-- verify: task test -- --filter=events_log -->
+-- [ ] **1.2 Use the real absent-reason vocabulary.** The draft writes
++- [x] **1.2 Use the real absent-reason vocabulary.** The draft writes
+       `(binary_missing, quota, timeout, error)`; the tree has
+       `AbsentReason = 'no_binary' | 'no_auth' | 'timeout' | 'quota'`
+       (`transport_resolver.ts:65`) plus the runtime fallbacks `'unavailable'` and
+       the literal `'binary_missing'`. Three of four drafted tokens are wrong.
+       <!-- verify: task test -- --filter=transport_resolver -->
+-- [ ] **1.3 `isSoloConcluded` as a derived predicate** in `quorum.ts` beside
++- [x] **1.3 `isSoloConcluded` as a derived predicate** in `quorum.ts` beside
+       `evaluateQuorum` — deliberately **not** a third `QuorumStatus`; the two-state
+       enum and `ceil(n/2)` stay untouched (the ceil-vs-floor divergence is a
+       recorded decision at `quorum.ts:13-15`). Advisory render only; no gate
+       behaviour change. <!-- verify: task test -- --filter=quorum -->
+-- [ ] **1.4 Register the three omitted metrics** — attendance rate,
++- [x] **1.4 Register the three omitted metrics** — attendance rate,
+       solo-conclusion rate, absent-reason distribution — in a **budget JSON**, not
+       roadmap prose. `hook-token-budget.json` (definition / instrument / threshold
+       / declared honest gap) and `recycle-threshold-budget.json` (`owner`,
+       `registered_at`, `review_by`, `honest_null_consequence`) already carry the
+       schema and the honest-gap convention.
++      Landed as `src/config/quorum-attendance-budget.json`. No threshold is
++      committed — every row reads "baseline first, threshold at review date", so
++      the file loosens no gate (nothing reads it yet) and creates none.
+ - [~] **1.5 Solo-attendance floor.** Deferred to the blocker below: the three
+       candidate outcomes (a third CLI member · gate-scoped `min_present: 2` · a
+       null under 5 %) cannot be chosen before the 1.1 telemetry accumulates.
+diff --git a/src/config/quorum-attendance-budget.json b/src/config/quorum-attendance-budget.json
+new file mode 100644
+index 0000000000000000000000000000000000000000..882a5b4f200c187a10caf5017e9740d15d178894
+--- /dev/null
++++ b/src/config/quorum-attendance-budget.json
+@@ -0,0 +1,31 @@
++{
++    "_comment": "Pre-registered council ATTENDANCE metrics (road-to-inbox-harvest-2026-08-b Phase 1.4). Registered here rather than in roadmap prose because a roadmap is archived when it closes and a metric outlives it — the sibling budget files (hook-token-budget.json, recycle-threshold-budget.json) already carry the owner / review_by / honest-gap discipline this reuses. The instrument is the quorum_result line appendQuorumEvent writes to agents/runtime/council/events.log (schema v2); nothing here is measured yet, and no threshold is committed before data exists.",
++    "schema_version": 1,
++    "registered_at": "2026-08-10",
++    "owner": "maintainer",
++    "review_by": "2026-11-10",
++    "unit": "quorum_result event lines in agents/runtime/council/events.log",
++    "privacy": "a quorum_result line carries {phase, command, dispatch, verdict, threshold, configured_total, total, present, solo, absent[{member, reason}]} — counts, closed vocabularies, and member ids only. The type has no field able to hold free-form content, so the CLI's own `detail` string (provider error text, which can embed paths and prompt fragments) is dropped at the boundary rather than scrubbed.",
++    "phase_split": "A pass emits `pre_run` (build_members — who could be constructed) and, on the `run` path, `post_run` (_postRunQuorum — who actually returned a usable response). They disagree whenever a member constructs and then fails mid-flight, so a rate computed over both double-counts. NOT every pre_run line is a pass: `command: estimate` is a spend-free preview, and a `command: run` line is written before the necessity and size-fit gates can abort. That is why `command` exists — every rate below states which values it admits.",
++    "attendance_rate": {
++        "definition": "how many of the CONFIGURED members answered: present / configured_total per post_run pass. `total` is the roster that survived construction and `configured_total` the enabled roster before `--single` filtering and before any construction failure — a pass with 3 configured, 2 failing to construct and 1 answering is 1/3, not the 1/1 a `total`-based reading would report.",
++        "instrument": "quorum_result lines, phase=post_run, command=run, fields present + configured_total (+ total for the survived-construction split)",
++        "threshold": "none committed before data — baseline first, threshold at review date"
++    },
++    "solo_conclusion_rate": {
++        "definition": "share of post_run passes with `solo: true` — written by the isSoloConcluded predicate in quorum.ts, never re-derived from the numbers here, so one change to the rule cannot leave this definition stale. ceil(n/2) makes 1-of-2 a legitimate conclusion; this measures how often that legitimacy is used, not whether it should be. THREE cases carry solo: true and they are not the same finding — a degraded multi-member council (configured_total > 1), a council configured with one member (configured_total = 1, dispatch = full), and a deliberate --single dispatch (dispatch = single). Split on dispatch and configured_total before reading the rate.",
++        "instrument": "quorum_result lines, phase=post_run, command=run, field solo, split by dispatch + configured_total",
++        "threshold": "none committed before data. The quorum-solo-floor blocker pre-registers the three outcomes this rate decides between — a third CLI member, a gate-scoped min_present: 2, or a published null under 5 % — and that choice is made against real data, never ahead of it. It is decided on the degraded case only; a --single pass is the operator asking for one voice, not the council failing to assemble."
++    },
++    "absent_reason_distribution": {
++        "definition": "count per reason over absent[] entries — no_binary / no_auth / timeout / quota (AbsentReason) plus the two runtime fallbacks the CLI writes directly, `unavailable` (transport resolved to nothing) and `binary_missing` (a CLI client refused to construct). Distinguishes a council degraded by configuration from one degraded by provider behaviour, which have opposite fixes.",
++        "instrument": "quorum_result lines, absent[].reason, split by phase (a pre_run absence is configuration; a post_run absence is mid-flight) and filtered to command != estimate — a preview reaches construction without running anything, and counting its absences inflates the configuration half.",
++        "threshold": "none committed before data — the distribution IS the finding at review date"
++    },
++    "honest_null_consequence": "If the log accumulates and the solo-conclusion rate sits near zero, that is the published answer to the quorum-solo-floor blocker and 1.5 is cancelled against it — not quietly dropped. If attendance data never accumulates at all (nobody runs a metered council pass in the window), that is reported as an unmeasured metric at the review date, never as a passing one.",
++    "honest_gaps": [
++        "`lens` and `invocation` are empty on every pre_run line — neither is known at member-construction time — so any per-lens breakdown is post_run-only.",
++        "`command: debate` carries the pre_run half ONLY. There is no _postRunQuorum on the debate path, and defining `usable response` for a multi-round debate is a separate question this registration does not answer. So debate contributes to absent_reason_distribution and to nothing else: attendance_rate and solo_conclusion_rate cover the `run` path, and a reader must not read them as covering every metered pass.",
++        "A pre_run line proves construction happened, never that a pass followed — the necessity and size-fit gates can abort afterwards and nothing on the line records it. Any count over pre_run lines is an upper bound."
++    ]
++}
+diff --git a/src/scripts/ai_council/events_log.ts b/src/scripts/ai_council/events_log.ts
+index c218ff7b7c6540403ae4da7442a7668f49e241aa..e8fd8769d0bd067437d62539bb882f7b36e580b3 100644
+--- a/src/scripts/ai_council/events_log.ts
++++ b/src/scripts/ai_council/events_log.ts
+@@ -25,14 +25,24 @@ import * as fs from 'node:fs';
+ import * as path from 'node:path';
+ import { fileURLToPath } from 'node:url';
+ 
+-export const SCHEMA_VERSION = 1;
++import { isSoloConcluded, type QuorumResult } from './quorum.js';
++import type { AbsentReason } from './transport_resolver.js';
+ 
+-export type EventAction = 'proceed' | 'skip_necessity' | 'block_quota';
++/**
++ * v2 adds the `quorum_result` action (and nothing else) — see
++ * `appendQuorumEvent`. Every schema-v1 field keeps its name, type and
++ * position, so a v1 reader parses a v2 necessity line unchanged; only the
++ * action vocabulary widened.
++ */
++export const SCHEMA_VERSION = 2;
++
++export type EventAction = 'proceed' | 'skip_necessity' | 'block_quota' | 'quorum_result';
+ 
+ const _VALID_ACTIONS: ReadonlySet<string> = new Set([
+     'proceed',
+     'skip_necessity',
+     'block_quota',
++    'quorum_result',
+ ]);
+ 
+ /**
+@@ -215,6 +225,114 @@ export function defaultLogPath(): string {
+     return _DEFAULT_LOG_PATH;
+ }
+ 
++// ── quorum attendance (schema v2) ───────────────────────────────────
++
++/**
++ * Which of the two `evaluateQuorum` call sites produced the record.
++ *
++ * `pre_run` is `build_members`' construction-time reading — who could be
++ * built at all. `post_run` is `_postRunQuorum`'s re-derivation over what
++ * actually returned a usable response. One pass emits BOTH, and they
++ * disagree whenever a member constructs and then fails mid-flight, so a
++ * consumer that counts attendance without splitting on this field
++ * double-counts every pass.
++ */
++export type QuorumEventPhase = 'pre_run' | 'post_run';
++
++/**
++ * One absent member, in the vocabulary the tree actually uses:
++ * `AbsentReason` plus the two runtime fallbacks the CLI writes directly —
++ * `'unavailable'` (transport resolved to ∅) and `'binary_missing'` (a CLI
++ * client refused to construct).
++ */
++export type QuorumAbsentReason = AbsentReason | 'unavailable' | 'binary_missing';
++
++export interface QuorumAbsence {
++    readonly member: string;
++    readonly reason: QuorumAbsentReason;
++}
++
++/**
++ * Which CLI path produced the line. `estimate` spends nothing — it is a cost
++ * preview — so every rate computed over these lines must exclude it, and it
++ * is recorded rather than suppressed so the exclusion is the consumer's
++ * explicit act instead of an invisible one.
++ */
++export type QuorumCommand = 'run' | 'estimate' | 'debate';
++
++/**
++ * `single` means `--single` filtered the roster down to one member BEFORE
++ * the pass ran. Without this field a deliberate solo dispatch is byte-identical
++ * to a configured one-member council, and the solo-conclusion rate cannot tell
++ * the two apart — which is the one distinction it exists to make.
++ */
++export type QuorumDispatch = 'full' | 'single';
++
++export interface QuorumEventInput {
++    readonly lens: string;
++    readonly invocation: string;
++    readonly phase: QuorumEventPhase;
++    readonly command: QuorumCommand;
++    readonly dispatch: QuorumDispatch;
++    /**
++     * Enabled members in the config, BEFORE `--single` / `--siblings`
++     * filtering and before construction failures. `result.total` is the
++     * roster that survived; when the two differ, the gap is exactly the
++     * "council degraded by configuration" case a post_run-only reading is
++     * otherwise blind to.
++     */
++    readonly configuredTotal: number;
++    readonly result: QuorumResult;
++    readonly absent: readonly QuorumAbsence[];
++}
++
++/**
++ * Append one `quorum_result` line — the attendance record that makes a
++ * solo-concluded pass distinguishable from a full-attendance one.
++ *
++ * Privacy floor, by construction: `QuorumAbsence` carries a member name and
++ * a closed-vocabulary reason and has **no field able to hold free-form
++ * content**. The CLI's own absent entries carry a `detail` string built from
++ * provider error text (which can embed paths and prompts); it is dropped
++ * here rather than scrubbed, so there is no scrubber to fail.
++ *
++ * Fail-open: attendance telemetry must never be able to kill a council
++ * pass, so every error — an unwritable log dir, a full disk — is swallowed
++ * and reported as `false`. `appendEvent` itself throws only on an invalid
++ * action, which this function cannot produce.
++ */
++export function appendQuorumEvent(
++    input: QuorumEventInput,
++    opts: AppendEventOptions = {},
++): boolean {
++    try {
++        return appendEvent(
++            {
++                lens: input.lens,
++                invocation: input.invocation,
++                action: 'quorum_result',
++                verdict: input.result.status,
++                phase: input.phase,
++                command: input.command,
++                dispatch: input.dispatch,
++                threshold: input.result.threshold,
++                configured_total: input.configuredTotal,
++                total: input.result.total,
++                present: input.result.present,
++                // Written by the predicate, never re-derived from the numbers
++                // downstream: one definition of "concluded on a single voice",
++                // in `quorum.ts`, so a change to it cannot leave a consumer's
++                // copy silently stale.
++                solo: isSoloConcluded(input.result),
++                absent: input.absent.map((a) => ({ member: a.member, reason: a.reason })),
++            },
++            opts,
++        );
++    } catch {
++        return false;
++    }
++}
++
+ // ── helpers ─────────────────────────────────────────────────────────
+ 
+ /**
+diff --git a/src/scripts/ai_council/quorum.ts b/src/scripts/ai_council/quorum.ts
+index 746d0782f10e1f330715bf45f2adb99e6ae7459d..b13f535ee642faf2d16f450310279e3a5ff1da11 100644
+--- a/src/scripts/ai_council/quorum.ts
++++ b/src/scripts/ai_council/quorum.ts
+@@ -82,3 +82,23 @@ export function evaluateQuorum(
+     const status: QuorumStatus = clampedPresent >= threshold ? 'concluded' : 'inconclusive';
+     return { status, threshold, total, present: clampedPresent };
+ }
++
++/**
++ * Did this pass conclude on a single voice?
++ *
++ * Derived — deliberately NOT a third `QuorumStatus`. `ceil(n / 2)` makes
++ * 1-of-2 a legitimate `concluded`, which is the intended behaviour (see the
++ * module header); this predicate does not dispute it, it only makes the
++ * shape visible so a reader can tell a one-member conclusion from a
++ * full-attendance one. Advisory render and telemetry only: no gate reads it,
++ * and nothing downstream may branch on it without its own decision record.
++ *
++ * `total` is deliberately NOT consulted. A council configured with a single
++ * member concludes solo by construction, and that is still a conclusion
++ * reached on one voice — collapsing it into "not solo" would hide exactly
++ * the passes a solo-conclusion rate is measured to find. A consumer that
++ * cares about the distinction reads `result.total` alongside.
++ */
++export function isSoloConcluded(result: QuorumResult): boolean {
++    return result.status === 'concluded' && result.present === 1;
++}
+diff --git a/src/scripts/council_cli.ts b/src/scripts/council_cli.ts
+index b32dd7ba30f1b4f214255290e98bc294a2cedd8d..139d3fa9b706a7e2052be147aa27a87a9c04fdd9 100644
+--- a/src/scripts/council_cli.ts
++++ b/src/scripts/council_cli.ts
+@@ -77,7 +77,14 @@ import { InvalidModeError, resolve_global_mode } from './ai_council/modes.js';
+ import { resolveMemberTransport } from './ai_council/transport_resolver.js';
+ import { absentReasonFromCliFailure, classifyCliFailure, type AbsentReason } from './ai_council/transport_resolver.js';
+ import { evaluateQuorum, type QuorumResult } from './ai_council/quorum.js';
+-import { appendEvent } from './ai_council/events_log.js';
++import {
++    appendEvent,
++    appendQuorumEvent,
++    type QuorumAbsence,
++    type QuorumCommand,
++    type QuorumDispatch,
++    type QuorumEventPhase,
++} from './ai_council/events_log.js';
+ import {
+     type ClassificationResult,
+     type SizeFitVerdict,
+@@ -576,6 +583,16 @@ interface BuildMembersOptions {
+      * "null = never evaluated" convention.
+      */
+     quorum_out?: { result: QuorumResult | null } | null;
++    /**
++     * Which CLI path is constructing — recorded on the `pre_run` quorum
++     * event so a consumer can exclude the paths that never run a pass.
++     * `estimate` is a spend-free preview and `run` may still abort at the
++     * necessity or size-fit gate after this point, so a `pre_run` line is
++     * evidence that construction happened, never that a pass followed;
++     * attendance rates are computed over `post_run` lines for exactly that
++     * reason. Defaults to `run` for a caller that does not say.
++     */
++    command?: QuorumCommand;
+     /**
+      * Test-only injection point, mirroring the `settings`/`members`/`table`
+      * DI pattern the CLI commands already use. Production callers never set
+@@ -630,6 +647,52 @@ function _quorum_setting_from(ai: Dict): QuorumSetting {
+     return 'majority';
+ }
+ 
++/**
++ * Emit one `quorum_result` line for a resolved quorum.
++ *
++ * Both `evaluateQuorum` call sites route through here, tagged by `phase`, so
++ * a solo-concluded pass is distinguishable from a full-attendance one in the
++ * event log — the gap `road-to-always-on-orchestration`'s Risk 6 asserted was
++ * already closed and was not.
++ *
++ * The emit sits at the call sites rather than inside `_postRunQuorum` on
++ * purpose: that function is exported and unit-tested as a pure derivation,
++ * and a write buried in it would make every test of it a log writer.
++ *
++ * `absent` entries arrive as the CLI's own `{member, reason, detail}` dicts;
++ * `detail` is dropped by `appendQuorumEvent`'s input type, which cannot carry
++ * free-form text at all.
++ */
++function _emitQuorumEvent(
++    phase: QuorumEventPhase,
++    quorum: QuorumResult,
++    absent: readonly Dict[],
++    ctx: {
++        command: QuorumCommand;
++        dispatch?: QuorumDispatch;
++        /** Enabled members before `--single` filtering; defaults to the roster that ran. */
++        configuredTotal?: number;
++        lens?: string;
++        invocation?: string;
++    },
++): void {
++    appendQuorumEvent({
++        lens: ctx.lens ?? '',
++        invocation: ctx.invocation ?? '',
++        phase,
++        command: ctx.command,
++        dispatch: ctx.dispatch ?? 'full',
++        configuredTotal: ctx.configuredTotal ?? quorum.total,
++        result: quorum,
++        absent: absent.map(
++            (a): QuorumAbsence => ({
++                member: String(a['member'] ?? ''),
++                reason: (a['reason'] as QuorumAbsence['reason']) ?? 'unavailable',
++            }),
++        ),
++    });
++}
++
+ /**
+  * Re-derive quorum AFTER the provider calls, over what was actually USABLE —
+  * never what merely CONSTRUCTED (M3, independent-review finding). `members`
+@@ -762,6 +825,18 @@ function build_members(settings: Dict, opts: BuildMembersOptions = {}): External
+     // that caller shape.
+     let total_enabled = 0;
+     let absent_count = 0;
++    // Every absence, regardless of whether the caller asked for the
++    // human-readable `skipped` out-param — the quorum event needs the
++    // member/reason pairs even when `skipped` is `null`, and reconstructing
++    // them from `absent_count` alone is impossible.
++    const absent_entries: Dict[] = [];
++    const record_absent = (entry: Dict): void => {
++        absent_count += 1;
++        absent_entries.push(entry);
++        if (skipped !== null) {
++            skipped.push(entry);
++        }
++    };
+     for (const name of Object.keys(members_cfg)) {
+         const cfg = ((members_cfg[name] as Dict) || {}) as Dict;
+         if (!_pyBool(cfg['enabled'])) {
+@@ -834,10 +909,7 @@ function build_members(settings: Dict, opts: BuildMembersOptions = {}): External
+                 reason: resolved.absentReason ?? 'unavailable',
+                 detail,
+             };
+-            absent_count += 1;
+-            if (skipped !== null) {
+-                skipped.push(entry);
+-            }
++            record_absent(entry);
+             _stderr(`[council] SKIP ${name}: ${detail}\n`);
+             continue;
+         }
+@@ -877,10 +949,7 @@ function build_members(settings: Dict, opts: BuildMembersOptions = {}): External
+                 }
+                 const detail = exc.message;
+                 const entry: Dict = { member: name, reason: 'no_auth', detail };
+-                absent_count += 1;
+-                if (skipped !== null) {
+-                    skipped.push(entry);
+-                }
++                record_absent(entry);
+                 _stderr(`[council] SKIP ${name}: ${detail}\n`);
+                 continue;
+             }
+@@ -910,10 +979,7 @@ function build_members(settings: Dict, opts: BuildMembersOptions = {}): External
+                     reason: 'binary_missing',
+                     detail,
+                 };
+-                absent_count += 1;
+-                if (skipped !== null) {
+-                    skipped.push(entry);
+-                }
++                record_absent(entry);
+                 _stderr(`[council] SKIP ${name}: ${detail}\n`);
+                 continue;
+             }
+@@ -935,6 +1001,15 @@ function build_members(settings: Dict, opts: BuildMembersOptions = {}): External
+     if (quorum_out !== null) {
+         const present = total_enabled - absent_count;
+         quorum_out.result = evaluateQuorum(total_enabled, present, _quorum_setting_from(ai));
++        // Construction-time attendance. `lens` / `invocation` stay empty
++        // here on purpose: neither is known at member-construction time,
++        // and `invocation_mode` (api / cli / manual) is a different axis
++        // that would read as the same field under a shared name.
++        // `command` IS recorded, because a preview and an aborted run both
++        // reach this line and neither is a pass.
++        _emitQuorumEvent('pre_run', quorum_out.result, absent_entries, {
++            command: opts.command ?? 'run',
++        });
+     }
+     if (members.length === 0) {
+         if (skipped && skipped.length > 0) {
+@@ -1703,6 +1778,10 @@ function cmd_estimate(
+             siblings_overrides: _parse_siblings_overrides(_getattr<string[] | null>(args, 'siblings', null)),
+             skipped,
+             quorum_out,
++            // A cost preview spends nothing and runs no pass. The line is
++            // still written — tagged, so a consumer excludes it deliberately
++            // instead of never learning it was there.
++            command: 'estimate',
+         });
+     }
+     if (table === null) {
+@@ -2538,9 +2617,29 @@ function cmd_run(
+     // (mid-flight failures appended to the same array construction-time
+     // skips already populate, so `payload['absent_members']` needs no
+     // separate wiring either).
++    // The pre-run reading, before it is overwritten — `build_members` set it
++    // from `total_enabled`, i.e. the enabled roster before `--single` filtering
++    // and before any construction failure. Without carrying it forward, a pass
++    // with 3 configured members where 2 fail to construct and 1 answers emits
++    // `{total: 1, present: 1}` and reads as full attendance.
++    const configured_total = quorum_out.result?.total ?? null;
+     const post_run = _postRunQuorum(members, responses, ai_cfg);
+     quorum_out.result = post_run.quorum;
+     skipped.push(...post_run.absent);
++    // Attendance telemetry for the reading that actually decided the pass.
++    // `post_run.absent` is the mid-flight set only; the construction-time
++    // skips already went out under `phase: 'pre_run'` from `build_members`,
++    // and merging them here would double-count a member absent in both.
++    _emitQuorumEvent('post_run', post_run.quorum, post_run.absent, {
++        command: 'run',
++        // `--single` filtered the roster to one BEFORE the pass. Without this
++        // the line is byte-identical to a configured one-member council, and
++        // the solo-conclusion rate cannot make the one distinction it exists for.
++        dispatch: _getattr(args, 'single', false) ? 'single' : 'full',
++        ...(configured_total !== null ? { configuredTotal: configured_total } : {}),
++        lens: question.mode,
++        invocation: String(_getattr(args, 'invocation', 'agent')),
++    });
+     // Phase 4.1 — verdict → handoff envelope. Same tally `render()` computes
+     // internally for the Vote Tally block (mirrored here, not imported from
+     // there, because `render()` re-derives it from the SAVED payload on a
+@@ -2817,12 +2916,21 @@ function cmd_debate(
+     const advisor_plans = _build_advisor_plans(ai_cfg, REPO_ROOT);
+     const explicit_overrides = _parse_model_overrides(_getattr<string[] | null>(args, 'model', null));
+     const skipped: Dict[] = [];
++    // Debate spends the same providers as `run`, so its attendance belongs in
++    // the same log. It carries the construction-time half only: there is no
++    // `_postRunQuorum` on this path, and adding one would need a usable-response
++    // definition for a multi-round debate that this change does not have. The
++    // gap is declared in quorum-attendance-budget.json rather than left for a
++    // reader to discover from a missing row.
++    const quorum_out: { result: QuorumResult | null } = { result: null };
+     if (members === null) {
+         members = build_members(settings, {
+             invocation_mode: args.mode_override,
+             model_overrides: _advisor_model_overrides(advisor_plans, explicit_overrides),
+             siblings_overrides: _parse_siblings_overrides(_getattr<string[] | null>(args, 'siblings', null)),
+             skipped,
++            quorum_out,
++            command: 'debate',
+         });
+     }
+     if (table === null) {
+diff --git a/tests/scripts/ai_council/events_log.test.ts b/tests/scripts/ai_council/events_log.test.ts
+index 23feee728e86b6b01900145fe11bf1d49435a5db..10cc3c2ea3325a9a6e5c4c2a4dd323dcb2aa6a1c 100644
+--- a/tests/scripts/ai_council/events_log.test.ts
++++ b/tests/scripts/ai_council/events_log.test.ts
+@@ -12,8 +12,10 @@ import { afterEach, describe, expect, it } from 'vitest';
+ import {
+     SCHEMA_VERSION,
+     appendEvent,
++    appendQuorumEvent,
+     defaultLogPath,
+ } from '../../../src/scripts/ai_council/events_log.js';
++import { evaluateQuorum } from '../../../src/scripts/ai_council/quorum.js';
+ 
+ const created: string[] = [];
+ function tmpDir(): string {
+@@ -77,27 +79,27 @@ describe('events_log — write + schema', () => {
+         expect(fs.existsSync(lp)).toBe(true);
+     });
+ 
+-    it('schema-v1 fields win over pass-through collisions', () => {
++    it('reserved schema fields win over pass-through collisions', () => {
+         const lp = path.join(tmpDir(), 'c.log');
+         appendEvent(
+             { action: 'proceed', lens: 'real', schema_version: 999, ts_utc: 'fake' },
+             { logPath: lp, now: FIXED },
+         );
+         const rec = JSON.parse(fs.readFileSync(lp, 'utf-8').trim()) as Record<string, unknown>;
+-        expect(rec.schema_version).toBe(1);
++        expect(rec.schema_version).toBe(SCHEMA_VERSION);
+         expect(rec.ts_utc).toBe('2026-06-14T08:30:15Z');
+         expect(rec.lens).toBe('real');
+     });
+ 
+     it('invalid action throws (Python ValueError parity)', () => {
+         expect(() => appendEvent({ action: 'nope' }, { logPath: path.join(tmpDir(), 'x.log') })).toThrow(
+-            "events_log: action='nope' not in ['block_quota', 'proceed', 'skip_necessity'].",
++            "events_log: action='nope' not in ['block_quota', 'proceed', 'quorum_result', 'skip_necessity'].",
+         );
+     });
+ 
+     it('missing action throws with None repr', () => {
+         expect(() => appendEvent({}, { logPath: path.join(tmpDir(), 'x.log') })).toThrow(
+-            "events_log: action=None not in ['block_quota', 'proceed', 'skip_necessity'].",
++            "events_log: action=None not in ['block_quota', 'proceed', 'quorum_result', 'skip_necessity'].",
+         );
+     });
+ 
+@@ -123,3 +125,172 @@ describe('events_log — write + schema', () => {
+     });
+ });
+ 
++
++describe('events_log — quorum attendance (schema v2)', () => {
++    function readOne(lp: string): Record<string, unknown> {
++        return JSON.parse(fs.readFileSync(lp, 'utf-8').trim()) as Record<string, unknown>;
++    }
++
++    const CTX = {
++        lens: '',
++        invocation: '',
++        phase: 'post_run',
++        command: 'run',
++        dispatch: 'full',
++    } as const;
++
++    it('pins the on-wire schema version at 2', () => {
++        // Deliberately a literal, not the constant: this module's whole
++        // contract is a versioned wire format, and an assertion written
++        // against SCHEMA_VERSION is tautological — it passes whatever the
++        // constant becomes. A bump has to break a test on purpose.
++        const lp = path.join(tmpDir(), 'wire.log');
++        appendEvent({ action: 'proceed' }, { logPath: lp, now: FIXED });
++        expect(readOne(lp).schema_version).toBe(2);
++    });
++
++    it('writes a quorum_result line carrying the attendance shape', () => {
++        const lp = path.join(tmpDir(), 'q.log');
++        expect(
++            appendQuorumEvent(
++                {
++                    ...CTX,
++                    lens: 'security',
++                    invocation: 'agent',
++                    configuredTotal: 2,
++                    result: evaluateQuorum(2, 1),
++                    absent: [{ member: 'openai', reason: 'quota' }],
++                },
++                { logPath: lp, now: FIXED },
++            ),
++        ).toBe(true);
++        const rec = readOne(lp);
++        expect(rec.action).toBe('quorum_result');
++        expect(rec.verdict).toBe('concluded');
++        expect(rec.phase).toBe('post_run');
++        expect(rec.command).toBe('run');
++        expect(rec.dispatch).toBe('full');
++        expect(rec.threshold).toBe(1);
++        expect(rec.configured_total).toBe(2);
++        expect(rec.total).toBe(2);
++        expect(rec.present).toBe(1);
++        expect(rec.solo).toBe(true);
++        expect(rec.absent).toEqual([{ member: 'openai', reason: 'quota' }]);
++        expect(rec.schema_version).toBe(SCHEMA_VERSION);
++    });
++
++    it('solo is written by the predicate, not re-derived downstream', () => {
++        const lp = path.join(tmpDir(), 'q2.log');
++        appendQuorumEvent(
++            { ...CTX, configuredTotal: 2, result: evaluateQuorum(2, 1), absent: [] },
++            { logPath: lp, now: FIXED },
++        );
++        appendQuorumEvent(
++            { ...CTX, configuredTotal: 2, result: evaluateQuorum(2, 2), absent: [] },
++            { logPath: lp, now: FIXED },
++        );
++        const lines = fs
++            .readFileSync(lp, 'utf-8')
++            .trim()
++            .split('\n')
++            .map((l) => JSON.parse(l) as Record<string, unknown>);
++        // Both concluded; only `solo` separates them, and it comes from
++        // isSoloConcluded rather than a second copy of the rule.
++        expect(lines.map((l) => l.verdict)).toEqual(['concluded', 'concluded']);
++        expect(lines.map((l) => l.solo)).toEqual([true, false]);
++    });
++
++    it('configured_total keeps a construction-degraded pass distinguishable', () => {
++        // 3 configured, 2 failed to construct, 1 answered. Without
++        // configured_total the line reads {total:1, present:1} — full
++        // attendance — which is the exact case the metric exists to catch.
++        const lp = path.join(tmpDir(), 'q3.log');
++        appendQuorumEvent(
++            { ...CTX, configuredTotal: 3, result: evaluateQuorum(1, 1), absent: [] },
++            { logPath: lp, now: FIXED },
++        );
++        const rec = readOne(lp);
++        expect(rec.configured_total).toBe(3);
++        expect(rec.total).toBe(1);
++        expect(rec.present).toBe(1);
++    });
++
++    it('dispatch separates a --single pass from a one-member council', () => {
++        const lp = path.join(tmpDir(), 'q4.log');
++        const one = { ...CTX, configuredTotal: 1, result: evaluateQuorum(1, 1), absent: [] };
++        appendQuorumEvent({ ...one, dispatch: 'single' }, { logPath: lp, now: FIXED });
++        appendQuorumEvent({ ...one, dispatch: 'full' }, { logPath: lp, now: FIXED });
++        const lines = fs
++            .readFileSync(lp, 'utf-8')
++            .trim()
++            .split('\n')
++            .map((l) => JSON.parse(l) as Record<string, unknown>);
++        // Identical numbers on both lines — `dispatch` is the only thing that
++        // tells a deliberate solo dispatch from a council configured with one
++        // member, and both are `solo: true`.
++        expect(lines.map((l) => l.solo)).toEqual([true, true]);
++        expect(lines.map((l) => l.total)).toEqual([1, 1]);
++        expect(lines.map((l) => l.dispatch)).toEqual(['single', 'full']);
++    });
++
++    it('command marks the paths that never run a pass', () => {
++        const lp = path.join(tmpDir(), 'q5.log');
++        appendQuorumEvent(
++            {
++                ...CTX,
++                phase: 'pre_run',
++                command: 'estimate',
++                configuredTotal: 2,
++                result: evaluateQuorum(2, 2),
++                absent: [],
++            },
++            { logPath: lp, now: FIXED },
++        );
++        expect(readOne(lp).command).toBe('estimate');
++    });
++
++    it('carries no free-form field a detail string could land in', () => {
++        const lp = path.join(tmpDir(), 'q6.log');
++        appendQuorumEvent(
++            {
++                ...CTX,
++                configuredTotal: 2,
++                result: evaluateQuorum(2, 0),
++                // A caller handing over the CLI's own richer dict must not be
++                // able to smuggle `detail` (provider error text, which can embed
++                // paths and prompt fragments) through the typed surface.
++                absent: [{ member: 'anthropic', reason: 'timeout', detail: '/Users/me/secret' } as never],
++            },
++            { logPath: lp, now: FIXED },
++        );
++        const rec = readOne(lp);
++        expect(rec.absent).toEqual([{ member: 'anthropic', reason: 'timeout' }]);
++        expect(JSON.stringify(rec)).not.toContain('secret');
++    });
++
++    it('fails open — an unwritable target returns false instead of throwing', () => {
++        const dir = tmpDir();
++        const blocker = path.join(dir, 'blocked');
++        fs.writeFileSync(blocker, 'not a directory');
++        // `blocker` is a file, so mkdir of `blocker/x` raises ENOTDIR inside
++        // appendEvent — attendance telemetry must swallow it.
++        expect(
++            appendQuorumEvent(
++                { ...CTX, configuredTotal: 1, result: evaluateQuorum(1, 1), absent: [] },
++                { logPath: path.join(blocker, 'x', 'q.log'), now: FIXED },
++            ),
++        ).toBe(false);
++    });
++
++    it('honours the kill-switch like every other event', () => {
++        process.env.AGENT_CONFIG_NO_EVENTS_LOG = '1';
++        const lp = path.join(tmpDir(), 'q7.log');
++        expect(
++            appendQuorumEvent(
++                { ...CTX, configuredTotal: 1, result: evaluateQuorum(1, 1), absent: [] },
++                { logPath: lp },
++            ),
++        ).toBe(false);
++        expect(fs.existsSync(lp)).toBe(false);
++    });
++});
+diff --git a/tests/scripts/ai_council/quorum.test.ts b/tests/scripts/ai_council/quorum.test.ts
+index 93f28dce859c8556c905b0405d6b7214fa0bec04..8f52ea13813676f98e7d8bb1a196bf329fdd10c2 100644
+--- a/tests/scripts/ai_council/quorum.test.ts
++++ b/tests/scripts/ai_council/quorum.test.ts
+@@ -4,6 +4,7 @@ import { describe, expect, it } from 'vitest';
+ 
+ import {
+     evaluateQuorum,
++    isSoloConcluded,
+     resolveQuorumThreshold,
+ } from '../../../src/scripts/ai_council/quorum.js';
+ 
+@@ -100,3 +101,35 @@ describe('evaluateQuorum', () => {
+         expect(evaluateQuorum(0, 0).status).toBe('concluded');
+     });
+ });
++
++describe('isSoloConcluded — the 1-of-n conclusion, made visible', () => {
++    it('1-of-2 concluded is solo — the case ceil(n/2) makes legal and invisible', () => {
++        expect(isSoloConcluded(evaluateQuorum(2, 1))).toBe(true);
++    });
++
++    it('full attendance is never solo', () => {
++        expect(isSoloConcluded(evaluateQuorum(2, 2))).toBe(false);
++        expect(isSoloConcluded(evaluateQuorum(3, 2))).toBe(false);
++    });
++
++    it('an inconclusive pass is never solo, whatever present is', () => {
++        // 1 of 3 needs 2 → inconclusive. It carries one voice and is still
++        // not a solo *conclusion*: nothing was concluded.
++        expect(isSoloConcluded(evaluateQuorum(3, 1))).toBe(false);
++    });
++
++    it('a one-member council counts as solo — configured, not degraded', () => {
++        // Deliberate: a conclusion reached on one voice is the thing being
++        // measured, and n=1 reaches it by construction. Callers that care
++        // read `total` alongside.
++        expect(isSoloConcluded(evaluateQuorum(1, 1))).toBe(true);
++    });
++
++    it('n=0 concludes trivially and is not solo — there is no voice at all', () => {
++        expect(isSoloConcluded(evaluateQuorum(0, 0))).toBe(false);
++    });
++
++    it('a fixed k=1 over 3 members still reads solo at present=1', () => {
++        expect(isSoloConcluded(evaluateQuorum(3, 1, 1))).toBe(true);
++    });
++});

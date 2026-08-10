@@ -53,7 +53,7 @@ from.
 
 ## Phase 1 — Attendance becomes machine-readable
 
-- [ ] **1.1 Add a `quorum_result` event.** Extend `EventAction`
+- [x] **1.1 Add a `quorum_result` event.** Extend `EventAction`
       (`ai_council/events_log.ts:30`) **and** `_VALID_ACTIONS` (`:32-36`) — both,
       or `appendEvent` throws at `:162`. Payload: `status`, `threshold`, `total`,
       `present`, `absent[{member, reason}]`; these ride the non-reserved
@@ -65,7 +65,7 @@ from.
       in a `try`, which is the fail-open shape. Bump `SCHEMA_VERSION` (`:28`) per
       the module's own byte-parity convention (`:18-21`).
       <!-- verify: task test -- --filter=events_log -->
-- [ ] **1.2 Use the tree's real absent-reason vocabulary.** The source file drafted
+- [x] **1.2 Use the tree's real absent-reason vocabulary.** The source file drafted
       `(binary_missing, quota, timeout, error)`; three of four tokens are wrong.
       The real set is `AbsentReason = 'no_binary' | 'no_auth' | 'timeout' |
       'quota'` (`ai_council/transport_resolver.ts:65`), plus the runtime fallback
@@ -73,7 +73,7 @@ from.
       `'binary_missing'` at `council_cli.ts:910`. The event records what the
       caller already computed; it introduces no sixth token.
       <!-- verify: task test -- --filter=transport_resolver -->
-- [ ] **1.3 Add `isSoloConcluded(q)` as a derived predicate** in
+- [x] **1.3 Add `isSoloConcluded(q)` as a derived predicate** in
       `ai_council/quorum.ts`, beside `evaluateQuorum` (`:75`). Deliberately **not**
       a third `QuorumStatus`: the two-state enum (`:29`) and `ceil(n/2)` (`:63`)
       stay untouched, because the ceil-vs-floor divergence is a recorded decision
@@ -85,7 +85,7 @@ from.
       `session.ts:109`/`:550` already carry the artifact and manifest halves, so
       this is one line in an existing renderer, not a new surface.
       <!-- verify: task test -- --filter=orchestrator -->
-- [ ] **1.5 Register the three omitted metrics in a budget JSON, not roadmap
+- [x] **1.5 Register the three omitted metrics in a budget JSON, not roadmap
       prose** — attendance rate, solo-conclusion rate, absent-reason
       distribution. The schema and the honest-gap convention both already exist:
       `src/config/hook-token-budget.json` carries
@@ -93,6 +93,10 @@ from.
       (`:44`, `:53-62`), and `src/config/recycle-threshold-budget.json` carries
       `registered_at` / `owner` / `review_by` / `honest_null_consequence`
       (`:4-6`, `:11`). Registration precedes data; no threshold is committed here.
+      Landed as `src/config/quorum-attendance-budget.json`, with a fourth row
+      (`roster_shortfall_rate`) two review rounds forced: attendance alone could
+      not see a council degraded before the pass, and one ratio over config
+      entries vs clients was unbounded under `--siblings`.
 - [~] **1.6 Solo-attendance floor.** Deferred behind `blocker: quorum-solo-floor`
       below — the rate cannot be read before 1.1 accumulates it. 1.1–1.5 ship and
       are useful without it.

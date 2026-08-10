@@ -1,0 +1,39 @@
+{
+    "_comment": "Pre-registered council ATTENDANCE metrics (road-to-inbox-harvest-2026-08-b Phase 1.4). Registered here rather than in roadmap prose because a roadmap is archived when it closes and a metric outlives it — the sibling budget files (hook-token-budget.json, recycle-threshold-budget.json) already carry the owner / review_by / honest-gap discipline this reuses. The instrument is the quorum_result line appendQuorumEvent writes to agents/runtime/council/events.log (schema v2); nothing here is measured yet, and no threshold is committed before data exists.",
+    "schema_version": 1,
+    "registered_at": "2026-08-10",
+    "owner": "maintainer",
+    "review_by": "2026-11-10",
+    "unit": "quorum_result event lines in agents/runtime/council/events.log",
+    "privacy": "a quorum_result line carries {phase, command, dispatch, verdict, threshold, configured_total, total, present, solo, absent[{member, reason}]} — counts, closed vocabularies, and member ids only. The type has no field able to hold free-form content, so the CLI's own `detail` string (provider error text, which can embed paths and prompt fragments) is dropped at the boundary rather than scrubbed.",
+    "phase_split": "A pass emits `pre_run` (build_members — who could be constructed) and, on the `run` path, `post_run` (_postRunQuorum — who actually returned a usable response). They disagree whenever a member constructs and then fails mid-flight, so a rate computed over both double-counts. A `pre_run` line is NOT evidence a pass ran: `command: estimate` is a spend-free preview, and a `run` / `debate` line is written before the `--confirm` gate (which defaults to false and returns before any provider call) and before the necessity and size-fit gates. A `post_run` line is the only line that proves providers were called — which is why every rate below is post_run-scoped, and why `command` exists at all.",
+    "attendance_rate": {
+        "definition": "of the members that entered the pass, how many answered: present / total per post_run pass. Bounded by 1 by construction (evaluateQuorum clamps present into [0, total]).",
+        "instrument": "quorum_result lines, phase=post_run, command=run, fields present + total",
+        "threshold": "none committed before data — baseline first, threshold at review date"
+    },
+    "roster_shortfall_rate": {
+        "definition": "how often the council shrank BEFORE the pass: share of post_run passes with total < configured_total, plus the size of the gap. This is the half attendance_rate cannot see — a pass with 3 configured, 2 failing to construct and 1 answering reads 1/1 = 100 % attendance and a shortfall of 2. Both numbers are needed and neither substitutes for the other; a single ratio over mixed rosters is the error this pair replaces.",
+        "instrument": "quorum_result lines, phase=post_run, command=run, configured_total vs total",
+        "threshold": "none committed before data — baseline first, threshold at review date",
+        "not_an_error": "total > configured_total is legitimate and not a shortfall: `--siblings` fans ONE enabled config entry into N clients, so the client roster can exceed the entry count. configured_total counts enabled config ENTRIES; total counts CLIENTS. Compare them for direction, never divide one by the other."
+    },
+    "solo_conclusion_rate": {
+        "definition": "share of post_run passes with `solo: true` — written by the isSoloConcluded predicate in quorum.ts, never re-derived from the numbers here, so one change to the rule cannot leave this definition stale. ceil(n/2) makes 1-of-2 a legitimate conclusion; this measures how often that legitimacy is used, not whether it should be. THREE cases carry solo: true and they are not the same finding — a degraded multi-member council (configured_total > 1), a council configured with one member (configured_total = 1, dispatch = full), and a deliberate --single dispatch (dispatch = single). Split on dispatch and configured_total before reading the rate.",
+        "instrument": "quorum_result lines, phase=post_run, command=run, field solo, split by dispatch + configured_total",
+        "threshold": "none committed before data. The quorum-solo-floor blocker pre-registers the three outcomes this rate decides between — a third CLI member, a gate-scoped min_present: 2, or a published null under 5 % — and that choice is made against real data, never ahead of it. It is decided on the degraded case only; a --single pass is the operator asking for one voice, not the council failing to assemble."
+    },
+    "absent_reason_distribution": {
+        "definition": "count per reason over absent[] entries — no_binary / no_auth / timeout / quota (AbsentReason) plus the two runtime fallbacks the CLI writes directly, `unavailable` (transport resolved to nothing) and `binary_missing` (a CLI client refused to construct). Distinguishes a council degraded by configuration from one degraded by provider behaviour, which have opposite fixes.",
+        "instrument": "quorum_result lines, absent[].reason, split by phase (a pre_run absence is configuration; a post_run absence is mid-flight). Excluding `command: estimate` is NOT sufficient: `run` and `debate` also reach construction and return at the `--confirm` gate, which defaults to false. The reliable filter is a pre_run line whose pass produced a matching post_run line; a pre_run line with no post_run partner reached construction and stopped there, whatever its command says.",
+        "threshold": "none committed before data — the distribution IS the finding at review date",
+        "merge_before_reading": "`no_binary` and `binary_missing` are two spellings of one condition — the CLI binary is unusable — written by different code paths (transport_resolver's static classification vs the CLI client's construction failure). They are recorded separately because that is what the tree emits, not because they are separate findings; merge them before reading the distribution, or the largest bucket is split in two."
+    },
+    "honest_null_consequence": "If the log accumulates and the solo-conclusion rate sits near zero, that is the published answer to the quorum-solo-floor blocker and 1.5 is cancelled against it — not quietly dropped. If attendance data never accumulates at all (nobody runs a metered council pass in the window), that is reported as an unmeasured metric at the review date, never as a passing one.",
+    "honest_gaps": [
+        "`lens` and `invocation` are empty on every pre_run line — neither is known at member-construction time — so any per-lens breakdown is post_run-only.",
+        "`command: debate` carries the pre_run half ONLY. There is no _postRunQuorum on the debate path, and defining `usable response` for a multi-round debate is a separate question this registration does not answer. So debate contributes to absent_reason_distribution and to nothing else: attendance_rate and solo_conclusion_rate cover the `run` path, and a reader must not read them as covering every metered pass.",
+        "A pre_run line proves construction happened, never that a pass followed — the `--confirm` gate (default false), the necessity gate and the size-fit gate all abort afterwards and nothing on the line records it. Any count over pre_run lines is an upper bound; pair it with a post_run line before treating it as a pass.",
+        "The CLI emit wiring itself has no test. The two modules are covered directly, but nothing exercises build_members / cmd_run / cmd_debate end-to-end against a captured log — and `_emitQuorumEvent` forwards no AppendEventOptions, so there is no target to capture into. Two defects in this file's first version (a `dispatch` written from the flag rather than the outcome, and a rate mixing config entries with clients) were found by review rather than by a test, which is what that gap costs."
+    ]
+}
