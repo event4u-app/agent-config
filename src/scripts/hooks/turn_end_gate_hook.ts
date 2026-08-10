@@ -257,6 +257,23 @@ export function readLanguagePin(workspaceRoot: string): Verdict {
  * Fires only when the classifier is CONFIDENT the prose is the other
  * language. `classify` returns `und` below its marker floor, and `und`
  * never fires — a short reply is not evidence of drift.
+ *
+ * WHAT IS ACTUALLY CLASSIFIED, stated accurately because R2 finding 9 caught
+ * this file claiming otherwise in three places. `visibleProse` strips code,
+ * quotes, tables, URLs and paths from the whole reply — but `classify` then
+ * applies `instructionText` (which drops output-shaped lines and their
+ * followers) and `humanAuthoredLead`, and RETURNS ON THE LEAD ALONE when the
+ * lead is determined. So in the common case the verdict comes from the reply's
+ * opening chunk, not from all of it, and indented prose is discarded before
+ * scoring.
+ *
+ * That is deliberately left as-is rather than swapped for a full-text scorer:
+ * sharing one classifier with `language_mirror_hook` is what stops the pin and
+ * the detector disagreeing about what language a turn is in, and changing the
+ * scoring surface would change the measured rate, which needs its own
+ * measurement rather than a quiet edit. What is fixed here is the CLAIM —
+ * including the one this function used to put in its own refusal text, where an
+ * inflated description of the evidence is worst.
  */
 export function detectLanguage(reply: string, pinned: Verdict): Finding | null {
     if (pinned !== 'de' && pinned !== 'en') return null;
@@ -268,9 +285,10 @@ export function detectLanguage(reply: string, pinned: Verdict): Finding | null {
         detector: 'language',
         evidence: prose.trim().slice(0, 120),
         reason:
-            `the pinned reply language is "${pinned}" but the user-visible prose classifies as ` +
-            `"${verdict.language}" (${verdict.de_markers} de / ${verdict.en_markers} en markers, ` +
-            'code, quotes, paths and identifiers already excluded)',
+            `the pinned reply language is "${pinned}" but the reply classifies as ` +
+            `"${verdict.language}" (${verdict.de_markers} de / ${verdict.en_markers} en markers; ` +
+            'code, quotes, tables, URLs and paths excluded, then scored lead-first ' +
+            'by the same classifier that sets the pin)',
     };
 }
 

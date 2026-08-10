@@ -402,42 +402,60 @@ part twice is how a second detector becomes a second outage.
   `language-and-tone` already states. Record measured precision per detector; a
   detector that cannot clear a stated bar registers as detection-only and the
   roadmap says so.
-  <!-- MEASURED, and reproducible rather than asserted:
-  `./scripts-run src/scripts/measure_turn_end_gate --store <claude transcript
-  dir> --limit 30`, run 2026-08-09 over the SAME 30-session store round 5
-  scanned — 2157 assistant turns.
+  <!-- SUPERSEDED 2026-08-10 by R2 finding 1. The figures below were WRONG in
+  unit and are kept, struck, because a corrected number that hides what it
+  replaced teaches nothing:
 
-    detector A (promissory)  fires on   28 turns   1.3%
-    detector B (language)    fires on  388 turns  18.0%
-      of which the independent scanner also flagged   360
-      fired where the scanner saw nothing              28
+    ~~2157 assistant turns · detector A 28 / 1.3% · detector B 388 / 18.0%
+      of which the scanner also flagged 360 · scanner-silent 28~~
 
-  READ B FIRST, because it is the uncomfortable one. An 18% fire rate on a
-  BLOCKING guard means roughly one refused turn in five and a half. That is not
-  a false-positive rate — `conformance_scan` independently counted 408 language
-  violations (18.9%) over the same window, and the two instruments agree on 360
-  of this detector's 388 fires. The violations are real. But "real" and
-  "shippable default-on" are different claims, and a mechanism that would have
-  refused nearly a fifth of all turns is precisely the one the round-6 council
-  said must soak behind an opt-in first. This measurement is the strongest
-  single argument for the default-OFF decision recorded in 3.6, and it was taken
-  BEFORE that decision could be rationalised by it.
+  The instrument scored every assistant ENTRY and labelled the result per turn,
+  while the gate only ever evaluates the LAST assistant text of a turn. So the
+  population was ~8.6x too large, detector A — a *closing*-paragraph detector by
+  construction — was scored over mid-turn prose, and the "agree on 360" cell was
+  per-session min/max arithmetic that reports disjoint findings of equal count
+  as full agreement (R2 finding 7).
+
+  CORRECTED, same command, same store, run 2026-08-10 after the instrument was
+  fixed to score one sample per turn:
+
+    30 sessions · 259 turns · 2228 assistant entries
+    detector A (promissory)  fires on 24 turns   9.3%
+    detector B (language)    fires on 39 turns  15.1%
+    scanner's own language total, for context only: 408 (NOT an agreement figure)
+
+  READ A FIRST, and note the correction cuts the other way from what a rewrite
+  would flatter: the dangerous figure was the OPTIMISTIC one. Detector A at
+  "1.3%" looked nearly free; per turn it refuses about one in eleven. Together
+  the two detectors would refuse roughly a quarter of all turns. That makes the
+  default-OFF decision recorded in 3.6 better supported than the original number
+  did, not worse — but the original number could not have supported it, because
+  it measured something else.
+
+  One thing the fix bought that the old number could not: 24 fires against the
+  audit's 20 turn-closings is now a comparison in the SAME unit, so it is worth
+  making at all. The earlier "28 vs 20, the same order" was two units.
+
+  The scanner total is reported beside these rates and NOT as an overlap: the two
+  instruments read different spans (its first prose line vs. this whole stripped
+  reply) and the script does no per-turn matching, so no agreement figure is
+  derivable from the two totals.
 
   The 28 fire-where-the-scanner-saw-nothing turns are candidate false positives,
-  NOT confirmed ones: the scanner reads the first prose line and this detector
-  reads the whole stripped reply, so the instruments disagree in both directions
-  (the scanner flagged 48 this detector did not). Neither set was hand-audited;
-  saying so is cheaper than implying an audit that did not happen.
+  NOT confirmed ones — ~~the scanner flagged 48 this detector did not~~, another
+  cell derived from the same broken arithmetic and withdrawn with it. Neither set
+  was hand-audited; saying so is cheaper than implying an audit that did not
+  happen.
 
   DETECTOR A HAS NO RECALL FIGURE, and the reason is structural rather than
   lazy. `conformance_scan.ts` states in its own header that promissory closings
   are "deliberately NOT scanned"; the round-5 audit's 20 occurrences came from
   subagent transcript READING, so there is no machine-readable ground truth to
-  score against and no way to re-derive those 20 spans. What can be said: the
-  detector fires 28 times over the same window against the audit's reported 20 —
-  the same order, slightly wider. Whether the extra 8 are additional true
-  positives or false ones is unresolved, and this line is the honest form of
-  that.
+  score against and no way to re-derive those 20 spans. What can be said, and
+  only since the per-turn fix: the detector fires **24** times over the same
+  window against the audit's reported 20 — the same unit at last, and close.
+  Whether the extra 4 are additional true positives or false ones is unresolved,
+  and this line is the honest form of that.
 
   The step's literal ask — "must fire on the 20 measured occurrences" — is
   therefore NOT satisfiable as written, and is recorded as such instead of being
