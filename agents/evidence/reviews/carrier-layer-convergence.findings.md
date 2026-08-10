@@ -1,10 +1,10 @@
 # Findings: carrier-layer-convergence
-<!-- completion-review: v1 | reviewed: 2026-08-10 | scope: f494e78b7c8a43d2b3cd000302df6f77a45a2e68031478f509732f6ea75df618 | diff: 195523465db8fabb84be3f4ad27f8293cf5e4ac5 | reviewer: r2-fresh-subagent-carrier-layer-convergence | prompt_hash: d6db1729b27a90432716265ac5c5bf386459555e6322eaeed16000983fe231f8 -->
+<!-- completion-review: v1 | reviewed: 2026-08-10 | scope: 488f707ed5bed63b74c568a83a4fd447cf1c3fdc1cf9d7888fd8c13b7bf9f287 | diff: 195523465db8fabb84be3f4ad27f8293cf5e4ac5 | reviewer: r2-fresh-subagent-carrier-layer-convergence | prompt_hash: d6db1729b27a90432716265ac5c5bf386459555e6322eaeed16000983fe231f8 -->
 
 <!-- context-manifest: v1
 inputs:
   diff_sha: 195523465db8fabb84be3f4ad27f8293cf5e4ac5
-  scope_hash: f494e78b7c8a43d2b3cd000302df6f77a45a2e68031478f509732f6ea75df618
+  scope_hash: 488f707ed5bed63b74c568a83a4fd447cf1c3fdc1cf9d7888fd8c13b7bf9f287
   roadmap: agents/roadmaps/road-to-carrier-layer-convergence.md
   roadmap_hash: b47ba58a310005fb4b55e42c6658a7c8811adedaae46ffe9c93880a380a0107c
   ac_hash: d81df67982028afbaab2d9e1a238d4a19a3f72ac9a8c8dc375c6c4941ced7077
@@ -20,7 +20,12 @@ the head the reviewer actually read: that field is provenance and never compared
 and moving it would misrepresent when the review ran. `reviewer:` and `prompt_hash`
 are unchanged for the same reason — they identify who produced these rows and with
 which prompt. The review-input/ package is likewise left as the reviewer read it.
-No second dispatch: this is the same round, re-bound (2.7).
+No second dispatch: this is the same round, re-bound (2.7). Re-bound twice, and
+the second time is the mechanic worth naming: the first re-bind shipped the
+dashboard-total correction in the SAME commit, so it recorded the scope from
+before that file entered the diff. A re-bind commit that touches only this
+artefact is the fixed point, because agents/evidence/reviews is excluded from
+the scope by construction (2.0).
 The round ran on branch feat/carrier-layer-convergence; PR #1250 merged before the
 fixes landed, so the round and its repairs ship here instead. -->
 
