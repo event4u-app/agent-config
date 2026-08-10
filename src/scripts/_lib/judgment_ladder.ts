@@ -467,9 +467,9 @@ export function classifyLadder(inp: LadderInputs): LadderResult {
 export type RungStatus = 'taken' | 'rejected' | 'not-reached';
 
 export interface RungEvaluation {
-    rung: 0 | 1 | 2 | 3 | 4;
+    rung: 0 | 0.5 | 1 | 2 | 3 | 4;
     /** The verdict this rung resolves to when taken. */
-    resolves_to: 'script' | 'subagent' | 'team' | 'council';
+    resolves_to: 'script' | 'ask' | 'subagent' | 'team' | 'council';
     status: RungStatus;
     reason: string;
 }
@@ -477,7 +477,13 @@ export interface RungEvaluation {
 export interface LadderExplanation {
     /** The authoritative resolution — exactly `classifyLadder(inp)`. */
     result: LadderResult;
-    /** Per-rung trail in the resolver's fixed priority order: 0, 4, 3, 2, 1. */
+    /**
+     * Per-rung trail in the resolver's fixed priority order: 0, 4, 3, 2, 0.5, 1.
+     *
+     * 0.5 sits where the resolver checks it — inside the size-floor branch,
+     * after rung 2's verdict and before rung 1 — not where its number would
+     * sort. The order IS the contract, so the trail follows the walk.
+     */
     trail: RungEvaluation[];
     /** Present only when `result.rung` is null (∅) — the why-no-spawn reason. */
     no_spawn_reason?: string;
@@ -557,15 +563,23 @@ export function explainLadder(inp: LadderInputs): LadderExplanation {
     if (gate !== null || resolvedAbove) {
         const why = gate ?? `resolved at rung ${result.rung}`;
         trail.push({ rung: 2, resolves_to: 'subagent', status: 'not-reached', reason: notReached(why) });
+        trail.push({ rung: 0.5, resolves_to: 'ask', status: 'not-reached', reason: notReached(why) });
         trail.push({ rung: 1, resolves_to: 'subagent', status: 'not-reached', reason: notReached(why) });
     } else {
         const classification = classifyTask(inp.signals, inp.activation);
         if (result.rung === 2) {
             trail.push({ rung: 2, resolves_to: 'subagent', status: 'taken', reason: result.reason });
+            trail.push({ rung: 0.5, resolves_to: 'ask', status: 'not-reached', reason: notReached('resolved at rung 2') });
             trail.push({ rung: 1, resolves_to: 'subagent', status: 'not-reached', reason: notReached('resolved at rung 2') });
         } else {
             trail.push({ rung: 2, resolves_to: 'subagent', status: 'rejected', reason: classification.reason });
             if (result.rung === 1) {
+                trail.push({
+                    rung: 0.5,
+                    resolves_to: 'ask',
+                    status: 'not-reached',
+                    reason: notReached(`task above the size floor (${inp.signals.size_estimate} > ${SIZE_FLOOR}) — rung 0.5 is reachable only below it`),
+                });
                 trail.push({ rung: 1, resolves_to: 'subagent', status: 'taken', reason: result.reason });
             } else if (result.degraded_from === 3) {
                 // The communication branch returns from INSIDE rung 3's handling
@@ -577,13 +591,25 @@ export function explainLadder(inp: LadderInputs): LadderExplanation {
                 // session-context burn". A maintainer asking why nothing spawned
                 // was told rung 1 declined, hiding the missing agent_teams
                 // capability that actually ended the walk.
-                trail.push({
-                    rung: 1,
-                    resolves_to: 'subagent',
-                    status: 'not-reached',
-                    reason: notReached('the rung-3 communication branch resolved before rung 1 was consulted'),
-                });
+                const skipped = notReached('the rung-3 communication branch resolved before it was consulted');
+                trail.push({ rung: 0.5, resolves_to: 'ask', status: 'not-reached', reason: skipped });
+                trail.push({ rung: 1, resolves_to: 'subagent', status: 'not-reached', reason: skipped });
             } else if (inp.signals.size_estimate <= SIZE_FLOOR) {
+                // Rung 0.5 lives INSIDE the resolver's floor branch, between rung
+                // 2 and rung 1, so it is reachable only here. Emitting it in that
+                // position keeps the trail's order the resolver's order; omitting
+                // it (as this trail did before the rung landed) would report a
+                // walk that skipped a rung the resolver actually consulted.
+                if (result.rung === 0.5) {
+                    trail.push({ rung: 0.5, resolves_to: 'ask', status: 'taken', reason: result.reason });
+                } else {
+                    trail.push({
+                        rung: 0.5,
+                        resolves_to: 'ask',
+                        status: 'rejected',
+                        reason: detectBoundedQuestion(inp.taskText).reason,
+                    });
+                }
                 trail.push({
                     rung: 1,
                     resolves_to: 'subagent',
@@ -591,6 +617,14 @@ export function explainLadder(inp: LadderInputs): LadderExplanation {
                     reason: `task below size floor (${inp.signals.size_estimate} <= ${SIZE_FLOOR}) — rung 1 never bypasses the floor`,
                 });
             } else {
+                // Above the floor the resolver never enters the branch rung 0.5
+                // lives in, so it was not consulted — not declined.
+                trail.push({
+                    rung: 0.5,
+                    resolves_to: 'ask',
+                    status: 'not-reached',
+                    reason: notReached(`task above the size floor (${inp.signals.size_estimate} > ${SIZE_FLOOR}) — rung 0.5 is reachable only below it`),
+                });
                 trail.push({ rung: 1, resolves_to: 'subagent', status: 'rejected', reason: detectBoundedReadHeavySlice(inp.taskText).reason });
             }
         }

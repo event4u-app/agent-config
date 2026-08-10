@@ -103,8 +103,11 @@ describe('explain_run --decision — through the CLI dispatcher path', () => {
         expect(r.code).toBe(0);
         expect(r.stdout).toContain('Resolved: rung ∅ (never spawns) — verdict `in-session`');
         expect(r.stdout).toContain('Why no spawn: task below size floor (0 <= 1)');
-        // Every rung was genuinely evaluated and rejected — none taken, none skipped.
-        for (const rung of [0, 4, 3, 2, 1]) {
+        // Every rung was genuinely evaluated and rejected — none taken, none
+        // skipped. 0.5 is included: below the floor the resolver DOES consult it,
+        // so a `not-reached` row for it here would be the same fabrication in
+        // reverse.
+        for (const rung of ['0', '4', '3', '2', '0\\.5', '1']) {
             expect(r.stdout).toMatch(new RegExp(`\\| ${rung} \\| \\S+ \\| rejected \\|`));
         }
         expect(r.stdout).not.toContain('| taken |');
@@ -123,7 +126,7 @@ describe('explain_run --decision — through the CLI dispatcher path', () => {
         ]);
         expect(r.code).toBe(0);
         expect(r.stdout).toContain('| 1 | subagent | not-reached |');
-        expect(r.stdout).toContain('the rung-3 communication branch resolved before rung 1 was consulted');
+        expect(r.stdout).toContain('the rung-3 communication branch resolved before it was consulted');
         // The regression this pins: the old trail said `rejected` and quoted the
         // matching detector's own words.
         expect(r.stdout).not.toMatch(/\| 1 \| subagent \| rejected \|.*one lite-tier subagent/);
@@ -143,6 +146,27 @@ describe('explain_run --decision — through the CLI dispatcher path', () => {
         const missing = runCli(['--decision']);
         expect(missing.code).toBe(2);
         expect(missing.stderr).toContain('--decision requires a value');
+    });
+
+    it('(f) rung 0.5 appears where the resolver checks it — taken below the floor, not-reached above', () => {
+        // The bounded-question rung landed on main while this trail was being
+        // built (road-to-token-economy-dispatch Phase 4). It lives INSIDE the
+        // size-floor branch, so the trail must show it between rung 2 and rung 1
+        // rather than where its number would sort — and above the floor the
+        // resolver never enters that branch, so it is not-reached, not declined.
+        const below = runCli([
+            '--decision', 'What is the difference between a rule and a skill?',
+            ...isolationArgs(),
+        ]);
+        expect(below.code).toBe(0);
+        expect(below.stdout).toContain('| 0.5 | ask | taken |');
+
+        // Above the floor with no multi-slice shape: rung 2 declines on signals,
+        // so the walk reaches the branch rung 0.5 does NOT live in.
+        const above = runCli(['--decision', 'summarize this module', '--size-estimate', '3', ...isolationArgs()]);
+        expect(above.code).toBe(0);
+        expect(above.stdout).toContain('| 0.5 | ask | not-reached |');
+        expect(above.stdout).toContain('rung 0.5 is reachable only below it');
     });
 
     it('(c) missing telemetry record → honest no-record line, never a fabricated estimate', () => {
