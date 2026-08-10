@@ -448,18 +448,18 @@ describe("run — the locale fallback end to end", () => {
 // is what these tests are about — not the injection.
 // ---------------------------------------------------------------------------
 
-function compactEnvelope(): string {
-  return JSON.stringify({ event: "pre_compact", session_id: "s1", platform: "claude", payload: {} });
+function compactEnvelope(session_id = "s1"): string {
+  return JSON.stringify({ event: "pre_compact", session_id, platform: "claude", payload: {} });
 }
 
-function toolEnvelope(): string {
-  return JSON.stringify({ event: "post_tool_use", session_id: "s1", platform: "claude", payload: {} });
+function toolEnvelope(session_id = "s1"): string {
+  return JSON.stringify({ event: "post_tool_use", session_id, platform: "claude", payload: {} });
 }
 
 describe("the compaction boundary (6.1)", () => {
   it("pre_compact writes the marker and emits nothing itself", () => {
     expect(run(compactEnvelope(), { consumer_root: tmp })).toBe(0);
-    expect(_pinLost(tmp)).toBe(true);
+    expect(_pinLost(tmp, "s1")).toBe(true);
   });
 
   it("post_tool_use re-emits the pin ONCE, then goes quiet", () => {
@@ -473,7 +473,7 @@ describe("the compaction boundary (6.1)", () => {
     // injection per compaction EVENT, not one per call.
     expect(run(toolEnvelope(), { consumer_root: tmp })).toBe(0);
     expect(run(toolEnvelope(), { consumer_root: tmp })).toBe(0);
-    expect(_pinLost(tmp)).toBe(false);
+    expect(_pinLost(tmp, "s1")).toBe(false);
   });
 
   it("post_tool_use is silent when no compaction happened — the common path", () => {
@@ -486,7 +486,21 @@ describe("the compaction boundary (6.1)", () => {
     expect(run(toolEnvelope(), { consumer_root: tmp })).toBe(0);
     // The marker is still consumed, so a missing pin cannot arm a permanent
     // re-fire on every later tool call.
-    expect(_pinLost(tmp)).toBe(false);
+    expect(_pinLost(tmp, "s1")).toBe(false);
+  });
+
+  it("R2-10: one session cannot consume another session's marker", () => {
+    // A single shared marker made this cross-talk between concurrent sessions —
+    // the normal shape for this repo's worktree workflow. Session B used to
+    // consume the marker A's compaction set, so A never got its one re-emit.
+    run(envelope("Bitte mach weiter mit der Analyse und den Tests."), { consumer_root: tmp });
+    run(compactEnvelope("session-A"), { consumer_root: tmp });
+
+    // B has had no compaction, so B stays silent and must not clear A's marker.
+    expect(run(toolEnvelope("session-B"), { consumer_root: tmp })).toBe(0);
+    // A still gets exactly its one re-emit.
+    expect(run(toolEnvelope("session-A"), { consumer_root: tmp })).toBe(2);
+    expect(run(toolEnvelope("session-A"), { consumer_root: tmp })).toBe(0);
   });
 
   it("pre_compact does not disturb the pin it is protecting", () => {

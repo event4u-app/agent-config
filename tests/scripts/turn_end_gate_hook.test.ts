@@ -20,12 +20,13 @@ import * as os from 'node:os';
 import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { afterAll, describe, expect, it } from 'vitest';
+import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
 import {
+    alreadyRefusedTurn,
     detectLanguage,
     detectPromissory,
-    deriveTurnKey,
+    deriveSessionKey,
     finalParagraph,
     readGateSettings,
     readLanguagePin,
@@ -42,6 +43,26 @@ const TSX = path.join(
 );
 
 const tmp_dirs: string[] = [];
+
+/**
+ * `readGateSettings` now goes through the real settings cascade, whose
+ * user-global layer resolves under `EVENT4U_CONFIG_HOME` (its own documented
+ * override) or `os.homedir()`. Without this the in-process tests would read the
+ * DEVELOPER's global settings and pass or fail on their machine's state —
+ * exactly the non-hermetic shape this repo has been bitten by before.
+ */
+let _priorConfigHome: string | undefined;
+beforeAll(() => {
+    const empty = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'teg-global-')));
+    tmp_dirs.push(empty);
+    _priorConfigHome = process.env['EVENT4U_CONFIG_HOME'];
+    process.env['EVENT4U_CONFIG_HOME'] = empty;
+});
+afterAll(() => {
+    if (_priorConfigHome === undefined) delete process.env['EVENT4U_CONFIG_HOME'];
+    else process.env['EVENT4U_CONFIG_HOME'] = _priorConfigHome;
+});
+
 afterAll(() => {
     for (const d of tmp_dirs) {
         try {
@@ -294,8 +315,6 @@ describe('settings — default OFF, detectors ON within it (roadmap 3.6)', () =>
     });
 
     it('a SIBLING section’s `enabled:` is never read as ours', () => {
-        // The indent-aware walker exists for exactly this: a width-agnostic
-        // terminator would run past the block and pick up the next key's flag.
         const s = readGateSettings(
             makeWorkspace(
                 'hooks:\n  turn_end_gate:\n    promissory: false\n  injection_scan:\n    enabled: true\n',
@@ -303,6 +322,49 @@ describe('settings — default OFF, detectors ON within it (roadmap 3.6)', () =>
         );
         expect(s.enabled).toBe(false);
         expect(s.promissory).toBe(false);
+    });
+
+    // --- R2 finding 6: three ways the hand-rolled walker mis-resolved it -----
+
+    it('R2-6b: a trailing comment does not turn the switch OFF', () => {
+        // `^\s+enabled:\s*(true|false)\s*$` required end-of-line, so a
+        // maintainer who annotated their opt-in silently got no gate.
+        const s = readGateSettings(
+            makeWorkspace('hooks:\n  turn_end_gate:\n    enabled: true  # soak opt-in\n'),
+        );
+        expect(s.enabled).toBe(true);
+    });
+
+    it('R2-6b: the YAML boolean `yes` means yes', () => {
+        // The `yaml` package parses to the 1.2 core schema where `yes` is the
+        // STRING "yes", so a parser alone does not fix this — the reader has to
+        // accept the spelling a human actually writes.
+        const s = readGateSettings(makeWorkspace('hooks:\n  turn_end_gate:\n    enabled: yes\n'));
+        expect(s.enabled).toBe(true);
+    });
+
+    it('R2-6b: `off` / `no` mean off, and an unknown value falls back to the default', () => {
+        expect(
+            readGateSettings(makeWorkspace('hooks:\n  turn_end_gate:\n    enabled: no\n')).enabled,
+        ).toBe(false);
+        // Not a recognised spelling ⇒ the conservative default, never a guess.
+        expect(
+            readGateSettings(makeWorkspace('hooks:\n  turn_end_gate:\n    enabled: maybe\n'))
+                .enabled,
+        ).toBe(false);
+    });
+
+    it('R2-6c: a `turn_end_gate:` block under the WRONG parent never arms the gate', () => {
+        // The text walker had no notion of a parent, so a top-level block or one
+        // under any other key armed a concern that can refuse a turn-end.
+        expect(readGateSettings(makeWorkspace('turn_end_gate:\n  enabled: true\n')).enabled).toBe(
+            false,
+        );
+        expect(
+            readGateSettings(
+                makeWorkspace('quality:\n  turn_end_gate:\n    enabled: true\n'),
+            ).enabled,
+        ).toBe(false);
     });
 });
 
@@ -352,12 +414,20 @@ function makeGateWorkspace(): { dir: string; home: string } {
     return { dir, home };
 }
 
-function writeTranscript(home: string, userText: string, assistantText: string): string {
-    const file = path.join(home, `transcript-${Math.abs(hashish(assistantText))}.jsonl`);
+/**
+ * Write a transcript. `userTexts` is EVERY user-role entry in order, so a test
+ * can control the turn ordinal — and can include a harness-shaped entry to
+ * prove it does not count.
+ */
+function writeTranscript(home: string, userTexts: string[], assistantText: string): string {
+    const file = path.join(
+        home,
+        `transcript-${Math.abs(hashish(userTexts.join('|') + assistantText))}.jsonl`,
+    );
     fs.writeFileSync(
         file,
         [
-            JSON.stringify({ type: 'user', message: { content: userText } }),
+            ...userTexts.map((t) => JSON.stringify({ type: 'user', message: { content: t } })),
             JSON.stringify({
                 type: 'assistant',
                 message: { content: [{ type: 'text', text: assistantText }] },
@@ -391,12 +461,27 @@ function envelopeJson(
     });
 }
 
+/**
+ * `HOME` is the fake home, which does two things at once and is why the hook
+ * needs no test-only seam of its own (R2 finding 13 removed the old
+ * `AGENT_CONFIG_TRANSCRIPT_HOME`): `os.homedir()` honours it, so the
+ * transcript-confinement check is exercised against a temp root, AND the
+ * settings cascade resolves its user-global layer under that same root, which
+ * keeps these tests hermetic against the developer's real global settings.
+ * `EVENT4U_CONFIG_HOME` is the cascade's own documented test override, set as a
+ * belt for the same reason.
+ */
 function runHook(cwd: string, stdin: string, home: string): Run {
     const r = spawnSync(TSX, [HOOK], {
         encoding: 'utf8',
         cwd,
         input: stdin,
-        env: { ...process.env, AGENT_CONFIG_TRANSCRIPT_HOME: home },
+        env: {
+            ...process.env,
+            HOME: home,
+            USERPROFILE: home,
+            EVENT4U_CONFIG_HOME: path.join(home, '.event4u', 'agent-config'),
+        },
     });
     return { status: r.status ?? 1, stdout: r.stdout ?? '', stderr: r.stderr ?? '' };
 }
@@ -407,7 +492,7 @@ const CLEAN = 'Der Branch steht, die Tests sind grün, mehr war nicht zu tun.';
 describe('the gate, end to end', () => {
     it('refuses a promissory closing with exit 1 and the reason on STDERR', () => {
         const { dir, home } = makeGateWorkspace();
-        const t = writeTranscript(home, 'mach weiter', PROMISE);
+        const t = writeTranscript(home, ['mach weiter'], PROMISE);
         const r = runHook(dir, envelopeJson(dir, t), home);
 
         expect(r.status, r.stderr).toBe(1); // dispatcher-internal EXIT_BLOCK
@@ -419,7 +504,7 @@ describe('the gate, end to end', () => {
 
     it('lets a clean turn end, silently', () => {
         const { dir, home } = makeGateWorkspace();
-        const t = writeTranscript(home, 'mach weiter', CLEAN);
+        const t = writeTranscript(home, ['mach weiter'], CLEAN);
         const r = runHook(dir, envelopeJson(dir, t), home);
         expect(r.status, r.stderr).toBe(0);
         expect(r.stderr).toBe('');
@@ -429,7 +514,7 @@ describe('the gate, end to end', () => {
         const dir = makeWorkspace(); // no settings file at all
         const home = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'turn-end-gate-home-')));
         tmp_dirs.push(home);
-        const t = writeTranscript(home, 'mach weiter', PROMISE);
+        const t = writeTranscript(home, ['mach weiter'], PROMISE);
         const r = runHook(dir, envelopeJson(dir, t), home);
         expect(r.status, r.stderr).toBe(0);
     });
@@ -438,7 +523,7 @@ describe('the gate, end to end', () => {
 
     it('LAYER 1: `stop_hook_active` alone stops a second refusal', () => {
         const { dir, home } = makeGateWorkspace();
-        const t = writeTranscript(home, 'mach weiter', PROMISE);
+        const t = writeTranscript(home, ['mach weiter'], PROMISE);
         // No prior run, so no state marker exists — only the host flag can
         // be doing the work here.
         const r = runHook(dir, envelopeJson(dir, t, { stop_hook_active: true }), home);
@@ -448,7 +533,7 @@ describe('the gate, end to end', () => {
 
     it('LAYER 2: the turn marker alone stops a second refusal, even on a NEW reply', () => {
         const { dir, home } = makeGateWorkspace();
-        const first = runHook(dir, envelopeJson(dir, writeTranscript(home, 'mach weiter', PROMISE)), home);
+        const first = runHook(dir, envelopeJson(dir, writeTranscript(home, ['mach weiter'], PROMISE)), home);
         expect(first.status, first.stderr).toBe(1);
 
         // The model answered the refusal with a DIFFERENT reply that still
@@ -456,7 +541,7 @@ describe('the gate, end to end', () => {
         // `stop_hook_active` is deliberately absent, so layer 2 is on its own.
         const second = runHook(
             dir,
-            envelopeJson(dir, writeTranscript(home, 'mach weiter', 'Ok.\n\nIch melde mich gleich.')),
+            envelopeJson(dir, writeTranscript(home, ['mach weiter'], 'Ok.\n\nIch melde mich gleich.')),
             home,
         );
         expect(second.status, second.stderr).toBe(0);
@@ -465,15 +550,73 @@ describe('the gate, end to end', () => {
 
     it('a NEW user prompt re-arms the gate — the marker must not wedge the session', () => {
         const { dir, home } = makeGateWorkspace();
-        const first = runHook(dir, envelopeJson(dir, writeTranscript(home, 'erster prompt', PROMISE)), home);
+        const first = runHook(dir, envelopeJson(dir, writeTranscript(home, ['erster prompt'], PROMISE)), home);
         expect(first.status, first.stderr).toBe(1);
 
         const nextTurn = runHook(
             dir,
-            envelopeJson(dir, writeTranscript(home, 'zweiter prompt', PROMISE)),
+            envelopeJson(dir, writeTranscript(home, ['erster prompt', 'zweiter prompt'], PROMISE)),
             home,
         );
         expect(nextTurn.status, nextTurn.stderr).toBe(1);
+    });
+
+    // --- R2 finding 2: the regression the old test could not see -------------
+
+    it('R2-2: a REPEATED prompt text still gets refused — the key is the turn, not the text', () => {
+        // The text-keyed version resolved the second identical prompt to the
+        // SAME key as the first refused turn and allowed it unconditionally.
+        // "weiter" / "ok" / "1" are the dominant prompt shape in the corpus
+        // this gate was built from, so that bug disabled the gate exactly where
+        // it was meant to work. Both turns below carry byte-identical text.
+        const { dir, home } = makeGateWorkspace();
+
+        const first = runHook(dir, envelopeJson(dir, writeTranscript(home, ['weiter'], PROMISE)), home);
+        expect(first.status, first.stderr).toBe(1);
+
+        const second = runHook(
+            dir,
+            envelopeJson(dir, writeTranscript(home, ['weiter', 'weiter'], PROMISE)),
+            home,
+        );
+        expect(second.status, second.stderr).toBe(1);
+    });
+
+    it('R2-3: a harness-injected user entry does NOT re-arm the gate mid-turn', () => {
+        // A compaction summary and a `<system-reminder>` both arrive in the
+        // user role. Counting them moved the key WITHIN one turn, minting a
+        // fresh marker and letting the same turn be refused twice on any host
+        // that sends no `stop_hook_active` — the wedge layer 2 exists to stop.
+        const { dir, home } = makeGateWorkspace();
+        const synthetic = `<system-reminder>\n${'This is harness text, not a chat message. '.repeat(80)}\n</system-reminder>`;
+
+        const first = runHook(dir, envelopeJson(dir, writeTranscript(home, ['weiter'], PROMISE)), home);
+        expect(first.status, first.stderr).toBe(1);
+
+        const afterInjection = runHook(
+            dir,
+            envelopeJson(dir, writeTranscript(home, ['weiter', synthetic], PROMISE)),
+            home,
+        );
+        expect(afterInjection.status, afterInjection.stderr).toBe(0);
+        expect(afterInjection.stderr).toBe('');
+    });
+
+    it('R2-17: refusal state is ONE file per session, not one per refused turn', () => {
+        const { dir, home } = makeGateWorkspace();
+        for (const prompts of [['a'], ['a', 'b'], ['a', 'b', 'c']]) {
+            runHook(dir, envelopeJson(dir, writeTranscript(home, prompts, PROMISE)), home);
+        }
+        const stateDir = path.join(dir, 'agents', 'runtime', 'state', 'turn-end-gate');
+        // `.json` only — `atomic_write_json` leaves its own `.dispatcher.lock`
+        // beside the payload, and counting directory entries would make this
+        // assert the writer's internals rather than the state shape.
+        const files = fs.existsSync(stateDir)
+            ? fs.readdirSync(stateDir).filter((f) => f.endsWith('.json'))
+            : [];
+        // Three refused turns, one session ⇒ exactly one state file. The old
+        // per-turn files accumulated with no TTL and nothing pruned them.
+        expect(files).toHaveLength(1);
     });
 
     it('an unreadable transcript lets the turn END — never a wedge', () => {
@@ -533,7 +676,9 @@ function runDispatcher(workspace: string, transcriptPath: string, home: string):
             env: {
                 ...process.env,
                 AGENT_CONFIG_PACKAGE_ROOT: REPO_ROOT,
-                AGENT_CONFIG_TRANSCRIPT_HOME: home,
+                HOME: home,
+                USERPROFILE: home,
+                EVENT4U_CONFIG_HOME: path.join(home, '.event4u', 'agent-config'),
             },
         },
     );
@@ -543,14 +688,14 @@ function runDispatcher(workspace: string, transcriptPath: string, home: string):
 describe('claude stop — the refusal actually reaches the host', () => {
     it('exits 2, not 1 — exit 1 on stop would let the turn end anyway', () => {
         const { dir, home } = makeGateWorkspace();
-        const t = writeTranscript(home, 'mach weiter', PROMISE);
+        const t = writeTranscript(home, ['mach weiter'], PROMISE);
         const r = runDispatcher(dir, t, home);
         expect(r.status, `stderr: ${r.stderr.slice(0, 600)}`).toBe(2);
     });
 
     it('puts the concern’s OWN reason on stderr, not a generic label', () => {
         const { dir, home } = makeGateWorkspace();
-        const t = writeTranscript(home, 'mach weiter', PROMISE);
+        const t = writeTranscript(home, ['mach weiter'], PROMISE);
         const r = runDispatcher(dir, t, home);
         expect(r.stderr).toContain('turn-end-gate');
         expect(r.stderr).not.toBe('blocked by agent-config hook policy\n');
@@ -558,24 +703,154 @@ describe('claude stop — the refusal actually reaches the host', () => {
 
     it('a clean turn ends with 0 through the same path', () => {
         const { dir, home } = makeGateWorkspace();
-        const t = writeTranscript(home, 'mach weiter', CLEAN);
+        const t = writeTranscript(home, ['mach weiter'], CLEAN);
         const r = runDispatcher(dir, t, home);
         expect(r.status, `stderr: ${r.stderr.slice(0, 600)}`).toBe(0);
     });
 });
 
-describe('the turn key', () => {
-    it('is the same for the same turn and different across turns', () => {
-        expect(deriveTurnKey('s', 'prompt A')).toBe(deriveTurnKey('s', 'prompt A'));
-        expect(deriveTurnKey('s', 'prompt A')).not.toBe(deriveTurnKey('s', 'prompt B'));
-        expect(deriveTurnKey('s1', 'prompt A')).not.toBe(deriveTurnKey('s2', 'prompt A'));
+describe('the turn identity — ordinal, never text (R2 findings 2 + 3)', () => {
+    it('the session key depends on the session and nothing else', () => {
+        expect(deriveSessionKey('s1')).toBe(deriveSessionKey('s1'));
+        expect(deriveSessionKey('s1')).not.toBe(deriveSessionKey('s2'));
     });
 
-    it('does NOT depend on the reply — that is the whole point', () => {
-        // If the reply were part of the key, a refused turn would mint a new
-        // key on its next reply and could be refused forever.
-        const a = deriveTurnKey('s', 'prompt');
-        const b = deriveTurnKey('s', 'prompt');
-        expect(a).toBe(b);
+    it('the marker matches only the ordinal it was written for', () => {
+        const dir = makeWorkspace();
+        const key = deriveSessionKey('s1');
+        fs.mkdirSync(path.join(dir, 'agents', 'runtime', 'state', 'turn-end-gate'), {
+            recursive: true,
+        });
+        fs.writeFileSync(
+            path.join(dir, 'agents', 'runtime', 'state', 'turn-end-gate', `${key}.json`),
+            JSON.stringify({ refused_turn: 3, detector: 'promissory' }),
+        );
+        expect(alreadyRefusedTurn(dir, key, 3)).toBe(true);
+        expect(alreadyRefusedTurn(dir, key, 4)).toBe(false);
+        // A different session never reads another session's marker.
+        expect(alreadyRefusedTurn(dir, deriveSessionKey('s2'), 3)).toBe(false);
+    });
+
+    it('absent or malformed state means not-refused — fail-open, never a wedge', () => {
+        const dir = makeWorkspace();
+        const key = deriveSessionKey('s1');
+        expect(alreadyRefusedTurn(dir, key, 1)).toBe(false);
+        fs.mkdirSync(path.join(dir, 'agents', 'runtime', 'state', 'turn-end-gate'), {
+            recursive: true,
+        });
+        fs.writeFileSync(
+            path.join(dir, 'agents', 'runtime', 'state', 'turn-end-gate', `${key}.json`),
+            '{ not json',
+        );
+        expect(alreadyRefusedTurn(dir, key, 1)).toBe(false);
+    });
+});
+
+describe('R2 finding 4 — a stated refusal to act is not a promise', () => {
+    // Each of these fired on the shipped regex, whose lookahead excluded only
+    // the literal `nicht`. All four are live false refusals on a BLOCKING
+    // guard: none is caught by HANDBACK and none carries a `?`.
+    const NEGATIONS = [
+        'Fertig.\n\nIch werde nichts anfassen.',
+        'Fertig.\n\nIch werde keine Tests schreiben.',
+        'Fertig.\n\nIch werde niemals raten.',
+        'Fertig.\n\nIch werde nie ungefragt pushen.',
+        'Fertig.\n\nIch werde gefragt, ob die Regeln passen.',
+    ];
+
+    it('does not fire on any of them', () => {
+        const wrong = NEGATIONS.filter((r) => detectPromissory(r) !== null);
+        expect(wrong, `false refusals: ${JSON.stringify(wrong, null, 2)}`).toEqual([]);
+    });
+
+    it('still fires on the affirmative form — the fix must not disarm the detector', () => {
+        expect(detectPromissory('Fertig.\n\nIch werde jetzt die Tests schreiben.')).not.toBeNull();
+    });
+});
+
+describe('R2 finding 5 — CommonMark allows a LONGER closing fence', () => {
+    it('a longer closing fence does not delete the reply tail', () => {
+        // Pass 1 used a `\1` backreference, so a three-tilde block closed with
+        // four did not match, and the greedy tail-drop then removed everything
+        // after it — including the closing paragraph detector A must read.
+        const reply = ['Vorher.', '~~~ts', 'const x = 1;', '~~~~', '', 'Ich melde mich, sobald die CI grün ist.'].join('\n');
+        expect(visibleProse(reply)).toContain('Ich melde mich');
+        expect(visibleProse(reply)).not.toContain('const x');
+        expect(detectPromissory(reply)).not.toBeNull();
+    });
+
+    it('same for a three-backtick block closed with six', () => {
+        const reply = ['Vorher.', '```ts', 'const y = 2;', '``````', '', 'Als nächstes baue ich den Rest.'].join('\n');
+        expect(visibleProse(reply)).toContain('Als nächstes');
+        expect(visibleProse(reply)).not.toContain('const y');
+    });
+
+    it('a genuinely unterminated fence still drops the tail', () => {
+        const prose = visibleProse('Vorher.\n\n```ts\nconst leak = "LEAK_MUST_VANISH";');
+        expect(prose).toContain('Vorher.');
+        expect(prose).not.toContain('LEAK_MUST_VANISH');
+    });
+
+    // --- round 2, finding 1: the regression the round-1 fix INTRODUCED --------
+
+    it('R2r2-1: a MIXED-character nested fence does not delete the reply tail', () => {
+        // `~~~` outer with ``` inner is the shape `markdown-safe-codeblocks`
+        // prescribes as its DEFAULT. The character-matching regex stopped at the
+        // inner ``` line, declined it on the mismatch, and the greedy tail-drop
+        // then removed everything from the opener onward — so the round-1 "fix"
+        // was WORSE than what it replaced on the more common input. Neither
+        // regex could get this right; the scanner can.
+        const reply = [
+            'Vorher.',
+            '~~~markdown',
+            'Beispiel für einen inneren Block:',
+            '```ts',
+            'const inner = 1;',
+            '```',
+            '~~~',
+            '',
+            'Ich melde mich, sobald die CI grün ist.',
+        ].join('\n');
+        const prose = visibleProse(reply);
+        expect(prose).toContain('Vorher.');
+        expect(prose).toContain('Ich melde mich');
+        expect(prose).not.toContain('const inner');
+        // And the closing paragraph is readable again, which is the point.
+        expect(detectPromissory(reply)).not.toBeNull();
+    });
+
+    it('R2r2-1: an inner fence of the SAME character does not close the block early', () => {
+        const reply = ['Vorher.', '````md', '```', 'inner_must_vanish', '```', '````', '', 'Fertig, nichts offen.'].join('\n');
+        const prose = visibleProse(reply);
+        expect(prose).not.toContain('inner_must_vanish');
+        expect(prose).toContain('Fertig');
+    });
+});
+
+describe('round 2, findings 15 + 16 — detector A precision and recall', () => {
+    it('R2r2-15: an umlaut infinitive is reachable', () => {
+        // `\\b\\w{3,}en\\b` could not reach `prüfen` / `lösen`: ü and ö are not
+        // `\\w`, so they create a word boundary. Verified against the literal
+        // regex before and after.
+        for (const r of [
+            'Fertig.\n\nIch werde die Datei prüfen.',
+            'Fertig.\n\nIch werde das lösen.',
+            'Fertig.\n\nIch werde die Regeln überfliegen.',
+        ]) {
+            expect(detectPromissory(r), r).not.toBeNull();
+        }
+    });
+
+    it('R2r2-16: a question mid-paragraph is no longer a one-character bypass', () => {
+        // `includes('?')` let any rhetorical or quoted question disable a
+        // blocking guard. Only a question that ENDS the paragraph is a hand-back.
+        const bypass = 'Fertig.\n\nWarum auch nicht? Ich melde mich, sobald die CI grün ist.';
+        expect(detectPromissory(bypass)).not.toBeNull();
+    });
+
+    it('R2r2-16: a real closing question still yields to the user', () => {
+        expect(detectPromissory('Zwei Wege sind möglich.\n\nSoll ich den ersten nehmen?')).toBeNull();
+        // Trailing quote/bracket after the mark still counts as a closing question.
+        expect(detectPromissory('Zwei Wege.\n\nWelchen nimmst Du (1 oder 2)?')).toBeNull();
     });
 });
