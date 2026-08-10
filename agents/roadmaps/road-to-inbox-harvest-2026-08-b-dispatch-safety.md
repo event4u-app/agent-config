@@ -69,16 +69,34 @@ binds. Only a third detector is missing, and the soak stays.
 
 ## Phase 1 — Scoped tool grants
 
-- [ ] **1.1 Widen the subagent `tools` enum to admit a scoped grant.** Replace the
-      bare-token-only `enum` at `subagent.schema.json:52` with a constraint that also
-      accepts `Bash(<prefix>:*)`, keeping every existing token valid.
-      `tests/scripts/subagent_contract.test.ts:59-61` pins that `curl` is rejected —
-      that assertion must still hold.
+- [x] **1.1 Widen the subagent `tools` enum to admit a scoped grant.** Shipped as
+      a `pattern` that keeps the base name closed — a typo still fails CI — while
+      admitting an optional `(...)` suffix. Two pointer corrections worth
+      recording: the field is `tools`, and `skill.schema.json`'s `allowed_tools`
+      does **not** already model the syntax with a pattern — it permits it by
+      validating nothing, which is a weaker thing and not a template to copy.
+      The `curl` assertion still holds, but the test asserting it had pinned
+      `rule === 'enum'` — the keyword rather than the subject — so it reddened
+      on behaviour that had not changed. Rewritten keyword-agnostically and
+      widened with the cases nothing covered: a scoped grant accepted,
+      `Frobnicate(anything:*)` rejected, four malformed scopes rejected.
       <!-- verify: task test -- --filter=subagent_contract -->
 - [ ] **1.2 Narrow `production-validator` to the prefixes it needs.** Edit
       `src/subagents/production-validator.md` so the shell grant becomes the command
       families the audit runs, then regenerate so
       `.claude/agents/production-validator.md:4` no longer carries a bare `Bash`.
+      **Left OPEN deliberately, with the finding that argues against it.** 1.1
+      made the narrowing expressible, which is all this step depended on. But the
+      validator's own procedure step 3 is "find evidence the real path executed"
+      — against whatever dependency and whatever runner the *consumer* project
+      uses. A portable suite cannot enumerate those command families, and a scope
+      that guesses wrong makes the validator report a missing run it was merely
+      forbidden to attempt: the worst failure available to a gate whose output is
+      a READY line. What shipped instead is the reason, written into the
+      frontmatter so the bare `Bash` no longer reads as an oversight. Closing
+      this needs a call on which is worse — an over-broad grant on a read-only
+      auditor, or an auditor that cannot run the project's own tests. Maintainer
+      decision, not an agent edit.
       <!-- verify: grep -n 'tools:' .claude/agents/production-validator.md -->
 - [ ] **1.3 Extend the existing safety linter to the subagent corpus and key.** Add
       `src/subagents` to the roots at `lint_skill_frontmatter_safety.ts:261` and teach

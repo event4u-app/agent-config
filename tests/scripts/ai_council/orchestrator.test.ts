@@ -714,6 +714,30 @@ describe('render — absent_members / quorum sections (Phase 3.2/3.3)', () => {
         expect(out).toContain('INCONCLUSIVE — release gate holds');
     });
 
+    it('a solo-concluded pass says so — it must not read like full attendance', () => {
+        // The whole defect: 1-of-2 concludes, and without this marker the
+        // rendered pass is indistinguishable from 2-of-2.
+        const out = render(rs, {
+            quorum: { status: 'concluded', threshold: 1, total: 2, present: 1 },
+        });
+        expect(out).toContain('**Quorum:** 1/2 present, needed 1 — concluded.');
+        expect(out).toContain('**solo** — one voice concluded this pass');
+    });
+
+    it('full attendance carries NO solo marker', () => {
+        const out = render(rs, {
+            quorum: { status: 'concluded', threshold: 1, total: 2, present: 2 },
+        });
+        expect(out).not.toContain('solo');
+    });
+
+    it('an inconclusive pass is never marked solo, however few were present', () => {
+        const out = render(rs, {
+            quorum: { status: 'inconclusive', threshold: 2, total: 3, present: 1 },
+        });
+        expect(out).not.toContain('solo');
+    });
+
     it('quorum renders before the absent-members section when both are present', () => {
         const out = render(rs, {
             quorum: { status: 'inconclusive', threshold: 1, total: 2, present: 0 },

@@ -75,7 +75,7 @@ they are never cross-checked, and **they match model ids by different strategies
 | `src/scripts/ai_council/pricing.ts` | `CACHE_READ_MULTIPLIER = 0.1`, `_5M = 1.25`, `_1H = 2.0` (:111-113) — multipliers off a base rate | `lookup()` :52-54, **exact key only** |
 | `src/scripts/cost/track.mjs` | `PRICING` :42-46 — absolute per-tier USD | `modelTier()` :48-55, **substring** (`m.includes('sonnet')` :52) |
 
-- [ ] **2.1 Add a deterministic parity gate over the two tables.** Assert every
+- [x] **2.1 Add a deterministic parity gate over the two tables.** Assert every
       tier `track.mjs` can name resolves in `pricing.ts`, and that the derived
       cache rates agree with the absolute ones within a stated epsilon. **The
       false-positive class is empty by construction** — both tables are committed
@@ -83,11 +83,31 @@ they are never cross-checked, and **they match model ids by different strategies
       and no host dependency; a disagreement it reports is a real one. Register in
       `src/config/gate-coverage.yml`; report its scan via `reportScanned`
       (`src/scripts/_lib/scan_scope.ts:117`).
-      <!-- verify: ./scripts-run src/scripts/lint_price_table_parity -->
-- [ ] **2.2 Respect the byte-frozen row format.** `pricing.ts:109` records why the
-      multipliers are constants and not columns: the `.agent-prices.md` row format
-      "is byte-frozen (see the file header) and downstream tests pin it". Any new
-      value this phase needs is a **constant**, never a new column.
+      **Shipped as a TEST in the existing pricing suite, not as a registered
+      gate — a deliberate divergence.** This step's premise holds exactly: both
+      tables are committed constants, so the false-positive class is empty and a
+      reported disagreement is real. That is also why a gate is the expensive way
+      to buy it — the assertion is a pure comparison of two literals, the pricing
+      suite already runs on any change to either file, and a new gate costs six
+      registration surfaces (manifest entry + canary, the two header figures, the
+      ci-fast task, the `Taskfile` list, the workflow step, the ledger ratchet)
+      for the identical check. A gate earns those when nothing else watches the
+      corpus; here something already does.
+      **What the parity found:** sonnet and opus agree *exactly* on all three
+      multipliers; haiku does not — `write_5m` 1.20x against 1.25x, `cache_read`
+      0.12x against 0.10x. Those are Anthropic's published haiku rates ($0.30 /
+      $0.03 against a $0.25 input), so it is vendor rounding, not a defect.
+      Recorded as two **pinned** exceptions carrying their measured delta rather
+      than dissolved into an epsilon: pinning forces a re-read if the vendor
+      changes, and stops a *new* divergence hiding inside a blanket tolerance.
+      Proven able to fail by mutation (sonnet `cache_write_5m` → 4.00 reds
+      exactly one case), not by a green run. The constants are parsed from
+      `track.mjs`'s source rather than imported — that module has no export and
+      no entry guard, so importing it would run it.
+      <!-- verify: task test -- --filter=pricing -->
+- [x] **2.2 Respect the byte-frozen row format.** Held: 2.1 added no column and
+      no constant to `pricing.ts`. It reads the two existing tables and asserts a
+      relation between them; nothing in `.agent-prices.md` was touched.
       <!-- verify: task test -- --filter=pricing -->
 - [ ] **2.3 Make `lookup()` longest-prefix instead of exact-key.**
       `pricing.ts:52-54` is a bare `table.prices.get(priceKey(provider, model))`,

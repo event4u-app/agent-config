@@ -80,7 +80,7 @@ from.
       in that module's own docstring (`:13-19`) — 1-of-2 is called "the deliberate
       choice, not an off-by-one". Advisory derivation only; no gate behaviour
       changes. <!-- verify: task test -- --filter=quorum -->
-- [ ] **1.4 Render a solo marker** in `ai_council/orchestrator.ts:1983`
+- [x] **1.4 Render a solo marker** in `ai_council/orchestrator.ts:1983`
       `_render_quorum_line`, consuming 1.3. `:1992 _render_absent_members` and
       `session.ts:109`/`:550` already carry the artifact and manifest halves, so
       this is one line in an existing renderer, not a new surface.

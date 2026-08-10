@@ -422,3 +422,94 @@ describe('downgrade_coupling — A1↔A3 cache-coupling gate', () => {
         expect(c.net_positive).toBe(false);
     });
 });
+
+// ── cross-table parity: pricing.ts multipliers vs cost/track.mjs absolutes ──
+//
+// Two independent tables encode the SAME vendor facts in different units and
+// nothing compared them until this test. `pricing.ts` holds cache multipliers
+// relative to the input rate; `src/scripts/cost/track.mjs` holds absolute USD
+// per tier. An edit to either alone silently splits the two cost paths — the
+// council's own estimator and the transcript-derived spend report — and the
+// split shows up as a quiet disagreement in dollar figures, never as a failure.
+//
+// The constants are read out of track.mjs's SOURCE rather than imported: the
+// module has no export and no entry guard, so importing it would run it. What
+// a parity check must read is the committed literal anyway.
+describe('pricing — cross-table parity with cost/track.mjs', () => {
+    const TRACK = path.resolve(__dirname, '../../../src/scripts/cost/track.mjs');
+
+    interface TierRow {
+        input: number;
+        cache_write_5m: number;
+        cache_write_1h: number;
+        cache_read: number;
+    }
+
+    function parseTrackPricing(): Record<string, TierRow> {
+        const src = fs.readFileSync(TRACK, 'utf-8');
+        const block = src.match(/const PRICING = \{([\s\S]*?)\n\};/);
+        expect(block, 'track.mjs must still declare a PRICING literal').not.toBeNull();
+        const out: Record<string, TierRow> = {};
+        const rowRe =
+            /(\w+):\s*\{\s*input:\s*([\d.]+),\s*output:\s*[\d.]+,\s*cache_write_5m:\s*([\d.]+),\s*cache_write_1h:\s*([\d.]+),\s*cache_read:\s*([\d.]+)\s*\}/g;
+        let m: RegExpExecArray | null;
+        while ((m = rowRe.exec(block![1] as string)) !== null) {
+            out[m[1] as string] = {
+                input: Number(m[2]),
+                cache_write_5m: Number(m[3]),
+                cache_write_1h: Number(m[4]),
+                cache_read: Number(m[5]),
+            };
+        }
+        return out;
+    }
+
+    // Anthropic publishes Haiku's cache rates ROUNDED ($0.30 write / $0.03 read
+    // against a $0.25 input) rather than at the exact 1.25x / 0.1x the other
+    // tiers hit on the nose. That is a vendor fact, not a typo, so it is
+    // recorded here as a named exception with its measured delta — the point of
+    // the exception list is that a NEW divergence cannot hide inside a blanket
+    // tolerance.
+    const ROUNDING_EXCEPTIONS: Record<string, string> = {
+        'haiku.cache_write_5m': 'vendor publishes $0.30 (1.20x), not the exact 1.25x',
+        'haiku.cache_read': 'vendor publishes $0.03 (0.12x), not the exact 0.10x',
+    };
+
+    const table = parseTrackPricing();
+
+    it('parses all three tiers out of track.mjs', () => {
+        expect(Object.keys(table).sort()).toEqual(['haiku', 'opus', 'sonnet']);
+    });
+
+    for (const [tier, row] of Object.entries(parseTrackPricing())) {
+        const checks: [string, number, number][] = [
+            ['cache_write_5m', row.cache_write_5m, CACHE_WRITE_MULTIPLIER_5M],
+            ['cache_write_1h', row.cache_write_1h, CACHE_WRITE_MULTIPLIER_1H],
+            ['cache_read', row.cache_read, CACHE_READ_MULTIPLIER],
+        ];
+        for (const [field, absolute, multiplier] of checks) {
+            const key = `${tier}.${field}`;
+            const expected = row.input * multiplier;
+            if (key in ROUNDING_EXCEPTIONS) {
+                it(`${key} diverges, and the divergence is the DOCUMENTED one`, () => {
+                    // Pinned, not tolerated: if the vendor changes the rounding
+                    // the exception must be re-read, not silently absorbed.
+                    expect(absolute).not.toBeCloseTo(expected, 6);
+                    expect(ROUNDING_EXCEPTIONS[key]).toBeTruthy();
+                });
+            } else {
+                it(`${key} equals input x ${String(multiplier)} exactly`, () => {
+                    expect(absolute).toBeCloseTo(expected, 6);
+                });
+            }
+        }
+    }
+
+    it('every exception names a tier/field that still exists', () => {
+        for (const key of Object.keys(ROUNDING_EXCEPTIONS)) {
+            const [tier, field] = key.split('.') as [string, keyof TierRow];
+            expect(table[tier], `exception names a missing tier: ${tier}`).toBeDefined();
+            expect(table[tier]![field], `exception names a missing field: ${key}`).toBeDefined();
+        }
+    });
+});
