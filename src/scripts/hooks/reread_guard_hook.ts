@@ -144,7 +144,7 @@ export function readLedger(workspaceRoot: string, sessionKey: string): Ledger {
         const parsed = JSON.parse(fs.readFileSync(ledgerFile(workspaceRoot, sessionKey), 'utf8'));
         if (!isObject(parsed)) return emptyLedger();
         return {
-            reads: isObject(parsed['reads']) ? (parsed['reads'] as Record<string, ReadRecord>) : {},
+            reads: isObject(parsed['reads']) ? (parsed['reads'] as unknown as Record<string, ReadRecord>) : {},
             writes: isObject(parsed['writes']) ? (parsed['writes'] as Record<string, number>) : {},
             fired: isObject(parsed['fired']) ? (parsed['fired'] as Record<string, boolean>) : {},
         };
