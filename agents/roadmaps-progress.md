@@ -2,23 +2,15 @@
 
 > Auto-generated — do not edit. Regenerate with `task roadmap-progress` or by running the `update_roadmap_progress` script for your install; rewritten on every roadmap create / execute / completion change (timestamp lives in git history).
 >
-> 24 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **32** open blockers
+> 23 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **29** open blockers
 
 ## Overall
 
-**234 / 400 steps done · 58%**
+**206 / 372 steps done · 55%**
 
 ```text
-███████████████████████░░░░░░░░░░░░░░░░░   58%
+██████████████████████░░░░░░░░░░░░░░░░░░   55%
 ```
-
-## ⚠️ Iron Law 3 — unresolved deferred items
-
-These roadmaps have `count_open == 0` but carry `[~]` deferred items. Per `roadmap-progress-sync` Iron Law 3 they do NOT auto-archive — the user must resolve the deferrals first (spawn follow-up, restore, or cancel). See [`roadmap-management § 4b`](../packages/core/.agent-src.uncondensed/skills/roadmap-management/SKILL.md).
-
-| Roadmap | Done | Deferred | Cancelled |
-|---|---:|---:|---:|
-| [road-to-token-economy-dispatch.md](roadmaps/road-to-token-economy-dispatch.md) | 28 | 8 | 0 |
 
 ## Open roadmaps
 
@@ -43,11 +35,10 @@ These roadmaps have `count_open == 0` but carry `[~]` deferred items. Per `roadm
 | 17 | [road-to-surface-consolidation.md](roadmaps/road-to-surface-consolidation.md) | 3 | 14 | 1 | 12 | 1 | 0 | [2](#blockers-road-to-surface-consolidation) | █████████░ 92% |
 | 18 | [road-to-tier-removal.md](roadmaps/road-to-tier-removal.md) | 4 | 8 | 2 | 6 | 0 | 0 | [1](#blockers-road-to-tier-removal) | ████████░░ 75% |
 | 19 | [road-to-token-economy-cache.md](roadmaps/road-to-token-economy-cache.md) | 7 | 38 | 38 | 0 | 0 | 0 | [2](#blockers-road-to-token-economy-cache) | ░░░░░░░░░░ 0% |
-| 20 | [road-to-token-economy-dispatch.md](roadmaps/road-to-token-economy-dispatch.md) | 7 | 36 | 0 | 28 | 8 | 0 | [3](#blockers-road-to-token-economy-dispatch) | ██████████ 100% |
-| 21 | [road-to-token-economy-recycling.md](roadmaps/road-to-token-economy-recycling.md) | 5 | 26 | 26 | 0 | 0 | 0 | [2](#blockers-road-to-token-economy-recycling) | ░░░░░░░░░░ 0% |
-| 22 | [road-to-ui-track-integrity-followup.md](roadmaps/road-to-ui-track-integrity-followup.md) | 1 | 10 | 10 | 0 | 0 | 0 | [2](#blockers-road-to-ui-track-integrity-followup) | ░░░░░░░░░░ 0% |
-| 23 | [road-to-worktree-hygiene.md](roadmaps/road-to-worktree-hygiene.md) | 1 | 9 | 2 | 7 | 0 | 0 | [1](#blockers-road-to-worktree-hygiene) | ████████░░ 78% |
-| 24 | [road-to-zero-ceremony-settings.md](roadmaps/road-to-zero-ceremony-settings.md) | 5 | 19 | 1 | 17 | 1 | 0 | 0 | █████████░ 94% |
+| 20 | [road-to-token-economy-recycling.md](roadmaps/road-to-token-economy-recycling.md) | 5 | 26 | 26 | 0 | 0 | 0 | [2](#blockers-road-to-token-economy-recycling) | ░░░░░░░░░░ 0% |
+| 21 | [road-to-ui-track-integrity-followup.md](roadmaps/road-to-ui-track-integrity-followup.md) | 1 | 10 | 10 | 0 | 0 | 0 | [2](#blockers-road-to-ui-track-integrity-followup) | ░░░░░░░░░░ 0% |
+| 22 | [road-to-worktree-hygiene.md](roadmaps/road-to-worktree-hygiene.md) | 1 | 9 | 2 | 7 | 0 | 0 | [1](#blockers-road-to-worktree-hygiene) | ████████░░ 78% |
+| 23 | [road-to-zero-ceremony-settings.md](roadmaps/road-to-zero-ceremony-settings.md) | 5 | 19 | 1 | 17 | 1 | 0 | 0 | █████████░ 94% |
 
 ---
 
@@ -513,44 +504,6 @@ _1 blocker resolved._
     mode). The census ranks the repeaters by measured load; 3.3 targets the
     top of that list instead of a guessed set.
   - **Resolved when:** the census note exists and 3.3's target list cites it.
-
-### [road-to-token-economy-dispatch.md](roadmaps/road-to-token-economy-dispatch.md)
-
-**Road to token-economy — dispatch: the always-on stack stops paying the full harness price per spawn** — 28 / 28 done (100%)
-
-| # | Phase | State | Open | Done | Deferred | Cancelled | % |
-|---|---|---|---:|---:|---:|---:|---:|
-| 1 | measure the floor before touching it | ✅ done | 0 | 4 | 0 | 0 | 100% |
-| 2 | a role axis in the hook manifest | ✅ done | 0 | 4 | 0 | 0 | 100% |
-| 3 | worker thin projection, cut where the data says | ✅ done | 0 | 1 | 3 | 0 | 100% |
-| 4 | rung 0.5: ask, don't spawn | ✅ done | 0 | 4 | 0 | 0 | 100% |
-| 5 | model tiering stops being advisory | ✅ done | 0 | 2 | 1 | 0 | 100% |
-| 6 | the envelope is the only return channel | ✅ done | 0 | 3 | 0 | 0 | 100% |
-| 7 | what this roadmap will not do | ✅ done | 0 | 10 | 4 | 0 | 100% |
-
-<a id="blockers-road-to-token-economy-dispatch"></a>
-**Blockers**
-
-- **fork-spawn-cache-verification** (owner: maintainer) — blocks any strengthening of the shipped fork-vs-subagent ordering rule into a "prefer fork" DEFAULT
-  - **What to do:**
-    in cache-economy Phase 4, which shipped the rule as "ordering, not
-    default") says a fork reuses the parent's prompt cache on its first
-    request while a fresh spawn holds a separate cache; this repo has never
-    observed it live. Run a two-arm live probe (fork vs fresh, identical
-    task, token accounting from the transcript ledger via `cc_transcript.ts`),
-    record both numbers.
-  - **Resolved when:** the probe note exists; doctrine cites it or the null (no measurable difference) is published and the ordering rule stays as-is.
-- **worker-chain-host-delivery** (owner: maintainer) — blocks (was) Phase 2 shipping as more than manifest prose - **Probe result:** (a) An Agent-tool subagent's tool env is NOT distinguishable from the parent's: `CLAUDE_CODE_CHILD_SESSION=1` appears in BOTH (it marks the tool child process, not the session), and `CLAUDE_CODE_SESSION_ID` carries the PARENT id inside the subagent — no per-spawn env marking is possible on this host, and no observed discriminator exists (the judgment ladder's caller-supplied stance stands). (b) A subagent leg creates NO own dispatcher feedback-dir session (462 dirs before == after; newest = parent session) — subagent sessions have no own session_start/user_prompt_submit/stop slots. (c) Consequence, exactly the pre-registered cut: the role axis binds where the suite launches a separate CLI session itself — today the council CLI transport (`clients.ts`), which pays the full chain in every member session and is now marked `worker`. Agent-tool spawns keep the full chain until the host offers per-spawn identity (upstream NOT_PLANNED).
-  - **What to do:**
-  - **Resolved when:** ~~a probe transcript shows which slots fire in a worker session, and Phase 2's step list cites it.~~ Met — steps 2.2/2.3 cite the probe; contract section: hook-architecture-v1.md § roles axis.
-- **reviewer-tier-quality-floor** (owner: maintainer) — blocks Phase 5.3 default-shipping (reviewer on small tier)
-  - **What to do:**
-    comparison on real review tasks from the `review_skipped`-driven reviewer
-    dispatches: small-tier vs main-model verdict agreement + missed-defect
-    count. Pre-registered null: "small tier misses materially more" is
-    publishable and pins the reviewer to the main model with the evidence
-    attached.
-  - **Resolved when:** the comparison note exists and 5.3's default cites it.
 
 ### [road-to-token-economy-recycling.md](roadmaps/road-to-token-economy-recycling.md)
 

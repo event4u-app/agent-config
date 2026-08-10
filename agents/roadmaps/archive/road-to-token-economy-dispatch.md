@@ -523,3 +523,5 @@ result and the projection widens by evidence, not by fear.
 - [x] Nothing on the cache-economy refusal list was rebuilt (anti-dump
       check: grep the diff for proxy/TTL/auto-tuning mechanisms → zero).
       <!-- verified 2026-08-10: see 7.6 annotation -->
+
+<!-- Deferred items migrated to agents/roadmaps/later/road-to-token-economy-dispatch-followup.md on 2026-08-10 -->
