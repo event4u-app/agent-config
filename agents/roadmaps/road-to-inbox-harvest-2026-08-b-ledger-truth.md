@@ -31,11 +31,21 @@ returns **0 hits**: nothing anywhere distinguishes the model that was asked for
 from the model that answered.
 
 - [ ] **1.1 Read the served model off the API response.**
-      `src/scripts/ai_council/clients.ts` stores `model: this.model` — the
-      **requested** id — at every one of its 22 `new CouncilResponse` sites
-      (:545, :577, :586, :618, :704, :721, :780, :787, :798 among them), while the
-      Anthropic response object's own `model` field is read nowhere in the file.
-      Extract it beside the existing `_getattr(response, 'content')` read (:594).
+      `src/scripts/ai_council/clients.ts` has **22** `new CouncilResponse` sites
+      (`:584`, `:616`, `:702`, `:719`, `:785`, `:796`, …), and each writes the
+      **requested** id through a `model: this.model` assignment (`:545`, `:577`,
+      `:586`, `:618`, `:704`, `:721`, `:780`, `:787`, `:798`, … — those are the
+      assignment lines, not the constructor lines; an earlier draft of this step
+      conflated the two counts). The response object's own model field is read
+      nowhere. **Only four are live-API success sites** — `:616` Anthropic,
+      `:719` OpenAI, `:796` Gemini, `:878` xAI/Perplexity via the shared
+      OpenAI-compatible client; every other site is an error path and correctly
+      keeps the default. **The field name is not uniform across providers:**
+      Gemini reports it as `model_version`, not `model`, so a literal
+      single-field read leaves Gemini silently empty. Read it beside the existing
+      `_getattr(response, 'content')` (`:594`). CLI transports carry no
+      served-model field at all, so `''` is the honest value there rather than a
+      parsed guess.
       <!-- verify: task test -- --filter=clients -->
 - [ ] **1.2 Carry it as a distinct `CouncilResponse` field.** The class is
       declared at `clients.ts:199-213` with `model: string` at :201 and an

@@ -101,14 +101,20 @@ from.
 
 1. A solo-concluded pass is distinguishable from a full-attendance one by reading
    `agents/runtime/council/events.log` alone.
-2. **No `member_slot` vocabulary is introduced.** `grep -rn
+2. **No `member_slot` vocabulary is introduced — this constrains 1.1, it does not
+   block it.** 1.1 writes **plain member ids**, which is the convention the tree
+   already uses: `AbsentMemberRecord.member` is a bare `string` documented as
+   "Provider name (or `provider/model` — whatever the caller's roster used)"
+   (`ai_council/session.ts:59-66`), carried on `absent_members` at `:103`. What is
+   banned is **slot indirection**, not identification. `grep -rn
    'member_slot\|memberSlot\|slot_index' src/scripts/ai_council/` returns **zero**
    today, and `agents/roadmaps/road-to-council-blind-review.md` is `status: ready`
    with open work in Phase 2 (`:145`) and Phase 3 (`:179`); its anonymisation seam
    is `ai_council/orchestrator.ts:1430-1433` and `:1589` (`Response-A` labels for
-   the peer-review pass). 1.1 records `member` as the already-public name the
-   absent-list at `council_cli.ts:662-666` already carries, or it waits for that
-   roadmap's seam. A parallel anonymisation vocabulary is drift this repo has paid
+   the peer-review pass). So 1.1 records `member` as the already-public name the
+   absent-list at `council_cli.ts:662-666` already carries, and only a
+   slot-numbering scheme waits for that roadmap's seam. A parallel anonymisation
+   vocabulary is drift this repo has paid
    for before.
 
 ## Phase 2 — A verdict that disagrees with its own tally
