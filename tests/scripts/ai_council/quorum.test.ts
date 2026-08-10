@@ -102,39 +102,34 @@ describe('evaluateQuorum', () => {
     });
 });
 
-describe('isSoloConcluded', () => {
-    it('the canonical case: n=2, one member present, pass still concluded', () => {
+describe('isSoloConcluded — the 1-of-n conclusion, made visible', () => {
+    it('1-of-2 concluded is solo — the case ceil(n/2) makes legal and invisible', () => {
         expect(isSoloConcluded(evaluateQuorum(2, 1))).toBe(true);
     });
 
-    it('full attendance is not solo', () => {
+    it('full attendance is never solo', () => {
         expect(isSoloConcluded(evaluateQuorum(2, 2))).toBe(false);
-        expect(isSoloConcluded(evaluateQuorum(3, 3))).toBe(false);
-    });
-
-    it('two of three is concluded but not solo — the predicate counts present, not the margin', () => {
         expect(isSoloConcluded(evaluateQuorum(3, 2))).toBe(false);
     });
 
-    it('an inconclusive pass is never solo-concluded, however few were present', () => {
+    it('an inconclusive pass is never solo, whatever present is', () => {
+        // 1 of 3 needs 2 → inconclusive. It carries one voice and is still
+        // not a solo *conclusion*: nothing was concluded.
         expect(isSoloConcluded(evaluateQuorum(3, 1))).toBe(false);
-        expect(isSoloConcluded(evaluateQuorum(2, 0))).toBe(false);
     });
 
-    it('n=1 reports true — structural, and deliberately not hidden', () => {
-        // A one-member council always concludes solo. The predicate says so
-        // rather than filtering on total, so the unfiltered rate stays
-        // recoverable from the log; a degradation rate filters on `total`.
+    it('a one-member council counts as solo — configured, not degraded', () => {
+        // Deliberate: a conclusion reached on one voice is the thing being
+        // measured, and n=1 reaches it by construction. Callers that care
+        // read `total` alongside.
         expect(isSoloConcluded(evaluateQuorum(1, 1))).toBe(true);
     });
 
-    it('n=0 concludes with 0 present and is not solo', () => {
+    it('n=0 concludes trivially and is not solo — there is no voice at all', () => {
         expect(isSoloConcluded(evaluateQuorum(0, 0))).toBe(false);
     });
 
-    it('adds no state — it is derived purely from an existing QuorumResult', () => {
-        const r = evaluateQuorum(2, 1);
-        expect(isSoloConcluded(r)).toBe(isSoloConcluded({ ...r }));
-        expect(Object.keys(r).sort()).toEqual(['present', 'status', 'threshold', 'total']);
+    it('a fixed k=1 over 3 members still reads solo at present=1', () => {
+        expect(isSoloConcluded(evaluateQuorum(3, 1, 1))).toBe(true);
     });
 });

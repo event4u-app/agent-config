@@ -4,25 +4,15 @@
  * Ported from the retired Python `src/scripts/ai_council/events_log.py` (ADR-200 —
  * Python→TS migration, Phase 1). Appends one JSON line per council event to
  * `<project_root>/agents/runtime/council/events.log`. The schema carries the
- * minimum needed to answer the "why did the council skip / block this?"
- * question at retro time without leaking prompt content.
- *
- * Schema v2 adds the `quorum_result` action (`appendQuorumEvent`), so that a
- * solo-concluded pass is distinguishable from a full-attendance one. Before
- * it, attendance was rendered into the pass artifact and nowhere else, and
- * the two were downstream-identical in the log. The version bumped rather
- * than the action being added silently, because a consumer that validates
- * `action` against the v1 enum would otherwise see an unknown value with no
- * signal that the schema moved.
+ * minimum needed to answer "why did the council skip / block this?" and,
+ * since v2, "who actually attended?" — at retro time, without leaking prompt
+ * content. v2 added the `quorum_result` action and nothing else; see
+ * `appendQuorumEvent`.
  *
  * Privacy floor:
  *     `original_ask` is never written verbatim — the caller passes the raw
  *     string, and `appendEvent` writes `sha256(value)[:12]` as
- *     `original_ask_hash`. The v2 quorum record goes one step further and is
- *     PII-excluded *by construction*: `QuorumAbsentEntry` has no field able
- *     to hold free-form text, so the raw provider error `detail` a caller
- *     already carries alongside it cannot reach the log even by mistake.
- *     A scrubber that could fail is replaced by a type that cannot.
+ *     `original_ask_hash`.
  *
  * Kill-switch:
  *     `AGENT_CONFIG_NO_EVENTS_LOG=1` short-circuits `appendEvent` to a no-op.
@@ -37,8 +27,15 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+import { isSoloConcluded, type QuorumResult } from './quorum.js';
 import type { AbsentReason } from './transport_resolver.js';
 
+/**
+ * v2 adds the `quorum_result` action (and nothing else) — see
+ * `appendQuorumEvent`. Every schema-v1 field keeps its name, type and
+ * position, so a v1 reader parses a v2 necessity line unchanged; only the
+ * action vocabulary widened.
+ */
 export const SCHEMA_VERSION = 2;
 
 export type EventAction = 'proceed' | 'skip_necessity' | 'block_quota' | 'quorum_result';
@@ -209,7 +206,7 @@ export function appendEvent(
         original_ask_hash: _hash_original_ask(rawAsk),
     };
     // Pass-through for any caller-supplied diagnostic fields that are not in
-    // the schema-v1 reserved set. The schema-v1 fields above always win on
+    // the reserved set. The reserved fields above always win on
     // collision.
     const reserved = new Set([...Object.keys(record), 'original_ask']);
     for (const [k, v] of Object.entries(event)) {
@@ -233,92 +230,109 @@ export function defaultLogPath(): string {
 // ── quorum attendance (schema v2) ───────────────────────────────────
 
 /**
- * The reason vocabulary an absent member is bucketed under.
+ * Which of the two `evaluateQuorum` call sites produced the record.
  *
- * The static half is imported rather than restated: `AbsentReason` in
- * `transport_resolver.ts` is the tree's own type and the only thing that may
- * define those four tokens. The two additional literals are not invented
- * here either — they are what the CLI actually writes today:
- * `'unavailable'` is the runtime fallback at `council_cli.ts` when
- * `absentReasonFromCliFailure` cannot classify a failure, and
- * `'binary_missing'` is the construction-time literal a missing CLI binary
- * produces. Any token outside this union is a caller bug, not a new bucket.
+ * `pre_run` is `build_members`' construction-time reading — who could be
+ * built at all. `post_run` is `_postRunQuorum`'s re-derivation over what
+ * actually returned a usable response. One pass emits BOTH, and they
+ * disagree whenever a member constructs and then fails mid-flight, so a
+ * consumer that counts attendance without splitting on this field
+ * double-counts every pass.
+ */
+export type QuorumEventPhase = 'pre_run' | 'post_run';
+
+/**
+ * One absent member, in the vocabulary the tree actually uses:
+ * `AbsentReason` plus the two runtime fallbacks the CLI writes directly —
+ * `'unavailable'` (transport resolved to ∅) and `'binary_missing'` (a CLI
+ * client refused to construct).
  */
 export type QuorumAbsentReason = AbsentReason | 'unavailable' | 'binary_missing';
 
-/**
- * One absent member, PII-excluded by construction.
- *
- * There is deliberately no `detail` field. Both call sites carry a raw
- * provider error string next to `member` / `reason`, and that string is
- * free-form text of unbounded shape — file paths, prompts echoed back by a
- * provider, credentials in a malformed URL. A type that cannot hold it needs
- * no scrubber and has no scrubber to fail. The reason token is what a rate
- * is computed over; the prose was never the signal.
- */
-export interface QuorumAbsentEntry {
+export interface QuorumAbsence {
     readonly member: string;
     readonly reason: QuorumAbsentReason;
 }
 
-/** Where in the pass lifecycle the quorum was evaluated. */
-export type QuorumStage = 'construction' | 'post_run';
+/**
+ * Which CLI path produced the line. `estimate` spends nothing — it is a cost
+ * preview — so every rate computed over these lines must exclude it, and it
+ * is recorded rather than suppressed so the exclusion is the consumer's
+ * explicit act instead of an invisible one.
+ */
+export type QuorumCommand = 'run' | 'estimate' | 'debate';
+
+/**
+ * `single` means `--single` filtered the roster down to one member BEFORE
+ * the pass ran. Without this field a deliberate solo dispatch is byte-identical
+ * to a configured one-member council, and the solo-conclusion rate cannot tell
+ * the two apart — which is the one distinction it exists to make.
+ */
+export type QuorumDispatch = 'full' | 'single';
 
 export interface QuorumEventInput {
-    /** `evaluateQuorum`'s verdict — the two-state enum, unchanged. */
-    readonly status: 'concluded' | 'inconclusive';
-    /** The concrete k this pass needed. */
-    readonly threshold: number;
-    /** Enabled members configured for this pass — the n. */
-    readonly total: number;
-    /** Members that produced a usable response. */
-    readonly present: number;
-    /** Absent members, one entry each. */
-    readonly absent: readonly QuorumAbsentEntry[];
+    readonly lens: string;
+    readonly invocation: string;
+    readonly phase: QuorumEventPhase;
+    readonly command: QuorumCommand;
+    readonly dispatch: QuorumDispatch;
     /**
-     * `construction` — evaluated while building the member roster, before any
-     * provider call. `post_run` — re-derived over what was actually usable.
-     * Both are emitted; a consumer that counts a pass twice is reading the
-     * stage field wrong, not seeing a duplicate.
+     * Enabled members in the config, BEFORE `--single` / `--siblings`
+     * filtering and before construction failures. `result.total` is the
+     * roster that survived; when the two differ, the gap is exactly the
+     * "council degraded by configuration" case a post_run-only reading is
+     * otherwise blind to.
      */
-    readonly stage: QuorumStage;
-    /** `isSoloConcluded(result)` — carried so no consumer re-derives it. */
-    readonly solo_concluded: boolean;
+    readonly configuredTotal: number;
+    readonly result: QuorumResult;
+    readonly absent: readonly QuorumAbsence[];
 }
 
 /**
- * Append a `quorum_result` event. **Fail-open by contract**: never throws,
- * never rejects a caller. Attendance telemetry that can abort a council pass
- * is worse than no telemetry — the pass is the product, the record is the
- * observation of it.
+ * Append one `quorum_result` line — the attendance record that makes a
+ * solo-concluded pass distinguishable from a full-attendance one.
  *
- * Returns `true` when a line was written, `false` on the kill-switch or on
- * any suppressed failure.
+ * Privacy floor, by construction: `QuorumAbsence` carries a member name and
+ * a closed-vocabulary reason and has **no field able to hold free-form
+ * content**. The CLI's own absent entries carry a `detail` string built from
+ * provider error text (which can embed paths and prompts); it is dropped
+ * here rather than scrubbed, so there is no scrubber to fail.
+ *
+ * Fail-open: attendance telemetry must never be able to kill a council
+ * pass, so every error is swallowed and reported as `false`. The reachable
+ * ones are filesystem errors from `appendEvent`'s own `mkdirSync` /
+ * `appendFileSync` — an unwritable path, ENOTDIR, a full disk. Its other
+ * throw (an invalid action) is unreachable from here, since this function
+ * supplies the action itself.
  */
 export function appendQuorumEvent(
-    q: QuorumEventInput,
+    input: QuorumEventInput,
     opts: AppendEventOptions = {},
 ): boolean {
     try {
         return appendEvent(
             {
-                lens: '',
-                invocation: '',
+                lens: input.lens,
+                invocation: input.invocation,
                 action: 'quorum_result',
-                verdict: q.status,
-                provider_caps: {},
-                status: q.status,
-                threshold: q.threshold,
-                total: q.total,
-                present: q.present,
-                solo_concluded: q.solo_concluded,
-                stage: q.stage,
-                absent: q.absent.map((a) => ({ member: a.member, reason: a.reason })),
+                verdict: input.result.status,
+                phase: input.phase,
+                command: input.command,
+                dispatch: input.dispatch,
+                threshold: input.result.threshold,
+                configured_total: input.configuredTotal,
+                total: input.result.total,
+                present: input.result.present,
+                // Written by the predicate, never re-derived from the numbers
+                // downstream: one definition of "concluded on a single voice",
+                // in `quorum.ts`, so a change to it cannot leave a consumer's
+                // copy silently stale.
+                solo: isSoloConcluded(input.result),
+                absent: input.absent.map((a) => ({ member: a.member, reason: a.reason })),
             },
             opts,
         );
     } catch {
-        // Fail-open: an unwritable log never breaks a council pass.
         return false;
     }
 }

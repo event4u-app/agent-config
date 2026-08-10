@@ -84,22 +84,20 @@ export function evaluateQuorum(
 }
 
 /**
- * Was this pass concluded by a single member?
+ * Did this pass conclude on a single voice?
  *
- * A **derived predicate**, deliberately not a third `QuorumStatus`. The
- * two-state enum and the `ceil(n/2)` threshold above are untouched: the
- * ceil-vs-floor divergence is a recorded decision (see this module's header),
- * and adding a status would make every existing `status === 'concluded'`
- * check silently wrong at n=2. This answers a different question — not
- * "did the pass conclude" but "how thin was the agreement that concluded
- * it" — and the answer is advisory. Nothing gates on it.
+ * Derived — deliberately NOT a third `QuorumStatus`. `ceil(n / 2)` makes
+ * 1-of-2 a legitimate `concluded`, which is the intended behaviour (see the
+ * module header); this predicate does not dispute it, it only makes the
+ * shape visible so a reader can tell a one-member conclusion from a
+ * full-attendance one. Advisory render and telemetry only: no gate reads it,
+ * and nothing downstream may branch on it without its own decision record.
  *
- * The reading at `total === 1`: a one-member council always concludes solo.
- * That is structural, not degradation, and the predicate reports it as
- * `true` anyway rather than hiding it behind a `total > 1` guard — a
- * consumer computing the *degradation* rate filters on `total` itself,
- * which the quorum record carries. Baking the filter in here would make the
- * unfiltered number unrecoverable from the log.
+ * `total` is deliberately NOT consulted. A council configured with a single
+ * member concludes solo by construction, and that is still a conclusion
+ * reached on one voice — collapsing it into "not solo" would hide exactly
+ * the passes a solo-conclusion rate is measured to find. A consumer that
+ * cares about the distinction reads `result.total` alongside.
  */
 export function isSoloConcluded(result: QuorumResult): boolean {
     return result.status === 'concluded' && result.present === 1;

@@ -93,6 +93,10 @@ from.
       (`:44`, `:53-62`), and `src/config/recycle-threshold-budget.json` carries
       `registered_at` / `owner` / `review_by` / `honest_null_consequence`
       (`:4-6`, `:11`). Registration precedes data; no threshold is committed here.
+      Landed as `src/config/quorum-attendance-budget.json`, with a fourth row
+      (`roster_shortfall_rate`) two review rounds forced: attendance alone could
+      not see a council degraded before the pass, and one ratio over config
+      entries vs clients was unbounded under `--siblings`.
 - [~] **1.6 Solo-attendance floor.** Deferred behind `blocker: quorum-solo-floor`
       below — the rate cannot be read before 1.1 accumulates it. 1.1–1.5 ship and
       are useful without it.
