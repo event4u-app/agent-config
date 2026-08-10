@@ -4,9 +4,9 @@
     "recorded_at": "2026-08-10T08:15:00.000Z",
     "git_sha": "4d5130bdd71f797b95db763c6b2a8606e3a8b5bd",
     "run_url": null,
-    "conditions": "Refresh for the 95 -> 96 cli_help_command_count move (session:recycle — road-to-token-economy-recycling Phase 2.2, the recycle-envelope producer). Re-measured locally via the pinned registry-enumeration method: 96. mcp_public_tool_count carried at 19 — this branch adds no MCP server tool.",
+    "conditions": "Refresh for the 95 -> 97 cli_help_command_count move. Two branches added one verb each and each measured 96 independently against a 95 base: session:recycle (road-to-token-economy-recycling Phase 2.2, the recycle-envelope producer) landed on main first, and gates (the owner-filtered reader over the roadmap blocker fields the dashboard already parses but never separates by owner) merged main in and carries the combined number. Re-measured twice via the pinned registry-enumeration method on the merged tree: 97/97. mcp_public_tool_count carried at 19 — neither branch adds an MCP server tool.",
     "measurements": {
-        "cli_help_command_count": 96,
+        "cli_help_command_count": 97,
         "mcp_public_tool_count": 19
     }
 }
