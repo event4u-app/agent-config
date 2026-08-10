@@ -78,33 +78,124 @@ the third. The pattern is not new work to invent — it is work to repeat.
 
 ### blocker: host-capability-default-flip
 
-- **Status:** open
+- **Status:** open — **proposed closure by supersession, pending one maintainer
+  answer** (see below; the answer is a scope clarification, not a design call)
 - **Owner:** maintainer
-- **Blocks:** Phase 1 (all steps)
-- **What to do:** decide what an empty `host_capabilities: {}` means. The
-  template comment says "leave empty to let the agent resolve the manifest from
-  host knowledge"; the loader coerces every absent field to `false`, i.e. *no
-  capability*. Those are opposite semantics for the shipped default, and the
-  difference decides whether the subagent-orchestration layer is on or off for
-  every consumer. Options: make the empty case mean agent-resolved (behaviour
-  change on every install), keep all-false and correct the comment plus every
-  rule that reads the manifest, or add a third explicit state.
-- **Resolved when:** the decision is recorded and the template comment, the
-  loader, and the reading rules agree.
+- **Blocks:** the third acceptance criterion only. It no longer blocks 1.1, 1.2
+  or 1.3 — the decision those steps were waiting to *apply* has been taken and
+  merged, so applying it is no longer a blocked act. Narrowed on measured
+  evidence, not on judgement; the evidence is below.
+- **What to do:** confirm (or reject) the supersession. The decision this blocker
+  asked for was made under `road-to-always-on-orchestration` Phase 1, which chose
+  the **second** of the three options this blocker itself listed — keep all-false,
+  correct the comment, fix every reader — and went further by deleting the
+  settings key outright. Measured on `origin/main` at `c3a30060a`:
+  `subagents.host_capabilities` is **absent from the shipped template** (the
+  template's own comment says it "was REMOVED" and that a leftover key from an
+  older install "is ignored"), absent from the settings schema, and absent from
+  the production code path (`probeHostCapabilities` resolves from a committed
+  host registry plus a live environment probe, and a test pins its arity at 1 so
+  no override parameter can return). There is no empty `host_capabilities: {}`
+  left to assign semantics to.
+- **Resolved when:** the maintainer answers the scope question below. The
+  original wording — "the decision is recorded and the template comment, the
+  loader, and the reading rules agree" — is satisfied for production behaviour
+  and, as of this change, for the documents that describe it.
 
-Not decided here on purpose: this changes what ships to a consumer, which is the
-one class of change this repo does not let an agent make. Naming it is the whole
-of Phase 1 until the decision lands.
+**The one question left, and it is the whole blocker.** "…and the reading rules
+agree" is ambiguous between two readings, and only the owner can say which was
+meant:
+
+1. **Production behaviour** — template, loader, and runtime code agree. This is
+   **complete** and was already complete before this change.
+2. **Documentation exhaustiveness** — every document that describes how to read
+   the manifest is correct too. This had **two live gaps**, both closed here: the
+   contract documented five of the interface's six fields (`worker_respawn`
+   appeared in neither its table nor its example), and no surface reported where
+   a field's value came from.
+
+If reading 1 was meant, this blocker is resolved and the third acceptance
+criterion closes. If reading 2 was meant, it is resolved as of this change. Under
+either reading the remaining act is a confirmation, which is why it is filed as a
+question rather than as work.
+
+Still not decided by an agent, deliberately: **nothing here changes what ships to
+a consumer.** The consumer-visible flip was made by a human merging a different
+roadmap. Recognising that merge is bookkeeping; making it would have been the
+class of change this repo does not let an agent make, and this change does not
+make it. The distinction — decide-what-ships versus decide-whether-the-criteria-
+are-met — is the one an AI council (anthropic claude-sonnet-4-5 + openai gpt-4o,
+2 rounds, 2026-08-10) converged 2/2 on, while also converging that the closure
+itself stays a maintainer act. Hence: proposed, not taken.
 
 ## Phase 1 — The worst instance, once its semantics are decided
 
-- [ ] 1.1 Apply the blocker's decision to the template comment, the loader, and
+- [x] 1.1 Apply the blocker's decision to the template comment, the loader, and
   every rule that reads the host-capability manifest, so the three agree.
-- [ ] 1.2 Make the probe honest: it currently reports a settings-derived answer as
+  <!-- The template and the loader already agreed (the key is gone from both);
+  the DOCUMENTS describing them did not. Closed: `host-capability-manifest.md`
+  gains the missing `worker_respawn` row in its Fields table and its schema
+  example, plus a Provenance section; `docs/contracts/capability-answerability.md`
+  moves the "Host subagent-spawn" row off `undecided — blocked`;
+  `delegation-policy` states the check. -->
+
+  **What "the three" turned out to be.** Two of the three were already
+  consistent, so the step's real content was the third — and the third had a
+  defect the roadmap had not seen: the interface declares **six** capability
+  fields and the contract documented **five**. `worker_respawn` existed in the
+  code, was referenced by a *different* roadmap's blocker, and appeared in no
+  document a reader would consult. A step written as "make the docs match the
+  decision" closed by finding the docs did not match the *code*.
+
+- [x] 1.2 Make the probe honest: it currently reports a settings-derived answer as
   though it were a detection. Either detect, or say the number came from settings
   and may not reflect the host.
-- [ ] 1.3 A test that the shipped template and the loader agree about the empty
+  <!-- `describeHostCapabilities(hostId)` in `src/scripts/_lib/host_capability.ts`
+  returns the manifest plus a per-field `sources` map (`registry` | `live-probe`
+  | `default`); `routing:doctor` prints it with a legend. The manifest half
+  delegates to `probeHostCapabilities` so the readout cannot disagree with the
+  value the delegation layer gated on. -->
+
+  **The dishonesty moved rather than existing as described.** The step says the
+  probe "reports a settings-derived answer" — that path was deleted with the
+  settings key. What survives is a different misattribution at the same spot:
+  the function is named `probe*` and the contract called it "a live environment
+  probe", while **five of its six fields** come from a hardcoded table with
+  exactly one row and only `agent_teams` is ever read from the environment. So
+  on any host but one, every field is the all-false safe default — meaning
+  *nobody answered* — and it renders identically to *checked, absent*. Verified
+  by running the verb, not by reading it: `subagent_spawn=true(registry)` on the
+  known host, `agent_teams=true(live-probe)` under the env flag, and all six
+  `default` for `--platform cursor`.
+
+  **Shape chosen: extend the existing diagnostic, not a new verb.** `routing:doctor`
+  already printed the manifest alongside its `ASSUMED`/`observed` host flag — the
+  same "say how you know" shape this step needs — so provenance went there. An AI
+  council (anthropic claude-sonnet-4-5 + openai gpt-4o, 2026-08-10) converged 2/2
+  on this over a dedicated verb, on the roadmap's own Risk-1 grounds: a sixth
+  probe nobody references repeats the defect at higher cost.
+
+- [x] 1.3 A test that the shipped template and the loader agree about the empty
   case — the contradiction above is exactly what no test asserts today.
+  <!-- `tests/scripts/_lib_host_capability.test.ts`: a provenance block (5 cases,
+  incl. a cannot-drift-from-probeHostCapabilities property) and a
+  contract↔interface parity block (3 cases). 35 tests green. -->
+
+  **Most of the literal ask was already pinned — by other work, and that is
+  stated rather than re-claimed.** `lint_no_activation_gates` fails the build if
+  the shipped template reintroduces a subagent activation key, and
+  `routing_doctor.test.ts` + `delegation_nudge_hook.test.ts` each already pin
+  that a leftover `subagents.host_capabilities` override no longer applies. So
+  the template↔loader half had a gate and two tests before this change.
+
+  **What nothing pinned is the drift that had actually shipped**, so that is what
+  the new tests assert: contract table ↔ interface, contract example ↔ interface,
+  and the provenance field list ↔ interface — three independent drift axes, all
+  anchored on the interface declaration parsed from source. Each was verified by
+  **mutate-then-revert**, not by reading: deleting the `worker_respawn` table row
+  fails exactly one case, deleting it from the example fails exactly one other,
+  and dropping it from the provenance list fails two. A parity test that has
+  never been red is a tautology.
 
 ## Phase 2 — Answerability for the gaps with no probe at all
 
@@ -406,19 +497,28 @@ half a fix.
 | Skill-body sweep for further instances | The rule corpus was swept exhaustively; ~290 skill bodies were not. More instances are likely there, and the count above is therefore a floor, not a total. |
 | Running the probes to confirm the code-path conclusions | The sweep was read-only. The rank-1 "false on every stock install" is a code-path reading, not an observed run — 1.2 is where that gets executed rather than argued. |
 | The `.tokens.json` ↔ `tokens.json` naming split (43 sites, 15 files) | Found while doing 2.4. The authoring surface (`brand-to-tokens`) and the reading surface (`BRAND_TOKEN_PATHS`) name different files, so this is a rename decision with consumer-visible reach, not a prose sweep. `brand-source-of-truth` is corrected because it is 2.4's own target and its two halves would otherwise contradict each other; `brand:status` reports the mismatch wherever it occurs. Picking the surviving name is a maintainer call. |
+| Renaming `probeHostCapabilities` to something that is not a claim | The name is the misattribution 1.2 is about — five of six fields are table lookups, not probes. But it is referenced from the contract, two hooks, the doctor, a judgment-ladder comment and its own test file, so a rename is a cross-surface sweep whose only payload is a word. The provenance readout removes the *consequence* of the wrong name at the point a reader would be misled, which is where it costs the least. Recorded so the next reader knows the name was seen and left. |
+| Widening the capability registry beyond its one row | Seven of eight declared platforms have no row, so `subagent_spawn` is `default` (no answer) there — which is now visible instead of implied. Adding a row requires OBSERVING the primitive on that host, which is a measurement campaign, not a documentation change. The registry's own comment already forbids speculative entries. |
 | A second profile resolver | `src/scripts/config/profiles.ts` resolves `<root>/profiles/<id>.yml` via `artefact_roots()`, while `src/cli/commands/profiles.ts` reads `src/profiles/<id>.yaml` — different directory, different extension. Same shape as the table's five adjacent path defects, found while building 2.1, and outside the four this roadmap enumerated. |
 
 ## Acceptance criteria
 
-- [ ] Every capability in the seven-row table either has a probe that answers it,
+- [x] Every capability in the seven-row table either has a probe that answers it,
   or a rule that states the answer is unavailable and what the agent should do
   instead. No row is left implying coverage it does not have.
-  <!-- OPEN, and not closable here. Rows 2-7 are covered (council:status,
-  packs:active, mcp:available, hooks:status, brand:status, plus the design-review
-  rule's existing degradation disclosure). Row 1 — host subagent-spawn — is
-  exactly the row whose probe is dishonest, and fixing it IS step 1.2, blocked on
-  the maintainer's host-capability decision. Flipping this while row 1 still
-  implies coverage it does not have would be the overclaim the row describes. -->
+  <!-- All seven rows covered. Rows 2-7 as before (council:status, packs:active,
+  mcp:available, hooks:status, brand:status, plus the design-review rule's
+  existing degradation disclosure). Row 1 — host subagent-spawn — closed by 1.2:
+  `routing:doctor` answers it and states per field whether the answer is a
+  committed observation, a live read, or no answer at all. -->
+
+  **Row 1 was the row whose probe implied coverage it did not have, and the fix
+  is the disclosure rather than a detection.** This repo cannot detect
+  `subagent_spawn` on an arbitrary host — no such check exists — so the honest
+  close is the one the rule for render capability already models: state what is
+  known, name what is not, and never let an unanswered field read as a measured
+  absence. `delegation-policy` now carries that instruction at the point the
+  `false` would be misread.
 
 - [x] No probe ships without at least one rule or command referencing it; a verb
   nobody points at counts as unshipped.
@@ -439,9 +539,19 @@ half a fix.
   break.
 - [ ] The host-capability default is decided, and the template comment, the
   loader, and the reading rules agree — pinned by a test.
-  <!-- OPEN — blocked on `host-capability-default-flip` (Phase 1), a
-  consumer-visible default flip that is a maintainer decision by this repo's own
-  discipline. -->
+  <!-- OPEN on the first clause only, and deliberately. "Decided" is satisfied in
+  substance (all-false, settings key removed, merged under
+  road-to-always-on-orchestration Phase 1) but the closure of a maintainer-owned
+  blocker stays a maintainer act — council 2/2, 2026-08-10. The rest of the
+  criterion is met: template, loader, reading rules and the documents describing
+  them agree, pinned by the parity block in
+  tests/scripts/_lib_host_capability.test.ts. Flip this when the blocker's one
+  scope question is answered. -->
+
+  Left open **on purpose**, not by omission: an agent recording "already decided
+  elsewhere" against a maintainer-owned blocker is exactly the inference by which
+  an agent would make a consumer-visible change without making one visibly. The
+  work is done; the signature is not the agent's to forge.
 
 - [x] The ten rules naming `.agent-settings.yml` bare either carry the resolution
   chain or point at it.

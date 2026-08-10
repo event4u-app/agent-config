@@ -105,7 +105,17 @@ plus this telemetry). The
 capability gate itself resolves from the committed host registry merged with a
 live environment probe in `src/scripts/_lib/host_capability.ts`
 (`probeHostCapabilities` — capability is a fact about the host, never a
-settings override). What stays
+settings override).
+
+**Never read a `false` capability as a host limitation without checking where it
+came from.** The registry holds one row, so on every other host all six fields
+are the all-false safe default — which records that *nobody answered*, not that
+the host cannot spawn. `agent-config routing:doctor [--platform <host>]` prints
+the value **and** its provenance per field (`registry` = a committed observation
+this repo made once · `live-probe` = established in this process · `default` =
+no answer). Run it before concluding delegation is unavailable here; the
+same-shaped wrong guess about the council is the incident
+[`council-availability`](council-availability.md) exists for. What stays
 model-carried, honestly: the decomposition itself, the per-return
 verification, and every dispatch on hosts without hook slots. The nudges are
 advisory by design — whether they change behaviour is measured by the
