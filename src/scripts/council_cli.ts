@@ -2444,6 +2444,13 @@ function cmd_run(
             quorum_out,
         });
     }
+    // Measured, never assumed: `_apply_solo_dispatch` escalates back to the
+    // full roster on three paths (empty fallback chain, no chain member
+    // runtime-present, the picked member vanished). `--single` is therefore a
+    // request, not an outcome, and a `dispatch` field written from the flag
+    // would claim a solo pass that did not happen — contaminating the one
+    // split the solo-conclusion rate depends on.
+    const roster_before_dispatch = members.length;
     if (_getattr(args, 'single', false)) {
         const [filtered, solo_banner] = _apply_solo_dispatch(members);
         members = filtered;
@@ -2452,6 +2459,8 @@ function cmd_run(
         }
         _emit_shadow_slo_banner();
     }
+    const dispatch_shape: QuorumDispatch =
+        members.length < roster_before_dispatch ? 'single' : 'full';
     if (table === null) {
         // Anchor to the PROJECT root — the module default writes into the
         // installed package dir when run from a consumer (pollutes the npm
@@ -2632,10 +2641,11 @@ function cmd_run(
     // and merging them here would double-count a member absent in both.
     _emitQuorumEvent('post_run', post_run.quorum, post_run.absent, {
         command: 'run',
-        // `--single` filtered the roster to one BEFORE the pass. Without this
-        // the line is byte-identical to a configured one-member council, and
-        // the solo-conclusion rate cannot make the one distinction it exists for.
-        dispatch: _getattr(args, 'single', false) ? 'single' : 'full',
+        // Whether the roster actually shrank — see `dispatch_shape`. Without
+        // this the line is byte-identical to a configured one-member council,
+        // and the solo-conclusion rate cannot make the one distinction it
+        // exists for.
+        dispatch: dispatch_shape,
         ...(configured_total !== null ? { configuredTotal: configured_total } : {}),
         lens: question.mode,
         invocation: String(_getattr(args, 'invocation', 'agent')),

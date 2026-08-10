@@ -3,9 +3,11 @@
  *
  * Ported from the retired Python `src/scripts/ai_council/events_log.py` (ADR-200 —
  * Python→TS migration, Phase 1). Appends one JSON line per council event to
- * `<project_root>/agents/runtime/council/events.log`. Schema v1 carries the
- * minimum needed to answer the "why did the council skip / block this?"
- * question at retro time without leaking prompt content.
+ * `<project_root>/agents/runtime/council/events.log`. The schema carries the
+ * minimum needed to answer "why did the council skip / block this?" and,
+ * since v2, "who actually attended?" — at retro time, without leaking prompt
+ * content. v2 added the `quorum_result` action and nothing else; see
+ * `appendQuorumEvent`.
  *
  * Privacy floor:
  *     `original_ask` is never written verbatim — the caller passes the raw
@@ -204,7 +206,7 @@ export function appendEvent(
         original_ask_hash: _hash_original_ask(rawAsk),
     };
     // Pass-through for any caller-supplied diagnostic fields that are not in
-    // the schema-v1 reserved set. The schema-v1 fields above always win on
+    // the reserved set. The reserved fields above always win on
     // collision.
     const reserved = new Set([...Object.keys(record), 'original_ask']);
     for (const [k, v] of Object.entries(event)) {
@@ -297,9 +299,11 @@ export interface QuorumEventInput {
  * here rather than scrubbed, so there is no scrubber to fail.
  *
  * Fail-open: attendance telemetry must never be able to kill a council
- * pass, so every error — an unwritable log dir, a full disk — is swallowed
- * and reported as `false`. `appendEvent` itself throws only on an invalid
- * action, which this function cannot produce.
+ * pass, so every error is swallowed and reported as `false`. The reachable
+ * ones are filesystem errors from `appendEvent`'s own `mkdirSync` /
+ * `appendFileSync` — an unwritable path, ENOTDIR, a full disk. Its other
+ * throw (an invalid action) is unreachable from here, since this function
+ * supplies the action itself.
  */
 export function appendQuorumEvent(
     input: QuorumEventInput,
