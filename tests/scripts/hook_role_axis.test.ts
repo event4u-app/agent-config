@@ -16,8 +16,23 @@ import { _check_roles } from '../../src/scripts/lint_hook_manifest.js';
 const REPO_ROOT = path.resolve(__dirname, '..', '..');
 const MANIFEST = path.join(REPO_ROOT, 'src', 'scripts', 'hook_manifest.yaml');
 
-/** The Phase 2.3 orchestrator-only set, pinned. */
-const WORKER_DROP = ['delegation-nudge', 'end-review-nudge', 'council-availability', 'team-review-gate', 'self-repair'];
+/**
+ * The Phase 2.3 orchestrator-only set, pinned.
+ *
+ * `session-eol` joined the set in road-to-token-economy-recycling Phase 3.2:
+ * its advisory tells the USER to run `session:recycle` and clear, and a
+ * worker neither talks to the user nor can clear its own session — the same
+ * reason `end-review-nudge` sits here. Its recording half is orchestrator
+ * business too: the fill level that matters is the main session's.
+ */
+const WORKER_DROP = [
+    'delegation-nudge',
+    'end-review-nudge',
+    'council-availability',
+    'team-review-gate',
+    'self-repair',
+    'session-eol',
+];
 
 function manifest(): JsonObject {
     return _load_yaml(MANIFEST);

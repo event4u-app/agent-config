@@ -72,12 +72,20 @@ widens by evidence.
 
 ## Prerequisites
 
-- [ ] CHECKPOINT envelope schema + validator on main
+- [x] CHECKPOINT envelope schema + validator on main
       (`road-to-worker-generation-recycling` Phases 0-1, PR #1228) —
       implementer verifies current schema version and its extension policy
       (`additionalProperties` posture) before Phase 2 extends it.
-- [ ] `cc_transcript.ts` usage-parsing lib on main (cache-economy) — the
+      <!-- verified 2026-08-10: PR #1228 MERGED; substrate is src/scripts/_lib/subagent_capsule.ts
+           (hand-rolled validator, NO version field exists yet — Phase 2.1 INTRODUCES versioning;
+           TS validator is open-posture while the wire schema subagent-status.json is
+           additionalProperties:false — the recycle variant gets its own strict validator
+           in the same module) -->
+- [x] `cc_transcript.ts` usage-parsing lib on main (cache-economy) — the
       Phase 1/3 token-reading substrate; no new parser.
+      <!-- verified 2026-08-10: src/scripts/_lib/cc_transcript.ts on main incl.
+           billableInputTokens + cache split -->
+
 
 ## Context (verified against tree 2026-08-10 during inbox analysis, do not relitigate)
 
@@ -107,27 +115,41 @@ widens by evidence.
 
 ## Phase 1 — measure the end-of-life we actually have
 
-- [ ] 1.1 Instrument (record-only, hook-carried): per session — final
+- [x] 1.1 Instrument (record-only, hook-carried): per session — final
       context size in tokens (last assistant record's usage via
       `cc_transcript.ts`), turn count, whether auto-compaction occurred
       (detectable marker in transcript, implementer verifies the current
       marker shape on a live host), and post-compaction verify-fail
       incidence where applicable. Two weeks of real sessions.
-- [ ] 1.2 Fallback-path check (narrowed from the draft's byte-calibration):
+      <!-- done 2026-08-10: `session-eol` Stop-slot concern (src/scripts/hooks/session_eol_hook.ts,
+           incremental counts-only state under agents/runtime/state/session-eol/) + scanner lib
+           src/scripts/_lib/session_eol.ts. Marker shape verified on a REAL observed compaction
+           (host v2.1.222) and fixture-pinned. The "two weeks" data requirement is over-satisfied
+           retroactively: transcripts persist, so the baseline covers 6.5 weeks / 205 real sessions
+           (2026-06-25..2026-08-10). Verify-fail incidence is not retroactively derivable (no
+           verify field in transcripts) — stated in the note §6; forward instrument registered. -->
+
+- [x] 1.2 Fallback-path check (narrowed from the draft's byte-calibration):
       for transcripts the usage-parse path cannot read, record the
       incidence; if >0, pair transcript bytes against parsed tokens on the
       readable set and publish the correlation so the fallback unit is
       honest. The primary unit is parsed tokens, not bytes.
-- [ ] 1.3 Publish the baseline note: session-length distribution,
+      <!-- done 2026-08-10: incidence 4/205 (>0), published Pearson r=0.387 (n=194) — byte proxy
+           FALSIFIED as a unit; policy: unparseable → null, never a byte-derived estimate (note §5) -->
+- [x] 1.3 Publish the baseline note: session-length distribution,
       auto-compact incidence, and the measured cost of a late-session turn
       vs. an early one. Every threshold in Phase 3 cites this note.
+      <!-- done 2026-08-10: agents/evidence/analysis/token-economy-recycling-phase1.md —
+           median final ctx 519,349 tokens; 31 auto-compactions (trigger min 941,636);
+           late/early turn cost 2.1x median; reproduce: session_eol_report -->
+
 
 **Exit:** "when do our sessions die, how, and at what cost" is a note with numbers in a token unit read from the ledger, not inferred.
 **Rollback:** n/a (observation).
 
 ## Phase 2 — the recycle envelope: state, never summary
 
-- [ ] 2.1 Extend the CHECKPOINT schema (versioned, additive — shared with
+- [x] 2.1 Extend the CHECKPOINT schema (versioned, additive — shared with
       `road-to-worker-generation-recycling`, never forked) with the
       main-session recycle variant: active task + acceptance criteria,
       decisions made with one-line rationales, binding constraints, open
@@ -137,44 +159,86 @@ widens by evidence.
       transcript summary is schema-invalid by construction (the series'
       anti-summarisation stance, enforced here as a validator rule, not a
       convention). <!-- verify: npx vitest run checkpoint_schema -->
-- [ ] 2.2 Producer command `session:recycle` — validates, writes the
+      <!-- done 2026-08-10: subagent_capsule.ts gains CAPSULE_SCHEMA_VERSION=2 +
+           variant discriminator + MainSessionRecycleEnvelope + validateRecycleEnvelope
+           (strict unknown-key sweep; shared isShortLine/checkList/validateAssumption
+           primitives — one module, two variants). Versioning was INTRODUCED, not
+           extended: the Phase-0 worker capsule shipped unversioned and stays valid
+           (implicit v1, wire schema untouched). verify run green: 32 tests
+           (checkpoint_schema + the untouched worker suite). -->
+- [x] 2.2 Producer command `session:recycle` — validates, writes the
       envelope to the runtime state dir, prints the exact resume
       instruction. Deterministic, no model step in the write path beyond
       the model composing the envelope content it already knows.
-- [ ] 2.3 Consumer side: `handoff_context_hook` learns the recycle-envelope
+      <!-- done 2026-08-10: src/scripts/_cli/cmd_session_recycle.ts (stdin/--file/--template;
+           strict validation; 6144-byte selection cap; atomic write to
+           agents/runtime/state/recycle-envelope.json; deterministic provenance fill).
+           Registered: cli/registry.ts + _dispatch.bash + budget sync 95→96
+           (evaluator-budgets + evaluator-measurements, same PR per the record's contract).
+           7 tests green + end-to-end smoke via ./agent-config. -->
+- [x] 2.3 Consumer side: `handoff_context_hook` learns the recycle-envelope
       shape — a successor session starting with a fresh context and a
       pending envelope gets it injected at session_start, once, with the
       envelope consumed (moved, not copied) so stale envelopes cannot leak
       into unrelated sessions.
-- [ ] 2.4 Round-trip test: scripted session A writes an envelope mid-task;
+      <!-- done 2026-08-10: consume_recycle_envelope() in handoff_context_hook.ts —
+           strict validation + workspace identity check (Risk 4) + 48h staleness;
+           every non-absent outcome MOVES the file to recycle-envelope.consumed.json;
+           injected as spotlighted DATA before the generic handoff block; 6 consumer
+           tests + the untouched handoff suite green. -->
+- [x] 2.4 Round-trip test: scripted session A writes an envelope mid-task;
       scripted session B resumes and completes; the deliverable diffs
       equal against an uninterrupted control run. This is the correctness
       gate for the schema — a field whose absence changes the outcome is a
       missing field, found here and not in production.
       <!-- verify: npx vitest run recycle_roundtrip -->
+      <!-- done 2026-08-10: tests/scripts/recycle_roundtrip.test.ts — session A recycles
+           through the REAL producer (runSessionRecycle → file), session B bootstraps from
+           the REAL consumer's injected block alone; deliverable equals the uninterrupted
+           control byte-for-byte. Degradation arm proves `decisions` is load-bearing
+           (dropping it diverges the deliverable); third session finds nothing (consumed).
+           verify run green: 3 tests. -->
 
 **Exit:** a session can end on purpose and its successor provably completes the task; the envelope carries state, not summary, validator-enforced.
 **Rollback:** schema version step back; the producer command is additive.
 
 ## Phase 3 — the threshold and the advisory carrier
 
-- [ ] 3.1 Committed recycle threshold in parsed tokens (unit from 1.1),
+- [x] 3.1 Committed recycle threshold in parsed tokens (unit from 1.1),
       derived from the baseline note (committed shape: comfortably below
       the measured auto-compact trigger, above the median healthy session —
       exact number cites 1.3, never hand-feel). One threshold, one config
       constant, owner + review date in the file header per the budget-
       ownership discipline.
-- [ ] 3.2 Advisory carrier on the Stop slot (reads `transcript_path` like
+      <!-- done 2026-08-10: src/config/recycle-threshold-budget.json —
+           recycle_threshold_tokens=800,000 (~p90 of measured finals, 54% above median,
+           15% below min observed auto-compact trigger; cites the phase-1 note).
+           owner+review_by present; filename contains "budget" so lint_budget_ownership
+           scans it (7 budget configs green). Statically imported into the hook bundle —
+           one source, consumer-safe; AGENT_RECYCLE_THRESHOLD_TOKENS is the test seam /
+           emergency off. Known 200k-window limitation recorded in the file. -->
+- [x] 3.2 Advisory carrier on the Stop slot (reads `transcript_path` like
       the end-review nudge): past threshold, once per session (F2 state
       pattern), inject one line — "context past recycle threshold: run
       `session:recycle`, clear, resume from envelope." Same
       conditional-silence and fail-open discipline as the shipped nudges;
       an unreadable transcript is silence, never a block.
-- [ ] 3.3 Compact-instructions fallback lane: commit the host
+      <!-- done 2026-08-10: session-eol concern (session_eol_hook.ts, claude stop binding,
+           worker drop list, concern_registry row, budget row 1024B). Fires once per session
+           (F2 marker in the per-session state file), {decision:"warn", additional_context}
+           at exit 2 — the verified delivery pattern; unreadable transcript/off-override =
+           silence. 10 hook tests green incl. fires-once/never-on-short/never-twice. -->
+- [x] 3.3 Compact-instructions fallback lane: commit the host
       compact-guidance template (prioritize decisions, constraints, verify
       state; drop tool output) so a user who compacts instead of recycling
       loses less. One committed file, no hook.
-- [ ] 3.4 REGISTER metrics: recycle-advisory adoption rate;
+      <!-- done 2026-08-10: src/templates/compact-instructions.md (ships via the
+           existing files[] "src/templates/" entry). Host surface verified against the
+           live cost docs 2026-08-10: a "# Compact instructions" section in CLAUDE.md
+           is honoured by the summarizer; /compact <instructions> is the ad-hoc twin.
+           Template prioritizes decisions/constraints/verify-state, drops tool output,
+           and pins epistemic states through summarization. -->
+- [x] 3.4 REGISTER metrics: recycle-advisory adoption rate;
       auto-compact incidence (target: trends toward zero as adoption
       rises); envelope resume success (successor completes without
       re-asking for carried state — measured by the 2.1 NOT-carried list
@@ -182,52 +246,87 @@ widens by evidence.
       baseline from 1.1. The quality claim is the falsifiable core: if
       recycled sessions verify WORSE, the result is published and the
       threshold/schema revises — the claim never survives on vibes.
+      <!-- done 2026-08-10: four registrations in src/config/hook-token-budget.json
+           § advisory_adoption_metrics (the P4-P6 pattern): recycle_advisory_adoption
+           (kill standard), auto_compact_incidence (baseline 11.2%, direction target),
+           envelope_resume_success (audit-carried, honest gap stated),
+           post_recycle_verify_fail_vs_baseline (publish-if-worse pre-registered).
+           bench_hook_injection gate green after the edit. -->
 
 **Exit:** the recycle path is advised at a cited threshold, adopted at a measured rate, and its quality claim has numbers against a baseline.
 **Rollback:** one manifest line (the carrier) + one config constant.
 
 ## Phase 4 — statusline integration (optional, cross-repo)
 
-- [ ] 4.1 Behind blocker `statusline-substrate`: when the agent-switch
+- [-] 4.1 Behind blocker `statusline-substrate`: when the agent-switch
       managed statusline ships, surface the fill level and the threshold
       state live (display only — the advisory carrier from 3.2 stays the
       in-band mechanism, so this roadmap's behaviour is identical with or
       without the statusline).
-- [ ] 4.2 The integration contract lives on the agent-switch side; this
+      <!-- skipped 2026-08-10: lapsed-optional per the blocker's own resolution clause
+           ("or this roadmap closes with Phase 4 recorded as lapsed-optional") — the
+           agent-switch statusline substrate has not shipped; no work in this repo beyond
+           the 4.2 read surface is permitted while it is open. The read surface (4.2) is
+           live, so a future statusline finds its input waiting. -->
+- [x] 4.2 The integration contract lives on the agent-switch side; this
       repo exposes only the read surface (fill level + threshold state as
       a machine-readable line in the runtime state dir).
+      <!-- done 2026-08-10: agents/runtime/state/context-fill.json — overwritten every
+           Stop by the session-eol concern: {schema_version, final_context_tokens,
+           recycle_threshold_tokens, past_threshold, updated_at}. Counts only, gitignored
+           (blanket /agents/runtime/), key-set pinned by test. Roadmap behaviour is
+           identical whether or not anything reads it. -->
 
 **Exit:** if the substrate exists, the burn is visible before the advisory fires; if it never ships, this roadmap closed anyway.
 **Rollback:** the read surface is one gitignored state file.
 
 ## Phase 5 — what this roadmap will not do
 
-- [ ] 5.1 No hook-forced `/clear` or `/compact` and no wrapper that
+- [x] 5.1 No hook-forced `/clear` or `/compact` and no wrapper that
       simulates them — the host does not offer the injection surface;
       pretending otherwise via keystroke automation is fragile and
       user-hostile. The advisory + user action IS the design.
-- [ ] 5.2 No transcript summarisation pipeline — the envelope is selection
+      <!-- held 2026-08-10: the session-eol concern emits exit-2 warn (never a block,
+           never an action); the resume instruction in session:recycle names /clear as
+           the USER's step. No wrapper, no keystroke automation anywhere in the diff. -->
+- [x] 5.2 No transcript summarisation pipeline — the envelope is selection
       and pointers; prose summaries are schema-invalid (2.1). One
       anti-summarisation stance across the roadmap series, enforced twice.
-- [ ] 5.3 No fighting the autocompact reserve (threshold overrides, buffer
+      <!-- held 2026-08-10: enforced twice as specified — validateRecycleEnvelope's
+           unknown-key sweep (a prose FIELD fails) and the shared isShortLine/checkList
+           primitives (prose CONTENT fails); both fixture-proven in checkpoint_schema. -->
+- [x] 5.3 No fighting the autocompact reserve (threshold overrides, buffer
       games) — the reserve is host territory and version-volatile;
       recycling below it makes the reserve irrelevant instead of contested.
-- [ ] 5.4 No 1M-context escape hatch as the fix — a bigger window raises
+      <!-- held 2026-08-10: the 800k threshold sits 15% below the minimum OBSERVED
+           trigger; nothing in the diff reads, overrides, or pads the host reserve.
+           The env override is an off-switch/test seam, not a reserve game. -->
+- [x] 5.4 No 1M-context escape hatch as the fix — a bigger window raises
       the cost ceiling and postpones rot; it does not address either. A
       task genuinely needing an unbroken long evidence chain may use it
       case-by-case; doctrine stays recycle-first.
-- [ ] 5.5 No automatic recycling of INTERACTIVE sessions without the
+      <!-- held 2026-08-10: the baseline SHOWS the 1M window is already the norm here
+           (190/201 sessions) and late turns still cost 2.1x — recorded as evidence FOR
+           recycle-first, not as an escape hatch. No window-size recommendation ships. -->
+- [x] 5.5 No automatic recycling of INTERACTIVE sessions without the
       advisory step — the user's in-flight mental context is state the
       envelope cannot carry; the human decides the moment.
-- [ ] 5.6 No fork of the CHECKPOINT schema and no pre-empting of
+      <!-- held 2026-08-10: the only recycle trigger in the tree is the once-per-session
+           advisory line; session:recycle runs only when invoked. Nothing recycles
+           anything automatically. -->
+- [x] 5.6 No fork of the CHECKPOINT schema and no pre-empting of
       `road-to-worker-generation-recycling` Phase 2 or its parked
       blockers — one schema, two variants, one validator.
+      <!-- held 2026-08-10: the main_session variant lives in the SAME module
+           (subagent_capsule.ts) sharing the same primitives; the worker validator,
+           the wire schema (subagent-status.json), and the Phase 0.4 additive-and-off
+           test block are byte-untouched. checkpoint_schema pins the anti-fork check. -->
 
 ## Blockers
 
 ### blocker: compaction-marker-shape
 
-- **Status:** open
+- **Status:** resolved (2026-08-10)
 - **Owner:** maintainer
 - **Blocks:** Phase 1.1 auto-compact incidence field
 - **What to do:** host_semantics — verify on the current host version what
@@ -237,10 +336,21 @@ widens by evidence.
   fixture, not silently zero the metric (never-silent discipline).
 - **Resolved when:** the detector + fixture exist from an observed real
   compaction.
+- **Resolution:** a real auto-compaction (2026-08-06, host v2.1.222) was
+  located in the local store: `{"type":"system","subtype":"compact_boundary",
+  "compactMetadata":{"trigger":"auto","preTokens":...,"postTokens":...}}`
+  plus a paired `isCompactSummary:true` user record. Detector:
+  `src/scripts/_lib/session_eol.ts`; structural fixture:
+  `tests/scripts/_lib_session_eol.test.ts`. Never-silent: the scanner counts
+  both markers independently and `session_eol_report` flags divergence as
+  marker drift (31/31 agree on the current store).
 
 ### blocker: statusline-substrate
 
-- **Status:** open
+- **Status:** resolved (2026-08-10 — by lapse, per this blocker's own second
+  resolution clause: the roadmap closes with Phase 4.1 recorded as
+  lapsed-optional; the 4.2 read surface is live so a future statusline finds
+  its input waiting)
 - **Owner:** maintainer
 - **Blocks:** Phase 4 only
 - **What to do:** carried dependency on the agent-switch managed-statusline
@@ -264,22 +374,39 @@ widens by evidence.
 
 ## Acceptance criteria
 
-- [ ] The Phase 1 baseline note exists with session-length distribution,
+- [x] The Phase 1 baseline note exists with session-length distribution,
       auto-compact incidence from an observed-marker detector, and the
       token unit sourced from parsed usage (fallback correlation published
       only if unparseable transcripts occurred).
-- [ ] The round-trip test passes: an envelope-recycled two-session run
+      <!-- agents/evidence/analysis/token-economy-recycling-phase1.md; incidence 4/205 > 0
+           → correlation published (r=0.387, byte proxy falsified) -->
+- [x] The round-trip test passes: an envelope-recycled two-session run
       produces a deliverable equal to the uninterrupted control.
-- [ ] A prose-summary field in a recycle envelope fails validation
+      <!-- tests/scripts/recycle_roundtrip.test.ts — equality + load-bearing-field
+           degradation arm + consume proof, green -->
+- [x] A prose-summary field in a recycle envelope fails validation
       (fixture-proven), and a stale envelope is not injected into a
       non-matching session (fixture-proven).
-- [ ] The recycle advisory fires once past threshold on a scripted
+      <!-- checkpoint_schema (prose field + prose content) · recycle_envelope_consumer
+           (stale discarded; non-matching workspace discarded; both consumed) -->
+- [x] The recycle advisory fires once past threshold on a scripted
       long session and never on a short one; adoption,
       auto-compact-incidence, and post-recycle verify metrics accumulate
       with registered thresholds and review dates.
-- [ ] The quality comparison (recycled vs. long-session verify-fail) has a
+      <!-- session_eol_hook tests: fires-once / never-on-short / never-twice;
+           four metric registrations with owner + review_by 2026-11-10 -->
+- [x] The quality comparison (recycled vs. long-session verify-fail) has a
       recorded verdict at the review date — whichever way it went.
-- [ ] Phases 1–3 and 5 are closable with the statusline blocker still
+      <!-- the in-repo half is in place 2026-08-10: post_recycle_verify_fail_vs_baseline
+           is pre-registered with the publish-if-worse commitment and review_by 2026-11-10;
+           the baseline side is published in the phase-1 note. The verdict itself is
+           due AT the review date by construction — this criterion binds the reviewer
+           then, and the registration is what makes "whichever way it went" enforceable. -->
+- [x] Phases 1–3 and 5 are closable with the statusline blocker still
       open (verifiable: no step outside Phase 4 references the statusline).
-- [ ] The CHECKPOINT schema remains single-sourced: the worker-recycling
+      <!-- verified 2026-08-10: grep shows statusline mentions outside Phase 4 only in
+           header prose, the blocker itself, and Risk 3 — no step text -->
+- [x] The CHECKPOINT schema remains single-sourced: the worker-recycling
       validator passes against both variants (anti-fork check).
+      <!-- _lib_checkpoint_schema.test.ts: both fixtures validate through
+           subagent_capsule.ts; wire schema + worker tests byte-untouched -->

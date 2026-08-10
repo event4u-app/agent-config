@@ -2,14 +2,14 @@
 
 > Auto-generated — do not edit. Regenerate with `task roadmap-progress` or by running the `update_roadmap_progress` script for your install; rewritten on every roadmap create / execute / completion change (timestamp lives in git history).
 >
-> 21 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **26** open blockers
+> 20 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **24** open blockers
 
 ## Overall
 
-**168 / 289 steps done · 58%**
+**168 / 263 steps done · 64%**
 
 ```text
-███████████████████████░░░░░░░░░░░░░░░░░   58%
+██████████████████████████░░░░░░░░░░░░░░   64%
 ```
 
 ## Open roadmaps
@@ -34,9 +34,8 @@
 | 16 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 6 | 3 | 0 | 0 | [1](#blockers-road-to-subagent-value-realization-followup) | ███░░░░░░░ 33% |
 | 17 | [road-to-surface-consolidation.md](roadmaps/road-to-surface-consolidation.md) | 3 | 14 | 1 | 12 | 1 | 0 | [2](#blockers-road-to-surface-consolidation) | █████████░ 92% |
 | 18 | [road-to-tier-removal.md](roadmaps/road-to-tier-removal.md) | 4 | 8 | 2 | 6 | 0 | 0 | [1](#blockers-road-to-tier-removal) | ████████░░ 75% |
-| 19 | [road-to-token-economy-recycling.md](roadmaps/road-to-token-economy-recycling.md) | 5 | 26 | 26 | 0 | 0 | 0 | [2](#blockers-road-to-token-economy-recycling) | ░░░░░░░░░░ 0% |
-| 20 | [road-to-ui-track-integrity-followup.md](roadmaps/road-to-ui-track-integrity-followup.md) | 1 | 10 | 10 | 0 | 0 | 0 | [2](#blockers-road-to-ui-track-integrity-followup) | ░░░░░░░░░░ 0% |
-| 21 | [road-to-worktree-hygiene.md](roadmaps/road-to-worktree-hygiene.md) | 1 | 9 | 2 | 7 | 0 | 0 | [1](#blockers-road-to-worktree-hygiene) | ████████░░ 78% |
+| 19 | [road-to-ui-track-integrity-followup.md](roadmaps/road-to-ui-track-integrity-followup.md) | 1 | 10 | 10 | 0 | 0 | 0 | [2](#blockers-road-to-ui-track-integrity-followup) | ░░░░░░░░░░ 0% |
+| 20 | [road-to-worktree-hygiene.md](roadmaps/road-to-worktree-hygiene.md) | 1 | 9 | 2 | 7 | 0 | 0 | [1](#blockers-road-to-worktree-hygiene) | ████████░░ 78% |
 
 ---
 
@@ -457,35 +456,6 @@ _1 blocker resolved._
     `build_discovery_manifest.ts`, publish it, and let that date pass. The council
     ruled the date itself is not an agent decision.
   - **Resolved when:** a concrete `sunset` date is published in the manifest's `tier` deprecation entry AND that date has passed with no external breakage reported — at which point Phase 3 records the confirmation and Phase 4's external half becomes executable.
-
-### [road-to-token-economy-recycling.md](roadmaps/road-to-token-economy-recycling.md)
-
-**Road to token-economy — recycling: deliberate envelope-mediated fresh starts instead of lossy auto-compaction** — 0 / 26 done (0%)
-
-| # | Phase | State | Open | Done | Deferred | Cancelled | % |
-|---|---|---|---:|---:|---:|---:|---:|
-| 1 | measure the end-of-life we actually have | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
-| 2 | the recycle envelope: state, never summary | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
-| 3 | the threshold and the advisory carrier | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
-| 4 | statusline integration (optional, cross-repo) | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
-| 5 | what this roadmap will not do | ⬜ not started | 13 | 0 | 0 | 0 | 0% |
-
-<a id="blockers-road-to-token-economy-recycling"></a>
-**Blockers**
-
-- **compaction-marker-shape** (owner: maintainer) — blocks Phase 1.1 auto-compact incidence field
-  - **What to do:**
-    a compaction event looks like in the transcript file (marker, summary
-    block shape, anything greppable) and pin the detector to observed
-    reality with a fixture. A host update changing the shape must fail the
-    fixture, not silently zero the metric (never-silent discipline).
-  - **Resolved when:** the detector + fixture exist from an observed real compaction.
-- **statusline-substrate** (owner: maintainer) — blocks Phase 4 only
-  - **What to do:**
-    design shipping. No work in this repo beyond the read-surface file until
-    it does. Explicitly NOT a blocker for roadmap closure — Phases 1–3 + 5
-    close without it.
-  - **Resolved when:** the statusline exists and 4.1 lands, or this roadmap closes with Phase 4 recorded as lapsed-optional.
 
 ### [road-to-ui-track-integrity-followup.md](roadmaps/road-to-ui-track-integrity-followup.md)
 

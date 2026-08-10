@@ -484,6 +484,25 @@ concerns:
     severity: advisory
     # Provable from the hook's own source: READ_TOOLS ∪ WRITE_TOOLS.
     tools: [Read, Edit, Write]
+  # road-to-token-economy-recycling Phases 1.1 / 3.2 / 4.2 — session
+  # end-of-life instrument + recycle advisory. Every Stop, incrementally
+  # folds the transcript's newly appended lines (payload `transcript_path`,
+  # validated like end-review-nudge) into counts-only per-session state
+  # under agents/runtime/state/session-eol/ (final context tokens via
+  # cc_transcript's billable-input definition, turn count, observed
+  # compaction events) and overwrites the machine-readable fill surface
+  # agents/runtime/state/context-fill.json. Past the committed recycle
+  # threshold (src/config/recycle-threshold-budget.json), injects ONE
+  # advisory line ONCE per session (F2) — `{decision:"warn", reason,
+  # additional_context}` at exit 2, the verified delivery pattern of
+  # end-review-nudge. Absent config or unreadable transcript is silence,
+  # never a block; hooks cannot inject /clear, so the recycle action itself
+  # is advisory-carried by design. fail_closed: false.
+  session-eol:
+    script: src/scripts/hooks/session_eol_hook.ts
+    args: []
+    fail_closed: false
+    severity: advisory
 
 # Role axis (road-to-token-economy-dispatch Phase 2). The dispatcher reads
 # AGENT_CONFIG_SESSION_ROLE (resolved via _lib/session_role.ts — set ONLY by
@@ -502,7 +521,7 @@ roles:
     # Orchestrator-only concerns (Phase 2.3): a worker never talks to the
     # user, never dispatches sub-workers, never runs the council, and its
     # complaints route via the orchestrator.
-    drop: [delegation-nudge, end-review-nudge, council-availability, team-review-gate, self-repair]
+    drop: [delegation-nudge, end-review-nudge, council-availability, team-review-gate, self-repair, session-eol]
 
 platforms:
   augment:
@@ -515,7 +534,7 @@ platforms:
   claude:
     session_start:    [chat-history, hot-context, handoff-context, session-canary, council-availability, first-run-gate, onboarding-gate, verify-before-complete, minimal-safe-diff, profile-staleness, wrapper-freshness, surface-probe, session-register]
     session_end:      [chat-history, memory-learn, session-register]
-    stop:             [chat-history, hot-context, verify-before-complete, team-review-gate, end-review-nudge, turn-end-gate, self-repair, session-register]
+    stop:             [chat-history, hot-context, verify-before-complete, team-review-gate, end-review-nudge, turn-end-gate, self-repair, session-register, session-eol]
     user_prompt_submit: [chat-history, verify-before-complete, minimal-safe-diff, language-mirror, delegation-nudge, git-authorization, session-canary, self-repair, session-register]
     pre_tool_use:     [block-no-verify, block-unauthorized-git, evidence-independence, block-kernel-rule-writes, block-config-weakening, rtk-wrap, design-slop, code-graph-nudge, reread-guard]
     post_tool_use:    [chat-history, roadmap-progress, context-hygiene, verify-before-complete, minimal-safe-diff, injection-scan, pr-url-reminder, orchestration-record, edit-shape, language-mirror]
