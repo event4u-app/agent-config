@@ -28,8 +28,8 @@ packs:
 
 Do NOT use when:
 
-- The diff is low-risk and no ownership map exists — fall back to
-  [`reviewer-awareness`](../../rules/reviewer-awareness.md) defaults.
+- The diff is low-risk and no ownership map exists — fall back to the
+  common role vocabulary below.
 - A full PR description is requested — route to
   [`create-pr-description`](../create-pr:description-only/SKILL.md) and let
   it call this skill for the routing block.
@@ -55,7 +55,7 @@ Check, in order:
 Parse each with YAML. Validate `version: 1` is present. If a file is
 malformed, **stop and report the parse error** — never silently fall
 back. If neither file exists, emit the generic role-based fallback
-using [`reviewer-awareness`](../../rules/reviewer-awareness.md).
+using the common role vocabulary below.
 
 **Also** pull agent-written signals via the shared abstraction (see
 [`memory-access`](../../../docs/guidelines/agent-infra/memory-access.md)):
@@ -114,12 +114,29 @@ If `ownership-map.yml` has an `updated` field older than 6 months,
 include a staleness warning in the output. Still use the data — just
 flag it.
 
+## Common role vocabulary
+
+The fallback set when no ownership entry matches. Extend it per project, but
+keep these as the shared names — a role nobody else uses routes to nobody.
+
+| Role | Typical focus |
+|---|---|
+| `backend` | business logic, validation, side effects, data integrity |
+| `frontend` | UX, accessibility, client-side state, rendering |
+| `security` | authz, secrets, trust boundaries, data exposure |
+| `infra` / `ops` | rollout, migration safety, observability, retries |
+| `database` | schema changes, indexes, query plans, rollback realism |
+| `domain owner` | business invariants, policy intent, edge-case correctness |
+| `qa` | test coverage, regression scenarios, flake risk |
+
+Roles, never individuals: a package-shipped artifact names `security`, and the
+consumer's CODEOWNERS or ownership map maps that to a person.
+
 ## Validation
 
 Before returning:
 
-1. Every emitted role is either in the common vocabulary
-   ([`reviewer-awareness`](../../rules/reviewer-awareness.md)) or sourced
+1. Every emitted role is either in the common vocabulary above or sourced
    from an ownership entry — never invented.
 2. Every historical-pattern match cites its `id` and `required_test`
    verbatim.
@@ -191,7 +208,7 @@ Data source: <"ownership-map.yml + historical-bug-patterns.yml"
 
 ## See also
 
-- [`reviewer-awareness`](../../rules/reviewer-awareness.md) — role vocabulary + data-source rules
+- [`reviewer-awareness`](../../rules/reviewer-awareness.md) — the rule that routes here: anchor reviewer choice in paths and risk, never seniority
 - [`review-routing-data-format`](../../../docs/guidelines/agent-infra/review-routing-data-format.md)
 - [`create-pr-description`](../create-pr:description-only/SKILL.md)
 - [`judge-test-coverage`](../judge-test-coverage/SKILL.md) — consumes

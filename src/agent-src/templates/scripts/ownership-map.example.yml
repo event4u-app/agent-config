@@ -3,7 +3,7 @@
 # Copy this file to `.github/ownership-map.yml` (preferred) or
 # `agents/ownership-map.yml` and adapt the entries to your stack.
 # Omitting the file entirely is fine — routing falls back to the
-# generic role vocabulary from `reviewer-awareness`.
+# common role vocabulary in `skill:review-routing`.
 #
 # First match wins per file. List narrower globs before broader ones.
 
