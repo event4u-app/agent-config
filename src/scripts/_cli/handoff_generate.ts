@@ -35,6 +35,12 @@ export const WORD_CAP = 1200;
 const SNIPPET_CHARS = 200;
 const DONE_SNIPPET_CHARS = 400;
 const MAX_ERRORS = 5;
+/**
+ * Per-error cap. Deliberately far above `SNIPPET_CHARS`: an error string is
+ * kept verbatim so it stays greppable, and this is a guard against one absurd
+ * line, not a formatting budget.
+ */
+const MAX_ERROR_CHARS = 1000;
 const MAX_DECISIONS = 5;
 const MAX_FILES = 15;
 
@@ -325,11 +331,23 @@ export function build_handoff(
     );
 
     // Errors + fixes — failure-pattern turns, oldest→newest, last 5.
+    //
+    // Precision rule (Phase 3.1): the error string is carried VERBATIM. It
+    // used to be `_snippet`-ed like every other section, which truncates
+    // mid-string — and a truncated error cannot be grepped, matched against a
+    // tracker, or recognised when it recurs, which is the only reason to
+    // carry it at all. So the FAILURE-matching line is taken whole (capped
+    // only against an absurd single line) instead of the turn being cut at an
+    // arbitrary offset.
     const errors = _redact_items(
         toolish
             .filter((t) => FAILURE_RE.test(t.text))
             .slice(-MAX_ERRORS)
-            .map((t) => _snippet(`${t.tool ? `${t.tool}: ` : ''}${t.text}`, SNIPPET_CHARS)),
+            .map((t) => {
+                const line = t.text.split('\n').find((l) => FAILURE_RE.test(l))?.trim() ?? t.text.trim();
+                const prefix = t.tool ? `${t.tool}: ` : '';
+                return `${prefix}${line}`.slice(0, MAX_ERROR_CHARS);
+            }),
     );
 
     // Key decisions — decision-pattern assistant turns, last 5.
@@ -396,6 +414,16 @@ export function build_handoff(
         }
         for (const s of sections) {
             lines.push('', `## ${s.title}`, '');
+            if (s.title === 'Resume pointer') {
+                // Precision rules (Phase 3.1), rendered where the successor
+                // reads them rather than filed in a doc nobody opens.
+                lines.push(
+                    '> Precision contract: identify code by signature or `path:line`, never by',
+                    '> description; quote error strings verbatim; give every resume step its',
+                    '> expected outcome, so "done" is checkable rather than felt.',
+                    '',
+                );
+            }
             if (s.items.length === 0) {
                 if (s.verbatim && verbatim.withheldLines > 0) {
                     lines.push(`- [${verbatim.withheldLines} line(s) withheld by privacy floor]`);

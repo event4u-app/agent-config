@@ -38,6 +38,7 @@ import {
     CAPSULE_SCHEMA_VERSION,
     validateRecycleEnvelope,
 } from '../_lib/subagent_capsule.js';
+import { collectGrounding } from '../_lib/envelope_grounding.js';
 import { atomic_write_json } from '../hooks/state_io.js';
 
 export interface RecycleResult {
@@ -125,6 +126,18 @@ export function runSessionRecycle(
         envelope['written_at'] = (opts.now ?? new Date()).toISOString();
     }
     if (envelope['workspace'] === undefined) envelope['workspace'] = projectRoot;
+
+    // Scripted grounding (Phase 3.3): the factual fields are READ, never
+    // composed. A model-written branch is a claim; this is a reading. The
+    // composer cannot override them — a "next_task" it got wrong is a
+    // proposal, a "head" it got wrong is a silent stale resume.
+    const grounding = collectGrounding(projectRoot);
+    if (grounding.repo_identity !== null) envelope['repo_identity'] = grounding.repo_identity;
+    if (grounding.branch !== null) envelope['branch'] = grounding.branch;
+    if (grounding.head !== null) envelope['head'] = grounding.head;
+    if (grounding.status_summary !== null) envelope['status_summary'] = grounding.status_summary;
+    if (grounding.last_verify !== null) envelope['last_verify'] = grounding.last_verify;
+    envelope['uncommitted_paths'] = grounding.uncommitted_paths;
 
     const violations = validateRecycleEnvelope(envelope);
     if (violations.length > 0) {

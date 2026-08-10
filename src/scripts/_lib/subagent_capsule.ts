@@ -268,6 +268,23 @@ export interface MainSessionRecycleEnvelope {
      * successor re-burning a recorded dead end.
      */
     failed_approaches: string[];
+    /**
+     * Drift anchor — all three, or none of them is one. Identity is the
+     * canonicalized remote (or the realpath of the common git dir when there
+     * is no remote); branch and HEAD alone cannot tell two worktrees of the
+     * same repo apart, and this tree routinely has many.
+     *
+     * Written by `collectGrounding`, never composed by a model.
+     */
+    repo_identity?: string;
+    branch?: string;
+    head?: string;
+    /** Uncommitted paths at write time — pointers, never a diff. */
+    uncommitted_paths?: string[];
+    /** One line, e.g. `clean working tree` / `7 uncommitted path(s)`. */
+    status_summary?: string;
+    /** The last recorded verification — a command and a time, NOT an exit status. */
+    last_verify?: string;
 }
 
 // ---------------------------------------------------------------------
@@ -419,6 +436,12 @@ const RECYCLE_ENVELOPE_KEYS: ReadonlySet<string> = new Set([
     'next_task',
     'suggested_skills',
     'failed_approaches',
+    'repo_identity',
+    'branch',
+    'head',
+    'uncommitted_paths',
+    'status_summary',
+    'last_verify',
 ]);
 
 /**
@@ -489,6 +512,15 @@ export function validateRecycleEnvelope(input: unknown): string[] {
                 'silence and "nothing was abandoned" stay distinguishable',
         );
     }
+
+    // Drift anchor (Phase 3.2). Optional as a set — an older envelope simply
+    // has none — but each present field must still be a short line.
+    for (const field of ['repo_identity', 'branch', 'head', 'status_summary', 'last_verify'] as const) {
+        if (e[field] !== undefined && !isShortLine(e[field], MAX_REF_CHARS)) {
+            errors.push(`${field} must be a single line of 1–${MAX_REF_CHARS} chars`);
+        }
+    }
+    checkList(errors, 'uncommitted_paths', e['uncommitted_paths'], MAX_REF_CHARS, false);
 
     // Redaction as a SHAPE, not a scrubbing pass (Phase 2.4): content the
     // envelope cannot hold, rather than content something remembers to strip.

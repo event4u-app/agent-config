@@ -38,7 +38,7 @@ The headline is how little survived.
 
 | Draft | Verified disposition | Became |
 | --- | --- | --- |
-| dispatch economy | **87 % already shipped** — 27 of 31 steps are `[x]` on `archive/road-to-token-economy-dispatch.md` (PR #1237) or already parked in `later/road-to-token-economy-dispatch-followup.md` | `road-to-cost-parity-3-handoff-envelope.md` (4 surviving steps) |
+| dispatch economy | **87 % already shipped** — 27 of 31 steps are `[x]` on `archive/road-to-token-economy-dispatch.md` (PR #1237) or already parked in `later/road-to-token-economy-dispatch-followup.md` | `archive/road-to-cost-parity-3-handoff-envelope.md` (4 surviving steps — **done**) |
 | cost-quality parity | **Premise refuted.** It sequenced four "open" roadmaps: three are archived and two of the three names never existed. Its WIP cap, metric-expiry mechanic and release dimension are each separately blocked (below) | this file — target table + ordering only |
 | estate maintenance | **~40 % already covered or done, ~25 % collides with maintainer-blocked work.** Its only hard prerequisite is `never-true` *and* relitigates a standing refusal | `later/road-to-cost-parity-1-rule-payload-diet.md` (the unowned residue, parked) |
 | state-aware dispatch | **Heavy overlap.** Its central premise ("the ladder is shape-only") is false, and 3 of its 5 components are lock-conflicted | `later/road-to-cost-parity-2-state-aware-dispatch.md` (the resolver only, parked) |

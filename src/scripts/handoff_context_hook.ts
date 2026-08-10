@@ -34,6 +34,7 @@ import * as path from 'node:path';
 import process from 'node:process';
 import { fileURLToPath } from 'node:url';
 
+import { collectRepoAnchor, describeDrift } from './_lib/envelope_grounding.js';
 import { readHookStdin } from './hooks/hook_stdin.js';
 import {
     RECYCLE_CONSUMED_REL,
@@ -145,7 +146,12 @@ export function consume_handoff_context(root: string, now: Date = new Date()): C
  *   - consume-on-read, MOVED not copied: every outcome except `absent`
  *     relocates the file to `recycle-envelope.consumed.json` — it can never
  *     leak into a second session, while the last envelope stays
- *     inspectable for debugging.
+ *     inspectable for debugging;
+ *   - drift (Phase 3.2): the envelope's recorded repo identity + branch +
+ *     HEAD are compared against the tree it lands in, and any mismatch LEADS
+ *     the injected block. Never a silent stale resume;
+ *   - focus (Phase 3.4): `AGENT_RESUME_FOCUS` narrows what the successor
+ *     attacks first — the consumer-side mirror of `next_task`.
  */
 export function consume_recycle_envelope(root: string, now: Date = new Date()): ConsumeDecision {
     const target = process.env.AGENT_RECYCLE_ENVELOPE_FILE || path.join(root, RECYCLE_ENVELOPE_REL);
@@ -206,13 +212,19 @@ export function consume_recycle_envelope(root: string, now: Date = new Date()): 
         return { action: 'discard', reason: 'recycle envelope workspace does not resolve' };
     }
 
+    // Drift first: a stale resume against the wrong tree is the failure the
+    // reader must see before anything else in the block.
+    const drift = describeDrift(envelope, collectRepoAnchor(root));
     // Proposal fields carrying an imperative LEAD the block as a stop
     // notice — surfaced, never executed, never silently stripped.
     const warnings = scanEnvelopeDirectives(envelope);
+    const focus = (process.env.AGENT_RESUME_FOCUS ?? '').trim();
     const block = wrapAsPriorSessionData(JSON.stringify(envelope, null, 2), {
         kind: 'recycle-envelope',
         source: RECYCLE_ENVELOPE_REL,
         warnings: [
+            ...drift,
+            ...(focus ? [`FOCUS: attack "${focus}" first — the rest of this envelope is context.`] : []),
             'Re-derive everything under not_carried_forward from source before trusting it.',
             ...warnings,
         ],
