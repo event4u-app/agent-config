@@ -5,7 +5,7 @@
 inputs:
   diff_sha: 84e4596c7d42afbe3d26ee2e2b2e36836b754c97
   scope_hash: 9476261cefe528ebe79da63d6d526a44b0f595da9314fa826efc7f5857d34b43
-  roadmap: agents/roadmaps/road-to-zero-ceremony-settings.md
+  roadmap: agents/roadmaps/archive/road-to-zero-ceremony-settings.md
   roadmap_hash: 9887176041ebee4150fce8304d675c470f166acccc3b5f35d663049ffacfaba2
   ac_hash: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
 excluded: [session-history, agents/runtime, implementation-context]
@@ -24,7 +24,7 @@ dispatched: 2026-08-05T21:06:22Z
 | 7 | low | src/scripts/lint_settings_classes.ts:284 | Ledger accounting misreports a failing target as clean: a stale contract row is `complete`d in the class loop, then produces a finding in the second loop with no ledger call, so `report()` prints it as satisfied while the gate exits 1. The Counts-mismatch findings are likewise unledgered. The verdict is right; the completeness accounting the change advertises is not. | fixed | 84e4596c7 — a stale row now fails its own ledger target in the first loop |
 | 8 | low | docs/contracts/settings-classes.md:331 | Self-contradiction: the document states the C rule was expanded into EIGHT tests and calls test 8 the one to reach for first, then tells the next author to check a new key against "the seven C tests". `lint_settings_classes.ts` repeats "seven explicit tests". | fixed | 84e4596c7 — eight in both the contract checklist and the gate header |
 | 9 | low | src/scripts/_cli/cmd_settings_set.ts:137 | `_setDotted` walks a user-supplied dotted path with plain bracket indexing; a `__proto__` segment steps onto the prototype and the terminal assignment writes onto `Object.prototype`. Not reachable today — the class lookup must return A or B first and no contract row is named `__proto__` — but the guard is a markdown data file, not a code invariant, and the function is exported. | fixed | 84e4596c7 — FORBIDDEN_SEGMENTS refuses __proto__ / constructor / prototype structurally |
-| 10 | low | agents/roadmaps/road-to-zero-ceremony-settings.md:251 | The new blocker says it blocks "Phase 3 (all four steps)" while step 2 is `[x]` and unblocked; steps 3 and 4 are flipped to `[~]` with no inline reason, unlike every other deferral in the file. The dashboard then renders Phase 3 as done at 100% on 1 done / 3 deferred. | fixed | 84e4596c7 — the blocker names steps 1, 3, 4; steps 3 and 4 carry their reason inline |
+| 10 | low | agents/roadmaps/archive/road-to-zero-ceremony-settings.md:251 | The new blocker says it blocks "Phase 3 (all four steps)" while step 2 is `[x]` and unblocked; steps 3 and 4 are flipped to `[~]` with no inline reason, unlike every other deferral in the file. The dashboard then renders Phase 3 as done at 100% on 1 done / 3 deferred. | fixed | 84e4596c7 — the blocker names steps 1, 3, 4; steps 3 and 4 carry their reason inline |
 
 ## Binding-review disposition
 

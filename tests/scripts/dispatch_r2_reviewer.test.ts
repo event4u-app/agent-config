@@ -155,7 +155,16 @@ describe('dispatch_r2_reviewer — package + skeleton', () => {
         // Package files land under <repo>/<out-dir>/<slug>.review-input/.
         const inputDir = path.join(repo, OUT, `${SLUG}.review-input`);
         expect(fs.readFileSync(path.join(inputDir, 'diff.patch'), 'utf-8')).toBe(diff);
-        expect(fs.readFileSync(path.join(inputDir, 'roadmap.md'), 'utf-8')).toBe(ROADMAP);
+        // The snapshot is the roadmap verbatim BELOW a check-refs exemption
+        // header: the copy lives under a directory check_references walks,
+        // while the live roadmap layer is excluded — a roadmap legitimately
+        // quoting a nonexistent path (a documented hallucinated citation)
+        // must not red CI through its own snapshot. roadmap_hash stays bound
+        // to the LIVE text (asserted above), never the stamped copy.
+        const snapshot = fs.readFileSync(path.join(inputDir, 'roadmap.md'), 'utf-8');
+        const snapshotLines = snapshot.split('\n');
+        expect(snapshotLines[0]).toBe('<!-- check-refs: skip -->');
+        expect(snapshot.endsWith(ROADMAP)).toBe(true);
         expect(fs.readFileSync(path.join(inputDir, 'acceptance-criteria.md'), 'utf-8')).toBe(ac);
         const prompt = fs.readFileSync(path.join(inputDir, 'prompt.md'), 'utf-8');
         expect(prompt).toContain('Review only — write no code, fix nothing.');
@@ -628,6 +637,15 @@ describe('dispatch_r2_reviewer — pure helpers', () => {
 
     it('extractAcceptanceCriteria returns empty string when the section is absent', () => {
         expect(extractAcceptanceCriteria('# X\n\n## Phase 1\n- [ ] a\n')).toBe('');
+    });
+
+    it('extractAcceptanceCriteria matches the heading case-insensitively', () => {
+        // The tree carries both `## Acceptance Criteria` and `## Acceptance
+        // criteria`; the case-sensitive version extracted an empty file for the
+        // latter and stamped ac_hash with the SHA-256 of the empty string —
+        // found by the zcs-close R2 review (2026-08-09), pinned here.
+        const lower = '# X\n\n## Acceptance criteria\n\n- crit A\n\n## Next\n';
+        expect(extractAcceptanceCriteria(lower)).toContain('- crit A');
     });
 
     it('reviewScopeDiffArgs excludes every gate-owned evidence path from the reviewed scope', () => {
