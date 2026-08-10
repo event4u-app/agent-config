@@ -33,7 +33,7 @@ afterEach(() => {
 const FIXED = new Date(Date.UTC(2026, 5, 14, 8, 30, 15));
 
 describe('events_log — write + schema', () => {
-    it('writes a v1 record, injects hash, pops original_ask', () => {
+    it('writes a record, injects hash, pops original_ask', () => {
         const lp = path.join(tmpDir(), 'events.log');
         const event: Record<string, unknown> = {
             lens: 'security',
