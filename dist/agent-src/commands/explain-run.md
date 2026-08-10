@@ -42,10 +42,40 @@ Both arguments are optional and narrow the report:
 With neither, the engine reports over all available artefacts. Pass through
 exactly what the user gave — do not invent a task id or a date.
 
+### 1b. Optionally explain ONE dispatch decision
+
+`--decision "<task text>"` adds a section that walks the judgment ladder for
+that text: the rung taken, every rung genuinely evaluated-and-rejected with its
+detector's own reason, and the rungs the resolver never reached (`not-reached` —
+never a fabricated rejection). Absent `--decision`, the section is omitted and
+the rest of the report is unchanged.
+
+The remaining flags are the ladder's input signals — pass only what the user
+states, since each one changes the resolution:
+
+- `--size-estimate <int>` · `--slices <int>` — the size signals; a task at or
+  below the size floor never delegates.
+- `--ordered-plan` — the slices are ordered rather than independent.
+- `--agent-teams` — the host reports the `agent_teams` capability (without it a
+  communication-shaped task degrades below rung 3).
+- `--halted` — `emergency.orchestration_halt` is set.
+- `--no-spawn-primitive` — the host has no `subagent_spawn` primitive.
+- `--inside-subagent` — the classification runs inside a subagent session
+  (recursive-dispatch guard).
+- `--approval-required` — a human decision is pending; resolves ∅ before every
+  rung.
+
+The token/cost line under that section prints the freshest real dispatch record
+in the window and states that it is **not** matched to this decision — the
+record shape carries no decision key, so correspondence is never claimed.
+
 ### 2. Run the engine
 
 ```bash
-./scripts-run src/scripts/explain_run [--task <id>] [--since <ISO-8601>]
+./scripts-run src/scripts/explain_run [--task <id>] [--since <ISO-8601>] \
+  [--decision "<task text>"] [--size-estimate <int>] [--slices <int>] \
+  [--ordered-plan] [--agent-teams] [--halted] [--no-spawn-primitive] \
+  [--inside-subagent] [--approval-required]
 ```
 
 Exit codes:
