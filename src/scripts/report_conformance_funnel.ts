@@ -147,7 +147,7 @@ export function render(r: FunnelReport): string {
     } else {
         lines.push(
             `    Divergence: ${d.shared} shared · ${d.bodyDiff.length} prose-diff · ` +
-                `${d.frontmatterOnly.length} frontmatter-only · ` +
+                `${d.frontmatterOnly.length} frontmatter-only (${d.pathsScopeDiff.length} on \`paths:\`) · ` +
                 `${d.provenanceOnly.length} provenance-only · ${d.projectOnly.length} project-only · ` +
                 `${d.globalOnly.length} global-only` +
                 (d.manualOnlyGlobal.length > 0 ? ` (${d.manualOnlyGlobal.length} by design, ADR-004 manual)` : ''),
@@ -159,9 +159,16 @@ export function render(r: FunnelReport): string {
             lines.push('    (claude-code-rules-dir-contract.md). The project copy is merely the');
             lines.push('    newer one — recency, not precedence.');
         }
-        if (d.frontmatterOnly.length > 0) {
-            lines.push(`    ${String(d.frontmatterOnly.length)} pair(s) differ only in frontmatter — prose byte-identical, nothing`);
-            lines.push('    to act on; the host delivers the prose without that block.');
+        if (d.pathsScopeDiff.length > 0) {
+            lines.push(`    \`paths:\` SCOPE DISAGREEMENT (${String(d.pathsScopeDiff.length)}) — same prose, different load`);
+            lines.push('    schedule. `paths` is the one frontmatter key the host reads, so the copy');
+            lines.push('    without it defeats the other copy\'s scoping: a deliberately scoped');
+            lines.push('    obligation is delivered unconditionally. Act on these.');
+        }
+        const inertFm = d.frontmatterOnly.length - d.pathsScopeDiff.length;
+        if (inertFm > 0) {
+            lines.push(`    ${String(inertFm)} further pair(s) differ only in frontmatter the host does not read —`);
+            lines.push('    prose byte-identical, `paths` in agreement, nothing to act on.');
         }
         if (d.unreadable.length > 0) {
             lines.push(`    Unreadable on one side (${d.unreadable.length}) — a broken install, not a disagreement.`);

@@ -1,3 +1,5 @@
+<!-- check-refs: skip -->
+<!-- verbatim roadmap snapshot for the R2 reviewer; the live roadmap layer is excluded from check_references, and a snapshot must not fail a gate its source is exempt from -->
 ---
 complexity: lightweight
 status: ready
@@ -22,24 +24,14 @@ parent_roadmap: road-to-feedback-9-29
 
 > **CORRECTION, 2026-08-10 — half the premise above is false, and Phase 1 is what
 > falsified it.** All 109 pairs carry **byte-identical prose**; the entire
-> difference is the frontmatter block. So there is no correctness hole of the kind
-> claimed: no governed text differs, nothing is binding-ambiguous, and no claim
-> one copy retracts can be re-asserted by the other.
->
-> **A smaller, real defect survives, and the R2 review caught it after this
-> correction was first written as an all-clear.** For **24** of the 109 the
-> frontmatter disagreement is about `paths:` — the one key this host reads, which
-> decides *when* a rule loads. Project copy scoped, global copy always-on, so the
-> global copy **un-scopes** what the project layer deliberately scoped. Identical
-> text, different schedule. Direction is safe (over-delivery, never a missing
-> obligation) and it is not zero. Whether `install.ts` should emit `paths:` is a
-> consumer-visible behaviour question and is NOT decided here.
->
-> The second defect sat in the instrument — a metadata-only difference was
-> reported as body divergence, i.e. as the one class the report tells a reader to
-> act on — and both are repaired under Phase 2. Classification, the cited
-> precedence answer, and the explanation of why two earlier readings of one commit
-> disagreed:
+> difference is the frontmatter block, which the host does not deliver. So there
+> is no correctness hole: no governed text differs, nothing is
+> binding-ambiguous, and no claim one copy retracts can be re-asserted by the
+> other. The duplication is real and the ambiguity is not. The defect that WAS
+> real sat in the instrument — a metadata-only difference was reported as body
+> divergence, i.e. as the one class the report tells a reader to act on — and it
+> is repaired under Phase 2. Classification, the cited precedence answer, and the
+> explanation of why two earlier readings of one commit disagreed:
 > [`agents/evidence/analysis/carrier-layer-divergence-classification.md`](../evidence/analysis/carrier-layer-divergence-classification.md).
 > The original claim is kept above rather than rewritten, so the trail from
 > premise to falsification stays readable.
@@ -79,14 +71,10 @@ maintainer machine, and no obligation lost in the process.
       genuinely different obligations (a content decision, and the interesting
       case). Report counts per class — a single mixed bucket is not a finding. <!-- verify: report lists all 109 with a class and the per-class totals -->
       <!-- DONE 2026-08-10, commit a5b2f4cb7, freshly regenerated checkout.
-      Totals against the phase's own taxonomy: refresh-closes-it 0 ·
-      generator-difference 109 · genuinely-different-obligation 0.
-      READ THE 109 WITH ITS REFUTATION, never bare: the label fits but its
-      parenthesis ("the generator is the fix") does not — there is NO generator
-      defect. The honest label is a fourth bucket the taxonomy lacks, a
-      deliberate two-writer metadata policy: 109 = 24 actionable on `paths:`
-      + 85 inert. All 109 carry byte-identical prose. Listed flat, with the 24
-      broken out, in carrier-layer-divergence-classification.md. -->
+      Totals: refresh-closes-it 0 · generator-difference 109 ·
+      genuinely-different-obligation 0. All 109 listed flat (one class) in
+      carrier-layer-divergence-classification.md. All 109 carry byte-identical
+      prose; the whole difference is the frontmatter block. -->
 - [x] Name the precedence rule the host actually applies when both layers carry
       a rule of the same basename, from the host's own documentation or an
       observed load, never from inference — if it is unobservable, say so and
@@ -151,16 +139,12 @@ regeneration at the previous commit.
 
 ## Phase 3 — Deduplicate, and prove the saving
 
-> **Its safety precondition is discharged for CONTENT, and the layer choice is now
-> load-bearing (2026-08-10).** The phase order exists because suppressing a
-> *divergent* copy drops whatever obligations only that copy carried. Phase 1
-> measured the prose identical across all 109, so suppression is already a no-op
-> **on content** — the thing Phase 2 was meant to establish. It is **not** a no-op
-> on load schedule: suppressing the **global** layer restores the project layer's
-> `paths:` scoping for the 24 affected rules, suppressing the **project** layer
-> makes the always-on delivery permanent. So step 1 must record WHICH layer it
-> suppressed, not only the token delta. The before/after reading still needs the
-> maintainer machine, so the blocker stands unchanged.
+> **Its safety precondition is discharged ahead of its measurement (2026-08-10).**
+> The phase order exists because suppressing a *divergent* copy drops whatever
+> obligations only that copy carried. Phase 1 measured the prose identical across
+> all 109, so suppression is already a no-op on content — the thing Phase 2 was
+> meant to establish. Only the before/after reading is still owed, and that needs
+> the maintainer machine, so the blocker stands unchanged.
 
 - [ ] With the layers converged, apply the single-layer suppression and record
       the delivered-token reading before and after on the same machine and the
@@ -205,14 +189,9 @@ class the measurement found empty.
 
 - **MET** — All 109 divergent rules are classified, with per-class totals
   (0 refresh-closes-it · 109 generator-difference · 0 genuinely-different-obligation).
-  The 109 is **not** 109 generator defects — the phase's taxonomy has no bucket
-  for a deliberate two-writer metadata policy, so the honest split is 24
-  actionable on `paths:` + 85 inert. Never quote the total without that.
 - **MET** — Divergence reaches 0, or every remaining member is a surfaced decision:
-  0 prose-divergent; the remainder is 109 frontmatter-only, of which the 24
-  `paths:` disagreements ARE surfaced as a decision (named in both report
-  surfaces, and the installer question left explicitly undecided) and the other
-  85 owe none, because no governed text differs and no key the host reads does.
+  0 prose-divergent, remainder 109 frontmatter-only with its cause stated in the
+  report and no decision owed, because no governed text differs.
 - **OPEN** — The delivered-token before/after pair is recorded at one commit on one
   machine. Blocked on `b-convergence-machine`; its safety precondition is now
   discharged (see Phase 3).

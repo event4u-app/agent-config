@@ -52,13 +52,25 @@
  *                    reader acting on that would have believed the host resolves
  *                    something it does not.
  *   frontmatter-only the prose is byte-identical and only the metadata block
- *                    differs. The host delivers the prose without that block, so
- *                    nothing a reader must act on reaches the model differently.
- *                    Split out because it was, measured, the ENTIRE content of
- *                    the `body-diff` class: 109 of 109 on 2026-08-10. Left inside
- *                    body-diff it manufactured the report's only actionable
- *                    class out of a metadata difference — the same mistake the
- *                    `unreadable` branch below already refuses to make.
+ *                    differs. Split out because it was, measured, the ENTIRE
+ *                    content of the `body-diff` class: 109 of 109 on 2026-08-10.
+ *                    Left inside body-diff it manufactured the report's only
+ *                    actionable class out of a metadata difference — the same
+ *                    mistake the `unreadable` branch below already refuses to
+ *                    make.
+ *                    NOT inert as a whole, and an earlier version of this entry
+ *                    wrongly said it was: the `paths:` SUBSET below is reported
+ *                    separately and IS actionable. Only the remainder — keys this
+ *                    host does not read — is safe to ignore.
+ *   `paths:` subset  a `frontmatter-only` pair whose two copies disagree about
+ *                    `paths`, the one frontmatter key the host reads. It decides
+ *                    WHEN a rule loads (matching-file read and no /compact
+ *                    re-injection, versus unconditionally at launch), so the copy
+ *                    without `paths` DEFEATS the other's scoping and an
+ *                    obligation someone deliberately scoped is silently unscoped.
+ *                    Measured 2026-08-10: 24 of the 109, all of them `paths` in
+ *                    the project copy and none in the global one. Identical prose
+ *                    does not make a schedule difference inert.
  *   provenance-only  identical after removing the two installer ownership keys.
  *                    Structural, expected, and decided against closing —
  *                    `agents/settings/contexts/dedup-reachability-refusal.md`.
@@ -83,7 +95,13 @@ import * as path from 'node:path';
 import process from 'node:process';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
-import { comparePair, type PairVerdict, proseEqual } from './_lib/carrier_divergence.js';
+import {
+    comparePair,
+    frontmatterPaths,
+    type PairVerdict,
+    proseEqual,
+    splitFrontmatter,
+} from './_lib/carrier_divergence.js';
 
 const _HERE = fileURLToPath(import.meta.url);
 const REPO_ROOT = path.resolve(path.dirname(_HERE), '..', '..');
@@ -124,6 +142,13 @@ export interface CarrierDivergence {
      * something a reader has to act on.
      */
     frontmatterOnly: string[];
+    /**
+     * A SUBSET of `frontmatterOnly` whose two copies disagree about `paths:` —
+     * the one frontmatter key this host reads. Same prose, different load
+     * schedule, so this one IS actionable and must not be reported as inert
+     * metadata.
+     */
+    pathsScopeDiff: string[];
     bodyDiff: string[];
     projectOnly: string[];
     globalOnly: string[];
@@ -152,7 +177,17 @@ function _listRules(dir: string): string[] {
     }
 }
 
-/** `type:` from a rule's frontmatter, or `''` when unreadable / absent. */
+/**
+ * `type:` from a rule's frontmatter, or `''` when unreadable / absent.
+ *
+ * Reads the shared fence parser rather than re-implementing one. It used to
+ * carry its own, and the two disagreed on an unterminated fence: this one
+ * treated the WHOLE file as frontmatter, so a `type:` line anywhere in the prose
+ * could be read as the rule's type. Now an unterminated fence yields no
+ * frontmatter and therefore no type — the conservative answer, since attributing
+ * a rule to the ADR-004 manual filter on a malformed read would hide it from the
+ * drift list.
+ */
 function _ruleType(file: string): string {
     let text: string;
     try {
@@ -160,10 +195,7 @@ function _ruleType(file: string): string {
     } catch {
         return '';
     }
-    if (!text.startsWith('---')) return '';
-    const end = text.indexOf('\n---', 3);
-    const fm = end === -1 ? text : text.slice(0, end);
-    const m = /^type:\s*"?([a-z]+)"?/m.exec(fm);
+    const m = /^type:\s*"?([a-z]+)"?/m.exec(splitFrontmatter(text).frontmatter);
     return m === null ? '' : (m[1] as string);
 }
 
@@ -193,6 +225,7 @@ export function compareCarriers(
         identical: [],
         provenanceOnly: [],
         frontmatterOnly: [],
+        pathsScopeDiff: [],
         bodyDiff: [],
         projectOnly: [],
         globalOnly: [],
@@ -218,12 +251,12 @@ export function compareCarriers(
         }
         out.shared += 1;
         let verdict: PairVerdict;
-        let proseSame: boolean;
+        let projectCopy: Buffer;
+        let globalCopy: Buffer;
         try {
-            const projectCopy = fs.readFileSync(path.join(projectDir, rule));
-            const globalCopy = fs.readFileSync(path.join(globalDir, rule));
+            projectCopy = fs.readFileSync(path.join(projectDir, rule));
+            globalCopy = fs.readFileSync(path.join(globalDir, rule));
             verdict = comparePair(projectCopy, globalCopy);
-            proseSame = proseEqual(projectCopy.toString('utf-8'), globalCopy.toString('utf-8'));
         } catch {
             // An unreadable copy is not a body difference and must not be
             // reported as one — a permission error would otherwise manufacture
@@ -236,8 +269,23 @@ export function compareCarriers(
         }
         if (verdict === 'identical') out.identical.push(rule);
         else if (verdict === 'provenance-only') out.provenanceOnly.push(rule);
-        else if (proseSame) out.frontmatterOnly.push(rule);
-        else out.bodyDiff.push(rule);
+        else {
+            // Only this branch consumes the prose comparison, so it is computed
+            // here rather than beside `comparePair`: on an `identical` or
+            // `provenance-only` pair the two `toString` conversions and two fence
+            // scans are work whose result is never read.
+            const projectText = projectCopy.toString('utf-8');
+            const globalText = globalCopy.toString('utf-8');
+            if (proseEqual(projectText, globalText)) {
+                out.frontmatterOnly.push(rule);
+                // `paths:` is the one key the host reads, so a disagreement here
+                // is a load-schedule difference, not inert metadata. Recorded as
+                // a subset so the count stays reconcilable with `frontmatterOnly`.
+                if (frontmatterPaths(projectText) !== frontmatterPaths(globalText)) {
+                    out.pathsScopeDiff.push(rule);
+                }
+            } else out.bodyDiff.push(rule);
+        }
     }
     return out;
 }
@@ -269,6 +317,7 @@ export function render(d: CarrierDivergence): string {
     lines.push(`    byte-identical                     ${d.identical.length}`);
     lines.push(`    differ ONLY in the install stamp   ${d.provenanceOnly.length}`);
     lines.push(`    differ ONLY in frontmatter         ${d.frontmatterOnly.length}`);
+    lines.push(`      of which disagree on \`paths:\`    ${d.pathsScopeDiff.length}  ← ACTIONABLE`);
     lines.push(`    differ in PROSE                    ${d.bodyDiff.length}`);
     if (d.unreadable.length > 0) {
         lines.push(`    unreadable on one side             ${d.unreadable.length}  (${d.unreadable.join(', ')})`);
@@ -295,16 +344,28 @@ export function render(d: CarrierDivergence): string {
         lines.push('');
     }
 
-    if (d.frontmatterOnly.length > 0) {
-        lines.push(`  ${String(d.frontmatterOnly.length)} pair(s) differ ONLY in the frontmatter block — prose byte-identical.`);
-        lines.push('  Not a governed-text difference and nothing to act on: the host delivers the');
-        lines.push('  prose without that block, and none of the keys in it is one this host reads');
-        lines.push('  (claude-code-rules-dir-contract.md: it reads `paths`, and agent-config\'s own');
-        lines.push('  vocabulary is not read at all). Two writers, two frontmatter policies —');
-        lines.push('  `generate-tools` emits `paths` where a rule is path-scoped and nothing');
-        lines.push('  otherwise; `install.ts` writes the full vocabulary plus its ownership stamp.');
-        lines.push('  Reported as a count on purpose: naming every pair would bury the class');
-        lines.push('  above, which is the one a reader must act on.');
+    if (d.pathsScopeDiff.length > 0) {
+        lines.push(`  \`paths:\` SCOPE DISAGREEMENT (${String(d.pathsScopeDiff.length)}) — same prose, different load schedule.`);
+        lines.push('  ACT ON THESE. `paths` is the one frontmatter key this host reads: with it, a');
+        lines.push('  rule fires when a matching file is read and is NOT re-injected after');
+        lines.push('  /compact; without it, the rule loads unconditionally at launch. So the copy');
+        lines.push('  that lacks `paths` DEFEATS the other copy\'s scoping — the rule the project');
+        lines.push('  layer meant to deliver conditionally is delivered always, and an obligation');
+        lines.push('  a maintainer deliberately scoped is silently unscoped on any machine that');
+        lines.push('  carries both. Identical prose does not make this inert.');
+        for (const r of d.pathsScopeDiff) lines.push(`    - ${r}`);
+        lines.push('');
+    }
+
+    const inert = d.frontmatterOnly.length - d.pathsScopeDiff.length;
+    if (inert > 0) {
+        lines.push(`  ${String(inert)} further pair(s) differ ONLY in frontmatter the host does not read —`);
+        lines.push('  prose byte-identical, `paths` in agreement, nothing to act on. Two writers,');
+        lines.push('  two policies: `generate-tools` emits `paths` where a rule is path-scoped and');
+        lines.push('  nothing otherwise; `install.ts` writes agent-config\'s own vocabulary plus its');
+        lines.push('  ownership stamp, and none of those keys is one this host reads');
+        lines.push('  (claude-code-rules-dir-contract.md). Reported as a count on purpose: naming');
+        lines.push('  every pair would bury the two classes above, which are the actionable ones.');
         lines.push('');
     }
 
@@ -346,6 +407,10 @@ export function render(d: CarrierDivergence): string {
     if (d.bodyDiff.length === 0) {
         lines.push('');
         lines.push('  No prose divergence — no rule\'s governed text differs between the carriers.');
+        if (d.pathsScopeDiff.length > 0) {
+            lines.push('  NOT an all-clear: the `paths:` disagreements above are still open, and they');
+            lines.push('  change when a rule loads rather than what it says.');
+        }
         lines.push('  The condition is transient — it returns whenever the checkout moves ahead of');
         lines.push('  the installed release — so this is a reading of right now, not a property of');
         lines.push('  the repo. Re-run it, do not cite it. That holds doubly here: the reading also');
