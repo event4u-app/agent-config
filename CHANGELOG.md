@@ -321,6 +321,57 @@ Entry-shape contract: [`docs/contracts/CHANGELOG-conventions.md`](docs/contracts
 > that forces a new era split (`# Era: 9.32.x`, etc.) — see
 > [`docs/contracts/CHANGELOG-conventions.md § Era splits`](docs/contracts/CHANGELOG-conventions.md).
 
+## [9.32.0](https://github.com/event4u-app/agent-config/compare/9.31.0...9.32.0) (2026-08-10)
+
+### Release highlights
+
+<!-- Curated head: fill before merge, keep it under 10 lines, and leave `_none_` where it is genuinely the answer. The generated log below is unchanged. -->
+- **Behaviour changes:** _auto-derived, rewrite before merge:_ rule/schema diffs, breaking commits or removed public surface in 1f01490, e05de77.
+- **Default changes + migration:** _none_
+- **Security and correctness:** _none_
+- **Honest nulls:** _none_
+- **Known limitations:** _none_
+
+### Features
+
+* **work-engine:** route both red-check lanes through the self-fix loop ([10c8f7e](https://github.com/event4u-app/agent-config/commit/10c8f7eafbf21fc03a5f301163c941a20df4a885))
+* **work-engine:** bounded self-fix loop primitive + executable dod schema ([1f01490](https://github.com/event4u-app/agent-config/commit/1f0149035c1a27729b729dab1dedd861ccdf9812))
+* **envelope:** drift anchor, scripted grounding, verbatim error strings ([6c9187e](https://github.com/event4u-app/agent-config/commit/6c9187e30f41c87553764759096a3f7f4d19a126))
+* **envelope:** successor tailoring, mandatory failed_approaches, data-never-instruction boundary ([b03beac](https://github.com/event4u-app/agent-config/commit/b03beac1ad1325253c89a63eac9abc9f051269d3))
+* **orchestration:** report per-field provenance for host capabilities ([f4958de](https://github.com/event4u-app/agent-config/commit/f4958decf4a70b445a38747bff768ab449877d52))
+
+### Bug Fixes
+
+* **gates:** stop the R2 review-input copy from laundering fixture secrets ([c63d350](https://github.com/event4u-app/agent-config/commit/c63d3502013e7bc261096d02e2c102a52e2f1ec7))
+* **golden:** teach the replay the delegated bad-verdict surface, re-lock baselines ([1ff480c](https://github.com/event4u-app/agent-config/commit/1ff480c6adeb88af32198a19d41838e2f9f5dcc0))
+* **envelope:** close the eight R2 review findings ([b0d153c](https://github.com/event4u-app/agent-config/commit/b0d153cb3084dac2a20093b73d28a3ce3c12324c))
+* **tests:** type the self-fix state helpers against the wire types ([60d2724](https://github.com/event4u-app/agent-config/commit/60d272419b07b5abea1ce6ffa430faf127fcde4a))
+* **handoff:** stop offering the caller its own empty session ([b72f772](https://github.com/event4u-app/agent-config/commit/b72f772a03207aa4feeded3acd5b68823e3fd79c))
+* **tests:** narrow regex captures in the capability parity block ([6f27615](https://github.com/event4u-app/agent-config/commit/6f276154b83781404d6551113c6d43e5cf040423))
+* **carrier:** a paths: disagreement is a delivery defect, not inert metadata ([318fb81](https://github.com/event4u-app/agent-config/commit/318fb818eb543f27fc4c3b138ce762dc8c9e9640))
+
+### Documentation
+
+* **review:** re-bind the findings artefact to the post-fix scope ([7a9bbbb](https://github.com/event4u-app/agent-config/commit/7a9bbbb2d7f4f04786771914bf7b3b68aba23e10))
+* **review:** record the R2 completion-review findings before fixing them ([27322e8](https://github.com/event4u-app/agent-config/commit/27322e876c76f96d6a67131f9e96a1759290a8f5))
+* **roadmap:** P2.2 build half shipped, its threshold unevaluated with a blocker ([1e478fd](https://github.com/event4u-app/agent-config/commit/1e478fdc317fdf12df001c1b98ef264df54a3742))
+* **contracts:** the flow contract documents the self-fix loop and the dod slot ([0ebaaba](https://github.com/event4u-app/agent-config/commit/0ebaabae9e12c75446efefc5be6f6b33b9d0435f))
+* **roadmap:** capability-answerability Phase 1 closed, blocker narrowed to one question ([c37af04](https://github.com/event4u-app/agent-config/commit/c37af045ecbf62b31e6878befdc88d763498d7a9))
+* **rules:** delegation-policy names the capability provenance check ([e05de77](https://github.com/event4u-app/agent-config/commit/e05de771d74e8284e2e64e91e33be66b1bd15e23))
+* **contracts:** the host-capability contract documents six fields, not five ([566b984](https://github.com/event4u-app/agent-config/commit/566b984681d1a1a5ef76643fa6f90f297c284e81))
+
+### Tests
+
+* **work-engine:** pin the loop contract and update the changed halt shapes ([eb88aa6](https://github.com/event4u-app/agent-config/commit/eb88aa695121a01c0c1e10de9804f1df3424c334))
+
+### Other
+
+* **carrier:** re-bind to the post-merge scope — the fixed point ([884104c](https://github.com/event4u-app/agent-config/commit/884104c15d8257579a320932c671b489d96e7b06))
+* **carrier:** re-bind the R2 round to the shipping content, all 6 terminal ([9bbfbc3](https://github.com/event4u-app/agent-config/commit/9bbfbc35388f54c77fdae27315025843a6ea79f5))
+* **carrier:** R2 completion review round 1 — 6 findings, all open ([75be940](https://github.com/event4u-app/agent-config/commit/75be940f4f9bcbf71e1f1248467637fc51c6b63b))
+
+Tests: 12818 (+89 since 9.31.0)
+
 ## [9.31.0](https://github.com/event4u-app/agent-config/compare/9.30.0...9.31.0) (2026-08-10)
 
 ### Release highlights
