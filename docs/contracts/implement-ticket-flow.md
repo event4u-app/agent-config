@@ -64,6 +64,7 @@ document — the shape is normative, the container is not):
 | `outcomes` | Per-step `success | blocked | partial` + message |
 | `questions` | Pending numbered questions when blocked |
 | `report` | Final delivery report (populated by `report` step) |
+| `self_fix` | Per-lane bounded-loop counters — `{<lane>: {attempts, signatures[]}}`. `null` until a red check is seen. Owned by [`_self_fix.ts`](../../src/agent-src/templates/scripts/work_engine/directives/backend/_self_fix.ts) |
 
 No step may invent fields not declared here. Extensions require a
 roadmap amendment + this doc updated.
@@ -339,19 +340,62 @@ declaring it fails the build.
 
 | Step | Codes | Shape |
 |---|---|---|
-| `refine` | `missing_id`, `trivial_title`, `missing_or_vague_ac` | deterministic gate |
+| `refine` | `missing_id`, `trivial_title`, `missing_or_vague_ac`, `malformed_dod` | deterministic gate |
 | `memory` | — | always succeeds (zero hits is valid) |
 | `analyze` | `upstream_refine_failed`, `upstream_memory_failed`, `lost_ac` | deterministic gate |
 | `plan` | `upstream_analyze_failed`, `empty_plan_delegate`, `malformed_plan` | delegation gate |
 | `implement` | `upstream_plan_failed`, `empty_changes_delegate`, `malformed_changes` | delegation gate |
-| `test` | `upstream_implement_failed`, `empty_tests_delegate`, `malformed_tests`, `bad_test_verdict` | delegation gate |
-| `verify` | `upstream_test_failed`, `empty_verify_delegate`, `malformed_verify`, `bad_verify_verdict` | delegation gate |
+| `test` | `upstream_implement_failed`, `empty_tests_delegate`, `malformed_tests`, `bad_test_verdict`, `self_fix_exhausted` | delegation gate + bounded self-fix loop |
+| `verify` | `upstream_test_failed`, `empty_verify_delegate`, `malformed_verify`, `bad_verify_verdict`, `self_fix_exhausted` | delegation gate + bounded self-fix loop |
 | `report` | — | pure renderer, always succeeds |
 
 Delegation-gate `empty_*_delegate` codes emit an `@agent-directive:`
 so the orchestrator runs the matching skill (`feature-plan`,
 `apply-plan`, `run-tests`, `review-changes`) and resumes. All
 other codes halt the flow with numbered options for the user.
+
+## Bounded self-fix loop (`test` / `verify`)
+
+A red check used to be a *user* halt: `bad_test_verdict` and
+`bad_verify_verdict` emitted a directive-free question block, so a failure the
+agent could fix unaided still cost a user round-trip. Both lanes now route
+through [`_self_fix.ts`](../../src/agent-src/templates/scripts/work_engine/directives/backend/_self_fix.ts).
+
+| Property | Value | Where it comes from |
+|---|---|---|
+| Attempts per lane | `SELF_FIX_CEILING = 3` | the N=3 validation-loop budget in the `autonomous-execution` rule — not a fresh number |
+| Counter scope | per lane (`test`, `verify`) | that rule resets its counter on a different validation target |
+| No-progress floor | two consecutive identical verdict signatures stop the loop, budget remaining or not | the floor `recursive-verification` already stated in prose; matches `context-hygiene`'s "same failure signature twice → stop and pivot" |
+| Signature | canonical JSON of the recorded verdict, object keys sorted, volatile keys (`duration_ms`, `timestamp`, …) removed | without the exclusion a re-run would always sign differently and the floor could never fire |
+| Retry exit | `BLOCKED` carrying `@agent-directive: fix-failing-checks` | the same delegation shape `run-tests` / `review-changes` already use — an agent round-trip, not a user one |
+| Loop exit | `PARTIAL`, with the red verdict on the surface and any unproven `dod[]` items listed | the loop must never convert a red into a green |
+
+The no-progress floor is checked **before** the ceiling: an unchanged signature
+means the remaining budget cannot move the target, so spending it is the exact
+wasted-attempt pattern both rules name.
+
+The loop adds **no critic**, which is why the TERMINAL honest null on
+`recursive-verification` (ADR-106: capability 87% vs 87%, McNemar p=1.0) does
+not bind it — the verdict is already a deterministic value the engine holds, so
+there is no judgement for a second model to make. The null's decisive finding
+(cost scaled with all tasks while benefit sat in the ~28% tail) inverts here: a
+red-check retry fires only on a red, so it costs nothing on the passing
+majority. What the null *does* bind is honoured — "the loop is redundant" stays
+discoverable, because every exit the loop owns is `PARTIAL` with the failure
+still visible.
+
+## Executable definition of done (`dod[]`)
+
+An optional slot on the ticket / prompt envelope, schema:
+[`dod.schema.json`](../../src/scripts/schemas/dod.schema.json). Each entry
+carries an `id` and a `check` — the command that proves it — plus an optional
+`description` and a `proven` flag the agent sets once the check has actually run
+green. `refine` shape-checks the slot on both envelope paths before either
+routes (`malformed_dod`); an absent key changes no behaviour, and the engine
+never infers `proven` from a passing suite, because a suite passing is not
+evidence that *this* check ran. The self-fix loop's `PARTIAL` exit lists the
+unproven entries so a reader can see what is still open without re-reading the
+envelope.
 
 ## Delivery report schema
 
