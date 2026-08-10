@@ -124,6 +124,20 @@ CLAIMS, `unbacked`.
       listing orchestration as a capability and instead state the honest stance —
       "contract exists, default off, value not established; we do not ship
       unproven orchestration." The contract stays internal.
+      <!-- PREMISE-STALE in clause 1, MAINTAINER-OWNED in clause 2, checked
+      2026-08-10. Clause 1: there is no `subagents.auto` left to demote to
+      `ask` — road-to-always-on-orchestration Phase 1 deleted the key from the
+      template, the schema and the production path, and orchestration now
+      resolves from a host-capability probe with `emergency.orchestration_halt`
+      as the only switch. "Demote the default" therefore names a mechanism the
+      tree no longer has; re-cutting it is a scope decision. Clause 2 is a
+      change to what the package publicly claims, i.e. decide-what-ships — the
+      distinction an AI council drew for a sibling roadmap the same day
+      (anthropic/claude-sonnet-4-5 + openai/gpt-4o, 2026-08-10, 2 rounds,
+      convergent): an agent may decide whether criteria are met, never what
+      ships. It also runs directly against a roadmap that has already shipped
+      orchestration as always-on, so the two must be reconciled by a human
+      before either is acted on. -->
 
 **Exit:** a `backed` scoped claim + scoped flip, OR a recorded null + a public
 demotion of the front. No middle state where marketing implies a swarm the
@@ -165,4 +179,25 @@ proof surface.
   telemetry. Use the agent on genuinely parallel/ordered multi-file tasks under
   the post-ADR-117 default (`subagents.auto: on`), then check
   `wc -l agents/runtime/state/audit/$(date +%Y-%m).jsonl`. Resume at ≥20.
+
+  **Measured 2026-08-10 — the literal condition is MET (99 orchestration lines
+  in `2026-08.jsonl`) and Phase 3 is still not decidable.** The count moved
+  because the `orchestration-record` `post_tool_use` concern now emits per
+  dispatch; it did not move because usage habits changed. But all 99 lines
+  carry `token_delta: 0` / `estimated` and `null` for `dispatch_tokens`,
+  `first_pass_success`, `escalated` and `task_class`, which is correct at that
+  layer for a **background** dispatch (the host attaches usage only to a sync
+  completion) — so "at held quality" has no input and PROVE cannot be
+  evaluated. The full field-level measurement and why this is a live-host probe
+  rather than an emitter bug is recorded once, in the sibling's
+  `telemetry-sample-size` blocker; this roadmap's Phase 2 inherits it per the
+  Notes section there.
+
+  Two consequences worth stating before anyone reads the cleared count as a
+  green light. **(1)** Feeding today's telemetry through `gateVerdict()` yields
+  a null-or-worse reading assembled from one July line, not a verdict — the
+  aggregate currently reports a net of tokens *added* at a 1 % measured share.
+  **(2)** The DROP branch below is premise-stale in its first clause and
+  maintainer-owned in its second, so a DROP is not an agent-executable
+  outcome either.
 - **Resolved when:** the current-month audit log holds ≥20 orchestration lines.
