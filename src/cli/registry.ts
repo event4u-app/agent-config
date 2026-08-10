@@ -68,6 +68,7 @@ export const REGISTRY: readonly CommandEntry[] = [
     { name: 'use', disposition: 'delegate', synopsis: 'Switch the active experience/profile (writes profile.id).' },
     { name: 'sessions:list', disposition: 'delegate', synopsis: 'List live agent sessions on this repository (shared session register).' },
     { name: 'sessions:claim', disposition: 'delegate', synopsis: 'Claim a roadmap for this session so other sessions skip it; --release clears it.' },
+    { name: 'session:recycle', disposition: 'delegate', synopsis: 'Validate + write the main-session recycle envelope; the successor session resumes from it after /clear.' },
     { name: 'roadmap:progress', disposition: 'delegate', synopsis: 'Regenerate agents/roadmaps-progress.md from open roadmaps.' },
     { name: 'roadmap:progress-check', disposition: 'delegate', synopsis: 'Fail if agents/roadmaps-progress.md is stale (for CI).' },
     { name: 'roadmap:archive', disposition: 'delegate', synopsis: 'Archive completed roadmaps (PR-gate sweep).' },

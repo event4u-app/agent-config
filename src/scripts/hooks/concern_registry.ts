@@ -59,6 +59,7 @@ import { main as delegationNudgeMain } from './delegation_nudge_hook.js';
 import { main as endReviewNudgeMain } from './end_review_nudge_hook.js';
 import { main as editShapeMain } from './edit_shape_hook.js';
 import { main as rereadGuardMain } from './reread_guard_hook.js';
+import { main as sessionEolMain } from './session_eol_hook.js';
 
 /** A concern `main` — argv-taking or not; both shapes exist. */
 export type ConcernMain = (argv?: string[]) => number | undefined | void;
@@ -100,4 +101,5 @@ export const CONCERN_REGISTRY: Readonly<Record<string, ConcernMain>> = {
     'src/scripts/hooks/end_review_nudge_hook.ts': endReviewNudgeMain as ConcernMain,
     'src/scripts/hooks/edit_shape_hook.ts': editShapeMain as ConcernMain,
     'src/scripts/hooks/reread_guard_hook.ts': rereadGuardMain as ConcernMain,
+    'src/scripts/hooks/session_eol_hook.ts': sessionEolMain as ConcernMain,
 };
