@@ -12,8 +12,10 @@ import { afterEach, describe, expect, it } from 'vitest';
 import {
     SCHEMA_VERSION,
     appendEvent,
+    appendQuorumEvent,
     defaultLogPath,
 } from '../../../src/scripts/ai_council/events_log.js';
+import { evaluateQuorum } from '../../../src/scripts/ai_council/quorum.js';
 
 const created: string[] = [];
 function tmpDir(): string {
@@ -31,7 +33,7 @@ afterEach(() => {
 const FIXED = new Date(Date.UTC(2026, 5, 14, 8, 30, 15));
 
 describe('events_log — write + schema', () => {
-    it('writes a v1 record, injects hash, pops original_ask', () => {
+    it('writes a record, injects hash, pops original_ask', () => {
         const lp = path.join(tmpDir(), 'events.log');
         const event: Record<string, unknown> = {
             lens: 'security',
@@ -77,27 +79,27 @@ describe('events_log — write + schema', () => {
         expect(fs.existsSync(lp)).toBe(true);
     });
 
-    it('schema-v1 fields win over pass-through collisions', () => {
+    it('reserved schema fields win over pass-through collisions', () => {
         const lp = path.join(tmpDir(), 'c.log');
         appendEvent(
             { action: 'proceed', lens: 'real', schema_version: 999, ts_utc: 'fake' },
             { logPath: lp, now: FIXED },
         );
         const rec = JSON.parse(fs.readFileSync(lp, 'utf-8').trim()) as Record<string, unknown>;
-        expect(rec.schema_version).toBe(1);
+        expect(rec.schema_version).toBe(SCHEMA_VERSION);
         expect(rec.ts_utc).toBe('2026-06-14T08:30:15Z');
         expect(rec.lens).toBe('real');
     });
 
     it('invalid action throws (Python ValueError parity)', () => {
         expect(() => appendEvent({ action: 'nope' }, { logPath: path.join(tmpDir(), 'x.log') })).toThrow(
-            "events_log: action='nope' not in ['block_quota', 'proceed', 'skip_necessity'].",
+            "events_log: action='nope' not in ['block_quota', 'proceed', 'quorum_result', 'skip_necessity'].",
         );
     });
 
     it('missing action throws with None repr', () => {
         expect(() => appendEvent({}, { logPath: path.join(tmpDir(), 'x.log') })).toThrow(
-            "events_log: action=None not in ['block_quota', 'proceed', 'skip_necessity'].",
+            "events_log: action=None not in ['block_quota', 'proceed', 'quorum_result', 'skip_necessity'].",
         );
     });
 
@@ -123,3 +125,172 @@ describe('events_log — write + schema', () => {
     });
 });
 
+
+describe('events_log — quorum attendance (schema v2)', () => {
+    function readOne(lp: string): Record<string, unknown> {
+        return JSON.parse(fs.readFileSync(lp, 'utf-8').trim()) as Record<string, unknown>;
+    }
+
+    const CTX = {
+        lens: '',
+        invocation: '',
+        phase: 'post_run',
+        command: 'run',
+        dispatch: 'full',
+    } as const;
+
+    it('pins the on-wire schema version at 2', () => {
+        // Deliberately a literal, not the constant: this module's whole
+        // contract is a versioned wire format, and an assertion written
+        // against SCHEMA_VERSION is tautological — it passes whatever the
+        // constant becomes. A bump has to break a test on purpose.
+        const lp = path.join(tmpDir(), 'wire.log');
+        appendEvent({ action: 'proceed' }, { logPath: lp, now: FIXED });
+        expect(readOne(lp).schema_version).toBe(2);
+    });
+
+    it('writes a quorum_result line carrying the attendance shape', () => {
+        const lp = path.join(tmpDir(), 'q.log');
+        expect(
+            appendQuorumEvent(
+                {
+                    ...CTX,
+                    lens: 'security',
+                    invocation: 'agent',
+                    configuredTotal: 2,
+                    result: evaluateQuorum(2, 1),
+                    absent: [{ member: 'openai', reason: 'quota' }],
+                },
+                { logPath: lp, now: FIXED },
+            ),
+        ).toBe(true);
+        const rec = readOne(lp);
+        expect(rec.action).toBe('quorum_result');
+        expect(rec.verdict).toBe('concluded');
+        expect(rec.phase).toBe('post_run');
+        expect(rec.command).toBe('run');
+        expect(rec.dispatch).toBe('full');
+        expect(rec.threshold).toBe(1);
+        expect(rec.configured_total).toBe(2);
+        expect(rec.total).toBe(2);
+        expect(rec.present).toBe(1);
+        expect(rec.solo).toBe(true);
+        expect(rec.absent).toEqual([{ member: 'openai', reason: 'quota' }]);
+        expect(rec.schema_version).toBe(SCHEMA_VERSION);
+    });
+
+    it('solo is written by the predicate, not re-derived downstream', () => {
+        const lp = path.join(tmpDir(), 'q2.log');
+        appendQuorumEvent(
+            { ...CTX, configuredTotal: 2, result: evaluateQuorum(2, 1), absent: [] },
+            { logPath: lp, now: FIXED },
+        );
+        appendQuorumEvent(
+            { ...CTX, configuredTotal: 2, result: evaluateQuorum(2, 2), absent: [] },
+            { logPath: lp, now: FIXED },
+        );
+        const lines = fs
+            .readFileSync(lp, 'utf-8')
+            .trim()
+            .split('\n')
+            .map((l) => JSON.parse(l) as Record<string, unknown>);
+        // Both concluded; only `solo` separates them, and it comes from
+        // isSoloConcluded rather than a second copy of the rule.
+        expect(lines.map((l) => l.verdict)).toEqual(['concluded', 'concluded']);
+        expect(lines.map((l) => l.solo)).toEqual([true, false]);
+    });
+
+    it('configured_total keeps a construction-degraded pass distinguishable', () => {
+        // 3 configured, 2 failed to construct, 1 answered. Without
+        // configured_total the line reads {total:1, present:1} — full
+        // attendance — which is the exact case the metric exists to catch.
+        const lp = path.join(tmpDir(), 'q3.log');
+        appendQuorumEvent(
+            { ...CTX, configuredTotal: 3, result: evaluateQuorum(1, 1), absent: [] },
+            { logPath: lp, now: FIXED },
+        );
+        const rec = readOne(lp);
+        expect(rec.configured_total).toBe(3);
+        expect(rec.total).toBe(1);
+        expect(rec.present).toBe(1);
+    });
+
+    it('dispatch separates a --single pass from a one-member council', () => {
+        const lp = path.join(tmpDir(), 'q4.log');
+        const one = { ...CTX, configuredTotal: 1, result: evaluateQuorum(1, 1), absent: [] };
+        appendQuorumEvent({ ...one, dispatch: 'single' }, { logPath: lp, now: FIXED });
+        appendQuorumEvent({ ...one, dispatch: 'full' }, { logPath: lp, now: FIXED });
+        const lines = fs
+            .readFileSync(lp, 'utf-8')
+            .trim()
+            .split('\n')
+            .map((l) => JSON.parse(l) as Record<string, unknown>);
+        // Identical numbers on both lines — `dispatch` is the only thing that
+        // tells a deliberate solo dispatch from a council configured with one
+        // member, and both are `solo: true`.
+        expect(lines.map((l) => l.solo)).toEqual([true, true]);
+        expect(lines.map((l) => l.total)).toEqual([1, 1]);
+        expect(lines.map((l) => l.dispatch)).toEqual(['single', 'full']);
+    });
+
+    it('command marks the paths that never run a pass', () => {
+        const lp = path.join(tmpDir(), 'q5.log');
+        appendQuorumEvent(
+            {
+                ...CTX,
+                phase: 'pre_run',
+                command: 'estimate',
+                configuredTotal: 2,
+                result: evaluateQuorum(2, 2),
+                absent: [],
+            },
+            { logPath: lp, now: FIXED },
+        );
+        expect(readOne(lp).command).toBe('estimate');
+    });
+
+    it('carries no free-form field a detail string could land in', () => {
+        const lp = path.join(tmpDir(), 'q6.log');
+        appendQuorumEvent(
+            {
+                ...CTX,
+                configuredTotal: 2,
+                result: evaluateQuorum(2, 0),
+                // A caller handing over the CLI's own richer dict must not be
+                // able to smuggle `detail` (provider error text, which can embed
+                // paths and prompt fragments) through the typed surface.
+                absent: [{ member: 'anthropic', reason: 'timeout', detail: '/Users/me/secret' } as never],
+            },
+            { logPath: lp, now: FIXED },
+        );
+        const rec = readOne(lp);
+        expect(rec.absent).toEqual([{ member: 'anthropic', reason: 'timeout' }]);
+        expect(JSON.stringify(rec)).not.toContain('secret');
+    });
+
+    it('fails open — an unwritable target returns false instead of throwing', () => {
+        const dir = tmpDir();
+        const blocker = path.join(dir, 'blocked');
+        fs.writeFileSync(blocker, 'not a directory');
+        // `blocker` is a file, so mkdir of `blocker/x` raises ENOTDIR inside
+        // appendEvent — attendance telemetry must swallow it.
+        expect(
+            appendQuorumEvent(
+                { ...CTX, configuredTotal: 1, result: evaluateQuorum(1, 1), absent: [] },
+                { logPath: path.join(blocker, 'x', 'q.log'), now: FIXED },
+            ),
+        ).toBe(false);
+    });
+
+    it('honours the kill-switch like every other event', () => {
+        process.env.AGENT_CONFIG_NO_EVENTS_LOG = '1';
+        const lp = path.join(tmpDir(), 'q7.log');
+        expect(
+            appendQuorumEvent(
+                { ...CTX, configuredTotal: 1, result: evaluateQuorum(1, 1), absent: [] },
+                { logPath: lp },
+            ),
+        ).toBe(false);
+        expect(fs.existsSync(lp)).toBe(false);
+    });
+});

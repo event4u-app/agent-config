@@ -3,9 +3,11 @@
  *
  * Ported from the retired Python `src/scripts/ai_council/events_log.py` (ADR-200 —
  * Python→TS migration, Phase 1). Appends one JSON line per council event to
- * `<project_root>/agents/runtime/council/events.log`. Schema v1 carries the
- * minimum needed to answer the "why did the council skip / block this?"
- * question at retro time without leaking prompt content.
+ * `<project_root>/agents/runtime/council/events.log`. The schema carries the
+ * minimum needed to answer "why did the council skip / block this?" and,
+ * since v2, "who actually attended?" — at retro time, without leaking prompt
+ * content. v2 added the `quorum_result` action and nothing else; see
+ * `appendQuorumEvent`.
  *
  * Privacy floor:
  *     `original_ask` is never written verbatim — the caller passes the raw
@@ -25,14 +27,24 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-export const SCHEMA_VERSION = 1;
+import { isSoloConcluded, type QuorumResult } from './quorum.js';
+import type { AbsentReason } from './transport_resolver.js';
 
-export type EventAction = 'proceed' | 'skip_necessity' | 'block_quota';
+/**
+ * v2 adds the `quorum_result` action (and nothing else) — see
+ * `appendQuorumEvent`. Every schema-v1 field keeps its name, type and
+ * position, so a v1 reader parses a v2 necessity line unchanged; only the
+ * action vocabulary widened.
+ */
+export const SCHEMA_VERSION = 2;
+
+export type EventAction = 'proceed' | 'skip_necessity' | 'block_quota' | 'quorum_result';
 
 const _VALID_ACTIONS: ReadonlySet<string> = new Set([
     'proceed',
     'skip_necessity',
     'block_quota',
+    'quorum_result',
 ]);
 
 /**
@@ -194,7 +206,7 @@ export function appendEvent(
         original_ask_hash: _hash_original_ask(rawAsk),
     };
     // Pass-through for any caller-supplied diagnostic fields that are not in
-    // the schema-v1 reserved set. The schema-v1 fields above always win on
+    // the reserved set. The reserved fields above always win on
     // collision.
     const reserved = new Set([...Object.keys(record), 'original_ask']);
     for (const [k, v] of Object.entries(event)) {
@@ -213,6 +225,116 @@ export function appendEvent(
 /** Return the canonical events-log path (callers / tests). */
 export function defaultLogPath(): string {
     return _DEFAULT_LOG_PATH;
+}
+
+// ── quorum attendance (schema v2) ───────────────────────────────────
+
+/**
+ * Which of the two `evaluateQuorum` call sites produced the record.
+ *
+ * `pre_run` is `build_members`' construction-time reading — who could be
+ * built at all. `post_run` is `_postRunQuorum`'s re-derivation over what
+ * actually returned a usable response. One pass emits BOTH, and they
+ * disagree whenever a member constructs and then fails mid-flight, so a
+ * consumer that counts attendance without splitting on this field
+ * double-counts every pass.
+ */
+export type QuorumEventPhase = 'pre_run' | 'post_run';
+
+/**
+ * One absent member, in the vocabulary the tree actually uses:
+ * `AbsentReason` plus the two runtime fallbacks the CLI writes directly —
+ * `'unavailable'` (transport resolved to ∅) and `'binary_missing'` (a CLI
+ * client refused to construct).
+ */
+export type QuorumAbsentReason = AbsentReason | 'unavailable' | 'binary_missing';
+
+export interface QuorumAbsence {
+    readonly member: string;
+    readonly reason: QuorumAbsentReason;
+}
+
+/**
+ * Which CLI path produced the line. `estimate` spends nothing — it is a cost
+ * preview — so every rate computed over these lines must exclude it, and it
+ * is recorded rather than suppressed so the exclusion is the consumer's
+ * explicit act instead of an invisible one.
+ */
+export type QuorumCommand = 'run' | 'estimate' | 'debate';
+
+/**
+ * `single` means `--single` filtered the roster down to one member BEFORE
+ * the pass ran. Without this field a deliberate solo dispatch is byte-identical
+ * to a configured one-member council, and the solo-conclusion rate cannot tell
+ * the two apart — which is the one distinction it exists to make.
+ */
+export type QuorumDispatch = 'full' | 'single';
+
+export interface QuorumEventInput {
+    readonly lens: string;
+    readonly invocation: string;
+    readonly phase: QuorumEventPhase;
+    readonly command: QuorumCommand;
+    readonly dispatch: QuorumDispatch;
+    /**
+     * Enabled members in the config, BEFORE `--single` / `--siblings`
+     * filtering and before construction failures. `result.total` is the
+     * roster that survived; when the two differ, the gap is exactly the
+     * "council degraded by configuration" case a post_run-only reading is
+     * otherwise blind to.
+     */
+    readonly configuredTotal: number;
+    readonly result: QuorumResult;
+    readonly absent: readonly QuorumAbsence[];
+}
+
+/**
+ * Append one `quorum_result` line — the attendance record that makes a
+ * solo-concluded pass distinguishable from a full-attendance one.
+ *
+ * Privacy floor, by construction: `QuorumAbsence` carries a member name and
+ * a closed-vocabulary reason and has **no field able to hold free-form
+ * content**. The CLI's own absent entries carry a `detail` string built from
+ * provider error text (which can embed paths and prompts); it is dropped
+ * here rather than scrubbed, so there is no scrubber to fail.
+ *
+ * Fail-open: attendance telemetry must never be able to kill a council
+ * pass, so every error is swallowed and reported as `false`. The reachable
+ * ones are filesystem errors from `appendEvent`'s own `mkdirSync` /
+ * `appendFileSync` — an unwritable path, ENOTDIR, a full disk. Its other
+ * throw (an invalid action) is unreachable from here, since this function
+ * supplies the action itself.
+ */
+export function appendQuorumEvent(
+    input: QuorumEventInput,
+    opts: AppendEventOptions = {},
+): boolean {
+    try {
+        return appendEvent(
+            {
+                lens: input.lens,
+                invocation: input.invocation,
+                action: 'quorum_result',
+                verdict: input.result.status,
+                phase: input.phase,
+                command: input.command,
+                dispatch: input.dispatch,
+                threshold: input.result.threshold,
+                configured_total: input.configuredTotal,
+                total: input.result.total,
+                present: input.result.present,
+                // Written by the predicate, never re-derived from the numbers
+                // downstream: one definition of "concluded on a single voice",
+                // in `quorum.ts`, so a change to it cannot leave a consumer's
+                // copy silently stale.
+                solo: isSoloConcluded(input.result),
+                absent: input.absent.map((a) => ({ member: a.member, reason: a.reason })),
+            },
+            opts,
+        );
+    } catch {
+        return false;
+    }
 }
 
 // ── helpers ─────────────────────────────────────────────────────────

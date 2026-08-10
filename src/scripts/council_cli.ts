@@ -77,7 +77,14 @@ import { InvalidModeError, resolve_global_mode } from './ai_council/modes.js';
 import { resolveMemberTransport } from './ai_council/transport_resolver.js';
 import { absentReasonFromCliFailure, classifyCliFailure, type AbsentReason } from './ai_council/transport_resolver.js';
 import { evaluateQuorum, type QuorumResult } from './ai_council/quorum.js';
-import { appendEvent } from './ai_council/events_log.js';
+import {
+    appendEvent,
+    appendQuorumEvent,
+    type QuorumAbsence,
+    type QuorumCommand,
+    type QuorumDispatch,
+    type QuorumEventPhase,
+} from './ai_council/events_log.js';
 import {
     type ClassificationResult,
     type SizeFitVerdict,
@@ -577,6 +584,16 @@ interface BuildMembersOptions {
      */
     quorum_out?: { result: QuorumResult | null } | null;
     /**
+     * Which CLI path is constructing — recorded on the `pre_run` quorum
+     * event so a consumer can exclude the paths that never run a pass.
+     * `estimate` is a spend-free preview and `run` may still abort at the
+     * necessity or size-fit gate after this point, so a `pre_run` line is
+     * evidence that construction happened, never that a pass followed;
+     * attendance rates are computed over `post_run` lines for exactly that
+     * reason. Defaults to `run` for a caller that does not say.
+     */
+    command?: QuorumCommand;
+    /**
      * Test-only injection point, mirroring the `settings`/`members`/`table`
      * DI pattern the CLI commands already use. Production callers never set
      * this — `build_members` falls back to the real, process-memoised
@@ -628,6 +645,52 @@ function _quorum_setting_from(ai: Dict): QuorumSetting {
         return raw;
     }
     return 'majority';
+}
+
+/**
+ * Emit one `quorum_result` line for a resolved quorum.
+ *
+ * Both `evaluateQuorum` call sites route through here, tagged by `phase`, so
+ * a solo-concluded pass is distinguishable from a full-attendance one in the
+ * event log — the gap `road-to-always-on-orchestration`'s Risk 6 asserted was
+ * already closed and was not.
+ *
+ * The emit sits at the call sites rather than inside `_postRunQuorum` on
+ * purpose: that function is exported and unit-tested as a pure derivation,
+ * and a write buried in it would make every test of it a log writer.
+ *
+ * `absent` entries arrive as the CLI's own `{member, reason, detail}` dicts;
+ * `detail` is dropped by `appendQuorumEvent`'s input type, which cannot carry
+ * free-form text at all.
+ */
+function _emitQuorumEvent(
+    phase: QuorumEventPhase,
+    quorum: QuorumResult,
+    absent: readonly Dict[],
+    ctx: {
+        command: QuorumCommand;
+        dispatch?: QuorumDispatch;
+        /** Enabled members before `--single` filtering; defaults to the roster that ran. */
+        configuredTotal?: number;
+        lens?: string;
+        invocation?: string;
+    },
+): void {
+    appendQuorumEvent({
+        lens: ctx.lens ?? '',
+        invocation: ctx.invocation ?? '',
+        phase,
+        command: ctx.command,
+        dispatch: ctx.dispatch ?? 'full',
+        configuredTotal: ctx.configuredTotal ?? quorum.total,
+        result: quorum,
+        absent: absent.map(
+            (a): QuorumAbsence => ({
+                member: String(a['member'] ?? ''),
+                reason: (a['reason'] as QuorumAbsence['reason']) ?? 'unavailable',
+            }),
+        ),
+    });
 }
 
 /**
@@ -762,6 +825,18 @@ function build_members(settings: Dict, opts: BuildMembersOptions = {}): External
     // that caller shape.
     let total_enabled = 0;
     let absent_count = 0;
+    // Every absence, regardless of whether the caller asked for the
+    // human-readable `skipped` out-param — the quorum event needs the
+    // member/reason pairs even when `skipped` is `null`, and reconstructing
+    // them from `absent_count` alone is impossible.
+    const absent_entries: Dict[] = [];
+    const record_absent = (entry: Dict): void => {
+        absent_count += 1;
+        absent_entries.push(entry);
+        if (skipped !== null) {
+            skipped.push(entry);
+        }
+    };
     for (const name of Object.keys(members_cfg)) {
         const cfg = ((members_cfg[name] as Dict) || {}) as Dict;
         if (!_pyBool(cfg['enabled'])) {
@@ -834,10 +909,7 @@ function build_members(settings: Dict, opts: BuildMembersOptions = {}): External
                 reason: resolved.absentReason ?? 'unavailable',
                 detail,
             };
-            absent_count += 1;
-            if (skipped !== null) {
-                skipped.push(entry);
-            }
+            record_absent(entry);
             _stderr(`[council] SKIP ${name}: ${detail}\n`);
             continue;
         }
@@ -877,10 +949,7 @@ function build_members(settings: Dict, opts: BuildMembersOptions = {}): External
                 }
                 const detail = exc.message;
                 const entry: Dict = { member: name, reason: 'no_auth', detail };
-                absent_count += 1;
-                if (skipped !== null) {
-                    skipped.push(entry);
-                }
+                record_absent(entry);
                 _stderr(`[council] SKIP ${name}: ${detail}\n`);
                 continue;
             }
@@ -910,10 +979,7 @@ function build_members(settings: Dict, opts: BuildMembersOptions = {}): External
                     reason: 'binary_missing',
                     detail,
                 };
-                absent_count += 1;
-                if (skipped !== null) {
-                    skipped.push(entry);
-                }
+                record_absent(entry);
                 _stderr(`[council] SKIP ${name}: ${detail}\n`);
                 continue;
             }
@@ -935,6 +1001,15 @@ function build_members(settings: Dict, opts: BuildMembersOptions = {}): External
     if (quorum_out !== null) {
         const present = total_enabled - absent_count;
         quorum_out.result = evaluateQuorum(total_enabled, present, _quorum_setting_from(ai));
+        // Construction-time attendance. `lens` / `invocation` stay empty
+        // here on purpose: neither is known at member-construction time,
+        // and `invocation_mode` (api / cli / manual) is a different axis
+        // that would read as the same field under a shared name.
+        // `command` IS recorded, because a preview and an aborted run both
+        // reach this line and neither is a pass.
+        _emitQuorumEvent('pre_run', quorum_out.result, absent_entries, {
+            command: opts.command ?? 'run',
+        });
     }
     if (members.length === 0) {
         if (skipped && skipped.length > 0) {
@@ -1703,6 +1778,10 @@ function cmd_estimate(
             siblings_overrides: _parse_siblings_overrides(_getattr<string[] | null>(args, 'siblings', null)),
             skipped,
             quorum_out,
+            // A cost preview spends nothing and runs no pass. The line is
+            // still written — tagged, so a consumer excludes it deliberately
+            // instead of never learning it was there.
+            command: 'estimate',
         });
     }
     if (table === null) {
@@ -2365,6 +2444,13 @@ function cmd_run(
             quorum_out,
         });
     }
+    // Measured, never assumed: `_apply_solo_dispatch` escalates back to the
+    // full roster on three paths (empty fallback chain, no chain member
+    // runtime-present, the picked member vanished). `--single` is therefore a
+    // request, not an outcome, and a `dispatch` field written from the flag
+    // would claim a solo pass that did not happen — contaminating the one
+    // split the solo-conclusion rate depends on.
+    const roster_before_dispatch = members.length;
     if (_getattr(args, 'single', false)) {
         const [filtered, solo_banner] = _apply_solo_dispatch(members);
         members = filtered;
@@ -2373,6 +2459,8 @@ function cmd_run(
         }
         _emit_shadow_slo_banner();
     }
+    const dispatch_shape: QuorumDispatch =
+        members.length < roster_before_dispatch ? 'single' : 'full';
     if (table === null) {
         // Anchor to the PROJECT root — the module default writes into the
         // installed package dir when run from a consumer (pollutes the npm
@@ -2538,9 +2626,30 @@ function cmd_run(
     // (mid-flight failures appended to the same array construction-time
     // skips already populate, so `payload['absent_members']` needs no
     // separate wiring either).
+    // The pre-run reading, before it is overwritten — `build_members` set it
+    // from `total_enabled`, i.e. the enabled roster before `--single` filtering
+    // and before any construction failure. Without carrying it forward, a pass
+    // with 3 configured members where 2 fail to construct and 1 answers emits
+    // `{total: 1, present: 1}` and reads as full attendance.
+    const configured_total = quorum_out.result?.total ?? null;
     const post_run = _postRunQuorum(members, responses, ai_cfg);
     quorum_out.result = post_run.quorum;
     skipped.push(...post_run.absent);
+    // Attendance telemetry for the reading that actually decided the pass.
+    // `post_run.absent` is the mid-flight set only; the construction-time
+    // skips already went out under `phase: 'pre_run'` from `build_members`,
+    // and merging them here would double-count a member absent in both.
+    _emitQuorumEvent('post_run', post_run.quorum, post_run.absent, {
+        command: 'run',
+        // Whether the roster actually shrank — see `dispatch_shape`. Without
+        // this the line is byte-identical to a configured one-member council,
+        // and the solo-conclusion rate cannot make the one distinction it
+        // exists for.
+        dispatch: dispatch_shape,
+        ...(configured_total !== null ? { configuredTotal: configured_total } : {}),
+        lens: question.mode,
+        invocation: String(_getattr(args, 'invocation', 'agent')),
+    });
     // Phase 4.1 — verdict → handoff envelope. Same tally `render()` computes
     // internally for the Vote Tally block (mirrored here, not imported from
     // there, because `render()` re-derives it from the SAVED payload on a
@@ -2817,12 +2926,21 @@ function cmd_debate(
     const advisor_plans = _build_advisor_plans(ai_cfg, REPO_ROOT);
     const explicit_overrides = _parse_model_overrides(_getattr<string[] | null>(args, 'model', null));
     const skipped: Dict[] = [];
+    // Debate spends the same providers as `run`, so its attendance belongs in
+    // the same log. It carries the construction-time half only: there is no
+    // `_postRunQuorum` on this path, and adding one would need a usable-response
+    // definition for a multi-round debate that this change does not have. The
+    // gap is declared in quorum-attendance-budget.json rather than left for a
+    // reader to discover from a missing row.
+    const quorum_out: { result: QuorumResult | null } = { result: null };
     if (members === null) {
         members = build_members(settings, {
             invocation_mode: args.mode_override,
             model_overrides: _advisor_model_overrides(advisor_plans, explicit_overrides),
             siblings_overrides: _parse_siblings_overrides(_getattr<string[] | null>(args, 'siblings', null)),
             skipped,
+            quorum_out,
+            command: 'debate',
         });
     }
     if (table === null) {
