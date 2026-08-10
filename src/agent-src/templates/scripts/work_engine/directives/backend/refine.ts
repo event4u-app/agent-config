@@ -7,7 +7,9 @@
  * part of the contract).
  *
  * The step never calls an LLM. It inspects `state.ticket` (which carries
- * `input.data` after the CLI projection) and routes on shape:
+ * `input.data` after the CLI projection), shape-checks the optional
+ * `dod[]` slot (the executable definition-of-done —
+ * `src/scripts/schemas/dod.schema.json`), and routes on shape:
  *
  * - **Ticket envelope** (`id`, `title`, `acceptance_criteria`) — the
  *   R1 path. Validates the minimum viable shape and either returns
@@ -85,6 +87,15 @@ export const AMBIGUITIES: ReadonlyArray<Record<string, string>> = [
             're-runs `refine-prompt` against the refreshed prompt',
     },
     {
+        code: 'malformed_dod',
+        trigger:
+            '`dod` key present but not a list, or an entry missing a ' +
+            'non-empty `id` / `check` string',
+        resolution:
+            'fix the `dod[]` entries against `src/scripts/schemas/dod.schema.json`, ' +
+            'or drop the key — the slot is optional',
+    },
+    {
         code: 'prompt_ui_intent',
         trigger:
             'scorer flagged `ui_intent=True` — the prompt reads as UI ' +
@@ -99,6 +110,27 @@ export const AMBIGUITIES: ReadonlyArray<Record<string, string>> = [
 /** Route on envelope shape: ticket path or prompt path. */
 export function run(state: DeliveryState): StepResult {
     const data = state.ticket || {};
+
+    // The `dod[]` slot is shape-checked on BOTH paths before either routes, so
+    // a malformed definition-of-done cannot reach the self-fix loop that
+    // reports it. Absent key → no check, no behaviour change.
+    const dod_issues = diagnose_dod(data);
+    if (dod_issues.length > 0) {
+        const dod_ticket_id = _pyTruthy(data.id) ? _pyStr(data.id) : '(no id)';
+        return new StepResult({
+            outcome: Outcome.BLOCKED,
+            questions: [
+                `> Ticket ${dod_ticket_id} — the \`dod[]\` slot is malformed: ` + dod_issues.join('; ') + '.',
+                '> Every entry needs a non-empty `id` and a non-empty `check` ' +
+                    '(the command that proves it) — prose there cannot be run.',
+                '> 1. Fix the `dod[]` entries and re-invoke',
+                '> 2. Drop the `dod` key — the slot is optional',
+                '> 3. Abort',
+            ],
+            message: `Ticket ${dod_ticket_id} has a malformed dod[] slot: ` + dod_issues.join('; '),
+        });
+    }
+
     if (_is_prompt_envelope(data)) {
         return _run_prompt(state, data);
     }
@@ -115,6 +147,53 @@ export function run(state: DeliveryState): StepResult {
         questions,
         message: `Ticket ${ticket_id} is not refined enough to plan against: ` + deficiencies.join('; '),
     });
+}
+
+/**
+ * Report what is wrong with an envelope's `dod[]` slot; `[]` when it is fine.
+ *
+ * Exported so the shape is testable on its own and so a caller can ask the
+ * question without triggering a halt. An absent key is valid — the slot is
+ * optional and omitting it means the author never declared a machine-checkable
+ * done-condition, which is different from declaring an empty one.
+ *
+ * `check` is required to be non-empty for the reason the schema states: the
+ * dispatcher spawns no subprocesses, so `check` is handed to an agent to run,
+ * and an agent cannot run a sentence.
+ */
+export function diagnose_dod(data: Record<string, Any>): string[] {
+    if (!_isPlainObject(data) || !('dod' in data)) {
+        return [];
+    }
+    const dod = data.dod;
+    if (!Array.isArray(dod)) {
+        return [`\`dod\` must be a list, got ${_pyTypeName(dod)}`];
+    }
+    const issues: string[] = [];
+    const seen = new Set<string>();
+    dod.forEach((entry, idx) => {
+        const position = idx + 1;
+        if (!_isPlainObject(entry)) {
+            issues.push(`entry ${position} must be an object, got ${_pyTypeName(entry)}`);
+            return;
+        }
+        const id = entry.id;
+        if (typeof id !== 'string' || !id.trim()) {
+            issues.push(`entry ${position} has no \`id\``);
+        } else if (seen.has(id)) {
+            issues.push(`entry ${position} repeats id \`${id}\``);
+        } else {
+            seen.add(id);
+        }
+        const check = entry.check;
+        if (typeof check !== 'string' || !check.trim()) {
+            issues.push(`entry ${position} has no \`check\` command`);
+        }
+        if ('proven' in entry && typeof entry.proven !== 'boolean') {
+            issues.push(`entry ${position} has a non-boolean \`proven\``);
+        }
+    });
+    return issues;
 }
 
 /**
@@ -440,6 +519,32 @@ function _pyTruthy(value: unknown): boolean {
         return Object.keys(value as Record<string, unknown>).length !== 0;
     }
     return true;
+}
+
+/** Python `type(x).__name__` for the value kinds the dod diagnose path sees. */
+function _pyTypeName(value: unknown): string {
+    if (value === null || value === undefined) {
+        return 'NoneType';
+    }
+    if (typeof value === 'boolean') {
+        return 'bool';
+    }
+    if (typeof value === 'number') {
+        return Number.isInteger(value) ? 'int' : 'float';
+    }
+    if (typeof value === 'string') {
+        return 'str';
+    }
+    if (Array.isArray(value)) {
+        return 'list';
+    }
+    if (value instanceof Set) {
+        return 'set';
+    }
+    if (value instanceof Map || _isPlainObject(value)) {
+        return 'dict';
+    }
+    return typeof value;
 }
 
 /** True for a dict-like value (mirrors Python `isinstance(x, dict)`). */
