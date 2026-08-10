@@ -92,6 +92,41 @@ agents/tmp.old/    ← AGENT moves the consumed file here, same reply
 - Both directories are gitignored in **package and consumer scope** (entry in
   `src/config/agents-paths.yml` with `scope: both`).
 
+### Snapshot provenance — one optional line that separates stale from wrong
+
+An inbox file is a **frozen opinion about a tree that has since moved**, and
+the tree moves faster than the conversation that produced the file. A draft may
+therefore be *stale* (correct when written, overtaken since) or *wrong*
+(never true) — two dispositions with completely different costs, and nothing in
+the file distinguishes them.
+
+So an inbox artifact **may** open with one provenance line, in either shape:
+
+```
+drafted-against: <short-SHA>            # e.g. drafted-against: fea32452b
+drafted-at: <YYYY-MM-DD>                # fallback when no SHA is available
+```
+
+**Optional by design.** The inbox is the user's space and must stay free-form —
+a required header would make a dropped note a schema error, which is exactly
+what this directory exists not to be. A file without the line is processed
+normally; the line only buys a cheaper triage.
+
+**What it buys.** With a SHA, a consumer of the file (
+[`/analyze:inbox`](../../src/domains/analysis-workbench/analyze/inbox/command.md))
+can run `git log --oneline <SHA>..HEAD` first and separate the two dispositions
+mechanically instead of re-verifying every claim from scratch. Measured on the
+2026-08-10 batch that motivated this: one of four drafts was 87 % *already
+executed* by a PR that merged between the drafting and the drop — pure
+staleness, discoverable in one `git diff`, which instead cost a full
+claim-by-claim verification pass.
+
+**What it does not buy.** A SHA is not a clearance. Claims about a *third*
+system (a host's behaviour, a provider's pricing, an external tool) do not
+become fresh because the repo SHA is known, and a draft that was wrong at its
+SHA is still wrong. The line narrows the verification surface; it never
+replaces it.
+
 ---
 
 ## Consumer-only scope (slim profile)
