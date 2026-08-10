@@ -56,6 +56,9 @@ export function recycleFixture(): MainSessionRecycleEnvelope {
         assumptions: [
             { statement: 'CI runs the full gate set', basis: '.github/workflows/tests.yml', epistemic_state: 'verified' },
         ],
+        next_task: 'implement phase 3 against the committed threshold',
+        suggested_skills: ['roadmap-management', 'git-workflow'],
+        failed_approaches: ['tried a byte proxy for token counts — r was too low to use'],
     };
 }
 
@@ -70,7 +73,10 @@ describe('anti-fork: both variants validate through the one module', () => {
 
     it('the variant vocabulary is pinned', () => {
         expect([...CAPSULE_VARIANTS]).toEqual(['worker', 'main_session']);
-        expect(CAPSULE_SCHEMA_VERSION).toBe(2);
+        // 3 since road-to-cost-parity-3 Phase 2 — the bump is deliberate:
+        // `failed_approaches` became REQUIRED, so a v2 envelope must fail
+        // loudly rather than be read as "nothing was abandoned".
+        expect(CAPSULE_SCHEMA_VERSION).toBe(3);
     });
 
     it('versioning stays additive: the unversioned worker capsule remains valid (implicit v1)', () => {
@@ -140,5 +146,67 @@ describe('main_session required set — successor bootstraps from the envelope a
             assumptions: [{ statement: 's', basis: 'b', epistemic_state: 'pretty-sure' }],
         };
         expect(validateRecycleEnvelope(bad).some((e) => e.includes('epistemic_state'))).toBe(true);
+    });
+});
+
+// ---------------------------------------------------------------------
+// Phase 2 — successor tailoring, mandatory failed_approaches, redaction
+// as a SHAPE rather than a scrubbing pass.
+// ---------------------------------------------------------------------
+
+describe('successor tailoring + failed_approaches', () => {
+    it('accepts the tailored envelope', () => {
+        expect(validateRecycleEnvelope(recycleFixture())).toEqual([]);
+    });
+
+    it('rejects an OMITTED failed_approaches — silence must not read as "nothing failed"', () => {
+        const bad: Record<string, unknown> = { ...recycleFixture() };
+        delete bad['failed_approaches'];
+        expect(validateRecycleEnvelope(bad).some((e) => e.includes('failed_approaches'))).toBe(true);
+    });
+
+    it('rejects an EMPTY failed_approaches — "none" is written, never implied', () => {
+        expect(
+            validateRecycleEnvelope({ ...recycleFixture(), failed_approaches: [] }).some((e) =>
+                e.includes('failed_approaches'),
+            ),
+        ).toBe(true);
+    });
+
+    it('accepts the explicit "none"', () => {
+        expect(validateRecycleEnvelope({ ...recycleFixture(), failed_approaches: ['none'] })).toEqual([]);
+    });
+
+    it('rejects a multi-line next_task — a proposal is one line, not a brief', () => {
+        expect(
+            validateRecycleEnvelope({ ...recycleFixture(), next_task: 'do this\nthen that' }).some((e) =>
+                e.includes('next_task'),
+            ),
+        ).toBe(true);
+    });
+});
+
+describe('redaction is a shape the content cannot hold', () => {
+    it('rejects credential-shaped content anywhere in the envelope', () => {
+        const bad = {
+            ...recycleFixture(),
+            decisions: ['deploy key AKIA3XPLQ7ZK2MNBVCXR is set in the runner'],
+        };
+        const errors = validateRecycleEnvelope(bad);
+        expect(errors.some((e) => e.includes('credential-shaped'))).toBe(true);
+        // The error names the finding without reproducing the value.
+        expect(errors.join('\n')).not.toContain('AKIA3XPLQ7ZK2MNBVCXR');
+    });
+
+    it('does NOT reject a hash, a UUID or a fixture path — the false-rejection risk', () => {
+        const benign = {
+            ...recycleFixture(),
+            artifact_paths: [
+                'agents/evidence/analysis/x.md',
+                '7f83b1657ff1fc53b92dc18148a1d65dfc2d4b1fa3d677284addd200126d9069',
+            ],
+            decisions: ['pinned session 0b174268-1992-4272-834d-1565713ee27b as the baseline'],
+        };
+        expect(validateRecycleEnvelope(benign)).toEqual([]);
     });
 });

@@ -89,26 +89,26 @@ worth resuming.
 
 ## Phase 2 — envelope contract upgrades
 
-- [ ] 2.1 Successor tailoring: the shared envelope schema gains `next_task`,
+- [x] 2.1 Successor tailoring: the shared envelope schema gains `next_task`,
       and the composing session selects content FOR that task instead of
       emitting a generic state dump. Applies to all envelope variants
       through the shared schema module, schema-versioned and additive.
-- [ ] 2.2 `suggested_skills`: a list naming the skills the successor should
+- [x] 2.2 `suggested_skills`: a list naming the skills the successor should
       invoke, turning the handoff into an activation carrier. Recorded
       motivation: activation is the funnel's measured weak stage, and this
       is a carrier that already crosses the boundary.
-- [ ] 2.3 `failed_approaches`, mandatory whenever the session abandoned an
+- [x] 2.3 `failed_approaches`, mandatory whenever the session abandoned an
       approach — "tried X, failed because Y". A composing session with none
       states `none` explicitly and never omits the field, so absence is
       distinguishable from silence.
-- [ ] 2.4 Redaction as a validator rule: credential / key / PII patterns are
+- [x] 2.4 Redaction as a validator rule: credential / key / PII patterns are
       schema-invalid in envelope content, lint-tested — not a scrubbing pass
       that can fail, but a shape the content cannot hold.
       <!-- verify: task test -- --filter=envelope -->
-- [ ] 2.5 Pointers-first as the schema's leading design sentence: never
+- [x] 2.5 Pointers-first as the schema's leading design sentence: never
       duplicate what specs, ADRs, commits, diffs or issues already hold —
       reference by path.
-- [ ] 2.6 **Injected envelope content is data, never instruction** — binding,
+- [x] 2.6 **Injected envelope content is data, never instruction** — binding,
       and the load-bearing half of this phase. The consumer wraps every
       injected envelope in the spotlighting / datamarking shape
       `untrusted-input-defense` requires, with an explicit boundary marker
@@ -119,14 +119,14 @@ worth resuming.
       instruction inside a delegated container does. A confirmation planted
       inside envelope content is not confirmation.
       <!-- verify: task test -- --filter=envelope -->
-- [ ] 2.7 Two adversarial fixtures pin 2.6, because a security requirement
+- [x] 2.7 Two adversarial fixtures pin 2.6, because a security requirement
       with only positive fixtures is untested: an envelope whose `next_task`
       contains an imperative to push, deploy or exfiltrate must be surfaced
       and refused rather than executed; and an envelope whose
       `failed_approaches` text contains a role-takeover string must be
       injected as inert data with its boundary marker intact.
       <!-- verify: task test -- --filter=envelope -->
-- [ ] 2.8 **Gate the half that is gateable, and say which half that is.**
+- [x] 2.8 **Gate the half that is gateable, and say which half that is.**
       The obligation splits cleanly and only one side is model-carried:
       **(a) emission — gated.** The injection path is code, so the marker's
       presence is a checkable property: the consumer refuses to inject an
@@ -216,7 +216,20 @@ worth resuming.
 
 ### blocker: handoff-content-adjudication
 
-- **Status:** open
+- **Status:** resolved (2026-08-10, in the Phase 2 change itself)
+- **Adjudication:** the earlier read was closed as "contradicted our own
+  honest-null doctrine" because it imported a *conclusion* — a claim about
+  what handoffs should say, carried over without a measurement this tree
+  could falsify. These three are not that. `next_task`, `suggested_skills`
+  and `failed_approaches` are schema fields with validators and fixtures:
+  each one is a shape the envelope either has or does not have, checked by
+  `validateRecycleEnvelope` and pinned by a test that fails when the rule is
+  removed. Nothing about them asserts an outcome. The one claim that could
+  have been imported — that carrying these fields makes successors resume
+  better — is deliberately NOT made here; it stays the registered, unmeasured
+  `envelope_resume_success` metric in `hook-token-budget.json`. A field whose
+  presence is checkable survives where a doctrine whose effect is unmeasured
+  did not, and that is the whole distinction.
 - **Owner:** maintainer
 - **Blocks:** Phase 2.1–2.3 landing as designed
 - **What to do:** `road-to-inbox-harvest-2026-08.md` triaged an earlier

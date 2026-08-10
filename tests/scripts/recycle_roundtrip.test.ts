@@ -80,6 +80,7 @@ function sessionA(root: string): void {
         acceptance_criteria: ['report.txt equals the control deliverable'],
         remaining: ALL_STEPS.slice(2).map((s) => `step:${s}`),
         not_carried_forward: ['the raw records — re-read from the fixture, not from memory'],
+        failed_approaches: ['none'],
         decisions: ['delimiter=| — pipe keeps the report grep-safe'],
         artifact_paths: ['work/partial.txt'],
     };

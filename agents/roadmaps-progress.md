@@ -6,10 +6,10 @@
 
 ## Overall
 
-**174 / 315 steps done · 55%**
+**182 / 315 steps done · 58%**
 
 ```text
-██████████████████████░░░░░░░░░░░░░░░░░░   55%
+███████████████████████░░░░░░░░░░░░░░░░░   58%
 ```
 
 ## Open roadmaps
@@ -21,7 +21,7 @@
 | 3 | [road-to-carrier-layer-convergence.md](roadmaps/road-to-carrier-layer-convergence.md) | 3 | 8 | 2 | 3 | 0 | 3 | [1](#blockers-road-to-carrier-layer-convergence) | ██████░░░░ 60% |
 | 4 | [road-to-ci-native-release-first-run.md](roadmaps/road-to-ci-native-release-first-run.md) | 2 | 8 | 8 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 5 | [road-to-cost-parity-0-program.md](roadmaps/road-to-cost-parity-0-program.md) | 4 | 23 | 23 | 0 | 0 | 0 | [1](#blockers-road-to-cost-parity-0-program) | ░░░░░░░░░░ 0% |
-| 6 | [road-to-cost-parity-3-handoff-envelope.md](roadmaps/road-to-cost-parity-3-handoff-envelope.md) | 4 | 28 | 25 | 3 | 0 | 0 | [2](#blockers-road-to-cost-parity-3-handoff-envelope) | █░░░░░░░░░ 11% |
+| 6 | [road-to-cost-parity-3-handoff-envelope.md](roadmaps/road-to-cost-parity-3-handoff-envelope.md) | 4 | 28 | 17 | 11 | 0 | 0 | [2](#blockers-road-to-cost-parity-3-handoff-envelope) | ████░░░░░░ 39% |
 | 7 | [road-to-council-blind-review.md](roadmaps/road-to-council-blind-review.md) | 3 | 6 | 2 | 3 | 0 | 1 | 0 | ██████░░░░ 60% |
 | 8 | [road-to-gated-reach-followup.md](roadmaps/road-to-gated-reach-followup.md) | 1 | 12 | 12 | 0 | 0 | 0 | [1](#blockers-road-to-gated-reach-followup) | ░░░░░░░░░░ 0% |
 | 9 | [road-to-inbox-harvest-2026-08.md](roadmaps/road-to-inbox-harvest-2026-08.md) | 5 | 21 | 1 | 11 | 4 | 5 | [2](#blockers-road-to-inbox-harvest-2026-08) | █████████░ 92% |
@@ -183,12 +183,12 @@
 
 ### [road-to-cost-parity-3-handoff-envelope.md](roadmaps/road-to-cost-parity-3-handoff-envelope.md)
 
-**Road to cost parity — 3: the handoff envelope carries what the successor actually needs** — 3 / 28 done (11%)
+**Road to cost parity — 3: the handoff envelope carries what the successor actually needs** — 11 / 28 done (39%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
 | 1 | the enumeration fix (independent, ships alone) | ✅ done | 0 | 3 | 0 | 0 | 100% |
-| 2 | envelope contract upgrades | ⬜ not started | 8 | 0 | 0 | 0 | 0% |
+| 2 | envelope contract upgrades | ✅ done | 0 | 8 | 0 | 0 | 100% |
 | 3 | resume precision and the drift anchor | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
 | 4 | what this roadmap will not do | ⬜ not started | 12 | 0 | 0 | 0 | 0% |
 

@@ -61,6 +61,9 @@ export function templateEnvelope(): Record<string, unknown> {
         open_worker_envelopes: [],
         artifact_paths: ['<path to a deliverable / note / evidence file>'],
         assumptions: [],
+        next_task: '<the ONE task this envelope is written for — select content for it>',
+        suggested_skills: ['<skill the successor should invoke>'],
+        failed_approaches: ['<tried X, failed because Y — or the single entry "none">'],
     };
 }
 
