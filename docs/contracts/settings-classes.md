@@ -269,6 +269,7 @@ Rows follow template order, so a diff against the template reads straight down.
 | `subagents.model_map.high` | C | `""` | names an external model endpoint |
 | `subagents.implementer_model` | C | `""` | names an external model endpoint |
 | `subagents.judge_model` | C | `""` | names an external model endpoint |
+| `subagents.model_ceiling` | C | `""` | session-wide subagent model cap (exported as `CLAUDE_CODE_SUBAGENT_MODEL` by suite-owned CLI spawn wrappers), which is spend and quality |
 | `subagents.max_parallel` | C | `3` | parallelism cap, and therefore a spend rate |
 | `subagents.adversarial_council` | C | `"off"` | governs a paid verification step |
 | `worktrees.mode` | C | `ask` | standing permission for autonomous worktree creation |

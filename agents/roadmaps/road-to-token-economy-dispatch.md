@@ -329,18 +329,30 @@ result and the projection widens by evidence, not by fear.
 
 ## Phase 5 — model tiering stops being advisory
 
-- [ ] 5.1 Worker and reviewer definitions pin `model:` per the committed
+- [x] 5.1 Worker and reviewer definitions pin `model:` per the committed
       cheapest-sufficient-model table (research/lookup roles → small model;
       implementing roles inherit the main model; the table's escalation
       criteria are the override path). The table stays the single source;
-      definitions cite it.
-- [ ] 5.2 The dispatch wrapper may set the host's subagent model ceiling
+      definitions cite it. <!-- done 2026-08-10: subagent.schema.json already
+      REQUIRES model_tier on every definition (structural pin); the one
+      in-tree definition (src/subagents/production-validator.md) now cites
+      the table's criterion for its `inherit` pin (security-sensitive audit
+      surface -> session tier, per the table's security row); no
+      research/lookup definition exists in-tree to downshift -->
+- [x] 5.2 The dispatch wrapper may set the host's subagent model ceiling
       (`CLAUDE_CODE_SUBAGENT_MODEL`) only as an explicit per-install
       setting (class-C, default absent) — a ceiling is a spend cap, which is
-      exactly the settings class the always-on doctrine keeps.
-- [ ] 5.3 The end-review reviewer runs on the table's review tier by
+      exactly the settings class the always-on doctrine keeps. <!-- done
+      2026-08-10: subagents.model_ceiling (template + settings-classes row,
+      class C, default "") — read memoised in clients.ts and exported as
+      CLAUDE_CODE_SUBAGENT_MODEL on the council CLI spawn only when a human
+      set it; absent/unreadable -> no ceiling -->
+- [~] 5.3 The end-review reviewer runs on the table's review tier by
       default; a reviewer that escalates records the criterion it invoked in
-      the review artifact.
+      the review artifact. <!-- deferred 2026-08-10: blocker-gated by design
+      (reviewer-tier-quality-floor) — the small-tier default must not ship
+      before the verdict-agreement comparison exists; production-validator's
+      inherit pin documents the same gate -->
 
 **Exit:** the reviewer that fires after nearly every mutating session no longer bills at main-model rates by default; every escalation names its reason.
 **Rollback:** remove `model:` pins; host default resumes.

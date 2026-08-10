@@ -180,3 +180,14 @@ describe('ladder rung 0.5 + nudge line (4.2/4.3)', () => {
         expect(classifyPrompt('does the envelope validator reject prose summaries?', process.cwd(), 'claude')).toBeNull();
     });
 });
+
+describe('subagent model ceiling (Phase 5.2, class C)', () => {
+    it('resolves empty/absent to null and a set value verbatim — human-set only, never inferred', async () => {
+        const { _subagentModelCeiling, _resetModelCeilingMemo } = await import(
+            '../../src/scripts/ai_council/clients.js'
+        );
+        _resetModelCeilingMemo();
+        // In this repo's settings the key is absent/empty → no ceiling.
+        expect(_subagentModelCeiling()).toBeNull();
+    });
+});

@@ -46,6 +46,30 @@ import * as path from 'node:path';
 
 import { hardenedSpawnEnv } from '../_lib/spawn_env.js';
 import { SESSION_ROLE_ENV } from '../_lib/session_role.js';
+import { load_agent_settings } from '../_lib/agent_settings.js';
+
+// Session-wide subagent model ceiling (token-economy-dispatch Phase 5.2):
+// class-C setting, default absent, HUMAN-set only. When present, the CLI
+// spawn below exports CLAUDE_CODE_SUBAGENT_MODEL so the spawned vendor
+// session caps its own subagents' models. Memoised per process — the
+// setting is per-install, not per-call.
+let _modelCeilingMemo: string | null | undefined;
+export function _subagentModelCeiling(): string | null {
+    if (_modelCeilingMemo !== undefined) return _modelCeilingMemo;
+    try {
+        const settings = load_agent_settings({ cwd: process.cwd() }) as Record<string, unknown>;
+        const sub = (settings['subagents'] ?? {}) as Record<string, unknown>;
+        const v = typeof sub['model_ceiling'] === 'string' ? sub['model_ceiling'].trim() : '';
+        _modelCeilingMemo = v.length > 0 ? v : null;
+    } catch {
+        _modelCeilingMemo = null; // unreadable settings → no ceiling (fail-open)
+    }
+    return _modelCeilingMemo;
+}
+/** Test seam: reset the per-process ceiling memo. */
+export function _resetModelCeilingMemo(): void {
+    _modelCeilingMemo = undefined;
+}
 import * as user_global_paths from '../_lib/user_global_paths.js';
 import { appendEvent } from './events_log.js';
 
@@ -1190,7 +1214,15 @@ export abstract class CliClient extends ExternalAIClient {
             // that launches a separate CLI session today — Agent-tool
             // subagents share the host process env and cannot be marked
             // (probed live 2026-08-10; see _lib/session_role.ts).
-            env: hardenedSpawnEnv({ [SESSION_ROLE_ENV]: 'worker' }),
+            // The optional model ceiling (subagents.model_ceiling, class C)
+            // rides the same spawn: a spend cap the human set per install.
+            env: hardenedSpawnEnv({
+                [SESSION_ROLE_ENV]: 'worker',
+                ...((): Record<string, string> => {
+                    const ceiling = _subagentModelCeiling();
+                    return ceiling !== null ? { CLAUDE_CODE_SUBAGENT_MODEL: ceiling } : {};
+                })(),
+            }),
         };
         if (stdinPayload !== null) {
             spawnOpts.input = stdinPayload;

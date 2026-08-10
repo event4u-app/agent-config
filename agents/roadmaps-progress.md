@@ -6,10 +6,10 @@
 
 ## Overall
 
-**219 / 405 steps done · 54%**
+**221 / 404 steps done · 55%**
 
 ```text
-██████████████████████░░░░░░░░░░░░░░░░░░   54%
+██████████████████████░░░░░░░░░░░░░░░░░░   55%
 ```
 
 ## Open roadmaps
@@ -35,7 +35,7 @@
 | 17 | [road-to-surface-consolidation.md](roadmaps/road-to-surface-consolidation.md) | 3 | 14 | 1 | 12 | 1 | 0 | [2](#blockers-road-to-surface-consolidation) | █████████░ 92% |
 | 18 | [road-to-tier-removal.md](roadmaps/road-to-tier-removal.md) | 4 | 8 | 2 | 6 | 0 | 0 | [1](#blockers-road-to-tier-removal) | ████████░░ 75% |
 | 19 | [road-to-token-economy-cache.md](roadmaps/road-to-token-economy-cache.md) | 7 | 38 | 38 | 0 | 0 | 0 | [2](#blockers-road-to-token-economy-cache) | ░░░░░░░░░░ 0% |
-| 20 | [road-to-token-economy-dispatch.md](roadmaps/road-to-token-economy-dispatch.md) | 7 | 36 | 20 | 13 | 3 | 0 | [3](#blockers-road-to-token-economy-dispatch) | ████░░░░░░ 39% |
+| 20 | [road-to-token-economy-dispatch.md](roadmaps/road-to-token-economy-dispatch.md) | 7 | 36 | 17 | 15 | 4 | 0 | [3](#blockers-road-to-token-economy-dispatch) | █████░░░░░ 47% |
 | 21 | [road-to-token-economy-recycling.md](roadmaps/road-to-token-economy-recycling.md) | 5 | 26 | 26 | 0 | 0 | 0 | [2](#blockers-road-to-token-economy-recycling) | ░░░░░░░░░░ 0% |
 | 22 | [road-to-ui-track-integrity-followup.md](roadmaps/road-to-ui-track-integrity-followup.md) | 1 | 10 | 10 | 0 | 0 | 0 | [2](#blockers-road-to-ui-track-integrity-followup) | ░░░░░░░░░░ 0% |
 | 23 | [road-to-worktree-hygiene.md](roadmaps/road-to-worktree-hygiene.md) | 1 | 9 | 2 | 7 | 0 | 0 | [1](#blockers-road-to-worktree-hygiene) | ████████░░ 78% |
@@ -508,7 +508,7 @@ _1 blocker resolved._
 
 ### [road-to-token-economy-dispatch.md](roadmaps/road-to-token-economy-dispatch.md)
 
-**Road to token-economy — dispatch: the always-on stack stops paying the full harness price per spawn** — 13 / 33 done (39%)
+**Road to token-economy — dispatch: the always-on stack stops paying the full harness price per spawn** — 15 / 32 done (47%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
@@ -516,7 +516,7 @@ _1 blocker resolved._
 | 2 | a role axis in the hook manifest | ✅ done | 0 | 4 | 0 | 0 | 100% |
 | 3 | worker thin projection, cut where the data says | ✅ done | 0 | 1 | 3 | 0 | 100% |
 | 4 | rung 0.5: ask, don't spawn | ✅ done | 0 | 4 | 0 | 0 | 100% |
-| 5 | model tiering stops being advisory | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
+| 5 | model tiering stops being advisory | ✅ done | 0 | 2 | 1 | 0 | 100% |
 | 6 | the envelope is the only return channel | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
 | 7 | what this roadmap will not do | ⬜ not started | 14 | 0 | 0 | 0 | 0% |
 
