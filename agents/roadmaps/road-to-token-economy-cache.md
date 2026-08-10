@@ -81,7 +81,8 @@ discipline the latency budget already established for wall-clock.
   `hook-latency-budget.json` (registered 2026-07-27, owner + review date,
   absolute p95 caps, honest-null consequence: default-off + published
   cost). No analogous file budgets what the concerns *inject*
-  (`src/config/hook-token-budget.json` absent at HEAD). The 9.28/9.29
+  (`src/config/hook-token-budget.json` absent at HEAD — the file Phase 3 creates). <!-- ref-ignore -->
+  The 9.28/9.29
   chains added injectors on `user_prompt_submit` (delegation-nudge,
   self-repair), `stop` (end-review-nudge, self-repair), and
   `session_start` (council-availability) with per-hook
