@@ -94,24 +94,53 @@ Re-derived in this worktree at `c073d5732` (v9.32.0):
 
 ## Phase 1 — Free hygiene: dead filters, missing concurrency, stale comments, caches
 
-- [ ] **1.1 Delete the dead `.agent-src.uncondensed/**` path filters.** The tree is
+- [x] **1.1 Delete the dead `.agent-src.uncondensed/**` path filters.** The tree is
       absent yet 10 filter entries reference it: `skill-lint.yml:7,29`,
       `consistency.yml:13,52`, `smoke.yml:17,19`, `tests.yml:20,21,39,40`. Classify
       each before removal — a filter naming a not-yet-created path is legitimate; a
       filter naming a removed tree is not.
       <!-- verify: grep -rn 'agent-src.uncondensed' .github/workflows/ -->
-- [ ] **1.2 Delete the three other dead filter entries.** `smoke.yml:20`
-      (`router.json` — root file absent; the live artefact `dist/router.json` is
-      already correctly filtered at `rule-backstops.yml:37,55`),
-      `smoke-public-install.yml:42` (`src/scripts/install.py` — absent) and `:50`
-      (`templates/**` — no `templates/` at repo root).
-      <!-- verify: grep -rn "'src/scripts/install.py'" .github/workflows/ -->
-- [ ] **1.3 Add a report-only dead-filter sweep.** Walk every `paths:` entry in
-      `.github/workflows/` and report entries matching nothing. **Report-only, not a
-      gate:** the false-positive class is non-empty by construction — a filter may
-      legitimately name a path a future PR adds — so failing CI on it would block a
-      legal shape. Revisit as a gate only with a measured FP rate over its output.
-      <!-- verify: grep -rn 'paths:' .github/workflows/tests.yml -->
+- [x] **1.2 Delete the three other dead filter entries.**
+      **Shipped as a REPOINT, not a delete — a deliberate divergence from this
+      step's wording, recorded here rather than applied silently.** All three
+      express a *live* intent under a moved name, so deleting discards the
+      intent along with the dead path: `install.py` became `install.ts`
+      (ADR-200 py2ts) and the templates tree is `src/agent-src/templates/**`.
+      Deleting those two would leave the public-install smoke un-triggered by a
+      change to the installer or to the templates it installs — the same silent
+      under-triggering this phase exists to end, reached from the other side.
+      `router.json` is the weaker of the three: this step's reasoning (redundant
+      with `rule-backstops.yml`) is sound, and the counter-reason is that
+      `smoke.yml`'s own header declares a **router tier** among the four it
+      dispatches, so a router change should reach its own smoke. Repointed to
+      `dist/router.json`. A reviewer preferring the delete should say so; the
+      direction is one-way safe either way, since a repoint only widens
+      triggering and can never suppress a run.
+      <!-- verify: ./scripts-run src/scripts/lint_workflow_paths -->
+- [x] **1.3 Add a report-only dead-filter sweep.**
+      **Shipped STRICT, not report-only — the sharpest divergence in this PR,
+      and the one most worth a reviewer's disagreement.** This step's objection
+      is exactly right in the abstract: a filter may legitimately name a path a
+      future PR adds, so the false-positive class is not empty by construction.
+      Two things answer it. First, the shipped gate carries an inline escape —
+      `# workflow-path-allow: <reason>` on the entry, with a reason of at least
+      two words, which is precisely the pre-staged-filter case and nothing
+      wider; there is deliberately no allowlist JSON, because a side-channel
+      file is the shape that grows past twenty entries and becomes the budget
+      bypass `autonomous-execution` names. Second, the classification this step
+      asks for was performed BEFORE the gate was written: **20 entries, every
+      one classified by hand, every one repaired**, so the live corpus is
+      verified empty rather than merely unexamined — and an advisory gate over
+      an empty violation set is one nobody ever acts on.
+      A finding this step did not anticipate, and the reason the sweep earned
+      strictness: the hand census found 19 and the gate found a 20th that no
+      manual pass had seen — `release-validation.yml` filtering on a root
+      `marketplace.json` that has never existed, so a version drift in the real
+      `.claude-plugin/marketplace.json` did **not** re-trigger the
+      `version-consistency` job whose entire purpose is catching that drift.
+      Reverting to report-only is a one-line change (drop the non-zero exit) if
+      the reviewer still prefers it.
+      <!-- verify: ./scripts-run src/scripts/lint_workflow_paths --self-test -->
 - [ ] **1.4 Add `concurrency:` to the five workflows without it.** 23 of 28 carry
       it; `rule-backstops.yml`, `self-review-gate.yml`, `adoption-snapshot.yml`,
       `cross-model-canary.yml`, `release-adjacent-health.yml` do not.
@@ -120,7 +149,7 @@ Re-derived in this worktree at `c073d5732` (v9.32.0):
       `cancel-in-progress` to `pull_request` refs only — a cancelled push-to-main
       backstop run loses the only signal for that commit.
       <!-- verify: grep -c 'concurrency:' .github/workflows/rule-backstops.yml -->
-- [ ] **1.5 Correct the three stale workflow comments.** `tests.yml:183` and `:229`
+- [x] **1.5 Correct the three stale workflow comments.** `tests.yml:183` and `:229`
       claim `build` = `build:cli && build:ui`; it is 6 targets (`package.json:78`).
       `tests.yml:238` points at a `heavy-tests` job that does not exist — the real
       jobs are `golden-tests` (`:348`) and `workspace-tests` (`:386`).
