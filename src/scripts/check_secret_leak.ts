@@ -52,6 +52,18 @@ const DEFAULT_EXCLUDE: readonly RegExp[] = [
     /(^|\/)\.claude(\/|$)/,
     /(^|\/)fixtures(\/|$)/,
     /(^|\/)tests(\/|$)/, // test + golden + parity data legitimately holds secret-shaped strings
+    // R2 review-input packages: a VERBATIM copy of the branch diff, written by
+    // `dispatch_r2_reviewer`. Every byte in it already exists in the branch and
+    // is scanned at its own path under its own exclusions, so scanning the copy
+    // adds no coverage — and it DEFEATS the two carve-outs above by
+    // construction: a secret-shaped string that is legal in a test fixture gets
+    // laundered into a scanned path the moment a completion review runs. That
+    // is not hypothetical; it red this gate on the PR that added this line.
+    // What the exclusion cannot lose: content present only in the copy and
+    // nowhere else in the branch. The package is machine-generated from
+    // `git diff` and cannot invent content, and `--verify-current` re-derives
+    // its hashes, so a hand-edit is detectable rather than silent.
+    /(^|\/)[^/]+\.review-input(\/|$)/,
     /(^|\/)__[a-z_]+__(\/|$)/, // snapshot dirs (e.g. __parity_snapshots__)
     /\.test\.[a-z]+$/,
     /\.spec\.[a-z]+$/,
