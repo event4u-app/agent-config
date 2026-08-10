@@ -105,6 +105,32 @@ export interface Options {
     approvalRequired?: boolean;
 }
 
+const USAGE = `usage: explain_run [--task <id>] [--since <ISO-8601>] [--output <path>]
+                   [--decision "<task text>"] [--size-estimate <int>] [--slices <int>]
+                   [--ordered-plan] [--agent-teams] [--halted] [--no-spawn-primitive]
+                   [--inside-subagent] [--approval-required]
+
+Window:
+  --task <id>            restrict to one task id in the audit log
+  --since <ISO-8601>     cutoff timestamp / date
+  --output <path>        write the report to a file instead of stdout
+
+Dispatch decision (all optional; absent --decision omits the section):
+  --decision <text>      classify this task text through the judgment ladder and
+                         render the rung taken, the rungs rejected with their
+                         detector's reason, and the rungs never reached
+  --size-estimate <int>  size signal; at or below the floor nothing delegates
+  --slices <int>         number of independent slices
+  --ordered-plan         the slices are ordered, not independent
+  --agent-teams          the host reports the agent_teams capability
+  --halted               emergency.orchestration_halt is set
+  --no-spawn-primitive   the host has no subagent_spawn primitive
+  --inside-subagent      classification runs inside a subagent (recursive guard)
+  --approval-required    a human decision is pending; resolves before every rung
+
+Exit: 0 report rendered · 2 bad argument.
+`;
+
 function parseArgs(argv: string[]): Options {
     const opts: Options = {
         task: null,
@@ -172,8 +198,16 @@ function parseArgs(argv: string[]): Options {
         else if (a === '--no-spawn-primitive') opts.noSpawnPrimitive = true;
         else if (a === '--inside-subagent') opts.insideSubagent = true;
         else if (a === '--approval-required') opts.approvalRequired = true;
-        else {
-            process.stderr.write(`explain_run: unrecognized argument: ${a}\n`);
+        else if (a === '--help' || a === '-h') {
+            process.stdout.write(USAGE);
+            process.exit(0);
+        } else {
+            // The usage text goes to stderr with the error, so a typo shows the
+            // whole surface rather than only the rejected token. Nine of these
+            // flags landed at once (the dispatch-decision trace); a script whose
+            // only discovery path is reading its source is a script whose flags
+            // do not exist for the person at the terminal.
+            process.stderr.write(`explain_run: unrecognized argument: ${a}\n\n${USAGE}`);
             process.exit(2);
         }
     }

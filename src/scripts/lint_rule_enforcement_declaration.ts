@@ -31,6 +31,19 @@
  * their `// ledger-exempt:` markers are a different surface
  * (`check_gate_completeness`) and are not read here.
  *
+ * **Where the baseline lives, and why it ships.** `src/config/` is a directory
+ * entry in `package.json`'s `files[]`, so `rule-enforcement-baseline.json` is in
+ * the published tarball alongside its nine siblings — `gate-violation-baselines`,
+ * the four `*-budget` files, and the rest. All ten are repo-internal gate state:
+ * this gate is their consumer, it ships too (via `src/scripts/`), and in a
+ * consumer checkout it finds no `src/rules/` and does nothing. That is inert, not
+ * orphaned, and it is the pre-existing shape rather than something this file
+ * introduced — an automated review flagged it as "ships into dist with no
+ * consumer", which is doubly wrong: the file is not in `dist/` at all, and the
+ * consumer is this script. Whether ten repo-internal baselines belong in the
+ * tarball is a real packaging question; it is one decision about ten files, not a
+ * carve-out for the tenth.
+ *
  * CLI contract: exit 0 = clean, 1 = a finding (or dead scan root), 2 = usage.
  * `--quiet` mutes the clean-path line; `--root <dir>` re-roots for fixtures;
  * `--write-baseline` records the current undeclared set (bootstrap/re-anchor —
