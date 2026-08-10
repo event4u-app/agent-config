@@ -1,0 +1,21 @@
+{
+    "_comment": "NEGATIVE fixture for road-to-cost-parity-0-program § 1.2b. The honest-null clause is only real if the validator is provably red on the case it forbids: a target that records what it was revised FROM while publishing no evidence for the revision. This file must always fail lint_budget_ownership's row checks. It lives under tests/fixtures/ and NOT under src/config/, so the real gate never scans it.",
+    "schema_version": 1,
+    "registered_at": "2026-08-10",
+    "owner": "maintainer",
+    "review_by": "2026-11-10",
+    "row_schema": {
+        "required_row_fields": ["id", "unit", "baseline", "source", "revisable", "revision_evidence", "revised_from"]
+    },
+    "session_cost_targets": [
+        {
+            "id": "median_final_context_tokens",
+            "unit": "billable input tokens",
+            "baseline": 400000,
+            "source": "agents/evidence/analysis/token-economy-recycling-phase1.md:45",
+            "revisable": true,
+            "revision_evidence": "",
+            "revised_from": 519349
+        }
+    ]
+}
