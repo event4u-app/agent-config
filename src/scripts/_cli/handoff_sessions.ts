@@ -34,6 +34,14 @@ import { derive_session_tag, list_sessions, read_entries } from '../chat_history
 import { eolSessionKey, readEolCounters, type StoredEolCounters } from '../_lib/session_eol.js';
 
 export const DEFAULT_CAP = 15;
+/**
+ * Per-source over-fetch factor. The exclusions run after the per-source cap,
+ * so fetching exactly `cap` lets a filtered candidate consume a slot no
+ * eligible session can reclaim. 3× is a backfill margin, not a measurement:
+ * on the observed store 10 of 217 sessions are filtered (~5%), so 3× covers
+ * that comfortably while keeping the per-file scan bounded.
+ */
+const FETCH_OVERSHOOT = 3;
 const SUMMARY_SNIPPET_CHARS = 120;
 
 /**
@@ -459,10 +467,18 @@ function _sort_key(s: HandoffSession): string {
  */
 export function is_substantive(counters: StoredEolCounters | null): boolean {
     if (counters === null) return true;
-    if (Number(counters.assistant_records ?? 0) < 1) return false;
-    if (counters.tool_calls === undefined) return true;
-    if (Number(counters.tool_calls) >= 1) return true;
-    return Number(counters.final_context_tokens ?? 0) >= SUBSTANTIVE_TOKEN_FLOOR;
+    // Every "unknown" below is a NUMBER test, not an `=== undefined` test.
+    // Absent, null and NaN are all unknown, and each one reaches this code by
+    // a real path: a state file written before the counter existed is absent,
+    // `JSON.stringify` turns NaN into null on the way to disk, and a
+    // half-written file yields a parseable object with missing keys. Reading
+    // any of them as "counted zero" hides a session that did real work.
+    if (!Number.isFinite(counters.assistant_records)) return true;
+    if ((counters.assistant_records as number) < 1) return false;
+    if (!Number.isFinite(counters.tool_calls)) return true;
+    if ((counters.tool_calls as number) >= 1) return true;
+    if (!Number.isFinite(counters.final_context_tokens)) return true;
+    return (counters.final_context_tokens as number) >= SUBSTANTIVE_TOKEN_FLOOR;
 }
 
 function _derive_tag(id: string): string | null {
@@ -521,9 +537,16 @@ export function list_handoff_sessions(opts: ListOptions = {}): HandoffSession[] 
     const primary = _chat_history_sessions(opts);
     const knownTags = new Set(primary.map((s) => s.id));
 
+    // Over-fetch per source, because the two filters below run AFTER it and
+    // the issuing session is by construction among the newest — with a
+    // per-source cap of exactly `cap`, the caller always burns a slot and
+    // every filtered empty session burns another, so a substantive session
+    // just outside the window is silently dropped instead of backfilled.
+    // That is the hidden-session direction Phase 1.2 calls data loss.
+    const fetchCap = cap * FETCH_OVERSHOOT;
     const nativeAll = [
-        ..._claude_transcript_sessions(opts, cap),
-        ..._codex_sessions(opts, cap),
+        ..._claude_transcript_sessions(opts, fetchCap),
+        ..._codex_sessions(opts, fetchCap),
     ];
     const byTag = new Map<string, HandoffSession>();
     for (const s of nativeAll) {

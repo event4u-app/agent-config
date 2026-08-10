@@ -145,7 +145,14 @@ export function readLastVerify(root: string): string | null {
 /** Collect every scripted field. Never throws — an unreadable fact is `null`. */
 export function collectGrounding(root: string): Grounding {
     const anchor = collectRepoAnchor(root);
-    const porcelain = git(root, ['status', '--porcelain']) ?? '';
+    const porcelain = git(root, ['status', '--porcelain']);
+    if (porcelain === null) {
+        // A FAILED read is not a clean tree. Collapsing the two would make
+        // this the one field in the module that asserts something it never
+        // read — and it would assert it exactly when every sibling field is
+        // null, so `describeDrift` is silent and nothing challenges it.
+        return { ...anchor, uncommitted_paths: [], status_summary: null, last_verify: readLastVerify(root) };
+    }
     const lines = porcelain.split('\n').filter((l) => l.trim().length > 0);
     const paths = lines
         .map((l) => l.slice(3).trim())

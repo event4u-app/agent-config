@@ -36,11 +36,18 @@ const SNIPPET_CHARS = 200;
 const DONE_SNIPPET_CHARS = 400;
 const MAX_ERRORS = 5;
 /**
- * Per-error cap. Deliberately far above `SNIPPET_CHARS`: an error string is
- * kept verbatim so it stays greppable, and this is a guard against one absurd
- * line, not a formatting budget.
+ * Per-error cap. Above `SNIPPET_CHARS` because an error string is kept
+ * verbatim so it stays greppable — but deliberately not far above.
+ *
+ * The section competes for a fixed word cap whose trim pops the NEWEST entry
+ * first, and the newest failure is the one a successor needs. Enlarging each
+ * entry therefore makes that pre-existing trim order bite more often. 400 is
+ * twice the old truncation — enough to carry a real error line whole — while
+ * keeping the five-entry section within roughly a sixth of the cap. The
+ * pop()-newest ordering is pre-existing and is not this change's to alter;
+ * this bound is what keeps the change from amplifying it.
  */
-const MAX_ERROR_CHARS = 1000;
+const MAX_ERROR_CHARS = 400;
 const MAX_DECISIONS = 5;
 const MAX_FILES = 15;
 

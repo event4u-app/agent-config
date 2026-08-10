@@ -2,7 +2,7 @@
 
 > Auto-generated — do not edit. Regenerate with `task roadmap-progress` or by running the `update_roadmap_progress` script for your install; rewritten on every roadmap create / execute / completion change (timestamp lives in git history).
 >
-> 21 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **26** open blockers, **10** need you → `agent-config gates`
+> 21 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **27** open blockers, **10** need you → `agent-config gates`
 
 ## Overall
 
@@ -20,7 +20,7 @@
 | 2 | [road-to-capability-answerability.md](roadmaps/road-to-capability-answerability.md) | 4 | 19 | 1 | 18 | 0 | 0 | [1](#blockers-road-to-capability-answerability) | ██████████ 95% |
 | 3 | [road-to-carrier-layer-convergence.md](roadmaps/road-to-carrier-layer-convergence.md) | 3 | 8 | 2 | 3 | 0 | 3 | [1](#blockers-road-to-carrier-layer-convergence) | ██████░░░░ 60% |
 | 4 | [road-to-ci-native-release-first-run.md](roadmaps/road-to-ci-native-release-first-run.md) | 2 | 8 | 8 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
-| 5 | [road-to-cost-parity-0-program.md](roadmaps/road-to-cost-parity-0-program.md) | 4 | 23 | 23 | 0 | 0 | 0 | [1](#blockers-road-to-cost-parity-0-program) | ░░░░░░░░░░ 0% |
+| 5 | [road-to-cost-parity-0-program.md](roadmaps/road-to-cost-parity-0-program.md) | 4 | 23 | 23 | 0 | 0 | 0 | [2](#blockers-road-to-cost-parity-0-program) | ░░░░░░░░░░ 0% |
 | 6 | [road-to-council-blind-review.md](roadmaps/road-to-council-blind-review.md) | 3 | 6 | 2 | 3 | 0 | 1 | 0 | ██████░░░░ 60% |
 | 7 | [road-to-gated-reach-followup.md](roadmaps/road-to-gated-reach-followup.md) | 1 | 12 | 12 | 0 | 0 | 0 | [1](#blockers-road-to-gated-reach-followup) | ░░░░░░░░░░ 0% |
 | 8 | [road-to-inbox-harvest-2026-08.md](roadmaps/road-to-inbox-harvest-2026-08.md) | 5 | 21 | 1 | 11 | 4 | 5 | [2](#blockers-road-to-inbox-harvest-2026-08) | █████████░ 92% |
@@ -183,6 +183,14 @@
     `bench-spend-and-methodology`). The size-vs-adherence question is theirs;
     part 1 must consume their result, not open a third bench.
   - **Resolved when:** one of the two benches is authorized and run, or the question is recorded as a null.
+- **background-continuation-probe** (owner: maintainer) — blocks any continuation-offload step (none planned in this program) - **Inherited from:** `archive/road-to-cost-parity-3-handoff-envelope.md`, which closed with this blocker still open. Carried here rather than archived with it: part 3 blocked no step on it, so it could not hold that roadmap open — but archiving is the only moment the question could have silently left the tracked surface, and an open question that no artefact names again is one nobody will ever answer.
+  - **What to do:**
+    past the recycle threshold, the flow MAY hand remaining
+    work to a fresh background session seeded with the envelope instead of
+    asking the user to clear in place. Whether a background spawn reliably
+    receives and acts on a seeded envelope is host semantics and unverified.
+    Run a bounded two-arm probe on a live host before any step is written.
+  - **Resolved when:** a probe note records the observed seeding behaviour per host, and either a step is added citing it or the idea is recorded as a null.
 
 ### [road-to-council-blind-review.md](roadmaps/road-to-council-blind-review.md)
 

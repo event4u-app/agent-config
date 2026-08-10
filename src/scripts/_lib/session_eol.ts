@@ -188,7 +188,12 @@ export function scanEolSlice(text: string, prior: EolCounters): EolCounters {
                         (b as Record<string, unknown>)['type'] === 'tool_use',
                 )
             ) {
-                next.tool_calls += 1;
+                // `{...prior}` carries `undefined` forward from a state file
+                // written before this counter existed, and `undefined + 1` is
+                // NaN — which `JSON.stringify` writes as `null`, i.e. as a
+                // counted zero rather than as the unknown it is. Coerce here
+                // so the writer can never persist that.
+                next.tool_calls = (Number.isFinite(next.tool_calls) ? next.tool_calls : 0) + 1;
             }
             const usage =
                 typeof message === 'object' && message !== null

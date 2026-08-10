@@ -132,6 +132,15 @@ export function runSessionRecycle(
     // composer cannot override them — a "next_task" it got wrong is a
     // proposal, a "head" it got wrong is a silent stale resume.
     const grounding = collectGrounding(projectRoot);
+    // Drop the composer's factual keys UNCONDITIONALLY first. Guarding each
+    // assignment on `!== null` would leave a model-composed branch or head
+    // standing whenever the git read fails — the consumer would then compare
+    // a fabricated anchor against the real tree and produce either false
+    // drift or, worse, false silence. An unreadable fact is absent, never
+    // inherited from the composer.
+    for (const key of ['repo_identity', 'branch', 'head', 'status_summary', 'last_verify', 'uncommitted_paths']) {
+        delete envelope[key];
+    }
     if (grounding.repo_identity !== null) envelope['repo_identity'] = grounding.repo_identity;
     if (grounding.branch !== null) envelope['branch'] = grounding.branch;
     if (grounding.head !== null) envelope['head'] = grounding.head;

@@ -392,14 +392,36 @@ export function wrapAsPriorSessionData(
     body: string,
     meta: { kind: string; source: string; warnings?: string[] },
 ): string {
-    const lead = (meta.warnings ?? []).map((w) => `  !! ${w}`);
+    const lead = (meta.warnings ?? []).map((w) => `  !! ${neutralizeBoundary(w)}`);
     return [
-        `${ENVELOPE_BOUNDARY_OPEN} kind="${meta.kind}" source="${meta.source}"`,
+        `${ENVELOPE_BOUNDARY_OPEN} kind="${neutralizeBoundary(meta.kind)}" source="${neutralizeBoundary(meta.source)}"`,
         `  note="${ENVELOPE_DATA_LABEL}">`,
         ...lead,
-        body.trimEnd(),
+        neutralizeBoundary(body.trimEnd()),
         ENVELOPE_BOUNDARY_CLOSE,
     ].join('\n');
+}
+
+/**
+ * Defang the boundary literals inside CONTENT, so no value can close the
+ * region it is quoted inside.
+ *
+ * `JSON.stringify` escapes `"` and `\` and never `<`, `>` or `/`, so a value
+ * carrying `</prior-session-data>` used to end the datamarking region
+ * mid-payload while `hasBoundaryMarker` still passed — everything after it
+ * read to the successor as unmarked text. The marker is called the
+ * load-bearing half of this contract, so it must be unforgeable from content,
+ * not merely present.
+ *
+ * The replacement keeps the text legible (a reader still sees what was
+ * attempted) and inert (it can no longer be the delimiter).
+ */
+export function neutralizeBoundary(text: string): string {
+    return text
+        .split(ENVELOPE_BOUNDARY_CLOSE)
+        .join('&lt;/prior-session-data&gt;')
+        .split(ENVELOPE_BOUNDARY_OPEN)
+        .join('&lt;prior-session-data');
 }
 
 /**
@@ -410,10 +432,15 @@ export function wrapAsPriorSessionData(
  * and this check must never be read as covering it.
  */
 export function hasBoundaryMarker(block: string): boolean {
+    const opens = block.split(ENVELOPE_BOUNDARY_OPEN).length - 1;
+    const closes = block.split(ENVELOPE_BOUNDARY_CLOSE).length - 1;
     return (
-        block.includes(ENVELOPE_BOUNDARY_OPEN) &&
-        block.includes(ENVELOPE_BOUNDARY_CLOSE) &&
-        block.includes(ENVELOPE_DATA_LABEL)
+        opens === 1 &&
+        closes === 1 &&
+        block.includes(ENVELOPE_DATA_LABEL) &&
+        // The region must END at the close marker; anything after it would be
+        // outside the datamarking while still riding in the same block.
+        block.trimEnd().endsWith(ENVELOPE_BOUNDARY_CLOSE)
     );
 }
 

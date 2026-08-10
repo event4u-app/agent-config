@@ -18,7 +18,11 @@ import {
     list_handoff_sessions,
     SUBSTANTIVE_TOKEN_FLOOR,
 } from '../../src/scripts/_cli/handoff_sessions.js';
-import { eolSessionKey, eolStateFile } from '../../src/scripts/_lib/session_eol.js';
+import {
+    eolSessionKey,
+    eolStateFile,
+    type StoredEolCounters,
+} from '../../src/scripts/_lib/session_eol.js';
 
 const FIXTURE_DIR = path.resolve(fileURLToPath(import.meta.url), '..', 'fixtures', 'handoff');
 
@@ -364,6 +368,26 @@ describe('is_substantive', () => {
         expect(
             is_substantive({ ...base, assistant_records: 0, tool_calls: 9, final_context_tokens: 999_999 }),
         ).toBe(false);
+    });
+
+    it('reads a NULL tool_calls as unknown, not as a counted zero (R2 finding 2)', () => {
+        // JSON.stringify writes NaN as null, so a migrated legacy state file
+        // arrives with `tool_calls: null` — which is not `undefined`, and used
+        // to bypass the unknown-guard and hide a real prior session.
+        expect(
+            is_substantive({
+                ...base,
+                assistant_records: 3,
+                tool_calls: null as unknown as number,
+                final_context_tokens: 500,
+            }),
+        ).toBe(true);
+    });
+
+    it('lists a half-written state file — fail-open on mis-shaped, not just unparseable (R2 finding 3)', () => {
+        // `{"counters":{}}` parses, so it never reaches the null path; every
+        // counter is missing and must read as unknown rather than as zero.
+        expect(is_substantive({} as unknown as StoredEolCounters)).toBe(true);
     });
 
     it('filters an answered session that neither called a tool nor reached the floor', () => {
