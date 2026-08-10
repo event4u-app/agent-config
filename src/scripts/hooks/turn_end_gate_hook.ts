@@ -63,7 +63,13 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
-import { classify, STATE_FILE as LANGUAGE_STATE_FILE, type Verdict } from '../language_mirror_hook.js';
+import { load_agent_settings } from '../_lib/agent_settings.js';
+import {
+    classify,
+    isSyntheticPrompt,
+    STATE_FILE as LANGUAGE_STATE_FILE,
+    type Verdict,
+} from '../language_mirror_hook.js';
 import { isSafeTranscriptPath } from './end_review_nudge_hook.js';
 import { unwrap, type JsonObject, type JsonValue } from './envelope.js';
 import { readHookStdin } from './hook_stdin.js';
@@ -100,9 +106,26 @@ export interface Finding {
 export function visibleProse(reply: string): string {
     let text = reply;
     // Fenced blocks, both ``` and ~~~ (markdown-safe-codeblocks ships both).
-    text = text.replace(/^[ \t]*(`{3,}|~{3,})[\s\S]*?^[ \t]*\1[ \t]*$/gm, ' ');
-    // An unterminated fence at the end of a reply — drop the tail.
-    text = text.replace(/^[ \t]*(`{3,}|~{3,})[\s\S]*$/m, ' ');
+    //
+    // CommonMark allows the CLOSING fence to be LONGER than the opener, so a
+    // `\1` backreference does not match valid markdown. R2 finding 5 reproduced
+    // the consequence: on a three-tilde block closed with four, pass 1 missed
+    // and the greedy tail-drop below deleted the rest of the reply — including
+    // the closing paragraph detector A exists to read. Match the fence
+    // CHARACTER and require at least as many of it, per the spec.
+    text = text.replace(
+        /^[ \t]*(`{3,}|~{3,})[^\n]*\n[\s\S]*?^[ \t]*(?:`{3,}|~{3,})[ \t]*$/gm,
+        (block, opener: string) => {
+            const ch = opener[0]!;
+            // Only treat it as closed when the closer uses the SAME character
+            // and is not shorter — otherwise leave it to the tail-drop.
+            const closer = /(?:^|\n)[ \t]*([`~]{3,})[ \t]*$/.exec(block)?.[1] ?? '';
+            return closer[0] === ch && closer.length >= opener.length ? ' ' : block;
+        },
+    );
+    // A genuinely unterminated fence at the end of a reply — drop the tail.
+    // Reached only when the pass above left the block intact.
+    text = text.replace(/^[ \t]*(?:`{3,}|~{3,})[\s\S]*$/m, ' ');
     // Inline code.
     text = text.replace(/`[^`\n]*`/g, ' ');
     // Block quotes — the shape quoted tool output takes.
@@ -146,10 +169,16 @@ const PROMISSORY = [
     /\bals n(ä|ae)chstes (werde|mache|baue|pr(ü|ue)fe) ich\b/i,
     // German puts the infinitive at the END of the clause ("ich werde jetzt
     // die Tests schreiben"), so the verb cannot be matched adjacent to
-    // "werde" — it has to be looked for across the rest of the sentence. The
-    // negative lookahead keeps a stated REFUSAL to act ("ich werde das nicht
-    // anfassen") out: declining to do something is not a promise to do it.
-    /\bich werde\b(?![^.!?\n]*\bnicht\b)[^.!?\n]*\b\w{3,}en\b/i,
+    // "werde" — it has to be looked for across the rest of the sentence.
+    //
+    // The lookahead excludes a stated REFUSAL to act: declining to do
+    // something is not a promise to do it. R2 finding 4 reproduced four live
+    // false refusals against the old `\bnicht\b`-only version — "Ich werde
+    // nichts anfassen" (no word boundary after `nicht`), "keine Tests
+    // schreiben", "niemals raten", and the passive non-promise "Ich werde
+    // gefragt, ob …". Each was a false refusal on a BLOCKING guard, which is
+    // the precision failure the council warning is about.
+    /\bich werde\b(?![^.!?\n]*\b(?:nicht|nichts|kein(?:e|en|em|er|es)?|niemals|nie)\b)(?![^.!?\n]*\b(?:gefragt|gebeten|informiert|benachrichtigt)\b)[^.!?\n]*\b\w{3,}en\b/i,
     /\bI(?:'| wi)ll (report|let you know|update you|follow up)\b/i,
     /\bI(?:'| wi)ll (now |then )?\w+ (it|that|this|next)\b/i,
     /\bnext,? I(?:'| wi)ll\b/i,
@@ -253,35 +282,68 @@ function stateDir(workspaceRoot: string): string {
     return path.join(workspaceRoot, 'agents', 'runtime', 'state', 'turn-end-gate');
 }
 
-function stateFile(workspaceRoot: string, turnKey: string): string {
-    return path.join(stateDir(workspaceRoot), `${turnKey}.json`);
+/**
+ * ONE file per session, not one per refused turn. R2 finding 17: per-turn files
+ * accumulated without bound and without a TTL, because "re-arms itself with no
+ * cleanup" described the key rotating, not the files being removed.
+ */
+function sessionStateFile(workspaceRoot: string, sessionKey: string): string {
+    return path.join(stateDir(workspaceRoot), `${sessionKey}.json`);
+}
+
+export function deriveSessionKey(sessionId: string): string {
+    return crypto.createHash('sha256').update(sessionId).digest('hex').slice(0, 32);
 }
 
 /**
- * The turn's identity. Session id plus the last USER message — see the file
- * header for why the reply must not be part of it.
+ * A turn's identity is its ORDINAL — how many genuine user prompts the
+ * transcript has carried — never the prompt's text.
+ *
+ * R2 findings 2 and 3 killed the text-keyed version, in both directions:
+ *
+ *   · keying on sha256(session + last user text) made every REPEAT of a prompt
+ *     collide with the earlier refused turn, so the second "weiter" / "ok" /
+ *     "1" was allowed unconditionally. Repeated short continuations are the
+ *     dominant prompt shape in the corpus this gate was built from, so the
+ *     gate disabled itself exactly where it was needed;
+ *   · taking the last user-role entry made the key drift WITHIN one turn,
+ *     because a compaction summary and a `<system-reminder>` both arrive in the
+ *     user role. A new key mid-turn re-arms the marker, which is the wedge
+ *     layer 2 exists to prevent on hosts that send no `stop_hook_active`.
+ *
+ * An ordinal over `isSyntheticPrompt`-filtered entries fixes both at once: it
+ * is distinct for every real turn regardless of what the user typed, and it
+ * does not move when the harness injects a user-role entry.
  */
-export function deriveTurnKey(sessionId: string, lastUserText: string): string {
-    return crypto
-        .createHash('sha256')
-        .update(`${sessionId}\n${lastUserText}`)
-        .digest('hex')
-        .slice(0, 32);
-}
-
-export function alreadyRefusedThisTurn(workspaceRoot: string, turnKey: string): boolean {
+export function alreadyRefusedTurn(
+    workspaceRoot: string,
+    sessionKey: string,
+    turnOrdinal: number,
+): boolean {
     try {
-        return fs.existsSync(stateFile(workspaceRoot, turnKey));
+        const raw = fs.readFileSync(sessionStateFile(workspaceRoot, sessionKey), 'utf-8');
+        const decoded: unknown = JSON.parse(raw);
+        if (typeof decoded === 'object' && decoded !== null && !Array.isArray(decoded)) {
+            return (decoded as Record<string, unknown>)['refused_turn'] === turnOrdinal;
+        }
     } catch {
-        return false;
+        // absent, unreadable, or malformed state means "not refused yet" —
+        // fail-open, per this hook's contract.
     }
+    return false;
 }
 
-function markRefusedThisTurn(workspaceRoot: string, turnKey: string, detector: DetectorId): void {
+function markRefusedTurn(
+    workspaceRoot: string,
+    sessionKey: string,
+    turnOrdinal: number,
+    detector: DetectorId,
+): void {
     if (is_replay_mode()) return;
     try {
-        atomic_write_json(stateFile(workspaceRoot, turnKey), {
+        atomic_write_json(sessionStateFile(workspaceRoot, sessionKey), {
             refused_at: new Date().toISOString(),
+            refused_turn: turnOrdinal,
             detector,
         });
     } catch {
@@ -297,19 +359,30 @@ function markRefusedThisTurn(workspaceRoot: string, turnKey: string, detector: D
 
 export interface TranscriptTail {
     lastAssistant: string;
-    lastUser: string;
+    /**
+     * How many GENUINE user prompts the transcript carries — harness-injected
+     * user-role entries excluded via `isSyntheticPrompt`. This is the turn's
+     * identity; see `alreadyRefusedTurn` for why the prompt's text is not.
+     */
+    turnOrdinal: number;
 }
 
 /**
- * Last assistant text and last user text from a Claude JSONL transcript.
- * Mirrors `chat_history._extract_claude_transcript_response` for the
- * assistant half and adds the user half the turn key needs.
+ * The last assistant text, plus the turn ordinal, from a Claude JSONL
+ * transcript. Mirrors `chat_history._extract_claude_transcript_response` for
+ * the assistant half.
+ *
+ * `isSyntheticPrompt` is applied to every user-role entry — the same filter
+ * `language_mirror_hook` uses, and for the same reason it was added there
+ * (round-5 § 6.5): a background-task notification and a `<system-reminder>`
+ * both occupy the user role without being chat messages. Counting them would
+ * move the turn ordinal mid-turn, which is R2 finding 3.
  */
 export function readTranscriptTail(
     transcriptPath: string,
     opts: { homeDir?: string; maxBytes?: number } = {},
 ): TranscriptTail {
-    const empty: TranscriptTail = { lastAssistant: '', lastUser: '' };
+    const empty: TranscriptTail = { lastAssistant: '', turnOrdinal: 0 };
     if (!transcriptPath || !isSafeTranscriptPath(transcriptPath, opts)) return empty;
     let lines: string[];
     try {
@@ -318,7 +391,7 @@ export function readTranscriptTail(
         return empty;
     }
     let lastAssistant = '';
-    let lastUser = '';
+    let turnOrdinal = 0;
     for (const rawLine of lines) {
         const line = rawLine.trim();
         if (!line) continue;
@@ -336,10 +409,13 @@ export function readTranscriptTail(
         if (typeof msg !== 'object' || msg === null || Array.isArray(msg)) continue;
         const text = _messageText((msg as Record<string, unknown>)['content']);
         if (text === null) continue;
-        if (role === 'assistant') lastAssistant = text;
-        else lastUser = text;
+        if (role === 'assistant') {
+            lastAssistant = text;
+        } else if (!isSyntheticPrompt(text)) {
+            turnOrdinal += 1;
+        }
     }
-    return { lastAssistant: lastAssistant.trim(), lastUser: lastUser.trim() };
+    return { lastAssistant: lastAssistant.trim(), turnOrdinal };
 }
 
 function _messageText(content: unknown): string | null {
@@ -367,39 +443,52 @@ export interface GateSettings {
 }
 
 /**
- * Read the three switches with a line walker rather than the full settings
- * cascade: this concern runs on EVERY turn-end and is default-off, so the
- * common path must not pay for a cascade load it will discard.
+ * YAML spellings a human writes for "on". The `yaml` package parses to the 1.2
+ * core schema, where `yes` is the STRING "yes" rather than a boolean — so a
+ * maintainer who writes `enabled: yes` means it, and a reader that silently
+ * treats it as off is the R2 finding-6b defect wearing a parser instead of a
+ * regex. Anything not in this set is off; there is no truthiness guessing.
+ */
+function _isOn(v: unknown): boolean | null {
+    if (typeof v === 'boolean') return v;
+    if (typeof v !== 'string') return null;
+    const s = v.trim().toLowerCase();
+    if (s === 'true' || s === 'yes' || s === 'on') return true;
+    if (s === 'false' || s === 'no' || s === 'off') return false;
+    return null;
+}
+
+/**
+ * Read the three switches through the real settings cascade.
+ *
+ * The previous version hand-walked `<workspaceRoot>/.agent-settings.yml` for
+ * speed, and R2 finding 6 found three defects in that trade: it ignored the
+ * user-global layer entirely (so a maintainer who opts in globally got no gate
+ * AND no diagnostic), its end-of-line-anchored regex read
+ * `enabled: true  # soak opt-in` as FALSE, and it accepted a `turn_end_gate:`
+ * block under ANY parent as ON because a text walker has no notion of a parent.
+ *
+ * The stated reason for skipping the cascade does not survive contact with the
+ * sibling concerns: `delegation-nudge` calls `load_agent_settings` on
+ * `user_prompt_submit`, i.e. every turn. Correctness on a gate that can refuse
+ * a turn-end outranks one settings read per turn-end.
  */
 export function readGateSettings(workspaceRoot: string): GateSettings {
     const off: GateSettings = { enabled: false, promissory: true, language: true };
-    let raw: string;
+    let settings: Record<string, unknown>;
     try {
-        raw = fs.readFileSync(path.join(workspaceRoot, '.agent-settings.yml'), 'utf-8');
+        settings = load_agent_settings({ cwd: workspaceRoot }) as Record<string, unknown>;
     } catch {
         return off;
     }
-    // Indent-aware: the block ends at the first line indented no deeper than
-    // the header. A width-agnostic `^\S` terminator would swallow the next
-    // sibling key and read ITS `enabled:` as ours.
-    const lines = raw.split('\n');
-    const headerIdx = lines.findIndex((l) => /^\s*turn_end_gate:\s*$/.test(l));
-    if (headerIdx === -1) return off;
-    const headerIndent = (lines[headerIdx]!.match(/^\s*/) ?? [''])[0].length;
-    const body: string[] = [];
-    for (const line of lines.slice(headerIdx + 1)) {
-        if (line.trim() === '' || line.trimStart().startsWith('#')) continue;
-        const indent = (line.match(/^\s*/) ?? [''])[0].length;
-        if (indent <= headerIndent) break;
-        body.push(line);
-    }
+    const hooks = settings['hooks'];
+    if (typeof hooks !== 'object' || hooks === null || Array.isArray(hooks)) return off;
+    const block = (hooks as Record<string, unknown>)['turn_end_gate'];
+    if (typeof block !== 'object' || block === null || Array.isArray(block)) return off;
+    const gate = block as Record<string, unknown>;
     const flag = (name: string, dflt: boolean): boolean => {
-        const re = new RegExp(`^\\s+${name}:\\s*(true|false)\\s*$`);
-        for (const line of body) {
-            const m = line.match(re);
-            if (m) return m[1] === 'true';
-        }
-        return dflt;
+        const v = _isOn(gate[name]);
+        return v === null ? dflt : v;
     };
     return {
         enabled: flag('enabled', false),
@@ -436,23 +525,20 @@ export function main(): number {
     const transcriptPath = str(
         (payload['transcript_path'] ?? payload['transcriptPath']) as JsonValue | undefined,
     );
-    // `AGENT_CONFIG_TRANSCRIPT_HOME` exists for the test harness only: real
-    // transcripts live under `~/.claude/projects/**` and production never sets
-    // it. Without it a test cannot exercise the path-safety check at all,
-    // which would leave the one security-relevant branch unmeasured.
-    const homeOverride = process.env['AGENT_CONFIG_TRANSCRIPT_HOME'];
-    const { lastAssistant, lastUser } = readTranscriptTail(
-        transcriptPath,
-        homeOverride ? { homeDir: homeOverride } : {},
-    );
+    // No override of the home-confinement check on the production path. R2
+    // finding 13: the previous `AGENT_CONFIG_TRANSCRIPT_HOME` widened the one
+    // security-relevant predicate in this hook, and an env var that relaxes a
+    // path-confinement check IS a bypass of it, whatever the comment says. The
+    // tests set `HOME` on the spawned process instead — `os.homedir()` honours
+    // it — so the branch is still exercised with no product-code seam.
+    const { lastAssistant, turnOrdinal } = readTranscriptTail(transcriptPath);
     if (!lastAssistant) return EXIT_ALLOW;
 
-    // Layer 2 — the turn-keyed marker. Reply-independent by construction.
-    const turnKey = deriveTurnKey(
+    // Layer 2 — keyed on the turn's ORDINAL, never on the prompt's text.
+    const sessionKey = deriveSessionKey(
         str(envelope['session_id'] as JsonValue | undefined) || 'unknown-session',
-        lastUser,
     );
-    if (alreadyRefusedThisTurn(workspaceRoot, turnKey)) return EXIT_ALLOW;
+    if (alreadyRefusedTurn(workspaceRoot, sessionKey, turnOrdinal)) return EXIT_ALLOW;
 
     const findings: Finding[] = [];
     if (settings.promissory) {
@@ -465,7 +551,7 @@ export function main(): number {
     }
     if (findings.length === 0) return EXIT_ALLOW;
 
-    markRefusedThisTurn(workspaceRoot, turnKey, findings[0]!.detector);
+    markRefusedTurn(workspaceRoot, sessionKey, turnOrdinal, findings[0]!.detector);
 
     const lines = findings.map(
         (f) => `  · ${f.detector}: ${f.reason}\n    evidence: ${JSON.stringify(f.evidence)}`,
