@@ -87,7 +87,7 @@ carries no per-entry reason field.
 - [x] **Step 6:** Split any baseline that mixes human and machine entries into two tiers — human entries glob-matched and drift-tolerant, machine entries content-hashed and regenerable by a CLI verb, never hand-edited. Position-keyed human entries are the recorded failure this split removes.
 - [x] **Step 7:** Add a test that an entry added in the working copy but absent at the base ref fails, and that a renamed entry does not. <!-- verify: npx vitest run tests/scripts/ratchet_base_ref.test.ts -->
 
-### Phase 2 execution notes
+### Execution notes for Phase 2
 
 Two steps landed differently from their literal wording; both are recorded here
 rather than silently absorbed.
@@ -138,7 +138,7 @@ rather than silently absorbed.
 - [x] **Step 5:** Add an assertion to the derived-page tests that a generator given an unmeasured dimension does not emit a percentage for it. <!-- verify: npx vitest run tests/scripts/derived_page_truthfulness.test.ts -->
 - [x] **Step 6:** Publish the gap list beside every coverage number this package emits — name the un-measured artifacts rather than reporting only the covered count.
 
-### Phase 4-5 execution notes
+### Execution notes for Phases 4-5
 
 - **Phase 4 Step 3 (sync/parity audit) — 27 gates audited, 19 guarded, 8
   vulnerable, 0 undecided.** The full list is recorded in
