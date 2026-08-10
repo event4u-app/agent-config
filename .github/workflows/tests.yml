@@ -174,9 +174,10 @@ jobs:
     # distinct). The installer package shares the root node_modules via
     # npm-hoisting for @inquirer/prompts, commander, js-yaml, vitest,
     # typescript; no separate `npm ci` is required inside the package
-    # directory. `build` script = `build:cli && build:ui`, so the
-    # previous explicit build:cli + build:ui + build pair was a no-op
-    # duplicate; collapsed to a single build invocation.
+    # directory. `build` chains SIX targets (package.json:78) — cli,
+    # install-bundle, hooks, mcp-bundle, cli-delegate, ui — so the previous
+    # explicit build:cli + build:ui + build triple was a no-op duplicate;
+    # collapsed to a single build invocation.
     name: Node Tests (${{ matrix.os }}, shard ${{ matrix.shard }}/4)
     runs-on: ${{ matrix.os }}
     # Release-PR skip per docs/contracts/release-pr-gating.md — release
@@ -220,8 +221,9 @@ jobs:
       # not per OS × shard) so no vitest shard carries their ~40s and every
       # shard is build + vitest only.
       - name: Build (dist/cli + UI bundle)
-        # `build` = `build:cli && build:ui`. Every shard needs dist/ — the
-        # subprocess suites spawn `./agent-config` → dist/cli/agent-config.js.
+        # `build` chains six targets (package.json:78), not two. Every shard
+        # needs dist/ — the subprocess suites spawn `./agent-config` →
+        # dist/cli/agent-config.js.
         run: npm run build --silent
 
       - name: Vitest (shard ${{ matrix.shard }}/4, heavy suites excluded)
