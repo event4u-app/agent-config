@@ -168,8 +168,8 @@ dispatch runs, not WHETHER the layer exists, so they keep their own C rows.
 |---|---|
 | A — preference | 27 |
 | B — consent | 3 |
-| C — guarded | 107 |
-| **Total** | **137** |
+| C — guarded | 108 |
+| **Total** | **138** |
 
 The total is every leaf in the template, where *leaf* means anything that is not
 a **non-empty** map. An empty map (like the former `subagents.host_capabilities: {}`) is a real
@@ -269,6 +269,7 @@ Rows follow template order, so a diff against the template reads straight down.
 | `subagents.model_map.high` | C | `""` | names an external model endpoint |
 | `subagents.implementer_model` | C | `""` | names an external model endpoint |
 | `subagents.judge_model` | C | `""` | names an external model endpoint |
+| `subagents.model_ceiling` | C | `""` | session-wide subagent model cap (exported as `CLAUDE_CODE_SUBAGENT_MODEL` by suite-owned CLI spawn wrappers), which is spend and quality |
 | `subagents.max_parallel` | C | `3` | parallelism cap, and therefore a spend rate |
 | `subagents.adversarial_council` | C | `"off"` | governs a paid verification step |
 | `worktrees.mode` | C | `ask` | standing permission for autonomous worktree creation |

@@ -99,6 +99,7 @@ import { load_agent_settings } from "../_lib/agent_settings.js";
 import { probeHostCapabilities } from "../_lib/host_capability.js";
 import type { ActivationInputs, Classification, TaskSignals } from "../_lib/auto_dispatch.js";
 import { classifyLadder, type LadderRung } from "../_lib/judgment_ladder.js";
+import { resolveSessionRole } from "../_lib/session_role.js";
 import { resolveSubagentRouting, type Tier } from "../_lib/subagent_routing.js";
 import { isSyntheticPrompt } from "../_lib/prompt_shape.js";
 
@@ -338,6 +339,17 @@ export function buildNudgeLine(
 ): string {
   const unit = sliceCount === 1 ? "slice" : "slices";
   const rungLabel = rung === null ? "rung-?" : `rung-${rung}`;
+  // Rung 0.5 (token-economy-dispatch 4.3): cite the sub-spawn ask path —
+  // never a spawn recommendation for a question-shaped slice.
+  if (rung === 0.5) {
+    return (
+      `<delegation-nudge>rung-0.5: ask, est. <1k tokens. This is a single bounded ` +
+      `question — answer it via ONE completion ` +
+      "(`./scripts-run src/scripts/ask_transport \"<question>\"`) instead of a " +
+      `subagent spawn (measured spawn floor: ~251k tokens) — ` +
+      `${classification.reason}.</delegation-nudge>`
+    );
+  }
   // Rung 1 (single bounded slice) carries no do-in-steps/do-in-parallel
   // mode of its own — `classification.mode` is `null` for that shape.
   const modeLabel = classification.mode ?? "single-slice";
@@ -353,7 +365,11 @@ export interface NudgeResult {
   classification: Classification;
   sliceCount: number;
   tier: Tier;
-  /** The judgment-ladder rung this verdict resolved to (2.4) — 1 or 2 only, this concern's scope. */
+  /** The judgment-ladder rung this verdict resolved to (2.4) — 1 or 2 in
+   *  production today: classifyPrompt returns null for every non-subagent
+   *  verdict including rung 0.5 (the carrier stays silent on questions);
+   *  buildNudgeLine's 0.5 branch is vocabulary for orchestrator-facing
+   *  surfaces and direct callers. */
   rung: LadderRung;
 }
 
@@ -374,9 +390,30 @@ export function classifyPrompt(
       workspace_root,
       hostId,
     );
-    const ladder = classifyLadder({ taskText: prompt, signals, activation, agentTeams });
+    // Recursive-dispatch guard input — the SHARED session-role detector
+    // (_lib/session_role.ts, "one detector, two consumers, test-pinned
+    // equal"): a session marked worker/reviewer by a suite-owned spawn
+    // wrapper never receives a delegation nudge. Unmarked sessions keep
+    // the documented gap (no host discriminator exists) — fail-open.
+    const sessionRole = resolveSessionRole(process.env);
+    const ladder = classifyLadder({
+      taskText: prompt,
+      signals,
+      activation,
+      agentTeams,
+      insideSubagentSession: sessionRole !== "orchestrator",
+    });
+    // Rung 0.5 (token-economy-dispatch 4.3): on a USER prompt the carrier
+    // stays SILENT for a bounded question — the agent answers in-session at
+    // zero marginal cost, and injecting an ask_transport citation here would
+    // be the cosmetic-injection failure this repo measured at 24/29 misses.
+    // The 0.5 verdict is an ORCHESTRATOR-facing routing datum (slice
+    // resolution); buildNudgeLine carries the rung-0.5 vocabulary for those
+    // surfaces. Silence here also guarantees a question-shaped prompt can
+    // never produce a spawn nudge ("the carrier stops nudging full spawns
+    // for question-shaped slices").
     if (ladder.verdict !== "subagent") {
-      return null; // rung-0 script, rung-3/4 team/council, or ∅ ask/in-session — out of scope here
+      return null; // rung-0 script, rung-0.5 ask-transport, rung-3/4 team/council, or ∅ user-ask/in-session
     }
     const tier = recommendSliceTier(downshift, separate_quota_pool);
     // Rung 1 (single bounded slice) has no explicit slice count of its own —

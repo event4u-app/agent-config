@@ -13,9 +13,10 @@
  *     [--tiers sonnet,opus] [--agent-combo implementer,judge] [--wall-clock-ms 18500] [--dispatch-outcome DONE] \
  *     [--first-pass-success true|false] [--escalated true|false] \
  *     [--init-tokens 1200] [--payload-hash <hex8-64>] [--lookup-class definition|references|string-existence|report-run] \
- *     [--route-taken primitive|subagent] [--budget-hit true|false] [--correctness-match true|false] \
+ *     [--route-taken primitive|subagent|ask] [--budget-hit true|false] [--correctness-match true|false] \
  *     [--cache-hit true|false] [--origin lean-init-2026] \
  *     [--rules-carried 32] [--rules-used 5] \
+ *     [--work-tokens 41000] [--floor-provenance measured|estimated] \
  *     [--capsule-emitted true|false] [--capsule-entries 9] \
  *     [--watermark-step 8] [--saturation-step 4] [--trigger-arm-earlier watermark|saturation|tie] \
  *     [--dir <audit-dir>] [--dry-run]
@@ -144,6 +145,8 @@ export function main(argv: string[] = process.argv.slice(2)): number {
         origin: str(flags, 'origin'),
         rules_carried: int(flags, 'rules-carried'),
         rules_used: int(flags, 'rules-used'),
+        work_tokens: int(flags, 'work-tokens'),
+        floor_provenance: str(flags, 'floor-provenance') as Provenance | undefined,
         capsule_emitted: bool(flags, 'capsule-emitted'),
         capsule_entries: int(flags, 'capsule-entries'),
         watermark_step: int(flags, 'watermark-step'),

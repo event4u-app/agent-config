@@ -45,6 +45,37 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 
 import { hardenedSpawnEnv } from '../_lib/spawn_env.js';
+import { SESSION_ROLE_ENV } from '../_lib/session_role.js';
+import { load_agent_settings } from '../_lib/agent_settings.js';
+
+// Session-wide subagent model ceiling (token-economy-dispatch Phase 5.2):
+// class-C setting, default absent, HUMAN-set only. When present, the CLI
+// spawn below exports CLAUDE_CODE_SUBAGENT_MODEL so the spawned vendor
+// session caps its own subagents' models. Memoised PER CWD, not per
+// process (review finding 2026-08-10): a long-lived server process may
+// serve several projects, and a single-slot memo would apply project A's
+// spend cap to project B's spawns. A human edit still needs a process
+// restart to be seen — acceptable for a per-install cap, stated here.
+const _modelCeilingMemo = new Map<string, string | null>();
+export function _subagentModelCeiling(cwd: string = process.cwd()): string | null {
+    const hit = _modelCeilingMemo.get(cwd);
+    if (hit !== undefined) return hit;
+    let ceiling: string | null;
+    try {
+        const settings = load_agent_settings({ cwd }) as Record<string, unknown>;
+        const sub = (settings['subagents'] ?? {}) as Record<string, unknown>;
+        const v = typeof sub['model_ceiling'] === 'string' ? sub['model_ceiling'].trim() : '';
+        ceiling = v.length > 0 ? v : null;
+    } catch {
+        ceiling = null; // unreadable settings → no ceiling (fail-open)
+    }
+    _modelCeilingMemo.set(cwd, ceiling);
+    return ceiling;
+}
+/** Test seam: reset the per-cwd ceiling memo. */
+export function _resetModelCeilingMemo(): void {
+    _modelCeilingMemo.clear();
+}
 import * as user_global_paths from '../_lib/user_global_paths.js';
 import { appendEvent } from './events_log.js';
 
@@ -1179,7 +1210,25 @@ export abstract class CliClient extends ExternalAIClient {
             // (loader preload, git *_COMMAND, NODE_OPTIONS, …) so an
             // attacker-influenced parent env cannot RCE via the spawned CLI
             // or a `git` it invokes internally.
-            env: hardenedSpawnEnv(),
+            // Role marking (token-economy-dispatch Phase 2.2): a council
+            // member CLI session is worker-class — it never talks to OUR
+            // user, never dispatches sub-workers, never runs a council.
+            // The spawned vendor CLI loads this repo's hook chains; the
+            // marker lets the dispatcher run the thinner worker chain
+            // (manifest `roles.worker.drop`; pre_tool_use guards are
+            // structurally exempt). This is the ONE in-tree spawn point
+            // that launches a separate CLI session today — Agent-tool
+            // subagents share the host process env and cannot be marked
+            // (probed live 2026-08-10; see _lib/session_role.ts).
+            // The optional model ceiling (subagents.model_ceiling, class C)
+            // rides the same spawn: a spend cap the human set per install.
+            env: hardenedSpawnEnv({
+                [SESSION_ROLE_ENV]: 'worker',
+                ...((): Record<string, string> => {
+                    const ceiling = _subagentModelCeiling();
+                    return ceiling !== null ? { CLAUDE_CODE_SUBAGENT_MODEL: ceiling } : {};
+                })(),
+            }),
         };
         if (stdinPayload !== null) {
             spawnOpts.input = stdinPayload;

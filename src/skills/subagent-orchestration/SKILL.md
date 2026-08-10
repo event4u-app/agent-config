@@ -248,6 +248,16 @@ mechanically. Meaning/required-keys table, why-fixed rationale, and the
 `NEEDS_CONTEXT`-vs-`BLOCKED` distinction →
 [`subagent-modes-detail` § Status taxonomy](../../agent-src/contexts/execution/subagent-modes-detail.md).
 
+**The envelope is the ONLY return channel** (token-economy-dispatch
+Phase 6). A worker writes its full output to disk (runtime artifact dir,
+gitignored) and returns the bounded envelope — `summary` +
+`artifact_paths` + verdict, size caps validator-enforced
+(`_lib/subagent_response.ts`: summary ≤ 2,000 chars, whole envelope
+≤ 12,000). The orchestrator reads FROM the artifact paths on demand —
+never instructs a worker to paste its full result into the return, and
+never ingests a transcript-shaped return wholesale: dispatching N workers
+grows the orchestrator context by N envelopes, not N transcripts.
+
 ## Dispatch prompts — externalized
 
 Each mode's literal dispatch template lives under
