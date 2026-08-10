@@ -1,0 +1,26 @@
+{
+    "_comment": "Pre-registered council ATTENDANCE metrics (road-to-inbox-harvest-2026-08-b Phase 1.4). Registered here rather than in roadmap prose because a roadmap is archived when it closes and a metric outlives it — the sibling budget files (hook-token-budget.json, recycle-threshold-budget.json) already carry the owner / review_by / honest-gap discipline this reuses. The instrument is the quorum_result line appendQuorumEvent writes to agents/runtime/council/events.log (schema v2); nothing here is measured yet, and no threshold is committed before data exists.",
+    "schema_version": 1,
+    "registered_at": "2026-08-10",
+    "owner": "maintainer",
+    "review_by": "2026-11-10",
+    "unit": "quorum_result event lines in agents/runtime/council/events.log",
+    "privacy": "a quorum_result line carries {phase, verdict, threshold, total, present, absent[{member, reason}]} — counts, a closed reason vocabulary, and member ids only. The type has no field able to hold free-form content, so the CLI's own `detail` string (provider error text, which can embed paths and prompt fragments) is dropped at the boundary rather than scrubbed.",
+    "phase_split": "Every pass emits TWO lines: `pre_run` (build_members — who could be constructed) and `post_run` (_postRunQuorum — who actually returned a usable response). They disagree whenever a member constructs and then fails mid-flight. Every rate below is computed over `post_run` lines only; counting both double-counts every pass.",
+    "attendance_rate": {
+        "definition": "present / total per post_run pass, and its distribution over a window. The question it answers: when the council speaks, how many members actually spoke.",
+        "instrument": "quorum_result lines, phase=post_run, fields present + total",
+        "threshold": "none committed before data — baseline first, threshold at review date"
+    },
+    "solo_conclusion_rate": {
+        "definition": "share of post_run passes with verdict=concluded and present=1 (the isSoloConcluded predicate in quorum.ts). ceil(n/2) makes 1-of-2 a legitimate conclusion — this measures how often that legitimacy is being used, not whether it should be. A one-member council concludes solo by construction and is counted; a consumer separating configured-solo from degraded-solo reads `total` alongside.",
+        "instrument": "quorum_result lines, phase=post_run, verdict + present (+ total for the configured-vs-degraded split)",
+        "threshold": "none committed before data. The quorum-solo-floor blocker pre-registers the three outcomes this rate decides between — a third CLI member, a gate-scoped min_present: 2, or a published null under 5 % — and that choice is made against real data, never ahead of it."
+    },
+    "absent_reason_distribution": {
+        "definition": "count per reason over absent[] entries — no_binary / no_auth / timeout / quota (AbsentReason) plus the two runtime fallbacks the CLI writes directly, `unavailable` (transport resolved to nothing) and `binary_missing` (a CLI client refused to construct). Distinguishes a council degraded by configuration from one degraded by provider behaviour, which have opposite fixes.",
+        "instrument": "quorum_result lines, absent[].reason, split by phase (a pre_run absence is configuration; a post_run absence is mid-flight)",
+        "threshold": "none committed before data — the distribution IS the finding at review date"
+    },
+    "honest_null_consequence": "If the log accumulates and the solo-conclusion rate sits near zero, that is the published answer to the quorum-solo-floor blocker and 1.5 is cancelled against it — not quietly dropped. If attendance data never accumulates at all (nobody runs a metered council pass in the window), that is reported as an unmeasured metric at the review date, never as a passing one. HONEST GAP, stated at registration: `lens` and `invocation` are empty on every pre_run line — neither is known at member-construction time — so any per-lens breakdown is post_run-only."
+}
