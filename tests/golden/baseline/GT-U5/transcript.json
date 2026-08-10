@@ -110,6 +110,7 @@
           "contract_confirmed": false
         },
         "stitch": null,
+        "self_fix": null,
         "halts": [],
         "persona": "senior-engineer",
         "memory": [],
@@ -243,6 +244,7 @@
           "contract_confirmed": true
         },
         "stitch": null,
+        "self_fix": null,
         "halts": [],
         "persona": "senior-engineer",
         "memory": [],
@@ -420,6 +422,7 @@
           "contract_confirmed": true
         },
         "stitch": null,
+        "self_fix": null,
         "halts": [],
         "persona": "senior-engineer",
         "memory": [],
@@ -630,6 +633,7 @@
             }
           ]
         },
+        "self_fix": null,
         "halts": [],
         "persona": "senior-engineer",
         "memory": [],
@@ -840,6 +844,7 @@
             }
           ]
         },
+        "self_fix": null,
         "halts": [],
         "persona": "senior-engineer",
         "memory": [],
@@ -1058,6 +1063,7 @@
             }
           ]
         },
+        "self_fix": null,
         "halts": [],
         "persona": "senior-engineer",
         "memory": [],

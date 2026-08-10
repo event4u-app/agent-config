@@ -8,8 +8,10 @@
  *      trips on even exponents); state.changes recorded
  *   3. run-tests halt      → vitest runs; the negative-base test asserts odd
  *      AND even exponents → failed verdict captured
- *   4. bad-verdict halt    → recipe applies the real fix, re-runs vitest
- *      (success), updates state.tests
+ *   4. bad-verdict halt    → now an `@agent-directive: fix-failing-checks`
+ *      delegation (self-fix attempt 1 of 3) rather than a user question;
+ *      recipe applies the real fix, re-runs vitest (success), updates
+ *      state.tests
  *   5. review-changes halt → recipe sets state.verify
  *   6. report runs         → engine exits 0
  */
@@ -72,9 +74,13 @@ export function buildRecipe(workspace: string): Record<string, RecipeStep> {
         return state;
     };
 
-    // The only no-directive halt in this recipe is the bad-verdict surface.
-    // Apply the real fix, re-run vitest.
-    const onNoDirective: RecipeStep = (state: Dict, record: CycleRecord) => {
+    // The bad-verdict surface. It used to be the recipe's only no-directive
+    // halt — a user question block — and the bounded self-fix loop turned it
+    // into an `@agent-directive: fix-failing-checks` delegation. Both keys are
+    // registered: the directive is what the engine emits now, and
+    // `_no_directive` stays so this recipe still describes the pre-loop shape
+    // if the surface is ever routed back.
+    const onBadVerdict: RecipeStep = (state: Dict, record: CycleRecord) => {
         h.replace_in_file(workspace, 'src/calculator.ts', FIRST_ATTEMPT, REAL_FIX);
         state['tests'] = h.run_vitest(workspace);
         record.recipe_notes.push(
@@ -94,7 +100,8 @@ export function buildRecipe(workspace: string): Record<string, RecipeStep> {
         'apply-plan': onApplyPlan,
         'run-tests': onRunTests,
         'review-changes': onReviewChanges,
-        _no_directive: onNoDirective,
+        'fix-failing-checks': onBadVerdict,
+        _no_directive: onBadVerdict,
     };
 }
 

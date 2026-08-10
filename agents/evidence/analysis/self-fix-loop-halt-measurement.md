@@ -38,6 +38,27 @@ So half of the red-check exit surfaces now delegate where none did before, and
 pre-change numbers are not asserted from memory: they are the four inline
 snapshots this change updated, so the old surfaces are readable in the diff.
 
+## One run-level observation, and it is n=1
+
+The golden replay suite locks the halt surface of 29 recorded transcripts, and
+exactly one of them — `GT-3`, whose recipe comment reads "the only no-directive
+halt in this recipe is the bad-verdict surface" — exercises the red-test path.
+That lock caught the change without being asked to:
+
+| `GT-3` cycle 4 | before | after |
+|---|---|---|
+| `directive` | `null` | `fix-failing-checks` |
+| `recipe_action` | `_no_directive` | `fix-failing-checks` |
+| surface | 4-line user question block | 5 lines, first is the directive |
+| run total | 6 cycles, exit 0 | 6 cycles, exit 0 |
+
+So on the one locked replay that reaches a red verdict, the halt moved from a
+user round-trip to an agent one **and the run still completes** — the loop did
+not cost the transcript its report. This is a real observation on a real replay
+rather than a branch count, and it is still **one** transcript: n=1 is not a
+rate, and 1 of 1 is not 50% of anything. It corroborates the mechanism; it does
+not evaluate the threshold.
+
 ## Why this is not the pre-registered number
 
 The threshold is about halts in **runs**, not branches in code. Per red check,

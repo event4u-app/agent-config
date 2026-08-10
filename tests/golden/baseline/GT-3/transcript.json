@@ -222,7 +222,7 @@
         ".implement-ticket-state.json"
       ],
       "exit_code": 1,
-      "stdout": "[halt] outcome=blocked step=test\n> Ticket GT-3-POW — tests reported `failed`. Verification cannot proceed on a non-success verdict.\n> 1. Fix the failing tests and re-run `run-tests`\n> 2. Continue anyway — override (NOT recommended)\n> 3. Abort\n",
+      "stdout": "[halt] outcome=blocked step=test\n@agent-directive: fix-failing-checks ticket=GT-3-POW lane=test attempt=1 ceiling=3\n> Ticket GT-3-POW — `test` reported `failed`. Self-fix attempt 1 of 3.\n> The verdict is deterministic, so the fix is delegated rather than asked: read the failing assertions, fix the cause, re-run the same filter.\n> 1. Continue — fix the failures and re-run `run-tests`\n> 2. Abort — stop this cycle and hand the failures back\n",
       "stderr": "",
       "state_after": {
         "ticket": {
@@ -276,15 +276,16 @@
           "test": "blocked"
         },
         "questions": [
-          "> Ticket GT-3-POW — tests reported `failed`. Verification cannot proceed on a non-success verdict.",
-          "> 1. Fix the failing tests and re-run `run-tests`",
-          "> 2. Continue anyway — override (NOT recommended)",
-          "> 3. Abort"
+          "@agent-directive: fix-failing-checks ticket=GT-3-POW lane=test attempt=1 ceiling=3",
+          "> Ticket GT-3-POW — `test` reported `failed`. Self-fix attempt 1 of 3.",
+          "> The verdict is deterministic, so the fix is delegated rather than asked: read the failing assertions, fix the cause, re-run the same filter.",
+          "> 1. Continue — fix the failures and re-run `run-tests`",
+          "> 2. Abort — stop this cycle and hand the failures back"
         ],
         "report": ""
       },
-      "directive": null,
-      "recipe_action": "_no_directive",
+      "directive": "fix-failing-checks",
+      "recipe_action": "fix-failing-checks",
       "recipe_notes": [
         "real fix applied; re-run verdict=success"
       ]

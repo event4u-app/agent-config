@@ -221,8 +221,11 @@ its central gap is verified in code.
     not trigger the revert clause either, which fires on a measured miss.
     Structurally, no red reaches the user on first occurrence in either lane
     (before: 2 of 2 red exits were directive-free user halts; after: 0 of 2),
-    but counting code branches as halts would be reading the metric off the
-    artefact built to satisfy it. Full reasoning, including the two honest ways
+    and the one locked golden replay that reaches a red verdict (`GT-3`) moved
+    its cycle-4 halt from a user question block to a delegated directive while
+    still finishing in 6 cycles at exit 0 — but that is n=1, and counting code
+    branches as halts would be reading the metric off the artefact built to
+    satisfy it. Full reasoning, including the two honest ways
     forward: `agents/evidence/analysis/self-fix-loop-halt-measurement.md`.
     → blocker `self-fix-halt-telemetry`.
 - [-] **P2.3 Host-primitive phase — CANCELLED on a false premise.** It asserts
