@@ -29,7 +29,7 @@ Changed files:
 
 - agents/roadmaps-progress.md
 - agents/roadmaps/archive/road-to-zero-ceremony-settings.md
-- agents/roadmaps/road-to-scripts-settings-defaults.md
+- agents/roadmaps/archive/road-to-scripts-settings-defaults.md
 - agents/roadmaps/road-to-zero-ceremony-settings.md
 - tests/scripts/first_run.test.ts
 

@@ -46,31 +46,92 @@ the resolved value of any key that is present today, and without weakening the
 
 ## Phase 1 — Map the divergence before touching it
 
-- [ ] Inventory the two read paths side by side: `load_agent_settings`
+- [x] Inventory the two read paths side by side: `load_agent_settings`
   (scripts) vs the server resolver — layer order, `MERGEABLE_KEYS` filtering,
   and the governing ADR. Emit the comparison as an Evidence Report in
   `agents/evidence/analysis/` (per `source-discovery-gate`) so the convergence
   decision is made on cited lines, not memory.
-- [ ] Enumerate every scripts-family read site with its own fallback; classify
+  <!-- done 2026-08-10: agents/evidence/analysis/scripts-vs-server-settings-read-paths.md § 1 —
+  scripts `_DEFAULTS = {}` (agent_settings.ts:289) vs the template-as-base server
+  family pinned by tests/server/schemas/parity.test.ts; layer order, MERGEABLE_KEYS
+  (:255-287, ADR-219), and the already-existing-but-display-only templateDefault()
+  seam at cmd_settings_get.ts:129 all cited at line level. -->
+- [x] Enumerate every scripts-family read site with its own fallback; classify
   which fallbacks agree with the template default and which silently diverge
   (those are the live defects this roadmap exists to catch — the scripts-family
   divergence set is unaudited; the nine keys the parent documented belong to
   the server/installer family and are only the shape to look for, not the list).
+  <!-- done 2026-08-10: § 2 of the Evidence Report — 167 reads across 28 files;
+  48 AGREE, 102 NO-TEMPLATE-KEY, 9 NO-FALLBACK, 8 DIVERGE rows over 5 distinct keys
+  (projection.mode, projection.rule_workspaces, chat_history.enabled,
+  chat_history.frequency, rule_loading_tier). FOUR of the five ARE carve-out rows
+  already — so a naive layer would break the documented upgrade contract, and the
+  layer must exclude the carve-out set plus every placeholder-valued leaf. § 3
+  records the 47-file bypass reader class (readFileSync without the loader) this
+  change cannot reach, including three carve-out readers.
+  Context correction: this step's own parenthetical claimed the documented
+  absent-≠-default keys are NOT scripts-family evidence. Measured, four of them
+  are exactly the scripts-family divergences; the claim held only for the three
+  that live in the bypass class. -->
 
 ## Phase 2 — The defaults layer, behind the existing read path
 
-- [ ] Give `load_agent_settings` a template-defaults resolution layer so every
+- [x] Give `load_agent_settings` a template-defaults resolution layer so every
   consumer stays oblivious — same contract the server half already honours.
   Precedence and `MERGEABLE_KEYS` filtering stay exactly as the ADR fixes
   them; the defaults layer sits below every real layer, never above one.
   *Verify:* a parity-style test pinning that an absent key resolves to the
   template default on BOTH families, and that every key present in a populated
   file resolves to the same value before and after the change.
-- [ ] Retire read-site fallbacks that merely restate the template default;
+  <!-- done 2026-08-10: template_defaults() in src/scripts/_lib/agent_settings.ts —
+  reads src/config/agent-settings.template.yml (shipped via package.json files[]),
+  prunes the carve-out set + every placeholder-valued leaf, memoised, and sits as
+  the BASE below user-global and the project cascade. New tests/lib/settings_defaults_layer.test.ts
+  (11) pins absent→default, the whole-layer claim, both exclusions, precedence in
+  both directions, the tolerance path, and no-change-for-present-keys.
+  Mutation-checked: removing the carve-out exclusion, removing the placeholder
+  exclusion, or moving the layer above user-global each reds exactly one test.
+  A `template_path` caller override was added (same contract as project_path /
+  user_global_path) so the 19 exact-equality cascade tests keep asserting the union
+  of the FILES rather than restating the template.
+  DEFECT FOUND AND FIXED BY THE SUITE: the first draft returned _deep_copy_defaults(),
+  which is _deep_merge onto {} and therefore shares every sub-tree by reference —
+  the cascade then wrote through into the cache and the FIRST settings file read in
+  a process became the defaults every later read saw (caught by
+  command_suggester "partial keeps defaults"). Now a full _deepcopy, with a
+  regression test that mutates a nested leaf and an array element. -->
+- [x] Retire read-site fallbacks that merely restate the template default;
   keep (and comment) the ones that intentionally diverge, each with the reason
   — a silent divergence is the defect, an explained one is a decision.
   *Verify:* the Phase-1 classification table has zero unexplained divergences
   left; the full test suite stays green.
+  <!-- done 2026-08-10, differentiated on evidence rather than wholesale (§ 5 of the
+  Evidence Report). Inspected, the 48 AGREE fallbacks are NOT redundant: every one is
+  a type/enum guard with an embedded default (_coerce_bool, _deep_default_merge, an
+  enum whitelist), several also cover a read error or a non-dict block, and several
+  receive a dict that did not come from load_agent_settings at all. Retiring them
+  would delete input validation — Risk 4 of this roadmap's own register. They stay;
+  their ROLE changes (guard, no longer source), and that is recorded.
+  Retired: `_DEFAULTS`, the empty defaults slot this roadmap is named after — a
+  second, misleading answer to the question the template now answers.
+  Explained: rule_loading_tier at _cli/explain_last/inputs.ts:127, the only DIVERGE
+  row without a settingsCarveOut entry, now carries the reason inline including the
+  honest note that a literal placeholder in a settings file still reports as a
+  healthy `source: default`. Zero UNEXPLAINED divergences remain — which was the
+  exit condition; zero divergences never was. -->
+  <!-- scope note: § 3 of the Evidence Report records a second reader class this
+  change cannot reach — 47 files that read .agent-settings.yml directly with
+  readFileSync, never through the loader, including three of the eight carve-out
+  readers (quality.local_auto_run, onboarding.onboarded, profile.id). The Goal
+  sentence is met for the cascade class only. Named, not absorbed. -->
+  <!-- test-suite evidence: full run 12655 passed / 34 failed in 7 files, all
+  accounted for — 4 files (cli-e2e, mcp-server.e2e, settings.e2e, ui/build) assert
+  on dist/cli/, gitignored build output absent in a fresh worktree by construction
+  and built by CI before these run; council_cli + reach_doctor are the pre-existing
+  environment reds measured on the untouched baseline (reach_doctor:769 is the
+  documented depth-≥8 artefact); check_artefact_count_messaging is a 10 s timeout
+  under parallel load and passes alone. Zero reds attributable to this diff. -->
+
 
 ## Risk Register
 
