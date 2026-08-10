@@ -103,29 +103,32 @@ tree: `src/scripts/ai_council/events_log.ts:30` carries
 occurrences of `quorum`. A solo-concluded pass is downstream-identical to a
 full-attendance one.
 
-- [ ] **1.1 `quorum_result` event.** Extend `events_log.ts` with `status`,
+- [x] **1.1 `quorum_result` event.** Extend `events_log.ts` with `status`,
       `threshold`, `total`, `present`, `absent[]`. Emit at both `evaluateQuorum`
       call sites — `src/scripts/council_cli.ts:668` and `:937` (verified: exactly
       two, no third). Follow the two existing `appendEvent` emitters; bump
       `SCHEMA_VERSION` per that module's port-parity convention; fail-open.
       <!-- verify: task test -- --filter=events_log -->
-- [ ] **1.2 Use the real absent-reason vocabulary.** The draft writes
+- [x] **1.2 Use the real absent-reason vocabulary.** The draft writes
       `(binary_missing, quota, timeout, error)`; the tree has
       `AbsentReason = 'no_binary' | 'no_auth' | 'timeout' | 'quota'`
       (`transport_resolver.ts:65`) plus the runtime fallbacks `'unavailable'` and
       the literal `'binary_missing'`. Three of four drafted tokens are wrong.
       <!-- verify: task test -- --filter=transport_resolver -->
-- [ ] **1.3 `isSoloConcluded` as a derived predicate** in `quorum.ts` beside
+- [x] **1.3 `isSoloConcluded` as a derived predicate** in `quorum.ts` beside
       `evaluateQuorum` — deliberately **not** a third `QuorumStatus`; the two-state
       enum and `ceil(n/2)` stay untouched (the ceil-vs-floor divergence is a
       recorded decision at `quorum.ts:13-15`). Advisory render only; no gate
       behaviour change. <!-- verify: task test -- --filter=quorum -->
-- [ ] **1.4 Register the three omitted metrics** — attendance rate,
+- [x] **1.4 Register the three omitted metrics** — attendance rate,
       solo-conclusion rate, absent-reason distribution — in a **budget JSON**, not
       roadmap prose. `hook-token-budget.json` (definition / instrument / threshold
       / declared honest gap) and `recycle-threshold-budget.json` (`owner`,
       `registered_at`, `review_by`, `honest_null_consequence`) already carry the
       schema and the honest-gap convention.
+      Landed as `src/config/quorum-attendance-budget.json`. No threshold is
+      committed — every row reads "baseline first, threshold at review date", so
+      the file loosens no gate (nothing reads it yet) and creates none.
 - [~] **1.5 Solo-attendance floor.** Deferred to the blocker below: the three
       candidate outcomes (a third CLI member · gate-scoped `min_present: 2` · a
       null under 5 %) cannot be chosen before the 1.1 telemetry accumulates.
