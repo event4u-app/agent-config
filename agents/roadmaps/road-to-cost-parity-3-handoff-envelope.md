@@ -126,12 +126,19 @@ worth resuming.
       `failed_approaches` text contains a role-takeover string must be
       injected as inert data with its boundary marker intact.
       <!-- verify: task test -- --filter=envelope -->
-- [ ] 2.8 State the scope honestly in the schema docs: 2.6 is
-      **model-carried** on the consumer side — no gate can verify that an
-      injected block was treated as data. The fixtures prove the boundary
-      marker is *emitted*; they cannot prove it was *obeyed*. Same honesty
-      boundary `untrusted-input-defense` states for itself
-      (`enforced_by: none`), and it is written down rather than implied.
+- [ ] 2.8 **Gate the half that is gateable, and say which half that is.**
+      The obligation splits cleanly and only one side is model-carried:
+      **(a) emission — gated.** The injection path is code, so the marker's
+      presence is a checkable property: the consumer refuses to inject an
+      envelope block that does not carry its boundary marker and its
+      prior-session-data label, and a fixture proves the refusal. An
+      unmarked injection is a build/runtime error, not a style lapse.
+      **(b) obedience — model-carried, `enforced_by: none`.** No gate can
+      verify that a marked block was *treated* as data rather than followed.
+      This is the same honesty boundary `untrusted-input-defense` states for
+      itself, and the schema docs say so in these terms rather than letting
+      (a)'s gate imply coverage of (b).
+      <!-- verify: task test -- --filter=envelope -->
 
 **Exit:** every envelope variant validates against the extended schema; a fixture carrying a credential pattern is rejected; a fixture omitting `failed_approaches` after an abandoned approach is rejected; both adversarial fixtures from 2.7 are green and each fails when the boundary marker is removed.
 **Rollback:** fields are schema-versioned additive; the validator rule is one predicate; the boundary marker is consumer-side prose.
@@ -144,7 +151,13 @@ worth resuming.
       outcome.
 - [ ] 3.2 Drift anchor: the envelope records **repo identity + branch + HEAD**
       at write time — identity being the resolved remote URL, or the
-      realpath of the common git dir when there is no remote. Branch and HEAD
+      realpath of the common git dir when there is no remote — **canonicalized
+      before comparison**, or the field produces false drift: the same remote
+      appears as an SSH and an HTTPS URL, with and without a `.git` suffix,
+      and the same git dir appears with and without a symlinked path segment.
+      Canonicalization is committed as: lower-cased host, scheme and
+      credentials stripped, trailing `.git` removed for remotes; `realpath`
+      for the git-dir fallback. Branch and HEAD
       alone are not an anchor: this repo routinely has many worktrees, a
       branch name is not unique across them or across clones, and two
       checkouts at the same commit on a same-named branch would compare as

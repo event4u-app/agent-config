@@ -2,14 +2,14 @@
 
 > Auto-generated — do not edit. Regenerate with `task roadmap-progress` or by running the `update_roadmap_progress` script for your install; rewritten on every roadmap create / execute / completion change (timestamp lives in git history).
 >
-> 25 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **34** open blockers, **14** need you → `agent-config gates`
+> 25 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **33** open blockers, **13** need you → `agent-config gates`
 
 ## Overall
 
-**168 / 392 steps done · 43%**
+**168 / 401 steps done · 42%**
 
 ```text
-█████████████████░░░░░░░░░░░░░░░░░░░░░░░   43%
+█████████████████░░░░░░░░░░░░░░░░░░░░░░░   42%
 ```
 
 ## Open roadmaps
@@ -20,9 +20,9 @@
 | 2 | [road-to-capability-answerability.md](roadmaps/road-to-capability-answerability.md) | 4 | 19 | 5 | 14 | 0 | 0 | [1](#blockers-road-to-capability-answerability) | ███████░░░ 74% |
 | 3 | [road-to-carrier-layer-convergence.md](roadmaps/road-to-carrier-layer-convergence.md) | 3 | 7 | 7 | 0 | 0 | 0 | [1](#blockers-road-to-carrier-layer-convergence) | ░░░░░░░░░░ 0% |
 | 4 | [road-to-ci-native-release-first-run.md](roadmaps/road-to-ci-native-release-first-run.md) | 2 | 8 | 8 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
-| 5 | [road-to-cost-parity-0-program.md](roadmaps/road-to-cost-parity-0-program.md) | 4 | 22 | 22 | 0 | 0 | 0 | [2](#blockers-road-to-cost-parity-0-program) | ░░░░░░░░░░ 0% |
-| 6 | [road-to-cost-parity-1-rule-payload-diet.md](roadmaps/road-to-cost-parity-1-rule-payload-diet.md) | 6 | 45 | 45 | 0 | 0 | 0 | [3](#blockers-road-to-cost-parity-1-rule-payload-diet) | ░░░░░░░░░░ 0% |
-| 7 | [road-to-cost-parity-2-state-aware-dispatch.md](roadmaps/road-to-cost-parity-2-state-aware-dispatch.md) | 4 | 27 | 27 | 0 | 0 | 0 | [2](#blockers-road-to-cost-parity-2-state-aware-dispatch) | ░░░░░░░░░░ 0% |
+| 5 | [road-to-cost-parity-0-program.md](roadmaps/road-to-cost-parity-0-program.md) | 4 | 23 | 23 | 0 | 0 | 0 | [1](#blockers-road-to-cost-parity-0-program) | ░░░░░░░░░░ 0% |
+| 6 | [road-to-cost-parity-1-rule-payload-diet.md](roadmaps/road-to-cost-parity-1-rule-payload-diet.md) | 6 | 49 | 49 | 0 | 0 | 0 | [3](#blockers-road-to-cost-parity-1-rule-payload-diet) | ░░░░░░░░░░ 0% |
+| 7 | [road-to-cost-parity-2-state-aware-dispatch.md](roadmaps/road-to-cost-parity-2-state-aware-dispatch.md) | 4 | 31 | 31 | 0 | 0 | 0 | [2](#blockers-road-to-cost-parity-2-state-aware-dispatch) | ░░░░░░░░░░ 0% |
 | 8 | [road-to-cost-parity-3-handoff-envelope.md](roadmaps/road-to-cost-parity-3-handoff-envelope.md) | 4 | 28 | 28 | 0 | 0 | 0 | [2](#blockers-road-to-cost-parity-3-handoff-envelope) | ░░░░░░░░░░ 0% |
 | 9 | [road-to-council-blind-review.md](roadmaps/road-to-council-blind-review.md) | 3 | 6 | 2 | 3 | 0 | 1 | 0 | ██████░░░░ 60% |
 | 10 | [road-to-gated-reach-followup.md](roadmaps/road-to-gated-reach-followup.md) | 1 | 12 | 12 | 0 | 0 | 0 | [1](#blockers-road-to-gated-reach-followup) | ░░░░░░░░░░ 0% |
@@ -163,11 +163,11 @@
 
 ### [road-to-cost-parity-0-program.md](roadmaps/road-to-cost-parity-0-program.md)
 
-**Road to cost parity — 0: the median session gets a measured target and the family gets its order** — 0 / 22 done (0%)
+**Road to cost parity — 0: the median session gets a measured target and the family gets its order** — 0 / 23 done (0%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
-| 1 | the target table, committed before any sibling lands | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
+| 1 | the target table, committed before any sibling lands | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
 | 2 | the execution order across the family | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
 | 3 | the small corrections this triage surfaced | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
 | 4 | what this roadmap will not do | ⬜ not started | 11 | 0 | 0 | 0 | 0% |
@@ -175,13 +175,6 @@
 <a id="blockers-road-to-cost-parity-0-program"></a>
 **Blockers**
 
-- **orchestration-claim-queue** (owner: user) — blocks part 2 Phase 5-shaped comparisons (deliberately not planned)
-  - **What to do:**
-    `road-to-orchestration-scope-decision.md` holds the rule
-    that exactly one orchestration claim is open at a time, and resumes at
-    ≥ 20 real orchestration audit lines. Only 1 `ask`-route line exists.
-    Any cost-of-dispatch comparison is a second claim on that queue and waits.
-  - **Resolved when:** the audit-line bar is met and the queue holds one claim.
 - **adherence-bench-spend** (owner: user) — blocks part 1's adherence-eval phase
   - **What to do:**
     two existing roadmaps already own an A/B bench of this
@@ -193,16 +186,16 @@
 
 ### [road-to-cost-parity-1-rule-payload-diet.md](roadmaps/road-to-cost-parity-1-rule-payload-diet.md)
 
-**Road to cost parity — 1: the maintained estate shrinks where nothing else owns it** — 0 / 45 done (0%)
+**Road to cost parity — 1: the maintained estate shrinks where nothing else owns it** — 0 / 49 done (0%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
 | 1 | census with decided verdicts | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
 | 2 | skill-cluster consolidation, pilot first | ⬜ not started | 8 | 0 | 0 | 0 | 0% |
-| 3 | authored norm-lines and sectioning, kernel carved out | ⬜ not started | 6 | 0 | 0 | 0 | 0% |
-| 4 | the two uncapped growth surfaces | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
+| 3 | authored norm-lines and sectioning, kernel carved out | ⬜ not started | 8 | 0 | 0 | 0 | 0% |
+| 4 | the two uncapped growth surfaces | ⬜ not started | 6 | 0 | 0 | 0 | 0% |
 | 5 | the maintenance promise and the contexts surface | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
-| 6 | what this roadmap will not do | ⬜ not started | 17 | 0 | 0 | 0 | 0% |
+| 6 | what this roadmap will not do | ⬜ not started | 18 | 0 | 0 | 0 | 0% |
 
 <a id="blockers-road-to-cost-parity-1-rule-payload-diet"></a>
 **Blockers**
@@ -236,13 +229,13 @@
 
 ### [road-to-cost-parity-2-state-aware-dispatch.md](roadmaps/road-to-cost-parity-2-state-aware-dispatch.md)
 
-**Road to cost parity — 2: the dispatch decision gets session state as a recorded input** — 0 / 27 done (0%)
+**Road to cost parity — 2: the dispatch decision gets session state as a recorded input** — 0 / 31 done (0%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
-| 1 | the state resolver, deterministic reads only | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
+| 1 | the state resolver, deterministic reads only | ⬜ not started | 7 | 0 | 0 | 0 | 0% |
 | 2 | populate the estimate field that already exists | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
-| 3 | record-only soak | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
+| 3 | record-only soak | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
 | 4 | what this roadmap will not do, and which lock forbids it | ⬜ not started | 14 | 0 | 0 | 0 | 0% |
 
 <a id="blockers-road-to-cost-parity-2-state-aware-dispatch"></a>

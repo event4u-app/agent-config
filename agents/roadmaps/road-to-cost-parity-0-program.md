@@ -115,13 +115,26 @@ was set against one:
 | CLI verbs | 97 | 96 |
 | `user_prompt_submit` concerns (claude) | 9 (7–8 on other hosts) | 9, stated suite-wide |
 
-Session-cost figures from `agents/evidence/analysis/token-economy-recycling-phase1.md`
-verified exact, with one correction: the median is over **201** sessions with
-parseable final usage, not 205; and the 123 s auto-compact duration is a
-**single observed event**, not a distribution statistic.
+Session-cost figures carry their provenance to the line, because a median is
+the one number in this table that no later reader can re-derive without the
+same corpus: **median 519,349 · p90 807,937 · p95 902,355 · max 986,876** at
+`agents/evidence/analysis/token-economy-recycling-phase1.md:45`, over **201**
+sessions with parseable final usage (`:44`) out of 205 non-empty (`:10`; four
+unparseable, `:81`). Late/early per-call cost 2.1× median / 3.3× p90 over the
+145 sessions with ≥ 200 calls, `:69–75`. Auto-compact incidence 23 of 205 =
+11.2 % (`:59`), 31 compaction events across them (`:60`), ~98 % of context
+dumped (`:66`). Two corrections to the drafts: the denominator is 201, not
+205; and the **123 s is a single observed event** (`:25`), not a distribution
+statistic — the drafts presented all five figures as if they were one.
 
 **Two measurement rules the Phase-1 registration inherits, both learned the
 hard way while producing this table.**
+
+Both are **schema fields on the baseline row**, not prose a reader may skip:
+`measurement_date`, `commit`, `projection_regenerated: true` (the validator
+rejects `false`), and no `carrier_divergence` row admitted into the baseline at
+all. A rule that lives only in a paragraph is a rule the next author does not
+inherit.
 
 1. **A projection count is only valid after a regeneration.** `.claude/rules/`
    reads 92 files on a checkout whose projection is stale on disk and 110 after
@@ -152,9 +165,22 @@ file is the baseline.
       → ~0 %; late/early per-call cost ratio 2.1× → ≤ 1.6× → ≤ 1.3×.
       <!-- verify: task test -- --filter=budget -->
 - [ ] 1.2 The payload rows are registered **per host**, not as one number —
-      `.claude/rules` 304 KB and `.augment/` 409 KB are separate rows with
+      `.claude/rules` 330 KB and `.augment/rules` 409 KB are separate rows with
       separate targets, and the ~3 KB hosts are recorded as already lean so
       no target implies work there.
+- [ ] 1.2b The registration is **validated, not just written.** The budget file
+      joins the existing budget-file schema check: every row carries
+      `schema_version`, `registered_at`, owner, `review_by`, a `source`
+      pointer for its baseline value, and the three honest-null fields from
+      1.3 — and the validator fails on a missing `source`, so a baseline
+      figure without a traceable origin cannot enter the file. This is the
+      gate that makes the rest of Phase 1 more than prose.
+      **The fixture is named, not implied**, because a schema whose enforcement
+      is only asserted ships unenforced: the negative fixture asserting a
+      `revised_from` without `revision_evidence` is rejected, and the test that
+      consumes it, are both deliverables of this step and are cited by path in
+      the implementing PR.
+      <!-- verify: task test -- --filter=budget -->
 - [ ] 1.3 The honest-null clause is **schema, not prose.** A sentence in a
       config file is a comment no reader is obliged to honour, and this
       programme's whole claim is that numbers bend to measurements — so the
@@ -257,17 +283,6 @@ listed here rather than in a sibling because none belongs to a programme.
 
 ## Blockers
 
-### blocker: orchestration-claim-queue
-
-- **Status:** open
-- **Owner:** user
-- **Blocks:** part 2 Phase 5-shaped comparisons (deliberately not planned)
-- **What to do:** `road-to-orchestration-scope-decision.md` holds the rule
-  that exactly one orchestration claim is open at a time, and resumes at
-  ≥ 20 real orchestration audit lines. Only 1 `ask`-route line exists.
-  Any cost-of-dispatch comparison is a second claim on that queue and waits.
-- **Resolved when:** the audit-line bar is met and the queue holds one claim.
-
 ### blocker: adherence-bench-spend
 
 - **Status:** open
@@ -323,8 +338,34 @@ listed here rather than in a sibling because none belongs to a programme.
   for all four source drafts — `KEEP` became the three siblings, `FOLD`
   became this file's Phase 2 pointers, `CUT` is enumerated with a citation
   per entry.
-- Council: **not run.** Adjudication was four independent tree-verification
-  passes, one per draft, each citing `file:line`. The three surviving lock
-  conflicts are routed to a council pass by Phase 2.4 rather than recorded
-  as resolved here — stating this rather than implying convergence that did
-  not happen.
+- Council: **anthropic/claude-sonnet-4-5 + openai/gpt-4o, 2026-08-10, 2 rounds,
+  blind-chairman, `--prompt-mode pr`** (parts 0 and 2 attached verbatim; parts 1
+  and 3 summarized — a bundle-size ceiling forbade all four). Adjudication of
+  the drafts themselves was four independent tree-verification passes, one per
+  draft, each citing `file:line`. Council convergence, inlined:
+  - **Family scope — both members: open parts 0 and 3 now, defer parts 1 and 2**
+    until one blocked roadmap clears. Rationale: a backlog that is ~60 % blocked
+    is a diagnosis rather than a number, and shipping the two unblocked parts
+    proves the queue moves before blocked scope is added. Recorded here as a
+    maintainer decision, **not applied** — all four are open in this cut.
+  - **Lock deferrals — both: grounded, obey them**, with one live exception both
+    raised independently: a *brake* and a *dispatch-probability weight* may not
+    be the same shape, since the contract forbids blocking work to save money
+    and arguably not making a spawn less likely while the user can still force
+    it. Carried as the reopen condition in part 2's Phase 4 table.
+  - **Strongest single point, both: part 2's soak must log counterfactual
+    verdicts**, not only state — otherwise "no verdict modified" is
+    unfalsifiable and the phase is theater. Applied as part 2 § 3.1b/3.1c.
+  - **Part 1's bundling is a choice, not a structural necessity** —
+    consolidation and norm-lines have independent rollback paths and success
+    criteria, so consolidation could ship alone. Recorded; the split rides with
+    the scope decision above.
+  - Applied verbatim from the pass: name the validator fixture instead of
+    asserting enforcement (§ 1.2b), make both measurement rules schema fields
+    (§ Context), surface the floor's `scope: worker` at the API boundary
+    (part 2 § 1.3), replace the ambiguous no-new-prose promise with a byte
+    ceiling (part 1 § 6.8), and measure the norm-line payload delta before
+    Phase 3 continues (part 1 § 3.5c).
+  - One member's summary verdict was `REQUEST_CHANGES` on opening all four. The
+    technical changes are applied; the family-scope question is the
+    maintainer's and is open.

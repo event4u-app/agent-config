@@ -97,10 +97,31 @@ instead of the constant `0` it holds today. No verdict changes.
       <!-- verify: ./scripts-run src/scripts/check_hook_latency_budget --quiet -->
 - [ ] 1.3 The output is one validated, versioned struct. Consumers read the
       struct, never the raw sources, so every later input lands in one place
-      with one schema test.
+      with one schema test. **The floor field carries its scope at the API
+      boundary**, not in governance prose — `{ value, scope: 'worker', stale }`
+      — because a reader of the Goal expects a role-aware floor and must learn
+      the worker-only limitation from the type, not from a blocker note three
+      hundred lines away. Reviewer legs measure 0; the struct says so.
 - [ ] 1.4 Absence is a first-class value throughout: no input ever resolves
       to a default that reads like a measurement. A dead sensor is visibly
       dead.
+- [ ] 1.4b **The floor input carries the same n ≥ 20 sample bar as the class
+      medians (2.1b), enforced in the resolver rather than assumed.** A median
+      over three legs is a number with the shape of a measurement and none of
+      its authority; the fresh read showed 558 worker legs but **0 reviewer
+      legs**, so the bar is what stops the reviewer column from shipping a
+      median of nothing. Below the bar the field resolves `absent` and every
+      consumer inerts through the same path as a stale sensor.
+      <!-- verify: task test -- --filter=dispatch_state -->
+- [ ] 1.4c **Staleness is bounded, not merely labelled.** `context-fill.json`
+      is written at the Stop slot, so a per-prompt read is one turn old by
+      construction — that is acceptable and marked. What is not acceptable is
+      an arbitrarily old value wearing the same marker: a file whose write
+      timestamp predates the current session's start resolves `absent`, not
+      `one-turn-stale`, because it describes a different session entirely. The
+      bound is session identity plus write timestamp, both already present in
+      the file.
+      <!-- verify: task test -- --filter=dispatch_state -->
 - [ ] 1.5 No existing price surface is extended and no new one is created.
       The repo already carries four (`ai_council/_default_prices.ts`,
       `agents/runtime/.agent-prices.md` byte-frozen, `internal/bench/pricing.yaml`,
@@ -150,6 +171,23 @@ instead of the constant `0` it holds today. No verdict changes.
       baseline any future comparison would need, and committing it before any
       behaviour ships is the pre-registration discipline this repo already
       applies elsewhere.
+- [ ] 3.1b **Log the counterfactual, not just the state** — the council's
+      single strongest point, and without it this phase is theater. Each
+      snapshot records the verdict that shipped **and** the verdict the
+      populated estimate *would have* produced, plus which input drove the
+      difference. A soak that captures inputs but not the decision they would
+      have changed cannot answer the only question it exists to answer, and
+      "no verdict modified" is unfalsifiable without it: there is no
+      activation commit to timestamp against, so the claim needs the
+      counterfactual as its evidence.
+      <!-- verify: task test -- --filter=dispatch_state -->
+- [ ] 3.1c **Define what "modified" means before the soak, not during it.**
+      Two readings differ materially: **narrow** — the verdict recorded in the
+      `orchestration_record` line differs; **wide** — the verdict differs *and*
+      the final dispatch destination differs (an explicit user override can
+      make the two diverge). This roadmap commits to logging **both** and
+      reporting them separately, because a flip that a user override absorbed
+      is a different fact from a flip that changed what ran.
 - [ ] 3.2 Publish what the soak shows as an evidence note appended to the
       part-0 ledger: the distribution of fill at dispatch time, dispatch
       counts per session, and how often each input resolved `stale` or
@@ -166,7 +204,17 @@ instead of the constant `0` it holds today. No verdict changes.
 
 Each row below was in the source draft and is dropped with its citation, so a
 successor argues against the actual recorded decision rather than re-deriving
-this list.
+this list. The table makes the revisit path machine-readable — a deferral
+without a stated reopen condition drifts into a permanent refusal nobody
+remembers deciding.
+
+| Component | Lock | Reopen condition | Status |
+|---|---|---|---|
+| Cost-arbitration downgrade | `budget-routing.md` — work is never blocked to save money | **Live candidate.** The council flagged that a *brake* and a *dispatch-probability weight* may not be the same shape: the contract forbids blocking work, arguably not making a spawn less likely at high fill while the user can still force it. Resolve that reading before any implementation | deferred, revisitable |
+| Budget brake | same contract — budget machinery may degrade the savings, never the work | A brake that blocks work stays forbidden regardless of the reading above | deferred |
+| Audited model override | `ADR-105` defers LLM classification to a benchmark; `ADR-212` forbids an LLM judge in gate paths | The benchmark `ADR-117` records as non-producible becomes producible, **or** an ADR amendment | deferred, revisitable |
+| Subscription quota weights | `cache-economy-refusals.md` — no primary source | A primary source is published | deferred, revisitable |
+| Outcome comparison | `docs/CLAIMS.md` — the in-session counterfactual is `resolved-null`, indeterminate on baseline choice | The claim queue frees **and** a baseline method survives its own indeterminacy finding | deferred |
 
 - [ ] 4.1 **No cost-arbitration downgrade row.** Cost-based routing in this
       repo is escalate-only by decision:
@@ -295,6 +343,10 @@ this list.
   drop it"* — is honoured directly: four of the draft's five components are
   dropped in Phase 4 with the lock that forbids each, and the one that
   survives ships behind a record-only soak.
-- Council: **not run.** Phase 3.3 routes the locked rows to a council pass
-  once the soak removes the missing-data excuse, rather than recording a
-  convergence that did not happen.
+- Council: **anthropic/claude-sonnet-4-5 + openai/gpt-4o, 2026-08-10, 2 rounds**
+  (`--prompt-mode pr`). Convergence is inlined once, in
+  [`road-to-cost-parity-0-program.md`](road-to-cost-parity-0-program.md)
+  § Provenance, rather than restated per sibling. What it changed here is marked
+  in the phases above; what it recorded and did **not** apply is the
+  family-scope question (open parts 0 and 3 now, defer 1 and 2), which is the
+  maintainer's decision.

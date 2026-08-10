@@ -19,9 +19,9 @@ execution:
 The maintained skill count drops by cluster arithmetic with trigger accuracy
 held, every surviving rule carries an authored one-line normative core under
 a drift lint, and the two uncapped growth surfaces (CLI verbs, hook chain
-length) gain a census and a cap — with the nine write-denied kernel rules
-carved out by name and no shipped artefact deleted without its migration
-note.
+length) gain a census and a cap — with the write-denied kernel rules excluded
+via a contract-derived list and no shipped artefact deleted without its
+migration note.
 
 ## Prerequisites
 
@@ -68,8 +68,8 @@ Two facts shape how the rule work must be done:
   `direct-answers`, `language-and-tone`, `no-cheap-questions`,
   `non-destructive-by-default`, `scope-control`, `verify-before-complete`),
   and `scope-control § Kernel-rule edits` requires an own PR with ≥ 24 h
-  between merges. They are not dietable at tranche pace and are carved out
-  by name throughout.
+  between merges. They are not dietable at tranche pace and are excluded via a
+  list DERIVED from the kernel contract at run time (§ 3.5), never hardcoded.
 - **`preservation-guard` forbids stripping negation clauses.** The source
   draft proposed restating `NEVER X` prohibitions as positive targets. That
   is precisely what that rule's reject criteria name. Phase 3 therefore
@@ -77,7 +77,7 @@ Two facts shape how the rule work must be done:
 
 And one fact explains why the payload is worth attacking at all:
 `dist/router.json` has **no runtime host consumer**, so `type: auto` does not
-gate delivery — 92 of 116 rules reach a Claude session and all 115 reach an
+gate delivery — 110 of 116 rules reach a Claude session and all 115 reach an
 Augment session, regardless of the type field. The per-host numbers are in
 part 0's table.
 
@@ -189,12 +189,31 @@ part 0's table.
       byte-exactness invariant (`dist == rewrite(src)`) is asserted by
       `check_condensation` and is not reopened here.
       <!-- verify: task check-condensation -->
-- [ ] 3.5 The nine kernel rules are excluded from 3.1–3.4 by an explicit
-      named list, because `check_kernel_prefix_stability` asserts their
-      byte-prefix and a batch sweep including them reds it. If they are ever
-      to gain norm-lines it is nine separate PRs at ≥ 24 h spacing, which is
-      a maintainer decision and not planned here.
+- [ ] 3.5 The kernel rules are excluded from 3.1–3.4 by a list **derived at
+      run time, never hardcoded**: the sweep reads the kernel set from
+      `docs/contracts/kernel-membership.md` (the same source
+      `check_static_layer_stability` derives it from) and refuses to run if
+      that read fails. A hardcoded nine-name list is a second source of truth
+      that silently goes wrong the day the kernel changes — and it would go
+      wrong in the most expensive direction, sweeping a rule whose byte-prefix
+      is asserted. The count is nine today; the sweep must not depend on that
+      staying true.
       <!-- verify: task check-kernel-prefix-stability -->
+- [ ] 3.5b A fixture pins the derivation: adding a tenth rule to the kernel
+      source excludes it from the sweep without any edit to the sweep, and an
+      unreadable kernel source makes the sweep refuse rather than proceed with
+      an empty exclusion set.
+      <!-- verify: task test -- --filter=kernel_exclusion -->
+- [ ] 3.5c **Measure the payload delta before Phase 3 commits, because
+      norm-lines can make it worse.** 3.3 adds the norm-line *alongside* the
+      body rather than replacing it (preservation-guard forbids the
+      replacement), so this phase's arithmetic is additive on a surface the
+      programme exists to shrink. The first tranche publishes bytes-before and
+      bytes-after against part 0's registered per-host rows; if the net is
+      positive, Phase 3 stops and the design is reconsidered rather than
+      continued on the assumption that the index/detail split will recover it
+      later.
+      <!-- verify: task check-token-regression -->
 - [ ] 3.6 Report the norm inventory in CI — the MUST/NEVER/ALWAYS total
       across survivors (measured baseline: 171 across 116 rules). Report
       only; a cap on this layer already exists as a pre-registered target in
@@ -214,6 +233,13 @@ part 0's table.
       (`later/road-to-token-economy-dispatch-followup.md`), because a verb is
       invoked far more rarely than a rule is carried and the shorter floor
       would under-sample by construction.
+- [ ] 4.1a The window has a **start condition and an end rule**, not just a
+      length: it starts on the commit that lands the counter (recorded in the
+      census header, so "when did this start" is answerable), and it ends at
+      the later of ≥ 4 weeks elapsed **and** ≥ 1 recorded invocation for at
+      least half the registry — because four weeks of an idle machine is not a
+      window, it is an absence. If the second condition is unmet at 8 weeks,
+      the census publishes as inconclusive and no verb is sunset.
 - [ ] 4.1b The rule that keeps the window from being load-bearing, committed
       with it: **zero invocations in the window is `no-data`, never `dead`.**
       A verb reaching the census with no observations is reported as
@@ -287,10 +313,19 @@ part 0's table.
       proven absent first, and `routes_to:` feeds the router that
       `check_static_layer_stability` reads. A consumer audit is a
       prerequisite for a future roadmap, not a step here.
-- [ ] 6.7 No new lint beyond the four enumerated (norm presence, norm drift,
-      section markers, chain-length cap) plus the two ratchet repoints. A
-      maintenance roadmap that grows the meta-estate refutes itself, and the
-      count is an acceptance criterion.
+- [ ] 6.7 No new lint beyond the enumerated set (norm presence, norm drift,
+      section markers, chain-length cap, removed-name gate, kernel-exclusion
+      derivation) plus the two ratchet repoints. A maintenance roadmap that
+      grows the meta-estate refutes itself, and the count is an acceptance
+      criterion.
+- [ ] 6.8 **No payload growth from this roadmap's own governance — stated as a
+      byte ceiling, not as a rule-type claim.** "No new always-loaded prose" is
+      ambiguous here: only 9 of 116 rules are `type: always`, yet 110 reach a
+      Claude session, so a norm-line is in the payload whatever its type says.
+      The checkable form is part 0's registered per-host row: any norm-line or
+      section-marker addition that would push `.claude/rules/` past its
+      registered interim target must subtract equivalent bytes elsewhere or
+      red the phase (3.5c is the measurement).
 
 ## Blockers
 
@@ -398,6 +433,10 @@ part 0's table.
   phases verified as already-built (matrix generation, pack split),
   already-owned (commands, `tier:`, rule deletion, description sharpening,
   adherence bench) or lock-conflicted (negation rewriting, kernel writes).
-- Council: **not run.** Part 0 § 2.4 routes this roadmap's three surviving
-  lock questions to a council pass before Phase 2 executes, rather than
-  recording a convergence that did not happen.
+- Council: **anthropic/claude-sonnet-4-5 + openai/gpt-4o, 2026-08-10, 2 rounds**
+  (`--prompt-mode pr`). Convergence is inlined once, in
+  [`road-to-cost-parity-0-program.md`](road-to-cost-parity-0-program.md)
+  § Provenance, rather than restated per sibling. What it changed here is marked
+  in the phases above; what it recorded and did **not** apply is the
+  family-scope question (open parts 0 and 3 now, defer 1 and 2), which is the
+  maintainer's decision.
