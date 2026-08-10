@@ -1,0 +1,843 @@
+diff --git a/agents/evidence/analysis/carrier-layer-divergence-classification.md b/agents/evidence/analysis/carrier-layer-divergence-classification.md
+new file mode 100644
+index 0000000000000000000000000000000000000000..0e925865f2d979b0d34afe31aa6741fa54ec8b38
+--- /dev/null
++++ b/agents/evidence/analysis/carrier-layer-divergence-classification.md
+@@ -0,0 +1,188 @@
++# Carrier-layer divergence, classified — the 109 differ in metadata, not in obligation
++
++> **Produced by:** Phase 1 of the carrier-layer-convergence roadmap.
++> **Measured:** 2026-08-10 · **Commit:** `a5b2f4cb7` · **Host:** Claude Code
++> `2.1.226` · **Checkout:** a freshly regenerated worktree (`task sync` +
++> `task generate-tools` run immediately before the reading, per the
++> regenerate-before-quoting discipline).
++> **Instrument:** `report_carrier_divergence`, plus a one-off frontmatter-strip
++> comparison whose logic then landed in the instrument itself as
++> `proseEqual`.
++
++## The two questions Phase 1 had to answer
++
++### (1) Classify each of the 109 divergent rules. Per-class totals.
++
++Against the taxonomy the phase names:
++
++| Class | Count | Verdict |
++|---|---:|---|
++| The global copy is an **older release** of the same rule (a refresh closes it) | **0** | Empty. No global copy carries superseded prose. |
++| The project copy is **generated differently** (the generator is the fix) | **109** | The whole set — but the prescribed remedy does not apply, see below. |
++| The two carry **genuinely different obligations** (a content decision) | **0** | Empty. Nothing to surface, nothing to decide. |
++
++**All 109 pairs carry byte-identical prose.** The entire difference is the YAML
++frontmatter block. Two writers apply two frontmatter policies to the same rule:
++
++- `generate-tools` emits a real file carrying **only** `paths:`, and only where a
++  rule is path-scoped — 25 of 110 files in this checkout. The other 85 carry no
++  frontmatter at all.
++- `install.ts` writes agent-config's full vocabulary (`type`, `tier`,
++  `description`, `alwaysApply`, `triggers`, `workspaces`, `packs`, …) plus its
++  two ownership keys (`package`, `source_path`) — 114 of 114 files.
++
++Neither policy is wrong, and this is why the phase's own remedy ("fix the
++generator so the projection is reproducible rather than patching the output")
++has nothing to act on: the projection **is** reproducible. `task sync` followed
++by `task generate-tools` at this commit leaves a clean tree — the step's own
++verification passes without any change. The difference is deliberate on both
++sides: the host reads `paths` and nothing else from this block, so emitting the
++rest into the project carrier would be payload the host ignores, while the
++installer needs its vocabulary and its ownership stamp for agent-config's own
++tooling (uninstall attribution, and the `type: manual` filter this very report
++reads from the projection source).
++
++The 109, by name — one class, so the list is flat:
++
++active-remediation, agent-authority, architecture, artifact-drafting-protocol,
++artifact-engagement-recording, ask-when-uncertain, augment-edit-discipline,
++autonomous-execution, brand-source-of-truth, broken-access-control,
++cli-output-handling, code-comment-discipline, code-provenance,
++command-suggestion-policy, commit-conventions, commit-policy,
++communication-through-line, content-quoting-floor, context-hygiene,
++copilot-routing, council-availability, cross-source-consistency,
++decision-revisit-gate, delegation-policy, design-fidelity,
++design-review-after-ui-write, devcontainer-routing, direct-answers,
++doc-screenshot-hygiene, docker-commands, domain-adoption-policy,
++domain-safety-disclaimer, domain-safety-pii, domain-safety-retention,
++downstream-changes, engineering-safety-floor, evaluator-independence,
++external-code-graph-interop, external-reference-deep-dive,
++fast-path-marker-visibility, finance-safety-floor,
++framework-neutrality-in-generic-skills, git-history-discipline,
++history-discipline, icon-consistency, image-likeness-and-rights,
++improve-before-implement, invite-challenge, language-and-tone, laravel-routing,
++laravel-translations, legal-safety-floor, lethal-trifecta-guard,
++linked-projects-onboarding-gate, low-impact-corpus-privacy-floor,
++markdown-safe-codeblocks, media-governance-routing, media-sync-ground-truth,
++minimal-safe-diff, missing-tool-handling, model-recommendation,
++no-attribution-footers, no-cheap-questions,
++no-decorative-emojis-in-git-surfaces, no-pr-progress-comments,
++no-roadmap-references, non-destructive-by-default, notes-first-reasoning,
++onboarding-gate, output-discipline, persona-governance, php-coding,
++prefer-enums-over-literals, preservation-guard, provider-lifecycle-discipline,
++question-not-instruction, reviewer-awareness, roadmap-ci-steps-policy,
++roadmap-progress-sync, role-mode-adherence, rule-type-governance,
++runtime-safety, scale-discipline, scope-control, secret-vcs-guard,
++security-sensitive-stop, self-repair-loop, senior-engineering-discipline,
++session-canary, settings-ask-protocol, skill-improvement-trigger, skill-quality,
++slash-command-routing-policy, source-confidentiality, source-discovery-gate,
++spreadsheet-source-quality, strategy-safety-floor, symfony-routing,
++think-before-action, token-budget-discipline, token-efficiency,
++token-optimizer-maintenance, tool-safety, ui-audit-gate,
++untrusted-input-defense, upstream-proposal, user-interaction,
++user-interrupt-priority, verify-before-complete.
++
++Asymmetric reach at the same reading, recorded because a project-scope figure
++does not transfer without it: **1** project-only (`source-of-truth` — newer than
++the installed release) and **5** global-only, all of them ADR-004
++`type: manual` and therefore expected (`analysis-skill-routing`,
++`brand-consistency`, `guidelines`, `package-ci-checks`, `size-enforcement`).
++
++### (2) Name the precedence rule the host actually applies.
++
++**The host applies none.** Rules without a `paths` key are loaded at launch with
++the same priority as `CLAUDE.md`, and no precedence marker exists between the
++two layers. Cited rather than inferred, from the probed host contract in
++`claude-code-rules-dir-contract.md` (host 2.1.226) — the host's own
++documentation, verbatim there, plus a first-party observation of a live session
++carrying both copies simultaneously.
++
++So the phase's fallback verdict is the operative one: **binding is undefined**
++whenever the two carriers disagree. It simply does not follow, at this reading,
++that anything disagrees.
++
++This corrects a claim two instruments were printing. Both
++`report_carrier_divergence` and `report_conformance_funnel` told the reader
++"the project projection is generated from `src/` at this commit **and wins**".
++The project copy is indeed the newer text — that is a fact about recency, not a
++precedence rule the host implements — and a reader acting on "wins" would have
++believed the host resolves something it does not. Both surfaces now state that
++binding is undefined and that recency is not precedence.
++
++## What this does to the roadmap's premise
++
++The roadmap opens with two defects wearing one number: a removable share of the
++standing-delivery floor, and *"a correctness hole, because when two copies of a
++rule differ there is no defined answer to which text binds"*.
++
++**The correctness hole is not there.** No governed text differs, so no
++obligation is ambiguous, and no rule can have a claim retracted by one copy and
++re-asserted by the other. The duplication is real and measured; the ambiguity is
++not.
++
++What remains is a delivery-cost item — and the instrument that measures it says,
++in its own header, that it must never acquire a threshold, for the same reason
++`report_skill_activation` must not. Two independent recorded findings say the
++same thing from the other direction: a carrier-comparison figure may diagnose a
++stale install and nothing more, and the parent roadmap routed this measurement
++out of its blockers as evidence-deciding-nothing. That reading holds.
++
++The defect actually worth repairing was therefore **in the instrument, not in
++the carriers**: a metadata-only difference was being reported as body
++divergence, i.e. as the one class the report tells a reader to act on. That is
++the precise failure the same function already refuses to commit for an
++unreadable copy ("a permission error would otherwise manufacture the only class
++this report asks a reader to act on"). It now has a fourth class,
++`frontmatter-only`, reported as a count with its explanation.
++
++## Why two earlier readings of the same commit disagreed
++
++A recorded measurement puzzle closes here. At one commit the primary checkout
++reported **91 shared / 90 stamp-only / 1 body**, while a freshly generated
++worktree reported **109 shared / 0 stamp-only / 109 body**. Rebuilding the
++worktree from scratch reproduced 109, which ruled out contamination and left the
++discrepancy unexplained.
++
++The explanation is the **emitter generation that produced the project tree**:
++
++| Project tree | Files | Frontmatter | Shape |
++|---|---:|---|---|
++| Primary checkout (older emitter) | 92 | all 92 carry it | symlinks into `dist/agent-src/rules/` |
++| This worktree (current emitter) | 110 | 25 (`paths:` only) | real files |
++
++A symlinked tree inherits `dist`'s full frontmatter, so stripping the two
++ownership keys equalizes the pair and it classifies **stamp-only**. A
++real-file tree carries no frontmatter to strip, so the same pair classifies
++**body-diff**. Same commit, same install, opposite verdicts — the figure is a
++fact about when and with which emitter someone last regenerated, on top of how
++stale the global install is. The report now says so where it reports a clean
++reading.
++
++## Named, not fixed
++
++- **The delivered-payload byte basis is an over-count.** Byte censuses of
++  `~/.claude/rules/` include each file's frontmatter, and the host does not
++  deliver it: the global copy of `role-mode-adherence` carries eight-plus lines
++  of frontmatter on disk and reaches the model as prose starting at its first
++  heading. Correcting the basis would move three published baselines and touch
++  the standing-delivery gate, so it is recorded here rather than changed under
++  this roadmap. Direction of the error is stated: the published payload figure
++  is conservative (too high), not optimistic.
++- **Phase 3's safety precondition is now met, ahead of its measurement.** The
++  phase order exists because suppressing a *divergent* copy drops whatever
++  obligations only that copy carried. With prose identical across all 109,
++  suppression is a no-op on content — which is what Phase 2 was supposed to
++  establish and what this reading establishes directly. The measurement itself
++  still needs the maintainer machine, so the phase stays blocked; only its
++  premise is discharged.
++- **Convergence is point-in-time.** The global layer is a release snapshot, so
++  today's reading says nothing about the next release. That was already named in
++  the roadmap's risk register and is not repaired here.
++
++## What a re-run should show
++
++On a freshly regenerated checkout against a global install at or behind this
++commit: `differ in PROSE 0`, `differ ONLY in frontmatter` equal to the shared
++count, and the flat class list above. A non-zero prose count on a later reading
++is a real finding and means a rule's governed text genuinely diverged — that is
++the number to act on, and the only one.
+diff --git a/agents/evidence/analysis/loaded-rule-token-distribution.md b/agents/evidence/analysis/loaded-rule-token-distribution.md
+index c5f80432315300eabbd77de830a899d2c1fcdaa3..fb0993e8c4b60685ef5db8865adbd7253d438920 100644
+--- a/agents/evidence/analysis/loaded-rule-token-distribution.md
++++ b/agents/evidence/analysis/loaded-rule-token-distribution.md
+@@ -46,6 +46,15 @@ Instrument B — `./scripts-run src/scripts/check_standing_rule_delivery`
+   work measures; the fix on a maintainer machine is
+   `agent-config install --layer=<global|project>` (suppression, not deletion) —
+   tracked as blocker `b-machine-dedup` in the roadmap.
++  > **CORRECTION 2026-08-10 — "divergent" here means metadata, not drifted text.**
++  > All 109 pairs were re-measured at commit `a5b2f4cb7` and carry **byte-identical
++  > prose**; the whole difference is the frontmatter block, which the host does not
++  > deliver. So the double-delivery is real (both copies reach the model) and the
++  > *drift* is not: no governed text differs and nothing is binding-ambiguous.
++  > Read this line as a duplication figure only, never as a correctness finding.
++  > Classification, the cited precedence answer, and why a stale symlinked
++  > projection classifies the same commit as 91/90-stamp-only instead:
++  > [`carrier-layer-divergence-classification.md`](carrier-layer-divergence-classification.md).
+ - Reference point: the external auditor measured 176,354 union tokens on
+   2026-08-09 on the same machine class; today's readings are 190,873 (proxy A)
+   / 186,536 (proxy B). The carriers moved between measurements (9.29.0 merge);
+diff --git a/agents/roadmaps-progress.md b/agents/roadmaps-progress.md
+index e6d88021c870730bbe2f0e4ee9f66c829d34b078..8cbfa87a7e2fbd6f1fa34978c54f56cc0277c57e 100644
+--- a/agents/roadmaps-progress.md
++++ b/agents/roadmaps-progress.md
+@@ -6,10 +6,10 @@
+ 
+ ## Overall
+ 
+-**168 / 321 steps done · 52%**
++**171 / 319 steps done · 54%**
+ 
+ ```text
+-█████████████████████░░░░░░░░░░░░░░░░░░░   52%
++██████████████████████░░░░░░░░░░░░░░░░░░   54%
+ ```
+ 
+ ## Open roadmaps
+@@ -18,7 +18,7 @@
+ |---|---|---:|---:|---:|---:|---:|---:|---:|---|
+ | 1 | [road-to-always-on-orchestration.md](roadmaps/road-to-always-on-orchestration.md) | 7 | 36 | 1 | 35 | 0 | 0 | [5](#blockers-road-to-always-on-orchestration) | ██████████ 97% |
+ | 2 | [road-to-capability-answerability.md](roadmaps/road-to-capability-answerability.md) | 4 | 19 | 5 | 14 | 0 | 0 | [1](#blockers-road-to-capability-answerability) | ███████░░░ 74% |
+-| 3 | [road-to-carrier-layer-convergence.md](roadmaps/road-to-carrier-layer-convergence.md) | 3 | 7 | 7 | 0 | 0 | 0 | [1](#blockers-road-to-carrier-layer-convergence) | ░░░░░░░░░░ 0% |
++| 3 | [road-to-carrier-layer-convergence.md](roadmaps/road-to-carrier-layer-convergence.md) | 3 | 8 | 2 | 3 | 0 | 3 | [1](#blockers-road-to-carrier-layer-convergence) | ██████░░░░ 60% |
+ | 4 | [road-to-ci-native-release-first-run.md](roadmaps/road-to-ci-native-release-first-run.md) | 2 | 8 | 8 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+ | 5 | [road-to-cost-parity-0-program.md](roadmaps/road-to-cost-parity-0-program.md) | 4 | 23 | 23 | 0 | 0 | 0 | [1](#blockers-road-to-cost-parity-0-program) | ░░░░░░░░░░ 0% |
+ | 6 | [road-to-cost-parity-3-handoff-envelope.md](roadmaps/road-to-cost-parity-3-handoff-envelope.md) | 4 | 28 | 28 | 0 | 0 | 0 | [2](#blockers-road-to-cost-parity-3-handoff-envelope) | ░░░░░░░░░░ 0% |
+@@ -132,12 +132,12 @@
+ 
+ ### [road-to-carrier-layer-convergence.md](roadmaps/road-to-carrier-layer-convergence.md)
+ 
+-**Road to carrier-layer convergence — 109 rules arrive twice, none identical** — 0 / 7 done (0%)
++**Road to carrier-layer convergence — 109 rules arrive twice, none identical** — 3 / 5 done (60%)
+ 
+ | # | Phase | State | Open | Done | Deferred | Cancelled | % |
+ |---|---|---|---:|---:|---:|---:|---:|
+-| 1 | Establish which layer is stale, per rule | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
+-| 2 | Converge | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
++| 1 | Establish which layer is stale, per rule | ✅ done | 0 | 2 | 0 | 0 | 100% |
++| 2 | Converge | ✅ done | 0 | 1 | 0 | 3 | 100% |
+ | 3 | Deduplicate, and prove the saving | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
+ 
+ <a id="blockers-road-to-carrier-layer-convergence"></a>
+diff --git a/agents/roadmaps/later/road-to-conformance-round6.md b/agents/roadmaps/later/road-to-conformance-round6.md
+index 9de669932846c0877ab2f6db572883db6ab29b8b..954a7629fa5c80b4caaef795681b37d8fe9e1043 100644
+--- a/agents/roadmaps/later/road-to-conformance-round6.md
++++ b/agents/roadmaps/later/road-to-conformance-round6.md
+@@ -580,6 +580,14 @@ install cadence cannot be closed by a text change; it can only be made visible,
+ and the report now prints the precedence (project projection wins, global install
+ is a release snapshot) at the moment a body difference appears.
+ 
++> **CORRECTED 2026-08-10 — that parenthetical was wrong and the report no longer
++> prints it.** The host applies no precedence at all: rules without a `paths` key
++> load at launch with the same priority as CLAUDE.md and no marker exists between
++> the layers, so binding is UNDEFINED when the two disagree (cited in
++> `agents/evidence/analysis/claude-code-rules-dir-contract.md`, host 2.1.226). The
++> project copy is merely the newer text — recency, not precedence. Kept rather
++> than rewritten so the trail is readable.
++
+ **The second pair cannot be checked, and that is a finding about the record.**
+ Round 5 wrote *"for four rules the divergence is semantic, and for two it is
+ contradictory"* and named exactly one. An unnamed member of a stated count is not
+diff --git a/agents/roadmaps/road-to-carrier-layer-convergence.md b/agents/roadmaps/road-to-carrier-layer-convergence.md
+index 91f97b407dbac43b89e443b0ddfd517df479c1ea..6e8c4596d07b44deec88d07ccd0f1a4b9e636407 100644
+--- a/agents/roadmaps/road-to-carrier-layer-convergence.md
++++ b/agents/roadmaps/road-to-carrier-layer-convergence.md
+@@ -20,6 +20,20 @@ parent_roadmap: road-to-feedback-9-29
+ > the parent treated it as evidence-deciding-nothing, which is right for a diet
+ > verdict and wrong for a delivery defect.
+ 
++> **CORRECTION, 2026-08-10 — half the premise above is false, and Phase 1 is what
++> falsified it.** All 109 pairs carry **byte-identical prose**; the entire
++> difference is the frontmatter block, which the host does not deliver. So there
++> is no correctness hole: no governed text differs, nothing is
++> binding-ambiguous, and no claim one copy retracts can be re-asserted by the
++> other. The duplication is real and the ambiguity is not. The defect that WAS
++> real sat in the instrument — a metadata-only difference was reported as body
++> divergence, i.e. as the one class the report tells a reader to act on — and it
++> is repaired under Phase 2. Classification, the cited precedence answer, and the
++> explanation of why two earlier readings of one commit disagreed:
++> [`agents/evidence/analysis/carrier-layer-divergence-classification.md`](../evidence/analysis/carrier-layer-divergence-classification.md).
++> The original claim is kept above rather than rewritten, so the trail from
++> premise to falsification stays readable.
++
+ ## Goal
+ 
+ Converge the two rule-carrier layers so a session receives each governed rule
+@@ -49,15 +63,27 @@ maintainer machine, and no obligation lost in the process.
+ 
+ ## Phase 1 — Establish which layer is stale, per rule
+ 
+-- [ ] For each of the 109 divergent rules, classify the divergence: the global
++- [x] For each of the 109 divergent rules, classify the divergence: the global
+       copy is an older release of the same rule (refresh closes it), the project
+       copy is generated differently (the generator is the fix), or the two carry
+       genuinely different obligations (a content decision, and the interesting
+       case). Report counts per class — a single mixed bucket is not a finding. <!-- verify: report lists all 109 with a class and the per-class totals -->
+-- [ ] Name the precedence rule the host actually applies when both layers carry
++      <!-- DONE 2026-08-10, commit a5b2f4cb7, freshly regenerated checkout.
++      Totals: refresh-closes-it 0 · generator-difference 109 ·
++      genuinely-different-obligation 0. All 109 listed flat (one class) in
++      carrier-layer-divergence-classification.md. All 109 carry byte-identical
++      prose; the whole difference is the frontmatter block. -->
++- [x] Name the precedence rule the host actually applies when both layers carry
+       a rule of the same basename, from the host's own documentation or an
+       observed load, never from inference — if it is unobservable, say so and
+       treat every divergence as binding-undefined. <!-- verify: the precedence answer cites a doc section or an InstructionsLoaded observation -->
++      <!-- DONE 2026-08-10. Answer: the host applies NO precedence — rules
++      without a `paths` key load at launch with the same priority as CLAUDE.md,
++      no marker between the layers, so binding is UNDEFINED whenever the two
++      disagree. Cited to claude-code-rules-dir-contract.md (host 2.1.226: the
++      host's own docs plus a first-party observation), never inferred. Two
++      instruments were printing the opposite ("the project projection … and
++      wins"); both corrected under Phase 2. -->
+ 
+ Exit criteria: every one of the 109 carries a class; the precedence question has
+ a cited answer or an explicit unobservable verdict.
+@@ -65,21 +91,59 @@ Rollback: report-only phase, nothing to revert.
+ 
+ ## Phase 2 — Converge
+ 
+-- [ ] Refresh the stale side for every rule in the refresh-closes-it class, so
++- [-] Refresh the stale side for every rule in the refresh-closes-it class, so
+       the two copies become byte-identical. <!-- verify: report_carrier_divergence shows those rules as duplicate rather than divergent -->
+-- [ ] For the generator-difference class, fix the generator so the projection is
++      <!-- SKIPPED 2026-08-10 — the class is measured EMPTY (0 of 109). No global
++      copy carries superseded prose, so there is no stale side to refresh. An
++      empty class is a real answer, not an unfinished step. -->
++- [-] For the generator-difference class, fix the generator so the projection is
+       reproducible rather than patching the output. <!-- verify: task sync + generate-tools leaves no drift for those rules -->
+-- [ ] For any genuinely-different-obligation rule, surface it as a decision
++      <!-- SKIPPED 2026-08-10 — the step's own verification PASSES with no change:
++      `task sync` + `task generate-tools` at a5b2f4cb7 leaves a clean tree, so the
++      projection is already reproducible and there is no generator defect to fix.
++      The 109 are a deliberate two-writer policy difference — `generate-tools`
++      emits only `paths:` because the host reads nothing else from the block;
++      `install.ts` writes the full vocabulary plus its ownership stamp because
++      agent-config's own tooling needs it. Making them byte-identical would mean
++      either shipping payload the host ignores or dropping metadata the installer
++      needs, so convergence-by-alignment is the wrong target here. The defect the
++      classification actually surfaced was in the instrument — see the step
++      below. -->
++- [-] For any genuinely-different-obligation rule, surface it as a decision
+       rather than picking a side — this is the class where a silent choice loses
+       a governed obligation. <!-- verify: each such rule is listed with both texts and no edit applied -->
++      <!-- SKIPPED 2026-08-10 — the class is measured EMPTY (0 of 109). No pair
++      carries different obligations, so there is nothing to surface and no side
++      to avoid picking. This is the class the phase called "the interesting
++      case"; it is empty, and that is the finding. -->
++- [x] **Added 2026-08-10, and the only convergence work that landed.** Repair the
++      instrument that reported a metadata-only difference as body divergence —
++      i.e. as the one class the report tells a reader to act on — and the
++      precedence claim both surfaces were printing. <!-- verify: report_carrier_divergence prints `differ in PROSE 0` + `differ ONLY in frontmatter 109`, states binding is UNDEFINED, and no surface claims the newer copy "wins"; pinned by tests -->
++      <!-- DONE: `proseEqual` + `stripFrontmatter` in _lib/carrier_divergence.ts
++      (deliberately NOT folded into `comparePair`, which stays byte-identity so
++      the dedup predicate is untouched); a fourth `frontmatter-only` class in
++      report_carrier_divergence; the same split and the corrected precedence
++      prose in report_conformance_funnel. Two existing tests pinned the false
++      "and wins" claim and were inverted with the citation in the test body. -->
+ 
+ Exit criteria: `report_carrier_divergence` reports 0 divergent, or a stated
+ remainder whose every member is a surfaced decision.
++<!-- MET 2026-08-10, in the terms the measurement forced: 0 PROSE-divergent, with
++a stated remainder of 109 frontmatter-only pairs whose cause is named in the
++report itself and which require no decision, because no governed text differs. -->
+ Rollback: the refresh is regeneration from tracked sources, so revert is
+ regeneration at the previous commit.
+ 
+ ## Phase 3 — Deduplicate, and prove the saving
+ 
++> **Its safety precondition is discharged ahead of its measurement (2026-08-10).**
++> The phase order exists because suppressing a *divergent* copy drops whatever
++> obligations only that copy carried. Phase 1 measured the prose identical across
++> all 109, so suppression is already a no-op on content — the thing Phase 2 was
++> meant to establish. Only the before/after reading is still owed, and that needs
++> the maintainer machine, so the blocker stands unchanged.
++
+ - [ ] With the layers converged, apply the single-layer suppression and record
+       the delivered-token reading before and after on the same machine and the
+       same commit. <!-- verify: check_standing_rule_delivery under cap, with the before/after pair recorded -->
+@@ -112,9 +176,25 @@ suppressed layer restores the prior state.
+ | 4 | The before/after pair measured across a moving tree | implementation | The project carrier is generated from `src/`, so two readings at different commits differ for reasons unrelated to deduplication and would read as a saving that is not one | Same machine, same commit, both readings recorded — the pin-your-SHA lesson the parent roadmap's own report had to learn twice | Phase 3 — Deduplicate, and prove the saving |
+ | 5 | Convergence closes, then re-opens on the next release | product | The global layer is a release snapshot; refreshing it today says nothing about the next one, so the 109 could simply return | Out of scope here and named rather than hidden: a standing fix belongs to the install/release path, and this roadmap's exit criteria are point-in-time by design | Acceptance criteria |
+ 
++**Risk 3 materialized, and was the real defect (2026-08-10).** It warned that an
++*inferred* precedence answer would leave every later step resting on a guess.
++That is exactly what had already happened: two shipped surfaces printed "the
++project projection … and wins", which no host behaviour supports, and two tests
++pinned it. Rank 1 and Rank 2 did not materialize — both depended on a divergence
++class the measurement found empty.
++
+ ## Acceptance criteria
+ 
+-- All 109 divergent rules are classified, with per-class totals.
+-- Divergence reaches 0, or every remaining member is a surfaced decision.
+-- The delivered-token before/after pair is recorded at one commit on one machine.
+-- No rule present before convergence is absent after deduplication.
++- **MET** — All 109 divergent rules are classified, with per-class totals
++  (0 refresh-closes-it · 109 generator-difference · 0 genuinely-different-obligation).
++- **MET** — Divergence reaches 0, or every remaining member is a surfaced decision:
++  0 prose-divergent, remainder 109 frontmatter-only with its cause stated in the
++  report and no decision owed, because no governed text differs.
++- **OPEN** — The delivered-token before/after pair is recorded at one commit on one
++  machine. Blocked on `b-convergence-machine`; its safety precondition is now
++  discharged (see Phase 3).
++- **OPEN** — No rule present before convergence is absent after deduplication.
++  Blocked with the reading above.
++- **Added, MET** — No surface claims a precedence the host does not implement. Both
++  carrier surfaces now state that binding is undefined when prose diverges, and
++  that the project copy's recency is not precedence.
+diff --git a/src/scripts/_lib/carrier_divergence.ts b/src/scripts/_lib/carrier_divergence.ts
+index 248bb4e129475223a3a5ff3ed84c40c2c66a54c9..ba26f714083dbc7cae303ba718a721440c710109 100644
+--- a/src/scripts/_lib/carrier_divergence.ts
++++ b/src/scripts/_lib/carrier_divergence.ts
+@@ -81,6 +81,53 @@ export function comparePair(a: Buffer, b: Buffer): PairVerdict {
+     return 'body-diff';
+ }
+ 
++/**
++ * Drop a leading YAML frontmatter block, returning the prose the host actually
++ * delivers.
++ *
++ * A file with no `---` fence, or an unterminated one, is returned unchanged —
++ * the same tolerance `report_carrier_divergence`'s own `type:` reader applies,
++ * because a malformed fence must not silently swallow a rule's whole text.
++ */
++export function stripFrontmatter(text: string): string {
++    if (!text.startsWith('---')) return text;
++    const end = text.indexOf('\n---', 3);
++    if (end === -1) return text;
++    const afterFence = text.indexOf('\n', end + 1);
++    return afterFence === -1 ? '' : text.slice(afterFence + 1);
++}
++
++/**
++ * Do the two copies carry the same governed PROSE, ignoring frontmatter?
++ *
++ * WHY THIS IS SEPARATE FROM `comparePair`, AND MUST STAY SEPARATE
++ * --------------------------------------------------------------
++ * `comparePair` answers *can a byte-identity dedup skip this pair* — it is the
++ * dedup predicate, and a frontmatter difference is a real byte difference, so
++ * folding this in would relax the predicate that
++ * `agents/settings/contexts/dedup-reachability-refusal.md` deliberately keeps
++ * strict. `measure_scope_dedup` asks exactly that question and its arithmetic
++ * stays untouched.
++ *
++ * This answers the different, reader-facing question `report_carrier_divergence`
++ * asks: *must a human act on this pair*. Measured 2026-08-10 over the live
++ * carriers at commit `a5b2f4cb7`: 109 shared rules, **0** byte-identical, **109**
++ * classified `body-diff` — and after this strip, **0** of the 109 differ in
++ * prose. The whole divergence was the metadata block. Reporting that as body
++ * divergence manufactures the one class the report tells a reader to act on,
++ * which is precisely the failure `compareCarriers` already refuses to commit for
++ * an unreadable copy.
++ *
++ * Edge trimming only, on purpose: the frontmatter fence leaves the two sides one
++ * leading newline apart, and that is not a content difference. Internal
++ * whitespace and line endings are NOT normalized — a CRLF-vs-LF body stays a
++ * prose difference, so this stays no softer than the dedup predicate on the text
++ * the host reads.
++ */
++export function proseEqual(a: string, b: string): boolean {
++    return stripFrontmatter(a).trim() === stripFrontmatter(b).trim();
++}
++
+ export interface RuleDirCensus {
+     files: number;
+     /**
+diff --git a/src/scripts/report_carrier_divergence.ts b/src/scripts/report_carrier_divergence.ts
+index bd06052fa9a9dac04c7fbc28defeef813a1ffc6c..ce6e61b5bf89252647ccdeee7f85fbd5ad102941 100644
+--- a/src/scripts/report_carrier_divergence.ts
++++ b/src/scripts/report_carrier_divergence.ts
+@@ -35,16 +35,30 @@
+  * ignored, which is the failure `check-rule-invariants` already paid for once.
+  * The point is that the condition becomes VISIBLE, not that it becomes illegal.
+  *
+- * THE THREE CLASSES, AND WHICH ONE A READER MUST ACT ON
+- * ----------------------------------------------------
+- *   body-diff        the two carriers deliver different TEXT. This is the class
++ * THE FOUR CLASSES, AND WHICH ONE A READER MUST ACT ON
++ * ---------------------------------------------------
++ *   body-diff        the two carriers deliver different PROSE. This is the class
+  *                    round 5's contradiction lived in, and the only one that
+- *                    needs a decision. Precedence when it appears: the project
+- *                    projection is generated from `src/` at the current commit,
+- *                    so it is the newer copy and it wins; the global install is
+- *                    a release snapshot. Printed with the report so the
+- *                    precedence is read at the moment it matters rather than
+- *                    looked up.
++ *                    needs a decision. What the host does about it: NOTHING —
++ *                    both copies load at launch with the same priority and no
++ *                    precedence marker between them, so the divergence is
++ *                    binding-undefined rather than resolved in either
++ *                    direction. Cited, not inferred:
++ *                    `agents/evidence/analysis/claude-code-rules-dir-contract.md`
++ *                    (host 2.1.226, first-party observation plus the host's own
++ *                    documentation). The project copy is the NEWER text, which
++ *                    is a fact about recency and not a precedence rule — the
++ *                    earlier wording of this header called it a win, and a
++ *                    reader acting on that would have believed the host resolves
++ *                    something it does not.
++ *   frontmatter-only the prose is byte-identical and only the metadata block
++ *                    differs. The host delivers the prose without that block, so
++ *                    nothing a reader must act on reaches the model differently.
++ *                    Split out because it was, measured, the ENTIRE content of
++ *                    the `body-diff` class: 109 of 109 on 2026-08-10. Left inside
++ *                    body-diff it manufactured the report's only actionable
++ *                    class out of a metadata difference — the same mistake the
++ *                    `unreadable` branch below already refuses to make.
+  *   provenance-only  identical after removing the two installer ownership keys.
+  *                    Structural, expected, and decided against closing —
+  *                    `agents/settings/contexts/dedup-reachability-refusal.md`.
+@@ -69,7 +83,7 @@ import * as path from 'node:path';
+ import process from 'node:process';
+ import { fileURLToPath, pathToFileURL } from 'node:url';
+ 
+-import { comparePair, type PairVerdict } from './_lib/carrier_divergence.js';
++import { comparePair, type PairVerdict, proseEqual } from './_lib/carrier_divergence.js';
+ 
+ const _HERE = fileURLToPath(import.meta.url);
+ const REPO_ROOT = path.resolve(path.dirname(_HERE), '..', '..');
+@@ -103,6 +117,13 @@ export interface CarrierDivergence {
+     shared: number;
+     identical: string[];
+     provenanceOnly: string[];
++    /**
++     * Prose byte-identical, metadata block different. A real byte difference — so
++     * `comparePair` still calls it `body-diff` and the dedup predicate is
++     * unchanged — but not a difference in what the host delivers, so it is not
++     * something a reader has to act on.
++     */
++    frontmatterOnly: string[];
+     bodyDiff: string[];
+     projectOnly: string[];
+     globalOnly: string[];
+@@ -171,6 +192,7 @@ export function compareCarriers(
+         shared: 0,
+         identical: [],
+         provenanceOnly: [],
++        frontmatterOnly: [],
+         bodyDiff: [],
+         projectOnly: [],
+         globalOnly: [],
+@@ -196,11 +218,12 @@ export function compareCarriers(
+         }
+         out.shared += 1;
+         let verdict: PairVerdict;
++        let proseSame: boolean;
+         try {
+-            verdict = comparePair(
+-                fs.readFileSync(path.join(projectDir, rule)),
+-                fs.readFileSync(path.join(globalDir, rule)),
+-            );
++            const projectCopy = fs.readFileSync(path.join(projectDir, rule));
++            const globalCopy = fs.readFileSync(path.join(globalDir, rule));
++            verdict = comparePair(projectCopy, globalCopy);
++            proseSame = proseEqual(projectCopy.toString('utf-8'), globalCopy.toString('utf-8'));
+         } catch {
+             // An unreadable copy is not a body difference and must not be
+             // reported as one — a permission error would otherwise manufacture
+@@ -213,6 +236,7 @@ export function compareCarriers(
+         }
+         if (verdict === 'identical') out.identical.push(rule);
+         else if (verdict === 'provenance-only') out.provenanceOnly.push(rule);
++        else if (proseSame) out.frontmatterOnly.push(rule);
+         else out.bodyDiff.push(rule);
+     }
+     return out;
+@@ -244,7 +268,8 @@ export function render(d: CarrierDivergence): string {
+     lines.push(`  shared rule names                    ${d.shared}`);
+     lines.push(`    byte-identical                     ${d.identical.length}`);
+     lines.push(`    differ ONLY in the install stamp   ${d.provenanceOnly.length}`);
+-    lines.push(`    differ in BODY                     ${d.bodyDiff.length}`);
++    lines.push(`    differ ONLY in frontmatter         ${d.frontmatterOnly.length}`);
++    lines.push(`    differ in PROSE                    ${d.bodyDiff.length}`);
+     if (d.unreadable.length > 0) {
+         lines.push(`    unreadable on one side             ${d.unreadable.length}  (${d.unreadable.join(', ')})`);
+         lines.push('      Not counted as shared and NOT a body difference — a dangling entry is');
+@@ -255,16 +280,34 @@ export function render(d: CarrierDivergence): string {
+     lines.push('');
+ 
+     if (d.bodyDiff.length > 0) {
+-        lines.push('  BODY DIVERGENCE — the two carriers deliver different text for these rules.');
+-        lines.push('  Both copies reach the model, with no precedence marker between them, so a');
+-        lines.push('  claim one copy retracts can be re-asserted by the other. PRECEDENCE: the');
+-        lines.push('  project projection is generated from src/ at this commit and wins; the');
+-        lines.push('  global install is a release snapshot. Close it by reinstalling the global');
+-        lines.push('  copy, or by reading the project copy as authoritative.');
++        lines.push('  PROSE DIVERGENCE — the two carriers deliver different governed text for');
++        lines.push('  these rules. Both copies reach the model, and the host resolves NOTHING:');
++        lines.push('  rules without a `paths` key load at launch with the same priority as');
++        lines.push('  CLAUDE.md, with no precedence marker between the layers, so a claim one');
++        lines.push('  copy retracts can be re-asserted by the other and which text binds is');
++        lines.push('  UNDEFINED. Cited, not inferred — agents/evidence/analysis/');
++        lines.push('  claude-code-rules-dir-contract.md (host 2.1.226, the host\'s own docs plus');
++        lines.push('  a first-party observation). The project copy is the NEWER text, which is a');
++        lines.push('  fact about recency and NOT a host precedence rule: close the divergence by');
++        lines.push('  reinstalling the global copy, or decide which text binds — do not assume');
++        lines.push('  the newer one already won.');
+         for (const r of d.bodyDiff) lines.push(`    - ${r}`);
+         lines.push('');
+     }
+ 
++    if (d.frontmatterOnly.length > 0) {
++        lines.push(`  ${String(d.frontmatterOnly.length)} pair(s) differ ONLY in the frontmatter block — prose byte-identical.`);
++        lines.push('  Not a governed-text difference and nothing to act on: the host delivers the');
++        lines.push('  prose without that block, and none of the keys in it is one this host reads');
++        lines.push('  (claude-code-rules-dir-contract.md: it reads `paths`, and agent-config\'s own');
++        lines.push('  vocabulary is not read at all). Two writers, two frontmatter policies —');
++        lines.push('  `generate-tools` emits `paths` where a rule is path-scoped and nothing');
++        lines.push('  otherwise; `install.ts` writes the full vocabulary plus its ownership stamp.');
++        lines.push('  Reported as a count on purpose: naming every pair would bury the class');
++        lines.push('  above, which is the one a reader must act on.');
++        lines.push('');
++    }
++
+     if (d.provenanceOnly.length > 0) {
+         lines.push(`  ${String(d.provenanceOnly.length)} pair(s) differ only by the installer's package:/source_path: stamp.`);
+         lines.push('  Not a content difference and NOT a defect: install.ts stamps every installed');
+@@ -302,9 +345,14 @@ export function render(d: CarrierDivergence): string {
+ 
+     if (d.bodyDiff.length === 0) {
+         lines.push('');
+-        lines.push('  No body divergence. The condition is transient — it returns whenever the');
+-        lines.push('  checkout moves ahead of the installed release — so this is a reading of');
+-        lines.push('  right now, not a property of the repo. Re-run it, do not cite it.');
++        lines.push('  No prose divergence — no rule\'s governed text differs between the carriers.');
++        lines.push('  The condition is transient — it returns whenever the checkout moves ahead of');
++        lines.push('  the installed release — so this is a reading of right now, not a property of');
++        lines.push('  the repo. Re-run it, do not cite it. That holds doubly here: the reading also');
++        lines.push('  depends on WHICH GENERATION of the emitter produced the project tree (a');
++        lines.push('  frontmatter-carrying symlink tree and a frontmatter-less real-file tree');
++        lines.push('  classify the same commit differently), so a number from another checkout is');
++        lines.push('  not comparable to this one.');
+     }
+     return lines.join('\n');
+ }
+diff --git a/src/scripts/report_conformance_funnel.ts b/src/scripts/report_conformance_funnel.ts
+index c532138be613fe08f86b03a124c1d2006d0e3703..e51a130c52b9df2c6c95747769f6df49f305eda6 100644
+--- a/src/scripts/report_conformance_funnel.ts
++++ b/src/scripts/report_conformance_funnel.ts
+@@ -146,15 +146,22 @@ export function render(r: FunnelReport): string {
+         lines.push('    substituted with dist/, which would answer a different question.');
+     } else {
+         lines.push(
+-            `    Divergence: ${d.shared} shared · ${d.bodyDiff.length} body-diff · ` +
++            `    Divergence: ${d.shared} shared · ${d.bodyDiff.length} prose-diff · ` +
++                `${d.frontmatterOnly.length} frontmatter-only · ` +
+                 `${d.provenanceOnly.length} provenance-only · ${d.projectOnly.length} project-only · ` +
+                 `${d.globalOnly.length} global-only` +
+                 (d.manualOnlyGlobal.length > 0 ? ` (${d.manualOnlyGlobal.length} by design, ADR-004 manual)` : ''),
+         );
+         if (d.bodyDiff.length > 0) {
+-            lines.push(`    BODY DIVERGENCE — both copies reach the model: ${d.bodyDiff.join(', ')}`);
+-            lines.push('    Precedence: the project projection is generated from src/ at this commit');
+-            lines.push('    and wins; the global install is a release snapshot.');
++            lines.push(`    PROSE DIVERGENCE — both copies reach the model: ${d.bodyDiff.join(', ')}`);
++            lines.push('    The host resolves nothing: both layers load at launch at the same');
++            lines.push('    priority with no precedence marker, so which text binds is UNDEFINED');
++            lines.push('    (claude-code-rules-dir-contract.md). The project copy is merely the');
++            lines.push('    newer one — recency, not precedence.');
++        }
++        if (d.frontmatterOnly.length > 0) {
++            lines.push(`    ${String(d.frontmatterOnly.length)} pair(s) differ only in frontmatter — prose byte-identical, nothing`);
++            lines.push('    to act on; the host delivers the prose without that block.');
+         }
+         if (d.unreadable.length > 0) {
+             lines.push(`    Unreadable on one side (${d.unreadable.length}) — a broken install, not a disagreement.`);
+diff --git a/tests/scripts/report_carrier_divergence.test.ts b/tests/scripts/report_carrier_divergence.test.ts
+index 190a08e4dfeb02d7661dd0bba20ea865f6a4fe33..9299596bd1c84a33e107540d331867c9c52a7d7a 100644
+--- a/tests/scripts/report_carrier_divergence.test.ts
++++ b/tests/scripts/report_carrier_divergence.test.ts
+@@ -14,7 +14,12 @@ import * as path from 'node:path';
+ 
+ import { afterEach, describe, expect, it } from 'vitest';
+ 
+-import { comparePair, stripOwnershipKeys } from '../../src/scripts/_lib/carrier_divergence.js';
++import {
++    comparePair,
++    proseEqual,
++    stripFrontmatter,
++    stripOwnershipKeys,
++} from '../../src/scripts/_lib/carrier_divergence.js';
+ import { compareCarriers, main, render } from '../../src/scripts/report_carrier_divergence.js';
+ 
+ const tmps: string[] = [];
+@@ -80,6 +85,86 @@ describe('comparePair — the three-way split', () => {
+     });
+ });
+ 
++// ── frontmatter-only, the class that WAS the whole body-diff bucket ─────────
++//
++// Measured 2026-08-10 over the live carriers at a5b2f4cb7: 109 shared rules, 0
++// byte-identical, 109 reported `body-diff` — and 0 of the 109 differing in
++// prose. The project emitter writes frontmatter-less real files (or a
++// `paths:`-only block); `install.ts` writes agent-config's full vocabulary plus
++// its stamp. So the report was manufacturing its one actionable class out of a
++// metadata block the host does not even deliver.
++describe('frontmatter-only is not prose divergence', () => {
++    it('strips a fenced frontmatter block and leaves a fence-less file alone', () => {
++        expect(stripFrontmatter('---\na: 1\n---\n\nbody\n')).toBe('\nbody\n');
++        expect(stripFrontmatter('# no frontmatter\n')).toBe('# no frontmatter\n');
++    });
++
++    it('leaves an unterminated fence untouched rather than swallowing the rule', () => {
++        // A malformed fence must not silently delete a rule's whole text — that
++        // would report every governed obligation as absent.
++        expect(stripFrontmatter('---\na: 1\nbody with no closing fence\n')).toBe(
++            '---\na: 1\nbody with no closing fence\n',
++        );
++    });
++
++    it('calls the real measured shape equal — full frontmatter vs none, same prose', () => {
++        const withFm = '---\ntype: "always"\npackage: event4u/agent-config\n---\n\n# Rule\n\nobey\n';
++        const withoutFm = '# Rule\n\nobey\n';
++        expect(proseEqual(withFm, withoutFm)).toBe(true);
++    });
++
++    it('still calls a real prose difference unequal, frontmatter or not', () => {
++        expect(proseEqual('---\na: 1\n---\n\nNEW\n', '# x\n\nOLD\n')).toBe(false);
++    });
++
++    it('keeps CRLF-vs-LF a prose difference, so it is no softer than the dedup predicate', () => {
++        expect(proseEqual('one\r\ntwo\n', 'one\ntwo\n')).toBe(false);
++    });
++
++    it('does NOT relax comparePair — the dedup predicate stays byte-identity', () => {
++        // The separation is load-bearing: `measure_scope_dedup` asks whether a
++        // byte-identity dedup could skip the pair, and a frontmatter difference
++        // is a real byte difference. Folding `proseEqual` into `comparePair`
++        // would relax the predicate `dedup-reachability-refusal.md` keeps strict.
++        const withFm = '---\ntype: "always"\n---\n\nsame prose\n';
++        expect(comparePair(Buffer.from(withFm), Buffer.from('same prose\n'))).toBe('body-diff');
++        expect(proseEqual(withFm, 'same prose\n')).toBe(true);
++    });
++
++    it('classifies the pair as frontmatter-only and keeps prose divergence separate', () => {
++        const root = tmpdir();
++        const project = writeRules(path.join(root, 'project'), {
++            'meta.md': '# Meta\n\nagreed\n',
++            'drifted.md': '# Drifted\n\nNEW claim\n',
++        });
++        const global = writeRules(path.join(root, 'global'), {
++            'meta.md': '---\ntype: "always"\npackage: event4u/agent-config\n---\n\n# Meta\n\nagreed\n',
++            'drifted.md': '---\ntype: "always"\n---\n\n# Drifted\n\nOLD claim\n',
++        });
++
++        const d = compareCarriers(project, global);
++        expect(d.frontmatterOnly).toEqual(['meta.md']);
++        expect(d.bodyDiff).toEqual(['drifted.md']);
++        expect(d.shared).toBe(2);
++    });
++
++    it('reports the count without naming every pair, and without the prose-divergence block', () => {
++        const root = tmpdir();
++        const d = compareCarriers(
++            writeRules(path.join(root, 'project'), { 'meta.md': '# Meta\n\nagreed\n' }),
++            writeRules(path.join(root, 'global'), {
++                'meta.md': '---\ntype: "always"\n---\n\n# Meta\n\nagreed\n',
++            }),
++        );
++        const text = render(d);
++        expect(text).toMatch(/differ ONLY in frontmatter {9}1/);
++        expect(text).toMatch(/prose byte-identical/);
++        // The whole point: this must not read as the class a reader acts on.
++        expect(text).not.toMatch(/PROSE DIVERGENCE/);
++        expect(text).not.toMatch(/- meta\.md/);
++    });
++});
++
+ describe('compareCarriers — union view, and what it must not confuse', () => {
+     it('names the rule whose two copies differ in body, and only that one', () => {
+         const root = tmpdir();
+@@ -191,18 +276,30 @@ describe('the report is advisory and must stay that way', () => {
+         expect(main(['--bogus'])).toBe(1);
+     });
+ 
+-    it('prints the precedence rule whenever it names a body difference', () => {
++    it('states the host resolves nothing whenever it names a prose difference', () => {
+         const root = tmpdir();
+         const d = compareCarriers(
+             writeRules(path.join(root, 'project'), { 'a.md': 'NEW\n' }),
+             writeRules(path.join(root, 'global'), { 'a.md': 'OLD\n' }),
+         );
+         const text = render(d);
+-        expect(text).toMatch(/PRECEDENCE/);
+-        // Read at the moment it matters. A body difference with no stated
+-        // precedence is the exact condition round 5 recorded and could not fix:
+-        // the agent holds both copies and nothing says which one wins.
+-        expect(text).toMatch(/project projection is generated from src\/ at this commit and wins/);
++        expect(text).toMatch(/PROSE DIVERGENCE/);
++        // Read at the moment it matters. A prose difference with nothing said
++        // about binding is the exact condition round 5 recorded and could not
++        // fix: the agent holds both copies and nothing says which one binds.
++        expect(text).toMatch(/UNDEFINED/);
++        // WHY THIS ASSERTION INVERTED (2026-08-10). It used to pin "the project
++        // projection … and wins", and that claim is false about this host:
++        // `agents/evidence/analysis/claude-code-rules-dir-contract.md` records,
++        // from the host's own documentation and a first-party observation at
++        // 2.1.226, that rules without a `paths` key load at launch with the same
++        // priority as CLAUDE.md and no precedence marker exists between the
++        // layers. The project copy is the NEWER text — recency, not precedence —
++        // and a reader who acted on "wins" would have believed the host resolved
++        // something it does not. A test that pins a false statement about the
++        // host is a test that defends the defect.
++        expect(text).toMatch(/recency/);
++        expect(text).not.toMatch(/and wins/);
+     });
+ 
+     it('says a clean reading is a reading of right now, not a repo property', () => {
+diff --git a/tests/scripts/report_conformance_funnel.test.ts b/tests/scripts/report_conformance_funnel.test.ts
+index 9d1f9a7503c3cb252c6564fe1c541ed0954c33a1..6e4849288848b4002e11fcb3a6bde00cfe41dd90 100644
+--- a/tests/scripts/report_conformance_funnel.test.ts
++++ b/tests/scripts/report_conformance_funnel.test.ts
+@@ -114,8 +114,13 @@ describe('all three axes render against whatever local data exists', () => {
+         // the body-diff pair — both from the sources' own exports.
+         expect(r.delivered.project.present).toBe(true);
+         expect(r.divergence.bodyDiff).toEqual(['shared.md']);
+-        expect(text).toMatch(/1 body-diff/);
+-        expect(text).toMatch(/project projection is generated from src\/ at this commit/);
++        expect(text).toMatch(/1 prose-diff/);
++        // Was `project projection is generated from src/ at this commit`, i.e.
++        // the "newer copy wins" precedence claim. Corrected 2026-08-10: the host
++        // loads both layers at launch at equal priority with no precedence marker
++        // (claude-code-rules-dir-contract.md, host 2.1.226), so binding is
++        // undefined and recency is not precedence.
++        expect(text).toMatch(/UNDEFINED/);
+ 
+         // Activation: the Skill call was counted as usage.
+         expect(r.usage.invocations).toBe(1);
