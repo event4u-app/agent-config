@@ -38,7 +38,7 @@ The headline is how little survived.
 
 | Draft | Verified disposition | Became |
 | --- | --- | --- |
-| dispatch economy | **87 % already shipped** — 27 of 31 steps are `[x]` on `archive/road-to-token-economy-dispatch.md` (PR #1237) or already parked in `later/road-to-token-economy-dispatch-followup.md` | `road-to-cost-parity-3-handoff-envelope.md` (4 surviving steps) |
+| dispatch economy | **87 % already shipped** — 27 of 31 steps are `[x]` on `archive/road-to-token-economy-dispatch.md` (PR #1237) or already parked in `later/road-to-token-economy-dispatch-followup.md` | `archive/road-to-cost-parity-3-handoff-envelope.md` (4 surviving steps — **done**) |
 | cost-quality parity | **Premise refuted.** It sequenced four "open" roadmaps: three are archived and two of the three names never existed. Its WIP cap, metric-expiry mechanic and release dimension are each separately blocked (below) | this file — target table + ordering only |
 | estate maintenance | **~40 % already covered or done, ~25 % collides with maintainer-blocked work.** Its only hard prerequisite is `never-true` *and* relitigates a standing refusal | `later/road-to-cost-parity-1-rule-payload-diet.md` (the unowned residue, parked) |
 | state-aware dispatch | **Heavy overlap.** Its central premise ("the ladder is shape-only") is false, and 3 of its 5 components are lock-conflicted | `later/road-to-cost-parity-2-state-aware-dispatch.md` (the resolver only, parked) |
@@ -300,6 +300,26 @@ listed here rather than in a sibling because none belongs to a programme.
   part 1 must consume their result, not open a third bench.
 - **Resolved when:** one of the two benches is authorized and run, or the
   question is recorded as a null.
+
+### blocker: background-continuation-probe
+
+- **Status:** open
+- **Owner:** maintainer
+- **Blocks:** any continuation-offload step (none planned in this program)
+- **Inherited from:** `archive/road-to-cost-parity-3-handoff-envelope.md`,
+  which closed with this blocker still open. Carried here rather than
+  archived with it: part 3 blocked no step on it, so it could not hold that
+  roadmap open — but archiving is the only moment the question could have
+  silently left the tracked surface, and an open question that no artefact
+  names again is one nobody will ever answer.
+- **What to do:** past the recycle threshold, the flow MAY hand remaining
+  work to a fresh background session seeded with the envelope instead of
+  asking the user to clear in place. Whether a background spawn reliably
+  receives and acts on a seeded envelope is host semantics and unverified.
+  Run a bounded two-arm probe on a live host before any step is written.
+- **Resolved when:** a probe note records the observed seeding behaviour per
+  host, and either a step is added citing it or the idea is recorded as a
+  null.
 
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-08-10 | reviewer: claude/host -->

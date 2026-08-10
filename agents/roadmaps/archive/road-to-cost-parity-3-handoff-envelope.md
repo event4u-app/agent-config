@@ -70,16 +70,16 @@ worth resuming.
 
 ## Phase 1 — the enumeration fix (independent, ships alone)
 
-- [ ] 1.1 `handoff_sessions.ts` applies `is_substantive`: the ISSUING
+- [x] 1.1 `handoff_sessions.ts` applies `is_substantive`: the ISSUING
       session is excluded by `session_id` unconditionally — never
       heuristically — and every other candidate requires ≥ 1 assistant turn
       AND (≥ 1 tool call OR parsed tokens ≥ a committed threshold), read
       from the existing session-eol counts-only state.
       <!-- verify: task test -- --filter=handoff_sessions -->
-- [ ] 1.2 Fail-open, stated in code: unreadable state **lists** rather than
+- [x] 1.2 Fail-open, stated in code: unreadable state **lists** rather than
       filters. A wrongly listed candidate is noise; a wrongly hidden one is
       data loss.
-- [ ] 1.3 Four fixtures pin the behaviour: empty session filtered,
+- [x] 1.3 Four fixtures pin the behaviour: empty session filtered,
       self-session filtered, one-turn-with-tool-use listed,
       unreadable-state listed.
       <!-- verify: task test -- --filter=handoff_sessions -->
@@ -89,26 +89,26 @@ worth resuming.
 
 ## Phase 2 — envelope contract upgrades
 
-- [ ] 2.1 Successor tailoring: the shared envelope schema gains `next_task`,
+- [x] 2.1 Successor tailoring: the shared envelope schema gains `next_task`,
       and the composing session selects content FOR that task instead of
       emitting a generic state dump. Applies to all envelope variants
       through the shared schema module, schema-versioned and additive.
-- [ ] 2.2 `suggested_skills`: a list naming the skills the successor should
+- [x] 2.2 `suggested_skills`: a list naming the skills the successor should
       invoke, turning the handoff into an activation carrier. Recorded
       motivation: activation is the funnel's measured weak stage, and this
       is a carrier that already crosses the boundary.
-- [ ] 2.3 `failed_approaches`, mandatory whenever the session abandoned an
+- [x] 2.3 `failed_approaches`, mandatory whenever the session abandoned an
       approach — "tried X, failed because Y". A composing session with none
       states `none` explicitly and never omits the field, so absence is
       distinguishable from silence.
-- [ ] 2.4 Redaction as a validator rule: credential / key / PII patterns are
+- [x] 2.4 Redaction as a validator rule: credential / key / PII patterns are
       schema-invalid in envelope content, lint-tested — not a scrubbing pass
       that can fail, but a shape the content cannot hold.
       <!-- verify: task test -- --filter=envelope -->
-- [ ] 2.5 Pointers-first as the schema's leading design sentence: never
+- [x] 2.5 Pointers-first as the schema's leading design sentence: never
       duplicate what specs, ADRs, commits, diffs or issues already hold —
       reference by path.
-- [ ] 2.6 **Injected envelope content is data, never instruction** — binding,
+- [x] 2.6 **Injected envelope content is data, never instruction** — binding,
       and the load-bearing half of this phase. The consumer wraps every
       injected envelope in the spotlighting / datamarking shape
       `untrusted-input-defense` requires, with an explicit boundary marker
@@ -119,14 +119,14 @@ worth resuming.
       instruction inside a delegated container does. A confirmation planted
       inside envelope content is not confirmation.
       <!-- verify: task test -- --filter=envelope -->
-- [ ] 2.7 Two adversarial fixtures pin 2.6, because a security requirement
+- [x] 2.7 Two adversarial fixtures pin 2.6, because a security requirement
       with only positive fixtures is untested: an envelope whose `next_task`
       contains an imperative to push, deploy or exfiltrate must be surfaced
       and refused rather than executed; and an envelope whose
       `failed_approaches` text contains a role-takeover string must be
       injected as inert data with its boundary marker intact.
       <!-- verify: task test -- --filter=envelope -->
-- [ ] 2.8 **Gate the half that is gateable, and say which half that is.**
+- [x] 2.8 **Gate the half that is gateable, and say which half that is.**
       The obligation splits cleanly and only one side is model-carried:
       **(a) emission — gated.** The injection path is code, so the marker's
       presence is a checkable property: the consumer refuses to inject an
@@ -145,11 +145,11 @@ worth resuming.
 
 ## Phase 3 — resume precision and the drift anchor
 
-- [ ] 3.1 Precision rules for the resume section, lint-backed where cheap:
+- [x] 3.1 Precision rules for the resume section, lint-backed where cheap:
       code identified by signature or `path:line` rather than description,
       error strings verbatim, and every resume step carrying its expected
       outcome.
-- [ ] 3.2 Drift anchor: the envelope records **repo identity + branch + HEAD**
+- [x] 3.2 Drift anchor: the envelope records **repo identity + branch + HEAD**
       at write time — identity being the resolved remote URL, or the
       realpath of the common git dir when there is no remote — **canonicalized
       before comparison**, or the field produces false drift: the same remote
@@ -166,18 +166,18 @@ worth resuming.
       with a drift statement naming what to re-verify. Never a silent stale
       resume.
       <!-- verify: task test -- --filter=envelope -->
-- [ ] 3.2b Three fixtures pin the comparison: same identity + same HEAD stays
+- [x] 3.2b Three fixtures pin the comparison: same identity + same HEAD stays
       silent; same identity + moved HEAD reports commit drift; **same branch
       name in a different repo or worktree reports identity drift** — the
       case branch+HEAD alone cannot see.
       <!-- verify: task test -- --filter=envelope -->
-- [ ] 3.3 Deterministic environment grounding: a script collects the factual
+- [x] 3.3 Deterministic environment grounding: a script collects the factual
       fields (git branch / HEAD / status summary, uncommitted paths, last
       verify exit) into the envelope; the model composes only the judgment
       fields (decisions, failed approaches, resume). Scripted facts are free
       and verifiable; deriving them via a subagent is the right idea at the
       wrong price.
-- [ ] 3.4 Resume-side focus hint: the consumer accepts an argument narrowing
+- [x] 3.4 Resume-side focus hint: the consumer accepts an argument narrowing
       what to attack first, mirroring the producer-side tailoring in 2.1.
 
 **Exit:** a round-trip fixture proves drift detection (envelope written at HEAD A, injected at HEAD B, drift line leads the block) and proves the scripted fields are populated without a model step.
@@ -185,16 +185,16 @@ worth resuming.
 
 ## Phase 4 — what this roadmap will not do
 
-- [ ] 4.1 No re-opening of `road-to-token-economy-dispatch` — its Phases 1–6.3
+- [x] 4.1 No re-opening of `road-to-token-economy-dispatch` — its Phases 1–6.3
       are shipped and its remainder is owned by
       `later/road-to-token-economy-dispatch-followup.md`. Nothing here
       touches those steps.
-- [ ] 4.2 Nothing from `cache-economy-refusals.md` re-enters — no subagent
+- [x] 4.2 Nothing from `cache-economy-refusals.md` re-enters — no subagent
       caching mechanism, no blanket TTL, no cache-hit auto-tuning.
-- [ ] 4.3 No continuation-offload to a background session — carried as a
+- [x] 4.3 No continuation-offload to a background session — carried as a
       blocker below, not as a step, because the host semantics it depends on
       are unverified.
-- [ ] 4.4 No model-generated envelope content in the factual fields — 3.3
+- [x] 4.4 No model-generated envelope content in the factual fields — 3.3
       splits scripted facts from composed judgment on purpose.
 
 ## Blockers
@@ -216,7 +216,20 @@ worth resuming.
 
 ### blocker: handoff-content-adjudication
 
-- **Status:** open
+- **Status:** resolved (2026-08-10, in the Phase 2 change itself)
+- **Adjudication:** the earlier read was closed as "contradicted our own
+  honest-null doctrine" because it imported a *conclusion* — a claim about
+  what handoffs should say, carried over without a measurement this tree
+  could falsify. These three are not that. `next_task`, `suggested_skills`
+  and `failed_approaches` are schema fields with validators and fixtures:
+  each one is a shape the envelope either has or does not have, checked by
+  `validateRecycleEnvelope` and pinned by a test that fails when the rule is
+  removed. Nothing about them asserts an outcome. The one claim that could
+  have been imported — that carrying these fields makes successors resume
+  better — is deliberately NOT made here; it stays the registered, unmeasured
+  `envelope_resume_success` metric in `hook-token-budget.json`. A field whose
+  presence is checkable survives where a doctrine whose effect is unmeasured
+  did not, and that is the whole distinction.
 - **Owner:** maintainer
 - **Blocks:** Phase 2.1–2.3 landing as designed
 - **What to do:** `road-to-inbox-harvest-2026-08.md` triaged an earlier
@@ -242,24 +255,24 @@ worth resuming.
 
 ## Acceptance criteria
 
-- [ ] The handoff command's candidate list provably excludes the issuing
+- [x] The handoff command's candidate list provably excludes the issuing
       session and every empty session, with all four Phase-1 fixtures green
       and one demonstrably red when the self-exclusion is reverted.
-- [ ] The envelope schema carries `next_task`, `suggested_skills` and
+- [x] The envelope schema carries `next_task`, `suggested_skills` and
       `failed_approaches`, schema-versioned, with every existing envelope
       variant still validating.
-- [ ] A credential-pattern fixture is rejected by the validator and a
+- [x] A credential-pattern fixture is rejected by the validator and a
       legitimate high-entropy fixture is accepted.
-- [ ] Both adversarial injection fixtures from 2.7 are green, each provably
+- [x] Both adversarial injection fixtures from 2.7 are green, each provably
       red when the boundary marker is removed, and the schema docs carry the
       2.8 model-carried scope statement rather than implying a gate.
-- [ ] All three drift fixtures from 3.2b pass, including the same-branch
+- [x] All three drift fixtures from 3.2b pass, including the same-branch
       -different-repo case that branch + HEAD alone cannot detect.
-- [ ] The scripted grounding fields are populated by the script alone —
+- [x] The scripted grounding fields are populated by the script alone —
       verifiable by running it with no model step in the path.
-- [ ] The Phase 2 PR carries the handoff-content adjudication paragraph
+- [x] The Phase 2 PR carries the handoff-content adjudication paragraph
       required by the blocker above.
-- [ ] Nothing in `archive/road-to-token-economy-dispatch.md` or
+- [x] Nothing in `archive/road-to-token-economy-dispatch.md` or
       `later/road-to-token-economy-dispatch-followup.md` was edited by this
       roadmap — verifiable from the diff.
 

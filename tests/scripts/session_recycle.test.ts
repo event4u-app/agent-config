@@ -25,7 +25,10 @@ import {
     RECYCLE_ENVELOPE_MAX_BYTES,
     RECYCLE_ENVELOPE_REL,
 } from '../../src/scripts/_lib/recycle_envelope_paths.js';
-import { validateRecycleEnvelope } from '../../src/scripts/_lib/subagent_capsule.js';
+import {
+    CAPSULE_SCHEMA_VERSION,
+    validateRecycleEnvelope,
+} from '../../src/scripts/_lib/subagent_capsule.js';
 
 function scratch(): string {
     return fs.mkdtempSync(path.join(os.tmpdir(), 'session-recycle-'));
@@ -38,6 +41,7 @@ function minimalEnvelope(): Record<string, unknown> {
         acceptance_criteria: ['all boxes flipped', 'CI green'],
         remaining: ['phase 3'],
         not_carried_forward: ['diff bodies — re-read from the branch'],
+        failed_approaches: ['tried a shallow scan — it missed the sidechain records'],
     };
 }
 
@@ -54,7 +58,7 @@ describe('runSessionRecycle', () => {
         const written = JSON.parse(
             fs.readFileSync(path.join(cwd, RECYCLE_ENVELOPE_REL), 'utf-8'),
         ) as Record<string, unknown>;
-        expect(written['capsule_version']).toBe(2);
+        expect(written['capsule_version']).toBe(CAPSULE_SCHEMA_VERSION);
         expect(written['variant']).toBe('main_session');
         expect(written['written_at']).toBe('2026-08-10T12:00:00.000Z');
         expect(typeof written['workspace']).toBe('string');

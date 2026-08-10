@@ -28,7 +28,6 @@
  * reduces to a non-blocking warn on claude. `AGENT_CONFIG_REPLAY=1` → no-op.
  */
 
-import * as crypto from 'node:crypto';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import process from 'node:process';
@@ -38,6 +37,8 @@ import recycleThresholdConfig from '../../config/recycle-threshold-budget.json';
 
 import {
     emptyCounters,
+    eolSessionKey,
+    eolStateFile,
     readNewCompleteLines,
     scanEolSlice,
     type EolCounters,
@@ -73,20 +74,19 @@ function str(value: JsonValue | undefined): string {
     return typeof value === 'string' ? value : '';
 }
 
-function stateDir(workspaceRoot: string): string {
-    return path.join(workspaceRoot, 'agents', 'runtime', 'state', 'session-eol');
-}
+/** Re-exported so existing importers keep one path; derivation lives in the lib. */
+export const stateFile = eolStateFile;
 
-export function stateFile(workspaceRoot: string, sessionKey: string): string {
-    return path.join(stateDir(workspaceRoot), `${sessionKey}.json`);
-}
-
-/** Same derivation as `end_review_nudge_hook.deriveSessionKey` — hashed, never raw. */
+/**
+ * Same derivation as `end_review_nudge_hook.deriveSessionKey` — hashed, never
+ * raw. The hashing itself is `eolSessionKey`, shared with the readers so a
+ * reader can never key a state file differently than the writer wrote it.
+ */
 export function deriveSessionKey(envelope: JsonObject, payload: JsonObject): string {
-    const raw =
+    return eolSessionKey(
         str(envelope['session_id'] as JsonValue | undefined) ||
-        str((payload['transcript_path'] ?? payload['transcriptPath']) as JsonValue | undefined);
-    return crypto.createHash('sha256').update(raw || 'unknown-session').digest('hex');
+            str((payload['transcript_path'] ?? payload['transcriptPath']) as JsonValue | undefined),
+    );
 }
 
 /** Load prior per-session state; any read/shape error reads as "fresh session". */
