@@ -72,7 +72,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
-import { atomic_write_json } from "./hooks/state_io.js";
+import { atomic_write_json, atomic_write_text, is_replay_mode } from "./hooks/state_io.js";
 import { readHookStdin } from "./hooks/hook_stdin.js";
 import { humanAuthoredLead, isSyntheticPrompt } from "./_lib/prompt_shape.js";
 
@@ -92,7 +92,21 @@ export const STATE_FILE = path.join("agents", "state", "language-mirror.json");
  * re-emit that follows it (round-5 § 6.1). Its existence — not a counter — is
  * what bounds the re-injection to ONE per compaction event.
  */
-export const PIN_LOST_MARKER = path.join("agents", "state", "language-mirror.pin-lost");
+export const PIN_LOST_DIR = path.join("agents", "state", "language-mirror.pin-lost");
+
+/**
+ * Per-SESSION marker path. R2 finding 10: a single shared marker made the
+ * mechanism cross-talk between concurrent sessions — the normal shape for this
+ * repo's worktree workflow. Session B's next `post_tool_use` consumed the marker
+ * session A's compaction had set, so A never got the one re-emit that is the
+ * whole point of the mechanism, and B got a pin notice derived from whichever
+ * session last wrote the shared state. An empty id degrades to a literal
+ * bucket rather than colliding silently.
+ */
+export function pinLostMarker(session_id: string): string {
+  const safe = (session_id || "unknown-session").replace(/[^A-Za-z0-9._-]/g, "_");
+  return path.join(PIN_LOST_DIR, `${safe}.marker`);
+}
 
 type JsonValue = string | number | boolean | null | JsonValue[] | { [k: string]: JsonValue };
 type JsonObject = { [k: string]: JsonValue };
@@ -387,29 +401,41 @@ function _extractPrompt(payload: JsonObject): string {
   return "";
 }
 
-/** Record that compaction is about to drop the context copy of the pin. */
-export function _setPinLost(consumer_root: string): void {
+/** The envelope's session id, or a literal bucket when the host sends none. */
+function _sessionId(envelope: JsonObject): string {
+  const v = envelope["session_id"];
+  return typeof v === "string" && v.trim() !== "" ? v : "unknown-session";
+}
+
+/**
+ * Record that compaction is about to drop the context copy of the pin.
+ *
+ * R2 finding 14: this used to write with a raw `mkdirSync` + `writeFileSync`,
+ * bypassing both conventions the surrounding code follows — the module's own
+ * atomic writer, and the `is_replay_mode()` guard that keeps a replayed event
+ * from mutating live state. A replayed compaction wrote the marker for real.
+ */
+export function _setPinLost(consumer_root: string, session_id: string): void {
+  if (is_replay_mode()) return;
   try {
-    const target = path.join(consumer_root, PIN_LOST_MARKER);
-    fs.mkdirSync(path.dirname(target), { recursive: true });
-    fs.writeFileSync(target, new Date().toISOString());
+    atomic_write_text(path.join(consumer_root, pinLostMarker(session_id)), new Date().toISOString());
   } catch {
     // Observability only — a failed marker write costs one un-restored pin,
     // never a broken turn.
   }
 }
 
-export function _pinLost(consumer_root: string): boolean {
+export function _pinLost(consumer_root: string, session_id: string): boolean {
   try {
-    return fs.existsSync(path.join(consumer_root, PIN_LOST_MARKER));
+    return fs.existsSync(path.join(consumer_root, pinLostMarker(session_id)));
   } catch {
     return false;
   }
 }
 
-function _clearPinLost(consumer_root: string): void {
+function _clearPinLost(consumer_root: string, session_id: string): void {
   try {
-    fs.rmSync(path.join(consumer_root, PIN_LOST_MARKER), { force: true });
+    fs.rmSync(path.join(consumer_root, pinLostMarker(session_id)), { force: true });
   } catch {
     // If it cannot be cleared the next tool call re-emits once more. One
     // duplicate line is the failure mode; a loop is not, because the marker
@@ -422,8 +448,8 @@ function _clearPinLost(consumer_root: string): void {
  * and only when a pin actually exists — an absent or undetermined pin is not
  * an obligation, and inventing one here would be worse than the gap.
  */
-export function _reEmitAfterCompaction(consumer_root: string): number {
-  if (!_pinLost(consumer_root)) {
+export function _reEmitAfterCompaction(consumer_root: string, session_id: string): number {
+  if (!_pinLost(consumer_root, session_id)) {
     return EXIT_ALLOW;
   }
   const previous = _loadState(path.join(consumer_root, STATE_FILE));
@@ -431,7 +457,7 @@ export function _reEmitAfterCompaction(consumer_root: string): number {
   const source: PinSource = previous.source === "system-locale" ? "system-locale" : "prompt";
   // Clear FIRST: if the write below throws, the marker must not survive to
   // re-fire on every subsequent tool call — that is the shape § 6.2 refuses.
-  _clearPinLost(consumer_root);
+  _clearPinLost(consumer_root, session_id);
   if (language !== "de" && language !== "en") {
     return EXIT_ALLOW;
   }
@@ -479,11 +505,11 @@ export function run(
   // and this marker is the entire difference between the two.
   const event = typeof envelope["event"] === "string" ? envelope["event"] : "";
   if (event === "pre_compact") {
-    _setPinLost(options.consumer_root);
+    _setPinLost(options.consumer_root, _sessionId(envelope));
     return EXIT_ALLOW;
   }
   if (event === "post_tool_use") {
-    return _reEmitAfterCompaction(options.consumer_root);
+    return _reEmitAfterCompaction(options.consumer_root, _sessionId(envelope));
   }
 
   const prompt = _extractPrompt(payload);

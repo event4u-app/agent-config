@@ -404,6 +404,15 @@ export function readTranscriptTail(
     if (!transcriptPath || !isSafeTranscriptPath(transcriptPath, opts)) return empty;
     let lines: string[];
     try {
+        // R2 finding 12: `maxBytes` was accepted in the options type and never
+        // used, so the declared cap was decoration. It is enforced here as well
+        // as inside `isSafeTranscriptPath`, because this is the read it bounds.
+        // The whole file still has to be walked — the turn ordinal is a count
+        // over all entries, not something a tail can answer — so the cap is the
+        // guard, not an optimisation.
+        if (opts.maxBytes !== undefined && fs.statSync(transcriptPath).size > opts.maxBytes) {
+            return empty;
+        }
         lines = fs.readFileSync(transcriptPath, 'utf-8').split('\n');
     } catch {
         return empty;
