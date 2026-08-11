@@ -22,9 +22,12 @@ on:
   workflow_dispatch: {}
 
 # Superseded PR pushes cancel; the weekly canary and manual dispatches do not —
-# a cancelled canary run is a lost data point, not a re-runnable check.
+# a cancelled canary run is a lost data point, not a re-runnable check. That is
+# the group KEY doing the work: non-PR runs are keyed by `github.run_id`, so
+# each is a group of one. `cancel-in-progress: false` alone would not save a
+# run still pending in a shared group.
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
+  group: ${{ github.workflow }}-${{ github.event_name == 'pull_request' && github.ref || github.run_id }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 permissions:

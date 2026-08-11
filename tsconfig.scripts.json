@@ -3,6 +3,11 @@
   "compilerOptions": {
     "noEmit": true,
     "rootDir": ".",
+    // `incremental` lives ONLY on the configs that are intrinsically noEmit.
+    // Putting it on the base config would put it on `build:cli`
+    // (`tsc -p tsconfig.json`), where a surviving buildinfo plus a deleted
+    // dist/ makes the rebuild a silent no-op.
+    "incremental": true,
     "tsBuildInfoFile": ".tscache/scripts.tsbuildinfo"
   },
   "include": [

@@ -19,10 +19,13 @@ on:
   workflow_dispatch:
 
 # No `pull_request` trigger, so nothing here is ever cancelled: the daily health
-# run is the only observation for that day. The group serialises an overlapping
-# manual dispatch instead of racing it.
+# run is the only observation for that day, and `github.run_id` puts each run in
+# a group of one so neither a queued nor a running observation can be evicted.
+# A shared workflow+ref key would let a manual dispatch drop the day's pending
+# scheduled run — GitHub evicts a *pending* group member whatever
+# `cancel-in-progress` is set to.
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
+  group: ${{ github.workflow }}-${{ github.event_name == 'pull_request' && github.ref || github.run_id }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 permissions:

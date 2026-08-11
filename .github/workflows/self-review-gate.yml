@@ -20,9 +20,12 @@ on:
   workflow_dispatch: {}
 
 # Two PR jobs stack on every push to a branch; superseded runs cancel. A
-# manually dispatched run is never cancelled — someone is waiting on it.
+# manually dispatched run is never cancelled — someone is waiting on it, and
+# that is enforced by the group KEY (`github.run_id` puts each dispatch in a
+# group of one), not by `cancel-in-progress`, which does not protect a run
+# still sitting in the queue.
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
+  group: ${{ github.workflow }}-${{ github.event_name == 'pull_request' && github.ref || github.run_id }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 permissions:

@@ -101,7 +101,13 @@ outright, so neither describes a job that runs today.
   `cmd_export`. Moved to its own path-filtered workflow in Phase C
   Step 1 — **also since removed**; there is no Windows leg in CI today.
 
-## Expected savings (post-optimisation)
+## Expected savings (post-optimisation) — historical, as projected 2026-05-26
+
+Kept for the trail, and superseded by the re-measured table above. Two of the
+savings it prices — removing the Windows leg and the 3-version Python sweep —
+were later overtaken: both sibling workflows were removed outright, so the
+scenario rows mentioning Windows or Python describe a pipeline that no longer
+exists. The figures below were never re-derived after that.
 
 The Phase A guards on `tests.yml` + `smoke-public-install.yml` cut
 release-PR critical-path from `218 s + 413 s` (serial worst case ≈ 11
@@ -164,11 +170,20 @@ which is not mechanically decidable.
 
 The criterion for a measurement-only change is therefore:
 
-> **The refreshed table names every job that exists and none that does
-> not.**
+> **Every job named in the table resolves to a live job in
+> `.github/workflows/`.**
 
-Decidable in one pass: every job key in the table resolves to a live job in
-`.github/workflows/`, and every job that runs on a PR appears in the table.
+Decidable in one pass, and it is the direction that actually failed: the
+three rows removed on 2026-08-11 had named a job key and two workflow files
+that no longer existed, for an unknown number of quarters.
+
+The converse — every PR-triggered job appears in the table — is **not** the
+criterion, because it is not true and stating it would fail every future
+change on arrival. 19 workflows carry a `pull_request:` trigger; the table
+covers the wall-clock-dominant ones plus the required check. Widening it to
+all 19 is a separate decision about what this contract is for, not a
+measurement-only edit.
+
 A change that alters a job, a matrix dimension, a trigger surface or the
 required-check set is *not* measurement-only and does not get this
 criterion.

@@ -92,7 +92,7 @@ spawning files makes one shard several times slower than its siblings.
 script's exported `main(argv)`:
 
 ```ts
-import { runInProc, runInProcAsync, ProcessExit } from '../_lib/run_in_process';
+import { runInProc, runInProcAsync, ProcessExit } from '../_lib/run_in_process.js';
 
 const res = runInProc(main, ['--json'], { cwd: tmp, env: { CI: '1' } });
 expect(res.status).toBe(0);

@@ -12,8 +12,6 @@
         "esModuleInterop": true,
         "resolveJsonModule": true,
         "skipLibCheck": true,
-        "incremental": true,
-        "tsBuildInfoFile": ".tscache/root.tsbuildinfo",
         "declaration": false,
         "sourceMap": true,
         "baseUrl": "./src",
