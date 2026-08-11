@@ -93,6 +93,16 @@ export function evaluateQuorum(
  * full-attendance one. Advisory render and telemetry only: no gate reads it,
  * and nothing downstream may branch on it without its own decision record.
  *
+ * ONE such record now exists, and it is deliberately narrow: ADR-224
+ * (`docs/decisions/ADR-224-gate-scoped-solo-attendance-floor.md`) authorizes a
+ * `min_present: 2` floor to branch on this predicate **for gate-class passes
+ * only**, decided against a measured 12.5 % solo-conclusion rate. Nothing has
+ * landed yet — no caller branches on it today — so the sentence above still
+ * describes the code. It is stated here so a reader finds the authorization
+ * instead of re-deriving the prohibition, and so the next branch is visibly a
+ * separate argument: the exception is gate-class passes, not solo status
+ * generally.
+ *
  * `total` is deliberately NOT consulted. A council configured with a single
  * member concludes solo by construction, and that is still a conclusion
  * reached on one voice — collapsing it into "not solo" would hide exactly

@@ -57,6 +57,38 @@ States: **active** · **dormant** · **sunset**. Slots beside the
   name the successor or the reason; no tombstone files.
 - A `last_reviewed:` / human-review field is **deferred until a second maintainer**
   exists (then human review, not commit activity, is the signal worth recording).
+  **If that condition ever fires, a sidecar is the precedent, not frontmatter.** A
+  review-date field spread across 405 artefacts is diff noise on every unrelated
+  edit, and the only review-metadata triple the tree actually ships
+  (`registered_at` / `owner` / `review_by` in
+  [`recycle-threshold-budget.json`](../src/config/recycle-threshold-budget.json))
+  is sidecar-shaped on a single config file.
+- **The signal has an instrument.** `build_discovery_manifest.ts` emits
+  `dist/discovery/dormancy-report.md` alongside the deprecation, trust and orphan
+  reports, from one bounded `git log --since` walk. It is report-only and never a
+  gate: a finished artefact and an abandoned one are indistinguishable from commit
+  dates, so the false-positive class is not empty. Where history is shorter than
+  the window — a shallow clone, which is the CI default — the report **names the
+  missing signal and publishes no list**, because an empty list would read as
+  "nothing is dormant", a different and false claim.
+
+### Two lifecycle vocabularies, and they are not one field
+
+`lifecycle:` and the skill-only `status:` are distinct fields with distinct
+enums, and reading either as the other is a mistake the schemas permit:
+
+| Field | Enum | Declared by |
+|---|---|---|
+| `lifecycle:` | `active · deprecated · experimental · archived` | 15 of 289 skills |
+| `status:` | `active · deprecated · superseded` | 66 of 289 skills |
+
+`lifecycle` carries `"default": "active"` (`skill.schema.json`), so **absent
+reads as active** — thin declared coverage is not evidence of an undeclared
+estate. Neither field is a runtime lifecycle: both are static declarations, and
+before the dormancy report above nothing computed dormancy at all. Reconciling
+the two enums is a separate decision and is not taken here; this entry exists so
+they stop being read as one field. Counts re-derived 2026-08-11 against
+`src/skills/` (289 skills, 116 rules).
 
 ## Deferred governance (council-decided, not dropped)
 
