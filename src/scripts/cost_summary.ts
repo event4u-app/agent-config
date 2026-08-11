@@ -18,6 +18,8 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
+import { CACHE_READ_MULTIPLIER, CACHE_WRITE_MULTIPLIER_5M } from './ai_council/pricing.js';
+
 const _HERE = fileURLToPath(import.meta.url);
 // src/scripts/cost_summary.ts → parents[2] is the repo root (mirrors
 // `Path(__file__).resolve().parent.parent.parent` in the .py).
@@ -107,12 +109,53 @@ function _zero_model(): ModelBucket {
     };
 }
 
+/**
+ * What the prompt cache bought, in INPUT-TOKEN EQUIVALENTS — not dollars.
+ *
+ * A cached read bills at `CACHE_READ_MULTIPLIER` of the input rate, so each
+ * read token saved `1 - multiplier` of one. A cache write bills at a premium,
+ * so each written token cost an extra `multiplier - 1`. Netting the two is the
+ * only honest single number here.
+ *
+ * Deliberately NOT priced in USD: the summary aggregates across models with
+ * different input rates, and `totals` carries no per-model token split to
+ * apply them to — a dollar figure would have to pick one rate and would be
+ * wrong for every other model in the row.
+ *
+ * The write premium uses the 5-minute multiplier. Rows carry no TTL split, and
+ * 5m is both Anthropic's default and the assumption `cost/track.mjs` already
+ * makes for unaccounted writes — so the two cost paths stay consistent rather
+ * than disagreeing quietly. A 1h-heavy workload therefore reads as slightly
+ * OPTIMISTIC, which is stated in the contract.
+ */
+function _cacheSavings(readTokens: number, writeTokens: number): number {
+    const saved = readTokens * (1 - CACHE_READ_MULTIPLIER);
+    const premium = writeTokens * (CACHE_WRITE_MULTIPLIER_5M - 1);
+    return Math.round(saved - premium);
+}
+
+/** UTC calendar date (`YYYY-MM-DD`) of a row, or `'unknown'`. */
+function _rowDate(row: Row): string {
+    // `startedAt` is the row's own first-message timestamp (track.mjs); the
+    // snake_case spelling is accepted for the same reason `session_id` is.
+    const raw = row['startedAt'] ?? row['started_at'];
+    if (typeof raw !== 'string' || !raw) {
+        return 'unknown';
+    }
+    const parsed = new Date(raw);
+    if (Number.isNaN(parsed.getTime())) {
+        return 'unknown';
+    }
+    return parsed.toISOString().slice(0, 10);
+}
+
 /** Aggregate rows into the cost-summary structure (PyFloat-aware output). */
 export function aggregate(rows: Row[]): Json {
     // Insertion-ordered maps to mirror Python's dict ordering + sorted().
     const by_sess = new Map<string, KvBucket>();
     const by_conv = new Map<string, KvBucket>();
     const by_model = new Map<string, ModelBucket>();
+    const by_date = new Map<string, KvBucket>();
     const totals = _zero_kv();
 
     for (const row of rows) {
@@ -128,7 +171,8 @@ export function aggregate(rows: Row[]): Json {
 
         const sessBucket = _getOr(by_sess, sid, _zero_kv);
         const convBucket = _getOr(by_conv, cid, _zero_kv);
-        for (const bucket of [sessBucket, convBucket, totals]) {
+        const dateBucket = _getOr(by_date, _rowDate(row), _zero_kv);
+        for (const bucket of [sessBucket, convBucket, dateBucket, totals]) {
             bucket.sessions += 1;
             bucket.total_cost_usd += cost;
             bucket.input_tokens += itok;
@@ -159,6 +203,11 @@ export function aggregate(rows: Row[]): Json {
             telegraph_delta_tokens: totals.telegraph_delta_tokens,
             telegraph_multiplier_version: MULTIPLIER_VERSION,
             telegraph_multiplier_active: MULTIPLIER_ACTIVE,
+            // Additive per the schema's own rule; token-equivalents, not USD.
+            cache_savings_input_token_equivalents: _cacheSavings(
+                totals.cache_read_input_tokens,
+                totals.cache_creation_input_tokens,
+            ),
         },
         by_session: _sortedEntries(by_sess).map(([k, v]) => ({
             key: k,
@@ -171,6 +220,20 @@ export function aggregate(rows: Row[]): Json {
             telegraph_delta_tokens: v.telegraph_delta_tokens,
         })),
         by_conversation: _sortedEntries(by_conv).map(([k, v]) => ({
+            key: k,
+            sessions: v.sessions,
+            total_cost_usd: new PyFloat(v.total_cost_usd),
+            input_tokens: v.input_tokens,
+            output_tokens: v.output_tokens,
+            cache_read_input_tokens: v.cache_read_input_tokens,
+            cache_creation_input_tokens: v.cache_creation_input_tokens,
+            telegraph_delta_tokens: v.telegraph_delta_tokens,
+        })),
+        // Ordered by date ascending — `_sortedEntries` is codepoint order, and
+        // ISO `YYYY-MM-DD` sorts chronologically under it. `'unknown'` sorts
+        // last (`u` > any digit), so a row with no timestamp never displaces a
+        // real day.
+        by_date: _sortedEntries(by_date).map(([k, v]) => ({
             key: k,
             sessions: v.sessions,
             total_cost_usd: new PyFloat(v.total_cost_usd),

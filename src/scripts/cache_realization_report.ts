@@ -88,6 +88,25 @@ export interface ColdStartStats {
     first_call_cache_read_share: number;
     /** Σ(first-call cache_creation_input_tokens) / Σ(all subagent cache_creation_input_tokens) — the C-1 metric. */
     cold_start_share_of_write_volume: number;
+    /**
+     * The write-share SIGNATURE across ALL subagent records (not just first
+     * calls): how the billable input splits between cache writes, cache reads,
+     * and uncached input.
+     *
+     * The three shares are over the same denominator and sum to 1 (up to
+     * float error) whenever any billable input exists, which is what makes it
+     * a signature rather than three unrelated ratios — a workload that is
+     * mostly `write` is paying the cache premium without collecting the read
+     * discount, and that is invisible in `cold_start_share_of_write_volume`,
+     * which only says how much of the writing happened on a first call.
+     *
+     * All three are 0 when there is no billable input at all. That is the
+     * empty-corpus reading, NOT "a perfectly uncached workload" — read it
+     * beside `legs`.
+     */
+    write_share_of_billable: number;
+    read_share_of_billable: number;
+    uncached_share_of_billable: number;
 }
 
 /**
@@ -132,12 +151,22 @@ export function computeColdStarts(records: readonly TranscriptRecord[]): ColdSta
     const sumFirstCallBillable = firstCalls.reduce((s, r) => s + billableInputTokens(r.usage), 0);
     const sumFirstCallWrite = firstCalls.reduce((s, r) => s + r.usage.cache_creation_input_tokens, 0);
 
+    // Signature over ALL subagent records — the shape of the workload, where
+    // the metrics above describe only its first calls.
+    const sumBillable = subagentRecords.reduce((s, r) => s + billableInputTokens(r.usage), 0);
+    const sumWrite = totalWriteVolume;
+    const sumRead = subagentRecords.reduce((s, r) => s + r.usage.cache_read_input_tokens, 0);
+    const sumUncached = subagentRecords.reduce((s, r) => s + r.usage.input_tokens, 0);
+
     return {
         legs: firstCalls.length,
         median_first_call_written_or_uncached: median(writtenOrUncached),
         mean_first_call_written_or_uncached: mean(writtenOrUncached),
         first_call_cache_read_share: sumFirstCallBillable > 0 ? sumFirstCallRead / sumFirstCallBillable : 0,
         cold_start_share_of_write_volume: totalWriteVolume > 0 ? sumFirstCallWrite / totalWriteVolume : 0,
+        write_share_of_billable: sumBillable > 0 ? sumWrite / sumBillable : 0,
+        read_share_of_billable: sumBillable > 0 ? sumRead / sumBillable : 0,
+        uncached_share_of_billable: sumBillable > 0 ? sumUncached / sumBillable : 0,
     };
 }
 
@@ -737,6 +766,15 @@ export function renderText(r: Report): string {
     );
     out.push(`  first_call_cache_read_share=${pct(cs.first_call_cache_read_share)}`);
     out.push(`  cold_start_share_of_subagent_write_volume=${pct(cs.cold_start_share_of_write_volume)}`);
+    // Write-share signature over ALL subagent records: the three shares sum to
+    // 100% and say where the billable input actually went. A write-heavy split
+    // is paying the cache premium without collecting the read discount — which
+    // the cold-start metrics above cannot show, since they only look at first
+    // calls. All-zero means no billable input at all; read it beside legs.
+    out.push(
+        `  write_share=${pct(cs.write_share_of_billable)} read_share=${pct(cs.read_share_of_billable)}` +
+            ` uncached_share=${pct(cs.uncached_share_of_billable)} (of billable input, all subagent records)`,
+    );
     out.push('');
 
     out.push(`Per-agent breakdown: ${r.by_agent.length} distinct subagent legs (--format json carries all; top 10 by weighted_input_units below)`);

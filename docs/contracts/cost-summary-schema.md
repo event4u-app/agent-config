@@ -33,6 +33,7 @@ fields and the telegraph-suspended-multiplier contract.
 | `totals` | object | Lifetime aggregates — see `totals` below. |
 | `by_session` | array | Per `sessionId` row; ordered by `sessionId` ascending. |
 | `by_conversation` | array | Per `conversation_id` row; ordered by `conversation_id` ascending. |
+| `by_date` | array | Per UTC calendar day (`YYYY-MM-DD`) of the row's `startedAt`; ordered ascending. A row with no or unparseable timestamp lands under `unknown`, which sorts last. **v1 additive extension.** |
 | `by_model` | array | Per `model` row; ordered by `model` ascending. |
 
 ## `totals` shape
@@ -47,9 +48,29 @@ fields and the telegraph-suspended-multiplier contract.
   "cache_creation_input_tokens": 5000,
   "telegraph_delta_tokens": 0,
   "telegraph_multiplier_version": "v1",
-  "telegraph_multiplier_active": false
+  "telegraph_multiplier_active": false,
+  "cache_savings_input_token_equivalents": 38
 }
 ```
+
+`cache_savings_input_token_equivalents` is what the prompt cache bought,
+expressed in **input-token equivalents — not USD**: each cached read token
+saved `1 - CACHE_READ_MULTIPLIER` of a full-rate input token, each written
+token cost an extra `CACHE_WRITE_MULTIPLIER_5M - 1`, and the field is the net.
+A **negative** value is meaningful and not an error — it says the run wrote
+cache it never read back and paid the premium for nothing.
+
+Two honest limits. It is not priced in dollars because `totals` aggregates
+across models with different input rates and carries no per-model token split
+to apply them to; any single rate would be wrong for every other model in the
+row. And the write premium uses the **5-minute** multiplier, because rows carry
+no TTL split — 5m is Anthropic's default and the assumption
+[`cost/track.mjs`](../../src/scripts/cost/track.mjs) already makes for
+unaccounted writes, so the two cost paths agree rather than diverging quietly.
+A 1h-heavy workload therefore reads slightly optimistic.
+
+Also a **v1 additive extension**: absent on a summary emitted before it
+shipped, exactly like the cache fields above.
 
 `telegraph_delta_tokens` is always `0` while
 `telegraph_multiplier_active == false` — see
@@ -62,11 +83,11 @@ extension shipped lack the fields and aggregate as `0` for them, exactly
 like a row missing `input_tokens` — no version bump, per the additive rule
 below.
 
-## `by_session` / `by_conversation` row shape
+## `by_session` / `by_conversation` / `by_date` row shape
 
 ```json
 {
-  "key": "<sessionId or conversation_id>",
+  "key": "<sessionId, conversation_id, or YYYY-MM-DD>",
   "sessions": 12,
   "total_cost_usd": 0.4567,
   "input_tokens": 8000,

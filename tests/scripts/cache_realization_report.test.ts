@@ -376,7 +376,7 @@ describe('computeWorktreeFragmentation', () => {
 describe('buildClaims', () => {
     it('C-3 is always pending — no preamble-reduction intervention has landed', () => {
         const claims = buildClaims({
-            subagentColdStart: { legs: 0, median_first_call_written_or_uncached: 0, mean_first_call_written_or_uncached: 0, first_call_cache_read_share: 0, cold_start_share_of_write_volume: 0 },
+            subagentColdStart: { legs: 0, median_first_call_written_or_uncached: 0, mean_first_call_written_or_uncached: 0, first_call_cache_read_share: 0, cold_start_share_of_write_volume: 0, write_share_of_billable: 0, read_share_of_billable: 0, uncached_share_of_billable: 0 },
             duplicateScope: { evaluable: false, shared_filenames: 0, duplicate_tokens_per_spawn: 0, spawn_count: 0, duplicate_token_estimate_total: 0, share_of_subagent_write_volume: 0 },
             councilMispricing: { status: 'pending' },
             worktreeFragmentation: { status: 'pending' },
@@ -388,7 +388,7 @@ describe('buildClaims', () => {
 
     it('every claim reports pending — never a fabricated verdict — when its inputs are not evaluable', () => {
         const claims = buildClaims({
-            subagentColdStart: { legs: 0, median_first_call_written_or_uncached: 0, mean_first_call_written_or_uncached: 0, first_call_cache_read_share: 0, cold_start_share_of_write_volume: 0 },
+            subagentColdStart: { legs: 0, median_first_call_written_or_uncached: 0, mean_first_call_written_or_uncached: 0, first_call_cache_read_share: 0, cold_start_share_of_write_volume: 0, write_share_of_billable: 0, read_share_of_billable: 0, uncached_share_of_billable: 0 },
             duplicateScope: { evaluable: false, reason: 'no data', shared_filenames: 0, duplicate_tokens_per_spawn: 0, spawn_count: 0, duplicate_token_estimate_total: 0, share_of_subagent_write_volume: 0 },
             councilMispricing: { status: 'pending', reason: 'no artefact' },
             worktreeFragmentation: { status: 'pending', reason: 'no worktrees' },
@@ -401,10 +401,10 @@ describe('buildClaims', () => {
 
     it('C-1 confirms at/above the 50% threshold and falsifies below it', () => {
         const base = { duplicateScope: { evaluable: false, shared_filenames: 0, duplicate_tokens_per_spawn: 0, spawn_count: 0, duplicate_token_estimate_total: 0, share_of_subagent_write_volume: 0 } as const, councilMispricing: { status: 'pending' } as const, worktreeFragmentation: { status: 'pending' } as const };
-        const atThreshold = buildClaims({ ...base, subagentColdStart: { legs: 10, median_first_call_written_or_uncached: 0, mean_first_call_written_or_uncached: 0, first_call_cache_read_share: 0, cold_start_share_of_write_volume: 0.5 } });
+        const atThreshold = buildClaims({ ...base, subagentColdStart: { legs: 10, median_first_call_written_or_uncached: 0, mean_first_call_written_or_uncached: 0, first_call_cache_read_share: 0, cold_start_share_of_write_volume: 0.5, write_share_of_billable: 0, read_share_of_billable: 0, uncached_share_of_billable: 0 } });
         expect(atThreshold.find((c) => c.id === 'C-1')!.verdict).toBe('confirmed');
 
-        const belowThreshold = buildClaims({ ...base, subagentColdStart: { legs: 10, median_first_call_written_or_uncached: 0, mean_first_call_written_or_uncached: 0, first_call_cache_read_share: 0, cold_start_share_of_write_volume: 0.499 } });
+        const belowThreshold = buildClaims({ ...base, subagentColdStart: { legs: 10, median_first_call_written_or_uncached: 0, mean_first_call_written_or_uncached: 0, first_call_cache_read_share: 0, cold_start_share_of_write_volume: 0.499, write_share_of_billable: 0, read_share_of_billable: 0, uncached_share_of_billable: 0 } });
         expect(belowThreshold.find((c) => c.id === 'C-1')!.verdict).toBe('falsified');
     });
 });
@@ -449,5 +449,59 @@ describe('buildReport', () => {
             expect(c.verdict).toBe('pending');
         }
         expect(typeof report.host_version).toBe('string');
+    });
+});
+
+// ── write-share signature (ledger-truth 3.3) ─────────────────────────────
+//
+// `cold_start_share_of_write_volume` says how much of the writing happened on
+// a first call. It cannot say whether the workload is writing cache it never
+// reads back — that costs the 1.25x premium and collects no discount, and it
+// is exactly the shape a cache report should surface.
+describe('computeColdStarts — write-share signature', () => {
+    it('the three shares partition billable input and sum to 1', () => {
+        const records = [
+            rec('a', '2026-08-11T10:00:00Z', { input_tokens: 100, cache_creation_input_tokens: 300, cache_read_input_tokens: 600 }),
+            rec('b', '2026-08-11T10:01:00Z', { input_tokens: 100, cache_creation_input_tokens: 100, cache_read_input_tokens: 800 }),
+        ];
+        const cs = computeColdStarts(records);
+        const billable = records.reduce((s, r) => s + billableInputTokens(r.usage), 0);
+        expect(cs.write_share_of_billable).toBeCloseTo(400 / billable, 10);
+        expect(cs.read_share_of_billable).toBeCloseTo(1400 / billable, 10);
+        expect(cs.uncached_share_of_billable).toBeCloseTo(200 / billable, 10);
+        expect(
+            cs.write_share_of_billable + cs.read_share_of_billable + cs.uncached_share_of_billable,
+        ).toBeCloseTo(1, 10);
+    });
+
+    it('a write-heavy run that never reads back is visible here and NOT in the cold-start metric', () => {
+        const records = [
+            rec('a', '2026-08-11T10:00:00Z', { cache_creation_input_tokens: 1000 }),
+            rec('a', '2026-08-11T10:01:00Z', { cache_creation_input_tokens: 1000 }),
+        ];
+        const cs = computeColdStarts(records);
+        expect(cs.write_share_of_billable).toBe(1);
+        expect(cs.read_share_of_billable).toBe(0);
+        // The pre-existing metric reports half the writing on the first call —
+        // it says nothing about the premium being wasted.
+        expect(cs.cold_start_share_of_write_volume).toBeCloseTo(0.5, 10);
+    });
+
+    it('counts ALL subagent records, not just first calls', () => {
+        const records = [
+            rec('a', '2026-08-11T10:00:00Z', { cache_creation_input_tokens: 1000 }),
+            rec('a', '2026-08-11T10:01:00Z', { cache_read_input_tokens: 3000 }),
+        ];
+        const cs = computeColdStarts(records);
+        expect(cs.legs).toBe(1);
+        expect(cs.read_share_of_billable).toBeCloseTo(0.75, 10);
+    });
+
+    it('an empty corpus reads 0/0/0 — absence, never a perfectly-uncached claim', () => {
+        const cs = computeColdStarts([]);
+        expect(cs.legs).toBe(0);
+        expect(cs.write_share_of_billable).toBe(0);
+        expect(cs.read_share_of_billable).toBe(0);
+        expect(cs.uncached_share_of_billable).toBe(0);
     });
 });

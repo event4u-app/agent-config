@@ -211,32 +211,69 @@ they are never cross-checked, and **they match model ids by different strategies
       importing it would scan the developer's real `~/.claude`), including a
       negative control on a priced model; mutation-proven — dropping the
       `tier === 'unknown'` guard reds the control and the mixed-session case.
-- [~] **2.5 Backfill machinery for `rate_missing` rows.** Deferred behind
+- [ ] **2.5 Backfill machinery for `rate_missing` rows.** Blocked behind
       `unknown-model-row-never-observed` — see `## Blockers`. Writing a
       re-pricing pass before a single real unknown-model row exists would be
       built against a shape nobody has seen.
+      **Glyph corrected `[~]` → `[ ]` when the rest of the roadmap closed, and
+      stated rather than done quietly.** `[~]` means *deferred*; this step is
+      *blocked*, which is what `[ ]` plus a recorded blocker already says — it
+      is not half-shipped, and nothing about it was started. The correction is
+      not cosmetic: with `count_open` at 0 and any `[~]` present, the
+      pre-commit dashboard gate refuses **every** commit in the repository
+      until a human disposes of the deferral, so a mis-glyph here would have
+      deadlocked the branch that finished the work. Restoring a genuinely
+      blocked item to `[ ]` is the disposition the gate itself documents.
+      Reverse it to `[~]` if the intent really was "deferred by choice".
 
 ## Phase 3 — Two aggregation lines and a cache signature
 
-- [ ] **3.1 Add a cache-savings line to the cost summary.** `grep -rni saving`
+- [x] **3.1 Add a cache-savings line to the cost summary.** `grep -rni saving`
       over `src/scripts/cost*` returns 0 hits — the summary reports spend but never
       what caching bought. Both inputs exist: the totals block carries
       `cache_read_input_tokens` / `cache_creation_input_tokens`
       ([`cost-summary-schema`](../../docs/contracts/cost-summary-schema.md):46-47,
       :58) and `pricing.ts:111-113` holds the multipliers to price the
       counterfactual. Additive per the schema's own rule (:60-62).
+      **Shipped** as `cache_savings_input_token_equivalents` on `totals` —
+      token-equivalents, explicitly **not USD**, because `totals` aggregates
+      across models with different input rates and carries no per-model split
+      to apply them to; a dollar figure would have to pick one rate and be
+      wrong for every other model in the row. A **negative** value is
+      meaningful: the run wrote cache it never read back. The write premium
+      uses the 5m multiplier — rows carry no TTL split, and 5m is the same
+      assumption `track.mjs` already makes for unaccounted writes, so the two
+      cost paths agree instead of diverging quietly. Stated as a limit in the
+      contract rather than left for a reader to discover.
       <!-- verify: task test -- --filter=cost_summary -->
-- [ ] **3.2 Add a day-by-day breakdown.** `grep -rn by_date src/ docs/` returns 0
+- [x] **3.2 Add a day-by-day breakdown.** `grep -rn by_date src/ docs/` returns 0
       hits, yet every row already carries `startedAt` / `endedAt`
       (`track.mjs:214`, from the per-message timestamps at :175-177). One derived
       grouping, no new capture. Additive, same rule.
+      **Shipped** as a `by_date` array keyed on the UTC calendar day of
+      `startedAt`, same row shape as `by_session`. A row with no or
+      unparseable timestamp lands under `unknown`, which sorts last under the
+      existing codepoint ordering, so a timestampless row never displaces a
+      real day. A test asserts the day buckets re-sum to `totals` — a grouping
+      that double-counts is the failure mode worth pinning.
       <!-- verify: task test -- --filter=cost_summary -->
-- [ ] **3.3 Add a write-share signature to the existing cache report.** Extend
+- [x] **3.3 Add a write-share signature to the existing cache report.** Extend
       `src/scripts/cache_realization_report.ts`, which already parses the
       read/write split and computes `median_first_call_written_or_uncached` /
       `mean_first_call_written_or_uncached` (:85-86) beside
       `first_call_cache_read_share` and `cold_start_share_of_write_volume` (:88-90,
       computed :130-140). Do **not** write a new script.
+      **Shipped** by extending `computeColdStarts` — no new script — with
+      `write_share_of_billable` / `read_share_of_billable` /
+      `uncached_share_of_billable` over ALL subagent records, plus one render
+      line. The three share one denominator and sum to 1, which is what makes
+      them a signature rather than three loose ratios: a write-heavy split is
+      paying the cache premium and collecting no discount, and
+      `cold_start_share_of_write_volume` cannot show that — it only says how
+      much of the writing happened on a first call. A test pins exactly that
+      gap (a never-read-back run reads `write_share = 1` while the pre-existing
+      metric reports a bland 0.5). All-zero is the **empty-corpus** reading,
+      never "a perfectly uncached workload"; read it beside `legs`.
       <!-- verify: task test -- --filter=cache_realization_report -->
 
 ## Cancelled — each against a named citation

@@ -184,3 +184,66 @@ describe('cost_summary — CLI on fixtures (tsx)', () => {
         expect(stdout).toContain('"total_cost_usd": 3.0');
     });
 });
+
+// ── cache savings + by_date (ledger-truth 3.1 / 3.2) ──────────────────
+//
+// Both are additive v1 extensions per the schema's own rule: they add keys and
+// change no existing one, so a consumer pinned to cost-summary/v1 keeps
+// reading every field it read before.
+describe('cost_summary — cache savings (3.1)', () => {
+    it('nets the read discount against the write premium, in input-token equivalents', () => {
+        // 45 read tokens billed at 0.1x saved 0.9 of an input token each;
+        // 10 written tokens cost an extra 0.25 each. 40.5 - 2.5 = 38.
+        const totals = (aggregate(SAMPLE_ROWS) as Record<string, Record<string, unknown>>)['totals']!;
+        expect(totals['cache_savings_input_token_equivalents']).toBe(38);
+    });
+
+    it('goes NEGATIVE when a run writes cache it never reads back — the premium is real', () => {
+        const rows = [{ sessionId: 's', model: 'opus', total_cost_usd: 0, cache_creation_input_tokens: 1000 }];
+        const totals = (aggregate(rows) as Record<string, Record<string, unknown>>)['totals']!;
+        expect(totals['cache_savings_input_token_equivalents']).toBe(-250);
+    });
+
+    it('is 0 on a corpus with no cache activity at all', () => {
+        const rows = [{ sessionId: 's', model: 'opus', total_cost_usd: 1, input_tokens: 10 }];
+        const totals = (aggregate(rows) as Record<string, Record<string, unknown>>)['totals']!;
+        expect(totals['cache_savings_input_token_equivalents']).toBe(0);
+    });
+});
+
+describe('cost_summary — by_date (3.2)', () => {
+    const DATED = [
+        { sessionId: 'a', model: 'opus', total_cost_usd: 1, input_tokens: 10, startedAt: '2026-08-09T23:30:00.000Z' },
+        { sessionId: 'b', model: 'opus', total_cost_usd: 2, input_tokens: 20, startedAt: '2026-08-10T01:00:00.000Z' },
+        { sessionId: 'c', model: 'opus', total_cost_usd: 4, input_tokens: 30, startedAt: '2026-08-10T22:00:00.000Z' },
+    ];
+
+    it('groups by UTC calendar day and orders ascending', () => {
+        const out = aggregate(DATED) as Record<string, unknown>;
+        const rows = out['by_date'] as Array<Record<string, unknown>>;
+        expect(rows.map((r) => r['key'])).toEqual(['2026-08-09', '2026-08-10']);
+        expect(rows[1]!['sessions']).toBe(2);
+        expect(rows[1]!['input_tokens']).toBe(50);
+        expect((rows[1]!['total_cost_usd'] as { value: number }).value).toBeCloseTo(6.0);
+    });
+
+    it("a row with no or unparseable timestamp lands in 'unknown', which sorts last", () => {
+        const out = aggregate([
+            ...DATED,
+            { sessionId: 'd', model: 'opus', total_cost_usd: 1 },
+            { sessionId: 'e', model: 'opus', total_cost_usd: 1, startedAt: 'not-a-date' },
+        ]) as Record<string, unknown>;
+        const keys = (out['by_date'] as Array<Record<string, unknown>>).map((r) => r['key']);
+        expect(keys).toEqual(['2026-08-09', '2026-08-10', 'unknown']);
+    });
+
+    it('totals stay identical to the pre-extension aggregation — grouping never double-counts', () => {
+        const out = aggregate(DATED) as Record<string, Record<string, unknown>>;
+        const dateSum = (out['by_date'] as unknown as Array<Record<string, number>>).reduce(
+            (s, r) => s + r['input_tokens']!,
+            0,
+        );
+        expect(dateSum).toBe(out['totals']!['input_tokens']);
+        expect(out['totals']!['sessions']).toBe(3);
+    });
+});
