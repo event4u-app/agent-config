@@ -2025,9 +2025,20 @@ export function render(responses: CouncilResponse[], opts: RenderOptions = {}): 
  * identically to a full-attendance one, and the reader of a rendered pass is
  * exactly who needs to see the difference. Derived through `isSoloConcluded`
  * so the predicate keeps one definition and the renderer does not restate it.
+ *
+ * A floor-held pass names the floor. Without that, a gate-class pass with
+ * `1/2 present, needed 1` would render `INCONCLUSIVE` while its own numbers say
+ * the threshold was met — which reads as an arithmetic bug rather than as the
+ * ADR-224 floor doing exactly its job. The event log distinguishes the two
+ * outcomes via `held_by_floor`; a human reading the rendered pass needs the
+ * same distinction, in the one line they actually see.
  */
 function _render_quorum_line(q: QuorumResult): string {
-    const verdict = q.status === 'concluded' ? 'concluded' : 'INCONCLUSIVE — release gate holds';
+    const verdict = q.heldByFloor
+        ? 'INCONCLUSIVE — threshold met, gate-class attendance floor holds'
+        : q.status === 'concluded'
+          ? 'concluded'
+          : 'INCONCLUSIVE — release gate holds';
     const solo = isSoloConcluded(q) ? ' · **solo** — one voice concluded this pass' : '';
     return `**Quorum:** ${q.present}/${q.total} present, needed ${q.threshold} — ${verdict}.${solo}`;
 }

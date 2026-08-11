@@ -738,7 +738,14 @@ function _postRunQuorum(
  * preview too, not only to a completed pass.
  */
 function _format_quorum_line(q: QuorumResult): string {
-    const verdict = q.status === 'concluded' ? 'concluded' : 'INCONCLUSIVE — release gate holds';
+    // Mirrors `_render_quorum_line`'s floor branch for the same reason: a
+    // gate-class hold whose own numbers met the threshold reads as a bug unless
+    // the line names the floor.
+    const verdict = q.heldByFloor
+        ? 'INCONCLUSIVE — threshold met, gate-class attendance floor holds'
+        : q.status === 'concluded'
+          ? 'concluded'
+          : 'INCONCLUSIVE — release gate holds';
     return `council:quorum · ${q.present}/${q.total} present, needed ${q.threshold} — ${verdict}.`;
 }
 
@@ -1721,7 +1728,24 @@ function _deserialise_quorum(data: unknown): QuorumResult | null {
     ) {
         return null;
     }
-    return { status, threshold, total, present };
+    // `heldByFloor` is read when present and defaults to `false` otherwise. A
+    // payload saved before the ADR-224 floor landed carries no such field, and
+    // `false` is the honest reading of its absence: no floor existed to hold
+    // that pass. Defaulting to `true` would retro-label historical passes as
+    // gate-held, which is the one wrong answer available here.
+    //
+    // The key is camelCase because `cmd_run` writes `payload['quorum'] =
+    // quorum_out.result` — the `QuorumResult` object verbatim. The events log's
+    // `held_by_floor` is a DIFFERENT surface, explicitly field-mapped in
+    // `events_log.ts::appendQuorumEvent`; the two spellings are not a
+    // convention drift and neither reads the other's file.
+    return {
+        status,
+        threshold,
+        total,
+        present,
+        heldByFloor: d['heldByFloor'] === true,
+    };
 }
 
 // ── round / depth / token resolution ────────────────────────────────
