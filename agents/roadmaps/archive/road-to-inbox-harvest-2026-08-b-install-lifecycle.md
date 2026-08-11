@@ -11,7 +11,7 @@ parent_roadmap: road-to-inbox-harvest-2026-08-b.md
 > silent park.
 
 > Source (consumed inbox): `agents/tmp.old/plugin-system.txt` — part of the
-> 2026-08-10 batch triaged by [`road-to-inbox-harvest-2026-08-b.md`](road-to-inbox-harvest-2026-08-b.md).
+> 2026-08-10 batch triaged by [`road-to-inbox-harvest-2026-08-b.md`](../road-to-inbox-harvest-2026-08-b.md).
 
 ## Context / What is verified
 
@@ -118,7 +118,7 @@ tests for that behaviour exist (`tests/scripts/_cli/cmd_uninstall.test.ts`,
       domains with overlapping surfaces exist (`:66-67`), triggers unmet, with
       `agents/roadmaps/domain-pack-extraction-when-triggered.md` (`status: draft`) as
       the parked sibling; (b) why it is surfaceable under
-      [`decision-revisit-gate`](../../src/rules/decision-revisit-gate.md) — the
+      [`decision-revisit-gate`](../../../src/rules/decision-revisit-gate.md) — the
       **mechanism differs**, ADR-011 governs extracting core domains *out* while the
       source proposes pulling org content *in*; (c) the bar any reopening clears, per
       `docs/decisions/ADR-088-no-external-runtime-federation.md:93-102` § 3 —
