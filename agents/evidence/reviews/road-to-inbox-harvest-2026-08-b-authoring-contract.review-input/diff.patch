@@ -1,0 +1,2432 @@
+diff --git a/agents/roadmaps-progress.md b/agents/roadmaps-progress.md
+index 94a20fab822af15df82a1746d135393844a43323..90375747015ba5ce086404bb83a9e60a556f048d 100644
+--- a/agents/roadmaps-progress.md
++++ b/agents/roadmaps-progress.md
+@@ -2,14 +2,14 @@
+ 
+ > Auto-generated — do not edit. Regenerate with `task roadmap-progress` or by running the `update_roadmap_progress` script for your install; rewritten on every roadmap create / execute / completion change (timestamp lives in git history).
+ >
+-> 29 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **38** open blockers, **9** need you → `agent-config gates`
++> 28 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **37** open blockers, **9** need you → `agent-config gates`
+ 
+ ## Overall
+ 
+-**196 / 365 steps done · 54%**
++**217 / 351 steps done · 62%**
+ 
+ ```text
+-██████████████████████░░░░░░░░░░░░░░░░░░   54%
++█████████████████████████░░░░░░░░░░░░░░░   62%
+ ```
+ 
+ ## Open roadmaps
+@@ -22,29 +22,28 @@
+ | 4 | [road-to-ci-native-release-first-run.md](roadmaps/road-to-ci-native-release-first-run.md) | 2 | 8 | 8 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+ | 5 | [road-to-council-blind-review.md](roadmaps/road-to-council-blind-review.md) | 3 | 6 | 2 | 3 | 0 | 1 | 0 | ██████░░░░ 60% |
+ | 6 | [road-to-gated-reach-followup.md](roadmaps/road-to-gated-reach-followup.md) | 1 | 12 | 12 | 0 | 0 | 0 | [1](#blockers-road-to-gated-reach-followup) | ░░░░░░░░░░ 0% |
+-| 7 | [road-to-inbox-harvest-2026-08-b-authoring-contract.md](roadmaps/road-to-inbox-harvest-2026-08-b-authoring-contract.md) | 6 | 25 | 15 | 0 | 1 | 9 | [1](#blockers-road-to-inbox-harvest-2026-08-b-authoring-contract) | ░░░░░░░░░░ 0% |
+-| 8 | [road-to-inbox-harvest-2026-08-b-ci-economy.md](roadmaps/road-to-inbox-harvest-2026-08-b-ci-economy.md) | 5 | 24 | 17 | 4 | 2 | 1 | [2](#blockers-road-to-inbox-harvest-2026-08-b-ci-economy) | ██░░░░░░░░ 19% |
+-| 9 | [road-to-inbox-harvest-2026-08-b-council-integrity.md](roadmaps/road-to-inbox-harvest-2026-08-b-council-integrity.md) | 3 | 16 | 2 | 6 | 1 | 7 | [1](#blockers-road-to-inbox-harvest-2026-08-b-council-integrity) | ████████░░ 75% |
+-| 10 | [road-to-inbox-harvest-2026-08-b-dispatch-safety.md](roadmaps/road-to-inbox-harvest-2026-08-b-dispatch-safety.md) | 4 | 21 | 13 | 1 | 1 | 6 | [1](#blockers-road-to-inbox-harvest-2026-08-b-dispatch-safety) | █░░░░░░░░░ 7% |
+-| 11 | [road-to-inbox-harvest-2026-08-b-estate-lifecycle.md](roadmaps/road-to-inbox-harvest-2026-08-b-estate-lifecycle.md) | 4 | 15 | 9 | 0 | 0 | 6 | [1](#blockers-road-to-inbox-harvest-2026-08-b-estate-lifecycle) | ░░░░░░░░░░ 0% |
+-| 12 | [road-to-inbox-harvest-2026-08-b-install-lifecycle.md](roadmaps/road-to-inbox-harvest-2026-08-b-install-lifecycle.md) | 2 | 13 | 1 | 6 | 0 | 6 | [1](#blockers-road-to-inbox-harvest-2026-08-b-install-lifecycle) | █████████░ 86% |
+-| 13 | [road-to-inbox-harvest-2026-08-b-ledger-truth.md](roadmaps/road-to-inbox-harvest-2026-08-b-ledger-truth.md) | 3 | 19 | 10 | 2 | 1 | 6 | [1](#blockers-road-to-inbox-harvest-2026-08-b-ledger-truth) | ██░░░░░░░░ 17% |
+-| 14 | [road-to-inbox-harvest-2026-08-b-release-integrity.md](roadmaps/road-to-inbox-harvest-2026-08-b-release-integrity.md) | 5 | 25 | 1 | 11 | 0 | 13 | [3](#blockers-road-to-inbox-harvest-2026-08-b-release-integrity) | █████████░ 92% |
+-| 15 | [road-to-inbox-harvest-2026-08-b.md](roadmaps/road-to-inbox-harvest-2026-08-b.md) | 3 | 6 | 1 | 2 | 0 | 3 | [1](#blockers-road-to-inbox-harvest-2026-08-b) | ███████░░░ 67% |
+-| 16 | [road-to-inbox-harvest-2026-08.md](roadmaps/road-to-inbox-harvest-2026-08.md) | 5 | 21 | 1 | 11 | 4 | 5 | [3](#blockers-road-to-inbox-harvest-2026-08) | █████████░ 92% |
+-| 17 | [road-to-kernel-question-triangle.md](roadmaps/road-to-kernel-question-triangle.md) | 1 | 3 | 3 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+-| 18 | [road-to-maintainer-bus-factor.md](roadmaps/road-to-maintainer-bus-factor.md) | 4 | 12 | 5 | 7 | 0 | 0 | [1](#blockers-road-to-maintainer-bus-factor) | ██████░░░░ 58% |
+-| 19 | [road-to-orchestration-scope-decision.md](roadmaps/road-to-orchestration-scope-decision.md) | 4 | 10 | 6 | 4 | 0 | 0 | [1](#blockers-road-to-orchestration-scope-decision) | ████░░░░░░ 40% |
+-| 20 | [road-to-rule-coherence-followup.md](roadmaps/road-to-rule-coherence-followup.md) | 5 | 9 | 8 | 1 | 0 | 0 | [2](#blockers-road-to-rule-coherence-followup) | █░░░░░░░░░ 11% |
+-| 21 | [road-to-scale-history-bench-run.md](roadmaps/road-to-scale-history-bench-run.md) | 1 | 2 | 2 | 0 | 0 | 0 | [1](#blockers-road-to-scale-history-bench-run) | ░░░░░░░░░░ 0% |
+-| 22 | [road-to-skill-description-measurement.md](roadmaps/road-to-skill-description-measurement.md) | 1 | 4 | 4 | 0 | 0 | 0 | [1](#blockers-road-to-skill-description-measurement) | ░░░░░░░░░░ 0% |
+-| 23 | [road-to-skill-ecosystem-gate-integrity.md](roadmaps/road-to-skill-ecosystem-gate-integrity.md) | 5 | 43 | 3 | 40 | 0 | 0 | [1](#blockers-road-to-skill-ecosystem-gate-integrity) | █████████░ 93% |
+-| 24 | [road-to-solution-minimalism.md](roadmaps/road-to-solution-minimalism.md) | 4 | 36 | 10 | 25 | 0 | 1 | [1](#blockers-road-to-solution-minimalism) | ███████░░░ 71% |
+-| 25 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 6 | 3 | 0 | 0 | [1](#blockers-road-to-subagent-value-realization-followup) | ███░░░░░░░ 33% |
+-| 26 | [road-to-surface-consolidation.md](roadmaps/road-to-surface-consolidation.md) | 3 | 14 | 1 | 12 | 1 | 0 | [2](#blockers-road-to-surface-consolidation) | █████████░ 92% |
+-| 27 | [road-to-tier-removal.md](roadmaps/road-to-tier-removal.md) | 4 | 8 | 2 | 6 | 0 | 0 | [1](#blockers-road-to-tier-removal) | ████████░░ 75% |
+-| 28 | [road-to-ui-track-integrity-followup.md](roadmaps/road-to-ui-track-integrity-followup.md) | 1 | 10 | 10 | 0 | 0 | 0 | [2](#blockers-road-to-ui-track-integrity-followup) | ░░░░░░░░░░ 0% |
+-| 29 | [road-to-worktree-hygiene.md](roadmaps/road-to-worktree-hygiene.md) | 1 | 9 | 2 | 7 | 0 | 0 | [1](#blockers-road-to-worktree-hygiene) | ████████░░ 78% |
++| 7 | [road-to-inbox-harvest-2026-08-b-ci-economy.md](roadmaps/road-to-inbox-harvest-2026-08-b-ci-economy.md) | 5 | 24 | 17 | 4 | 2 | 1 | [2](#blockers-road-to-inbox-harvest-2026-08-b-ci-economy) | ██░░░░░░░░ 19% |
++| 8 | [road-to-inbox-harvest-2026-08-b-council-integrity.md](roadmaps/road-to-inbox-harvest-2026-08-b-council-integrity.md) | 3 | 16 | 2 | 6 | 1 | 7 | [1](#blockers-road-to-inbox-harvest-2026-08-b-council-integrity) | ████████░░ 75% |
++| 9 | [road-to-inbox-harvest-2026-08-b-dispatch-safety.md](roadmaps/road-to-inbox-harvest-2026-08-b-dispatch-safety.md) | 4 | 21 | 13 | 1 | 1 | 6 | [1](#blockers-road-to-inbox-harvest-2026-08-b-dispatch-safety) | █░░░░░░░░░ 7% |
++| 10 | [road-to-inbox-harvest-2026-08-b-estate-lifecycle.md](roadmaps/road-to-inbox-harvest-2026-08-b-estate-lifecycle.md) | 4 | 15 | 9 | 0 | 0 | 6 | [1](#blockers-road-to-inbox-harvest-2026-08-b-estate-lifecycle) | ░░░░░░░░░░ 0% |
++| 11 | [road-to-inbox-harvest-2026-08-b-install-lifecycle.md](roadmaps/road-to-inbox-harvest-2026-08-b-install-lifecycle.md) | 2 | 13 | 1 | 6 | 0 | 6 | [1](#blockers-road-to-inbox-harvest-2026-08-b-install-lifecycle) | █████████░ 86% |
++| 12 | [road-to-inbox-harvest-2026-08-b-ledger-truth.md](roadmaps/road-to-inbox-harvest-2026-08-b-ledger-truth.md) | 3 | 19 | 1 | 12 | 0 | 6 | [1](#blockers-road-to-inbox-harvest-2026-08-b-ledger-truth) | █████████░ 92% |
++| 13 | [road-to-inbox-harvest-2026-08-b-release-integrity.md](roadmaps/road-to-inbox-harvest-2026-08-b-release-integrity.md) | 5 | 25 | 1 | 11 | 0 | 13 | [3](#blockers-road-to-inbox-harvest-2026-08-b-release-integrity) | █████████░ 92% |
++| 14 | [road-to-inbox-harvest-2026-08-b.md](roadmaps/road-to-inbox-harvest-2026-08-b.md) | 3 | 6 | 1 | 2 | 0 | 3 | [1](#blockers-road-to-inbox-harvest-2026-08-b) | ███████░░░ 67% |
++| 15 | [road-to-inbox-harvest-2026-08.md](roadmaps/road-to-inbox-harvest-2026-08.md) | 5 | 21 | 1 | 11 | 4 | 5 | [3](#blockers-road-to-inbox-harvest-2026-08) | █████████░ 92% |
++| 16 | [road-to-kernel-question-triangle.md](roadmaps/road-to-kernel-question-triangle.md) | 1 | 3 | 3 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
++| 17 | [road-to-maintainer-bus-factor.md](roadmaps/road-to-maintainer-bus-factor.md) | 4 | 12 | 5 | 7 | 0 | 0 | [1](#blockers-road-to-maintainer-bus-factor) | ██████░░░░ 58% |
++| 18 | [road-to-orchestration-scope-decision.md](roadmaps/road-to-orchestration-scope-decision.md) | 4 | 10 | 6 | 4 | 0 | 0 | [1](#blockers-road-to-orchestration-scope-decision) | ████░░░░░░ 40% |
++| 19 | [road-to-rule-coherence-followup.md](roadmaps/road-to-rule-coherence-followup.md) | 5 | 9 | 8 | 1 | 0 | 0 | [2](#blockers-road-to-rule-coherence-followup) | █░░░░░░░░░ 11% |
++| 20 | [road-to-scale-history-bench-run.md](roadmaps/road-to-scale-history-bench-run.md) | 1 | 2 | 2 | 0 | 0 | 0 | [1](#blockers-road-to-scale-history-bench-run) | ░░░░░░░░░░ 0% |
++| 21 | [road-to-skill-description-measurement.md](roadmaps/road-to-skill-description-measurement.md) | 1 | 4 | 4 | 0 | 0 | 0 | [1](#blockers-road-to-skill-description-measurement) | ░░░░░░░░░░ 0% |
++| 22 | [road-to-skill-ecosystem-gate-integrity.md](roadmaps/road-to-skill-ecosystem-gate-integrity.md) | 5 | 43 | 3 | 40 | 0 | 0 | [1](#blockers-road-to-skill-ecosystem-gate-integrity) | █████████░ 93% |
++| 23 | [road-to-solution-minimalism.md](roadmaps/road-to-solution-minimalism.md) | 4 | 36 | 10 | 25 | 0 | 1 | [1](#blockers-road-to-solution-minimalism) | ███████░░░ 71% |
++| 24 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 6 | 3 | 0 | 0 | [1](#blockers-road-to-subagent-value-realization-followup) | ███░░░░░░░ 33% |
++| 25 | [road-to-surface-consolidation.md](roadmaps/road-to-surface-consolidation.md) | 3 | 14 | 1 | 12 | 1 | 0 | [2](#blockers-road-to-surface-consolidation) | █████████░ 92% |
++| 26 | [road-to-tier-removal.md](roadmaps/road-to-tier-removal.md) | 4 | 8 | 2 | 6 | 0 | 0 | [1](#blockers-road-to-tier-removal) | ████████░░ 75% |
++| 27 | [road-to-ui-track-integrity-followup.md](roadmaps/road-to-ui-track-integrity-followup.md) | 1 | 10 | 10 | 0 | 0 | 0 | [2](#blockers-road-to-ui-track-integrity-followup) | ░░░░░░░░░░ 0% |
++| 28 | [road-to-worktree-hygiene.md](roadmaps/road-to-worktree-hygiene.md) | 1 | 9 | 2 | 7 | 0 | 0 | [1](#blockers-road-to-worktree-hygiene) | ████████░░ 78% |
+ 
+ ---
+ 
+@@ -195,35 +194,6 @@
+     `yt-dlp` and a JavaScript runtime are installed **by a human** on the machine that runs this. Execution starts when the condition clears. The package never auto-installs — that is a contract (`missing-tool-handling`), not a limitation to work around.
+   - **Resolved when:** condition described above clears
+ 
+-### [road-to-inbox-harvest-2026-08-b-authoring-contract.md](roadmaps/road-to-inbox-harvest-2026-08-b-authoring-contract.md)
+-
+-**Road to an enforced authoring contract** — 0 / 15 done (0%)
+-
+-| # | Phase | State | Open | Done | Deferred | Cancelled | % |
+-|---|---|---|---:|---:|---:|---:|---:|
+-| 1 | Enforce the one required section whose population is decidable | ⬜ not started | 3 | 0 | 1 | 0 | 0% |
+-| 2 | Extend the skill-writing pattern registry | ⬜ not started | 4 | 0 | 0 | 4 | 0% |
+-| 3 | Failure signatures: a stable code, and a drill per row | ⬜ not started | 3 | 0 | 0 | 1 | 0% |
+-| 4 | Bind the external research citations to the ledger | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
+-| 5 | Hedge-word lint, diff-scoped, with a declared escalation stage | ⬜ not started | 2 | 0 | 0 | 1 | 0% |
+-| 6 | Cancelled with citation | ⏭️ skipped | 0 | 0 | 0 | 3 | 0% |
+-
+-<a id="blockers-road-to-inbox-harvest-2026-08-b-authoring-contract"></a>
+-**Blockers**
+-
+-- **conditional-section-population-key** (owner: maintainer) — blocks step 1.4 only. Phase 1 steps 1.1-1.3 (the script-bearing section and its gate), and all of Phases 2-7, proceed independently.
+-  - **What to do:**
+-    Decide between two options for
+-    `## Rationalizations to reject` (`src/skills/skill-writing/SKILL.md:533`) and
+-    `## Non-negotiable deliverable` (`:556`), whose populations are not decidable
+-    from the tree. (1) Add a declarative skill-frontmatter key naming the pattern
+-    a skill opts into — a schema change under
+-    `src/scripts/schemas/skill.schema.json:8` `additionalProperties: false`, plus
+-    the frontmatter validator and every generator reading skill frontmatter.
+-    (2) Drop `required` from both headings so the label matches the enforcement
+-    that exists, leaving them optional patterns like `:505` and `:592`.
+-  - **Resolved when:** The maintainer records option 1 or option 2 in this blocker, and step 1.4 is rewritten as the concrete steps that option needs.
+-
+ ### [road-to-inbox-harvest-2026-08-b-ci-economy.md](roadmaps/road-to-inbox-harvest-2026-08-b-ci-economy.md)
+ 
+ **Road to CI Economy — cut the redundant full builds and re-anchor the cost artefacts to CI-recorded data** — 4 / 21 done (19%)
+diff --git a/agents/roadmaps/archive/road-to-inbox-harvest-2026-08-b-authoring-contract.md b/agents/roadmaps/archive/road-to-inbox-harvest-2026-08-b-authoring-contract.md
+new file mode 100644
+index 0000000000000000000000000000000000000000..1dbd44fdd7282523ddc3dc5bf9e159efd9ee53cf
+--- /dev/null
++++ b/agents/roadmaps/archive/road-to-inbox-harvest-2026-08-b-authoring-contract.md
+@@ -0,0 +1,349 @@
++---
++complexity: lightweight
++parent_roadmap: road-to-inbox-harvest-2026-08-b.md
++---
++
++# Road to an enforced authoring contract
++
++> Take the three sections `skill-writing` labels **required** from 0-of-3
++> enforced and 0-of-4 complied to 1-of-3 enforced with its population at 100%,
++> and the other 2 explicitly reclassified with a citation — plus bind the
++> estate's 14 external research ids into the claims ledger, from 0 bound today.
++
++> Source (consumed inbox): `agents/tmp.old/ac-skill-template`,
++> `agents/tmp.old/ac-failure-signatures`, `agents/tmp.old/ac-doctrine-cited-briefs`,
++> `agents/tmp.old/ac-positional-doctrine` — part of the 2026-08-10 batch triaged
++> by [`road-to-inbox-harvest-2026-08-b.md`](road-to-inbox-harvest-2026-08-b.md).
++
++## Context / What is verified
++
++Measured in this worktree at HEAD, not asserted:
++
++- **Three sections are labelled required and enforced by nothing.**
++  `src/skills/skill-writing/SKILL.md:533` (`## Rationalizations-to-reject
++  section (required, security-stop-routed skills)`), `:556`
++  (`## Non-negotiable-deliverable section (required, adjacent-technology
++  clusters)`), `:619` (`## Security-constraints section (required pattern,
++  script-bearing skills)`). `grep -rlE 'Rationalizations-to-reject|Non-negotiable-deliverable|Security constraints' src/scripts/*.ts`
++  returns nothing.
++- **The enforcement pattern already exists.**
++  `src/scripts/skill_linter.ts:98` `REQUIRED_SKILL_SECTIONS = ['When to use',
++  'Gotcha', 'Procedure', 'Output format', 'Do NOT']`, aliased at `:100-105`
++  (`Do NOT` → `Anti-patterns`), emitting `error/missing_section` at `:1356-1359`.
++  Budget is ample: `skill_linter --all` scans **437 artefacts in 0.56 s**.
++- **Compliance with all three is zero.** 4 skills ship a `scripts/` directory
++  (`corpus-grounding`, `design-tokens`, `react-shadcn-ui`, `tailwind-engineer`)
++  and **none** carries `## Security constraints`. Exactly one file matches
++  `^## Rationalizations` and one matches `^## Non-negotiable` — both are
++  `skill-writing/SKILL.md` itself, describing the pattern, not an instance.
++- **Only one of the three has a filesystem-decidable population.**
++  "script-bearing" is `test -d src/skills/<n>/scripts`. "security-stop-routed"
++  and "adjacent-technology cluster" are judgement calls; `security-sensitive-stop.md:72-75`
++  names 4 analysis skills and the `*-routing.md` rules name 4 cluster heads, but
++  neither list is a declared skill property. `src/scripts/schemas/skill.schema.json:8`
++  sets `additionalProperties: false`, so a declarative key is a schema change.
++- **The claims ledger has the format and zero usage for external cites.**
++  `docs/CLAIMS.md:46` already defines `https://… (YYYY-MM-DD)` as pointer
++  grammar #3 of 4; 43 backed / 10 unbacked / 5 resolved-null entries exist and
++  **no `- evidence:` line carries an http or arXiv pointer**. The tree cites
++  **14 distinct arXiv ids across 49 lines in 33 tracked files**. Ledger entries
++  render into `docs/proof.md` via `src/scripts/build_proof.ts`, drift-checked by
++  `task build-proof-check` (`Taskfile.yml:293`).
++- **Hedge words are measured, never linted.** `src/scripts/bench_honesty_score.ts:528`
++  `HEDGE_WORDS`, `:593` `countHedgeWords`, `:606-621` `hedge_count` /
++  `hedge_per_100_words` — all scoring agent *output*, not artefact prose. No
++  `src/scripts/*hedge*` lint exists.
++- **`## Known pitfalls` is at 4 of 289 skills** and its content is already
++  governed by `src/rules/size-enforcement.md:29` ("never a new skill per
++  pitfall", cap 5 sourced entries). No work is planned on it here — an optional
++  pattern with low uptake is not a defect.
++
++Estate: **116 rules, 289 skills, 437 linted artefacts.** Every step below names
++the existing artefact it extends; nothing here adds a rule or a skill.
++
++## Phase 1 — Enforce the one required section whose population is decidable
++
++- [x] **1.1 Write `## Security constraints` into the four script-bearing skills.**
++      `src/skills/{corpus-grounding,design-tokens,react-shadcn-ui,tailwind-engineer}/SKILL.md`
++      each ship a `scripts/` directory and none carries the section. Use the
++      four-bullet shape already specified at `src/skills/skill-writing/SKILL.md:629-643`
++      — what it may touch, what it must never do, default-invocation behaviour
++      (read-only or mutating, and the gating flag if any), what it sends
++      outbound. Must land **before** 1.2 or the gate reds four shipped skills.
++      <!-- verify: grep -lc '^## Security constraints' src/skills/corpus-grounding/SKILL.md src/skills/design-tokens/SKILL.md src/skills/react-shadcn-ui/SKILL.md src/skills/tailwind-engineer/SKILL.md -->
++- [x] **1.2 Add a conditional required-section check to `skill_linter.ts`, keyed on
++      `scripts/` directory existence.** Extend the `REQUIRED_SKILL_SECTIONS` loop
++      at `src/scripts/skill_linter.ts:1356-1359` with a conditional tier that
++      emits `error/missing_conditional_section` when a skill directory contains
++      `scripts/` and the body has no `## Security constraints`. **The
++      false-positive class is empty by construction**: the predicate is a
++      filesystem existence test on the skill's own directory, not a heuristic
++      over prose — a skill either ships a script or it does not. After 1.1 the
++      violation set is 0, so the check ships as `error` on day one rather than
++      advisory (the stage-vs-hedge argument in
++      `src/scripts/check_suppression_hygiene.ts:38-42`).
++      <!-- verify: ./scripts-run src/scripts/skill_linter --all -->
++- [x] **1.3 Pin the new check in the linter's own test file.** Add cases to
++      `tests/scripts/skill_linter.test.ts`: a fixture skill with `scripts/` and
++      no section → one `missing_conditional_section` error; the same fixture with
++      the section → clean; a skill with no `scripts/` and no section → clean (the
++      discrimination case, without which the check is indistinguishable from an
++      unconditional one).
++      <!-- verify: npx vitest run tests/scripts/skill_linter.test.ts -->
++- [x] **1.4 Reclassify the other two sections — option 2, per council 2026-08-11.**
++      Blocker `conditional-section-population-key` resolved: 2/2 (anthropic,
++      openai) for reclassification over a declared frontmatter key. The decisive
++      argument was not cost but coverage — an authored opt-in key cannot see the
++      skill that *should* have opted in and did not, so option 1 buys a gate
++      without buying the guarantee that makes the `scripts/` predicate worth
++      having; and 0-of-289 voluntary uptake is evidence the requirement was never
++      operative. Landed as three edits: both headings at
++      `src/skills/skill-writing/SKILL.md` now read `(recommended pattern, …)`,
++      and the `CONDITIONAL_SKILL_SECTIONS` docblock in `src/scripts/skill_linter.ts`
++      records why the two are absent from the table so the next reader does not
++      re-open it as an oversight. No schema change; `additionalProperties: false`
++      is untouched.
++      <!-- verify: grep -c 'recommended pattern' src/skills/skill-writing/SKILL.md -->
++
++      **What the reclassification does not buy, stated plainly:** the two patterns
++      are now unenforced by construction, so uptake stays voluntary and will
++      probably stay at zero. That is the honest end state for a pattern whose
++      population is a judgement call — the alternative was a label that claimed an
++      enforcement nothing performed.
++
++## Phase 2 — Extend the skill-writing pattern registry
++
++`src/skills/skill-writing/SKILL.md:482-645` already **is** a conditional
++section-pattern registry (Self-QA loop, Known-pitfalls, Rationalizations-to-reject,
++Non-negotiable-deliverable, Upstream-version-notes, Security-constraints). Every
++step below extends that registry. No new artefact; no new skill against 289.
++
++- [x] **2.1 Add a mechanism-teaching pattern.** One screen, mechanisms only — the
++      currently-unnamed sibling of the existing patterns. No section pattern and
++      no linter signal exists for it (`grep -n '^## ' src/skills/skill-writing/SKILL.md`
++      lists all 20 headings; none covers it). Land it as an *optional* pattern:
++      "teaches a mechanism" is a prose judgement, so it gets no gate — see the
++      Risk Register row on FP classes.
++- [x] **2.2 Add an illustrative-not-verbatim marker pattern for reference code.**
++      `grep -c illustrative` over both `src/skills/skill-writing/SKILL.md` and
++      `src/scripts/skill_linter.ts` returns **0**; the nearest existing guidance
++      is `skill-writing/SKILL.md:265` "### 4. Add safe/unsafe example". Specify a
++      one-line marker above a reference block so a reader can tell shape-teaching
++      code from copy-me code.
++- [x] **2.3 Add a headline-metric-plus-closing-report pattern for optimization
++      skills.** `grep -rn 'headline metric' src/ docs/` returns exactly one
++      unrelated hit (`src/scripts/measure_projection_bytes.ts:11`). Specify: name
++      the single number the skill moves, and the closing report shape that states
++      it before and after.
++- [-] **2.4 Read-only reconnaissance as a new pattern — already shipped.**
++      `src/scripts/skill_linter.ts:704-708` `_INSPECT_VERB_PATTERN` /
++      `hasInspectStep`, enforced at `:1515`; the authored counterpart is
++      `src/skills/skill-writing/SKILL.md:111` "### 0. Inspect, then run the
++      Drafting Protocol".
++- [-] **2.5 Negative knowledge as a new pattern — already mandatory.** `Do NOT`
++      is in `REQUIRED_SKILL_SECTIONS` (`src/scripts/skill_linter.ts:98`) with
++      `Anti-patterns` aliased at `:103`, so all 289 skills already carry it.
++- [-] **2.6 The validation half of verification — already shipped.**
++      `src/scripts/skill_linter.ts:670-705` `hasValidationStep`, enforced at
++      `:1508` against both the procedure block and the full body.
++- [x] **2.7 Name the contrastive-example slot in `skill-writing` and
++      `rule-writing`.** The practice is already house style with six live corpora
++      — `docs/guidelines/agent-infra/{direct-answers-demos,asking-and-brevity-examples,language-and-tone-examples}.md`
++      and `src/agent-src/contexts/execution/{autonomy-examples,interrupt-examples,cheap-question-mechanics}.md`
++      — but neither authoring skill names the slot, so it does not propagate.
++      `src/skills/rule-writing/SKILL.md:349-357` has an `## Examples` section that
++      shows good-vs-bad for descriptions only. Point at the existing exemplars;
++      do not invent a format.
++- [-] **2.8 A new rule for contrastive examples — cancelled.** 116 rules already
++      ship; this is a template slot in two existing skills, not a behaviour
++      constraint needing its own always-loaded file.
++
++## Phase 3 — Failure signatures: a stable code, and a drill per row
++
++`docs/guidelines/agent-infra/failure-signatures.md` already exists (35 lines,
++10-row table, read by `src/skills/systematic-debugging/SKILL.md:224-228`). Its
++own header records the file-first council decision of 2026-06-15.
++
++- [x] **3.1 Give each row a stable identifier.** The first column is headed
++      `Signature (what you see)` (`failure-signatures.md:15`) but holds prose, so
++      nothing can be cited by name. Add a short kebab code per row and point the
++      gate/guard/coercion rows at the identifiers the tooling already emits —
++      `skill_linter.ts:1358` emits `missing_section`, `:1255`
++      `invalid_execution_handler`, and the whole `Issue` code set is stable
++      strings a signature row can name verbatim.
++- [x] **3.2 Add a discrimination drill per row.** A row's "first check" is only
++      worth following if the documented signature is what actually appears. For
++      each row, state the one-line drill that produces it (break the named layer,
++      assert the documented signature). Doc-only step; the drills are text a
++      human runs, not a CI gate.
++- [x] **3.3 Add one row: stale capability self-claim.** Signature — budget
++      exhausted plus repeated attempts at a tool that is not available. Likely
++      cause — a capability the session claimed for itself rather than resolved.
++      First check — `agent-config hooks:status` and `agent-config routing:doctor`,
++      both live verbs (`src/cli/registry.ts:82` and `:84`), the latter printing
++      per-field provenance.
++- [-] **3.4 Per-subsystem `TROUBLESHOOTING.md` files — cancelled.** Reverses the
++      file-first decision recorded in the guideline's own header
++      (`docs/guidelines/agent-infra/failure-signatures.md:9-11`, council
++      2026-06-15): one table the skill reads, deliberately not scattered.
++
++## Phase 4 — Bind the external research citations to the ledger
++
++- [x] **4.1 Inventory the citations — and the planned count was wrong.**
++      The step's own verify command undercounts: its pattern is
++      `arxiv[:/ ]*(abs/)?<id>`, which cannot match the `arxiv.org/abs/<id>` URL
++      form because `.org/` sits between `arxiv` and the separator class. Run as
++      written it finds **14 ids in 8 files**, all under `agents/`. Corrected to
++      `arxiv(\.org/abs)?[:/ ]*<id>`, the tree holds **20 distinct ids across 90
++      lines in 32 files**. The "49 lines in 33 files" in the Context above
++      matches neither reading and is superseded by this measurement.
++      <!-- verify: grep -rhoiE 'arxiv(\.org/abs)?[:/ ]*[0-9]{4}\.[0-9]{4,5}' $(git ls-files) | grep -oE '[0-9]{4}\.[0-9]{4,5}' | sort -u | wc -l -->
++
++      **The split that decides 4.2.** Of the 32 citing files, 11 are `src/`
++      sources (the rest are `dist/` projections of those 11, roadmaps under
++      `agents/`, one evidence review, and one MCP content blob). Every `src/`
++      citation sits in a `## References` section and grounds a normative design
++      claim — six distinct ids:
++
++      | id | Cited from | The sentence it holds up |
++      |---|---|---|
++      | `2306.05685` | `judge-{bug-hunter,code-quality,security-auditor,synthesis,test-coverage}/SKILL.md`, `domains/engineering-base/review/changes/command.md` | the judge family's whole premise, plus position bias / self-consistency as its named failure modes |
++      | `2305.10601` | `adversarial-review/SKILL.md` | branching critique with explicit pruning |
++      | `2303.17651` | `analysis-autonomous-mode/SKILL.md` | self-critique between steps, not only at the end |
++      | `2309.11495` | `bug-analyzer/SKILL.md` | verify each root cause against a concrete trigger — the mechanism behind "never invent issues" |
++      | `2201.11903` | `sequential-thinking/SKILL.md` | CoT with a thought cap and a mandatory validation step |
++      | `2303.11366` | `skill-improvement-pipeline/SKILL.md` | post-task outcomes become written lessons, not in-context retries |
++
++      The other 14 ids appear **only** in roadmap prose (12 of them in
++      `archive/`) and one evidence review. Planning prose is not a public or
++      normative sentence, so they stay unbound per 4.2's own instruction —
++      recorded here rather than silently omitted.
++- [x] **4.2 Bind the load-bearing cites using pointer grammar #3.** Use the
++      already-specified `https://… (YYYY-MM-DD)` form (`docs/CLAIMS.md:46`) —
++      **do not invent a dossier format**; a second source of truth is exactly
++      what `src/scripts/generate_subagent_floor.ts` exists to prevent. Bind only
++      cites that a public or normative sentence rests on; a citation that decorates
++      prose needs no ledger row. Re-run `build_proof` after editing the ledger
++      (`docs/CLAIMS.md` renders into `docs/proof.md` per
++      `src/scripts/build_proof.ts:8`).
++      **Nothing here ingests external content, and nothing may start to.** The
++      pointer grammar is an existence-and-date check that the tooling never
++      dereferences — `check_claims.ts` documents its pointers as not fetched in
++      CI, and `build_proof.ts` renders an external cite with that same statement.
++      The citation universe is the closed set already committed to this tree,
++      enumerated by the command in 4.1; pointers stay scoped to it. A phase that
++      fetched a citation would be a different phase and would need its own
++      egress review under [`lethal-trifecta-guard`](../../src/rules/lethal-trifecta-guard.md).
++      <!-- verify: ./scripts-run src/scripts/check_claims -->
++- [x] **4.3 Add a successor pointer to retired claims.** The retire-never-delete
++      lifecycle already ships as `status: resolved-null` (`docs/CLAIMS.md:23-31`).
++      What it lacks is a forward link when a closed question is later reopened by
++      a different mechanism. One optional field, schema-documented at
++      `docs/CLAIMS.md:37-44`.
++      <!-- verify: npx vitest run tests/scripts/check_claims.test.ts -->
++
++## Phase 5 — Hedge-word lint, diff-scoped, with a declared escalation stage
++
++- [x] **5.1 Add a diff-scoped hedge-word check reusing the existing lexicon.**
++      Export and reuse `HEDGE_WORDS` from `src/scripts/bench_honesty_score.ts:528`
++      rather than restating a list. Diff-scoped, not corpus-wide: ADR-218:93 states
++      the preference outright — "one that watches diffs, not one that counts the
++      corpus". Adjacent precedent for a vocabulary floor over prose is
++      `src/scripts/lint_provenance_vocabulary.ts:14-17` (a phrase banned "anywhere,
++      even hedged", with a quote-the-ban carve-out this check needs too).
++      <!-- verify: ./scripts-run src/scripts/lint_hedge_words -->
++- [x] **5.2 Ship it with a declared escalation stage — and the first measurement
++      says the stage may never advance.** The trigger is written into the script
++      header before any data: advisory → error only when (a) ≥ 30 merged PRs are
++      measured, (b) a human read classifies ≤ 10% of ≥ 50 sampled findings as
++      legitimate calibrated hedging, and (c) a maintainer binds the resulting
++      threshold in `docs/CLAIMS.md`. The (b)-fails branch is pre-authorised in the
++      same header: the check stays advisory permanently or is removed — it does
++      **not** get a lowered bar.
++
++      **First measurement, this branch's own diff:** 4 hedged lines over 264 added
++      prose lines / 3,284 words — `hedged_per_100_words: 0.12`. A human read of
++      all four classifies **4 of 4 as legitimate**: a table header (`Likely
++      cause`), two descriptive sentences about what a reader *could* reference and
++      what *appears*, and one about what a reader *might* assume. That is a **100%
++      false-positive rate at n = 4** — a small sample, and pointing the same way
++      the risk register predicted. Recorded here rather than left for the
++      escalation review to discover.
++
++      **Not wired into `task ci` or any workflow, deliberately.** The parity gate
++      (`check_ci_local_parity`) derives both sides from those two chains, so an
++      unwired advisory script is invisible to it rather than a declared exception.
++      The honest cost of that choice: findings only accrue when someone runs the
++      command, so condition (a) accrues slowly or not at all — the gate may sit at
++      n = 4 indefinitely. Wiring it would trade that for a line of advisory output
++      on every CI run, which is the trade a maintainer should make deliberately,
++      not one this step should make silently.
++- [-] **5.3 Estate-wide hedge count as the gate — cancelled.** ADR-218:93 already
++      settled the diff-vs-corpus question for prose-shape tooling; a corpus count
++      over 116 rules and 289 skills produces a number nobody can act on.
++
++## Phase 6 — Cancelled with citation
++
++- [-] **6.1 Per-turn doctrine-recency cue (inject 3-6 kernel constraints at the
++      payload tail every turn) — cancelled, hard-blocked three ways.** (a)
++      `docs/decisions/ADR-054-rule-adherence-decay-triggered-restate.md:3` is
++      `status: rejected` and is this exact proposal. (b)
++      `agents/settings/contexts/reminder-injection-verdict.md:54` records the
++      pilot at **Δ = 0 pp on both hosts**, with the hook, manifest wiring and
++      settings flag "removed in the same branch that built it" (`:75-77`) per a
++      pre-committed teardown at `<5 pp` (`:28`). (c) The premise itself failed a
++      pre-registered search: `agents/evidence/analysis/activation-red-baseline.md:15`
++      swept **1,158 sessions** and `:25-27` records qualifying rows spanning
++      **9,464 to 727,537 tokens** against a 3,000-token bar — "distance was never
++      the limiting factor". And the one carrier that does fire per turn on this
++      exact surface is measured at **24 of 29 misses** with the honesty clause
++      firing **0** times (`src/rules/session-canary.md:105-106`), whose own
++      conclusion is that a reminder in context is not a mechanism for this
++      obligation.
++- [-] **6.2 The 97-of-111 absoluta point estimate — cancelled, re-derive instead.**
++      `./scripts-run src/scripts/measure_rule_absoluta` at HEAD reports **116
++      rules scanned, 84 strict (72.4%), 102 case-insensitive (87.9%), 99 carrying
++      an Iron Law (85.3%), 287 strict occurrences**. `docs/decisions/ADR-218-absoluta-census-is-a-closed-decision-input.md:43`
++      and `:88` require citing the range and the structural figure, never a point
++      estimate.
++- [-] **6.3 "Positional doctrine is new" — cancelled, already shipped.**
++      `src/rules/token-budget-discipline.md:117` ships `## Rich artifacts lead
++      with a non-negotiable band`, and `src/scripts/check_iron_law_prominence.ts:14-19`
++      enforces both halves: no Iron-Law heading at H3 or deeper, and at least one
++      Iron-Law H2 among the file's first two H2 headings.
++
++## Risk Register
++<!-- risk-review: v1 | reviewed: 2026-08-10 | reviewer: claude/host -->
++| Rank | Item | Risk type | Description | Mitigation | Anchored under |
++|------|------|-----------|-------------|------------|----------------|
++| 1 | Gate lands before its population complies | implementation | 1.2 turns a missing `## Security constraints` into `error/missing_conditional_section`, and all 4 script-bearing skills are non-compliant today — wiring it first reds four shipped artefacts and the fix looks like a linter regression | 1.1 strictly precedes 1.2 in the same change; 1.3's third case pins that a script-free skill stays clean | Phase 1 — Enforce the one required section whose population is decidable |
++| 2 | Hedge-word lint has a live false-positive class | product | Hedges are legitimate in this tree's own honesty prose; a check over rule bodies will flag "may", "typically", "in doubt" in the very rules that teach calibrated language | Diff-scoped per ADR-218:93; measured FP rate plus a written advisory→error trigger before it can fail a build; quote-the-ban carve-out modelled on `lint_provenance_vocabulary.ts:14-17` | Phase 5 — Hedge-word lint, diff-scoped, with a declared escalation stage |
++| 3 | A declarative frontmatter key is a wider surface than it looks | implementation | `skill.schema.json:8` is `additionalProperties: false`, so keying the other two sections on a declared property touches the schema, the frontmatter validator, and every generator that reads skill frontmatter | Held behind `blocker: conditional-section-population-key`; the reclassification alternative (drop `required` from the two headings) needs no schema change at all | Phase 1 — Enforce the one required section whose population is decidable |
++| 4 | A bound external cite can rot silently | implementation | Pointer grammar #3 is an existence-and-date check — `docs/CLAIMS.md:46` says plainly "not fetched in CI" — so a bound arXiv row stays green after the paper is withdrawn or renumbered | Bind only cites a normative sentence rests on (4.2), carry the dated stamp the grammar requires, and leave decorative citations unbound rather than manufacturing ledger rows | Phase 4 — Bind the external research citations to the ledger |
++| 5 | skill-writing outgrows its budget | product | `src/skills/skill-writing/SKILL.md` is 661 lines and already carries 20 H2 sections; three more patterns plus a contrastive slot push it further against `size-enforcement` | Keep each new pattern to the ~15-line shape the existing patterns use (`:505-532` is the model); if the file crosses its budget, the pattern registry splits out rather than the patterns being dropped | Phase 2 — Extend the skill-writing pattern registry |
++
++## Blockers
++
++### blocker: conditional-section-population-key
++- **Status:** resolved 2026-08-11 — **option 2 (reclassify)**, AI council, quorum
++  2/2 (anthropic, openai), both members independently for option 2. Recorded
++  reasoning: an authored frontmatter opt-in cannot detect the skill that should
++  have opted in and did not, so it produces a gate with no coverage guarantee —
++  unlike the `scripts/` predicate, whose population is a filesystem fact. Zero of
++  289 skills had voluntarily adopted either section while both were labelled
++  required, which is evidence the requirement never bound. Step 1.4 carries the
++  three landed edits.
++- **Owner:** maintainer
++- **Blocks:** step 1.4 only. Phase 1 steps 1.1-1.3 (the script-bearing section
++  and its gate), and all of Phases 2-7, proceed independently.
++- **What to do:** Decide between two options for
++  `## Rationalizations to reject` (`src/skills/skill-writing/SKILL.md:533`) and
++  `## Non-negotiable deliverable` (`:556`), whose populations are not decidable
++  from the tree. (1) Add a declarative skill-frontmatter key naming the pattern
++  a skill opts into — a schema change under
++  `src/scripts/schemas/skill.schema.json:8` `additionalProperties: false`, plus
++  the frontmatter validator and every generator reading skill frontmatter.
++  (2) Drop `required` from both headings so the label matches the enforcement
++  that exists, leaving them optional patterns like `:505` and `:592`.
++- **Resolved when:** The maintainer records option 1 or option 2 in this
++  blocker, and step 1.4 is rewritten as the concrete steps that option needs.
+diff --git a/agents/roadmaps/road-to-inbox-harvest-2026-08-b-authoring-contract.md b/agents/roadmaps/road-to-inbox-harvest-2026-08-b-authoring-contract.md
+deleted file mode 100644
+index 68401550dcbdc9cdd8d36313123e5a8d9236212f..0000000000000000000000000000000000000000
+--- a/agents/roadmaps/road-to-inbox-harvest-2026-08-b-authoring-contract.md
++++ /dev/null
+@@ -1,288 +0,0 @@
+----
+-complexity: lightweight
+-parent_roadmap: road-to-inbox-harvest-2026-08-b.md
+----
+-
+-# Road to an enforced authoring contract
+-
+-> Take the three sections `skill-writing` labels **required** from 0-of-3
+-> enforced and 0-of-4 complied to 1-of-3 enforced with its population at 100%,
+-> and the other 2 explicitly reclassified with a citation — plus bind the
+-> estate's 14 external research ids into the claims ledger, from 0 bound today.
+-
+-> Source (consumed inbox): `agents/tmp.old/ac-skill-template`,
+-> `agents/tmp.old/ac-failure-signatures`, `agents/tmp.old/ac-doctrine-cited-briefs`,
+-> `agents/tmp.old/ac-positional-doctrine` — part of the 2026-08-10 batch triaged
+-> by [`road-to-inbox-harvest-2026-08-b.md`](road-to-inbox-harvest-2026-08-b.md).
+-
+-## Context / What is verified
+-
+-Measured in this worktree at HEAD, not asserted:
+-
+-- **Three sections are labelled required and enforced by nothing.**
+-  `src/skills/skill-writing/SKILL.md:533` (`## Rationalizations-to-reject
+-  section (required, security-stop-routed skills)`), `:556`
+-  (`## Non-negotiable-deliverable section (required, adjacent-technology
+-  clusters)`), `:619` (`## Security-constraints section (required pattern,
+-  script-bearing skills)`). `grep -rlE 'Rationalizations-to-reject|Non-negotiable-deliverable|Security constraints' src/scripts/*.ts`
+-  returns nothing.
+-- **The enforcement pattern already exists.**
+-  `src/scripts/skill_linter.ts:98` `REQUIRED_SKILL_SECTIONS = ['When to use',
+-  'Gotcha', 'Procedure', 'Output format', 'Do NOT']`, aliased at `:100-105`
+-  (`Do NOT` → `Anti-patterns`), emitting `error/missing_section` at `:1356-1359`.
+-  Budget is ample: `skill_linter --all` scans **437 artefacts in 0.56 s**.
+-- **Compliance with all three is zero.** 4 skills ship a `scripts/` directory
+-  (`corpus-grounding`, `design-tokens`, `react-shadcn-ui`, `tailwind-engineer`)
+-  and **none** carries `## Security constraints`. Exactly one file matches
+-  `^## Rationalizations` and one matches `^## Non-negotiable` — both are
+-  `skill-writing/SKILL.md` itself, describing the pattern, not an instance.
+-- **Only one of the three has a filesystem-decidable population.**
+-  "script-bearing" is `test -d src/skills/<n>/scripts`. "security-stop-routed"
+-  and "adjacent-technology cluster" are judgement calls; `security-sensitive-stop.md:72-75`
+-  names 4 analysis skills and the `*-routing.md` rules name 4 cluster heads, but
+-  neither list is a declared skill property. `src/scripts/schemas/skill.schema.json:8`
+-  sets `additionalProperties: false`, so a declarative key is a schema change.
+-- **The claims ledger has the format and zero usage for external cites.**
+-  `docs/CLAIMS.md:46` already defines `https://… (YYYY-MM-DD)` as pointer
+-  grammar #3 of 4; 43 backed / 10 unbacked / 5 resolved-null entries exist and
+-  **no `- evidence:` line carries an http or arXiv pointer**. The tree cites
+-  **14 distinct arXiv ids across 49 lines in 33 tracked files**. Ledger entries
+-  render into `docs/proof.md` via `src/scripts/build_proof.ts`, drift-checked by
+-  `task build-proof-check` (`Taskfile.yml:293`).
+-- **Hedge words are measured, never linted.** `src/scripts/bench_honesty_score.ts:528`
+-  `HEDGE_WORDS`, `:593` `countHedgeWords`, `:606-621` `hedge_count` /
+-  `hedge_per_100_words` — all scoring agent *output*, not artefact prose. No
+-  `src/scripts/*hedge*` lint exists.
+-- **`## Known pitfalls` is at 4 of 289 skills** and its content is already
+-  governed by `src/rules/size-enforcement.md:29` ("never a new skill per
+-  pitfall", cap 5 sourced entries). No work is planned on it here — an optional
+-  pattern with low uptake is not a defect.
+-
+-Estate: **116 rules, 289 skills, 437 linted artefacts.** Every step below names
+-the existing artefact it extends; nothing here adds a rule or a skill.
+-
+-## Phase 1 — Enforce the one required section whose population is decidable
+-
+-- [ ] **1.1 Write `## Security constraints` into the four script-bearing skills.**
+-      `src/skills/{corpus-grounding,design-tokens,react-shadcn-ui,tailwind-engineer}/SKILL.md`
+-      each ship a `scripts/` directory and none carries the section. Use the
+-      four-bullet shape already specified at `src/skills/skill-writing/SKILL.md:629-643`
+-      — what it may touch, what it must never do, default-invocation behaviour
+-      (read-only or mutating, and the gating flag if any), what it sends
+-      outbound. Must land **before** 1.2 or the gate reds four shipped skills.
+-      <!-- verify: grep -lc '^## Security constraints' src/skills/corpus-grounding/SKILL.md src/skills/design-tokens/SKILL.md src/skills/react-shadcn-ui/SKILL.md src/skills/tailwind-engineer/SKILL.md -->
+-- [ ] **1.2 Add a conditional required-section check to `skill_linter.ts`, keyed on
+-      `scripts/` directory existence.** Extend the `REQUIRED_SKILL_SECTIONS` loop
+-      at `src/scripts/skill_linter.ts:1356-1359` with a conditional tier that
+-      emits `error/missing_conditional_section` when a skill directory contains
+-      `scripts/` and the body has no `## Security constraints`. **The
+-      false-positive class is empty by construction**: the predicate is a
+-      filesystem existence test on the skill's own directory, not a heuristic
+-      over prose — a skill either ships a script or it does not. After 1.1 the
+-      violation set is 0, so the check ships as `error` on day one rather than
+-      advisory (the stage-vs-hedge argument in
+-      `src/scripts/check_suppression_hygiene.ts:38-42`).
+-      <!-- verify: ./scripts-run src/scripts/skill_linter --all -->
+-- [ ] **1.3 Pin the new check in the linter's own test file.** Add cases to
+-      `tests/scripts/skill_linter.test.ts`: a fixture skill with `scripts/` and
+-      no section → one `missing_conditional_section` error; the same fixture with
+-      the section → clean; a skill with no `scripts/` and no section → clean (the
+-      discrimination case, without which the check is indistinguishable from an
+-      unconditional one).
+-      <!-- verify: npx vitest run tests/scripts/skill_linter.test.ts -->
+-- [~] **1.4 Resolve the other two sections: declared key, or reclassified as
+-      documentation-only.** Blocked on `blocker: conditional-section-population-key`.
+-      Neither "security-stop-routed" nor "adjacent-technology cluster" is
+-      decidable from the tree. Either a schema key lands (a real surface —
+-      `src/scripts/schemas/skill.schema.json:8` is `additionalProperties: false`),
+-      or the two headings at `src/skills/skill-writing/SKILL.md:533` and `:556`
+-      drop the word `required` and read `(recommended pattern, …)` to match the
+-      enforcement that exists. Silently leaving `required` unbacked is the one
+-      option that is not honest.
+-
+-## Phase 2 — Extend the skill-writing pattern registry
+-
+-`src/skills/skill-writing/SKILL.md:482-645` already **is** a conditional
+-section-pattern registry (Self-QA loop, Known-pitfalls, Rationalizations-to-reject,
+-Non-negotiable-deliverable, Upstream-version-notes, Security-constraints). Every
+-step below extends that registry. No new artefact; no new skill against 289.
+-
+-- [ ] **2.1 Add a mechanism-teaching pattern.** One screen, mechanisms only — the
+-      currently-unnamed sibling of the existing patterns. No section pattern and
+-      no linter signal exists for it (`grep -n '^## ' src/skills/skill-writing/SKILL.md`
+-      lists all 20 headings; none covers it). Land it as an *optional* pattern:
+-      "teaches a mechanism" is a prose judgement, so it gets no gate — see the
+-      Risk Register row on FP classes.
+-- [ ] **2.2 Add an illustrative-not-verbatim marker pattern for reference code.**
+-      `grep -c illustrative` over both `src/skills/skill-writing/SKILL.md` and
+-      `src/scripts/skill_linter.ts` returns **0**; the nearest existing guidance
+-      is `skill-writing/SKILL.md:265` "### 4. Add safe/unsafe example". Specify a
+-      one-line marker above a reference block so a reader can tell shape-teaching
+-      code from copy-me code.
+-- [ ] **2.3 Add a headline-metric-plus-closing-report pattern for optimization
+-      skills.** `grep -rn 'headline metric' src/ docs/` returns exactly one
+-      unrelated hit (`src/scripts/measure_projection_bytes.ts:11`). Specify: name
+-      the single number the skill moves, and the closing report shape that states
+-      it before and after.
+-- [-] **2.4 Read-only reconnaissance as a new pattern — already shipped.**
+-      `src/scripts/skill_linter.ts:704-708` `_INSPECT_VERB_PATTERN` /
+-      `hasInspectStep`, enforced at `:1515`; the authored counterpart is
+-      `src/skills/skill-writing/SKILL.md:111` "### 0. Inspect, then run the
+-      Drafting Protocol".
+-- [-] **2.5 Negative knowledge as a new pattern — already mandatory.** `Do NOT`
+-      is in `REQUIRED_SKILL_SECTIONS` (`src/scripts/skill_linter.ts:98`) with
+-      `Anti-patterns` aliased at `:103`, so all 289 skills already carry it.
+-- [-] **2.6 The validation half of verification — already shipped.**
+-      `src/scripts/skill_linter.ts:670-705` `hasValidationStep`, enforced at
+-      `:1508` against both the procedure block and the full body.
+-- [ ] **2.7 Name the contrastive-example slot in `skill-writing` and
+-      `rule-writing`.** The practice is already house style with six live corpora
+-      — `docs/guidelines/agent-infra/{direct-answers-demos,asking-and-brevity-examples,language-and-tone-examples}.md`
+-      and `src/agent-src/contexts/execution/{autonomy-examples,interrupt-examples,cheap-question-mechanics}.md`
+-      — but neither authoring skill names the slot, so it does not propagate.
+-      `src/skills/rule-writing/SKILL.md:349-357` has an `## Examples` section that
+-      shows good-vs-bad for descriptions only. Point at the existing exemplars;
+-      do not invent a format.
+-- [-] **2.8 A new rule for contrastive examples — cancelled.** 116 rules already
+-      ship; this is a template slot in two existing skills, not a behaviour
+-      constraint needing its own always-loaded file.
+-
+-## Phase 3 — Failure signatures: a stable code, and a drill per row
+-
+-`docs/guidelines/agent-infra/failure-signatures.md` already exists (35 lines,
+-10-row table, read by `src/skills/systematic-debugging/SKILL.md:224-228`). Its
+-own header records the file-first council decision of 2026-06-15.
+-
+-- [ ] **3.1 Give each row a stable identifier.** The first column is headed
+-      `Signature (what you see)` (`failure-signatures.md:15`) but holds prose, so
+-      nothing can be cited by name. Add a short kebab code per row and point the
+-      gate/guard/coercion rows at the identifiers the tooling already emits —
+-      `skill_linter.ts:1358` emits `missing_section`, `:1255`
+-      `invalid_execution_handler`, and the whole `Issue` code set is stable
+-      strings a signature row can name verbatim.
+-- [ ] **3.2 Add a discrimination drill per row.** A row's "first check" is only
+-      worth following if the documented signature is what actually appears. For
+-      each row, state the one-line drill that produces it (break the named layer,
+-      assert the documented signature). Doc-only step; the drills are text a
+-      human runs, not a CI gate.
+-- [ ] **3.3 Add one row: stale capability self-claim.** Signature — budget
+-      exhausted plus repeated attempts at a tool that is not available. Likely
+-      cause — a capability the session claimed for itself rather than resolved.
+-      First check — `agent-config hooks:status` and `agent-config routing:doctor`,
+-      both live verbs (`src/cli/registry.ts:82` and `:84`), the latter printing
+-      per-field provenance.
+-- [-] **3.4 Per-subsystem `TROUBLESHOOTING.md` files — cancelled.** Reverses the
+-      file-first decision recorded in the guideline's own header
+-      (`docs/guidelines/agent-infra/failure-signatures.md:9-11`, council
+-      2026-06-15): one table the skill reads, deliberately not scattered.
+-
+-## Phase 4 — Bind the external research citations to the ledger
+-
+-- [ ] **4.1 Inventory the citations.** 14 distinct arXiv ids across 49 lines in
+-      33 tracked files, and **zero** are bound: no `- evidence:` line in
+-      `docs/CLAIMS.md` carries an http or arXiv pointer, against 43 backed
+-      entries. Produce the id → citing-file:line list as the input to 4.2.
+-      <!-- verify: grep -rhoiE 'arxiv[:/ ]*(abs/)?[0-9]{4}\.[0-9]{4,5}' $(git ls-files) | grep -oE '[0-9]{4}\.[0-9]{4,5}' | sort -u | wc -l -->
+-- [ ] **4.2 Bind the load-bearing cites using pointer grammar #3.** Use the
+-      already-specified `https://… (YYYY-MM-DD)` form (`docs/CLAIMS.md:46`) —
+-      **do not invent a dossier format**; a second source of truth is exactly
+-      what `src/scripts/generate_subagent_floor.ts` exists to prevent. Bind only
+-      cites that a public or normative sentence rests on; a citation that decorates
+-      prose needs no ledger row. Re-run `build_proof` after editing the ledger
+-      (`docs/CLAIMS.md` renders into `docs/proof.md` per
+-      `src/scripts/build_proof.ts:8`).
+-      **Nothing here ingests external content, and nothing may start to.** The
+-      pointer grammar is an existence-and-date check that the tooling never
+-      dereferences — `check_claims.ts` documents its pointers as not fetched in
+-      CI, and `build_proof.ts` renders an external cite with that same statement.
+-      The citation universe is the closed set already committed to this tree,
+-      enumerated by the command in 4.1; pointers stay scoped to it. A phase that
+-      fetched a citation would be a different phase and would need its own
+-      egress review under [`lethal-trifecta-guard`](../../src/rules/lethal-trifecta-guard.md).
+-      <!-- verify: ./scripts-run src/scripts/check_claims -->
+-- [ ] **4.3 Add a successor pointer to retired claims.** The retire-never-delete
+-      lifecycle already ships as `status: resolved-null` (`docs/CLAIMS.md:23-31`).
+-      What it lacks is a forward link when a closed question is later reopened by
+-      a different mechanism. One optional field, schema-documented at
+-      `docs/CLAIMS.md:37-44`.
+-      <!-- verify: npx vitest run tests/scripts/check_claims.test.ts -->
+-
+-## Phase 5 — Hedge-word lint, diff-scoped, with a declared escalation stage
+-
+-- [ ] **5.1 Add a diff-scoped hedge-word check reusing the existing lexicon.**
+-      Export and reuse `HEDGE_WORDS` from `src/scripts/bench_honesty_score.ts:528`
+-      rather than restating a list. Diff-scoped, not corpus-wide: ADR-218:93 states
+-      the preference outright — "one that watches diffs, not one that counts the
+-      corpus". Adjacent precedent for a vocabulary floor over prose is
+-      `src/scripts/lint_provenance_vocabulary.ts:14-17` (a phrase banned "anywhere,
+-      even hedged", with a quote-the-ban carve-out this check needs too).
+-      <!-- verify: ./scripts-run src/scripts/lint_hedge_words -->
+-- [ ] **5.2 Ship it with a declared escalation stage, not open-ended warn-only.**
+-      The FP class here is **not** empty: hedging is legitimate in this tree's own
+-      honesty prose (every "may", "typically", "in doubt" in a rule body). So the
+-      check needs a measured FP rate over the current diff surface plus a written
+-      trigger for advisory → error. `src/scripts/check_suppression_hygiene.ts:38-42`
+-      is the shape to copy: state which stage it ships in and why, because
+-      "shipping it advisory would have been a hedge rather than a stage".
+-- [-] **5.3 Estate-wide hedge count as the gate — cancelled.** ADR-218:93 already
+-      settled the diff-vs-corpus question for prose-shape tooling; a corpus count
+-      over 116 rules and 289 skills produces a number nobody can act on.
+-
+-## Phase 6 — Cancelled with citation
+-
+-- [-] **6.1 Per-turn doctrine-recency cue (inject 3-6 kernel constraints at the
+-      payload tail every turn) — cancelled, hard-blocked three ways.** (a)
+-      `docs/decisions/ADR-054-rule-adherence-decay-triggered-restate.md:3` is
+-      `status: rejected` and is this exact proposal. (b)
+-      `agents/settings/contexts/reminder-injection-verdict.md:54` records the
+-      pilot at **Δ = 0 pp on both hosts**, with the hook, manifest wiring and
+-      settings flag "removed in the same branch that built it" (`:75-77`) per a
+-      pre-committed teardown at `<5 pp` (`:28`). (c) The premise itself failed a
+-      pre-registered search: `agents/evidence/analysis/activation-red-baseline.md:15`
+-      swept **1,158 sessions** and `:25-27` records qualifying rows spanning
+-      **9,464 to 727,537 tokens** against a 3,000-token bar — "distance was never
+-      the limiting factor". And the one carrier that does fire per turn on this
+-      exact surface is measured at **24 of 29 misses** with the honesty clause
+-      firing **0** times (`src/rules/session-canary.md:105-106`), whose own
+-      conclusion is that a reminder in context is not a mechanism for this
+-      obligation.
+-- [-] **6.2 The 97-of-111 absoluta point estimate — cancelled, re-derive instead.**
+-      `./scripts-run src/scripts/measure_rule_absoluta` at HEAD reports **116
+-      rules scanned, 84 strict (72.4%), 102 case-insensitive (87.9%), 99 carrying
+-      an Iron Law (85.3%), 287 strict occurrences**. `docs/decisions/ADR-218-absoluta-census-is-a-closed-decision-input.md:43`
+-      and `:88` require citing the range and the structural figure, never a point
+-      estimate.
+-- [-] **6.3 "Positional doctrine is new" — cancelled, already shipped.**
+-      `src/rules/token-budget-discipline.md:117` ships `## Rich artifacts lead
+-      with a non-negotiable band`, and `src/scripts/check_iron_law_prominence.ts:14-19`
+-      enforces both halves: no Iron-Law heading at H3 or deeper, and at least one
+-      Iron-Law H2 among the file's first two H2 headings.
+-
+-## Risk Register
+-<!-- risk-review: v1 | reviewed: 2026-08-10 | reviewer: claude/host -->
+-| Rank | Item | Risk type | Description | Mitigation | Anchored under |
+-|------|------|-----------|-------------|------------|----------------|
+-| 1 | Gate lands before its population complies | implementation | 1.2 turns a missing `## Security constraints` into `error/missing_conditional_section`, and all 4 script-bearing skills are non-compliant today — wiring it first reds four shipped artefacts and the fix looks like a linter regression | 1.1 strictly precedes 1.2 in the same change; 1.3's third case pins that a script-free skill stays clean | Phase 1 — Enforce the one required section whose population is decidable |
+-| 2 | Hedge-word lint has a live false-positive class | product | Hedges are legitimate in this tree's own honesty prose; a check over rule bodies will flag "may", "typically", "in doubt" in the very rules that teach calibrated language | Diff-scoped per ADR-218:93; measured FP rate plus a written advisory→error trigger before it can fail a build; quote-the-ban carve-out modelled on `lint_provenance_vocabulary.ts:14-17` | Phase 5 — Hedge-word lint, diff-scoped, with a declared escalation stage |
+-| 3 | A declarative frontmatter key is a wider surface than it looks | implementation | `skill.schema.json:8` is `additionalProperties: false`, so keying the other two sections on a declared property touches the schema, the frontmatter validator, and every generator that reads skill frontmatter | Held behind `blocker: conditional-section-population-key`; the reclassification alternative (drop `required` from the two headings) needs no schema change at all | Phase 1 — Enforce the one required section whose population is decidable |
+-| 4 | A bound external cite can rot silently | implementation | Pointer grammar #3 is an existence-and-date check — `docs/CLAIMS.md:46` says plainly "not fetched in CI" — so a bound arXiv row stays green after the paper is withdrawn or renumbered | Bind only cites a normative sentence rests on (4.2), carry the dated stamp the grammar requires, and leave decorative citations unbound rather than manufacturing ledger rows | Phase 4 — Bind the external research citations to the ledger |
+-| 5 | skill-writing outgrows its budget | product | `src/skills/skill-writing/SKILL.md` is 661 lines and already carries 20 H2 sections; three more patterns plus a contrastive slot push it further against `size-enforcement` | Keep each new pattern to the ~15-line shape the existing patterns use (`:505-532` is the model); if the file crosses its budget, the pattern registry splits out rather than the patterns being dropped | Phase 2 — Extend the skill-writing pattern registry |
+-
+-## Blockers
+-
+-### blocker: conditional-section-population-key
+-- **Status:** open
+-- **Owner:** maintainer
+-- **Blocks:** step 1.4 only. Phase 1 steps 1.1-1.3 (the script-bearing section
+-  and its gate), and all of Phases 2-7, proceed independently.
+-- **What to do:** Decide between two options for
+-  `## Rationalizations to reject` (`src/skills/skill-writing/SKILL.md:533`) and
+-  `## Non-negotiable deliverable` (`:556`), whose populations are not decidable
+-  from the tree. (1) Add a declarative skill-frontmatter key naming the pattern
+-  a skill opts into — a schema change under
+-  `src/scripts/schemas/skill.schema.json:8` `additionalProperties: false`, plus
+-  the frontmatter validator and every generator reading skill frontmatter.
+-  (2) Drop `required` from both headings so the label matches the enforcement
+-  that exists, leaving them optional patterns like `:505` and `:592`.
+-- **Resolved when:** The maintainer records option 1 or option 2 in this
+-  blocker, and step 1.4 is rewritten as the concrete steps that option needs.
+diff --git a/agents/roadmaps/road-to-inbox-harvest-2026-08-b.md b/agents/roadmaps/road-to-inbox-harvest-2026-08-b.md
+index a67206c82b622f4ae14115093ee272ba8d228164..21d7e8ce35d75002b8981904f0985ef76f4b5b23 100644
+--- a/agents/roadmaps/road-to-inbox-harvest-2026-08-b.md
++++ b/agents/roadmaps/road-to-inbox-harvest-2026-08-b.md
+@@ -123,7 +123,7 @@ cancellations with the lock cited inline.
+ | [`-ci-economy`](road-to-inbox-harvest-2026-08-b-ci-economy.md) | the CI/test economy — `tests.yml` matrix-expands to **23 jobs** (`:76-78` etc.) of which **13** each run the full 6-target build (8 + 1 + 2 + 2, derived in that roadmap's Context), 191 subprocess-spawning tests, dead path filters | largest; baseline must be recorded **from CI** |
+ | [`-ledger-truth`](road-to-inbox-harvest-2026-08-b-ledger-truth.md) | `model_served` vs `model_requested` (0 hits), two un-cross-checked rate tables with different matching strategies, silent zero-costing | highest-value single item in the batch |
+ | [`-council-integrity`](road-to-inbox-harvest-2026-08-b-council-integrity.md) | the quorum-attendance defect, shared model-field coercion, synthesis prose-vs-tally | the one fully-surviving source |
+-| [`-authoring-contract`](road-to-inbox-harvest-2026-08-b-authoring-contract.md) | three sections labelled *required* and enforced by nothing; failure-signature drills; 20 unbound research citations | sharpest finding the bundles missed |
++| [`-authoring-contract`](archive/road-to-inbox-harvest-2026-08-b-authoring-contract.md) | three sections labelled *required* and enforced by nothing; failure-signature drills; 20 unbound research citations | sharpest finding the bundles missed |
+ | [`-estate-lifecycle`](road-to-inbox-harvest-2026-08-b-estate-lifecycle.md) | staleness metadata, archive-not-delete, zero-inbound report | **opens with a decision-revisit offer** against a same-day lock |
+ | [`-install-lifecycle`](road-to-inbox-harvest-2026-08-b-install-lifecycle.md) | there is no uninstall path in `install.ts` at all; plus the org-pack decision | the uninstall half needs no pack system |
+ | [`-dispatch-safety`](road-to-inbox-harvest-2026-08-b-dispatch-safety.md) | scoped-Bash expressibility, a confirmation primitive, checkable handoff fields | a live schema-vs-rule contradiction |
+diff --git a/dist/agent-src/skills/corpus-grounding/SKILL.md b/dist/agent-src/skills/corpus-grounding/SKILL.md
+index 0961218a173be7dba006bc59b518ee8c1116f252..f8eacefeca8abffb50ba6eb68bbf46da056c86f2 100644
+--- a/dist/agent-src/skills/corpus-grounding/SKILL.md
++++ b/dist/agent-src/skills/corpus-grounding/SKILL.md
+@@ -184,18 +184,27 @@ Each domain ships `data/manifest.json` beside its CSVs — declaring its
+ - BM25 tokenizer drops tokens ≤2 chars — "UI", "a11y" style queries need
+   longer companions.
+ 
+-## Runtime-safety review (Step 1.6 record)
+-
+-- **Read-only by default** — the engine opens corpus CSVs under the
+-  manifest's directory only (`resolve_data_path` refuses absolute paths
+-  and `..` escapes).
+-- **Single write surface** — `--persist DIR` (opt-in) writes markdown
+-  under the caller-chosen `DIR`; nothing else writes.
+-- **No network, no subprocess, no secrets** — pure stdlib; embeddings /
+-  remote retrievers are intentionally not implemented (ADR-061 §2).
+-- `rules_module` executes a manifest-adjacent TypeScript module (dynamic
+-  `import()`) — same trust domain as the skill that ships the manifest;
+-  containment enforced by `resolve_data_path`.
++## Security constraints (Step 1.6 runtime-safety record)
++
++Four scripts ship under `scripts/`: `ground.ts` (CLI), `bm25_search.ts`,
++`decision_engine.ts`, `schema_validator.ts`.
++
++- **What they may touch** — corpus CSVs and the manifest under the
++  manifest's own directory. `resolve_data_path` refuses absolute paths and
++  `..` escapes, so the manifest directory is the read boundary.
++- **What they must never do** — read outside that directory, reach the
++  network, or spawn a subprocess. Embeddings and remote retrievers are
++  intentionally not implemented (ADR-061 §2), and that is a containment
++  decision, not a missing feature.
++- **Default invocation** — read-only. The single write surface is opt-in
++  `--persist DIR`, which writes `MASTER.md` (and `pages/<page>.md` when
++  `--page` is given) under `DIR/design-system/<project-slug>/`. Nothing
++  else writes.
++- **Outbound** — nothing. No network access at all.
++
++One qualified exception: `rules_module` executes a manifest-adjacent
++TypeScript module via dynamic `import()`. That is the same trust domain as
++the skill shipping the manifest, and its containment is `resolve_data_path`.
+ 
+ ## See also
+ 
+diff --git a/dist/agent-src/skills/design-tokens/SKILL.md b/dist/agent-src/skills/design-tokens/SKILL.md
+index ff695ecfdd77c71ff0a88b38568642ad29963a35..3e34a94e201ec69d24a640eb9b9ca72cdfccb57b 100644
+--- a/dist/agent-src/skills/design-tokens/SKILL.md
++++ b/dist/agent-src/skills/design-tokens/SKILL.md
+@@ -113,6 +113,21 @@ four-operation split assigns to *rules/linters*, not the corpus).
+ 3. `validate` report — exit 0 evidence, or the violations list handed to
+    the polish round as `token_violation` findings.
+ 
++## Security constraints
++
++`scripts/tokens.ts` is the only shipped script.
++
++- **What it may touch** — the `tokens.json` config path it is given, the
++  directory it is asked to `validate`, and the `--output` path it is asked
++  to write. Nothing outside the paths named on the command line.
++- **What it must never do** — reach the network, spawn a subprocess, or
++  write to a path the caller did not name. It never edits the generated CSS
++  it produced earlier; regeneration replaces, it does not patch.
++- **Default invocation** — read-only. `generate` prints to stdout unless
++  `--output PATH` is passed; `--output` is the flag that makes it mutating,
++  and it creates only that file's parent directory. `validate` never writes.
++- **Outbound** — nothing. No network access.
++
+ ## Do NOT
+ 
+ - Do NOT hand-edit generated CSS — `tokens.json` is the single source.
+diff --git a/dist/agent-src/skills/react-shadcn-ui/SKILL.md b/dist/agent-src/skills/react-shadcn-ui/SKILL.md
+index d6711868cc94b411a74e726d5adf5a1a9049c5a0..bcdd3732155866269893ed575f3b62bad2b69ab9 100644
+--- a/dist/agent-src/skills/react-shadcn-ui/SKILL.md
++++ b/dist/agent-src/skills/react-shadcn-ui/SKILL.md
+@@ -299,6 +299,30 @@ carve-out for the tool-specific part.
+   values the component no longer accepts is stale documentation; keep them beside
+   the component and update them in the same change.
+ 
++## Security constraints
++
++`scripts/shadcn_add.ts` is the only shipped script, and it is the single
++subprocess-plus-network surface in this suite — treat it accordingly.
++
++- **What it may touch** — the project rooted at `--project-root` (default
++  `cwd`): it reads `components.json` there and lets the upstream CLI write
++  the generated primitives under that root. Nothing outside it.
++- **What it must never do** — run without the exact `npx` command and the
++  component list having been shown to the user first, per the gate above.
++  Never pass `--overwrite` unprompted; never treat a non-zero exit as
++  success; never work around a missing `npx` silently
++  ([`missing-tool-handling`](../../rules/missing-tool-handling.md)).
++- **Default invocation** — mutating. A bare `shadcn_add <component>`
++  spawns `npx shadcn@latest add <component>` and writes into the project.
++  `--dry-run` is the read-only path and prints the command it would run;
++  `--list` is read-only too. Use `--dry-run` for the proposal step.
++- **Outbound** — yes, and this is the point of the gate: `npx` resolves
++  `shadcn@latest` from the public npm registry on every live run, so both
++  the code fetched and the components written are chosen upstream, at run
++  time, not pinned here. That is the egress leg of the lethal trifecta
++  ([`lethal-trifecta-guard`](../../rules/lethal-trifecta-guard.md)); the
++  human confirmation is what keeps it off an autonomous path.
++
+ ## Do NOT
+ 
+ - Do NOT install `shadcn-ui` from npm — primitives are scaffolded.
+diff --git a/dist/agent-src/skills/rule-writing/SKILL.md b/dist/agent-src/skills/rule-writing/SKILL.md
+index 1f1702171cee6782021c11ed848e8e6b40dd57a1..042770c3339fabbbaf9132f4087e8810adf739aa 100644
+--- a/dist/agent-src/skills/rule-writing/SKILL.md
++++ b/dist/agent-src/skills/rule-writing/SKILL.md
+@@ -355,3 +355,26 @@ Good description (trigger-shaped, names domain + symptoms):
+ Bad description (no trigger, too vague):
+ 
+ > "Commit conventions"
++
++### Contrastive-example slot (optional, for the rule body)
++
++The pair above governs descriptions. A rule whose obligation is easy to agree
++with and hard to apply — what counts as a cheap question, when an interrupt is
++an interrupt, which reply mirrors the user's language — needs the same treatment
++for the **behaviour**, not just the frontmatter.
++
++Six live corpora already carry those pairs:
++[`direct-answers-demos`](../../../docs/guidelines/agent-infra/direct-answers-demos.md),
++[`asking-and-brevity-examples`](../../../docs/guidelines/agent-infra/asking-and-brevity-examples.md),
++[`language-and-tone-examples`](../../../docs/guidelines/agent-infra/language-and-tone-examples.md),
++and `autonomy-examples` / `interrupt-examples` / `cheap-question-mechanics` under
++`src/agent-src/contexts/execution/`. Follow one; do not invent a format.
++
++The shape they share: the **wrong** version in the form it actually gets
++written, the **right** version, and one line of **why** — the why is what makes
++it a rule rather than a memorised case.
++
++Where the pairs go is a size decision, not a taste one. A rule body is capped at
++200 lines hard / 120 soft, so more than two or three pairs belong in a guideline
++or context file the rule points at — same split
++[`skill-writing`](../skill-writing/SKILL.md) § Contrastive-example slot uses.
+diff --git a/dist/agent-src/skills/skill-writing/SKILL.md b/dist/agent-src/skills/skill-writing/SKILL.md
+index 7ca98d72cbb29e208ff2360f15e5d1c4a96512b4..8886763e3fcce85ed9e1f1f48751cd53e8183cec 100644
+--- a/dist/agent-src/skills/skill-writing/SKILL.md
++++ b/dist/agent-src/skills/skill-writing/SKILL.md
+@@ -530,7 +530,7 @@ tool skill*, **never** a new skill per pitfall and never a generated grid (see
+ [`size-enforcement`](../../rules/size-enforcement.md) § Per-tool pitfall
+ content).
+ 
+-## Rationalizations-to-reject section (required, security-stop-routed skills)
++## Rationalizations-to-reject section (recommended pattern, security-stop-routed skills)
+ 
+ A skill routed by `security-sensitive-stop` already carries a forbidden-moves or
+ failure-mode list. Those describe **what is wrong**. They do not answer the
+@@ -553,7 +553,7 @@ the skip actually happens.
+ Keep it to the arguments that have really been made. An invented rationalization
+ teaches nothing and dilutes the ones that recur.
+ 
+-## Non-negotiable-deliverable section (required, adjacent-technology clusters)
++## Non-negotiable-deliverable section (recommended pattern, adjacent-technology clusters)
+ 
+ Some skills sit next to a technology that is a *tempting wrong answer* — close
+ enough to look interchangeable, different enough that picking it silently loses
+@@ -644,6 +644,84 @@ This duplicates the rules on purpose, and the duplication is the point: the
+ rules are the enforcement, the section is what survives the artifact leaving
+ their reach.
+ 
++## Mechanism-teaching section (optional pattern, skills whose subject has one)
++
++A procedure tells the agent what to do in the cases you thought of. A
++**mechanism** tells it why those steps work, which is the only thing that
++transfers to the case you did not. Where a skill's subject has a mechanism worth
++one screen — how the cascade resolves, why the queue drops the message, what the
++scheduler actually orders — state it in a `## How it works` section, ahead of the
++procedure that depends on it.
++
++Keep it to one screen and to mechanisms only: no history, no alternatives-considered,
++no restating the procedure in prose. If it takes more than a screen, the skill is
++carrying a guideline's worth of material and should point at one instead.
++
++The test for whether it earns its place: name a plausible situation the procedure
++does not cover, and check whether this section is enough to answer it. If the
++answer is still "read the source", the section is decoration.
++
++Optional, and it gets no gate: "teaches a mechanism" is a prose judgement, and a
++predicate over prose is the false-positive class this file's other patterns avoid.
++
++## Illustrative-not-verbatim marker (optional pattern, reference code)
++
++A code block in a skill is read as copy-me by default. When a block is teaching a
++*shape* — a signature to mirror, a structure to follow, pseudocode standing in for
++the real call — say so on the line above it:
++
++```
++<!-- illustrative: shape only, not a working snippet -->
++```
++
++One line, immediately above the fence, in the skill's own words if you prefer.
++What matters is that the reader can tell shape-teaching code from code that runs,
++because the failure mode is silent: an agent pastes the illustration, it almost
++works, and the debugging starts from the wrong premise.
++
++The inverse deserves the same care — a block that IS meant to be run verbatim,
++where a reader might assume otherwise, says so too. See also `### 4. Add
++safe/unsafe example`, which governs a different axis: safe-vs-unsafe, not
++runnable-vs-illustrative.
++
++## Headline metric + closing report (optional pattern, optimization skills)
++
++A skill whose job is to make something better — smaller, faster, cheaper, quieter
++— has to say **which single number it moves**. Without one, "optimized" is a
++claim nobody can check and every run reports success.
++
++So an optimization skill names, up front:
++
++1. **The headline metric.** One number, with its unit and how it is measured.
++   "Initial-context tokens, measured by `audit-tokens`" — not "context cost".
++2. **The closing report shape.** Before, after, delta, and the command that
++   produced both. The same command for both readings, or the delta is not a delta.
++
++State what the metric does **not** capture, in one line. An optimization that
++moves the headline number by degrading something it does not measure is the
++failure this pattern exists to make visible, and only the author knows where that
++edge is.
++
++## Contrastive-example slot (optional pattern, authoring and behaviour skills)
++
++Where a skill's guidance is easy to agree with and hard to apply — tone, phrasing,
++question shape, what counts as evidence — a wrong/right pair does what prose
++cannot: it shows the near-miss. Six live corpora already carry them:
++[`direct-answers-demos`](../../../docs/guidelines/agent-infra/direct-answers-demos.md),
++[`asking-and-brevity-examples`](../../../docs/guidelines/agent-infra/asking-and-brevity-examples.md),
++[`language-and-tone-examples`](../../../docs/guidelines/agent-infra/language-and-tone-examples.md),
++and `autonomy-examples` / `interrupt-examples` / `cheap-question-mechanics` under
++`src/agent-src/contexts/execution/`.
++
++Follow one of those rather than inventing a format. The shape they share: the
++**wrong** version first, in the form it actually gets written; the **right**
++version second; and one line of **why** — which is the load-bearing part, because
++a pair without it teaches the specific case and not the rule.
++
++Put the corpus in a guideline or context file and point at it from the skill when
++it outgrows a section. A near-miss corpus is reference material read on demand,
++not always-loaded prose.
++
+ ## Do NOT
+ 
+ * Write documentation-style, pointer-only, or too-broad skills ("Laravel skill", "Django skill")
+diff --git a/dist/agent-src/skills/systematic-debugging/SKILL.md b/dist/agent-src/skills/systematic-debugging/SKILL.md
+index 1572e663e348eedd3f3ba9d2466ddcffe6d328a8..26f39fb0f49d365526465320eb676b92738ab887 100644
+--- a/dist/agent-src/skills/systematic-debugging/SKILL.md
++++ b/dist/agent-src/skills/systematic-debugging/SKILL.md
+@@ -222,10 +222,12 @@ right line beats five minutes of IDE breakpoints.
+ 
+ **Known failure signature?** If the symptom has a recognisable shape — a
+ tool/agent loop, HTTP 429, `ECONNREFUSED`, `ENOENT`, timeout/hang, OOM, flaky
+-test, or works-locally-fails-in-CI — consult the symptom → cause → first-check
++test, works-locally-fails-in-CI, or repeated attempts at a tool that is not
++available — consult the symptom → cause → first-check
+ lookup in [`failure-signatures`](../../../docs/guidelines/agent-infra/failure-signatures.md)
+-to shortcut Phase 2 (Isolate) with the highest-probability first check. It
+-supplements the loop; it does not replace it.
++to shortcut Phase 2 (Isolate) with the highest-probability first check. Each row
++carries a stable id you can cite, and a discrimination drill that produces its
++documented symptom. It supplements the loop; it does not replace it.
+ 
+ ## Condition-based waiting (intermittent bugs)
+ 
+diff --git a/dist/agent-src/skills/tailwind-engineer/SKILL.md b/dist/agent-src/skills/tailwind-engineer/SKILL.md
+index 878b329176a2da86742931c7ba278e22d320339a..6b45acac6e4de8a0076fb902be59a4e1dfacbb66 100644
+--- a/dist/agent-src/skills/tailwind-engineer/SKILL.md
++++ b/dist/agent-src/skills/tailwind-engineer/SKILL.md
+@@ -157,8 +157,32 @@ Risks:          <arbitrary values, !important, dark-mode gaps>
+ 
+ When `DESIGN.md` declares `## Taste Dials`, honour them: Variance → layout-family spread + asymmetry tolerance; Motion → animation budget + reduced-motion posture; Density → spacing scale + information-per-viewport. Absent → follow the design brief's inferred dials.
+ 
++## Security constraints
++
++`scripts/tailwind_config_gen.ts` is the only shipped script.
++
++- **What it may touch** — exactly one file: `--output PATH`, or
++  `tailwind.config.ts` / `.js` in the current working directory when no
++  `--output` is given. It reads nothing from the project.
++- **What it must never do** — write anywhere other than that one path,
++  reach the network, or spawn a subprocess. It does none of these.
++- **Default invocation** — **mutating**, and stated here because it is a
++  real exception rather than a comfortable one: a bare invocation writes
++  `tailwind.config.ts` into `cwd`, overwriting an existing config without
++  prompting. `--validate-only` is the read-only path — it prints the
++  generated config to stdout and writes nothing. Run `--validate-only`
++  first, and pass `--output` when the target is not the cwd default.
++  This default contradicts `skill-writing`'s "never mutate on a bare
++  invocation" line; it is recorded rather than silently tolerated, and
++  changing the script's default is a caller-visible behaviour change that
++  belongs in its own change, not here.
++- **Outbound** — nothing. No network access.
++
+ ## Do NOT
+ 
++- Do NOT run `tailwind_config_gen` bare in a project that already has a
++  `tailwind.config.*` — it overwrites without asking. Use
++  `--validate-only` first, then `--output` at the intended path.
+ - Do NOT add `!important` to win a specificity fight; restructure
+   the cascade or extract the conflicting style.
+ - Do NOT introduce a new colour outside `tailwind.config` without
+diff --git a/docs/CLAIMS.md b/docs/CLAIMS.md
+index 956eb78e3198f7801c4f6388f9e4057c649033b2..f1faa40240ff9aaaf128510bfe32c37196656c56 100644
+--- a/docs/CLAIMS.md
++++ b/docs/CLAIMS.md
+@@ -37,8 +37,32 @@
+ - evidence: <pointer>            # see grammar below
+ - status: backed | unbacked | resolved-null
+ - last_verified: <YYYY-MM-DD>
++- superseded_by: <kebab-id>      # optional; resolved-null entries only
+ ```
+ 
++**`superseded_by` — the forward link out of a closed question.** The
++retire-never-delete lifecycle keeps a `resolved-null` readable forever, which is
++the point: a null nobody can find gets quietly re-argued. What it lacked was the
++other direction — a reader who arrives at the closed entry has no way to learn
++that the same question was later reopened **by a different mechanism**. This
++optional field is that link.
++
++Three rules, all machine-checked by `check_claims`:
++
++- It may name only an id that exists in this ledger. A dangling successor sends
++  the reader nowhere, which is worse than no link.
++- It is only meaningful on `resolved-null`. On a `backed` or `unbacked` entry it
++  claims a closure that never happened, and is rejected.
++- It never points at its own entry.
++
++It is a *successor*, not a *citation*. A later claim that merely references a
++null in its reasoning — as `worker-capsule-trigger-arm` references
++`orchestration-observed-dispatch-cost` — is not a successor: the question was
++not reopened, it was used as a prior. Use the field only when the new claim asks
++the **same** question by other means. No entry carries one today; the field is
++here for the first reopening, and the gate is here so that it cannot be added
++wrong.
++
+ **Evidence-pointer grammar (v2):**
+ 
+ - `path/to/file.md` or `path/to/file.md:42` — the repo file exists (line advisory).
+@@ -458,3 +482,45 @@ metacharacters and repo escape, including the right-hand side of `--flag=value`.
+ - evidence: PRE-REGISTERED 2026-08-09 (road-to-worker-generation-recycling Phase 1.4 — registered BEFORE the first shadow capsule is read; the mechanism ships shadow-only, so no capsule has been scored at registration time). CAPSULE-QUALITY RUBRIC, fixed here, five binary criteria scored 0-5 per capsule — (1) `remaining[]` names every open item the task still needs, no silent drops; (2) `decisions[]` names each choice a successor would otherwise silently re-open; (3) `assumptions[]` is non-empty and every entry carries a resolving `basis` ref; (4) every `done[]` ref resolves to a real file/line; (5) a successor briefed on the ORIGINAL brief plus the capsule alone takes a first action that neither repeats completed work nor asks for a re-brief. ADOPTION MARGIN, fixed BEFORE data: an arm is adopted only if, on paired samples from the same runs, it fires at a median of >= 2 steps earlier AND its capsules score >= 4/5 on the rubric with no regression against the other arm; an arm that wins on earliness while dropping below 4/5 is NOT adopted, because an earlier bad capsule is worse than a later good one. Sample floor: >= 30 shadow capsules with BOTH trigger points recorded (`watermark_step`, `saturation_step`, `trigger_arm_earlier` on the `orchestration_record` line). Instrument: `src/scripts/_lib/capsule_trigger.ts` (`compareTriggers`, `earlierArm`), term-frequency only, no embeddings. HONEST-NULL consequence, pre-authorised: BOTH arms losing (neither reaches 4/5, or the margin is not met) is a publishable result that closes the mechanism as default-off — it is the expected-value outcome given the standing `orchestration-observed-dispatch-cost` null, and it must be cheap to record. Token delta is reported as a pair with quality and is explicitly NOT the claim.
+ - status: unbacked
+ - last_verified:
++
++### claim: judge-family-llm-as-a-judge-foundation
++- claim: The judge-skill family (`judge-bug-hunter`, `judge-code-quality`, `judge-security-auditor`, `judge-synthesis`, `judge-test-coverage`, and the `/review-changes` dispatcher) implements the LLM-as-a-judge pattern — a specialized model scoring another model's output against a rubric — and treats position bias and self-consistency as its known failure modes, which is why the dispatcher randomizes order and the synthesis layer surfaces conflict rather than averaging it.
++- kind: qual
++- evidence: https://arxiv.org/abs/2306.05685 (2026-08-11)
++- status: backed
++- last_verified: 2026-08-11
++
++### claim: adversarial-review-tree-of-thoughts
++- claim: `adversarial-review` structures its critique as branching exploration with explicit pruning rather than a single pass, following the Tree-of-Thoughts formulation.
++- kind: qual
++- evidence: https://arxiv.org/abs/2305.10601 (2026-08-11)
++- status: backed
++- last_verified: 2026-08-11
++
++### claim: autonomous-analysis-self-refine
++- claim: `analysis-autonomous-mode` runs iterative self-critique between steps rather than only at the end, following the Self-Refine formulation.
++- kind: qual
++- evidence: https://arxiv.org/abs/2303.17651 (2026-08-11)
++- status: backed
++- last_verified: 2026-08-11
++
++### claim: bug-analyzer-chain-of-verification
++- claim: `bug-analyzer` verifies each candidate root cause against a concrete trigger before reporting it, following the Chain-of-Verification formulation — which is the mechanism behind its "never invent issues" constraint.
++- kind: qual
++- evidence: https://arxiv.org/abs/2309.11495 (2026-08-11)
++- status: backed
++- last_verified: 2026-08-11
++
++### claim: sequential-thinking-chain-of-thought
++- claim: `sequential-thinking` applies chain-of-thought decomposition with two constraints the original formulation does not carry — a cap on the number of thoughts and a mandatory validation step — specifically to bound the unbounded-expansion failure mode.
++- kind: qual
++- evidence: https://arxiv.org/abs/2201.11903 (2026-08-11)
++- status: backed
++- last_verified: 2026-08-11
++
++### claim: skill-improvement-reflexion
++- claim: `skill-improvement-pipeline` converts post-task outcomes into durable written lessons rather than in-context retries, following the Reflexion formulation.
++- kind: qual
++- evidence: https://arxiv.org/abs/2303.11366 (2026-08-11)
++- status: backed
++- last_verified: 2026-08-11
+diff --git a/docs/guidelines/agent-infra/failure-signatures.md b/docs/guidelines/agent-infra/failure-signatures.md
+index 8eef32926b47b5caa97ef3c40b44a00b62466c87..447f28dc5d46e54ef8a237427ec0f5623b02df94 100644
+--- a/docs/guidelines/agent-infra/failure-signatures.md
++++ b/docs/guidelines/agent-infra/failure-signatures.md
+@@ -12,18 +12,53 @@ probability cause.
+ 
+ ## Lookup
+ 
+-| Signature (what you see) | Likely cause | First check |
+-|---|---|---|
+-| **Tool/agent loop** — same tool called >2× with near-identical args, no progress | Missing stop condition; reading without acting; ambiguous state | Stop. State the hypothesis in one line. Act or ask — do not re-read. (`context-hygiene` 15/25 rule) |
+-| **HTTP 429 / "rate limit" / "quota"** | Too-frequent calls; shared quota; missing backoff | Inspect response headers (`Retry-After`, `X-RateLimit-*`); add exponential backoff; check if a loop is firing the calls |
+-| **`ECONNREFUSED` / connection refused** | Service not up; wrong host/port; container not started | Is the service running? (`docker compose ps`, health endpoint); is the port right? (`lsof -i :PORT`); is it bound to `127.0.0.1` vs `0.0.0.0`? |
+-| **`ENOENT` / "no such file or directory"** | Wrong cwd; path relative vs absolute; file not generated yet | Print the *resolved absolute* path; check cwd; confirm a prior step actually wrote the file |
+-| **Timeout / hang** | Blocking I/O; deadlock; awaiting a condition that never holds | What is it waiting on? Add a log right before the blocking call; bound the wait; check for a missing `await`/`return` |
+-| **`OOM` / killed (137) / heap out of memory** | Unbounded collection; loading all rows; leak in a loop | What grows per iteration? Stream/paginate instead of loading all; check `--max-old-space-size` only after finding the growth |
+-| **`EACCES` / permission denied** | Wrong file mode; running as wrong user; read-only mount | `ls -l` the target; check the process user; is the path a read-only volume? |
+-| **Flaky test (passes alone, fails in suite)** | Shared state; order dependence; real clock/random; unawaited async | Run the test in isolation vs in suite; look for shared fixtures, global state, `Date.now()`/random, missing `await` |
+-| **Works locally, fails in CI** | Env/config drift; missing service; absent secret; path/case sensitivity | Diff env (`printenv`); is the service/secret present in CI? Linux is case-sensitive — check filename casing |
+-| **Intermittent / "sometimes"** | Race; timing; network; non-deterministic order | Reproduce with condition-based waiting, not fixed sleeps (`systematic-debugging` § Condition-based waiting); log timestamps |
++| ID | Signature (what you see) | Likely cause | First check |
++|---|---|---|---|
++| `tool-loop` | **Tool/agent loop** — same tool called >2× with near-identical args, no progress | Missing stop condition; reading without acting; ambiguous state | Stop. State the hypothesis in one line. Act or ask — do not re-read. (`context-hygiene` 15/25 rule) |
++| `rate-limited` | **HTTP 429 / "rate limit" / "quota"** | Too-frequent calls; shared quota; missing backoff | Inspect response headers (`Retry-After`, `X-RateLimit-*`); add exponential backoff; check if a loop is firing the calls |
++| `connection-refused` | **`ECONNREFUSED` / connection refused** | Service not up; wrong host/port; container not started | Is the service running? (`docker compose ps`, health endpoint); is the port right? (`lsof -i :PORT`); is it bound to `127.0.0.1` vs `0.0.0.0`? |
++| `path-not-found` | **`ENOENT` / "no such file or directory"** | Wrong cwd; path relative vs absolute; file not generated yet | Print the *resolved absolute* path; check cwd; confirm a prior step actually wrote the file |
++| `hang` | **Timeout / hang** | Blocking I/O; deadlock; awaiting a condition that never holds | What is it waiting on? Add a log right before the blocking call; bound the wait; check for a missing `await`/`return` |
++| `out-of-memory` | **`OOM` / killed (137) / heap out of memory** | Unbounded collection; loading all rows; leak in a loop | What grows per iteration? Stream/paginate instead of loading all; check `--max-old-space-size` only after finding the growth |
++| `permission-denied` | **`EACCES` / permission denied** | Wrong file mode; running as wrong user; read-only mount | `ls -l` the target; check the process user; is the path a read-only volume? |
++| `order-dependent-test` | **Flaky test (passes alone, fails in suite)** | Shared state; order dependence; real clock/random; unawaited async | Run the test in isolation vs in suite; look for shared fixtures, global state, `Date.now()`/random, missing `await` |
++| `local-ci-drift` | **Works locally, fails in CI** | Env/config drift; missing service; absent secret; path/case sensitivity | Diff env (`printenv`); is the service/secret present in CI? Linux is case-sensitive — check filename casing |
++| `race` | **Intermittent / "sometimes"** | Race; timing; network; non-deterministic order | Reproduce with condition-based waiting, not fixed sleeps (`systematic-debugging` § Condition-based waiting); log timestamps |
++| `stale-capability-claim` | **Budget exhausted plus repeated attempts at a tool that is not available** | A capability the session claimed for itself instead of resolving — the council, a hook slot, a subagent primitive, an MCP server assumed present | Ask the live verb, not the tree: `agent-config hooks:status` for slot bindings, `agent-config routing:doctor` for per-field capability **provenance** (`registry` / `live-probe` / `default`), `agent-config council:status` for council availability. A `false` from `default` records that nobody answered, not that the host cannot |
++
++### Naming convention for IDs
++
++An id is a short kebab handle so a signature can be **cited by name** — the
++first column was prose, so nothing could reference a row.
++
++One rule governs new ids: **where a row's signature is a stable string the
++tooling already prints, the id is that string verbatim** rather than a kebab
++synonym. `skill_linter.ts` emits a closed set of `Issue` codes —
++`missing_section`, `missing_conditional_section`, `invalid_execution_handler` —
++and a row about one of those is looked up by the code the reader just saw in the
++output. No current row is of that class; the convention is stated for the next
++one, so the table does not accumulate two names for the same failure.
++
++## Discrimination drills
++
++A row's "first check" is only worth following if the documented signature is what
++actually appears. Each drill breaks the named layer and asserts the documented
++symptom — run it once when you doubt a row, or when adding one. They are text a
++human runs; nothing here is a CI gate.
++
++| ID | Drill — break this, expect that |
++|---|---|
++| `tool-loop` | Ask for a fact that is genuinely absent from the tree (a config key nothing defines). Expect repeated searches with shrinking variation and no edit — that shape, not an error message, is the signature. |
++| `rate-limited` | Fire the provider's own rate limit with a tight loop against a cheap endpoint. Expect `429` **plus** `Retry-After`; a `429` with no such header is a different failure (a gateway, not the API). |
++| `connection-refused` | Stop the service and call it (`docker compose stop <svc>`). Expect `ECONNREFUSED` immediately. If it hangs instead, the host resolves but nothing listens — that is `hang`, not this row. |
++| `path-not-found` | Run a path-taking script from a different cwd. Expect `ENOENT` naming a path that is *almost* right — the near-miss is the tell that the path is relative, not missing. |
++| `hang` | `await` a promise nothing resolves. Expect no output and no exit, distinguishable from `race` by being 100% reproducible. |
++| `out-of-memory` | Accumulate rows in an array inside a loop over a large fixture. Expect the heap message and exit 137 — and note that the reported line is where allocation failed, not where the growth is. |
++| `permission-denied` | `chmod 000` a fixture and read it. Expect `EACCES`, not `ENOENT` — confusing the two sends you looking for a missing file that is right there. |
++| `order-dependent-test` | Add a module-level mutable to two tests in one file. Expect green alone, red in suite. Reversing the file order should move the failure — if it does not, the cause is shared *external* state, not order. |
++| `local-ci-drift` | Rename a fixture's casing (`Foo.ts` → `foo.ts`) and import the old name. Expect green on macOS, red on Linux CI. The generalisation: anything the local filesystem is lenient about. |
++| `race` | Replace a condition-based wait with a fixed `sleep` shorter than the operation. Expect intermittent failure whose rate moves with machine load — load-sensitivity is what separates this from `order-dependent-test`. |
++| `stale-capability-claim` | Assert a capability without asking for it, then compare against the live verb. `agent-config routing:doctor` prints provenance per field; a field whose provenance is `default` was never established by anything — which is exactly the state a confident self-claim is indistinguishable from. |
+ 
+ ## How to use
+ 
+diff --git a/docs/proof.md b/docs/proof.md
+index 437e7b96c51c667042e09b71e6a2a2c408a597dc..268dd39a7f7c03923bb9a71d95fdacfd5e8e491b 100644
+--- a/docs/proof.md
++++ b/docs/proof.md
+@@ -45,7 +45,10 @@ evidence pointer, or `task check-claims` fails the build.
+ 
+ | Claim | Kind | Evidence | Resolves |
+ |---|---|---|---|
++| `adversarial-review` structures its critique as branching exploration with explicit pruning rather than a single pass, following the Tree-of-Thoughts formulation. | qual | `https://arxiv.org/abs/2305.10601 (2026-08-11)` | ✅ |
++| `analysis-autonomous-mode` runs iterative self-critique between steps rather than only at the end, following the Self-Refine formulation. | qual | `https://arxiv.org/abs/2303.17651 (2026-08-11)` | ✅ |
+ | The budget-routing relation (cheapest classifier-adequate tier WITH available budget; exhausted/cooling tier falls back upward; all unavailable → session model, work never blocked; session model never switched) is implemented and deterministically tested, including the atomic reserve lifecycle (acquire → TTL-expire/settle → compact, shared-TTL single source, stale-lock breakage; pre-registered AC1–AC5). DELIVERY is agent-adherent policy — no code caller dispatches through pickTier at runtime — and is monitored by routing:doctor's delivery-evidence check, which WARNs when budget_routing is bound but zero recorded dispatches carry a tier decision. This entry deliberately does NOT claim "budget-aware delegation shipped" as autonomous runtime behavior. | qual | `tests/scripts/tier_budget_routing.test.ts` | ✅ |
++| `bug-analyzer` verifies each candidate root cause against a concrete trigger before reporting it, following the Chain-of-Verification formulation — which is the mechanism behind its "never invent issues" constraint. | qual | `https://arxiv.org/abs/2309.11495 (2026-08-11)` | ✅ |
+ | The release process is documented as an inheritable runbook + succession doc, and the project's bus-factor (trailing-90-day distinct human reviewers) is tracked and reported truthfully — currently 1, not implied to be more. | qual | `docs/succession.md#trailing 90 days` | ✅ |
+ | On the pre-registered 2-arm retrieval benchmark (18 hand-verified code-structure questions across 3 real repos, ground truth hash-bound before the run, deterministic, zero model calls), the native code graph scored mean recall 0.365 vs grep 0.797 on the 15 graph-shaped questions (delta -43.2 pp against a pre-declared +10 pp win threshold) and 0.111 vs 0.833 on the negative controls. HONEST NULL — measured root cause: TS arrow-function exports produce no symbol nodes (170 TS vs 13,428 PHP symbol nodes on same-shaped repos) and string-keyed dynamic consumers have no static edge. Consequence bound: code_graph.enabled stays false permanently; deprecation at the next major, removal the major after unless external evidence appears. | quant | `internal/bench/reports/code-graph-vs-grep.md#Verdict — NULL, decisively` | ✅ |
+ | 196 commands. | quant | `exec:check_artefact_count_messaging -> 0` | ✅ |
+@@ -71,6 +74,7 @@ evidence pointer, or `task check-claims` fails the build.
+ | 23 host agents are detected and inventoried; 20 receive a written config surface (18 projection + 1 plugin + 1 bundle target) and 3 are export-only (aider, zed, jetbrains). The count is enforced, not asserted — `knownToolIds()` is pinned at 23 by a test whose assertion literal IS the number, and `src/config/surface-matrix.yml` is held in set-equality with the installer's own user-scope path map by `lint_surface_matrix`, so a host added to one and not the other fails the build. This entry stood `unbacked` while naming its own unblocking condition ("once `surface-matrix.yml` exists, bind the count to that file and flip"); the condition was met and nothing fired, so the shipped figure stayed "7+" — understating real coverage by 3x. | quant | `exec:vitest run tests/install/toolDetection.test.ts -> 0` | ✅ |
+ | On the fixture corpus (n = 20 before/after pairs, 16 length-controlled within ±25%), the humanizer pass removes every mechanically detected AI-writing tell (mean hard hits 0.9 → 0, cluster score 53.97 → 0 per 500 words, dash density 9.22 → 0), and a blind judge (claude-sonnet-4-5, deterministic per-pair A/B seed) preferred the humanized text in 16/16 length-controlled pairs. Scope note — the "before" fixtures were deliberately tell-seeded, so this measures seeded-tell removal on a self-constructed corpus, NOT real-draft improvement; real-world lift is unmeasured until step 4b has processed real ghostwriter drafts (see the road-to-humanizer-hardening live-usage blocker). | quant | `internal/bench/reports/humanizer-v1.md#prefers the humanized text` | ✅ |
+ | A fresh registry install of this package carries zero high/critical npm-audit findings on the runtime dependency tree (0 vulnerabilities total at last verification), gated on every PR and every release PR. | quant | `.github/workflows/release-validation.yml#npm audit --omit=dev --audit-level=high` | ✅ |
++| The judge-skill family (`judge-bug-hunter`, `judge-code-quality`, `judge-security-auditor`, `judge-synthesis`, `judge-test-coverage`, and the `/review-changes` dispatcher) implements the LLM-as-a-judge pattern — a specialized model scoring another model's output against a rubric — and treats position bias and self-consistency as its known failure modes, which is why the dispatcher randomizes order and the synthesis layer surfaces conflict rather than averaging it. | qual | `https://arxiv.org/abs/2306.05685 (2026-08-11)` | ✅ |
+ | Word-boundary-anchored keyword matching reduced unintended rule activations by 12.5% (495 → 433) over the 302-prompt matrix-derived corpus with zero intended positives lost. Disclosure — the derived corpus was co-edited in the same change (6 German positives re-authored to standalone tokens; verb-inflection recall is a documented accepted cost). The circularity is broken by an independent replay over 49 UN-edited real-corpus prompts: recall 15/17 in BOTH arms (zero labels lost to anchoring), unintended activations 110 → 99 (−10.0%). | quant | `agents/evidence/analysis/anchoring-independent-replay-2026-08.md` | ✅ |
+ | NONE of the backed ledger claims are machine-re-verifiable today — every evidence pointer is checked for existence (file present, substring present, URL carries a date), never for truth, so a claim pointing at a stale artefact stays backed indefinitely. A measured minority COULD carry a re-executing `exec:` form, clearing the >= 10 pp threshold that was pre-registered before the count was taken, which is why that form is scheduled rather than assumed. The rest cannot: paid or stochastic benchmark runs no CI job can re-derive, and prose contracts. Exact counts live in the evidence file and are NOT restated here on purpose — this entry hard-coded its denominator twice and drifted within a day both times (25 when the ledger held 26, then 26 when it held 27) while CI stayed green, because the pointer resolved. `check_claims` now compares the stored denominator against the live ledger and fails on divergence. A number a human retypes on every ledger edit will drift; the fix was to stop retyping it. | quant | `internal/reports/exec-evidence-feasibility.json#"exec_feasible"` | ✅ |
+ | A hand-rolled, dependency-free BM25 + trigram lexical index resolves the "recalls but does not rank" gap: on the retrieval-precision corpus (9 keyword-overlapping-confuser tasks) it drives the mean top tie-set from 3.333 (the `_score` bucket scorer) to 1.0 — every needed decision uniquely top-ranked — with precision@1 and precision@5 unchanged at 1.0. Method: deterministic, model-free re-ranking of the SAME retrieved entry set; both scorers measured over the identical store via `measure_lexical_ranking.ts`. Cross-artefact note (2026-07-25): this baseline (3.333) is the value in THIS claim's own artefact and is cited correctly, but the retrieval-precision artefact records 4.111 for the same scorer on the same corpus — two bench scripts disagree. The lift direction (ties collapse to 1.0) holds under either baseline; the discrepancy itself is unresolved and recorded rather than smoothed. | quant | `exec:measure_lexical_ranking -> 0` | ✅ |
+@@ -81,20 +85,22 @@ evidence pointer, or `task check-claims` fails the build.
+ | 116 governed rules. | quant | `exec:check_artefact_count_messaging -> 0` | ✅ |
+ | Scope de-duplication of the rule projection removes 38.0% of the median cold-start payload (87,677 of 230,556 tokens) against a pre-registered 15% bar. CONDITION, inseparable from the number: that figure is FIXTURE-MEASURED on byte-identical global and project projections, and it is **currently unreachable for production installs** — the installer stamps ownership metadata (`package:` / `source_path:`) onto every installed rule unconditionally, so the two scopes are produced by two writers with deliberately different output, the byte-identity gate correctly refuses to dedup, and the recipient set is empty. The mechanism works; the saving is not realised by any consumer today. | quant | `agents/settings/contexts/cache-economy-refusals.md#Honest null — scope de-duplication is measured but` | ✅ |
+ | On a deterministic multi-session recall corpus, the memory substrate produces a measured, placebo-controlled recall lift — memory-on 27/27 vs no-memory 10/27 and vs equal-byte placebo 9/27 (claude-haiku-4-5, n=9 tasks x 3 seeds, sign test p=0.031 for BOTH pairings). Scoped honestly: this is the context-value upper bound (perfect retrieval on a one-fact-per-task corpus), not retrieval precision under a large store. | quant | `internal/bench/reports/second-brain-delta.json` | ✅ |
++| `sequential-thinking` applies chain-of-thought decomposition with two constraints the original formulation does not carry — a cap on the number of thoughts and a mandatory validation step — specifically to bound the unbounded-expansion failure mode. | qual | `https://arxiv.org/abs/2201.11903 (2026-08-11)` | ✅ |
+ | Every artifact the package ships — source AND the condensed projection that reaches consumers — is machine-scanned in CI for hidden-Unicode, mixed-script-confusable, and instruction-smuggling payloads (the rules-file-backdoor class); a finding blocks the release before `npm publish`, not just the merge. | qual | `exec:lint_agent_security -> 0` | ✅ |
+ | 289 skills. | quant | `exec:check_artefact_count_messaging -> 0` | ✅ |
++| `skill-improvement-pipeline` converts post-task outcomes into durable written lessons rather than in-context retries, following the Reflexion formulation. | qual | `https://arxiv.org/abs/2303.11366 (2026-08-11)` | ✅ |
+ | Removes only its own keys from a shared host config (matched by JSON-pointer + SHA-256), never a neighbour tool's entries. | qual | `exec:vitest run tests/lib/json_pointers.test.ts -> 0` | ✅ |
+ | On the pre-registered 12-fixture defect-finding corpus (three arms, deterministic file-level recall, codex reviewer gpt-5.5), the cross-model team-review arm produced NO recall lift over single-model self-review — all three arms recalled every planted defect (Δ = 0, H1 not met). Honest null, ceiling-limited (recall 1.00 everywhere: the seeded defects are too obvious to discriminate the arms on recall); the only non-null signal is a single self-review false positive on the controversial-but-correct control vs 0 for team/council. No cross-model quality/lift claim binds; team mode stays workflow-value-only. Re-open: a judge-survivable-subtlety corpus or a new model generation. | quant | `internal/bench/reports/defect-finding.json#honest_null` | ✅ |
+ | On the A3 orchestration eval (deterministic verify, measured token deltas), the production-validator subagent returned the correct verdict on both fixtures — NOT READY with the exact `file:line` citation on a planted hollow implementation, READY with zero spurious findings on the clean control — while consuming ~45k fewer tokens than the inline-host baseline on each task. Scope: two planted fixtures on a Claude Code host, not a broad hit-rate. | quant | `internal/bench/orchestration/pv-a3-results.md#token_delta_provenance: measured` | ✅ |
+ 
+-**41 backed claim(s)** — all evidence pointers resolve in CI.
++**47 backed claim(s)** — all evidence pointers resolve in CI.
+ 
+ ### How many of those re-derive themselves
+ 
+-**12 of 41** backed claims carry `exec:` evidence —
++**12 of 47** backed claims carry `exec:` evidence —
+ CI re-runs the command and compares its exit code to the claim, so a
+ stale one turns the build red. The other
+-**29** rest on a pointer: CI checks that the artefact
++**35** rest on a pointer: CI checks that the artefact
+ exists and contains what it should, which cannot distinguish a live
+ claim from one whose producer nobody has run in months.
+ 
+@@ -105,7 +111,10 @@ given:
+ 
+ | Claim | Why it cannot re-execute |
+ |---|---|
++| `adversarial-review` structures its critique as branching exploration with explicit pruning rather than a sing | external cite — CI does not fetch the network |
++| `analysis-autonomous-mode` runs iterative self-critique between steps rather than only at the end, following t | external cite — CI does not fetch the network |
+ | The budget-routing relation (cheapest classifier-adequate tier WITH available budget; exhausted/cooling tier f | prose or contract artefact — no exit code carries the verdict |
++| `bug-analyzer` verifies each candidate root cause against a concrete trigger before reporting it, following th | external cite — CI does not fetch the network |
+ | The release process is documented as an inheritable runbook + succession doc, and the project's bus-factor (tr | prose or contract artefact — no exit code carries the verdict |
+ | On the pre-registered 2-arm retrieval benchmark (18 hand-verified code-structure questions across 3 real repos | benchmark output — regenerating it needs paid or stochastic model calls no CI job can re-derive |
+ | On the first post-fix behaviour-conformance measurement (round 5, `/analyze:conformance --limit 30`, run 2026- | benchmark output — regenerating it needs paid or stochastic model calls no CI job can re-derive |
+@@ -124,6 +133,7 @@ given:
+ | Hook dispatch runs as one precompiled node process with all concerns in-process, and the CI latency gate measu | prose or contract artefact — no exit code carries the verdict |
+ | On the fixture corpus (n = 20 before/after pairs, 16 length-controlled within ±25%), the humanizer pass remove | benchmark output — regenerating it needs paid or stochastic model calls no CI job can re-derive |
+ | A fresh registry install of this package carries zero high/critical npm-audit findings on the runtime dependen | prose or contract artefact — no exit code carries the verdict |
++| The judge-skill family (`judge-bug-hunter`, `judge-code-quality`, `judge-security-auditor`, `judge-synthesis`, | external cite — CI does not fetch the network |
+ | Word-boundary-anchored keyword matching reduced unintended rule activations by 12.5% (495 → 433) over the 302- | prose or contract artefact — no exit code carries the verdict |
+ | NONE of the backed ledger claims are machine-re-verifiable today — every evidence pointer is checked for exist | prose or contract artefact — no exit code carries the verdict |
+ | The whole layer is compiled into host agents with zero runtime daemon. | prose or contract artefact — no exit code carries the verdict |
+@@ -132,6 +142,8 @@ given:
+ | On the live end-to-end retrieval benchmark (9 tasks × 3 arms × 3 seeds on claude-haiku, fixture store with key | benchmark output — regenerating it needs paid or stochastic model calls no CI job can re-derive |
+ | Scope de-duplication of the rule projection removes 38.0% of the median cold-start payload (87,677 of 230,556  | prose or contract artefact — no exit code carries the verdict |
+ | On a deterministic multi-session recall corpus, the memory substrate produces a measured, placebo-controlled r | benchmark output — regenerating it needs paid or stochastic model calls no CI job can re-derive |
++| `sequential-thinking` applies chain-of-thought decomposition with two constraints the original formulation doe | external cite — CI does not fetch the network |
++| `skill-improvement-pipeline` converts post-task outcomes into durable written lessons rather than in-context r | external cite — CI does not fetch the network |
+ | On the pre-registered 12-fixture defect-finding corpus (three arms, deterministic file-level recall, codex rev | benchmark output — regenerating it needs paid or stochastic model calls no CI job can re-derive |
+ | On the A3 orchestration eval (deterministic verify, measured token deltas), the production-validator subagent  | benchmark output — regenerating it needs paid or stochastic model calls no CI job can re-derive |
+ 
+@@ -312,12 +324,15 @@ resolution (`check_enforcement_coverage`) and the claims ledger
+ 
+ Undeclared rules (84) carry no row — an honest gap beats a false claim.
+ 
+-**Axis 2 — evidence form per public claim.** 54 ledger entries · 41 backed · 9 unbacked inventory · 4 resolved-null.
++**Axis 2 — evidence form per public claim.** 60 ledger entries · 47 backed · 9 unbacked inventory · 4 resolved-null.
+ 
+ | Claim id | Kind | Status | Evidence pointer |
+ |---|---|---|---|
+ | `adversarial-council-finding-coverage` | quant | resolved-null | `docs/benchmark.md#adversarial-verification-council` |
++| `adversarial-review-tree-of-thoughts` | qual | backed | `https://arxiv.org/abs/2305.10601 (2026-08-11)` |
++| `autonomous-analysis-self-refine` | qual | backed | `https://arxiv.org/abs/2303.17651 (2026-08-11)` |
+ | `budget-routing-relation` | qual | backed | `tests/scripts/tier_budget_routing.test.ts` |
++| `bug-analyzer-chain-of-verification` | qual | backed | `https://arxiv.org/abs/2309.11495 (2026-08-11)` |
+ | `bus-factor-tracked` | qual | backed | `docs/succession.md#trailing 90 days` |
+ | `code-graph-retrieval-null` | quant | backed | `internal/bench/reports/code-graph-vs-grep.md#Verdict — NULL, decisively` |
+ | `command-count` | quant | backed | `exec:check_artefact_count_messaging -> 0` |
+@@ -347,6 +362,7 @@ Undeclared rules (84) carry no row — an honest gap beats a false claim.
+ | `host-agent-count` | quant | backed | `exec:vitest run tests/install/toolDetection.test.ts -> 0` |
+ | `humanizer-tell-reduction` | quant | backed | `internal/bench/reports/humanizer-v1.md#prefers the humanized text` |
+ | `install-audit-clean` | quant | backed | `.github/workflows/release-validation.yml#npm audit --omit=dev --audit-level=high` |
++| `judge-family-llm-as-a-judge-foundation` | qual | backed | `https://arxiv.org/abs/2306.05685 (2026-08-11)` |
+ | `keyword-anchoring-census` | quant | backed | `agents/evidence/analysis/anchoring-independent-replay-2026-08.md` |
+ | `lean-init-cost-reduction` | quant | unbacked | `PRE-REGISTERED 2026-07-28 (road-to-lean-agent-init Phase 3 — registered BEFORE any savings number is cited anywhere; family-scoped, modeled on `downshift-cost-reduction`; quality definition reused from the correctness-comparison acceptance, no second truth). Falsification criteria fixed BEFORE data: (1) correctness floor — primitive answer ≡ agent answer on the golden corpus (`internal/bench/lean-init/results-2026-07-28.md`, 12/12); ANY mismatch on a routed real task recorded via `correctness_match: false` counts against the claim; (2) negative control — a non-lookup task never routes to a primitive (`LOOKUP_CORPUS` lk-n1..n4, FP=0); (3) cost metric — read from `agents/runtime/state/audit/*.jsonl` orchestration lines tagged `origin: lean-init-2026` with `lookup_class != null`, comparing `route_taken: primitive` token cost against `route_taken: subagent` lines of the same class (n and family scope stated at backing time); (4) segregation — lines carry `origin: lean-init-2026` so the `road-to-orchestration-scope-decision` sample stays uncontaminated (council Q5, 2026-07-28). PROVE → flip to backed for the lookup family only; DROP → honest null, primitives stay (correctness-validated) but no savings number is ever cited.` |
+ | `ledger-exec-verifiability` | quant | backed | `internal/reports/exec-evidence-feasibility.json#"exec_feasible"` |
+@@ -363,8 +379,10 @@ Undeclared rules (84) carry no row — an honest gap beats a false claim.
+ | `rule-count` | quant | backed | `exec:check_artefact_count_messaging -> 0` |
+ | `scope-dedup-cold-start-reduction` | quant | backed | `agents/settings/contexts/cache-economy-refusals.md#Honest null — scope de-duplication is measured but` |
+ | `second-brain-recall-lift` | quant | backed | `internal/bench/reports/second-brain-delta.json` |
++| `sequential-thinking-chain-of-thought` | qual | backed | `https://arxiv.org/abs/2201.11903 (2026-08-11)` |
+ | `shipped-artifacts-hidden-instruction-scanned` | qual | backed | `exec:lint_agent_security -> 0` |
+ | `skill-count` | quant | backed | `exec:check_artefact_count_messaging -> 0` |
++| `skill-improvement-reflexion` | qual | backed | `https://arxiv.org/abs/2303.11366 (2026-08-11)` |
+ | `surgical-uninstall` | qual | backed | `exec:vitest run tests/lib/json_pointers.test.ts -> 0` |
+ | `team-defect-finding-null` | quant | backed | `internal/bench/reports/defect-finding.json#honest_null` |
+ | `utilization-window-decidability` | comparative | unbacked | `PRE-REGISTERED 2026-07-12 (road-to-feedback-8.11-2 Phase 0 — no goalpost-moving after the numbers land; criteria at `docs/design/utilization-window-criteria.md`). Floor fixed BEFORE data: >=100 task boundaries AND >=2 hosts (or the documented degraded form) AND >=45 elapsed days; decision rules D1 (loaded-never-consulted -> retirement-candidate list), D2 (consulted-never-applied <10% applied-ratio at >=5 consultations -> trigger-review queue), D3 (above floor -> >=1 named decision per kind or a recorded why-not), D4 (below floor after one extension -> honest null, lifecycle/ledger gates stay closed). Kernel + safety floors exempt by construction.` |
+diff --git a/internal/reports/exec-evidence-feasibility.json b/internal/reports/exec-evidence-feasibility.json
+index b962fcf4880ea1e0f0ea570fae09ea560d3bd224..d19d87f78c3b303491ef42825b3eab37f2ce6fc2 100644
+--- a/internal/reports/exec-evidence-feasibility.json
++++ b/internal/reports/exec-evidence-feasibility.json
+@@ -1,8 +1,8 @@
+ {
+   "_doc": "Feasibility measurement for an `exec:` evidence form in the claims ledger (road-to-enforcement-proof Phase 5). The question this answers is NOT 'would exec: be nice' but 'would it cover enough of the ledger to earn its maintenance surface'. The threshold was pre-registered in the roadmap BEFORE this was measured: >= 10 percentage points of the backed ledger, or it gets parked with the number published. Measured 2026-07-25 against docs/CLAIMS.md.",
+-  "measured_at": "2026-07-25 (re-counted three times. The first publication said 25 backed / 10 feasible and was measured mid-PR. The 11-feasible figure was then corrected DOWN to 10 when the form was actually built: context-token-reduction was counted feasible because check_token_regression re-derives token figures via js-tiktoken, but the script reads internal/bench/reports/projection-cost.json, which is gitignored as a per-run artifact — so the command is not self-sufficient in a fresh checkout and exits 1. Found by the exec: gate on its first CI run, which is the gate doing its job. The backed_claims DENOMINATOR drifted separately and is now derived and gate-checked rather than retyped. Re-derived 2026-07-27: +3 backed entries from road-to-credible-install (install-audit-clean exec-backed, hook-dispatch-latency, default-install-context-cost). Re-derived 2026-07-28: +1 backed entry (code-graph-retrieval-null — bench needs local target repos, not exec:-feasible in a fresh CI checkout; stays on its pointer form). Re-derived 2026-07-29: +2 backed entries from road-to-runtime-encoding-hardening (encoding-floor-text-layer-only and encoding-corpus-scope-guard). Both stay on pointer form rather than exec:, because the measurement report's latency figure is machine-dependent and an exec: gate on it could redden on a loaded runner — the exit code would stop being a property of the code. Re-derived 2026-08-02: +1 backed entry (scope-dedup-cold-start-reduction — the 38.0% figure entered the ledger with its unreachable-in-production condition bound into the claim text, road-to-release-shape-honesty Phase 3; pointer form, since the evidence is a written honest-null record rather than a re-runnable command). Re-derived 2026-08-02 (second sitting): +4 backed entries from road-to-governance-invariants Phase 4 (governance-aggregation-refusal-invariance, governance-decomposition-effect-boundary, governance-marker-preservation-null, governance-adjacent-properties). All four stay on pointer form rather than exec:, because their numbers are re-derived by a committed vitest drift gate (tests/scripts/governance_invariants_report.test.ts) that already runs in the node-tests job — an exec: pointer would re-run the same assertions a second time for no added signal. `delta_pp` is left at its 2026-07-25 value on purpose: it records THAT measurement's verdict, not a running ratio. Re-derived 2026-08-03: +2 backed entries from the PR-#1133 external-review follow-up (keyword-anchoring-census — census claim now carries the corpus-co-edit disclosure plus an independent 49-prompt replay record; budget-routing-relation — deliberately worded to what the code proves: relation implemented + tested with the full reserve lifecycle, delivery agent-adherent and doctor-monitored, NOT 'shipped'). Both pointer form: the census evidence is a written measurement record, and the relation's numbers are re-derived by the vitest suite already in the node-tests job. Re-derived 2026-08-10: +1 backed entry (conformance-advisory-vs-blocking — the round-5 advisory-vs-blocking result, 555 → 19 vs 8 → 0 and 1 → 0; pointer form, since the numbers rest on a one-off transcript audit over the maintainer's local session store that no CI job can re-derive).",
++  "measured_at": "2026-07-25 (re-counted three times. The first publication said 25 backed / 10 feasible and was measured mid-PR. The 11-feasible figure was then corrected DOWN to 10 when the form was actually built: context-token-reduction was counted feasible because check_token_regression re-derives token figures via js-tiktoken, but the script reads internal/bench/reports/projection-cost.json, which is gitignored as a per-run artifact — so the command is not self-sufficient in a fresh checkout and exits 1. Found by the exec: gate on its first CI run, which is the gate doing its job. The backed_claims DENOMINATOR drifted separately and is now derived and gate-checked rather than retyped. Re-derived 2026-07-27: +3 backed entries from road-to-credible-install (install-audit-clean exec-backed, hook-dispatch-latency, default-install-context-cost). Re-derived 2026-07-28: +1 backed entry (code-graph-retrieval-null — bench needs local target repos, not exec:-feasible in a fresh CI checkout; stays on its pointer form). Re-derived 2026-07-29: +2 backed entries from road-to-runtime-encoding-hardening (encoding-floor-text-layer-only and encoding-corpus-scope-guard). Both stay on pointer form rather than exec:, because the measurement report's latency figure is machine-dependent and an exec: gate on it could redden on a loaded runner — the exit code would stop being a property of the code. Re-derived 2026-08-02: +1 backed entry (scope-dedup-cold-start-reduction — the 38.0% figure entered the ledger with its unreachable-in-production condition bound into the claim text, road-to-release-shape-honesty Phase 3; pointer form, since the evidence is a written honest-null record rather than a re-runnable command). Re-derived 2026-08-02 (second sitting): +4 backed entries from road-to-governance-invariants Phase 4 (governance-aggregation-refusal-invariance, governance-decomposition-effect-boundary, governance-marker-preservation-null, governance-adjacent-properties). All four stay on pointer form rather than exec:, because their numbers are re-derived by a committed vitest drift gate (tests/scripts/governance_invariants_report.test.ts) that already runs in the node-tests job — an exec: pointer would re-run the same assertions a second time for no added signal. `delta_pp` is left at its 2026-07-25 value on purpose: it records THAT measurement's verdict, not a running ratio. Re-derived 2026-08-03: +2 backed entries from the PR-#1133 external-review follow-up (keyword-anchoring-census — census claim now carries the corpus-co-edit disclosure plus an independent 49-prompt replay record; budget-routing-relation — deliberately worded to what the code proves: relation implemented + tested with the full reserve lifecycle, delivery agent-adherent and doctor-monitored, NOT 'shipped'). Both pointer form: the census evidence is a written measurement record, and the relation's numbers are re-derived by the vitest suite already in the node-tests job. Re-derived 2026-08-11: +6 backed entries from road-to-inbox-harvest-2026-08-b-authoring-contract Phase 4 — the six external research citations a normative sentence in src/ rests on (judge-family-llm-as-a-judge-foundation, adversarial-review-tree-of-thoughts, autonomous-analysis-self-refine, bug-analyzer-chain-of-verification, sequential-thinking-chain-of-thought, skill-improvement-reflexion). All six use pointer grammar #3 (external URL + dated stamp), which is NOT exec:-feasible by construction: the grammar is an existence-and-date check the tooling never dereferences, so a withdrawn or renumbered paper stays green — the reason only load-bearing cites were bound and the 14 ids appearing solely in roadmap prose were left unbound. Re-derived 2026-08-10: +1 backed entry (conformance-advisory-vs-blocking — the round-5 advisory-vs-blocking result, 555 → 19 vs 8 → 0 and 1 → 0; pointer form, since the numbers rest on a one-off transcript audit over the maintainer's local session store that no CI job can re-derive).",
+   "pre_registered_threshold_pp": 10,
+-  "backed_claims": 41,
++  "backed_claims": 47,
+   "machine_re_verifiable_today": 0,
+   "exec_feasible": 10,
+   "delta_pp": 38.5,
+diff --git a/src/scripts/check_claims.ts b/src/scripts/check_claims.ts
+index 620dd194bf0f596da66de968eb30ca29b2a90892..0d8c32d7b5ee8443f1f68d40fb910ef61884a30c 100644
+--- a/src/scripts/check_claims.ts
++++ b/src/scripts/check_claims.ts
+@@ -55,7 +55,14 @@ const LEDGER_REL = 'docs/CLAIMS.md';
+ const SURFACE_ROOTS = ['README.md', 'docs'];
+ 
+ const CLAIM_MARKER = /<!--\s*claim:([A-Za-z0-9._-]+)\s*-->/g;
+-const URL_DATED = /^https?:\/\/\S+\(\d{4}-\d{2}-\d{2}\)\s*$/;
++// The documented grammar is `https://… (YYYY-MM-DD)` — with a space, in both
++// docs/CLAIMS.md § Evidence-pointer grammar and this file's own header. The
++// original pattern required the stamp to abut the URL (`\S+\(`), so every
++// pointer written the documented way was rejected. That went unnoticed because
++// the form had zero usage until the external research citations were bound;
++// the space is now optional, which accepts both spellings and keeps the
++// enforcement matching the spec rather than the other way round.
++const URL_DATED = /^https?:\/\/\S+\s*\(\d{4}-\d{2}-\d{2}\)\s*$/;
+ 
+ /** Witness sweep (P1.2) — marketing-class surfaces where a bare number must
+  *  not appear as a capability claim. docs/proof.md and docs/comparison.yaml
+@@ -118,6 +125,17 @@ export interface LedgerEntry {
+     evidence: string;
+     status: string;
+     last_verified: string;
++    /**
++     * Optional forward link on a `resolved-null` entry: the id of the claim that
++     * reopened the same question by a different mechanism. The retire-never-delete
++     * lifecycle keeps the null readable forever, but a reader arriving at a closed
++     * question has no way to learn it was later reopened — this is that link.
++     *
++     * Parsed and gated rather than merely documented: an unparsed field would be a
++     * documented claim the code does not honour, which is the defect class this
++     * ledger exists to make impossible.
++     */
++    superseded_by: string;
+ }
+ 
+ interface Args {
+@@ -158,6 +176,7 @@ function load_ledger(): Map<string, LedgerEntry> {
+                 evidence: cur.evidence ?? '',
+                 status: cur.status ?? '',
+                 last_verified: cur.last_verified ?? '',
++                superseded_by: cur.superseded_by ?? '',
+             });
+         }
+         cur = {};
+@@ -170,7 +189,7 @@ function load_ledger(): Map<string, LedgerEntry> {
+             continue;
+         }
+         if (!cur.id) continue;
+-        const field = line.match(/^-\s+(claim|kind|evidence|status|last_verified):\s*(.*)$/);
++        const field = line.match(/^-\s+(claim|kind|evidence|status|last_verified|superseded_by):\s*(.*)$/);
+         if (field) {
+             const key = field[1] as keyof LedgerEntry;
+             (cur as Record<string, string>)[key] = (field[2] ?? '').trim();
+@@ -320,6 +339,36 @@ function main(argv: string[] = process.argv.slice(2)): number {
+         if (un) findings.push({ id: entry.id, file: LEDGER_REL, reason: `backed entry has dangling evidence — ${un}` });
+     }
+ 
++    // 2b. Successor pointers: a `superseded_by` must name a real ledger entry,
++    //     and only a closed question can have a successor. The field exists so a
++    //     reader arriving at a `resolved-null` learns the question was reopened
++    //     by a different mechanism — a dangling id would send them nowhere, and
++    //     the field on a live entry would claim a closure that never happened.
++    for (const entry of ledger.values()) {
++        if (!entry.superseded_by) continue;
++        if (entry.status !== 'resolved-null') {
++            findings.push({
++                id: entry.id,
++                file: LEDGER_REL,
++                reason: `superseded_by is only meaningful on a resolved-null entry (status: ${entry.status || 'missing'})`,
++            });
++            continue;
++        }
++        if (!ledger.has(entry.superseded_by)) {
++            findings.push({
++                id: entry.id,
++                file: LEDGER_REL,
++                reason: `superseded_by names claim:${entry.superseded_by}, which is not in the ledger`,
++            });
++        } else if (entry.superseded_by === entry.id) {
++            findings.push({
++                id: entry.id,
++                file: LEDGER_REL,
++                reason: 'superseded_by points at its own entry',
++            });
++        }
++    }
++
+     // 3. Witness sweep (road-to-opt-subagent-harvest P1.2): a QUANTIFIED
+     //    capability claim on a marketing-class surface must be witnessed — a
+     //    `<!-- claim:ID -->` marker on the same line, or an explicit
+diff --git a/src/scripts/lint_hedge_words.ts b/src/scripts/lint_hedge_words.ts
+new file mode 100644
+index 0000000000000000000000000000000000000000..556ea6f0d2b3e1112d6572513abfe39efd70b3bd
+--- /dev/null
++++ b/src/scripts/lint_hedge_words.ts
+@@ -0,0 +1,286 @@
++#!/usr/bin/env tsx
++/**
++ * Hedge-word lint — diff-scoped, ADVISORY, with a declared escalation trigger.
++ *
++ * `bench_honesty_score.ts` has measured hedging in agent OUTPUT since it was
++ * written (`HEDGE_WORDS`, `countHedgeWords`). Nothing has ever looked at the
++ * hedging in this package's own authored prose, which is where a hedge does the
++ * most damage: a rule that says a gate "should probably" fire is a rule nobody
++ * can be held to. This linter closes that half, reusing the same lexicon rather
++ * than restating a second list that would drift from it.
++ *
++ * ── Why diff-scoped, not corpus-wide ────────────────────────────────────────
++ * ADR-218:93 settled the question for prose-shape tooling outright: the wanted
++ * instrument is "one that watches diffs, not one that counts the corpus". A
++ * corpus count over 116 rules and 289 skills produces a number nobody can act
++ * on — every reading is dominated by prose written years apart under different
++ * conventions, and no single commit can move it.
++ *
++ * ── Why ADVISORY, and what would change that ────────────────────────────────
++ * `check_suppression_hygiene.ts` states the rule this gate is measured against:
++ * a gate whose corpus has findings on day one ships advisory; a gate whose
++ * corpus is already clean ships enforced, "because shipping it advisory would
++ * have been a hedge rather than a stage". This one has findings on day one and,
++ * unlike the `scripts/`-directory predicate, its false-positive class is NOT
++ * empty and cannot be made empty: hedging is legitimate — required, even — in
++ * this tree's own calibrated-honesty prose. "May", "typically" and "in doubt"
++ * appear in the very rules that teach an agent not to overclaim, and flagging
++ * them would be the gate arguing against the house style it exists to protect.
++ *
++ * So it ships advisory WITH A STAGE, not advisory forever. The escalation
++ * trigger is declared here, before any data, so that a later maintainer inherits
++ * a condition rather than a judgement call:
++ *
++ *   ADVISORY → ERROR when ALL THREE hold, and not before:
++ *     (a) at least 30 merged PRs have been measured by this gate;
++ *     (b) across a sample of at least 50 of the findings those PRs produced, a
++ *         human read classifies ≤ 10% as legitimate calibrated hedging — i.e.
++ *         the check is mostly right about the prose it flags;
++ *     (c) a maintainer records the measured rate and the resulting per-diff
++ *         threshold in `docs/CLAIMS.md`, so the number that starts failing
++ *         builds is itself bound to evidence.
++ *
++ *   If (b) fails — the FP rate stays above 10% — the honest outcome is that this
++ *   check STAYS advisory permanently, or is removed. It does not get a lowered
++ *   bar. That branch is pre-authorised here so that missing the threshold is a
++ *   publishable result rather than an awkward conversation.
++ *
++ * ── Carve-outs (modelled on lint_provenance_vocabulary's quote-the-ban) ─────
++ * A line that NAMES a hedge word rather than using one — the word inside
++ * backticks or quotes — is exempt, or this file and its own test would be the
++ * corpus's worst offenders. Fenced code and indented blocks are skipped: a
++ * hedge in a code comment is a different surface with a different reviewer.
++ *
++ * Scan surfaces: added (`+`) lines in `src/**\/*.md` and `docs/**\/*.md`.
++ *
++ * Exit codes: 0 always, in the advisory stage — including when findings exist.
++ * A non-zero exit is reserved for a usage error or a git failure, so that
++ * wiring this into a pipeline today cannot redden a build.
++ *
++ * Usage:
++ *     ./scripts-run src/scripts/lint_hedge_words
++ *     ./scripts-run src/scripts/lint_hedge_words --base origin/main
++ *     git diff origin/main | ./scripts-run src/scripts/lint_hedge_words --stdin
++ */
++import { spawnSync } from 'node:child_process';
++import * as path from 'node:path';
++import process from 'node:process';
++import { fileURLToPath, pathToFileURL } from 'node:url';
++
++import { HEDGE_WORDS } from './bench_honesty_score.js';
++import { readStdinText } from './_lib/stdin.js';
++
++const _HERE = fileURLToPath(import.meta.url);
++const REPO_ROOT = path.resolve(path.dirname(_HERE), '..', '..');
++
++/** Prose surfaces this gate reads. Code and generated trees are out of scope. */
++const SCAN_ROOTS = ['src/', 'docs/'] as const;
++
++/**
++ * Files exempt because their subject IS the lexicon. Without this, the gate's
++ * own source, its test, and the scorer that owns `HEDGE_WORDS` dominate every
++ * reading — the file that lists "might, could, perhaps" is not hedging.
++ */
++const LEXICON_FILES = [
++    'src/scripts/lint_hedge_words.ts',
++    'src/scripts/bench_honesty_score.ts',
++    'tests/scripts/lint_hedge_words.test.ts',
++];
++
++export interface HedgeFinding {
++    file: string;
++    /** The added line, trimmed — line numbers are not recoverable from a `+` line alone. */
++    line: string;
++    words: string[];
++}
++
++export interface HedgeReport {
++    findings: HedgeFinding[];
++    filesScanned: number;
++    addedProseLines: number;
++    addedWords: number;
++}
++
++function escapeRegExp(s: string): string {
++    return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
++}
++
++const HEDGE_RES: readonly { word: string; re: RegExp }[] = HEDGE_WORDS.map((w) => ({
++    word: w,
++    re: new RegExp(`\\b${escapeRegExp(w)}\\b`, 'g'),
++}));
++
++/**
++ * Spans where a hedge word is being NAMED, not used: backticked code spans and
++ * quoted strings. Mirrors `lint_provenance_vocabulary`'s carve-out for a line
++ * that quotes the ban it enforces.
++ */
++const QUOTED_SPAN = /`[^`]*`|"[^"]*"|'[^']*'|“[^”]*”|«[^»]*»/g;
++
++function stripQuotedSpans(line: string): string {
++    return line.replace(QUOTED_SPAN, ' ');
++}
++
++/** True for a line whose surface is code rather than prose. */
++function isCodeSurface(line: string): boolean {
++    if (/^\s{4,}\S/.test(line)) return true; // indented block
++    if (/^\s*(?:```|~~~)/.test(line)) return true; // fence marker
++    if (/^\s*(?:\/\/|\/\*|\*|#!)/.test(line)) return true; // comment
++    if (/^\s*<!--/.test(line)) return true; // html comment / verify marker
++    return false;
++}
++
++function inScope(file: string): boolean {
++    if (!file.endsWith('.md')) return false;
++    if (LEXICON_FILES.includes(file)) return false;
++    return SCAN_ROOTS.some((r) => file.startsWith(r));
++}
++
++/**
++ * Scan a unified diff for hedge words in added prose.
++ *
++ * Pure over the diff string — no filesystem access — so the whole gate is
++ * testable from a fixture diff without a repo.
++ */
++export function scanDiff(diffText: string): HedgeReport {
++    const findings: HedgeFinding[] = [];
++    const files = new Set<string>();
++    let curFile: string | null = null;
++    let inFence = false;
++    let addedProseLines = 0;
++    let addedWords = 0;
++
++    for (const raw of diffText.split('\n')) {
++        if (raw.startsWith('+++ b/')) {
++            curFile = raw.slice(6);
++            inFence = false;
++            if (inScope(curFile)) files.add(curFile);
++            continue;
++        }
++        if (raw.startsWith('@@')) {
++            // A hunk boundary loses fence context; assume prose rather than
++            // silently swallowing a whole file because one fence opened above.
++            inFence = false;
++            continue;
++        }
++        if (!raw.startsWith('+') || raw.startsWith('+++')) continue;
++        if (curFile === null || !inScope(curFile)) continue;
++
++        const line = raw.slice(1);
++        if (/^\s*(?:```|~~~)/.test(line)) {
++            inFence = !inFence;
++            continue;
++        }
++        if (inFence || isCodeSurface(line)) continue;
++
++        const prose = stripQuotedSpans(line);
++        if (prose.trim() === '') continue;
++        addedProseLines += 1;
++        addedWords += prose.trim().split(/\s+/).length;
++
++        const lower = prose.toLowerCase();
++        const hits: string[] = [];
++        for (const { word, re } of HEDGE_RES) {
++            re.lastIndex = 0;
++            if (re.test(lower)) hits.push(word);
++        }
++        if (hits.length > 0) {
++            findings.push({ file: curFile, line: line.trim(), words: hits });
++        }
++    }
++
++    return { findings, filesScanned: files.size, addedProseLines, addedWords };
++}
++
++function baseRef(argv: string[]): string {
++    const i = argv.indexOf('--base');
++    if (i !== -1 && i + 1 < argv.length) return argv[i + 1]!;
++    return 'origin/main';
++}
++
++export function main(argv: string[] = process.argv.slice(2)): number {
++    if (argv.includes('-h') || argv.includes('--help')) {
++        process.stdout.write(
++            'usage: lint_hedge_words [--base <ref>] [--stdin] [--quiet]\n' +
++                '  Advisory: reports hedge words in added prose. Always exits 0 on findings.\n',
++        );
++        return 0;
++    }
++    const quiet = argv.includes('--quiet');
++
++    let diffText: string;
++    if (argv.includes('--stdin')) {
++        diffText = readStdinText();
++    } else {
++        const base = baseRef(argv);
++        const proc = spawnSync('git', ['diff', base, '--', ...SCAN_ROOTS], {
++            cwd: REPO_ROOT,
++            encoding: 'utf-8',
++            maxBuffer: 64 * 1024 * 1024,
++        });
++        if (proc.error) {
++            process.stderr.write(`lint_hedge_words: git diff failed: ${proc.error.message}\n`);
++            return 2;
++        }
++        if (proc.status !== 0 && proc.status !== 1) {
++            // Base ref absent (shallow clone, detached CI checkout) — a missing
++            // base is not a finding, and inventing one would be worse.
++            process.stdout.write(
++                `lint_hedge_words: base ref '${base}' unavailable — advisory scan skipped.\n`,
++            );
++            return 0;
++        }
++        diffText = proc.stdout ?? '';
++    }
++
++    const report = scanDiff(diffText);
++
++    if (report.addedProseLines === 0) {
++        if (!quiet) {
++            process.stdout.write('lint_hedge_words: no added prose under src/ or docs/ — nothing to read.\n');
++            process.stdout.write('scanned: 0\n');
++        }
++        return 0;
++    }
++
++    const per100 = (report.findings.length / report.addedWords) * 100;
++    if (report.findings.length > 0 && !quiet) {
++        process.stdout.write(
++            `lint_hedge_words (ADVISORY): ${report.findings.length} hedged line(s) ` +
++                `in ${report.filesScanned} file(s):\n`,
++        );
++        for (const f of report.findings) {
++            const clipped = f.line.length > 140 ? `${f.line.slice(0, 137)}…` : f.line;
++            process.stdout.write(`    ${f.file} · [${f.words.join(', ')}] ${clipped}\n`);
++        }
++        process.stdout.write(
++            '\n    Not every hit is a defect: calibrated hedging is house style in honesty\n' +
++                '    prose. Read each one; this gate never fails a build in its current stage.\n' +
++                '    Escalation trigger: see the header of src/scripts/lint_hedge_words.ts.\n',
++        );
++    } else if (!quiet) {
++        process.stdout.write('lint_hedge_words (ADVISORY): no hedged lines in added prose.\n');
++    }
++
++    if (!quiet) {
++        process.stdout.write(
++            `hedged_lines: ${report.findings.length} · added_prose_lines: ${report.addedProseLines} ` +
++                `· added_words: ${report.addedWords} · hedged_per_100_words: ${per100.toFixed(2)}\n`,
++        );
++        process.stdout.write(`scanned: ${report.filesScanned}\n`);
++    }
++    return 0;
++}
++
++/* c8 ignore start */
++function isCliEntry(): boolean {
++    if (process.argv[1] === undefined) return false;
++    return pathToFileURL(path.resolve(process.argv[1])).href === pathToFileURL(_FILEPATH()).href;
++}
++function _FILEPATH(): string {
++    return _HERE;
++}
++if (isCliEntry()) {
++    process.exit(main());
++}
++/* c8 ignore stop */
+diff --git a/src/scripts/skill_linter.ts b/src/scripts/skill_linter.ts
+index a88a839ebffc1d776ff08a82608d422116d2853c..b4b92f29abe9d2ea050c9af7f5a5c2082ca3fae7 100644
+--- a/src/scripts/skill_linter.ts
++++ b/src/scripts/skill_linter.ts
+@@ -106,6 +106,35 @@ const SECTION_ALIASES: Record<string, Set<string>> = {
+ 
+ const RECOMMENDED_SKILL_SECTIONS: string[] = [];
+ 
++/**
++ * Sections `skill-writing` labels required for a NAMED SUBSET of skills, paired
++ * with the predicate that decides the subset.
++ *
++ * The predicate must be decidable from the filesystem, never from prose. That is
++ * what keeps the false-positive class empty by construction: a skill either ships
++ * a directory or it does not, so there is nothing for a heuristic to get wrong,
++ * and the check can ship as `error` on day one instead of as an open-ended
++ * advisory (the stage-vs-hedge argument in `check_suppression_hygiene.ts`).
++ *
++ * `skill-writing` carries two further section patterns — `Rationalizations to
++ * reject` and `Non-negotiable deliverable`. Neither is listed here, and neither
++ * is labelled required any more. Their populations ("security-stop-routed",
++ * "adjacent-technology cluster") are judgement calls that no property of the tree
++ * declares, so a predicate for them would be exactly the heuristic this table
++ * refuses; compliance stood at 0 of 289 skills while the label said required.
++ * Council 2026-08-11 (2/2, anthropic + openai) resolved the mismatch by
++ * reclassifying both to `recommended pattern` rather than by adding a declared
++ * frontmatter key — an authored opt-in cannot see the skill that should have
++ * opted in and did not, so it would buy a gate without buying the guarantee.
++ */
++const CONDITIONAL_SKILL_SECTIONS: { section: string; when: (skillDir: string) => boolean; reason: string }[] = [
++    {
++        section: 'Security constraints',
++        when: (skillDir) => fs.existsSync(path.join(skillDir, 'scripts')),
++        reason: 'the skill ships a scripts/ directory',
++    },
++];
++
+ const RULE_BAD_SIGNS = ['## Procedure', '## Output format', '## Gotchas'];
+ 
+ const FRUGALITY_WRITER_SKILLS = new Set([
+@@ -1346,7 +1375,7 @@ function lint_execution_metadata(execution: ExecutionBlock): Issue[] {
+     return issues;
+ }
+ 
+-export function lint_skill(p: string, text: string): LintResult {
++export function lint_skill(p: string, text: string, absPath: string | null = null): LintResult {
+     const issues: Issue[] = [];
+     const suggestions: string[] = [];
+ 
+@@ -1359,6 +1388,20 @@ export function lint_skill(p: string, text: string): LintResult {
+         }
+     }
+ 
++    // `p` may be a repo-relative display path; `absPath` is the path actually read.
++    const skillDir = path.dirname(absPath ?? p);
++    for (const { section, when, reason } of CONDITIONAL_SKILL_SECTIONS) {
++        if (when(skillDir) && !sectionMatches(section, sections)) {
++            issues.push(
++                new Issue(
++                    'error',
++                    'missing_conditional_section',
++                    `Missing required section: ${section} (${reason})`,
++                ),
++            );
++        }
++    }
++
+     for (const section of RECOMMENDED_SKILL_SECTIONS) {
+         if (!sectionMatches(section, sections)) {
+             issues.push(
+@@ -3533,7 +3576,7 @@ export function lint_file(p: string, repoRoot: string | null = null): LintResult
+ 
+     let result: LintResult;
+     if (artifactType === 'skill') {
+-        result = lint_skill(displayPath, text);
++        result = lint_skill(displayPath, text, p);
+     } else if (artifactType === 'rule') {
+         result = lint_rule(displayPath, text);
+     } else if (artifactType === 'command') {
+diff --git a/src/skills/corpus-grounding/SKILL.md b/src/skills/corpus-grounding/SKILL.md
+index 0961218a173be7dba006bc59b518ee8c1116f252..f8eacefeca8abffb50ba6eb68bbf46da056c86f2 100644
+--- a/src/skills/corpus-grounding/SKILL.md
++++ b/src/skills/corpus-grounding/SKILL.md
+@@ -184,18 +184,27 @@ Each domain ships `data/manifest.json` beside its CSVs — declaring its
+ - BM25 tokenizer drops tokens ≤2 chars — "UI", "a11y" style queries need
+   longer companions.
+ 
+-## Runtime-safety review (Step 1.6 record)
+-
+-- **Read-only by default** — the engine opens corpus CSVs under the
+-  manifest's directory only (`resolve_data_path` refuses absolute paths
+-  and `..` escapes).
+-- **Single write surface** — `--persist DIR` (opt-in) writes markdown
+-  under the caller-chosen `DIR`; nothing else writes.
+-- **No network, no subprocess, no secrets** — pure stdlib; embeddings /
+-  remote retrievers are intentionally not implemented (ADR-061 §2).
+-- `rules_module` executes a manifest-adjacent TypeScript module (dynamic
+-  `import()`) — same trust domain as the skill that ships the manifest;
+-  containment enforced by `resolve_data_path`.
++## Security constraints (Step 1.6 runtime-safety record)
++
++Four scripts ship under `scripts/`: `ground.ts` (CLI), `bm25_search.ts`,
++`decision_engine.ts`, `schema_validator.ts`.
++
++- **What they may touch** — corpus CSVs and the manifest under the
++  manifest's own directory. `resolve_data_path` refuses absolute paths and
++  `..` escapes, so the manifest directory is the read boundary.
++- **What they must never do** — read outside that directory, reach the
++  network, or spawn a subprocess. Embeddings and remote retrievers are
++  intentionally not implemented (ADR-061 §2), and that is a containment
++  decision, not a missing feature.
++- **Default invocation** — read-only. The single write surface is opt-in
++  `--persist DIR`, which writes `MASTER.md` (and `pages/<page>.md` when
++  `--page` is given) under `DIR/design-system/<project-slug>/`. Nothing
++  else writes.
++- **Outbound** — nothing. No network access at all.
++
++One qualified exception: `rules_module` executes a manifest-adjacent
++TypeScript module via dynamic `import()`. That is the same trust domain as
++the skill shipping the manifest, and its containment is `resolve_data_path`.
+ 
+ ## See also
+ 
+diff --git a/src/skills/design-tokens/SKILL.md b/src/skills/design-tokens/SKILL.md
+index ff695ecfdd77c71ff0a88b38568642ad29963a35..3e34a94e201ec69d24a640eb9b9ca72cdfccb57b 100644
+--- a/src/skills/design-tokens/SKILL.md
++++ b/src/skills/design-tokens/SKILL.md
+@@ -113,6 +113,21 @@ four-operation split assigns to *rules/linters*, not the corpus).
+ 3. `validate` report — exit 0 evidence, or the violations list handed to
+    the polish round as `token_violation` findings.
+ 
++## Security constraints
++
++`scripts/tokens.ts` is the only shipped script.
++
++- **What it may touch** — the `tokens.json` config path it is given, the
++  directory it is asked to `validate`, and the `--output` path it is asked
++  to write. Nothing outside the paths named on the command line.
++- **What it must never do** — reach the network, spawn a subprocess, or
++  write to a path the caller did not name. It never edits the generated CSS
++  it produced earlier; regeneration replaces, it does not patch.
++- **Default invocation** — read-only. `generate` prints to stdout unless
++  `--output PATH` is passed; `--output` is the flag that makes it mutating,
++  and it creates only that file's parent directory. `validate` never writes.
++- **Outbound** — nothing. No network access.
++
+ ## Do NOT
+ 
+ - Do NOT hand-edit generated CSS — `tokens.json` is the single source.
+diff --git a/src/skills/react-shadcn-ui/SKILL.md b/src/skills/react-shadcn-ui/SKILL.md
+index d6711868cc94b411a74e726d5adf5a1a9049c5a0..bcdd3732155866269893ed575f3b62bad2b69ab9 100644
+--- a/src/skills/react-shadcn-ui/SKILL.md
++++ b/src/skills/react-shadcn-ui/SKILL.md
+@@ -299,6 +299,30 @@ carve-out for the tool-specific part.
+   values the component no longer accepts is stale documentation; keep them beside
+   the component and update them in the same change.
+ 
++## Security constraints
++
++`scripts/shadcn_add.ts` is the only shipped script, and it is the single
++subprocess-plus-network surface in this suite — treat it accordingly.
++
++- **What it may touch** — the project rooted at `--project-root` (default
++  `cwd`): it reads `components.json` there and lets the upstream CLI write
++  the generated primitives under that root. Nothing outside it.
++- **What it must never do** — run without the exact `npx` command and the
++  component list having been shown to the user first, per the gate above.
++  Never pass `--overwrite` unprompted; never treat a non-zero exit as
++  success; never work around a missing `npx` silently
++  ([`missing-tool-handling`](../../rules/missing-tool-handling.md)).
++- **Default invocation** — mutating. A bare `shadcn_add <component>`
++  spawns `npx shadcn@latest add <component>` and writes into the project.
++  `--dry-run` is the read-only path and prints the command it would run;
++  `--list` is read-only too. Use `--dry-run` for the proposal step.
++- **Outbound** — yes, and this is the point of the gate: `npx` resolves
++  `shadcn@latest` from the public npm registry on every live run, so both
++  the code fetched and the components written are chosen upstream, at run
++  time, not pinned here. That is the egress leg of the lethal trifecta
++  ([`lethal-trifecta-guard`](../../rules/lethal-trifecta-guard.md)); the
++  human confirmation is what keeps it off an autonomous path.
++
+ ## Do NOT
+ 
+ - Do NOT install `shadcn-ui` from npm — primitives are scaffolded.
+diff --git a/src/skills/rule-writing/SKILL.md b/src/skills/rule-writing/SKILL.md
+index 1f1702171cee6782021c11ed848e8e6b40dd57a1..042770c3339fabbbaf9132f4087e8810adf739aa 100644
+--- a/src/skills/rule-writing/SKILL.md
++++ b/src/skills/rule-writing/SKILL.md
+@@ -355,3 +355,26 @@ Good description (trigger-shaped, names domain + symptoms):
+ Bad description (no trigger, too vague):
+ 
+ > "Commit conventions"
++
++### Contrastive-example slot (optional, for the rule body)
++
++The pair above governs descriptions. A rule whose obligation is easy to agree
++with and hard to apply — what counts as a cheap question, when an interrupt is
++an interrupt, which reply mirrors the user's language — needs the same treatment
++for the **behaviour**, not just the frontmatter.
++
++Six live corpora already carry those pairs:
++[`direct-answers-demos`](../../../docs/guidelines/agent-infra/direct-answers-demos.md),
++[`asking-and-brevity-examples`](../../../docs/guidelines/agent-infra/asking-and-brevity-examples.md),
++[`language-and-tone-examples`](../../../docs/guidelines/agent-infra/language-and-tone-examples.md),
++and `autonomy-examples` / `interrupt-examples` / `cheap-question-mechanics` under
++`src/agent-src/contexts/execution/`. Follow one; do not invent a format.
++
++The shape they share: the **wrong** version in the form it actually gets
++written, the **right** version, and one line of **why** — the why is what makes
++it a rule rather than a memorised case.
++
++Where the pairs go is a size decision, not a taste one. A rule body is capped at
++200 lines hard / 120 soft, so more than two or three pairs belong in a guideline
++or context file the rule points at — same split
++[`skill-writing`](../skill-writing/SKILL.md) § Contrastive-example slot uses.
+diff --git a/src/skills/skill-writing/SKILL.md b/src/skills/skill-writing/SKILL.md
+index 7ca98d72cbb29e208ff2360f15e5d1c4a96512b4..8886763e3fcce85ed9e1f1f48751cd53e8183cec 100644
+--- a/src/skills/skill-writing/SKILL.md
++++ b/src/skills/skill-writing/SKILL.md
+@@ -530,7 +530,7 @@ tool skill*, **never** a new skill per pitfall and never a generated grid (see
+ [`size-enforcement`](../../rules/size-enforcement.md) § Per-tool pitfall
+ content).
+ 
+-## Rationalizations-to-reject section (required, security-stop-routed skills)
++## Rationalizations-to-reject section (recommended pattern, security-stop-routed skills)
+ 
+ A skill routed by `security-sensitive-stop` already carries a forbidden-moves or
+ failure-mode list. Those describe **what is wrong**. They do not answer the
+@@ -553,7 +553,7 @@ the skip actually happens.
+ Keep it to the arguments that have really been made. An invented rationalization
+ teaches nothing and dilutes the ones that recur.
+ 
+-## Non-negotiable-deliverable section (required, adjacent-technology clusters)
++## Non-negotiable-deliverable section (recommended pattern, adjacent-technology clusters)
+ 
+ Some skills sit next to a technology that is a *tempting wrong answer* — close
+ enough to look interchangeable, different enough that picking it silently loses
+@@ -644,6 +644,84 @@ This duplicates the rules on purpose, and the duplication is the point: the
+ rules are the enforcement, the section is what survives the artifact leaving
+ their reach.
+ 
++## Mechanism-teaching section (optional pattern, skills whose subject has one)
++
++A procedure tells the agent what to do in the cases you thought of. A
++**mechanism** tells it why those steps work, which is the only thing that
++transfers to the case you did not. Where a skill's subject has a mechanism worth
++one screen — how the cascade resolves, why the queue drops the message, what the
++scheduler actually orders — state it in a `## How it works` section, ahead of the
++procedure that depends on it.
++
++Keep it to one screen and to mechanisms only: no history, no alternatives-considered,
++no restating the procedure in prose. If it takes more than a screen, the skill is
++carrying a guideline's worth of material and should point at one instead.
++
++The test for whether it earns its place: name a plausible situation the procedure
++does not cover, and check whether this section is enough to answer it. If the
++answer is still "read the source", the section is decoration.
++
++Optional, and it gets no gate: "teaches a mechanism" is a prose judgement, and a
++predicate over prose is the false-positive class this file's other patterns avoid.
++
++## Illustrative-not-verbatim marker (optional pattern, reference code)
++
++A code block in a skill is read as copy-me by default. When a block is teaching a
++*shape* — a signature to mirror, a structure to follow, pseudocode standing in for
++the real call — say so on the line above it:
++
++```
++<!-- illustrative: shape only, not a working snippet -->
++```
++
++One line, immediately above the fence, in the skill's own words if you prefer.
++What matters is that the reader can tell shape-teaching code from code that runs,
++because the failure mode is silent: an agent pastes the illustration, it almost
++works, and the debugging starts from the wrong premise.
++
++The inverse deserves the same care — a block that IS meant to be run verbatim,
++where a reader might assume otherwise, says so too. See also `### 4. Add
++safe/unsafe example`, which governs a different axis: safe-vs-unsafe, not
++runnable-vs-illustrative.
++
++## Headline metric + closing report (optional pattern, optimization skills)
++
++A skill whose job is to make something better — smaller, faster, cheaper, quieter
++— has to say **which single number it moves**. Without one, "optimized" is a
++claim nobody can check and every run reports success.
++
++So an optimization skill names, up front:
++
++1. **The headline metric.** One number, with its unit and how it is measured.
++   "Initial-context tokens, measured by `audit-tokens`" — not "context cost".
++2. **The closing report shape.** Before, after, delta, and the command that
++   produced both. The same command for both readings, or the delta is not a delta.
++
++State what the metric does **not** capture, in one line. An optimization that
++moves the headline number by degrading something it does not measure is the
++failure this pattern exists to make visible, and only the author knows where that
++edge is.
++
++## Contrastive-example slot (optional pattern, authoring and behaviour skills)
++
++Where a skill's guidance is easy to agree with and hard to apply — tone, phrasing,
++question shape, what counts as evidence — a wrong/right pair does what prose
++cannot: it shows the near-miss. Six live corpora already carry them:
++[`direct-answers-demos`](../../../docs/guidelines/agent-infra/direct-answers-demos.md),
++[`asking-and-brevity-examples`](../../../docs/guidelines/agent-infra/asking-and-brevity-examples.md),
++[`language-and-tone-examples`](../../../docs/guidelines/agent-infra/language-and-tone-examples.md),
++and `autonomy-examples` / `interrupt-examples` / `cheap-question-mechanics` under
++`src/agent-src/contexts/execution/`.
++
++Follow one of those rather than inventing a format. The shape they share: the
++**wrong** version first, in the form it actually gets written; the **right**
++version second; and one line of **why** — which is the load-bearing part, because
++a pair without it teaches the specific case and not the rule.
++
++Put the corpus in a guideline or context file and point at it from the skill when
++it outgrows a section. A near-miss corpus is reference material read on demand,
++not always-loaded prose.
++
+ ## Do NOT
+ 
+ * Write documentation-style, pointer-only, or too-broad skills ("Laravel skill", "Django skill")
+diff --git a/src/skills/systematic-debugging/SKILL.md b/src/skills/systematic-debugging/SKILL.md
+index 1572e663e348eedd3f3ba9d2466ddcffe6d328a8..26f39fb0f49d365526465320eb676b92738ab887 100644
+--- a/src/skills/systematic-debugging/SKILL.md
++++ b/src/skills/systematic-debugging/SKILL.md
+@@ -222,10 +222,12 @@ right line beats five minutes of IDE breakpoints.
+ 
+ **Known failure signature?** If the symptom has a recognisable shape — a
+ tool/agent loop, HTTP 429, `ECONNREFUSED`, `ENOENT`, timeout/hang, OOM, flaky
+-test, or works-locally-fails-in-CI — consult the symptom → cause → first-check
++test, works-locally-fails-in-CI, or repeated attempts at a tool that is not
++available — consult the symptom → cause → first-check
+ lookup in [`failure-signatures`](../../../docs/guidelines/agent-infra/failure-signatures.md)
+-to shortcut Phase 2 (Isolate) with the highest-probability first check. It
+-supplements the loop; it does not replace it.
++to shortcut Phase 2 (Isolate) with the highest-probability first check. Each row
++carries a stable id you can cite, and a discrimination drill that produces its
++documented symptom. It supplements the loop; it does not replace it.
+ 
+ ## Condition-based waiting (intermittent bugs)
+ 
+diff --git a/src/skills/tailwind-engineer/SKILL.md b/src/skills/tailwind-engineer/SKILL.md
+index 878b329176a2da86742931c7ba278e22d320339a..6b45acac6e4de8a0076fb902be59a4e1dfacbb66 100644
+--- a/src/skills/tailwind-engineer/SKILL.md
++++ b/src/skills/tailwind-engineer/SKILL.md
+@@ -157,8 +157,32 @@ Risks:          <arbitrary values, !important, dark-mode gaps>
+ 
+ When `DESIGN.md` declares `## Taste Dials`, honour them: Variance → layout-family spread + asymmetry tolerance; Motion → animation budget + reduced-motion posture; Density → spacing scale + information-per-viewport. Absent → follow the design brief's inferred dials.
+ 
++## Security constraints
++
++`scripts/tailwind_config_gen.ts` is the only shipped script.
++
++- **What it may touch** — exactly one file: `--output PATH`, or
++  `tailwind.config.ts` / `.js` in the current working directory when no
++  `--output` is given. It reads nothing from the project.
++- **What it must never do** — write anywhere other than that one path,
++  reach the network, or spawn a subprocess. It does none of these.
++- **Default invocation** — **mutating**, and stated here because it is a
++  real exception rather than a comfortable one: a bare invocation writes
++  `tailwind.config.ts` into `cwd`, overwriting an existing config without
++  prompting. `--validate-only` is the read-only path — it prints the
++  generated config to stdout and writes nothing. Run `--validate-only`
++  first, and pass `--output` when the target is not the cwd default.
++  This default contradicts `skill-writing`'s "never mutate on a bare
++  invocation" line; it is recorded rather than silently tolerated, and
++  changing the script's default is a caller-visible behaviour change that
++  belongs in its own change, not here.
++- **Outbound** — nothing. No network access.
++
+ ## Do NOT
+ 
++- Do NOT run `tailwind_config_gen` bare in a project that already has a
++  `tailwind.config.*` — it overwrites without asking. Use
++  `--validate-only` first, then `--output` at the intended path.
+ - Do NOT add `!important` to win a specificity fight; restructure
+   the cascade or extract the conflicting style.
+ - Do NOT introduce a new colour outside `tailwind.config` without
+diff --git a/tests/scripts/check_claims.test.ts b/tests/scripts/check_claims.test.ts
+index ec3951a92a315bf4ea32bfa3b1687a8ba41606d0..7e64ddfdab0f6588aaef3f2ff2ba2c489131d87e 100644
+--- a/tests/scripts/check_claims.test.ts
++++ b/tests/scripts/check_claims.test.ts
+@@ -163,4 +163,120 @@ describe('check_claims — mechanism', () => {
+         expect(run().code).toBe(0);
+     });
+ 
++
++    // road-to-inbox-harvest-2026-08-b-authoring-contract 4.2 — the documented
++    // external-pointer grammar is `https://… (YYYY-MM-DD)`, WITH a space. The
++    // enforcing pattern used to require the stamp to abut the URL, so every
++    // pointer written the documented way was rejected; the form had zero usage,
++    // so nothing caught it. Both spellings must clear.
++    it('accepts an external cite with a dated stamp, spaced or abutting', () => {
++        for (const pointer of [
++            'https://arxiv.org/abs/2306.05685 (2026-08-11)',
++            'https://arxiv.org/abs/2306.05685(2026-08-11)',
++        ]) {
++            write(
++                'docs/CLAIMS.md',
++                [
++                    '# Claims Ledger',
++                    '',
++                    '### claim: external',
++                    '- claim: A claim resting on an external paper.',
++                    '- kind: qual',
++                    `- evidence: ${pointer}`,
++                    '- status: backed',
++                    '- last_verified: 2026-08-11',
++                    '',
++                ].join('\n'),
++            );
++            write('README.md', 'Implements the judge pattern.<!-- claim:external -->\n');
++            const r = run();
++            expect(r.code, `${pointer} → ${r.stderr}`).toBe(0);
++        }
++    });
++
++    it('still rejects an external cite with no dated stamp', () => {
++        write(
++            'docs/CLAIMS.md',
++            [
++                '# Claims Ledger',
++                '',
++                '### claim: external',
++                '- claim: A claim resting on an external paper.',
++                '- kind: qual',
++                '- evidence: https://arxiv.org/abs/2306.05685',
++                '- status: backed',
++                '- last_verified: 2026-08-11',
++                '',
++            ].join('\n'),
++        );
++        write('README.md', 'Implements the judge pattern.<!-- claim:external -->\n');
++        const r = run();
++        expect(r.code).toBe(2);
++        expect(r.stderr).toContain('missing a (YYYY-MM-DD) stamp');
++    });
++
++
++    // road-to-inbox-harvest-2026-08-b-authoring-contract 4.3 — `superseded_by` is
++    // parsed and gated, not merely documented. An unparsed field would be a
++    // documented claim the code does not honour.
++    function supersedeLedger(fields: string): string {
++        return [
++            '# Claims Ledger',
++            '',
++            '### claim: closed',
++            '- claim: A question that was asked and answered null.',
++            '- kind: quant',
++            '- evidence: docs/evidence.md#ANCHOR',
++            '- status: resolved-null',
++            '- last_verified: 2026-08-11',
++            fields,
++            '',
++            '### claim: reopened',
++            '- claim: The same question, asked by a different mechanism.',
++            '- kind: quant',
++            '- evidence: docs/evidence.md#ANCHOR',
++            '- status: unbacked',
++            '- last_verified: 2026-08-11',
++            '',
++        ].join('\n');
++    }
++
++    it('accepts a successor pointer that names a real entry', () => {
++        write('docs/evidence.md', 'ANCHOR\n');
++        write('docs/CLAIMS.md', supersedeLedger('- superseded_by: reopened'));
++        write('README.md', 'No markers here.\n');
++        expect(run().code).toBe(0);
++    });
++
++    it('rejects a successor pointer that names nothing', () => {
++        write('docs/evidence.md', 'ANCHOR\n');
++        write('docs/CLAIMS.md', supersedeLedger('- superseded_by: ghost'));
++        write('README.md', 'No markers here.\n');
++        const r = run();
++        expect(r.code).toBe(2);
++        expect(r.stderr).toContain('not in the ledger');
++    });
++
++    it('rejects a successor pointer on a live entry', () => {
++        write('docs/evidence.md', 'ANCHOR\n');
++        const ledger = supersedeLedger('- superseded_by: reopened').replace(
++            '- status: resolved-null',
++            '- status: backed',
++        );
++        write('docs/CLAIMS.md', ledger);
++        write('README.md', 'No markers here.\n');
++        const r = run();
++        expect(r.code).toBe(2);
++        expect(r.stderr).toContain('only meaningful on a resolved-null entry');
++    });
++
++    it('rejects a successor pointer at its own entry', () => {
++        write('docs/evidence.md', 'ANCHOR\n');
++        write('docs/CLAIMS.md', supersedeLedger('- superseded_by: closed'));
++        write('README.md', 'No markers here.\n');
++        const r = run();
++        expect(r.code).toBe(2);
++        expect(r.stderr).toContain('points at its own entry');
++    });
++
+ });
+diff --git a/tests/scripts/lint_hedge_words.test.ts b/tests/scripts/lint_hedge_words.test.ts
+new file mode 100644
+index 0000000000000000000000000000000000000000..5021485758364a7d02d552c1e3e3b5eccb7f3ab5
+--- /dev/null
++++ b/tests/scripts/lint_hedge_words.test.ts
+@@ -0,0 +1,94 @@
++/**
++ * Mechanism tests for `src/scripts/lint_hedge_words.ts`.
++ *
++ * The gate is advisory by design, so "does it fail the build" is not the
++ * property under test — `main` returns 0 on findings on purpose. What must hold
++ * is that the scanner reads the right surface: added prose in `src/` and `docs/`
++ * markdown, and nothing else. Every carve-out below exists because without it
++ * the gate's loudest findings would be its own vocabulary.
++ */
++import { describe, expect, it } from 'vitest';
++
++import { scanDiff } from '../../src/scripts/lint_hedge_words.js';
++
++/** Build a minimal unified diff whose added lines are `lines`. */
++function diff(file: string, lines: string[]): string {
++    return [`--- a/${file}`, `+++ b/${file}`, '@@ -0,0 +1 @@', ...lines.map((l) => `+${l}`)].join('\n');
++}
++
++describe('lint_hedge_words — scanDiff', () => {
++    it('flags a hedge word in added prose', () => {
++        const r = scanDiff(diff('src/rules/example.md', ['The gate might fire when the path is absent.']));
++        expect(r.findings).toHaveLength(1);
++        expect(r.findings[0]?.words).toContain('might');
++        expect(r.filesScanned).toBe(1);
++    });
++
++    it('does not flag a line with no hedge word', () => {
++        const r = scanDiff(diff('src/rules/example.md', ['The gate fires when the path is absent.']));
++        expect(r.findings).toHaveLength(0);
++        expect(r.addedProseLines).toBe(1);
++    });
++
++    it('ignores a hedge word that is quoted rather than used', () => {
++        const r = scanDiff(
++            diff('docs/guidelines/example.md', [
++                'Banned in a claim sentence: `might`, `could`, and "perhaps".',
++            ]),
++        );
++        expect(r.findings).toHaveLength(0);
++    });
++
++    it('ignores fenced code between markers', () => {
++        const r = scanDiff(
++            diff('src/skills/example/SKILL.md', [
++                'Prose before the fence.',
++                '```ts',
++                'const maybe = true; // this might be fine',
++                '```',
++                'Prose after the fence.',
++            ]),
++        );
++        expect(r.findings).toHaveLength(0);
++        expect(r.addedProseLines).toBe(2);
++    });
++
++    it('ignores indented code and comment lines', () => {
++        const r = scanDiff(
++            diff('src/skills/example/SKILL.md', [
++                '    const x = 1; // possibly',
++                '<!-- verify: this could change -->',
++                '// it seems fine',
++            ]),
++        );
++        expect(r.findings).toHaveLength(0);
++    });
++
++    it('ignores files outside src/ and docs/', () => {
++        const r = scanDiff(diff('agents/roadmaps/plan.md', ['This might be the shape.']));
++        expect(r.findings).toHaveLength(0);
++        expect(r.filesScanned).toBe(0);
++    });
++
++    it('ignores non-markdown files under a scanned root', () => {
++        const r = scanDiff(diff('src/scripts/thing.ts', ['// this might be the shape']));
++        expect(r.findings).toHaveLength(0);
++    });
++
++    it('ignores the lexicon files themselves — the list is not hedging', () => {
++        const r = scanDiff(diff('src/scripts/lint_hedge_words.ts', ['might, could, perhaps']));
++        expect(r.findings).toHaveLength(0);
++    });
++
++    it('ignores removed lines', () => {
++        const raw = ['--- a/src/rules/example.md', '+++ b/src/rules/example.md', '@@ -1 +1 @@', '-It might fire.', '+It fires.'].join('\n');
++        const r = scanDiff(raw);
++        expect(r.findings).toHaveLength(0);
++    });
++
++    it('counts added words so a rate can be derived', () => {
++        const r = scanDiff(diff('src/rules/example.md', ['one two three four five']));
++        expect(r.addedWords).toBe(5);
++        expect(r.addedProseLines).toBe(1);
++    });
++});
+diff --git a/tests/scripts/skill_linter.test.ts b/tests/scripts/skill_linter.test.ts
+index a79ed01ff37442f7459ad53a11d0c365070386dd..f5dd80cdeee0a4143fc1a63aa1deff6d6452d1be 100644
+--- a/tests/scripts/skill_linter.test.ts
++++ b/tests/scripts/skill_linter.test.ts
+@@ -2383,3 +2383,86 @@ describe('skill_linter --changed — release-PR empty-scope discriminator', () =
+         }
+     });
+ });
++
++// --- Conditional required sections (road-to-inbox-harvest-2026-08-b-authoring-contract 1.3)
++//
++// `## Security constraints` is required only of skills that ship a `scripts/`
++// directory. The third case is the load-bearing one: without it the check is
++// indistinguishable from an unconditional required-section rule.
++
++const SCRIPT_BEARING_SKILL = (extraBlocks: string): string => `---
++name: scripted
++description: "Use when generating a config file from a token set — ships a generator script and writes exactly one output path."
++source: project
++---
++
++# scripted
++
++## When to use
++
++* Generating the config from a token set
++
++## Procedure
++
++1. Inspect the existing config
++2. Generate the replacement
++3. Validate the result
++
++## Output format
++
++1. config file at the named path
++
++## Gotchas
++
++* Overwrites the target path without prompting
++
++## Do NOT
++
++* Do NOT run it bare in a project that already has a config
++${extraBlocks}`;
++
++const SECURITY_CONSTRAINTS_BLOCK = `
++## Security constraints
++
++- **What it may touch** — only the \`--output\` path it is given.
++- **What it must never do** — write anywhere else; reach the network.
++- **Default invocation** — read-only; \`--output\` makes it mutating.
++- **Outbound** — nothing.
++`;
++
++describe('skill_linter — conditional required sections', () => {
++    it('a skill with scripts/ and no Security constraints section is an error', () => {
++        const p = writeFile('skills/scripted/SKILL.md', SCRIPT_BEARING_SKILL(''));
++        writeFile('skills/scripted/scripts/generate.ts', 'export const noop = 0;\n');
++        const result = lint_file(p);
++        const hits = result.issues.filter((i) => i.code === 'missing_conditional_section');
++        expect(hits).toHaveLength(1);
++        expect(hits[0]?.severity).toBe('error');
++        expect(hits[0]?.message).toContain('Security constraints');
++        expect(hits[0]?.message).toContain('scripts/ directory');
++    });
++
++    it('the same skill with the section is clean', () => {
++        const p = writeFile('skills/scripted/SKILL.md', SCRIPT_BEARING_SKILL(SECURITY_CONSTRAINTS_BLOCK));
++        writeFile('skills/scripted/scripts/generate.ts', 'export const noop = 0;\n');
++        const result = lint_file(p);
++        expect(hasCode(result, 'missing_conditional_section')).toBe(false);
++    });
++
++    it('a skill with no scripts/ and no section is clean — the discrimination case', () => {
++        const p = writeFile('skills/unscripted/SKILL.md', SCRIPT_BEARING_SKILL(''));
++        const result = lint_file(p);
++        expect(hasCode(result, 'missing_conditional_section')).toBe(false);
++    });
++
++    it('a heading that qualifies the section still matches (prefix form)', () => {
++        const qualified = SECURITY_CONSTRAINTS_BLOCK.replace(
++            '## Security constraints',
++            '## Security constraints (runtime-safety record)',
++        );
++        const p = writeFile('skills/scripted/SKILL.md', SCRIPT_BEARING_SKILL(qualified));
++        writeFile('skills/scripted/scripts/generate.ts', 'export const noop = 0;\n');
++        const result = lint_file(p);
++        expect(hasCode(result, 'missing_conditional_section')).toBe(false);
++    });
++});
