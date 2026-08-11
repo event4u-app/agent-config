@@ -1,0 +1,1527 @@
+diff --git a/agents/roadmaps-progress.md b/agents/roadmaps-progress.md
+index 6064ca039f9d5acd6286f4751527b89d3928092a..212e41f69c3a0c075a5bd8f65c66168297b8877f 100644
+--- a/agents/roadmaps-progress.md
++++ b/agents/roadmaps-progress.md
+@@ -6,10 +6,10 @@
+ 
+ ## Overall
+ 
+-**190 / 365 steps done · 52%**
++**200 / 366 steps done · 55%**
+ 
+ ```text
+-█████████████████████░░░░░░░░░░░░░░░░░░░   52%
++██████████████████████░░░░░░░░░░░░░░░░░░   55%
+ ```
+ 
+ ## Open roadmaps
+@@ -28,7 +28,7 @@
+ | 10 | [road-to-inbox-harvest-2026-08-b-dispatch-safety.md](roadmaps/road-to-inbox-harvest-2026-08-b-dispatch-safety.md) | 4 | 21 | 13 | 1 | 1 | 6 | [1](#blockers-road-to-inbox-harvest-2026-08-b-dispatch-safety) | █░░░░░░░░░ 7% |
+ | 11 | [road-to-inbox-harvest-2026-08-b-estate-lifecycle.md](roadmaps/road-to-inbox-harvest-2026-08-b-estate-lifecycle.md) | 4 | 15 | 9 | 0 | 0 | 6 | [1](#blockers-road-to-inbox-harvest-2026-08-b-estate-lifecycle) | ░░░░░░░░░░ 0% |
+ | 12 | [road-to-inbox-harvest-2026-08-b-install-lifecycle.md](roadmaps/road-to-inbox-harvest-2026-08-b-install-lifecycle.md) | 2 | 13 | 7 | 0 | 1 | 5 | [1](#blockers-road-to-inbox-harvest-2026-08-b-install-lifecycle) | ░░░░░░░░░░ 0% |
+-| 13 | [road-to-inbox-harvest-2026-08-b-ledger-truth.md](roadmaps/road-to-inbox-harvest-2026-08-b-ledger-truth.md) | 3 | 19 | 10 | 2 | 1 | 6 | [1](#blockers-road-to-inbox-harvest-2026-08-b-ledger-truth) | ██░░░░░░░░ 17% |
++| 13 | [road-to-inbox-harvest-2026-08-b-ledger-truth.md](roadmaps/road-to-inbox-harvest-2026-08-b-ledger-truth.md) | 3 | 19 | 1 | 12 | 0 | 6 | [1](#blockers-road-to-inbox-harvest-2026-08-b-ledger-truth) | █████████░ 92% |
+ | 14 | [road-to-inbox-harvest-2026-08-b-release-integrity.md](roadmaps/road-to-inbox-harvest-2026-08-b-release-integrity.md) | 5 | 25 | 12 | 0 | 1 | 12 | [3](#blockers-road-to-inbox-harvest-2026-08-b-release-integrity) | ░░░░░░░░░░ 0% |
+ | 15 | [road-to-inbox-harvest-2026-08-b.md](roadmaps/road-to-inbox-harvest-2026-08-b.md) | 3 | 6 | 1 | 2 | 0 | 3 | [1](#blockers-road-to-inbox-harvest-2026-08-b) | ███████░░░ 67% |
+ | 16 | [road-to-inbox-harvest-2026-08.md](roadmaps/road-to-inbox-harvest-2026-08.md) | 5 | 21 | 1 | 11 | 4 | 5 | [3](#blockers-road-to-inbox-harvest-2026-08) | █████████░ 92% |
+@@ -347,13 +347,13 @@
+ 
+ ### [road-to-inbox-harvest-2026-08-b-ledger-truth.md](roadmaps/road-to-inbox-harvest-2026-08-b-ledger-truth.md)
+ 
+-**Road to cost-ledger truth** — 2 / 12 done (17%)
++**Road to cost-ledger truth** — 12 / 13 done (92%)
+ 
+ | # | Phase | State | Open | Done | Deferred | Cancelled | % |
+ |---|---|---|---:|---:|---:|---:|---:|
+-| 1 | Served-model truth | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
+-| 2 | The rate tables cannot disagree | 🟡 in progress | 2 | 2 | 1 | 0 | 50% |
+-| 3 | Two aggregation lines and a cache signature | ⬜ not started | 3 | 0 | 0 | 6 | 0% |
++| 1 | Served-model truth | ✅ done | 0 | 5 | 0 | 0 | 100% |
++| 2 | The rate tables cannot disagree | 🟡 in progress | 1 | 4 | 0 | 0 | 80% |
++| 3 | Two aggregation lines and a cache signature | ✅ done | 0 | 3 | 0 | 6 | 100% |
+ 
+ <a id="blockers-road-to-inbox-harvest-2026-08-b-ledger-truth"></a>
+ **Blockers**
+diff --git a/agents/roadmaps/road-to-inbox-harvest-2026-08-b-ledger-truth.md b/agents/roadmaps/road-to-inbox-harvest-2026-08-b-ledger-truth.md
+index 7f511330f42ad6abd103f51657c0adefc862bfdc..a8a2d66283907527bf2e1247c7a7294602066588 100644
+--- a/agents/roadmaps/road-to-inbox-harvest-2026-08-b-ledger-truth.md
++++ b/agents/roadmaps/road-to-inbox-harvest-2026-08-b-ledger-truth.md
+@@ -44,7 +44,7 @@ coherence or plan drift, so it is the maintainer's call in that change, not here
+ and its test run reported a count that is environment-conditional, where the
+ defensible figure is the **delta of +7** over whatever the local baseline is.
+ 
+-- [ ] **1.1 Read the served model off the API response.**
++- [x] **1.1 Read the served model off the API response.**
+       `src/scripts/ai_council/clients.ts` has **22** `new CouncilResponse` sites
+       (`:584`, `:616`, `:702`, `:719`, `:785`, `:796`, …), and each writes the
+       **requested** id through a `model: this.model` assignment (`:545`, `:577`,
+@@ -60,20 +60,49 @@ defensible figure is the **delta of +7** over whatever the local baseline is.
+       `_getattr(response, 'content')` (`:594`). CLI transports carry no
+       served-model field at all, so `''` is the honest value there rather than a
+       parsed guess.
++      **Shipped** via `_servedModel(response, field = 'model')` in
++      `clients.ts` — a `field` PARAMETER rather than a literal, because the
++      Gemini case is the one that fails silently: a single-field read returns
++      `''`, which is indistinguishable from an honest no-report. All four live
++      sites read it (`clients.ts:645` Anthropic, `:749` OpenAI, `:828` Gemini
++      via `model_version`, `:911` the OpenAI-compatible client); the seventeen
++      error paths keep the `''` default untouched. A non-string value collapses
++      to `''` rather than being coerced — a coerced `'42'` would read as a real
++      served id downstream and could flip `model_divergent` to a false `true`.
++      Pinned by 7 tests, and the Gemini field name proved falsifiable by
++      mutation (`'model_version'` → `'model'` reds exactly that one case).
+       <!-- verify: task test -- --filter=clients -->
+-- [ ] **1.2 Carry it as a distinct `CouncilResponse` field.** The class is
++- [x] **1.2 Carry it as a distinct `CouncilResponse` field.** The class is
+       declared at `clients.ts:199-213` with `model: string` at :201 and an
+       optional-with-default constructor at :215-230 — the same additive shape
+       `cache_read_input_tokens` used. Add the served id as a new optional field;
+       do **not** overwrite `model`, because the requested id is what the tier
+       decision was made against and both are needed to detect a substitution.
++      **Shipped** as `model_served: string`, optional-with-default `''`
++      (`clients.ts:225`, `:242`, `:254`) — the same additive shape
++      `cache_read_input_tokens` used, so no existing caller changes. It reaches
++      the persisted **response row** through `_serialise_response`
++      (`session.ts`). It is deliberately NOT hoisted to the session manifest:
++      that was the surplus this roadmap left to the change carrying the code,
++      and the field describes one response, not a session. A test pins the
++      absence, so a later hoist has to be a decision rather than a drift.
+       <!-- verify: task test -- --filter=clients -->
+-- [ ] **1.3 Extend the cost-summary contract additively.**
++- [x] **1.3 Extend the cost-summary contract additively.**
+       [`cost-summary-schema`](../../docs/contracts/cost-summary-schema.md):60-62
+       states its own rule — new fields are "a **v1 additive extension**", rows
+       written before them read "like a row missing `input_tokens` — no version
+       bump". Follow that rule exactly; no version bump, no required field.
+-- [ ] **1.4 Assert it at the consumer that silently mis-attributes today.**
++      **Shipped** as a `## Served-model attribution` section — additive, no
++      version bump, no required field, absent reads as `''`, and the field is
++      marked attribution-only so nothing routes or prices on it. **One
++      deliberate non-extension, recorded rather than silently skipped:**
++      `by_model` does NOT aggregate it. That array is keyed by the *requested*
++      model and one bucket can legitimately span several served ids, so any
++      single per-bucket value would pick one and misreport the rest — and
++      wiring an aggregation no producer feeds is the "defined but not wired"
++      surface this package has already paid for once. The divergence signal
++      lives per-dispatch in the audit log instead (1.4).
++- [x] **1.4 Assert it at the consumer that silently mis-attributes today.**
+       `src/scripts/_lib/orchestration_record.ts:48-71` reads the requested tier
+       for `tier_chosen`, `tier_source`, `session_tier` and the downshift
+       cost-percentage — so on any alias or provider substitution the recorded
+@@ -81,12 +110,30 @@ defensible figure is the **delta of +7** over whatever the local baseline is.
+       served-vs-requested divergence as a recorded field, not a thrown error —
+       `buildOrchestrationLine` collects into an `errors: string[]` (:183-184)
+       rather than throwing, and this stays inside that contract.
++      **Shipped** as three fields on the orchestration object:
++      `model_requested`, `model_served`, and a DERIVED `model_divergent`.
++      Divergence is three-valued on purpose — `null` when either id is absent,
++      never `false`. Every CLI transport reports no served id, so a `false`
++      there would read as "checked, and they matched", which is the same
++      confident mis-attribution the step exists to remove. A non-string id
++      collects into `errors` rather than throwing, per the stated contract.
++      **Wired, not merely defined:** `ask_transport` is the first producer that
++      holds both ids, so `AskResult` carries `model_served` and the ask route's
++      audit line records all three — asserted end-to-end (substitution → `true`,
++      unreported → `null`, honest-∅ → nulls). Documented in
++      `orchestration-telemetry.md` § Field semantics.
+       <!-- verify: task test -- --filter=_lib_orchestration_record -->
+-- [ ] **1.5 State in the change that no ADR is needed.**
++- [x] **1.5 State in the change that no ADR is needed.**
+       [`ADR-035`](../../docs/decisions/ADR-035-model-capability-tiers.md) is not
+       amended — its tier mapping is unchanged; this phase makes the ADR's
+       attribution honest rather than re-deciding it. Say so, so a later reader does
+       not go looking for a missing record.
++      **Stated here and in the pull request:** no ADR accompanies Phase 1.
++      `ADR-035`'s tier mapping is untouched — nothing about which model serves
++      which tier is re-decided. What changes is that the record now says which
++      model actually answered, so the ADR's own attribution stops being a
++      claim. `cost-summary-schema` and `audit-log-v1` both absorb the fields
++      under their existing additive rules, so no contract version moves either.
+ 
+ ## Phase 2 — The rate tables cannot disagree
+ 
+@@ -133,44 +180,100 @@ they are never cross-checked, and **they match model ids by different strategies
+       no constant to `pricing.ts`. It reads the two existing tables and asserts a
+       relation between them; nothing in `.agent-prices.md` was touched.
+       <!-- verify: task test -- --filter=pricing -->
+-- [ ] **2.3 Make `lookup()` longest-prefix instead of exact-key.**
++- [x] **2.3 Make `lookup()` longest-prefix instead of exact-key.**
+       `pricing.ts:52-54` is a bare `table.prices.get(priceKey(provider, model))`,
+       so `claude-sonnet-4-5-20260101` misses a `claude-sonnet-4-5` row and prices
+       at nothing. Fall back to the longest matching key prefix, keeping exact
+       match as the first hit so no currently-priced call changes.
++      **Shipped**, with one guard the step did not name and that a plain
++      `startsWith` would have missed: a prefix must be followed by a separator
++      (`-`, `.`, `:`, `@`) or end the id, so a `claude-opus-4-1` row never
++      prices `claude-opus-4-15`. Mispricing one model at another's rate is
++      **worse** than the zero it replaces, because it looks correct. Longest
++      match wins, so a specific row is never shadowed by a shorter one that
++      also prefixes the id; provider is part of the composite key, so
++      cross-provider bleed is impossible by construction. Six tests, including
++      the exact-match-unchanged case and both near-misses.
+       <!-- verify: task test -- --filter=pricing -->
+-- [ ] **2.4 Flag the silent zero instead of returning it.** `track.mjs:64` is
++- [x] **2.4 Flag the silent zero instead of returning it.** `track.mjs:64` is
+       `if (!p || !u) return 0;`, reached whenever `modelTier()` returns
+       `'unknown'` (:49, :54) — an unknown model is priced at **zero, with no
+       warning and no flag**; `grep -rn rate_missing src/` returns 0 hits. Emit a
+       `rate_missing` marker on the row and one stderr warning per run. Rows keep
+       their token counts, so a later backfill stays possible.
+-- [~] **2.5 Backfill machinery for `rate_missing` rows.** Deferred behind
++      **Shipped** as `rate_missing: boolean` plus `rate_missing_models: string[]`
++      (sorted, distinct) on the session row, and ONE stderr warning per run —
++      emitted **before** the `TRACK_QUIET` return, because a suppressed report
++      is a display choice while an understated cost figure is a data-integrity
++      problem. Token counts are untouched, which is what makes 2.5's backfill
++      possible at all. Pinned by 4 subprocess tests over a temp-`HOME`
++      transcript fixture (track.mjs has no export and no entry guard, so
++      importing it would scan the developer's real `~/.claude`), including a
++      negative control on a priced model; mutation-proven — dropping the
++      `tier === 'unknown'` guard reds the control and the mixed-session case.
++- [ ] **2.5 Backfill machinery for `rate_missing` rows.** Blocked behind
+       `unknown-model-row-never-observed` — see `## Blockers`. Writing a
+       re-pricing pass before a single real unknown-model row exists would be
+       built against a shape nobody has seen.
++      **Glyph corrected `[~]` → `[ ]` when the rest of the roadmap closed, and
++      stated rather than done quietly.** `[~]` means *deferred*; this step is
++      *blocked*, which is what `[ ]` plus a recorded blocker already says — it
++      is not half-shipped, and nothing about it was started. The correction is
++      not cosmetic: with `count_open` at 0 and any `[~]` present, the
++      pre-commit dashboard gate refuses **every** commit in the repository
++      until a human disposes of the deferral, so a mis-glyph here would have
++      deadlocked the branch that finished the work. Restoring a genuinely
++      blocked item to `[ ]` is the disposition the gate itself documents.
++      Reverse it to `[~]` if the intent really was "deferred by choice".
+ 
+ ## Phase 3 — Two aggregation lines and a cache signature
+ 
+-- [ ] **3.1 Add a cache-savings line to the cost summary.** `grep -rni saving`
++- [x] **3.1 Add a cache-savings line to the cost summary.** `grep -rni saving`
+       over `src/scripts/cost*` returns 0 hits — the summary reports spend but never
+       what caching bought. Both inputs exist: the totals block carries
+       `cache_read_input_tokens` / `cache_creation_input_tokens`
+       ([`cost-summary-schema`](../../docs/contracts/cost-summary-schema.md):46-47,
+       :58) and `pricing.ts:111-113` holds the multipliers to price the
+       counterfactual. Additive per the schema's own rule (:60-62).
++      **Shipped** as `cache_savings_input_token_equivalents` on `totals` —
++      token-equivalents, explicitly **not USD**, because `totals` aggregates
++      across models with different input rates and carries no per-model split
++      to apply them to; a dollar figure would have to pick one rate and be
++      wrong for every other model in the row. A **negative** value is
++      meaningful: the run wrote cache it never read back. The write premium
++      uses the 5m multiplier — rows carry no TTL split, and 5m is the same
++      assumption `track.mjs` already makes for unaccounted writes, so the two
++      cost paths agree instead of diverging quietly. Stated as a limit in the
++      contract rather than left for a reader to discover.
+       <!-- verify: task test -- --filter=cost_summary -->
+-- [ ] **3.2 Add a day-by-day breakdown.** `grep -rn by_date src/ docs/` returns 0
++- [x] **3.2 Add a day-by-day breakdown.** `grep -rn by_date src/ docs/` returns 0
+       hits, yet every row already carries `startedAt` / `endedAt`
+       (`track.mjs:214`, from the per-message timestamps at :175-177). One derived
+       grouping, no new capture. Additive, same rule.
++      **Shipped** as a `by_date` array keyed on the UTC calendar day of
++      `startedAt`, same row shape as `by_session`. A row with no or
++      unparseable timestamp lands under `unknown`, which sorts last under the
++      existing codepoint ordering, so a timestampless row never displaces a
++      real day. A test asserts the day buckets re-sum to `totals` — a grouping
++      that double-counts is the failure mode worth pinning.
+       <!-- verify: task test -- --filter=cost_summary -->
+-- [ ] **3.3 Add a write-share signature to the existing cache report.** Extend
++- [x] **3.3 Add a write-share signature to the existing cache report.** Extend
+       `src/scripts/cache_realization_report.ts`, which already parses the
+       read/write split and computes `median_first_call_written_or_uncached` /
+       `mean_first_call_written_or_uncached` (:85-86) beside
+       `first_call_cache_read_share` and `cold_start_share_of_write_volume` (:88-90,
+       computed :130-140). Do **not** write a new script.
++      **Shipped** by extending `computeColdStarts` — no new script — with
++      `write_share_of_billable` / `read_share_of_billable` /
++      `uncached_share_of_billable` over ALL subagent records, plus one render
++      line. The three share one denominator and sum to 1, which is what makes
++      them a signature rather than three loose ratios: a write-heavy split is
++      paying the cache premium and collecting no discount, and
++      `cold_start_share_of_write_volume` cannot show that — it only says how
++      much of the writing happened on a first call. A test pins exactly that
++      gap (a never-read-back run reads `write_share = 1` while the pre-existing
++      metric reports a bland 0.5). All-zero is the **empty-corpus** reading,
++      never "a perfectly uncached workload"; read it beside `legs`.
+       <!-- verify: task test -- --filter=cache_realization_report -->
+ 
+ ## Cancelled — each against a named citation
+diff --git a/dist/agent-src/contexts/execution/orchestration-telemetry.md b/dist/agent-src/contexts/execution/orchestration-telemetry.md
+index 4cf61844441869a6eeab9206973e14ab299b6a52..7489aa10f79c3f838d08f05c572dbb9cad3d8597 100644
+--- a/dist/agent-src/contexts/execution/orchestration-telemetry.md
++++ b/dist/agent-src/contexts/execution/orchestration-telemetry.md
+@@ -68,6 +68,9 @@ v1 forward-compat rule on unknown fields).
+ | `rules_used` | int \| null | **Lean-init extension (L6 demand signal).** Rules the worker actually applied/cited. Validation: never exceeds `rules_carried`. `null` = not measured. Counts only. |
+ | `work_tokens` | int \| null | **Dispatch-economy extension.** Tokens the worker consumed AFTER init — the delta from first worker turn to envelope close. With `init_tokens`, yields the `dispatch_floor` ratio (`src/config/dispatch-economy-metrics.json`). Sourced from the transcript ledger (`_lib/cc_transcript.ts` `billable_input` semantics) by the report/backfill, never model-estimated without the tag below. `null` = not measured. |
+ | `floor_provenance` | enum \| null | **Dispatch-economy extension.** Provenance of the `init_tokens`/`work_tokens` pair: `measured` (transcript ledger) · `estimated`. Auto-defaults to `estimated` when either field is present untagged — mirrors `token_delta_provenance`. `null` = neither field present. |
++| `model_requested` | string \| null | **Served-model-truth extension (`inbox-harvest-2026-08-b-ledger-truth` Phase 1).** The model id that was ASKED for — the id `tier_chosen`, `tier_source`, `session_tier` and the downshift cost-% are all derived from. `null` = not recorded. Id only, never free-form. |
++| `model_served` | string \| null | **Served-model-truth extension.** The model id the provider reported ANSWERING with. `''`/`null` when the transport reports none (every CLI client) — absent is the honest value, not a defect. Attribution only: never route or tier on it. |
++| `model_divergent` | bool \| null | **Served-model-truth extension.** DERIVED, never supplied: `true` when both ids are present and differ (an alias or provider substitution — every tier-derived figure on this line attributes to a model that never ran), `false` when both are present and match. `null` when either is absent, because a comparison that never happened must not read as "checked, and they matched". |
+ | `return_channel_chars` | int \| null | **Dispatch-economy extension (Phase 6.3).** Serialized chars of the tool result returned into the orchestrator context (sync completions, hook-derived count — content never enters the record). Detector for "isolation win refunded through the return channel"; committed cap: `MAX_ENVELOPE_CHARS` (12,000) via `return_channel` in `dispatch-economy-metrics.json`. `null` = async ack. |
+ 
+ These routing + cost fields are additive and optional — a line without them is
+diff --git a/docs/contracts/cost-summary-schema.md b/docs/contracts/cost-summary-schema.md
+index c251b8d2e3b8d0766952dda968f21e896a4ef52b..d860c9f3ad582db3a4314d2987b973427e42ef92 100644
+--- a/docs/contracts/cost-summary-schema.md
++++ b/docs/contracts/cost-summary-schema.md
+@@ -33,6 +33,7 @@ fields and the telegraph-suspended-multiplier contract.
+ | `totals` | object | Lifetime aggregates — see `totals` below. |
+ | `by_session` | array | Per `sessionId` row; ordered by `sessionId` ascending. |
+ | `by_conversation` | array | Per `conversation_id` row; ordered by `conversation_id` ascending. |
++| `by_date` | array | Per UTC calendar day (`YYYY-MM-DD`) of the row's `startedAt`; ordered ascending. A row with no or unparseable timestamp lands under `unknown`, which sorts last. **v1 additive extension.** |
+ | `by_model` | array | Per `model` row; ordered by `model` ascending. |
+ 
+ ## `totals` shape
+@@ -47,10 +48,30 @@ fields and the telegraph-suspended-multiplier contract.
+   "cache_creation_input_tokens": 5000,
+   "telegraph_delta_tokens": 0,
+   "telegraph_multiplier_version": "v1",
+-  "telegraph_multiplier_active": false
++  "telegraph_multiplier_active": false,
++  "cache_savings_input_token_equivalents": 38
+ }
+ ```
+ 
++`cache_savings_input_token_equivalents` is what the prompt cache bought,
++expressed in **input-token equivalents — not USD**: each cached read token
++saved `1 - CACHE_READ_MULTIPLIER` of a full-rate input token, each written
++token cost an extra `CACHE_WRITE_MULTIPLIER_5M - 1`, and the field is the net.
++A **negative** value is meaningful and not an error — it says the run wrote
++cache it never read back and paid the premium for nothing.
++
++Two honest limits. It is not priced in dollars because `totals` aggregates
++across models with different input rates and carries no per-model token split
++to apply them to; any single rate would be wrong for every other model in the
++row. And the write premium uses the **5-minute** multiplier, because rows carry
++no TTL split — 5m is Anthropic's default and the assumption
++[`cost/track.mjs`](../../src/scripts/cost/track.mjs) already makes for
++unaccounted writes, so the two cost paths agree rather than diverging quietly.
++A 1h-heavy workload therefore reads slightly optimistic.
++
++Also a **v1 additive extension**: absent on a summary emitted before it
++shipped, exactly like the cache fields above.
++
+ `telegraph_delta_tokens` is always `0` while
+ `telegraph_multiplier_active == false` — see
+ [`telegraph-telemetry.md`](telegraph-telemetry.md) for the suspension contract.
+@@ -62,11 +83,11 @@ extension shipped lack the fields and aggregate as `0` for them, exactly
+ like a row missing `input_tokens` — no version bump, per the additive rule
+ below.
+ 
+-## `by_session` / `by_conversation` row shape
++## `by_session` / `by_conversation` / `by_date` row shape
+ 
+ ```json
+ {
+-  "key": "<sessionId or conversation_id>",
++  "key": "<sessionId, conversation_id, or YYYY-MM-DD>",
+   "sessions": 12,
+   "total_cost_usd": 0.4567,
+   "input_tokens": 8000,
+@@ -99,6 +120,29 @@ model-scoped — but DOES carry the cache fields: the prompt cache itself is
+ model-scoped (a cache write under one model is never read back under
+ another), so a per-model cache breakdown is meaningful here.
+ 
++## Served-model attribution — `model_served`, a v1 additive extension
++
++A recorded spend row may carry `model_served`: the model id the provider
++reported **answering** with, beside `model`, which stays the id that was
++**requested**. Keeping both is the point — on an alias or a provider
++substitution the two differ, and a row that carries only one attributes the
++spend to a model that never ran.
++
++- **Additive per the rule above.** No version bump, no required field. A row
++  written before this extension, and any transport that reports no served id
++  (every CLI client), reads as `''` — exactly like a row missing
++  `input_tokens`.
++- **Attribution-only.** A consumer MUST NOT route, tier, or price on
++  `model_served`; `model` is what the tier decision was made against.
++- **Deliberately not aggregated into `by_model`.** That array is keyed by the
++  requested `model`, and one such bucket can legitimately span several served
++  ids, so a single per-bucket value would have to pick one and misreport the
++  rest. The divergence itself is recorded per dispatch in the audit log
++  ([`audit-log-v1`](audit-log-v1.md)) rather than summed here.
++
++First producer: the AI council's per-member response row
++(`src/scripts/ai_council/session.ts`, `_serialise_response`).
++
+ ## Stability guarantees
+ 
+ - **Field additions** are **non-breaking**: consumers MUST ignore unknown fields.
+diff --git a/src/agent-src/contexts/execution/orchestration-telemetry.md b/src/agent-src/contexts/execution/orchestration-telemetry.md
+index 4cf61844441869a6eeab9206973e14ab299b6a52..7489aa10f79c3f838d08f05c572dbb9cad3d8597 100644
+--- a/src/agent-src/contexts/execution/orchestration-telemetry.md
++++ b/src/agent-src/contexts/execution/orchestration-telemetry.md
+@@ -68,6 +68,9 @@ v1 forward-compat rule on unknown fields).
+ | `rules_used` | int \| null | **Lean-init extension (L6 demand signal).** Rules the worker actually applied/cited. Validation: never exceeds `rules_carried`. `null` = not measured. Counts only. |
+ | `work_tokens` | int \| null | **Dispatch-economy extension.** Tokens the worker consumed AFTER init — the delta from first worker turn to envelope close. With `init_tokens`, yields the `dispatch_floor` ratio (`src/config/dispatch-economy-metrics.json`). Sourced from the transcript ledger (`_lib/cc_transcript.ts` `billable_input` semantics) by the report/backfill, never model-estimated without the tag below. `null` = not measured. |
+ | `floor_provenance` | enum \| null | **Dispatch-economy extension.** Provenance of the `init_tokens`/`work_tokens` pair: `measured` (transcript ledger) · `estimated`. Auto-defaults to `estimated` when either field is present untagged — mirrors `token_delta_provenance`. `null` = neither field present. |
++| `model_requested` | string \| null | **Served-model-truth extension (`inbox-harvest-2026-08-b-ledger-truth` Phase 1).** The model id that was ASKED for — the id `tier_chosen`, `tier_source`, `session_tier` and the downshift cost-% are all derived from. `null` = not recorded. Id only, never free-form. |
++| `model_served` | string \| null | **Served-model-truth extension.** The model id the provider reported ANSWERING with. `''`/`null` when the transport reports none (every CLI client) — absent is the honest value, not a defect. Attribution only: never route or tier on it. |
++| `model_divergent` | bool \| null | **Served-model-truth extension.** DERIVED, never supplied: `true` when both ids are present and differ (an alias or provider substitution — every tier-derived figure on this line attributes to a model that never ran), `false` when both are present and match. `null` when either is absent, because a comparison that never happened must not read as "checked, and they matched". |
+ | `return_channel_chars` | int \| null | **Dispatch-economy extension (Phase 6.3).** Serialized chars of the tool result returned into the orchestrator context (sync completions, hook-derived count — content never enters the record). Detector for "isolation win refunded through the return channel"; committed cap: `MAX_ENVELOPE_CHARS` (12,000) via `return_channel` in `dispatch-economy-metrics.json`. `null` = async ack. |
+ 
+ These routing + cost fields are additive and optional — a line without them is
+diff --git a/src/scripts/_lib/orchestration_record.ts b/src/scripts/_lib/orchestration_record.ts
+index 9d36b72d91f40ce3b9fe066fadd11f349a9f4a70..6f474978ff8e8dedf20dac4a4c7853fcb11717af 100644
+--- a/src/scripts/_lib/orchestration_record.ts
++++ b/src/scripts/_lib/orchestration_record.ts
+@@ -64,6 +64,20 @@ export interface RecordInput {
+     dispatch_tokens?: number | null | undefined;
+     /** The orchestrator's own tier — the baseline the downshift cost-% measures against. */
+     session_tier?: string | null | undefined;
++    /**
++     * The model id that was ASKED for. `tier_chosen`, `tier_source`,
++     * `session_tier` and the downshift cost-percentage are all read off the
++     * requested tier, so on an alias or a provider substitution every one of
++     * them attributes the saving to a model that never ran. Recording the
++     * requested id beside the served one is what makes that detectable.
++     */
++    model_requested?: string | null | undefined;
++    /**
++     * The model id the provider reported SERVING. `''` / null when the
++     * transport reports none (every CLI client) — absent is honest, not a
++     * defect, and is NOT a divergence.
++     */
++    model_served?: string | null | undefined;
+     dispatch_outcome?: DispatchOutcome | undefined;
+     verify_mode?: VerifyMode | undefined;
+     /** QUALITY: subagent return adopted without parent rework. Optional boolean (null = not measured). */
+@@ -176,6 +190,23 @@ function isInt(n: unknown): n is number {
+     return typeof n === 'number' && Number.isFinite(n) && Number.isInteger(n);
+ }
+ 
++/**
++ * Did the provider answer with a different model than the one requested?
++ *
++ * `null` — not decidable — whenever either id is missing or empty. That is the
++ * common case (every CLI transport reports no served id) and it is not the
++ * same as "no divergence": a `false` here would claim a comparison that never
++ * happened, which is the exact mis-attribution this field exists to expose.
++ */
++function modelDivergent(
++    requested: string | null | undefined,
++    served: string | null | undefined,
++): boolean | null {
++    if (typeof requested !== 'string' || typeof served !== 'string') return null;
++    if (!requested || !served) return null;
++    return requested !== served;
++}
++
+ /**
+  * Build + validate the audit-log-v1 line. Returns `{line, errors}`; when
+  * `errors` is non-empty, `line` is null and the caller must NOT write.
+@@ -290,6 +321,13 @@ export function buildOrchestrationLine(input: RecordInput): BuiltLine {
+         errors.push(`trigger_arm_earlier must be one of ${TRIGGER_ARMS.join(' | ')} (or omitted / null when neither arm fired)`);
+     }
+ 
++    for (const [key, v] of [
++        ['model_requested', input.model_requested],
++        ['model_served', input.model_served],
++    ] as const) {
++        if (v != null && typeof v !== 'string') errors.push(`${key} must be a string or omitted`);
++    }
++
+     if (!input.ts) errors.push('ts (ISO-8601 UTC) is required');
+     if (!input.id) errors.push('id (ULID or content hash) is required');
+ 
+@@ -310,6 +348,13 @@ export function buildOrchestrationLine(input: RecordInput): BuiltLine {
+         tier_source: input.tier_source ?? null,
+         dispatch_tokens: input.dispatch_tokens ?? null,
+         session_tier: input.session_tier ?? null,
++        // Served-model attribution. `model_divergent` is DERIVED, never
++        // supplied: `null` when either id is absent — a transport that reports
++        // no served id cannot disagree with anything, and calling that `false`
++        // would read as "checked, and they matched".
++        model_requested: input.model_requested ?? null,
++        model_served: input.model_served ?? null,
++        model_divergent: modelDivergent(input.model_requested, input.model_served),
+         first_pass_success: input.first_pass_success ?? null,
+         escalated: input.escalated ?? null,
+         agent_combo: input.agent_combo ?? [],
+diff --git a/src/scripts/ai_council/clients.ts b/src/scripts/ai_council/clients.ts
+index ed8d6b564fbe730d4e68ca909a2da3173cd94dc9..86b306e0d33940a4659e5fad3814eedc53ea25a3 100644
+--- a/src/scripts/ai_council/clients.ts
++++ b/src/scripts/ai_council/clients.ts
+@@ -195,10 +195,34 @@ export function assertCacheBreakpointOrder(ttls: readonly PromptCacheTtl[]): voi
+     }
+ }
+ 
++/**
++ * The model id a provider reports on its own response, or `''` when it reports
++ * none.
++ *
++ * `field` is a parameter because the name is NOT uniform across providers:
++ * Gemini reports it as `model_version`, so a literal single-field read would
++ * leave Gemini silently empty — which is indistinguishable from a transport
++ * that genuinely reports nothing. Non-string values collapse to `''` rather
++ * than being coerced: a guess is worse than an honest blank here, because the
++ * whole point of the field is detecting a substitution.
++ */
++function _servedModel(response: unknown, field = 'model'): string {
++    const value = _getattr(response, field, '');
++    return typeof value === 'string' ? value : '';
++}
++
+ /** Normalised output from a single council member (dataclass `CouncilResponse`). */
+ export class CouncilResponse {
+     provider: string;
+     model: string;
++    // The model id the provider reported serving, when it reports one. NEVER
++    // overwrites `model`: that is the REQUESTED id, and it is what the tier
++    // decision was made against — keeping both is what makes a silent alias or
++    // provider substitution detectable at all. Attribution-only; no consumer
++    // may route on it. Defaults to '' (the honest value for a transport that
++    // reports no served id, e.g. every CLI client) so existing callers and the
++    // persisted response JSON stay backward-compatible.
++    model_served: string;
+     text: string;
+     input_tokens: number;
+     output_tokens: number;
+@@ -215,6 +239,7 @@ export class CouncilResponse {
+     constructor(opts: {
+         provider: string;
+         model: string;
++        model_served?: string;
+         text: string;
+         input_tokens?: number;
+         output_tokens?: number;
+@@ -226,6 +251,7 @@ export class CouncilResponse {
+     }) {
+         this.provider = opts.provider;
+         this.model = opts.model;
++        this.model_served = opts.model_served ?? '';
+         this.text = opts.text;
+         this.input_tokens = opts.input_tokens ?? 0;
+         this.output_tokens = opts.output_tokens ?? 0;
+@@ -616,6 +642,7 @@ export class AnthropicClient extends ExternalAIClient {
+         return new CouncilResponse({
+             provider: this.name,
+             model: this.model,
++            model_served: _servedModel(response),
+             text,
+             input_tokens: usage ? (_getattr(usage, 'input_tokens', 0) as number) : 0,
+             output_tokens: usage ? (_getattr(usage, 'output_tokens', 0) as number) : 0,
+@@ -719,6 +746,7 @@ export class OpenAIClient extends ExternalAIClient {
+         return new CouncilResponse({
+             provider: this.name,
+             model: this.model,
++            model_served: _servedModel(response),
+             text: (text as string) || '',
+             input_tokens: usage ? (_getattr(usage, 'prompt_tokens', 0) as number) : 0,
+             output_tokens: usage ? (_getattr(usage, 'completion_tokens', 0) as number) : 0,
+@@ -796,6 +824,8 @@ export class GeminiClient extends ExternalAIClient {
+         return new CouncilResponse({
+             provider: this.name,
+             model: this.model,
++            // Gemini names it `model_version`, not `model`.
++            model_served: _servedModel(response, 'model_version'),
+             text,
+             input_tokens: usage ? (_getattr(usage, 'prompt_token_count', 0) as number) : 0,
+             output_tokens: usage ? (_getattr(usage, 'candidates_token_count', 0) as number) : 0,
+@@ -878,6 +908,7 @@ export class _OpenAICompatibleClient extends ExternalAIClient {
+         return new CouncilResponse({
+             provider: this.name,
+             model: this.model,
++            model_served: _servedModel(response),
+             text: (text as string) || '',
+             input_tokens: usage ? (_getattr(usage, 'prompt_tokens', 0) as number) : 0,
+             output_tokens: usage ? (_getattr(usage, 'completion_tokens', 0) as number) : 0,
+diff --git a/src/scripts/ai_council/pricing.ts b/src/scripts/ai_council/pricing.ts
+index 0d6b27818044c3d071daea2c104afa67e23d2461..79fc42aad56ae43105619f3705247d6c1d1390a6 100644
+--- a/src/scripts/ai_council/pricing.ts
++++ b/src/scripts/ai_council/pricing.ts
+@@ -49,8 +49,51 @@ export interface PriceTable {
+     prices: Map<string, Price>; // keyed by priceKey(provider, model)
+ }
+ 
++/**
++ * Price for (provider, model) — exact key first, then the longest matching
++ * key PREFIX within the same provider.
++ *
++ * Exact match stays the first hit, so no call that resolves today changes
++ * path or price. The fallback exists because vendors ship dated aliases:
++ * `claude-sonnet-4-5-20260101` missed a `claude-sonnet-4-5` row and priced at
++ * **nothing** — a silent zero, not an error. Longest-first means a more
++ * specific row always wins over a shorter one that also prefixes the id
++ * (`claude-opus-4-1` over a hypothetical `claude-opus`).
++ *
++ * The prefix must be followed by a separator (`-`, `.`, `:`, `@`) or end the
++ * id, so `claude-opus-4-1` never matches a `claude-opus-4-15` row: a bare
++ * `startsWith` would price one model at another's rate, which is worse than
++ * the zero it replaces because it looks correct.
++ *
++ * Provider is part of the composite key, so cross-provider bleed is
++ * impossible by construction.
++ */
+ export function lookup(table: PriceTable, provider: string, model: string): Price | null {
+-    return table.prices.get(priceKey(provider, model)) ?? null;
++    const exact = table.prices.get(priceKey(provider, model));
++    if (exact !== undefined) {
++        return exact;
++    }
++    const prefix = `${provider} `;
++    let best: Price | null = null;
++    let bestLen = -1;
++    for (const [key, price] of table.prices) {
++        if (!key.startsWith(prefix)) {
++            continue;
++        }
++        const candidate = key.slice(prefix.length);
++        if (!candidate || !model.startsWith(candidate)) {
++            continue;
++        }
++        const next = model.charAt(candidate.length);
++        if (next !== '' && next !== '-' && next !== '.' && next !== ':' && next !== '@') {
++            continue;
++        }
++        if (candidate.length > bestLen) {
++            best = price;
++            bestLen = candidate.length;
++        }
++    }
++    return best;
+ }
+ 
+ // ── token + cost arithmetic ────────────────────────────────────────
+diff --git a/src/scripts/ai_council/session.ts b/src/scripts/ai_council/session.ts
+index 01369389da12d2b45ffefab76d82bd49cde5e6d6..980086685aa694956a6ca63193e9ab5ca2cbf205 100644
+--- a/src/scripts/ai_council/session.ts
++++ b/src/scripts/ai_council/session.ts
+@@ -189,6 +189,14 @@ function _serialise_response(r: CouncilResponse): Record<string, unknown> {
+     const payload: Record<string, unknown> = {
+         provider: r.provider,
+         model: r.model,
++        // `model` stays the REQUESTED id — the tier decision was made against
++        // it. `model_served` is what the provider reported answering with, so a
++        // silent alias or substitution is visible instead of being recorded as
++        // the model that never ran. Attribution-only: no consumer routes on it.
++        // A v1 additive extension per `cost-summary-schema`:60-62 — rows
++        // written before it, and transports that report no served id, read as
++        // `''`; no version bump, no required field.
++        model_served: r.model_served,
+         input_tokens: r.input_tokens,
+         output_tokens: r.output_tokens,
+         latency_ms: r.latency_ms,
+diff --git a/src/scripts/ask_transport.ts b/src/scripts/ask_transport.ts
+index 5a0d4de650f88fdd26f183ff72f0522e5630fc38..4d15d652af88a85278cd5dced84e0f745c37ff71 100644
+--- a/src/scripts/ask_transport.ts
++++ b/src/scripts/ask_transport.ts
+@@ -51,7 +51,10 @@ import { DEFAULT_DIR } from './orchestration_record.js';
+ export interface AskResult {
+     answer: string;
+     member: string;
++    /** The REQUESTED model id — what the member was configured to call. */
+     model: string;
++    /** The model the provider reported serving; `''` when it reports none. */
++    model_served: string;
+     input_tokens: number;
+     output_tokens: number;
+     latency_ms: number;
+@@ -94,6 +97,8 @@ function recordAskLine(auditDir: string, result: AskResult | null, member: strin
+         dispatch_tokens: result === null ? null : result.input_tokens + result.output_tokens,
+         wall_clock_ms: result === null ? 0 : Math.max(0, Math.round(result.latency_ms)),
+         agent_combo: [member || 'none'],
++        model_requested: result === null ? null : result.model,
++        model_served: result === null ? null : result.model_served,
+         origin: 'dispatch-economy-2026',
+         ts,
+         id,
+@@ -146,6 +151,7 @@ export async function askOnce(prompt: string, opts: AskOptions = {}): Promise<As
+                 answer: text,
+                 member: provider,
+                 model: r.model ?? 'unknown',
++                model_served: r.model_served ?? '',
+                 input_tokens: r.input_tokens ?? 0,
+                 output_tokens: r.output_tokens ?? 0,
+                 latency_ms: r.latency_ms ?? 0,
+diff --git a/src/scripts/cache_realization_report.ts b/src/scripts/cache_realization_report.ts
+index 55150ea17141cfcca2e36dc0e76dd7347f83b405..9a19fc776dc91f6176bf9781d100f6478e0c0ca4 100644
+--- a/src/scripts/cache_realization_report.ts
++++ b/src/scripts/cache_realization_report.ts
+@@ -88,6 +88,25 @@ export interface ColdStartStats {
+     first_call_cache_read_share: number;
+     /** Σ(first-call cache_creation_input_tokens) / Σ(all subagent cache_creation_input_tokens) — the C-1 metric. */
+     cold_start_share_of_write_volume: number;
++    /**
++     * The write-share SIGNATURE across ALL subagent records (not just first
++     * calls): how the billable input splits between cache writes, cache reads,
++     * and uncached input.
++     *
++     * The three shares are over the same denominator and sum to 1 (up to
++     * float error) whenever any billable input exists, which is what makes it
++     * a signature rather than three unrelated ratios — a workload that is
++     * mostly `write` is paying the cache premium without collecting the read
++     * discount, and that is invisible in `cold_start_share_of_write_volume`,
++     * which only says how much of the writing happened on a first call.
++     *
++     * All three are 0 when there is no billable input at all. That is the
++     * empty-corpus reading, NOT "a perfectly uncached workload" — read it
++     * beside `legs`.
++     */
++    write_share_of_billable: number;
++    read_share_of_billable: number;
++    uncached_share_of_billable: number;
+ }
+ 
+ /**
+@@ -132,12 +151,22 @@ export function computeColdStarts(records: readonly TranscriptRecord[]): ColdSta
+     const sumFirstCallBillable = firstCalls.reduce((s, r) => s + billableInputTokens(r.usage), 0);
+     const sumFirstCallWrite = firstCalls.reduce((s, r) => s + r.usage.cache_creation_input_tokens, 0);
+ 
++    // Signature over ALL subagent records — the shape of the workload, where
++    // the metrics above describe only its first calls.
++    const sumBillable = subagentRecords.reduce((s, r) => s + billableInputTokens(r.usage), 0);
++    const sumWrite = totalWriteVolume;
++    const sumRead = subagentRecords.reduce((s, r) => s + r.usage.cache_read_input_tokens, 0);
++    const sumUncached = subagentRecords.reduce((s, r) => s + r.usage.input_tokens, 0);
++
+     return {
+         legs: firstCalls.length,
+         median_first_call_written_or_uncached: median(writtenOrUncached),
+         mean_first_call_written_or_uncached: mean(writtenOrUncached),
+         first_call_cache_read_share: sumFirstCallBillable > 0 ? sumFirstCallRead / sumFirstCallBillable : 0,
+         cold_start_share_of_write_volume: totalWriteVolume > 0 ? sumFirstCallWrite / totalWriteVolume : 0,
++        write_share_of_billable: sumBillable > 0 ? sumWrite / sumBillable : 0,
++        read_share_of_billable: sumBillable > 0 ? sumRead / sumBillable : 0,
++        uncached_share_of_billable: sumBillable > 0 ? sumUncached / sumBillable : 0,
+     };
+ }
+ 
+@@ -737,6 +766,15 @@ export function renderText(r: Report): string {
+     );
+     out.push(`  first_call_cache_read_share=${pct(cs.first_call_cache_read_share)}`);
+     out.push(`  cold_start_share_of_subagent_write_volume=${pct(cs.cold_start_share_of_write_volume)}`);
++    // Write-share signature over ALL subagent records: the three shares sum to
++    // 100% and say where the billable input actually went. A write-heavy split
++    // is paying the cache premium without collecting the read discount — which
++    // the cold-start metrics above cannot show, since they only look at first
++    // calls. All-zero means no billable input at all; read it beside legs.
++    out.push(
++        `  write_share=${pct(cs.write_share_of_billable)} read_share=${pct(cs.read_share_of_billable)}` +
++            ` uncached_share=${pct(cs.uncached_share_of_billable)} (of billable input, all subagent records)`,
++    );
+     out.push('');
+ 
+     out.push(`Per-agent breakdown: ${r.by_agent.length} distinct subagent legs (--format json carries all; top 10 by weighted_input_units below)`);
+diff --git a/src/scripts/cost/track.mjs b/src/scripts/cost/track.mjs
+index 325427ff0dd1878fef402404d187ca6fb81d28f2..a510d514d74838f5453fdd357b34d84a8cf7a4c4 100755
+--- a/src/scripts/cost/track.mjs
++++ b/src/scripts/cost/track.mjs
+@@ -59,6 +59,11 @@ function modelTier(model) {
+ // cache_creation_input_tokens NOT covered by that split (older records that
+ // predate the TTL breakdown) is priced at the 5m rate — Anthropic's default
+ // TTL — rather than silently dropped.
++// A tier with no PRICING row prices at zero. That zero is indistinguishable
++// from a genuinely free message, so the ROW carries `rate_missing` and the run
++// warns once on stderr — the alternative (throwing) would lose a whole session
++// of real token counts over one unrecognised model id. Token counts are kept
++// untouched precisely so a later re-pricing pass can backfill the cost.
+ function costForUsage(tier, u) {
+   const p = PRICING[tier];
+   if (!p || !u) return 0;
+@@ -163,6 +168,8 @@ function summarizeSession(files) {
+   let sessionId = null, cwd = null;
+   let totalSeen = 0;
+   const seen = new Set();
++  // Model ids that priced at zero because no PRICING tier claimed them.
++  const rateMissingModels = new Set();
+ 
+   for (const file of files) {
+     let text;
+@@ -188,6 +195,7 @@ function summarizeSession(files) {
+       const tier = modelTier(model);
+       const u = usageTokens(m.message.usage);
+       const cost = costForUsage(tier, u);
++      if (tier === 'unknown') rateMissingModels.add(model);
+ 
+       const slot = byModel[model] || { tier, input_tokens: 0, output_tokens: 0,
+         cache_creation_input_tokens: 0, cache_read_input_tokens: 0, messages: 0, cost_usd: 0 };
+@@ -213,6 +221,12 @@ function summarizeSession(files) {
+   const dedup_ratio = totalSeen > 0 ? (totalSeen - dedupedCount) / totalSeen : 0;
+   return { sessionId, cwd, startedAt: firstTs, endedAt: lastTs, messageCount,
+     byModel, byTier, byBucket, total_cost_usd: totalCost,
++    // `rate_missing` marks a row whose total_cost_usd is understated because
++    // at least one model priced at zero for want of a rate — never because the
++    // work was free. `rate_missing_models` carries the ids so a backfill has a
++    // shape to work against instead of re-deriving it from the transcript.
++    rate_missing: rateMissingModels.size > 0,
++    rate_missing_models: [...rateMissingModels].sort(),
+     totalRecordsSeen: totalSeen, dedupedRecordsCount: dedupedCount, dedup_ratio,
+     capturedAt: new Date().toISOString() };
+ }
+@@ -237,6 +251,15 @@ function main() {
+   }
+   const files = collectSessionFiles(projectDir, sessionPath);
+   const summary = summarizeSession(files);
++  // ONE warning per run, before the quiet return: a suppressed report is a
++  // display choice, an understated cost figure is a data-integrity problem.
++  if (summary.rate_missing) {
++    console.error(
++      `cost-track: rate_missing — no price tier for ${summary.rate_missing_models.join(', ')}; ` +
++        `those messages priced at $0 and the session total is understated. ` +
++        `Token counts are kept, so the row can be re-priced later.`,
++    );
++  }
+   if (process.env.TRACK_OUT) writeFileSync(process.env.TRACK_OUT, JSON.stringify(summary, null, 2));
+   const store = process.env.TRACK_STORE || DEFAULT_STORE;
+   let res = { ok: false, reason: 'dry-run' };
+diff --git a/src/scripts/cost_summary.ts b/src/scripts/cost_summary.ts
+index 4de05f7302f40b8678104ea8a7acd18476595264..09c11378c638679dae91579386167ac204455148 100644
+--- a/src/scripts/cost_summary.ts
++++ b/src/scripts/cost_summary.ts
+@@ -18,6 +18,8 @@ import * as fs from 'node:fs';
+ import * as path from 'node:path';
+ import { fileURLToPath, pathToFileURL } from 'node:url';
+ 
++import { CACHE_READ_MULTIPLIER, CACHE_WRITE_MULTIPLIER_5M } from './ai_council/pricing.js';
++
+ const _HERE = fileURLToPath(import.meta.url);
+ // src/scripts/cost_summary.ts → parents[2] is the repo root (mirrors
+ // `Path(__file__).resolve().parent.parent.parent` in the .py).
+@@ -107,12 +109,53 @@ function _zero_model(): ModelBucket {
+     };
+ }
+ 
++/**
++ * What the prompt cache bought, in INPUT-TOKEN EQUIVALENTS — not dollars.
++ *
++ * A cached read bills at `CACHE_READ_MULTIPLIER` of the input rate, so each
++ * read token saved `1 - multiplier` of one. A cache write bills at a premium,
++ * so each written token cost an extra `multiplier - 1`. Netting the two is the
++ * only honest single number here.
++ *
++ * Deliberately NOT priced in USD: the summary aggregates across models with
++ * different input rates, and `totals` carries no per-model token split to
++ * apply them to — a dollar figure would have to pick one rate and would be
++ * wrong for every other model in the row.
++ *
++ * The write premium uses the 5-minute multiplier. Rows carry no TTL split, and
++ * 5m is both Anthropic's default and the assumption `cost/track.mjs` already
++ * makes for unaccounted writes — so the two cost paths stay consistent rather
++ * than disagreeing quietly. A 1h-heavy workload therefore reads as slightly
++ * OPTIMISTIC, which is stated in the contract.
++ */
++function _cacheSavings(readTokens: number, writeTokens: number): number {
++    const saved = readTokens * (1 - CACHE_READ_MULTIPLIER);
++    const premium = writeTokens * (CACHE_WRITE_MULTIPLIER_5M - 1);
++    return Math.round(saved - premium);
++}
++
++/** UTC calendar date (`YYYY-MM-DD`) of a row, or `'unknown'`. */
++function _rowDate(row: Row): string {
++    // `startedAt` is the row's own first-message timestamp (track.mjs); the
++    // snake_case spelling is accepted for the same reason `session_id` is.
++    const raw = row['startedAt'] ?? row['started_at'];
++    if (typeof raw !== 'string' || !raw) {
++        return 'unknown';
++    }
++    const parsed = new Date(raw);
++    if (Number.isNaN(parsed.getTime())) {
++        return 'unknown';
++    }
++    return parsed.toISOString().slice(0, 10);
++}
++
+ /** Aggregate rows into the cost-summary structure (PyFloat-aware output). */
+ export function aggregate(rows: Row[]): Json {
+     // Insertion-ordered maps to mirror Python's dict ordering + sorted().
+     const by_sess = new Map<string, KvBucket>();
+     const by_conv = new Map<string, KvBucket>();
+     const by_model = new Map<string, ModelBucket>();
++    const by_date = new Map<string, KvBucket>();
+     const totals = _zero_kv();
+ 
+     for (const row of rows) {
+@@ -128,7 +171,8 @@ export function aggregate(rows: Row[]): Json {
+ 
+         const sessBucket = _getOr(by_sess, sid, _zero_kv);
+         const convBucket = _getOr(by_conv, cid, _zero_kv);
+-        for (const bucket of [sessBucket, convBucket, totals]) {
++        const dateBucket = _getOr(by_date, _rowDate(row), _zero_kv);
++        for (const bucket of [sessBucket, convBucket, dateBucket, totals]) {
+             bucket.sessions += 1;
+             bucket.total_cost_usd += cost;
+             bucket.input_tokens += itok;
+@@ -159,6 +203,11 @@ export function aggregate(rows: Row[]): Json {
+             telegraph_delta_tokens: totals.telegraph_delta_tokens,
+             telegraph_multiplier_version: MULTIPLIER_VERSION,
+             telegraph_multiplier_active: MULTIPLIER_ACTIVE,
++            // Additive per the schema's own rule; token-equivalents, not USD.
++            cache_savings_input_token_equivalents: _cacheSavings(
++                totals.cache_read_input_tokens,
++                totals.cache_creation_input_tokens,
++            ),
+         },
+         by_session: _sortedEntries(by_sess).map(([k, v]) => ({
+             key: k,
+@@ -180,6 +229,20 @@ export function aggregate(rows: Row[]): Json {
+             cache_creation_input_tokens: v.cache_creation_input_tokens,
+             telegraph_delta_tokens: v.telegraph_delta_tokens,
+         })),
++        // Ordered by date ascending — `_sortedEntries` is codepoint order, and
++        // ISO `YYYY-MM-DD` sorts chronologically under it. `'unknown'` sorts
++        // last (`u` > any digit), so a row with no timestamp never displaces a
++        // real day.
++        by_date: _sortedEntries(by_date).map(([k, v]) => ({
++            key: k,
++            sessions: v.sessions,
++            total_cost_usd: new PyFloat(v.total_cost_usd),
++            input_tokens: v.input_tokens,
++            output_tokens: v.output_tokens,
++            cache_read_input_tokens: v.cache_read_input_tokens,
++            cache_creation_input_tokens: v.cache_creation_input_tokens,
++            telegraph_delta_tokens: v.telegraph_delta_tokens,
++        })),
+         by_model: _sortedEntries(by_model).map(([k, v]) => ({
+             model: k,
+             sessions: v.sessions,
+diff --git a/tests/scripts/_lib_orchestration_record.test.ts b/tests/scripts/_lib_orchestration_record.test.ts
+index 286cb6f35cc1b8b3c6a5d51744d80591bd97dc50..5b25e6d94a56fdd8050ce7cc61b8bf61e325ffa0 100644
+--- a/tests/scripts/_lib_orchestration_record.test.ts
++++ b/tests/scripts/_lib_orchestration_record.test.ts
+@@ -203,3 +203,66 @@ describe('dispatch-economy additive fields (road-to-token-economy-dispatch Phase
+         expect(neither.work_tokens).toBeNull();
+     });
+ });
++
++// ── served-model divergence (inbox-harvest-2026-08-b-ledger-truth 1.4) ──
++//
++// `tier_chosen`, `tier_source`, `session_tier` and the downshift cost-% are
++// all derived from the REQUESTED model. On an alias or provider substitution
++// every one of them attributes the saving to a model that never ran, and
++// nothing on the line said so. `model_divergent` is the signal — derived, and
++// deliberately three-valued: `null` is "not decidable", never "checked, and
++// they matched".
++describe('buildOrchestrationLine — served-model divergence', () => {
++    it('records true when both ids are present and differ', () => {
++        const { line, errors } = buildOrchestrationLine({
++            ...BASE,
++            model_requested: 'claude-sonnet-4-5',
++            model_served: 'claude-sonnet-4-5-20260101',
++        });
++        expect(errors).toEqual([]);
++        expect(line!.orchestration).toMatchObject({
++            model_requested: 'claude-sonnet-4-5',
++            model_served: 'claude-sonnet-4-5-20260101',
++            model_divergent: true,
++        });
++    });
++
++    it('records false when both ids are present and match', () => {
++        const { line } = buildOrchestrationLine({
++            ...BASE,
++            model_requested: 'gpt-4o',
++            model_served: 'gpt-4o',
++        });
++        expect((line!.orchestration as Record<string, unknown>)['model_divergent']).toBe(false);
++    });
++
++    it('stays null when the transport reports no served id — absent is not agreement', () => {
++        for (const served of ['', null, undefined]) {
++            const { line } = buildOrchestrationLine({
++                ...BASE,
++                model_requested: 'claude-sonnet-4-5',
++                model_served: served,
++            });
++            expect((line!.orchestration as Record<string, unknown>)['model_divergent']).toBeNull();
++        }
++    });
++
++    it('stays null when neither id was recorded (a pre-extension line)', () => {
++        const { line, errors } = buildOrchestrationLine(BASE);
++        expect(errors).toEqual([]);
++        expect(line!.orchestration).toMatchObject({
++            model_requested: null,
++            model_served: null,
++            model_divergent: null,
++        });
++    });
++
++    it('collects a non-string id into errors rather than throwing', () => {
++        const { line, errors } = buildOrchestrationLine({
++            ...BASE,
++            model_served: 42 as unknown as string,
++        });
++        expect(errors).toContain('model_served must be a string or omitted');
++        expect(line).toBeNull();
++    });
++});
+diff --git a/tests/scripts/ai_council/clients.test.ts b/tests/scripts/ai_council/clients.test.ts
+index b83f4a9c654dc3fd6b7e2d8908d7e78b50f61eb8..cc8bce5e18876ef1feeb0b3ca79a0c816a6c48d9 100644
+--- a/tests/scripts/ai_council/clients.test.ts
++++ b/tests/scripts/ai_council/clients.test.ts
+@@ -1254,3 +1254,97 @@ describe('prompt_cache_ttl (road-to-cache-economy Phase 4)', () => {
+         expect(() => assertCacheBreakpointOrder(['1h', '1h'])).not.toThrow();
+     });
+ });
++
++// ── served-model truth (inbox-harvest-2026-08-b-ledger-truth Phase 1) ──
++//
++// `model` stays the REQUESTED id — it is what the tier decision was made
++// against — and `model_served` carries what the provider reported answering
++// with. The pair is what makes an alias or a provider substitution visible;
++// a row carrying only one attributes the spend to a model that never ran.
++//
++// The field name is NOT uniform across providers, so each live-API success
++// site is asserted separately rather than once through a shared helper: a
++// single-field read leaves Gemini (`model_version`) silently empty, and an
++// empty string is exactly what an honest no-report looks like — the two are
++// indistinguishable downstream, which is why the Gemini case is pinned.
++describe('clients — served-model attribution', () => {
++    it('Anthropic reads the served id off the response, keeping the requested id in `model`', () => {
++        const mock = {
++            messages: {
++                create: () => ({
++                    ...fakeAnthropicResponse('hi', 1, 2),
++                    model: 'claude-sonnet-4-5-20260101',
++                }),
++            },
++        };
++        const r = new AnthropicClient({ client: mock, model: 'claude-sonnet-4-5' }).ask('s', 'u');
++        expect(r.model).toBe('claude-sonnet-4-5');
++        expect(r.model_served).toBe('claude-sonnet-4-5-20260101');
++    });
++
++    it('OpenAI reads the served id', () => {
++        const mock = {
++            chat: {
++                completions: {
++                    create: () => ({
++                        choices: [{ message: { content: 'ok' } }],
++                        usage: { prompt_tokens: 1, completion_tokens: 1 },
++                        model: 'gpt-4o-2024-11-20',
++                    }),
++                },
++            },
++        };
++        const r = new OpenAIClient({ client: mock, model: 'gpt-4o' }).ask('s', 'u');
++        expect(r.model).toBe('gpt-4o');
++        expect(r.model_served).toBe('gpt-4o-2024-11-20');
++    });
++
++    it('Gemini reads `model_version`, not `model` — a single-field read would be silently empty', () => {
++        const mock = {
++            models: {
++                generate_content: () => ({
++                    text: 'g',
++                    usage_metadata: { prompt_token_count: 1, candidates_token_count: 1 },
++                    model_version: 'gemini-2.5-pro-002',
++                }),
++            },
++        };
++        const r = new GeminiClient({ client: mock }).ask('s', 'u');
++        expect(r.model_served).toBe('gemini-2.5-pro-002');
++    });
++
++    it('the OpenAI-compatible client (xAI / Perplexity) reads the served id', () => {
++        const mock = {
++            chat: {
++                completions: {
++                    create: () => ({
++                        choices: [{ message: { content: 'x' } }],
++                        usage: { prompt_tokens: 1, completion_tokens: 1 },
++                        model: 'grok-4-0709',
++                    }),
++                },
++            },
++        };
++        const r = new XAIClient({ client: mock, model: 'grok-4' }).ask('s', 'u');
++        expect(r.model_served).toBe('grok-4-0709');
++    });
++
++    it("a provider that reports no served id yields '' — the honest blank, not a guess", () => {
++        const mock = { chat: { completions: { create: () => ({ choices: [{ message: { content: 'ok' } }], usage: {} }) } } };
++        expect(new OpenAIClient({ client: mock }).ask('s', 'u').model_served).toBe('');
++    });
++
++    it("a non-string served id collapses to '' rather than being coerced", () => {
++        // A coerced `[object Object]` or `'42'` would read downstream as a real
++        // served id and could flip `model_divergent` to a false `true`.
++        const mock = { chat: { completions: { create: () => ({ choices: [{ message: { content: 'ok' } }], usage: {}, model: 42 }) } } };
++        expect(new OpenAIClient({ client: mock }).ask('s', 'u').model_served).toBe('');
++    });
++
++    it("the error path keeps '' — a failed call served nothing", () => {
++        const mock = { chat: { completions: { create() { throw new RangeError('rl'); } } } };
++        const r = new OpenAIClient({ client: mock }).ask('s', 'u');
++        expect(r.error).toBe('RangeError: rl');
++        expect(r.model_served).toBe('');
++    });
++});
+diff --git a/tests/scripts/ai_council/pricing.test.ts b/tests/scripts/ai_council/pricing.test.ts
+index 44072f2b0a31724b2f71f07aaa88b864203c032f..47097b93f874299e34ce4d3190a3a1d98a405c07 100644
+--- a/tests/scripts/ai_council/pricing.test.ts
++++ b/tests/scripts/ai_council/pricing.test.ts
+@@ -513,3 +513,67 @@ describe('pricing — cross-table parity with cost/track.mjs', () => {
+         }
+     });
+ });
++
++// ── longest-prefix lookup (inbox-harvest-2026-08-b-ledger-truth 2.3) ──
++//
++// `lookup()` was a bare exact-key Map read, so a dated vendor alias
++// (`claude-sonnet-4-5-20260101`) missed the `claude-sonnet-4-5` row and priced
++// at NOTHING — a silent zero that reads exactly like a free call. The fallback
++// keeps exact match as the first hit, so no call that resolves today changes
++// path or price.
++describe('pricing — lookup falls back to the longest matching prefix', () => {
++    function tableWith(rows: Array<[string, string, number, number]>) {
++        const p = path.join(mkTmp(), 'prices.md');
++        fs.writeFileSync(
++            p,
++            '---\nlast_updated: 2026-04-29\ncurrency: USD\nunit: per_1M_tokens\nsource: t\n---\n\n' +
++                '| provider | model | input | output |\n|---|---|---|---|\n' +
++                rows.map(([pr, m, i, o]) => `| ${pr} | ${m} | ${i} | ${o} |`).join('\n') +
++                '\n',
++            'utf-8',
++        );
++        return load_prices(p);
++    }
++
++    it('a dated alias resolves to its base row instead of pricing at zero', () => {
++        const table = tableWith([['anthropic', 'claude-sonnet-4-5', 3.0, 15.0]]);
++        const price = lookup(table, 'anthropic', 'claude-sonnet-4-5-20260101');
++        expect(price?.input_per_1m_usd).toBe(3.0);
++        expect(price?.output_per_1m_usd).toBe(15.0);
++    });
++
++    it('exact match stays the first hit — a currently-resolving call never changes price', () => {
++        const table = tableWith([
++            ['anthropic', 'claude-sonnet-4-5', 3.0, 15.0],
++            ['anthropic', 'claude-sonnet-4-5-20260101', 7.0, 9.0],
++        ]);
++        expect(lookup(table, 'anthropic', 'claude-sonnet-4-5')?.input_per_1m_usd).toBe(3.0);
++        expect(lookup(table, 'anthropic', 'claude-sonnet-4-5-20260101')?.input_per_1m_usd).toBe(7.0);
++    });
++
++    it('the LONGEST prefix wins — a more specific row is never shadowed by a shorter one', () => {
++        const table = tableWith([
++            ['anthropic', 'claude', 1.0, 1.0],
++            ['anthropic', 'claude-opus-4-1', 15.0, 75.0],
++        ]);
++        expect(lookup(table, 'anthropic', 'claude-opus-4-1-20260101')?.input_per_1m_usd).toBe(15.0);
++    });
++
++    it('a prefix must end on a separator — claude-opus-4-1 never prices claude-opus-4-15', () => {
++        // The failure a bare startsWith would introduce is WORSE than the zero
++        // it replaces: a wrong rate looks like a correct one.
++        const table = tableWith([['anthropic', 'claude-opus-4-1', 15.0, 75.0]]);
++        expect(lookup(table, 'anthropic', 'claude-opus-4-15')).toBeNull();
++        expect(lookup(table, 'anthropic', 'claude-opus-4-1.2')?.input_per_1m_usd).toBe(15.0);
++    });
++
++    it('never bleeds across providers', () => {
++        const table = tableWith([['anthropic', 'claude-sonnet-4-5', 3.0, 15.0]]);
++        expect(lookup(table, 'openai', 'claude-sonnet-4-5-20260101')).toBeNull();
++    });
++
++    it('a genuinely unknown model still resolves to null, not to some neighbour', () => {
++        const table = tableWith([['anthropic', 'claude-sonnet-4-5', 3.0, 15.0]]);
++        expect(lookup(table, 'anthropic', 'gpt-4o')).toBeNull();
++    });
++});
+diff --git a/tests/scripts/ai_council/session.test.ts b/tests/scripts/ai_council/session.test.ts
+index a555eac14b3b424f02ac31a08d56d218e17ba213..ec26036873a1009450d804333cdad014cea45f12 100644
+--- a/tests/scripts/ai_council/session.test.ts
++++ b/tests/scripts/ai_council/session.test.ts
+@@ -142,3 +142,43 @@ describe('session.save — absent_members / quorum (Phase 3.2/3.3)', () => {
+         expect(payload['quorum']).toBe('overridden-by-extra');
+     });
+ });
++
++describe('session.save — served-model attribution on the response row (ledger-truth 1.2)', () => {
++    function mkManifest() {
++        return new SessionManifest({
++            mode: 'prompt',
++            artefact: '<inline>',
++            original_ask: 'hi',
++            members: ['anthropic/claude-sonnet-4-5'],
++        });
++    }
++
++    it('persists model_served beside the requested model, and NOT in the manifest', () => {
++        const base = mkTmp();
++        const responses = [
++            new CouncilResponse({
++                provider: 'anthropic',
++                model: 'claude-sonnet-4-5',
++                model_served: 'claude-sonnet-4-5-20260101',
++                text: 'ok',
++            }),
++        ];
++        const dir = save({ manifest: mkManifest(), responses, sessions_dir: base, retention_days: 0 });
++        const payload = readManifest(dir);
++        const rows = (payload['responses_per_round'] as Array<Array<Record<string, unknown>>>)[0]!;
++        expect(rows[0]!['model']).toBe('claude-sonnet-4-5');
++        expect(rows[0]!['model_served']).toBe('claude-sonnet-4-5-20260101');
++        // The surplus the roadmap flagged and left to this change: the field
++        // belongs on the response row it describes, not hoisted to the
++        // manifest as if it were a session-level fact.
++        expect(payload['model_served']).toBeUndefined();
++    });
++
++    it("a transport that reports no served id persists '' — additive, absent-safe", () => {
++        const base = mkTmp();
++        const responses = [new CouncilResponse({ provider: 'anthropic', model: 'claude-x', text: 'ok' })];
++        const dir = save({ manifest: mkManifest(), responses, sessions_dir: base, retention_days: 0 });
++        const rows = (readManifest(dir)['responses_per_round'] as Array<Array<Record<string, unknown>>>)[0]!;
++        expect(rows[0]!['model_served']).toBe('');
++    });
++});
+diff --git a/tests/scripts/ask_transport.test.ts b/tests/scripts/ask_transport.test.ts
+index 32808079a4429aaf7cdedf489768669ebea26d49..f5c73f0acc12e2e201fb37c14b9b03c7d014fbfe 100644
+--- a/tests/scripts/ask_transport.test.ts
++++ b/tests/scripts/ask_transport.test.ts
+@@ -298,3 +298,62 @@ describe('return_channel_chars (Phase 6.3 — hook-carried count)', () => {
+         expect(buildRecordInput(asyncAck, '2026-08-10T12:00:00.000Z', 'rc-4').return_channel_chars).toBeUndefined();
+     });
+ });
++
++// ── served-model truth end-to-end (ledger-truth 1.1/1.2/1.4) ──
++//
++// The ask route is the first producer that has BOTH ids in hand, so this is
++// where the field stops being a definition and becomes a recorded fact.
++describe('askOnce — served-model attribution reaches the audit line', () => {
++    function servedClient(served: string): ExternalAIClient {
++        return {
++            name: 'anthropic',
++            ask: () =>
++                new CouncilResponse({
++                    provider: 'anthropic',
++                    model: 'claude-sonnet-4-5',
++                    model_served: served,
++                    text: 'the answer',
++                    input_tokens: 10,
++                    output_tokens: 5,
++                }),
++        } as unknown as ExternalAIClient;
++    }
++
++    it('carries requested + served + a true divergence when the provider substituted', async () => {
++        const dir = path.join(tmp, 'audit-served');
++        const result = await askOnce('q?', {
++            members: [servedClient('claude-sonnet-4-5-20260101')],
++            auditDir: dir,
++            now: () => new Date('2026-08-11T12:00:00Z'),
++            id: () => 'ask-served-1',
++        });
++        expect(result!.model).toBe('claude-sonnet-4-5');
++        expect(result!.model_served).toBe('claude-sonnet-4-5-20260101');
++
++        const o = auditLines(dir)[0]!['orchestration'] as Record<string, unknown>;
++        expect(o['model_requested']).toBe('claude-sonnet-4-5');
++        expect(o['model_served']).toBe('claude-sonnet-4-5-20260101');
++        expect(o['model_divergent']).toBe(true);
++    });
++
++    it('leaves divergence null when the transport reported no served id', async () => {
++        const dir = path.join(tmp, 'audit-unreported');
++        await askOnce('q?', {
++            members: [servedClient('')],
++            auditDir: dir,
++            now: () => new Date('2026-08-11T12:00:00Z'),
++            id: () => 'ask-served-2',
++        });
++        const o = auditLines(dir)[0]!['orchestration'] as Record<string, unknown>;
++        expect(o['model_served']).toBe('');
++        expect(o['model_divergent']).toBeNull();
++    });
++
++    it('records nulls on the honest-∅ path — no answer served no model', async () => {
++        const dir = path.join(tmp, 'audit-null');
++        expect(await askOnce('q?', { members: [], auditDir: dir })).toBeNull();
++        const o = auditLines(dir)[0]!['orchestration'] as Record<string, unknown>;
++        expect(o['model_requested']).toBeNull();
++        expect(o['model_divergent']).toBeNull();
++    });
++});
+diff --git a/tests/scripts/cache_realization_report.test.ts b/tests/scripts/cache_realization_report.test.ts
+index 4911eb16538db25e1deea926e4c24998cd4f7d56..22f0d0331084891f6b00acb9462557f835d9f6a1 100644
+--- a/tests/scripts/cache_realization_report.test.ts
++++ b/tests/scripts/cache_realization_report.test.ts
+@@ -376,7 +376,7 @@ describe('computeWorktreeFragmentation', () => {
+ describe('buildClaims', () => {
+     it('C-3 is always pending — no preamble-reduction intervention has landed', () => {
+         const claims = buildClaims({
+-            subagentColdStart: { legs: 0, median_first_call_written_or_uncached: 0, mean_first_call_written_or_uncached: 0, first_call_cache_read_share: 0, cold_start_share_of_write_volume: 0 },
++            subagentColdStart: { legs: 0, median_first_call_written_or_uncached: 0, mean_first_call_written_or_uncached: 0, first_call_cache_read_share: 0, cold_start_share_of_write_volume: 0, write_share_of_billable: 0, read_share_of_billable: 0, uncached_share_of_billable: 0 },
+             duplicateScope: { evaluable: false, shared_filenames: 0, duplicate_tokens_per_spawn: 0, spawn_count: 0, duplicate_token_estimate_total: 0, share_of_subagent_write_volume: 0 },
+             councilMispricing: { status: 'pending' },
+             worktreeFragmentation: { status: 'pending' },
+@@ -388,7 +388,7 @@ describe('buildClaims', () => {
+ 
+     it('every claim reports pending — never a fabricated verdict — when its inputs are not evaluable', () => {
+         const claims = buildClaims({
+-            subagentColdStart: { legs: 0, median_first_call_written_or_uncached: 0, mean_first_call_written_or_uncached: 0, first_call_cache_read_share: 0, cold_start_share_of_write_volume: 0 },
++            subagentColdStart: { legs: 0, median_first_call_written_or_uncached: 0, mean_first_call_written_or_uncached: 0, first_call_cache_read_share: 0, cold_start_share_of_write_volume: 0, write_share_of_billable: 0, read_share_of_billable: 0, uncached_share_of_billable: 0 },
+             duplicateScope: { evaluable: false, reason: 'no data', shared_filenames: 0, duplicate_tokens_per_spawn: 0, spawn_count: 0, duplicate_token_estimate_total: 0, share_of_subagent_write_volume: 0 },
+             councilMispricing: { status: 'pending', reason: 'no artefact' },
+             worktreeFragmentation: { status: 'pending', reason: 'no worktrees' },
+@@ -401,10 +401,10 @@ describe('buildClaims', () => {
+ 
+     it('C-1 confirms at/above the 50% threshold and falsifies below it', () => {
+         const base = { duplicateScope: { evaluable: false, shared_filenames: 0, duplicate_tokens_per_spawn: 0, spawn_count: 0, duplicate_token_estimate_total: 0, share_of_subagent_write_volume: 0 } as const, councilMispricing: { status: 'pending' } as const, worktreeFragmentation: { status: 'pending' } as const };
+-        const atThreshold = buildClaims({ ...base, subagentColdStart: { legs: 10, median_first_call_written_or_uncached: 0, mean_first_call_written_or_uncached: 0, first_call_cache_read_share: 0, cold_start_share_of_write_volume: 0.5 } });
++        const atThreshold = buildClaims({ ...base, subagentColdStart: { legs: 10, median_first_call_written_or_uncached: 0, mean_first_call_written_or_uncached: 0, first_call_cache_read_share: 0, cold_start_share_of_write_volume: 0.5, write_share_of_billable: 0, read_share_of_billable: 0, uncached_share_of_billable: 0 } });
+         expect(atThreshold.find((c) => c.id === 'C-1')!.verdict).toBe('confirmed');
+ 
+-        const belowThreshold = buildClaims({ ...base, subagentColdStart: { legs: 10, median_first_call_written_or_uncached: 0, mean_first_call_written_or_uncached: 0, first_call_cache_read_share: 0, cold_start_share_of_write_volume: 0.499 } });
++        const belowThreshold = buildClaims({ ...base, subagentColdStart: { legs: 10, median_first_call_written_or_uncached: 0, mean_first_call_written_or_uncached: 0, first_call_cache_read_share: 0, cold_start_share_of_write_volume: 0.499, write_share_of_billable: 0, read_share_of_billable: 0, uncached_share_of_billable: 0 } });
+         expect(belowThreshold.find((c) => c.id === 'C-1')!.verdict).toBe('falsified');
+     });
+ });
+@@ -451,3 +451,57 @@ describe('buildReport', () => {
+         expect(typeof report.host_version).toBe('string');
+     });
+ });
++
++// ── write-share signature (ledger-truth 3.3) ─────────────────────────────
++//
++// `cold_start_share_of_write_volume` says how much of the writing happened on
++// a first call. It cannot say whether the workload is writing cache it never
++// reads back — that costs the 1.25x premium and collects no discount, and it
++// is exactly the shape a cache report should surface.
++describe('computeColdStarts — write-share signature', () => {
++    it('the three shares partition billable input and sum to 1', () => {
++        const records = [
++            rec('a', '2026-08-11T10:00:00Z', { input_tokens: 100, cache_creation_input_tokens: 300, cache_read_input_tokens: 600 }),
++            rec('b', '2026-08-11T10:01:00Z', { input_tokens: 100, cache_creation_input_tokens: 100, cache_read_input_tokens: 800 }),
++        ];
++        const cs = computeColdStarts(records);
++        const billable = records.reduce((s, r) => s + billableInputTokens(r.usage), 0);
++        expect(cs.write_share_of_billable).toBeCloseTo(400 / billable, 10);
++        expect(cs.read_share_of_billable).toBeCloseTo(1400 / billable, 10);
++        expect(cs.uncached_share_of_billable).toBeCloseTo(200 / billable, 10);
++        expect(
++            cs.write_share_of_billable + cs.read_share_of_billable + cs.uncached_share_of_billable,
++        ).toBeCloseTo(1, 10);
++    });
++
++    it('a write-heavy run that never reads back is visible here and NOT in the cold-start metric', () => {
++        const records = [
++            rec('a', '2026-08-11T10:00:00Z', { cache_creation_input_tokens: 1000 }),
++            rec('a', '2026-08-11T10:01:00Z', { cache_creation_input_tokens: 1000 }),
++        ];
++        const cs = computeColdStarts(records);
++        expect(cs.write_share_of_billable).toBe(1);
++        expect(cs.read_share_of_billable).toBe(0);
++        // The pre-existing metric reports half the writing on the first call —
++        // it says nothing about the premium being wasted.
++        expect(cs.cold_start_share_of_write_volume).toBeCloseTo(0.5, 10);
++    });
++
++    it('counts ALL subagent records, not just first calls', () => {
++        const records = [
++            rec('a', '2026-08-11T10:00:00Z', { cache_creation_input_tokens: 1000 }),
++            rec('a', '2026-08-11T10:01:00Z', { cache_read_input_tokens: 3000 }),
++        ];
++        const cs = computeColdStarts(records);
++        expect(cs.legs).toBe(1);
++        expect(cs.read_share_of_billable).toBeCloseTo(0.75, 10);
++    });
++
++    it('an empty corpus reads 0/0/0 — absence, never a perfectly-uncached claim', () => {
++        const cs = computeColdStarts([]);
++        expect(cs.legs).toBe(0);
++        expect(cs.write_share_of_billable).toBe(0);
++        expect(cs.read_share_of_billable).toBe(0);
++        expect(cs.uncached_share_of_billable).toBe(0);
++    });
++});
+diff --git a/tests/scripts/cost_summary.test.ts b/tests/scripts/cost_summary.test.ts
+index 1f087629802805341252de1477664bf70800b52b..010259b8afd68ac3b43fd43e003cdb533db5400d 100644
+--- a/tests/scripts/cost_summary.test.ts
++++ b/tests/scripts/cost_summary.test.ts
+@@ -184,3 +184,66 @@ describe('cost_summary — CLI on fixtures (tsx)', () => {
+         expect(stdout).toContain('"total_cost_usd": 3.0');
+     });
+ });
++
++// ── cache savings + by_date (ledger-truth 3.1 / 3.2) ──────────────────
++//
++// Both are additive v1 extensions per the schema's own rule: they add keys and
++// change no existing one, so a consumer pinned to cost-summary/v1 keeps
++// reading every field it read before.
++describe('cost_summary — cache savings (3.1)', () => {
++    it('nets the read discount against the write premium, in input-token equivalents', () => {
++        // 45 read tokens billed at 0.1x saved 0.9 of an input token each;
++        // 10 written tokens cost an extra 0.25 each. 40.5 - 2.5 = 38.
++        const totals = (aggregate(SAMPLE_ROWS) as Record<string, Record<string, unknown>>)['totals']!;
++        expect(totals['cache_savings_input_token_equivalents']).toBe(38);
++    });
++
++    it('goes NEGATIVE when a run writes cache it never reads back — the premium is real', () => {
++        const rows = [{ sessionId: 's', model: 'opus', total_cost_usd: 0, cache_creation_input_tokens: 1000 }];
++        const totals = (aggregate(rows) as Record<string, Record<string, unknown>>)['totals']!;
++        expect(totals['cache_savings_input_token_equivalents']).toBe(-250);
++    });
++
++    it('is 0 on a corpus with no cache activity at all', () => {
++        const rows = [{ sessionId: 's', model: 'opus', total_cost_usd: 1, input_tokens: 10 }];
++        const totals = (aggregate(rows) as Record<string, Record<string, unknown>>)['totals']!;
++        expect(totals['cache_savings_input_token_equivalents']).toBe(0);
++    });
++});
++
++describe('cost_summary — by_date (3.2)', () => {
++    const DATED = [
++        { sessionId: 'a', model: 'opus', total_cost_usd: 1, input_tokens: 10, startedAt: '2026-08-09T23:30:00.000Z' },
++        { sessionId: 'b', model: 'opus', total_cost_usd: 2, input_tokens: 20, startedAt: '2026-08-10T01:00:00.000Z' },
++        { sessionId: 'c', model: 'opus', total_cost_usd: 4, input_tokens: 30, startedAt: '2026-08-10T22:00:00.000Z' },
++    ];
++
++    it('groups by UTC calendar day and orders ascending', () => {
++        const out = aggregate(DATED) as Record<string, unknown>;
++        const rows = out['by_date'] as Array<Record<string, unknown>>;
++        expect(rows.map((r) => r['key'])).toEqual(['2026-08-09', '2026-08-10']);
++        expect(rows[1]!['sessions']).toBe(2);
++        expect(rows[1]!['input_tokens']).toBe(50);
++        expect((rows[1]!['total_cost_usd'] as { value: number }).value).toBeCloseTo(6.0);
++    });
++
++    it("a row with no or unparseable timestamp lands in 'unknown', which sorts last", () => {
++        const out = aggregate([
++            ...DATED,
++            { sessionId: 'd', model: 'opus', total_cost_usd: 1 },
++            { sessionId: 'e', model: 'opus', total_cost_usd: 1, startedAt: 'not-a-date' },
++        ]) as Record<string, unknown>;
++        const keys = (out['by_date'] as Array<Record<string, unknown>>).map((r) => r['key']);
++        expect(keys).toEqual(['2026-08-09', '2026-08-10', 'unknown']);
++    });
++
++    it('totals stay identical to the pre-extension aggregation — grouping never double-counts', () => {
++        const out = aggregate(DATED) as Record<string, Record<string, unknown>>;
++        const dateSum = (out['by_date'] as unknown as Array<Record<string, number>>).reduce(
++            (s, r) => s + r['input_tokens']!,
++            0,
++        );
++        expect(dateSum).toBe(out['totals']!['input_tokens']);
++        expect(out['totals']!['sessions']).toBe(3);
++    });
++});
+diff --git a/tests/scripts/cost_track.test.ts b/tests/scripts/cost_track.test.ts
+new file mode 100644
+index 0000000000000000000000000000000000000000..505d0d9be293ee665fe8bb8656d7ab8326e64555
+--- /dev/null
++++ b/tests/scripts/cost_track.test.ts
+@@ -0,0 +1,118 @@
++// Tests for src/scripts/cost/track.mjs — the `rate_missing` flag
++// (inbox-harvest-2026-08-b-ledger-truth 2.4).
++//
++// `costForUsage` returns 0 whenever `modelTier()` reports `unknown`. That zero
++// is byte-identical to a genuinely free message, so a session containing an
++// unrecognised model reported a total that was understated with no warning and
++// no flag anywhere. These tests pin the flag, the stderr warning, and — the
++// part that makes a later backfill possible at all — that the token counts
++// survive the missing rate.
++//
++// track.mjs has no export and no entry guard (it calls `main()` at module
++// scope), so it is exercised as a SUBPROCESS rather than imported: importing
++// it would run a real session scan against the developer's own ~/.claude.
++// `HOME` is redirected to a temp dir, which is what makes the fixture the only
++// transcript the run can see.
++
++import { spawnSync } from 'node:child_process';
++import * as fs from 'node:fs';
++import * as os from 'node:os';
++import * as path from 'node:path';
++
++import { afterEach, describe, expect, it } from 'vitest';
++
++const TRACK = path.resolve(__dirname, '../../src/scripts/cost/track.mjs');
++const tmps: string[] = [];
++
++afterEach(() => {
++    for (const d of tmps.splice(0)) fs.rmSync(d, { recursive: true, force: true });
++});
++
++/** Claude Code encodes BOTH separators and dots (see track.mjs). */
++function encodeProjectPath(cwd: string): string {
++    return cwd.replace(/[/.]/g, '-');
++}
++
++function assistantLine(model: string, id: string) {
++    return JSON.stringify({
++        type: 'assistant',
++        sessionId: 'sess-fixture',
++        cwd: '/work/proj',
++        timestamp: '2026-08-11T10:00:00.000Z',
++        requestId: `req-${id}`,
++        message: {
++            id: `msg-${id}`,
++            model,
++            usage: { input_tokens: 1000, output_tokens: 500 },
++        },
++    });
++}
++
++/** Run track.mjs against a one-file transcript fixture; return summary + stderr. */
++function runTrack(models: string[]): { summary: Record<string, unknown>; stderr: string } {
++    const home = fs.mkdtempSync(path.join(os.tmpdir(), 'track-home-'));
++    tmps.push(home);
++    const trackCwd = '/work/proj';
++    const projectDir = path.join(home, '.claude', 'projects', encodeProjectPath(trackCwd));
++    fs.mkdirSync(projectDir, { recursive: true });
++    fs.writeFileSync(
++        path.join(projectDir, 'sess-fixture.jsonl'),
++        models.map((m, i) => assistantLine(m, String(i))).join('\n') + '\n',
++        'utf8',
++    );
++    const out = path.join(home, 'summary.json');
++    const r = spawnSync(process.execPath, [TRACK], {
++        env: {
++            ...process.env,
++            HOME: home,
++            TRACK_CWD: trackCwd,
++            TRACK_OUT: out,
++            TRACK_DRY_RUN: '1',
++            TRACK_QUIET: '1',
++        },
++        encoding: 'utf8',
++    });
++    if (r.status !== 0) {
++        throw new Error(`track.mjs exited ${r.status}: ${r.stderr}`);
++    }
++    return {
++        summary: JSON.parse(fs.readFileSync(out, 'utf8')) as Record<string, unknown>,
++        stderr: r.stderr ?? '',
++    };
++}
++
++describe('cost/track.mjs — rate_missing', () => {
++    it('flags a session whose model no tier claims, and names the id', () => {
++        const { summary, stderr } = runTrack(['some-new-vendor-model-v9']);
++        expect(summary['rate_missing']).toBe(true);
++        expect(summary['rate_missing_models']).toEqual(['some-new-vendor-model-v9']);
++        expect(stderr).toContain('rate_missing');
++        expect(stderr).toContain('some-new-vendor-model-v9');
++        // The whole point of flagging instead of throwing: the counts survive,
++        // so the row can be re-priced once a rate exists.
++        const byModel = summary['byModel'] as Record<string, Record<string, number>>;
++        expect(byModel['some-new-vendor-model-v9']!['input_tokens']).toBe(1000);
++        expect(byModel['some-new-vendor-model-v9']!['output_tokens']).toBe(500);
++        expect(summary['total_cost_usd']).toBe(0);
++    });
++
++    it('a priced model is NOT flagged and warns about nothing — the negative control', () => {
++        const { summary, stderr } = runTrack(['claude-sonnet-4-5']);
++        expect(summary['rate_missing']).toBe(false);
++        expect(summary['rate_missing_models']).toEqual([]);
++        expect(stderr).not.toContain('rate_missing');
++        expect(summary['total_cost_usd']).toBeGreaterThan(0);
++    });
++
++    it('a mixed session flags only the unpriced ids and still bills the priced ones', () => {
++        const { summary } = runTrack(['claude-sonnet-4-5', 'mystery-model', 'claude-opus-4-1']);
++        expect(summary['rate_missing']).toBe(true);
++        expect(summary['rate_missing_models']).toEqual(['mystery-model']);
++        expect(summary['total_cost_usd']).toBeGreaterThan(0);
++    });
++
++    it('reports every unpriced id, sorted — a backfill needs the whole set', () => {
++        const { summary } = runTrack(['zeta-model', 'alpha-model', 'zeta-model']);
++        expect(summary['rate_missing_models']).toEqual(['alpha-model', 'zeta-model']);
++    });
++});
