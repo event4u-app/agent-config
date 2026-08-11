@@ -6,11 +6,19 @@
 
 ## Overall
 
-**186 / 364 steps done · 51%**
+**188 / 364 steps done · 52%**
 
 ```text
-████████████████████░░░░░░░░░░░░░░░░░░░░   51%
+█████████████████████░░░░░░░░░░░░░░░░░░░   52%
 ```
+
+## ⚠️ Iron Law 3 — unresolved deferred items
+
+These roadmaps have `count_open == 0` but carry `[~]` deferred items. Per `roadmap-progress-sync` Iron Law 3 they do NOT auto-archive — the user must resolve the deferrals first (spawn follow-up, restore, or cancel). See [`roadmap-management § 4b`](../packages/core/.agent-src.uncondensed/skills/roadmap-management/SKILL.md).
+
+| Roadmap | Done | Deferred | Cancelled |
+|---|---:|---:|---:|
+| [road-to-inbox-harvest-2026-08-b-install-lifecycle.md](roadmaps/road-to-inbox-harvest-2026-08-b-install-lifecycle.md) | 6 | 1 | 6 |
 
 ## Open roadmaps
 
@@ -27,7 +35,7 @@
 | 9 | [road-to-inbox-harvest-2026-08-b-council-integrity.md](roadmaps/road-to-inbox-harvest-2026-08-b-council-integrity.md) | 3 | 16 | 3 | 5 | 1 | 7 | [1](#blockers-road-to-inbox-harvest-2026-08-b-council-integrity) | ██████░░░░ 62% |
 | 10 | [road-to-inbox-harvest-2026-08-b-dispatch-safety.md](roadmaps/road-to-inbox-harvest-2026-08-b-dispatch-safety.md) | 4 | 21 | 14 | 0 | 1 | 6 | [1](#blockers-road-to-inbox-harvest-2026-08-b-dispatch-safety) | ░░░░░░░░░░ 0% |
 | 11 | [road-to-inbox-harvest-2026-08-b-estate-lifecycle.md](roadmaps/road-to-inbox-harvest-2026-08-b-estate-lifecycle.md) | 4 | 15 | 9 | 0 | 0 | 6 | [1](#blockers-road-to-inbox-harvest-2026-08-b-estate-lifecycle) | ░░░░░░░░░░ 0% |
-| 12 | [road-to-inbox-harvest-2026-08-b-install-lifecycle.md](roadmaps/road-to-inbox-harvest-2026-08-b-install-lifecycle.md) | 2 | 13 | 2 | 4 | 1 | 6 | [1](#blockers-road-to-inbox-harvest-2026-08-b-install-lifecycle) | ███████░░░ 67% |
+| 12 | [road-to-inbox-harvest-2026-08-b-install-lifecycle.md](roadmaps/road-to-inbox-harvest-2026-08-b-install-lifecycle.md) | 2 | 13 | 0 | 6 | 1 | 6 | [1](#blockers-road-to-inbox-harvest-2026-08-b-install-lifecycle) | ██████████ 100% |
 | 13 | [road-to-inbox-harvest-2026-08-b-ledger-truth.md](roadmaps/road-to-inbox-harvest-2026-08-b-ledger-truth.md) | 3 | 19 | 12 | 0 | 1 | 6 | [1](#blockers-road-to-inbox-harvest-2026-08-b-ledger-truth) | ░░░░░░░░░░ 0% |
 | 14 | [road-to-inbox-harvest-2026-08-b-release-integrity.md](roadmaps/road-to-inbox-harvest-2026-08-b-release-integrity.md) | 5 | 25 | 12 | 0 | 1 | 12 | [3](#blockers-road-to-inbox-harvest-2026-08-b-release-integrity) | ░░░░░░░░░░ 0% |
 | 15 | [road-to-inbox-harvest-2026-08-b.md](roadmaps/road-to-inbox-harvest-2026-08-b.md) | 3 | 6 | 1 | 2 | 0 | 3 | [1](#blockers-road-to-inbox-harvest-2026-08-b) | ███████░░░ 67% |
@@ -328,12 +336,12 @@
 
 ### [road-to-inbox-harvest-2026-08-b-install-lifecycle.md](roadmaps/road-to-inbox-harvest-2026-08-b-install-lifecycle.md)
 
-**Road to install lifecycle — every write recorded, org packs decided** — 4 / 6 done (67%)
+**Road to install lifecycle — every write recorded, org packs decided** — 6 / 6 done (100%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
 | 1 | record the three writes uninstall cannot undo | ✅ done | 0 | 4 | 0 | 2 | 100% |
-| 2 | put the org-pack question to the maintainer | ⬜ not started | 2 | 0 | 1 | 4 | 0% |
+| 2 | put the org-pack question to the maintainer | ✅ done | 0 | 2 | 1 | 4 | 100% |
 
 <a id="blockers-road-to-inbox-harvest-2026-08-b-install-lifecycle"></a>
 **Blockers**

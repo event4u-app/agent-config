@@ -110,7 +110,8 @@ tests for that behaviour exist (`tests/scripts/_cli/cmd_uninstall.test.ts`,
 
 ## Phase 2 — put the org-pack question to the maintainer
 
-- [ ] **2.1 Write the reopening brief, not the implementation.** One artefact stating:
+- [x] **2.1 Write the reopening brief, not the implementation.** Landed as
+      `agents/settings/contexts/org-pack-reopening-brief.md`. One artefact stating:
       (a) the governing lock — `docs/decisions/ADR-011-domain-pack-readiness.md`,
       `status: accepted` (`:3`), holding that future domains ship as in-repo capability
       bundles "not as separately-installable packs, until at least two independent"
@@ -127,7 +128,8 @@ tests for that behaviour exist (`tests/scripts/_cli/cmd_uninstall.test.ts`,
       this proposal — it scopes to driving an external agent *runtime* — so it is cited
       as the bar, never as a prohibition; (d) the unresolved contradiction below.
       Do not route around the lock and do not pre-commit the answer.
-- [ ] **2.2 Record the overrides contradiction as a precondition.** The source's claim
+- [x] **2.2 Record the overrides contradiction as a precondition.** Recorded as
+      § (d) of the 2.1 brief; re-verified at HEAD. The source's claim
       that manual duplication is the only option today is false:
       `agents/overrides/` is the shipped project-local extension layer and
       `src/skills/override-management/SKILL.md:50-51` defines **`extend` and
