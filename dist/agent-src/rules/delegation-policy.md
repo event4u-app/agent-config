@@ -66,6 +66,12 @@ primitive → run in-session (clean no-op).
 2. **Tier-size** each slice (`lite|medium|high`) per the classification context —
    never the orchestrator's own session tier (the cost win is the per-call
    downsize; see [`subagent-routing`](../contexts/execution/subagent-routing.md)).
+   Where `subagents.model_ceiling` caps the tier and the slice does not fit under
+   it, the worker **escalates and never silently delivers the degraded result**;
+   the orchestrator re-slices, runs in-session, or surfaces the ceiling to the
+   human, and never raises the ceiling itself (class C — `settings:set` refuses
+   it by construction). Absent is *uncapped*, never a low cap. Full contract:
+   [`subagent-boundary § The model ceiling`](../docs/contracts/subagent-boundary.md).
 3. **Dispatch** via the form gate + matching `subagent-orchestration` mode
    (independent → do-in-parallel; ordered → do-in-steps; risk/correctness →
    + judge; UI-heavy → live-app judge, efficacy-gated).
