@@ -157,8 +157,32 @@ Risks:          <arbitrary values, !important, dark-mode gaps>
 
 When `DESIGN.md` declares `## Taste Dials`, honour them: Variance → layout-family spread + asymmetry tolerance; Motion → animation budget + reduced-motion posture; Density → spacing scale + information-per-viewport. Absent → follow the design brief's inferred dials.
 
+## Security constraints
+
+`scripts/tailwind_config_gen.ts` is the only shipped script.
+
+- **What it may touch** — exactly one file: `--output PATH`, or
+  `tailwind.config.ts` / `.js` in the current working directory when no
+  `--output` is given. It reads nothing from the project.
+- **What it must never do** — write anywhere other than that one path,
+  reach the network, or spawn a subprocess. It does none of these.
+- **Default invocation** — **mutating**, and stated here because it is a
+  real exception rather than a comfortable one: a bare invocation writes
+  `tailwind.config.ts` into `cwd`, overwriting an existing config without
+  prompting. `--validate-only` is the read-only path — it prints the
+  generated config to stdout and writes nothing. Run `--validate-only`
+  first, and pass `--output` when the target is not the cwd default.
+  This default contradicts `skill-writing`'s "never mutate on a bare
+  invocation" line; it is recorded rather than silently tolerated, and
+  changing the script's default is a caller-visible behaviour change that
+  belongs in its own change, not here.
+- **Outbound** — nothing. No network access.
+
 ## Do NOT
 
+- Do NOT run `tailwind_config_gen` bare in a project that already has a
+  `tailwind.config.*` — it overwrites without asking. Use
+  `--validate-only` first, then `--output` at the intended path.
 - Do NOT add `!important` to win a specificity fight; restructure
   the cascade or extract the conflicting style.
 - Do NOT introduce a new colour outside `tailwind.config` without

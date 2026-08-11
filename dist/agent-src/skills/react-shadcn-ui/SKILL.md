@@ -299,6 +299,30 @@ carve-out for the tool-specific part.
   values the component no longer accepts is stale documentation; keep them beside
   the component and update them in the same change.
 
+## Security constraints
+
+`scripts/shadcn_add.ts` is the only shipped script, and it is the single
+subprocess-plus-network surface in this suite — treat it accordingly.
+
+- **What it may touch** — the project rooted at `--project-root` (default
+  `cwd`): it reads `components.json` there and lets the upstream CLI write
+  the generated primitives under that root. Nothing outside it.
+- **What it must never do** — run without the exact `npx` command and the
+  component list having been shown to the user first, per the gate above.
+  Never pass `--overwrite` unprompted; never treat a non-zero exit as
+  success; never work around a missing `npx` silently
+  ([`missing-tool-handling`](../../rules/missing-tool-handling.md)).
+- **Default invocation** — mutating. A bare `shadcn_add <component>`
+  spawns `npx shadcn@latest add <component>` and writes into the project.
+  `--dry-run` is the read-only path and prints the command it would run;
+  `--list` is read-only too. Use `--dry-run` for the proposal step.
+- **Outbound** — yes, and this is the point of the gate: `npx` resolves
+  `shadcn@latest` from the public npm registry on every live run, so both
+  the code fetched and the components written are chosen upstream, at run
+  time, not pinned here. That is the egress leg of the lethal trifecta
+  ([`lethal-trifecta-guard`](../../rules/lethal-trifecta-guard.md)); the
+  human confirmation is what keeps it off an autonomous path.
+
 ## Do NOT
 
 - Do NOT install `shadcn-ui` from npm — primitives are scaffolded.

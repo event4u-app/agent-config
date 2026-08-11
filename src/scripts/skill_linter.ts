@@ -106,6 +106,35 @@ const SECTION_ALIASES: Record<string, Set<string>> = {
 
 const RECOMMENDED_SKILL_SECTIONS: string[] = [];
 
+/**
+ * Sections `skill-writing` labels required for a NAMED SUBSET of skills, paired
+ * with the predicate that decides the subset.
+ *
+ * The predicate must be decidable from the filesystem, never from prose. That is
+ * what keeps the false-positive class empty by construction: a skill either ships
+ * a directory or it does not, so there is nothing for a heuristic to get wrong,
+ * and the check can ship as `error` on day one instead of as an open-ended
+ * advisory (the stage-vs-hedge argument in `check_suppression_hygiene.ts`).
+ *
+ * `skill-writing` carries two further section patterns — `Rationalizations to
+ * reject` and `Non-negotiable deliverable`. Neither is listed here, and neither
+ * is labelled required any more. Their populations ("security-stop-routed",
+ * "adjacent-technology cluster") are judgement calls that no property of the tree
+ * declares, so a predicate for them would be exactly the heuristic this table
+ * refuses; compliance stood at 0 of 289 skills while the label said required.
+ * Council 2026-08-11 (2/2, anthropic + openai) resolved the mismatch by
+ * reclassifying both to `recommended pattern` rather than by adding a declared
+ * frontmatter key — an authored opt-in cannot see the skill that should have
+ * opted in and did not, so it would buy a gate without buying the guarantee.
+ */
+const CONDITIONAL_SKILL_SECTIONS: { section: string; when: (skillDir: string) => boolean; reason: string }[] = [
+    {
+        section: 'Security constraints',
+        when: (skillDir) => fs.existsSync(path.join(skillDir, 'scripts')),
+        reason: 'the skill ships a scripts/ directory',
+    },
+];
+
 const RULE_BAD_SIGNS = ['## Procedure', '## Output format', '## Gotchas'];
 
 const FRUGALITY_WRITER_SKILLS = new Set([
@@ -1346,7 +1375,7 @@ function lint_execution_metadata(execution: ExecutionBlock): Issue[] {
     return issues;
 }
 
-export function lint_skill(p: string, text: string): LintResult {
+export function lint_skill(p: string, text: string, absPath: string | null = null): LintResult {
     const issues: Issue[] = [];
     const suggestions: string[] = [];
 
@@ -1356,6 +1385,20 @@ export function lint_skill(p: string, text: string): LintResult {
     for (const section of REQUIRED_SKILL_SECTIONS) {
         if (!sectionMatches(section, sections)) {
             issues.push(new Issue('error', 'missing_section', `Missing required section: ${section}`));
+        }
+    }
+
+    // `p` may be a repo-relative display path; `absPath` is the path actually read.
+    const skillDir = path.dirname(absPath ?? p);
+    for (const { section, when, reason } of CONDITIONAL_SKILL_SECTIONS) {
+        if (when(skillDir) && !sectionMatches(section, sections)) {
+            issues.push(
+                new Issue(
+                    'error',
+                    'missing_conditional_section',
+                    `Missing required section: ${section} (${reason})`,
+                ),
+            );
         }
     }
 
@@ -3533,7 +3576,7 @@ export function lint_file(p: string, repoRoot: string | null = null): LintResult
 
     let result: LintResult;
     if (artifactType === 'skill') {
-        result = lint_skill(displayPath, text);
+        result = lint_skill(displayPath, text, p);
     } else if (artifactType === 'rule') {
         result = lint_rule(displayPath, text);
     } else if (artifactType === 'command') {

@@ -184,18 +184,27 @@ Each domain ships `data/manifest.json` beside its CSVs — declaring its
 - BM25 tokenizer drops tokens ≤2 chars — "UI", "a11y" style queries need
   longer companions.
 
-## Runtime-safety review (Step 1.6 record)
+## Security constraints (Step 1.6 runtime-safety record)
 
-- **Read-only by default** — the engine opens corpus CSVs under the
-  manifest's directory only (`resolve_data_path` refuses absolute paths
-  and `..` escapes).
-- **Single write surface** — `--persist DIR` (opt-in) writes markdown
-  under the caller-chosen `DIR`; nothing else writes.
-- **No network, no subprocess, no secrets** — pure stdlib; embeddings /
-  remote retrievers are intentionally not implemented (ADR-061 §2).
-- `rules_module` executes a manifest-adjacent TypeScript module (dynamic
-  `import()`) — same trust domain as the skill that ships the manifest;
-  containment enforced by `resolve_data_path`.
+Four scripts ship under `scripts/`: `ground.ts` (CLI), `bm25_search.ts`,
+`decision_engine.ts`, `schema_validator.ts`.
+
+- **What they may touch** — corpus CSVs and the manifest under the
+  manifest's own directory. `resolve_data_path` refuses absolute paths and
+  `..` escapes, so the manifest directory is the read boundary.
+- **What they must never do** — read outside that directory, reach the
+  network, or spawn a subprocess. Embeddings and remote retrievers are
+  intentionally not implemented (ADR-061 §2), and that is a containment
+  decision, not a missing feature.
+- **Default invocation** — read-only. The single write surface is opt-in
+  `--persist DIR`, which writes `MASTER.md` (and `pages/<page>.md` when
+  `--page` is given) under `DIR/design-system/<project-slug>/`. Nothing
+  else writes.
+- **Outbound** — nothing. No network access at all.
+
+One qualified exception: `rules_module` executes a manifest-adjacent
+TypeScript module via dynamic `import()`. That is the same trust domain as
+the skill shipping the manifest, and its containment is `resolve_data_path`.
 
 ## See also
 
