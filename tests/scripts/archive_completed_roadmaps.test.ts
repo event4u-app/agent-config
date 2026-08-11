@@ -53,25 +53,9 @@ function git(cwd: string, ...args: string[]): SpawnSyncReturns<string> {
     return spawnSync('git', args, { cwd, encoding: 'utf8' });
 }
 
-/** A self-contained git repo with the given roadmap files committed. */
-function initRepo(dir: string, files: Record<string, string>): void {
-    fs.mkdirSync(dir, { recursive: true });
-    git(dir, 'init', '-q');
-    git(dir, 'config', 'user.email', 'parity@test.local');
-    git(dir, 'config', 'user.name', 'parity');
-    git(dir, 'config', 'commit.gpgsign', 'false');
-    for (const [rel, body] of Object.entries(files)) {
-        const fp = path.join(dir, rel);
-        fs.mkdirSync(path.dirname(fp), { recursive: true });
-        fs.writeFileSync(fp, body, 'utf-8');
-    }
-    git(dir, 'add', '-A');
-    git(dir, 'commit', '-qm', 'init');
-}
 
 const COMPLETE = ['# Complete', '', '## Phase 1 — All', '- [x] all done', ''].join('\n');
 const OPEN = ['# Open', '', '## Phase 1 — Go', '- [ ] not done', ''].join('\n');
-const DEFERRED = ['# Deferred', '', '## Phase 1 — Wait', '- [x] done', '- [~] later', ''].join('\n');
 
 // Untracked-safe archival (road-to-roadmap-archival-robustness, gap A).
 // TS-only enhancement (the Python twin was deleted in ADR-200), so this is
