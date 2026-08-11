@@ -113,6 +113,21 @@ four-operation split assigns to *rules/linters*, not the corpus).
 3. `validate` report — exit 0 evidence, or the violations list handed to
    the polish round as `token_violation` findings.
 
+## Security constraints
+
+`scripts/tokens.ts` is the only shipped script.
+
+- **What it may touch** — the `tokens.json` config path it is given, the
+  directory it is asked to `validate`, and the `--output` path it is asked
+  to write. Nothing outside the paths named on the command line.
+- **What it must never do** — reach the network, spawn a subprocess, or
+  write to a path the caller did not name. It never edits the generated CSS
+  it produced earlier; regeneration replaces, it does not patch.
+- **Default invocation** — read-only. `generate` prints to stdout unless
+  `--output PATH` is passed; `--output` is the flag that makes it mutating,
+  and it creates only that file's parent directory. `validate` never writes.
+- **Outbound** — nothing. No network access.
+
 ## Do NOT
 
 - Do NOT hand-edit generated CSS — `tokens.json` is the single source.

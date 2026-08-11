@@ -163,4 +163,120 @@ describe('check_claims — mechanism', () => {
         expect(run().code).toBe(0);
     });
 
+
+    // road-to-inbox-harvest-2026-08-b-authoring-contract 4.2 — the documented
+    // external-pointer grammar is `https://… (YYYY-MM-DD)`, WITH a space. The
+    // enforcing pattern used to require the stamp to abut the URL, so every
+    // pointer written the documented way was rejected; the form had zero usage,
+    // so nothing caught it. Both spellings must clear.
+    it('accepts an external cite with a dated stamp, spaced or abutting', () => {
+        for (const pointer of [
+            'https://arxiv.org/abs/2306.05685 (2026-08-11)',
+            'https://arxiv.org/abs/2306.05685(2026-08-11)',
+        ]) {
+            write(
+                'docs/CLAIMS.md',
+                [
+                    '# Claims Ledger',
+                    '',
+                    '### claim: external',
+                    '- claim: A claim resting on an external paper.',
+                    '- kind: qual',
+                    `- evidence: ${pointer}`,
+                    '- status: backed',
+                    '- last_verified: 2026-08-11',
+                    '',
+                ].join('\n'),
+            );
+            write('README.md', 'Implements the judge pattern.<!-- claim:external -->\n');
+            const r = run();
+            expect(r.code, `${pointer} → ${r.stderr}`).toBe(0);
+        }
+    });
+
+    it('still rejects an external cite with no dated stamp', () => {
+        write(
+            'docs/CLAIMS.md',
+            [
+                '# Claims Ledger',
+                '',
+                '### claim: external',
+                '- claim: A claim resting on an external paper.',
+                '- kind: qual',
+                '- evidence: https://arxiv.org/abs/2306.05685',
+                '- status: backed',
+                '- last_verified: 2026-08-11',
+                '',
+            ].join('\n'),
+        );
+        write('README.md', 'Implements the judge pattern.<!-- claim:external -->\n');
+        const r = run();
+        expect(r.code).toBe(2);
+        expect(r.stderr).toContain('missing a (YYYY-MM-DD) stamp');
+    });
+
+
+    // road-to-inbox-harvest-2026-08-b-authoring-contract 4.3 — `superseded_by` is
+    // parsed and gated, not merely documented. An unparsed field would be a
+    // documented claim the code does not honour.
+    function supersedeLedger(fields: string): string {
+        return [
+            '# Claims Ledger',
+            '',
+            '### claim: closed',
+            '- claim: A question that was asked and answered null.',
+            '- kind: quant',
+            '- evidence: docs/evidence.md#ANCHOR',
+            '- status: resolved-null',
+            '- last_verified: 2026-08-11',
+            fields,
+            '',
+            '### claim: reopened',
+            '- claim: The same question, asked by a different mechanism.',
+            '- kind: quant',
+            '- evidence: docs/evidence.md#ANCHOR',
+            '- status: unbacked',
+            '- last_verified: 2026-08-11',
+            '',
+        ].join('\n');
+    }
+
+    it('accepts a successor pointer that names a real entry', () => {
+        write('docs/evidence.md', 'ANCHOR\n');
+        write('docs/CLAIMS.md', supersedeLedger('- superseded_by: reopened'));
+        write('README.md', 'No markers here.\n');
+        expect(run().code).toBe(0);
+    });
+
+    it('rejects a successor pointer that names nothing', () => {
+        write('docs/evidence.md', 'ANCHOR\n');
+        write('docs/CLAIMS.md', supersedeLedger('- superseded_by: ghost'));
+        write('README.md', 'No markers here.\n');
+        const r = run();
+        expect(r.code).toBe(2);
+        expect(r.stderr).toContain('not in the ledger');
+    });
+
+    it('rejects a successor pointer on a live entry', () => {
+        write('docs/evidence.md', 'ANCHOR\n');
+        const ledger = supersedeLedger('- superseded_by: reopened').replace(
+            '- status: resolved-null',
+            '- status: backed',
+        );
+        write('docs/CLAIMS.md', ledger);
+        write('README.md', 'No markers here.\n');
+        const r = run();
+        expect(r.code).toBe(2);
+        expect(r.stderr).toContain('only meaningful on a resolved-null entry');
+    });
+
+    it('rejects a successor pointer at its own entry', () => {
+        write('docs/evidence.md', 'ANCHOR\n');
+        write('docs/CLAIMS.md', supersedeLedger('- superseded_by: closed'));
+        write('README.md', 'No markers here.\n');
+        const r = run();
+        expect(r.code).toBe(2);
+        expect(r.stderr).toContain('points at its own entry');
+    });
+
 });

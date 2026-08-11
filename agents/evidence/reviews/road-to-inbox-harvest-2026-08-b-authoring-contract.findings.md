@@ -1,0 +1,49 @@
+# Findings: road-to-inbox-harvest-2026-08-b-authoring-contract
+<!-- completion-review: v1 | reviewed: 2026-08-11 | scope: f5ec352a48061ea55adaafa99d39b6a512fa75732f6a5afa480c121e5303dd88 | diff: d0c9d9e9b6812d59a7a89e8287bc4b89800aa28d | reviewer: r2-fresh-subagent-road-to-inbox-harvest-2026-08-b-authoring-contract | prompt_hash: ecfeeaa74acc1b3b702b34295f1d1d34e27a82a8064b5105b72e7150ed392184 -->
+
+<!-- context-manifest: v1
+inputs:
+  diff_sha: d0c9d9e9b6812d59a7a89e8287bc4b89800aa28d
+  scope_hash: f5ec352a48061ea55adaafa99d39b6a512fa75732f6a5afa480c121e5303dd88
+  roadmap: none
+  roadmap_hash: none
+  ac_hash: none
+excluded: [session-history, agents/runtime, implementation-context]
+tools: [git-diff-branch-scoped, file-read-branch-paths]
+dispatched: 2026-08-11T08:55:00Z
+-->
+
+| # | Severity | File:Line | Finding | Status | Reason/Ref |
+|---|----------|-----------|---------|--------|------------|
+| 1 | medium | src/scripts/lint_hedge_words.ts:128 | The comment predicate `/^\s*(?:\/\/\|\/\*\|\*\|#!)/` includes a bare asterisk, so in the only surface this gate scans (`.md` under `src/` and `docs/`) every markdown `*` bullet and every `**bold**` lead-in is classified as a code surface and skipped. Concretely: `+* The gate might fire when the path is absent.` in `src/skills/x/SKILL.md` yields 0 findings, while the identical sentence written with `- ` yields 1. `src/skills/skill-writing/SKILL.md` uses `* ` bullets in its own `## Do NOT` (diff line 1015), so this is not a hypothetical population. It also biases the escalation-trigger data the header declares, and the "4 hedged lines / 0.12 per 100 words" first measurement recorded in the archived roadmap 5.2 was taken through this filter. | fixed | fixed 02cdfbb28 — comment predicate anchored to `/*` and `*/`; a leading `*` is read as a bullet. Test: `scans a markdown bullet`. |
+| 2 | medium | src/scripts/lint_hedge_words.ts:118 | `QUOTED_SPAN`'s `'[^']*'` alternative cannot distinguish a quoted span from two ordinary apostrophes. On `it's a case where it might fail and that's fine`, the regex matches from the apostrophe in `it's` to the one in `that's` and `stripQuotedSpans` blanks the whole middle, so `might` is never seen. Contractions and possessives are pervasive in this tree's prose, so this is a silent false-negative on exactly the lines most likely to hedge. It also under-counts `addedWords`, which is the denominator of the reported rate. | fixed | fixed 02cdfbb28 — the straight-single-quote alternative is removed from `QUOTED_SPAN`, with the reason in the docblock. Test: `does not let two apostrophes swallow the text between them`. |
+| 3 | medium | src/scripts/lint_hedge_words.ts:133 | The `LEXICON_FILES` exemption is unreachable: `inScope` returns false for any non-`.md` path one line earlier, and all three entries are `.ts`. The documented protection ("the gate's own source, its test, and the scorer that owns HEDGE_WORDS") is therefore provided by the extension check, not by the list. The pinning test `tests/scripts/lint_hedge_words.test.ts:78` ('ignores the lexicon files themselves') asserts a behaviour it does not exercise — it passes on the `.md` filter — so a future widening of the scan surface would break the intent with the test still green. | fixed | fixed 02cdfbb28 — `LEXICON_FILES` removed as unreachable; the test now asserts the `.md` gate directly and the header states that the lexicon sources need no list. |
+| 4 | medium | docs/CLAIMS.md:486 | `judge-family-llm-as-a-judge-foundation` binds two different assertions to one external pointer. The first half (the family implements LLM-as-a-judge; position bias and self-consistency are known failure modes of that pattern) is what arXiv 2306.05685 can support. The second half — "which is why the dispatcher randomizes order and the synthesis layer surfaces conflict rather than averaging it" — is a claim about this repo's `/review-changes` dispatcher, and the row's only evidence is a URL that, by the grammar's own design, is checked for existence and a date stamp and never dereferenced. The ledger will report the repo-behaviour claim as `backed` on evidence that cannot bear it; a repo-side pointer (the dispatcher file, or a test) is what that half needs. | fixed | fixed 02cdfbb28 — the repo-behaviour half is removed from the claim and the entry carries an explicit SCOPE line saying the pointer does not back a statement about this repo. |
+| 5 | low | src/scripts/lint_hedge_words.ts:170 | Fence state toggles only on added (`+`) lines. When a hunk adds lines inside a code block whose opening fence is an unchanged context line, `inFence` stays false and the added code is scanned as prose — a false-positive class in the opposite direction from findings 1 and 2. The header comment covers the hunk-boundary reset at :161 but not the unchanged-fence case. | fixed | fixed 02cdfbb28 (documented) — the added-lines-only limit is now stated at the `inFence` declaration, including the unchanged-fence case. Reconstructing true fence state needs the whole file, which is the axis ADR-218 settled the other way. |
+| 6 | low | src/scripts/lint_hedge_words.ts:246 | The metric printed as `hedged_per_100_words` is computed as `findings.length / addedWords * 100` — hedged *lines* per 100 words, not hedge occurrences per 100 words. `bench_honesty_score.ts`, whose lexicon this file deliberately reuses, publishes a `hedge_per_100_words` with an occurrence numerator, so two near-identically named metrics with different numerators now exist and the escalation trigger in the header is written against this one. A line carrying three hedges counts once. | fixed | fixed 02cdfbb28 — renamed to `hedged_lines_per_100_words`, with the numerator difference against `bench_honesty_score` stated at the computation. |
+| 7 | low | src/scripts/skill_linter.ts:1378 | The new third parameter defaults to `null`, and :1392 falls back to `path.dirname(p)` where `p` is a repo-relative display path. Any caller of the exported `lint_skill` that passes two arguments therefore resolves the `scripts/` predicate against the process CWD: from a different CWD the check silently no-ops (false negative), and if an unrelated `scripts/` happens to sit under the resolved relative path it fires on a skill that ships none (false positive). Only `lint_file` (:3579) passes the absolute path today, so this is latent rather than live, but the exported signature admits it. | fixed | fixed 02cdfbb28 — when neither `absPath` nor an absolute `p` is available the conditional check is skipped rather than resolved against the process cwd. |
+| 8 | low | src/scripts/skill_linter.ts:133 | The predicate is `fs.existsSync(path.join(skillDir, 'scripts'))`, which is true for a *file* named `scripts` as well as a directory. Archived roadmap step 1.2 specifies the population as `test -d src/skills/<n>/scripts`. The docblock immediately above rests the whole "false-positive class is empty by construction" argument on the predicate being a filesystem fact about a shipped directory; `existsSync` is a weaker predicate than the one the argument describes. `statSync(...).isDirectory()` closes the gap. | fixed | fixed 02cdfbb28 — predicate is `statSync(...).isDirectory()`. Test: `a FILE named scripts does not trigger the check`. |
+| 9 | low | internal/reports/exec-evidence-feasibility.json:3 | The new "Re-derived 2026-08-11: +6 backed entries …" sentence is inserted immediately before the pre-existing "Re-derived 2026-08-10: +1 backed entry …" sentence, so the append-only re-derivation log now reads 2026-08-03, 2026-08-11, 2026-08-10. The arithmetic is consistent (41 + 6 = 47), but the log's ordering is the only thing that lets a later reader reconstruct which count each sentence produced. | fixed | fixed 02cdfbb28 — the note is moved to the end of the log, restoring 2026-08-03 → 2026-08-10 → 2026-08-11. |
+
+## Disposition
+
+All nine findings were confirmed against the diff and fixed in `02cdfbb28`, which is
+inside this review scope — so this artefact is re-bound to the post-fix scope
+(`c1ff717f…`) rather than left claiming the pre-fix one. The reviewer was a fresh
+subagent dispatched at the package `dispatch_r2_reviewer` wrote; the prompt it ran is
+committed alongside these findings in `review-input/prompt.md`, and its hash is in the
+header above.
+
+One consequence worth naming: finding 1 showed the archived roadmap 5.2 measurement was
+taken through a predicate that skipped `*`-bulleted prose. That step now carries the
+re-measurement at the fixed predicates (same 4 findings, denominator 264 → 272 lines /
+3,284 → 3,437 words) with the reason stated, instead of the original number standing
+unqualified.
+
+**Second re-bind, 2026-08-11.** Remote CI then failed on two `check_gate_coverage`
+assertions that no local chain reaches — a `src/scripts/lint_*` script joins the gate
+population whether or not it is a gate. Fixed in `d0c9d9e9b` by reporting the scan scope
+through `_lib/scan_scope` with an `EMPTY_VALID:` reason rather than registering a floor a
+diff-scoped gate cannot honour. That is a CI finding, not one of the nine above, and it is
+named here because it moved the review scope: this artefact is re-bound again so it claims
+the delta it actually describes.
