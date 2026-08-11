@@ -123,7 +123,7 @@ from.
 
 ## Phase 2 — A verdict that disagrees with its own tally
 
-- [ ] **2.1 Check synthesis prose against the stance tally.**
+- [x] **2.1 Check synthesis prose against the stance tally.**
       `ai_council/prompts.ts:467 assert_synthesis_sections` validates that
       `### Kill criteria` and `### Concrete next step` are present and non-empty
       (`REQUIRED_SYNTHESIS_SECTIONS`, `:456`) — a *shape* check. It does not
@@ -142,11 +142,46 @@ from.
 **Exit:** a synthesis naming agreement while the tally records dissent throws
 `SynthesisRenderError` on the emit path, the same way a missing section does.
 
+**Two premise corrections, recorded because the step rested on both.**
+
+1. **"the same way a missing section does" described nothing.**
+   `assert_synthesis_sections` had **zero production call sites** — `grep`
+   outside `tests/` returned nothing — while its own docstring claimed it was
+   "called on the synthesis-emit path". Worse, it cannot simply be wired:
+   with no chairman the rendered body is the literal
+   `*to be summarised by the host agent*`, which carries neither section, so an
+   unconditional call throws on every templated render (probed:
+   `missing the required "### Kill criteria" section`). The docstring's false
+   claim is corrected in place; the shape check stays caller-invoked.
+2. **The step's own wording contradicted the module it extends.** "compare the
+   recommendation **prose** to the counted stances" is the prose inference
+   `stance_tally.ts` forbids twice in its own doctrine ("the tally never infers
+   a stance from the surrounding prose") and that the named precedent
+   `check_finding_dispositions.ts` forbids again ("a comment is mutable and
+   unaudited; it is transport, not a record"). Council 2026-08-11, 2/2 on the
+   structured reading — the *position* is checked, not the prose.
+
+**What shipped instead.** `VERDICT_LINE_CONTRACT` gives the synthesis the same
+machine-readable closing-line duty members already owe via
+`STANCE_LINE_CONTRACT`; `parse_verdict_line` reads only that line and returns
+`null` — a repair marker, never a guess — when it is absent;
+`assert_synthesis_matches_tally` throws when the stated verdict names a winner
+the tally did not clear, claims a split it did clear, or names a different
+option. Wired at `orchestrator.ts` inside the `stance_tally` block, the one
+place a tally exists. Conditional by construction: an absent verdict line
+returns silently, so the templated default body and every synthesis written
+before the contract stay green. The contract's own `VERDICT: <option-label>`
+placeholder parses as absent — without that guard the template path, whose body
+IS the contract text, would throw on every un-summarised render.
+
 ## Phase 3 — One duplicated defence, honestly scoped
 
-- [ ] **3.1 Consolidate the two byte-identical truthy-string guards.** The
+- [x] **3.1 Consolidate the two byte-identical truthy-string guards.** The
       `'false'`-is-a-truthy-string defence is written out twice, byte-for-byte:
-      `ai_council/events_log.ts:129-133` and `ai_team/review_gate.ts:172-176` —
+      `ai_council/events_log.ts:141-144` and `ai_team/review_gate.ts:172-175` —
+      (the first citation read `:129-133`, which is UTF-8 encoding code; the
+      guard sits twelve lines further down, and the two blocks share the env
+      var `AGENT_CONFIG_NO_EVENTS_LOG` as well as the body) —
       `diff` over the two blocks is empty, and no shared helper exists
       (`ls src/scripts/_lib/ | grep -i 'coerce\|bool'` → nothing). Extract one
       `src/scripts/_lib/` helper and migrate exactly those two call sites. This is

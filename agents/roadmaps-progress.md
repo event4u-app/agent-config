@@ -6,11 +6,19 @@
 
 ## Overall
 
-**196 / 365 steps done · 54%**
+**219 / 366 steps done · 60%**
 
 ```text
-██████████████████████░░░░░░░░░░░░░░░░░░   54%
+████████████████████████░░░░░░░░░░░░░░░░   60%
 ```
+
+## ⚠️ Iron Law 3 — unresolved deferred items
+
+These roadmaps have `count_open == 0` but carry `[~]` deferred items. Per `roadmap-progress-sync` Iron Law 3 they do NOT auto-archive — the user must resolve the deferrals first (spawn follow-up, restore, or cancel). See [`roadmap-management § 4b`](../packages/core/.agent-src.uncondensed/skills/roadmap-management/SKILL.md).
+
+| Roadmap | Done | Deferred | Cancelled |
+|---|---:|---:|---:|
+| [road-to-inbox-harvest-2026-08-b-council-integrity.md](roadmaps/road-to-inbox-harvest-2026-08-b-council-integrity.md) | 8 | 1 | 7 |
 
 ## Open roadmaps
 
@@ -24,11 +32,11 @@
 | 6 | [road-to-gated-reach-followup.md](roadmaps/road-to-gated-reach-followup.md) | 1 | 12 | 12 | 0 | 0 | 0 | [1](#blockers-road-to-gated-reach-followup) | ░░░░░░░░░░ 0% |
 | 7 | [road-to-inbox-harvest-2026-08-b-authoring-contract.md](roadmaps/road-to-inbox-harvest-2026-08-b-authoring-contract.md) | 6 | 25 | 15 | 0 | 1 | 9 | [1](#blockers-road-to-inbox-harvest-2026-08-b-authoring-contract) | ░░░░░░░░░░ 0% |
 | 8 | [road-to-inbox-harvest-2026-08-b-ci-economy.md](roadmaps/road-to-inbox-harvest-2026-08-b-ci-economy.md) | 5 | 24 | 17 | 4 | 2 | 1 | [2](#blockers-road-to-inbox-harvest-2026-08-b-ci-economy) | ██░░░░░░░░ 19% |
-| 9 | [road-to-inbox-harvest-2026-08-b-council-integrity.md](roadmaps/road-to-inbox-harvest-2026-08-b-council-integrity.md) | 3 | 16 | 2 | 6 | 1 | 7 | [1](#blockers-road-to-inbox-harvest-2026-08-b-council-integrity) | ████████░░ 75% |
+| 9 | [road-to-inbox-harvest-2026-08-b-council-integrity.md](roadmaps/road-to-inbox-harvest-2026-08-b-council-integrity.md) | 3 | 16 | 0 | 8 | 1 | 7 | [1](#blockers-road-to-inbox-harvest-2026-08-b-council-integrity) | ██████████ 100% |
 | 10 | [road-to-inbox-harvest-2026-08-b-dispatch-safety.md](roadmaps/road-to-inbox-harvest-2026-08-b-dispatch-safety.md) | 4 | 21 | 13 | 1 | 1 | 6 | [1](#blockers-road-to-inbox-harvest-2026-08-b-dispatch-safety) | █░░░░░░░░░ 7% |
 | 11 | [road-to-inbox-harvest-2026-08-b-estate-lifecycle.md](roadmaps/road-to-inbox-harvest-2026-08-b-estate-lifecycle.md) | 4 | 15 | 9 | 0 | 0 | 6 | [1](#blockers-road-to-inbox-harvest-2026-08-b-estate-lifecycle) | ░░░░░░░░░░ 0% |
 | 12 | [road-to-inbox-harvest-2026-08-b-install-lifecycle.md](roadmaps/road-to-inbox-harvest-2026-08-b-install-lifecycle.md) | 2 | 13 | 1 | 6 | 0 | 6 | [1](#blockers-road-to-inbox-harvest-2026-08-b-install-lifecycle) | █████████░ 86% |
-| 13 | [road-to-inbox-harvest-2026-08-b-ledger-truth.md](roadmaps/road-to-inbox-harvest-2026-08-b-ledger-truth.md) | 3 | 19 | 10 | 2 | 1 | 6 | [1](#blockers-road-to-inbox-harvest-2026-08-b-ledger-truth) | ██░░░░░░░░ 17% |
+| 13 | [road-to-inbox-harvest-2026-08-b-ledger-truth.md](roadmaps/road-to-inbox-harvest-2026-08-b-ledger-truth.md) | 3 | 19 | 1 | 12 | 0 | 6 | [1](#blockers-road-to-inbox-harvest-2026-08-b-ledger-truth) | █████████░ 92% |
 | 14 | [road-to-inbox-harvest-2026-08-b-release-integrity.md](roadmaps/road-to-inbox-harvest-2026-08-b-release-integrity.md) | 5 | 25 | 1 | 11 | 0 | 13 | [3](#blockers-road-to-inbox-harvest-2026-08-b-release-integrity) | █████████░ 92% |
 | 15 | [road-to-inbox-harvest-2026-08-b.md](roadmaps/road-to-inbox-harvest-2026-08-b.md) | 3 | 6 | 1 | 2 | 0 | 3 | [1](#blockers-road-to-inbox-harvest-2026-08-b) | ███████░░░ 67% |
 | 16 | [road-to-inbox-harvest-2026-08.md](roadmaps/road-to-inbox-harvest-2026-08.md) | 5 | 21 | 1 | 11 | 4 | 5 | [3](#blockers-road-to-inbox-harvest-2026-08) | █████████░ 92% |
@@ -255,13 +263,13 @@
 
 ### [road-to-inbox-harvest-2026-08-b-council-integrity.md](roadmaps/road-to-inbox-harvest-2026-08-b-council-integrity.md)
 
-**Road to council-pass integrity** — 6 / 8 done (75%)
+**Road to council-pass integrity** — 8 / 8 done (100%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
 | 1 | Attendance becomes machine-readable | ✅ done | 0 | 5 | 1 | 0 | 100% |
-| 2 | A verdict that disagrees with its own tally | ⬜ not started | 1 | 0 | 0 | 0 | 0% |
-| 3 | One duplicated defence, honestly scoped | 🟡 in progress | 1 | 1 | 0 | 7 | 50% |
+| 2 | A verdict that disagrees with its own tally | ✅ done | 0 | 1 | 0 | 0 | 100% |
+| 3 | One duplicated defence, honestly scoped | ✅ done | 0 | 2 | 0 | 7 | 100% |
 
 <a id="blockers-road-to-inbox-harvest-2026-08-b-council-integrity"></a>
 **Blockers**
