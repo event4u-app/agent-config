@@ -328,6 +328,7 @@ Rows follow template order, so a diff against the template reads straight down.
 | `hooks.turn_end_gate.enabled` | C | `false` | arms the only concern that can REFUSE a turn-end; an agent must never be able to switch its own delivery gate on |
 | `hooks.turn_end_gate.promissory` | C | `true` | which refusal the turn-end gate may raise; inert while the master switch is off |
 | `hooks.turn_end_gate.language` | C | `true` | which refusal the turn-end gate may raise; inert while the master switch is off |
+| `hooks.turn_end_gate.verification` | C | `true` | which refusal the turn-end gate may raise; inert while the master switch is off |
 | `decision_engine.surface_traces` | C | `false` | the decision engine’s own black box; the agent must not be able to close it |
 | `decision_engine.min_confidence` | C | `"off"` | the confidence gate |
 | `decision_engine.block_on_risk` | C | `"off"` | the risk-class gate |
