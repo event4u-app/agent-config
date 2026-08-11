@@ -74,6 +74,23 @@ describe('requires_confirmation — skill execution block', () => {
     });
 });
 
+/**
+ * Findings for one command key. The command surface is exercised through
+ * `validate()` for the same reason the skill surface is: a shape read of the
+ * JSON proves the property is DECLARED, never that the validator enforces it —
+ * and "pinned rather than assumed" was the whole claim of roadmap step 2.1.
+ */
+function commandFindings(value: unknown, key = 'requires_confirmation'): { rule: string }[] {
+    const doc = {
+        name: 'confirmation-fixture',
+        description: 'Fixture command for the requires_confirmation contract test.',
+        [key]: value,
+    } as unknown as Record<string, YamlValue>;
+    return validate(doc, schema('command')).filter((e) =>
+        String((e as { path?: string }).path ?? '').includes(key),
+    ) as unknown as { rule: string }[];
+}
+
 describe('requires_confirmation — command frontmatter', () => {
     const commandSchema = (): Record<string, YamlValue> => schema('command');
 
@@ -81,6 +98,22 @@ describe('requires_confirmation — command frontmatter', () => {
         const props = (commandSchema().properties ?? {}) as Record<string, YamlValue>;
         expect(props.requires_confirmation).toBeDefined();
         expect((props.requires_confirmation as Record<string, unknown>).type).toBe('boolean');
+    });
+
+    it('accepts a boolean declaration', () => {
+        expect(commandFindings(true)).toEqual([]);
+    });
+
+    it('rejects a stringly-typed "true"', () => {
+        const findings = commandFindings('true');
+        expect(findings).toHaveLength(1);
+        expect(findings[0]?.rule).toBe('type');
+    });
+
+    it('rejects the misspelled key — additionalProperties closed here too', () => {
+        const findings = commandFindings(true, 'require_confirmation');
+        expect(findings).toHaveLength(1);
+        expect(findings[0]?.rule).toBe('additionalProperties');
     });
 
     it('the two surfaces agree on the key name', () => {
