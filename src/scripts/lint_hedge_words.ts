@@ -70,6 +70,7 @@ import process from 'node:process';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import { HEDGE_WORDS } from './bench_honesty_score.js';
+import { reportScanned } from './_lib/scan_scope.js';
 import { readStdinText } from './_lib/stdin.js';
 
 const _HERE = fileURLToPath(import.meta.url);
@@ -245,10 +246,26 @@ export function main(argv: string[] = process.argv.slice(2)): number {
 
     const report = scanDiff(diffText);
 
+    // Scope assertion + the machine-readable count, via the shared helper rather
+    // than a hand-written `scanned:` line: `check_gate_coverage`'s ratchet treats
+    // an emitted count with no assertion behind it as decoration, and it is right
+    // to — a diff-scoped gate is exactly the shape that can print `scanned: 0`
+    // out of a dead root forever. `EMPTY_VALID` is the honest prefix here: a diff
+    // that touches no prose under src/ or docs/ HAS zero hedged lines, and the
+    // reason survives the operational test — if the scan roots were deleted, "a
+    // diff with no prose in it" would still mean what it says.
+    const scanScope = {
+        gate: 'lint_hedge_words',
+        scanned: report.filesScanned,
+        units: 'changed prose file(s)',
+        roots: SCAN_ROOTS,
+        allowEmpty: 'EMPTY_VALID: a diff that changes no prose under src/ or docs/ has no hedged lines to report; the gate is diff-scoped by ADR-218 and its corpus is the diff, not a tree.',
+    } as const;
+
     if (report.addedProseLines === 0) {
         if (!quiet) {
             process.stdout.write('lint_hedge_words: no added prose under src/ or docs/ — nothing to read.\n');
-            process.stdout.write('scanned: 0\n');
+            reportScanned(scanScope);
         }
         return 0;
     }
@@ -281,7 +298,7 @@ export function main(argv: string[] = process.argv.slice(2)): number {
             `hedged_lines: ${report.findings.length} · added_prose_lines: ${report.addedProseLines} ` +
                 `· added_words: ${report.addedWords} · hedged_lines_per_100_words: ${hedgedLinesPer100.toFixed(2)}\n`,
         );
-        process.stdout.write(`scanned: ${report.filesScanned}\n`);
+        reportScanned(scanScope);
     }
     return 0;
 }

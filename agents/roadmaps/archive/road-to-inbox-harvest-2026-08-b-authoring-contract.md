@@ -284,6 +284,19 @@ own header records the file-first council decision of 2026-06-15.
       *lines*. The n = 4 verdict stands; what changed is that it now rests on a
       scan that reads the prose it claims to.
 
+      **What the step did not anticipate: a new `lint_*` script joins a gate
+      population whether or not it is a gate.** `check_gate_coverage`'s ratchet
+      counts every `src/scripts/{lint,check,audit}_*.ts` and requires each either
+      to route its count through `_lib/scan_scope` or to be registered in
+      `gate-coverage.yml` with a floor — a hand-written `scanned:` line with
+      nothing asserting it is decoration, which is exactly what a diff-scoped
+      script can print out of a dead root forever. Registration was the wrong
+      branch here (a diff that touches no prose legitimately scans zero, so there
+      is no honest floor), so the gate reports through `reportScanned` with an
+      `EMPTY_VALID:` reason. Found by remote CI, not by `task preflight` — the
+      ratchet lives in the node-tests shard, which preflight deliberately does not
+      run.
+
       **Not wired into `task ci` or any workflow, deliberately.** The parity gate
       (`check_ci_local_parity`) derives both sides from those two chains, so an
       unwired advisory script is invisible to it rather than a declared exception.
