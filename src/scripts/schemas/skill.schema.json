@@ -222,6 +222,11 @@
           },
           "description": "U3 (ecosystem harvest): optional deny-list layered UNDER allowed_tools — defense-in-depth; a tool matching here is refused even if a broad allow pattern would admit it. Supports the scoped-grant syntax (e.g. Bash(git push:*))."
         },
+        "requires_confirmation": {
+          "type": "boolean",
+          "description": "Declares that this execution STAGES its irreversible action instead of performing it: the action is held, the approval names the exact object, and one approval executes it exactly once. Declaration only — nothing in the shipped tree stages on it yet, so a true here is a contract a reader can check, never enforcement a host provides.",
+          "$comment": "road-to-inbox-harvest-2026-08-b-dispatch-safety Phase 2.1. Shaped on the sibling disallowed_tools: optional, additive, schema-backed. Boolean rather than a per-action list — no caller can name its actions until step 2.4 decides where the flag binds, and inventing the richer shape ahead of its consumer is the speculative half minimal-safe-diff forbids. Widening boolean → object later is additive for readers that treat a bare true as 'all actions'."
+        },
         "command": {
           "type": "array",
           "minItems": 1,

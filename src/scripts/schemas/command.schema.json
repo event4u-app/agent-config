@@ -253,6 +253,11 @@
       },
       "description": "ADR-013 install hints (default-on at consumer install; user-removable)."
     },
+    "requires_confirmation": {
+      "type": "boolean",
+      "description": "Declares that this command STAGES its irreversible action instead of performing it: the action is held, the approval names the exact object, and one approval executes it exactly once. Declaration only — nothing in the shipped tree stages on it yet, so a true here is a contract a reader can check, never enforcement a host provides.",
+      "$comment": "road-to-inbox-harvest-2026-08-b-dispatch-safety Phase 2.1 — same key, same meaning as skill.schema.json's execution.requires_confirmation, so a reader learns one word for both surfaces. Boolean by the same reasoning recorded there."
+    },
     "gui_runnable": {
       "type": "boolean",
       "description": "AI OS Product UI allowlist (road-to-ai-os-product-ui.md Phase 1). When true, the command is exposed in the browser /tasks surface and may be spawned by POST /api/v1/task/run. Default false — commands that touch git, secrets, or run destructive migrations must stay false (terminal only). Per-command opt-in, never opt-out."
