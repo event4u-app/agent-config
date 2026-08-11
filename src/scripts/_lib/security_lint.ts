@@ -408,10 +408,13 @@ export function* iter_corpus(
  * Exit 1 iff at least one finding `is_fail` (HIGH + full weight). WARN-level
  * (weighted-down or < HIGH) findings print but never fail the build.
  */
-export function report(findings: readonly Finding[], opts: { check_label: string }): number {
+export function report(
+    findings: readonly Finding[],
+    opts: { check_label: string; scanned_roots?: readonly string[] },
+): number {
     const check_label = opts.check_label;
     if (findings.length === 0) {
-        process.stdout.write(`✅  ${check_label}: clean (${_corpus_note()}).\n`);
+        process.stdout.write(`✅  ${check_label}: clean (${_corpus_note(opts.scanned_roots)}).\n`);
         return 0;
     }
 
@@ -459,8 +462,19 @@ function _pyG(n: number): string {
     return s;
 }
 
-function _corpus_note(): string {
-    return 'scanned ' + DEFAULT_SCAN_ROOTS.join(', ');
+// The clean-path line names the corpus the caller ACTUALLY walked, not the
+// shared default. Two of five callers diverge from `DEFAULT_SCAN_ROOTS`
+// (`lint_skill_frontmatter_safety` replaces the set outright,
+// `lint_mcp_config_security` appends `src/templates`), so a hardcoded note made
+// this gate report a scope in both directions at once: it claimed `src/rules`
+// and `dist/agent-src`, which it never reads, and omitted `src/subagents`,
+// which is the one root holding the artefact its over-broad-grant check exists
+// for. A reader verifying that root by running the gate read the opposite of
+// the truth. Same contract as `_lib/scan_scope.reportScanned` — the emitted
+// scope is the scope that was walked.
+function _corpus_note(scanned_roots?: readonly string[]): string {
+    const roots = scanned_roots && scanned_roots.length > 0 ? scanned_roots : DEFAULT_SCAN_ROOTS;
+    return 'scanned ' + roots.join(', ');
 }
 
 // ---------------------------------------------------------------------

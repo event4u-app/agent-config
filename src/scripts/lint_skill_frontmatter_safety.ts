@@ -347,7 +347,7 @@ export function main(argv: readonly string[] | null = null): number {
         process.stdout.write(payload + '\n');
         return findings.some((f) => f.is_fail) ? 1 : 0;
     }
-    return sl.report(findings, { check_label: 'dangerous-frontmatter' });
+    return sl.report(findings, { check_label: 'dangerous-frontmatter', scanned_roots: roots });
 }
 
 function _isCliEntry(): boolean {
