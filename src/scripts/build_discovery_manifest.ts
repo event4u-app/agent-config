@@ -38,6 +38,7 @@
  *
  * Schema: docs/contracts/discovery-manifest.schema.json
  */
+import * as child_process from 'node:child_process';
 import * as crypto from 'node:crypto';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
@@ -83,6 +84,7 @@ interface ModuleConfig {
     DEFAULT_DEPRECATION_REPORT: string;
     DEFAULT_TRUST_REPORT: string;
     DEFAULT_ORPHAN_REPORT: string;
+    DEFAULT_DORMANCY_REPORT: string;
     DEFAULT_WORKSPACES_JSON: string;
     DEFAULT_PACKS_JSON: string;
     // Patchable seams (Python monkeypatches these module attributes).
@@ -101,6 +103,7 @@ function _deriveConfig(root: string): ModuleConfig {
         DEFAULT_DEPRECATION_REPORT: path.join(disc, 'deprecation-report.md'),
         DEFAULT_TRUST_REPORT: path.join(disc, 'trust-report.md'),
         DEFAULT_ORPHAN_REPORT: path.join(disc, 'orphan-report.md'),
+        DEFAULT_DORMANCY_REPORT: path.join(disc, 'dormancy-report.md'),
         DEFAULT_WORKSPACES_JSON: path.join(disc, 'workspaces.json'),
         DEFAULT_PACKS_JSON: path.join(disc, 'packs.json'),
         artefact_roots: _artefact_roots,
@@ -937,6 +940,156 @@ function _deprecation_report(manifest: JsonObject): string {
     return lines.join('\n') + '\n';
 }
 
+/** Dormancy window, in months. `docs/governance.md` § Skill lifecycle policy. */
+const _DORMANCY_MONTHS = 6;
+
+/**
+ * What the dormancy report could actually establish from git in this checkout.
+ *
+ * `ok: false` is a first-class outcome, not an error: a shallow clone or a
+ * repository younger than the window cannot distinguish "untouched for six
+ * months" from "history truncated three months ago", and CI clones are shallow
+ * by default. The report NAMES that instead of emitting a list built on it.
+ */
+export interface DormancyProbe {
+    ok: boolean;
+    /** Why the signal is unavailable — set iff `ok` is false. */
+    reason?: string;
+    /** Repo-relative paths with at least one commit inside the window. */
+    touched: Set<string>;
+}
+
+function _git(root: string, args: readonly string[]): string | null {
+    try {
+        return child_process.execFileSync('git', [...args], {
+            cwd: root,
+            encoding: 'utf-8',
+            maxBuffer: 64 * 1024 * 1024,
+            stdio: ['ignore', 'pipe', 'ignore'],
+        });
+    } catch {
+        return null;
+    }
+}
+
+/**
+ * Probe git once for the whole estate: one bounded `--since` walk, exactly the
+ * command `governance.md` names, rather than one `git log` per artefact.
+ */
+function _dormancy_probe(root: string, now: Date = new Date()): DormancyProbe {
+    const since = `${String(_DORMANCY_MONTHS)} months ago`;
+    if (_git(root, ['rev-parse', '--git-dir']) === null) {
+        return { ok: false, reason: 'not a git checkout — commit history is unavailable', touched: new Set() };
+    }
+    if ((_git(root, ['rev-parse', '--is-shallow-repository']) ?? '').trim() === 'true') {
+        return {
+            ok: false,
+            reason:
+                'shallow clone — a truncated history is indistinguishable from a dormant artefact. ' +
+                'Re-run after `git fetch --unshallow`.',
+            touched: new Set(),
+        };
+    }
+    const oldest = (_git(root, ['log', '--reverse', '--format=%cI', '--max-count=1']) ?? '').trim();
+    if (oldest !== '') {
+        const cutoff = new Date(now);
+        cutoff.setMonth(cutoff.getMonth() - _DORMANCY_MONTHS);
+        if (new Date(oldest) > cutoff) {
+            return {
+                ok: false,
+                reason:
+                    `repository history starts ${oldest.slice(0, 10)}, inside the ` +
+                    `${String(_DORMANCY_MONTHS)}-month window — every artefact would read as dormant`,
+                touched: new Set(),
+            };
+        }
+    }
+    const out = _git(root, ['log', `--since=${since}`, '--name-only', '--format=']);
+    if (out === null) {
+        return { ok: false, reason: 'git log failed', touched: new Set() };
+    }
+    const touched = new Set(out.split('\n').map((l) => l.trim()).filter((l) => l !== ''));
+    return { ok: true, touched };
+}
+
+/**
+ * The unit dormancy is measured over. A skill is a directory (governance names
+ * `git log -- src/skills/<name>/`), so a commit touching its `reference.md`
+ * keeps the skill alive; every other artefact is its own file.
+ */
+function _dormancy_unit(artefactPath: string): string {
+    return path.basename(artefactPath) === 'SKILL.md' ? path.dirname(artefactPath) : artefactPath;
+}
+
+/**
+ * Artefacts with no commit inside the dormancy window.
+ *
+ * Report-only by construction: `governance.md` § Skill lifecycle policy says
+ * dormancy triggers review, never auto-deprecation — and a finished artefact is
+ * indistinguishable from an abandoned one from commit dates, so the
+ * false-positive class is not empty and no argument makes it so.
+ */
+function _dormant_artefacts(manifest: JsonObject, probe: DormancyProbe): JsonObject[] {
+    if (!probe.ok) {
+        return [];
+    }
+    const alive = new Set<string>();
+    for (const p of probe.touched) {
+        alive.add(p);
+        // A touched file keeps its containing directory-shaped artefact alive.
+        for (let d = path.dirname(p); d !== '.' && d !== path.sep; d = path.dirname(d)) {
+            alive.add(d);
+        }
+    }
+    const out: JsonObject[] = [];
+    for (const a of manifest['artefacts'] as JsonObject[]) {
+        const unit = _dormancy_unit(a['path'] as string);
+        if (!alive.has(unit)) {
+            out.push({ path: a['path'], unit, category: a['category'] });
+        }
+    }
+    out.sort((a, b) => _cmpStr(a['path'] as string, b['path'] as string));
+    return out;
+}
+
+/** The dormancy section of the discovery report family (governance.md § Skill lifecycle policy). */
+function _dormancy_report(manifest: JsonObject, probe: DormancyProbe): string {
+    const lines = ['# Discovery — Dormancy Report', ''];
+    lines.push(`- Generated: \`${String(manifest['generated_at'])}\``);
+    lines.push(`- Window: **${String(_DORMANCY_MONTHS)} months** without a commit`);
+    lines.push('');
+    lines.push('> Dormancy triggers **review, never auto-deprecation**');
+    lines.push('> (`docs/governance.md` § Skill lifecycle policy). A finished artefact and an');
+    lines.push('> abandoned one look identical from commit dates, so this is a prompt to ask');
+    lines.push('> "still earning its slot?" — never a removal list, and never a gate.');
+    lines.push('');
+    if (!probe.ok) {
+        lines.push('## Signal unavailable');
+        lines.push('');
+        lines.push(`**No dormancy list is published**: ${String(probe.reason)}`);
+        lines.push('');
+        lines.push('An empty section here would read as "nothing is dormant", which is a');
+        lines.push('different claim from "the signal could not be computed".');
+        lines.push('');
+        return lines.join('\n') + '\n';
+    }
+    const items = _dormant_artefacts(manifest, probe);
+    lines.push(`- Dormant artefacts: **${items.length}**`);
+    lines.push('');
+    if (items.length === 0) {
+        lines.push('_None. Every artefact was touched inside the window._');
+        lines.push('');
+        return lines.join('\n') + '\n';
+    }
+    lines.push('| Path | Unit | Category |');
+    lines.push('|---|---|---|');
+    for (const a of items) {
+        lines.push(`| \`${String(a['path'])}\` | \`${String(a['unit'])}\` | ${String(a['category'])} |`);
+    }
+    lines.push('');
+    return lines.join('\n') + '\n';
+}
+
 /** Trust-level breakdown by workspace + human-review sanity flag. Mirrors `_trust_report`. */
 function _trust_report(manifest: JsonObject): string {
     const byWs = new Map<string, JsonObject>();
@@ -1195,6 +1348,7 @@ interface ParsedArgs {
     deprecation_report: string;
     trust_report: string;
     orphan_report: string;
+    dormancy_report: string;
     workspaces_json: string;
     packs_json: string;
     strict: boolean;
@@ -1231,6 +1385,7 @@ function parse_args(argv: readonly string[]): ParsedArgs {
         deprecation_report: _config.DEFAULT_DEPRECATION_REPORT,
         trust_report: _config.DEFAULT_TRUST_REPORT,
         orphan_report: _config.DEFAULT_ORPHAN_REPORT,
+        dormancy_report: _config.DEFAULT_DORMANCY_REPORT,
         workspaces_json: _config.DEFAULT_WORKSPACES_JSON,
         packs_json: _config.DEFAULT_PACKS_JSON,
         strict: false,
@@ -1242,6 +1397,7 @@ function parse_args(argv: readonly string[]): ParsedArgs {
         '                                   [--deprecation-report DEPRECATION_REPORT]\n' +
         '                                   [--trust-report TRUST_REPORT]\n' +
         '                                   [--orphan-report ORPHAN_REPORT]\n' +
+        '                                   [--dormancy-report DORMANCY_REPORT]\n' +
         '                                   [--workspaces-json WORKSPACES_JSON]\n' +
         '                                   [--packs-json PACKS_JSON] [--strict]\n' +
         '                                   [--quiet]\n';
@@ -1252,6 +1408,7 @@ function parse_args(argv: readonly string[]): ParsedArgs {
         '--deprecation-report': 'deprecation_report',
         '--trust-report': 'trust_report',
         '--orphan-report': 'orphan_report',
+        '--dormancy-report': 'dormancy_report',
         '--workspaces-json': 'workspaces_json',
         '--packs-json': 'packs_json',
     };
@@ -1324,6 +1481,10 @@ function main(argv: readonly string[]): number {
         _writeFileMkdir(args.deprecation_report, _deprecation_report(manifest));
         _writeFileMkdir(args.trust_report, _trust_report(manifest));
         _writeFileMkdir(args.orphan_report, _orphan_report(manifest));
+        _writeFileMkdir(
+            args.dormancy_report,
+            _dormancy_report(manifest, _dormancy_probe(_config.ROOT)),
+        );
         // Phase 5 sub-views.
         _writeFileMkdir(
             args.workspaces_json,
@@ -1425,6 +1586,10 @@ export {
     _trust_report,
     _orphan_artefacts,
     _orphan_report,
+    _dormancy_probe,
+    _dormancy_unit,
+    _dormant_artefacts,
+    _dormancy_report,
     _workspaces_view,
     _packs_view,
     _summary,
