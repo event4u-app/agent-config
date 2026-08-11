@@ -76,13 +76,29 @@ report-only by construction and moves no cap.
       parked roadmap, and do not reopen `governance.md:49-59` — the commit-based
       choice is the reason Phase 2 costs nothing.
 
+      **Surfaced 2026-08-11; the answer is outstanding, which is why this stays
+      open.** Put to the maintainer, unchanged, as the blocker words it:
+
+      > `later/road-to-cost-parity-1-rule-payload-diet.md:3` is `status: later`,
+      > parked `:17-30` on 2026-08-10 by council convergence + maintainer pick,
+      > with `:52` "do not relitigate". `docs/governance.md` § Skill lifecycle
+      > policy separately defers a `last_reviewed:` field "until a second
+      > maintainer exists". **Does the maintained-estate framing reopen now, or
+      > stay parked on its own resume conditions — and does the
+      > second-maintainer condition still hold?**
+
+      Neither lock was edited, and neither needed to be: Phases 2-4 shipped
+      report-only, added no frontmatter field and moved no cap, so nothing below
+      depends on the answer. What the answer unlocks is only what the blocker
+      already scopes — a removal list, a cap change, or a new estate field.
+
 ## Phase 2 — The dormancy signal governance already mandates
 
 `governance.md:52` names the exact command and calls the signal derivable. Nothing
 computes it, so an accepted policy has no instrument. This phase builds the
 instrument, not a new policy.
 
-- [ ] **2.1 Add a dormancy section to the existing discovery report family.**
+- [x] **2.1 Add a dormancy section to the existing discovery report family.**
       Compute per-artefact last-touch from `git log -1 --format=%cI -- <path>` over
       `iter_artefacts` and emit a section listing everything past the 6-month bar,
       alongside `_deprecation_report` (`build_discovery_manifest.ts:915-920`) and
@@ -92,13 +108,13 @@ instrument, not a new policy.
       commit dates, so the false-positive class is not empty and no argument makes
       it so.
       <!-- verify: task test -- --filter=build_discovery_manifest -->
-- [ ] **2.2 Publish the two-vocabulary finding and the coverage figures.** One
+- [x] **2.2 Publish the two-vocabulary finding and the coverage figures.** One
       paragraph in `docs/governance.md`: `lifecycle:` and skill `status:` are
       distinct fields with distinct enums, 15 of 289 and 66 of 289 declare them,
       and `lifecycle` defaults to `active` (`skill.schema.json:262`) so absent
       reads as active. Reconciling them is a separate decision; this only stops
       the two being read as one field.
-- [ ] **2.3 Record the sidecar-versus-frontmatter answer where the question is
+- [x] **2.3 Record the sidecar-versus-frontmatter answer where the question is
       asked.** `governance.md:58-59` defers the field; add the reasoning in one
       line — a review-date field across 405 artefacts is the diff noise the parked
       roadmap's own Phase 3 drift-lint contends with, and the only shipped
@@ -114,13 +130,13 @@ report is an **inverse traversal of `discovery_graph.ts`**, whose edge set is
 already deterministic and cached against the manifest checksum (`:143-154`). Not a
 new engine.
 
-- [ ] **3.1 Add an inbound-degree query to `discovery_graph.ts`.** `Edge` (`:45-50`)
+- [x] **3.1 Add an inbound-degree query to `discovery_graph.ts`.** `Edge` (`:45-50`)
       already carries `from`/`to`/`rel`/`confidence`; invert it once and report
       nodes with zero inbound `EXTRACTED` edges, excluding `member_of` (`INFERRED`
       at `:124,129`, which would make every artefact look reachable via its pack
       node). Additive alongside `affected` (`:195`) and `explain` (`:221`).
       <!-- verify: task test -- --filter=discovery_graph -->
-- [ ] **3.2 Classify every first-run hit before anything is wired.** The relation
+- [x] **3.2 Classify every first-run hit before anything is wired.** The relation
       set is narrow — `replaces`, `routes_to`, ADR path targets, `packs`,
       `workspaces` (`:10-14`) — so a prose-only cross-reference produces no edge and
       a reachable artefact reads as zero-inbound. Classify the hits, then decide
@@ -128,14 +144,14 @@ new engine.
       `check_references.ts` is the cross-reference gate and this traversal sees a
       strictly narrower graph, so the false-positive class is provably non-empty.
       <!-- verify: ./scripts-run src/scripts/check_references --format=text -->
-- [ ] **3.3 Point the report at review, not removal.** One line in the emitted
+- [x] **3.3 Point the report at review, not removal.** One line in the emitted
       section citing `governance.md:56-57` — sunset is explicit, recorded in the
       removing commit, no tombstone files — and `janitor.ts:10` as the
       archive-not-delete precedent.
 
 ## Phase 4 — The graph's own observability
 
-- [ ] **4.1 Add `stats` and per-source try-isolation to `discovery_graph.ts`.**
+- [x] **4.1 Add `stats` and per-source try-isolation to `discovery_graph.ts`.**
       `Graph` is exactly four fields (`:51-56`) with no `stats`, `buildGraph`
       (`:95`) runs one loop with no per-relation error containment, and the file has
       **zero** `reportScanned`/`assertScanned` calls. Add
@@ -146,11 +162,42 @@ new engine.
       just accepted". `schema_version` already exists (`:148`), so this is additive
       and **needs no ADR**.
       <!-- verify: task test -- --filter=discovery_graph -->
-- [ ] **4.2 Namespace non-artefact node ids.** `pack:` and `workspace:` are the only
+- [x] **4.2 Namespace non-artefact node ids.** `pack:` and `workspace:` are the only
       prefixes (`:123,128`); artefact nodes are bare paths (`idOf` at `:99`). A
       zero-inbound report over a mixed id space is ambiguous the first time a path
       collides with a synthetic node. One prefix constant, no format change.
       <!-- verify: task test -- --filter=discovery_graph -->
+
+## What landed — and the two findings that changed the shape
+
+Both report steps built their instrument and then **refused to publish a list**,
+in each case because a measurement said the list would not mean what a reader
+would take it to mean. Neither refusal was planned; both are recorded here
+rather than smoothed over.
+
+- **3.2 — the zero-inbound traversal is correct and its edge set is not.** First
+  run: 595 of 759 nodes, i.e. **every** skill (289/289) and **every** rule
+  (116/116). Cause, measured: all 119 `routes_to` / `replaces` targets are
+  *logical names* (`commit:in-chunks`) while node ids are repo-relative paths —
+  **0 of 119 resolve**, so no artefact ever carries an inbound EXTRACTED edge and
+  the 595 is arithmetic. `references_adr: 0` is the same defect from the other
+  side. `orphans` therefore names the degraded state and prints no list while
+  `stats.dangling_targets > 0`; the guard clears itself the moment targets
+  resolve. Evidence + the knock-on for the shipped `affected` / `explain`
+  traversals: [`discovery-graph-inbound-degree.md`](../evidence/analysis/discovery-graph-inbound-degree.md).
+  Fixing the resolution is a behaviour change to two shipped commands and is
+  deliberately **not** made here.
+- **2.1 — the dormancy window is longer than the available history.** This
+  checkout is a shallow clone (`git rev-parse --is-shallow-repository` → `true`)
+  whose oldest commit is 2026-05-18 — under three months against a six-month
+  bar, and CI clones are shallow by default. A truncated history is
+  indistinguishable from a dormant artefact, so the report names the missing
+  signal instead of emitting a list; the populated path is unit-tested rather
+  than left unexercised.
+
+The shared shape: an empty or maximal list is a *claim*, and neither report is
+allowed to make one it cannot support. Both follow the labelled-degraded-path
+precedent this roadmap's own Context cites (`check_standing_rule_delivery.ts:15-27`).
 
 ## Cancelled — each against a named citation
 
