@@ -1,0 +1,1400 @@
+diff --git a/agents/roadmaps-progress.md b/agents/roadmaps-progress.md
+index b02d4c958be7c4aaf08f9c10754717de58e3b0bf..a69fb1f03d9a535a340cf1067eae52c360898e68 100644
+--- a/agents/roadmaps-progress.md
++++ b/agents/roadmaps-progress.md
+@@ -6,10 +6,10 @@
+ 
+ ## Overall
+ 
+-**233 / 346 steps done · 67%**
++**236 / 346 steps done · 68%**
+ 
+ ```text
+-███████████████████████████░░░░░░░░░░░░░   67%
++███████████████████████████░░░░░░░░░░░░░   68%
+ ```
+ 
+ ## Open roadmaps
+@@ -24,7 +24,7 @@
+ | 6 | [road-to-council-solo-floor-implementation.md](roadmaps/road-to-council-solo-floor-implementation.md) | 3 | 13 | 13 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+ | 7 | [road-to-gated-reach-followup.md](roadmaps/road-to-gated-reach-followup.md) | 1 | 12 | 12 | 0 | 0 | 0 | [1](#blockers-road-to-gated-reach-followup) | ░░░░░░░░░░ 0% |
+ | 8 | [road-to-inbox-harvest-2026-08-b-ci-economy.md](roadmaps/road-to-inbox-harvest-2026-08-b-ci-economy.md) | 5 | 24 | 1 | 17 | 2 | 4 | [2](#blockers-road-to-inbox-harvest-2026-08-b-ci-economy) | █████████░ 94% |
+-| 9 | [road-to-inbox-harvest-2026-08-b-dispatch-safety.md](roadmaps/road-to-inbox-harvest-2026-08-b-dispatch-safety.md) | 4 | 21 | 6 | 8 | 1 | 6 | [1](#blockers-road-to-inbox-harvest-2026-08-b-dispatch-safety) | ██████░░░░ 57% |
++| 9 | [road-to-inbox-harvest-2026-08-b-dispatch-safety.md](roadmaps/road-to-inbox-harvest-2026-08-b-dispatch-safety.md) | 4 | 21 | 3 | 11 | 1 | 6 | [1](#blockers-road-to-inbox-harvest-2026-08-b-dispatch-safety) | ████████░░ 79% |
+ | 10 | [road-to-inbox-harvest-2026-08-b-estate-lifecycle.md](roadmaps/road-to-inbox-harvest-2026-08-b-estate-lifecycle.md) | 4 | 15 | 1 | 8 | 0 | 6 | [1](#blockers-road-to-inbox-harvest-2026-08-b-estate-lifecycle) | █████████░ 89% |
+ | 11 | [road-to-inbox-harvest-2026-08-b-ledger-truth.md](roadmaps/road-to-inbox-harvest-2026-08-b-ledger-truth.md) | 3 | 19 | 1 | 12 | 0 | 6 | [1](#blockers-road-to-inbox-harvest-2026-08-b-ledger-truth) | █████████░ 92% |
+ | 12 | [road-to-inbox-harvest-2026-08-b-release-integrity.md](roadmaps/road-to-inbox-harvest-2026-08-b-release-integrity.md) | 5 | 25 | 1 | 11 | 0 | 13 | [3](#blockers-road-to-inbox-harvest-2026-08-b-release-integrity) | █████████░ 92% |
+@@ -234,12 +234,12 @@
+ 
+ ### [road-to-inbox-harvest-2026-08-b-dispatch-safety.md](roadmaps/road-to-inbox-harvest-2026-08-b-dispatch-safety.md)
+ 
+-**Road to inbox harvest 2026-08-b — dispatch safety** — 8 / 14 done (57%)
++**Road to inbox harvest 2026-08-b — dispatch safety** — 11 / 14 done (79%)
+ 
+ | # | Phase | State | Open | Done | Deferred | Cancelled | % |
+ |---|---|---|---:|---:|---:|---:|---:|
+ | 1 | Scoped tool grants | 🟡 in progress | 1 | 3 | 0 | 2 | 75% |
+-| 2 | A confirmation primitive for staged irreversible actions | ⬜ not started | 3 | 0 | 1 | 0 | 0% |
++| 2 | A confirmation primitive for staged irreversible actions | ✅ done | 0 | 3 | 1 | 0 | 100% |
+ | 3 | Checkable handoff-envelope fields | 🟡 in progress | 1 | 3 | 0 | 0 | 75% |
+ | 4 | Roles, lifecycles, and the two residues | 🟡 in progress | 1 | 2 | 0 | 4 | 67% |
+ 
+diff --git a/agents/roadmaps/road-to-inbox-harvest-2026-08-b-dispatch-safety.md b/agents/roadmaps/road-to-inbox-harvest-2026-08-b-dispatch-safety.md
+index ff392ddcd766dc96b62a67330fa4454d4442c1cd..7b7578d53d089cffb8d10dd0920ac5652b06081c 100644
+--- a/agents/roadmaps/road-to-inbox-harvest-2026-08-b-dispatch-safety.md
++++ b/agents/roadmaps/road-to-inbox-harvest-2026-08-b-dispatch-safety.md
+@@ -142,20 +142,46 @@ binds. Only a third detector is missing, and the soak stays.
+ 
+ ## Phase 2 — A confirmation primitive for staged irreversible actions
+ 
+-- [ ] **2.1 Add `requires_confirmation` as a registry-level flag.** Shape it on
+-      `skill.schema.json:218-224` (optional, additive, schema-backed) so a command or
+-      skill can declare that its action stages rather than executes. Schema plus fixture
+-      only — no binding yet.
+-      <!-- verify: ./scripts-run src/scripts/validate_frontmatter -->
+-- [ ] **2.2 Implement exactly-once confirmed execution.** A staged action carries a
+-      token; a double-approve executes once. Extend the `ask` / `ask_timeout` branch at
+-      `decision_gate.ts:100-109` rather than adding a second prompt path, and keep the
+-      non-interactive fallback it defines.
+-      <!-- verify: task test -- --filter=hooks_builtin_decision_gate -->
+-- [ ] **2.3 Make pending confirmations enumerable through an existing verb** — a flag,
+-      never a new command; the enumeration precedent is `self-repair:status`
+-      (`src/cli/registry.ts:118`, `src/scripts/self_repair_cli.ts:403-418`).
+-      <!-- verify: grep -rn 'requires_confirmation' src/cli/registry.ts -->
++- [x] **2.1 Add `requires_confirmation` as a registry-level flag.** Shipped on BOTH
++      declaring surfaces under one key — `skill.schema.json` `execution.requires_confirmation`
++      and `command.schema.json` top-level — because the step's own wording is "a command
++      or skill", and two spellings of one concept is drift a reader pays for later.
++      Boolean, not a per-action list: no caller can name its actions until 2.4 decides
++      where the flag binds, and boolean → object stays additive for a reader that treats
++      a bare `true` as "all actions". The cited pointer `skill.schema.json:218-224` is
++      `disallowed_tools` and was the right shape to copy. What makes a typo in the key
++      fail CI rather than declare nothing silently is `additionalProperties: false`,
++      which both surfaces already carry — pinned as its own spec rather than assumed.
++      <!-- verify: npx vitest run tests/scripts/requires_confirmation_contract.test.ts -->
++- [x] **2.2 Implement exactly-once confirmed execution.** Shipped as
++      `work_engine/hooks/builtin/confirmation.ts`: a staged action is a file under
++      `agents/runtime/confirmations/pending/`, an approval `rename(2)`s it into
++      `consumed/`, and a second approval finds nothing to rename. **Exactly-once is the
++      rename, not a `consumed` boolean** — read-check-write leaves a window in which a
++      second caller reads the same `false`, and a file's location cannot disagree with
++      itself the way a flag inside a mutable record can. `unknown` and `already_executed`
++      stay distinguishable on purpose: one is a typo or a wrong project root, the other a
++      real second approval, and collapsing them would let an operator read a mistyped
++      token as a completed action.
++      **One premise correction, recorded rather than worked around.** The step says
++      "extend the `ask` / `ask_timeout` branch … rather than adding a second prompt path",
++      but `decision_gate.ts:100-109` contains no prompt — it throws `HookHalt` with a
++      numbered-option surface, and the TTY prompt lives in the CLI integration that
++      consumes the halt. What that branch does define, and what was kept, is the
++      non-interactive fallback (`on_block_fallback`). So the gate gained an **injected**
++      `stage` seam, not a wired one: absent a stager the halt surface is byte-identical
++      (the existing inline snapshot is that assertion), and a `warn` fallback stages
++      nothing because nothing is being held. Wiring it is 2.4.
++      <!-- verify: npx vitest run tests/scripts/work_engine/confirmation_exactly_once.test.ts tests/scripts/work_engine/hooks_builtin_decision_gate.test.ts -->
++- [x] **2.3 Make pending confirmations enumerable through an existing verb** — shipped as
++      `agent-config hooks:status --pending` (a flag on an existing verb, no 197th
++      command), with `--format json` for machine readers. It returns before the manifest
++      is read, so the default `hooks:status` output other callers pin byte-for-byte is
++      untouched. **The empty state names WHY it is empty** — "0 pending" and "nothing can
++      stage yet" are different facts, and until 2.4 binds a producer the honest reading
++      of an empty list is the second one; a list that merely printed `none` would read as
++      a working primitive with no work in it.
++      <!-- verify: npx vitest run tests/scripts/hooks_status_pending.test.ts -->
+ - [~] **2.4 Decide whether the primitive binds, and what the other five hosts get.**
+       Deferred behind `blocker: confirmation-degraded-host-semantics` — a host without a
+       `pre_tool_use` slot (5 of 8, per `hook_manifest.yaml:531,539,578`) can only carry
+@@ -291,6 +317,30 @@ binds. Only a third detector is missing, and the soak stays.
+       mapping on this host: `dispatch_hook.ts:76-78,803-804` defines `EXIT_WARN = 2`
+       alongside `EXIT_BLOCK = 1`, and an advisory finding delivered on the wrong exit
+       code becomes a hard deny. Treat that as a probe, not an assumption.
++
++      **The probe was run 2026-08-11; it stays OPEN on what the probe revealed, not
++      on effort.** Result, so nobody re-derives it: `EXIT_BLOCK = 1` / `EXIT_WARN = 2`
++      (`dispatch_hook.ts:77-78`), `_aggregate` returns `EXIT_WARN` when any concern
++      returns 2 (`:806-807`), and only `rc >= 3` reaches the `fail_closed` branch —
++      which for this concern is `false`, so a crash fails **open** and the turn ends,
++      as its header intends. The load-bearing half is the one the step could not
++      assume: the P0.2 severity ceiling downgrades a stray `EXIT_BLOCK` to warn **only
++      for a concern declared `severity: advisory`** (`:1133`, `_is_advisory` at `:117`),
++      and `turn-end-gate` is declared `severity: blocking`
++      (`hook_manifest.yaml:445-449`). So a third detector that means "advisory" and
++      returns 1 becomes a **real hard deny with nothing to catch it** — the exact
++      failure the step named, confirmed rather than feared. An advisory detector here
++      exits 2.
++      **Two unknowns remain, and one of them is a judgement this roadmap has not
++      made.** (a) `_messageText` (`turn_end_gate_hook.ts:528-540`) keeps only
++      `type === 'text'` blocks, so the transcript reader is structurally blind to tool
++      activity — an edit-without-verification detector needs `tool_use` blocks
++      collected per turn before it can detect anything, which is a reader change, not a
++      detector addition. (b) *Which* tool calls count as verification is undecided: a
++      test runner clearly does, `git diff` clearly does not, and `npx tsc --noEmit`
++      sits between them. Inventing that classification and shipping it into a
++      `severity: blocking` concern is the "claims enforcement it does not have" failure
++      this roadmap already names at 2.4 — so it is surfaced, not guessed.
+       <!-- verify: task test -- --filter=turn_end_gate -->
+ - [-] **4.4 Role-contract budget fields and an eight-role catalog behind a flag —
+       cancelled by record.** `ADR-109-subagent-v1-contract.md:75-76` lists
+diff --git a/dist/agent-src/templates/scripts/work_engine/hooks/builtin/confirmation.ts b/dist/agent-src/templates/scripts/work_engine/hooks/builtin/confirmation.ts
+new file mode 100644
+index 0000000000000000000000000000000000000000..b030c2afb0d9ba1c33821e15bbcc749f4147a6d2
+--- /dev/null
++++ b/dist/agent-src/templates/scripts/work_engine/hooks/builtin/confirmation.ts
+@@ -0,0 +1,197 @@
++/**
++ * Staged-action confirmations — the exactly-once half of the
++ * `requires_confirmation` primitive (road-to-inbox-harvest-2026-08-b-dispatch-safety
++ * Phase 2).
++ *
++ * `src/rules/non-destructive-by-default.md` already states the whole policy:
++ * ask and act are strictly sequential, and the approval names the exact object.
++ * What the tree had no mechanism for is the second half of that sentence — a
++ * staged action that is executed **once** when the approval arrives, and not
++ * again when the same approval arrives twice (a re-run, a retried hook, an
++ * operator pressing enter on a stale prompt).
++ *
++ * Exactly-once is a `rename(2)`, not a read-then-write. Reading a record,
++ * checking a `consumed` boolean and writing it back has a window between the
++ * read and the write in which a second caller reads the same `false`; a rename
++ * is atomic on every POSIX filesystem and on NTFS, so the *first* caller moves
++ * the file and every later caller gets `ENOENT`. The file's location is its
++ * state — `pending/` or `consumed/` — which also means the state cannot
++ * disagree with itself the way a flag inside a mutable record can.
++ *
++ * Records live under `agents/runtime/confirmations/`, covered by the repo
++ * `.gitignore`'s `/agents/runtime/` catch-all: a staged action is machine-local
++ * state, never a tracked artefact — the same placement `self_repair_store.ts`
++ * uses for the same reason.
++ *
++ * **Nothing in the shipped tree stages an action yet, deliberately.** Whether
++ * the primitive binds — and what the five hosts without a `pre_tool_use` slot
++ * get — is step 2.4, deferred behind `blocker: confirmation-degraded-host-semantics`.
++ * `stageAction` is reachable only through an explicitly injected stager
++ * ({@link DecisionGateHook}'s `stage` option), so the default behaviour of every
++ * shipped path is byte-identical to before this module existed. Shipping the
++ * mechanism unbound and saying so is the honest shape; shipping it bound and
++ * claiming enforcement three hosts cannot provide is the failure
++ * `src/rules/ui-audit-gate.md` names.
++ */
++import { randomUUID } from 'node:crypto';
++import * as fs from 'node:fs';
++import * as path from 'node:path';
++
++/** Relative store root, mirroring `self_repair_store.STORE_REL`. */
++export const CONFIRMATIONS_REL = path.join('agents', 'runtime', 'confirmations');
++
++export function pendingDir(root: string): string {
++    return path.join(root, CONFIRMATIONS_REL, 'pending');
++}
++
++export function consumedDir(root: string): string {
++    return path.join(root, CONFIRMATIONS_REL, 'consumed');
++}
++
++/**
++ * What a caller declares when staging.
++ *
++ * Every field is a short scalar. There is deliberately no `payload` / `notes` /
++ * `extra` field: a type that cannot hold free-form content has no scrubber that
++ * can fail (`domain-safety-pii` § Surface 2). `object` is the one field that
++ * carries caller text, and it is required rather than optional — an approval
++ * that does not name the exact object is the thing
++ * `non-destructive-by-default` forbids.
++ */
++export interface StageInput {
++    /** Which gate or surface staged this. */
++    readonly gate_id: string;
++    /** Work-engine phase, or `''` when staged outside a phase. */
++    readonly phase: string;
++    /** The verb that will run on approval — `push`, `publish`, `delete`. */
++    readonly action: string;
++    /** The exact object the approval names — a branch, a path, an amount. */
++    readonly object: string;
++}
++
++export interface StagedAction extends StageInput {
++    readonly token: string;
++    /** ISO-8601, stamped at stage time. */
++    readonly staged_at: string;
++}
++
++export type ConfirmStatus =
++    /** This call consumed the token; the caller may execute now. */
++    | 'executed'
++    /** A previous call already consumed it; the caller must NOT execute. */
++    | 'already_executed'
++    /** No such token was ever staged here. */
++    | 'unknown';
++
++export interface ConfirmOutcome {
++    readonly status: ConfirmStatus;
++    /** The staged record, when one is recoverable; `null` on `unknown`. */
++    readonly record: StagedAction | null;
++}
++
++/** Options exist so tests pin a token and a timestamp instead of guessing. */
++export interface StageOptions {
++    readonly token?: string;
++    readonly now?: string;
++}
++
++function recordFile(dir: string, token: string): string {
++    return path.join(dir, `${token}.json`);
++}
++
++function isStaged(v: unknown): v is StagedAction {
++    if (typeof v !== 'object' || v === null) {
++        return false;
++    }
++    const r = v as Partial<StagedAction>;
++    return (
++        typeof r.token === 'string' &&
++        typeof r.gate_id === 'string' &&
++        typeof r.action === 'string' &&
++        typeof r.object === 'string'
++    );
++}
++
++function readAt(file: string): StagedAction | null {
++    try {
++        const parsed: unknown = JSON.parse(fs.readFileSync(file, 'utf-8'));
++        return isStaged(parsed) ? parsed : null;
++    } catch {
++        return null;
++    }
++}
++
++/**
++ * Stage an action and return its record. The token is the approval's name;
++ * surface it to the human so the confirmation can reference exactly this
++ * staging and not a similar one.
++ */
++export function stageAction(
++    root: string,
++    input: StageInput,
++    opts: StageOptions = {},
++): StagedAction {
++    const record: StagedAction = {
++        token: opts.token ?? randomUUID(),
++        gate_id: input.gate_id,
++        phase: input.phase,
++        action: input.action,
++        object: input.object,
++        staged_at: opts.now ?? new Date().toISOString(),
++    };
++    const dir = pendingDir(root);
++    fs.mkdirSync(dir, { recursive: true });
++    fs.writeFileSync(
++        recordFile(dir, record.token),
++        `${JSON.stringify(record, null, 2)}\n`,
++        'utf-8',
++    );
++    return record;
++}
++
++/**
++ * Consume a token exactly once.
++ *
++ * The first call renames `pending/<token>.json` into `consumed/` and returns
++ * `executed`. Every later call finds nothing to rename and returns
++ * `already_executed` (the consumed record is still there to prove it) or
++ * `unknown` (nothing by that name was ever staged). A caller executes on
++ * `executed` and on nothing else.
++ */
++export function confirmAction(root: string, token: string): ConfirmOutcome {
++    const from = recordFile(pendingDir(root), token);
++    const to = recordFile(consumedDir(root), token);
++    fs.mkdirSync(consumedDir(root), { recursive: true });
++    try {
++        const record = readAt(from);
++        fs.renameSync(from, to);
++        return { status: 'executed', record: record ?? readAt(to) };
++    } catch {
++        const consumed = readAt(to);
++        return consumed === null
++            ? { status: 'unknown', record: null }
++            : { status: 'already_executed', record: consumed };
++    }
++}
++
++/** Every staged-but-unconfirmed action, oldest staging first. */
++export function listPending(root: string): StagedAction[] {
++    let names: string[];
++    try {
++        names = fs.readdirSync(pendingDir(root));
++    } catch {
++        return [];
++    }
++    const out: StagedAction[] = [];
++    for (const n of names) {
++        if (!n.endsWith('.json')) {
++            continue;
++        }
++        const rec = readAt(path.join(pendingDir(root), n));
++        if (rec !== null) {
++            out.push(rec);
++        }
++    }
++    out.sort((a, b) => a.staged_at.localeCompare(b.staged_at));
++    return out;
++}
+diff --git a/dist/agent-src/templates/scripts/work_engine/hooks/builtin/decision_gate.ts b/dist/agent-src/templates/scripts/work_engine/hooks/builtin/decision_gate.ts
+index 6fd7545a9c4b06172320b1c6c37868276133cc0f..3af542136a85fffe1e3c7bbac7210c80ce3d5ab6 100644
+--- a/dist/agent-src/templates/scripts/work_engine/hooks/builtin/decision_gate.ts
++++ b/dist/agent-src/templates/scripts/work_engine/hooks/builtin/decision_gate.ts
+@@ -35,12 +35,30 @@ import type { HookContext } from '../context.js';
+ import { HookEvent } from '../events.js';
+ import { HookError, HookHalt } from '../exceptions.js';
+ import type { HookRegistry } from '../registry.js';
++import type { StageInput, StagedAction } from './confirmation.js';
+ 
+ /** Arbitrary value, mirroring the Python `Any` fields. */
+ type Any = unknown;
+ 
+ const _BLOCK_REASON_PREFIX = 'decision_gate';
+ 
++/**
++ * Stage one held action and return its record, or `null` to stage nothing.
++ *
++ * A halting gate IS an action held for a human, which is what the
++ * `requires_confirmation` primitive names. The seam is injected rather than
++ * wired: whether the primitive binds — and what the five hosts without a
++ * `pre_tool_use` slot get — is step 2.4 of
++ * `road-to-inbox-harvest-2026-08-b-dispatch-safety`, deferred behind
++ * `blocker: confirmation-degraded-host-semantics`. With no stager the hook
++ * behaves byte-identically to before this seam existed, halt surface included.
++ */
++export type StageFn = (input: StageInput) => StagedAction | null;
++
++export interface DecisionGateOptions {
++    readonly stage?: StageFn;
++}
++
+ /**
+  * Evaluate decision-engine gates on every `AFTER_STEP`.
+  *
+@@ -49,9 +67,11 @@ const _BLOCK_REASON_PREFIX = 'decision_gate';
+  */
+ export class DecisionGateHook {
+     private readonly _settings: DecisionEngineSettings;
++    private readonly _stage: StageFn | null;
+ 
+-    constructor(settings: DecisionEngineSettings) {
++    constructor(settings: DecisionEngineSettings, opts: DecisionGateOptions = {}) {
+         this._settings = settings;
++        this._stage = opts.stage ?? null;
+     }
+ 
+     /** Register the gate callback on `AFTER_STEP`. */
+@@ -104,15 +124,48 @@ export class DecisionGateHook {
+                     DecisionGateHook._format_reason(decision, 'ask_timeout'),
+                 );
+             }
+-            throw new HookHalt(
+-                `${_BLOCK_REASON_PREFIX}:${decision.gate_id}:ask_timeout`,
+-                DecisionGateHook._surface(decision, 'ask_timeout'),
+-            );
++            this._halt(decision, 'ask_timeout');
+         }
+-        throw new HookHalt(
+-            `${_BLOCK_REASON_PREFIX}:${decision.gate_id}`,
+-            DecisionGateHook._surface(decision),
+-        );
++        this._halt(decision);
++    }
++
++    /**
++     * Throw the halt, staging the held advance first when a stager is injected.
++     *
++     * The tag is byte-identical to the two literals this replaced; only the
++     * surface can grow, and only by the one line a staged token adds.
++     */
++    private _halt(decision: GateDecision, suffix = ''): never {
++        const tag = suffix
++            ? `${_BLOCK_REASON_PREFIX}:${decision.gate_id}:${suffix}`
++            : `${_BLOCK_REASON_PREFIX}:${decision.gate_id}`;
++        throw new HookHalt(tag, this._surface_with_confirmation(decision, suffix));
++    }
++
++    /**
++     * The numbered-option surface, plus the staged token when one was created.
++     *
++     * A stager that returns `null` (refused, capped, unwritable store) leaves
++     * the surface untouched rather than announcing a token nobody can confirm.
++     */
++    private _surface_with_confirmation(decision: GateDecision, suffix = ''): string[] {
++        const surface = DecisionGateHook._surface(decision, suffix);
++        if (this._stage === null) {
++            return surface;
++        }
++        const staged = this._stage({
++            gate_id: decision.gate_id,
++            phase: decision.phase,
++            action: suffix ? `advance:${suffix}` : 'advance',
++            object: decision.phase,
++        });
++        if (staged === null) {
++            return surface;
++        }
++        return [
++            ...surface,
++            `Held as ${staged.token} — an approval of this token executes once, never twice.`,
++        ];
+     }
+ 
+     // -- formatting helpers -------------------------------------------
+@@ -145,7 +198,10 @@ export class DecisionGateHook {
+  * Returns `null` when the config is absent or every gate is `off`; the
+  * bootstrap layer then skips registration entirely.
+  */
+-export function build_decision_gate_hook(settings: Any): DecisionGateHook | null {
++export function build_decision_gate_hook(
++    settings: Any,
++    opts: DecisionGateOptions = {},
++): DecisionGateHook | null {
+     if (settings === null || settings === undefined) {
+         return null;
+     }
+@@ -155,7 +211,7 @@ export function build_decision_gate_hook(settings: Any): DecisionGateHook | null
+     if (!settings.any_gate_active) {
+         return null;
+     }
+-    return new DecisionGateHook(settings);
++    return new DecisionGateHook(settings, opts);
+ }
+ 
+ /** Python `getattr(obj, name, default)`. */
+diff --git a/src/agent-src/templates/scripts/work_engine/hooks/builtin/confirmation.ts b/src/agent-src/templates/scripts/work_engine/hooks/builtin/confirmation.ts
+new file mode 100644
+index 0000000000000000000000000000000000000000..b030c2afb0d9ba1c33821e15bbcc749f4147a6d2
+--- /dev/null
++++ b/src/agent-src/templates/scripts/work_engine/hooks/builtin/confirmation.ts
+@@ -0,0 +1,197 @@
++/**
++ * Staged-action confirmations — the exactly-once half of the
++ * `requires_confirmation` primitive (road-to-inbox-harvest-2026-08-b-dispatch-safety
++ * Phase 2).
++ *
++ * `src/rules/non-destructive-by-default.md` already states the whole policy:
++ * ask and act are strictly sequential, and the approval names the exact object.
++ * What the tree had no mechanism for is the second half of that sentence — a
++ * staged action that is executed **once** when the approval arrives, and not
++ * again when the same approval arrives twice (a re-run, a retried hook, an
++ * operator pressing enter on a stale prompt).
++ *
++ * Exactly-once is a `rename(2)`, not a read-then-write. Reading a record,
++ * checking a `consumed` boolean and writing it back has a window between the
++ * read and the write in which a second caller reads the same `false`; a rename
++ * is atomic on every POSIX filesystem and on NTFS, so the *first* caller moves
++ * the file and every later caller gets `ENOENT`. The file's location is its
++ * state — `pending/` or `consumed/` — which also means the state cannot
++ * disagree with itself the way a flag inside a mutable record can.
++ *
++ * Records live under `agents/runtime/confirmations/`, covered by the repo
++ * `.gitignore`'s `/agents/runtime/` catch-all: a staged action is machine-local
++ * state, never a tracked artefact — the same placement `self_repair_store.ts`
++ * uses for the same reason.
++ *
++ * **Nothing in the shipped tree stages an action yet, deliberately.** Whether
++ * the primitive binds — and what the five hosts without a `pre_tool_use` slot
++ * get — is step 2.4, deferred behind `blocker: confirmation-degraded-host-semantics`.
++ * `stageAction` is reachable only through an explicitly injected stager
++ * ({@link DecisionGateHook}'s `stage` option), so the default behaviour of every
++ * shipped path is byte-identical to before this module existed. Shipping the
++ * mechanism unbound and saying so is the honest shape; shipping it bound and
++ * claiming enforcement three hosts cannot provide is the failure
++ * `src/rules/ui-audit-gate.md` names.
++ */
++import { randomUUID } from 'node:crypto';
++import * as fs from 'node:fs';
++import * as path from 'node:path';
++
++/** Relative store root, mirroring `self_repair_store.STORE_REL`. */
++export const CONFIRMATIONS_REL = path.join('agents', 'runtime', 'confirmations');
++
++export function pendingDir(root: string): string {
++    return path.join(root, CONFIRMATIONS_REL, 'pending');
++}
++
++export function consumedDir(root: string): string {
++    return path.join(root, CONFIRMATIONS_REL, 'consumed');
++}
++
++/**
++ * What a caller declares when staging.
++ *
++ * Every field is a short scalar. There is deliberately no `payload` / `notes` /
++ * `extra` field: a type that cannot hold free-form content has no scrubber that
++ * can fail (`domain-safety-pii` § Surface 2). `object` is the one field that
++ * carries caller text, and it is required rather than optional — an approval
++ * that does not name the exact object is the thing
++ * `non-destructive-by-default` forbids.
++ */
++export interface StageInput {
++    /** Which gate or surface staged this. */
++    readonly gate_id: string;
++    /** Work-engine phase, or `''` when staged outside a phase. */
++    readonly phase: string;
++    /** The verb that will run on approval — `push`, `publish`, `delete`. */
++    readonly action: string;
++    /** The exact object the approval names — a branch, a path, an amount. */
++    readonly object: string;
++}
++
++export interface StagedAction extends StageInput {
++    readonly token: string;
++    /** ISO-8601, stamped at stage time. */
++    readonly staged_at: string;
++}
++
++export type ConfirmStatus =
++    /** This call consumed the token; the caller may execute now. */
++    | 'executed'
++    /** A previous call already consumed it; the caller must NOT execute. */
++    | 'already_executed'
++    /** No such token was ever staged here. */
++    | 'unknown';
++
++export interface ConfirmOutcome {
++    readonly status: ConfirmStatus;
++    /** The staged record, when one is recoverable; `null` on `unknown`. */
++    readonly record: StagedAction | null;
++}
++
++/** Options exist so tests pin a token and a timestamp instead of guessing. */
++export interface StageOptions {
++    readonly token?: string;
++    readonly now?: string;
++}
++
++function recordFile(dir: string, token: string): string {
++    return path.join(dir, `${token}.json`);
++}
++
++function isStaged(v: unknown): v is StagedAction {
++    if (typeof v !== 'object' || v === null) {
++        return false;
++    }
++    const r = v as Partial<StagedAction>;
++    return (
++        typeof r.token === 'string' &&
++        typeof r.gate_id === 'string' &&
++        typeof r.action === 'string' &&
++        typeof r.object === 'string'
++    );
++}
++
++function readAt(file: string): StagedAction | null {
++    try {
++        const parsed: unknown = JSON.parse(fs.readFileSync(file, 'utf-8'));
++        return isStaged(parsed) ? parsed : null;
++    } catch {
++        return null;
++    }
++}
++
++/**
++ * Stage an action and return its record. The token is the approval's name;
++ * surface it to the human so the confirmation can reference exactly this
++ * staging and not a similar one.
++ */
++export function stageAction(
++    root: string,
++    input: StageInput,
++    opts: StageOptions = {},
++): StagedAction {
++    const record: StagedAction = {
++        token: opts.token ?? randomUUID(),
++        gate_id: input.gate_id,
++        phase: input.phase,
++        action: input.action,
++        object: input.object,
++        staged_at: opts.now ?? new Date().toISOString(),
++    };
++    const dir = pendingDir(root);
++    fs.mkdirSync(dir, { recursive: true });
++    fs.writeFileSync(
++        recordFile(dir, record.token),
++        `${JSON.stringify(record, null, 2)}\n`,
++        'utf-8',
++    );
++    return record;
++}
++
++/**
++ * Consume a token exactly once.
++ *
++ * The first call renames `pending/<token>.json` into `consumed/` and returns
++ * `executed`. Every later call finds nothing to rename and returns
++ * `already_executed` (the consumed record is still there to prove it) or
++ * `unknown` (nothing by that name was ever staged). A caller executes on
++ * `executed` and on nothing else.
++ */
++export function confirmAction(root: string, token: string): ConfirmOutcome {
++    const from = recordFile(pendingDir(root), token);
++    const to = recordFile(consumedDir(root), token);
++    fs.mkdirSync(consumedDir(root), { recursive: true });
++    try {
++        const record = readAt(from);
++        fs.renameSync(from, to);
++        return { status: 'executed', record: record ?? readAt(to) };
++    } catch {
++        const consumed = readAt(to);
++        return consumed === null
++            ? { status: 'unknown', record: null }
++            : { status: 'already_executed', record: consumed };
++    }
++}
++
++/** Every staged-but-unconfirmed action, oldest staging first. */
++export function listPending(root: string): StagedAction[] {
++    let names: string[];
++    try {
++        names = fs.readdirSync(pendingDir(root));
++    } catch {
++        return [];
++    }
++    const out: StagedAction[] = [];
++    for (const n of names) {
++        if (!n.endsWith('.json')) {
++            continue;
++        }
++        const rec = readAt(path.join(pendingDir(root), n));
++        if (rec !== null) {
++            out.push(rec);
++        }
++    }
++    out.sort((a, b) => a.staged_at.localeCompare(b.staged_at));
++    return out;
++}
+diff --git a/src/agent-src/templates/scripts/work_engine/hooks/builtin/decision_gate.ts b/src/agent-src/templates/scripts/work_engine/hooks/builtin/decision_gate.ts
+index 6fd7545a9c4b06172320b1c6c37868276133cc0f..3af542136a85fffe1e3c7bbac7210c80ce3d5ab6 100644
+--- a/src/agent-src/templates/scripts/work_engine/hooks/builtin/decision_gate.ts
++++ b/src/agent-src/templates/scripts/work_engine/hooks/builtin/decision_gate.ts
+@@ -35,12 +35,30 @@ import type { HookContext } from '../context.js';
+ import { HookEvent } from '../events.js';
+ import { HookError, HookHalt } from '../exceptions.js';
+ import type { HookRegistry } from '../registry.js';
++import type { StageInput, StagedAction } from './confirmation.js';
+ 
+ /** Arbitrary value, mirroring the Python `Any` fields. */
+ type Any = unknown;
+ 
+ const _BLOCK_REASON_PREFIX = 'decision_gate';
+ 
++/**
++ * Stage one held action and return its record, or `null` to stage nothing.
++ *
++ * A halting gate IS an action held for a human, which is what the
++ * `requires_confirmation` primitive names. The seam is injected rather than
++ * wired: whether the primitive binds — and what the five hosts without a
++ * `pre_tool_use` slot get — is step 2.4 of
++ * `road-to-inbox-harvest-2026-08-b-dispatch-safety`, deferred behind
++ * `blocker: confirmation-degraded-host-semantics`. With no stager the hook
++ * behaves byte-identically to before this seam existed, halt surface included.
++ */
++export type StageFn = (input: StageInput) => StagedAction | null;
++
++export interface DecisionGateOptions {
++    readonly stage?: StageFn;
++}
++
+ /**
+  * Evaluate decision-engine gates on every `AFTER_STEP`.
+  *
+@@ -49,9 +67,11 @@ const _BLOCK_REASON_PREFIX = 'decision_gate';
+  */
+ export class DecisionGateHook {
+     private readonly _settings: DecisionEngineSettings;
++    private readonly _stage: StageFn | null;
+ 
+-    constructor(settings: DecisionEngineSettings) {
++    constructor(settings: DecisionEngineSettings, opts: DecisionGateOptions = {}) {
+         this._settings = settings;
++        this._stage = opts.stage ?? null;
+     }
+ 
+     /** Register the gate callback on `AFTER_STEP`. */
+@@ -104,15 +124,48 @@ export class DecisionGateHook {
+                     DecisionGateHook._format_reason(decision, 'ask_timeout'),
+                 );
+             }
+-            throw new HookHalt(
+-                `${_BLOCK_REASON_PREFIX}:${decision.gate_id}:ask_timeout`,
+-                DecisionGateHook._surface(decision, 'ask_timeout'),
+-            );
++            this._halt(decision, 'ask_timeout');
+         }
+-        throw new HookHalt(
+-            `${_BLOCK_REASON_PREFIX}:${decision.gate_id}`,
+-            DecisionGateHook._surface(decision),
+-        );
++        this._halt(decision);
++    }
++
++    /**
++     * Throw the halt, staging the held advance first when a stager is injected.
++     *
++     * The tag is byte-identical to the two literals this replaced; only the
++     * surface can grow, and only by the one line a staged token adds.
++     */
++    private _halt(decision: GateDecision, suffix = ''): never {
++        const tag = suffix
++            ? `${_BLOCK_REASON_PREFIX}:${decision.gate_id}:${suffix}`
++            : `${_BLOCK_REASON_PREFIX}:${decision.gate_id}`;
++        throw new HookHalt(tag, this._surface_with_confirmation(decision, suffix));
++    }
++
++    /**
++     * The numbered-option surface, plus the staged token when one was created.
++     *
++     * A stager that returns `null` (refused, capped, unwritable store) leaves
++     * the surface untouched rather than announcing a token nobody can confirm.
++     */
++    private _surface_with_confirmation(decision: GateDecision, suffix = ''): string[] {
++        const surface = DecisionGateHook._surface(decision, suffix);
++        if (this._stage === null) {
++            return surface;
++        }
++        const staged = this._stage({
++            gate_id: decision.gate_id,
++            phase: decision.phase,
++            action: suffix ? `advance:${suffix}` : 'advance',
++            object: decision.phase,
++        });
++        if (staged === null) {
++            return surface;
++        }
++        return [
++            ...surface,
++            `Held as ${staged.token} — an approval of this token executes once, never twice.`,
++        ];
+     }
+ 
+     // -- formatting helpers -------------------------------------------
+@@ -145,7 +198,10 @@ export class DecisionGateHook {
+  * Returns `null` when the config is absent or every gate is `off`; the
+  * bootstrap layer then skips registration entirely.
+  */
+-export function build_decision_gate_hook(settings: Any): DecisionGateHook | null {
++export function build_decision_gate_hook(
++    settings: Any,
++    opts: DecisionGateOptions = {},
++): DecisionGateHook | null {
+     if (settings === null || settings === undefined) {
+         return null;
+     }
+@@ -155,7 +211,7 @@ export function build_decision_gate_hook(settings: Any): DecisionGateHook | null
+     if (!settings.any_gate_active) {
+         return null;
+     }
+-    return new DecisionGateHook(settings);
++    return new DecisionGateHook(settings, opts);
+ }
+ 
+ /** Python `getattr(obj, name, default)`. */
+diff --git a/src/cli/registry.ts b/src/cli/registry.ts
+index 77f7ad18655f45f5d1fc39fafed59d2c7c243a77..525c3e405e89d6bda19fba8fca97fc5e886b6ca2 100644
+--- a/src/cli/registry.ts
++++ b/src/cli/registry.ts
+@@ -79,7 +79,7 @@ export const REGISTRY: readonly CommandEntry[] = [
+     { name: 'benchmark', disposition: 'delegate', synopsis: 'Report context-token reduction vs the full always-loaded projection.' },
+     { name: 'code-graph', disposition: 'delegate', synopsis: 'Deterministic code-graph engine: build|detect|query|affected|path|explain|validate.' },
+     { name: 'hooks:install', disposition: 'delegate', synopsis: 'Install the combined pre-commit hook.' },
+-    { name: 'hooks:status', disposition: 'delegate', synopsis: 'Print the runtime hook matrix (per-platform install + bindings).' },
++    { name: 'hooks:status', disposition: 'delegate', synopsis: 'Print the runtime hook matrix (per-platform install + bindings); --pending lists staged requires_confirmation actions.' },
+     { name: 'hooks:doctor', disposition: 'delegate', synopsis: 'Diagnose hook health: concerns, posture, missing trampolines (read-only).' },
+     { name: 'routing:doctor', disposition: 'delegate', synopsis: 'Live routing diagnosis: per-gate ACTIVE/INACTIVE with reason, chain, freshness, orchestration state (read-only).' },
+     { name: 'route:explain', disposition: 'delegate', synopsis: 'Deterministic rule-routing trace for one prompt: matched triggers, tier, disposition, budget, rejected candidates (trigger-match level only).' },
+diff --git a/src/scripts/_dispatch.bash b/src/scripts/_dispatch.bash
+index 1ee98ee499f0ffed75c0cdbcef6e87be52aea750..53c8c1465b8765981b0283bff236a7dcbd7a3c3e 100755
+--- a/src/scripts/_dispatch.bash
++++ b/src/scripts/_dispatch.bash
+@@ -236,6 +236,7 @@ Tier 2 — maintenance / internal (hooks, MCP, memory, telemetry):
+                              (use --print to dump it, --force to overwrite an existing hook)
+   hooks:status               Print the runtime hook matrix (per-platform install + bindings)
+                              Flags: --format json|table, --strict (CI), --project-root <path>
++                                    --pending (list staged requires_confirmation actions)
+   hooks:doctor               Diagnose hook health: concerns + fail-open/closed posture,
+                              last dispatcher feedback per concern, missing trampolines.
+                              Wraps hooks:status. Read-only.
+diff --git a/src/scripts/hooks_status.ts b/src/scripts/hooks_status.ts
+index 0efaa64b62cc32582c11e5c26977b2edc83143cd..6413b89ebbcfcc28d05e41f326877075a71df7d0 100644
+--- a/src/scripts/hooks_status.ts
++++ b/src/scripts/hooks_status.ts
+@@ -28,6 +28,13 @@ import {
+   type JsonValue,
+   _load_yaml,
+ } from "./hooks/dispatch_hook.js";
++// The confirmation store lives in the work_engine tree because that is where
++// its only (injected) producer lives; importing it across the package/template
++// boundary follows the committed precedent in `lint_ui_stack_bundles.ts`.
++import {
++  listPending,
++  type StagedAction,
++} from "../agent-src/templates/scripts/work_engine/hooks/builtin/confirmation.js";
+ 
+ // src/scripts/hooks_status.ts → parents[1] is the repo root (.../parents[2]
+ // in the Python which lives one level deeper relative computation).
+@@ -209,6 +216,7 @@ interface ParsedArgs {
+   project_root: string;
+   manifest: string;
+   strict: boolean;
++  pending: boolean;
+ }
+ 
+ function parse_args(argv: string[]): ParsedArgs {
+@@ -216,9 +224,12 @@ function parse_args(argv: string[]): ParsedArgs {
+   let project_root = ".";
+   let manifest = MANIFEST_PATH;
+   let strict = false;
++  let pending = false;
+   for (let i = 0; i < argv.length; i += 1) {
+     const arg = argv[i];
+-    if (arg === "--format") {
++    if (arg === "--pending") {
++      pending = true;
++    } else if (arg === "--format") {
+       const v = argv[i + 1];
+       if (v === "json" || v === "table") format = v;
+       i += 1;
+@@ -232,7 +243,33 @@ function parse_args(argv: string[]): ParsedArgs {
+       strict = true;
+     }
+   }
+-  return { format, project_root, manifest, strict };
++  return { format, project_root, manifest, strict, pending };
++}
++
++/**
++ * Render the staged-but-unconfirmed actions, or the honest empty state.
++ *
++ * The empty line says WHY it is empty, because "0 pending" and "nothing can
++ * ever stage" are different facts and only one of them is a reason to keep
++ * looking. Until dispatch-safety step 2.4 decides where the primitive binds,
++ * the only producer is an explicitly injected stager, so an empty list is the
++ * expected reading rather than a sign that nothing was held.
++ */
++export function _render_pending(rows: StagedAction[]): string {
++  if (rows.length === 0) {
++    return (
++      "pending confirmations: none\n" +
++      "  no surface stages a requires_confirmation action yet — the primitive\n" +
++      "  ships unbound (dispatch-safety step 2.4 decides whether it binds and\n" +
++      "  what a host without a pre_tool_use slot gets)."
++    );
++  }
++  const lines = [`pending confirmations: ${rows.length}`];
++  for (const r of rows) {
++    lines.push(`  ${r.token}  ${r.action} → ${r.object}`);
++    lines.push(`    gate=${r.gate_id} phase=${r.phase || "-"} staged=${r.staged_at}`);
++  }
++  return lines.join("\n");
+ }
+ 
+ // Python json.dumps(payload, indent=2, sort_keys=True) byte-for-byte.
+@@ -265,6 +302,22 @@ function _py_json_dumps_sorted(value: JsonValue, indent = 2): string {
+ export function main(argv?: string[]): number {
+   const args = parse_args(argv ?? process.argv.slice(2));
+ 
++  // `--pending` enumerates staged confirmations and returns before the manifest
++  // is touched: the two reports answer different questions, and folding the
++  // confirmations into the default output would change a surface other callers
++  // (task hooks-status, post-install smoke, CI) pin byte-for-byte.
++  if (args.pending) {
++    const rows = listPending(path.resolve(args.project_root));
++    if (args.format === "json") {
++      process.stdout.write(
++        _py_json_dumps_sorted(rows as unknown as JsonValue) + "\n",
++      );
++    } else {
++      process.stdout.write(_render_pending(rows) + "\n");
++    }
++    return 0;
++  }
++
+   const manifest_path = args.manifest;
+   if (!fs.existsSync(manifest_path)) {
+     process.stderr.write(`hooks_status: manifest missing at ${manifest_path}\n`);
+diff --git a/src/scripts/schemas/command.schema.json b/src/scripts/schemas/command.schema.json
+index 02814c4a10f132101e7e651fadfe99a7937a070e..65889e4dcae945fcbfc6dd135d6cfe5938ec6fe2 100644
+--- a/src/scripts/schemas/command.schema.json
++++ b/src/scripts/schemas/command.schema.json
+@@ -253,6 +253,11 @@
+       },
+       "description": "ADR-013 install hints (default-on at consumer install; user-removable)."
+     },
++    "requires_confirmation": {
++      "type": "boolean",
++      "description": "Declares that this command STAGES its irreversible action instead of performing it: the action is held, the approval names the exact object, and one approval executes it exactly once. Declaration only — nothing in the shipped tree stages on it yet, so a true here is a contract a reader can check, never enforcement a host provides.",
++      "$comment": "road-to-inbox-harvest-2026-08-b-dispatch-safety Phase 2.1 — same key, same meaning as skill.schema.json's execution.requires_confirmation, so a reader learns one word for both surfaces. Boolean by the same reasoning recorded there."
++    },
+     "gui_runnable": {
+       "type": "boolean",
+       "description": "AI OS Product UI allowlist (road-to-ai-os-product-ui.md Phase 1). When true, the command is exposed in the browser /tasks surface and may be spawned by POST /api/v1/task/run. Default false — commands that touch git, secrets, or run destructive migrations must stay false (terminal only). Per-command opt-in, never opt-out."
+diff --git a/src/scripts/schemas/skill.schema.json b/src/scripts/schemas/skill.schema.json
+index a57f1c39ad43825c0f1d2926fcfae38df1931ef8..af1ded58d104d984f19e59973cb64efa87a333ec 100644
+--- a/src/scripts/schemas/skill.schema.json
++++ b/src/scripts/schemas/skill.schema.json
+@@ -222,6 +222,11 @@
+           },
+           "description": "U3 (ecosystem harvest): optional deny-list layered UNDER allowed_tools — defense-in-depth; a tool matching here is refused even if a broad allow pattern would admit it. Supports the scoped-grant syntax (e.g. Bash(git push:*))."
+         },
++        "requires_confirmation": {
++          "type": "boolean",
++          "description": "Declares that this execution STAGES its irreversible action instead of performing it: the action is held, the approval names the exact object, and one approval executes it exactly once. Declaration only — nothing in the shipped tree stages on it yet, so a true here is a contract a reader can check, never enforcement a host provides.",
++          "$comment": "road-to-inbox-harvest-2026-08-b-dispatch-safety Phase 2.1. Shaped on the sibling disallowed_tools: optional, additive, schema-backed. Boolean rather than a per-action list — no caller can name its actions until step 2.4 decides where the flag binds, and inventing the richer shape ahead of its consumer is the speculative half minimal-safe-diff forbids. Widening boolean → object later is additive for readers that treat a bare true as 'all actions'."
++        },
+         "command": {
+           "type": "array",
+           "minItems": 1,
+diff --git a/tests/scripts/hooks_status_pending.test.ts b/tests/scripts/hooks_status_pending.test.ts
+new file mode 100644
+index 0000000000000000000000000000000000000000..79f69aaa08326252d603aa4e01959b15953d21dc
+--- /dev/null
++++ b/tests/scripts/hooks_status_pending.test.ts
+@@ -0,0 +1,102 @@
++/**
++ * `hooks:status --pending` — the enumeration half (dispatch-safety Phase 2.3).
++ *
++ * Two things have to hold and only one of them is obvious. The obvious one: a
++ * staged action is listed. The other: the DEFAULT output is untouched, because
++ * `hooks:status` is pinned byte-for-byte by other callers (`task hooks-status`,
++ * post-install smoke, CI) and folding a second report into it would break them
++ * for a reason no caller asked for.
++ *
++ * The empty state is asserted on its wording, not just its emptiness — "0
++ * pending" and "nothing can stage yet" are different facts, and a reader who
++ * cannot tell them apart will read an unbound primitive as a working one.
++ */
++import * as fs from 'node:fs';
++import * as os from 'node:os';
++import * as path from 'node:path';
++
++import { afterEach, beforeEach, describe, expect, it } from 'vitest';
++
++import { stageAction } from '../../src/agent-src/templates/scripts/work_engine/hooks/builtin/confirmation.js';
++import { _render_pending, main } from '../../src/scripts/hooks_status.js';
++
++let root: string;
++
++beforeEach(() => {
++    root = fs.mkdtempSync(path.join(os.tmpdir(), 'hooks-pending-'));
++});
++
++afterEach(() => {
++    fs.rmSync(root, { recursive: true, force: true });
++});
++
++function capture(argv: string[]): { out: string; code: number } {
++    const chunks: string[] = [];
++    const orig = process.stdout.write.bind(process.stdout);
++    (process.stdout as unknown as { write: (s: string) => boolean }).write = (s: string) => {
++        chunks.push(String(s));
++        return true;
++    };
++    try {
++        const code = main(argv);
++        return { out: chunks.join(''), code };
++    } finally {
++        (process.stdout as unknown as { write: typeof orig }).write = orig;
++    }
++}
++
++describe('hooks:status --pending', () => {
++    it('empty store → says WHY it is empty, not only that it is', () => {
++        const { out, code } = capture(['--pending', '--project-root', root]);
++        expect(code).toBe(0);
++        expect(out).toContain('pending confirmations: none');
++        expect(out).toContain('ships unbound');
++    });
++
++    it('lists a staged action with its token, verb and object', () => {
++        stageAction(
++            root,
++            { gate_id: 'require_memory_hits', phase: 'refine', action: 'advance', object: 'refine' },
++            { token: 'tok-9', now: '2026-08-11T00:00:00.000Z' },
++        );
++        const { out, code } = capture(['--pending', '--project-root', root]);
++        expect(code).toBe(0);
++        expect(out).toContain('pending confirmations: 1');
++        expect(out).toContain('tok-9');
++        expect(out).toContain('advance → refine');
++        expect(out).toContain('gate=require_memory_hits');
++    });
++
++    it('--format json emits the records as an array', () => {
++        stageAction(
++            root,
++            { gate_id: 'g', phase: '', action: 'publish', object: 'v9.34.0' },
++            { token: 'tok-json' },
++        );
++        const { out } = capture(['--pending', '--format', 'json', '--project-root', root]);
++        const parsed = JSON.parse(out) as { token: string; object: string }[];
++        expect(parsed).toHaveLength(1);
++        expect(parsed[0]?.token).toBe('tok-json');
++        expect(parsed[0]?.object).toBe('v9.34.0');
++    });
++
++    it('a phase-less staging renders a placeholder rather than an empty field', () => {
++        stageAction(root, { gate_id: 'g', phase: '', action: 'publish', object: 'x' }, { token: 't' });
++        const { out } = capture(['--pending', '--project-root', root]);
++        expect(out).toContain('phase=-');
++    });
++
++    it('_render_pending is pure — same rows, same string', () => {
++        const rows = [
++            {
++                token: 't1',
++                gate_id: 'g',
++                phase: 'p',
++                action: 'a',
++                object: 'o',
++                staged_at: '2026-08-11T00:00:00.000Z',
++            },
++        ];
++        expect(_render_pending(rows)).toBe(_render_pending(rows));
++    });
++});
+diff --git a/tests/scripts/requires_confirmation_contract.test.ts b/tests/scripts/requires_confirmation_contract.test.ts
+new file mode 100644
+index 0000000000000000000000000000000000000000..7c11eb0b4e93f3b7285bea381ea265bb4ba33561
+--- /dev/null
++++ b/tests/scripts/requires_confirmation_contract.test.ts
+@@ -0,0 +1,102 @@
++/**
++ * `requires_confirmation` — the declaration half of the confirmation primitive
++ * (dispatch-safety Phase 2.1).
++ *
++ * The flag is additive and schema-backed on two surfaces, so the gate that has
++ * to hold is symmetric: both schemas accept a boolean, both reject a non-boolean
++ * (a string `"true"` is the plausible authoring slip), and neither has stopped
++ * rejecting unknown keys — `additionalProperties: false` is what makes a typo in
++ * this key fail CI rather than silently declaring nothing.
++ *
++ * Runs through the validator's own exported surface, the same one the CI
++ * `validate_frontmatter` sweep uses, so the test tracks the real gate.
++ */
++import fs from 'node:fs';
++import path from 'node:path';
++import { fileURLToPath } from 'node:url';
++
++import { describe, expect, it } from 'vitest';
++
++import { load_schema, validate, type YamlValue } from '../../src/scripts/validate_frontmatter.js';
++
++const _HERE = path.dirname(fileURLToPath(import.meta.url));
++const _REPO = path.resolve(_HERE, '..', '..');
++const _SCHEMAS = path.join(_REPO, 'src', 'scripts', 'schemas');
++
++/** `load_schema` takes the artefact type, not a path — it derives the filename. */
++function schema(artefactType: 'skill' | 'command'): Record<string, YamlValue> {
++    return load_schema(artefactType) as Record<string, YamlValue>;
++}
++
++/** Minimal frontmatter each schema accepts, used as the fixture base. */
++function minimalSkill(): Record<string, YamlValue> {
++    return {
++        name: 'confirmation-fixture',
++        description:
++            'Fixture skill for the requires_confirmation contract test — declares that its execution stages rather than performs.',
++    } as unknown as Record<string, YamlValue>;
++}
++
++/**
++ * Findings for the execution block only. `validate` returns objects with a
++ * `path` / `rule` / `message` shape, and the fixture omits unrelated required
++ * keys on purpose — this test is about one property, not about a whole
++ * conforming skill, so it reads the findings at that path rather than the
++ * error count.
++ */
++function executionFindings(exec: unknown): { path: string; rule: string }[] {
++    const doc = minimalSkill();
++    doc.execution = exec as YamlValue;
++    return validate(doc, schema('skill')).filter((e) =>
++        String((e as { path?: string }).path ?? '').startsWith('$.execution.'),
++    ) as unknown as { path: string; rule: string }[];
++}
++
++describe('requires_confirmation — skill execution block', () => {
++    it('accepts a boolean declaration', () => {
++        expect(executionFindings({ type: 'manual', requires_confirmation: true })).toEqual([]);
++    });
++
++    it('rejects a stringly-typed "true" — the plausible authoring slip', () => {
++        const findings = executionFindings({ type: 'manual', requires_confirmation: 'true' });
++        expect(findings).toHaveLength(1);
++        expect(findings[0]?.path).toBe('$.execution.requires_confirmation');
++        expect(findings[0]?.rule).toBe('type');
++    });
++
++    it('rejects a misspelled key — additionalProperties still closed', () => {
++        // The reason a typo in this key is a CI failure rather than a silent
++        // no-op: without the closed object, `require_confirmation` would parse
++        // as a declaration that declares nothing.
++        const findings = executionFindings({ type: 'manual', require_confirmation: true });
++        expect(findings).toHaveLength(1);
++        expect(findings[0]?.rule).toBe('additionalProperties');
++    });
++});
++
++describe('requires_confirmation — command frontmatter', () => {
++    const commandSchema = (): Record<string, YamlValue> => schema('command');
++
++    it('is declared on the command schema under the same key', () => {
++        const props = (commandSchema().properties ?? {}) as Record<string, YamlValue>;
++        expect(props.requires_confirmation).toBeDefined();
++        expect((props.requires_confirmation as Record<string, unknown>).type).toBe('boolean');
++    });
++
++    it('the two surfaces agree on the key name', () => {
++        const skillProps = (
++            ((schema('skill').properties as Record<string, YamlValue>)
++                .execution as Record<string, YamlValue>).properties ?? {}
++        ) as Record<string, YamlValue>;
++        expect(Object.keys(skillProps)).toContain('requires_confirmation');
++    });
++});
++
++describe('the schema files stay parseable JSON', () => {
++    it('both edited schemas round-trip', () => {
++        for (const name of ['skill.schema.json', 'command.schema.json']) {
++            const raw = fs.readFileSync(path.join(_SCHEMAS, name), 'utf-8');
++            expect(() => JSON.parse(raw)).not.toThrow();
++        }
++    });
++});
+diff --git a/tests/scripts/work_engine/confirmation_exactly_once.test.ts b/tests/scripts/work_engine/confirmation_exactly_once.test.ts
+new file mode 100644
+index 0000000000000000000000000000000000000000..039508b2b73c2658c3249f9e75701bc3fc9ac77d
+--- /dev/null
++++ b/tests/scripts/work_engine/confirmation_exactly_once.test.ts
+@@ -0,0 +1,94 @@
++/**
++ * Exactly-once confirmation store (dispatch-safety Phase 2.2).
++ *
++ * The property under test is the one the policy in
++ * `src/rules/non-destructive-by-default.md` needs and the tree had no mechanism
++ * for: a staged action executes on the first approval and NOT on the second.
++ * A happy-path stage-then-confirm assertion cannot see that, so the
++ * double-approve case is the test that carries the phase.
++ */
++import * as fs from 'node:fs';
++import * as os from 'node:os';
++import * as path from 'node:path';
++
++import { afterEach, beforeEach, describe, expect, it } from 'vitest';
++
++import {
++    CONFIRMATIONS_REL,
++    confirmAction,
++    consumedDir,
++    listPending,
++    pendingDir,
++    stageAction,
++} from '../../../src/agent-src/templates/scripts/work_engine/hooks/builtin/confirmation.js';
++
++let root: string;
++
++beforeEach(() => {
++    root = fs.mkdtempSync(path.join(os.tmpdir(), 'confirm-'));
++});
++
++afterEach(() => {
++    fs.rmSync(root, { recursive: true, force: true });
++});
++
++const input = {
++    gate_id: 'require_memory_hits',
++    phase: 'refine',
++    action: 'advance',
++    object: 'refine',
++} as const;
++
++describe('confirmation store — exactly-once', () => {
++    it('stages under agents/runtime/, which the repo gitignore already covers', () => {
++        const rec = stageAction(root, input, { token: 't1', now: '2026-08-11T00:00:00.000Z' });
++        expect(CONFIRMATIONS_REL).toBe(path.join('agents', 'runtime', 'confirmations'));
++        expect(fs.existsSync(path.join(pendingDir(root), 't1.json'))).toBe(true);
++        expect(rec.staged_at).toBe('2026-08-11T00:00:00.000Z');
++    });
++
++    it('a double approve executes once — second call reports already_executed', () => {
++        stageAction(root, input, { token: 't2' });
++
++        const first = confirmAction(root, 't2');
++        expect(first.status).toBe('executed');
++        expect(first.record?.object).toBe('refine');
++
++        const second = confirmAction(root, 't2');
++        expect(second.status).toBe('already_executed');
++        // The consumed record survives, so "already executed" is provable rather
++        // than inferred from an absence.
++        expect(second.record?.token).toBe('t2');
++
++        expect(fs.existsSync(path.join(pendingDir(root), 't2.json'))).toBe(false);
++        expect(fs.existsSync(path.join(consumedDir(root), 't2.json'))).toBe(true);
++    });
++
++    it('a token that was never staged is unknown, not already_executed', () => {
++        // The two must stay distinguishable: `unknown` is a typo or a wrong
++        // project root, `already_executed` is a real second approval. Collapsing
++        // them would make an operator read a mistyped token as a completed action.
++        const out = confirmAction(root, 'never-staged');
++        expect(out.status).toBe('unknown');
++        expect(out.record).toBeNull();
++    });
++
++    it('listPending shows staged actions oldest first and drops consumed ones', () => {
++        stageAction(root, input, { token: 'b', now: '2026-08-11T02:00:00.000Z' });
++        stageAction(root, input, { token: 'a', now: '2026-08-11T01:00:00.000Z' });
++        expect(listPending(root).map((r) => r.token)).toEqual(['a', 'b']);
++
++        confirmAction(root, 'a');
++        expect(listPending(root).map((r) => r.token)).toEqual(['b']);
++    });
++
++    it('listPending on a root with no store is empty, not an error', () => {
++        expect(listPending(path.join(root, 'nope'))).toEqual([]);
++    });
++
++    it('a malformed record is skipped rather than crashing the enumeration', () => {
++        stageAction(root, input, { token: 'good' });
++        fs.writeFileSync(path.join(pendingDir(root), 'bad.json'), '{ not json', 'utf-8');
++        expect(listPending(root).map((r) => r.token)).toEqual(['good']);
++    });
++});
+diff --git a/tests/scripts/work_engine/hooks_builtin_decision_gate.test.ts b/tests/scripts/work_engine/hooks_builtin_decision_gate.test.ts
+index d634fbfb662d6dbfb96b675415a312987ce4c0d7..6bd5b8c9faf4443d34abb6d7ea7075a5b07b9acb 100644
+--- a/tests/scripts/work_engine/hooks_builtin_decision_gate.test.ts
++++ b/tests/scripts/work_engine/hooks_builtin_decision_gate.test.ts
+@@ -132,3 +132,129 @@ describe('DecisionGateHook — TS unit checks', () => {
+         }
+     });
+ });
++
++// dispatch-safety Phase 2.2 — the confirmation seam. A halting gate IS an
++// action held for a human, so it is where a `requires_confirmation` staging
++// belongs. The seam is injected, not wired: step 2.4 decides whether the
++// primitive binds, so the no-stager path must stay byte-identical (the inline
++// snapshot above is that assertion) while the staged path is reachable and
++// tested before anything binds it.
++describe('DecisionGateHook — confirmation staging seam', () => {
++    function fireStaged(
++        settings: DecisionEngineSettings,
++        ctx: HookContext,
++        opts: ConstructorParameters<typeof DecisionGateHook>[1],
++    ): Fired {
++        const hook = new DecisionGateHook(settings, opts);
++        const reg = new HookRegistry();
++        hook.register(reg);
++        const out: Fired = { halt: null, error: null };
++        try {
++            for (const cb of reg.for_event(HookEvent.AFTER_STEP)) cb(ctx);
++        } catch (e) {
++            if (e instanceof HookHalt) out.halt = e;
++            else if (e instanceof HookError) out.error = e;
++            else throw e;
++        }
++        return out;
++    }
++
++    const stopSettings = new DecisionEngineSettings({
++        require_memory_hits: true,
++        on_block: 'stop',
++    });
++
++    it('no stager → surface identical to the unseamed hook', () => {
++        const seamed = fireStaged(stopSettings, refineCtx, {});
++        const plain = fire(stopSettings, refineCtx);
++        expect(seamed.halt?.surface).toEqual(plain.halt?.surface);
++        expect(seamed.halt?.reason).toBe(plain.halt?.reason);
++    });
++
++    it('stager → the held action is staged with gate, phase and object named', () => {
++        const seen: unknown[] = [];
++        const out = fireStaged(stopSettings, refineCtx, {
++            stage: (input) => {
++                seen.push(input);
++                return { ...input, token: 'tok-1', staged_at: '2026-08-11T00:00:00.000Z' };
++            },
++        });
++        expect(seen).toEqual([
++            {
++                gate_id: 'require_memory_hits',
++                phase: 'refine',
++                action: 'advance',
++                object: 'refine',
++            },
++        ]);
++        // The token rides on the surface so a human approves exactly this
++        // holding — an approval that cannot name its object is what
++        // `non-destructive-by-default` forbids.
++        expect(out.halt?.surface.at(-1)).toBe(
++            'Held as tok-1 — an approval of this token executes once, never twice.',
++        );
++        expect(out.halt?.reason).toBe('decision_gate:require_memory_hits');
++    });
++
++    it('a stager that refuses leaves the surface untouched', () => {
++        // Announcing a token nobody can confirm is worse than announcing none:
++        // it reads as a pending approval no store will ever accept.
++        const out = fireStaged(stopSettings, refineCtx, { stage: () => null });
++        expect(out.halt?.surface).toHaveLength(5);
++        expect(out.halt?.surface.at(-1)).toBe('3) Abort the run.');
++    });
++
++    it('the ask-timeout halt stages too, and records which hold it was', () => {
++        const prevCI = process.env.CI;
++        process.env.CI = '1';
++        try {
++            const seen: { action?: string }[] = [];
++            const out = fireStaged(
++                new DecisionEngineSettings({
++                    require_memory_hits: true,
++                    on_block: 'ask',
++                    on_block_fallback: 'stop',
++                }),
++                refineCtx,
++                {
++                    stage: (input) => {
++                        seen.push(input);
++                        return { ...input, token: 'tok-2', staged_at: 'x' };
++                    },
++                },
++            );
++            expect(seen[0]?.action).toBe('advance:ask_timeout');
++            expect(out.halt?.reason).toBe('decision_gate:require_memory_hits:ask_timeout');
++        } finally {
++            if (prevCI === undefined) delete process.env.CI;
++            else process.env.CI = prevCI;
++        }
++    });
++
++    it('a warn fallback stages nothing — nothing is being held', () => {
++        const prevCI = process.env.CI;
++        process.env.CI = '1';
++        try {
++            let staged = 0;
++            const out = fireStaged(
++                new DecisionEngineSettings({
++                    require_memory_hits: true,
++                    on_block: 'ask',
++                    on_block_fallback: 'warn',
++                }),
++                refineCtx,
++                {
++                    stage: (input) => {
++                        staged += 1;
++                        return { ...input, token: 'never', staged_at: 'x' };
++                    },
++                },
++            );
++            expect(out.error).toBeInstanceOf(HookError);
++            expect(staged).toBe(0);
++        } finally {
++            if (prevCI === undefined) delete process.env.CI;
++            else process.env.CI = prevCI;
++        }
++    });
++});
