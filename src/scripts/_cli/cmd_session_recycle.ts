@@ -73,6 +73,7 @@ interface ParsedArgv {
     message?: string;
     file?: string;
     template?: boolean;
+    verify?: boolean;
 }
 
 export function parseArgv(argv: readonly string[]): ParsedArgv {
@@ -81,6 +82,8 @@ export function parseArgv(argv: readonly string[]): ParsedArgv {
         const a = argv[i] as string;
         if (a === '--template') {
             parsed.template = true;
+        } else if (a === '--verify') {
+            parsed.verify = true;
         } else if (a === '--file') {
             const value = argv[i + 1];
             if (!value) return { ok: false, message: '--file requires a path' };
@@ -102,7 +105,7 @@ export function parseArgv(argv: readonly string[]): ParsedArgv {
  */
 export function runSessionRecycle(
     input: string,
-    opts: { cwd: string; now?: Date },
+    opts: { cwd: string; now?: Date; verify?: boolean },
 ): RecycleResult {
     const out: string[] = [];
     const err: string[] = [];
@@ -171,6 +174,15 @@ export function runSessionRecycle(
         };
     }
 
+    // `--verify` stops HERE: every rejection above has already run, and the
+    // only thing skipped is the write. Validating through a different path
+    // than the one that writes would make the check a second implementation
+    // to keep in sync — the failure this suite refuses elsewhere.
+    if (opts.verify === true) {
+        out.push(`recycle envelope VALID — ${bytes} bytes, not written (--verify).`);
+        return { code: 0, out, err };
+    }
+
     const target = path.join(projectRoot, RECYCLE_ENVELOPE_REL);
     try {
         atomic_write_json(target, envelope);
@@ -193,9 +205,10 @@ export function main(argv: string[] = process.argv.slice(2)): number {
     const parsed = parseArgv(argv);
     if (!parsed.ok) {
         const usage = [
-            'usage: agent-config session:recycle [--file <envelope.json>] [--template]',
+            'usage: agent-config session:recycle [--file <envelope.json>] [--template] [--verify]',
             '  --file <path>   read the envelope JSON from a file (default: stdin)',
             '  --template      print a skeleton envelope and exit',
+            '  --verify        validate only — same rejections, no write',
         ].join('\n');
         if (parsed.message === 'usage') {
             process.stdout.write(`${usage}\n`);
@@ -225,7 +238,10 @@ export function main(argv: string[] = process.argv.slice(2)): number {
         return 2;
     }
 
-    const result = runSessionRecycle(input, { cwd: process.cwd() });
+    const result = runSessionRecycle(input, {
+        cwd: process.cwd(),
+        ...(parsed.verify === true ? { verify: true } : {}),
+    });
     for (const line of result.out) process.stdout.write(`${line}\n`);
     for (const line of result.err) process.stderr.write(`${line}\n`);
     return result.code;
