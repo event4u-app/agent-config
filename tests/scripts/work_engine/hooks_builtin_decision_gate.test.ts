@@ -132,3 +132,129 @@ describe('DecisionGateHook — TS unit checks', () => {
         }
     });
 });
+
+// dispatch-safety Phase 2.2 — the confirmation seam. A halting gate IS an
+// action held for a human, so it is where a `requires_confirmation` staging
+// belongs. The seam is injected, not wired: step 2.4 decides whether the
+// primitive binds, so the no-stager path must stay byte-identical (the inline
+// snapshot above is that assertion) while the staged path is reachable and
+// tested before anything binds it.
+describe('DecisionGateHook — confirmation staging seam', () => {
+    function fireStaged(
+        settings: DecisionEngineSettings,
+        ctx: HookContext,
+        opts: ConstructorParameters<typeof DecisionGateHook>[1],
+    ): Fired {
+        const hook = new DecisionGateHook(settings, opts);
+        const reg = new HookRegistry();
+        hook.register(reg);
+        const out: Fired = { halt: null, error: null };
+        try {
+            for (const cb of reg.for_event(HookEvent.AFTER_STEP)) cb(ctx);
+        } catch (e) {
+            if (e instanceof HookHalt) out.halt = e;
+            else if (e instanceof HookError) out.error = e;
+            else throw e;
+        }
+        return out;
+    }
+
+    const stopSettings = new DecisionEngineSettings({
+        require_memory_hits: true,
+        on_block: 'stop',
+    });
+
+    it('no stager → surface identical to the unseamed hook', () => {
+        const seamed = fireStaged(stopSettings, refineCtx, {});
+        const plain = fire(stopSettings, refineCtx);
+        expect(seamed.halt?.surface).toEqual(plain.halt?.surface);
+        expect(seamed.halt?.reason).toBe(plain.halt?.reason);
+    });
+
+    it('stager → the held action is staged with gate, phase and object named', () => {
+        const seen: unknown[] = [];
+        const out = fireStaged(stopSettings, refineCtx, {
+            stage: (input) => {
+                seen.push(input);
+                return { ...input, token: 'tok-1', staged_at: '2026-08-11T00:00:00.000Z' };
+            },
+        });
+        expect(seen).toEqual([
+            {
+                gate_id: 'require_memory_hits',
+                phase: 'refine',
+                action: 'advance',
+                object: 'refine',
+            },
+        ]);
+        // The token rides on the surface so a human approves exactly this
+        // holding — an approval that cannot name its object is what
+        // `non-destructive-by-default` forbids.
+        expect(out.halt?.surface.at(-1)).toBe(
+            'Held as tok-1 — an approval of this token executes once, never twice.',
+        );
+        expect(out.halt?.reason).toBe('decision_gate:require_memory_hits');
+    });
+
+    it('a stager that refuses leaves the surface untouched', () => {
+        // Announcing a token nobody can confirm is worse than announcing none:
+        // it reads as a pending approval no store will ever accept.
+        const out = fireStaged(stopSettings, refineCtx, { stage: () => null });
+        expect(out.halt?.surface).toHaveLength(5);
+        expect(out.halt?.surface.at(-1)).toBe('3) Abort the run.');
+    });
+
+    it('the ask-timeout halt stages too, and records which hold it was', () => {
+        const prevCI = process.env.CI;
+        process.env.CI = '1';
+        try {
+            const seen: { action?: string }[] = [];
+            const out = fireStaged(
+                new DecisionEngineSettings({
+                    require_memory_hits: true,
+                    on_block: 'ask',
+                    on_block_fallback: 'stop',
+                }),
+                refineCtx,
+                {
+                    stage: (input) => {
+                        seen.push(input);
+                        return { ...input, token: 'tok-2', staged_at: 'x' };
+                    },
+                },
+            );
+            expect(seen[0]?.action).toBe('advance:ask_timeout');
+            expect(out.halt?.reason).toBe('decision_gate:require_memory_hits:ask_timeout');
+        } finally {
+            if (prevCI === undefined) delete process.env.CI;
+            else process.env.CI = prevCI;
+        }
+    });
+
+    it('a warn fallback stages nothing — nothing is being held', () => {
+        const prevCI = process.env.CI;
+        process.env.CI = '1';
+        try {
+            let staged = 0;
+            const out = fireStaged(
+                new DecisionEngineSettings({
+                    require_memory_hits: true,
+                    on_block: 'ask',
+                    on_block_fallback: 'warn',
+                }),
+                refineCtx,
+                {
+                    stage: (input) => {
+                        staged += 1;
+                        return { ...input, token: 'never', staged_at: 'x' };
+                    },
+                },
+            );
+            expect(out.error).toBeInstanceOf(HookError);
+            expect(staged).toBe(0);
+        } finally {
+            if (prevCI === undefined) delete process.env.CI;
+            else process.env.CI = prevCI;
+        }
+    });
+});

@@ -35,11 +35,29 @@ import type { HookContext } from '../context.js';
 import { HookEvent } from '../events.js';
 import { HookError, HookHalt } from '../exceptions.js';
 import type { HookRegistry } from '../registry.js';
+import type { StageInput, StagedAction } from './confirmation.js';
 
 /** Arbitrary value, mirroring the Python `Any` fields. */
 type Any = unknown;
 
 const _BLOCK_REASON_PREFIX = 'decision_gate';
+
+/**
+ * Stage one held action and return its record, or `null` to stage nothing.
+ *
+ * A halting gate IS an action held for a human, which is what the
+ * `requires_confirmation` primitive names. The seam is injected rather than
+ * wired: whether the primitive binds — and what the five hosts without a
+ * `pre_tool_use` slot get — is step 2.4 of
+ * `road-to-inbox-harvest-2026-08-b-dispatch-safety`, deferred behind
+ * `blocker: confirmation-degraded-host-semantics`. With no stager the hook
+ * behaves byte-identically to before this seam existed, halt surface included.
+ */
+export type StageFn = (input: StageInput) => StagedAction | null;
+
+export interface DecisionGateOptions {
+    readonly stage?: StageFn;
+}
 
 /**
  * Evaluate decision-engine gates on every `AFTER_STEP`.
@@ -49,9 +67,11 @@ const _BLOCK_REASON_PREFIX = 'decision_gate';
  */
 export class DecisionGateHook {
     private readonly _settings: DecisionEngineSettings;
+    private readonly _stage: StageFn | null;
 
-    constructor(settings: DecisionEngineSettings) {
+    constructor(settings: DecisionEngineSettings, opts: DecisionGateOptions = {}) {
         this._settings = settings;
+        this._stage = opts.stage ?? null;
     }
 
     /** Register the gate callback on `AFTER_STEP`. */
@@ -104,15 +124,48 @@ export class DecisionGateHook {
                     DecisionGateHook._format_reason(decision, 'ask_timeout'),
                 );
             }
-            throw new HookHalt(
-                `${_BLOCK_REASON_PREFIX}:${decision.gate_id}:ask_timeout`,
-                DecisionGateHook._surface(decision, 'ask_timeout'),
-            );
+            this._halt(decision, 'ask_timeout');
         }
-        throw new HookHalt(
-            `${_BLOCK_REASON_PREFIX}:${decision.gate_id}`,
-            DecisionGateHook._surface(decision),
-        );
+        this._halt(decision);
+    }
+
+    /**
+     * Throw the halt, staging the held advance first when a stager is injected.
+     *
+     * The tag is byte-identical to the two literals this replaced; only the
+     * surface can grow, and only by the one line a staged token adds.
+     */
+    private _halt(decision: GateDecision, suffix = ''): never {
+        const tag = suffix
+            ? `${_BLOCK_REASON_PREFIX}:${decision.gate_id}:${suffix}`
+            : `${_BLOCK_REASON_PREFIX}:${decision.gate_id}`;
+        throw new HookHalt(tag, this._surface_with_confirmation(decision, suffix));
+    }
+
+    /**
+     * The numbered-option surface, plus the staged token when one was created.
+     *
+     * A stager that returns `null` (refused, capped, unwritable store) leaves
+     * the surface untouched rather than announcing a token nobody can confirm.
+     */
+    private _surface_with_confirmation(decision: GateDecision, suffix = ''): string[] {
+        const surface = DecisionGateHook._surface(decision, suffix);
+        if (this._stage === null) {
+            return surface;
+        }
+        const staged = this._stage({
+            gate_id: decision.gate_id,
+            phase: decision.phase,
+            action: suffix ? `advance:${suffix}` : 'advance',
+            object: decision.phase,
+        });
+        if (staged === null) {
+            return surface;
+        }
+        return [
+            ...surface,
+            `Held as ${staged.token} — an approval of this token executes once, never twice.`,
+        ];
     }
 
     // -- formatting helpers -------------------------------------------
@@ -145,7 +198,10 @@ export class DecisionGateHook {
  * Returns `null` when the config is absent or every gate is `off`; the
  * bootstrap layer then skips registration entirely.
  */
-export function build_decision_gate_hook(settings: Any): DecisionGateHook | null {
+export function build_decision_gate_hook(
+    settings: Any,
+    opts: DecisionGateOptions = {},
+): DecisionGateHook | null {
     if (settings === null || settings === undefined) {
         return null;
     }
@@ -155,7 +211,7 @@ export function build_decision_gate_hook(settings: Any): DecisionGateHook | null
     if (!settings.any_gate_active) {
         return null;
     }
-    return new DecisionGateHook(settings);
+    return new DecisionGateHook(settings, opts);
 }
 
 /** Python `getattr(obj, name, default)`. */
