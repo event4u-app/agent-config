@@ -37,7 +37,31 @@
 - evidence: <pointer>            # see grammar below
 - status: backed | unbacked | resolved-null
 - last_verified: <YYYY-MM-DD>
+- superseded_by: <kebab-id>      # optional; resolved-null entries only
 ```
+
+**`superseded_by` — the forward link out of a closed question.** The
+retire-never-delete lifecycle keeps a `resolved-null` readable forever, which is
+the point: a null nobody can find gets quietly re-argued. What it lacked was the
+other direction — a reader who arrives at the closed entry has no way to learn
+that the same question was later reopened **by a different mechanism**. This
+optional field is that link.
+
+Three rules, all machine-checked by `check_claims`:
+
+- It may name only an id that exists in this ledger. A dangling successor sends
+  the reader nowhere, which is worse than no link.
+- It is only meaningful on `resolved-null`. On a `backed` or `unbacked` entry it
+  claims a closure that never happened, and is rejected.
+- It never points at its own entry.
+
+It is a *successor*, not a *citation*. A later claim that merely references a
+null in its reasoning — as `worker-capsule-trigger-arm` references
+`orchestration-observed-dispatch-cost` — is not a successor: the question was
+not reopened, it was used as a prior. Use the field only when the new claim asks
+the **same** question by other means. No entry carries one today; the field is
+here for the first reopening, and the gate is here so that it cannot be added
+wrong.
 
 **Evidence-pointer grammar (v2):**
 
@@ -458,3 +482,45 @@ metacharacters and repo escape, including the right-hand side of `--flag=value`.
 - evidence: PRE-REGISTERED 2026-08-09 (road-to-worker-generation-recycling Phase 1.4 — registered BEFORE the first shadow capsule is read; the mechanism ships shadow-only, so no capsule has been scored at registration time). CAPSULE-QUALITY RUBRIC, fixed here, five binary criteria scored 0-5 per capsule — (1) `remaining[]` names every open item the task still needs, no silent drops; (2) `decisions[]` names each choice a successor would otherwise silently re-open; (3) `assumptions[]` is non-empty and every entry carries a resolving `basis` ref; (4) every `done[]` ref resolves to a real file/line; (5) a successor briefed on the ORIGINAL brief plus the capsule alone takes a first action that neither repeats completed work nor asks for a re-brief. ADOPTION MARGIN, fixed BEFORE data: an arm is adopted only if, on paired samples from the same runs, it fires at a median of >= 2 steps earlier AND its capsules score >= 4/5 on the rubric with no regression against the other arm; an arm that wins on earliness while dropping below 4/5 is NOT adopted, because an earlier bad capsule is worse than a later good one. Sample floor: >= 30 shadow capsules with BOTH trigger points recorded (`watermark_step`, `saturation_step`, `trigger_arm_earlier` on the `orchestration_record` line). Instrument: `src/scripts/_lib/capsule_trigger.ts` (`compareTriggers`, `earlierArm`), term-frequency only, no embeddings. HONEST-NULL consequence, pre-authorised: BOTH arms losing (neither reaches 4/5, or the margin is not met) is a publishable result that closes the mechanism as default-off — it is the expected-value outcome given the standing `orchestration-observed-dispatch-cost` null, and it must be cheap to record. Token delta is reported as a pair with quality and is explicitly NOT the claim.
 - status: unbacked
 - last_verified:
+
+### claim: judge-family-llm-as-a-judge-foundation
+- claim: The judge-skill family (`judge-bug-hunter`, `judge-code-quality`, `judge-security-auditor`, `judge-synthesis`, `judge-test-coverage`, and the `/review-changes` dispatcher) implements the LLM-as-a-judge pattern — a specialized model scoring another model's output against a rubric — and treats position bias and self-consistency as its known failure modes, which is why the dispatcher randomizes order and the synthesis layer surfaces conflict rather than averaging it.
+- kind: qual
+- evidence: https://arxiv.org/abs/2306.05685 (2026-08-11)
+- status: backed
+- last_verified: 2026-08-11
+
+### claim: adversarial-review-tree-of-thoughts
+- claim: `adversarial-review` structures its critique as branching exploration with explicit pruning rather than a single pass, following the Tree-of-Thoughts formulation.
+- kind: qual
+- evidence: https://arxiv.org/abs/2305.10601 (2026-08-11)
+- status: backed
+- last_verified: 2026-08-11
+
+### claim: autonomous-analysis-self-refine
+- claim: `analysis-autonomous-mode` runs iterative self-critique between steps rather than only at the end, following the Self-Refine formulation.
+- kind: qual
+- evidence: https://arxiv.org/abs/2303.17651 (2026-08-11)
+- status: backed
+- last_verified: 2026-08-11
+
+### claim: bug-analyzer-chain-of-verification
+- claim: `bug-analyzer` verifies each candidate root cause against a concrete trigger before reporting it, following the Chain-of-Verification formulation — which is the mechanism behind its "never invent issues" constraint.
+- kind: qual
+- evidence: https://arxiv.org/abs/2309.11495 (2026-08-11)
+- status: backed
+- last_verified: 2026-08-11
+
+### claim: sequential-thinking-chain-of-thought
+- claim: `sequential-thinking` applies chain-of-thought decomposition with two constraints the original formulation does not carry — a cap on the number of thoughts and a mandatory validation step — specifically to bound the unbounded-expansion failure mode.
+- kind: qual
+- evidence: https://arxiv.org/abs/2201.11903 (2026-08-11)
+- status: backed
+- last_verified: 2026-08-11
+
+### claim: skill-improvement-reflexion
+- claim: `skill-improvement-pipeline` converts post-task outcomes into durable written lessons rather than in-context retries, following the Reflexion formulation.
+- kind: qual
+- evidence: https://arxiv.org/abs/2303.11366 (2026-08-11)
+- status: backed
+- last_verified: 2026-08-11
