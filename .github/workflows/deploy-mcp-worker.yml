@@ -64,7 +64,7 @@ jobs:
           cache-dependency-path: internal/workers/mcp/package-lock.json
 
       - name: Install Worker deps
-        run: npm ci
+        run: npm ci --no-audit --no-fund --prefer-offline
         working-directory: internal/workers/mcp
 
       # scripts-run resolves the REPO-ROOT node_modules/.bin/tsx — the
@@ -72,7 +72,7 @@ jobs:
       # broke every release-triggered deploy since the scripts moved to tsx
       # (8.2.0 … 8.6.0 all failed at "Pack content blob" with exit 127).
       - name: Install repo deps (scripts-run needs root tsx)
-        run: npm ci
+        run: npm ci --no-audit --no-fund --prefer-offline
 
       - name: Pack content blob
         id: pack

@@ -2,7 +2,18 @@
   "extends": "./tsconfig.json",
   "compilerOptions": {
     "noEmit": true,
-    "rootDir": "."
+    "rootDir": ".",
+    // This is the ONLY config carrying `incremental`, and the only one that
+    // needs it: `typecheck` runs `tsc -p tsconfig.json --noEmit && tsc -p
+    // tsconfig.scripts.json`, so this is the sole tsc invocation whose config
+    // is intrinsically noEmit. Never move it to the base config — that would
+    // put it on `build:cli` (`tsc -p tsconfig.json`), where a surviving
+    // buildinfo plus a deleted dist/ makes the rebuild a silent no-op.
+    // `tsconfig.test.json` is also noEmit but nothing passes it to tsc
+    // (eslint uses it as a `project`, which writes no buildinfo), so the flag
+    // would be dead there.
+    "incremental": true,
+    "tsBuildInfoFile": ".tscache/scripts.tsbuildinfo"
   },
   "include": [
     "src/scripts/**/*.ts",

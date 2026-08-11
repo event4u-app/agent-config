@@ -85,7 +85,7 @@ jobs:
       # local install, resolve_tsx_bin falls back to `npx tsx`, whose on-the-fly
       # fetch fails offline (esbuild ENOENT). Provide node_modules up front.
       - name: Install dependencies (provides node_modules/.bin/tsx for the installer)
-        run: npm ci
+        run: npm ci --no-audit --no-fund --prefer-offline
 
       - name: Run install.sh integration tests (shard ${{ matrix.shard }}/4)
         run: bash tests/test_install.sh --parallel 9
@@ -116,7 +116,7 @@ jobs:
       # install, resolve_tsx_bin falls back to `npx tsx` whose fetch fails
       # offline (esbuild ENOENT). Provide node_modules up front.
       - name: Install dependencies (provides node_modules/.bin/tsx for the installer)
-        run: npm ci
+        run: npm ci --no-audit --no-fund --prefer-offline
 
       # The committed dist/install/install.mjs is the raw-source consumer
       # bridge runner (node, no tsx) used by setup.sh. Rebuild it and assert
@@ -206,7 +206,7 @@ jobs:
           cache: 'npm'
 
       - name: Install dependencies (hoists installer toolchain)
-        run: npm ci
+        run: npm ci --no-audit --no-fund --prefer-offline
 
       - name: Build discovery manifest (gitignored; cli-e2e reads it)
         # `agent-config commands ls/explain` and the cli-e2e suite read
@@ -258,7 +258,7 @@ jobs:
           cache: 'npm'
 
       - name: Install dependencies (hoists installer toolchain)
-        run: npm ci
+        run: npm ci --no-audit --no-fund --prefer-offline
 
       - name: ESLint (src/**/*.ts)
         run: npm run lint:ts --silent
@@ -369,7 +369,7 @@ jobs:
           cache: 'npm'
 
       - name: Install dependencies (hoists installer toolchain)
-        run: npm ci
+        run: npm ci --no-audit --no-fund --prefer-offline
 
       - name: Build discovery manifest (gitignored; cli-e2e reads it)
         run: ./scripts-run src/scripts/build_discovery_manifest --write --quiet
@@ -404,7 +404,7 @@ jobs:
           cache: 'npm'
 
       - name: Install dependencies (hoists installer toolchain)
-        run: npm ci
+        run: npm ci --no-audit --no-fund --prefer-offline
 
       - name: Build discovery manifest (gitignored; cli-e2e reads it)
         run: ./scripts-run src/scripts/build_discovery_manifest --write --quiet

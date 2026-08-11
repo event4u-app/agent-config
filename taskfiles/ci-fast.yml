@@ -293,6 +293,18 @@ tasks:
       road-to-adoption-proof-and-ci-green.md.
     cmd: ./scripts-run src/scripts/ci_status {{.CLI_ARGS}}
 
+  ci:time-ratio:
+    silent: true
+    desc: |
+      Report the CI-time / local-edit-time ratio per touched-path class
+      (doc / skill / test / meta / mixed) by sampling recent commits and
+      their GitHub Actions durations. Median > 5x for a frequent class
+      means that class needs a cheaper tier; < 3x across all classes
+      means the structural overhead is acceptable. Needs `gh` auth and
+      hits the network. Writes agents/reports/ci-time-ratio.json.
+      Pass --limit N / --branch NAME / --out PATH.
+    cmd: ./scripts-run src/scripts/ci_time_ratio {{.CLI_ARGS}}
+
   adoption:status:
     silent: true
     desc: |

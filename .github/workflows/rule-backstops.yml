@@ -56,6 +56,20 @@ on:
       - "internal/bench/reports/kernel-prefix.json"
       - ".github/workflows/rule-backstops.yml"
 
+# Superseded PR pushes cancel; `push: main` runs never do. On main this
+# workflow is the ONLY run for that commit, so cancelling it would leave the
+# commit with no backstop signal at all.
+#
+# The guarantee lives in the GROUP KEY, not in `cancel-in-progress`. GitHub
+# drops a *pending* run as soon as another run joins its group, whatever
+# `cancel-in-progress` says — that flag only governs runs already in
+# progress. So non-PR runs are keyed by `github.run_id`, making each its own
+# single-member group that nothing can ever join, and PR runs keep the shared
+# per-ref key so a newer push does supersede an older one.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event_name == 'pull_request' && github.ref || github.run_id }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 permissions:
   contents: read
 
