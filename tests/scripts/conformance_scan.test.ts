@@ -18,6 +18,9 @@ import {
   measureDelivered,
   recordRate,
   render,
+  renderWhy,
+  CHECK_IDS,
+  CHECK_MEANINGS,
   scanSession,
   storeKey,
   userText,
@@ -485,5 +488,84 @@ describe("DEFAULT_RATE_SERIES", () => {
     // and splitting a series whose whole purpose is comparability.
     expect(path.isAbsolute(DEFAULT_RATE_SERIES)).toBe(true);
     expect(DEFAULT_RATE_SERIES.endsWith(path.join("agents", "runtime", "state", "conformance-rates.jsonl"))).toBe(true);
+  });
+});
+
+describe("renderWhy — conformance:why <id>", () => {
+  function reportWithHits(hits: ScanReport["per_session"][number]["violations"]): ScanReport {
+    return {
+      scanned_at: "T",
+      store: "/tmp/store",
+      sessions: 2,
+      totals: {
+        "language-pin": 0,
+        "git-authorization": 0,
+        "vacuous-evidence": 0,
+        "evidence-steering": 0,
+      },
+      per_session: [{ session: "abc", user_turns: 1, assistant_turns: 9, violations: hits }],
+      delivered: {
+        project: { dir: "/tmp/p", present: true, files: 2, tokens: 100 },
+        global: { dir: "/tmp/g", present: true, files: 3, tokens: 200 },
+        union_tokens: 300,
+      },
+      rate: {
+        store_key: "deadbeefcafe",
+        sessions: 2,
+        assistant_turns: 9,
+        language_pin: 0,
+        rate_pct: 0,
+        band: "corpus-too-small",
+        delivered_project_tokens: 100,
+        delivered_global_tokens: 200,
+      },
+    };
+  }
+
+  it("every check id carries a meaning — a count with no definition is the failure", () => {
+    for (const id of CHECK_IDS) {
+      expect(CHECK_MEANINGS[id]).toBeTruthy();
+      expect(CHECK_MEANINGS[id].length).toBeGreaterThan(40);
+    }
+  });
+
+  it("a check that did not fire prints as a MEASURED zero, never as silence", () => {
+    const out = renderWhy(reportWithHits([]), "vacuous-evidence");
+    expect(out).toContain("Did NOT fire in this window (0 hits over 2 session(s))");
+    expect(out).toContain("measured zero, not an unmeasured one");
+    expect(out).toContain(CHECK_MEANINGS["vacuous-evidence"]);
+  });
+
+  it("hits carry session, detail, and the language-pin provenance split", () => {
+    const out = renderWhy(
+      reportWithHits([
+        {
+          check: "language-pin",
+          session: "abc",
+          at: "2026-08-11T00:00:00Z",
+          detail: "replied in en under a de pin",
+          turns_since_prompt: 4,
+          compaction_since_prompt: true,
+        },
+      ]),
+      "language-pin",
+    );
+    expect(out).toContain("Fired 1 time(s)");
+    expect(out).toContain("abc @ 2026-08-11T00:00:00Z");
+    expect(out).toContain("replied in en under a de pin");
+    // The absent-vs-ignored split is the whole reason the provenance exists.
+    expect(out).toContain("turns_since_prompt=4");
+    expect(out).toContain("compaction_since_prompt=true");
+  });
+
+  it("filters to the asked-for id and does not leak a sibling check's hits", () => {
+    const report = reportWithHits([
+      { check: "language-pin", session: "abc", at: "T1", detail: "pin miss" },
+      { check: "git-authorization", session: "abc", at: "T2", detail: "unauthorized push" },
+    ]);
+    const out = renderWhy(report, "git-authorization");
+    expect(out).toContain("unauthorized push");
+    expect(out).not.toContain("pin miss");
+    expect(out).toContain("Fired 1 time(s)");
   });
 });

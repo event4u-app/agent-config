@@ -174,6 +174,79 @@ export interface ScanReport {
   rate: RateRecord;
 }
 
+export type CheckId = Violation["check"];
+
+export const CHECK_IDS: readonly CheckId[] = [
+  "language-pin",
+  "git-authorization",
+  "vacuous-evidence",
+  "evidence-steering",
+];
+
+/**
+ * What each mechanised check actually detects, in the words a reader needs in
+ * order to decide whether a hit is a defect or a false read. `--why` prints
+ * this ALONGSIDE the hits rather than instead of them: a count with no
+ * definition is the shape that let a figure like "109 divergent pairs" travel
+ * through five reviews unchallenged.
+ */
+export const CHECK_MEANINGS: Record<CheckId, string> = {
+  "language-pin":
+    "An assistant turn whose user-visible prose is not in the language that " +
+    "turn's own pin named. Carries provenance (turns_since_prompt, " +
+    "compaction_since_prompt) so a pin that was ABSENT because compaction " +
+    "removed it stays distinguishable from one that was present and ignored.",
+  "git-authorization":
+    "A gated git operation performed in a session where no authorization for " +
+    "that operation was observed. Authorization is per-operation and never " +
+    "carries from one to the next.",
+  "vacuous-evidence":
+    "A CI poll read as settled without ever observing an in-flight run — the " +
+    "poll gap that reports a green settle over a window in which nothing was " +
+    "pending yet.",
+  "evidence-steering":
+    "A self-commissioned evaluation whose prompt pre-loaded its own verdict, " +
+    "or a second self-scoped evaluation of the same subject within one turn.",
+};
+
+/**
+ * `--why <id>` — trace one conformance id: what it detects, whether it fired in
+ * this window, and every hit with its session and detail.
+ *
+ * A check that did not fire prints as *did not fire*, never as silence. Zero is
+ * a real answer, and the difference between "clean" and "not measured" is the
+ * whole reason to print it.
+ */
+export function renderWhy(report: ScanReport, id: CheckId): string {
+  const hits = report.per_session.flatMap((s) => s.violations.filter((v) => v.check === id));
+  const lines: string[] = [
+    `conformance:why · ${id} · ${report.sessions} session(s) · ${report.store}`,
+    "",
+    "  What it detects:",
+    `    ${CHECK_MEANINGS[id]}`,
+    "",
+  ];
+  if (hits.length === 0) {
+    lines.push(`  Did NOT fire in this window (0 hits over ${report.sessions} session(s)).`);
+    lines.push("  A measured zero, not an unmeasured one — the check ran.");
+    return lines.join("\n");
+  }
+  lines.push(`  Fired ${hits.length} time(s):`);
+  for (const v of hits) {
+    lines.push(`    · ${v.session} @ ${v.at}`);
+    lines.push(`      ${v.detail}`);
+    const since = (v as { turns_since_prompt?: number }).turns_since_prompt;
+    const compacted = (v as { compaction_since_prompt?: boolean }).compaction_since_prompt;
+    if (since !== undefined || compacted !== undefined) {
+      lines.push(
+        `      provenance: turns_since_prompt=${since ?? "—"} · ` +
+          `compaction_since_prompt=${compacted ?? "—"}`,
+      );
+    }
+  }
+  return lines.join("\n");
+}
+
 type Entry = Record<string, unknown>;
 
 function _isObject(v: unknown): v is Record<string, unknown> {
@@ -641,6 +714,7 @@ export function main(argv?: string[]): number {
   let json = false;
   let out: string | null = null;
   let record: string | null = null;
+  let why: string | null = null;
   for (let i = 0; i < args.length; i += 1) {
     const a = args[i];
     if (a === "--store" && args[i + 1] !== undefined) {
@@ -651,6 +725,8 @@ export function main(argv?: string[]): number {
       json = true;
     } else if (a === "--output" && args[i + 1] !== undefined) {
       out = args[++i] as string;
+    } else if (a === "--why" && args[i + 1] !== undefined) {
+      why = args[++i] as string;
     } else if (a === "--record") {
       // Opt-in, and a bare `--record` takes the default path rather than
       // swallowing the next flag as a filename.
@@ -659,6 +735,13 @@ export function main(argv?: string[]): number {
           ? (args[++i] as string)
           : DEFAULT_RATE_SERIES;
     }
+  }
+  if (why !== null && !CHECK_IDS.includes(why as CheckId)) {
+    process.stderr.write(
+      `conformance:why: unknown check id ${JSON.stringify(why)} — known ids: ` +
+        `${CHECK_IDS.join(", ")}\n`,
+    );
+    return 2;
   }
   const resolved = store ?? defaultStore(process.cwd());
   if (!fs.existsSync(resolved)) {
@@ -675,6 +758,28 @@ export function main(argv?: string[]): number {
   // fs.writeSync, not process.stdout.write: `process.exit()` below does not
   // flush an async pipe write, so `--json | jq` reproducibly received a
   // truncated 64 KB document with no error (measured: 85,169 vs 65,536 bytes).
+  if (why !== null) {
+    const id = why as CheckId;
+    fs.writeSync(
+      1,
+      json
+        ? `${JSON.stringify(
+            {
+              check: id,
+              meaning: CHECK_MEANINGS[id],
+              store: report.store,
+              sessions: report.sessions,
+              hits: report.per_session.flatMap((s) =>
+                s.violations.filter((v) => v.check === id),
+              ),
+            },
+            null,
+            2,
+          )}\n`
+        : `${renderWhy(report, id)}\n`,
+    );
+    return 0;
+  }
   fs.writeSync(1, json ? `${JSON.stringify(report, null, 2)}\n` : `${render(report)}\n`);
   return 0;
 }
