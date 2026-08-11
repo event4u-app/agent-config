@@ -63,7 +63,7 @@ the existing artefact it extends; nothing here adds a rule or a skill.
 
 ## Phase 1 — Enforce the one required section whose population is decidable
 
-- [ ] **1.1 Write `## Security constraints` into the four script-bearing skills.**
+- [x] **1.1 Write `## Security constraints` into the four script-bearing skills.**
       `src/skills/{corpus-grounding,design-tokens,react-shadcn-ui,tailwind-engineer}/SKILL.md`
       each ship a `scripts/` directory and none carries the section. Use the
       four-bullet shape already specified at `src/skills/skill-writing/SKILL.md:629-643`
@@ -71,7 +71,7 @@ the existing artefact it extends; nothing here adds a rule or a skill.
       (read-only or mutating, and the gating flag if any), what it sends
       outbound. Must land **before** 1.2 or the gate reds four shipped skills.
       <!-- verify: grep -lc '^## Security constraints' src/skills/corpus-grounding/SKILL.md src/skills/design-tokens/SKILL.md src/skills/react-shadcn-ui/SKILL.md src/skills/tailwind-engineer/SKILL.md -->
-- [ ] **1.2 Add a conditional required-section check to `skill_linter.ts`, keyed on
+- [x] **1.2 Add a conditional required-section check to `skill_linter.ts`, keyed on
       `scripts/` directory existence.** Extend the `REQUIRED_SKILL_SECTIONS` loop
       at `src/scripts/skill_linter.ts:1356-1359` with a conditional tier that
       emits `error/missing_conditional_section` when a skill directory contains
@@ -83,22 +83,33 @@ the existing artefact it extends; nothing here adds a rule or a skill.
       advisory (the stage-vs-hedge argument in
       `src/scripts/check_suppression_hygiene.ts:38-42`).
       <!-- verify: ./scripts-run src/scripts/skill_linter --all -->
-- [ ] **1.3 Pin the new check in the linter's own test file.** Add cases to
+- [x] **1.3 Pin the new check in the linter's own test file.** Add cases to
       `tests/scripts/skill_linter.test.ts`: a fixture skill with `scripts/` and
       no section → one `missing_conditional_section` error; the same fixture with
       the section → clean; a skill with no `scripts/` and no section → clean (the
       discrimination case, without which the check is indistinguishable from an
       unconditional one).
       <!-- verify: npx vitest run tests/scripts/skill_linter.test.ts -->
-- [~] **1.4 Resolve the other two sections: declared key, or reclassified as
-      documentation-only.** Blocked on `blocker: conditional-section-population-key`.
-      Neither "security-stop-routed" nor "adjacent-technology cluster" is
-      decidable from the tree. Either a schema key lands (a real surface —
-      `src/scripts/schemas/skill.schema.json:8` is `additionalProperties: false`),
-      or the two headings at `src/skills/skill-writing/SKILL.md:533` and `:556`
-      drop the word `required` and read `(recommended pattern, …)` to match the
-      enforcement that exists. Silently leaving `required` unbacked is the one
-      option that is not honest.
+- [x] **1.4 Reclassify the other two sections — option 2, per council 2026-08-11.**
+      Blocker `conditional-section-population-key` resolved: 2/2 (anthropic,
+      openai) for reclassification over a declared frontmatter key. The decisive
+      argument was not cost but coverage — an authored opt-in key cannot see the
+      skill that *should* have opted in and did not, so option 1 buys a gate
+      without buying the guarantee that makes the `scripts/` predicate worth
+      having; and 0-of-289 voluntary uptake is evidence the requirement was never
+      operative. Landed as three edits: both headings at
+      `src/skills/skill-writing/SKILL.md` now read `(recommended pattern, …)`,
+      and the `CONDITIONAL_SKILL_SECTIONS` docblock in `src/scripts/skill_linter.ts`
+      records why the two are absent from the table so the next reader does not
+      re-open it as an oversight. No schema change; `additionalProperties: false`
+      is untouched.
+      <!-- verify: grep -c 'recommended pattern' src/skills/skill-writing/SKILL.md -->
+
+      **What the reclassification does not buy, stated plainly:** the two patterns
+      are now unenforced by construction, so uptake stays voluntary and will
+      probably stay at zero. That is the honest end state for a pattern whose
+      population is a judgement call — the alternative was a label that claimed an
+      enforcement nothing performed.
 
 ## Phase 2 — Extend the skill-writing pattern registry
 
@@ -107,19 +118,19 @@ section-pattern registry (Self-QA loop, Known-pitfalls, Rationalizations-to-reje
 Non-negotiable-deliverable, Upstream-version-notes, Security-constraints). Every
 step below extends that registry. No new artefact; no new skill against 289.
 
-- [ ] **2.1 Add a mechanism-teaching pattern.** One screen, mechanisms only — the
+- [x] **2.1 Add a mechanism-teaching pattern.** One screen, mechanisms only — the
       currently-unnamed sibling of the existing patterns. No section pattern and
       no linter signal exists for it (`grep -n '^## ' src/skills/skill-writing/SKILL.md`
       lists all 20 headings; none covers it). Land it as an *optional* pattern:
       "teaches a mechanism" is a prose judgement, so it gets no gate — see the
       Risk Register row on FP classes.
-- [ ] **2.2 Add an illustrative-not-verbatim marker pattern for reference code.**
+- [x] **2.2 Add an illustrative-not-verbatim marker pattern for reference code.**
       `grep -c illustrative` over both `src/skills/skill-writing/SKILL.md` and
       `src/scripts/skill_linter.ts` returns **0**; the nearest existing guidance
       is `skill-writing/SKILL.md:265` "### 4. Add safe/unsafe example". Specify a
       one-line marker above a reference block so a reader can tell shape-teaching
       code from copy-me code.
-- [ ] **2.3 Add a headline-metric-plus-closing-report pattern for optimization
+- [x] **2.3 Add a headline-metric-plus-closing-report pattern for optimization
       skills.** `grep -rn 'headline metric' src/ docs/` returns exactly one
       unrelated hit (`src/scripts/measure_projection_bytes.ts:11`). Specify: name
       the single number the skill moves, and the closing report shape that states
@@ -135,7 +146,7 @@ step below extends that registry. No new artefact; no new skill against 289.
 - [-] **2.6 The validation half of verification — already shipped.**
       `src/scripts/skill_linter.ts:670-705` `hasValidationStep`, enforced at
       `:1508` against both the procedure block and the full body.
-- [ ] **2.7 Name the contrastive-example slot in `skill-writing` and
+- [x] **2.7 Name the contrastive-example slot in `skill-writing` and
       `rule-writing`.** The practice is already house style with six live corpora
       — `docs/guidelines/agent-infra/{direct-answers-demos,asking-and-brevity-examples,language-and-tone-examples}.md`
       and `src/agent-src/contexts/execution/{autonomy-examples,interrupt-examples,cheap-question-mechanics}.md`
@@ -153,19 +164,19 @@ step below extends that registry. No new artefact; no new skill against 289.
 10-row table, read by `src/skills/systematic-debugging/SKILL.md:224-228`). Its
 own header records the file-first council decision of 2026-06-15.
 
-- [ ] **3.1 Give each row a stable identifier.** The first column is headed
+- [x] **3.1 Give each row a stable identifier.** The first column is headed
       `Signature (what you see)` (`failure-signatures.md:15`) but holds prose, so
       nothing can be cited by name. Add a short kebab code per row and point the
       gate/guard/coercion rows at the identifiers the tooling already emits —
       `skill_linter.ts:1358` emits `missing_section`, `:1255`
       `invalid_execution_handler`, and the whole `Issue` code set is stable
       strings a signature row can name verbatim.
-- [ ] **3.2 Add a discrimination drill per row.** A row's "first check" is only
+- [x] **3.2 Add a discrimination drill per row.** A row's "first check" is only
       worth following if the documented signature is what actually appears. For
       each row, state the one-line drill that produces it (break the named layer,
       assert the documented signature). Doc-only step; the drills are text a
       human runs, not a CI gate.
-- [ ] **3.3 Add one row: stale capability self-claim.** Signature — budget
+- [x] **3.3 Add one row: stale capability self-claim.** Signature — budget
       exhausted plus repeated attempts at a tool that is not available. Likely
       cause — a capability the session claimed for itself rather than resolved.
       First check — `agent-config hooks:status` and `agent-config routing:doctor`,
@@ -178,12 +189,36 @@ own header records the file-first council decision of 2026-06-15.
 
 ## Phase 4 — Bind the external research citations to the ledger
 
-- [ ] **4.1 Inventory the citations.** 14 distinct arXiv ids across 49 lines in
-      33 tracked files, and **zero** are bound: no `- evidence:` line in
-      `docs/CLAIMS.md` carries an http or arXiv pointer, against 43 backed
-      entries. Produce the id → citing-file:line list as the input to 4.2.
-      <!-- verify: grep -rhoiE 'arxiv[:/ ]*(abs/)?[0-9]{4}\.[0-9]{4,5}' $(git ls-files) | grep -oE '[0-9]{4}\.[0-9]{4,5}' | sort -u | wc -l -->
-- [ ] **4.2 Bind the load-bearing cites using pointer grammar #3.** Use the
+- [x] **4.1 Inventory the citations — and the planned count was wrong.**
+      The step's own verify command undercounts: its pattern is
+      `arxiv[:/ ]*(abs/)?<id>`, which cannot match the `arxiv.org/abs/<id>` URL
+      form because `.org/` sits between `arxiv` and the separator class. Run as
+      written it finds **14 ids in 8 files**, all under `agents/`. Corrected to
+      `arxiv(\.org/abs)?[:/ ]*<id>`, the tree holds **20 distinct ids across 90
+      lines in 32 files**. The "49 lines in 33 files" in the Context above
+      matches neither reading and is superseded by this measurement.
+      <!-- verify: grep -rhoiE 'arxiv(\.org/abs)?[:/ ]*[0-9]{4}\.[0-9]{4,5}' $(git ls-files) | grep -oE '[0-9]{4}\.[0-9]{4,5}' | sort -u | wc -l -->
+
+      **The split that decides 4.2.** Of the 32 citing files, 11 are `src/`
+      sources (the rest are `dist/` projections of those 11, roadmaps under
+      `agents/`, one evidence review, and one MCP content blob). Every `src/`
+      citation sits in a `## References` section and grounds a normative design
+      claim — six distinct ids:
+
+      | id | Cited from | The sentence it holds up |
+      |---|---|---|
+      | `2306.05685` | `judge-{bug-hunter,code-quality,security-auditor,synthesis,test-coverage}/SKILL.md`, `domains/engineering-base/review/changes/command.md` | the judge family's whole premise, plus position bias / self-consistency as its named failure modes |
+      | `2305.10601` | `adversarial-review/SKILL.md` | branching critique with explicit pruning |
+      | `2303.17651` | `analysis-autonomous-mode/SKILL.md` | self-critique between steps, not only at the end |
+      | `2309.11495` | `bug-analyzer/SKILL.md` | verify each root cause against a concrete trigger — the mechanism behind "never invent issues" |
+      | `2201.11903` | `sequential-thinking/SKILL.md` | CoT with a thought cap and a mandatory validation step |
+      | `2303.11366` | `skill-improvement-pipeline/SKILL.md` | post-task outcomes become written lessons, not in-context retries |
+
+      The other 14 ids appear **only** in roadmap prose (12 of them in
+      `archive/`) and one evidence review. Planning prose is not a public or
+      normative sentence, so they stay unbound per 4.2's own instruction —
+      recorded here rather than silently omitted.
+- [x] **4.2 Bind the load-bearing cites using pointer grammar #3.** Use the
       already-specified `https://… (YYYY-MM-DD)` form (`docs/CLAIMS.md:46`) —
       **do not invent a dossier format**; a second source of truth is exactly
       what `src/scripts/generate_subagent_floor.ts` exists to prevent. Bind only
@@ -200,7 +235,7 @@ own header records the file-first council decision of 2026-06-15.
       fetched a citation would be a different phase and would need its own
       egress review under [`lethal-trifecta-guard`](../../src/rules/lethal-trifecta-guard.md).
       <!-- verify: ./scripts-run src/scripts/check_claims -->
-- [ ] **4.3 Add a successor pointer to retired claims.** The retire-never-delete
+- [x] **4.3 Add a successor pointer to retired claims.** The retire-never-delete
       lifecycle already ships as `status: resolved-null` (`docs/CLAIMS.md:23-31`).
       What it lacks is a forward link when a closed question is later reopened by
       a different mechanism. One optional field, schema-documented at
@@ -209,7 +244,7 @@ own header records the file-first council decision of 2026-06-15.
 
 ## Phase 5 — Hedge-word lint, diff-scoped, with a declared escalation stage
 
-- [ ] **5.1 Add a diff-scoped hedge-word check reusing the existing lexicon.**
+- [x] **5.1 Add a diff-scoped hedge-word check reusing the existing lexicon.**
       Export and reuse `HEDGE_WORDS` from `src/scripts/bench_honesty_score.ts:528`
       rather than restating a list. Diff-scoped, not corpus-wide: ADR-218:93 states
       the preference outright — "one that watches diffs, not one that counts the
@@ -217,13 +252,32 @@ own header records the file-first council decision of 2026-06-15.
       `src/scripts/lint_provenance_vocabulary.ts:14-17` (a phrase banned "anywhere,
       even hedged", with a quote-the-ban carve-out this check needs too).
       <!-- verify: ./scripts-run src/scripts/lint_hedge_words -->
-- [ ] **5.2 Ship it with a declared escalation stage, not open-ended warn-only.**
-      The FP class here is **not** empty: hedging is legitimate in this tree's own
-      honesty prose (every "may", "typically", "in doubt" in a rule body). So the
-      check needs a measured FP rate over the current diff surface plus a written
-      trigger for advisory → error. `src/scripts/check_suppression_hygiene.ts:38-42`
-      is the shape to copy: state which stage it ships in and why, because
-      "shipping it advisory would have been a hedge rather than a stage".
+- [x] **5.2 Ship it with a declared escalation stage — and the first measurement
+      says the stage may never advance.** The trigger is written into the script
+      header before any data: advisory → error only when (a) ≥ 30 merged PRs are
+      measured, (b) a human read classifies ≤ 10% of ≥ 50 sampled findings as
+      legitimate calibrated hedging, and (c) a maintainer binds the resulting
+      threshold in `docs/CLAIMS.md`. The (b)-fails branch is pre-authorised in the
+      same header: the check stays advisory permanently or is removed — it does
+      **not** get a lowered bar.
+
+      **First measurement, this branch's own diff:** 4 hedged lines over 264 added
+      prose lines / 3,284 words — `hedged_per_100_words: 0.12`. A human read of
+      all four classifies **4 of 4 as legitimate**: a table header (`Likely
+      cause`), two descriptive sentences about what a reader *could* reference and
+      what *appears*, and one about what a reader *might* assume. That is a **100%
+      false-positive rate at n = 4** — a small sample, and pointing the same way
+      the risk register predicted. Recorded here rather than left for the
+      escalation review to discover.
+
+      **Not wired into `task ci` or any workflow, deliberately.** The parity gate
+      (`check_ci_local_parity`) derives both sides from those two chains, so an
+      unwired advisory script is invisible to it rather than a declared exception.
+      The honest cost of that choice: findings only accrue when someone runs the
+      command, so condition (a) accrues slowly or not at all — the gate may sit at
+      n = 4 indefinitely. Wiring it would trade that for a line of advisory output
+      on every CI run, which is the trade a maintainer should make deliberately,
+      not one this step should make silently.
 - [-] **5.3 Estate-wide hedge count as the gate — cancelled.** ADR-218:93 already
       settled the diff-vs-corpus question for prose-shape tooling; a corpus count
       over 116 rules and 289 skills produces a number nobody can act on.
@@ -271,7 +325,14 @@ own header records the file-first council decision of 2026-06-15.
 ## Blockers
 
 ### blocker: conditional-section-population-key
-- **Status:** open
+- **Status:** resolved 2026-08-11 — **option 2 (reclassify)**, AI council, quorum
+  2/2 (anthropic, openai), both members independently for option 2. Recorded
+  reasoning: an authored frontmatter opt-in cannot detect the skill that should
+  have opted in and did not, so it produces a gate with no coverage guarantee —
+  unlike the `scripts/` predicate, whose population is a filesystem fact. Zero of
+  289 skills had voluntarily adopted either section while both were labelled
+  required, which is evidence the requirement never bound. Step 1.4 carries the
+  three landed edits.
 - **Owner:** maintainer
 - **Blocks:** step 1.4 only. Phase 1 steps 1.1-1.3 (the script-bearing section
   and its gate), and all of Phases 2-7, proceed independently.
