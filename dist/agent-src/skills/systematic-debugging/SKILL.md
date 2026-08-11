@@ -222,10 +222,12 @@ right line beats five minutes of IDE breakpoints.
 
 **Known failure signature?** If the symptom has a recognisable shape — a
 tool/agent loop, HTTP 429, `ECONNREFUSED`, `ENOENT`, timeout/hang, OOM, flaky
-test, or works-locally-fails-in-CI — consult the symptom → cause → first-check
+test, works-locally-fails-in-CI, or repeated attempts at a tool that is not
+available — consult the symptom → cause → first-check
 lookup in [`failure-signatures`](../../../docs/guidelines/agent-infra/failure-signatures.md)
-to shortcut Phase 2 (Isolate) with the highest-probability first check. It
-supplements the loop; it does not replace it.
+to shortcut Phase 2 (Isolate) with the highest-probability first check. Each row
+carries a stable id you can cite, and a discrimination drill that produces its
+documented symptom. It supplements the loop; it does not replace it.
 
 ## Condition-based waiting (intermittent bugs)
 

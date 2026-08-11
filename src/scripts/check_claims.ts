@@ -55,7 +55,14 @@ const LEDGER_REL = 'docs/CLAIMS.md';
 const SURFACE_ROOTS = ['README.md', 'docs'];
 
 const CLAIM_MARKER = /<!--\s*claim:([A-Za-z0-9._-]+)\s*-->/g;
-const URL_DATED = /^https?:\/\/\S+\(\d{4}-\d{2}-\d{2}\)\s*$/;
+// The documented grammar is `https://… (YYYY-MM-DD)` — with a space, in both
+// docs/CLAIMS.md § Evidence-pointer grammar and this file's own header. The
+// original pattern required the stamp to abut the URL (`\S+\(`), so every
+// pointer written the documented way was rejected. That went unnoticed because
+// the form had zero usage until the external research citations were bound;
+// the space is now optional, which accepts both spellings and keeps the
+// enforcement matching the spec rather than the other way round.
+const URL_DATED = /^https?:\/\/\S+\s*\(\d{4}-\d{2}-\d{2}\)\s*$/;
 
 /** Witness sweep (P1.2) — marketing-class surfaces where a bare number must
  *  not appear as a capability claim. docs/proof.md and docs/comparison.yaml
@@ -118,6 +125,17 @@ export interface LedgerEntry {
     evidence: string;
     status: string;
     last_verified: string;
+    /**
+     * Optional forward link on a `resolved-null` entry: the id of the claim that
+     * reopened the same question by a different mechanism. The retire-never-delete
+     * lifecycle keeps the null readable forever, but a reader arriving at a closed
+     * question has no way to learn it was later reopened — this is that link.
+     *
+     * Parsed and gated rather than merely documented: an unparsed field would be a
+     * documented claim the code does not honour, which is the defect class this
+     * ledger exists to make impossible.
+     */
+    superseded_by: string;
 }
 
 interface Args {
@@ -158,6 +176,7 @@ function load_ledger(): Map<string, LedgerEntry> {
                 evidence: cur.evidence ?? '',
                 status: cur.status ?? '',
                 last_verified: cur.last_verified ?? '',
+                superseded_by: cur.superseded_by ?? '',
             });
         }
         cur = {};
@@ -170,7 +189,7 @@ function load_ledger(): Map<string, LedgerEntry> {
             continue;
         }
         if (!cur.id) continue;
-        const field = line.match(/^-\s+(claim|kind|evidence|status|last_verified):\s*(.*)$/);
+        const field = line.match(/^-\s+(claim|kind|evidence|status|last_verified|superseded_by):\s*(.*)$/);
         if (field) {
             const key = field[1] as keyof LedgerEntry;
             (cur as Record<string, string>)[key] = (field[2] ?? '').trim();
@@ -318,6 +337,36 @@ function main(argv: string[] = process.argv.slice(2)): number {
         if (entry.status !== 'backed') continue;
         const un = pointer_unresolved(entry.evidence);
         if (un) findings.push({ id: entry.id, file: LEDGER_REL, reason: `backed entry has dangling evidence — ${un}` });
+    }
+
+    // 2b. Successor pointers: a `superseded_by` must name a real ledger entry,
+    //     and only a closed question can have a successor. The field exists so a
+    //     reader arriving at a `resolved-null` learns the question was reopened
+    //     by a different mechanism — a dangling id would send them nowhere, and
+    //     the field on a live entry would claim a closure that never happened.
+    for (const entry of ledger.values()) {
+        if (!entry.superseded_by) continue;
+        if (entry.status !== 'resolved-null') {
+            findings.push({
+                id: entry.id,
+                file: LEDGER_REL,
+                reason: `superseded_by is only meaningful on a resolved-null entry (status: ${entry.status || 'missing'})`,
+            });
+            continue;
+        }
+        if (!ledger.has(entry.superseded_by)) {
+            findings.push({
+                id: entry.id,
+                file: LEDGER_REL,
+                reason: `superseded_by names claim:${entry.superseded_by}, which is not in the ledger`,
+            });
+        } else if (entry.superseded_by === entry.id) {
+            findings.push({
+                id: entry.id,
+                file: LEDGER_REL,
+                reason: 'superseded_by points at its own entry',
+            });
+        }
     }
 
     // 3. Witness sweep (road-to-opt-subagent-harvest P1.2): a QUANTIFIED

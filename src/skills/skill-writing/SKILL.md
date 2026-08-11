@@ -530,7 +530,7 @@ tool skill*, **never** a new skill per pitfall and never a generated grid (see
 [`size-enforcement`](../../rules/size-enforcement.md) § Per-tool pitfall
 content).
 
-## Rationalizations-to-reject section (required, security-stop-routed skills)
+## Rationalizations-to-reject section (recommended pattern, security-stop-routed skills)
 
 A skill routed by `security-sensitive-stop` already carries a forbidden-moves or
 failure-mode list. Those describe **what is wrong**. They do not answer the
@@ -553,7 +553,7 @@ the skip actually happens.
 Keep it to the arguments that have really been made. An invented rationalization
 teaches nothing and dilutes the ones that recur.
 
-## Non-negotiable-deliverable section (required, adjacent-technology clusters)
+## Non-negotiable-deliverable section (recommended pattern, adjacent-technology clusters)
 
 Some skills sit next to a technology that is a *tempting wrong answer* — close
 enough to look interchangeable, different enough that picking it silently loses
@@ -643,6 +643,84 @@ artifact**, in a `## Security constraints` section:
 This duplicates the rules on purpose, and the duplication is the point: the
 rules are the enforcement, the section is what survives the artifact leaving
 their reach.
+
+## Mechanism-teaching section (optional pattern, skills whose subject has one)
+
+A procedure tells the agent what to do in the cases you thought of. A
+**mechanism** tells it why those steps work, which is the only thing that
+transfers to the case you did not. Where a skill's subject has a mechanism worth
+one screen — how the cascade resolves, why the queue drops the message, what the
+scheduler actually orders — state it in a `## How it works` section, ahead of the
+procedure that depends on it.
+
+Keep it to one screen and to mechanisms only: no history, no alternatives-considered,
+no restating the procedure in prose. If it takes more than a screen, the skill is
+carrying a guideline's worth of material and should point at one instead.
+
+The test for whether it earns its place: name a plausible situation the procedure
+does not cover, and check whether this section is enough to answer it. If the
+answer is still "read the source", the section is decoration.
+
+Optional, and it gets no gate: "teaches a mechanism" is a prose judgement, and a
+predicate over prose is the false-positive class this file's other patterns avoid.
+
+## Illustrative-not-verbatim marker (optional pattern, reference code)
+
+A code block in a skill is read as copy-me by default. When a block is teaching a
+*shape* — a signature to mirror, a structure to follow, pseudocode standing in for
+the real call — say so on the line above it:
+
+```
+<!-- illustrative: shape only, not a working snippet -->
+```
+
+One line, immediately above the fence, in the skill's own words if you prefer.
+What matters is that the reader can tell shape-teaching code from code that runs,
+because the failure mode is silent: an agent pastes the illustration, it almost
+works, and the debugging starts from the wrong premise.
+
+The inverse deserves the same care — a block that IS meant to be run verbatim,
+where a reader might assume otherwise, says so too. See also `### 4. Add
+safe/unsafe example`, which governs a different axis: safe-vs-unsafe, not
+runnable-vs-illustrative.
+
+## Headline metric + closing report (optional pattern, optimization skills)
+
+A skill whose job is to make something better — smaller, faster, cheaper, quieter
+— has to say **which single number it moves**. Without one, "optimized" is a
+claim nobody can check and every run reports success.
+
+So an optimization skill names, up front:
+
+1. **The headline metric.** One number, with its unit and how it is measured.
+   "Initial-context tokens, measured by `audit-tokens`" — not "context cost".
+2. **The closing report shape.** Before, after, delta, and the command that
+   produced both. The same command for both readings, or the delta is not a delta.
+
+State what the metric does **not** capture, in one line. An optimization that
+moves the headline number by degrading something it does not measure is the
+failure this pattern exists to make visible, and only the author knows where that
+edge is.
+
+## Contrastive-example slot (optional pattern, authoring and behaviour skills)
+
+Where a skill's guidance is easy to agree with and hard to apply — tone, phrasing,
+question shape, what counts as evidence — a wrong/right pair does what prose
+cannot: it shows the near-miss. Six live corpora already carry them:
+[`direct-answers-demos`](../../../docs/guidelines/agent-infra/direct-answers-demos.md),
+[`asking-and-brevity-examples`](../../../docs/guidelines/agent-infra/asking-and-brevity-examples.md),
+[`language-and-tone-examples`](../../../docs/guidelines/agent-infra/language-and-tone-examples.md),
+and `autonomy-examples` / `interrupt-examples` / `cheap-question-mechanics` under
+`src/agent-src/contexts/execution/`.
+
+Follow one of those rather than inventing a format. The shape they share: the
+**wrong** version first, in the form it actually gets written; the **right**
+version second; and one line of **why** — which is the load-bearing part, because
+a pair without it teaches the specific case and not the rule.
+
+Put the corpus in a guideline or context file and point at it from the skill when
+it outgrows a section. A near-miss corpus is reference material read on demand,
+not always-loaded prose.
 
 ## Do NOT
 

@@ -355,3 +355,26 @@ Good description (trigger-shaped, names domain + symptoms):
 Bad description (no trigger, too vague):
 
 > "Commit conventions"
+
+### Contrastive-example slot (optional, for the rule body)
+
+The pair above governs descriptions. A rule whose obligation is easy to agree
+with and hard to apply — what counts as a cheap question, when an interrupt is
+an interrupt, which reply mirrors the user's language — needs the same treatment
+for the **behaviour**, not just the frontmatter.
+
+Six live corpora already carry those pairs:
+[`direct-answers-demos`](../../../docs/guidelines/agent-infra/direct-answers-demos.md),
+[`asking-and-brevity-examples`](../../../docs/guidelines/agent-infra/asking-and-brevity-examples.md),
+[`language-and-tone-examples`](../../../docs/guidelines/agent-infra/language-and-tone-examples.md),
+and `autonomy-examples` / `interrupt-examples` / `cheap-question-mechanics` under
+`src/agent-src/contexts/execution/`. Follow one; do not invent a format.
+
+The shape they share: the **wrong** version in the form it actually gets
+written, the **right** version, and one line of **why** — the why is what makes
+it a rule rather than a memorised case.
+
+Where the pairs go is a size decision, not a taste one. A rule body is capped at
+200 lines hard / 120 soft, so more than two or three pairs belong in a guideline
+or context file the rule points at — same split
+[`skill-writing`](../skill-writing/SKILL.md) § Contrastive-example slot uses.
