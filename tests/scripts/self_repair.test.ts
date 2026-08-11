@@ -13,7 +13,9 @@ import { parse as parseYaml } from 'yaml';
 
 import {
     chooseEgress,
+    CREATION_WINDOW_MS,
     DEFECT_CLASSES,
+    type DefectFinding,
     type DefectRecord,
     detectCouncilClaim,
     detectLanguageMirror,
@@ -21,6 +23,7 @@ import {
     egressBlockedReason,
     fingerprint,
     mergeRecord,
+    NEW_RECORDS_PER_SOURCE_PER_WINDOW,
     parseReport,
     renderReport,
     runDetectors,
@@ -32,6 +35,9 @@ import {
     listRecords,
     markReleased,
     openRecords,
+    OVERFLOW_FILE,
+    readOverflow,
+    STORE_REL,
     upsertFinding,
 } from '../../src/scripts/_lib/self_repair_store.js';
 import { buildQueueLine, readTurn } from '../../src/scripts/self_repair_hook.js';
@@ -497,7 +503,7 @@ describe('self-repair — egress ladder', () => {
 
     it('a triple failure (push → fork → issue) leaves all three errors recorded', () => {
         const tmp = mkTmp();
-        const rec = upsertFinding(tmp, detectUserReport('du hast das falsch gemacht')!, NOW);
+        const rec = upsertFinding(tmp, detectUserReport('du hast das falsch gemacht')!, NOW)!;
         const runner = scriptedRunner((cmd, args) => {
             const b = okBranch(cmd, args);
             if (b) {
@@ -576,7 +582,7 @@ describe('self-repair — egress ladder', () => {
 
     it('a successful release clears earlier attached errors', () => {
         const tmp = mkTmp();
-        const rec = upsertFinding(tmp, detectUserReport('du hast das falsch gemacht')!, NOW);
+        const rec = upsertFinding(tmp, detectUserReport('du hast das falsch gemacht')!, NOW)!;
         attachReleaseErrors(tmp, rec.fingerprint, ['push-upstream: permission denied'], NOW);
         const released = markReleased(tmp, rec.fingerprint, LATER);
         expect(released?.status).toBe('released');
@@ -655,20 +661,20 @@ describe('self-repair — store', () => {
 
     it('persists a finding and reads it back as open', () => {
         const f = detectUserReport('du hast das falsch gemacht')!;
-        const rec = upsertFinding(tmp, f, NOW);
+        const rec = upsertFinding(tmp, f, NOW)!;
         expect(openRecords(tmp).map((r) => r.fingerprint)).toEqual([rec.fingerprint]);
     });
 
     it('keeps one file per fingerprint across repeats', () => {
         const f = detectUserReport('du hast das falsch gemacht')!;
         upsertFinding(tmp, f, NOW);
-        const second = upsertFinding(tmp, f, LATER);
+        const second = upsertFinding(tmp, f, LATER)!;
         expect(listRecords(tmp)).toHaveLength(1);
         expect(second.occurrences).toBe(2);
     });
 
     it('drops a released record out of the open set', () => {
-        const rec = upsertFinding(tmp, detectUserReport('du hast das falsch gemacht')!, NOW);
+        const rec = upsertFinding(tmp, detectUserReport('du hast das falsch gemacht')!, NOW)!;
         markReleased(tmp, rec.fingerprint, LATER);
         expect(openRecords(tmp)).toHaveLength(0);
         expect(listRecords(tmp)).toHaveLength(1);
@@ -676,6 +682,96 @@ describe('self-repair — store', () => {
 
     it('returns an empty list for a workspace with no store', () => {
         expect(listRecords(path.join(tmp, 'nope'))).toEqual([]);
+    });
+
+    // The cap bounds CREATION. Note what `fingerprint` already folds: it hashes
+    // a SHAPE (digits → `#`, quotes and punctuation stripped, case-folded), so
+    // spans differing only in numbers or punctuation are one record and never
+    // reach the cap at all. Distinct records need distinct WORDS, which is what
+    // this generator varies — a version keyed on a counter produced exactly one
+    // record for twenty findings, and the cap it was written to exercise never
+    // fired. Letters only, since the shape pass drops everything else.
+    function distinctFinding(n: number, source: DefectSource = 'user-reported'): DefectFinding {
+        const word =
+            String.fromCharCode(97 + Math.floor(n / 26)) + String.fromCharCode(97 + (n % 26));
+        return {
+            defect_class: source === 'user-reported' ? 'user-reported' : 'language-mirror',
+            source,
+            evidence: `distinct evidence span ${word}`,
+            suggested_surface: 'some-rule.md',
+        };
+    }
+
+    it('folds digit-only variation into one record, so the cap never sees it', () => {
+        for (let i = 0; i < NEW_RECORDS_PER_SOURCE_PER_WINDOW + 5; i += 1) {
+            upsertFinding(
+                tmp,
+                {
+                    defect_class: 'user-reported',
+                    source: 'user-reported',
+                    evidence: `the same complaint, attempt ${i}`,
+                    suggested_surface: 'some-rule.md',
+                },
+                NOW,
+            );
+        }
+        expect(listRecords(tmp)).toHaveLength(1);
+        expect(listRecords(tmp)[0]!.occurrences).toBe(NEW_RECORDS_PER_SOURCE_PER_WINDOW + 5);
+        expect(readOverflow(tmp)['user-reported']).toBeUndefined();
+    });
+
+    it('opens records up to the cap and refuses the one past it', () => {
+        for (let i = 0; i < NEW_RECORDS_PER_SOURCE_PER_WINDOW; i += 1) {
+            expect(upsertFinding(tmp, distinctFinding(i), NOW)).not.toBeNull();
+        }
+        expect(listRecords(tmp)).toHaveLength(NEW_RECORDS_PER_SOURCE_PER_WINDOW);
+        expect(upsertFinding(tmp, distinctFinding(600), NOW)).toBeNull();
+        expect(listRecords(tmp)).toHaveLength(NEW_RECORDS_PER_SOURCE_PER_WINDOW);
+    });
+
+    it('counts every refusal per source instead of dropping it silently', () => {
+        for (let i = 0; i < NEW_RECORDS_PER_SOURCE_PER_WINDOW + 3; i += 1) {
+            upsertFinding(tmp, distinctFinding(i), NOW);
+        }
+        expect(readOverflow(tmp)['user-reported']?.dropped).toBe(3);
+        expect(readOverflow(tmp)['user-reported']?.last_seen).toBe(NOW);
+        expect(readOverflow(tmp)['self-detected']).toBeUndefined();
+    });
+
+    it('never caps a fold — an existing fingerprint still increments past the cap', () => {
+        const first = upsertFinding(tmp, distinctFinding(0), NOW)!;
+        for (let i = 1; i < NEW_RECORDS_PER_SOURCE_PER_WINDOW + 5; i += 1) {
+            upsertFinding(tmp, distinctFinding(i), NOW);
+        }
+        const folded = upsertFinding(tmp, distinctFinding(0), LATER);
+        expect(folded).not.toBeNull();
+        expect(folded!.fingerprint).toBe(first.fingerprint);
+        expect(folded!.occurrences).toBe(2);
+    });
+
+    it('budgets each source separately, so one runaway cannot starve the other', () => {
+        for (let i = 0; i < NEW_RECORDS_PER_SOURCE_PER_WINDOW + 2; i += 1) {
+            upsertFinding(tmp, distinctFinding(i), NOW);
+        }
+        expect(upsertFinding(tmp, distinctFinding(0, 'self-detected'), NOW)).not.toBeNull();
+    });
+
+    it('lets the budget recover once the window has passed', () => {
+        for (let i = 0; i < NEW_RECORDS_PER_SOURCE_PER_WINDOW; i += 1) {
+            upsertFinding(tmp, distinctFinding(i), NOW);
+        }
+        expect(upsertFinding(tmp, distinctFinding(600), NOW)).toBeNull();
+        const afterWindow = new Date(Date.parse(NOW) + CREATION_WINDOW_MS + 1000).toISOString();
+        expect(upsertFinding(tmp, distinctFinding(600), afterWindow)).not.toBeNull();
+    });
+
+    it('keeps the overflow counter out of the record list', () => {
+        for (let i = 0; i < NEW_RECORDS_PER_SOURCE_PER_WINDOW + 1; i += 1) {
+            upsertFinding(tmp, distinctFinding(i), NOW);
+        }
+        expect(fs.existsSync(path.join(tmp, STORE_REL, OVERFLOW_FILE))).toBe(true);
+        expect(listRecords(tmp).every((r) => typeof r.fingerprint === 'string')).toBe(true);
+        expect(listRecords(tmp)).toHaveLength(NEW_RECORDS_PER_SOURCE_PER_WINDOW);
     });
 });
 

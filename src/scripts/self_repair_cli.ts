@@ -37,6 +37,7 @@ import {
     type EgressChoice,
     type EgressRoute,
     egressBlockedReason,
+    NEW_RECORDS_PER_SOURCE_PER_WINDOW,
     patchDeniedReason,
     type PushVia,
     renderReport,
@@ -48,6 +49,7 @@ import {
     listRecords,
     markReleased,
     openRecords,
+    readOverflow,
     readRecord,
 } from './_lib/self_repair_store.js';
 
@@ -400,11 +402,33 @@ export function executeRelease(
     return { published: null, attempts };
 }
 
+/**
+ * The creation cap's drop tally, printed whenever it is non-zero. This is the
+ * half that keeps the cap honest: a bounded store is only an improvement if
+ * "records were refused" is readable, otherwise the bound is indistinguishable
+ * from defects that never happened.
+ */
+function overflowLines(root: string): string {
+    const counts = readOverflow(root);
+    const rows = Object.entries(counts).filter(([, v]) => (v?.dropped ?? 0) > 0);
+    if (rows.length === 0) {
+        return '';
+    }
+    let out = '\n';
+    for (const [source, v] of rows) {
+        out +=
+            `  ! creation cap refused ${v?.dropped ?? 0} new ${source} record(s) ` +
+            `(cap ${NEW_RECORDS_PER_SOURCE_PER_WINDOW} per source per 24h, last ${v?.last_seen ?? '?'})\n`;
+    }
+    return out;
+}
+
 function statusCmd(root: string): number {
     const open = openRecords(root);
     const all = listRecords(root);
     if (all.length === 0) {
-        process.stdout.write('self-repair: no records.\n');
+        const overflow = overflowLines(root);
+        process.stdout.write(`self-repair: no records.\n${overflow}`);
         return EXIT_OK;
     }
     process.stdout.write(`self-repair: ${open.length} open of ${all.length} record(s)\n\n`);
@@ -415,6 +439,7 @@ function statusCmd(root: string): number {
                 `      ${r.evidence}\n`,
         );
     }
+    process.stdout.write(overflowLines(root));
     process.stdout.write('\nRelease one: agent-config self-repair:release <fingerprint>\n');
     return EXIT_OK;
 }
