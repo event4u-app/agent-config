@@ -40,7 +40,7 @@ jobs:
 
       # Root deps provide node_modules/.bin/tsx for ./scripts-run.
       - name: Install root dependencies (tsx for scripts-run)
-        run: npm ci
+        run: npm ci --no-audit --no-fund --prefer-offline
 
       # Isolated site workspace (own package.json/lockfile) — astro + starlight.
       - name: Build the Starlight site

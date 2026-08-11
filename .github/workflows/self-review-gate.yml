@@ -19,6 +19,12 @@ on:
   pull_request:
   workflow_dispatch: {}
 
+# Two PR jobs stack on every push to a branch; superseded runs cancel. A
+# manually dispatched run is never cancelled — someone is waiting on it.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 permissions:
   contents: read
   pull-requests: write
@@ -34,7 +40,7 @@ jobs:
       - uses: actions/setup-node@v7
         with:
           node-version: '20'
-      - run: npm ci
+      - run: npm ci --no-audit --no-fund --prefer-offline
       - name: Self-review plan (dry-run — no spend, advisory)
         run: ./node_modules/.bin/tsx src/scripts/self_review_gate.ts --dry-run --base "origin/${{ github.base_ref }}"
 
@@ -53,7 +59,7 @@ jobs:
       - uses: actions/setup-node@v7
         with:
           node-version: '20'
-      - run: npm ci
+      - run: npm ci --no-audit --no-fund --prefer-offline
       - name: Dogfooded self-review (advisory; skips if ANTHROPIC_API_KEY absent)
         run: ./node_modules/.bin/tsx src/scripts/self_review_gate.ts --base "origin/${{ github.base_ref }}" --findings-out /tmp/self-review-findings.json
 

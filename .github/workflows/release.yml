@@ -144,7 +144,7 @@ jobs:
           cache: 'npm'
 
       - name: Install Node deps
-        run: npm ci
+        run: npm ci --no-audit --no-fund --prefer-offline
 
       # release.ts step [2/10] shells out to `task release-prepare`
       # (sync + build-discovery + generate-tools). Without this the CI-native

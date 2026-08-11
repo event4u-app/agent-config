@@ -54,6 +54,6 @@ jobs:
         with:
           repo-token: ${{ secrets.GITHUB_TOKEN }}
       - name: Install dependencies (tsx for the trust commands)
-        run: npm ci
+        run: npm ci --no-audit --no-fund --prefer-offline
       - name: The recorded demo's commands still pass
         run: bash internal/demo/proof-demo-commands.sh

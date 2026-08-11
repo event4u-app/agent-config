@@ -18,6 +18,13 @@ on:
     - cron: '30 6 * * *' # daily 06:30 UTC
   workflow_dispatch:
 
+# No `pull_request` trigger, so nothing here is ever cancelled: the daily health
+# run is the only observation for that day. The group serialises an overlapping
+# manual dispatch instead of racing it.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 permissions:
   actions: read
   contents: read
@@ -37,7 +44,7 @@ jobs:
           cache: 'npm'
 
       - name: Install deps
-        run: npm ci
+        run: npm ci --no-audit --no-fund --prefer-offline
 
       - name: Check last completed run of each watched workflow
         env:

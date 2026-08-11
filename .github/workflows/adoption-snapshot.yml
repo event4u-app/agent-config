@@ -28,6 +28,13 @@ on:
     # rolling-8-week report tolerates ±48h on each row.
     - cron: "0 6 * * 0"
 
+# No `pull_request` trigger, so `cancel-in-progress` is always false here: a
+# cancelled weekly snapshot is a missing row in the rolling-8-week report, not
+# a re-runnable check. The group still serialises an overlapping dispatch.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 permissions:
   # Read-only — the snapshot only reads public endpoints. The GitHub
   # API read uses GITHUB_TOKEN by default (avoids unauthenticated

@@ -21,6 +21,12 @@ on:
     - cron: "0 6 * * 1"
   workflow_dispatch: {}
 
+# Superseded PR pushes cancel; the weekly canary and manual dispatches do not —
+# a cancelled canary run is a lost data point, not a re-runnable check.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 permissions:
   contents: read
 
@@ -33,7 +39,7 @@ jobs:
       - uses: actions/setup-node@v7
         with:
           node-version: '20'
-      - run: npm ci
+      - run: npm ci --no-audit --no-fund --prefer-offline
       - name: Cross-model smoke (dry-run — MockRouter, no spend)
         run: ./node_modules/.bin/tsx src/scripts/cross_model_smoke.ts --dry-run --skills image-analyser
 
@@ -49,7 +55,7 @@ jobs:
       - uses: actions/setup-node@v7
         with:
           node-version: '20'
-      - run: npm ci
+      - run: npm ci --no-audit --no-fund --prefer-offline
       - name: Cross-model live smoke (skips if key secrets absent)
         run: |
           if [ -z "$GEMINI_API_KEY" ] || [ -z "$OPENAI_API_KEY" ] || [ -z "$ANTHROPIC_API_KEY" ]; then
