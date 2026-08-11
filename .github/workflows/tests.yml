@@ -15,10 +15,7 @@ on:
       - "eslint.config.js"
       - "Taskfile.yml"
       - "taskfiles/**"
-      - "install.sh"
       - "setup.sh"
-      - ".agent-src.uncondensed/skills/lint-skills/**"
-      - ".agent-src.uncondensed/skills/check-refs/**"
       - ".github/workflows/tests.yml"
   push:
     branches: [main, master]
@@ -34,10 +31,7 @@ on:
       - "eslint.config.js"
       - "Taskfile.yml"
       - "taskfiles/**"
-      - "install.sh"
       - "setup.sh"
-      - ".agent-src.uncondensed/skills/lint-skills/**"
-      - ".agent-src.uncondensed/skills/check-refs/**"
       - ".github/workflows/tests.yml"
   # Manual re-trigger from the Actions UI / `gh workflow run tests.yml`.
   # Needed because the path filter sometimes skips a synchronize event
@@ -180,9 +174,10 @@ jobs:
     # distinct). The installer package shares the root node_modules via
     # npm-hoisting for @inquirer/prompts, commander, js-yaml, vitest,
     # typescript; no separate `npm ci` is required inside the package
-    # directory. `build` script = `build:cli && build:ui`, so the
-    # previous explicit build:cli + build:ui + build pair was a no-op
-    # duplicate; collapsed to a single build invocation.
+    # directory. `build` chains SIX targets (package.json:78) — cli,
+    # install-bundle, hooks, mcp-bundle, cli-delegate, ui — so the previous
+    # explicit build:cli + build:ui + build triple was a no-op duplicate;
+    # collapsed to a single build invocation.
     name: Node Tests (${{ matrix.os }}, shard ${{ matrix.shard }}/4)
     runs-on: ${{ matrix.os }}
     # Release-PR skip per docs/contracts/release-pr-gating.md — release
@@ -226,8 +221,9 @@ jobs:
       # not per OS × shard) so no vitest shard carries their ~40s and every
       # shard is build + vitest only.
       - name: Build (dist/cli + UI bundle)
-        # `build` = `build:cli && build:ui`. Every shard needs dist/ — the
-        # subprocess suites spawn `./agent-config` → dist/cli/agent-config.js.
+        # `build` chains six targets (package.json:78), not two. Every shard
+        # needs dist/ — the subprocess suites spawn `./agent-config` →
+        # dist/cli/agent-config.js.
         run: npm run build --silent
 
       - name: Vitest (shard ${{ matrix.shard }}/4, heavy suites excluded)
@@ -235,7 +231,9 @@ jobs:
         # quarter of the file set. The subprocess-heavy clusters (golden +
         # workspace) hash-clump into one over-budget shard regardless of shard
         # count, so they are excluded here and run in the dedicated
-        # `heavy-tests` job → each node-tests shard stays light and balanced.
+        # `golden-tests` / `workspace-tests` jobs below → each node-tests shard
+        # stays light and balanced. (There has never been a `heavy-tests` job;
+        # the name this comment used to carry named nothing.)
         run: >-
           npm run test:ts --silent --
           --shard=${{ matrix.shard }}/4
@@ -346,7 +344,7 @@ jobs:
         run: npm audit --omit=dev --audit-level=high
 
   golden-tests:
-    # Golden-transcript replay — 29 scenarios × `./agent-config` (dist/cli)
+    # Golden-transcript replay — 30 scenarios × `./agent-config` (dist/cli)
     # spawn per cycle, split across 6 files (tests/golden/golden_replay*.test.ts)
     # so vitest's fork pool runs them concurrently on a DEDICATED runner
     # (~25 s local). Kept out of the sharded `node-tests` matrix because vitest

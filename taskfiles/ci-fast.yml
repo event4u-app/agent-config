@@ -1383,6 +1383,14 @@ tasks:
       sinks, credential literals, hook bypass. Strict: the corpus is at zero.
     cmd: ./scripts-run src/scripts/lint_example_fences --strict
 
+  lint-workflow-paths:
+    silent: true
+    desc: >-
+      A workflow `paths:` filter matching no tracked file never fires, and no
+      other gate can see that — actionlint validates the schema, not the tree.
+      Strict: the corpus is at zero.
+    cmd: ./scripts-run src/scripts/lint_workflow_paths
+
   check-depth-budget:
     silent: true
     desc: >-

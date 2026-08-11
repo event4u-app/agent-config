@@ -57,7 +57,13 @@ on:
       - 'package.json'            # `files[]` + the release version bump
       - 'package-lock.json'
       - 'CHANGELOG.md'            # `changelog-entry` reads it
-      - 'marketplace.json'        # `version-consistency` reads it
+      # `version-consistency` reads it. The manifest has never lived at the
+      # repo root — `lint_marketplace.ts` opens `.claude-plugin/marketplace.json`
+      # (and its Augment twin ships alongside). The bare root path this entry
+      # carried matched nothing, so a version drift in the manifest did not
+      # re-trigger the job whose whole purpose is to catch that drift.
+      - '.claude-plugin/marketplace.json'
+      - '.augment-plugin/marketplace.json'
       - 'src/scripts/install.ts'  # what release-install-e2e exercises
       - 'src/scripts/release.ts'
       - 'agents/evidence/release-findings/**'  # `finding-dispositions` reads it

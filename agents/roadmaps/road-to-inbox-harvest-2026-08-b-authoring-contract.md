@@ -191,6 +191,14 @@ own header records the file-first council decision of 2026-06-15.
       prose needs no ledger row. Re-run `build_proof` after editing the ledger
       (`docs/CLAIMS.md` renders into `docs/proof.md` per
       `src/scripts/build_proof.ts:8`).
+      **Nothing here ingests external content, and nothing may start to.** The
+      pointer grammar is an existence-and-date check that the tooling never
+      dereferences — `check_claims.ts` documents its pointers as not fetched in
+      CI, and `build_proof.ts` renders an external cite with that same statement.
+      The citation universe is the closed set already committed to this tree,
+      enumerated by the command in 4.1; pointers stay scoped to it. A phase that
+      fetched a citation would be a different phase and would need its own
+      egress review under [`lethal-trifecta-guard`](../../src/rules/lethal-trifecta-guard.md).
       <!-- verify: ./scripts-run src/scripts/check_claims -->
 - [ ] **4.3 Add a successor pointer to retired claims.** The retire-never-delete
       lifecycle already ships as `status: resolved-null` (`docs/CLAIMS.md:23-31`).

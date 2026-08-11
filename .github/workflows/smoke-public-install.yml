@@ -39,7 +39,7 @@ on:
     paths:
       - 'src/scripts/install'
       - 'src/scripts/install.sh'
-      - 'src/scripts/install.py'
+      - 'src/scripts/install.ts'
       - 'src/scripts/agent-config'
       - 'src/scripts/_dispatch.bash'
       - 'src/scripts/_lib/**'
@@ -47,7 +47,7 @@ on:
       - 'setup.sh'
       - 'tests/test_one_liner_entrypoints.sh'
       - 'package.json'
-      - 'templates/**'
+      - 'src/agent-src/templates/**'
       - '.github/workflows/smoke-public-install.yml'
   push:
     branches: [main, master]

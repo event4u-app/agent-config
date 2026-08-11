@@ -120,7 +120,7 @@ cancellations with the lock cited inline.
 
 | Roadmap | Carries | Shape |
 |---|---|---|
-| [`-ci-economy`](road-to-inbox-harvest-2026-08-b-ci-economy.md) | the CI/test economy — 36–43 jobs per broad PR, 12 redundant full builds, 191 subprocess-spawning tests, dead path filters | largest; baseline must be recorded **from CI** |
+| [`-ci-economy`](road-to-inbox-harvest-2026-08-b-ci-economy.md) | the CI/test economy — `tests.yml` matrix-expands to **23 jobs** (`:76-78` etc.) of which **13** each run the full 6-target build (8 + 1 + 2 + 2, derived in that roadmap's Context), 191 subprocess-spawning tests, dead path filters | largest; baseline must be recorded **from CI** |
 | [`-ledger-truth`](road-to-inbox-harvest-2026-08-b-ledger-truth.md) | `model_served` vs `model_requested` (0 hits), two un-cross-checked rate tables with different matching strategies, silent zero-costing | highest-value single item in the batch |
 | [`-council-integrity`](road-to-inbox-harvest-2026-08-b-council-integrity.md) | the quorum-attendance defect, shared model-field coercion, synthesis prose-vs-tally | the one fully-surviving source |
 | [`-authoring-contract`](road-to-inbox-harvest-2026-08-b-authoring-contract.md) | three sections labelled *required* and enforced by nothing; failure-signature drills; 20 unbound research citations | sharpest finding the bundles missed |
@@ -136,6 +136,36 @@ cancellations with the lock cited inline.
       `-release-integrity` Phase 5); two open with a maintainer decision before any
       code (`-estate-lifecycle`, `-install-lifecycle` Phase 2). Write the chosen
       order into this step and strike the rest until they are reached.
+
+### Council convergence on the family's governance — 2026-08-11
+
+Two members (anthropic, openai), quorum 2/2, concluded. Recorded so these four are
+not re-argued; the reasoning is theirs, not this file's.
+
+- **The family gets no second control.** Not a cap extension, not a sunset date. The
+  existing concurrency cap is prefix-scoped to another family, and copying it here
+  would apply a control without establishing that this family shares the problem it
+  was calibrated for. A sunset date was rejected on a sharper ground: `ADR-216`
+  anchors restraint to **capacity**, which is effort-based, while a date is
+  time-based — it can fall due exactly when capacity is absent, forcing either
+  rushed work or ceremonial renewal. **2.1 above is the capacity gate**, because it
+  surfaces the question at the moment work is considered.
+- **Implementation lands outside this pull request.** A verified, green patch is not
+  held behind a planning decision — that would let planning gate code rather than
+  verification gate code. Code ships in its own change; this family stays
+  documentation.
+- **A blind security gate is not a planning item.** Where a shipped detector is
+  demonstrably not inspecting the artefact class it exists for, the fix goes out
+  immediately and separately — separately because widening a detector's scan roots
+  can surface unrelated pre-existing findings, and absorbing that risk into a
+  documentation diff creates a review dependency outside its scope.
+- **A self-declared probabilistic gate does not shift the burden of proof.** Its
+  findings are refuted by citation where the tree contradicts them, with the
+  disposition written down rather than passed over.
+
+One question did not converge — whether an implementation may persist a new field in
+a second location beyond the step that specified it. It belongs to the pull request
+that carries that code, not here.
 
 ## Phase 3 — Cancelled at batch level
 
