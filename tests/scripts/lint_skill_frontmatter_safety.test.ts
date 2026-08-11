@@ -143,7 +143,13 @@ describe('security_lint.report — the clean-path scope note', () => {
             return true;
         };
         try {
-            const code = sl.report([], { check_label: 'scope-note-spec', scanned_roots });
+            // The key is OMITTED rather than passed as `undefined`: the repo
+            // typechecks with `exactOptionalPropertyTypes`, under which those are
+            // different types, and "no argument" is the case being exercised.
+            const code =
+                scanned_roots === undefined
+                    ? sl.report([], { check_label: 'scope-note-spec' })
+                    : sl.report([], { check_label: 'scope-note-spec', scanned_roots });
             expect(code).toBe(0);
         } finally {
             (process.stdout as unknown as { write: typeof original }).write = original;

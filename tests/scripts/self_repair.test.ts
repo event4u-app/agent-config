@@ -17,6 +17,7 @@ import {
     DEFECT_CLASSES,
     type DefectFinding,
     type DefectRecord,
+    type DefectSource,
     detectCouncilClaim,
     detectLanguageMirror,
     detectUserReport,
