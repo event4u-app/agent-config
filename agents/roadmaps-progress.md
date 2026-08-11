@@ -6,10 +6,10 @@
 
 ## Overall
 
-**224 / 353 steps done · 63%**
+**232 / 345 steps done · 67%**
 
 ```text
-█████████████████████████░░░░░░░░░░░░░░░   63%
+███████████████████████████░░░░░░░░░░░░░   67%
 ```
 
 ## Open roadmaps
@@ -25,7 +25,7 @@
 | 7 | [road-to-gated-reach-followup.md](roadmaps/road-to-gated-reach-followup.md) | 1 | 12 | 12 | 0 | 0 | 0 | [1](#blockers-road-to-gated-reach-followup) | ░░░░░░░░░░ 0% |
 | 8 | [road-to-inbox-harvest-2026-08-b-ci-economy.md](roadmaps/road-to-inbox-harvest-2026-08-b-ci-economy.md) | 5 | 24 | 1 | 17 | 2 | 4 | [2](#blockers-road-to-inbox-harvest-2026-08-b-ci-economy) | █████████░ 94% |
 | 9 | [road-to-inbox-harvest-2026-08-b-dispatch-safety.md](roadmaps/road-to-inbox-harvest-2026-08-b-dispatch-safety.md) | 4 | 21 | 13 | 1 | 1 | 6 | [1](#blockers-road-to-inbox-harvest-2026-08-b-dispatch-safety) | █░░░░░░░░░ 7% |
-| 10 | [road-to-inbox-harvest-2026-08-b-estate-lifecycle.md](roadmaps/road-to-inbox-harvest-2026-08-b-estate-lifecycle.md) | 4 | 15 | 9 | 0 | 0 | 6 | [1](#blockers-road-to-inbox-harvest-2026-08-b-estate-lifecycle) | ░░░░░░░░░░ 0% |
+| 10 | [road-to-inbox-harvest-2026-08-b-estate-lifecycle.md](roadmaps/road-to-inbox-harvest-2026-08-b-estate-lifecycle.md) | 4 | 15 | 1 | 8 | 0 | 6 | [1](#blockers-road-to-inbox-harvest-2026-08-b-estate-lifecycle) | █████████░ 89% |
 | 11 | [road-to-inbox-harvest-2026-08-b-install-lifecycle.md](roadmaps/road-to-inbox-harvest-2026-08-b-install-lifecycle.md) | 2 | 13 | 1 | 6 | 0 | 6 | [1](#blockers-road-to-inbox-harvest-2026-08-b-install-lifecycle) | █████████░ 86% |
 | 12 | [road-to-inbox-harvest-2026-08-b-ledger-truth.md](roadmaps/road-to-inbox-harvest-2026-08-b-ledger-truth.md) | 3 | 19 | 1 | 12 | 0 | 6 | [1](#blockers-road-to-inbox-harvest-2026-08-b-ledger-truth) | █████████░ 92% |
 | 13 | [road-to-inbox-harvest-2026-08-b-release-integrity.md](roadmaps/road-to-inbox-harvest-2026-08-b-release-integrity.md) | 5 | 25 | 1 | 11 | 0 | 13 | [3](#blockers-road-to-inbox-harvest-2026-08-b-release-integrity) | █████████░ 92% |
@@ -257,14 +257,14 @@
 
 ### [road-to-inbox-harvest-2026-08-b-estate-lifecycle.md](roadmaps/road-to-inbox-harvest-2026-08-b-estate-lifecycle.md)
 
-**Road to estate lifecycle reporting** — 0 / 9 done (0%)
+**Road to estate lifecycle reporting** — 8 / 9 done (89%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
 | 1 | The revisit offer | ⬜ not started | 1 | 0 | 0 | 0 | 0% |
-| 2 | The dormancy signal governance already mandates | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
-| 3 | Zero inbound references, on the graph that already exists | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
-| 4 | The graph's own observability | ⬜ not started | 2 | 0 | 0 | 6 | 0% |
+| 2 | The dormancy signal governance already mandates | ✅ done | 0 | 3 | 0 | 0 | 100% |
+| 3 | Zero inbound references, on the graph that already exists | ✅ done | 0 | 3 | 0 | 0 | 100% |
+| 4 | The graph's own observability | ✅ done | 0 | 2 | 0 | 6 | 100% |
 
 <a id="blockers-road-to-inbox-harvest-2026-08-b-estate-lifecycle"></a>
 **Blockers**
