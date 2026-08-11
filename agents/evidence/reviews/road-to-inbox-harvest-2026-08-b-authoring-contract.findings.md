@@ -1,16 +1,16 @@
 # Findings: road-to-inbox-harvest-2026-08-b-authoring-contract
-<!-- completion-review: v1 | reviewed: 2026-08-11 | scope: c1ff717f8e24c46a3d103ff15af61189f4f9f77d8ec8660bad160c7effc8c6d3 | diff: 02cdfbb28f04e432cccff7c14ba9f12e177feb0e | reviewer: r2-fresh-subagent-road-to-inbox-harvest-2026-08-b-authoring-contract | prompt_hash: 60aef45213d10668867c11b2af1b993a559892c3ac779a163f7e853823078905 -->
+<!-- completion-review: v1 | reviewed: 2026-08-11 | scope: f5ec352a48061ea55adaafa99d39b6a512fa75732f6a5afa480c121e5303dd88 | diff: d0c9d9e9b6812d59a7a89e8287bc4b89800aa28d | reviewer: r2-fresh-subagent-road-to-inbox-harvest-2026-08-b-authoring-contract | prompt_hash: ecfeeaa74acc1b3b702b34295f1d1d34e27a82a8064b5105b72e7150ed392184 -->
 
 <!-- context-manifest: v1
 inputs:
-  diff_sha: 02cdfbb28f04e432cccff7c14ba9f12e177feb0e
-  scope_hash: c1ff717f8e24c46a3d103ff15af61189f4f9f77d8ec8660bad160c7effc8c6d3
+  diff_sha: d0c9d9e9b6812d59a7a89e8287bc4b89800aa28d
+  scope_hash: f5ec352a48061ea55adaafa99d39b6a512fa75732f6a5afa480c121e5303dd88
   roadmap: none
   roadmap_hash: none
   ac_hash: none
 excluded: [session-history, agents/runtime, implementation-context]
 tools: [git-diff-branch-scoped, file-read-branch-paths]
-dispatched: 2026-08-11T08:05:00Z
+dispatched: 2026-08-11T08:55:00Z
 -->
 
 | # | Severity | File:Line | Finding | Status | Reason/Ref |
@@ -39,3 +39,11 @@ taken through a predicate that skipped `*`-bulleted prose. That step now carries
 re-measurement at the fixed predicates (same 4 findings, denominator 264 → 272 lines /
 3,284 → 3,437 words) with the reason stated, instead of the original number standing
 unqualified.
+
+**Second re-bind, 2026-08-11.** Remote CI then failed on two `check_gate_coverage`
+assertions that no local chain reaches — a `src/scripts/lint_*` script joins the gate
+population whether or not it is a gate. Fixed in `d0c9d9e9b` by reporting the scan scope
+through `_lib/scan_scope` with an `EMPTY_VALID:` reason rather than registering a floor a
+diff-scoped gate cannot honour. That is a CI finding, not one of the nine above, and it is
+named here because it moved the review scope: this artefact is re-bound again so it claims
+the delta it actually describes.

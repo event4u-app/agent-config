@@ -110,10 +110,10 @@ index 94a20fab822af15df82a1746d135393844a43323..90375747015ba5ce086404bb83a9e60a
  **Road to CI Economy — cut the redundant full builds and re-anchor the cost artefacts to CI-recorded data** — 4 / 21 done (19%)
 diff --git a/agents/roadmaps/archive/road-to-inbox-harvest-2026-08-b-authoring-contract.md b/agents/roadmaps/archive/road-to-inbox-harvest-2026-08-b-authoring-contract.md
 new file mode 100644
-index 0000000000000000000000000000000000000000..6ae7ed82120ca56a217f18eafc3948ff57a741c2
+index 0000000000000000000000000000000000000000..c574db74321aa559dc9d88fc77465c4f9f01bb2d
 --- /dev/null
 +++ b/agents/roadmaps/archive/road-to-inbox-harvest-2026-08-b-authoring-contract.md
-@@ -0,0 +1,363 @@
+@@ -0,0 +1,376 @@
 +---
 +complexity: lightweight
 +parent_roadmap: road-to-inbox-harvest-2026-08-b.md
@@ -399,6 +399,19 @@ index 0000000000000000000000000000000000000000..6ae7ed82120ca56a217f18eafc3948ff
 +      `hedge_per_100_words` over hedge-word *occurrences* while this counts hedged
 +      *lines*. The n = 4 verdict stands; what changed is that it now rests on a
 +      scan that reads the prose it claims to.
++
++      **What the step did not anticipate: a new `lint_*` script joins a gate
++      population whether or not it is a gate.** `check_gate_coverage`'s ratchet
++      counts every `src/scripts/{lint,check,audit}_*.ts` and requires each either
++      to route its count through `_lib/scan_scope` or to be registered in
++      `gate-coverage.yml` with a floor — a hand-written `scanned:` line with
++      nothing asserting it is decoration, which is exactly what a diff-scoped
++      script can print out of a dead root forever. Registration was the wrong
++      branch here (a diff that touches no prose legitimately scans zero, so there
++      is no honest floor), so the gate reports through `reportScanned` with an
++      `EMPTY_VALID:` reason. Found by remote CI, not by `task preflight` — the
++      ratchet lives in the node-tests shard, which preflight deliberately does not
++      run.
 +
 +      **Not wired into `task ci` or any workflow, deliberately.** The parity gate
 +      (`check_ci_local_parity`) derives both sides from those two chains, so an
@@ -1459,10 +1472,10 @@ index 620dd194bf0f596da66de968eb30ca29b2a90892..0d8c32d7b5ee8443f1f68d40fb910ef6
      //    `<!-- claim:ID -->` marker on the same line, or an explicit
 diff --git a/src/scripts/lint_hedge_words.ts b/src/scripts/lint_hedge_words.ts
 new file mode 100644
-index 0000000000000000000000000000000000000000..36d142767f0ed1c31a6dfb7b19427d7162a4ee56
+index 0000000000000000000000000000000000000000..066cfc28c71e55f111203b2ec1a2b7562bd332ff
 --- /dev/null
 +++ b/src/scripts/lint_hedge_words.ts
-@@ -0,0 +1,300 @@
+@@ -0,0 +1,317 @@
 +#!/usr/bin/env tsx
 +/**
 + * Hedge-word lint — diff-scoped, ADVISORY, with a declared escalation trigger.
@@ -1535,6 +1548,7 @@ index 0000000000000000000000000000000000000000..36d142767f0ed1c31a6dfb7b19427d71
 +import { fileURLToPath, pathToFileURL } from 'node:url';
 +
 +import { HEDGE_WORDS } from './bench_honesty_score.js';
++import { reportScanned } from './_lib/scan_scope.js';
 +import { readStdinText } from './_lib/stdin.js';
 +
 +const _HERE = fileURLToPath(import.meta.url);
@@ -1710,10 +1724,26 @@ index 0000000000000000000000000000000000000000..36d142767f0ed1c31a6dfb7b19427d71
 +
 +    const report = scanDiff(diffText);
 +
++    // Scope assertion + the machine-readable count, via the shared helper rather
++    // than a hand-written `scanned:` line: `check_gate_coverage`'s ratchet treats
++    // an emitted count with no assertion behind it as decoration, and it is right
++    // to — a diff-scoped gate is exactly the shape that can print `scanned: 0`
++    // out of a dead root forever. `EMPTY_VALID` is the honest prefix here: a diff
++    // that touches no prose under src/ or docs/ HAS zero hedged lines, and the
++    // reason survives the operational test — if the scan roots were deleted, "a
++    // diff with no prose in it" would still mean what it says.
++    const scanScope = {
++        gate: 'lint_hedge_words',
++        scanned: report.filesScanned,
++        units: 'changed prose file(s)',
++        roots: SCAN_ROOTS,
++        allowEmpty: 'EMPTY_VALID: a diff that changes no prose under src/ or docs/ has no hedged lines to report; the gate is diff-scoped by ADR-218 and its corpus is the diff, not a tree.',
++    } as const;
++
 +    if (report.addedProseLines === 0) {
 +        if (!quiet) {
 +            process.stdout.write('lint_hedge_words: no added prose under src/ or docs/ — nothing to read.\n');
-+            process.stdout.write('scanned: 0\n');
++            reportScanned(scanScope);
 +        }
 +        return 0;
 +    }
@@ -1746,7 +1776,7 @@ index 0000000000000000000000000000000000000000..36d142767f0ed1c31a6dfb7b19427d71
 +            `hedged_lines: ${report.findings.length} · added_prose_lines: ${report.addedProseLines} ` +
 +                `· added_words: ${report.addedWords} · hedged_lines_per_100_words: ${hedgedLinesPer100.toFixed(2)}\n`,
 +        );
-+        process.stdout.write(`scanned: ${report.filesScanned}\n`);
++        reportScanned(scanScope);
 +    }
 +    return 0;
 +}
