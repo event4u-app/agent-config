@@ -975,13 +975,17 @@ function ensure_agent_settings(
     success(`${SETTINGS_FILE} created (rule_loading_tier=${profile}${suffix})`);
 }
 
-function ensure_vscode_bridge(project_root: string, package_type: string, force: boolean): void {
+function ensure_vscode_bridge(
+    project_root: string,
+    package_type: string,
+    force: boolean,
+): Record<string, unknown>[] {
     const plugin_paths: Record<string, string> = {
         npm: './node_modules/@event4u/agent-config/plugin/agent-config',
     };
     const plugin_path = plugin_paths[package_type] ?? './plugin/agent-config';
     const bridge = { 'chat.pluginLocations': { [plugin_path]: true } };
-    merge_json_file(
+    return merge_json_file(
         path.join(project_root, '.vscode', 'settings.json'),
         bridge,
         force,
@@ -1043,8 +1047,11 @@ function _remove_legacy_augment_trampolines(): void {
                 fs.unlinkSync(legacy);
                 skip(`removed legacy ~/.augment/hooks/${name}`);
             }
-        } catch {
-            /* OSError → ignore */
+        } catch (err) {
+            // A swallowed failure leaves a stale trampoline that no manifest entry
+            // covers, so uninstall cannot reach it. Non-fatal and semantics-neutral:
+            // the removal is still best-effort, it is simply no longer silent.
+            warn(`could not remove legacy ${legacy}: ${err instanceof Error ? err.message : String(err)}`);
         }
     }
 }
@@ -5075,8 +5082,15 @@ function _main_project_install(
     const merged_keys_by_tool: Record<string, Record<string, unknown>[]> = {};
 
     if (!opts.skip_bridges) {
-        ensure_vscode_bridge(project_root, package_type, opts.force);
-        merged_keys_by_tool['augment'] = ensure_augment_bridge(project_root, opts.force);
+        // `.vscode/settings.json` and `.augment/settings.json` are the two bridges
+        // written unconditionally, so neither belongs to a selected tool. The
+        // lockfile keys `merged_keys` by tool name (`_VALID_TOOLS`), so both are
+        // recorded under the substrate entry `augment` — see
+        // `docs/contracts/install-layout.md` § Untracked surfaces for the residual.
+        merged_keys_by_tool['augment'] = [
+            ...ensure_vscode_bridge(project_root, package_type, opts.force),
+            ...ensure_augment_bridge(project_root, opts.force),
+        ];
         if (_is_tool_enabled(tools, 'claude-code')) {
             merged_keys_by_tool['claude-code'] = ensure_claude_bridge(project_root, opts.force);
         }
