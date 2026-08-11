@@ -460,9 +460,19 @@ export const REQUIRED_SYNTHESIS_SECTIONS = ['Kill criteria', 'Concrete next step
  * fills the Convergence / Divergence slot) — not the template prompt. Every
  * lens must close with a non-empty `### Kill criteria` and `### Concrete next
  * step`; a missing or placeholder-empty section throws `SynthesisRenderError`
- * naming the first offender. Called on the synthesis-emit path (the chairman
- * synthesis in Phase 2, and any future synthesis-record step); safe to call on
- * decision and creative lenses alike, since both now require the two sections.
+ * naming the first offender. Safe to call on decision and creative lenses
+ * alike, since both now require the two sections.
+ *
+ * **Not wired onto the emit path, deliberately.** This docstring used to claim
+ * it was "called on the synthesis-emit path"; measured, the function had zero
+ * production call sites and only the test imported it. Wiring it
+ * unconditionally into `render()` is not available either: with no chairman the
+ * rendered body is the literal `*to be summarised by the host agent*`, which
+ * carries neither section, so every templated render would throw (verified —
+ * the probe raises `missing the required "### Kill criteria" section`). A
+ * caller that HAS a completed synthesis calls this; the templated default path
+ * has nothing to validate. The tally check below is the half that could be
+ * wired, because it is conditional on a verdict line the template never emits.
  */
 export function assert_synthesis_sections(text: string): void {
     const lines = text.split('\n');
@@ -485,6 +495,115 @@ export function assert_synthesis_sections(text: string): void {
                 `synthesis "### ${section}" section is empty (placeholder)`,
             );
         }
+    }
+}
+
+/** The reserved verdict label a synthesis uses when the tally did not converge. */
+export const SPLIT_VERDICT_LABEL = 'split';
+
+// Mirrors `_STANCE_RE`'s shape discipline: an explicit, single-field closing
+// line, tolerant of whitespace and case, never read out of surrounding prose.
+const _VERDICT_RE = /^\s*VERDICT:\s*(.+?)\s*$/gim;
+
+/**
+ * Mandatory closing-line contract for a synthesis rendered alongside a stance
+ * tally. The synthesis states its verdict as a machine-readable label rather
+ * than leaving it to be mined out of the recommendation prose — the same
+ * discipline `STANCE_LINE_CONTRACT` imposes on members.
+ */
+export const VERDICT_LINE_CONTRACT = `Close the synthesis with EXACTLY this line, and nothing after it:
+VERDICT: <option-label>
+Use the SAME <option-label> the Vote Tally cleared. Use \`${SPLIT_VERDICT_LABEL}\` when no option cleared the threshold — an honest split is a verdict, and claiming a winner the tally did not record is a render error.`;
+
+/**
+ * Parse the synthesis verdict line. Returns the LAST match (the final,
+ * most-authoritative one) or `null` when no well-formed line exists.
+ *
+ * `null` is a repair marker, never a guess: this function does not fall back to
+ * reading agreement out of the prose. That is the invariant `stance_tally`
+ * states for members ("the tally never infers a stance from the surrounding
+ * prose") and the one `check_finding_dispositions` states for the release
+ * ledger ("a comment is mutable and unaudited; it is transport, not a record").
+ */
+export function parse_verdict_line(text: string): { label: string; display: string } | null {
+    _VERDICT_RE.lastIndex = 0;
+    let last: RegExpExecArray | null = null;
+    let m: RegExpExecArray | null;
+    while ((m = _VERDICT_RE.exec(text)) !== null) {
+        last = m;
+    }
+    if (last === null) {
+        return null;
+    }
+    const raw = (last[1] ?? '').trim();
+    if (raw.length === 0) {
+        return null;
+    }
+    // An angle-bracketed label is the CONTRACT's own placeholder, not a verdict.
+    // This matters on the templated path: with no chairman the rendered body IS
+    // `VERDICT_LINE_CONTRACT`'s template text, so a parser without this guard
+    // would read `<option-label>` as a claimed winner and throw on every
+    // un-summarised render. Same treatment `assert_synthesis_sections` gives a
+    // placeholder-empty section.
+    if (/^<.*>$/.test(raw)) {
+        return null;
+    }
+    return { label: raw.toLowerCase(), display: raw };
+}
+
+/**
+ * Validate a completed synthesis against the stance tally it was rendered
+ * beside: a verdict naming a winner the tally did not clear throws
+ * `SynthesisRenderError`, the same way a missing section does.
+ *
+ * The defect this closes: `assert_synthesis_sections` is a *shape* check, so a
+ * synthesis could report agreement over a tally that recorded dissent and
+ * nothing downstream disagreed. That is the class behind the recorded 9.14.0
+ * release failure, where the head read "Security and correctness: none" over a
+ * critical finding — `check_finding_dispositions.ts` is the same check on the
+ * release surface.
+ *
+ * **An absent verdict line does not throw.** It is a repair marker under the
+ * same rule as an unparseable stance: the fail-safe direction is to record that
+ * the claim was not made, never to infer one from prose. That also keeps every
+ * synthesis rendered before `VERDICT_LINE_CONTRACT` shipped green.
+ */
+export function assert_synthesis_matches_tally(
+    text: string,
+    tally: {
+        consensus: { label: string } | null;
+        split: boolean;
+        options: ReadonlyArray<{ label: string }>;
+    },
+): void {
+    const verdict = parse_verdict_line(text);
+    if (verdict === null) {
+        return; // repair marker, not a guess
+    }
+    const claimsSplit = verdict.label === SPLIT_VERDICT_LABEL;
+
+    if (tally.consensus === null) {
+        if (!claimsSplit) {
+            throw new SynthesisRenderError(
+                `synthesis claims "${verdict.display}" but the tally recorded no consensus ` +
+                    `(split across ${tally.options.length} option(s)); use ` +
+                    `\`${SPLIT_VERDICT_LABEL}\` or re-run the round`,
+            );
+        }
+        return;
+    }
+
+    if (claimsSplit) {
+        throw new SynthesisRenderError(
+            `synthesis claims a split but the tally cleared ` +
+                `"${tally.consensus.label}"`,
+        );
+    }
+    if (verdict.label !== tally.consensus.label.toLowerCase()) {
+        throw new SynthesisRenderError(
+            `synthesis claims "${verdict.display}" but the tally cleared ` +
+                `"${tally.consensus.label}"`,
+        );
     }
 }
 

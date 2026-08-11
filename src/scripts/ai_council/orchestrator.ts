@@ -58,6 +58,7 @@ import type { AdvisorPlan } from './advisors.js';
 import {
     advisor_system_prompt,
     ANTI_CONFORMITY_DIRECTIVE,
+    assert_synthesis_matches_tally,
     STANCE_LINE_CONTRACT,
     build_extraction_user_prompt,
     build_peer_review_user_prompt,
@@ -65,6 +66,7 @@ import {
     peer_review_synthesis_addendum,
     synthesis_template,
     system_prompt_for,
+    VERDICT_LINE_CONTRACT,
 } from './prompts.js';
 import { count_dissenters, dissent_quota_met, is_near_duplicate } from './debate_gates.js';
 import { parse_stance_line, render_vote_tally, tally_stances } from './stance_tally.js';
@@ -1927,6 +1929,18 @@ export function render(responses: CouncilResponse[], opts: RenderOptions = {}): 
         // addendum so both extensions stack predictably.
         template = template ? `${template}\n\n${CHAIRMAN_FIELDS_ADDENDUM}` : CHAIRMAN_FIELDS_ADDENDUM;
     }
+    if (opts.stance_tally === true) {
+        // Phase 2.1: the synthesis owes the same machine-readable closing line
+        // the members owe. Appended only when a tally will be rendered — there
+        // is nothing to check a verdict against otherwise. Composed last so it
+        // is the final instruction, matching the contract's "and nothing after
+        // it". The template's own `VERDICT: <option-label>` placeholder is
+        // parsed as absent (see `parse_verdict_line`), so the un-summarised
+        // render stays green.
+        template = template
+            ? `${template}\n\n${VERDICT_LINE_CONTRACT}`
+            : VERDICT_LINE_CONTRACT;
+    }
     let body: string;
     if (template) {
         body = template;
@@ -1950,6 +1964,13 @@ export function render(responses: CouncilResponse[], opts: RenderOptions = {}): 
                 .filter((r) => !r.error)
                 .map((r) => ({ member: `${r.provider}:${r.model}`, text: r.text })),
         );
+        // Phase 2.1: the verdict half of the same projection. A synthesis that
+        // states a `VERDICT:` line the tally did not clear throws here rather
+        // than rendering an agreement claim over recorded dissent. Conditional
+        // by construction — an absent verdict line returns silently, so the
+        // templated default body (`*to be summarised by the host agent*`) and
+        // every synthesis written before the contract shipped stay green.
+        assert_synthesis_matches_tally(body, tally);
         blocks.push(render_vote_tally(tally));
     }
     blocks.push(`## Convergence / Divergence\n\n${body}`);
