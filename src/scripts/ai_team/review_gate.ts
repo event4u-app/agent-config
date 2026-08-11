@@ -42,6 +42,7 @@ import * as os from 'node:os';
 import * as path from 'node:path';
 
 import { claude_config_dir, CODEX_MARKETPLACE_NAME, CODEX_PLUGIN_ID } from '../_lib/claude_plugin.js';
+import { isEnvKillSwitchActive } from '../_lib/env_kill_switch.js';
 import { atomic_write_json } from '../hooks/state_io.js';
 import { AI_TEAM_DEFAULTS, load_ai_team_config, type AiTeamConfig } from './config.js';
 
@@ -170,8 +171,7 @@ export function circuit_breaker_notice(bound: number): string {
 // ── ledger (events-log convention) ──────────────────────────────────
 
 function _kill_switch_active(): boolean {
-    const value = process.env[_KILL_SWITCH_ENV] ?? '';
-    return !(value === '' || value === '0' || value === 'false' || value === 'False');
+    return isEnvKillSwitchActive(_KILL_SWITCH_ENV);
 }
 
 function _iso_seconds_z(d: Date): string {

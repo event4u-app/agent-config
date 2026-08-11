@@ -123,7 +123,7 @@ from.
 
 ## Phase 2 — A verdict that disagrees with its own tally
 
-- [ ] **2.1 Check synthesis prose against the stance tally.**
+- [x] **2.1 Check synthesis prose against the stance tally.**
       `ai_council/prompts.ts:467 assert_synthesis_sections` validates that
       `### Kill criteria` and `### Concrete next step` are present and non-empty
       (`REQUIRED_SYNTHESIS_SECTIONS`, `:456`) — a *shape* check. It does not
@@ -139,14 +139,77 @@ from.
       defect class on a different artifact.
       <!-- verify: task test -- --filter=synthesis_check -->
 
-**Exit:** a synthesis naming agreement while the tally records dissent throws
-`SynthesisRenderError` on the emit path, the same way a missing section does.
+**Exit, as amended by the R2 completion review** (findings 1 and 3,
+`agents/evidence/reviews/council-integrity.findings.md`): a synthesis naming
+agreement while the tally records dissent is **surfaced in the rendered pass**,
+and throws for a caller that holds a finished synthesis and calls
+`assert_synthesis_matches_tally` directly.
+
+The original wording — "throws `SynthesisRenderError` on the emit path, the same
+way a missing section does" — was wrong twice over, and both corrections are
+recorded rather than quietly applied:
+
+- **Throwing on the emit path is the wrong control.** `render()` builds its
+  blocks in order, so a throw discards the entire artifact — every member
+  response, the peer review, the quorum bookkeeping — *after* every provider
+  call is already paid for. The module's own answer for an unverifiable claim
+  is the `needs_repair` marker, not a discarded pass.
+- **Coverage is narrower than "the emit path" suggests.** The check reads the
+  body `render()` holds, which carries a real verdict only on the
+  member-chairman path. On the templated default the host agent writes its
+  synthesis *after* `render()` returns, where nothing sees it. Closing that
+  needs a synthesis-record step, which this roadmap did not build.
+
+**Two premise corrections, recorded because the step rested on both.**
+
+1. **"the same way a missing section does" described nothing.**
+   `assert_synthesis_sections` had **zero production call sites** — `grep`
+   outside `tests/` returned nothing — while its own docstring claimed it was
+   "called on the synthesis-emit path". Worse, it cannot simply be wired:
+   with no chairman the rendered body is the literal
+   `*to be summarised by the host agent*`, which carries neither section, so an
+   unconditional call throws on every templated render (probed:
+   `missing the required "### Kill criteria" section`). The docstring's false
+   claim is corrected in place; the shape check stays caller-invoked.
+2. **The step's own wording contradicted the module it extends.** "compare the
+   recommendation **prose** to the counted stances" is the prose inference
+   `stance_tally.ts` forbids twice in its own doctrine ("the tally never infers
+   a stance from the surrounding prose") and that the named precedent
+   `check_finding_dispositions.ts` forbids again ("a comment is mutable and
+   unaudited; it is transport, not a record"). Council 2026-08-11, 2/2 on the
+   structured reading — the *position* is checked, not the prose.
+
+**What shipped instead.** `VERDICT_LINE_CONTRACT` gives the synthesis the same
+machine-readable closing-line duty members already owe via
+`STANCE_LINE_CONTRACT`; `parse_verdict_line` reads only that line and returns
+`null` — a repair marker, never a guess — when it is absent;
+`describe_verdict_mismatch` returns the contradiction as a string and
+`assert_synthesis_matches_tally` throws it, when the stated verdict names a
+winner the tally did not clear, claims a split it did clear, or names a
+different option. The render path uses the returning shape and appends the
+mismatch **after** the Vote Tally block, so the artifact survives. Conditional
+by construction: an absent verdict line yields null, so the templated default
+body and every synthesis written before the contract stay green. The contract's
+own `VERDICT: <option-label>` placeholder parses as absent — without that guard
+the template path, whose body IS the contract text, would flag every
+un-summarised render.
+
+The regex is **case-sensitive**, also per the review (finding 2): it shipped
+with `/i` and is line-anchored, so `Verdict: option A is the stronger choice` —
+ordinary chairman prose — parsed as a verdict carrying the whole sentence as its
+label. That is the prose inference this design exists to avoid, arriving through
+the regex rather than through a fallback, and the test written for that case had
+used prose with no line-initial marker, testing around the failure instead of at
+it.
 
 ## Phase 3 — One duplicated defence, honestly scoped
 
-- [ ] **3.1 Consolidate the two byte-identical truthy-string guards.** The
+- [x] **3.1 Consolidate the two byte-identical truthy-string guards.** The
       `'false'`-is-a-truthy-string defence is written out twice, byte-for-byte:
-      `ai_council/events_log.ts:129-133` and `ai_team/review_gate.ts:172-176` —
+      `ai_council/events_log.ts:141-144` and `ai_team/review_gate.ts:172-175` —
+      (the first citation read `:129-133`, which is UTF-8 encoding code; the
+      guard sits twelve lines further down, and the two blocks share the env
+      var `AGENT_CONFIG_NO_EVENTS_LOG` as well as the body) —
       `diff` over the two blocks is empty, and no shared helper exists
       (`ls src/scripts/_lib/ | grep -i 'coerce\|bool'` → nothing). Extract one
       `src/scripts/_lib/` helper and migrate exactly those two call sites. This is
@@ -243,3 +306,5 @@ whose "Resolved when: attendance data exists" is the same unpaid precondition,
 and whose "watch council attendance telemetry" presumed the telemetry Phase 1
 builds. It is not a new idea; it is an unpaid one — which is the argument for
 1.1 rather than for another deferral.
+
+<!-- Deferred items migrated to agents/roadmaps/road-to-inbox-harvest-2026-08-b-council-integrity-followup.md on 2026-08-11 -->

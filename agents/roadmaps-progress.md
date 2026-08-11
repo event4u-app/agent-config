@@ -6,10 +6,10 @@
 
 ## Overall
 
-**230 / 348 steps done · 66%**
+**224 / 345 steps done · 65%**
 
 ```text
-██████████████████████████░░░░░░░░░░░░░░   66%
+██████████████████████████░░░░░░░░░░░░░░   65%
 ```
 
 ## Open roadmaps
@@ -23,7 +23,7 @@
 | 5 | [road-to-council-blind-review.md](roadmaps/road-to-council-blind-review.md) | 3 | 6 | 2 | 3 | 0 | 1 | 0 | ██████░░░░ 60% |
 | 6 | [road-to-gated-reach-followup.md](roadmaps/road-to-gated-reach-followup.md) | 1 | 12 | 12 | 0 | 0 | 0 | [1](#blockers-road-to-gated-reach-followup) | ░░░░░░░░░░ 0% |
 | 7 | [road-to-inbox-harvest-2026-08-b-ci-economy.md](roadmaps/road-to-inbox-harvest-2026-08-b-ci-economy.md) | 5 | 24 | 1 | 17 | 2 | 4 | [2](#blockers-road-to-inbox-harvest-2026-08-b-ci-economy) | █████████░ 94% |
-| 8 | [road-to-inbox-harvest-2026-08-b-council-integrity.md](roadmaps/road-to-inbox-harvest-2026-08-b-council-integrity.md) | 3 | 16 | 2 | 6 | 1 | 7 | [1](#blockers-road-to-inbox-harvest-2026-08-b-council-integrity) | ████████░░ 75% |
+| 8 | [road-to-inbox-harvest-2026-08-b-council-integrity-followup.md](roadmaps/road-to-inbox-harvest-2026-08-b-council-integrity-followup.md) | 1 | 5 | 5 | 0 | 0 | 0 | [1](#blockers-road-to-inbox-harvest-2026-08-b-council-integrity-followup) | ░░░░░░░░░░ 0% |
 | 9 | [road-to-inbox-harvest-2026-08-b-dispatch-safety.md](roadmaps/road-to-inbox-harvest-2026-08-b-dispatch-safety.md) | 4 | 21 | 13 | 1 | 1 | 6 | [1](#blockers-road-to-inbox-harvest-2026-08-b-dispatch-safety) | █░░░░░░░░░ 7% |
 | 10 | [road-to-inbox-harvest-2026-08-b-estate-lifecycle.md](roadmaps/road-to-inbox-harvest-2026-08-b-estate-lifecycle.md) | 4 | 15 | 9 | 0 | 0 | 6 | [1](#blockers-road-to-inbox-harvest-2026-08-b-estate-lifecycle) | ░░░░░░░░░░ 0% |
 | 11 | [road-to-inbox-harvest-2026-08-b-install-lifecycle.md](roadmaps/road-to-inbox-harvest-2026-08-b-install-lifecycle.md) | 2 | 13 | 1 | 6 | 0 | 6 | [1](#blockers-road-to-inbox-harvest-2026-08-b-install-lifecycle) | █████████░ 86% |
@@ -223,33 +223,26 @@
     repo-admin setting that cannot be turned on from the tree.
   - **Resolved when:** the merge queue is enabled on `main` and at least one workflow declares a `merge_group` trigger (currently zero across `.github/`).
 
-### [road-to-inbox-harvest-2026-08-b-council-integrity.md](roadmaps/road-to-inbox-harvest-2026-08-b-council-integrity.md)
+### [road-to-inbox-harvest-2026-08-b-council-integrity-followup.md](roadmaps/road-to-inbox-harvest-2026-08-b-council-integrity-followup.md)
 
-**Road to council-pass integrity** — 6 / 8 done (75%)
+**Follow-up to council-pass integrity** — 0 / 5 done (0%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
-| 1 | Attendance becomes machine-readable | ✅ done | 0 | 5 | 1 | 0 | 100% |
-| 2 | A verdict that disagrees with its own tally | ⬜ not started | 1 | 0 | 0 | 0 | 0% |
-| 3 | One duplicated defence, honestly scoped | 🟡 in progress | 1 | 1 | 0 | 7 | 50% |
+| 1 | The solo-attendance floor (carried from parent Phase 1) | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
 
-<a id="blockers-road-to-inbox-harvest-2026-08-b-council-integrity"></a>
+<a id="blockers-road-to-inbox-harvest-2026-08-b-council-integrity-followup"></a>
 **Blockers**
 
-- **quorum-solo-floor** (owner: maintainer) — blocks 1.6 only. Phases 1.1–1.5, 2 and 3 ship and are useful without it.
+- **quorum-solo-floor** (owner: maintainer) — blocks 1.1 only — which is this roadmap's single step, so in practice the whole file. Nothing else here is gated; the parent's Phases 1.1–1.5, 2 and 3 shipped and are useful without it.
   - **What to do:**
-    the solo-conclusion rate is a rate over real passes, and no
-    event exists yet to accumulate it — which is why this is a blocker and not a
-    step. After 1.1 lands, pick between three pre-registered outcomes: (a) add a
-    third CLI member — `gemini` is already in `ai_council/cli_hints.ts:40-43` and
-    `ai_council/config.ts:78`, and `_lib/environment_detector.ts:138` records it as
-    `['gemini', false]` where the boolean is the community-wrapper flag documented
-    at `:127-133` (`false` = vendor-official CLI running under the user's own
-    subscription), so this option is spend-free on a host that has the binary;
-    (b) scope a `min_present: 2` floor to gate-class passes only; or (c) publish a
-    null if the rate is under 5 %. Tightening `ceil(n/2)` itself is out of scope —
-    `quorum.ts:13-19` records that divergence as a decision.
-  - **Resolved when:** one of the three outcomes is chosen against real attendance data, or 1.6 is cancelled against the published null.
+    wait for `agents/runtime/council/events.log` to carry enough
+    `quorum_result` rows to read a solo-conclusion rate, then pick one of the
+    three pre-registered outcomes in 1.1. This is **data accumulation, not a
+    human decision** — no one has to act for the condition to clear; the check is
+    `grep -c quorum_result agents/runtime/council/events.log`. The maintainer owns
+    the *choice* once the rate exists.
+  - **Resolved when:** the rate has been read from real rows and one of (a), (b), (c) is chosen against it — or 1.1 is cancelled against the published null.
 
 ### [road-to-inbox-harvest-2026-08-b-dispatch-safety.md](roadmaps/road-to-inbox-harvest-2026-08-b-dispatch-safety.md)
 
