@@ -20,6 +20,8 @@ import { afterAll, describe, expect, it } from 'vitest';
 import {
     REVIEW_SCOPE_EXCLUDES,
     REVIEW_SCOPE_GIT_CONFIG,
+    artefactStaleness,
+    leftoverArtefactRefusal,
     scopeExclusionViolation,
     computeReviewScope,
     deriveManifest,
@@ -850,5 +852,93 @@ describe('dispatch_r2_reviewer — slug source precedence', () => {
         const detached = (a: readonly string[]): string => (a.includes('--short') ? 'abc1234\n' : 'HEAD\n');
         expect(deriveSlug(detached, { GITHUB_HEAD_REF: 'feat/Road-To-X' })).toBe('feat-road-to-x');
         expect(deriveSlug(detached, {})).toBe('detached-abc1234');
+    });
+});
+
+describe('dispatch_r2_reviewer — a leftover artefact is classified, never silently replaced', () => {
+    const manifestFor = (scopeHash: string): string =>
+        deriveManifest({
+            diffSha: 'deadbeef',
+            scopeHash,
+            roadmap: 'none',
+            roadmapHash: 'none',
+            acHash: 'none',
+            dispatched: NOW,
+        });
+
+    it('classifies by the scope hash the review binds to', () => {
+        const manifest = manifestFor('a'.repeat(64));
+        expect(artefactStaleness(manifest, 'a'.repeat(64))).toBe('current');
+        expect(artefactStaleness(manifest, 'b'.repeat(64))).toBe('stale');
+        expect(artefactStaleness('no manifest here', 'a'.repeat(64))).toBe('unreadable');
+    });
+
+    // The refusal must route to contract §2.7, whose two paths are re-bind in
+    // place and archive-once-terminal. It must NOT invent a third one: an
+    // auto-rename would leave the shipping content with no review (the §2.7
+    // `missing-artifact` case) and would also miss `check_review_dispositions`,
+    // which recognises an archived record by `-review.md`.
+    it('a stale artefact routes to the two contract paths, not to a fresh skeleton', () => {
+        const text = leftoverArtefactRefusal(
+            'agents/evidence/reviews/x.findings.md',
+            'stale',
+            'a'.repeat(64),
+            'b'.repeat(64),
+        );
+        expect(text).toContain('RE-BIND IN PLACE');
+        expect(text).toContain('round<N>-review.md');
+        expect(text).toContain('check_review_dispositions');
+        expect(text).toContain('destroys the record');
+    });
+
+    it('names the live-review case differently from the stale one', () => {
+        const current = leftoverArtefactRefusal('x.findings.md', 'current', '', 'b'.repeat(64));
+        expect(current).toContain('LIVE review');
+        expect(current).not.toContain('RE-BIND IN PLACE');
+    });
+
+    it('refuses an unidentifiable artefact without claiming it is superseded', () => {
+        const text = leftoverArtefactRefusal('x.findings.md', 'unreadable', '', 'b'.repeat(64));
+        expect(text).toContain('cannot be identified as superseded');
+        expect(text).not.toContain('RE-BIND IN PLACE');
+    });
+
+    it('re-dispatch after the scope moved refuses and names the re-bind path', () => {
+        const repo = initRepo();
+        expect(run(dispatchArgs(repo)).status).toBe(0);
+        const findings = path.join(repo, OUT, `${SLUG}.findings.md`);
+        const firstScope = parseManifest(fs.readFileSync(findings, 'utf-8'))!.scope_hash;
+
+        // A revision moves the review scope — the normal §2.7 re-bind case.
+        write(repo, 'src/foo.ts', 'export const x = 2;\n');
+        git(repo, 'add', '-A');
+        git(repo, 'commit', '-qm', 'fix: revise foo');
+
+        const second = run(dispatchArgs(repo));
+        expect(second.status).toBe(1);
+        expect(second.stderr).toContain('RE-BIND IN PLACE');
+
+        // The artefact is untouched — no rename, no overwrite.
+        expect(parseManifest(fs.readFileSync(findings, 'utf-8'))!.scope_hash).toBe(firstScope);
+        expect(fs.readdirSync(path.join(repo, OUT)).filter((n) => n.includes('superseded'))).toEqual(
+            [],
+        );
+    });
+
+    it('re-dispatch on an UNCHANGED scope says the artefact is the live review', () => {
+        const repo = initRepo();
+        expect(run(dispatchArgs(repo)).status).toBe(0);
+        const again = run(dispatchArgs(repo));
+        expect(again.status).toBe(1);
+        expect(again.stderr).toContain('LIVE review');
+    });
+
+    it('an unreadable artefact is refused rather than replaced on a guess', () => {
+        const repo = initRepo();
+        expect(run(dispatchArgs(repo)).status).toBe(0);
+        write(repo, path.join(OUT, `${SLUG}.findings.md`), 'no manifest at all\n');
+        const again = run(dispatchArgs(repo));
+        expect(again.status).toBe(1);
+        expect(again.stderr).toContain('cannot be identified as superseded');
     });
 });

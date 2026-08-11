@@ -11,7 +11,14 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 
-import { type DefectFinding, type DefectRecord, fingerprint, mergeRecord } from './self_repair.js';
+import {
+    creationCapReached,
+    type DefectFinding,
+    type DefectRecord,
+    type DefectSource,
+    fingerprint,
+    mergeRecord,
+} from './self_repair.js';
 
 export const STORE_REL = path.join('agents', 'runtime', 'self-repair');
 
@@ -61,7 +68,10 @@ export function listRecords(root: string): DefectRecord[] {
     }
     const out: DefectRecord[] = [];
     for (const n of names.sort()) {
-        if (!n.endsWith('.json')) {
+        // The overflow counter shares the directory and the extension but is not
+        // a record. `isRecord` would reject it anyway; naming it here keeps the
+        // exclusion intentional rather than incidental.
+        if (!n.endsWith('.json') || n === OVERFLOW_FILE) {
             continue;
         }
         const rec = readRecord(root, n.slice(0, -'.json'.length));
@@ -78,12 +88,62 @@ export function openRecords(root: string): DefectRecord[] {
 }
 
 /**
- * Fold a finding into the store: increments the existing record when the
- * fingerprint matches, otherwise opens a new one. Returns the stored record.
+ * Per-source counters for findings the creation cap refused. ONE file for the
+ * whole store, so the overflow record is bounded by construction — it is the
+ * counter a runaway writer increments instead of the file it would otherwise
+ * mint. Deliberately NOT a `DefectRecord`: an overflow is not a defect and must
+ * not need a `DefectClass`, an issue-form dropdown entry, or an egress route.
  */
-export function upsertFinding(root: string, finding: DefectFinding, now: string): DefectRecord {
+export const OVERFLOW_FILE = '_overflow.json';
+
+export type OverflowCounts = Partial<Record<DefectSource, { dropped: number; last_seen: string }>>;
+
+function overflowPath(root: string): string {
+    return path.join(storeDir(root), OVERFLOW_FILE);
+}
+
+export function readOverflow(root: string): OverflowCounts {
+    try {
+        const parsed: unknown = JSON.parse(fs.readFileSync(overflowPath(root), 'utf-8'));
+        return typeof parsed === 'object' && parsed !== null ? (parsed as OverflowCounts) : {};
+    } catch {
+        return {};
+    }
+}
+
+function bumpOverflow(root: string, source: DefectSource, now: string): void {
+    const counts = readOverflow(root);
+    const prev = counts[source]?.dropped ?? 0;
+    counts[source] = { dropped: prev + 1, last_seen: now };
+    const dir = storeDir(root);
+    fs.mkdirSync(dir, { recursive: true });
+    fs.writeFileSync(overflowPath(root), `${JSON.stringify(counts, null, 2)}\n`, 'utf-8');
+}
+
+/**
+ * Fold a finding into the store: increments the existing record when the
+ * fingerprint matches, otherwise opens a new one. Returns the stored record, or
+ * `null` when the per-source creation cap refused to open a new one.
+ *
+ * A refusal is COUNTED, never silent — `readOverflow` carries the per-source
+ * drop tally, so "the cap fired" is a readable fact rather than a defect that
+ * disappeared. A cap that quietly discarded reports would break this loop's own
+ * Iron Law (a defect is queued, never shrugged off) in the name of bounding it.
+ */
+export function upsertFinding(
+    root: string,
+    finding: DefectFinding,
+    now: string,
+): DefectRecord | null {
     const fp = fingerprint(finding.defect_class, finding.evidence);
-    const merged = mergeRecord(readRecord(root, fp), finding, now);
+    const existing = readRecord(root, fp);
+    // The fold path never consults the cap: a fingerprint already in the store
+    // adds no file, so capping it would silence a tracked defect for no bound.
+    if (existing === null && creationCapReached(listRecords(root), finding, now)) {
+        bumpOverflow(root, finding.source, now);
+        return null;
+    }
+    const merged = mergeRecord(existing, finding, now);
     writeRecord(root, merged);
     return merged;
 }

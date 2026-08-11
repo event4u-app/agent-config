@@ -538,6 +538,66 @@ export function fingerprint(defect_class: DefectClass, evidence: string): string
 }
 
 /** Fold a finding into an existing record, or open a new one. */
+// ── creation rate cap ──────────────────────────────────────────────
+//
+// `upsertFinding` folds on fingerprint, so a *recurring* defect increments one
+// record and adds no file. What nothing bounded is **creation**: the fingerprint
+// is `defect_class + evidence`, and evidence is a quoted span from the turn, so a
+// defect whose span varies per turn mints a fresh record every time. The only
+// cap in the module pair was `MAX_EVIDENCE`, which bounds a span's *length* and
+// says nothing about how many records may exist.
+//
+// The cap is per `source` because the two intake paths have different plausible
+// rates and a runaway on one must not consume the other's headroom: a
+// `user-reported` record needs the user to complain, and `self-detected` fires at
+// most once per turn per detector. `NEW_RECORDS_PER_SOURCE_PER_WINDOW` sits above
+// any plausible day (three detector classes, a few evidence variants each) and
+// far below a runaway (one per turn over a long session).
+export const NEW_RECORDS_PER_SOURCE_PER_WINDOW = 20;
+export const CREATION_WINDOW_MS = 24 * 60 * 60 * 1000;
+
+/**
+ * How many records of `source` were CREATED inside the window ending at `now`.
+ * Counts `first_seen`, never `last_seen` — an old record still being folded into
+ * is not creation and must not consume the budget.
+ */
+export function recentCreations(
+    existing: readonly DefectRecord[],
+    source: DefectSource,
+    now: string,
+): number {
+    const end = Date.parse(now);
+    if (Number.isNaN(end)) {
+        return 0;
+    }
+    return existing.filter((r) => {
+        if (r.source !== source) {
+            return false;
+        }
+        const t = Date.parse(r.first_seen);
+        // An unparseable stamp is counted: a malformed record is exactly what a
+        // runaway writer produces, and failing open there would uncap the store.
+        return Number.isNaN(t) || (end - t < CREATION_WINDOW_MS && end - t >= 0);
+    }).length;
+}
+
+/**
+ * Whether opening a NEW record for `finding` is over budget. A fingerprint that
+ * already exists is a fold, never a creation, so it is never capped — the cap
+ * must not silence a defect the store is already tracking.
+ */
+export function creationCapReached(
+    existing: readonly DefectRecord[],
+    finding: DefectFinding,
+    now: string,
+): boolean {
+    const fp = fingerprint(finding.defect_class, finding.evidence);
+    if (existing.some((r) => r.fingerprint === fp)) {
+        return false;
+    }
+    return recentCreations(existing, finding.source, now) >= NEW_RECORDS_PER_SOURCE_PER_WINDOW;
+}
+
 export function mergeRecord(
     existing: DefectRecord | null,
     finding: DefectFinding,

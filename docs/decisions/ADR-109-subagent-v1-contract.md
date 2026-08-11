@@ -251,6 +251,33 @@ upstream closes the gap.
   found by re-checking current host documentation; it does not reopen the
   contract or alter `status: accepted`.
 
+## Amendment 4 (2026-08-11) — `tools` admits a scoped grant (additive)
+
+§2's `tools` field was enum-validated against the bare Claude Code tool set, so
+`Bash(npm test:*)` was **inexpressible** while
+[`tool-safety`](../../src/rules/tool-safety.md) § Scoped grants prescribes the
+opposite ("Prefer scoped-grant syntax over bare tool names"). The schema now
+validates `tools` with a pattern that keeps the base name closed — a typo still
+fails CI — and admits an optional `(...)` suffix.
+
+- **Additive, not a contract change.** Every value the old enum accepted still
+  validates; the pattern only widens what a governed definition may express. The
+  field stays REQUIRED and stays enum-closed on the base token, which is the
+  property the enum was there for. No `status: accepted` change.
+- **Expressible is not the same as mandatory.** The one shipped unit
+  (`src/subagents/production-validator.md`) keeps an **unscoped** `Bash`
+  deliberately, reasoned in its own frontmatter and disposed by a committed
+  `security-lint: allow` pragma: its audit must run whatever runner a *consumer*
+  project uses, so a portable suite cannot enumerate the command families, and a
+  scope that guesses wrong makes the validator report a missing run it was merely
+  forbidden to attempt. Least Agency is the narrowest grant that still satisfies
+  the task — not the narrowest grant.
+- **The detector that reads it.** `lint_skill_frontmatter_safety` scans
+  `src/subagents` and reads the top-level `tools:` key, so a bare shell grant on a
+  subagent is a HIGH finding that must be narrowed or disposed in the file. Its
+  clean-path note names the corpus actually walked, so "is this root scanned?" is
+  answerable by running the gate.
+
 ## References
 
 - Council debate 2026-07-04 (claude-sonnet-4-5 + gpt-4o, 2 rounds).

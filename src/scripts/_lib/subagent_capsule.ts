@@ -232,10 +232,35 @@ export interface MainSessionRecycleEnvelope {
      * of silent. Required; an empty list is a claim, not a default.
      */
     not_carried_forward: string[];
-    /** Choices already made, each with its one-line rationale in the same line. */
+    /**
+     * Choices already made, each with its one-line rationale in the same line.
+     *
+     * A line MAY close with a reversibility tag — `[reversible]` or
+     * `[irreversible]` — so the successor can tell "we picked A over B, easy to
+     * revisit" from "we already migrated the data". The tag is OPTIONAL, so no
+     * committed envelope is retroactively invalid; when present its spelling is
+     * validated, which is what keeps it a checkable field rather than a doctrine
+     * nobody can verify. No claim is made that it improves resumption — that
+     * stays the registered, unmeasured `envelope_resume_success` metric.
+     */
     decisions?: string[];
     /** Binding constraints the successor must not silently re-open. */
     constraints?: string[];
+    /**
+     * Paths the successor must NOT modify — a parallel worktree, a file another
+     * session holds, a generated projection whose source lives elsewhere.
+     *
+     * Distinct from `constraints`, which carries decisions in prose: this is a
+     * list of path refs, so "was this path off limits?" is answerable by
+     * comparison instead of by reading. That checkability is the whole reason it
+     * is a field rather than a sentence — the same bar the handoff-envelope
+     * adjudication set (a field whose presence is checkable survives where a
+     * doctrine whose effect is unmeasured did not).
+     *
+     * Optional: an envelope with nothing off limits states nothing here, and an
+     * empty list is not a claim that everything is writable.
+     */
+    do_not_touch?: string[];
     /** Open worker CHECKPOINT envelopes by path — never inlined bodies. */
     open_worker_envelopes?: string[];
     /** Artifact paths (deliverables, notes, evidence) — refs, never bodies. */
@@ -444,6 +469,54 @@ export function hasBoundaryMarker(block: string): boolean {
     );
 }
 
+/** The two accepted reversibility tags, exact spellings. */
+export const DECISION_REVERSIBILITY_TAGS: readonly string[] = ['reversible', 'irreversible'];
+
+/**
+ * Validate the OPTIONAL trailing reversibility tag on a decision line.
+ *
+ * Fires only on a line that closes with a bracket whose content is trying to be
+ * one of the two tags — `[reversble]`, `[Irreversible!]`, `[reversible?]`. A
+ * bracket used for anything else (`[ADR-109]`, `[see #1273]`) is left alone, and
+ * a line with no bracket at all is the untagged default. So the check catches a
+ * typo in a tag someone MEANT to write, which is the only failure a
+ * presence-checkable optional field can actually have: a silently misspelled tag
+ * reads as "untagged" and loses the distinction the tag exists to carry.
+ */
+export function decisionTagErrors(decisions: unknown): string[] {
+    if (!Array.isArray(decisions)) {
+        return [];
+    }
+    const errors: string[] = [];
+    for (const line of decisions) {
+        if (typeof line !== 'string') {
+            continue;
+        }
+        const m = /\[([^\]]*)\]\s*$/.exec(line.trimEnd());
+        if (m === null) {
+            continue;
+        }
+        const inner = (m[1] ?? '').trim();
+        const lowered = inner.toLowerCase();
+        if (DECISION_REVERSIBILITY_TAGS.includes(lowered)) {
+            if (inner !== lowered) {
+                errors.push(
+                    `decisions: reversibility tag must be lower-case — got \`[${inner}]\`, expected \`[${lowered}]\``,
+                );
+            }
+            continue;
+        }
+        if (/^i?rr?ever[a-z]*[^a-z]*$/i.test(lowered)) {
+            errors.push(
+                `decisions: \`[${inner}]\` is not a reversibility tag — use exactly ` +
+                    DECISION_REVERSIBILITY_TAGS.map((t) => `\`[${t}]\``).join(' or ') +
+                    ', or drop the bracket',
+            );
+        }
+    }
+    return errors;
+}
+
 /** Every key `validateRecycleEnvelope` accepts — anything else is schema-invalid. */
 const RECYCLE_ENVELOPE_KEYS: ReadonlySet<string> = new Set([
     'capsule_version',
@@ -457,6 +530,7 @@ const RECYCLE_ENVELOPE_KEYS: ReadonlySet<string> = new Set([
     'not_carried_forward',
     'decisions',
     'constraints',
+    'do_not_touch',
     'open_worker_envelopes',
     'artifact_paths',
     'assumptions',
@@ -519,7 +593,10 @@ export function validateRecycleEnvelope(input: unknown): string[] {
     checkList(errors, 'remaining', e['remaining'], MAX_LINE_CHARS, true);
     checkList(errors, 'not_carried_forward', e['not_carried_forward'], MAX_LINE_CHARS, true);
     checkList(errors, 'decisions', e['decisions'], MAX_LINE_CHARS, false);
+    errors.push(...decisionTagErrors(e['decisions']));
     checkList(errors, 'constraints', e['constraints'], MAX_LINE_CHARS, false);
+    // Path refs, so the REF budget applies — not the prose one `constraints` uses.
+    checkList(errors, 'do_not_touch', e['do_not_touch'], MAX_REF_CHARS, false);
     checkList(errors, 'open_worker_envelopes', e['open_worker_envelopes'], MAX_REF_CHARS, false);
     checkList(errors, 'artifact_paths', e['artifact_paths'], MAX_REF_CHARS, false);
     checkList(errors, 'suggested_skills', e['suggested_skills'], MAX_REF_CHARS, false);

@@ -125,3 +125,70 @@ describe('lint_skill_frontmatter_safety — _scan over a built ScannedFile', () 
         expect(hits).toHaveLength(0);
     });
 });
+
+// --- The clean-path scope note names the corpus actually walked --------------
+//
+// This gate replaces `DEFAULT_SCAN_ROOTS` outright, so a hardcoded note made it
+// claim two roots it never reads and omit `src/subagents`, the one root holding
+// the artefact its over-broad-grant check exists for. Asserted through the real
+// `report` on a captured stdout rather than against a pinned string, so the
+// property under test is "the note equals the roots passed", for any roots.
+
+describe('security_lint.report — the clean-path scope note', () => {
+    function captureCleanNote(scanned_roots?: readonly string[]): string {
+        const chunks: string[] = [];
+        const original = process.stdout.write.bind(process.stdout);
+        (process.stdout as unknown as { write: (s: string) => boolean }).write = (s: string) => {
+            chunks.push(String(s));
+            return true;
+        };
+        try {
+            // The key is OMITTED rather than passed as `undefined`: the repo
+            // typechecks with `exactOptionalPropertyTypes`, under which those are
+            // different types, and "no argument" is the case being exercised.
+            const code =
+                scanned_roots === undefined
+                    ? sl.report([], { check_label: 'scope-note-spec' })
+                    : sl.report([], { check_label: 'scope-note-spec', scanned_roots });
+            expect(code).toBe(0);
+        } finally {
+            (process.stdout as unknown as { write: typeof original }).write = original;
+        }
+        return chunks.join('');
+    }
+
+    it('names exactly the roots the caller passed, in order', () => {
+        const roots = ['alpha/one', 'beta/two', 'gamma/three'];
+        const out = captureCleanNote(roots);
+        expect(out).toContain(`clean (scanned ${roots.join(', ')})`);
+    });
+
+    it('omits a root the caller did not pass', () => {
+        const out = captureCleanNote(['only/this']);
+        for (const notScanned of sl.DEFAULT_SCAN_ROOTS) {
+            if (notScanned === 'only/this') continue;
+            expect(out).not.toContain(notScanned);
+        }
+    });
+
+    it('falls back to the shared default when the caller passes nothing', () => {
+        expect(captureCleanNote()).toContain(
+            `clean (scanned ${sl.DEFAULT_SCAN_ROOTS.join(', ')})`,
+        );
+    });
+
+    it('treats an empty root list as "no answer" rather than an empty scope', () => {
+        expect(captureCleanNote([])).toContain(
+            `clean (scanned ${sl.DEFAULT_SCAN_ROOTS.join(', ')})`,
+        );
+    });
+
+    it('is wired: this gate reports the four roots its own main walks', () => {
+        const src = fs.readFileSync(
+            path.join(__dirname, '..', '..', 'src', 'scripts', 'lint_skill_frontmatter_safety.ts'),
+            'utf-8',
+        );
+        expect(src).toMatch(/scanned_roots:\s*roots/);
+        expect(src).toContain("'src/subagents'");
+    });
+});

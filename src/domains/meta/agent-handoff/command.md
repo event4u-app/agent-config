@@ -167,9 +167,11 @@ Markdown, no host API). Required fields, in order:
 ## Contract owed
 {what the current phase must produce before yielding}
 ## Decisions
-- {decisions taken, with one-line rationale}
+- {decision taken, with one-line rationale} {optionally close the line with
+  `[reversible]` or `[irreversible]` — those two spellings exactly}
 ## Open questions
-- {unresolved items the next session must not silently drop}
+- {unresolved items the next session must not silently drop — each as a
+  question ending in `?`; write `none` when there genuinely are none}
 ## Next command
 {the single command or step to run first on resume}
 ```
@@ -177,7 +179,11 @@ Markdown, no host API). Required fields, in order:
 **Resume rule:** a workflow skill's step 0 checks for this file and resumes
 from its contract (mode-inference table) instead of re-deriving state; a
 long phase refreshes the file before yielding. Validated by
-`lint_handoffs.ts` when present — a missing required field is red.
+`lint_handoffs.ts` when present — a missing required field is red, and so is an
+`## Open questions` section that answers neither way (blank, or a bare `TBD` /
+`TODO` / `...`). A `?`-terminated question passes; so does an explicit `none` —
+the check exists to stop a blank section reading as an all-clear, not to force a
+question where there is none.
 
 **Critical-planning-file safety protocol** (applies to HANDOFF.md and agent
 roadmap edits): read the current file FIRST; take a timestamped backup copy
@@ -225,6 +231,12 @@ do not auto-execute.
 - **Branch name is critical** — always include it.
 - **Open tasks are critical** — the new chat needs to know what's left.
 - **Decisions are important** — prevents the new chat from re-asking settled questions.
+  A decision line may close with `[reversible]` or `[irreversible]`, which tells the
+  successor "we picked A over B, easy to revisit" apart from "we already migrated the
+  data". The tag is optional; those two spellings are the only accepted ones, and a
+  near-miss (`[reversble]`, `[Irreversible]`) is a validation error rather than a
+  silently untagged line. No claim is made that tagging improves resumption — that
+  stays the registered, unmeasured `envelope_resume_success` metric.
 - **File list is optional** — only include if the new chat will need to edit specific files.
 - **NEVER render a printed handoff as live markdown** — see Iron Law above.
 
