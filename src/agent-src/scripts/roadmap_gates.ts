@@ -18,10 +18,34 @@
  * Blocking a pipeline on "the user has an open decision" would turn a
  * visibility aid into a second thing to fight.
  *
+ * `--reply` is the same projection shaped for the END OF A CHAT REPLY rather
+ * than a terminal pane, and it exists because the pull channel above is only
+ * read by someone who already knows to ask. Transcript forensics over three
+ * consumer sessions found five "what do I do now?" follow-ups, every one of
+ * them next to a blocker the agent HAD reported — as a file reference, as a
+ * bare option count, or as a choice of substitute work. What the same corpus
+ * also shows is that a tool's output gets carried into the reply verbatim
+ * (the dashboard's step count appears word-for-word inside eight option
+ * blocks). So the fix is not to make the agent format better from memory; it
+ * is to hand it the finished text. See ADR-222.
+ *
+ * Two properties carry the contract mechanically:
+ *   - Nothing owned by the user open ⇒ EMPTY output. "No blocker → no block"
+ *     stops being a judgement call, so the command is safe to call
+ *     unconditionally at reply-close.
+ *   - Exactly ONE blocker is rendered in full — the one that unblocks most.
+ *     Every other one is a single trailing line. The user is never handed a
+ *     flat list to weigh themselves.
+ *
+ * Labels are English like the rest of the CLI surface; the agent mirrors them
+ * into the user's language when it lifts them into a reply, exactly as it does
+ * for `Recommendation:` / `Empfehlung:`.
+ *
  * Invocation (from project root):
  *   ./agent-config gates            # decisions owned by the user
  *   ./agent-config gates --all      # every open blocker, grouped by owner
  *   ./agent-config gates --json     # machine-readable
+ *   ./agent-config gates --reply    # reply-close form; empty when none
  */
 
 import * as path from 'node:path';
@@ -209,6 +233,76 @@ function render(entries: readonly Entry[], all: boolean): string {
     return lines.join('\n') + '\n';
 }
 
+/**
+ * Reply-close form: the one blocking decision in full, the rest as one line.
+ *
+ * Deliberately narrower than `render()`. `Status` and `Owner` are roadmap-file
+ * metadata that a reader of a reply cannot act on, so they are dropped; what
+ * survives is what the user has to DO and how they will know it is done. The
+ * five-field shape stays where it is enforced — in the roadmap file — and does
+ * not follow the blocker into prose it would only pad.
+ *
+ * Returns '' when nothing is owned by the user, so the caller can append the
+ * result unconditionally and get silence when silence is correct.
+ */
+function renderReply(entries: readonly Entry[]): string {
+    const mine = entries.filter((e) => needsUser(e.blocker.owner));
+    if (mine.length === 0) {
+        return '';
+    }
+
+    // `collectEntries` already sorted by unblocking weight, so the first entry
+    // IS the one that matters most. Picking it here rather than asking the
+    // caller to choose is the point: a flat list is the failure mode.
+    const lead = mine[0] as Entry;
+    const rest = mine.slice(1);
+    const lines: string[] = [];
+
+    lines.push(`Blocked: ${lead.blocker.blocks} — ${lead.roadmapRel}`);
+
+    const steps = regroupTodo(lead.blocker.todo);
+    const doLabel = isLegacy(lead.blocker) ? 'Blocked until:' : 'Do:';
+    if (steps.length === 0) {
+        lines.push(
+            `${doLabel} (no steps recorded — the blocker entry needs a **What to do:** list)`,
+        );
+    } else if (steps.length === 1) {
+        lines.push(...wrap(`${doLabel} ${steps[0] as string}`, WIDTH, '    '));
+    } else {
+        // Emitted as authored, never re-numbered: real blocker entries already
+        // carry their own `1.` / `2.` markers (the CI-enforced `What to do:`
+        // shape), so adding our own would produce "1. 1. …". An entry that
+        // arrives unnumbered stays unnumbered — that is a fact about the
+        // roadmap entry, and papering over it here would hide it from the
+        // person who could fix it.
+        lines.push(`${doLabel}`);
+        for (const s of steps) {
+            lines.push(...wrap(`  ${s}`, WIDTH, '     '));
+        }
+    }
+    lines.push(...wrap(`Done when: ${lead.blocker.resolvedWhen}`, WIDTH, '    '));
+
+    if (rest.length > 0) {
+        // A count, not a roster. Naming all of them reproduces the exact
+        // failure this form exists to end — "zwölf Entscheidungen bei Dir …
+        // rund 850 Zeilen", which the transcript shows produced no decision at
+        // all. The one that blocks is written out above; the rest are one
+        // command away, and saying so is shorter than listing them and more
+        // honest than hiding them.
+        lines.push('');
+        lines.push(
+            ...wrap(
+                `${rest.length} other decision${rest.length !== 1 ? 's' : ''} also wait${rest.length === 1 ? 's' : ''} on you, ` +
+                    'none blocking this — `agent-config gates`.',
+                WIDTH,
+                '    ',
+            ),
+        );
+    }
+
+    return lines.join('\n') + '\n';
+}
+
 function renderJson(entries: readonly Entry[], all: boolean): string {
     const pick = all ? entries : entries.filter((e) => needsUser(e.blocker.owner));
     return (
@@ -270,18 +364,28 @@ function main(argv?: readonly string[]): number {
     const args = argv ?? process.argv.slice(2);
     const all = args.includes('--all');
     const json = args.includes('--json');
+    const reply = args.includes('--reply');
 
     const repoRoot = _resolveRepoRoot(process.cwd());
     const roadmapRoot = path.join(repoRoot, 'agents', 'roadmaps');
     if (!_isDir(roadmapRoot)) {
+        // `--reply` stays silent here too: a project without roadmaps has no
+        // blocker to hand over, and a reply-close line saying so would be the
+        // ceremony the form exists to avoid.
         process.stdout.write(
-            json ? '{"needsYou":0,"other":0,"blockers":[]}\n' : 'No roadmaps directory — nothing to report.\n',
+            reply
+                ? ''
+                : json
+                  ? '{"needsYou":0,"other":0,"blockers":[]}\n'
+                  : 'No roadmaps directory — nothing to report.\n',
         );
         return 0;
     }
 
     const entries = collectEntries(roadmapRoot);
-    process.stdout.write(json ? renderJson(entries, all) : render(entries, all));
+    process.stdout.write(
+        reply ? renderReply(entries) : json ? renderJson(entries, all) : render(entries, all),
+    );
     return 0;
 }
 
@@ -308,5 +412,5 @@ if (_isCliEntry()) {
     process.exitCode = main();
 }
 
-export { main, needsUser, regroupTodo, wrap, collectEntries, render, renderJson };
+export { main, needsUser, regroupTodo, wrap, collectEntries, render, renderJson, renderReply };
 export type { Entry };
