@@ -79,8 +79,15 @@ Minimal-install scaffold (override layer): `agents/overrides/{rules,skills,comma
 `agents/overrides/README.md`.
 
 VSCode substrate bridge: `<root>/.vscode/settings.json` key
-`/chat/pluginLocations/<plugin_path>` is written unconditionally and is
-**intentionally not tracked** in the manifest (see § Untracked surfaces).
+`/chat.pluginLocations/<escaped_plugin_path>` is written unconditionally. It is
+**recorded** in the manifest under the `augment` entry, which is the only other
+unconditionally-written project bridge (see § Untracked surfaces for the residual
+when `augment` is not among the selected tools).
+
+`chat.pluginLocations` is a literal dotted key, not a nesting level, so the
+pointer's first segment carries the dot verbatim and the plugin path is
+`~1`-escaped per RFC 6901 (`_escape_segment` in
+[`json_pointers.ts`](../../src/scripts/_lib/json_pointers.ts)).
 
 ### Per-tool project-scope bridge markers
 
@@ -168,7 +175,7 @@ leaves; sibling keys owned by other tools survive. The exceptions are noted.
 | `.windsurf/hooks.json`, `~/.codeium/windsurf/hooks.json` | `/hooks/{post_setup_worktree,pre_user_prompt,post_cascade_response}` | deep_merge |
 | `.gemini/settings.json`, `~/.gemini/settings.json` | `/hooks/{SessionStart,SessionEnd,AfterAgent,BeforeAgent,AfterTool}` | deep_merge |
 | `.github/plugin/marketplace.json` | `/marketplace/name`, `/marketplace/plugins/0` | **whole-file write** |
-| `.vscode/settings.json` | `/chat/pluginLocations/<path>` | deep_merge (**untracked**) |
+| `.vscode/settings.json` | `/chat.pluginLocations/<~1-escaped path>` | deep_merge (recorded under `augment`) |
 
 Per the manifest contract, RFC-6901 pointers target object keys, never array
 indices — except the documented hook-array replacements above, which the
@@ -225,13 +232,36 @@ currently undo them. They are frozen as documented behaviour, not contract
 promises — fixing them is an additive change (recording a previously-untracked
 write), never a breaking one.
 
-- `.vscode/settings.json` `chat.pluginLocations` (substrate bridge, written
-  unconditionally).
-- User-scope `merged_keys` (the global install path passes `files_by_tool` but
+- ~~`.vscode/settings.json` `chat.pluginLocations` (substrate bridge, written
+  unconditionally).~~ **Closed.** `ensure_vscode_bridge` now returns its
+  `merge_json_file` result like its nine sibling call sites, and the project
+  install threads it into `merged_keys_by_tool` under `augment`.
+- ~~User-scope `merged_keys` (the global install path passes `files_by_tool` but
   not `merged_keys_by_tool`, so JSON merges into `~/.augment/settings.json`,
-  `~/.cursor/hooks.json`, etc. are unrecorded).
-- Best-effort legacy-trampoline removal (`OSError` swallowed; failed removals
-  leave stale files with no manifest entry).
+  `~/.cursor/hooks.json`, etc. are unrecorded).~~ **Withdrawn — the stated
+  mechanism does not exist.** `install_global` performs no JSON merge at all: the
+  user-scope hook merges are opt-in flags on the *project* install path
+  (`--augment-user-hooks` and siblings), and that path already captures every one
+  of them into `merged_keys_by_tool` and passes it. The omitted sixth argument on
+  the global call is real and inert — there is nothing on that path to record.
+  The one genuine user-scope residual is listed below.
+
+Still frozen:
+
+- **Unconditional bridges depend on `augment` being selected.** Both
+  `.vscode/settings.json` and `.augment/settings.json` are written regardless of
+  `--tools`, but the lockfile keys `merged_keys` by tool name, and the manifest
+  writer skips a tool that is not in the selected set. An install such as
+  `--tools claude-code` therefore writes both files and records neither. Closing
+  this needs a manifest identity for substrate writes, which is a schema change
+  (`name` must be one of `_VALID_TOOLS`), not an additive fix.
+- **Cline user-scope trampolines.** `ensure_cline_user_hooks` writes hook scripts
+  and returns `void`, so unlike its four siblings it contributes no
+  `merged_keys`; the files it writes carry no manifest entry.
+- **Best-effort legacy-trampoline removal.** A failed removal is now surfaced as
+  a non-fatal warning naming the path instead of a swallowed `OSError`, so it is
+  visible — but the stale file it leaves behind still has no manifest entry, and
+  removal semantics are deliberately unchanged.
 
 ## `--apply-payload` entry point
 
