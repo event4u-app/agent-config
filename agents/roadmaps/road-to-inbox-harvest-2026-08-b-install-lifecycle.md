@@ -137,8 +137,13 @@ tests for that behaviour exist (`tests/scripts/_cli/cmd_uninstall.test.ts`,
       contradicts a shipped, documented mechanism. Any reopening must reconcile the two
       first or they contradict at runtime.
       <!-- verify: rg -n 'extend|replace' src/skills/override-management/SKILL.md | head -5 -->
-- [~] **2.3 Decide whether an external pack source root opens.** Deferred behind
-      `blocker: org-pack-reopening`. Note that `src/config/discovery/packs.yml:1-4` is a
+- [ ] **2.3 Decide whether an external pack source root opens.** Open behind
+      `blocker: org-pack-reopening`; the 2.1 brief it waits on has landed at
+      `agents/settings/contexts/org-pack-reopening-brief.md`. Restored from `[~]` to
+      `[ ]` on 2026-08-11 (maintainer decision): the step is blocked-and-open, not
+      half-shipped, and `[ ]` plus a recorded blocker is exactly what that state
+      means — `[~]` is reserved for genuinely partial work.
+      Note that `src/config/discovery/packs.yml:1-4` is a
       **closed** id vocabulary whose amendment "require[s] an ADR-013 amendment in the
       same PR", so an open vocabulary is a direct contract change, not an additive
       feature.
