@@ -102,7 +102,7 @@ jobs:
 
       - name: Install npm dependencies
         if: steps.check.outputs.already_published != 'true'
-        run: npm ci
+        run: npm ci --no-audit --no-fund --prefer-offline
 
       - name: Build CLI and UI ahead of pack (prepack chain)
         if: steps.check.outputs.already_published != 'true'

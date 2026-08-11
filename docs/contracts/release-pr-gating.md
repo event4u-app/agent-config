@@ -14,10 +14,15 @@ keep-beta-until: 2026-09-04
 > This contract's shape checks are author-agnostic by design; both entry
 > points produce the identical PR shape below.
 >
-> Source: `road-to-optimized-ci-and-release-gates.md` Phase A Step 1. Measured
-> baseline (`gh run list --branch main --limit 50`): `Public Install Smoke`
-> avg **413 s** (3-OS × 2-Node matrix), `Tests` avg **218 s** (Linux + macOS
-> + Windows). Both trigger on `package.json`. Release PRs (`release/X.Y.Z`)
+> Source: `road-to-optimized-ci-and-release-gates.md` Phase A Step 1. Original
+> baseline, run-level (`gh run list --branch main --limit 50`): `Public Install
+> Smoke` avg **413 s** (3-OS × 2-Node matrix), `Tests` avg **218 s** (Linux +
+> macOS + Windows). **Re-measured per job on 2026-08-11** — the slowest Public
+> Install Smoke leg is the Windows one at 159–169 s, and no leg is near the
+> 5-minute ceiling; the two figures are not directly comparable because the
+> older one is matrix-level. Current per-job numbers live in
+> [`ci-cost-budget.md`](ci-cost-budget.md); the skip argument below is
+> unaffected either way. Both trigger on `package.json`. Release PRs (`release/X.Y.Z`)
 > only touch `package.json`, `CHANGELOG.md`, `marketplace.json`,
 > `packages/*/pack.yaml`, `packages/*/README.md`, and the CHANGELOG era
 > archive `docs/archive/CHANGELOG-pre-*.md` — verified against PR #238
