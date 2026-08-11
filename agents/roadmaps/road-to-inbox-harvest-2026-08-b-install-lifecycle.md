@@ -137,16 +137,27 @@ tests for that behaviour exist (`tests/scripts/_cli/cmd_uninstall.test.ts`,
       contradicts a shipped, documented mechanism. Any reopening must reconcile the two
       first or they contradict at runtime.
       <!-- verify: rg -n 'extend|replace' src/skills/override-management/SKILL.md | head -5 -->
-- [ ] **2.3 Decide whether an external pack source root opens.** Open behind
-      `blocker: org-pack-reopening`; the 2.1 brief it waits on has landed at
-      `agents/settings/contexts/org-pack-reopening-brief.md`. Restored from `[~]` to
-      `[ ]` on 2026-08-11 (maintainer decision): the step is blocked-and-open, not
-      half-shipped, and `[ ]` plus a recorded blocker is exactly what that state
-      means — `[~]` is reserved for genuinely partial work.
-      Note that `src/config/discovery/packs.yml:1-4` is a
-      **closed** id vocabulary whose amendment "require[s] an ADR-013 amendment in the
-      same PR", so an open vocabulary is a direct contract change, not an additive
-      feature.
+- [-] **2.3 Decide whether an external pack source root opens.** **Declined
+      2026-08-11.** The source root does not open, ADR-011 stands, and no ADR is
+      commissioned. Decided against the 2.1 brief
+      (`agents/settings/contexts/org-pack-reopening-brief.md`, which carries no
+      recommendation by construction) via an AI-council pass that converged **2/2 on
+      decline**; the reasoning and the falsifiable reopen condition are recorded in
+      that brief under `## Decision`. Citation order, as the council weighted it:
+      **(1)** the unresolved `replace` contradiction — the brief's § (d) names
+      reconciling it a *precondition* of any reopening, and it is unreconciled, so the
+      proposal fails its own precondition before any external argument is reached;
+      **(2)** the capacity frame — 116 rules, 289 skills, 12 in-repo packs, one
+      maintainer, and a pack system externalises the error surface, since an external
+      artefact's syntax error surfaces at runtime rather than at PR time and a kernel
+      change then needs N external maintainers to act; **(3)** the closed id
+      vocabulary — `src/config/discovery/packs.yml:1-4` requires "an ADR-013 amendment
+      in the same PR", so an externally-supplied vocabulary is a direct contract
+      change, not an additive feature. ADR-011's unfired design gate is deliberately
+      **not** the lead citation: it was written against *extraction*, so the brief's
+      § (b) mechanism-match reading holds. It still bears indirectly — the
+      identity-collision, precedence and trust-boundary questions its overlap
+      inventory would have forced are unanswered in the ingestion direction too.
 - [-] **2.4 Build the pack system.** Cancelled — it ships: `packs:` is a schema'd
       frontmatter key (`src/scripts/schemas/skill.schema.json:244-253`) carried by all
       **289** skills; **12** in-repo packs at `src/domains/*/pack.yaml`;
@@ -186,7 +197,7 @@ condition (`:10-17`). That is the frame the decision is taken in.
 ## Blockers
 
 ### blocker: org-pack-reopening
-- **Status:** open
+- **Status:** resolved 2026-08-11 — **declined**
 - **Owner:** maintainer
 - **Blocks:** step 2.3 only. Steps 2.1 and 2.2 are authoring and verification and are
   not blocked; all of Phase 1 is independent of the pack question entirely.
@@ -195,3 +206,10 @@ condition (`:10-17`). That is the frame the decision is taken in.
   and reconciles the `agents/overrides/` `replace` mode.
 - **Resolved when:** either 2.3 is marked `- [-]` citing a decline, or a new ADR exists
   with `status: accepted` amending ADR-011 and ADR-013 § packs.
+- **Resolution:** the first branch. 2.3 is `- [-]` citing the decline; no ADR was
+  commissioned, so ADR-011 and ADR-013 § packs are unamended and the closed pack-id
+  vocabulary is untouched. The decision was taken by an AI-council pass that converged
+  2/2 (2026-08-11), against the recommendation-free 2.1 brief; the reasoning and the
+  two-part falsifiable reopen condition live in
+  `agents/settings/contexts/org-pack-reopening-brief.md` § Decision, which is the
+  durable home — this roadmap archives with the PR that records it.
