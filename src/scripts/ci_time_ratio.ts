@@ -20,7 +20,9 @@
  * - Median ratio < 3× across all classes      → structural overhead acceptable
  *
  * Output: human-readable table on stdout + JSON to
- * `agents/runtime/reports/ci-time-ratio.json`.
+ * `agents/reports/ci-time-ratio.json` — the tracked report directory, and
+ * the path `DEFAULT_OUT` has always written. This docstring named a
+ * different, untracked directory until 2026-08-11; the code never did.
  *
  * Usage:
  *   node ci_time_ratio.js --limit 30
