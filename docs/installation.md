@@ -926,6 +926,24 @@ chain, and wrapper state. Use this when a command appears to read the
 wrong `.agent-settings.yml`. Pair with `--trace-root` (above) when the
 **anchor walk itself** needs debugging.
 
+### What the agent is actually carrying — `doctor --anatomy`
+
+```bash
+agent-config doctor --anatomy          # text
+agent-config doctor --anatomy --json   # one document, both halves
+```
+
+Renders the injection anatomy from measurements that already exist: the
+preamble byte census (what occupies the always-loaded context — user-scope
+rules, project-scope rules, the `CLAUDE.md` hierarchy, the skills catalog, and
+the named residual bucket) joined to the dispatch-economy report (what the
+dispatch legs cost). It takes **no new measurement** and gates on nothing —
+both sources are advisory and stay advisory here.
+
+The dispatch-economy half needs local transcripts and the registration file. On
+a machine that has neither it is reported as unavailable, with the reason, and
+never as a zero.
+
 ---
 
 ## Windows

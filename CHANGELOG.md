@@ -326,7 +326,7 @@ Entry-shape contract: [`docs/contracts/CHANGELOG-conventions.md`](docs/contracts
 ### Release highlights
 
 <!-- Curated head: fill before merge, keep it under 10 lines, and leave `_none_` where it is genuinely the answer. The generated log below is unchanged. -->
-- **Behaviour changes:** _auto-derived, rewrite before merge:_ rule/schema diffs, breaking commits or removed public surface in 1f01490, e05de77.
+- **Behaviour changes:** the work-engine's two red-check lanes now run a bounded self-fix loop before halting to `BLOCKED` — at most three attempts per validation target, stopped early when a verdict signature repeats (1f01490, wired in 10c8f7e). e05de77 edits a rule file only and changes no behaviour.
 - **Default changes + migration:** _none_
 - **Security and correctness:** _none_
 - **Honest nulls:** _none_

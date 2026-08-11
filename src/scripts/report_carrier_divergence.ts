@@ -35,6 +35,16 @@
  * ignored, which is the failure `check-rule-invariants` already paid for once.
  * The point is that the condition becomes VISIBLE, not that it becomes illegal.
  *
+ * BEFORE QUOTING A COUNT FROM THIS REPORT
+ * ---------------------------------------
+ * Read `agents/settings/contexts/carrier-divergence-109-vs-24.md` first. The
+ * figure "109 divergent pairs, binding undefined" reached five independent
+ * release reviews as the tree's largest technical debt; all 109 carry
+ * byte-identical prose, and the real actionable set is the 24-pair `paths:`
+ * subset below, in the over-delivery direction. That correction had no stable
+ * surface, which is why every fresh reader re-derived the wrong number from
+ * this report's own output.
+ *
  * THE FOUR CLASSES, AND WHICH ONE A READER MUST ACT ON
  * ---------------------------------------------------
  *   body-diff        the two carriers deliver different PROSE. This is the class

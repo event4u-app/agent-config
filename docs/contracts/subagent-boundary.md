@@ -59,9 +59,45 @@ a host primitive outside these templates inherits any of it. That is a host
 property this package does not control and does not test. A contract that
 quietly covered it would repeat the exact defect this section exists to close.
 
+## The model ceiling — escalate, never silently degrade
+
+`subagents.model_ceiling` (class C, default `""` —
+`src/config/agent-settings.template.yml:795`,
+[`settings-classes.md`](settings-classes.md)) caps the model a dispatched worker
+may run on. Nothing is capped today, and that is exactly why the behaviour has
+to be written down before the first consumer sets one: the cheapest moment to
+decide what a capped worker does is while nobody depends on the answer.
+
+```
+A WORKER THAT CANNOT CARRY ITS SLICE UNDER THE CEILING ESCALATES.
+IT NEVER SILENTLY DELIVERS THE DEGRADED RESULT AS IF IT WERE THE ASKED-FOR ONE.
+```
+
+- **The worker returns the escalation, not a lesser answer.** "The ceiling
+  cannot carry this slice" is a legitimate return value and is the required one.
+  Delivering a weaker result under a ceiling the requester set, without saying
+  so, converts a spend control into a silent quality regression — and the
+  orchestrator cannot verify what it was not told.
+- **The orchestrator decides, and it is the orchestrator's decision alone.** On
+  an escalation it may re-slice the task smaller so the ceiling does carry it,
+  run the slice in-session, or surface the ceiling to the human. It never raises
+  the ceiling itself: `subagents.model_ceiling` is class C, so no agent-reachable
+  writer exists — `settings:set` refuses C keys by construction, which is the
+  fence rather than a promise.
+- **An unset ceiling is not a low one.** The default `""` means *uncapped*, and a
+  worker must not read an absent value as permission to downshift. This is the
+  absent-is-not-default trap the settings contract already names, applied to the
+  one key that decides how good the answer is allowed to be.
+- **No cap on the cap.** Per-task-class and dollar caps were considered and cut:
+  no over-spend has been observed and nothing is capped today, so a cap would be
+  a mechanism without a matched failure mode.
+
 ## Failure modes
 
 - A research subagent that, finding the task underspecified, invents a broader task and "helpfully" does it.
+- A worker that hits the model ceiling and returns its best degraded attempt as
+  the answer, with no escalation — the silent-degrade failure the section above
+  exists to forbid.
 - A subagent that writes to shared memory / a roadmap dashboard as a side effect.
 - A subagent that commits, pushes, or deletes because "the task implied it".
 - An orchestrator that pastes a subagent's claim into the answer without verifying it.

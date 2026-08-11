@@ -83,7 +83,7 @@ evidence pointer, or `task check-claims` fails the build.
 | On a deterministic multi-session recall corpus, the memory substrate produces a measured, placebo-controlled recall lift — memory-on 27/27 vs no-memory 10/27 and vs equal-byte placebo 9/27 (claude-haiku-4-5, n=9 tasks x 3 seeds, sign test p=0.031 for BOTH pairings). Scoped honestly: this is the context-value upper bound (perfect retrieval on a one-fact-per-task corpus), not retrieval precision under a large store. | quant | `internal/bench/reports/second-brain-delta.json` | ✅ |
 | Every artifact the package ships — source AND the condensed projection that reaches consumers — is machine-scanned in CI for hidden-Unicode, mixed-script-confusable, and instruction-smuggling payloads (the rules-file-backdoor class); a finding blocks the release before `npm publish`, not just the merge. | qual | `exec:lint_agent_security -> 0` | ✅ |
 | 289 skills. | quant | `exec:check_artefact_count_messaging -> 0` | ✅ |
-| Removes only its own keys from a shared host config (matched by JSON-pointer + SHA-256), never a neighbour tool's entries. | qual | `docs/contracts/install-layout.md#JSON-pointer` | ✅ |
+| Removes only its own keys from a shared host config (matched by JSON-pointer + SHA-256), never a neighbour tool's entries. | qual | `exec:vitest run tests/lib/json_pointers.test.ts -> 0` | ✅ |
 | On the pre-registered 12-fixture defect-finding corpus (three arms, deterministic file-level recall, codex reviewer gpt-5.5), the cross-model team-review arm produced NO recall lift over single-model self-review — all three arms recalled every planted defect (Δ = 0, H1 not met). Honest null, ceiling-limited (recall 1.00 everywhere: the seeded defects are too obvious to discriminate the arms on recall); the only non-null signal is a single self-review false positive on the controversial-but-correct control vs 0 for team/council. No cross-model quality/lift claim binds; team mode stays workflow-value-only. Re-open: a judge-survivable-subtlety corpus or a new model generation. | quant | `internal/bench/reports/defect-finding.json#honest_null` | ✅ |
 | On the A3 orchestration eval (deterministic verify, measured token deltas), the production-validator subagent returned the correct verdict on both fixtures — NOT READY with the exact `file:line` citation on a planted hollow implementation, READY with zero spurious findings on the clean control — while consuming ~45k fewer tokens than the inline-host baseline on each task. Scope: two planted fixtures on a Claude Code host, not a broad hit-rate. | quant | `internal/bench/orchestration/pv-a3-results.md#token_delta_provenance: measured` | ✅ |
 
@@ -91,10 +91,10 @@ evidence pointer, or `task check-claims` fails the build.
 
 ### How many of those re-derive themselves
 
-**11 of 41** backed claims carry `exec:` evidence —
+**12 of 41** backed claims carry `exec:` evidence —
 CI re-runs the command and compares its exit code to the claim, so a
 stale one turns the build red. The other
-**30** rest on a pointer: CI checks that the artefact
+**29** rest on a pointer: CI checks that the artefact
 exists and contains what it should, which cannot distinguish a live
 claim from one whose producer nobody has run in months.
 
@@ -132,7 +132,6 @@ given:
 | On the live end-to-end retrieval benchmark (9 tasks × 3 arms × 3 seeds on claude-haiku, fixture store with key | benchmark output — regenerating it needs paid or stochastic model calls no CI job can re-derive |
 | Scope de-duplication of the rule projection removes 38.0% of the median cold-start payload (87,677 of 230,556  | prose or contract artefact — no exit code carries the verdict |
 | On a deterministic multi-session recall corpus, the memory substrate produces a measured, placebo-controlled r | benchmark output — regenerating it needs paid or stochastic model calls no CI job can re-derive |
-| Removes only its own keys from a shared host config (matched by JSON-pointer + SHA-256), never a neighbour too | prose or contract artefact — no exit code carries the verdict |
 | On the pre-registered 12-fixture defect-finding corpus (three arms, deterministic file-level recall, codex rev | benchmark output — regenerating it needs paid or stochastic model calls no CI job can re-derive |
 | On the A3 orchestration eval (deterministic verify, measured token deltas), the production-validator subagent  | benchmark output — regenerating it needs paid or stochastic model calls no CI job can re-derive |
 
@@ -366,7 +365,7 @@ Undeclared rules (84) carry no row — an honest gap beats a false claim.
 | `second-brain-recall-lift` | quant | backed | `internal/bench/reports/second-brain-delta.json` |
 | `shipped-artifacts-hidden-instruction-scanned` | qual | backed | `exec:lint_agent_security -> 0` |
 | `skill-count` | quant | backed | `exec:check_artefact_count_messaging -> 0` |
-| `surgical-uninstall` | qual | backed | `docs/contracts/install-layout.md#JSON-pointer` |
+| `surgical-uninstall` | qual | backed | `exec:vitest run tests/lib/json_pointers.test.ts -> 0` |
 | `team-defect-finding-null` | quant | backed | `internal/bench/reports/defect-finding.json#honest_null` |
 | `utilization-window-decidability` | comparative | unbacked | `PRE-REGISTERED 2026-07-12 (road-to-feedback-8.11-2 Phase 0 — no goalpost-moving after the numbers land; criteria at `docs/design/utilization-window-criteria.md`). Floor fixed BEFORE data: >=100 task boundaries AND >=2 hosts (or the documented degraded form) AND >=45 elapsed days; decision rules D1 (loaded-never-consulted -> retirement-candidate list), D2 (consulted-never-applied <10% applied-ratio at >=5 consultations -> trigger-review queue), D3 (above floor -> >=1 named decision per kind or a recorded why-not), D4 (below floor after one extension -> honest null, lifecycle/ledger gates stay closed). Kernel + safety floors exempt by construction.` |
 | `wedge-hollow-detection` | quant | backed | `internal/bench/orchestration/pv-a3-results.md#token_delta_provenance: measured` |
