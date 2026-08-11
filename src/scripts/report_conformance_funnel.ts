@@ -11,6 +11,11 @@
  * conformance sources, so the three questions that were answered in three
  * places read as the funnel they are:
  *
+ *   OPPORTUNITY in how many scanned sessions a skill was in context at all —
+ *               derived from `report_skill_obligation_violations.scanStore`'s
+ *               own `sessionsWithASkill`, so it adds no classifier. It is the
+ *               denominator ACTIVATION was missing: `skills.total` is supply,
+ *               not opportunity.
  *   DELIVERY    what rule text the carriers put in front of the model, and
  *               whether the two carriers agree —
  *               `conformance_scan.measureDelivered` (carrier census) +
@@ -174,6 +179,41 @@ export function render(r: FunnelReport): string {
             lines.push(`    Unreadable on one side (${d.unreadable.length}) — a broken install, not a disagreement.`);
         }
     }
+    lines.push('');
+
+    // ── OPPORTUNITY ────────────────────────────────────────────────────────
+    // The stage the funnel was missing. ACTIVATION below reports against
+    // `skills.total`, which is a SUPPLY number: how many skills exist. That
+    // denominator can only fall as the catalogue grows, and it says nothing
+    // about whether any skill had a chance to fire. Opportunity is the
+    // denominator that belongs between delivery and activation — sessions in
+    // which a skill was actually in context.
+    //
+    // DERIVED, never re-measured: `sessionsWithASkill` is the SK-2 scan's own
+    // field, so this stage adds no classifier and cannot disagree with the
+    // COMPLIANCE stage that already prints it.
+    lines.push('OPPORTUNITY — in how many sessions could a skill fire at all?');
+    if (!r.storePresent) {
+        lines.push('    NO DATA: no transcript store — opportunity is not measurable here.');
+        lines.push('    An absent store is an answer, not a zero.');
+    } else {
+        lines.push(`    sessions scanned                      ${r.sk2.sessions}`);
+        lines.push(
+            `    with a skill in context               ${r.sk2.sessionsWithASkill} ` +
+                `(${_pct(r.sk2.sessionsWithASkill, r.sk2.sessions)})`,
+        );
+        lines.push(
+            '    Skill invocations per such session     ' +
+                (r.sk2.sessionsWithASkill === 0
+                    ? 'n/a'
+                    : (r.usage.invocations / r.sk2.sessionsWithASkill).toFixed(2)),
+        );
+    }
+    lines.push("    Honest scope: \"in context\" is the SK-2 scan's reading — a skill was");
+    lines.push('    LOADED, not that the task needed it. So this bounds activation from');
+    lines.push('    above; it never claims a missed invocation was a defect. Report-only and');
+    lines.push('    deliberately without a threshold: a joined funnel with a denominator');
+    lines.push('    invites one, and the activation red-baseline null is terminal.');
     lines.push('');
 
     // ── ACTIVATION ─────────────────────────────────────────────────────────
