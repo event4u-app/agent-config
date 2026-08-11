@@ -47,6 +47,19 @@ const _RE_PERMISSION_MODE = /^\s*permissionMode:\s*['"]?bypassPermissions/;
 //   Python: re.match(r"\s*allowed-tools:\s*(.+)$", text)
 const _RE_ALLOWED_TOOLS = /^\s*allowed-tools:\s*(.+)$/;
 
+// Subagent definitions grant tools under a TOP-LEVEL `tools:` key (subagent-v1,
+// `src/scripts/schemas/subagent.schema.json`), not under `execution.allowed_tools`
+// and not as `allowed-tools`. Both other spellings were already read here; this
+// one was not, and `src/subagents` was not a scan root either — so the two
+// over-broad-grant checks below had never inspected a subagent definition.
+// Top-level anchored (no leading whitespace) so a nested `tools:` inside some
+// other block cannot be mistaken for a grant; the key is unused by skills,
+// commands and domain artefacts, so the anchor costs no coverage.
+const _RE_TOOLS_KEY = /^tools:\s*(.*)$/;
+// A YAML block-sequence item under it (`  - Bash`). Inline flow (`tools: [Bash]`)
+// is captured by the key regex's own trailing group.
+const _RE_SEQ_ITEM = /^\s+-\s*(.+)$/;
+
 /** Mirror Python `str.strip("'\"")` — strip any leading/trailing `'` or `"`. */
 function _stripQuotes(s: string): string {
     let lo = 0;
@@ -138,6 +151,44 @@ export function _scan(sf: sl.ScannedFile): sl.Finding[] {
             (_WILDCARD_TOOL.test(m[1] as string) ||
                 (_BARE_BASH.test(m[1] as string) && !is_execution_skill))
         ) {
+            out.push(
+                new sl.Finding(
+                    sf.rel,
+                    lineno,
+                    CHECK,
+                    'HIGH',
+                    'wildcard / bare-Bash tool grant (over-broad)',
+                    sf.weight,
+                ),
+            );
+        }
+    }
+
+    // Top-level `tools:` — the subagent-v1 grant key. Collect the inline value
+    // plus any block-sequence items that follow, and run the same two checks the
+    // other two spellings get. A subagent is never an execution skill (no
+    // `execution:` block), so the bare-Bash arm applies by construction.
+    for (let i = 0; i < body.length; i += 1) {
+        const [lineno, text] = body[i] as [number, string];
+        const key = _RE_TOOLS_KEY.exec(text);
+        if (!key) {
+            continue;
+        }
+        const grants: string[] = [];
+        const inline = (key[1] ?? '').trim();
+        if (inline !== '') {
+            grants.push(inline);
+        }
+        for (let j = i + 1; j < body.length; j += 1) {
+            const [, next] = body[j] as [number, string];
+            const item = _RE_SEQ_ITEM.exec(next);
+            if (!item) {
+                break;
+            }
+            grants.push(_stripQuotes((item[1] as string).trim()));
+        }
+        const joined = grants.join(', ');
+        if (joined !== '' && (_WILDCARD_TOOL.test(joined) || _BARE_BASH.test(joined))) {
             out.push(
                 new sl.Finding(
                     sf.rel,
@@ -258,7 +309,10 @@ export function main(argv: readonly string[] | null = null): number {
     const args = parse_args(argv ?? process.argv.slice(2));
 
     const findings: sl.Finding[] = [];
-    const roots = ['src/skills', 'src/agent-src', 'src/domains'];
+    // `src/subagents` is the fourth root, added because its omission is what made
+    // the over-broad-grant checks blind: the only artefact in the tree granting a
+    // bare shell lives there, and the gate had never read it.
+    const roots = ['src/skills', 'src/agent-src', 'src/domains', 'src/subagents'];
     let scanned = 0;
     for (const sf of sl.iter_corpus(roots, ['.md'])) {
         scanned += 1;

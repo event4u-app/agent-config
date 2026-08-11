@@ -53,6 +53,43 @@ describe('lint_skill_frontmatter_safety — _scan over a built ScannedFile', () 
         );
     });
 
+    // The subagent-v1 grant key. Before this was read, the two over-broad-grant
+    // checks had never inspected a subagent definition: `src/subagents` was not a
+    // scan root and `tools:` was not one of the two spellings the scanner knew.
+    // Each case below goes red if either half of that fix is reverted.
+    it('flags a bare Bash grant under the top-level subagent tools: key', () => {
+        const hits = scanText(
+            '---\nschema_version: subagent-v1\ntools:\n  - Read\n  - Bash\n---\nbody\n',
+        );
+        expect(hits.map((h) => h.message)).toContain(
+            'wildcard / bare-Bash tool grant (over-broad)',
+        );
+        expect(hits[0]!.is_fail).toBe(true);
+    });
+
+    it('flags a wildcard under the inline-flow form of tools:', () => {
+        const hits = scanText(`---\ntools: [${BASH_WILD}]\n---\nbody\n`);
+        expect(hits.map((h) => h.message)).toContain(
+            'wildcard / bare-Bash tool grant (over-broad)',
+        );
+    });
+
+    it('leaves a narrow subagent tools: list alone', () => {
+        const hits = scanText('---\ntools:\n  - Read\n  - Grep\n  - Glob\n---\nbody\n');
+        expect(hits.map((h) => h.message)).not.toContain(
+            'wildcard / bare-Bash tool grant (over-broad)',
+        );
+    });
+
+    it('does not read a nested tools: key as a grant', () => {
+        // Top-level-anchored on purpose: an indented `tools:` belongs to some
+        // other block and is not a subagent grant.
+        const hits = scanText('---\nsomething:\n  tools:\n    - Bash\n---\nbody\n');
+        expect(hits.map((h) => h.message)).not.toContain(
+            'wildcard / bare-Bash tool grant (over-broad)',
+        );
+    });
+
     it('flags automated execution missing the runtime-safety floor as HIGH', () => {
         const hits = scanText(
             '---\nexecution:\n  type: automated\n  handler: none\n---\nbody\n',
