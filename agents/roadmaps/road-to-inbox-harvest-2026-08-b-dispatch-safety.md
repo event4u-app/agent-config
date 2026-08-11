@@ -164,26 +164,67 @@ binds. Only a third detector is missing, and the soak stays.
 
 ## Phase 3 — Checkable handoff-envelope fields
 
-- [ ] **3.1 Add a validated `do_not_touch` envelope field.** Add to
-      `RECYCLE_ENVELOPE_KEYS` (`subagent_capsule.ts:447-460`, beside `constraints` at
-      `:459`), a `checkList` line beside `:522`, the interface entry beside `:238`, and
-      the heading to `HANDOFF_ARTIFACT_REQUIRED` (`lint_handoffs.ts:342-349`), with a
-      fixture pin.
-      <!-- verify: task test -- --filter=_lib_subagent_capsule -->
-- [ ] **3.2 Add `reversibility` to each decision line** — a one-line shape extension on
-      `decisions` (`subagent_capsule.ts:236`) plus the writer's contract at
-      `src/domains/meta/agent-handoff/command.md:169,227`. No claim is made that it
-      improves resumption; that stays the registered, unmeasured
-      `envelope_resume_success` metric.
-      <!-- verify: task test -- --filter=lint_handoffs -->
-- [ ] **3.3 Lint the Open-questions shape, not just the heading.**
-      `validate_handoff_artifact` (`lint_handoffs.ts:351-360`) only tests that each
-      required `##` heading exists; require at least one `?`-terminated line under
-      `Open questions`. Roughly five deterministic lines, and the false-positive class is
-      empty by construction — a section with no question in it is the defect.
-      <!-- verify: task test -- --filter=lint_handoffs_artifact -->
-- [ ] **3.4 Warn on a write against a `do_not_touch` path.** Sequenced strictly after
-      3.1 — the field must exist before a guard can read it. Model on
+- [x] **3.1 Add a validated `do_not_touch` envelope field.** Shipped on the
+      `constraints` pattern — interface entry, `RECYCLE_ENVELOPE_KEYS`, and a
+      `checkList` line — but on the **REF** budget rather than the prose one,
+      since the entries are path refs. It is distinct from `constraints` on
+      purpose: constraints carry decisions in prose, this carries paths, so "was
+      this path off limits?" is answerable by comparison instead of by reading —
+      the checkability bar the handoff-envelope adjudication set. The
+      `--template` skeleton carries it EMPTY rather than with a `<placeholder>`,
+      unlike the prose lists: a leftover placeholder path would be a fake ref
+      instead of obvious filler.
+      **One instruction not followed, with the reason:** the step also said to add
+      the heading to `HANDOFF_ARTIFACT_REQUIRED`. That would make the section
+      mandatory in every HANDOFF.md while the field itself is optional — and 3.3
+      in this same phase just established that a required-but-empty section is the
+      defect, so requiring a heading whose content is optional would manufacture
+      the shape 3.3 exists to catch. The field is validated where it is written;
+      the required-heading list is unchanged.
+      <!-- verify: npx vitest run tests/scripts/session_recycle.test.ts -->
+- [x] **3.2 Add `reversibility` to each decision line** — shipped as an OPTIONAL
+      trailing tag (`[reversible]` / `[irreversible]`) on a `decisions` line, both
+      writer contracts updated, and the no-resumption-claim carried into the field
+      doc verbatim.
+      **Optional had to stay checkable or the step would have shipped exactly what
+      its own citation rejects** ("a field whose presence is checkable survives
+      where a doctrine whose effect is unmeasured did not"). Requiring the tag
+      would invalidate every committed envelope; documenting it and validating
+      nothing would be the doctrine. So `decisionTagErrors` validates the tag
+      **when a line is trying to carry one**: an exact tag passes, wrong case and a
+      near-miss (`[reversble]`, `[irreversible!]`) are errors, and an unrelated
+      bracket (`[ADR-109]`, `[see #1273]`) is left alone. That targets the only
+      failure an optional tag really has — a misspelling reads as untagged and
+      silently loses the distinction the tag exists to carry. 15 specs.
+      <!-- verify: npx vitest run tests/scripts/session_recycle.test.ts -->
+- [x] **3.3 Lint the Open-questions shape, not just the heading.** Shipped as
+      `validate_handoff_open_questions` plus `handoff_section_body`, wired into the
+      artifact mode beside the missing-heading report (its summary line now counts
+      both problem kinds). **The step's "false-positive class is empty by
+      construction" is false, and the counterexample already shipped in this
+      repo:** `tests/scripts/lint_handoffs_artifact.test.ts` carries
+      `## Open questions` / `- none`, so requiring a `?` would have reddened the
+      gate's own acceptance fixture and, worse, taught authors to invent a fake
+      question. So the check accepts EITHER a `?`-terminated line OR an explicit
+      none-marker (closed set: `none`, `keine`, `n/a`, `nothing`) and fires only
+      on a section that answers neither — blank, or only `TBD` / `TODO` / `...`.
+      A declarative note is left alone: this is an emptiness check, not a
+      phrasing gate. Section extraction strips fenced blocks first, so a `##`
+      inside a quoted command cannot end the section early. 17 specs.
+      Doc-Impact: `/agent-handoff`s template and its validation sentence now
+      state the shape, since the artefact contract they describe got stricter.
+      <!-- verify: npx vitest run tests/scripts/lint_handoffs_artifact.test.ts -->
+- [ ] **3.4 Warn on a write against a `do_not_touch` path.** **Left open with a
+      measurement, not with an omission.** Its stated precondition is met — 3.1
+      shipped the field — but the field has **zero producers** today: the
+      `--template` skeleton offers it empty, and no envelope in the tree carries
+      an entry. A tenth `pre_tool_use` concern pays latency on every tool call
+      (this step says so itself) to read a list that is currently always absent,
+      which is the build-the-mechanism-before-measuring-the-premise pattern this
+      package has recorded three times. Sequence it after the first envelopes
+      actually carry paths; the guard is then reading real data instead of
+      proving it can read none.
+      Model on
       `block-kernel-rule-writes` (`hook_manifest.yaml:110`) and `reread-guard` (`:480`),
       register in `src/scripts/hooks/concern_registry.ts:98-108`, advisory and
       `fail_closed: false`. The `pre_tool_use` chain already runs nine concerns
@@ -218,13 +259,30 @@ binds. Only a third detector is missing, and the soak stays.
       prints the tally whenever it is non-zero. Eight specs, including the
       digit-folding boundary the first version got wrong.
       <!-- verify: npx vitest run tests/scripts/self_repair.test.ts -->
-- [ ] **4.2 Quarantine a stale findings artefact before a revision re-dispatch.**
-      `src/scripts/dispatch_r2_reviewer.ts:298-307` already owns the single review-scope
-      hash both dispatcher and validator bind to (contract §2.1, cited at `:32`); reuse
-      that hash as the staleness signal instead of adding a second definition, and read
-      `docs/contracts/plan-review-gates.md` §5 for the artefact-then-fix ordering the
-      re-dispatch must not break.
-      <!-- verify: task test -- --filter=dispatch_r2_reviewer -->
+- [x] **4.2 Quarantine a stale findings artefact before a revision re-dispatch.**
+      The step's staleness signal is right and its **mechanism is forbidden by the
+      contract it cites** — so the signal shipped and the quarantine did not.
+      Built first as designed (classify by scope hash, rename the stale artefact
+      aside), then removed on reading §2.7 rather than §5: a fix pass moves the
+      review scope, so an artefact bound to the previous scope is the **normal
+      in-place re-bind case**, and §2.7 says renaming there "would leave the
+      shipping content with no review at all → `missing-artifact`". The archival
+      rename is a later, separate step with a prescribed name
+      (`<slug>.round<N>-review.md`) gated on every finding being terminal. Worse,
+      the invented quarantine name would have missed
+      `check_review_dispositions:64`, which recognises an archived record by
+      `-review.md` — i.e. it would have created an archive path with no
+      terminal-before-rename check on it. Two gates dodged by one convenience
+      rename.
+      **What shipped instead**, and it closes the real defect: the leftover-artefact
+      refusal could not distinguish three states and offered one escape for all of
+      them — `--force`, which overwrites, so the only exit destroyed the record of
+      a review that happened. `artefactStaleness` classifies `current` / `stale` /
+      `unreadable` off the single shared scope hash, and `leftoverArtefactRefusal`
+      names the contract-conform step per state: the live review for `current`,
+      §2.7s two paths for `stale`, and inspect-first for `unreadable` (refusing on
+      an unidentified artefact rather than acting on a guess). 10 specs.
+      <!-- verify: npx vitest run tests/scripts/dispatch_r2_reviewer.test.ts -->
 - [ ] **4.3 Add an edit-without-fresh-verification detector to the turn-end gate.** A
       third `DetectorId` beside `'promissory' | 'language'`
       (`turn_end_gate_hook.ts:107`), inside the existing two-layer re-entrancy guard, and
