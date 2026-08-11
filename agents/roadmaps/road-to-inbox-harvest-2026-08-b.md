@@ -125,7 +125,7 @@ cancellations with the lock cited inline.
 | [`-council-integrity`](archive/road-to-inbox-harvest-2026-08-b-council-integrity.md) (archived; 1.6 carried to [`-followup`](road-to-inbox-harvest-2026-08-b-council-integrity-followup.md)) | the quorum-attendance defect, shared model-field coercion, synthesis prose-vs-tally | the one fully-surviving source |
 | [`-authoring-contract`](archive/road-to-inbox-harvest-2026-08-b-authoring-contract.md) (archived) | three sections labelled *required* and enforced by nothing; failure-signature drills; 20 unbound research citations | sharpest finding the bundles missed |
 | [`-estate-lifecycle`](road-to-inbox-harvest-2026-08-b-estate-lifecycle.md) | staleness metadata, archive-not-delete, zero-inbound report | **opens with a decision-revisit offer** against a same-day lock |
-| [`-install-lifecycle`](road-to-inbox-harvest-2026-08-b-install-lifecycle.md) | there is no uninstall path in `install.ts` at all; plus the org-pack decision | the uninstall half needs no pack system |
+| [`-install-lifecycle`](archive/road-to-inbox-harvest-2026-08-b-install-lifecycle.md) | there is no uninstall path in `install.ts` at all; plus the org-pack decision | the uninstall half needs no pack system |
 | [`-dispatch-safety`](road-to-inbox-harvest-2026-08-b-dispatch-safety.md) | scoped-Bash expressibility, a confirmation primitive, checkable handoff fields | a live schema-vs-rule contradiction |
 | [`-release-integrity`](road-to-inbox-harvest-2026-08-b-release-integrity.md) | the recurring release-head placeholder, the carrier remainder, four flags over existing data | most survivors of any single source |
 
