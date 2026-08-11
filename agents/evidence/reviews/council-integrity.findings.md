@@ -1,10 +1,10 @@
 # Findings: council-integrity
-<!-- completion-review: v1 | reviewed: 2026-08-11 | scope: 30eba75391f5513fca14c69d07ab60f1027187299bb6b2a90316853c5b9abd80 | diff: 30328d8811bd65f35f2bf42bc6b4fbe8cc76fa4c | reviewer: r2-fresh-subagent-council-integrity | prompt_hash: fccc00b0d955ef070a14b20828d5fe1833af34a7b184e4f4999d4e44b3621d3d -->
+<!-- completion-review: v1 | reviewed: 2026-08-11 | scope: 5b552cbbf5548f3e46cde332e42294a7c2f73066efd6e469ac51b11445e3d0ba | diff: 1a7b4f87e2d1100d288059f8003266bc7fe79eaa | reviewer: r2-fresh-subagent-council-integrity | prompt_hash: fccc00b0d955ef070a14b20828d5fe1833af34a7b184e4f4999d4e44b3621d3d -->
 
 <!-- context-manifest: v1
 inputs:
-  diff_sha: 30328d8811bd65f35f2bf42bc6b4fbe8cc76fa4c
-  scope_hash: 30eba75391f5513fca14c69d07ab60f1027187299bb6b2a90316853c5b9abd80
+  diff_sha: 1a7b4f87e2d1100d288059f8003266bc7fe79eaa
+  scope_hash: 5b552cbbf5548f3e46cde332e42294a7c2f73066efd6e469ac51b11445e3d0ba
   roadmap: agents/roadmaps/archive/road-to-inbox-harvest-2026-08-b-council-integrity.md
   roadmap_hash: 834f4bb1b28757eaaa46d1683b261248d92a232ed12cd1e41715216e0b42b145
   ac_hash: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
@@ -26,3 +26,14 @@ dispatched: 2026-08-11T05:50:00Z
 | 9 | low | src/scripts/_lib/env_kill_switch.ts:35 | The new shared helper ships with no direct test; the step's verify command exercises at most one of its two call sites. The off-set is now an untested cross-module invariant. | fixed | `tests/scripts/_lib/env_kill_switch.test.ts` — 11 cases across both call sites (02c786c28) |
 | 10 | low | src/scripts/ai_council/prompts.ts:548 | The placeholder guard plus the last-match rule means a chairman who leaves `VERDICT: <option-label>` in place silently disables the check — the most likely authoring mistake produces no signal at all. | fixed | subsumed by 1 — the render path now surfaces rather than silently returning (02c786c28) |
 | 11 | low | agents/roadmaps/road-to-inbox-harvest-2026-08-b-council-integrity-followup.md:392 | "The parent closed 8 of 8 steps" is contradicted by the next sentence and by the archived parent, which carries 1.6 as `[~]`. | fixed | "8 of 9 non-cancelled steps" (02c786c28) |
+
+**Re-bound after merging `origin/main` (PR #1272), and the delta is named rather
+than absorbed.** The scope hash moved because the branch merged main, not
+because reviewed code changed. Measured: the scope file list is identical to the
+reviewed round except for the resolved rename source and the test the fix pass
+added, both already covered. What the reviewer never saw is exactly the merge
+resolution — two rows of the `-inbox-harvest-2026-08-b` index table (both
+children now point at `archive/`, since each session had archived its own and
+left the other active) and the regenerated dashboard. No foreign code entered
+the review scope: after merging main, main's own files are identical to
+`origin/main` and therefore absent from the diff.
