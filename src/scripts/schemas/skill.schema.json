@@ -222,6 +222,10 @@
           },
           "description": "U3 (ecosystem harvest): optional deny-list layered UNDER allowed_tools — defense-in-depth; a tool matching here is refused even if a broad allow pattern would admit it. Supports the scoped-grant syntax (e.g. Bash(git push:*))."
         },
+        "requires_confirmation": {
+          "type": "boolean",
+          "description": "Optional, additive: the skill's action STAGES rather than executes, so an irreversible step waits for an explicit human confirmation naming the exact object (non-destructive-by-default § Never act while asking). A declaration only — it names the action class, never the object, which exists at stage time and not in frontmatter. The mechanism is stageAction/confirmOnce in work_engine/hooks/builtin/staged_confirmation.ts; enumerate what is pending with `agent-config gates --pending`. Nothing BINDS on this flag yet: on 5 of 8 hosts there is no pre_tool_use slot, so a guard would degrade to prose while the flag reads like a control — that decision is deferred behind blocker confirmation-degraded-host-semantics."
+        },
         "command": {
           "type": "array",
           "minItems": 1,
