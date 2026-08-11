@@ -2,12 +2,10 @@
 import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
-import { fileURLToPath } from 'node:url';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import * as mod from '../../src/scripts/build_discovery_manifest.js';
 
-const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..');
 
 // --- Layer 1: ported builder contract (tmp-fixture) -------------------------
 
@@ -382,19 +380,79 @@ describe('build_discovery_manifest — builder contract (ported from pytest)', (
         expect(sortKeys(mod._packs_view(m1))).toBe(sortKeys(mod._packs_view(m2)));
     });
 });
-const TS_SCRIPT = path.join(REPO_ROOT, 'src', 'scripts', 'build_discovery_manifest.ts');
-const VALIDATE_PY = path.join(REPO_ROOT, 'src', 'scripts', 'validate_discovery_manifest.py');
-const COMMITTED = path.join(REPO_ROOT, 'dist', 'discovery', 'discovery-manifest.json');
-const TSX_BIN = path.join(
-    REPO_ROOT,
-    'node_modules',
-    '.bin',
-    process.platform === 'win32' ? 'tsx.cmd' : 'tsx',
-);
-const big = { maxBuffer: 256 * 1024 * 1024, cwd: REPO_ROOT, encoding: 'utf8' as const };
 
-function normalizeGeneratedAt(jsonText: string): string {
-    const obj = JSON.parse(jsonText) as Record<string, unknown>;
-    obj.generated_at = '<normalised>';
-    return JSON.stringify(obj, Object.keys(obj).sort(), 2);
-}
+// --- Dormancy report (estate-lifecycle 2.1) --------------------------------
+
+describe('dormancy report', () => {
+    const manifest = {
+        generated_at: '2026-08-11T00:00:00Z',
+        artefacts: [
+            { path: 'src/skills/fresh/SKILL.md', category: 'skill' },
+            { path: 'src/skills/stale/SKILL.md', category: 'skill' },
+            { path: 'src/rules/fresh-rule.md', category: 'rule' },
+            { path: 'src/rules/stale-rule.md', category: 'rule' },
+        ],
+    };
+
+    it('measures a skill over its directory and every other artefact over its file', () => {
+        expect(mod._dormancy_unit('src/skills/foo/SKILL.md')).toBe(path.join('src', 'skills', 'foo'));
+        expect(mod._dormancy_unit('src/rules/bar.md')).toBe('src/rules/bar.md');
+    });
+
+    it('a commit on any file inside a skill keeps the whole skill alive', () => {
+        // Only a SIBLING of SKILL.md was touched — governance measures the
+        // directory, so the skill must not read as dormant.
+        const probe = { ok: true, touched: new Set(['src/skills/fresh/reference.md', 'src/rules/fresh-rule.md']) };
+        const dormant = mod._dormant_artefacts(manifest, probe).map((a) => a.path);
+        expect(dormant).not.toContain('src/skills/fresh/SKILL.md');
+        expect(dormant).not.toContain('src/rules/fresh-rule.md');
+        expect(dormant).toEqual(['src/rules/stale-rule.md', 'src/skills/stale/SKILL.md']);
+    });
+
+    it('publishes the list when the signal is available', () => {
+        const probe = { ok: true, touched: new Set(['src/skills/fresh/SKILL.md', 'src/rules/fresh-rule.md']) };
+        const report = mod._dormancy_report(manifest, probe);
+        expect(report).toContain('Dormant artefacts: **2**');
+        expect(report).toContain('`src/skills/stale/SKILL.md`');
+        expect(report).not.toContain('Signal unavailable');
+    });
+
+    it('says "none" rather than nothing when every artefact is fresh', () => {
+        const probe = { ok: true, touched: new Set(manifest.artefacts.map((a) => a.path)) };
+        const report = mod._dormancy_report(manifest, probe);
+        expect(report).toContain('Dormant artefacts: **0**');
+        expect(report).toContain('_None.');
+    });
+
+    it('NAMES an unavailable signal instead of emitting an empty list', () => {
+        const probe = { ok: false, reason: 'shallow clone — truncated history', touched: new Set<string>() };
+        const report = mod._dormancy_report(manifest, probe);
+        expect(report).toContain('Signal unavailable');
+        expect(report).toContain('shallow clone');
+        // The distinguishing property: an unavailable signal must NOT render as
+        // "0 dormant", which is the different — and false — claim.
+        expect(report).not.toContain('Dormant artefacts:');
+        expect(report).not.toContain('src/skills/stale/SKILL.md');
+    });
+
+    it('a dormant list is never produced from an unavailable probe', () => {
+        const probe = { ok: false, reason: 'not a git checkout', touched: new Set<string>() };
+        expect(mod._dormant_artefacts(manifest, probe)).toEqual([]);
+    });
+
+    it('probing a non-git directory reports unavailable, never "nothing dormant"', () => {
+        const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'dormancy-'));
+        try {
+            const probe = mod._dormancy_probe(tmp);
+            expect(probe.ok).toBe(false);
+            expect(String(probe.reason)).toMatch(/git/i);
+        } finally {
+            fs.rmSync(tmp, { recursive: true, force: true });
+        }
+    });
+
+    it('is deterministic across runs', () => {
+        const probe = { ok: true, touched: new Set(['src/rules/fresh-rule.md']) };
+        expect(mod._dormancy_report(manifest, probe)).toBe(mod._dormancy_report(manifest, probe));
+    });
+});

@@ -129,11 +129,41 @@ function _branch_touched_paths(root: string, base: string): Set<string> | null {
 }
 
 /**
+ * Paths where a repo-relative path is DATA, not a live reference — so
+ * rewriting it falsifies a record instead of keeping a link resolvable.
+ *
+ * Two classes, and the second is why this predicate exists at all:
+ *
+ * - `agents/evidence/**` — a committed record of what was true, or of what a
+ *   reviewer was shown, at one point in time. Retroactively editing it makes it
+ *   claim something that did not happen, which is the failure
+ *   `evaluator-independence` exists to prevent ("the prompt ships with the
+ *   verdict" is worthless if a later sweep can edit the prompt).
+ * - `*.patch` anywhere — a patch's `diff --git a/… b/…` and `+++ b/…` lines are
+ *   the payload. Rewriting them detaches the patch from the commit it records
+ *   AND makes `git apply` target a path the diff never created.
+ *
+ * Measured 2026-08-11: archiving one roadmap rewrote four frozen artefacts
+ * under `agents/evidence/reviews/`, including the `diff.patch` headers of a
+ * recorded review input. Nothing caught it — the sweep reported it as
+ * "4 ref(s) migrated", which reads like success.
+ */
+const _FROZEN_RECORD_PREFIXES: readonly string[] = ['agents/evidence/'];
+
+/** Is `rel` a frozen record whose path strings must not be rewritten? */
+export function _is_frozen_record(rel: string): boolean {
+    const norm = rel.split(path.sep).join('/');
+    return _FROZEN_RECORD_PREFIXES.some((p) => norm.startsWith(p)) || norm.endsWith('.patch');
+}
+
+/**
  * Rewrite full-path references `old_rel` → `new_rel` in tracked files.
  *
  * Only the exact repo-relative path is rewritten (bare-filename mentions are
  * left alone). The archived file's own path never matches because the search
- * string is the un-archived path.
+ * string is the un-archived path. Frozen records are skipped — see
+ * `_is_frozen_record`; a link left dangling in a historical record is correct,
+ * because the record describes a tree that no longer exists.
  */
 function _inbound_ref_rewrite(
     root: string,
@@ -163,6 +193,10 @@ function _inbound_ref_rewrite(
         const rel = line.trim();
         if (!rel || rel === old_rel) {
             // skip the roadmap file itself
+            continue;
+        }
+        if (_is_frozen_record(rel)) {
+            // A record of a past state — rewriting it falsifies the record.
             continue;
         }
         const fp = path.join(root, rel);

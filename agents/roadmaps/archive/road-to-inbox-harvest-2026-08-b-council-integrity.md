@@ -307,4 +307,4 @@ and whose "watch council attendance telemetry" presumed the telemetry Phase 1
 builds. It is not a new idea; it is an unpaid one — which is the argument for
 1.1 rather than for another deferral.
 
-<!-- Deferred items migrated to agents/roadmaps/road-to-inbox-harvest-2026-08-b-council-integrity-followup.md on 2026-08-11 -->
+<!-- Deferred items migrated to agents/roadmaps/archive/road-to-inbox-harvest-2026-08-b-council-integrity-followup.md on 2026-08-11 -->
