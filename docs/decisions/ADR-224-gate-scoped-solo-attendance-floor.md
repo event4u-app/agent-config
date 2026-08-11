@@ -146,6 +146,71 @@ implementation is therefore carried by
 which exists so that a chosen outcome does not become a fifth deferral by
 silence.
 
+## Amendment 2026-08-11 — the three implementation questions, answered
+
+The implementation landed via
+[`road-to-council-solo-floor-implementation.md`](../../agents/roadmaps/road-to-council-solo-floor-implementation.md).
+This record's own "what the implementation still has to answer" list is answered
+here rather than only in code, because two of the three answers are decisions a
+future reader would otherwise re-litigate.
+
+**1. Gate-class is caller-DECLARED.** `evaluateQuorum` takes a fourth argument,
+`floor: AttendanceFloor | null = null`; supplying one *is* the declaration. The
+two alternatives were rejected on verified grounds. *Inference from the
+invocation context* silently reclassifies passes whenever that context changes
+shape, and cannot work at the `pre_run` call site at all — `lens` and
+`invocation` are empty there by construction, which this record already noted for
+a different reason. *A config key* inherits ADR-104's user-global config, so the
+floor would be present or absent per operator machine with no signal when absent
+— the exact objection that rejected alternative (a) above. The floor's magnitude
+is therefore a code constant (`GATE_CLASS_ATTENDANCE_FLOOR`), not a setting: a
+caller declares *whether* a pass is gate-class and cannot negotiate the minimum
+down to 1 and thereby disable the floor quietly.
+
+**2. Un-instrumented call sites default OFF**, and the accepted failure mode is
+named in the code: the floor protects only where a caller opts in. Default-on
+would have held every pass in the repository, changing exactly the ordinary
+advisory behaviour this record promised not to touch.
+
+**3. A declared gate-class pass is floored immediately** — default-ON once
+declared, with no second enable flag. Two independent opt-ins would produce a
+mechanism overwhelmingly unlikely ever to fire.
+
+### The floor does NOT branch on `isSoloConcluded` — the authorization is unspent
+
+This record authorizes branching on that predicate for gate-class passes. The
+implementation did not need to: `AttendanceFloor` compares `present` against a
+minimum directly, which subsumes the solo case. So `isSoloConcluded` remains
+advisory-render-and-telemetry-only, its prohibition intact, and the permission
+granted above is **unused**. A future branch on solo status still needs its own
+record. This is narrower than what was authorized, deliberately.
+
+### What this ships, stated without inflation: a capability, not yet a protection
+
+**No caller declares a gate-class pass today.** Both `evaluateQuorum` call sites
+pass no floor, so runtime behaviour is byte-identical to pre-amendment. The
+nearest candidate consumer, `legal_review_prep.require_council`, is a
+model-carried obligation — the flag lives in the settings template, its schema,
+one rule and one skill, and **no code reads it**; wiring it means threading
+quorum enforcement into skill execution, an architectural change with its own
+safety surface and out of scope here.
+
+An AI council (2 members, 2026-08-11, $0.0548) converged that shipping an inert
+default-off floor is the weakest form of this work, and that finding is adopted
+rather than summarised away: the inertness is recorded as a registered honest gap
+in `quorum-attendance-budget.json`, so a zero `floor_fire_rate` reads as "zero
+callers" and never as an honest null. Its alternative proposal — deriving a
+`gate_risk` heuristic inside `evaluateQuorum` from `command === 'run'` — was
+declined because it *is* the inference option the same review called the worst
+choice, and because it would break `quorum.ts`'s documented purity (no context,
+no config). Its CI-alarm proposal was declined on a verified fact: the events log
+is gitignored and worktree-local, so a workflow can assert nothing over it.
+
+**The falsifiable trigger for the next step** is therefore not a date: the first
+caller that passes `GATE_CLASS_ATTENDANCE_FLOOR`. Until one exists, the review at
+2026-11-10 should read this as inert-by-measurement, not as a floor that never
+fired.
+
 ## Consequences
 
 - A gate-class council pass will hold for a human rather than conclude on one

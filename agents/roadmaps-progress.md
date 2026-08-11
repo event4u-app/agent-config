@@ -6,10 +6,10 @@
 
 ## Overall
 
-**233 / 346 steps done · 67%**
+**245 / 346 steps done · 71%**
 
 ```text
-███████████████████████████░░░░░░░░░░░░░   67%
+████████████████████████████░░░░░░░░░░░░   71%
 ```
 
 ## Open roadmaps
@@ -21,7 +21,7 @@
 | 3 | [road-to-carrier-layer-convergence.md](roadmaps/road-to-carrier-layer-convergence.md) | 3 | 8 | 2 | 3 | 0 | 3 | [1](#blockers-road-to-carrier-layer-convergence) | ██████░░░░ 60% |
 | 4 | [road-to-ci-native-release-first-run.md](roadmaps/road-to-ci-native-release-first-run.md) | 2 | 8 | 8 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 5 | [road-to-council-blind-review.md](roadmaps/road-to-council-blind-review.md) | 3 | 6 | 2 | 3 | 0 | 1 | 0 | ██████░░░░ 60% |
-| 6 | [road-to-council-solo-floor-implementation.md](roadmaps/road-to-council-solo-floor-implementation.md) | 3 | 13 | 13 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+| 6 | [road-to-council-solo-floor-implementation.md](roadmaps/road-to-council-solo-floor-implementation.md) | 3 | 13 | 1 | 12 | 0 | 0 | 0 | █████████░ 92% |
 | 7 | [road-to-gated-reach-followup.md](roadmaps/road-to-gated-reach-followup.md) | 1 | 12 | 12 | 0 | 0 | 0 | [1](#blockers-road-to-gated-reach-followup) | ░░░░░░░░░░ 0% |
 | 8 | [road-to-inbox-harvest-2026-08-b-ci-economy.md](roadmaps/road-to-inbox-harvest-2026-08-b-ci-economy.md) | 5 | 24 | 1 | 17 | 2 | 4 | [2](#blockers-road-to-inbox-harvest-2026-08-b-ci-economy) | █████████░ 94% |
 | 9 | [road-to-inbox-harvest-2026-08-b-dispatch-safety.md](roadmaps/road-to-inbox-harvest-2026-08-b-dispatch-safety.md) | 4 | 21 | 6 | 8 | 1 | 6 | [1](#blockers-road-to-inbox-harvest-2026-08-b-dispatch-safety) | ██████░░░░ 57% |
@@ -179,13 +179,13 @@
 
 ### [road-to-council-solo-floor-implementation.md](roadmaps/road-to-council-solo-floor-implementation.md)
 
-**Road to the gate-scoped solo-attendance floor** — 0 / 13 done (0%)
+**Road to the gate-scoped solo-attendance floor** — 12 / 13 done (92%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
-| 1 | Define gate-class, before threading anything | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
-| 2 | The floor in the quorum layer | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
-| 3 | The floor's own telemetry | ⬜ not started | 7 | 0 | 0 | 0 | 0% |
+| 1 | Define gate-class, before threading anything | ✅ done | 0 | 3 | 0 | 0 | 100% |
+| 2 | The floor in the quorum layer | ✅ done | 0 | 3 | 0 | 0 | 100% |
+| 3 | The floor's own telemetry | 🟡 in progress | 1 | 6 | 0 | 0 | 86% |
 
 ### [road-to-gated-reach-followup.md](roadmaps/road-to-gated-reach-followup.md)
 
