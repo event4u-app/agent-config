@@ -56,32 +56,52 @@ tests for that behaviour exist (`tests/scripts/_cli/cmd_uninstall.test.ts`,
 
 ## Phase 1 — record the three writes uninstall cannot undo
 
-- [ ] **1.1 Return and record the `.vscode/settings.json` merge.** Make
+- [x] **1.1 Return and record the `.vscode/settings.json` merge.** Make
       `ensure_vscode_bridge` (`src/scripts/install.ts:978-989`) return the
       `merge_json_file` result like its nine sibling call sites, and thread it into
       `merged_keys_by_tool` at the project call site (`:5138-5145`). Extend the
       existing manifest writer; add no new module.
       <!-- verify: task test -- --filter=cmd_uninstall -->
-- [ ] **1.2 Pass `merged_keys_by_tool` on the global install path.** `install.ts:3858`
-      omits the sixth parameter declared at `:2504`, so merges into
-      `~/.augment/settings.json`, `~/.cursor/hooks.json` and their siblings
-      (`:5106-5118`) never reach the lockfile. Pass the map the project path already
-      builds.
-      <!-- verify: task test -- --filter=installed_tools -->
-- [ ] **1.3 Stop discarding legacy-trampoline removal failures.** Replace the bare
+- [-] **1.2 Pass `merged_keys_by_tool` on the global install path.** Cancelled —
+      the premise's consequence is false at HEAD, per Risk-Register rank 4.
+      The omitted sixth argument is real (`install.ts:3862`, parameter declared at
+      `:2504`) but **inert**: `install_global` spans `install.ts:3646-3909` and
+      contains zero `merge_json_file` / `ensure_*` calls, so there is no JSON merge
+      on that path to record. The `~/.augment/settings.json` and
+      `~/.cursor/hooks.json` merges the step cites are opt-in flags on the
+      *project* path (`install.ts:5116-5130`), which already captures each into
+      `merged_keys_by_tool` and passes it at `:5150`. Confirmed sole call site of
+      `install_global` at `:4897`. The one genuine user-scope residual — Cline's
+      `void`-returning `ensure_cline_user_hooks` (`:1251`) — is recorded as
+      still-frozen by 1.5 instead.
+- [x] **1.3 Stop discarding legacy-trampoline removal failures.** Replace the bare
       `catch` in `_remove_legacy_augment_trampolines` (`install.ts:1038-1050`) with a
       surfaced non-fatal warning naming the path, so a failed removal is visible rather
       than a silent stale file. Do not change removal semantics.
       <!-- verify: task test -- --filter=cmd_prune -->
-- [ ] **1.4 Re-point the `surgical-uninstall` claim at executable evidence.** In
+- [x] **1.4 Re-point the `surgical-uninstall` claim at executable evidence.** In
       `docs/CLAIMS.md:94-99` the claim is `backed` by the contract that specifies it.
       Retarget `evidence` to the tests that exercise the behaviour and re-stamp
-      `last_verified`.
+      `last_verified`. **Correction:** neither test this step names demonstrates the
+      claim — `cmd_uninstall.test.ts` covers arg errors, marker fallback and
+      whole-file removal, and `installed_tools.test.ts` covers manifest shape. The
+      behaviour ("only its own keys … never a neighbour tool's entries", matched by
+      pointer + SHA-256) is proven in `tests/lib/json_pointers.test.ts`
+      (`test_preserves_foreign_keys`, `test_two_tools_share_parent_uninstalling_one_leaves_other`,
+      `test_ancestor_with_foreign_sibling_stops_trim`, `test_list_with_drifted_hash_skips_with_warning`),
+      so the pointer targets that file in the re-executing `exec:` form.
       <!-- verify: rg -n 'claim: surgical-uninstall' -A5 docs/CLAIMS.md -->
-- [ ] **1.5 Shrink the frozen-gaps list to what remains.** Update § Untracked surfaces
+- [x] **1.5 Shrink the frozen-gaps list to what remains.** Update § Untracked surfaces
       in `docs/contracts/install-layout.md` so each closed item is struck with its
       commit, and anything still untracked (user-scope *files* such as the Cline
-      trampoline at `install.ts:1247-1262`) is named as still-frozen.
+      trampoline at `install.ts:1247-1262`) is named as still-frozen. Landed: the
+      `.vscode` bullet struck as closed; the user-scope-`merged_keys` bullet struck
+      as **withdrawn** (its mechanism does not exist — see 1.2); three residuals
+      named as still-frozen, one of them new — both unconditional bridges are
+      recorded only when `augment` is among the selected tools, because the lockfile
+      keys `merged_keys` by a name that must be in `_VALID_TOOLS`. Also corrected two
+      wrong pointer renderings of `chat.pluginLocations`, which is a literal dotted
+      key rather than a nesting level (`_escape_segment`, `json_pointers.ts:50-52`).
 - [-] **1.6 Add provenance markers, a marked-content-only removal path, and an
       orphan report.** Cancelled — all three ship: `files[]`/`merged_keys[]`/`sha256`
       (`docs/contracts/install-layout.md:177-191`), `uninstall` + `prune`

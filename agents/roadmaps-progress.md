@@ -6,10 +6,10 @@
 
 ## Overall
 
-**182 / 365 steps done · 50%**
+**186 / 364 steps done · 51%**
 
 ```text
-████████████████████░░░░░░░░░░░░░░░░░░░░   50%
+████████████████████░░░░░░░░░░░░░░░░░░░░   51%
 ```
 
 ## Open roadmaps
@@ -27,7 +27,7 @@
 | 9 | [road-to-inbox-harvest-2026-08-b-council-integrity.md](roadmaps/road-to-inbox-harvest-2026-08-b-council-integrity.md) | 3 | 16 | 3 | 5 | 1 | 7 | [1](#blockers-road-to-inbox-harvest-2026-08-b-council-integrity) | ██████░░░░ 62% |
 | 10 | [road-to-inbox-harvest-2026-08-b-dispatch-safety.md](roadmaps/road-to-inbox-harvest-2026-08-b-dispatch-safety.md) | 4 | 21 | 14 | 0 | 1 | 6 | [1](#blockers-road-to-inbox-harvest-2026-08-b-dispatch-safety) | ░░░░░░░░░░ 0% |
 | 11 | [road-to-inbox-harvest-2026-08-b-estate-lifecycle.md](roadmaps/road-to-inbox-harvest-2026-08-b-estate-lifecycle.md) | 4 | 15 | 9 | 0 | 0 | 6 | [1](#blockers-road-to-inbox-harvest-2026-08-b-estate-lifecycle) | ░░░░░░░░░░ 0% |
-| 12 | [road-to-inbox-harvest-2026-08-b-install-lifecycle.md](roadmaps/road-to-inbox-harvest-2026-08-b-install-lifecycle.md) | 2 | 13 | 7 | 0 | 1 | 5 | [1](#blockers-road-to-inbox-harvest-2026-08-b-install-lifecycle) | ░░░░░░░░░░ 0% |
+| 12 | [road-to-inbox-harvest-2026-08-b-install-lifecycle.md](roadmaps/road-to-inbox-harvest-2026-08-b-install-lifecycle.md) | 2 | 13 | 2 | 4 | 1 | 6 | [1](#blockers-road-to-inbox-harvest-2026-08-b-install-lifecycle) | ███████░░░ 67% |
 | 13 | [road-to-inbox-harvest-2026-08-b-ledger-truth.md](roadmaps/road-to-inbox-harvest-2026-08-b-ledger-truth.md) | 3 | 19 | 12 | 0 | 1 | 6 | [1](#blockers-road-to-inbox-harvest-2026-08-b-ledger-truth) | ░░░░░░░░░░ 0% |
 | 14 | [road-to-inbox-harvest-2026-08-b-release-integrity.md](roadmaps/road-to-inbox-harvest-2026-08-b-release-integrity.md) | 5 | 25 | 12 | 0 | 1 | 12 | [3](#blockers-road-to-inbox-harvest-2026-08-b-release-integrity) | ░░░░░░░░░░ 0% |
 | 15 | [road-to-inbox-harvest-2026-08-b.md](roadmaps/road-to-inbox-harvest-2026-08-b.md) | 3 | 6 | 1 | 2 | 0 | 3 | [1](#blockers-road-to-inbox-harvest-2026-08-b) | ███████░░░ 67% |
@@ -328,11 +328,11 @@
 
 ### [road-to-inbox-harvest-2026-08-b-install-lifecycle.md](roadmaps/road-to-inbox-harvest-2026-08-b-install-lifecycle.md)
 
-**Road to install lifecycle — every write recorded, org packs decided** — 0 / 7 done (0%)
+**Road to install lifecycle — every write recorded, org packs decided** — 4 / 6 done (67%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
-| 1 | record the three writes uninstall cannot undo | ⬜ not started | 5 | 0 | 0 | 1 | 0% |
+| 1 | record the three writes uninstall cannot undo | ✅ done | 0 | 4 | 0 | 2 | 100% |
 | 2 | put the org-pack question to the maintainer | ⬜ not started | 2 | 0 | 1 | 4 | 0% |
 
 <a id="blockers-road-to-inbox-harvest-2026-08-b-install-lifecycle"></a>
