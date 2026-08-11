@@ -137,14 +137,105 @@ Three things are genuinely undecided, and none of them is a plumbing detail:
 3. **Whether the floor is default-on or default-off** where a gate-class pass is
    identifiable at all.
 
-Step 1.1 of the roadmap asks for an outcome "chosen against a rate that was
-actually read, and the outcome recorded". It does not ask for the mechanism, and
-building one that first invents a classification, audits every call site and
+Step 1.1 of the parent roadmap asks for an outcome "chosen against a rate that
+was actually read, and the outcome recorded". It does not ask for the mechanism,
+and building one that first invents a classification, audits every call site and
 adds a telemetry state is roadmap-sized rather than step-sized. The
-implementation is therefore carried by
-[`road-to-council-solo-floor-implementation.md`](../../agents/roadmaps/road-to-council-solo-floor-implementation.md),
-which exists so that a chosen outcome does not become a fifth deferral by
-silence.
+implementation is therefore carried by a separate roadmap — named here without a
+path, because a roadmap is archived when it closes and a link from this record
+would break on exactly the change that closes it — which exists so that a chosen
+outcome does not become a fifth deferral by silence.
+
+**All three are now answered; see the amendment below.**
+
+## Amendment, 2026-08-11 — the measurement landed, the enforcement did not
+
+The three open questions above are answered here rather than only in code, per
+the implementation roadmap's own acceptance criterion. Two facts read off the
+tree during implementation changed what "implementing this decision" means, and
+neither was known when the Decision above was written:
+
+- **Nothing in the tree branches on `QuorumStatus` to hold anything.** The only
+  reader of `'inconclusive'` outside `quorum.ts` is
+  `council_cli.ts::_deserialise_quorum`, which validates a persisted string. An
+  enforcing floor would therefore have changed **zero** behaviour on the day it
+  landed — there is no gate for it to hold — while being able to hang an
+  advisory pass as soon as a consumer appeared. The enforcement half had no
+  consumer to enforce against.
+- **A challenge pass converged 2/2 against building the enforcement now** (AI
+  council, 2026-08-11, members anthropic and openai): the deciding rate is 1 of
+  8 with an interval spanning roughly 0.3 %–53 %, the 1-of-2 conclusion is a
+  recorded deliberate behaviour, and the floor *adds* a way for a pass to fail
+  to conclude. One member argued the stronger form — that building at n=8
+  overrides this record's own n=40 trigger and is therefore a governance
+  violation. **That reading is refuted by this record's text**: trigger (a)
+  reopens alternative (c) at n=40, and trigger (b) is "the gate-class floor
+  lands and its own fire-rate telemetry accumulates", which *presumes* the floor
+  landing. The trigger is a revisit condition, not a precondition. It is
+  recorded here rather than re-argued with the council, because the maintainer's
+  chosen resolution below satisfies both readings and a re-ask would have
+  relitigated a settled decision.
+
+**Resolution, maintainer-chosen: the floor is built in shadow.** It is evaluated
+on every pass and recorded; it holds nothing. That is compatible with this
+record (it is what trigger (b) asks to accumulate), with the challenge verdict
+(nothing is enforced on a 1-of-8 estimate), and with the tree (there is nothing
+to enforce against). Enforcement stays a separate decision, to be made when a
+gate-class consumer exists **and** the rate is worth acting on.
+
+### 1. What makes a pass gate-class — declared, never inferred
+
+Gate-class is a **property the caller declares**, recorded as `gate_class` on
+the `quorum_result` line, defaulting to `false`.
+
+Inference from the invocation context was rejected: it silently reclassifies
+passes whenever the context shape changes, and that is the one failure a rate
+computed over the field could never detect. A config key was rejected because it
+moves the classification to an operator who does not know which call sites gate
+anything.
+
+**The failure mode of the choice made, stated rather than only the rejected
+ones:** a declared flag is exactly as good as the call-site audit that places
+it, so a caller that gates a release and forgets to declare itself is invisible
+to the floor. The mitigation available today is that the population is small —
+there are two `evaluateQuorum` call sites in the tree — and that `command` and
+`phase` remain on every line, so the inferred reading can still be computed and
+compared against the declared one when they are expected to disagree.
+
+**No call site declares `true` today**, and that is not an omission: with no
+consumer branching on quorum status, there is no gate-class caller to mark. The
+field is written regardless, so the split is readable the moment one appears
+rather than leaving every earlier line ambiguous.
+
+### 2. The un-instrumented default — off, and why that is safe *here*
+
+An un-declared call site is **not** gate-class.
+
+In an enforcing design this is the harder call, and one council member argued
+the opposite (default ON, since an unmarked gate-class pass that solo-concludes
+risks a defect escape, while an unmarked advisory pass only delays a developer).
+That argument is sound **for an enforcing floor** and does not transfer to a
+shadow one: nothing is held at either setting, so the cost of defaulting off is
+a missing measurement rather than a missed protection, and the cost of
+defaulting on would be a fire-rate inflated by passes nobody ever intended to
+gate — an artefact that would corrupt the very series ADR trigger (b) exists to
+accumulate.
+
+**The failure mode:** if enforcement is ever switched on while this default
+stands, an undeclared gate-class caller silently loses the floor. Enforcement
+must therefore not be a flag flip — it needs its own record, which re-decides
+this default against the consumers that exist by then.
+
+### 3. Default-on/off for declared gate-class passes — moot today, on when it lands
+
+For a pass that declares itself gate-class, the floor is intended **on**: a
+caller that declares the class is asking for the floor, and a declared-but-off
+state is a setting whose only effect is to make the declaration a lie.
+
+This is recorded as intent, not as behaviour: with no enforcement and no
+declaring caller, it decides nothing today. It is written down so the
+enforcement decision starts from a stated position rather than re-opening a
+question this record already considered.
 
 ## Consequences
 

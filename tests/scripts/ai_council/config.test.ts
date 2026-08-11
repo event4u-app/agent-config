@@ -750,6 +750,76 @@ describe('quorum — config validation (Phase 3.3)', () => {
     });
 });
 
+// === ADR-224 — quorum_min_present (the shadow floor) ===
+
+describe('quorum_min_present — config validation (ADR-224)', () => {
+    it('defaults to the ADR-224 value when omitted', () => {
+        // Deliberately NOT defaulting to "unset": an unset floor records
+        // nothing, and ADR-224's review trigger (b) is "the floor lands and
+        // its own fire-rate telemetry accumulates". A default of 2 is what
+        // makes that trigger reachable without an operator edit.
+        const tmp = make_tmp();
+        const c = cfg.load_council_config(write_yaml(tmp, MINIMAL_VALID));
+        expect(c.quorum_min_present).toBe(2);
+    });
+
+    it('accepts a positive integer', () => {
+        const tmp = make_tmp();
+        const payload = `${MINIMAL_VALID}quorum_min_present: 3\n`;
+        const c = cfg.load_council_config(write_yaml(tmp, payload));
+        expect(c.quorum_min_present).toBe(3);
+    });
+
+    it('accepts 1 — the operator disabling the counterfactual', () => {
+        const tmp = make_tmp();
+        const payload = `${MINIMAL_VALID}quorum_min_present: 1\n`;
+        const c = cfg.load_council_config(write_yaml(tmp, payload));
+        expect(c.quorum_min_present).toBe(1);
+    });
+
+    it('accepts a floor above any plausible roster — clamped per pass, not at load', () => {
+        // Rejecting this at load would refuse a config that becomes
+        // legitimate the moment a member is added; `wouldSoloFloorHold`
+        // clamps where `total` is actually known.
+        const tmp = make_tmp();
+        const payload = `${MINIMAL_VALID}quorum_min_present: 99\n`;
+        const c = cfg.load_council_config(write_yaml(tmp, payload));
+        expect(c.quorum_min_present).toBe(99);
+    });
+
+    it('rejects zero', () => {
+        const tmp = make_tmp();
+        const payload = `${MINIMAL_VALID}quorum_min_present: 0\n`;
+        expect(() => cfg.load_council_config(write_yaml(tmp, payload))).toThrow(
+            /quorum_min_present.*integer >= 1/,
+        );
+    });
+
+    it('rejects a boolean', () => {
+        const tmp = make_tmp();
+        const payload = `${MINIMAL_VALID}quorum_min_present: true\n`;
+        expect(() => cfg.load_council_config(write_yaml(tmp, payload))).toThrow(
+            /quorum_min_present/,
+        );
+    });
+
+    it('rejects a float', () => {
+        const tmp = make_tmp();
+        const payload = `${MINIMAL_VALID}quorum_min_present: 1.5\n`;
+        expect(() => cfg.load_council_config(write_yaml(tmp, payload))).toThrow(
+            /quorum_min_present/,
+        );
+    });
+
+    it('rejects a string', () => {
+        const tmp = make_tmp();
+        const payload = `${MINIMAL_VALID}quorum_min_present: two\n`;
+        expect(() => cfg.load_council_config(write_yaml(tmp, payload))).toThrow(
+            /quorum_min_present/,
+        );
+    });
+});
+
 // === road-to-always-on-orchestration Phase 3.4 — cli_call_budget per-provider defaults ===
 
 describe('cli_call_budget.max_calls_per_day — generous per-provider defaults (Phase 3.4)', () => {
