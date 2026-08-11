@@ -76,7 +76,7 @@ import { AuthCache, select_solo_member } from './ai_council/solo_dispatch.js';
 import { InvalidModeError, resolve_global_mode } from './ai_council/modes.js';
 import { resolveMemberTransport } from './ai_council/transport_resolver.js';
 import { absentReasonFromCliFailure, classifyCliFailure, type AbsentReason } from './ai_council/transport_resolver.js';
-import { evaluateQuorum, type QuorumResult } from './ai_council/quorum.js';
+import { evaluateQuorum, SOLO_FLOOR_MIN_PRESENT, type QuorumResult } from './ai_council/quorum.js';
 import {
     appendEvent,
     appendQuorumEvent,
@@ -525,6 +525,12 @@ function _synthesize_ai_council_block(cfg: CouncilConfig): Dict {
         // configured `quorum: <k>`. Additive key — callers that never read
         // it observe no change.
         quorum: cfg.quorum,
+        // Forwarded for the same reason `quorum` above had to be: a key that
+        // `_build_config` validates and this block drops is a key the loader
+        // enforces and the runtime never sees. That defect shipped once here
+        // already; repeating it for the shadow floor would silently pin every
+        // `floor_would_hold` to the default no matter what the operator set.
+        quorum_min_present: cfg.quorum_min_present,
         necessity_classifier: {
             enabled: cfg.necessity_classifier.enabled,
             mode: cfg.necessity_classifier.mode,
@@ -648,6 +654,25 @@ function _quorum_setting_from(ai: Dict): QuorumSetting {
 }
 
 /**
+ * `ai['quorum_min_present']` with the same fail-soft posture as
+ * `_quorum_setting_from`: the loader has already validated it on the normal
+ * path, and a hand-built dict that bypasses the loader falls back to the
+ * ADR-224 default rather than throwing.
+ *
+ * Failing soft costs nothing on the safety side here, and less than it does
+ * for `quorum`: this value feeds a counterfactual boolean that no gate reads,
+ * so the worst outcome of a wrong fallback is one mis-recorded telemetry line,
+ * never a pass that concluded when it should not have.
+ */
+function _quorum_min_present_from(ai: Dict): number {
+    const raw = ai['quorum_min_present'];
+    if (typeof raw === 'number' && Number.isInteger(raw) && raw >= 1) {
+        return raw;
+    }
+    return SOLO_FLOOR_MIN_PRESENT;
+}
+
+/**
  * Emit one `quorum_result` line for a resolved quorum.
  *
  * Both `evaluateQuorum` call sites route through here, tagged by `phase`, so
@@ -674,6 +699,13 @@ function _emitQuorumEvent(
         configuredTotal?: number;
         lens?: string;
         invocation?: string;
+        /**
+         * The ADR-224 shadow floor for this pass. `gateClass` is deliberately
+         * NOT in this context object: no CLI path declares itself gate-class,
+         * so a parameter here would be one no caller ever sets, and its
+         * absence is what the `false` on every line honestly records.
+         */
+        minPresent?: number;
     },
 ): void {
     appendQuorumEvent({
@@ -684,6 +716,7 @@ function _emitQuorumEvent(
         dispatch: ctx.dispatch ?? 'full',
         configuredTotal: ctx.configuredTotal ?? quorum.total,
         result: quorum,
+        ...(ctx.minPresent !== undefined ? { minPresent: ctx.minPresent } : {}),
         absent: absent.map(
             (a): QuorumAbsence => ({
                 member: String(a['member'] ?? ''),
@@ -1009,6 +1042,7 @@ function build_members(settings: Dict, opts: BuildMembersOptions = {}): External
         // reach this line and neither is a pass.
         _emitQuorumEvent('pre_run', quorum_out.result, absent_entries, {
             command: opts.command ?? 'run',
+            minPresent: _quorum_min_present_from(ai),
         });
     }
     if (members.length === 0) {
@@ -2646,6 +2680,7 @@ function cmd_run(
         // and the solo-conclusion rate cannot make the one distinction it
         // exists for.
         dispatch: dispatch_shape,
+        minPresent: _quorum_min_present_from(ai_cfg),
         ...(configured_total !== null ? { configuredTotal: configured_total } : {}),
         lens: question.mode,
         invocation: String(_getattr(args, 'invocation', 'agent')),

@@ -6,8 +6,9 @@
  * `<project_root>/agents/runtime/council/events.log`. The schema carries the
  * minimum needed to answer "why did the council skip / block this?" and,
  * since v2, "who actually attended?" — at retro time, without leaking prompt
- * content. v2 added the `quorum_result` action and nothing else; see
- * `appendQuorumEvent`.
+ * content. v2 added the `quorum_result` action and nothing else; v3 added two
+ * booleans to that line (`gate_class`, `floor_would_hold`) and nothing else.
+ * See `appendQuorumEvent`.
  *
  * Privacy floor:
  *     `original_ask` is never written verbatim — the caller passes the raw
@@ -28,7 +29,7 @@ import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { isEnvKillSwitchActive } from '../_lib/env_kill_switch.js';
-import { isSoloConcluded, type QuorumResult } from './quorum.js';
+import { isSoloConcluded, wouldSoloFloorHold, type QuorumResult } from './quorum.js';
 import type { AbsentReason } from './transport_resolver.js';
 
 /**
@@ -36,8 +37,17 @@ import type { AbsentReason } from './transport_resolver.js';
  * `appendQuorumEvent`. Every schema-v1 field keeps its name, type and
  * position, so a v1 reader parses a v2 necessity line unchanged; only the
  * action vocabulary widened.
+ *
+ * v3 adds two booleans to the `quorum_result` line — `gate_class` (declared
+ * by the caller) and `floor_would_hold` (the ADR-224 counterfactual). Purely
+ * additive, in the same sense v2 was: no field is renamed, retyped or moved,
+ * no action is added, and a v2 reader parses a v3 line unchanged because it
+ * reads fields by name and never saw these two. The version moves anyway, so
+ * a consumer computing the shadow fire-rate can tell a line that recorded
+ * `false` from a line written before the field existed — a distinction it
+ * cannot make from the absent field alone.
  */
-export const SCHEMA_VERSION = 2;
+export const SCHEMA_VERSION = 3;
 
 export type EventAction = 'proceed' | 'skip_necessity' | 'block_quota' | 'quorum_result';
 
@@ -286,6 +296,30 @@ export interface QuorumEventInput {
     readonly configuredTotal: number;
     readonly result: QuorumResult;
     readonly absent: readonly QuorumAbsence[];
+    /**
+     * Did the CALLER declare this pass gate-class? Declared, never inferred,
+     * and it defaults to `false` — the fail-safe direction, because an
+     * un-declared pass is the one nobody classified and the cost of reading it
+     * as advisory is a missing measurement rather than a held gate.
+     *
+     * Inference from the invocation context was the rejected alternative: it
+     * silently reclassifies passes whenever the context shape changes, which
+     * is the one failure a rate computed over this field could not detect.
+     * `command` + `phase` remain on the line, so a consumer that wants the
+     * inferred reading can still compute it and see it disagree.
+     *
+     * **No call site declares `true` today** — nothing in the tree branches on
+     * `QuorumStatus` to hold a gate, so there is no gate-class caller to mark.
+     * The field is written anyway: it is what makes the population split
+     * readable the moment one appears, and a field added later would leave
+     * every line before it ambiguous.
+     */
+    readonly gateClass?: boolean;
+    /**
+     * The floor to evaluate the counterfactual against — the operator's
+     * `quorum_min_present`, defaulting to `SOLO_FLOOR_MIN_PRESENT`.
+     */
+    readonly minPresent?: number;
 }
 
 /**
@@ -328,6 +362,22 @@ export function appendQuorumEvent(
                 // in `quorum.ts`, so a change to it cannot leave a consumer's
                 // copy silently stale.
                 solo: isSoloConcluded(input.result),
+                // Declared class, never inferred — see `QuorumEventInput`.
+                gate_class: input.gateClass ?? false,
+                // The counterfactual, written on every line: would a
+                // `min_present` floor have held this pass? Recorded as a FIELD
+                // on `quorum_result` rather than as a new action, deliberately:
+                // a new action is invisible to every consumer filtering
+                // `action === 'quorum_result'`, which would split the
+                // attendance population in two and silently move the
+                // denominator of all four registered metrics. An additive
+                // boolean moves no existing bucket.
+                //
+                // Mutually exclusive with `verdict: 'inconclusive'` by
+                // construction (`wouldSoloFloorHold` returns false unless the
+                // pass concluded), which is what makes "held by the floor" and
+                // "threshold not met" readable apart from this line alone.
+                floor_would_hold: wouldSoloFloorHold(input.result, input.minPresent),
                 absent: input.absent.map((a) => ({ member: a.member, reason: a.reason })),
             },
             opts,

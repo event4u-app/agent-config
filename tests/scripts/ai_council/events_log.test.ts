@@ -139,14 +139,18 @@ describe('events_log — quorum attendance (schema v2)', () => {
         dispatch: 'full',
     } as const;
 
-    it('pins the on-wire schema version at 2', () => {
+    it('pins the on-wire schema version at 3', () => {
         // Deliberately a literal, not the constant: this module's whole
         // contract is a versioned wire format, and an assertion written
         // against SCHEMA_VERSION is tautological — it passes whatever the
         // constant becomes. A bump has to break a test on purpose.
+        //
+        // Bumped 2 → 3 when `quorum_result` gained `gate_class` and
+        // `floor_would_hold` (ADR-224 shadow floor). It broke this test on
+        // purpose, which is the assertion working.
         const lp = path.join(tmpDir(), 'wire.log');
         appendEvent({ action: 'proceed' }, { logPath: lp, now: FIXED });
-        expect(readOne(lp).schema_version).toBe(2);
+        expect(readOne(lp).schema_version).toBe(3);
     });
 
     it('writes a quorum_result line carrying the attendance shape', () => {
@@ -198,6 +202,71 @@ describe('events_log — quorum attendance (schema v2)', () => {
         // isSoloConcluded rather than a second copy of the rule.
         expect(lines.map((l) => l.verdict)).toEqual(['concluded', 'concluded']);
         expect(lines.map((l) => l.solo)).toEqual([true, false]);
+    });
+
+    it('records the shadow floor without an operator opting in', () => {
+        const lp = path.join(tmpDir(), 'floor.log');
+        appendQuorumEvent(
+            { ...CTX, configuredTotal: 2, result: evaluateQuorum(2, 1), absent: [] },
+            { logPath: lp, now: FIXED },
+        );
+        const rec = readOne(lp);
+        // No `minPresent` supplied — the ADR-224 default applies, so
+        // review trigger (b) has data from the first pass rather than from
+        // the first pass after somebody edits a config.
+        expect(rec.floor_would_hold).toBe(true);
+        // Declared, never inferred: no CLI path declares itself gate-class,
+        // and `false` is the honest record of that, not a placeholder.
+        expect(rec.gate_class).toBe(false);
+    });
+
+    it('separates "held by the floor" from "threshold not met" on the line alone', () => {
+        const lp = path.join(tmpDir(), 'split.log');
+        // Concluded on one voice — the floor would have held it.
+        appendQuorumEvent(
+            { ...CTX, configuredTotal: 2, result: evaluateQuorum(2, 1), absent: [] },
+            { logPath: lp, now: FIXED },
+        );
+        // Never reached the threshold — a different outcome with a
+        // different cause, and the reason this is a field and not a reuse
+        // of `verdict`.
+        appendQuorumEvent(
+            { ...CTX, configuredTotal: 3, result: evaluateQuorum(3, 1), absent: [] },
+            { logPath: lp, now: FIXED },
+        );
+        const lines = fs
+            .readFileSync(lp, 'utf-8')
+            .trim()
+            .split('\n')
+            .map((l) => JSON.parse(l) as Record<string, unknown>);
+        expect(lines.map((l) => l.verdict)).toEqual(['concluded', 'inconclusive']);
+        expect(lines.map((l) => l.floor_would_hold)).toEqual([true, false]);
+    });
+
+    it('honours a configured floor over the default', () => {
+        const lp = path.join(tmpDir(), 'floor2.log');
+        // Full attendance at 2 of 2 — the default floor does not fire...
+        appendQuorumEvent(
+            { ...CTX, configuredTotal: 2, result: evaluateQuorum(2, 2), absent: [] },
+            { logPath: lp, now: FIXED },
+        );
+        // ...and a stricter operator floor of 3 clamps to the roster rather
+        // than manufacturing a hold, so it does not fire either.
+        appendQuorumEvent(
+            { ...CTX, configuredTotal: 2, result: evaluateQuorum(2, 2), absent: [], minPresent: 3 },
+            { logPath: lp, now: FIXED },
+        );
+        // A floor of 1 is the operator disabling the counterfactual.
+        appendQuorumEvent(
+            { ...CTX, configuredTotal: 2, result: evaluateQuorum(2, 1), absent: [], minPresent: 1 },
+            { logPath: lp, now: FIXED },
+        );
+        const lines = fs
+            .readFileSync(lp, 'utf-8')
+            .trim()
+            .split('\n')
+            .map((l) => JSON.parse(l) as Record<string, unknown>);
+        expect(lines.map((l) => l.floor_would_hold)).toEqual([false, false, false]);
     });
 
     it('configured_total keeps a construction-degraded pass distinguishable', () => {
