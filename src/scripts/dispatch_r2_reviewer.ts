@@ -306,6 +306,84 @@ export function computeReviewScope(runGit: GitRunner, base: string): ReviewScope
     return { diffText, hash: sha256(diffText), empty: isEmptyScope(diffText) };
 }
 
+/**
+ * Staleness verdict for a findings artefact already sitting at the dispatch
+ * target, decided by the ONE review-scope hash both dispatcher and validator
+ * bind to — never by a second definition of "same review".
+ *
+ *   - `current` — its manifest claims the scope being dispatched now. This is
+ *     the live review; overwriting it would destroy the record of the review
+ *     that is still in force, so the refusal stands.
+ *   - `stale` — it claims a DIFFERENT scope. The fixes moved the scope past it,
+ *     which is exactly the §2.7 re-bind case, and it must not be mistaken for
+ *     the current review.
+ *   - `unreadable` — no parseable manifest. Treated like `current`: refusing is
+ *     the conservative branch when the artefact cannot be identified, since the
+ *     alternative is renaming a file whose contents nobody established.
+ */
+export type ArtefactStaleness = 'current' | 'stale' | 'unreadable';
+
+export function artefactStaleness(text: string, currentScopeHash: string): ArtefactStaleness {
+    const manifest = parseManifest(text);
+    if (manifest === null) {
+        return 'unreadable';
+    }
+    return manifest.scope_hash === currentScopeHash ? 'current' : 'stale';
+}
+
+/**
+ * The refusal text for a leftover artefact at the dispatch target, naming which
+ * of the contract's two paths applies instead of offering only `--force`.
+ *
+ * **Why this is a message and NOT an automatic rename.** Renaming a stale
+ * artefact aside looks like the obvious fix and contract §2.7 forbids it: a fix
+ * pass changes the review scope, so an artefact bound to the previous scope is
+ * the NORMAL in-place re-bind case, and "renaming instead of re-binding here
+ * would leave the shipping content with no review at all → `missing-artifact`".
+ * The archival rename is a separate, later step, it has a prescribed name
+ * (`<slug>.round<N>-review.md`), and it is gated on every finding already being
+ * terminal (`check_review_dispositions`, which recognises an archived record by
+ * `-review.md`). An invented quarantine name would have slipped past that gate
+ * too, creating an archive path with no terminal check on it.
+ *
+ * So the dispatcher classifies and explains; the operator performs whichever
+ * contract-conform step actually applies.
+ */
+export function leftoverArtefactRefusal(
+    findingsPathRel: string,
+    verdict: ArtefactStaleness,
+    staleScopeHash: string,
+    currentScopeHash: string,
+): string {
+    const head = `❌  Refusing to overwrite existing findings artifact: ${findingsPathRel}\n`;
+    if (verdict === 'unreadable') {
+        return (
+            head +
+            '    Its manifest is unreadable, so it cannot be identified as superseded.\n' +
+            '    Inspect it before doing anything: --force OVERWRITES, and an unidentified\n' +
+            '    artefact may be the only record of a review that happened.\n'
+        );
+    }
+    if (verdict === 'current') {
+        return (
+            head +
+            `    It already binds the scope being dispatched now (${currentScopeHash.slice(0, 12)}),\n` +
+            '    so it is the LIVE review of this content. Re-dispatching would discard it.\n'
+        );
+    }
+    return (
+        head +
+        `    It binds scope ${staleScopeHash.slice(0, 12)}; this dispatch binds ${currentScopeHash.slice(0, 12)},\n` +
+        '    so the reviewed content moved under it. That is the normal re-bind case, and\n' +
+        '    contract §2.7 gives it two paths — neither of which is a fresh skeleton:\n' +
+        '      1. RE-BIND IN PLACE (the usual one): edit this artefact — new `scope:`, rows\n' +
+        '         flipped to terminal — and re-commit it. §2.5 expects exactly that.\n' +
+        '      2. ARCHIVE the closed round: rename it to `<slug>.round<N>-review.md` ONCE every\n' +
+        '         finding is terminal, which `check_review_dispositions` enforces. Then dispatch.\n' +
+        '    --force writes a fresh skeleton OVER this file and destroys the record.\n'
+    );
+}
+
 /** Manifest comment block — exactly the contract §5 shape. */
 export function deriveManifest(inputs: ManifestInputs): string {
     return [
@@ -895,8 +973,31 @@ function runDispatch(args: Args): number {
     const outDirAbs = path.resolve(args.repo, args.outDir);
     const inputDirAbs = path.join(outDirAbs, `${slug}.review-input`);
     const findingsAbs = path.join(outDirAbs, `${slug}.findings.md`);
+    // A leftover artefact at the target is one of three very different things and
+    // the pre-existing refusal could not tell them apart: it said "use --force"
+    // for all of them, and `--force` overwrites — so the only escape it offered
+    // destroys the record of a review that happened. Classify by the ONE
+    // review-scope hash both dispatcher and validator bind to, and name the
+    // contract-conform step for what was actually found.
     if (fs.existsSync(findingsAbs) && !args.force) {
-        process.stderr.write(`❌  Refusing to overwrite existing findings artifact: ${findingsAbs} (use --force)\n`);
+        let existingText: string | null = null;
+        try {
+            existingText = fs.readFileSync(findingsAbs, 'utf-8');
+        } catch {
+            existingText = null;
+        }
+        const verdict: ArtefactStaleness =
+            existingText === null ? 'unreadable' : artefactStaleness(existingText, hashes.scope_hash);
+        const staleHash =
+            existingText === null ? '' : (parseManifest(existingText)?.scope_hash ?? '');
+        process.stderr.write(
+            leftoverArtefactRefusal(
+                path.relative(args.repo, findingsAbs),
+                verdict,
+                staleHash,
+                hashes.scope_hash,
+            ),
+        );
         return 1;
     }
 
