@@ -142,20 +142,46 @@ binds. Only a third detector is missing, and the soak stays.
 
 ## Phase 2 — A confirmation primitive for staged irreversible actions
 
-- [ ] **2.1 Add `requires_confirmation` as a registry-level flag.** Shape it on
-      `skill.schema.json:218-224` (optional, additive, schema-backed) so a command or
-      skill can declare that its action stages rather than executes. Schema plus fixture
-      only — no binding yet.
-      <!-- verify: ./scripts-run src/scripts/validate_frontmatter -->
-- [ ] **2.2 Implement exactly-once confirmed execution.** A staged action carries a
-      token; a double-approve executes once. Extend the `ask` / `ask_timeout` branch at
-      `decision_gate.ts:100-109` rather than adding a second prompt path, and keep the
-      non-interactive fallback it defines.
-      <!-- verify: task test -- --filter=hooks_builtin_decision_gate -->
-- [ ] **2.3 Make pending confirmations enumerable through an existing verb** — a flag,
-      never a new command; the enumeration precedent is `self-repair:status`
-      (`src/cli/registry.ts:118`, `src/scripts/self_repair_cli.ts:403-418`).
-      <!-- verify: grep -rn 'requires_confirmation' src/cli/registry.ts -->
+- [x] **2.1 Add `requires_confirmation` as a registry-level flag.** Shipped on BOTH
+      declaring surfaces under one key — `skill.schema.json` `execution.requires_confirmation`
+      and `command.schema.json` top-level — because the step's own wording is "a command
+      or skill", and two spellings of one concept is drift a reader pays for later.
+      Boolean, not a per-action list: no caller can name its actions until 2.4 decides
+      where the flag binds, and boolean → object stays additive for a reader that treats
+      a bare `true` as "all actions". The cited pointer `skill.schema.json:218-224` is
+      `disallowed_tools` and was the right shape to copy. What makes a typo in the key
+      fail CI rather than declare nothing silently is `additionalProperties: false`,
+      which both surfaces already carry — pinned as its own spec rather than assumed.
+      <!-- verify: npx vitest run tests/scripts/requires_confirmation_contract.test.ts -->
+- [x] **2.2 Implement exactly-once confirmed execution.** Shipped as
+      `work_engine/hooks/builtin/confirmation.ts`: a staged action is a file under
+      `agents/runtime/confirmations/pending/`, an approval `rename(2)`s it into
+      `consumed/`, and a second approval finds nothing to rename. **Exactly-once is the
+      rename, not a `consumed` boolean** — read-check-write leaves a window in which a
+      second caller reads the same `false`, and a file's location cannot disagree with
+      itself the way a flag inside a mutable record can. `unknown` and `already_executed`
+      stay distinguishable on purpose: one is a typo or a wrong project root, the other a
+      real second approval, and collapsing them would let an operator read a mistyped
+      token as a completed action.
+      **One premise correction, recorded rather than worked around.** The step says
+      "extend the `ask` / `ask_timeout` branch … rather than adding a second prompt path",
+      but `decision_gate.ts:100-109` contains no prompt — it throws `HookHalt` with a
+      numbered-option surface, and the TTY prompt lives in the CLI integration that
+      consumes the halt. What that branch does define, and what was kept, is the
+      non-interactive fallback (`on_block_fallback`). So the gate gained an **injected**
+      `stage` seam, not a wired one: absent a stager the halt surface is byte-identical
+      (the existing inline snapshot is that assertion), and a `warn` fallback stages
+      nothing because nothing is being held. Wiring it is 2.4.
+      <!-- verify: npx vitest run tests/scripts/work_engine/confirmation_exactly_once.test.ts tests/scripts/work_engine/hooks_builtin_decision_gate.test.ts -->
+- [x] **2.3 Make pending confirmations enumerable through an existing verb** — shipped as
+      `agent-config hooks:status --pending` (a flag on an existing verb, no 197th
+      command), with `--format json` for machine readers. It returns before the manifest
+      is read, so the default `hooks:status` output other callers pin byte-for-byte is
+      untouched. **The empty state names WHY it is empty** — "0 pending" and "nothing can
+      stage yet" are different facts, and until 2.4 binds a producer the honest reading
+      of an empty list is the second one; a list that merely printed `none` would read as
+      a working primitive with no work in it.
+      <!-- verify: npx vitest run tests/scripts/hooks_status_pending.test.ts -->
 - [~] **2.4 Decide whether the primitive binds, and what the other five hosts get.**
       Deferred behind `blocker: confirmation-degraded-host-semantics` — a host without a
       `pre_tool_use` slot (5 of 8, per `hook_manifest.yaml:531,539,578`) can only carry
@@ -291,6 +317,30 @@ binds. Only a third detector is missing, and the soak stays.
       mapping on this host: `dispatch_hook.ts:76-78,803-804` defines `EXIT_WARN = 2`
       alongside `EXIT_BLOCK = 1`, and an advisory finding delivered on the wrong exit
       code becomes a hard deny. Treat that as a probe, not an assumption.
+
+      **The probe was run 2026-08-11; it stays OPEN on what the probe revealed, not
+      on effort.** Result, so nobody re-derives it: `EXIT_BLOCK = 1` / `EXIT_WARN = 2`
+      (`dispatch_hook.ts:77-78`), `_aggregate` returns `EXIT_WARN` when any concern
+      returns 2 (`:806-807`), and only `rc >= 3` reaches the `fail_closed` branch —
+      which for this concern is `false`, so a crash fails **open** and the turn ends,
+      as its header intends. The load-bearing half is the one the step could not
+      assume: the P0.2 severity ceiling downgrades a stray `EXIT_BLOCK` to warn **only
+      for a concern declared `severity: advisory`** (`:1133`, `_is_advisory` at `:117`),
+      and `turn-end-gate` is declared `severity: blocking`
+      (`hook_manifest.yaml:445-449`). So a third detector that means "advisory" and
+      returns 1 becomes a **real hard deny with nothing to catch it** — the exact
+      failure the step named, confirmed rather than feared. An advisory detector here
+      exits 2.
+      **Two unknowns remain, and one of them is a judgement this roadmap has not
+      made.** (a) `_messageText` (`turn_end_gate_hook.ts:528-540`) keeps only
+      `type === 'text'` blocks, so the transcript reader is structurally blind to tool
+      activity — an edit-without-verification detector needs `tool_use` blocks
+      collected per turn before it can detect anything, which is a reader change, not a
+      detector addition. (b) *Which* tool calls count as verification is undecided: a
+      test runner clearly does, `git diff` clearly does not, and `npx tsc --noEmit`
+      sits between them. Inventing that classification and shipping it into a
+      `severity: blocking` concern is the "claims enforcement it does not have" failure
+      this roadmap already names at 2.4 — so it is surfaced, not guessed.
       <!-- verify: task test -- --filter=turn_end_gate -->
 - [-] **4.4 Role-contract budget fields and an eight-role catalog behind a flag —
       cancelled by record.** `ADR-109-subagent-v1-contract.md:75-76` lists

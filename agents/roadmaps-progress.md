@@ -6,10 +6,10 @@
 
 ## Overall
 
-**233 / 346 steps done · 67%**
+**236 / 346 steps done · 68%**
 
 ```text
-███████████████████████████░░░░░░░░░░░░░   67%
+███████████████████████████░░░░░░░░░░░░░   68%
 ```
 
 ## Open roadmaps
@@ -24,7 +24,7 @@
 | 6 | [road-to-council-solo-floor-implementation.md](roadmaps/road-to-council-solo-floor-implementation.md) | 3 | 13 | 13 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 7 | [road-to-gated-reach-followup.md](roadmaps/road-to-gated-reach-followup.md) | 1 | 12 | 12 | 0 | 0 | 0 | [1](#blockers-road-to-gated-reach-followup) | ░░░░░░░░░░ 0% |
 | 8 | [road-to-inbox-harvest-2026-08-b-ci-economy.md](roadmaps/road-to-inbox-harvest-2026-08-b-ci-economy.md) | 5 | 24 | 1 | 17 | 2 | 4 | [2](#blockers-road-to-inbox-harvest-2026-08-b-ci-economy) | █████████░ 94% |
-| 9 | [road-to-inbox-harvest-2026-08-b-dispatch-safety.md](roadmaps/road-to-inbox-harvest-2026-08-b-dispatch-safety.md) | 4 | 21 | 6 | 8 | 1 | 6 | [1](#blockers-road-to-inbox-harvest-2026-08-b-dispatch-safety) | ██████░░░░ 57% |
+| 9 | [road-to-inbox-harvest-2026-08-b-dispatch-safety.md](roadmaps/road-to-inbox-harvest-2026-08-b-dispatch-safety.md) | 4 | 21 | 3 | 11 | 1 | 6 | [1](#blockers-road-to-inbox-harvest-2026-08-b-dispatch-safety) | ████████░░ 79% |
 | 10 | [road-to-inbox-harvest-2026-08-b-estate-lifecycle.md](roadmaps/road-to-inbox-harvest-2026-08-b-estate-lifecycle.md) | 4 | 15 | 1 | 8 | 0 | 6 | [1](#blockers-road-to-inbox-harvest-2026-08-b-estate-lifecycle) | █████████░ 89% |
 | 11 | [road-to-inbox-harvest-2026-08-b-ledger-truth.md](roadmaps/road-to-inbox-harvest-2026-08-b-ledger-truth.md) | 3 | 19 | 1 | 12 | 0 | 6 | [1](#blockers-road-to-inbox-harvest-2026-08-b-ledger-truth) | █████████░ 92% |
 | 12 | [road-to-inbox-harvest-2026-08-b-release-integrity.md](roadmaps/road-to-inbox-harvest-2026-08-b-release-integrity.md) | 5 | 25 | 1 | 11 | 0 | 13 | [3](#blockers-road-to-inbox-harvest-2026-08-b-release-integrity) | █████████░ 92% |
@@ -234,12 +234,12 @@
 
 ### [road-to-inbox-harvest-2026-08-b-dispatch-safety.md](roadmaps/road-to-inbox-harvest-2026-08-b-dispatch-safety.md)
 
-**Road to inbox harvest 2026-08-b — dispatch safety** — 8 / 14 done (57%)
+**Road to inbox harvest 2026-08-b — dispatch safety** — 11 / 14 done (79%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
 | 1 | Scoped tool grants | 🟡 in progress | 1 | 3 | 0 | 2 | 75% |
-| 2 | A confirmation primitive for staged irreversible actions | ⬜ not started | 3 | 0 | 1 | 0 | 0% |
+| 2 | A confirmation primitive for staged irreversible actions | ✅ done | 0 | 3 | 1 | 0 | 100% |
 | 3 | Checkable handoff-envelope fields | 🟡 in progress | 1 | 3 | 0 | 0 | 75% |
 | 4 | Roles, lifecycles, and the two residues | 🟡 in progress | 1 | 2 | 0 | 4 | 67% |
 
