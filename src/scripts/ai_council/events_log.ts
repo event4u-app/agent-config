@@ -36,8 +36,17 @@ import type { AbsentReason } from './transport_resolver.js';
  * `appendQuorumEvent`. Every schema-v1 field keeps its name, type and
  * position, so a v1 reader parses a v2 necessity line unchanged; only the
  * action vocabulary widened.
+ *
+ * v3 adds one additive field to `quorum_result`, `held_by_floor` (ADR-224's
+ * gate-class attendance floor). Every v2 field keeps its name, type and
+ * position, so a v2 reader parses a v3 line unchanged — but a v2 reader that
+ * buckets by `verdict` alone now under-reports, because a floor-held pass
+ * carries `verdict: 'inconclusive'` while being a different outcome from a
+ * threshold that was never met. That is precisely why the version moved rather
+ * than the field being slipped in silently: the four metrics registered in
+ * `quorum-attendance-budget.json` are the readers this warns.
  */
-export const SCHEMA_VERSION = 2;
+export const SCHEMA_VERSION = 3;
 
 export type EventAction = 'proceed' | 'skip_necessity' | 'block_quota' | 'quorum_result';
 
@@ -328,6 +337,19 @@ export function appendQuorumEvent(
                 // in `quorum.ts`, so a change to it cannot leave a consumer's
                 // copy silently stale.
                 solo: isSoloConcluded(input.result),
+                // The third outcome ADR-224 names, carried as its own field
+                // rather than as a third `verdict` value: the threshold WAS met
+                // and a gate-class attendance floor held the pass anyway.
+                // `verdict: 'inconclusive'` alone cannot distinguish that from
+                // a threshold never reached, and the difference is the only
+                // evidence that could later justify or retire the floor.
+                //
+                // Read it together with `solo`, not instead of it: a held pass
+                // resolves `inconclusive`, so `solo` is `false` for it and the
+                // solo-conclusion rate deflates as the floor fires. The pair
+                // are successor instruments — see the `floor_fire_rate` entry
+                // in `quorum-attendance-budget.json`.
+                held_by_floor: input.result.heldByFloor,
                 absent: input.absent.map((a) => ({ member: a.member, reason: a.reason })),
             },
             opts,
