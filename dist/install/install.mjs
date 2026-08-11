@@ -17965,7 +17965,7 @@ function ensure_vscode_bridge(project_root, package_type, force) {
   };
   const plugin_path = plugin_paths[package_type] ?? "./plugin/agent-config";
   const bridge = { "chat.pluginLocations": { [plugin_path]: true } };
-  merge_json_file(
+  return merge_json_file(
     path16.join(project_root, ".vscode", "settings.json"),
     bridge,
     force,
@@ -18023,7 +18023,8 @@ function _remove_legacy_augment_trampolines() {
         fs18.unlinkSync(legacy);
         skip(`removed legacy ~/.augment/hooks/${name}`);
       }
-    } catch {
+    } catch (err) {
+      warn(`could not remove legacy ${legacy}: ${err instanceof Error ? err.message : String(err)}`);
     }
   }
 }
@@ -21072,8 +21073,10 @@ function _main_project_install(opts, project_root, parsed_tools, is_first_run) {
   const tools = parsed_tools;
   const merged_keys_by_tool = {};
   if (!opts.skip_bridges) {
-    ensure_vscode_bridge(project_root, package_type, opts.force);
-    merged_keys_by_tool["augment"] = ensure_augment_bridge(project_root, opts.force);
+    merged_keys_by_tool["augment"] = [
+      ...ensure_vscode_bridge(project_root, package_type, opts.force),
+      ...ensure_augment_bridge(project_root, opts.force)
+    ];
     if (_is_tool_enabled(tools, "claude-code")) {
       merged_keys_by_tool["claude-code"] = ensure_claude_bridge(project_root, opts.force);
     }
