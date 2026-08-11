@@ -16,9 +16,11 @@ import { load_ledger } from '../../src/scripts/check_claims.js';
 const REPO_ROOT = join(fileURLToPath(import.meta.url), '..', '..', '..');
 
 // `render()` costs ~54s (measured 2026-08-11): it walks the whole claims
-// ledger, and this file called it five times, making it the single slowest
-// test file in the suite at ~269s — 8.7x the next one, and enough on its own
-// to push one vitest shard over the CI per-job ceiling.
+// ledger, and this file called it five times. That made it the single slowest
+// test file in the suite — 290s in a 977-file pass, 8.7x the next-slowest file
+// in that same pass (33.5s), and ~269s when run alone. Enough on its own to
+// push one vitest shard over the CI per-job ceiling. After the change: 103s
+// wall-clock standalone, i.e. the two `render()` calls determinism needs.
 //
 // Rendering ONCE and reusing the string is sound precisely because the first
 // test below asserts determinism: if `render()` ever stopped returning the

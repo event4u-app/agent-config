@@ -186,12 +186,21 @@ Re-derived in this worktree at `c073d5732` (v9.32.0):
       which trades a real correctness risk (a stale lint cache) for a saving the
       Phase 0.4 table shows is small — `static-checks` is 131 s, well under the
       ceiling. What they buy is **local** re-run time, measured on this machine:
-      `npm run typecheck` 9.3 s → **3.0 s** warm, `npm run lint:ts` 11.2 s →
+      `npm run typecheck` 8.2 s → **3.2 s** warm, `npm run lint:ts` 11.2 s →
       **0.83 s** warm. That is a developer-loop and `task preflight` win, and it
-      is worth having under its real name. Buildinfo goes to a gitignored
-      `.tscache/`, one file per tsconfig so the four do not clobber each other;
-      `.eslintcache` is gitignored too. Both entries sit outside the managed
-      gitignore block. No `incremental` or
+      is worth having under its real name.
+      **`incremental` is on the two intrinsically-`noEmit` configs ONLY, and the
+      first attempt got this wrong.** It was initially added to the base
+      `tsconfig.json`, which `build:cli` (`tsc -p tsconfig.json`) **emits** from:
+      with a surviving buildinfo and a deleted `dist/`, tsc emits nothing and
+      exits 0, which would have made the freshness gate's own remediation
+      ("run `npm run build:cli` and commit the result") a silent no-op — and
+      `.tscache/` is gitignored, so it survives every `git clean` of `dist/`.
+      Caught by the completion review, reproduced, and moved to
+      `tsconfig.scripts.json` / `tsconfig.test.json`. Buildinfo goes to a
+      gitignored `.tscache/`, one file per config so the two do not clobber each
+      other; `.eslintcache` is gitignored too. Both entries sit outside the
+      managed gitignore block. No `incremental` or
       `tsBuildInfoFile` in `tsconfig.json`, `tsconfig.scripts.json`,
       `tsconfig.test.json`, `tsconfig.ui.json`; `lint:ts` is bare
       `eslint 'src/**/*.ts'` (`package.json:80`) with no `--cache`. Both are
@@ -404,14 +413,20 @@ Re-derived in this worktree at `c073d5732` (v9.32.0):
       `.github/`, so nothing in-tree is wired for it either way.
 
 ## Risk Register
-<!-- risk-review: v1 | reviewed: 2026-08-10 | reviewer: claude/host -->
+<!-- risk-review: v1 | reviewed: 2026-08-11 | reviewer: claude/host -->
+
+Reconciled 2026-08-11 against what the phases actually did: rows 1, 3, 4 and 5
+anchored mitigations to steps that were cancelled, diverged, or turned out
+insufficient. A register that prescribes a mitigation for an abandoned design is
+worse than none — it reads as a live control.
+
 | Rank | Item | Risk type | Description | Mitigation | Anchored under |
 |------|------|-----------|-------------|------------|----------------|
-| 1 | Shared build artefact hides per-job drift | implementation | Four independent builds today each re-derive `dist/`; one shared artefact means a drift only the producer would notice. | Keep the `tests.yml:303-312` freshness gate on the producer; consumers assert the artefact rather than rebuilding on cache miss (2.3). | Phase 2 — The build fan-out |
+| 1 | Shared build artefact hides per-job drift | implementation | Four independent builds today each re-derive `dist/`; one shared artefact means a drift only the producer would notice. | **Retired — the risk cannot occur.** 2.2-2.4 were cancelled on 2.1's measurement, so there is no shared artefact and each job keeps re-deriving `dist/` behind the unchanged `tests.yml` freshness gate. Re-arm this row only if the revisit threshold in `ci-cost-budget.md` is met. | Phase 2 — The build fan-out |
 | 2 | Baseline recorded from too few runs | implementation | A figure from one PR run measures runner variance; a later regression window would then flag noise. | Use the 50-run average the file's own checklist specifies (`ci-cost-budget.md:90-91`), recorded from CI, never locally (`hook-latency.json:2`). | Phase 0 — Re-anchor the two existing cost artefacts |
-| 3 | In-process migration deletes real coverage | implementation | Converting a spawn to an in-process call removes the argv / exit-code / stdio boundary some tests exist to prove. | Keep one spawning test per CLI entry point (3.2); `ProcessExit` (`run_in_process.ts:41`) preserves exit semantics for the rest. | Phase 3 — The subprocess lever |
-| 4 | A filter is dead by typo, not by removal | product | Deleting a path-filter entry that was meant to match something narrows a trigger surface silently. | Classify every entry before deleting (1.1, 1.2), each removal citing its absence check; the sweep in 1.3 stays report-only. | Phase 1 — Free hygiene |
-| 5 | `cancel-in-progress` drops a backstop signal | product | On `push: main`, `rule-backstops.yml` is the only run for that commit; cancelling it loses the signal entirely. | Scope `cancel-in-progress` to `pull_request` refs only (1.4). | Phase 1 — Free hygiene |
+| 3 | In-process migration deletes real coverage | implementation | Converting a spawn to an in-process call removes the argv / exit-code / stdio boundary some tests exist to prove. | **Dormant — no migration happened.** 3.1 measured the spawning set as not the cost, so 3.2 converted nothing; the rule (one spawning test per CLI entry point) is written into `docs/development.md` so it binds whenever a migration is actually attempted. | Phase 3 — The subprocess lever |
+| 4 | A filter is dead by typo, not by removal | product | Deleting a path-filter entry that was meant to match something narrows a trigger surface silently. | Classify every entry before deleting (1.1, 1.2), each removal citing its absence check. **1.3 shipped STRICT, not report-only** — its escape is an inline `# workflow-path-allow: <reason>` on the entry, which is the pre-staged-filter case and nothing wider; all 20 live entries were hand-classified and repaired first, so the corpus is verified empty rather than unexamined. | Phase 1 — Free hygiene |
+| 5 | A concurrency group drops a backstop signal | product | On `push: main`, `rule-backstops.yml` is the only run for that commit; losing it loses the signal entirely. | **Scoping `cancel-in-progress` was NOT sufficient** — GitHub evicts a *pending* group member regardless of that flag, so the first attempt at 1.4 introduced the very loss it was written to prevent. Fixed by the group KEY: non-PR runs are keyed by `github.run_id`, putting each in a group of one. Found by the completion review, not by the author. | Phase 1 — Free hygiene |
 
 ## Blockers
 

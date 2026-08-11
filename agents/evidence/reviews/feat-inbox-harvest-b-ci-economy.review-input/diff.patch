@@ -1,16 +1,18 @@
 diff --git a/.github/workflows/adoption-snapshot.yml b/.github/workflows/adoption-snapshot.yml
-index 106d06152e062cb56c9e2900f515ded158c133d5..a554bce369106bba03c130944c886403966458b6 100644
+index 106d06152e062cb56c9e2900f515ded158c133d5..f2d8563a6ea6df2bfe9148e10236d97ca8821a2b 100644
 --- a/.github/workflows/adoption-snapshot.yml
 +++ b/.github/workflows/adoption-snapshot.yml
-@@ -28,6 +28,13 @@ on:
+@@ -28,6 +28,15 @@ on:
      # rolling-8-week report tolerates ±48h on each row.
      - cron: "0 6 * * 0"
  
-+# No `pull_request` trigger, so `cancel-in-progress` is always false here: a
-+# cancelled weekly snapshot is a missing row in the rolling-8-week report, not
-+# a re-runnable check. The group still serialises an overlapping dispatch.
++# No `pull_request` trigger, so every run here is keyed by `github.run_id` and
++# sits in a group of one: a cancelled weekly snapshot is a missing row in the
++# rolling-8-week report, not a re-runnable check. Keying by workflow+ref
++# instead would let a dispatch drop a queued scheduled run outright — GitHub
++# evicts a *pending* group member regardless of `cancel-in-progress`.
 +concurrency:
-+  group: ${{ github.workflow }}-${{ github.ref }}
++  group: ${{ github.workflow }}-${{ github.event_name == 'pull_request' && github.ref || github.run_id }}
 +  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 +
  permissions:
@@ -44,23 +46,26 @@ index 2f418b52172a2c65cb0ad477cb2f973f8bf2c3bc..89a5be9a78a349c5e7eb9e02964055f1
        - name: Marketplace manifest lint
          run: ./scripts-run src/scripts/lint_marketplace
 diff --git a/.github/workflows/cross-model-canary.yml b/.github/workflows/cross-model-canary.yml
-index c9e46836161ad2288f9c6d6b9f10733868928c32..e3bb678d03cfeaef52dc1cff058c2c054b31dfaf 100644
+index c9e46836161ad2288f9c6d6b9f10733868928c32..0dda236102c0eb426cc8e56b736c02e82e0bf6c5 100644
 --- a/.github/workflows/cross-model-canary.yml
 +++ b/.github/workflows/cross-model-canary.yml
-@@ -21,6 +21,12 @@ on:
+@@ -21,6 +21,15 @@ on:
      - cron: "0 6 * * 1"
    workflow_dispatch: {}
  
 +# Superseded PR pushes cancel; the weekly canary and manual dispatches do not —
-+# a cancelled canary run is a lost data point, not a re-runnable check.
++# a cancelled canary run is a lost data point, not a re-runnable check. That is
++# the group KEY doing the work: non-PR runs are keyed by `github.run_id`, so
++# each is a group of one. `cancel-in-progress: false` alone would not save a
++# run still pending in a shared group.
 +concurrency:
-+  group: ${{ github.workflow }}-${{ github.ref }}
++  group: ${{ github.workflow }}-${{ github.event_name == 'pull_request' && github.ref || github.run_id }}
 +  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 +
  permissions:
    contents: read
  
-@@ -33,7 +39,7 @@ jobs:
+@@ -33,7 +42,7 @@ jobs:
        - uses: actions/setup-node@v7
          with:
            node-version: '20'
@@ -69,7 +74,7 @@ index c9e46836161ad2288f9c6d6b9f10733868928c32..e3bb678d03cfeaef52dc1cff058c2c05
        - name: Cross-model smoke (dry-run — MockRouter, no spend)
          run: ./node_modules/.bin/tsx src/scripts/cross_model_smoke.ts --dry-run --skills image-analyser
  
-@@ -49,7 +55,7 @@ jobs:
+@@ -49,7 +58,7 @@ jobs:
        - uses: actions/setup-node@v7
          with:
            node-version: '20'
@@ -126,24 +131,27 @@ index 20dd33b05a0f3a722482966f30238a20c620f347..c68ab479419553e7cf1f86a814e51bfa
        - name: Build CLI and UI ahead of pack (prepack chain)
          if: steps.check.outputs.already_published != 'true'
 diff --git a/.github/workflows/release-adjacent-health.yml b/.github/workflows/release-adjacent-health.yml
-index f1ac5cc4545b0261e031424b4a99c6df07f12584..3da3895c0a31127788e055d5bd452c19e6731d68 100644
+index f1ac5cc4545b0261e031424b4a99c6df07f12584..a50a31c947a88c8b16f428ffa600525e2149680a 100644
 --- a/.github/workflows/release-adjacent-health.yml
 +++ b/.github/workflows/release-adjacent-health.yml
-@@ -18,6 +18,13 @@ on:
+@@ -18,6 +18,16 @@ on:
      - cron: '30 6 * * *' # daily 06:30 UTC
    workflow_dispatch:
  
 +# No `pull_request` trigger, so nothing here is ever cancelled: the daily health
-+# run is the only observation for that day. The group serialises an overlapping
-+# manual dispatch instead of racing it.
++# run is the only observation for that day, and `github.run_id` puts each run in
++# a group of one so neither a queued nor a running observation can be evicted.
++# A shared workflow+ref key would let a manual dispatch drop the day's pending
++# scheduled run — GitHub evicts a *pending* group member whatever
++# `cancel-in-progress` is set to.
 +concurrency:
-+  group: ${{ github.workflow }}-${{ github.ref }}
++  group: ${{ github.workflow }}-${{ github.event_name == 'pull_request' && github.ref || github.run_id }}
 +  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 +
  permissions:
    actions: read
    contents: read
-@@ -37,7 +44,7 @@ jobs:
+@@ -37,7 +47,7 @@ jobs:
            cache: 'npm'
  
        - name: Install deps
@@ -166,10 +174,10 @@ index ec9e9e17ae618dbe094ac1201afaad4e247887d7..b8cf0b12924fcccd08bc4d1f4134fc4f
        # release.ts step [2/10] shells out to `task release-prepare`
        # (sync + build-discovery + generate-tools). Without this the CI-native
 diff --git a/.github/workflows/rule-backstops.yml b/.github/workflows/rule-backstops.yml
-index cf65e349e9933ca740d218af180a1b9093850e01..b3598110bb5c0099ecd992ba4748794a6ecc4832 100644
+index cf65e349e9933ca740d218af180a1b9093850e01..2eebf0a3a015e4fede794a5122be6f43cfff9ffc 100644
 --- a/.github/workflows/rule-backstops.yml
 +++ b/.github/workflows/rule-backstops.yml
-@@ -56,6 +56,14 @@ on:
+@@ -56,6 +56,21 @@ on:
        - "internal/bench/reports/kernel-prefix.json"
        - ".github/workflows/rule-backstops.yml"
  
@@ -177,31 +185,41 @@ index cf65e349e9933ca740d218af180a1b9093850e01..b3598110bb5c0099ecd992ba4748794a
 +# workflow is the ONLY run for that commit, so cancelling it would leave the
 +# commit with no backstop signal at all — the 23 workflows that carry an
 +# unconditional `cancel-in-progress: true` are all PR-only.
++#
++# The guarantee lives in the GROUP KEY, not in `cancel-in-progress`. GitHub
++# drops a *pending* run as soon as another run joins its group, whatever
++# `cancel-in-progress` says — that flag only governs runs already in
++# progress. So non-PR runs are keyed by `github.run_id`, making each its own
++# single-member group that nothing can ever join, and PR runs keep the shared
++# per-ref key so a newer push does supersede an older one.
 +concurrency:
-+  group: ${{ github.workflow }}-${{ github.ref }}
++  group: ${{ github.workflow }}-${{ github.event_name == 'pull_request' && github.ref || github.run_id }}
 +  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 +
  permissions:
    contents: read
  
 diff --git a/.github/workflows/self-review-gate.yml b/.github/workflows/self-review-gate.yml
-index ffced941c6c9b9e20f28c7405fd184f2a2f529db..5a71ded00d20f14cd6371f3910a8edbb491b2f7c 100644
+index ffced941c6c9b9e20f28c7405fd184f2a2f529db..ce90cbb8754e5caad9933067b229c84dc9e04f77 100644
 --- a/.github/workflows/self-review-gate.yml
 +++ b/.github/workflows/self-review-gate.yml
-@@ -19,6 +19,12 @@ on:
+@@ -19,6 +19,15 @@ on:
    pull_request:
    workflow_dispatch: {}
  
 +# Two PR jobs stack on every push to a branch; superseded runs cancel. A
-+# manually dispatched run is never cancelled — someone is waiting on it.
++# manually dispatched run is never cancelled — someone is waiting on it, and
++# that is enforced by the group KEY (`github.run_id` puts each dispatch in a
++# group of one), not by `cancel-in-progress`, which does not protect a run
++# still sitting in the queue.
 +concurrency:
-+  group: ${{ github.workflow }}-${{ github.ref }}
++  group: ${{ github.workflow }}-${{ github.event_name == 'pull_request' && github.ref || github.run_id }}
 +  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 +
  permissions:
    contents: read
    pull-requests: write
-@@ -34,7 +40,7 @@ jobs:
+@@ -34,7 +43,7 @@ jobs:
        - uses: actions/setup-node@v7
          with:
            node-version: '20'
@@ -210,7 +228,7 @@ index ffced941c6c9b9e20f28c7405fd184f2a2f529db..5a71ded00d20f14cd6371f3910a8edbb
        - name: Self-review plan (dry-run — no spend, advisory)
          run: ./node_modules/.bin/tsx src/scripts/self_review_gate.ts --dry-run --base "origin/${{ github.base_ref }}"
  
-@@ -53,7 +59,7 @@ jobs:
+@@ -53,7 +62,7 @@ jobs:
        - uses: actions/setup-node@v7
          with:
            node-version: '20'
@@ -358,7 +376,7 @@ index 94a20fab822af15df82a1746d135393844a43323..efd2353453ba8d895d1ef50046633f98
  <a id="blockers-road-to-inbox-harvest-2026-08-b-ci-economy"></a>
  **Blockers**
 diff --git a/agents/roadmaps/road-to-inbox-harvest-2026-08-b-ci-economy.md b/agents/roadmaps/road-to-inbox-harvest-2026-08-b-ci-economy.md
-index 1720651c668a84b0ba614537caa26997c231c8c1..ecfbdad2063e50807ebff3610d0672c3c96d379f 100644
+index 1720651c668a84b0ba614537caa26997c231c8c1..fe88202d578c19620775caf01a7dc827d33fece0 100644
 --- a/agents/roadmaps/road-to-inbox-harvest-2026-08-b-ci-economy.md
 +++ b/agents/roadmaps/road-to-inbox-harvest-2026-08-b-ci-economy.md
 @@ -70,23 +70,33 @@ Re-derived in this worktree at `c073d5732` (v9.32.0):
@@ -418,7 +436,7 @@ index 1720651c668a84b0ba614537caa26997c231c8c1..ecfbdad2063e50807ebff3610d0672c3
        it; `rule-backstops.yml`, `self-review-gate.yml`, `adoption-snapshot.yml`,
        `cross-model-canary.yml`, `release-adjacent-health.yml` do not.
        `rule-backstops.yml` (`:24` PR, `:40` push) and `self-review-gate.yml` (`:19`
-@@ -155,13 +175,35 @@ Re-derived in this worktree at `c073d5732` (v9.32.0):
+@@ -155,13 +175,44 @@ Re-derived in this worktree at `c073d5732` (v9.32.0):
        jobs are `golden-tests` (`:348`) and `workspace-tests` (`:386`).
        `tests.yml:349` says "29 scenarios"; `tests/golden/baseline/` holds 30.
        <!-- verify: grep -n 'build:cli && build:ui\|heavy-tests\|29 scenario' .github/workflows/tests.yml -->
@@ -432,12 +450,21 @@ index 1720651c668a84b0ba614537caa26997c231c8c1..ecfbdad2063e50807ebff3610d0672c3
 +      which trades a real correctness risk (a stale lint cache) for a saving the
 +      Phase 0.4 table shows is small — `static-checks` is 131 s, well under the
 +      ceiling. What they buy is **local** re-run time, measured on this machine:
-+      `npm run typecheck` 9.3 s → **3.0 s** warm, `npm run lint:ts` 11.2 s →
++      `npm run typecheck` 8.2 s → **3.2 s** warm, `npm run lint:ts` 11.2 s →
 +      **0.83 s** warm. That is a developer-loop and `task preflight` win, and it
-+      is worth having under its real name. Buildinfo goes to a gitignored
-+      `.tscache/`, one file per tsconfig so the four do not clobber each other;
-+      `.eslintcache` is gitignored too. Both entries sit outside the managed
-+      gitignore block. No `incremental` or
++      is worth having under its real name.
++      **`incremental` is on the two intrinsically-`noEmit` configs ONLY, and the
++      first attempt got this wrong.** It was initially added to the base
++      `tsconfig.json`, which `build:cli` (`tsc -p tsconfig.json`) **emits** from:
++      with a surviving buildinfo and a deleted `dist/`, tsc emits nothing and
++      exits 0, which would have made the freshness gate's own remediation
++      ("run `npm run build:cli` and commit the result") a silent no-op — and
++      `.tscache/` is gitignored, so it survives every `git clean` of `dist/`.
++      Caught by the completion review, reproduced, and moved to
++      `tsconfig.scripts.json` / `tsconfig.test.json`. Buildinfo goes to a
++      gitignored `.tscache/`, one file per config so the two do not clobber each
++      other; `.eslintcache` is gitignored too. Both entries sit outside the
++      managed gitignore block. No `incremental` or
        `tsBuildInfoFile` in `tsconfig.json`, `tsconfig.scripts.json`,
        `tsconfig.test.json`, `tsconfig.ui.json`; `lint:ts` is bare
        `eslint 'src/**/*.ts'` (`package.json:80`) with no `--cache`. Both are
@@ -456,7 +483,7 @@ index 1720651c668a84b0ba614537caa26997c231c8c1..ecfbdad2063e50807ebff3610d0672c3
        13 workflows already pass the first two; 10 still carry at least one bare
        `run: npm ci`, including all six in `tests.yml` (`:94`, `:125`, `:214`,
        `:263`, `:374`, `:409`). `--prefer-offline` appears zero times anywhere, while
-@@ -170,53 +212,131 @@ Re-derived in this worktree at `c073d5732` (v9.32.0):
+@@ -170,53 +221,131 @@ Re-derived in this worktree at `c073d5732` (v9.32.0):
  
  ## Phase 2 — The build fan-out: stop rebuilding the same 6 targets 13 times
  
@@ -619,7 +646,7 @@ index 1720651c668a84b0ba614537caa26997c231c8c1..ecfbdad2063e50807ebff3610d0672c3
        rules / 289 skills and this is the subject that skill already owns. Note
        honestly that the skill is currently single-stack — its whole "Optimization
        strategies" section (`:68-147`) is database / migration / seeder work. Adding
-@@ -224,6 +344,27 @@ Re-derived in this worktree at `c073d5732` (v9.32.0):
+@@ -224,6 +353,27 @@ Re-derived in this worktree at `c073d5732` (v9.32.0):
        which also moves it toward the multi-stack shape
        `framework-neutrality-in-generic-skills` asks of a generically named artefact.
  - [ ] **3.4 Retire the `heavy-tests` framing if the clumping cause is gone.**
@@ -647,7 +674,7 @@ index 1720651c668a84b0ba614537caa26997c231c8c1..ecfbdad2063e50807ebff3610d0672c3
        `golden-tests` and `workspace-tests` exist as dedicated runners because
        subprocess-heavy files hash-clump into one over-budget vitest shard
        (`tests.yml:349-357`, `:387-392`). If 3.2 removes enough spawns that the clump
-@@ -233,12 +374,25 @@ Re-derived in this worktree at `c073d5732` (v9.32.0):
+@@ -233,12 +383,25 @@ Re-derived in this worktree at `c073d5732` (v9.32.0):
  
  ## Phase 4 — Required-check-set changes (authored here, applied by the maintainer)
  
@@ -679,8 +706,34 @@ index 1720651c668a84b0ba614537caa26997c231c8c1..ecfbdad2063e50807ebff3610d0672c3
  - [~] **4.2 Demote the macOS leg and/or the `npm audit` PR gate.** Deferred behind
        `blocker: required-check-set-change`. Touches ruleset `17749383` plus
        `docs/contracts/branch-protection-policy.md`, `ci-green-floor.md` and
+@@ -248,14 +411,20 @@ Re-derived in this worktree at `c073d5732` (v9.32.0):
+       `.github/`, so nothing in-tree is wired for it either way.
+ 
+ ## Risk Register
+-<!-- risk-review: v1 | reviewed: 2026-08-10 | reviewer: claude/host -->
++<!-- risk-review: v1 | reviewed: 2026-08-11 | reviewer: claude/host -->
++
++Reconciled 2026-08-11 against what the phases actually did: rows 1, 3, 4 and 5
++anchored mitigations to steps that were cancelled, diverged, or turned out
++insufficient. A register that prescribes a mitigation for an abandoned design is
++worse than none — it reads as a live control.
++
+ | Rank | Item | Risk type | Description | Mitigation | Anchored under |
+ |------|------|-----------|-------------|------------|----------------|
+-| 1 | Shared build artefact hides per-job drift | implementation | Four independent builds today each re-derive `dist/`; one shared artefact means a drift only the producer would notice. | Keep the `tests.yml:303-312` freshness gate on the producer; consumers assert the artefact rather than rebuilding on cache miss (2.3). | Phase 2 — The build fan-out |
++| 1 | Shared build artefact hides per-job drift | implementation | Four independent builds today each re-derive `dist/`; one shared artefact means a drift only the producer would notice. | **Retired — the risk cannot occur.** 2.2-2.4 were cancelled on 2.1's measurement, so there is no shared artefact and each job keeps re-deriving `dist/` behind the unchanged `tests.yml` freshness gate. Re-arm this row only if the revisit threshold in `ci-cost-budget.md` is met. | Phase 2 — The build fan-out |
+ | 2 | Baseline recorded from too few runs | implementation | A figure from one PR run measures runner variance; a later regression window would then flag noise. | Use the 50-run average the file's own checklist specifies (`ci-cost-budget.md:90-91`), recorded from CI, never locally (`hook-latency.json:2`). | Phase 0 — Re-anchor the two existing cost artefacts |
+-| 3 | In-process migration deletes real coverage | implementation | Converting a spawn to an in-process call removes the argv / exit-code / stdio boundary some tests exist to prove. | Keep one spawning test per CLI entry point (3.2); `ProcessExit` (`run_in_process.ts:41`) preserves exit semantics for the rest. | Phase 3 — The subprocess lever |
+-| 4 | A filter is dead by typo, not by removal | product | Deleting a path-filter entry that was meant to match something narrows a trigger surface silently. | Classify every entry before deleting (1.1, 1.2), each removal citing its absence check; the sweep in 1.3 stays report-only. | Phase 1 — Free hygiene |
+-| 5 | `cancel-in-progress` drops a backstop signal | product | On `push: main`, `rule-backstops.yml` is the only run for that commit; cancelling it loses the signal entirely. | Scope `cancel-in-progress` to `pull_request` refs only (1.4). | Phase 1 — Free hygiene |
++| 3 | In-process migration deletes real coverage | implementation | Converting a spawn to an in-process call removes the argv / exit-code / stdio boundary some tests exist to prove. | **Dormant — no migration happened.** 3.1 measured the spawning set as not the cost, so 3.2 converted nothing; the rule (one spawning test per CLI entry point) is written into `docs/development.md` so it binds whenever a migration is actually attempted. | Phase 3 — The subprocess lever |
++| 4 | A filter is dead by typo, not by removal | product | Deleting a path-filter entry that was meant to match something narrows a trigger surface silently. | Classify every entry before deleting (1.1, 1.2), each removal citing its absence check. **1.3 shipped STRICT, not report-only** — its escape is an inline `# workflow-path-allow: <reason>` on the entry, which is the pre-staged-filter case and nothing wider; all 20 live entries were hand-classified and repaired first, so the corpus is verified empty rather than unexamined. | Phase 1 — Free hygiene |
++| 5 | A concurrency group drops a backstop signal | product | On `push: main`, `rule-backstops.yml` is the only run for that commit; losing it loses the signal entirely. | **Scoping `cancel-in-progress` was NOT sufficient** — GitHub evicts a *pending* group member regardless of that flag, so the first attempt at 1.4 introduced the very loss it was written to prevent. Fixed by the group KEY: non-PR runs are keyed by `github.run_id`, putting each in a group of one. Found by the completion review, not by the author. | Phase 1 — Free hygiene |
+ 
+ ## Blockers
+ 
 diff --git a/docs/contracts/ci-cost-budget.md b/docs/contracts/ci-cost-budget.md
-index b8fb43f247ecc47d1e5e56ef7b96ef3c66b4d92a..de7dc9230d1fa1edad15fe213fb3b00e6ceb3fc8 100644
+index b8fb43f247ecc47d1e5e56ef7b96ef3c66b4d92a..ed5f7e7597c45015f22ce867b4ad4ad1cf7097a1 100644
 --- a/docs/contracts/ci-cost-budget.md
 +++ b/docs/contracts/ci-cost-budget.md
 @@ -15,27 +15,75 @@ keep-beta-until: 2026-09-04
@@ -774,7 +827,7 @@ index b8fb43f247ecc47d1e5e56ef7b96ef3c66b4d92a..de7dc9230d1fa1edad15fe213fb3b00e
  
  - `smoke-public-install.yml` and `tests.yml` dominate non-release-PR
    wall-clock. Both trigger on `package.json` — a release PR (which only
-@@ -45,11 +93,13 @@ recent 50 main-branch runs.
+@@ -45,13 +93,21 @@ recent 50 main-branch runs.
    macOS on every PR touching `scripts/**`. The 3.10 / 3.11 / 3.13 legs
    are extras: they prove the supported range but rarely surface a
    Python-version-only regression. Moved to a path-filtered sibling
@@ -787,10 +840,19 @@ index b8fb43f247ecc47d1e5e56ef7b96ef3c66b4d92a..de7dc9230d1fa1edad15fe213fb3b00e
    `cmd_export`. Moved to its own path-filtered workflow in Phase C
 -  Step 1.
 +  Step 1 — **also since removed**; there is no Windows leg in CI today.
++
++## Expected savings (post-optimisation) — historical, as projected 2026-05-26
  
- ## Expected savings (post-optimisation)
+-## Expected savings (post-optimisation)
++Kept for the trail, and superseded by the re-measured table above. Two of the
++savings it prices — removing the Windows leg and the 3-version Python sweep —
++were later overtaken: both sibling workflows were removed outright, so the
++scenario rows mentioning Windows or Python describe a pipeline that no longer
++exists. The figures below were never re-derived after that.
  
-@@ -78,10 +128,50 @@ main-branch runs requires one of:
+ The Phase A guards on `tests.yml` + `smoke-public-install.yml` cut
+ release-PR critical-path from `218 s + 413 s` (serial worst case ≈ 11
+@@ -78,10 +134,59 @@ main-branch runs requires one of:
  3. An ADR superseding the ceiling for this specific job (e.g. integration
     smoke that proves a real consumer-visible promise).
  
@@ -834,18 +896,27 @@ index b8fb43f247ecc47d1e5e56ef7b96ef3c66b4d92a..de7dc9230d1fa1edad15fe213fb3b00e
 +
 +The criterion for a measurement-only change is therefore:
 +
-+> **The refreshed table names every job that exists and none that does
-+> not.**
++> **Every job named in the table resolves to a live job in
++> `.github/workflows/`.**
 +
-+Decidable in one pass: every job key in the table resolves to a live job in
-+`.github/workflows/`, and every job that runs on a PR appears in the table.
++Decidable in one pass, and it is the direction that actually failed: the
++three rows removed on 2026-08-11 had named a job key and two workflow files
++that no longer existed, for an unknown number of quarters.
++
++The converse — every PR-triggered job appears in the table — is **not** the
++criterion, because it is not true and stating it would fail every future
++change on arrival. 19 workflows carry a `pull_request:` trigger; the table
++covers the wall-clock-dominant ones plus the required check. Widening it to
++all 19 is a separate decision about what this contract is for, not a
++measurement-only edit.
++
 +A change that alters a job, a matrix dimension, a trigger surface or the
 +required-check set is *not* measurement-only and does not get this
 +criterion.
  
  ## Quarterly review checklist
  
-@@ -105,7 +195,10 @@ Run the first Monday of every quarter:
+@@ -105,7 +210,10 @@ Run the first Monday of every quarter:
    predicates, cut surface, kept surface.
  - [`branch-protection-policy.md`](branch-protection-policy.md) — required
    status check floor per PR shape.
@@ -1016,7 +1087,7 @@ index 6fd2e414e48f81e85b6b61fbad14b997b8838a3a..c199561f8b6c2661591497b2d1570b9d
  ## Unnumbered (legacy)
  
 diff --git a/docs/development.md b/docs/development.md
-index ef8eea6d320f71de88dc470c6fc78897c7f07aa9..b5782c6281b94fba63b02454bbfc06e3de73a62f 100644
+index ef8eea6d320f71de88dc470c6fc78897c7f07aa9..25de6d1a52e8bec249839b1ae05049f0de95450f 100644
 --- a/docs/development.md
 +++ b/docs/development.md
 @@ -48,30 +48,70 @@ task clean-tools               # Remove all generated tool directories
@@ -1085,7 +1156,7 @@ index ef8eea6d320f71de88dc470c6fc78897c7f07aa9..b5782c6281b94fba63b02454bbfc06e3
 +script's exported `main(argv)`:
 +
 +```ts
-+import { runInProc, runInProcAsync, ProcessExit } from '../_lib/run_in_process';
++import { runInProc, runInProcAsync, ProcessExit } from '../_lib/run_in_process.js';
 +
 +const res = runInProc(main, ['--json'], { cwd: tmp, env: { CI: '1' } });
 +expect(res.status).toBe(0);
@@ -1160,10 +1231,10 @@ index db58e10dc8fffd6609f2425885e10fbdf6cbc771..4e689e68fb95c86810d27aa2feecccc2
      silent: true
      desc: |
 diff --git a/tests/scripts/build_proof.test.ts b/tests/scripts/build_proof.test.ts
-index 3d3136216f1679c7d7003a78d9282abd02d47fc8..c5f1690a5900713b9265509130b2e47442636edc 100644
+index 3d3136216f1679c7d7003a78d9282abd02d47fc8..26d2c12ab409cecce80e970e9abeade9de3a40f9 100644
 --- a/tests/scripts/build_proof.test.ts
 +++ b/tests/scripts/build_proof.test.ts
-@@ -15,13 +15,25 @@ import { load_ledger } from '../../src/scripts/check_claims.js';
+@@ -15,13 +15,32 @@ import { load_ledger } from '../../src/scripts/check_claims.js';
  
  const REPO_ROOT = join(fileURLToPath(import.meta.url), '..', '..', '..');
  
@@ -1177,83 +1248,72 @@ index 3d3136216f1679c7d7003a78d9282abd02d47fc8..c5f1690a5900713b9265509130b2e474
 +// same output, that test fails and the cache cannot mask it. The determinism
 +// test keeps two independent invocations — two calls IS what it measures.
 +// Do not "simplify" the other tests back to calling `render()` themselves.
-+const PROOF = render();
++//
++// Memoised lazily rather than at module scope on purpose: `render()` can throw
++// (via `renderPreventedFailures`, on a claim with no ledger entry or one
++// downgraded to unbacked), and a module-scope throw aborts collection of the
++// whole file — taking out the very tests further down that diagnose that
++// cause. Deferring the call keeps the saving and keeps the diagnosis.
++let _proof: string | undefined;
++const proof = (): string => (_proof ??= render());
 +
  describe('build_proof — render()', () => {
      it('is deterministic (no timestamp / stable ordering)', () => {
 -        expect(render()).toBe(render());
-+        expect(render()).toBe(PROOF);
++        expect(render()).toBe(proof());
      });
  
      it('emits the required proof structure', () => {
 -        const out = render();
-+        const out = PROOF;
++        const out = proof();
          expect(out).toContain('# Proof — verify our claims yourself');
          expect(out).toContain('## See it run (< 60s, real output)');
          expect(out).toContain('](media/proof-demo.gif)');
-@@ -38,12 +50,12 @@ describe('build_proof — render()', () => {
+@@ -38,12 +57,12 @@ describe('build_proof — render()', () => {
      });
  
      it('carries the do-not-hand-edit generated marker', () => {
 -        expect(render()).toMatch(/GENERATED by src\/scripts\/build_proof\.ts/);
-+        expect(PROOF).toMatch(/GENERATED by src\/scripts\/build_proof\.ts/);
++        expect(proof()).toMatch(/GENERATED by src\/scripts\/build_proof\.ts/);
      });
  
      it('the committed docs/proof.md is in sync (drift guard)', () => {
          const committed = readFileSync(join(REPO_ROOT, OUT_REL), 'utf8');
 -        expect(committed).toBe(render());
-+        expect(committed).toBe(PROOF);
++        expect(committed).toBe(proof());
      });
  });
  
-diff --git a/tsconfig.json b/tsconfig.json
-index 7e7bdf2e25a2038cc07529c3cedef90988b1894b..314f072ffe846d925d7eb01a77a51992d7cf00a9 100644
---- a/tsconfig.json
-+++ b/tsconfig.json
-@@ -12,6 +12,8 @@
-         "esModuleInterop": true,
-         "resolveJsonModule": true,
-         "skipLibCheck": true,
-+        "incremental": true,
-+        "tsBuildInfoFile": ".tscache/root.tsbuildinfo",
-         "declaration": false,
-         "sourceMap": true,
-         "baseUrl": "./src",
 diff --git a/tsconfig.scripts.json b/tsconfig.scripts.json
-index 84f521d5199d392d41008b31b79a91eb9f0be47d..cdb3ce1e1bde0b72066eb216ed113f45dc223bac 100644
+index 84f521d5199d392d41008b31b79a91eb9f0be47d..f8283a6d4ebea3aa4eed33b9a1e9e37211a8d3fa 100644
 --- a/tsconfig.scripts.json
 +++ b/tsconfig.scripts.json
-@@ -2,7 +2,8 @@
+@@ -2,7 +2,13 @@
    "extends": "./tsconfig.json",
    "compilerOptions": {
      "noEmit": true,
 -    "rootDir": "."
 +    "rootDir": ".",
++    // `incremental` lives ONLY on the configs that are intrinsically noEmit.
++    // Putting it on the base config would put it on `build:cli`
++    // (`tsc -p tsconfig.json`), where a surviving buildinfo plus a deleted
++    // dist/ makes the rebuild a silent no-op.
++    "incremental": true,
 +    "tsBuildInfoFile": ".tscache/scripts.tsbuildinfo"
    },
    "include": [
      "src/scripts/**/*.ts",
 diff --git a/tsconfig.test.json b/tsconfig.test.json
-index 7c9c9ed131b1c11c3a6c1e86cc92759ed1137209..49f0ee5ae153482b33cbd68d1a2f6dc14ff7614a 100644
+index 7c9c9ed131b1c11c3a6c1e86cc92759ed1137209..01f3ac24ab424080a80d7066bce52180b510bb3a 100644
 --- a/tsconfig.test.json
 +++ b/tsconfig.test.json
-@@ -3,6 +3,7 @@
+@@ -3,6 +3,9 @@
      "compilerOptions": {
          "rootDir": ".",
          "noEmit": true,
++        // Only on intrinsically-noEmit configs — see tsconfig.scripts.json.
++        "incremental": true,
 +        "tsBuildInfoFile": ".tscache/test.tsbuildinfo",
          "lib": ["ES2022", "DOM", "DOM.Iterable"],
          "jsx": "react-jsx",
          "jsxImportSource": "preact",
-diff --git a/tsconfig.ui.json b/tsconfig.ui.json
-index c166f6644ae1e60755638dda7b5a02f50ff1acc3..b3dc03c8e46dab031c35845563a8f15ef457c140 100644
---- a/tsconfig.ui.json
-+++ b/tsconfig.ui.json
-@@ -4,6 +4,7 @@
-         "lib": ["ES2022", "DOM", "DOM.Iterable"],
-         "outDir": "dist/ui",
-         "rootDir": "src/ui",
-+        "tsBuildInfoFile": ".tscache/ui.tsbuildinfo",
-         "jsx": "react-jsx",
-         "jsxImportSource": "preact",
-         "types": ["vite/client"]

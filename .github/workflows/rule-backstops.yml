@@ -58,8 +58,7 @@ on:
 
 # Superseded PR pushes cancel; `push: main` runs never do. On main this
 # workflow is the ONLY run for that commit, so cancelling it would leave the
-# commit with no backstop signal at all — the 23 workflows that carry an
-# unconditional `cancel-in-progress: true` are all PR-only.
+# commit with no backstop signal at all.
 #
 # The guarantee lives in the GROUP KEY, not in `cancel-in-progress`. GitHub
 # drops a *pending* run as soon as another run joins its group, whatever

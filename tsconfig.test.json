@@ -3,9 +3,6 @@
     "compilerOptions": {
         "rootDir": ".",
         "noEmit": true,
-        // Only on intrinsically-noEmit configs — see tsconfig.scripts.json.
-        "incremental": true,
-        "tsBuildInfoFile": ".tscache/test.tsbuildinfo",
         "lib": ["ES2022", "DOM", "DOM.Iterable"],
         "jsx": "react-jsx",
         "jsxImportSource": "preact",

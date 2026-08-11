@@ -17,15 +17,19 @@ keep-beta-until: 2026-09-04
 
 ## Baseline (re-measured 2026-08-11)
 
-**Method.** `tests.yml` rows are per-job durations from the GitHub Actions
-jobs API (`/actions/runs/<id>/jobs`), averaged over the three most recent
-**successful** main-branch runs. Non-`tests.yml` rows are run-level
-wall-clock from `gh run list --branch main --json
-conclusion,startedAt,updatedAt`, averaged over the last 4–6 successful runs;
-those workflows are single-job, so run-level is the job figure plus queueing.
-Recorded from CI, never from a developer machine — a locally captured
-baseline measures the environment offset instead of the regression
-(`docs/hook-latency.json:2`).
+**Method.** Every row is a **per-job** duration from the GitHub Actions jobs
+API (`/actions/runs/<id>/jobs`) — `tests.yml` averaged over the three most
+recent **successful** main-branch runs, the other workflows from the most
+recent successful run. Recorded from CI, never from a developer machine — a
+locally captured baseline measures the environment offset instead of the
+regression (`docs/hook-latency.json:2`).
+
+A run-level figure (`gh run list … startedAt,updatedAt`) is **not**
+interchangeable with a job figure and is not used here. For a matrix workflow
+it is the span of the whole fan-out plus queueing, so it exceeds every job in
+it: `smoke.yml` reads 82 s at run level and 20–23 s per job. Comparing one
+against the other manufactures regressions that did not happen — which is
+exactly what the first version of this re-measurement did.
 
 `tests.yml` declares 6 job keys that matrix-expand to 23 jobs. The table
 lists each shard family once, with the per-shard average.
@@ -39,10 +43,10 @@ lists each shard family once, with the per-shard average.
 | `tests.yml` | `static-checks` | ubuntu, no matrix | 131 s | same as above |
 | `tests.yml` | `golden-tests` | 2 OS | 132 s ubuntu / 138 s macOS | same as above |
 | `tests.yml` | `workspace-tests` | 2 OS | 98 s ubuntu / 85 s macOS | same as above |
-| `smoke-public-install.yml` | `smoke` | 3 OS × 2 Node | 291 s | install paths + setup.sh + templates |
-| `consistency.yml` | (single) | ubuntu | 109 s | always-on (PR / push) |
-| `smoke.yml` | smoke-contracts | ubuntu | 82 s | `scripts/schemas/**` |
-| `skill-lint.yml` | (single) | ubuntu | 66 s | `dist/agent-src*/**`, schemas |
+| `smoke-public-install.yml` | per-OS × Node leg | 3 OS × 2 Node = 6 jobs | 24–30 s ubuntu / 39–47 s macOS / **159–169 s windows** | install paths + setup.sh + templates |
+| `consistency.yml` | `Sync + Generate Tools Consistency` | ubuntu, single job | 75 s | always-on (PR / push) |
+| `smoke.yml` | `smoke-kernel` · `smoke-router` · `smoke-schema` · `smoke-skills` | ubuntu, 4 jobs | 20–23 s each | `scripts/schemas/**` |
+| `skill-lint.yml` | `skill-lint` · `skill-lint-strict` (+ `originality-gate`) | ubuntu, 3 jobs | 34 s · 23 s (strict + originality release-gated) | `dist/agent-src*/**`, schemas |
 | `release-guard.yml` | (single) | ubuntu | < 10 s | tag-trigger only |
 
 Three rows from the 2026-05-26 baseline were removed because the jobs and
@@ -51,13 +55,23 @@ workflows they named no longer exist: `python-tests` (no such job key in
 `migration-dry-run.yml` (both files absent). `node-tests` was recorded as
 "2 OS" when it is 2 OS × 4 shards, which hid the shard-3 outlier below.
 
-**Two regressions against the 2026-05-26 figures, flagged per checklist
-item 2 (> 25 %):** `consistency.yml` 27 s → 109 s and `smoke.yml` 18 s →
-82 s. Both are well under the ceiling, so neither earns a follow-up step on
-cost grounds alone, but `consistency.yml` is the single required check
+**One regression against the 2026-05-26 figures, flagged per checklist item 2
+(> 25 %):** `consistency.yml` 27 s → **75 s**. It is single-job, so this is a
+like-for-like comparison. Well under the ceiling, so it earns no follow-up on
+cost grounds alone, but it is the single required check
 (`branch-protection-policy.md:59`) and therefore sits on every PR's critical
-path. `smoke-public-install.yml` moved the other way, 413 s → 291 s, and is
-no longer a ceiling violation.
+path.
+
+`smoke.yml` is **not** a regression: 18 s → 20–23 s per job. An earlier draft
+of this section reported it as 18 s → 82 s by comparing the old per-job figure
+against a new run-level one, and flagged a 4.5× regression that does not
+exist. Recorded rather than quietly corrected, because it is the same
+measure-the-wrong-thing failure the Method note above now guards against.
+
+`smoke-public-install.yml` is no longer a ceiling violation. Its slowest job
+is the Windows leg at 159–169 s; the retired 413 s figure was matrix-level,
+not per-job, so the two are not directly comparable either — what is
+comparable is that no job in it is near 300 s today.
 
 **The build step is not a cost driver — measured, not assumed.**
 `npm run build --silent` runs in 13 of the 23 matrix-expanded jobs and
@@ -148,7 +162,7 @@ spawns nothing. It called `render()` five times, and `render()` costs
 were redundant: the file's own first test asserts `render()` is
 deterministic, so one result can be reused. Reducing it to the two
 independent calls that determinism actually requires took the file from
-~260 s to **103 s** wall-clock.
+~269 s standalone to **103 s** wall-clock.
 
 Two consequences worth keeping. The workflow comment on the shard matrix
 attributes the clump to "subprocess-heavy clusters"; for the largest
@@ -192,15 +206,21 @@ criterion.
 
 Run the first Monday of every quarter:
 
-1. Re-capture the baseline table via `gh run list --branch main --limit
-   50 --json name,createdAt,updatedAt` + arithmetic.
+1. Re-capture the baseline table **per job**, via `gh run list --branch main
+   --workflow <wf> --json databaseId,conclusion` to pick successful runs and
+   then `gh api /repos/<owner>/<repo>/actions/runs/<id>/jobs` for the
+   durations. Do **not** use run-level `startedAt`/`updatedAt`: for a matrix
+   workflow that is the whole fan-out plus queueing, and comparing it against
+   the per-job rows above invents regressions (see the Method note).
 2. Compare each row against the previous quarter; flag any > 25 %
    regression.
 3. For every row over the 5-min ceiling, file a follow-up step in the
    open CI-roadmap (or in this file's history if no roadmap is
    currently active).
-4. Update the "Expected savings" table once optimisations land so the
-   delta is provable, not asserted.
+4. Do **not** update the "Expected savings" table — it was frozen as
+   historical on 2026-08-11 and describes a pipeline that no longer exists.
+   When a future optimisation needs its delta proved, add a new dated section
+   rather than editing that one.
 5. Audit the path-filter surfaces — when a workflow keeps firing on
    PRs that don't touch its real scope, tighten the filter.
 

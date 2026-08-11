@@ -3,7 +3,8 @@
 ## Prerequisites
 
 - [Task](https://taskfile.dev/) (task runner)
-- Python 3.10+ (for linter, condensation tools)
+- Node.js >= 20.11.0 (the linter, condensation and every gate are TypeScript;
+  `no-python-in-src.yml` asserts there is no Python left to install)
 - Bash (for install scripts, tests)
 
 ## Editing content

@@ -21,8 +21,8 @@ Senior-engineer review of the branch diff. Search grid — hunt for:
 
 ## Inputs
 
-- diff: `diff.patch` — the review scope (branch head 3a3523de29b269b9b580fd9bd071d94cafa0a2cd, review
-  artefacts excluded), scope hash `2f87177e55a3395b27422340e7a10280bfe7d4572e07bdc6ff8367ce874e2d09`
+- diff: `diff.patch` — the review scope (branch head 910f7c4e85886f194f214ceeafe06c2b479b154e, review
+  artefacts excluded), scope hash `136ff91b84ce8d51d7e269182b8adbc1b034262fafb9203e4b698d9313b29bf7`
 - roadmap under review: `roadmap.md` (Acceptance Criteria extracted to `acceptance-criteria.md`)
 
 Changed files:
@@ -50,10 +50,8 @@ Changed files:
 - src/scripts/ci_time_ratio.ts
 - taskfiles/ci-fast.yml
 - tests/scripts/build_proof.test.ts
-- tsconfig.json
 - tsconfig.scripts.json
 - tsconfig.test.json
-- tsconfig.ui.json
 
 ## Output format (contract §2.2)
 
@@ -75,5 +73,5 @@ Fill the findings table in `feat-inbox-harvest-b-ci-economy.findings.md`:
   (contract §2.3):
 
 ```markdown
-**Honest-null:** 0 findings, scope 2f87177e55a3395b27422340e7a10280bfe7d4572e07bdc6ff8367ce874e2d09, reviewed <YYYY-MM-DD>
+**Honest-null:** 0 findings, scope 136ff91b84ce8d51d7e269182b8adbc1b034262fafb9203e4b698d9313b29bf7, reviewed <YYYY-MM-DD>
 ```
