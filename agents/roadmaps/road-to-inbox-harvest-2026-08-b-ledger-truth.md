@@ -180,18 +180,37 @@ they are never cross-checked, and **they match model ids by different strategies
       no constant to `pricing.ts`. It reads the two existing tables and asserts a
       relation between them; nothing in `.agent-prices.md` was touched.
       <!-- verify: task test -- --filter=pricing -->
-- [ ] **2.3 Make `lookup()` longest-prefix instead of exact-key.**
+- [x] **2.3 Make `lookup()` longest-prefix instead of exact-key.**
       `pricing.ts:52-54` is a bare `table.prices.get(priceKey(provider, model))`,
       so `claude-sonnet-4-5-20260101` misses a `claude-sonnet-4-5` row and prices
       at nothing. Fall back to the longest matching key prefix, keeping exact
       match as the first hit so no currently-priced call changes.
+      **Shipped**, with one guard the step did not name and that a plain
+      `startsWith` would have missed: a prefix must be followed by a separator
+      (`-`, `.`, `:`, `@`) or end the id, so a `claude-opus-4-1` row never
+      prices `claude-opus-4-15`. Mispricing one model at another's rate is
+      **worse** than the zero it replaces, because it looks correct. Longest
+      match wins, so a specific row is never shadowed by a shorter one that
+      also prefixes the id; provider is part of the composite key, so
+      cross-provider bleed is impossible by construction. Six tests, including
+      the exact-match-unchanged case and both near-misses.
       <!-- verify: task test -- --filter=pricing -->
-- [ ] **2.4 Flag the silent zero instead of returning it.** `track.mjs:64` is
+- [x] **2.4 Flag the silent zero instead of returning it.** `track.mjs:64` is
       `if (!p || !u) return 0;`, reached whenever `modelTier()` returns
       `'unknown'` (:49, :54) — an unknown model is priced at **zero, with no
       warning and no flag**; `grep -rn rate_missing src/` returns 0 hits. Emit a
       `rate_missing` marker on the row and one stderr warning per run. Rows keep
       their token counts, so a later backfill stays possible.
+      **Shipped** as `rate_missing: boolean` plus `rate_missing_models: string[]`
+      (sorted, distinct) on the session row, and ONE stderr warning per run —
+      emitted **before** the `TRACK_QUIET` return, because a suppressed report
+      is a display choice while an understated cost figure is a data-integrity
+      problem. Token counts are untouched, which is what makes 2.5's backfill
+      possible at all. Pinned by 4 subprocess tests over a temp-`HOME`
+      transcript fixture (track.mjs has no export and no entry guard, so
+      importing it would scan the developer's real `~/.claude`), including a
+      negative control on a priced model; mutation-proven — dropping the
+      `tier === 'unknown'` guard reds the control and the mixed-session case.
 - [~] **2.5 Backfill machinery for `rate_missing` rows.** Deferred behind
       `unknown-model-row-never-observed` — see `## Blockers`. Writing a
       re-pricing pass before a single real unknown-model row exists would be
