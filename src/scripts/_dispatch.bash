@@ -130,7 +130,7 @@ Tier 1 — power-user (release shape, audit, migration):
                              user-authored files; persists standing consent
                              (install.auto_converge) on first use.
                              Flags: --dry-run | --yes
-  conformance:behavior       Replay local transcripts through the mechanised conformance checks
+  conformance:behavior       Replay local transcripts through the mechanised conformance checks (--why <id> traces one)
   conformance                Consumer conformance contract: doctor --ci +
                              installed-and-firing checks. Exits non-zero on
                              a failed check.
@@ -197,7 +197,7 @@ Tier 2 — maintenance / internal (hooks, MCP, memory, telemetry):
                              session register). Flags: --json
   sessions:claim             Claim a roadmap for this session so other sessions skip
                              it; --release clears the claim
-  session:recycle            Validate + write the main-session recycle envelope
+  session:recycle            Validate + write the main-session recycle envelope (--verify validates only)
                              (deliberate recycle instead of auto-compact). Flags:
                              --file <json> | --template; default reads stdin
   roadmap:progress           Regenerate agents/roadmaps-progress.md from open roadmaps
