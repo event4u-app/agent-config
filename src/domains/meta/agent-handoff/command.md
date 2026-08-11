@@ -167,7 +167,8 @@ Markdown, no host API). Required fields, in order:
 ## Contract owed
 {what the current phase must produce before yielding}
 ## Decisions
-- {decisions taken, with one-line rationale}
+- {decision taken, with one-line rationale} {optionally close the line with
+  `[reversible]` or `[irreversible]` — those two spellings exactly}
 ## Open questions
 - {unresolved items the next session must not silently drop — each as a
   question ending in `?`; write `none` when there genuinely are none}
@@ -230,6 +231,12 @@ do not auto-execute.
 - **Branch name is critical** — always include it.
 - **Open tasks are critical** — the new chat needs to know what's left.
 - **Decisions are important** — prevents the new chat from re-asking settled questions.
+  A decision line may close with `[reversible]` or `[irreversible]`, which tells the
+  successor "we picked A over B, easy to revisit" apart from "we already migrated the
+  data". The tag is optional; those two spellings are the only accepted ones, and a
+  near-miss (`[reversble]`, `[Irreversible]`) is a validation error rather than a
+  silently untagged line. No claim is made that tagging improves resumption — that
+  stays the registered, unmeasured `envelope_resume_success` metric.
 - **File list is optional** — only include if the new chat will need to edit specific files.
 - **NEVER render a printed handoff as live markdown** — see Iron Law above.
 

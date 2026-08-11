@@ -57,8 +57,13 @@ export function templateEnvelope(): Record<string, unknown> {
         acceptance_criteria: ['<what done means, one line each>'],
         remaining: ['<open work, one line each>'],
         not_carried_forward: ['<what the successor must re-derive from source>'],
-        decisions: ['<decision — one-line rationale>'],
+        decisions: ['<decision — one-line rationale> [reversible]'],
         constraints: ['<binding constraint>'],
+        // Ships EMPTY, unlike the prose lists above: the entries are path refs,
+        // and a `<placeholder>` left in by a hurried writer would be a fake path
+        // rather than obvious filler. An empty list is also the honest default —
+        // nothing off limits is the common case.
+        do_not_touch: [],
         open_worker_envelopes: [],
         artifact_paths: ['<path to a deliverable / note / evidence file>'],
         assumptions: [],
