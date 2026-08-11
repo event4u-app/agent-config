@@ -165,6 +165,36 @@ describe('wouldSoloFloorHold — the ADR-224 counterfactual', () => {
         expect(wouldSoloFloorHold(evaluateQuorum(1, 1), 5)).toBe(false);
     });
 
+    it('fires on a CONSTRUCTION-degraded pass — the case ADR-224 was decided on', () => {
+        // 2 configured, 1 failed to construct, 1 answered. post_run `total`
+        // is the roster that constructed, so this reads total=1/present=1 —
+        // indistinguishable from a one-member council unless configured_total
+        // is consulted. Clamping against `total` alone made the floor
+        // structurally unable to fire here, which is a metric blind to its
+        // own target population.
+        const degraded = evaluateQuorum(1, 1);
+        expect(wouldSoloFloorHold(degraded)).toBe(false);
+        expect(wouldSoloFloorHold(degraded, SOLO_FLOOR_MIN_PRESENT, 2)).toBe(true);
+    });
+
+    it('still does not fire for a council CONFIGURED with one member', () => {
+        // Same total/present as the degraded pass above; only
+        // configured_total separates them, which is exactly the split the
+        // budget file insists on for the solo-conclusion rate.
+        expect(wouldSoloFloorHold(evaluateQuorum(1, 1), SOLO_FLOOR_MIN_PRESENT, 1)).toBe(false);
+    });
+
+    it('does not treat a --siblings fan-out as a shortfall', () => {
+        // total > configured_total is legitimate: --siblings fans ONE config
+        // entry into N clients. The ceiling is the larger of the two, so a
+        // 3-client pass with 2 present is judged against 3, not against 1.
+        expect(wouldSoloFloorHold(evaluateQuorum(3, 3), SOLO_FLOOR_MIN_PRESENT, 1)).toBe(false);
+        // A fixed k=1 is what lets a 3-client pass CONCLUDE on one voice;
+        // under `majority` the same shape is inconclusive and the floor is
+        // not what stopped it.
+        expect(wouldSoloFloorHold(evaluateQuorum(3, 1, 1), SOLO_FLOOR_MIN_PRESENT, 1)).toBe(true);
+    });
+
     it('clamps a floor above the roster instead of holding every pass', () => {
         // Unclamped, a floor of 5 over a 2-member council would report a
         // 100 % fire-rate — an artefact of the config, not a finding about

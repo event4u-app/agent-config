@@ -126,7 +126,7 @@ describe('events_log — write + schema', () => {
 });
 
 
-describe('events_log — quorum attendance (schema v2)', () => {
+describe('events_log — quorum attendance (schema v3)', () => {
     function readOne(lp: string): Record<string, unknown> {
         return JSON.parse(fs.readFileSync(lp, 'utf-8').trim()) as Record<string, unknown>;
     }
@@ -241,6 +241,23 @@ describe('events_log — quorum attendance (schema v2)', () => {
             .map((l) => JSON.parse(l) as Record<string, unknown>);
         expect(lines.map((l) => l.verdict)).toEqual(['concluded', 'inconclusive']);
         expect(lines.map((l) => l.floor_would_hold)).toEqual([true, false]);
+    });
+
+    it('fires on a construction-degraded pass, using configured_total', () => {
+        // The line already carries configured_total to keep this pass
+        // distinguishable; the floor has to actually consult it. 2 configured,
+        // 1 constructed, 1 answered — a conclusion on one of two configured
+        // voices, which reads total=1/present=1 on the wire.
+        const lp = path.join(tmpDir(), 'degraded.log');
+        appendQuorumEvent(
+            { ...CTX, configuredTotal: 2, result: evaluateQuorum(1, 1), absent: [] },
+            { logPath: lp, now: FIXED },
+        );
+        const rec = readOne(lp);
+        expect(rec.total).toBe(1);
+        expect(rec.present).toBe(1);
+        expect(rec.configured_total).toBe(2);
+        expect(rec.floor_would_hold).toBe(true);
     });
 
     it('honours a configured floor over the default', () => {

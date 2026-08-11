@@ -76,6 +76,11 @@ import * as path from 'node:path';
 import { parse as parseYaml } from 'yaml';
 
 import * as user_global_paths from '../_lib/user_global_paths.js';
+// LAYERING CONSTRAINT, load-bearing: this is a VALUE import from quorum, while
+// `quorum.ts` imports `QuorumSetting` back from here. That back-edge is
+// `import type` and is erased at build, so there is no runtime cycle today.
+// Converting it to a value import — or adding any other runtime import from
+// quorum into config — creates a real ESM cycle in the loader's init path.
 import { SOLO_FLOOR_MIN_PRESENT } from './quorum.js';
 
 const _VALID_PROVIDERS: ReadonlySet<string> = new Set([
@@ -1938,16 +1943,20 @@ function _build_quorum(raw: Json): QuorumSetting {
 /**
  * Validate `quorum_min_present` — the shadow floor's configured value.
  *
- * Rejects the same shapes `_build_quorum` rejects (booleans are integers in
- * JS's `typeof` world and are excluded explicitly), and for the same reason: a
+ * Rejects the same shapes `_build_quorum` rejects, and for the same reason: a
  * silently coerced floor produces a fire-rate that is an artefact of the
- * coercion rather than of the council. There is no upper bound here — a floor
- * above the roster is clamped per-pass by `wouldSoloFloorHold`, where `total`
- * is actually known, and rejecting it at load would refuse a config that is
- * legitimate the moment a member is added.
+ * coercion rather than of the council. `_isInt` already requires
+ * `typeof value === 'number'`, so booleans are excluded by it — the sibling's
+ * extra `!_isBool` conjunct is a Python-ism (there `bool` really is an `int`
+ * subclass) and is not repeated here.
+ *
+ * There is no upper bound — a floor above the roster is clamped per-pass by
+ * `wouldSoloFloorHold`, where the roster is actually known, and rejecting it
+ * at load would refuse a config that is legitimate the moment a member is
+ * added.
  */
 function _build_quorum_min_present(raw: Json): QuorumMinPresent {
-    if (_isInt(raw) && !_isBool(raw) && (raw as number) >= 1) {
+    if (_isInt(raw) && (raw as number) >= 1) {
         return raw as number;
     }
     throw new CouncilConfigError(

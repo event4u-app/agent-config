@@ -12,11 +12,11 @@ parent_roadmap: archive/road-to-inbox-harvest-2026-08-b-council-integrity-follow
 
 ## Context
 
-[`ADR-224`](../../docs/decisions/ADR-224-gate-scoped-solo-attendance-floor.md)
+[`ADR-224`](../../../docs/decisions/ADR-224-gate-scoped-solo-attendance-floor.md)
 decided the outcome; it deliberately did not build the mechanism. The decision
 was made against a measured solo-conclusion rate of **1 of 8 post_run passes =
 12.5 %** (read 2026-08-11T09:30Z, definition pre-registered in
-[`quorum-attendance-budget.json`](../../src/config/quorum-attendance-budget.json)),
+[`quorum-attendance-budget.json`](../../../src/config/quorum-attendance-budget.json)),
 with the AI council converging 2/2 on the gate-scoped floor over the two
 rejected alternatives.
 
@@ -24,7 +24,7 @@ rejected alternatives.
 
 - `resolveQuorumThreshold` returns `ceil(n / 2)`, so at `n = 2` a single present
   member is a legitimate `concluded`
-  ([`quorum.ts:13-19`](../../src/scripts/ai_council/quorum.ts)). **Tightening
+  ([`quorum.ts:13-19`](../../../src/scripts/ai_council/quorum.ts)). **Tightening
   that formula is out of scope and stays out** — the divergence is a recorded
   decision, and reopening it is a separate argument with its own record.
 - `isSoloConcluded` exists and is advisory-only. ADR-224 authorizes a branch on
@@ -120,9 +120,13 @@ acting on.
       widened `QuorumSetting` (which is consumed by four call sites that would
       all have to change to express a value none of them read). Validated at
       load beside `_build_quorum`; the roster clamp lives per-pass in
-      `wouldSoloFloorHold`, where `total` is actually known, so a floor above
-      today's roster is not rejected for a council that gains a member
-      tomorrow. Forwarded through `_synthesize_ai_council_block` — the
+      `wouldSoloFloorHold`, where the roster is actually known, so a floor
+      above today's roster is not rejected for a council that gains a member
+      tomorrow. The clamp ceiling is `max(total, configured_total)` — the
+      completion review caught the first version clamping against `total`
+      alone, which made the floor structurally unable to fire on a
+      construction-degraded pass, i.e. on the exact case ADR-224 was decided
+      on. Forwarded through `_synthesize_ai_council_block` — the
       validated-but-never-forwarded defect this exact block shipped once for
       `quorum` itself, now pinned by its own test.**
 - [x] **2.2 Compute the floor as a counterfactual on every pass**, so an

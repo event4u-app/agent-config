@@ -89,6 +89,7 @@ cli_call_budget:                # optional; per-day call-count guard for mode: c
     <provider>: <int >= 0>                # per-provider override; SHIPS POPULATED at 50/day for every known provider — see "cli_call_budget defaults" below
   warn_at: <float in [0.0, 1.0]>          # default 0.8 — pre-run summary line prefixes "⚠️" once used/limit >= warn_at (step-8 D4)
 quorum: <"majority" | int >= 1>  # optional, default "majority"; see "Quorum" below
+quorum_min_present: <int >= 1>   # optional, default 2; SHADOW only — enforces nothing
 members:                        # per-provider blocks, at least one enabled
   <provider>:
     enabled: <bool>
@@ -266,8 +267,25 @@ gate, which is the failure mode this default is built to avoid. A fixed
 integer `quorum: <k>` overrides `"majority"` outright and is clamped to
 `[1, n]` by the resolver (never structurally unwinnable, never trivially met).
 
+`quorum_min_present` (top-level, optional, default `2`) is a SHADOW floor and
+enforces nothing. It configures a counterfactual only: whether a pass that
+DID conclude reached that conclusion on fewer voices than a gate would want.
+The answer is recorded on the `quorum_result` event line as
+`floor_would_hold` and never acted on — no value of this key can hold, delay
+or fail a pass, and `quorum` above remains the only setting that decides
+whether a pass concludes.
+
+It exists because ADR-224 chose a gate-scoped `min_present: 2` floor and its
+review trigger asks for the floor's own fire-rate to accumulate; nothing in
+the tree yet branches on quorum status to hold a gate, so the measurement
+landed and the enforcement did not. Enforcement needs its own record. The
+floor is judged against the larger of the constructed roster and the
+configured entry count, so a member that fails to construct does not hide a
+one-of-two conclusion behind a one-of-one reading.
+
 Implemented in `src/scripts/ai_council/quorum.ts`
-(`resolveQuorumThreshold` / `evaluateQuorum`) — a pure function pair; the
+(`resolveQuorumThreshold` / `evaluateQuorum` / `wouldSoloFloorHold`) — pure
+functions; the
 caller supplies its own count of enabled members (`n`) and members that
 actually produced a usable response (`present`). The verdict surfaces in
 both artefact halves:

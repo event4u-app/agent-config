@@ -308,11 +308,17 @@ export interface QuorumEventInput {
      * `command` + `phase` remain on the line, so a consumer that wants the
      * inferred reading can still compute it and see it disagree.
      *
-     * **No call site declares `true` today** — nothing in the tree branches on
-     * `QuorumStatus` to hold a gate, so there is no gate-class caller to mark.
-     * The field is written anyway: it is what makes the population split
-     * readable the moment one appears, and a field added later would leave
-     * every line before it ambiguous.
+     * **No producer exists today, by design, and that is not a wiring bug.**
+     * Nothing in the tree branches on `QuorumStatus` to hold a gate, so there
+     * is no gate-class caller to mark; `council_cli.ts::_emitQuorumEvent`
+     * therefore omits it from its context object deliberately rather than by
+     * oversight, and `gate_class` is `false` on every line the tree can emit.
+     * The parameter is kept because the first consumer that holds something on
+     * quorum status IS by construction the first gate-class caller: it sets
+     * this, and `shadow_floor_fire_rate` filtered on it becomes the
+     * enforcement-relevant rate. A field introduced only at that point would
+     * leave every earlier line ambiguous between "not gate-class" and "written
+     * before anyone asked".
      */
     readonly gateClass?: boolean;
     /**
@@ -377,7 +383,16 @@ export function appendQuorumEvent(
                 // construction (`wouldSoloFloorHold` returns false unless the
                 // pass concluded), which is what makes "held by the floor" and
                 // "threshold not met" readable apart from this line alone.
-                floor_would_hold: wouldSoloFloorHold(input.result, input.minPresent),
+                // `configuredTotal` is passed, not omitted: post_run `total`
+                // is the roster that CONSTRUCTED, so without it a pass that
+                // lost a member at construction time reads total=1/present=1
+                // and the floor cannot fire on it — the construction-degraded
+                // solo case ADR-224 was actually decided on.
+                floor_would_hold: wouldSoloFloorHold(
+                    input.result,
+                    input.minPresent,
+                    input.configuredTotal,
+                ),
                 absent: input.absent.map((a) => ({ member: a.member, reason: a.reason })),
             },
             opts,
