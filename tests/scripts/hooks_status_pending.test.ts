@@ -86,6 +86,24 @@ describe('hooks:status --pending', () => {
         expect(out).toContain('phase=-');
     });
 
+    it('--pending --strict is refused rather than silently exiting 0', () => {
+        // R2 finding 8: the early return exited 0 unconditionally, so a strict CI
+        // invocation reported green for hook bridges this branch never builds.
+        const chunks: string[] = [];
+        const orig = process.stderr.write.bind(process.stderr);
+        (process.stderr as unknown as { write: (s: string) => boolean }).write = (s: string) => {
+            chunks.push(String(s));
+            return true;
+        };
+        try {
+            const code = main(['--pending', '--strict', '--project-root', root]);
+            expect(code).toBe(2);
+            expect(chunks.join('')).toContain('incompatible');
+        } finally {
+            (process.stderr as unknown as { write: typeof orig }).write = orig;
+        }
+    });
+
     it('_render_pending is pure — same rows, same string', () => {
         const rows = [
             {

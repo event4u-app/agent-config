@@ -307,6 +307,18 @@ export function main(argv?: string[]): number {
   // confirmations into the default output would change a surface other callers
   // (task hooks-status, post-install smoke, CI) pin byte-for-byte.
   if (args.pending) {
+    // `--strict` is the matrix report's CI gate and this branch never builds a
+    // matrix, so honouring it is impossible and ignoring it is worse: the
+    // combination would exit 0 through a strict CI invocation and report green
+    // for hook bridges nobody checked. Reject it rather than silently drop it.
+    if (args.strict) {
+      process.stderr.write(
+        "hooks_status: --pending and --strict are incompatible — --pending " +
+          "enumerates staged confirmations and builds no hook matrix for " +
+          "--strict to gate. Run them as two invocations.\n",
+      );
+      return 2;
+    }
     const rows = listPending(path.resolve(args.project_root));
     if (args.format === "json") {
       process.stdout.write(

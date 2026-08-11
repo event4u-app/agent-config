@@ -236,7 +236,8 @@ Tier 2 — maintenance / internal (hooks, MCP, memory, telemetry):
                              (use --print to dump it, --force to overwrite an existing hook)
   hooks:status               Print the runtime hook matrix (per-platform install + bindings)
                              Flags: --format json|table, --strict (CI), --project-root <path>
-                                    --pending (list staged requires_confirmation actions)
+                                    --pending (list staged requires_confirmation actions;
+                                    builds no matrix, so it refuses --strict)
   hooks:doctor               Diagnose hook health: concerns + fail-open/closed posture,
                              last dispatcher feedback per concern, missing trampolines.
                              Wraps hooks:status. Read-only.
