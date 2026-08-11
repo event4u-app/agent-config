@@ -109,7 +109,7 @@ visible and idle.
       render string), audit every call site, and add a third telemetry outcome
       for "met threshold but held by the floor". That is roadmap-sized, and it
       is carried by
-      [`road-to-council-solo-floor-implementation.md`](../road-to-council-solo-floor-implementation.md)
+      [`road-to-council-solo-floor-implementation.md`](road-to-council-solo-floor-implementation.md)
       so the chosen outcome does not become a fifth deferral by silence.
 
 **Exit:** one of (a), (b), (c) is chosen against a rate that was actually read,

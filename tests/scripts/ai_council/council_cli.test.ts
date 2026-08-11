@@ -548,6 +548,62 @@ describe('_synthesize_ai_council_block — quorum', () => {
         const synthesized = _synthesize_ai_council_block(cfg);
         expect(synthesized['quorum']).toBe('majority');
     });
+
+    // The same defect class, one key later: `quorum_min_present` is
+    // validated by `_build_config`, and a synthesized block that drops it
+    // would pin every `floor_would_hold` to the default no matter what the
+    // operator configured — validated-but-ignored, exactly as `quorum` was.
+    it('forwards a configured quorum_min_present into the synthesized block', () => {
+        const dir = mkTmp();
+        const yamlPath = path.join(dir, '.ai-council.yml');
+        fs.writeFileSync(
+            yamlPath,
+            [
+                'enabled: true',
+                'defaults:',
+                '  mode: api',
+                'cost_budget:',
+                '  max_total_usd: 20.0',
+                'quorum_min_present: 3',
+                'members:',
+                '  anthropic:',
+                '    enabled: true',
+                '    model: claude-x',
+                '    api_key_ref: env:ANTHROPIC_KEY',
+                '',
+            ].join('\n'),
+            'utf-8',
+        );
+        const cfg = load_council_config(yamlPath);
+        expect(cfg.quorum_min_present).toBe(3);
+        const synthesized = _synthesize_ai_council_block(cfg);
+        expect(synthesized['quorum_min_present']).toBe(3);
+    });
+
+    it('forwards the ADR-224 default when the config omits the floor', () => {
+        const dir = mkTmp();
+        const yamlPath = path.join(dir, '.ai-council.yml');
+        fs.writeFileSync(
+            yamlPath,
+            [
+                'enabled: true',
+                'defaults:',
+                '  mode: api',
+                'cost_budget:',
+                '  max_total_usd: 20.0',
+                'members:',
+                '  anthropic:',
+                '    enabled: true',
+                '    model: claude-x',
+                '    api_key_ref: env:ANTHROPIC_KEY',
+                '',
+            ].join('\n'),
+            'utf-8',
+        );
+        const cfg = load_council_config(yamlPath);
+        const synthesized = _synthesize_ai_council_block(cfg);
+        expect(synthesized['quorum_min_present']).toBe(2);
+    });
 });
 
 // ── cmd_render — handoff round-trip (road-to-always-on-orchestration Phase 4.1) ──

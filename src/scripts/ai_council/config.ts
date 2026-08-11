@@ -52,6 +52,11 @@
  *    single absent member into a deadlocked release gate (council-verified
  *    2026-08-09). See `quorum.ts` for the resolver a caller applies to its
  *    own present/total member counts.
+ * 9b. `quorum_min_present` ∈ positive integers (default 2, ADR-224). The
+ *    floor a gate-class pass would want — SHADOW ONLY: it is recorded per
+ *    pass and enforced nowhere, so no value of this key can hold, delay or
+ *    fail a council pass today. See `quorum.ts::wouldSoloFloorHold` for why
+ *    the measurement landed without the enforcement.
  *
  * Parity notes (intentional, documented):
  *   - YAML is parsed with `yaml` (npm) at `version: '1.1'`, matching
@@ -71,6 +76,12 @@ import * as path from 'node:path';
 import { parse as parseYaml } from 'yaml';
 
 import * as user_global_paths from '../_lib/user_global_paths.js';
+// LAYERING CONSTRAINT, load-bearing: this is a VALUE import from quorum, while
+// `quorum.ts` imports `QuorumSetting` back from here. That back-edge is
+// `import type` and is erased at build, so there is no runtime cycle today.
+// Converting it to a value import — or adding any other runtime import from
+// quorum into config — creates a real ESM cycle in the loader's init path.
+import { SOLO_FLOOR_MIN_PRESENT } from './quorum.js';
 
 const _VALID_PROVIDERS: ReadonlySet<string> = new Set([
     'anthropic',
@@ -585,6 +596,25 @@ export interface CliCallBudgetConfig {
  */
 export type QuorumSetting = 'majority' | number;
 
+/**
+ * The `min_present` floor ADR-224 authorized, as an operator-visible key.
+ *
+ * A SIBLING key rather than a widened `QuorumSetting`, deliberately.
+ * `QuorumSetting` is consumed by `resolveQuorumThreshold`, `evaluateQuorum`,
+ * `_quorum_setting_from` and their tests; widening it into a union with an
+ * object would touch every one of them to express a value none of them read.
+ * The floor is not a second threshold — `quorum` answers "did enough members
+ * answer to conclude", the floor answers "was that conclusion reached on too
+ * few voices to gate on", and they resolve at different call sites.
+ *
+ * Validated at load like every other key; defaults to
+ * `quorum.ts::SOLO_FLOOR_MIN_PRESENT` so the shadow fire-rate accumulates
+ * without the operator having to opt in — an unset floor that recorded nothing
+ * would leave ADR-224's review trigger (b) with no data to trigger on. Nothing
+ * is enforced at any value: see `wouldSoloFloorHold`.
+ */
+export type QuorumMinPresent = number;
+
 export interface CouncilConfig {
     readonly enabled: boolean;
     readonly defaults: DefaultsConfig;
@@ -594,6 +624,7 @@ export interface CouncilConfig {
     readonly consensus_scoring: ConsensusScoringConfig;
     readonly cli_call_budget: CliCallBudgetConfig;
     readonly quorum: QuorumSetting;
+    readonly quorum_min_present: QuorumMinPresent;
     readonly necessity_classifier: NecessityClassifierConfig;
     readonly model_downgrade: ModelDowngradeConfig;
     readonly debate: DebateConfig;
@@ -822,6 +853,9 @@ export function _build_config(raw: Dict, source_path: PathLike): CouncilConfig {
         _asDict(_getOr(raw, 'cli_call_budget', {})),
     );
     const quorum = _build_quorum(_get(raw, 'quorum', 'majority'));
+    const quorum_min_present = _build_quorum_min_present(
+        _get(raw, 'quorum_min_present', SOLO_FLOOR_MIN_PRESENT),
+    );
     const necessity_classifier = _build_necessity_classifier(
         _asDict(_getOr(raw, 'necessity_classifier', {})),
     );
@@ -871,6 +905,7 @@ export function _build_config(raw: Dict, source_path: PathLike): CouncilConfig {
         consensus_scoring: consensus,
         cli_call_budget,
         quorum,
+        quorum_min_present,
         necessity_classifier,
         model_downgrade,
         debate,
@@ -1901,6 +1936,31 @@ function _build_quorum(raw: Json): QuorumSetting {
     }
     throw new CouncilConfigError(
         `\`quorum\`=${_pyRepr(raw)} must be 'majority' or an integer >= 1 ` +
+            `(got ${_pyTypeName(raw)}).`,
+    );
+}
+
+/**
+ * Validate `quorum_min_present` — the shadow floor's configured value.
+ *
+ * Rejects the same shapes `_build_quorum` rejects, and for the same reason: a
+ * silently coerced floor produces a fire-rate that is an artefact of the
+ * coercion rather than of the council. `_isInt` already requires
+ * `typeof value === 'number'`, so booleans are excluded by it — the sibling's
+ * extra `!_isBool` conjunct is a Python-ism (there `bool` really is an `int`
+ * subclass) and is not repeated here.
+ *
+ * There is no upper bound — a floor above the roster is clamped per-pass by
+ * `wouldSoloFloorHold`, where the roster is actually known, and rejecting it
+ * at load would refuse a config that is legitimate the moment a member is
+ * added.
+ */
+function _build_quorum_min_present(raw: Json): QuorumMinPresent {
+    if (_isInt(raw) && (raw as number) >= 1) {
+        return raw as number;
+    }
+    throw new CouncilConfigError(
+        `\`quorum_min_present\`=${_pyRepr(raw)} must be an integer >= 1 ` +
             `(got ${_pyTypeName(raw)}).`,
     );
 }
