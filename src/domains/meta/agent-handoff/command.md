@@ -169,7 +169,8 @@ Markdown, no host API). Required fields, in order:
 ## Decisions
 - {decisions taken, with one-line rationale}
 ## Open questions
-- {unresolved items the next session must not silently drop}
+- {unresolved items the next session must not silently drop — each as a
+  question ending in `?`; write `none` when there genuinely are none}
 ## Next command
 {the single command or step to run first on resume}
 ```
@@ -177,7 +178,11 @@ Markdown, no host API). Required fields, in order:
 **Resume rule:** a workflow skill's step 0 checks for this file and resumes
 from its contract (mode-inference table) instead of re-deriving state; a
 long phase refreshes the file before yielding. Validated by
-`lint_handoffs.ts` when present — a missing required field is red.
+`lint_handoffs.ts` when present — a missing required field is red, and so is an
+`## Open questions` section that answers neither way (blank, or a bare `TBD` /
+`TODO` / `...`). A `?`-terminated question passes; so does an explicit `none` —
+the check exists to stop a blank section reading as an all-clear, not to force a
+question where there is none.
 
 **Critical-planning-file safety protocol** (applies to HANDOFF.md and agent
 roadmap edits): read the current file FIRST; take a timestamped backup copy
