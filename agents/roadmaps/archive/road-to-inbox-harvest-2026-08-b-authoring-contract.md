@@ -270,6 +270,20 @@ own header records the file-first council decision of 2026-06-15.
       the risk register predicted. Recorded here rather than left for the
       escalation review to discover.
 
+      **Corrected after the R2 completion review — the reading above was taken
+      through two broken predicates.** The review found that a bare `*` in the
+      comment test classified every markdown `*` bullet as code, and that
+      `'[^']*'` let two apostrophes blank the prose between them; both suppressed
+      prose the gate should have read, and both are fixed on this branch. Re-run
+      at the fixed predicates: **4 hedged lines over 272 added prose lines /
+      3,437 words — `hedged_lines_per_100_words: 0.12`**, the same four lines and
+      the same 4-of-4 human read. The finding count did not move (this branch's
+      own prose uses `-` bullets and few apostrophes) but the denominator did, and
+      the metric was renamed because `bench_honesty_score` already publishes
+      `hedge_per_100_words` over hedge-word *occurrences* while this counts hedged
+      *lines*. The n = 4 verdict stands; what changed is that it now rests on a
+      scan that reads the prose it claims to.
+
       **Not wired into `task ci` or any workflow, deliberately.** The parity gate
       (`check_ci_local_parity`) derives both sides from those two chains, so an
       unwired advisory script is invisible to it rather than a declared exception.

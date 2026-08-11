@@ -47,9 +47,11 @@
  *
  * ── Carve-outs (modelled on lint_provenance_vocabulary's quote-the-ban) ─────
  * A line that NAMES a hedge word rather than using one — the word inside
- * backticks or quotes — is exempt, or this file and its own test would be the
- * corpus's worst offenders. Fenced code and indented blocks are skipped: a
- * hedge in a code comment is a different surface with a different reviewer.
+ * backticks or double quotes — is exempt; without it, a rule teaching an agent
+ * which words to avoid would be flagged for listing them. Fenced code and
+ * indented blocks are skipped: a hedge in a code comment is a different surface
+ * with a different reviewer. The lexicon-bearing sources need no exemption list:
+ * they are `.ts`, and only `.md` is ever read.
  *
  * Scan surfaces: added (`+`) lines in `src/**\/*.md` and `docs/**\/*.md`.
  *
@@ -75,17 +77,6 @@ const REPO_ROOT = path.resolve(path.dirname(_HERE), '..', '..');
 
 /** Prose surfaces this gate reads. Code and generated trees are out of scope. */
 const SCAN_ROOTS = ['src/', 'docs/'] as const;
-
-/**
- * Files exempt because their subject IS the lexicon. Without this, the gate's
- * own source, its test, and the scorer that owns `HEDGE_WORDS` dominate every
- * reading — the file that lists "might, could, perhaps" is not hedging.
- */
-const LEXICON_FILES = [
-    'src/scripts/lint_hedge_words.ts',
-    'src/scripts/bench_honesty_score.ts',
-    'tests/scripts/lint_hedge_words.test.ts',
-];
 
 export interface HedgeFinding {
     file: string;
@@ -114,25 +105,39 @@ const HEDGE_RES: readonly { word: string; re: RegExp }[] = HEDGE_WORDS.map((w) =
  * Spans where a hedge word is being NAMED, not used: backticked code spans and
  * quoted strings. Mirrors `lint_provenance_vocabulary`'s carve-out for a line
  * that quotes the ban it enforces.
+ *
+ * The straight single quote is deliberately NOT a delimiter here. Prose is full
+ * of apostrophes, and `'[^']*'` cannot tell `it's … that's` from a quoted span —
+ * it matches across the middle and blanks the text between two contractions,
+ * which silently drops hedges AND shrinks the word denominator the reported rate
+ * divides by. Backticks and double quotes carry the carve-out; a hedge word
+ * inside single quotes is rare enough to be worth a false positive.
  */
-const QUOTED_SPAN = /`[^`]*`|"[^"]*"|'[^']*'|“[^”]*”|«[^»]*»/g;
+const QUOTED_SPAN = /`[^`]*`|"[^"]*"|“[^”]*”|«[^»]*»/g;
 
 function stripQuotedSpans(line: string): string {
     return line.replace(QUOTED_SPAN, ' ');
 }
 
-/** True for a line whose surface is code rather than prose. */
+/**
+ * True for a line whose surface is code rather than prose.
+ *
+ * The comment alternatives are anchored to two characters (`/*`, `*&#47;`) rather
+ * than to a bare `*`. A lone leading asterisk is a markdown bullet far more often
+ * than a comment continuation, and in the only surface this gate reads — `.md`
+ * under `src/` and `docs/` — treating it as code skips most of the prose,
+ * including this suite's own `* `-bulleted sections.
+ */
 function isCodeSurface(line: string): boolean {
     if (/^\s{4,}\S/.test(line)) return true; // indented block
     if (/^\s*(?:```|~~~)/.test(line)) return true; // fence marker
-    if (/^\s*(?:\/\/|\/\*|\*|#!)/.test(line)) return true; // comment
+    if (/^\s*(?:\/\/|\/\*|\*\/|#!)/.test(line)) return true; // comment
     if (/^\s*<!--/.test(line)) return true; // html comment / verify marker
     return false;
 }
 
 function inScope(file: string): boolean {
     if (!file.endsWith('.md')) return false;
-    if (LEXICON_FILES.includes(file)) return false;
     return SCAN_ROOTS.some((r) => file.startsWith(r));
 }
 
@@ -146,6 +151,11 @@ export function scanDiff(diffText: string): HedgeReport {
     const findings: HedgeFinding[] = [];
     const files = new Set<string>();
     let curFile: string | null = null;
+    // Fence state is tracked across ADDED lines only, because a unified diff is
+    // all this gate sees. A hunk that adds prose INSIDE an already-open fence
+    // therefore reads as prose. Known and accepted: reconstructing true fence
+    // state needs the whole file, which would make the gate file-scoped rather
+    // than diff-scoped — the axis ADR-218 already settled the other way.
     let inFence = false;
     let addedProseLines = 0;
     let addedWords = 0;
@@ -243,7 +253,11 @@ export function main(argv: string[] = process.argv.slice(2)): number {
         return 0;
     }
 
-    const per100 = (report.findings.length / report.addedWords) * 100;
+    // Lines, not occurrences. `bench_honesty_score` publishes `hedge_per_100_words`
+    // over hedge-word HITS; this counts hedged LINES, so it carries a different
+    // name. Two metrics sharing one name is how an escalation trigger ends up
+    // reading a number that was never the one it was calibrated against.
+    const hedgedLinesPer100 = (report.findings.length / report.addedWords) * 100;
     if (report.findings.length > 0 && !quiet) {
         process.stdout.write(
             `lint_hedge_words (ADVISORY): ${report.findings.length} hedged line(s) ` +
@@ -265,7 +279,7 @@ export function main(argv: string[] = process.argv.slice(2)): number {
     if (!quiet) {
         process.stdout.write(
             `hedged_lines: ${report.findings.length} · added_prose_lines: ${report.addedProseLines} ` +
-                `· added_words: ${report.addedWords} · hedged_per_100_words: ${per100.toFixed(2)}\n`,
+                `· added_words: ${report.addedWords} · hedged_lines_per_100_words: ${hedgedLinesPer100.toFixed(2)}\n`,
         );
         process.stdout.write(`scanned: ${report.filesScanned}\n`);
     }

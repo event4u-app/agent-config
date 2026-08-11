@@ -484,7 +484,7 @@ metacharacters and repo escape, including the right-hand side of `--flag=value`.
 - last_verified:
 
 ### claim: judge-family-llm-as-a-judge-foundation
-- claim: The judge-skill family (`judge-bug-hunter`, `judge-code-quality`, `judge-security-auditor`, `judge-synthesis`, `judge-test-coverage`, and the `/review-changes` dispatcher) implements the LLM-as-a-judge pattern — a specialized model scoring another model's output against a rubric — and treats position bias and self-consistency as its known failure modes, which is why the dispatcher randomizes order and the synthesis layer surfaces conflict rather than averaging it.
+- claim: The judge-skill family (`judge-bug-hunter`, `judge-code-quality`, `judge-security-auditor`, `judge-synthesis`, `judge-test-coverage`, and the `/review-changes` dispatcher) implements the LLM-as-a-judge pattern — a specialized model scoring another model's output against a rubric — and names position bias and self-consistency as its known failure modes. SCOPE: the pointer backs the pattern and its named failure modes, which is what the cited work establishes. It does NOT back any claim about how this repo mitigates them; a statement about the dispatcher's own behaviour needs a repo pointer, not a paper.
 - kind: qual
 - evidence: https://arxiv.org/abs/2306.05685 (2026-08-11)
 - status: backed

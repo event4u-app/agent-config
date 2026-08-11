@@ -39,6 +39,12 @@ describe('lint_hedge_words — scanDiff', () => {
         expect(r.findings).toHaveLength(0);
     });
 
+    it('ignores a non-markdown file under a scanned root — the lexicon needs no list', () => {
+        const r = scanDiff(diff('src/scripts/lint_hedge_words.ts', ['might, could, perhaps']));
+        expect(r.findings).toHaveLength(0);
+        expect(r.filesScanned).toBe(0);
+    });
+
     it('ignores fenced code between markers', () => {
         const r = scanDiff(
             diff('src/skills/example/SKILL.md', [
@@ -75,8 +81,29 @@ describe('lint_hedge_words — scanDiff', () => {
         expect(r.findings).toHaveLength(0);
     });
 
-    it('ignores the lexicon files themselves — the list is not hedging', () => {
-        const r = scanDiff(diff('src/scripts/lint_hedge_words.ts', ['might, could, perhaps']));
+    it('scans a markdown bullet — a leading asterisk is not a comment', () => {
+        const r = scanDiff(
+            diff('src/skills/example/SKILL.md', [
+                '* The gate might fire when the path is absent.',
+                '- The gate could fire when the path is absent.',
+            ]),
+        );
+        expect(r.findings).toHaveLength(2);
+        expect(r.findings.map((f) => f.words[0])).toEqual(['might', 'could']);
+    });
+
+    it('does not let two apostrophes swallow the text between them', () => {
+        const r = scanDiff(
+            diff('src/rules/example.md', ["it's a case where it might fail and that's fine"]),
+        );
+        expect(r.findings).toHaveLength(1);
+        expect(r.findings[0]?.words).toContain('might');
+    });
+
+    it('still strips a backticked or double-quoted span', () => {
+        const r = scanDiff(
+            diff('docs/guidelines/example.md', ['Avoid `might` and "could" in a claim sentence.']),
+        );
         expect(r.findings).toHaveLength(0);
     });
 

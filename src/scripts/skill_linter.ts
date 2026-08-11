@@ -130,7 +130,16 @@ const RECOMMENDED_SKILL_SECTIONS: string[] = [];
 const CONDITIONAL_SKILL_SECTIONS: { section: string; when: (skillDir: string) => boolean; reason: string }[] = [
     {
         section: 'Security constraints',
-        when: (skillDir) => fs.existsSync(path.join(skillDir, 'scripts')),
+        // `isDirectory()`, not `existsSync` — a FILE named `scripts` would satisfy
+        // an existence test while shipping no script at all, and the predicate is
+        // only false-positive-free because it means what it says.
+        when: (skillDir) => {
+            try {
+                return fs.statSync(path.join(skillDir, 'scripts')).isDirectory();
+            } catch {
+                return false;
+            }
+        },
         reason: 'the skill ships a scripts/ directory',
     },
 ];
@@ -1388,10 +1397,14 @@ export function lint_skill(p: string, text: string, absPath: string | null = nul
         }
     }
 
-    // `p` may be a repo-relative display path; `absPath` is the path actually read.
-    const skillDir = path.dirname(absPath ?? p);
+    // `p` may be a repo-relative DISPLAY path, so it is not resolvable on its own;
+    // `absPath` is the path actually read and `lint_file` always supplies it. A
+    // caller that supplies neither gets no conditional check rather than a check
+    // resolved against whatever the process cwd happens to be — a gate whose
+    // verdict depends on the caller's directory is worse than an absent one.
+    const skillDir = absPath !== null ? path.dirname(absPath) : path.isAbsolute(p) ? path.dirname(p) : null;
     for (const { section, when, reason } of CONDITIONAL_SKILL_SECTIONS) {
-        if (when(skillDir) && !sectionMatches(section, sections)) {
+        if (skillDir !== null && when(skillDir) && !sectionMatches(section, sections)) {
             issues.push(
                 new Issue(
                     'error',

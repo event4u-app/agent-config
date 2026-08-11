@@ -2455,6 +2455,13 @@ describe('skill_linter — conditional required sections', () => {
         expect(hasCode(result, 'missing_conditional_section')).toBe(false);
     });
 
+    it('a FILE named scripts does not trigger the check — the predicate is a directory test', () => {
+        const p = writeFile('skills/scripted/SKILL.md', SCRIPT_BEARING_SKILL(''));
+        writeFile('skills/scripted/scripts', 'not a directory\n');
+        const result = lint_file(p);
+        expect(hasCode(result, 'missing_conditional_section')).toBe(false);
+    });
+
     it('a heading that qualifies the section still matches (prefix form)', () => {
         const qualified = SECURITY_CONSTRAINTS_BLOCK.replace(
             '## Security constraints',
