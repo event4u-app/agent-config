@@ -2,7 +2,7 @@
 
 > Auto-generated — do not edit. Regenerate with `task roadmap-progress` or by running the `update_roadmap_progress` script for your install; rewritten on every roadmap create / execute / completion change (timestamp lives in git history).
 >
-> 29 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **38** open blockers, **10** need you → `agent-config gates`
+> 29 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **38** open blockers, **9** need you → `agent-config gates`
 
 ## Overall
 
@@ -264,10 +264,15 @@
 <a id="blockers-road-to-inbox-harvest-2026-08-b-council-integrity-followup"></a>
 **Blockers**
 
-- **legacy** (owner: user) — blocks entire roadmap
+- **quorum-solo-floor** (owner: maintainer) — blocks 1.1 only — which is this roadmap's single step, so in practice the whole file. Nothing else here is gated; the parent's Phases 1.1–1.5, 2 and 3 shipped and are useful without it.
   - **What to do:**
-    `agents/runtime/council/events.log` carries enough `quorum_result` rows to read a solo-conclusion rate. Execution starts when the condition clears; until then this roadmap is visible and idle.
-  - **Resolved when:** condition described above clears
+    wait for `agents/runtime/council/events.log` to carry enough
+    `quorum_result` rows to read a solo-conclusion rate, then pick one of the
+    three pre-registered outcomes in 1.1. This is **data accumulation, not a
+    human decision** — no one has to act for the condition to clear; the check is
+    `grep -c quorum_result agents/runtime/council/events.log`. The maintainer owns
+    the *choice* once the rate exists.
+  - **Resolved when:** the rate has been read from real rows and one of (a), (b), (c) is chosen against it — or 1.1 is cancelled against the published null.
 
 ### [road-to-inbox-harvest-2026-08-b-dispatch-safety.md](roadmaps/road-to-inbox-harvest-2026-08-b-dispatch-safety.md)
 

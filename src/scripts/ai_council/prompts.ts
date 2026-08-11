@@ -502,8 +502,16 @@ export function assert_synthesis_sections(text: string): void {
 export const SPLIT_VERDICT_LABEL = 'split';
 
 // Mirrors `_STANCE_RE`'s shape discipline: an explicit, single-field closing
-// line, tolerant of whitespace and case, never read out of surrounding prose.
-const _VERDICT_RE = /^\s*VERDICT:\s*(.+?)\s*$/gim;
+// line, never read out of surrounding prose.
+//
+// **Case-SENSITIVE, deliberately.** The `i` flag was here and was wrong: the
+// pattern is line-anchored, so `Verdict: option A is the stronger choice` —
+// ordinary chairman prose opening a line — parsed as a machine-readable verdict
+// carrying the whole sentence as its label. That is precisely the prose
+// inference the paragraph above forbids, arriving through the regex instead of
+// through a fallback. `VERDICT_LINE_CONTRACT` asks for the literal uppercase
+// token, so requiring it costs a compliant author nothing and closes the class.
+const _VERDICT_RE = /^\s*VERDICT:\s*(.+?)\s*$/gm;
 
 /**
  * Mandatory closing-line contract for a synthesis rendered alongside a stance
@@ -568,43 +576,68 @@ export function parse_verdict_line(text: string): { label: string; display: stri
  * the claim was not made, never to infer one from prose. That also keeps every
  * synthesis rendered before `VERDICT_LINE_CONTRACT` shipped green.
  */
-export function assert_synthesis_matches_tally(
-    text: string,
-    tally: {
-        consensus: { label: string } | null;
-        split: boolean;
-        options: ReadonlyArray<{ label: string }>;
-    },
-): void {
+export function assert_synthesis_matches_tally(text: string, tally: TallyView): void {
+    const mismatch = describe_verdict_mismatch(text, tally);
+    if (mismatch !== null) {
+        throw new SynthesisRenderError(mismatch);
+    }
+}
+
+/** The slice of a `StanceTallyResult` the verdict check reads. */
+export interface TallyView {
+    consensus: { label: string } | null;
+    split: boolean;
+    options: ReadonlyArray<{ label: string }>;
+}
+
+/**
+ * The same comparison as `assert_synthesis_matches_tally`, returning the
+ * mismatch as a string instead of throwing — `null` means "no contradiction".
+ *
+ * **Why both shapes exist.** Throwing is right for a caller holding a finished
+ * synthesis it can refuse. It is wrong on the render path: `render()` throws
+ * before the tally and the Convergence blocks are pushed, so a mismatch would
+ * destroy the ENTIRE artifact — every member response, the peer review, the
+ * quorum bookkeeping — *after* every provider call has already been paid for.
+ * The module's own answer for an unverifiable claim is the `needs_repair`
+ * marker `render_vote_tally` prints, not a discarded pass, and the roadmap had
+ * already recorded that unconditionally wiring the sibling shape check was
+ * unsafe for this same reason. So the render path surfaces the contradiction
+ * where a reader will see it and keeps the artifact.
+ */
+export function describe_verdict_mismatch(text: string, tally: TallyView): string | null {
     const verdict = parse_verdict_line(text);
     if (verdict === null) {
-        return; // repair marker, not a guess
+        return null; // repair marker, not a guess
     }
     const claimsSplit = verdict.label === SPLIT_VERDICT_LABEL;
 
     if (tally.consensus === null) {
-        if (!claimsSplit) {
-            throw new SynthesisRenderError(
-                `synthesis claims "${verdict.display}" but the tally recorded no consensus ` +
-                    `(split across ${tally.options.length} option(s)); use ` +
-                    `\`${SPLIT_VERDICT_LABEL}\` or re-run the round`,
-            );
+        if (claimsSplit) {
+            return null;
         }
-        return;
+        // `split` is the tally's own word for this state; reading it here rather
+        // than re-deriving "no consensus ⇒ split" keeps the message honest when
+        // the tally is empty (zero options is not a split across zero options).
+        const how = tally.split
+            ? `split across ${tally.options.length} option(s)`
+            : 'no option-level stances parsed';
+        return (
+            `synthesis claims "${verdict.display}" but the tally recorded no consensus ` +
+            `(${how}); use \`${SPLIT_VERDICT_LABEL}\` or re-run the round`
+        );
     }
 
     if (claimsSplit) {
-        throw new SynthesisRenderError(
-            `synthesis claims a split but the tally cleared ` +
-                `"${tally.consensus.label}"`,
-        );
+        return `synthesis claims a split but the tally cleared "${tally.consensus.label}"`;
     }
     if (verdict.label !== tally.consensus.label.toLowerCase()) {
-        throw new SynthesisRenderError(
+        return (
             `synthesis claims "${verdict.display}" but the tally cleared ` +
-                `"${tally.consensus.label}"`,
+            `"${tally.consensus.label}"`
         );
     }
+    return null;
 }
 
 /**

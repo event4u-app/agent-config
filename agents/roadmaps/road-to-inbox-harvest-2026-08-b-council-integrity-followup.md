@@ -1,6 +1,6 @@
 ---
 complexity: lightweight
-parent_roadmap: road-to-inbox-harvest-2026-08-b-council-integrity.md
+parent_roadmap: archive/road-to-inbox-harvest-2026-08-b-council-integrity.md
 ---
 
 # Roadmap: Follow-up to council-pass integrity
@@ -14,10 +14,10 @@ This roadmap collects the one item deferred from
 [`agents/roadmaps/archive/road-to-inbox-harvest-2026-08-b-council-integrity.md`](archive/road-to-inbox-harvest-2026-08-b-council-integrity.md).
 See the parent's archive entry for the original rationale.
 
-The parent closed 8 of 8 steps. Its Phase 1 shipped the `quorum_result` event
-(1.1) and Phase 2 shipped the verdict-vs-tally check; 1.6 is the only item that
-could not be closed there, because it asks for a **rate over real passes** and
-no event existed to accumulate one.
+The parent closed 8 of its 9 non-cancelled steps. Its Phase 1 shipped the
+`quorum_result` event (1.1) and Phase 2 shipped the verdict-vs-tally check; 1.6
+is the one item that could not be closed there, because it asks for a **rate
+over real passes** and no event existed to accumulate one.
 
 **Why this is a follow-up and not a fourth deferral.** The parent records that
 the ask was already deferred once before, as `blocker: b-quorum-n2` in
@@ -30,9 +30,8 @@ deferral."* 1.1 has now landed, so the precondition is **reachable for the
 first time** — it is not yet met. That is the difference between this file and
 another deferral, and it is the condition below.
 
-> Blocked until `agents/runtime/council/events.log` carries enough
-> `quorum_result` rows to read a solo-conclusion rate. Execution starts when
-> the condition clears; until then this roadmap is visible and idle.
+Execution starts when the blocker below clears; until then this roadmap is
+visible and idle.
 
 ## Prerequisites
 
@@ -70,6 +69,40 @@ another deferral, and it is the condition below.
 **Exit:** one of (a), (b), (c) is chosen against a rate that was actually read,
 and the outcome is recorded — including the null, which is a result and not a
 silence.
+
+## Blockers
+
+### blocker: quorum-solo-floor
+- **Status:** open
+- **Owner:** maintainer
+- **Blocks:** 1.1 only — which is this roadmap's single step, so in practice the
+  whole file. Nothing else here is gated; the parent's Phases 1.1–1.5, 2 and 3
+  shipped and are useful without it.
+- **What to do:** wait for `agents/runtime/council/events.log` to carry enough
+  `quorum_result` rows to read a solo-conclusion rate, then pick one of the
+  three pre-registered outcomes in 1.1. This is **data accumulation, not a
+  human decision** — no one has to act for the condition to clear; the check is
+  `grep -c quorum_result agents/runtime/council/events.log`. The maintainer owns
+  the *choice* once the rate exists.
+- **Resolved when:** the rate has been read from real rows and one of (a), (b),
+  (c) is chosen against it — or 1.1 is cancelled against the published null.
+
+The structured section above is not decoration. A bare `> Blocked until …`
+blockquote is what this file carried first, and the dashboard generator turned
+it into a blocker with the id `legacy` owned by `user`, replacing a
+`maintainer`-owned blocker that had a precise resolution criterion — and counted
+it as one more roadmap that "needs you", for a gate that needs only time. The
+carried-forward parent blocker keeps the owner, the scope and the criterion the
+generator cannot infer from prose.
+
+## Risk Register
+<!-- risk-review: v1 | reviewed: 2026-08-11 | reviewer: claude/host -->
+| Rank | Item | Risk type | Description | Mitigation | Anchored under |
+|------|------|-----------|-------------|------------|----------------|
+| 1 | This file becomes the fourth deferral it was created to end | product | The ask has already survived two deferrals on silence (`b-quorum-n2`, then parent 1.6); a READY roadmap whose condition nobody checks is the same outcome with a filename | The blocked-until condition is machine-checkable in one command (`grep -c quorum_result`), the prerequisite makes checking it step zero, and an acceptance criterion forbids a quiet drop — publishing the null is a required outcome, not an allowed one | Acceptance Criteria |
+| 2 | The outcome is fitted to the rate after seeing it | product | Three outcomes with a free choice after reading one number is post-hoc rationalisation wearing a decision's clothes — and the 5 % figure sits in option (c) where it can be reinterpreted | The three outcomes are carried **pre-registered** from the parent blocker rather than re-derived here, and the acceptance criteria require naming why the two rejected ones lost, so the choice is auditable against what was written before the data existed | Phase 1 — The solo-attendance floor (carried from parent Phase 1) |
+| 3 | The floor is read as licence to reopen `ceil(n/2)` | implementation | A "solo-attendance floor" and the quorum threshold are one edit apart, and `quorum.ts:13-19` records the ceil-vs-floor divergence as a decision — 1-of-2 is "the deliberate choice, not an off-by-one" | Step 1.1 names the exclusion in its own body with the citation, so reopening it is visibly a separate argument rather than a side effect of this one | Phase 1 — The solo-attendance floor (carried from parent Phase 1) |
+| 4 | Option (a) is taken as spend-free when it is not | implementation | `gemini` is already wired in three places, which makes "add a third member" look free; it is spend-free only where the vendor CLI binary exists under the user's own subscription, and the alternative is an API key | The option carries the `environment_detector.ts:127-133` citation for exactly what the `false` flag means, so the condition travels with the option instead of being re-derived at decision time | Phase 1 — The solo-attendance floor (carried from parent Phase 1) |
 
 ## Acceptance Criteria
 

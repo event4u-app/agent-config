@@ -58,7 +58,7 @@ import type { AdvisorPlan } from './advisors.js';
 import {
     advisor_system_prompt,
     ANTI_CONFORMITY_DIRECTIVE,
-    assert_synthesis_matches_tally,
+    describe_verdict_mismatch,
     STANCE_LINE_CONTRACT,
     build_extraction_user_prompt,
     build_peer_review_user_prompt,
@@ -1929,7 +1929,7 @@ export function render(responses: CouncilResponse[], opts: RenderOptions = {}): 
         // addendum so both extensions stack predictably.
         template = template ? `${template}\n\n${CHAIRMAN_FIELDS_ADDENDUM}` : CHAIRMAN_FIELDS_ADDENDUM;
     }
-    if (opts.stance_tally === true) {
+    if (opts.stance_tally === true && template !== '') {
         // Phase 2.1: the synthesis owes the same machine-readable closing line
         // the members owe. Appended only when a tally will be rendered — there
         // is nothing to check a verdict against otherwise. Composed last so it
@@ -1937,9 +1937,14 @@ export function render(responses: CouncilResponse[], opts: RenderOptions = {}): 
         // it". The template's own `VERDICT: <option-label>` placeholder is
         // parsed as absent (see `parse_verdict_line`), so the un-summarised
         // render stays green.
-        template = template
-            ? `${template}\n\n${VERDICT_LINE_CONTRACT}`
-            : VERDICT_LINE_CONTRACT;
+        //
+        // The `template !== ''` guard is load-bearing: an empty template is
+        // `prose_synthesis: true`, documented at `:1859-1862` as a BARE slot.
+        // Appending here would replace `*to be summarised by the host agent*`
+        // with raw contract instructions and silently override an option the
+        // caller set on purpose — a creative-lens pass would start reading like
+        // a filled-in form.
+        template = `${template}\n\n${VERDICT_LINE_CONTRACT}`;
     }
     let body: string;
     if (template) {
@@ -1964,14 +1969,26 @@ export function render(responses: CouncilResponse[], opts: RenderOptions = {}): 
                 .filter((r) => !r.error)
                 .map((r) => ({ member: `${r.provider}:${r.model}`, text: r.text })),
         );
-        // Phase 2.1: the verdict half of the same projection. A synthesis that
-        // states a `VERDICT:` line the tally did not clear throws here rather
-        // than rendering an agreement claim over recorded dissent. Conditional
-        // by construction — an absent verdict line returns silently, so the
-        // templated default body (`*to be summarised by the host agent*`) and
-        // every synthesis written before the contract shipped stay green.
-        assert_synthesis_matches_tally(body, tally);
         blocks.push(render_vote_tally(tally));
+        // Phase 2.1: the verdict half of the same projection. A synthesis that
+        // states a `VERDICT:` line the tally did not clear is contradicting its
+        // own count, and the reader of the rendered pass is exactly who needs to
+        // see that.
+        //
+        // Surfaced, never thrown, and the ordering above is part of the fix: a
+        // throw here would discard the whole artifact — every member response,
+        // the peer review, the quorum bookkeeping — AFTER every provider call
+        // was paid for, which is the hazard this roadmap already recorded for
+        // the sibling shape check. `describe_verdict_mismatch` returns the
+        // string; `assert_synthesis_matches_tally` still throws for a caller
+        // holding a finished synthesis it can refuse.
+        //
+        // Conditional by construction: an absent verdict line yields null, so
+        // every synthesis written before the contract shipped stays byte-identical.
+        const mismatch = describe_verdict_mismatch(body, tally);
+        if (mismatch !== null) {
+            blocks.push(`> **Verdict/tally mismatch:** ${mismatch}`);
+        }
     }
     blocks.push(`## Convergence / Divergence\n\n${body}`);
     // Phase 4.1: closest to the synthesis it was extracted from — ahead of

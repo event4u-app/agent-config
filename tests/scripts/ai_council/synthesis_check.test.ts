@@ -9,6 +9,7 @@ import { describe, expect, it } from 'vitest';
 import {
     assert_synthesis_matches_tally,
     assert_synthesis_sections,
+    describe_verdict_mismatch,
     parse_verdict_line,
     SPLIT_VERDICT_LABEL,
     SynthesisRenderError,
@@ -203,5 +204,76 @@ describe('assert_synthesis_matches_tally — verdict vs. counted stances', () =>
         const tally = tallyFrom(STANCE_A, STANCE_B);
         const prose = 'The council did NOT converge; two reviewers agree on nothing here.';
         expect(() => assert_synthesis_matches_tally(prose, tally)).not.toThrow();
+    });
+
+    // R2 finding 2. The version above tests AROUND the real false positive: it
+    // uses prose with no line-initial marker, so it passed under the
+    // case-insensitive regex that was the defect. These are the shapes that
+    // actually reached the parser.
+    it('ignores lower-case prose opening a line with "Verdict:"', () => {
+        const tally = tallyFrom(STANCE_A, STANCE_B);
+        const prose = 'Verdict: option A is the stronger choice, but the split stands.';
+        expect(parse_verdict_line(prose)).toBeNull();
+        expect(() => assert_synthesis_matches_tally(prose, tally)).not.toThrow();
+    });
+
+    it('ignores mixed-case "VerDict:" prose', () => {
+        expect(parse_verdict_line('VerDict: we should probably ship A')).toBeNull();
+    });
+
+    it('still reads the contract-literal uppercase token', () => {
+        expect(parse_verdict_line('VERDICT: option A')?.label).toBe('option a');
+    });
+
+    it('reports an empty tally honestly rather than as a split across zero', () => {
+        // R2 finding 7: `consensus === null` was assumed to mean "split", so a
+        // tally with no parsed stances read as "split across 0 option(s)".
+        const empty = tallyFrom('no stance line at all');
+        expect(empty.consensus).toBeNull();
+        expect(empty.split).toBe(true);
+        expect(empty.options.length).toBe(0);
+        const msg = describe_verdict_mismatch('VERDICT: option A', {
+            consensus: null,
+            split: false,
+            options: [],
+        });
+        expect(msg).toMatch(/no option-level stances parsed/);
+        expect(msg).not.toMatch(/across 0 option/);
+    });
+});
+
+describe('describe_verdict_mismatch — the render-path shape', () => {
+    // R2 finding 1: the render path must not throw. A throw inside `render()`
+    // discards the whole artifact after every provider call is already paid for.
+    it('returns null when the verdict matches the cleared option', () => {
+        const tally = tallyFrom(STANCE_A, STANCE_A);
+        expect(describe_verdict_mismatch('VERDICT: option A', tally)).toBeNull();
+    });
+
+    it('returns null when no verdict line exists', () => {
+        expect(describe_verdict_mismatch(COMPLETE, tallyFrom(STANCE_A, STANCE_B))).toBeNull();
+    });
+
+    it('returns a message instead of throwing on a contradiction', () => {
+        const tally = tallyFrom(STANCE_A, STANCE_B);
+        let threw = false;
+        let msg: string | null = null;
+        try {
+            msg = describe_verdict_mismatch('VERDICT: option A', tally);
+        } catch {
+            threw = true;
+        }
+        expect(threw).toBe(false);
+        expect(msg).toMatch(/recorded no consensus/);
+    });
+
+    it('agrees with the throwing wrapper on every case it flags', () => {
+        const tally = tallyFrom(STANCE_A, STANCE_A);
+        for (const text of ['VERDICT: option B', `VERDICT: ${SPLIT_VERDICT_LABEL}`]) {
+            expect(describe_verdict_mismatch(text, tally)).not.toBeNull();
+            expect(() => assert_synthesis_matches_tally(text, tally)).toThrow(
+                SynthesisRenderError,
+            );
+        }
     });
 });

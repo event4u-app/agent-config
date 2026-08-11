@@ -139,8 +139,26 @@ from.
       defect class on a different artifact.
       <!-- verify: task test -- --filter=synthesis_check -->
 
-**Exit:** a synthesis naming agreement while the tally records dissent throws
-`SynthesisRenderError` on the emit path, the same way a missing section does.
+**Exit, as amended by the R2 completion review** (findings 1 and 3,
+`agents/evidence/reviews/council-integrity.findings.md`): a synthesis naming
+agreement while the tally records dissent is **surfaced in the rendered pass**,
+and throws for a caller that holds a finished synthesis and calls
+`assert_synthesis_matches_tally` directly.
+
+The original wording — "throws `SynthesisRenderError` on the emit path, the same
+way a missing section does" — was wrong twice over, and both corrections are
+recorded rather than quietly applied:
+
+- **Throwing on the emit path is the wrong control.** `render()` builds its
+  blocks in order, so a throw discards the entire artifact — every member
+  response, the peer review, the quorum bookkeeping — *after* every provider
+  call is already paid for. The module's own answer for an unverifiable claim
+  is the `needs_repair` marker, not a discarded pass.
+- **Coverage is narrower than "the emit path" suggests.** The check reads the
+  body `render()` holds, which carries a real verdict only on the
+  member-chairman path. On the templated default the host agent writes its
+  synthesis *after* `render()` returns, where nothing sees it. Closing that
+  needs a synthesis-record step, which this roadmap did not build.
 
 **Two premise corrections, recorded because the step rested on both.**
 
@@ -165,14 +183,24 @@ from.
 machine-readable closing-line duty members already owe via
 `STANCE_LINE_CONTRACT`; `parse_verdict_line` reads only that line and returns
 `null` — a repair marker, never a guess — when it is absent;
-`assert_synthesis_matches_tally` throws when the stated verdict names a winner
-the tally did not clear, claims a split it did clear, or names a different
-option. Wired at `orchestrator.ts` inside the `stance_tally` block, the one
-place a tally exists. Conditional by construction: an absent verdict line
-returns silently, so the templated default body and every synthesis written
-before the contract stay green. The contract's own `VERDICT: <option-label>`
-placeholder parses as absent — without that guard the template path, whose body
-IS the contract text, would throw on every un-summarised render.
+`describe_verdict_mismatch` returns the contradiction as a string and
+`assert_synthesis_matches_tally` throws it, when the stated verdict names a
+winner the tally did not clear, claims a split it did clear, or names a
+different option. The render path uses the returning shape and appends the
+mismatch **after** the Vote Tally block, so the artifact survives. Conditional
+by construction: an absent verdict line yields null, so the templated default
+body and every synthesis written before the contract stay green. The contract's
+own `VERDICT: <option-label>` placeholder parses as absent — without that guard
+the template path, whose body IS the contract text, would flag every
+un-summarised render.
+
+The regex is **case-sensitive**, also per the review (finding 2): it shipped
+with `/i` and is line-anchored, so `Verdict: option A is the stronger choice` —
+ordinary chairman prose — parsed as a verdict carrying the whole sentence as its
+label. That is the prose inference this design exists to avoid, arriving through
+the regex rather than through a fallback, and the test written for that case had
+used prose with no line-initial marker, testing around the failure instead of at
+it.
 
 ## Phase 3 — One duplicated defence, honestly scoped
 
