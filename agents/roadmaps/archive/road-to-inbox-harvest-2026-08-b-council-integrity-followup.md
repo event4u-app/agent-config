@@ -11,7 +11,7 @@ parent_roadmap: archive/road-to-inbox-harvest-2026-08-b-council-integrity.md
 ## Context
 
 This roadmap collects the one item deferred from
-[`agents/roadmaps/archive/road-to-inbox-harvest-2026-08-b-council-integrity.md`](archive/road-to-inbox-harvest-2026-08-b-council-integrity.md).
+[`agents/roadmaps/archive/road-to-inbox-harvest-2026-08-b-council-integrity.md`](road-to-inbox-harvest-2026-08-b-council-integrity.md).
 See the parent's archive entry for the original rationale.
 
 The parent closed 8 of its 9 non-cancelled steps. Its Phase 1 shipped the
@@ -35,14 +35,17 @@ visible and idle.
 
 ## Prerequisites
 
-- [ ] Read `AGENTS.md` and the parent archive entry.
-- [ ] Confirm `quorum_result` rows are actually accumulating —
+- [x] Read `AGENTS.md` and the parent archive entry.
+- [x] Confirm `quorum_result` rows are actually accumulating —
       `grep -c quorum_result agents/runtime/council/events.log`. A zero here
       means the condition has not cleared and the phase below does not start.
+      **20 rows at 2026-08-11T09:30Z — the condition has cleared.** The log is
+      append-only and concurrently written: it grew from 18 to 20 during the
+      measurement, which is why every figure below carries its read timestamp.
 
 ## Phase 1 — The solo-attendance floor (carried from parent Phase 1)
 
-- [ ] **1.1 Decide the solo-attendance floor against real data.** Carried
+- [x] **1.1 Decide the solo-attendance floor against real data.** Carried
       verbatim from the parent's 1.6: *"Solo-attendance floor. Deferred behind
       `blocker: quorum-solo-floor` — the rate cannot be read before 1.1
       accumulates it. 1.1–1.5 ship and are useful without it."* Read the
@@ -66,14 +69,60 @@ visible and idle.
       argument from this one.
       <!-- verify: grep -c quorum_result agents/runtime/council/events.log -->
 
+      **Outcome — (b), recorded in
+      [`ADR-224`](../../../docs/decisions/ADR-224-gate-scoped-solo-attendance-floor.md).**
+      Rate read at 2026-08-11T09:30Z with the definition pre-registered in
+      `src/config/quorum-attendance-budget.json` (share of `post_run` +
+      `command=run` passes with `solo: true`, degraded case only): **1 of 8 =
+      12.5 %**, the one solo pass having lost `anthropic` as `unavailable`. Zero
+      `--single` solos, zero one-member-council solos, zero roster shortfall.
+
+      Why the two rejected options lost, as the acceptance criteria require:
+      **(a) a third CLI member** is spend-free on this host (binary verified at
+      `/opt/homebrew/bin/gemini`, `['gemini', false]` = vendor-official under the
+      user's own subscription) and would remove the case through the existing
+      `ceil(3/2)=2`, but it **degrades silently exactly where it should protect**
+      — without the binary `total` falls back to 2 and `threshold` to 1, with no
+      signal — and the roster lives in the user-global `.ai-council.yml`
+      (ADR-104), so it is an operator instruction rather than a change this repo
+      can ship. **(c) publish a null** requires a rate under 5 %; 12.5 % does not
+      meet it, and re-reading the threshold against the confidence interval's
+      lower bound *after* seeing the data would be the post-hoc rationalisation
+      the pre-registration exists to prevent.
+
+      Stated because it is load-bearing rather than buried: at n=8 the 95 %
+      interval around 1/8 runs roughly 0.3 %–53 %, so the rate establishes
+      **urgency, not certainty**. What decides now is procedural — two prior
+      deferrals on silence, and (b) is narrow and reversible. Option (c) stays
+      live under ADR-224's review trigger, which fires at n=40.
+
+      Decided with the AI council (2 members, 2 rounds, $0.0629, converged 2/2
+      on (b)). Its correction is adopted rather than summarised away: a
+      gate-scoped floor **is** a branch on `isSoloConcluded`, which `quorum.ts`
+      forbids "without its own decision record" — so ADR-224 is that record, and
+      the predicate's docstring now points at it.
+
+      **Implementation is deliberately not in this step.** Step 1.1 asks for an
+      outcome "chosen … and recorded"; the mechanism first has to invent a
+      gate-class concept that does not exist in the tree (`QuorumSetting` is
+      `'majority' | number`; "release gate" appears only in comments and one
+      render string), audit every call site, and add a third telemetry outcome
+      for "met threshold but held by the floor". That is roadmap-sized, and it
+      is carried by
+      [`road-to-council-solo-floor-implementation.md`](../road-to-council-solo-floor-implementation.md)
+      so the chosen outcome does not become a fifth deferral by silence.
+
 **Exit:** one of (a), (b), (c) is chosen against a rate that was actually read,
 and the outcome is recorded — including the null, which is a result and not a
-silence.
+silence. — **Met:** (b) chosen against 1/8 = 12.5 % and recorded in ADR-224.
 
 ## Blockers
 
 ### blocker: quorum-solo-floor
-- **Status:** open
+- **Status:** resolved 2026-08-11 — 20 `quorum_result` rows had accumulated, the
+  rate was read (1/8 = 12.5 %, degraded case) and outcome (b) was chosen against
+  it in ADR-224. The data-accumulation half cleared on its own, as this blocker
+  predicted; the choice half was settled by the AI council 2/2.
 - **Owner:** maintainer
 - **Blocks:** 1.1 only — which is this roadmap's single step, so in practice the
   whole file. Nothing else here is gated; the parent's Phases 1.1–1.5, 2 and 3
@@ -106,10 +155,18 @@ generator cannot infer from prose.
 
 ## Acceptance Criteria
 
-- [ ] The solo-conclusion rate is read from real `quorum_result` rows and
-      stated as a number, never estimated.
-- [ ] One pre-registered outcome is chosen, and the two rejected ones are named
-      with the reason they lost.
-- [ ] If the outcome is (c), the null is published rather than the item quietly
+- [x] The solo-conclusion rate is read from real `quorum_result` rows and
+      stated as a number, never estimated. **1 of 8 post_run/command=run passes
+      = 12.5 %**, read 2026-08-11T09:30Z with the pre-registered definition.
+- [x] One pre-registered outcome is chosen, and the two rejected ones are named
+      with the reason they lost. **(b) chosen; (a) lost on silent host-dependent
+      degradation plus a user-global roster this repo cannot ship, (c) lost
+      because 12.5 % does not meet its "under 5 %" condition.**
+- [-] If the outcome is (c), the null is published rather than the item quietly
       dropped — this ask has already survived two deferrals on silence.
-- [ ] All quality gates pass — see `quality-tools`.
+      **Not applicable — the outcome is (b).** The clause's intent is honoured
+      anyway: the sample-size limit is recorded in ADR-224 rather than dropped,
+      and (c) stays live under a review trigger that fires at n=40.
+- [x] All quality gates pass — see `quality-tools`. **Remote CI on the PR is the
+      gate** (per `quality.local_auto_run: false` and `roadmap-ci-steps-policy`);
+      `task preflight` ran green locally before the push.

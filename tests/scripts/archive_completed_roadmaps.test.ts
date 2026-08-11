@@ -53,25 +53,9 @@ function git(cwd: string, ...args: string[]): SpawnSyncReturns<string> {
     return spawnSync('git', args, { cwd, encoding: 'utf8' });
 }
 
-/** A self-contained git repo with the given roadmap files committed. */
-function initRepo(dir: string, files: Record<string, string>): void {
-    fs.mkdirSync(dir, { recursive: true });
-    git(dir, 'init', '-q');
-    git(dir, 'config', 'user.email', 'parity@test.local');
-    git(dir, 'config', 'user.name', 'parity');
-    git(dir, 'config', 'commit.gpgsign', 'false');
-    for (const [rel, body] of Object.entries(files)) {
-        const fp = path.join(dir, rel);
-        fs.mkdirSync(path.dirname(fp), { recursive: true });
-        fs.writeFileSync(fp, body, 'utf-8');
-    }
-    git(dir, 'add', '-A');
-    git(dir, 'commit', '-qm', 'init');
-}
 
 const COMPLETE = ['# Complete', '', '## Phase 1 — All', '- [x] all done', ''].join('\n');
 const OPEN = ['# Open', '', '## Phase 1 — Go', '- [ ] not done', ''].join('\n');
-const DEFERRED = ['# Deferred', '', '## Phase 1 — Wait', '- [x] done', '- [~] later', ''].join('\n');
 
 // Untracked-safe archival (road-to-roadmap-archival-robustness, gap A).
 // TS-only enhancement (the Python twin was deleted in ADR-200), so this is
@@ -131,5 +115,55 @@ describe.runIf(hasGit())('archive_completed_roadmaps — untracked-safe (TS-only
 
         // Dashboard regenerated even in the untracked tree.
         expect(fs.existsSync(path.join(repo, 'agents/roadmaps-progress.md'))).toBe(true);
+    });
+
+    // Frozen records must survive the ref rewrite byte-for-byte. Measured
+    // 2026-08-11: archiving one roadmap rewrote four artefacts under
+    // `agents/evidence/reviews/`, including the `diff --git a/… b/…` and
+    // `+++ b/…` headers inside a recorded review `diff.patch` — which detaches
+    // the patch from the commit it records and makes `git apply` target a path
+    // that diff never created. The sweep reported it as "4 ref(s) migrated",
+    // i.e. as success, so nothing surfaced it.
+    //
+    // Both halves are asserted on purpose: an exclusion that also stopped
+    // rewriting ordinary docs would pass a one-sided test while silently
+    // breaking the sweep's actual job.
+    it('--all leaves frozen records (agents/evidence/**, *.patch) untouched while still rewriting ordinary docs', () => {
+        const repo = path.join(tmp, 'frozen');
+        const patchBody = [
+            'diff --git a/agents/roadmaps/road-to-complete.md b/agents/roadmaps/road-to-complete.md',
+            'new file mode 100644',
+            '--- /dev/null',
+            '+++ b/agents/roadmaps/road-to-complete.md',
+            '@@ -0,0 +1 @@',
+            '+# Complete',
+            '',
+        ].join('\n');
+        const findings = 'Reviewed agents/roadmaps/road-to-complete.md at that commit.\n';
+        const evidencePatchRel = 'agents/evidence/reviews/x.review-input/diff.patch';
+        const findingsRel = 'agents/evidence/reviews/x.findings.md';
+        // A .patch OUTSIDE agents/evidence/ — excluded by the extension rule
+        // alone, which is the half a prefix-only exclusion would miss.
+        const loosePatchRel = 'internal/snapshots/old.patch';
+
+        initUncommitted(repo, {
+            'agents/roadmaps/road-to-complete.md': COMPLETE,
+            [evidencePatchRel]: patchBody,
+            [findingsRel]: findings,
+            [loosePatchRel]: patchBody,
+            'docs/some-adr.md': 'See agents/roadmaps/road-to-complete.md for detail.\n',
+        });
+
+        const ts = runTs(['--all'], repo);
+        expect(ts.status, 'exit').toBe(0);
+
+        // Frozen records: byte-identical to what was written.
+        expect(fs.readFileSync(path.join(repo, evidencePatchRel), 'utf-8')).toBe(patchBody);
+        expect(fs.readFileSync(path.join(repo, findingsRel), 'utf-8')).toBe(findings);
+        expect(fs.readFileSync(path.join(repo, loosePatchRel), 'utf-8')).toBe(patchBody);
+
+        // The sweep still does its job everywhere else.
+        const adr = fs.readFileSync(path.join(repo, 'docs/some-adr.md'), 'utf-8');
+        expect(adr.includes('agents/roadmaps/archive/road-to-complete.md')).toBe(true);
     });
 });
