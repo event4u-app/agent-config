@@ -1,0 +1,1259 @@
+diff --git a/.github/workflows/adoption-snapshot.yml b/.github/workflows/adoption-snapshot.yml
+index 106d06152e062cb56c9e2900f515ded158c133d5..a554bce369106bba03c130944c886403966458b6 100644
+--- a/.github/workflows/adoption-snapshot.yml
++++ b/.github/workflows/adoption-snapshot.yml
+@@ -28,6 +28,13 @@ on:
+     # rolling-8-week report tolerates ±48h on each row.
+     - cron: "0 6 * * 0"
+ 
++# No `pull_request` trigger, so `cancel-in-progress` is always false here: a
++# cancelled weekly snapshot is a missing row in the rolling-8-week report, not
++# a re-runnable check. The group still serialises an overlapping dispatch.
++concurrency:
++  group: ${{ github.workflow }}-${{ github.ref }}
++  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
++
+ permissions:
+   # Read-only — the snapshot only reads public endpoints. The GitHub
+   # API read uses GITHUB_TOKEN by default (avoids unauthenticated
+diff --git a/.github/workflows/consumer-matrix.yml b/.github/workflows/consumer-matrix.yml
+index 2f418b52172a2c65cb0ad477cb2f973f8bf2c3bc..89a5be9a78a349c5e7eb9e02964055f10b51d920 100644
+--- a/.github/workflows/consumer-matrix.yml
++++ b/.github/workflows/consumer-matrix.yml
+@@ -199,11 +199,11 @@ jobs:
+           cache-dependency-path: internal/workers/mcp/package-lock.json
+ 
+       - name: Install Worker deps
+-        run: npm ci
++        run: npm ci --no-audit --no-fund --prefer-offline
+         working-directory: internal/workers/mcp
+ 
+       - name: Install repo deps (scripts-run needs root tsx — the 8.2–8.6 failure)
+-        run: npm ci
++        run: npm ci --no-audit --no-fund --prefer-offline
+ 
+       - name: Pack content blob
+         run: ./scripts-run src/scripts/pack_mcp_content
+@@ -227,7 +227,7 @@ jobs:
+           cache: 'npm'
+ 
+       - name: Install deps
+-        run: npm ci
++        run: npm ci --no-audit --no-fund --prefer-offline
+ 
+       - name: Marketplace manifest lint
+         run: ./scripts-run src/scripts/lint_marketplace
+diff --git a/.github/workflows/cross-model-canary.yml b/.github/workflows/cross-model-canary.yml
+index c9e46836161ad2288f9c6d6b9f10733868928c32..e3bb678d03cfeaef52dc1cff058c2c054b31dfaf 100644
+--- a/.github/workflows/cross-model-canary.yml
++++ b/.github/workflows/cross-model-canary.yml
+@@ -21,6 +21,12 @@ on:
+     - cron: "0 6 * * 1"
+   workflow_dispatch: {}
+ 
++# Superseded PR pushes cancel; the weekly canary and manual dispatches do not —
++# a cancelled canary run is a lost data point, not a re-runnable check.
++concurrency:
++  group: ${{ github.workflow }}-${{ github.ref }}
++  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
++
+ permissions:
+   contents: read
+ 
+@@ -33,7 +39,7 @@ jobs:
+       - uses: actions/setup-node@v7
+         with:
+           node-version: '20'
+-      - run: npm ci
++      - run: npm ci --no-audit --no-fund --prefer-offline
+       - name: Cross-model smoke (dry-run — MockRouter, no spend)
+         run: ./node_modules/.bin/tsx src/scripts/cross_model_smoke.ts --dry-run --skills image-analyser
+ 
+@@ -49,7 +55,7 @@ jobs:
+       - uses: actions/setup-node@v7
+         with:
+           node-version: '20'
+-      - run: npm ci
++      - run: npm ci --no-audit --no-fund --prefer-offline
+       - name: Cross-model live smoke (skips if key secrets absent)
+         run: |
+           if [ -z "$GEMINI_API_KEY" ] || [ -z "$OPENAI_API_KEY" ] || [ -z "$ANTHROPIC_API_KEY" ]; then
+diff --git a/.github/workflows/deploy-mcp-worker.yml b/.github/workflows/deploy-mcp-worker.yml
+index 08c2317abb55f5e719c3a63f46bd8c4b9d29bc05..31b173a3646187ffa00b0fde3d4d9b85715ddda3 100644
+--- a/.github/workflows/deploy-mcp-worker.yml
++++ b/.github/workflows/deploy-mcp-worker.yml
+@@ -64,7 +64,7 @@ jobs:
+           cache-dependency-path: internal/workers/mcp/package-lock.json
+ 
+       - name: Install Worker deps
+-        run: npm ci
++        run: npm ci --no-audit --no-fund --prefer-offline
+         working-directory: internal/workers/mcp
+ 
+       # scripts-run resolves the REPO-ROOT node_modules/.bin/tsx — the
+@@ -72,7 +72,7 @@ jobs:
+       # broke every release-triggered deploy since the scripts moved to tsx
+       # (8.2.0 … 8.6.0 all failed at "Pack content blob" with exit 127).
+       - name: Install repo deps (scripts-run needs root tsx)
+-        run: npm ci
++        run: npm ci --no-audit --no-fund --prefer-offline
+ 
+       - name: Pack content blob
+         id: pack
+diff --git a/.github/workflows/proof-demo.yml b/.github/workflows/proof-demo.yml
+index 67f9c4b2d73c1c31007bc3f20419ad85c73ae841..9f6e41c8f69f94e1868db7523ca64d3fe264f8e5 100644
+--- a/.github/workflows/proof-demo.yml
++++ b/.github/workflows/proof-demo.yml
+@@ -54,6 +54,6 @@ jobs:
+         with:
+           repo-token: ${{ secrets.GITHUB_TOKEN }}
+       - name: Install dependencies (tsx for the trust commands)
+-        run: npm ci
++        run: npm ci --no-audit --no-fund --prefer-offline
+       - name: The recorded demo's commands still pass
+         run: bash internal/demo/proof-demo-commands.sh
+diff --git a/.github/workflows/publish-npm.yml b/.github/workflows/publish-npm.yml
+index 20dd33b05a0f3a722482966f30238a20c620f347..c68ab479419553e7cf1f86a814e51bfac2d689b4 100644
+--- a/.github/workflows/publish-npm.yml
++++ b/.github/workflows/publish-npm.yml
+@@ -102,7 +102,7 @@ jobs:
+ 
+       - name: Install npm dependencies
+         if: steps.check.outputs.already_published != 'true'
+-        run: npm ci
++        run: npm ci --no-audit --no-fund --prefer-offline
+ 
+       - name: Build CLI and UI ahead of pack (prepack chain)
+         if: steps.check.outputs.already_published != 'true'
+diff --git a/.github/workflows/release-adjacent-health.yml b/.github/workflows/release-adjacent-health.yml
+index f1ac5cc4545b0261e031424b4a99c6df07f12584..3da3895c0a31127788e055d5bd452c19e6731d68 100644
+--- a/.github/workflows/release-adjacent-health.yml
++++ b/.github/workflows/release-adjacent-health.yml
+@@ -18,6 +18,13 @@ on:
+     - cron: '30 6 * * *' # daily 06:30 UTC
+   workflow_dispatch:
+ 
++# No `pull_request` trigger, so nothing here is ever cancelled: the daily health
++# run is the only observation for that day. The group serialises an overlapping
++# manual dispatch instead of racing it.
++concurrency:
++  group: ${{ github.workflow }}-${{ github.ref }}
++  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
++
+ permissions:
+   actions: read
+   contents: read
+@@ -37,7 +44,7 @@ jobs:
+           cache: 'npm'
+ 
+       - name: Install deps
+-        run: npm ci
++        run: npm ci --no-audit --no-fund --prefer-offline
+ 
+       - name: Check last completed run of each watched workflow
+         env:
+diff --git a/.github/workflows/release.yml b/.github/workflows/release.yml
+index ec9e9e17ae618dbe094ac1201afaad4e247887d7..b8cf0b12924fcccd08bc4d1f4134fc4f2c0fd098 100644
+--- a/.github/workflows/release.yml
++++ b/.github/workflows/release.yml
+@@ -144,7 +144,7 @@ jobs:
+           cache: 'npm'
+ 
+       - name: Install Node deps
+-        run: npm ci
++        run: npm ci --no-audit --no-fund --prefer-offline
+ 
+       # release.ts step [2/10] shells out to `task release-prepare`
+       # (sync + build-discovery + generate-tools). Without this the CI-native
+diff --git a/.github/workflows/rule-backstops.yml b/.github/workflows/rule-backstops.yml
+index cf65e349e9933ca740d218af180a1b9093850e01..b3598110bb5c0099ecd992ba4748794a6ecc4832 100644
+--- a/.github/workflows/rule-backstops.yml
++++ b/.github/workflows/rule-backstops.yml
+@@ -56,6 +56,14 @@ on:
+       - "internal/bench/reports/kernel-prefix.json"
+       - ".github/workflows/rule-backstops.yml"
+ 
++# Superseded PR pushes cancel; `push: main` runs never do. On main this
++# workflow is the ONLY run for that commit, so cancelling it would leave the
++# commit with no backstop signal at all — the 23 workflows that carry an
++# unconditional `cancel-in-progress: true` are all PR-only.
++concurrency:
++  group: ${{ github.workflow }}-${{ github.ref }}
++  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
++
+ permissions:
+   contents: read
+ 
+diff --git a/.github/workflows/self-review-gate.yml b/.github/workflows/self-review-gate.yml
+index ffced941c6c9b9e20f28c7405fd184f2a2f529db..5a71ded00d20f14cd6371f3910a8edbb491b2f7c 100644
+--- a/.github/workflows/self-review-gate.yml
++++ b/.github/workflows/self-review-gate.yml
+@@ -19,6 +19,12 @@ on:
+   pull_request:
+   workflow_dispatch: {}
+ 
++# Two PR jobs stack on every push to a branch; superseded runs cancel. A
++# manually dispatched run is never cancelled — someone is waiting on it.
++concurrency:
++  group: ${{ github.workflow }}-${{ github.ref }}
++  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
++
+ permissions:
+   contents: read
+   pull-requests: write
+@@ -34,7 +40,7 @@ jobs:
+       - uses: actions/setup-node@v7
+         with:
+           node-version: '20'
+-      - run: npm ci
++      - run: npm ci --no-audit --no-fund --prefer-offline
+       - name: Self-review plan (dry-run — no spend, advisory)
+         run: ./node_modules/.bin/tsx src/scripts/self_review_gate.ts --dry-run --base "origin/${{ github.base_ref }}"
+ 
+@@ -53,7 +59,7 @@ jobs:
+       - uses: actions/setup-node@v7
+         with:
+           node-version: '20'
+-      - run: npm ci
++      - run: npm ci --no-audit --no-fund --prefer-offline
+       - name: Dogfooded self-review (advisory; skips if ANTHROPIC_API_KEY absent)
+         run: ./node_modules/.bin/tsx src/scripts/self_review_gate.ts --base "origin/${{ github.base_ref }}" --findings-out /tmp/self-review-findings.json
+ 
+diff --git a/.github/workflows/site.yml b/.github/workflows/site.yml
+index d8140c0cf99e633b1cae4b5aa6fd614088d1359d..2dcaf059f57d316fa26607a74b83285f9b1a0806 100644
+--- a/.github/workflows/site.yml
++++ b/.github/workflows/site.yml
+@@ -40,7 +40,7 @@ jobs:
+ 
+       # Root deps provide node_modules/.bin/tsx for ./scripts-run.
+       - name: Install root dependencies (tsx for scripts-run)
+-        run: npm ci
++        run: npm ci --no-audit --no-fund --prefer-offline
+ 
+       # Isolated site workspace (own package.json/lockfile) — astro + starlight.
+       - name: Build the Starlight site
+diff --git a/.github/workflows/tests.yml b/.github/workflows/tests.yml
+index 774498facbe6ce9554eddbb45ac7446b9cff9ff9..78fc64f7c8454c9566b20e93215039726522de7f 100644
+--- a/.github/workflows/tests.yml
++++ b/.github/workflows/tests.yml
+@@ -85,7 +85,7 @@ jobs:
+       # local install, resolve_tsx_bin falls back to `npx tsx`, whose on-the-fly
+       # fetch fails offline (esbuild ENOENT). Provide node_modules up front.
+       - name: Install dependencies (provides node_modules/.bin/tsx for the installer)
+-        run: npm ci
++        run: npm ci --no-audit --no-fund --prefer-offline
+ 
+       - name: Run install.sh integration tests (shard ${{ matrix.shard }}/4)
+         run: bash tests/test_install.sh --parallel 9
+@@ -116,7 +116,7 @@ jobs:
+       # install, resolve_tsx_bin falls back to `npx tsx` whose fetch fails
+       # offline (esbuild ENOENT). Provide node_modules up front.
+       - name: Install dependencies (provides node_modules/.bin/tsx for the installer)
+-        run: npm ci
++        run: npm ci --no-audit --no-fund --prefer-offline
+ 
+       # The committed dist/install/install.mjs is the raw-source consumer
+       # bridge runner (node, no tsx) used by setup.sh. Rebuild it and assert
+@@ -206,7 +206,7 @@ jobs:
+           cache: 'npm'
+ 
+       - name: Install dependencies (hoists installer toolchain)
+-        run: npm ci
++        run: npm ci --no-audit --no-fund --prefer-offline
+ 
+       - name: Build discovery manifest (gitignored; cli-e2e reads it)
+         # `agent-config commands ls/explain` and the cli-e2e suite read
+@@ -258,7 +258,7 @@ jobs:
+           cache: 'npm'
+ 
+       - name: Install dependencies (hoists installer toolchain)
+-        run: npm ci
++        run: npm ci --no-audit --no-fund --prefer-offline
+ 
+       - name: ESLint (src/**/*.ts)
+         run: npm run lint:ts --silent
+@@ -369,7 +369,7 @@ jobs:
+           cache: 'npm'
+ 
+       - name: Install dependencies (hoists installer toolchain)
+-        run: npm ci
++        run: npm ci --no-audit --no-fund --prefer-offline
+ 
+       - name: Build discovery manifest (gitignored; cli-e2e reads it)
+         run: ./scripts-run src/scripts/build_discovery_manifest --write --quiet
+@@ -404,7 +404,7 @@ jobs:
+           cache: 'npm'
+ 
+       - name: Install dependencies (hoists installer toolchain)
+-        run: npm ci
++        run: npm ci --no-audit --no-fund --prefer-offline
+ 
+       - name: Build discovery manifest (gitignored; cli-e2e reads it)
+         run: ./scripts-run src/scripts/build_discovery_manifest --write --quiet
+diff --git a/.gitignore b/.gitignore
+index ea6231dd5d5b4f7f8dd6630a8021911943a38a11..592a0f33ceea2ae821feff05ad52778cf8ab90b1 100644
+--- a/.gitignore
++++ b/.gitignore
+@@ -311,3 +311,8 @@ internal/bench/corpora/*.local.yaml
+ 
+ # Worktrees
+ /.worktrees/
++
++# Toolchain incremental caches: tsc --incremental buildinfo + eslint --cache.
++# Local re-run speedup only — a CI runner starts cold and has nothing to reuse.
++/.tscache/
++/.eslintcache
+diff --git a/agents/roadmaps-progress.md b/agents/roadmaps-progress.md
+index 94a20fab822af15df82a1746d135393844a43323..efd2353453ba8d895d1ef50046633f980319a4c3 100644
+--- a/agents/roadmaps-progress.md
++++ b/agents/roadmaps-progress.md
+@@ -6,10 +6,10 @@
+ 
+ ## Overall
+ 
+-**196 / 365 steps done · 54%**
++**230 / 363 steps done · 63%**
+ 
+ ```text
+-██████████████████████░░░░░░░░░░░░░░░░░░   54%
++█████████████████████████░░░░░░░░░░░░░░░   63%
+ ```
+ 
+ ## Open roadmaps
+@@ -23,12 +23,12 @@
+ | 5 | [road-to-council-blind-review.md](roadmaps/road-to-council-blind-review.md) | 3 | 6 | 2 | 3 | 0 | 1 | 0 | ██████░░░░ 60% |
+ | 6 | [road-to-gated-reach-followup.md](roadmaps/road-to-gated-reach-followup.md) | 1 | 12 | 12 | 0 | 0 | 0 | [1](#blockers-road-to-gated-reach-followup) | ░░░░░░░░░░ 0% |
+ | 7 | [road-to-inbox-harvest-2026-08-b-authoring-contract.md](roadmaps/road-to-inbox-harvest-2026-08-b-authoring-contract.md) | 6 | 25 | 15 | 0 | 1 | 9 | [1](#blockers-road-to-inbox-harvest-2026-08-b-authoring-contract) | ░░░░░░░░░░ 0% |
+-| 8 | [road-to-inbox-harvest-2026-08-b-ci-economy.md](roadmaps/road-to-inbox-harvest-2026-08-b-ci-economy.md) | 5 | 24 | 17 | 4 | 2 | 1 | [2](#blockers-road-to-inbox-harvest-2026-08-b-ci-economy) | ██░░░░░░░░ 19% |
++| 8 | [road-to-inbox-harvest-2026-08-b-ci-economy.md](roadmaps/road-to-inbox-harvest-2026-08-b-ci-economy.md) | 5 | 24 | 1 | 17 | 2 | 4 | [2](#blockers-road-to-inbox-harvest-2026-08-b-ci-economy) | █████████░ 94% |
+ | 9 | [road-to-inbox-harvest-2026-08-b-council-integrity.md](roadmaps/road-to-inbox-harvest-2026-08-b-council-integrity.md) | 3 | 16 | 2 | 6 | 1 | 7 | [1](#blockers-road-to-inbox-harvest-2026-08-b-council-integrity) | ████████░░ 75% |
+ | 10 | [road-to-inbox-harvest-2026-08-b-dispatch-safety.md](roadmaps/road-to-inbox-harvest-2026-08-b-dispatch-safety.md) | 4 | 21 | 13 | 1 | 1 | 6 | [1](#blockers-road-to-inbox-harvest-2026-08-b-dispatch-safety) | █░░░░░░░░░ 7% |
+ | 11 | [road-to-inbox-harvest-2026-08-b-estate-lifecycle.md](roadmaps/road-to-inbox-harvest-2026-08-b-estate-lifecycle.md) | 4 | 15 | 9 | 0 | 0 | 6 | [1](#blockers-road-to-inbox-harvest-2026-08-b-estate-lifecycle) | ░░░░░░░░░░ 0% |
+ | 12 | [road-to-inbox-harvest-2026-08-b-install-lifecycle.md](roadmaps/road-to-inbox-harvest-2026-08-b-install-lifecycle.md) | 2 | 13 | 1 | 6 | 0 | 6 | [1](#blockers-road-to-inbox-harvest-2026-08-b-install-lifecycle) | █████████░ 86% |
+-| 13 | [road-to-inbox-harvest-2026-08-b-ledger-truth.md](roadmaps/road-to-inbox-harvest-2026-08-b-ledger-truth.md) | 3 | 19 | 10 | 2 | 1 | 6 | [1](#blockers-road-to-inbox-harvest-2026-08-b-ledger-truth) | ██░░░░░░░░ 17% |
++| 13 | [road-to-inbox-harvest-2026-08-b-ledger-truth.md](roadmaps/road-to-inbox-harvest-2026-08-b-ledger-truth.md) | 3 | 19 | 1 | 12 | 0 | 6 | [1](#blockers-road-to-inbox-harvest-2026-08-b-ledger-truth) | █████████░ 92% |
+ | 14 | [road-to-inbox-harvest-2026-08-b-release-integrity.md](roadmaps/road-to-inbox-harvest-2026-08-b-release-integrity.md) | 5 | 25 | 1 | 11 | 0 | 13 | [3](#blockers-road-to-inbox-harvest-2026-08-b-release-integrity) | █████████░ 92% |
+ | 15 | [road-to-inbox-harvest-2026-08-b.md](roadmaps/road-to-inbox-harvest-2026-08-b.md) | 3 | 6 | 1 | 2 | 0 | 3 | [1](#blockers-road-to-inbox-harvest-2026-08-b) | ███████░░░ 67% |
+ | 16 | [road-to-inbox-harvest-2026-08.md](roadmaps/road-to-inbox-harvest-2026-08.md) | 5 | 21 | 1 | 11 | 4 | 5 | [3](#blockers-road-to-inbox-harvest-2026-08) | █████████░ 92% |
+@@ -226,15 +226,15 @@
+ 
+ ### [road-to-inbox-harvest-2026-08-b-ci-economy.md](roadmaps/road-to-inbox-harvest-2026-08-b-ci-economy.md)
+ 
+-**Road to CI Economy — cut the redundant full builds and re-anchor the cost artefacts to CI-recorded data** — 4 / 21 done (19%)
++**Road to CI Economy — cut the redundant full builds and re-anchor the cost artefacts to CI-recorded data** — 17 / 18 done (94%)
+ 
+ | # | Phase | State | Open | Done | Deferred | Cancelled | % |
+ |---|---|---|---:|---:|---:|---:|---:|
+-| 0 | Re-anchor the two existing cost artefacts to CI-recorded data | ⬜ not started | 4 | 0 | 0 | 1 | 0% |
+-| 1 | Free hygiene: dead filters, missing concurrency, stale comments, caches | 🟡 in progress | 3 | 4 | 0 | 0 | 57% |
+-| 2 | The build fan-out: stop rebuilding the same 6 targets 13 times | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
+-| 3 | The subprocess lever: extend in-process running, do not add a skill | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
+-| 4 | Required-check-set changes (authored here, applied by the maintainer) | ⬜ not started | 1 | 0 | 2 | 0 | 0% |
++| 0 | Re-anchor the two existing cost artefacts to CI-recorded data | ✅ done | 0 | 4 | 0 | 1 | 100% |
++| 1 | Free hygiene: dead filters, missing concurrency, stale comments, caches | ✅ done | 0 | 7 | 0 | 0 | 100% |
++| 2 | The build fan-out: stop rebuilding the same 6 targets 13 times | ✅ done | 0 | 2 | 0 | 3 | 100% |
++| 3 | The subprocess lever: extend in-process running, do not add a skill | 🟡 in progress | 1 | 3 | 0 | 0 | 75% |
++| 4 | Required-check-set changes (authored here, applied by the maintainer) | ✅ done | 0 | 1 | 2 | 0 | 100% |
+ 
+ <a id="blockers-road-to-inbox-harvest-2026-08-b-ci-economy"></a>
+ **Blockers**
+diff --git a/agents/roadmaps/road-to-inbox-harvest-2026-08-b-ci-economy.md b/agents/roadmaps/road-to-inbox-harvest-2026-08-b-ci-economy.md
+index 1720651c668a84b0ba614537caa26997c231c8c1..ecfbdad2063e50807ebff3610d0672c3c96d379f 100644
+--- a/agents/roadmaps/road-to-inbox-harvest-2026-08-b-ci-economy.md
++++ b/agents/roadmaps/road-to-inbox-harvest-2026-08-b-ci-economy.md
+@@ -70,23 +70,33 @@ Re-derived in this worktree at `c073d5732` (v9.32.0):
+       `:24-36`, ceiling `:70-84`, review cadence `:86-100`). Extend that file; do not
+       add a second one. The path is named without a link on purpose — it must stay
+       absent, so a resolvable reference to it would be the defect.
+-- [ ] **0.2 Fix the `ci_time_ratio` output-path drift.** Docstring `:23` names
++- [x] **0.2 Fix the `ci_time_ratio` output-path drift.** Docstring `:23` names
+       `agents/runtime/reports/ci-time-ratio.json`; `DEFAULT_OUT` `:37` writes
+       `agents/reports/ci-time-ratio.json`; only the latter directory exists.
+       <!-- verify: grep -n 'runtime/reports' src/scripts/ci_time_ratio.ts -->
+-- [ ] **0.3 Register `ci_time_ratio` behind a named target.** Zero hits today in
++- [x] **0.3 Register `ci_time_ratio` behind a named target.** Zero hits today in
+       `Taskfile.yml`, `taskfiles/*.yml`, `src/cli/registry.ts`. Add it beside the
+       sibling CI helper in `taskfiles/ci-fast.yml`, which already hosts
+       `ci:required-checks` (`branch-protection-policy.md:101`).
+       <!-- verify: grep -rn 'ci_time_ratio' taskfiles/ -->
+-- [ ] **0.4 Replace the stale `ci-cost-budget.md` baseline rows with CI figures.**
++- [x] **0.4 Replace the stale `ci-cost-budget.md` baseline rows with CI figures.**
++      Shipped wider than the step's wording in one respect, recorded rather than
++      applied silently: the three dead rows also had two dead **See-also**
++      pointers (`python-version-sweep.yml`, `windows-lockfile-export.yml`) and
++      two "Critical path observations" bullets describing both as live jobs.
++      Dropping only the table rows would have left the same false claim standing
++      three paragraphs down. Two regressions surfaced that the step did not
++      predict: `consistency.yml` 27 s → 109 s (the single required check) and
++      `smoke.yml` 18 s → 82 s; `smoke-public-install.yml` fell 413 s → 291 s and
++      is no longer the ceiling violator. The new violator is `node-tests`
++      shard 3/4 at 645 s / 852 s, which the old "2 OS" row had hidden.
+       Drop `python-tests`, `windows-lockfile-export`, `migration-dry-run.yml` (all
+       gone); correct `node-tests` to 2 OS x 4 shards (`tests.yml:203-204`); add
+       `static-checks`, `golden-tests`, `workspace-tests`. Figures from `gh run list
+       --branch main --limit 50` as the file's own checklist specifies (`:90-91`) —
+       never a local run, per `docs/hook-latency.json:2`.
+       <!-- verify: grep -n 'python-tests\|windows-lockfile-export\|migration-dry-run' docs/contracts/ci-cost-budget.md -->
+-- [ ] **0.5 State the measurement-only kill criterion in the file.** The inbox file
++- [x] **0.5 State the measurement-only kill criterion in the file.** The inbox file
+       bound every kill criterion to `escaped_regressions`, which needs a human to
+       attribute a post-merge failure to a demoted check and is not mechanically
+       decidable. Phase 0 changes no job, so its criterion is "the refreshed table
+@@ -141,7 +151,17 @@ Re-derived in this worktree at `c073d5732` (v9.32.0):
+       Reverting to report-only is a one-line change (drop the non-zero exit) if
+       the reviewer still prefers it.
+       <!-- verify: ./scripts-run src/scripts/lint_workflow_paths --self-test -->
+-- [ ] **1.4 Add `concurrency:` to the five workflows without it.** 23 of 28 carry
++- [x] **1.4 Add `concurrency:` to the five workflows without it.**
++      All five got the same block, with `cancel-in-progress: ${{ github.event_name
++      == 'pull_request' }}` rather than the unconditional `true` the other 23
++      carry. That single expression satisfies the step's requirement everywhere:
++      it is true only on PR refs, so it is automatically false for
++      `adoption-snapshot` and `release-adjacent-health` (which have no
++      `pull_request` trigger at all) and for every `schedule` / `workflow_dispatch`
++      run of the other three. The group still serialises overlapping non-PR runs
++      instead of racing them. Each block carries a comment naming which signal the
++      exception protects.
++      <!-- verify: python3 -c "import yaml; [print(f, yaml.safe_load(open(f))['concurrency']) for f in __import__('glob').glob('.github/workflows/*.yml')]" --> 23 of 28 carry
+       it; `rule-backstops.yml`, `self-review-gate.yml`, `adoption-snapshot.yml`,
+       `cross-model-canary.yml`, `release-adjacent-health.yml` do not.
+       `rule-backstops.yml` (`:24` PR, `:40` push) and `self-review-gate.yml` (`:19`
+@@ -155,13 +175,35 @@ Re-derived in this worktree at `c073d5732` (v9.32.0):
+       jobs are `golden-tests` (`:348`) and `workspace-tests` (`:386`).
+       `tests.yml:349` says "29 scenarios"; `tests/golden/baseline/` holds 30.
+       <!-- verify: grep -n 'build:cli && build:ui\|heavy-tests\|29 scenario' .github/workflows/tests.yml -->
+-- [ ] **1.6 Turn on the two absent toolchain caches.** No `incremental` or
++- [x] **1.6 Turn on the two absent toolchain caches.**
++      **Shipped, but this step's stated benefit is wrong and the correction is
++      the point.** It says both "feed `static-checks`" — they do not. A CI runner
++      starts cold: there is no prior `.tsbuildinfo` and no prior `.eslintcache` to
++      reuse, so neither saves a second in CI unless an `actions/cache` step is
++      added to carry them between runs, which this step does not ask for and
++      which trades a real correctness risk (a stale lint cache) for a saving the
++      Phase 0.4 table shows is small — `static-checks` is 131 s, well under the
++      ceiling. What they buy is **local** re-run time, measured on this machine:
++      `npm run typecheck` 9.3 s → **3.0 s** warm, `npm run lint:ts` 11.2 s →
++      **0.83 s** warm. That is a developer-loop and `task preflight` win, and it
++      is worth having under its real name. Buildinfo goes to a gitignored
++      `.tscache/`, one file per tsconfig so the four do not clobber each other;
++      `.eslintcache` is gitignored too. Both entries sit outside the managed
++      gitignore block. No `incremental` or
+       `tsBuildInfoFile` in `tsconfig.json`, `tsconfig.scripts.json`,
+       `tsconfig.test.json`, `tsconfig.ui.json`; `lint:ts` is bare
+       `eslint 'src/**/*.ts'` (`package.json:80`) with no `--cache`. Both are
+       correctness-neutral and both feed `static-checks`.
+       <!-- verify: grep -n 'incremental' tsconfig.json -->
+-- [ ] **1.7 Add `--no-audit --no-fund --prefer-offline` to the bare `npm ci` calls.**
++- [x] **1.7 Add `--no-audit --no-fund --prefer-offline` to the bare `npm ci` calls.**
++      20 bare call sites across the 10 named workflows, now zero. The already-flagged
++      calls elsewhere use a longer house form with retry fallback
++      (`--fetch-retries=5 --fetch-retry-mintimeout=10000 || (sleep 10 && …)`);
++      that form was NOT propagated here, because changing retry semantics is a
++      reliability change and this step is a flag change. Unlike 1.6 this one does
++      pay in CI: `setup-node` restores the npm cache before these run, so
++      `--prefer-offline` skips revalidation on a warm cache and falls back to the
++      network on a miss.
+       13 workflows already pass the first two; 10 still carry at least one bare
+       `run: npm ci`, including all six in `tests.yml` (`:94`, `:125`, `:214`,
+       `:263`, `:374`, `:409`). `--prefer-offline` appears zero times anywhere, while
+@@ -170,53 +212,131 @@ Re-derived in this worktree at `c073d5732` (v9.32.0):
+ 
+ ## Phase 2 — The build fan-out: stop rebuilding the same 6 targets 13 times
+ 
+-- [ ] **2.1 Record the per-build cost before changing anything.** Add the
++- [x] **2.1 Record the per-build cost before changing anything.** Add the
+       `npm run build --silent` step duration for `node-tests`, `static-checks`,
+       `golden-tests`, `workspace-tests` to the Phase 0.4 table, from a CI run.
+       Without that row the fan-out saving is asserted, not measured.
++      **Measured: 5–10 s in every one of the 13 jobs that run it**, across three
++      successful main runs. Full step breakdown of the slowest job in the matrix
++      (`node-tests` ubuntu shard 3/4): set-up 1 s · checkout 4 s · setup-node
++      6 s · `npm ci` 6 s · discovery manifest 1 s · **build 8 s** · **Vitest
++      594 s**. The build is ~1.3 % of the job. Recorded in
++      `docs/contracts/ci-cost-budget.md`. This gate did its job: the number
++      falsifies 2.2-2.4 below.
+       <!-- verify: grep -c 'npm run build --silent' .github/workflows/tests.yml -->
+-- [ ] **2.2 Build once, share the artefact.** One producer job runs the full build
+-      and uploads `dist/`; the other three families download it instead of
+-      rebuilding. Both primitives are already in-tree — `upload-artifact@v7` in 8
+-      workflows (e.g. `consistency.yml:470`) and `actions/cache@v6` in
+-      `release-validation.yml:391` — so this adds no new dependency.
+-      <!-- verify: grep -c 'npm run build --silent' .github/workflows/tests.yml -->
+-- [ ] **2.3 Keep the drift gate on the producer.** The freshness check at
+-      `tests.yml:303-312` is what makes a shared artefact safe: it asserts
+-      `dist/install/` still derives from `src/install/` via `git status
+-      --porcelain`. It stays on the job that actually builds, and consumers assert
+-      the artefact they received rather than silently rebuilding on cache miss.
+-      <!-- verify: grep -n 'Committed build output is fresh' .github/workflows/tests.yml -->
+-- [ ] **2.4 Split the build where a consumer needs fewer than six targets.**
+-      `build:cli-delegate` (`package.json:71`) is the in-repo precedent for an
+-      independently buildable esbuild target. `static-checks` runs ESLint + tsc +
+-      prepack and never spawns `./agent-config`, so it does not need `build:ui`;
+-      `golden-tests` and `workspace-tests` spawn the CLI and do. Record per job
+-      which targets are actually required.
+-      <!-- verify: grep -n 'build:cli-delegate' package.json -->
+-- [ ] **2.5 Record the deliberate non-adoption of a remote build cache.** Rejected
++- [-] **2.2 Build once, share the artefact.**
++      **Cancelled by 2.1's measurement — this phase's own gate, working as
++      designed.** The build is **8 s** and runs in parallel across 13 jobs, so it
++      contributes ~8 s to critical path. A producer/consumer split adds a serial
++      producer job (checkout + setup-node + `npm ci` + build ≈ 25 s) that every
++      consumer waits on, plus upload and download on each side, and converts a
++      parallel 8 s into a serial ~35 s. It makes CI **slower**. Consumers still
++      need their own `npm ci`, so that cost does not disappear either.
++      AI council 2/2 (2026-08-11, anthropic + openai) converged on cancel, and
++      added the argument that decides the one benefit the cost case misses:
++      **the "one canonical `dist/`" gain already exists.** The drift gate runs in
++      every building job today and is green, so the 13 builds are already
++      byte-identical — building once would buy no consistency that the status quo
++      lacks, and would *lose* the cross-platform property that the build produces
++      correct output on macOS as well as ubuntu.
++      **Revisit-if:** the build step exceeds producer-job overhead by ~3× — i.e.
++      a build above ~75 s while producer overhead stays near 25 s — AND artifact
++      transfer stays under ~5 s. Note the council's caveat: a 10× build-time
++      growth is more likely a signal that the tree needs package boundaries than
++      an artefact-caching opportunity.
++- [-] **2.3 Keep the drift gate on the producer.**
++      **Cancelled with 2.2** — it exists only to make a shared artefact safe, and
++      there is no shared artefact. The freshness check at `tests.yml:303-312`
++      stays exactly where it is, unchanged; nothing in this PR touches it.
++- [-] **2.4 Split the build where a consumer needs fewer than six targets.**
++      **Cancelled with 2.2.** Splitting targets per consumer optimises a step
++      measured at 5–10 s, against a job whose Vitest phase is 594 s. It would add
++      a per-job target matrix to maintain — a standing correctness risk, since a
++      job given too few targets fails only when a test happens to spawn the
++      missing binary — to buy a saving inside the noise band of runner variance.
++      `build:cli-delegate` remains the precedent if a future need is measured.
++- [x] **2.5 Record the deliberate non-adoption of a remote build cache.** Rejected
+       on cost and dependency grounds: a third-party cache service adds an external
+-      dependency and a spend line for a saving 2.2 gets from primitives already in
+-      the repo. **Not** an ADR-088 consequence —
++      dependency and a spend line. With 2.2 cancelled the case is stronger, not
++      weaker — the saving a remote cache would buy is the same 8 s build that the
++      in-repo artefact split was just cancelled for being too small to be worth
++      serialising. Paying an external vendor for it is the same trade at a worse
++      price. **Not** an ADR-088 consequence —
+       `ADR-088-no-external-runtime-federation.md` is a category boundary about
+       driving external agent runtimes and does not reach build caching. The inbox
+       file cited it incorrectly.
+ 
+ ## Phase 3 — The subprocess lever: extend in-process running, do not add a skill
+ 
+-- [ ] **3.1 Inventory the 191 spawning test files against the 43 adopters.**
++- [x] **3.1 Inventory the spawning test files against the adopters.**
++      Re-counted live: **207** files touch `spawnSync`/`execSync`/`child_process`
++      (the step's 191 has grown), **43** use `run_in_process`. Narrowing to the
++      population this phase can act on — files invoking `./scripts-run` or
++      `./agent-config`, excluding the suites CI already runs in dedicated jobs
++      (`tests/golden/**`, `tests/server/workspace.test.ts`,
++      `tests/scripts/cli/python/**`) — gives **66 candidates**, of which only 4
++      already adopt the runner and 1 also spawns `git` (a real boundary). So the
++      nominal migration set is ~62 files.
++      **The inventory's real finding is that this set is not where the time is.**
++      A per-file duration pass over 977 files (`--reporter=json`, local; used for
++      relative ranking only, never as a CI baseline) totals 1483 s, and the
++      distribution is not flat: `tests/scripts/build_proof.test.ts` alone is
++      **290 s — 19.5 % of everything, 8.7× the next file** — and it contains
++      **zero spawns**. Nothing in the 66-file candidate set appears near the top.
++      Top of the ranking after it: `check_no_external_sources` 33.5 s,
++      `check_completion_review` 32.3 s, `dispatch_r2_reviewer` 27.6 s,
++      `cmd_doctor_anatomy` 25.7 s — all inside the noise of a 130 s shard.
++      <!-- verify: grep -rl 'run_in_process' tests/ | wc -l -->
+       `tests/_lib/run_in_process.ts` already exports `runInProc` / `runInProcAsync`
+       (`:149`, `:48`) and models process exit as a throwable (`ProcessExit`, `:41`).
+       Produce the candidate list: files whose spawn is a plain `./scripts-run` or
+       `./agent-config` invocation with no real process-boundary assertion.
+       <!-- verify: grep -rl 'run_in_process' tests/ | wc -l -->
+-- [ ] **3.2 Migrate the mechanical candidates in batches, keeping one spawning test
+-      per CLI entry point.** The process boundary is the thing under test for argv
+-      handling, exit codes and stdio; converting every last one deletes that
+-      coverage.
+-      <!-- verify: grep -rl 'run_in_process' tests/ | wc -l -->
+-- [ ] **3.3 Document the in-process pattern in the existing
+-      `src/skills/test-performance/SKILL.md`.** No new skill: the estate is 116
++- [x] **3.2 Fix the file that is actually over budget — a one-file change, not a
++      62-file migration.** The step's method (batch-migrate spawns) is aimed at a
++      cost 3.1 measured and did not find: the single heaviest file spawns nothing,
++      and no candidate ranks near it. Migrating ~62 files would have been a large,
++      risky diff buying a saving inside runner variance — the same
++      assert-don't-measure trap 2.1's gate caught one phase earlier.
++      What the measurement supports instead, and what shipped:
++      `tests/scripts/build_proof.test.ts` called `render()` **five** times at
++      ~54 s per call. Its own first test asserts `render()` is deterministic —
++      which is exactly the property that makes reusing one result sound, and
++      which keeps the cache from ever masking a regression. Rendering once at
++      module scope and reusing it leaves the determinism test its two independent
++      invocations (two calls IS what that test measures) and drops the file from
++      ~260 s to **103 s** wall-clock, all 8 tests green.
++      The honest residual: 103 s is still two `render()` calls, and `render()`
++      itself at 54 s is the next lever — that is production code and out of this
++      phase's scope. Recorded in `ci-cost-budget.md`.
++      The keep-one-spawning-test-per-entry-point rule the step names is preserved
++      as guidance in `docs/development.md` (see 3.3), so a future migration has
++      the constraint written down even though no migration happened here.
++      <!-- verify: npx vitest run tests/scripts/build_proof.test.ts -->
++- [x] **3.3 Document the in-process pattern — in `docs/development.md`, NOT in
++      the skill.** A deliberate divergence, on two grounds the step did not have.
++      **(1) The skill ships to consumers; the library does not.**
++      `tests/_lib/run_in_process.ts` exists only in this repo. Telling a consumer's
++      agent to import it would cite a file absent from their tree — the same
++      names-something-that-does-not-exist defect Phase 0 spent its whole budget
++      repairing. **(2) Adding a second stack to that skill is not free, and the
++      cost is invisible from the step's wording.** `lint_framework_leakage`
++      exempts a file via `has_framework_frontmatter()`, and
++      `test-performance` carries `framework: laravel`. The skill schema says
++      multi-stack skills MUST omit that key — so making it multi-stack means
++      deleting its exemption, which newly exposes ~16 lines of existing
++      `php artisan` / `RefreshDatabase` / seeder prose to a CI-blocking gate.
++      That is a skill-wide neutralisation refactor, not a documentation step.
++      What shipped instead: a `docs/development.md` § Testing subsection with the
++      `runInProc` / `runInProcAsync` / `ProcessExit` surface, `RunOpts`, the
++      ~350 ms per-spawn cost, the count-based sharding that turns a spawn cluster
++      into one slow shard, the keep-one-spawning-test-per-entry-point rule, and
++      the module-level-state limitation. The same edit repaired a drift cluster
++      found in place: six of the seven documented `task test-*` targets
++      (`test-python`, `test-linter`, `test-readme-linter`, `test-runtime`,
++      `test-tools`, `test-runtime-all`) **do not exist**, and the "CI test matrix"
++      table described a Python 3.10–3.13 sweep that no workflow has run since the
++      py2ts move. No new skill: the estate is 116
+       rules / 289 skills and this is the subject that skill already owns. Note
+       honestly that the skill is currently single-stack — its whole "Optimization
+       strategies" section (`:68-147`) is database / migration / seeder work. Adding
+@@ -224,6 +344,27 @@ Re-derived in this worktree at `c073d5732` (v9.32.0):
+       which also moves it toward the multi-stack shape
+       `framework-neutrality-in-generic-skills` asks of a generically named artefact.
+ - [ ] **3.4 Retire the `heavy-tests` framing if the clumping cause is gone.**
++      **Stays OPEN, not deferred — its decision input does not exist yet, and
++      cannot until this PR lands.** `[ ]` rather than `[~]` on purpose: this is
++      real work with a firing condition, so it belongs in the open count and on
++      the dashboard. Marking it `[~]` would drive `count_open` to 0 beside the
++      two maintainer-gated deferrals and fire Iron Law 3 — a repo-wide archive
++      refusal only the user can clear — for a step that is simply waiting on a
++      CI run. The step is explicit that the call is "decidable from the shard
++      durations in the Phase 0.4 table, not from a guess", and that table now
++      holds *pre-fix* durations: 645 s / 852 s for shard 3/4, measured before
++      3.2 removed ~157 s from the heaviest file in it. Whether golden-tests and
++      workspace-tests can fold back into the shard matrix depends on the
++      *post-fix* shard-3 figure, which only a CI run on merged code produces.
++      Two corrections to the step's own framing, both from 3.1's measurement:
++      the `heavy-tests` name was already repaired by 1.5 (the comment at
++      `tests.yml:238` now states no such job ever existed), and the premise
++      "if 3.2 removes enough spawns" cannot fire as written — 3.2 removed no
++      spawns, because spawns were not the cost.
++      **Resume when:** shard 3/4 has a post-merge duration on `main`. If it lands
++      under the 300 s ceiling, re-open the fold-back question; if it does not,
++      the next lever is `render()` at 54 s a call, not the job layout.
++      <!-- verify: grep -n 'hash-clump' .github/workflows/tests.yml -->
+       `golden-tests` and `workspace-tests` exist as dedicated runners because
+       subprocess-heavy files hash-clump into one over-budget vitest shard
+       (`tests.yml:349-357`, `:387-392`). If 3.2 removes enough spawns that the clump
+@@ -233,12 +374,25 @@ Re-derived in this worktree at `c073d5732` (v9.32.0):
+ 
+ ## Phase 4 — Required-check-set changes (authored here, applied by the maintainer)
+ 
+-- [ ] **4.1 Draft ADR-222 for any required-check demotion, after 0.4 has numbers.**
+-      Next free number is 222 (`docs/decisions/` ends at
+-      `ADR-221-host-native-first-ladder.md`). The ADR states what regression class
+-      the demoted check was catching and what still catches it. It is a proposal in
+-      `docs/decisions/` and changes no enforcement by itself.
+-      <!-- verify: ls docs/decisions/ | tail -3 -->
++- [x] **4.1 Draft the ADR for any required-check demotion, after 0.4 has numbers.**
++      **Landed as ADR-223, not 222 — the number in this step was already taken.**
++      `ADR-222-blocker-handover-at-reply-close.md` merged from a parallel branch
++      after this roadmap was written, so "next free number is 222" was stale by
++      the time it was read. Next free is 223; index regenerated with
++      `regenerate_index --dir docs/decisions` (its default `--dir docs/adr` does
++      not exist in this repo and exits with `adr-dir not found`).
++      **The ADR's content is also not what the step assumed.** It expected to
++      record a demotion; the measurement supports none, and the record says so
++      with the evidence: the required set has exactly **one** member
++      (`Sync + Generate Tools Consistency`), so neither the macOS legs nor the
++      `npm audit` gate is *in* it and there is nothing to demote — removing them
++      would be a trigger change. The audit gate is a step inside a 131 s job and
++      the identical command already runs in `release-validation.yml:370`. And
++      demoting the macOS leg would drop the 852 s job while leaving its 645 s
++      ubuntu twin over the ceiling, hiding the breach rather than fixing it.
++      The ADR names the missing evidence a real demotion needs — per-OS failure
++      attribution, which nothing in the tree records — as its `review_trigger`.
++      <!-- verify: ls docs/decisions/ | grep ADR-223 -->
+ - [~] **4.2 Demote the macOS leg and/or the `npm audit` PR gate.** Deferred behind
+       `blocker: required-check-set-change`. Touches ruleset `17749383` plus
+       `docs/contracts/branch-protection-policy.md`, `ci-green-floor.md` and
+diff --git a/docs/contracts/ci-cost-budget.md b/docs/contracts/ci-cost-budget.md
+index b8fb43f247ecc47d1e5e56ef7b96ef3c66b4d92a..de7dc9230d1fa1edad15fe213fb3b00e6ceb3fc8 100644
+--- a/docs/contracts/ci-cost-budget.md
++++ b/docs/contracts/ci-cost-budget.md
+@@ -15,27 +15,75 @@ keep-beta-until: 2026-09-04
+ > [`release-pr-gating.md`](release-pr-gating.md) and
+ > [`branch-protection-policy.md`](branch-protection-policy.md).
+ 
+-## Baseline (pre-optimisation, 2026-05-26)
++## Baseline (re-measured 2026-08-11)
+ 
+-Captured via `gh run list --branch main --limit 50 --json
+-name,createdAt,updatedAt`. Wall-clock figures are the average of the most
+-recent 50 main-branch runs.
++**Method.** `tests.yml` rows are per-job durations from the GitHub Actions
++jobs API (`/actions/runs/<id>/jobs`), averaged over the three most recent
++**successful** main-branch runs. Non-`tests.yml` rows are run-level
++wall-clock from `gh run list --branch main --json
++conclusion,startedAt,updatedAt`, averaged over the last 4–6 successful runs;
++those workflows are single-job, so run-level is the job figure plus queueing.
++Recorded from CI, never from a developer machine — a locally captured
++baseline measures the environment offset instead of the regression
++(`docs/hook-latency.json:2`).
++
++`tests.yml` declares 6 job keys that matrix-expand to 23 jobs. The table
++lists each shard family once, with the per-shard average.
+ 
+ | Workflow | Job | OS × variant | Avg duration | Trigger surface |
+ |---|---|---|--:|---|
+-| `tests.yml` | `install-tests` | 4 shards × 2 OS | 218 s | `scripts/**`, `tests/**`, `src/**`, manifest pins |
+-| `tests.yml` | `install-aux-tests` | 2 OS | 90 s | same as above |
+-| `tests.yml` | `python-tests` | 4 versions × ubuntu + 3.12 × macOS | ~210 s | same as above |
+-| `tests.yml` | `node-tests` | 2 OS | 180 s | same as above |
+-| `tests.yml` | `windows-lockfile-export` | windows-latest | 60–90 s | same as above (over-broad — see Phase C Step 1) |
+-| `smoke-public-install.yml` | `smoke` | 3 OS × 2 Node | 413 s | install paths + setup.sh + templates |
+-| `consistency.yml` | (single) | ubuntu | 27 s | always-on (PR / push) |
+-| `smoke.yml` | smoke-contracts | ubuntu | 18 s | `scripts/schemas/**` |
+-| `migration-dry-run.yml` | (single) | ubuntu | 20 s | migration-touching paths |
+-| `skill-lint.yml` | (single) | ubuntu | 64 s | `dist/agent-src*/**`, schemas |
++| `tests.yml` | `install-tests` | 4 shards × 2 OS | 51 s ubuntu / 85 s macOS | `scripts/**`, `tests/**`, `src/**`, manifest pins |
++| `tests.yml` | `install-aux-tests` | 2 OS | 64 s ubuntu / 118 s macOS | same as above |
++| `tests.yml` | `node-tests` shards 1, 2, 4 | 2 OS × 3 shards | 125–152 s | same as above |
++| `tests.yml` | `node-tests` **shard 3/4** | 2 OS | **645 s ubuntu / 852 s macOS** | same as above — over ceiling, see below |
++| `tests.yml` | `static-checks` | ubuntu, no matrix | 131 s | same as above |
++| `tests.yml` | `golden-tests` | 2 OS | 132 s ubuntu / 138 s macOS | same as above |
++| `tests.yml` | `workspace-tests` | 2 OS | 98 s ubuntu / 85 s macOS | same as above |
++| `smoke-public-install.yml` | `smoke` | 3 OS × 2 Node | 291 s | install paths + setup.sh + templates |
++| `consistency.yml` | (single) | ubuntu | 109 s | always-on (PR / push) |
++| `smoke.yml` | smoke-contracts | ubuntu | 82 s | `scripts/schemas/**` |
++| `skill-lint.yml` | (single) | ubuntu | 66 s | `dist/agent-src*/**`, schemas |
+ | `release-guard.yml` | (single) | ubuntu | < 10 s | tag-trigger only |
+ 
+-**Critical path observations:**
++Three rows from the 2026-05-26 baseline were removed because the jobs and
++workflows they named no longer exist: `python-tests` (no such job key in
++`.github/workflows/`), `windows-lockfile-export.yml` and
++`migration-dry-run.yml` (both files absent). `node-tests` was recorded as
++"2 OS" when it is 2 OS × 4 shards, which hid the shard-3 outlier below.
++
++**Two regressions against the 2026-05-26 figures, flagged per checklist
++item 2 (> 25 %):** `consistency.yml` 27 s → 109 s and `smoke.yml` 18 s →
++82 s. Both are well under the ceiling, so neither earns a follow-up step on
++cost grounds alone, but `consistency.yml` is the single required check
++(`branch-protection-policy.md:59`) and therefore sits on every PR's critical
++path. `smoke-public-install.yml` moved the other way, 413 s → 291 s, and is
++no longer a ceiling violation.
++
++**The build step is not a cost driver — measured, not assumed.**
++`npm run build --silent` runs in 13 of the 23 matrix-expanded jobs and
++measured **5–10 s in every one of them** across the three sampled runs. In
++the slowest job in the matrix the full step breakdown is: set-up 1 s,
++checkout 4 s, setup-node 6 s, `npm ci` 6 s, discovery manifest 1 s, build
++8 s, **Vitest 594 s**. The build is ~1.3 % of that job.
++
++A "build once in a producer job, share `dist/` as an artefact" refactor was
++evaluated against this row on 2026-08-11 and **rejected**: it would add a
++serial producer job (≈ 25 s of checkout + setup-node + `npm ci` + build)
++that every consumer waits on, plus upload and download, converting a
++parallel 8 s into a serial ~35 s. Consumers still need their own `npm ci`.
++The consistency argument for one canonical `dist/` does not apply either —
++the freshness gate is green in every building job today, so the builds are
++already byte-identical, and building once on one OS would drop the
++cross-platform check that the build works on macOS too.
++
++**Revisit only if** the build step exceeds producer-job overhead by ~3×
++(a build above ~75 s against ~25 s of overhead) **and** artifact transfer
++stays under ~5 s. A build that has grown 10× is more likely a signal that
++the tree needs package boundaries than an artefact-caching opportunity.
++
++**Critical path observations — historical, as recorded 2026-05-26.** Kept
++for the trail; the two sibling workflows named below were later removed
++outright, so neither describes a job that runs today.
+ 
+ - `smoke-public-install.yml` and `tests.yml` dominate non-release-PR
+   wall-clock. Both trigger on `package.json` — a release PR (which only
+@@ -45,11 +93,13 @@ recent 50 main-branch runs.
+   macOS on every PR touching `scripts/**`. The 3.10 / 3.11 / 3.13 legs
+   are extras: they prove the supported range but rarely surface a
+   Python-version-only regression. Moved to a path-filtered sibling
+-  workflow in Phase C Step 2.
++  workflow in Phase C Step 2 — **and that workflow is now gone too**; the
++  tree carries no Python test leg (`no-python-in-src.yml` asserts the
++  absence instead).
+ - `tests.yml` `windows-lockfile-export` fired on every PR touching
+   `scripts/**` even when the PR never went near `install_global` /
+   `cmd_export`. Moved to its own path-filtered workflow in Phase C
+-  Step 1.
++  Step 1 — **also since removed**; there is no Windows leg in CI today.
+ 
+ ## Expected savings (post-optimisation)
+ 
+@@ -78,10 +128,50 @@ main-branch runs requires one of:
+ 3. An ADR superseding the ceiling for this specific job (e.g. integration
+    smoke that proves a real consumer-visible promise).
+ 
+-Current jobs above the ceiling: `smoke-public-install.yml` (413 s) —
+-ceiling violation is acknowledged. The Phase A skip on release PRs
+-mitigates it; an ADR will follow if it re-exceeds 5 min on feature PRs
+-post-Phase C.
++Current jobs above the ceiling (2026-08-11): **`tests.yml` `node-tests`
++shard 3/4**, at 645 s on ubuntu and 852 s on macOS — 2.2× and 2.8× the
++ceiling. Its sibling shards run 125–152 s, so this is not a whole-suite
++cost: `Vitest (shard 3/4)` alone accounts for 594 s of a 673 s job.
++
++**The cause is one test file, and it is not subprocess overhead.** A
++per-file duration pass over 977 files (local, `--reporter=json`; relative
++durations, not a CI baseline) put `tests/scripts/build_proof.test.ts` at
++**290 s — 19.5 % of total file-time and 8.7× the next-slowest file**. It
++spawns nothing. It called `render()` five times, and `render()` costs
++~54 s because it walks the whole claims ledger. Four of those five calls
++were redundant: the file's own first test asserts `render()` is
++deterministic, so one result can be reused. Reducing it to the two
++independent calls that determinism actually requires took the file from
++~260 s to **103 s** wall-clock.
++
++Two consequences worth keeping. The workflow comment on the shard matrix
++attributes the clump to "subprocess-heavy clusters"; for the largest
++contributor that was not true, so re-check the attribution before acting on
++it. And the remaining ~103 s is dominated by `render()` itself at 54 s a
++call — the next lever on this file is that function, not the test.
++
++`smoke-public-install.yml` was the previous entry here at 413 s and is now
++291 s, under the ceiling. No open ADR is required for it.
++
++## Measurement-only changes — kill criterion
++
++A change that re-measures and re-documents cost without altering any job,
++matrix, trigger or required check cannot be judged by whether a regression
++escaped: nothing about the pipeline's behaviour changed, so there is no
++regression class to escape. Binding such a change to an escaped-regression
++count would also require a human to attribute a post-merge failure to it,
++which is not mechanically decidable.
++
++The criterion for a measurement-only change is therefore:
++
++> **The refreshed table names every job that exists and none that does
++> not.**
++
++Decidable in one pass: every job key in the table resolves to a live job in
++`.github/workflows/`, and every job that runs on a PR appears in the table.
++A change that alters a job, a matrix dimension, a trigger surface or the
++required-check set is *not* measurement-only and does not get this
++criterion.
+ 
+ ## Quarterly review checklist
+ 
+@@ -105,7 +195,10 @@ Run the first Monday of every quarter:
+   predicates, cut surface, kept surface.
+ - [`branch-protection-policy.md`](branch-protection-policy.md) — required
+   status check floor per PR shape.
+-- `.github/workflows/python-version-sweep.yml` — extras Python versions
+-  (3.10 · 3.11 · 3.13) on Python-path PRs.
+-- `.github/workflows/windows-lockfile-export.yml` — Windows leg gated by
+-  `install_global` / `cmd_export` paths.
++- `src/scripts/ci_time_ratio.ts` — CI-time / local-edit-time ratio per
++  touched-path class, run via `task ci:time-ratio`; writes
++  `agents/reports/ci-time-ratio.json`.
++
++The two workflow pointers that stood here — a Python version sweep and a
++Windows lockfile-export leg — were removed along with their table rows on
++2026-08-11: both files are absent from `.github/workflows/`.
+diff --git a/docs/decisions/ADR-223-no-required-check-demotion-on-cost-grounds.md b/docs/decisions/ADR-223-no-required-check-demotion-on-cost-grounds.md
+new file mode 100644
+index 0000000000000000000000000000000000000000..c7c074c508f00f3b1ca9ecd9c03e0b00c48ea3f6
+--- /dev/null
++++ b/docs/decisions/ADR-223-no-required-check-demotion-on-cost-grounds.md
+@@ -0,0 +1,137 @@
++---
++adr: 223
++status: proposed
++date: 2026-08-11
++decision: no-required-check-demotion-on-cost-grounds
++supersedes: —
++superseded_by: —
++phase: road-to-inbox-harvest-2026-08-b
++type: structural
++review_trigger: >-
++  Revisit when either (a) a per-OS failure attribution exists — at least 20
++  recorded PR runs in which a macOS leg went red while its ubuntu twin stayed
++  green, or 20 in which neither did — because the demotion question is a
++  coverage question and no such record exists today, or (b) the required-status
++  check list stops being a single entry, at which point "demotion" becomes a
++  real lever rather than a description of an empty set. Nothing here expires on
++  a date: a check set is either earning its cost or it is not, and both triggers
++  are observable events rather than a calendar.
++---
++
++# ADR-223 — No required-check demotion on cost grounds; the cost is one vitest shard
++
++## Status
++
++**Proposed** · 2026-08-11. Records a decision *not* to change the required set,
++with the measurement that decided it. Acceptance is the maintainer's call. This
++record changes no enforcement by itself — it neither edits ruleset `17749383`
++nor any workflow.
++
++## Context
++
++A CI-economy pass re-measured every PR-blocking job from GitHub Actions job
++data (three most recent successful `tests.yml` runs on `main`, per-job
++durations from `/actions/runs/<id>/jobs`) and wrote the result into
++[`ci-cost-budget.md`](../contracts/ci-cost-budget.md). It planned to follow
++that measurement with a required-check demotion — specifically "the macOS leg
++and/or the `npm audit` PR gate" — and to record the demotion here.
++
++Four facts from that measurement decide the question, and three of them were
++not visible before it:
++
++1. **The required set has exactly one member.** Ruleset `17749383` requires
++   `Sync + Generate Tools Consistency` and nothing else
++   ([`branch-protection-policy.md:59`](../contracts/branch-protection-policy.md)).
++   Neither the macOS legs nor the `npm audit` gate is in it. There is no
++   demotion to perform: they are already not required, and removing them from
++   a PR would be a **trigger** change, not a required-check change.
++
++2. **The same policy document recommends the opposite direction.**
++   `branch-protection-policy.md:163` carries a "recommended minimum addition"
++   list of checks that already run and pass on every feature PR. The standing
++   proposal is to *enlarge* the required set, not shrink it.
++
++3. **The cost is not spread across the check set — it is one shard.** Of 23
++   matrix-expanded jobs, most run 45–170 s. Two do not: `node-tests` shard 3/4
++   at 645 s (ubuntu) and 852 s (macOS), against 125–152 s for its sibling
++   shards. In the slowest job, `Vitest (shard 3/4)` alone is 594 s of a 673 s
++   job; everything else — checkout, setup-node, `npm ci`, the build — totals
++   ~26 s. vitest shards by file *count*, not duration, so the
++   subprocess-spawning suites hash-clump into one shard. Demoting the macOS
++   leg would remove the 852 s job and leave the 645 s one, i.e. it would hide
++   the outlier rather than fix it.
++
++4. **The `npm audit` PR gate costs almost nothing and is already duplicated.**
++   It is a step inside `static-checks` (`tests.yml:340`), a 131 s ubuntu-only
++   job that is comfortably under the 5-minute ceiling, and the identical
++   `npm audit --omit=dev --audit-level=high` runs again in
++   `release-validation.yml:370`. Demoting it saves seconds and removes a
++   pre-merge signal whose only remaining instance fires at release time, when
++   the fix is more expensive.
++
++What the measurement does **not** contain is the thing a demotion decision
++actually needs: whether the macOS legs ever catch a regression the ubuntu legs
++miss. That is a coverage question, and nothing in the tree records per-OS
++failure attribution. The last 30 `tests.yml` runs on `main` are 20 success and
++10 cancelled with zero failures, which is expected for a post-merge branch and
++is therefore evidence of nothing either way.
++
++## Decision
++
++**No required-check demotion is proposed, and the required set stays at one
++entry.** Concretely:
++
++- The macOS legs stay on PRs. The cost case against them is really a case
++  against one over-budget shard, and the coverage case for them is unmeasured.
++- The `npm audit` PR gate stays. Its cost is inside the noise band and its
++  removal would relocate a pre-merge signal to release time.
++- Relief for the measured ceiling breach is sought in the shard clump —
++  reducing the number of subprocess-spawning test files, so the clump
++  re-balances — not in the check set. Re-sharding alone only moves the clump to
++  a different shard number.
++
++## Consequences
++
++- The over-ceiling entry in `ci-cost-budget.md` stays open and named
++  (`node-tests` shard 3/4). The contract's per-job ceiling continues to flag
++  it every quarterly review until the clump is addressed, which is the correct
++  behaviour for an unresolved cost.
++- No ruleset write happens, so `branch-protection-policy.md`,
++  `ci-green-floor.md` and `release-pr-gating.md` need no coordinated edit —
++  the three-document change those files describe is not triggered.
++- A future demotion proposal now has a stated evidence bar rather than a cost
++  argument: per-OS failure attribution, named in `review_trigger` above.
++
++## Alternatives considered
++
++**Demote the macOS legs.** Rejected: it removes the single most expensive job
++(852 s) and would look like a large saving, but the ubuntu twin of the same
++shard is still 645 s and still over the ceiling, so the breach survives the
++change. It also spends unmeasured cross-platform coverage to buy it — this
++package ships an installer whose path handling differs by OS, which is exactly
++where a macOS-only regression would live.
++
++**Demote the `npm audit` PR gate.** Rejected on the numbers: it is a step in a
++131 s job, and the same command already runs at release. The saving is inside
++runner variance.
++
++**Enlarge the required set instead**, per `branch-protection-policy.md:163`.
++Not rejected — out of scope here. It is a maintainer ruleset action and a
++different decision from the one this record was asked to make; nothing in the
++measurement argues against it.
++
++**Re-shard `node-tests` from 4 to N shards.** Rejected as a standalone fix:
++with count-based sharding the spawning cluster lands in *some* shard whatever N
++is. It becomes viable once the number of spawning files is reduced, and is
++recorded there rather than here.
++
++## References
++
++- [`docs/contracts/ci-cost-budget.md`](../contracts/ci-cost-budget.md) — the
++  re-measured baseline, the 5-minute ceiling, and the current breach.
++- [`docs/contracts/branch-protection-policy.md`](../contracts/branch-protection-policy.md)
++  — the one-entry required set (`:59`), the reported check names (`:56`), and
++  the ruleset write path (`:158`).
++- `.github/workflows/tests.yml` — `node-tests` shard matrix (`:198`),
++  `static-checks` (`:244`), the `npm audit` step (`:340`).
++- `.github/workflows/release-validation.yml:370` — the duplicate audit run.
+diff --git a/docs/decisions/INDEX.md b/docs/decisions/INDEX.md
+index 6fd2e414e48f81e85b6b61fbad14b997b8838a3a..c199561f8b6c2661591497b2d1570b9d264c7f4c 100644
+--- a/docs/decisions/INDEX.md
++++ b/docs/decisions/INDEX.md
+@@ -165,6 +165,7 @@ _Auto-generated by `src/scripts/adr/regenerate_index.ts`. Do not edit._
+ | [ADR-220](ADR-220-skill-invocation-attestation.md) | Skill Invocation Attestation | accepted | 2026-08-09 | — |
+ | [ADR-221](ADR-221-host-native-first-ladder.md) | Host Native First Ladder | proposed | 2026-08-10 | — |
+ | [ADR-222](ADR-222-blocker-handover-at-reply-close.md) | Blocker Handover At Reply Close | proposed | 2026-08-11 | — |
++| [ADR-223](ADR-223-no-required-check-demotion-on-cost-grounds.md) | No Required Check Demotion On Cost Grounds | proposed | 2026-08-11 | — |
+ 
+ ## Unnumbered (legacy)
+ 
+diff --git a/docs/development.md b/docs/development.md
+index ef8eea6d320f71de88dc470c6fc78897c7f07aa9..b5782c6281b94fba63b02454bbfc06e3de73a62f 100644
+--- a/docs/development.md
++++ b/docs/development.md
+@@ -48,30 +48,70 @@ task clean-tools               # Remove all generated tool directories
+ ### Testing
+ 
+ ```bash
+-task test                      # Run all tests (bash + Python)
+-task test-install              # Install script integration tests
+-task test-python               # Condensation and linter tests
+-task test-linter               # Skill linter unit tests
+-task test-readme-linter        # README linter unit tests
+-task test-runtime              # Runtime registry + dispatcher tests
+-task test-tools                # Tool registry + adapter tests
+-task test-runtime-all          # All runtime and tools tests
++task test                      # Full surface: bash installer tests + the TS suite
++task test-ts                   # Vitest only
++task test-install              # Install script + orchestrator bash tests
++task test-install-local        # Installer against a local checkout
++task test-triggers             # Trigger-set checks (offline)
++task test-cost-budget          # Cost-budget assertions
++npx vitest run <file>          # A single file — stays native, no task wrapper
+ ```
+ 
+ #### CI test matrix
+ 
+-GitHub Actions runs the suite on every push and PR across:
++`tests.yml` declares 6 job keys that matrix-expand to 23 jobs, all on
++Node 20:
+ 
+-| Runner | Python versions |
++| Job | Expansion |
+ |---|---|
+-| `ubuntu-latest` | 3.10, 3.11, 3.12, 3.13 |
+-| `macos-latest` | 3.12 |
+-
+-The matrix enforces the "Python 3.10+, stdlib only" guarantee from
+-`CONTRIBUTING.md`. Installer integration tests (`test_install.sh`,
+-`test_install_orchestrator.sh`) run on both Linux and macOS. Windows
+-is not part of the matrix — consumers on Windows use WSL2 (see
+-[installation guide](installation.md#windows)).
++| `install-tests` | 4 shards × 2 OS |
++| `install-aux-tests` | 2 OS |
++| `node-tests` | 2 OS × 4 shards (`tests/golden/**` and the workspace suite excluded) |
++| `static-checks` | ubuntu only — ESLint, `tsc --noEmit`, prepack |
++| `golden-tests` | 2 OS |
++| `workspace-tests` | 2 OS |
++
++Both OS legs are `ubuntu-latest` and `macos-latest`. Windows is not in
++the matrix — consumers on Windows use WSL2 (see
++[installation guide](installation.md#windows)). There is no Python leg:
++the toolchain moved to TypeScript, and `no-python-in-src.yml` now asserts
++the absence rather than testing versions.
++
++Per-job wall-clock figures and the 5-minute ceiling live in
++[`contracts/ci-cost-budget.md`](contracts/ci-cost-budget.md).
++
++#### Spawning a CLI in a test — prefer the in-process runner
++
++Many suites exercise a CLI twin by spawning it (`spawnSync` on
++`./scripts-run` or `./agent-config`). Each spawn pays roughly **350 ms of
++tsx cold start**, and the cost lands on whichever vitest shard the file
++hashes into — vitest shards by file *count*, not duration, so a cluster of
++spawning files makes one shard several times slower than its siblings.
++
++`tests/_lib/run_in_process.ts` replaces the spawn with a direct call to the
++script's exported `main(argv)`:
++
++```ts
++import { runInProc, runInProcAsync, ProcessExit } from '../_lib/run_in_process';
++
++const res = runInProc(main, ['--json'], { cwd: tmp, env: { CI: '1' } });
++expect(res.status).toBe(0);
++expect(res.stdout).toContain('…');
++```
++
++It returns `{ status, stdout, stderr }` and handles all three exit styles:
++a numeric return from `main`, a `process.exitCode` assignment, and a real
++`process.exit(N)` (caught as `ProcessExit`). `RunOpts` covers `cwd`, an
++`env` overlay, and `stdin`. It is safe because vitest forks per test file
++and runs tests within a file sequentially, so the save/restore of process
++globals cannot race.
++
++**Keep spawning where the process boundary is the thing under test.** argv
++parsing, exit codes and stdio behaviour are properties of the boundary, not
++of `main` — converting every last one deletes that coverage. The rule of
++thumb is one spawning test per CLI entry point, in-process for the rest.
++The known limitation is module-level mutable state in the imported script,
++which is shared across calls; module-level constants are fine.
+ 
+ ### Linting
+ 
+diff --git a/package.json b/package.json
+index f52dcea49c9b5bb7254999eca659b63f91268a1e..efa6727d1f1841529c910872c33406d67ddf72c6 100644
+--- a/package.json
++++ b/package.json
+@@ -77,7 +77,7 @@
+         "build:mcp-catalog": "./scripts-run src/scripts/build_mcp_catalog --write --strict",
+         "build": "npm run build:cli && npm run build:install-bundle && npm run build:hooks && npm run build:mcp-bundle && npm run build:cli-delegate && npm run build:ui",
+         "typecheck": "tsc -p tsconfig.json --noEmit && tsc -p tsconfig.scripts.json",
+-        "lint:ts": "eslint 'src/**/*.ts'",
++        "lint:ts": "eslint --cache 'src/**/*.ts'",
+         "test:ts": "vitest run",
+         "lint:publint": "publint",
+         "prepack": "npm run build && npm run build:discovery && npm run build:mcp-manifest && node src/scripts/prepack-check.mjs",
+diff --git a/src/scripts/ci_time_ratio.ts b/src/scripts/ci_time_ratio.ts
+index e89037f12ec7b66868870317437b245dc17c995c..5e1ec24d3ea56e2292706bfad1a96dc17ec1a202 100644
+--- a/src/scripts/ci_time_ratio.ts
++++ b/src/scripts/ci_time_ratio.ts
+@@ -20,7 +20,9 @@
+  * - Median ratio < 3× across all classes      → structural overhead acceptable
+  *
+  * Output: human-readable table on stdout + JSON to
+- * `agents/runtime/reports/ci-time-ratio.json`.
++ * `agents/reports/ci-time-ratio.json` — the tracked report directory, and
++ * the path `DEFAULT_OUT` has always written. This docstring named a
++ * different, untracked directory until 2026-08-11; the code never did.
+  *
+  * Usage:
+  *   node ci_time_ratio.js --limit 30
+diff --git a/taskfiles/ci-fast.yml b/taskfiles/ci-fast.yml
+index db58e10dc8fffd6609f2425885e10fbdf6cbc771..4e689e68fb95c86810d27aa2feecccc2504307c7 100644
+--- a/taskfiles/ci-fast.yml
++++ b/taskfiles/ci-fast.yml
+@@ -293,6 +293,18 @@ tasks:
+       road-to-adoption-proof-and-ci-green.md.
+     cmd: ./scripts-run src/scripts/ci_status {{.CLI_ARGS}}
+ 
++  ci:time-ratio:
++    silent: true
++    desc: |
++      Report the CI-time / local-edit-time ratio per touched-path class
++      (doc / skill / test / meta / mixed) by sampling recent commits and
++      their GitHub Actions durations. Median > 5x for a frequent class
++      means that class needs a cheaper tier; < 3x across all classes
++      means the structural overhead is acceptable. Needs `gh` auth and
++      hits the network. Writes agents/reports/ci-time-ratio.json.
++      Pass --limit N / --branch NAME / --out PATH.
++    cmd: ./scripts-run src/scripts/ci_time_ratio {{.CLI_ARGS}}
++
+   adoption:status:
+     silent: true
+     desc: |
+diff --git a/tests/scripts/build_proof.test.ts b/tests/scripts/build_proof.test.ts
+index 3d3136216f1679c7d7003a78d9282abd02d47fc8..c5f1690a5900713b9265509130b2e47442636edc 100644
+--- a/tests/scripts/build_proof.test.ts
++++ b/tests/scripts/build_proof.test.ts
+@@ -15,13 +15,25 @@ import { load_ledger } from '../../src/scripts/check_claims.js';
+ 
+ const REPO_ROOT = join(fileURLToPath(import.meta.url), '..', '..', '..');
+ 
++// `render()` costs ~54s (measured 2026-08-11): it walks the whole claims
++// ledger, and this file called it five times, making it the single slowest
++// test file in the suite at ~269s — 8.7x the next one, and enough on its own
++// to push one vitest shard over the CI per-job ceiling.
++//
++// Rendering ONCE and reusing the string is sound precisely because the first
++// test below asserts determinism: if `render()` ever stopped returning the
++// same output, that test fails and the cache cannot mask it. The determinism
++// test keeps two independent invocations — two calls IS what it measures.
++// Do not "simplify" the other tests back to calling `render()` themselves.
++const PROOF = render();
++
+ describe('build_proof — render()', () => {
+     it('is deterministic (no timestamp / stable ordering)', () => {
+-        expect(render()).toBe(render());
++        expect(render()).toBe(PROOF);
+     });
+ 
+     it('emits the required proof structure', () => {
+-        const out = render();
++        const out = PROOF;
+         expect(out).toContain('# Proof — verify our claims yourself');
+         expect(out).toContain('## See it run (< 60s, real output)');
+         expect(out).toContain('](media/proof-demo.gif)');
+@@ -38,12 +50,12 @@ describe('build_proof — render()', () => {
+     });
+ 
+     it('carries the do-not-hand-edit generated marker', () => {
+-        expect(render()).toMatch(/GENERATED by src\/scripts\/build_proof\.ts/);
++        expect(PROOF).toMatch(/GENERATED by src\/scripts\/build_proof\.ts/);
+     });
+ 
+     it('the committed docs/proof.md is in sync (drift guard)', () => {
+         const committed = readFileSync(join(REPO_ROOT, OUT_REL), 'utf8');
+-        expect(committed).toBe(render());
++        expect(committed).toBe(PROOF);
+     });
+ });
+ 
+diff --git a/tsconfig.json b/tsconfig.json
+index 7e7bdf2e25a2038cc07529c3cedef90988b1894b..314f072ffe846d925d7eb01a77a51992d7cf00a9 100644
+--- a/tsconfig.json
++++ b/tsconfig.json
+@@ -12,6 +12,8 @@
+         "esModuleInterop": true,
+         "resolveJsonModule": true,
+         "skipLibCheck": true,
++        "incremental": true,
++        "tsBuildInfoFile": ".tscache/root.tsbuildinfo",
+         "declaration": false,
+         "sourceMap": true,
+         "baseUrl": "./src",
+diff --git a/tsconfig.scripts.json b/tsconfig.scripts.json
+index 84f521d5199d392d41008b31b79a91eb9f0be47d..cdb3ce1e1bde0b72066eb216ed113f45dc223bac 100644
+--- a/tsconfig.scripts.json
++++ b/tsconfig.scripts.json
+@@ -2,7 +2,8 @@
+   "extends": "./tsconfig.json",
+   "compilerOptions": {
+     "noEmit": true,
+-    "rootDir": "."
++    "rootDir": ".",
++    "tsBuildInfoFile": ".tscache/scripts.tsbuildinfo"
+   },
+   "include": [
+     "src/scripts/**/*.ts",
+diff --git a/tsconfig.test.json b/tsconfig.test.json
+index 7c9c9ed131b1c11c3a6c1e86cc92759ed1137209..49f0ee5ae153482b33cbd68d1a2f6dc14ff7614a 100644
+--- a/tsconfig.test.json
++++ b/tsconfig.test.json
+@@ -3,6 +3,7 @@
+     "compilerOptions": {
+         "rootDir": ".",
+         "noEmit": true,
++        "tsBuildInfoFile": ".tscache/test.tsbuildinfo",
+         "lib": ["ES2022", "DOM", "DOM.Iterable"],
+         "jsx": "react-jsx",
+         "jsxImportSource": "preact",
+diff --git a/tsconfig.ui.json b/tsconfig.ui.json
+index c166f6644ae1e60755638dda7b5a02f50ff1acc3..b3dc03c8e46dab031c35845563a8f15ef457c140 100644
+--- a/tsconfig.ui.json
++++ b/tsconfig.ui.json
+@@ -4,6 +4,7 @@
+         "lib": ["ES2022", "DOM", "DOM.Iterable"],
+         "outDir": "dist/ui",
+         "rootDir": "src/ui",
++        "tsBuildInfoFile": ".tscache/ui.tsbuildinfo",
+         "jsx": "react-jsx",
+         "jsxImportSource": "preact",
+         "types": ["vite/client"]
