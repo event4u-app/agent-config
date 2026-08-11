@@ -2,12 +2,10 @@
 import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
-import { fileURLToPath } from 'node:url';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import * as mod from '../../src/scripts/build_discovery_manifest.js';
 
-const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..');
 
 // --- Layer 1: ported builder contract (tmp-fixture) -------------------------
 
@@ -382,19 +380,3 @@ describe('build_discovery_manifest — builder contract (ported from pytest)', (
         expect(sortKeys(mod._packs_view(m1))).toBe(sortKeys(mod._packs_view(m2)));
     });
 });
-const TS_SCRIPT = path.join(REPO_ROOT, 'src', 'scripts', 'build_discovery_manifest.ts');
-const VALIDATE_PY = path.join(REPO_ROOT, 'src', 'scripts', 'validate_discovery_manifest.py');
-const COMMITTED = path.join(REPO_ROOT, 'dist', 'discovery', 'discovery-manifest.json');
-const TSX_BIN = path.join(
-    REPO_ROOT,
-    'node_modules',
-    '.bin',
-    process.platform === 'win32' ? 'tsx.cmd' : 'tsx',
-);
-const big = { maxBuffer: 256 * 1024 * 1024, cwd: REPO_ROOT, encoding: 'utf8' as const };
-
-function normalizeGeneratedAt(jsonText: string): string {
-    const obj = JSON.parse(jsonText) as Record<string, unknown>;
-    obj.generated_at = '<normalised>';
-    return JSON.stringify(obj, Object.keys(obj).sort(), 2);
-}
