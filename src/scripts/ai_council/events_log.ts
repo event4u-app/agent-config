@@ -27,6 +27,7 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+import { isEnvKillSwitchActive } from '../_lib/env_kill_switch.js';
 import { isSoloConcluded, type QuorumResult } from './quorum.js';
 import type { AbsentReason } from './transport_resolver.js';
 
@@ -139,8 +140,7 @@ function _utf8Bytes(cp: number): string {
 }
 
 function _kill_switch_active(): boolean {
-    const value = process.env[_KILL_SWITCH_ENV] ?? '';
-    return !(value === '' || value === '0' || value === 'false' || value === 'False');
+    return isEnvKillSwitchActive(_KILL_SWITCH_ENV);
 }
 
 export interface AppendEventOptions {
