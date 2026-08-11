@@ -311,3 +311,8 @@ internal/bench/corpora/*.local.yaml
 
 # Worktrees
 /.worktrees/
+
+# Toolchain incremental caches: tsc --incremental buildinfo + eslint --cache.
+# Local re-run speedup only — a CI runner starts cold and has nothing to reuse.
+/.tscache/
+/.eslintcache

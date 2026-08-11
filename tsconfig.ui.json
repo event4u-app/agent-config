@@ -4,6 +4,7 @@
         "lib": ["ES2022", "DOM", "DOM.Iterable"],
         "outDir": "dist/ui",
         "rootDir": "src/ui",
+        "tsBuildInfoFile": ".tscache/ui.tsbuildinfo",
         "jsx": "react-jsx",
         "jsxImportSource": "preact",
         "types": ["vite/client"]
