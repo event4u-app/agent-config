@@ -2,14 +2,14 @@
 
 > Auto-generated — do not edit. Regenerate with `task roadmap-progress` or by running the `update_roadmap_progress` script for your install; rewritten on every roadmap create / execute / completion change (timestamp lives in git history).
 >
-> 28 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **37** open blockers, **9** need you → `agent-config gates`
+> 28 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **36** open blockers, **9** need you → `agent-config gates`
 
 ## Overall
 
-**224 / 345 steps done · 65%**
+**224 / 353 steps done · 63%**
 
 ```text
-██████████████████████████░░░░░░░░░░░░░░   65%
+█████████████████████████░░░░░░░░░░░░░░░   63%
 ```
 
 ## Open roadmaps
@@ -21,9 +21,9 @@
 | 3 | [road-to-carrier-layer-convergence.md](roadmaps/road-to-carrier-layer-convergence.md) | 3 | 8 | 2 | 3 | 0 | 3 | [1](#blockers-road-to-carrier-layer-convergence) | ██████░░░░ 60% |
 | 4 | [road-to-ci-native-release-first-run.md](roadmaps/road-to-ci-native-release-first-run.md) | 2 | 8 | 8 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 5 | [road-to-council-blind-review.md](roadmaps/road-to-council-blind-review.md) | 3 | 6 | 2 | 3 | 0 | 1 | 0 | ██████░░░░ 60% |
-| 6 | [road-to-gated-reach-followup.md](roadmaps/road-to-gated-reach-followup.md) | 1 | 12 | 12 | 0 | 0 | 0 | [1](#blockers-road-to-gated-reach-followup) | ░░░░░░░░░░ 0% |
-| 7 | [road-to-inbox-harvest-2026-08-b-ci-economy.md](roadmaps/road-to-inbox-harvest-2026-08-b-ci-economy.md) | 5 | 24 | 1 | 17 | 2 | 4 | [2](#blockers-road-to-inbox-harvest-2026-08-b-ci-economy) | █████████░ 94% |
-| 8 | [road-to-inbox-harvest-2026-08-b-council-integrity-followup.md](roadmaps/road-to-inbox-harvest-2026-08-b-council-integrity-followup.md) | 1 | 5 | 5 | 0 | 0 | 0 | [1](#blockers-road-to-inbox-harvest-2026-08-b-council-integrity-followup) | ░░░░░░░░░░ 0% |
+| 6 | [road-to-council-solo-floor-implementation.md](roadmaps/road-to-council-solo-floor-implementation.md) | 3 | 13 | 13 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+| 7 | [road-to-gated-reach-followup.md](roadmaps/road-to-gated-reach-followup.md) | 1 | 12 | 12 | 0 | 0 | 0 | [1](#blockers-road-to-gated-reach-followup) | ░░░░░░░░░░ 0% |
+| 8 | [road-to-inbox-harvest-2026-08-b-ci-economy.md](roadmaps/road-to-inbox-harvest-2026-08-b-ci-economy.md) | 5 | 24 | 1 | 17 | 2 | 4 | [2](#blockers-road-to-inbox-harvest-2026-08-b-ci-economy) | █████████░ 94% |
 | 9 | [road-to-inbox-harvest-2026-08-b-dispatch-safety.md](roadmaps/road-to-inbox-harvest-2026-08-b-dispatch-safety.md) | 4 | 21 | 13 | 1 | 1 | 6 | [1](#blockers-road-to-inbox-harvest-2026-08-b-dispatch-safety) | █░░░░░░░░░ 7% |
 | 10 | [road-to-inbox-harvest-2026-08-b-estate-lifecycle.md](roadmaps/road-to-inbox-harvest-2026-08-b-estate-lifecycle.md) | 4 | 15 | 9 | 0 | 0 | 6 | [1](#blockers-road-to-inbox-harvest-2026-08-b-estate-lifecycle) | ░░░░░░░░░░ 0% |
 | 11 | [road-to-inbox-harvest-2026-08-b-install-lifecycle.md](roadmaps/road-to-inbox-harvest-2026-08-b-install-lifecycle.md) | 2 | 13 | 1 | 6 | 0 | 6 | [1](#blockers-road-to-inbox-harvest-2026-08-b-install-lifecycle) | █████████░ 86% |
@@ -178,6 +178,16 @@
 | 2 | Re-run test on existing artifacts (minimal spend) | 🟡 in progress | 1 | 1 | 0 | 0 | 50% |
 | 3 | Landing & close | ⬜ not started | 1 | 0 | 0 | 1 | 0% |
 
+### [road-to-council-solo-floor-implementation.md](roadmaps/road-to-council-solo-floor-implementation.md)
+
+**Road to the gate-scoped solo-attendance floor** — 0 / 13 done (0%)
+
+| # | Phase | State | Open | Done | Deferred | Cancelled | % |
+|---|---|---|---:|---:|---:|---:|---:|
+| 1 | Define gate-class, before threading anything | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
+| 2 | The floor in the quorum layer | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
+| 3 | The floor's own telemetry | ⬜ not started | 7 | 0 | 0 | 0 | 0% |
+
 ### [road-to-gated-reach-followup.md](roadmaps/road-to-gated-reach-followup.md)
 
 **Follow-up to Road to gated reach — exercise the YouTube channel** — 0 / 12 done (0%)
@@ -222,27 +232,6 @@
     decide whether to enable a GitHub merge queue for `main` — a
     repo-admin setting that cannot be turned on from the tree.
   - **Resolved when:** the merge queue is enabled on `main` and at least one workflow declares a `merge_group` trigger (currently zero across `.github/`).
-
-### [road-to-inbox-harvest-2026-08-b-council-integrity-followup.md](roadmaps/road-to-inbox-harvest-2026-08-b-council-integrity-followup.md)
-
-**Follow-up to council-pass integrity** — 0 / 5 done (0%)
-
-| # | Phase | State | Open | Done | Deferred | Cancelled | % |
-|---|---|---|---:|---:|---:|---:|---:|
-| 1 | The solo-attendance floor (carried from parent Phase 1) | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
-
-<a id="blockers-road-to-inbox-harvest-2026-08-b-council-integrity-followup"></a>
-**Blockers**
-
-- **quorum-solo-floor** (owner: maintainer) — blocks 1.1 only — which is this roadmap's single step, so in practice the whole file. Nothing else here is gated; the parent's Phases 1.1–1.5, 2 and 3 shipped and are useful without it.
-  - **What to do:**
-    wait for `agents/runtime/council/events.log` to carry enough
-    `quorum_result` rows to read a solo-conclusion rate, then pick one of the
-    three pre-registered outcomes in 1.1. This is **data accumulation, not a
-    human decision** — no one has to act for the condition to clear; the check is
-    `grep -c quorum_result agents/runtime/council/events.log`. The maintainer owns
-    the *choice* once the rate exists.
-  - **Resolved when:** the rate has been read from real rows and one of (a), (b), (c) is chosen against it — or 1.1 is cancelled against the published null.
 
 ### [road-to-inbox-harvest-2026-08-b-dispatch-safety.md](roadmaps/road-to-inbox-harvest-2026-08-b-dispatch-safety.md)
 
