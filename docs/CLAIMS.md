@@ -94,9 +94,9 @@ metacharacters and repo escape, including the right-hand side of `--flag=value`.
 ### claim: surgical-uninstall
 - claim: Removes only its own keys from a shared host config (matched by JSON-pointer + SHA-256), never a neighbour tool's entries.
 - kind: qual
-- evidence: docs/contracts/install-layout.md#JSON-pointer
+- evidence: exec:vitest run tests/lib/json_pointers.test.ts -> 0
 - status: backed
-- last_verified: 2026-07-04
+- last_verified: 2026-08-11
 
 ### claim: discipline-lift-weak-host
 - claim: On a weak host (claude-haiku-4-5) the package produces a significant, placebo-controlled discipline lift on scope/downstream traps; on a strong host the same measurement is a published null — the package transplants discipline a weak model lacks, not model intelligence.
