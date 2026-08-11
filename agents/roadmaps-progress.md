@@ -6,10 +6,10 @@
 
 ## Overall
 
-**196 / 365 steps done · 54%**
+**230 / 363 steps done · 63%**
 
 ```text
-██████████████████████░░░░░░░░░░░░░░░░░░   54%
+█████████████████████████░░░░░░░░░░░░░░░   63%
 ```
 
 ## Open roadmaps
@@ -23,12 +23,12 @@
 | 5 | [road-to-council-blind-review.md](roadmaps/road-to-council-blind-review.md) | 3 | 6 | 2 | 3 | 0 | 1 | 0 | ██████░░░░ 60% |
 | 6 | [road-to-gated-reach-followup.md](roadmaps/road-to-gated-reach-followup.md) | 1 | 12 | 12 | 0 | 0 | 0 | [1](#blockers-road-to-gated-reach-followup) | ░░░░░░░░░░ 0% |
 | 7 | [road-to-inbox-harvest-2026-08-b-authoring-contract.md](roadmaps/road-to-inbox-harvest-2026-08-b-authoring-contract.md) | 6 | 25 | 15 | 0 | 1 | 9 | [1](#blockers-road-to-inbox-harvest-2026-08-b-authoring-contract) | ░░░░░░░░░░ 0% |
-| 8 | [road-to-inbox-harvest-2026-08-b-ci-economy.md](roadmaps/road-to-inbox-harvest-2026-08-b-ci-economy.md) | 5 | 24 | 17 | 4 | 2 | 1 | [2](#blockers-road-to-inbox-harvest-2026-08-b-ci-economy) | ██░░░░░░░░ 19% |
+| 8 | [road-to-inbox-harvest-2026-08-b-ci-economy.md](roadmaps/road-to-inbox-harvest-2026-08-b-ci-economy.md) | 5 | 24 | 1 | 17 | 2 | 4 | [2](#blockers-road-to-inbox-harvest-2026-08-b-ci-economy) | █████████░ 94% |
 | 9 | [road-to-inbox-harvest-2026-08-b-council-integrity.md](roadmaps/road-to-inbox-harvest-2026-08-b-council-integrity.md) | 3 | 16 | 2 | 6 | 1 | 7 | [1](#blockers-road-to-inbox-harvest-2026-08-b-council-integrity) | ████████░░ 75% |
 | 10 | [road-to-inbox-harvest-2026-08-b-dispatch-safety.md](roadmaps/road-to-inbox-harvest-2026-08-b-dispatch-safety.md) | 4 | 21 | 13 | 1 | 1 | 6 | [1](#blockers-road-to-inbox-harvest-2026-08-b-dispatch-safety) | █░░░░░░░░░ 7% |
 | 11 | [road-to-inbox-harvest-2026-08-b-estate-lifecycle.md](roadmaps/road-to-inbox-harvest-2026-08-b-estate-lifecycle.md) | 4 | 15 | 9 | 0 | 0 | 6 | [1](#blockers-road-to-inbox-harvest-2026-08-b-estate-lifecycle) | ░░░░░░░░░░ 0% |
 | 12 | [road-to-inbox-harvest-2026-08-b-install-lifecycle.md](roadmaps/road-to-inbox-harvest-2026-08-b-install-lifecycle.md) | 2 | 13 | 1 | 6 | 0 | 6 | [1](#blockers-road-to-inbox-harvest-2026-08-b-install-lifecycle) | █████████░ 86% |
-| 13 | [road-to-inbox-harvest-2026-08-b-ledger-truth.md](roadmaps/road-to-inbox-harvest-2026-08-b-ledger-truth.md) | 3 | 19 | 10 | 2 | 1 | 6 | [1](#blockers-road-to-inbox-harvest-2026-08-b-ledger-truth) | ██░░░░░░░░ 17% |
+| 13 | [road-to-inbox-harvest-2026-08-b-ledger-truth.md](roadmaps/road-to-inbox-harvest-2026-08-b-ledger-truth.md) | 3 | 19 | 1 | 12 | 0 | 6 | [1](#blockers-road-to-inbox-harvest-2026-08-b-ledger-truth) | █████████░ 92% |
 | 14 | [road-to-inbox-harvest-2026-08-b-release-integrity.md](roadmaps/road-to-inbox-harvest-2026-08-b-release-integrity.md) | 5 | 25 | 1 | 11 | 0 | 13 | [3](#blockers-road-to-inbox-harvest-2026-08-b-release-integrity) | █████████░ 92% |
 | 15 | [road-to-inbox-harvest-2026-08-b.md](roadmaps/road-to-inbox-harvest-2026-08-b.md) | 3 | 6 | 1 | 2 | 0 | 3 | [1](#blockers-road-to-inbox-harvest-2026-08-b) | ███████░░░ 67% |
 | 16 | [road-to-inbox-harvest-2026-08.md](roadmaps/road-to-inbox-harvest-2026-08.md) | 5 | 21 | 1 | 11 | 4 | 5 | [3](#blockers-road-to-inbox-harvest-2026-08) | █████████░ 92% |
@@ -226,15 +226,15 @@
 
 ### [road-to-inbox-harvest-2026-08-b-ci-economy.md](roadmaps/road-to-inbox-harvest-2026-08-b-ci-economy.md)
 
-**Road to CI Economy — cut the redundant full builds and re-anchor the cost artefacts to CI-recorded data** — 4 / 21 done (19%)
+**Road to CI Economy — cut the redundant full builds and re-anchor the cost artefacts to CI-recorded data** — 17 / 18 done (94%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
-| 0 | Re-anchor the two existing cost artefacts to CI-recorded data | ⬜ not started | 4 | 0 | 0 | 1 | 0% |
-| 1 | Free hygiene: dead filters, missing concurrency, stale comments, caches | 🟡 in progress | 3 | 4 | 0 | 0 | 57% |
-| 2 | The build fan-out: stop rebuilding the same 6 targets 13 times | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
-| 3 | The subprocess lever: extend in-process running, do not add a skill | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
-| 4 | Required-check-set changes (authored here, applied by the maintainer) | ⬜ not started | 1 | 0 | 2 | 0 | 0% |
+| 0 | Re-anchor the two existing cost artefacts to CI-recorded data | ✅ done | 0 | 4 | 0 | 1 | 100% |
+| 1 | Free hygiene: dead filters, missing concurrency, stale comments, caches | ✅ done | 0 | 7 | 0 | 0 | 100% |
+| 2 | The build fan-out: stop rebuilding the same 6 targets 13 times | ✅ done | 0 | 2 | 0 | 3 | 100% |
+| 3 | The subprocess lever: extend in-process running, do not add a skill | 🟡 in progress | 1 | 3 | 0 | 0 | 75% |
+| 4 | Required-check-set changes (authored here, applied by the maintainer) | ✅ done | 0 | 1 | 2 | 0 | 100% |
 
 <a id="blockers-road-to-inbox-harvest-2026-08-b-ci-economy"></a>
 **Blockers**
