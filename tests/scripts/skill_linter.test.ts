@@ -2383,3 +2383,93 @@ describe('skill_linter --changed — release-PR empty-scope discriminator', () =
         }
     });
 });
+
+// --- Conditional required sections (road-to-inbox-harvest-2026-08-b-authoring-contract 1.3)
+//
+// `## Security constraints` is required only of skills that ship a `scripts/`
+// directory. The third case is the load-bearing one: without it the check is
+// indistinguishable from an unconditional required-section rule.
+
+const SCRIPT_BEARING_SKILL = (extraBlocks: string): string => `---
+name: scripted
+description: "Use when generating a config file from a token set — ships a generator script and writes exactly one output path."
+source: project
+---
+
+# scripted
+
+## When to use
+
+* Generating the config from a token set
+
+## Procedure
+
+1. Inspect the existing config
+2. Generate the replacement
+3. Validate the result
+
+## Output format
+
+1. config file at the named path
+
+## Gotchas
+
+* Overwrites the target path without prompting
+
+## Do NOT
+
+* Do NOT run it bare in a project that already has a config
+${extraBlocks}`;
+
+const SECURITY_CONSTRAINTS_BLOCK = `
+## Security constraints
+
+- **What it may touch** — only the \`--output\` path it is given.
+- **What it must never do** — write anywhere else; reach the network.
+- **Default invocation** — read-only; \`--output\` makes it mutating.
+- **Outbound** — nothing.
+`;
+
+describe('skill_linter — conditional required sections', () => {
+    it('a skill with scripts/ and no Security constraints section is an error', () => {
+        const p = writeFile('skills/scripted/SKILL.md', SCRIPT_BEARING_SKILL(''));
+        writeFile('skills/scripted/scripts/generate.ts', 'export const noop = 0;\n');
+        const result = lint_file(p);
+        const hits = result.issues.filter((i) => i.code === 'missing_conditional_section');
+        expect(hits).toHaveLength(1);
+        expect(hits[0]?.severity).toBe('error');
+        expect(hits[0]?.message).toContain('Security constraints');
+        expect(hits[0]?.message).toContain('scripts/ directory');
+    });
+
+    it('the same skill with the section is clean', () => {
+        const p = writeFile('skills/scripted/SKILL.md', SCRIPT_BEARING_SKILL(SECURITY_CONSTRAINTS_BLOCK));
+        writeFile('skills/scripted/scripts/generate.ts', 'export const noop = 0;\n');
+        const result = lint_file(p);
+        expect(hasCode(result, 'missing_conditional_section')).toBe(false);
+    });
+
+    it('a skill with no scripts/ and no section is clean — the discrimination case', () => {
+        const p = writeFile('skills/unscripted/SKILL.md', SCRIPT_BEARING_SKILL(''));
+        const result = lint_file(p);
+        expect(hasCode(result, 'missing_conditional_section')).toBe(false);
+    });
+
+    it('a FILE named scripts does not trigger the check — the predicate is a directory test', () => {
+        const p = writeFile('skills/scripted/SKILL.md', SCRIPT_BEARING_SKILL(''));
+        writeFile('skills/scripted/scripts', 'not a directory\n');
+        const result = lint_file(p);
+        expect(hasCode(result, 'missing_conditional_section')).toBe(false);
+    });
+
+    it('a heading that qualifies the section still matches (prefix form)', () => {
+        const qualified = SECURITY_CONSTRAINTS_BLOCK.replace(
+            '## Security constraints',
+            '## Security constraints (runtime-safety record)',
+        );
+        const p = writeFile('skills/scripted/SKILL.md', SCRIPT_BEARING_SKILL(qualified));
+        writeFile('skills/scripted/scripts/generate.ts', 'export const noop = 0;\n');
+        const result = lint_file(p);
+        expect(hasCode(result, 'missing_conditional_section')).toBe(false);
+    });
+});
