@@ -92,16 +92,26 @@ defensible figure is the **delta of +7** over whatever the local baseline is.
       states its own rule — new fields are "a **v1 additive extension**", rows
       written before them read "like a row missing `input_tokens` — no version
       bump". Follow that rule exactly; no version bump, no required field.
-      **Shipped** as a `## Served-model attribution` section — additive, no
-      version bump, no required field, absent reads as `''`, and the field is
-      marked attribution-only so nothing routes or prices on it. **One
-      deliberate non-extension, recorded rather than silently skipped:**
-      `by_model` does NOT aggregate it. That array is keyed by the *requested*
-      model and one bucket can legitimately span several served ids, so any
-      single per-bucket value would pick one and misreport the rest — and
-      wiring an aggregation no producer feeds is the "defined but not wired"
-      surface this package has already paid for once. The divergence signal
-      lives per-dispatch in the audit log instead (1.4).
+      **Shipped — but NOT for `model_served`, and the correction is the
+      finding.** The first draft documented `model_served` here. The R2 review
+      caught it: this contract describes `agents/cost-tracking/sessions.jsonl`,
+      while the served id is written by `_serialise_response` into the **council
+      session manifest** — a different artefact with a different producer. So
+      the section documented a field no cost-summary producer writes: the exact
+      "defined but not wired" surface the step's own `by_model` reasoning
+      declined to create, reintroduced one section lower.
+      The field this contract actually gained a producer for in this change is
+      **`rate_missing`** (2.4 writes it into that JSONL), so that is what the
+      additive extension documents — plus the summary now aggregates it
+      (`rate_missing_sessions` on totals and every grouping,
+      `rate_missing_models` on totals), because a summary that silently
+      aggregates past an understated row reproduces the zero one layer up.
+      `model_served` is documented where it is recorded: the manifest row's own
+      comment, and `orchestration-telemetry.md` for the audit line.
+      **One deliberate non-extension, recorded rather than silently skipped:**
+      `by_model` does NOT aggregate the served id. That array is keyed by the
+      *requested* model and one bucket can legitimately span several served ids,
+      so any single per-bucket value would pick one and misreport the rest.
 - [x] **1.4 Assert it at the consumer that silently mis-attributes today.**
       `src/scripts/_lib/orchestration_record.ts:48-71` reads the requested tier
       for `tier_chosen`, `tier_source`, `session_tier` and the downshift

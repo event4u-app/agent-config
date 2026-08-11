@@ -33,7 +33,7 @@ fields and the telegraph-suspended-multiplier contract.
 | `totals` | object | Lifetime aggregates — see `totals` below. |
 | `by_session` | array | Per `sessionId` row; ordered by `sessionId` ascending. |
 | `by_conversation` | array | Per `conversation_id` row; ordered by `conversation_id` ascending. |
-| `by_date` | array | Per UTC calendar day (`YYYY-MM-DD`) of the row's `startedAt`; ordered ascending. A row with no or unparseable timestamp lands under `unknown`, which sorts last. **v1 additive extension.** |
+| `by_date` | array | Per UTC calendar day (`YYYY-MM-DD`) of the row's `startedAt`; ordered ascending. A row with no or unparseable timestamp lands under `unknown`, which sorts last. **v1 additive extension.** **Honest limit:** the key is the START day only, so a session spanning midnight or several days attributes its whole cost to the day it began — a day's figure is "spend from sessions that started that day", not "spend that occurred that day". Splitting a session across days would need per-message costs the source row does not carry (it keeps `startedAt`/`endedAt` and one total), so the alternative is not a better number but an invented one. |
 | `by_model` | array | Per `model` row; ordered by `model` ascending. |
 
 ## `totals` shape
@@ -120,28 +120,27 @@ model-scoped — but DOES carry the cache fields: the prompt cache itself is
 model-scoped (a cache write under one model is never read back under
 another), so a per-model cache breakdown is meaningful here.
 
-## Served-model attribution — `model_served`, a v1 additive extension
+## Unpriced rows — `rate_missing`, a v1 additive extension
 
-A recorded spend row may carry `model_served`: the model id the provider
-reported **answering** with, beside `model`, which stays the id that was
-**requested**. Keeping both is the point — on an alias or a provider
-substitution the two differ, and a row that carries only one attributes the
-spend to a model that never ran.
+A source row may carry `rate_missing` (bool) and `rate_missing_models`
+(string[]): the session contained at least one message whose model matched no
+price tier, so those messages were costed at **$0** and the row's
+`total_cost_usd` is **understated** — it is not a record of cheap work.
+Written by [`cost/track.mjs`](../../src/scripts/cost/track.mjs); token counts
+are kept untouched so the row can be re-priced once a rate exists.
 
-- **Additive per the rule above.** No version bump, no required field. A row
-  written before this extension, and any transport that reports no served id
-  (every CLI client), reads as `''` — exactly like a row missing
-  `input_tokens`.
-- **Attribution-only.** A consumer MUST NOT route, tier, or price on
-  `model_served`; `model` is what the tier decision was made against.
-- **Deliberately not aggregated into `by_model`.** That array is keyed by the
-  requested `model`, and one such bucket can legitimately span several served
-  ids, so a single per-bucket value would have to pick one and misreport the
-  rest. The divergence itself is recorded per dispatch in the audit log
-  ([`audit-log-v1`](audit-log-v1.md)) rather than summed here.
+The summary surfaces it rather than silently aggregating past it:
 
-First producer: the AI council's per-member response row
-(`src/scripts/ai_council/session.ts`, `_serialise_response`).
+- `totals.rate_missing_sessions` — how many source rows were flagged, and
+  `totals.rate_missing_models` — the sorted distinct union of the unpriced ids.
+- Every `by_session` / `by_conversation` / `by_date` / `by_model` row carries
+  its own `rate_missing_sessions` count, because the understatement propagates
+  into whichever grouping the flagged row lands in. A non-zero count on a row
+  means that row's `total_cost_usd` is a floor, not a figure.
+
+Additive per the rule below: absent on rows and summaries written before this
+extension, which read as `0` / `[]` — the same absent-reading as the cache
+fields. No version bump, no required field.
 
 ## Stability guarantees
 

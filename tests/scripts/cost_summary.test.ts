@@ -247,3 +247,67 @@ describe('cost_summary — by_date (3.2)', () => {
         expect(out['totals']!['sessions']).toBe(3);
     });
 });
+
+// ── rate_missing propagation (R2 review, finding 2) ───────────────────
+//
+// `cost/track.mjs` writes `rate_missing` into the very JSONL this schema
+// describes. Aggregating past it would report an understated total_cost_usd
+// unqualified — the same silent zero the row-level flag removes, one layer up.
+describe('cost_summary — rate_missing qualification', () => {
+    const FLAGGED = [
+        {
+            sessionId: 's1',
+            conversation_id: 'c1',
+            model: 'mystery-model',
+            total_cost_usd: 0,
+            input_tokens: 100,
+            startedAt: '2026-08-10T10:00:00.000Z',
+            rate_missing: true,
+            rate_missing_models: ['mystery-model'],
+        },
+        {
+            sessionId: 's2',
+            conversation_id: 'c2',
+            model: 'claude-sonnet-4-5',
+            total_cost_usd: 3,
+            input_tokens: 100,
+            startedAt: '2026-08-10T11:00:00.000Z',
+        },
+    ];
+
+    it('counts flagged rows and unions their unpriced ids on totals', () => {
+        const totals = (aggregate(FLAGGED) as Record<string, Record<string, unknown>>)['totals']!;
+        expect(totals['rate_missing_sessions']).toBe(1);
+        expect(totals['rate_missing_models']).toEqual(['mystery-model']);
+    });
+
+    it('propagates the count into every grouping the flagged row lands in', () => {
+        const out = aggregate(FLAGGED) as Record<string, unknown>;
+        const pick = (arr: string, key: string) =>
+            (out[arr] as Array<Record<string, unknown>>).find(
+                (r) => r['key'] === key || r['model'] === key,
+            )!;
+        expect(pick('by_session', 's1')['rate_missing_sessions']).toBe(1);
+        expect(pick('by_session', 's2')['rate_missing_sessions']).toBe(0);
+        expect(pick('by_conversation', 'c1')['rate_missing_sessions']).toBe(1);
+        expect(pick('by_model', 'mystery-model')['rate_missing_sessions']).toBe(1);
+        // Both rows share a day, so the day bucket is qualified too.
+        expect(pick('by_date', '2026-08-10')['rate_missing_sessions']).toBe(1);
+    });
+
+    it('an unflagged corpus reads 0 / [] — the same absent-reading as the cache fields', () => {
+        const totals = (aggregate(SAMPLE_ROWS) as Record<string, Record<string, unknown>>)['totals']!;
+        expect(totals['rate_missing_sessions']).toBe(0);
+        expect(totals['rate_missing_models']).toEqual([]);
+    });
+
+    it('a malformed rate_missing_models field is skipped, never coerced or thrown on', () => {
+        const rows = [
+            { sessionId: 's', model: 'm', total_cost_usd: 0, rate_missing: true, rate_missing_models: 'not-a-list' },
+            { sessionId: 't', model: 'm', total_cost_usd: 0, rate_missing: true, rate_missing_models: [42, '', 'real-id'] },
+        ];
+        const totals = (aggregate(rows) as Record<string, Record<string, unknown>>)['totals']!;
+        expect(totals['rate_missing_sessions']).toBe(2);
+        expect(totals['rate_missing_models']).toEqual(['real-id']);
+    });
+});

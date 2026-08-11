@@ -193,9 +193,12 @@ function _serialise_response(r: CouncilResponse): Record<string, unknown> {
         // it. `model_served` is what the provider reported answering with, so a
         // silent alias or substitution is visible instead of being recorded as
         // the model that never ran. Attribution-only: no consumer routes on it.
-        // A v1 additive extension per `cost-summary-schema`:60-62 — rows
-        // written before it, and transports that report no served id, read as
-        // `''`; no version bump, no required field.
+        //
+        // Additive on the MANIFEST's own response row, which is this artefact —
+        // NOT a `cost-summary/v1` field: that contract describes
+        // `agents/cost-tracking/sessions.jsonl`, a different file with a
+        // different producer. Absent on manifests written before this, and `''`
+        // for every transport that reports no served id.
         model_served: r.model_served,
         input_tokens: r.input_tokens,
         output_tokens: r.output_tokens,

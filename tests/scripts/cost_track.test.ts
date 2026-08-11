@@ -1,8 +1,8 @@
 // Tests for src/scripts/cost/track.mjs — the `rate_missing` flag
 // (inbox-harvest-2026-08-b-ledger-truth 2.4).
 //
-// `costForUsage` returns 0 whenever `modelTier()` reports `unknown`. That zero
-// is byte-identical to a genuinely free message, so a session containing an
+// `costForUsage` returns 0 for any tier PRICING has no row for. That zero is
+// byte-identical to a genuinely free message, so a session containing an
 // unrecognised model reported a total that was understated with no warning and
 // no flag anywhere. These tests pin the flag, the stderr warning, and — the
 // part that makes a later backfill possible at all — that the token counts
@@ -114,5 +114,47 @@ describe('cost/track.mjs — rate_missing', () => {
     it('reports every unpriced id, sorted — a backfill needs the whole set', () => {
         const { summary } = runTrack(['zeta-model', 'alpha-model', 'zeta-model']);
         expect(summary['rate_missing_models']).toEqual(['alpha-model', 'zeta-model']);
+    });
+});
+
+// ── review repairs (R2 findings 3 and 4) ─────────────────────────────
+describe('cost/track.mjs — rate_missing does not cry wolf', () => {
+    /** Build a fixture whose assistant record carries usage with zero tokens. */
+    function runZeroToken(model: string) {
+        const home = fs.mkdtempSync(path.join(os.tmpdir(), 'track-zero-'));
+        tmps.push(home);
+        const trackCwd = '/work/proj';
+        const dir = path.join(home, '.claude', 'projects', trackCwd.replace(/[/.]/g, '-'));
+        fs.mkdirSync(dir, { recursive: true });
+        fs.writeFileSync(
+            path.join(dir, 'sess.jsonl'),
+            JSON.stringify({
+                type: 'assistant',
+                sessionId: 'z',
+                cwd: trackCwd,
+                timestamp: '2026-08-11T10:00:00.000Z',
+                requestId: 'r0',
+                message: { id: 'm0', model, usage: { input_tokens: 0, output_tokens: 0 } },
+            }) + '\n',
+            'utf8',
+        );
+        const out = path.join(home, 's.json');
+        const r = spawnSync(process.execPath, [TRACK], {
+            env: { ...process.env, HOME: home, TRACK_CWD: trackCwd, TRACK_OUT: out, TRACK_DRY_RUN: '1', TRACK_QUIET: '1' },
+            encoding: 'utf8',
+        });
+        return { summary: JSON.parse(fs.readFileSync(out, 'utf8')) as Record<string, unknown>, stderr: r.stderr ?? '' };
+    }
+
+    it('a zero-token message with an unknown model is NOT flagged — it costs nothing at any rate', () => {
+        const { summary, stderr } = runZeroToken('some-unpriced-model');
+        expect(summary['rate_missing']).toBe(false);
+        expect(summary['rate_missing_models']).toEqual([]);
+        expect(stderr).not.toContain('rate_missing');
+    });
+
+    it('a message with real tokens and an unknown model still IS flagged', () => {
+        const { summary } = runTrack(['some-unpriced-model']);
+        expect(summary['rate_missing']).toBe(true);
     });
 });

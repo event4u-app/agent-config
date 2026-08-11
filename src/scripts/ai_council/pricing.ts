@@ -73,7 +73,11 @@ export function lookup(table: PriceTable, provider: string, model: string): Pric
     if (exact !== undefined) {
         return exact;
     }
-    const prefix = `${provider} `;
+    // Derived from `priceKey`, never hand-rebuilt: it owns the composite-key
+    // encoding, and a second copy here would let a separator change follow the
+    // exact-match path while this loop silently matched nothing — regressing to
+    // the very silent zero the fallback exists to remove.
+    const prefix = priceKey(provider, '');
     let best: Price | null = null;
     let bestLen = -1;
     for (const [key, price] of table.prices) {

@@ -72,6 +72,13 @@ interface KvBucket {
     cache_read_input_tokens: number;
     cache_creation_input_tokens: number;
     telegraph_delta_tokens: number;
+    // Source rows whose `total_cost_usd` is a FLOOR, not a figure: at least
+    // one message priced at $0 for want of a rate (`cost/track.mjs`
+    // `rate_missing`). Carried into every grouping because the understatement
+    // travels with the row — a summary that aggregates past it reports the
+    // silent zero one layer up, which is the defect the row-level flag exists
+    // to remove.
+    rate_missing_sessions: number;
 }
 
 function _zero_kv(): KvBucket {
@@ -83,6 +90,7 @@ function _zero_kv(): KvBucket {
         cache_read_input_tokens: 0,
         cache_creation_input_tokens: 0,
         telegraph_delta_tokens: 0,
+        rate_missing_sessions: 0,
     };
 }
 
@@ -96,6 +104,7 @@ interface ModelBucket {
     // cache itself is model-scoped — see pricing.ts), so by_model carries it.
     cache_read_input_tokens: number;
     cache_creation_input_tokens: number;
+    rate_missing_sessions: number;
 }
 
 function _zero_model(): ModelBucket {
@@ -106,6 +115,7 @@ function _zero_model(): ModelBucket {
         output_tokens: 0,
         cache_read_input_tokens: 0,
         cache_creation_input_tokens: 0,
+        rate_missing_sessions: 0,
     };
 }
 
@@ -156,6 +166,7 @@ export function aggregate(rows: Row[]): Json {
     const by_conv = new Map<string, KvBucket>();
     const by_model = new Map<string, ModelBucket>();
     const by_date = new Map<string, KvBucket>();
+    const rate_missing_models = new Set<string>();
     const totals = _zero_kv();
 
     for (const row of rows) {
@@ -168,6 +179,12 @@ export function aggregate(rows: Row[]): Json {
         const cread = _int(row['cache_read_input_tokens']);
         const cwrite = _int(row['cache_creation_input_tokens']);
         const delta = _delta(row);
+        // A row is understated when its producer says so. `_pyTruthy` keeps the
+        // absent-reading identical to every other additive field: no flag → 0.
+        const rateMissing = _pyTruthy(row['rate_missing']) ? 1 : 0;
+        for (const id of _strList(row['rate_missing_models'])) {
+            rate_missing_models.add(id);
+        }
 
         const sessBucket = _getOr(by_sess, sid, _zero_kv);
         const convBucket = _getOr(by_conv, cid, _zero_kv);
@@ -180,6 +197,7 @@ export function aggregate(rows: Row[]): Json {
             bucket.cache_read_input_tokens += cread;
             bucket.cache_creation_input_tokens += cwrite;
             bucket.telegraph_delta_tokens += delta;
+            bucket.rate_missing_sessions += rateMissing;
         }
         const m = _getOr(by_model, model, _zero_model);
         m.sessions += 1;
@@ -188,6 +206,7 @@ export function aggregate(rows: Row[]): Json {
         m.output_tokens += otok;
         m.cache_read_input_tokens += cread;
         m.cache_creation_input_tokens += cwrite;
+        m.rate_missing_sessions += rateMissing;
     }
 
     return {
@@ -208,6 +227,10 @@ export function aggregate(rows: Row[]): Json {
                 totals.cache_read_input_tokens,
                 totals.cache_creation_input_tokens,
             ),
+            // The understated-cost qualification, surfaced instead of
+            // aggregated past: a non-zero count means total_cost_usd is a floor.
+            rate_missing_sessions: totals.rate_missing_sessions,
+            rate_missing_models: [...rate_missing_models].sort(),
         },
         by_session: _sortedEntries(by_sess).map(([k, v]) => ({
             key: k,
@@ -218,6 +241,7 @@ export function aggregate(rows: Row[]): Json {
             cache_read_input_tokens: v.cache_read_input_tokens,
             cache_creation_input_tokens: v.cache_creation_input_tokens,
             telegraph_delta_tokens: v.telegraph_delta_tokens,
+            rate_missing_sessions: v.rate_missing_sessions,
         })),
         by_conversation: _sortedEntries(by_conv).map(([k, v]) => ({
             key: k,
@@ -228,6 +252,7 @@ export function aggregate(rows: Row[]): Json {
             cache_read_input_tokens: v.cache_read_input_tokens,
             cache_creation_input_tokens: v.cache_creation_input_tokens,
             telegraph_delta_tokens: v.telegraph_delta_tokens,
+            rate_missing_sessions: v.rate_missing_sessions,
         })),
         // Ordered by date ascending — `_sortedEntries` is codepoint order, and
         // ISO `YYYY-MM-DD` sorts chronologically under it. `'unknown'` sorts
@@ -242,6 +267,7 @@ export function aggregate(rows: Row[]): Json {
             cache_read_input_tokens: v.cache_read_input_tokens,
             cache_creation_input_tokens: v.cache_creation_input_tokens,
             telegraph_delta_tokens: v.telegraph_delta_tokens,
+            rate_missing_sessions: v.rate_missing_sessions,
         })),
         by_model: _sortedEntries(by_model).map(([k, v]) => ({
             model: k,
@@ -251,6 +277,7 @@ export function aggregate(rows: Row[]): Json {
             output_tokens: v.output_tokens,
             cache_read_input_tokens: v.cache_read_input_tokens,
             cache_creation_input_tokens: v.cache_creation_input_tokens,
+            rate_missing_sessions: v.rate_missing_sessions,
         })),
     };
 }
@@ -280,6 +307,19 @@ function _str(value: unknown): string {
         return value ? 'True' : 'False';
     }
     return String(value);
+}
+
+/**
+ * Read a list-of-strings field defensively — absent, wrong-typed, or holding
+ * non-string members all read as "nothing to add" rather than throwing or
+ * coercing. A summary must never fail on a malformed source row; it skips it,
+ * exactly as `_load` skips an unparseable line.
+ */
+function _strList(value: unknown): string[] {
+    if (!Array.isArray(value)) {
+        return [];
+    }
+    return value.filter((v): v is string => typeof v === 'string' && v.length > 0);
 }
 
 /** Mirror `int(row.get(k) or 0)` — falsy → 0; numeric/string → truncated int. */

@@ -64,6 +64,14 @@ function modelTier(model) {
 // warns once on stderr — the alternative (throwing) would lose a whole session
 // of real token counts over one unrecognised model id. Token counts are kept
 // untouched precisely so a later re-pricing pass can backfill the cost.
+// Every token class that costs money. A record where this is 0 costs 0 at any
+// rate, so a missing rate cannot understate it.
+function billableTokens(u) {
+  if (!u) return 0;
+  return (u.input_tokens || 0) + (u.output_tokens || 0)
+       + (u.cache_creation_input_tokens || 0) + (u.cache_read_input_tokens || 0);
+}
+
 function costForUsage(tier, u) {
   const p = PRICING[tier];
   if (!p || !u) return 0;
@@ -195,7 +203,15 @@ function summarizeSession(files) {
       const tier = modelTier(model);
       const u = usageTokens(m.message.usage);
       const cost = costForUsage(tier, u);
-      if (tier === 'unknown') rateMissingModels.add(model);
+      // Key on the ACTUAL zero condition — `!PRICING[tier]`, what
+      // costForUsage returns 0 on — not on `tier === 'unknown'`. The two
+      // coincide only because `unknown` is today the sole tier modelTier()
+      // returns that PRICING lacks; adding a vendor family without a rate row
+      // would otherwise restore the exact silent zero this flag removes.
+      // The usage guard keeps the flag worth reading: a message with no
+      // billable tokens costs nothing at any rate, so flagging it would claim
+      // an understatement that is not there.
+      if (!PRICING[tier] && billableTokens(u) > 0) rateMissingModels.add(model);
 
       const slot = byModel[model] || { tier, input_tokens: 0, output_tokens: 0,
         cache_creation_input_tokens: 0, cache_read_input_tokens: 0, messages: 0, cost_usd: 0 };

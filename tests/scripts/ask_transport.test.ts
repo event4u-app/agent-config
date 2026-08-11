@@ -357,3 +357,35 @@ describe('askOnce — served-model attribution reaches the audit line', () => {
         expect(o['model_divergent']).toBeNull();
     });
 });
+
+// ── the sentinel must not become an id (R2 review, finding 6) ─────────
+describe('askOnce — the unknown-model sentinel never reaches the audit line', () => {
+    it('records model_requested null, so a missing id cannot fabricate a divergence', async () => {
+        const noModel = {
+            name: 'anthropic',
+            ask: () =>
+                new CouncilResponse({
+                    provider: 'anthropic',
+                    model: undefined as unknown as string,
+                    model_served: 'claude-sonnet-4-5-20260101',
+                    text: 'the answer',
+                }),
+        } as unknown as ExternalAIClient;
+
+        const dir = path.join(tmp, 'audit-sentinel');
+        const result = await askOnce('q?', {
+            members: [noModel],
+            auditDir: dir,
+            now: () => new Date('2026-08-11T12:00:00Z'),
+            id: () => 'ask-sentinel',
+        });
+        // The public result keeps its sentinel — that shape is unchanged.
+        expect(result!.model).toBe('unknown');
+
+        const o = auditLines(dir)[0]!['orchestration'] as Record<string, unknown>;
+        expect(o['model_requested']).toBeNull();
+        // A served id IS present, so a naive comparison would have said `true`.
+        expect(o['model_served']).toBe('claude-sonnet-4-5-20260101');
+        expect(o['model_divergent']).toBeNull();
+    });
+});
