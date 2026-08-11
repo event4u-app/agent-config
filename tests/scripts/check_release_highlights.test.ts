@@ -7,16 +7,22 @@
  *   - correctly curated head → green
  *   - empty span with `_none_` everywhere → green
  */
-import { describe, expect, it } from 'vitest';
+import * as fs from 'node:fs';
+import * as os from 'node:os';
+import * as path from 'node:path';
+
+import { describe, expect, it, vi } from 'vitest';
 
 import {
     _parse_git_log,
     derive_categories,
     HEAD_LABELS,
     highlight_contradictions,
+    main,
     parse_curated_head,
     type SpanCommit,
 } from '../../src/scripts/check_release_highlights.js';
+import { DERIVED_MARKER } from '../../src/scripts/_lib/release_highlights.js';
 import { render_release_head } from '../../src/scripts/release.js';
 
 const SHA = 'a'.repeat(40);
@@ -109,6 +115,62 @@ describe('derive_categories — per-label rules', () => {
             commit({ subject: 'fix(security)!: everything at once — known limitation' }),
         ]);
         expect(derived['Known limitations']).toEqual([]);
+    });
+});
+
+describe('draft head cadence — the decision this fixture makes a one-line diff', () => {
+    /**
+     * `HEAD..HEAD` is empty by construction and needs no tag, so the span is
+     * the same on a shallow CI checkout as it is locally. An empty span
+     * derives no categories, which isolates the draft-marker branch: whatever
+     * this asserts about the exit code is owned by that branch alone.
+     */
+    function runOnDraftHead(): { code: number; stdout: string } {
+        const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'release-head-'));
+        const changelog = path.join(dir, 'CHANGELOG.md');
+        const head = render_release_head({
+            'Behaviour changes': `${DERIVED_MARKER} rule/schema diffs in abc1234.`,
+        }).join('\n');
+        fs.writeFileSync(changelog, `## [9.99.0](https://example.invalid) (2026-01-01)\n\n${head}\n`);
+        let stdout = '';
+        const spy = vi
+            .spyOn(process.stdout, 'write')
+            .mockImplementation((chunk: string | Uint8Array): boolean => {
+                stdout += String(chunk);
+                return true;
+            });
+        try {
+            const code = main([
+                '--version',
+                '9.99.0',
+                '--from',
+                'HEAD',
+                '--to',
+                'HEAD',
+                '--changelog',
+                changelog,
+            ]);
+            return { code, stdout };
+        } finally {
+            spy.mockRestore();
+            fs.rmSync(dir, { recursive: true, force: true });
+        }
+    }
+
+    it('a surviving draft marker warns and does NOT red the build', () => {
+        const { code, stdout } = runOnDraftHead();
+        expect(code).toBe(0);
+        expect(stdout).toContain('auto-derived head line(s) not yet rewritten for 9.99.0');
+        expect(stdout).toContain('Behaviour changes');
+        expect(stdout).toContain('advisory, not blocking');
+    });
+
+    it('the draft marker is not itself a contradiction', () => {
+        const curated = {
+            ...ALL_NONE,
+            'Behaviour changes': `${DERIVED_MARKER} rule/schema diffs in abc1234.`,
+        };
+        expect(highlight_contradictions(curated, derive_categories([]))).toEqual([]);
     });
 });
 
