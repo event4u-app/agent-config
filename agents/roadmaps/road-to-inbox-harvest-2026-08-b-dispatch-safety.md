@@ -98,16 +98,35 @@ binds. Only a third detector is missing, and the soak stays.
       auditor, or an auditor that cannot run the project's own tests. Maintainer
       decision, not an agent edit.
       <!-- verify: grep -n 'tools:' .claude/agents/production-validator.md -->
-- [ ] **1.3 Extend the existing safety linter to the subagent corpus and key.** Add
-      `src/subagents` to the roots at `lint_skill_frontmatter_safety.ts:261` and teach
-      `_scan` the subagent `tools:` key so the `_BARE_BASH` finding at `:220` reaches it.
-      The false-positive class is empty by construction: the key can only hold values
-      the 1.1 schema admits, and a bare `Bash` is what `tool-safety.md:40` names as
-      over-broad.
+- [x] **1.3 Extend the existing safety linter to the subagent corpus and key.** Both
+      halves were **already shipped** — `src/subagents` is the fourth scan root and
+      `_RE_TOOLS_KEY` reads the top-level subagent `tools:` key, so the finding
+      reaches the file and is disposed there by a committed `security-lint: allow`
+      pragma rather than suppressed by blindness. **But verifying it with this
+      step's own command read the opposite of the truth, and that was a live
+      defect:** `security_lint.report` printed a hardcoded `DEFAULT_SCAN_ROOTS`
+      note, so this gate announced `scanned src/skills, src/rules, src/agent-src,
+      src/domains, dist/agent-src` — claiming two roots it never reads and omitting
+      `src/subagents`, the one root the over-broad-grant check exists for. Fixed at
+      the source: `report` takes an optional `scanned_roots` and the note names the
+      corpus actually walked, the same contract `_lib/scan_scope.reportScanned`
+      already holds. **Sibling search — the exact construct is `sl.report(...)`
+      called by a gate whose real roots differ from `DEFAULT_SCAN_ROOTS`: 2 of 5
+      callers matched** (`lint_skill_frontmatter_safety.ts:350` replaces the set,
+      `lint_mcp_config_security.ts:242` appends `src/templates`); the other three
+      (`lint_confusables`, `lint_hidden_unicode`, `lint_instruction_smuggling`) pass
+      `DEFAULT_SCAN_ROOTS` verbatim and were already truthful. Both divergent sites
+      now pass their real roots. Five specs pin the property "the note equals the
+      roots passed, for any roots" plus the empty-list and no-argument fallbacks.
       <!-- verify: ./scripts-run src/scripts/lint_skill_frontmatter_safety -->
-- [ ] **1.4 Record the contract change as an ADR-109 amendment note** — one paragraph in
-      `docs/decisions/ADR-109-subagent-v1-contract.md` stating that the enum now admits
-      scoped grants and why that is additive. Doc-only.
+- [x] **1.4 Record the contract change as an ADR-109 amendment note** — landed as
+      Amendment 4, in the shape the file's three existing amendments already use
+      (additive, explicit "no `status: accepted` change"). It records three things
+      rather than one: that the pattern is additive because every previously valid
+      value still validates and the base token stays closed; that expressible is
+      not mandatory, with 1.2's argument as the worked case; and which detector
+      reads the field, so the contract names its own enforcement instead of
+      implying it. Doc-only.
 - [-] **1.5 Host-flag compiler (`--allowedTools` / `--max-turns` / `--model`) and an
       NDJSON `stream-json` driver — cancelled, no call site.**
       `src/scripts/_lib/subagent_spawn.ts:1-12` is declared "Pure, no-I/O" brief
@@ -173,13 +192,32 @@ binds. Only a third detector is missing, and the soak stays.
 
 ## Phase 4 — Roles, lifecycles, and the two residues
 
-- [ ] **4.1 Rate-cap self-repair complaint creation per source.** `upsertFinding`
-      (`src/scripts/_lib/self_repair_store.ts:84-89`) folds on fingerprint (`:85`), but
-      the only cap in the module pair is `MAX_EVIDENCE = 160`
-      (`src/scripts/_lib/self_repair.ts:94`) — a cap on evidence *length*, not on record
-      creation. Roughly ten lines. Note: the bundle calls this function `openOrMerge`,
-      which does not exist; the exports are at `:18-110`.
-      <!-- verify: task test -- --filter=self_repair -->
+- [x] **4.1 Rate-cap self-repair complaint creation per source.** Shipped as
+      `creationCapReached` / `recentCreations` in the pure half (20 new records per
+      source per rolling 24 h, counted on `first_seen` so folding an old record
+      never consumes budget) with `upsertFinding` returning `DefectRecord | null`.
+      **The step's premise was true and its consequence was not, so the cap's
+      justification is re-derived rather than inherited.** "No creation cap
+      exists" is correct; "therefore records grow unbounded" is much weaker than
+      it reads, because `fingerprint` hashes a *shape* — digits → `#`, quotes and
+      punctuation stripped, case-folded — so spans differing only in numbers or
+      punctuation are already ONE record. Measured: twenty findings varying only a
+      counter produced **one** record, and a first version of the cap's own test
+      exercised nothing for exactly that reason. What genuinely mints records is
+      distinct WORDS, so the real runaway is the `self-detected` path, where a
+      detector quotes a fresh span from every offending turn and one underlying
+      defect becomes dozens of records. That is the case the cap bounds; a
+      user-reported complaint in genuinely different words is a different
+      complaint and correctly gets its own record.
+      **Deviation, deliberate:** the step said ~10 lines, and a bare cap would
+      have been. A cap that discards a report and says nothing would break this
+      loop's own Iron Law ("queued and fixed — never shrugged off") in the act of
+      bounding it, so a refusal increments a per-source counter in a single
+      `_overflow.json` — bounded by construction, not a `DefectRecord`, so it
+      needs no `DefectClass` and no issue-form entry — and `self-repair:status`
+      prints the tally whenever it is non-zero. Eight specs, including the
+      digit-folding boundary the first version got wrong.
+      <!-- verify: npx vitest run tests/scripts/self_repair.test.ts -->
 - [ ] **4.2 Quarantine a stale findings artefact before a revision re-dispatch.**
       `src/scripts/dispatch_r2_reviewer.ts:298-307` already owns the single review-scope
       hash both dispatcher and validator bind to (contract §2.1, cited at `:32`); reuse
