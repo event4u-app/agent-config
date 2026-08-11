@@ -125,7 +125,7 @@ describe('session.save — absent_members / quorum (Phase 3.2/3.3)', () => {
         });
         const dir = save({ manifest, responses: [], sessions_dir: base, retention_days: 0 });
         const payload = readManifest(dir);
-        expect(payload['quorum']).toEqual({ status: 'inconclusive', threshold: 1, total: 2, present: 0 });
+        expect(payload['quorum']).toEqual({ status: 'inconclusive', threshold: 1, total: 2, present: 0, heldByFloor: false });
     });
 
     it('a caller-supplied `extra` key still wins over the new fields on a name collision', () => {

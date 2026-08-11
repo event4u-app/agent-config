@@ -702,14 +702,14 @@ describe('render — absent_members / quorum sections (Phase 3.2/3.3)', () => {
 
     it('a concluded quorum renders a plain one-liner', () => {
         const out = render(rs, {
-            quorum: { status: 'concluded', threshold: 1, total: 2, present: 2 },
+            quorum: { status: 'concluded', threshold: 1, total: 2, present: 2, heldByFloor: false },
         });
         expect(out).toContain('**Quorum:** 2/2 present, needed 1 — concluded.');
     });
 
     it('an inconclusive quorum visibly names the release-gate hold', () => {
         const out = render(rs, {
-            quorum: { status: 'inconclusive', threshold: 1, total: 2, present: 0 },
+            quorum: { status: 'inconclusive', threshold: 1, total: 2, present: 0, heldByFloor: false },
         });
         expect(out).toContain('INCONCLUSIVE — release gate holds');
     });
@@ -718,7 +718,7 @@ describe('render — absent_members / quorum sections (Phase 3.2/3.3)', () => {
         // The whole defect: 1-of-2 concludes, and without this marker the
         // rendered pass is indistinguishable from 2-of-2.
         const out = render(rs, {
-            quorum: { status: 'concluded', threshold: 1, total: 2, present: 1 },
+            quorum: { status: 'concluded', threshold: 1, total: 2, present: 1, heldByFloor: false },
         });
         expect(out).toContain('**Quorum:** 1/2 present, needed 1 — concluded.');
         expect(out).toContain('**solo** — one voice concluded this pass');
@@ -726,21 +726,21 @@ describe('render — absent_members / quorum sections (Phase 3.2/3.3)', () => {
 
     it('full attendance carries NO solo marker', () => {
         const out = render(rs, {
-            quorum: { status: 'concluded', threshold: 1, total: 2, present: 2 },
+            quorum: { status: 'concluded', threshold: 1, total: 2, present: 2, heldByFloor: false },
         });
         expect(out).not.toContain('solo');
     });
 
     it('an inconclusive pass is never marked solo, however few were present', () => {
         const out = render(rs, {
-            quorum: { status: 'inconclusive', threshold: 2, total: 3, present: 1 },
+            quorum: { status: 'inconclusive', threshold: 2, total: 3, present: 1, heldByFloor: false },
         });
         expect(out).not.toContain('solo');
     });
 
     it('quorum renders before the absent-members section when both are present', () => {
         const out = render(rs, {
-            quorum: { status: 'inconclusive', threshold: 1, total: 2, present: 0 },
+            quorum: { status: 'inconclusive', threshold: 1, total: 2, present: 0, heldByFloor: false },
             absent_members: [{ member: 'openai', reason: 'timeout', detail: 'call timed out' }],
         });
         const quorumIdx = out.indexOf('**Quorum:**');
@@ -786,11 +786,11 @@ describe('render — handoff section (Phase 4.1)', () => {
         // are supplied — closest to the synthesis it was extracted from.
         expect(render(rs, {
             handoff: { decision: 'x', rejected_alternatives: null, constraints: null },
-            quorum: { status: 'concluded', threshold: 1, total: 1, present: 1 },
+            quorum: { status: 'concluded', threshold: 1, total: 1, present: 1, heldByFloor: false },
         }).indexOf('### Handoff')).toBeLessThan(
             render(rs, {
                 handoff: { decision: 'x', rejected_alternatives: null, constraints: null },
-                quorum: { status: 'concluded', threshold: 1, total: 1, present: 1 },
+                quorum: { status: 'concluded', threshold: 1, total: 1, present: 1, heldByFloor: false },
             }).indexOf('**Quorum:**'),
         );
         expect(quorumIdx).toBe(-1); // this render() call passed no quorum option

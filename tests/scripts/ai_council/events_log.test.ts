@@ -15,7 +15,10 @@ import {
     appendQuorumEvent,
     defaultLogPath,
 } from '../../../src/scripts/ai_council/events_log.js';
-import { evaluateQuorum } from '../../../src/scripts/ai_council/quorum.js';
+import {
+    evaluateQuorum,
+    GATE_CLASS_ATTENDANCE_FLOOR,
+} from '../../../src/scripts/ai_council/quorum.js';
 
 const created: string[] = [];
 function tmpDir(): string {
@@ -126,7 +129,7 @@ describe('events_log — write + schema', () => {
 });
 
 
-describe('events_log — quorum attendance (schema v2)', () => {
+describe('events_log — quorum attendance (schema v3)', () => {
     function readOne(lp: string): Record<string, unknown> {
         return JSON.parse(fs.readFileSync(lp, 'utf-8').trim()) as Record<string, unknown>;
     }
@@ -139,14 +142,19 @@ describe('events_log — quorum attendance (schema v2)', () => {
         dispatch: 'full',
     } as const;
 
-    it('pins the on-wire schema version at 2', () => {
+    it('pins the on-wire schema version at 3', () => {
         // Deliberately a literal, not the constant: this module's whole
         // contract is a versioned wire format, and an assertion written
         // against SCHEMA_VERSION is tautological — it passes whatever the
         // constant becomes. A bump has to break a test on purpose.
+        //
+        // 2 → 3 on 2026-08-11: `quorum_result` gained `held_by_floor`
+        // (ADR-224). This test broke on purpose and was updated as part of that
+        // change, which is the mechanism working rather than a ratchet being
+        // loosened — every v2 field kept its name, type and position.
         const lp = path.join(tmpDir(), 'wire.log');
         appendEvent({ action: 'proceed' }, { logPath: lp, now: FIXED });
-        expect(readOne(lp).schema_version).toBe(2);
+        expect(readOne(lp).schema_version).toBe(3);
     });
 
     it('writes a quorum_result line carrying the attendance shape', () => {
@@ -175,8 +183,45 @@ describe('events_log — quorum attendance (schema v2)', () => {
         expect(rec.total).toBe(2);
         expect(rec.present).toBe(1);
         expect(rec.solo).toBe(true);
+        expect(rec.held_by_floor).toBe(false);
         expect(rec.absent).toEqual([{ member: 'openai', reason: 'quota' }]);
         expect(rec.schema_version).toBe(SCHEMA_VERSION);
+    });
+
+    it('held_by_floor separates a floor-held pass from a threshold never met (ADR-224)', () => {
+        // Both lines carry `verdict: 'inconclusive'`. A reader that buckets on
+        // verdict alone cannot tell them apart, which is exactly what this
+        // field exists to fix — and why the schema version moved with it.
+        const lp = path.join(tmpDir(), 'floor.log');
+        appendQuorumEvent(
+            {
+                ...CTX,
+                configuredTotal: 2,
+                result: evaluateQuorum(2, 1, 'majority', GATE_CLASS_ATTENDANCE_FLOOR),
+                absent: [],
+            },
+            { logPath: lp, now: FIXED },
+        );
+        appendQuorumEvent(
+            { ...CTX, configuredTotal: 3, result: evaluateQuorum(3, 1), absent: [] },
+            { logPath: lp, now: FIXED },
+        );
+        const lines = fs
+            .readFileSync(lp, 'utf-8')
+            .trim()
+            .split('\n')
+            .map((l) => JSON.parse(l) as Record<string, unknown>);
+        expect(lines.map((l) => l.verdict)).toEqual(['inconclusive', 'inconclusive']);
+        expect(lines.map((l) => l.held_by_floor)).toEqual([true, false]);
+        // The held pass met its threshold; the other never did. That is the
+        // distinction `verdict` loses and this field keeps.
+        expect(lines[0]?.present).toBe(1);
+        expect(lines[0]?.threshold).toBe(1);
+        expect(lines[1]?.present).toBe(1);
+        expect(lines[1]?.threshold).toBe(2);
+        // A held pass is not a solo CONCLUSION — the solo rate deflates as the
+        // floor fires, so the two fields are successor instruments.
+        expect(lines.map((l) => l.solo)).toEqual([false, false]);
     });
 
     it('solo is written by the predicate, not re-derived downstream', () => {

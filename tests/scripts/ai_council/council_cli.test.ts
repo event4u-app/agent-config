@@ -414,6 +414,7 @@ describe('build_members — mode: auto', () => {
             threshold: 1,
             total: 2,
             present: 1,
+            heldByFloor: false,
         });
     });
 
@@ -441,6 +442,7 @@ describe('build_members — mode: auto', () => {
             threshold: 2,
             total: 2,
             present: 1,
+            heldByFloor: false,
         });
     });
 
@@ -789,7 +791,7 @@ describe('_postRunQuorum', () => {
         ];
         const responses = members.map((m) => m.ask());
         const { quorum, absent } = _postRunQuorum(members, responses, {});
-        expect(quorum).toEqual({ status: 'inconclusive', threshold: 1, total: 2, present: 0 });
+        expect(quorum).toEqual({ status: 'inconclusive', threshold: 1, total: 2, present: 0, heldByFloor: false });
         expect(absent).toEqual([
             { member: 'anthropic', reason: 'no_auth', detail: 'auth_expired' },
             { member: 'openai', reason: 'timeout', detail: 'timeout' },
@@ -803,14 +805,14 @@ describe('_postRunQuorum', () => {
         ];
         const responses = members.map((m) => m.ask());
         const { quorum, absent } = _postRunQuorum(members, responses, {});
-        expect(quorum).toEqual({ status: 'concluded', threshold: 1, total: 2, present: 1 });
+        expect(quorum).toEqual({ status: 'concluded', threshold: 1, total: 2, present: 1, heldByFloor: false });
         expect(absent).toEqual([{ member: 'openai', reason: 'quota', detail: 'cli_quota_exhausted' }]);
     });
 
     it('a missing response entry (index past the end of `responses`) counts as absent, never as present', () => {
         const members = [new StubMember('anthropic', 'claude-x', new CouncilResponse({ provider: 'anthropic', model: 'claude-x', text: 'ok' }))];
         const { quorum, absent } = _postRunQuorum(members, [], {});
-        expect(quorum).toEqual({ status: 'inconclusive', threshold: 1, total: 1, present: 0 });
+        expect(quorum).toEqual({ status: 'inconclusive', threshold: 1, total: 1, present: 0, heldByFloor: false });
         expect(absent).toEqual([{ member: 'anthropic', reason: 'unavailable', detail: 'no response' }]);
     });
 
@@ -822,7 +824,7 @@ describe('_postRunQuorum', () => {
         ];
         const responses = members.map((m) => m.ask());
         const { quorum, absent } = _postRunQuorum(members, responses, { quorum: 2 });
-        expect(quorum).toEqual({ status: 'concluded', threshold: 2, total: 3, present: 2 });
+        expect(quorum).toEqual({ status: 'concluded', threshold: 2, total: 3, present: 2, heldByFloor: false });
         expect(absent).toEqual([{ member: 'gemini', reason: 'unavailable', detail: 'exit_1' }]);
     });
 });
