@@ -79,7 +79,7 @@ export const REGISTRY: readonly CommandEntry[] = [
     { name: 'benchmark', disposition: 'delegate', synopsis: 'Report context-token reduction vs the full always-loaded projection.' },
     { name: 'code-graph', disposition: 'delegate', synopsis: 'Deterministic code-graph engine: build|detect|query|affected|path|explain|validate.' },
     { name: 'hooks:install', disposition: 'delegate', synopsis: 'Install the combined pre-commit hook.' },
-    { name: 'hooks:status', disposition: 'delegate', synopsis: 'Print the runtime hook matrix (per-platform install + bindings).' },
+    { name: 'hooks:status', disposition: 'delegate', synopsis: 'Print the runtime hook matrix (per-platform install + bindings); --pending lists staged requires_confirmation actions.' },
     { name: 'hooks:doctor', disposition: 'delegate', synopsis: 'Diagnose hook health: concerns, posture, missing trampolines (read-only).' },
     { name: 'routing:doctor', disposition: 'delegate', synopsis: 'Live routing diagnosis: per-gate ACTIVE/INACTIVE with reason, chain, freshness, orchestration state (read-only).' },
     { name: 'route:explain', disposition: 'delegate', synopsis: 'Deterministic rule-routing trace for one prompt: matched triggers, tier, disposition, budget, rejected candidates (trigger-match level only).' },

@@ -28,6 +28,13 @@ import {
   type JsonValue,
   _load_yaml,
 } from "./hooks/dispatch_hook.js";
+// The confirmation store lives in the work_engine tree because that is where
+// its only (injected) producer lives; importing it across the package/template
+// boundary follows the committed precedent in `lint_ui_stack_bundles.ts`.
+import {
+  listPending,
+  type StagedAction,
+} from "../agent-src/templates/scripts/work_engine/hooks/builtin/confirmation.js";
 
 // src/scripts/hooks_status.ts → parents[1] is the repo root (.../parents[2]
 // in the Python which lives one level deeper relative computation).
@@ -209,6 +216,7 @@ interface ParsedArgs {
   project_root: string;
   manifest: string;
   strict: boolean;
+  pending: boolean;
 }
 
 function parse_args(argv: string[]): ParsedArgs {
@@ -216,9 +224,12 @@ function parse_args(argv: string[]): ParsedArgs {
   let project_root = ".";
   let manifest = MANIFEST_PATH;
   let strict = false;
+  let pending = false;
   for (let i = 0; i < argv.length; i += 1) {
     const arg = argv[i];
-    if (arg === "--format") {
+    if (arg === "--pending") {
+      pending = true;
+    } else if (arg === "--format") {
       const v = argv[i + 1];
       if (v === "json" || v === "table") format = v;
       i += 1;
@@ -232,7 +243,33 @@ function parse_args(argv: string[]): ParsedArgs {
       strict = true;
     }
   }
-  return { format, project_root, manifest, strict };
+  return { format, project_root, manifest, strict, pending };
+}
+
+/**
+ * Render the staged-but-unconfirmed actions, or the honest empty state.
+ *
+ * The empty line says WHY it is empty, because "0 pending" and "nothing can
+ * ever stage" are different facts and only one of them is a reason to keep
+ * looking. Until dispatch-safety step 2.4 decides where the primitive binds,
+ * the only producer is an explicitly injected stager, so an empty list is the
+ * expected reading rather than a sign that nothing was held.
+ */
+export function _render_pending(rows: StagedAction[]): string {
+  if (rows.length === 0) {
+    return (
+      "pending confirmations: none\n" +
+      "  no surface stages a requires_confirmation action yet — the primitive\n" +
+      "  ships unbound (dispatch-safety step 2.4 decides whether it binds and\n" +
+      "  what a host without a pre_tool_use slot gets)."
+    );
+  }
+  const lines = [`pending confirmations: ${rows.length}`];
+  for (const r of rows) {
+    lines.push(`  ${r.token}  ${r.action} → ${r.object}`);
+    lines.push(`    gate=${r.gate_id} phase=${r.phase || "-"} staged=${r.staged_at}`);
+  }
+  return lines.join("\n");
 }
 
 // Python json.dumps(payload, indent=2, sort_keys=True) byte-for-byte.
@@ -264,6 +301,22 @@ function _py_json_dumps_sorted(value: JsonValue, indent = 2): string {
 
 export function main(argv?: string[]): number {
   const args = parse_args(argv ?? process.argv.slice(2));
+
+  // `--pending` enumerates staged confirmations and returns before the manifest
+  // is touched: the two reports answer different questions, and folding the
+  // confirmations into the default output would change a surface other callers
+  // (task hooks-status, post-install smoke, CI) pin byte-for-byte.
+  if (args.pending) {
+    const rows = listPending(path.resolve(args.project_root));
+    if (args.format === "json") {
+      process.stdout.write(
+        _py_json_dumps_sorted(rows as unknown as JsonValue) + "\n",
+      );
+    } else {
+      process.stdout.write(_render_pending(rows) + "\n");
+    }
+    return 0;
+  }
 
   const manifest_path = args.manifest;
   if (!fs.existsSync(manifest_path)) {
