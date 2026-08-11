@@ -48,30 +48,70 @@ task clean-tools               # Remove all generated tool directories
 ### Testing
 
 ```bash
-task test                      # Run all tests (bash + Python)
-task test-install              # Install script integration tests
-task test-python               # Condensation and linter tests
-task test-linter               # Skill linter unit tests
-task test-readme-linter        # README linter unit tests
-task test-runtime              # Runtime registry + dispatcher tests
-task test-tools                # Tool registry + adapter tests
-task test-runtime-all          # All runtime and tools tests
+task test                      # Full surface: bash installer tests + the TS suite
+task test-ts                   # Vitest only
+task test-install              # Install script + orchestrator bash tests
+task test-install-local        # Installer against a local checkout
+task test-triggers             # Trigger-set checks (offline)
+task test-cost-budget          # Cost-budget assertions
+npx vitest run <file>          # A single file — stays native, no task wrapper
 ```
 
 #### CI test matrix
 
-GitHub Actions runs the suite on every push and PR across:
+`tests.yml` declares 6 job keys that matrix-expand to 23 jobs, all on
+Node 20:
 
-| Runner | Python versions |
+| Job | Expansion |
 |---|---|
-| `ubuntu-latest` | 3.10, 3.11, 3.12, 3.13 |
-| `macos-latest` | 3.12 |
+| `install-tests` | 4 shards × 2 OS |
+| `install-aux-tests` | 2 OS |
+| `node-tests` | 2 OS × 4 shards (`tests/golden/**` and the workspace suite excluded) |
+| `static-checks` | ubuntu only — ESLint, `tsc --noEmit`, prepack |
+| `golden-tests` | 2 OS |
+| `workspace-tests` | 2 OS |
 
-The matrix enforces the "Python 3.10+, stdlib only" guarantee from
-`CONTRIBUTING.md`. Installer integration tests (`test_install.sh`,
-`test_install_orchestrator.sh`) run on both Linux and macOS. Windows
-is not part of the matrix — consumers on Windows use WSL2 (see
-[installation guide](installation.md#windows)).
+Both OS legs are `ubuntu-latest` and `macos-latest`. Windows is not in
+the matrix — consumers on Windows use WSL2 (see
+[installation guide](installation.md#windows)). There is no Python leg:
+the toolchain moved to TypeScript, and `no-python-in-src.yml` now asserts
+the absence rather than testing versions.
+
+Per-job wall-clock figures and the 5-minute ceiling live in
+[`contracts/ci-cost-budget.md`](contracts/ci-cost-budget.md).
+
+#### Spawning a CLI in a test — prefer the in-process runner
+
+Many suites exercise a CLI twin by spawning it (`spawnSync` on
+`./scripts-run` or `./agent-config`). Each spawn pays roughly **350 ms of
+tsx cold start**, and the cost lands on whichever vitest shard the file
+hashes into — vitest shards by file *count*, not duration, so a cluster of
+spawning files makes one shard several times slower than its siblings.
+
+`tests/_lib/run_in_process.ts` replaces the spawn with a direct call to the
+script's exported `main(argv)`:
+
+```ts
+import { runInProc, runInProcAsync, ProcessExit } from '../_lib/run_in_process';
+
+const res = runInProc(main, ['--json'], { cwd: tmp, env: { CI: '1' } });
+expect(res.status).toBe(0);
+expect(res.stdout).toContain('…');
+```
+
+It returns `{ status, stdout, stderr }` and handles all three exit styles:
+a numeric return from `main`, a `process.exitCode` assignment, and a real
+`process.exit(N)` (caught as `ProcessExit`). `RunOpts` covers `cwd`, an
+`env` overlay, and `stdin`. It is safe because vitest forks per test file
+and runs tests within a file sequentially, so the save/restore of process
+globals cannot race.
+
+**Keep spawning where the process boundary is the thing under test.** argv
+parsing, exit codes and stdio behaviour are properties of the boundary, not
+of `main` — converting every last one deletes that coverage. The rule of
+thumb is one spawning test per CLI entry point, in-process for the rest.
+The known limitation is module-level mutable state in the imported script,
+which is shared across calls; module-level constants are fine.
 
 ### Linting
 
