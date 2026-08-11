@@ -6,10 +6,10 @@
 
 ## Overall
 
-**190 / 365 steps done · 52%**
+**195 / 365 steps done · 53%**
 
 ```text
-█████████████████████░░░░░░░░░░░░░░░░░░░   52%
+█████████████████████░░░░░░░░░░░░░░░░░░░   53%
 ```
 
 ## Open roadmaps
@@ -28,7 +28,7 @@
 | 10 | [road-to-inbox-harvest-2026-08-b-dispatch-safety.md](roadmaps/road-to-inbox-harvest-2026-08-b-dispatch-safety.md) | 4 | 21 | 13 | 1 | 1 | 6 | [1](#blockers-road-to-inbox-harvest-2026-08-b-dispatch-safety) | █░░░░░░░░░ 7% |
 | 11 | [road-to-inbox-harvest-2026-08-b-estate-lifecycle.md](roadmaps/road-to-inbox-harvest-2026-08-b-estate-lifecycle.md) | 4 | 15 | 9 | 0 | 0 | 6 | [1](#blockers-road-to-inbox-harvest-2026-08-b-estate-lifecycle) | ░░░░░░░░░░ 0% |
 | 12 | [road-to-inbox-harvest-2026-08-b-install-lifecycle.md](roadmaps/road-to-inbox-harvest-2026-08-b-install-lifecycle.md) | 2 | 13 | 7 | 0 | 1 | 5 | [1](#blockers-road-to-inbox-harvest-2026-08-b-install-lifecycle) | ░░░░░░░░░░ 0% |
-| 13 | [road-to-inbox-harvest-2026-08-b-ledger-truth.md](roadmaps/road-to-inbox-harvest-2026-08-b-ledger-truth.md) | 3 | 19 | 10 | 2 | 1 | 6 | [1](#blockers-road-to-inbox-harvest-2026-08-b-ledger-truth) | ██░░░░░░░░ 17% |
+| 13 | [road-to-inbox-harvest-2026-08-b-ledger-truth.md](roadmaps/road-to-inbox-harvest-2026-08-b-ledger-truth.md) | 3 | 19 | 5 | 7 | 1 | 6 | [1](#blockers-road-to-inbox-harvest-2026-08-b-ledger-truth) | ██████░░░░ 58% |
 | 14 | [road-to-inbox-harvest-2026-08-b-release-integrity.md](roadmaps/road-to-inbox-harvest-2026-08-b-release-integrity.md) | 5 | 25 | 12 | 0 | 1 | 12 | [3](#blockers-road-to-inbox-harvest-2026-08-b-release-integrity) | ░░░░░░░░░░ 0% |
 | 15 | [road-to-inbox-harvest-2026-08-b.md](roadmaps/road-to-inbox-harvest-2026-08-b.md) | 3 | 6 | 1 | 2 | 0 | 3 | [1](#blockers-road-to-inbox-harvest-2026-08-b) | ███████░░░ 67% |
 | 16 | [road-to-inbox-harvest-2026-08.md](roadmaps/road-to-inbox-harvest-2026-08.md) | 5 | 21 | 1 | 11 | 4 | 5 | [3](#blockers-road-to-inbox-harvest-2026-08) | █████████░ 92% |
@@ -347,11 +347,11 @@
 
 ### [road-to-inbox-harvest-2026-08-b-ledger-truth.md](roadmaps/road-to-inbox-harvest-2026-08-b-ledger-truth.md)
 
-**Road to cost-ledger truth** — 2 / 12 done (17%)
+**Road to cost-ledger truth** — 7 / 12 done (58%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
-| 1 | Served-model truth | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
+| 1 | Served-model truth | ✅ done | 0 | 5 | 0 | 0 | 100% |
 | 2 | The rate tables cannot disagree | 🟡 in progress | 2 | 2 | 1 | 0 | 50% |
 | 3 | Two aggregation lines and a cache signature | ⬜ not started | 3 | 0 | 0 | 6 | 0% |
 

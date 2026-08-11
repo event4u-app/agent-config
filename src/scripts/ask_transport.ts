@@ -51,7 +51,10 @@ import { DEFAULT_DIR } from './orchestration_record.js';
 export interface AskResult {
     answer: string;
     member: string;
+    /** The REQUESTED model id — what the member was configured to call. */
     model: string;
+    /** The model the provider reported serving; `''` when it reports none. */
+    model_served: string;
     input_tokens: number;
     output_tokens: number;
     latency_ms: number;
@@ -94,6 +97,8 @@ function recordAskLine(auditDir: string, result: AskResult | null, member: strin
         dispatch_tokens: result === null ? null : result.input_tokens + result.output_tokens,
         wall_clock_ms: result === null ? 0 : Math.max(0, Math.round(result.latency_ms)),
         agent_combo: [member || 'none'],
+        model_requested: result === null ? null : result.model,
+        model_served: result === null ? null : result.model_served,
         origin: 'dispatch-economy-2026',
         ts,
         id,
@@ -146,6 +151,7 @@ export async function askOnce(prompt: string, opts: AskOptions = {}): Promise<As
                 answer: text,
                 member: provider,
                 model: r.model ?? 'unknown',
+                model_served: r.model_served ?? '',
                 input_tokens: r.input_tokens ?? 0,
                 output_tokens: r.output_tokens ?? 0,
                 latency_ms: r.latency_ms ?? 0,

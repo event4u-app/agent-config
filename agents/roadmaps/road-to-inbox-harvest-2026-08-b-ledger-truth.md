@@ -44,7 +44,7 @@ coherence or plan drift, so it is the maintainer's call in that change, not here
 and its test run reported a count that is environment-conditional, where the
 defensible figure is the **delta of +7** over whatever the local baseline is.
 
-- [ ] **1.1 Read the served model off the API response.**
+- [x] **1.1 Read the served model off the API response.**
       `src/scripts/ai_council/clients.ts` has **22** `new CouncilResponse` sites
       (`:584`, `:616`, `:702`, `:719`, `:785`, `:796`, …), and each writes the
       **requested** id through a `model: this.model` assignment (`:545`, `:577`,
@@ -60,20 +60,49 @@ defensible figure is the **delta of +7** over whatever the local baseline is.
       `_getattr(response, 'content')` (`:594`). CLI transports carry no
       served-model field at all, so `''` is the honest value there rather than a
       parsed guess.
+      **Shipped** via `_servedModel(response, field = 'model')` in
+      `clients.ts` — a `field` PARAMETER rather than a literal, because the
+      Gemini case is the one that fails silently: a single-field read returns
+      `''`, which is indistinguishable from an honest no-report. All four live
+      sites read it (`clients.ts:645` Anthropic, `:749` OpenAI, `:828` Gemini
+      via `model_version`, `:911` the OpenAI-compatible client); the seventeen
+      error paths keep the `''` default untouched. A non-string value collapses
+      to `''` rather than being coerced — a coerced `'42'` would read as a real
+      served id downstream and could flip `model_divergent` to a false `true`.
+      Pinned by 7 tests, and the Gemini field name proved falsifiable by
+      mutation (`'model_version'` → `'model'` reds exactly that one case).
       <!-- verify: task test -- --filter=clients -->
-- [ ] **1.2 Carry it as a distinct `CouncilResponse` field.** The class is
+- [x] **1.2 Carry it as a distinct `CouncilResponse` field.** The class is
       declared at `clients.ts:199-213` with `model: string` at :201 and an
       optional-with-default constructor at :215-230 — the same additive shape
       `cache_read_input_tokens` used. Add the served id as a new optional field;
       do **not** overwrite `model`, because the requested id is what the tier
       decision was made against and both are needed to detect a substitution.
+      **Shipped** as `model_served: string`, optional-with-default `''`
+      (`clients.ts:225`, `:242`, `:254`) — the same additive shape
+      `cache_read_input_tokens` used, so no existing caller changes. It reaches
+      the persisted **response row** through `_serialise_response`
+      (`session.ts`). It is deliberately NOT hoisted to the session manifest:
+      that was the surplus this roadmap left to the change carrying the code,
+      and the field describes one response, not a session. A test pins the
+      absence, so a later hoist has to be a decision rather than a drift.
       <!-- verify: task test -- --filter=clients -->
-- [ ] **1.3 Extend the cost-summary contract additively.**
+- [x] **1.3 Extend the cost-summary contract additively.**
       [`cost-summary-schema`](../../docs/contracts/cost-summary-schema.md):60-62
       states its own rule — new fields are "a **v1 additive extension**", rows
       written before them read "like a row missing `input_tokens` — no version
       bump". Follow that rule exactly; no version bump, no required field.
-- [ ] **1.4 Assert it at the consumer that silently mis-attributes today.**
+      **Shipped** as a `## Served-model attribution` section — additive, no
+      version bump, no required field, absent reads as `''`, and the field is
+      marked attribution-only so nothing routes or prices on it. **One
+      deliberate non-extension, recorded rather than silently skipped:**
+      `by_model` does NOT aggregate it. That array is keyed by the *requested*
+      model and one bucket can legitimately span several served ids, so any
+      single per-bucket value would pick one and misreport the rest — and
+      wiring an aggregation no producer feeds is the "defined but not wired"
+      surface this package has already paid for once. The divergence signal
+      lives per-dispatch in the audit log instead (1.4).
+- [x] **1.4 Assert it at the consumer that silently mis-attributes today.**
       `src/scripts/_lib/orchestration_record.ts:48-71` reads the requested tier
       for `tier_chosen`, `tier_source`, `session_tier` and the downshift
       cost-percentage — so on any alias or provider substitution the recorded
@@ -81,12 +110,30 @@ defensible figure is the **delta of +7** over whatever the local baseline is.
       served-vs-requested divergence as a recorded field, not a thrown error —
       `buildOrchestrationLine` collects into an `errors: string[]` (:183-184)
       rather than throwing, and this stays inside that contract.
+      **Shipped** as three fields on the orchestration object:
+      `model_requested`, `model_served`, and a DERIVED `model_divergent`.
+      Divergence is three-valued on purpose — `null` when either id is absent,
+      never `false`. Every CLI transport reports no served id, so a `false`
+      there would read as "checked, and they matched", which is the same
+      confident mis-attribution the step exists to remove. A non-string id
+      collects into `errors` rather than throwing, per the stated contract.
+      **Wired, not merely defined:** `ask_transport` is the first producer that
+      holds both ids, so `AskResult` carries `model_served` and the ask route's
+      audit line records all three — asserted end-to-end (substitution → `true`,
+      unreported → `null`, honest-∅ → nulls). Documented in
+      `orchestration-telemetry.md` § Field semantics.
       <!-- verify: task test -- --filter=_lib_orchestration_record -->
-- [ ] **1.5 State in the change that no ADR is needed.**
+- [x] **1.5 State in the change that no ADR is needed.**
       [`ADR-035`](../../docs/decisions/ADR-035-model-capability-tiers.md) is not
       amended — its tier mapping is unchanged; this phase makes the ADR's
       attribution honest rather than re-deciding it. Say so, so a later reader does
       not go looking for a missing record.
+      **Stated here and in the pull request:** no ADR accompanies Phase 1.
+      `ADR-035`'s tier mapping is untouched — nothing about which model serves
+      which tier is re-decided. What changes is that the record now says which
+      model actually answered, so the ADR's own attribution stops being a
+      claim. `cost-summary-schema` and `audit-log-v1` both absorb the fields
+      under their existing additive rules, so no contract version moves either.
 
 ## Phase 2 — The rate tables cannot disagree
 

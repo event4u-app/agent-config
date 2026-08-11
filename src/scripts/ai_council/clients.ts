@@ -195,10 +195,34 @@ export function assertCacheBreakpointOrder(ttls: readonly PromptCacheTtl[]): voi
     }
 }
 
+/**
+ * The model id a provider reports on its own response, or `''` when it reports
+ * none.
+ *
+ * `field` is a parameter because the name is NOT uniform across providers:
+ * Gemini reports it as `model_version`, so a literal single-field read would
+ * leave Gemini silently empty — which is indistinguishable from a transport
+ * that genuinely reports nothing. Non-string values collapse to `''` rather
+ * than being coerced: a guess is worse than an honest blank here, because the
+ * whole point of the field is detecting a substitution.
+ */
+function _servedModel(response: unknown, field = 'model'): string {
+    const value = _getattr(response, field, '');
+    return typeof value === 'string' ? value : '';
+}
+
 /** Normalised output from a single council member (dataclass `CouncilResponse`). */
 export class CouncilResponse {
     provider: string;
     model: string;
+    // The model id the provider reported serving, when it reports one. NEVER
+    // overwrites `model`: that is the REQUESTED id, and it is what the tier
+    // decision was made against — keeping both is what makes a silent alias or
+    // provider substitution detectable at all. Attribution-only; no consumer
+    // may route on it. Defaults to '' (the honest value for a transport that
+    // reports no served id, e.g. every CLI client) so existing callers and the
+    // persisted response JSON stay backward-compatible.
+    model_served: string;
     text: string;
     input_tokens: number;
     output_tokens: number;
@@ -215,6 +239,7 @@ export class CouncilResponse {
     constructor(opts: {
         provider: string;
         model: string;
+        model_served?: string;
         text: string;
         input_tokens?: number;
         output_tokens?: number;
@@ -226,6 +251,7 @@ export class CouncilResponse {
     }) {
         this.provider = opts.provider;
         this.model = opts.model;
+        this.model_served = opts.model_served ?? '';
         this.text = opts.text;
         this.input_tokens = opts.input_tokens ?? 0;
         this.output_tokens = opts.output_tokens ?? 0;
@@ -616,6 +642,7 @@ export class AnthropicClient extends ExternalAIClient {
         return new CouncilResponse({
             provider: this.name,
             model: this.model,
+            model_served: _servedModel(response),
             text,
             input_tokens: usage ? (_getattr(usage, 'input_tokens', 0) as number) : 0,
             output_tokens: usage ? (_getattr(usage, 'output_tokens', 0) as number) : 0,
@@ -719,6 +746,7 @@ export class OpenAIClient extends ExternalAIClient {
         return new CouncilResponse({
             provider: this.name,
             model: this.model,
+            model_served: _servedModel(response),
             text: (text as string) || '',
             input_tokens: usage ? (_getattr(usage, 'prompt_tokens', 0) as number) : 0,
             output_tokens: usage ? (_getattr(usage, 'completion_tokens', 0) as number) : 0,
@@ -796,6 +824,8 @@ export class GeminiClient extends ExternalAIClient {
         return new CouncilResponse({
             provider: this.name,
             model: this.model,
+            // Gemini names it `model_version`, not `model`.
+            model_served: _servedModel(response, 'model_version'),
             text,
             input_tokens: usage ? (_getattr(usage, 'prompt_token_count', 0) as number) : 0,
             output_tokens: usage ? (_getattr(usage, 'candidates_token_count', 0) as number) : 0,
@@ -878,6 +908,7 @@ export class _OpenAICompatibleClient extends ExternalAIClient {
         return new CouncilResponse({
             provider: this.name,
             model: this.model,
+            model_served: _servedModel(response),
             text: (text as string) || '',
             input_tokens: usage ? (_getattr(usage, 'prompt_tokens', 0) as number) : 0,
             output_tokens: usage ? (_getattr(usage, 'completion_tokens', 0) as number) : 0,

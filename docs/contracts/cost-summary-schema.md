@@ -99,6 +99,29 @@ model-scoped — but DOES carry the cache fields: the prompt cache itself is
 model-scoped (a cache write under one model is never read back under
 another), so a per-model cache breakdown is meaningful here.
 
+## Served-model attribution — `model_served`, a v1 additive extension
+
+A recorded spend row may carry `model_served`: the model id the provider
+reported **answering** with, beside `model`, which stays the id that was
+**requested**. Keeping both is the point — on an alias or a provider
+substitution the two differ, and a row that carries only one attributes the
+spend to a model that never ran.
+
+- **Additive per the rule above.** No version bump, no required field. A row
+  written before this extension, and any transport that reports no served id
+  (every CLI client), reads as `''` — exactly like a row missing
+  `input_tokens`.
+- **Attribution-only.** A consumer MUST NOT route, tier, or price on
+  `model_served`; `model` is what the tier decision was made against.
+- **Deliberately not aggregated into `by_model`.** That array is keyed by the
+  requested `model`, and one such bucket can legitimately span several served
+  ids, so a single per-bucket value would have to pick one and misreport the
+  rest. The divergence itself is recorded per dispatch in the audit log
+  ([`audit-log-v1`](audit-log-v1.md)) rather than summed here.
+
+First producer: the AI council's per-member response row
+(`src/scripts/ai_council/session.ts`, `_serialise_response`).
+
 ## Stability guarantees
 
 - **Field additions** are **non-breaking**: consumers MUST ignore unknown fields.

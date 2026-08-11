@@ -189,6 +189,14 @@ function _serialise_response(r: CouncilResponse): Record<string, unknown> {
     const payload: Record<string, unknown> = {
         provider: r.provider,
         model: r.model,
+        // `model` stays the REQUESTED id — the tier decision was made against
+        // it. `model_served` is what the provider reported answering with, so a
+        // silent alias or substitution is visible instead of being recorded as
+        // the model that never ran. Attribution-only: no consumer routes on it.
+        // A v1 additive extension per `cost-summary-schema`:60-62 — rows
+        // written before it, and transports that report no served id, read as
+        // `''`; no version bump, no required field.
+        model_served: r.model_served,
         input_tokens: r.input_tokens,
         output_tokens: r.output_tokens,
         latency_ms: r.latency_ms,
