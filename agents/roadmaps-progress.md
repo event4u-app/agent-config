@@ -278,25 +278,6 @@
     condition still holds, since it is what makes Phase 2 derive rather than store.
   - **Resolved when:** the answer is written into 1.1 with its date, and either the parked roadmap moves out of `later/` or 1.1 records that it stays.
 
-### [road-to-inbox-harvest-2026-08-b-install-lifecycle.md](roadmaps/road-to-inbox-harvest-2026-08-b-install-lifecycle.md)
-
-**Road to install lifecycle — every write recorded, org packs decided** — 6 / 7 done (86%)
-
-| # | Phase | State | Open | Done | Deferred | Cancelled | % |
-|---|---|---|---:|---:|---:|---:|---:|
-| 1 | record the three writes uninstall cannot undo | ✅ done | 0 | 4 | 0 | 2 | 100% |
-| 2 | put the org-pack question to the maintainer | 🟡 in progress | 1 | 2 | 0 | 4 | 67% |
-
-<a id="blockers-road-to-inbox-harvest-2026-08-b-install-lifecycle"></a>
-**Blockers**
-
-- **org-pack-reopening** (owner: maintainer) — blocks step 2.3 only. Steps 2.1 and 2.2 are authoring and verification and are not blocked; all of Phase 1 is independent of the pack question entirely.
-  - **What to do:**
-    read the 2.1 brief and either decline (ADR-011 stands, 2.3 closes as
-    `- [-]`) or reopen by commissioning an ADR that answers the four ADR-088 § 3 questions
-    and reconciles the `agents/overrides/` `replace` mode.
-  - **Resolved when:** either 2.3 is marked `- [-]` citing a decline, or a new ADR exists with `status: accepted` amending ADR-011 and ADR-013 § packs.
-
 ### [road-to-inbox-harvest-2026-08-b-ledger-truth.md](roadmaps/road-to-inbox-harvest-2026-08-b-ledger-truth.md)
 
 **Road to cost-ledger truth** — 12 / 13 done (92%)

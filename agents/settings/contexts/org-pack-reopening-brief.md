@@ -1,9 +1,15 @@
 # Org-Pack Reopening — decision brief
 
-**Status:** brief only. It states a lock, why the lock is surfaceable rather
+**Status:** **decided 2026-08-11 — declined.** The verdict and its reopen
+condition are recorded in `## Decision` at the foot of this file; everything
+above that section is the original brief, unedited.
+
+Sections (a)-(d) below were written as **brief only** and deliberately carry
+**no recommendation** — they state a lock, why the lock is surfaceable rather
 than binding-by-default, the bar a reopening would clear, and one unresolved
-contradiction. It carries **no recommendation**, and the decision it serves is
-owner `maintainer` (blocker `org-pack-reopening`).
+contradiction. They are left exactly as written so the decision stays auditable
+against an input that did not pre-commit it. The decision it served was owner
+`maintainer` (blocker `org-pack-reopening`).
 
 The question it puts up: *should an external pack source root open, so that
 org-level content can be pulled in from outside this repository?*
@@ -112,3 +118,60 @@ and the deferred step closes `- [-]` citing it; or **reopen** — commission an
 ADR answering the four questions in (c) and reconciling the `replace` mode in
 (d), which lands as its own record with `status: accepted` amending ADR-011 and
 ADR-013 § packs.
+
+## Decision — 2026-08-11: **decline**
+
+The external pack source root does **not** open. ADR-011 stands, no ADR is
+commissioned, ADR-013 § packs is unamended, and the closed pack-id vocabulary in
+`src/config/discovery/packs.yml:1-4` is untouched.
+
+**How it was taken.** An AI-council pass over sections (a)-(d) above, converging
+**2/2 on decline**. The brief was handed over verbatim and recommendation-free,
+with both moves stated as genuinely open — the verdict was not authored into the
+question. This is the first branch of the blocker's own `Resolved when`, which is
+why it needs no ADR: a decline changes nothing, and only a reopening would have
+been a contract change requiring a record.
+
+**Citation order, as the council weighted it.** The order matters, because the
+obvious lead citation is the wrong one:
+
+1. **The unresolved `replace` contradiction (§ d) — primary.** The brief names
+   reconciling it a **precondition** of any reopening, not a follow-up. It is
+   unreconciled. So the proposal fails its own stated precondition before any
+   external argument is reached, and the question is not "reopen despite the
+   contradiction" but "reopen once it is resolved" — which is not yet asked.
+2. **The capacity frame — secondary.** 116 rules, 289 skills, 12 in-repo packs,
+   one maintainer. The load-bearing half is not maintenance volume but the
+   **error surface**: in-repo, a syntax error is caught at PR time, a rule
+   conflict is visible in one tree, and a kernel change is one update pass.
+   Externalised, the error surfaces at runtime, conflicts need cross-repository
+   reasoning, and a kernel change needs N external maintainers to act or
+   backward compatibility held indefinitely.
+3. **The closed id vocabulary — tertiary but hard.** An externally-supplied
+   vocabulary is a direct contract change requiring an ADR-013 amendment in the
+   same PR, not an additive feature. This one is direction-agnostic: § (b)'s
+   mechanism-match distinction does not soften it.
+
+**What is deliberately NOT the lead citation.** ADR-011's unfired design gate.
+The brief's § (b) mechanism-match reading holds — ADR-011 tested *extraction* and
+this proposal is *ingestion* — so leading with it would be the same category
+error § (c) flags for ADR-088, pointed the other way. It still bears indirectly:
+the overlap inventory the gate demands would have forced identity-collision,
+precedence and trust-boundary answers, and those are unanswered in the ingestion
+direction too. An unfired gate is a reason the design work is missing, not a
+prohibition on the question.
+
+**Reopen condition — falsifiable, both legs file-checkable.** This decision is
+revisitable when **both** hold:
+
+1. An ADR with `status: accepted` defines override precedence for
+   `agents/overrides/` — specifically what `replace` mode means when a second
+   layer also claims final say over the same artefact. This resolves § (d) and is
+   the genuinely unmet need underneath the proposal: the override layer already
+   ships, and what it lacks is governance, not a second ingestion path.
+2. ADR-011's design gate has fired — `docs/contracts/domain-pack-overlap-inventory.md`
+   exists with ≥ 3 falsifiable overlap predictions.
+
+**Explicitly NOT a reopen condition:** an external-adoption signal. ADR-216
+`:10-17` strikes it — *"adoption is not a project goal and therefore not a valid
+gate."* A demand argument resting on adoption does not reopen this.
