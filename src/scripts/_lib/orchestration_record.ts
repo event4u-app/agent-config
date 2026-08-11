@@ -64,6 +64,20 @@ export interface RecordInput {
     dispatch_tokens?: number | null | undefined;
     /** The orchestrator's own tier — the baseline the downshift cost-% measures against. */
     session_tier?: string | null | undefined;
+    /**
+     * The model id that was ASKED for. `tier_chosen`, `tier_source`,
+     * `session_tier` and the downshift cost-percentage are all read off the
+     * requested tier, so on an alias or a provider substitution every one of
+     * them attributes the saving to a model that never ran. Recording the
+     * requested id beside the served one is what makes that detectable.
+     */
+    model_requested?: string | null | undefined;
+    /**
+     * The model id the provider reported SERVING. `''` / null when the
+     * transport reports none (every CLI client) — absent is honest, not a
+     * defect, and is NOT a divergence.
+     */
+    model_served?: string | null | undefined;
     dispatch_outcome?: DispatchOutcome | undefined;
     verify_mode?: VerifyMode | undefined;
     /** QUALITY: subagent return adopted without parent rework. Optional boolean (null = not measured). */
@@ -174,6 +188,23 @@ function envelopeOutcome(d: DispatchOutcome): LineOutcome {
 
 function isInt(n: unknown): n is number {
     return typeof n === 'number' && Number.isFinite(n) && Number.isInteger(n);
+}
+
+/**
+ * Did the provider answer with a different model than the one requested?
+ *
+ * `null` — not decidable — whenever either id is missing or empty. That is the
+ * common case (every CLI transport reports no served id) and it is not the
+ * same as "no divergence": a `false` here would claim a comparison that never
+ * happened, which is the exact mis-attribution this field exists to expose.
+ */
+function modelDivergent(
+    requested: string | null | undefined,
+    served: string | null | undefined,
+): boolean | null {
+    if (typeof requested !== 'string' || typeof served !== 'string') return null;
+    if (!requested || !served) return null;
+    return requested !== served;
 }
 
 /**
@@ -290,6 +321,13 @@ export function buildOrchestrationLine(input: RecordInput): BuiltLine {
         errors.push(`trigger_arm_earlier must be one of ${TRIGGER_ARMS.join(' | ')} (or omitted / null when neither arm fired)`);
     }
 
+    for (const [key, v] of [
+        ['model_requested', input.model_requested],
+        ['model_served', input.model_served],
+    ] as const) {
+        if (v != null && typeof v !== 'string') errors.push(`${key} must be a string or omitted`);
+    }
+
     if (!input.ts) errors.push('ts (ISO-8601 UTC) is required');
     if (!input.id) errors.push('id (ULID or content hash) is required');
 
@@ -310,6 +348,13 @@ export function buildOrchestrationLine(input: RecordInput): BuiltLine {
         tier_source: input.tier_source ?? null,
         dispatch_tokens: input.dispatch_tokens ?? null,
         session_tier: input.session_tier ?? null,
+        // Served-model attribution. `model_divergent` is DERIVED, never
+        // supplied: `null` when either id is absent — a transport that reports
+        // no served id cannot disagree with anything, and calling that `false`
+        // would read as "checked, and they matched".
+        model_requested: input.model_requested ?? null,
+        model_served: input.model_served ?? null,
+        model_divergent: modelDivergent(input.model_requested, input.model_served),
         first_pass_success: input.first_pass_success ?? null,
         escalated: input.escalated ?? null,
         agent_combo: input.agent_combo ?? [],

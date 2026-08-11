@@ -1254,3 +1254,97 @@ describe('prompt_cache_ttl (road-to-cache-economy Phase 4)', () => {
         expect(() => assertCacheBreakpointOrder(['1h', '1h'])).not.toThrow();
     });
 });
+
+// ── served-model truth (inbox-harvest-2026-08-b-ledger-truth Phase 1) ──
+//
+// `model` stays the REQUESTED id — it is what the tier decision was made
+// against — and `model_served` carries what the provider reported answering
+// with. The pair is what makes an alias or a provider substitution visible;
+// a row carrying only one attributes the spend to a model that never ran.
+//
+// The field name is NOT uniform across providers, so each live-API success
+// site is asserted separately rather than once through a shared helper: a
+// single-field read leaves Gemini (`model_version`) silently empty, and an
+// empty string is exactly what an honest no-report looks like — the two are
+// indistinguishable downstream, which is why the Gemini case is pinned.
+describe('clients — served-model attribution', () => {
+    it('Anthropic reads the served id off the response, keeping the requested id in `model`', () => {
+        const mock = {
+            messages: {
+                create: () => ({
+                    ...fakeAnthropicResponse('hi', 1, 2),
+                    model: 'claude-sonnet-4-5-20260101',
+                }),
+            },
+        };
+        const r = new AnthropicClient({ client: mock, model: 'claude-sonnet-4-5' }).ask('s', 'u');
+        expect(r.model).toBe('claude-sonnet-4-5');
+        expect(r.model_served).toBe('claude-sonnet-4-5-20260101');
+    });
+
+    it('OpenAI reads the served id', () => {
+        const mock = {
+            chat: {
+                completions: {
+                    create: () => ({
+                        choices: [{ message: { content: 'ok' } }],
+                        usage: { prompt_tokens: 1, completion_tokens: 1 },
+                        model: 'gpt-4o-2024-11-20',
+                    }),
+                },
+            },
+        };
+        const r = new OpenAIClient({ client: mock, model: 'gpt-4o' }).ask('s', 'u');
+        expect(r.model).toBe('gpt-4o');
+        expect(r.model_served).toBe('gpt-4o-2024-11-20');
+    });
+
+    it('Gemini reads `model_version`, not `model` — a single-field read would be silently empty', () => {
+        const mock = {
+            models: {
+                generate_content: () => ({
+                    text: 'g',
+                    usage_metadata: { prompt_token_count: 1, candidates_token_count: 1 },
+                    model_version: 'gemini-2.5-pro-002',
+                }),
+            },
+        };
+        const r = new GeminiClient({ client: mock }).ask('s', 'u');
+        expect(r.model_served).toBe('gemini-2.5-pro-002');
+    });
+
+    it('the OpenAI-compatible client (xAI / Perplexity) reads the served id', () => {
+        const mock = {
+            chat: {
+                completions: {
+                    create: () => ({
+                        choices: [{ message: { content: 'x' } }],
+                        usage: { prompt_tokens: 1, completion_tokens: 1 },
+                        model: 'grok-4-0709',
+                    }),
+                },
+            },
+        };
+        const r = new XAIClient({ client: mock, model: 'grok-4' }).ask('s', 'u');
+        expect(r.model_served).toBe('grok-4-0709');
+    });
+
+    it("a provider that reports no served id yields '' — the honest blank, not a guess", () => {
+        const mock = { chat: { completions: { create: () => ({ choices: [{ message: { content: 'ok' } }], usage: {} }) } } };
+        expect(new OpenAIClient({ client: mock }).ask('s', 'u').model_served).toBe('');
+    });
+
+    it("a non-string served id collapses to '' rather than being coerced", () => {
+        // A coerced `[object Object]` or `'42'` would read downstream as a real
+        // served id and could flip `model_divergent` to a false `true`.
+        const mock = { chat: { completions: { create: () => ({ choices: [{ message: { content: 'ok' } }], usage: {}, model: 42 }) } } };
+        expect(new OpenAIClient({ client: mock }).ask('s', 'u').model_served).toBe('');
+    });
+
+    it("the error path keeps '' — a failed call served nothing", () => {
+        const mock = { chat: { completions: { create() { throw new RangeError('rl'); } } } };
+        const r = new OpenAIClient({ client: mock }).ask('s', 'u');
+        expect(r.error).toBe('RangeError: rl');
+        expect(r.model_served).toBe('');
+    });
+});

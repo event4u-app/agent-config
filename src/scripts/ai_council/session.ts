@@ -189,6 +189,17 @@ function _serialise_response(r: CouncilResponse): Record<string, unknown> {
     const payload: Record<string, unknown> = {
         provider: r.provider,
         model: r.model,
+        // `model` stays the REQUESTED id — the tier decision was made against
+        // it. `model_served` is what the provider reported answering with, so a
+        // silent alias or substitution is visible instead of being recorded as
+        // the model that never ran. Attribution-only: no consumer routes on it.
+        //
+        // Additive on the MANIFEST's own response row, which is this artefact —
+        // NOT a `cost-summary/v1` field: that contract describes
+        // `agents/cost-tracking/sessions.jsonl`, a different file with a
+        // different producer. Absent on manifests written before this, and `''`
+        // for every transport that reports no served id.
+        model_served: r.model_served,
         input_tokens: r.input_tokens,
         output_tokens: r.output_tokens,
         latency_ms: r.latency_ms,

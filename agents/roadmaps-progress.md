@@ -347,13 +347,13 @@
 
 ### [road-to-inbox-harvest-2026-08-b-ledger-truth.md](roadmaps/road-to-inbox-harvest-2026-08-b-ledger-truth.md)
 
-**Road to cost-ledger truth** — 2 / 12 done (17%)
+**Road to cost-ledger truth** — 12 / 13 done (92%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
-| 1 | Served-model truth | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
-| 2 | The rate tables cannot disagree | 🟡 in progress | 2 | 2 | 1 | 0 | 50% |
-| 3 | Two aggregation lines and a cache signature | ⬜ not started | 3 | 0 | 0 | 6 | 0% |
+| 1 | Served-model truth | ✅ done | 0 | 5 | 0 | 0 | 100% |
+| 2 | The rate tables cannot disagree | 🟡 in progress | 1 | 4 | 0 | 0 | 80% |
+| 3 | Two aggregation lines and a cache signature | ✅ done | 0 | 3 | 0 | 6 | 100% |
 
 <a id="blockers-road-to-inbox-harvest-2026-08-b-ledger-truth"></a>
 **Blockers**

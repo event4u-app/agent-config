@@ -48,10 +48,20 @@ import type { ExternalAIClient } from './ai_council/clients.js';
 import { buildOrchestrationLine } from './_lib/orchestration_record.js';
 import { DEFAULT_DIR } from './orchestration_record.js';
 
+/**
+ * Placeholder written into `AskResult.model` when the member reported no id.
+ * Named so the audit path can recognise and refuse it rather than passing a
+ * sentinel off as a real model id.
+ */
+export const UNKNOWN_MODEL = 'unknown';
+
 export interface AskResult {
     answer: string;
     member: string;
+    /** The REQUESTED model id — what the member was configured to call. */
     model: string;
+    /** The model the provider reported serving; `''` when it reports none. */
+    model_served: string;
     input_tokens: number;
     output_tokens: number;
     latency_ms: number;
@@ -94,6 +104,14 @@ function recordAskLine(auditDir: string, result: AskResult | null, member: strin
         dispatch_tokens: result === null ? null : result.input_tokens + result.output_tokens,
         wall_clock_ms: result === null ? 0 : Math.max(0, Math.round(result.latency_ms)),
         agent_combo: [member || 'none'],
+        // `AskResult.model` substitutes an `'unknown'` SENTINEL when the member
+        // reported no id (below). That sentinel must never reach the audit line
+        // as a model_requested: `modelDivergent` treats any non-empty string as
+        // a real id, so it would fabricate a `true` on a line whose entire
+        // purpose is making real substitutions credible. null keeps the
+        // three-valued semantics — and the field's own "id only" contract.
+        model_requested: result === null || result.model === UNKNOWN_MODEL ? null : result.model,
+        model_served: result === null ? null : result.model_served,
         origin: 'dispatch-economy-2026',
         ts,
         id,
@@ -145,7 +163,8 @@ export async function askOnce(prompt: string, opts: AskOptions = {}): Promise<As
             {
                 answer: text,
                 member: provider,
-                model: r.model ?? 'unknown',
+                model: r.model ?? UNKNOWN_MODEL,
+                model_served: r.model_served ?? '',
                 input_tokens: r.input_tokens ?? 0,
                 output_tokens: r.output_tokens ?? 0,
                 latency_ms: r.latency_ms ?? 0,

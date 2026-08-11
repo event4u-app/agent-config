@@ -49,8 +49,55 @@ export interface PriceTable {
     prices: Map<string, Price>; // keyed by priceKey(provider, model)
 }
 
+/**
+ * Price for (provider, model) — exact key first, then the longest matching
+ * key PREFIX within the same provider.
+ *
+ * Exact match stays the first hit, so no call that resolves today changes
+ * path or price. The fallback exists because vendors ship dated aliases:
+ * `claude-sonnet-4-5-20260101` missed a `claude-sonnet-4-5` row and priced at
+ * **nothing** — a silent zero, not an error. Longest-first means a more
+ * specific row always wins over a shorter one that also prefixes the id
+ * (`claude-opus-4-1` over a hypothetical `claude-opus`).
+ *
+ * The prefix must be followed by a separator (`-`, `.`, `:`, `@`) or end the
+ * id, so `claude-opus-4-1` never matches a `claude-opus-4-15` row: a bare
+ * `startsWith` would price one model at another's rate, which is worse than
+ * the zero it replaces because it looks correct.
+ *
+ * Provider is part of the composite key, so cross-provider bleed is
+ * impossible by construction.
+ */
 export function lookup(table: PriceTable, provider: string, model: string): Price | null {
-    return table.prices.get(priceKey(provider, model)) ?? null;
+    const exact = table.prices.get(priceKey(provider, model));
+    if (exact !== undefined) {
+        return exact;
+    }
+    // Derived from `priceKey`, never hand-rebuilt: it owns the composite-key
+    // encoding, and a second copy here would let a separator change follow the
+    // exact-match path while this loop silently matched nothing — regressing to
+    // the very silent zero the fallback exists to remove.
+    const prefix = priceKey(provider, '');
+    let best: Price | null = null;
+    let bestLen = -1;
+    for (const [key, price] of table.prices) {
+        if (!key.startsWith(prefix)) {
+            continue;
+        }
+        const candidate = key.slice(prefix.length);
+        if (!candidate || !model.startsWith(candidate)) {
+            continue;
+        }
+        const next = model.charAt(candidate.length);
+        if (next !== '' && next !== '-' && next !== '.' && next !== ':' && next !== '@') {
+            continue;
+        }
+        if (candidate.length > bestLen) {
+            best = price;
+            bestLen = candidate.length;
+        }
+    }
+    return best;
 }
 
 // ── token + cost arithmetic ────────────────────────────────────────

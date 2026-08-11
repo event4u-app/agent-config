@@ -298,3 +298,94 @@ describe('return_channel_chars (Phase 6.3 — hook-carried count)', () => {
         expect(buildRecordInput(asyncAck, '2026-08-10T12:00:00.000Z', 'rc-4').return_channel_chars).toBeUndefined();
     });
 });
+
+// ── served-model truth end-to-end (ledger-truth 1.1/1.2/1.4) ──
+//
+// The ask route is the first producer that has BOTH ids in hand, so this is
+// where the field stops being a definition and becomes a recorded fact.
+describe('askOnce — served-model attribution reaches the audit line', () => {
+    function servedClient(served: string): ExternalAIClient {
+        return {
+            name: 'anthropic',
+            ask: () =>
+                new CouncilResponse({
+                    provider: 'anthropic',
+                    model: 'claude-sonnet-4-5',
+                    model_served: served,
+                    text: 'the answer',
+                    input_tokens: 10,
+                    output_tokens: 5,
+                }),
+        } as unknown as ExternalAIClient;
+    }
+
+    it('carries requested + served + a true divergence when the provider substituted', async () => {
+        const dir = path.join(tmp, 'audit-served');
+        const result = await askOnce('q?', {
+            members: [servedClient('claude-sonnet-4-5-20260101')],
+            auditDir: dir,
+            now: () => new Date('2026-08-11T12:00:00Z'),
+            id: () => 'ask-served-1',
+        });
+        expect(result!.model).toBe('claude-sonnet-4-5');
+        expect(result!.model_served).toBe('claude-sonnet-4-5-20260101');
+
+        const o = auditLines(dir)[0]!['orchestration'] as Record<string, unknown>;
+        expect(o['model_requested']).toBe('claude-sonnet-4-5');
+        expect(o['model_served']).toBe('claude-sonnet-4-5-20260101');
+        expect(o['model_divergent']).toBe(true);
+    });
+
+    it('leaves divergence null when the transport reported no served id', async () => {
+        const dir = path.join(tmp, 'audit-unreported');
+        await askOnce('q?', {
+            members: [servedClient('')],
+            auditDir: dir,
+            now: () => new Date('2026-08-11T12:00:00Z'),
+            id: () => 'ask-served-2',
+        });
+        const o = auditLines(dir)[0]!['orchestration'] as Record<string, unknown>;
+        expect(o['model_served']).toBe('');
+        expect(o['model_divergent']).toBeNull();
+    });
+
+    it('records nulls on the honest-∅ path — no answer served no model', async () => {
+        const dir = path.join(tmp, 'audit-null');
+        expect(await askOnce('q?', { members: [], auditDir: dir })).toBeNull();
+        const o = auditLines(dir)[0]!['orchestration'] as Record<string, unknown>;
+        expect(o['model_requested']).toBeNull();
+        expect(o['model_divergent']).toBeNull();
+    });
+});
+
+// ── the sentinel must not become an id (R2 review, finding 6) ─────────
+describe('askOnce — the unknown-model sentinel never reaches the audit line', () => {
+    it('records model_requested null, so a missing id cannot fabricate a divergence', async () => {
+        const noModel = {
+            name: 'anthropic',
+            ask: () =>
+                new CouncilResponse({
+                    provider: 'anthropic',
+                    model: undefined as unknown as string,
+                    model_served: 'claude-sonnet-4-5-20260101',
+                    text: 'the answer',
+                }),
+        } as unknown as ExternalAIClient;
+
+        const dir = path.join(tmp, 'audit-sentinel');
+        const result = await askOnce('q?', {
+            members: [noModel],
+            auditDir: dir,
+            now: () => new Date('2026-08-11T12:00:00Z'),
+            id: () => 'ask-sentinel',
+        });
+        // The public result keeps its sentinel — that shape is unchanged.
+        expect(result!.model).toBe('unknown');
+
+        const o = auditLines(dir)[0]!['orchestration'] as Record<string, unknown>;
+        expect(o['model_requested']).toBeNull();
+        // A served id IS present, so a naive comparison would have said `true`.
+        expect(o['model_served']).toBe('claude-sonnet-4-5-20260101');
+        expect(o['model_divergent']).toBeNull();
+    });
+});

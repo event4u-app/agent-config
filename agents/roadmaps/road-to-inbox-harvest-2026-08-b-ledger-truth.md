@@ -44,7 +44,7 @@ coherence or plan drift, so it is the maintainer's call in that change, not here
 and its test run reported a count that is environment-conditional, where the
 defensible figure is the **delta of +7** over whatever the local baseline is.
 
-- [ ] **1.1 Read the served model off the API response.**
+- [x] **1.1 Read the served model off the API response.**
       `src/scripts/ai_council/clients.ts` has **22** `new CouncilResponse` sites
       (`:584`, `:616`, `:702`, `:719`, `:785`, `:796`, …), and each writes the
       **requested** id through a `model: this.model` assignment (`:545`, `:577`,
@@ -60,20 +60,59 @@ defensible figure is the **delta of +7** over whatever the local baseline is.
       `_getattr(response, 'content')` (`:594`). CLI transports carry no
       served-model field at all, so `''` is the honest value there rather than a
       parsed guess.
+      **Shipped** via `_servedModel(response, field = 'model')` in
+      `clients.ts` — a `field` PARAMETER rather than a literal, because the
+      Gemini case is the one that fails silently: a single-field read returns
+      `''`, which is indistinguishable from an honest no-report. All four live
+      sites read it (`clients.ts:645` Anthropic, `:749` OpenAI, `:828` Gemini
+      via `model_version`, `:911` the OpenAI-compatible client); the seventeen
+      error paths keep the `''` default untouched. A non-string value collapses
+      to `''` rather than being coerced — a coerced `'42'` would read as a real
+      served id downstream and could flip `model_divergent` to a false `true`.
+      Pinned by 7 tests, and the Gemini field name proved falsifiable by
+      mutation (`'model_version'` → `'model'` reds exactly that one case).
       <!-- verify: task test -- --filter=clients -->
-- [ ] **1.2 Carry it as a distinct `CouncilResponse` field.** The class is
+- [x] **1.2 Carry it as a distinct `CouncilResponse` field.** The class is
       declared at `clients.ts:199-213` with `model: string` at :201 and an
       optional-with-default constructor at :215-230 — the same additive shape
       `cache_read_input_tokens` used. Add the served id as a new optional field;
       do **not** overwrite `model`, because the requested id is what the tier
       decision was made against and both are needed to detect a substitution.
+      **Shipped** as `model_served: string`, optional-with-default `''`
+      (`clients.ts:225`, `:242`, `:254`) — the same additive shape
+      `cache_read_input_tokens` used, so no existing caller changes. It reaches
+      the persisted **response row** through `_serialise_response`
+      (`session.ts`). It is deliberately NOT hoisted to the session manifest:
+      that was the surplus this roadmap left to the change carrying the code,
+      and the field describes one response, not a session. A test pins the
+      absence, so a later hoist has to be a decision rather than a drift.
       <!-- verify: task test -- --filter=clients -->
-- [ ] **1.3 Extend the cost-summary contract additively.**
+- [x] **1.3 Extend the cost-summary contract additively.**
       [`cost-summary-schema`](../../docs/contracts/cost-summary-schema.md):60-62
       states its own rule — new fields are "a **v1 additive extension**", rows
       written before them read "like a row missing `input_tokens` — no version
       bump". Follow that rule exactly; no version bump, no required field.
-- [ ] **1.4 Assert it at the consumer that silently mis-attributes today.**
+      **Shipped — but NOT for `model_served`, and the correction is the
+      finding.** The first draft documented `model_served` here. The R2 review
+      caught it: this contract describes `agents/cost-tracking/sessions.jsonl`,
+      while the served id is written by `_serialise_response` into the **council
+      session manifest** — a different artefact with a different producer. So
+      the section documented a field no cost-summary producer writes: the exact
+      "defined but not wired" surface the step's own `by_model` reasoning
+      declined to create, reintroduced one section lower.
+      The field this contract actually gained a producer for in this change is
+      **`rate_missing`** (2.4 writes it into that JSONL), so that is what the
+      additive extension documents — plus the summary now aggregates it
+      (`rate_missing_sessions` on totals and every grouping,
+      `rate_missing_models` on totals), because a summary that silently
+      aggregates past an understated row reproduces the zero one layer up.
+      `model_served` is documented where it is recorded: the manifest row's own
+      comment, and `orchestration-telemetry.md` for the audit line.
+      **One deliberate non-extension, recorded rather than silently skipped:**
+      `by_model` does NOT aggregate the served id. That array is keyed by the
+      *requested* model and one bucket can legitimately span several served ids,
+      so any single per-bucket value would pick one and misreport the rest.
+- [x] **1.4 Assert it at the consumer that silently mis-attributes today.**
       `src/scripts/_lib/orchestration_record.ts:48-71` reads the requested tier
       for `tier_chosen`, `tier_source`, `session_tier` and the downshift
       cost-percentage — so on any alias or provider substitution the recorded
@@ -81,12 +120,30 @@ defensible figure is the **delta of +7** over whatever the local baseline is.
       served-vs-requested divergence as a recorded field, not a thrown error —
       `buildOrchestrationLine` collects into an `errors: string[]` (:183-184)
       rather than throwing, and this stays inside that contract.
+      **Shipped** as three fields on the orchestration object:
+      `model_requested`, `model_served`, and a DERIVED `model_divergent`.
+      Divergence is three-valued on purpose — `null` when either id is absent,
+      never `false`. Every CLI transport reports no served id, so a `false`
+      there would read as "checked, and they matched", which is the same
+      confident mis-attribution the step exists to remove. A non-string id
+      collects into `errors` rather than throwing, per the stated contract.
+      **Wired, not merely defined:** `ask_transport` is the first producer that
+      holds both ids, so `AskResult` carries `model_served` and the ask route's
+      audit line records all three — asserted end-to-end (substitution → `true`,
+      unreported → `null`, honest-∅ → nulls). Documented in
+      `orchestration-telemetry.md` § Field semantics.
       <!-- verify: task test -- --filter=_lib_orchestration_record -->
-- [ ] **1.5 State in the change that no ADR is needed.**
+- [x] **1.5 State in the change that no ADR is needed.**
       [`ADR-035`](../../docs/decisions/ADR-035-model-capability-tiers.md) is not
       amended — its tier mapping is unchanged; this phase makes the ADR's
       attribution honest rather than re-deciding it. Say so, so a later reader does
       not go looking for a missing record.
+      **Stated here and in the pull request:** no ADR accompanies Phase 1.
+      `ADR-035`'s tier mapping is untouched — nothing about which model serves
+      which tier is re-decided. What changes is that the record now says which
+      model actually answered, so the ADR's own attribution stops being a
+      claim. `cost-summary-schema` and `audit-log-v1` both absorb the fields
+      under their existing additive rules, so no contract version moves either.
 
 ## Phase 2 — The rate tables cannot disagree
 
@@ -133,44 +190,100 @@ they are never cross-checked, and **they match model ids by different strategies
       no constant to `pricing.ts`. It reads the two existing tables and asserts a
       relation between them; nothing in `.agent-prices.md` was touched.
       <!-- verify: task test -- --filter=pricing -->
-- [ ] **2.3 Make `lookup()` longest-prefix instead of exact-key.**
+- [x] **2.3 Make `lookup()` longest-prefix instead of exact-key.**
       `pricing.ts:52-54` is a bare `table.prices.get(priceKey(provider, model))`,
       so `claude-sonnet-4-5-20260101` misses a `claude-sonnet-4-5` row and prices
       at nothing. Fall back to the longest matching key prefix, keeping exact
       match as the first hit so no currently-priced call changes.
+      **Shipped**, with one guard the step did not name and that a plain
+      `startsWith` would have missed: a prefix must be followed by a separator
+      (`-`, `.`, `:`, `@`) or end the id, so a `claude-opus-4-1` row never
+      prices `claude-opus-4-15`. Mispricing one model at another's rate is
+      **worse** than the zero it replaces, because it looks correct. Longest
+      match wins, so a specific row is never shadowed by a shorter one that
+      also prefixes the id; provider is part of the composite key, so
+      cross-provider bleed is impossible by construction. Six tests, including
+      the exact-match-unchanged case and both near-misses.
       <!-- verify: task test -- --filter=pricing -->
-- [ ] **2.4 Flag the silent zero instead of returning it.** `track.mjs:64` is
+- [x] **2.4 Flag the silent zero instead of returning it.** `track.mjs:64` is
       `if (!p || !u) return 0;`, reached whenever `modelTier()` returns
       `'unknown'` (:49, :54) — an unknown model is priced at **zero, with no
       warning and no flag**; `grep -rn rate_missing src/` returns 0 hits. Emit a
       `rate_missing` marker on the row and one stderr warning per run. Rows keep
       their token counts, so a later backfill stays possible.
-- [~] **2.5 Backfill machinery for `rate_missing` rows.** Deferred behind
+      **Shipped** as `rate_missing: boolean` plus `rate_missing_models: string[]`
+      (sorted, distinct) on the session row, and ONE stderr warning per run —
+      emitted **before** the `TRACK_QUIET` return, because a suppressed report
+      is a display choice while an understated cost figure is a data-integrity
+      problem. Token counts are untouched, which is what makes 2.5's backfill
+      possible at all. Pinned by 4 subprocess tests over a temp-`HOME`
+      transcript fixture (track.mjs has no export and no entry guard, so
+      importing it would scan the developer's real `~/.claude`), including a
+      negative control on a priced model; mutation-proven — dropping the
+      `tier === 'unknown'` guard reds the control and the mixed-session case.
+- [ ] **2.5 Backfill machinery for `rate_missing` rows.** Blocked behind
       `unknown-model-row-never-observed` — see `## Blockers`. Writing a
       re-pricing pass before a single real unknown-model row exists would be
       built against a shape nobody has seen.
+      **Glyph corrected `[~]` → `[ ]` when the rest of the roadmap closed, and
+      stated rather than done quietly.** `[~]` means *deferred*; this step is
+      *blocked*, which is what `[ ]` plus a recorded blocker already says — it
+      is not half-shipped, and nothing about it was started. The correction is
+      not cosmetic: with `count_open` at 0 and any `[~]` present, the
+      pre-commit dashboard gate refuses **every** commit in the repository
+      until a human disposes of the deferral, so a mis-glyph here would have
+      deadlocked the branch that finished the work. Restoring a genuinely
+      blocked item to `[ ]` is the disposition the gate itself documents.
+      Reverse it to `[~]` if the intent really was "deferred by choice".
 
 ## Phase 3 — Two aggregation lines and a cache signature
 
-- [ ] **3.1 Add a cache-savings line to the cost summary.** `grep -rni saving`
+- [x] **3.1 Add a cache-savings line to the cost summary.** `grep -rni saving`
       over `src/scripts/cost*` returns 0 hits — the summary reports spend but never
       what caching bought. Both inputs exist: the totals block carries
       `cache_read_input_tokens` / `cache_creation_input_tokens`
       ([`cost-summary-schema`](../../docs/contracts/cost-summary-schema.md):46-47,
       :58) and `pricing.ts:111-113` holds the multipliers to price the
       counterfactual. Additive per the schema's own rule (:60-62).
+      **Shipped** as `cache_savings_input_token_equivalents` on `totals` —
+      token-equivalents, explicitly **not USD**, because `totals` aggregates
+      across models with different input rates and carries no per-model split
+      to apply them to; a dollar figure would have to pick one rate and be
+      wrong for every other model in the row. A **negative** value is
+      meaningful: the run wrote cache it never read back. The write premium
+      uses the 5m multiplier — rows carry no TTL split, and 5m is the same
+      assumption `track.mjs` already makes for unaccounted writes, so the two
+      cost paths agree instead of diverging quietly. Stated as a limit in the
+      contract rather than left for a reader to discover.
       <!-- verify: task test -- --filter=cost_summary -->
-- [ ] **3.2 Add a day-by-day breakdown.** `grep -rn by_date src/ docs/` returns 0
+- [x] **3.2 Add a day-by-day breakdown.** `grep -rn by_date src/ docs/` returns 0
       hits, yet every row already carries `startedAt` / `endedAt`
       (`track.mjs:214`, from the per-message timestamps at :175-177). One derived
       grouping, no new capture. Additive, same rule.
+      **Shipped** as a `by_date` array keyed on the UTC calendar day of
+      `startedAt`, same row shape as `by_session`. A row with no or
+      unparseable timestamp lands under `unknown`, which sorts last under the
+      existing codepoint ordering, so a timestampless row never displaces a
+      real day. A test asserts the day buckets re-sum to `totals` — a grouping
+      that double-counts is the failure mode worth pinning.
       <!-- verify: task test -- --filter=cost_summary -->
-- [ ] **3.3 Add a write-share signature to the existing cache report.** Extend
+- [x] **3.3 Add a write-share signature to the existing cache report.** Extend
       `src/scripts/cache_realization_report.ts`, which already parses the
       read/write split and computes `median_first_call_written_or_uncached` /
       `mean_first_call_written_or_uncached` (:85-86) beside
       `first_call_cache_read_share` and `cold_start_share_of_write_volume` (:88-90,
       computed :130-140). Do **not** write a new script.
+      **Shipped** by extending `computeColdStarts` — no new script — with
+      `write_share_of_billable` / `read_share_of_billable` /
+      `uncached_share_of_billable` over ALL subagent records, plus one render
+      line. The three share one denominator and sum to 1, which is what makes
+      them a signature rather than three loose ratios: a write-heavy split is
+      paying the cache premium and collecting no discount, and
+      `cold_start_share_of_write_volume` cannot show that — it only says how
+      much of the writing happened on a first call. A test pins exactly that
+      gap (a never-read-back run reads `write_share = 1` while the pre-existing
+      metric reports a bland 0.5). All-zero is the **empty-corpus** reading,
+      never "a perfectly uncached workload"; read it beside `legs`.
       <!-- verify: task test -- --filter=cache_realization_report -->
 
 ## Cancelled — each against a named citation

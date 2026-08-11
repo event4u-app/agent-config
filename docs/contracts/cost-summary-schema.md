@@ -33,6 +33,7 @@ fields and the telegraph-suspended-multiplier contract.
 | `totals` | object | Lifetime aggregates — see `totals` below. |
 | `by_session` | array | Per `sessionId` row; ordered by `sessionId` ascending. |
 | `by_conversation` | array | Per `conversation_id` row; ordered by `conversation_id` ascending. |
+| `by_date` | array | Per UTC calendar day (`YYYY-MM-DD`) of the row's `startedAt`; ordered ascending. A row with no or unparseable timestamp lands under `unknown`, which sorts last. **v1 additive extension.** **Honest limit:** the key is the START day only, so a session spanning midnight or several days attributes its whole cost to the day it began — a day's figure is "spend from sessions that started that day", not "spend that occurred that day". Splitting a session across days would need per-message costs the source row does not carry (it keeps `startedAt`/`endedAt` and one total), so the alternative is not a better number but an invented one. |
 | `by_model` | array | Per `model` row; ordered by `model` ascending. |
 
 ## `totals` shape
@@ -47,9 +48,29 @@ fields and the telegraph-suspended-multiplier contract.
   "cache_creation_input_tokens": 5000,
   "telegraph_delta_tokens": 0,
   "telegraph_multiplier_version": "v1",
-  "telegraph_multiplier_active": false
+  "telegraph_multiplier_active": false,
+  "cache_savings_input_token_equivalents": 38
 }
 ```
+
+`cache_savings_input_token_equivalents` is what the prompt cache bought,
+expressed in **input-token equivalents — not USD**: each cached read token
+saved `1 - CACHE_READ_MULTIPLIER` of a full-rate input token, each written
+token cost an extra `CACHE_WRITE_MULTIPLIER_5M - 1`, and the field is the net.
+A **negative** value is meaningful and not an error — it says the run wrote
+cache it never read back and paid the premium for nothing.
+
+Two honest limits. It is not priced in dollars because `totals` aggregates
+across models with different input rates and carries no per-model token split
+to apply them to; any single rate would be wrong for every other model in the
+row. And the write premium uses the **5-minute** multiplier, because rows carry
+no TTL split — 5m is Anthropic's default and the assumption
+[`cost/track.mjs`](../../src/scripts/cost/track.mjs) already makes for
+unaccounted writes, so the two cost paths agree rather than diverging quietly.
+A 1h-heavy workload therefore reads slightly optimistic.
+
+Also a **v1 additive extension**: absent on a summary emitted before it
+shipped, exactly like the cache fields above.
 
 `telegraph_delta_tokens` is always `0` while
 `telegraph_multiplier_active == false` — see
@@ -62,11 +83,11 @@ extension shipped lack the fields and aggregate as `0` for them, exactly
 like a row missing `input_tokens` — no version bump, per the additive rule
 below.
 
-## `by_session` / `by_conversation` row shape
+## `by_session` / `by_conversation` / `by_date` row shape
 
 ```json
 {
-  "key": "<sessionId or conversation_id>",
+  "key": "<sessionId, conversation_id, or YYYY-MM-DD>",
   "sessions": 12,
   "total_cost_usd": 0.4567,
   "input_tokens": 8000,
@@ -98,6 +119,28 @@ group by inspecting which array the row lives in.
 model-scoped — but DOES carry the cache fields: the prompt cache itself is
 model-scoped (a cache write under one model is never read back under
 another), so a per-model cache breakdown is meaningful here.
+
+## Unpriced rows — `rate_missing`, a v1 additive extension
+
+A source row may carry `rate_missing` (bool) and `rate_missing_models`
+(string[]): the session contained at least one message whose model matched no
+price tier, so those messages were costed at **$0** and the row's
+`total_cost_usd` is **understated** — it is not a record of cheap work.
+Written by [`cost/track.mjs`](../../src/scripts/cost/track.mjs); token counts
+are kept untouched so the row can be re-priced once a rate exists.
+
+The summary surfaces it rather than silently aggregating past it:
+
+- `totals.rate_missing_sessions` — how many source rows were flagged, and
+  `totals.rate_missing_models` — the sorted distinct union of the unpriced ids.
+- Every `by_session` / `by_conversation` / `by_date` / `by_model` row carries
+  its own `rate_missing_sessions` count, because the understatement propagates
+  into whichever grouping the flagged row lands in. A non-zero count on a row
+  means that row's `total_cost_usd` is a floor, not a figure.
+
+Additive per the rule below: absent on rows and summaries written before this
+extension, which read as `0` / `[]` — the same absent-reading as the cache
+fields. No version bump, no required field.
 
 ## Stability guarantees
 

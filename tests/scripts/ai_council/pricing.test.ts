@@ -513,3 +513,67 @@ describe('pricing — cross-table parity with cost/track.mjs', () => {
         }
     });
 });
+
+// ── longest-prefix lookup (inbox-harvest-2026-08-b-ledger-truth 2.3) ──
+//
+// `lookup()` was a bare exact-key Map read, so a dated vendor alias
+// (`claude-sonnet-4-5-20260101`) missed the `claude-sonnet-4-5` row and priced
+// at NOTHING — a silent zero that reads exactly like a free call. The fallback
+// keeps exact match as the first hit, so no call that resolves today changes
+// path or price.
+describe('pricing — lookup falls back to the longest matching prefix', () => {
+    function tableWith(rows: Array<[string, string, number, number]>) {
+        const p = path.join(mkTmp(), 'prices.md');
+        fs.writeFileSync(
+            p,
+            '---\nlast_updated: 2026-04-29\ncurrency: USD\nunit: per_1M_tokens\nsource: t\n---\n\n' +
+                '| provider | model | input | output |\n|---|---|---|---|\n' +
+                rows.map(([pr, m, i, o]) => `| ${pr} | ${m} | ${i} | ${o} |`).join('\n') +
+                '\n',
+            'utf-8',
+        );
+        return load_prices(p);
+    }
+
+    it('a dated alias resolves to its base row instead of pricing at zero', () => {
+        const table = tableWith([['anthropic', 'claude-sonnet-4-5', 3.0, 15.0]]);
+        const price = lookup(table, 'anthropic', 'claude-sonnet-4-5-20260101');
+        expect(price?.input_per_1m_usd).toBe(3.0);
+        expect(price?.output_per_1m_usd).toBe(15.0);
+    });
+
+    it('exact match stays the first hit — a currently-resolving call never changes price', () => {
+        const table = tableWith([
+            ['anthropic', 'claude-sonnet-4-5', 3.0, 15.0],
+            ['anthropic', 'claude-sonnet-4-5-20260101', 7.0, 9.0],
+        ]);
+        expect(lookup(table, 'anthropic', 'claude-sonnet-4-5')?.input_per_1m_usd).toBe(3.0);
+        expect(lookup(table, 'anthropic', 'claude-sonnet-4-5-20260101')?.input_per_1m_usd).toBe(7.0);
+    });
+
+    it('the LONGEST prefix wins — a more specific row is never shadowed by a shorter one', () => {
+        const table = tableWith([
+            ['anthropic', 'claude', 1.0, 1.0],
+            ['anthropic', 'claude-opus-4-1', 15.0, 75.0],
+        ]);
+        expect(lookup(table, 'anthropic', 'claude-opus-4-1-20260101')?.input_per_1m_usd).toBe(15.0);
+    });
+
+    it('a prefix must end on a separator — claude-opus-4-1 never prices claude-opus-4-15', () => {
+        // The failure a bare startsWith would introduce is WORSE than the zero
+        // it replaces: a wrong rate looks like a correct one.
+        const table = tableWith([['anthropic', 'claude-opus-4-1', 15.0, 75.0]]);
+        expect(lookup(table, 'anthropic', 'claude-opus-4-15')).toBeNull();
+        expect(lookup(table, 'anthropic', 'claude-opus-4-1.2')?.input_per_1m_usd).toBe(15.0);
+    });
+
+    it('never bleeds across providers', () => {
+        const table = tableWith([['anthropic', 'claude-sonnet-4-5', 3.0, 15.0]]);
+        expect(lookup(table, 'openai', 'claude-sonnet-4-5-20260101')).toBeNull();
+    });
+
+    it('a genuinely unknown model still resolves to null, not to some neighbour', () => {
+        const table = tableWith([['anthropic', 'claude-sonnet-4-5', 3.0, 15.0]]);
+        expect(lookup(table, 'anthropic', 'gpt-4o')).toBeNull();
+    });
+});

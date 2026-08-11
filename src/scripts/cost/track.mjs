@@ -59,6 +59,19 @@ function modelTier(model) {
 // cache_creation_input_tokens NOT covered by that split (older records that
 // predate the TTL breakdown) is priced at the 5m rate — Anthropic's default
 // TTL — rather than silently dropped.
+// A tier with no PRICING row prices at zero. That zero is indistinguishable
+// from a genuinely free message, so the ROW carries `rate_missing` and the run
+// warns once on stderr — the alternative (throwing) would lose a whole session
+// of real token counts over one unrecognised model id. Token counts are kept
+// untouched precisely so a later re-pricing pass can backfill the cost.
+// Every token class that costs money. A record where this is 0 costs 0 at any
+// rate, so a missing rate cannot understate it.
+function billableTokens(u) {
+  if (!u) return 0;
+  return (u.input_tokens || 0) + (u.output_tokens || 0)
+       + (u.cache_creation_input_tokens || 0) + (u.cache_read_input_tokens || 0);
+}
+
 function costForUsage(tier, u) {
   const p = PRICING[tier];
   if (!p || !u) return 0;
@@ -163,6 +176,8 @@ function summarizeSession(files) {
   let sessionId = null, cwd = null;
   let totalSeen = 0;
   const seen = new Set();
+  // Model ids that priced at zero because no PRICING tier claimed them.
+  const rateMissingModels = new Set();
 
   for (const file of files) {
     let text;
@@ -188,6 +203,15 @@ function summarizeSession(files) {
       const tier = modelTier(model);
       const u = usageTokens(m.message.usage);
       const cost = costForUsage(tier, u);
+      // Key on the ACTUAL zero condition — `!PRICING[tier]`, what
+      // costForUsage returns 0 on — not on `tier === 'unknown'`. The two
+      // coincide only because `unknown` is today the sole tier modelTier()
+      // returns that PRICING lacks; adding a vendor family without a rate row
+      // would otherwise restore the exact silent zero this flag removes.
+      // The usage guard keeps the flag worth reading: a message with no
+      // billable tokens costs nothing at any rate, so flagging it would claim
+      // an understatement that is not there.
+      if (!PRICING[tier] && billableTokens(u) > 0) rateMissingModels.add(model);
 
       const slot = byModel[model] || { tier, input_tokens: 0, output_tokens: 0,
         cache_creation_input_tokens: 0, cache_read_input_tokens: 0, messages: 0, cost_usd: 0 };
@@ -213,6 +237,12 @@ function summarizeSession(files) {
   const dedup_ratio = totalSeen > 0 ? (totalSeen - dedupedCount) / totalSeen : 0;
   return { sessionId, cwd, startedAt: firstTs, endedAt: lastTs, messageCount,
     byModel, byTier, byBucket, total_cost_usd: totalCost,
+    // `rate_missing` marks a row whose total_cost_usd is understated because
+    // at least one model priced at zero for want of a rate — never because the
+    // work was free. `rate_missing_models` carries the ids so a backfill has a
+    // shape to work against instead of re-deriving it from the transcript.
+    rate_missing: rateMissingModels.size > 0,
+    rate_missing_models: [...rateMissingModels].sort(),
     totalRecordsSeen: totalSeen, dedupedRecordsCount: dedupedCount, dedup_ratio,
     capturedAt: new Date().toISOString() };
 }
@@ -237,6 +267,15 @@ function main() {
   }
   const files = collectSessionFiles(projectDir, sessionPath);
   const summary = summarizeSession(files);
+  // ONE warning per run, before the quiet return: a suppressed report is a
+  // display choice, an understated cost figure is a data-integrity problem.
+  if (summary.rate_missing) {
+    console.error(
+      `cost-track: rate_missing — no price tier for ${summary.rate_missing_models.join(', ')}; ` +
+        `those messages priced at $0 and the session total is understated. ` +
+        `Token counts are kept, so the row can be re-priced later.`,
+    );
+  }
   if (process.env.TRACK_OUT) writeFileSync(process.env.TRACK_OUT, JSON.stringify(summary, null, 2));
   const store = process.env.TRACK_STORE || DEFAULT_STORE;
   let res = { ok: false, reason: 'dry-run' };

@@ -142,3 +142,43 @@ describe('session.save — absent_members / quorum (Phase 3.2/3.3)', () => {
         expect(payload['quorum']).toBe('overridden-by-extra');
     });
 });
+
+describe('session.save — served-model attribution on the response row (ledger-truth 1.2)', () => {
+    function mkManifest() {
+        return new SessionManifest({
+            mode: 'prompt',
+            artefact: '<inline>',
+            original_ask: 'hi',
+            members: ['anthropic/claude-sonnet-4-5'],
+        });
+    }
+
+    it('persists model_served beside the requested model, and NOT in the manifest', () => {
+        const base = mkTmp();
+        const responses = [
+            new CouncilResponse({
+                provider: 'anthropic',
+                model: 'claude-sonnet-4-5',
+                model_served: 'claude-sonnet-4-5-20260101',
+                text: 'ok',
+            }),
+        ];
+        const dir = save({ manifest: mkManifest(), responses, sessions_dir: base, retention_days: 0 });
+        const payload = readManifest(dir);
+        const rows = (payload['responses_per_round'] as Array<Array<Record<string, unknown>>>)[0]!;
+        expect(rows[0]!['model']).toBe('claude-sonnet-4-5');
+        expect(rows[0]!['model_served']).toBe('claude-sonnet-4-5-20260101');
+        // The surplus the roadmap flagged and left to this change: the field
+        // belongs on the response row it describes, not hoisted to the
+        // manifest as if it were a session-level fact.
+        expect(payload['model_served']).toBeUndefined();
+    });
+
+    it("a transport that reports no served id persists '' — additive, absent-safe", () => {
+        const base = mkTmp();
+        const responses = [new CouncilResponse({ provider: 'anthropic', model: 'claude-x', text: 'ok' })];
+        const dir = save({ manifest: mkManifest(), responses, sessions_dir: base, retention_days: 0 });
+        const rows = (readManifest(dir)['responses_per_round'] as Array<Array<Record<string, unknown>>>)[0]!;
+        expect(rows[0]!['model_served']).toBe('');
+    });
+});

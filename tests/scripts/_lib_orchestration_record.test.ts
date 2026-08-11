@@ -203,3 +203,66 @@ describe('dispatch-economy additive fields (road-to-token-economy-dispatch Phase
         expect(neither.work_tokens).toBeNull();
     });
 });
+
+// ── served-model divergence (inbox-harvest-2026-08-b-ledger-truth 1.4) ──
+//
+// `tier_chosen`, `tier_source`, `session_tier` and the downshift cost-% are
+// all derived from the REQUESTED model. On an alias or provider substitution
+// every one of them attributes the saving to a model that never ran, and
+// nothing on the line said so. `model_divergent` is the signal — derived, and
+// deliberately three-valued: `null` is "not decidable", never "checked, and
+// they matched".
+describe('buildOrchestrationLine — served-model divergence', () => {
+    it('records true when both ids are present and differ', () => {
+        const { line, errors } = buildOrchestrationLine({
+            ...BASE,
+            model_requested: 'claude-sonnet-4-5',
+            model_served: 'claude-sonnet-4-5-20260101',
+        });
+        expect(errors).toEqual([]);
+        expect(line!.orchestration).toMatchObject({
+            model_requested: 'claude-sonnet-4-5',
+            model_served: 'claude-sonnet-4-5-20260101',
+            model_divergent: true,
+        });
+    });
+
+    it('records false when both ids are present and match', () => {
+        const { line } = buildOrchestrationLine({
+            ...BASE,
+            model_requested: 'gpt-4o',
+            model_served: 'gpt-4o',
+        });
+        expect((line!.orchestration as Record<string, unknown>)['model_divergent']).toBe(false);
+    });
+
+    it('stays null when the transport reports no served id — absent is not agreement', () => {
+        for (const served of ['', null, undefined]) {
+            const { line } = buildOrchestrationLine({
+                ...BASE,
+                model_requested: 'claude-sonnet-4-5',
+                model_served: served,
+            });
+            expect((line!.orchestration as Record<string, unknown>)['model_divergent']).toBeNull();
+        }
+    });
+
+    it('stays null when neither id was recorded (a pre-extension line)', () => {
+        const { line, errors } = buildOrchestrationLine(BASE);
+        expect(errors).toEqual([]);
+        expect(line!.orchestration).toMatchObject({
+            model_requested: null,
+            model_served: null,
+            model_divergent: null,
+        });
+    });
+
+    it('collects a non-string id into errors rather than throwing', () => {
+        const { line, errors } = buildOrchestrationLine({
+            ...BASE,
+            model_served: 42 as unknown as string,
+        });
+        expect(errors).toContain('model_served must be a string or omitted');
+        expect(line).toBeNull();
+    });
+});
