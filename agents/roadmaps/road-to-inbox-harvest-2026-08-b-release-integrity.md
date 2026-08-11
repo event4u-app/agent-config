@@ -50,25 +50,46 @@ curation. Both cannot be done, and the script argues against the flip itself:
 mode this whole change exists to remove". So the flip is a decision revisit, not a
 fix.
 
-- [ ] **1.1 Rewrite the shipped placeholder line by hand.** `CHANGELOG.md:329` is
+- [x] **1.1 Rewrite the shipped placeholder line by hand.** `CHANGELOG.md:329` is
       wrong today whichever cadence wins — the release is out and the line still
       says rewrite-before-merge. Curate it from `1f01490`, `e05de77`.
-- [ ] **1.2 State the cadence question in the contract, both branches.** Neither
+      Done: the v9.32.0 Behaviour-changes line now states the bounded self-fix
+      loop (`1f01490`, wired in `10c8f7e`) and records that `e05de77` is a
+      rule-file edit with no behaviour change.
+      `check_release_highlights --version 9.32.0 --from 9.31.0 --to 9.32.0`
+      returns `✅ curated head plausible` with no advisory line.
+- [x] **1.2 State the cadence question in the contract, both branches.** Neither
       `docs/contracts/release-pr-gating.md` nor
       `docs/contracts/CHANGELOG-conventions.md` says whether the curated head is a
       merge precondition or a retro-curation surface. Record both readings and the
       one the blocker picks — no behaviour change.
-- [ ] **1.3 Pin the current advisory behaviour with a fixture.** Extend
+      Done: `CHANGELOG-conventions.md` § *Curated-head cadence* records the pick,
+      the rejected branch with its reason, and what the pick concedes;
+      `release-pr-gating.md`'s `highlight-plausibility` row states that prose
+      polish is not gated and points at it.
+- [x] **1.3 Pin the current advisory behaviour with a fixture.** Extend
       `tests/scripts/check_release_highlights.test.ts` so a placeholder head
       produces exit 0 plus the advisory line, making the decision a one-line diff
       either way.
       <!-- verify: task test -- --filter=check_release_highlights -->
-- [~] **1.4 Flip the placeholder check to blocking for the final release head.**
-      Deferred behind `release-head-cadence-decision`. The gate is constructible
-      despite *a measurement is not a gate*: the placeholder string is emitted by
-      our own generator into our own file, so the false-positive class is **empty
-      by construction** — no third party can produce that byte sequence in a
-      curated head. The argument holds; wanting the gate is the maintainer's call.
+      Done: `main` is exported (the house pattern — 306 scripts already do) and
+      the fixture drives it over a temp changelog with an empty `HEAD..HEAD`
+      span, so it needs no tag and behaves the same on a shallow CI checkout.
+      Verified by mutation: adding `return 1` to the advisory branch reds the
+      fixture, and reverting greens it.
+- [-] **1.4 Flip the placeholder check to blocking for the final release head.**
+      **Cancelled — the cadence blocker resolved to (b), no gate change**
+      (AI-council 2/2, 2026-08-11, anthropic + openai, re-decided after being
+      shown the counter-argument a first round never saw). The "empty by
+      construction" argument is about *detection*, not about *blocking*: the
+      marker is present by construction on every release carrying a substantiated
+      category, so blocking it re-creates the guaranteed-first-run red that
+      pre-filling was introduced to remove — the failure mode
+      `check_release_highlights.ts:196-200` names in its own source. A marked
+      line is a prose gap, not a contradiction. Recorded in
+      `docs/contracts/CHANGELOG-conventions.md` § Curated-head cadence, including
+      what the choice concedes (recurrence), and pinned by 1.3 so reversing it
+      stays a one-line diff.
 
 ## Phase 2 — The carrier remainder, with its premise corrected
 
@@ -79,7 +100,7 @@ fix.
       `src/scripts/report_carrier_divergence.ts:320` prints the `paths:` subset as
       ACTIONABLE under the frontmatter-only count, and
       `tests/scripts/report_carrier_divergence.test.ts` pins `pathsScopeDiff`.
-- [ ] **2.3 Promote the corrected premise to a stable context.** It lives only in a
+- [x] **2.3 Promote the corrected premise to a stable context.** It lives only in a
       roadmap (transient) and in
       `agents/evidence/analysis/carrier-layer-divergence-classification.md`. Per
       `no-roadmap-references`, promote the durable conclusion (109 prose-identical,
@@ -88,25 +109,72 @@ fix.
       sanctioned promote-target — and cite it from the report's header. Five reviews
       re-cited 109 because the correction had no stable surface.
       <!-- verify: ./scripts-run src/scripts/check_context_paths -->
+      Done: `agents/settings/contexts/carrier-divergence-109-vs-24.md` carries
+      the durable conclusion (109 prose-identical, 24 actionable on `paths:`,
+      over-delivery direction, and what it explicitly does not decide);
+      `report_carrier_divergence.ts` gained a *BEFORE QUOTING A COUNT* header
+      block pointing at it. `check_context_paths` scanned 1275, zero violations.
 
 ## Phase 3 — Four flags over data that already exists
 
-- [ ] **3.1 `doctor --anatomy`.** Render the injection anatomy from
+- [x] **3.1 `doctor --anatomy`.** Render the injection anatomy from
       `src/scripts/preamble_byte_census.ts` and
       `src/scripts/dispatch_economy_report.ts`; `doctor` is already registered
       (`src/cli/registry.ts:41`). No new measurement.
       <!-- verify: task test -- --filter=preamble_byte_census -->
-- [ ] **3.2 `conformance:why <id>`.** A flag on the existing `explain`
+      Done as a flag on `doctor`, composing both reports' existing
+      `buildReport` / `renderText` — no new measurement and no threshold. A
+      precondition surfaced while wiring it: `preamble_byte_census.ts` carried no
+      `__AGENT_CONFIG_BUNDLE__` guard, and `cmd_doctor.ts` is a
+      `build:cli-delegate` bundle entry, so importing it would have run the
+      census and exited before the command's own `main`. Guard added, same shape
+      as the one `dispatch_economy_report.ts` already had. An absent
+      dispatch-economy half reports as unavailable with its reason, never as a
+      zero. Fixtures in `tests/scripts/_cli/cmd_doctor_anatomy.test.ts`.
+- [x] **3.2 `conformance:why <id>`.** A flag on the existing `explain`
       (`src/cli/registry.ts:58`) and `conformance:behavior`
       (`src/cli/registry.ts:44`) verbs — trace why one conformance id fired.
       <!-- verify: task test -- --filter=runtime_registry -->
-- [ ] **3.3 `recycle:verify` plus envelope mutation tests.** A flag on
+      Landed as `--why <id>` on `conformance:behavior`, which owns the data:
+      what the check detects, whether it fired, and every hit with its session,
+      detail and (for `language-pin`) the absent-vs-ignored provenance split.
+      An unknown id exits 2 naming the four known ids; a check that did not fire
+      prints as a **measured zero**, never as silence.
+      **Scope call, recorded rather than silently dropped:** it is NOT also a
+      subject on `explain`. That command is a py-parity surface whose `usage:`
+      line is byte-compared against a Python twin
+      (`tests/scripts/_cli/cmd_explain*`), so a fifth `SUBJECT_CHOICES` entry
+      either breaks the parity or drags the twin into a report-flag change. The
+      registry synopsis and `_dispatch.bash` help both name the flag, so it is
+      discoverable from the surface a reader actually greps.
+- [x] **3.3 `recycle:verify` plus envelope mutation tests.** A flag on
       `session:recycle` (`src/cli/registry.ts:71`).
       `src/scripts/_lib/subagent_capsule.ts` already does the version check
       (`:495`), unknown-key rejection (`:489`) and a staleness guard (`:223`); the
       gap is a mutation suite proving each rejection fires.
       <!-- verify: task test -- --filter=_lib_subagent_capsule -->
-- [ ] **3.4 `surface prune` as a report flag.** Over census data already computed
+      Done: `--verify` on `session:recycle` runs every rejection and stops
+      before the write — deliberately the SAME code path, since validating
+      through a second path would create the keep-in-sync artefact this tree
+      refuses. `tests/scripts/recycle_envelope_mutations.test.ts` drives one
+      mutation per rejection off a baseline the suite asserts is clean, so a
+      green case cannot be green for an unrelated reason: wrong and missing
+      `capsule_version`, wrong `variant`, an unknown key, unparseable and
+      missing `written_at`, empty `acceptance_criteria`, non-object payloads,
+      and the all-violations-at-once case.
+- [ ] **3.4 `surface prune` as a report flag.** OPEN — the step's own premise
+      does not hold, and inventing past it would be the failure this roadmap is
+      about. It reads "a flag beats a 197th command", which presumes a host verb
+      named `surface`. There is none: `grep "'surface" src/cli/registry.ts`
+      returns nothing, and no script generates `docs/SKILL_CENSUS.md` or
+      `docs/artefact-census.md` (the only reader is
+      `check_artefact_count_messaging.ts`). So the choices are to create the
+      verb the step forbids, or to pick a different host verb — a design
+      decision the step did not make and this run declines to make silently.
+      Whoever takes it: `commands` (native, already "list/explain the command
+      surface") is the nearest candidate, and 3.5 already points the
+      reduction TARGETS at the three roadmaps that own them.
+      ORIGINAL TEXT: Over census data already computed
       in `docs/SKILL_CENSUS.md` and `docs/artefact-census.md`; a flag beats a 197th
       command against a 196-command surface.
       <!-- verify: ./scripts-run src/scripts/check_references -->
@@ -117,7 +185,7 @@ fix.
 
 ## Phase 4 — Two real contract gaps
 
-- [ ] **4.1 Write the model-ceiling escalation contract.** Genuine gap: a
+- [x] **4.1 Write the model-ceiling escalation contract.** Genuine gap: a
       case-insensitive `ceiling` grep returns 0 for both
       `docs/contracts/subagent-boundary.md` and `src/rules/delegation-policy.md`,
       so nothing states what a worker does when the ceiling cannot carry the task.
@@ -125,12 +193,28 @@ fix.
       `subagents.model_ceiling` is class C, default `""`
       (`src/config/agent-settings.template.yml:795`,
       `docs/contracts/settings-classes.md:284`) — nothing is capped today.
-- [ ] **4.2 Add the funnel's missing Opportunity stage.**
+      Done: `subagent-boundary.md` § *The model ceiling* carries the Iron Law
+      (escalate, never silently degrade) plus four clauses — the worker returns
+      the escalation, the orchestrator decides and never raises the ceiling
+      itself (class C, `settings:set` refuses it by construction), absent is
+      *uncapped* rather than a low cap, and the per-task-class/dollar caps stay
+      cut. `delegation-policy.md` step 2 states the same obligation and routes
+      there. Re-measured: the case-insensitive `ceiling` grep that returned 0
+      for both files now returns 10 and 4.
+- [x] **4.2 Add the funnel's missing Opportunity stage.**
       `src/scripts/report_conformance_funnel.ts` joins delivery to activation to
       compliance (`:128`), prints `NO DATA` honestly (`:187`, `:219`), and carries
       zero hits for `outcome` or `opportunity`. Derive Opportunity from the
       existing transcript store; keep it report-only, as its own header says.
       <!-- verify: task test -- --filter=report_conformance_funnel -->
+      Done: an OPPORTUNITY block between DELIVERY and ACTIVATION, derived from
+      the SK-2 scan's own `sessionsWithASkill` — no new classifier, so it cannot
+      disagree with the COMPLIANCE stage that already prints the same field. It
+      supplies the denominator ACTIVATION lacked: `skills.total` is a SUPPLY
+      number that can only fall as the catalogue grows. Report-only and
+      explicitly threshold-free, with the honest scope stated inline ("in
+      context" means loaded, not needed, so it bounds activation from above and
+      never calls a missed invocation a defect). Absent store prints NO DATA.
 - [-] **4.3 Cancelled: per-task-class and dollar caps on the ceiling.** No
       over-spend observed and nothing is capped today (4.1), so a cap would be a
       mechanism without a matched failure mode.
@@ -140,18 +224,29 @@ fix.
 
 ## Phase 5 — Records, and the asks that need no work
 
-- [ ] **5.1 Decide Continuation Protocol v1 as a record first.** Is one schema
+- [x] **5.1 Decide Continuation Protocol v1 as a record first.** Is one schema
       right, or are the variants correct? The capsule is already
       variant-discriminated at `CAPSULE_SCHEMA_VERSION = 3`
       (`src/scripts/_lib/subagent_capsule.ts:112`, 2 to 3 in #1255). A decision
       record, never a fourth format — the source file's own negative instruction.
-- [ ] **5.2 Record the runtime transition graph and loop detector as deferred,
+      Done in `agents/settings/contexts/continuation-protocol-and-runtime-graph.md`
+      § 1. The decision is **one schema, variant-discriminated** — the shipped
+      code already answers it (`CAPSULE_SCHEMA_VERSION = 3` at `:112`, `variant`
+      discriminator at `:114` validated at `:498`, both variants through one
+      validator), so a v1 document describing a fourth shape would compete with
+      it. Reopening condition stated and falsifiable: a consumer whose required
+      fields CONTRADICT an existing variant rather than extending it.
+- [x] **5.2 Record the runtime transition graph and loop detector as deferred,
       with a named revisit trigger.** The loop feared is already bounded: the
       turn-end gate refuses at most once per turn per key
       (`src/scripts/hooks/turn_end_gate_hook.ts:442-446`, "costs at most one extra
       refusal") and `session-eol` is `severity: advisory`, `fail_closed: false`,
       and cannot inject `/clear` (`src/scripts/hook_manifest.yaml:501-505`).
       Trigger: a transcript showing a real block, repair, recycle, same-block cycle.
+      Done in the same context, § 2, with both bounds re-verified in the tree at
+      the cited lines. Recorded as a mechanism without a matched failure mode —
+      the same test that cut 4.3 — with the transcript as the falsifiable
+      revisit trigger.
 - [-] **5.3 Cancelled: Runtime Event Model / canonical event bus.** The reviewer's
       own condition was "only if it replaces hooks"; the target is already a single
       in-process dispatcher and the item is recorded as CUT to a maintainer

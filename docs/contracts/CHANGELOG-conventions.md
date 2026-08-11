@@ -45,6 +45,37 @@ before merge. `_none_` is a legitimate value and often the true one — a
 release that changed no defaults should say so rather than carry an unfilled
 marker.
 
+### Curated-head cadence — retro-curation, not a merge precondition
+
+The generator pre-fills each *substantiated* label with a marked line
+(`DERIVED_MARKER` in `src/scripts/_lib/release_highlights.ts`) carrying the real
+reason plus the citing SHAs; the maintainer rewrites it into prose. When a marked
+line survives to merge, `src/scripts/check_release_highlights.ts` warns and still
+exits 0. Whether that is a defect or the intended cadence was open until
+2026-08-11, and one marked line reached npm and GitHub Releases in the v9.32.0
+head before it was settled. Both branches are recorded here so the decision is
+legible later (AI-council convergence 2/2, 2026-08-11, anthropic + openai).
+
+**The cadence is retro-curation.** A marked line is a legitimate interim state:
+unpolished, never false — its reason is derived and its SHAs are real. Curation
+is expected before merge and permitted after; a shipped head may be rewritten in
+place by a later change, which is how the v9.32.0 head was repaired.
+
+**The rejected branch.** Hard-blocking a surviving marker in the final release
+head was rejected. The marker is present *by construction* on every release that
+carries any substantiated category, so blocking it re-introduces the
+guaranteed-first-run red that pre-filling was introduced to remove — the failure
+mode `check_release_highlights.ts` names in its own source. A marked line is a
+prose gap, not a contradiction, and contradictions (`_none_` against derived
+evidence) remain the sole blocking condition.
+
+**What that concedes.** The advisory already failed once, and no non-gate
+mechanism is added here to make the next survivor less likely; this branch
+accepts recurrence rather than claiming a process reminder prevents it. The
+behaviour is pinned in `tests/scripts/check_release_highlights.test.ts` — a
+surviving marker warns and exits 0, verified to go red when that branch is
+flipped — so reversing the decision stays a one-line diff a test notices.
+
 Why it is a *head* and not a trailer: reviewers of 9.9.0 and 9.10.0 repeatedly
 could not tell, from a generated commit log, which entries change consumer
 behaviour, which need migration, which are internal gate repairs, and which

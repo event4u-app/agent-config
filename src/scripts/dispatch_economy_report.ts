@@ -54,7 +54,9 @@ const _HERE = fileURLToPath(import.meta.url);
 // 2-up resolution cache_realization_report.ts uses at the same depth).
 const REPO_ROOT = path.resolve(path.dirname(_HERE), '..', '..');
 const REGISTRATION_FILE = path.join(REPO_ROOT, 'src', 'config', 'dispatch-economy-metrics.json');
-const DEFAULT_AUDIT_DIR = path.join('agents', 'runtime', 'state', 'audit');
+/** Exported so `doctor --anatomy` resolves the same audit dir this script does. */
+export const DEFAULT_AUDIT_DIR = path.join('agents', 'runtime', 'state', 'audit');
+export { DEFAULT_PROJECTS_ROOT };
 
 /** Reviewer attribution off audit-line agent_combo — id-shaped types only. */
 const REVIEWER_TYPE_RE = /review|judge|validator/i;
@@ -375,7 +377,8 @@ function fmtTokens(n: number | null): string {
     return n >= 1000 ? `${(n / 1000).toFixed(1)}k` : String(Math.round(n));
 }
 
-function renderText(r: Report): string {
+/** Exported so `doctor --anatomy` renders the same text this script prints. */
+export function renderText(r: Report): string {
     const lines: string[] = [];
     lines.push('dispatch-economy report (registered: ' + r.registration.registered_at + ' · review by: ' + r.registration.review_by + ')');
     lines.push(`window: ${r.window.max_age_days}d · ${r.window.transcript_records} deduped records · ${r.window.legs} legs`);

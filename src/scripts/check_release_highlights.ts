@@ -114,7 +114,13 @@ export function highlight_contradictions(
     return out;
 }
 
-function main(argv: readonly string[]): number {
+/**
+ * Exported so the advisory-vs-blocking decision is a fixture, not a claim.
+ * `stale_draft_labels` firing while the exit code stays 0 is the behaviour the
+ * cadence blocker adjudicates; pinning it here makes either branch of that
+ * decision a one-line diff with a test that notices.
+ */
+export function main(argv: readonly string[]): number {
     let version: string | null = null;
     let from: string | null = null;
     let to = 'HEAD';
