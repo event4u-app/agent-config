@@ -23,6 +23,13 @@
  * state, never a tracked artefact — the same placement `self_repair_store.ts`
  * uses for the same reason.
  *
+ * **Known gap, stated rather than implied: `consumed/` has no prune or TTL.**
+ * `pending/` is bounded because staging the same hold twice returns the same
+ * token, but a consumed record is kept forever so `already_executed` stays
+ * provable rather than inferred from an absence. The neighbours under
+ * `agents/runtime/` are retention-managed and this is not; a retention policy
+ * is a decision (`domain-safety-retention`), not a default to invent here.
+ *
  * **Nothing in the shipped tree stages an action yet, deliberately.** Whether
  * the primitive binds — and what the five hosts without a `pre_tool_use` slot
  * get — is step 2.4, deferred behind `blocker: confirmation-degraded-host-semantics`.
@@ -81,7 +88,13 @@ export type ConfirmStatus =
     /** A previous call already consumed it; the caller must NOT execute. */
     | 'already_executed'
     /** No such token was ever staged here. */
-    | 'unknown';
+    | 'unknown'
+    /**
+     * A record by that name exists and cannot be read, so the action it holds
+     * cannot be named. Distinct from `unknown` on purpose: one is a typo, this
+     * is a damaged store with an action still held. The caller must NOT execute.
+     */
+    | 'unreadable';
 
 export interface ConfirmOutcome {
     readonly status: ConfirmStatus;
@@ -95,10 +108,34 @@ export interface StageOptions {
     readonly now?: string;
 }
 
+/**
+ * A token is a filename, so it is validated before it reaches `path.join`.
+ *
+ * `confirmAction` is the module's only destructive verb and its input is a
+ * string a human retyped from a prompt — the design this module documents.
+ * Interpolating that into a path unchecked makes `../../x` a rename of an
+ * arbitrary file, which inverts the purpose of a safety primitive. The shape
+ * is the one `randomUUID` produces, widened only to what a filename may
+ * safely carry.
+ */
+const _TOKEN_RE = /^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$/;
+
+export function isSafeToken(token: string): boolean {
+    return _TOKEN_RE.test(token) && token !== '.' && token !== '..';
+}
+
 function recordFile(dir: string, token: string): string {
     return path.join(dir, `${token}.json`);
 }
 
+/**
+ * Every field is checked, `staged_at` included.
+ *
+ * An earlier version validated four of the six and still claimed
+ * `v is StagedAction`, so a record missing `staged_at` passed the guard and
+ * crashed the `localeCompare` sort in {@link listPending} — an unsound guard
+ * turning a malformed file into a broken enumeration.
+ */
 function isStaged(v: unknown): v is StagedAction {
     if (typeof v !== 'object' || v === null) {
         return false;
@@ -107,8 +144,10 @@ function isStaged(v: unknown): v is StagedAction {
     return (
         typeof r.token === 'string' &&
         typeof r.gate_id === 'string' &&
+        typeof r.phase === 'string' &&
         typeof r.action === 'string' &&
-        typeof r.object === 'string'
+        typeof r.object === 'string' &&
+        typeof r.staged_at === 'string'
     );
 }
 
@@ -131,8 +170,32 @@ export function stageAction(
     input: StageInput,
     opts: StageOptions = {},
 ): StagedAction {
+    const token = opts.token ?? randomUUID();
+    if (!isSafeToken(token)) {
+        throw new Error(
+            `confirmation: refusing to stage under an unsafe token '${token}' — ` +
+                'a token is a filename and must match [A-Za-z0-9][A-Za-z0-9._-]*',
+        );
+    }
+
+    // Staging the SAME hold twice returns the same token rather than minting a
+    // second one. A gate that blocks the same advance on every AFTER_STEP would
+    // otherwise accumulate one pending record per attempt, and an operator
+    // would face N approvals for one held action — which is the opposite of
+    // what an approval naming an exact object is for.
+    const existing = listPending(root).find(
+        (r) =>
+            r.gate_id === input.gate_id &&
+            r.phase === input.phase &&
+            r.action === input.action &&
+            r.object === input.object,
+    );
+    if (existing !== undefined) {
+        return existing;
+    }
+
     const record: StagedAction = {
-        token: opts.token ?? randomUUID(),
+        token,
         gate_id: input.gate_id,
         phase: input.phase,
         action: input.action,
@@ -141,11 +204,23 @@ export function stageAction(
     };
     const dir = pendingDir(root);
     fs.mkdirSync(dir, { recursive: true });
-    fs.writeFileSync(
-        recordFile(dir, record.token),
-        `${JSON.stringify(record, null, 2)}\n`,
-        'utf-8',
-    );
+    try {
+        // Exclusive create for the same reason consumption is a rename: a
+        // silent overwrite would drop a held action with no trace.
+        fs.writeFileSync(
+            recordFile(dir, record.token),
+            `${JSON.stringify(record, null, 2)}\n`,
+            { encoding: 'utf-8', flag: 'wx' },
+        );
+    } catch (err) {
+        if ((err as NodeJS.ErrnoException).code === 'EEXIST') {
+            throw new Error(
+                `confirmation: token '${record.token}' is already staged — ` +
+                    'refusing to overwrite a held action',
+            );
+        }
+        throw err;
+    }
     return record;
 }
 
@@ -159,14 +234,35 @@ export function stageAction(
  * `executed` and on nothing else.
  */
 export function confirmAction(root: string, token: string): ConfirmOutcome {
+    // An unsafe token cannot name anything this module staged, so the honest
+    // answer is `unknown` — and refusing it here is what keeps the rename below
+    // from being an arbitrary-path move.
+    if (!isSafeToken(token)) {
+        return { status: 'unknown', record: null };
+    }
     const from = recordFile(pendingDir(root), token);
     const to = recordFile(consumedDir(root), token);
+
+    const record = readAt(from);
+    if (record === null && fs.existsSync(from)) {
+        // The record exists but cannot be read. Consuming it would return
+        // `executed` for an action whose object cannot be named — the one thing
+        // `non-destructive-by-default` forbids an approval to do. Refuse, and
+        // leave it pending so it stays inspectable.
+        return { status: 'unreadable', record: null };
+    }
+
     fs.mkdirSync(consumedDir(root), { recursive: true });
     try {
-        const record = readAt(from);
         fs.renameSync(from, to);
-        return { status: 'executed', record: record ?? readAt(to) };
-    } catch {
+        return { status: 'executed', record };
+    } catch (err) {
+        if ((err as NodeJS.ErrnoException).code !== 'ENOENT') {
+            // A broken store is not a typo. Reporting it as `unknown` would tell
+            // the operator their correct token was wrong while the action stays
+            // held — the third state the earlier bare catch folded into the first.
+            throw err;
+        }
         const consumed = readAt(to);
         return consumed === null
             ? { status: 'unknown', record: null }

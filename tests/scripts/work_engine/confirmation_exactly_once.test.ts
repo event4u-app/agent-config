@@ -74,8 +74,11 @@ describe('confirmation store — exactly-once', () => {
     });
 
     it('listPending shows staged actions oldest first and drops consumed ones', () => {
-        stageAction(root, input, { token: 'b', now: '2026-08-11T02:00:00.000Z' });
-        stageAction(root, input, { token: 'a', now: '2026-08-11T01:00:00.000Z' });
+        // Two DISTINCT holds — staging the same hold twice now returns the same
+        // token by design (R2 finding 5), so varying `object` is what makes this
+        // an ordering assertion rather than an idempotency one.
+        stageAction(root, { ...input, object: 'later' }, { token: 'b', now: '2026-08-11T02:00:00.000Z' });
+        stageAction(root, { ...input, object: 'earlier' }, { token: 'a', now: '2026-08-11T01:00:00.000Z' });
         expect(listPending(root).map((r) => r.token)).toEqual(['a', 'b']);
 
         confirmAction(root, 'a');
@@ -90,5 +93,70 @@ describe('confirmation store — exactly-once', () => {
         stageAction(root, input, { token: 'good' });
         fs.writeFileSync(path.join(pendingDir(root), 'bad.json'), '{ not json', 'utf-8');
         expect(listPending(root).map((r) => r.token)).toEqual(['good']);
+    });
+
+    // R2 finding 1. The version above passed while the guard checked four of
+    // six fields, so a record that is valid JSON but structurally partial slipped
+    // through and crashed the localeCompare sort. Unparseable JSON was the case
+    // the guard already handled — the assertion read as robustness the code did
+    // not have, which is why the partial-record shape gets its own spec.
+    it('a structurally-partial record is skipped too, with two records present', () => {
+        stageAction(root, input, { token: 'good1', now: '2026-08-11T01:00:00.000Z' });
+        stageAction(root, { ...input, object: 'other' }, { token: 'good2', now: '2026-08-11T02:00:00.000Z' });
+        fs.writeFileSync(
+            path.join(pendingDir(root), 'partial.json'),
+            JSON.stringify({ token: 'partial', gate_id: 'g', action: 'a', object: 'o' }),
+            'utf-8',
+        );
+        expect(() => listPending(root)).not.toThrow();
+        expect(listPending(root).map((r) => r.token)).toEqual(['good1', 'good2']);
+    });
+});
+
+// R2 findings 2, 3, 4, 7 — the failure modes the first version shipped.
+describe('confirmation store — hostile and damaged input', () => {
+    it('refuses to stage under a traversing token', () => {
+        // The record used to land at agents/runtime/escaped.json, outside the store.
+        expect(() => stageAction(root, input, { token: '../../escaped' })).toThrow(/unsafe token/);
+        expect(fs.existsSync(path.join(root, 'agents', 'runtime', 'escaped.json'))).toBe(false);
+    });
+
+    it('a traversing token confirms as unknown rather than renaming an arbitrary file', () => {
+        // confirmAction is the only destructive verb and its input is a string a
+        // human retyped from a prompt.
+        expect(confirmAction(root, '../../escaped')).toEqual({ status: 'unknown', record: null });
+    });
+
+    it('re-staging the same hold returns the same token instead of a second one', () => {
+        const first = stageAction(root, input);
+        const second = stageAction(root, input);
+        expect(second.token).toBe(first.token);
+        expect(listPending(root)).toHaveLength(1);
+    });
+
+    it('re-using a token for a DIFFERENT hold refuses rather than overwriting', () => {
+        stageAction(root, input, { token: 'dup' });
+        expect(() => stageAction(root, { ...input, object: 'something-else' }, { token: 'dup' })).toThrow(
+            /already staged/,
+        );
+    });
+
+    it('an unreadable pending record is refused, not consumed as executed', () => {
+        // Returning `executed` here would instruct execution of an action whose
+        // object cannot be named — what non-destructive-by-default forbids.
+        fs.mkdirSync(pendingDir(root), { recursive: true });
+        fs.writeFileSync(path.join(pendingDir(root), 'broken.json'), '{ not json', 'utf-8');
+        expect(confirmAction(root, 'broken')).toEqual({ status: 'unreadable', record: null });
+        expect(fs.existsSync(path.join(pendingDir(root), 'broken.json'))).toBe(true);
+    });
+
+    it('a broken store throws instead of reporting a correct token as unknown', () => {
+        stageAction(root, input, { token: 'blocked' });
+        const target = path.join(consumedDir(root), 'blocked.json');
+        fs.mkdirSync(target, { recursive: true });
+        fs.writeFileSync(path.join(target, 'occupant'), 'x', 'utf-8');
+        expect(() => confirmAction(root, 'blocked')).toThrow();
+        // The action stays held rather than being silently declared a typo.
+        expect(fs.existsSync(path.join(pendingDir(root), 'blocked.json'))).toBe(true);
     });
 });

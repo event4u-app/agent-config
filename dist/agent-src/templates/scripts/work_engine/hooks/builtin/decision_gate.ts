@@ -139,26 +139,40 @@ export class DecisionGateHook {
         const tag = suffix
             ? `${_BLOCK_REASON_PREFIX}:${decision.gate_id}:${suffix}`
             : `${_BLOCK_REASON_PREFIX}:${decision.gate_id}`;
-        throw new HookHalt(tag, this._surface_with_confirmation(decision, suffix));
+        // Stage HERE, not inside the formatter. Staging writes to disk, and a
+        // method named for building a string array is the wrong place for a
+        // side effect: any caller that re-rendered the surface would stage a
+        // second, unreferenced hold.
+        const staged = this._stage_hold(decision, suffix);
+        throw new HookHalt(tag, DecisionGateHook._surface_with_token(decision, suffix, staged));
     }
 
-    /**
-     * The numbered-option surface, plus the staged token when one was created.
-     *
-     * A stager that returns `null` (refused, capped, unwritable store) leaves
-     * the surface untouched rather than announcing a token nobody can confirm.
-     */
-    private _surface_with_confirmation(decision: GateDecision, suffix = ''): string[] {
-        const surface = DecisionGateHook._surface(decision, suffix);
+    /** Stage the held advance, or `null` when no stager is injected / it refused. */
+    private _stage_hold(decision: GateDecision, suffix: string): StagedAction | null {
         if (this._stage === null) {
-            return surface;
+            return null;
         }
-        const staged = this._stage({
+        return this._stage({
             gate_id: decision.gate_id,
             phase: decision.phase,
             action: suffix ? `advance:${suffix}` : 'advance',
             object: decision.phase,
         });
+    }
+
+    /**
+     * The numbered-option surface, plus the staged token when one exists.
+     *
+     * Pure: a stager that returned `null` (refused, capped, unwritable store)
+     * leaves the surface untouched rather than announcing a token nobody can
+     * confirm.
+     */
+    private static _surface_with_token(
+        decision: GateDecision,
+        suffix: string,
+        staged: StagedAction | null,
+    ): string[] {
+        const surface = DecisionGateHook._surface(decision, suffix);
         if (staged === null) {
             return surface;
         }
