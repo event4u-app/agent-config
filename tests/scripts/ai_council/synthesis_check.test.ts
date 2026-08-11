@@ -242,6 +242,25 @@ describe('assert_synthesis_matches_tally — verdict vs. counted stances', () =>
     });
 });
 
+describe('the reserved split label yields to a real option (R2 finding 8)', () => {
+    const STANCE_SPLIT = 'STANCE: split | CONFIDENCE: high | DEALBREAKER: no';
+
+    it('accepts VERDICT: split when the tally cleared an option named split', () => {
+        const tally = tallyFrom(STANCE_SPLIT, STANCE_SPLIT);
+        expect(tally.consensus?.label).toBe('split');
+        expect(() =>
+            assert_synthesis_matches_tally(`body\nVERDICT: ${SPLIT_VERDICT_LABEL}`, tally),
+        ).not.toThrow();
+    });
+
+    it('keeps the reserved sense when no option carries that label', () => {
+        const tally = tallyFrom(STANCE_A, STANCE_A);
+        expect(() =>
+            assert_synthesis_matches_tally(`body\nVERDICT: ${SPLIT_VERDICT_LABEL}`, tally),
+        ).toThrow(/claims a split but the tally cleared/);
+    });
+});
+
 describe('describe_verdict_mismatch — the render-path shape', () => {
     // R2 finding 1: the render path must not throw. A throw inside `render()`
     // discards the whole artifact after every provider call is already paid for.

@@ -610,7 +610,17 @@ export function describe_verdict_mismatch(text: string, tally: TallyView): strin
     if (verdict === null) {
         return null; // repair marker, not a guess
     }
-    const claimsSplit = verdict.label === SPLIT_VERDICT_LABEL;
+    // The reserved sense of `split` yields to a real option that carries the
+    // same label (R2 finding 8): the label vocabulary is free text mined from
+    // member `STANCE:` lines, so nothing stops an option genuinely called
+    // `split`, and when the tally clears it the CORRECT verdict would otherwise
+    // read as a contradiction. Deciding by whether the tally actually holds
+    // that option keeps one namespace without an escape syntax authors would
+    // have to learn.
+    const optionNamedSplit = tally.options.some(
+        (o) => o.label.toLowerCase() === SPLIT_VERDICT_LABEL,
+    );
+    const claimsSplit = verdict.label === SPLIT_VERDICT_LABEL && !optionNamedSplit;
 
     if (tally.consensus === null) {
         if (claimsSplit) {
