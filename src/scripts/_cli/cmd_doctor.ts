@@ -90,6 +90,8 @@ import * as installed_tools from '../_lib/installed_tools.js';
 import * as user_global_paths from '../_lib/user_global_paths.js';
 import * as global_deploy_inventory from '../_lib/global_deploy_inventory.js';
 import { censusDuplicateScope } from '../_lib/duplicate_scope_census.js';
+import * as preamble_byte_census from '../preamble_byte_census.js';
+import * as dispatch_economy_report from '../dispatch_economy_report.js';
 import { git_common_dir } from '../_lib/git_common_dir.js';
 import * as sync_gitattributes from '../sync_gitattributes.js';
 import {
@@ -3244,6 +3246,7 @@ interface Options {
     check: string | null;
     trace_root: boolean;
     context: boolean;
+    anatomy: boolean;
     repair: string | null;
 }
 
@@ -3254,13 +3257,15 @@ const PROG = 'agent-config doctor';
 // terminal width; golden tests assert the `usage:` token + exit code only.
 const USAGE =
     `usage: ${PROG} [-h] [--project PROJECT] [--json] [--ci] [--check ID]\n` +
-    '                           [--trace-root] [--context] [--repair ID]\n';
+    '                           [--trace-root] [--context] [--anatomy]\n' +
+    '                           [--repair ID]\n';
 
 const _STORE_TRUE_FLAGS: Record<string, keyof Options> = {
     '--json': 'json',
     '--ci': 'ci',
     '--trace-root': 'trace_root',
     '--context': 'context',
+    '--anatomy': 'anatomy',
 };
 
 const _VALUE_FLAGS: Record<string, keyof Options> = {
@@ -3283,6 +3288,7 @@ function _parse(argv: string[]): Options {
         check: null,
         trace_root: false,
         context: false,
+        anatomy: false,
         repair: null,
     };
 
@@ -3408,6 +3414,65 @@ function _run_context(opts: Options): number {
     return 0;
 }
 
+/**
+ * `--anatomy` — the injection anatomy, rendered from measurements that already
+ * exist. Composes `preamble_byte_census` (what occupies the always-loaded
+ * preamble) with `dispatch_economy_report` (what the dispatch legs cost). It
+ * takes NO new measurement and adds no threshold: both sources are advisory
+ * reports and stay advisory here.
+ *
+ * Neither module runs anything at import time — `preamble_byte_census` gained
+ * the `__AGENT_CONFIG_BUNDLE__` guard for exactly this import, since inside the
+ * `build:cli-delegate` bundle its old entry check would have matched whenever
+ * this command was invoked directly.
+ */
+function _run_anatomy(opts: Options): number {
+    const census = preamble_byte_census;
+    const economy = dispatch_economy_report;
+
+    const byteCensus = census.buildReport(census.parseArgs([]));
+
+    // The economy half reads transcripts and a registration file; either can be
+    // absent on a consumer machine. An absent half is reported as absent, never
+    // as a zero — a fabricated zero is the failure both source reports already
+    // refuse to make.
+    let economyReport: ReturnType<typeof economy.buildReport> | null = null;
+    let economyError: string | null = null;
+    try {
+        economyReport = economy.buildReport({
+            root: economy.DEFAULT_PROJECTS_ROOT,
+            auditDir: path.join(process.cwd(), economy.DEFAULT_AUDIT_DIR),
+            maxAgeDays: 14,
+        });
+    } catch (err) {
+        economyError = err instanceof Error ? err.message : String(err);
+    }
+
+    if (opts.json) {
+        print(
+            _jsonDumpsIndentAscii(
+                {
+                    preamble_byte_census: byteCensus,
+                    dispatch_economy: economyReport,
+                    dispatch_economy_unavailable: economyError,
+                } as unknown as Dict,
+                2,
+            ),
+        );
+        return 0;
+    }
+
+    print('── injection anatomy ─────────────────────────────────────────');
+    print(census.renderText(byteCensus));
+    print('');
+    print(
+        economyReport !== null
+            ? economy.renderText(economyReport)
+            : `dispatch-economy report unavailable: ${economyError}`,
+    );
+    return 0;
+}
+
 function _run_repair(opts: Options): number {
     const target = opts.repair;
     if (target === 'wizard-state') {
@@ -3463,6 +3528,9 @@ function main(argv: string[] | null = null): number {
     }
     if (opts.context) {
         return _run_context(opts);
+    }
+    if (opts.anatomy) {
+        return _run_anatomy(opts);
     }
     let project_root: string;
     let origin: string;

@@ -557,7 +557,15 @@ export function main(argv: string[] = process.argv.slice(2)): number {
     return 0;
 }
 
-if (process.argv[1] !== undefined) {
+// `__AGENT_CONFIG_BUNDLE__` is defined true by every esbuild target. Inside a
+// bundle `import.meta.url` is the OUTPUT file's URL for every bundled module,
+// so the guard below would match whenever the bundle is invoked directly — and
+// importing this module from a bundled CLI entry (`cmd_doctor` bundles under
+// `build:cli-delegate`) would run the census and exit before that entry's own
+// main. Same shape as the guard in `dispatch_economy_report.ts`.
+declare const __AGENT_CONFIG_BUNDLE__: boolean | undefined;
+const _isBundled = typeof __AGENT_CONFIG_BUNDLE__ !== 'undefined' && __AGENT_CONFIG_BUNDLE__;
+if (!_isBundled && process.argv[1] !== undefined) {
     const invokedUrl = pathToFileURL(path.resolve(process.argv[1])).href;
     if (import.meta.url === invokedUrl) process.exit(main());
 }
