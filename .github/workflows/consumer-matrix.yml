@@ -72,7 +72,7 @@ jobs:
 
       - name: Install and build (prepack chain)
         run: |
-          npm ci
+          npm ci --no-audit --no-fund --prefer-offline
           npm run build
 
       - name: Build discovery manifest (mirrors publish-npm.yml)
@@ -163,7 +163,7 @@ jobs:
 
       - name: Install, build, manifest (publish steps sans publish)
         run: |
-          npm ci
+          npm ci --no-audit --no-fund --prefer-offline
           npm run build
           ./scripts-run src/scripts/build_discovery_manifest --write --strict
           ./scripts-run src/scripts/lint_discovery_manifest --quiet

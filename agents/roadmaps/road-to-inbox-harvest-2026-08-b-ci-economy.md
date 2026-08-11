@@ -173,13 +173,18 @@ Re-derived in this worktree at `c073d5732` (v9.32.0):
       keep the shared per-ref key so a newer push supersedes an older one.
       `cancel-in-progress` stays conditioned as a second, consistent signal.
       Each block carries a comment naming which signal the exception protects.
-      <!-- verify: python3 -c "import yaml; [print(f, yaml.safe_load(open(f))['concurrency']) for f in __import__('glob').glob('.github/workflows/*.yml')]" --> 23 of 28 carry
-      it; `rule-backstops.yml`, `self-review-gate.yml`, `adoption-snapshot.yml`,
-      `cross-model-canary.yml`, `release-adjacent-health.yml` do not.
-      `rule-backstops.yml` (`:24` PR, `:40` push) and `self-review-gate.yml` (`:19`
-      PR, two PR jobs at `:27`, `:41`) are the two that actually stack. Scope
-      `cancel-in-progress` to `pull_request` refs only — a cancelled push-to-main
-      backstop run loses the only signal for that commit.
+      As found, 23 of 28 workflows carried a `concurrency:` block and these five
+      did not: `rule-backstops.yml`, `self-review-gate.yml`,
+      `adoption-snapshot.yml`, `cross-model-canary.yml`,
+      `release-adjacent-health.yml`. All 28 carry one now. `rule-backstops.yml`
+      (`:24` PR, `:40` push) and `self-review-gate.yml` (`:19` PR, two PR jobs)
+      are the two that actually stack.
+      One instance found while fixing this and deliberately NOT changed:
+      `release-drift.yml` has no `pull_request` trigger, yet sits in a global
+      group with an unconditional `cancel-in-progress: true` — the same
+      pending-eviction exposure, in a workflow this step does not name. Left
+      alone to keep the diff traceable to the step; recorded here so the next
+      pass has the instance rather than the pattern.
       <!-- verify: grep -c 'concurrency:' .github/workflows/rule-backstops.yml -->
 - [x] **1.5 Correct the three stale workflow comments.** `tests.yml:183` and `:229`
       claim `build` = `build:cli && build:ui`; it is 6 targets (`package.json:78`).
@@ -207,9 +212,12 @@ Re-derived in this worktree at `c073d5732` (v9.32.0):
       ("run `npm run build:cli` and commit the result") a silent no-op — and
       `.tscache/` is gitignored, so it survives every `git clean` of `dist/`.
       Caught by the completion review, reproduced, and moved to
-      `tsconfig.scripts.json` / `tsconfig.test.json`. Buildinfo goes to a
-      gitignored `.tscache/`, one file per config so the two do not clobber each
-      other; `.eslintcache` is gitignored too. Both entries sit outside the
+      `tsconfig.scripts.json` — and only there. Round 2 had put it on
+      `tsconfig.test.json` as well; round 3 found nothing ever passes that
+      config to `tsc` (eslint uses it as a `project`, which writes no
+      buildinfo), so the flag was dead and is gone. `.tscache/` holds exactly
+      one file, `scripts.tsbuildinfo`, which is what the directory listing
+      shows. `.eslintcache` is gitignored too; both entries sit outside the
       managed gitignore block. No `incremental` or
       `tsBuildInfoFile` in `tsconfig.json`, `tsconfig.scripts.json`,
       `tsconfig.test.json`, `tsconfig.ui.json`; `lint:ts` is bare
@@ -217,7 +225,18 @@ Re-derived in this worktree at `c073d5732` (v9.32.0):
       correctness-neutral and both feed `static-checks`.
       <!-- verify: grep -n 'incremental' tsconfig.json -->
 - [x] **1.7 Add `--no-audit --no-fund --prefer-offline` to the bare `npm ci` calls.**
-      20 bare call sites across the 10 named workflows, now zero. The already-flagged
+      **24 bare call sites across 11 workflows, now zero — and the first count
+      was wrong.** The step's own verify regex (`^\s*-?\s*run:\s*npm ci\s*$`)
+      matches only the single-line `run:` form, so the first pass reported "20
+      across 10, now zero" while four bare calls survived inside `run: |`
+      blocks: `site.yml`, `deploy-site.yml` (a workflow the step never named)
+      and two in `consumer-matrix.yml`. A verify command that cannot see a whole
+      syntactic form is a completeness claim about the wrong set; round 3 caught
+      it. The residual grep hits are comment prose, not invocations.
+      **The CI benefit is real but not universal:** `--prefer-offline` pays only
+      where `setup-node` declares `cache: 'npm'`, and 4 of the 24 sites have no
+      `cache:` key — there the flags still save the audit and funding lookups,
+      which is smaller. The already-flagged
       calls elsewhere use a longer house form with retry fallback
       (`--fetch-retries=5 --fetch-retry-mintimeout=10000 || (sleep 10 && …)`);
       that form was NOT propagated here, because changing retry semantics is a
@@ -229,7 +248,7 @@ Re-derived in this worktree at `c073d5732` (v9.32.0):
       `run: npm ci`, including all six in `tests.yml` (`:94`, `:125`, `:214`,
       `:263`, `:374`, `:409`). `--prefer-offline` appears zero times anywhere, while
       `setup-node` already populates the npm cache.
-      <!-- verify: grep -nE '^\s*-?\s*run:\s*npm ci\s*$' .github/workflows/tests.yml -->
+      <!-- verify: grep -rnE 'npm ci\s*$' .github/workflows/ | grep -v prefer-offline -->
 
 ## Phase 2 — The build fan-out: stop rebuilding the same 6 targets 13 times
 

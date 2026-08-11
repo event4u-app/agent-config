@@ -170,8 +170,11 @@ contributor that was not true, so re-check the attribution before acting on
 it. And the remaining ~103 s is dominated by `render()` itself at 54 s a
 call — the next lever on this file is that function, not the test.
 
-`smoke-public-install.yml` was the previous entry here at 413 s and is now
-291 s, under the ceiling. No open ADR is required for it.
+`smoke-public-install.yml` was the previous entry here at 413 s and is no
+longer one. Both figures need their unit stated or the comparison is the
+run-level-vs-per-job mistake again: 413 s was matrix-level, and per job today
+the slowest leg is Windows at 159–169 s. The ceiling is per job, so nothing in
+this workflow breaches it and no open ADR is required for it.
 
 ## Measurement-only changes — kill criterion
 

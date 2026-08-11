@@ -46,7 +46,7 @@ jobs:
       - name: Build the Starlight site
         run: |
           cd site
-          npm ci
+          npm ci --no-audit --no-fund --prefer-offline
           npm run build
 
       - name: Internal-link check (no dangling links in the built site)

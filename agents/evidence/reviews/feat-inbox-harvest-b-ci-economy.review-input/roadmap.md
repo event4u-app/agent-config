@@ -87,11 +87,20 @@ Re-derived in this worktree at `c073d5732` (v9.32.0):
       pointers (`python-version-sweep.yml`, `windows-lockfile-export.yml`) and
       two "Critical path observations" bullets describing both as live jobs.
       Dropping only the table rows would have left the same false claim standing
-      three paragraphs down. Two regressions surfaced that the step did not
-      predict: `consistency.yml` 27 s → 109 s (the single required check) and
-      `smoke.yml` 18 s → 82 s; `smoke-public-install.yml` fell 413 s → 291 s and
-      is no longer the ceiling violator. The new violator is `node-tests`
-      shard 3/4 at 645 s / 852 s, which the old "2 OS" row had hidden.
+      three paragraphs down. The new ceiling violator is `node-tests` shard 3/4
+      at 645 s / 852 s, which the old "2 OS" row had hidden.
+      **The first pass got its own method wrong and the correction is recorded
+      rather than quietly applied.** It measured non-`tests.yml` workflows at
+      *run* level while the 2026-05-26 rows were *per-job*, and reported two
+      regressions from the mismatch: `smoke.yml` 18 s → 82 s (actually 20–23 s
+      per job — no regression) and `smoke-public-install` 413 s → 291 s (a
+      matrix-level figure against a matrix-level figure, but presented as a job
+      row). Re-measured per job for every workflow, exactly **one** regression
+      stands: `consistency.yml` 27 s → 75 s, single-job and therefore
+      like-for-like. The table also carried `smoke-contracts` as a job name; it
+      is the workflow *display* name, and `smoke.yml` declares four jobs. Caught
+      by the round-2 completion review, which is also what falsified the kill
+      criterion 0.5 shipped.
       Drop `python-tests`, `windows-lockfile-export`, `migration-dry-run.yml` (all
       gone); correct `node-tests` to 2 OS x 4 shards (`tests.yml:203-204`); add
       `static-checks`, `golden-tests`, `workspace-tests`. Figures from `gh run list
@@ -154,15 +163,18 @@ Re-derived in this worktree at `c073d5732` (v9.32.0):
       the reviewer still prefers it.
       <!-- verify: ./scripts-run src/scripts/lint_workflow_paths --self-test -->
 - [x] **1.4 Add `concurrency:` to the five workflows without it.**
-      All five got the same block, with `cancel-in-progress: ${{ github.event_name
-      == 'pull_request' }}` rather than the unconditional `true` the other 23
-      carry. That single expression satisfies the step's requirement everywhere:
-      it is true only on PR refs, so it is automatically false for
-      `adoption-snapshot` and `release-adjacent-health` (which have no
-      `pull_request` trigger at all) and for every `schedule` / `workflow_dispatch`
-      run of the other three. The group still serialises overlapping non-PR runs
-      instead of racing them. Each block carries a comment naming which signal the
-      exception protects.
+      All five got the same block. **The first attempt conditioned only
+      `cancel-in-progress` and was wrong** — GitHub evicts a *pending* member of
+      a concurrency group whatever that flag says, so keying every run on
+      workflow+ref would have let a queued `push: main` backstop run be dropped:
+      the exact loss the step exists to prevent, newly introduced by the step
+      meant to prevent it. The completion review caught it.
+      What ships: the **group key** carries the guarantee. Non-PR runs are keyed
+      by `github.run_id`, putting each in a group of one that nothing can join,
+      so they are never evicted and never serialised against each other; PR runs
+      keep the shared per-ref key so a newer push supersedes an older one.
+      `cancel-in-progress` stays conditioned as a second, consistent signal.
+      Each block carries a comment naming which signal the exception protects.
       <!-- verify: python3 -c "import yaml; [print(f, yaml.safe_load(open(f))['concurrency']) for f in __import__('glob').glob('.github/workflows/*.yml')]" --> 23 of 28 carry
       it; `rule-backstops.yml`, `self-review-gate.yml`, `adoption-snapshot.yml`,
       `cross-model-canary.yml`, `release-adjacent-health.yml` do not.
@@ -316,7 +328,7 @@ Re-derived in this worktree at `c073d5732` (v9.32.0):
       which keeps the cache from ever masking a regression. Rendering once at
       module scope and reusing it leaves the determinism test its two independent
       invocations (two calls IS what that test measures) and drops the file from
-      ~260 s to **103 s** wall-clock, all 8 tests green.
+      ~269 s standalone to **103 s** wall-clock, all 8 tests green.
       The honest residual: 103 s is still two `render()` calls, and `render()`
       itself at 54 s is the next lever — that is production code and out of this
       phase's scope. Recorded in `ci-cost-budget.md`.

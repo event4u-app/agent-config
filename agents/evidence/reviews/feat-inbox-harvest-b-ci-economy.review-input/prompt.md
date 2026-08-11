@@ -21,8 +21,8 @@ Senior-engineer review of the branch diff. Search grid — hunt for:
 
 ## Inputs
 
-- diff: `diff.patch` — the review scope (branch head 910f7c4e85886f194f214ceeafe06c2b479b154e, review
-  artefacts excluded), scope hash `136ff91b84ce8d51d7e269182b8adbc1b034262fafb9203e4b698d9313b29bf7`
+- diff: `diff.patch` — the review scope (branch head 59b45613fdd7eb3ffef275b5062f36c366428015, review
+  artefacts excluded), scope hash `62a5614c35b6e08d12a06fc43c9395e48c2662f45c6b4bba08736bc986e39dab`
 - roadmap under review: `roadmap.md` (Acceptance Criteria extracted to `acceptance-criteria.md`)
 
 Changed files:
@@ -43,6 +43,7 @@ Changed files:
 - agents/roadmaps-progress.md
 - agents/roadmaps/road-to-inbox-harvest-2026-08-b-ci-economy.md
 - docs/contracts/ci-cost-budget.md
+- docs/contracts/release-pr-gating.md
 - docs/decisions/ADR-223-no-required-check-demotion-on-cost-grounds.md
 - docs/decisions/INDEX.md
 - docs/development.md
@@ -51,7 +52,6 @@ Changed files:
 - taskfiles/ci-fast.yml
 - tests/scripts/build_proof.test.ts
 - tsconfig.scripts.json
-- tsconfig.test.json
 
 ## Output format (contract §2.2)
 
@@ -73,5 +73,5 @@ Fill the findings table in `feat-inbox-harvest-b-ci-economy.findings.md`:
   (contract §2.3):
 
 ```markdown
-**Honest-null:** 0 findings, scope 136ff91b84ce8d51d7e269182b8adbc1b034262fafb9203e4b698d9313b29bf7, reviewed <YYYY-MM-DD>
+**Honest-null:** 0 findings, scope 62a5614c35b6e08d12a06fc43c9395e48c2662f45c6b4bba08736bc986e39dab, reviewed <YYYY-MM-DD>
 ```
