@@ -86,6 +86,29 @@ describe('lint_framework_leakage — ported pytest suite', () => {
     });
 
     it('test_allowlisted_line_passes', () => {
+        // Anchored, not `lines: [4]`. Position keying is retired: it drifts out
+        // from under its own exemption on any edit above the line, and three
+        // shipped entries had rotted that way before the migration.
+        makeTree(tmp, {
+            'skills/refine-prompt/SKILL.md': '# Refine\n\nLine 2\nUses FormRequest here.\n',
+            '_allow.json': JSON.stringify({
+                version: 1,
+                entries: [
+                    {
+                        file: 'skills/refine-prompt/SKILL.md',
+                        anchor: 'Uses FormRequest here.',
+                        reason: 'documented',
+                    },
+                ],
+            }),
+        });
+        expect(run('skills')).toBe(0);
+        expect(stdout).toContain('1 allowlisted');
+    });
+
+    it('test_position_keyed_entry_is_refused', () => {
+        // The retirement is enforced, not merely preferred: a `lines: [N]` entry
+        // stops the scan rather than keying on a number that silently drifts.
         makeTree(tmp, {
             'skills/refine-prompt/SKILL.md': '# Refine\n\nLine 2\nUses FormRequest here.\n',
             '_allow.json': JSON.stringify({
@@ -93,8 +116,7 @@ describe('lint_framework_leakage — ported pytest suite', () => {
                 entries: [{ file: 'skills/refine-prompt/SKILL.md', lines: [4], reason: 'documented' }],
             }),
         });
-        expect(run('skills')).toBe(0);
-        expect(stdout).toContain('1 allowlisted');
+        expect(run('skills')).toBe(1);
     });
 
     it('test_allowlist_whole_file_passes', () => {
