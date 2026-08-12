@@ -224,6 +224,11 @@ Chunked commits (the agent picks the split — never ask how, per
 [`/create-pr`](../../git/pr/create.md): archival sweep, preflight,
 push, PR opened **ready for review** (not draft).
 
+This step is where the run **ends**, not a step it may stop before — see the
+second Iron Law below. The invocation already authorised the push and the PR;
+asking for them again is the re-ask
+[`no-cheap-questions`](../../rules/no-cheap-questions.md) § IL 5 forbids.
+
 ### 7. CI — fix locally, honour the push gate
 
 Follow [`/create-pr` § 4d](../../git/pr/create.md): wait for the
@@ -257,6 +262,39 @@ THE THREE LIVE CHECKS RUN FIRST, EVERY INVOCATION.
 A ROADMAP CLAIMED "IN FLIGHT", "MERGED", OR "DONE" WITHOUT A LIVE CHECK
 AT THE MOMENT OF THE CLAIM IS AN UNVERIFIED CLAIM.
 ```
+
+## Iron Law — the run ends at a PR, never at an offer to open one
+
+```
+STEP 6 IS AN END CONDITION, NOT A STEP THE RUN MAY STOP BEFORE REACHING.
+A RUN THAT PRODUCED COMMITS ENDS WITH A PR OPENED FOR REVIEW.
+THE INVOCATION IS THE ACCEPT — IT COVERS THE BRANCH, THE CHUNKED COMMITS,
+THE FIRST PUSH TO THAT BRANCH, AND THE PR. NEVER RE-ASK FOR THEM.
+"SAY THE WORD AND I'LL OPEN IT" IS A PROMISSORY CLOSE, WHICH
+verify-before-complete ALREADY FORBIDS. SO IS ENDING ON COMMITTED-BUT-UNPUSHED
+WORK WITHOUT NAMING IT.
+STOPPING EARLIER IS LEGAL ONLY AS ONE OF process-full's FIVE NAMED HALTS,
+A HARD-FLOOR TRIGGER, OR AN N=3 EXHAUSTION — AND THE HALT IS NAMED IN THE
+REPORT TOGETHER WITH WHAT IS STILL UNPUSHED.
+```
+
+**What this does NOT lift.** § 7's re-push restriction stands unchanged: the
+invocation covers the *first* push that opens the PR, never the pushes that
+follow a CI fix. Those are Hard-Floor triggers needing the user's word that turn
+([`non-destructive-by-default`](../../rules/non-destructive-by-default.md)), and
+no reading of this law manufactures a per-PR standing mandate.
+
+**Why it needed saying, measured on this command's own run.** A session screened
+30 roadmaps, recovered from a live claim collision, picked, branched and did the
+work — then closed with a status report and no PR, because § 6 read as a step in
+a list rather than as the condition the run terminates on. The user had to ask
+for the PR the invocation had already authorised. A step that can be narrated
+instead of executed is not an obligation; an end condition is.
+
+**Honest scope.** `enforced_by: none` — nothing inspects a chat turn for a
+missing PR, so this is model-carried like the live screen above it. The
+deterministic half is elsewhere and unchanged: `/create-pr` runs the archival
+sweep and preflight, and CI gates the branch once the PR exists.
 
 ## Rules
 
