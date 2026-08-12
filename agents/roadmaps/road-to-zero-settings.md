@@ -255,6 +255,13 @@ what must still round-trip, so editing the fixture would remove the case.
   spend/quota hard blocker — the kind that is surfaced rather than retried — so
   the pass produced no verdict and cost $0.00. Re-run when the quota window
   resets; the question is written and needs no re-derivation.
+  **Retried once, deliberately, because the environment changed** — PR #1309
+  landed another transport repair between the two attempts — and it confirmed the
+  reading rather than lifting it: same `cli_quota_exhausted`, both members absent.
+  **A failed attempt still counts against the quota**: the counters rose from
+  125/50 · 134/50 to 140/50 · 146/50 across the two runs. So do not burn further
+  attempts probing whether it works yet; check `council:status` quota output
+  first.
 - **The step's own premise is wrong in two ways, verified against the tree
   2026-08-12 — hand the corrected version to the council, not the original.**
   (a) It says "the three class-B consent keys". Only **two** of the three carry the
