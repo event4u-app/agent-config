@@ -90,6 +90,71 @@ under the concurrency rules below.
 | `2` | warn | dispatcher exits 0, logs `reason` to stderr, sets `additionalContext` if platform supports it |
 | `≥ 3` | error | dispatcher logs full traceback, exits 0 (fail-open) unless `concerns.<name>.fail_closed: true` in settings |
 
+## What a concern may block on — severity follows the INPUT TYPE
+
+```
+A CONCERN MAY BLOCK ON STRUCTURED INPUT OR STRUCTURED STATE.
+A CONCERN WHOSE DECISION RESTS ON FREE TEXT ALONE MAY ONLY WARN.
+FREE TEXT MAY TRIGGER A LOOKUP. IT MAY NOT BE THE VERDICT.
+```
+
+Three shipped `blocking` concerns decided by running regular expressions over
+natural-language or shell text. A cross-project audit over 129 sessions
+(`agents/evidence/audits/session-audit-2026-08-12.md`) measured false positives
+in **all three**, each one refusing work the operator had asked for:
+
+| Concern | Input | What it refused |
+|---|---|---|
+| `evidence-independence` | a subagent **prompt** | 15 of 16 workers in an implementation fan-out |
+| `block-unauthorized-git` | a **shell command** | a PR whose title said "publish", two read-only `gh api` GETs |
+| `turn-end-gate` | the assistant's **reply prose** | honest "not done yet" status lines |
+
+Each was fixed by narrowing its pattern. The council convened on the design
+(anthropic + openai, 2026-08-12, quorum 2/2) rejected that as the durable
+answer, and the reason is not stylistic:
+
+> a finite pattern cannot bound an infinite false-positive set — narrowing is
+> sampling from an unbounded error space, not converging on a solution.
+
+The history supports it. `block-unauthorized-git` has now been narrowed three
+times (quoted `|`, dotted path segments, unanchored verb) and
+`evidence-independence`'s self-scope discriminator was *itself* the fix for an
+earlier false positive of the same shape.
+
+### The three tiers
+
+- **Tier 1 — structured input may block.** The decision reads a schema-validated
+  field, an enum, a tool name, a file path, an exit code. Nothing is inferred
+  from prose. This is where a guard belongs whenever the ground truth exists at
+  call time.
+- **Tier 2 — free text triggers, structured state decides.** The pattern is a
+  high-recall *trigger*; the block requires an independent structured fact to
+  corroborate it. `turn-end-gate` is the shipped example: the completion pattern
+  only fires as a trigger, and the refusal additionally requires an unsettled CI
+  read. A Tier-2 guard may block.
+- **Tier 3 — free text alone may only warn.** No structured corroboration is
+  available, so the verdict rests on inferred intent. Warn, log, and use the log
+  to decide whether a structured alternative can be built.
+
+### Why a prompt cannot reach Tier 1 by pattern alone
+
+Shell has positional grammar, so "verb at command position" is a real
+structural discriminator — that is what the git guard's anchoring now uses. A
+subagent **prompt has no grammar to anchor to**: `review this branch` is
+ambiguous between an action, a topic, and a location, and the audited false
+positive was exactly that ambiguity. The council's answer is to emit intent as
+structured metadata at the call site (a `role` / `evidence_scope` field the
+dispatcher sets), where the caller knows by construction what it is asking for —
+not to keep guessing from the text.
+
+Until such a field exists, a prompt-reading concern is Tier 3.
+
+### Authoring rule
+
+A new concern declaring `severity: blocking` states which tier it is in and what
+structured input or state carries the decision. "A regex over prose" is not an
+answer to that question.
+
 ## Reduction across multiple concerns
 
 When a `(platform, event)` tuple maps to ≥ 2 concerns, the dispatcher

@@ -306,12 +306,23 @@ concerns:
     args: []
     fail_closed: true
     severity: blocking
-  # Evaluator independence. Gates EVALUATION dispatches only — a verdict
-  # pre-loaded into the prompt, or a second evaluation of the same work in one
-  # turn. Ordinary parallel fan-out is untouched: the council's "second dispatch
-  # of any kind" criterion would have blocked 6 of the 7 analysis subagents in
-  # the very session that produced this guard. fail_closed: false — a malformed
-  # envelope must never block a dispatch.
+  # Evaluator independence. Gates EVALUATION dispatches only. Two branches with
+  # DIFFERENT severities, per the tier rule in
+  # docs/contracts/hook-architecture-v1.md (§ What a concern may block on):
+  #   · pre-loaded verdict → BLOCKS. It matches a literal steering formulation
+  #     ("NO-FINDINGS is expected and welcome"), which IS the violation rather
+  #     than evidence of one.
+  #   · second self-scoped dispatch in a turn → WARNS (exit 0 + decision:"warn").
+  #     It decides from prose alone — Tier 3 — and a cross-project audit measured
+  #     the cost of blocking on that: a 16-way IMPLEMENTATION fan-out lost 15 of
+  #     its workers, because the phrase `this branch` (an address every worktree
+  #     dispatch prompt carries) read as a self-reference.
+  # `severity: blocking` therefore states the HIGHEST severity this concern can
+  # reach, not the severity of every path through it.
+  # Ordinary parallel fan-out was always meant to be untouched: the council's
+  # "second dispatch of any kind" criterion would have blocked 6 of the 7 analysis
+  # subagents in the very session that produced this guard. fail_closed: false — a
+  # malformed envelope must never block a dispatch.
   evidence-independence:
     script: src/scripts/hooks/evidence_independence.ts
     args: []

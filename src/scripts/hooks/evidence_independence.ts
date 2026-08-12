@@ -269,16 +269,50 @@ export function decide(
     return { exit: EXIT_ALLOW, stdout: "", stderr: "", evaluations: priorEvaluations };
   }
 
+  // WARN, not block — a deliberate severity decision, not an oversight.
+  //
+  // This branch decides from PROSE ALONE: `isEvaluationPrompt` and `isSelfScoped`
+  // both infer intent from a natural-language prompt, and no structured fact
+  // corroborates them. Under the tier rule in `docs/contracts/hook-architecture-v1.md`
+  // (§ What a concern may block on) that is Tier 3, and Tier 3 may only warn.
+  //
+  // It is written from measurement, not taste. A 16-way fan-out of IMPLEMENTATION
+  // subagents lost 15 workers to this branch, because `isEvaluationPrompt` fired
+  // on the unavoidable words review/audit/check and `isSelfScoped` on the phrase
+  // `this branch` — an address every worktree dispatch prompt carries. Narrowing
+  // the phrase list fixed that instance; the council convened on the design
+  // (anthropic + openai, 2026-08-12, quorum 2/2) held that no finite pattern can
+  // bound the false-positive set, and that a prompt — unlike a shell command —
+  // has no grammar to anchor an "invoked vs named" discriminator to.
+  //
+  // What is NOT downgraded: the pre-loaded-verdict block above. That one matches
+  // a literal steering formulation ("NO-FINDINGS is expected and welcome"), which
+  // IS the violation rather than evidence of one, so it keeps blocking.
+  //
+  // The route back to blocking is structural, not another regex: a `role` /
+  // `evidence_scope` field the dispatcher sets at the call site, where the caller
+  // knows by construction whether it is commissioning an evaluation. Then this
+  // branch reads a field instead of guessing, and becomes Tier 1.
+  // exit 0 + `decision: "warn"` on stdout is how this dispatcher carries an
+  // advisory — NOT exit 2. The internal ladder's `2 = warn` is read as BLOCK by
+  // Claude Code's native PreToolUse contract, which is the defect that made an
+  // advisory guard a hard deny once already; the same shape here would have kept
+  // the fan-out blocked while claiming to warn.
   if (priorEvaluations >= 1) {
     return {
-      exit: EXIT_BLOCK,
-      stdout: "",
-      stderr:
-        `Blocked: second evaluation dispatch of your own work in this turn (verdict ` +
-        `shopping). One evaluation has already run; commissioning another with a ` +
-        `different prompt or scope selects the answer instead of measuring it. ` +
-        `Report what the first pass returned, then re-plan.\n`,
-      evaluations: priorEvaluations,
+      exit: EXIT_ALLOW,
+      stdout: `${JSON.stringify({
+        decision: "warn",
+        reason:
+          `Second evaluation dispatch of your own work in this turn. If both passes ` +
+          `judge the SAME subject, that is verdict shopping — commissioning another ` +
+          `with a different prompt or scope selects the answer instead of measuring ` +
+          `it. Report what the first pass returned, then re-plan. If this is an ` +
+          `implementation fan-out rather than a second review, carry on: this check ` +
+          `reads prose and cannot tell the two apart with certainty.`,
+      })}\n`,
+      stderr: "",
+      evaluations: priorEvaluations + 1,
     };
   }
 

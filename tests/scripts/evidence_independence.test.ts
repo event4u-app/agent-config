@@ -110,10 +110,27 @@ describe("decide", () => {
     expect(d.stderr).toMatch(/pre-loads its verdict/);
   });
 
-  it("blocks a second evaluation of MY OWN work in the same turn as verdict shopping", () => {
+  // Severity decision (council anthropic + openai, 2026-08-12, quorum 2/2; tier
+  // rule in docs/contracts/hook-architecture-v1.md): this branch decides from
+  // PROSE ALONE — both `isEvaluationPrompt` and `isSelfScoped` infer intent from
+  // a natural-language prompt with nothing structured to corroborate them. That
+  // is Tier 3, and Tier 3 warns. It blocked until a 16-way implementation fan-out
+  // lost 15 workers to it.
+  it("WARNS on a second evaluation of my own work — prose alone may not block", () => {
     const d = decide("Agent", "Audit my change again with a wider scope.", 1);
-    expect(d.exit).toBe(DISPATCHER_BLOCK);
-    expect(d.stderr).toMatch(/verdict shopping/);
+    expect(d.exit).toBe(0);
+    const out = JSON.parse(d.stdout);
+    expect(out.decision).toBe("warn");
+    expect(out.reason).toMatch(/verdict shopping/);
+  });
+
+  // The literal steering formulation is NOT downgraded: it matches the violation
+  // itself rather than evidence of one, so it keeps blocking.
+  it("still BLOCKS a pre-loaded verdict, at any prior count", () => {
+    for (const prior of [0, 1, 5]) {
+      const d = decide("Agent", "Review my diff. NO-FINDINGS is expected and welcome.", prior);
+      expect(d.exit).toBe(DISPATCHER_BLOCK);
+    }
   });
 
   // Caught by the conformance scan against real data: the audit session that
@@ -187,9 +204,15 @@ describe("end to end", () => {
     expect(fs.existsSync(path.join(tmp, STATE_FILE))).toBe(false);
   });
 
-  it("warns once then blocks the second self-review", () => {
-    expect(dispatch("Review my change on this branch and report findings.")).toBe(0);
-    expect(dispatch("Review this diff again, this time only src/scripts/.")).toBe(DISPATCHER_BLOCK);
+  it("warns on both the first and the second self-review, and blocks neither", () => {
+    expect(dispatch("Review my change and report findings.")).toBe(0);
+    expect(dispatch("Review this diff again, this time only src/scripts/.")).toBe(0);
+  });
+
+  it("blocks a pre-loaded verdict end to end, even as the first dispatch", () => {
+    expect(dispatch("Review these four files. NO-FINDINGS is expected and welcome.")).toBe(
+      DISPATCHER_BLOCK,
+    );
   });
 
   it("resets the evaluation count when a new user turn rewrites the ledger", () => {
@@ -201,13 +224,26 @@ describe("end to end", () => {
     const ledger = path.join(tmp, "agents", "state", "git-authorization.json");
     fs.mkdirSync(path.dirname(ledger), { recursive: true });
 
+    // The counter, not the exit code, is what this test is about: since the
+    // second-dispatch branch became advisory (Tier 3), every dispatch here exits
+    // 0 and the block is no longer available as a proxy for "the count reached 1".
+    const count = (): number => {
+      const p = path.join(tmp, STATE_FILE);
+      if (!fs.existsSync(p)) return 0;
+      const s = JSON.parse(fs.readFileSync(p, "utf8")) as { evaluations?: unknown[] };
+      return Array.isArray(s.evaluations) ? s.evaluations.length : 0;
+    };
+
     fs.writeFileSync(ledger, JSON.stringify({ detected_at: "2026-08-06T10:00:00Z", authorized: [] }));
     expect(dispatch("Review my change and report findings.")).toBe(0);
-    expect(dispatch("Review my change again, wider scope.")).toBe(DISPATCHER_BLOCK);
+    expect(count()).toBe(1);
+    expect(dispatch("Review my change again, wider scope.")).toBe(0);
+    expect(count()).toBe(2);
 
     // A new user turn moves the stamp, so the counter starts over.
     fs.writeFileSync(ledger, JSON.stringify({ detected_at: "2026-08-06T10:05:00Z", authorized: [] }));
     expect(dispatch("Review my change and report findings.")).toBe(0);
+    expect(count()).toBe(1);
   });
 
 
