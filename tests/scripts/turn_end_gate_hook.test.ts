@@ -26,11 +26,15 @@ import {
     alreadyRefusedTurn,
     detectLanguage,
     detectPromissory,
+    detectUnverifiedEdit,
     deriveSessionKey,
     finalParagraph,
+    isVerificationCommand,
     readGateSettings,
     readLanguagePin,
+    readTranscriptTail,
     visibleProse,
+    type ToolCall,
 } from '../../src/scripts/hooks/turn_end_gate_hook.js';
 
 const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..');
@@ -298,20 +302,44 @@ describe('settings — default OFF, detectors ON within it (roadmap 3.6)', () =>
         );
     });
 
-    it('enabling the master switch turns BOTH detectors on without naming them', () => {
+    it('enabling the master switch turns EVERY detector on without naming them', () => {
         const s = readGateSettings(
             makeWorkspace('hooks:\n  turn_end_gate:\n    enabled: true\n'),
         );
-        expect(s).toEqual({ enabled: true, promissory: true, language: true });
+        expect(s).toEqual({
+            enabled: true,
+            promissory: true,
+            language: true,
+            verification: true,
+        });
     });
 
-    it('either detector can be silenced without editing the hook manifest', () => {
+    it('any detector can be silenced without editing the hook manifest', () => {
         const s = readGateSettings(
             makeWorkspace(
                 'hooks:\n  turn_end_gate:\n    enabled: true\n    language: false\n',
             ),
         );
-        expect(s).toEqual({ enabled: true, promissory: true, language: false });
+        expect(s).toEqual({
+            enabled: true,
+            promissory: true,
+            language: false,
+            verification: true,
+        });
+    });
+
+    it('the verification detector has its own switch', () => {
+        const s = readGateSettings(
+            makeWorkspace(
+                'hooks:\n  turn_end_gate:\n    enabled: true\n    verification: false\n',
+            ),
+        );
+        expect(s).toEqual({
+            enabled: true,
+            promissory: true,
+            language: true,
+            verification: false,
+        });
     });
 
     it('a SIBLING section’s `enabled:` is never read as ours', () => {
@@ -852,5 +880,177 @@ describe('round 2, findings 15 + 16 — detector A precision and recall', () => 
         expect(detectPromissory('Zwei Wege sind möglich.\n\nSoll ich den ersten nehmen?')).toBeNull();
         // Trailing quote/bracket after the mark still counts as a closing question.
         expect(detectPromissory('Zwei Wege.\n\nWelchen nimmst Du (1 oder 2)?')).toBeNull();
+    });
+});
+
+// ---------------------------------------------------------------------------
+// Detector C — an edit the turn never verified (dispatch-safety 4.3)
+// ---------------------------------------------------------------------------
+
+function call(name: string, extra: { command?: string; path?: string } = {}): ToolCall {
+    return { name, ...extra };
+}
+
+describe('isVerificationCommand — narrow on purpose', () => {
+    it('claims the project runners', () => {
+        for (const cmd of [
+            'task test',
+            'task ci',
+            'task typecheck-ts',
+            'npx vitest run tests/x.test.ts',
+            'npm run check',
+            'pnpm test',
+            'composer test',
+            'php artisan test --filter=Foo',
+            'go test ./...',
+            'cargo clippy',
+            'pytest -k foo',
+            'npx tsc --noEmit',
+            'npx eslint src',
+            './scripts-run src/scripts/validate_frontmatter',
+        ]) {
+            expect(isVerificationCommand(cmd), cmd).toBe(true);
+        }
+    });
+
+    it('does NOT claim an ordinary shell call', () => {
+        // The rejected alternative — "any Bash call verifies" — would let `ls`
+        // clear an unverified edit, which is the partial-verification failure
+        // verify-before-complete names.
+        for (const cmd of ['ls -la', 'git status', 'cat README.md', 'mkdir -p out', 'echo hi']) {
+            expect(isVerificationCommand(cmd), cmd).toBe(false);
+        }
+    });
+});
+
+describe('detectUnverifiedEdit', () => {
+    it('is silent on a turn that edited nothing', () => {
+        expect(detectUnverifiedEdit([call('Read'), call('Bash', { command: 'ls' })])).toBeNull();
+        expect(detectUnverifiedEdit([])).toBeNull();
+    });
+
+    it('fires when an edit is followed by no verification at all', () => {
+        const f = detectUnverifiedEdit([call('Edit', { path: 'src/a.ts' })]);
+        expect(f?.detector).toBe('verification');
+        expect(f?.evidence).toBe('src/a.ts');
+    });
+
+    it('fires when the only shell call after the edit cannot have checked it', () => {
+        const f = detectUnverifiedEdit([
+            call('Edit', { path: 'src/a.ts' }),
+            call('Bash', { command: 'git status' }),
+        ]);
+        expect(f).not.toBeNull();
+    });
+
+    it('is silent when a verification run follows the edit', () => {
+        expect(
+            detectUnverifiedEdit([
+                call('Write', { path: 'src/a.ts' }),
+                call('Bash', { command: 'task test -- --filter=a' }),
+            ]),
+        ).toBeNull();
+    });
+
+    it('fires when the verification ran BEFORE the last edit', () => {
+        // The freshness clause, and the only thing that separates this case from
+        // the one above: a run before the final edit did not exercise it.
+        const f = detectUnverifiedEdit([
+            call('Edit', { path: 'src/a.ts' }),
+            call('Bash', { command: 'npx vitest run' }),
+            call('Edit', { path: 'src/b.ts' }),
+        ]);
+        expect(f?.evidence).toBe('src/b.ts');
+    });
+
+    it('covers every write tool, not just Edit', () => {
+        for (const name of ['Edit', 'Write', 'MultiEdit', 'NotebookEdit']) {
+            expect(detectUnverifiedEdit([call(name, { path: 'x' })]), name).not.toBeNull();
+        }
+    });
+
+    it('names the tool when the call carried no path', () => {
+        expect(detectUnverifiedEdit([call('Write')])?.evidence).toBe('Write');
+    });
+
+    it('never quotes a file body — the evidence is a path or a tool name', () => {
+        // `ToolCall` has no field able to hold content, so this is a property of
+        // the type rather than of a scrubber. Pinned because the evidence span is
+        // written into a refusal a human reads.
+        const f = detectUnverifiedEdit([call('Edit', { path: 'src/a.ts' })]);
+        expect(Object.keys({ ...call('Edit', { path: 'x' }) }).sort()).toEqual(['name', 'path']);
+        expect(f?.evidence).not.toContain('\n');
+    });
+});
+
+describe('readTranscriptTail — tool calls of the CURRENT turn', () => {
+    function transcript(home: string, entries: unknown[]): string {
+        const file = path.join(home, `tools-${entries.length}-${Math.abs(hashish(JSON.stringify(entries)))}.jsonl`);
+        fs.writeFileSync(file, entries.map((e) => JSON.stringify(e)).join('\n') + '\n');
+        return file;
+    }
+    const user = (text: string) => ({ type: 'user', message: { content: text } });
+    const toolUse = (name: string, input: Record<string, unknown>) => ({
+        type: 'assistant',
+        message: { content: [{ type: 'tool_use', name, input }] },
+    });
+    const say = (text: string) => ({
+        type: 'assistant',
+        message: { content: [{ type: 'text', text }] },
+    });
+
+    let home: string;
+    beforeAll(() => {
+        home = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'turn-end-tools-')));
+        tmp_dirs.push(home);
+    });
+
+    it('collects a tool_use block that carries no text at all', () => {
+        // The regression this pins: reading tool calls after the `text === null`
+        // guard would drop exactly the entries the detector needs, because a
+        // tool-only assistant entry has no text block.
+        const t = transcript(home, [
+            user('los'),
+            toolUse('Edit', { file_path: 'src/a.ts' }),
+            say('fertig'),
+        ]);
+        const tail = readTranscriptTail(t, { homeDir: home });
+        expect(tail.toolCalls.map((c) => c.name)).toEqual(['Edit']);
+        expect(tail.toolCalls[0]?.path).toBe('src/a.ts');
+        expect(tail.lastAssistant).toBe('fertig');
+    });
+
+    it('resets at a genuine user prompt — a run three turns ago does not vouch', () => {
+        const t = transcript(home, [
+            user('erste aufgabe'),
+            toolUse('Bash', { command: 'task test' }),
+            say('grün'),
+            user('zweite aufgabe'),
+            toolUse('Edit', { file_path: 'src/b.ts' }),
+            say('geändert'),
+        ]);
+        const tail = readTranscriptTail(t, { homeDir: home });
+        expect(tail.toolCalls.map((c) => c.name)).toEqual(['Edit']);
+        expect(detectUnverifiedEdit(tail.toolCalls)).not.toBeNull();
+    });
+
+    it('keeps the shell command so verification is answerable', () => {
+        const t = transcript(home, [
+            user('los'),
+            toolUse('Write', { file_path: 'src/c.ts' }),
+            toolUse('Bash', { command: 'npx vitest run tests/c.test.ts' }),
+            say('grün'),
+        ]);
+        const tail = readTranscriptTail(t, { homeDir: home });
+        expect(detectUnverifiedEdit(tail.toolCalls)).toBeNull();
+    });
+
+    it('ignores a sidechain entry — a subagent is not this turn', () => {
+        const t = transcript(home, [
+            user('los'),
+            { ...toolUse('Edit', { file_path: 'src/d.ts' }), isSidechain: true },
+            say('fertig'),
+        ]);
+        expect(readTranscriptTail(t, { homeDir: home }).toolCalls).toEqual([]);
     });
 });

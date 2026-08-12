@@ -42,6 +42,22 @@ type Any = unknown;
 const _BLOCK_REASON_PREFIX = 'decision_gate';
 
 /**
+ * Stage an action for confirmation and return the surface lines that name it.
+ *
+ * An injected collaborator rather than a direct import of
+ * `staged_confirmation_store.js`, for two reasons. The gate is called from a
+ * hook bus with no repo root and no clock of its own, and — the load-bearing
+ * one — an absent stager keeps the `ask` path byte-identical to what ships
+ * today. The confirmation primitive is deliberately UNBOUND until blocker
+ * `confirmation-degraded-host-semantics` is decided (5 of 8 hosts have no
+ * `pre_tool_use` slot), so reaching it has to be an explicit opt-in and not a
+ * behaviour change that arrives with an upgrade.
+ */
+export interface ConfirmationStager {
+    stage(input: { action: string; object: string; source: string }): readonly string[];
+}
+
+/**
  * Evaluate decision-engine gates on every `AFTER_STEP`.
  *
  * The hook stores `settings` as a frozen reference; tests pass a fresh
@@ -49,9 +65,11 @@ const _BLOCK_REASON_PREFIX = 'decision_gate';
  */
 export class DecisionGateHook {
     private readonly _settings: DecisionEngineSettings;
+    private readonly _stager: ConfirmationStager | null;
 
-    constructor(settings: DecisionEngineSettings) {
+    constructor(settings: DecisionEngineSettings, stager: ConfirmationStager | null = null) {
         this._settings = settings;
+        this._stager = stager;
     }
 
     /** Register the gate callback on `AFTER_STEP`. */
@@ -109,10 +127,22 @@ export class DecisionGateHook {
                 DecisionGateHook._surface(decision, 'ask_timeout'),
             );
         }
-        throw new HookHalt(
-            `${_BLOCK_REASON_PREFIX}:${decision.gate_id}`,
-            DecisionGateHook._surface(decision),
-        );
+        // `stop` and `ask` share this exit: both halt, which is the policy —
+        // ask and action are strictly sequential, so an interactive gate does
+        // not act while it asks. What `ask` adds, and only when a stager is
+        // injected, is a token on the surface so the answer can be matched to
+        // THIS question and consumed exactly once. The halt reason is
+        // deliberately unchanged: it is the identity downstream readers match on.
+        let surface = DecisionGateHook._surface(decision);
+        if (action === 'ask' && this._stager !== null) {
+            const extra = this._stager.stage({
+                action: `work_engine:advance:${decision.gate_id}`,
+                object: `phase ${decision.phase}`,
+                source: _BLOCK_REASON_PREFIX,
+            });
+            surface = [...surface, '', ...extra];
+        }
+        throw new HookHalt(`${_BLOCK_REASON_PREFIX}:${decision.gate_id}`, surface);
     }
 
     // -- formatting helpers -------------------------------------------

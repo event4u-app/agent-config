@@ -1,0 +1,252 @@
+/**
+ * Staged confirmation — the pure half of exactly-once confirmed execution.
+ *
+ * `src/rules/non-destructive-by-default.md` already carries the whole policy:
+ * an irreversible action is confirmed on THIS turn, ask and action are strictly
+ * sequential ("Never act while asking"), and the approval names the exact
+ * object. What the tree had no mechanism for is the *sequencing itself* — a
+ * staged action, a confirmation that matches it, and the guarantee that a
+ * second approval of the same stage does not fire the action twice.
+ *
+ * Two properties carry that guarantee, and they are split across two files on
+ * purpose:
+ *
+ *   - **Identity is derived, not invented.** {@link stageAction} hashes the
+ *     action, the exact object, and a caller-supplied nonce into a token, so a
+ *     confirmation can only match the stage it was issued for. Restaging the
+ *     same object under a fresh nonce yields a different token — an approval
+ *     never carries over to "the next one like it".
+ *   - **The claim is atomic, and it lives in the store.** Nothing here can be
+ *     exactly-once by itself: two processes reading the same `pending` record
+ *     and both deciding "execute" is a check-then-act race no pure function can
+ *     close. This module decides WHAT the outcome should be;
+ *     `staged_confirmation_store.ts` makes the transition atomic with a
+ *     directory rename, which either succeeds once or fails.
+ *
+ * Nothing binds on this yet, deliberately. `pre_tool_use` exists on 3 of 8
+ * platform rows (`hook_manifest.yaml`), so a guard that claimed to enforce
+ * confirmation would be prose on the other five while reading like a control —
+ * the failure `src/rules/ui-audit-gate.md` names about its own scope. The
+ * decision is deferred behind blocker `confirmation-degraded-host-semantics`;
+ * until it lands, callers opt in explicitly.
+ *
+ * Pure: no filesystem, no clock, no randomness. `now` and `nonce` are
+ * parameters so a test pins a whole lifecycle without faking globals.
+ */
+
+import { createHash } from 'node:crypto';
+
+/**
+ * Lifecycle of one staged action. `expired` is not a stored state — it is
+ * derived from the clock by {@link stageStatus}, so a stale pending record
+ * cannot read as awaiting-approval merely because nobody swept it.
+ */
+export type StageState = 'pending' | 'confirmed' | 'declined';
+
+/** What {@link confirmOnce} concluded. Only `execute` authorizes the action. */
+export type ConfirmOutcome =
+    | 'execute'
+    | 'already-confirmed'
+    | 'expired'
+    | 'declined'
+    | 'token-mismatch';
+
+/**
+ * The `on_block_fallback` vocabulary from
+ * `work_engine/scoring/decision_engine.ts` (`stop` / `warn`, default `stop`),
+ * reused rather than re-invented: this module extends that gate's ask path, so
+ * a second fallback vocabulary would be a second contract to keep in sync.
+ */
+export type NonInteractiveFallback = 'stop' | 'warn';
+
+/**
+ * Default staging window. A confirmation the user never gives must not sit in
+ * the store as an approval waiting to be collected: an abandoned stage that
+ * stays valid indefinitely is a pre-approved irreversible action, which is the
+ * opposite of what the policy asks for. Fifteen minutes is long enough for a
+ * human to read the surface and answer, short enough that a turn which ended
+ * hours ago cannot authorize anything.
+ */
+export const STAGE_TTL_MS = 15 * 60 * 1000;
+
+export interface StagedAction {
+    /** Confirmation token — derived, never guessable from the object alone. */
+    readonly token: string;
+    /** What would fire: a command name, a skill slug, a concern id. */
+    readonly action: string;
+    /**
+     * The exact object the approval names — a path, a URL, a recipient, an
+     * amount. The policy's "names the exact object" clause lives here, which is
+     * why it is required rather than optional: a stage with no object is a
+     * category confirmation, and the rule forbids exactly that.
+     */
+    readonly object: string;
+    /** Who staged it — the surface a `gates --pending` reader needs. */
+    readonly source: string;
+    readonly staged_at: string;
+    readonly expires_at: string;
+    readonly state: StageState;
+    /** Set on the transition out of `pending`, never rewritten afterwards. */
+    readonly resolved_at?: string;
+}
+
+/** ISO-8601 seconds, matching the runtime records already in the tree. */
+function iso(ms: number): string {
+    return new Date(ms).toISOString().replace(/\.\d{3}Z$/, 'Z');
+}
+
+/**
+ * Derive the confirmation token.
+ *
+ * The nonce is a parameter and not read from a clock or an RNG here, so the
+ * derivation is reproducible in a test. It is also what makes two stages of the
+ * same object distinct: without it, approving a delete of `x` once would
+ * produce a token that matches every future delete of `x`.
+ *
+ * The separator is NUL, written as an escape sequence and never as a raw byte.
+ * NUL is the right separator — it cannot occur in an action, a path or a nonce,
+ * so no two different triples concatenate to the same string. A RAW NUL in a
+ * text source would make git, grep and file(1) treat the whole file as binary
+ * and skip it silently, which `lint_hidden_unicode` blocks on; the escape keeps
+ * the domain separation and leaves the file readable by every tool.
+ */
+export function deriveToken(action: string, object: string, nonce: string): string {
+    return createHash('sha256')
+        .update(`${action}\u0000${object}\u0000${nonce}`)
+        .digest('hex')
+        .slice(0, 16);
+}
+
+/** Stage an action. Returns the record; it is the caller's job to persist it. */
+export function stageAction(args: {
+    action: string;
+    object: string;
+    source: string;
+    nonce: string;
+    now: number;
+    ttlMs?: number;
+}): StagedAction {
+    const ttl = args.ttlMs ?? STAGE_TTL_MS;
+    return {
+        token: deriveToken(args.action, args.object, args.nonce),
+        action: args.action,
+        object: args.object,
+        source: args.source,
+        staged_at: iso(args.now),
+        expires_at: iso(args.now + ttl),
+        state: 'pending',
+    };
+}
+
+/**
+ * Effective status at `now` — `expired` is derived, not stored.
+ *
+ * A pending record past its `expires_at` reads as `expired` even though no
+ * sweep has run, so the guarantee does not depend on a pruner having been
+ * called. Prune is housekeeping; this is the decision.
+ */
+export function stageStatus(stage: StagedAction, now: number): StageState | 'expired' {
+    if (stage.state === 'pending' && Date.parse(stage.expires_at) <= now) {
+        return 'expired';
+    }
+    return stage.state;
+}
+
+export function isExpired(stage: StagedAction, now: number): boolean {
+    return stageStatus(stage, now) === 'expired';
+}
+
+/**
+ * Decide what a confirmation attempt means. `execute` — and only `execute` —
+ * authorizes the action, and it is returned at most once per stage because the
+ * caller writes the returned record back before acting.
+ *
+ * The token is compared in full: a confirmation for a different stage is
+ * `token-mismatch` rather than a silent no-op, because a mismatch is a real
+ * signal (a stale surface, a copied token) and swallowing it would hide it.
+ */
+export function confirmOnce(
+    stage: StagedAction,
+    token: string,
+    now: number,
+): { outcome: ConfirmOutcome; stage: StagedAction } {
+    if (token !== stage.token) {
+        return { outcome: 'token-mismatch', stage };
+    }
+    const status = stageStatus(stage, now);
+    if (status === 'confirmed') {
+        return { outcome: 'already-confirmed', stage };
+    }
+    if (status === 'declined') {
+        return { outcome: 'declined', stage };
+    }
+    if (status === 'expired') {
+        return { outcome: 'expired', stage };
+    }
+    return {
+        outcome: 'execute',
+        stage: { ...stage, state: 'confirmed', resolved_at: iso(now) },
+    };
+}
+
+/** Decline a stage. Idempotent for the same reason `confirmOnce` is. */
+export function declineStage(
+    stage: StagedAction,
+    token: string,
+    now: number,
+): { declined: boolean; stage: StagedAction } {
+    if (token !== stage.token || stageStatus(stage, now) !== 'pending') {
+        return { declined: false, stage };
+    }
+    return { declined: true, stage: { ...stage, state: 'declined', resolved_at: iso(now) } };
+}
+
+/**
+ * What a non-interactive context does with a stage.
+ *
+ * Both fallbacks REFUSE — `decision_engine`'s `stop` and `warn` differ in how
+ * loudly they surface, never in whether the gated thing proceeds, and a staged
+ * irreversible action is the last place to invent an auto-approve. Naming the
+ * `warn` case explicitly is the point: a reader looking for the permissive
+ * branch finds it absent on purpose.
+ */
+export function nonInteractiveDecision(fallback: NonInteractiveFallback): {
+    execute: false;
+    surface: 'halt' | 'warn';
+} {
+    return { execute: false, surface: fallback === 'warn' ? 'warn' : 'halt' };
+}
+
+/**
+ * The confirmation surface, in the numbered-options shape
+ * `src/rules/user-interaction.md` requires. Returned as lines rather than
+ * written, so the same text serves a hook halt, a CLI pane, and a chat reply.
+ *
+ * `confirmWith` / `declineWith` are the caller's channel and are NOT defaulted
+ * to a command name. Which channel confirms a staged action is precisely what
+ * blocker `confirmation-degraded-host-semantics` has not decided — a
+ * `pre_tool_use` reply on three hosts, prose on the other five — and printing
+ * an invocation that does not exist yet would put a false instruction into a
+ * shipped surface. Until a binding caller supplies one, the surface names the
+ * token and says plainly that no channel is wired.
+ */
+export function confirmationSurface(
+    stage: StagedAction,
+    channel?: { confirmWith?: string; declineWith?: string },
+): string[] {
+    const confirm = channel?.confirmWith;
+    const decline = channel?.declineWith;
+    return [
+        `Confirmation required: ${stage.action}`,
+        `Object: ${stage.object}`,
+        `Staged by: ${stage.source} · token ${stage.token} · expires ${stage.expires_at}`,
+        confirm === undefined
+            ? `1) Confirm — quote token ${stage.token} back to the caller that staged it.`
+            : `1) Confirm — ${confirm}`,
+        decline === undefined
+            ? '2) Decline — say so; the stage is resolved without firing.'
+            : `2) Decline — ${decline}`,
+        '3) Do nothing — the stage expires and the action never fires.',
+        'Pending stages: `agent-config gates --pending`.',
+    ];
+}

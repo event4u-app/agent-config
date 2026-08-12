@@ -530,6 +530,9 @@ export const settingsSchema = z.object({
             language: z.boolean().default(true).describe(
                 'Detector B of the turn-end gate: refuse a turn whose reply is not in the pinned language (19 measured occurrences). Fenced code, inline code, quoted tool output, tables, URLs and paths are stripped first, and the remainder is then scored LEAD-FIRST by the same classifier that sets the pin — so the verdict usually comes from the reply opening, not from all of it. Sharing that classifier is deliberate: it stops the pin and the detector disagreeing about a turn. Accepted opt-in spellings for the switches below include YAML true/false and yes/no/on/off. Inert while hooks.turn_end_gate.enabled is false.',
             ),
+            verification: z.boolean().default(true).describe(
+                'Detector C of the turn-end gate: refuse a turn that changed a file and then ran nothing that could have checked it — no test, type-check, lint or build call follows the LAST edit. Ordering is the point: a run before the final edit did not exercise it, which is the freshness clause verify-before-complete states. Read off the turn tool calls, not the prose, because a reply cannot say whether an edit was verified. Deliberately narrow on what counts as verification — a missed detection costs one unguarded turn, a false refusal teaches you to switch the gate off. No fire rate is quoted: none has been measured yet. Inert while hooks.turn_end_gate.enabled is false.',
+            ),
         }).default({}),
     }),
     decision_engine: z.object({

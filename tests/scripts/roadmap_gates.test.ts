@@ -6,9 +6,24 @@
 // split that decides whether a blocker reaches the user at all, the
 // continuation-line regrouping that turns raw parsed lines back into steps,
 // and the rendered summary line the user reads first.
-import { describe, expect, it } from 'vitest';
+import * as fs from 'node:fs';
+import * as os from 'node:os';
+import * as path from 'node:path';
 
-import { needsUser, regroupTodo, render, renderJson, renderReply, type Entry } from '../../src/agent-src/scripts/roadmap_gates.js';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+
+import {
+    needsUser,
+    regroupTodo,
+    render,
+    renderJson,
+    renderPending,
+    renderPendingJson,
+    renderReply,
+    type Entry,
+} from '../../src/agent-src/scripts/roadmap_gates.js';
+import { stageAction } from '../../src/agent-src/templates/scripts/work_engine/hooks/builtin/staged_confirmation.js';
+import { putPending } from '../../src/agent-src/templates/scripts/work_engine/hooks/builtin/staged_confirmation_store.js';
 
 function entry(
     owner: string,
@@ -251,5 +266,93 @@ describe('renderReply — the reply-close form', () => {
     it('names the gap when the blocker entry records no steps', () => {
         const out = renderReply([entry('user', { todo: [] })]);
         expect(out).toContain('no steps recorded');
+    });
+});
+
+// `--pending` is the second source under the same verb (dispatch-safety 2.3):
+// staged `requires_confirmation` actions, which are decisions that need the user
+// in the most literal sense the verb's own definition allows.
+describe('renderPending — staged actions awaiting confirmation', () => {
+    const T0 = Date.parse('2026-08-11T12:00:00Z');
+    let root: string;
+
+    beforeEach(() => {
+        root = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'gatespending-')));
+    });
+
+    afterEach(() => {
+        fs.rmSync(root, { recursive: true, force: true });
+    });
+
+    function put(object: string, nonce: string, ttlMs?: number): void {
+        putPending(
+            root,
+            stageAction({
+                action: 'agent-config release:publish',
+                object,
+                source: 'release-flow',
+                nonce,
+                now: T0,
+                ...(ttlMs === undefined ? {} : { ttlMs }),
+            }),
+        );
+    }
+
+    it('says so plainly when nothing is staged', () => {
+        expect(renderPending(root, T0)).toBe('No staged actions awaiting confirmation.\n');
+    });
+
+    it('renders the exact object first — the approval must name it', () => {
+        put('npm publish @event4u/agent-config@9.9.9', 'n1');
+        const out = renderPending(root, T0 + 1000);
+        expect(out).toContain('1 staged action awaits your confirmation');
+        expect(out).toContain('npm publish @event4u/agent-config@9.9.9');
+        expect(out).toContain('Staged by:');
+    });
+
+    it('pluralises the summary line', () => {
+        put('a', 'n1');
+        put('b', 'n2');
+        expect(renderPending(root, T0 + 1)).toContain('2 staged actions await your confirmation');
+    });
+
+    it('counts an expired stage instead of listing it as actionable', () => {
+        put('a', 'n1', 1000);
+        const out = renderPending(root, T0 + 5000);
+        expect(out).toContain('1 stage expired unconfirmed');
+        expect(out).not.toContain('Object:');
+    });
+
+    it('reports live and expired separately when both exist', () => {
+        put('live', 'n1');
+        put('dead', 'n2', 1000);
+        const out = renderPending(root, T0 + 5000);
+        expect(out).toContain('1 staged action awaits your confirmation');
+        expect(out).toContain('1 expired unconfirmed');
+        expect(out).toContain('live');
+        expect(out).not.toContain('dead');
+    });
+
+    it('renders byte-identically on an unchanged store', () => {
+        put('a', 'n1');
+        put('b', 'n2');
+        expect(renderPending(root, T0 + 1)).toBe(renderPending(root, T0 + 1));
+    });
+
+    it('--json carries the derived status, not the stored field', () => {
+        put('a', 'n1', 1000);
+        const parsed = JSON.parse(renderPendingJson(root, T0 + 5000)) as {
+            awaitingYou: number;
+            expired: number;
+            staged: { status: string; object: string }[];
+        };
+        expect(parsed.awaitingYou).toBe(0);
+        expect(parsed.expired).toBe(1);
+        expect(parsed.staged[0]?.status).toBe('expired');
+    });
+
+    it('--json on an empty store is still valid JSON', () => {
+        const parsed = JSON.parse(renderPendingJson(root, T0)) as { staged: unknown[] };
+        expect(parsed.staged).toEqual([]);
     });
 });
