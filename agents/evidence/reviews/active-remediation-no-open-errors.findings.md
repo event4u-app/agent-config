@@ -80,9 +80,13 @@ to absorb inside an unrelated PR.
 `check_standing_rule_delivery` is red on this branch (191,901 tok / 110,000) and
 red on `main` at the same commit (185,207 tok) — a local install topology where
 both the global and project rule layers are present, which CI does not
-reproduce. It is surfaced to the maintainer rather than folded in silently; the
-gate's own remedy (`agent-config install --layer=…`) changes the developer's
-machine, not this repository.
+reproduce. It was surfaced to the maintainer rather than folded in silently, and
+is now **decided**: `ADR-226` records that this repository keeps both layers,
+because the gate's own remedy (`agent-config install --layer=global`) would
+suppress the only layer carrying `source-of-truth.md`. The measurement that
+produced that answer — global 114 rules / 107,204 tok as a superset of project
+92 / 78,003, with exactly one exception — is in the ADR. The item is closed by a
+decision, not by a mention.
 
 ## Re-bound again after the derived-page regeneration
 

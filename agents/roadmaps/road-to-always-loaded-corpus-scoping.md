@@ -29,6 +29,14 @@ Two gates measure the same corpus from different ends and both are strained:
 The two are independent: layer suppression halves a doubled corpus, scoping
 shrinks the corpus itself. Doing only the first leaves ~107,000 tokens standing.
 
+**And in this repository the first is not available at all.** `ADR-226` records
+why: the global layer is a superset of the project layer except for
+`source-of-truth.md`, which only the project layer carries, so `--layer=global`
+buys tokens by dropping the rule that protects every generated projection in the
+one repository that has them. Layer suppression stays a consumer remedy. That
+makes corpus size the only lever here, which is what raises this roadmap from
+nice-to-have to the sole open path.
+
 ### What is already settled, and must not be re-litigated
 
 **Thin projection is measured and did not ship.** Replacing non-kernel rule
