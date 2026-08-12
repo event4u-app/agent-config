@@ -9,7 +9,7 @@
  * `stop`-is-not-session-end trap on every platform shape.
  */
 
-import { execFileSync } from 'node:child_process';
+import { execFileSync, type spawnSync } from 'node:child_process';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
@@ -23,6 +23,7 @@ import {
     type SessionRecord,
     TTL_DEFAULT_SECONDS,
     TTL_MEASURED_SECONDS,
+    classify_collisions,
     delete_record,
     foreign_live_records,
     is_expired,
@@ -35,6 +36,18 @@ import {
     ttl_seconds_for,
     write_record,
 } from '../../src/scripts/_lib/session_register.js';
+import {
+    ROADMAP_CLAIM_REL,
+    claim_is_stale,
+    read_claimed_slug,
+    roadmap_claim_rel,
+} from '../../src/scripts/session_register_hook.js';
+import {
+    branch_name_hits,
+    claim_conflicts,
+    other_worktree_branches,
+    other_worktree_branches_detailed,
+} from '../../src/scripts/sessions_cli.js';
 
 let tmp: string;
 
@@ -294,5 +307,414 @@ describe('fail-open — the register never costs a session its start', () => {
     it('deleting an absent record is a no-op, not a failure path', () => {
         const { main } = make_repo();
         expect(delete_record(register_dir(main)!, 'never-existed')).toBe(false);
+    });
+});
+
+// ---------------------------------------------------------------------------
+// The duplicate-work collision — four defects, each with the case that was
+// silent before it. Measured twice on this repo (PR #1277/#1280, #1280/#1281):
+// two sessions built the same roadmap phase under two branch names.
+// ---------------------------------------------------------------------------
+
+describe('classify_collisions — the roadmap axis that was missing', () => {
+    it('reports the SAME roadmap under DIFFERENT branch names — the measured case', () => {
+        // This is the whole incident in one assertion. Before this axis existed,
+        // the comparison was `r.branch === here` and these two records produced
+        // NO warning at all.
+        const others = [
+            rec({
+                session_id: 'peer',
+                branch: 'feat/dispatch-safety-confirmation',
+                roadmap_slug: 'road-to-inbox-harvest-2026-08-b-dispatch-safety',
+            }),
+        ];
+        const hits = classify_collisions(others, {
+            branch: 'feat/dispatch-safety-confirmed-execution',
+            roadmap_slug: 'road-to-inbox-harvest-2026-08-b-dispatch-safety',
+        });
+        expect(hits.map((h) => h.kind)).toEqual(['roadmap']);
+        expect(hits[0]!.record.session_id).toBe('peer');
+    });
+
+    it('orders roadmap BEFORE branch — the expensive collision leads', () => {
+        const others = [rec({ session_id: 'peer', branch: 'feat/a', roadmap_slug: 'road-to-x' })];
+        const hits = classify_collisions(others, { branch: 'feat/a', roadmap_slug: 'road-to-x' });
+        expect(hits.map((h) => h.kind)).toEqual(['roadmap', 'branch']);
+    });
+
+    it('keeps the branch axis working on its own', () => {
+        const others = [rec({ session_id: 'peer', branch: 'feat/a', roadmap_slug: 'road-to-y' })];
+        const hits = classify_collisions(others, { branch: 'feat/a', roadmap_slug: 'road-to-x' });
+        expect(hits.map((h) => h.kind)).toEqual(['branch']);
+    });
+
+    it('a null slug never collides — otherwise every pair of fresh sessions fires', () => {
+        const others = [rec({ session_id: 'peer', branch: 'feat/b', roadmap_slug: null })];
+        expect(classify_collisions(others, { branch: 'feat/a', roadmap_slug: null })).toEqual([]);
+        expect(classify_collisions(others, { branch: 'feat/a', roadmap_slug: 'road-to-x' })).toEqual(
+            [],
+        );
+    });
+
+    it('different roadmaps on different branches are not a collision', () => {
+        const others = [rec({ session_id: 'peer', branch: 'feat/b', roadmap_slug: 'road-to-y' })];
+        expect(classify_collisions(others, { branch: 'feat/a', roadmap_slug: 'road-to-x' })).toEqual(
+            [],
+        );
+    });
+
+    it('reports every peer on the same roadmap, not just the first', () => {
+        const others = [
+            rec({ session_id: 'p1', branch: 'feat/b', roadmap_slug: 'road-to-x' }),
+            rec({ session_id: 'p2', branch: 'feat/c', roadmap_slug: 'road-to-x' }),
+        ];
+        const hits = classify_collisions(others, { branch: 'feat/a', roadmap_slug: 'road-to-x' });
+        expect(hits.map((h) => h.record.session_id)).toEqual(['p1', 'p2']);
+    });
+});
+
+describe('the claim is per SESSION, not per worktree', () => {
+    function claim(root: string, body: Record<string, unknown>, file: string): void {
+        const p = path.join(root, file);
+        fs.mkdirSync(path.dirname(p), { recursive: true });
+        fs.writeFileSync(p, JSON.stringify(body));
+    }
+
+    it('an IDENTIFIED session never reads the shared legacy claim — the measured defect', () => {
+        // Four live records once carried one identical slug because every session
+        // in a checkout read the last claim written there. A session reporting a
+        // roadmap it is not working is worse than reporting none: the screen reads
+        // it as "taken".
+        //
+        // The rule is not "compare the ids" — that was R2 finding 6: `cmd_claim`
+        // serialises `session_id: null` on the legacy path and the reader drops a
+        // null, so the comparison never ran. A session that CAN identify itself
+        // never writes that file, so whatever is in it is not its claim.
+        const { main } = make_repo();
+        claim(main, { slug: 'road-to-peer', session_id: 'peer-session' }, ROADMAP_CLAIM_REL);
+        expect(read_claimed_slug(main, 'my-session')).toBeNull();
+        // Not even the id that wrote it: it belongs to that session's per-session
+        // file now, and reading it here would re-open the inheritance path.
+        expect(read_claimed_slug(main, 'peer-session')).toBeNull();
+    });
+
+    it('only an UNIDENTIFIED session reads the shared file — the shape it must share', () => {
+        const { main } = make_repo();
+        claim(main, { slug: 'road-to-shared' }, ROADMAP_CLAIM_REL);
+        expect(read_claimed_slug(main, null)).toBe('road-to-shared');
+        expect(read_claimed_slug(main, '')).toBe('road-to-shared');
+    });
+
+    it('the per-session file wins over the legacy one', () => {
+        const { main } = make_repo();
+        claim(main, { slug: 'legacy-slug' }, ROADMAP_CLAIM_REL);
+        claim(main, { slug: 'mine' }, roadmap_claim_rel('my-session'));
+        expect(read_claimed_slug(main, 'my-session')).toBe('mine');
+    });
+
+    it('the pre-upgrade claim is DROPPED for an identified session — the price, stated', () => {
+        // Migration and non-inheritance are the same read and only one can win: a
+        // legacy file is either a peer's (host with no id) or pre-upgrade, and a
+        // reader cannot tell. Inheriting a peer's claim is the measured defect;
+        // losing a pre-upgrade claim costs one re-run of `sessions:claim`. So this
+        // asserts the loss deliberately rather than papering over it.
+        const { main } = make_repo();
+        claim(main, { slug: 'pre-existing' }, ROADMAP_CLAIM_REL);
+        expect(read_claimed_slug(main, 'my-session')).toBeNull();
+        expect(read_claimed_slug(main, null)).toBe('pre-existing');
+    });
+
+    it('an unidentifiable session falls back to the legacy path rather than losing the claim', () => {
+        expect(roadmap_claim_rel(null)).toBe(ROADMAP_CLAIM_REL);
+        expect(roadmap_claim_rel('')).toBe(ROADMAP_CLAIM_REL);
+        expect(roadmap_claim_rel('   ')).toBe(ROADMAP_CLAIM_REL);
+    });
+
+    it('a hostile session id cannot escape the state directory', () => {
+        expect(roadmap_claim_rel('../../etc/passwd')).not.toContain('..');
+    });
+
+    it('an absent or malformed claim reads as no claim, never as a throw', () => {
+        const { main } = make_repo();
+        expect(read_claimed_slug(main, 'x')).toBeNull();
+        claim(main, {} as Record<string, unknown>, ROADMAP_CLAIM_REL);
+        expect(read_claimed_slug(main, 'x')).toBeNull();
+        fs.writeFileSync(path.join(main, ROADMAP_CLAIM_REL), '{ not json');
+        expect(read_claimed_slug(main, 'x')).toBeNull();
+    });
+});
+
+describe('a stale slug is not a claim', () => {
+    it('a slug naming an ARCHIVED roadmap reads as stale', () => {
+        const { main } = make_repo();
+        fs.mkdirSync(path.join(main, 'agents', 'roadmaps', 'archive'), { recursive: true });
+        fs.writeFileSync(path.join(main, 'agents', 'roadmaps', 'archive', 'road-to-done.md'), '#');
+        expect(claim_is_stale(main, 'road-to-done')).toBe(true);
+    });
+
+    it('a slug naming an OPEN roadmap is live', () => {
+        const { main } = make_repo();
+        fs.mkdirSync(path.join(main, 'agents', 'roadmaps'), { recursive: true });
+        fs.writeFileSync(path.join(main, 'agents', 'roadmaps', 'road-to-open.md'), '#');
+        expect(claim_is_stale(main, 'road-to-open')).toBe(false);
+        expect(claim_is_stale(main, 'road-to-open.md')).toBe(false);
+    });
+
+    it('null is not stale — absence is a state, not a defect', () => {
+        const { main } = make_repo();
+        expect(claim_is_stale(main, null)).toBe(false);
+        expect(claim_is_stale(main, '')).toBe(false);
+    });
+
+    it('a traversal-shaped slug is stale rather than rendered as live work', () => {
+        const { main } = make_repo();
+        expect(claim_is_stale(main, '../../../etc/passwd')).toBe(true);
+    });
+});
+
+describe('sessions:claim refuses a slug a peer already holds', () => {
+    /**
+     * The regression this whole group exists for. The register's context block is
+     * emitted on `session_start` only, and there this session's own slug is null
+     * by construction — so a roadmap-collision warning in that renderer can never
+     * fire on the session doing the picking. The check has to sit on the claim.
+     */
+    function open_roadmap(root: string, slug: string): void {
+        fs.mkdirSync(path.join(root, 'agents', 'roadmaps'), { recursive: true });
+        fs.writeFileSync(path.join(root, 'agents', 'roadmaps', `${slug}.md`), '# x');
+    }
+
+    it('finds a live peer record on the same slug', () => {
+        const { main } = make_repo();
+        open_roadmap(main, 'road-to-x');
+        write_record(
+            register_dir(main)!,
+            rec({ session_id: 'peer', branch: 'feat/other-name', roadmap_slug: 'road-to-x' }),
+        );
+        const hits = claim_conflicts(main, 'road-to-x');
+        expect(hits.map((h) => h.kind)).toContain('session');
+    });
+
+    it('ignores a peer whose slug is STALE — an archived roadmap blocks nothing', () => {
+        const { main } = make_repo();
+        // No open roadmap file → the peer's claim names nothing live.
+        write_record(register_dir(main)!, rec({ session_id: 'peer', roadmap_slug: 'road-to-gone' }));
+        expect(claim_conflicts(main, 'road-to-gone')).toEqual([]);
+    });
+
+    it('finds a peer BRANCH by the slug tail — the peer that never claimed', () => {
+        const { main, wt } = make_repo();
+        open_roadmap(main, 'road-to-inbox-harvest-2026-08-b-dispatch-safety');
+        // Exactly the measured branch name. Matching the whole slug would find
+        // nothing, which is why the tail is what is compared.
+        git(main, 'branch', 'feat/dispatch-safety-confirmation');
+        git(wt, 'checkout', '-q', 'feat/dispatch-safety-confirmation');
+        fs.writeFileSync(path.join(wt, 'w.txt'), 'x');
+        git(wt, 'add', 'w.txt');
+        git(wt, 'commit', '-q', '-m', 'peer work');
+        const hits = claim_conflicts(main, 'road-to-inbox-harvest-2026-08-b-dispatch-safety');
+        expect(hits.map((h) => h.kind)).toContain('branch');
+    });
+
+    it('is silent on an unrelated slug', () => {
+        const { main } = make_repo();
+        open_roadmap(main, 'road-to-x');
+        write_record(register_dir(main)!, rec({ session_id: 'peer', roadmap_slug: 'road-to-y' }));
+        expect(claim_conflicts(main, 'road-to-x')).toEqual([]);
+    });
+
+    it('is silent when nothing else is live', () => {
+        const { main } = make_repo();
+        open_roadmap(main, 'road-to-x');
+        expect(claim_conflicts(main, 'road-to-x')).toEqual([]);
+    });
+
+    it('does not report the caller own record as a conflict', () => {
+        const { main } = make_repo();
+        open_roadmap(main, 'road-to-x');
+        const prev = process.env['AGENT_CONFIG_SESSION_ID'];
+        process.env['AGENT_CONFIG_SESSION_ID'] = 'me';
+        try {
+            write_record(register_dir(main)!, rec({ session_id: 'me', roadmap_slug: 'road-to-x' }));
+            expect(claim_conflicts(main, 'road-to-x')).toEqual([]);
+        } finally {
+            if (prev === undefined) delete process.env['AGENT_CONFIG_SESSION_ID'];
+            else process.env['AGENT_CONFIG_SESSION_ID'] = prev;
+        }
+    });
+
+    it('a two-character tail is not matched — it would hit every branch', () => {
+        const { main, wt } = make_repo();
+        open_roadmap(main, 'road-to-a-b');
+        fs.writeFileSync(path.join(wt, 'w.txt'), 'x');
+        git(wt, 'add', 'w.txt');
+        git(wt, 'commit', '-q', '-m', 'w');
+        expect(claim_conflicts(main, 'road-to-a-b').filter((h) => h.kind === 'branch')).toEqual([]);
+    });
+});
+
+describe('R2 fixes — each finding gets the case it named', () => {
+    function open_roadmap(root: string, slug: string): void {
+        fs.mkdirSync(path.join(root, 'agents', 'roadmaps'), { recursive: true });
+        fs.writeFileSync(path.join(root, 'agents', 'roadmaps', `${slug}.md`), '# x');
+    }
+
+    it('R2-1: a peer claim is live when the PEER tree holds the roadmap, not ours', () => {
+        // The high finding. Worktrees share one register on different commits, so
+        // resolving the roadmap only in the caller's tree read a live peer claim as
+        // stale — and stale is treated as no claim, which disabled the refusal in
+        // exactly the multi-worktree case this exists for.
+        const { main, wt } = make_repo();
+        open_roadmap(wt, 'road-to-only-in-peer');
+        expect(claim_is_stale(main, 'road-to-only-in-peer')).toBe(true); // our tree alone
+        expect(claim_is_stale(main, 'road-to-only-in-peer', wt)).toBe(false); // peer's tree
+    });
+
+    it('R2-1: absent in BOTH trees is still stale', () => {
+        const { main, wt } = make_repo();
+        expect(claim_is_stale(main, 'road-to-nowhere', wt)).toBe(true);
+    });
+
+    it('R2-2: an unidentified session excludes its OWN record by worktree', () => {
+        const { main } = make_repo();
+        open_roadmap(main, 'road-to-x');
+        const prev = process.env['CLAUDE_CODE_SESSION_ID'];
+        const prev2 = process.env['AGENT_CONFIG_SESSION_ID'];
+        delete process.env['CLAUDE_CODE_SESSION_ID'];
+        delete process.env['AGENT_CONFIG_SESSION_ID'];
+        try {
+            write_record(
+                register_dir(main)!,
+                rec({ session_id: 'whoever', worktree: main, roadmap_slug: 'road-to-x' }),
+            );
+            // Without the worktree fallback this exited 1 citing the session itself,
+            // so re-claiming was non-idempotent on the graceful-degradation path.
+            expect(claim_conflicts(main, 'road-to-x')).toEqual([]);
+        } finally {
+            if (prev === undefined) delete process.env['CLAUDE_CODE_SESSION_ID'];
+            else process.env['CLAUDE_CODE_SESSION_ID'] = prev;
+            if (prev2 === undefined) delete process.env['AGENT_CONFIG_SESSION_ID'];
+            else process.env['AGENT_CONFIG_SESSION_ID'] = prev2;
+        }
+    });
+
+    it('R2-4: a date-suffixed slug does not match every branch', () => {
+        const { main, wt } = make_repo();
+        fs.writeFileSync(path.join(wt, 'w.txt'), 'x');
+        git(wt, 'add', 'w.txt');
+        git(wt, 'commit', '-q', '-m', 'w');
+        // tail `2026-08` cleared the old `length >= 4` guard and matched anything
+        // carrying that string.
+        expect(branch_name_hits(main, 'road-to-inbox-harvest-2026-08')).toEqual([]);
+    });
+
+    it('R2-4: the real slug tail still matches', () => {
+        const { main, wt } = make_repo();
+        git(main, 'branch', 'feat/dispatch-safety-confirmation');
+        git(wt, 'checkout', '-q', 'feat/dispatch-safety-confirmation');
+        fs.writeFileSync(path.join(wt, 'w.txt'), 'x');
+        git(wt, 'add', 'w.txt');
+        git(wt, 'commit', '-q', '-m', 'w');
+        expect(
+            branch_name_hits(main, 'road-to-inbox-harvest-2026-08-b-dispatch-safety').map(
+                (h) => h.branch,
+            ),
+        ).toContain('feat/dispatch-safety-confirmation');
+    });
+
+    it('R2-12: the walk reports whether the unmerged filter was applied', () => {
+        const { main } = make_repo();
+        // No `origin/main` in the fixture, so the filter is unavailable and the
+        // human output must say so instead of claiming "N unmerged branch(es)".
+        expect(other_worktree_branches_detailed(main).filtered).toBe(false);
+    });
+
+    it('PR-review: a legacy file with NO session_id is not credited to a session', () => {
+        // The reviewer asked for exactly this assertion, and named why: the claim
+        // path had no coverage at all before this branch, which is how the original
+        // scoping bug shipped. A pre-change `cmd_claim` never wrote a session_id, so
+        // this is the shape of every file that caused the incident.
+        const { main } = make_repo();
+        fs.mkdirSync(path.join(main, 'agents', 'runtime', 'state'), { recursive: true });
+        fs.writeFileSync(
+            path.join(main, ROADMAP_CLAIM_REL),
+            JSON.stringify({ slug: 'road-to-inbox-harvest-2026-08-b-dispatch-safety' }),
+        );
+        expect(read_claimed_slug(main, 'some-session')).toBeNull();
+    });
+
+    it('gate-high: a hostile session id cannot leave the state directory', () => {
+        for (const hostile of ['../../etc/passwd', '/etc/passwd', '..', 'a/../../b']) {
+            const rel = roadmap_claim_rel(hostile);
+            expect(rel.includes('..'), hostile).toBe(false);
+            expect(
+                rel === ROADMAP_CLAIM_REL ||
+                    rel.startsWith(path.join('agents', 'runtime', 'state') + path.sep),
+                hostile,
+            ).toBe(true);
+        }
+    });
+
+    it('gate-high: a slug that would escape the roadmaps directory reads as stale', () => {
+        const { main } = make_repo();
+        for (const hostile of ['../../etc/passwd', '/etc/passwd', 'a/../../../b']) {
+            expect(claim_is_stale(main, hostile), hostile).toBe(true);
+        }
+    });
+
+    it('gate-medium: the branch tail matches on token boundaries, not substrings', () => {
+        const { main, wt } = make_repo();
+        // The gate named this false positive: `dispatch-safety` is a substring of
+        // `redispatch-safety-valve`, a different task.
+        git(main, 'branch', 'feat/redispatch-safety-valve');
+        git(wt, 'checkout', '-q', 'feat/redispatch-safety-valve');
+        fs.writeFileSync(path.join(wt, 'w.txt'), 'x');
+        git(wt, 'add', 'w.txt');
+        git(wt, 'commit', '-q', '-m', 'w');
+        expect(branch_name_hits(main, 'road-to-x-dispatch-safety')).toEqual([]);
+    });
+
+    it('R2-14: every roadmap peer is classified, and the renderer has them all', () => {
+        const others = [
+            rec({ session_id: 'p1', branch: 'feat/b', roadmap_slug: 'road-to-x' }),
+            rec({ session_id: 'p2', branch: 'feat/c', roadmap_slug: 'road-to-x' }),
+        ];
+        const hits = classify_collisions(others, { branch: 'feat/a', roadmap_slug: 'road-to-x' });
+        expect(hits.filter((h) => h.kind === 'roadmap')).toHaveLength(2);
+    });
+});
+
+describe('the branch axis — what the register cannot see', () => {
+    it('lists an unmerged branch checked out in ANOTHER worktree', () => {
+        const { main, wt } = make_repo();
+        // `feat/a` needs a commit of its own, or `--no-merged origin/main` would
+        // correctly exclude it. That is the documented limit, asserted below.
+        fs.writeFileSync(path.join(wt, 'work.txt'), 'x');
+        git(wt, 'add', 'work.txt');
+        git(wt, 'commit', '-q', '-m', 'work');
+        // No `origin/main` in a bare fixture, so the filter is unavailable and the
+        // function reports every foreign worktree — the fail-open branch.
+        const rows = other_worktree_branches(main);
+        expect(rows.map((r) => r.branch)).toContain('feat/a');
+        // Compared by realpath: git reports the path it registered, and on macOS
+        // `mkdtemp` hands back /var/... while git resolves /private/var/... — the
+        // same divergence the production function guards its own self-check with.
+        expect(rows.map((r) => fs.realpathSync(r.worktree))).toContain(fs.realpathSync(wt));
+    });
+
+    it('never reports the caller own worktree', () => {
+        const { main, wt } = make_repo();
+        expect(other_worktree_branches(wt).map((r) => r.branch)).not.toContain('feat/a');
+        expect(other_worktree_branches(main).map((r) => r.branch)).not.toContain('main');
+    });
+
+    it('degrades to an empty list when git is unavailable, never throwing', () => {
+        const { main } = make_repo();
+        const fail = (() => ({ status: 1, stdout: '', stderr: 'boom' })) as unknown as typeof spawnSync;
+        expect(other_worktree_branches(main, fail)).toEqual([]);
+        const thrower = (() => {
+            throw new Error('no git');
+        }) as unknown as typeof spawnSync;
+        expect(other_worktree_branches(main, thrower)).toEqual([]);
     });
 });

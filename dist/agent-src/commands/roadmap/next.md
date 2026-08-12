@@ -42,8 +42,13 @@ git fetch origin --prune
 git ls-tree --name-only origin/main agents/roadmaps/          # still active?
 git ls-tree --name-only origin/main agents/roadmaps/archive/   # already closed?
 gh pr list --state open --json number,title,headRefName        # in flight?
-agent-config sessions:list --json                              # claimed right now?
+agent-config sessions:list                                     # claimed right now?
 ```
+
+`sessions:list` without `--json` on purpose: the human form carries **both**
+axes — the live records AND the unmerged branches checked out in other
+worktrees. `--json` returns only the records unless `--branches` is passed, and
+the branch axis is the one that does not need a peer to have claimed anything.
 
 Excluded from the candidate set: `template.md`, `archive/`,
 `skipped/`, `later/`, anything with `status: draft` whose promotion
@@ -53,11 +58,23 @@ trigger has not fired, and:
 |---|---|---|---|
 | **taken by an open PR** | `gh pr list` — a roadmap slug matching an open PR's branch | The work is done or nearly done and is waiting on review | Review or merge that PR; the roadmap archives inside it |
 | **claimed by a live session** | `sessions:list` — a live record whose `roadmap_slug` matches | Another session is working on it *right now*, before any PR exists | Nothing to do — it releases on that session's end, or by TTL |
+| **held by a foreign worktree** | `sessions:list` — an unmerged branch in another worktree whose name names this roadmap | A peer is already writing code, whether or not it ever claimed | Pick something else; a branch on disk outranks an unwritten claim |
 
-Keep the two distinguishable in the reported screen. They are different
+Keep the three distinguishable in the reported screen. They are different
 states with different recovery, and collapsing them into "unavailable"
 loses the only information that tells the user whether to wait for a
 review or simply pick something else.
+
+```
+A DIFFERENT BRANCH NAME DOES NOT MAKE IT A DIFFERENT TASK.
+MEASURED TWICE: TWO SESSIONS BUILT ONE ROADMAP PHASE UNDER
+`feat/dispatch-safety-confirmation` AND `feat/dispatch-safety-confirmed-execution`,
+AND ONE OF THE TWO PRs WAS THROWN AWAY. COMPARE THE ROADMAP, NEVER THE BRANCH.
+```
+
+A slug in the register that names **no open roadmap** is not a claim — it is a
+stale field left behind after that roadmap archived. `sessions:list` labels it
+`← STALE`; read it as "nobody claimed anything", never as "taken".
 
 A roadmap completes by an archive move **inside its merging PR**, so a
 local checkout can show a closed roadmap as open. That is why this step
@@ -145,9 +162,24 @@ agent-config sessions:claim <roadmap-slug>
 ```
 
 Immediately after the pick, before any branch or commit. This writes the slug
-into `agents/runtime/state/roadmap-claim.json`; the next heartbeat lifts it into
-this session's register record, so another session's step 1 excludes it **within
-one turn** and long before a PR exists.
+into `agents/runtime/state/roadmap-claim-<session>.json`; the next heartbeat lifts
+it into this session's register record, so another session's step 1 excludes it
+**within one turn** and long before a PR exists.
+
+The file is keyed on the host session id, not on the worktree, and that
+distinction was a measured defect rather than a nicety: with one shared file per
+checkout, four live records once carried one identical slug — naming an
+already-archived roadmap — because every session in that checkout read the last
+claim written there. A session that inherits a peer's claim reports work it is
+not doing, and the peer whose claim was overwritten reports none. On a host that
+exports no session id the legacy shared path is still written and still read, and
+`sessions:claim` says so on that path rather than implying a guarantee it cannot
+give.
+
+**The claim is also what makes the duplicate-work warning possible.** Without it
+the register can only compare branch names, and two sessions on one roadmap
+routinely pick two different names — so a skipped claim does not merely delay
+visibility, it removes the only axis that sees the expensive collision.
 
 Routing the claim through a state file rather than having this command write the
 register directly is deliberate: the roadmap is picked mid-session by the model,
