@@ -109,6 +109,15 @@ measured. Do not treat the recommendation as settled until Phase 1 answers them.
   or reversed with structure behind it — not left as an untested default.
 - A model that mislabels a structured field is visible in the logs.
 
+## Risk Register
+<!-- risk-review: v1 | reviewed: 2026-08-12 | reviewer: claude/host -->
+| Rank | Item | Risk type | Description | Mitigation | Anchored under |
+|------|------|-----------|-------------|------------|----------------|
+| 1 | The advisory downgrade is never re-examined | product | The second-dispatch branch went from block to warn on a council recommendation whose false-negative bar was never measured. If genuine verdict shopping now slips through, the guard that exists to stop fabricated gate evidence is quietly inert, and nothing surfaces that | Phase 1 measures the false-negative rate over 50 sessions with a per-case classification and a stated bar (>2% ⇒ the branch needs structure, not advisory status), before any structured work begins | Phase 1 — measure before building |
+| 2 | The structured field gets built on an unmeasured premise | implementation | Phase 2 is expensive and rests on three council assumptions — that secondary controls exist, that the dispatch-site count is affordable, that the model populates the field honestly. Building first and measuring after is how a recommendation becomes a sunk cost | Phase 1 answers all three with counts and file references, and each carries the falsifier that would change the plan; Phase 3 tests the honesty assumption adversarially after deployment | Phase 1 — measure before building |
+| 3 | A new false positive is patched instead of escalated | implementation | The failure this roadmap exists to stop is precisely the reflex to narrow the pattern once more. Each of the three guards was narrowed at least once by someone who was right about the case in front of them | Stated as a non-goal, and the tier rule in the hook contract forces a new blocking concern to name its structured input rather than its regex | Non-goals |
+| 4 | Pre-expansion text silently undermines the tier rule | implementation | If guards read text before template expansion, a "structured" input may be a template variable at the moment of the read — which would make a Tier-1 classification wrong without anything failing visibly | Phase 4 establishes which text each guard actually receives from a real envelope, and requires the contract to state the answer either way | Phase 4 — the blind spot the audit missed |
+
 ## Non-goals
 
 - Machine-learned intent classification. Both council members rejected it: the
