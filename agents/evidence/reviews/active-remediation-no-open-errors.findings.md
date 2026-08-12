@@ -1,6 +1,6 @@
 # Completion review — no issue left open without a decision
 
-**Skipped:** no code surface for this completion — the diff is two authoring documents, one gate-state list and one byte-identical projection, and the gate itself measures zero code paths of five changed files, scope b9b0477e89624396b4427bcbf0693a7a5c40d4e30cf4652416b23fda038e7025, declared 2026-08-12
+**Skipped:** no code surface for this completion — the diff is two authoring documents, one gate-state list and one byte-identical projection, and the gate itself measures zero code paths of five changed files, scope 7b09a7ae1113f68e5cd16e68c94bdbac95c3a4eb1dbfef19aec025fd539bdd7f, declared 2026-08-12
 
 ## Why a skip rather than a review
 
@@ -55,6 +55,27 @@ rewritten source, and `lint_regression`), `lint_rule_enforcement_declaration`,
 the three touched markdown files, `lint_hidden_unicode`, `skill_linter
 --changed` PASS on the projected rule, and
 `vitest tests/scripts/{cmd_route_explain,explain_run}.test.ts` (32 tests).
+
+## Re-bound after the token-budget commit
+
+The first push went red on `check_token_regression` — `eager_rule_load` 106,928
+against a 101,670 baseline, +5.2% over a +5% cliff — and the re-bind records how
+that was decided, because the cheap answer was available and was not taken.
+
+The contribution was measured rather than assumed: the projected rule grew from
+1,101 to 2,032 tokens with `token_count.gpt_tokens` (exact BPE), and it is the
+only projected rule in the diff, so `main` stood at 105,997 — **+4.26% of a +5%
+budget before this branch existed**, and the overshoot was 174 tokens.
+`--update-baseline` would have cleared the red in one command and re-anchored
+that inherited 4.26% into a number nobody chose, which is what the package's own
+re-anchor discipline warns against. Instead the explanation moved to the
+mechanics guideline (not part of `eager_rule_load`) and the obligation stayed in
+the rule: delta 931 → 707, surface 106,704, +5.0%, green with 49 tokens of slack.
+
+That slack is a finding and is stated as one: the next non-trivial edit to any
+always-loaded rule crosses this cliff regardless of its own size. The decision it
+needs — re-anchor, or scope rules with `paths:` — is a maintainer's, not a thing
+to absorb inside an unrelated PR.
 
 `check_standing_rule_delivery` is red on this branch (191,901 tok / 110,000) and
 red on `main` at the same commit (185,207 tok) — a local install topology where
