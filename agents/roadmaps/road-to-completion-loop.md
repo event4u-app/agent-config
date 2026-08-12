@@ -113,10 +113,24 @@ it is what pays for the missing kill-switch.
 
 ## Phase 2 — the decision, taken on the number
 
-- [ ] 2.1 Pre-register the bar BEFORE reading Phase 1's output: the rate and the
+- [x] 2.1 Pre-register the bar BEFORE reading Phase 1's output: the rate and the
   hand-validated precision at which detector D is worth its false-positive cost,
   and the values at which this roadmap closes as an honest null instead.
   `verify:` the bar is committed in a commit that precedes the measurement commit.
+  **Landed as `agents/evidence/analysis/task-completeness-preregistered-bar.md`,
+  in its own commit ahead of the measurement — and it discloses a contamination
+  rather than claiming a clean blind.** Running 1.2's `verify:` command
+  necessarily printed the hit COUNT (3 over 28 sessions), because `--why` prints
+  the definition and the hits together; the two `verify:` lines are mutually
+  exclusive as written. Blind at writing time, and therefore the binding half of
+  the bar: the **hand-validated precision**, plus the rate's denominator, which
+  did not exist yet. The contaminated axis (rate) is deliberately set slack so it
+  cannot decide the outcome. Bar: precision >= 0.80 **with** a 95 % one-sided
+  Clopper-Pearson lower bound >= 0.80 (verified: needs >= 14 all-true hits;
+  `0.05^(1/14)` = 0.807, `0.05^(1/13)` = 0.794), and rate >= 2.0 % of eligible
+  windows. The pre-registration therefore states, before the measurement, that a
+  3-hit corpus is **null-by-corpus-size whatever the validation returns** — which
+  is the whole point of writing it down first.
 - [ ] 2.2 Read the number against the bar and record the verdict. **A null here
   is a real outcome**, not a failure of the roadmap — the sibling
   `recursive-verification` null is the precedent, and it saved a mechanism whose
