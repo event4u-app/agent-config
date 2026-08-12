@@ -48,9 +48,12 @@ describe('COMPILE_TIME_TOGGLES.telegraph-speak — dormant by default (ADR teleg
         expect(toggle?.({ telegraph: { enabled: false, speak: true } })).toBe(false);
     });
 
-    it('speak_scope is NOT consulted — it disables behaviour, never the token cost', () => {
-        // The trap this decision exposed: `speak_scope: off` leaves the ~982-token
-        // body inlined under eager-all. Only `speak` controls router membership.
+    it('a LEFTOVER speak_scope cannot move router membership — the inverted invariant', () => {
+        // The key was deleted in road-to-zero-settings Phase 2.1 because nothing
+        // read it. This assertion used to prove that with the key still shipped;
+        // it now proves the deletion did not hand the key power it never had.
+        // An older install still carrying either value gets the same membership
+        // it would get with the section empty — `speak` decides, alone.
         expect(toggle?.({ telegraph: { speak: true, speak_scope: 'off' } })).toBe(true);
         expect(toggle?.({ telegraph: { speak_scope: 'aggressive' } })).toBe(false);
     });
