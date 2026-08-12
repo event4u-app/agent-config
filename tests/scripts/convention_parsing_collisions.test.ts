@@ -195,7 +195,7 @@ describe('lint_pack_risk_class — first `key:` in the pack block wins', () => {
  * non-null return makes `main()` `continue` at line 515 — the file is exempted
  * from leakage scanning entirely.
  *
- * Producible today: `src/skills/prediction-pool-optimizer/reference/ev-fixtures.md`
+ * Producible today: `src/skills/prediction-pool-optimizer/references/ev-fixtures.md`
  * has no leading frontmatter and eight bare `---` lines, and it is already in
  * the recursive `*.md` scan. It escapes only because none of those spans holds a
  * `framework:` line. `src/skills/command-writing/SKILL.md` shows the house

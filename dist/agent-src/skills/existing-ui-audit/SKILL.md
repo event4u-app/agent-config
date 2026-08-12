@@ -256,7 +256,7 @@ Load on demand once the audit needs the pitfall catalog:
 **Design-system export (current-repo source):** when the goal is to seed
 `DESIGN.md` from *this* repo, emit the inventory as a `design-system.json`
 artifact (the import contract in
-[`design-system-capture`](../design-system-capture/reference/design-system-json.md))
+[`design-system-capture`](../design-system-capture/references/design-system-json.md))
 and hand it to `design-system-capture` — the same shape an external extraction
 tool produces, so the import path is uniform.
 

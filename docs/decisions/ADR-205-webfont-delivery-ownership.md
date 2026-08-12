@@ -35,7 +35,7 @@ fourth emitted the thing the others call an anti-pattern:
 - `docs/guidelines/design-fidelity-mechanics.md` § Asset & imagery discipline
   forbade hotlinking, but scoped itself to **project-owned** assets and
   **design-system-internal** URLs.
-- `src/skills/design-system-capture/reference/design-system-json.md` declared
+- `src/skills/design-system-capture/references/design-system-json.md` declared
   font bundling explicitly out of scope ("the package never downloads or bundles
   fonts") — a standing lock, not revisited here.
 - `src/skills/typography-system/SKILL.md` required the
@@ -149,4 +149,4 @@ the dissent is preserved above rather than dropped.
 - `src/skills/design-intelligence/data/font-pairings-reference.csv`, `data/stacks/nextjs.csv` — the corpus.
 - `tests/design-artifacts/eval-fixtures.md` § `daf-webfont-delivery` — the definition of fixed.
 - `docs/guidelines/design-antipatterns.md` § Typography T7 — the flagged-font catalog.
-- `src/skills/design-system-capture/reference/design-system-json.md` — the no-bundler lock this decision stays inside.
+- `src/skills/design-system-capture/references/design-system-json.md` — the no-bundler lock this decision stays inside.
