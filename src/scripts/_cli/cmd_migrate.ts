@@ -955,7 +955,13 @@ function _isCliEntry(): boolean {
         // comparison below weighs the CHUNK against `argv[1]` and never matches —
         // `agent-config migrate` shipped producing zero bytes and exit 0. The
         // invoked file name is the reliable signal inside this bundle.
-        return path.basename(process.argv[1], '.js') === 'cmd_migrate';
+        if (path.basename(process.argv[1], '.js') === 'cmd_migrate') {
+            return true;
+        }
+        // A miss falls THROUGH to the realpath comparison below rather than
+        // returning false: a symlinked or renamed invocation is exactly the
+        // case that fallback exists for, and swallowing it here would rebuild
+        // the silent no-op this change removes.
     }
     const argvUrl = pathToFileURL(path.resolve(process.argv[1])).href;
     if (import.meta.url === argvUrl) {

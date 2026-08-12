@@ -453,17 +453,34 @@ export function main(argv: string[] | null = null, options: MainOptions = {}): n
  * Defined by `build:cli-delegate` only — see `cmd_session_recycle.ts` for why the
  * URL comparison below cannot decide this inside that bundle.
  */
+declare const __AGENT_CONFIG_BUNDLE__: boolean | undefined;
 declare const __AGENT_CONFIG_CLI_DELEGATE__: boolean | undefined;
 
 function _isCliEntry(): boolean {
+    const bundled = typeof __AGENT_CONFIG_BUNDLE__ !== 'undefined' && __AGENT_CONFIG_BUNDLE__;
+    const cliDelegate =
+        typeof __AGENT_CONFIG_CLI_DELEGATE__ !== 'undefined' && __AGENT_CONFIG_CLI_DELEGATE__;
+    // Inlined into the installer / hook / MCP bundle: never auto-run. This
+    // file previously carried no such guard while its comment described the
+    // pairing, so the four siblings documented one mechanism and implemented
+    // two.
+    if (bundled && !cliDelegate) {
+        return false;
+    }
     if (process.argv[1] === undefined) {
         return false;
     }
-    if (typeof __AGENT_CONFIG_CLI_DELEGATE__ !== 'undefined' && __AGENT_CONFIG_CLI_DELEGATE__) {
+    if (cliDelegate) {
         // Found by running every delegate bundle, not by reading: `--splitting`
         // had moved this body into a shared chunk too, so `agent-config refresh`
         // was a silent exit 0 like doctor, migrate and session:recycle.
-        return path.basename(process.argv[1], '.js') === 'cmd_refresh';
+        if (path.basename(process.argv[1], '.js') === 'cmd_refresh') {
+            return true;
+        }
+        // A miss falls THROUGH to the realpath comparison below rather than
+        // returning false: a symlinked or renamed invocation is exactly the
+        // case that fallback exists for, and swallowing it here would rebuild
+        // the silent no-op this change removes.
     }
     const argvUrl = pathToFileURL(path.resolve(process.argv[1])).href;
     if (import.meta.url === argvUrl) {

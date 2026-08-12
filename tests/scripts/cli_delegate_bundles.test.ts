@@ -30,8 +30,16 @@ import { beforeAll, describe, expect, it } from 'vitest';
 const REPO = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
 const OUT_DIR = path.join(REPO, 'dist', 'cli-delegate');
 
-/** Run one bundle and report whether it produced anything at all. */
-function probe(bundle: string): { code: number; bytes: number } {
+/**
+ * Run one bundle and report what actually happened.
+ *
+ * `died` is separate from the exit code on purpose: a timeout kill, a signal,
+ * and a spawn failure all arrive with a null/undefined status, and folding them
+ * into "exit 1" would let a HUNG entry guard — a plausible regression — read as
+ * a healthy non-zero exit. The assertion below is `bytes > 0 && !died`, so every
+ * abnormal end fails rather than only the one shape that shipped.
+ */
+function probe(bundle: string): { code: number; bytes: number; died: string | null } {
     try {
         const out = execFileSync(process.execPath, [bundle, '--help'], {
             cwd: REPO,
@@ -39,12 +47,23 @@ function probe(bundle: string): { code: number; bytes: number } {
             stdio: ['ignore', 'pipe', 'pipe'],
             timeout: 30_000,
         });
-        return { code: 0, bytes: out.length };
+        return { code: 0, bytes: out.length, died: null };
     } catch (err) {
-        const e = err as { status?: number; stdout?: string; stderr?: string };
+        const e = err as {
+            status?: number | null;
+            signal?: string | null;
+            code?: string;
+            stdout?: string;
+            stderr?: string;
+        };
+        const bytes = (e.stdout ?? '').length + (e.stderr ?? '').length;
+        if (typeof e.status === 'number') {
+            return { code: e.status, bytes, died: null };
+        }
         return {
-            code: typeof e.status === 'number' ? e.status : 1,
-            bytes: (e.stdout ?? '').length + (e.stderr ?? '').length,
+            code: -1,
+            bytes,
+            died: e.signal ? `killed by ${e.signal}` : (e.code ?? 'spawn failed'),
         };
     }
 }
@@ -54,12 +73,24 @@ describe('cli-delegate bundles', () => {
 
     beforeAll(() => {
         // The REAL build script, not a re-spelled esbuild call: a test that
-        // rebuilds with its own flags proves nothing about what ships. ~50ms.
-        execFileSync('npm', ['run', '--silent', 'build:cli-delegate'], {
-            cwd: REPO,
-            stdio: 'ignore',
-            timeout: 120_000,
-        });
+        // rebuilds with its own flags proves nothing about what ships. Measured
+        // ~2.5s for the whole file, most of it the 29 node spawns below; esbuild
+        // itself is ~50ms and the npm wrapper the rest.
+        try {
+            execFileSync(process.platform === 'win32' ? 'npm.cmd' : 'npm', [
+                'run',
+                '--silent',
+                'build:cli-delegate',
+            ], { cwd: REPO, stdio: ['ignore', 'pipe', 'pipe'], encoding: 'utf-8', timeout: 120_000 });
+        } catch (err) {
+            // Surface the compiler diagnostics. Swallowing them leaves the suite
+            // red with nothing to read, in a file written to diagnose exactly
+            // that kind of silence.
+            const e = err as { stdout?: string; stderr?: string };
+            throw new Error(
+                `build:cli-delegate failed\n${e.stdout ?? ''}\n${e.stderr ?? ''}`.trim(),
+            );
+        }
         bundles = fs
             .readdirSync(OUT_DIR)
             .filter((n) => n.startsWith('cmd_') && n.endsWith('.js'))
@@ -67,26 +98,32 @@ describe('cli-delegate bundles', () => {
     }, 130_000);
 
     it('the build produces a bundle per _cli command', () => {
-        // Guards the guard: if the outdir were empty the sweep below would pass
-        // over nothing and report green, which is the failure class this whole
-        // test exists for.
+        // Guards the guard: a sweep over an empty outdir passes vacuously. The
+        // build globs `src/scripts/_cli/cmd_*.ts`, so the relation is exactly
+        // one bundle per source. An earlier version allowed a slack of three for
+        // no reason, which would have let three commands drop out of the build
+        // and still report green — the failure class this file exists for.
         const sources = fs
             .readdirSync(path.join(REPO, 'src', 'scripts', '_cli'))
-            .filter((n) => n.startsWith('cmd_') && n.endsWith('.ts'));
-        expect(sources.length).toBeGreaterThan(20);
-        expect(bundles.length).toBeGreaterThanOrEqual(sources.length - 3);
+            .filter((n) => n.startsWith('cmd_') && n.endsWith('.ts'))
+            .map((n) => n.replace(/\.ts$/, ''))
+            .sort();
+        expect(bundles.map((n) => n.replace(/\.js$/, ''))).toEqual(sources);
     });
 
     it('no bundle is a silent no-op', () => {
-        const silent: string[] = [];
+        const broken: string[] = [];
         for (const name of bundles) {
-            const { code, bytes } = probe(path.join(OUT_DIR, name));
-            // Exit 0 with no output at all is the signature: the entry guard did
-            // not fire, `main` never ran, and the process reported success.
-            if (code === 0 && bytes === 0) {
-                silent.push(name);
+            const { code, bytes, died } = probe(path.join(OUT_DIR, name));
+            // Zero output is the signature of the shipped defect: the entry guard
+            // did not fire and `main` never ran. `died` covers the neighbours a
+            // status-only check would have called healthy.
+            if (died !== null) {
+                broken.push(`${name} (${died})`);
+            } else if (bytes === 0) {
+                broken.push(`${name} (no output, exit ${String(code)})`);
             }
         }
-        expect(silent).toEqual([]);
+        expect(broken).toEqual([]);
     }, 120_000);
 });

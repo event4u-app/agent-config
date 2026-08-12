@@ -3595,20 +3595,37 @@ function main(argv: string[] | null = null): number {
  * Defined by `build:cli-delegate` only — see `cmd_session_recycle.ts` for why a
  * single "am I inside a bundle" flag cannot answer "may I run".
  */
+declare const __AGENT_CONFIG_BUNDLE__: boolean | undefined;
 declare const __AGENT_CONFIG_CLI_DELEGATE__: boolean | undefined;
 
 function _isCliEntry(): boolean {
+    const bundled = typeof __AGENT_CONFIG_BUNDLE__ !== 'undefined' && __AGENT_CONFIG_BUNDLE__;
+    const cliDelegate =
+        typeof __AGENT_CONFIG_CLI_DELEGATE__ !== 'undefined' && __AGENT_CONFIG_CLI_DELEGATE__;
+    // Inlined into the installer / hook / MCP bundle: never auto-run. This
+    // file previously carried no such guard while its comment described the
+    // pairing, so the four siblings documented one mechanism and implemented
+    // two.
+    if (bundled && !cliDelegate) {
+        return false;
+    }
     if (process.argv[1] === undefined) {
         return false;
     }
-    if (typeof __AGENT_CONFIG_CLI_DELEGATE__ !== 'undefined' && __AGENT_CONFIG_CLI_DELEGATE__) {
+    if (cliDelegate) {
         // `--splitting` moves this module's body into a shared chunk, so the URL
         // comparison below weighs the CHUNK against `argv[1]` and never matches.
         // `agent-config doctor` shipped producing zero bytes and exit 0 for
         // exactly that reason — a diagnostic reporting success while saying
         // nothing. The invoked file name is the reliable signal inside this
         // bundle; the delegate smoke test keeps the literal honest.
-        return path.basename(process.argv[1], '.js') === 'cmd_doctor';
+        if (path.basename(process.argv[1], '.js') === 'cmd_doctor') {
+            return true;
+        }
+        // A miss falls THROUGH to the realpath comparison below rather than
+        // returning false: a symlinked or renamed invocation is exactly the
+        // case that fallback exists for, and swallowing it here would rebuild
+        // the silent no-op this change removes.
     }
     const argvUrl = pathToFileURL(path.resolve(process.argv[1])).href;
     if (import.meta.url === argvUrl) {

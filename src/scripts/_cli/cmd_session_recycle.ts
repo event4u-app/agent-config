@@ -287,7 +287,13 @@ function _isCliEntry(): boolean {
         // place their code. Inside this bundle the invoked file name is the only
         // reliable signal; the smoke test over every delegate bundle is what
         // keeps this literal honest if the file is ever renamed.
-        return path.basename(process.argv[1], '.js') === 'cmd_session_recycle';
+        if (path.basename(process.argv[1], '.js') === 'cmd_session_recycle') {
+            return true;
+        }
+        // A miss falls THROUGH to the realpath comparison below rather than
+        // returning false: a symlinked or renamed invocation is exactly the
+        // case that fallback exists for, and swallowing it here would rebuild
+        // the silent no-op this change removes.
     }
     if (import.meta.url === pathToFileURL(path.resolve(process.argv[1])).href) return true;
     try {
