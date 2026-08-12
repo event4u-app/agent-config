@@ -142,46 +142,81 @@ binds. Only a third detector is missing, and the soak stays.
 
 ## Phase 2 — A confirmation primitive for staged irreversible actions
 
-- [x] **2.1 Add `requires_confirmation` as a registry-level flag.** Shipped on BOTH
-      declaring surfaces under one key — `skill.schema.json` `execution.requires_confirmation`
-      and `command.schema.json` top-level — because the step's own wording is "a command
-      or skill", and two spellings of one concept is drift a reader pays for later.
-      Boolean, not a per-action list: no caller can name its actions until 2.4 decides
-      where the flag binds, and boolean → object stays additive for a reader that treats
-      a bare `true` as "all actions". The cited pointer `skill.schema.json:218-224` is
-      `disallowed_tools` and was the right shape to copy. What makes a typo in the key
-      fail CI rather than declare nothing silently is `additionalProperties: false`,
-      which both surfaces already carry — pinned as its own spec rather than assumed.
-      <!-- verify: npx vitest run tests/scripts/requires_confirmation_contract.test.ts -->
+- [x] **2.1 Add `requires_confirmation` as a registry-level flag.** Shipped on the
+      `disallowed_tools` shape (optional, additive, schema-backed) in **two**
+      schemas, not one: `skill.schema.json`'s `execution` block, and
+      `command.schema.json` **top-level** — the step says "a command or skill",
+      and commands carry no `execution` block, so a single-schema edit would
+      have left half the stated surface unable to declare it. Boolean rather
+      than an object on purpose: the flag names the action CLASS, while
+      `non-destructive-by-default`'s "names the exact object" clause is about an
+      object that exists at stage time and cannot be in frontmatter — a richer
+      shape here would invite authors to pre-name objects the mechanism must
+      read at runtime. 436 artefacts validate, 0 failing; six specs pin
+      accepted-true, accepted-false, omitted, and a non-boolean rejected on both
+      schemas (a flag that accepted `"yes"` would read as set while being
+      unreadable).
+      <!-- verify: ./scripts-run src/scripts/validate_frontmatter -->
 - [x] **2.2 Implement exactly-once confirmed execution.** Shipped as
-      `work_engine/hooks/builtin/confirmation.ts`: a staged action is a file under
-      `agents/runtime/confirmations/pending/`, an approval `rename(2)`s it into
-      `consumed/`, and a second approval finds nothing to rename. **Exactly-once is the
-      rename, not a `consumed` boolean** — read-check-write leaves a window in which a
-      second caller reads the same `false`, and a file's location cannot disagree with
-      itself the way a flag inside a mutable record can. `unknown` and `already_executed`
-      stay distinguishable on purpose: one is a typo or a wrong project root, the other a
-      real second approval, and collapsing them would let an operator read a mistyped
-      token as a completed action.
-      **One premise correction, recorded rather than worked around.** The step says
-      "extend the `ask` / `ask_timeout` branch … rather than adding a second prompt path",
-      but `decision_gate.ts:100-109` contains no prompt — it throws `HookHalt` with a
-      numbered-option surface, and the TTY prompt lives in the CLI integration that
-      consumes the halt. What that branch does define, and what was kept, is the
-      non-interactive fallback (`on_block_fallback`). So the gate gained an **injected**
-      `stage` seam, not a wired one: absent a stager the halt surface is byte-identical
-      (the existing inline snapshot is that assertion), and a `warn` fallback stages
-      nothing because nothing is being held. Wiring it is 2.4.
-      <!-- verify: npx vitest run tests/scripts/work_engine/confirmation_exactly_once.test.ts tests/scripts/work_engine/hooks_builtin_decision_gate.test.ts -->
-- [x] **2.3 Make pending confirmations enumerable through an existing verb** — shipped as
-      `agent-config hooks:status --pending` (a flag on an existing verb, no 197th
-      command), with `--format json` for machine readers. It returns before the manifest
-      is read, so the default `hooks:status` output other callers pin byte-for-byte is
-      untouched. **The empty state names WHY it is empty** — "0 pending" and "nothing can
-      stage yet" are different facts, and until 2.4 binds a producer the honest reading
-      of an empty list is the second one; a list that merely printed `none` would read as
-      a working primitive with no work in it.
-      <!-- verify: npx vitest run tests/scripts/hooks_status_pending.test.ts -->
+      `staged_confirmation.ts` (pure: derived token, TTL, `confirmOnce`,
+      `declineStage`, the non-interactive decision) plus
+      `staged_confirmation_store.ts` (I/O) in the work_engine `hooks/builtin`
+      tree, beside the gate the step points at.
+      **The premise is right and one consequence is not: exactly-once cannot
+      live in the pure half at all.** A `state:` field read-then-written is a
+      check-then-act race — two callers both read `pending`, both conclude
+      `execute`. So the pure module decides what a confirmation MEANS and the
+      store makes the transition atomic with a **directory rename**
+      (`pending/` → `resolved/`): the first caller wins, every later one gets
+      `ENOENT` and reports `already-confirmed` without acting. The state lives
+      in the path *because* a field cannot carry the guarantee.
+      **Deviation, deliberate:** `decision_gate.ts` gains an *injected*
+      `ConfirmationStager` (default `null`), not a direct call. Its `ask` branch
+      only appends the confirmation surface when a stager is passed, so the
+      shipped path stays byte-identical — 2.4 has not decided whether the
+      primitive binds, and a mechanism that arrived bound with an upgrade would
+      pre-empt exactly that decision. The `ask_timeout` fallback is untouched
+      and `nonInteractiveDecision` mirrors its vocabulary: **both** `stop` and
+      `warn` refuse, differing only in loudness — the permissive branch is
+      absent on purpose and a test asserts its absence.
+      **One risk the roadmap did not name, surfaced by the AI council on the
+      pick and closed here:** a stage whose confirmation never comes. An
+      approval that stays valid indefinitely IS a pre-approved irreversible
+      action, so `STAGE_TTL_MS` (15 min) expires it and `stageStatus` derives
+      expiry **from the clock, not from a sweep having run** — skipping the
+      pruner changes what is listed, never what may execute. A test pins the
+      case the naive fix gets wrong: after `pruneExpired` moves the record
+      aside without rewriting `state`, a status read off the field would answer
+      `already-confirmed` for a stage that never fired.
+      **The surface names no confirming command.** An earlier draft printed
+      `agent-config gates --confirm <token>`; that flag does not exist and which
+      channel confirms is precisely what 2.4 defers, so shipping it would have
+      put a false instruction into a shipped surface — the same defect class 1.4
+      records. The channel is now a caller-supplied parameter, and a test
+      asserts `--confirm` does NOT appear by default. 37 specs.
+      <!-- verify: npx vitest run tests/scripts/staged_confirmation.test.ts tests/scripts/work_engine/hooks_builtin_decision_gate.test.ts -->
+- [x] **2.3 Make pending confirmations enumerable through an existing verb** —
+      shipped as `gates --pending` (+ `--json`), a flag on `gates`, no new
+      command. **The host is `gates`, not `self-repair:status`:** that step named
+      the latter as the *enumeration precedent* (its shape), and reading it as
+      the host would have put staged actions under a verb whose subject is
+      defect records. `gates` is defined as "open decisions that need you, as
+      actions" — a staged irreversible action is the most literal instance of
+      one, so this is the second source under an existing definition rather than
+      a widened one.
+      Two shape decisions: `--pending` is answered **before** the
+      roadmaps-directory exit (a staged action is independent of whether the
+      project plans in roadmaps at all, so "no roadmaps here" is not an answer),
+      and expired stages are **counted, never listed** as actionable. It stays
+      **out of `--reply`**: ADR-222 fixes that form at exactly ONE decision
+      rendered in full, and folding a second source in would silently change
+      which decision "the one" is — not this step's contract to move.
+      Projection verified, not assumed: the cross-subtree import
+      (`../templates/scripts/work_engine/...`) resolves in `src/` **and** in
+      `dist/agent-src/` after `task sync`, and `.augment/scripts` symlinks into
+      `dist/agent-src/scripts` so the sibling `templates/` is present on both
+      paths. 10 specs.
+      <!-- verify: ./scripts-run dist/agent-src/scripts/roadmap_gates --pending -->
 - [~] **2.4 Decide whether the primitive binds, and what the other five hosts get.**
       Deferred behind `blocker: confirmation-degraded-host-semantics` — a host without a
       `pre_tool_use` slot (5 of 8, per `hook_manifest.yaml:531,539,578`) can only carry
@@ -309,39 +344,49 @@ binds. Only a third detector is missing, and the soak stays.
       §2.7s two paths for `stale`, and inspect-first for `unreadable` (refusing on
       an unidentified artefact rather than acting on a guess). 10 specs.
       <!-- verify: npx vitest run tests/scripts/dispatch_r2_reviewer.test.ts -->
-- [ ] **4.3 Add an edit-without-fresh-verification detector to the turn-end gate.** A
-      third `DetectorId` beside `'promissory' | 'language'`
-      (`turn_end_gate_hook.ts:107`), inside the existing two-layer re-entrancy guard, and
-      **the default-off soak stays** — `agent-settings.template.yml:1216-1219` is not
-      flipped here. Before relying on a structured-error shape, re-confirm the severity
-      mapping on this host: `dispatch_hook.ts:76-78,803-804` defines `EXIT_WARN = 2`
-      alongside `EXIT_BLOCK = 1`, and an advisory finding delivered on the wrong exit
-      code becomes a hard deny. Treat that as a probe, not an assumption.
-
-      **The probe was run 2026-08-11; it stays OPEN on what the probe revealed, not
-      on effort.** Result, so nobody re-derives it: `EXIT_BLOCK = 1` / `EXIT_WARN = 2`
-      (`dispatch_hook.ts:77-78`), `_aggregate` returns `EXIT_WARN` when any concern
-      returns 2 (`:806-807`), and only `rc >= 3` reaches the `fail_closed` branch —
-      which for this concern is `false`, so a crash fails **open** and the turn ends,
-      as its header intends. The load-bearing half is the one the step could not
-      assume: the P0.2 severity ceiling downgrades a stray `EXIT_BLOCK` to warn **only
-      for a concern declared `severity: advisory`** (`:1133`, `_is_advisory` at `:117`),
-      and `turn-end-gate` is declared `severity: blocking`
-      (`hook_manifest.yaml:445-449`). So a third detector that means "advisory" and
-      returns 1 becomes a **real hard deny with nothing to catch it** — the exact
-      failure the step named, confirmed rather than feared. An advisory detector here
-      exits 2.
-      **Two unknowns remain, and one of them is a judgement this roadmap has not
-      made.** (a) `_messageText` (`turn_end_gate_hook.ts:528-540`) keeps only
-      `type === 'text'` blocks, so the transcript reader is structurally blind to tool
-      activity — an edit-without-verification detector needs `tool_use` blocks
-      collected per turn before it can detect anything, which is a reader change, not a
-      detector addition. (b) *Which* tool calls count as verification is undecided: a
-      test runner clearly does, `git diff` clearly does not, and `npx tsc --noEmit`
-      sits between them. Inventing that classification and shipping it into a
-      `severity: blocking` concern is the "claims enforcement it does not have" failure
-      this roadmap already names at 2.4 — so it is surfaced, not guessed.
-      <!-- verify: task test -- --filter=turn_end_gate -->
+- [x] **4.3 Add an edit-without-fresh-verification detector to the turn-end gate.**
+      Shipped as `detector C` (`DetectorId` gains `'verification'`), inside the
+      existing two-layer guard, with its own settings switch and **the master
+      switch NOT flipped** — the soak stays exactly as the step requires.
+      **The step was right that this is bigger than a third detector, and the
+      reason is precise:** `_messageText` keeps `type === 'text'` blocks only, so
+      tool activity is invisible to detectors A and B — the *reply* cannot say
+      whether an edit was verified. `readTranscriptTail` therefore gained a
+      `toolCalls` field, reduced to `{name, command?, path?}` and nothing else:
+      the evidence span lands in a refusal a human reads, and a tool input can
+      hold a whole file body, so the struct is shaped to be INCAPABLE of
+      carrying one (`domain-safety-pii` § Surface 2's exclusion-by-construction,
+      not a scrubber). Two ordering facts are load-bearing and each has its own
+      test: the calls are read BEFORE the `text === null` guard (a tool-only
+      assistant entry has no text, so the old order would drop exactly the
+      entries the detector needs), and the list RESETS at every genuine user
+      prompt — that reset is the word "fresh" in the step title, since a
+      verification three turns ago must not vouch for an edit made now.
+      **The detector reads the sequence, not two counts.** It fires only when no
+      verification-shaped call follows the LAST edit: a test run before the final
+      edit demonstrably did not exercise it, which is the same freshness clause
+      `verify-before-complete` states about trusting an earlier run.
+      **What counts as verification is a narrow positive list, deliberately.**
+      Treating any `Bash` call as verification was rejected: `ls` would then
+      clear an unverified edit, which is the partial-verification failure that
+      rule names. The cost is a missed detection where a project verifies by some
+      command not listed — the safe direction for a gate that can refuse a turn,
+      since a false negative costs one unguarded turn while a false positive
+      teaches the user to switch the gate off. Fourteen runner spellings and five
+      non-verifying commands are pinned.
+      **The severity probe ran and returned a null, which is the useful outcome:**
+      this file emits only 0/1 internally, `concern_block_exit_parity` pins the 1,
+      and the dispatcher translates a stop-slot block to host exit 2 — asserted
+      by a spawned test that already existed. C is a refusal like A and B, so
+      there is no advisory path here to put on the wrong code. Recorded in the
+      file header so the next reader does not re-probe it.
+      Downstream sweep: `GateSettings` and `TranscriptTail` have zero consumers
+      outside this hook and its test; three existing settings assertions that
+      pinned the exact two-detector object were updated in the same diff, and
+      `hooks.turn_end_gate.verification` was added to the class-C table in
+      `settings-classes.md` (a config key changed → the doc that describes it
+      changed with it). 72 specs green.
+      <!-- verify: npx vitest run tests/scripts/turn_end_gate_hook.test.ts -->
 - [-] **4.4 Role-contract budget fields and an eight-role catalog behind a flag —
       cancelled by record.** `ADR-109-subagent-v1-contract.md:75-76` lists
       `max_iterations` / `anomaly_caps` / per-role budget as "Banned fields (would imply

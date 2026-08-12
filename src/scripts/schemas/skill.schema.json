@@ -224,8 +224,7 @@
         },
         "requires_confirmation": {
           "type": "boolean",
-          "description": "Declares that this execution STAGES its irreversible action instead of performing it: the action is held, the approval names the exact object, and one approval executes it exactly once. Declaration only — nothing in the shipped tree stages on it yet, so a true here is a contract a reader can check, never enforcement a host provides.",
-          "$comment": "road-to-inbox-harvest-2026-08-b-dispatch-safety Phase 2.1. Shaped on the sibling disallowed_tools: optional, additive, schema-backed. Boolean rather than a per-action list — no caller can name its actions until step 2.4 decides where the flag binds, and inventing the richer shape ahead of its consumer is the speculative half minimal-safe-diff forbids. Widening boolean → object later is additive for readers that treat a bare true as 'all actions'."
+          "description": "Optional, additive: the skill's action STAGES rather than executes, so an irreversible step waits for an explicit human confirmation naming the exact object (non-destructive-by-default § Never act while asking). A declaration only — it names the action class, never the object, which exists at stage time and not in frontmatter. The mechanism is stageAction/confirmOnce in work_engine/hooks/builtin/staged_confirmation.ts; enumerate what is pending with `agent-config gates --pending`. Nothing BINDS on this flag yet: on 5 of 8 hosts there is no pre_tool_use slot, so a guard would degrade to prose while the flag reads like a control — that decision is deferred behind blocker confirmation-degraded-host-semantics."
         },
         "command": {
           "type": "array",

@@ -1207,9 +1207,17 @@ hooks:
   # language    — detector B: the user-visible prose is not in the pinned
   #               language, with code, quotes, paths and identifiers already
   #               excluded (19 measured).
+  # verification — detector C: the turn changed a file and then ran nothing that
+  #               could have checked it — no test, type-check, lint or build call
+  #               follows the LAST edit. Ordering is the point: a run before the
+  #               final edit did not exercise it, which is the freshness clause
+  #               verify-before-complete states. Reads the turn's tool calls, not
+  #               the prose. Deliberately narrow on what counts as verification —
+  #               a missed detection costs one unguarded turn, a false refusal
+  #               teaches you to switch the gate off.
   #
-  # Both detectors default ON *within* the master switch, so opting in needs
-  # one line, and either can be silenced without editing the hook manifest.
+  # All three detectors default ON *within* the master switch, so opting in needs
+  # one line, and any one can be silenced without editing the hook manifest.
   # A refused turn continues in the same turn and is never refused twice —
   # re-entrancy is `stop_hook_active` plus a marker keyed on the last user
   # message, never on the reply.
@@ -1217,6 +1225,7 @@ hooks:
     enabled: false
     promissory: true
     language: true
+    verification: true
 
   # PreToolUse RTK-wrap nudge (token-saving Phase 3). Default-OFF. When enabled
   # AND `rtk` is on PATH (a live probe — not a self-reported flag), warns (exit

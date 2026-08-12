@@ -46,6 +46,13 @@
  *   ./agent-config gates --all      # every open blocker, grouped by owner
  *   ./agent-config gates --json     # machine-readable
  *   ./agent-config gates --reply    # reply-close form; empty when none
+ *   ./agent-config gates --pending  # staged actions awaiting confirmation
+ *
+ * `--pending` reads a different source — the staged-confirmation store, not the
+ * roadmap tree — and stays out of `--reply` on purpose. ADR-222 fixes the
+ * reply-close form at exactly ONE decision rendered in full; folding a second
+ * source into it would silently change which decision "the one" is, and that
+ * contract is not this step's to move.
  */
 
 import * as path from 'node:path';
@@ -58,6 +65,8 @@ import {
     blocker_needs_user as needsUser,
     type Blocker,
 } from './update_roadmap_progress.js';
+import { listPending } from '../templates/scripts/work_engine/hooks/builtin/staged_confirmation_store.js';
+import type { StagedAction } from '../templates/scripts/work_engine/hooks/builtin/staged_confirmation.js';
 
 const _HERE = fileURLToPath(import.meta.url);
 
@@ -327,6 +336,89 @@ function renderJson(entries: readonly Entry[], all: boolean): string {
     );
 }
 
+/**
+ * `--pending`: staged actions awaiting a human confirmation.
+ *
+ * A second source under the same verb, and the reason it belongs here rather
+ * than in a new command is the verb's own definition — "open decisions that
+ * need you, as actions". A staged irreversible action IS one, and the most
+ * literal kind: the roadmap blockers above are decisions a human owes a plan,
+ * this is a decision a human owes an action that is already loaded and waiting.
+ *
+ * Expired stages are counted, never listed as actionable. An expired stage
+ * cannot execute (`stageStatus` derives that from the clock, not from a sweep
+ * having run), so rendering it beside a live one would put two rows in front of
+ * the reader where only one is a decision.
+ */
+function renderPending(root: string, now: number): string {
+    const rows = listPending(root, now);
+    const live = rows.filter((r) => r.status === 'pending');
+    const expired = rows.filter((r) => r.status === 'expired');
+    const lines: string[] = [];
+
+    if (live.length === 0) {
+        lines.push(
+            expired.length === 0
+                ? 'No staged actions awaiting confirmation.'
+                : `Nothing awaits your confirmation. ${expired.length} stage` +
+                      `${expired.length !== 1 ? 's' : ''} expired unconfirmed — the action never fired.`,
+        );
+        return lines.join('\n') + '\n';
+    }
+
+    lines.push(
+        `${live.length} staged action${live.length !== 1 ? 's' : ''} await` +
+            `${live.length === 1 ? 's' : ''} your confirmation` +
+            (expired.length > 0 ? ` · ${expired.length} expired unconfirmed` : ''),
+    );
+    let n = 0;
+    for (const { stage } of live) {
+        n += 1;
+        lines.push(...renderStage(stage, n));
+    }
+    lines.push('');
+    return lines.join('\n') + '\n';
+}
+
+function renderStage(stage: StagedAction, index: number): string[] {
+    const head = `${index} · ${stage.action}`;
+    const tail = `token: ${stage.token}`;
+    const dashes = Math.max(3, WIDTH - head.length - tail.length - 6);
+    return [
+        '',
+        `── ${head} ${'─'.repeat(dashes)} ${tail}`.trimEnd(),
+        // The object is the first field on purpose: an approval that does not
+        // name the exact object is the thing non-destructive-by-default forbids,
+        // so it is what the reader must see before anything else.
+        ...field('Object:', stage.object),
+        ...field('Staged by:', stage.source),
+        ...field('Expires:', stage.expires_at),
+    ];
+}
+
+function renderPendingJson(root: string, now: number): string {
+    const rows = listPending(root, now);
+    return (
+        JSON.stringify(
+            {
+                awaitingYou: rows.filter((r) => r.status === 'pending').length,
+                expired: rows.filter((r) => r.status === 'expired').length,
+                staged: rows.map(({ stage, status }) => ({
+                    token: stage.token,
+                    action: stage.action,
+                    object: stage.object,
+                    source: stage.source,
+                    stagedAt: stage.staged_at,
+                    expiresAt: stage.expires_at,
+                    status,
+                })),
+            },
+            null,
+            2,
+        ) + '\n'
+    );
+}
+
 function _isDir(p: string): boolean {
     try {
         return fs.statSync(p).isDirectory();
@@ -340,8 +432,8 @@ function _isDir(p: string): boolean {
  * `agents/roadmaps`, otherwise fall back to the git toplevel (monorepo
  * sub-project support).
  */
-function _resolveRepoRoot(start: string): string {
-    if (_isDir(path.join(start, 'agents', 'roadmaps'))) {
+function _resolveRepoRoot(start: string, marker = path.join('agents', 'roadmaps')): string {
+    if (_isDir(path.join(start, marker))) {
         return start;
     }
     try {
@@ -351,7 +443,7 @@ function _resolveRepoRoot(start: string): string {
             timeout: 10_000,
         });
         const top = (r.stdout || '').trim();
-        if (r.status === 0 && top !== '' && _isDir(path.join(top, 'agents', 'roadmaps'))) {
+        if (r.status === 0 && top !== '' && _isDir(path.join(top, marker))) {
             return top;
         }
     } catch {
@@ -365,6 +457,18 @@ function main(argv?: readonly string[]): number {
     const all = args.includes('--all');
     const json = args.includes('--json');
     const reply = args.includes('--reply');
+    const pending = args.includes('--pending');
+
+    // `--pending` resolves against `agents/runtime/`, not `agents/roadmaps/`,
+    // and is answered BEFORE the roadmaps-directory exit below: a staged action
+    // is independent of whether this project plans in roadmaps at all, so
+    // "no roadmaps here" is not an answer to "what awaits my confirmation".
+    if (pending) {
+        const root = _resolveRepoRoot(process.cwd(), path.join('agents', 'runtime'));
+        const now = Date.now();
+        process.stdout.write(json ? renderPendingJson(root, now) : renderPending(root, now));
+        return 0;
+    }
 
     const repoRoot = _resolveRepoRoot(process.cwd());
     const roadmapRoot = path.join(repoRoot, 'agents', 'roadmaps');
@@ -412,5 +516,16 @@ if (_isCliEntry()) {
     process.exitCode = main();
 }
 
-export { main, needsUser, regroupTodo, wrap, collectEntries, render, renderJson, renderReply };
+export {
+    main,
+    needsUser,
+    regroupTodo,
+    wrap,
+    collectEntries,
+    render,
+    renderJson,
+    renderReply,
+    renderPending,
+    renderPendingJson,
+};
 export type { Entry };

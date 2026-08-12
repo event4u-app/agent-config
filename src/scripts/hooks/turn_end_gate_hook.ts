@@ -9,11 +9,17 @@
  * is deliberately not another reminder. It is a check at the point of
  * delivery that can say no.
  *
- * Two detectors ride on one guard, because building the unsafe part twice
+ * Three detectors ride on one guard, because building the unsafe part twice
  * is how a second detector becomes a second outage:
  *
  *   A — promissory closing  (FC-5, 20 measured occurrences)
  *   B — language mismatch   (19 measured occurrences, fresh pin present)
+ *   C — unverified edit     (the turn changed a file and ran nothing that could
+ *                            have checked it — verify-before-complete's gate,
+ *                            read off the turn's TOOL CALLS rather than its
+ *                            prose, which is why `readTranscriptTail` collects
+ *                            them: `_messageText` keeps `type === 'text'` blocks
+ *                            only, so tool activity is invisible to A and B.)
  *
  * ## Re-entrancy — the shape, stated before registration
  *
@@ -60,10 +66,11 @@
  * mechanism exists and soaks before it binds" — two prior hook-severity
  * mistakes plus a turn-end blast radius made default-on uninsurable in
  * their reading. Both are satisfied literally: the MASTER switch
- * (`hooks.turn_end_gate.enabled`) is default OFF, and WITHIN it both
- * detectors are default ON. A maintainer who opts in gets both without
+ * (`hooks.turn_end_gate.enabled`) is default OFF, and WITHIN it every
+ * detector is default ON. A maintainer who opts in gets all of them without
  * further configuration; until then this concern is a no-op that costs one
- * settings-cascade read per turn-end.
+ * settings-cascade read per turn-end. Detector C landed under the same rule —
+ * the master switch was NOT flipped when it shipped.
  *
  * CONTRACT: dispatcher-internal exit is 1 (EXIT_BLOCK) on a fire, 0
  * otherwise. `fail_closed: false` — deliberately. A crash in a turn-end
@@ -71,6 +78,16 @@
  * crash to a block is the outage this whole file is arranged to avoid.
  * Every unreadable input, missing transcript, absent pin, or malformed
  * state resolves to silence.
+ *
+ * The severity mapping was re-probed when C landed, because
+ * `dispatch_hook.ts` defines `EXIT_WARN = 2` beside `EXIT_BLOCK = 1` and an
+ * advisory finding delivered on the wrong code becomes a hard deny. Result:
+ * this file emits ONLY 0 and 1 internally, `concern_block_exit_parity` pins the
+ * 1, and the dispatcher translates a stop-slot block to host exit **2** —
+ * which a spawned test in `turn_end_gate_hook.test.ts` asserts, because on the
+ * stop slot exit 1 would let the turn end anyway. C is a refusal like A and B,
+ * not an advisory, so there is no advisory path here to put on the wrong code.
+ * Probed, not assumed.
  */
 import * as crypto from 'node:crypto';
 import * as fs from 'node:fs';
@@ -104,7 +121,7 @@ const EXIT_ALLOW = 0;
 export const TRANSCRIPT_READ_MAX_BYTES = 8 * 1024 * 1024; // 8 MB
 
 /** Detector identity, used in the state marker and the refusal text. */
-export type DetectorId = 'promissory' | 'language';
+export type DetectorId = 'promissory' | 'language' | 'verification';
 
 export interface Finding {
     detector: DetectorId;
@@ -361,6 +378,71 @@ export function detectLanguage(reply: string, pinned: Verdict): Finding | null {
 }
 
 // ---------------------------------------------------------------------------
+// Detector 3 — an edit the turn never verified
+// ---------------------------------------------------------------------------
+
+/** Tools that CHANGE the tree. The three write tools, nothing inferred. */
+const _EDIT_TOOLS = new Set(['Edit', 'Write', 'MultiEdit', 'NotebookEdit']);
+
+/**
+ * Shell commands that count as verification.
+ *
+ * A positive list, and deliberately narrow. The alternative — treating any
+ * `Bash` call as verification — was rejected because `ls` would then clear an
+ * unverified edit, which is the failure mode `verify-before-complete` names
+ * ("relying on partial verification"). The cost of narrowness is a MISSED
+ * detection when a project verifies by some command not listed here, and that is
+ * the safe direction for a gate that can refuse a turn: a false negative costs
+ * one unguarded turn, a false positive teaches the user to switch the gate off.
+ */
+const _VERIFY_RE =
+    /\b(test|tests|vitest|jest|pytest|phpunit|pest|tsc|eslint|ruff|mypy|pyright|clippy|typecheck|lint|build|ci|preflight|smoke[-_:a-z]*|check[-_:a-z]*|validate[-_:a-z]*)\b|\b(task|npm|pnpm|yarn|composer|cargo|go|make|php artisan|bun)\s+(run\s+)?\S*(test|check|lint|build|ci|typecheck)/i;
+
+export function isVerificationCommand(command: string): boolean {
+    return _VERIFY_RE.test(command);
+}
+
+/**
+ * Fire when the turn changed a file and then ran nothing that could have
+ * checked it.
+ *
+ * The window is "after the LAST edit", not "anywhere in the turn": a test run
+ * before the final edit demonstrably did not exercise it, which is the same
+ * freshness argument `verify-before-complete` makes about trusting an earlier
+ * run ("no verification command run in this message → you cannot claim it
+ * passes"). Ordering is the only thing that distinguishes the two, so the
+ * detector reads the sequence rather than a pair of counts.
+ *
+ * Silent when the turn edited nothing — a read-only or conversational turn has
+ * no claim to verify, and refusing one would make the gate fire on the majority
+ * of turns, which is how a guard gets disabled.
+ */
+export function detectUnverifiedEdit(toolCalls: readonly ToolCall[]): Finding | null {
+    let lastEdit = -1;
+    for (let i = 0; i < toolCalls.length; i += 1) {
+        if (_EDIT_TOOLS.has(toolCalls[i]!.name)) lastEdit = i;
+    }
+    if (lastEdit === -1) return null;
+    for (let i = lastEdit + 1; i < toolCalls.length; i += 1) {
+        const c = toolCalls[i]!;
+        if (c.name === 'Bash' && c.command !== undefined && isVerificationCommand(c.command)) {
+            return null;
+        }
+    }
+    const edited = toolCalls[lastEdit]!.path;
+    return {
+        detector: 'verification',
+        // The path, never the diff: the evidence span is quoted into a refusal,
+        // and `ToolCall` is shaped so a file body cannot reach it.
+        evidence: edited ?? toolCalls[lastEdit]!.name,
+        reason:
+            'this turn changed a file and then ran no verification command — ' +
+            'no test, type-check, lint or build call follows the last edit ' +
+            '(verify-before-complete: a claim without a fresh run is unverified)',
+    };
+}
+
+// ---------------------------------------------------------------------------
 // Re-entrancy — the guard, keyed on the turn, not on the reply
 // ---------------------------------------------------------------------------
 
@@ -450,6 +532,24 @@ function markRefusedTurn(
 // Transcript
 // ---------------------------------------------------------------------------
 
+/**
+ * One tool call the assistant made, reduced to what a detector can reason
+ * about: the tool's name, the shell command when it is a shell call, and the
+ * target path when it is a file write.
+ *
+ * Nothing else is kept. A tool input can hold a whole file body, and this
+ * struct is what a refusal quotes back — so it is shaped to be INCAPABLE of
+ * carrying one, the same PII-exclusion-by-construction discipline
+ * `domain-safety-pii` § Surface 2 asks for in a log line.
+ */
+export interface ToolCall {
+    name: string;
+    /** `Bash` only — the command line, so "did anything verify" is answerable. */
+    command?: string;
+    /** Edit/Write only — the file the turn changed, used as the evidence span. */
+    path?: string;
+}
+
 export interface TranscriptTail {
     lastAssistant: string;
     /**
@@ -458,6 +558,14 @@ export interface TranscriptTail {
      * identity; see `alreadyRefusedTurn` for why the prompt's text is not.
      */
     turnOrdinal: number;
+    /**
+     * The tool calls of the CURRENT turn, in order — reset at every genuine user
+     * prompt, so a verification from three turns ago cannot vouch for an edit
+     * made now. `_messageText` keeps only `type === 'text'` blocks, which is why
+     * this needed its own extraction rather than a reading of `lastAssistant`:
+     * tool activity is not in the prose at all.
+     */
+    toolCalls: ToolCall[];
 }
 
 /**
@@ -475,7 +583,7 @@ export function readTranscriptTail(
     transcriptPath: string,
     opts: { homeDir?: string; maxBytes?: number } = {},
 ): TranscriptTail {
-    const empty: TranscriptTail = { lastAssistant: '', turnOrdinal: 0 };
+    const empty: TranscriptTail = { lastAssistant: '', turnOrdinal: 0, toolCalls: [] };
     if (!transcriptPath || !isSafeTranscriptPath(transcriptPath, opts)) return empty;
     let lines: string[];
     try {
@@ -494,6 +602,7 @@ export function readTranscriptTail(
     }
     let lastAssistant = '';
     let turnOrdinal = 0;
+    let toolCalls: ToolCall[] = [];
     for (const rawLine of lines) {
         const line = rawLine.trim();
         if (!line) continue;
@@ -514,15 +623,55 @@ export function readTranscriptTail(
         if (role !== 'assistant' && role !== 'user') continue;
         const msg = entry['message'];
         if (typeof msg !== 'object' || msg === null || Array.isArray(msg)) continue;
-        const text = _messageText((msg as Record<string, unknown>)['content']);
+        const content = (msg as Record<string, unknown>)['content'];
+        // Tool calls are read BEFORE the text guard: an assistant entry that is
+        // only a tool_use block has no text at all, so `continue`-ing on a null
+        // text would drop exactly the entries this detector exists to see.
+        if (role === 'assistant') {
+            toolCalls.push(..._toolCalls(content));
+        }
+        const text = _messageText(content);
         if (text === null) continue;
         if (role === 'assistant') {
             lastAssistant = text;
         } else if (!isSyntheticPrompt(text)) {
             turnOrdinal += 1;
+            // A genuine user prompt starts a new turn, so the previous turn's
+            // tool activity stops counting. Without this reset, a verification
+            // run three turns ago would vouch for an edit made now — the
+            // "fresh" in edit-without-FRESH-verification is this line.
+            toolCalls = [];
         }
     }
-    return { lastAssistant: lastAssistant.trim(), turnOrdinal };
+    return { lastAssistant: lastAssistant.trim(), turnOrdinal, toolCalls };
+}
+
+/**
+ * Extract this entry's tool calls, keeping only name, shell command and target
+ * path. A tool input can hold a whole file body; nothing but those three fields
+ * is carried forward.
+ */
+function _toolCalls(content: unknown): ToolCall[] {
+    if (!Array.isArray(content)) return [];
+    const out: ToolCall[] = [];
+    for (const blk of content) {
+        if (typeof blk !== 'object' || blk === null || Array.isArray(blk)) continue;
+        const b = blk as Record<string, unknown>;
+        if (b['type'] !== 'tool_use') continue;
+        const name = b['name'];
+        if (typeof name !== 'string') continue;
+        const input = b['input'];
+        const call: ToolCall = { name };
+        if (typeof input === 'object' && input !== null && !Array.isArray(input)) {
+            const inp = input as Record<string, unknown>;
+            const cmd = inp['command'];
+            if (typeof cmd === 'string') call.command = cmd;
+            const p = inp['file_path'] ?? inp['path'] ?? inp['notebook_path'];
+            if (typeof p === 'string') call.path = p;
+        }
+        out.push(call);
+    }
+    return out;
 }
 
 function _messageText(content: unknown): string | null {
@@ -547,6 +696,7 @@ export interface GateSettings {
     enabled: boolean;
     promissory: boolean;
     language: boolean;
+    verification: boolean;
 }
 
 /**
@@ -581,7 +731,12 @@ function _isOn(v: unknown): boolean | null {
  * a turn-end outranks one settings read per turn-end.
  */
 export function readGateSettings(workspaceRoot: string): GateSettings {
-    const off: GateSettings = { enabled: false, promissory: true, language: true };
+    const off: GateSettings = {
+        enabled: false,
+        promissory: true,
+        language: true,
+        verification: true,
+    };
     let settings: Record<string, unknown>;
     try {
         settings = load_agent_settings({ cwd: workspaceRoot }) as Record<string, unknown>;
@@ -601,6 +756,7 @@ export function readGateSettings(workspaceRoot: string): GateSettings {
         enabled: flag('enabled', false),
         promissory: flag('promissory', true),
         language: flag('language', true),
+        verification: flag('verification', true),
     };
 }
 
@@ -644,7 +800,7 @@ export function main(): number {
     // in production while its comment claimed it was enforced — the same
     // fixed-the-definition-not-the-caller shape as two other findings in that
     // round, which is why this line exists rather than a default parameter.
-    const { lastAssistant, turnOrdinal } = readTranscriptTail(transcriptPath, {
+    const { lastAssistant, turnOrdinal, toolCalls } = readTranscriptTail(transcriptPath, {
         maxBytes: TRANSCRIPT_READ_MAX_BYTES,
     });
     if (!lastAssistant) return EXIT_ALLOW;
@@ -671,6 +827,10 @@ export function main(): number {
         const f = detectLanguage(lastAssistant, readLanguagePin(workspaceRoot));
         if (f) findings.push(f);
     }
+    if (settings.verification) {
+        const f = detectUnverifiedEdit(toolCalls);
+        if (f) findings.push(f);
+    }
     if (findings.length === 0) return EXIT_ALLOW;
 
     markRefusedTurn(workspaceRoot, sessionKey, turnOrdinal, findings[0]!.detector);
@@ -680,7 +840,8 @@ export function main(): number {
     );
     process.stderr.write(
         `turn-end-gate: REFUSED — this turn is not finished.\n${lines.join('\n')}\n` +
-            '  Do the promised work now, or correct the language, then end the turn.\n' +
+            '  Do the promised work now, correct the language, or run the ' +
+            'verification the edit needs, then end the turn.\n' +
             '  This turn will not be refused a second time.\n' +
             '  Disable: hooks.turn_end_gate.enabled: false in .agent-settings.yml\n',
     );

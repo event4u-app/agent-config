@@ -10,6 +10,7 @@ import { describe, expect, it } from 'vitest';
 import {
     DecisionGateHook,
     build_decision_gate_hook,
+    type ConfirmationStager,
 } from '../../../src/agent-src/templates/scripts/work_engine/hooks/builtin/decision_gate.js';
 import { DecisionEngineSettings } from '../../../src/agent-src/templates/scripts/work_engine/scoring/decision_engine.js';
 import { HookContext } from '../../../src/agent-src/templates/scripts/work_engine/hooks/context.js';
@@ -22,8 +23,12 @@ interface Fired {
     error: HookError | null;
 }
 
-function fire(settings: DecisionEngineSettings, ctx: HookContext): Fired {
-    const hook = new DecisionGateHook(settings);
+function fire(
+    settings: DecisionEngineSettings,
+    ctx: HookContext,
+    stager: ConfirmationStager | null = null,
+): Fired {
+    const hook = new DecisionGateHook(settings, stager);
     const reg = new HookRegistry();
     hook.register(reg);
     const out: Fired = { halt: null, error: null };
@@ -133,128 +138,114 @@ describe('DecisionGateHook — TS unit checks', () => {
     });
 });
 
-// dispatch-safety Phase 2.2 — the confirmation seam. A halting gate IS an
-// action held for a human, so it is where a `requires_confirmation` staging
-// belongs. The seam is injected, not wired: step 2.4 decides whether the
-// primitive binds, so the no-stager path must stay byte-identical (the inline
-// snapshot above is that assertion) while the staged path is reachable and
-// tested before anything binds it.
-describe('DecisionGateHook — confirmation staging seam', () => {
-    function fireStaged(
-        settings: DecisionEngineSettings,
-        ctx: HookContext,
-        opts: ConstructorParameters<typeof DecisionGateHook>[1],
-    ): Fired {
-        const hook = new DecisionGateHook(settings, opts);
-        const reg = new HookRegistry();
-        hook.register(reg);
-        const out: Fired = { halt: null, error: null };
+// The confirmation primitive (dispatch-safety Phase 2.2) is reachable from the
+// one live `ask` path and BINDS ON NOTHING by default. Blocker
+// `confirmation-degraded-host-semantics` has not decided what a host without a
+// `pre_tool_use` slot gets (5 of 8 rows), so the default surface must stay
+// exactly what ships today — these tests pin that, not just the new behaviour.
+describe('DecisionGateHook — the confirmation stager is opt-in', () => {
+    /**
+     * `_resolve_action` reads the ambient TTY + CI, and the hook does not accept
+     * an `is_interactive` injection, so the interactive branch is only reachable
+     * by stubbing both. Restored in `finally` so no later test inherits a fake
+     * terminal.
+     */
+    function interactively<T>(fn: () => T): T {
+        const prevCI = process.env.CI;
+        const prevIn = process.stdin.isTTY;
+        const prevOut = process.stdout.isTTY;
+        delete process.env.CI;
+        Object.defineProperty(process.stdin, 'isTTY', { value: true, configurable: true });
+        Object.defineProperty(process.stdout, 'isTTY', { value: true, configurable: true });
         try {
-            for (const cb of reg.for_event(HookEvent.AFTER_STEP)) cb(ctx);
-        } catch (e) {
-            if (e instanceof HookHalt) out.halt = e;
-            else if (e instanceof HookError) out.error = e;
-            else throw e;
+            return fn();
+        } finally {
+            if (prevCI === undefined) delete process.env.CI;
+            else process.env.CI = prevCI;
+            Object.defineProperty(process.stdin, 'isTTY', { value: prevIn, configurable: true });
+            Object.defineProperty(process.stdout, 'isTTY', { value: prevOut, configurable: true });
         }
-        return out;
     }
 
-    const stopSettings = new DecisionEngineSettings({
-        require_memory_hits: true,
-        on_block: 'stop',
+    const askSettings = (): DecisionEngineSettings =>
+        new DecisionEngineSettings({ require_memory_hits: true, on_block: 'ask' });
+
+    it('on_block=ask without a stager → the surface that ships today', () => {
+        const out = interactively(() => fire(askSettings(), refineCtx));
+        expect(out.halt?.reason).toBe('decision_gate:require_memory_hits');
+        expect(out.halt?.surface).toHaveLength(5);
+        expect(out.halt?.surface?.join('\n')).not.toContain('Confirmation required');
     });
 
-    it('no stager → surface identical to the unseamed hook', () => {
-        const seamed = fireStaged(stopSettings, refineCtx, {});
-        const plain = fire(stopSettings, refineCtx);
-        expect(seamed.halt?.surface).toEqual(plain.halt?.surface);
-        expect(seamed.halt?.reason).toBe(plain.halt?.reason);
-    });
-
-    it('stager → the held action is staged with gate, phase and object named', () => {
-        const seen: unknown[] = [];
-        const out = fireStaged(stopSettings, refineCtx, {
-            stage: (input) => {
+    it('on_block=ask with a stager → the confirmation surface is appended', () => {
+        const seen: { action: string; object: string; source: string }[] = [];
+        const stager: ConfirmationStager = {
+            stage(input) {
                 seen.push(input);
-                return { ...input, token: 'tok-1', staged_at: '2026-08-11T00:00:00.000Z' };
+                return ['Confirmation required: x', 'token abc123'];
             },
-        });
+        };
+        const out = interactively(() => fire(askSettings(), refineCtx, stager));
+        // The halt still fires: ask and action stay strictly sequential, so the
+        // gate never advances while it asks.
+        expect(out.halt).toBeInstanceOf(HookHalt);
+        // The reason is the identity downstream readers match on — unchanged.
+        expect(out.halt?.reason).toBe('decision_gate:require_memory_hits');
+        expect(out.halt?.surface?.at(-1)).toBe('token abc123');
         expect(seen).toEqual([
             {
-                gate_id: 'require_memory_hits',
-                phase: 'refine',
-                action: 'advance',
-                object: 'refine',
+                action: 'work_engine:advance:require_memory_hits',
+                object: 'phase refine',
+                source: 'decision_gate',
             },
         ]);
-        // The token rides on the surface so a human approves exactly this
-        // holding — an approval that cannot name its object is what
-        // `non-destructive-by-default` forbids.
-        expect(out.halt?.surface.at(-1)).toBe(
-            'Held as tok-1 — an approval of this token executes once, never twice.',
-        );
-        expect(out.halt?.reason).toBe('decision_gate:require_memory_hits');
     });
 
-    it('a stager that refuses leaves the surface untouched', () => {
-        // Announcing a token nobody can confirm is worse than announcing none:
-        // it reads as a pending approval no store will ever accept.
-        const out = fireStaged(stopSettings, refineCtx, { stage: () => null });
-        expect(out.halt?.surface).toHaveLength(5);
-        expect(out.halt?.surface.at(-1)).toBe('3) Abort the run.');
-    });
-
-    it('the ask-timeout halt stages too, and records which hold it was', () => {
+    it('does NOT stage on the non-interactive ask_timeout path', () => {
+        // The fallback refuses without asking anyone, so there is nobody to
+        // confirm and nothing to stage — staging here would leave a record no
+        // human will ever answer.
+        let staged = 0;
+        const stager: ConfirmationStager = {
+            stage() {
+                staged += 1;
+                return ['nope'];
+            },
+        };
         const prevCI = process.env.CI;
         process.env.CI = '1';
         try {
-            const seen: { action?: string }[] = [];
-            const out = fireStaged(
+            const out = fire(
                 new DecisionEngineSettings({
                     require_memory_hits: true,
                     on_block: 'ask',
                     on_block_fallback: 'stop',
                 }),
                 refineCtx,
-                {
-                    stage: (input) => {
-                        seen.push(input);
-                        return { ...input, token: 'tok-2', staged_at: 'x' };
-                    },
-                },
+                stager,
             );
-            expect(seen[0]?.action).toBe('advance:ask_timeout');
             expect(out.halt?.reason).toBe('decision_gate:require_memory_hits:ask_timeout');
+            expect(staged).toBe(0);
         } finally {
             if (prevCI === undefined) delete process.env.CI;
             else process.env.CI = prevCI;
         }
     });
 
-    it('a warn fallback stages nothing — nothing is being held', () => {
-        const prevCI = process.env.CI;
-        process.env.CI = '1';
-        try {
-            let staged = 0;
-            const out = fireStaged(
-                new DecisionEngineSettings({
-                    require_memory_hits: true,
-                    on_block: 'ask',
-                    on_block_fallback: 'warn',
-                }),
-                refineCtx,
-                {
-                    stage: (input) => {
-                        staged += 1;
-                        return { ...input, token: 'never', staged_at: 'x' };
-                    },
-                },
-            );
-            expect(out.error).toBeInstanceOf(HookError);
-            expect(staged).toBe(0);
-        } finally {
-            if (prevCI === undefined) delete process.env.CI;
-            else process.env.CI = prevCI;
-        }
+    it('does NOT stage on on_block=stop', () => {
+        let staged = 0;
+        const stager: ConfirmationStager = {
+            stage() {
+                staged += 1;
+                return ['nope'];
+            },
+        };
+        const out = fire(
+            new DecisionEngineSettings({ require_memory_hits: true, on_block: 'stop' }),
+            refineCtx,
+            stager,
+        );
+        expect(out.halt).toBeInstanceOf(HookHalt);
+        expect(staged).toBe(0);
     });
 });

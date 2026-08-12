@@ -35,7 +35,6 @@ import type { HookContext } from '../context.js';
 import { HookEvent } from '../events.js';
 import { HookError, HookHalt } from '../exceptions.js';
 import type { HookRegistry } from '../registry.js';
-import type { StageInput, StagedAction } from './confirmation.js';
 
 /** Arbitrary value, mirroring the Python `Any` fields. */
 type Any = unknown;
@@ -43,20 +42,19 @@ type Any = unknown;
 const _BLOCK_REASON_PREFIX = 'decision_gate';
 
 /**
- * Stage one held action and return its record, or `null` to stage nothing.
+ * Stage an action for confirmation and return the surface lines that name it.
  *
- * A halting gate IS an action held for a human, which is what the
- * `requires_confirmation` primitive names. The seam is injected rather than
- * wired: whether the primitive binds — and what the five hosts without a
- * `pre_tool_use` slot get — is step 2.4 of
- * `road-to-inbox-harvest-2026-08-b-dispatch-safety`, deferred behind
- * `blocker: confirmation-degraded-host-semantics`. With no stager the hook
- * behaves byte-identically to before this seam existed, halt surface included.
+ * An injected collaborator rather than a direct import of
+ * `staged_confirmation_store.js`, for two reasons. The gate is called from a
+ * hook bus with no repo root and no clock of its own, and — the load-bearing
+ * one — an absent stager keeps the `ask` path byte-identical to what ships
+ * today. The confirmation primitive is deliberately UNBOUND until blocker
+ * `confirmation-degraded-host-semantics` is decided (5 of 8 hosts have no
+ * `pre_tool_use` slot), so reaching it has to be an explicit opt-in and not a
+ * behaviour change that arrives with an upgrade.
  */
-export type StageFn = (input: StageInput) => StagedAction | null;
-
-export interface DecisionGateOptions {
-    readonly stage?: StageFn;
+export interface ConfirmationStager {
+    stage(input: { action: string; object: string; source: string }): readonly string[];
 }
 
 /**
@@ -67,11 +65,11 @@ export interface DecisionGateOptions {
  */
 export class DecisionGateHook {
     private readonly _settings: DecisionEngineSettings;
-    private readonly _stage: StageFn | null;
+    private readonly _stager: ConfirmationStager | null;
 
-    constructor(settings: DecisionEngineSettings, opts: DecisionGateOptions = {}) {
+    constructor(settings: DecisionEngineSettings, stager: ConfirmationStager | null = null) {
         this._settings = settings;
-        this._stage = opts.stage ?? null;
+        this._stager = stager;
     }
 
     /** Register the gate callback on `AFTER_STEP`. */
@@ -124,62 +122,27 @@ export class DecisionGateHook {
                     DecisionGateHook._format_reason(decision, 'ask_timeout'),
                 );
             }
-            this._halt(decision, 'ask_timeout');
+            throw new HookHalt(
+                `${_BLOCK_REASON_PREFIX}:${decision.gate_id}:ask_timeout`,
+                DecisionGateHook._surface(decision, 'ask_timeout'),
+            );
         }
-        this._halt(decision);
-    }
-
-    /**
-     * Throw the halt, staging the held advance first when a stager is injected.
-     *
-     * The tag is byte-identical to the two literals this replaced; only the
-     * surface can grow, and only by the one line a staged token adds.
-     */
-    private _halt(decision: GateDecision, suffix = ''): never {
-        const tag = suffix
-            ? `${_BLOCK_REASON_PREFIX}:${decision.gate_id}:${suffix}`
-            : `${_BLOCK_REASON_PREFIX}:${decision.gate_id}`;
-        // Stage HERE, not inside the formatter. Staging writes to disk, and a
-        // method named for building a string array is the wrong place for a
-        // side effect: any caller that re-rendered the surface would stage a
-        // second, unreferenced hold.
-        const staged = this._stage_hold(decision, suffix);
-        throw new HookHalt(tag, DecisionGateHook._surface_with_token(decision, suffix, staged));
-    }
-
-    /** Stage the held advance, or `null` when no stager is injected / it refused. */
-    private _stage_hold(decision: GateDecision, suffix: string): StagedAction | null {
-        if (this._stage === null) {
-            return null;
+        // `stop` and `ask` share this exit: both halt, which is the policy —
+        // ask and action are strictly sequential, so an interactive gate does
+        // not act while it asks. What `ask` adds, and only when a stager is
+        // injected, is a token on the surface so the answer can be matched to
+        // THIS question and consumed exactly once. The halt reason is
+        // deliberately unchanged: it is the identity downstream readers match on.
+        let surface = DecisionGateHook._surface(decision);
+        if (action === 'ask' && this._stager !== null) {
+            const extra = this._stager.stage({
+                action: `work_engine:advance:${decision.gate_id}`,
+                object: `phase ${decision.phase}`,
+                source: _BLOCK_REASON_PREFIX,
+            });
+            surface = [...surface, '', ...extra];
         }
-        return this._stage({
-            gate_id: decision.gate_id,
-            phase: decision.phase,
-            action: suffix ? `advance:${suffix}` : 'advance',
-            object: decision.phase,
-        });
-    }
-
-    /**
-     * The numbered-option surface, plus the staged token when one exists.
-     *
-     * Pure: a stager that returned `null` (refused, capped, unwritable store)
-     * leaves the surface untouched rather than announcing a token nobody can
-     * confirm.
-     */
-    private static _surface_with_token(
-        decision: GateDecision,
-        suffix: string,
-        staged: StagedAction | null,
-    ): string[] {
-        const surface = DecisionGateHook._surface(decision, suffix);
-        if (staged === null) {
-            return surface;
-        }
-        return [
-            ...surface,
-            `Held as ${staged.token} — an approval of this token executes once, never twice.`,
-        ];
+        throw new HookHalt(`${_BLOCK_REASON_PREFIX}:${decision.gate_id}`, surface);
     }
 
     // -- formatting helpers -------------------------------------------
@@ -212,10 +175,7 @@ export class DecisionGateHook {
  * Returns `null` when the config is absent or every gate is `off`; the
  * bootstrap layer then skips registration entirely.
  */
-export function build_decision_gate_hook(
-    settings: Any,
-    opts: DecisionGateOptions = {},
-): DecisionGateHook | null {
+export function build_decision_gate_hook(settings: Any): DecisionGateHook | null {
     if (settings === null || settings === undefined) {
         return null;
     }
@@ -225,7 +185,7 @@ export function build_decision_gate_hook(
     if (!settings.any_gate_active) {
         return null;
     }
-    return new DecisionGateHook(settings, opts);
+    return new DecisionGateHook(settings);
 }
 
 /** Python `getattr(obj, name, default)`. */
