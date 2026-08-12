@@ -32,8 +32,25 @@ import {
     validateRecycleEnvelope,
 } from '../../src/scripts/_lib/subagent_capsule.js';
 
+/**
+ * A scratch directory that looks like a project to `resolve_project_root`.
+ *
+ * `agents/overrides/` is one of the anchor markers, and the anchor is what
+ * separates a real repo from the cwd-fallback the command now refuses. A bare
+ * `mkdtemp` has no anchor — which is exactly the shape `rootlessScratch`
+ * below covers, and exactly why every pre-existing case here had to gain one:
+ * they were all asserting the behaviour of a call the command no longer
+ * accepts.
+ */
 function scratch(): string {
-    return fs.mkdtempSync(path.join(os.tmpdir(), 'session-recycle-'));
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'session-recycle-'));
+    fs.mkdirSync(path.join(dir, 'agents', 'overrides'), { recursive: true });
+    return dir;
+}
+
+/** A scratch directory with NO project anchor at or above it. */
+function rootlessScratch(): string {
+    return fs.mkdtempSync(path.join(os.tmpdir(), 'session-recycle-rootless-'));
 }
 
 function minimalEnvelope(): Record<string, unknown> {
@@ -104,6 +121,48 @@ describe('runSessionRecycle', () => {
         const result = runSessionRecycle('not json', { cwd: scratch() });
         expect(result.code).toBe(1);
     });
+
+    it('refuses an unanchored cwd and writes nothing', () => {
+        const cwd = rootlessScratch();
+        const result = runSessionRecycle(JSON.stringify(minimalEnvelope()), { cwd });
+        expect(result.code).toBe(1);
+        expect(result.err.join('\n')).toContain('no project anchor');
+        expect(result.err.join('\n')).toContain('--project');
+        expect(result.err.join('\n')).toContain('AGENT_CONFIG_PROJECT_ROOT');
+        expect(fs.existsSync(path.join(cwd, RECYCLE_ENVELOPE_REL))).toBe(false);
+        // The resume instruction is the expensive half — it must not appear on
+        // a path that wrote nothing.
+        expect(result.out.join('\n')).not.toContain('/clear');
+    });
+
+    it('--verify is refused on an unanchored cwd too', () => {
+        const result = runSessionRecycle(JSON.stringify(minimalEnvelope()), {
+            cwd: rootlessScratch(),
+            verify: true,
+        });
+        expect(result.code).toBe(1);
+        expect(result.err.join('\n')).toContain('no project anchor');
+    });
+
+    it('--project restores the write from an unanchored cwd', () => {
+        const repo = scratch();
+        const result = runSessionRecycle(JSON.stringify(minimalEnvelope()), {
+            cwd: rootlessScratch(),
+            project: repo,
+        });
+        expect(result.err).toEqual([]);
+        expect(result.code).toBe(0);
+        expect(fs.existsSync(path.join(repo, RECYCLE_ENVELOPE_REL))).toBe(true);
+    });
+
+    it('prints the absolute target path, not the shared relative one', () => {
+        const cwd = scratch();
+        const result = runSessionRecycle(JSON.stringify(minimalEnvelope()), { cwd });
+        expect(result.code).toBe(0);
+        // A relative path reads identically for every root; the one thing in
+        // doubt when this line is read is WHICH tree was written.
+        expect(result.out[0]).toContain(path.join(cwd, RECYCLE_ENVELOPE_REL));
+    });
 });
 
 describe('templateEnvelope + parseArgv', () => {
@@ -111,11 +170,13 @@ describe('templateEnvelope + parseArgv', () => {
         expect(validateRecycleEnvelope({ ...templateEnvelope(), workspace: '/x', written_at: '2026-08-10T00:00:00Z' })).toEqual([]);
     });
 
-    it('parses --file and --template; rejects unknown flags', () => {
+    it('parses --file, --project and --template; rejects unknown flags', () => {
         expect(parseArgv(['--file', 'x.json'])).toEqual({ ok: true, file: 'x.json' });
         expect(parseArgv(['--template'])).toEqual({ ok: true, template: true });
+        expect(parseArgv(['--project', '/repo'])).toEqual({ ok: true, project: '/repo' });
         expect(parseArgv(['--nope']).ok).toBe(false);
         expect(parseArgv(['--file']).ok).toBe(false);
+        expect(parseArgv(['--project']).ok).toBe(false);
     });
 
     it('carries do_not_touch as a discoverable, empty-by-default list', () => {
