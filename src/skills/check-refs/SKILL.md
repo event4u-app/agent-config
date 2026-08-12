@@ -11,6 +11,11 @@ execution:
   command:
     - ./scripts-run
     - src/scripts/check_references
+requires:
+  bins:
+    - bash
+    - node
+  network: []
 workspaces:
   - agent-config-maintainer
 packs:

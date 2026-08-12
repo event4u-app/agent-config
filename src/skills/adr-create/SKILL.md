@@ -11,6 +11,11 @@ execution:
   command:
     - ./scripts-run
     - src/scripts/adr/regenerate_index
+requires:
+  bins:
+    - bash
+    - node
+  network: []
 workspaces:
   - agent-config-maintainer
 packs:

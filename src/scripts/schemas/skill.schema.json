@@ -33,6 +33,43 @@
       "maxLength": 500,
       "description": "Agent-Skills spec field (optional): machine-readable declaration of environment requirements — system packages, network access, product/host constraints. Mirrors the public spec so media/doc skills can state requirements outside prose."
     },
+    "requires": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Structured runtime prerequisites, in the form `doctor`/`preflight` can actually probe. The free-text `compatibility` field above states requirements for a human reader; this states them for a machine, and the two coexist deliberately — `compatibility` mirrors the public Agent-Skills spec and is not replaced here. Mandatory for an external `execution.handler` (shell/node/php), which cannot run without declared dependencies; meaningless for `internal`, which by definition needs no external binary.",
+      "properties": {
+        "bins": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "description": "Executables that must resolve on PATH (e.g. `python3`, `curl`). Probed by name, never by version — a version constraint belongs in the skill body where it can explain itself."
+        },
+        "env": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^[A-Z][A-Z0-9_]*$"
+          },
+          "description": "Environment variable NAMES that must be set. Names only — a value here would be a credential in a tracked file (secret-vcs-guard)."
+        },
+        "primary_env": {
+          "type": "string",
+          "pattern": "^[A-Z][A-Z0-9_]*$",
+          "description": "The one variable from `env` whose absence makes the skill unusable rather than degraded, so a doctor report can distinguish a hard block from a partial one. Must also appear in `env`."
+        },
+        "network": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "description": "Egress hostnames the skill contacts, checked against the egress allowlist. An empty array is a positive claim of no network access and is NOT the same as omitting the key."
+        }
+      },
+      "$comment": "road-to-skill-ecosystem-executable-payloads Phase 1 (defect D2): `compatibility` is free text used by 2 skills, so cmd_doctor.ts / cmd_preflight.ts had nothing structured to verify."
+    },
     "provenance": {
       "type": "string",
       "enum": [

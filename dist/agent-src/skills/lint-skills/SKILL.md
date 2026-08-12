@@ -12,6 +12,11 @@ execution:
     - ./scripts-run
     - src/scripts/skill_linter
     - "--all"
+requires:
+  bins:
+    - bash
+    - node
+  network: []
 workspaces:
   - agent-config-maintainer
 packs:

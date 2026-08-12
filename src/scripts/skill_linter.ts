@@ -230,6 +230,15 @@ const KERNEL_RULE_IDS = new Set([
 export const VALID_EXECUTION_TYPES = new Set(['manual', 'assisted', 'automated']);
 export const VALID_EXECUTION_HANDLERS = new Set(['none', 'shell', 'php', 'node', 'internal']);
 const VALID_EXECUTION_SAFETY_MODES = new Set(['strict']);
+/**
+ * Handlers that shell out of this process and therefore depend on something the
+ * host must already have. `internal` is deliberately absent: it runs in-process
+ * and by definition needs no external binary, so demanding a `requires` block
+ * from it would produce a pro-forma declaration rather than a checkable fact.
+ */
+const EXTERNAL_EXECUTION_HANDLERS = new Set(['shell', 'php', 'node']);
+/** Top-level `requires:` block (sibling of `execution:`, not a field inside it). */
+const REQUIRES_BLOCK_PATTERN = /^requires:\s*$/m;
 const VALID_EXECUTION_FIELDS = new Set([
     'type',
     'handler',
@@ -1264,7 +1273,7 @@ function lint_wing4_boundaries(text: string): Issue[] {
     return issues;
 }
 
-function lint_execution_metadata(execution: ExecutionBlock): Issue[] {
+function lint_execution_metadata(execution: ExecutionBlock, frontmatter = ''): Issue[] {
     const issues: Issue[] = [];
 
     const execType = execution.type;
@@ -1372,6 +1381,29 @@ function lint_execution_metadata(execution: ExecutionBlock): Issue[] {
         } else if (command.length === 0) {
             issues.push(new Issue('error', 'empty_command', 'command must not be empty'));
         }
+    }
+
+    // An external handler that actually declares a command depends on binaries or
+    // env the host may not have; without a `requires` block, `doctor`/`preflight`
+    // have nothing to probe and the failure surfaces mid-run instead. Gated on a
+    // declared `command:` on purpose — a `handler: shell` skill with no command is
+    // advisory prose, and demanding requirements from it would be a pro-forma field.
+    if (
+        typeof handler === 'string' &&
+        EXTERNAL_EXECUTION_HANDLERS.has(handler) &&
+        Array.isArray(command) &&
+        command.length > 0 &&
+        !REQUIRES_BLOCK_PATTERN.test(frontmatter)
+    ) {
+        issues.push(
+            new Issue(
+                'error',
+                'missing_requires',
+                `execution.handler '${handler}' declares a command but the skill has no top-level ` +
+                    "'requires:' block — declare bins/env/network so doctor and preflight can verify " +
+                    'the runtime before the command runs',
+            ),
+        );
     }
 
     const unknown = Object.keys(execution).filter((k) => !VALID_EXECUTION_FIELDS.has(k));
@@ -1530,7 +1562,7 @@ export function lint_skill(p: string, text: string, absPath: string | null = nul
 
         const execution = parseExecutionBlock(frontmatter);
         if (execution !== null) {
-            issues.push(...lint_execution_metadata(execution));
+            issues.push(...lint_execution_metadata(execution, frontmatter));
         }
 
         const tierMatch = TIER_PATTERN.exec(frontmatter);

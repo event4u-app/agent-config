@@ -1075,6 +1075,38 @@ ${frontmatterExtra}---
         expect(hasCode(result, 'invalid_execution_type')).toBe(true);
     });
 
+    // road-to-skill-ecosystem-executable-payloads Phase 1: an external handler that
+    // declares a command must declare what the host needs, or doctor/preflight have
+    // nothing to probe. The three negative cases below are the reason the rule is
+    // scoped the way it is rather than to `handler != none`.
+    it('external handler with a command but no requires fails', () => {
+        const result = lint_file(
+            makeSkill('execution:\n  type: assisted\n  handler: shell\n  command:\n    - ./scripts-run\n    - src/scripts/noop\n'),
+        );
+        expect(hasCode(result, 'missing_requires')).toBe(true);
+    });
+
+    it('external handler with a command and requires passes', () => {
+        const result = lint_file(
+            makeSkill(
+                'execution:\n  type: assisted\n  handler: shell\n  command:\n    - ./scripts-run\n    - src/scripts/noop\nrequires:\n  bins:\n    - bash\n  network: []\n',
+            ),
+        );
+        expect(hasCode(result, 'missing_requires')).toBe(false);
+    });
+
+    it('internal handler with a command needs no requires', () => {
+        const result = lint_file(
+            makeSkill('execution:\n  type: assisted\n  handler: internal\n  command:\n    - noop\n'),
+        );
+        expect(hasCode(result, 'missing_requires')).toBe(false);
+    });
+
+    it('external handler without a command needs no requires', () => {
+        const result = lint_file(makeSkill('execution:\n  type: assisted\n  handler: shell\n'));
+        expect(hasCode(result, 'missing_requires')).toBe(false);
+    });
+
     it('invalid handler fails', () => {
         const result = lint_file(makeSkill('execution:\n  type: manual\n  handler: bash\n'));
         expect(hasCode(result, 'invalid_execution_handler')).toBe(true);
