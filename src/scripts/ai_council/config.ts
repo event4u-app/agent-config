@@ -1551,7 +1551,11 @@ function _build_defaults(d: Dict, ignored: string[] = []): DefaultsConfig {
     // per invocation (`cli → api → unavailable`, airgap forcing `api`). A file
     // still carrying `mode:` loads fine and is reported via
     // `ignored_transport_keys` — see `CouncilConfig`.
-    if (_get(d, 'mode', undefined) !== undefined) {
+    // `null` as the sentinel, not `undefined`: `_get`'s default parameter is
+    // typed `Json`, which excludes `undefined`. A config spelling `mode: null`
+    // is indistinguishable from an absent key here, and that is correct — a
+    // null transport is not a pin worth reporting.
+    if (_get(d, 'mode', null) !== null) {
         ignored.push('defaults.mode');
     }
     const mode = 'auto';
@@ -1776,7 +1780,7 @@ function _build_member(
     // as `_build_defaults`. A member that pinned `mode: api` would reintroduce
     // exactly the silent-spend path the global key was removed for, one
     // provider at a time. Recorded as ignored, never read.
-    if (_get(cfg, 'mode', undefined) !== undefined) {
+    if (_get(cfg, 'mode', null) !== null) {
         ignored.push(`members.${name}.mode`);
     }
     const member_mode: string | null = null;
