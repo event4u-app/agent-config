@@ -46,7 +46,14 @@ When the issues are too many to fold in without blowing the current diff's scope
 
 ## Observed failing checks — classifying the red you already have
 
-The rule puts a check result you have already seen into the same ladder as a defect you read in a file. Classification is the whole of the work, and it runs on two axes:
+The rule puts a check result you have already seen into the same ladder as a defect you read in a file. Running a command, reading seven errors, and walking past them is not scoping the work — it is looking away.
+
+The rule's two bounds, in full:
+
+- **Only output you already have.** The clause never obliges a check run; it fires on a result already in front of you. What runs locally stays the user's call — this package records "no proactive quality tools, remote CI gates only" as a standing preference — and the remote CI remains the authoritative gate. An obligation to *hunt* for red would contradict that outright; an obligation not to walk past red you already read does not.
+- **Ownership picks the tier, never the silence.** Caused by your diff → it is the task. Pre-existing and inside the fix-now bar → fix it. Pre-existing and wider, or many, or unrelated → note + ask, or a follow-up PR. There is no seventh option called "mention it in the closing summary" — that line reads as a status report and closes nothing.
+
+Classification is the whole of the work, and it runs on two axes:
 
 | | Inside the fix-now bar | Outside it |
 |---|---|---|

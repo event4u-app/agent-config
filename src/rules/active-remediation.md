@@ -47,22 +47,15 @@ Security gaps (broken access control, injection, secrets, missing authz — see 
 
 ## A check you already ran is a spotted issue
 
-An error the tooling put in front of you — a red gate, a failing test, a lint or
-type error, a command that no longer runs — is **spotted**, exactly like a defect
-you read in a file. It enters the ladder on the same terms. "It was already red
-before I got here" is not a tier: pre-existing decides *which* tier, never whether
-the ladder applies. Running a command, reading seven errors, and walking past them
-is not scoping the work — it is looking away.
+A red gate, a failing test, a lint or type error — output the tooling already put
+in front of you — is **spotted**, exactly like a defect read in a file, and
+enters the ladder on the same terms. "It was already red before I got here"
+decides *which* tier, never whether the ladder applies.
 
-Two bounds, both narrow and both load-bearing:
-
-- **Only output you already have.** This never obliges you to go run checks
-  hunting for problems; what runs locally stays the user's call and the remote CI
-  is the authoritative gate. The trigger is a result already in front of you.
-- **Ownership picks the tier, never the silence.** Caused by your diff → it is the
-  task, fix it. Pre-existing and inside the fix-now bar → fix it. Pre-existing and
-  wider, or many, or unrelated → note + ask, or a follow-up PR. There is no
-  seventh option called "mention it in the closing summary".
+Two bounds: **only output you already have** (never an obligation to go run a
+check — the remote CI stays the authoritative gate), and **ownership picks the
+tier, never the silence**. Classification + worked example: the mechanics
+guideline below.
 
 ## The ladder — three tiers
 
@@ -70,30 +63,25 @@ Two bounds, both narrow and both load-bearing:
 
 ## Every noted issue ends in one of three states
 
-When the task closes, each issue you named is **fixed**, **decided by the user**
-(fix later, or ignore — an explicit "leave it" is terminal and is not raised
-again, per [`scope-control`](scope-control.md)), or **in front of the user right
-now** as the batched ask. Anything else leaves the issue open while sounding like
-it was handled — most often a line in the closing summary that reads as a status
-report and closes nothing. That line is the failure this rule exists to stop.
-
-An item the user has not decided **survives the turn**: raise it once more at the
-next natural task boundary rather than letting it age out of the conversation.
-A batch already declined is closed.
+**Fixed**, **decided by the user** (an explicit "leave it" is terminal and is not
+raised again, per [`scope-control`](scope-control.md)), or **in front of the user
+right now** as the batched ask. A line in the closing summary is none of the
+three: it leaves the issue open while sounding like it was handled, and it is the
+failure this rule exists to stop. An undecided item survives the turn — raised
+once more at the next task boundary, never aged out. A declined batch is closed.
 
 ## The ask carries fixes, not a flag
 
 "There are 7 lint errors — shall I fix them?" hands the problem back untouched.
-Group the findings by fix shape and make each numbered option a candidate the
-user can pick without a follow-up question: what changes, where, roughly how
-large, what it costs. The last option is always an explicit **leave it as is**,
-and one recommendation line names your pick (per
-[`user-interaction`](user-interaction.md)).
+Each numbered option is a candidate the user can pick without a follow-up
+question — what changes, where, roughly how large, what it costs — grouped by fix
+shape rather than one per finding, with an explicit **leave it as is** last and
+one recommendation line (per [`user-interaction`](user-interaction.md)).
 
-The ask is subordinate to [`no-cheap-questions`](no-cheap-questions.md) — its
+The ask is subordinate to [`no-cheap-questions`](no-cheap-questions.md): its
 Pre-Send Self-Check runs first, and a finding with no nameable benefit or no real
-trade-off is dropped silently instead of becoming a question. What that check
-forbids is a content-free ask, never the surfacing of a genuine defect.
+trade-off is dropped silently instead of becoming a question. That check forbids
+a content-free ask, never the surfacing of a genuine defect.
 
 ## Live-security carve-out (priority)
 
@@ -111,14 +99,12 @@ While implementing/modifying code you pass an issue outside the literal task. Al
 
 ## Honest enforcement — `enforced_by: none`
 
-No gate can read a reply and tell a discharged issue from one that was mentioned
-and dropped: the note, the ask, and the user's decision are all prose, and the
-issue set is whatever the agent happened to see. So this rule ships
-`enforced_by: none` — the same honesty boundary
+The note, the ask and the user's decision are all prose, and the issue set is
+whatever the agent happened to see, so no gate can tell a discharged issue from a
+mentioned one. This rule ships `enforced_by: none` — the honesty boundary
 [`security-sensitive-stop`](security-sensitive-stop.md) and
-[`ui-audit-gate`](ui-audit-gate.md) state for their own obligations — rather than
-naming an adjacent linter that never inspects this behaviour. The ladder is the
-control; skipping it is caught by nothing.
+[`ui-audit-gate`](ui-audit-gate.md) state for their own obligations. The ladder
+is the control; skipping it is caught by nothing.
 
 Body migrated to [`guideline:agent-infra/active-remediation-mechanics`](../docs/guidelines/agent-infra/active-remediation-mechanics.md) (per P4 of `road-to-kernel-and-router.md`) — per-tier fix-now/note+ask/follow-up-PR criteria, version-gated modernization, anti-nagging guardrails.
 Trigger-set above activates this routing on demand, independent of the discipline profile (ADR-110).
@@ -131,5 +117,5 @@ Trigger-set above activates this routing on demand, independent of the disciplin
 - [`source-discovery-gate`](source-discovery-gate.md) — establishing the verified project version before modernizing.
 - [`scope-control`](scope-control.md), [`commit-policy`](commit-policy.md) — PR/commit creation stays permission-gated.
 - [`improve-before-implement`](improve-before-implement.md) — the pre-work challenge (before); this is the during/after remediation.
-- [`verify-before-complete`](verify-before-complete.md) — the turn-completion gate: an undecided issue is unfinished work, not a caveat to report.
-- [`no-cheap-questions`](no-cheap-questions.md) — the floor the batched ask clears before it is asked at all; the registered pair is `no-cheap-questions-x-active-remediation`.
+- [`verify-before-complete`](verify-before-complete.md) — an undecided issue is unfinished work, not a caveat to report.
+- [`no-cheap-questions`](no-cheap-questions.md) — the floor the batched ask clears before it is asked at all.
