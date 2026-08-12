@@ -6,10 +6,10 @@
 
 ## Overall
 
-**276 / 393 steps done · 70%**
+**281 / 392 steps done · 72%**
 
 ```text
-████████████████████████████░░░░░░░░░░░░   70%
+█████████████████████████████░░░░░░░░░░░   72%
 ```
 
 ## ✅ Completed — pending archival
@@ -47,7 +47,7 @@ These roadmaps are **complete** (`count_open == 0`, `count_deferred == 0`) but s
 | 21 | [road-to-skill-ecosystem-executable-payloads.md](roadmaps/road-to-skill-ecosystem-executable-payloads.md) | 6 | 21 | 1 | 4 | 15 | 1 | [2](#blockers-road-to-skill-ecosystem-executable-payloads) | ████████░░ 80% |
 | 22 | [road-to-skill-ecosystem-gate-integrity.md](roadmaps/road-to-skill-ecosystem-gate-integrity.md) | 5 | 43 | 3 | 40 | 0 | 0 | [1](#blockers-road-to-skill-ecosystem-gate-integrity) | █████████░ 93% |
 | 23 | [road-to-solution-minimalism.md](roadmaps/road-to-solution-minimalism.md) | 4 | 36 | 10 | 25 | 0 | 1 | [1](#blockers-road-to-solution-minimalism) | ███████░░░ 71% |
-| 24 | [road-to-structured-guard-input.md](roadmaps/road-to-structured-guard-input.md) | 4 | 9 | 9 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+| 24 | [road-to-structured-guard-input.md](roadmaps/road-to-structured-guard-input.md) | 4 | 9 | 3 | 5 | 0 | 1 | 0 | ██████░░░░ 62% |
 | 25 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 6 | 3 | 0 | 0 | [1](#blockers-road-to-subagent-value-realization-followup) | ███░░░░░░░ 33% |
 | 26 | [road-to-surface-consolidation.md](roadmaps/road-to-surface-consolidation.md) | 3 | 14 | 1 | 12 | 1 | 0 | [2](#blockers-road-to-surface-consolidation) | █████████░ 92% |
 | 27 | [road-to-tier-removal.md](roadmaps/road-to-tier-removal.md) | 4 | 8 | 2 | 6 | 0 | 0 | [1](#blockers-road-to-tier-removal) | ████████░░ 75% |
@@ -735,14 +735,14 @@ _1 blocker resolved._
 
 ### [road-to-structured-guard-input.md](roadmaps/road-to-structured-guard-input.md)
 
-**Road to structured guard input — stop guessing intent from prose** — 0 / 9 done (0%)
+**Road to structured guard input — stop guessing intent from prose** — 5 / 8 done (62%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
-| 1 | measure before building | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
+| 1 | measure before building | ✅ done | 0 | 3 | 0 | 0 | 100% |
 | 2 | the structured field, if Phase 1 supports it | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
-| 3 | the adversarial question the council raised | ⬜ not started | 1 | 0 | 0 | 0 | 0% |
-| 4 | the blind spot the audit missed | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
+| 3 | the adversarial question the council raised | ⏭️ skipped | 0 | 0 | 0 | 1 | 0% |
+| 4 | the blind spot the audit missed | ✅ done | 0 | 2 | 0 | 0 | 100% |
 
 ### [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md)
 
