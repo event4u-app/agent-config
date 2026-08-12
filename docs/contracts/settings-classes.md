@@ -180,8 +180,8 @@ dispatch runs, not WHETHER the layer exists, so they keep their own C rows.
 |---|---|
 | A — preference | 27 |
 | B — consent | 3 |
-| C — guarded | 112 |
-| **Total** | **142** |
+| C — guarded | 113 |
+| **Total** | **143** |
 
 The total is every leaf in the template, where *leaf* means anything that is not
 a **non-empty** map. An empty map (like the former `subagents.host_capabilities: {}`) is a real
@@ -324,6 +324,7 @@ Rows follow template order, so a diff against the template reads straight down.
 | `hooks.injection_scan.enabled` | C | `false` | the prompt-injection scanner |
 | `hooks.rtk_wrap.enabled` | C | `false` | configures code that runs on every tool call |
 | `hooks.design_slop.enabled` | C | `false` | configures code that runs on every tool call |
+| `hooks.ui_route_nudge.enabled` | C | `false` | configures code that runs on every tool call |
 | `hooks.code_graph.enabled` | C | `false` | configures code that runs on every tool call |
 | `hooks.turn_end_gate.enabled` | C | `false` | arms the only concern that can REFUSE a turn-end; an agent must never be able to switch its own delivery gate on |
 | `hooks.turn_end_gate.promissory` | C | `true` | which refusal the turn-end gate may raise; inert while the master switch is off |

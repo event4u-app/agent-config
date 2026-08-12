@@ -168,6 +168,18 @@ gates:
     corpus: "src/rules/*.md frontmatters (111 at baseline)"
     status: enforced
 
+  - id: lint_rule_skill_pack_reach
+    argv: ["--quiet"]
+    min_scanned: 90
+    corpus: "src/rules/*.md frontmatters joined against src/skills packs and the pack registry (116 rules at baseline)"
+    status: enforced
+    note: >
+      Advisory on findings, enforced on COVERAGE: the gate exits 0 while its
+      unreachable-route set is non-empty (12 at introduction), so only this
+      floor can catch it going blind. A collapse below 90 would mean it stopped
+      reading src/rules, which is exactly the shape that would make "0 findings"
+      read as clean.
+
   - id: check_condensation
     argv: []
     min_scanned: 380

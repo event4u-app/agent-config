@@ -6,6 +6,14 @@ description: "Writing/editing UI — components, screens, layouts, design tokens
 triggers:
   - path_prefix: "resources/views/"
   - path_prefix: "resources/js/"
+  - path_prefix: "components/"
+  - path_prefix: "src/components/"
+  - path_prefix: "pages/"
+  - file_pattern: "*.vue"
+  - file_pattern: "*.svelte"
+  - file_pattern: "*.tsx"
+  - file_pattern: "*.jsx"
+  - file_pattern: "*.blade.php"
   - keyword: "component"
   - keyword: "design token"
 routes_to:
@@ -21,6 +29,14 @@ collision_ok:
   "design token": "same surface, opposite side: this inventories tokens before the write, design-review-after-ui-write reviews what the write emitted"
   "resources/views/": "both halves of one UI loop fire on the same path — audit before, review after; neither substitutes for the other"
   "resources/js/": "both halves of one UI loop fire on the same path — audit before, review after; neither substitutes for the other"
+  "components/": "both halves of one UI loop fire on the same path — audit before, review after; neither substitutes for the other"
+  "src/components/": "both halves of one UI loop fire on the same path — audit before, review after; neither substitutes for the other"
+  "pages/": "both halves of one UI loop fire on the same path — audit before, review after; neither substitutes for the other"
+  "*.vue": "one component file, two obligations: inventory before the write, review after it"
+  "*.svelte": "one component file, two obligations: inventory before the write, review after it"
+  "*.tsx": "one component file, two obligations: inventory before the write, review after it"
+  "*.jsx": "one component file, two obligations: inventory before the write, review after it"
+  "*.blade.php": "one template file, two obligations: inventory before the write, review after it"
 # obligation: line 39
 obligation_frequency: "per-edit"
 ---
@@ -90,6 +106,25 @@ component because reuse beats duplication — not because a check will catch you
 Full enforcement requires the dispatcher (or the `frontend-design` pack once
 pack-scoped rule projection is enabled; that flip is a maintainer decision,
 never an automated one).
+
+**A runtime carrier now exists, and it does not change the verdict.** The
+`ui-route-nudge` PreToolUse concern warns once on a UI write with no design
+consultation latched this session.
+
+It is a **parallel** mechanism, not a consumer of the triggers above — the
+distinction matters and the earlier wording here got it wrong. The concern
+decides "is this a UI surface" from `src/scripts/_lib/ui_surface.ts`; nothing
+in the tree parses this frontmatter at session time, so the `keyword:` triggers
+still have no runtime consumer at all, and the two sets can drift. What holds
+them together is a test, not a dependency: `ui_rule_triggers.test.ts` asserts
+every `file_pattern` declared here is accepted by that predicate. The predicate
+is deliberately wider (it also covers `.css`, `.scss`, `.astro`), because a
+measurement denominator and a routing trigger are not the same population.
+
+Warn-only, capped at two per session, default-OFF, bound only where a
+`pre_tool_use` slot exists. A reminder that can be ignored is not a gate, so
+`enforced_by:` stays `none`. Run `agent-config hooks:status` for the host you
+are on rather than trusting this sentence.
 
 ## Failure modes
 

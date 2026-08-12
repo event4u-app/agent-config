@@ -1248,6 +1248,20 @@ hooks:
   design_slop:
     enabled: false
 
+  # PreToolUse UI-route nudge (road-to-frontend-skill-application Phase 4).
+  # Default-OFF. When enabled, a Write/Edit to a UI surface with no design
+  # consultation latched this session WARNS (exit 2, never blocks) naming the
+  # route: run existing-ui-audit, then the fe-design loop. A read or search
+  # touching fe-design / existing-ui-audit / design-review / design-intelligence
+  # latches consultation and silences it for the rest of the session, so the
+  # agent that did the right thing is never nagged. Anti-loop: at most 2 nudges
+  # per session. It does NOT read the two UI rules: the UI-surface decision
+  # comes from _lib/ui_surface.ts, so this runs parallel to them rather than
+  # consuming their triggers. Host-limited (pre_tool_use fires on ~2-3 hosts) —
+  # elsewhere the obligation stays model-carried, as the two UI rules declare.
+  ui_route_nudge:
+    enabled: false
+
   # PreToolUse code-graph nudge (ADR-124 Phase 4). Default-OFF. When enabled
   # AND a native code-graph engine has built a cache (or the repo ships a
   # graph.json / SCIP index), WARNS once per session (exit 2, never blocks) as

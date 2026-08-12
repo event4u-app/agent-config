@@ -1,0 +1,20 @@
+# Entries observed WITH a description in the same injected catalogue.
+accessibility-auditor
+activation-design
+adr-create
+adversarial-review
+agent-docs-writing
+agent-handoff
+agent-status
+ai-council
+code-review
+competitive-positioning
+condense
+devcontainer
+jira-integration
+mcp
+md-language-check
+prediction-pool-optimizer
+roadmap-management
+roadmap-writing
+using-git-worktrees
