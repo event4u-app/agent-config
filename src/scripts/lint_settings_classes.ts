@@ -48,16 +48,23 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import { load as parseYaml } from 'js-yaml';
 
 import {
+    dispositionOf,
     getSettingsLeaf,
     isConservativeDefault,
     isSettingsClass,
+    isSettingsDisposition,
     parseDeclaredClassCounts,
+    parseDeclaredDispositionCounts,
     parseSettingsClassRows,
+    replacementOf,
     SETTINGS_CLASSES,
+    SETTINGS_DISPOSITIONS,
     type SettingsClass,
     type SettingsClassRow,
+    type SettingsDisposition,
     settingsLeafPaths,
 } from '../shared/settingsClasses.js';
+import { checkRatchet } from './_lib/gate_baseline.js';
 import { GateLedger } from './_lib/gate_ledger.js';
 import { runGateCli, runSelfTest } from './_lib/gate_self_test.js';
 import { DeadScopeError, reportScanned } from './_lib/scan_scope.js';
@@ -117,15 +124,27 @@ export function selfTest(): number {
         `\n## Counts\n\n| Class | Keys |\n|---|---|\n| A — preference | ${String(a)} |\n` +
         `| B — consent | ${String(b)} |\n| C — guarded | ${String(c)} |\n` +
         `| **Total** | **${String(total)}** |\n`;
-    const table = (rows: string): string => `# Fixture\n${counts(0, 1, 1, 2)}\n## The table\n\n| Key | Class | Default | Why |\n|---|---|---|---|\n${rows}`;
+    // The disposition tallies, in the section the parser scopes to. Defaulted to
+    // the clean fixture's shape so a case that does not care about them says so
+    // by omission rather than by restating four rows.
+    const dispositions = (d: number, u: number, co: number, p: number, total: number): string =>
+        `\n## Dispositions\n\n| Disposition | Keys |\n|---|---|\n| derivable | ${String(d)} |\n` +
+        `| un-inferrable | ${String(u)} |\n| consent | ${String(co)} |\n| policy | ${String(p)} |\n` +
+        `| **Total** | **${String(total)}** |\n`;
+    const table = (rows: string, disp = dispositions(0, 1, 1, 0, 2)): string =>
+        `# Fixture\n${counts(0, 1, 1, 2)}\n${disp}\n## The table\n\n` +
+        `| Key | Class | Default | Why | Disposition |\n|---|---|---|---|---|\n${rows}`;
 
-    const clean = table('| `alpha.one` | B | `false` | fixture |\n| `beta` | C | `"keep"` | fixture |\n');
+    const clean = table(
+        '| `alpha.one` | B | `false` | fixture | consent |\n' +
+            '| `beta` | C | `"keep"` | fixture | un-inferrable |\n',
+    );
 
     try {
         return runSelfTest({
             gate: GATE,
-            minCases: 6,
-            minRejectCases: 5,
+            minCases: 11,
+            minRejectCases: 9,
             cases: [
                 {
                     name: 'a template whose every leaf is classified passes',
@@ -140,7 +159,7 @@ export function selfTest(): number {
                             seed(
                                 'unclassified',
                                 template,
-                                table('| `beta` | C | `"keep"` | fixture |\n') + counts(0, 0, 1, 1),
+                                table('| `beta` | C | `"keep"` | fixture | un-inferrable |\n') + counts(0, 0, 1, 1),
                             ),
                         ),
                 },
@@ -153,8 +172,9 @@ export function selfTest(): number {
                                 'stale-row',
                                 template,
                                 table(
-                                    '| `alpha.one` | B | `false` | fixture |\n| `beta` | C | `"keep"` | fixture |\n' +
-                                        '| `gamma.gone` | A | `1` | fixture |\n',
+                                    '| `alpha.one` | B | `false` | fixture | consent |\n' +
+                                        '| `beta` | C | `"keep"` | fixture | un-inferrable |\n' +
+                                        '| `gamma.gone` | A | `1` | fixture | policy |\n',
                                 ),
                             ),
                         ),
@@ -167,7 +187,90 @@ export function selfTest(): number {
                             seed(
                                 'bad-class',
                                 template,
-                                table('| `alpha.one` | D | `false` | fixture |\n| `beta` | C | `"keep"` | fixture |\n'),
+                                table(
+                                    '| `alpha.one` | D | `false` | fixture | consent |\n' +
+                                        '| `beta` | C | `"keep"` | fixture | un-inferrable |\n',
+                                ),
+                            ),
+                        ),
+                },
+                {
+                    name: 'a leaf with a class but no disposition is rejected',
+                    expect: 'reject',
+                    run: () =>
+                        run(
+                            seed(
+                                'no-disposition',
+                                template,
+                                table(
+                                    '| `alpha.one` | B | `false` | fixture | consent |\n' +
+                                        '| `beta` | C | `"keep"` | fixture |\n',
+                                    dispositions(0, 0, 1, 0, 2),
+                                ),
+                            ),
+                        ),
+                },
+                {
+                    name: 'a disposition outside the closed vocabulary is rejected',
+                    expect: 'reject',
+                    run: () =>
+                        run(
+                            seed(
+                                'bad-disposition',
+                                template,
+                                table(
+                                    '| `alpha.one` | B | `false` | fixture | consent |\n' +
+                                        '| `beta` | C | `"keep"` | fixture | obsolete |\n',
+                                    dispositions(0, 0, 1, 0, 2),
+                                ),
+                            ),
+                        ),
+                },
+                {
+                    name: 'a `derivable` row that names no replacement is rejected — the clause IS the falsifier',
+                    expect: 'reject',
+                    run: () =>
+                        run(
+                            seed(
+                                'derivable-without-replacement',
+                                template,
+                                table(
+                                    '| `alpha.one` | B | `false` | fixture | consent |\n' +
+                                        '| `beta` | C | `"keep"` | fixture | derivable |\n',
+                                    dispositions(1, 0, 1, 0, 2),
+                                ),
+                            ),
+                        ),
+                },
+                {
+                    name: 'a `derivable` row that names its replacement passes',
+                    expect: 'accept',
+                    run: () =>
+                        run(
+                            seed(
+                                'derivable-with-replacement',
+                                template,
+                                table(
+                                    '| `alpha.one` | B | `false` | fixture | consent |\n' +
+                                        '| `beta` | C | `"keep"` | fixture | derivable — the probe reads it |\n',
+                                    dispositions(1, 0, 1, 0, 2),
+                                ),
+                            ),
+                        ),
+                },
+                {
+                    name: 'a Dispositions table that disagrees with the rows is rejected',
+                    expect: 'reject',
+                    run: () =>
+                        run(
+                            seed(
+                                'bad-disposition-counts',
+                                template,
+                                table(
+                                    '| `alpha.one` | B | `false` | fixture | consent |\n' +
+                                        '| `beta` | C | `"keep"` | fixture | un-inferrable |\n',
+                                    dispositions(7, 7, 7, 7, 28),
+                                ),
                             ),
                         ),
                 },
@@ -191,8 +294,10 @@ export function selfTest(): number {
                             seed(
                                 'bad-counts',
                                 template,
-                                `# Fixture\n${counts(9, 9, 9, 27)}\n## The table\n\n| Key | Class | Default | Why |\n|---|---|---|---|\n` +
-                                    '| `alpha.one` | B | `false` | fixture |\n| `beta` | C | `"keep"` | fixture |\n',
+                                `# Fixture\n${counts(9, 9, 9, 27)}\n${dispositions(0, 1, 1, 0, 2)}\n` +
+                                    '## The table\n\n| Key | Class | Default | Why | Disposition |\n|---|---|---|---|---|\n' +
+                                    '| `alpha.one` | B | `false` | fixture | consent |\n' +
+                                    '| `beta` | C | `"keep"` | fixture | un-inferrable |\n',
                             ),
                         ),
                 },
@@ -329,6 +434,98 @@ function main(): number {
             continue;
         }
         ledger.complete(target);
+    }
+
+    // --- the disposition axis -------------------------------------------------
+    // Orthogonal to A/B/C: that answers who may WRITE a key, this answers whether
+    // the key should EXIST. Checked against the same leaf set, in the same gate,
+    // so a key with no disposition fails the mechanism that already counts it —
+    // rather than sitting in a second artefact that can drift from the template.
+    const dispositionTally: Record<SettingsDisposition, number> = {
+        derivable: 0,
+        'un-inferrable': 0,
+        consent: 0,
+        policy: 0,
+    };
+    for (const leaf of leaves) {
+        const row = rowByKey.get(leaf);
+        if (row === undefined) {
+            continue; // already reported as unclassified above
+        }
+        const label = dispositionOf(row.disposition);
+        if (label === null || label === '') {
+            findings.push(
+                `${CONTRACT_RELATIVE}:${String(row.line)}  \`${leaf}\` has no disposition — add one of ` +
+                    `${SETTINGS_DISPOSITIONS.join(' | ')}. A key with no disposition is the finding: ` +
+                    'nobody has said whether it should exist.',
+            );
+            continue;
+        }
+        if (!isSettingsDisposition(label)) {
+            findings.push(
+                `${CONTRACT_RELATIVE}:${String(row.line)}  \`${leaf}\` has disposition '${label}' — ` +
+                    `allowed: ${SETTINGS_DISPOSITIONS.join(' | ')}.`,
+            );
+            continue;
+        }
+        dispositionTally[label] += 1;
+        if (label === 'derivable' && replacementOf(row.disposition) === '') {
+            // The replacement clause is what makes `derivable` falsifiable. Without
+            // it the label degrades into a synonym for "inconvenient to keep", and
+            // the direction of this axis pushes every borderline row toward it.
+            findings.push(
+                `${CONTRACT_RELATIVE}:${String(row.line)}  \`${leaf}\` is \`derivable\` but names no ` +
+                    'replacement — write `derivable — <what decides instead>`. A derivable row that ' +
+                    'cannot name its replacement is reclassified, not deleted.',
+            );
+        }
+    }
+
+    // The anti-regrowth ratchet. `derivable` is a deletion queue, so its size is
+    // a debt count and may only fall: a NEW key classified `derivable` is a key
+    // that should not have been added, and it raises the number. The 56-day
+    // non-stagnation clause in the shared baseline mechanism is the other half —
+    // a queue that never drains is a direction nobody is walking.
+    //
+    // Deliberately scoped to the real repo root. Under `--root` (self-test
+    // fixtures) the baseline describes a different tree entirely, and judging a
+    // two-key fixture against this repository's surface would make every fixture
+    // report a loose ratchet.
+    if (_rootOverride(process.argv.slice(2)) === null) {
+        const verdict = checkRatchet({
+            gate: `${GATE}:derivable-surface`,
+            actual: dispositionTally.derivable,
+            repoRoot: REPO_ROOT,
+        });
+        if (!verdict.ok) {
+            findings.push(verdict.message);
+        } else if (verdict.status === 'improved' && !QUIET) {
+            process.stdout.write(`ℹ️  ${verdict.message}\n`);
+        }
+    }
+
+    const declaredDisposition = parseDeclaredDispositionCounts(contractText);
+    const dispositionExpected: Array<[string, number | null, number]> = [
+        ['derivable', declaredDisposition.derivable, dispositionTally.derivable],
+        ['un-inferrable', declaredDisposition['un-inferrable'], dispositionTally['un-inferrable']],
+        ['consent', declaredDisposition.consent, dispositionTally.consent],
+        ['policy', declaredDisposition.policy, dispositionTally.policy],
+        ['Total', declaredDisposition.total, leaves.length],
+    ];
+    for (const [label, stated, actual] of dispositionExpected) {
+        if (stated === null) {
+            findings.push(
+                `${CONTRACT_RELATIVE}  the Dispositions table has no '${label}' row — a published count ` +
+                    'with no row is a count nothing can check.',
+            );
+            continue;
+        }
+        if (stated !== actual) {
+            findings.push(
+                `${CONTRACT_RELATIVE}  Dispositions says ${label} = ${String(stated)}, the table holds ` +
+                    `${String(actual)} — a derived number beside a mechanism that can compute it.`,
+            );
+        }
     }
 
     const declared = parseDeclaredClassCounts(contractText);
