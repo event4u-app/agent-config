@@ -102,12 +102,12 @@ test_no_tty_exits_2() {
     local out rc
     out="$(setsid bash "$SCRIPT" </dev/null 2>&1 || true)"
     rc=$?
-    if echo "$out" | grep -q "controlling terminal"; then
+    if grep -q "controlling terminal" <<<"$out"; then
         pass "no-tty path prints 'controlling terminal' message"
     else
         fail "no-tty path missing expected message (got: $out)"
     fi
-    if echo "$out" | grep -q "/dev/tty not available"; then
+    if grep -q "/dev/tty not available" <<<"$out"; then
         pass "no-tty path mentions /dev/tty"
     else
         fail "no-tty path missing /dev/tty mention"

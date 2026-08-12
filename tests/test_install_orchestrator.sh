@@ -127,7 +127,7 @@ test_idempotent() {
 test_help_flag() {
     local out
     out="$(bash "$INSTALL" --help 2>&1)"
-    if echo "$out" | grep -q "Primary entry\|orchestrates\|install.sh\|install.py\|Orchestrates"; then
+    if grep -q "Primary entry\|orchestrates\|install.sh\|install.py\|Orchestrates" <<<"$out"; then
         pass "--help describes orchestrator"
     else
         fail "--help output missing orchestrator context"
@@ -158,10 +158,10 @@ test_bin_install_php_routes_through_orchestrator() {
 test_list_tools_prints_catalog() {
     local out
     out="$(bash "$INSTALL" --list-tools 2>&1)"
-    if echo "$out" | grep -q "claude-code" && \
-       echo "$out" | grep -q "cursor" && \
-       echo "$out" | grep -q "windsurf" && \
-       echo "$out" | grep -q "all"; then
+    if grep -q "claude-code" <<<"$out" && \
+       grep -q "cursor" <<<"$out" && \
+       grep -q "windsurf" <<<"$out" && \
+       grep -q "all" <<<"$out"; then
         pass "--list-tools prints catalog with known IDs"
     else
         fail "--list-tools missing catalog entries"
@@ -299,7 +299,7 @@ test_global_no_ui_flag_accepted() {
 test_global_no_ui_flag_documented_in_help() {
     local out
     out="$(bash "$INSTALL" --help 2>&1)"
-    if echo "$out" | grep -q -- "--no-ui"; then
+    if grep -q -- "--no-ui" <<<"$out"; then
         pass "--help documents --no-ui"
     else
         fail "--help output missing --no-ui"
