@@ -260,7 +260,12 @@ function runRunHarnessTs(outPath: string): Run {
     const r = spawnSync(TSX_BIN, [RUN_HARNESS_TS, QUESTION, outPath], {
         cwd: REPO_ROOT,
         encoding: 'utf8',
-        env: { ...process.env },
+        // `cmd_run` emits a real `post_run` quorum event, and the attendance
+        // rate is computed over exactly that population — a synthetic
+        // `{present: 0, total: 2}` row from a test run would be indistinguishable
+        // from a real degraded pass and cannot be deleted afterwards. The
+        // module's own documented kill switch keeps the sink clean.
+        env: { ...process.env, AGENT_CONFIG_NO_EVENTS_LOG: '1' },
     });
     return {
         status: r.status ?? -1,
@@ -598,15 +603,23 @@ describe('council_cli run — post-run quorum on stdout (injected failing member
         const ts = runRunHarnessTs(outRel);
         try {
 
-            // The banner the operator reads must carry the failure.
-            expect(ts.stdout, ts.stderr).toContain('council:quorum · 0/2 present, needed 1 — INCONCLUSIVE');
+            // The banner the operator reads must carry the failure, and must say
+            // WHICH reading it is — see the `_format_quorum_line` phase-tag test
+            // below for why the tag is load-bearing.
+            expect(ts.stdout, ts.stderr).toContain(
+                'council:quorum · after the run · 0/2 present, needed 1 — INCONCLUSIVE',
+            );
             expect(ts.stdout).toContain('DEGRADED');
-            // The pre-run reading must not be the LAST word on attendance. Asserting
-            // on the final quorum line rather than on absence of the string keeps the
-            // test honest if a future pre-run banner legitimately prints first.
+            // Exactly ONE quorum line on this path, and it is the post-run one.
+            // Stated as a fact rather than as a "last word" guard, because the
+            // pre-run banner is unreachable here BY CONSTRUCTION: `cmd_run` only
+            // populates `quorum_out` inside `build_members`, which an injected
+            // roster skips. This harness therefore cannot reproduce the
+            // two-contradictory-lines shape a real degraded run produces — that
+            // half is covered by the phase-tag unit test, not by this one.
             const quorumLines = ts.stdout.split('\n').filter((l) => l.includes('council:quorum ·'));
-            expect(quorumLines.length).toBeGreaterThan(0);
-            expect(quorumLines[quorumLines.length - 1]).toContain('0/2 present');
+            expect(quorumLines.length).toBe(1);
+            expect(quorumLines[0]).toContain('0/2 present');
 
             // …and the payload agrees, so the two surfaces cannot drift apart.
             const payload = JSON.parse(fs.readFileSync(out, 'utf8')) as {

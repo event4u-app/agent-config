@@ -777,7 +777,17 @@ function _postRunQuorum(
  * "attendance is telemetry, never a silent drop" applies to the estimate
  * preview too, not only to a completed pass.
  */
-function _format_quorum_line(q: QuorumResult): string {
+function _format_quorum_line(q: QuorumResult, phase?: QuorumEventPhase): string {
+    // The phase tag is not decoration. A degraded run prints attendance TWICE —
+    // the pre-run reading before the estimate table, the post-run reading after
+    // the consult — and the two disagree by construction: `2/2 present …
+    // concluded` then `0/2 present … INCONCLUSIVE`. Same prefix, opposite
+    // content, and until 2026-08-12 neither line said which was which, so an
+    // operator skimming (or anything grepping `council:quorum ·`) could take the
+    // stale one. The event log had solved this from the start with an explicit
+    // `phase` field; stdout had not. Optional, because the estimate path prints
+    // exactly one line and a tag there would claim a distinction it does not make.
+    const tag = phase === undefined ? '' : `${phase === 'pre_run' ? 'before the run' : 'after the run'} · `;
     const verdict = q.status === 'concluded' ? 'concluded' : 'INCONCLUSIVE — release gate holds';
     // Round 7 § 5.3 — a degraded pass says so. `1/2 present, needed 1 —
     // concluded` is literally true and reads as agreement; with a threshold of 1
@@ -786,7 +796,7 @@ function _format_quorum_line(q: QuorumResult): string {
     // what was missing is the word that stops a reader inferring convergence.
     const degraded =
         q.present < q.total ? `  ⚠️  DEGRADED — ${String(q.total - q.present)} member(s) did not answer; this is not convergence.` : '';
-    return `council:quorum · ${q.present}/${q.total} present, needed ${q.threshold} — ${verdict}.${degraded}`;
+    return `council:quorum · ${tag}${q.present}/${q.total} present, needed ${q.threshold} — ${verdict}.${degraded}`;
 }
 
 function build_members(settings: Dict, opts: BuildMembersOptions = {}): ExternalAIClient[] {
@@ -2621,7 +2631,9 @@ function cmd_run(
         _stdout(format_install_hints(skipped) + '\n');
     }
     if (quorum_out.result !== null) {
-        _stdout(_format_quorum_line(quorum_out.result) + '\n');
+        // Tagged, because `cmd_run` prints attendance a SECOND time after the
+        // consult and on a degraded pass the two readings contradict each other.
+        _stdout(_format_quorum_line(quorum_out.result, 'pre_run') + '\n');
     }
     _stdout(
         format_estimate_table(billable, estimates, {
@@ -2789,7 +2801,7 @@ function cmd_run(
     // (`_format_quorum_line`) reads the same way for an unchanged reading, and a
     // conditional print would make the absence of a line mean two different
     // things.
-    _stdout(_format_quorum_line(post_run.quorum) + '\n');
+    _stdout(_format_quorum_line(post_run.quorum, 'post_run') + '\n');
     // Phase 4.1 — verdict → handoff envelope. Same tally `render()` computes
     // internally for the Vote Tally block (mirrored here, not imported from
     // there, because `render()` re-derives it from the SAVED payload on a
@@ -4037,5 +4049,10 @@ export {
     _parse_siblings_overrides,
     _synthesize_ai_council_block,
     _postRunQuorum,
+    // Exported for the phase-tag test only. The two-contradictory-banners shape
+    // it guards cannot be produced through `cmd_run` with an injected roster
+    // (the pre-run print is gated on `build_members` having populated
+    // `quorum_out`), and constructing a real roster would spend money.
+    _format_quorum_line,
     CouncilDisabledError,
 };

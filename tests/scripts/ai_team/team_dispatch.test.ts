@@ -464,7 +464,13 @@ describe('run_team_review — envelope (happy parse)', () => {
         expect(argv.join(' ')).toContain('exec');
         expect(argv).not.toContain('--system');
         expect(argv).toContain('-');
-        expect(calls[0]?.stdin ?? '').toContain('findings');
+        // BOTH halves, separately. A single `toContain('findings')` is satisfied
+        // by the system prompt alone, so a regression that dropped the review
+        // bundle from the payload would still pass — the exact shape of
+        // passing-for-the-wrong-reason that let the `--system` argv survive.
+        const stdin = calls[0]?.stdin ?? '';
+        expect(stdin).toContain(TEAM_REVIEW_SYSTEM_PROMPT);
+        expect(stdin).toContain(`HEAD ${FAKE_HEAD}`);
     });
 
     it('clean review (no findings) → DONE', () => {

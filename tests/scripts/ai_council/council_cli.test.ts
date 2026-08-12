@@ -51,6 +51,7 @@ import {
     _parse_siblings_overrides,
     _synthesize_ai_council_block,
     _postRunQuorum,
+    _format_quorum_line,
 } from '../../../src/scripts/council_cli.js';
 
 
@@ -1096,5 +1097,47 @@ describe('cmd_debate', () => {
         }
         expect(rc).toBe(0);
         expect(errSpy.join('')).not.toContain('refused');
+    });
+});
+
+// ── the quorum banner names its phase ─────────────────────────────────
+//
+// A degraded `cmd_run` prints attendance twice and the two readings
+// CONTRADICT each other: the pre-run line is derived from the constructed
+// roster, the post-run line from who actually answered. Until 2026-08-12
+// neither carried a phase, so `council:quorum · 2/2 present … concluded`
+// and `council:quorum · 0/2 present … INCONCLUSIVE` were distinguishable
+// only by reading order — and the first one is the wrong one.
+//
+// A unit test rather than an end-to-end one on purpose: the pre-run print is
+// gated on `build_members` having populated `quorum_out`, which an injected
+// roster skips, so the two-line shape is unreachable from any no-spend harness.
+describe('_format_quorum_line — phase tag', () => {
+    const concluded: QuorumResult = { status: 'concluded', threshold: 1, total: 2, present: 2 };
+    const inconclusive: QuorumResult = { status: 'inconclusive', threshold: 1, total: 2, present: 0 };
+
+    it('the two readings of one degraded run are distinguishable without reading order', () => {
+        const pre = _format_quorum_line(concluded, 'pre_run');
+        const post = _format_quorum_line(inconclusive, 'post_run');
+        expect(pre).toContain('before the run');
+        expect(post).toContain('after the run');
+        // The property that actually matters: neither line can be mistaken for
+        // the other by a reader or by a grep on the shared prefix.
+        expect(pre).not.toEqual(post);
+        expect(pre.includes('after the run')).toBe(false);
+        expect(post.includes('before the run')).toBe(false);
+    });
+
+    it('an untagged line stays byte-identical to the pre-phase format', () => {
+        // The estimate path prints exactly one attendance line, so a phase tag
+        // there would claim a distinction it does not make.
+        expect(_format_quorum_line(concluded)).toBe('council:quorum · 2/2 present, needed 1 — concluded.');
+    });
+
+    it('the post-run tag rides alongside the DEGRADED warning, not instead of it', () => {
+        const post = _format_quorum_line(inconclusive, 'post_run');
+        expect(post).toContain('after the run');
+        expect(post).toContain('INCONCLUSIVE — release gate holds');
+        expect(post).toContain('DEGRADED — 2 member(s) did not answer');
     });
 });
