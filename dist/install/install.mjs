@@ -10446,8 +10446,8 @@ function ruleFileArrives(sourcePath, scope) {
   if (!sourcePath.endsWith(".md")) {
     return true;
   }
-  const basename5 = path12.basename(sourcePath);
-  if (COMPAT_ALWAYS_EXCLUDED.includes(basename5)) {
+  const basename6 = path12.basename(sourcePath);
+  if (COMPAT_ALWAYS_EXCLUDED.includes(basename6)) {
     return false;
   }
   return rule_in_scope(sourcePath, scope.workspaces, scope.packs, scope.roles ?? null);
@@ -17245,11 +17245,16 @@ function main(argv = null, options = {}) {
   }
   return _apply(project, out, err);
 }
-var _bundled = true;
+var _inForeignBundle = !(typeof __AGENT_CONFIG_CLI_DELEGATE__ !== "undefined" && __AGENT_CONFIG_CLI_DELEGATE__);
 var _HERE = fileURLToPath4(import.meta.url);
 function _isCliEntry() {
   if (process2.argv[1] === void 0) {
     return false;
+  }
+  if (typeof __AGENT_CONFIG_CLI_DELEGATE__ !== "undefined" && __AGENT_CONFIG_CLI_DELEGATE__) {
+    if (path15.basename(process2.argv[1], ".js") === "cmd_migrate") {
+      return true;
+    }
   }
   const argvUrl = pathToFileURL(path15.resolve(process2.argv[1])).href;
   if (import.meta.url === argvUrl) {
@@ -17263,7 +17268,7 @@ function _isCliEntry() {
     return false;
   }
 }
-if (!_bundled && (_isCliEntry() || process2.argv[1] === _HERE)) {
+if (!_inForeignBundle && (_isCliEntry() || process2.argv[1] === _HERE)) {
   try {
     process2.exitCode = main(process2.argv.slice(2));
   } catch (exc) {
