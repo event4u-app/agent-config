@@ -1,10 +1,10 @@
 # Findings: dispatch-safety-phase2
-<!-- completion-review: v1 | reviewed: 2026-08-11 | scope: ed16195c17d866b83d1a098a9b26c953a8630ade0d242c4bbb964affce5bca26 | diff: d6905af2385948a7bb44dbdb3a9025834b91afb2 | reviewer: r2-fresh-subagent-dispatch-safety-phase2 | prompt_hash: 7ef1311d5c593a331fe0b2c1bdd7cd45f3aa880fd4ac366e5325eb99498bd848 -->
+<!-- completion-review: v1 | reviewed: 2026-08-11 | scope: 9cb92e7c31402df64ae51ef4409f3d7a66d64a6eb222ad3f8b3a1ebaef805fa5 | diff: d6905af2385948a7bb44dbdb3a9025834b91afb2 | reviewer: r2-fresh-subagent-dispatch-safety-phase2 | prompt_hash: 7ef1311d5c593a331fe0b2c1bdd7cd45f3aa880fd4ac366e5325eb99498bd848 -->
 
 <!-- context-manifest: v1
 inputs:
   diff_sha: d6905af2385948a7bb44dbdb3a9025834b91afb2
-  scope_hash: ed16195c17d866b83d1a098a9b26c953a8630ade0d242c4bbb964affce5bca26
+  scope_hash: 9cb92e7c31402df64ae51ef4409f3d7a66d64a6eb222ad3f8b3a1ebaef805fa5
   roadmap: agents/roadmaps/road-to-inbox-harvest-2026-08-b-dispatch-safety.md
   roadmap_hash: 0ec1dc41ecf2206ca1b5a585668d2fd282bf67e373103338592fa2d4b8e75a72
   ac_hash: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
