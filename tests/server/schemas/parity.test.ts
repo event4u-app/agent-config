@@ -190,8 +190,6 @@ const DELETED_2026_08_12: readonly (readonly [string, string, Json])[] = [
 ] as const;
 
 describe('deleted settings keys cannot be honoured again', () => {
-    const template = loadTemplate();
-
     for (const [section, leaf, hostileValue] of DELETED_2026_08_12) {
         const dotted = `${section}.${leaf}`;
 
