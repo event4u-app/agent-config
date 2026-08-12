@@ -2,14 +2,14 @@
 
 > Auto-generated — do not edit. Regenerate with `task roadmap-progress` or by running the `update_roadmap_progress` script for your install; rewritten on every roadmap create / execute / completion change (timestamp lives in git history).
 >
-> 30 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **42** open blockers, **10** need you → `agent-config gates`
+> 31 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **45** open blockers, **10** need you → `agent-config gates`
 
 ## Overall
 
-**269 / 391 steps done · 69%**
+**277 / 396 steps done · 70%**
 
 ```text
-████████████████████████████░░░░░░░░░░░░   69%
+████████████████████████████░░░░░░░░░░░░   70%
 ```
 
 ## ✅ Completed — pending archival
@@ -46,14 +46,15 @@ These roadmaps are **complete** (`count_open == 0`, `count_deferred == 0`) but s
 | 20 | [road-to-rule-coherence-followup.md](roadmaps/road-to-rule-coherence-followup.md) | 5 | 9 | 8 | 1 | 0 | 0 | [2](#blockers-road-to-rule-coherence-followup) | █░░░░░░░░░ 11% |
 | 21 | [road-to-scale-history-bench-run.md](roadmaps/road-to-scale-history-bench-run.md) | 1 | 2 | 2 | 0 | 0 | 0 | [1](#blockers-road-to-scale-history-bench-run) | ░░░░░░░░░░ 0% |
 | 22 | [road-to-skill-description-measurement.md](roadmaps/road-to-skill-description-measurement.md) | 1 | 4 | 4 | 0 | 0 | 0 | [1](#blockers-road-to-skill-description-measurement) | ░░░░░░░░░░ 0% |
-| 23 | [road-to-skill-ecosystem-gate-integrity.md](roadmaps/road-to-skill-ecosystem-gate-integrity.md) | 5 | 43 | 3 | 40 | 0 | 0 | [1](#blockers-road-to-skill-ecosystem-gate-integrity) | █████████░ 93% |
-| 24 | [road-to-solution-minimalism.md](roadmaps/road-to-solution-minimalism.md) | 4 | 36 | 10 | 25 | 0 | 1 | [1](#blockers-road-to-solution-minimalism) | ███████░░░ 71% |
-| 25 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 6 | 3 | 0 | 0 | [1](#blockers-road-to-subagent-value-realization-followup) | ███░░░░░░░ 33% |
-| 26 | [road-to-surface-consolidation.md](roadmaps/road-to-surface-consolidation.md) | 3 | 14 | 1 | 12 | 1 | 0 | [2](#blockers-road-to-surface-consolidation) | █████████░ 92% |
-| 27 | [road-to-tier-removal.md](roadmaps/road-to-tier-removal.md) | 4 | 8 | 2 | 6 | 0 | 0 | [1](#blockers-road-to-tier-removal) | ████████░░ 75% |
-| 28 | [road-to-ui-track-integrity-followup.md](roadmaps/road-to-ui-track-integrity-followup.md) | 1 | 10 | 10 | 0 | 0 | 0 | [2](#blockers-road-to-ui-track-integrity-followup) | ░░░░░░░░░░ 0% |
-| 29 | [road-to-worktree-hygiene.md](roadmaps/road-to-worktree-hygiene.md) | 1 | 9 | 2 | 7 | 0 | 0 | [1](#blockers-road-to-worktree-hygiene) | ████████░░ 78% |
-| 30 | [road-to-zero-settings.md](roadmaps/road-to-zero-settings.md) | 4 | 9 | 9 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+| 23 | [road-to-skill-ecosystem-executable-payloads.md](roadmaps/road-to-skill-ecosystem-executable-payloads.md) | 6 | 21 | 1 | 4 | 15 | 1 | [2](#blockers-road-to-skill-ecosystem-executable-payloads) | ████████░░ 80% |
+| 24 | [road-to-skill-ecosystem-gate-integrity.md](roadmaps/road-to-skill-ecosystem-gate-integrity.md) | 5 | 43 | 3 | 40 | 0 | 0 | [1](#blockers-road-to-skill-ecosystem-gate-integrity) | █████████░ 93% |
+| 25 | [road-to-solution-minimalism.md](roadmaps/road-to-solution-minimalism.md) | 4 | 36 | 10 | 25 | 0 | 1 | [1](#blockers-road-to-solution-minimalism) | ███████░░░ 71% |
+| 26 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 6 | 3 | 0 | 0 | [1](#blockers-road-to-subagent-value-realization-followup) | ███░░░░░░░ 33% |
+| 27 | [road-to-surface-consolidation.md](roadmaps/road-to-surface-consolidation.md) | 3 | 14 | 1 | 12 | 1 | 0 | [2](#blockers-road-to-surface-consolidation) | █████████░ 92% |
+| 28 | [road-to-tier-removal.md](roadmaps/road-to-tier-removal.md) | 4 | 8 | 2 | 6 | 0 | 0 | [1](#blockers-road-to-tier-removal) | ████████░░ 75% |
+| 29 | [road-to-ui-track-integrity-followup.md](roadmaps/road-to-ui-track-integrity-followup.md) | 1 | 10 | 10 | 0 | 0 | 0 | [2](#blockers-road-to-ui-track-integrity-followup) | ░░░░░░░░░░ 0% |
+| 30 | [road-to-worktree-hygiene.md](roadmaps/road-to-worktree-hygiene.md) | 1 | 9 | 2 | 7 | 0 | 0 | [1](#blockers-road-to-worktree-hygiene) | ████████░░ 78% |
+| 31 | [road-to-zero-settings.md](roadmaps/road-to-zero-settings.md) | 4 | 9 | 5 | 4 | 0 | 0 | [1](#blockers-road-to-zero-settings) | ████░░░░░░ 44% |
 
 ---
 
@@ -971,14 +972,34 @@ _1 blocker resolved._
 
 ### [road-to-zero-settings.md](roadmaps/road-to-zero-settings.md)
 
-**Road to zero settings — delete the flags whose answer the situation already carries** — 0 / 9 done (0%)
+**Road to zero settings — delete the flags whose answer the situation already carries** — 4 / 9 done (44%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
-| 1 | classify all 140, with the number published | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
+| 1 | classify all 140, with the number published | ✅ done | 0 | 3 | 0 | 0 | 100% |
 | 2 | delete the free tier | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
 | 3 | the keys that need a mechanism first | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
-| 4 | state the floor and stop | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
+| 4 | state the floor and stop | 🟡 in progress | 1 | 1 | 0 | 0 | 50% |
+
+<a id="blockers-road-to-zero-settings"></a>
+**Blockers**
+
+- **consent-key-redesign-verdict** (owner: maintainer) — blocks step 3.2 only. Phases 1 and 4.2 are closed; 2.1/2.2/3.1/4.1 are unblocked by it.
+  - **What to do:**
+    3.2 asks for a keep-vs-redesign verdict on the three class-B
+    consent keys against *"does the action need authorising at all?"*. That is a
+    product call about what the package may do to a user — not a classification —
+    and the roadmap's own `verify:` demands a recorded verdict rather than a
+    deferral, so it cannot be closed by an agent choosing one.
+    - **Why it is not council-resolved:** it is a judgement call, so the
+    action-vs-judgement split would normally route it to the AI council. The
+    council was **configured and both members failed** on 2026-08-12 —
+    `anthropic` exit 1, `openai` exit 2 (`unexpected argument '--system'` from the
+    `codex exec` transport). The run also printed `2/2 present, needed 1 —
+    concluded` while its own JSON recorded `present: 0, status: inconclusive`,
+    which is worth repairing separately: a transport failure that reports as a
+    quorum is worse than one that reports as an outage.
+  - **Resolved when:** each of the three keys carries a recorded verdict (keep, or redesign the action), in this roadmap or an ADR.
 
 ---
 
