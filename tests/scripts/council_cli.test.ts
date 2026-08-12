@@ -58,6 +58,7 @@ let QUESTION: string; // a free-form prompt artefact
 let RESP_PLAIN: string; // a responses JSON with no consensus block
 let HARNESS_TS: string;
 let QUOTA_HARNESS_TS: string;
+let RUN_HARNESS_TS: string;
 
 const RESP_PLAIN_PAYLOAD = {
     schema_version: 1,
@@ -191,6 +192,83 @@ function runQuotaHarnessTs(): Run {
     };
 }
 
+// Injected-member RUN harness — the same no-spend injection the estimate
+// harness uses, driven through `cmd_run --confirm` so the post-consult code
+// path executes. Every member answers with an errored `CouncilResponse`, which
+// is the shape a real transport failure produces (2026-08-12: `--system`
+// rejected by `codex exec`, exit 2). argv: <question-file> <output-json>.
+function runHarness(root: string): string {
+    return `import { cmd_run } from ${JSON.stringify(path.join(root, 'src/scripts/council_cli.ts'))};
+import { ExternalAIClient, CouncilResponse } from ${JSON.stringify(
+        path.join(root, 'src/scripts/ai_council/clients.ts'),
+    )};
+import { load_prices } from ${JSON.stringify(path.join(root, 'src/scripts/ai_council/pricing.ts'))};
+
+class Failing extends ExternalAIClient {
+    constructor(n, m) {
+        super();
+        this.name = n;
+        this.model = m;
+        this.billable = false;
+    }
+    ask() {
+        return new CouncilResponse({ provider: this.name, model: this.model, text: '', error: 'exit_2' });
+    }
+}
+
+const members = [new Failing('anthropic', 'claude-sonnet-4-5'), new Failing('openai', 'gpt-4o')];
+const settings = {
+    ai_council: {
+        enabled: true,
+        members: { anthropic: { enabled: true }, openai: { enabled: true } },
+    },
+};
+const args = {
+    cmd: 'run',
+    question: process.argv[2],
+    input_mode: 'prompt',
+    prompt_mode: null,
+    max_tokens: null,
+    mode_override: null,
+    model: null,
+    siblings: null,
+    original_ask: '',
+    peer_review: false,
+    output: process.argv[3],
+    confirm: true,
+    rounds: 1,
+    depth: 'standard',
+    invocation: 'agent',
+    proceed_anyway: false,
+    single: false,
+    prose_synthesis: null,
+    auto_continue: false,
+    continue_as_debate: null,
+    responses: null,
+    include_member_arguments: null,
+    low_impact_stats: false,
+    reset: null,
+    log: null,
+    window_days: 7,
+    debate: false,
+};
+process.exitCode = cmd_run(args, { settings, members, table: load_prices() });
+`;
+}
+
+function runRunHarnessTs(outPath: string): Run {
+    const r = spawnSync(TSX_BIN, [RUN_HARNESS_TS, QUESTION, outPath], {
+        cwd: REPO_ROOT,
+        encoding: 'utf8',
+        env: { ...process.env },
+    });
+    return {
+        status: r.status ?? -1,
+        stdout: r.stdout ?? '',
+        stderr: r.stderr ?? '',
+    };
+}
+
 beforeAll(() => {
     TMP = fs.mkdtempSync(path.join(os.tmpdir(), 'council-cli-'));
     QUESTION = path.join(TMP, 'q.txt');
@@ -201,6 +279,8 @@ beforeAll(() => {
     fs.writeFileSync(HARNESS_TS, tsHarness(REPO_ROOT));
     QUOTA_HARNESS_TS = path.join(TMP, 'quota_harness.ts');
     fs.writeFileSync(QUOTA_HARNESS_TS, quotaHarness(REPO_ROOT));
+    RUN_HARNESS_TS = path.join(TMP, 'run_harness.ts');
+    fs.writeFileSync(RUN_HARNESS_TS, runHarness(REPO_ROOT));
 });
 
 afterAll(() => {
@@ -497,5 +577,47 @@ describe('council_cli estimate cost-output — intent (injected members)', () =>
         expect(ts.stdout).toContain('Round 1 of 2:');
         expect(ts.stdout).toContain('Round 2 of 2:');
         expect(ts.stdout).toMatch(/PROJECTED TOTAL \(2 rounds\):\s+\$\d+\.\d{4}/);
+    });
+});
+
+// ── run: the post-run quorum reaches STDOUT, not only the payload ──
+//
+// Measured 2026-08-12 on a real pass where both members errored: the payload
+// recorded `{status: "inconclusive", present: 0}` and named both members
+// absent — honest — while stdout carried only the pre-run `2/2 present …
+// concluded` banner and then `wrote …json`. The record was never the problem;
+// the operator's stream was.
+describe('council_cli run — post-run quorum on stdout (injected failing members)', () => {
+    it('every member errors → stdout says INCONCLUSIVE and never claims 2/2 present', () => {
+        // `--output` is validated against the canonical responses dir before the
+        // first call, so the harness has to write there; the file is removed
+        // again below. The directory is gitignored, so nothing tracked is touched.
+        const outRel = 'agents/runtime/council/responses/__test-post-run-quorum.json';
+        const out = path.join(REPO_ROOT, outRel);
+        fs.mkdirSync(path.dirname(out), { recursive: true });
+        const ts = runRunHarnessTs(outRel);
+        try {
+
+            // The banner the operator reads must carry the failure.
+            expect(ts.stdout, ts.stderr).toContain('council:quorum · 0/2 present, needed 1 — INCONCLUSIVE');
+            expect(ts.stdout).toContain('DEGRADED');
+            // The pre-run reading must not be the LAST word on attendance. Asserting
+            // on the final quorum line rather than on absence of the string keeps the
+            // test honest if a future pre-run banner legitimately prints first.
+            const quorumLines = ts.stdout.split('\n').filter((l) => l.includes('council:quorum ·'));
+            expect(quorumLines.length).toBeGreaterThan(0);
+            expect(quorumLines[quorumLines.length - 1]).toContain('0/2 present');
+
+            // …and the payload agrees, so the two surfaces cannot drift apart.
+            const payload = JSON.parse(fs.readFileSync(out, 'utf8')) as {
+                quorum: { status: string; present: number; total: number };
+                absent_members: { member: string }[];
+            };
+            expect(payload.quorum.status).toBe('inconclusive');
+            expect(payload.quorum.present).toBe(0);
+            expect(payload.absent_members.map((a) => a.member).sort()).toEqual(['anthropic', 'openai']);
+        } finally {
+            fs.rmSync(out, { force: true });
+        }
     });
 });

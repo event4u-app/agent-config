@@ -2777,6 +2777,19 @@ function cmd_run(
         lens: question.mode,
         invocation: String(_getattr(args, 'invocation', 'agent')),
     });
+    // The post-run reading also has to REACH THE OPERATOR, not just the event
+    // log and the payload. Measured 2026-08-12: a pass where BOTH members
+    // errored printed `2/2 present, needed 1 — concluded` — the pre-run banner
+    // from the estimate block above — then `wrote …json`, and nothing else. The
+    // payload said `{status: "inconclusive", present: 0}` and the absent list
+    // named both, so the record was honest the whole time; the only place the
+    // failure was invisible was the stream the operator actually reads. Printing
+    // it unconditionally, rather than only when it differs from the pre-run
+    // value, is deliberate: "attendance is telemetry, never a silent drop"
+    // (`_format_quorum_line`) reads the same way for an unchanged reading, and a
+    // conditional print would make the absence of a line mean two different
+    // things.
+    _stdout(_format_quorum_line(post_run.quorum) + '\n');
     // Phase 4.1 — verdict → handoff envelope. Same tally `render()` computes
     // internally for the Vote Tally block (mirrored here, not imported from
     // there, because `render()` re-derives it from the SAVED payload on a
