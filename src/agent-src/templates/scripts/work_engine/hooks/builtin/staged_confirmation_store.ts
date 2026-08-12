@@ -47,18 +47,18 @@ function resolvedDir(root: string): string {
 }
 
 /**
- * A token is a filename before it is an identifier, so it is checked before it
- * reaches `path.join`.
+ * A token is a filename before it is an identifier, so every site that turns
+ * one into a path checks it first — the read verbs, the write verb, and the
+ * record guard itself.
  *
- * `deriveToken` returns a 16-char sha256 prefix, so nothing this module STAGES
- * can traverse. The read side is the exposed one: `readPending`,
- * `claimConfirmation` and `declineConfirmation` each take a caller-supplied
- * token, and `path.join(pendingDir(root), '../x.json')` resolves outside
- * `pending/` — verified against this file before the guard existed. No shipped
- * caller passes an operator string today, which is what keeps it latent rather
- * than live; the moment one does, the module's only destructive verb is a
- * rename of an arbitrary path. Checking the shape the module itself mints costs
- * one regex and removes the class.
+ * `deriveToken` returns a 16-char sha256 prefix, so a token this module mints
+ * is always safe. Everything else is a way in: `readPending`,
+ * `claimConfirmation` and `declineConfirmation` take a caller-supplied token;
+ * `putPending` joins `stage.token` from a caller-built record (verified: it
+ * wrote outside the store root); and `isStage` accepted any string, so a record
+ * written by something else carried its token into the prune path. All four are
+ * guarded, and `path.join(pendingDir(root), '../x.json')` resolving outside
+ * `pending/` is what makes that necessary.
  */
 const _TOKEN_RE = /^[0-9a-f]{8,64}$/;
 
@@ -83,6 +83,7 @@ function isStage(v: unknown): v is StagedAction {
     const s = v as Partial<StagedAction>;
     return (
         typeof s.token === 'string' &&
+        isSafeToken(s.token) &&
         typeof s.action === 'string' &&
         typeof s.object === 'string' &&
         typeof s.staged_at === 'string' &&
@@ -104,8 +105,21 @@ function writeStageFile(file: string, stage: StagedAction): void {
     fs.writeFileSync(file, `${JSON.stringify(stage, null, 2)}\n`, 'utf-8');
 }
 
-/** Persist a freshly staged action. Returns the path written. */
+/**
+ * Persist a freshly staged action. Returns the path written.
+ *
+ * Throws on an unsafe token rather than returning: a caller reaching here with
+ * one built the record itself and has a bug, and `writeStageFile` creates
+ * directories, so a silent refusal would look like a successful stage nothing
+ * can ever confirm.
+ */
 export function putPending(root: string, stage: StagedAction): string {
+    if (!isSafeToken(stage.token)) {
+        throw new Error(
+            `staged-confirmation: refusing to write under an unsafe token '${stage.token}' — ` +
+                'a token is a filename and must match the deriveToken shape',
+        );
+    }
     const file = path.join(pendingDir(root), `${stage.token}.json`);
     writeStageFile(file, stage);
     return file;
@@ -259,13 +273,28 @@ export function declineConfirmation(
  * skipping the sweep changes what is *listed*, never what may execute.
  */
 export function pruneExpired(root: string, now: number): number {
+    let names: string[];
+    try {
+        names = fs.readdirSync(pendingDir(root));
+    } catch {
+        return 0;
+    }
     let moved = 0;
-    for (const { stage, status } of listPending(root, now)) {
-        if (status !== 'expired') {
+    for (const name of names.sort()) {
+        if (!name.endsWith('.json')) {
             continue;
         }
-        const from = path.join(pendingDir(root), `${stage.token}.json`);
-        const to = path.join(resolvedDir(root), `${stage.token}.json`);
+        // Move the file that was ENUMERATED, never a path rebuilt from the
+        // record's `token` field. The two disagree whenever a filename and its
+        // token do — a record written by anything but `putPending` — and the
+        // rebuilt path then hits ENOENT, gets swallowed by the catch below, and
+        // the stage sits in `pending/` forever while `moved` under-reports it.
+        const from = path.join(pendingDir(root), name);
+        const stage = readStageFile(from);
+        if (stage === null || stageStatus(stage, now) !== 'expired') {
+            continue;
+        }
+        const to = path.join(resolvedDir(root), name);
         fs.mkdirSync(resolvedDir(root), { recursive: true });
         try {
             fs.renameSync(from, to);
