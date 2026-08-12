@@ -166,33 +166,25 @@ lean_projection:
 
 # --- Telegraph condensation (output-side) ---
 #
-# speak_scope: off | prose_only | aggressive   (QUOTE the value — bare `off` is a
-#                                              YAML 1.1 boolean, not the string)
-#
-# `off` is the shipped default per docs/adrs/telegraph/0001-default-off-until-bench.md
-# (Status: accepted) and docs/contracts/condensation-default-kill-criterion.md.
+# `speak: false` is the shipped default per
+# docs/adrs/telegraph/0001-default-off-until-bench.md (Status: accepted) and
+# docs/contracts/condensation-default-kill-criterion.md.
 # Reason it is off: the only output-side bench (telegraph-v1, n=10, 2026-05-16)
 # measured median vs_terse -9.27% (API counts) / -5.47% (exact cl100k_base
 # re-analysis) — telegraph emits MORE tokens than a plain "be terse" instruction.
 # The kill-criterion table therefore lands on "criterion not met — defer" and the
 # telemetry multiplier stays suspended (0.9155 < 1.0).
 #
-# NOTE: `speak_scope: off` disables the BEHAVIOUR but not the COST — the projector
-# gates this rule on `telegraph.speak`, never on speak_scope, so under
-# `lean_projection.mode: eager-all` the ~982-token body still ships every session.
-# Set `speak: false` for zero-cost dormancy.
-#
 # Stated explicitly here because until 2026-07-29 this default existed only in
-# prose — and two prose sources disagreed (the rule said prose_only, the accepted
-# ADR said off). Do not flip without a passing output-side bench.
+# prose — and two prose sources disagreed. Do not flip without a passing
+# output-side bench.
 telegraph:
   # speak: false = DORMANT (the shipped default per docs/adrs/telegraph/0002).
   # The rule is omitted from dist/router.json entirely, so its ~982-token body
-  # never ships. This — not speak_scope — is the lever that stops the cost:
-  # compile_router gates on `speak` and never reads speak_scope.
+  # never ships. This is the only lever that stops the cost: compile_router
+  # gates on `speak` and on nothing else.
   # Set true only after an output-side bench clears the kill-criterion bar.
   speak: false
-  speak_scope: "off"
 
 # --- Token-rich skills governance ---
 #
@@ -419,14 +411,6 @@ chat_history:
   #   per_phase = one entry per workflow phase
   #   per_tool  = one entry per tool call (most verbose)
   frequency: __CHAT_HISTORY_FREQUENCY__
-
-  # Max file size in KB before overflow handling kicks in (integer)
-  max_size_kb: __CHAT_HISTORY_MAX_SIZE_KB__
-
-  # Overflow behavior
-  #   rotate   = drop oldest entries to stay under max_size_kb
-  #   condense = mark for summarization on the next agent turn
-  on_overflow: __CHAT_HISTORY_ON_OVERFLOW__
 
   # Per-entry-type text-length caps (chars). 0 = verbatim, no slice.
   # N > 0 = collapse whitespace, slice to N chars, append " … [+K chars]"
@@ -655,13 +639,6 @@ quality:
   # above, (c) user-invoked runs. Run-end reports must say "quality
   # gates delegated to remote CI", never claim an unrun pipeline passed.
   local_auto_run: false
-
-  # Wait for remote CI to finish on the PR / pipeline (true, false)
-  # true  = after push, poll GitHub check-runs / pipeline status and
-  #         report green / red before handing back
-  # false = push and hand back immediately; user inspects CI
-  #         themselves (default — saves agent runtime and tokens)
-  wait_for_remote_ci: false
 
 # --- Design fidelity ---
 #
@@ -1365,7 +1342,6 @@ explain:
 # rule refuses every legal-review-prep skill until `acknowledged: true`.
 legal_review_prep:
   acknowledged: false
-  consented_at: ""
   # Gate legal work-product behind a multi-model council / deep-research pass
   # (defense-in-depth + audit trail; fail-closed). Off lets single-model legal
   # output through — not recommended for this high-risk pack.

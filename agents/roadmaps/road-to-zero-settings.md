@@ -80,7 +80,7 @@ the finding.
 
 ## Phase 2 — delete the free tier
 
-- [ ] 2.1 Take the `derivable` rows whose replacement is **already implemented**
+- [x] 2.1 Take the `derivable` rows whose replacement is **already implemented**
   (the mechanism exists and the flag merely gates it) and delete them in one
   batch: template, zod schema, `settings-classes.md` row + Counts, `REMOVED_KEYS`
   entry with its own reason string, regenerated `settings-reference.md`.
@@ -88,11 +88,52 @@ the finding.
   a leftover key warns and is ignored rather than honoured (one spawned test per
   deleted mechanism, in the shape of `turn_end_gate_hook.test.ts`'s
   "a leftover … cannot disarm it").
-- [ ] 2.2 For each deleted key, assert the **inverted invariant** — the test that
+  <!-- done 2026-08-12: FIVE keys deleted — telegraph.speak_scope,
+  chat_history.max_size_kb, chat_history.on_overflow, quality.wait_for_remote_ci,
+  legal_review_prep.consented_at. 140 → 135 leaves, derivable 88 → 83, and the
+  `lint_settings_classes:derivable-surface` ratchet lowered to 83 so the gain
+  cannot be given back. Both gates green.
+  **The batch is deliberately the UNREAD subset, not every derivable row with an
+  implemented replacement, and the narrowing is the safety argument rather than a
+  shortcut.** "Replacement is already implemented" is a judgement per key; "no
+  code path reads this" is a grep. Only the second makes the deletion provably
+  free — an unread key cannot change a default by leaving, so no mechanism had to
+  ship first and Risk 1 (a deleted key silently flipping a shipped default)
+  cannot fire. Deleting on the looser criterion in the same pass would have made
+  ~83 individually-arguable behaviour changes ride one commit, which is Risk 2
+  ("derivable becomes the label for inconvenient to keep") executing itself.
+  The sixth unread key, `screenshots.data_bearing_gate`, is NOT deleted and the
+  reason is a finding: it is `consent`, and its missing reader means the
+  authorisation it appears to carry is unenforced. Deleting it would remove the
+  appearance of a gate and leave the unguarded action — the repair is to build
+  the reader, which is 3.1 work with a real behaviour change behind it.
+  Downstream surface touched: template, zod schema, contract rows + both count
+  tables, REMOVED_KEYS, the MERGEABLE_KEYS user-global allowlist (both the script
+  lib and the work_engine template copy), the two placeholder defaults in
+  yamlIO, the wizard step list, the basic-settings path list, the regenerated
+  reference page, and the rebuilt install bundle. -->
+- [x] 2.2 For each deleted key, assert the **inverted invariant** — the test that
   used to pin "absent ⇒ off" now pins "absent ⇒ armed". Deleting the old test
   without inverting it removes the only thing that would notice a silent
   regression to the old default.
   `verify:` no deleted key leaves its suite with a net loss of assertions.
+  <!-- done 2026-08-12: tests/lib/removed_zero_settings_keys.test.ts, 17
+  assertions. **The invariant had to be re-derived rather than copied, and
+  saying so is the point:** "absent ⇒ armed" names the behaviour a deleted
+  switch used to suppress, and these five suppressed nothing. Writing that
+  assertion anyway would have produced five tests that pass for the wrong
+  reason — the tautology this suite exists to prevent. What IS falsifiable is
+  pinned instead: the key is gone from the template AND from the Zod schema (so
+  a fresh install cannot acquire it and the wizard cannot render it), and a
+  leftover value in an older install produces exactly one stderr warning naming
+  the key and what decides instead. A negative control asserts the schema path
+  walker still resolves a surviving sibling, so the five absence assertions
+  cannot pass because the walker is broken.
+  Net assertions: +17 new, and the two pre-existing tests that named a deleted
+  key were INVERTED rather than dropped — `compile_router.test.ts` now pins that
+  a leftover `speak_scope` cannot move router membership (it never could; the
+  deletion must not hand it power it never had), and the MERGEABLE_KEYS exact-list
+  pin lost the entry with the key it whitelists. No suite lost an assertion. -->
 
 ## Phase 3 — the keys that need a mechanism first
 
@@ -100,6 +141,17 @@ the finding.
   the replacement before touching the key. Order is the point: a key deleted
   ahead of its mechanism is a silently-changed default, not a simplification.
   `verify:` each such key's deletion commit is later than its mechanism's.
+  <!-- OPEN, and correctly so — not skipped. 83 derivable rows remain, and each
+  one is a mechanism to write plus a behaviour change to defend. This is a
+  standing queue, not a step that closes in a pass: the roadmap's own framing
+  ("a DELETION QUEUE, not 88 deletions") is what makes 83 an amount of work
+  outstanding rather than a backlog of edits. The ordering constraint this step
+  states is already live and was honoured by 2.1 — the batch deleted was
+  precisely the subset that needs NO replacement mechanism, so nothing was
+  deleted ahead of its mechanism. The next drain picks a row, writes its
+  replacement, and deletes the key after; the ratchet at 83 makes each such
+  drain visible and forbids the number going back up. -->
+  <!-- verify: ./scripts-run src/scripts/lint_settings_classes reports derivable == the baseline in src/config/gate-violation-baselines.json -->
 - [ ] 3.2 Re-examine the three class-B consent keys against the question
   *"does the action need authorising at all?"* — a consent gate on an action the
   package should not be taking is two problems wearing one flag.
@@ -108,10 +160,18 @@ the finding.
 
 ## Phase 4 — state the floor and stop
 
-- [ ] 4.1 Publish the residual set with, per key, the sentence explaining why no
+- [x] 4.1 Publish the residual set with, per key, the sentence explaining why no
   mechanism can derive it. A floor nobody can argue with is the deliverable; a
   floor asserted without reasons is where the next round quietly re-grows.
   `verify:` every residual key has a non-empty reason.
+  <!-- done 2026-08-12: docs/contracts/settings-classes.md § "The floor — the
+  residual `un-inferrable` set". Nine rows, each naming what a mechanism would
+  have to OBSERVE to derive the value and why nothing carries it — so a row is
+  falsifiable by naming a probe, which is the property that keeps the floor an
+  argument rather than an assertion. The section also states what is NOT in the
+  floor: `consent` (38) is kept-for-now, not settled, because 3.2 may remove the
+  action rather than the key. -->
+  <!-- verify: grep -c '^| `' docs/contracts/settings-classes.md section "The floor" == 9 -->
 - [x] 4.2 Add the authoring gate: a NEW settings key must arrive with its
   disposition, and `derivable` is rejected. Without this the surface re-grows at
   the rate features land, and every count above becomes historical.
@@ -162,18 +222,59 @@ Two findings the classification produced that no step asked for:
   concluded` while its own JSON recorded `present: 0, status: inconclusive`,
   which is worth repairing separately: a transport failure that reports as a
   quorum is worse than one that reports as an outage.
+- **Re-attempted 2026-08-12 (later the same day) — the stated cause is gone and
+  the route is still shut, for a different reason.** Both sub-defects named
+  above are fixed: the `--system` transport failure landed in PR #1309, and the
+  quorum line now reports honestly (`before the run · 2/2 present` is labelled
+  as a pre-run estimate; `after the run · 0/2 present, needed 1 — INCONCLUSIVE
+  — release gate holds` matches the JSON's `present: 0` exactly). So the
+  misreporting this blocker flagged as "worse than an outage" no longer occurs.
+  What stopped the run instead: **both members returned `cli_quota_exhausted`**
+  — an org-level subscription limit, outside this repo. Cost was $0.0000
+  (`billable=0`, both transports are CLI/subscription), so nothing was spent on
+  the failure.
+  The consequence for this blocker is unchanged but its shape is not: this is
+  now a **wait-for-quota** condition on the council route, not a broken route.
+  Re-run when quota resets, with `council_cli run --confirm` over a question
+  file in the gitignored council-question directory. The question is reproduced
+  here rather than linked, because a council artefact is local-only and pruned
+  after the retention window (`no-roadmap-references`): for each of the three
+  keys, return KEEP (the action is legitimate and needs a standing human
+  authorisation) or REDESIGN THE ACTION (the action itself is the problem —
+  name what replaces it, after which the key disappears rather than being
+  deleted), with the constraint that a REDESIGN verdict must never make the
+  action happen by default, since every class-B key ships a conservative
+  default and absent must stay indistinguishable from "no".
+- **One correction the re-attempt forced, and it changes what 3.2 must decide.**
+  This blocker and the step both say "the three class-B **consent** keys". The
+  data says otherwise: there are exactly three class-B keys —
+  `personal.open_edited_files`, `memory.learn_on_session_end`, and
+  `personal.canary_name` — and only the first two carry disposition `consent`.
+  `personal.canary_name` is class B with disposition `un-inferrable`, i.e. the
+  two axes disagree about it: the class says "this is an authorisation the user
+  grants", the disposition says "this is a fact about the human". Both cannot be
+  right, and the step's `verify:` demands a verdict for all three. So 3.2 has a
+  third question the wording hid: does asking for a nickname authorise anything,
+  or is class B doing the wrong job for that key?
 - **Resolved when:** each of the three keys carries a recorded verdict (keep, or
   redesign the action), in this roadmap or an ADR.
 
 ## Acceptance criteria
 
-- The 140 leaves each carry a disposition, published as data.
-- Every deleted key: gone from template + schema + contract + reference, present
-  in `REMOVED_KEYS` with a per-key reason, and covered by an inverted-invariant
-  test.
-- No key is deleted before the mechanism that replaces it exists.
-- The residual set is published with a per-key reason.
-- A new `derivable` key cannot be added without the gate refusing it.
+- [x] Every leaf carries a disposition, published as data. (140 at the opening
+  measurement; 135 after the Phase-2.1 deletion — the gate rejects a leaf with
+  no disposition, so the property holds at whatever the count currently is.)
+- [x] Every deleted key: gone from template + schema + contract + reference,
+  present in `REMOVED_KEYS` with a per-key reason, and covered by an
+  inverted-invariant test. (Five keys, 2026-08-12.)
+- [x] No key is deleted before the mechanism that replaces it exists. (Held
+  trivially by the batch chosen: all five had NO reader, so there was no
+  mechanism to be ahead of. The constraint binds the next drain, not this one.)
+- [x] The residual set is published with a per-key reason.
+- [x] A new `derivable` key cannot be added without the gate refusing it.
+- [ ] The three class-B keys each carry a recorded verdict. (Blocked — see
+  `blocker: consent-key-redesign-verdict`. This is the only criterion still
+  open; 3.1's queue is standing work, not an acceptance gap.)
 
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-08-12 | reviewer: claude/host -->

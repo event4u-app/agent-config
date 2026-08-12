@@ -9936,7 +9936,6 @@ var MERGEABLE_KEYS = [
   "personal.bot_icon",
   "personal.pr_comment_bot_icon",
   "personal.autonomy",
-  "telegraph.speak_scope",
   // Knowledge-card global cross-project sharing is a USER-GLOBAL setting
   // (ADR-100 / road-to-structure-grounding-v2). Whitelisted so the
   // ~/.event4u/agent-config/agent-settings.yml values are honoured.
@@ -10219,7 +10218,12 @@ var REMOVED_KEYS = /* @__PURE__ */ new Map([
   ["hooks.turn_end_gate.enabled", "the turn-end gate is always armed"],
   ["hooks.turn_end_gate.promissory", "the turn-end gate is always armed"],
   ["hooks.turn_end_gate.language", "the turn-end gate is always armed"],
-  ["hooks.turn_end_gate.verification", "the turn-end gate is always armed"]
+  ["hooks.turn_end_gate.verification", "the turn-end gate is always armed"],
+  ["telegraph.speak_scope", "the rule body states its own scope; compile_router gates on telegraph.speak alone"],
+  ["chat_history.max_size_kb", "the rotate command takes --max-kb from argv; session-count pruning bounds the file"],
+  ["chat_history.on_overflow", "the overflow mode comes from the rotate command --mode argv"],
+  ["quality.wait_for_remote_ci", "whether to poll follows from the push plus a detectable remote pipeline"],
+  ["legal_review_prep.consented_at", "the provenance sidecar settings:set writes and consentVerdict reads"]
 ]);
 var _warnedRemovedKeys = /* @__PURE__ */ new Set();
 function _readDottedSettingsPath(root, dotted) {
@@ -14580,7 +14584,6 @@ var userType = external_exports.enum(["", "consultant", "creator", "developer", 
 var profileId = external_exports.enum(["developer", "content_creator", "founder", "agency", "finance", "ops"]);
 var accessStyle = external_exports.enum(["getters_setters", "get_attribute", "magic_properties"]);
 var chatFreq = external_exports.enum(["per_turn", "per_phase", "per_tool"]);
-var chatOverflow = external_exports.enum(["rotate", "condense"]);
 var qualityCadence = external_exports.enum(["end_of_roadmap", "per_phase", "per_step"]);
 var regenCadence = external_exports.enum(["per_step", "every_5_steps", "phase_boundary"]);
 var worktreeMode = external_exports.enum(["off", "on", "ask"]);
@@ -14727,12 +14730,6 @@ var settingsSchema = external_exports.object({
     frequency: chatFreq.default("per_turn").describe(
       "How often the chat-history writer flushes to disk. per_turn = after every user / agent exchange (default, lowest data loss on crash). per_phase = at phase boundaries (cheaper I/O). per_tool = after every tool call (highest fidelity, noisiest log)."
     ),
-    max_size_kb: external_exports.number().int().min(0).default(2048).describe(
-      "Maximum size (KB) of the active chat-history file before chat_history.on_overflow kicks in. Set 0 to disable rotation / condensation entirely (file grows forever)."
-    ),
-    on_overflow: chatOverflow.default("rotate").describe(
-      "What happens when chat_history.max_size_kb is hit. rotate = move the current log aside and start fresh (default). condense = telegraph-condense the oldest entries in place to keep recent context."
-    ),
     text_limits: external_exports.object({
       user: external_exports.number().int().min(0).default(0).describe(
         "Per-message character cap for user inputs in the chat-history log. 0 = log verbatim (default). Raise above 0 only if your prompts contain large pasted artefacts you do not want stored."
@@ -14781,9 +14778,6 @@ var settingsSchema = external_exports.object({
   quality: external_exports.object({
     local_auto_run: external_exports.boolean().default(false).describe(
       "Run quality tools (linters, type-checks, formatters) and the local test suite autonomously after edits. Off by default \u2014 the agent never runs quality tools proactively and does not ask; the user runs them manually (e.g. /quality-fix) and remote CI is the authoritative gate. The agent only runs a quality tool on an explicit ask, a concrete CI failure, or the new-gate carve-out. Turn on to restore autonomous pipeline runs."
-    ),
-    wait_for_remote_ci: external_exports.boolean().default(false).describe(
-      "After pushing a branch, poll the remote CI provider (GitHub Actions, GitLab CI) and surface failures inline. Off by default \u2014 useful when local CI does not cover everything the remote pipeline runs."
     )
   }),
   design: external_exports.object({
@@ -14809,12 +14803,9 @@ var settingsSchema = external_exports.object({
   }).default({ identity_allowlist: [], forbid_terminal_capture: true, data_bearing_gate: "on" }),
   telegraph: external_exports.object({
     speak: external_exports.boolean().default(false).describe(
-      "Whether the telegraph-speak rule ships at all. false (default) = DORMANT: compile_router omits the rule from dist/router.json entirely, so its body never reaches a host. This \u2014 not speak_scope \u2014 is the lever that stops the cost. Set true only after an output-side bench clears the kill-criterion bar (docs/adrs/telegraph/0002)."
-    ),
-    speak_scope: external_exports.enum(["off", "reply", "all"]).default("off").describe(
-      "Where telegraph condensation applies WHEN speak is true. off (default) = agent reply prose is exempt. compile_router never reads this key: with speak false the rule does not ship, so this setting has no effect on its own. Quote the value in YAML \u2014 bare `off` parses as a boolean under YAML 1.1 and is rejected."
+      "Whether the telegraph-speak rule ships at all. false (default) = DORMANT: compile_router omits the rule from dist/router.json entirely, so its body never reaches a host. This is the only lever that stops the cost. Set true only after an output-side bench clears the kill-criterion bar (docs/adrs/telegraph/0002)."
     )
-  }).default({ speak: false, speak_scope: "off" }),
+  }).default({ speak: false }),
   tokens: external_exports.object({
     rich_skills: richSkillsMode.default("on").describe(
       "Whether skills marked token_budget_class: rich may load in full (exempt from telegraph-speak + thin-projector trimming), consumed by the token-budget-discipline rule. on = allowed (default); off = fall back to standard condensed behavior; ask = surface an estimated token delta (tokens, not dollars) and ask once per session before loading."
@@ -15124,13 +15115,10 @@ var settingsSchema = external_exports.object({
     acknowledged: external_exports.boolean().default(false).describe(
       "I understand the legal-review-prep pack provides templates and general information ONLY \u2014 it is NOT legal advice, creates no attorney-client relationship, and never replaces a licensed lawyer. Individual cases require an attorney. The pack stays inactive until this is checked."
     ),
-    consented_at: external_exports.string().default("").describe(
-      "ISO timestamp recorded when the legal-review-prep acknowledgment was given. Set automatically by the setup wizard; leave empty otherwise."
-    ),
     require_council: external_exports.boolean().default(true).describe(
       "Gate legal work-product behind a multi-model AI-council / deep-research pass (defense-in-depth: documented multi-stage review + audit trail; fail-closed when no council is configured). Leave on for the safest posture. Turning it off lets single-model legal output through \u2014 not recommended for a high-risk pack."
     )
-  }).default({ acknowledged: false, consented_at: "", require_council: true })
+  }).default({ acknowledged: false, require_council: true })
 });
 
 // node_modules/zod-to-json-schema/dist/esm/Options.js

@@ -919,14 +919,14 @@ _1 blocker resolved._
 
 ### [road-to-zero-settings.md](roadmaps/road-to-zero-settings.md)
 
-**Road to zero settings — delete the flags whose answer the situation already carries** — 4 / 9 done (44%)
+**Road to zero settings — delete the flags whose answer the situation already carries** — 12 / 15 done (80%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
 | 1 | classify all 140, with the number published | ✅ done | 0 | 3 | 0 | 0 | 100% |
-| 2 | delete the free tier | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
+| 2 | delete the free tier | ✅ done | 0 | 2 | 0 | 0 | 100% |
 | 3 | the keys that need a mechanism first | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
-| 4 | state the floor and stop | 🟡 in progress | 1 | 1 | 0 | 0 | 50% |
+| 4 | state the floor and stop | 🟡 in progress | 1 | 7 | 0 | 0 | 88% |
 
 <a id="blockers-road-to-zero-settings"></a>
 **Blockers**
@@ -946,6 +946,40 @@ _1 blocker resolved._
     concluded` while its own JSON recorded `present: 0, status: inconclusive`,
     which is worth repairing separately: a transport failure that reports as a
     quorum is worse than one that reports as an outage.
+    - **Re-attempted 2026-08-12 (later the same day) — the stated cause is gone and
+    the route is still shut, for a different reason.** Both sub-defects named
+    above are fixed: the `--system` transport failure landed in PR #1309, and the
+    quorum line now reports honestly (`before the run · 2/2 present` is labelled
+    as a pre-run estimate; `after the run · 0/2 present, needed 1 — INCONCLUSIVE
+    — release gate holds` matches the JSON's `present: 0` exactly). So the
+    misreporting this blocker flagged as "worse than an outage" no longer occurs.
+    What stopped the run instead: **both members returned `cli_quota_exhausted`**
+    — an org-level subscription limit, outside this repo. Cost was $0.0000
+    (`billable=0`, both transports are CLI/subscription), so nothing was spent on
+    the failure.
+    The consequence for this blocker is unchanged but its shape is not: this is
+    now a **wait-for-quota** condition on the council route, not a broken route.
+    Re-run when quota resets, with `council_cli run --confirm` over a question
+    file in the gitignored council-question directory. The question is reproduced
+    here rather than linked, because a council artefact is local-only and pruned
+    after the retention window (`no-roadmap-references`): for each of the three
+    keys, return KEEP (the action is legitimate and needs a standing human
+    authorisation) or REDESIGN THE ACTION (the action itself is the problem —
+    name what replaces it, after which the key disappears rather than being
+    deleted), with the constraint that a REDESIGN verdict must never make the
+    action happen by default, since every class-B key ships a conservative
+    default and absent must stay indistinguishable from "no".
+    - **One correction the re-attempt forced, and it changes what 3.2 must decide.**
+    This blocker and the step both say "the three class-B **consent** keys". The
+    data says otherwise: there are exactly three class-B keys —
+    `personal.open_edited_files`, `memory.learn_on_session_end`, and
+    `personal.canary_name` — and only the first two carry disposition `consent`.
+    `personal.canary_name` is class B with disposition `un-inferrable`, i.e. the
+    two axes disagree about it: the class says "this is an authorisation the user
+    grants", the disposition says "this is a fact about the human". Both cannot be
+    right, and the step's `verify:` demands a verdict for all three. So 3.2 has a
+    third question the wording hid: does asking for a nickname authorise anything,
+    or is class B doing the wrong job for that key?
   - **Resolved when:** each of the three keys carries a recorded verdict (keep, or redesign the action), in this roadmap or an ADR.
 
 ---

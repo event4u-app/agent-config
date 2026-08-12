@@ -313,6 +313,11 @@ describe('MERGEABLE_KEYS', () => {
         // frozen at the PRE-migration spellings (`ide`, `personal.bot_icon`),
         // so it whitelisted names the template does not have while filtering out
         // the names it does.
+        //
+        // `telegraph.speak_scope` left the list when the key was deleted
+        // (road-to-zero-settings Phase 2.1). Whitelisting a key that no longer
+        // exists would carry a user-global value into a tree nothing reads, so
+        // the entry has to go with the key rather than outlive it.
         expect(ags.MERGEABLE_KEYS).toEqual([
             'name',
             'ide',
@@ -322,7 +327,6 @@ describe('MERGEABLE_KEYS', () => {
             'personal.bot_icon',
             'personal.pr_comment_bot_icon',
             'personal.autonomy',
-            'telegraph.speak_scope',
             'knowledge.global_sharing.enabled',
             'knowledge.global_sharing.allowed_tiers',
             'knowledge.global_sharing.redaction.enabled',
