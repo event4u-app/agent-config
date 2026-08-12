@@ -330,6 +330,97 @@ Entry-shape contract: [`docs/contracts/CHANGELOG-conventions.md`](docs/contracts
 > that forces a new era split (`# Era: 9.35.x`, etc.) — see
 > [`docs/contracts/CHANGELOG-conventions.md § Era splits`](docs/contracts/CHANGELOG-conventions.md).
 
+## [9.35.0](https://github.com/event4u-app/agent-config/compare/9.34.0...9.35.0) (2026-08-12)
+
+### Release highlights
+
+<!-- Curated head: fill before merge, keep it under 10 lines, and leave `_none_` where it is genuinely the answer. The generated log below is unchanged. -->
+- **Behaviour changes:** _auto-derived, rewrite before merge:_ rule/schema diffs, breaking commits or removed public surface in af968b5, 6d3c9f7.
+- **Default changes + migration:** _none_
+- **Security and correctness:** _none_
+- **Honest nulls:** _none_
+- **Known limitations:** _none_
+
+### Features
+
+* **leakage-allowlist:** validate the exemptions before scanning, retire position keys ([97d2c29](https://github.com/event4u-app/agent-config/commit/97d2c29ba763af06c45c5e4a4aebbed7fb531561))
+* **sessions:** refuse a claim a peer holds, and report the branch axis ([39cb3b4](https://github.com/event4u-app/agent-config/commit/39cb3b4f2e6d3c0602e5544b7079f242f5a7cd9f))
+* **council:** record the ADR-224 solo floor without enforcing it ([be09d0f](https://github.com/event4u-app/agent-config/commit/be09d0fa8f75e03b3d767f225d67cda53dd36ee8))
+* **turn-end-gate:** refuse a turn that edited a file and verified nothing ([647eca9](https://github.com/event4u-app/agent-config/commit/647eca9830a6ea9b6597a3404f37aac2fe41360d))
+* **gates:** enumerate staged confirmations behind gates --pending ([9cccf4e](https://github.com/event4u-app/agent-config/commit/9cccf4eb789f68dcc67bbf8534824212ea507845))
+* **work-engine:** exactly-once confirmed execution for a staged action ([8588e54](https://github.com/event4u-app/agent-config/commit/8588e54377062126df888b42f02155ad9e28c3b5))
+* **schemas:** add requires_confirmation to the skill and command contracts ([af968b5](https://github.com/event4u-app/agent-config/commit/af968b533a72c2358897fabcfe61bfb1baa7dc87))
+* **cli:** hooks:status --pending enumerates staged confirmations ([442bde3](https://github.com/event4u-app/agent-config/commit/442bde3bb0b047ca85d8b0e5dcb973af4343209c))
+* **work-engine:** exactly-once confirmation store plus a decision-gate seam ([9fe068c](https://github.com/event4u-app/agent-config/commit/9fe068c96a698c1d30ae74d65545b9fa301e72a3))
+* **schemas:** declare requires_confirmation on skills and commands ([6d3c9f7](https://github.com/event4u-app/agent-config/commit/6d3c9f73ccc224517a81effb5f9874f388e140ee))
+
+### Bug Fixes
+
+* **tests:** a matched grep must not fail the assertion — echo | grep -q under pipefail ([e7352cc](https://github.com/event4u-app/agent-config/commit/e7352ccedbd9cd996220db0293faf6d42a67529e))
+* **leakage-allowlist:** close the seven R2 findings, including two on this PR ([c859249](https://github.com/event4u-app/agent-config/commit/c8592492f32d6c5072eb361fde9081457855d5a7))
+* **sessions:** drop the ROADMAP_CLAIM_REL import that lost its last reference ([0d6a1c0](https://github.com/event4u-app/agent-config/commit/0d6a1c0e4670a30f7f00475d7463b986f8fa697b))
+* **session-register:** work in the PR review — path containment, token-boundary match, claim lifetime ([8e108ca](https://github.com/event4u-app/agent-config/commit/8e108ca07bae79a6058608a4bfd4b316e8d12e31))
+* **testing-anti-patterns:** close the R2 findings on the new anti-pattern ([67b747e](https://github.com/event4u-app/agent-config/commit/67b747e95bfdbf2026f5e8286a960045eb864568))
+* **session-register:** all 15 R2 findings, three of them the same shape as the bug ([871c00a](https://github.com/event4u-app/agent-config/commit/871c00a6275ed0ecf6bc3a9ea2783aa134388ec5))
+* **session-register:** key the roadmap claim on the session, and reject a stale slug ([64a9ce7](https://github.com/event4u-app/agent-config/commit/64a9ce71ad4a410fdcbed361fb8a2829c4a306ac))
+* **session-register:** compare the roadmap, not the branch name ([e338113](https://github.com/event4u-app/agent-config/commit/e338113b0adcb8d5ccb4239478bb9f2033cbc2e4))
+* **staged-confirmation:** close the round-2 findings on the hardening itself ([fa47ef6](https://github.com/event4u-app/agent-config/commit/fa47ef6253b4ae1d1612db972ed39c856ee29314))
+* **staged-confirmation:** sound the type guard and refuse a traversing token ([75dbdb3](https://github.com/event4u-app/agent-config/commit/75dbdb35fce020568fbeba978f14b521599aee67))
+* **test:** stop pipefail reporting a matched grep as a failure ([29916d1](https://github.com/event4u-app/agent-config/commit/29916d1e96e6118d9a15e84cc6eeac6de3516705))
+* **council:** record min_present on the quorum line, schema v3 to v4 ([53fe036](https://github.com/event4u-app/agent-config/commit/53fe0362b2d403455b6f7eb4e66952b1dd42e161))
+* **cli:** refuse hooks:status --pending --strict instead of exiting 0 ([7e752a9](https://github.com/event4u-app/agent-config/commit/7e752a9d6da83b7c73d97cb2996fbc7d465caf4c))
+* **confirmation:** close R2 findings 1-5 and 7 in the store and the seam ([42c6f5b](https://github.com/event4u-app/agent-config/commit/42c6f5b5b4e9f2c5835dbbf14567a6944bab13dc))
+* **council:** judge the shadow floor against the configured roster ([9cde092](https://github.com/event4u-app/agent-config/commit/9cde092cf6c745c55d9468ebb4480ffb2a11259a))
+* three CI reds — a raw NUL in a source, and a settings key declared once ([b128645](https://github.com/event4u-app/agent-config/commit/b128645e8aa29e1b8ccbab31fd3b5509e73da0da))
+
+### Documentation
+
+* **review:** re-bind the review artefact after the pipefail fix ([d4b23e1](https://github.com/event4u-app/agent-config/commit/d4b23e1c9f2620778564d81c7e0c3180e3b60eb8))
+* **review:** re-bind the review artefact after merging main ([3fc625f](https://github.com/event4u-app/agent-config/commit/3fc625f8b5d02320f62af217f7805cf85c95e91d))
+* **review:** re-bind the completion-review artefact to the fixed scope ([0fc9e82](https://github.com/event4u-app/agent-config/commit/0fc9e822c2f863216f7e721f471b070d50718157))
+* **review:** record the R2 findings before any fix ([9c66161](https://github.com/event4u-app/agent-config/commit/9c66161c76484a856b1293918074bcf387683d9b))
+* **testing-anti-patterns:** the negative test that passes for the wrong reason ([8fb3f84](https://github.com/event4u-app/agent-config/commit/8fb3f84a7a9c009a53dd383ac8a86bfe00de4fe6))
+* state the collision that cost a PR, and the two axes that catch it ([60c0df8](https://github.com/event4u-app/agent-config/commit/60c0df808af87a748643d1fbfe2310a9a08f2c25))
+* **review:** record the R2 completion-review findings before fixing them ([35570a5](https://github.com/event4u-app/agent-config/commit/35570a5df0be0cd402f8cc9ed3e5f5cf817a02d1))
+* **roadmap:** close and archive the solo-floor roadmap ([128b2cd](https://github.com/event4u-app/agent-config/commit/128b2cddbadf12825bb220cc2aef261976ccb023))
+* **adr:** answer ADR-224 three open questions in an amendment ([ff2362e](https://github.com/event4u-app/agent-config/commit/ff2362e1971dadd3b547fbfeadf2650dbb3a4c3f))
+
+### Refactoring
+
+* **leakage-allowlist:** key 35 exemptions on content, drop 3 that were dead ([de96358](https://github.com/event4u-app/agent-config/commit/de96358ddb309be1d4ffa4035d3b8e55e8e08458))
+
+### Tests
+
+* **session-register:** pin all five failure modes, each with the case that was silent ([7f35c3b](https://github.com/event4u-app/agent-config/commit/7f35c3bce8118d3112217af6d20dabdae487b301))
+* **schemas:** validate the command surface instead of reading its shape ([5b75e64](https://github.com/event4u-app/agent-config/commit/5b75e64cc6f988212aabaaa84e82ebb4940681e0))
+
+### Build
+
+* refresh dist/install/install.mjs for the new settings key ([a4a99ed](https://github.com/event4u-app/agent-config/commit/a4a99edd6132f92d6e975ccba3261939964c015b))
+
+### Chores
+
+* **review:** re-bind the artefact and mark all seven findings fixed ([fb6283f](https://github.com/event4u-app/agent-config/commit/fb6283fa2011650986c89eb514e0be80d2ffd9c0))
+* **memory:** drop three docblock claims about the removed agent-memory path ([307a355](https://github.com/event4u-app/agent-config/commit/307a3550fce6e81dfeb42b0124e276b762da9d66))
+* **review:** record seven R2 findings before fixing them ([c86bf3d](https://github.com/event4u-app/agent-config/commit/c86bf3daa3e3281416c9ce426fe1560084dbb1b7))
+* **mcp:** drop the agent-memory declaration ADR-094 left behind ([4283a8e](https://github.com/event4u-app/agent-config/commit/4283a8efad4ee9ed721404d3a68aff0b367ad690))
+* **review:** re-bind the artefact and mark all three findings fixed ([d2a0c54](https://github.com/event4u-app/agent-config/commit/d2a0c544c80a5e20f0cd7b7d338cbf17684b7c87))
+* **review:** record the R2 findings on the anti-pattern addition ([b382dd1](https://github.com/event4u-app/agent-config/commit/b382dd1bfe1b4c3a1301358eb667692e5bc606d0))
+* **lint:** re-anchor the leakage allowlist after the inserted paragraph ([8bef27e](https://github.com/event4u-app/agent-config/commit/8bef27e8adae4e742350970323232981d8b499d0))
+* **dist:** project the testing-anti-patterns addition ([c6fcd4a](https://github.com/event4u-app/agent-config/commit/c6fcd4ae50fbd6caaa7cc3d7b3fcf8751283815f))
+* **review:** re-bind round 2 and mark its three findings fixed ([40e110c](https://github.com/event4u-app/agent-config/commit/40e110c7203b121b0e15f6ad5de0217efb1d90c8))
+* **review:** record the R2 round-2 findings before fixing them ([0e477f3](https://github.com/event4u-app/agent-config/commit/0e477f357071e4bc2dc69786ce4e24c1ebf50e75))
+* **review:** re-bind the R2 artefact after merging main ([756b226](https://github.com/event4u-app/agent-config/commit/756b226de64ec1a581338b07954a2e4e948b758f))
+* **roadmap:** regenerate the dashboard after the main merge ([ba9a0ad](https://github.com/event4u-app/agent-config/commit/ba9a0ade70f40447b6eb3a43736b32376bad56e1))
+* **review:** re-bind the R2 artefact and mark all eight findings fixed ([081ffff](https://github.com/event4u-app/agent-config/commit/081ffffbee9d0c9d28e380e148ce29f27aa5d793))
+* **review:** record the R2 completion review for dispatch-safety Phase 2 ([661947d](https://github.com/event4u-app/agent-config/commit/661947def61068d05c832146723366fd5abda225))
+* **config:** register shadow_floor_fire_rate as the fifth attendance metric ([70abe5c](https://github.com/event4u-app/agent-config/commit/70abe5c0118085fadd01a2eec14433814bf405c5))
+* **roadmap:** close dispatch-safety 2.1-2.3 and 4.3, regenerate the dashboard ([bb8dd69](https://github.com/event4u-app/agent-config/commit/bb8dd69b31893ea235e3159ef48b5180e3385b6d))
+* **dist:** project the confirmation module and the gate seam ([d6905af](https://github.com/event4u-app/agent-config/commit/d6905af2385948a7bb44dbdb3a9025834b91afb2))
+* **roadmap:** close dispatch-safety Phase 2, record the 4.3 severity probe ([be0f893](https://github.com/event4u-app/agent-config/commit/be0f893e57001ca8a3a8c4c4a21538f37266f410))
+
+Tests: 13213 (+145 since 9.34.0)
+
 ## [9.34.0](https://github.com/event4u-app/agent-config/compare/9.33.0...9.34.0) (2026-08-11)
 
 ### Release highlights
