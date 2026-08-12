@@ -59,8 +59,8 @@ source:
 - **D2 — runtime requirements are unstructured.** The only environment field is
   `compatibility`: free text, `maxLength: 500`
   (`skill.schema.json:31`), used by exactly **2** SKILL.md files
-  (`docx-authoring`, `pdf-tools`). No `requires`, `bins`, `env`, or
-  `harness_compat` key exists anywhere in the schema, so `cmd_doctor.ts` and
+  (`docx-authoring`, `pdf-tools`). No structured runtime key — `bins`, `env`, or
+  `harness_compat` — exists anywhere in the schema, so `cmd_doctor.ts` and
   `cmd_preflight.ts` — both present in `src/scripts/_cli/` — have nothing
   structured to check.
 - **D3 — no per-skill output contract or self-diagnosis.** Zero skills reference
@@ -84,7 +84,7 @@ The source is kept as evidence, not as instructions. Four claims did not survive
 |---|---|---|
 | "`triggers.json`, 103 skills" | **never-true** | 68, at HEAD **and** at the source's own drafting SHA. The path is `src/skills/<id>/evals/triggers.json`, not `<id>/triggers.json` — an unanchored count also picks up the `dist/agent-src/` projection and doubles it. |
 | "No harness compares two revisions … with a judge" (as a bare gap) | **true, but incomplete** | A large `bench_ab_*` family exists (`bench_ab_run`, `_diff`, `_v2_run`, …). It measures **package impact** on a with/without variant axis, not per-skill revision output. The gap is real; the infrastructure to graft onto is already there, so Phase 4 extends rather than builds. |
-| "Backfill mandatory for the 52 skills declaring `execution:`" | **over-scoped** | Only **9** declare `handler: shell`; 21 declare `handler: internal` (no external dependency by definition) and 22 carry no `handler` key at all. A mandate over 52 would demand `requires` from skills that require nothing. Phase 1 narrows to the `shell\|node\|php` set. |
+| "Backfill mandatory for the 52 skills declaring `execution:`" | **over-scoped** | Only **9** declare `handler: shell`; 21 declare `handler: internal` (no external dependency by definition) and 22 carry no `handler` key at all. A mandate over 52 would demand a declaration from skills that require nothing. Phase 1 narrows to the `shell\|node\|php` set that also declares a `command:`. |
 | Phase 5 trigger-density sweep, "measured by `lint_trigger_precision.ts` deltas" | **parked — measures the wrong thing** | `docs/contracts/rule-router.md:27` states NO HOST AGENT PERFORMS A RUNTIME LOOKUP against the router. A lint delta over trigger keywords would move a number in a file nothing reads at runtime, and could not demonstrate an activation change. Parked with the reason rather than dropped. |
 
 ### The prior that governs Phase 2, written in rather than discovered later
@@ -107,7 +107,7 @@ conversion, not after.
 | Mechanism from the sources | Verdict | Where it lands |
 |---|---|---|
 | Thin-manual SKILL.md + deterministic script payload | adopt (pattern) | Phase 2, gated |
-| Structured `requires.bins` / `requires.env` / `primary_env` | adapt — native schema, not a vendor namespace | Phase 1 |
+| Structured `requires.bins` / `requires.env` / `primary_env` | adapt — native schema under `runtime_requires`, not a vendor namespace and not the reserved `requires` key | Phase 1 |
 | `harnesses:` portability list | adapt — structured `harness_compat` replacing free-text | Phase 1 |
 | `--emit=json` with a documented output contract | adopt | Phase 2, gated |
 | `--diagnose` self-check | adapt — one `doctor --skill=<id>`, not a per-skill flag | Phase 2, gated |
@@ -144,15 +144,22 @@ under automation.
 
 Closes D2. Steps 1, 2 and 4 are ungated; step 3 is gated on S0.3.
 
-- [x] Extend `src/scripts/schemas/skill.schema.json` with an optional `requires`
-  object — `bins: string[]`, `env: string[]`, `primary_env: string`,
-  `network: string[]` — keeping `additionalProperties: false`.
-  `verify:` `node -e "JSON.parse(require('fs').readFileSync('src/scripts/schemas/skill.schema.json','utf8'))"` exits 0 and `grep -c '"requires"' src/scripts/schemas/skill.schema.json` is non-zero.
-- [x] Backfill `requires` for the skills declaring an **external** handler
+- [x] Extend `src/scripts/schemas/skill.schema.json` with an optional
+  `runtime_requires` object — `bins: string[]`, `env: string[]`,
+  `primary_env: string`, `network: string[]` — keeping
+  `additionalProperties: false`. **Not** named `requires`: that key is ADR-015
+  pack-dependency edges (a list of pack ids, validated in
+  `build_discovery_manifest.ts`), and an object there makes every carrying skill
+  unassignable in strict mode. The collision cost 13 red CI checks on one root
+  cause, because every one of those jobs builds the manifest as a setup step —
+  the skill schema declaring no `requires` property was not evidence the name
+  was free, since the discovery layer reads frontmatter the schema never declares.
+  `verify:` `node -e "JSON.parse(require('fs').readFileSync('src/scripts/schemas/skill.schema.json','utf8'))"` exits 0, `grep -c '"runtime_requires"' src/scripts/schemas/skill.schema.json` is non-zero, and `./scripts-run src/scripts/build_discovery_manifest --write --quiet` exits 0.
+- [x] Backfill `runtime_requires` for the skills declaring an **external** handler
   **and an actual `command:`** — 4, not 9. Of the 9 `handler: shell` skills, 5
   (`file-editor`, `quality-tools`, `token-optimizer`, `rtk-output-filtering`,
   `react-shadcn-ui`) declare no `command:` at all: they are advisory prose, and a
-  `requires` block there would be the pro-forma field risk 2 names. The 4 that do
+  `runtime_requires` block there would be the pro-forma field risk 2 names. The 4 that do
   execute all invoke `./scripts-run`, which needs `bash` and `node` on PATH and
   no egress. Skills with `handler: internal` remain out of scope by definition.
   `verify:` `./scripts-run src/scripts/validate_frontmatter` exits 0 — 436
@@ -161,12 +168,14 @@ Closes D2. Steps 1, 2 and 4 are ungated; step 3 is gated on S0.3.
   `env` set/unset, and `network` against the egress allowlist. **Gated on S0.3** —
   do not start before that spike publishes.
 - [x] Linter rule: an external handler (`shell`/`node`/`php`) **that declares a
-  `command:`** without a `requires` block is an error; `internal`, absent
+  `command:`** without a `runtime_requires` block is an error; `internal`, absent
   handlers, and command-less advisory skills are unaffected.
-  `verify:` `missing_requires` fires on a fixture with `handler: shell` + a
-  command and no `requires`, and stays silent on all three near-misses
+  `verify:` `missing_runtime_requires` fires on a fixture with `handler: shell` +
+  a command and no `runtime_requires`, and stays silent on all three near-misses
   (`internal` + command · `shell` without command · `shell` + command +
-  `requires`) — 4 tests in `tests/scripts/skill_linter.test.ts`, 144 pass.
+  `runtime_requires`). A fifth test pins the collision: a pack-edge `requires:`
+  **list** must not satisfy the rule — 5 tests in
+  `tests/scripts/skill_linter.test.ts`, 145 pass.
 - [~] Deprecate free-text `compatibility` toward a structured `harness_compat`
   enum. **Human-gated:** `compatibility` is a public Agent-Skills spec field and
   2 skills use it; a deprecation is a consumer-visible schema decision, not an
@@ -261,9 +270,9 @@ is nothing to benchmark before that.
 | Rank | Item | Risk type | Description | Mitigation | Anchored under |
 |------|------|-----------|-------------|------------|----------------|
 | 1 | Phase 2 builds an executable-payload track the host never invokes | product | The activation census measured 31 invocations of 6 distinct skills across 288 shipped, so a converted skill may simply never run its script — and a conversion is strictly worse than prose if the script is not called, because the manual then describes work nothing performs. | S0.1 gates every conversion and its kill criterion is pre-registered at < 90 % invocation; the census is written into the spike as its prior so a kill is the expected outcome rather than a surprise. | Phase 0 |
-| 2 | A mandatory `requires` block becomes a pro-forma field | product | A schema requirement invites a placeholder that satisfies the validator without declaring anything real, which is the gate-fatigue failure this package has already recorded. | The mandate covers only external handlers (9 skills at drafting), never `internal`; the doctor wiring that gives the field teeth is itself gated on S0.3, so the field is verified by a probe rather than by its own presence. | Phase 1 |
+| 2 | A mandatory `runtime_requires` block becomes a pro-forma field | product | A schema requirement invites a placeholder that satisfies the validator without declaring anything real, which is the gate-fatigue failure this package has already recorded. | The mandate covers only external handlers (9 skills at drafting), never `internal`; the doctor wiring that gives the field teeth is itself gated on S0.3, so the field is verified by a probe rather than by its own presence. | Phase 1 |
 | 3 | The injection lint false-reds across a 466-gate script estate | implementation | A heuristic "externally-sourced variable reaches an LLM prompt" cannot be decided syntactically in general, and an over-broad version would red legitimate call sites and be suppressed wholesale. | Warn-first for one release with the count published, error only after the tree is clean; the helper is a pure addition, so the value lands even if the lint never promotes. | Phase 3 |
-| 4 | Deprecating `compatibility` breaks a public-spec surface | implementation | `compatibility` mirrors a public Agent Skills field and two skills use it; replacing it unilaterally would diverge this schema from the spec it cites as intent. | The deprecation step is human-gated and never autonomous; `requires` lands additively alongside `compatibility` so nothing is removed to gain the structured form. | Phase 1 |
+| 4 | Deprecating `compatibility` breaks a public-spec surface | implementation | `compatibility` mirrors a public Agent Skills field and two skills use it; replacing it unilaterally would diverge this schema from the spec it cites as intent. | The deprecation step is human-gated and never autonomous; `runtime_requires` lands additively alongside `compatibility` so nothing is removed to gain the structured form. | Phase 1 |
 | 5 | The family slot is consumed for a proposal that gets killed | product | Naming this into the capped family spends the last of two slots on work whose largest phase may be killed by S0.1. | Phases 1 and 3 do not depend on S0.1 and deliver on their own, so a killed Phase 2 leaves the roadmap closable rather than stranded; a kill publishes the null and frees the slot immediately. | Phase 0 |
 
 ## Blockers
