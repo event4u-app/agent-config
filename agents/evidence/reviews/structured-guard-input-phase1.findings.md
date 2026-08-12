@@ -1,6 +1,6 @@
 # Completion review — structured-guard-input Phase 1 and Phase 4
 
-**Skipped:** no code surface for this completion — the diff is one contract section, one evidence write-up, one roadmap and its regenerated dashboard; the gate itself measures zero code paths of four changed files, scope 79d456b55b8ea6da71ea28b7a1c78d4faac694229b3d249c214a58ed5f465531, declared 2026-08-12
+**Skipped:** no code surface for this completion — the diff is two contract sections, one evidence write-up, one roadmap and its regenerated dashboard; the gate itself measures zero code paths of five changed files, scope 7dd3d224a9e9e2a7ac5fd9476125c2a10c00e2fe190ed390a0f7d98e0ef5273a, declared 2026-08-12
 
 ## Why a skip rather than a review
 
@@ -50,6 +50,34 @@ is whether each number is real and whether it says what it is claimed to say.
 - **A probe was designed and deliberately not run**, with the reason recorded:
   assembling a blocked token at runtime would have settled the shell half in one
   read-only command, and doing so is a guard bypass in form regardless of payload.
+
+## Re-bind 2026-08-12 — Phase 2 re-cut to option C
+
+Re-bound in place rather than renamed (§ 2.7): the reviewed content was
+**extended**, not withdrawn. The added surface is still docs-only — a second
+contract section, the Phase 2/3 re-cut, and the measurement behind it.
+
+What needs checking in the added half, since it argues for building something:
+
+- **The falsified premise was falsified against the tree, not from memory.** The
+  contract said no in-repo check can read the prompt; `git ls-files` returns 19
+  tracked `prompt.md` files and the dispatcher line that writes them is cited.
+- **The two broken hash bindings were diagnosed, not reported as a count.** CRLF,
+  LF and trailing-newline variants were each re-hashed and none reproduces the
+  declared value, so "line endings" is ruled out rather than assumed; the commit
+  that touched each file was read. One cause is named and its fix dated; the
+  other is stated as **unexplained**, which is the honest answer and the one that
+  justifies the control.
+- **The already-shipped fix was found before proposing to rebuild it.**
+  `_FROZEN_RECORD_PREFIXES` already excludes `agents/evidence/`, landed
+  2026-08-11 — so the obvious repair for the first break was not re-proposed.
+- **The detection ceiling is measured, not estimated.** The predicate was run
+  against the four steering clauses case zero records verbatim: one matches,
+  three do not, and the three are named.
+- **The smaller solution replaced the first one considered.** A `prompt:`
+  manifest field was the suggested minimal change; the slug convention already
+  determines the path, so the field would have migrated 30 committed manifests
+  for nothing. The scan proves the convention works by having used it.
 
 ## What is deliberately NOT claimed
 
