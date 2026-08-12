@@ -149,6 +149,55 @@ not to keep guessing from the text.
 
 Until such a field exists, a prompt-reading concern is Tier 3.
 
+### What text a guard actually receives — pre- or post-expansion
+
+The council raised this as the blind spot the audit missed: a guard reading
+`rm $FILES` cannot know whether `$FILES` expands to `*.tmp` or `*`. Establishing
+it matters because it decides whether a Tier-1 classification can be trusted at
+the moment of the read. Measured 2026-08-12, and the answer splits:
+
+**Transport adds nothing.** `dispatch_hook._build_envelope` `JSON.parse`s stdin
+and places the object under `payload` unmodified; `envelope.unwrap` only
+unwraps. Nothing between the host and a concern rewrites the text — which is
+what "`payload` is passed through verbatim from the platform" above means, now
+stated for expansion specifically because the word appeared nowhere in this
+document.
+
+**The shell guards are built for PRE-expansion text, and their own machinery is
+the evidence.** `block_unauthorized_git` hand-parses `$(…)`, backticks and
+process substitution out of the command string and unwraps `sh -c` / `eval`;
+`block_no_verify` does its own tokenisation and heredoc stripping. That code is
+dead on post-expansion input. Both headers additionally record
+`P=publish; npm $P` as a **measured, still-open** vector — a hole that only
+exists if the guard never sees the expanded form, and which their test suites
+pin as an accepted gap rather than a bug.
+
+**The host fact itself is undetermined, and this is stated rather than closed.**
+No captured `PreToolUse` envelope carrying a `$VAR`, a `$(…)` or a `Task`
+dispatch exists anywhere in the tree; the one hook fixture is hand-authored and
+is required by its own README to carry no real content. So the tree proves the
+guards' *design assumption*, not the platform's behaviour. What would settle it
+is already shipped: `AGENT_HOOK_CAPTURE_DIR` makes `dispatch_hook` write raw
+stdin to disk **before** the envelope is built, so one hook-bound session with a
+`$HOME` still literal in the captured `tool_input.command` closes the question
+for every guard at once. Setting that variable is a host-environment change, i.e.
+a human action outside an agent session.
+
+**A dispatch prompt has no expansion stage to worry about.** For `Agent` / `Task`
+the model emits the final string into `tool_input.prompt`; a slash-command
+template is expanded before the model writes the call, so no placeholder survives
+to hook-read time. The template concern is therefore a **shell** concern in
+practice, not a dispatch-prompt one.
+
+**The consequence for the tier rule, either way the host answers:** a Tier-1
+claim is a claim about the text *at the moment the guard reads it*. An input that
+is a template variable at that moment is **not** structured, however structured
+its eventual value — so a `role` / `evidence_scope` field carrying an
+unsubstituted placeholder buys nothing over the prose it replaced, and a concern
+reading one is Tier 3 for that read. A Tier-1 declaration must name a field whose
+*value* is present in the payload, never one whose value is derivable only after
+substitution.
+
 ### Authoring rule
 
 A new concern declaring `severity: blocking` states which tier it is in and what
