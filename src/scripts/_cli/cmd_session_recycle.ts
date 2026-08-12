@@ -20,6 +20,7 @@
  *   agent-config session:recycle --file <envelope.json>   # read from file
  *   agent-config session:recycle < envelope.json          # read from stdin
  *   agent-config session:recycle --template               # print a skeleton
+ *   agent-config session:recycle --project <path>         # name the repo explicitly
  *
  * Exit codes: 0 written (or template printed) · 1 invalid / refused · 2 usage.
  */
@@ -29,7 +30,7 @@ import * as path from 'node:path';
 import process from 'node:process';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
-import { resolve_project_root } from '../_lib/agent_settings.js';
+import { ORIGIN_CWD_FALLBACK, resolve_project_root } from '../_lib/agent_settings.js';
 import {
     RECYCLE_ENVELOPE_MAX_BYTES,
     RECYCLE_ENVELOPE_REL,
@@ -77,6 +78,7 @@ interface ParsedArgv {
     ok: boolean;
     message?: string;
     file?: string;
+    project?: string;
     template?: boolean;
     verify?: boolean;
 }
@@ -94,6 +96,11 @@ export function parseArgv(argv: readonly string[]): ParsedArgv {
             if (!value) return { ok: false, message: '--file requires a path' };
             parsed.file = value;
             i += 1;
+        } else if (a === '--project') {
+            const value = argv[i + 1];
+            if (!value) return { ok: false, message: '--project requires a path' };
+            parsed.project = value;
+            i += 1;
         } else if (a === '-h' || a === '--help') {
             return { ok: false, message: 'usage' };
         } else {
@@ -110,11 +117,50 @@ export function parseArgv(argv: readonly string[]): ParsedArgv {
  */
 export function runSessionRecycle(
     input: string,
-    opts: { cwd: string; now?: Date; verify?: boolean },
+    opts: { cwd: string; now?: Date; verify?: boolean; project?: string },
 ): RecycleResult {
     const out: string[] = [];
     const err: string[] = [];
-    const [projectRoot] = resolve_project_root(null, { cwd: opts.cwd });
+
+    // `--project` is validated by the resolver (existence + directory), which
+    // signals by THROWING. Uncaught, that would surface as a stack trace from
+    // a command whose entire subject is legible failure.
+    let projectRoot: string;
+    let origin: string;
+    try {
+        [projectRoot, origin] = resolve_project_root(opts.project ?? null, { cwd: opts.cwd });
+    } catch (exc) {
+        return { code: 1, out, err: [`recycle envelope refused — ${String(exc)}`] };
+    }
+
+    // An unanchored cwd is the ONE case where a successful write is worse than
+    // a refusal. `resolve_project_root` falls back to the cwd itself when it
+    // reaches the filesystem root without finding an anchor, so a call from
+    // outside any repo — the shape a consumer with a toolchain pin is forced
+    // into — writes a valid envelope into a directory the successor session
+    // never looks at, and then prints a resume instruction whose next step is
+    // `/clear`. The exit code says it worked; the session is gone anyway.
+    //
+    // Refused BEFORE the parse: everything downstream reads this root, so a
+    // wrong one also produces a wrong `workspace` field and grounding read
+    // from the wrong git tree. `--verify` is refused too — validating against
+    // a root the write would not use answers a question nobody asked.
+    if (origin === ORIGIN_CWD_FALLBACK) {
+        return {
+            code: 1,
+            out,
+            err: [
+                `recycle envelope refused — no project anchor at or above ${projectRoot}`,
+                'Writing here would put the envelope where the successor session never reads it,',
+                'and the resume instruction would then advise /clear on a session that cannot resume.',
+                'Name the repository explicitly — it must be the WORKSPACE ROOT OF THE SESSION',
+                'that will resume, because that is the directory the successor reads the envelope',
+                'from; a path that merely happens to be a project is not enough:',
+                `  agent-config session:recycle --project <session-workspace-root> …`,
+                `  AGENT_CONFIG_PROJECT_ROOT=<session-workspace-root> agent-config session:recycle …`,
+            ],
+        };
+    }
 
     let parsed: unknown;
     try {
@@ -179,23 +225,28 @@ export function runSessionRecycle(
         };
     }
 
+    // Absolute, not `RECYCLE_ENVELOPE_REL`: the relative form is identical for
+    // every root, so it cannot tell the reader WHICH tree was written — the
+    // one thing in doubt at the moment this line is read.
+    const target = path.join(projectRoot, RECYCLE_ENVELOPE_REL);
+
     // `--verify` stops HERE: every rejection above has already run, and the
     // only thing skipped is the write. Validating through a different path
     // than the one that writes would make the check a second implementation
     // to keep in sync — the failure this suite refuses elsewhere.
     if (opts.verify === true) {
         out.push(`recycle envelope VALID — ${bytes} bytes, not written (--verify).`);
+        out.push(`Target would be: ${target}`);
         return { code: 0, out, err };
     }
 
-    const target = path.join(projectRoot, RECYCLE_ENVELOPE_REL);
     try {
         atomic_write_json(target, envelope);
     } catch (exc) {
         return { code: 1, out, err: [`could not write ${target}: ${String(exc)}`] };
     }
 
-    out.push(`recycle envelope written — ${RECYCLE_ENVELOPE_REL} (${bytes} bytes)`);
+    out.push(`recycle envelope written — ${target} (${bytes} bytes)`);
     out.push('');
     out.push('Resume instruction:');
     out.push('  1. End this session now: run /clear (or start a fresh session in this workspace).');
@@ -210,10 +261,15 @@ export function main(argv: string[] = process.argv.slice(2)): number {
     const parsed = parseArgv(argv);
     if (!parsed.ok) {
         const usage = [
-            'usage: agent-config session:recycle [--file <envelope.json>] [--template] [--verify]',
-            '  --file <path>   read the envelope JSON from a file (default: stdin)',
-            '  --template      print a skeleton envelope and exit',
-            '  --verify        validate only — same rejections, no write',
+            'usage: agent-config session:recycle [--file <envelope.json>] [--project <path>] [--template] [--verify]',
+            '  --file <path>     read the envelope JSON from a file (default: stdin)',
+            '  --project <path>  the workspace root of the session that will resume — required',
+            '                    when the working directory is outside any project (the command',
+            '                    refuses rather than writing an envelope the successor cannot',
+            '                    find). The successor reads the envelope from ITS OWN workspace',
+            '                    root, so a path that is merely a valid project is not enough.',
+            '  --template        print a skeleton envelope and exit',
+            '  --verify          validate only — same rejections, no write',
         ].join('\n');
         if (parsed.message === 'usage') {
             process.stdout.write(`${usage}\n`);
@@ -246,6 +302,7 @@ export function main(argv: string[] = process.argv.slice(2)): number {
     const result = runSessionRecycle(input, {
         cwd: process.cwd(),
         ...(parsed.verify === true ? { verify: true } : {}),
+        ...(parsed.project !== undefined ? { project: parsed.project } : {}),
     });
     for (const line of result.out) process.stdout.write(`${line}\n`);
     for (const line of result.err) process.stderr.write(`${line}\n`);
