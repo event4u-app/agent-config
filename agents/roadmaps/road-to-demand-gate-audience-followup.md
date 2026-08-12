@@ -11,7 +11,7 @@ so neither is lost and neither is taken by an agent on its own authority.
 
 ## Context
 
-`agents/roadmaps/road-to-demand-gate-audience.md` fixed the demand gate's
+`agents/roadmaps/archive/road-to-demand-gate-audience.md` fixed the demand gate's
 single-addressee defect: § 8-pre gained an `L-self` build level, and
 `project.audience` was added as a class-C settings key defaulting to `public`
 (today's behaviour, unchanged for every existing install).
@@ -59,5 +59,5 @@ What would have to be decided:
 
 ## Prerequisites
 
-- `agents/roadmaps/road-to-demand-gate-audience.md` is complete (or archived).
+- `agents/roadmaps/archive/road-to-demand-gate-audience.md` is complete (or archived).
 - A human decision on Item 1 and/or Item 2. Until then this roadmap stays `draft`.
