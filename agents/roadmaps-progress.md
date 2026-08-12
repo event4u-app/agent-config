@@ -6,10 +6,10 @@
 
 ## Overall
 
-**267 / 387 steps done · 69%**
+**275 / 393 steps done · 70%**
 
 ```text
-████████████████████████████░░░░░░░░░░░░   69%
+████████████████████████████░░░░░░░░░░░░   70%
 ```
 
 ## Open roadmaps
@@ -45,7 +45,7 @@
 | 27 | [road-to-tier-removal.md](roadmaps/road-to-tier-removal.md) | 4 | 8 | 2 | 6 | 0 | 0 | [1](#blockers-road-to-tier-removal) | ████████░░ 75% |
 | 28 | [road-to-ui-track-integrity-followup.md](roadmaps/road-to-ui-track-integrity-followup.md) | 1 | 10 | 10 | 0 | 0 | 0 | [2](#blockers-road-to-ui-track-integrity-followup) | ░░░░░░░░░░ 0% |
 | 29 | [road-to-worktree-hygiene.md](roadmaps/road-to-worktree-hygiene.md) | 1 | 9 | 2 | 7 | 0 | 0 | [1](#blockers-road-to-worktree-hygiene) | ████████░░ 78% |
-| 30 | [road-to-zero-settings.md](roadmaps/road-to-zero-settings.md) | 4 | 9 | 5 | 4 | 0 | 0 | [1](#blockers-road-to-zero-settings) | ████░░░░░░ 44% |
+| 30 | [road-to-zero-settings.md](roadmaps/road-to-zero-settings.md) | 4 | 15 | 3 | 12 | 0 | 0 | [1](#blockers-road-to-zero-settings) | ████████░░ 80% |
 
 ---
 
@@ -980,6 +980,23 @@ _1 blocker resolved._
     right, and the step's `verify:` demands a verdict for all three. So 3.2 has a
     third question the wording hid: does asking for a nickname authorise anything,
     or is class B doing the wrong job for that key?
+    - **A FAILED council attempt still spends quota — measured, and it changes how to
+    wait.** The re-attempt above was itself repeated once more from a parallel
+    branch, and the counters rose across the two runs: `anthropic 125/50 · openai
+    134/50` became `140/50 · 146/50`, with `actual $0.0000` both times. So probing
+    "does it work yet" makes the wait longer rather than shorter. Read the quota
+    line in `council:status` instead of firing a run to find out. One retry IS
+    legitimate when the environment changed underneath you — a transport-repair PR
+    landing between attempts is exactly that case, and it is what produced the
+    `cli_quota_exhausted` reading rather than an assumption.
+    - **The two real consent keys are not comparable, and the asymmetry is what 3.2
+    has to weigh.** `memory.learn_on_session_end` has a **real** reader:
+    `src/scripts/memory_learn_hook.ts` parses it itself and stays dark unless it
+    reads `true`. `personal.open_edited_files` is enforced by **prose only** —
+    `src/skills/file-editor/SKILL.md` instructs the agent to read it, and no code
+    path or hook can refuse the action. Whether an authorisation that only prose
+    enforces is a consent gate at all is a different question from whether the
+    action needs authorising, and the step's single wording collapses the two.
   - **Resolved when:** each of the three keys carries a recorded verdict (keep, or redesign the action), in this roadmap or an ADR.
 
 ---

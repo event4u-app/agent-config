@@ -2,14 +2,9 @@
 import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
-import { fileURLToPath } from 'node:url';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import { main } from '../../src/scripts/sync_agent_settings.js';
-
-const HERE = path.dirname(fileURLToPath(import.meta.url));
-const REPO_ROOT = path.resolve(HERE, '..', '..');
-const TS_SCRIPT = path.join(REPO_ROOT, 'src', 'scripts', 'sync_agent_settings.ts');
 
 const MINIMAL_TEMPLATE = `# Header
 rule_loading_tier: __RULE_LOADING_TIER__
@@ -26,7 +21,6 @@ personal:
 chat_history:
   enabled: true
   frequency: __CHAT_HISTORY_FREQUENCY__
-  max_size_kb: __CHAT_HISTORY_MAX_SIZE_KB__
 
 # --- Onboarding ---
 onboarding:
@@ -35,8 +29,6 @@ onboarding:
 
 const MINIMAL_INI = `rule_loading_tier=minimal
 chat_history_frequency=per_turn
-chat_history_max_size_kb=128
-chat_history_on_overflow=rotate
 `;
 
 const NESTED_TEMPLATE = `rule_loading_tier: __RULE_LOADING_TIER__
@@ -103,7 +95,6 @@ describe('sync_agent_settings — minimal workspace', () => {
     const data = yamlLoad(fs.readFileSync(target, 'utf-8'));
     expect(data['rule_loading_tier']).toBe('minimal');
     expect((data['chat_history'] as Record<string, unknown>)['frequency']).toBe('per_turn');
-    expect((data['chat_history'] as Record<string, unknown>)['max_size_kb']).toBe(128);
     expect((data['onboarding'] as Record<string, unknown>)['onboarded']).toBe(false);
   });
 
@@ -213,7 +204,7 @@ describe('sync_agent_settings — minimal workspace', () => {
   it('--profile balanced overrides inferred tier', () => {
     fs.writeFileSync(
       path.join(workspace, 'config', 'profiles', 'balanced.ini'),
-      'rule_loading_tier=balanced\nchat_history_frequency=per_phase\nchat_history_max_size_kb=256\nchat_history_on_overflow=rotate\n',
+      'rule_loading_tier=balanced\nchat_history_frequency=per_phase\n',
       'utf-8',
     );
     const target = path.join(workspace, '.agent-settings.yml');
@@ -224,7 +215,6 @@ describe('sync_agent_settings — minimal workspace', () => {
     const data = yamlLoad(body);
     const ch = data['chat_history'] as Record<string, unknown>;
     expect(ch['frequency']).toBe('per_phase');
-    expect(ch['max_size_kb']).toBe(256);
   });
 
   it('malformed user yaml exits 2 with message', () => {
@@ -306,9 +296,3 @@ describe('sync_agent_settings — nested workspace', () => {
     expect(body).not.toContain('blocklist: "[\'');
   });
 });
-
-interface RunResult {
-  stdout: string;
-  stderr: string;
-  exit: number;
-}

@@ -176,12 +176,6 @@ chat_history:
   # Logging granularity: per_turn | per_phase | per_tool
   frequency: per_phase
 
-  # Max file size in KB before overflow handling kicks in
-  max_size_kb: 256
-
-  # Overflow behavior: rotate (drop oldest) | condense (summarize)
-  on_overflow: rotate
-
 # --- Work-engine hooks ---
 #
 # Lifecycle hook surface of the `work_engine` Python engine
@@ -287,12 +281,6 @@ quality:
   # suppressed runs are surfaced ("quality gates delegated to remote CI"),
   # never claimed as passing.
   local_auto_run: false
-
-  # Wait for remote CI to finish on the PR / pipeline (true, false)
-  # true  = poll GitHub check-runs / pipeline after push and report
-  #         green / red before handing back
-  # false = push and hand back immediately (default)
-  wait_for_remote_ci: false
 
 # --- Subagent orchestration ---
 subagents:
@@ -485,19 +473,18 @@ verbosity:
   # safe task per Phase 10.3.
   taskfile_command_echo: false
 
-# --- Telegraph speak (authoring-only) ---
+# --- Telegraph condensation (output-side) ---
 #
-# Telegraph-style condensation scope for newly authored prose. The
-# compile-time toggle (`telegraph.speak`) is added in Phase 8.
-# `speak_scope` lands now so the charter and consumers can pin it.
+# One lever, deliberately: whether the telegraph-speak rule ships at all.
+# The rule body states its own grammar scope — which carve-outs (numbered
+# options, Iron-Law literals, code, paths) stay full prose — so there is no
+# separate scope key to pin.
 telegraph:
-  # speak_scope = how widely telegraph-speak grammar applies in chat
-  #   off          = no telegraph grammar in output (compile-time still
-  #                  governed by telegraph.speak)
-  #   prose_only   = telegraph in body prose; numbered options +
-  #                  Iron-Law-literal blocks stay full prose
-  #   aggressive   = telegraph everywhere except Iron-Law literals
-  speak_scope: prose_only
+  # speak: false = DORMANT (the shipped default). The rule is omitted from
+  # dist/router.json entirely, so its body never reaches a host. That
+  # omission is what stops the cost. Set true only after an output-side
+  # bench clears the kill-criterion bar.
+  speak: false
 
 telemetry:
   artifact_engagement:
@@ -552,7 +539,7 @@ Personal and project-level settings (initial file written by
 **Key paths use dot-notation** to denote nesting: `personal.user_name`
 lives under `personal:` in YAML.
 
-The `verbosity.*` and `telegraph.speak_scope` rows are summarized below;
+The `verbosity.*` rows are summarized below;
 the canonical narrative lives in
 [`docs/customization.md` § Verbosity](../../docs/customization.md#verbosity).
 
@@ -575,8 +562,6 @@ the canonical narrative lives in
 | `code_style.docblocks` | `minimal`, `full` | `minimal` | Consumed by the `code-comment-discipline` rule. `minimal`: no signature-mirroring docblocks; docblocks only for machine-relevant precision (generics, array shapes) or genuine why-context. `full`: exported public library surface may carry one-line summary docblocks; the redundancy ban still holds. |
 | `chat_history.enabled` | `true`, `false` | `true` | Persist chat events to `agents/runtime/.agent-chat-history` (JSONL) for crash recovery. |
 | `chat_history.frequency` | `per_turn`, `per_phase`, `per_tool` | per profile | Logging granularity. Defaults: `minimal`→`per_turn`, `balanced`→`per_phase`, `full`→`per_tool`. |
-| `chat_history.max_size_kb` | integer | per profile | Max file size before overflow handling. Defaults: `minimal`→`128`, `balanced`→`256`, `full`→`512`. |
-| `chat_history.on_overflow` | `rotate`, `condense` | per profile | On overflow: `rotate` drops oldest entries; `condense` marks the file for summarization on the next turn. Defaults: `minimal`/`balanced`→`rotate`, `full`→`condense`. |
 | `chat_history.text_limits.{user,agent,tool,phase}` | integer (chars) | `user=0`, `agent=5000`, `tool=200`, `phase=200` | Per-entry-type text-length cap. `0` = verbatim, no slice. `N > 0` = collapse whitespace, slice to N chars, append `" … [+K chars]"` so the log self-reports truncation. Defaults match `DEFAULT_TEXT_LIMITS` in `scripts/chat_history.ts`. |
 | `hooks.concern_budget.{max_per_event,tier1_concerns,hard_fail}` | integer / list / `true`,`false` | `8` / `[]` / `false` | Concern budget gate for the hook dispatcher (`lint_hook_concern_budget`): caps concerns per (platform, event) cell, restricts `fail_closed: true` to the `tier1_concerns` allowlist, and `hard_fail: false` keeps the gate warn-only. |
 | `hooks.injection_scan.enabled` | `true`, `false` | `false` | PostToolUse prompt-injection scanner: scans tool output for injection signatures and warns in context (exit 2) — never blocks. |
@@ -587,7 +572,6 @@ the canonical narrative lives in
 | `roadmap.skip_pre_run_gate` | `true`, `false` | `true` | When `true` (default): `/roadmap:process-step\|phase\|full` skips the interactive pre-run summary and starts the loop immediately — the resolved roadmap, cadence, and council are surfaced inline so an unwanted pick can still be aborted. When `false`: the loop shows the pre-run summary with numbered options (Go / Different roadmap / Different scope / Toggle council / Abort) and waits. The gate is always shown — regardless of this flag — when the roadmap is ambiguous (multiple active, none named) or a scope / cadence conflict has no sensible default. |
 | `roadmap.quality_cadence` | `end_of_roadmap`, `per_phase`, `per_step` | `end_of_roadmap` | When `/roadmap:process-step|phase|full` runs the project's quality pipeline — only relevant when `quality.local_auto_run` is `true`; when it is `false` (the default) local pipeline runs are suppressed at every cadence and remote CI is the gate. Default skips per-step / per-phase runs and gates only the final archival. `per_phase` runs once after every phase; `per_step` is the legacy verbose mode. Step checkboxes and the dashboard are always updated regardless. |
 | `quality.local_auto_run` | `true`, `false` | `false` | When `false` (default): agent NEVER runs the project's quality pipeline (`task ci`, `make test`, `npm run check`, PHPStan, ECS, Rector, test suites) proactively — and does not ask. The user runs quality tools manually; remote CI is the authoritative gate. The agent runs one only on (1) an explicit ask this turn, (2) a concrete CI failure (run exactly that failing check), or (3) the new-gate carve-out. When `true`: opt-in legacy — agent runs the pipeline autonomously when work is ready for verification. **Carve-out**: NEW CI gates / smoke tests / test files MUST run locally regardless of this flag — without execution the new gate is unverified evidence. Iron Law `verify-before-complete` still applies; suppressed runs are surfaced ("quality gates delegated to remote CI"), never claimed as passing. |
-| `quality.wait_for_remote_ci` | `true`, `false` | `false` | When `true`: after `git push`, the agent polls GitHub check-runs / pipeline status on the PR and reports green / red before handing back. When `false`: agent pushes and hands back immediately; the user inspects CI themselves (default — saves agent runtime and tokens). |
 | `subagents.implementer_model` | model alias or empty | _(empty)_ | Model for implementer subagents. Empty = same tier as session model. See [subagent-configuration](../contexts/subagent-configuration.md). |
 | `subagents.judge_model` | model alias or empty | _(empty)_ | Model for judge subagents. Empty = one tier above implementer (opus if sonnet, sonnet if haiku). |
 | `subagents.max_parallel` | integer | `3` | Maximum parallel subagent invocations. `1` serializes. |
@@ -613,7 +597,7 @@ the canonical narrative lives in
 | `verbosity.offer_council_in_delivery` | `true`, `false` | `false` | Offer "run AI Council on this?" inside delivery commands (`/feature-plan`, `/review-changes`, `/roadmap-create`). Council commands themselves are unaffected. |
 | `verbosity.post_action_reports` | `off`, `minimal`, `full` | `minimal` | Multi-line status / summary blocks after a successful action. `off` = no report; `minimal` = one-line confirmation; `full` = bullet list. |
 | `verbosity.intent_announcements` | `true`, `false` | `false` | Intent announcements ("Let me check…", "Now I will…", "Found it") in skill bodies. `false` = act and emit the result. |
-| `telegraph.speak_scope` | `off`, `prose_only`, `aggressive` | `off` | How widely telegraph-speak grammar applies in chat. `off` = no telegraph grammar; `prose_only` = telegraph in body prose, numbered options + Iron-Law-literal blocks stay full prose; `aggressive` = telegraph everywhere except Iron-Law literals. The compile-time toggle `telegraph.speak` ships as `false` (dormant) — the projector gates the rule on `speak`, never on `speak_scope`. |
+| `telegraph.speak` | `true`, `false` | `false` | Whether the telegraph-speak rule ships at all. `false` (default) = dormant: the projector omits the rule from `dist/router.json`, so its body never reaches a host. The rule body states its own grammar scope and carve-outs (numbered options, Iron-Law literals, code, paths), so this is the only lever. |
 | `telemetry.artifact_engagement.enabled` | `true`, `false` | `false` | Master switch for the artefact engagement log. Not in the shipped template — a missing `telemetry:` section means disabled (the recording rule no-ops). Default-off; zero file IO and zero token cost when `false`. Maintainer-targeted; consumers leave it off. |
 | `telemetry.artifact_engagement.granularity` | `task`, `phase-step`, `tool-call` | `task` | Boundary at which events are recorded. `tool-call` is expensive — opt-in only. |
 | `telemetry.artifact_engagement.record.consulted` | `true`, `false` | `true` | When `true`: record artefacts loaded into context. |
