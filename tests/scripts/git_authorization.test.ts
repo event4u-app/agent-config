@@ -182,6 +182,33 @@ describe("commandOp", () => {
     ]);
   });
 
+  // Cross-project session audit (2026-08-12): all three BLOCK ops in the window
+  // were false positives of one shape — the verb was NAMED in a quoted argument
+  // or an API path, not INVOKED. Every one was read-only or harmless, and the
+  // same window's transcripts carry "Ich kann wieder nicht releasen. Warum
+  // nicht?" while a blocking guard sat on the diagnosis.
+  it("does not classify a verb named inside a quoted argument", () => {
+    expect(
+      commandOp(
+        `gh pr create --base main --head fix/x --title "fix(release): align version (unblock npm publish)"`,
+      ),
+    ).toBe("pr-create");
+    expect(commandOp(`git commit -m "mention npm publish in the message"`)).toBe("commit");
+  });
+
+  it("treats read-only `gh api` as read-only, whatever the path says", () => {
+    expect(commandOp(`gh api repos/o/r/releases/latest --jq '{tag:.tag_name}'`)).toBeNull();
+    expect(commandOp(`gh api repos/jdx/aube-action/releases --jq '.[0:3][] | .tag_name'`)).toBeNull();
+    expect(commandOp(`gh api repos/o/r/pulls/5/merge`)).toBeNull();
+  });
+
+  it("still catches a writing `gh api`, with the method on either side", () => {
+    expect(commandOp(`gh api -X POST repos/o/r/releases -f tag_name=v1`)).toBe("release");
+    expect(commandOp(`gh api repos/o/r/releases -X POST -f tag_name=v1`)).toBe("release");
+    expect(commandOp(`gh api --method DELETE repos/o/r/releases/9`)).toBe("release");
+    expect(commandOp(`gh api -X PUT repos/o/r/pulls/5/merge`)).toBe("pr-merge");
+  });
+
   it("still splits on unquoted separators after the quote fix", () => {
     expect(commandOp("ls | npm publish")).toBe("publish");
     expect(commandOp("echo hi & npm publish")).toBe("publish");

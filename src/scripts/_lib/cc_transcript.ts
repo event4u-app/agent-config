@@ -35,6 +35,31 @@ import { homedir } from 'node:os';
 /** Default base directory holding one subdirectory per Claude Code project. */
 export const DEFAULT_PROJECTS_ROOT = path.join(homedir(), '.claude', 'projects');
 
+/**
+ * The store directory name Claude Code derives from a working directory.
+ *
+ * Every character outside `[A-Za-z0-9-]` becomes `-`: `/Users/x/.claude` →
+ * `-Users-x--claude`, and a worktree `feat+turn-end-gate-always-on` →
+ * `feat-turn-end-gate-always-on`.
+ *
+ * This lives here because it was wrong in six places at once. The sweep on
+ * 2026-08-12 found `replace(/[/.]/g, '-')` copied across every transcript-reading
+ * report; each one computed a directory that does not exist for any path
+ * carrying a `+` and returned an empty corpus — indistinguishable from a clean
+ * result. One of those copies already carried a comment about the round BEFORE
+ * that, when only `/` was replaced and dotted segments missed. Widening the
+ * class by one character per incident is how a defect survives two fixes, so
+ * the class is closed instead: anything not `[A-Za-z0-9-]` is slugged.
+ */
+export function projectStoreSlug(cwd: string): string {
+  return cwd.replace(/[^A-Za-z0-9-]/g, '-');
+}
+
+/** Absolute path to a working directory's transcript store. */
+export function projectStoreDir(cwd: string, root: string = DEFAULT_PROJECTS_ROOT): string {
+  return path.join(root, projectStoreSlug(cwd));
+}
+
 export type TranscriptBucket = 'main' | 'subagent';
 
 /** The six token counters every downstream metric (cost, weight, share) is built from. */

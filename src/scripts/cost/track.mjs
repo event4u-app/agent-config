@@ -116,10 +116,16 @@ function dedupKey(rec) {
   return `${id} ${reqId}`;
 }
 
-// Claude Code encodes BOTH separators and dots: `/x/.claude/y` → `-x--claude-y`.
-// Replacing only `/` never resolves a dotted path segment, so any cwd under
-// `.claude/worktrees/` silently missed its project dir and exited 2.
-function encodeProjectPath(cwd) { return cwd.replace(/[/.]/g, '-'); }
+// Claude Code slugs every character outside [A-Za-z0-9-], not just separators
+// and dots: `/x/.claude/y` → `-x--claude-y`, and `feat+wt` → `feat-wt`.
+//
+// This is an inline copy of `_lib/cc_transcript.projectStoreSlug` — a module
+// boundary, not an oversight: this file imports node builtins only. Keep the
+// two in step. It was narrowed twice for the same reason (first `/` alone
+// missed dotted segments; then `[/.]` missed a `+` worktree and silently
+// resolved no project dir at all), which is why the class is now closed rather
+// than extended one character per incident.
+function encodeProjectPath(cwd) { return cwd.replace(/[^A-Za-z0-9-]/g, '-'); }
 
 function findProjectDir(cwd) {
   const c = join(PROJECTS_DIR, encodeProjectPath(cwd));

@@ -48,6 +48,7 @@ import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
 import { censusRuleDir } from "./_lib/carrier_divergence.js";
+import { projectStoreSlug } from "./_lib/cc_transcript.js";
 import { entryText, isSidechain } from "./_lib/transcript_entry.js";
 
 import { classify } from "./language_mirror_hook.js";
@@ -870,10 +871,27 @@ export const DEFAULT_RATE_SERIES = path.join(
   "conformance-rates.jsonl",
 );
 
-/** Default Claude Code transcript store for a project directory. */
+/**
+ * Default Claude Code transcript store for a project directory.
+ *
+ * Claude Code slugs every character outside `[A-Za-z0-9-]`, not just the
+ * separator and the dot: `/Users/x/.claude` → `-Users-x--claude`, and a
+ * worktree named `feat+turn-end-gate-always-on` → `feat-turn-end-gate-always-on`.
+ *
+ * The narrower `[/.]` this replaced is why the 2026-08-12 session audit could
+ * not scan the worktree it was running in: the `+` survived into the computed
+ * slug, no such directory exists, and the scan printed "no transcript store"
+ * and measured NOTHING. A measurement tool that silently reports an empty
+ * corpus for a whole class of paths is worse than one that errors, because the
+ * zero is indistinguishable from a clean result.
+ *
+ * The character class is generalised rather than extended by one `+` because
+ * every one of the 56 store names on this machine matches `^[A-Za-z0-9-]+$` —
+ * there is no observed counter-example of a preserved special character, and
+ * guessing which OTHER character is next would repeat this defect.
+ */
 export function defaultStore(projectDir: string): string {
-  // Claude Code slugs BOTH separators and dots: /Users/x/.claude → -Users-x--claude.
-  const slug = projectDir.replace(/[/.]/g, "-");
+  const slug = projectStoreSlug(projectDir);
   return path.join(process.env["HOME"] ?? "", ".claude", "projects", slug);
 }
 
