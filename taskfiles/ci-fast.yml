@@ -1447,7 +1447,7 @@ tasks:
 
   check-bridge-derivation:
     silent: true
-    desc: Generated bridge trees derive from src/ — symlink targets valid, regeneration is a fixpoint (skill-quality-gates Phase 4). Regenerates .claude/.cursor/.windsurf/.augment as a side effect.
+    desc: Generated bridge trees derive from src/ — symlink targets valid, regeneration is a fixpoint (skill-quality-gates Phase 4). Regenerates .claude/.cursor/.windsurf/.augment as a side effect. Scoped to the roots this checkout writes: a root whose tool is off in agents/.agent-tools.yml has no regeneration path, so it is skipped (named on stderr). .augment is never skipped — its projection carries no tool gate.
     cmd: ./scripts-run src/scripts/check_bridge_derivation
 
   check-rule-projection-integrity:
