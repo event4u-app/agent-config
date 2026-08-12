@@ -14,7 +14,7 @@
 ## Pointers
 
 - **Filling out this AGENTS.md** — section templates, capability bullets, multi-agent entry flow, monorepo layout: [`consumer-agents-md-guide`](.augment/contexts/contracts/consumer-agents-md-guide.md).
-- **Behavior rules** — [`.augment/rules/`](.augment/rules/). The 9-rule kernel is always active; the rest carry triggers and route on match (triage item 5 below). Kernel rules are **immutable**; tighten only via the override registry.
+- **Behavior rules** (9 always-on; rest routed) — [`.augment/rules/`](.augment/rules/). Kernel rules are **immutable**; tighten only via the override registry.
 - **Skills (on-demand expertise)** — domain skills surfaced by description, invoked on trigger match: [`.augment/skills/`](.augment/skills/).
 - **Commands (workflows)** — slash-commands the agent runs end-to-end (`/work`, `/create-pr`, …): [`.augment/commands/`](.augment/commands/).
 - **Project-specific docs** — your own architecture notes, roadmaps, sessions, contexts: [`agents/`](agents/).
