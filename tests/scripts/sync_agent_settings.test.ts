@@ -9,7 +9,6 @@ import { main } from '../../src/scripts/sync_agent_settings.js';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = path.resolve(HERE, '..', '..');
-const TS_SCRIPT = path.join(REPO_ROOT, 'src', 'scripts', 'sync_agent_settings.ts');
 
 const MINIMAL_TEMPLATE = `# Header
 rule_loading_tier: __RULE_LOADING_TIER__
@@ -301,9 +300,3 @@ describe('sync_agent_settings — nested workspace', () => {
     expect(body).not.toContain('blocklist: "[\'');
   });
 });
-
-interface RunResult {
-  stdout: string;
-  stderr: string;
-  exit: number;
-}
