@@ -228,10 +228,12 @@ Three vendor CLIs are wired:
       model: claude-sonnet-4-5
   ```
 
-- **OpenAI / Codex** — invokes `codex exec --json` and walks the
-  newline-delimited JSON event stream, pulling text from
-  `item.completed` and tokens from `turn.completed`. Session id
-  is preserved.
+- **OpenAI / Codex** — invokes `codex exec --json -` with the prompt piped on
+  stdin, and walks the newline-delimited JSON event stream, pulling text from
+  `item.completed` and tokens from `turn.completed`. Session id is preserved.
+  Unlike the Anthropic client, there is **no separate system-prompt channel**:
+  `codex exec` has no `--system` flag, so a system prompt is prepended to the
+  user prompt in the same payload.
 
   ```yaml
   members:

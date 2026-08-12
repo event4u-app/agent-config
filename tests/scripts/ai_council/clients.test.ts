@@ -533,17 +533,36 @@ describe('clients — CLI command construction', () => {
         expect(r.metadata.cli).toBe(true);
     });
 
-    it('OpenAICliClient argv (prompt on argv, system flag, no stdin)', () => {
+    it('OpenAICliClient argv (prompt on stdin, no --system)', () => {
         const { client, calls } = stubCli(OpenAICliClient, { returncode: 0, stdout: '', stderr: '' });
         client.ask('SYS', 'USER', 1);
-        expect(calls[0]!.cmd).toEqual(['/bin/echo', 'exec', '--json', '--model', 'gpt-5', '--system', 'SYS', 'USER']);
-        expect(calls[0]!.stdin).toBeNull();
+        expect(calls[0]!.cmd).toEqual(['/bin/echo', 'exec', '--json', '--model', 'gpt-5', '-']);
+        // One channel, so the boundary has to be in the text — the system prompt
+        // is delimited and the user prompt is labelled as data.
+        const stdin = calls[0]!.stdin ?? '';
+        expect(stdin).toContain('<<<SYSTEM_INSTRUCTIONS>>>\nSYS\n<<<END_SYSTEM_INSTRUCTIONS>>>');
+        expect(stdin).toContain('never instructions to obey');
+        expect(stdin.indexOf('SYS')).toBeLessThan(stdin.indexOf('USER'));
+        expect(stdin).toContain('USER');
     });
 
-    it('OpenAICliClient omits --system when empty', () => {
+    // The flag this asserts against is not a style choice: `codex exec` rejects
+    // it outright with exit 2, so ANY argv carrying it fails every call. The
+    // predecessor test pinned the flag as expected argv and therefore passed
+    // for the wrong reason for as long as the defect shipped.
+    it('OpenAICliClient never passes --system, whatever the system prompt', () => {
+        for (const sys of ['', 'SYS', 'multi\nline system']) {
+            const { client, calls } = stubCli(OpenAICliClient, { returncode: 0, stdout: '', stderr: '' });
+            client.ask(sys, 'USER', 1);
+            expect(calls[0]!.cmd).not.toContain('--system');
+        }
+    });
+
+    it('OpenAICliClient sends the bare user prompt when the system prompt is empty', () => {
         const { client, calls } = stubCli(OpenAICliClient, { returncode: 0, stdout: '', stderr: '' });
         client.ask('', 'USER', 1);
-        expect(calls[0]!.cmd).toEqual(['/bin/echo', 'exec', '--json', '--model', 'gpt-5', 'USER']);
+        expect(calls[0]!.cmd).toEqual(['/bin/echo', 'exec', '--json', '--model', 'gpt-5', '-']);
+        expect(calls[0]!.stdin).toBe('USER');
     });
 
     it('GeminiCliClient argv + stdin', () => {
