@@ -359,8 +359,18 @@ const _ALL_TOOLS: ReadonlySet<string> = new Set([
 ]);
 void _ALL_TOOLS;
 
-function _active_tools(): ReadonlySet<string> | null {
-    const tools_file = path.join(MODULE_STATE.PROJECT_ROOT, 'agents', '.agent-tools.yml');
+/**
+ * Tool ids selected by `agents/.agent-tools.yml` under `root`, or `null` when
+ * the file is absent / malformed / carries no `tools:` list — `null` means
+ * "all tools active", never "none".
+ *
+ * Root-parameterised and exported so a consumer auditing a checkout other than
+ * `MODULE_STATE.PROJECT_ROOT` (a gate run with `--root`) reads the selection
+ * this generator actually honours, instead of re-implementing these four
+ * fallbacks and drifting from them.
+ */
+export function active_tools_at(root: string): ReadonlySet<string> | null {
+    const tools_file = path.join(root, 'agents', '.agent-tools.yml');
     if (!_exists(tools_file)) {
         return null;
     }
@@ -378,6 +388,10 @@ function _active_tools(): ReadonlySet<string> | null {
         return null;
     }
     return new Set(tools.filter((t): t is string => typeof t === 'string'));
+}
+
+function _active_tools(): ReadonlySet<string> | null {
+    return active_tools_at(MODULE_STATE.PROJECT_ROOT);
 }
 
 function _tool_active(tool_id: string): boolean {
