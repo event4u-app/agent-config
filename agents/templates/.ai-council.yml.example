@@ -25,9 +25,13 @@
 # never at the raw secret. See docs/contracts/ai-council-config.md for
 # the full schema.
 #
-# Cost note: every consultation makes real, paid API calls. The
-# autonomy directive does NOT silently spend tokens — the /council
-# command always asks before invoking, even under autonomy: on.
+# Cost note: a consultation is billed only when it resolves to the metered
+# `api` rung. A vendor CLI under your subscription is preferred whenever one
+# resolves, so the common case costs nothing per token — run
+# `agent-config council status` to see the resolved transport and billing class
+# per member before invoking. The autonomy directive does NOT silently spend
+# tokens — the /council command always asks before invoking, even under
+# autonomy: on.
 
 # Master switch (true, false). REQUIRED — the loader has no default for it,
 # so this file's value is the only value.
@@ -44,51 +48,30 @@
 # "could work" and "may spend" is visible rather than mysterious.
 enabled: true
 
-# Per-invocation defaults. Each member may override `mode:` below.
+# Per-invocation defaults.
 defaults:
-  # Default transport mode for every member (overridable per-member
-  # below, and per-invocation via `/council mode:<x>`).
+  # There is NO transport-mode setting, deliberately.
   #
-  #   manual = copy & paste — the human transports prompt + reply
-  #            between the agent and an external chat surface. Free,
-  #            no key.
-  #   api    = SDK call against a stored key, per-token billing.
-  #   cli    = shell out to a locally-installed provider CLI under the
-  #            user's subscription auth (Claude Pro/Max, ChatGPT
-  #            Plus/Pro, Google Gemini, etc.). Spend is covered by the
-  #            flat-rate subscription, not per-token. `cost_budget.
-  #            max_total_usd` does NOT apply; use `cli_call_budget`
-  #            below to guard subscription quotas.
-  #   auto   = resolve per provider per invocation: the provider's CLI
-  #            binary resolves AND a credential is present -> cli; else a
-  #            key resolves -> api; else unavailable with a one-line
-  #            reason. `manual` is NEVER part of the auto chain (it would
-  #            always "succeed" and silently turn every call into a
-  #            copy-paste request) — it stays an explicit opt-in.
-  #            THE SHIPPED DEFAULT (road-to-always-on-orchestration
-  #            Phase 3.1 — CLI-first is the owner-set transport doctrine):
-  #            ride the vendor CLI under your subscription first, fall to
-  #            the metered API only where no CLI resolves. Pin `manual` /
-  #            `api` / `cli` here (or per-member below) to override it.
-  #            `cli_call_budget` below ships populated with a generous
-  #            per-provider guard so this default never runs your
-  #            subscription quota uncapped.
+  # Transport is resolved per machine per invocation — `cli → api →
+  # unavailable`, and an airgapped host forces the `api` rung. A vendor CLI
+  # under your subscription is preferred whenever one resolves with a
+  # credential, so the free transport wins without anybody configuring it.
   #
-  # Precedence: invocation flag > per-member mode > defaults.mode >
-  # built-in. Two DIFFERENT defaults sit at the bottom, and they are not
-  # the same thing:
-  #   · omit `defaults.mode` entirely and the loader fills "auto" (was
-  #     "api" before the Phase 3.1 flip) — that is what every real config
-  #     file observes.
-  #   · the resolver's built-in fallback, reached only when no layer at all
-  #     supplies a mode (a settings dict handed straight to the resolver,
-  #     no config file involved), is "manual" — free, no key. A caller who
-  #     named no transport has not asked to spend money. This did NOT flip
-  #     alongside the loader default: `auto` still resolves to a paying
-  #     rung when no CLI is usable, so flipping this too would let a
-  #     caller that bypassed the config file spend money on a preference
-  #     it never stated.
-  mode: auto
+  # It used to be `defaults.mode`, with a per-member override. The default was
+  # flipped to CLI-first, but a default only fires on an ABSENT key: every
+  # config that had spelled the key out — which this template did, and which
+  # the setup wizard wrote — kept its old `api` value and went on paying per
+  # token while a paid-for subscription CLI sat unused on the same machine.
+  # A knob whose stale value silently costs money is worse than no knob.
+  #
+  # A file that still carries `mode:` (here or under a member) loads fine; the
+  # key is ignored and `agent-config council status` lists it as ignored so you
+  # can delete it. To pin one transport for ONE run — including the free,
+  # key-free `manual` copy-paste loop — pass `--mode-override` on the
+  # invocation. That is a flag, not a setting: it cannot go stale.
+  #
+  # `agent-config council status` prints the resolved transport and the billing
+  # class per member, which is the only honest answer to "will this cost money".
 
   # Default number of debate rounds per /council invocation.
   #
@@ -264,7 +247,9 @@ quorum: majority
 #                 under ~/.event4u/agent-config/, legacy
 #                 ~/.config/agent-config/ read as a fallback) or an env
 #                 var (`env:<VAR>`). Raw keys here are a hard validation
-#                 error. Required for mode: api; optional for cli /
+#                 error. Optional: it is the credential for the metered `api`
+#                 fallback rung. Absent, that rung is simply unavailable and
+#                 the member needs a working CLI. Not needed for cli /
 #                 manual / auto (those may authenticate via the CLI).
 #   mode:         overrides defaults.mode for this member only.
 #   binary:       absolute path to the provider's CLI — only valid when
@@ -290,7 +275,6 @@ members:
     enabled: true
     model: claude-sonnet-4-5
     api_key_ref: file:anthropic.key
-    # mode: cli                          # use subscription auth (Claude Pro/Max) — free, see cli_call_budget above
     # binary: /usr/local/bin/claude      # only valid when mode == cli
     # Phase 7 — size-fit downgrade ladder (smallest → largest). The
     # active `model:` above must appear on this list. When the size
@@ -325,7 +309,6 @@ members:
     enabled: true
     model: gpt-4o
     api_key_ref: file:openai.key
-    # mode: cli                          # use subscription auth (ChatGPT Plus/Pro via Codex CLI) — free
     # binary: /usr/local/bin/codex       # only valid when mode == cli
     # Phase 7 — size-fit downgrade ladder (smallest → largest). The
     # active `model:` above must appear on this list.
@@ -340,14 +323,12 @@ members:
     enabled: false
     model: gemini-2.5-pro
     api_key_ref: env:GEMINI_API_KEY
-    # mode: cli                          # use Google account (free-tier limits apply) — free
     # binary: /usr/local/bin/gemini      # only valid when mode == cli
 
   xai:
     enabled: false
     model: grok-4
     api_key_ref: env:XAI_API_KEY
-    # mode: cli                          # community `grok` CLI (Superagent) — ergonomic shortcut, NOT a billing change.
     # binary: /usr/local/bin/grok        # The CLI consumes XAI_API_KEY and remains billable=True;
     #                                    # cost_budget.max_total_usd STILL applies. Opt-in only.
 
@@ -355,7 +336,6 @@ members:
     enabled: false
     model: sonar-pro
     api_key_ref: env:PERPLEXITY_API_KEY
-    # mode: cli                          # community `perplexity` CLI — ergonomic shortcut, NOT a billing change.
     # binary: /usr/local/bin/perplexity  # The CLI consumes PERPLEXITY_API_KEY and remains billable=True;
     #                                    # cost_budget.max_total_usd STILL applies. Opt-in only.
 

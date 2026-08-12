@@ -289,10 +289,17 @@ describe('council_cli CLI — argparse intent', () => {
 // ── quota / shadow-report (read-only, no member construction) ───────
 
 describe('council_cli quota + shadow-report — intent', () => {
-    it('quota (no configured caps in user-global config) → exit 0', () => {
+    it('quota → exit 0 and one council:quota report, whatever this machine has configured', () => {
         const ts = runTs(['quota']);
         expect(ts.status).toBe(0);
-        expect(ts.stdout).toContain('council:quota · no providers have a configured cli_call_budget.max_calls_per_day cap.');
+        // Deliberately NOT pinning which of the two shapes appears. The old
+        // assertion demanded the "no configured caps" line, and it held only
+        // because the developer's real user-global config pinned `mode: api`,
+        // which took every member out of the CLI call budget. Now that
+        // transport is resolved rather than configured, every member is `auto`
+        // and the caps apply wherever a config exists — so the old expectation
+        // was asserting a property of one machine, not of the verb.
+        expect(ts.stdout).toMatch(/^council:quota · /);
     });
 
     it('quota --reset openai without --confirm → exit 2', () => {
