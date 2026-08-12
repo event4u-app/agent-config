@@ -50,7 +50,16 @@
  *    longer than the TTL means another session may claim your branch.
  * 2. **This is advisory, not a mutex.** Two sessions can claim in the same
  *    millisecond. Nothing here provides exclusion, and no later feature may be
- *    built on it as if it did.
+ *    built on it as if it did. `sessions:claim` refusing to WRITE a claim a peer
+ *    holds is a consistency check on its own write, not exclusion: it protects
+ *    the record from being false, never the peer from being duplicated.
+ * 3. **The claim is per SESSION, and the bridge file has to be too.** The
+ *    paragraph above rules `agents/runtime/state/` out for the register and the
+ *    same argument applies to the claim that feeds it: one shared file per
+ *    checkout means a second session in the same directory reads the first one's
+ *    claim as its own. Measured — four live records carrying one identical,
+ *    already-archived slug. The file is keyed on the host session id where one
+ *    exists, and degrades to the shared path where none does.
  *
  * ## Failure is always open
  *
@@ -358,4 +367,61 @@ export function foreign_live_records(
 ): SessionRecord[] {
     const own = safe_stem(session_id);
     return read_live_records(dir, options).filter((r) => safe_stem(r.session_id) !== own);
+}
+
+// ---------------------------------------------------------------------------
+// Collisions — and why `branch` alone was the wrong axis
+// ---------------------------------------------------------------------------
+
+/**
+ * What two live sessions are colliding over.
+ *
+ * `branch` was the only axis this register checked, and it is the CHEAP one: two
+ * sessions on one branch see each other immediately, and coordinating is a
+ * `git worktree add`. `roadmap` is the expensive one and went unchecked —
+ * measured twice (PR #1277/#1280, PR #1280/#1281), both times two sessions built
+ * the SAME roadmap phase under DIFFERENT branch names
+ * (`feat/dispatch-safety-confirmation` vs `feat/dispatch-safety-confirmed-execution`),
+ * so the branch comparison was silent by construction while a whole
+ * implementation was duplicated. One of the two PRs is thrown away either way.
+ */
+export type CollisionKind = 'roadmap' | 'branch';
+
+export interface Collision {
+    kind: CollisionKind;
+    record: SessionRecord;
+}
+
+/**
+ * Classify what this session collides with, roadmap-first.
+ *
+ * Ordering is the finding, not a preference: a roadmap collision means the work
+ * is being done twice and one branch is already wasted, while a branch collision
+ * means two sessions can see each other's commits. Reporting the cheap one first
+ * is what let the expensive one pass unremarked.
+ *
+ * A `null` slug never collides — "no roadmap claimed" is the state of every
+ * session before it picks one, and treating absence as a match would make the
+ * warning fire on every pair of fresh sessions and be switched off.
+ */
+export function classify_collisions(
+    others: readonly SessionRecord[],
+    here: { branch: string | null; roadmap_slug: string | null },
+): Collision[] {
+    const out: Collision[] = [];
+    for (const r of others) {
+        if (
+            here.roadmap_slug !== null &&
+            r.roadmap_slug !== null &&
+            r.roadmap_slug === here.roadmap_slug
+        ) {
+            out.push({ kind: 'roadmap', record: r });
+        }
+    }
+    for (const r of others) {
+        if (here.branch !== null && r.branch === here.branch) {
+            out.push({ kind: 'branch', record: r });
+        }
+    }
+    return out;
 }
