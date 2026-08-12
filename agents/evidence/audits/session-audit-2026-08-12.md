@@ -126,6 +126,44 @@ not appear — in the same window whose transcripts carry these two lines:
 > *"Ich kann wieder nicht releasen. Warum nicht?"* <!-- md-language-check: ignore -->
 > *"SChon wieder geht das release nicht !!!"* <!-- md-language-check: ignore -->
 
+## Council convergence — the guards are one class, not three incidents
+
+Convened 2026-08-12 on the design question the three fixes raised: is
+"narrow the regex again" the right layer? Members: anthropic
+(claude-sonnet-4-5) + openai (gpt-4o), quorum 2/2, actual cost $0.07.
+
+Both members converged, and the argument is not stylistic:
+
+> A finite pattern cannot bound an infinite false-positive set — narrowing is
+> sampling from an unbounded error space, not converging on a solution.
+
+The history in this tree is the supporting evidence. `block-unauthorized-git`
+has now been narrowed **three** times — quoted `|`, dotted path segments,
+unanchored verb — and `evidence-independence`'s self-scope discriminator was
+*itself* the fix for an earlier false positive of the same shape. Each fix was
+right about the case in front of it and bought nothing against the next.
+
+**The rule both members endorsed: severity follows the input type.**
+
+- Structured input (a schema field, an enum, a tool name, an exit code) may block.
+- Free text that only *triggers* a lookup, with structured state deciding, may block.
+- Free text alone may only warn.
+
+**Why a prompt cannot reach the first tier by pattern alone.** Shell has
+positional grammar, so "verb at command position" is a real discriminator — that
+is what the git guard now uses. A subagent prompt has no grammar to anchor to:
+`review this branch` is ambiguous between an action, a topic and a location, and
+the audited false positive was exactly that ambiguity. The route back to
+blocking is a `role` / `evidence_scope` field set at the call site, not a better
+regex.
+
+**What the council flagged that this audit missed:** guards may see text
+*before* template expansion. A guard reading `rm $FILES` cannot know whether
+`$FILES` expands to `*.tmp` or `*`. Unverified here, and carried forward.
+
+**Not adopted:** machine-learned intent classification — both members rejected
+it on maintenance cost and the precision natural language would demand.
+
 ## Findings carried into a roadmap
 
 `road-to-fan-out-guard-correctness.md` carried F1 (fan-out guard), F2

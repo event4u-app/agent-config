@@ -2,14 +2,14 @@
 
 > Auto-generated — do not edit. Regenerate with `task roadmap-progress` or by running the `update_roadmap_progress` script for your install; rewritten on every roadmap create / execute / completion change (timestamp lives in git history).
 >
-> 29 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **41** open blockers, **9** need you → `agent-config gates`
+> 30 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **41** open blockers, **9** need you → `agent-config gates`
 
 ## Overall
 
-**267 / 378 steps done · 71%**
+**267 / 387 steps done · 69%**
 
 ```text
-████████████████████████████░░░░░░░░░░░░   71%
+████████████████████████████░░░░░░░░░░░░   69%
 ```
 
 ## Open roadmaps
@@ -39,12 +39,13 @@
 | 21 | [road-to-skill-ecosystem-executable-payloads.md](roadmaps/road-to-skill-ecosystem-executable-payloads.md) | 6 | 21 | 1 | 4 | 15 | 1 | [2](#blockers-road-to-skill-ecosystem-executable-payloads) | ████████░░ 80% |
 | 22 | [road-to-skill-ecosystem-gate-integrity.md](roadmaps/road-to-skill-ecosystem-gate-integrity.md) | 5 | 43 | 3 | 40 | 0 | 0 | [1](#blockers-road-to-skill-ecosystem-gate-integrity) | █████████░ 93% |
 | 23 | [road-to-solution-minimalism.md](roadmaps/road-to-solution-minimalism.md) | 4 | 36 | 10 | 25 | 0 | 1 | [1](#blockers-road-to-solution-minimalism) | ███████░░░ 71% |
-| 24 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 6 | 3 | 0 | 0 | [1](#blockers-road-to-subagent-value-realization-followup) | ███░░░░░░░ 33% |
-| 25 | [road-to-surface-consolidation.md](roadmaps/road-to-surface-consolidation.md) | 3 | 14 | 1 | 12 | 1 | 0 | [2](#blockers-road-to-surface-consolidation) | █████████░ 92% |
-| 26 | [road-to-tier-removal.md](roadmaps/road-to-tier-removal.md) | 4 | 8 | 2 | 6 | 0 | 0 | [1](#blockers-road-to-tier-removal) | ████████░░ 75% |
-| 27 | [road-to-ui-track-integrity-followup.md](roadmaps/road-to-ui-track-integrity-followup.md) | 1 | 10 | 10 | 0 | 0 | 0 | [2](#blockers-road-to-ui-track-integrity-followup) | ░░░░░░░░░░ 0% |
-| 28 | [road-to-worktree-hygiene.md](roadmaps/road-to-worktree-hygiene.md) | 1 | 9 | 2 | 7 | 0 | 0 | [1](#blockers-road-to-worktree-hygiene) | ████████░░ 78% |
-| 29 | [road-to-zero-settings.md](roadmaps/road-to-zero-settings.md) | 4 | 9 | 5 | 4 | 0 | 0 | [1](#blockers-road-to-zero-settings) | ████░░░░░░ 44% |
+| 24 | [road-to-structured-guard-input.md](roadmaps/road-to-structured-guard-input.md) | 4 | 9 | 9 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+| 25 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 6 | 3 | 0 | 0 | [1](#blockers-road-to-subagent-value-realization-followup) | ███░░░░░░░ 33% |
+| 26 | [road-to-surface-consolidation.md](roadmaps/road-to-surface-consolidation.md) | 3 | 14 | 1 | 12 | 1 | 0 | [2](#blockers-road-to-surface-consolidation) | █████████░ 92% |
+| 27 | [road-to-tier-removal.md](roadmaps/road-to-tier-removal.md) | 4 | 8 | 2 | 6 | 0 | 0 | [1](#blockers-road-to-tier-removal) | ████████░░ 75% |
+| 28 | [road-to-ui-track-integrity-followup.md](roadmaps/road-to-ui-track-integrity-followup.md) | 1 | 10 | 10 | 0 | 0 | 0 | [2](#blockers-road-to-ui-track-integrity-followup) | ░░░░░░░░░░ 0% |
+| 29 | [road-to-worktree-hygiene.md](roadmaps/road-to-worktree-hygiene.md) | 1 | 9 | 2 | 7 | 0 | 0 | [1](#blockers-road-to-worktree-hygiene) | ████████░░ 78% |
+| 30 | [road-to-zero-settings.md](roadmaps/road-to-zero-settings.md) | 4 | 9 | 5 | 4 | 0 | 0 | [1](#blockers-road-to-zero-settings) | ████░░░░░░ 44% |
 
 ---
 
@@ -723,6 +724,17 @@ _1 blocker resolved._
     the metric-pair acceptance criterion cannot report a pass without #11. The
     grant unblocks the run; it does not unblock the harness.
   - **Resolved when:** the user states a spend ceiling for the Phase-3 sweep, or cancels Phase 3 against the cost sheet.
+
+### [road-to-structured-guard-input.md](roadmaps/road-to-structured-guard-input.md)
+
+**Road to structured guard input — stop guessing intent from prose** — 0 / 9 done (0%)
+
+| # | Phase | State | Open | Done | Deferred | Cancelled | % |
+|---|---|---|---:|---:|---:|---:|---:|
+| 1 | measure before building | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
+| 2 | the structured field, if Phase 1 supports it | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
+| 3 | the adversarial question the council raised | ⬜ not started | 1 | 0 | 0 | 0 | 0% |
+| 4 | the blind spot the audit missed | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
 
 ### [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md)
 
