@@ -162,18 +162,46 @@ fix.
       `capsule_version`, wrong `variant`, an unknown key, unparseable and
       missing `written_at`, empty `acceptance_criteria`, non-object payloads,
       and the all-violations-at-once case.
-- [ ] **3.4 `surface prune` as a report flag.** OPEN — the step's own premise
-      does not hold, and inventing past it would be the failure this roadmap is
-      about. It reads "a flag beats a 197th command", which presumes a host verb
-      named `surface`. There is none: `grep "'surface" src/cli/registry.ts`
-      returns nothing, and no script generates `docs/SKILL_CENSUS.md` or
-      `docs/artefact-census.md` (the only reader is
-      `check_artefact_count_messaging.ts`). So the choices are to create the
-      verb the step forbids, or to pick a different host verb — a design
-      decision the step did not make and this run declines to make silently.
-      Whoever takes it: `commands` (native, already "list/explain the command
-      surface") is the nearest candidate, and 3.5 already points the
-      reduction TARGETS at the three roadmaps that own them.
+- [x] **3.4 `surface prune` as a report flag.** Landed as
+      `commands ls --candidates`, and the three design decisions the step
+      refused to make silently are recorded here rather than in a commit body.
+      **Host verb: `commands`** — the step's own named candidate, confirmed
+      real (`registry.ts`, `native`, synopsis "List/explain the command
+      surface"). Zero new registry verbs, so Risk 3 does not fire.
+      **NOT named `--prune`, and that is the finding the step could not see:**
+      `prune` is ALREADY a registered verb (`registry.ts`, `delegate`) meaning
+      "remove orphaned bridge markers against `installed-tools.lock`". A
+      `--prune` flag here would read as "delete commands" — the one thing this
+      report must not do, since 3.5 hands the reduction targets to
+      `road-to-surface-consolidation`, `road-to-solution-minimalism` and
+      `road-to-tier-removal`. The report names all three and decides nothing.
+      **Data source changed, with the reason:** the step pointed at
+      `docs/SKILL_CENSUS.md` and `docs/artefact-census.md`. Both are DATED
+      point-in-time snapshots — measured 2026-07-13 (237 skills) and
+      2026-06-09 (227 skills / 150 commands) against a tree now at 289 / 196 —
+      and `check_artefact_count_messaging.ts` excludes them **by design**
+      ("carry point-in-time counts by design"). `SKILL_CENSUS` states outright
+      that no usage evidence backs its Keep/Prune calls. Rendering either as
+      current would ship exactly the unbacked claim this roadmap exists to
+      remove, so the report reads the **discovery manifest** instead: every row
+      traces to a manifest field (`replaces`, `visibility`, `intent`, `pack`)
+      a reader can grep. Both snapshots are named in the output with the
+      warning not to read their numbers as current.
+      **`utilization_report` is named, not imported.** Its D1/REAP verdict is
+      the designated usage-backed signal, but its entry guard is an argv
+      comparison with no `__AGENT_CONFIG_BUNDLE__` guard, and this file reaches
+      the CLI bundle via `main.ts` — the precondition 3.1 hit on
+      `preamble_byte_census`. Half-importing it would have run its `main` at
+      import time. The report states the evidence gap and its owner instead.
+      **Measured on the real manifest, first run:** 196 commands — 5 visible,
+      17 advanced, 174 internal; **8 deprecation shims** with their replaced
+      ids; **166 of 196 commands carry no `intent`**. Text mode caps the
+      undocumented enumeration at 12 and **names the withheld count** ("… and
+      154 more"); `--json` is never capped. 19 assertions in
+      `src/cli/commands/commands.candidates.test.ts`, every expectation derived
+      from its input rather than pinned to emitted prose; the disclaimer and
+      the owner list are exported constants so a deletion fails the suite
+      while a rewording does not.
       ORIGINAL TEXT: Over census data already computed
       in `docs/SKILL_CENSUS.md` and `docs/artefact-census.md`; a flag beats a 197th
       command against a 196-command surface.
