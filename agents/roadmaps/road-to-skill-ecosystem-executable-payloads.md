@@ -16,8 +16,12 @@ default-off until its gate clears (ADR-202 discipline). Form: inverted harvest
 (ADR-211 C/D) — it starts from confirmed defects in this tree and draws sources
 in, never pushing sources onto the repo additively.
 
-Source: [`agents/tmp.old/aisa-skills/road-to-executable-skill-payloads.md`](../tmp.old/aisa-skills/road-to-executable-skill-payloads.md)
+Source: [`agents/tmp.old/inbox-2026-08-12-skill-payloads/road-to-executable-skill-payloads.md`](../tmp.old/inbox-2026-08-12-skill-payloads/road-to-executable-skill-payloads.md)
 (+ `chat.txt`, the transcript that produced it), analysed via `/analyze:inbox`.
+Per `source-confidentiality`, the four external skill estates it compared against
+are described here by what they do, never by repo, org, or author name; the raw
+named evidence stays in the gitignored path above and never enters the tracked
+tree.
 
 ## Context
 
@@ -32,7 +36,8 @@ This consumes the second slot — free one before opening another family roadmap
 **Provenance of the source.** The inbox artifact pinned five live trees on
 2026-08-12 and carried `agent-config @ 9c0fe519` (v9.35.0) as its drafting SHA.
 That let the staleness window be read mechanically: `9c0fe519..HEAD` is 18
-commits, all in turn-end-gate, consultation-rate and graphify-inbox-harvest —
+commits, all in unrelated tracks (a turn-end gate, a consultation-rate metric,
+an inbox-harvest branch) —
 **none touches `src/skills/`, the skill schema, `_lib/`, or the eval layer.** The
 defects below are therefore unaffected by the window: they are live, not stale.
 
@@ -289,4 +294,6 @@ is nothing to benchmark before that.
 Source repos were pinned by the inbox artifact on 2026-08-12; the five defect
 claims, the four corrections, and every count in this file were re-derived
 against the working tree rather than carried over. The source artifact and its
-transcript are retained under `agents/tmp.old/aisa-skills/`.
+transcript are retained under the gitignored
+`agents/tmp.old/inbox-2026-08-12-skill-payloads/`, which is where the named
+sources stay.
