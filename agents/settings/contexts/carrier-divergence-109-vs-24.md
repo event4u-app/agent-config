@@ -1,12 +1,22 @@
 # Carrier divergence — 109 prose-identical, 24 actionable
 
 Durable home for a correction that kept being re-derived wrongly. The figure
-"109 divergent carrier pairs, binding undefined" circulated through five
+"109 divergent carrier pairs, binding undefined" circulated through **six**
 independent release reviews as the single largest piece of technical debt in the
 tree. It is wrong, and it was wrong by 78%. The correction previously existed
 only in a transient roadmap and in one analysis file, so every fresh reader
 re-derived the original number from the report's own output. This is the stable
 surface it lacked.
+
+**The sixth circulation added a target, and the target is the part to reject.**
+The 9.30→9.35 review span asks, as a P0, to "bring divergent carrier pairs to 0".
+There is nothing to bring to zero: all 109 pairs carry byte-identical prose, so
+convergence is already total on every governed sentence. The number that can
+move is **24** — the pairs disagreeing on `paths:` — and it is blocked on
+`carrier-install-paths-decision` (owner: maintainer) in
+`road-to-carrier-layer-convergence.md`, not on engineering effort. A plan phrased
+as "divergence → 0" therefore describes no work; it reads as 109 units of debt
+where 24 units of *decision* exist.
 
 ## What was measured (2026-08-10)
 

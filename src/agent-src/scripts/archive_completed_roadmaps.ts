@@ -335,6 +335,23 @@ function archive_completed(
         if (stats.open_ !== 0 || stats.deferred !== 0) {
             continue; // not complete
         }
+        // An unresolved blocker outlives its steps. Closing every box does not
+        // answer a question the roadmap raised for a human, and archiving on
+        // step-count alone is how `b-highlights-mechanism` left the active tree
+        // unanswered in the 9.29 roadmap — four releases before the failure it
+        // predicted shipped in the 9.36.0 changelog head. Same discipline
+        // `roadmap-progress-sync` Iron Law 3 applies to `[~]` steps: a roadmap
+        // carrying an open decision stays visible until the decision is made.
+        const open_blockers = stats.open_blockers;
+        if (open_blockers.length > 0) {
+            const ids = open_blockers.map((b) => b.id).join(', ');
+            process.stderr.write(
+                `  ⚠️  ${stats.rel}: all steps closed but ${open_blockers.length} ` +
+                    `blocker(s) still open (${ids}) — not archived. Resolve them, ` +
+                    'or record the decision, then re-run the sweep.\n',
+            );
+            continue;
+        }
         const old_rel = `agents/roadmaps/${stats.rel}`;
         if (changed_only && !(touched as Set<string>).has(old_rel)) {
             continue; // complete, but not this branch's work
