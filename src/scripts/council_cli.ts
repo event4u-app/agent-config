@@ -2328,6 +2328,31 @@ function _emit_shadow_slo_banner(): void {
  * leaves nothing to infer. Exit is always 0 — this reports a state, it does not
  * gate — and the verdict line is machine-greppable in both directions.
  */
+/**
+ * Resolve the concrete transport a member would use on THIS machine right now.
+ *
+ * `cmd_status` exists to answer "is the council reachable, and will it bill me".
+ * Since the transport-mode setting was removed, the second half is not a value
+ * anyone can look up in the config — it is a per-machine resolution. Printing a
+ * configured mode would be the same class of stale answer the removed setting
+ * produced. `mode` is pinned to `auto` because the loader no longer emits
+ * anything else.
+ */
+function _resolvedTransportFor(
+    name: string,
+    member: { readonly binary: string | null; readonly api_key_ref: string | null },
+    report?: EnvironmentReport,
+): ReturnType<typeof resolveMemberTransport> {
+    return resolveMemberTransport({
+        provider: name,
+        report: report ?? detectEnvironment(),
+        invocationMode: null,
+        memberSettings: null,
+        globalMode: 'auto',
+        binaryOverride: member.binary,
+    });
+}
+
 export function cmd_status(args: Args, opts: { env?: Record<string, string | undefined> } = {}): number {
     const env = opts.env ?? process.env;
     const override = env[COUNCIL_CONFIG_ENV];
@@ -2363,6 +2388,21 @@ export function cmd_status(args: Args, opts: { env?: Record<string, string | und
                 members_total: cfg === null ? null : cfg.members.size,
                 members_enabled: cfg === null ? null : enabledMembers.length,
                 member_names: enabledMembers.map(([n]) => n),
+                transports: Object.fromEntries(
+                    enabledMembers.map(([n, m]) => {
+                        const t = _resolvedTransportFor(n, m);
+                        return [
+                            n,
+                            {
+                                available: t.available,
+                                transport: t.available ? t.transport : null,
+                                billing: t.available ? t.billing : null,
+                                reason: t.reason,
+                            },
+                        ];
+                    }),
+                ),
+                ignored_transport_keys: cfg?.ignored_transport_keys ?? [],
                 parse_error,
                 project_tree_consulted: false,
             })}\n`,
@@ -2382,6 +2422,25 @@ export function cmd_status(args: Args, opts: { env?: Record<string, string | und
         _stdout(`  members          ${enabledMembers.length} enabled of ${cfg.members.size}\n`);
         if (enabledMembers.length > 0) {
             _stdout(`                   ${enabledMembers.map(([n]) => n).join(', ')}\n`);
+        }
+        // Transport is resolved per machine, so the only honest way to answer
+        // "will this cost money" is to resolve it here rather than print a
+        // configured value. The billing class comes from the detected auth
+        // source, never from the transport name — a community CLI wrapper
+        // shells out to the same paid API and stays metered.
+        for (const [name, member] of enabledMembers) {
+            const t = _resolvedTransportFor(name, member);
+            const billing = t.available ? ` · ${t.billing}` : '';
+            const detail = t.available ? t.transport : `unavailable — ${t.reason ?? 'no usable transport'}`;
+            _stdout(`  transport        ${name}: ${detail}${billing}\n`);
+        }
+        if (cfg.ignored_transport_keys.length > 0) {
+            _stdout('\n');
+            _stdout('  Ignored transport keys — transport is resolved, not configured:\n');
+            for (const key of cfg.ignored_transport_keys) {
+                _stdout(`    ${key}\n`);
+            }
+            _stdout('  Safe to delete from the config file; they change nothing.\n');
         }
     }
     _stdout('\n');

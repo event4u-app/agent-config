@@ -639,6 +639,20 @@ export interface CouncilConfig {
     readonly low_impact: LowImpactConfig;
     readonly lens_overrides: LensOverridesConfig;
     readonly source_path: PathLike | null;
+    /**
+     * Transport keys the config file still carries and the loader deliberately
+     * IGNORED — dotted paths, e.g. `defaults.mode`, `members.anthropic.mode`.
+     *
+     * Transport is resolved per machine per invocation, never configured: the
+     * chain is `cli → api → unavailable`, and an airgapped host forces the
+     * `api` rung. Deleting the keys from the schema outright would have made
+     * every pre-existing installation fail to load, so a stale key is
+     * accepted, ignored, and reported once — the migration IS the ignore.
+     *
+     * Empty on a config that never carried one, which is the shape the current
+     * template ships.
+     */
+    readonly ignored_transport_keys: readonly string[];
 }
 
 // ── default factories (dataclass defaults) ─────────────────────────
@@ -796,7 +810,11 @@ export function _build_config(raw: Dict, source_path: PathLike): CouncilConfig {
         throw new CouncilConfigError('`enabled` must be a bool.');
     }
 
-    const defaults = _build_defaults(_asDict(_getOr(raw, 'defaults', {})));
+    const ignored_transport_keys: string[] = [];
+    const defaults = _build_defaults(
+        _asDict(_getOr(raw, 'defaults', {})),
+        ignored_transport_keys,
+    );
     const cost_budget = _build_cost_budget(
         _asDict(_getOr(raw, 'cost_budget', {})),
     );
@@ -809,7 +827,12 @@ export function _build_config(raw: Dict, source_path: PathLike): CouncilConfig {
     for (const [name, cfg] of Object.entries(members_raw)) {
         members.set(
             name,
-            _build_member(name, _asDict(_orEmpty(cfg)), defaults.mode),
+            _build_member(
+                name,
+                _asDict(_orEmpty(cfg)),
+                defaults.mode,
+                ignored_transport_keys,
+            ),
         );
     }
 
@@ -920,6 +943,7 @@ export function _build_config(raw: Dict, source_path: PathLike): CouncilConfig {
         low_impact,
         lens_overrides,
         source_path,
+        ignored_transport_keys,
     };
 }
 
@@ -1508,23 +1532,32 @@ function _build_consensus_scoring(d: Dict): ConsensusScoringConfig {
 
 const _VALID_MEMBER_MODES: ReadonlySet<string> = new Set(['cli', 'api']);
 
-function _build_defaults(d: Dict): DefaultsConfig {
+function _build_defaults(d: Dict, ignored: string[] = []): DefaultsConfig {
     if (!_isDict(d)) {
         throw new CouncilConfigError('`defaults` must be a mapping.');
     }
-    // road-to-always-on-orchestration Phase 3.1: CLI-first is the shipped
-    // default (was `api`) — see the module docstring rule 2. `manual` and a
-    // pinned `api`/`cli` remain valid overrides at every layer resolve_mode
-    // checks; this only changes what a config that never sets `mode` gets.
-    const mode = _get(d, 'mode', 'auto');
-    if (!(_isStr(mode) && _VALID_MODES.has(mode))) {
-        throw new CouncilConfigError(
-            `defaults.mode=${_pyRepr(mode)} not in ${_sortedListRepr(_VALID_MODES)}.`,
-        );
+    // Transport is RESOLVED, never configured.
+    //
+    // The CLI-first flip (road-to-always-on-orchestration Phase 3.1) changed
+    // only what a config that OMITS `mode` receives. Every installation that
+    // spelled the key out — which the wizard did, and which every pre-flip
+    // template shipped — kept its old `api` value forever, silently, and went
+    // on paying per token while a subscription CLI sat unused on the same
+    // machine. A default that only fires on an absent key does not migrate
+    // anybody; it just makes the docs read better than the behaviour.
+    //
+    // So the key is no longer read. `auto` is the only value this loader
+    // produces, and `transport_resolver` picks the concrete rung per machine
+    // per invocation (`cli → api → unavailable`, airgap forcing `api`). A file
+    // still carrying `mode:` loads fine and is reported via
+    // `ignored_transport_keys` — see `CouncilConfig`.
+    if (_get(d, 'mode', undefined) !== undefined) {
+        ignored.push('defaults.mode');
     }
+    const mode = 'auto';
     // `member_mode` (step-9 P8 · U1) — global preference for solo /
-    // CLI-mode invocations. Narrower set than `defaults.mode` because
-    // `manual` makes no sense as a per-member dispatch default.
+    // CLI-mode invocations. Narrower set than the retired `defaults.mode`
+    // because `manual` makes no sense as a per-member dispatch default.
     const member_mode = _get(d, 'member_mode', 'cli');
     if (!(_isStr(member_mode) && _VALID_MEMBER_MODES.has(member_mode))) {
         throw new CouncilConfigError(
@@ -1726,6 +1759,7 @@ function _build_member(
     // a future caller that omits the third argument observes the same
     // doctrine rather than silently reverting to the retired `api` default.
     default_mode = 'auto',
+    ignored: string[] = [],
 ): MemberConfig {
     if (!_VALID_PROVIDERS.has(name)) {
         throw new CouncilConfigError(
@@ -1738,15 +1772,15 @@ function _build_member(
     const model = _pyTruthy(modelVal) ? (modelVal as string) : '';
     const api_key_ref_raw = _get(cfg, 'api_key_ref', null);
     const api_key_ref = api_key_ref_raw === undefined ? null : api_key_ref_raw;
-    const member_mode_raw = _get(cfg, 'mode', null);
-    const member_mode = member_mode_raw === undefined ? null : member_mode_raw;
-    if (member_mode !== null && !(_isStr(member_mode) && _VALID_MODES.has(member_mode))) {
-        throw new CouncilConfigError(
-            `members.${name}.mode=${_pyRepr(member_mode)} not in ` +
-                `${_sortedListRepr(_VALID_MODES)}.`,
-        );
+    // Per-member transport is no longer configurable either — same reasoning
+    // as `_build_defaults`. A member that pinned `mode: api` would reintroduce
+    // exactly the silent-spend path the global key was removed for, one
+    // provider at a time. Recorded as ignored, never read.
+    if (_get(cfg, 'mode', undefined) !== undefined) {
+        ignored.push(`members.${name}.mode`);
     }
-    const effective_mode = member_mode !== null ? (member_mode as string) : default_mode;
+    const member_mode: string | null = null;
+    const effective_mode = default_mode;
     const binary_raw = _get(cfg, 'binary', null);
     const binary = binary_raw === undefined ? null : binary_raw;
     if (binary !== null) {
