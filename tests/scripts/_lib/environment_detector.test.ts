@@ -3,8 +3,11 @@
  *
  * Five synthetic machines (bare · cli-only · keys-only · mixed ·
  * unreadable-credential-file), the static no-network property, and the
- * version-shape table. Every case injects `home` / `pathEnv` / `env` and a
- * stub version probe, so nothing here touches the developer's real machine.
+ * version-shape table, plus the macOS Keychain rung for the anthropic
+ * subscription. Every case injects `home` / `pathEnv` / `env`, a stub version
+ * probe AND a stub Keychain probe, so nothing here touches the developer's real
+ * machine — the Keychain probe in particular defaults to shelling out to
+ * `security`, which would otherwise let a subscribed laptop decide outcomes.
  */
 
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
@@ -64,6 +67,12 @@ function machine(extraEnv: Record<string, string> = {}): DetectEnvironmentOption
             ...extraEnv,
         },
         probeVersion: () => 'stub 1.2.3\n',
+        // This suite's whole contract is that no case touches the developer's
+        // real machine. The Keychain probe defaults to shelling out to
+        // `security`, so a macOS machine holding a Claude subscription would
+        // otherwise inject a `cli-subscription` auth into the `bare` and
+        // `keys-only` fixtures and make their outcome depend on who ran them.
+        probeKeychain: () => false,
     };
 }
 
@@ -358,13 +367,27 @@ describe('static property: read-only and spend-free', () => {
         expect(violations).toEqual(['node:https']);
     });
 
-    it('never calls fetch and spawns only a --version probe', () => {
+    it('never calls fetch, and every spawn site is a read-only probe', () => {
         const src = fs.readFileSync(DETECTOR_SRC, 'utf-8');
         expect(src).not.toMatch(/\bfetch\s*\(/);
         expect(src).not.toMatch(/\bexecSync\s*\(/);
-        // One spawn call site, and its argv is the version flag.
-        expect(src.match(/spawnSync\(/g)).toHaveLength(1);
+        // TWO spawn call sites, both read-only: the version probe and the
+        // macOS Keychain presence probe. The count is pinned deliberately —
+        // a third one appearing should force a reviewer to justify it here.
+        expect(src.match(/spawnSync\(/g)).toHaveLength(2);
         expect(src).toContain("['--version']");
+        expect(src).toContain("'find-generic-password'");
+    });
+
+    it('the Keychain probe never asks for the secret itself', () => {
+        const src = fs.readFileSync(DETECTOR_SRC, 'utf-8');
+        // `security find-generic-password -w` PRINTS the password to stdout.
+        // Without `-w` it prints attributes only, so presence is read from the
+        // exit code and the credential cannot reach a log, a detection report,
+        // or a crash dump. This is the security property of the probe, so it
+        // gets its own witness rather than riding along in the argv check.
+        expect(src).not.toMatch(/'find-generic-password',\s*'-w'/);
+        expect(src).not.toMatch(/'-w',\s*'-s'/);
     });
 });
 
@@ -437,5 +460,40 @@ describe('per-process cache', () => {
         const first = detectEnvironment();
         resetEnvironmentCache();
         expect(detectEnvironment()).not.toBe(first);
+    });
+});
+
+// === the macOS Keychain rung for the anthropic subscription ===============
+
+describe('anthropic cli-subscription — Keychain vs credential file', () => {
+    it('a Keychain hit is a cli-subscription, and its evidence is a locator not a secret', () => {
+        const report = detectEnvironment({ ...machine(), probeKeychain: () => true });
+        expect(sourcesFor(report, 'anthropic')).toEqual(['cli-subscription']);
+        const strongest = strongestAuth(report, 'anthropic');
+        expect(strongest?.evidence).toBe('keychain:Claude Code-credentials');
+        // The whole point of the rung: this member costs the subscription, not
+        // per-token billing.
+        expect(classifyBilling('anthropic', strongest?.source ?? null)).toBe('subscription');
+    });
+
+    it('the Keychain outranks a stored API key — otherwise the paid rung wins on a subscribed machine', () => {
+        put(path.join('.event4u', 'agent-config', 'anthropic.key'), 'sk-ant-x');
+        const report = detectEnvironment({ ...machine(), probeKeychain: () => true });
+        expect(strongestAuth(report, 'anthropic')?.source).toBe('cli-subscription');
+    });
+
+    it('no Keychain and no credential file leaves the key file as the only auth', () => {
+        put(path.join('.event4u', 'agent-config', 'anthropic.key'), 'sk-ant-x');
+        const report = detectEnvironment({ ...machine(), probeKeychain: () => false });
+        expect(sourcesFor(report, 'anthropic')).toEqual(['key-file']);
+        expect(classifyBilling('anthropic', 'key-file')).toBe('per-token');
+    });
+
+    it('the credential FILE still wins when present — the Keychain is an additional rung, not a replacement', () => {
+        put(path.join('.claude', '.credentials.json'));
+        const report = detectEnvironment({ ...machine(), probeKeychain: () => true });
+        const strongest = strongestAuth(report, 'anthropic');
+        expect(strongest?.source).toBe('cli-subscription');
+        expect(strongest?.evidence).toContain('.credentials.json');
     });
 });
