@@ -163,3 +163,55 @@ describe('settings schema ↔ template parity', () => {
         expect(mismatches, `type mismatches:\n  ${mismatches.join('\n  ')}`).toEqual([]);
     });
 });
+
+/**
+ * The six keys deleted on 2026-08-12 because no code path read any of them.
+ *
+ * The parity gate above already fails on a one-sided deletion, so absence needs
+ * no separate assertion. What it does NOT cover, and what a silent regression
+ * would look like, is the value coming *back*: a settings file left over from
+ * before the deletion still carries these keys, and the danger is a future edit
+ * that re-adds a leaf and starts honouring one. So the pin is the inverted
+ * invariant — the leftover value does not survive a parse and cannot become a
+ * live setting again.
+ */
+const DELETED_2026_08_12: readonly (readonly [string, string, Json])[] = [
+    ['telegraph', 'speak_scope', 'aggressive'],
+    ['chat_history', 'max_size_kb', 64],
+    ['chat_history', 'on_overflow', 'condense'],
+    ['quality', 'wait_for_remote_ci', true],
+    ['screenshots', 'data_bearing_gate', 'off'],
+    ['legal_review_prep', 'consented_at', '2026-01-01T00:00:00Z'],
+] as const;
+
+describe('deleted settings keys cannot be honoured again', () => {
+    const template = loadTemplate();
+
+    for (const [section, leaf, hostileValue] of DELETED_2026_08_12) {
+        const dotted = `${section}.${leaf}`;
+
+        it(`${dotted} is absent from the template and the schema`, () => {
+            expect(getTemplateAt(template, dotted)).toBeUndefined();
+            expect(getSchemaAt(settingsSchema, dotted)).toBeNull();
+        });
+
+        it(`${dotted} is stripped rather than honoured when a stale file still carries it`, () => {
+            // The hostile value is the one a pre-deletion file would plausibly
+            // hold AND the one whose survival would change behaviour — `off` for
+            // a gate, `true` for a poll, a non-default enum for a scope.
+            //
+            // The section is parsed on its own, made partial first: the top-level
+            // schema has sibling sections with no default, and the template's
+            // installer placeholders are type-erased strings, so neither the whole
+            // tree nor a one-key fragment of it parses. `.partial()` isolates the
+            // property under test — zod's unknown-key stripping — from every
+            // unrelated required leaf.
+            const sectionSchema = unwrapOptional(getSchemaAt(settingsSchema, section) as z.ZodTypeAny);
+            expect(sectionSchema).toBeInstanceOf(z.ZodObject);
+            const parsed = (sectionSchema as z.ZodObject<z.ZodRawShape>)
+                .partial()
+                .parse({ [leaf]: hostileValue });
+            expect(Object.hasOwn(parsed as object, leaf)).toBe(false);
+        });
+    }
+});

@@ -322,7 +322,6 @@ describe('MERGEABLE_KEYS', () => {
             'personal.bot_icon',
             'personal.pr_comment_bot_icon',
             'personal.autonomy',
-            'telegraph.speak_scope',
             'knowledge.global_sharing.enabled',
             'knowledge.global_sharing.allowed_tiers',
             'knowledge.global_sharing.redaction.enabled',
@@ -331,6 +330,14 @@ describe('MERGEABLE_KEYS', () => {
             'knowledge.global_sharing.freshness.hypothesis_after_days',
             'knowledge.global_sharing.freshness.stale_after_days',
         ]);
+    });
+
+    it('no longer whitelists telegraph.speak_scope, which is deleted', () => {
+        // The user-global cascade is the one place a leftover value could still
+        // travel from a machine-wide file into a project, so the exact-list pin
+        // above is not enough on its own: this states the direction, and it is
+        // the assertion that reds if a future edit re-adds the key anywhere.
+        expect(ags.MERGEABLE_KEYS).not.toContain('telegraph.speak_scope');
     });
 
     it('keeps the legacy spelling beside every migrated one (ADR-219 is additive)', () => {
@@ -1303,4 +1310,75 @@ describe('load_agent_settings — removed always-on-orchestration keys deprecati
             spy.mockRestore();
         }
     });
+});
+
+// --- the six keys no code path read, deleted 2026-08-12 ---
+
+/**
+ * One row per deleted key: the YAML a pre-deletion settings file still carries,
+ * and the reason string the warning must name.
+ *
+ * The reason is pinned verbatim, not just its presence, because the reason is
+ * the whole value of this warning: it tells the user what decides INSTEAD, and a
+ * warning that only says "removed" sends them looking for a replacement key that
+ * does not exist. Each key gets its own row — a shared reason string across six
+ * unrelated mechanisms would be exactly that useless message.
+ *
+ * Each key appears in exactly ONE test on purpose: the warning dedupes per
+ * process, so a second assertion on the same key would read a silent spy and
+ * pass for the wrong reason.
+ */
+const UNREAD_KEYS_DELETED: readonly (readonly [string, string, string])[] = [
+    [
+        'telegraph.speak_scope',
+        'telegraph:\n  speak_scope: aggressive\n',
+        'the telegraph-speak rule body states its own grammar scope; `telegraph.speak` is the only lever',
+    ],
+    [
+        'chat_history.max_size_kb',
+        'chat_history:\n  max_size_kb: 64\n',
+        'the rotate command takes its cap from --max-kb, and session-count pruning bounds the directory',
+    ],
+    [
+        'chat_history.on_overflow',
+        'chat_history:\n  on_overflow: condense\n',
+        'the rotate command takes its mode from --mode',
+    ],
+    [
+        'quality.wait_for_remote_ci',
+        'quality:\n  wait_for_remote_ci: true\n',
+        'a push plus a detectable remote pipeline decides it; the PR command already states the obligation',
+    ],
+    [
+        'screenshots.data_bearing_gate',
+        'screenshots:\n  data_bearing_gate: "off"\n',
+        'a data-bearing embed is a published egress, so its confirmation is a Hard Floor no setting may lift',
+    ],
+    [
+        'legal_review_prep.consented_at',
+        'legal_review_prep:\n  consented_at: "2026-01-01T00:00:00Z"\n',
+        'the provenance sidecar settings:set writes and consentVerdict reads records when and by what route',
+    ],
+] as const;
+
+describe('load_agent_settings — the six unread keys deleted 2026-08-12', () => {
+    for (const [key, yaml, reason] of UNREAD_KEYS_DELETED) {
+        it(`warns for a leftover ${key}, naming what decides instead`, () => {
+            const tmp = make_tmp();
+            const project = write_file(path.join(tmp, 'project.yml'), yaml);
+            const spy = vi.spyOn(process.stderr, 'write').mockImplementation(() => true);
+            try {
+                ags.load_agent_settings({
+                    project_path: project,
+                    user_global_path: path.join(tmp, 'missing.yml'),
+                });
+                expect(spy).toHaveBeenCalledTimes(1);
+                expect(String(spy.mock.calls[0]?.[0])).toBe(
+                    `${key} was removed (${reason}); ignored.\n`,
+                );
+            } finally {
+                spy.mockRestore();
+            }
+        });
+    }
 });
