@@ -29,7 +29,12 @@ import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { isEnvKillSwitchActive } from '../_lib/env_kill_switch.js';
-import { isSoloConcluded, wouldSoloFloorHold, type QuorumResult } from './quorum.js';
+import {
+    isSoloConcluded,
+    SOLO_FLOOR_MIN_PRESENT,
+    wouldSoloFloorHold,
+    type QuorumResult,
+} from './quorum.js';
 import type { AbsentReason } from './transport_resolver.js';
 
 /**
@@ -46,8 +51,20 @@ import type { AbsentReason } from './transport_resolver.js';
  * a consumer computing the shadow fire-rate can tell a line that recorded
  * `false` from a line written before the field existed — a distinction it
  * cannot make from the absent field alone.
+ *
+ * v4 adds `min_present` to the same line: the floor value `floor_would_hold`
+ * was actually computed against. Additive in the v2/v3 sense — no field is
+ * renamed, retyped or moved — and it closes a provenance hole rather than
+ * adding a capability. `quorum_min_present` is an operator-facing key in the
+ * **user-global** `.ai-council.yml` (ADR-104), so before v4 two machines
+ * emitted byte-identical lines while measuring different counterfactuals, and
+ * a configured `quorum_min_present: 1` — valid, and provably unable to hold
+ * anything — zeroed `shadow_floor_fire_rate` with no trace on the data. A
+ * boolean whose meaning depends on an unrecorded per-machine value is not a
+ * measurement; recording the value is what makes the series comparable and a
+ * zero reading attributable.
  */
-export const SCHEMA_VERSION = 3;
+export const SCHEMA_VERSION = 4;
 
 export type EventAction = 'proceed' | 'skip_necessity' | 'block_quota' | 'quorum_result';
 
@@ -324,6 +341,12 @@ export interface QuorumEventInput {
     /**
      * The floor to evaluate the counterfactual against — the operator's
      * `quorum_min_present`, defaulting to `SOLO_FLOOR_MIN_PRESENT`.
+     *
+     * Written to the line as `min_present` since schema v4, not only consumed:
+     * it comes from the user-global config (ADR-104), so without it on the line
+     * a reader cannot tell which counterfactual a `floor_would_hold` refers to,
+     * and cannot distinguish "the floor never would have fired" from "this
+     * operator configured a floor that cannot fire".
      */
     readonly minPresent?: number;
 }
@@ -350,6 +373,10 @@ export function appendQuorumEvent(
     opts: AppendEventOptions = {},
 ): boolean {
     try {
+        // The same default `wouldSoloFloorHold` would have applied, hoisted so
+        // the recorded value and the evaluated value are one expression rather
+        // than two that happen to agree.
+        const minPresent = input.minPresent ?? SOLO_FLOOR_MIN_PRESENT;
         return appendEvent(
             {
                 lens: input.lens,
@@ -388,9 +415,16 @@ export function appendQuorumEvent(
                 // lost a member at construction time reads total=1/present=1
                 // and the floor cannot fire on it — the construction-degraded
                 // solo case ADR-224 was actually decided on.
+                //
+                // `min_present` records the floor the counterfactual was
+                // computed against, resolved ONCE below and used for both the
+                // record and the predicate so the line can never disagree with
+                // the boolean it explains — the one-definition discipline
+                // `solo` follows by deferring to `isSoloConcluded`.
+                min_present: minPresent,
                 floor_would_hold: wouldSoloFloorHold(
                     input.result,
-                    input.minPresent,
+                    minPresent,
                     input.configuredTotal,
                 ),
                 absent: input.absent.map((a) => ({ member: a.member, reason: a.reason })),
