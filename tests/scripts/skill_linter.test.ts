@@ -1107,6 +1107,16 @@ ${frontmatterExtra}---
         expect(hasCode(result, 'missing_runtime_requires')).toBe(false);
     });
 
+    // R2 review finding 3: the block-only regex hard-errored on flow style, which
+    // is valid YAML and valid against the schema — telling the author to add a
+    // declaration they already had, with no suppression path.
+    it('a flow-style runtime_requires satisfies the rule', () => {
+        const result = lint_file(
+            makeSkill('execution:\n  type: assisted\n  handler: shell\n  command:\n    - ./scripts-run\n    - src/scripts/noop\nruntime_requires: {bins: ["bash"], network: []}\n'),
+        );
+        expect(hasCode(result, 'missing_runtime_requires')).toBe(false);
+    });
+
     // The rename is the fix for a real CI failure: `requires:` is ADR-015
     // pack-dependency edges (a list of pack ids), so an object there made every
     // carrying skill unassignable in the discovery manifest. A pack-edge `requires`

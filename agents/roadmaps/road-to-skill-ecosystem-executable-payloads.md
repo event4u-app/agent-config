@@ -272,10 +272,12 @@ an assertion that the work happened.
 4. Every skill declaring an external `execution.handler` **and** a `command:`
    carries a `runtime_requires` block; no skill with `handler: internal` or
    without a `command:` is required to.
-5. `missing_runtime_requires` fires on a fixture with an external handler + a
-   command + no block, and stays silent on all four near-misses — `internal` +
-   command, external without command, external + command + block, and a pack-edge
-   `requires:` **list**.
+5. `missing_runtime_requires` **fires** on a fixture with an external handler + a
+   command and no `runtime_requires` — including when a pack-edge `requires:`
+   **list** is present, since that key satisfies nothing here — and **stays
+   silent** on the three legitimate near-misses: `internal` + command, external
+   without command, and external + command + a `runtime_requires` declaration in
+   either block or flow style.
 6. `./scripts-run src/scripts/skill_linter --all` reports 0 fail.
 
 **Phase 3 (shipped):**

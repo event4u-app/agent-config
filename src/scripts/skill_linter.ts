@@ -238,12 +238,22 @@ const VALID_EXECUTION_SAFETY_MODES = new Set(['strict']);
  */
 const EXTERNAL_EXECUTION_HANDLERS = new Set(['shell', 'php', 'node']);
 /**
- * Top-level `runtime_requires:` block (sibling of `execution:`, not a field inside
- * it). Deliberately NOT `requires:` — that key is ADR-015 pack-dependency edges
- * (a list of pack ids), and a skill carrying an object there is rejected by
+ * Top-level `runtime_requires:` declaration (sibling of `execution:`, not a field
+ * inside it). Deliberately NOT `requires:` — that key is ADR-015 pack-dependency
+ * edges (a list of pack ids), and a skill carrying an object there is rejected by
  * `build_discovery_manifest.ts` as unassignable.
+ *
+ * Matches block style (`runtime_requires:` then indented keys) AND flow style
+ * (`runtime_requires: {bins: [...]}`). The block-only version was an R2 review
+ * finding: flow style is valid YAML and valid against the schema, so erroring on
+ * it told the author to add a declaration they already had, with no suppression
+ * path. The neighbouring `^execution:\s*$` is block-only by house convention, but
+ * its consequence is a silent skip rather than a hard error.
+ *
+ * `[ \t]*` rather than `\s*`: `\s` matches a newline, so the looser form could
+ * span lines and accept a bare key whose value sits somewhere below it.
  */
-const RUNTIME_REQUIRES_BLOCK_PATTERN = /^runtime_requires:\s*$/m;
+const RUNTIME_REQUIRES_BLOCK_PATTERN = /^runtime_requires:[ \t]*(\{.*)?$/m;
 const VALID_EXECUTION_FIELDS = new Set([
     'type',
     'handler',
@@ -1278,7 +1288,14 @@ function lint_wing4_boundaries(text: string): Issue[] {
     return issues;
 }
 
-function lint_execution_metadata(execution: ExecutionBlock, frontmatter = ''): Issue[] {
+/**
+ * `frontmatter` is required, not defaulted. An R2 review finding: with
+ * `frontmatter = ''` an omitted argument makes the runtime-requires check
+ * FABRICATE its error rather than skip it, which is the wrong failure direction
+ * for an optional parameter — a future caller that forgets it gets a confident
+ * error about a declaration it never looked for.
+ */
+function lint_execution_metadata(execution: ExecutionBlock, frontmatter: string): Issue[] {
     const issues: Issue[] = [];
 
     const execType = execution.type;

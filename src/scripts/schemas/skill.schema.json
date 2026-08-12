@@ -57,7 +57,7 @@
         "primary_env": {
           "type": "string",
           "pattern": "^[A-Z][A-Z0-9_]*$",
-          "description": "The one variable from `env` whose absence makes the skill unusable rather than degraded, so a doctor report can distinguish a hard block from a partial one. Must also appear in `env`."
+          "description": "The one variable from `env` whose absence makes the skill unusable rather than degraded, so a doctor report can distinguish a hard block from a partial one. Must also appear in `env`. HALF-ENFORCED, stated plainly: the `dependencies` keyword below requires `env` to be present whenever `primary_env` is, which is the part JSON Schema can express. That the named variable is a MEMBER of `env` is NOT checked anywhere — the linter reads frontmatter by regex, and a fragile pattern on a blocking rule is worse than an honest gap. Zero skills use the field today; the membership check belongs in the doctor wiring (Phase 1, gated on S0.3), where the value is parsed rather than matched."
         },
         "network": {
           "type": "array",
@@ -68,7 +68,12 @@
           "description": "Egress hostnames the skill contacts, checked against the egress allowlist. An empty array is a positive claim of no network access and is NOT the same as omitting the key."
         }
       },
-      "$comment": "road-to-skill-ecosystem-executable-payloads Phase 1 (defect D2): `compatibility` is free text used by 2 skills, so cmd_doctor.ts / cmd_preflight.ts had nothing structured to verify. Named `runtime_requires` because `requires` is reserved for ADR-015 pack edges."
+      "dependencies": {
+        "primary_env": [
+          "env"
+        ]
+      },
+      "$comment": "road-to-skill-ecosystem-executable-payloads Phase 1 (defect D2): `compatibility` is free text used by 2 skills, so cmd_doctor.ts / cmd_preflight.ts had nothing structured to verify. Named `runtime_requires` because `requires` is reserved for ADR-015 pack edges. The `dependencies` keyword closes the half of the primary_env invariant a schema can express; R2 review finding 1 flagged the fully-unenforced version as the same ADR-127 shape this roadmap is closing."
     },
     "provenance": {
       "type": "string",
