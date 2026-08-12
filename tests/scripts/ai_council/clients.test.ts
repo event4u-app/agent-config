@@ -528,13 +528,61 @@ describe('clients — CLI command construction', () => {
         });
         const r = client.ask('SYS', 'USER', 100);
         expect(calls[0]!.cmd).toEqual([
-            '/bin/echo', '--print', '--output-format', 'json', '--model', 'claude-sonnet-4-5', '--append-system-prompt', 'SYS',
+            '/bin/echo', '--print', '--output-format', 'json', '--model', 'claude-sonnet-4-5',
+            '--tools', '', '--append-system-prompt', 'SYS',
         ]);
         expect(calls[0]!.stdin).toBe('USER');
         expect(r.text).toBe('hi');
         expect(r.input_tokens).toBe(1);
         expect(r.output_tokens).toBe(2);
         expect(r.metadata.cli).toBe(true);
+    });
+
+    it('AnthropicCliClient grants the spawned agent NO tools, for every system prompt', () => {
+        // Asserted as a property rather than left to the argv literal above.
+        // The literal is the shape a refactor reorders or a "cleanup" drops, and
+        // the sibling openai defect survived precisely because its argv test
+        // pinned the broken command as expected — a test that transcribes the
+        // command cannot notice the command is wrong.
+        //
+        // `claude` is an agentic CLI: absent `--tools`, the spawned session gets
+        // the full built-in set. A council member reads a question and returns
+        // an opinion, so any tool at all is an over-broad grant
+        // (`tool-safety` § Least Agency).
+        for (const sys of ['', 'SYS', 'a'.repeat(5000)]) {
+            const { client, calls } = stubCli(AnthropicCliClient, { returncode: 0, stdout: '{}', stderr: '' });
+            client.ask(sys, 'USER', 100);
+            const cmd = calls[0]!.cmd;
+            const at = cmd.indexOf('--tools');
+            expect(at).toBeGreaterThan(-1);
+            expect(cmd[at + 1]).toBe('');
+        }
+    });
+
+    it('the CLI spawn runs OUTSIDE the caller repository, so no project hook chain reaches the member', () => {
+        // Exercised through the REAL `_runSubprocess` — the stub used elsewhere
+        // in this file replaces the spawn wholesale and would happily pass while
+        // the cwd option was missing, which is the "defined but not wired" shape
+        // this assertion exists to refuse. `/bin/pwd` prints the directory the
+        // child actually ran in, so the spawn option is what is measured rather
+        // than a constant that merely exists.
+        class PwdClient extends AnthropicCliClient {
+            protected override _build_command(): string[] {
+                return ['/bin/pwd'];
+            }
+            protected override _stdin_payload(): string | null {
+                return null;
+            }
+        }
+        const c = new PwdClient({ binary: '/bin/pwd' });
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const where = ((c as any)._runSubprocess(['/bin/pwd'], null) as { stdout: string }).stdout.trim();
+        expect(where).not.toBe('');
+        // macOS reports /var/folders/… for a /private/var/folders/… tmpdir, so
+        // compare on the resolved real path rather than the string.
+        expect(fs.realpathSync(where)).toBe(fs.realpathSync(os.tmpdir()));
+        expect(fs.existsSync(path.join(where, 'CLAUDE.md'))).toBe(false);
+        expect(fs.existsSync(path.join(where, '.claude'))).toBe(false);
     });
 
     it('OpenAICliClient argv (prompt on stdin, no --system)', () => {

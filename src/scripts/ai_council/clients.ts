@@ -42,6 +42,7 @@
 
 import { spawnSync } from 'node:child_process';
 import * as fs from 'node:fs';
+import * as os from 'node:os';
 import * as path from 'node:path';
 
 import { hardenedSpawnEnv } from '../_lib/spawn_env.js';
@@ -1257,6 +1258,30 @@ export abstract class CliClient extends ExternalAIClient {
         const spawnOpts: Parameters<typeof spawnSync>[2] = {
             encoding: 'utf-8',
             timeout: Math.round(this.timeout_seconds * 1000),
+            // Neutral cwd, and this one is load-bearing rather than tidy.
+            //
+            // The spawn used to inherit the caller's directory, so a council
+            // invoked from inside a repository launched the vendor CLI THERE —
+            // and a vendor CLI in a project runs that project's hook chain.
+            // Measured 2026-08-12, three of three runs from a worktree with
+            // uncommitted changes: the member answered this repository's
+            // `end-review-nudge` instead of the question it was asked
+            // ("I see the end-review-nudge notification about 52 mutated
+            // lines…"). The same call from `/tmp` returned the answer.
+            //
+            // The trigger is why it stayed invisible: that nudge fires only on
+            // a session with modifications, so the contamination appears exactly
+            // when someone runs the council DURING work — the normal case — and
+            // disappears on the clean tree anyone would use to reproduce it.
+            //
+            // This does not contradict the worker-role marker below. That
+            // marker exists to make the spawned session load a THINNER chain;
+            // loading none is the limit of that direction, not a reversal of it.
+            // And a council member is the wrong audience for an operator nudge
+            // by construction: it is a neutral second opinion on a
+            // self-contained question, it holds no tools (see the Anthropic
+            // builder), and it has no working tree of its own to review.
+            cwd: os.tmpdir(),
             // Least-Agency: scrub code-execution-injection env vectors
             // (loader preload, git *_COMMAND, NODE_OPTIONS, …) so an
             // attacker-influenced parent env cannot RCE via the spawned CLI
@@ -1556,6 +1581,34 @@ export class AnthropicCliClient extends CliClient {
             'json',
             '--model',
             this.model,
+            // A council member is a text-in/text-out oracle: it reads a question
+            // and returns an opinion. It never edits, never runs a command,
+            // never fetches. `claude` is an AGENTIC CLI and grants its full
+            // built-in tool set by default, so the spawn was handing a
+            // read-write agent to a role that needs none of it — the over-broad
+            // grant `tool-safety` § Least Agency exists to refuse. `""` is the
+            // documented "disable all tools" value.
+            //
+            // It also repairs a live failure, which is how the grant was found
+            // rather than reasoned about. The spawn inherits the caller's cwd
+            // (`_runSubprocess` sets none, deliberately — the worker-role marker
+            // below depends on the vendor CLI loading this repo's hook chain),
+            // so invoking the council from inside a repository made the child
+            // load that project's own instructions AND every tool definition.
+            // In this package that overflowed the model's context window
+            // outright: `is_error: true`, `"the request is ~214331 tokens
+            // (limit 200000) … the rest is system prompt, tool definitions"`,
+            // exit 1, empty stderr — so the member reported as unavailable with
+            // no diagnosable cause. Measured 2026-08-12: identical call from
+            // `/tmp` exit 0, from the worktree exit 1, and adding this one flag
+            // returns the worktree call to exit 0.
+            //
+            // Dropping the tools rather than neutralising the cwd is the
+            // narrower fix of the two: it leaves the worker-role hook chain
+            // intact and removes only the capability the role never had a use
+            // for. The context saving is a consequence, not the justification.
+            '--tools',
+            '',
             '--append-system-prompt',
             system_prompt,
         ];
