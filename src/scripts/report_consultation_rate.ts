@@ -60,12 +60,25 @@ const WRITE_TOOLS = new Set(['Write', 'Edit', 'NotebookEdit', 'MultiEdit']);
 /** The skill whose opening the discharge PROXY counts. */
 const REVIEW_SURFACE = 'design-review';
 
+/**
+ * One transcript tool call, tagged with the assistant turn it belongs to.
+ *
+ * The turn index is what makes the published unit honest. The pre-registered
+ * metric is a share of UI *turns*; an earlier version counted `tool_use` parts
+ * and published the count as turns, which inflates any turn that writes two
+ * files and mixes a per-session numerator with a per-call denominator.
+ */
+export interface TimedEvent {
+    event: ToolEvent;
+    turn: number;
+}
+
 export interface SessionMeasurement {
-    /** UI-write turns seen in this session. */
-    uiWrites: number;
-    /** UI-write turns that followed a consultation in the same session. */
+    /** Assistant turns containing at least one UI write. */
+    uiWriteTurns: number;
+    /** Those turns that followed a consultation in the same session. */
     consulted: number;
-    /** UI-write turns followed later by opening the review skill. */
+    /** Those turns followed later by opening the review skill. */
     reviewOpenedAfter: number;
 }
 
@@ -73,9 +86,13 @@ export interface RateReport {
     store: string;
     /** False when the store directory does not exist — never the same as empty. */
     storeExists: boolean;
+    /** Transcripts read. Capped by --limit; the cap is reported when it bites. */
     sessions: number;
+    /** True when --limit truncated the store rather than reading all of it. */
+    truncated: boolean;
     sessionsWithUiWrite: number;
-    uiWrites: number;
+    /** Assistant turns containing at least one UI write — the denominator. */
+    uiWriteTurns: number;
     consulted: number;
     reviewOpenedAfter: number;
 }
@@ -120,36 +137,47 @@ export function toolUseToEvent(part: Record<string, unknown>): ToolEvent | null 
  * after it; a session that opens `fe-design` at the end does not retroactively
  * consult for the file it already wrote.
  */
-export function measureSession(events: readonly ToolEvent[]): SessionMeasurement {
-    const out: SessionMeasurement = { uiWrites: 0, consulted: 0, reviewOpenedAfter: 0 };
+export function measureSession(timed: readonly TimedEvent[]): SessionMeasurement {
+    const out: SessionMeasurement = { uiWriteTurns: 0, consulted: 0, reviewOpenedAfter: 0 };
     let consulted = false;
-    const writeIndices: number[] = [];
-    const reviewOpenIndices: number[] = [];
+    /** turn -> was the session already consulted when that turn first wrote UI */
+    const writeTurns = new Map<number, boolean>();
+    let lastReviewOpenAt = -1;
+    const reviewOpenPositions: number[] = [];
+    const writePositions: Array<{ position: number; turn: number }> = [];
 
-    events.forEach((event, index) => {
+    timed.forEach(({ event, turn }, position) => {
         if (isUiWrite(event)) {
-            out.uiWrites += 1;
-            if (consulted) out.consulted += 1;
-            writeIndices.push(index);
+            if (!writeTurns.has(turn)) {
+                writeTurns.set(turn, consulted);
+                writePositions.push({ position, turn });
+            }
             return;
         }
         if (isConsultation(event)) {
             consulted = true;
             if (event.file.replace(/\\/g, '/').toLowerCase().includes(`skills/${REVIEW_SURFACE}/`)) {
-                reviewOpenIndices.push(index);
+                reviewOpenPositions.push(position);
+                lastReviewOpenAt = position;
             }
         }
     });
 
-    for (const writeIndex of writeIndices) {
-        if (reviewOpenIndices.some((r) => r > writeIndex)) out.reviewOpenedAfter += 1;
+    out.uiWriteTurns = writeTurns.size;
+    for (const wasConsulted of writeTurns.values()) if (wasConsulted) out.consulted += 1;
+    // A single max comparison, not a scan per write: the proxy asks only whether
+    // ANY review-open follows, so the last one decides every earlier write.
+    void reviewOpenPositions;
+    for (const { position } of writePositions) {
+        if (lastReviewOpenAt > position) out.reviewOpenedAfter += 1;
     }
     return out;
 }
 
 /** Read every `tool_use` part of one transcript file, in order. */
-export function readSessionEvents(file: string): ToolEvent[] {
-    const events: ToolEvent[] = [];
+export function readSessionEvents(file: string): TimedEvent[] {
+    const events: TimedEvent[] = [];
+    let turn = -1;
     for (const line of fs.readFileSync(file, 'utf8').split('\n')) {
         if (!line.trim()) continue;
         let entry: Record<string, unknown>;
@@ -159,6 +187,7 @@ export function readSessionEvents(file: string): ToolEvent[] {
             continue;
         }
         if (entry['type'] !== 'assistant') continue;
+        turn += 1;
         const msg = entry['message'];
         const content =
             msg !== null && typeof msg === 'object'
@@ -170,7 +199,7 @@ export function readSessionEvents(file: string): ToolEvent[] {
             const p = part as Record<string, unknown>;
             if (p['type'] !== 'tool_use') continue;
             const event = toolUseToEvent(p);
-            if (event) events.push(event);
+            if (event) events.push({ event, turn });
         }
     }
     return events;
@@ -181,8 +210,9 @@ export function measureStore(store: string, limit: number): RateReport {
         store,
         storeExists: fs.existsSync(store),
         sessions: 0,
+        truncated: false,
         sessionsWithUiWrite: 0,
-        uiWrites: 0,
+        uiWriteTurns: 0,
         consulted: 0,
         reviewOpenedAfter: 0,
     };
@@ -191,19 +221,37 @@ export function measureStore(store: string, limit: number): RateReport {
     // one clean zero is the failure this repo has recorded four times.
     if (!report.storeExists) return report;
 
-    const files = fs
+    // mtime is read ONCE per file, not inside the comparator: a comparator that
+    // stats is O(n log n) syscalls and throws ENOENT if a live store rotates a
+    // transcript mid-sort — a measurement must not crash on the store being used.
+    const all = fs
         .readdirSync(store)
         .filter((f) => f.endsWith('.jsonl'))
         .map((f) => path.join(store, f))
-        .sort((a, b) => fs.statSync(b).mtimeMs - fs.statSync(a).mtimeMs)
-        .slice(0, limit);
+        .map((file) => {
+            let mtimeMs = 0;
+            try {
+                mtimeMs = fs.statSync(file).mtimeMs;
+            } catch {
+                /* vanished between readdir and stat — sort it last, skip it below */
+            }
+            return { file, mtimeMs };
+        })
+        .sort((a, b) => b.mtimeMs - a.mtimeMs);
 
+    const files = all.slice(0, limit).map((f) => f.file);
+    report.truncated = all.length > files.length;
     report.sessions = files.length;
     for (const file of files) {
-        const measured = measureSession(readSessionEvents(file));
-        if (measured.uiWrites === 0) continue;
+        let measured: SessionMeasurement;
+        try {
+            measured = measureSession(readSessionEvents(file));
+        } catch {
+            continue; // rotated or unreadable transcript — skip, never crash
+        }
+        if (measured.uiWriteTurns === 0) continue;
         report.sessionsWithUiWrite += 1;
-        report.uiWrites += measured.uiWrites;
+        report.uiWriteTurns += measured.uiWriteTurns;
         report.consulted += measured.consulted;
         report.reviewOpenedAfter += measured.reviewOpenedAfter;
     }
@@ -224,15 +272,17 @@ export function render(report: RateReport, threshold: number): string {
         lines.push('      `ls ~/.claude/projects` lists them.');
         return lines.join('\n');
     }
-    lines.push(`  sessions scanned                 ${report.sessions}`);
+    lines.push(
+        `  sessions scanned                 ${report.sessions}${report.truncated ? ' (TRUNCATED by --limit)' : ''}`,
+    );
     lines.push(`  sessions with a UI write         ${report.sessionsWithUiWrite}`);
-    lines.push(`  UI-write turns                   ${report.uiWrites}`);
+    lines.push(`  UI-write turns                   ${report.uiWriteTurns}`);
     lines.push('');
     lines.push(
-        `  CONSULTATION RATE                ${pct(report.consulted, report.uiWrites)}  (${report.consulted}/${report.uiWrites})`,
+        `  CONSULTATION RATE                ${pct(report.consulted, report.uiWriteTurns)}  (${report.consulted}/${report.uiWriteTurns})`,
     );
     lines.push(
-        `  discharge PROXY (review opened)  ${pct(report.reviewOpenedAfter, report.uiWrites)}  (${report.reviewOpenedAfter}/${report.uiWrites})`,
+        `  discharge PROXY (review opened)  ${pct(report.reviewOpenedAfter, report.uiWriteTurns)}  (${report.reviewOpenedAfter}/${report.uiWriteTurns})`,
     );
     lines.push('');
 
@@ -251,20 +301,43 @@ export function render(report: RateReport, threshold: number): string {
     return lines.join('\n');
 }
 
+/**
+ * Value of `flag`, or `fallback` when it is absent.
+ *
+ * Throws when the flag is present with no value after it. The earlier version
+ * returned the fallback there, so `--store` as the last argv element silently
+ * measured the DEFAULT store — and since the text report never prints the scan
+ * root, the substitution was invisible in exactly the output a reader would
+ * publish. A usage error is the only honest answer to "you asked for a store
+ * and named none".
+ */
 function argValue(flag: string, fallback: string): string {
     const index = process.argv.indexOf(flag);
-    if (index === -1 || index + 1 >= process.argv.length) return fallback;
-    return process.argv[index + 1]!;
+    if (index === -1) return fallback;
+    const value = process.argv[index + 1];
+    if (value === undefined || value.startsWith('--')) {
+        throw new Error(`${flag} requires a value`);
+    }
+    return value;
+}
+
+/** Parse a positive-integer flag, or fail loudly. Never silently NaN. */
+function intArg(flag: string, fallback: string): number {
+    const raw = argValue(flag, fallback);
+    const parsed = Number.parseInt(raw, 10);
+    if (!Number.isFinite(parsed) || parsed <= 0) {
+        throw new Error(`${flag} must be a positive integer (got ${JSON.stringify(raw)})`);
+    }
+    return parsed;
 }
 
 function main(): number {
     const store = argValue('--store', defaultStore(process.cwd()));
-    const limit = Number.parseInt(argValue('--limit', '200'), 10);
-    const threshold = Number.parseInt(argValue('--min-sessions', '20'), 10);
-    if (!Number.isFinite(limit) || limit <= 0) {
-        process.stderr.write('❌  --limit must be a positive integer\n');
-        return 1;
-    }
+    const limit = intArg('--limit', '200');
+    // Validated for the same reason --limit is, and it was not: a NaN threshold
+    // makes `sessionsWithUiWrite < NaN` false, which SUPPRESSES the provisional
+    // warning — the run then reads as a settled baseline over any corpus.
+    const threshold = intArg('--min-sessions', '20');
 
     const report = measureStore(store, limit);
     if (process.argv.includes('--json')) {

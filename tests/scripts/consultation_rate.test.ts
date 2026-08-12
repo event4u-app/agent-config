@@ -38,29 +38,61 @@ afterAll(() => {
     fs.rmSync(TMP, { recursive: true, force: true });
 });
 
-const uiWrite = (file = 'src/components/Card.tsx') => ({ file, isWrite: true });
-const open = (file: string) => ({ file, isWrite: false });
+// Each helper defaults to its own turn, so a list of helpers reads as a list
+// of turns. `turn` is passed explicitly where the point is two writes in ONE
+// turn — the case that inflated the old part-counting denominator.
+let nextTurn = 0;
+const uiWrite = (file = 'src/components/Card.tsx', turn?: number) => ({
+    event: { file, isWrite: true },
+    turn: turn ?? nextTurn++,
+});
+const open = (file: string, turn?: number) => ({
+    event: { file, isWrite: false },
+    turn: turn ?? nextTurn++,
+});
 
-const OPEN_FE_DESIGN = open('src/skills/fe-design/SKILL.md');
-const OPEN_REVIEW = open('src/skills/design-review/SKILL.md');
+const FE_DESIGN = 'src/skills/fe-design/SKILL.md';
+const REVIEW = 'src/skills/design-review/SKILL.md';
 
 describe('measureSession — ordering', () => {
     it('counts a write after a consultation as consulted', () => {
-        const m = measureSession([OPEN_FE_DESIGN, uiWrite()]);
+        const m = measureSession([open(FE_DESIGN), uiWrite()]);
 
-        expect(m).toMatchObject({ uiWrites: 1, consulted: 1 });
+        expect(m).toMatchObject({ uiWriteTurns: 1, consulted: 1 });
     });
 
     it('does not let a later consultation excuse an earlier write', () => {
-        const m = measureSession([uiWrite(), OPEN_FE_DESIGN]);
+        const m = measureSession([uiWrite(), open(FE_DESIGN)]);
 
-        expect(m).toMatchObject({ uiWrites: 1, consulted: 0 });
+        expect(m).toMatchObject({ uiWriteTurns: 1, consulted: 0 });
     });
 
     it('counts every write in the session, not only the first', () => {
-        const m = measureSession([uiWrite('a.vue'), uiWrite('b.vue'), OPEN_FE_DESIGN, uiWrite('c.vue')]);
+        const m = measureSession([uiWrite('a.vue'), uiWrite('b.vue'), open(FE_DESIGN), uiWrite('c.vue')]);
 
-        expect(m).toMatchObject({ uiWrites: 3, consulted: 1 });
+        expect(m).toMatchObject({ uiWriteTurns: 3, consulted: 1 });
+    });
+});
+
+describe('measureSession — turns, not tool calls', () => {
+    it('counts one turn that writes two UI files as ONE UI-write turn', () => {
+        // The unit the pre-registered metric is stated in. Counting tool_use
+        // parts inflates any turn that writes more than one file, and the
+        // inflated number was published in the baseline and both blockers.
+        const m = measureSession([uiWrite('a.vue', 7), uiWrite('b.tsx', 7)]);
+
+        expect(m.uiWriteTurns).toBe(1);
+    });
+
+    it('counts two turns separately', () => {
+        expect(measureSession([uiWrite('a.vue', 1), uiWrite('b.tsx', 2)]).uiWriteTurns).toBe(2);
+    });
+
+    it('credits a turn once even if consultation lands mid-turn', () => {
+        const m = measureSession([uiWrite('a.vue', 3), open(FE_DESIGN, 3), uiWrite('b.tsx', 3)]);
+
+        // One turn, and it was unconsulted when it first wrote.
+        expect(m).toMatchObject({ uiWriteTurns: 1, consulted: 0 });
     });
 });
 
@@ -71,18 +103,18 @@ describe('measureSession — the nudge cap must not reach the denominator', () =
         const m = measureSession(events);
 
         // Measuring through `decide` would stop at MAX_NUDGES.
-        expect(m.uiWrites).toBe(MAX_NUDGES + 5);
+        expect(m.uiWriteTurns).toBe(MAX_NUDGES + 5);
         expect(m.consulted).toBe(0);
     });
 });
 
 describe('measureSession — population', () => {
     it('ignores a non-UI write', () => {
-        expect(measureSession([uiWrite('src/scripts/foo.ts')]).uiWrites).toBe(0);
+        expect(measureSession([uiWrite('src/scripts/foo.ts')]).uiWriteTurns).toBe(0);
     });
 
     it('ignores a read of a UI file', () => {
-        expect(measureSession([open('src/components/Card.tsx')]).uiWrites).toBe(0);
+        expect(measureSession([open('src/components/Card.tsx')]).uiWriteTurns).toBe(0);
     });
 
     it('does not latch on a path that merely contains a surface name', () => {
@@ -94,13 +126,13 @@ describe('measureSession — population', () => {
 
 describe('discharge proxy', () => {
     it('counts a write followed by opening the review skill', () => {
-        const m = measureSession([uiWrite(), OPEN_REVIEW]);
+        const m = measureSession([uiWrite(), open(REVIEW)]);
 
         expect(m.reviewOpenedAfter).toBe(1);
     });
 
     it('does not count a review opened BEFORE the write', () => {
-        const m = measureSession([OPEN_REVIEW, uiWrite()]);
+        const m = measureSession([open(REVIEW), uiWrite()]);
 
         expect(m.reviewOpenedAfter).toBe(0);
         // …though it does count as a consultation, which is a different fact.
@@ -108,7 +140,7 @@ describe('discharge proxy', () => {
     });
 
     it('does not count opening a different design surface', () => {
-        expect(measureSession([uiWrite(), OPEN_FE_DESIGN]).reviewOpenedAfter).toBe(0);
+        expect(measureSession([uiWrite(), open(FE_DESIGN)]).reviewOpenedAfter).toBe(0);
     });
 });
 
@@ -153,8 +185,8 @@ describe('readSessionEvents + measureStore', () => {
         const events = readSessionEvents(path.join(dir, 'a.jsonl'));
 
         expect(events).toEqual([
-            { file: 'src/skills/fe-design/SKILL.md', isWrite: false },
-            { file: 'src/components/Card.tsx', isWrite: true },
+            { event: { file: 'src/skills/fe-design/SKILL.md', isWrite: false }, turn: 0 },
+            { event: { file: 'src/components/Card.tsx', isWrite: true }, turn: 1 },
         ]);
     });
 
@@ -167,7 +199,7 @@ describe('readSessionEvents + measureStore', () => {
 
         expect(report.sessions).toBe(2);
         expect(report.sessionsWithUiWrite).toBe(1);
-        expect(report.uiWrites).toBe(1);
+        expect(report.uiWriteTurns).toBe(1);
     });
 
     it('returns an empty report for a store that does not exist', () => {
@@ -180,8 +212,9 @@ describe('render', () => {
         store: '/somewhere',
         storeExists: true,
         sessions: 3,
+        truncated: false,
         sessionsWithUiWrite: 2,
-        uiWrites: 4,
+        uiWriteTurns: 4,
         consulted: 1,
         reviewOpenedAfter: 2,
     };
@@ -218,7 +251,7 @@ describe('render', () => {
     });
 
     it('says n/a rather than dividing by zero', () => {
-        expect(render({ ...report, uiWrites: 0, consulted: 0, reviewOpenedAfter: 0 }, 20)).toContain(
+        expect(render({ ...report, uiWriteTurns: 0, consulted: 0, reviewOpenedAfter: 0 }, 20)).toContain(
             'n/a',
         );
     });

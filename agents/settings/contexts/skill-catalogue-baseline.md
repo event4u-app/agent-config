@@ -115,6 +115,12 @@ First run, 107 sessions in this repo's own store:
 | sessions scanned | 107 |
 | sessions containing a UI write | **1** |
 | UI-write turns | **3** |
+
+The unit is turns, verified rather than assumed: an assistant turn that writes
+two UI files counts once. An earlier build of the analyzer counted `tool_use`
+parts and published them under the turn label — the count happened to match
+here because the three writes fell in three separate turns, which is exactly
+the kind of coincidence that lets a wrong unit survive a review.
 | consultation rate | 0.0 % (0/3) |
 
 **The number is not the finding. The denominator is.** Three UI-write turns
