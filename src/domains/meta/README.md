@@ -227,7 +227,7 @@ Artefacts that maintain this package (agent-config itself).
 - **`slash-command-routing-policy`** — User types a slash command like /create-pr, /commit, or pastes command file content
 - **`source-confidentiality`** — Naming an external repo this package copied/harvested/compared against — keep the tracked tree source-anonymous
 - **`source-of-truth`** — Editing dist/agent-src/, .augment/, .claude/, .cursor/ — source of truth is src/; never edit a generated projection
-- **`telegraph-speak`** — telegraph.speak_scope != off — telegraph the prose; carve-outs (options, Iron-Law, code, paths) stay byte-stable
+- **`telegraph-speak`** — telegraph.speak on — telegraph the prose; carve-outs (options, Iron-Law, code, paths) stay byte-stable
 - **`token-budget-discipline`** — rich-class skills are exempt from telegraph + thin-projector trims; enforce the 15% cap + justification
 - **`token-efficiency`** — CLI runs, log fetches, replies — redirect verbose output, minimize tool calls, stay concise
 - **`token-optimizer-maintenance`** — Editing a token-optimizer-cited asset — sync the catalog row in the same commit

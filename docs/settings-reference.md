@@ -47,8 +47,6 @@ explanation lives now that the file no longer carries it as comments.
 |---|---|---|---|---|---|
 | `chat_history.enabled` | C | boolean | `true` |  | Persist a structured log of every chat turn to .agent-config/chat-history/ so /chat-history:show, :import, and :learn can replay sessions. Turn off if you never want chat transcripts on disk. |
 | `chat_history.frequency` | C | string | `"per_turn"` | `per_turn` · `per_phase` · `per_tool` | How often the chat-history writer flushes to disk. per_turn = after every user / agent exchange (default, lowest data loss on crash). per_phase = at phase boundaries (cheaper I/O). per_tool = after every tool call (highest fidelity, noisiest log). |
-| `chat_history.max_size_kb` | C | integer | `2048` |  | Maximum size (KB) of the active chat-history file before chat_history.on_overflow kicks in. Set 0 to disable rotation / condensation entirely (file grows forever). |
-| `chat_history.on_overflow` | C | string | `"rotate"` | `rotate` · `condense` | What happens when chat_history.max_size_kb is hit. rotate = move the current log aside and start fresh (default). condense = telegraph-condense the oldest entries in place to keep recent context. |
 | `chat_history.text_limits.agent` | C | integer | `5000` |  | Per-message character cap for agent replies in the chat-history log. Truncates with an ellipsis past the cap. Lower to shrink history files, raise for long-reasoning replies. |
 | `chat_history.text_limits.phase` | C | integer | `200` |  | Per-marker character cap for phase markers (Phase=Refine, Phase=Plan, …) in the chat-history log. Rarely needs tuning. |
 | `chat_history.text_limits.tool` | C | integer | `200` |  | Per-call character cap for tool input / output blobs in the chat-history log. The default 200 keeps history files compact while preserving enough signal to replay a session. |
@@ -174,7 +172,6 @@ explanation lives now that the file no longer carries it as comments.
 | Key | Class | Type | Default | Allowed values | What it does |
 |---|---|---|---|---|---|
 | `legal_review_prep.acknowledged` | C | boolean | `false` |  | I understand the legal-review-prep pack provides templates and general information ONLY — it is NOT legal advice, creates no attorney-client relationship, and never replaces a licensed lawyer. Individual cases require an attorney. The pack stays inactive until this is checked. |
-| `legal_review_prep.consented_at` | C | string | `""` |  | ISO timestamp recorded when the legal-review-prep acknowledgment was given. Set automatically by the setup wizard; leave empty otherwise. |
 | `legal_review_prep.require_council` | C | boolean | `true` |  | Gate legal work-product behind a multi-model AI-council / deep-research pass (defense-in-depth: documented multi-stage review + audit trail; fail-closed when no council is configured). Leave on for the safest posture. Turning it off lets single-model legal output through — not recommended for a high-risk pack. |
 
 ## memory
@@ -256,7 +253,6 @@ explanation lives now that the file no longer carries it as comments.
 | Key | Class | Type | Default | Allowed values | What it does |
 |---|---|---|---|---|---|
 | `quality.local_auto_run` | C | boolean | `false` |  | Run quality tools (linters, type-checks, formatters) and the local test suite autonomously after edits. Off by default — the agent never runs quality tools proactively and does not ask; the user runs them manually (e.g. /quality-fix) and remote CI is the authoritative gate. The agent only runs a quality tool on an explicit ask, a concrete CI failure, or the new-gate carve-out. Turn on to restore autonomous pipeline runs. |
-| `quality.wait_for_remote_ci` | C | boolean | `false` |  | After pushing a branch, poll the remote CI provider (GitHub Actions, GitLab CI) and surface failures inline. Off by default — useful when local CI does not cover everything the remote pipeline runs. |
 
 ## reasoning
 
@@ -287,7 +283,6 @@ explanation lives now that the file no longer carries it as comments.
 
 | Key | Class | Type | Default | Allowed values | What it does |
 |---|---|---|---|---|---|
-| `screenshots.data_bearing_gate` | C | string | `"on"` | `on` · `off` | Consumed by the doc-screenshot-hygiene rule. on (default) = a data-bearing screenshot embed is gated behind this-turn human confirmation; uncertain/unresolved regions redact-or-refuse, never ship-and-hope; illustrative/no-data screenshots may embed with a stated justification. off = no data-bearing gate (the anonymization taxonomy still applies). |
 | `screenshots.forbid_terminal_capture` | C | boolean | `true` |  | Consumed by the doc-screenshot-hygiene rule. true (default) = terminal/CLI/IDE screenshots are forbidden (highest leak vector: absolute local paths, env tokens); use text code blocks with text redaction instead. false = allowed, still subject to the data-bearing human gate. |
 | `screenshots.identity_allowlist` | C | array | `[]` |  | Consumed by the doc-screenshot-hygiene rule and screenshot-hygiene skill. Public identity tokens SAFE to show unredacted in a documentation screenshot — the maintainer's own public handles plus well-known fake-data tokens. Not a general fake-data dictionary and not identity-resolution: everything not listed is treated as sensitive by default, and a public handle co-located with a real name does not whitelist the real name. Default [] = nothing auto-allowed. |
 
@@ -310,8 +305,7 @@ explanation lives now that the file no longer carries it as comments.
 
 | Key | Class | Type | Default | Allowed values | What it does |
 |---|---|---|---|---|---|
-| `telegraph.speak` | C | boolean | `false` |  | Whether the telegraph-speak rule ships at all. false (default) = DORMANT: compile_router omits the rule from dist/router.json entirely, so its body never reaches a host. This — not speak_scope — is the lever that stops the cost. Set true only after an output-side bench clears the kill-criterion bar (docs/adrs/telegraph/0002). |
-| `telegraph.speak_scope` | A | string | `"off"` | `off` · `reply` · `all` | Where telegraph condensation applies WHEN speak is true. off (default) = agent reply prose is exempt. compile_router never reads this key: with speak false the rule does not ship, so this setting has no effect on its own. Quote the value in YAML — bare `off` parses as a boolean under YAML 1.1 and is rejected. |
+| `telegraph.speak` | C | boolean | `false` |  | Whether the telegraph-speak rule ships at all. false (default) = DORMANT: compile_router omits the rule from dist/router.json entirely, so its body never reaches a host. That omission is the only lever that stops the cost — the rule body states its own grammar scope, so no scope setting exists. Set true only after an output-side bench clears the kill-criterion bar (docs/adrs/telegraph/0002). |
 
 ## tokens
 

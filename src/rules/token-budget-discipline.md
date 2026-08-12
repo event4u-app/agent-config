@@ -74,8 +74,9 @@ from. Where a consumer has enabled it, it **exempts** skills marked
 - Preserve all worked examples, decision tables, and code blocks verbatim
 
 This exemption is limited to the skill's guidance content; reply prose from the
-*agent* (not from the skill body) remains subject to telegraph-speak unless the
-user has set `telegraph.speak_scope: off`.
+*agent* (not from the skill body) remains subject to telegraph-speak wherever
+that rule ships at all (`telegraph.speak`), within the carve-outs the rule
+itself names.
 
 ## Value-over-budget escalation
 

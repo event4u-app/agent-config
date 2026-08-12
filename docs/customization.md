@@ -44,7 +44,7 @@ those sections.
 
 ### User-global DX-comfort defaults (cross-project)
 
-Six **DX-comfort** keys can be carried across every project that uses
+Five **DX-comfort** keys can be carried across every project that uses
 `event4u/agent-config` by storing them once in a user-global file at:
 
 ```
@@ -57,7 +57,7 @@ root — same place where `anthropic.key`, `openai.key`, and
 files under `~/.config/agent-config/` are read as a fallback until the
 namespace migration shim moves them.
 
-**Whitelist (locked, exact dotted paths)** — only these six keys are
+**Whitelist (locked, exact dotted paths)** — only these five keys are
 mergeable from the user-global file; every other key is silently ignored:
 
 ```
@@ -66,7 +66,6 @@ ide
 rule_loading_tier
 personal.bot_icon
 personal.autonomy
-telegraph.speak_scope
 ```
 
 **Merge order** (lowest → highest precedence; every layer optional):
@@ -90,7 +89,7 @@ file is a fallback, never a lock. Non-whitelisted keys in the
 user-global file are dropped without error — adding `personal.theme`
 there has no effect.
 
-**Whitelist asymmetry.** The six-key whitelist applies **only** to the
+**Whitelist asymmetry.** The five-key whitelist applies **only** to the
 user-global layer. Non-root in-project layers (intermediate +
 ``<CWD>``) carry arbitrary keys — they live inside the project
 boundary, are tracked in git, and reviewed in PRs like any other
@@ -178,8 +177,6 @@ is recovered on the next server boot.
 | `pipelines.skill_improvement` | `true` | Post-task learning capture. Included in every profile except `custom`. |
 | `chat_history.enabled` | `true` | Persistent JSONL log at `agents/runtime/.agent-chat-history` for crash recovery. |
 | `chat_history.frequency` | per profile | Logging granularity: `per_turn`, `per_phase`, or `per_tool` (see matrix below). |
-| `chat_history.max_size_kb` | per profile | Max file size before overflow handling (see matrix below). |
-| `chat_history.on_overflow` | per profile | `rotate` drops oldest, `condense` marks for summarization (see matrix below). |
 | `onboarding.onboarded` | `false` | Whether the setup wizard has run. The `onboarding-gate` rule prompts for `agent-config setup` while this is `false`. |
 | `ai_council.enabled` | `false` | Master switch for the `/council` command. Even when enabled, every consultation asks before spending tokens. |
 | `ai_council.members.<provider>.enabled` | `false` | Per-provider opt-in (`anthropic`, `openai`). Tokens live in `~/.event4u/agent-config/<provider>.key` (mode 0600), never in this file. Legacy `~/.config/agent-config/<provider>.key` is read as a fallback. |
@@ -277,18 +274,16 @@ behavior — the per-profile table is just the initial default.
 |---|---|---|---|
 | `chat_history.enabled` | `true` | `true` | `true` |
 | `chat_history.frequency` | `per_turn` | `per_phase` | `per_tool` |
-| `chat_history.max_size_kb` | `128` | `256` | `512` |
-| `chat_history.on_overflow` | `rotate` | `rotate` | `condense` |
 
 `custom` ignores these defaults — set every value explicitly.
 
 ### Verbosity
 
-The `verbosity:` block and `telegraph.speak_scope` control how much narration
-the agent emits around routine actions. Defaults are tuned for token
-frugality — flip values to `true` (or higher tier) to restore legacy verbose
-output. Iron-Law gates (`commit-policy`, `scope-control` git-ops,
-`non-destructive-by-default`) ALWAYS confirm regardless of these flags.
+The `verbosity:` block controls how much narration the agent emits around
+routine actions. Defaults are tuned for token frugality — flip values to
+`true` (or higher tier) to restore legacy verbose output. Iron-Law gates
+(`commit-policy`, `scope-control` git-ops, `non-destructive-by-default`)
+ALWAYS confirm regardless of these flags.
 
 | Setting | Values | Default | Description |
 |---|---|---|---|
@@ -299,7 +294,6 @@ output. Iron-Law gates (`commit-policy`, `scope-control` git-ops,
 | `verbosity.intent_announcements` | `true`, `false` | `false` | Intent announcements ("Let me check…", "Now I will…", "Found it") in skill bodies. `false` = act and emit the result. |
 | `verbosity.script_output` | `silent`, `minimal`, `verbose` | `minimal` | Stdout chatter from `scripts/*.py`, `scripts/*.sh`, and `.augment/scripts/`. `silent` = stderr only; `minimal` = one summary line per script; `verbose` = pre-Phase-10 per-step prints. Iron-Law surfaces (release confirms, install secrets prompts, error markers) ignore this key. |
 | `verbosity.taskfile_command_echo` | `true`, `false` | `false` | Suppress the `task: [name] cmd...` echo Taskfile prints before each task body. `true` = echoes preserved (legacy behaviour); `false` = `silent: true` is set on every Phase-10 safe task. |
-| `telegraph.speak_scope` | `off`, `prose_only`, `aggressive` | `prose_only` | How widely telegraph-speak grammar applies in chat. `off` = no telegraph; `prose_only` = telegraph in body prose, numbered options + Iron-Law-literal blocks stay full prose; `aggressive` = telegraph everywhere except Iron-Law literals. |
 
 The cross-rule index for these defaults lives in
 [`src/agent-src/contexts/contracts/frugality-charter.md`](../src/agent-src/contexts/contracts/frugality-charter.md).

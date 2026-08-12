@@ -60,9 +60,10 @@ export const COMPILE_TIME_TOGGLES: Record<string, (s: ToggleSettings) => boolean
     // family master switch, and flipping it would silence sibling telegraph settings
     // that were never measured negative.
     //
-    // This predicate deliberately does NOT read `speak_scope`. That key disables the
-    // rule's *behaviour* and never removed its token cost — the trap the measurement
-    // exposed.
+    // The predicate gates on `telegraph.speak` because that is the only lever that
+    // removes the rule's ~982-token body from the router and the projection. A knob
+    // that merely narrowed the grammar at runtime would leave the token cost in place
+    // — the trap the measurement exposed.
     'telegraph-speak': (s: ToggleSettings): boolean => {
         const tg = (s['telegraph'] as ToggleSettings | undefined) ?? {};
         const enabled = tg['enabled'] === undefined ? true : tg['enabled'];
