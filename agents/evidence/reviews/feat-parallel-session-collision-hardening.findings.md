@@ -1,10 +1,10 @@
 # Findings: feat-parallel-session-collision-hardening
-<!-- completion-review: v1 | reviewed: 2026-08-12 | scope: 81d5fbec0ae203fdf3949b2ffb22983eec902e8c0142ccde00c8982183804006 | diff: f0b77ccd7c01e1d6e402689470dc485418f45618 | reviewer: r2-fresh-subagent-feat-parallel-session-collision-hardening | prompt_hash: 81d5fbec0ae203fdf3949b2ffb22983eec902e8c0142ccde00c8982183804006 -->
+<!-- completion-review: v1 | reviewed: 2026-08-12 | scope: d996e8e86a6e21a7cad66963f70219e59fe8cb96bca0bd1adceeea7ad2565c4b | diff: e7352ccedbd9cd996220db0293faf6d42a67529e | reviewer: r2-fresh-subagent-feat-parallel-session-collision-hardening | prompt_hash: d996e8e86a6e21a7cad66963f70219e59fe8cb96bca0bd1adceeea7ad2565c4b -->
 
 <!-- context-manifest: v1
 inputs:
-  diff_sha: f0b77ccd7c01e1d6e402689470dc485418f45618
-  scope_hash: 81d5fbec0ae203fdf3949b2ffb22983eec902e8c0142ccde00c8982183804006
+  diff_sha: e7352ccedbd9cd996220db0293faf6d42a67529e
+  scope_hash: d996e8e86a6e21a7cad66963f70219e59fe8cb96bca0bd1adceeea7ad2565c4b
   roadmap: none
   roadmap_hash: none
   ac_hash: none
