@@ -173,11 +173,16 @@ Gate:
 ```
 BEFORE trusting a negative test:
   Delete or invert the control it claims to pin. Does it FAIL?
+  RESTORE THE CONTROL IMMEDIATELY — before any other edit, before any commit.
+    The mutation is a probe, never a change. A deleted guard left deleted is
+    a shipped vulnerability produced by a test-quality check.
   IF it still passes: it is pinning something else. Name what, then fix the test.
-  IF an assertion cannot fail for ANY implementation: delete it — it is decoration.
+  IF an assertion cannot fail for ANY implementation: delete THE ASSERTION —
+    it is decoration. Only after proving vacuity, and never to turn a red test
+    green — that is Anti-Pattern 7 below.
 ```
 
-No mutation-testing rig required: comment the guard out, run that one spec, put it back. A negative test nobody has ever watched fail is a claim, not evidence.
+No mutation-testing rig required: comment the control out, run that one spec, put it back. A negative test nobody has ever watched fail is a claim, not evidence.
 
 ### Anti-Pattern 7 — Gaming the green (test-integrity)
 
@@ -227,6 +232,7 @@ This is the test-surface instance of the `autonomous-execution` N=3 / allowlist-
 - Do NOT mark a story complete until at least one test was watched failing first.
 - Do NOT hardcode an expected value the code will emit, or pin a regex to an incidental fixed date/id — derive from inputs and seeded data, and vary the input across cases.
 - Do NOT skip / `xfail` / delete a failing test, or rewrite its `expected` to the code's current output, to get a green run — fix the code, or state a real spec change in the diff.
+- Do NOT trust a negative test you have never watched fail — delete the control it pins, confirm the test goes red, restore the control immediately.
 
 ## Auto-trigger keywords
 
@@ -241,6 +247,9 @@ This is the test-surface instance of the `autonomous-execution` N=3 / allowlist-
 - gaming the green
 - skip failing test
 - test integrity
+- negative test
+- vacuous assertion
+- abuse-case test
 
 ## Provenance
 

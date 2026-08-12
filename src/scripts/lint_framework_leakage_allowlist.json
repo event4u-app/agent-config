@@ -113,7 +113,7 @@
       "lines": [
         87,
         124,
-        201
+        206
       ],
       "reason": "Multi-ecosystem capture-tools line and skip-marker grep spanning pytest/PHPUnit/JS in one pattern — documentation across stacks."
     },
