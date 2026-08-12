@@ -180,8 +180,8 @@ dispatch runs, not WHETHER the layer exists, so they keep their own C rows.
 |---|---|
 | A — preference | 27 |
 | B — consent | 3 |
-| C — guarded | 113 |
-| **Total** | **143** |
+| C — guarded | 114 |
+| **Total** | **144** |
 
 The total is every leaf in the template, where *leaf* means anything that is not
 a **non-empty** map. An empty map (like the former `subagents.host_capabilities: {}`) is a real
@@ -236,6 +236,7 @@ Rows follow template order, so a diff against the template reads straight down.
 | `project.pr_template` | C | `.github/pull_request_template.md` | filesystem path whose contents reach an outbound PR |
 | `project.upstream_repo` | C | `""` | destination of outbound improvement PRs |
 | `project.improvement_pr_branch_prefix` | A | `improve/agent-` | branch-name cosmetics |
+| `project.audience` | C | `public` | C-test 4 — it governs the agent's own reasoning discipline: `self` makes the § 8-pre demand gate inert. Who a project is built for is a fact only its maintainer knows, so the agent never infers it and never asks; hand-edit or the GUI write route. The default is today's behaviour, so an install that never sets it is unchanged |
 | `github.pr_reply_method` | A | `create_review_comment` | picks between two endpoints of one operation |
 | `augment.rules_use_symlinks` | A | `false` | reversible install mechanics |
 | `eloquent.access_style` | A | `getters_setters` | code convention |

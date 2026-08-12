@@ -156,6 +156,32 @@ describe('lint_roadmap_complexity — behavioural spec', () => {
         expect(hits.some((w) => w.includes('billing UI'))).toBe(false);
     });
 
+    it('a gate resting on an external population warns, in criteria and in Resolved when', () => {
+        const p = write(
+            '---\ncomplexity: lightweight\n---\n## Phase 1\n\n- [ ] x\n\n' +
+                'Exit criteria: 50 external installations with write activity recorded.\n\n' +
+                '## Blockers\n\n### blocker: adoption\n' +
+                '- **Resolved when:** at least 2 people have activated it\n',
+        );
+        const warnings: string[] = [];
+        mod.lint_roadmap(p, 0, warnings);
+        const hits = warnings.filter((w) => w.includes('gate rests on'));
+        expect(hits).toHaveLength(2);
+        expect(hits.some((w) => w.includes('an external user population'))).toBe(true);
+        expect(hits.some((w) => w.includes('a headcount threshold of external people'))).toBe(true);
+    });
+
+    it('an agent-decidable gate stays silent, and the nouns are free outside gate context', () => {
+        const p = write(
+            '---\ncomplexity: lightweight\n---\n## Phase 1\n\n- [ ] x\n\n' +
+                'Exit criteria: `task ci` exits 0 and the fixture file exists.\n\n' +
+                '## Notes\n\nWe expect churn to drop and installations to rise once this lands.\n',
+        );
+        const warnings: string[] = [];
+        mod.lint_roadmap(p, 0, warnings);
+        expect(warnings.filter((w) => w.includes('gate rests on'))).toEqual([]);
+    });
+
     it('autonomous mode: vague step and pre-existing [~] items warn', () => {
         const p = write(
             '---\ncomplexity: lightweight\nexecution:\n  mode: autonomous\n---\n## Phase 1\n\n' +
