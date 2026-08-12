@@ -34,9 +34,11 @@ import {
 import {
     claimConfirmation,
     declineConfirmation,
+    isSafeToken,
     listPending,
     pruneExpired,
     putPending,
+    readPending,
     readResolved,
 } from '../../src/agent-src/templates/scripts/work_engine/hooks/builtin/staged_confirmation_store.js';
 import {
@@ -342,5 +344,76 @@ describe('requires_confirmation — the declaration validates', () => {
     it('rejects a non-boolean on a command', () => {
         const errs = errorsFor('command', commandDoc({ requires_confirmation: 1 }));
         expect(errs.join(' ')).toContain('requires_confirmation');
+    });
+});
+
+/**
+ * Two findings from an R2 completion review of the parallel implementation that
+ * PR #1280 withdrew — both reproduced against THIS store. Kept as specs rather
+ * than prose because neither shape is reachable from the happy path: one needs a
+ * file the writer never writes, the other a token the minter never mints.
+ */
+describe('the store — malformed records and hostile tokens', () => {
+    let root: string;
+
+    beforeEach(() => {
+        root = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'stagedconf-hard-')));
+    });
+
+    afterEach(() => {
+        fs.rmSync(root, { recursive: true, force: true });
+    });
+
+    it('a record without staged_at is skipped, never sorted on', () => {
+        // The guard checked four of five fields while asserting the full type, so
+        // this record passed and `listPending` sorted on an undefined — a
+        // TypeError thrown through `roadmap_gates.renderPending`, i.e. one bad
+        // file on disk taking out a shipped gate. TWO records are required: with
+        // one row the comparator never runs.
+        putPending(root, stage());
+        const partial = path.join(
+            root,
+            'agents',
+            'runtime',
+            'staged-confirmations',
+            'pending',
+            'partial.json',
+        );
+        fs.writeFileSync(
+            partial,
+            JSON.stringify({
+                token: 'deadbeefdeadbeef',
+                action: 'agent-config release:publish',
+                object: 'npm publish',
+                expires_at: new Date(T0 + STAGE_TTL_MS).toISOString(),
+            }),
+            'utf-8',
+        );
+        expect(() => listPending(root, T0 + 1)).not.toThrow();
+        expect(listPending(root, T0 + 1)).toHaveLength(1);
+    });
+
+    it('a traversing token reads nothing, claims nothing, declines nothing', () => {
+        // `path.join(pendingDir, '../x.json')` resolves into the store root, so a
+        // caller-supplied token escaped `pending/`. `deriveToken` returns a
+        // 16-char sha256 prefix, so no staged token can carry this shape.
+        const outside = path.join(root, 'agents', 'runtime', 'staged-confirmations', 'outside.json');
+        fs.mkdirSync(path.dirname(outside), { recursive: true });
+        fs.writeFileSync(outside, JSON.stringify(stage()), 'utf-8');
+
+        expect(readPending(root, '../outside')).toBeNull();
+        expect(claimConfirmation(root, '../outside', T0 + 1).outcome).toBe('token-mismatch');
+        expect(declineConfirmation(root, '../outside', T0 + 1).declined).toBe(false);
+        // Nothing outside the store was renamed away.
+        expect(fs.existsSync(outside)).toBe(true);
+    });
+
+    it('a real token still round-trips through every verb', () => {
+        // The guard must not be tighter than what `deriveToken` mints.
+        const s = stage();
+        expect(isSafeToken(s.token)).toBe(true);
+        putPending(root, s);
+        expect(readPending(root, s.token)?.token).toBe(s.token);
+        expect(claimConfirmation(root, s.token, T0 + 1).outcome).toBe('execute');
     });
 });

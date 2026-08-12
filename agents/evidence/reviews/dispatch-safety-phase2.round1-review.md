@@ -1,4 +1,18 @@
-# Findings: dispatch-safety-phase2
+# Findings: dispatch-safety-phase2 — round 1 (superseded)
+
+> **The implementation this round reviewed was withdrawn.** PR #1281 merged the
+> same Phase 2 while this branch was in review, so `confirmation.ts`, the
+> `hooks:status --pending` enumeration and the schema test named below no longer
+> exist — every row reached `fixed` before the withdrawal, and the file:line
+> references point at deleted code. Kept as the audit trail for the two findings
+> that **reproduced against the merged implementation** and are fixed on it in
+> this PR: **1** (unsound type guard → `listPending` crash, reachable through
+> `roadmap_gates.renderPending`) and **2** (a caller-supplied token reaching
+> `path.join`). Findings 3, 4, 6 and 8 do not apply to
+> `staged_confirmation_store.ts`; 5 and 7 apply only in weakened form. Archived
+> per plan-review-gates § 2.7 — outside the `*.findings.md` glob on purpose,
+> because the scope it binds no longer exists.
+
 <!-- completion-review: v1 | reviewed: 2026-08-11 | scope: 9cb92e7c31402df64ae51ef4409f3d7a66d64a6eb222ad3f8b3a1ebaef805fa5 | diff: d6905af2385948a7bb44dbdb3a9025834b91afb2 | reviewer: r2-fresh-subagent-dispatch-safety-phase2 | prompt_hash: 7ef1311d5c593a331fe0b2c1bdd7cd45f3aa880fd4ac366e5325eb99498bd848 -->
 
 <!-- context-manifest: v1

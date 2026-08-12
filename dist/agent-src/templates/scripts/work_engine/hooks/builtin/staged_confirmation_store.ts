@@ -46,6 +46,36 @@ function resolvedDir(root: string): string {
     return path.join(storeDir(root), 'resolved');
 }
 
+/**
+ * A token is a filename before it is an identifier, so it is checked before it
+ * reaches `path.join`.
+ *
+ * `deriveToken` returns a 16-char sha256 prefix, so nothing this module STAGES
+ * can traverse. The read side is the exposed one: `readPending`,
+ * `claimConfirmation` and `declineConfirmation` each take a caller-supplied
+ * token, and `path.join(pendingDir(root), '../x.json')` resolves outside
+ * `pending/` — verified against this file before the guard existed. No shipped
+ * caller passes an operator string today, which is what keeps it latent rather
+ * than live; the moment one does, the module's only destructive verb is a
+ * rename of an arbitrary path. Checking the shape the module itself mints costs
+ * one regex and removes the class.
+ */
+const _TOKEN_RE = /^[0-9a-f]{8,64}$/;
+
+export function isSafeToken(token: string): boolean {
+    return _TOKEN_RE.test(token);
+}
+
+/**
+ * Every field the module later reads, `staged_at` included.
+ *
+ * It checked four of five while still asserting `v is StagedAction`, so a
+ * record that was valid JSON but carried no `staged_at` passed the guard and
+ * reached `listPending`'s `staged_at.localeCompare(...)`: a TypeError thrown
+ * through `roadmap_gates.renderPending`, i.e. one malformed file on disk taking
+ * out a shipped gate. An unsound guard is worse than no guard — it makes the
+ * caller's `!== null` check read as a proof that it is not.
+ */
 function isStage(v: unknown): v is StagedAction {
     if (typeof v !== 'object' || v === null) {
         return false;
@@ -55,6 +85,7 @@ function isStage(v: unknown): v is StagedAction {
         typeof s.token === 'string' &&
         typeof s.action === 'string' &&
         typeof s.object === 'string' &&
+        typeof s.staged_at === 'string' &&
         typeof s.expires_at === 'string'
     );
 }
@@ -81,10 +112,16 @@ export function putPending(root: string, stage: StagedAction): string {
 }
 
 export function readPending(root: string, token: string): StagedAction | null {
+    if (!isSafeToken(token)) {
+        return null;
+    }
     return readStageFile(path.join(pendingDir(root), `${token}.json`));
 }
 
 export function readResolved(root: string, token: string): StagedAction | null {
+    if (!isSafeToken(token)) {
+        return null;
+    }
     return readStageFile(path.join(resolvedDir(root), `${token}.json`));
 }
 
@@ -145,6 +182,12 @@ export function claimConfirmation(
     token: string,
     now: number,
 ): { outcome: ConfirmOutcome; stage: StagedAction | null } {
+    if (!isSafeToken(token)) {
+        // Nothing this module staged can have that shape, so the honest answer
+        // is the same one an unknown token gets — and refusing here is what
+        // keeps the rename below off an arbitrary path.
+        return { outcome: 'token-mismatch', stage: null };
+    }
     const pendingFile = path.join(pendingDir(root), `${token}.json`);
     const stage = readStageFile(pendingFile);
     if (stage === null) {
@@ -187,6 +230,9 @@ export function declineConfirmation(
     token: string,
     now: number,
 ): { declined: boolean; stage: StagedAction | null } {
+    if (!isSafeToken(token)) {
+        return { declined: false, stage: null };
+    }
     const pendingFile = path.join(pendingDir(root), `${token}.json`);
     const stage = readStageFile(pendingFile);
     if (stage === null) {
