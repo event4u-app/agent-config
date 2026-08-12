@@ -5,7 +5,9 @@
  *
  * WHY THIS GATE EXISTS (road-to-conformance-round5 Phase 1, measured 2026-08-07)
  * ---------------------------------------------------------------------------
- * `docs/contracts/rule-router.md:234` states that nothing loads
+ * `docs/contracts/rule-router.md` (§ "The router earns its place as a
+ * **compile-time** artifact", measured: zero consumers under
+ * `src/scripts/hooks/`) states that nothing loads
  * `dist/router.json` at runtime, so **projection is the only reach mechanism
  * there is**: a non-kernel rule activates by the model's judgment over text
  * already in context, and the per-tool rule tree is what puts it there. That

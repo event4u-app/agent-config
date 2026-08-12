@@ -44,12 +44,15 @@ itself is per-host, and the mechanism differs per host:
 |---|---|---|
 | Cursor | `globs:` + `alwaysApply:` in the emitted `.mdc` | `_emit_cursor_mdc` (`condense.ts`) |
 | Windsurf | `trigger: glob \| model_decision` | `_emit_windsurf_rule` (`condense.ts`) |
-| Claude Code | `paths:` frontmatter on the file in `.claude/rules/`; a rule **without** `paths:` loads unconditionally at launch | none yet — P3.1 of `road-to-rule-delivery-integrity`; contract fixture: `agents/evidence/analysis/claude-code-rules-dir-contract.md` |
+| Claude Code | `paths:` frontmatter on the file in `.claude/rules/`; a rule **without** `paths:` loads unconditionally at launch | `_emit_claude_rule` (`condense.ts`), planned by `_claude_paths_plan` under `CLAUDE_PATHS_PATTERN_BUDGET`; shipped in PR #1231; contract fixture: `agents/evidence/analysis/claude-code-rules-dir-contract.md` |
 | Everything else | the projected file set is the activation surface; no per-host scoping key is known | — |
 
-The Claude Code row is the load-bearing gap: the host **does** support scoping
-and the suite does not emit it, so every projected rule there is standing
-context. Anything that reads this contract to decide whether a trigger "works"
+The Claude Code row **was** the load-bearing gap and is now a narrower one: the
+emitter ships, so a rule that declares `paths:` is scoped on that host, while a
+rule that declares none still loads unconditionally. The residual gap is
+therefore per-rule coverage, not a missing mechanism — and the authority for any
+single rule is that rule's emitted frontmatter, never a count written into this
+contract. Anything that reads this contract to decide whether a trigger "works"
 must read the row for the host in question, not the router.
 
 ## Frontmatter schema
