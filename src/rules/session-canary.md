@@ -127,8 +127,13 @@ no way to know a task started. The proposal is not merely unbuilt; as specified 
 cannot be built, and saying "proposed, not shipped" implied otherwise.
 
 What IS decidable is the per-**session** instance, and it was measured rather than
-asserted (`./scripts-run src/scripts/probe_session_canary`, 30 sessions,
-2026-08-12): the opening greeting is present in **25 of 28** sessions carrying
+asserted — reproducibly, which took a correction: the probe resolves the name
+through the same settings layers this rule names and REFUSES when no layer carries
+one, so the figure below is reproduced with the name passed explicitly
+(`./scripts-run src/scripts/probe_session_canary --limit 30 --name <your name>`;
+the first version hardcoded a maintainer's nickname as its default, which made the
+number irreproducible for anyone else and silently read 0 %). Over 30 sessions on
+2026-08-12: the opening greeting is present in **25 of 28** sessions carrying
 assistant prose (89.3 %), and in **24 of 25** post-carrier (96.0 %). Of the three
 misses, two predate the carrier (2026-07-21, 2026-07-29) and one is a session whose
 first thirty turns were tool calls.

@@ -477,11 +477,13 @@ export function scanSession(sessionId: string, lines: string[]): SessionReport {
         });
       }
       // Round 7 § 1.5 — the session-scoped CI-settle state the completion-claim
-      // check reads. Same discrimination `before_complete_hook.ci_last` makes:
-      // only a readable zero-pending result is a settle, and an unrecognised
-      // shape (which includes "no checks reported") never is.
+      // check reads. R2 finding 3: this copied `pending === 0` AND the wrong
+      // comment claiming it matched the producer's discrimination. It did not —
+      // a stale all-pass table read as a settle and silenced the check. The
+      // in-flight witness is required here too, so the measurement and the gate
+      // agree on what a settle is.
       ciSeen = true;
-      ciSettled = pending === 0;
+      ciSettled = pending === 0 && sawPending && !isVacuousOutput(out);
       pendingPoll = null;
       continue;
     }
@@ -888,7 +890,9 @@ export function render(report: ScanReport): string {
   lines.push("      24/25 post-carrier. The per-TASK instance is undecidable — no task boundary");
   lines.push("      is recorded in a transcript.");
   lines.push("    promissory closings                   — not here, but ALREADY GATED: `turn-end-gate`");
-  lines.push("      ships a blocking `detectPromissory`. Round 7 probe: 1 of 163 hand-back turns.");
+  lines.push("      ships a blocking `detectPromissory`. Round 7 probe: 1 of 120 hand-back turns");
+  lines.push("      (the 163 this line first printed was the retracted denominator — it counted");
+  lines.push("      synthetic user turns as hand-back closers).");
   lines.push("      `./scripts-run src/scripts/probe_promissory_closing`.");
   lines.push("    checkbox batching                     — measured NOWHERE. ~5 low-severity findings.");
   return lines.join("\n");

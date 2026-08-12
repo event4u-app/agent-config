@@ -31,6 +31,7 @@
 import fs from "node:fs";
 import path from "node:path";
 
+import { load_agent_settings } from "./_lib/agent_settings.js";
 import { defaultStore, HARNESS_TEXT } from "./conformance_scan.js";
 
 /** The first assistant turn that carries prose, or null. */
@@ -60,6 +61,34 @@ function firstProse(lines: string[]): { text: string; at: string } | null {
     return { text, at: String(e["timestamp"] ?? "") };
   }
   return null;
+}
+
+/**
+ * The name the obligation actually uses, read through the same three layers the
+ * rule names: project `personal.canary_name` → user-global `personal.canary_name`
+ * → user-global `identity.name`. Empty string when no layer carries one, which is
+ * exactly when the rule is inert.
+ *
+ * Deliberately tolerant of every read failure: a probe that throws because a
+ * settings file is malformed measures the file, not the behaviour.
+ */
+export function resolveCanaryName(): string {
+  try {
+    const s = load_agent_settings({ cwd: process.cwd() }) as Record<string, unknown>;
+    const personal = s["personal"];
+    if (typeof personal === "object" && personal !== null && !Array.isArray(personal)) {
+      const n = (personal as Record<string, unknown>)["canary_name"];
+      if (typeof n === "string" && n.trim() !== "") return n.trim();
+    }
+    const identity = s["identity"];
+    if (typeof identity === "object" && identity !== null && !Array.isArray(identity)) {
+      const n = (identity as Record<string, unknown>)["name"];
+      if (typeof n === "string" && n.trim() !== "") return n.trim();
+    }
+  } catch {
+    // no settings, unreadable settings, malformed settings — all mean "no name".
+  }
+  return "";
 }
 
 export interface CanaryRow {
@@ -103,8 +132,23 @@ export function main(argv?: string[]): number {
   };
   const store = arg("--store", defaultStore(process.cwd()));
   const limit = Number(arg("--limit", "30"));
-  const name = arg("--name", "Matze");
+  // R2 finding 7: the default used to be a maintainer's own nickname, hardcoded
+  // in `src/` — which breaks the portability Iron Law and made the figure
+  // irreproducible for anyone else (a name that never appears greps to a silent
+  // 0 %). The rule this probe measures resolves the name through the settings
+  // cascade, so the probe resolves it the same way and REFUSES rather than
+  // guessing when no layer carries one.
+  const name = arg("--name", resolveCanaryName());
 
+  if (name === "") {
+    process.stdout.write(
+      "probe:session-canary · no canary name configured — nothing to measure.\n" +
+        "  The obligation itself is inert without one (`session-canary`: no name on any\n" +
+        "  layer ⇒ the rule does not fire), so a rate here would be a rate over an\n" +
+        "  obligation that does not exist. Pass --name <name> to measure anyway.\n",
+    );
+    return 0;
+  }
   if (!fs.existsSync(store)) {
     process.stdout.write(`probe:session-canary · store not found: ${store}\n`);
     return 0;

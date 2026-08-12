@@ -14,9 +14,10 @@ tasks:
       full `task ci` and belongs in the post-CI loop.
 
       THIS TASK DOES NOT HAVE PARITY WITH CI, AND IS NOT MEANT TO.
-      Measured 2026-08-12 (round 7): preflight reaches 22 gates; 221 CI-enforced
-      gates are locally reachable and NOT here. A green preflight is a cheap
-      pre-push filter, never a prediction that CI will be green — three measured
+      Measured 2026-08-12 (round 7): preflight reaches 22 gates; 209 CI-enforced
+      gates run neither here nor anywhere else this push runs locally. A green
+      preflight is a cheap pre-push filter, never a prediction that CI will be
+      green — three measured
       "green locally, red remotely" cycles came out of reading it as one (the
       Thin-Root char cap, the ratchet in the Node-Tests shard, derived-page
       freshness).

@@ -347,7 +347,6 @@ export interface LanguagePin {
     language: Verdict;
 }
 
-/** Read the pin the language-mirror hook wrote. Absent ⇒ no obligation. */
 /**
  * Round 7 § Phase 1 — where the CI-settle fact comes from, and why not from here.
  *
@@ -420,6 +419,12 @@ export function detectCompletionClaim(
     };
 }
 
+/**
+ * Read the pin the language-mirror hook wrote. Absent ⇒ no obligation.
+ *
+ * (R2 finding 8: this line was left 73 lines above, where inserting `readCiSettled`
+ * had stranded it — so it documented the wrong function and this one had none.)
+ */
 export function readLanguagePin(workspaceRoot: string): Verdict {
     try {
         const raw = fs.readFileSync(path.join(workspaceRoot, LANGUAGE_STATE_FILE), 'utf-8');

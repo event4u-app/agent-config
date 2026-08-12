@@ -28,17 +28,24 @@
 # contributor is TOLD to run before pushing is `task preflight`, a deliberate
 # subset of `ci`.
 #
-# Measured 2026-08-12: preflight reaches **22** gates; **221** CI-enforced gates
-# are locally reachable and NOT in preflight. Round 7 traced three "green locally,
-# red remotely" cycles to that set (the Thin-Root char cap, the ratchet in the
-# Node-Tests shard, derived-page freshness).
+# Measured 2026-08-12: preflight reaches **22** gates; **209** CI-enforced gates
+# are locally reachable and run in NEITHER preflight nor anywhere else the
+# pre-push hook reaches — i.e. the set that can only fail after a push. Round 7
+# traced three "green locally, red remotely" cycles to it (the Thin-Root char cap,
+# the ratchet in the Node-Tests shard, derived-page freshness).
+#
+# The first reading said 221 and subtracted preflight alone, which counted gates
+# the pre-push hook already runs and therefore cannot fail remotely — corrected
+# by the round's own completion review (finding 4). Both figures are kept because
+# the correction is the point: a number published as "the deliverable" was
+# computed over a superset.
 #
 # It is REPORT-ONLY, and deliberately not a declared list, for two reasons:
 #   1. The subset is intentional. preflight's own docstring excludes
 #      check_enforcement_coverage at a measured 30.7 s because "a pre-push gate
 #      that doubles the hook teaches people to skip it". Failing on the gap would
 #      demand preflight grow into ci — the opposite of that decision.
-#   2. 221 per-entry declarations would BE the allowlist-growth antipattern the
+#   2. 209 per-entry declarations would BE the allowlist-growth antipattern the
 #      `autonomous-execution` rule caps at 20: past that count, the list is the
 #      problem and not the exemption.
 #

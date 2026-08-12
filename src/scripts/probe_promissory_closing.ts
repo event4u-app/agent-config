@@ -93,13 +93,16 @@ function turns(lines: string[]): Turn[] {
 }
 
 export interface PromissoryResult {
+  /** Hand-back turns that could carry a promissory closing — asking ones excluded. */
   handbacks: number;
+  /** Asking hand-backs, excluded from the population. R2 finding 6. */
+  asked: number;
   narrow: { session: string; at: string; span: string }[];
   loose: number;
 }
 
 export function measure(store: string, limit: number): PromissoryResult {
-  const result: PromissoryResult = { handbacks: 0, narrow: [], loose: 0 };
+  const result: PromissoryResult = { handbacks: 0, asked: 0, narrow: [], loose: 0 };
   const files = fs
     .readdirSync(store)
     .filter((f) => f.endsWith(".jsonl"))
@@ -116,9 +119,18 @@ export function measure(store: string, limit: number): PromissoryResult {
       const next = ts[i + 1];
       // A hand-back: the next turn is the user's, or the session ends here.
       if (next !== undefined && next.role !== "user") continue;
-      result.handbacks += 1;
       const tail = t.text.trimEnd().split("\n").slice(-4).join("\n");
-      if (ASKS.test(tail)) continue;
+      // R2 finding 6: `handbacks` was incremented BEFORE this guard, so every
+      // asking hand-back sat in the denominator while being excluded from both
+      // numerators — understating both rates by the ask share. An asking closing
+      // is a legitimate stop condition and cannot be a promissory closing, so it
+      // is not in the population at all. Counted separately, because a reader who
+      // cannot see the ask share cannot judge the denominator.
+      if (ASKS.test(tail)) {
+        result.asked += 1;
+        continue;
+      }
+      result.handbacks += 1;
       if (PROMISE_LOOSE.test(tail)) result.loose += 1;
       const hit = PROMISE_NARROW.find((re) => re.test(tail));
       if (hit) {
@@ -143,7 +155,10 @@ export function main(argv?: string[]): number {
     return 0;
   }
   const r = measure(store, limit);
-  process.stdout.write(`probe:promissory-closing · ${r.handbacks} hand-back turn(s) in ${store}\n`);
+  process.stdout.write(
+    `probe:promissory-closing · ${r.handbacks} eligible hand-back turn(s) ` +
+      `(+${r.asked} that ASK, excluded — a question is a legitimate stop condition) in ${store}\n`,
+  );
   for (const h of r.narrow) {
     process.stdout.write(`  ${h.session} ${h.at.slice(0, 16)}  ${JSON.stringify(h.span)}\n`);
   }

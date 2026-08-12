@@ -311,6 +311,16 @@ function _update(state: StateDict, event: string, envelope: StateDict): StateDic
     // Session boundary — reset session-scoped counters.
     state["session_id"] = session_id;
     state["verifications_this_session"] = 0;
+    // R2 finding 1 (high). `ci_last` is SESSION-scoped, and until this line
+    // nothing cleared it: `_reset_turn` clears the turn-scoped witness,
+    // `_empty_state` sets it null only for a state file that does not exist yet,
+    // and `_load_state` merges the persisted value over that default. So session
+    // A polled CI, saw pending, and ended; session B — a doc-only session that
+    // never touched CI — said "Fertig" and was REFUSED, contradicting both the
+    // consumer's own comment ("a session that never polled CI must never be
+    // refused for it") and the negative case the roadmap pinned. Session-scoped
+    // has to mean cleared at the boundary, or it means never cleared.
+    state["ci_last"] = null;
     state = _reset_turn(state, session_id);
   }
 
@@ -346,15 +356,26 @@ function _update(state: StateDict, event: string, envelope: StateDict): StateDic
         } else {
           counts = false; // unrecognised or unreadable — never read as settled
         }
-        // Round 7 § 1.1 — the session-scoped negative the turn-end consumer
-        // reads. `settled` is true ONLY for a readable zero-pending result; an
-        // unreadable shape (`pending === null`, which includes "no checks
-        // reported") is NOT a settle, same discrimination `counts` makes above.
+        // Round 7 § 1.1 — the session-scoped negative the turn-end consumer reads.
+        //
+        // R2 finding 3 (medium), and it was the sharpest one: this said `settled:
+        // pending === 0` and CLAIMED "the same discrimination `counts` makes
+        // above". It was not. `counts` requires `!vacuous && ci_saw_pending`;
+        // `pending === 0` alone drops both. A post-push poll that reads a stale
+        // all-pass table returns pending 0 — verbatim the FC-3b failure documented
+        // twenty lines up — and recorded `settled: true`, so the completion
+        // detector went SILENT in exactly the premature-claim case it exists for.
+        // A detector defeated by the false settle it was built to catch is worse
+        // than no detector, because it reports coverage.
+        //
+        // Now it reuses `counts` itself, which is that discrimination rather than
+        // a paraphrase of it. `pending === null` (unreadable, and "no checks
+        // reported") stays not-a-settle by construction.
         state["ci_last"] = {
           at: _now(),
           command: cmd.slice(0, 512),
           pending,
-          settled: pending === 0,
+          settled: pending === 0 && counts === true,
         };
       }
 

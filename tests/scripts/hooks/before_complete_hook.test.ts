@@ -183,11 +183,16 @@ describe('verify_before_complete — ci_last (round 7)', () => {
         expect(ci['pending']).toBe(1);
     });
 
-    it('records a real result table with no in-flight rows as settled', () => {
+    // This test used to assert `settled: true` here, and the assertion was the
+    // defect R2 finding 3 named: a zero-pending table with no in-flight witness
+    // is the stale-read case, and calling it a settle silenced the detector in
+    // exactly the premature-claim case it exists for. The corrected pair lives
+    // below ("NO in-flight witness" / "AFTER an in-flight observation"); this one
+    // keeps only the part that was always right — the parsed count.
+    it('parses a real result table with no in-flight rows as zero pending', () => {
         run(envelope('augment', 'session_start', {}), { consumer_root: tmp });
         poll('build\tpass\t1m\nlint\tpass\t30s\n');
         const ci = state(tmp)['ci_last'] as Record<string, unknown>;
-        expect(ci['settled']).toBe(true);
         expect(ci['pending']).toBe(0);
     });
 
@@ -211,6 +216,36 @@ describe('verify_before_complete — ci_last (round 7)', () => {
         // … and the session-scoped negative is exactly what must NOT be.
         const ci = state(tmp)['ci_last'] as Record<string, unknown>;
         expect(ci['settled']).toBe(false);
+    });
+
+    // R2 finding 1 (high) — the case my own negative test could not see, because
+    // it fed a synthetic `{seen:false}` and never crossed a session boundary.
+    it('is CLEARED at a session boundary — a stale unsettled read must not refuse a new session', () => {
+        run(envelope('augment', 'session_start', {}), { consumer_root: tmp });
+        poll('build\tpending\t1m\n');
+        expect((state(tmp)['ci_last'] as Record<string, unknown>)['settled']).toBe(false);
+        // A different session id on the same state file: session B never polled CI.
+        run(envelope('augment', 'session_start', {}, 's2'), { consumer_root: tmp });
+        expect(state(tmp)['ci_last']).toBe(null);
+        expect(state(tmp)['session_id']).toBe('s2');
+    });
+
+    // R2 finding 3 (medium) — the sharpest one: a stale all-pass table used to
+    // record `settled: true`, which silenced the detector in exactly the
+    // premature-claim case it exists for.
+    it('a zero-pending table with NO in-flight witness is NOT a settle', () => {
+        run(envelope('augment', 'session_start', {}), { consumer_root: tmp });
+        poll('build\tpass\t1m\nlint\tpass\t30s\n'); // first read, nothing seen pending
+        const ci = state(tmp)['ci_last'] as Record<string, unknown>;
+        expect(ci['pending']).toBe(0);
+        expect(ci['settled']).toBe(false);
+    });
+
+    it('a zero-pending table AFTER an in-flight observation IS a settle', () => {
+        run(envelope('augment', 'session_start', {}), { consumer_root: tmp });
+        poll('build\tpending\t1m\n');
+        poll('build\tpass\t1m\nlint\tpass\t30s\n');
+        expect((state(tmp)['ci_last'] as Record<string, unknown>)['settled']).toBe(true);
     });
 
     it('a non-CI verification leaves ci_last untouched', () => {
