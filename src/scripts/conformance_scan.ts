@@ -371,7 +371,18 @@ export const CHECK_MEANINGS: Record<CheckId, string> = {
     "ordered-plan, explicit-count, for-each and conjunction shapes name a " +
     "COUNT of deliverables but not their identities, so this check is blind to " +
     "them by construction — it does not score them complete, it does not score " +
-    "them at all. A prose deliverable that is not a filename is invisible to it.",
+    "them at all. A prose deliverable that is not a filename is invisible to it.\n" +
+    "    MEASURED PRECISION: 0 of 3 hits, over 4 eligible windows in 28 sessions " +
+    "(2026-08-12). All three were false positives from ONE extraction defect: the " +
+    "token list is taken from the whole prompt, so files quoted inside material " +
+    "the user PASTED — a review, a log, an example — read as deliverables. In all " +
+    "three, the user's own ask contributed zero tokens. `isInjectedBody` did not " +
+    "filter them because it only excludes long ENGLISH text, and this corpus is " +
+    "mostly German (12 295 and 7 656 chars, both classified `de`, both passed); " +
+    "the one English case missed the 2 500-char cut by 12. So a hit here is not " +
+    "evidence of anything until the ask is separated from the pasted material. " +
+    "Detector D was NOT built on this result — see " +
+    "`agents/evidence/analysis/task-completeness-measurement.md`.",
 };
 
 /**

@@ -106,10 +106,22 @@ it is what pays for the missing kill-switch.
   exclusive**. Disclosed in full under 2.1; the fix for the next roadmap of this
   shape is to verify a `--why` definition against a FIXTURE store, never the
   corpus the bar will be read against.
-- [ ] 1.3 Hand-validate every hit on the first run and publish the precision.
+- [x] 1.3 Hand-validate every hit on the first run and publish the precision.
   A detector over a small corpus can produce confident nonsense; the rate is
   worthless without it.
   `verify:` the published figure names the corpus size and the hand-validated count.
+  **Published in `agents/evidence/analysis/task-completeness-measurement.md`:
+  28 sessions · 4 eligible reply windows · 3 hits · hand-validated true positives
+  0. Precision 0/3.** This step earned its place — the rate alone reads 75 % and
+  looks alarming; every hit is a false positive. All three share ONE extraction
+  defect, verified per hit: the token list is taken from the whole prompt, so
+  files quoted inside material the user PASTED (an agent review, a PR review, a
+  preflight log) read as deliverables, while in all three the user's own ask
+  contributed **zero** tokens. `isInjectedBody` did not filter them because it
+  only excludes long ENGLISH text — 12 295 and 7 656 chars both classify `de` and
+  pass; the one English case misses the 2 500-char cut by **12**. The finding
+  under the finding: **4 eligible windows in 28 sessions**, because the user
+  speaks in intents and the agent is what names files.
 
 ## Phase 2 — the decision, taken on the number
 
@@ -131,30 +143,55 @@ it is what pays for the missing kill-switch.
   windows. The pre-registration therefore states, before the measurement, that a
   3-hit corpus is **null-by-corpus-size whatever the validation returns** — which
   is the whole point of writing it down first.
-- [ ] 2.2 Read the number against the bar and record the verdict. **A null here
+- [x] 2.2 Read the number against the bar and record the verdict. **A null here
   is a real outcome**, not a failure of the roadmap — the sibling
   `recursive-verification` null is the precedent, and it saved a mechanism whose
   cost scaled with every task for benefit on a 28 % tail.
   `verify:` the verdict cites the pre-registered bar and the measured figure side by side.
+  **Verdict: NULL — detector D is NOT built.** The measurement file carries the
+  bar and the figures side by side: B1 precision ≥ 0.80 vs **0.00** (0/3) → FAIL ·
+  B2 95 % lower bound ≥ 0.80, needing ≥ 14 all-true hits, vs 3 hits / 0 true →
+  FAIL · B3 rate ≥ 2.0 % vs 75.0 % → pass, and meaningless over four windows.
+  **B3 passing is why the bar required all three:** a rate-only bar — the
+  dimension whose numerator was already seen when the bar was written — would have
+  read 75 % and shipped a refusal with no kill-switch on 0-precision evidence.
 
 ## Phase 3 — detector D, only if Phase 2 says so
 
-- [ ] 3.1 Build the false-positive corpus FIRST, in the shape
+**Phase 2 said no, so this phase is SKIPPED, not deferred.** Its gating condition
+("only if Phase 2 says so") resolved against building: precision 0/3 from a named
+extraction defect. Skipping it is the designed outcome the Acceptance criteria
+endorse, not work left undone — a `[~]` here would claim there is still a plan to
+execute, and there is not. The re-ask condition is recorded in
+`agents/evidence/analysis/task-completeness-measurement.md`: separate the ask from
+the pasted material, then re-derive the eligible population before any detector is
+reconsidered.
+
+- [-] 3.1 Build the false-positive corpus FIRST, in the shape
   `PROMISSORY_NEGATIVES` already uses: every legitimate way a turn can address
   fewer items than the prompt enumerated — a blocking question, a hand-back, a
   user-fenced scope, an explicitly deferred item. Refusing these is what teaches
   a maintainer to revert the gate, and there is no switch to reach for now.
   `verify:` the negative corpus is non-empty and every entry returns null.
-- [ ] 3.2 Add detector D to `turn_end_gate_hook.ts` beside A/B/C — one guard,
+- [-] 3.2 Add detector D to `turn_end_gate_hook.ts` beside A/B/C — one guard,
   three-then-four detectors, no second hook. Building the unsafe part twice is
   how a second detector becomes a second outage.
   `verify:` the spawned suite covers D refusing and D staying silent, through the
   real process, on a workspace with no settings file.
-- [ ] 3.3 Re-measure with D live and compare against the pre-registered
+- [-] 3.3 Re-measure with D live and compare against the pre-registered
   reduction. Revert if it does not appear.
   `verify:` the post-flip figure is published beside the pre-flip one.
+  Skipped with 3.1 and 3.2: there is no D to re-measure. The reduction it would
+  have been read against (rate at least halved) is recorded in the
+  pre-registration so a future round inherits it rather than re-inventing it.
 
 ## Acceptance criteria
+
+**Outcome 2026-08-12: all four hold, on the null branch.** The instrument ships
+and publishes a hand-validated rate (0/3 precision over 4 eligible windows in 28
+sessions); the bar was committed one commit ahead of the measurement, with its
+one contaminated dimension disclosed and made non-binding; the bar was missed, so
+the roadmap closes as a published null and detector D was not built.
 
 - `conformance_scan` measures completeness and publishes a hand-validated rate.
 - The bar for shipping detector D was committed before the number was known.

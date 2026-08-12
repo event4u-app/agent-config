@@ -6,10 +6,10 @@
 
 ## Overall
 
-**276 / 396 steps done · 70%**
+**278 / 393 steps done · 71%**
 
 ```text
-████████████████████████████░░░░░░░░░░░░   70%
+████████████████████████████░░░░░░░░░░░░   71%
 ```
 
 ## ✅ Completed — pending archival
@@ -18,6 +18,7 @@ These roadmaps are **complete** (`count_open == 0`, `count_deferred == 0`) but s
 
 | Roadmap | Done | Total |
 |---|---:|---:|
+| [road-to-completion-loop.md](roadmaps/road-to-completion-loop.md) | 5 | 5 |
 | [road-to-feedback-9-35.md](roadmaps/road-to-feedback-9-35.md) | 10 | 10 |
 
 ## Open roadmaps
@@ -28,7 +29,7 @@ These roadmaps are **complete** (`count_open == 0`, `count_deferred == 0`) but s
 | 2 | [road-to-capability-answerability.md](roadmaps/road-to-capability-answerability.md) | 4 | 19 | 1 | 18 | 0 | 0 | [1](#blockers-road-to-capability-answerability) | ██████████ 95% |
 | 3 | [road-to-carrier-layer-convergence.md](roadmaps/road-to-carrier-layer-convergence.md) | 3 | 8 | 2 | 3 | 0 | 3 | [1](#blockers-road-to-carrier-layer-convergence) | ██████░░░░ 60% |
 | 4 | [road-to-ci-native-release-first-run.md](roadmaps/road-to-ci-native-release-first-run.md) | 2 | 8 | 8 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
-| 5 | [road-to-completion-loop.md](roadmaps/road-to-completion-loop.md) | 3 | 8 | 5 | 3 | 0 | 0 | 0 | ████░░░░░░ 38% |
+| 5 | [road-to-completion-loop.md](roadmaps/road-to-completion-loop.md) | 3 | 8 | 0 | 5 | 0 | 3 | 0 | ██████████ 100% |
 | 6 | [road-to-council-blind-review.md](roadmaps/road-to-council-blind-review.md) | 3 | 6 | 2 | 3 | 0 | 1 | 0 | ██████░░░░ 60% |
 | 7 | [road-to-feedback-9-35.md](roadmaps/road-to-feedback-9-35.md) | 4 | 10 | 0 | 10 | 0 | 0 | [4](#blockers-road-to-feedback-9-35) | ██████████ 100% |
 | 8 | [road-to-frontend-skill-application.md](roadmaps/road-to-frontend-skill-application.md) | 5 | 31 | 9 | 22 | 0 | 0 | [3](#blockers-road-to-frontend-skill-application) | ███████░░░ 71% |
@@ -181,13 +182,13 @@ These roadmaps are **complete** (`count_open == 0`, `count_deferred == 0`) but s
 
 ### [road-to-completion-loop.md](roadmaps/road-to-completion-loop.md)
 
-**Road to the completion loop — measure "delivered less than was asked" before refusing on it** — 3 / 8 done (38%)
+**Road to the completion loop — measure "delivered less than was asked" before refusing on it** — 5 / 5 done (100%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
-| 1 | the instrument | 🟡 in progress | 1 | 2 | 0 | 0 | 67% |
-| 2 | the decision, taken on the number | 🟡 in progress | 1 | 1 | 0 | 0 | 50% |
-| 3 | detector D, only if Phase 2 says so | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
+| 1 | the instrument | ✅ done | 0 | 3 | 0 | 0 | 100% |
+| 2 | the decision, taken on the number | ✅ done | 0 | 2 | 0 | 0 | 100% |
+| 3 | detector D, only if Phase 2 says so | ⏭️ skipped | 0 | 0 | 0 | 3 | 0% |
 
 ### [road-to-council-blind-review.md](roadmaps/road-to-council-blind-review.md)
 
