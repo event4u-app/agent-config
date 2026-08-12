@@ -330,6 +330,83 @@ Entry-shape contract: [`docs/contracts/CHANGELOG-conventions.md`](docs/contracts
 > that forces a new era split (`# Era: 9.35.x`, etc.) — see
 > [`docs/contracts/CHANGELOG-conventions.md § Era splits`](docs/contracts/CHANGELOG-conventions.md).
 
+## [9.36.0](https://github.com/event4u-app/agent-config/compare/9.35.0...9.36.0) (2026-08-12)
+
+### Release highlights
+
+<!-- Curated head: fill before merge, keep it under 10 lines, and leave `_none_` where it is genuinely the answer. The generated log below is unchanged. -->
+- **Behaviour changes:** _auto-derived, rewrite before merge:_ rule/schema diffs, breaking commits or removed public surface in 9f69017, 924cad8, 3c20d47, 72bb1bc.
+- **Default changes + migration:** _none_
+- **Security and correctness:** _none_
+- **Honest nulls:** _none_
+- **Known limitations:** _none_
+
+### Features
+
+* **consultation-rate:** compute the half of the metric that is computable ([36064ef](https://github.com/event4u-app/agent-config/commit/36064efa1a85c9ea1c6c2beb427fe684177ca2a8))
+* **analyze:** anchor-first direction, claim gate, interop probe and bounded --deep ([5bee62a](https://github.com/event4u-app/agent-config/commit/5bee62a5828ba6d3cf38a7d5d685004716d8addf))
+* **lint-roadmap:** warn when a gate rests on a population the project cannot produce ([e5c0b56](https://github.com/event4u-app/agent-config/commit/e5c0b569417d80ee937fd7ec955680c724abe3e1))
+* **demand-gate:** the L0-L4 ladder measures market demand, and now says so ([9f69017](https://github.com/event4u-app/agent-config/commit/9f69017632aead1f2a0e20eb8518ae4d8508ea1a))
+* **fe-design:** outside the ticket engine, this skill is the executor ([2946655](https://github.com/event4u-app/agent-config/commit/294665543cfb1a3c896e25024fd08551af629bb2))
+* **ui-route-nudge:** the first runtime consumer the UI rule triggers ever had ([6bf216e](https://github.com/event4u-app/agent-config/commit/6bf216e649febf3d95162e7f9b222f43ae2bd407))
+* **pack-reach:** report where a rule and the skills it routes to cannot meet ([4bc28e6](https://github.com/event4u-app/agent-config/commit/4bc28e660f9eaef87b1e8f5ed4bbbd1914a7d3e4))
+* **catalogue:** measure the skill-catalogue delivery defect, and publish the null ([b2adebe](https://github.com/event4u-app/agent-config/commit/b2adebe17320109a98a41eb4b0fc69233b567e47))
+* **ui-surface:** one definition of a UI surface, and it covers Blade ([e9ba053](https://github.com/event4u-app/agent-config/commit/e9ba0533110da9aa9bbd276ab3ced2004c2d5d50))
+
+### Bug Fixes
+
+* **proof:** regenerate docs/proof.md after the new pre-registered claim ([6a8bc44](https://github.com/event4u-app/agent-config/commit/6a8bc446abcc06cee3cc55ffd75f7668037542ea))
+* **baseline:** repair the measurement table split by the unit note ([afa1ea0](https://github.com/event4u-app/agent-config/commit/afa1ea0f1369293a8e392e132343dc05c126ccda))
+* **consultation-rate:** close the R2 findings, unit first ([c53b3da](https://github.com/event4u-app/agent-config/commit/c53b3da53111a089d07c59186d1aa1124adc2d31))
+* **agents-md:** keep the corrected pointer inside the Thin-Root char cap ([858963f](https://github.com/event4u-app/agent-config/commit/858963f956d516d5200d9e27c9014aee41938973))
+* **agents-md:** the consumer template contradicted itself on always-active rules ([639ce5e](https://github.com/event4u-app/agent-config/commit/639ce5e26d8e4d3ca70d8e4f1f6953548f72322f))
+* **dist:** rebuild the install bundle without build-machine paths ([55f4e64](https://github.com/event4u-app/agent-config/commit/55f4e6449ad0eb9d8c79bdeffea6c174ddda66f2))
+* **cli-delegate:** close the six R2 findings, two of them on this fix ([6c26dd4](https://github.com/event4u-app/agent-config/commit/6c26dd45187b374a473df5bba241b0bd502accd2))
+* **cli-delegate:** four shipped commands were silent no-ops in their own bundle ([1ea3f67](https://github.com/event4u-app/agent-config/commit/1ea3f67012929f7c00604bc9cda6a85b1d783e32))
+* **ci:** three downstream surfaces the new triggers, key and gate opened ([924cad8](https://github.com/event4u-app/agent-config/commit/924cad87f91eb57acf4e8619015f3089e07a956c))
+* **capture,lint,docs:** close the remaining R2 findings ([396d58f](https://github.com/event4u-app/agent-config/commit/396d58fbff2704cddce10577e2cbd82db9c5003c))
+* **ui-surface,nudge,settings:** three predicates that were wider than their claims ([36e1632](https://github.com/event4u-app/agent-config/commit/36e1632287a85c0934bec8a43752b8761dfa19d6))
+* **ui-rules:** the nudge does not read the rules, and six surfaces said it did ([3c20d47](https://github.com/event4u-app/agent-config/commit/3c20d47dee794e1c9ddbf6a895527953788c31ff))
+* **ui-rules:** reach the consumers the design skills were written for ([72bb1bc](https://github.com/event4u-app/agent-config/commit/72bb1bc3943c8fb721db9d44b5daa5334bcb956f))
+
+### Documentation
+
+* **review:** re-bind the R2 artefact to the fixed scope ([0cc9057](https://github.com/event4u-app/agent-config/commit/0cc9057d97b78cf82fd957afd96ec9205bfc7fc0))
+* **review:** record the R2 findings before fixing any of them ([b42227a](https://github.com/event4u-app/agent-config/commit/b42227a6e32b041c6b9b82f373bb23c2d15cc03a))
+* **baseline,roadmap:** the first measurement, and what its denominator says ([347cb47](https://github.com/event4u-app/agent-config/commit/347cb4702b55f22723ecf4d7fb00fe202fb4d72c))
+* **roadmaps:** archive the completed cross-repo differential loop roadmap ([f90b42b](https://github.com/event4u-app/agent-config/commit/f90b42b918813c0f354037abd5965bd45afb7a5d))
+* **claims:** pre-register the reference-loop upgrade value claim ([67c1ba4](https://github.com/event4u-app/agent-config/commit/67c1ba400531ca0eead1c282a6dd802c55080eb5))
+* **roadmap:** archive the cross-corpus verification roadmap, complete ([483acc6](https://github.com/event4u-app/agent-config/commit/483acc654e8d8a2a3b9cecbc96be6e79e8da12a0))
+* **adr:** record what the cross-corpus proposal measurements survived ([87e81d8](https://github.com/event4u-app/agent-config/commit/87e81d8faadc35f070163d3ec3288b78cad19d1d))
+* **roadmap:** the demand-gate audience roadmap and its follow-up ([079f22c](https://github.com/event4u-app/agent-config/commit/079f22cbd16df95ceebcccdb9a4ae3bcc73390ef))
+* **review:** re-bind after the CI fixes, and name what is unreviewed ([f9e66de](https://github.com/event4u-app/agent-config/commit/f9e66de977d9a33766edcfd84936ef12ba09358d))
+* **review:** state precisely what moved between the two re-binds ([8b2bdd4](https://github.com/event4u-app/agent-config/commit/8b2bdd4267307cbbaec410d6305b9d91f98cc7c1))
+* **review:** re-bind the R2 artefact after the generated-file regen ([03e1029](https://github.com/event4u-app/agent-config/commit/03e102989d92f2cc913dc839b05986cf7d4db1f3))
+* **roadmap:** the frontend-skill-application plan and its first run ([c1bd64f](https://github.com/event4u-app/agent-config/commit/c1bd64fe559a60a6b6f6248ffc3ff0127df5fe46))
+* **dispatch:** a UI-shaped slice carries its design context across the boundary ([aae1e52](https://github.com/event4u-app/agent-config/commit/aae1e5242d3f5ed4a99c9a33d4551ca9183b8f77))
+
+### Refactoring
+
+* **skills:** one spelling for the disclosure directory, and an authoring section that names it ([3cd3103](https://github.com/event4u-app/agent-config/commit/3cd3103962d8d632c9fe18691016b6044ffc084b))
+
+### Tests
+
+* **demand-gate:** pin both halves, and name what these tests are not ([0a1da08](https://github.com/event4u-app/agent-config/commit/0a1da086689b0c3b5d4df3097df4e731b6506481))
+* **cli-delegate:** execute every delegate bundle, because reading cannot see this ([5d8a741](https://github.com/event4u-app/agent-config/commit/5d8a7410da9caba0e77714dc9e5e92c370a1614e))
+
+### Chores
+
+* **roadmap:** archive the completed roadmap in the PR that completes it ([1d05116](https://github.com/event4u-app/agent-config/commit/1d05116c62f316b64fb1d6a8e86381d03f3f22fe))
+* **review:** re-bind the artefact after the bundle rebuild ([b0bf837](https://github.com/event4u-app/agent-config/commit/b0bf837046718823c52f4db9216d27192f8a131b))
+* **dist:** rebuild the committed install bundle after the guard change ([0d7b0ae](https://github.com/event4u-app/agent-config/commit/0d7b0ae2709d7a6fcf0eb5ecd9e1e0241a28c06d))
+* **review:** re-bind the artefact after merging main ([ab4272b](https://github.com/event4u-app/agent-config/commit/ab4272b98a53628fa00544b134a49b7e97545ad4))
+* **review:** re-bind the artefact and mark all six findings fixed ([c1eb64a](https://github.com/event4u-app/agent-config/commit/c1eb64ab051a663a45a1a76696a282a7e7dfb6c0))
+* **review:** record six R2 findings before fixing them ([872fc7b](https://github.com/event4u-app/agent-config/commit/872fc7b0a7e735e7ebd13d357b7270b8a1140046))
+* **index:** regenerate the artefact index and public catalog ([cfc75b6](https://github.com/event4u-app/agent-config/commit/cfc75b6b26bbf6bd09c0536ca0f553a52fbd09a9))
+* **dist:** regenerate the router after merging main ([4bab07c](https://github.com/event4u-app/agent-config/commit/4bab07c67ec7d5778f957789bc6d427ec6274641))
+
+Tests: 13333 (+120 since 9.35.0)
+
 ## [9.35.0](https://github.com/event4u-app/agent-config/compare/9.34.0...9.35.0) (2026-08-12)
 
 ### Release highlights
