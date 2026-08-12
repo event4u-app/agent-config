@@ -57,6 +57,26 @@ function git(cwd: string, ...args: string[]): SpawnSyncReturns<string> {
 const COMPLETE = ['# Complete', '', '## Phase 1 — All', '- [x] all done', ''].join('\n');
 const OPEN = ['# Open', '', '## Phase 1 — Go', '- [ ] not done', ''].join('\n');
 
+/** A complete roadmap (every box `[x]`) carrying one blocker at `status`. */
+function completeWithBlocker(status: 'open' | 'resolved'): string {
+    return [
+        '# Complete but undecided',
+        '',
+        '## Phase 1 — All',
+        '- [x] all done',
+        '',
+        '## Blockers',
+        '',
+        '### blocker: b-undecided',
+        `- **Status:** ${status}`,
+        '- **Owner:** maintainer',
+        '- **Blocks:** nothing in this roadmap',
+        '- **What to do:** decide the mechanism',
+        '- **Resolved when:** an ADR records the choice',
+        '',
+    ].join('\n');
+}
+
 // Untracked-safe archival (road-to-roadmap-archival-robustness, gap A).
 // TS-only enhancement (the Python twin was deleted in ADR-200), so this is
 // driven against the `.ts` engine alone — no python parity. A pre-first-commit
@@ -165,5 +185,47 @@ describe.runIf(hasGit())('archive_completed_roadmaps — untracked-safe (TS-only
         // The sweep still does its job everywhere else.
         const adr = fs.readFileSync(path.join(repo, 'docs/some-adr.md'), 'utf-8');
         expect(adr.includes('agents/roadmaps/archive/road-to-complete.md')).toBe(true);
+    });
+
+    // Closing every box does not answer a question the roadmap raised for a
+    // human. Measured: `b-highlights-mechanism` was surfaced in the 9.29
+    // feedback roadmap, archived unanswered on step-count alone, and the
+    // failure it predicted shipped into the 9.36.0 changelog head four
+    // releases later. Both halves asserted — a guard that also held roadmaps
+    // whose blockers are resolved would pass a one-sided test while stalling
+    // the sweep's actual job.
+    it('--all does not archive a complete roadmap whose blocker is still open, and names it', () => {
+        const repo = path.join(tmp, 'open-blocker');
+        initUncommitted(repo, {
+            'agents/roadmaps/road-to-undecided.md': completeWithBlocker('open'),
+        });
+
+        const ts = runTs(['--all'], repo);
+
+        expect(ts.status, 'exit').toBe(0);
+        expect(ts.stderr, 'names the roadmap and the blocker id').toMatch(
+            /road-to-undecided\.md.*b-undecided/s,
+        );
+        expect(ts.stdout, 'not reported as archived').not.toMatch(/✅\s+Archived/);
+        // Stayed in the active tree — that is the whole point.
+        expect(fs.existsSync(path.join(repo, 'agents/roadmaps/road-to-undecided.md'))).toBe(true);
+        expect(
+            fs.existsSync(path.join(repo, 'agents/roadmaps/archive/road-to-undecided.md')),
+        ).toBe(false);
+    });
+
+    it('--all still archives a complete roadmap whose blocker is resolved', () => {
+        const repo = path.join(tmp, 'resolved-blocker');
+        initUncommitted(repo, {
+            'agents/roadmaps/road-to-decided.md': completeWithBlocker('resolved'),
+        });
+
+        const ts = runTs(['--all'], repo);
+
+        expect(ts.status, 'exit').toBe(0);
+        expect(ts.stderr).not.toMatch(/still open/);
+        expect(fs.existsSync(path.join(repo, 'agents/roadmaps/archive/road-to-decided.md'))).toBe(
+            true,
+        );
     });
 });
