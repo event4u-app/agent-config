@@ -1,0 +1,77 @@
+# Completion review — structured-guard-input Phase 1 and Phase 4
+
+**Skipped:** no code surface for this completion — the diff is one contract section, one evidence write-up, one roadmap and its regenerated dashboard; the gate itself measures zero code paths of four changed files, scope 79d456b55b8ea6da71ea28b7a1c78d4faac694229b3d249c214a58ed5f465531, declared 2026-08-12
+
+## Why a skip rather than a review
+
+Nothing executable changed. No script, no hook, no schema, no test, no config.
+The work was **measurement plus recording**: three pre-registered falsifiers
+answered with existing instruments, and one contract section stating what text a
+guard receives. `check_completion_review` classifies the diff as zero code paths
+of four changed files, which is the condition this declaration covers.
+
+## What replaces a code review here
+
+The deliverable is a set of numbers that will be acted on, so what needs checking
+is whether each number is real and whether it says what it is claimed to say.
+
+- **No classifier was re-implemented.** F1 was measured with
+  `conformance_scan --why evidence-steering`, which imports `isEvaluationPrompt`,
+  `isSelfScoped` and `preloadedVerdict` from the guard itself. A second copy
+  would let the measurement and the gate disagree silently, which is the drift
+  this repo's own principle forbids — so the probe that was *not* written is part
+  of the result.
+- **The 128-session corpus is enumerated, not summarised.** Five stores with
+  per-store counts, including two carrying no project-scope install as a control
+  group; both control stores are clean, which is the reading that would have
+  been lost by reporting a single pooled rate.
+- **The 6 hits are classified individually, and the classification is the
+  finding.** Reporting "6 second-self-review dispatches" as the answer would have
+  inverted it. Each round was separated by a dispatched fix worker, so every pass
+  judged a different artefact — iteration, not verdict shopping — and one of the
+  six is an implementation prompt caught by the evaluation pattern.
+- **The retrospective corpus is defended, not glossed.** The downgrade landed the
+  same day, so no session postdates it. The argument that this is still the right
+  population — the downgrade changed severity, not classification, and the
+  predicates deciding membership are untouched — is stated in the write-up where
+  a reader can reject it.
+- **F3 is reported at both boundaries rather than at the convenient one.** Read
+  strictly as a conjunction the falsifier fires on 57 sites / 54 % and not on
+  50 / 48 %. Both readings are given, with the note that the external half is
+  exceeded either way. Rounding this to "the falsifier fires" would have been an
+  overclaim in the direction of the conclusion.
+- **F2 is the finding that argues against the conclusion, and it is not buried.**
+  It is the one measurement pointing at *more* severity, and it is stated first
+  in its own section rather than folded into a table.
+- **Phase 4's verify condition was NOT met, and that is recorded as the result.**
+  It asked for a worked example from a real envelope; no captured envelope exists
+  in the tree, so the answer is "by construction, and here is the rig that would
+  settle it" rather than a fabricated example.
+- **A probe was designed and deliberately not run**, with the reason recorded:
+  assembling a blocked token at runtime would have settled the shell half in one
+  read-only command, and doing so is a guard bypass in form regardless of payload.
+
+## What is deliberately NOT claimed
+
+The Phase 2 and Phase 3 disposition is recorded as an **open decision with four
+options**, not as a verdict. The AI council was convened on it and returned
+INCONCLUSIVE (`cli_quota_exhausted`, both members, 0/2 present). No solo verdict
+is presented in its place, and the failed attempt is recorded rather than
+omitted — a failed council attempt still spends quota, and hiding it would make
+the next run look cheaper than it is.
+
+Gates green on this branch: `task preflight` (full run, including
+`lint_regression`, `check_condensation`, `check_safety_floor_untouched`,
+`skill_linter --changed`), and the pre-push static pass, which reported no
+changed TypeScript because there is none.
+
+## Standing caveat
+
+A skip declaration is a statement about the diff's surface, not a claim that the
+conclusions are right. The strongest objection to this change is that F1's zero
+is measured over a corpus in which the *opportunity* for verdict shopping may
+simply be rare — 128 sessions with one review-heavy arc between them is thin
+evidence about a behaviour that only arises when an agent is reviewing its own
+work. The counter is that this is precisely why the disposition is left open
+rather than resolved, and why F2 (no second control) is recorded as standing
+against the advisory severity even though F1 does not.
