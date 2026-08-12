@@ -80,7 +80,7 @@ the finding.
 
 ## Phase 2 — delete the free tier
 
-- [ ] 2.1 Take the `derivable` rows whose replacement is **already implemented**
+- [x] 2.1 Take the `derivable` rows whose replacement is **already implemented**
   (the mechanism exists and the flag merely gates it) and delete them in one
   batch: template, zod schema, `settings-classes.md` row + Counts, `REMOVED_KEYS`
   entry with its own reason string, regenerated `settings-reference.md`.
@@ -88,7 +88,7 @@ the finding.
   a leftover key warns and is ignored rather than honoured (one spawned test per
   deleted mechanism, in the shape of `turn_end_gate_hook.test.ts`'s
   "a leftover … cannot disarm it").
-- [ ] 2.2 For each deleted key, assert the **inverted invariant** — the test that
+- [x] 2.2 For each deleted key, assert the **inverted invariant** — the test that
   used to pin "absent ⇒ off" now pins "absent ⇒ armed". Deleting the old test
   without inverting it removes the only thing that would notice a silent
   regression to the old default.
@@ -108,7 +108,7 @@ the finding.
 
 ## Phase 4 — state the floor and stop
 
-- [ ] 4.1 Publish the residual set with, per key, the sentence explaining why no
+- [x] 4.1 Publish the residual set with, per key, the sentence explaining why no
   mechanism can derive it. A floor nobody can argue with is the deliverable; a
   floor asserted without reasons is where the next round quietly re-grows.
   `verify:` every residual key has a non-empty reason.
@@ -141,6 +141,94 @@ Two findings the classification produced that no step asked for:
   whichever step deletes or fixes the key, and repairing it in passing would be
   the drive-by edit `minimal-safe-diff` forbids.
 
+## Why 3.1 stays open, and what was built for it instead (2026-08-12)
+
+**3.1 is not a step, it is the queue.** Its subject is "`derivable` rows whose
+replacement does **not** yet exist", and there are 83 of them — writing those
+mechanisms is the remaining programme, not a checkbox. Phase 2 deliberately
+touched none of them: every key deleted either had no reader at all or had its
+replacement already shipped, so 3.1's `verify:` ("each such key's deletion commit
+is later than its mechanism's") holds for this change with no subject. Closing it
+on that basis would be checkbox motion, so it stays open.
+
+What was built instead is the missing half of the gate. `lint_settings_classes`
+had five checks and all five police what is **added** — a new leaf needs a row, a
+class, a disposition, a conservative default. Nothing policed what is **removed**,
+which on a roadmap whose whole direction is deletion was the un-gated half doing
+the work. Check 6 now fails the build on two decidable contradictions the loader
+cannot see: a `REMOVED_KEYS` entry whose reason names no replacement, and a key
+that is simultaneously removed and live in the template (which would make the
+loader warn "ignored" about a value the schema honours). That makes the acceptance
+criterion *"no key is deleted before the mechanism that replaces it exists"*
+mechanical on its naming half.
+
+Stated because the step asks for more than the gate delivers: **the gate does not
+check that the replacement mechanism actually exists, nor that its commit precedes
+the deletion.** Neither is decidable from the template and the contract, so both
+stay model-carried — the same honesty boundary the A/B/C judgement itself carries.
+Falsifiability was verified rather than assumed: re-adding a deleted key to the
+template makes check 6 name it.
+
+## What Phase 2 did (2026-08-12)
+
+**Deleted the six keys no code path read**, taking the surface 140 → 134 and the
+`derivable` queue 88 → 83. `lint_settings_classes` re-derives it: `scanned: 134`,
+`A=26 B=3 C=105`, and the ratchet in `gate-violation-baselines.json` is lowered to
+83 so the gain cannot be given back.
+
+Three things went differently from the step text, each worth stating:
+
+- **One of the six was `consent`, not `derivable`, so 2.1's literal scope did not
+  cover it.** `screenshots.data_bearing_gate` was reclassified to `derivable`
+  before deletion, with the replacement named (the unconditional gate in
+  `doc-screenshot-hygiene` routing into `non-destructive-by-default`). The
+  argument, recorded in the contract rather than applied quietly: a data-bearing
+  embed is a published egress, so its confirmation is a Hard Floor no settings
+  value may lift — an `off` could never have been honoured, which is exactly why
+  nothing read it. Risk 2 of this roadmap is the reason that reclassification is
+  written down instead of assumed.
+- **Two of the six carried a documented promise the code did not keep**, so the
+  deletion repairs a live defect rather than only removing a line.
+  `screenshots.data_bearing_gate` advertised an opt-out that did not exist, and
+  `legal_review_prep.consented_at` was documented as "set automatically by the
+  setup wizard" while nothing wrote it.
+- **The blast radius was 25 files, not the five the step names.** Beyond template,
+  schema, contract, `REMOVED_KEYS` and reference page: the JSON schema, the
+  user-global `MERGEABLE_KEYS` whitelist (both the live copy and the projected
+  work-engine template), the two placeholder defaults in `yamlIO`, all three
+  profile `.ini` presets, the wizard step list and the GUI basic-paths list, the
+  telegraph-speak rule's own frontmatter description, and five prose surfaces.
+
+**The inverted invariants (2.2) are three assertions per key, not one.**
+`tests/server/schemas/parity.test.ts` pins that each key is absent from BOTH
+template and schema (the parity gate already reds on a one-sided deletion) and
+that a stale file's hostile value is *stripped* rather than honoured —
+`off` for a gate, `true` for a poll, a non-default enum for a scope.
+`tests/lib/agent_settings.test.ts` pins each `REMOVED_KEYS` reason string
+verbatim, because the reason is the whole value of that warning: it names what
+decides instead, and a warning that only says "removed" sends the user looking
+for a replacement key that does not exist.
+
+Falsifiability was checked, not assumed: re-adding `speak_scope` to the Zod
+schema reds exactly three assertions and leaves the other five keys green.
+
+**Two findings recorded, not repaired** (both pre-date this change, so repairing
+them here would be the drive-by edit `minimal-safe-diff` forbids):
+
+- `docs/customization.md` documents the user-global whitelist as five exact
+  dotted paths. `MERGEABLE_KEYS` has fifteen — `personal.ide`,
+  `personal.pr_comment_bot_icon`, `memory.cadence` and the seven
+  `knowledge.global_sharing.*` entries are absent from the doc. The count was
+  already wrong before the deletion; only the arithmetic changed.
+- `docs/architecture/current-onboard-baseline.md` still names the key, and is
+  stale wholesale: it documents the retired `/onboard` command and cites
+  `.agent-src.uncondensed/`, a tree that no longer exists.
+
+`tests/fixtures/sync_yaml_rt/current-real.yml` keeps all three deleted
+`chat_history` lines **deliberately**. That corpus asserts
+`emit(parse(x)) == x`; a settings file written before a deletion is precisely
+what must still round-trip, so editing the fixture would remove the case.
+
 ## Blockers
 
 ### blocker: consent-key-redesign-verdict
@@ -154,16 +242,37 @@ Two findings the classification produced that no step asked for:
   product call about what the package may do to a user — not a classification —
   and the roadmap's own `verify:` demands a recorded verdict rather than a
   deferral, so it cannot be closed by an agent choosing one.
-- **Why it is not council-resolved:** it is a judgement call, so the
-  action-vs-judgement split would normally route it to the AI council. The
-  council was **configured and both members failed** on 2026-08-12 —
-  `anthropic` exit 1, `openai` exit 2 (`unexpected argument '--system'` from the
-  `codex exec` transport). The run also printed `2/2 present, needed 1 —
-  concluded` while its own JSON recorded `present: 0, status: inconclusive`,
-  which is worth repairing separately: a transport failure that reports as a
-  quorum is worse than one that reports as an outage.
-- **Resolved when:** each of the three keys carries a recorded verdict (keep, or
-  redesign the action), in this roadmap or an ADR.
+- **Why it is not council-resolved — re-measured 2026-08-12, and the reason has
+  changed.** It is a judgement call, so the action-vs-judgement split routes it to
+  the AI council, and the council **is** configured (2 members, both CLI
+  transport — `council:status` confirms). The transport defect this blocker used
+  to name is **fixed**: `openai` exit 2 (`unexpected argument '--system'` from
+  `codex exec`) was repaired in PR #1308, and the false-quorum line it also named
+  now reads correctly — the run prints `after the run · 0/2 present … INCONCLUSIVE`
+  beside the stale pre-run `2/2 present … concluded`. Do not re-diagnose either.
+  What blocks it today is different and simpler: **both members returned
+  `cli_quota_exhausted`** (`anthropic 125/50`, `openai 134/50`). That is a
+  spend/quota hard blocker — the kind that is surfaced rather than retried — so
+  the pass produced no verdict and cost $0.00. Re-run when the quota window
+  resets; the question is written and needs no re-derivation.
+- **The step's own premise is wrong in two ways, verified against the tree
+  2026-08-12 — hand the corrected version to the council, not the original.**
+  (a) It says "the three class-B consent keys". Only **two** of the three carry the
+  `consent` disposition: `personal.open_edited_files` and
+  `memory.learn_on_session_end`. The third, `personal.canary_name`, is
+  `un-inferrable` — it is now one of the nine keys in the published floor (§ The
+  floor), so asking whether its *action* needs authorising is the wrong question
+  for it. (b) The two real consent keys are not comparable, and the difference is
+  the whole substance: `memory.learn_on_session_end` has a **real** reader
+  (`src/scripts/memory_learn_hook.ts` parses it itself and stays dark unless it
+  reads `true`), while `personal.open_edited_files` is enforced by **prose only** —
+  `src/skills/file-editor/SKILL.md` instructs the agent to read it, and no code
+  path or hook can refuse the action. Whether an authorisation that only prose
+  enforces is a consent gate at all is the question the step should be asking
+  about that key.
+- **Resolved when:** each of the two consent keys carries a recorded verdict
+  (keep, redesign the action, or delete with a named replacement), in this roadmap
+  or an ADR, and the third key's mis-grouping is either corrected or argued.
 
 ## Acceptance criteria
 
