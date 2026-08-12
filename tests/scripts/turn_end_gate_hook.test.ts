@@ -32,7 +32,6 @@ import {
     finalParagraph,
     isVerificationCommand,
     readCiSettled,
-    readGateSettings,
     readLanguagePin,
     readTranscriptTail,
     visibleProse,
@@ -52,11 +51,12 @@ const TSX = path.join(
 const tmp_dirs: string[] = [];
 
 /**
- * `readGateSettings` now goes through the real settings cascade, whose
- * user-global layer resolves under `EVENT4U_CONFIG_HOME` (its own documented
- * override) or `os.homedir()`. Without this the in-process tests would read the
- * DEVELOPER's global settings and pass or fail on their machine's state —
- * exactly the non-hermetic shape this repo has been bitten by before.
+ * The gate itself no longer reads settings at all — the switch was removed and
+ * it is always armed. This pin STAYS anyway: the spawned hook runs the real
+ * dispatcher path, and anything it imports that does touch the settings cascade
+ * would otherwise resolve the DEVELOPER's user-global layer and make the suite
+ * pass or fail on one machine's state. Hermeticity is cheap; a
+ * works-on-my-machine hook test is not.
  */
 let _priorConfigHome: string | undefined;
 beforeAll(() => {
@@ -215,7 +215,7 @@ describe('detector B — language mismatch (roadmap 3.3)', () => {
     it('ADVERSARIAL: English identifiers and paths do not flip a German turn', () => {
         const reply =
             'Ich habe `src/scripts/hooks/turn_end_gate_hook.ts` angelegt und in ' +
-            '`concern_registry.ts` eingetragen; `readGateSettings` liest den Schalter.';
+            '`concern_registry.ts` eingetragen; `detectUnverifiedEdit` liest die Tool-Calls.';
         expect(detectLanguage(reply, 'de')).toBeNull();
     });
 
@@ -282,7 +282,15 @@ describe('visibleProse — the exclusion set', () => {
 });
 
 // ---------------------------------------------------------------------------
-// Settings — the master switch and the two per-detector switches (3.6)
+// Workspace helper.
+//
+// The `settings — default OFF, detectors ON within it` describe block that used
+// to live here is GONE, with its R2-6a/6b/6c regressions: the gate reads no
+// settings any more, so `enabled: yes`, a trailing comment, and a block under
+// the wrong parent are no longer things it can get wrong. What replaced those
+// tests is one assertion in the spawned section below — a workspace with NO
+// settings file at all must still refuse — which is the inversion of the case
+// they were pinning and the only one that can regress now.
 // ---------------------------------------------------------------------------
 
 function makeWorkspace(settings?: string): string {
@@ -293,129 +301,6 @@ function makeWorkspace(settings?: string): string {
     }
     return dir;
 }
-
-describe('settings — default OFF, detectors ON within it (roadmap 3.6)', () => {
-    it('absent settings file ⇒ disabled', () => {
-        expect(readGateSettings(makeWorkspace()).enabled).toBe(false);
-    });
-
-    it('absent section ⇒ disabled — absent is never an opt-in', () => {
-        expect(readGateSettings(makeWorkspace('hooks:\n  injection_scan:\n    enabled: true\n')).enabled).toBe(
-            false,
-        );
-    });
-
-    it('enabling the master switch turns EVERY detector on without naming them', () => {
-        const s = readGateSettings(
-            makeWorkspace('hooks:\n  turn_end_gate:\n    enabled: true\n'),
-        );
-        expect(s).toEqual({
-            enabled: true,
-            promissory: true,
-            language: true,
-            verification: true,
-            completion: true,
-        });
-    });
-
-    it('any detector can be silenced without editing the hook manifest', () => {
-        const s = readGateSettings(
-            makeWorkspace(
-                'hooks:\n  turn_end_gate:\n    enabled: true\n    language: false\n',
-            ),
-        );
-        expect(s).toEqual({
-            enabled: true,
-            promissory: true,
-            language: false,
-            verification: true,
-            completion: true,
-        });
-    });
-
-    it('the verification detector has its own switch', () => {
-        const s = readGateSettings(
-            makeWorkspace(
-                'hooks:\n  turn_end_gate:\n    enabled: true\n    verification: false\n',
-            ),
-        );
-        expect(s).toEqual({
-            enabled: true,
-            promissory: true,
-            language: true,
-            verification: false,
-            completion: true,
-        });
-    });
-
-    it('the completion detector has its own switch', () => {
-        const s = readGateSettings(
-            makeWorkspace(
-                'hooks:\n  turn_end_gate:\n    enabled: true\n    completion: false\n',
-            ),
-        );
-        expect(s).toEqual({
-            enabled: true,
-            promissory: true,
-            language: true,
-            verification: true,
-            completion: false,
-        });
-    });
-
-    it('a SIBLING section’s `enabled:` is never read as ours', () => {
-        const s = readGateSettings(
-            makeWorkspace(
-                'hooks:\n  turn_end_gate:\n    promissory: false\n  injection_scan:\n    enabled: true\n',
-            ),
-        );
-        expect(s.enabled).toBe(false);
-        expect(s.promissory).toBe(false);
-    });
-
-    // --- R2 finding 6: three ways the hand-rolled walker mis-resolved it -----
-
-    it('R2-6b: a trailing comment does not turn the switch OFF', () => {
-        // `^\s+enabled:\s*(true|false)\s*$` required end-of-line, so a
-        // maintainer who annotated their opt-in silently got no gate.
-        const s = readGateSettings(
-            makeWorkspace('hooks:\n  turn_end_gate:\n    enabled: true  # soak opt-in\n'),
-        );
-        expect(s.enabled).toBe(true);
-    });
-
-    it('R2-6b: the YAML boolean `yes` means yes', () => {
-        // The `yaml` package parses to the 1.2 core schema where `yes` is the
-        // STRING "yes", so a parser alone does not fix this — the reader has to
-        // accept the spelling a human actually writes.
-        const s = readGateSettings(makeWorkspace('hooks:\n  turn_end_gate:\n    enabled: yes\n'));
-        expect(s.enabled).toBe(true);
-    });
-
-    it('R2-6b: `off` / `no` mean off, and an unknown value falls back to the default', () => {
-        expect(
-            readGateSettings(makeWorkspace('hooks:\n  turn_end_gate:\n    enabled: no\n')).enabled,
-        ).toBe(false);
-        // Not a recognised spelling ⇒ the conservative default, never a guess.
-        expect(
-            readGateSettings(makeWorkspace('hooks:\n  turn_end_gate:\n    enabled: maybe\n'))
-                .enabled,
-        ).toBe(false);
-    });
-
-    it('R2-6c: a `turn_end_gate:` block under the WRONG parent never arms the gate', () => {
-        // The text walker had no notion of a parent, so a top-level block or one
-        // under any other key armed a concern that can refuse a turn-end.
-        expect(readGateSettings(makeWorkspace('turn_end_gate:\n  enabled: true\n')).enabled).toBe(
-            false,
-        );
-        expect(
-            readGateSettings(
-                makeWorkspace('quality:\n  turn_end_gate:\n    enabled: true\n'),
-            ).enabled,
-        ).toBe(false);
-    });
-});
 
 describe('language pin', () => {
     it('absent pin ⇒ `und` ⇒ no obligation', () => {
@@ -543,9 +428,15 @@ interface Run {
     stderr: string;
 }
 
-/** A workspace with the gate ON, a German pin, and a fake $HOME for transcripts. */
+/**
+ * A workspace with a German pin and a fake $HOME for transcripts.
+ *
+ * No settings file is written, and that omission is the point: the gate is
+ * always armed, so every spawned test below runs against a workspace that opts
+ * into nothing. This helper used to write `enabled: true`.
+ */
 function makeGateWorkspace(): { dir: string; home: string } {
-    const dir = makeWorkspace('hooks:\n  turn_end_gate:\n    enabled: true\n');
+    const dir = makeWorkspace();
     fs.mkdirSync(path.join(dir, 'agents', 'state'), { recursive: true });
     fs.writeFileSync(
         path.join(dir, 'agents', 'state', 'language-mirror.json'),
@@ -699,13 +590,32 @@ describe('the gate, end to end', () => {
         expect(r.stderr).toBe('');
     });
 
-    it('is a no-op while the master switch is off — the shipped default', () => {
+    it('is ARMED with no settings file at all — the inverted invariant', () => {
+        // This assertion used to read `toBe(0)` under the title "is a no-op
+        // while the master switch is off". The switch is gone: an install that
+        // opts into nothing gets the gate. Whether it FIRES is decided one
+        // level down, by the detector — which is why the sibling test above,
+        // same workspace and a clean reply, still exits 0.
         const dir = makeWorkspace(); // no settings file at all
         const home = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'turn-end-gate-home-')));
         tmp_dirs.push(home);
         const t = writeTranscript(home, ['mach weiter'], PROMISE);
         const r = runHook(dir, envelopeJson(dir, t), home);
-        expect(r.status, r.stderr).toBe(0);
+        expect(r.status, r.stderr).toBe(1);
+        expect(r.stderr).toContain('promissory');
+    });
+
+    it('a leftover `hooks.turn_end_gate.enabled: false` cannot disarm it', () => {
+        // The removed key is ignored, not honoured. An older install carrying
+        // the opt-out must not silently keep the gate off — that is the exact
+        // shape a deletion gets wrong, and REMOVED_KEYS only warns.
+        const dir = makeWorkspace('hooks:\n  turn_end_gate:\n    enabled: false\n');
+        fs.mkdirSync(path.join(dir, 'agents', 'state'), { recursive: true });
+        const home = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'turn-end-gate-home-')));
+        tmp_dirs.push(home);
+        const t = writeTranscript(home, ['mach weiter'], PROMISE);
+        const r = runHook(dir, envelopeJson(dir, t), home);
+        expect(r.status, r.stderr).toBe(1);
     });
 
     // --- the two re-entrancy layers, each proven ALONE ---

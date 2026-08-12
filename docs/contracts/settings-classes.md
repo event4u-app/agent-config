@@ -146,9 +146,18 @@ larger set; it is the set that passes both halves.
 The always-on-orchestration doctrine (subagents, council, team) deletes every
 per-layer on/off setting: `subagents.enabled`, `subagents.auto`, and
 `subagents.host_capabilities` are gone from the template, and the layer
-activates on any capable host with an EMPTY settings file. One switch survives
-that deletion on purpose, and it is not the same shape wearing a different
-name.
+activates on any capable host with an EMPTY settings file.
+
+`hooks.turn_end_gate.*` was deleted the same way on 2026-08-12, and its
+deletion carries an argument worth keeping: the switch existed so the gate
+could **soak** before it bound, and a concern that is off does not run, so the
+switch made the soak it was protecting impossible. What decides whether that
+gate fires is now what should have decided it from the start — each detector's
+own trigger conditions. A leftover block warns once and is ignored
+(`REMOVED_KEYS`, `src/scripts/_lib/agent_settings.ts`).
+
+One switch survives these deletions on purpose, and it is not the same shape
+wearing a different name.
 
 ```
 ON-BY-DEFAULT, NOT OFF-BY-DEFAULT. ABSENT OR false MEANS THE STACK RUNS.
@@ -180,8 +189,8 @@ dispatch runs, not WHETHER the layer exists, so they keep their own C rows.
 |---|---|
 | A — preference | 27 |
 | B — consent | 3 |
-| C — guarded | 114 |
-| **Total** | **144** |
+| C — guarded | 110 |
+| **Total** | **140** |
 
 The total is every leaf in the template, where *leaf* means anything that is not
 a **non-empty** map. An empty map (like the former `subagents.host_capabilities: {}`) is a real
@@ -327,10 +336,6 @@ Rows follow template order, so a diff against the template reads straight down.
 | `hooks.design_slop.enabled` | C | `false` | configures code that runs on every tool call |
 | `hooks.ui_route_nudge.enabled` | C | `false` | configures code that runs on every tool call |
 | `hooks.code_graph.enabled` | C | `false` | configures code that runs on every tool call |
-| `hooks.turn_end_gate.enabled` | C | `false` | arms the only concern that can REFUSE a turn-end; an agent must never be able to switch its own delivery gate on |
-| `hooks.turn_end_gate.promissory` | C | `true` | which refusal the turn-end gate may raise; inert while the master switch is off |
-| `hooks.turn_end_gate.language` | C | `true` | which refusal the turn-end gate may raise; inert while the master switch is off |
-| `hooks.turn_end_gate.verification` | C | `true` | which refusal the turn-end gate may raise; inert while the master switch is off |
 | `decision_engine.surface_traces` | C | `false` | the decision engine’s own black box; the agent must not be able to close it |
 | `decision_engine.min_confidence` | C | `"off"` | the confidence gate |
 | `decision_engine.block_on_risk` | C | `"off"` | the risk-class gate |

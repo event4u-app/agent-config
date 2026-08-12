@@ -41,8 +41,11 @@ both verified in the tree:
 - The turn-end gate refuses **at most once per turn per key**, and its own
   comment states the cost of losing the marker: *"costs at most one extra
   refusal; failing closed here would cost the session"*
-  (`src/scripts/hooks/turn_end_gate_hook.ts:440-446`). A lost marker degrades to
-  one extra refusal, never to a cycle.
+  (`src/scripts/hooks/turn_end_gate_hook.ts`, `markRefusedTurn`). A lost marker
+  degrades to one extra refusal, never to a cycle. The bound got MORE load-bearing
+  on 2026-08-12, when the gate's settings switch was removed and it became always
+  armed: the one-refusal cap is now the only ceiling on a misfire, so it is cited
+  by name rather than by a line range that a later edit silently invalidates.
 - `session-eol` is `severity: advisory` and `fail_closed: false`
   (`src/scripts/hook_manifest.yaml:501-505`), and hooks cannot inject `/clear` —
   so the recycle action is advisory-carried by construction. A hook that cannot

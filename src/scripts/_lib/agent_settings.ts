@@ -884,31 +884,45 @@ export function load_agent_settings(
 }
 
 /**
- * Settings keys deleted by the always-on-orchestration doctrine
- * (road-to-always-on-orchestration Phase 1 for the `subagents.*` keys;
- * Phase 1 Step 1.3 for `ai_team.enabled`). A leftover value from an older
+ * Settings keys this package has DELETED. A leftover value from an older
  * install is ignored — never applied by any reader — and surfaced with ONE
  * deprecation line per key per process run (stderr; the exit code never
  * changes).
  *
- * `ai_team.enabled` joined this list in Step 1.3: the `/team` family's
- * availability is now a codex-CLI/auth FACT
- * (`src/scripts/ai_team/availability.ts`), the same doctrine already
- * applied to `subagents.*` below, not a settings flag. The `ai_team`
- * config loader (`src/scripts/ai_team/config.ts`) separately accepts a
- * leftover `enabled` key without failing closed, so this warning is the
- * only surfaced signal of the deletion.
+ * The map carries a per-key REASON rather than one shared sentence, because
+ * the list now spans more than one deletion doctrine and a single blanket
+ * phrase would mis-attribute every future entry. A reader who hits the line
+ * should learn why the key went, not just that it did.
+ *
+ * `subagents.*` — the always-on-orchestration doctrine
+ * (road-to-always-on-orchestration Phase 1): the layer has no per-layer
+ * on/off setting any more. `ai_team.enabled` joined in Step 1.3 — the
+ * `/team` family's availability is a codex-CLI/auth FACT
+ * (`src/scripts/ai_team/availability.ts`), not a flag; the `ai_team` config
+ * loader (`src/scripts/ai_team/config.ts`) separately accepts a leftover
+ * `enabled` key without failing closed, so this warning is the only surfaced
+ * signal of that deletion.
+ *
+ * `hooks.turn_end_gate.*` — the turn-end gate is always armed (2026-08-12).
+ * A default-off safety gate cannot soak, so the switch protecting the soak
+ * made the soak impossible; whether the gate fires is now decided by each
+ * detector's own trigger conditions. See `turn_end_gate_hook.ts` § "Always
+ * armed".
  */
-const REMOVED_ALWAYS_ON_KEYS: readonly string[] = [
-    'subagents.enabled',
-    'subagents.auto',
-    'subagents.host_capabilities',
-    'subagents.budget_routing',
-    'ai_team.enabled',
-];
+const REMOVED_KEYS: ReadonlyMap<string, string> = new Map([
+    ['subagents.enabled', 'always-on orchestration'],
+    ['subagents.auto', 'always-on orchestration'],
+    ['subagents.host_capabilities', 'always-on orchestration'],
+    ['subagents.budget_routing', 'always-on orchestration'],
+    ['ai_team.enabled', 'always-on orchestration'],
+    ['hooks.turn_end_gate.enabled', 'the turn-end gate is always armed'],
+    ['hooks.turn_end_gate.promissory', 'the turn-end gate is always armed'],
+    ['hooks.turn_end_gate.language', 'the turn-end gate is always armed'],
+    ['hooks.turn_end_gate.verification', 'the turn-end gate is always armed'],
+]);
 
 /** Keys already warned about in THIS process — the "once per run" dedupe. */
-const _warnedRemovedAlwaysOnKeys = new Set<string>();
+const _warnedRemovedKeys = new Set<string>();
 
 /** Read one dotted path out of a merged settings tree; `undefined` when absent. */
 function _readDottedSettingsPath(root: SettingsDict, dotted: string): SettingsValue {
@@ -923,20 +937,20 @@ function _readDottedSettingsPath(root: SettingsDict, dotted: string): SettingsVa
 }
 
 /**
- * Warn once per process, on stderr, for every {@link REMOVED_ALWAYS_ON_KEYS}
- * still present in a resolved settings tree. Never throws, never changes
- * what the caller does with `merged` — a pure notification side effect.
+ * Warn once per process, on stderr, for every {@link REMOVED_KEYS} entry still
+ * present in a resolved settings tree. Never throws, never changes what the
+ * caller does with `merged` — a pure notification side effect.
  */
 function _warn_removed_always_on_keys(merged: SettingsDict): void {
-    for (const key of REMOVED_ALWAYS_ON_KEYS) {
-        if (_warnedRemovedAlwaysOnKeys.has(key)) {
+    for (const [key, reason] of REMOVED_KEYS) {
+        if (_warnedRemovedKeys.has(key)) {
             continue;
         }
         if (_readDottedSettingsPath(merged, key) === undefined) {
             continue;
         }
-        _warnedRemovedAlwaysOnKeys.add(key);
-        process.stderr.write(`${key} was removed (always-on orchestration); ignored.\n`);
+        _warnedRemovedKeys.add(key);
+        process.stderr.write(`${key} was removed (${reason}); ignored.\n`);
     }
 }
 
