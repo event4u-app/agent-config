@@ -283,6 +283,18 @@ floor is judged against the larger of the constructed roster and the
 configured entry count, so a member that fails to construct does not hide a
 one-of-two conclusion behind a one-of-one reading.
 
+**The configured value is recorded on every line** as `min_present`
+(`quorum_result`, schema v4+), not only consumed. This key lives in the
+user-global `.ai-council.yml`, so it varies per developer machine and is
+invisible in any repository: without it on the line, two operators emit
+byte-identical records for different counterfactuals, and a pooled
+`shadow_floor_fire_rate` averages incomparable readings. It also makes a zero
+rate attributable — `quorum_min_present: 1` is valid and can never hold
+anything, so it drives the rate to a permanent zero that would otherwise be
+indistinguishable from "the floor genuinely never would have fired". Group the
+rate by `min_present` before reading it; treat pre-v4 lines as a stratum whose
+floor is unknown rather than assuming the default.
+
 Implemented in `src/scripts/ai_council/quorum.ts`
 (`resolveQuorumThreshold` / `evaluateQuorum` / `wouldSoloFloorHold`) — pure
 functions; the

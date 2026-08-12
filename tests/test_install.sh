@@ -366,7 +366,16 @@ test_cli_wrapper_delegates_to_master() {
         "$TMPDIR/node_modules/@event4u/agent-config/scripts/agent-config"
     local out
     out="$(cd "$TMPDIR" && ./agent-config help 2>&1)"
-    if printf '%s' "$out" | grep -q "agent-config — event4u/agent-config CLI"; then
+    # A herestring, NOT `printf … | grep -q`. Under this file's `set -o
+    # pipefail`, `grep -q` exits the moment it matches and closes the pipe;
+    # `printf` then dies of SIGPIPE, and pipefail propagates ITS 141 as the
+    # pipeline's status — so a successful match is reported as a failure. It
+    # only fires once the output exceeds the pipe buffer, which is why this
+    # passed while the help text was shorter, and why it reads as a flake
+    # rather than as a bug. Measured: rc=141 through the pipe with a matching
+    # first line plus ~20k filler lines, MATCHED through the herestring.
+    # No pipe, no SIGPIPE, no false negative.
+    if grep -q "agent-config — event4u/agent-config CLI" <<<"$out"; then
         echo "  ✅  wrapper delegates to master (help reached master)"
         ((PASS++)) || true
     else

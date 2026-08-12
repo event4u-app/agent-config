@@ -46,6 +46,36 @@ function resolvedDir(root: string): string {
     return path.join(storeDir(root), 'resolved');
 }
 
+/**
+ * A token is a filename before it is an identifier, so every site that turns
+ * one into a path checks it first — the read verbs, the write verb, and the
+ * record guard itself.
+ *
+ * `deriveToken` returns a 16-char sha256 prefix, so a token this module mints
+ * is always safe. Everything else is a way in: `readPending`,
+ * `claimConfirmation` and `declineConfirmation` take a caller-supplied token;
+ * `putPending` joins `stage.token` from a caller-built record (verified: it
+ * wrote outside the store root); and `isStage` accepted any string, so a record
+ * written by something else carried its token into the prune path. All four are
+ * guarded, and `path.join(pendingDir(root), '../x.json')` resolving outside
+ * `pending/` is what makes that necessary.
+ */
+const _TOKEN_RE = /^[0-9a-f]{8,64}$/;
+
+export function isSafeToken(token: string): boolean {
+    return _TOKEN_RE.test(token);
+}
+
+/**
+ * Every field the module later reads, `staged_at` included.
+ *
+ * It checked four of five while still asserting `v is StagedAction`, so a
+ * record that was valid JSON but carried no `staged_at` passed the guard and
+ * reached `listPending`'s `staged_at.localeCompare(...)`: a TypeError thrown
+ * through `roadmap_gates.renderPending`, i.e. one malformed file on disk taking
+ * out a shipped gate. An unsound guard is worse than no guard — it makes the
+ * caller's `!== null` check read as a proof that it is not.
+ */
 function isStage(v: unknown): v is StagedAction {
     if (typeof v !== 'object' || v === null) {
         return false;
@@ -53,8 +83,10 @@ function isStage(v: unknown): v is StagedAction {
     const s = v as Partial<StagedAction>;
     return (
         typeof s.token === 'string' &&
+        isSafeToken(s.token) &&
         typeof s.action === 'string' &&
         typeof s.object === 'string' &&
+        typeof s.staged_at === 'string' &&
         typeof s.expires_at === 'string'
     );
 }
@@ -73,18 +105,37 @@ function writeStageFile(file: string, stage: StagedAction): void {
     fs.writeFileSync(file, `${JSON.stringify(stage, null, 2)}\n`, 'utf-8');
 }
 
-/** Persist a freshly staged action. Returns the path written. */
+/**
+ * Persist a freshly staged action. Returns the path written.
+ *
+ * Throws on an unsafe token rather than returning: a caller reaching here with
+ * one built the record itself and has a bug, and `writeStageFile` creates
+ * directories, so a silent refusal would look like a successful stage nothing
+ * can ever confirm.
+ */
 export function putPending(root: string, stage: StagedAction): string {
+    if (!isSafeToken(stage.token)) {
+        throw new Error(
+            `staged-confirmation: refusing to write under an unsafe token '${stage.token}' — ` +
+                'a token is a filename and must match the deriveToken shape',
+        );
+    }
     const file = path.join(pendingDir(root), `${stage.token}.json`);
     writeStageFile(file, stage);
     return file;
 }
 
 export function readPending(root: string, token: string): StagedAction | null {
+    if (!isSafeToken(token)) {
+        return null;
+    }
     return readStageFile(path.join(pendingDir(root), `${token}.json`));
 }
 
 export function readResolved(root: string, token: string): StagedAction | null {
+    if (!isSafeToken(token)) {
+        return null;
+    }
     return readStageFile(path.join(resolvedDir(root), `${token}.json`));
 }
 
@@ -145,6 +196,12 @@ export function claimConfirmation(
     token: string,
     now: number,
 ): { outcome: ConfirmOutcome; stage: StagedAction | null } {
+    if (!isSafeToken(token)) {
+        // Nothing this module staged can have that shape, so the honest answer
+        // is the same one an unknown token gets — and refusing here is what
+        // keeps the rename below off an arbitrary path.
+        return { outcome: 'token-mismatch', stage: null };
+    }
     const pendingFile = path.join(pendingDir(root), `${token}.json`);
     const stage = readStageFile(pendingFile);
     if (stage === null) {
@@ -187,6 +244,9 @@ export function declineConfirmation(
     token: string,
     now: number,
 ): { declined: boolean; stage: StagedAction | null } {
+    if (!isSafeToken(token)) {
+        return { declined: false, stage: null };
+    }
     const pendingFile = path.join(pendingDir(root), `${token}.json`);
     const stage = readStageFile(pendingFile);
     if (stage === null) {
@@ -213,13 +273,28 @@ export function declineConfirmation(
  * skipping the sweep changes what is *listed*, never what may execute.
  */
 export function pruneExpired(root: string, now: number): number {
+    let names: string[];
+    try {
+        names = fs.readdirSync(pendingDir(root));
+    } catch {
+        return 0;
+    }
     let moved = 0;
-    for (const { stage, status } of listPending(root, now)) {
-        if (status !== 'expired') {
+    for (const name of names.sort()) {
+        if (!name.endsWith('.json')) {
             continue;
         }
-        const from = path.join(pendingDir(root), `${stage.token}.json`);
-        const to = path.join(resolvedDir(root), `${stage.token}.json`);
+        // Move the file that was ENUMERATED, never a path rebuilt from the
+        // record's `token` field. The two disagree whenever a filename and its
+        // token do — a record written by anything but `putPending` — and the
+        // rebuilt path then hits ENOENT, gets swallowed by the catch below, and
+        // the stage sits in `pending/` forever while `moved` under-reports it.
+        const from = path.join(pendingDir(root), name);
+        const stage = readStageFile(from);
+        if (stage === null || stageStatus(stage, now) !== 'expired') {
+            continue;
+        }
+        const to = path.join(resolvedDir(root), name);
         fs.mkdirSync(resolvedDir(root), { recursive: true });
         try {
             fs.renameSync(from, to);
