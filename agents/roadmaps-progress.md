@@ -214,6 +214,18 @@
 | 2 | Re-run test on existing artifacts (minimal spend) | 🟡 in progress | 1 | 1 | 0 | 0 | 50% |
 | 3 | Landing & close | ⬜ not started | 1 | 0 | 0 | 1 | 0% |
 
+### [road-to-design-system-onramp.md](roadmaps/road-to-design-system-onramp.md)
+
+**Road to the design-system onramp — consume the crawler ecosystem, one optional command** — 0 / 12 done (0%)
+
+| # | Phase | State | Open | Done | Deferred | Cancelled | % |
+|---|---|---|---:|---:|---:|---:|---:|
+| 1 | The import adapter — three lanes into one contract | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
+| 2 | The onramp — one optional command, zero settings | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
+| 3 | Corpus refresh — close the v2.5 → v2.6 drift | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
+| 4 | Wire the consumers — cross-refs, no duplication | ⬜ not started | 2 | 0 | 0 | 1 | 0% |
+| 5 | Measure | ⬜ not started | 1 | 0 | 0 | 0 | 0% |
+
 ### [road-to-frontend-skill-application.md](roadmaps/road-to-frontend-skill-application.md)
 
 **Frontend skills stop being loaded shelfware** — 22 / 31 done (71%)
@@ -645,14 +657,14 @@ _1 blocker resolved._
     trigger-style evaluation hard-aborts under automation, so they cannot be run
     from an autonomous session. Run them, publish the results (including a null),
     then unblock the dependent phases in their own change.
-  - **Resolved when:** (unspecified)
+  - **Resolved when:** the S0.1 invocation count and the S0.2 token measurement are published as evidence — a null counts — and the dependent phases are unblocked in a separate change that cites them.
 - **compatibility-deprecation-is-a-consumer-visible-decision** (owner: maintainer) — blocks Phase 1, the `harness_compat` step.
   - **What to do:**
     decide whether this schema keeps mirroring the public
     Agent-Skills `compatibility` field, adds `harness_compat` beside it
     permanently, or migrates and diverges. `requires` lands additively either way,
     so nothing else waits on this.
-  - **Resolved when:** (unspecified)
+  - **Resolved when:** the maintainer has recorded which of the three options the schema takes, in a decision record the `harness_compat` step can cite.
 
 ### [road-to-skill-ecosystem-gate-integrity.md](roadmaps/road-to-skill-ecosystem-gate-integrity.md)
 
@@ -759,6 +771,19 @@ _1 blocker resolved._
     grant unblocks the run; it does not unblock the harness.
   - **Resolved when:** the user states a spend ceiling for the Phase-3 sweep, or cancels Phase 3 against the cost sheet.
 
+### [road-to-source-first-frontend.md](roadmaps/road-to-source-first-frontend.md)
+
+**Road to source-first frontend — when the code is available, the code is the data basis; a screenshot is validation** — 0 / 18 done (0%)
+
+| # | Phase | State | Open | Done | Deferred | Cancelled | % |
+|---|---|---|---:|---:|---:|---:|---:|
+| 1 | Measure — reproduce ad-hoc, census the screenshot tools | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
+| 2 | One data-basis ladder, written where the agent reads, engine-independent | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
+| 3 | The deterministic carrier — a source-first gate on screenshot tools | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
+| 4 | The browser handover — extraction into files, inside the lock | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
+| 5 | Interop precedence — a provided artifact outranks generative tooling | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
+| 6 | Close the loop — re-measure ad-hoc, decide the gated follow-ups | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
+
 ### [road-to-structured-guard-input.md](roadmaps/road-to-structured-guard-input.md)
 
 **Road to structured guard input — stop guessing intent from prose** — 5 / 8 done (62%)
@@ -769,6 +794,20 @@ _1 blocker resolved._
 | 2 | the structured field, if Phase 1 supports it | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
 | 3 | the adversarial question the council raised | ⏭️ skipped | 0 | 0 | 0 | 1 | 0% |
 | 4 | the blind spot the audit missed | ✅ done | 0 | 2 | 0 | 0 | 100% |
+
+### [road-to-subagent-lifecycle-integrity.md](roadmaps/road-to-subagent-lifecycle-integrity.md)
+
+**Road to subagent lifecycle integrity — turn three production symptoms into deterministic guards** — 0 / 19 done (0%)
+
+| # | Phase | State | Open | Done | Deferred | Cancelled | % |
+|---|---|---|---:|---:|---:|---:|---:|
+| 0 | Spikes — pin the host, reproduce the two upstream premises | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
+| 1 | Measure — lifecycle capture, no behaviour change | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
+| 2 | Return-channel integrity — validate, fall back to disk, retry once | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
+| 3 | Runaway containment — spawn guard, ledger-aware stop gate, shadow stop-loss | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
+| 4 | Role axis binds on payload, not env | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
+| 5 | Tier routing has a caller — measure whether it moved the distribution | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
+| 6 | Frontend amendments — SUPERSEDED by road-to-source-first-frontend | ⏭️ skipped | 0 | 0 | 0 | 2 | 0% |
 
 ### [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md)
 
