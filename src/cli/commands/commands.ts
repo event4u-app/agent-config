@@ -202,7 +202,18 @@ export function renderCandidates(report: CandidatesReport): string {
     lines.push(`Command-surface reduction report — ${REPORT_ONLY_NOTICE}`);
     lines.push('');
     lines.push(`surface                    ${report.total} commands`);
-    for (const label of VISIBILITY_ORDER) {
+    // Render EVERY bucket, not just the three known labels. `visibility` is a
+    // free string in the manifest (ADR-092 named the field, nothing pins its
+    // domain), so a fourth value is reachable — and rendering only the known
+    // three made the printed breakdown silently fail to sum to the total, with
+    // the unknown-visibility commands vanishing from the report entirely.
+    // Known labels keep their fixed order so the output stays byte-stable;
+    // anything else follows, sorted, and is therefore impossible to miss.
+    const known = VISIBILITY_ORDER.filter((l) => l in report.byVisibility);
+    const unknown = Object.keys(report.byVisibility)
+        .filter((l) => !VISIBILITY_ORDER.includes(l))
+        .sort();
+    for (const label of [...known, ...unknown]) {
         lines.push(`  ${label.padEnd(24)} ${report.byVisibility[label] ?? 0}`);
     }
 

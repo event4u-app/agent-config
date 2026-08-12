@@ -164,6 +164,51 @@ describe('renderCandidates — the honesty band', () => {
     });
 });
 
+describe('renderCandidates — an unrecognised visibility value cannot vanish', () => {
+    // `visibility` is a free string in the manifest (ADR-092 named the field,
+    // nothing pins its domain). Rendering only the three known labels made the
+    // printed breakdown silently disagree with the total — the exact false-green
+    // shape a report must not have.
+    const withUnknown: readonly DiscoveryArtefact[] = [
+        cmd('known', 'engineering-base', { visibility: 'visible' }),
+        cmd('odd-one', 'engineering-base', { visibility: 'experimental' }),
+        cmd('odd-two', 'engineering-base', { visibility: 'experimental' }),
+    ];
+    const report = buildCandidatesReport(withUnknown);
+    const text = renderCandidates(report);
+
+    it('counts the unrecognised value rather than dropping it', () => {
+        expect(report.byVisibility['experimental']).toBe(2);
+        const summed = Object.values(report.byVisibility).reduce((a, b) => a + b, 0);
+        expect(summed).toBe(withUnknown.length);
+    });
+
+    it('renders it, so the printed breakdown sums to the printed total', () => {
+        expect(text).toContain('experimental');
+        const rendered = text
+            .split('\n')
+            .filter((l) => /^ {2}\S+ +\d+$/.test(l) && !l.includes('->'))
+            .map((l) => Number(l.trim().split(/\s+/)[1]));
+        // Sum only the visibility block: it is the run of bucket lines that
+        // directly follows the `surface` line.
+        const start = text.split('\n').findIndex((l) => l.startsWith('surface '));
+        const block: number[] = [];
+        for (const line of text.split('\n').slice(start + 1)) {
+            const m = line.match(/^ {2}(\S+) +(\d+)$/);
+            if (!m) break;
+            block.push(Number(m[2]));
+        }
+        expect(block.reduce((a, b) => a + b, 0)).toBe(report.total);
+        expect(rendered.length).toBeGreaterThan(0);
+    });
+
+    it('keeps the known labels ahead of the unrecognised one, for byte stability', () => {
+        const order = [...text.matchAll(/^ {2}(visible|advanced|internal|experimental) +\d+$/gm)]
+            .map((m) => m[1]);
+        expect(order[order.length - 1]).toBe('experimental');
+    });
+});
+
 describe('renderCandidates — the text-mode cap is named, never silent', () => {
     /** One more undocumented command than the cap allows, so truncation bites. */
     const over: readonly DiscoveryArtefact[] = Array.from(
