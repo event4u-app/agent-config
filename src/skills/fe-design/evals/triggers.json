@@ -1,7 +1,7 @@
 {
     "skill": "fe-design",
-    "last_eval": "2026-07-10",
-    "description": "5 should-trigger + 5 should-not-trigger queries for the variation & canvas planning layer (road-to-design-artifact-fidelity Phase 4). Should-trigger covers exploration / variation planning and UI-design decisions where fe-design plans BEFORE generating (give me directions, explore, plan the flow, pattern choice). Should-not-trigger covers near-misses that must NOT invoke design planning: pure implementation of an already-selected design (apply-step), inventorying existing UI (existing-ui-audit), a surgical one-line edit, and non-UI/backend work.",
+    "last_eval": "2026-08-12",
+    "description": "Should-trigger covers BOTH halves of this skill's two modes: planning/exploration (give me directions, explore, plan the flow, pattern choice) AND — new — ad-hoc implementation, because outside a ticketed run no other artefact owns the design quality of a UI write. The implementation query used to be labelled should-not-trigger on the reasoning that it belongs to the apply step; that step only exists as a dispatch target inside the engine, so the label routed ad-hoc implementation prompts to nobody. Should-not-trigger keeps the genuine near-misses: inventorying existing UI (existing-ui-audit owns it in both modes), a ui-trivial one-line edit, and non-UI work.",
     "queries": [
         {
             "q": "give me three directions for the pricing page",
@@ -25,7 +25,15 @@
         },
         {
             "q": "implement the selected checkout design in React exactly as approved",
-            "trigger": false
+            "trigger": true
+        },
+        {
+            "q": "build the settings page",
+            "trigger": true
+        },
+        {
+            "q": "improve this form, it feels clunky",
+            "trigger": true
         },
         {
             "q": "what form components do we already have in the codebase?",

@@ -1,7 +1,7 @@
 ---
 model_tier: medium
 name: fe-design
-description: "Reference for frontend-design heuristics — component architecture, layout patterns, form/table design, responsive strategy, a11y, UX principles. Stack-agnostic; cited by directives/ui/design.ts."
+description: "Frontend design heuristics — and, outside the ticket engine, the loop that applies them: audit, brief, build, review. Use when building or changing any UI, not only when planning one."
 personas:
   - frontend-engineer
 domain: engineering
@@ -11,15 +11,82 @@ packs:
   - engineering-base
 ---
 
-# Frontend Design Skill (Reference)
+# Frontend Design Skill
 
-## Positioning — reference, not executor
+## Ad-hoc mode — outside the engine, YOU run this loop now
 
-`fe-design` is a **universal reference skill**, not an executor. It carries
-stack-agnostic heuristics that the UI directive set cites; it does **not**
-own the flow.
+One question decides which mode you are in: **is a `/implement-ticket` run
+dispatching this?**
 
-| Concern | Owner |
+| Situation | Who owns the UI write | This skill is |
+|---|---|---|
+| A ticketed run — the UI directive set is dispatching | `directives/ui/*` | a reference it cites |
+| Anything else — "build me the page", "improve this form", "implement the approved design" | **you, in this turn** | the executor |
+
+Outside the engine, nothing else owns the design quality of a UI write. Reading
+this skill and then writing the UI from priors is the failure it exists to
+prevent — the loop below is not optional context, it is the work.
+
+**Skip only when the change is `ui-trivial`, decidable off the diff:** ≤ 1 file,
+≤ 5 changed lines, no new component, no new state, no new dependency. Anything
+else runs the loop.
+
+### The loop
+
+1. **Audit first** — run [`existing-ui-audit`](../existing-ui-audit/SKILL.md).
+   What already exists (components, tokens, layout conventions) outranks every
+   heuristic below. Reinventing an existing component is the #1 failure mode.
+2. **Brief** — cover the same five keys the engine requires before any code:
+   `layout`, `components`, `states`, `microcopy`, `a11y`. `states` means all
+   five of `empty`, `loading`, `error`, `success`, `disabled` — a brief missing
+   one is unfinished, not concise.
+3. **Build** — against the audit's primitives, in the project's stack.
+4. **Review** — run [`design-review`](../design-review/SKILL.md) before calling
+   it done, and scope the verdict honestly: render-scoped when you can render
+   it, otherwise explicitly static-scoped, naming which checks actually ran.
+   "Looks good" with neither scope named is a verdict without evidence.
+
+### The heuristics — here, not one hop away
+
+The load-bearing subset, inline so that "loaded" means the content is in
+context. Depth stays in [`references/design-patterns.md`](references/design-patterns.md).
+
+1. **Audit outranks heuristic.** A token, primitive or convention the audit
+   found wins over anything on this list; say `[audit override]` when it does.
+2. **Reuse tokens, never raw values.** A hex, font or px literal where the
+   audit found a token is off-brand by construction.
+3. **All five states are designed.** `empty` is a helpful message, not a blank
+   region; `loading` prefers a skeleton over a spinner (it shows structure, so
+   it reads as faster); `error` says what to do next.
+4. **Labels are always visible.** No placeholder-only inputs.
+5. **Validate on blur and on submit**, never on every keystroke; the message
+   goes below the field and is specific.
+6. **Mobile-first, and 320 px actually works.** Default styles are the small
+   viewport; complexity is added at larger breakpoints, never removed at
+   smaller ones.
+7. **A11y minimums are non-negotiable:** 4.5:1 contrast for text (3:1 large),
+   every interactive element reachable by Tab, a visible focus ring, semantic
+   elements over `div`, and an `aria-label` wherever there is no visible text.
+8. **Every action gets feedback.** Users read silence as failure.
+9. **Prefer undo over a confirmation dialog** — confirmations get clicked
+   through; an undo affordance actually protects the user.
+10. **Tables:** numbers right-aligned, text left-aligned, a designed empty
+    state, and a sticky header on anything long enough to scroll.
+11. **No placeholder microcopy ships.** Lorem ipsum, `TODO`, and
+    `[Your text here]` are unfinished output, not drafts.
+
+Before proposing a direction, run the anti-slop scan named under
+[Anti-slop discipline](#anti-slop-discipline) below.
+
+## Positioning — reference inside the engine, executor outside it
+
+Inside a `/implement-ticket` run, `fe-design` is a **universal reference
+skill**: it carries stack-agnostic heuristics the UI directive set cites, and
+it does not own the flow. The ownership table below applies **to that mode**.
+Outside the engine the table has no dispatcher behind it — the ad-hoc loop
+above is the owner instead.
+
+| Concern | Owner (engine-mediated runs) |
 |---|---|
 | Layout / states / microcopy lock | [`directives/ui/design.ts`](../../templates/scripts/work_engine/directives/ui/design.ts) |
 | Stack-dispatched implementation | [`directives/ui/apply.ts`](../../templates/scripts/work_engine/directives/ui/apply.ts) → `blade-ui` / `livewire` / `flux` / `react-shadcn-ui` |
@@ -37,11 +104,16 @@ Cite this skill when:
 - Making responsive design decisions
 - Reviewing UI for accessibility and usability
 
-Do NOT use this skill to:
+**Inside a ticketed run**, do NOT use this skill to:
 
 - Implement components — that is the apply-step's stack-dispatched skill
 - Audit an existing UI — that is `existing-ui-audit`
 - Drive the full UI flow — that is the `directives/ui/` orchestrator
+
+Outside a ticketed run, the first and third lines invert: no dispatcher is
+running, so implementation quality and the flow are yours. The second holds in
+both modes — the audit is always `existing-ui-audit`; you invoke it, you do not
+replace it.
 
 > **Resource-first, before taste.** Any request to recreate / redesign / mock /
 > prototype / improve an existing UI runs the
@@ -129,4 +201,4 @@ approach or explicitly invoke the override condition in the design brief.
 - Do NOT skip mobile viewport testing.
 - Do NOT use fixed pixel widths for responsive layouts.
 - Do NOT ignore accessibility requirements.
-- Do NOT use this skill as an executor — it is a reference cited by `directives/ui/design.ts`.
+- Do NOT use this skill as an executor INSIDE a ticketed run — there the executor is `directives/ui/design.ts` and this is the reference it cites. Outside one, the ad-hoc loop at the top of this file IS the executor; do NOT read the reference and then write the UI from priors.
