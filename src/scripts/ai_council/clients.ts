@@ -1217,6 +1217,26 @@ export abstract class CliClient extends ExternalAIClient {
     /** Parse provider-specific stdout into a CouncilResponse. */
     protected abstract _parse_output(stdout: string, stderr: string): CouncilResponse;
 
+    /**
+     * Opt-in for subclasses whose CLI reports no token usage at all. When set,
+     * `ask()` fills `input_tokens` from the prompt it actually sent. Default
+     * false so a provider-reported 0 is never overwritten.
+     */
+    protected estimates_input_tokens = false;
+
+    /**
+     * Count one call against the daily quota, swallowing a state-file write
+     * failure. Every path that actually spawned a process routes through here,
+     * so a failure mode cannot escape the cap by returning early.
+     */
+    protected _recordCallQuietly(): void {
+        try {
+            record_cli_call(this.name, this._cli_calls_path);
+        } catch {
+            // state-file write failure is non-fatal here.
+        }
+    }
+
     /** Return text to send on stdin, or `null` to inherit caller's stdin. */
     protected _stdin_payload(system_prompt: string, user_prompt: string): string | null {
         void system_prompt;
@@ -1341,6 +1361,14 @@ export abstract class CliClient extends ExternalAIClient {
         } catch (exc) {
             if (exc instanceof SubprocessError) {
                 if (exc.kind === 'timeout') {
+                    // A spawned-then-hung process is the CANONICAL case step 3's
+                    // comment describes — "a broken CLI cannot burn the whole
+                    // budget in a tight loop" — and it returned above that
+                    // recording, so it decremented nothing. A CLI that hangs
+                    // every call was therefore the one failure the daily cap
+                    // could not contain, at `timeout_seconds` of wall-clock per
+                    // attempt. The process ran; the call counts.
+                    this._recordCallQuietly();
                     return new CouncilResponse({
                         provider: this.name,
                         model: this.model,
@@ -1360,26 +1388,34 @@ export abstract class CliClient extends ExternalAIClient {
                         metadata: { cli: true, binary: this.binary },
                     });
                 }
-                // OSError
+                // OSError — the spawn was attempted, so it counts. `E2BIG` lands
+                // here when an argv-borne prompt outgrows the platform limit,
+                // which is a per-attempt cost like any other.
+                this._recordCallQuietly();
                 return new CouncilResponse({
                     provider: this.name,
                     model: this.model,
                     text: '',
                     latency_ms: _elapsedMs(t0),
                     error: `os_error: ${exc.osName}`,
-                    metadata: { cli: true },
+                    metadata: {
+                        cli: true,
+                        // `E2BIG` is the one OS error with a fix the operator can
+                        // act on, and the bare errno name does not suggest it.
+                        ...(exc.osName === 'E2BIG'
+                            ? { hint: 'argv too long — the prompt exceeded the platform argument limit' }
+                            : {}),
+                    },
                 });
             }
             throw exc;
         }
 
         // 3. record the call — even failures count against the quota so a broken
-        //    CLI cannot burn the whole budget in a tight loop.
-        try {
-            record_cli_call(this.name, this._cli_calls_path);
-        } catch {
-            // state-file write failure is non-fatal here.
-        }
+        //    CLI cannot burn the whole budget in a tight loop. The spawn-failure
+        //    branches above record it themselves; only `file_not_found` does not,
+        //    because no process ever ran and a missing binary cannot loop.
+        this._recordCallQuietly();
 
         const latency_ms = _elapsedMs(t0);
 
@@ -1418,6 +1454,19 @@ export abstract class CliClient extends ExternalAIClient {
             });
         }
         response.latency_ms = latency_ms;
+        // 5b. Plain-text CLIs report no usage at all, and `_parse_output` cannot
+        // supply the input side because its signature never sees the prompt —
+        // so those members recorded `input_tokens: 0` while being `billable`,
+        // and the USD tracker under-reported them by the entire request. The
+        // estimate is made here, the one place that holds both prompts, and only
+        // for adapters that opt in: a 0 from a provider that genuinely reports
+        // usage is a real 0 and must not be overwritten.
+        if (this.estimates_input_tokens && response.input_tokens === 0 && !response.error) {
+            const sent = this._stdin_payload(system_prompt, user_prompt) ?? '';
+            const argv = _foldSystemPrompt(system_prompt, user_prompt);
+            const billed = sent.length >= argv.length ? sent : argv;
+            response.input_tokens = billed ? Math.max(1, Math.trunc(_pyLen(billed) / 4)) : 0;
+        }
         const meta: Record<string, unknown> = { ...response.metadata };
         if (!('cli' in meta)) {
             meta['cli'] = true;
@@ -1873,6 +1922,9 @@ export class GeminiCliClient extends CliClient {
  */
 export class XAICliClient extends CliClient {
     override billable = true; // community CLI consumes an API key — billable applies
+    // Plain-text output carries no usage block, and this member IS billed, so
+    // the input side is estimated in `ask()` rather than left at zero.
+    protected override estimates_input_tokens = true;
 
     static override _AUTH_FAILURE_PATTERNS: readonly string[] = [
         ...CliClient._AUTH_FAILURE_PATTERNS,
@@ -1942,6 +1994,9 @@ export class XAICliClient extends CliClient {
  */
 export class PerplexityCliClient extends CliClient {
     override billable = true; // community CLI consumes an API key — billable applies
+    // Plain-text output carries no usage block, and this member IS billed, so
+    // the input side is estimated in `ask()` rather than left at zero.
+    protected override estimates_input_tokens = true;
 
     static override _AUTH_FAILURE_PATTERNS: readonly string[] = [
         ...CliClient._AUTH_FAILURE_PATTERNS,

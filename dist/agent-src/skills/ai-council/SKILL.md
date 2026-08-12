@@ -251,10 +251,18 @@ Three vendor CLIs are wired:
   `Unknown argument: system` — so the system prompt is prepended to the piped
   payload.
 
+  Two caveats before enabling it, both measured 2026-08-12 and neither resolved.
+  The CLI's own `--help` says `-p/--prompt` is what selects non-interactive
+  mode, and this invocation passes neither `-p` nor the `query` positional;
+  whether piped stdin alone keeps it headless is **unestablished**. And the
+  free tier now refuses this client outright with `IneligibleTierError`, so a
+  round-trip could not be completed here at all. Enable it only if you can
+  confirm both on your own account.
+
   ```yaml
   members:
     gemini:
-      enabled: true
+      enabled: false   # see the two caveats above before flipping this
       mode: cli
       model: gemini-2.5-pro
   ```
@@ -269,6 +277,15 @@ substitutes.
 `xai` + `perplexity` accept `mode: cli` from Phase 4 onward, but
 their community CLIs DO consume the API key and DO NOT bypass
 per-token billing — the contract doc warns explicitly.
+
+Both take a single `-p <prompt>` and have no second channel, so the system
+prompt is folded into that same value. Until 2026-08-12 it was **discarded**,
+and these two members answered every question with no role, no neutrality
+framing and no output contract while the run counted the reply as a peer
+verdict. Two consequences worth knowing: their whole prompt travels on argv, so
+a very large one can fail with `os_error: E2BIG` (the response carries a `hint`
+saying so), and because their CLIs report no usage block, the input side of
+their cost is an estimate rather than a provider figure.
 
 ### Cost-gate bypass for non-billable members
 
