@@ -241,7 +241,7 @@ Rollback: revert commits; ADR stays `proposed` until human acceptance.
   capability graph fields (`road-to-capability-answerability`) · checkpoint
   verify + capsule/handoff unification (`later/road-to-worker-generation-
   recycling`, parked with resume conditions) · adherence one-shot
-  (`later/road-to-conformance-round6`, parked) · skill/command surface
+  (`archive/road-to-conformance-round6`, completed 2026-08-12) · skill/command surface
   reduction (`road-to-surface-consolidation` + `later/road-to-command-
   structure-followup`) · skill-selection baseline (`road-to-skill-description-
   measurement`, human live run).
