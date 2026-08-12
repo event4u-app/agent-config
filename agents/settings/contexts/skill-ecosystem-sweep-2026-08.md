@@ -185,6 +185,23 @@ split-by-responsibility rule.
 **Disposition:** measure real tokenisation first, then put the band question to
 the maintainer with the numbers. Do not silently re-band the affected artifacts.
 
+**Discharged 2026-08-06 by [`ADR-217`](../../../docs/decisions/ADR-217-rich-class-band-measured-and-enforced.md).**
+Measured with the exact BPE tokenizer, not character division; the band is now
+2,000–3,500 and its **ceiling** is gated by `lint_token_budget_discipline`, which
+also publishes every rich artifact's size on the green path. The floor is
+deliberately ungated — running the check surfaced a legitimate 1,931-token rich
+artifact, because `rich` buys exemption from condensation (a claim about what
+compression would lose) rather than asserting a minimum file size. The old
+2,000–5,000 ceiling described no artifact that existed: the largest measured
+3,331 tokens.
+
+Recorded here because the record's silence had a cost. Two of the five external
+reviews of the 9.30→9.35 span list this contradiction as "unmoved for the third
+time" — written against a verification head six days *after* the ADR was
+accepted. A disposition that is met but not marked met reads as an open item
+forever. **R2 below is genuinely still open**; the reviews were right about that
+half and wrong about this one.
+
 ### R2 — Imperative density versus reasoning-based phrasing
 
 Three sources disagree. One asserts reasoning-based phrasing outperforms rigid
