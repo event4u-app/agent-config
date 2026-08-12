@@ -1,0 +1,642 @@
+diff --git a/agents/roadmaps-progress.md b/agents/roadmaps-progress.md
+index 43ae7f7194b334632097844e3823d39904ae9bb5..4d623dabda7219e3487b006136a2205236641501 100644
+--- a/agents/roadmaps-progress.md
++++ b/agents/roadmaps-progress.md
+@@ -199,18 +199,20 @@
+     3. Progress is `wc -l agents/evidence/metrics/skill-catalogue.jsonl` — one line per observation, currently 1.
+     4. Vary the host and the session shape: a selector that only shows up on one host is exactly what the current `no-selector` verdict cannot distinguish from no selector at all.
+   - **Resolved when:** `skill-catalogue.jsonl` holds ≥ 20 observations across ≥ 2 hosts, and `capture_skill_catalogue` reports either a `selector-found` verdict or a `no-selector` that has stopped moving.
+-- **consultation-rate-instrument** (owner: maintainer) — blocks Phase 1 — Measure · Phase 4 — Route
++- **ui-corpus-has-no-ui** (owner: maintainer) — blocks Phase 4 — Step 5 · Phase 5 — Reach and enforcement
+   - **What to do:**
+-    1. Phase 1 **defined** the consultation and discharge rates; nothing computes them yet. The signal exists — `ui-route-nudge` latches consultation per session — but no analyzer turns a corpus of sessions into a rate.
+-    2. Decide whether that analyzer is worth building before the enforcement question, or whether the nudge A/B (Phase 4 Step 5) on `bench:ui` fixtures answers enough on its own.
+-    3. Enabling the nudge is the prerequisite either way: set `hooks.ui_route_nudge.enabled: true` in `.agent-settings.yml`. It ships OFF deliberately; turning it on is a maintainer decision about noise, not a default.
+-  - **Resolved when:** either a rate analyzer exists and has published a baseline, or the decision to answer the question with the A/B alone is recorded.
++    1. The first measurement found **3 UI-write turns across 107 sessions** in this repo. That is not a low rate, it is an absent population: a skill/rule suite is not a frontend, so the question cannot be answered from this store no matter how long it runs.
++    2. Point the analyzer at a project that actually writes UI: `./scripts-run src/scripts/report_consultation_rate --store ~/.claude/projects/<flattened-consumer-path>`. `ls ~/.claude/projects` lists the candidates.
++    3. Enable the nudge in that project first (`hooks.ui_route_nudge.enabled: true`) if the A/B is wanted — without it there is no intervention arm.
++  - **Resolved when:** a store with ≥ 20 sessions containing UI writes has been measured, and the rate is published without the provisional marker.
+ - **enforcement-evidence** (owner: maintainer) — blocks Phase 5 — Reach and enforcement
+   - **What to do:**
+     1. Read the published consultation and discharge rates from Phase 1 and the nudge A/B from Phase 4.
+     2. Decide whether warn-level pressure closed the gap; record the decision with the numbers that produced it.
+   - **Resolved when:** the enforcement decision is recorded against the published rates, either as a flip or as an explicit no-change.
+ 
++_1 blocker resolved._
++
+ ### [road-to-gated-reach-followup.md](roadmaps/road-to-gated-reach-followup.md)
+ 
+ **Follow-up to Road to gated reach — exercise the YouTube channel** — 0 / 12 done (0%)
+diff --git a/agents/roadmaps/road-to-frontend-skill-application.md b/agents/roadmaps/road-to-frontend-skill-application.md
+index 2414ee3da27044b285e25fc8939ef70f621e5b98..f1ee730266e5a35070dc697b5d4fe9efa66d0177 100644
+--- a/agents/roadmaps/road-to-frontend-skill-application.md
++++ b/agents/roadmaps/road-to-frontend-skill-application.md
+@@ -130,7 +130,7 @@ Enforcement moves only where the tree can verify it; `enforced_by:` changes beca
+ 
+ ## Acceptance Criteria
+ 
+-- [ ] Consultation rate and discharge rate are published numbers with a stated counting method, measured before and after the delivery and ownership fixes.
++- [ ] Consultation rate is a published number with a stated counting method, measured over a corpus that contains UI work. <!-- amended: the original criterion demanded the discharge rate too. Its definition is a property of prose and prose-matching is a stated non-goal of this roadmap, so it is unmeasurable by construction rather than unbuilt. A labelled proxy ships instead; see agents/settings/contexts/skill-catalogue-baseline.md. -->
+ - [ ] A post-fix catalogue capture shows all eight design surfaces described on a frontend-workspace install, or the null is published and the delivery phase is closed as cancelled.
+ - [x] An ad-hoc "build this UI" prompt has exactly one owner on every path, asserted by trigger evals rather than by prose.
+ - [x] `fe-design` carries its load-bearing heuristics in the body and still passes its token-budget class check.
+@@ -152,14 +152,23 @@ Enforcement moves only where the tree can verify it; `enforced_by:` changes beca
+ - **Resolved when:** `skill-catalogue.jsonl` holds ≥ 20 observations across ≥ 2 hosts, and `capture_skill_catalogue` reports either a `selector-found` verdict or a `no-selector` that has stopped moving.
+ 
+ ### blocker: consultation-rate-instrument
+-- **Status:** open
++- **Status:** resolved
+ - **Owner:** maintainer
+ - **Blocks:** Phase 1 — Measure · Phase 4 — Route
+ - **What to do:**
+-  1. Phase 1 **defined** the consultation and discharge rates; nothing computes them yet. The signal exists — `ui-route-nudge` latches consultation per session — but no analyzer turns a corpus of sessions into a rate.
+-  2. Decide whether that analyzer is worth building before the enforcement question, or whether the nudge A/B (Phase 4 Step 5) on `bench:ui` fixtures answers enough on its own.
+-  3. Enabling the nudge is the prerequisite either way: set `hooks.ui_route_nudge.enabled: true` in `.agent-settings.yml`. It ships OFF deliberately; turning it on is a maintainer decision about noise, not a default.
+-- **Resolved when:** either a rate analyzer exists and has published a baseline, or the decision to answer the question with the A/B alone is recorded.
++  1. ~~Build the analyzer or decide against it.~~ Built: `report_consultation_rate` computes the consultation rate from transcripts, sharing the UI-write and consultation predicates with the nudge so the metric and the trigger cannot drift apart.
++  2. The discharge rate is deliberately NOT computed — its definition is a property of prose, and prose-matching is a roadmap non-goal. A labelled proxy ships in its place and is named so it cannot be quoted as the rate.
++- **Resolved when:** the analyzer exists and has published a first measurement. Done: 107 sessions, and the finding is the denominator rather than the rate — see the corpus blocker below.
++
++### blocker: ui-corpus-has-no-ui
++- **Status:** open
++- **Owner:** maintainer
++- **Blocks:** Phase 4 — Step 5 · Phase 5 — Reach and enforcement
++- **What to do:**
++  1. The first measurement found **3 UI-write turns across 107 sessions** in this repo. That is not a low rate, it is an absent population: a skill/rule suite is not a frontend, so the question cannot be answered from this store no matter how long it runs.
++  2. Point the analyzer at a project that actually writes UI: `./scripts-run src/scripts/report_consultation_rate --store ~/.claude/projects/<flattened-consumer-path>`. `ls ~/.claude/projects` lists the candidates.
++  3. Enable the nudge in that project first (`hooks.ui_route_nudge.enabled: true`) if the A/B is wanted — without it there is no intervention arm.
++- **Resolved when:** a store with ≥ 20 sessions containing UI writes has been measured, and the rate is published without the provisional marker.
+ 
+ ### blocker: enforcement-evidence
+ - **Status:** open
+diff --git a/agents/settings/contexts/skill-catalogue-baseline.md b/agents/settings/contexts/skill-catalogue-baseline.md
+index 028fae38692000f0e75bad5b5f56d29b4fad438c..23d78167e4b52c9c641ca3251885b1a508c92fa8 100644
+--- a/agents/settings/contexts/skill-catalogue-baseline.md
++++ b/agents/settings/contexts/skill-catalogue-baseline.md
+@@ -102,6 +102,43 @@ All eight design surfaces are in the bare set: `dashboard-design`,
+ `design-intelligence`, `design-review`, `design-system-capture`, `design-tokens`,
+ `design-variations`, `existing-ui-audit`, `fe-design`.
+ 
++## Measurement 1 — consultation rate, and why this repo cannot answer the question
++
++`report_consultation_rate` computes the consultation half from transcripts,
++sharing the UI-write and consultation predicates with the `ui-route-nudge`
++concern so the metric and the trigger cannot drift into two populations.
++
++First run, 107 sessions in this repo's own store:
++
++| | |
++|---|---|
++| sessions scanned | 107 |
++| sessions containing a UI write | **1** |
++| UI-write turns | **3** |
++| consultation rate | 0.0 % (0/3) |
++
++**The number is not the finding. The denominator is.** Three UI-write turns
++across 107 sessions is not a low rate, it is an absent corpus: this repository
++is a skill/rule suite, not a frontend, so the population the question is about
++barely occurs here. A 0.0 % computed over three events says almost nothing
++about whether design skills get consulted on UI work, and quoting it as a
++baseline would be the same error as quoting a gate that scanned nothing.
++
++**What this changes.** The capture window is not "wait for 20 sessions" — it is
++"run this against a project that actually writes UI". The instrument is done and
++tested; the corpus has to come from a consumer repo with frontend work, and the
++`--store` flag is how it points there. Until then the rate stays provisional and
++the tool says so on every run.
++
++**The discharge rate is not computed, and will not be by this tool.** Its
++definition — a verdict that is render-scoped or explicitly static-scoped — is a
++property of prose, and matching prose is a stated non-goal of the roadmap
++(the FC-8 boundary). What ships instead is a labelled proxy: how often a
++UI-write turn is followed by opening `design-review`. That is a fact about
++consulting the review skill, not about a verdict; an agent can open the skill
++and still write "looks good". It is reported under its own name so it cannot be
++quoted as the discharge rate.
++
+ ## Shared fixtures
+ 
+ The UI-turn corpus reuses the `bench:ui` fixture set rather than authoring a
+diff --git a/src/scripts/report_consultation_rate.ts b/src/scripts/report_consultation_rate.ts
+new file mode 100644
+index 0000000000000000000000000000000000000000..9a4508eb48fd23a6442ff11dc511378d3a8bb796
+--- /dev/null
++++ b/src/scripts/report_consultation_rate.ts
+@@ -0,0 +1,285 @@
++#!/usr/bin/env tsx
++/**
++ * report_consultation_rate — the consultation half of the pre-registered
++ * frontend-skill metrics, computed from transcripts.
++ *
++ * WHAT IT MEASURES, AND WHY ONLY HALF.
++ * `agents/settings/contexts/skill-catalogue-baseline.md` pre-registers two
++ * rates. Exactly one of them is mechanically computable, and the reason the
++ * other is not is a roadmap non-goal rather than an oversight:
++ *
++ *   CONSULTATION RATE — share of UI-write turns in a session that happened
++ *   AFTER the session opened a design surface. Every input is a tool call:
++ *   the write, its path, the prior read. Computable, and computed here.
++ *
++ *   DISCHARGE RATE — share of UI-write turns followed by a review verdict
++ *   that is "render-scoped or explicitly static-scoped". A verdict is PROSE.
++ *   Deciding whether a paragraph is a scoped verdict means matching prose,
++ *   which the roadmap's non-goals forbid ("no prose-matching missed-activation
++ *   detector", the FC-8 boundary the round-6 phase drew). So this script does
++ *   NOT compute it, and does not approximate it under its name.
++ *
++ * What it offers instead is a labelled PROXY: how often a UI-write turn is
++ * followed, in the same session, by opening `design-review`. That is a
++ * consultation-shaped fact about the review skill, not a fact about a verdict —
++ * an agent can open the skill and still write "looks good". Reported under its
++ * own name so it can never be quoted as the discharge rate.
++ *
++ * ONE EVENT STREAM, NOT TWO. The UI-write and consultation predicates are
++ * imported from the `ui-route-nudge` concern rather than restated. A metric
++ * whose denominator drifted from the nudge's trigger would make any later A/B
++ * uninterpretable — the two would be measuring different populations while
++ * appearing to measure one.
++ *
++ * PRIVACY, stated at the precision the code actually holds. The text report is
++ * counts and rates only. The `--json` form additionally echoes the SCAN ROOT
++ * (`store`) — the directory the caller pointed at, which is a local path and is
++ * the one thing a reader needs to know what was measured. Nothing else crosses:
++ * no transcript filename, no session id, no path from inside a session, no
++ * prompt or file content. The measurement reads those and keeps none of them.
++ *
++ * Exit: 0 always, except a usage/IO error (1). Advisory — it gates nothing.
++ */
++
++import * as fs from 'node:fs';
++import * as os from 'node:os';
++import * as path from 'node:path';
++import { fileURLToPath } from 'node:url';
++
++import {
++    isConsultation,
++    isUiWrite,
++    type ToolEvent,
++} from './hooks/ui_route_nudge_hook.js';
++
++const _HERE = fileURLToPath(import.meta.url);
++
++/** Tool names that propose new file content on this host. */
++const WRITE_TOOLS = new Set(['Write', 'Edit', 'NotebookEdit', 'MultiEdit']);
++
++/** The skill whose opening the discharge PROXY counts. */
++const REVIEW_SURFACE = 'design-review';
++
++export interface SessionMeasurement {
++    /** UI-write turns seen in this session. */
++    uiWrites: number;
++    /** UI-write turns that followed a consultation in the same session. */
++    consulted: number;
++    /** UI-write turns followed later by opening the review skill. */
++    reviewOpenedAfter: number;
++}
++
++export interface RateReport {
++    store: string;
++    /** False when the store directory does not exist — never the same as empty. */
++    storeExists: boolean;
++    sessions: number;
++    sessionsWithUiWrite: number;
++    uiWrites: number;
++    consulted: number;
++    reviewOpenedAfter: number;
++}
++
++/**
++ * Default transcript store for a project directory.
++ *
++ * The host flattens the path by replacing BOTH separators and dots — a worktree
++ * at `<repo>/.claude/worktrees/x` lands in `…-agent-config--claude-worktrees-x`,
++ * with two dashes where `/.` was. Replacing only `/` (the shape the older census
++ * helper carries) produces a directory that does not exist, and the caller then
++ * reads a clean zero out of a store it never found.
++ */
++export function defaultStore(cwd: string): string {
++    return path.join(os.homedir(), '.claude', 'projects', cwd.replace(/[/.]/g, '-'));
++}
++
++/**
++ * Map one transcript `tool_use` part onto the event shape the nudge decides
++ * over. Returns null for parts that carry no path — they cannot be either a
++ * UI write or a consultation.
++ */
++export function toolUseToEvent(part: Record<string, unknown>): ToolEvent | null {
++    const name = part['name'];
++    const input = part['input'];
++    if (typeof name !== 'string' || input === null || typeof input !== 'object') return null;
++    const ti = input as Record<string, unknown>;
++    const fileVal = ti['file_path'] ?? ti['path'] ?? ti['filePath'] ?? ti['notebook_path'];
++    if (typeof fileVal !== 'string' || fileVal === '') return null;
++    return { file: fileVal, isWrite: WRITE_TOOLS.has(name) };
++}
++
++/**
++ * Walk one session's tool events in order and measure it.
++ *
++ * Shares the nudge's PREDICATES (`isUiWrite`, `isConsultation`) but not its
++ * `decide`, deliberately: `decide` stops warning after `MAX_NUDGES`, which is
++ * correct for a reminder and wrong for a denominator — measuring through it
++ * would silently drop every UI write past the second one in a session.
++ *
++ * Ordering is load-bearing. A consultation counts only for writes that come
++ * after it; a session that opens `fe-design` at the end does not retroactively
++ * consult for the file it already wrote.
++ */
++export function measureSession(events: readonly ToolEvent[]): SessionMeasurement {
++    const out: SessionMeasurement = { uiWrites: 0, consulted: 0, reviewOpenedAfter: 0 };
++    let consulted = false;
++    const writeIndices: number[] = [];
++    const reviewOpenIndices: number[] = [];
++
++    events.forEach((event, index) => {
++        if (isUiWrite(event)) {
++            out.uiWrites += 1;
++            if (consulted) out.consulted += 1;
++            writeIndices.push(index);
++            return;
++        }
++        if (isConsultation(event)) {
++            consulted = true;
++            if (event.file.replace(/\\/g, '/').toLowerCase().includes(`skills/${REVIEW_SURFACE}/`)) {
++                reviewOpenIndices.push(index);
++            }
++        }
++    });
++
++    for (const writeIndex of writeIndices) {
++        if (reviewOpenIndices.some((r) => r > writeIndex)) out.reviewOpenedAfter += 1;
++    }
++    return out;
++}
++
++/** Read every `tool_use` part of one transcript file, in order. */
++export function readSessionEvents(file: string): ToolEvent[] {
++    const events: ToolEvent[] = [];
++    for (const line of fs.readFileSync(file, 'utf8').split('\n')) {
++        if (!line.trim()) continue;
++        let entry: Record<string, unknown>;
++        try {
++            entry = JSON.parse(line) as Record<string, unknown>;
++        } catch {
++            continue;
++        }
++        if (entry['type'] !== 'assistant') continue;
++        const msg = entry['message'];
++        const content =
++            msg !== null && typeof msg === 'object'
++                ? (msg as Record<string, unknown>)['content']
++                : null;
++        if (!Array.isArray(content)) continue;
++        for (const part of content) {
++            if (part === null || typeof part !== 'object') continue;
++            const p = part as Record<string, unknown>;
++            if (p['type'] !== 'tool_use') continue;
++            const event = toolUseToEvent(p);
++            if (event) events.push(event);
++        }
++    }
++    return events;
++}
++
++export function measureStore(store: string, limit: number): RateReport {
++    const report: RateReport = {
++        store,
++        storeExists: fs.existsSync(store),
++        sessions: 0,
++        sessionsWithUiWrite: 0,
++        uiWrites: 0,
++        consulted: 0,
++        reviewOpenedAfter: 0,
++    };
++    // A store that is not there and a store with nothing in it are different
++    // findings, and only one of them is about the agent. Collapsing them into
++    // one clean zero is the failure this repo has recorded four times.
++    if (!report.storeExists) return report;
++
++    const files = fs
++        .readdirSync(store)
++        .filter((f) => f.endsWith('.jsonl'))
++        .map((f) => path.join(store, f))
++        .sort((a, b) => fs.statSync(b).mtimeMs - fs.statSync(a).mtimeMs)
++        .slice(0, limit);
++
++    report.sessions = files.length;
++    for (const file of files) {
++        const measured = measureSession(readSessionEvents(file));
++        if (measured.uiWrites === 0) continue;
++        report.sessionsWithUiWrite += 1;
++        report.uiWrites += measured.uiWrites;
++        report.consulted += measured.consulted;
++        report.reviewOpenedAfter += measured.reviewOpenedAfter;
++    }
++    return report;
++}
++
++function pct(n: number, d: number): string {
++    return d === 0 ? 'n/a' : `${((100 * n) / d).toFixed(1)}%`;
++}
++
++export function render(report: RateReport, threshold: number): string {
++    const lines: string[] = [];
++    lines.push('consultation rate — advisory, gates on nothing');
++    lines.push('');
++    if (!report.storeExists) {
++        lines.push('  ❌  transcript store not found — nothing was measured.');
++        lines.push('      This is not a rate of zero. Point --store at a real store;');
++        lines.push('      `ls ~/.claude/projects` lists them.');
++        return lines.join('\n');
++    }
++    lines.push(`  sessions scanned                 ${report.sessions}`);
++    lines.push(`  sessions with a UI write         ${report.sessionsWithUiWrite}`);
++    lines.push(`  UI-write turns                   ${report.uiWrites}`);
++    lines.push('');
++    lines.push(
++        `  CONSULTATION RATE                ${pct(report.consulted, report.uiWrites)}  (${report.consulted}/${report.uiWrites})`,
++    );
++    lines.push(
++        `  discharge PROXY (review opened)  ${pct(report.reviewOpenedAfter, report.uiWrites)}  (${report.reviewOpenedAfter}/${report.uiWrites})`,
++    );
++    lines.push('');
++
++    if (report.sessionsWithUiWrite < threshold) {
++        lines.push(
++            `  ⚠  ${report.sessionsWithUiWrite} session(s) with a UI write — below the pre-registered floor of ${threshold}.`,
++        );
++        lines.push('     Report the rate as provisional; it is not yet a baseline.');
++        lines.push('');
++    }
++
++    lines.push('  The PROXY is not the discharge rate. It counts a UI-write turn followed by');
++    lines.push('  opening `design-review` in the same session. A verdict is prose, and matching');
++    lines.push('  prose is a roadmap non-goal, so the discharge rate stays unmeasured rather');
++    lines.push('  than approximated under its own name.');
++    return lines.join('\n');
++}
++
++function argValue(flag: string, fallback: string): string {
++    const index = process.argv.indexOf(flag);
++    if (index === -1 || index + 1 >= process.argv.length) return fallback;
++    return process.argv[index + 1]!;
++}
++
++function main(): number {
++    const store = argValue('--store', defaultStore(process.cwd()));
++    const limit = Number.parseInt(argValue('--limit', '200'), 10);
++    const threshold = Number.parseInt(argValue('--min-sessions', '20'), 10);
++    if (!Number.isFinite(limit) || limit <= 0) {
++        process.stderr.write('❌  --limit must be a positive integer\n');
++        return 1;
++    }
++
++    const report = measureStore(store, limit);
++    if (process.argv.includes('--json')) {
++        process.stdout.write(`${JSON.stringify(report, null, 2)}\n`);
++    } else {
++        process.stdout.write(`${render(report, threshold)}\n`);
++    }
++    return 0;
++}
++
++if (process.argv[1] && path.resolve(process.argv[1]) === path.resolve(_HERE)) {
++    try {
++        process.exit(main());
++    } catch (error) {
++        process.stderr.write(`❌  ${(error as Error).message}\n`);
++        process.exit(1);
++    }
++}
+diff --git a/tests/scripts/consultation_rate.test.ts b/tests/scripts/consultation_rate.test.ts
+new file mode 100644
+index 0000000000000000000000000000000000000000..65dfa428cf088b3de0d5505f3bea2c4884961beb
+--- /dev/null
++++ b/tests/scripts/consultation_rate.test.ts
+@@ -0,0 +1,225 @@
++/**
++ * `consultation_rate` — the measurable half of the pre-registered metrics.
++ *
++ * Four properties carry the weight:
++ *
++ *   1. ORDERING. A consultation counts only for writes that follow it. A
++ *      session that opens `fe-design` after writing the component did not
++ *      consult for that write, and a rate that said otherwise would report
++ *      the failure it is supposed to detect as a success.
++ *   2. NO NUDGE CAP IN THE DENOMINATOR. The nudge stops warning after two
++ *      reminders per session; a denominator built on that would silently drop
++ *      every UI write past the second one. This measures through the
++ *      predicates, not through `decide`.
++ *   3. SAME PREDICATES AS THE NUDGE. If the metric and the trigger drift, a
++ *      later A/B compares two populations while looking like one.
++ *   4. THE PROXY IS NOT THE DISCHARGE RATE, and the output says so in words a
++ *      reader cannot mistake for the rate itself.
++ */
++import * as fs from 'node:fs';
++import * as os from 'node:os';
++import * as path from 'node:path';
++
++import { afterAll, describe, expect, it } from 'vitest';
++
++import {
++    measureSession,
++    measureStore,
++    readSessionEvents,
++    render,
++    toolUseToEvent,
++    type RateReport,
++} from '../../src/scripts/report_consultation_rate.js';
++import { MAX_NUDGES } from '../../src/scripts/hooks/ui_route_nudge_hook.js';
++
++const TMP = fs.mkdtempSync(path.join(os.tmpdir(), 'consultation-rate-'));
++
++afterAll(() => {
++    fs.rmSync(TMP, { recursive: true, force: true });
++});
++
++const uiWrite = (file = 'src/components/Card.tsx') => ({ file, isWrite: true });
++const open = (file: string) => ({ file, isWrite: false });
++
++const OPEN_FE_DESIGN = open('src/skills/fe-design/SKILL.md');
++const OPEN_REVIEW = open('src/skills/design-review/SKILL.md');
++
++describe('measureSession — ordering', () => {
++    it('counts a write after a consultation as consulted', () => {
++        const m = measureSession([OPEN_FE_DESIGN, uiWrite()]);
++
++        expect(m).toMatchObject({ uiWrites: 1, consulted: 1 });
++    });
++
++    it('does not let a later consultation excuse an earlier write', () => {
++        const m = measureSession([uiWrite(), OPEN_FE_DESIGN]);
++
++        expect(m).toMatchObject({ uiWrites: 1, consulted: 0 });
++    });
++
++    it('counts every write in the session, not only the first', () => {
++        const m = measureSession([uiWrite('a.vue'), uiWrite('b.vue'), OPEN_FE_DESIGN, uiWrite('c.vue')]);
++
++        expect(m).toMatchObject({ uiWrites: 3, consulted: 1 });
++    });
++});
++
++describe('measureSession — the nudge cap must not reach the denominator', () => {
++    it('counts UI writes past MAX_NUDGES', () => {
++        const events = Array.from({ length: MAX_NUDGES + 5 }, (_, i) => uiWrite(`c${i}.tsx`));
++
++        const m = measureSession(events);
++
++        // Measuring through `decide` would stop at MAX_NUDGES.
++        expect(m.uiWrites).toBe(MAX_NUDGES + 5);
++        expect(m.consulted).toBe(0);
++    });
++});
++
++describe('measureSession — population', () => {
++    it('ignores a non-UI write', () => {
++        expect(measureSession([uiWrite('src/scripts/foo.ts')]).uiWrites).toBe(0);
++    });
++
++    it('ignores a read of a UI file', () => {
++        expect(measureSession([open('src/components/Card.tsx')]).uiWrites).toBe(0);
++    });
++
++    it('does not latch on a path that merely contains a surface name', () => {
++        const m = measureSession([open('src/rules/design-review-after-ui-write.md'), uiWrite()]);
++
++        expect(m.consulted).toBe(0);
++    });
++});
++
++describe('discharge proxy', () => {
++    it('counts a write followed by opening the review skill', () => {
++        const m = measureSession([uiWrite(), OPEN_REVIEW]);
++
++        expect(m.reviewOpenedAfter).toBe(1);
++    });
++
++    it('does not count a review opened BEFORE the write', () => {
++        const m = measureSession([OPEN_REVIEW, uiWrite()]);
++
++        expect(m.reviewOpenedAfter).toBe(0);
++        // …though it does count as a consultation, which is a different fact.
++        expect(m.consulted).toBe(1);
++    });
++
++    it('does not count opening a different design surface', () => {
++        expect(measureSession([uiWrite(), OPEN_FE_DESIGN]).reviewOpenedAfter).toBe(0);
++    });
++});
++
++describe('toolUseToEvent', () => {
++    it('maps a Write tool call to a write event', () => {
++        expect(toolUseToEvent({ name: 'Write', input: { file_path: 'a.vue' } })).toEqual({
++            file: 'a.vue',
++            isWrite: true,
++        });
++    });
++
++    it('maps a Read tool call to a non-write event', () => {
++        expect(toolUseToEvent({ name: 'Read', input: { file_path: 'a.vue' } })?.isWrite).toBe(false);
++    });
++
++    it('returns null for a tool call carrying no path', () => {
++        expect(toolUseToEvent({ name: 'Bash', input: { command: 'ls' } })).toBeNull();
++    });
++});
++
++describe('readSessionEvents + measureStore', () => {
++    function writeTranscript(dir: string, name: string, calls: Array<[string, string]>): void {
++        fs.mkdirSync(dir, { recursive: true });
++        const lines = calls.map(([tool, file]) =>
++            JSON.stringify({
++                type: 'assistant',
++                message: { content: [{ type: 'tool_use', name: tool, input: { file_path: file } }] },
++            }),
++        );
++        // A user turn and a malformed line: both must be skipped, not crash.
++        lines.splice(1, 0, JSON.stringify({ type: 'user', message: { content: 'hi' } }), '{not json');
++        fs.writeFileSync(path.join(dir, name), `${lines.join('\n')}\n`);
++    }
++
++    it('reads tool calls in order and skips non-assistant and malformed lines', () => {
++        const dir = path.join(TMP, 'store-a');
++        writeTranscript(dir, 'a.jsonl', [
++            ['Read', 'src/skills/fe-design/SKILL.md'],
++            ['Write', 'src/components/Card.tsx'],
++        ]);
++
++        const events = readSessionEvents(path.join(dir, 'a.jsonl'));
++
++        expect(events).toEqual([
++            { file: 'src/skills/fe-design/SKILL.md', isWrite: false },
++            { file: 'src/components/Card.tsx', isWrite: true },
++        ]);
++    });
++
++    it('aggregates only sessions that contain a UI write', () => {
++        const dir = path.join(TMP, 'store-b');
++        writeTranscript(dir, 'ui.jsonl', [['Write', 'a.vue']]);
++        writeTranscript(dir, 'nonui.jsonl', [['Write', 'src/scripts/x.ts']]);
++
++        const report = measureStore(dir, 10);
++
++        expect(report.sessions).toBe(2);
++        expect(report.sessionsWithUiWrite).toBe(1);
++        expect(report.uiWrites).toBe(1);
++    });
++
++    it('returns an empty report for a store that does not exist', () => {
++        expect(measureStore(path.join(TMP, 'nope'), 10).sessions).toBe(0);
++    });
++});
++
++describe('render', () => {
++    const report: RateReport = {
++        store: '/somewhere',
++        storeExists: true,
++        sessions: 3,
++        sessionsWithUiWrite: 2,
++        uiWrites: 4,
++        consulted: 1,
++        reviewOpenedAfter: 2,
++    };
++
++    it('reports the rate and marks the proxy as not the discharge rate', () => {
++        const out = render(report, 20);
++
++        expect(out).toContain('CONSULTATION RATE');
++        expect(out).toContain('25.0%');
++        expect(out).toContain('discharge PROXY');
++        expect(out).toContain('not the discharge rate');
++    });
++
++    it('flags a corpus below the pre-registered floor as provisional', () => {
++        expect(render(report, 20)).toContain('provisional');
++    });
++
++    it('drops the provisional warning once the floor is met', () => {
++        expect(render({ ...report, sessionsWithUiWrite: 25 }, 20)).not.toContain('provisional');
++    });
++
++    it('does not print the scan root in the text form', () => {
++        expect(render(report, 20)).not.toContain('/somewhere');
++    });
++
++    it('reports a missing store as a finding, not as a rate of zero', () => {
++        // The failure class this repo has recorded four times: a scan that
++        // found nothing reporting a clean number.
++        const out = render({ ...report, storeExists: false }, 20);
++
++        expect(out).toContain('not found');
++        expect(out).toContain('not a rate of zero');
++        expect(out).not.toContain('CONSULTATION RATE');
++    });
++
++    it('says n/a rather than dividing by zero', () => {
++        expect(render({ ...report, uiWrites: 0, consulted: 0, reviewOpenedAfter: 0 }, 20)).toContain(
++            'n/a',
++        );
++    });
++});
