@@ -214,10 +214,8 @@ export interface SignalRecord {
 /**
  * Append a signal entry. Returns the written record, or null when skipped.
  *
- * On `present` backend, routing to the package is a no-op here today —
- * the package adapter is wired in `road-to-agent-memory-integration.md`
- * Phase 3. For now, the file path is the single source of truth so
- * merge-safety is preserved in every mode.
+ * The file path is the single source of truth: there is no external backend
+ * to route to, so merge-safety holds in every mode.
  */
 export function emit(
     entry_type: string,

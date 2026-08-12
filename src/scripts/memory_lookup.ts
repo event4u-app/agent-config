@@ -529,8 +529,7 @@ function* _iter_knowledge_entries(): Generator<[string, Record<string, unknown>]
 /**
  * Naive relevance score: max over keys of (glob-match | substring).
  *
- * Good enough for the `absent` path where retrieval is best-effort.
- * The `present` path returns a real score from agent-memory.
+ * Retrieval is best-effort by design — this is the only scoring path.
  *
  * DOCUMENTED FALLBACK (road-to-reachable-code-memory Phase 6 / ADR-129):
  * this is the primary, always-available scorer. It has a known correctness
