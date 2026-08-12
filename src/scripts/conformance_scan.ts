@@ -129,6 +129,18 @@ export interface SessionReport {
   de_pin_turns: number;
   /** First entry timestamp, so a reader can era-split without a second pass. */
   first_at: string;
+  /**
+   * `task-completeness`'s DENOMINATOR: reply windows that met the file floor and
+   * contained real assistant work, i.e. the windows on which the check could fire
+   * at all.
+   *
+   * Counted here beside the numerator for the same reason `de_pin_turns` is — a
+   * rate whose two halves are derived from different populations is the defect
+   * round 7 § 6.2 found in the language figure, where the same 152 violations read
+   * 6.5 % over all turns and 9.2 % over the eligible ones. Without this a hit
+   * COUNT is all there is, and a count is not a rate.
+   */
+  completeness_windows: number;
 }
 
 /**
@@ -209,6 +221,17 @@ export interface RateRecord {
   de_pin_turns?: number;
   /** The same numerator over `de_pin_turns`. Reported beside `rate_pct`, never instead. */
   rate_pct_de_pin?: number;
+  /**
+   * `task-completeness`'s two halves, optional for the same archive reason as the
+   * four above: no line written before this check existed carries them.
+   *
+   * The rate is over WINDOWS, not turns or sessions — the only denominator on
+   * which the check can fire — and it is persisted beside the count so a later
+   * reader cannot mistake a hit count for a rate.
+   */
+  completeness_windows?: number;
+  task_completeness?: number;
+  task_completeness_rate_pct?: number;
   /** The corpus straddles a carrier landing, so no band verdict. */
   era_spanning?: boolean;
   /** Which carrier, when `era_spanning` — empty otherwise. */
@@ -538,6 +561,7 @@ export function scanSession(sessionId: string, lines: string[]): SessionReport {
     violations: [],
     de_pin_turns: 0,
     first_at: "",
+    completeness_windows: 0,
   };
 
   let pinned: "de" | "en" | null = null;
@@ -568,6 +592,13 @@ export function scanSession(sessionId: string, lines: string[]): SessionReport {
   const closeWindow = (): void => {
     if (openWindow === null) {
       return;
+    }
+    // The denominator counts windows the check COULD fire on. A window with no
+    // assistant work is excluded from both halves — `evaluateWindow` already
+    // refuses to score it, and counting it below while never counting it above
+    // would deflate the rate by however often a store ends mid-reply.
+    if (openWindow.worked) {
+      report.completeness_windows += 1;
     }
     const verdict = evaluateWindow(openWindow);
     if (verdict !== null) {
@@ -926,6 +957,16 @@ export function scanStore(store: string, limit: number): ScanReport {
   const de_pin_turns = per_session.reduce((n, s) => n + s.de_pin_turns, 0);
   const rate_pct_de_pin =
     de_pin_turns === 0 ? 0 : Number(((100 * language_pin) / de_pin_turns).toFixed(1));
+  // `task-completeness` over its own denominator. Kept separate from the language
+  // rate on purpose: the two checks fire on different populations, and a single
+  // `rate_pct` covering both would be the pooled figure round 7 § 6.1 had to
+  // retract.
+  const completeness_windows = per_session.reduce((n, s) => n + s.completeness_windows, 0);
+  const task_completeness = totals["task-completeness"] ?? 0;
+  const task_completeness_rate_pct =
+    completeness_windows === 0
+      ? 0
+      : Number(((100 * task_completeness) / completeness_windows).toFixed(1));
   const era = spansCarrierChange(per_session.map((s) => s.first_at));
   const delivered = measureDelivered(
     path.join(REPO_ROOT, ".claude", "rules"),
@@ -948,6 +989,9 @@ export function scanStore(store: string, limit: number): ScanReport {
       rate_pct,
       de_pin_turns,
       rate_pct_de_pin,
+      completeness_windows,
+      task_completeness,
+      task_completeness_rate_pct,
       era_spanning: era.spans,
       era_reason: era.what,
       band: bandVerdict(rate_pct, assistant_turns, { spansCarrier: era.spans }),
@@ -1031,6 +1075,22 @@ export function render(report: ScanReport): string {
       '    The band (M5, n=3) was computed on the ALL-turns denominator, so the first figure',
     );
     lines.push('    is the comparable one and the second is the honest one. Both are printed.');
+  }
+  // `task-completeness`, on its own denominator. Optional-read for the same
+  // archive reason as the two above: a `rate` block recorded before this check
+  // existed carries neither field, and the series exists to be read back.
+  const cWindows = report.rate.completeness_windows;
+  const cRate = report.rate.task_completeness_rate_pct;
+  if (typeof cWindows === "number" && typeof cRate === "number") {
+    lines.push("");
+    lines.push(
+      `  task-completeness  ${cRate.toFixed(1)}%  ` +
+        `(${report.rate.task_completeness ?? 0} of ${cWindows} eligible reply windows)`,
+    );
+    lines.push("    A hit is EVIDENCE of an omission, never proof: a blocking question, a");
+    lines.push("    hand-back, a fenced scope and a deferred item all produce this signature");
+    lines.push("    correctly. Read the hand-validated precision beside this figure or not");
+    lines.push("    at all — `--why task-completeness` lists every hit with its missed tokens.");
   }
   if (report.rate.band === "era-spanning") {
     lines.push(
