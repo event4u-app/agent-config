@@ -1,10 +1,10 @@
 # Findings: cli-delegate-entry-guard
-<!-- completion-review: v1 | reviewed: 2026-08-12 | scope: 97619b89303cfc7f2da17c9f5de0f1f3e80cfd3a918dc418adb494368cfd9706 | diff: 5d8a7410da9caba0e77714dc9e5e92c370a1614e | reviewer: r2-fresh-subagent-cli-delegate-entry-guard | prompt_hash: 06afe19dd1779d0443065e10714b39d48879b6e22bd59ba829fb33845ae2cba2 -->
+<!-- completion-review: v1 | reviewed: 2026-08-12 | scope: 5026d803ed4ccd4fe77c5d4dbaa88a69562f797f625b0d60c6af953f027a7c2e | diff: 5d8a7410da9caba0e77714dc9e5e92c370a1614e | reviewer: r2-fresh-subagent-cli-delegate-entry-guard | prompt_hash: 06afe19dd1779d0443065e10714b39d48879b6e22bd59ba829fb33845ae2cba2 -->
 
 <!-- context-manifest: v1
 inputs:
   diff_sha: 5d8a7410da9caba0e77714dc9e5e92c370a1614e
-  scope_hash: 97619b89303cfc7f2da17c9f5de0f1f3e80cfd3a918dc418adb494368cfd9706
+  scope_hash: 5026d803ed4ccd4fe77c5d4dbaa88a69562f797f625b0d60c6af953f027a7c2e
   roadmap: none
   roadmap_hash: none
   ac_hash: none
