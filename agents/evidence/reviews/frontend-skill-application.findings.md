@@ -17,10 +17,14 @@ dispatched: 2026-08-12T03:25:00Z
 > followed the fix pass. The scope then moved again because three GENERATED
 > files entered the diff — `agents/index.md`, `docs/catalog.md`,
 > `dist/router.json`, all regenerated from sources the review already covered —
-> plus a merge of `origin/main`. No reviewed content changed between the two
-> scopes; `git diff <first-scope-head>..<this-head>` over `src/` and `tests/`
-> is empty. Recorded rather than silently re-hashed, because a re-bind that
-> does not say what moved is indistinguishable from one that hides a change.
+> plus a merge of `origin/main`. No file THIS BRANCH authors changed between
+> the two scopes. A plain `git diff` over `src/` between the two heads is not
+> empty — it shows `memory_lookup.ts` / `memory_signal.ts`, which arrived with
+> the merge and belong to `main`, not to this branch; they are outside the
+> review scope, which is computed against the merge base. Stated at this
+> precision because the first draft of this note claimed the diff was empty,
+> and it is not. A re-bind that does not say exactly what moved is
+> indistinguishable from one that hides a change.
 
 | # | Severity | File:Line | Finding | Status | Reason/Ref |
 |---|----------|-----------|---------|--------|------------|
