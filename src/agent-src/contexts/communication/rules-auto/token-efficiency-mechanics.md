@@ -83,9 +83,30 @@ When `personal.minimal_output: true`:
 ### Minimize tool calls
 
 - Parallel reads — don't read 5 files sequentially.
-- Regex search over full file reads. View specific line ranges.
 - One codebase search call with all symbols — not 5 separate.
 - Short question → short answer. Summary tables only for 3+ items.
+
+### Size-gated read procedure (the 800-line threshold)
+
+The rule states the obligation; this is how to discharge it. Three steps, in
+order, and each one narrows the next:
+
+1. **Size** — `wc -l <file>`. Under the threshold, stop here and read it.
+2. **Shape** — a structural grep for the anchors you need, emitting offsets:
+   `grep -nE '^(class|function|def|export|## )' <file>` for a map, or
+   `grep -n '<the symbol>' <file>` when you know what you are after.
+3. **Slice** — a ranged read around those offsets only (the host's
+   `offset`/`limit` read, or `sed -n 'A,Bp'`), widened once if the slice
+   straddles a boundary.
+
+Two failure modes this replaces. **Blind full read:** loading a 3,000-line file
+to answer a question one function answers — the cost is paid on every later turn
+that carries it. **Blind slice:** reading lines 1–200 of an unknown file and
+guessing the rest, which is the probe skipped rather than performed.
+
+The step-2 grep is not a second probe of the same file for the same fact — it
+returns information step 1 did not have, so it is one operation with step 3, per
+the enumerated-set carve-out.
 
 ### Exceptions
 

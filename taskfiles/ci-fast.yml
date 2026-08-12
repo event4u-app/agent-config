@@ -842,6 +842,18 @@ tasks:
     desc: Reject empty (0-byte / whitespace-only) roadmap files under agents/roadmaps/ — backstop against auto-commit 0-byte stubs
     cmd: ./scripts-run src/scripts/lint_empty_roadmaps {{.QUIET_FLAG}}
 
+  lint-symptom-intake:
+    silent: true
+    desc: |
+      Warn when an operator symptom entry under agents/tickets/symptoms/ is
+      unresolved more than 30 days after its reported date — it must carry either
+      a `## confirmed:` block (defect + file:line at a pinned commit) or a
+      `## null:` block (checked, not reproducible). Warn-only on purpose: intake
+      must stay cheaper than the work it triggers, and a gate that reds CI
+      because a human has not yet investigated a symptom teaches people to stop
+      filing symptoms. Only a dead scan scope exits non-zero.
+    cmd: ./scripts-run src/scripts/lint_symptom_intake {{.QUIET_FLAG}}
+
   lint-roadmap-family-cap:
     silent: true
     desc: |
