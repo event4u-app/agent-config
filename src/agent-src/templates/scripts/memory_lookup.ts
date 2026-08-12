@@ -388,8 +388,7 @@ function* _iter_knowledge_entries(): Generator<[string, Record<string, unknown>]
 /**
  * Naive relevance score: max over keys of (glob-match | substring).
  *
- * Good enough for the `absent` path where retrieval is best-effort.
- * The `present` path returns a real score from agent-memory.
+ * Retrieval is best-effort by design — this is the only scoring path.
  */
 export function _score(entry: Record<string, unknown>, keys: string[]): number {
     if (keys.length === 0) {
