@@ -199,7 +199,7 @@ external static-extraction tool and hand the result to this skill as a
 `design-system.json` artifact. We own the **import contract**, not the crawler:
 the package never ships the Playwright runtime, a font-bundler, or a `.skill`
 auto-installer (out of scope). Full schema is lazy-loaded from
-[`reference/design-system-json.md`](reference/design-system-json.md) — read it
+[`references/design-system-json.md`](references/design-system-json.md) — read it
 only when an import is requested.
 
 **Import procedure:**
@@ -281,7 +281,7 @@ most common handoff ambiguity.
 When the goal is to extract this repo's design system as a **reusable package
 artifact** (not just DESIGN.md prose), the extraction meets this floor — the
 handoff shape emitted alongside `design-system.json`
-([import contract](reference/design-system-json.md)).
+([import contract](references/design-system-json.md)).
 
 - **Contract contents.** A complete extraction carries: a root guide / manifest;
   token CSS (or the stack's equivalent); the typography / colour / spacing /

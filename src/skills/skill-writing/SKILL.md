@@ -106,6 +106,30 @@ Do NOT create a skill or rule for:
 * If two skills overlap heavily → merge
 * If a skill becomes "read the guideline" → it lost its purpose, restore the workflow
 
+### Progressive disclosure — the directory is `references/`, plural
+
+When a skill needs depth the workflow does not, the depth goes in a
+**`references/`** subdirectory beside `SKILL.md` — that exact name, plural. It
+was two spellings across nine skills until 2026-08-12 because nothing here
+named one; the split cost a rename, not a decision.
+
+* **Body:** the trigger, the workflow, the ownership statement, and every
+  heuristic that changes a write decision. A skill whose body is a map to its
+  own content is loaded and not applied.
+* **`references/`:** corpora, lookup tables, long schemas, worked examples —
+  read on the path that needs them, never on every activation.
+
+Splitting is not a size escape hatch. The measured estate (n=289, 2026-08-12):
+median 1,077 words, p90 1,867, **only 6 skills above 2,500 and 4 above 3,000**.
+So a skill at 1,500 words is ordinary, and moving prose out of the body to hit
+a number makes it worse. Split when the material is genuinely
+consulted-on-demand; keep the load-bearing part in the body even when that
+leaves the file long.
+
+A `references/` split does not change the gates that already apply: a
+`token_budget_class: rich` skill still meets its 3,500-token ceiling on the
+body alone.
+
 ## Procedure
 
 ### 0. Inspect, then run the Drafting Protocol

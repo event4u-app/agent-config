@@ -132,7 +132,7 @@ The default path is the bundled `scripts/shadcn_add.ts` CLI wrapper + reading
 `components.json` — it works on most shadcn projects and stays the default.
 The modern registry model is an **opt-in enhancement**; do not add round-trips
 to every component op. Full JSON-schema + namespace detail is lazy-loaded from
-[`reference/registry.md`](reference/registry.md) — read it only on this path,
+[`references/registry.md`](references/registry.md) — read it only on this path,
 not on the vanilla `add`.
 
 **`shadcn info --json` handshake** — run it as the grounding step **when** the

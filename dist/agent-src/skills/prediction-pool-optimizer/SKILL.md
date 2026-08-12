@@ -94,7 +94,7 @@ biggest publicly-viewable books**, not a single portal:
    each special/award market a bonus question needs) from several books.
    Odds-comparison aggregators (Oddschecker, Oddsportal / Betexplorer) show
    many books at once; supplement with named books. Concrete book list and
-   the weighting recipe live in [`reference/odds-and-bonus.md`](reference/odds-and-bonus.md).
+   the weighting recipe live in [`references/odds-and-bonus.md`](references/odds-and-bonus.md).
 2. **De-vig each book** independently (remove its margin) → per-book implied
    probabilities. Raw odds sum to >100%; never treat them as probabilities.
 3. **Aggregate with a healthy weighting**, not a blind average: weight
@@ -203,7 +203,7 @@ Respect all strategy limits from step 1 (max identical tips, etc.).
 
 Walk the **step-1 checklist** and answer **each** entry. Pick the method by
 question type — full taxonomy + per-type method in
-[`reference/odds-and-bonus.md`](reference/odds-and-bonus.md):
+[`references/odds-and-bonus.md`](references/odds-and-bonus.md):
 
 - **Tournament structure** (group winners, KO rounds, finalists, champion):
   use real **outright market odds** ("to win group", "to reach final",
@@ -253,7 +253,7 @@ deadline is the only hard constraint.
 
 3. **Group standings and the full bracket** where the event has them.
 4. **Self-check note** — (a) confirm the tips reconcile with
-   [`reference/ev-fixtures.md`](reference/ev-fixtures.md) (known pool rules +
+   [`references/ev-fixtures.md`](references/ev-fixtures.md) (known pool rules +
    market odds → a known-good EV tip); (b) confirm the bonus table has the
    **same number of rows as the step-1 checklist** — a shorter table means a
    question was dropped. If your method disagrees with a fixture, your method
@@ -310,10 +310,10 @@ gate — the skill never enters or submits anything.
 
 - [`/prediction-pool`](../../commands/prediction-pool.md) — the orchestrator (event,
   persistence, Playwright entry, gates).
-- [`reference/odds-and-bonus.md`](reference/odds-and-bonus.md) — the major-book
+- [`references/odds-and-bonus.md`](references/odds-and-bonus.md) — the major-book
   list + sharpness-weighted consensus recipe, and the bonus / award / special
   question taxonomy with a per-type method.
-- [`reference/ev-fixtures.md`](reference/ev-fixtures.md) — known-good
+- [`references/ev-fixtures.md`](references/ev-fixtures.md) — known-good
   rules+odds → EV examples.
 - `node_modules/@event4u/agent-config/src/scripts/prediction-pool/score_ev.ts` —
   the executed exact-score EV optimiser (step 4a; λ + rule → EV-max scoreline).
