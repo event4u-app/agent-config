@@ -12,7 +12,20 @@ tasks:
       Deliberately EXCLUDES check_enforcement_coverage (30.7s measured): a pre-push
       gate that doubles the hook teaches people to skip it. That one stays in the
       full `task ci` and belongs in the post-CI loop.
-      Parity with CI is enforced by `task check-ci-local-parity`.
+
+      THIS TASK DOES NOT HAVE PARITY WITH CI, AND IS NOT MEANT TO.
+      Measured 2026-08-12 (round 7): preflight reaches 22 gates; 209 CI-enforced
+      gates run neither here nor anywhere else this push runs locally. A green
+      preflight is a cheap pre-push filter, never a prediction that CI will be
+      green — three measured
+      "green locally, red remotely" cycles came out of reading it as one (the
+      Thin-Root char cap, the ratchet in the Node-Tests shard, derived-page
+      freshness).
+      This line previously read "Parity with CI is enforced by
+      `task check-ci-local-parity`". That checker compares CI against `task ci`,
+      which INCLUDES preflight — so it never inspected this task, and the sentence
+      claimed an authority nothing held. `check_ci_local_parity` now reports the
+      gap on every run; run `task ci` when you need the full set.
     cmds:
       # Before anything reads the tree: is the tree even current? Measured
       # 2026-08-08 — a branch cut from a fetch at the start of a ninety-minute
@@ -1447,7 +1460,14 @@ tasks:
 
   check-bridge-derivation:
     silent: true
-    desc: Generated bridge trees derive from src/ — symlink targets valid, regeneration is a fixpoint (skill-quality-gates Phase 4). Regenerates .claude/.cursor/.windsurf/.augment as a side effect.
+    desc: |
+      Generated bridge trees derive from src/ — symlink targets valid,
+      regeneration is a fixpoint (skill-quality-gates Phase 4). Regenerates
+      .claude/.cursor/.windsurf/.augment as a side effect.
+      Scoped to the roots this checkout writes: a root whose tool is off in
+      agents/.agent-tools.yml has no regeneration path, so it is skipped and
+      named on stderr. .augment is never skipped — its projection carries no
+      tool gate.
     cmd: ./scripts-run src/scripts/check_bridge_derivation
 
   check-rule-projection-integrity:

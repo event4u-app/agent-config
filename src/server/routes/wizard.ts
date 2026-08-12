@@ -355,7 +355,11 @@ function extractCouncilConfig(body: string): CouncilConfigView {
     return {
         enabled: doc['enabled'] === true,
         defaults: {
-            mode: typeof defaults['mode'] === 'string' ? defaults['mode'] as string : 'api',
+            // Always `auto`: transport is resolved per machine, not configured,
+            // and the loader emits nothing else. The old fallback here was
+            // `'api'`, which reported a paid transport for a config that had
+            // never asked for one.
+            mode: 'auto',
             min_rounds: typeof defaults['min_rounds'] === 'number' ? defaults['min_rounds'] as number : 2,
         },
         cost_budget: {
@@ -670,7 +674,15 @@ const modulesConfigSchema = z.object({
 // model_ladder, …) are intentionally NOT writable here — hand-edit only.
 const aiCouncilPayloadSchema = z.object({
     enabled: z.boolean().optional(),
-    defaultMode: z.enum(['manual', 'api', 'cli']).optional(),
+    /**
+     * Accepted and IGNORED — kept in the schema on purpose.
+     *
+     * `.strict()` rejects unknown keys, so dropping the field outright would
+     * make an older SPA build's POST fail wholesale and take the rest of the
+     * council settings down with it. Transport is resolved, never persisted;
+     * the value is discarded rather than written.
+     */
+    defaultMode: z.enum(['manual', 'api', 'cli', 'auto']).optional(),
     minRounds: z.number().int().min(1).optional(),
     maxTotalUsd: z.number().min(0).optional(),
     members: z.record(z.object({
@@ -876,7 +888,15 @@ export function wizardRoute(opts: WizardRouteOptions & { packageRoot: string }):
                     if (value !== undefined) body = replaceScalar(body, path, value);
                 };
                 set(['enabled'], p.enabled);
-                set(['defaults', 'mode'], p.defaultMode);
+                // `defaults.mode` is deliberately NOT written any more.
+                //
+                // This write is how the defect shipped: the wizard materialised
+                // the key on every run, so the later CLI-first default — which
+                // only fires on an ABSENT key — could never reach a machine the
+                // wizard had touched. Those installations kept paying per token
+                // with a subscription CLI sitting available. Transport is
+                // resolved now (`cli → api → unavailable`, airgap forcing
+                // `api`), so there is nothing left to persist.
                 set(['defaults', 'min_rounds'], p.minRounds);
                 set(['cost_budget', 'max_total_usd'], p.maxTotalUsd);
                 for (const provider of AI_COUNCIL_PROVIDERS) {

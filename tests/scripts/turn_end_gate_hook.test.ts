@@ -24,18 +24,20 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
 import {
     alreadyRefusedTurn,
+    detectCompletionClaim,
     detectLanguage,
     detectPromissory,
     detectUnverifiedEdit,
     deriveSessionKey,
     finalParagraph,
     isVerificationCommand,
-    readGateSettings,
+    readCiSettled,
     readLanguagePin,
     readTranscriptTail,
     visibleProse,
     type ToolCall,
 } from '../../src/scripts/hooks/turn_end_gate_hook.js';
+import { STATE_FILE as CI_STATE_FILE } from '../../src/scripts/before_complete_hook.js';
 
 const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..');
 const HOOK = path.join(REPO_ROOT, 'src', 'scripts', 'hooks', 'turn_end_gate_hook.ts');
@@ -49,11 +51,12 @@ const TSX = path.join(
 const tmp_dirs: string[] = [];
 
 /**
- * `readGateSettings` now goes through the real settings cascade, whose
- * user-global layer resolves under `EVENT4U_CONFIG_HOME` (its own documented
- * override) or `os.homedir()`. Without this the in-process tests would read the
- * DEVELOPER's global settings and pass or fail on their machine's state —
- * exactly the non-hermetic shape this repo has been bitten by before.
+ * The gate itself no longer reads settings at all — the switch was removed and
+ * it is always armed. This pin STAYS anyway: the spawned hook runs the real
+ * dispatcher path, and anything it imports that does touch the settings cascade
+ * would otherwise resolve the DEVELOPER's user-global layer and make the suite
+ * pass or fail on one machine's state. Hermeticity is cheap; a
+ * works-on-my-machine hook test is not.
  */
 let _priorConfigHome: string | undefined;
 beforeAll(() => {
@@ -212,7 +215,7 @@ describe('detector B — language mismatch (roadmap 3.3)', () => {
     it('ADVERSARIAL: English identifiers and paths do not flip a German turn', () => {
         const reply =
             'Ich habe `src/scripts/hooks/turn_end_gate_hook.ts` angelegt und in ' +
-            '`concern_registry.ts` eingetragen; `readGateSettings` liest den Schalter.';
+            '`concern_registry.ts` eingetragen; `detectUnverifiedEdit` liest die Tool-Calls.';
         expect(detectLanguage(reply, 'de')).toBeNull();
     });
 
@@ -279,7 +282,15 @@ describe('visibleProse — the exclusion set', () => {
 });
 
 // ---------------------------------------------------------------------------
-// Settings — the master switch and the two per-detector switches (3.6)
+// Workspace helper.
+//
+// The `settings — default OFF, detectors ON within it` describe block that used
+// to live here is GONE, with its R2-6a/6b/6c regressions: the gate reads no
+// settings any more, so `enabled: yes`, a trailing comment, and a block under
+// the wrong parent are no longer things it can get wrong. What replaced those
+// tests is one assertion in the spawned section below — a workspace with NO
+// settings file at all must still refuse — which is the inversion of the case
+// they were pinning and the only one that can regress now.
 // ---------------------------------------------------------------------------
 
 function makeWorkspace(settings?: string): string {
@@ -290,111 +301,6 @@ function makeWorkspace(settings?: string): string {
     }
     return dir;
 }
-
-describe('settings — default OFF, detectors ON within it (roadmap 3.6)', () => {
-    it('absent settings file ⇒ disabled', () => {
-        expect(readGateSettings(makeWorkspace()).enabled).toBe(false);
-    });
-
-    it('absent section ⇒ disabled — absent is never an opt-in', () => {
-        expect(readGateSettings(makeWorkspace('hooks:\n  injection_scan:\n    enabled: true\n')).enabled).toBe(
-            false,
-        );
-    });
-
-    it('enabling the master switch turns EVERY detector on without naming them', () => {
-        const s = readGateSettings(
-            makeWorkspace('hooks:\n  turn_end_gate:\n    enabled: true\n'),
-        );
-        expect(s).toEqual({
-            enabled: true,
-            promissory: true,
-            language: true,
-            verification: true,
-        });
-    });
-
-    it('any detector can be silenced without editing the hook manifest', () => {
-        const s = readGateSettings(
-            makeWorkspace(
-                'hooks:\n  turn_end_gate:\n    enabled: true\n    language: false\n',
-            ),
-        );
-        expect(s).toEqual({
-            enabled: true,
-            promissory: true,
-            language: false,
-            verification: true,
-        });
-    });
-
-    it('the verification detector has its own switch', () => {
-        const s = readGateSettings(
-            makeWorkspace(
-                'hooks:\n  turn_end_gate:\n    enabled: true\n    verification: false\n',
-            ),
-        );
-        expect(s).toEqual({
-            enabled: true,
-            promissory: true,
-            language: true,
-            verification: false,
-        });
-    });
-
-    it('a SIBLING section’s `enabled:` is never read as ours', () => {
-        const s = readGateSettings(
-            makeWorkspace(
-                'hooks:\n  turn_end_gate:\n    promissory: false\n  injection_scan:\n    enabled: true\n',
-            ),
-        );
-        expect(s.enabled).toBe(false);
-        expect(s.promissory).toBe(false);
-    });
-
-    // --- R2 finding 6: three ways the hand-rolled walker mis-resolved it -----
-
-    it('R2-6b: a trailing comment does not turn the switch OFF', () => {
-        // `^\s+enabled:\s*(true|false)\s*$` required end-of-line, so a
-        // maintainer who annotated their opt-in silently got no gate.
-        const s = readGateSettings(
-            makeWorkspace('hooks:\n  turn_end_gate:\n    enabled: true  # soak opt-in\n'),
-        );
-        expect(s.enabled).toBe(true);
-    });
-
-    it('R2-6b: the YAML boolean `yes` means yes', () => {
-        // The `yaml` package parses to the 1.2 core schema where `yes` is the
-        // STRING "yes", so a parser alone does not fix this — the reader has to
-        // accept the spelling a human actually writes.
-        const s = readGateSettings(makeWorkspace('hooks:\n  turn_end_gate:\n    enabled: yes\n'));
-        expect(s.enabled).toBe(true);
-    });
-
-    it('R2-6b: `off` / `no` mean off, and an unknown value falls back to the default', () => {
-        expect(
-            readGateSettings(makeWorkspace('hooks:\n  turn_end_gate:\n    enabled: no\n')).enabled,
-        ).toBe(false);
-        // Not a recognised spelling ⇒ the conservative default, never a guess.
-        expect(
-            readGateSettings(makeWorkspace('hooks:\n  turn_end_gate:\n    enabled: maybe\n'))
-                .enabled,
-        ).toBe(false);
-    });
-
-    it('R2-6c: a `turn_end_gate:` block under the WRONG parent never arms the gate', () => {
-        // The text walker had no notion of a parent, so a top-level block or one
-        // under any other key armed a concern that can refuse a turn-end.
-        expect(readGateSettings(makeWorkspace('turn_end_gate:\n  enabled: true\n')).enabled).toBe(
-            false,
-        );
-        expect(
-            readGateSettings(
-                makeWorkspace('quality:\n  turn_end_gate:\n    enabled: true\n'),
-            ).enabled,
-        ).toBe(false);
-    });
-});
 
 describe('language pin', () => {
     it('absent pin ⇒ `und` ⇒ no obligation', () => {
@@ -419,6 +325,99 @@ describe('language pin', () => {
     });
 });
 
+/**
+ * Round 7 § Phase 1 — detector D: a completion claim over an unsettled CI read.
+ *
+ * The measured class (14 instances, every one costing the user a turn) is
+ * "Fertig" while checks are still running. The three negative cases below are the
+ * point of the detector, not an afterthought: a blocking guard that refuses a
+ * legitimate completion teaches the user to switch it off.
+ */
+describe('detector D — completion claim over unsettled CI (round 7)', () => {
+    function writeCi(dir: string, ci: unknown): void {
+        const target = path.join(dir, CI_STATE_FILE);
+        fs.mkdirSync(path.dirname(target), { recursive: true });
+        fs.writeFileSync(target, JSON.stringify({ schema_version: 1, ci_last: ci }));
+    }
+
+    const UNSETTLED = { seen: true, settled: false };
+    const SETTLED = { seen: true, settled: true };
+    const NEVER_SEEN = { seen: false, settled: false };
+
+    it('fires on the measured German shape', () => {
+        const f = detectCompletionClaim('Fertig, Matze — der komplette Auftrag ist durch.', UNSETTLED);
+        expect(f?.detector).toBe('completion');
+        expect(f?.evidence).toContain('Fertig');
+    });
+
+    it('fires on "Damit ist alles erledigt."', () => {
+        expect(detectCompletionClaim('Damit ist alles erledigt.', UNSETTLED)).not.toBeNull();
+    });
+
+    // --- the three cases that must NOT fire (roadmap 1.4) ---
+
+    it('does NOT fire when the CI read was settled', () => {
+        expect(detectCompletionClaim('Fertig, Matze.', SETTLED)).toBeNull();
+    });
+
+    it('does NOT fire in a session that never read CI', () => {
+        expect(detectCompletionClaim('Fertig, Matze.', NEVER_SEEN)).toBeNull();
+    });
+
+    it('does NOT fire on an unsettled read with no completion claim', () => {
+        expect(
+            detectCompletionClaim('Die CI läuft noch, ich warte auf das Settle.', UNSETTLED),
+        ).toBeNull();
+    });
+
+    it('does NOT fire on "fertig" inside a sentence about something else', () => {
+        expect(
+            detectCompletionClaim(
+                'Der Generator ist noch nicht fertig konfiguriert, deshalb prüfe ich das.',
+                UNSETTLED,
+            ),
+        ).toBeNull();
+    });
+
+    it('does NOT fire on a completion claim inside quoted tool output', () => {
+        expect(
+            detectCompletionClaim('Das Log sagt:\n\n```\nFertig.\n```\n\nIch lese weiter.', UNSETTLED),
+        ).toBeNull();
+    });
+
+    // --- readCiSettled: absence is never a settle, and never a refusal ---
+
+    it('no state file ⇒ not seen ⇒ the detector cannot fire', () => {
+        expect(readCiSettled(makeWorkspace())).toEqual(NEVER_SEEN);
+    });
+
+    it('a malformed state file is treated as not seen', () => {
+        const dir = makeWorkspace();
+        const target = path.join(dir, CI_STATE_FILE);
+        fs.mkdirSync(path.dirname(target), { recursive: true });
+        fs.writeFileSync(target, '{ not json');
+        expect(readCiSettled(dir)).toEqual(NEVER_SEEN);
+    });
+
+    it('ci_last null ⇒ not seen', () => {
+        const dir = makeWorkspace();
+        writeCi(dir, null);
+        expect(readCiSettled(dir)).toEqual(NEVER_SEEN);
+    });
+
+    it('reads an unsettled record the producer wrote', () => {
+        const dir = makeWorkspace();
+        writeCi(dir, { at: '2026-08-12T00:00:00+00:00', pending: 3, settled: false });
+        expect(readCiSettled(dir)).toEqual(UNSETTLED);
+    });
+
+    it('reads a settled record the producer wrote', () => {
+        const dir = makeWorkspace();
+        writeCi(dir, { at: '2026-08-12T00:00:00+00:00', pending: 0, settled: true });
+        expect(readCiSettled(dir)).toEqual(SETTLED);
+    });
+});
+
 // ---------------------------------------------------------------------------
 // Re-entrancy — through the real process (roadmap 3.1)
 // ---------------------------------------------------------------------------
@@ -429,9 +428,15 @@ interface Run {
     stderr: string;
 }
 
-/** A workspace with the gate ON, a German pin, and a fake $HOME for transcripts. */
+/**
+ * A workspace with a German pin and a fake $HOME for transcripts.
+ *
+ * No settings file is written, and that omission is the point: the gate is
+ * always armed, so every spawned test below runs against a workspace that opts
+ * into nothing. This helper used to write `enabled: true`.
+ */
 function makeGateWorkspace(): { dir: string; home: string } {
-    const dir = makeWorkspace('hooks:\n  turn_end_gate:\n    enabled: true\n');
+    const dir = makeWorkspace();
     fs.mkdirSync(path.join(dir, 'agents', 'state'), { recursive: true });
     fs.writeFileSync(
         path.join(dir, 'agents', 'state', 'language-mirror.json'),
@@ -538,13 +543,79 @@ describe('the gate, end to end', () => {
         expect(r.stderr).toBe('');
     });
 
-    it('is a no-op while the master switch is off — the shipped default', () => {
+    // Round 7 § Phase 1 — the completion detector THROUGH the real process, not
+    // only as a pure function. The unit tests prove the predicate; this proves it
+    // is wired: a detector that is correct and unreachable is the shape this
+    // repo's own memory calls "defined but not wired".
+    function writeCiState(dir: string, settled: boolean): void {
+        const target = path.join(dir, CI_STATE_FILE);
+        fs.mkdirSync(path.dirname(target), { recursive: true });
+        fs.writeFileSync(
+            target,
+            JSON.stringify({
+                schema_version: 1,
+                ci_last: { at: '2026-08-12T00:00:00+00:00', pending: settled ? 0 : 3, settled },
+            }),
+        );
+    }
+
+    const DONE = 'Fertig, Matze. Der komplette Auftrag ist durch, alles gemergt.';
+
+    it('refuses a completion claim while the recorded CI read is unsettled', () => {
+        const { dir, home } = makeGateWorkspace();
+        writeCiState(dir, false);
+        const t = writeTranscript(home, ['mach weiter'], DONE);
+        const r = runHook(dir, envelopeJson(dir, t), home);
+        expect(r.status, r.stderr).toBe(1);
+        expect(r.stderr).toContain('completion');
+        expect(r.stdout).toBe('');
+    });
+
+    it('lets the SAME claim through once the CI read is settled', () => {
+        const { dir, home } = makeGateWorkspace();
+        writeCiState(dir, true);
+        const t = writeTranscript(home, ['mach weiter'], DONE);
+        const r = runHook(dir, envelopeJson(dir, t), home);
+        expect(r.status, r.stderr).toBe(0);
+        expect(r.stderr).toBe('');
+    });
+
+    it('lets the same claim through when no CI was ever observed', () => {
+        // No state file at all — a session that never touched CI must never be
+        // refused for it, and this is the case an over-eager version would break.
+        const { dir, home } = makeGateWorkspace();
+        const t = writeTranscript(home, ['mach weiter'], DONE);
+        const r = runHook(dir, envelopeJson(dir, t), home);
+        expect(r.status, r.stderr).toBe(0);
+        expect(r.stderr).toBe('');
+    });
+
+    it('is ARMED with no settings file at all — the inverted invariant', () => {
+        // This assertion used to read `toBe(0)` under the title "is a no-op
+        // while the master switch is off". The switch is gone: an install that
+        // opts into nothing gets the gate. Whether it FIRES is decided one
+        // level down, by the detector — which is why the sibling test above,
+        // same workspace and a clean reply, still exits 0.
         const dir = makeWorkspace(); // no settings file at all
         const home = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'turn-end-gate-home-')));
         tmp_dirs.push(home);
         const t = writeTranscript(home, ['mach weiter'], PROMISE);
         const r = runHook(dir, envelopeJson(dir, t), home);
-        expect(r.status, r.stderr).toBe(0);
+        expect(r.status, r.stderr).toBe(1);
+        expect(r.stderr).toContain('promissory');
+    });
+
+    it('a leftover `hooks.turn_end_gate.enabled: false` cannot disarm it', () => {
+        // The removed key is ignored, not honoured. An older install carrying
+        // the opt-out must not silently keep the gate off — that is the exact
+        // shape a deletion gets wrong, and REMOVED_KEYS only warns.
+        const dir = makeWorkspace('hooks:\n  turn_end_gate:\n    enabled: false\n');
+        fs.mkdirSync(path.join(dir, 'agents', 'state'), { recursive: true });
+        const home = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'turn-end-gate-home-')));
+        tmp_dirs.push(home);
+        const t = writeTranscript(home, ['mach weiter'], PROMISE);
+        const r = runHook(dir, envelopeJson(dir, t), home);
+        expect(r.status, r.stderr).toBe(1);
     });
 
     // --- the two re-entrancy layers, each proven ALONE ---

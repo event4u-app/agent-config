@@ -71,7 +71,8 @@ describe('load_council_config — happy path', () => {
         const tmp = make_tmp();
         const c = cfg.load_council_config(write_yaml(tmp, MINIMAL_VALID));
         expect(c.enabled).toBe(true);
-        expect(c.defaults.mode).toBe('api');
+        // `auto` is the ONLY value this loader emits — see `_build_defaults`.
+        expect(c.defaults.mode).toBe('auto');
         expect(c.cost_budget.max_total_usd).toBe(20.0);
         const member = c.members.get('anthropic');
         expect(member).toBeDefined();
@@ -252,9 +253,12 @@ members:
     model: gpt-x
 `;
         const c = cfg.load_council_config(write_yaml(tmp, payload));
-        expect(c.members.get('anthropic')!.mode).toBe('api');
-        // openai inherits defaults.mode (manual) → no api_key_ref required.
+        // Transport is resolved per machine, never configured — a member that
+        // still spells `mode:` out is loaded, ignored, and reported. Reading it
+        // is what let a pre-flip config keep paying per token forever.
+        expect(c.members.get('anthropic')!.mode).toBeNull();
         expect(c.members.get('openai')!.mode).toBeNull();
+        expect(c.ignored_transport_keys).toContain('members.anthropic.mode');
     });
 
     it('disabled member allows omitted key and model', () => {
@@ -292,19 +296,32 @@ describe('load_council_config — validation errors', () => {
         expect(() => cfg.load_council_config(p)).toThrow(/enabled.*bool/);
     });
 
-    it('unknown default mode is rejected', () => {
+    it('a bogus default mode no longer fails the load — the key is not read at all', () => {
         const tmp = make_tmp();
         const p = write_yaml(tmp, 'enabled: false\ndefaults:\n  mode: bogus\n');
-        expect(() => cfg.load_council_config(p)).toThrow(/defaults\.mode/);
+        // Validating a key nobody reads would turn every stale config into a
+        // hard load failure, which is the breaking change the ignore-list
+        // exists to avoid. Accept, ignore, report.
+        const c = cfg.load_council_config(p);
+        expect(c.defaults.mode).toBe('auto');
+        expect(c.ignored_transport_keys).toContain('defaults.mode');
     });
 
-    it('unknown member mode is rejected', () => {
+    it('a bogus member mode is likewise ignored rather than rejected', () => {
         const tmp = make_tmp();
         const p = write_yaml(
             tmp,
             'enabled: false\nmembers:\n  anthropic:\n    enabled: false\n    mode: weird\n',
         );
-        expect(() => cfg.load_council_config(p)).toThrow(/members\.anthropic\.mode/);
+        const c = cfg.load_council_config(p);
+        expect(c.members.get('anthropic')!.mode).toBeNull();
+        expect(c.ignored_transport_keys).toContain('members.anthropic.mode');
+    });
+
+    it('a config that never carried a transport key reports none ignored', () => {
+        const tmp = make_tmp();
+        const p = write_yaml(tmp, 'enabled: false\nmembers:\n  anthropic:\n    enabled: false\n');
+        expect(cfg.load_council_config(p).ignored_transport_keys).toEqual([]);
     });
 
     it('unknown provider is rejected', () => {
@@ -319,19 +336,20 @@ describe('load_council_config — validation errors', () => {
         expect(() => cfg.load_council_config(p)).toThrow(/non-empty `model`/);
     });
 
-    it('enabled api-mode member without api_key_ref fails', () => {
+    it('an enabled member without api_key_ref loads — the key is a fallback credential, not a requirement', () => {
         const tmp = make_tmp();
-        // Explicit `mode: api` — road-to-always-on-orchestration Phase 3.1
-        // flipped the implicit `defaults.mode` default to `auto`, under
-        // which a missing `api_key_ref` is not fatal (the auto chain may
-        // still resolve to the key-free `cli` rung). This test targets the
-        // api-mode-specific rule, so it pins the mode it means to exercise
-        // rather than relying on the (now different) default.
+        // Every member now resolves through the auto chain, whose first rung is
+        // the key-free `cli` transport. Demanding an API key up front would
+        // refuse to load exactly the subscription-only machine this change
+        // exists to serve; a missing key simply makes the `api` fallback rung
+        // unavailable, which `resolveTransport` reports at call time.
         const p = write_yaml(
             tmp,
             'enabled: false\nmembers:\n  anthropic:\n    enabled: true\n    model: m\n    mode: api\n',
         );
-        expect(() => cfg.load_council_config(p)).toThrow(/api_key_ref/);
+        const c = cfg.load_council_config(p);
+        expect(c.members.get('anthropic')!.api_key_ref).toBeNull();
+        expect(c.ignored_transport_keys).toContain('members.anthropic.mode');
     });
 
     it('api_key_ref must use a known prefix', () => {
@@ -650,7 +668,7 @@ describe('cost_budget.daily_limit_usd — the rolling 24h cap (and the ledger sw
 
 // === road-to-always-on-orchestration Phase 3.1 — CLI-first shipped default ===
 
-describe('defaults.mode — CLI-first is the shipped default (Phase 3.1)', () => {
+describe('transport is resolved, not configured — the mode key is ignored', () => {
     it('defaults to auto when the config omits `defaults` entirely', () => {
         const tmp = make_tmp();
         const payload = 'enabled: true\nmembers:\n  anthropic:\n    enabled: false\n';
@@ -679,20 +697,34 @@ describe('defaults.mode — CLI-first is the shipped default (Phase 3.1)', () =>
         expect(() => cfg.load_council_config(write_yaml(tmp, payload))).not.toThrow();
     });
 
-    it('a pinned `mode: api` member still requires api_key_ref — the flip never relaxes an explicit pin', () => {
+    it('a pinned `mode: api` no longer survives — a per-member pin was the last silent-spend path', () => {
         const tmp = make_tmp();
         const payload =
             'enabled: true\nmembers:\n  anthropic:\n    enabled: true\n    model: claude-x\n    mode: api\n';
-        expect(() => cfg.load_council_config(write_yaml(tmp, payload))).toThrow(/api_key_ref/);
+        const c = cfg.load_council_config(write_yaml(tmp, payload));
+        expect(c.members.get('anthropic')!.mode).toBeNull();
+        expect(c.ignored_transport_keys).toEqual(['members.anthropic.mode']);
     });
 
-    it('a pinned `mode: manual` or `mode: cli` member is unaffected by the default flip', () => {
-        const tmp = make_tmp();
+    it('a pinned `mode: manual` / `mode: cli` is ignored too — one rule for every value, no exceptions', () => {
         for (const mode of ['manual', 'cli']) {
+            const tmp = make_tmp();
             const payload = `enabled: true\nmembers:\n  anthropic:\n    enabled: true\n    model: claude-x\n    mode: ${mode}\n`;
             const c = cfg.load_council_config(write_yaml(tmp, payload));
-            expect(c.members.get('anthropic')!.mode).toBe(mode);
+            // Ignoring only the paid value would leave `mode:` half-alive and
+            // reintroduce the two-defaults confusion this change removes.
+            // `manual` stays reachable per invocation via `--mode-override`.
+            expect(c.members.get('anthropic')!.mode).toBeNull();
+            expect(c.ignored_transport_keys).toEqual(['members.anthropic.mode']);
         }
+    });
+
+    it('both layers are reported when both carry a stale key', () => {
+        const tmp = make_tmp();
+        const payload =
+            'enabled: true\ndefaults:\n  mode: api\nmembers:\n  anthropic:\n    enabled: true\n    model: claude-x\n    mode: api\n';
+        const c = cfg.load_council_config(write_yaml(tmp, payload));
+        expect(c.ignored_transport_keys).toEqual(['defaults.mode', 'members.anthropic.mode']);
     });
 });
 

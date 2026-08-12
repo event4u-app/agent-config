@@ -41,6 +41,9 @@ import { isSyntheticPrompt } from "./_lib/prompt_shape.js";
 import { classifyAuthorization, type GitOp } from "./git_authorization_hook.js";
 import { BLOCK_OPS, commandOp } from "./hooks/block_unauthorized_git.js";
 import { isVacuousOutput, isCiPoll, pendingCount } from "./before_complete_hook.js";
+// Round 7 § 1.5 — the SAME predicate `turn-end-gate` refuses on, imported rather
+// than reimplemented, so the measured rate and the gate cannot disagree.
+import { detectCompletionClaim } from "./hooks/turn_end_gate_hook.js";
 import { isEvaluationPrompt, isSelfScoped, preloadedVerdict } from "./hooks/evidence_independence.js";
 
 /**
@@ -57,7 +60,12 @@ import { isEvaluationPrompt, isSelfScoped, preloadedVerdict } from "./hooks/evid
 const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "..");
 
 export interface Violation {
-  check: "language-pin" | "git-authorization" | "vacuous-evidence" | "evidence-steering";
+  check:
+    | "language-pin"
+    | "git-authorization"
+    | "vacuous-evidence"
+    | "evidence-steering"
+    | "completion-claim";
   session: string;
   at: string;
   detail: string;
@@ -78,6 +86,17 @@ export interface SessionReport {
   user_turns: number;
   assistant_turns: number;
   violations: Violation[];
+  /**
+   * Round 7 § 6.2 — assistant turns that stood under a GERMAN pin, i.e. the only
+   * turns on which `language-pin` can fire at all. The rate was published over
+   * ALL assistant turns, which understates it by whatever fraction of a corpus is
+   * English-pinned: measured on round 7's own corpus, 1 655 of 2 354 (70 %), and
+   * the same 152 violations read 6.5 % on the old denominator and 9.2 % on this
+   * one — enough to move the band verdict from OUTSIDE to INSIDE.
+   */
+  de_pin_turns: number;
+  /** First entry timestamp, so a reader can era-split without a second pass. */
+  first_at: string;
 }
 
 /**
@@ -134,7 +153,7 @@ export const OBSERVED_BAND = { low: 9.1, high: 39.2 } as const;
  */
 export const BAND_MIN_TURNS = 1978;
 
-export type BandVerdict = "inside" | "outside" | "corpus-too-small";
+export type BandVerdict = "inside" | "outside" | "corpus-too-small" | "era-spanning";
 
 /** Round-6 Phase 4.5 — the forward-capture record for one scan run. */
 export interface RateRecord {
@@ -144,7 +163,29 @@ export interface RateRecord {
   assistant_turns: number;
   language_pin: number;
   rate_pct: number;
-  /** `outside` is the falsifier firing; `corpus-too-small` is not a reading. */
+  /**
+   * Round 7 § 6.2 / 6.1 — OPTIONAL, and not for convenience.
+   *
+   * `--record` appends one line per run to a series whose whole purpose is
+   * comparability over time, and every line written before round 7 carries none
+   * of these four. Declaring them required would make the type say something
+   * false about the records on disk, and the renderer already reads them
+   * defensively for exactly that reason. `analyse()` always populates them, so a
+   * fresh run is never partial — the optionality describes the archive, not the
+   * producer.
+   */
+  de_pin_turns?: number;
+  /** The same numerator over `de_pin_turns`. Reported beside `rate_pct`, never instead. */
+  rate_pct_de_pin?: number;
+  /** The corpus straddles a carrier landing, so no band verdict. */
+  era_spanning?: boolean;
+  /** Which carrier, when `era_spanning` — empty otherwise. */
+  era_reason?: string;
+  /**
+   * `outside` is the falsifier firing; `corpus-too-small` and `era-spanning` are
+   * not readings — the first is about corpus size, the second about the corpus
+   * containing two different systems.
+   */
   band: BandVerdict;
   /**
    * `null` when the scanned store is NOT this repo's own — `measureDelivered` is
@@ -157,7 +198,49 @@ export interface RateRecord {
   delivered_global_tokens: number | null;
 }
 
-export function bandVerdict(rate_pct: number, assistant_turns: number): BandVerdict {
+/**
+ * Round 7 § 6.1 — dates on which a carrier for a mechanised check LANDED.
+ *
+ * A rate pooled across one of these is not a reading about behaviour; it is a
+ * weighted average of two different systems. The band's falsifier is "a fourth
+ * PROJECT outside the band", and on round 7's first run it fired on the project
+ * that helped DEFINE the band — because the corpus straddled the language-pin
+ * carrier. 23.1 % before it, 0.0 % after, 6.5 % pooled, and the pooled figure was
+ * announced as the falsifier.
+ *
+ * Declared as data with provenance rather than inferred: nothing in a transcript
+ * records which carriers were bound while it was written.
+ */
+export const CARRIER_CHANGES: readonly { at: string; what: string }[] = [
+  { at: "2026-08-07T00:00:00Z", what: "language-pin bound on user_prompt_submit (round 5)" },
+];
+
+/** True when the corpus spans a carrier change, i.e. two systems in one average. */
+export function spansCarrierChange(firstAts: readonly string[]): { spans: boolean; what: string } {
+  const stamps = firstAts.filter((s) => s !== "").sort();
+  if (stamps.length === 0) {
+    return { spans: false, what: "" };
+  }
+  const lo = stamps[0] as string;
+  const hi = stamps[stamps.length - 1] as string;
+  for (const c of CARRIER_CHANGES) {
+    if (lo < c.at && hi >= c.at) {
+      return { spans: true, what: c.what };
+    }
+  }
+  return { spans: false, what: "" };
+}
+
+export function bandVerdict(
+  rate_pct: number,
+  assistant_turns: number,
+  opts: { spansCarrier?: boolean } = {},
+): BandVerdict {
+  // The era guard is checked FIRST and for the same reason the turn floor is: a
+  // verdict about corpus shape must not be reported as a verdict about behaviour.
+  if (opts.spansCarrier === true) {
+    return "era-spanning";
+  }
   if (assistant_turns < BAND_MIN_TURNS) {
     return "corpus-too-small";
   }
@@ -181,6 +264,7 @@ export const CHECK_IDS: readonly CheckId[] = [
   "git-authorization",
   "vacuous-evidence",
   "evidence-steering",
+  "completion-claim",
 ];
 
 /**
@@ -207,6 +291,12 @@ export const CHECK_MEANINGS: Record<CheckId, string> = {
   "evidence-steering":
     "A self-commissioned evaluation whose prompt pre-loaded its own verdict, " +
     "or a second self-scoped evaluation of the same subject within one turn.",
+  "completion-claim":
+    "An assistant turn claiming the work is complete while the last CI read in " +
+    "that session was NOT settled. Round 7 measured 14 instances by reading, " +
+    "each followed by the user handing the work back; this is the same " +
+    "predicate `turn-end-gate`'s completion detector refuses on, so the rate " +
+    "and the gate cannot disagree. A session that never polled CI can never hit.",
 };
 
 /**
@@ -317,7 +407,11 @@ export function isInjectedBody(text: string): boolean {
  * `API Error: 529 Overloaded` retry banners. Counting the harness as the model
  * inflates the very number this scan exists to report honestly.
  */
-const HARNESS_TEXT =
+// Exported since round 7 § 6.3: `probe_session_canary` needs the SAME predicate,
+// and its first version had its own copy that omitted `You've hit your` — which
+// turned a spend-limit banner into a missed greeting and reported 24/28 for a
+// corpus that is 25/28.
+export const HARNESS_TEXT =
   /^(API Error:|Request (timed out|was aborted)|\[Request interrupted|Error: |Credit balance is too low|You've hit your|Prompt is too long)/i;
 
 /** Rough English-opener test for the language check (first prose line only). */
@@ -330,6 +424,8 @@ export function scanSession(sessionId: string, lines: string[]): SessionReport {
     user_turns: 0,
     assistant_turns: 0,
     violations: [],
+    de_pin_turns: 0,
+    first_at: "",
   };
 
   let pinned: "de" | "en" | null = null;
@@ -343,6 +439,10 @@ export function scanSession(sessionId: string, lines: string[]): SessionReport {
   // that split reproducible against a future corpus instead of re-argued.
   let turnsSincePrompt = 0;
   let compactionSincePrompt = false;
+  // Round 7 § 1.5 — session-scoped, deliberately NOT reset per prompt: the
+  // measured failure is a completion claim in a LATER turn than the poll.
+  let ciSeen = false;
+  let ciSettled = false;
 
   for (const line of lines) {
     if (!line.trim()) {
@@ -353,6 +453,12 @@ export function scanSession(sessionId: string, lines: string[]): SessionReport {
       entry = JSON.parse(line) as Entry;
     } catch {
       continue;
+    }
+    // Round 7 § 6.1 — captured for the era guard. The FIRST timestamp in the
+    // file, not the file mtime: mtime moves when a session is resumed, which
+    // would put a July session in the August era.
+    if (report.first_at === "" && typeof entry["timestamp"] === "string") {
+      report.first_at = entry["timestamp"];
     }
 
     // Tool results arrive as `user` entries carrying `toolUseResult`.
@@ -370,6 +476,14 @@ export function scanSession(sessionId: string, lines: string[]): SessionReport {
           detail: `CI poll read as settled without an in-flight observation: ${out.slice(0, 90)}`,
         });
       }
+      // Round 7 § 1.5 — the session-scoped CI-settle state the completion-claim
+      // check reads. R2 finding 3: this copied `pending === 0` AND the wrong
+      // comment claiming it matched the producer's discrimination. It did not —
+      // a stale all-pass table read as a settle and silenced the check. The
+      // in-flight witness is required here too, so the measurement and the gate
+      // agree on what a settle is.
+      ciSeen = true;
+      ciSettled = pending === 0 && sawPending && !isVacuousOutput(out);
       pendingPoll = null;
       continue;
     }
@@ -424,6 +538,26 @@ export function scanSession(sessionId: string, lines: string[]): SessionReport {
     if (prose !== null) {
       report.assistant_turns += 1;
       turnsSincePrompt += 1;
+      // Round 7 § 6.2 — the denominator the language check can actually fire on.
+      // Counted here, beside the numerator, so the two cannot be derived from
+      // different populations later.
+      if (pinned === "de") {
+        report.de_pin_turns += 1;
+      }
+      // Round 7 § 1.5 — placed BEFORE the language block on purpose: that block
+      // `continue`s on a harness banner, and a check placed after it would be
+      // skipped for every such turn without saying so.
+      if (!HARNESS_TEXT.test((prose.split("\n").find((l) => l.trim()) ?? "").trim())) {
+        const cc = detectCompletionClaim(prose, { seen: ciSeen, settled: ciSettled });
+        if (cc !== null) {
+          report.violations.push({
+            check: "completion-claim",
+            session: sessionId,
+            at,
+            detail: `completion claimed over an unsettled CI read: "${cc.evidence.slice(0, 110)}"`,
+          });
+        }
+      }
       if (pinned === "de") {
         const first = prose.split("\n").find((l) => l.trim()) ?? "";
         if (HARNESS_TEXT.test(first.trim())) {
@@ -585,6 +719,7 @@ export function scanStore(store: string, limit: number): ScanReport {
     "git-authorization": 0,
     "vacuous-evidence": 0,
     "evidence-steering": 0,
+    "completion-claim": 0,
   };
   for (const s of per_session) {
     for (const v of s.violations) {
@@ -600,6 +735,14 @@ export function scanStore(store: string, limit: number): ScanReport {
   // band" — a rounding artefact announcing the declared falsifier.
   const rate_pct =
     assistant_turns === 0 ? 0 : Number(((100 * language_pin) / assistant_turns).toFixed(1));
+  // Round 7 § 6.2 — the second denominator, reported beside the first rather than
+  // instead of it: replacing the figure silently would break comparability with
+  // every recorded run, and the band's own three reference values were computed
+  // on the all-turns denominator.
+  const de_pin_turns = per_session.reduce((n, s) => n + s.de_pin_turns, 0);
+  const rate_pct_de_pin =
+    de_pin_turns === 0 ? 0 : Number(((100 * language_pin) / de_pin_turns).toFixed(1));
+  const era = spansCarrierChange(per_session.map((s) => s.first_at));
   const delivered = measureDelivered(
     path.join(REPO_ROOT, ".claude", "rules"),
     path.join(process.env["HOME"] ?? os.homedir(), ".claude", "rules"),
@@ -619,7 +762,11 @@ export function scanStore(store: string, limit: number): ScanReport {
       assistant_turns,
       language_pin,
       rate_pct,
-      band: bandVerdict(rate_pct, assistant_turns),
+      de_pin_turns,
+      rate_pct_de_pin,
+      era_spanning: era.spans,
+      era_reason: era.what,
+      band: bandVerdict(rate_pct, assistant_turns, { spansCarrier: era.spans }),
       // Only attach the carrier figures when the rate and the carriers describe
       // the same project.
       delivered_project_tokens: ownStore ? delivered.project.tokens : null,
@@ -680,7 +827,36 @@ export function render(report: ScanReport): string {
     `  language-pin rate  ${report.rate.rate_pct.toFixed(1)}%  ` +
       `(${report.rate.language_pin} of ${report.rate.assistant_turns} assistant turns)`,
   );
-  if (report.rate.band === "corpus-too-small") {
+  // Round 7 § 6.2 — both denominators, always. The band's three reference values
+  // were computed on the all-turns one, so that stays the headline; the second is
+  // the only one the check can actually fire on, and on round 7's own corpus the
+  // two differ by enough to move the verdict (6.5 % vs 9.2 %, band low 9.1 %).
+  // Optional-read, not `report.rate.x.toFixed(...)`: a `rate` block RECORDED
+  // before round 7 carries neither field, and `--record` exists to be read back
+  // over time. A renderer that throws on last month's line makes the series
+  // unreadable to prove a point about denominators.
+  const dePinTurns = report.rate.de_pin_turns;
+  const dePinRate = report.rate.rate_pct_de_pin;
+  if (typeof dePinTurns === 'number' && typeof dePinRate === 'number') {
+    lines.push(
+      `                     ${dePinRate.toFixed(1)}%  ` +
+        `(${report.rate.language_pin} of ${dePinTurns} turns under a GERMAN pin — the only` +
+        ' turns this check can fire on)',
+    );
+    lines.push(
+      '    The band (M5, n=3) was computed on the ALL-turns denominator, so the first figure',
+    );
+    lines.push('    is the comparable one and the second is the honest one. Both are printed.');
+  }
+  if (report.rate.band === "era-spanning") {
+    lines.push(
+      `    Not compared: the corpus SPANS a carrier landing — ${report.rate.era_reason || 'see CARRIER_CHANGES'}.`,
+    );
+    lines.push('    A rate pooled across it is a weighted average of two different systems, not');
+    lines.push('    a reading about behaviour. Round 7 measured 23.1% before and 0.0% after that');
+    lines.push('    exact carrier; the pooled 6.5% was announced as the falsifier firing.');
+    lines.push('    Split the window at the carrier date and read each era on its own.');
+  } else if (report.rate.band === "corpus-too-small") {
     lines.push(
       `    Not compared: ${report.rate.assistant_turns} turns is below the ${BAND_MIN_TURNS} of the`,
     );
@@ -702,8 +878,23 @@ export function render(report: ScanReport): string {
     lines.push("    as new. Store novelty is not project novelty.");
   }
   lines.push("");
-  lines.push("  Scanned checks are exactly the mechanised ones. Ask-shape, session-canary,");
-  lines.push("  promissory closings and checkbox batching are left as prose and NOT measured.");
+  // Round 7 § 6.4 — this footer used to lump four classes together as "NOT
+  // measured", and two of the four were wrong. Stated per class instead, because
+  // "not measured here" and "not measured anywhere" are different facts and only
+  // one of them is a gap.
+  lines.push("  Scanned checks are exactly the mechanised ones. What is NOT in the counts above:");
+  lines.push("    ask-shape (trailing free-text offer)  — measured NOWHERE. ~11 findings in round 7's");
+  lines.push("      reading half; the discriminator needs judgement, so it stays advisory on purpose.");
+  lines.push("    session-canary (opening greeting)     — not here, but PROBEABLE:");
+  lines.push("      `./scripts-run src/scripts/probe_session_canary`. Round 7: 25/28 sessions,");
+  lines.push("      24/25 post-carrier. The per-TASK instance is undecidable — no task boundary");
+  lines.push("      is recorded in a transcript.");
+  lines.push("    promissory closings                   — not here, but ALREADY GATED: `turn-end-gate`");
+  lines.push("      ships a blocking `detectPromissory`. Round 7 probe: 1 of 120 hand-back turns");
+  lines.push("      (the 163 this line first printed was the retracted denominator — it counted");
+  lines.push("      synthetic user turns as hand-back closers).");
+  lines.push("      `./scripts-run src/scripts/probe_promissory_closing`.");
+  lines.push("    checkbox batching                     — measured NOWHERE. ~5 low-severity findings.");
   return lines.join("\n");
 }
 

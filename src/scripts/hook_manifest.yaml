@@ -60,8 +60,12 @@ concerns:
     severity: advisory
   # Phase 5 — Tier-1 hook for the verify-before-complete rule. Records
   # observable evidence of verification commands (tests, quality tools,
-  # builds) into agents/runtime/state/verify-before-complete.json. The rule body
-  # cites that file as the source of truth for "verified this turn?".
+  # builds) into agents/state/verify-before-complete.json — the path the code
+  # actually writes (`before_complete_hook.STATE_FILE`); this comment said
+  # `agents/runtime/state/` until round 7, which is a directory it never used.
+  # The rule body cites that file as the source of truth for "verified this
+  # turn?". Since round 7 it also carries `ci_last`, the session-scoped CI-settle
+  # negative that `turn-end-gate` reads to refuse a premature completion claim.
   verify-before-complete:
     script: src/scripts/before_complete_hook.ts
     args: []
@@ -447,10 +451,12 @@ concerns:
   # mismatch (19 measured) — because building the unsafe part twice is how a
   # second detector becomes a second outage.
   #
-  # DEFAULT OFF (`hooks.turn_end_gate.enabled`), per the council
-  # recorded in round 6: the mechanism exists and soaks before it binds. Both
-  # detectors are default ON *within* the master switch, which is round 5
-  # § 3.6's ask read so that both hold at once.
+  # ALWAYS ARMED — no settings surface (2026-08-12). It shipped default-OFF on
+  # the round-6 council's "soak before it binds", and the maintainer removed the
+  # switch on the ground that a concern which is off cannot soak: the flag made
+  # the soak it protected unreachable. Whether the gate fires is decided by each
+  # detector's own trigger conditions, which is the same shape `delegation-nudge`
+  # uses — no signal, no output. `hooks.turn_end_gate.*` is in REMOVED_KEYS.
   #
   # fail_closed: FALSE, deliberately and unlike every other blocking concern
   # here: a crash in a turn-end gate must let the turn END. Failing closed on

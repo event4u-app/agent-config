@@ -57,7 +57,21 @@ function makeBrokenRef(
 
 const SCAN_DIRS = ['dist/agent-src', 'agents'];
 const SKIP_DIRS = [
-    'agents/roadmaps/archive', // archived roadmaps have historical refs
+    // Archived roadmaps have historical refs — a link to a file that existed when
+    // the plan was written is not drift, so the exclusion is right on the merits.
+    //
+    // ROUND 7, DOWNGRADE (2026-08-12): it also means this checker is the ONLY thing
+    // that would see a class of real rot, and cannot. Measured: **530 dead relative
+    // links across 147 of 466 archived roadmaps**. The cause is not history — it is
+    // that `archive_completed_roadmaps` moves a file one directory deeper and never
+    // re-depths its outgoing relative links, so a link that resolved before the move
+    // is broken BY the move. Two tools, one silence: the writer does not rewrite, and
+    // the only checker that would notice is scoped away from where it lands.
+    //
+    // Not repaired here: the fix is a bulk edit across 147 files plus a re-depth pass
+    // in the sweep, which is its own change. Recorded so the exclusion is read as a
+    // known gap with a number rather than as coverage.
+    'agents/roadmaps/archive',
     'agents/runtime/council/sessions', // per-user audit trail (gitignored), captured provider output
     'agents/runtime/council/responses', // paired council output (gitignored), captured provider output
     'agents/runtime/council/questions', // design Q&A trail — forward-refs to planned artifacts

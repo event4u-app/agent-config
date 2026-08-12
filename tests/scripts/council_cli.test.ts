@@ -322,6 +322,26 @@ describe('council_cli CLI — argparse intent', () => {
 // ── quota / shadow-report (read-only, no member construction) ───────
 
 describe('council_cli quota + shadow-report — intent', () => {
+    it('quota → exit 0 and one council:quota report, whatever this machine has configured', () => {
+        const ts = runTs(['quota']);
+        expect(ts.status).toBe(0);
+        // Deliberately NOT pinning which of the two shapes appears. The old
+        // assertion demanded the "no configured caps" line, and it held only
+        // because the developer's real user-global config pinned `mode: api`,
+        // which took every member out of the CLI call budget. Now that
+        // transport is resolved rather than configured, every member is `auto`
+        // and the caps apply wherever a config exists — so the old expectation
+        // was asserting a property of one machine, not of the verb.
+        expect(ts.stdout).toMatch(/^council:quota · /);
+    });
+
+    // The case above proves the verb runs anywhere; this one proves the branch
+    // it can no longer reach on a configured machine still prints the right
+    // line. Two assertions, two purposes: loosening the spawned case fixed the
+    // host dependency but left the empty-caps output covered by nothing, and
+    // `cmd_quota` already accepts injected settings, so the branch is reachable
+    // without a production change — the same injection the estimate cases above
+    // established.
     it('quota with no configured caps → exit 0 + the empty-caps line', () => {
         // Injected empty settings, NOT the host's — see `quotaHarness`.
         const ts = runQuotaHarnessTs();
