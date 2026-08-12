@@ -1,0 +1,2430 @@
+diff --git a/agents/roadmaps/archive/road-to-conformance-round7.md b/agents/roadmaps/archive/road-to-conformance-round7.md
+new file mode 100644
+index 0000000000000000000000000000000000000000..7e11ecf95734555e2ac3debcdd87d121fc02ca77
+--- /dev/null
++++ b/agents/roadmaps/archive/road-to-conformance-round7.md
+@@ -0,0 +1,558 @@
++---
++complexity: structural
++status: ready
++---
++
++# Road to conformance round 7 — the rules held, the tooling did not
++
++> Source: the last 30 local session transcripts of this package, read
++> 2026-08-12. Method below. Predecessors: `road-to-conformance-round5` (open),
++> `road-to-conformance-round6` (parked in `later/`, one step blocked on a
++> maintainer decision). Neither is touched here.
++
++## The finding that reframes this round
++
++**Five audit rounds measured rule TEXT and rule DELIVERY. This one measured the
++tools the rules route to, and that is where the defect mass is.**
++
++Of ~135 quoted findings, **~85 are `tooling-failure`** — this package's own
++gates, scripts and CLI. The four mechanised behaviour checks, meanwhile, are at
++**zero across the 25 post-carrier sessions**.
++
++The user said this before the measurement did, in the corpus itself
++(session `3d50d0df`, 2026-08-08):
++
++> "es zeigt, dass du nur scheiße baust. Wir haben nun zig mal sessions
++> analysiert ung dass die Agents Regeln, etc. ignorieren. Warum kann das
++> passieren? Warum findest Du es nicht heraus? Warum testest Du es nicht?"
++
++The answer this round gives: the rules were largely being followed. What kept
++costing time were gates that block valid input, gates that are green locally and
++red remotely, allowlists that suppress nothing, commands that exit 0 and do
++nothing, and paid council runs that lose the spend or report attendance they did
++not have.
++
++## Method, stated so the numbers are auditable
++
++- **Corpus:** the 30 most recent transcripts in this package's store, **as of
++  2026-08-12 T08:00Z**. 28 carry assistant turns; **2 carry none** (`67abbd6a`,
++  `92a60190`) — that is the whole 30→28 gap the scan reports, verified rather than
++  assumed.
++- **The window SLIDES, so re-running does not reproduce these figures**, and that
++  is a property of the instrument rather than a caveat about this run. Measured
++  within this same session, four hours later: 27 sessions with prose, 2 pre-carrier
++  instead of 3, 5.7 % instead of 6.5 % — because live sessions were appended and
++  the oldest fell out of the top-30. Every absolute number below is pinned to the
++  timestamp above; the RELATIONS (post-carrier zero on the four pre-existing
++  checks, `completion-claim` concentrated post-carrier) held across both readings,
++  which is the part a later round can check.
++- **Deterministic half:** `agent-config conformance:behavior --limit 30`, whose
++  four classifiers are imported from the gates they measure. 2 354 assistant
++  turns.
++- **Reading half:** 6 subagents over balanced batches, 28 sessions, full
++  digests (user turns near-verbatim, assistant prose truncated head+tail, tool
++  calls stripped). Fixed finding shape; **a finding without a verbatim quote was
++  discarded**. Highest-signal evidence ranked: a user turn correcting the agent,
++  a user turn expressing frustration, the agent's own retro admission.
++- **Independent cross-check that mattered:** each batch counted wrong-language
++  turns itself. Six batches returned per-session counts that agree with the
++  detector on every session, including its two outliers. The detector's zeros are
++  behaviour, not blindness.
++- **Reproducible probes** (committed under `src/scripts/`, see Phase 6): era
++  split, German-pin denominator, opening-canary rate, promissory-closing rate.
++
++## Corrected numbers — published beside the wrong ones, not instead of them
++
++| # | First reading | Corrected reading | What was wrong |
++|---|---|---|---|
++| 1 | `language-pin 6.5 % — OUTSIDE the 9.1–39.2 % band`, i.e. the pre-registered falsifier firing | **23.1 % pre-carrier / 0.0 % post-carrier**; 9.2 % on the German-pin denominator, i.e. INSIDE the band | The rate pools eras across the mechanism it measures, and divides by ALL assistant turns although the check can only fire on German-pinned ones |
++| 2 | opening canary present in 24 of 28 sessions (85.7 %) | **25 of 28 (89.3 %)**, and 24 of 25 (96.0 %) post-carrier | The first probe's harness predicate omitted `You've hit your`, so a spend-limit banner counted as a missed greeting |
++| 3 | promissory closings: 1 of 163 hand-back turns (0.6 %) | **1 of 120 (0.8 %)**, loose predicate 2 of 120 (1.7 %) — and the **reason** was wrong too: a blocking `detectPromissory` already ships in `turn-end-gate`, so a low figure is residual leakage past a working mechanism, not a rare class | Two errors. The denominator counted synthetic user turns (task notifications, injected command bodies) as hand-back closers; the committed script uses the scan's own `isSyntheticPrompt` / `isInjectedBody` predicates and reads 120. And the class was declined as "below any threshold worth a gate" while the gate existed |
++| 4 | "the mechanised surface is clean" | true of the **four pre-existing** checks; the fifth check this round added reads **17**, of which **15 are post-carrier across 14 of 28 sessions** | The claim was scoped to the checks that existed. Adding one moved it — which is the whole argument for adding it |
++
++## The mechanised surface, split at the carrier
++
++Split at 2026-08-07, the day the language-pin `user_prompt_submit` carrier
++landed:
++
++| era | sessions | assistant turns | under German pin | language-pin | git-auth | vacuous-evidence | evidence-steering |
++|---|---:|---:|---:|---:|---:|---:|---:|
++| pre  | 3  | 657   | 640   | 152 | 0 | 3 | 0 |
++| post | 25 | 1 697 | 1 015 | **0** | **0** | **0** | **0** |
++
++All 155 violations sit in three pre-carrier sessions. 118 of the 152 language
++ones sit in **one** session (`b01eda65`, 2026-07-29) whose hook bundle was
++verifiably stale — the transcript says so in its own words
++(`0571cbc6`: *"der Sprach-Hook läuft dabei immer noch nicht (Bundle 07:27), das
++ist also Aufmerksamkeit, kein Mechanismus"*).
++
++## Council
++
++Two members, 2/2 present, $0.057 actual. Both converged on three changes and
++this roadmap adopts all three:
++
++1. **The instrument fix is not a standalone phase.** It corrects the audit's own
++   false alarm; it changes no behaviour. Folded into Phase 6.
++2. **Premature completion displaces it as Phase 1.** 14 measured instances,
++   every one costing the user a turn, and — the argument this roadmap did not
++   have — *the "advisory carriers don't work" prior does not transfer*:
++   language-pin and git-auth are **recognition** tasks, premature completion is a
++   **precondition** check.
++3. **P6 bundled three different things** (retraction, scoping decision,
++   workstream split). Split into Phase 6 and Phase 7.
++
++**Departure, recorded with its reason.** Both members said the guard fix
++(Phase 2) belongs in its own PR because it can block irreversible operations.
++This roadmap keeps it here and answers the substance instead of the form: no rule
++requires an own-PR + soak for a hook script (`scope-control` § Kernel-rule edits
++scopes that to kernel *rules*), the operator asked for one PR this run, and the
++real risk — re-opening the bypass round 6 had to repair — is addressed by pinning
++round 6's own vector matrix as an acceptance criterion and by landing Phase 2 as
++the **first commit chunk**, so it is separable if review wants it separated.
++
++## Challenge pass
++
++Run before execution, per the operator's standing preference that a roadmap is
++challenged and not only council-reviewed — the council judges the *mechanism*, the
++challenge attacks whether the plan solves the right problem at all. Run as an
++independent adversarial reader over the drafted file with instructions to verify
++every cited `file:line` rather than an interactive interview, because the same
++operator's standing instruction is to decide such questions autonomously and keep
++working.
++
++**It died on the account spend limit mid-run** — which is, without irony, the
++eighth instance of the class this roadmap declines to fix as not-our-surface. It
++returned one finding before dying, and that finding was blocking:
++
++> "Phase 1's data-access premise is broken."
++
++Verified independently against the source rather than adopted on its word, and it
++is correct — see the rewritten Phase 1 for the two mechanisms
++(`_toolCalls` keeps no results; `toolCalls` resets per user prompt) and for the
++producer/consumer split that repairs it. Phase 3 was sharpened in the same pass
++from a finding of my own: `task ci` **includes** `preflight`, so the original
++framing ("preflight is not a root") understated the defect — the invisible set is
++`CI ∩ ci \ preflight`, and `preflight`'s docstring claims a parity the gate never
++checked.
++
++Honest limit on this pass: **axes 3-5 were never run.** The premise checks on
++`lint_framework_leakage`, `check_references`, the 8-of-39 dead exceptions and the
++quorum counting were verified by me, which makes them self-verified rather than
++independently challenged. Phase 4 and Phase 5 therefore carry less adversarial
++scrutiny than Phases 1-3, and that is recorded here rather than smoothed over.
++
++## Phase 1 — A completion claim while CI is unsettled is refused, not warned
++
++The single most expensive behavioural class in the corpus: 14 instances, each
++followed by the user handing the work back. Three verbatim:
++
++> `e372249a` — "Fertig, Matze — die Roadmap … ist vollständig abgearbeitet und
++> als PR ausgeliefert." → next user turn: *"fixe die ci und die merge konflikte"*
++>
++> `9502795e` — "**Stand.** … mehrere Node-/Install-Shards laufen noch." → next
++> user turn: *"fixe die  ci"*
++>
++> `20188a37` — "Damit ist alles erledigt." → next user turn: *"consistency
++> faily. fixe das"*
++
++The rule is in context at full strength every time. What is missing is a refusal.
++
++**This phase was rewritten after its first premise was falsified — see § Challenge
++pass.** The first version had the detector read the unsettled CI state out of the
++transcript. `readTranscriptTail` cannot supply it, twice over:
++`_toolCalls` keeps only *name, shell command and target path*
++(`turn_end_gate_hook.ts:646-660`), so a tool **result** — where the pending count
++lives — is never read; and `toolCalls` is **reset at every genuine user prompt**
++by design (`:641-645`, *"a verification from three turns ago cannot vouch for an
++edit made now"*), while the completion claim almost always lands in a later turn
++than the poll. Building it as first written would have required reversing an
++invariant that file argues for in prose and pins in tests.
++
++The producer already exists instead. `before_complete_hook.ts` runs on
++`post_tool_use` and already records observable verification evidence into
++`agents/runtime/state/verify-before-complete.json` (`hook_manifest.yaml:61-69`),
++and `turn-end-gate` is already declared `severity: blocking`, `fail_closed: false`
++(`:460-464`) with the delivered reply available as `lastAssistant`. So the split
++is producer/consumer across two concerns that are both already bound.
++
++- [x] **1.1** Producer: extend `before_complete_hook.ts` to record whether the
++  most recent CI read was **settled**, from the Bash tool results it already sees
++  on `post_tool_use`. It reuses the **existing** `pendingCount` /
++  `isVacuousOutput` predicates from `conformance_scan.ts` rather than a new
++  parser, so the gate and the scan cannot drift.
++  `verify:` `npx vitest run tests/scripts/hooks/before_complete_hook.test.ts`
++- [x] **1.2** Consumer: add a `completion-claim-without-settled-ci` detector to
++  `turn_end_gate_hook.ts`. It fires only when BOTH hold: `lastAssistant` carries a
++  completion claim, and the recorded CI state is unsettled. No network call and no
++  transcript re-read — a `gh` invocation per turn-end would put a round-trip on
++  the hot path (`road-to-hook-latency-repair` exists for that reason). Record the
++  rejected alternative in the docstring.
++  `verify:` `npx vitest run tests/scripts/turn_end_gate_hook.test.ts`
++- [x] **1.2b** State the staleness asymmetry that makes cross-turn state
++  legitimate here where the reader refuses it for verification: a stale
++  *positive* ("I verified") wrongly vouches, a stale *negative* ("CI was
++  unsettled") only ever refuses more often. The invariant is preserved, not
++  bypassed.
++  `verify:` `grep -ci "asymmetr" src/scripts/hooks/turn_end_gate_hook.ts`
++- [x] **1.3** Fail-open on every internal error, and fire **at most once per
++  turn**. A turn-end gate that can wedge the loop is worse than the class it
++  catches.
++  `verify:` `npx vitest run tests/scripts/turn_end_gate_hook.test.ts`
++- [x] **1.4** Negative tests that must PASS (not block): a completion claim after
++  a settled green read; a completion claim in a session that never touched CI; an
++  unsettled CI read with no completion claim.
++  `verify:` `npx vitest run tests/scripts/turn_end_gate_hook.test.ts`
++- [x] **1.5** Register the same detector as a fifth check in
++  `conformance_scan.ts` so the class has a rate before and after, measured by the
++  same predicate the gate uses.
++
++  **Measured, and it is the finding that outranks the rest of this roadmap.**
++  The fifth check reads **17** over the same 28 sessions — against 14 counted by
++  hand in the reading half, two independent instruments agreeing within margin on
++  a class nobody had measured. Its era split is the opposite of every other
++  check's:
++
++  | check | pre-carrier | post-carrier | sessions with a hit |
++  |---|---|---|---|
++  | the four pre-existing | 155 / 657 turns | **0** / 1 697 | 3 of 28 |
++  | `completion-claim` | 2 / 657 (0.30 %) | **15** / 1 727 (0.87 %) | **14 of 28** |
++
++  So the round's thesis survives with one named exception: the four mechanised
++  checks are clean, and the class that was never mechanised is the live one —
++  diffuse rather than concentrated, higher after the carrier than before, and
++  carrying two hits from the day of this audit.
++  `verify:` `./scripts-run src/scripts/conformance_scan --limit 30 --store "$HOME/.claude/projects/-Users-mathiasberg-projects-galawork-galawork-packages-event4u-agent-config"`
++
++## Phase 2 — `block_no_verify` fails closed on ordinary prose
++
++Reproduced live on 2026-08-12, on this branch:
++
++```
++$ block_no_verify --command "git commit -F - <<'EOF'
++fix(x): respect the maintainer's call
++EOF"
++BLOCKED — command parse failed (shlex) on a git-containing command — fail-closed
++```
++
++That command bypasses nothing. `shlex` has no heredoc model, so an apostrophe
++inside a heredoc **body** aborts the parse, and the fail-closed branch then
++blocks a valid commit. Four sessions hit it (`88d229d6`, `bddced99`, `8824e2e9`,
++`3d50d0df`), each paying the same workaround — write the message to a file. The
++guard's own error text documents the workaround instead of fixing the cause.
++
++`grep -n` no longer trips it — probed and **already fixed**, so that half of the
++finding is retired rather than carried.
++
++- [x] **2.1** Threat-model first (`security-sensitive-stop`): this guard blocks
++  irreversible operations, so write down what an attacker could hide in a
++  heredoc body before touching the parser.
++  `verify:` `grep -ci "threat model" src/scripts/hooks/block_no_verify.ts`
++- [x] **2.2** Excise heredoc bodies before `shlex`, **and re-apply the guard
++  recursively to each shell-consumed body**, so a body that is itself a command
++  (`bash <<EOF … git commit --no-verify … EOF`) blocks while a commit MESSAGE
++  naming the flag stays data.
++
++  **Correction to this step's own premise, measured before the edit.** It read
++  "excising without the recursive pass would *trade* a false positive for a real
++  bypass — the exact trade round 6 had to repair". There is no trade: the bypass
++  **pre-existed**. Probed on this branch at the unmodified code, both directions
++  were already broken —
++
++  | vector | before | after |
++  |---|---|---|
++  | `git commit -F - <<'EOF' … maintainer's … EOF` | **BLOCKED** (false positive) | passes |
++  | `bash <<EOF … git commit --no-verify … EOF` | **ALLOWED** (real bypass) | blocks |
++
++  because the stripped string fed only the substitution scan while `shlexSplit`
++  still received the raw command. One change moves both rows.
++  `verify:` `npx vitest run tests/scripts/hooks/block_no_verify.test.ts`
++- [x] **2.3** Pin the matrix as tests, both directions: `git commit -n` blocks ·
++  `git commit --no-verify` blocks · `bash <<EOF … --no-verify … EOF` blocks ·
++  a shell consumer through a path prefix (`/bin/sh`) and an `env` prefix blocks ·
++  the apostrophe-in-heredoc commit **passes** · a commit message *naming*
++  `--no-verify` passes · a bare mention of `bash` in a message passes ·
++  an unterminated heredoc still fails closed · `grep -n` passes ·
++  `[ -n "$X" ]` passes.
++
++  **Attribution corrected:** round 6's `echo $'don\'t' && npm publish` vector is
++  **not** this guard's — `npm publish` is a `BLOCK_OP` of
++  `block_unauthorized_git`. Verified there instead (`commandOp` → `publish`), and
++  that guard is untouched by this phase.
++  `verify:` `npx vitest run tests/scripts/hooks/block_no_verify.test.ts`
++- [-] **2.5** A SECOND false positive in the same guard, found by hitting it while
++  executing this roadmap, and deliberately **not fixed here**. The guard blocked
++  `git show HEAD:file > /tmp/x; grep -n foo /tmp/x` — a read-only command with no
++  bypass in it. Mechanism, isolated by probe:
++
++  | command | exit |
++  |---|---|
++  | `git show … > /tmp/x; grep -n foo /tmp/x` (no space before `;`) | **1 — blocked** |
++  | `git show … > /tmp/x ; grep -n foo /tmp/x` (spaced) | 0 — passes |
++
++  `;` IS in `_SHELL_SEPARATORS`, but `_split_subcommands` compares **whole
++  tokens**, and `shlexSplit` tokenises `/tmp/x;` as one word — so no boundary is
++  seen, `grep`'s `-n` is read as a flag of the `git` in command position.
++
++  **The obvious fix is a bypass, which is why it stays open.** Splitting tokens on
++  embedded separators after tokenisation cannot distinguish a quoted `;` from an
++  unquoted one, because shlex has already dropped the quotes:
++  `git commit -m "a;b" --no-verify` would split into `[git commit -m a]` and
++  `[b --no-verify]`, the second group has no `git`, and `--no-verify` stops being
++  flagged — a false NEGATIVE on the exact flag the guard exists for. A correct fix
++  makes `shlexSplit` report separator boundaries it saw unquoted, which is a change
++  to the tokeniser and larger than this phase. Filed in § Classes deliberately NOT
++  fixed with that reason.
++  `verify:` `./scripts-run src/scripts/hooks/block_no_verify --command 'git show HEAD:f > /tmp/x ; grep -n foo /tmp/x'`
++- [x] **2.4** Replace the workaround-documenting error text with one that names
++  the real cause. A terminated heredoc can no longer reach the fail-closed branch,
++  so prescribing "write the message to a file" there described a cause that no
++  longer exists; what reaches it now is quoting bash itself refuses.
++  `verify:` `npx vitest run tests/scripts/hooks/block_no_verify.test.ts`
++
++## Phase 3 — The CI↔local parity gate does not know about `preflight`
++
++`check_ci_local_parity.ts` derives its local side from the transitive closure of
++`task ci` + `task consistency` plus the pre-push hook (`LOCAL_ROOTS = ['ci',
++'consistency']`). And `task ci` **includes** `preflight` as one of its ~30 steps
++(`Taskfile.yml:87`). So the gate answers *"does `task ci` mirror CI"* — while the
++pass an agent is actually told to run before pushing is `task preflight`, a
++**deliberate subset** of it.
++
++That makes the whole set `CI ∩ task ci \ preflight` invisible to the parity gate
++by construction, and that intersection is exactly where the corpus's "green
++locally, red remotely" cycles came from. `preflight`'s own docstring asserts
++*"Parity with CI is enforced by `task check-ci-local-parity`"* — an overclaim of
++the same false-authority class this audit found elsewhere, since the gate never
++looked at `preflight`.
++
++Note what is NOT proposed: making `preflight` equal CI. It is a subset on
++purpose (its docstring excludes `check_enforcement_coverage` at a measured 30.7 s
++because "a pre-push gate that doubles the hook teaches people to skip it"). The
++deliverable is that the subset becomes **declared and counted** instead of implied:
++
++| measured case | session |
++|---|---|
++| Thin-Root char cap runs only in a CI job, not in preflight | `0d8e4064` |
++| the ratchet any new `src/scripts/lint_*` file trips lives in the Node-Tests shard preflight skips | `05291630` |
++| `build_proof` / derived-page freshness is not in the local set | `9502795e` |
++
++- [x] **3.1** Derive `preflight`'s closure as a **third** dimension alongside the
++  existing `ci` / `consistency` roots — not a replacement, because `ci ⊃ preflight`
++  and the two answer different questions. Pinned by a new test file: the gate had
++  **none**, so the two pre-existing directions are now covered too.
++  `verify:` `npx vitest run tests/scripts/check_ci_local_parity.test.ts`
++- [x] **3.2** Report the `CI ∩ ci \ preflight` count. A number here is the
++  deliverable, not an adjective. **Measured: `preflight` reaches 22 gates; 221
++  CI-enforced gates are locally reachable and not in it.** Printed on every path,
++  pass or fail.
++  `verify:` `./scripts-run src/scripts/check_ci_local_parity`
++- [x] **3.3** Declare the finding in `src/config/ci-local-parity.yml`.
++
++  **Departure from this step as written, forced by 3.2's number.** It said
++  "declare each entry of that set with a reason". 221 per-entry declarations would
++  be precisely the allowlist-growth antipattern `autonomous-execution` caps at 20
++  ("past that count the list is the problem"). So the gap is declared as a
++  **policy plus its measured size** in the manifest header and left report-only —
++  the subset is deliberate, and failing on it would demand `preflight` grow into
++  `ci`, the opposite of its author's decision.
++
++  One real per-entry declaration did land, and it was not mine: the gate was
++  **red on `origin/main`** with `roadmap_progress_hook` undeclared local-only,
++  since main's `fd8c56512` pointed the pre-commit hook at the live script path
++  and thereby made it visible to this checker. A pre-commit hook script cannot run
++  in any workflow, so the declaration is correct on the merits rather than a
++  suppression — its committed-tree equivalent (`roadmap:progress-check`) already
++  runs remotely. Gate now exits 0.
++  `verify:` `./scripts-run src/scripts/check_ci_local_parity`
++- [x] **3.4** Correct `preflight`'s docstring: it does not have parity with CI and
++  is not meant to. The old line — *"Parity with CI is enforced by
++  `task check-ci-local-parity`"* — named an authority nothing held, since that
++  checker compares CI against `task ci`, which INCLUDES preflight.
++  `verify:` `grep -ci "does not have parity" taskfiles/ci-fast.yml`
++
++## Phase 4 — A line-keyed allowlist produces false reds and rots silently
++
++`lint_framework_leakage.ts` indexes its allowlist by line number
++(`_allowlist_index(rel, h.line, allowlist, h.snippet)`). Two consequences, both
++measured in one PR (`4059ea0c`):
++
++- an unrelated insertion shifts the line and the suppression stops matching —
++  it fired twice in the same PR, the second time triggered by the review fixes
++  themselves (*"Die Zeile ist erneut gewandert (201 → 206) — dieselbe Falle,
++  zweimal in einem PR"*);
++- **8 of 39 exceptions suppress nothing** — three point at lines that do not
++  exist, one at a file 32 lines shorter than the number it names.
++
++> **THIS WHOLE PHASE IS RETIRED — the defect was already repaired at HEAD, and
++> the roadmap's premise was a finding read without re-deriving its consequence.**
++> The finding came from session `4059ea0c` (2026-08-12) — the session that FIXED
++> it. Measured on this branch before writing any code:
++>
++> - `_allowlist_index` matches on `entry.anchor` against the hit's line TEXT, and
++>   a numeric `lines` entry is rejected by `validate_allowlist` before the run.
++>   The keying is already content-based; the function's own docstring records the
++>   migration and says three entries "had rotted under position keys".
++> - `./scripts-run src/scripts/lint_framework_leakage` exits **0** and emits no
++>   "exemption suppressed nothing this run" line. The 8-of-39 dead exceptions are
++>   repaired.
++>
++> What I actually did wrong: I read `_allowlist_index(rel, h.line, allowlist,
++> h.snippet)` and inferred line-keying from the ARGUMENT, without reading the
++> body — where `line_no` is now a dead parameter used by nothing. That is this
++> repo's own recorded lesson ("a step citing `file:line` still needs the
++> consequence re-derived") applied to me.
++>
++> One residue, noted not fixed: `line_no` is an unused parameter. Removing it
++> changes the signature and every call site for zero behaviour, in a file this
++> diff otherwise does not touch — pre-existing debt under `minimal-safe-diff`,
++> surfaced here rather than deleted drive-by.
++
++- [-] **4.1** Re-key the allowlist on the **snippet** — already true at HEAD.
++  `verify:` `./scripts-run src/scripts/lint_framework_leakage`
++- [-] **4.2** Repair the 8 dead exceptions — already repaired; the gate emits no
++  "suppressed nothing" line.
++  `verify:` `./scripts-run src/scripts/lint_framework_leakage`
++- [-] **4.3** Make the "suppressed nothing" warning authoritative — already is,
++  because the keys are already content anchors.
++  `verify:` `./scripts-run src/scripts/lint_framework_leakage`
++
++## Phase 5 — The council CLI loses spend and over-reports attendance
++
++Two defects, both measured, both cheap to fix, and both corrupting the mechanism
++this very audit depends on.
++
++- [x] **5.1** Validate `--output` **before** the first billable call. Measured
++  cost: three sessions, ~$1.30 (`291f827b` ~$0.42, `9502795e` $0.44,
++  `d6154522` and `3d50d0df` one discarded run each). Recorded in memory as a
++  trap for weeks and still paid.
++  `verify:` `./scripts-run src/scripts/council_cli run agents/tmp/council-round7-question.md --output /nope/x.json`
++- [x] **5.2** Count quorum attendance from **non-empty** responses. A 290 s curl
++  timeout returning 0 bytes was reported as `2/2 present` in two sessions
++  (`9fc9ba3e`, `4ac2f7ac`) — a single-voice verdict presented as convergence,
++  on a paid run.
++  `verify:` `npx vitest run tests/scripts/ai_council/quorum.test.ts`
++- [x] **5.3** A degraded run says so in its own output, so a reader cannot mistake
++  attendance for agreement.
++  `verify:` `npx vitest run tests/scripts/ai_council/quorum.test.ts`
++
++## Phase 6 — The instrument that produced the false alarm
++
++Folded down from a standalone phase on the council's verdict: this is measurement
++hygiene, not a behaviour mechanism. It still ships, because the falsifier it
++mis-fired is pre-registered and a mis-firing falsifier escalates to a methodology
++review.
++
++- [x] **6.1** Era guard on the band verdict: refuse a band reading whose corpus
++  spans a carrier change, the same way the existing `BAND_MIN_TURNS` floor
++  refuses one whose corpus is too small.
++  `verify:` `npx vitest run tests/scripts/conformance_scan.test.ts`
++- [x] **6.2** Report both denominators — all assistant turns AND turns under a
++  German pin — and name which one the band's own three reference values used.
++  `verify:` `./scripts-run src/scripts/conformance_scan --limit 30 --store "$HOME/.claude/projects/-Users-mathiasberg-projects-galawork-galawork-packages-event4u-agent-config"`
++- [x] **6.3** Commit the probes as real scripts, so round 8 reproduces the numbers
++  instead of re-deriving them.
++
++  **Two of the four, not four**, and the reason is 6.1/6.2: the era split and the
++  pin denominator are now computed INSIDE the scan, so shipping them as separate
++  scripts would be two ways to derive one number — the drift this roadmap keeps
++  finding elsewhere. Committed: `probe_session_canary.ts` (25/28, 89.3 %) and
++  `probe_promissory_closing.ts` (1/120 narrow, 2/120 loose). Both import the
++  scan's own predicates rather than copying them — the canary probe's first
++  version had its own harness list and reported 24/28 for a 25/28 corpus.
++  `verify:` `./scripts-run src/scripts/probe_session_canary --limit 30`
++- [x] **6.4** Record in the scan's own output that ask-shape, session-canary,
++  promissory closings and checkbox batching remain unmeasured — with the two of
++  them this round measured by probe, and by which probe.
++  `verify:` `./scripts-run src/scripts/conformance_scan --limit 30 --store "$HOME/.claude/projects/-Users-mathiasberg-projects-galawork-galawork-packages-event4u-agent-config"`
++
++## Phase 7 — Honest downgrades
++
++Every enforcement claim this audit falsified.
++
++- [x] **7.1** `session-canary`'s pre-registered mechanism is **undecidable as
++  written**. Its own text proposes "a check at delivery that rejects a task-start
++  reply carrying no greeting". A *task* start is recorded nowhere in a
++  transcript, so the check cannot be built as specified. What IS decidable is the
++  per-**session** instance, measured here at 96.0 % post-carrier (24 of 25).
++  Record both: the per-session half as measured-and-good (25/28 overall,
++  **24/25 = 96.0 % post-carrier**, via the committed probe), the per-task half as
++  not-mechanisable-today, and delete the implication that the proposal is merely
++  unbuilt.
++  `verify:` `grep -c "UNDECIDABLE as written" src/rules/session-canary.md`
++- [x] **7.2** `check_references` excludes `agents/roadmaps/archive` and
++  `agents/roadmaps/skipped` by construction, so the **530 dead relative links
++  across 147 of 466 archived roadmaps** cannot be seen by the only checker that
++  would see them. Record the measured count and the exclusion as a known,
++  unrepaired gap — the repair is a bulk edit and is out of this scope.
++  `verify:` `grep -c "agents/roadmaps/archive" src/scripts/check_references.ts`
++- [x] **7.3** Record the four already-fixed premises this audit falsified while
++  screening, so nobody re-opens them: `grep -n` no longer trips
++  `block_no_verify`; the session-claim register was fixed by PR #1284 (merged
++  2026-08-12); `check_ci_local_parity` already exists and derives both sides; the
++  `block_unauthorized_git` raw-string match is segment-anchored now.
++  `verify:` `grep -c "1284" agents/roadmaps/road-to-conformance-round7.md`
++
++## Classes deliberately NOT fixed
++
++| Class | Measured | Why not fixed here |
++|---|---|---|
++| `language-and-tone` | 152 violations, **all** pre-carrier; 0 of 1 015 German-pinned post-carrier turns | The mechanism works. Nothing to build. |
++| promissory closings | 1 of 163 hand-back turns = **0.6 %** (looser predicate: 1.2 %) | **Already mechanised** — `turn-end-gate` ships a blocking `detectPromissory`. The residual 0.6 % is evidence the blocking-carrier prior holds again, not evidence the class is rare. Nothing to build; the first draft of this row said the opposite and was wrong. |
++| `user-interaction` trailing free-text ask | ~11 findings, 4 sessions | Real and unmeasured, but the discriminator ("is this an ask?") needs judgement, not a predicate. The council agreed it correctly stays advisory. Phase 6.4 records it as unmeasured rather than pretending otherwise. |
++| `commit-policy` remote-state gap | ~9 findings, **both directions** — one session inferred push authorization from a spent one-shot, another refused and the user repeated *"behebe die merge konflikte"* verbatim | A task whose deliverable IS remote state cannot be completed without a push. That is a **kernel rule** text change → own PR + ≥24 h soak (`scope-control`). Filed as a blocker below, not fixed here. |
++| four shipped CLI verbs as silent no-ops | `doctor`, `migrate`, `refresh`, `session:recycle` — zero bytes, exit 0, on every installed copy | Touches the bundle build path, whose known trap is that building it in a worktree poisons it. Needs a non-worktree session. |
++| `watch_pr_checks` accepting "no checks reported" | one production release (merge → tag → npm publish) completed with zero checks ever run | The release path can only be verified by a real release → spend + human gate. |
++| ratchets charging trunk accretion to the branch | 3 findings (`eager_rule_load`, preamble ratchet ×2) | The re-anchor is a maintainer call by the budget files' own rule. |
++| `block_no_verify` whitespace-dependent separators (§ 2.5) | probed live: `…/tmp/x; grep -n …` blocks, the spaced form passes | The naive fix — splitting tokens on embedded separators — introduces a false NEGATIVE on `--no-verify` itself, because shlex has already dropped the quotes that would distinguish data from a separator. Needs a tokeniser change that reports unquoted boundaries. Recorded with the probe so the next author does not ship the naive version. |
++| harness / spend-limit interruptions | ~8 findings, 5 sessions, each costing the user a verbatim repeat | Not this package's surface. |
++
++## Risk Register
++<!-- risk-review: v1 | reviewed: 2026-08-12 | reviewer: claude/host -->
++
++| Rank | Item | Risk type | Description | Mitigation | Anchored under |
++|------|------|-----------|-------------|------------|----------------|
++| 1 | Phase 2 trades a false positive for a real bypass | implementation | Excising heredoc bodies before parsing is exactly the shape of round 6's regression: it removed a false positive and opened two false negatives on irreversible operations. | **Retired — the risk was measured and it inverted.** The bypass PRE-EXISTED: probed at the unmodified code, `bash <<EOF … --no-verify … EOF` was already ALLOWED, so the change closes a hole rather than opening one. What survives of this row is the discrimination it forced: a body is scanned only when a SHELL consumes it, pinned by 2.3's message-naming-the-flag and bare-mention-of-bash cases, or the round-5 false positive returns in a new shape. | Phase 2 |
++| 2 | Phase 1 wedges the turn loop | implementation | A blocking check at turn-end that errors, hangs, or fires repeatedly makes every reply undeliverable — worse than the class it catches. | 1.3 caps it at one fire per turn and fails open on any internal error; 1.2 keeps every network call off the path; 1.4 pins three negative cases that must pass. | Phase 1 |
++| 3 | Phase 1's detector reproduces the defect it measures | implementation | The first version of this audit's language detector inherited the very defect it was measuring and reported 303 instead of 626. A completion detector built on a fresh parser could do the same. | 1.1 reuses `pendingCount` / `isVacuousOutput` from `conformance_scan.ts` rather than writing a new parser, and 1.5 registers the same predicate as the scan's fifth check, so gate and measurement cannot disagree. | Phase 1 |
++| 4 | Phase 4's re-key silently drops live suppressions | product | Moving from line keys to content keys can leave an entry matching nothing, which turns a suppressed pre-existing hit into a new red. | 4.2 repairs the 8 known-dead entries first and 4.3 makes the existing "suppressed nothing" warning authoritative, so a dropped suppression is reported rather than discovered in CI. | Phase 4 |
++| 5 | Phase 3 declares drift instead of removing it | product | Adding `preflight` as a root and then declaring everything it misses satisfies the gate while leaving the "green locally, red remotely" cycles intact. | 3.2 makes the drift **count** the deliverable, and 3.3 requires a per-entry reason — a reason a reader can reject. Closing the drift itself is deliberately not claimed by this roadmap. | Phase 3 |
++
++## Blockers
++
++### blocker: commit-policy-remote-state-deliverable
++- **Status:** open
++- **Owner:** maintainer
++- **Blocks:** nothing in Phases 1-7. It is listed because the class is measured
++  (~9 findings, both directions) and must not be lost, not because it gates a
++  step here.
++- **What to do:** decide whether an instruction whose deliverable IS remote state
++  ("behebe die merge konflikte" on an open PR, "fixe die ci") authorizes the push
++  that realizes it. The corpus contains both readings and a user turn repeating
++  the instruction verbatim after the conservative one. `commit-policy` is a
++  kernel rule, so the edit is its own PR with ≥24 h spacing
++  (`scope-control` § Kernel-rule edits) and is not agent-authorable.
++- **Resolved when:** `commit-policy` § One-shot authorization states the
++  remote-state case explicitly, in either direction, and the round-7 finding is
++  cited in the change.
++- **Carried forward, so archiving this roadmap does not bury it:**
++  `road-to-conformance-round7-followup.md` (`status: draft`) holds this decision
++  with its four measured sessions. A Blockers entry is not a `[~]` step, so Iron
++  Law 3's mechanical check would not have caught the loss — the promotion is
++  deliberate, not automatic.
++
++## Acceptance criteria
++
++- [x] The four mechanised checks still read **0** over the post-carrier era after
++  every change in this roadmap.
++- [x] `conformance_scan` refuses a band verdict over an era-spanning corpus and
++  reports both denominators.
++- [x] `block_no_verify` passes the apostrophe-in-heredoc commit and blocks every
++  round-6 vector, both directions pinned as tests.
++- [x] `check_ci_local_parity` derives `preflight` and its drift set is either
++  empty or declared with reasons.
++- [x] `lint_framework_leakage`'s allowlist survives a line shift, and zero
++  exceptions suppress nothing.
++- [x] `council run` cannot bill before `--output` is validated, and quorum
++  attendance counts non-empty responses only.
++- [x] Every falsified enforcement claim is downgraded in the artefact that made
++  it, and every declined class carries its measured reason.
+diff --git a/agents/roadmaps/road-to-conformance-round7-followup.md b/agents/roadmaps/road-to-conformance-round7-followup.md
+new file mode 100644
+index 0000000000000000000000000000000000000000..469d39eb2bb6fc045ec3f80b8205e07cfdd78726
+--- /dev/null
++++ b/agents/roadmaps/road-to-conformance-round7-followup.md
+@@ -0,0 +1,70 @@
++---
++complexity: lightweight
++status: draft
++parent_roadmap: road-to-conformance-round7
++---
++
++# Road to conformance round 7 — Follow-up
++
++**Goal.** Hold the one decision round 7 deliberately did not take, so it is not
++lost when the parent archives, and so no agent takes it on its own authority.
++
++## Context
++
++`agents/roadmaps/archive/road-to-conformance-round7.md` closed all 31 of its
++steps. Its Blockers section carried exactly one item, and that item blocked
++**none** of them — it is a kernel-rule question the round measured but is not
++allowed to answer.
++
++This roadmap is `status: draft`: hidden from the dashboard, not executable, and
++waiting on a human. It exists because archiving the parent with an unresolved
++maintainer decision inside it would bury the decision — the same lost-information
++failure `roadmap-progress-sync` Iron Law 3 exists to prevent, in the one shape its
++mechanical check does not see (a Blockers entry is not a `[~]` step).
++
++## The decision — does a remote-state deliverable authorize the push that realizes it?
++
++Round 7 measured this class at ~9 findings across the corpus, and — the part that
++makes it a genuine question rather than a defect — **in both directions**:
++
++- `798ed833` inferred authorization and pushed: *"Du hast zweimal gesagt, die
++  Konflikte sollen weg — auf einem PR heißt das den Push; ich lese das als
++  Freigabe."* The second "yes" it counted was a spent one-shot from the previous
++  push.
++- `88d229d6` did the opposite, stopped at the push gate, and the user repeated the
++  instruction verbatim: *"behebe die merge konflikte"* — already given one turn
++  earlier. That session's own retro states the trap: *"„Konflikte beheben" bei
++  einem offenen PR ist ohne Push nicht erreichbar."*
++- `9502795e` read *"fixe die ci"* as authorization and said so afterwards;
++  `7c398073` read the same shape as spent and held.
++
++So four sessions, three readings, and the corpus contains a user turn confirming
++that the conservative reading left the task incomplete. A task whose deliverable
++IS remote state cannot be completed under a local-only reading, and the rule as
++written does not say which way that cuts.
++
++## Why an agent may not decide it
++
++`commit-policy` is one of the **9 locked kernel rules**
++(`docs/contracts/kernel-membership.md` § 4). A kernel edit is its own PR with
++≥ 24 h spacing (`scope-control` § Kernel-rule edits), and the `block-kernel-rule-writes`
++PreToolUse guard makes it agent-impossible by construction — not merely
++discouraged.
++
++## What would have to be true to close this
++
++- [ ] A stated position on whether an instruction whose deliverable is remote
++  state ("behebe die merge konflikte" on an open PR, "fixe die ci") authorizes
++  the push that realizes it — in either direction, as a maintainer judgement.
++- [ ] If YES: `commit-policy` § One-shot authorization names the remote-state case
++  explicitly, in its own PR, citing round 7's four sessions.
++- [ ] If NO: the same section says so explicitly, so the conservative reading
++  stops looking like an omission — and the round-7 finding is cited as the reason
++  the question was asked rather than left implied.
++
++## Non-goals
++
++- Deciding it here. The whole point of this file is that it is not decidable by
++  the party writing it.
++- Re-measuring the class. Four sessions with verbatim quotes are in the parent;
++  a fifth would not change the shape.
+diff --git a/dist/agent-src/rules/session-canary.md b/dist/agent-src/rules/session-canary.md
+index 933f670e869736fb188367593c5ddb4bf6ed5a1e..b4479c7b304d5df9e84b3cea65fa25c5631f03bf 100644
+--- a/dist/agent-src/rules/session-canary.md
++++ b/dist/agent-src/rules/session-canary.md
+@@ -118,6 +118,29 @@ refused turn-end continues in the same turn) that rejects a task-start reply
+ carrying no greeting. Proposed, not shipped; until it is, this obligation is
+ model-carried in practice, whatever the frequency join reports.
+ 
++**Round 7 downgrade: that proposed mechanism is UNDECIDABLE as written, and the
++obligation splits into a measured half and an unmeasurable one.** A *task* start
++is recorded nowhere in a transcript — there is no task event on any host, and
++`user-interrupt-priority`'s continuation/clarification/interrupt distinction is a
++judgement, not a field. So a delivery check "that rejects a task-start reply" has
++no way to know a task started. The proposal is not merely unbuilt; as specified it
++cannot be built, and saying "proposed, not shipped" implied otherwise.
++
++What IS decidable is the per-**session** instance, and it was measured rather than
++asserted (`./scripts-run src/scripts/probe_session_canary`, 30 sessions,
++2026-08-12): the opening greeting is present in **25 of 28** sessions carrying
++assistant prose (89.3 %), and in **24 of 25** post-carrier (96.0 %). Of the three
++misses, two predate the carrier (2026-07-21, 2026-07-29) and one is a session whose
++first thirty turns were tool calls.
++
++Both halves of that are load-bearing. The carrier works exactly where it has a
++slot — `session_start` — which is why the session-scope figure is high; and the
++24-of-29 task-start figure above is not contradicted by it, because the two count
++different events. The honest statement is therefore: **session-scope compliance is
++measured and good; task-scope compliance is unmeasured and unmeasurable with
++today's transcript, and no gate can change that until a task boundary is recorded
++somewhere.** Do not read the 96 % as covering the obligation as a whole.
++
+ **The wrong-name half needs nothing, and that is worth stating.** The beat
+ already carries the resolved value — `build_canary_reminder` emits
+ `Canary active for "<name>"`, and the hook no-ops when no layer resolves a name —
+diff --git a/src/config/ci-local-parity.yml b/src/config/ci-local-parity.yml
+index a1ce78cbf91e861aa54dc80d5706bb2abec7a983..2381f208aa0ed3086fdc10df4ee385fb738784d9 100644
+--- a/src/config/ci-local-parity.yml
++++ b/src/config/ci-local-parity.yml
+@@ -20,6 +20,31 @@
+ # plus the checker makes each direction a declared, reviewable choice instead of an
+ # accident.
+ #
++# THE THIRD DIMENSION — `preflight`, added round 7, REPORT-ONLY
++# ------------------------------------------------------------
++# The two directions above compare CI against the local MIRROR (`task ci` +
++# `task consistency` + the pre-push hook). `task ci` INCLUDES `preflight`, so
++# neither direction can see the gap that actually costs push cycles: the pass a
++# contributor is TOLD to run before pushing is `task preflight`, a deliberate
++# subset of `ci`.
++#
++# Measured 2026-08-12: preflight reaches **22** gates; **221** CI-enforced gates
++# are locally reachable and NOT in preflight. Round 7 traced three "green locally,
++# red remotely" cycles to that set (the Thin-Root char cap, the ratchet in the
++# Node-Tests shard, derived-page freshness).
++#
++# It is REPORT-ONLY, and deliberately not a declared list, for two reasons:
++#   1. The subset is intentional. preflight's own docstring excludes
++#      check_enforcement_coverage at a measured 30.7 s because "a pre-push gate
++#      that doubles the hook teaches people to skip it". Failing on the gap would
++#      demand preflight grow into ci — the opposite of that decision.
++#   2. 221 per-entry declarations would BE the allowlist-growth antipattern the
++#      `autonomous-execution` rule caps at 20: past that count, the list is the
++#      problem and not the exemption.
++#
++# What the report removes is the IMPLICATION that a green preflight predicts a
++# green CI. It does not, and now it says so on every run.
++#
+ # THE CONTRACT
+ # ------------
+ # The checker DERIVES both sides — it never trusts a hand-maintained list of gates:
+@@ -152,6 +177,18 @@ ci_only:
+ # worth remote enforcement, OR it should simply be added to a workflow. Prefer
+ # adding it: a local-only gate is the direction that let real defects merge.
+ local_only:
++  - id: roadmap_progress_hook
++    class: git-hook-scoped
++    reason: >
++      A git PRE-COMMIT hook script, invoked by the installed hook that
++      `install-hooks.sh` writes. CI has no commit to intercept — the commit has
++      already happened by the time a workflow runs — so there is no remote
++      equivalent to wire it into. Undeclared since main's `fd8c56512`
++      ("point the pre-commit roadmap gate at the live script path"), which moved
++      the hook onto the real script path and thereby made it visible to this
++      checker for the first time; it turned the gate red on the trunk, where
++      round 7 found it. Declared rather than wired: the committed-tree equivalent
++      is `roadmap:progress-check`, which already runs remotely.
+   - id: check_knowledge_sharing
+     class: staging-scoped
+     reason: >
+diff --git a/src/rules/session-canary.md b/src/rules/session-canary.md
+index 933f670e869736fb188367593c5ddb4bf6ed5a1e..b4479c7b304d5df9e84b3cea65fa25c5631f03bf 100644
+--- a/src/rules/session-canary.md
++++ b/src/rules/session-canary.md
+@@ -118,6 +118,29 @@ refused turn-end continues in the same turn) that rejects a task-start reply
+ carrying no greeting. Proposed, not shipped; until it is, this obligation is
+ model-carried in practice, whatever the frequency join reports.
+ 
++**Round 7 downgrade: that proposed mechanism is UNDECIDABLE as written, and the
++obligation splits into a measured half and an unmeasurable one.** A *task* start
++is recorded nowhere in a transcript — there is no task event on any host, and
++`user-interrupt-priority`'s continuation/clarification/interrupt distinction is a
++judgement, not a field. So a delivery check "that rejects a task-start reply" has
++no way to know a task started. The proposal is not merely unbuilt; as specified it
++cannot be built, and saying "proposed, not shipped" implied otherwise.
++
++What IS decidable is the per-**session** instance, and it was measured rather than
++asserted (`./scripts-run src/scripts/probe_session_canary`, 30 sessions,
++2026-08-12): the opening greeting is present in **25 of 28** sessions carrying
++assistant prose (89.3 %), and in **24 of 25** post-carrier (96.0 %). Of the three
++misses, two predate the carrier (2026-07-21, 2026-07-29) and one is a session whose
++first thirty turns were tool calls.
++
++Both halves of that are load-bearing. The carrier works exactly where it has a
++slot — `session_start` — which is why the session-scope figure is high; and the
++24-of-29 task-start figure above is not contradicted by it, because the two count
++different events. The honest statement is therefore: **session-scope compliance is
++measured and good; task-scope compliance is unmeasured and unmeasurable with
++today's transcript, and no gate can change that until a task boundary is recorded
++somewhere.** Do not read the 96 % as covering the obligation as a whole.
++
+ **The wrong-name half needs nothing, and that is worth stating.** The beat
+ already carries the resolved value — `build_canary_reminder` emits
+ `Canary active for "<name>"`, and the hook no-ops when no layer resolves a name —
+diff --git a/src/scripts/before_complete_hook.ts b/src/scripts/before_complete_hook.ts
+index e82108d80f61085ce4d374e97897f989b902b789..4cabd213f94bdf49e630bc1153e3d7abb2e9633c 100644
+--- a/src/scripts/before_complete_hook.ts
++++ b/src/scripts/before_complete_hook.ts
+@@ -113,6 +113,14 @@ function _empty_state(): StateDict {
+     verified_this_turn: false,
+     ci_saw_pending: false,
+     nonevidence_this_turn: 0,
++    // Round 7 § Phase 1 — the last CI read, SESSION-scoped on purpose. Every
++    // other counter here is turn-scoped because a stale POSITIVE would wrongly
++    // vouch ("I verified"). This one is a NEGATIVE ("CI was not settled"), and a
++    // stale negative only ever refuses more often — so surviving the turn
++    // boundary preserves the freshness invariant rather than bypassing it. It
++    // has to survive it: the measured failure is a completion claim in a LATER
++    // turn than the poll it rests on.
++    ci_last: null,
+     checked_at: _now(),
+   };
+ }
+@@ -338,6 +346,16 @@ function _update(state: StateDict, event: string, envelope: StateDict): StateDic
+         } else {
+           counts = false; // unrecognised or unreadable — never read as settled
+         }
++        // Round 7 § 1.1 — the session-scoped negative the turn-end consumer
++        // reads. `settled` is true ONLY for a readable zero-pending result; an
++        // unreadable shape (`pending === null`, which includes "no checks
++        // reported") is NOT a settle, same discrimination `counts` makes above.
++        state["ci_last"] = {
++          at: _now(),
++          command: cmd.slice(0, 512),
++          pending,
++          settled: pending === 0,
++        };
+       }
+ 
+       state["last_verification"] = {
+diff --git a/src/scripts/check_ci_local_parity.ts b/src/scripts/check_ci_local_parity.ts
+index 0d8eff17942ea769cb817015a002312cabcdbd6c..1b598cd4ac1acf12f5d1051ad305a2f4a6fb63b7 100644
+--- a/src/scripts/check_ci_local_parity.ts
++++ b/src/scripts/check_ci_local_parity.ts
+@@ -38,6 +38,27 @@ const HOOK = path.join(REPO, 'src', 'scripts', 'install-hooks.sh');
+ /** Roots of the local closure. `ci` is the local mirror; the hook is what a push runs. */
+ const LOCAL_ROOTS = ['ci', 'consistency'] as const;
+ 
++/**
++ * Round 7 § Phase 3 — the third dimension, and why two were not enough.
++ *
++ * `task ci` INCLUDES `preflight` (`Taskfile.yml:87`), so the two roots above
++ * answer "does the local MIRROR match CI". The pass an agent is actually told to
++ * run before pushing is `task preflight`, a deliberate subset of `ci` — its own
++ * docstring excludes `check_enforcement_coverage` at a measured 30.7 s because
++ * "a pre-push gate that doubles the hook teaches people to skip it".
++ *
++ * That makes `CI ∩ ci \ preflight` invisible to this gate by construction, and it
++ * is exactly where round 7's measured "green locally, red remotely" cycles came
++ * from: the Thin-Root char cap, the ratchet living in the Node-Tests shard, and
++ * the derived-page freshness check.
++ *
++ * Reported, not gated. The subset is intentional, so failing on it would demand
++ * that `preflight` grow into `ci` — the opposite of what its author decided. What
++ * this dimension removes is the IMPLICATION that a green preflight means CI will
++ * be green.
++ */
++const PREFLIGHT_ROOTS = ['preflight'] as const;
++
+ export interface Declared {
+     id: string;
+     class: string;
+@@ -197,6 +218,14 @@ export interface ParityReport {
+     undeclared_ci_only: string[];
+     undeclared_local_only: string[];
+     stale_declarations: string[];
++    /** Round 7 § Phase 3 — `task preflight`'s own closure. */
++    preflight_gates: string[];
++    /**
++     * `CI ∩ local \ preflight` — gates a push's remote run enforces, the local
++     * mirror covers, and the documented pre-push pass does NOT. Report-only: this
++     * is the measured size of "green locally, red remotely", not a failure.
++     */
++    ci_not_in_preflight: string[];
+ }
+ 
+ export function analyse(repo = REPO, manifest?: Manifest): ParityReport {
+@@ -231,12 +260,21 @@ export function analyse(repo = REPO, manifest?: Manifest): ParityReport {
+         ...[...declaredLocal].filter((g) => localGates.has(g) && ciGates.has(g)),
+     ].sort();
+ 
++    // Round 7 § 3.1 — the third dimension. Derived the same way as the other two,
++    // so it cannot drift from them by construction.
++    const preflightGates = local_closure(PREFLIGHT_ROOTS, tasks);
++    const ci_not_in_preflight = [...ciGates]
++        .filter((g) => localGates.has(g) && !preflightGates.has(g))
++        .sort();
++
+     return {
+         ci_gates: [...ciGates].sort(),
+         local_gates: [...localGates].sort(),
+         undeclared_ci_only,
+         undeclared_local_only,
+         stale_declarations,
++        preflight_gates: [...preflightGates].sort(),
++        ci_not_in_preflight,
+     };
+ }
+ 
+@@ -292,6 +330,19 @@ export function main(argv: readonly string[] = process.argv.slice(2)): number {
+         for (const g of r.stale_declarations) process.stdout.write(`  - ${g}\n`);
+     }
+ 
++    // Round 7 § 3.2 — printed on EVERY path, pass or fail, because the number is
++    // the deliverable. A green parity verdict above says the local MIRROR matches
++    // CI; it says nothing about the pass a contributor is told to run, and reading
++    // the green line as if it did is the implication this block removes.
++    process.stdout.write(
++        `ℹ️   preflight: ${String(r.preflight_gates.length)} gate(s) of the ${String(r.local_gates.length)} local ones; ` +
++            `${String(r.ci_not_in_preflight.length)} CI-enforced gate(s) are NOT in \`task preflight\`.\n` +
++            '    `task ci` INCLUDES preflight, so the parity verdict above cannot see this set.\n' +
++            '    Report-only: the subset is deliberate (see the preflight docstring). A green\n' +
++            '    preflight is therefore not a prediction that CI will be green.\n',
++    );
++    for (const g of r.ci_not_in_preflight) process.stdout.write(`      · ${g}\n`);
++
+     if (!failed) {
+         process.stdout.write(
+             `✅  CI ↔ local parity: ${String(r.ci_gates.length)} CI gate(s), ${String(r.local_gates.length)} local, ` +
+diff --git a/src/scripts/check_references.ts b/src/scripts/check_references.ts
+index 6d42c6ca5cb7d90c2b28e2048c85331fec4d9dca..57698a5c71d8ba0ddd9a0f17c082913a27d60dac 100644
+--- a/src/scripts/check_references.ts
++++ b/src/scripts/check_references.ts
+@@ -57,7 +57,21 @@ function makeBrokenRef(
+ 
+ const SCAN_DIRS = ['dist/agent-src', 'agents'];
+ const SKIP_DIRS = [
+-    'agents/roadmaps/archive', // archived roadmaps have historical refs
++    // Archived roadmaps have historical refs — a link to a file that existed when
++    // the plan was written is not drift, so the exclusion is right on the merits.
++    //
++    // ROUND 7, DOWNGRADE (2026-08-12): it also means this checker is the ONLY thing
++    // that would see a class of real rot, and cannot. Measured: **530 dead relative
++    // links across 147 of 466 archived roadmaps**. The cause is not history — it is
++    // that `archive_completed_roadmaps` moves a file one directory deeper and never
++    // re-depths its outgoing relative links, so a link that resolved before the move
++    // is broken BY the move. Two tools, one silence: the writer does not rewrite, and
++    // the only checker that would notice is scoped away from where it lands.
++    //
++    // Not repaired here: the fix is a bulk edit across 147 files plus a re-depth pass
++    // in the sweep, which is its own change. Recorded so the exclusion is read as a
++    // known gap with a number rather than as coverage.
++    'agents/roadmaps/archive',
+     'agents/runtime/council/sessions', // per-user audit trail (gitignored), captured provider output
+     'agents/runtime/council/responses', // paired council output (gitignored), captured provider output
+     'agents/runtime/council/questions', // design Q&A trail — forward-refs to planned artifacts
+diff --git a/src/scripts/conformance_scan.ts b/src/scripts/conformance_scan.ts
+index f393f9b5002eb4cdf2ac2847ce90e6746bb8dca2..9742e023969bf846e1f8d7c4f3e7fb7206b5e7a6 100644
+--- a/src/scripts/conformance_scan.ts
++++ b/src/scripts/conformance_scan.ts
+@@ -41,6 +41,9 @@ import { isSyntheticPrompt } from "./_lib/prompt_shape.js";
+ import { classifyAuthorization, type GitOp } from "./git_authorization_hook.js";
+ import { BLOCK_OPS, commandOp } from "./hooks/block_unauthorized_git.js";
+ import { isVacuousOutput, isCiPoll, pendingCount } from "./before_complete_hook.js";
++// Round 7 § 1.5 — the SAME predicate `turn-end-gate` refuses on, imported rather
++// than reimplemented, so the measured rate and the gate cannot disagree.
++import { detectCompletionClaim } from "./hooks/turn_end_gate_hook.js";
+ import { isEvaluationPrompt, isSelfScoped, preloadedVerdict } from "./hooks/evidence_independence.js";
+ 
+ /**
+@@ -57,7 +60,12 @@ import { isEvaluationPrompt, isSelfScoped, preloadedVerdict } from "./hooks/evid
+ const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "..");
+ 
+ export interface Violation {
+-  check: "language-pin" | "git-authorization" | "vacuous-evidence" | "evidence-steering";
++  check:
++    | "language-pin"
++    | "git-authorization"
++    | "vacuous-evidence"
++    | "evidence-steering"
++    | "completion-claim";
+   session: string;
+   at: string;
+   detail: string;
+@@ -78,6 +86,17 @@ export interface SessionReport {
+   user_turns: number;
+   assistant_turns: number;
+   violations: Violation[];
++  /**
++   * Round 7 § 6.2 — assistant turns that stood under a GERMAN pin, i.e. the only
++   * turns on which `language-pin` can fire at all. The rate was published over
++   * ALL assistant turns, which understates it by whatever fraction of a corpus is
++   * English-pinned: measured on round 7's own corpus, 1 655 of 2 354 (70 %), and
++   * the same 152 violations read 6.5 % on the old denominator and 9.2 % on this
++   * one — enough to move the band verdict from OUTSIDE to INSIDE.
++   */
++  de_pin_turns: number;
++  /** First entry timestamp, so a reader can era-split without a second pass. */
++  first_at: string;
+ }
+ 
+ /**
+@@ -134,7 +153,7 @@ export const OBSERVED_BAND = { low: 9.1, high: 39.2 } as const;
+  */
+ export const BAND_MIN_TURNS = 1978;
+ 
+-export type BandVerdict = "inside" | "outside" | "corpus-too-small";
++export type BandVerdict = "inside" | "outside" | "corpus-too-small" | "era-spanning";
+ 
+ /** Round-6 Phase 4.5 — the forward-capture record for one scan run. */
+ export interface RateRecord {
+@@ -144,7 +163,19 @@ export interface RateRecord {
+   assistant_turns: number;
+   language_pin: number;
+   rate_pct: number;
+-  /** `outside` is the falsifier firing; `corpus-too-small` is not a reading. */
++  /** Round 7 § 6.2 — the denominator the check can actually fire on. */
++  de_pin_turns: number;
++  /** The same numerator over `de_pin_turns`. Reported beside `rate_pct`, never instead. */
++  rate_pct_de_pin: number;
++  /** Round 7 § 6.1 — the corpus straddles a carrier landing, so no band verdict. */
++  era_spanning: boolean;
++  /** Which carrier, when `era_spanning` — empty otherwise. */
++  era_reason: string;
++  /**
++   * `outside` is the falsifier firing; `corpus-too-small` and `era-spanning` are
++   * not readings — the first is about corpus size, the second about the corpus
++   * containing two different systems.
++   */
+   band: BandVerdict;
+   /**
+    * `null` when the scanned store is NOT this repo's own — `measureDelivered` is
+@@ -157,7 +188,49 @@ export interface RateRecord {
+   delivered_global_tokens: number | null;
+ }
+ 
+-export function bandVerdict(rate_pct: number, assistant_turns: number): BandVerdict {
++/**
++ * Round 7 § 6.1 — dates on which a carrier for a mechanised check LANDED.
++ *
++ * A rate pooled across one of these is not a reading about behaviour; it is a
++ * weighted average of two different systems. The band's falsifier is "a fourth
++ * PROJECT outside the band", and on round 7's first run it fired on the project
++ * that helped DEFINE the band — because the corpus straddled the language-pin
++ * carrier. 23.1 % before it, 0.0 % after, 6.5 % pooled, and the pooled figure was
++ * announced as the falsifier.
++ *
++ * Declared as data with provenance rather than inferred: nothing in a transcript
++ * records which carriers were bound while it was written.
++ */
++export const CARRIER_CHANGES: readonly { at: string; what: string }[] = [
++  { at: "2026-08-07T00:00:00Z", what: "language-pin bound on user_prompt_submit (round 5)" },
++];
++
++/** True when the corpus spans a carrier change, i.e. two systems in one average. */
++export function spansCarrierChange(firstAts: readonly string[]): { spans: boolean; what: string } {
++  const stamps = firstAts.filter((s) => s !== "").sort();
++  if (stamps.length === 0) {
++    return { spans: false, what: "" };
++  }
++  const lo = stamps[0] as string;
++  const hi = stamps[stamps.length - 1] as string;
++  for (const c of CARRIER_CHANGES) {
++    if (lo < c.at && hi >= c.at) {
++      return { spans: true, what: c.what };
++    }
++  }
++  return { spans: false, what: "" };
++}
++
++export function bandVerdict(
++  rate_pct: number,
++  assistant_turns: number,
++  opts: { spansCarrier?: boolean } = {},
++): BandVerdict {
++  // The era guard is checked FIRST and for the same reason the turn floor is: a
++  // verdict about corpus shape must not be reported as a verdict about behaviour.
++  if (opts.spansCarrier === true) {
++    return "era-spanning";
++  }
+   if (assistant_turns < BAND_MIN_TURNS) {
+     return "corpus-too-small";
+   }
+@@ -181,6 +254,7 @@ export const CHECK_IDS: readonly CheckId[] = [
+   "git-authorization",
+   "vacuous-evidence",
+   "evidence-steering",
++  "completion-claim",
+ ];
+ 
+ /**
+@@ -207,6 +281,12 @@ export const CHECK_MEANINGS: Record<CheckId, string> = {
+   "evidence-steering":
+     "A self-commissioned evaluation whose prompt pre-loaded its own verdict, " +
+     "or a second self-scoped evaluation of the same subject within one turn.",
++  "completion-claim":
++    "An assistant turn claiming the work is complete while the last CI read in " +
++    "that session was NOT settled. Round 7 measured 14 instances by reading, " +
++    "each followed by the user handing the work back; this is the same " +
++    "predicate `turn-end-gate`'s completion detector refuses on, so the rate " +
++    "and the gate cannot disagree. A session that never polled CI can never hit.",
+ };
+ 
+ /**
+@@ -317,7 +397,11 @@ export function isInjectedBody(text: string): boolean {
+  * `API Error: 529 Overloaded` retry banners. Counting the harness as the model
+  * inflates the very number this scan exists to report honestly.
+  */
+-const HARNESS_TEXT =
++// Exported since round 7 § 6.3: `probe_session_canary` needs the SAME predicate,
++// and its first version had its own copy that omitted `You've hit your` — which
++// turned a spend-limit banner into a missed greeting and reported 24/28 for a
++// corpus that is 25/28.
++export const HARNESS_TEXT =
+   /^(API Error:|Request (timed out|was aborted)|\[Request interrupted|Error: |Credit balance is too low|You've hit your|Prompt is too long)/i;
+ 
+ /** Rough English-opener test for the language check (first prose line only). */
+@@ -330,6 +414,8 @@ export function scanSession(sessionId: string, lines: string[]): SessionReport {
+     user_turns: 0,
+     assistant_turns: 0,
+     violations: [],
++    de_pin_turns: 0,
++    first_at: "",
+   };
+ 
+   let pinned: "de" | "en" | null = null;
+@@ -343,6 +429,10 @@ export function scanSession(sessionId: string, lines: string[]): SessionReport {
+   // that split reproducible against a future corpus instead of re-argued.
+   let turnsSincePrompt = 0;
+   let compactionSincePrompt = false;
++  // Round 7 § 1.5 — session-scoped, deliberately NOT reset per prompt: the
++  // measured failure is a completion claim in a LATER turn than the poll.
++  let ciSeen = false;
++  let ciSettled = false;
+ 
+   for (const line of lines) {
+     if (!line.trim()) {
+@@ -354,6 +444,12 @@ export function scanSession(sessionId: string, lines: string[]): SessionReport {
+     } catch {
+       continue;
+     }
++    // Round 7 § 6.1 — captured for the era guard. The FIRST timestamp in the
++    // file, not the file mtime: mtime moves when a session is resumed, which
++    // would put a July session in the August era.
++    if (report.first_at === "" && typeof entry["timestamp"] === "string") {
++      report.first_at = entry["timestamp"];
++    }
+ 
+     // Tool results arrive as `user` entries carrying `toolUseResult`.
+     if (entry["type"] === "user" && entry["toolUseResult"] !== undefined && pendingPoll !== null) {
+@@ -370,6 +466,12 @@ export function scanSession(sessionId: string, lines: string[]): SessionReport {
+           detail: `CI poll read as settled without an in-flight observation: ${out.slice(0, 90)}`,
+         });
+       }
++      // Round 7 § 1.5 — the session-scoped CI-settle state the completion-claim
++      // check reads. Same discrimination `before_complete_hook.ci_last` makes:
++      // only a readable zero-pending result is a settle, and an unrecognised
++      // shape (which includes "no checks reported") never is.
++      ciSeen = true;
++      ciSettled = pending === 0;
+       pendingPoll = null;
+       continue;
+     }
+@@ -424,6 +526,26 @@ export function scanSession(sessionId: string, lines: string[]): SessionReport {
+     if (prose !== null) {
+       report.assistant_turns += 1;
+       turnsSincePrompt += 1;
++      // Round 7 § 6.2 — the denominator the language check can actually fire on.
++      // Counted here, beside the numerator, so the two cannot be derived from
++      // different populations later.
++      if (pinned === "de") {
++        report.de_pin_turns += 1;
++      }
++      // Round 7 § 1.5 — placed BEFORE the language block on purpose: that block
++      // `continue`s on a harness banner, and a check placed after it would be
++      // skipped for every such turn without saying so.
++      if (!HARNESS_TEXT.test((prose.split("\n").find((l) => l.trim()) ?? "").trim())) {
++        const cc = detectCompletionClaim(prose, { seen: ciSeen, settled: ciSettled });
++        if (cc !== null) {
++          report.violations.push({
++            check: "completion-claim",
++            session: sessionId,
++            at,
++            detail: `completion claimed over an unsettled CI read: "${cc.evidence.slice(0, 110)}"`,
++          });
++        }
++      }
+       if (pinned === "de") {
+         const first = prose.split("\n").find((l) => l.trim()) ?? "";
+         if (HARNESS_TEXT.test(first.trim())) {
+@@ -585,6 +707,7 @@ export function scanStore(store: string, limit: number): ScanReport {
+     "git-authorization": 0,
+     "vacuous-evidence": 0,
+     "evidence-steering": 0,
++    "completion-claim": 0,
+   };
+   for (const s of per_session) {
+     for (const v of s.violations) {
+@@ -600,6 +723,14 @@ export function scanStore(store: string, limit: number): ScanReport {
+   // band" — a rounding artefact announcing the declared falsifier.
+   const rate_pct =
+     assistant_turns === 0 ? 0 : Number(((100 * language_pin) / assistant_turns).toFixed(1));
++  // Round 7 § 6.2 — the second denominator, reported beside the first rather than
++  // instead of it: replacing the figure silently would break comparability with
++  // every recorded run, and the band's own three reference values were computed
++  // on the all-turns denominator.
++  const de_pin_turns = per_session.reduce((n, s) => n + s.de_pin_turns, 0);
++  const rate_pct_de_pin =
++    de_pin_turns === 0 ? 0 : Number(((100 * language_pin) / de_pin_turns).toFixed(1));
++  const era = spansCarrierChange(per_session.map((s) => s.first_at));
+   const delivered = measureDelivered(
+     path.join(REPO_ROOT, ".claude", "rules"),
+     path.join(process.env["HOME"] ?? os.homedir(), ".claude", "rules"),
+@@ -619,7 +750,11 @@ export function scanStore(store: string, limit: number): ScanReport {
+       assistant_turns,
+       language_pin,
+       rate_pct,
+-      band: bandVerdict(rate_pct, assistant_turns),
++      de_pin_turns,
++      rate_pct_de_pin,
++      era_spanning: era.spans,
++      era_reason: era.what,
++      band: bandVerdict(rate_pct, assistant_turns, { spansCarrier: era.spans }),
+       // Only attach the carrier figures when the rate and the carriers describe
+       // the same project.
+       delivered_project_tokens: ownStore ? delivered.project.tokens : null,
+@@ -680,7 +815,36 @@ export function render(report: ScanReport): string {
+     `  language-pin rate  ${report.rate.rate_pct.toFixed(1)}%  ` +
+       `(${report.rate.language_pin} of ${report.rate.assistant_turns} assistant turns)`,
+   );
+-  if (report.rate.band === "corpus-too-small") {
++  // Round 7 § 6.2 — both denominators, always. The band's three reference values
++  // were computed on the all-turns one, so that stays the headline; the second is
++  // the only one the check can actually fire on, and on round 7's own corpus the
++  // two differ by enough to move the verdict (6.5 % vs 9.2 %, band low 9.1 %).
++  // Optional-read, not `report.rate.x.toFixed(...)`: a `rate` block RECORDED
++  // before round 7 carries neither field, and `--record` exists to be read back
++  // over time. A renderer that throws on last month's line makes the series
++  // unreadable to prove a point about denominators.
++  const dePinTurns = report.rate.de_pin_turns;
++  const dePinRate = report.rate.rate_pct_de_pin;
++  if (typeof dePinTurns === 'number' && typeof dePinRate === 'number') {
++    lines.push(
++      `                     ${dePinRate.toFixed(1)}%  ` +
++        `(${report.rate.language_pin} of ${dePinTurns} turns under a GERMAN pin — the only` +
++        ' turns this check can fire on)',
++    );
++    lines.push(
++      '    The band (M5, n=3) was computed on the ALL-turns denominator, so the first figure',
++    );
++    lines.push('    is the comparable one and the second is the honest one. Both are printed.');
++  }
++  if (report.rate.band === "era-spanning") {
++    lines.push(
++      `    Not compared: the corpus SPANS a carrier landing — ${report.rate.era_reason || 'see CARRIER_CHANGES'}.`,
++    );
++    lines.push('    A rate pooled across it is a weighted average of two different systems, not');
++    lines.push('    a reading about behaviour. Round 7 measured 23.1% before and 0.0% after that');
++    lines.push('    exact carrier; the pooled 6.5% was announced as the falsifier firing.');
++    lines.push('    Split the window at the carrier date and read each era on its own.');
++  } else if (report.rate.band === "corpus-too-small") {
+     lines.push(
+       `    Not compared: ${report.rate.assistant_turns} turns is below the ${BAND_MIN_TURNS} of the`,
+     );
+@@ -702,8 +866,21 @@ export function render(report: ScanReport): string {
+     lines.push("    as new. Store novelty is not project novelty.");
+   }
+   lines.push("");
+-  lines.push("  Scanned checks are exactly the mechanised ones. Ask-shape, session-canary,");
+-  lines.push("  promissory closings and checkbox batching are left as prose and NOT measured.");
++  // Round 7 § 6.4 — this footer used to lump four classes together as "NOT
++  // measured", and two of the four were wrong. Stated per class instead, because
++  // "not measured here" and "not measured anywhere" are different facts and only
++  // one of them is a gap.
++  lines.push("  Scanned checks are exactly the mechanised ones. What is NOT in the counts above:");
++  lines.push("    ask-shape (trailing free-text offer)  — measured NOWHERE. ~11 findings in round 7's");
++  lines.push("      reading half; the discriminator needs judgement, so it stays advisory on purpose.");
++  lines.push("    session-canary (opening greeting)     — not here, but PROBEABLE:");
++  lines.push("      `./scripts-run src/scripts/probe_session_canary`. Round 7: 25/28 sessions,");
++  lines.push("      24/25 post-carrier. The per-TASK instance is undecidable — no task boundary");
++  lines.push("      is recorded in a transcript.");
++  lines.push("    promissory closings                   — not here, but ALREADY GATED: `turn-end-gate`");
++  lines.push("      ships a blocking `detectPromissory`. Round 7 probe: 1 of 163 hand-back turns.");
++  lines.push("      `./scripts-run src/scripts/probe_promissory_closing`.");
++  lines.push("    checkbox batching                     — measured NOWHERE. ~5 low-severity findings.");
+   return lines.join("\n");
+ }
+ 
+diff --git a/src/scripts/council_cli.ts b/src/scripts/council_cli.ts
+index d9fd61b2f10f6572622b11ed5c9fe0a06af8de21..d03c96338529bff02d2126f3180095c91ed4121c 100644
+--- a/src/scripts/council_cli.ts
++++ b/src/scripts/council_cli.ts
+@@ -749,11 +749,18 @@ function _postRunQuorum(
+     for (let i = 0; i < members.length; i++) {
+         const m = members[i] as ExternalAIClient;
+         const r = responses[i];
+-        if (r !== undefined && !r.error) {
++        // Round 7 § 5.2 — attendance is a NON-EMPTY answer, not the absence of an
++        // error. `!r.error` alone counted a member that returned zero bytes, and
++        // that is not hypothetical: a 290 s curl timeout returned an empty body
++        // with no error set in two sessions (`9fc9ba3e`, `4ac2f7ac`) and the
++        // banner printed `2/2 present` — a single-voice verdict presented as
++        // convergence, on a paid run. An empty answer contributes nothing to a
++        // quorum by definition, whatever the transport thought of it.
++        if (r !== undefined && !r.error && r.text.trim() !== '') {
+             present += 1;
+             continue;
+         }
+-        const raw = r?.error ?? 'no response';
++        const raw = r?.error ?? (r !== undefined && r.text.trim() === '' ? 'empty response body' : 'no response');
+         const failure = classifyCliFailure(raw);
+         absent.push({
+             member: m.name,
+@@ -772,7 +779,14 @@ function _postRunQuorum(
+  */
+ function _format_quorum_line(q: QuorumResult): string {
+     const verdict = q.status === 'concluded' ? 'concluded' : 'INCONCLUSIVE — release gate holds';
+-    return `council:quorum · ${q.present}/${q.total} present, needed ${q.threshold} — ${verdict}.`;
++    // Round 7 § 5.3 — a degraded pass says so. `1/2 present, needed 1 —
++    // concluded` is literally true and reads as agreement; with a threshold of 1
++    // a solo answer concludes, and nothing in the line distinguishes "both
++    // members agreed" from "one member answered". The counts were always there;
++    // what was missing is the word that stops a reader inferring convergence.
++    const degraded =
++        q.present < q.total ? `  ⚠️  DEGRADED — ${String(q.total - q.present)} member(s) did not answer; this is not convergence.` : '';
++    return `council:quorum · ${q.present}/${q.total} present, needed ${q.threshold} — ${verdict}.${degraded}`;
+ }
+ 
+ function build_members(settings: Dict, opts: BuildMembersOptions = {}): ExternalAIClient[] {
+@@ -2652,6 +2666,25 @@ function cmd_run(
+         return 0;
+     }
+ 
++    // Round 7 § 5.1 — VALIDATE THE OUTPUT PATH BEFORE THE FIRST BILLABLE CALL.
++    //
++    // The only validation used to sit immediately before the WRITE, i.e. after
++    // every member had been paid, so a wrong directory discarded a completed run.
++    // Measured across round 7's corpus: ~$1.30 in three sessions (`291f827b`
++    // ~$0.42, `9502795e` $0.44, plus a discarded run each in `d6154522` and
++    // `3d50d0df`). The trap sat in the operator's notes for weeks and was still
++    // paid twice, because the defect is the ORDERING, not the caller.
++    //
++    // Placed HERE, after the `--confirm` gate, and not at function entry: the
++    // estimate-only path neither writes nor bills, and the first attempt at this
++    // fix validated at entry and broke it — caught by
++    // `council_cli.test.ts`'s no-confirm case. Nothing above this line spends.
++    //
++    // The validator is pure, so the pre-write call stays: it returns the string
++    // the write uses, and removing it to avoid "duplicate work" would put the
++    // guarantee back in a single place that runs late.
++    _validate_council_output_path(args.output as string, { kind: 'responses', subcommand: 'run' });
++
+     const cost_cfg = (ai_cfg['cost_budget'] as Dict) || {};
+     const budget = new CostBudget({
+         max_input_tokens: _pyInt(cost_cfg['max_input_tokens'] ?? 50_000, 50_000),
+diff --git a/src/scripts/hook_manifest.yaml b/src/scripts/hook_manifest.yaml
+index 2dc2bb789b5c4b07d0e2b9b2067ca2cc68d1258c..6416cc20269817a85c8fb9141687fa1f029f63c3 100644
+--- a/src/scripts/hook_manifest.yaml
++++ b/src/scripts/hook_manifest.yaml
+@@ -60,8 +60,12 @@ concerns:
+     severity: advisory
+   # Phase 5 — Tier-1 hook for the verify-before-complete rule. Records
+   # observable evidence of verification commands (tests, quality tools,
+-  # builds) into agents/runtime/state/verify-before-complete.json. The rule body
+-  # cites that file as the source of truth for "verified this turn?".
++  # builds) into agents/state/verify-before-complete.json — the path the code
++  # actually writes (`before_complete_hook.STATE_FILE`); this comment said
++  # `agents/runtime/state/` until round 7, which is a directory it never used.
++  # The rule body cites that file as the source of truth for "verified this
++  # turn?". Since round 7 it also carries `ci_last`, the session-scoped CI-settle
++  # negative that `turn-end-gate` reads to refuse a premature completion claim.
+   verify-before-complete:
+     script: src/scripts/before_complete_hook.ts
+     args: []
+diff --git a/src/scripts/hooks/block_no_verify.ts b/src/scripts/hooks/block_no_verify.ts
+index 7e138789f23da4561ab3b0d1bcaadf1a93ee1bf5..793240120a8f2e1567f95fc9f59ee58669682c73 100644
+--- a/src/scripts/hooks/block_no_verify.ts
++++ b/src/scripts/hooks/block_no_verify.ts
+@@ -409,31 +409,104 @@ export function _looks_like_git_invocation(cmd: string, depth = 0): boolean {
+  * Heredoc bodies are removed before extraction: a backtick or `$(` inside a
+  * commit message being written to a file is data, and feeding it back through
+  * this function is exactly the false positive the round-5 repair closed.
++ *
++ * ROUND 7 — THREAT MODEL for extending that removal to the shlex path (§ 2.1).
++ * Until round 7 the stripped string fed only `substitutionPayloads`; `shlexSplit`
++ * still received the RAW command. Both halves of that were measured, on this
++ * branch, before anything changed:
++ *
++ *   `git commit -F - <<'EOF' … maintainer's … EOF`   → BLOCKED   (false positive)
++ *   `bash <<EOF … git commit --no-verify … EOF`       → ALLOWED   (real bypass)
++ *
++ * So this is not the round-6 trade of one false positive for two false negatives.
++ * The bypass PRE-EXISTS: with the body inline, `shlexSplit` succeeds, the tokens
++ * are `bash <<EOF git commit --no-verify EOF`, command position is `bash`, and
++ * `_git_base` never sees git. Stripping before shlex fixes the false positive;
++ * scanning the bodies fixes the bypass. Both directions verified by probe.
++ *
++ * What an attacker can hide in a heredoc body, and how each is handled:
++ *
++ *   - a body consumed by a SHELL (`sh`/`bash`/`zsh`/`ksh`, with or without a path
++ *     prefix or an `env` prefix) IS a command list → scanned recursively.
++ *   - a body consumed by anything else (`git commit -F -`, `cat > f`, `tee`) is
++ *     DATA. Scanning it would re-open the exact false positive above, since a
++ *     commit message may legitimately contain the words `--no-verify`.
++ *   - an UNTERMINATED heredoc never matches the delimiter, so nothing is stripped
++ *     and the raw string still reaches shlex — the fail-closed branch keeps it.
++ */
++
++/** One heredoc: its body, and whether a shell is the thing consuming it. */
++interface Heredoc {
++    body: string;
++    shellConsumed: boolean;
++}
++
++/**
++ * Command position on the line that opens the heredoc is a shell interpreter, so
++ * the body is a command list rather than data. Anchored to the segment start or a
++ * shell separator, exactly like `_looks_like_git_invocation` does one level up —
++ * a bare mention of `bash` in an argument must not promote a message to code.
+  */
++const _SHELL_CONSUMER_RE =
++    /(?:^|[|&;]|\$\(|`)\s*(?:env\s+(?:[A-Za-z_][A-Za-z0-9_]*=\S*\s+)*)?(?:\S*\/)?(?:ba|z|k)?sh\b/;
++
++export function _heredocs(cmd: string): { stripped: string; docs: Heredoc[] } {
++    const re = /<<-?\s*(['"]?)([A-Za-z_][A-Za-z0-9_]*)\1([\s\S]*?)^\s*\2\s*$/gm;
++    const docs: Heredoc[] = [];
++    let stripped = '';
++    let last = 0;
++    let m: RegExpExecArray | null;
++    while ((m = re.exec(cmd)) !== null) {
++        const lineStart = cmd.lastIndexOf('\n', m.index) + 1;
++        const prefix = cmd.slice(lineStart, m.index);
++        docs.push({ body: m[3] ?? '', shellConsumed: _SHELL_CONSUMER_RE.test(prefix) });
++        stripped += cmd.slice(last, m.index) + '<<HEREDOC';
++        last = m.index + m[0].length;
++    }
++    stripped += cmd.slice(last);
++    return { stripped, docs };
++}
++
+ function _check_command(cmd: string, depth = 0): [boolean, string] {
++    // Round 7 § 2.2 — the stripped string now feeds shlex as well, not only the
++    // substitution scan. `<<HEREDOC` is a plain token, so an apostrophe in a
++    // commit message can no longer abort the parse of the command carrying it.
++    const { stripped, docs } = depth <= 3 ? _heredocs(cmd) : { stripped: cmd, docs: [] };
+     if (depth <= 3) {
+-        const withoutHeredocs = cmd.replace(
+-            /<<-?\s*(['"]?)([A-Za-z_][A-Za-z0-9_]*)\1[\s\S]*?^\s*\2\s*$/gm,
+-            '<<HEREDOC',
+-        );
+-        for (const payload of substitutionPayloads(withoutHeredocs)) {
++        for (const payload of substitutionPayloads(stripped)) {
+             const [blocked, reason] = _check_command(payload, depth + 1);
+             if (blocked) {
+                 return [true, reason];
+             }
+         }
++        // A shell-consumed body is a command list, so it is checked like one.
++        for (const doc of docs) {
++            if (!doc.shellConsumed) {
++                continue;
++            }
++            const [blocked, reason] = _check_command(doc.body, depth + 1);
++            if (blocked) {
++                return [true, reason];
++            }
++        }
+     }
+     let tokens: string[];
+     try {
+-        tokens = shlexSplit(cmd);
++        tokens = shlexSplit(stripped);
+     } catch (e) {
+         if (e instanceof ShlexError) {
+-            if (_looks_like_git_invocation(cmd)) {
++            // Tested against the string that actually failed to parse. Round 7
++            // § 2.4: the message no longer prescribes the message-in-a-file
++            // workaround, because a TERMINATED heredoc is now stripped before
++            // this point and can no longer be the cause. What reaches here is
++            // genuinely unbalanced quoting — an unterminated heredoc, or an odd
++            // quote outside one — which bash itself refuses to run.
++            if (_looks_like_git_invocation(stripped)) {
+                 return [
+                     true,
+                     'command parse failed (shlex) on a git-containing command — fail-closed (git-history-discipline). \n'
+-                    + 'Most common cause: an apostrophe or backtick inside a heredoc commit message in the SAME compound command as `git`. \n'
+-                    + 'Fix: write the message to a file and use `git commit -F <file>` — do not retry the heredoc.',
++                    + 'The quoting is unbalanced OUTSIDE any terminated heredoc — an unterminated heredoc, or an odd quote. \n'
++                    + 'bash refuses this command too; fix the quoting rather than working around the guard.',
+                 ];
+             }
+             return [false, ''];
+diff --git a/src/scripts/hooks/turn_end_gate_hook.ts b/src/scripts/hooks/turn_end_gate_hook.ts
+index 3b9876b2c68deeac5985faec81bea86c67756e20..1c93c623b4b1b9ac75d1b8a34b0a346a5874340f 100644
+--- a/src/scripts/hooks/turn_end_gate_hook.ts
++++ b/src/scripts/hooks/turn_end_gate_hook.ts
+@@ -101,6 +101,9 @@ import {
+     STATE_FILE as LANGUAGE_STATE_FILE,
+     type Verdict,
+ } from '../language_mirror_hook.js';
++// Round 7 § Phase 1 — the CI-settle producer. Imported for its STATE_FILE only,
++// so the consumer cannot read a path the producer does not write.
++import { STATE_FILE as CI_STATE_FILE } from '../before_complete_hook.js';
+ import { isSafeTranscriptPath } from './end_review_nudge_hook.js';
+ import { unwrap, type JsonObject, type JsonValue } from './envelope.js';
+ import { readHookStdin } from './hook_stdin.js';
+@@ -121,7 +124,7 @@ const EXIT_ALLOW = 0;
+ export const TRANSCRIPT_READ_MAX_BYTES = 8 * 1024 * 1024; // 8 MB
+ 
+ /** Detector identity, used in the state marker and the refusal text. */
+-export type DetectorId = 'promissory' | 'language' | 'verification';
++export type DetectorId = 'promissory' | 'language' | 'verification' | 'completion';
+ 
+ export interface Finding {
+     detector: DetectorId;
+@@ -324,6 +327,78 @@ export interface LanguagePin {
+ }
+ 
+ /** Read the pin the language-mirror hook wrote. Absent ⇒ no obligation. */
++/**
++ * Round 7 § Phase 1 — where the CI-settle fact comes from, and why not from here.
++ *
++ * The obvious implementation reads the unsettled state out of the transcript this
++ * hook already parses. It cannot: `_toolCalls` keeps only name, command and target
++ * path, so a tool RESULT — where the pending count lives — is never read; and
++ * `toolCalls` is reset at every genuine user prompt by design, while the measured
++ * failure is a completion claim in a LATER turn than the poll. Building it that way
++ * meant reversing an invariant this file argues for two functions down.
++ *
++ * So the producer is `before_complete_hook`, which already sees tool output on
++ * `post_tool_use` and already owns the `pendingCount` predicate. It writes
++ * `ci_last` into `agents/state/verify-before-complete.json` and this reads it.
++ *
++ * NO network call, deliberately. Asking `gh pr checks` here would put a network
++ * round-trip on every turn-end; `road-to-hook-latency-repair` exists because that
++ * cost is real. The rejected alternative is named so the next author does not
++ * re-derive it.
++ *
++ * ASYMMETRY that makes the cross-turn read legitimate where the reader refuses it
++ * for verification: a stale POSITIVE ("I verified") wrongly vouches for work it
++ * never saw. A stale NEGATIVE ("CI was not settled") only ever refuses more often.
++ * Same freshness invariant, opposite failure direction.
++ */
++export function readCiSettled(workspaceRoot: string): { seen: boolean; settled: boolean } {
++    try {
++        const raw = fs.readFileSync(path.join(workspaceRoot, CI_STATE_FILE), 'utf-8');
++        const decoded: unknown = JSON.parse(raw);
++        if (typeof decoded === 'object' && decoded !== null && !Array.isArray(decoded)) {
++            const ci = (decoded as Record<string, unknown>)['ci_last'];
++            if (typeof ci === 'object' && ci !== null && !Array.isArray(ci)) {
++                return { seen: true, settled: (ci as Record<string, unknown>)['settled'] === true };
++            }
++        }
++    } catch {
++        // absent, unreadable, or malformed — all mean "no CI was observed", and a
++        // session that never polled CI must never be refused for it.
++    }
++    return { seen: false, settled: false };
++}
++
++/**
++ * A completion claim in the delivered reply. Deliberately narrow: the German and
++ * English closings the corpus actually produced, anchored to a line so a mid-reply
++ * "fertig" inside a sentence about something else does not fire.
++ *
++ * Measured shapes it must catch (round 7, § Phase 1): "Fertig, Matze." ·
++ * "Damit ist alles erledigt." · "Aufgabe erledigt." · "der komplette Auftrag ist
++ * durch".
++ */
++const _COMPLETION_RE =
++    /(^|\n)\s*(?:\*\*)?(?:fertig\b|damit ist alles erledigt|aufgabe erledigt|alles erledigt\b|komplett(?:er)? (?:auftrag|abgearbeitet)|der komplette auftrag ist durch|done[.!]|all done\b|task complete)/i;
++
++export function detectCompletionClaim(
++    reply: string,
++    ci: { seen: boolean; settled: boolean },
++): Finding | null {
++    // A session that never read CI has nothing to be premature about.
++    if (!ci.seen || ci.settled) return null;
++    const prose = visibleProse(reply);
++    const m = _COMPLETION_RE.exec(prose);
++    if (!m) return null;
++    const at = m.index;
++    return {
++        detector: 'completion',
++        evidence: prose.slice(at, at + 120).trim(),
++        reason:
++            'a completion claim while the last CI read was not settled — ' +
++            'read the verdict, then claim it (verify-before-complete)',
++    };
++}
++
+ export function readLanguagePin(workspaceRoot: string): Verdict {
+     try {
+         const raw = fs.readFileSync(path.join(workspaceRoot, LANGUAGE_STATE_FILE), 'utf-8');
+@@ -697,6 +772,8 @@ export interface GateSettings {
+     promissory: boolean;
+     language: boolean;
+     verification: boolean;
++    /** Round 7 § Phase 1 — completion claim over an unsettled CI read. */
++    completion: boolean;
+ }
+ 
+ /**
+@@ -736,6 +813,7 @@ export function readGateSettings(workspaceRoot: string): GateSettings {
+         promissory: true,
+         language: true,
+         verification: true,
++        completion: true,
+     };
+     let settings: Record<string, unknown>;
+     try {
+@@ -757,6 +835,7 @@ export function readGateSettings(workspaceRoot: string): GateSettings {
+         promissory: flag('promissory', true),
+         language: flag('language', true),
+         verification: flag('verification', true),
++        completion: flag('completion', true),
+     };
+ }
+ 
+@@ -831,6 +910,10 @@ export function main(): number {
+         const f = detectUnverifiedEdit(toolCalls);
+         if (f) findings.push(f);
+     }
++    if (settings.completion) {
++        const f = detectCompletionClaim(lastAssistant, readCiSettled(workspaceRoot));
++        if (f) findings.push(f);
++    }
+     if (findings.length === 0) return EXIT_ALLOW;
+ 
+     markRefusedTurn(workspaceRoot, sessionKey, turnOrdinal, findings[0]!.detector);
+@@ -840,8 +923,9 @@ export function main(): number {
+     );
+     process.stderr.write(
+         `turn-end-gate: REFUSED — this turn is not finished.\n${lines.join('\n')}\n` +
+-            '  Do the promised work now, correct the language, or run the ' +
+-            'verification the edit needs, then end the turn.\n' +
++            '  Do the promised work now, correct the language, run the ' +
++            'verification the edit needs, or read the CI verdict before claiming ' +
++            'it — then end the turn.\n' +
+             '  This turn will not be refused a second time.\n' +
+             '  Disable: hooks.turn_end_gate.enabled: false in .agent-settings.yml\n',
+     );
+diff --git a/src/scripts/probe_promissory_closing.ts b/src/scripts/probe_promissory_closing.ts
+new file mode 100644
+index 0000000000000000000000000000000000000000..4c200e256d4a3f71ba9919e82cccd6d180e3d143
+--- /dev/null
++++ b/src/scripts/probe_promissory_closing.ts
+@@ -0,0 +1,165 @@
++#!/usr/bin/env tsx
++/**
++ * Round 7 § 6.3 — the promissory-closing rate, as a script instead of an ad-hoc probe.
++ *
++ * `verify-before-complete` § Turn-completion forbids ending a turn on a promise of
++ * unexecuted work ("I'll…", "als nächstes mache ich…"). Round 7 measured the rate
++ * to decide whether to build a mechanism, and the answer was: don't — a blocking
++ * `detectPromissory` ALREADY ships in `turn-end-gate`.
++ *
++ * That inverts the reading of a low number, and the inversion is the reason this
++ * script exists. Round 7's first draft declined the class as "below any threshold
++ * worth a gate"; with a gate already in place, 0.6 % is plausibly the mechanism
++ * WORKING, not the class being rare. A rate over a gated class measures residual
++ * leakage. Read it that way or not at all.
++ *
++ * WHAT IS COUNTED: only a HAND-BACK turn — an assistant turn immediately followed
++ * by a genuine user turn, i.e. where the agent actually stopped. A promise in a
++ * mid-turn message is not a violation; the agent kept going. A turn that ASKS is
++ * also excluded: a question is a legitimate stop condition.
++ *
++ * HONEST BOUND: the predicate is deliberately narrow (first-person + future,
++ * anchored in the closing lines), so the figure is a FLOOR. A looser predicate
++ * over the same corpus read 1.2 % against this one's 0.6 %; both are printed so a
++ * reader can see the width of the bracket rather than trust one edge of it.
++ *
++ * Usage:
++ *   ./scripts-run src/scripts/probe_promissory_closing [--limit N] [--store PATH]
++ *
++ * Exit codes: 0 always — a measurement, not a gate.
++ */
++import fs from "node:fs";
++import path from "node:path";
++
++import { defaultStore, HARNESS_TEXT, isInjectedBody } from "./conformance_scan.js";
++import { isSyntheticPrompt } from "./_lib/prompt_shape.js";
++
++/** First person + intent, at the start of a closing sentence. Narrow on purpose. */
++export const PROMISE_NARROW: readonly RegExp[] = [
++  /\bich (mache|baue|schreibe|starte|prüfe|räume|setze|lege|fixe|committe|pushe|nehme|ziehe|hole|führe|erstelle|implementiere)\b[^.?!]{0,80}\b(jetzt|als nächstes|gleich|danach|anschließend|im nächsten schritt)\b/i,
++  /\b(als nächstes|im nächsten schritt|danach) (mache|baue|schreibe|starte|prüfe|nehme|committe|pushe|erstelle|implementiere) ich\b/i,
++  /\bi'?(ll| will) (now |next |then )?(start|build|write|check|run|fix|commit|push|create|implement|add|wire|measure)\b/i,
++  /\bnext,? i'?(ll| will)\b/i,
++  /\bi'?m going to (start|build|write|check|run|fix|commit|push|create|implement)\b/i,
++];
++
++/** The bracket's other edge — any future-intent marker at all. */
++export const PROMISE_LOOSE =
++  /\b(ich werde|ich mache|ich baue|ich starte|ich prüfe|als nächstes|next up|i'll |i will |i'm going to|nun mache ich|jetzt mache ich)/i;
++
++/** A reply that asks is a legitimate stop condition, never a promissory closing. */
++const ASKS = /(\?\s*$)|(^\s*\d\.\s)/m;
++
++interface Turn {
++  role: "user" | "assistant";
++  text: string;
++  at: string;
++}
++
++function turns(lines: string[]): Turn[] {
++  const out: Turn[] = [];
++  for (const line of lines) {
++    if (!line.trim()) continue;
++    let e: Record<string, unknown>;
++    try {
++      e = JSON.parse(line) as Record<string, unknown>;
++    } catch {
++      continue;
++    }
++    if (e["isSidechain"] === true) continue;
++    if (e["type"] === "user" && e["toolUseResult"] !== undefined) continue;
++    if (e["isCompactSummary"] === true) continue;
++    const msg = e["message"] as { role?: string; content?: unknown } | undefined;
++    const role = msg?.role;
++    if (role !== "user" && role !== "assistant") continue;
++    const c = msg?.content;
++    const text =
++      typeof c === "string"
++        ? c
++        : Array.isArray(c)
++          ? c
++              .filter((b: { type?: string }) => b?.type === "text")
++              .map((b: { text?: string }) => b.text ?? "")
++              .join("\n")
++          : "";
++    if (!text.trim()) continue;
++    if (role === "assistant" && HARNESS_TEXT.test(text.trim())) continue;
++    // A skill / slash-command body arrives in the user role and is not a chat
++    // message, so it must not close a hand-back.
++    if (role === "user" && (isSyntheticPrompt(text) || isInjectedBody(text))) continue;
++    out.push({ role, text, at: String(e["timestamp"] ?? "") });
++  }
++  return out;
++}
++
++export interface PromissoryResult {
++  handbacks: number;
++  narrow: { session: string; at: string; span: string }[];
++  loose: number;
++}
++
++export function measure(store: string, limit: number): PromissoryResult {
++  const result: PromissoryResult = { handbacks: 0, narrow: [], loose: 0 };
++  const files = fs
++    .readdirSync(store)
++    .filter((f) => f.endsWith(".jsonl"))
++    .map((f) => ({ f, m: fs.statSync(path.join(store, f)).mtimeMs }))
++    .sort((a, b) => b.m - a.m)
++    .slice(0, limit);
++
++  for (const { f } of files) {
++    const session = f.replace(/\.jsonl$/, "").slice(0, 8);
++    const ts = turns(fs.readFileSync(path.join(store, f), "utf8").split("\n"));
++    for (let i = 0; i < ts.length; i += 1) {
++      const t = ts[i] as Turn;
++      if (t.role !== "assistant") continue;
++      const next = ts[i + 1];
++      // A hand-back: the next turn is the user's, or the session ends here.
++      if (next !== undefined && next.role !== "user") continue;
++      result.handbacks += 1;
++      const tail = t.text.trimEnd().split("\n").slice(-4).join("\n");
++      if (ASKS.test(tail)) continue;
++      if (PROMISE_LOOSE.test(tail)) result.loose += 1;
++      const hit = PROMISE_NARROW.find((re) => re.test(tail));
++      if (hit) {
++        result.narrow.push({ session, at: t.at, span: (tail.match(hit)?.[0] ?? "").slice(0, 110) });
++      }
++    }
++  }
++  return result;
++}
++
++export function main(argv?: string[]): number {
++  const args = argv ?? process.argv.slice(2);
++  const arg = (flag: string, dflt: string): string => {
++    const i = args.indexOf(flag);
++    return i >= 0 && args[i + 1] !== undefined ? (args[i + 1] as string) : dflt;
++  };
++  const store = arg("--store", defaultStore(process.cwd()));
++  const limit = Number(arg("--limit", "30"));
++
++  if (!fs.existsSync(store)) {
++    process.stdout.write(`probe:promissory-closing · store not found: ${store}\n`);
++    return 0;
++  }
++  const r = measure(store, limit);
++  process.stdout.write(`probe:promissory-closing · ${r.handbacks} hand-back turn(s) in ${store}\n`);
++  for (const h of r.narrow) {
++    process.stdout.write(`  ${h.session} ${h.at.slice(0, 16)}  ${JSON.stringify(h.span)}\n`);
++  }
++  const pct = (n: number): string => (r.handbacks === 0 ? "—" : `${((100 * n) / r.handbacks).toFixed(1)}%`);
++  process.stdout.write(
++    `  narrow predicate: ${r.narrow.length} (${pct(r.narrow.length)}) · ` +
++      `loose predicate: ${r.loose} (${pct(r.loose)})\n`,
++  );
++  process.stdout.write(
++    "  The class is ALREADY GATED — `turn-end-gate` ships a blocking `detectPromissory`.\n" +
++      "  So a low figure here is residual leakage past a working mechanism, not evidence\n" +
++      "  the class is rare. The narrow figure is a floor; the loose one is the other edge.\n",
++  );
++  return 0;
++}
++
++if (process.argv[1] !== undefined && import.meta.url.endsWith(path.basename(process.argv[1]))) {
++  process.exit(main());
++}
+diff --git a/src/scripts/probe_session_canary.ts b/src/scripts/probe_session_canary.ts
+new file mode 100644
+index 0000000000000000000000000000000000000000..6bbb45dc61b4ed9df571bd0be08b007256bc13f1
+--- /dev/null
++++ b/src/scripts/probe_session_canary.ts
+@@ -0,0 +1,136 @@
++#!/usr/bin/env tsx
++/**
++ * Round 7 § 6.3 — the opening-canary rate, as a script instead of an ad-hoc probe.
++ *
++ * `session-canary` obliges the agent to address the user by name in the first
++ * reply of a session AND of each new task within it. The rule's own text records
++ * two audits reading it as broadly missed (~13/15, then 24/29 task starts) and
++ * concludes the reminder carrier does not move it.
++ *
++ * This measures the half that is DECIDABLE from a transcript: the per-SESSION
++ * instance. The per-TASK instance is not measurable at all — no task boundary is
++ * recorded anywhere in a transcript — which is why the mechanism the rule
++ * pre-registers ("a check at delivery that rejects a task-start reply carrying no
++ * greeting") cannot be built as specified. Round 7 states that as an honest
++ * downgrade rather than an unbuilt promise.
++ *
++ * Two instrument defects this probe was born with, fixed and recorded:
++ *   1. Its first version omitted `You've hit your` from the harness predicate, so
++ *      a spend-limit banner counted as a missed greeting: 24/28 instead of 25/28.
++ *      The predicate is now the same one `conformance_scan` uses.
++ *   2. It reads the first assistant turn carrying PROSE, not the first assistant
++ *      entry: a session opening with 30 tool calls has no prose to greet in.
++ *
++ * Usage:
++ *   ./scripts-run src/scripts/probe_session_canary [--limit N] [--store PATH] [--name NAME]
++ *
++ * Exit codes: 0 always — this is a measurement, not a gate. A rate is not a
++ * verdict, and the round-7 reading (96 % post-carrier) is not a number anyone
++ * should gate on before it has a second window to compare against.
++ */
++import fs from "node:fs";
++import path from "node:path";
++
++import { defaultStore, HARNESS_TEXT } from "./conformance_scan.js";
++
++/** The first assistant turn that carries prose, or null. */
++function firstProse(lines: string[]): { text: string; at: string } | null {
++  for (const line of lines) {
++    if (!line.trim()) continue;
++    let e: Record<string, unknown>;
++    try {
++      e = JSON.parse(line) as Record<string, unknown>;
++    } catch {
++      continue;
++    }
++    if (e["isSidechain"] === true) continue;
++    const msg = e["message"] as { role?: string; content?: unknown } | undefined;
++    if (msg?.role !== "assistant") continue;
++    const c = msg.content;
++    if (!Array.isArray(c)) continue;
++    const text = c
++      .filter((b: { type?: string }) => b?.type === "text")
++      .map((b: { text?: string }) => b.text ?? "")
++      .join("\n")
++      .trim();
++    if (!text) continue;
++    // A harness banner occupies an assistant turn without being the assistant
++    // writing. Same predicate as the scan's, imported rather than re-typed.
++    if (HARNESS_TEXT.test(text)) continue;
++    return { text, at: String(e["timestamp"] ?? "") };
++  }
++  return null;
++}
++
++export interface CanaryRow {
++  session: string;
++  at: string;
++  greeted: boolean;
++  opener: string;
++}
++
++export function measure(store: string, limit: number, name: string): CanaryRow[] {
++  const re = new RegExp(`\\b${name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\b`, "i");
++  return fs
++    .readdirSync(store)
++    .filter((f) => f.endsWith(".jsonl"))
++    .map((f) => ({ f, m: fs.statSync(path.join(store, f)).mtimeMs }))
++    .sort((a, b) => b.m - a.m)
++    .slice(0, limit)
++    .flatMap(({ f }) => {
++      const lines = fs.readFileSync(path.join(store, f), "utf8").split("\n");
++      const first = firstProse(lines);
++      if (first === null) return [];
++      // The name has to be in the OPENING, not anywhere in a long first reply —
++      // a greeting is a greeting only where the reader looks for it.
++      const head = first.text.split("\n").slice(0, 3).join(" ");
++      return [
++        {
++          session: f.replace(/\.jsonl$/, "").slice(0, 8),
++          at: first.at,
++          greeted: re.test(head),
++          opener: first.text.split("\n")[0]?.slice(0, 70).replace(/\s+/g, " ") ?? "",
++        },
++      ];
++    });
++}
++
++export function main(argv?: string[]): number {
++  const args = argv ?? process.argv.slice(2);
++  const arg = (flag: string, dflt: string): string => {
++    const i = args.indexOf(flag);
++    return i >= 0 && args[i + 1] !== undefined ? (args[i + 1] as string) : dflt;
++  };
++  const store = arg("--store", defaultStore(process.cwd()));
++  const limit = Number(arg("--limit", "30"));
++  const name = arg("--name", "Matze");
++
++  if (!fs.existsSync(store)) {
++    process.stdout.write(`probe:session-canary · store not found: ${store}\n`);
++    return 0;
++  }
++  const rows = measure(store, limit, name);
++  if (rows.length === 0) {
++    process.stdout.write(`probe:session-canary · 0 session(s) with assistant prose in ${store}\n`);
++    return 0;
++  }
++  const hit = rows.filter((r) => r.greeted).length;
++  process.stdout.write(`probe:session-canary · ${rows.length} session(s) · name=${name}\n`);
++  for (const r of rows.filter((r) => !r.greeted).sort((a, b) => a.at.localeCompare(b.at))) {
++    process.stdout.write(`  MISS ${r.session} ${r.at.slice(0, 16)}  "${r.opener}"\n`);
++  }
++  process.stdout.write(
++    `  opening canary present in ${hit}/${rows.length} sessions ` +
++      `(${((100 * hit) / rows.length).toFixed(1)}%)\n`,
++  );
++  process.stdout.write(
++    "  Per-SESSION only. The per-TASK instance the rule also obliges is NOT decidable\n" +
++      "  from a transcript — no task boundary is recorded — so this figure is a floor on\n" +
++      "  compliance, never a verdict on the obligation as a whole.\n",
++  );
++  return 0;
++}
++
++if (process.argv[1] !== undefined && import.meta.url.endsWith(path.basename(process.argv[1]))) {
++  process.exit(main());
++}
+diff --git a/taskfiles/ci-fast.yml b/taskfiles/ci-fast.yml
+index 1aadd51adb234ff2006958be786df2338672f2fd..3b5da590ddae5bc32f3f0004e33095fa9fc07d8e 100644
+--- a/taskfiles/ci-fast.yml
++++ b/taskfiles/ci-fast.yml
+@@ -12,7 +12,19 @@ tasks:
+       Deliberately EXCLUDES check_enforcement_coverage (30.7s measured): a pre-push
+       gate that doubles the hook teaches people to skip it. That one stays in the
+       full `task ci` and belongs in the post-CI loop.
+-      Parity with CI is enforced by `task check-ci-local-parity`.
++
++      THIS TASK DOES NOT HAVE PARITY WITH CI, AND IS NOT MEANT TO.
++      Measured 2026-08-12 (round 7): preflight reaches 22 gates; 221 CI-enforced
++      gates are locally reachable and NOT here. A green preflight is a cheap
++      pre-push filter, never a prediction that CI will be green — three measured
++      "green locally, red remotely" cycles came out of reading it as one (the
++      Thin-Root char cap, the ratchet in the Node-Tests shard, derived-page
++      freshness).
++      This line previously read "Parity with CI is enforced by
++      `task check-ci-local-parity`". That checker compares CI against `task ci`,
++      which INCLUDES preflight — so it never inspected this task, and the sentence
++      claimed an authority nothing held. `check_ci_local_parity` now reports the
++      gap on every run; run `task ci` when you need the full set.
+     cmds:
+       # Before anything reads the tree: is the tree even current? Measured
+       # 2026-08-08 — a branch cut from a fetch at the start of a ninety-minute
+diff --git a/tests/scripts/ai_council/council_cli.test.ts b/tests/scripts/ai_council/council_cli.test.ts
+index 1a2ca96803222c296bf7788c760d0b44e8e276b9..483cd0d1c97f0fd217e665301a2fc188555fc6d8 100644
+--- a/tests/scripts/ai_council/council_cli.test.ts
++++ b/tests/scripts/ai_council/council_cli.test.ts
+@@ -870,6 +870,43 @@ describe('_postRunQuorum', () => {
+         expect(absent).toEqual([{ member: 'anthropic', reason: 'unavailable', detail: 'no response' }]);
+     });
+ 
++    // Round 7 § 5.2 — attendance is a NON-EMPTY answer, not the absence of an
++    // error. Measured: a 290 s curl timeout returned an empty body with NO error
++    // set in two sessions, and the banner printed `2/2 present` — a single-voice
++    // verdict presented as convergence, on a paid run.
++    it('an empty response body with NO error counts as ABSENT, not present', () => {
++        const members = [
++            new StubMember('anthropic', 'claude-x', new CouncilResponse({ provider: 'anthropic', model: 'claude-x', text: '' })),
++            new StubMember('openai', 'gpt-x', new CouncilResponse({ provider: 'openai', model: 'gpt-x', text: 'a real answer' })),
++        ];
++        const responses = members.map((m) => m.ask());
++        const { quorum, absent } = _postRunQuorum(members, responses, {});
++        expect(quorum).toEqual({ status: 'concluded', threshold: 1, total: 2, present: 1 });
++        expect(absent).toEqual([
++            { member: 'anthropic', reason: 'unavailable', detail: 'empty response body' },
++        ]);
++    });
++
++    it('whitespace-only text is empty too — a body of newlines is not an answer', () => {
++        const members = [
++            new StubMember('anthropic', 'claude-x', new CouncilResponse({ provider: 'anthropic', model: 'claude-x', text: '\n \n' })),
++        ];
++        const responses = members.map((m) => m.ask());
++        const { quorum } = _postRunQuorum(members, responses, {});
++        expect(quorum.present).toBe(0);
++    });
++
++    it('a real answer still counts — the change must not deduct a working member', () => {
++        const members = [
++            new StubMember('anthropic', 'claude-x', new CouncilResponse({ provider: 'anthropic', model: 'claude-x', text: 'ok' })),
++            new StubMember('openai', 'gpt-x', new CouncilResponse({ provider: 'openai', model: 'gpt-x', text: 'ok' })),
++        ];
++        const responses = members.map((m) => m.ask());
++        const { quorum, absent } = _postRunQuorum(members, responses, {});
++        expect(quorum).toEqual({ status: 'concluded', threshold: 1, total: 2, present: 2 });
++        expect(absent).toEqual([]);
++    });
++
+     it('an explicit `quorum: 2` over 3 members with 2 present is still inconclusive (2 < 2 is false, so this is concluded) — sanity on the setting passthrough', () => {
+         const members = [
+             new StubMember('anthropic', 'claude-x', new CouncilResponse({ provider: 'anthropic', model: 'claude-x', text: 'ok' })),
+diff --git a/tests/scripts/check_ci_local_parity.test.ts b/tests/scripts/check_ci_local_parity.test.ts
+new file mode 100644
+index 0000000000000000000000000000000000000000..7f8bf65e75919f79d266cccb21b45506d27f2018
+--- /dev/null
++++ b/tests/scripts/check_ci_local_parity.test.ts
+@@ -0,0 +1,87 @@
++// Round 7 § Phase 3 — the `preflight` dimension of the CI ↔ local parity gate.
++//
++// The gate had no test file at all, so the two pre-existing directions are pinned
++// here as well: a new dimension added to an untested reporter is how a report that
++// silently stops computing anything survives review.
++//
++// Every assertion is an INVARIANT over the derived sets, never a hardcoded count.
++// The counts move whenever a gate is added, and a test asserting "221" would fail
++// on the next unrelated gate while proving nothing about the relation it exists to
++// check.
++import { describe, expect, it } from 'vitest';
++
++import { analyse, extract_gates, extract_tasks, load_tasks, local_closure } from '../../src/scripts/check_ci_local_parity.js';
++
++const report = analyse();
++
++describe('check_ci_local_parity — the preflight dimension (round 7)', () => {
++    it('derives a non-empty preflight closure', () => {
++        // Zero would mean the root name stopped resolving — the "a gate that scans
++        // nothing exits green" shape this repo has been bitten by.
++        expect(report.preflight_gates.length).toBeGreaterThan(0);
++    });
++
++    it('preflight is a SUBSET of the local closure, because `task ci` includes it', () => {
++        const local = new Set(report.local_gates);
++        for (const g of report.preflight_gates) {
++            expect(local.has(g), `${g} is in preflight but not in the local closure`).toBe(true);
++        }
++    });
++
++    it('the reported gap is disjoint from preflight — by definition, so a bug here is silent', () => {
++        const pre = new Set(report.preflight_gates);
++        for (const g of report.ci_not_in_preflight) {
++            expect(pre.has(g), `${g} is reported as missing from preflight but is in it`).toBe(false);
++        }
++    });
++
++    it('every gap entry is CI-enforced AND locally reachable', () => {
++        const ci = new Set(report.ci_gates);
++        const local = new Set(report.local_gates);
++        for (const g of report.ci_not_in_preflight) {
++            expect(ci.has(g), `${g} is in the gap but not in CI`).toBe(true);
++            expect(local.has(g), `${g} is in the gap but not locally reachable`).toBe(true);
++        }
++    });
++
++    it('the gap is non-empty — if it ever empties, the report should be deleted, not left lying', () => {
++        // Measured 22 preflight / 221 gap on 2026-08-12. Asserted as a relation so
++        // the test survives gate churn: preflight must stay a PROPER subset while
++        // the two roots differ, which is the fact the docstring now states.
++        expect(report.ci_not_in_preflight.length).toBeGreaterThan(0);
++        expect(report.preflight_gates.length).toBeLessThan(report.local_gates.length);
++    });
++});
++
++describe('check_ci_local_parity — the two pre-existing directions still hold', () => {
++    it('reports no undeclared drift on the committed tree', () => {
++        expect(report.undeclared_ci_only).toEqual([]);
++        expect(report.undeclared_local_only).toEqual([]);
++    });
++
++    it('carries no stale declarations', () => {
++        expect(report.stale_declarations).toEqual([]);
++    });
++
++    it('the derivation reads both sides — neither side is empty', () => {
++        expect(report.ci_gates.length).toBeGreaterThan(0);
++        expect(report.local_gates.length).toBeGreaterThan(0);
++    });
++});
++
++describe('check_ci_local_parity — the extractors it derives from', () => {
++    it('extract_gates finds a scripts-run invocation', () => {
++        expect(extract_gates('- ./scripts-run src/scripts/lint_example --quiet')).toContain('lint_example');
++    });
++
++    it('extract_tasks finds a `task <name>` reference', () => {
++        // `task <name>`, with a space — NOT the YAML `task: <name>` dependency
++        // form. Asserted because the first version of this test assumed the
++        // colon form and passed vacuously against an empty set.
++        expect(extract_tasks('run: task check-refs')).toContain('check-refs');
++    });
++
++    it('local_closure on an unknown root is empty, not a throw', () => {
++        expect([...local_closure(['no-such-task-here'], load_tasks())]).toEqual([]);
++    });
++});
+diff --git a/tests/scripts/conformance_scan.test.ts b/tests/scripts/conformance_scan.test.ts
+index 41576a3ea286ee8ae0927549573e14dc28b43318..86d8536615a1dd741411e7ef1d8b1242e0e48be1 100644
+--- a/tests/scripts/conformance_scan.test.ts
++++ b/tests/scripts/conformance_scan.test.ts
+@@ -193,8 +193,17 @@ describe("render", () => {
+       expect(out).toContain(k);
+     }
+     // The scope disclaimer is part of the contract, not decoration.
+-    expect(out).toMatch(/NOT measured/);
++    //
++    // Round 7 § 6.4 tightened it: the footer used to say four classes are "NOT
++    // measured", and two of the four were wrong — `session-canary` is probeable
++    // and promissory closings are already GATED. So the assertion moved from the
++    // old blanket string to the property that now matters: each named class
++    // carries its own status, and the two that really are unmeasured say so.
++    expect(out).toMatch(/measured NOWHERE/);
+     expect(out).toMatch(/session-canary/);
++    expect(out).toMatch(/probe_session_canary/);
++    expect(out).toMatch(/ALREADY GATED/);
++    expect(out).toMatch(/ask-shape/);
+   });
+ });
+ 
+diff --git a/tests/scripts/hooks/before_complete_hook.test.ts b/tests/scripts/hooks/before_complete_hook.test.ts
+index 85a1be3d41b2e26f9dfb2949a339dd775f3f11f2..87effc69cbf84f31ba13e217821e9f17c81c01f3 100644
+--- a/tests/scripts/hooks/before_complete_hook.test.ts
++++ b/tests/scripts/hooks/before_complete_hook.test.ts
+@@ -145,3 +145,87 @@ describe('verify_before_complete — tracker behaviour', () => {
+         expect(state(tmp)['session_id']).toBe('s1');
+     });
+ });
++
++/**
++ * Round 7 § Phase 1.1 — `ci_last` is the session-scoped CI-settle NEGATIVE that
++ * `turn-end-gate` reads to refuse a premature completion claim. The property that
++ * matters is the one the turn-scoped counters deliberately do not have: it
++ * survives a user prompt, because the measured failure is a completion claim in a
++ * LATER turn than the poll it rests on.
++ */
++describe('verify_before_complete — ci_last (round 7)', () => {
++    function poll(output: string, session_id = 's1'): void {
++        run(
++            envelope(
++                'augment',
++                'post_tool_use',
++                {
++                    tool_name: 'launch-process',
++                    tool_input: { command: 'gh pr checks 1234' },
++                    tool_response: output,
++                },
++                session_id,
++            ),
++            { consumer_root: tmp },
++        );
++    }
++
++    it('is null before any CI poll', () => {
++        run(envelope('augment', 'session_start', {}), { consumer_root: tmp });
++        expect(state(tmp)['ci_last']).toBe(null);
++    });
++
++    it('records an in-flight poll as not settled', () => {
++        run(envelope('augment', 'session_start', {}), { consumer_root: tmp });
++        poll('build\tpending\t1m\nlint\tpass\t30s\n');
++        const ci = state(tmp)['ci_last'] as Record<string, unknown>;
++        expect(ci['settled']).toBe(false);
++        expect(ci['pending']).toBe(1);
++    });
++
++    it('records a real result table with no in-flight rows as settled', () => {
++        run(envelope('augment', 'session_start', {}), { consumer_root: tmp });
++        poll('build\tpass\t1m\nlint\tpass\t30s\n');
++        const ci = state(tmp)['ci_last'] as Record<string, unknown>;
++        expect(ci['settled']).toBe(true);
++        expect(ci['pending']).toBe(0);
++    });
++
++    it('never reads "no checks reported" as settled', () => {
++        run(envelope('augment', 'session_start', {}), { consumer_root: tmp });
++        poll('no checks reported on the abc123 branch\n');
++        const ci = state(tmp)['ci_last'] as Record<string, unknown>;
++        expect(ci['pending']).toBe(null);
++        expect(ci['settled']).toBe(false);
++    });
++
++    it('survives a user prompt — the turn-scoped witness does not', () => {
++        run(envelope('augment', 'session_start', {}), { consumer_root: tmp });
++        poll('build\tpending\t1m\n');
++        expect(state(tmp)['ci_saw_pending']).toBe(true);
++        run(envelope('augment', 'user_prompt_submit', { prompt: 'fixe die ci' }), {
++            consumer_root: tmp,
++        });
++        // The turn-scoped in-flight witness is reset by design …
++        expect(state(tmp)['ci_saw_pending']).toBe(false);
++        // … and the session-scoped negative is exactly what must NOT be.
++        const ci = state(tmp)['ci_last'] as Record<string, unknown>;
++        expect(ci['settled']).toBe(false);
++    });
++
++    it('a non-CI verification leaves ci_last untouched', () => {
++        run(envelope('augment', 'session_start', {}), { consumer_root: tmp });
++        poll('build\tpending\t1m\n');
++        run(
++            envelope('augment', 'post_tool_use', {
++                tool_name: 'launch-process',
++                tool_input: { command: 'npx vitest run tests/x.test.ts' },
++                tool_response: 'Tests  3 passed (3)',
++            }),
++            { consumer_root: tmp },
++        );
++        const ci = state(tmp)['ci_last'] as Record<string, unknown>;
++        expect(ci['settled']).toBe(false);
++        expect(ci['command']).toContain('gh pr checks');
++    });
++});
+diff --git a/tests/scripts/hooks/block_no_verify.test.ts b/tests/scripts/hooks/block_no_verify.test.ts
+index c37fecf7631b94a0ae8087157c8d133b506a3bcb..971c1eef7c2a84416d46a2aa8bb2ddbc9e54b845 100644
+--- a/tests/scripts/hooks/block_no_verify.test.ts
++++ b/tests/scripts/hooks/block_no_verify.test.ts
+@@ -87,6 +87,65 @@ describe('block_no_verify — shlexSplit', () => {
+     });
+ });
+ 
++// --- Round 7 § 2.3 — the heredoc matrix, both directions --------------------
++//
++// Measured on this branch BEFORE the change, which is why both rows exist:
++//   `git commit -F - <<'EOF' … maintainer's … EOF`  was BLOCKED (false positive)
++//   `bash <<EOF … git commit --no-verify … EOF`     was ALLOWED (real bypass)
++// The fix is one change — strip terminated heredocs before shlex, and scan a
++// body only when a SHELL consumes it — and it moves both rows at once. The
++// discrimination is the load-bearing part: a commit MESSAGE naming `--no-verify`
++// is data and must pass, or the round-5 false positive comes back in a new shape.
++describe('block_no_verify — heredoc bodies (round 7)', () => {
++    const MSG_HEREDOC = "git commit -F - <<'EOF'\nfix(x): respect the maintainer's call\nEOF";
++    const SHELL_HEREDOC = 'bash <<EOF\ngit commit --no-verify -m x\nEOF';
++
++    it('an apostrophe in a commit-message body no longer aborts the parse', () => {
++        expect(_check_command(MSG_HEREDOC)[0]).toBe(false);
++    });
++
++    it('a commit message that merely NAMES the flag is data, not code', () => {
++        expect(
++            _check_command(
++                "git commit -F - <<'EOF'\ndocs: explain why we never pass --no-verify\nEOF",
++            )[0],
++        ).toBe(false);
++    });
++
++    it('a SHELL-consumed body carrying --no-verify is blocked', () => {
++        expect(_check_command(SHELL_HEREDOC)[0]).toBe(true);
++    });
++
++    it('the shell consumer is recognised through a path prefix and an env prefix', () => {
++        expect(_check_command('/bin/sh <<EOF\ngit commit -n\nEOF')[0]).toBe(true);
++        expect(_check_command('env FOO=1 bash <<EOF\ngit commit -n\nEOF')[0]).toBe(true);
++    });
++
++    it('a bare mention of bash in an argument does NOT promote a message to code', () => {
++        expect(
++            _check_command("git commit -F - <<'EOF'\nchore: drop the bash wrapper\n--no-verify\nEOF")[0],
++        ).toBe(false);
++    });
++
++    it('an UNTERMINATED heredoc still reaches the fail-closed branch', () => {
++        // No closing delimiter ⇒ nothing is stripped ⇒ the raw string hits shlex,
++        // which throws on the odd quote ⇒ fail-closed on a git-containing command.
++        const [blocked, reason] = _check_command("git commit -F - <<'EOF'\nit's unterminated\n");
++        expect(blocked).toBe(true);
++        expect(reason).toContain('unbalanced');
++    });
++
++    it('the direct flags are unaffected — both still block', () => {
++        expect(_check_command('git commit -n -m x')[0]).toBe(true);
++        expect(_check_command('git commit --no-verify -m x')[0]).toBe(true);
++    });
++
++    it('the round-5 negative controls stay negative', () => {
++        expect(_check_command('grep -n foo x.ts')[0]).toBe(false);
++        expect(_check_command('[ -n "$X" ] && echo yes')[0]).toBe(false);
++    });
++});
++
+ // --- _split_subcommands / _git_base -----------------------------------------
+ 
+ describe('block_no_verify — subcommand split + git base', () => {
+diff --git a/tests/scripts/turn_end_gate_hook.test.ts b/tests/scripts/turn_end_gate_hook.test.ts
+index f94d882155d5e77cd9456efc4a03428c14164592..cc1f1bda965814ca75c6844993c5610519da4d5f 100644
+--- a/tests/scripts/turn_end_gate_hook.test.ts
++++ b/tests/scripts/turn_end_gate_hook.test.ts
+@@ -24,18 +24,21 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+ 
+ import {
+     alreadyRefusedTurn,
++    detectCompletionClaim,
+     detectLanguage,
+     detectPromissory,
+     detectUnverifiedEdit,
+     deriveSessionKey,
+     finalParagraph,
+     isVerificationCommand,
++    readCiSettled,
+     readGateSettings,
+     readLanguagePin,
+     readTranscriptTail,
+     visibleProse,
+     type ToolCall,
+ } from '../../src/scripts/hooks/turn_end_gate_hook.js';
++import { STATE_FILE as CI_STATE_FILE } from '../../src/scripts/before_complete_hook.js';
+ 
+ const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..');
+ const HOOK = path.join(REPO_ROOT, 'src', 'scripts', 'hooks', 'turn_end_gate_hook.ts');
+@@ -311,6 +314,7 @@ describe('settings — default OFF, detectors ON within it (roadmap 3.6)', () =>
+             promissory: true,
+             language: true,
+             verification: true,
++            completion: true,
+         });
+     });
+ 
+@@ -325,6 +329,7 @@ describe('settings — default OFF, detectors ON within it (roadmap 3.6)', () =>
+             promissory: true,
+             language: false,
+             verification: true,
++            completion: true,
+         });
+     });
+ 
+@@ -339,6 +344,22 @@ describe('settings — default OFF, detectors ON within it (roadmap 3.6)', () =>
+             promissory: true,
+             language: true,
+             verification: false,
++            completion: true,
++        });
++    });
++
++    it('the completion detector has its own switch', () => {
++        const s = readGateSettings(
++            makeWorkspace(
++                'hooks:\n  turn_end_gate:\n    enabled: true\n    completion: false\n',
++            ),
++        );
++        expect(s).toEqual({
++            enabled: true,
++            promissory: true,
++            language: true,
++            verification: true,
++            completion: false,
+         });
+     });
+ 
+@@ -419,6 +440,99 @@ describe('language pin', () => {
+     });
+ });
+ 
++/**
++ * Round 7 § Phase 1 — detector D: a completion claim over an unsettled CI read.
++ *
++ * The measured class (14 instances, every one costing the user a turn) is
++ * "Fertig" while checks are still running. The three negative cases below are the
++ * point of the detector, not an afterthought: a blocking guard that refuses a
++ * legitimate completion teaches the user to switch it off.
++ */
++describe('detector D — completion claim over unsettled CI (round 7)', () => {
++    function writeCi(dir: string, ci: unknown): void {
++        const target = path.join(dir, CI_STATE_FILE);
++        fs.mkdirSync(path.dirname(target), { recursive: true });
++        fs.writeFileSync(target, JSON.stringify({ schema_version: 1, ci_last: ci }));
++    }
++
++    const UNSETTLED = { seen: true, settled: false };
++    const SETTLED = { seen: true, settled: true };
++    const NEVER_SEEN = { seen: false, settled: false };
++
++    it('fires on the measured German shape', () => {
++        const f = detectCompletionClaim('Fertig, Matze — der komplette Auftrag ist durch.', UNSETTLED);
++        expect(f?.detector).toBe('completion');
++        expect(f?.evidence).toContain('Fertig');
++    });
++
++    it('fires on "Damit ist alles erledigt."', () => {
++        expect(detectCompletionClaim('Damit ist alles erledigt.', UNSETTLED)).not.toBeNull();
++    });
++
++    // --- the three cases that must NOT fire (roadmap 1.4) ---
++
++    it('does NOT fire when the CI read was settled', () => {
++        expect(detectCompletionClaim('Fertig, Matze.', SETTLED)).toBeNull();
++    });
++
++    it('does NOT fire in a session that never read CI', () => {
++        expect(detectCompletionClaim('Fertig, Matze.', NEVER_SEEN)).toBeNull();
++    });
++
++    it('does NOT fire on an unsettled read with no completion claim', () => {
++        expect(
++            detectCompletionClaim('Die CI läuft noch, ich warte auf das Settle.', UNSETTLED),
++        ).toBeNull();
++    });
++
++    it('does NOT fire on "fertig" inside a sentence about something else', () => {
++        expect(
++            detectCompletionClaim(
++                'Der Generator ist noch nicht fertig konfiguriert, deshalb prüfe ich das.',
++                UNSETTLED,
++            ),
++        ).toBeNull();
++    });
++
++    it('does NOT fire on a completion claim inside quoted tool output', () => {
++        expect(
++            detectCompletionClaim('Das Log sagt:\n\n```\nFertig.\n```\n\nIch lese weiter.', UNSETTLED),
++        ).toBeNull();
++    });
++
++    // --- readCiSettled: absence is never a settle, and never a refusal ---
++
++    it('no state file ⇒ not seen ⇒ the detector cannot fire', () => {
++        expect(readCiSettled(makeWorkspace())).toEqual(NEVER_SEEN);
++    });
++
++    it('a malformed state file is treated as not seen', () => {
++        const dir = makeWorkspace();
++        const target = path.join(dir, CI_STATE_FILE);
++        fs.mkdirSync(path.dirname(target), { recursive: true });
++        fs.writeFileSync(target, '{ not json');
++        expect(readCiSettled(dir)).toEqual(NEVER_SEEN);
++    });
++
++    it('ci_last null ⇒ not seen', () => {
++        const dir = makeWorkspace();
++        writeCi(dir, null);
++        expect(readCiSettled(dir)).toEqual(NEVER_SEEN);
++    });
++
++    it('reads an unsettled record the producer wrote', () => {
++        const dir = makeWorkspace();
++        writeCi(dir, { at: '2026-08-12T00:00:00+00:00', pending: 3, settled: false });
++        expect(readCiSettled(dir)).toEqual(UNSETTLED);
++    });
++
++    it('reads a settled record the producer wrote', () => {
++        const dir = makeWorkspace();
++        writeCi(dir, { at: '2026-08-12T00:00:00+00:00', pending: 0, settled: true });
++        expect(readCiSettled(dir)).toEqual(SETTLED);
++    });
++});
++
+ // ---------------------------------------------------------------------------
+ // Re-entrancy — through the real process (roadmap 3.1)
+ // ---------------------------------------------------------------------------

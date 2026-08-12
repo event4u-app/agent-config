@@ -171,7 +171,7 @@ describe("render", () => {
         "vacuous-evidence": 0,
         "evidence-steering": 1,
       },
-      per_session: [{ session: "abc", user_turns: 1, assistant_turns: 9, violations: [] }],
+      per_session: [{ session: "abc", user_turns: 1, assistant_turns: 9, violations: [], de_pin_turns: 0, first_at: "" }],
       delivered: {
         project: { dir: "/tmp/p", present: true, files: 2, tokens: 100 },
         global: { dir: "/tmp/g", present: true, files: 3, tokens: 200 },
@@ -363,7 +363,7 @@ describe("render — the payload block", () => {
       store: "/tmp/store",
       sessions: 1,
       totals: { "language-pin": 1, "git-authorization": 0, "vacuous-evidence": 0, "evidence-steering": 0 },
-      per_session: [{ session: "abc", user_turns: 1, assistant_turns: turns, violations: [] }],
+      per_session: [{ session: "abc", user_turns: 1, assistant_turns: turns, violations: [], de_pin_turns: 0, first_at: "" }],
       delivered: {
         project: { dir: "/tmp/p", present: true, files: 110, tokens: 101626 },
         global: { dir: "/tmp/g", present: true, files: 112, tokens: 102402 },
@@ -473,7 +473,7 @@ describe("measureDelivered — absent is not a measured zero", () => {
       store: "/tmp/s",
       sessions: 1,
       totals: { "language-pin": 0, "git-authorization": 0, "vacuous-evidence": 0, "evidence-steering": 0 },
-      per_session: [{ session: "a", user_turns: 1, assistant_turns: 3000, violations: [] }],
+      per_session: [{ session: "a", user_turns: 1, assistant_turns: 3000, violations: [], de_pin_turns: 0, first_at: "" }],
       delivered: measureDelivered(path.join(root, "nope"), path.join(root, "also-nope")),
       rate: {
         store_key: "aaaaaaaaaaaa",
@@ -512,7 +512,7 @@ describe("renderWhy — conformance:why <id>", () => {
         "vacuous-evidence": 0,
         "evidence-steering": 0,
       },
-      per_session: [{ session: "abc", user_turns: 1, assistant_turns: 9, violations: hits }],
+      per_session: [{ session: "abc", user_turns: 1, assistant_turns: 9, violations: hits, de_pin_turns: 0, first_at: "" }],
       delivered: {
         project: { dir: "/tmp/p", present: true, files: 2, tokens: 100 },
         global: { dir: "/tmp/g", present: true, files: 3, tokens: 200 },

@@ -163,14 +163,24 @@ export interface RateRecord {
   assistant_turns: number;
   language_pin: number;
   rate_pct: number;
-  /** Round 7 § 6.2 — the denominator the check can actually fire on. */
-  de_pin_turns: number;
+  /**
+   * Round 7 § 6.2 / 6.1 — OPTIONAL, and not for convenience.
+   *
+   * `--record` appends one line per run to a series whose whole purpose is
+   * comparability over time, and every line written before round 7 carries none
+   * of these four. Declaring them required would make the type say something
+   * false about the records on disk, and the renderer already reads them
+   * defensively for exactly that reason. `analyse()` always populates them, so a
+   * fresh run is never partial — the optionality describes the archive, not the
+   * producer.
+   */
+  de_pin_turns?: number;
   /** The same numerator over `de_pin_turns`. Reported beside `rate_pct`, never instead. */
-  rate_pct_de_pin: number;
-  /** Round 7 § 6.1 — the corpus straddles a carrier landing, so no band verdict. */
-  era_spanning: boolean;
+  rate_pct_de_pin?: number;
+  /** The corpus straddles a carrier landing, so no band verdict. */
+  era_spanning?: boolean;
   /** Which carrier, when `era_spanning` — empty otherwise. */
-  era_reason: string;
+  era_reason?: string;
   /**
    * `outside` is the falsifier firing; `corpus-too-small` and `era-spanning` are
    * not readings — the first is about corpus size, the second about the corpus
