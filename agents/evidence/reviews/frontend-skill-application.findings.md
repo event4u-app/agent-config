@@ -1,10 +1,10 @@
 # Findings: frontend-skill-application
-<!-- completion-review: v1 | reviewed: 2026-08-12 | scope: ae1406facf566e7a494163f47ed41b0b21a60faa00c9723fdc0b06d060fd9b52 | diff: cfc75b6b26bbf6bd09c0536ca0f553a52fbd09a9 | reviewer: r2-fresh-subagent-frontend-skill-application | prompt_hash: cccf6fbf0f41d8fb6c3d42caa8373c2da50180031965cd568d957697970371e3 -->
+<!-- completion-review: v1 | reviewed: 2026-08-12 | scope: a79d70df26e5f4473f7b84e10984450a87e22a00af0a2b597cd1acf067178eef | diff: 924cad87f91eb57acf4e8619015f3089e07a956c | reviewer: r2-fresh-subagent-frontend-skill-application | prompt_hash: cccf6fbf0f41d8fb6c3d42caa8373c2da50180031965cd568d957697970371e3 -->
 
 <!-- context-manifest: v1
 inputs:
-  diff_sha: cfc75b6b26bbf6bd09c0536ca0f553a52fbd09a9
-  scope_hash: ae1406facf566e7a494163f47ed41b0b21a60faa00c9723fdc0b06d060fd9b52
+  diff_sha: 924cad87f91eb57acf4e8619015f3089e07a956c
+  scope_hash: a79d70df26e5f4473f7b84e10984450a87e22a00af0a2b597cd1acf067178eef
   roadmap: none
   roadmap_hash: none
   ac_hash: none
@@ -25,6 +25,22 @@ dispatched: 2026-08-12T03:25:00Z
 > precision because the first draft of this note claimed the diff was empty,
 > and it is not. A re-bind that does not say exactly what moved is
 > indistinguishable from one that hides a change.
+>
+> **Third re-bind, and this one DID add unreviewed content — stated plainly
+> rather than folded into the same sentence as the generated files.** The CI
+> run surfaced three registries the branch had not accounted for, and the fixes
+> are new lines the reviewer never saw: eight `collision_ok` dispositions per UI
+> rule (the disposition text is one reason written once per value, not eight
+> arguments), one settings-class row plus its two derived counts, one
+> `gate-coverage.yml` registration with a scan floor, and a rewritten
+> `ui-session-capture-window` blocker — the old text described a capture concern
+> that the implementation deliberately does not have.
+>
+> None of it is behaviour: the collision entries are frontmatter the trigger
+> linter dictates, the class row and the gate entry are registry bookkeeping,
+> and the blocker text is documentation of an already-recorded decision. It is
+> still unreviewed, and whether that warrants a second pass is a human call, not
+> one this artefact should make on its own behalf.
 
 | # | Severity | File:Line | Finding | Status | Reason/Ref |
 |---|----------|-----------|---------|--------|------------|
