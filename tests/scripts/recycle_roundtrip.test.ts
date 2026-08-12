@@ -127,8 +127,18 @@ function sessionB(root: string): string {
     return deliverable(final);
 }
 
+/**
+ * A scratch root that looks like a project.
+ *
+ * The `agents/overrides/` marker is what makes `resolve_project_root` return
+ * an anchored root rather than the cwd-fallback `session:recycle` refuses. The
+ * round-trip is about two sessions handing off inside ONE repo, so an
+ * anchorless root would be testing a call shape the command rejects by design.
+ */
 function scratchRoot(): string {
-    return fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'recycle-roundtrip-')));
+    const root = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'recycle-roundtrip-')));
+    fs.mkdirSync(path.join(root, 'agents', 'overrides'), { recursive: true });
+    return root;
 }
 
 // ── The gate ────────────────────────────────────────────────────────────

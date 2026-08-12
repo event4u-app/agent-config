@@ -202,152 +202,218 @@ class is exactly what this contract exists to prevent.
 no row. It is a credential; were it ever uncommented it is C, and the lint would
 demand a row before the build went green.
 
+## The disposition axis — should the key exist at all?
+
+A/B/C answers **who may write a key**. It does not answer **whether the key
+should exist**, so a second, orthogonal axis carries that question. Every leaf
+lands in exactly one disposition; a key with no disposition is the finding,
+because it means nobody has said.
+
+| Disposition | Meaning | Action |
+|---|---|---|
+| `derivable` | the mechanism itself can decide, from the situation, better than a flag can | delete; move the decision into the mechanism |
+| `un-inferrable` | a fact about the human that nothing in the environment carries (name, language, IDE binary) | keep — this is the floor |
+| `consent` | a standing authorisation for something the package would otherwise do to the user | keep, but re-examine whether the ACTION needs authorising at all |
+| `policy` | a project-level fact the tree could carry instead (audience, jurisdiction) | move into the project surface, then delete the key |
+
+**A `derivable` row must name its replacement**, written after an em dash:
+`derivable — <what decides instead>`. That clause is the falsifier. Without it
+the label degrades into a synonym for "inconvenient to keep", and the direction
+of this axis pushes every borderline row toward exactly that. A row that cannot
+name a concrete mechanism is reclassified, not deleted —
+`lint_settings_classes` rejects the bare label.
+
+**Spend and irreversible outward actions are never `derivable`.** A flag whose
+stated purpose is to delay a mechanism usually prevents the evidence that would
+justify the mechanism, which makes "should this run?" keys the strongest
+deletion candidates — but a key that bounds cost or authorises something the
+user cannot un-see is `consent` however inferable it looks. The direction is
+toward fewer keys, not toward fewer confirmations.
+
+The axis lives in the same table and the same gate as the class, deliberately.
+A separate classification artefact would be a second thing to keep in sync with
+the template, which is the drift this contract exists to prevent.
+
+## Dispositions
+
+| Disposition | Keys |
+|---|---|
+| derivable | 88 |
+| un-inferrable | 9 |
+| consent | 38 |
+| policy | 5 |
+| **Total** | **140** |
+
+Measured 2026-08-12, from the table below rather than predicted — the numbers
+were deliberately not guessed in advance, because a target set before the
+classification is a target the classification then argues toward.
+
+`derivable` is the **deletion queue, not a deletion**: a row stays until the
+mechanism it names actually exists, so 88 measures work outstanding, not keys
+about to disappear. The count is expected to fall while `un-inferrable` does not
+— those 9 plus whatever survives re-examination in `consent` are the floor this
+surface has, and stating it is the point. `policy` is the smallest class and the
+only one whose action is a *move* rather than a keep or a delete: five keys carry
+a project fact the tree could hold instead.
+
+**Six keys have no reader at all** — found while classifying, not sought:
+`telegraph.speak_scope`, `chat_history.max_size_kb`, `chat_history.on_overflow`,
+`quality.wait_for_remote_ci`, `screenshots.data_bearing_gate`, and
+`legal_review_prep.consented_at`. Each is in the template, in the schema, on the
+reference page, and in several cases in the setup wizard; none is consulted by
+any code path. They are configured, documented, surfaced and inert. That is a
+sharper finding than the 88, because a key nothing reads cannot be defended on
+the grounds that someone depends on it — and two of them
+(`screenshots.data_bearing_gate`, `legal_review_prep.consented_at`) sit on
+consent-shaped surfaces where the absence of a reader means the authorisation
+they appear to carry is not actually enforced anywhere.
+
 ## The table
 
 Rows follow template order, so a diff against the template reads straight down.
 
-| Key | Class | Default | Why |
-|---|---|---|---|
-| `agent_config_version` | C | `""` | installer-owned pin selecting which package code executes |
-| `profile.id` | C | `developer` | master axis selecting the projected skill and command surface |
-| `projection.mode` | C | `scoped` | governs which artefacts reach the host trees at all |
-| `projection.rule_workspaces` | C | 9 workspaces | allowlist deciding which rules reach the agent |
-| `projection.rule_packs` | C | `[]` | second allowlist axis on rule projection |
-| `discipline_profile` | C | `__DISCIPLINE_PROFILE__` | master switch for the discipline rule tier |
-| `rule_loading_tier` | C | `__RULE_LOADING_TIER__` | legacy master switch for rule loading |
-| `lean_projection.mode` | C | `eager-all` | `thin` removes rule bodies from the agent's context |
-| `telegraph.speak` | C | `false` | ships a rule body; a token-cost lever in both directions |
-| `telegraph.speak_scope` | A | `"off"` | output register once that rule ships |
-| `tokens.rich_skills` | C | `"on"` | token-spend lever |
-| `cost.budgets.daily` | C | `0` | rolling spend ceiling |
-| `cost.budgets.weekly` | C | `0` | rolling spend ceiling |
-| `cost.budgets.monthly` | C | `0` | rolling spend ceiling |
-| `cost.budgets.per_tier.cheap` | C | `null` | per-tier spend ceiling |
-| `cost.budgets.per_tier.medium` | C | `null` | per-tier spend ceiling |
-| `cost.budgets.per_tier.strong` | C | `null` | per-tier spend ceiling |
-| `cost.enforcement` | C | `advisory` | decides whether a breach blocks or is merely logged |
-| `model.auto_switch` | C | `suggest` | authorises native model overrides, which is spend |
-| `personal.ide` | C | `""` | names a binary the agent would execute |
-| `personal.open_edited_files` | B | `false` | starts invoking that binary on every edit |
-| `personal.rtk_installed` | A | `false` | auto-detected machine fact |
-| `personal.minimal_output` | A | `true` | reply-shape preference |
-| `personal.play_by_play` | A | `false` | narration preference |
-| `personal.canary_name` | B | `""` | arms the session-degradation canary |
-| `personal.pr_comment_bot_icon` | A | `false` | comment cosmetics |
-| `personal.pr_progress_comments` | C | `false` | authorises unsolicited outbound comments on a PR |
-| `personal.autonomy` | C | `auto` | suppresses confirmation questions |
-| `personal.user_type` | C | `"__USER_TYPE__"` | master axis filtering the projected surface |
-| `verbosity.intent_announcements` | A | `false` | narration preference |
-| `verbosity.preview_artifacts` | C | `false` | removes pre-action review of commits, PRs, and branches |
-| `verbosity.routine_confirmations` | C | `false` | removes confirmation prompts |
-| `verbosity.offer_council_in_delivery` | A | `false` | offers a paid step; never takes it |
-| `verbosity.post_action_reports` | A | `minimal` | size of a status block |
-| `project.pr_template` | C | `.github/pull_request_template.md` | filesystem path whose contents reach an outbound PR |
-| `project.upstream_repo` | C | `""` | destination of outbound improvement PRs |
-| `project.improvement_pr_branch_prefix` | A | `improve/agent-` | branch-name cosmetics |
-| `project.audience` | C | `public` | C-test 4 — it governs the agent's own reasoning discipline: `self` makes the § 8-pre demand gate inert. Who a project is built for is a fact only its maintainer knows, so the agent never infers it and never asks; hand-edit or the GUI write route. The default is today's behaviour, so an install that never sets it is unchanged |
-| `github.pr_reply_method` | A | `create_review_comment` | picks between two endpoints of one operation |
-| `augment.rules_use_symlinks` | A | `false` | reversible install mechanics |
-| `eloquent.access_style` | A | `getters_setters` | code convention |
-| `chat_history.enabled` | C | `true` | kill-switch over a path that writes conversation content to disk |
-| `chat_history.frequency` | C | `__CHAT_HISTORY_FREQUENCY__` | capture granularity — a value that reduces what is captured erases the trail |
-| `chat_history.max_size_kb` | C | `__CHAT_HISTORY_MAX_SIZE_KB__` | cap on how much conversation lands on disk |
-| `chat_history.on_overflow` | C | `__CHAT_HISTORY_ON_OVERFLOW__` | decides what survives when the log fills; an audit-integrity choice, not a preference |
-| `chat_history.text_limits.user` | C | `0` | cap on how much user text is written to disk |
-| `chat_history.text_limits.agent` | C | `5000` | cap on how much agent text is written to disk |
-| `chat_history.text_limits.tool` | C | `200` | cap on how much tool payload is written to disk |
-| `chat_history.text_limits.phase` | C | `200` | cap on how much phase text is written to disk |
-| `pipelines.skill_improvement` | A | `true` | proposes a capture; the user still decides |
-| `reasoning.enabled` | C | `true` | master switch for the agent's own reasoning discipline |
-| `reasoning.auto_gate` | C | `true` | decides when that discipline engages |
-| `reasoning.components.orchestrator` | C | `true` | a component of the agent's own discipline |
-| `reasoning.components.notes_first` | C | `true` | a component of the agent's own discipline |
-| `reasoning.components.grounding` | C | `true` | a component of the agent's own discipline |
-| `reasoning.components.intent` | C | `true` | a component of the agent's own discipline |
-| `reasoning.components.complexity_first` | C | `true` | a component of the agent's own discipline |
-| `reasoning.components.verifier_default` | C | `true` | disabling it removes a verification step |
-| `reasoning.components.prediction_tracking` | C | `true` | a component of the agent's own discipline |
-| `reasoning.components.decision_ledger` | C | `true` | a component of the agent's own discipline |
-| `reasoning.components.uncertainty_budget` | C | `true` | a component of the agent's own discipline |
-| `roadmap.skip_pre_run_gate` | C | `true` | disables a pre-run confirmation gate |
-| `roadmap.quality_cadence` | C | `end_of_roadmap` | governs when verification runs |
-| `roadmap.dashboard_regen_cadence` | A | `every_5_steps` | beat of a derived view |
-| `roadmap.horizon_weeks` | C | `0` | a non-zero value relaxes a lint's plate-token ban |
-| `planning.challenge_on_create` | C | `true` | disables the plan-confidence gate |
-| `planning.risk_review` | C | `true` | disables the risk-register validator |
-| `planning.completion_review` | C | `true` | disables the completion-review validator |
-| `quality.local_auto_run` | C | `false` | governs whether local verification runs at all |
-| `quality.wait_for_remote_ci` | C | `false` | governs whether the authoritative gate is waited on |
-| `design.fidelity_mode` | C | `strict` | strict-mode selector, one of whose values is a Hard Floor |
-| `consistency.cross_source` | C | `"on"` | disables the cross-source discrepancy gate |
-| `screenshots.identity_allowlist` | C | `[]` | allowlist of identities that ship unredacted |
-| `screenshots.forbid_terminal_capture` | C | `true` | kill-switch over the highest-leak capture path |
-| `screenshots.data_bearing_gate` | C | `"on"` | the human-confirmation gate over a published egress |
-| `code_style.docblocks` | A | `minimal` | code convention |
-| `subagents.downshift` | C | `true` | routes to another model tier, which is spend and quality |
-| `subagents.quota_arbitrage` | C | `true` | spends from a separate quota pool |
-| `subagents.model_map.lite` | C | `""` | names an external model endpoint |
-| `subagents.model_map.medium` | C | `""` | names an external model endpoint |
-| `subagents.model_map.high` | C | `""` | names an external model endpoint |
-| `subagents.implementer_model` | C | `""` | names an external model endpoint |
-| `subagents.judge_model` | C | `""` | names an external model endpoint |
-| `subagents.model_ceiling` | C | `""` | session-wide subagent model cap (exported as `CLAUDE_CODE_SUBAGENT_MODEL` by suite-owned CLI spawn wrappers), which is spend and quality |
-| `subagents.max_parallel` | C | `3` | parallelism cap, and therefore a spend rate |
-| `subagents.adversarial_council` | C | `"off"` | governs a paid verification step |
-| `worktrees.mode` | C | `ask` | standing permission for autonomous worktree creation |
-| `ai_team.model` | C | `auto` | names an external model |
-| `ai_team.allow_delegate` | C | `false` | grants an external tool write access to the repository |
-| `ai_team.max_calls_per_day` | C | `50` | quota cap on a shared budget |
-| `ai_team.suppress_setup_hint` | A | `false` | hint cosmetics |
-| `ai_team.review_gate.managed` | C | `false` | governs an upstream review gate |
-| `ai_team.review_gate.max_consecutive_blocks` | C | `3` | circuit-breaker threshold |
-| `emergency.orchestration_halt` | C | `false` | the one audited incident switch over the always-on orchestration stack — see § The one exception above |
-| `emergency.orchestration_halt_justification` | C | `""` | required non-empty before the halt may be lifted; an audit-trail field |
-| `onboarding.onboarded` | C | `false` | flipping it bypasses the onboarding gate |
-| `commands.auto_detect` | C | `enabled` | kill-switch for orchestrator auto-detection |
-| `commands.suggestion.enabled` | A | `true` | a convenience layer; governs no gate and no spend |
-| `commands.suggestion.confidence_floor` | A | `0.6` | tuning of that convenience layer |
-| `commands.suggestion.cooldown_seconds` | A | `600` | tuning of that convenience layer |
-| `commands.suggestion.max_options` | A | `4` | tuning of that convenience layer |
-| `commands.suggestion.blocklist` | C | `[]` | a deny-list |
-| `commands.create_pr.preview_description` | C | `false` | removes pre-publish review of an outbound artefact |
-| `commands.create_pr.detail_level` | A | `min` | verbosity of a generated body |
-| `commands.create_pr.api_examples` | A | `true` | verbosity of a generated body |
-| `commands.create_pr.screenshots` | C | `false` | puts captured screenshots into a published PR body |
-| `commands.create_pr.ui_paths` | C | `[]` | glob allowlist |
-| `commands.create_pr.api_paths` | C | `[]` | glob allowlist |
-| `memory.cadence` | C | `always` | suppressing the visibility line hides what the agent learned from the user |
-| `memory.review_threshold` | A | `10` | when a review preview surfaces; governs no gate |
-| `memory.redact_patterns` | C | `[]` | deny-list of secret and PII regexes |
-| `memory.session_index` | A | `"off"` | injects a compact index at session start |
-| `memory.learn_on_session_end` | B | `false` | turns on automatic memory writes at session end |
-| `knowledge.global_sharing.enabled` | C | `true` | kill-switch over cross-project egress |
-| `knowledge.global_sharing.allowed_tiers` | C | `[public]` | allowlist for that egress |
-| `knowledge.global_sharing.redaction.enabled` | C | `true` | disabling it removes the redaction floor |
-| `knowledge.global_sharing.redaction.halt_on_trigger` | C | `true` | disabling it removes halt-and-prompt |
-| `knowledge.global_sharing.auto_promote_threshold` | C | `2` | threshold governing that egress |
-| `knowledge.global_sharing.freshness.hypothesis_after_days` | A | `90` | freshness heuristic on a card already shared |
-| `knowledge.global_sharing.freshness.stale_after_days` | A | `180` | freshness heuristic on a card already shared |
-| `hooks.concern_budget.max_per_event` | C | `8` | budget cap on hook concerns |
-| `hooks.concern_budget.tier1_concerns` | C | `[]` | allowlist of concerns permitted to fail closed |
-| `hooks.concern_budget.hard_fail` | C | `false` | weakens the budget gate to warn-only |
-| `hooks.injection_scan.enabled` | C | `false` | the prompt-injection scanner |
-| `hooks.rtk_wrap.enabled` | C | `false` | configures code that runs on every tool call |
-| `hooks.design_slop.enabled` | C | `false` | configures code that runs on every tool call |
-| `hooks.ui_route_nudge.enabled` | C | `false` | configures code that runs on every tool call |
-| `hooks.code_graph.enabled` | C | `false` | configures code that runs on every tool call |
-| `decision_engine.surface_traces` | C | `false` | the decision engine’s own black box; the agent must not be able to close it |
-| `decision_engine.min_confidence` | C | `"off"` | the confidence gate |
-| `decision_engine.block_on_risk` | C | `"off"` | the risk-class gate |
-| `decision_engine.require_memory_hits` | C | `false` | a phase gate |
-| `decision_engine.on_block` | C | `stop` | `warn` advances past a gate that fired |
-| `decision_engine.ask_timeout_seconds` | C | `30` | how long a fired gate waits before falling back |
-| `decision_engine.on_block_fallback` | C | `stop` | fail-safe versus fail-open after that timeout |
-| `update_check.enabled` | C | `true` | a background safety check; disabling it pins the user to known-vulnerable code |
-| `explain.enable_last` | A | `true` | a read-only diagnostics surface |
-| `legal_review_prep.acknowledged` | C | `false` | the consent gate; the safety floor requires the wizard checkbox |
-| `legal_review_prep.consented_at` | C | `""` | the record of that consent |
-| `legal_review_prep.require_council` | C | `true` | a fail-closed defence-in-depth gate |
+| Key | Class | Default | Why | Disposition |
+|---|---|---|---|---|
+| `agent_config_version` | C | `""` | installer-owned pin selecting which package code executes | derivable — the installed package's own `package.json` version; `check_template_pin_drift` already enforces pin == package.json |
+| `profile.id` | C | `developer` | master axis selecting the projected skill and command surface | un-inferrable |
+| `projection.mode` | C | `scoped` | governs which artefacts reach the host trees at all | derivable — the resolved active-profile + `runtime.active_packs` set `_resolve_scoped_projection` already computes |
+| `projection.rule_workspaces` | C | 9 workspaces | allowlist deciding which rules reach the agent | derivable — the rule's own `workspaces:` frontmatter intersected with the active profile/pack set, as `rule_scope.ts` already performs for `rule_packs: auto` |
+| `projection.rule_packs` | C | `[]` | second allowlist axis on rule projection | derivable — the `auto` derivation already implemented in `src/install/rule_scope.ts` |
+| `discipline_profile` | C | `__DISCIPLINE_PROFILE__` | master switch for the discipline rule tier | derivable — its own `auto` resolution against `src/config/host-capabilities.yml` |
+| `rule_loading_tier` | C | `__RULE_LOADING_TIER__` | legacy master switch for rule loading | derivable — `discipline_profile` supersedes it with a documented mapping (minimal→off, balanced→essential, full→full) |
+| `lean_projection.mode` | C | `eager-all` | `thin` removes rule bodies from the agent's context | derivable — `probe_host_compliance.ts` already computes the per-host thin/eager recommendation |
+| `telegraph.speak` | C | `false` | ships a rule body; a token-cost lever in both directions | derivable — the telegraph kill-criterion bench verdict is a package-level decision, not a per-install one |
+| `telegraph.speak_scope` | A | `"off"` | output register once that rule ships | derivable — the rule body's own scope statement; no code reader exists at all |
+| `tokens.rich_skills` | C | `"on"` | token-spend lever | derivable — the skill's own `token_budget_class: rich` declaration plus the CI ceiling in `lint_token_budget_discipline.ts` |
+| `cost.budgets.daily` | C | `0` | rolling spend ceiling | consent |
+| `cost.budgets.weekly` | C | `0` | rolling spend ceiling | consent |
+| `cost.budgets.monthly` | C | `0` | rolling spend ceiling | consent |
+| `cost.budgets.per_tier.cheap` | C | `null` | per-tier spend ceiling | consent |
+| `cost.budgets.per_tier.medium` | C | `null` | per-tier spend ceiling | consent |
+| `cost.budgets.per_tier.strong` | C | `null` | per-tier spend ceiling | consent |
+| `cost.enforcement` | C | `advisory` | decides whether a breach blocks or is merely logged | consent |
+| `model.auto_switch` | C | `suggest` | authorises native model overrides, which is spend | consent |
+| `personal.ide` | C | `""` | names a binary the agent would execute | un-inferrable |
+| `personal.open_edited_files` | B | `false` | starts invoking that binary on every edit | consent |
+| `personal.rtk_installed` | A | `false` | auto-detected machine fact | derivable — the wizard's own two-stage PATH probe (`which rtk` plus an identity check), which already overwrites the key |
+| `personal.minimal_output` | A | `true` | reply-shape preference | derivable — `direct-answers` Iron Law 3 already fixes reply length per reply |
+| `personal.play_by_play` | A | `false` | narration preference | derivable — `direct-answers`' narration ban is the standing default; an in-turn request is the only thing that lifts it |
+| `personal.canary_name` | B | `""` | arms the session-degradation canary | un-inferrable |
+| `personal.pr_comment_bot_icon` | A | `false` | comment cosmetics | derivable — `no-decorative-emojis-in-git-surfaces` already forbids the icon in PR comments |
+| `personal.pr_progress_comments` | C | `false` | authorises unsolicited outbound comments on a PR | consent |
+| `personal.autonomy` | C | `auto` | suppresses confirmation questions | derivable — `no-cheap-questions`' mode-independent Pre-Send Self-Check decides per question |
+| `personal.user_type` | C | `"__USER_TYPE__"` | master axis filtering the projected surface | derivable — `profile.id` already carries the persona axis over a near-identical value set |
+| `verbosity.intent_announcements` | A | `false` | narration preference | derivable — `personal.play_by_play` already gates the narration carve-out this key sits under |
+| `verbosity.preview_artifacts` | C | `false` | removes pre-action review of commits, PRs, and branches | derivable — the Iron-Law gates already decide which artefacts need a pre-action look |
+| `verbosity.routine_confirmations` | C | `false` | removes confirmation prompts | derivable — `no-cheap-questions`' Pre-Send Self-Check already decides whether a confirmation carries a real trade-off |
+| `verbosity.offer_council_in_delivery` | A | `false` | offers a paid step; never takes it | derivable — `agent-config council:status`, which answers whether there is anything to offer |
+| `verbosity.post_action_reports` | A | `minimal` | size of a status block | derivable — `direct-answers` Iron Law 3 and the reply-close contract already fix the status block to ONE end-summary |
+| `project.pr_template` | C | `.github/pull_request_template.md` | filesystem path whose contents reach an outbound PR | derivable — GitHub's own PR-template resolution order; the key only caches a filesystem lookup |
+| `project.upstream_repo` | C | `""` | destination of outbound improvement PRs | derivable — the installed package's own `package.json` repository field |
+| `project.improvement_pr_branch_prefix` | A | `improve/agent-` | branch-name cosmetics | derivable — the repo's own branch-naming convention, observable from `git branch -r` |
+| `project.audience` | C | `public` | C-test 4 — it governs the agent's own reasoning discipline: `self` makes the § 8-pre demand gate inert. Who a project is built for is a fact only its maintainer knows, so the agent never infers it and never asks; hand-edit or the GUI write route. The default is today's behaviour, so an install that never sets it is unchanged | policy |
+| `github.pr_reply_method` | A | `create_review_comment` | picks between two endpoints of one operation | derivable — the `auto` value already in the enum: the routing detects the working endpoint on first use and writes it back |
+| `augment.rules_use_symlinks` | A | `false` | reversible install mechanics | derivable — dev-mode detection at install time plus a symlink-capability probe on the target filesystem |
+| `eloquent.access_style` | A | `getters_setters` | code convention | derivable — the convention the project's existing models already use; `standards-from-config` reads it off the tree |
+| `chat_history.enabled` | C | `true` | kill-switch over a path that writes conversation content to disk | consent |
+| `chat_history.frequency` | C | `__CHAT_HISTORY_FREQUENCY__` | capture granularity — a value that reduces what is captured erases the trail | consent |
+| `chat_history.max_size_kb` | C | `__CHAT_HISTORY_MAX_SIZE_KB__` | cap on how much conversation lands on disk | derivable — nothing reads it; the `rotate` command takes `--max-kb` from argv and session-count pruning is what actually bounds the file |
+| `chat_history.on_overflow` | C | `__CHAT_HISTORY_ON_OVERFLOW__` | decides what survives when the log fills; an audit-integrity choice, not a preference | derivable — nothing reads it; the overflow mode comes from the `--mode` argv of the `rotate` command |
+| `chat_history.text_limits.user` | C | `0` | cap on how much user text is written to disk | consent |
+| `chat_history.text_limits.agent` | C | `5000` | cap on how much agent text is written to disk | consent |
+| `chat_history.text_limits.tool` | C | `200` | cap on how much tool payload is written to disk | consent |
+| `chat_history.text_limits.phase` | C | `200` | cap on how much phase text is written to disk | consent |
+| `pipelines.skill_improvement` | A | `true` | proposes a capture; the user still decides | derivable — the pipeline's own trigger condition; the capture is already a user-confirmed proposal |
+| `reasoning.enabled` | C | `true` | master switch for the agent's own reasoning discipline | derivable — the RDP gate's own task-triviality and host self-assessment signals already decide per turn |
+| `reasoning.auto_gate` | C | `true` | decides when that discipline engages | derivable — it only removes the RDP gate's host self-assessment signal, its cheapest and most situational input |
+| `reasoning.components.orchestrator` | C | `true` | a component of the agent's own discipline | derivable — the RDP gate's task signal (complex / multi-component vs trivial) |
+| `reasoning.components.notes_first` | C | `true` | a component of the agent's own discipline | derivable — the RDP gate's task signal; the notes file only exists once the gate engaged |
+| `reasoning.components.grounding` | C | `true` | a component of the agent's own discipline | derivable — `think-before-action`'s own info-gap condition, which `source-discovery-gate` already tests |
+| `reasoning.components.intent` | C | `true` | a component of the agent's own discipline | derivable — the RDP gate's host self-assessment signal |
+| `reasoning.components.complexity_first` | C | `true` | a component of the agent's own discipline | derivable — the RDP gate's task signal (a load-bearing unknown exists or it does not) |
+| `reasoning.components.verifier_default` | C | `true` | disabling it removes a verification step | derivable — the verifier's own structural-complexity gate |
+| `reasoning.components.prediction_tracking` | C | `true` | a component of the agent's own discipline | derivable — the RDP gate's task signal; a turn with no prediction to log produces no entry |
+| `reasoning.components.decision_ledger` | C | `true` | a component of the agent's own discipline | derivable — the escalation litmus in `notes-first-reasoning` (tactical to notes, durable to ADR) |
+| `reasoning.components.uncertainty_budget` | C | `true` | a component of the agent's own discipline | derivable — the RDP gate's task signal; the score feeds adaptive effort only where the gate already engaged |
+| `roadmap.skip_pre_run_gate` | C | `true` | disables a pre-run confirmation gate | derivable — the pre-run gate's own ambiguity condition; a genuine ambiguity prompts regardless |
+| `roadmap.quality_cadence` | C | `end_of_roadmap` | governs when verification runs | derivable — `quality.local_auto_run` decides whether local verification runs, and the `verify-before-complete` evidence gate decides the moment |
+| `roadmap.dashboard_regen_cadence` | A | `every_5_steps` | beat of a derived view | derivable — the dashboard is derived: `roadmap:progress` regenerates deterministically from the roadmap files |
+| `roadmap.horizon_weeks` | C | `0` | a non-zero value relaxes a lint's plate-token ban | policy |
+| `planning.challenge_on_create` | C | `true` | disables the plan-confidence gate | derivable — the gate's own confidence conditions; a confident plan passes straight through |
+| `planning.risk_review` | C | `true` | disables the risk-register validator | derivable — `lint_plan_risk_register`'s own scope predicate (ready, non-draft plans only) |
+| `planning.completion_review` | C | `true` | disables the completion-review validator | derivable — `check_completion_review`'s own scope predicate, bound to the current diff hash |
+| `quality.local_auto_run` | C | `false` | governs whether local verification runs at all | consent |
+| `quality.wait_for_remote_ci` | C | `false` | governs whether the authoritative gate is waited on | derivable — nothing reads it; whether to poll follows from the push plus a detectable remote pipeline |
+| `design.fidelity_mode` | C | `strict` | strict-mode selector, one of whose values is a Hard Floor | policy |
+| `consistency.cross_source` | C | `"on"` | disables the cross-source discrepancy gate | derivable — the rule's own trigger condition; a discrepancy exists only when two present sources contradict |
+| `screenshots.identity_allowlist` | C | `[]` | allowlist of identities that ship unredacted | consent |
+| `screenshots.forbid_terminal_capture` | C | `true` | kill-switch over the highest-leak capture path | consent |
+| `screenshots.data_bearing_gate` | C | `"on"` | the human-confirmation gate over a published egress | consent |
+| `code_style.docblocks` | A | `minimal` | code convention | derivable — the project's own linter/style config and the docblock density of the touched file, which `standards-from-config` reads off the tree |
+| `subagents.downshift` | C | `true` | routes to another model tier, which is spend and quality | derivable — the per-slice tier assignment in `auto-dispatch-classification`, which the orchestrator already computes per dispatch |
+| `subagents.quota_arbitrage` | C | `true` | spends from a separate quota pool | consent |
+| `subagents.model_map.lite` | C | `""` | names an external model endpoint | un-inferrable |
+| `subagents.model_map.medium` | C | `""` | names an external model endpoint | un-inferrable |
+| `subagents.model_map.high` | C | `""` | names an external model endpoint | un-inferrable |
+| `subagents.implementer_model` | C | `""` | names an external model endpoint | un-inferrable |
+| `subagents.judge_model` | C | `""` | names an external model endpoint | un-inferrable |
+| `subagents.model_ceiling` | C | `""` | session-wide subagent model cap (exported as `CLAUDE_CODE_SUBAGENT_MODEL` by suite-owned CLI spawn wrappers), which is spend and quality | consent |
+| `subagents.max_parallel` | C | `3` | parallelism cap, and therefore a spend rate | consent |
+| `subagents.adversarial_council` | C | `"off"` | governs a paid verification step | consent |
+| `worktrees.mode` | C | `ask` | standing permission for autonomous worktree creation | consent |
+| `ai_team.model` | C | `auto` | names an external model | un-inferrable |
+| `ai_team.allow_delegate` | C | `false` | grants an external tool write access to the repository | consent |
+| `ai_team.max_calls_per_day` | C | `50` | quota cap on a shared budget | consent |
+| `ai_team.suppress_setup_hint` | A | `false` | hint cosmetics | derivable — the hint's own precondition; `agent-config doctor --check team` already knows whether team mode is configured |
+| `ai_team.review_gate.managed` | C | `false` | governs an upstream review gate | consent |
+| `ai_team.review_gate.max_consecutive_blocks` | C | `3` | circuit-breaker threshold | derivable — the existing N=3 validation-loop budget in `autonomous-execution`, which already bounds consecutive failed attempts on one target |
+| `emergency.orchestration_halt` | C | `false` | the one audited incident switch over the always-on orchestration stack — see § The one exception above | consent |
+| `emergency.orchestration_halt_justification` | C | `""` | required non-empty before the halt may be lifted; an audit-trail field | consent |
+| `onboarding.onboarded` | C | `false` | flipping it bypasses the onboarding gate | derivable — the wizard's own completion artefacts; the onboarding hook can read whether setup actually ran instead of trusting a self-reported flag |
+| `commands.auto_detect` | C | `enabled` | kill-switch for orchestrator auto-detection | derivable — the orchestrator's own confidence-tiered detection table plus the non-interactive TTY/CI probe |
+| `commands.suggestion.enabled` | A | `true` | a convenience layer; governs no gate and no spend | derivable — the suggester's own match-score threshold and cooldown; a prompt that matches nothing already produces silence |
+| `commands.suggestion.confidence_floor` | A | `0.6` | tuning of that convenience layer | derivable — the suggester's calibrated constant, with the existing per-command frontmatter override where one command needs a different bar |
+| `commands.suggestion.cooldown_seconds` | A | `600` | tuning of that convenience layer | derivable — the per-command cooldown tracker, which already reads session behaviour |
+| `commands.suggestion.max_options` | A | `4` | tuning of that convenience layer | derivable — the number of matches that clear the confidence floor, bounded by the numbered-options shape `user-interaction` fixes |
+| `commands.suggestion.blocklist` | C | `[]` | a deny-list | derivable — the same cooldown tracker that reads whether the user picks a suggestion; repeated non-selection is the signal a hand-maintained deny-list stands in for |
+| `commands.create_pr.preview_description` | C | `false` | removes pre-publish review of an outbound artefact | consent |
+| `commands.create_pr.detail_level` | A | `min` | verbosity of a generated body | derivable — the diff the command already reads (changed-file count and risk surface) |
+| `commands.create_pr.api_examples` | A | `true` | verbosity of a generated body | derivable — the command's own API-surface detection plus its grounded-source requirement |
+| `commands.create_pr.screenshots` | C | `false` | puts captured screenshots into a published PR body | consent |
+| `commands.create_pr.ui_paths` | C | `[]` | glob allowlist | derivable — the frontend-surface heuristic the PR-description flow already applies when the glob list is empty |
+| `commands.create_pr.api_paths` | C | `[]` | glob allowlist | derivable — the API-endpoint heuristic the same flow already applies as its documented empty-list fallback |
+| `memory.cadence` | C | `always` | suppressing the visibility line hides what the agent learned from the user | derivable — the hits/asks count the memory-visibility summary already computes; the line only exists when memory was consulted |
+| `memory.review_threshold` | A | `10` | when a review preview surfaces; governs no gate | derivable — the unreviewed-intake count `/memory load` already computes before rendering its preview |
+| `memory.redact_patterns` | C | `[]` | deny-list of secret and PII regexes | policy |
+| `memory.session_index` | A | `"off"` | injects a compact index at session start | derivable — the row cap and index cost the mechanism already computes; the flag only holds an unproven ship-criterion open |
+| `memory.learn_on_session_end` | B | `false` | turns on automatic memory writes at session end | consent |
+| `knowledge.global_sharing.enabled` | C | `true` | kill-switch over cross-project egress | consent |
+| `knowledge.global_sharing.allowed_tiers` | C | `[public]` | allowlist for that egress | consent |
+| `knowledge.global_sharing.redaction.enabled` | C | `true` | disabling it removes the redaction floor | derivable — the redaction scan's own match result; no violation means no-op, so the flag can only remove a floor on an already-authorised path |
+| `knowledge.global_sharing.redaction.halt_on_trigger` | C | `true` | disabling it removes halt-and-prompt | derivable — the violations list the redaction scan already returns; a non-empty list IS the halt condition |
+| `knowledge.global_sharing.auto_promote_threshold` | C | `2` | threshold governing that egress | derivable — the distinct-repo count the promotion candidates already compute; promotion stays suggest-only and human-confirmed |
+| `knowledge.global_sharing.freshness.hypothesis_after_days` | A | `90` | freshness heuristic on a card already shared | derivable — the age computation over the card's own `last_verified` provenance footer |
+| `knowledge.global_sharing.freshness.stale_after_days` | A | `180` | freshness heuristic on a card already shared | derivable — the same age computation; the cut-point is advisory because the card is a cache, never a source of truth |
+| `hooks.concern_budget.max_per_event` | C | `8` | budget cap on hook concerns | derivable — the gate's own constant over `hook_manifest.yaml`, with no consumer-situational input to read |
+| `hooks.concern_budget.tier1_concerns` | C | `[]` | allowlist of concerns permitted to fail closed | policy |
+| `hooks.concern_budget.hard_fail` | C | `false` | weakens the budget gate to warn-only | derivable — the gate's own `--strict` argv, which CI already passes to sibling gates |
+| `hooks.injection_scan.enabled` | C | `false` | the prompt-injection scanner | derivable — the scanner's own signature match on the tool envelope; warn-only and silent on no hit |
+| `hooks.rtk_wrap.enabled` | C | `false` | configures code that runs on every tool call | derivable — the live PATH and identity probe the hook already runs; silent when rtk is absent |
+| `hooks.design_slop.enabled` | C | `false` | configures code that runs on every tool call | derivable — the rule-registry match plus the hook's own per-signature silence cap |
+| `hooks.ui_route_nudge.enabled` | C | `false` | configures code that runs on every tool call | derivable — the UI-surface predicate plus the hook's own two-nudges-per-session cap |
+| `hooks.code_graph.enabled` | C | `false` | configures code that runs on every tool call | derivable — the index-detection probe the nudge already runs; no index means silence |
+| `decision_engine.surface_traces` | C | `false` | the decision engine’s own black box; the agent must not be able to close it | derivable — the engine's own active-gate state; there is nothing to surface when no gate fired |
+| `decision_engine.min_confidence` | C | `"off"` | the confidence gate | derivable — the confidence band the scoring engine already computes at the plan phase |
+| `decision_engine.block_on_risk` | C | `"off"` | the risk-class gate | derivable — the risk class the engine already computes at the implement phase; the Hard Floor covers the irreversible end unconditionally |
+| `decision_engine.require_memory_hits` | C | `false` | a phase gate | derivable — the memory-hit count at the refine phase; its own template comment says the flag delays that soak |
+| `decision_engine.on_block` | C | `stop` | `warn` advances past a gate that fired | derivable — the non-interactive probe decides ask-versus-stop, and the fired gate's own action decides the rest |
+| `decision_engine.ask_timeout_seconds` | C | `30` | how long a fired gate waits before falling back | derivable — the same non-interactive probe: where nobody can answer there is nothing to wait for |
+| `decision_engine.on_block_fallback` | C | `stop` | fail-safe versus fail-open after that timeout | derivable — the same non-interactive detection; a gate that fires with no one to answer resolves fail-safe by construction |
+| `update_check.enabled` | C | `true` | a background safety check; disabling it pins the user to known-vulnerable code | consent |
+| `explain.enable_last` | A | `true` | a read-only diagnostics surface | derivable — the presence of a work-state trace to render; with no trace the command is already a no-op |
+| `legal_review_prep.acknowledged` | C | `false` | the consent gate; the safety floor requires the wizard checkbox | consent |
+| `legal_review_prep.consented_at` | C | `""` | the record of that consent | derivable — the provenance sidecar row `settings:set` already writes and `consentVerdict` already reads |
+| `legal_review_prep.require_council` | C | `true` | a fail-closed defence-in-depth gate | consent |
 
 ## The council review of the C list (2026-08-05)
 
