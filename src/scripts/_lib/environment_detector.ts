@@ -220,6 +220,50 @@ export interface DetectEnvironmentOptions {
      * hardened env and a 2s timeout; pass `() => null` to skip probing.
      */
     readonly probeVersion?: VersionProbe;
+    /**
+     * macOS Keychain presence probe for the Claude Code subscription
+     * credential. Omit to shell out to `security find-generic-password`;
+     * pass `() => false` to skip it entirely — every test that is not
+     * specifically about this probe should, so a developer machine's real
+     * Keychain never decides a test outcome.
+     */
+    readonly probeKeychain?: KeychainProbe;
+}
+
+/** `(service) => present?` — never returns the secret, only whether it exists. */
+export type KeychainProbe = (service: string) => boolean;
+
+/** Keychain service name Claude Code writes its subscription credential under. */
+export const CLAUDE_KEYCHAIN_SERVICE = 'Claude Code-credentials';
+
+/**
+ * Is the Claude Code subscription credential in the macOS login Keychain?
+ *
+ * Claude Code stores its OAuth credential in the Keychain on macOS and only
+ * falls back to `~/.claude/.credentials.json` elsewhere. Looking for the file
+ * alone therefore reports "no subscription" on the platform where the
+ * subscription is most likely to exist — which sent every macOS anthropic
+ * member down the metered `api` rung while a paid Claude subscription sat
+ * unused on the same machine. That is the defect this probe closes.
+ *
+ * `-w` is deliberately NOT passed: without it `security` prints attributes and
+ * never the password, so the secret cannot reach a log, a report, or a crash
+ * dump. Presence is read from the exit code alone.
+ */
+function defaultProbeKeychain(service: string): boolean {
+    if (process.platform !== 'darwin') return false;
+    try {
+        const res = spawnSync('security', ['find-generic-password', '-s', service], {
+            timeout: VERSION_PROBE_TIMEOUT_MS,
+            encoding: 'utf-8',
+            windowsHide: true,
+            env: hardenedSpawnEnv(),
+        });
+        if (res.error !== undefined || res.signal !== null) return false;
+        return res.status === 0;
+    } catch {
+        return false;
+    }
 }
 
 /**
@@ -298,12 +342,18 @@ function cliSubscriptionEvidence(
     home: string,
     env: EnvMap,
     claudeConfigDir: string,
+    probeKeychain: KeychainProbe,
 ): { source: AuthSource; evidence: string } | null {
     if (provider === 'anthropic') {
         const configDir = claudeConfigDir;
         for (const rel of ['.credentials.json', 'credentials.json']) {
             const p = path.join(configDir, rel);
             if (isFile(p)) return { source: 'cli-subscription', evidence: p };
+        }
+        // macOS keeps the credential in the Keychain instead of the file above.
+        // The evidence string is a locator, never the secret.
+        if (probeKeychain(CLAUDE_KEYCHAIN_SERVICE)) {
+            return { source: 'cli-subscription', evidence: `keychain:${CLAUDE_KEYCHAIN_SERVICE}` };
         }
         return null;
     }
@@ -359,11 +409,12 @@ function detectAuth(opts: DetectEnvironmentOptions): {
         opts.home === undefined && opts.env === undefined
             ? claude_config_dir()
             : ((env['CLAUDE_CONFIG_DIR'] ?? '').trim() || path.join(home, '.claude'));
+    const probeKeychain = opts.probeKeychain ?? defaultProbeKeychain;
     const auth: DetectedAuth[] = [];
     const keys: DetectedKey[] = [];
 
     for (const provider of knownProviders()) {
-        const cli = cliSubscriptionEvidence(provider, home, env, claudeConfigDir);
+        const cli = cliSubscriptionEvidence(provider, home, env, claudeConfigDir, probeKeychain);
         if (cli !== null) {
             auth.push({ provider, source: cli.source, evidence: cli.evidence });
         }

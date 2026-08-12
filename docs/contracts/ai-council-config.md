@@ -73,7 +73,8 @@ breadcrumb there points at this contract.
 ```yaml
 enabled: <bool>                 # master switch, required
 defaults:                       # per-invocation defaults, required
-  mode: <"api" | "manual" | "cli" | "auto">   # "auto" is the SHIPPED default; see Transport modes
+  # NO transport-mode key — transport is resolved, not configured. A file that
+  # still carries one loads fine and reports it ignored. See Transport modes.
   min_rounds: <int >= 1>
   deep_min_rounds: <int >= min_rounds>
   max_output_tokens: <int >= 0>           # 0 widens to provider ceiling
@@ -94,8 +95,8 @@ members:                        # per-provider blocks, at least one enabled
   <provider>:
     enabled: <bool>
     model: <string>
-    api_key_ref: <string>                 # required for mode: api; optional for cli/manual
-    mode: <"api" | "manual" | "cli" | "auto">  # optional override of defaults.mode
+    api_key_ref: <string>                 # optional — the credential for the metered `api` fallback rung
+    # no per-member `mode:` either — same reason as `defaults`
     binary: <string>                      # optional; only valid when effective mode == "cli" or "auto"
 advisors:                       # Thinking-style replace-mode advisors
   <advisor-key>:
@@ -126,17 +127,33 @@ Supported `<provider>` keys: `anthropic`, `openai`, `gemini`, `xai`,
 
 ### Transport modes
 
-Three first-class transports on the `mode:` axis, plus `auto`, which selects
-one of them per provider per invocation. Resolution per member:
-`invocation flag > per-member mode > defaults.mode > built-in fallback` — and
-see [Two defaults, not one](#two-defaults-not-one) for what sits at the bottom.
+**There is no transport-mode setting.** Transport is resolved per member per
+machine per invocation, and the only layer above the resolver is a
+per-invocation `--mode-override` flag.
+
+It used to be configurable at two layers, `defaults.mode` and a per-member
+`mode:`. The default was flipped to CLI-first — but a default only fires on an
+ABSENT key, so every config that spelled the key out (the shipped template did,
+and the setup wizard wrote it on every run) kept its old `api` value and went on
+paying per token while a subscription CLI sat unused on the same machine. A knob
+whose stale value silently costs money is worse than no knob, so both layers were
+removed rather than re-defaulted a second time.
+
+A config still carrying either key **loads** — the key is ignored and listed in
+`CouncilConfig.ignored_transport_keys`, which `agent-config council status`
+prints so it can be deleted. Validating a key nobody reads would have turned
+every stale installation into a hard load failure, which is the breaking change
+the ignore-list exists to avoid.
+
+The three transports below are still the vocabulary of the resolver's output and
+of `--mode-override`; they are simply no longer things a file can pin.
 
 | Mode | Semantics | Billable | Auth | Cost gate |
 |---|---|---|---|---|
 | `manual` | Copy & paste — the human transports prompt + reply between the agent and an external chat surface. | No | None — human-in-the-loop | n/a |
 | `api` | SDK call against a stored key, per-token billing on the provider's API. | Yes | `api_key_ref` (env or 0600 file) | `cost_budget` (full) |
 | `cli` | Shell out to a locally-installed provider CLI. For `anthropic` / `openai` / `gemini` this runs under the user's subscription auth and is `billable=False`. For `xai` / `perplexity` (community wrappers) the CLI consumes the same API key as `mode: api` and remains `billable=True`. | Mixed — see below | CLI-managed OAuth (vendor) or API key in CLI env (community) | Vendor: `cli_call_budget.max_calls_per_day` only · Community: full `cost_budget` |
-| `auto` | Not a transport — a selection rule. Per provider per invocation: the CLI binary resolves AND a credential is present → `cli`; else a key resolves → `api`; else the member is unavailable with a one-line reason. `manual` is never in the chain. **The SHIPPED default** (road-to-always-on-orchestration Phase 3.1 — CLI-first is the owner-set transport doctrine). A pinned `manual` / `api` / `cli` on `defaults.mode` or a per-member `mode:` still overrides it. | Inherited from the selected rung's provider + credential — never from the fact that `auto` chose it | Whatever the selected rung needs | The selected rung's gate |
+| `auto` | Not a transport — a selection rule. Per provider per invocation: the CLI binary resolves AND a credential is present → `cli`; else a key resolves → `api`; else the member is unavailable with a one-line reason. `manual` is never in the chain. **The only mode the loader emits**, and therefore what every member resolves through unless a `--mode-override` flag names one transport for one run. | Inherited from the selected rung's provider + credential — never from the fact that `auto` chose it | Whatever the selected rung needs | The selected rung's gate |
 
 #### `auto` — the selection rule
 
@@ -174,7 +191,7 @@ different layers. They are now named separately:
 
 | Layer | When it applies | Value |
 |---|---|---|
-| **Loader default** for `defaults.mode` | The config file omits the key. `config.ts::_build_defaults` fills it, so every real config observes this. | `auto` (was `api` before road-to-always-on-orchestration Phase 3.1) |
+| **Loader value** | Unconditional — `config.ts::_build_defaults` no longer reads the file's `mode` at all, so this is what every config observes whether or not it carries the key. | `auto` |
 | **Built-in fallback** in the resolver | No layer supplies a mode at all — a settings dict handed straight to `resolve_mode`, no config file involved. | `manual` |
 
 The built-in fallback is the free transport by design: a caller who named no
@@ -183,9 +200,8 @@ transport has not asked to spend money (`modes.ts::DEFAULT_MODE`, pinned in
 loader default: `auto` still resolves to a paying rung (`api`) when no CLI is
 usable, so flipping the built-in fallback too would let a caller that bypassed
 the config loader entirely spend money on a preference it never stated — the
-exact violation the fallback exists to prevent. Every real, file-backed
-config always has `defaults.mode` populated (now `auto`), so this fallback is
-never reached on that path.
+exact violation the fallback exists to prevent. Every file-backed config now
+resolves `auto` unconditionally, so this fallback is never reached on that path.
 
 Both shapes of the global key resolve. `council_cli.ts` synthesizes the loaded
 config into a block whose global mode sits at the top level (`mode`), while a
