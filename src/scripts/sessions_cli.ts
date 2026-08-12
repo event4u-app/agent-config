@@ -113,7 +113,7 @@ export function other_worktree_branches_detailed(
         const r = spawn('git', ['worktree', 'list', '--porcelain'], {
             cwd: root,
             encoding: 'utf-8',
-            timeout: 10_000,
+            timeout: GIT_PROBE_TIMEOUT_MS,
         });
         if (r.status !== 0) {
             return { rows: [], filtered: false };
@@ -131,7 +131,7 @@ export function other_worktree_branches_detailed(
         const r = spawn('git', ['branch', '--no-merged', 'origin/main', '--format=%(refname:short)'], {
             cwd: root,
             encoding: 'utf-8',
-            timeout: 10_000,
+            timeout: GIT_PROBE_TIMEOUT_MS,
         });
         if (r.status === 0) {
             unmerged = new Set(
@@ -288,6 +288,12 @@ export function env_session_id(env: NodeJS.ProcessEnv = process.env): string | n
     return null;
 }
 
+/**
+ * Ceiling for the two `git` probes here. Named rather than repeated: the value
+ * is a contract with the caller (a screen must not hang), and two literals drift.
+ */
+const GIT_PROBE_TIMEOUT_MS = 10_000;
+
 /** Same filesystem path, symlink-tolerant. `/var` vs `/private/var` on macOS. */
 function _same_path(a: string, b: string): boolean {
     try {
@@ -321,7 +327,13 @@ export function branch_name_hits(
     if (tail.length < 8 || /^[\d-]+$/.test(tail)) {
         return [];
     }
-    return other_worktree_branches(root).filter((b) => b.branch.includes(tail));
+    // Token-boundary match, not `includes`. The adversarial gate named the exact
+    // false positive: `dispatch-safety` is a substring of `redispatch-safety-valve`,
+    // which is a different task entirely. A branch name is `-` / `/` / `_`
+    // delimited, so requiring a delimiter (or an end) on both sides is the whole
+    // fix and it keeps `feat/dispatch-safety-confirmation` matching.
+    const bounded = new RegExp(`(^|[/_-])${tail.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}([/_-]|$)`);
+    return other_worktree_branches(root).filter((b) => bounded.test(b.branch));
 }
 
 /**

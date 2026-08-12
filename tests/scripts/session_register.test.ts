@@ -629,6 +629,51 @@ describe('R2 fixes — each finding gets the case it named', () => {
         expect(other_worktree_branches_detailed(main).filtered).toBe(false);
     });
 
+    it('PR-review: a legacy file with NO session_id is not credited to a session', () => {
+        // The reviewer asked for exactly this assertion, and named why: the claim
+        // path had no coverage at all before this branch, which is how the original
+        // scoping bug shipped. A pre-change `cmd_claim` never wrote a session_id, so
+        // this is the shape of every file that caused the incident.
+        const { main } = make_repo();
+        fs.mkdirSync(path.join(main, 'agents', 'runtime', 'state'), { recursive: true });
+        fs.writeFileSync(
+            path.join(main, ROADMAP_CLAIM_REL),
+            JSON.stringify({ slug: 'road-to-inbox-harvest-2026-08-b-dispatch-safety' }),
+        );
+        expect(read_claimed_slug(main, 'some-session')).toBeNull();
+    });
+
+    it('gate-high: a hostile session id cannot leave the state directory', () => {
+        for (const hostile of ['../../etc/passwd', '/etc/passwd', '..', 'a/../../b']) {
+            const rel = roadmap_claim_rel(hostile);
+            expect(rel.includes('..'), hostile).toBe(false);
+            expect(
+                rel === ROADMAP_CLAIM_REL ||
+                    rel.startsWith(path.join('agents', 'runtime', 'state') + path.sep),
+                hostile,
+            ).toBe(true);
+        }
+    });
+
+    it('gate-high: a slug that would escape the roadmaps directory reads as stale', () => {
+        const { main } = make_repo();
+        for (const hostile of ['../../etc/passwd', '/etc/passwd', 'a/../../../b']) {
+            expect(claim_is_stale(main, hostile), hostile).toBe(true);
+        }
+    });
+
+    it('gate-medium: the branch tail matches on token boundaries, not substrings', () => {
+        const { main, wt } = make_repo();
+        // The gate named this false positive: `dispatch-safety` is a substring of
+        // `redispatch-safety-valve`, a different task.
+        git(main, 'branch', 'feat/redispatch-safety-valve');
+        git(wt, 'checkout', '-q', 'feat/redispatch-safety-valve');
+        fs.writeFileSync(path.join(wt, 'w.txt'), 'x');
+        git(wt, 'add', 'w.txt');
+        git(wt, 'commit', '-q', '-m', 'w');
+        expect(branch_name_hits(main, 'road-to-x-dispatch-safety')).toEqual([]);
+    });
+
     it('R2-14: every roadmap peer is classified, and the renderer has them all', () => {
         const others = [
             rec({ session_id: 'p1', branch: 'feat/b', roadmap_slug: 'road-to-x' }),

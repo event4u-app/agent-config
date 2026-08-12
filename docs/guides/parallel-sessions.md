@@ -53,11 +53,17 @@ notice. `--force` writes it anyway when duplicating is the deliberate choice.
 
 ## The collision that actually cost something: the same roadmap, two branch names
 
-Measured twice on this repository. Two sessions each built the same roadmap phase,
-one on `feat/dispatch-safety-confirmation` and one on
-`feat/dispatch-safety-confirmed-execution`, and one of the two pull requests was
-thrown away. The register saw nothing, because it compared **branch names** — and
-those differed.
+Twice on this repository, both times on
+`road-to-inbox-harvest-2026-08-b-dispatch-safety`:
+
+| # | The two PRs | Branches | Outcome |
+|---|---|---|---|
+| 1 | #1277 and #1280 | `feat/inbox-harvest-b-dispatch-safety` · `feat/dispatch-safety-confirmation` | overlapping Phase-2 work |
+| 2 | #1280 and #1281 | `feat/dispatch-safety-confirmation` · `feat/dispatch-safety-confirmed-execution` | #1281 merged as `c7bbe2c24`; #1280 went `CONFLICTING` and withdrew its own implementation |
+
+Two sessions each built the same roadmap phase, and one of the two
+implementations was thrown away. The register saw nothing, because it compared
+**branch names** — and those differed.
 
 So the comparison is now the **roadmap**, and it reads two independent sources,
 because either can be silent on its own:
@@ -79,6 +85,13 @@ of the truth.
 Your claim is keyed on your **session**, not on your worktree. Before, one shared
 file per checkout meant a second session in the same directory inherited the first
 one's claim — reporting work it was not doing while the original reported none.
+
+One consequence worth knowing if you upgrade with a claim already set: a session
+that can identify itself no longer reads the shared file at all, so a claim
+written by the previous scheme is dropped rather than inherited. Re-run
+`sessions:claim` once. That trade is deliberate — a shared file is either a peer's
+or pre-upgrade and a reader cannot tell, so the choice is between losing a claim
+(one command to restore) and crediting a peer's work to you (the incident above).
 
 ## What the other session sees about you
 

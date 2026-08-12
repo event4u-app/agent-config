@@ -82,7 +82,9 @@ const REPLAY_ENV_VAR = 'AGENT_CONFIG_REPLAY';
  * the claim lands at most one turn later and the model never needs to know the
  * register's path or format.
  */
-export const ROADMAP_CLAIM_REL = path.join('agents', 'runtime', 'state', 'roadmap-claim.json');
+const _STATE_REL = path.join('agents', 'runtime', 'state');
+
+export const ROADMAP_CLAIM_REL = path.join(_STATE_REL, 'roadmap-claim.json');
 
 /**
  * Per-SESSION claim path. The legacy single file above is a claim on the
@@ -103,7 +105,19 @@ export function roadmap_claim_rel(session_id: string | null | undefined): string
     if (id === '') {
         return ROADMAP_CLAIM_REL;
     }
-    return path.join('agents', 'runtime', 'state', `roadmap-claim-${safe_stem(id)}.json`);
+    // `safe_stem` collapses `..` and both separators, so the stem cannot traverse.
+    // The containment assertion below is nonetheless real rather than ceremonial:
+    // the adversarial gate's finding was "the defense relies on caller honesty",
+    // and it is right that a guarantee living in another module's implementation is
+    // one refactor away from being untrue here. This one is local and mechanical —
+    // if the joined path ever leaves the state directory, fall back to the shared
+    // file rather than write outside it.
+    const rel = path.join(_STATE_REL, `roadmap-claim-${safe_stem(id)}.json`);
+    const norm = path.normalize(rel);
+    if (!norm.startsWith(`${_STATE_REL}${path.sep}`) || norm.includes('..')) {
+        return ROADMAP_CLAIM_REL;
+    }
+    return norm;
 }
 
 /** The shape `sessions:claim` writes. `session_id` is absent on legacy files. */
@@ -150,7 +164,11 @@ function _read_claim_file(file: string): RoadmapClaim | null {
  */
 export function read_claimed_slug(
     workspace_root: string,
-    session_id?: string | null,
+    // REQUIRED, on the reviewer's point: an optional id means a caller that forgets
+    // it silently gets legacy semantics instead of a type error, and there is
+    // exactly one call site that matters (`build_record`). `null` stays a legal
+    // value — it is the host-exports-nothing case — but it has to be passed.
+    session_id: string | null,
 ): string | null {
     const own = roadmap_claim_rel(session_id);
     if (own !== ROADMAP_CLAIM_REL) {
@@ -202,7 +220,14 @@ export function claim_is_stale(
         return false;
     }
     const base = slug.trim().replace(/\.md$/, '');
-    if (base.includes('/') || base.includes('\\') || base.includes('..')) {
+    // Containment, not a character blacklist. A blacklist answers "does this look
+    // hostile"; this answers the question that matters — "would the read leave the
+    // roadmaps directory" — and it is the same check for a traversal, an absolute
+    // path, and an encoding nobody enumerated. A slug that fails it is reported
+    // stale rather than resolved, so no read happens at all.
+    const rel = path.normalize(path.join('agents', 'roadmaps', `${base}.md`));
+    const inside = rel.startsWith(`agents${path.sep}roadmaps${path.sep}`) && !rel.includes('..');
+    if (!inside || path.isAbsolute(base)) {
         return true; // not a slug this repo can hold; never render it as live work
     }
     // Resolved in the PEER's worktree when one is known, and only then in ours.
@@ -222,7 +247,7 @@ export function claim_is_stale(
     );
     for (const root of roots) {
         try {
-            if (fs.existsSync(path.join(root, 'agents', 'roadmaps', `${base}.md`))) {
+            if (fs.existsSync(path.join(root, rel))) {
                 return false;
             }
         } catch {
@@ -421,13 +446,17 @@ export function main(): number {
             // file per session forever — the same unbounded-growth defect the register
             // itself spends code avoiding (R2 finding 3). Only ever this session's own
             // file: the shared legacy path may belong to a peer.
-            const own = roadmap_claim_rel(session_id);
-            if (own !== ROADMAP_CLAIM_REL) {
-                try {
-                    fs.unlinkSync(path.join(root, own));
-                } catch {
-                    /* absent or unwritable — a leftover claim expires with its record */
-                }
+            // Whichever file THIS session writes is the file it removes — the
+            // per-session one when it has an id, the shared one when it does not.
+            // The reviewer's second point: nothing removed the shared file, so a
+            // pre-change claim survived every release, every session end and every
+            // upgrade, unbounded. An id-less session owns that file by construction,
+            // so its end is the honest moment to drop it. An identified session still
+            // leaves it alone: it may be a peer's.
+            try {
+                fs.unlinkSync(path.join(root, roadmap_claim_rel(session_id)));
+            } catch {
+                /* absent or unwritable — a leftover claim expires with its record */
             }
             return 0;
         }
