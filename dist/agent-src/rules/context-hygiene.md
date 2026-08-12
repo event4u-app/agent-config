@@ -72,6 +72,45 @@ Calling the **same tool** more than **2 times in a row** with similar parameters
 **"Similar parameters" is the load-bearing word — an enumerated set is not a loop.** Walking N *declared, distinct* targets (a downstream-caller sweep per [`downstream-changes`](downstream-changes.md), an override chain, the members of a grep result) is one operation whose parameters differ every call. Counting it as N repetitions makes `downstream-changes`' "find **ALL** callers, tests, imports" unsatisfiable — it cannot be done in two calls. The loop this detects is *repetition without new information*: same target, same parameters, hoping for a different answer. Mirrors the same carve-out in [`token-efficiency`](token-efficiency.md).
 `sequentialthinking` is especially prone to loops: at most **once** per task, NEVER for simple file operations, command execution, or straightforward edits.
 
+### Waiting is one waiter, never a fleet
+
+```
+ONE WAITER PER CONDITION. NEVER A TIMER AND A WATCHER FOR THE SAME WAIT.
+NEVER START A NEW WAITER WHILE ONE IS STILL LIVE FOR THAT CONDITION.
+A NUMBER THAT CHANGED IS NOT NEW INFORMATION UNLESS IT CHANGES WHAT YOU DO NEXT.
+```
+
+Waiting on something external — CI, a deploy, a queue, a background job — is the
+one shape the loop test above systematically misses, in both of its clauses.
+
+- **"Same parameters" fails.** A `sleep 240` followed by `sleep 420` followed by
+  `sleep 595` are three different calls by any parameter comparison, so nothing
+  reads them as repetition.
+- **"Repetition without new information" fails too**, and this is the subtler
+  half: the poll genuinely returns a different value each round — 31 green, then
+  34, then 36 — which *feels* like progress. It is not information unless a
+  different digit would make you act differently. It would not: the only actions
+  available were wait, or stop and report, and 34 licensed neither more than 31
+  did. **The discriminator is the decision, not the digits.**
+
+So state it separately: pick **one** waiter for the condition and let it finish.
+Where the harness re-invokes on completion, waiting costs nothing and polling
+costs a turn per expiry — and every stacked waiter is a turn that arrives *after*
+the answer already did. Where it does not, one `until <condition>` loop is still
+one call rather than N.
+
+**Measured once, at n=1, and worth naming for its shape rather than its
+frequency** (2026-08-12): a CI wait started roughly 35 background commands —
+a fresh timer *and* a fresh condition-watcher per round, none cancelled when the
+next pair started. CI settled with about fifteen still live; each then expired
+and produced an empty turn. Nothing was corrupted, which is exactly why it ran
+so long: every individual step looked reasonable.
+
+**Enforcement: none, and the reason is structural.** The `context-hygiene` hook
+counts tool calls; a waiter is indistinguishable from any other call at that
+layer, and nothing in the envelope says two live waiters are watching one
+condition. This is model-carried on every host.
+
 ## Read-Loop Detection — the 15 / 25 rule
 
 ```
