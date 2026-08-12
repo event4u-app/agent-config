@@ -1,6 +1,6 @@
 # agent-config — Public Catalog
 
-Consumer-facing catalog of all **703 public artefacts** shipped by
+Consumer-facing catalog of all **704 public artefacts** shipped by
 this package. Internal package-maintenance rules and deprecation shims
 are excluded.
 
@@ -637,7 +637,7 @@ are excluded.
 | command | [`worktree-status`](../dist/agent-src/commands/worktree/status.md) | cluster: worktree | List active worktrees — ownership (scope lock), dirty state, ahead/behind, merge-readiness incl. verification evidence |
 | command | [`worktree-verify`](../dist/agent-src/commands/worktree/verify.md) | cluster: worktree | Run the scoped verification for a worktree's declared change — narrow probes matched to the diff, never the full CI pipeline |
 
-## Guidelines (104)
+## Guidelines (105)
 
 | kind | name | category | description |
 |---|---|---|---|
@@ -697,6 +697,7 @@ are excluded.
 | guideline | [`six-hats`](../docs/guidelines/agent-infra/six-hats.md) | agent-infra |  |
 | guideline | [`size-and-scope`](../docs/guidelines/agent-infra/size-and-scope.md) | agent-infra |  |
 | guideline | [`skill-quality-checklist`](../docs/guidelines/agent-infra/skill-quality-checklist.md) | agent-infra |  |
+| guideline | [`symptom-driven-harvest-loop`](../docs/guidelines/agent-infra/symptom-driven-harvest-loop.md) | agent-infra |  |
 | guideline | [`systems-thinking`](../docs/guidelines/agent-infra/systems-thinking.md) | agent-infra |  |
 | guideline | [`tool-description-as-policy`](../docs/guidelines/agent-infra/tool-description-as-policy.md) | agent-infra |  |
 | guideline | [`tool-integration`](../docs/guidelines/agent-infra/tool-integration.md) | agent-infra |  |
