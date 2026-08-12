@@ -738,11 +738,29 @@ dispatched: YYYY-MM-DDTHH:MM:SSZ
   host that tells the reviewer what to expect can steer the verdict while every
   mechanical check passes. **A hash-verified artefact is therefore not evidence
   of an unbiased review** — only evidence that the reviewer was handed the right
-  diff. No in-repo check can read the prompt, so there is no detection floor
-  beyond the same contradicting-round audit trail. What the host owes the gate,
-  and what no gate can collect: a prompt carrying **no** prior-round outcomes,
-  **no** statement of the expected result, and **no** narrowing to files the
-  requester selected.
+  diff. What the host owes the gate: a prompt carrying **no** prior-round
+  outcomes, **no** statement of the expected result, and **no** narrowing to
+  files the requester selected.
+
+  **Correction 2026-08-12 — "no in-repo check can read the prompt" was false,
+  and this residual understated what is collectable.** The dispatcher writes the
+  prompt verbatim to `<slug>.review-input/prompt.md` (§ 3), and 19 of those
+  files are tracked. A check can read them, and a scan of all 19 found **0**
+  carrying a pre-loaded verdict but **2 whose `prompt_hash` does not re-derive
+  from the committed text** — one caused by the archival sweep rewriting a path
+  inside a frozen record (cause fixed 2026-08-11), one dated after that fix and
+  still unexplained. `prompt_hash` is written and parsed but compared to
+  nothing; `--verify` re-derives `scope_hash`, `roadmap_hash` and `ac_hash`
+  only, and the dispatcher docstring claiming otherwise is wrong.
+
+  So the detection floor is **higher than this section claimed and lower than a
+  solution**. Two things are mechanically collectable — that the committed
+  prompt is the one the verdict was bound to, and that it carries no pre-loaded
+  verdict by the same predicate `evidence-independence` uses. Neither closes the
+  residual: the host that authors the prompt also writes the file, so
+  substitution stays undetectable, and against the four steering clauses case
+  zero records the predicate matches exactly **one**. The residual stays
+  `accepted-risk`; what changes is that it is no longer *uninstrumented*.
 
 **Case zero (2026-08-04).** A commit shipped a "binding R2 honest-null"
 declaring 0 findings for one scope. A real reviewer *was* dispatched and did
