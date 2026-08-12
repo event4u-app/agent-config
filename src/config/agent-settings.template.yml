@@ -1208,42 +1208,12 @@ hooks:
   injection_scan:
     enabled: false
 
-  # Stop-slot turn-end gate (road-to-conformance-round5 Phase 3). Default-OFF,
-  # and it is the only concern in this file that can REFUSE a turn-end rather
-  # than a tool call — so it soaks behind an explicit opt-in before it binds.
-  #
-  # Round 5 measured what it is for: both BLOCKING carriers reached zero
-  # violations, neither ADVISORY carrier did, and 19 wrong-language replies
-  # survived a pin that had fired 26-35 seconds earlier. A reminder at higher
-  # frequency is the same failed mechanism running more often; a check at
-  # delivery that can say no is a different one.
-  #
-  # enabled     — master switch. false = the concern is a no-op costing one
-  #               settings read per turn-end.
-  # promissory  — detector A: the closing paragraph promises work not yet
-  #               performed while asking the user nothing (20 measured).
-  # language    — detector B: the user-visible prose is not in the pinned
-  #               language, with code, quotes, paths and identifiers already
-  #               excluded (19 measured).
-  # verification — detector C: the turn changed a file and then ran nothing that
-  #               could have checked it — no test, type-check, lint or build call
-  #               follows the LAST edit. Ordering is the point: a run before the
-  #               final edit did not exercise it, which is the freshness clause
-  #               verify-before-complete states. Reads the turn's tool calls, not
-  #               the prose. Deliberately narrow on what counts as verification —
-  #               a missed detection costs one unguarded turn, a false refusal
-  #               teaches you to switch the gate off.
-  #
-  # All three detectors default ON *within* the master switch, so opting in needs
-  # one line, and any one can be silenced without editing the hook manifest.
-  # A refused turn continues in the same turn and is never refused twice —
-  # re-entrancy is `stop_hook_active` plus a marker keyed on the last user
-  # message, never on the reply.
-  turn_end_gate:
-    enabled: false
-    promissory: true
-    language: true
-    verification: true
+  # NOTE — `turn_end_gate` has no keys here any more. The stop-slot turn-end
+  # gate is ALWAYS ARMED (2026-08-12); `hooks.turn_end_gate.*` was removed and
+  # a leftover block warns once on stderr and is ignored. Whether it fires is
+  # decided by each detector's own trigger — no promise in the closing
+  # paragraph, no language-pin mismatch, no unverified edit ⇒ the turn ends.
+  # See `src/scripts/hooks/turn_end_gate_hook.ts` § "Always armed".
 
   # PreToolUse RTK-wrap nudge (token-saving Phase 3). Default-OFF. When enabled
   # AND `rtk` is on PATH (a live probe — not a self-reported flag), warns (exit
