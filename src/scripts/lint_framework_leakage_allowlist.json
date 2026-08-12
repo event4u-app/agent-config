@@ -1,4 +1,6 @@
 {
+  "version": 1,
+  "_doc": "Each entry: { file: relative path from repo root, anchor: a substring of the exempted line (the ONLY per-line key — position keys are refused by validate_allowlist), or lines: \"*\" for the whole file, reason: short justification }. Use sparingly — first ask whether the file should be neutralized or carved out. Policy cap: > 20 exempted FILES means the linter (or the content) is wrong — fix the tool or the text, never grow the list. The cap counts files because that is the unit it was written in, when one entry meant one file; entries are now per-line, so the two numbers differ on purpose (15 files / 31 entries as of the anchor migration) and the entry count is not the cap. Rebuilt 2026-07-12 (road-to-opt-hygiene-and-debt Phase 1): 104 -> minimal set after heuristic upgrades + 25 content neutralizations + 2 carve-outs. Re-keyed to content anchors 2026-08-12: 8 of the 39 exempted lines were found to exempt nothing — three named blank or out-of-range lines, five named lines that produce no hit — and were dropped rather than carried forward; the gate now refuses both shapes.",
   "entries": [
     {
       "file": "src/skills/api-testing/SKILL.md",
@@ -62,11 +64,6 @@
     },
     {
       "file": "src/skills/module-management/SKILL.md",
-      "anchor": "**Module identity** comes from `package.json#name`, not the ",
-      "reason": "Canonical multi-stack module catalogue (Laravel HMVC / Symfony DDD / Node / Python sections) — keep-in-place is a recorded council decision; per-stack sections sit farther apart than the ±10-line window."
-    },
-    {
-      "file": "src/skills/module-management/SKILL.md",
       "anchor": "metadata in `pyproject.toml`.",
       "reason": "Canonical multi-stack module catalogue (Laravel HMVC / Symfony DDD / Node / Python sections) — keep-in-place is a recorded council decision; per-stack sections sit farther apart than the ±10-line window."
     },
@@ -96,11 +93,6 @@
       "reason": "Quoted description examples + the 'too-broad skill (Laravel skill)' anti-pattern — meta content."
     },
     {
-      "file": "src/skills/skill-writing/SKILL.md",
-      "anchor": "A script shipped inside a skill (`scripts/**`) is **side-eff",
-      "reason": "Quoted description examples + the 'too-broad skill (Laravel skill)' anti-pattern — meta content."
-    },
-    {
       "file": "src/skills/supply-chain-intake/SKILL.md",
       "anchor": "rg -n '\"[^\"]+\":\\s*\"(\\^|~|\\*|latest)' package.json",
       "reason": "Per-ecosystem check commands in fenced blocks; the pip/composer siblings sit farther apart than the ±10-line window — genuine multi-ecosystem documentation."
@@ -109,21 +101,6 @@
       "file": "src/skills/supply-chain-intake/SKILL.md",
       "anchor": "[ -f package.json ] && [ ! -f package-lock.json ] && echo \"n",
       "reason": "Per-ecosystem check commands in fenced blocks; the pip/composer siblings sit farther apart than the ±10-line window — genuine multi-ecosystem documentation."
-    },
-    {
-      "file": "src/skills/test-driven-development/SKILL.md",
-      "anchor": "Do **not** add new behavior during refactor — that needs its",
-      "reason": "Worked Example A (PHP/Pest) paired with Example B (TypeScript/Jest) farther apart than the ±10-line window — canonical two-stack demo."
-    },
-    {
-      "file": "src/skills/test-driven-development/SKILL.md",
-      "anchor": "### 8. Repeat for the next behavior",
-      "reason": "Worked Example A (PHP/Pest) paired with Example B (TypeScript/Jest) farther apart than the ±10-line window — canonical two-stack demo."
-    },
-    {
-      "file": "src/skills/test-driven-development/SKILL.md",
-      "anchor": "3. Captured green-run output",
-      "reason": "Worked Example A (PHP/Pest) paired with Example B (TypeScript/Jest) farther apart than the ±10-line window — canonical two-stack demo."
     },
     {
       "file": "src/skills/testing-anti-patterns/SKILL.md",
