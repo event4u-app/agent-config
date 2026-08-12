@@ -23,6 +23,9 @@ packs:
   council-pass integration — not a checkbox flip)
 * Drafting a phase block, exit criteria, or rollback section that
   will land inside an existing roadmap
+* Turning an operator's **production symptom** into a roadmap — different
+  entry procedure (intake first, confirm at a pinned commit before any
+  external search): [`symptom-driven harvest`](../../../docs/guidelines/agent-infra/symptom-driven-harvest-loop.md)
 
 Do NOT use this skill when:
 
