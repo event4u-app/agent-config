@@ -25,8 +25,12 @@ import {
   storeKey,
   userText,
   assistantText,
+  evaluateWindow,
+  markAddressed,
+  type CompletenessWindow,
   type RateRecord,
   type ScanReport,
+  type Violation,
 } from "../../src/scripts/conformance_scan.js";
 
 const GERMAN_PROMPT =
@@ -171,7 +175,7 @@ describe("render", () => {
         "vacuous-evidence": 0,
         "evidence-steering": 1,
       },
-      per_session: [{ session: "abc", user_turns: 1, assistant_turns: 9, violations: [], de_pin_turns: 0, first_at: "" }],
+      per_session: [{ session: "abc", user_turns: 1, assistant_turns: 9, violations: [], de_pin_turns: 0, first_at: "", completeness_windows: 0 }],
       delivered: {
         project: { dir: "/tmp/p", present: true, files: 2, tokens: 100 },
         global: { dir: "/tmp/g", present: true, files: 3, tokens: 200 },
@@ -363,7 +367,7 @@ describe("render — the payload block", () => {
       store: "/tmp/store",
       sessions: 1,
       totals: { "language-pin": 1, "git-authorization": 0, "vacuous-evidence": 0, "evidence-steering": 0 },
-      per_session: [{ session: "abc", user_turns: 1, assistant_turns: turns, violations: [], de_pin_turns: 0, first_at: "" }],
+      per_session: [{ session: "abc", user_turns: 1, assistant_turns: turns, violations: [], de_pin_turns: 0, first_at: "", completeness_windows: 0 }],
       delivered: {
         project: { dir: "/tmp/p", present: true, files: 110, tokens: 101626 },
         global: { dir: "/tmp/g", present: true, files: 112, tokens: 102402 },
@@ -473,7 +477,7 @@ describe("measureDelivered — absent is not a measured zero", () => {
       store: "/tmp/s",
       sessions: 1,
       totals: { "language-pin": 0, "git-authorization": 0, "vacuous-evidence": 0, "evidence-steering": 0 },
-      per_session: [{ session: "a", user_turns: 1, assistant_turns: 3000, violations: [], de_pin_turns: 0, first_at: "" }],
+      per_session: [{ session: "a", user_turns: 1, assistant_turns: 3000, violations: [], de_pin_turns: 0, first_at: "", completeness_windows: 0 }],
       delivered: measureDelivered(path.join(root, "nope"), path.join(root, "also-nope")),
       rate: {
         store_key: "aaaaaaaaaaaa",
@@ -512,7 +516,7 @@ describe("renderWhy — conformance:why <id>", () => {
         "vacuous-evidence": 0,
         "evidence-steering": 0,
       },
-      per_session: [{ session: "abc", user_turns: 1, assistant_turns: 9, violations: hits, de_pin_turns: 0, first_at: "" }],
+      per_session: [{ session: "abc", user_turns: 1, assistant_turns: 9, violations: hits, de_pin_turns: 0, first_at: "", completeness_windows: 0 }],
       delivered: {
         project: { dir: "/tmp/p", present: true, files: 2, tokens: 100 },
         global: { dir: "/tmp/g", present: true, files: 3, tokens: 200 },
@@ -576,5 +580,131 @@ describe("renderWhy — conformance:why <id>", () => {
     expect(out).toContain("unauthorized push");
     expect(out).not.toContain("pin miss");
     expect(out).toContain("Fired 1 time(s)");
+  });
+});
+
+describe("task-completeness — the window primitives", () => {
+  function win(tokens: string[], worked = true): CompletenessWindow {
+    return { at: "T0", tokens, addressed: new Set<string>(), worked };
+  }
+
+  it("scores nothing when the window contains no assistant work", () => {
+    // Addressed NOTHING and still expects null: a truncated session is not an
+    // omission, and counting it would make the rate a measure of how often a
+    // store ends mid-reply.
+    expect(evaluateWindow(win(["a.ts", "b.ts", "c.ts"], false))).toBeNull();
+  });
+
+  it("scores nothing when every enumerated token was touched", () => {
+    const tokens = ["alpha.ts", "beta.md", "gamma.json"];
+    const w = win(tokens);
+    for (const t of tokens) {
+      markAddressed(`edited ${t} just now`, w);
+    }
+    expect(evaluateWindow(w)).toBeNull();
+  });
+
+  it("returns exactly the untouched tokens, in the order the prompt named them", () => {
+    const tokens = ["first.ts", "second.ts", "third.ts", "fourth.ts"];
+    const w = win(tokens);
+    markAddressed(`touched ${tokens[0]} and ${tokens[2]}`, w);
+    const verdict = evaluateWindow(w);
+    expect(verdict).not.toBeNull();
+    expect(verdict?.missed).toEqual([tokens[1], tokens[3]]);
+  });
+
+  it("matches a token case-insensitively and inside a longer path", () => {
+    const w = win(["cmd_prune.ts", "pricing.ts", "hook-latency.json"]);
+    markAddressed("wrote SRC/Scripts/CMD_PRUNE.TS", w);
+    markAddressed(JSON.stringify({ file_path: "/repo/src/lib/pricing.ts" }), w);
+    expect(evaluateWindow(w)?.missed).toEqual(["hook-latency.json"]);
+  });
+
+  it("never counts one token twice, so addressed can never exceed enumerated", () => {
+    const w = win(["dup.ts", "other.ts", "third.ts"]);
+    markAddressed("dup.ts dup.ts dup.ts", w);
+    markAddressed("dup.ts again", w);
+    expect(w.addressed.size).toBe(1);
+    expect(evaluateWindow(w)?.missed.length).toBe(2);
+  });
+
+  it("scores nothing when the prompt enumerated no deliverables at all", () => {
+    expect(evaluateWindow(win([]))).toBeNull();
+  });
+});
+
+describe("task-completeness — end to end over a transcript", () => {
+  const THREE = "Bitte fasse a_one.ts, b_two.ts und c_three.ts an.";
+  const hits = (r: { violations: Violation[] }) =>
+    r.violations.filter((v) => v.check === "task-completeness");
+
+  it("reports the tokens a reply never touched and counts the window", () => {
+    const r = scanSession("s", [
+      user(THREE),
+      assistant("Ich habe a_one.ts und b_two.ts angepasst."),
+    ]);
+    expect(hits(r).length).toBe(1);
+    expect(hits(r)[0]?.missed).toEqual(["c_three.ts"]);
+    expect(hits(r)[0]?.enumerated).toBe(3);
+    expect(hits(r)[0]?.addressed).toBe(2);
+    expect(r.completeness_windows).toBe(1);
+  });
+
+  it("stays silent when tool inputs cover every token the prose did not", () => {
+    const r = scanSession("s", [
+      user(THREE),
+      assistant("Ich passe a_one.ts an.", [
+        { name: "Edit", input: { file_path: "src/b_two.ts" } },
+        { name: "Bash", input: { command: "sed -i s/x/y/ src/c_three.ts" } },
+      ]),
+    ]);
+    expect(hits(r).length).toBe(0);
+    expect(r.completeness_windows).toBe(1);
+  });
+
+  it("does not open a window below the file floor, so the denominator stays 0", () => {
+    const r = scanSession("s", [
+      user("Bitte benenne a_one.ts nach b_two.ts um."),
+      assistant("Ich habe nichts angefasst."),
+    ]);
+    expect(hits(r).length).toBe(0);
+    expect(r.completeness_windows).toBe(0);
+  });
+
+  it("does not read a harness banner as work, so a died session is not an omission", () => {
+    const r = scanSession("s", [user(THREE), assistant("API Error: 529 Overloaded")]);
+    expect(hits(r).length).toBe(0);
+    expect(r.completeness_windows).toBe(0);
+  });
+
+  it("closes the last window at end of file, with no following prompt to trigger it", () => {
+    const r = scanSession("s", [user(THREE), assistant("Ich habe nur a_one.ts angefasst.")]);
+    expect(hits(r).length).toBe(1);
+    expect(hits(r)[0]?.missed).toEqual(["b_two.ts", "c_three.ts"]);
+  });
+
+  it("anchors each window to its own prompt and does not bleed across prompts", () => {
+    const r = scanSession("s", [
+      user(THREE),
+      assistant("Ich habe nur a_one.ts angefasst."),
+      user("Und jetzt d_four.ts, e_five.ts und f_six.ts."),
+      assistant("Erledigt: d_four.ts, e_five.ts, f_six.ts."),
+    ]);
+    expect(hits(r).length).toBe(1);
+    expect(hits(r)[0]?.missed).toEqual(["b_two.ts", "c_three.ts"]);
+    expect(r.completeness_windows).toBe(2);
+  });
+
+  it("does not let an injected skill body end the user's window", () => {
+    const r = scanSession("s", [
+      user(THREE),
+      assistant("Ich lese zuerst a_one.ts."),
+      user("<command-name>/roadmap:process-full</command-name>"),
+      assistant("Jetzt b_two.ts und c_three.ts."),
+    ]);
+    // ONE window, closed at EOF — the work after the injected body still counts
+    // toward it, because an injected body is not a chat message.
+    expect(hits(r).length).toBe(0);
+    expect(r.completeness_windows).toBe(1);
   });
 });

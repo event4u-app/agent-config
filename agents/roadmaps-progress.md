@@ -179,16 +179,6 @@ These roadmaps are **complete** (`count_open == 0`, `count_deferred == 0`) but s
 | 1 | Post-merge dry-run verification (carried from parent Phase 3) | ⬜ not started | 1 | 0 | 0 | 0 | 0% |
 | 2 | First real release + live drills (carried from parent Phase 4 + Phase 7) | ⬜ not started | 7 | 0 | 0 | 0 | 0% |
 
-### [road-to-completion-loop.md](roadmaps/road-to-completion-loop.md)
-
-**Road to the completion loop — measure "delivered less than was asked" before refusing on it** — 0 / 8 done (0%)
-
-| # | Phase | State | Open | Done | Deferred | Cancelled | % |
-|---|---|---|---:|---:|---:|---:|---:|
-| 1 | the instrument | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
-| 2 | the decision, taken on the number | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
-| 3 | detector D, only if Phase 2 says so | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
-
 ### [road-to-council-blind-review.md](roadmaps/road-to-council-blind-review.md)
 
 **Council Blind Review — three small deliberation-protocol adoptions from an external five-advisor prompt pattern** — 3 / 5 done (60%)

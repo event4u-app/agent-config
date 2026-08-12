@@ -128,10 +128,35 @@ function _isObject(v: unknown): v is JsonObject {
 const FILE_TOKEN_RE =
   /`?\b[\w][\w.\-]{0,80}\.(ts|tsx|js|jsx|mjs|cjs|py|php|rb|go|rs|java|kt|swift|md|mdx|json|ya?ml|css|scss|less|html|vue|svelte|sql|sh|bash|c|cpp|h|hpp|cs|toml|xml)\b`?/gi;
 
-export function detectEnumeratedFiles(text: string): number {
+/**
+ * The unique file tokens themselves, lower-cased and stripped of backticks.
+ *
+ * `detectEnumeratedFiles` needs only the size, but `conformance_scan`'s
+ * `task-completeness` check needs the IDENTITIES: it asks which of the files a
+ * prompt enumerated were actually touched, which a count cannot answer. Exposing
+ * them here rather than re-matching `FILE_TOKEN_RE` in the scanner keeps one
+ * regex in the tree — a second copy is the "second artefact to keep in sync"
+ * that would let the classifier and the measurement disagree silently, which is
+ * the property `conformance_scan`'s own header requires of every classifier it
+ * imports.
+ */
+/**
+ * Minimum unique file tokens before the FILE shape counts as a delegable
+ * signal (F7, review). Named rather than inlined because `conformance_scan`'s
+ * `task-completeness` check gates on the same floor: a prompt whose file
+ * enumeration is below it is not treated as naming a deliverable SET by either
+ * reader, and two copies of the number would let them disagree about which
+ * prompts are in scope.
+ */
+export const FILE_SIGNAL_FLOOR = 3;
+
+export function enumeratedFileTokens(text: string): string[] {
   const matches = text.match(FILE_TOKEN_RE) ?? [];
-  const unique = new Set(matches.map((m) => m.replace(/`/g, "").toLowerCase()));
-  return unique.size;
+  return [...new Set(matches.map((m) => m.replace(/`/g, "").toLowerCase()))];
+}
+
+export function detectEnumeratedFiles(text: string): number {
+  return enumeratedFileTokens(text).length;
 }
 
 /**
@@ -246,12 +271,12 @@ export function extractTaskSignals(text: string): ExtractedSignals {
   const conjunction = detectMultiDeliverableConjunction(text);
   const forEach = detectForEachShape(text);
 
-  // F7 (review): a bare file-token count below 3 is common and NOT itself
-  // evidence of independent, parallelizable work — "rename a.ts to b.ts"
-  // names 2 files but is one mechanical edit, not two delegable slices. The
-  // explicit "N files/Dateien" phrase (`detectExplicitSliceCount`) is a
+  // F7 (review): a bare file-token count below FILE_SIGNAL_FLOOR is common and
+  // NOT itself evidence of independent, parallelizable work — "rename a.ts to
+  // b.ts" names 2 files but is one mechanical edit, not two delegable slices.
+  // The explicit "N files/Dateien" phrase (`detectExplicitSliceCount`) is a
   // stronger, author-stated signal and keeps its existing floor of N>=2.
-  const fileSignal = fileCount >= 3 ? fileCount : 0;
+  const fileSignal = fileCount >= FILE_SIGNAL_FLOOR ? fileCount : 0;
 
   let slices = Math.max(fileSignal, explicit, conjunction);
   if (slices === 0 && forEach) {
