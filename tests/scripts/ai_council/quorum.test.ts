@@ -6,6 +6,8 @@ import {
     evaluateQuorum,
     isSoloConcluded,
     resolveQuorumThreshold,
+    SOLO_FLOOR_MIN_PRESENT,
+    wouldSoloFloorHold,
 } from '../../../src/scripts/ai_council/quorum.js';
 
 describe('resolveQuorumThreshold — majority', () => {
@@ -131,5 +133,123 @@ describe('isSoloConcluded — the 1-of-n conclusion, made visible', () => {
 
     it('a fixed k=1 over 3 members still reads solo at present=1', () => {
         expect(isSoloConcluded(evaluateQuorum(3, 1, 1))).toBe(true);
+    });
+});
+
+describe('wouldSoloFloorHold — the ADR-224 counterfactual', () => {
+    it('holds a degraded solo conclusion: 1 of 2 answered', () => {
+        expect(wouldSoloFloorHold(evaluateQuorum(2, 1))).toBe(true);
+    });
+
+    it('does not hold full attendance', () => {
+        expect(wouldSoloFloorHold(evaluateQuorum(2, 2))).toBe(false);
+        expect(wouldSoloFloorHold(evaluateQuorum(3, 3))).toBe(false);
+    });
+
+    it('does not hold a pass that never concluded — that is a different outcome', () => {
+        // 1 of 3 needs 2 → inconclusive. The floor did not stop this pass;
+        // the threshold did. Keeping the two apart is the whole point of
+        // recording them as separate fields.
+        const q = evaluateQuorum(3, 1);
+        expect(q.status).toBe('inconclusive');
+        expect(wouldSoloFloorHold(q)).toBe(false);
+    });
+
+    it('never holds a council CONFIGURED with one member', () => {
+        // The clamp into [1, total] carries the semantics, not just safety:
+        // n=1 concluding on its one voice is the configured shape, not a
+        // degraded pass, and merging it into the fire-rate would repeat the
+        // exact conflation quorum-attendance-budget.json warns about for the
+        // solo-conclusion rate.
+        expect(wouldSoloFloorHold(evaluateQuorum(1, 1))).toBe(false);
+        expect(wouldSoloFloorHold(evaluateQuorum(1, 1), 5)).toBe(false);
+    });
+
+    it('fires on a CONSTRUCTION-degraded pass — the case ADR-224 was decided on', () => {
+        // 2 configured, 1 failed to construct, 1 answered. post_run `total`
+        // is the roster that constructed, so this reads total=1/present=1 —
+        // indistinguishable from a one-member council unless configured_total
+        // is consulted. Clamping against `total` alone made the floor
+        // structurally unable to fire here, which is a metric blind to its
+        // own target population.
+        const degraded = evaluateQuorum(1, 1);
+        expect(wouldSoloFloorHold(degraded)).toBe(false);
+        expect(wouldSoloFloorHold(degraded, SOLO_FLOOR_MIN_PRESENT, 2)).toBe(true);
+    });
+
+    it('still does not fire for a council CONFIGURED with one member', () => {
+        // Same total/present as the degraded pass above; only
+        // configured_total separates them, which is exactly the split the
+        // budget file insists on for the solo-conclusion rate.
+        expect(wouldSoloFloorHold(evaluateQuorum(1, 1), SOLO_FLOOR_MIN_PRESENT, 1)).toBe(false);
+    });
+
+    it('does not treat a --siblings fan-out as a shortfall', () => {
+        // total > configured_total is legitimate: --siblings fans ONE config
+        // entry into N clients. The ceiling is the larger of the two, so a
+        // 3-client pass with 2 present is judged against 3, not against 1.
+        expect(wouldSoloFloorHold(evaluateQuorum(3, 3), SOLO_FLOOR_MIN_PRESENT, 1)).toBe(false);
+        // A fixed k=1 is what lets a 3-client pass CONCLUDE on one voice;
+        // under `majority` the same shape is inconclusive and the floor is
+        // not what stopped it.
+        expect(wouldSoloFloorHold(evaluateQuorum(3, 1, 1), SOLO_FLOOR_MIN_PRESENT, 1)).toBe(true);
+    });
+
+    it('clamps a floor above the roster instead of holding every pass', () => {
+        // Unclamped, a floor of 5 over a 2-member council would report a
+        // 100 % fire-rate — an artefact of the config, not a finding about
+        // the council.
+        expect(wouldSoloFloorHold(evaluateQuorum(2, 2), 5)).toBe(false);
+        expect(wouldSoloFloorHold(evaluateQuorum(2, 1), 5)).toBe(true);
+    });
+
+    it('a floor of 1 can never hold anything', () => {
+        expect(wouldSoloFloorHold(evaluateQuorum(2, 1), 1)).toBe(false);
+        expect(wouldSoloFloorHold(evaluateQuorum(3, 1, 1), 0)).toBe(false);
+    });
+
+    it('defaults to the ADR-224 value', () => {
+        expect(SOLO_FLOOR_MIN_PRESENT).toBe(2);
+        const q = evaluateQuorum(2, 1);
+        expect(wouldSoloFloorHold(q)).toBe(wouldSoloFloorHold(q, SOLO_FLOOR_MIN_PRESENT));
+    });
+
+    // ── the scope-leak negative test ────────────────────────────────
+    //
+    // The regression this phase could most plausibly ship is the floor
+    // leaking into passes it was never scoped to. In an ENFORCING design
+    // that test can only be written per-call-site, and it can only check the
+    // sites someone remembered. In the shadow design the claim is universal
+    // and therefore checkable as one: consulting the floor changes NOTHING
+    // about the verdict, for any roster, any presence, any floor value.
+    it('never changes the quorum verdict — for any roster, presence or floor', () => {
+        for (let total = 0; total <= 5; total++) {
+            for (let present = 0; present <= total; present++) {
+                for (const setting of ['majority', 1, 2, 3] as const) {
+                    const before = evaluateQuorum(total, present, setting);
+                    const snapshot = { ...before };
+                    for (const floor of [0, 1, 2, 3, 9]) {
+                        wouldSoloFloorHold(before, floor);
+                        // The predicate is pure: it neither mutates the
+                        // result it was handed nor feeds back into it.
+                        expect({ ...before }).toEqual(snapshot);
+                        expect(evaluateQuorum(total, present, setting).status).toBe(
+                            snapshot.status,
+                        );
+                    }
+                }
+            }
+        }
+    });
+
+    it('is mutually exclusive with an inconclusive verdict, by construction', () => {
+        for (let total = 0; total <= 5; total++) {
+            for (let present = 0; present <= total; present++) {
+                const q = evaluateQuorum(total, present);
+                if (wouldSoloFloorHold(q)) {
+                    expect(q.status).toBe('concluded');
+                }
+            }
+        }
     });
 });

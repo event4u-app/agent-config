@@ -1,0 +1,1349 @@
+diff --git a/agents/roadmaps-progress.md b/agents/roadmaps-progress.md
+index b02d4c958be7c4aaf08f9c10754717de58e3b0bf..749939f75e6c4346bbd80de820a295a34515859f 100644
+--- a/agents/roadmaps-progress.md
++++ b/agents/roadmaps-progress.md
+@@ -2,14 +2,14 @@
+ 
+ > Auto-generated — do not edit. Regenerate with `task roadmap-progress` or by running the `update_roadmap_progress` script for your install; rewritten on every roadmap create / execute / completion change (timestamp lives in git history).
+ >
+-> 27 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **35** open blockers, **9** need you → `agent-config gates`
++> 26 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **35** open blockers, **9** need you → `agent-config gates`
+ 
+ ## Overall
+ 
+-**233 / 346 steps done · 67%**
++**233 / 333 steps done · 70%**
+ 
+ ```text
+-███████████████████████████░░░░░░░░░░░░░   67%
++████████████████████████████░░░░░░░░░░░░   70%
+ ```
+ 
+ ## Open roadmaps
+@@ -21,28 +21,27 @@
+ | 3 | [road-to-carrier-layer-convergence.md](roadmaps/road-to-carrier-layer-convergence.md) | 3 | 8 | 2 | 3 | 0 | 3 | [1](#blockers-road-to-carrier-layer-convergence) | ██████░░░░ 60% |
+ | 4 | [road-to-ci-native-release-first-run.md](roadmaps/road-to-ci-native-release-first-run.md) | 2 | 8 | 8 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+ | 5 | [road-to-council-blind-review.md](roadmaps/road-to-council-blind-review.md) | 3 | 6 | 2 | 3 | 0 | 1 | 0 | ██████░░░░ 60% |
+-| 6 | [road-to-council-solo-floor-implementation.md](roadmaps/road-to-council-solo-floor-implementation.md) | 3 | 13 | 13 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+-| 7 | [road-to-gated-reach-followup.md](roadmaps/road-to-gated-reach-followup.md) | 1 | 12 | 12 | 0 | 0 | 0 | [1](#blockers-road-to-gated-reach-followup) | ░░░░░░░░░░ 0% |
+-| 8 | [road-to-inbox-harvest-2026-08-b-ci-economy.md](roadmaps/road-to-inbox-harvest-2026-08-b-ci-economy.md) | 5 | 24 | 1 | 17 | 2 | 4 | [2](#blockers-road-to-inbox-harvest-2026-08-b-ci-economy) | █████████░ 94% |
+-| 9 | [road-to-inbox-harvest-2026-08-b-dispatch-safety.md](roadmaps/road-to-inbox-harvest-2026-08-b-dispatch-safety.md) | 4 | 21 | 6 | 8 | 1 | 6 | [1](#blockers-road-to-inbox-harvest-2026-08-b-dispatch-safety) | ██████░░░░ 57% |
+-| 10 | [road-to-inbox-harvest-2026-08-b-estate-lifecycle.md](roadmaps/road-to-inbox-harvest-2026-08-b-estate-lifecycle.md) | 4 | 15 | 1 | 8 | 0 | 6 | [1](#blockers-road-to-inbox-harvest-2026-08-b-estate-lifecycle) | █████████░ 89% |
+-| 11 | [road-to-inbox-harvest-2026-08-b-ledger-truth.md](roadmaps/road-to-inbox-harvest-2026-08-b-ledger-truth.md) | 3 | 19 | 1 | 12 | 0 | 6 | [1](#blockers-road-to-inbox-harvest-2026-08-b-ledger-truth) | █████████░ 92% |
+-| 12 | [road-to-inbox-harvest-2026-08-b-release-integrity.md](roadmaps/road-to-inbox-harvest-2026-08-b-release-integrity.md) | 5 | 25 | 1 | 11 | 0 | 13 | [3](#blockers-road-to-inbox-harvest-2026-08-b-release-integrity) | █████████░ 92% |
+-| 13 | [road-to-inbox-harvest-2026-08-b.md](roadmaps/road-to-inbox-harvest-2026-08-b.md) | 3 | 6 | 1 | 2 | 0 | 3 | [1](#blockers-road-to-inbox-harvest-2026-08-b) | ███████░░░ 67% |
+-| 14 | [road-to-inbox-harvest-2026-08.md](roadmaps/road-to-inbox-harvest-2026-08.md) | 5 | 21 | 1 | 11 | 4 | 5 | [3](#blockers-road-to-inbox-harvest-2026-08) | █████████░ 92% |
+-| 15 | [road-to-kernel-question-triangle.md](roadmaps/road-to-kernel-question-triangle.md) | 1 | 3 | 3 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+-| 16 | [road-to-maintainer-bus-factor.md](roadmaps/road-to-maintainer-bus-factor.md) | 4 | 12 | 5 | 7 | 0 | 0 | [1](#blockers-road-to-maintainer-bus-factor) | ██████░░░░ 58% |
+-| 17 | [road-to-orchestration-scope-decision.md](roadmaps/road-to-orchestration-scope-decision.md) | 4 | 10 | 6 | 4 | 0 | 0 | [1](#blockers-road-to-orchestration-scope-decision) | ████░░░░░░ 40% |
+-| 18 | [road-to-rule-coherence-followup.md](roadmaps/road-to-rule-coherence-followup.md) | 5 | 9 | 8 | 1 | 0 | 0 | [2](#blockers-road-to-rule-coherence-followup) | █░░░░░░░░░ 11% |
+-| 19 | [road-to-scale-history-bench-run.md](roadmaps/road-to-scale-history-bench-run.md) | 1 | 2 | 2 | 0 | 0 | 0 | [1](#blockers-road-to-scale-history-bench-run) | ░░░░░░░░░░ 0% |
+-| 20 | [road-to-skill-description-measurement.md](roadmaps/road-to-skill-description-measurement.md) | 1 | 4 | 4 | 0 | 0 | 0 | [1](#blockers-road-to-skill-description-measurement) | ░░░░░░░░░░ 0% |
+-| 21 | [road-to-skill-ecosystem-gate-integrity.md](roadmaps/road-to-skill-ecosystem-gate-integrity.md) | 5 | 43 | 3 | 40 | 0 | 0 | [1](#blockers-road-to-skill-ecosystem-gate-integrity) | █████████░ 93% |
+-| 22 | [road-to-solution-minimalism.md](roadmaps/road-to-solution-minimalism.md) | 4 | 36 | 10 | 25 | 0 | 1 | [1](#blockers-road-to-solution-minimalism) | ███████░░░ 71% |
+-| 23 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 6 | 3 | 0 | 0 | [1](#blockers-road-to-subagent-value-realization-followup) | ███░░░░░░░ 33% |
+-| 24 | [road-to-surface-consolidation.md](roadmaps/road-to-surface-consolidation.md) | 3 | 14 | 1 | 12 | 1 | 0 | [2](#blockers-road-to-surface-consolidation) | █████████░ 92% |
+-| 25 | [road-to-tier-removal.md](roadmaps/road-to-tier-removal.md) | 4 | 8 | 2 | 6 | 0 | 0 | [1](#blockers-road-to-tier-removal) | ████████░░ 75% |
+-| 26 | [road-to-ui-track-integrity-followup.md](roadmaps/road-to-ui-track-integrity-followup.md) | 1 | 10 | 10 | 0 | 0 | 0 | [2](#blockers-road-to-ui-track-integrity-followup) | ░░░░░░░░░░ 0% |
+-| 27 | [road-to-worktree-hygiene.md](roadmaps/road-to-worktree-hygiene.md) | 1 | 9 | 2 | 7 | 0 | 0 | [1](#blockers-road-to-worktree-hygiene) | ████████░░ 78% |
++| 6 | [road-to-gated-reach-followup.md](roadmaps/road-to-gated-reach-followup.md) | 1 | 12 | 12 | 0 | 0 | 0 | [1](#blockers-road-to-gated-reach-followup) | ░░░░░░░░░░ 0% |
++| 7 | [road-to-inbox-harvest-2026-08-b-ci-economy.md](roadmaps/road-to-inbox-harvest-2026-08-b-ci-economy.md) | 5 | 24 | 1 | 17 | 2 | 4 | [2](#blockers-road-to-inbox-harvest-2026-08-b-ci-economy) | █████████░ 94% |
++| 8 | [road-to-inbox-harvest-2026-08-b-dispatch-safety.md](roadmaps/road-to-inbox-harvest-2026-08-b-dispatch-safety.md) | 4 | 21 | 6 | 8 | 1 | 6 | [1](#blockers-road-to-inbox-harvest-2026-08-b-dispatch-safety) | ██████░░░░ 57% |
++| 9 | [road-to-inbox-harvest-2026-08-b-estate-lifecycle.md](roadmaps/road-to-inbox-harvest-2026-08-b-estate-lifecycle.md) | 4 | 15 | 1 | 8 | 0 | 6 | [1](#blockers-road-to-inbox-harvest-2026-08-b-estate-lifecycle) | █████████░ 89% |
++| 10 | [road-to-inbox-harvest-2026-08-b-ledger-truth.md](roadmaps/road-to-inbox-harvest-2026-08-b-ledger-truth.md) | 3 | 19 | 1 | 12 | 0 | 6 | [1](#blockers-road-to-inbox-harvest-2026-08-b-ledger-truth) | █████████░ 92% |
++| 11 | [road-to-inbox-harvest-2026-08-b-release-integrity.md](roadmaps/road-to-inbox-harvest-2026-08-b-release-integrity.md) | 5 | 25 | 1 | 11 | 0 | 13 | [3](#blockers-road-to-inbox-harvest-2026-08-b-release-integrity) | █████████░ 92% |
++| 12 | [road-to-inbox-harvest-2026-08-b.md](roadmaps/road-to-inbox-harvest-2026-08-b.md) | 3 | 6 | 1 | 2 | 0 | 3 | [1](#blockers-road-to-inbox-harvest-2026-08-b) | ███████░░░ 67% |
++| 13 | [road-to-inbox-harvest-2026-08.md](roadmaps/road-to-inbox-harvest-2026-08.md) | 5 | 21 | 1 | 11 | 4 | 5 | [3](#blockers-road-to-inbox-harvest-2026-08) | █████████░ 92% |
++| 14 | [road-to-kernel-question-triangle.md](roadmaps/road-to-kernel-question-triangle.md) | 1 | 3 | 3 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
++| 15 | [road-to-maintainer-bus-factor.md](roadmaps/road-to-maintainer-bus-factor.md) | 4 | 12 | 5 | 7 | 0 | 0 | [1](#blockers-road-to-maintainer-bus-factor) | ██████░░░░ 58% |
++| 16 | [road-to-orchestration-scope-decision.md](roadmaps/road-to-orchestration-scope-decision.md) | 4 | 10 | 6 | 4 | 0 | 0 | [1](#blockers-road-to-orchestration-scope-decision) | ████░░░░░░ 40% |
++| 17 | [road-to-rule-coherence-followup.md](roadmaps/road-to-rule-coherence-followup.md) | 5 | 9 | 8 | 1 | 0 | 0 | [2](#blockers-road-to-rule-coherence-followup) | █░░░░░░░░░ 11% |
++| 18 | [road-to-scale-history-bench-run.md](roadmaps/road-to-scale-history-bench-run.md) | 1 | 2 | 2 | 0 | 0 | 0 | [1](#blockers-road-to-scale-history-bench-run) | ░░░░░░░░░░ 0% |
++| 19 | [road-to-skill-description-measurement.md](roadmaps/road-to-skill-description-measurement.md) | 1 | 4 | 4 | 0 | 0 | 0 | [1](#blockers-road-to-skill-description-measurement) | ░░░░░░░░░░ 0% |
++| 20 | [road-to-skill-ecosystem-gate-integrity.md](roadmaps/road-to-skill-ecosystem-gate-integrity.md) | 5 | 43 | 3 | 40 | 0 | 0 | [1](#blockers-road-to-skill-ecosystem-gate-integrity) | █████████░ 93% |
++| 21 | [road-to-solution-minimalism.md](roadmaps/road-to-solution-minimalism.md) | 4 | 36 | 10 | 25 | 0 | 1 | [1](#blockers-road-to-solution-minimalism) | ███████░░░ 71% |
++| 22 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 6 | 3 | 0 | 0 | [1](#blockers-road-to-subagent-value-realization-followup) | ███░░░░░░░ 33% |
++| 23 | [road-to-surface-consolidation.md](roadmaps/road-to-surface-consolidation.md) | 3 | 14 | 1 | 12 | 1 | 0 | [2](#blockers-road-to-surface-consolidation) | █████████░ 92% |
++| 24 | [road-to-tier-removal.md](roadmaps/road-to-tier-removal.md) | 4 | 8 | 2 | 6 | 0 | 0 | [1](#blockers-road-to-tier-removal) | ████████░░ 75% |
++| 25 | [road-to-ui-track-integrity-followup.md](roadmaps/road-to-ui-track-integrity-followup.md) | 1 | 10 | 10 | 0 | 0 | 0 | [2](#blockers-road-to-ui-track-integrity-followup) | ░░░░░░░░░░ 0% |
++| 26 | [road-to-worktree-hygiene.md](roadmaps/road-to-worktree-hygiene.md) | 1 | 9 | 2 | 7 | 0 | 0 | [1](#blockers-road-to-worktree-hygiene) | ████████░░ 78% |
+ 
+ ---
+ 
+@@ -177,16 +176,6 @@
+ | 2 | Re-run test on existing artifacts (minimal spend) | 🟡 in progress | 1 | 1 | 0 | 0 | 50% |
+ | 3 | Landing & close | ⬜ not started | 1 | 0 | 0 | 1 | 0% |
+ 
+-### [road-to-council-solo-floor-implementation.md](roadmaps/road-to-council-solo-floor-implementation.md)
+-
+-**Road to the gate-scoped solo-attendance floor** — 0 / 13 done (0%)
+-
+-| # | Phase | State | Open | Done | Deferred | Cancelled | % |
+-|---|---|---|---:|---:|---:|---:|---:|
+-| 1 | Define gate-class, before threading anything | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
+-| 2 | The floor in the quorum layer | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
+-| 3 | The floor's own telemetry | ⬜ not started | 7 | 0 | 0 | 0 | 0% |
+-
+ ### [road-to-gated-reach-followup.md](roadmaps/road-to-gated-reach-followup.md)
+ 
+ **Follow-up to Road to gated reach — exercise the YouTube channel** — 0 / 12 done (0%)
+diff --git a/agents/roadmaps/archive/road-to-council-solo-floor-implementation.md b/agents/roadmaps/archive/road-to-council-solo-floor-implementation.md
+new file mode 100644
+index 0000000000000000000000000000000000000000..8fed00823f8317757c2464fd42ad8deb150352e9
+--- /dev/null
++++ b/agents/roadmaps/archive/road-to-council-solo-floor-implementation.md
+@@ -0,0 +1,225 @@
++---
++complexity: standard
++parent_roadmap: archive/road-to-inbox-harvest-2026-08-b-council-integrity-followup.md
++---
++
++# Road to the gate-scoped solo-attendance floor
++
++> Build the `min_present: 2` floor that ADR-224 chose — define what makes a pass
++> gate-class, thread the floor through the quorum call sites with a safe default,
++> and give the floor its own telemetry so a later review can retire it on
++> evidence rather than on taste.
++
++## Context
++
++[`ADR-224`](../../docs/decisions/ADR-224-gate-scoped-solo-attendance-floor.md)
++decided the outcome; it deliberately did not build the mechanism. The decision
++was made against a measured solo-conclusion rate of **1 of 8 post_run passes =
++12.5 %** (read 2026-08-11T09:30Z, definition pre-registered in
++[`quorum-attendance-budget.json`](../../src/config/quorum-attendance-budget.json)),
++with the AI council converging 2/2 on the gate-scoped floor over the two
++rejected alternatives.
++
++**What is already true in the tree, verified rather than assumed:**
++
++- `resolveQuorumThreshold` returns `ceil(n / 2)`, so at `n = 2` a single present
++  member is a legitimate `concluded`
++  ([`quorum.ts:13-19`](../../src/scripts/ai_council/quorum.ts)). **Tightening
++  that formula is out of scope and stays out** — the divergence is a recorded
++  decision, and reopening it is a separate argument with its own record.
++- `isSoloConcluded` exists and is advisory-only. ADR-224 authorizes a branch on
++  it **for gate-class passes and nothing else**; the docstring already points at
++  that authorization.
++- `QuorumSetting` is `'majority' | number` — no `min_present`, no per-class
++  variant.
++- **No gate-class notion exists anywhere in the council code.** "release gate"
++  appears in two source comments and one render string
++  (`orchestrator.ts:2030`). This is the load-bearing gap: the concept has to be
++  defined before it can be threaded, and the pre-registered telemetry filter
++  (`post_run` + `command=run`) is **not** a substitute — it records which passes
++  reached the providers, which correlates with gate usage without defining it.
++
++**Why the risk-bearing part is first.** Phase 1 is the definition, not the
++plumbing, because every later phase is cheap once the concept is settled and
++worthless if it is wrong.
++
++## Challenge pass, 2026-08-11 — and what it changed
++
++Run before execution, per the standing preference that a roadmap is challenged
++rather than executed on its own say-so. AI council, 2 members (anthropic,
++openai), $0.07, converged **2/2 on "do not build the enforcement now"**: the
++1-of-2 conclusion is a recorded deliberate behaviour, the deciding rate is 1 of
++8 with an interval spanning roughly 0.3 %–53 %, and the floor *adds* a way for a
++pass to fail to conclude.
++
++Two premises were then checked against the tree, and both corrections matter
++more than the verdict:
++
++1. **Nothing branches on `QuorumStatus` to hold anything.** The only reader of
++   `'inconclusive'` outside `quorum.ts` is `_deserialise_quorum`, which
++   validates a persisted string. So an enforcing floor would have changed zero
++   behaviour on landing — and could hang an advisory pass the moment a consumer
++   appeared. The enforcement half had **no consumer to enforce against**, which
++   this roadmap's Context did not know.
++2. **The council's "you are overriding the n=40 trigger" argument is refuted by
++   ADR-224's own text.** Trigger (a) reopens alternative (c) at n=40; trigger
++   (b) is "the gate-class floor lands and its own fire-rate telemetry
++   accumulates" — which presumes the floor landing. A revisit condition, not a
++   precondition. Not re-asked, because the resolution below satisfies both
++   readings and a re-ask would relitigate a settled decision.
++
++**Maintainer resolution: build the floor in SHADOW.** Evaluated on every pass,
++recorded, holds nothing. Phase 2 below is rewritten accordingly; Phases 1 and 3
++are unchanged in intent. Enforcement is explicitly NOT in this roadmap and needs
++its own record, written when a gate-class consumer exists and the rate is worth
++acting on.
++
++## Prerequisites
++
++- [x] Read `AGENTS.md` and ADR-224 in full — in particular its "what the
++      implementation still has to answer" section, which is the source of the
++      three phases below.
++- [x] Confirm ADR-224 is still `status: proposed` or has been accepted. If it was
++      rejected or superseded, this roadmap is void and moves to `skipped/` rather
++      than being re-planned around. — **`status: proposed`, verified 2026-08-11.**
++
++## Phase 1 — Define gate-class, before threading anything
++
++- [x] **1.1 Decide what makes a council pass gate-class**, and record the answer
++      in the ADR-224 line or an amendment note rather than only in code. The
++      candidates are an explicit caller flag, a config key, or inference from the
++      invocation context; they are not equivalent — an inferred class silently
++      reclassifies passes when the context shape changes, an explicit flag is
++      only as good as the call-site audit. Name which call sites should carry it.
++      — **Declared by the caller, never inferred; `gate_class` on the
++      `quorum_result` line, default `false`. Recorded in the ADR-224 amendment
++      § 1, with the chosen option's own failure mode named. The two
++      `evaluateQuorum` call sites are the population; neither declares `true`
++      today, because nothing branches on quorum status to hold a gate.**
++- [x] **1.2 Fix the default for an un-instrumented call site** and state the
++      reasoning. A floor that defaults on turns every uninstrumented pass into a
++      potential held gate; one that defaults off means the protection is present
++      only where someone remembered it. Whichever is chosen, the *other* failure
++      mode is the one to name explicitly in the code comment.
++      — **Off. ADR-224 amendment § 2, including the council's opposing argument
++      for default-on and why it holds for an enforcing floor but not a shadow
++      one. The failure mode it buys is named there and in
++      `events_log.ts::QuorumEventInput`.**
++- [x] **1.3 Decide default-on vs default-off for gate-class passes themselves**
++      where the class is identifiable — ADR-224 lists this as undecided.
++      — **On, recorded as intent rather than behaviour: with no enforcement and
++      no declaring caller it decides nothing today. ADR-224 amendment § 3.**
++
++## Phase 2 — The floor in the quorum layer (SHADOW — rewritten by the challenge pass)
++
++- [x] **2.1 Extend the config shape** so a `min_present` floor is expressible and
++      validated at load time, following the clamping discipline
++      `resolveQuorumThreshold` already applies (a misconfigured cap above
++      `total` is structurally unwinnable; one below 1 resolves trivially).
++      — **`quorum_min_present` in `config.ts`, a SIBLING key rather than a
++      widened `QuorumSetting` (which is consumed by four call sites that would
++      all have to change to express a value none of them read). Validated at
++      load beside `_build_quorum`; the roster clamp lives per-pass in
++      `wouldSoloFloorHold`, where `total` is actually known, so a floor above
++      today's roster is not rejected for a council that gains a member
++      tomorrow. Forwarded through `_synthesize_ai_council_block` — the
++      validated-but-never-forwarded defect this exact block shipped once for
++      `quorum` itself, now pinned by its own test.**
++- [x] **2.2 Compute the floor as a counterfactual on every pass**, so an
++      ordinary advisory pass keeps the deliberate 1-of-2 behaviour — which in
++      shadow means *every* pass keeps it. A test pins both directions: a
++      solo-concluded pass is recorded as one the floor would have held, and a
++      full-attendance pass is not.
++      — **`wouldSoloFloorHold` in `quorum.ts`; nothing branches on it.**
++- [x] **2.3 Add the negative test that would catch a scope leak** — the floor
++      firing on a pass it was never scoped to is the regression this phase most
++      plausibly ships, and a happy-path test cannot see it.
++      — **Stronger in shadow than the enforced version admitted: the claim is
++      universal, so the test is too. Over every roster 0-5, every presence, every
++      quorum setting and every floor value, consulting the floor leaves the
++      verdict identical and mutates nothing. An enforced design could only ever
++      have tested the call sites someone remembered.**
++
++## Phase 3 — The floor's own telemetry
++
++- [x] **3.1 Distinguish "held by the floor" from "threshold not met".** ADR-224
++      records these as semantically different outcomes; emitting `inconclusive`
++      for both loses the only measurement that could later justify or retire the
++      floor. Decide whether that is a new field on the existing `quorum_result`
++      line or a distinct action, and keep the privacy shape the budget file
++      already guarantees — counts and closed vocabularies only, no field able to
++      hold free-form content.
++      — **A FIELD (`floor_would_hold`), not a new action. A new action is
++      invisible to every consumer filtering `action === 'quorum_result'`, which
++      would split the attendance population and silently move the denominator of
++      all four registered metrics — this file's own Risk 4. The two outcomes are
++      mutually exclusive by construction, so they read apart from one line
++      alone. Both additions are booleans, so the privacy shape cannot widen.
++      Schema v2 → v3; the deliberately-literal wire-version test broke on
++      purpose and was updated.**
++- [x] **3.2 Register the fire-rate as a metric** alongside the existing four in
++      `quorum-attendance-budget.json`, with no threshold committed before data —
++      the same discipline that made this roadmap's parent decidable at all.
++      — **`shadow_floor_fire_rate`, no threshold, plus an explicit
++      `nothing_is_enforced` clause and a new honest gap: `gate_class` is `false`
++      on every line until a gate-class consumer exists, so the rate is over ALL
++      post_run passes and the gate-class-scoped rate ADR-224 cares about is
++      UNMEASURED rather than zero.**
++
++## What this roadmap deliberately does NOT build
++
++Enforcement. No pass is held, delayed or failed at any configuration, and
++`isSoloConcluded` is still branched on by nothing. This is a narrower scope than
++ADR-224 authorized, recorded here so it is a stated boundary rather than an
++unfinished phase.
++
++**The condition for revisiting is falsifiable and does not depend on anyone
++remembering:** a consumer appears that branches on `QuorumStatus` to hold
++something — at which point that consumer is the first gate-class caller, it sets
++`gate_class: true`, and `shadow_floor_fire_rate` filtered on that flag is the
++evidence the enforcement decision was always supposed to rest on. Until then
++there is nothing to enforce against, and an enforcement switch would be a hold
++nobody reads. ADR-224's own trigger (a) — the n=40 denominator — remains open in
++parallel and is unaffected by this work.
++
++## Blockers
++
++None. The three open questions in Phase 1 are *steps*, not blockers: each is a
++judgement this roadmap is meant to make, none waits on an external human action,
++a date, or spend. Recording that explicitly matters — the parent's blocker was
++mis-parsed into a `user`-owned `legacy` blocker once already, which counted a
++gate that needed only time as a roadmap that "needs you".
++
++## Risk Register
++<!-- risk-review: v1 | reviewed: 2026-08-11 | reviewer: claude/host -->
++| Rank | Item | Risk type | Description | Mitigation | Anchored under |
++|------|------|-----------|-------------|------------|----------------|
++| 1 | The gate-class definition leaks and the floor fires on advisory passes | implementation | The concept does not exist yet, so its first definition sets the blast radius; an inferred class in particular reclassifies passes whenever the invocation context changes, and the symptom (an advisory pass held for a human) reads as a hang rather than as a gate | Phase 1 settles the definition before any threading, 2.2 pins both directions, and 2.3 is a dedicated negative test for the leak rather than a happy-path assertion | Phase 1 |
++| 2 | The floor is built on a rate too thin to justify it | product | The deciding rate was 1 of 8 passes; ADR-224 records the 95 % interval as roughly 0.3 %–53 %, so this work is authorized by urgency plus reversibility, not by a settled effect size | ADR-224's review trigger reopens the null at n=40, Phase 3 makes the floor's own fire-rate measurable so retiring it is an evidence decision, and the floor stays scoped to gate-class passes so the reversal surface is small | Phase 3 |
++| 3 | Implementing a floor is read as licence to tighten `ceil(n/2)` | implementation | A `min_present: 2` floor at n=2 and a `floor(n/2)+1` threshold produce the same outcome for the gate case, which makes the formula change look like a simplification of this work rather than the separate decision it is | The exclusion is restated in this file's Context with the citation, and ADR-224 names it as out of scope in its own Alternatives, so a future reader meets the boundary twice before touching `quorum.ts:13-19` | Context |
++| 4 | The new telemetry outcome breaks readers of the existing event shape | implementation | `quorum_result` is schema-versioned and already consumed by the four registered metrics; adding an outcome that a reader treats as `inconclusive` would silently inflate that bucket | 3.1 chooses field-vs-action deliberately rather than by convenience, `schema_version` exists for exactly this, and 3.2 registers the new metric so the split is documented where the other four are | Phase 3 |
++
++## Acceptance Criteria
++
++- [-] ~~A gate-class pass with one present member resolves `inconclusive` and
++      holds for a human; a non-gate pass with one present member still
++      concludes. Both are pinned by tests.~~ **Not applicable — this criterion
++      describes the enforcement the challenge pass and the tree both rejected.
++      Ticking it would have required building a hold that no consumer reads.
++      Replaced by the criterion below rather than reinterpreted, so the
++      difference stays visible.**
++- [x] A solo-concluded pass is recorded as one the floor would have held; a
++      full-attendance pass is not; and consulting the floor changes the verdict
++      of NO pass, for any roster, presence, quorum setting or floor value. All
++      three are pinned by tests.
++- [x] The gate-class definition, the un-instrumented default, and the
++      default-on/off choice are each recorded with their reasoning — not only
++      implemented. — **ADR-224 amendment §§ 1-3, each naming the failure mode of
++      the option chosen rather than only of the ones rejected.**
++- [x] "Held by the floor" is distinguishable from "threshold not met" by reading
++      the event log alone, and the fire-rate is registered as a metric with no
++      threshold committed before data.
++- [x] `ceil(n/2)` is unchanged, and `isSoloConcluded` is branched on by nothing —
++      a scope NARROWER than ADR-224 authorized, which is the direction the
++      challenge pass pushed and the only one that needs no further permission.
++- [x] All quality gates pass — see `quality-tools`.
+diff --git a/agents/roadmaps/archive/road-to-inbox-harvest-2026-08-b-council-integrity-followup.md b/agents/roadmaps/archive/road-to-inbox-harvest-2026-08-b-council-integrity-followup.md
+index db0392b486d546d00775ba152d8852fc7627c68a..fe3b9404cc985febdc8bf1a074ed46ca22f47d75 100644
+--- a/agents/roadmaps/archive/road-to-inbox-harvest-2026-08-b-council-integrity-followup.md
++++ b/agents/roadmaps/archive/road-to-inbox-harvest-2026-08-b-council-integrity-followup.md
+@@ -109,7 +109,7 @@ visible and idle.
+       render string), audit every call site, and add a third telemetry outcome
+       for "met threshold but held by the floor". That is roadmap-sized, and it
+       is carried by
+-      [`road-to-council-solo-floor-implementation.md`](../road-to-council-solo-floor-implementation.md)
++      [`road-to-council-solo-floor-implementation.md`](road-to-council-solo-floor-implementation.md)
+       so the chosen outcome does not become a fifth deferral by silence.
+ 
+ **Exit:** one of (a), (b), (c) is chosen against a rate that was actually read,
+diff --git a/agents/roadmaps/road-to-council-solo-floor-implementation.md b/agents/roadmaps/road-to-council-solo-floor-implementation.md
+deleted file mode 100644
+index 0185a753e4e8639be371b6dc97e760735daabe81..0000000000000000000000000000000000000000
+--- a/agents/roadmaps/road-to-council-solo-floor-implementation.md
++++ /dev/null
+@@ -1,128 +0,0 @@
+----
+-complexity: standard
+-parent_roadmap: archive/road-to-inbox-harvest-2026-08-b-council-integrity-followup.md
+----
+-
+-# Road to the gate-scoped solo-attendance floor
+-
+-> Build the `min_present: 2` floor that ADR-224 chose — define what makes a pass
+-> gate-class, thread the floor through the quorum call sites with a safe default,
+-> and give the floor its own telemetry so a later review can retire it on
+-> evidence rather than on taste.
+-
+-## Context
+-
+-[`ADR-224`](../../docs/decisions/ADR-224-gate-scoped-solo-attendance-floor.md)
+-decided the outcome; it deliberately did not build the mechanism. The decision
+-was made against a measured solo-conclusion rate of **1 of 8 post_run passes =
+-12.5 %** (read 2026-08-11T09:30Z, definition pre-registered in
+-[`quorum-attendance-budget.json`](../../src/config/quorum-attendance-budget.json)),
+-with the AI council converging 2/2 on the gate-scoped floor over the two
+-rejected alternatives.
+-
+-**What is already true in the tree, verified rather than assumed:**
+-
+-- `resolveQuorumThreshold` returns `ceil(n / 2)`, so at `n = 2` a single present
+-  member is a legitimate `concluded`
+-  ([`quorum.ts:13-19`](../../src/scripts/ai_council/quorum.ts)). **Tightening
+-  that formula is out of scope and stays out** — the divergence is a recorded
+-  decision, and reopening it is a separate argument with its own record.
+-- `isSoloConcluded` exists and is advisory-only. ADR-224 authorizes a branch on
+-  it **for gate-class passes and nothing else**; the docstring already points at
+-  that authorization.
+-- `QuorumSetting` is `'majority' | number` — no `min_present`, no per-class
+-  variant.
+-- **No gate-class notion exists anywhere in the council code.** "release gate"
+-  appears in two source comments and one render string
+-  (`orchestrator.ts:2030`). This is the load-bearing gap: the concept has to be
+-  defined before it can be threaded, and the pre-registered telemetry filter
+-  (`post_run` + `command=run`) is **not** a substitute — it records which passes
+-  reached the providers, which correlates with gate usage without defining it.
+-
+-**Why the risk-bearing part is first.** Phase 1 is the definition, not the
+-plumbing, because every later phase is cheap once the concept is settled and
+-worthless if it is wrong.
+-
+-## Prerequisites
+-
+-- [ ] Read `AGENTS.md` and ADR-224 in full — in particular its "what the
+-      implementation still has to answer" section, which is the source of the
+-      three phases below.
+-- [ ] Confirm ADR-224 is still `status: proposed` or has been accepted. If it was
+-      rejected or superseded, this roadmap is void and moves to `skipped/` rather
+-      than being re-planned around.
+-
+-## Phase 1 — Define gate-class, before threading anything
+-
+-- [ ] **1.1 Decide what makes a council pass gate-class**, and record the answer
+-      in the ADR-224 line or an amendment note rather than only in code. The
+-      candidates are an explicit caller flag, a config key, or inference from the
+-      invocation context; they are not equivalent — an inferred class silently
+-      reclassifies passes when the context shape changes, an explicit flag is
+-      only as good as the call-site audit. Name which call sites should carry it.
+-- [ ] **1.2 Fix the default for an un-instrumented call site** and state the
+-      reasoning. A floor that defaults on turns every uninstrumented pass into a
+-      potential held gate; one that defaults off means the protection is present
+-      only where someone remembered it. Whichever is chosen, the *other* failure
+-      mode is the one to name explicitly in the code comment.
+-- [ ] **1.3 Decide default-on vs default-off for gate-class passes themselves**
+-      where the class is identifiable — ADR-224 lists this as undecided.
+-
+-## Phase 2 — The floor in the quorum layer
+-
+-- [ ] **2.1 Extend the config shape** so a `min_present` floor is expressible and
+-      validated at load time in `_build_quorum`, following the clamping
+-      discipline `resolveQuorumThreshold` already applies (a misconfigured cap
+-      above `total` is structurally unwinnable; one below 1 resolves trivially).
+-- [ ] **2.2 Apply the floor at the gate-class call sites only**, so an ordinary
+-      advisory pass keeps the deliberate 1-of-2 behaviour. A test must pin both
+-      directions: a gate-class solo pass holds, and a non-gate solo pass still
+-      concludes.
+-- [ ] **2.3 Add the negative test that would catch a scope leak** — the floor
+-      firing on a pass that is not gate-class is the regression this phase most
+-      plausibly ships, and a happy-path test cannot see it.
+-
+-## Phase 3 — The floor's own telemetry
+-
+-- [ ] **3.1 Distinguish "held by the floor" from "threshold not met".** ADR-224
+-      records these as semantically different outcomes; emitting `inconclusive`
+-      for both loses the only measurement that could later justify or retire the
+-      floor. Decide whether that is a new field on the existing `quorum_result`
+-      line or a distinct action, and keep the privacy shape the budget file
+-      already guarantees — counts and closed vocabularies only, no field able to
+-      hold free-form content.
+-- [ ] **3.2 Register the fire-rate as a metric** alongside the existing four in
+-      `quorum-attendance-budget.json`, with no threshold committed before data —
+-      the same discipline that made this roadmap's parent decidable at all.
+-
+-## Blockers
+-
+-None. The three open questions in Phase 1 are *steps*, not blockers: each is a
+-judgement this roadmap is meant to make, none waits on an external human action,
+-a date, or spend. Recording that explicitly matters — the parent's blocker was
+-mis-parsed into a `user`-owned `legacy` blocker once already, which counted a
+-gate that needed only time as a roadmap that "needs you".
+-
+-## Risk Register
+-<!-- risk-review: v1 | reviewed: 2026-08-11 | reviewer: claude/host -->
+-| Rank | Item | Risk type | Description | Mitigation | Anchored under |
+-|------|------|-----------|-------------|------------|----------------|
+-| 1 | The gate-class definition leaks and the floor fires on advisory passes | implementation | The concept does not exist yet, so its first definition sets the blast radius; an inferred class in particular reclassifies passes whenever the invocation context changes, and the symptom (an advisory pass held for a human) reads as a hang rather than as a gate | Phase 1 settles the definition before any threading, 2.2 pins both directions, and 2.3 is a dedicated negative test for the leak rather than a happy-path assertion | Phase 1 |
+-| 2 | The floor is built on a rate too thin to justify it | product | The deciding rate was 1 of 8 passes; ADR-224 records the 95 % interval as roughly 0.3 %–53 %, so this work is authorized by urgency plus reversibility, not by a settled effect size | ADR-224's review trigger reopens the null at n=40, Phase 3 makes the floor's own fire-rate measurable so retiring it is an evidence decision, and the floor stays scoped to gate-class passes so the reversal surface is small | Phase 3 |
+-| 3 | Implementing a floor is read as licence to tighten `ceil(n/2)` | implementation | A `min_present: 2` floor at n=2 and a `floor(n/2)+1` threshold produce the same outcome for the gate case, which makes the formula change look like a simplification of this work rather than the separate decision it is | The exclusion is restated in this file's Context with the citation, and ADR-224 names it as out of scope in its own Alternatives, so a future reader meets the boundary twice before touching `quorum.ts:13-19` | Context |
+-| 4 | The new telemetry outcome breaks readers of the existing event shape | implementation | `quorum_result` is schema-versioned and already consumed by the four registered metrics; adding an outcome that a reader treats as `inconclusive` would silently inflate that bucket | 3.1 chooses field-vs-action deliberately rather than by convenience, `schema_version` exists for exactly this, and 3.2 registers the new metric so the split is documented where the other four are | Phase 3 |
+-
+-## Acceptance Criteria
+-
+-- [ ] A gate-class pass with one present member resolves `inconclusive` and holds
+-      for a human; a non-gate pass with one present member still concludes. Both
+-      are pinned by tests.
+-- [ ] The gate-class definition, the un-instrumented default, and the
+-      default-on/off choice are each recorded with their reasoning — not only
+-      implemented.
+-- [ ] "Held by the floor" is distinguishable from "threshold not met" by reading
+-      the event log alone, and the fire-rate is registered as a metric with no
+-      threshold committed before data.
+-- [ ] `ceil(n/2)` is unchanged, and `isSoloConcluded` is branched on only for
+-      gate-class passes — the exact scope ADR-224 authorized.
+-- [ ] All quality gates pass — see `quality-tools`.
+diff --git a/docs/decisions/ADR-224-gate-scoped-solo-attendance-floor.md b/docs/decisions/ADR-224-gate-scoped-solo-attendance-floor.md
+index c173397d9f1ac34758b45449f88f6af71b22fd51..d451378cab46dec698678bd3641c6bfc0e5a0c76 100644
+--- a/docs/decisions/ADR-224-gate-scoped-solo-attendance-floor.md
++++ b/docs/decisions/ADR-224-gate-scoped-solo-attendance-floor.md
+@@ -137,14 +137,105 @@ Three things are genuinely undecided, and none of them is a plumbing detail:
+ 3. **Whether the floor is default-on or default-off** where a gate-class pass is
+    identifiable at all.
+ 
+-Step 1.1 of the roadmap asks for an outcome "chosen against a rate that was
+-actually read, and the outcome recorded". It does not ask for the mechanism, and
+-building one that first invents a classification, audits every call site and
++Step 1.1 of the parent roadmap asks for an outcome "chosen against a rate that
++was actually read, and the outcome recorded". It does not ask for the mechanism,
++and building one that first invents a classification, audits every call site and
+ adds a telemetry state is roadmap-sized rather than step-sized. The
+-implementation is therefore carried by
+-[`road-to-council-solo-floor-implementation.md`](../../agents/roadmaps/road-to-council-solo-floor-implementation.md),
+-which exists so that a chosen outcome does not become a fifth deferral by
+-silence.
++implementation is therefore carried by a separate roadmap — named here without a
++path, because a roadmap is archived when it closes and a link from this record
++would break on exactly the change that closes it — which exists so that a chosen
++outcome does not become a fifth deferral by silence.
++
++**All three are now answered; see the amendment below.**
++
++## Amendment, 2026-08-11 — the measurement landed, the enforcement did not
++
++The three open questions above are answered here rather than only in code, per
++the implementation roadmap's own acceptance criterion. Two facts read off the
++tree during implementation changed what "implementing this decision" means, and
++neither was known when the Decision above was written:
++
++- **Nothing in the tree branches on `QuorumStatus` to hold anything.** The only
++  reader of `'inconclusive'` outside `quorum.ts` is
++  `council_cli.ts::_deserialise_quorum`, which validates a persisted string. An
++  enforcing floor would therefore have changed **zero** behaviour on the day it
++  landed — there is no gate for it to hold — while being able to hang an
++  advisory pass as soon as a consumer appeared. The enforcement half had no
++  consumer to enforce against.
++- **A challenge pass converged 2/2 against building the enforcement now** (AI
++  council, 2026-08-11, members anthropic and openai): the deciding rate is 1 of
++  8 with an interval spanning roughly 0.3 %–53 %, the 1-of-2 conclusion is a
++  recorded deliberate behaviour, and the floor *adds* a way for a pass to fail
++  to conclude. One member argued the stronger form — that building at n=8
++  overrides this record's own n=40 trigger and is therefore a governance
++  violation. **That reading is refuted by this record's text**: trigger (a)
++  reopens alternative (c) at n=40, and trigger (b) is "the gate-class floor
++  lands and its own fire-rate telemetry accumulates", which *presumes* the floor
++  landing. The trigger is a revisit condition, not a precondition. It is
++  recorded here rather than re-argued with the council, because the maintainer's
++  chosen resolution below satisfies both readings and a re-ask would have
++  relitigated a settled decision.
++
++**Resolution, maintainer-chosen: the floor is built in shadow.** It is evaluated
++on every pass and recorded; it holds nothing. That is compatible with this
++record (it is what trigger (b) asks to accumulate), with the challenge verdict
++(nothing is enforced on a 1-of-8 estimate), and with the tree (there is nothing
++to enforce against). Enforcement stays a separate decision, to be made when a
++gate-class consumer exists **and** the rate is worth acting on.
++
++### 1. What makes a pass gate-class — declared, never inferred
++
++Gate-class is a **property the caller declares**, recorded as `gate_class` on
++the `quorum_result` line, defaulting to `false`.
++
++Inference from the invocation context was rejected: it silently reclassifies
++passes whenever the context shape changes, and that is the one failure a rate
++computed over the field could never detect. A config key was rejected because it
++moves the classification to an operator who does not know which call sites gate
++anything.
++
++**The failure mode of the choice made, stated rather than only the rejected
++ones:** a declared flag is exactly as good as the call-site audit that places
++it, so a caller that gates a release and forgets to declare itself is invisible
++to the floor. The mitigation available today is that the population is small —
++there are two `evaluateQuorum` call sites in the tree — and that `command` and
++`phase` remain on every line, so the inferred reading can still be computed and
++compared against the declared one when they are expected to disagree.
++
++**No call site declares `true` today**, and that is not an omission: with no
++consumer branching on quorum status, there is no gate-class caller to mark. The
++field is written regardless, so the split is readable the moment one appears
++rather than leaving every earlier line ambiguous.
++
++### 2. The un-instrumented default — off, and why that is safe *here*
++
++An un-declared call site is **not** gate-class.
++
++In an enforcing design this is the harder call, and one council member argued
++the opposite (default ON, since an unmarked gate-class pass that solo-concludes
++risks a defect escape, while an unmarked advisory pass only delays a developer).
++That argument is sound **for an enforcing floor** and does not transfer to a
++shadow one: nothing is held at either setting, so the cost of defaulting off is
++a missing measurement rather than a missed protection, and the cost of
++defaulting on would be a fire-rate inflated by passes nobody ever intended to
++gate — an artefact that would corrupt the very series ADR trigger (b) exists to
++accumulate.
++
++**The failure mode:** if enforcement is ever switched on while this default
++stands, an undeclared gate-class caller silently loses the floor. Enforcement
++must therefore not be a flag flip — it needs its own record, which re-decides
++this default against the consumers that exist by then.
++
++### 3. Default-on/off for declared gate-class passes — moot today, on when it lands
++
++For a pass that declares itself gate-class, the floor is intended **on**: a
++caller that declares the class is asking for the floor, and a declared-but-off
++state is a setting whose only effect is to make the declaration a lie.
++
++This is recorded as intent, not as behaviour: with no enforcement and no
++declaring caller, it decides nothing today. It is written down so the
++enforcement decision starts from a stated position rather than re-opening a
++question this record already considered.
+ 
+ ## Consequences
+ 
+diff --git a/src/config/quorum-attendance-budget.json b/src/config/quorum-attendance-budget.json
+index 044dd67ac93dbe1e4f1492cfe107ab6bf1ff2cff..b8abcb1f538b0be9704b3ea46343903744dc0800 100644
+--- a/src/config/quorum-attendance-budget.json
++++ b/src/config/quorum-attendance-budget.json
+@@ -1,11 +1,11 @@
+ {
+-    "_comment": "Pre-registered council ATTENDANCE metrics (road-to-inbox-harvest-2026-08-b Phase 1.4). Registered here rather than in roadmap prose because a roadmap is archived when it closes and a metric outlives it — the sibling budget files (hook-token-budget.json, recycle-threshold-budget.json) already carry the owner / review_by / honest-gap discipline this reuses. The instrument is the quorum_result line appendQuorumEvent writes to agents/runtime/council/events.log (schema v2); nothing here is measured yet, and no threshold is committed before data exists.",
++    "_comment": "Pre-registered council ATTENDANCE metrics (road-to-inbox-harvest-2026-08-b Phase 1.4). Registered here rather than in roadmap prose because a roadmap is archived when it closes and a metric outlives it — the sibling budget files (hook-token-budget.json, recycle-threshold-budget.json) already carry the owner / review_by / honest-gap discipline this reuses. The instrument is the quorum_result line appendQuorumEvent writes to agents/runtime/council/events.log (schema v3 since the ADR-224 shadow floor added gate_class + floor_would_hold; v2 lines carry neither and a rate over them must exclude rather than assume them); nothing here is measured yet, and no threshold is committed before data exists.",
+     "schema_version": 1,
+     "registered_at": "2026-08-10",
+     "owner": "maintainer",
+     "review_by": "2026-11-10",
+     "unit": "quorum_result event lines in agents/runtime/council/events.log",
+-    "privacy": "a quorum_result line carries {phase, command, dispatch, verdict, threshold, configured_total, total, present, solo, absent[{member, reason}]} — counts, closed vocabularies, and member ids only. The type has no field able to hold free-form content, so the CLI's own `detail` string (provider error text, which can embed paths and prompt fragments) is dropped at the boundary rather than scrubbed.",
++    "privacy": "a quorum_result line carries {phase, command, dispatch, verdict, threshold, configured_total, total, present, solo, gate_class, floor_would_hold, absent[{member, reason}]} — counts, closed vocabularies, booleans, and member ids only. The type has no field able to hold free-form content, so the CLI's own `detail` string (provider error text, which can embed paths and prompt fragments) is dropped at the boundary rather than scrubbed. The two v3 additions are booleans, which cannot widen that surface.",
+     "phase_split": "A pass emits `pre_run` (build_members — who could be constructed) and, on the `run` path, `post_run` (_postRunQuorum — who actually returned a usable response). They disagree whenever a member constructs and then fails mid-flight, so a rate computed over both double-counts. A `pre_run` line is NOT evidence a pass ran: `command: estimate` is a spend-free preview, and a `run` / `debate` line is written before the `--confirm` gate (which defaults to false and returns before any provider call) and before the necessity and size-fit gates. A `post_run` line is the only line that proves providers were called — which is why every rate below is post_run-scoped, and why `command` exists at all.",
+     "attendance_rate": {
+         "definition": "of the members that entered the pass, how many answered: present / total per post_run pass. Bounded by 1 by construction (evaluateQuorum clamps present into [0, total]).",
+@@ -23,6 +23,12 @@
+         "instrument": "quorum_result lines, phase=post_run, command=run, field solo, split by dispatch + configured_total",
+         "threshold": "DECIDED 2026-08-11 against real data — see ADR-224 (docs/decisions/ADR-224-gate-scoped-solo-attendance-floor.md). The quorum-solo-floor blocker pre-registered three outcomes — a third CLI member, a gate-scoped min_present: 2, or a published null under 5 %. Read at 2026-08-11T09:30Z with the definition above: 1 of 8 post_run/command=run passes carried a degraded solo conclusion = 12.5 %, so the under-5 % null did not fire and the gate-scoped floor was chosen (council 2/2). It was decided on the degraded case only; a --single pass is the operator asking for one voice, not the council failing to assemble. Still no numeric threshold is committed here, deliberately: at n=8 the 95 % interval around 1/8 spans roughly 0.3 %-53 %, so the rate established urgency and not certainty, and ADR-224's review trigger reopens the null at n=40. What this metric measures does NOT change; once the floor lands, how often it FIRES is a second and different question needing its own instrument."
+     },
++    "shadow_floor_fire_rate": {
++        "definition": "share of post_run passes where a min_present floor WOULD have held the pass, had one been enforced: `floor_would_hold: true` over post_run/command=run lines. Written by the wouldSoloFloorHold predicate in quorum.ts, never re-derived from present/threshold here, for the same reason solo_conclusion_rate defers to isSoloConcluded — one definition, so a change to the rule cannot leave this file stale. This is the instrument solo_conclusion_rate's threshold note said the FIRING question would need; it answers 'how often would the floor hold a gate', which is NOT the question solo_conclusion_rate answers ('how often did a pass conclude on one voice'). The two differ wherever the floor is clamped: a council configured with one member is solo: true and floor_would_hold: false, deliberately.",
++        "instrument": "quorum_result lines, phase=post_run, command=run, field floor_would_hold, split by dispatch + configured_total",
++        "threshold": "none committed before data — and deliberately none at the review date either unless a gate-class caller exists by then. A fire-rate over passes that gate nothing measures a counterfactual, not a risk; it is registered now so ADR-224's review trigger (b) has an accumulating series rather than a series that starts on the day someone remembers to add one.",
++        "nothing_is_enforced": "No value of this metric holds, delays or fails a council pass. wouldSoloFloorHold is a counterfactual with no caller branching on it, and quorum_min_present configures only what the counterfactual is computed against. A reader must not cite this rate as evidence that the floor protected anything — it has never protected anything."
++    },
+     "absent_reason_distribution": {
+         "definition": "count per reason over absent[] entries — no_binary / no_auth / timeout / quota (AbsentReason) plus the two runtime fallbacks the CLI writes directly, `unavailable` (transport resolved to nothing) and `binary_missing` (a CLI client refused to construct). Distinguishes a council degraded by configuration from one degraded by provider behaviour, which have opposite fixes.",
+         "instrument": "quorum_result lines, absent[].reason, split by phase (a pre_run absence is configuration; a post_run absence is mid-flight). Excluding `command: estimate` is NOT sufficient: `run` and `debate` also reach construction and return at the `--confirm` gate, which defaults to false. The reliable filter is a pre_run line whose pass produced a matching post_run line; a pre_run line with no post_run partner reached construction and stopped there, whatever its command says.",
+@@ -34,6 +40,7 @@
+         "`lens` and `invocation` are empty on every pre_run line — neither is known at member-construction time — so any per-lens breakdown is post_run-only.",
+         "`command: debate` carries the pre_run half ONLY. There is no _postRunQuorum on the debate path, and defining `usable response` for a multi-round debate is a separate question this registration does not answer. So debate contributes to absent_reason_distribution and to nothing else: attendance_rate and solo_conclusion_rate cover the `run` path, and a reader must not read them as covering every metered pass.",
+         "A pre_run line proves construction happened, never that a pass followed — the `--confirm` gate (default false), the necessity gate and the size-fit gate all abort afterwards and nothing on the line records it. Any count over pre_run lines is an upper bound; pair it with a post_run line before treating it as a pass.",
++        "`gate_class` is `false` on EVERY line written so far and will stay false until a caller declares otherwise — nothing in the tree branches on QuorumStatus to hold a gate, so there is no gate-class caller to mark. shadow_floor_fire_rate is therefore a rate over ALL post_run passes, not over gate-class ones, and the gate-class-scoped rate ADR-224 actually cares about is UNMEASURED, not zero. Do not read a `false` majority as evidence that gate-class passes are rare; it is evidence that the concept has no consumer yet.",
+         "The CLI emit wiring itself has no test. The two modules are covered directly, but nothing exercises build_members / cmd_run / cmd_debate end-to-end against a captured log — and `_emitQuorumEvent` forwards no AppendEventOptions, so there is no target to capture into. Two defects in this file's first version (a `dispatch` written from the flag rather than the outcome, and a rate mixing config entries with clients) were found by review rather than by a test, which is what that gap costs."
+     ]
+ }
+diff --git a/src/scripts/ai_council/config.ts b/src/scripts/ai_council/config.ts
+index de280a8377e71d79e5595c80c1f6172e588607d8..6dc4996ddeb985d984d6ef13a7b105e4bdbfbc8e 100644
+--- a/src/scripts/ai_council/config.ts
++++ b/src/scripts/ai_council/config.ts
+@@ -52,6 +52,11 @@
+  *    single absent member into a deadlocked release gate (council-verified
+  *    2026-08-09). See `quorum.ts` for the resolver a caller applies to its
+  *    own present/total member counts.
++ * 9b. `quorum_min_present` ∈ positive integers (default 2, ADR-224). The
++ *    floor a gate-class pass would want — SHADOW ONLY: it is recorded per
++ *    pass and enforced nowhere, so no value of this key can hold, delay or
++ *    fail a council pass today. See `quorum.ts::wouldSoloFloorHold` for why
++ *    the measurement landed without the enforcement.
+  *
+  * Parity notes (intentional, documented):
+  *   - YAML is parsed with `yaml` (npm) at `version: '1.1'`, matching
+@@ -71,6 +76,7 @@ import * as path from 'node:path';
+ import { parse as parseYaml } from 'yaml';
+ 
+ import * as user_global_paths from '../_lib/user_global_paths.js';
++import { SOLO_FLOOR_MIN_PRESENT } from './quorum.js';
+ 
+ const _VALID_PROVIDERS: ReadonlySet<string> = new Set([
+     'anthropic',
+@@ -585,6 +591,25 @@ export interface CliCallBudgetConfig {
+  */
+ export type QuorumSetting = 'majority' | number;
+ 
++/**
++ * The `min_present` floor ADR-224 authorized, as an operator-visible key.
++ *
++ * A SIBLING key rather than a widened `QuorumSetting`, deliberately.
++ * `QuorumSetting` is consumed by `resolveQuorumThreshold`, `evaluateQuorum`,
++ * `_quorum_setting_from` and their tests; widening it into a union with an
++ * object would touch every one of them to express a value none of them read.
++ * The floor is not a second threshold — `quorum` answers "did enough members
++ * answer to conclude", the floor answers "was that conclusion reached on too
++ * few voices to gate on", and they resolve at different call sites.
++ *
++ * Validated at load like every other key; defaults to
++ * `quorum.ts::SOLO_FLOOR_MIN_PRESENT` so the shadow fire-rate accumulates
++ * without the operator having to opt in — an unset floor that recorded nothing
++ * would leave ADR-224's review trigger (b) with no data to trigger on. Nothing
++ * is enforced at any value: see `wouldSoloFloorHold`.
++ */
++export type QuorumMinPresent = number;
++
+ export interface CouncilConfig {
+     readonly enabled: boolean;
+     readonly defaults: DefaultsConfig;
+@@ -594,6 +619,7 @@ export interface CouncilConfig {
+     readonly consensus_scoring: ConsensusScoringConfig;
+     readonly cli_call_budget: CliCallBudgetConfig;
+     readonly quorum: QuorumSetting;
++    readonly quorum_min_present: QuorumMinPresent;
+     readonly necessity_classifier: NecessityClassifierConfig;
+     readonly model_downgrade: ModelDowngradeConfig;
+     readonly debate: DebateConfig;
+@@ -822,6 +848,9 @@ export function _build_config(raw: Dict, source_path: PathLike): CouncilConfig {
+         _asDict(_getOr(raw, 'cli_call_budget', {})),
+     );
+     const quorum = _build_quorum(_get(raw, 'quorum', 'majority'));
++    const quorum_min_present = _build_quorum_min_present(
++        _get(raw, 'quorum_min_present', SOLO_FLOOR_MIN_PRESENT),
++    );
+     const necessity_classifier = _build_necessity_classifier(
+         _asDict(_getOr(raw, 'necessity_classifier', {})),
+     );
+@@ -871,6 +900,7 @@ export function _build_config(raw: Dict, source_path: PathLike): CouncilConfig {
+         consensus_scoring: consensus,
+         cli_call_budget,
+         quorum,
++        quorum_min_present,
+         necessity_classifier,
+         model_downgrade,
+         debate,
+@@ -1905,6 +1935,27 @@ function _build_quorum(raw: Json): QuorumSetting {
+     );
+ }
+ 
++/**
++ * Validate `quorum_min_present` — the shadow floor's configured value.
++ *
++ * Rejects the same shapes `_build_quorum` rejects (booleans are integers in
++ * JS's `typeof` world and are excluded explicitly), and for the same reason: a
++ * silently coerced floor produces a fire-rate that is an artefact of the
++ * coercion rather than of the council. There is no upper bound here — a floor
++ * above the roster is clamped per-pass by `wouldSoloFloorHold`, where `total`
++ * is actually known, and rejecting it at load would refuse a config that is
++ * legitimate the moment a member is added.
++ */
++function _build_quorum_min_present(raw: Json): QuorumMinPresent {
++    if (_isInt(raw) && !_isBool(raw) && (raw as number) >= 1) {
++        return raw as number;
++    }
++    throw new CouncilConfigError(
++        `\`quorum_min_present\`=${_pyRepr(raw)} must be an integer >= 1 ` +
++            `(got ${_pyTypeName(raw)}).`,
++    );
++}
++
+ function _build_advisor(name: string, cfg: Dict): AdvisorConfig {
+     if (!_isDict(cfg)) {
+         throw new CouncilConfigError(`advisors.${name}: must be a mapping.`);
+diff --git a/src/scripts/ai_council/events_log.ts b/src/scripts/ai_council/events_log.ts
+index ae6f94176e99c424eaffd729422ac4229fc888d9..e70736e87b97db854b1d88ff9bcc2baaf803f0a2 100644
+--- a/src/scripts/ai_council/events_log.ts
++++ b/src/scripts/ai_council/events_log.ts
+@@ -6,8 +6,9 @@
+  * `<project_root>/agents/runtime/council/events.log`. The schema carries the
+  * minimum needed to answer "why did the council skip / block this?" and,
+  * since v2, "who actually attended?" — at retro time, without leaking prompt
+- * content. v2 added the `quorum_result` action and nothing else; see
+- * `appendQuorumEvent`.
++ * content. v2 added the `quorum_result` action and nothing else; v3 added two
++ * booleans to that line (`gate_class`, `floor_would_hold`) and nothing else.
++ * See `appendQuorumEvent`.
+  *
+  * Privacy floor:
+  *     `original_ask` is never written verbatim — the caller passes the raw
+@@ -28,7 +29,7 @@ import * as path from 'node:path';
+ import { fileURLToPath } from 'node:url';
+ 
+ import { isEnvKillSwitchActive } from '../_lib/env_kill_switch.js';
+-import { isSoloConcluded, type QuorumResult } from './quorum.js';
++import { isSoloConcluded, wouldSoloFloorHold, type QuorumResult } from './quorum.js';
+ import type { AbsentReason } from './transport_resolver.js';
+ 
+ /**
+@@ -36,8 +37,17 @@ import type { AbsentReason } from './transport_resolver.js';
+  * `appendQuorumEvent`. Every schema-v1 field keeps its name, type and
+  * position, so a v1 reader parses a v2 necessity line unchanged; only the
+  * action vocabulary widened.
++ *
++ * v3 adds two booleans to the `quorum_result` line — `gate_class` (declared
++ * by the caller) and `floor_would_hold` (the ADR-224 counterfactual). Purely
++ * additive, in the same sense v2 was: no field is renamed, retyped or moved,
++ * no action is added, and a v2 reader parses a v3 line unchanged because it
++ * reads fields by name and never saw these two. The version moves anyway, so
++ * a consumer computing the shadow fire-rate can tell a line that recorded
++ * `false` from a line written before the field existed — a distinction it
++ * cannot make from the absent field alone.
+  */
+-export const SCHEMA_VERSION = 2;
++export const SCHEMA_VERSION = 3;
+ 
+ export type EventAction = 'proceed' | 'skip_necessity' | 'block_quota' | 'quorum_result';
+ 
+@@ -286,6 +296,30 @@ export interface QuorumEventInput {
+     readonly configuredTotal: number;
+     readonly result: QuorumResult;
+     readonly absent: readonly QuorumAbsence[];
++    /**
++     * Did the CALLER declare this pass gate-class? Declared, never inferred,
++     * and it defaults to `false` — the fail-safe direction, because an
++     * un-declared pass is the one nobody classified and the cost of reading it
++     * as advisory is a missing measurement rather than a held gate.
++     *
++     * Inference from the invocation context was the rejected alternative: it
++     * silently reclassifies passes whenever the context shape changes, which
++     * is the one failure a rate computed over this field could not detect.
++     * `command` + `phase` remain on the line, so a consumer that wants the
++     * inferred reading can still compute it and see it disagree.
++     *
++     * **No call site declares `true` today** — nothing in the tree branches on
++     * `QuorumStatus` to hold a gate, so there is no gate-class caller to mark.
++     * The field is written anyway: it is what makes the population split
++     * readable the moment one appears, and a field added later would leave
++     * every line before it ambiguous.
++     */
++    readonly gateClass?: boolean;
++    /**
++     * The floor to evaluate the counterfactual against — the operator's
++     * `quorum_min_present`, defaulting to `SOLO_FLOOR_MIN_PRESENT`.
++     */
++    readonly minPresent?: number;
+ }
+ 
+ /**
+@@ -328,6 +362,22 @@ export function appendQuorumEvent(
+                 // in `quorum.ts`, so a change to it cannot leave a consumer's
+                 // copy silently stale.
+                 solo: isSoloConcluded(input.result),
++                // Declared class, never inferred — see `QuorumEventInput`.
++                gate_class: input.gateClass ?? false,
++                // The counterfactual, written on every line: would a
++                // `min_present` floor have held this pass? Recorded as a FIELD
++                // on `quorum_result` rather than as a new action, deliberately:
++                // a new action is invisible to every consumer filtering
++                // `action === 'quorum_result'`, which would split the
++                // attendance population in two and silently move the
++                // denominator of all four registered metrics. An additive
++                // boolean moves no existing bucket.
++                //
++                // Mutually exclusive with `verdict: 'inconclusive'` by
++                // construction (`wouldSoloFloorHold` returns false unless the
++                // pass concluded), which is what makes "held by the floor" and
++                // "threshold not met" readable apart from this line alone.
++                floor_would_hold: wouldSoloFloorHold(input.result, input.minPresent),
+                 absent: input.absent.map((a) => ({ member: a.member, reason: a.reason })),
+             },
+             opts,
+diff --git a/src/scripts/ai_council/quorum.ts b/src/scripts/ai_council/quorum.ts
+index 6f85303cbac54cb653f7878bb6977d62bd87e0e9..79fe10e609f8918341a3aba8eeb22a0a01cdd279 100644
+--- a/src/scripts/ai_council/quorum.ts
++++ b/src/scripts/ai_council/quorum.ts
+@@ -96,12 +96,13 @@ export function evaluateQuorum(
+  * ONE such record now exists, and it is deliberately narrow: ADR-224
+  * (`docs/decisions/ADR-224-gate-scoped-solo-attendance-floor.md`) authorizes a
+  * `min_present: 2` floor to branch on this predicate **for gate-class passes
+- * only**, decided against a measured 12.5 % solo-conclusion rate. Nothing has
+- * landed yet — no caller branches on it today — so the sentence above still
+- * describes the code. It is stated here so a reader finds the authorization
+- * instead of re-deriving the prohibition, and so the next branch is visibly a
+- * separate argument: the exception is gate-class passes, not solo status
+- * generally.
++ * only**, decided against a measured 12.5 % solo-conclusion rate. What landed
++ * from that authorization is `wouldSoloFloorHold` below, which is a
++ * counterfactual and branches nothing — so the sentence above still describes
++ * the code: no caller holds a pass on solo status today. It is stated here so
++ * a reader finds the authorization instead of re-deriving the prohibition, and
++ * so the next branch is visibly a separate argument: the exception is
++ * gate-class passes, not solo status generally.
+  *
+  * `total` is deliberately NOT consulted. A council configured with a single
+  * member concludes solo by construction, and that is still a conclusion
+@@ -112,3 +113,59 @@ export function evaluateQuorum(
+ export function isSoloConcluded(result: QuorumResult): boolean {
+     return result.status === 'concluded' && result.present === 1;
+ }
++
++/**
++ * The floor value ADR-224 named: a gate-class pass wants at least two voices.
++ *
++ * A constant rather than a bare `2` at the call site so the shadow telemetry
++ * below and any future enforcement read the same number, and so changing it
++ * is one edit with one place to argue about.
++ */
++export const SOLO_FLOOR_MIN_PRESENT = 2;
++
++/**
++ * WOULD a `min_present` floor have held this pass? Counterfactual only — this
++ * predicate changes nothing and no caller branches on it to hold a gate.
++ *
++ * ADR-224 chose a gate-scoped `min_present: 2` floor against a solo-conclusion
++ * rate of 1 of 8 passes, whose 95 % interval spans roughly 0.3 %–53 %. Two
++ * facts, both read off the tree rather than assumed, decided that what lands
++ * first is the measurement and not the enforcement:
++ *
++ *  - **Nothing in the tree branches on `QuorumStatus` to hold anything.** The
++ *    only non-`quorum.ts` reader of `'inconclusive'` is
++ *    `council_cli.ts::_deserialise_quorum`, which validates a persisted string.
++ *    An enforced floor would therefore change zero behaviour today — there is
++ *    no gate for it to hold — while still being able to hang an advisory pass
++ *    the moment a consumer appears.
++ *  - **ADR-224's own review trigger (b) is "the gate-class floor lands and its
++ *    own fire-rate telemetry accumulates"**, which presumes exactly this
++ *    counterfactual is being recorded.
++ *
++ * So the floor is evaluated on EVERY pass and recorded, never applied. The
++ * fire-rate that accumulates from it is what makes the enforcement decision an
++ * evidence call later instead of a second point estimate.
++ *
++ * `minPresent` is clamped into `[1, total]` with the same discipline
++ * `resolveQuorumThreshold` applies, and the clamp carries meaning rather than
++ * only safety: at `total = 1` it resolves to 1 and the floor never fires, so a
++ * council **configured** with one member is not counted as a degraded pass.
++ * That is the split `quorum-attendance-budget.json` already insists on for the
++ * solo-conclusion rate — a one-member roster and a two-member roster that lost
++ * one are different findings, and an unclamped floor would merge them.
++ *
++ * A pass that never reached `concluded` is not held by the floor: it failed
++ * the threshold, which is a different outcome with a different cause. The two
++ * are mutually exclusive by construction, which is what makes them readable
++ * apart from the event log alone.
++ */
++export function wouldSoloFloorHold(
++    result: QuorumResult,
++    minPresent: number = SOLO_FLOOR_MIN_PRESENT,
++): boolean {
++    if (result.status !== 'concluded') {
++        return false;
++    }
++    const floor = Math.min(Math.max(Math.trunc(minPresent), 1), result.total);
++    return result.present < floor;
++}
+diff --git a/src/scripts/council_cli.ts b/src/scripts/council_cli.ts
+index ddbe54c64dfe09f856c690f30fad066125019c1f..30be49df9d5a7ac8b3c8df5bf9742b81999b5960 100644
+--- a/src/scripts/council_cli.ts
++++ b/src/scripts/council_cli.ts
+@@ -76,7 +76,7 @@ import { AuthCache, select_solo_member } from './ai_council/solo_dispatch.js';
+ import { InvalidModeError, resolve_global_mode } from './ai_council/modes.js';
+ import { resolveMemberTransport } from './ai_council/transport_resolver.js';
+ import { absentReasonFromCliFailure, classifyCliFailure, type AbsentReason } from './ai_council/transport_resolver.js';
+-import { evaluateQuorum, type QuorumResult } from './ai_council/quorum.js';
++import { evaluateQuorum, SOLO_FLOOR_MIN_PRESENT, type QuorumResult } from './ai_council/quorum.js';
+ import {
+     appendEvent,
+     appendQuorumEvent,
+@@ -525,6 +525,12 @@ function _synthesize_ai_council_block(cfg: CouncilConfig): Dict {
+         // configured `quorum: <k>`. Additive key — callers that never read
+         // it observe no change.
+         quorum: cfg.quorum,
++        // Forwarded for the same reason `quorum` above had to be: a key that
++        // `_build_config` validates and this block drops is a key the loader
++        // enforces and the runtime never sees. That defect shipped once here
++        // already; repeating it for the shadow floor would silently pin every
++        // `floor_would_hold` to the default no matter what the operator set.
++        quorum_min_present: cfg.quorum_min_present,
+         necessity_classifier: {
+             enabled: cfg.necessity_classifier.enabled,
+             mode: cfg.necessity_classifier.mode,
+@@ -647,6 +653,25 @@ function _quorum_setting_from(ai: Dict): QuorumSetting {
+     return 'majority';
+ }
+ 
++/**
++ * `ai['quorum_min_present']` with the same fail-soft posture as
++ * `_quorum_setting_from`: the loader has already validated it on the normal
++ * path, and a hand-built dict that bypasses the loader falls back to the
++ * ADR-224 default rather than throwing.
++ *
++ * Failing soft costs nothing on the safety side here, and less than it does
++ * for `quorum`: this value feeds a counterfactual boolean that no gate reads,
++ * so the worst outcome of a wrong fallback is one mis-recorded telemetry line,
++ * never a pass that concluded when it should not have.
++ */
++function _quorum_min_present_from(ai: Dict): number {
++    const raw = ai['quorum_min_present'];
++    if (typeof raw === 'number' && Number.isInteger(raw) && raw >= 1) {
++        return raw;
++    }
++    return SOLO_FLOOR_MIN_PRESENT;
++}
++
+ /**
+  * Emit one `quorum_result` line for a resolved quorum.
+  *
+@@ -674,6 +699,13 @@ function _emitQuorumEvent(
+         configuredTotal?: number;
+         lens?: string;
+         invocation?: string;
++        /**
++         * The ADR-224 shadow floor for this pass. `gateClass` is deliberately
++         * NOT in this context object: no CLI path declares itself gate-class,
++         * so a parameter here would be one no caller ever sets, and its
++         * absence is what the `false` on every line honestly records.
++         */
++        minPresent?: number;
+     },
+ ): void {
+     appendQuorumEvent({
+@@ -684,6 +716,7 @@ function _emitQuorumEvent(
+         dispatch: ctx.dispatch ?? 'full',
+         configuredTotal: ctx.configuredTotal ?? quorum.total,
+         result: quorum,
++        ...(ctx.minPresent !== undefined ? { minPresent: ctx.minPresent } : {}),
+         absent: absent.map(
+             (a): QuorumAbsence => ({
+                 member: String(a['member'] ?? ''),
+@@ -1009,6 +1042,7 @@ function build_members(settings: Dict, opts: BuildMembersOptions = {}): External
+         // reach this line and neither is a pass.
+         _emitQuorumEvent('pre_run', quorum_out.result, absent_entries, {
+             command: opts.command ?? 'run',
++            minPresent: _quorum_min_present_from(ai),
+         });
+     }
+     if (members.length === 0) {
+@@ -2646,6 +2680,7 @@ function cmd_run(
+         // and the solo-conclusion rate cannot make the one distinction it
+         // exists for.
+         dispatch: dispatch_shape,
++        minPresent: _quorum_min_present_from(ai_cfg),
+         ...(configured_total !== null ? { configuredTotal: configured_total } : {}),
+         lens: question.mode,
+         invocation: String(_getattr(args, 'invocation', 'agent')),
+diff --git a/tests/scripts/ai_council/config.test.ts b/tests/scripts/ai_council/config.test.ts
+index 95d27f5b5692a9abe665f9d8b5f65466ddcc571a..0c897baa92b1a1d138e7b30372da001a4811f27f 100644
+--- a/tests/scripts/ai_council/config.test.ts
++++ b/tests/scripts/ai_council/config.test.ts
+@@ -750,6 +750,76 @@ describe('quorum — config validation (Phase 3.3)', () => {
+     });
+ });
+ 
++// === ADR-224 — quorum_min_present (the shadow floor) ===
++
++describe('quorum_min_present — config validation (ADR-224)', () => {
++    it('defaults to the ADR-224 value when omitted', () => {
++        // Deliberately NOT defaulting to "unset": an unset floor records
++        // nothing, and ADR-224's review trigger (b) is "the floor lands and
++        // its own fire-rate telemetry accumulates". A default of 2 is what
++        // makes that trigger reachable without an operator edit.
++        const tmp = make_tmp();
++        const c = cfg.load_council_config(write_yaml(tmp, MINIMAL_VALID));
++        expect(c.quorum_min_present).toBe(2);
++    });
++
++    it('accepts a positive integer', () => {
++        const tmp = make_tmp();
++        const payload = `${MINIMAL_VALID}quorum_min_present: 3\n`;
++        const c = cfg.load_council_config(write_yaml(tmp, payload));
++        expect(c.quorum_min_present).toBe(3);
++    });
++
++    it('accepts 1 — the operator disabling the counterfactual', () => {
++        const tmp = make_tmp();
++        const payload = `${MINIMAL_VALID}quorum_min_present: 1\n`;
++        const c = cfg.load_council_config(write_yaml(tmp, payload));
++        expect(c.quorum_min_present).toBe(1);
++    });
++
++    it('accepts a floor above any plausible roster — clamped per pass, not at load', () => {
++        // Rejecting this at load would refuse a config that becomes
++        // legitimate the moment a member is added; `wouldSoloFloorHold`
++        // clamps where `total` is actually known.
++        const tmp = make_tmp();
++        const payload = `${MINIMAL_VALID}quorum_min_present: 99\n`;
++        const c = cfg.load_council_config(write_yaml(tmp, payload));
++        expect(c.quorum_min_present).toBe(99);
++    });
++
++    it('rejects zero', () => {
++        const tmp = make_tmp();
++        const payload = `${MINIMAL_VALID}quorum_min_present: 0\n`;
++        expect(() => cfg.load_council_config(write_yaml(tmp, payload))).toThrow(
++            /quorum_min_present.*integer >= 1/,
++        );
++    });
++
++    it('rejects a boolean', () => {
++        const tmp = make_tmp();
++        const payload = `${MINIMAL_VALID}quorum_min_present: true\n`;
++        expect(() => cfg.load_council_config(write_yaml(tmp, payload))).toThrow(
++            /quorum_min_present/,
++        );
++    });
++
++    it('rejects a float', () => {
++        const tmp = make_tmp();
++        const payload = `${MINIMAL_VALID}quorum_min_present: 1.5\n`;
++        expect(() => cfg.load_council_config(write_yaml(tmp, payload))).toThrow(
++            /quorum_min_present/,
++        );
++    });
++
++    it('rejects a string', () => {
++        const tmp = make_tmp();
++        const payload = `${MINIMAL_VALID}quorum_min_present: two\n`;
++        expect(() => cfg.load_council_config(write_yaml(tmp, payload))).toThrow(
++            /quorum_min_present/,
++        );
++    });
++});
++
+ // === road-to-always-on-orchestration Phase 3.4 — cli_call_budget per-provider defaults ===
+ 
+ describe('cli_call_budget.max_calls_per_day — generous per-provider defaults (Phase 3.4)', () => {
+diff --git a/tests/scripts/ai_council/council_cli.test.ts b/tests/scripts/ai_council/council_cli.test.ts
+index a742be249da8cd28690bbf89b4ee86f4b9cb4fe4..1a2ca96803222c296bf7788c760d0b44e8e276b9 100644
+--- a/tests/scripts/ai_council/council_cli.test.ts
++++ b/tests/scripts/ai_council/council_cli.test.ts
+@@ -548,6 +548,62 @@ describe('_synthesize_ai_council_block — quorum', () => {
+         const synthesized = _synthesize_ai_council_block(cfg);
+         expect(synthesized['quorum']).toBe('majority');
+     });
++
++    // The same defect class, one key later: `quorum_min_present` is
++    // validated by `_build_config`, and a synthesized block that drops it
++    // would pin every `floor_would_hold` to the default no matter what the
++    // operator configured — validated-but-ignored, exactly as `quorum` was.
++    it('forwards a configured quorum_min_present into the synthesized block', () => {
++        const dir = mkTmp();
++        const yamlPath = path.join(dir, '.ai-council.yml');
++        fs.writeFileSync(
++            yamlPath,
++            [
++                'enabled: true',
++                'defaults:',
++                '  mode: api',
++                'cost_budget:',
++                '  max_total_usd: 20.0',
++                'quorum_min_present: 3',
++                'members:',
++                '  anthropic:',
++                '    enabled: true',
++                '    model: claude-x',
++                '    api_key_ref: env:ANTHROPIC_KEY',
++                '',
++            ].join('\n'),
++            'utf-8',
++        );
++        const cfg = load_council_config(yamlPath);
++        expect(cfg.quorum_min_present).toBe(3);
++        const synthesized = _synthesize_ai_council_block(cfg);
++        expect(synthesized['quorum_min_present']).toBe(3);
++    });
++
++    it('forwards the ADR-224 default when the config omits the floor', () => {
++        const dir = mkTmp();
++        const yamlPath = path.join(dir, '.ai-council.yml');
++        fs.writeFileSync(
++            yamlPath,
++            [
++                'enabled: true',
++                'defaults:',
++                '  mode: api',
++                'cost_budget:',
++                '  max_total_usd: 20.0',
++                'members:',
++                '  anthropic:',
++                '    enabled: true',
++                '    model: claude-x',
++                '    api_key_ref: env:ANTHROPIC_KEY',
++                '',
++            ].join('\n'),
++            'utf-8',
++        );
++        const cfg = load_council_config(yamlPath);
++        const synthesized = _synthesize_ai_council_block(cfg);
++        expect(synthesized['quorum_min_present']).toBe(2);
++    });
+ });
+ 
+ // ── cmd_render — handoff round-trip (road-to-always-on-orchestration Phase 4.1) ──
+diff --git a/tests/scripts/ai_council/events_log.test.ts b/tests/scripts/ai_council/events_log.test.ts
+index c19da20f20e4957ce3ed7f6d25a47af927ce9d30..342030098d37dc4bf699e2f366214e9b7d3b25c3 100644
+--- a/tests/scripts/ai_council/events_log.test.ts
++++ b/tests/scripts/ai_council/events_log.test.ts
+@@ -139,14 +139,18 @@ describe('events_log — quorum attendance (schema v2)', () => {
+         dispatch: 'full',
+     } as const;
+ 
+-    it('pins the on-wire schema version at 2', () => {
++    it('pins the on-wire schema version at 3', () => {
+         // Deliberately a literal, not the constant: this module's whole
+         // contract is a versioned wire format, and an assertion written
+         // against SCHEMA_VERSION is tautological — it passes whatever the
+         // constant becomes. A bump has to break a test on purpose.
++        //
++        // Bumped 2 → 3 when `quorum_result` gained `gate_class` and
++        // `floor_would_hold` (ADR-224 shadow floor). It broke this test on
++        // purpose, which is the assertion working.
+         const lp = path.join(tmpDir(), 'wire.log');
+         appendEvent({ action: 'proceed' }, { logPath: lp, now: FIXED });
+-        expect(readOne(lp).schema_version).toBe(2);
++        expect(readOne(lp).schema_version).toBe(3);
+     });
+ 
+     it('writes a quorum_result line carrying the attendance shape', () => {
+@@ -200,6 +204,71 @@ describe('events_log — quorum attendance (schema v2)', () => {
+         expect(lines.map((l) => l.solo)).toEqual([true, false]);
+     });
+ 
++    it('records the shadow floor without an operator opting in', () => {
++        const lp = path.join(tmpDir(), 'floor.log');
++        appendQuorumEvent(
++            { ...CTX, configuredTotal: 2, result: evaluateQuorum(2, 1), absent: [] },
++            { logPath: lp, now: FIXED },
++        );
++        const rec = readOne(lp);
++        // No `minPresent` supplied — the ADR-224 default applies, so
++        // review trigger (b) has data from the first pass rather than from
++        // the first pass after somebody edits a config.
++        expect(rec.floor_would_hold).toBe(true);
++        // Declared, never inferred: no CLI path declares itself gate-class,
++        // and `false` is the honest record of that, not a placeholder.
++        expect(rec.gate_class).toBe(false);
++    });
++
++    it('separates "held by the floor" from "threshold not met" on the line alone', () => {
++        const lp = path.join(tmpDir(), 'split.log');
++        // Concluded on one voice — the floor would have held it.
++        appendQuorumEvent(
++            { ...CTX, configuredTotal: 2, result: evaluateQuorum(2, 1), absent: [] },
++            { logPath: lp, now: FIXED },
++        );
++        // Never reached the threshold — a different outcome with a
++        // different cause, and the reason this is a field and not a reuse
++        // of `verdict`.
++        appendQuorumEvent(
++            { ...CTX, configuredTotal: 3, result: evaluateQuorum(3, 1), absent: [] },
++            { logPath: lp, now: FIXED },
++        );
++        const lines = fs
++            .readFileSync(lp, 'utf-8')
++            .trim()
++            .split('\n')
++            .map((l) => JSON.parse(l) as Record<string, unknown>);
++        expect(lines.map((l) => l.verdict)).toEqual(['concluded', 'inconclusive']);
++        expect(lines.map((l) => l.floor_would_hold)).toEqual([true, false]);
++    });
++
++    it('honours a configured floor over the default', () => {
++        const lp = path.join(tmpDir(), 'floor2.log');
++        // Full attendance at 2 of 2 — the default floor does not fire...
++        appendQuorumEvent(
++            { ...CTX, configuredTotal: 2, result: evaluateQuorum(2, 2), absent: [] },
++            { logPath: lp, now: FIXED },
++        );
++        // ...and a stricter operator floor of 3 clamps to the roster rather
++        // than manufacturing a hold, so it does not fire either.
++        appendQuorumEvent(
++            { ...CTX, configuredTotal: 2, result: evaluateQuorum(2, 2), absent: [], minPresent: 3 },
++            { logPath: lp, now: FIXED },
++        );
++        // A floor of 1 is the operator disabling the counterfactual.
++        appendQuorumEvent(
++            { ...CTX, configuredTotal: 2, result: evaluateQuorum(2, 1), absent: [], minPresent: 1 },
++            { logPath: lp, now: FIXED },
++        );
++        const lines = fs
++            .readFileSync(lp, 'utf-8')
++            .trim()
++            .split('\n')
++            .map((l) => JSON.parse(l) as Record<string, unknown>);
++        expect(lines.map((l) => l.floor_would_hold)).toEqual([false, false, false]);
++    });
++
+     it('configured_total keeps a construction-degraded pass distinguishable', () => {
+         // 3 configured, 2 failed to construct, 1 answered. Without
+         // configured_total the line reads {total:1, present:1} — full
+diff --git a/tests/scripts/ai_council/quorum.test.ts b/tests/scripts/ai_council/quorum.test.ts
+index 8f52ea13813676f98e7d8bb1a196bf329fdd10c2..a6df226d179fdd42c7be7b8fddf93f5c3833d236 100644
+--- a/tests/scripts/ai_council/quorum.test.ts
++++ b/tests/scripts/ai_council/quorum.test.ts
+@@ -6,6 +6,8 @@ import {
+     evaluateQuorum,
+     isSoloConcluded,
+     resolveQuorumThreshold,
++    SOLO_FLOOR_MIN_PRESENT,
++    wouldSoloFloorHold,
+ } from '../../../src/scripts/ai_council/quorum.js';
+ 
+ describe('resolveQuorumThreshold — majority', () => {
+@@ -133,3 +135,91 @@ describe('isSoloConcluded — the 1-of-n conclusion, made visible', () => {
+         expect(isSoloConcluded(evaluateQuorum(3, 1, 1))).toBe(true);
+     });
+ });
++
++describe('wouldSoloFloorHold — the ADR-224 counterfactual', () => {
++    it('holds a degraded solo conclusion: 1 of 2 answered', () => {
++        expect(wouldSoloFloorHold(evaluateQuorum(2, 1))).toBe(true);
++    });
++
++    it('does not hold full attendance', () => {
++        expect(wouldSoloFloorHold(evaluateQuorum(2, 2))).toBe(false);
++        expect(wouldSoloFloorHold(evaluateQuorum(3, 3))).toBe(false);
++    });
++
++    it('does not hold a pass that never concluded — that is a different outcome', () => {
++        // 1 of 3 needs 2 → inconclusive. The floor did not stop this pass;
++        // the threshold did. Keeping the two apart is the whole point of
++        // recording them as separate fields.
++        const q = evaluateQuorum(3, 1);
++        expect(q.status).toBe('inconclusive');
++        expect(wouldSoloFloorHold(q)).toBe(false);
++    });
++
++    it('never holds a council CONFIGURED with one member', () => {
++        // The clamp into [1, total] carries the semantics, not just safety:
++        // n=1 concluding on its one voice is the configured shape, not a
++        // degraded pass, and merging it into the fire-rate would repeat the
++        // exact conflation quorum-attendance-budget.json warns about for the
++        // solo-conclusion rate.
++        expect(wouldSoloFloorHold(evaluateQuorum(1, 1))).toBe(false);
++        expect(wouldSoloFloorHold(evaluateQuorum(1, 1), 5)).toBe(false);
++    });
++
++    it('clamps a floor above the roster instead of holding every pass', () => {
++        // Unclamped, a floor of 5 over a 2-member council would report a
++        // 100 % fire-rate — an artefact of the config, not a finding about
++        // the council.
++        expect(wouldSoloFloorHold(evaluateQuorum(2, 2), 5)).toBe(false);
++        expect(wouldSoloFloorHold(evaluateQuorum(2, 1), 5)).toBe(true);
++    });
++
++    it('a floor of 1 can never hold anything', () => {
++        expect(wouldSoloFloorHold(evaluateQuorum(2, 1), 1)).toBe(false);
++        expect(wouldSoloFloorHold(evaluateQuorum(3, 1, 1), 0)).toBe(false);
++    });
++
++    it('defaults to the ADR-224 value', () => {
++        expect(SOLO_FLOOR_MIN_PRESENT).toBe(2);
++        const q = evaluateQuorum(2, 1);
++        expect(wouldSoloFloorHold(q)).toBe(wouldSoloFloorHold(q, SOLO_FLOOR_MIN_PRESENT));
++    });
++
++    // ── the scope-leak negative test ────────────────────────────────
++    //
++    // The regression this phase could most plausibly ship is the floor
++    // leaking into passes it was never scoped to. In an ENFORCING design
++    // that test can only be written per-call-site, and it can only check the
++    // sites someone remembered. In the shadow design the claim is universal
++    // and therefore checkable as one: consulting the floor changes NOTHING
++    // about the verdict, for any roster, any presence, any floor value.
++    it('never changes the quorum verdict — for any roster, presence or floor', () => {
++        for (let total = 0; total <= 5; total++) {
++            for (let present = 0; present <= total; present++) {
++                for (const setting of ['majority', 1, 2, 3] as const) {
++                    const before = evaluateQuorum(total, present, setting);
++                    const snapshot = { ...before };
++                    for (const floor of [0, 1, 2, 3, 9]) {
++                        wouldSoloFloorHold(before, floor);
++                        // The predicate is pure: it neither mutates the
++                        // result it was handed nor feeds back into it.
++                        expect({ ...before }).toEqual(snapshot);
++                        expect(evaluateQuorum(total, present, setting).status).toBe(
++                            snapshot.status,
++                        );
++                    }
++                }
++            }
++        }
++    });
++
++    it('is mutually exclusive with an inconclusive verdict, by construction', () => {
++        for (let total = 0; total <= 5; total++) {
++            for (let present = 0; present <= total; present++) {
++                const q = evaluateQuorum(total, present);
++                if (wouldSoloFloorHold(q)) {
++                    expect(q.status).toBe('concluded');
++                }
++            }
++        }
++    });
++});
