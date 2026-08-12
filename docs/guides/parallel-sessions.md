@@ -44,6 +44,42 @@ it as if it did. When a collision is detected, your session asks you once — jo
 the branch, or spawn a separate worktree — and then does what you choose. The
 question is the whole mechanism.
 
+The one place that does refuse is `sessions:claim`: it will not WRITE a claim on a
+roadmap a live peer already holds, and exits non-zero instead. That is a
+consistency check on your own write rather than exclusion — the peer is not
+protected, and two simultaneous claims still race — but it stops the second
+session to arrive from recording a claim it cannot honour and from missing the
+notice. `--force` writes it anyway when duplicating is the deliberate choice.
+
+## The collision that actually cost something: the same roadmap, two branch names
+
+Measured twice on this repository. Two sessions each built the same roadmap phase,
+one on `feat/dispatch-safety-confirmation` and one on
+`feat/dispatch-safety-confirmed-execution`, and one of the two pull requests was
+thrown away. The register saw nothing, because it compared **branch names** — and
+those differed.
+
+So the comparison is now the **roadmap**, and it reads two independent sources,
+because either can be silent on its own:
+
+- **the claim** — a live peer record carrying the same slug. Needs
+  `sessions:claim` to have run, which is model-carried.
+- **the branch axis** — an unmerged branch in another worktree whose name carries
+  the roadmap's distinctive tail. Needs nothing but a checkout on disk, which
+  exists from the peer's first minute. `sessions:list` prints it.
+
+Two limits worth knowing. A branch created seconds ago has no commits of its own,
+so it counts as merged and does not appear on the branch axis — that first minute
+is what the claim covers. And a claim naming a roadmap that has since been
+archived is **stale**, not held: `sessions:list` labels it `← STALE` and every
+check treats it as no claim at all. Four live records once carried one identical
+archived slug, and reading that as "taken" is how a screen concludes the opposite
+of the truth.
+
+Your claim is keyed on your **session**, not on your worktree. Before, one shared
+file per checkout meant a second session in the same directory inherited the first
+one's claim — reporting work it was not doing while the original reported none.
+
 ## What the other session sees about you
 
 One small JSON file per session: a session id, the host you are on, the worktree
