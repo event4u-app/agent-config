@@ -199,17 +199,19 @@
     3. Progress is `wc -l agents/evidence/metrics/skill-catalogue.jsonl` — one line per observation, currently 1.
     4. Vary the host and the session shape: a selector that only shows up on one host is exactly what the current `no-selector` verdict cannot distinguish from no selector at all.
   - **Resolved when:** `skill-catalogue.jsonl` holds ≥ 20 observations across ≥ 2 hosts, and `capture_skill_catalogue` reports either a `selector-found` verdict or a `no-selector` that has stopped moving.
-- **consultation-rate-instrument** (owner: maintainer) — blocks Phase 1 — Measure · Phase 4 — Route
+- **ui-corpus-has-no-ui** (owner: maintainer) — blocks Phase 4 — Step 5 · Phase 5 — Reach and enforcement
   - **What to do:**
-    1. Phase 1 **defined** the consultation and discharge rates; nothing computes them yet. The signal exists — `ui-route-nudge` latches consultation per session — but no analyzer turns a corpus of sessions into a rate.
-    2. Decide whether that analyzer is worth building before the enforcement question, or whether the nudge A/B (Phase 4 Step 5) on `bench:ui` fixtures answers enough on its own.
-    3. Enabling the nudge is the prerequisite either way: set `hooks.ui_route_nudge.enabled: true` in `.agent-settings.yml`. It ships OFF deliberately; turning it on is a maintainer decision about noise, not a default.
-  - **Resolved when:** either a rate analyzer exists and has published a baseline, or the decision to answer the question with the A/B alone is recorded.
+    1. The first measurement found **3 UI-write turns across 107 sessions** in this repo. That is not a low rate, it is an absent population: a skill/rule suite is not a frontend, so the question cannot be answered from this store no matter how long it runs.
+    2. Point the analyzer at a project that actually writes UI: `./scripts-run src/scripts/report_consultation_rate --store ~/.claude/projects/<flattened-consumer-path>`. `ls ~/.claude/projects` lists the candidates.
+    3. Enable the nudge in that project first (`hooks.ui_route_nudge.enabled: true`) if the A/B is wanted — without it there is no intervention arm.
+  - **Resolved when:** a store with ≥ 20 sessions containing UI writes has been measured, and the rate is published without the provisional marker.
 - **enforcement-evidence** (owner: maintainer) — blocks Phase 5 — Reach and enforcement
   - **What to do:**
     1. Read the published consultation and discharge rates from Phase 1 and the nudge A/B from Phase 4.
     2. Decide whether warn-level pressure closed the gap; record the decision with the numbers that produced it.
   - **Resolved when:** the enforcement decision is recorded against the published rates, either as a flip or as an explicit no-change.
+
+_1 blocker resolved._
 
 ### [road-to-gated-reach-followup.md](roadmaps/road-to-gated-reach-followup.md)
 

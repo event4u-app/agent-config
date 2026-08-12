@@ -102,6 +102,43 @@ All eight design surfaces are in the bare set: `dashboard-design`,
 `design-intelligence`, `design-review`, `design-system-capture`, `design-tokens`,
 `design-variations`, `existing-ui-audit`, `fe-design`.
 
+## Measurement 1 — consultation rate, and why this repo cannot answer the question
+
+`report_consultation_rate` computes the consultation half from transcripts,
+sharing the UI-write and consultation predicates with the `ui-route-nudge`
+concern so the metric and the trigger cannot drift into two populations.
+
+First run, 107 sessions in this repo's own store:
+
+| | |
+|---|---|
+| sessions scanned | 107 |
+| sessions containing a UI write | **1** |
+| UI-write turns | **3** |
+| consultation rate | 0.0 % (0/3) |
+
+**The number is not the finding. The denominator is.** Three UI-write turns
+across 107 sessions is not a low rate, it is an absent corpus: this repository
+is a skill/rule suite, not a frontend, so the population the question is about
+barely occurs here. A 0.0 % computed over three events says almost nothing
+about whether design skills get consulted on UI work, and quoting it as a
+baseline would be the same error as quoting a gate that scanned nothing.
+
+**What this changes.** The capture window is not "wait for 20 sessions" — it is
+"run this against a project that actually writes UI". The instrument is done and
+tested; the corpus has to come from a consumer repo with frontend work, and the
+`--store` flag is how it points there. Until then the rate stays provisional and
+the tool says so on every run.
+
+**The discharge rate is not computed, and will not be by this tool.** Its
+definition — a verdict that is render-scoped or explicitly static-scoped — is a
+property of prose, and matching prose is a stated non-goal of the roadmap
+(the FC-8 boundary). What ships instead is a labelled proxy: how often a
+UI-write turn is followed by opening `design-review`. That is a fact about
+consulting the review skill, not about a verdict; an agent can open the skill
+and still write "looks good". It is reported under its own name so it cannot be
+quoted as the discharge rate.
+
 ## Shared fixtures
 
 The UI-turn corpus reuses the `bench:ui` fixture set rather than authoring a

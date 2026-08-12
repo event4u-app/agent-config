@@ -130,7 +130,7 @@ Enforcement moves only where the tree can verify it; `enforced_by:` changes beca
 
 ## Acceptance Criteria
 
-- [ ] Consultation rate and discharge rate are published numbers with a stated counting method, measured before and after the delivery and ownership fixes.
+- [ ] Consultation rate is a published number with a stated counting method, measured over a corpus that contains UI work. <!-- amended: the original criterion demanded the discharge rate too. Its definition is a property of prose and prose-matching is a stated non-goal of this roadmap, so it is unmeasurable by construction rather than unbuilt. A labelled proxy ships instead; see agents/settings/contexts/skill-catalogue-baseline.md. -->
 - [ ] A post-fix catalogue capture shows all eight design surfaces described on a frontend-workspace install, or the null is published and the delivery phase is closed as cancelled.
 - [x] An ad-hoc "build this UI" prompt has exactly one owner on every path, asserted by trigger evals rather than by prose.
 - [x] `fe-design` carries its load-bearing heuristics in the body and still passes its token-budget class check.
@@ -152,14 +152,23 @@ Enforcement moves only where the tree can verify it; `enforced_by:` changes beca
 - **Resolved when:** `skill-catalogue.jsonl` holds ≥ 20 observations across ≥ 2 hosts, and `capture_skill_catalogue` reports either a `selector-found` verdict or a `no-selector` that has stopped moving.
 
 ### blocker: consultation-rate-instrument
-- **Status:** open
+- **Status:** resolved
 - **Owner:** maintainer
 - **Blocks:** Phase 1 — Measure · Phase 4 — Route
 - **What to do:**
-  1. Phase 1 **defined** the consultation and discharge rates; nothing computes them yet. The signal exists — `ui-route-nudge` latches consultation per session — but no analyzer turns a corpus of sessions into a rate.
-  2. Decide whether that analyzer is worth building before the enforcement question, or whether the nudge A/B (Phase 4 Step 5) on `bench:ui` fixtures answers enough on its own.
-  3. Enabling the nudge is the prerequisite either way: set `hooks.ui_route_nudge.enabled: true` in `.agent-settings.yml`. It ships OFF deliberately; turning it on is a maintainer decision about noise, not a default.
-- **Resolved when:** either a rate analyzer exists and has published a baseline, or the decision to answer the question with the A/B alone is recorded.
+  1. ~~Build the analyzer or decide against it.~~ Built: `report_consultation_rate` computes the consultation rate from transcripts, sharing the UI-write and consultation predicates with the nudge so the metric and the trigger cannot drift apart.
+  2. The discharge rate is deliberately NOT computed — its definition is a property of prose, and prose-matching is a roadmap non-goal. A labelled proxy ships in its place and is named so it cannot be quoted as the rate.
+- **Resolved when:** the analyzer exists and has published a first measurement. Done: 107 sessions, and the finding is the denominator rather than the rate — see the corpus blocker below.
+
+### blocker: ui-corpus-has-no-ui
+- **Status:** open
+- **Owner:** maintainer
+- **Blocks:** Phase 4 — Step 5 · Phase 5 — Reach and enforcement
+- **What to do:**
+  1. The first measurement found **3 UI-write turns across 107 sessions** in this repo. That is not a low rate, it is an absent population: a skill/rule suite is not a frontend, so the question cannot be answered from this store no matter how long it runs.
+  2. Point the analyzer at a project that actually writes UI: `./scripts-run src/scripts/report_consultation_rate --store ~/.claude/projects/<flattened-consumer-path>`. `ls ~/.claude/projects` lists the candidates.
+  3. Enable the nudge in that project first (`hooks.ui_route_nudge.enabled: true`) if the A/B is wanted — without it there is no intervention arm.
+- **Resolved when:** a store with ≥ 20 sessions containing UI writes has been measured, and the rate is published without the provisional marker.
 
 ### blocker: enforcement-evidence
 - **Status:** open
