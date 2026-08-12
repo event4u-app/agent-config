@@ -339,6 +339,63 @@ Entry-shape contract: [`docs/contracts/CHANGELOG-conventions.md`](docs/contracts
 > that forces a new era split (`# Era: 9.37.x`, etc.) — see
 > [`docs/contracts/CHANGELOG-conventions.md § Era splits`](docs/contracts/CHANGELOG-conventions.md).
 
+## [10.0.0](https://github.com/event4u-app/agent-config/compare/9.36.0...10.0.0) (2026-08-12)
+
+### Release highlights
+
+<!-- Curated head: fill before merge, keep it under 10 lines, and leave `_none_` where it is genuinely the answer. The generated log below is unchanged. -->
+- **Behaviour changes:** _auto-derived, rewrite before merge:_ rule/schema diffs, breaking commits or removed public surface in 030ca0d, c1bc2aa, 4eda4ff.
+- **Default changes + migration:** _none_
+- **Security and correctness:** _none_
+- **Honest nulls:** _auto-derived, rewrite before merge:_ commits carrying an honest-null marker in 7c6b404.
+- **Known limitations:** _none_
+
+### BREAKING CHANGES
+
+* **council:** transport is resolved per machine, not configured ([4eda4ff](https://github.com/event4u-app/agent-config/commit/4eda4ff0f518cb30778dc139852576efd35bd57a))
+
+### Features
+
+* **ci:** the parity gate learns about preflight, which it never inspected ([44151b0](https://github.com/event4u-app/agent-config/commit/44151b02cd765aff16d7e95459752ec553c1d57b))
+* **conformance:** a fifth check, an era guard, and the denominator the rate was missing ([f7edbdc](https://github.com/event4u-app/agent-config/commit/f7edbdc99533d433ff2b1857bac5bc7fb2929fe8))
+* **hooks:** refuse a completion claim while the last CI read is unsettled ([1ea7536](https://github.com/event4u-app/agent-config/commit/1ea753629ce6a468e061af1ee2f7ac3f38f6bebd))
+* **turn-end-gate:** arm it unconditionally, with no settings surface ([42cd613](https://github.com/event4u-app/agent-config/commit/42cd6131761a5b6681583abd8b7100f4415d84bf))
+
+### Bug Fixes
+
+* **round7:** close the R2 findings — the two high ones are in my own Phase 1 ([030ca0d](https://github.com/event4u-app/agent-config/commit/030ca0d6e1a6b27ebbebf74a34caa1403cc98dfa))
+* **council:** validate the output path before spending, and count attendance from answers ([a23d6c8](https://github.com/event4u-app/agent-config/commit/a23d6c84d4963f17ca94838bdbc9f7067b72e77a))
+* **hooks:** block-no-verify stops failing closed on heredoc prose ([7ac5cd2](https://github.com/event4u-app/agent-config/commit/7ac5cd227d34dbc92f9f0438746ff5cd1317e5d2))
+* **taskfile:** block-scalar the bridge-derivation desc so the taskfile parses ([9b0f7b9](https://github.com/event4u-app/agent-config/commit/9b0f7b90ba9bac04c7b0e80dbeaeb99a3aab4cc3))
+* **council:** use a Json-typed sentinel for the ignored-key presence check ([29b9f42](https://github.com/event4u-app/agent-config/commit/29b9f42e505c187f2b35abcb81cc6e7055d5507f))
+* **detection:** find the Claude subscription in the macOS Keychain ([72de870](https://github.com/event4u-app/agent-config/commit/72de8706812ea2cf30940697887964ae1406a3e4))
+* **gates:** scope bridge-derivation to the roots this checkout writes ([ea1b1d4](https://github.com/event4u-app/agent-config/commit/ea1b1d4e230375db0ae1c8e01226d8527a08a1e7))
+
+### Documentation
+
+* **review:** re-bind the R2 artefact to the fixed scope ([304b898](https://github.com/event4u-app/agent-config/commit/304b89866880c23f68106c096df20ce18ed207b7))
+* **review:** record the R2 findings before fixing any of them ([bdf45c2](https://github.com/event4u-app/agent-config/commit/bdf45c2e86b2839f3c64d432d50285f043f08d3d))
+* **roadmaps:** the fifth check makes two Context claims stale, in both directions ([6915456](https://github.com/event4u-app/agent-config/commit/6915456005fd164bc525103c6f0b59f05dbc8169))
+* **analyze:** the conformance command documented four checks, there are five ([d05f97e](https://github.com/event4u-app/agent-config/commit/d05f97e13b03cc04036d83aba4df6635e0323932))
+* **conformance:** round 7 — the honest downgrades and the archived roadmap ([c1bc2aa](https://github.com/event4u-app/agent-config/commit/c1bc2aaef41b04aa76024f9949c9e10eacd9886c))
+* **council:** the template and contract stop documenting a setting that is gone ([49d58fa](https://github.com/event4u-app/agent-config/commit/49d58fa28778359416459465cf066b7d8fccb363))
+* **roadmap:** close the stop-refusal blocker, open the two follow-up tracks ([7c6b404](https://github.com/event4u-app/agent-config/commit/7c6b4045c2cadf023d1f434ff851cec86372613a))
+
+### Refactoring
+
+* **condense:** expose the active-tool set root-parameterised ([d795d6a](https://github.com/event4u-app/agent-config/commit/d795d6a666f57be451d0dd5462b8725b56e44e75))
+* **settings:** delete hooks.turn_end_gate.* and give REMOVED_KEYS per-key reasons ([f5b316b](https://github.com/event4u-app/agent-config/commit/f5b316b4bc531e2cf7ce0d65556c4a2737cbe0dc))
+
+### Tests
+
+* **hooks:** prove the completion detector is wired, not just correct ([4d284ef](https://github.com/event4u-app/agent-config/commit/4d284efa10ba939066edfc42c4a735d94e794def))
+
+### Chores
+
+* **condense:** re-project session-canary after the reproduction-command fix ([2d344c4](https://github.com/event4u-app/agent-config/commit/2d344c4d2183a608986f9dce485f1e5006e48863))
+
+Tests: 13384 (+51 since 9.36.0)
+
 ## [9.36.0](https://github.com/event4u-app/agent-config/compare/9.35.0...9.36.0) (2026-08-12)
 
 ### Release highlights
