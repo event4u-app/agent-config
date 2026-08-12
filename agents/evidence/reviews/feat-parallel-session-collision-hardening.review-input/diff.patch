@@ -1,0 +1,1209 @@
+diff --git a/dist/agent-src/commands/roadmap/next.md b/dist/agent-src/commands/roadmap/next.md
+index 7dfa37609857b093278a5ccefd2cd98f29714d82..763172da4c7d2e9d3a69b8949d3462c8f012b708 100644
+--- a/dist/agent-src/commands/roadmap/next.md
++++ b/dist/agent-src/commands/roadmap/next.md
+@@ -42,9 +42,14 @@ git fetch origin --prune
+ git ls-tree --name-only origin/main agents/roadmaps/          # still active?
+ git ls-tree --name-only origin/main agents/roadmaps/archive/   # already closed?
+ gh pr list --state open --json number,title,headRefName        # in flight?
+-agent-config sessions:list --json                              # claimed right now?
++agent-config sessions:list                                     # claimed right now?
+ ```
+ 
++`sessions:list` without `--json` on purpose: the human form carries **both**
++axes — the live records AND the unmerged branches checked out in other
++worktrees. `--json` returns only the records unless `--branches` is passed, and
++the branch axis is the one that does not need a peer to have claimed anything.
++
+ Excluded from the candidate set: `template.md`, `archive/`,
+ `skipped/`, `later/`, anything with `status: draft` whose promotion
+ trigger has not fired, and:
+@@ -53,12 +58,24 @@ trigger has not fired, and:
+ |---|---|---|---|
+ | **taken by an open PR** | `gh pr list` — a roadmap slug matching an open PR's branch | The work is done or nearly done and is waiting on review | Review or merge that PR; the roadmap archives inside it |
+ | **claimed by a live session** | `sessions:list` — a live record whose `roadmap_slug` matches | Another session is working on it *right now*, before any PR exists | Nothing to do — it releases on that session's end, or by TTL |
++| **held by a foreign worktree** | `sessions:list` — an unmerged branch in another worktree whose name names this roadmap | A peer is already writing code, whether or not it ever claimed | Pick something else; a branch on disk outranks an unwritten claim |
+ 
+-Keep the two distinguishable in the reported screen. They are different
++Keep the three distinguishable in the reported screen. They are different
+ states with different recovery, and collapsing them into "unavailable"
+ loses the only information that tells the user whether to wait for a
+ review or simply pick something else.
+ 
++```
++A DIFFERENT BRANCH NAME DOES NOT MAKE IT A DIFFERENT TASK.
++MEASURED TWICE: TWO SESSIONS BUILT ONE ROADMAP PHASE UNDER
++`feat/dispatch-safety-confirmation` AND `feat/dispatch-safety-confirmed-execution`,
++AND ONE OF THE TWO PRs WAS THROWN AWAY. COMPARE THE ROADMAP, NEVER THE BRANCH.
++```
++
++A slug in the register that names **no open roadmap** is not a claim — it is a
++stale field left behind after that roadmap archived. `sessions:list` labels it
++`← STALE`; read it as "nobody claimed anything", never as "taken".
++
+ A roadmap completes by an archive move **inside its merging PR**, so a
+ local checkout can show a closed roadmap as open. That is why this step
+ precedes the screen instead of following it.
+@@ -145,9 +162,24 @@ agent-config sessions:claim <roadmap-slug>
+ ```
+ 
+ Immediately after the pick, before any branch or commit. This writes the slug
+-into `agents/runtime/state/roadmap-claim.json`; the next heartbeat lifts it into
+-this session's register record, so another session's step 1 excludes it **within
+-one turn** and long before a PR exists.
++into `agents/runtime/state/roadmap-claim-<session>.json`; the next heartbeat lifts
++it into this session's register record, so another session's step 1 excludes it
++**within one turn** and long before a PR exists.
++
++The file is keyed on the host session id, not on the worktree, and that
++distinction was a measured defect rather than a nicety: with one shared file per
++checkout, four live records once carried one identical slug — naming an
++already-archived roadmap — because every session in that checkout read the last
++claim written there. A session that inherits a peer's claim reports work it is
++not doing, and the peer whose claim was overwritten reports none. On a host that
++exports no session id the legacy shared path is still written and still read, and
++`sessions:claim` says so on that path rather than implying a guarantee it cannot
++give.
++
++**The claim is also what makes the duplicate-work warning possible.** Without it
++the register can only compare branch names, and two sessions on one roadmap
++routinely pick two different names — so a skipped claim does not merely delay
++visibility, it removes the only axis that sees the expensive collision.
+ 
+ Routing the claim through a state file rather than having this command write the
+ register directly is deliberate: the roadmap is picked mid-session by the model,
+diff --git a/docs/guides/parallel-sessions.md b/docs/guides/parallel-sessions.md
+index 45a19fd6c31e64701d4cf270ab6a93bb8088f793..c2c7e19e89656c3492d74845344be049fc727f82 100644
+--- a/docs/guides/parallel-sessions.md
++++ b/docs/guides/parallel-sessions.md
+@@ -44,6 +44,42 @@ it as if it did. When a collision is detected, your session asks you once — jo
+ the branch, or spawn a separate worktree — and then does what you choose. The
+ question is the whole mechanism.
+ 
++The one place that does refuse is `sessions:claim`: it will not WRITE a claim on a
++roadmap a live peer already holds, and exits non-zero instead. That is a
++consistency check on your own write rather than exclusion — the peer is not
++protected, and two simultaneous claims still race — but it stops the second
++session to arrive from recording a claim it cannot honour and from missing the
++notice. `--force` writes it anyway when duplicating is the deliberate choice.
++
++## The collision that actually cost something: the same roadmap, two branch names
++
++Measured twice on this repository. Two sessions each built the same roadmap phase,
++one on `feat/dispatch-safety-confirmation` and one on
++`feat/dispatch-safety-confirmed-execution`, and one of the two pull requests was
++thrown away. The register saw nothing, because it compared **branch names** — and
++those differed.
++
++So the comparison is now the **roadmap**, and it reads two independent sources,
++because either can be silent on its own:
++
++- **the claim** — a live peer record carrying the same slug. Needs
++  `sessions:claim` to have run, which is model-carried.
++- **the branch axis** — an unmerged branch in another worktree whose name carries
++  the roadmap's distinctive tail. Needs nothing but a checkout on disk, which
++  exists from the peer's first minute. `sessions:list` prints it.
++
++Two limits worth knowing. A branch created seconds ago has no commits of its own,
++so it counts as merged and does not appear on the branch axis — that first minute
++is what the claim covers. And a claim naming a roadmap that has since been
++archived is **stale**, not held: `sessions:list` labels it `← STALE` and every
++check treats it as no claim at all. Four live records once carried one identical
++archived slug, and reading that as "taken" is how a screen concludes the opposite
++of the truth.
++
++Your claim is keyed on your **session**, not on your worktree. Before, one shared
++file per checkout meant a second session in the same directory inherited the first
++one's claim — reporting work it was not doing while the original reported none.
++
+ ## What the other session sees about you
+ 
+ One small JSON file per session: a session id, the host you are on, the worktree
+diff --git a/src/cli/registry.ts b/src/cli/registry.ts
+index b69692cf41e8ef65a664544839cbf9b97d6ce7e4..558a30571ae79bca1eea5dea0dd0851d30f89c81 100644
+--- a/src/cli/registry.ts
++++ b/src/cli/registry.ts
+@@ -66,7 +66,7 @@ export const REGISTRY: readonly CommandEntry[] = [
+     { name: 'mcp:run', disposition: 'delegate', synopsis: 'Run the built-in MCP server over stdio (experimental).' },
+     { name: 'mcp-server', disposition: 'native', synopsis: 'Turnkey read-only stdio MCP server over the bundled content (no repo clone; ADR-085).' },
+     { name: 'use', disposition: 'delegate', synopsis: 'Switch the active experience/profile (writes profile.id).' },
+-    { name: 'sessions:list', disposition: 'delegate', synopsis: 'List live agent sessions on this repository (shared session register).' },
++    { name: 'sessions:list', disposition: 'delegate', synopsis: 'List live agent sessions plus unmerged branches held by other worktrees; --json, --branches.' },
+     { name: 'sessions:claim', disposition: 'delegate', synopsis: 'Claim a roadmap for this session so other sessions skip it; --release clears it.' },
+     { name: 'session:recycle', disposition: 'delegate', synopsis: 'Validate + write the main-session recycle envelope (--verify validates only); the successor resumes from it after /clear.' },
+     { name: 'roadmap:progress', disposition: 'delegate', synopsis: 'Regenerate agents/roadmaps-progress.md from open roadmaps.' },
+diff --git a/src/domains/product-basic/roadmap/next/command.md b/src/domains/product-basic/roadmap/next/command.md
+index 7dfa37609857b093278a5ccefd2cd98f29714d82..763172da4c7d2e9d3a69b8949d3462c8f012b708 100644
+--- a/src/domains/product-basic/roadmap/next/command.md
++++ b/src/domains/product-basic/roadmap/next/command.md
+@@ -42,9 +42,14 @@ git fetch origin --prune
+ git ls-tree --name-only origin/main agents/roadmaps/          # still active?
+ git ls-tree --name-only origin/main agents/roadmaps/archive/   # already closed?
+ gh pr list --state open --json number,title,headRefName        # in flight?
+-agent-config sessions:list --json                              # claimed right now?
++agent-config sessions:list                                     # claimed right now?
+ ```
+ 
++`sessions:list` without `--json` on purpose: the human form carries **both**
++axes — the live records AND the unmerged branches checked out in other
++worktrees. `--json` returns only the records unless `--branches` is passed, and
++the branch axis is the one that does not need a peer to have claimed anything.
++
+ Excluded from the candidate set: `template.md`, `archive/`,
+ `skipped/`, `later/`, anything with `status: draft` whose promotion
+ trigger has not fired, and:
+@@ -53,12 +58,24 @@ trigger has not fired, and:
+ |---|---|---|---|
+ | **taken by an open PR** | `gh pr list` — a roadmap slug matching an open PR's branch | The work is done or nearly done and is waiting on review | Review or merge that PR; the roadmap archives inside it |
+ | **claimed by a live session** | `sessions:list` — a live record whose `roadmap_slug` matches | Another session is working on it *right now*, before any PR exists | Nothing to do — it releases on that session's end, or by TTL |
++| **held by a foreign worktree** | `sessions:list` — an unmerged branch in another worktree whose name names this roadmap | A peer is already writing code, whether or not it ever claimed | Pick something else; a branch on disk outranks an unwritten claim |
+ 
+-Keep the two distinguishable in the reported screen. They are different
++Keep the three distinguishable in the reported screen. They are different
+ states with different recovery, and collapsing them into "unavailable"
+ loses the only information that tells the user whether to wait for a
+ review or simply pick something else.
+ 
++```
++A DIFFERENT BRANCH NAME DOES NOT MAKE IT A DIFFERENT TASK.
++MEASURED TWICE: TWO SESSIONS BUILT ONE ROADMAP PHASE UNDER
++`feat/dispatch-safety-confirmation` AND `feat/dispatch-safety-confirmed-execution`,
++AND ONE OF THE TWO PRs WAS THROWN AWAY. COMPARE THE ROADMAP, NEVER THE BRANCH.
++```
++
++A slug in the register that names **no open roadmap** is not a claim — it is a
++stale field left behind after that roadmap archived. `sessions:list` labels it
++`← STALE`; read it as "nobody claimed anything", never as "taken".
++
+ A roadmap completes by an archive move **inside its merging PR**, so a
+ local checkout can show a closed roadmap as open. That is why this step
+ precedes the screen instead of following it.
+@@ -145,9 +162,24 @@ agent-config sessions:claim <roadmap-slug>
+ ```
+ 
+ Immediately after the pick, before any branch or commit. This writes the slug
+-into `agents/runtime/state/roadmap-claim.json`; the next heartbeat lifts it into
+-this session's register record, so another session's step 1 excludes it **within
+-one turn** and long before a PR exists.
++into `agents/runtime/state/roadmap-claim-<session>.json`; the next heartbeat lifts
++it into this session's register record, so another session's step 1 excludes it
++**within one turn** and long before a PR exists.
++
++The file is keyed on the host session id, not on the worktree, and that
++distinction was a measured defect rather than a nicety: with one shared file per
++checkout, four live records once carried one identical slug — naming an
++already-archived roadmap — because every session in that checkout read the last
++claim written there. A session that inherits a peer's claim reports work it is
++not doing, and the peer whose claim was overwritten reports none. On a host that
++exports no session id the legacy shared path is still written and still read, and
++`sessions:claim` says so on that path rather than implying a guarantee it cannot
++give.
++
++**The claim is also what makes the duplicate-work warning possible.** Without it
++the register can only compare branch names, and two sessions on one roadmap
++routinely pick two different names — so a skipped claim does not merely delay
++visibility, it removes the only axis that sees the expensive collision.
+ 
+ Routing the claim through a state file rather than having this command write the
+ register directly is deliberate: the roadmap is picked mid-session by the model,
+diff --git a/src/scripts/_dispatch.bash b/src/scripts/_dispatch.bash
+index 227e2ad1508f4819f0f9cbd4d87c5e3c999b22c3..def299398f7cf2a0d2dd5acb113e3040125c81f5 100755
+--- a/src/scripts/_dispatch.bash
++++ b/src/scripts/_dispatch.bash
+@@ -194,7 +194,10 @@ Tier 2 — maintenance / internal (hooks, MCP, memory, telemetry):
+   code-graph                 Deterministic code-graph engine (ADR-124, Class A).
+                              Usage: code-graph build|validate|detect|query|explain|affected|path [options]
+   sessions:list              List live agent sessions on this repository (shared
+-                             session register). Flags: --json
++                             session register) PLUS the unmerged branches checked
++                             out in other worktrees — the axis that needs no
++                             claim. Flags: --json, --branches (adds the branch
++                             axis to the JSON; the human form always shows it)
+   sessions:claim             Claim a roadmap for this session so other sessions skip
+                              it; --release clears the claim
+   session:recycle            Validate + write the main-session recycle envelope (--verify validates only)
+diff --git a/src/scripts/_lib/session_register.ts b/src/scripts/_lib/session_register.ts
+index b59df3fc75839860448d0bf744aba62d9bb62ae1..d49d9397c4f0560204b811bcafd3b3505e3c1968 100644
+--- a/src/scripts/_lib/session_register.ts
++++ b/src/scripts/_lib/session_register.ts
+@@ -50,7 +50,16 @@
+  *    longer than the TTL means another session may claim your branch.
+  * 2. **This is advisory, not a mutex.** Two sessions can claim in the same
+  *    millisecond. Nothing here provides exclusion, and no later feature may be
+- *    built on it as if it did.
++ *    built on it as if it did. `sessions:claim` refusing to WRITE a claim a peer
++ *    holds is a consistency check on its own write, not exclusion: it protects
++ *    the record from being false, never the peer from being duplicated.
++ * 3. **The claim is per SESSION, and the bridge file has to be too.** The
++ *    paragraph above rules `agents/runtime/state/` out for the register and the
++ *    same argument applies to the claim that feeds it: one shared file per
++ *    checkout means a second session in the same directory reads the first one's
++ *    claim as its own. Measured — four live records carrying one identical,
++ *    already-archived slug. The file is keyed on the host session id where one
++ *    exists, and degrades to the shared path where none does.
+  *
+  * ## Failure is always open
+  *
+@@ -359,3 +368,60 @@ export function foreign_live_records(
+     const own = safe_stem(session_id);
+     return read_live_records(dir, options).filter((r) => safe_stem(r.session_id) !== own);
+ }
++
++// ---------------------------------------------------------------------------
++// Collisions — and why `branch` alone was the wrong axis
++// ---------------------------------------------------------------------------
++
++/**
++ * What two live sessions are colliding over.
++ *
++ * `branch` was the only axis this register checked, and it is the CHEAP one: two
++ * sessions on one branch see each other immediately, and coordinating is a
++ * `git worktree add`. `roadmap` is the expensive one and went unchecked —
++ * measured twice (PR #1277/#1280, PR #1280/#1281), both times two sessions built
++ * the SAME roadmap phase under DIFFERENT branch names
++ * (`feat/dispatch-safety-confirmation` vs `feat/dispatch-safety-confirmed-execution`),
++ * so the branch comparison was silent by construction while a whole
++ * implementation was duplicated. One of the two PRs is thrown away either way.
++ */
++export type CollisionKind = 'roadmap' | 'branch';
++
++export interface Collision {
++    kind: CollisionKind;
++    record: SessionRecord;
++}
++
++/**
++ * Classify what this session collides with, roadmap-first.
++ *
++ * Ordering is the finding, not a preference: a roadmap collision means the work
++ * is being done twice and one branch is already wasted, while a branch collision
++ * means two sessions can see each other's commits. Reporting the cheap one first
++ * is what let the expensive one pass unremarked.
++ *
++ * A `null` slug never collides — "no roadmap claimed" is the state of every
++ * session before it picks one, and treating absence as a match would make the
++ * warning fire on every pair of fresh sessions and be switched off.
++ */
++export function classify_collisions(
++    others: readonly SessionRecord[],
++    here: { branch: string | null; roadmap_slug: string | null },
++): Collision[] {
++    const out: Collision[] = [];
++    for (const r of others) {
++        if (
++            here.roadmap_slug !== null &&
++            r.roadmap_slug !== null &&
++            r.roadmap_slug === here.roadmap_slug
++        ) {
++            out.push({ kind: 'roadmap', record: r });
++        }
++    }
++    for (const r of others) {
++        if (here.branch !== null && r.branch === here.branch) {
++            out.push({ kind: 'branch', record: r });
++        }
++    }
++    return out;
++}
+diff --git a/src/scripts/session_register_hook.ts b/src/scripts/session_register_hook.ts
+index f1b7c03af37ea83c3cb61eb58265f19b742d11e9..035ed2d3b390bca4a76515e6773afc84f9feae49 100644
+--- a/src/scripts/session_register_hook.ts
++++ b/src/scripts/session_register_hook.ts
+@@ -53,12 +53,15 @@ import { fileURLToPath } from 'node:url';
+ import { current_branch } from './_lib/git_common_dir.js';
+ import {
+     HEARTBEAT_REACHABLE_PLATFORMS,
++    type Collision,
+     type SessionRecord,
++    classify_collisions,
+     delete_record,
+     foreign_live_records,
+     iso_now,
+     read_own_record,
+     register_dir,
++    safe_stem,
+     stop_means_session_end,
+     ttl_is_measured,
+     ttl_seconds_for,
+@@ -81,27 +84,117 @@ const REPLAY_ENV_VAR = 'AGENT_CONFIG_REPLAY';
+  */
+ export const ROADMAP_CLAIM_REL = path.join('agents', 'runtime', 'state', 'roadmap-claim.json');
+ 
++/**
++ * Per-SESSION claim path. The legacy single file above is a claim on the
++ * WORKTREE, not on the session, and that was a measured defect rather than a
++ * theoretical one: four live records once carried one identical slug — naming a
++ * roadmap that was already archived — because every session in the same checkout
++ * read the last claim written there. A session inheriting a peer's claim reports
++ * work it is not doing, and a session whose claim was overwritten reports none.
++ *
++ * `session_id` is available on both paths: the hook gets it from the envelope,
++ * and `sessions:claim` resolves it from the host environment. When it is not
++ * resolvable the legacy path is still written and still read, so an older claim
++ * keeps working — the fallback degrades to the previous behaviour instead of
++ * losing the claim.
++ */
++export function roadmap_claim_rel(session_id: string | null | undefined): string {
++    const id = String(session_id ?? '').trim();
++    if (id === '') {
++        return ROADMAP_CLAIM_REL;
++    }
++    return path.join('agents', 'runtime', 'state', `roadmap-claim-${safe_stem(id)}.json`);
++}
++
++/** The shape `sessions:claim` writes. `session_id` is absent on legacy files. */
++export interface RoadmapClaim {
++    slug: string;
++    written_at?: string;
++    session_id?: string | null;
++}
++
+ function _is_replay_mode(): boolean {
+     return String(process.env[REPLAY_ENV_VAR] ?? '').trim() !== '';
+ }
+ 
+-/** The roadmap slug this session has claimed, or `null`. Never throws. */
+-export function read_claimed_slug(workspace_root: string): string | null {
++function _read_claim_file(file: string): RoadmapClaim | null {
+     try {
+-        const raw = fs.readFileSync(path.join(workspace_root, ROADMAP_CLAIM_REL), 'utf-8');
+-        const parsed: unknown = JSON.parse(raw);
+-        if (parsed !== null && typeof parsed === 'object' && !Array.isArray(parsed)) {
+-            const slug = (parsed as Record<string, unknown>)['slug'];
+-            if (typeof slug === 'string' && slug.trim().length > 0) {
+-                return slug.trim();
+-            }
++        const parsed: unknown = JSON.parse(fs.readFileSync(file, 'utf-8'));
++        if (parsed === null || typeof parsed !== 'object' || Array.isArray(parsed)) {
++            return null;
+         }
+-        return null;
++        const rec = parsed as Record<string, unknown>;
++        const slug = rec['slug'];
++        if (typeof slug !== 'string' || slug.trim().length === 0) {
++            return null;
++        }
++        const sid = rec['session_id'];
++        return {
++            slug: slug.trim(),
++            ...(typeof sid === 'string' && sid.trim() !== '' ? { session_id: sid.trim() } : {}),
++        };
+     } catch {
+         return null;
+     }
+ }
+ 
++/**
++ * The roadmap slug THIS session has claimed, or `null`. Never throws.
++ *
++ * Two reads, in order, and the second one is why a peer's claim can no longer be
++ * inherited: the per-session file first, then the legacy per-worktree file —
++ * and the legacy file counts only when it carries no `session_id`, or one that
++ * matches. A legacy claim written by a DIFFERENT session in the same checkout is
++ * that session's claim, and reading it as this session's is exactly the defect
++ * that put one archived slug on four live records.
++ */
++export function read_claimed_slug(
++    workspace_root: string,
++    session_id?: string | null,
++): string | null {
++    const own = roadmap_claim_rel(session_id);
++    if (own !== ROADMAP_CLAIM_REL) {
++        const mine = _read_claim_file(path.join(workspace_root, own));
++        if (mine !== null) {
++            return mine.slug;
++        }
++    }
++    const legacy = _read_claim_file(path.join(workspace_root, ROADMAP_CLAIM_REL));
++    if (legacy === null) {
++        return null;
++    }
++    const id = String(session_id ?? '').trim();
++    if (legacy.session_id !== undefined && id !== '' && legacy.session_id !== id) {
++        return null;
++    }
++    return legacy.slug;
++}
++
++/**
++ * Does a roadmap by this slug still exist as open work?
++ *
++ * A slug survives in a claim file after its roadmap is archived, and a stale slug
++ * is worse than no slug: it renders as an active claim, so a screening session
++ * reads "that roadmap is taken" about work that shipped, and — measured — reads
++ * "nobody claimed anything else" from four records that were all simply out of
++ * date. Only the ACTIVE tree counts; `archive/`, `later/` and `skipped/` are the
++ * dispositions that make a claim meaningless.
++ */
++export function claim_is_stale(workspace_root: string, slug: string | null): boolean {
++    if (slug === null || slug.trim() === '') {
++        return false;
++    }
++    const base = slug.trim().replace(/\.md$/, '');
++    if (base.includes('/') || base.includes('\\') || base.includes('..')) {
++        return true; // not a slug this repo can hold; never render it as live work
++    }
++    try {
++        return !fs.existsSync(path.join(workspace_root, 'agents', 'roadmaps', `${base}.md`));
++    } catch {
++        return false; // unreadable tree — fail open, same as every other read here
++    }
++}
++
+ /**
+  * Build this session's record from live state.
+  *
+@@ -121,7 +214,7 @@ export function build_record(
+         platform,
+         worktree: workspace_root,
+         branch: current_branch(workspace_root),
+-        roadmap_slug: read_claimed_slug(workspace_root),
++        roadmap_slug: read_claimed_slug(workspace_root, session_id),
+         started_at,
+         last_seen: iso_now(now),
+     };
+@@ -164,23 +257,39 @@ export function foreign_sessions_block(
+     if (others.length === 0) return null;
+ 
+     const here = current_branch(workspace_root);
++    const my_slug = read_claimed_slug(workspace_root, session_id);
+     const lines: string[] = [];
+-    let collision: SessionRecord | null = null;
++
++    // A stale slug is reported as stale and then treated as ABSENT for collision
++    // purposes: a claim naming an archived roadmap is not a claim, and counting
++    // it would fire the new warning on four records that were merely out of date.
++    const live_others: SessionRecord[] = [];
+ 
+     for (const r of others) {
+         const age_min = Math.max(0, Math.round((now.getTime() - Date.parse(r.last_seen)) / 60000));
+-        const slug = r.roadmap_slug === null ? 'no roadmap claimed' : `roadmap: ${r.roadmap_slug}`;
++        const stale = claim_is_stale(workspace_root, r.roadmap_slug);
++        const slug =
++            r.roadmap_slug === null
++                ? 'no roadmap claimed'
++                : stale
++                  ? `roadmap: ${r.roadmap_slug} (STALE — no such open roadmap; treat as no claim)`
++                  : `roadmap: ${r.roadmap_slug}`;
+         const ttl_note = ttl_is_measured(r.platform)
+             ? ''
+             : ` · unmeasured host, TTL falls back to ${Math.round(ttl_seconds_for(r.platform) / 3600)}h`;
+         lines.push(
+             `- ${r.platform} · branch \`${r.branch ?? 'detached'}\` · ${slug} · last seen ${age_min} min ago${ttl_note}\n  worktree: ${r.worktree}`,
+         );
+-        if (collision === null && here !== null && r.branch === here) {
+-            collision = r;
+-        }
++        live_others.push(stale ? { ...r, roadmap_slug: null } : r);
+     }
+ 
++    const collisions: Collision[] = classify_collisions(live_others, {
++        branch: here,
++        roadmap_slug: claim_is_stale(workspace_root, my_slug) ? null : my_slug,
++    });
++    const roadmap_hit = collisions.find((c) => c.kind === 'roadmap') ?? null;
++    const branch_hit = collisions.find((c) => c.kind === 'branch') ?? null;
++
+     const parts = [
+         '<session-register>',
+         'The following OTHER agent sessions are live on this repository right now.',
+@@ -189,7 +298,25 @@ export function foreign_sessions_block(
+         ...lines,
+     ];
+ 
+-    if (collision !== null) {
++    // Roadmap first, deliberately. This is the expensive collision — the work is
++    // being done twice and one of the two PRs is thrown away — and it is the one
++    // that went unreported twice while the cheap branch warning fired correctly.
++    if (roadmap_hit !== null) {
++        parts.push(
++            '',
++            `DUPLICATE WORK: another live session claims the SAME roadmap \`${my_slug}\`.`,
++            `  it is on branch \`${roadmap_hit.record.branch ?? 'detached'}\` in ${roadmap_hit.record.worktree}`,
++            'A different branch name does NOT make this a different task — measured twice,',
++            'two sessions built one roadmap phase under two branch names and one PR was wasted.',
++            'STOP before writing code. Ask the user ONCE, as numbered options:',
++            '  1. Take a different roadmap (`agent-config sessions:list` shows what is held)',
++            '  2. Split the roadmap explicitly — name which phases are yours',
++            '  3. Continue anyway, accepting that one of the two results is discarded',
++            'Never decide silently, in either direction.',
++        );
++    }
++
++    if (branch_hit !== null) {
+         parts.push(
+             '',
+             `COLLISION: another live session already holds branch \`${here}\`.`,
+diff --git a/src/scripts/sessions_cli.ts b/src/scripts/sessions_cli.ts
+index 3ffb59c1f2dbdba911bef4f745eb70544954e5f3..3ffe61e065b27f9402448cf2040444b95398b5ba 100644
+--- a/src/scripts/sessions_cli.ts
++++ b/src/scripts/sessions_cli.ts
+@@ -17,15 +17,27 @@
+  *
+  * ## Subcommands
+  *
+- * - `list [--json]` — live sessions on this repo. Human table by default; `--json`
+- *   emits the raw records for a scripted screen. Exits 0 with an empty result
++ * - `list [--json] [--branches]` — live sessions on this repo, plus the branches
++ *   checked out in OTHER worktrees. Human table by default; `--json` emits the
++ *   raw records for a scripted screen, and `--branches` adds the second axis to
++ *   the JSON (the human output always shows it). Exits 0 with an empty result
+  *   when there is no register — its absence is the normal pre-first-session
+  *   state, never an error.
+- * - `claim <slug>` — record that THIS worktree's session has taken a roadmap.
+- *   Writes the bridge file the next heartbeat lifts into the register.
++ * - `claim <slug>` — record that THIS SESSION has taken a roadmap. Writes the
++ *   bridge file the next heartbeat lifts into the register, keyed on the host
++ *   session id where one exists.
+  * - `claim --release` — clear the claim.
++ *
++ * ## Why two axes and not one
++ *
++ * The slug axis needs a claim to have been written, and writing it is
++ * model-carried. The branch axis needs nothing: a worktree checkout is on disk
++ * from the first minute. Measured twice, the duplication was caught by the branch
++ * axis (`git branch`'s `+` marker) and missed entirely by the register, so
++ * reporting only the register is reporting the half that can be silent.
+  */
+ 
++import { spawnSync } from 'node:child_process';
+ import * as fs from 'node:fs';
+ import * as path from 'node:path';
+ import process from 'node:process';
+@@ -39,7 +51,11 @@ import {
+     ttl_is_measured,
+     ttl_seconds_for,
+ } from './_lib/session_register.js';
+-import { ROADMAP_CLAIM_REL } from './session_register_hook.js';
++import {
++    ROADMAP_CLAIM_REL,
++    claim_is_stale,
++    roadmap_claim_rel,
++} from './session_register_hook.js';
+ 
+ function usage(): number {
+     process.stderr.write(
+@@ -47,6 +63,7 @@ function usage(): number {
+             'usage:',
+             '  agent-config sessions:list [--json]      live sessions on this repository',
+             '  agent-config sessions:claim <slug>       claim a roadmap for this session',
++            '  agent-config sessions:claim <slug> --force   claim it even though a peer holds it',
+             '  agent-config sessions:claim --release    drop this session\'s roadmap claim',
+             '',
+         ].join('\n'),
+@@ -54,18 +71,113 @@ function usage(): number {
+     return 2;
+ }
+ 
++/**
++ * Branches checked out in ANOTHER worktree — the second axis, and the one that
++ * does not depend on a claim having been written.
++ *
++ * `git branch` marks these with a `+` prefix, and that prefix is what actually
++ * caught the duplication both times it happened, from a memory note rather than
++ * from any command. It is reported here because the register alone cannot see it:
++ * a session that never ran `sessions:claim` is invisible to the slug axis while
++ * its branch is already on disk, so a claim-only screen has a blind spot exactly
++ * where the first minutes of a duplicate live.
++ *
++ * `git worktree list --porcelain` is preferred over parsing `git branch` output:
++ * the `+` marker is presentation and the porcelain form is a contract.
++ */
++export function other_worktree_branches(
++    root: string,
++    spawn: typeof spawnSync = spawnSync,
++): { branch: string; worktree: string }[] {
++    let out = '';
++    try {
++        const r = spawn('git', ['worktree', 'list', '--porcelain'], {
++            cwd: root,
++            encoding: 'utf-8',
++            timeout: 10_000,
++        });
++        if (r.status !== 0) {
++            return [];
++        }
++        out = String(r.stdout ?? '');
++    } catch {
++        return [];
++    }
++    // Unmerged branches only, in ONE extra git call. Without this filter the
++    // list is every worktree the repo ever had — 30+ here, all long merged — and
++    // a list that is mostly noise is a list nobody reads, which is the failure
++    // mode a false-positive-prone warning always ends in.
++    let unmerged: Set<string> | null = null;
++    try {
++        const r = spawn('git', ['branch', '--no-merged', 'origin/main', '--format=%(refname:short)'], {
++            cwd: root,
++            encoding: 'utf-8',
++            timeout: 10_000,
++        });
++        if (r.status === 0) {
++            unmerged = new Set(
++                String(r.stdout ?? '')
++                    .split('\n')
++                    .map((s) => s.trim())
++                    .filter((s) => s !== ''),
++            );
++        }
++    } catch {
++        unmerged = null; // no filter available — report everything rather than nothing
++    }
++
++    const rows: { branch: string; worktree: string }[] = [];
++    let wt: string | null = null;
++    for (const raw of out.split('\n')) {
++        const line = raw.trim();
++        if (line.startsWith('worktree ')) {
++            wt = line.slice('worktree '.length).trim();
++        } else if (line.startsWith('branch ') && wt !== null) {
++            const ref = line.slice('branch '.length).trim();
++            const branch = ref.replace(/^refs\/heads\//, '');
++            // The caller's own worktree is not a foreign checkout. Compared by
++            // realpath because /var vs /private/var on macOS would otherwise make
++            // every session report itself as a collision.
++            let same = false;
++            try {
++                same = fs.realpathSync(wt) === fs.realpathSync(root);
++            } catch {
++                same = wt === root;
++            }
++            if (!same && (unmerged === null || unmerged.has(branch))) {
++                rows.push({ branch, worktree: wt });
++            }
++        }
++    }
++    rows.sort((a, b) => a.branch.localeCompare(b.branch) || a.worktree.localeCompare(b.worktree));
++    return rows;
++}
++
+ function cmd_list(argv: string[], root: string): number {
+     const as_json = argv.includes('--json');
+     const dir = register_dir(root);
+     const records = dir === null ? [] : read_live_records(dir, { prune: true });
++    const held = other_worktree_branches(root);
+ 
+     if (as_json) {
+-        process.stdout.write(`${JSON.stringify(records, null, 2)}\n`);
++        // The record array stays the top-level shape it has always been when
++        // `--branches` is absent: a scripted screen pins it, and silently wrapping
++        // it in an object would break every existing caller.
++        process.stdout.write(
++            argv.includes('--branches')
++                ? `${JSON.stringify({ sessions: records, otherWorktreeBranches: held }, null, 2)}\n`
++                : `${JSON.stringify(records, null, 2)}\n`,
++        );
+         return 0;
+     }
+ 
++    if (records.length === 0 && held.length === 0) {
++        process.stdout.write('No live sessions registered on this repository.\n');
++        return 0;
++    }
+     if (records.length === 0) {
+         process.stdout.write('No live sessions registered on this repository.\n');
++        writeHeldBranches(held);
+         return 0;
+     }
+ 
+@@ -75,18 +187,28 @@ function cmd_list(argv: string[], root: string): number {
+         const age_min = Math.max(0, Math.round((now - Date.parse(r.last_seen)) / 60000));
+         const ttl_h = Math.round(ttl_seconds_for(r.platform) / 3600);
+         const ttl_note = ttl_is_measured(r.platform) ? `${ttl_h}h` : `${ttl_h}h (unmeasured host)`;
++        // A slug naming no open roadmap is labelled rather than printed straight.
++        // Measured: four live records all carried one already-archived slug, and a
++        // screening session read that as "taken" about work that had shipped.
++        const roadmap =
++            r.roadmap_slug === null
++                ? '(none claimed)'
++                : claim_is_stale(root, r.roadmap_slug)
++                  ? `${r.roadmap_slug}  ← STALE, no such open roadmap; treat as no claim`
++                  : r.roadmap_slug;
+         process.stdout.write(
+             [
+                 `  ${r.session_id}`,
+                 `    host:     ${r.platform}  ·  TTL ${ttl_note}`,
+                 `    branch:   ${r.branch ?? '(detached)'}`,
+-                `    roadmap:  ${r.roadmap_slug ?? '(none claimed)'}`,
++                `    roadmap:  ${roadmap}`,
+                 `    worktree: ${r.worktree}`,
+                 `    seen:     ${age_min} min ago`,
+                 '',
+             ].join('\n'),
+         );
+     }
++    writeHeldBranches(held);
+     process.stdout.write(
+         'Advisory only — this register is not a lock, and an idle session\n' +
+             'disappears from it after its TTL although its user may return.\n',
+@@ -94,13 +216,122 @@ function cmd_list(argv: string[], root: string): number {
+     return 0;
+ }
+ 
++function writeHeldBranches(held: readonly { branch: string; worktree: string }[]): void {
++    if (held.length === 0) {
++        return;
++    }
++    process.stdout.write(
++        `\n${held.length} unmerged branch(es) checked out in another worktree — a claim\n` +
++            'may not have been written yet, so check these before picking work.\n' +
++            'Limit: a branch created seconds ago carries no commits and is therefore\n' +
++            'MERGED into main by definition, so it does not appear here — that first\n' +
++            'minute is what the roadmap-slug axis above covers.\n',
++    );
++    for (const h of held) {
++        process.stdout.write(`  ${h.branch}\n    ${h.worktree}\n`);
++    }
++}
++
++/**
++ * This session's id, from the host environment, or `null`.
++ *
++ * The CLI has no envelope, so the environment is the only channel — and it is a
++ * real one: Claude Code exports `CLAUDE_CODE_SESSION_ID` into every shell it
++ * spawns (probed 2026-08-12). A host that exports nothing degrades to the legacy
++ * per-worktree claim rather than losing the claim, and `sessions:claim` says so
++ * on that path instead of implying a per-session guarantee it cannot give.
++ */
++export function env_session_id(env: NodeJS.ProcessEnv = process.env): string | null {
++    // The package's own variable is checked FIRST — an override that loses to the
++    // host variable is not an override. Caught by a test that set it and still got
++    // the ambient Claude Code id back, which is also the shape a second host or a
++    // debugging run would hit.
++    for (const key of ['AGENT_CONFIG_SESSION_ID', 'CLAUDE_CODE_SESSION_ID']) {
++        const v = String(env[key] ?? '').trim();
++        if (v !== '') {
++            return v;
++        }
++    }
++    return null;
++}
++
++/**
++ * Who else is already on this slug — checked BEFORE the claim is written.
++ *
++ * This is the only point in the flow where the check can work, and finding that
++ * out was the load-bearing part of the repair. The register's context block is
++ * emitted on `session_start` **only**, and at session start this session's own
++ * slug is `null` by construction, because the roadmap is picked later. A
++ * roadmap-collision warning in that renderer can therefore never fire on the
++ * session doing the picking: the warning window sat entirely before the decision.
++ *
++ * `sessions:claim` is the decision. It runs in the foreground, its output reaches
++ * the model directly, and it needs no hook slot and no heartbeat delay.
++ *
++ * Two sources, because either can be silent alone: a live register record with
++ * the same slug, and an unmerged branch in another worktree whose NAME contains
++ * the slug's distinctive tail (a peer that never claimed). The name match is a
++ * heuristic and says so — it is a reason to look, not a verdict.
++ */
++export function claim_conflicts(
++    root: string,
++    slug: string,
++): { kind: 'session' | 'branch'; detail: string }[] {
++    const out: { kind: 'session' | 'branch'; detail: string }[] = [];
++    const dir = register_dir(root);
++    const sid = env_session_id();
++    if (dir !== null) {
++        for (const r of read_live_records(dir, { prune: false })) {
++            if (sid !== null && r.session_id === sid) {
++                continue;
++            }
++            if (r.roadmap_slug === slug && !claim_is_stale(root, r.roadmap_slug)) {
++                out.push({
++                    kind: 'session',
++                    detail: `${r.platform} session on branch \`${r.branch ?? 'detached'}\` in ${r.worktree}`,
++                });
++            }
++        }
++    }
++    // `road-to-inbox-harvest-2026-08-b-dispatch-safety` → `dispatch-safety`, which
++    // is what a branch name actually carries. Matching the whole slug would find
++    // nothing: neither colliding branch in either measured incident contained it.
++    const tail = slug.replace(/^road-to-/, '').split('-').slice(-2).join('-');
++    if (tail.length >= 4) {
++        for (const b of other_worktree_branches(root)) {
++            if (b.branch.includes(tail)) {
++                out.push({ kind: 'branch', detail: `branch \`${b.branch}\` in ${b.worktree}` });
++            }
++        }
++    }
++    // Deduplicated by rendered detail. Several records can describe the same
++    // peer — observed live: three sessions in one checkout all carrying one slug,
++    // which is the per-worktree claim defect this change also fixes. Three
++    // identical lines read as three peers and inflate the finding.
++    const seen = new Set<string>();
++    return out.filter((c) => {
++        const key = `${c.kind}\t${c.detail}`;
++        if (seen.has(key)) {
++            return false;
++        }
++        seen.add(key);
++        return true;
++    });
++}
++
+ function cmd_claim(argv: string[], root: string): number {
+-    const target = path.join(root, ROADMAP_CLAIM_REL);
++    const sid = env_session_id();
++    const target = path.join(root, roadmap_claim_rel(sid));
+     if (argv.includes('--release')) {
+-        try {
+-            fs.unlinkSync(target);
+-        } catch {
+-            /* nothing to release */
++        // Release BOTH paths: a claim written before this session could identify
++        // itself lives in the legacy file, and releasing only the new one would
++        // leave a claim behind that the heartbeat still reports.
++        for (const p of new Set([target, path.join(root, ROADMAP_CLAIM_REL)])) {
++            try {
++                fs.unlinkSync(p);
++            } catch {
++                /* nothing to release */
++            }
+         }
+         process.stdout.write('Roadmap claim released.\n');
+         return 0;
+@@ -109,15 +340,42 @@ function cmd_claim(argv: string[], root: string): number {
+     if (slug === undefined || slug.trim() === '') {
+         return usage();
+     }
++
++    // Refuse to WRITE a claim a peer already holds, and exit non-zero. This is a
++    // consistency check on this session's own write, NOT a lock: two sessions can
++    // still claim in the same millisecond, and the register's own contract forbids
++    // building exclusion on it. What it does buy is that the second session to
++    // arrive cannot record a false "I am doing this" and cannot miss the notice —
++    // which is exactly what happened twice, both times ending in a discarded PR.
++    const conflicts = argv.includes('--force') ? [] : claim_conflicts(root, slug.trim());
++    if (conflicts.length > 0) {
++        process.stderr.write(
++            `sessions:claim: REFUSED — "${slug.trim()}" is already being worked on.\n` +
++                conflicts.map((c) => `  · ${c.kind}: ${c.detail}\n`).join('') +
++                '\nA different branch name does not make it a different task. Pick another\n' +
++                'roadmap, split this one explicitly with the peer, or re-run with --force\n' +
++                'if you have decided to duplicate deliberately.\n' +
++                'Advisory, not a lock: two sessions claiming simultaneously still race.\n',
++        );
++        return 1;
++    }
++
+     try {
+-        write_atomic(target, `${JSON.stringify({ slug: slug.trim(), written_at: iso_now() }, null, 2)}\n`);
++        write_atomic(
++            target,
++            `${JSON.stringify({ slug: slug.trim(), written_at: iso_now(), session_id: sid }, null, 2)}\n`,
++        );
+     } catch (exc) {
+         process.stderr.write(`sessions:claim: could not write the claim — ${String(exc)}\n`);
+         return 1; // the claim is the whole point of this verb; a silent no-op would lie
+     }
+     process.stdout.write(
+         `Claimed "${slug.trim()}" for this session. It becomes visible to other\n` +
+-            'sessions on the next turn, when the heartbeat lifts it into the register.\n',
++            'sessions on the next turn, when the heartbeat lifts it into the register.\n' +
++            (sid === null
++                ? 'NOTE: this host exports no session id, so the claim is scoped to this\n' +
++                  'WORKTREE — a second session in the same checkout will overwrite it.\n'
++                : ''),
+     );
+     return 0;
+ }
+diff --git a/tests/scripts/session_register.test.ts b/tests/scripts/session_register.test.ts
+index 18fc04809ff0d248e9f325de7fdcaacb36cf035f..9f98d10f8740474cb58c59fcd4a0de2ad5f9c97a 100644
+--- a/tests/scripts/session_register.test.ts
++++ b/tests/scripts/session_register.test.ts
+@@ -9,7 +9,7 @@
+  * `stop`-is-not-session-end trap on every platform shape.
+  */
+ 
+-import { execFileSync } from 'node:child_process';
++import { execFileSync, type spawnSync } from 'node:child_process';
+ import fs from 'node:fs';
+ import os from 'node:os';
+ import path from 'node:path';
+@@ -23,6 +23,7 @@ import {
+     type SessionRecord,
+     TTL_DEFAULT_SECONDS,
+     TTL_MEASURED_SECONDS,
++    classify_collisions,
+     delete_record,
+     foreign_live_records,
+     is_expired,
+@@ -35,6 +36,13 @@ import {
+     ttl_seconds_for,
+     write_record,
+ } from '../../src/scripts/_lib/session_register.js';
++import {
++    ROADMAP_CLAIM_REL,
++    claim_is_stale,
++    read_claimed_slug,
++    roadmap_claim_rel,
++} from '../../src/scripts/session_register_hook.js';
++import { claim_conflicts, other_worktree_branches } from '../../src/scripts/sessions_cli.js';
+ 
+ let tmp: string;
+ 
+@@ -296,3 +304,262 @@ describe('fail-open — the register never costs a session its start', () => {
+         expect(delete_record(register_dir(main)!, 'never-existed')).toBe(false);
+     });
+ });
++
++// ---------------------------------------------------------------------------
++// The duplicate-work collision — four defects, each with the case that was
++// silent before it. Measured twice on this repo (PR #1277/#1280, #1280/#1281):
++// two sessions built the same roadmap phase under two branch names.
++// ---------------------------------------------------------------------------
++
++describe('classify_collisions — the roadmap axis that was missing', () => {
++    it('reports the SAME roadmap under DIFFERENT branch names — the measured case', () => {
++        // This is the whole incident in one assertion. Before this axis existed,
++        // the comparison was `r.branch === here` and these two records produced
++        // NO warning at all.
++        const others = [
++            rec({
++                session_id: 'peer',
++                branch: 'feat/dispatch-safety-confirmation',
++                roadmap_slug: 'road-to-inbox-harvest-2026-08-b-dispatch-safety',
++            }),
++        ];
++        const hits = classify_collisions(others, {
++            branch: 'feat/dispatch-safety-confirmed-execution',
++            roadmap_slug: 'road-to-inbox-harvest-2026-08-b-dispatch-safety',
++        });
++        expect(hits.map((h) => h.kind)).toEqual(['roadmap']);
++        expect(hits[0]!.record.session_id).toBe('peer');
++    });
++
++    it('orders roadmap BEFORE branch — the expensive collision leads', () => {
++        const others = [rec({ session_id: 'peer', branch: 'feat/a', roadmap_slug: 'road-to-x' })];
++        const hits = classify_collisions(others, { branch: 'feat/a', roadmap_slug: 'road-to-x' });
++        expect(hits.map((h) => h.kind)).toEqual(['roadmap', 'branch']);
++    });
++
++    it('keeps the branch axis working on its own', () => {
++        const others = [rec({ session_id: 'peer', branch: 'feat/a', roadmap_slug: 'road-to-y' })];
++        const hits = classify_collisions(others, { branch: 'feat/a', roadmap_slug: 'road-to-x' });
++        expect(hits.map((h) => h.kind)).toEqual(['branch']);
++    });
++
++    it('a null slug never collides — otherwise every pair of fresh sessions fires', () => {
++        const others = [rec({ session_id: 'peer', branch: 'feat/b', roadmap_slug: null })];
++        expect(classify_collisions(others, { branch: 'feat/a', roadmap_slug: null })).toEqual([]);
++        expect(classify_collisions(others, { branch: 'feat/a', roadmap_slug: 'road-to-x' })).toEqual(
++            [],
++        );
++    });
++
++    it('different roadmaps on different branches are not a collision', () => {
++        const others = [rec({ session_id: 'peer', branch: 'feat/b', roadmap_slug: 'road-to-y' })];
++        expect(classify_collisions(others, { branch: 'feat/a', roadmap_slug: 'road-to-x' })).toEqual(
++            [],
++        );
++    });
++
++    it('reports every peer on the same roadmap, not just the first', () => {
++        const others = [
++            rec({ session_id: 'p1', branch: 'feat/b', roadmap_slug: 'road-to-x' }),
++            rec({ session_id: 'p2', branch: 'feat/c', roadmap_slug: 'road-to-x' }),
++        ];
++        const hits = classify_collisions(others, { branch: 'feat/a', roadmap_slug: 'road-to-x' });
++        expect(hits.map((h) => h.record.session_id)).toEqual(['p1', 'p2']);
++    });
++});
++
++describe('the claim is per SESSION, not per worktree', () => {
++    function claim(root: string, body: Record<string, unknown>, file: string): void {
++        const p = path.join(root, file);
++        fs.mkdirSync(path.dirname(p), { recursive: true });
++        fs.writeFileSync(p, JSON.stringify(body));
++    }
++
++    it('a peer claim in the SAME checkout is not inherited — the measured defect', () => {
++        // Four live records once carried one identical slug because every session
++        // in a checkout read the last claim written there. A session reporting a
++        // roadmap it is not working is worse than reporting none: the screen reads
++        // it as "taken".
++        const { main } = make_repo();
++        claim(main, { slug: 'road-to-peer', session_id: 'peer-session' }, ROADMAP_CLAIM_REL);
++        expect(read_claimed_slug(main, 'my-session')).toBeNull();
++        expect(read_claimed_slug(main, 'peer-session')).toBe('road-to-peer');
++    });
++
++    it('the per-session file wins over the legacy one', () => {
++        const { main } = make_repo();
++        claim(main, { slug: 'legacy-slug' }, ROADMAP_CLAIM_REL);
++        claim(main, { slug: 'mine' }, roadmap_claim_rel('my-session'));
++        expect(read_claimed_slug(main, 'my-session')).toBe('mine');
++    });
++
++    it('a legacy claim with no session_id still works — migration, not a reset', () => {
++        const { main } = make_repo();
++        claim(main, { slug: 'pre-existing' }, ROADMAP_CLAIM_REL);
++        expect(read_claimed_slug(main, 'my-session')).toBe('pre-existing');
++        expect(read_claimed_slug(main, null)).toBe('pre-existing');
++    });
++
++    it('an unidentifiable session falls back to the legacy path rather than losing the claim', () => {
++        expect(roadmap_claim_rel(null)).toBe(ROADMAP_CLAIM_REL);
++        expect(roadmap_claim_rel('')).toBe(ROADMAP_CLAIM_REL);
++        expect(roadmap_claim_rel('   ')).toBe(ROADMAP_CLAIM_REL);
++    });
++
++    it('a hostile session id cannot escape the state directory', () => {
++        expect(roadmap_claim_rel('../../etc/passwd')).not.toContain('..');
++    });
++
++    it('an absent or malformed claim reads as no claim, never as a throw', () => {
++        const { main } = make_repo();
++        expect(read_claimed_slug(main, 'x')).toBeNull();
++        claim(main, {} as Record<string, unknown>, ROADMAP_CLAIM_REL);
++        expect(read_claimed_slug(main, 'x')).toBeNull();
++        fs.writeFileSync(path.join(main, ROADMAP_CLAIM_REL), '{ not json');
++        expect(read_claimed_slug(main, 'x')).toBeNull();
++    });
++});
++
++describe('a stale slug is not a claim', () => {
++    it('a slug naming an ARCHIVED roadmap reads as stale', () => {
++        const { main } = make_repo();
++        fs.mkdirSync(path.join(main, 'agents', 'roadmaps', 'archive'), { recursive: true });
++        fs.writeFileSync(path.join(main, 'agents', 'roadmaps', 'archive', 'road-to-done.md'), '#');
++        expect(claim_is_stale(main, 'road-to-done')).toBe(true);
++    });
++
++    it('a slug naming an OPEN roadmap is live', () => {
++        const { main } = make_repo();
++        fs.mkdirSync(path.join(main, 'agents', 'roadmaps'), { recursive: true });
++        fs.writeFileSync(path.join(main, 'agents', 'roadmaps', 'road-to-open.md'), '#');
++        expect(claim_is_stale(main, 'road-to-open')).toBe(false);
++        expect(claim_is_stale(main, 'road-to-open.md')).toBe(false);
++    });
++
++    it('null is not stale — absence is a state, not a defect', () => {
++        const { main } = make_repo();
++        expect(claim_is_stale(main, null)).toBe(false);
++        expect(claim_is_stale(main, '')).toBe(false);
++    });
++
++    it('a traversal-shaped slug is stale rather than rendered as live work', () => {
++        const { main } = make_repo();
++        expect(claim_is_stale(main, '../../../etc/passwd')).toBe(true);
++    });
++});
++
++describe('sessions:claim refuses a slug a peer already holds', () => {
++    /**
++     * The regression this whole group exists for. The register's context block is
++     * emitted on `session_start` only, and there this session's own slug is null
++     * by construction — so a roadmap-collision warning in that renderer can never
++     * fire on the session doing the picking. The check has to sit on the claim.
++     */
++    function open_roadmap(root: string, slug: string): void {
++        fs.mkdirSync(path.join(root, 'agents', 'roadmaps'), { recursive: true });
++        fs.writeFileSync(path.join(root, 'agents', 'roadmaps', `${slug}.md`), '# x');
++    }
++
++    it('finds a live peer record on the same slug', () => {
++        const { main } = make_repo();
++        open_roadmap(main, 'road-to-x');
++        write_record(
++            register_dir(main)!,
++            rec({ session_id: 'peer', branch: 'feat/other-name', roadmap_slug: 'road-to-x' }),
++        );
++        const hits = claim_conflicts(main, 'road-to-x');
++        expect(hits.map((h) => h.kind)).toContain('session');
++    });
++
++    it('ignores a peer whose slug is STALE — an archived roadmap blocks nothing', () => {
++        const { main } = make_repo();
++        // No open roadmap file → the peer's claim names nothing live.
++        write_record(register_dir(main)!, rec({ session_id: 'peer', roadmap_slug: 'road-to-gone' }));
++        expect(claim_conflicts(main, 'road-to-gone')).toEqual([]);
++    });
++
++    it('finds a peer BRANCH by the slug tail — the peer that never claimed', () => {
++        const { main, wt } = make_repo();
++        open_roadmap(main, 'road-to-inbox-harvest-2026-08-b-dispatch-safety');
++        // Exactly the measured branch name. Matching the whole slug would find
++        // nothing, which is why the tail is what is compared.
++        git(main, 'branch', 'feat/dispatch-safety-confirmation');
++        git(wt, 'checkout', '-q', 'feat/dispatch-safety-confirmation');
++        fs.writeFileSync(path.join(wt, 'w.txt'), 'x');
++        git(wt, 'add', 'w.txt');
++        git(wt, 'commit', '-q', '-m', 'peer work');
++        const hits = claim_conflicts(main, 'road-to-inbox-harvest-2026-08-b-dispatch-safety');
++        expect(hits.map((h) => h.kind)).toContain('branch');
++    });
++
++    it('is silent on an unrelated slug', () => {
++        const { main } = make_repo();
++        open_roadmap(main, 'road-to-x');
++        write_record(register_dir(main)!, rec({ session_id: 'peer', roadmap_slug: 'road-to-y' }));
++        expect(claim_conflicts(main, 'road-to-x')).toEqual([]);
++    });
++
++    it('is silent when nothing else is live', () => {
++        const { main } = make_repo();
++        open_roadmap(main, 'road-to-x');
++        expect(claim_conflicts(main, 'road-to-x')).toEqual([]);
++    });
++
++    it('does not report the caller own record as a conflict', () => {
++        const { main } = make_repo();
++        open_roadmap(main, 'road-to-x');
++        const prev = process.env['AGENT_CONFIG_SESSION_ID'];
++        process.env['AGENT_CONFIG_SESSION_ID'] = 'me';
++        try {
++            write_record(register_dir(main)!, rec({ session_id: 'me', roadmap_slug: 'road-to-x' }));
++            expect(claim_conflicts(main, 'road-to-x')).toEqual([]);
++        } finally {
++            if (prev === undefined) delete process.env['AGENT_CONFIG_SESSION_ID'];
++            else process.env['AGENT_CONFIG_SESSION_ID'] = prev;
++        }
++    });
++
++    it('a two-character tail is not matched — it would hit every branch', () => {
++        const { main, wt } = make_repo();
++        open_roadmap(main, 'road-to-a-b');
++        fs.writeFileSync(path.join(wt, 'w.txt'), 'x');
++        git(wt, 'add', 'w.txt');
++        git(wt, 'commit', '-q', '-m', 'w');
++        expect(claim_conflicts(main, 'road-to-a-b').filter((h) => h.kind === 'branch')).toEqual([]);
++    });
++});
++
++describe('the branch axis — what the register cannot see', () => {
++    it('lists an unmerged branch checked out in ANOTHER worktree', () => {
++        const { main, wt } = make_repo();
++        // `feat/a` needs a commit of its own, or `--no-merged origin/main` would
++        // correctly exclude it. That is the documented limit, asserted below.
++        fs.writeFileSync(path.join(wt, 'work.txt'), 'x');
++        git(wt, 'add', 'work.txt');
++        git(wt, 'commit', '-q', '-m', 'work');
++        // No `origin/main` in a bare fixture, so the filter is unavailable and the
++        // function reports every foreign worktree — the fail-open branch.
++        const rows = other_worktree_branches(main);
++        expect(rows.map((r) => r.branch)).toContain('feat/a');
++        // Compared by realpath: git reports the path it registered, and on macOS
++        // `mkdtemp` hands back /var/... while git resolves /private/var/... — the
++        // same divergence the production function guards its own self-check with.
++        expect(rows.map((r) => fs.realpathSync(r.worktree))).toContain(fs.realpathSync(wt));
++    });
++
++    it('never reports the caller own worktree', () => {
++        const { main, wt } = make_repo();
++        expect(other_worktree_branches(wt).map((r) => r.branch)).not.toContain('feat/a');
++        expect(other_worktree_branches(main).map((r) => r.branch)).not.toContain('main');
++    });
++
++    it('degrades to an empty list when git is unavailable, never throwing', () => {
++        const { main } = make_repo();
++        const fail = (() => ({ status: 1, stdout: '', stderr: 'boom' })) as unknown as typeof spawnSync;
++        expect(other_worktree_branches(main, fail)).toEqual([]);
++        const thrower = (() => {
++            throw new Error('no git');
++        }) as unknown as typeof spawnSync;
++        expect(other_worktree_branches(main, thrower)).toEqual([]);
++    });
++});

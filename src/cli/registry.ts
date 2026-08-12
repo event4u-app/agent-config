@@ -66,7 +66,7 @@ export const REGISTRY: readonly CommandEntry[] = [
     { name: 'mcp:run', disposition: 'delegate', synopsis: 'Run the built-in MCP server over stdio (experimental).' },
     { name: 'mcp-server', disposition: 'native', synopsis: 'Turnkey read-only stdio MCP server over the bundled content (no repo clone; ADR-085).' },
     { name: 'use', disposition: 'delegate', synopsis: 'Switch the active experience/profile (writes profile.id).' },
-    { name: 'sessions:list', disposition: 'delegate', synopsis: 'List live agent sessions on this repository (shared session register).' },
+    { name: 'sessions:list', disposition: 'delegate', synopsis: 'List live agent sessions plus unmerged branches held by other worktrees; --json, --branches.' },
     { name: 'sessions:claim', disposition: 'delegate', synopsis: 'Claim a roadmap for this session so other sessions skip it; --release clears it.' },
     { name: 'session:recycle', disposition: 'delegate', synopsis: 'Validate + write the main-session recycle envelope (--verify validates only); the successor resumes from it after /clear.' },
     { name: 'roadmap:progress', disposition: 'delegate', synopsis: 'Regenerate agents/roadmaps-progress.md from open roadmaps.' },

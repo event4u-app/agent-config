@@ -194,7 +194,10 @@ Tier 2 — maintenance / internal (hooks, MCP, memory, telemetry):
   code-graph                 Deterministic code-graph engine (ADR-124, Class A).
                              Usage: code-graph build|validate|detect|query|explain|affected|path [options]
   sessions:list              List live agent sessions on this repository (shared
-                             session register). Flags: --json
+                             session register) PLUS the unmerged branches checked
+                             out in other worktrees — the axis that needs no
+                             claim. Flags: --json, --branches (adds the branch
+                             axis to the JSON; the human form always shows it)
   sessions:claim             Claim a roadmap for this session so other sessions skip
                              it; --release clears the claim
   session:recycle            Validate + write the main-session recycle envelope (--verify validates only)

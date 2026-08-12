@@ -102,13 +102,13 @@ test_no_tty_exits_2() {
     local out rc
     out="$(setsid bash "$SCRIPT" </dev/null 2>&1 || true)"
     rc=$?
-    if echo "$out" | grep -q "controlling terminal"; then
+    if grep -q "controlling terminal" <<<"$out"; then
         pass "no-tty path prints 'controlling terminal' message"
     else
         fail "no-tty path missing expected message (got: $out)"
     fi
     # `setsid` itself returns the child's exit code in most distros.
-    assert_grep_str() { echo "$out" | grep -q "$1"; }
+    assert_grep_str() { grep -q "$1"; } <<<"$out"
     if assert_grep_str "/dev/tty not available"; then
         pass "no-tty path mentions /dev/tty"
     else
