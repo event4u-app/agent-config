@@ -25,20 +25,29 @@ so we can align on direction before code is written.
 
 If you are unsure whether a change is in scope: open a discussion first.
 
-## Dependency direction — no circular deps with `agent-memory`
+## Dependency direction — memory is file-first, with no external backend
 
-`agent-config` is the upstream, standalone package. It must **never**
-hard-depend on `@event4u/agent-memory`. The optional companion package
-is declared in `suggest` (Composer) / `optionalDependencies` or
-documentation only (npm) — never as a runtime or dev dependency that
-`composer install` / `npm install` would pull automatically.
+`agent-config` is the upstream, standalone package. Its memory layer is
+file-first and self-contained: curated YAML under `agents/memory/<type>/`
+plus agent-written JSONL under `agents/memory/intake/`, read by `retrieve()`
+in `src/scripts/memory_lookup.ts`. There is no external memory backend.
 
-Reasoning: `agent-memory` depends on `agent-config` for its skills and
-governance. Reversing that would create a circular dependency and break
-installs in consumer projects that only want the rule/skill layer.
+[ADR-094](docs/decisions/ADR-094-agent-memory-layer-removal.md) removed the
+`@event4u/agent-memory` binding — the provider seam, the package detection,
+and the MCP routing that used it "when present" — and explicitly rejected
+leaving the integration surface inert: *"a dormant integration surface
+advertising a capability the suite no longer has is misleading residue."*
 
-See [`agents/roadmaps/road-to-memory-self-consumption.md`](agents/roadmaps/road-to-memory-self-consumption.md)
-for the full conflict-resolution contract between the two packages.
+Two rules survive that removal, and both are unconditional:
+
+- **Never hard-depend on a package that depends on `agent-config`.** That was
+  the case for `agent-memory`, so the dependency could only ever run one way;
+  reversing it would create a cycle and break installs in consumer projects
+  that want the rule/skill layer alone.
+- **Adding any external memory backend is a Class-B decision** under
+  [ADR-124](docs/decisions/ADR-124-embedded-engine-doctrine.md) § 5 — its own
+  ADR, a named consumer demand signal, and a measured Class-A failure — never
+  a dependency bump or a config entry.
 
 ## Quick start for contributors
 
