@@ -1,6 +1,6 @@
 # Completion review — no issue left open without a decision
 
-**Skipped:** no code surface for this completion — the diff is two authoring documents, one gate-state list and one byte-identical projection, and the gate itself measures zero code paths of five changed files, scope 7b09a7ae1113f68e5cd16e68c94bdbac95c3a4eb1dbfef19aec025fd539bdd7f, declared 2026-08-12
+**Skipped:** no code surface for this completion — the diff is authoring documents, one gate-state list, one derived page and one byte-identical projection, and the gate itself measures zero code paths of six changed files, scope 1a29e247c57ac652d691d54677ea08e811207eef172c01f431c7b5dfa59f27d9, declared 2026-08-12
 
 ## Why a skip rather than a review
 
@@ -83,6 +83,25 @@ both the global and project rule layers are present, which CI does not
 reproduce. It is surfaced to the maintainer rather than folded in silently; the
 gate's own remedy (`agent-config install --layer=…`) changes the developer's
 machine, not this repository.
+
+## Re-bound again after the derived-page regeneration
+
+CI's second round surfaced a drift `task preflight` does not run:
+`build_proof`'s guard on `docs/proof.md`. The page is derived from the
+`enforced_by` resolution, so this change's `none` declaration moves Axis 1
+(undeclared 84 → 83) and adds the rule's own row — the page had to be
+regenerated and committed, and now is.
+
+Ownership was established before the fix rather than assumed: the same test
+passes on a clean `main` checkout and fails on this branch, so the drift is
+this change's. Cost of not checking would have been a "pre-existing, not mine"
+misfiling of a defect that was in fact introduced here.
+
+The third red check in that round, `Sync + Generate Tools Consistency`, is
+**not** in this diff's ownership: its `Set up Task` step failed with
+`Failed to download version v3.52.0: Unexpected HTTP response: 503` while
+fetching the `task` binary. Transient infrastructure; the remedy is a re-run,
+and it is recorded here rather than left as an unexplained red.
 
 ## Standing caveat
 
