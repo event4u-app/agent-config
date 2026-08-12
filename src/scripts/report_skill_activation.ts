@@ -114,7 +114,11 @@ export interface UsageReport {
 
 /** Default store for the current working directory, mangled the way the host does. */
 export function defaultStore(cwd: string): string {
-  return path.join(os.homedir(), '.claude', 'projects', cwd.replace(/\//g, '-'));
+  // Dots are flattened too, not only separators: a worktree at
+  // `<repo>/.claude/worktrees/x` lands in `…-agent-config--claude-worktrees-x`.
+  // Replacing only `/` returns a directory that does not exist, and the caller
+  // then reads a clean zero out of a store it never found.
+  return path.join(os.homedir(), '.claude', 'projects', cwd.replace(/[/.]/g, '-'));
 }
 
 export function measureUsage(store: string, limit: number): UsageReport {
