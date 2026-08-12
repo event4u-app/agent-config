@@ -65,13 +65,33 @@ export function isUiPath(p: string): boolean {
 export const UI_PATH_FRAGMENTS = [
     'resources/views/',
     'resources/js/',
+    // `components/` already subsumes `src/components/` under substring
+    // matching — listing both here would be dead weight. The rules' own
+    // `path_prefix` list keeps both because matching there is anchored.
     'components/',
-    'src/components/',
     'pages/',
 ] as const;
 
-/** True when `p` sits inside a conventional UI tree. */
+/**
+ * Fragments that sit INSIDE a UI tree and are not UI. Checked first, because a
+ * substring fragment cannot express "pages/ but not pages/api/" on its own —
+ * and `pages/api/` is server-only Next.js code, the exact over-fire the `app/`
+ * exclusion above exists to avoid. Leaving it in would have put backend files
+ * in the pre-registered UI-turn denominator, which is worse than the nudge
+ * firing on them: a rate is harder to un-break than a warning.
+ */
+export const UI_TREE_EXCLUSIONS = ['pages/api/'] as const;
+
+/**
+ * True when `p` sits inside a conventional UI tree.
+ *
+ * Note this does NOT require a UI extension — that is the point: a `.js` file
+ * under `resources/js/` is UI. The cost is that a non-code file in a UI tree
+ * (a README, a fixture) also matches; callers that need the narrower answer
+ * combine this with `isUiPath`.
+ */
 export function isUiTreePath(p: string): boolean {
     const normalized = p.replace(/\\/g, '/').toLowerCase();
+    if (UI_TREE_EXCLUSIONS.some((fragment) => normalized.includes(fragment))) return false;
     return UI_PATH_FRAGMENTS.some((fragment) => normalized.includes(fragment));
 }

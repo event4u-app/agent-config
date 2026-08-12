@@ -85,6 +85,16 @@ describe('isUiTreePath', () => {
         expect(isUiPath('app/dashboard/page.tsx')).toBe(true);
     });
 
+    it('does not treat `pages/api/` as UI — it is server-only route code', () => {
+        // Same class of over-fire as `app/`, one level down: `pages/` is a UI
+        // fragment but `pages/api/` under it is not, and this predicate is the
+        // pre-registered UI-turn denominator as well as a nudge trigger.
+        expect(isUiTreePath('pages/api/users.ts')).toBe(false);
+        expect(isUiTreePath('apps/web/pages/api/webhook/stripe.ts')).toBe(false);
+        // The sibling page in the same tree is still UI.
+        expect(isUiTreePath('pages/about.vue')).toBe(true);
+    });
+
     it('does not match an unrelated tree', () => {
         expect(isUiTreePath('src/scripts/hooks/design_slop_hook.ts')).toBe(false);
         expect(isUiTreePath('docs/contracts/ui-track-flow.md')).toBe(false);

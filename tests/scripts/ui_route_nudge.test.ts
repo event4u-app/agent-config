@@ -1,15 +1,20 @@
 /**
- * `ui_route_nudge` — the decision logic of the first runtime consumer the UI
- * rules' triggers have ever had.
+ * `ui_route_nudge` — the decision logic of the UI-write reminder.
  *
- * Three properties carry the weight, and each has a way of failing that would
+ * It runs parallel to the two UI rules; it does not read their triggers. The
+ * coupling that does exist is pinned in `ui_rule_triggers.test.ts`.
+ *
+ * Four properties carry the weight, and each has a way of failing that would
  * be invisible in production:
  *
  *   1. it warns on an unconsulted UI write — the case it exists for;
  *   2. it goes quiet once the session HAS consulted — otherwise it nags the
  *      exact agent that did the right thing;
  *   3. it goes quiet after `MAX_NUDGES` regardless — the anti-loop valve,
- *      without which a deliberate-but-undeclared pattern traps the agent.
+ *      without which a deliberate-but-undeclared pattern traps the agent;
+ *   4. the latch means the skill was OPENED, not that its name appeared
+ *      somewhere — one false positive silences both the nudge and the metric
+ *      that shares its event stream.
  *
  * The logic is tested through `decide`, which is pure. The filesystem and the
  * envelope shape are tested separately so a payload-shape change cannot hide
@@ -19,7 +24,9 @@ import { describe, expect, it } from 'vitest';
 
 import {
     MAX_NUDGES,
+    MAX_SESSIONS,
     decide,
+    pruneSessions,
     extractEvent,
     isConsultation,
     isUiWrite,
@@ -31,10 +38,10 @@ import {
 const fresh: SessionState = { consulted: false, nudges: 0 };
 
 function write(file: string): ToolEvent {
-    return { file, isWrite: true, query: '' };
+    return { file, isWrite: true };
 }
-function read(file: string, query = ''): ToolEvent {
-    return { file, isWrite: false, query };
+function read(file: string): ToolEvent {
+    return { file, isWrite: false };
 }
 
 describe('event classification', () => {
@@ -52,17 +59,21 @@ describe('event classification', () => {
         expect(isUiWrite(read('src/components/Card.tsx'))).toBe(false);
     });
 
-    it('counts a read of a design surface as consultation', () => {
+    it('counts opening a design surface as consultation', () => {
         expect(isConsultation(read('src/skills/fe-design/SKILL.md'))).toBe(true);
         expect(isConsultation(read('src/skills/existing-ui-audit/SKILL.md'))).toBe(true);
+        expect(isConsultation(read('dist/agent-src/skills/design-review/SKILL.md'))).toBe(true);
     });
 
-    it('counts a search naming a design surface as consultation', () => {
-        expect(isConsultation(read('', 'design-review checklist'))).toBe(true);
+    it('does not latch on a path that merely contains the skill name', () => {
+        // The rule file is not the skill. Latching here silenced the nudge for
+        // a whole session and counted as a consultation in the metric.
+        expect(isConsultation(read('src/rules/design-review-after-ui-write.md'))).toBe(false);
+        expect(isConsultation(read('tests/scripts/fe_design_triggers.test.ts'))).toBe(false);
     });
 
     it('does not count a write as consultation, even to a design surface', () => {
-        expect(isConsultation({ file: 'src/skills/fe-design/SKILL.md', isWrite: true, query: '' })).toBe(
+        expect(isConsultation({ file: 'src/skills/fe-design/SKILL.md', isWrite: true })).toBe(
             false,
         );
     });
@@ -115,7 +126,7 @@ describe('extractEvent', () => {
             payload: { tool_input: { file_path: 'src/components/Card.tsx', content: '<div/>' } },
         });
 
-        expect(event).toEqual({ file: 'src/components/Card.tsx', isWrite: true, query: '' });
+        expect(event).toEqual({ file: 'src/components/Card.tsx', isWrite: true });
     });
 
     it('reads the flat legacy shape too', () => {
@@ -126,10 +137,13 @@ describe('extractEvent', () => {
         expect(event?.isWrite).toBe(true);
     });
 
-    it('collects search text so a grep counts as consultation', () => {
+    it('does not turn a search into a consultation', () => {
+        // A grep whose pattern happens to name a skill is not the skill being
+        // read; `command` is not collected at all, so `git log -- src/skills/
+        // fe-design` cannot latch either.
         const event = extractEvent({ tool_input: { pattern: 'fe-design' } })!;
 
-        expect(isConsultation(event)).toBe(true);
+        expect(isConsultation(event)).toBe(false);
     });
 
     it('returns null when there is no tool input to read', () => {
@@ -144,5 +158,27 @@ describe('nudgeReason', () => {
         expect(reason).toContain('src/components/Card.tsx');
         expect(reason).toContain('existing-ui-audit');
         expect(reason).toContain('ui-trivial');
+    });
+});
+
+describe('state hygiene', () => {
+    it('keeps the file bounded by dropping the oldest sessions', () => {
+        const all: Record<string, SessionState> = {};
+        for (let i = 0; i < MAX_SESSIONS + 10; i += 1) {
+            all[`session-${i}`] = { consulted: false, nudges: 1 };
+        }
+
+        const pruned = pruneSessions(all);
+
+        expect(Object.keys(pruned)).toHaveLength(MAX_SESSIONS);
+        // Oldest dropped, newest kept.
+        expect(pruned['session-0']).toBeUndefined();
+        expect(pruned[`session-${MAX_SESSIONS + 9}`]).toBeDefined();
+    });
+
+    it('leaves a small file untouched', () => {
+        const all = { a: { consulted: true, nudges: 0 } };
+
+        expect(pruneSessions(all)).toEqual(all);
     });
 });

@@ -37,9 +37,13 @@ export function hookSectionEnabled(root: string, section: string): boolean {
         return false;
     }
 
-    const sectionPattern = new RegExp(`^\\s+${section.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\s*:\\s*$`);
+    const escaped = section.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const sectionPattern = new RegExp(`^(\\s+)${escaped}\\s*:\\s*$`);
     let inHooks = false;
-    let inSection = false;
+    /** Indent width of the matched section header; null while outside it. */
+    let sectionIndent: number | null = null;
+
+    const indentOf = (line: string): number => line.length - line.replace(/^\s+/, '').length;
 
     for (const raw of text.split(/\r\n|\r|\n/)) {
         const line = raw.replace(/\s+$/, '');
@@ -48,20 +52,27 @@ export function hookSectionEnabled(root: string, section: string): boolean {
         // A non-indented line closes both scopes and may open `hooks:`.
         if (!(line.startsWith(' ') || line.startsWith('\t'))) {
             inHooks = /^hooks\s*:\s*$/.test(line);
-            inSection = false;
+            sectionIndent = null;
             continue;
         }
 
         if (inHooks) {
-            if (sectionPattern.test(line)) {
-                inSection = true;
+            const opened = sectionPattern.exec(line);
+            if (opened) {
+                // Remember the ACTUAL indent rather than assuming two spaces.
+                // The previous version closed the section on any line indented
+                // <= 3, so on a 4-space file a sibling section never closed and
+                // a default-OFF hook could read another section's enabled: true.
+                sectionIndent = opened[1]!.length;
                 continue;
             }
-            // A sibling key at the section's own depth closes the section.
-            if (inSection && /^\s{0,3}\S/.test(line)) inSection = false;
+            // A key at or above the section header's own depth closes it.
+            if (sectionIndent !== null && indentOf(line) <= sectionIndent) {
+                sectionIndent = null;
+            }
         }
 
-        if (inSection && /^\s+enabled\s*:\s*true\b/.test(line)) return true;
+        if (sectionIndent !== null && /^\s+enabled\s*:\s*true\b/.test(line)) return true;
     }
 
     return false;
