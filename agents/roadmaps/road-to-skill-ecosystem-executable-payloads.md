@@ -174,8 +174,9 @@ Closes D2. Steps 1, 2 and 4 are ungated; step 3 is gated on S0.3.
   a command and no `runtime_requires`, and stays silent on all three near-misses
   (`internal` + command · `shell` without command · `shell` + command +
   `runtime_requires`). A fifth test pins the collision: a pack-edge `requires:`
-  **list** must not satisfy the rule — 5 tests in
-  `tests/scripts/skill_linter.test.ts`, 145 pass.
+  **list** must not satisfy the rule, and a sixth that a flow-style
+  `runtime_requires: {…}` does — 6 tests in
+  `tests/scripts/skill_linter.test.ts`, 146 pass.
 - [~] Deprecate free-text `compatibility` toward a structured `harness_compat`
   enum. **Human-gated:** `compatibility` is a public Agent-Skills spec field and
   2 skills use it; a deprecation is a consumer-visible schema decision, not an
