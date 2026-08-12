@@ -651,6 +651,38 @@ _1 blocker resolved._
     break the pre-registration.
   - **Resolved when:** a predictions JSON exists for the pre-rewrite and the post-rewrite tree state, produced by the same protocol.
 
+### [road-to-skill-ecosystem-executable-payloads.md](roadmaps/road-to-skill-ecosystem-executable-payloads.md)
+
+**Road to executable skill payloads — a skill that only describes work cannot be measured doing it** — 4 / 5 done (80%)
+
+| # | Phase | State | Open | Done | Deferred | Cancelled | % |
+|---|---|---|---:|---:|---:|---:|---:|
+| 0 | Falsification spikes | ⏭️ skipped | 0 | 0 | 3 | 0 | 0% |
+| 1 | Structured runtime requirements in the skill schema | ✅ done | 0 | 3 | 2 | 0 | 100% |
+| 2 | Executable payload pilots | ⏭️ skipped | 0 | 0 | 5 | 0 | 0% |
+| 3 | Injection hardening at the ingestion point | ✅ done | 0 | 1 | 1 | 1 | 100% |
+| 4 | Output-quality benchmark axis | ⏭️ skipped | 0 | 0 | 3 | 0 | 0% |
+| 5 | Low-cost sweeps | ⬜ not started | 1 | 0 | 1 | 0 | 0% |
+
+<a id="blockers-road-to-skill-ecosystem-executable-payloads"></a>
+**Blockers**
+
+- **phase-0-spikes-need-a-live-host-session** (owner: maintainer) — blocks all of Phase 0, Phase 1 step 3, Phase 2 in full, Phase 4 in full.
+  - **What to do:**
+    S0.1 needs 20 scripted invocations against a live host and
+    S0.2 needs a token measurement — both are spend-bearing and a live
+    trigger-style evaluation hard-aborts under automation, so they cannot be run
+    from an autonomous session. Run them, publish the results (including a null),
+    then unblock the dependent phases in their own change.
+  - **Resolved when:** (unspecified)
+- **compatibility-deprecation-is-a-consumer-visible-decision** (owner: maintainer) — blocks Phase 1, the `harness_compat` step.
+  - **What to do:**
+    decide whether this schema keeps mirroring the public
+    Agent-Skills `compatibility` field, adds `harness_compat` beside it
+    permanently, or migrates and diverges. `requires` lands additively either way,
+    so nothing else waits on this.
+  - **Resolved when:** (unspecified)
+
 ### [road-to-skill-ecosystem-gate-integrity.md](roadmaps/road-to-skill-ecosystem-gate-integrity.md)
 
 **Road to gate integrity — a gate that scanned nothing must never exit green** — 40 / 43 done (93%)

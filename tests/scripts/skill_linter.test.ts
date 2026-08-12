@@ -1075,6 +1075,59 @@ ${frontmatterExtra}---
         expect(hasCode(result, 'invalid_execution_type')).toBe(true);
     });
 
+    // road-to-skill-ecosystem-executable-payloads Phase 1: an external handler that
+    // declares a command must declare what the host needs, or doctor/preflight have
+    // nothing to probe. The three negative cases below are the reason the rule is
+    // scoped the way it is rather than to `handler != none`.
+    it('external handler with a command but no runtime_requires fails', () => {
+        const result = lint_file(
+            makeSkill('execution:\n  type: assisted\n  handler: shell\n  command:\n    - ./scripts-run\n    - src/scripts/noop\n'),
+        );
+        expect(hasCode(result, 'missing_runtime_requires')).toBe(true);
+    });
+
+    it('external handler with a command and runtime_requires passes', () => {
+        const result = lint_file(
+            makeSkill(
+                'execution:\n  type: assisted\n  handler: shell\n  command:\n    - ./scripts-run\n    - src/scripts/noop\nruntime_requires:\n  bins:\n    - bash\n  network: []\n',
+            ),
+        );
+        expect(hasCode(result, 'missing_runtime_requires')).toBe(false);
+    });
+
+    it('internal handler with a command needs no runtime_requires', () => {
+        const result = lint_file(
+            makeSkill('execution:\n  type: assisted\n  handler: internal\n  command:\n    - noop\n'),
+        );
+        expect(hasCode(result, 'missing_runtime_requires')).toBe(false);
+    });
+
+    it('external handler without a command needs no runtime_requires', () => {
+        const result = lint_file(makeSkill('execution:\n  type: assisted\n  handler: shell\n'));
+        expect(hasCode(result, 'missing_runtime_requires')).toBe(false);
+    });
+
+    // R2 review finding 3: the block-only regex hard-errored on flow style, which
+    // is valid YAML and valid against the schema — telling the author to add a
+    // declaration they already had, with no suppression path.
+    it('a flow-style runtime_requires satisfies the rule', () => {
+        const result = lint_file(
+            makeSkill('execution:\n  type: assisted\n  handler: shell\n  command:\n    - ./scripts-run\n    - src/scripts/noop\nruntime_requires: {bins: ["bash"], network: []}\n'),
+        );
+        expect(hasCode(result, 'missing_runtime_requires')).toBe(false);
+    });
+
+    // The rename is the fix for a real CI failure: `requires:` is ADR-015
+    // pack-dependency edges (a list of pack ids), so an object there made every
+    // carrying skill unassignable in the discovery manifest. A pack-edge `requires`
+    // must NOT satisfy the runtime rule.
+    it('a pack-edge requires list does not satisfy the runtime rule', () => {
+        const result = lint_file(
+            makeSkill('execution:\n  type: assisted\n  handler: shell\n  command:\n    - ./scripts-run\n    - src/scripts/noop\nrequires:\n  - engineering-base\n'),
+        );
+        expect(hasCode(result, 'missing_runtime_requires')).toBe(true);
+    });
+
     it('invalid handler fails', () => {
         const result = lint_file(makeSkill('execution:\n  type: manual\n  handler: bash\n'));
         expect(hasCode(result, 'invalid_execution_handler')).toBe(true);
