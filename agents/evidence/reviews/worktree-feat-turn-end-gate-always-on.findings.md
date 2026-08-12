@@ -1,12 +1,12 @@
 # Findings: worktree-feat-turn-end-gate-always-on
-<!-- completion-review: v1 | reviewed: 2026-08-12 | scope: 7ef8f34dc265fa36a287bdeebc17cb6ed4224e65abaad59817ac99d564e7f3e8 | diff: 0992c92219364bc646e78c29fa3072b5e46361ef | reviewer: r2-fresh-subagent-worktree-feat-turn-end-gate-always-on | prompt_hash: f2355f7096631a3f30e38285ac25499af794a2349528a6d363e3e09bda1e9285 -->
+<!-- completion-review: v1 | reviewed: 2026-08-12 | scope: e51af3a79bf408dea54c648232bf9d87a310ba4d8a17cb0d3a84073f6b86947d | diff: ec52c421ba69dc85ee78095323f8495b93f3dd26 | reviewer: r2-fresh-subagent-worktree-feat-turn-end-gate-always-on | prompt_hash: f2355f7096631a3f30e38285ac25499af794a2349528a6d363e3e09bda1e9285 -->
 
 <!-- context-manifest: v1
 inputs:
-  diff_sha: 0992c92219364bc646e78c29fa3072b5e46361ef
-  scope_hash: 7ef8f34dc265fa36a287bdeebc17cb6ed4224e65abaad59817ac99d564e7f3e8
+  diff_sha: ec52c421ba69dc85ee78095323f8495b93f3dd26
+  scope_hash: e51af3a79bf408dea54c648232bf9d87a310ba4d8a17cb0d3a84073f6b86947d
   roadmap: agents/roadmaps/road-to-skill-ecosystem-executable-payloads.md
-  roadmap_hash: 7281c665233882d54968615e50598f663633348d63de1bb96f3ce15646ee82e7
+  roadmap_hash: 9ab1e4b9fbab79e087a181031d2ef18944097107631e31f8923e7781d7e079ae
   ac_hash: 96710f43b484b1eacdce63e8cd7dfb4b98e3d7f90caf8ce9c91779ba20f4ccab
 excluded: [session-history, agents/runtime, implementation-context]
 tools: [git-diff-branch-scoped, file-read-branch-paths]
