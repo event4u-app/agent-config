@@ -108,6 +108,22 @@ feature" ask, before checks 8a–8c. It is a three-question advisor, NOT a
 product-management framework — surface it in one short block, then proceed on
 the user's answer (never block; `improve-before-implement`'s golden rule holds).
 
+**Read the addressee before the questions.** The ladder below measures **market
+demand**, and market demand is a meaningful quantity only where a market is
+intended. Who the project is built for is `project.audience` — resolve it with
+`agent-config settings:get project.audience`, which reports the value and the
+file it came from, rather than opening one file. An absent value resolves to
+`public`: this package has no defaults layer that supplies one at read time, so
+absent means *nobody said*, and the conservative reading of that is the shipped
+default.
+
+| `project.audience` | What 8-pre does |
+|---|---|
+| `self` | **Inert.** One line — "demand gate skipped (audience: self)" — then straight to 8a. No deferral, no demand question. |
+| `internal` | Question 2 only ("what breaks without it?"). Questions 1 and 3 are already answered — the requester is the team. |
+| `client` | The requester is the client, not a segment. Question 2 survives; 1 and 3 are answered by the engagement. |
+| `public` | **Today's behaviour, unchanged** — all three questions and the full ladder. |
+
 Three questions:
 
 1. **Who requested this?** (a real user / segment, or an internal hunch?)
@@ -118,16 +134,42 @@ Map the answers to a compressed feature-demand hierarchy and recommend:
 
 | Level | Signal | Recommendation |
 |---|---|---|
+| L-self | The maintainer needs it for their own work — no user population is intended | **Build** |
 | L0 | Founder/agent anxiety — "it feels missing" | **Defer** — validate demand first |
 | L1 | One anecdotal request, no pattern | **Defer** — watch for repetition |
 | L2 | Repeated requests, no measured impact | **Validate** — instrument before building |
 | L3 | Blocks activation/retention for a real segment | **Build** |
 | L4 | Users are churning / deals lost without it | **Build now** |
 
-Build only at **L3–L4**; L0–L2 get a defer/validate recommendation with the
-one missing evidence named. This is advisory — the user decides; a "just build
-it" answer proceeds immediately to 8a. No network, no case-memory API (the
-source's remote lookup is dropped — a lethal-trifecta egress concern).
+Build at **L-self**, **L3**, or **L4**; L0–L2 get a defer/validate
+recommendation with the one missing evidence named.
+
+`L-self` is not a weaker L3. L3 and L4 are defined exclusively over third-party
+users — "a real segment", "users are churning" — so a project with no intended
+user population cannot reach either, not because it is bad but because the scale
+has no value for it. Its ceiling on the L0–L4 ladder is L0, whose recommendation
+is *defer*, which would defer a single-user tool forever. `L-self` is the level
+that ladder is missing, not a discount on the ones it has.
+
+**The artefact consequence.** At `L-self`, or at `audience: self` / `internal`,
+never write a roadmap gate, exit criterion, or opening condition that names an
+external user population, a market, or an external measurement. A gate whose
+condition depends on a quantity the project cannot produce is not a gate — it is
+a permanent no in the shape of an answer. This is where the advisory reading
+actually breaks: in conversation "never block" holds, but when a roadmap needs a
+falsifiable opening condition the agent reaches for the only vocabulary it has
+for *should this exist*, and an advisory ladder becomes a number, then a gate.
+
+This is advisory — the user decides; a "just build it" answer proceeds
+immediately to 8a. No network, no case-memory API (the source's remote lookup is
+dropped — a lethal-trifecta egress concern).
+
+**Enforcement, honestly.** Nothing reads `project.audience` to change what this
+section does. § 8-pre is prose and the branch table above is model-carried —
+the same honesty boundary `security-sensitive-stop` and `untrusted-input-defense`
+state for their own obligations. The one deterministic backstop sits downstream,
+where the damage actually lands: `lint_roadmap_complexity` warns when a roadmap
+gate rests on an external population.
 
 ### 8a. Is the request clear?
 

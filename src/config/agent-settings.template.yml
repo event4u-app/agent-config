@@ -355,6 +355,24 @@ project:
   # Branch prefix for improvement PRs
   improvement_pr_branch_prefix: "improve/agent-"
 
+  # Who this project is built for. Read by the demand gate
+  # (docs/guidelines/agent-infra/agent-interaction-and-decision-quality.md
+  # § 8-pre), whose L0-L4 ladder measures MARKET demand and is therefore
+  # meaningless where no market is intended.
+  #   self     -> a tool its maintainer builds for themselves. The demand gate
+  #               is inert; work is classified L-self (build), never deferred
+  #               for lack of a user population that is not wanted.
+  #   internal -> a team / company internal tool. Only "what breaks without
+  #               it?" survives; the requester is known.
+  #   client   -> built for a named client. The client is the requester, not a
+  #               market segment.
+  #   public   -> a product with an intended market. Full three-question gate
+  #               and the full ladder.
+  # Default `public` = the behaviour every install had before this key existed.
+  # Absent resolves to `public` for the same reason: this package has no
+  # defaults layer, so absent means nobody said.
+  audience: public
+
 # --- GitHub integration ---
 github:
   # API method for replying to PR review comments
