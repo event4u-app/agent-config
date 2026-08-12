@@ -447,10 +447,12 @@ concerns:
   # mismatch (19 measured) — because building the unsafe part twice is how a
   # second detector becomes a second outage.
   #
-  # DEFAULT OFF (`hooks.turn_end_gate.enabled`), per the council
-  # recorded in round 6: the mechanism exists and soaks before it binds. Both
-  # detectors are default ON *within* the master switch, which is round 5
-  # § 3.6's ask read so that both hold at once.
+  # ALWAYS ARMED — no settings surface (2026-08-12). It shipped default-OFF on
+  # the round-6 council's "soak before it binds", and the maintainer removed the
+  # switch on the ground that a concern which is off cannot soak: the flag made
+  # the soak it protected unreachable. Whether the gate fires is decided by each
+  # detector's own trigger conditions, which is the same shape `delegation-nudge`
+  # uses — no signal, no output. `hooks.turn_end_gate.*` is in REMOVED_KEYS.
   #
   # fail_closed: FALSE, deliberately and unlike every other blocking concern
   # here: a crash in a turn-end gate must let the turn END. Failing closed on
