@@ -216,6 +216,7 @@ function lint_roadmap(
         _check_human_gate_steps(text, warnings);
         _check_human_gate_phase_headings(text, warnings);
         _check_human_gate_exit_criteria(text, warnings);
+        _check_external_population_gates(text, warnings);
     }
     return problems;
 }
@@ -379,6 +380,65 @@ function _check_human_gate_exit_criteria(text: string, warnings: string[]): void
                 `human-approval exit criterion: "${rawLine.trim().slice(0, 80)}" — ` +
                     `criteria must be agent-decidable; ${RULE22_HINT}`,
             );
+        }
+    }
+}
+
+// A gate whose opening condition depends on a quantity the project cannot
+// produce is not a gate — it is a permanent no in the shape of an answer. The
+// measured case: a single-user private tool carried a roadmap gate on "external
+// installations with write activity", which held 33 steps closed and would have
+// held them closed forever. Matched only inside gate-shaped context (exit
+// criteria, acceptance criteria, a blocker's `Resolved when:`), because these
+// nouns are ordinary vocabulary in a roadmap for an actual product.
+const EXTERNAL_POPULATION_PATS: Array<[RegExp, string]> = [
+    [/\bexternal (users?|installs?|installations?|adopters?|consumers?)\b/i, 'an external user population'],
+    // Bare `adopters` is deliberately absent: measured against the real roadmap
+    // corpus it matched four internal counts ("4 adopters" of a gate helper),
+    // and an external adopter count is already covered by the pattern above.
+    [/\b(installations?|sign-?ups?|subscribers?|active users?)\b/i, 'an external adoption count'],
+    [/\bmarket (demand|validation|traction|fit|signal)\b/i, 'a market signal'],
+    [/\bchurn(ing|ed)?\b/i, 'a metric only a real user population produces'],
+    [/\buser (population|base|segment)\b/i, 'a user population'],
+    [/\b(?:at least |≥\s?)\d+ (people|users|customers|installs|adopters)\b/i, 'a headcount threshold of external people'],
+];
+
+const RESOLVED_WHEN_PAT = /^\s*(?:[-*]\s+)?\*{0,2}resolved when\*{0,2}\s*:/i;
+
+const AUDIENCE_HINT =
+    'is this project meant to have that population at all? A gate whose ' +
+    'condition depends on a quantity the project cannot produce is a permanent ' +
+    'no, not a gate — see project.audience and § 8-pre of ' +
+    'docs/guidelines/agent-infra/agent-interaction-and-decision-quality.md';
+
+function _check_external_population_gates(text: string, warnings: string[]): void {
+    let inHeadingBlock = false;
+    let inInlineBlock = false;
+    for (const rawLine of text.split('\n')) {
+        const heading = /^#{1,6}\s+(.*)$/.exec(rawLine);
+        if (heading) {
+            inHeadingBlock = /\b(acceptance|exit criteria)\b/i.test(heading[1]!);
+            inInlineBlock = false;
+            continue;
+        }
+        if (rawLine.trim() === '') {
+            inInlineBlock = false;
+            continue;
+        }
+        if (EXIT_CRITERIA_OPENER_PAT.test(rawLine)) {
+            inInlineBlock = true;
+        }
+        const isResolvedWhen = RESOLVED_WHEN_PAT.test(rawLine);
+        if (!inHeadingBlock && !inInlineBlock && !isResolvedWhen) {
+            continue;
+        }
+        for (const [re, label] of EXTERNAL_POPULATION_PATS) {
+            if (re.test(rawLine)) {
+                warnings.push(
+                    `gate rests on ${label}: "${rawLine.trim().slice(0, 80)}" — ` + AUDIENCE_HINT,
+                );
+                break;
+            }
         }
     }
 }

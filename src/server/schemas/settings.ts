@@ -36,6 +36,7 @@ const modelAutoSwitch = z.enum(['auto', 'suggest', 'off']);
 const leanProjectionMode = z.enum(['eager-all', 'thin']);
 const projectionMode = z.enum(['legacy-all', 'scoped']);
 const memoryCadence = z.enum(['auto', 'always', 'never']);
+const projectAudience = z.enum(['self', 'internal', 'client', 'public']);
 
 export const settingsSchema = z.object({
     agent_config_version: z.string().default('').describe(
@@ -141,6 +142,9 @@ export const settingsSchema = z.object({
         ),
         improvement_pr_branch_prefix: z.string().default('improve/agent-').describe(
             'Branch-name prefix for improvement PRs the agent opens against project.upstream_repo (e.g. "improve/agent-add-react-skill"). Pick a prefix your repo conventions allow.',
+        ),
+        audience: projectAudience.default('public').describe(
+            'Who this project is built for — read by the demand gate (§ 8-pre of docs/guidelines/agent-infra/agent-interaction-and-decision-quality.md), whose L0-L4 ladder measures MARKET demand and is meaningless where no market is intended. self = a tool its maintainer builds for themselves; the gate is inert and work is classified L-self (build) instead of being deferred for lack of a user population nobody wants. internal = a team tool; only "what breaks without it?" survives. client = built for a named client, who is the requester rather than a market segment. public (default) = a product with an intended market; full three-question gate, behaviour unchanged from before this key existed.',
         ),
     }),
     github: z.object({
