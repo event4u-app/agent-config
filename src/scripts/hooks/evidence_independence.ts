@@ -135,9 +135,27 @@ export function isEvaluationPrompt(prompt: string): boolean {
  * ON, so the second-dispatch block requires a self-reference. The pre-loaded-
  * verdict block does NOT: steering an evaluator is wrong whatever it is
  * pointed at.
+ *
+ * That fix was still too wide, and the cross-project session audit (2026-08-12)
+ * measured the cost: `road-to-release-truth/fc1ff181` turn 3 fanned out 16
+ * IMPLEMENTATION workers, and 15 were classified self-scoped on one phrase —
+ * `this branch`. In context it read "two conversions already landed on this
+ * branch in exactly the style you should match", i.e. it named WHERE the work
+ * happens. A worktree dispatch prompt carries that phrase by construction
+ * ("Work in <worktree> (branch …)"), so on a hook-bound host the guard ate 15
+ * of 16 workers — the exact behaviour `evaluator-independence` § "When it does
+ * NOT fire" promises is out of scope ("…or IMPLEMENT is not evaluation and is
+ * not gated").
+ *
+ * So the self-reference must name a SUBJECT a verdict can be shopped for — a
+ * diff, a change, a patch — never the LOCATION the work happens in. `this
+ * branch` is dropped for that reason; `my branch` stays, because the possessive
+ * makes it a claim about the agent's own work rather than an address. `this pr`
+ * stays for the same reason `this diff` does: a PR is a thing reviewers render
+ * verdicts on, whereas a branch is where you stand while working.
  */
 const SELF_SCOPE_RE =
-  /\b(my (work|change|diff|implementation|code|fix|patch|branch|pr)|this (diff|change|branch|pr|delta|implementation|patch)|the delta|the change i|what i (wrote|built|changed|implemented)|i just (wrote|built|changed|implemented))\b/i;
+  /\b(my (work|change|diff|implementation|code|fix|patch|branch|pr)|this (diff|change|pr|delta|implementation|patch)|the delta|the change i|what i (wrote|built|changed|implemented)|i just (wrote|built|changed|implemented))\b/i;
 
 export function isSelfScoped(prompt: string): boolean {
   return SELF_SCOPE_RE.test(prompt);

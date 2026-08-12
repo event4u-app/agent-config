@@ -131,6 +131,40 @@ describe("decide", () => {
     }
   });
 
+  // Cross-project session audit, 2026-08-12. `road-to-release-truth/fc1ff181`
+  // turn 3 dispatched a 16-way fan-out of IMPLEMENTATION workers ("Harden gates
+  // batch A", "Phase 2 wave 1 batch 0", …). All 16 were classified as
+  // evaluations — `review` / `audit` / `check` are unavoidable in a prompt about
+  // gate scripts — and 15 as self-scoped, every one of them on the single phrase
+  // `this branch`. In context that phrase reads "two conversions already landed
+  // on this branch in exactly the style you should match": it names WHERE the
+  // work happens, not a subject a verdict is being shopped for. On a hook-bound
+  // host that fan-out loses 15 of its 16 workers, which is precisely what
+  // `evaluator-independence` § "When it does NOT fire" promises it will not do:
+  // "Dispatching many subagents to read, map, search, or IMPLEMENT is not
+  // evaluation and is not gated."
+  const FAN_OUT_PROMPT =
+    "Work in `/…/worktrees/road-to-release-truth` (branch `feat/road-to-gate-hardening-adoption`). " +
+    "Each is a gate that walks a corpus and exits 0/1. If its root moved or emptied it scans zero " +
+    "units and still exits 0 — a believed green over nothing. Add the assertion that makes that loud. " +
+    "Read first: two conversions already landed on this branch in exactly the style you should match. " +
+    "Then review your own diff against the checklist before you report back.";
+
+  it("does not treat a worktree implementation fan-out as verdict shopping", () => {
+    // The location phrase alone must not make a prompt self-scoped.
+    expect(isSelfScoped(FAN_OUT_PROMPT)).toBe(false);
+    // …so no dispatch in the fan-out is ever blocked, at any prior count.
+    for (const prior of [0, 1, 14]) {
+      expect(decide("Agent", FAN_OUT_PROMPT, prior).exit).toBe(0);
+    }
+  });
+
+  it("keeps `this branch` inert on its own but blocks a named self-subject", () => {
+    expect(isSelfScoped("Convert the five gates on this branch to assert scope.")).toBe(false);
+    // The subject, not the location, is what makes shopping possible.
+    expect(isSelfScoped("Review my diff on this branch once more.")).toBe(true);
+  });
+
   it("never touches a non-evaluation dispatch, at any count", () => {
     for (const prior of [0, 1, 6]) {
       const d = decide("Agent", "Summarise these transcript digests.", prior);
