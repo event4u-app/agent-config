@@ -109,8 +109,10 @@ tools** is on the accept side of the lock's own sharpened reading
 that permission is written down nowhere the agent reads.
 
 **W6 — A co-installed generative skill pushes the other way.**
-`nextlevelbuilder/ui-ux-pro-max-skill` @ `97eb2a20` (fetched + cloned
-2026-08-12): `SKILL.md` Step 2 — *"Generate Design System (REQUIRED for new
+**Source C** — the upstream of this tree's own vendored design corpus (its real
+identity and pin live in `src/skills/design-intelligence/ATTRIBUTION.md`, the one
+place license attribution belongs), @ `97eb2a20`, fetched + cloned
+2026-08-12: its `SKILL.md` Step 2 — *"Generate Design System (REQUIRED for new
 pages/projects). Always start with `--design-system`"*. Installed next to
 agent-config, it instructs regeneration with no provided-artifact carve-out
 of its own. No precedence clause in this tree says a provided artifact
@@ -151,7 +153,7 @@ discipline, and a pre-delivery checklist — harvest verdicts in Phase 4/5.)
   visual verification of what the tree cannot capture; reported 10–100×
   token reduction and determinism gains. The industry default already matches
   the operator's rule. → W5, Phase 3 rationale.
-- **ui-ux-pro-max-skill** @ `97eb2a20` — Master+overrides persistence with an
+- **Source C** @ `97eb2a20` — Master+overrides persistence with an
   explicit retrieval order; skip-if-exists; pre-delivery checklist. Adopt the
   persistence/retrieval pattern for the extraction artifact; **reject** its
   generative-first default for the port case. → W6, Phase 4/5.
@@ -299,7 +301,7 @@ concern logic.
       `design-system.json` → extraction artifact → live page — so the source
       survives sessions instead of being re-screenshotted next time. The
       **persistence discipline itself** (skip-if-exists unless explicitly forced;
-      never silently discard prior decisions, borrowed from ui-ux-pro-max) is
+      never silently discard prior decisions, borrowed from Source C) is
       owned by [`road-to-design-system-onramp`](road-to-design-system-onramp.md)
       Phase 2, where it already lives — cited here, stated once there (program
       X4). This section owns the **producer sentence**: the documented easy path
@@ -326,7 +328,7 @@ existing handover prose and drop the persistence step.
       tooling, first- or third-party***. A co-installed skill instructing
       "always generate a design system first" does not apply to a port; its
       output may inform decisions the artifact leaves open, nothing more.
-- [ ] **Step 2:** Harvest verdicts on `ui-ux-pro-max-skill` recorded where
+- [ ] **Step 2:** Harvest verdicts on **Source C** recorded where
       harvest verdicts live: **adopt** (persist + retrieval order,
       skip-if-exists, checklist-as-predelivery-gate — consumed in Phase 4),
       **reject** (generative-first default for the port case, `--design-system`

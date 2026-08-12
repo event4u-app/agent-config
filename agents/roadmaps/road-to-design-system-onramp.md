@@ -5,7 +5,7 @@ complexity: structural
 # Road to the design-system onramp — consume the crawler ecosystem, one optional command
 
 > **The ask (2026-08-12):** (1) survey crawlers/extractors agents can use today
-> and let agent-config benefit from them; (2) plan a ui-ux-pro-max-style design
+> and let agent-config benefit from them; (2) plan a corpus-grounded design
 > system feature — **optional, and as easy to use as possible.** Pinned commit
 > for all repo claims: `ed76d224` (v10.1.0). External pins named per source.
 > *(proposal)* marks this roadmap's own suggestions (ADR-211 C/D).
@@ -22,7 +22,7 @@ complexity: structural
 > `road-to-source-first-frontend` Phase 4** (X4).
 
 > **The headline finding that shapes everything below:** most of ask (2) is
-> already in the tree and unreachable. The ui-ux-pro-max corpus is vendored
+> already in the tree and unreachable. The vendored design corpus is present
 > (`design-intelligence/ATTRIBUTION.md:9-12`, upstream pin `b7e3af80`,
 > 2026-06-07), the grounding engine is ported (`corpus-grounding/scripts/`),
 > and even the MASTER.md + page-overrides **persistence is already
@@ -66,7 +66,8 @@ presets) which the port's `data/` lacks (directory diff), and
 `design_system.py:51,61,310-317` implements the three 1-10 **design dials**
 (`--variance/--motion/--density`) — `grep variance|density
 corpus-grounding/scripts/*.ts` → 0 hits. Licenses unchanged (MIT corpus +
-engine; Apache-2.0 claudekit material), so a refresh is an ATTRIBUTION date
+engine; Apache-2.0 material from the second upstream), so a refresh is an
+ATTRIBUTION date
 bump plus data + engine deltas.
 
 **C4 — No settings surface may grow.** `road-to-zero-settings.md` (maintainer
