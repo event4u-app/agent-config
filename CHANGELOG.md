@@ -343,11 +343,18 @@ Entry-shape contract: [`docs/contracts/CHANGELOG-conventions.md`](docs/contracts
 
 ### Release highlights
 
-<!-- Curated head: fill before merge, keep it under 10 lines, and leave `_none_` where it is genuinely the answer. The generated log below is unchanged. -->
-- **Behaviour changes:** _auto-derived, rewrite before merge:_ rule/schema diffs, breaking commits or removed public surface in 030ca0d, c1bc2aa, 4eda4ff.
+- **Behaviour changes:** council transport is **resolved per machine rather than
+  configured** — the breaking change this major carries (4eda4ff); every member
+  now resolves as `auto`, so a configured CLI call budget applies wherever a
+  council config exists. The turn-end gate is armed unconditionally and loses its
+  settings surface (42cd613). Conformance round 7 records its downgrades rather
+  than restating them (030ca0d, c1bc2aa).
 - **Default changes + migration:** _none_
 - **Security and correctness:** _none_
-- **Honest nulls:** _auto-derived, rewrite before merge:_ commits carrying an honest-null marker in 7c6b404.
+- **Honest nulls:** a blocker whose resolution condition no passage of time could
+  satisfy — a default-OFF gate cannot soak, so the switch removal discharges it
+  and the original wording stays verbatim beside the resolution, because the
+  unsatisfiable condition is itself the finding (7c6b404).
 - **Known limitations:** _none_
 
 ### BREAKING CHANGES

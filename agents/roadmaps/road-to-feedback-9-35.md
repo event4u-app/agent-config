@@ -72,7 +72,7 @@ explicitly forbids for the next one to two releases.
 
 | # | Review claim (convergence) | Verdict | Evidence |
 |---|---|---|---|
-| 1 | Release-head placeholder must not survive merge (4/5, P0) | **still-true — now materialized** | `CHANGELOG.md:347`, inside the shipped `## [9.36.0]` section |
+| 1 | Release-head placeholder must not survive merge (4/5, P0) | **still-true — materialized twice in one day** | shipped in the released `## [9.36.0]` head (PR #1297) and again in `## [10.0.0]` (PR #1302, two fields), the second landing on `main` mid-run while this roadmap was being executed |
 | 2 | Confirmation token binds too weakly; needs payload/session/scope (4/5, P0) | **partly overtaken** | `staged_confirmation.ts` `StagedAction` already binds the *exact object* — the "delete foo ≠ delete bar" case is closed; actor/session/repo/branch are genuinely absent |
 | 3 | Turn-end counts verification presence, not scope match (4/5, P0) | **still-true** | `turn_end_gate_hook.ts`: `DetectorId = 'promissory' \| 'language' \| 'verification'`; `detectUnverifiedEdit` matches commands, not surfaces |
 | 4 | solution-minimalism bench 3× not run (1/5, but the strongest-argued) | **still-true, planned, human-blocked** | `road-to-solution-minimalism.md` 25/36; all 10 open steps `blocked-by: benchmark-spend-authorization` |

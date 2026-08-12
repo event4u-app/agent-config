@@ -410,12 +410,15 @@ _1 blocker resolved._
     `docs/contracts/CHANGELOG-conventions.md` to document retro-curation as the real
     cadence. Mutually exclusive, and hard-block was already CUT to a maintainer
     decision at `archive/road-to-feedback-9-29.md:77`.
-    **Evidence added 2026-08-12 — the placeholder stopped being hypothetical.** It
-    shipped into the released `## [9.36.0]` head (`CHANGELOG.md:347`, PR #1297),
-    and four of five independent external reviews of the 9.30→9.35 span predicted
-    exactly that, three of them making a hard block a P0. The 9.29 roadmap curated
-    such a head by hand once and it recurred, which is evidence that manual
-    curation does not hold across releases. The standing counter-argument is
+    **Evidence added 2026-08-12 — the placeholder stopped being hypothetical, twice
+    in one day.** It shipped into the released `## [9.36.0]` head (PR #1297), and
+    then again into `## [10.0.0]` (PR #1302) — that one in **two** fields,
+    Behaviour changes and Honest nulls, plus the fill-before-merge comment. Four of
+    five independent external reviews of the 9.30→9.35 span predicted exactly this,
+    three of them making a hard block a P0. The 9.29 roadmap curated such a head by
+    hand once; it has now recurred twice within hours of that curation being
+    discussed. Manual curation not holding across releases is no longer an
+    inference — it is two same-day observations. The standing counter-argument is
     unchanged and still in the gate's own source: a derived line "carries real
     evidence … only unpolished-if-unedited", and "a warning that reds the build is
     the guaranteed-red failure mode this whole change exists to remove"
