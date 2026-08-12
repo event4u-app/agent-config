@@ -30,6 +30,7 @@ import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
 
+import { projectStoreSlug } from '../_lib/cc_transcript.js';
 import { derive_session_tag, list_sessions, read_entries } from '../chat_history.js';
 import { eolSessionKey, readEolCounters, type StoredEolCounters } from '../_lib/session_eol.js';
 
@@ -102,9 +103,9 @@ export interface ListOptions {
     workspaceRoot?: string;
 }
 
-/** Mirrors the Claude Code project-dir naming: `/` and `.` → `-`. */
+/** Mirrors the Claude Code project-dir naming — see `_lib/cc_transcript.projectStoreSlug`. */
 export function encode_project_path(cwd: string): string {
-    return cwd.replace(/[/.]/g, '-');
+    return projectStoreSlug(cwd);
 }
 
 function _snippet(text: string, max: number = SUMMARY_SNIPPET_CHARS): string {

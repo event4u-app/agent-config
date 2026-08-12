@@ -52,6 +52,8 @@ import * as os from 'node:os';
 import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
+import { projectStoreSlug } from './_lib/cc_transcript.js';
+
 const _HERE = fileURLToPath(import.meta.url);
 const REPO_ROOT = path.resolve(path.dirname(_HERE), '..', '..');
 
@@ -114,11 +116,11 @@ export interface UsageReport {
 
 /** Default store for the current working directory, mangled the way the host does. */
 export function defaultStore(cwd: string): string {
-  // Dots are flattened too, not only separators: a worktree at
-  // `<repo>/.claude/worktrees/x` lands in `…-agent-config--claude-worktrees-x`.
-  // Replacing only `/` returns a directory that does not exist, and the caller
+  // Every non-alphanumeric is flattened, not only separators: a worktree at
+  // `<repo>/.claude/worktrees/x+y` lands in `…-agent-config--claude-worktrees-x-y`.
+  // A narrower class returns a directory that does not exist, and the caller
   // then reads a clean zero out of a store it never found.
-  return path.join(os.homedir(), '.claude', 'projects', cwd.replace(/[/.]/g, '-'));
+  return path.join(os.homedir(), '.claude', 'projects', projectStoreSlug(cwd));
 }
 
 export function measureUsage(store: string, limit: number): UsageReport {

@@ -40,6 +40,7 @@ import {
     aggregateByBucket,
     billableInputTokens,
     DEFAULT_PROJECTS_ROOT,
+    projectStoreSlug,
     scanTranscripts,
     type BucketAggregate,
     type TranscriptBucket,
@@ -432,9 +433,9 @@ export interface WorktreeFragmentationResult {
     ratio?: number;
 }
 
-/** Mirrors `cost/track.mjs`'s `encodeProjectPath` — the CC project-dir naming convention. */
+/** The CC project-dir naming convention — see `_lib/cc_transcript.projectStoreSlug`. */
 export function encodeProjectPath(cwd: string): string {
-    return cwd.replace(/[/.]/g, '-');
+    return projectStoreSlug(cwd);
 }
 
 /**
