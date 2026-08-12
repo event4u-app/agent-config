@@ -1,0 +1,872 @@
+diff --git a/agents/evidence/analysis/rootless-write-inventory.md b/agents/evidence/analysis/rootless-write-inventory.md
+new file mode 100644
+index 0000000000000000000000000000000000000000..ffdcc48a157ed9730a1d36387449eedb728c3efd
+--- /dev/null
++++ b/agents/evidence/analysis/rootless-write-inventory.md
+@@ -0,0 +1,87 @@
++# Rootless-write inventory — commands that resolve a project root and then act on it
++
++Companion finding to `agents/roadmaps/road-to-rootless-write-refusal.md` Phase 3.
++Read-only: no command below is changed by this document.
++
++## The construct
++
++`resolve_project_root(arg, opts)` returns `[root, origin]`. When the walk
++reaches the filesystem root without finding an anchor
++(`.agent-settings.yml`, an `agents/` dir carrying a marker, or `.git`), it
++returns the starting directory itself with `origin === ORIGIN_CWD_FALLBACK`
++(`src/scripts/_lib/agent_settings.ts:770-775`). A caller that discards the
++origin cannot distinguish "this is the repo" from "I found nothing, here is
++your cwd back".
++
++## The population
++
++Six commands resolve a root and then write or delete under it. Measured by
++`grep -rln "resolve_project_root" src/scripts/_cli/` (15 hits) intersected
++with `grep -ln "writeFileSync\|rmSync\|unlinkSync\|atomic_write_json"` (5 hits
++plus `session:recycle` itself).
++
++| Command | Root source | Explicit override | What it writes / deletes | Origin read? |
++|---|---|---|---|---|
++| `session:recycle` | cwd | `--project` (added by Phase 1) | `agents/runtime/state/recycle-envelope.json` | **yes — refuses on fallback** |
++| `doctor` | `--project` → cwd | `--project` | deletes the wizard-state file (`cmd_doctor.ts:3488`) | **reports it, never gates on it** |
++| `uninstall` | `--project` → cwd | `--project` | `rmSync`/`unlinkSync` over installed tool trees, labels, lockfile (`cmd_uninstall.ts:252-821`) | no |
++| `prune` | `--project` → cwd | `--project` | `unlinkSync` over manifest-declared paths (`cmd_prune.ts:388`) | no |
++| `migrate` | `options.cwd` → cwd | none | writes migrated files, unlinks legacy links/sources (`cmd_migrate.ts:272,475,501,581`) | no |
++| `update` | `options.cwd` → cwd | none | writes the version-state file and rewrites wrapper/config lines (`cmd_update.ts:231,304-324`) | no |
++
++## What a wrong root costs, per command
++
++- **`uninstall`, `prune`** — highest. Both delete, and both read a manifest
++  first: from an unanchored cwd there is no manifest, so the realistic
++  outcome is a clean "nothing installed here" exit, not a wrong deletion.
++  The damage case is narrower and worse — an unanchored cwd that happens to
++  *contain* a stale manifest (a copied tree, an extracted archive) is treated
++  as the project. Not reproduced; stated as the shape to test before changing
++  either command.
++- **`migrate`, `update`** — write into a directory nobody reads, then report
++  success. Same class as the `session:recycle` defect, lower cost: the
++  operator notices on the next run because the migration did not take.
++  Neither carries an explicit override flag, so from an unanchored cwd there
++  is currently no way to name the target at all except the
++  `AGENT_CONFIG_PROJECT_ROOT` environment variable.
++- **`doctor`** — diagnostic. A wrong root produces a wrong report, which is
++  cheap to notice and free to re-run.
++
++## Two findings the table does not carry
++
++1. **`doctor` re-derives the origin from string literals.** It builds its own
++   origin value with `origin = 'cwd-fallback'` (`cmd_doctor.ts:3376`) instead
++   of importing `ORIGIN_CWD_FALLBACK`. The two are equal today by coincidence
++   of spelling; renaming the constant would leave `doctor` reporting a value
++   nothing else produces, and no test compares them.
++2. **`doctor` already surfaces what every other caller drops.** It emits
++   `project_root_origin` in its JSON payload (`cmd_doctor.ts:3159-3161`). So
++   the information is not merely available — it is already presented to
++   operators in one place, which makes its absence in the five writers a
++   consistency gap rather than a missing capability.
++
++## Shared-helper verdict: not yet
++
++A `require_anchored_root()` helper would generalize Phase 1's refusal to all
++six call sites in a few lines, and the symmetry argument is real. It is still
++the wrong next step, for three reasons:
++
++- **The correct behaviour differs per command.** `session:recycle` must refuse,
++  because the action it recommends next (`/clear`) destroys the session. For
++  `doctor` a refusal is worse than a wrong report — a diagnostic that declines
++  to run in the exact situation the operator is trying to diagnose is a bad
++  trade. `migrate` and `update` probably want a warning plus an override flag
++  they do not currently have. One helper with three behaviours is a flag
++  argument, which is the shape that reads as symmetry and behaves as a switch.
++- **Two of the six have no override.** Adding a refusal to `migrate` and
++  `update` without first adding `--project` converts a silent wrong-target
++  write into a hard block with no documented way out — a strictly worse
++  failure for a consumer that has to invoke from outside the tree.
++- **The failure shape is unmeasured for five of the six.** Phase 1's refusal
++  is backed by a reproduction. The rows above are read from the source; none
++  of the five was run from an unanchored cwd. Generalizing a fix across five
++  unmeasured call sites is exactly the move this suite refuses elsewhere.
++
++**Revisit-if:** a second command is reported failing this way, or `migrate` /
++`update` gain a `--project` flag for an unrelated reason. Either makes the
++helper cheap and the behaviour question already answered.
+diff --git a/agents/roadmaps-progress.md b/agents/roadmaps-progress.md
+index 08baf33d446e9b28de7a87415aacfb9429087143..b5aca05597b2e84a58d70eabbffcd2c45d58fc81 100644
+--- a/agents/roadmaps-progress.md
++++ b/agents/roadmaps-progress.md
+@@ -2,11 +2,11 @@
+ 
+ > Auto-generated — do not edit. Regenerate with `task roadmap-progress` or by running the `update_roadmap_progress` script for your install; rewritten on every roadmap create / execute / completion change (timestamp lives in git history).
+ >
+-> 30 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **42** open blockers, **10** need you → `agent-config gates`
++> 31 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **44** open blockers, **10** need you → `agent-config gates`
+ 
+ ## Overall
+ 
+-**269 / 391 steps done · 69%**
++**273 / 396 steps done · 69%**
+ 
+ ```text
+ ████████████████████████████░░░░░░░░░░░░   69%
+@@ -46,14 +46,15 @@ These roadmaps are **complete** (`count_open == 0`, `count_deferred == 0`) but s
+ | 20 | [road-to-rule-coherence-followup.md](roadmaps/road-to-rule-coherence-followup.md) | 5 | 9 | 8 | 1 | 0 | 0 | [2](#blockers-road-to-rule-coherence-followup) | █░░░░░░░░░ 11% |
+ | 21 | [road-to-scale-history-bench-run.md](roadmaps/road-to-scale-history-bench-run.md) | 1 | 2 | 2 | 0 | 0 | 0 | [1](#blockers-road-to-scale-history-bench-run) | ░░░░░░░░░░ 0% |
+ | 22 | [road-to-skill-description-measurement.md](roadmaps/road-to-skill-description-measurement.md) | 1 | 4 | 4 | 0 | 0 | 0 | [1](#blockers-road-to-skill-description-measurement) | ░░░░░░░░░░ 0% |
+-| 23 | [road-to-skill-ecosystem-gate-integrity.md](roadmaps/road-to-skill-ecosystem-gate-integrity.md) | 5 | 43 | 3 | 40 | 0 | 0 | [1](#blockers-road-to-skill-ecosystem-gate-integrity) | █████████░ 93% |
+-| 24 | [road-to-solution-minimalism.md](roadmaps/road-to-solution-minimalism.md) | 4 | 36 | 10 | 25 | 0 | 1 | [1](#blockers-road-to-solution-minimalism) | ███████░░░ 71% |
+-| 25 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 6 | 3 | 0 | 0 | [1](#blockers-road-to-subagent-value-realization-followup) | ███░░░░░░░ 33% |
+-| 26 | [road-to-surface-consolidation.md](roadmaps/road-to-surface-consolidation.md) | 3 | 14 | 1 | 12 | 1 | 0 | [2](#blockers-road-to-surface-consolidation) | █████████░ 92% |
+-| 27 | [road-to-tier-removal.md](roadmaps/road-to-tier-removal.md) | 4 | 8 | 2 | 6 | 0 | 0 | [1](#blockers-road-to-tier-removal) | ████████░░ 75% |
+-| 28 | [road-to-ui-track-integrity-followup.md](roadmaps/road-to-ui-track-integrity-followup.md) | 1 | 10 | 10 | 0 | 0 | 0 | [2](#blockers-road-to-ui-track-integrity-followup) | ░░░░░░░░░░ 0% |
+-| 29 | [road-to-worktree-hygiene.md](roadmaps/road-to-worktree-hygiene.md) | 1 | 9 | 2 | 7 | 0 | 0 | [1](#blockers-road-to-worktree-hygiene) | ████████░░ 78% |
+-| 30 | [road-to-zero-settings.md](roadmaps/road-to-zero-settings.md) | 4 | 9 | 9 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
++| 23 | [road-to-skill-ecosystem-executable-payloads.md](roadmaps/road-to-skill-ecosystem-executable-payloads.md) | 6 | 21 | 1 | 4 | 15 | 1 | [2](#blockers-road-to-skill-ecosystem-executable-payloads) | ████████░░ 80% |
++| 24 | [road-to-skill-ecosystem-gate-integrity.md](roadmaps/road-to-skill-ecosystem-gate-integrity.md) | 5 | 43 | 3 | 40 | 0 | 0 | [1](#blockers-road-to-skill-ecosystem-gate-integrity) | █████████░ 93% |
++| 25 | [road-to-solution-minimalism.md](roadmaps/road-to-solution-minimalism.md) | 4 | 36 | 10 | 25 | 0 | 1 | [1](#blockers-road-to-solution-minimalism) | ███████░░░ 71% |
++| 26 | [road-to-subagent-value-realization-followup.md](roadmaps/road-to-subagent-value-realization-followup.md) | 2 | 9 | 6 | 3 | 0 | 0 | [1](#blockers-road-to-subagent-value-realization-followup) | ███░░░░░░░ 33% |
++| 27 | [road-to-surface-consolidation.md](roadmaps/road-to-surface-consolidation.md) | 3 | 14 | 1 | 12 | 1 | 0 | [2](#blockers-road-to-surface-consolidation) | █████████░ 92% |
++| 28 | [road-to-tier-removal.md](roadmaps/road-to-tier-removal.md) | 4 | 8 | 2 | 6 | 0 | 0 | [1](#blockers-road-to-tier-removal) | ████████░░ 75% |
++| 29 | [road-to-ui-track-integrity-followup.md](roadmaps/road-to-ui-track-integrity-followup.md) | 1 | 10 | 10 | 0 | 0 | 0 | [2](#blockers-road-to-ui-track-integrity-followup) | ░░░░░░░░░░ 0% |
++| 30 | [road-to-worktree-hygiene.md](roadmaps/road-to-worktree-hygiene.md) | 1 | 9 | 2 | 7 | 0 | 0 | [1](#blockers-road-to-worktree-hygiene) | ████████░░ 78% |
++| 31 | [road-to-zero-settings.md](roadmaps/road-to-zero-settings.md) | 4 | 9 | 9 | 0 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+ 
+ ---
+ 
+diff --git a/agents/roadmaps/archive/road-to-rootless-write-refusal.md b/agents/roadmaps/archive/road-to-rootless-write-refusal.md
+new file mode 100644
+index 0000000000000000000000000000000000000000..2e80452ee467cad2b3487eff68ea02ce39af0c92
+--- /dev/null
++++ b/agents/roadmaps/archive/road-to-rootless-write-refusal.md
+@@ -0,0 +1,207 @@
++---
++complexity: lightweight
++execution:
++  mode: autonomous
++---
++
++# Road to rootless-write refusal
++
++> A command that resolved its project root from an anchorless working directory
++> writes to the wrong place and exits 0; after this roadmap `session:recycle`
++> refuses instead, the Stop advisory stops recommending a blind `/clear`, and
++> the five sibling commands that write or delete under the same resolver are
++> inventoried.
++
++## Goal
++
++`agent-config session:recycle` invoked from a directory with no project anchor
++exits non-zero and writes nothing, instead of exiting 0 after writing an
++envelope the successor session can never find.
++
++## Prerequisites
++
++- [x] The `cli-delegate` entry-guard defect (PR #1291) is merged and released —
++      it is the *other* cause of the same symptom and is already fixed
++      (`git tag --contains 1ea3f670` → `9.36.0`, `10.0.0`).
++
++## Context
++
++Source: `agents/tmp.old/session-recycle-defekt.txt` (observed 2026-08-10 and
++2026-08-12 in a consumer repo; four occurrences across two sessions).
++
++The report describes `session:recycle` exiting 0 while writing no envelope, and
++lists three suspected causes. Verification against the tree found that the
++observed symptom had a **different** cause than any of the three — the
++`cli-delegate` entry guard shipped four commands as zero-byte no-ops
++(`src/scripts/_cli/cmd_session_recycle.ts:255-306`), fixed in PR #1291 and
++released. The report's own suspicions 1 and 2 are not reachable in the code.
++
++Suspicion 3 — "does it derive the repo from the CWD?" — is **correct, still
++open, and a distinct defect**. `runSessionRecycle` calls
++`resolve_project_root(null, { cwd })` (`cmd_session_recycle.ts:117`), which
++falls through to `ORIGIN_CWD_FALLBACK` — the CWD itself — when no anchor is
++found (`_lib/agent_settings.ts:770-775`). Reproduced against the current tree
++from an anchorless directory:
++
++    exit code: 0
++    recycle envelope written — agents/runtime/state/recycle-envelope.json (1047 bytes)
++      1. End this session now: run /clear …
++      2. The successor session receives the envelope automatically at session_start
++
++The file landed at `<anchorless-cwd>/agents/runtime/state/recycle-envelope.json`.
++Three things compound:
++
++1. The **origin is discarded** — `resolve_project_root` returns
++   `[root, origin]` and the caller destructures only `[projectRoot]`, so the
++   one fact that distinguishes a real repo from a fallback is thrown away at
++   the call site.
++2. The success line prints the **relative** path (`RECYCLE_ENVELOPE_REL`), so
++   the operator cannot see that it went somewhere else.
++3. The resume instruction that follows is **false** in this case, and it is the
++   instruction that costs the whole session.
++
++Grep across the same resolver: **zero** call sites in `src/` import
++`ORIGIN_CWD_FALLBACK` (`grep -rn ORIGIN_CWD_FALLBACK src/` → 6 hits, all
++definitions or comments in the two `agent_settings.ts` copies). One command —
++`doctor` — does surface the fallback, but re-derives it from a duplicated
++string literal (`cmd_doctor.ts:3376`) and only *reports* it; nothing gates on
++it anywhere. Six commands resolve the root and then write or delete under it:
++`session:recycle`, `migrate`, `update`, `uninstall`, `doctor`, `prune`. This
++roadmap fixes the one where a wrong location is silently destructive to a
++session and inventories the rest rather than rewriting all six blind.
++
++The second half of the report's minimum fix — "the Stop hook that recommends
++the call should make the same counter-check before advising `/clear`" — is
++unimplemented: `session_eol_hook.ts` never references the envelope path.
++
++## Phase 1 — `session:recycle` refuses a rootless write
++
++- [x] Thread the resolver origin into `runSessionRecycle`: destructure
++      `[projectRoot, origin]` at `cmd_session_recycle.ts:117` and refuse with
++      exit 1 when `origin === ORIGIN_CWD_FALLBACK`, naming the directory that
++      was resolved and the two ways to override it (`--project <path>`,
++      `AGENT_CONFIG_PROJECT_ROOT`). The refusal runs before the write and
++      before the resume instruction — a wrong-location envelope is worse than
++      none, because the instruction that follows it is what triggers `/clear`.
++      <!-- verify: npx vitest run tests/scripts/session_recycle.test.ts -->
++- [x] Add `--project <path>` to `parseArgv` and pass it as the first argument
++      of `resolve_project_root` (the parameter already exists and yields
++      `ORIGIN_EXPLICIT`). This is the documented escape for the reported
++      consumer shape — a repo whose `devEngines` pin forces the call from
++      outside the tree.
++      <!-- verify: npx vitest run tests/scripts/session_recycle.test.ts -->
++- [x] Print the **absolute** target path in the success line instead of
++      `RECYCLE_ENVELOPE_REL`. A relative path is unfalsifiable by the reader at
++      exactly the moment the location is the thing in doubt.
++      <!-- verify: npx vitest run tests/scripts/recycle_roundtrip.test.ts -->
++- [x] Cover the refusal in `tests/scripts/session_recycle.test.ts`: one case
++      asserting exit 1 + no file written from an anchorless cwd, one asserting
++      `--project` restores the write, and one asserting an anchored cwd is
++      unchanged (the regression guard for the normal path).
++      <!-- verify: npx vitest run tests/scripts/session_recycle.test.ts -->
++- [x] Update the `--help` text and the `src/cli/registry.ts:71` synopsis for the
++      new flag.
++      <!-- verify: grep -q -- "--project names the repo" src/cli/registry.ts -->
++- [x] Re-anchor the fixtures the refusal invalidated. `session_recycle.test.ts`
++      and `recycle_roundtrip.test.ts` both built their scratch root with a bare
++      `mkdtemp`, i.e. the exact anchorless shape the command now rejects; both
++      now create an `agents/overrides/` marker. `envelope_drift_roundtrip.test.ts`
++      needed no change — it already `git init`s, which anchors.
++      <!-- verify: npx vitest run tests/scripts/recycle_roundtrip.test.ts tests/scripts/envelope_drift_roundtrip.test.ts -->
++
++**Exit criteria:** `npx vitest run tests/scripts/session_recycle.test.ts` exits
++0 with the three new cases present; a manual run from an anchorless directory
++exits 1 and creates no `agents/` tree there.
++
++**Rollback:** revert the `cmd_session_recycle.ts` and `registry.ts` hunks; the
++new tests fail and are reverted with them. No state format changes, so no
++consumer migration.
++
++## Phase 2 — The Stop advisory stops recommending a blind `/clear`
++
++- [x] Sharpen `buildAdvisoryLine` (`hooks/session_eol_hook.ts:139-146`): the
++      line must tell the reader what proof to look for before clearing — the
++      absolute path the command prints — rather than presenting `/clear` as the
++      unconditional next step. Wording change only, no new state.
++      <!-- verify: npx vitest run tests/scripts/session_eol_hook.test.ts -->
++- [x] Add the counter-check the report asks for, exactly once: when
++      `advisory_fired_at` is already set and `agents/runtime/state/recycle-envelope.json`
++      does **not** exist under the workspace root, emit one further advisory
++      line saying so. Track it with a second timestamp field beside
++      `advisory_fired_at` so it can never repeat — the once-per-session shape
++      the advisory already uses, not a nag loop.
++      <!-- verify: npx vitest run tests/scripts/session_eol_hook.test.ts -->
++- [x] Keep every failure path silent-and-exit-0: an unreadable state file, an
++      absent workspace root, or a stat error must not block the Stop slot
++      (the hook's existing fail-open contract). `envelopeExists` returns `true`
++      on a stat error on purpose — a failed check must never manufacture a
++      warning that the envelope is gone.
++      <!-- verify: npx vitest run tests/scripts/session_eol_hook.test.ts -->
++- [x] Extend `tests/scripts/session_eol_hook.test.ts` with: advisory fires,
++      envelope absent at the next Stop → second line once; envelope present →
++      silence; second Stop after the second line → silence; below threshold →
++      never (a missing envelope means nothing where no recycle was advised).
++      <!-- verify: npx vitest run tests/scripts/session_eol_hook.test.ts -->
++
++**Exit criteria:** `npx vitest run tests/scripts/session_eol_hook.test.ts`
++exits 0; the new cases assert both the fire-once and the stay-silent branches.
++
++**Rollback:** revert the hook hunk. The extra state field is additive and
++ignored by the existing reader, so a rollback needs no state migration.
++
++## Phase 3 — Inventory the same defect across the sibling commands
++
++- [x] Record the count and the file list for the exact wrong construct —
++      `resolve_project_root(...)` destructured without its origin, in a command
++      that subsequently writes or deletes. Confirmed set at authoring time:
++      `cmd_session_recycle.ts` (Phase 1), `cmd_migrate.ts`, `cmd_update.ts`,
++      `cmd_uninstall.ts`, `cmd_doctor.ts`, `cmd_prune.ts`.
++      <!-- verify: grep -rn "resolve_project_root" src/scripts/_cli/ -->
++- [x] For each of the five, write one line in
++      `agents/evidence/analysis/rootless-write-inventory.md` stating what it
++      writes or deletes under the resolved root, and whether a wrong root is
++      destructive (`uninstall`, `prune`), merely useless (`doctor`), or
++      recoverable. No code changes in this phase — the decision per command is
++      a separate change with its own blast radius.
++      <!-- verify: test -f agents/evidence/analysis/rootless-write-inventory.md -->
++- [x] State in the same file whether a shared helper is warranted, with the
++      argument either way. A single `require_anchored_root()` would generalize
++      the fix; five bespoke refusals would not. The finding is the deliverable,
++      not the refactor. Verdict recorded: **not yet** — the correct behaviour
++      differs per command, two of the six carry no override flag to refuse
++      *into*, and five of the six are unmeasured.
++      <!-- verify: grep -q "Shared-helper verdict" agents/evidence/analysis/rootless-write-inventory.md -->
++
++**Exit criteria:** `agents/evidence/analysis/rootless-write-inventory.md`
++exists, names all five commands, and carries the shared-helper verdict.
++
++**Rollback:** delete the evidence file. No code touched.
++
++## Risk Register
++
++| # | Risk | Type | Why it is plausible | Mitigation | Anchored at |
++|---|---|---|---|---|---|
++| 1 | The refusal breaks a legitimate anchorless call | implementation | Some consumer may intentionally run from outside the tree — the reported repo does exactly that because of a `devEngines` pin. A hard refusal with no escape converts a silent failure into a hard block. | `--project <path>` ships in the same phase as the refusal, and the refusal message names it plus `AGENT_CONFIG_PROJECT_ROOT`. | Phase 1, step 2 |
++| 2 | The second advisory line becomes a nag | product | An advisory that fires whenever an envelope is absent would fire on every Stop of every session that ignored the first line. | Gated on `advisory_fired_at` being set AND a separate once-only timestamp; the tests assert the third Stop is silent. | Phase 2, steps 2 and 4 |
++| 3 | The counter-check reads the wrong path in a consumer | implementation | The hook resolves its workspace root from the envelope payload, not from `resolve_project_root` — a mismatch would make the check report a missing envelope that exists. | The check reuses `RECYCLE_ENVELOPE_REL` joined to the hook's own `workspaceRoot`, the same root it already writes `context-fill.json` to; a wrong answer there would already be visible in that file. | Phase 2, step 2 |
++| 4 | Phase 3 grows into a six-command refactor | implementation | Two of the five (`uninstall`, `prune`) delete files, which invites fixing them in the same pass. | Phase 3 is explicitly evidence-only; its exit criterion is a written file, and its steps forbid code changes. | Phase 3, steps 2 and 3 |
++| 5 | The absolute path leaks a local path into a shared transcript | product | The success line will print a full filesystem path where it printed a relative one. | The path is already visible to the operator running the command and is the same class of string `doctor` and `sync` print today; no new egress surface. | Phase 1, step 3 |
++
++## Acceptance criteria
++
++- [x] `session:recycle` from an anchorless directory exits 1, writes no file,
++      and names both overrides in its message. Verified against the same
++      directory that reproduced the original defect: before, exit 0 + a file in
++      `/tmp`; after, exit 1 + no file.
++- [x] `session:recycle --project <repo>` from that same directory writes the
++      envelope into `<repo>/agents/runtime/state/` and prints the absolute path.
++      Covered by the unit case and by a live CLI run, which is what proves the
++      argv wiring in `main()` — the unit test exercises `parseArgv` and
++      `runSessionRecycle`, never the hand-off between them.
++- [x] `session:recycle` from inside a repo behaves exactly as before, proven by
++      the pre-existing cases in `tests/scripts/recycle_roundtrip.test.ts`
++      passing unchanged.
++- [x] The Stop advisory names the proof to look for, and the missing-envelope
++      counter-check fires at most once per session.
++- [x] `agents/evidence/analysis/rootless-write-inventory.md` names all five
++      sibling commands and carries the shared-helper verdict.
+diff --git a/src/cli/registry.ts b/src/cli/registry.ts
+index 558a30571ae79bca1eea5dea0dd0851d30f89c81..9a548d11f0f6246700f094a8516c8b7e3b92e38f 100644
+--- a/src/cli/registry.ts
++++ b/src/cli/registry.ts
+@@ -68,7 +68,7 @@ export const REGISTRY: readonly CommandEntry[] = [
+     { name: 'use', disposition: 'delegate', synopsis: 'Switch the active experience/profile (writes profile.id).' },
+     { name: 'sessions:list', disposition: 'delegate', synopsis: 'List live agent sessions plus unmerged branches held by other worktrees; --json, --branches.' },
+     { name: 'sessions:claim', disposition: 'delegate', synopsis: 'Claim a roadmap for this session so other sessions skip it; --release clears it.' },
+-    { name: 'session:recycle', disposition: 'delegate', synopsis: 'Validate + write the main-session recycle envelope (--verify validates only); the successor resumes from it after /clear.' },
++    { name: 'session:recycle', disposition: 'delegate', synopsis: 'Validate + write the main-session recycle envelope (--verify validates only, --project names the repo); the successor resumes from it after /clear.' },
+     { name: 'roadmap:progress', disposition: 'delegate', synopsis: 'Regenerate agents/roadmaps-progress.md from open roadmaps.' },
+     { name: 'roadmap:progress-check', disposition: 'delegate', synopsis: 'Fail if agents/roadmaps-progress.md is stale (for CI).' },
+     { name: 'roadmap:archive', disposition: 'delegate', synopsis: 'Archive completed roadmaps (PR-gate sweep).' },
+diff --git a/src/scripts/_cli/cmd_session_recycle.ts b/src/scripts/_cli/cmd_session_recycle.ts
+index d6b3ae10ed4c62c1d66a220f8aa6d841a824a300..380a812561bc908ea226cd9e6e6ad82c9cf90c4f 100644
+--- a/src/scripts/_cli/cmd_session_recycle.ts
++++ b/src/scripts/_cli/cmd_session_recycle.ts
+@@ -20,6 +20,7 @@
+  *   agent-config session:recycle --file <envelope.json>   # read from file
+  *   agent-config session:recycle < envelope.json          # read from stdin
+  *   agent-config session:recycle --template               # print a skeleton
++ *   agent-config session:recycle --project <path>         # name the repo explicitly
+  *
+  * Exit codes: 0 written (or template printed) · 1 invalid / refused · 2 usage.
+  */
+@@ -29,7 +30,7 @@ import * as path from 'node:path';
+ import process from 'node:process';
+ import { fileURLToPath, pathToFileURL } from 'node:url';
+ 
+-import { resolve_project_root } from '../_lib/agent_settings.js';
++import { ORIGIN_CWD_FALLBACK, resolve_project_root } from '../_lib/agent_settings.js';
+ import {
+     RECYCLE_ENVELOPE_MAX_BYTES,
+     RECYCLE_ENVELOPE_REL,
+@@ -77,6 +78,7 @@ interface ParsedArgv {
+     ok: boolean;
+     message?: string;
+     file?: string;
++    project?: string;
+     template?: boolean;
+     verify?: boolean;
+ }
+@@ -94,6 +96,11 @@ export function parseArgv(argv: readonly string[]): ParsedArgv {
+             if (!value) return { ok: false, message: '--file requires a path' };
+             parsed.file = value;
+             i += 1;
++        } else if (a === '--project') {
++            const value = argv[i + 1];
++            if (!value) return { ok: false, message: '--project requires a path' };
++            parsed.project = value;
++            i += 1;
+         } else if (a === '-h' || a === '--help') {
+             return { ok: false, message: 'usage' };
+         } else {
+@@ -110,11 +117,38 @@ export function parseArgv(argv: readonly string[]): ParsedArgv {
+  */
+ export function runSessionRecycle(
+     input: string,
+-    opts: { cwd: string; now?: Date; verify?: boolean },
++    opts: { cwd: string; now?: Date; verify?: boolean; project?: string },
+ ): RecycleResult {
+     const out: string[] = [];
+     const err: string[] = [];
+-    const [projectRoot] = resolve_project_root(null, { cwd: opts.cwd });
++    const [projectRoot, origin] = resolve_project_root(opts.project ?? null, { cwd: opts.cwd });
++
++    // An unanchored cwd is the ONE case where a successful write is worse than
++    // a refusal. `resolve_project_root` falls back to the cwd itself when it
++    // reaches the filesystem root without finding an anchor, so a call from
++    // outside any repo — the shape a consumer with a toolchain pin is forced
++    // into — writes a valid envelope into a directory the successor session
++    // never looks at, and then prints a resume instruction whose next step is
++    // `/clear`. The exit code says it worked; the session is gone anyway.
++    //
++    // Refused BEFORE the parse: everything downstream reads this root, so a
++    // wrong one also produces a wrong `workspace` field and grounding read
++    // from the wrong git tree. `--verify` is refused too — validating against
++    // a root the write would not use answers a question nobody asked.
++    if (origin === ORIGIN_CWD_FALLBACK) {
++        return {
++            code: 1,
++            out,
++            err: [
++                `recycle envelope refused — no project anchor at or above ${projectRoot}`,
++                'Writing here would put the envelope where the successor session never reads it,',
++                'and the resume instruction would then advise /clear on a session that cannot resume.',
++                'Name the repository explicitly:',
++                `  agent-config session:recycle --project <repo> …`,
++                `  AGENT_CONFIG_PROJECT_ROOT=<repo> agent-config session:recycle …`,
++            ],
++        };
++    }
+ 
+     let parsed: unknown;
+     try {
+@@ -179,23 +213,28 @@ export function runSessionRecycle(
+         };
+     }
+ 
++    // Absolute, not `RECYCLE_ENVELOPE_REL`: the relative form is identical for
++    // every root, so it cannot tell the reader WHICH tree was written — the
++    // one thing in doubt at the moment this line is read.
++    const target = path.join(projectRoot, RECYCLE_ENVELOPE_REL);
++
+     // `--verify` stops HERE: every rejection above has already run, and the
+     // only thing skipped is the write. Validating through a different path
+     // than the one that writes would make the check a second implementation
+     // to keep in sync — the failure this suite refuses elsewhere.
+     if (opts.verify === true) {
+         out.push(`recycle envelope VALID — ${bytes} bytes, not written (--verify).`);
++        out.push(`Target would be: ${target}`);
+         return { code: 0, out, err };
+     }
+ 
+-    const target = path.join(projectRoot, RECYCLE_ENVELOPE_REL);
+     try {
+         atomic_write_json(target, envelope);
+     } catch (exc) {
+         return { code: 1, out, err: [`could not write ${target}: ${String(exc)}`] };
+     }
+ 
+-    out.push(`recycle envelope written — ${RECYCLE_ENVELOPE_REL} (${bytes} bytes)`);
++    out.push(`recycle envelope written — ${target} (${bytes} bytes)`);
+     out.push('');
+     out.push('Resume instruction:');
+     out.push('  1. End this session now: run /clear (or start a fresh session in this workspace).');
+@@ -210,10 +249,13 @@ export function main(argv: string[] = process.argv.slice(2)): number {
+     const parsed = parseArgv(argv);
+     if (!parsed.ok) {
+         const usage = [
+-            'usage: agent-config session:recycle [--file <envelope.json>] [--template] [--verify]',
+-            '  --file <path>   read the envelope JSON from a file (default: stdin)',
+-            '  --template      print a skeleton envelope and exit',
+-            '  --verify        validate only — same rejections, no write',
++            'usage: agent-config session:recycle [--file <envelope.json>] [--project <path>] [--template] [--verify]',
++            '  --file <path>     read the envelope JSON from a file (default: stdin)',
++            '  --project <path>  the repository to write into — required when the working',
++            '                    directory is outside any project (the command refuses rather',
++            '                    than writing an envelope the successor cannot find)',
++            '  --template        print a skeleton envelope and exit',
++            '  --verify          validate only — same rejections, no write',
+         ].join('\n');
+         if (parsed.message === 'usage') {
+             process.stdout.write(`${usage}\n`);
+@@ -246,6 +288,7 @@ export function main(argv: string[] = process.argv.slice(2)): number {
+     const result = runSessionRecycle(input, {
+         cwd: process.cwd(),
+         ...(parsed.verify === true ? { verify: true } : {}),
++        ...(parsed.project !== undefined ? { project: parsed.project } : {}),
+     });
+     for (const line of result.out) process.stdout.write(`${line}\n`);
+     for (const line of result.err) process.stderr.write(`${line}\n`);
+diff --git a/src/scripts/hooks/session_eol_hook.ts b/src/scripts/hooks/session_eol_hook.ts
+index 7f19c5bc55fa574d839d68369370ba419ac92aa0..c5d1874ef3c4fa56bf3c88449e9a0a23bfe05dbe 100644
+--- a/src/scripts/hooks/session_eol_hook.ts
++++ b/src/scripts/hooks/session_eol_hook.ts
+@@ -35,6 +35,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
+ 
+ import recycleThresholdConfig from '../../config/recycle-threshold-budget.json';
+ 
++import { RECYCLE_ENVELOPE_REL } from '../_lib/recycle_envelope_paths.js';
+ import {
+     emptyCounters,
+     eolSessionKey,
+@@ -67,6 +68,13 @@ export interface SessionEolState {
+     counters: EolCounters;
+     /** ISO stamp when the recycle advisory fired for this session (F2), or null. */
+     advisory_fired_at: string | null;
++    /**
++     * ISO stamp when the follow-up "advised, but no envelope exists" line
++     * fired, or null. Separate from `advisory_fired_at` so the counter-check
++     * is once-per-session in its own right: one reminder is a safety net, one
++     * per Stop for the rest of the session is a nag the reader learns to skip.
++     */
++    missing_envelope_warned_at?: string | null;
+     updated_at: string;
+ }
+ 
+@@ -105,6 +113,10 @@ export function readState(file: string): SessionEolState {
+                 counters: parsed.counters,
+                 advisory_fired_at:
+                     typeof parsed.advisory_fired_at === 'string' ? parsed.advisory_fired_at : null,
++                missing_envelope_warned_at:
++                    typeof parsed.missing_envelope_warned_at === 'string'
++                        ? parsed.missing_envelope_warned_at
++                        : null,
+                 updated_at: typeof parsed.updated_at === 'string' ? parsed.updated_at : '',
+             };
+         }
+@@ -115,10 +127,45 @@ export function readState(file: string): SessionEolState {
+         schema_version: 1,
+         counters: emptyCounters(),
+         advisory_fired_at: null,
++        missing_envelope_warned_at: null,
+         updated_at: '',
+     };
+ }
+ 
++/**
++ * Does a pending recycle envelope exist under this workspace?
++ *
++ * Read, never written — and every failure reads as "exists", not "missing".
++ * A stat error must not manufacture a warning that tells the operator their
++ * envelope is gone when the only thing that failed was the check.
++ */
++export function envelopeExists(workspaceRoot: string): boolean {
++    try {
++        return fs.existsSync(path.join(workspaceRoot, RECYCLE_ENVELOPE_REL));
++    } catch {
++        return true;
++    }
++}
++
++/**
++ * The follow-up line: the advisory already fired, and no envelope arrived.
++ *
++ * This is the half of the reported minimum fix that lives outside the command
++ * — the hook that recommends the call making the same counter-check before the
++ * operator acts on it. Whatever stopped the write (a wrong root, a refusal
++ * scrolled past, a forgotten step), the state visible here is identical, and
++ * the next action the advisory recommended is the one that destroys the
++ * session.
++ */
++export function buildMissingEnvelopeLine(workspaceRoot: string): string {
++    return (
++        `recycle advised earlier, but no envelope exists at ` +
++        `${path.join(workspaceRoot, RECYCLE_ENVELOPE_REL)} — /clear now starts the successor ` +
++        `from nothing. Re-run \`agent-config session:recycle\` and check that it prints the ` +
++        `absolute path it wrote before clearing.`
++    );
++}
++
+ /**
+  * Resolve the recycle threshold (Phase 3.1): the per-process override wins
+  * (tests; `0` = advisory lane off), else the committed constant from
+@@ -136,13 +183,22 @@ export function readThresholdTokens(): number | null {
+     return typeof value === 'number' && Number.isFinite(value) && value > 0 ? value : null;
+ }
+ 
+-/** The exactly-one advisory line injected past threshold (Phase 3.2). */
++/**
++ * The exactly-one advisory line injected past threshold (Phase 3.2).
++ *
++ * The `/clear` half is conditional on purpose. An earlier wording read
++ * `run X … then /clear`, which is an instruction to destroy the session with
++ * no check in between — and a reader who followed it while the command was
++ * silently writing nothing lost everything. The proof to wait for is the
++ * absolute path the command prints; naming it costs one clause.
++ */
+ export function buildAdvisoryLine(tokens: number, threshold: number): string {
+     return (
+         `context past recycle threshold (${tokens.toLocaleString('en-US')} of ` +
+         `${threshold.toLocaleString('en-US')} tokens): run \`agent-config session:recycle\` to ` +
+-        `write the recycle envelope, then /clear — the successor session resumes from the ` +
+-        `envelope at session_start (road-to-token-economy-recycling)`
++        `write the recycle envelope. It prints the absolute path it wrote — /clear only after ` +
++        `you have seen that line. The successor session then resumes from the envelope at ` +
++        `session_start (road-to-token-economy-recycling)`
+     );
+ }
+ 
+@@ -213,10 +269,23 @@ export function main(): number {
+         tokens >= threshold &&
+         state.advisory_fired_at === null;
+ 
++    // The counter-check: the advisory fired on an EARLIER Stop (so `state`,
++    // the pre-update snapshot, already carries the stamp) and no envelope has
++    // appeared since. It can never collide with `shouldAdvise` — that branch
++    // requires `advisory_fired_at === null` — so at most one line is emitted
++    // per Stop, and this one at most once per session.
++    const shouldWarnMissing =
++        state.advisory_fired_at !== null &&
++        (state.missing_envelope_warned_at ?? null) === null &&
++        !envelopeExists(workspaceRoot);
++
+     const nextState: SessionEolState = {
+         schema_version: 1,
+         counters,
+         advisory_fired_at: shouldAdvise ? now : state.advisory_fired_at,
++        missing_envelope_warned_at: shouldWarnMissing
++            ? now
++            : (state.missing_envelope_warned_at ?? null),
+         updated_at: now,
+     };
+     try {
+@@ -237,6 +306,16 @@ export function main(): number {
+         );
+         return EXIT_WARN;
+     }
++    if (shouldWarnMissing) {
++        process.stdout.write(
++            `${JSON.stringify({
++                decision: 'warn',
++                reason: 'session-eol: recycle advised, no envelope written',
++                additional_context: buildMissingEnvelopeLine(workspaceRoot),
++            })}\n`,
++        );
++        return EXIT_WARN;
++    }
+     return 0;
+ }
+ 
+diff --git a/tests/scripts/recycle_roundtrip.test.ts b/tests/scripts/recycle_roundtrip.test.ts
+index 404c2dd5459520be5fe2054aa8223e69b5abfad6..db5b0a98c97224f1d0deeafba1e9f63c9c4fc532 100644
+--- a/tests/scripts/recycle_roundtrip.test.ts
++++ b/tests/scripts/recycle_roundtrip.test.ts
+@@ -127,8 +127,18 @@ function sessionB(root: string): string {
+     return deliverable(final);
+ }
+ 
++/**
++ * A scratch root that looks like a project.
++ *
++ * The `agents/overrides/` marker is what makes `resolve_project_root` return
++ * an anchored root rather than the cwd-fallback `session:recycle` refuses. The
++ * round-trip is about two sessions handing off inside ONE repo, so an
++ * anchorless root would be testing a call shape the command rejects by design.
++ */
+ function scratchRoot(): string {
+-    return fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'recycle-roundtrip-')));
++    const root = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'recycle-roundtrip-')));
++    fs.mkdirSync(path.join(root, 'agents', 'overrides'), { recursive: true });
++    return root;
+ }
+ 
+ // ── The gate ────────────────────────────────────────────────────────────
+diff --git a/tests/scripts/session_eol_hook.test.ts b/tests/scripts/session_eol_hook.test.ts
+index 659135d1400120825f260e2ef69c0a3a2f1ec01b..63a10b3f3a206aac11937d76a8c8f4d021befc12 100644
+--- a/tests/scripts/session_eol_hook.test.ts
++++ b/tests/scripts/session_eol_hook.test.ts
+@@ -25,6 +25,7 @@ import {
+     CONTEXT_FILL_REL,
+     THRESHOLD_OVERRIDE_ENV,
+ } from '../../src/scripts/hooks/session_eol_hook.js';
++import { RECYCLE_ENVELOPE_REL } from '../../src/scripts/_lib/recycle_envelope_paths.js';
+ import { clearHookStdinOverride, setHookStdinOverride } from '../../src/scripts/hooks/hook_stdin.js';
+ 
+ let workspace: string;
+@@ -70,6 +71,13 @@ function writeThreshold(tokens: number): void {
+     process.env[THRESHOLD_OVERRIDE_ENV] = String(tokens);
+ }
+ 
++/** Put a pending recycle envelope in the workspace — content is irrelevant, existence is not. */
++function writeEnvelope(): void {
++    const target = path.join(workspace, RECYCLE_ENVELOPE_REL);
++    fs.mkdirSync(path.dirname(target), { recursive: true });
++    fs.writeFileSync(target, '{}');
++}
++
+ function runMain(sessionId = 'session-a'): { rc: number; out: string } {
+     setHookStdinOverride(envelopeJson(sessionId));
+     let out = '';
+@@ -157,6 +165,7 @@ describe('recording (Phase 1.1)', () => {
+ describe('recycle advisory (Phase 3.2)', () => {
+     it('fires once past threshold on a long session — and never twice', () => {
+         writeThreshold(100_000);
++        writeEnvelope(); // present from the start: isolates the advisory from the counter-check
+         fs.writeFileSync(transcript, assistantLine(5_000, 120_000));
+         const first = runMain();
+         expect(first.rc).toBe(2);
+@@ -170,6 +179,17 @@ describe('recycle advisory (Phase 3.2)', () => {
+         expect(second.out).toBe('');
+     });
+ 
++    it('names the absolute path as the proof to wait for, not a bare /clear', () => {
++        writeThreshold(100_000);
++        writeEnvelope();
++        fs.writeFileSync(transcript, assistantLine(5_000, 120_000));
++        const parsed = JSON.parse(runMain().out) as Record<string, string>;
++        const line = parsed['additional_context'] as string;
++        expect(line).toContain('absolute path');
++        // The instruction that destroys the session must carry its condition.
++        expect(line).toContain('/clear only after');
++    });
++
+     it('never fires on a short session', () => {
+         writeThreshold(100_000);
+         fs.writeFileSync(transcript, assistantLine(1_000, 2_000));
+@@ -177,6 +197,50 @@ describe('recycle advisory (Phase 3.2)', () => {
+         expect(r.rc).toBe(0);
+         expect(r.out).toBe('');
+     });
++});
++
++describe('missing-envelope counter-check', () => {
++    it('warns once on the Stop after the advisory when no envelope was written', () => {
++        writeThreshold(100_000);
++        fs.writeFileSync(transcript, assistantLine(5_000, 120_000));
++        expect(runMain().rc).toBe(2); // the advisory itself
++
++        fs.appendFileSync(transcript, assistantLine(6_000, 130_000));
++        const second = runMain();
++        expect(second.rc).toBe(2);
++        const parsed = JSON.parse(second.out) as Record<string, string>;
++        expect(parsed['reason']).toContain('no envelope written');
++        expect(parsed['additional_context']).toContain(path.join(workspace, RECYCLE_ENVELOPE_REL));
++        expect(parsed['additional_context']).toContain('/clear now starts the successor from nothing');
++
++        // …and never again: one reminder is a net, one per Stop is a nag.
++        fs.appendFileSync(transcript, assistantLine(7_000, 140_000));
++        const third = runMain();
++        expect(third.rc).toBe(0);
++        expect(third.out).toBe('');
++    });
++
++    it('stays silent when the envelope arrived between the two stops', () => {
++        writeThreshold(100_000);
++        fs.writeFileSync(transcript, assistantLine(5_000, 120_000));
++        expect(runMain().rc).toBe(2);
++
++        writeEnvelope(); // the operator ran the command
++        fs.appendFileSync(transcript, assistantLine(6_000, 130_000));
++        const second = runMain();
++        expect(second.rc).toBe(0);
++        expect(second.out).toBe('');
++    });
++
++    it('never fires when the advisory never fired', () => {
++        writeThreshold(100_000);
++        // Below threshold: no advisory, so a missing envelope means nothing —
++        // most sessions never recycle at all.
++        fs.writeFileSync(transcript, assistantLine(1_000, 2_000));
++        expect(runMain()).toEqual({ rc: 0, out: '' });
++        fs.appendFileSync(transcript, assistantLine(1_000, 3_000));
++        expect(runMain()).toEqual({ rc: 0, out: '' });
++    });
+ 
+     it('advisory lane is disabled by the 0-override while recording continues (emergency off)', () => {
+         writeThreshold(0);
+diff --git a/tests/scripts/session_recycle.test.ts b/tests/scripts/session_recycle.test.ts
+index 4d7b795ecdaf9008a325084b97d126d8b6617cd8..f51d442d550eb864f93b05efbc6951d20a33d03c 100644
+--- a/tests/scripts/session_recycle.test.ts
++++ b/tests/scripts/session_recycle.test.ts
+@@ -32,8 +32,25 @@ import {
+     validateRecycleEnvelope,
+ } from '../../src/scripts/_lib/subagent_capsule.js';
+ 
++/**
++ * A scratch directory that looks like a project to `resolve_project_root`.
++ *
++ * `agents/overrides/` is one of the anchor markers, and the anchor is what
++ * separates a real repo from the cwd-fallback the command now refuses. A bare
++ * `mkdtemp` has no anchor — which is exactly the shape `rootlessScratch`
++ * below covers, and exactly why every pre-existing case here had to gain one:
++ * they were all asserting the behaviour of a call the command no longer
++ * accepts.
++ */
+ function scratch(): string {
+-    return fs.mkdtempSync(path.join(os.tmpdir(), 'session-recycle-'));
++    const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'session-recycle-'));
++    fs.mkdirSync(path.join(dir, 'agents', 'overrides'), { recursive: true });
++    return dir;
++}
++
++/** A scratch directory with NO project anchor at or above it. */
++function rootlessScratch(): string {
++    return fs.mkdtempSync(path.join(os.tmpdir(), 'session-recycle-rootless-'));
+ }
+ 
+ function minimalEnvelope(): Record<string, unknown> {
+@@ -104,6 +121,48 @@ describe('runSessionRecycle', () => {
+         const result = runSessionRecycle('not json', { cwd: scratch() });
+         expect(result.code).toBe(1);
+     });
++
++    it('refuses an unanchored cwd and writes nothing', () => {
++        const cwd = rootlessScratch();
++        const result = runSessionRecycle(JSON.stringify(minimalEnvelope()), { cwd });
++        expect(result.code).toBe(1);
++        expect(result.err.join('\n')).toContain('no project anchor');
++        expect(result.err.join('\n')).toContain('--project');
++        expect(result.err.join('\n')).toContain('AGENT_CONFIG_PROJECT_ROOT');
++        expect(fs.existsSync(path.join(cwd, RECYCLE_ENVELOPE_REL))).toBe(false);
++        // The resume instruction is the expensive half — it must not appear on
++        // a path that wrote nothing.
++        expect(result.out.join('\n')).not.toContain('/clear');
++    });
++
++    it('--verify is refused on an unanchored cwd too', () => {
++        const result = runSessionRecycle(JSON.stringify(minimalEnvelope()), {
++            cwd: rootlessScratch(),
++            verify: true,
++        });
++        expect(result.code).toBe(1);
++        expect(result.err.join('\n')).toContain('no project anchor');
++    });
++
++    it('--project restores the write from an unanchored cwd', () => {
++        const repo = scratch();
++        const result = runSessionRecycle(JSON.stringify(minimalEnvelope()), {
++            cwd: rootlessScratch(),
++            project: repo,
++        });
++        expect(result.err).toEqual([]);
++        expect(result.code).toBe(0);
++        expect(fs.existsSync(path.join(repo, RECYCLE_ENVELOPE_REL))).toBe(true);
++    });
++
++    it('prints the absolute target path, not the shared relative one', () => {
++        const cwd = scratch();
++        const result = runSessionRecycle(JSON.stringify(minimalEnvelope()), { cwd });
++        expect(result.code).toBe(0);
++        // A relative path reads identically for every root; the one thing in
++        // doubt when this line is read is WHICH tree was written.
++        expect(result.out[0]).toContain(path.join(cwd, RECYCLE_ENVELOPE_REL));
++    });
+ });
+ 
+ describe('templateEnvelope + parseArgv', () => {
+@@ -111,11 +170,13 @@ describe('templateEnvelope + parseArgv', () => {
+         expect(validateRecycleEnvelope({ ...templateEnvelope(), workspace: '/x', written_at: '2026-08-10T00:00:00Z' })).toEqual([]);
+     });
+ 
+-    it('parses --file and --template; rejects unknown flags', () => {
++    it('parses --file, --project and --template; rejects unknown flags', () => {
+         expect(parseArgv(['--file', 'x.json'])).toEqual({ ok: true, file: 'x.json' });
+         expect(parseArgv(['--template'])).toEqual({ ok: true, template: true });
++        expect(parseArgv(['--project', '/repo'])).toEqual({ ok: true, project: '/repo' });
+         expect(parseArgv(['--nope']).ok).toBe(false);
+         expect(parseArgv(['--file']).ok).toBe(false);
++        expect(parseArgv(['--project']).ok).toBe(false);
+     });
+ 
+     it('carries do_not_touch as a discoverable, empty-by-default list', () => {
