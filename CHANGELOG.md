@@ -339,6 +339,52 @@ Entry-shape contract: [`docs/contracts/CHANGELOG-conventions.md`](docs/contracts
 > that forces a new era split (`# Era: 9.37.x`, etc.) — see
 > [`docs/contracts/CHANGELOG-conventions.md § Era splits`](docs/contracts/CHANGELOG-conventions.md).
 
+## [10.1.0](https://github.com/event4u-app/agent-config/compare/10.0.0...10.1.0) (2026-08-12)
+
+### Release highlights
+
+<!-- Curated head: fill before merge, keep it under 10 lines, and leave `_none_` where it is genuinely the answer. The generated log below is unchanged. -->
+- **Behaviour changes:** _auto-derived, rewrite before merge:_ rule/schema diffs, breaking commits or removed public surface in 0992c92, 20a8606, 63aeba1.
+- **Default changes + migration:** _none_
+- **Security and correctness:** _none_
+- **Honest nulls:** _auto-derived, rewrite before merge:_ commits carrying an honest-null marker in 0f3ce9b.
+- **Known limitations:** _none_
+
+### Features
+
+* **untrusted-content:** tag external content where it enters, with an unforgeable boundary ([7a313ec](https://github.com/event4u-app/agent-config/commit/7a313ecfae4eadd06ff547a4a67d363a6758707b))
+* **skill-schema:** structured runtime requirements, and the rule that gives them teeth ([63aeba1](https://github.com/event4u-app/agent-config/commit/63aeba1070af3d72bcaac0c7f999788d3b833354))
+
+### Bug Fixes
+
+* **roadmap,context:** satisfy the two gates this branch newly tripped ([e61d461](https://github.com/event4u-app/agent-config/commit/e61d46142a9dc41841c98360377cc89176ce1057))
+* **roadmap-archival:** an open blocker outlives its steps, and the sweep did not look ([710dc26](https://github.com/event4u-app/agent-config/commit/710dc266a27a82aad9a527c525650e8d43accfdc))
+* **review:** close all eight R2 findings, one of them by admitting a gap instead of papering it ([0992c92](https://github.com/event4u-app/agent-config/commit/0992c92219364bc646e78c29fa3072b5e46361ef))
+* **diff:** drop a regenerated report my git add -A swept in ([3aec031](https://github.com/event4u-app/agent-config/commit/3aec031b160a8bc676053be370b2fddfbeab250c))
+* **skill-schema:** rename requires to runtime_requires — the key was already taken ([20a8606](https://github.com/event4u-app/agent-config/commit/20a86065cc5d9c86e9fdf0710c51ddf850ca7ae4))
+* **roadmap:** anonymize the harvest source per source-confidentiality ([195e444](https://github.com/event4u-app/agent-config/commit/195e444a7b1f9d7d05ac5cb768b0be17a1ac58ea))
+
+### Documentation
+
+* **changelog:** curate the 10.0.0 head, which shipped the same placeholder hours later ([0f3ce9b](https://github.com/event4u-app/agent-config/commit/0f3ce9b22c1858e12556a4b0fe95bec1931dde91))
+* **roadmap:** the verified residue of five external release reviews ([a25579f](https://github.com/event4u-app/agent-config/commit/a25579fdf4d13cf6057ccdfeba5dc87990dd11e0))
+* **analysis:** threat-model the confirmation store, and enumerate the buried decisions ([8b18f1c](https://github.com/event4u-app/agent-config/commit/8b18f1c4a850a9b08906aceccbe3562f381de7c3))
+* **records:** three figures five reviews keep re-deriving, corrected at the source ([1612a70](https://github.com/event4u-app/agent-config/commit/1612a70e3e13daa0572fefb4803533708c1273f0))
+* **changelog:** curate the 9.36.0 head that shipped its own placeholder ([83a3922](https://github.com/event4u-app/agent-config/commit/83a3922f63efbe5aca280e775acc85b36573c3f4))
+* **review:** re-bind after the count correction ([9dd75ec](https://github.com/event4u-app/agent-config/commit/9dd75ecf178152641f8744a8f1b81f045befde7b))
+* **roadmap:** correct the test count the review fixes moved ([ec52c42](https://github.com/event4u-app/agent-config/commit/ec52c421ba69dc85ee78095323f8495b93f3dd26))
+* **review:** re-bind the R2 artefact to the fixed scope, dispositions terminal ([e601648](https://github.com/event4u-app/agent-config/commit/e6016487e883f611b2b7b989f23ed682796a6a73))
+* **review:** record the R2 findings before fixing any of them ([1cf8d78](https://github.com/event4u-app/agent-config/commit/1cf8d787c015f51261bdd22b7388e47d127003f6))
+* **roadmap:** add the Acceptance Criteria the completion review needs to bind to ([f35becd](https://github.com/event4u-app/agent-config/commit/f35becd885c09a5ac7f5a678adf29a360e776efa))
+* **roadmap:** follow the schema key rename, and record why the obvious name was unavailable ([5720847](https://github.com/event4u-app/agent-config/commit/572084763fef97eb66fa91fd722d75a9c527440a))
+* **roadmap:** the executable-payload harvest, with four source claims corrected ([2f4d8a8](https://github.com/event4u-app/agent-config/commit/2f4d8a8be5891d6045d4605a4a6d8fe3dc28a65e))
+
+### Tests
+
+* **council-cli:** the quota case asserted a property of the developer machine ([35037f9](https://github.com/event4u-app/agent-config/commit/35037f96d3e631d6ee1a235415e716e2a29f8f8c))
+
+Tests: 13411 (+27 since 10.0.0)
+
 ## [10.0.0](https://github.com/event4u-app/agent-config/compare/9.36.0...10.0.0) (2026-08-12)
 
 ### Release highlights
