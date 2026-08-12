@@ -144,8 +144,6 @@ export const TEMPLATE_PLACEHOLDER_DEFAULTS: Readonly<Record<string, string>> = {
     __DISCIPLINE_PROFILE__: 'auto',
     __USER_TYPE__: '',
     __CHAT_HISTORY_FREQUENCY__: 'per_turn',
-    __CHAT_HISTORY_MAX_SIZE_KB__: '2048',
-    __CHAT_HISTORY_ON_OVERFLOW__: 'rotate',
 };
 
 /** Replace every known template placeholder with its default value. */

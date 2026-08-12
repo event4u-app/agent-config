@@ -210,7 +210,6 @@ export const MERGEABLE_KEYS: readonly string[] = [
     'memory.cadence',
     'personal.bot_icon',
     'personal.autonomy',
-    'telegraph.speak_scope',
     // Knowledge-card global cross-project sharing is a USER-GLOBAL setting
     // (ADR-100 / road-to-structure-grounding-v2). Whitelisted so the
     // ~/.event4u/agent-config/agent-settings.yml values are honoured.

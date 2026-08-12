@@ -40,7 +40,6 @@ export const BASIC_PATHS: ReadonlySet<string> = new Set([
     'roadmap.quality_cadence',
     'roadmap.dashboard_regen_cadence',
     'quality.local_auto_run',
-    'quality.wait_for_remote_ci',
     // Memory
     'memory.review_threshold',
     'memory.redact_patterns',
