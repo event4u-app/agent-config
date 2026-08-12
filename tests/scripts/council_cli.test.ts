@@ -57,6 +57,7 @@ let TMP: string;
 let QUESTION: string; // a free-form prompt artefact
 let RESP_PLAIN: string; // a responses JSON with no consensus block
 let HARNESS_TS: string;
+let QUOTA_HARNESS_TS: string;
 
 const RESP_PLAIN_PAYLOAD = {
     schema_version: 1,
@@ -160,6 +161,36 @@ function runHarnessTs(qfile: string, rounds: string, debate: string): Run {
     };
 }
 
+// `cmd_quota` reads its caps from the SETTINGS cascade
+// (`ai_council.cli_call_budget.max_calls_per_day`), whose top layer is the
+// developer's user-global file. Spawning the CLI therefore asserts a property
+// of the host, not of the command: the no-cap line appears only on a machine
+// that happens to configure no cap, and a machine with one prints
+// `anthropic · 40/50` instead. Same determinism problem the shadow-report case
+// below already solves by pointing at a non-existent log — and `cmd_quota`
+// already accepts an injected `settings`, so the fix needs no production
+// change, only the injection the estimate cases above established.
+function quotaHarness(root: string): string {
+    return `import { cmd_quota } from ${JSON.stringify(path.join(root, 'src/scripts/council_cli.ts'))};
+
+// No ai_council.cli_call_budget block at all — the empty-caps branch.
+process.exit(cmd_quota({ cmd: 'quota', reset: null, confirm: false }, { settings: {} }));
+`;
+}
+
+function runQuotaHarnessTs(): Run {
+    const r = spawnSync(TSX_BIN, [QUOTA_HARNESS_TS], {
+        cwd: REPO_ROOT,
+        encoding: 'utf8',
+        env: { ...process.env },
+    });
+    return {
+        status: r.status ?? -1,
+        stdout: r.stdout ?? '',
+        stderr: r.stderr ?? '',
+    };
+}
+
 beforeAll(() => {
     TMP = fs.mkdtempSync(path.join(os.tmpdir(), 'council-cli-'));
     QUESTION = path.join(TMP, 'q.txt');
@@ -168,6 +199,8 @@ beforeAll(() => {
     fs.writeFileSync(RESP_PLAIN, JSON.stringify(RESP_PLAIN_PAYLOAD));
     HARNESS_TS = path.join(TMP, 'est_harness.ts');
     fs.writeFileSync(HARNESS_TS, tsHarness(REPO_ROOT));
+    QUOTA_HARNESS_TS = path.join(TMP, 'quota_harness.ts');
+    fs.writeFileSync(QUOTA_HARNESS_TS, quotaHarness(REPO_ROOT));
 });
 
 afterAll(() => {
@@ -289,9 +322,10 @@ describe('council_cli CLI — argparse intent', () => {
 // ── quota / shadow-report (read-only, no member construction) ───────
 
 describe('council_cli quota + shadow-report — intent', () => {
-    it('quota (no configured caps in user-global config) → exit 0', () => {
-        const ts = runTs(['quota']);
-        expect(ts.status).toBe(0);
+    it('quota with no configured caps → exit 0 + the empty-caps line', () => {
+        // Injected empty settings, NOT the host's — see `quotaHarness`.
+        const ts = runQuotaHarnessTs();
+        expect(ts.status, ts.stderr).toBe(0);
         expect(ts.stdout).toContain('council:quota · no providers have a configured cli_call_budget.max_calls_per_day cap.');
     });
 
