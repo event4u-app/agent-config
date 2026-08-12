@@ -72,10 +72,21 @@ how they make it.
 agent-config conformance:behavior --limit <N> --output conformance-report.json
 ```
 
-Replays the local transcript store through the four **mechanised** checks:
-language pin, git authorization, vacuous evidence, evidence steering. Every
-classifier is imported from the gate it measures, so the scan and the gate
-cannot drift apart.
+Replays the local transcript store through the five **mechanised** checks:
+language pin, git authorization, vacuous evidence, evidence steering, and — since
+round 7 — completion claim (a turn claiming the work is done while the last CI
+read in that session was not settled). Every classifier is imported from the gate
+it measures, so the scan and the gate cannot drift apart.
+
+Two readings the report now separates, both because round 7's first run got them
+wrong. The **language-pin rate is printed over two denominators** — all assistant
+turns, which is what the band's three reference values used, and turns under a
+German pin, which is the only population the check can fire on; the same corpus
+read 6.5 % on the first and 9.2 % on the second, enough to move the verdict. And
+the **band verdict is withheld over a corpus that spans a carrier landing**
+(`CARRIER_CHANGES`): pooling 23.1 % before a mechanism with 0.0 % after it is a
+weighted average of two systems, and the pooled figure was announced as the
+pre-registered falsifier firing.
 
 This is the floor, not the audit. It sees only what already has a gate — which
 is exactly why it is trustworthy and exactly why it is not sufficient.

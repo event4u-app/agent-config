@@ -24,17 +24,20 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
 import {
     alreadyRefusedTurn,
+    detectCompletionClaim,
     detectLanguage,
     detectPromissory,
     detectUnverifiedEdit,
     deriveSessionKey,
     finalParagraph,
     isVerificationCommand,
+    readCiSettled,
     readLanguagePin,
     readTranscriptTail,
     visibleProse,
     type ToolCall,
 } from '../../src/scripts/hooks/turn_end_gate_hook.js';
+import { STATE_FILE as CI_STATE_FILE } from '../../src/scripts/before_complete_hook.js';
 
 const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..');
 const HOOK = path.join(REPO_ROOT, 'src', 'scripts', 'hooks', 'turn_end_gate_hook.ts');
@@ -322,6 +325,99 @@ describe('language pin', () => {
     });
 });
 
+/**
+ * Round 7 § Phase 1 — detector D: a completion claim over an unsettled CI read.
+ *
+ * The measured class (14 instances, every one costing the user a turn) is
+ * "Fertig" while checks are still running. The three negative cases below are the
+ * point of the detector, not an afterthought: a blocking guard that refuses a
+ * legitimate completion teaches the user to switch it off.
+ */
+describe('detector D — completion claim over unsettled CI (round 7)', () => {
+    function writeCi(dir: string, ci: unknown): void {
+        const target = path.join(dir, CI_STATE_FILE);
+        fs.mkdirSync(path.dirname(target), { recursive: true });
+        fs.writeFileSync(target, JSON.stringify({ schema_version: 1, ci_last: ci }));
+    }
+
+    const UNSETTLED = { seen: true, settled: false };
+    const SETTLED = { seen: true, settled: true };
+    const NEVER_SEEN = { seen: false, settled: false };
+
+    it('fires on the measured German shape', () => {
+        const f = detectCompletionClaim('Fertig, Matze — der komplette Auftrag ist durch.', UNSETTLED);
+        expect(f?.detector).toBe('completion');
+        expect(f?.evidence).toContain('Fertig');
+    });
+
+    it('fires on "Damit ist alles erledigt."', () => {
+        expect(detectCompletionClaim('Damit ist alles erledigt.', UNSETTLED)).not.toBeNull();
+    });
+
+    // --- the three cases that must NOT fire (roadmap 1.4) ---
+
+    it('does NOT fire when the CI read was settled', () => {
+        expect(detectCompletionClaim('Fertig, Matze.', SETTLED)).toBeNull();
+    });
+
+    it('does NOT fire in a session that never read CI', () => {
+        expect(detectCompletionClaim('Fertig, Matze.', NEVER_SEEN)).toBeNull();
+    });
+
+    it('does NOT fire on an unsettled read with no completion claim', () => {
+        expect(
+            detectCompletionClaim('Die CI läuft noch, ich warte auf das Settle.', UNSETTLED),
+        ).toBeNull();
+    });
+
+    it('does NOT fire on "fertig" inside a sentence about something else', () => {
+        expect(
+            detectCompletionClaim(
+                'Der Generator ist noch nicht fertig konfiguriert, deshalb prüfe ich das.',
+                UNSETTLED,
+            ),
+        ).toBeNull();
+    });
+
+    it('does NOT fire on a completion claim inside quoted tool output', () => {
+        expect(
+            detectCompletionClaim('Das Log sagt:\n\n```\nFertig.\n```\n\nIch lese weiter.', UNSETTLED),
+        ).toBeNull();
+    });
+
+    // --- readCiSettled: absence is never a settle, and never a refusal ---
+
+    it('no state file ⇒ not seen ⇒ the detector cannot fire', () => {
+        expect(readCiSettled(makeWorkspace())).toEqual(NEVER_SEEN);
+    });
+
+    it('a malformed state file is treated as not seen', () => {
+        const dir = makeWorkspace();
+        const target = path.join(dir, CI_STATE_FILE);
+        fs.mkdirSync(path.dirname(target), { recursive: true });
+        fs.writeFileSync(target, '{ not json');
+        expect(readCiSettled(dir)).toEqual(NEVER_SEEN);
+    });
+
+    it('ci_last null ⇒ not seen', () => {
+        const dir = makeWorkspace();
+        writeCi(dir, null);
+        expect(readCiSettled(dir)).toEqual(NEVER_SEEN);
+    });
+
+    it('reads an unsettled record the producer wrote', () => {
+        const dir = makeWorkspace();
+        writeCi(dir, { at: '2026-08-12T00:00:00+00:00', pending: 3, settled: false });
+        expect(readCiSettled(dir)).toEqual(UNSETTLED);
+    });
+
+    it('reads a settled record the producer wrote', () => {
+        const dir = makeWorkspace();
+        writeCi(dir, { at: '2026-08-12T00:00:00+00:00', pending: 0, settled: true });
+        expect(readCiSettled(dir)).toEqual(SETTLED);
+    });
+});
+
 // ---------------------------------------------------------------------------
 // Re-entrancy — through the real process (roadmap 3.1)
 // ---------------------------------------------------------------------------
@@ -442,6 +538,53 @@ describe('the gate, end to end', () => {
     it('lets a clean turn end, silently', () => {
         const { dir, home } = makeGateWorkspace();
         const t = writeTranscript(home, ['mach weiter'], CLEAN);
+        const r = runHook(dir, envelopeJson(dir, t), home);
+        expect(r.status, r.stderr).toBe(0);
+        expect(r.stderr).toBe('');
+    });
+
+    // Round 7 § Phase 1 — the completion detector THROUGH the real process, not
+    // only as a pure function. The unit tests prove the predicate; this proves it
+    // is wired: a detector that is correct and unreachable is the shape this
+    // repo's own memory calls "defined but not wired".
+    function writeCiState(dir: string, settled: boolean): void {
+        const target = path.join(dir, CI_STATE_FILE);
+        fs.mkdirSync(path.dirname(target), { recursive: true });
+        fs.writeFileSync(
+            target,
+            JSON.stringify({
+                schema_version: 1,
+                ci_last: { at: '2026-08-12T00:00:00+00:00', pending: settled ? 0 : 3, settled },
+            }),
+        );
+    }
+
+    const DONE = 'Fertig, Matze. Der komplette Auftrag ist durch, alles gemergt.';
+
+    it('refuses a completion claim while the recorded CI read is unsettled', () => {
+        const { dir, home } = makeGateWorkspace();
+        writeCiState(dir, false);
+        const t = writeTranscript(home, ['mach weiter'], DONE);
+        const r = runHook(dir, envelopeJson(dir, t), home);
+        expect(r.status, r.stderr).toBe(1);
+        expect(r.stderr).toContain('completion');
+        expect(r.stdout).toBe('');
+    });
+
+    it('lets the SAME claim through once the CI read is settled', () => {
+        const { dir, home } = makeGateWorkspace();
+        writeCiState(dir, true);
+        const t = writeTranscript(home, ['mach weiter'], DONE);
+        const r = runHook(dir, envelopeJson(dir, t), home);
+        expect(r.status, r.stderr).toBe(0);
+        expect(r.stderr).toBe('');
+    });
+
+    it('lets the same claim through when no CI was ever observed', () => {
+        // No state file at all — a session that never touched CI must never be
+        // refused for it, and this is the case an over-eager version would break.
+        const { dir, home } = makeGateWorkspace();
+        const t = writeTranscript(home, ['mach weiter'], DONE);
         const r = runHook(dir, envelopeJson(dir, t), home);
         expect(r.status, r.stderr).toBe(0);
         expect(r.stderr).toBe('');

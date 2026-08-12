@@ -26,11 +26,22 @@ delivered, nothing was promised and no edit went unverified.** Silent
 incompleteness has no carrier today.
 
 **The premise is UNMEASURED, and that is the reason for Phase 1.**
-`conformance_scan` carries exactly four checks — `language-pin`,
-`git-authorization`, `vacuous-evidence`, `evidence-steering`. None of them
-measures completeness against the user's ask, so nobody has a rate. Building a
-refusal on an unmeasured premise is the failure this package has recorded under
-"measure the premise first, state the number".
+`conformance_scan` carries **five** checks since conformance round 7 —
+`language-pin`, `git-authorization`, `vacuous-evidence`, `evidence-steering`, and
+`completion-claim`. None of them measures completeness against the user's ask, so
+nobody has a rate. Building a refusal on an unmeasured premise is the failure this
+package has recorded under "measure the premise first, state the number".
+
+**The fifth check is adjacent, not this gap, and the boundary is worth stating
+because the names collide.** Round 7's `completion-claim` / detector D fires on a
+completion claim made while the last CI read in the session was **not settled** —
+a claim over an *unfinished verification*. It measured 17 over 28 sessions, 15 of
+them post-carrier across 14 sessions. It says nothing about whether the delivered
+work matched the ask: a session that asked for three things, delivered two, and
+never touched CI is invisible to it by construction (no CI observed ⇒ no finding).
+So this roadmap's gap survives round 7 intact — and the count above was corrected
+here rather than left reading "four", because a stale premise in a Context section
+is exactly what its own Phase 1 exists to prevent.
 
 **One observed instance exists, and it is not a rate.** Council 2026-08-04
 recorded a falsifiable hand-off rule built on *enumeration-completeness* errors —

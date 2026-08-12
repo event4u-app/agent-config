@@ -20,6 +20,38 @@
 # plus the checker makes each direction a declared, reviewable choice instead of an
 # accident.
 #
+# THE THIRD DIMENSION — `preflight`, added round 7, REPORT-ONLY
+# ------------------------------------------------------------
+# The two directions above compare CI against the local MIRROR (`task ci` +
+# `task consistency` + the pre-push hook). `task ci` INCLUDES `preflight`, so
+# neither direction can see the gap that actually costs push cycles: the pass a
+# contributor is TOLD to run before pushing is `task preflight`, a deliberate
+# subset of `ci`.
+#
+# Measured 2026-08-12: preflight reaches **22** gates; **209** CI-enforced gates
+# are locally reachable and run in NEITHER preflight nor anywhere else the
+# pre-push hook reaches — i.e. the set that can only fail after a push. Round 7
+# traced three "green locally, red remotely" cycles to it (the Thin-Root char cap,
+# the ratchet in the Node-Tests shard, derived-page freshness).
+#
+# The first reading said 221 and subtracted preflight alone, which counted gates
+# the pre-push hook already runs and therefore cannot fail remotely — corrected
+# by the round's own completion review (finding 4). Both figures are kept because
+# the correction is the point: a number published as "the deliverable" was
+# computed over a superset.
+#
+# It is REPORT-ONLY, and deliberately not a declared list, for two reasons:
+#   1. The subset is intentional. preflight's own docstring excludes
+#      check_enforcement_coverage at a measured 30.7 s because "a pre-push gate
+#      that doubles the hook teaches people to skip it". Failing on the gap would
+#      demand preflight grow into ci — the opposite of that decision.
+#   2. 209 per-entry declarations would BE the allowlist-growth antipattern the
+#      `autonomous-execution` rule caps at 20: past that count, the list is the
+#      problem and not the exemption.
+#
+# What the report removes is the IMPLICATION that a green preflight predicts a
+# green CI. It does not, and now it says so on every run.
+#
 # THE CONTRACT
 # ------------
 # The checker DERIVES both sides — it never trusts a hand-maintained list of gates:
@@ -152,6 +184,18 @@ ci_only:
 # worth remote enforcement, OR it should simply be added to a workflow. Prefer
 # adding it: a local-only gate is the direction that let real defects merge.
 local_only:
+  - id: roadmap_progress_hook
+    class: git-hook-scoped
+    reason: >
+      A git PRE-COMMIT hook script, invoked by the installed hook that
+      `install-hooks.sh` writes. CI has no commit to intercept — the commit has
+      already happened by the time a workflow runs — so there is no remote
+      equivalent to wire it into. Undeclared since main's `fd8c56512`
+      ("point the pre-commit roadmap gate at the live script path"), which moved
+      the hook onto the real script path and thereby made it visible to this
+      checker for the first time; it turned the gate red on the trunk, where
+      round 7 found it. Declared rather than wired: the committed-tree equivalent
+      is `roadmap:progress-check`, which already runs remotely.
   - id: check_knowledge_sharing
     class: staging-scoped
     reason: >

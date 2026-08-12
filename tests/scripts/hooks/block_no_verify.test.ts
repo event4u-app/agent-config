@@ -87,6 +87,65 @@ describe('block_no_verify — shlexSplit', () => {
     });
 });
 
+// --- Round 7 § 2.3 — the heredoc matrix, both directions --------------------
+//
+// Measured on this branch BEFORE the change, which is why both rows exist:
+//   `git commit -F - <<'EOF' … maintainer's … EOF`  was BLOCKED (false positive)
+//   `bash <<EOF … git commit --no-verify … EOF`     was ALLOWED (real bypass)
+// The fix is one change — strip terminated heredocs before shlex, and scan a
+// body only when a SHELL consumes it — and it moves both rows at once. The
+// discrimination is the load-bearing part: a commit MESSAGE naming `--no-verify`
+// is data and must pass, or the round-5 false positive comes back in a new shape.
+describe('block_no_verify — heredoc bodies (round 7)', () => {
+    const MSG_HEREDOC = "git commit -F - <<'EOF'\nfix(x): respect the maintainer's call\nEOF";
+    const SHELL_HEREDOC = 'bash <<EOF\ngit commit --no-verify -m x\nEOF';
+
+    it('an apostrophe in a commit-message body no longer aborts the parse', () => {
+        expect(_check_command(MSG_HEREDOC)[0]).toBe(false);
+    });
+
+    it('a commit message that merely NAMES the flag is data, not code', () => {
+        expect(
+            _check_command(
+                "git commit -F - <<'EOF'\ndocs: explain why we never pass --no-verify\nEOF",
+            )[0],
+        ).toBe(false);
+    });
+
+    it('a SHELL-consumed body carrying --no-verify is blocked', () => {
+        expect(_check_command(SHELL_HEREDOC)[0]).toBe(true);
+    });
+
+    it('the shell consumer is recognised through a path prefix and an env prefix', () => {
+        expect(_check_command('/bin/sh <<EOF\ngit commit -n\nEOF')[0]).toBe(true);
+        expect(_check_command('env FOO=1 bash <<EOF\ngit commit -n\nEOF')[0]).toBe(true);
+    });
+
+    it('a bare mention of bash in an argument does NOT promote a message to code', () => {
+        expect(
+            _check_command("git commit -F - <<'EOF'\nchore: drop the bash wrapper\n--no-verify\nEOF")[0],
+        ).toBe(false);
+    });
+
+    it('an UNTERMINATED heredoc still reaches the fail-closed branch', () => {
+        // No closing delimiter ⇒ nothing is stripped ⇒ the raw string hits shlex,
+        // which throws on the odd quote ⇒ fail-closed on a git-containing command.
+        const [blocked, reason] = _check_command("git commit -F - <<'EOF'\nit's unterminated\n");
+        expect(blocked).toBe(true);
+        expect(reason).toContain('unbalanced');
+    });
+
+    it('the direct flags are unaffected — both still block', () => {
+        expect(_check_command('git commit -n -m x')[0]).toBe(true);
+        expect(_check_command('git commit --no-verify -m x')[0]).toBe(true);
+    });
+
+    it('the round-5 negative controls stay negative', () => {
+        expect(_check_command('grep -n foo x.ts')[0]).toBe(false);
+        expect(_check_command('[ -n "$X" ] && echo yes')[0]).toBe(false);
+    });
+});
+
 // --- _split_subcommands / _git_base -----------------------------------------
 
 describe('block_no_verify — subcommand split + git base', () => {
