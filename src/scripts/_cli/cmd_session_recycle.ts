@@ -252,11 +252,49 @@ export function main(argv: string[] = process.argv.slice(2)): number {
     return result.code;
 }
 
-// Bundle-safety: never auto-run when inlined into an esbuild bundle.
+/**
+ * Bundle-safety: never auto-run when inlined into SOMEONE ELSE'S bundle.
+ *
+ * `__AGENT_CONFIG_BUNDLE__` alone cannot express that. All four esbuild targets
+ * define it, `build:cli-delegate` included — and that bundle's entry points ARE
+ * these files, so a guard refusing on the flag refuses to run the very bundle
+ * built to run it. That shipped: `dist/cli-delegate/cmd_session_recycle.js`
+ * produced zero bytes and exit 0 on every installed copy, so
+ * `agent-config session:recycle` reported success while writing no envelope.
+ * `cmd_doctor` and `cmd_migrate` carried the same guard and were dead the same
+ * way.
+ *
+ * `__AGENT_CONFIG_CLI_DELEGATE__` is defined by that one build only, so the pair
+ * says what a single flag could not: inlined elsewhere (install / hook / MCP
+ * bundle) → never run; this bundle's own target → run, and let the `argv[1]`
+ * comparison below decide whether THIS module is the entry or a shared chunk
+ * pulled in beside it.
+ */
 declare const __AGENT_CONFIG_BUNDLE__: boolean | undefined;
+declare const __AGENT_CONFIG_CLI_DELEGATE__: boolean | undefined;
 function _isCliEntry(): boolean {
-    if (typeof __AGENT_CONFIG_BUNDLE__ !== 'undefined' && __AGENT_CONFIG_BUNDLE__) return false;
+    const bundled = typeof __AGENT_CONFIG_BUNDLE__ !== 'undefined' && __AGENT_CONFIG_BUNDLE__;
+    const cliDelegate =
+        typeof __AGENT_CONFIG_CLI_DELEGATE__ !== 'undefined' && __AGENT_CONFIG_CLI_DELEGATE__;
+    if (bundled && !cliDelegate) return false;
     if (process.argv[1] === undefined) return false;
+    if (cliDelegate) {
+        // `--splitting` turns the entry file into a re-export shim and moves this
+        // module's body into a shared chunk, where `import.meta.url` is the
+        // CHUNK's url and can never equal `argv[1]`. The comparison below then
+        // silently never fires — which is why two sibling commands shipped dead
+        // while others worked by accident, purely by where esbuild happened to
+        // place their code. Inside this bundle the invoked file name is the only
+        // reliable signal; the smoke test over every delegate bundle is what
+        // keeps this literal honest if the file is ever renamed.
+        if (path.basename(process.argv[1], '.js') === 'cmd_session_recycle') {
+            return true;
+        }
+        // A miss falls THROUGH to the realpath comparison below rather than
+        // returning false: a symlinked or renamed invocation is exactly the
+        // case that fallback exists for, and swallowing it here would rebuild
+        // the silent no-op this change removes.
+    }
     if (import.meta.url === pathToFileURL(path.resolve(process.argv[1])).href) return true;
     try {
         return (
