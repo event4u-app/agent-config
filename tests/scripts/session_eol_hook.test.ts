@@ -25,6 +25,7 @@ import {
     CONTEXT_FILL_REL,
     THRESHOLD_OVERRIDE_ENV,
 } from '../../src/scripts/hooks/session_eol_hook.js';
+import { RECYCLE_ENVELOPE_REL } from '../../src/scripts/_lib/recycle_envelope_paths.js';
 import { clearHookStdinOverride, setHookStdinOverride } from '../../src/scripts/hooks/hook_stdin.js';
 
 let workspace: string;
@@ -68,6 +69,13 @@ function envelopeJson(sessionId: string): string {
 
 function writeThreshold(tokens: number): void {
     process.env[THRESHOLD_OVERRIDE_ENV] = String(tokens);
+}
+
+/** Put a pending recycle envelope in the workspace — content is irrelevant, existence is not. */
+function writeEnvelope(): void {
+    const target = path.join(workspace, RECYCLE_ENVELOPE_REL);
+    fs.mkdirSync(path.dirname(target), { recursive: true });
+    fs.writeFileSync(target, '{}');
 }
 
 function runMain(sessionId = 'session-a'): { rc: number; out: string } {
@@ -157,6 +165,7 @@ describe('recording (Phase 1.1)', () => {
 describe('recycle advisory (Phase 3.2)', () => {
     it('fires once past threshold on a long session — and never twice', () => {
         writeThreshold(100_000);
+        writeEnvelope(); // present from the start: isolates the advisory from the counter-check
         fs.writeFileSync(transcript, assistantLine(5_000, 120_000));
         const first = runMain();
         expect(first.rc).toBe(2);
@@ -170,12 +179,67 @@ describe('recycle advisory (Phase 3.2)', () => {
         expect(second.out).toBe('');
     });
 
+    it('names the absolute path as the proof to wait for, not a bare /clear', () => {
+        writeThreshold(100_000);
+        writeEnvelope();
+        fs.writeFileSync(transcript, assistantLine(5_000, 120_000));
+        const parsed = JSON.parse(runMain().out) as Record<string, string>;
+        const line = parsed['additional_context'] as string;
+        expect(line).toContain('absolute path');
+        // The instruction that destroys the session must carry its condition.
+        expect(line).toContain('/clear only after');
+    });
+
     it('never fires on a short session', () => {
         writeThreshold(100_000);
         fs.writeFileSync(transcript, assistantLine(1_000, 2_000));
         const r = runMain();
         expect(r.rc).toBe(0);
         expect(r.out).toBe('');
+    });
+});
+
+describe('missing-envelope counter-check', () => {
+    it('warns once on the Stop after the advisory when no envelope was written', () => {
+        writeThreshold(100_000);
+        fs.writeFileSync(transcript, assistantLine(5_000, 120_000));
+        expect(runMain().rc).toBe(2); // the advisory itself
+
+        fs.appendFileSync(transcript, assistantLine(6_000, 130_000));
+        const second = runMain();
+        expect(second.rc).toBe(2);
+        const parsed = JSON.parse(second.out) as Record<string, string>;
+        expect(parsed['reason']).toContain('no envelope written');
+        expect(parsed['additional_context']).toContain(path.join(workspace, RECYCLE_ENVELOPE_REL));
+        expect(parsed['additional_context']).toContain('/clear now starts the successor from nothing');
+
+        // …and never again: one reminder is a net, one per Stop is a nag.
+        fs.appendFileSync(transcript, assistantLine(7_000, 140_000));
+        const third = runMain();
+        expect(third.rc).toBe(0);
+        expect(third.out).toBe('');
+    });
+
+    it('stays silent when the envelope arrived between the two stops', () => {
+        writeThreshold(100_000);
+        fs.writeFileSync(transcript, assistantLine(5_000, 120_000));
+        expect(runMain().rc).toBe(2);
+
+        writeEnvelope(); // the operator ran the command
+        fs.appendFileSync(transcript, assistantLine(6_000, 130_000));
+        const second = runMain();
+        expect(second.rc).toBe(0);
+        expect(second.out).toBe('');
+    });
+
+    it('never fires when the advisory never fired', () => {
+        writeThreshold(100_000);
+        // Below threshold: no advisory, so a missing envelope means nothing —
+        // most sessions never recycle at all.
+        fs.writeFileSync(transcript, assistantLine(1_000, 2_000));
+        expect(runMain()).toEqual({ rc: 0, out: '' });
+        fs.appendFileSync(transcript, assistantLine(1_000, 3_000));
+        expect(runMain()).toEqual({ rc: 0, out: '' });
     });
 
     it('advisory lane is disabled by the 0-override while recording continues (emergency off)', () => {

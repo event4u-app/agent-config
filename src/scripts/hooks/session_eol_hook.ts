@@ -35,6 +35,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import recycleThresholdConfig from '../../config/recycle-threshold-budget.json';
 
+import { RECYCLE_ENVELOPE_REL } from '../_lib/recycle_envelope_paths.js';
 import {
     emptyCounters,
     eolSessionKey,
@@ -67,6 +68,13 @@ export interface SessionEolState {
     counters: EolCounters;
     /** ISO stamp when the recycle advisory fired for this session (F2), or null. */
     advisory_fired_at: string | null;
+    /**
+     * ISO stamp when the follow-up "advised, but no envelope exists" line
+     * fired, or null. Separate from `advisory_fired_at` so the counter-check
+     * is once-per-session in its own right: one reminder is a safety net, one
+     * per Stop for the rest of the session is a nag the reader learns to skip.
+     */
+    missing_envelope_warned_at?: string | null;
     updated_at: string;
 }
 
@@ -105,6 +113,10 @@ export function readState(file: string): SessionEolState {
                 counters: parsed.counters,
                 advisory_fired_at:
                     typeof parsed.advisory_fired_at === 'string' ? parsed.advisory_fired_at : null,
+                missing_envelope_warned_at:
+                    typeof parsed.missing_envelope_warned_at === 'string'
+                        ? parsed.missing_envelope_warned_at
+                        : null,
                 updated_at: typeof parsed.updated_at === 'string' ? parsed.updated_at : '',
             };
         }
@@ -115,8 +127,43 @@ export function readState(file: string): SessionEolState {
         schema_version: 1,
         counters: emptyCounters(),
         advisory_fired_at: null,
+        missing_envelope_warned_at: null,
         updated_at: '',
     };
+}
+
+/**
+ * Does a pending recycle envelope exist under this workspace?
+ *
+ * Read, never written — and every failure reads as "exists", not "missing".
+ * A stat error must not manufacture a warning that tells the operator their
+ * envelope is gone when the only thing that failed was the check.
+ */
+export function envelopeExists(workspaceRoot: string): boolean {
+    try {
+        return fs.existsSync(path.join(workspaceRoot, RECYCLE_ENVELOPE_REL));
+    } catch {
+        return true;
+    }
+}
+
+/**
+ * The follow-up line: the advisory already fired, and no envelope arrived.
+ *
+ * This is the half of the reported minimum fix that lives outside the command
+ * — the hook that recommends the call making the same counter-check before the
+ * operator acts on it. Whatever stopped the write (a wrong root, a refusal
+ * scrolled past, a forgotten step), the state visible here is identical, and
+ * the next action the advisory recommended is the one that destroys the
+ * session.
+ */
+export function buildMissingEnvelopeLine(workspaceRoot: string): string {
+    return (
+        `recycle advised earlier, but no envelope exists at ` +
+        `${path.join(workspaceRoot, RECYCLE_ENVELOPE_REL)} — /clear now starts the successor ` +
+        `from nothing. Re-run \`agent-config session:recycle\` and check that it prints the ` +
+        `absolute path it wrote before clearing.`
+    );
 }
 
 /**
@@ -136,13 +183,22 @@ export function readThresholdTokens(): number | null {
     return typeof value === 'number' && Number.isFinite(value) && value > 0 ? value : null;
 }
 
-/** The exactly-one advisory line injected past threshold (Phase 3.2). */
+/**
+ * The exactly-one advisory line injected past threshold (Phase 3.2).
+ *
+ * The `/clear` half is conditional on purpose. An earlier wording read
+ * `run X … then /clear`, which is an instruction to destroy the session with
+ * no check in between — and a reader who followed it while the command was
+ * silently writing nothing lost everything. The proof to wait for is the
+ * absolute path the command prints; naming it costs one clause.
+ */
 export function buildAdvisoryLine(tokens: number, threshold: number): string {
     return (
         `context past recycle threshold (${tokens.toLocaleString('en-US')} of ` +
         `${threshold.toLocaleString('en-US')} tokens): run \`agent-config session:recycle\` to ` +
-        `write the recycle envelope, then /clear — the successor session resumes from the ` +
-        `envelope at session_start (road-to-token-economy-recycling)`
+        `write the recycle envelope. It prints the absolute path it wrote — /clear only after ` +
+        `you have seen that line. The successor session then resumes from the envelope at ` +
+        `session_start (road-to-token-economy-recycling)`
     );
 }
 
@@ -213,10 +269,23 @@ export function main(): number {
         tokens >= threshold &&
         state.advisory_fired_at === null;
 
+    // The counter-check: the advisory fired on an EARLIER Stop (so `state`,
+    // the pre-update snapshot, already carries the stamp) and no envelope has
+    // appeared since. It can never collide with `shouldAdvise` — that branch
+    // requires `advisory_fired_at === null` — so at most one line is emitted
+    // per Stop, and this one at most once per session.
+    const shouldWarnMissing =
+        state.advisory_fired_at !== null &&
+        (state.missing_envelope_warned_at ?? null) === null &&
+        !envelopeExists(workspaceRoot);
+
     const nextState: SessionEolState = {
         schema_version: 1,
         counters,
         advisory_fired_at: shouldAdvise ? now : state.advisory_fired_at,
+        missing_envelope_warned_at: shouldWarnMissing
+            ? now
+            : (state.missing_envelope_warned_at ?? null),
         updated_at: now,
     };
     try {
@@ -233,6 +302,16 @@ export function main(): number {
                 decision: 'warn',
                 reason: `session-eol: context ${tokens} >= recycle threshold ${threshold}`,
                 additional_context: buildAdvisoryLine(tokens, threshold),
+            })}\n`,
+        );
+        return EXIT_WARN;
+    }
+    if (shouldWarnMissing) {
+        process.stdout.write(
+            `${JSON.stringify({
+                decision: 'warn',
+                reason: 'session-eol: recycle advised, no envelope written',
+                additional_context: buildMissingEnvelopeLine(workspaceRoot),
             })}\n`,
         );
         return EXIT_WARN;
