@@ -1,0 +1,19 @@
+# Entries observed WITHOUT a description in the injected catalogue.
+# Partial observation, self-reported by the session that authored
+# road-to-frontend-skill-application. Host: claude. Not enforcement.
+command-routing
+command-writing
+comp-banding
+competitive-moat-analysis
+complexity-first-planning
+composer-packages
+condense-memory
+content-funnel-design
+dashboard-design
+design-intelligence
+design-review
+design-system-capture
+design-tokens
+design-variations
+existing-ui-audit
+fe-design
