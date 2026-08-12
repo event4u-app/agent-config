@@ -1,6 +1,6 @@
 # Completion review — no issue left open without a decision
 
-**Skipped:** no code surface for this completion — the diff is authoring documents, two gate-state files, one derived page, a roadmap and one byte-identical projection, and the gate itself measures zero code paths of nine changed files, scope d2bba8efade6121d62919d8f687a512c858ef9ed1b18ffd0f893e15f2f5e8f0e, declared 2026-08-13
+**Skipped:** no code surface for this completion — the diff is authoring documents, two gate-state files, one derived page, a roadmap and one byte-identical projection, and the gate itself measures zero code paths of nine changed files, scope 3803478a3925c47eb73630b5be4f5840f10d6d16e686a621e8afb831fd9ec662, declared 2026-08-13
 
 ## Why a skip rather than a review
 
@@ -146,6 +146,23 @@ next.
 `## Risks` table whose `Anchored under` values resolved to no heading. Fixed by
 writing the required register with five entries anchored to real phases. Caught
 by preflight rather than by CI, which is the gate working as intended.
+
+## Re-bound after ADR-226 and a second main merge
+
+The last open item is closed by a decision rather than by a mention: `ADR-226`
+records that this repository keeps both rule layers, with the measurement that
+produced the answer and the two named conditions that would reopen it. The
+roadmap's Context was updated in the same commit, because layer suppression
+being unavailable here is what makes corpus size the only remaining lever — a
+claim the roadmap would otherwise leave implicit.
+
+A second `main` merge (a release bump) landed conflict-free in between. The
+branch merged rather than pushed over a stale base, on the gate's own reasoning
+that a fetch from earlier in a session is a memory, not a check.
+
+With that, this branch carries **no undecided finding**. Every issue it raised
+is fixed, decided, or recorded with the condition that would reopen it — which
+is the property the rule it ships was written to produce, applied to itself.
 
 ## Standing caveat
 
