@@ -48,6 +48,7 @@ import {
     iso_now,
     read_live_records,
     register_dir,
+    safe_stem,
     ttl_is_measured,
     ttl_seconds_for,
 } from './_lib/session_register.js';
@@ -61,7 +62,10 @@ function usage(): number {
     process.stderr.write(
         [
             'usage:',
-            '  agent-config sessions:list [--json]      live sessions on this repository',
+            '  agent-config sessions:list [--json] [--branches]',
+            '                                           live sessions, plus unmerged branches',
+            '                                           held by other worktrees (--branches adds',
+            '                                           that axis to the JSON form)',
             '  agent-config sessions:claim <slug>       claim a roadmap for this session',
             '  agent-config sessions:claim <slug> --force   claim it even though a peer holds it',
             '  agent-config sessions:claim --release    drop this session\'s roadmap claim',
@@ -89,6 +93,21 @@ export function other_worktree_branches(
     root: string,
     spawn: typeof spawnSync = spawnSync,
 ): { branch: string; worktree: string }[] {
+    return other_worktree_branches_detailed(root, spawn).rows;
+}
+
+/**
+ * Same walk, plus whether the unmerged filter was actually applied.
+ *
+ * R2 finding 12: when `origin/main` is missing or un-fetched the filter silently
+ * drops and every foreign worktree is reported — while the human output still
+ * claimed "N unmerged branch(es)". In a tree with 30+ long-merged worktrees that
+ * is not a small overstatement, and the reader had no way to see the degradation.
+ */
+export function other_worktree_branches_detailed(
+    root: string,
+    spawn: typeof spawnSync = spawnSync,
+): { rows: { branch: string; worktree: string }[]; filtered: boolean } {
     let out = '';
     try {
         const r = spawn('git', ['worktree', 'list', '--porcelain'], {
@@ -97,11 +116,11 @@ export function other_worktree_branches(
             timeout: 10_000,
         });
         if (r.status !== 0) {
-            return [];
+            return { rows: [], filtered: false };
         }
         out = String(r.stdout ?? '');
     } catch {
-        return [];
+        return { rows: [], filtered: false };
     }
     // Unmerged branches only, in ONE extra git call. Without this filter the
     // list is every worktree the repo ever had — 30+ here, all long merged — and
@@ -150,14 +169,21 @@ export function other_worktree_branches(
         }
     }
     rows.sort((a, b) => a.branch.localeCompare(b.branch) || a.worktree.localeCompare(b.worktree));
-    return rows;
+    return { rows, filtered: unmerged !== null };
 }
 
 function cmd_list(argv: string[], root: string): number {
     const as_json = argv.includes('--json');
     const dir = register_dir(root);
     const records = dir === null ? [] : read_live_records(dir, { prune: true });
-    const held = other_worktree_branches(root);
+    // Two git subprocesses with a 10 s timeout each, so they are not paid on the
+    // scripted path that discards them (R2 finding 8).
+    const wants_branches = !as_json || argv.includes('--branches');
+    const walk = wants_branches
+        ? other_worktree_branches_detailed(root)
+        : { rows: [], filtered: false };
+    const held = walk.rows;
+    const filtered = walk.filtered;
 
     if (as_json) {
         // The record array stays the top-level shape it has always been when
@@ -165,19 +191,17 @@ function cmd_list(argv: string[], root: string): number {
         // it in an object would break every existing caller.
         process.stdout.write(
             argv.includes('--branches')
-                ? `${JSON.stringify({ sessions: records, otherWorktreeBranches: held }, null, 2)}\n`
+                ? `${JSON.stringify({ sessions: records, other_worktree_branches: held, unmerged_filter_applied: filtered }, null, 2)}\n`
                 : `${JSON.stringify(records, null, 2)}\n`,
         );
         return 0;
     }
 
-    if (records.length === 0 && held.length === 0) {
-        process.stdout.write('No live sessions registered on this repository.\n');
-        return 0;
-    }
+    // One branch, not two: `write_held_branches([])` returns immediately, so the
+    // empty-and-empty case needed no special case of its own (R2 finding 7).
     if (records.length === 0) {
         process.stdout.write('No live sessions registered on this repository.\n');
-        writeHeldBranches(held);
+        write_held_branches(held, filtered);
         return 0;
     }
 
@@ -208,7 +232,7 @@ function cmd_list(argv: string[], root: string): number {
             ].join('\n'),
         );
     }
-    writeHeldBranches(held);
+    write_held_branches(held, filtered);
     process.stdout.write(
         'Advisory only — this register is not a lock, and an idle session\n' +
             'disappears from it after its TTL although its user may return.\n',
@@ -216,16 +240,25 @@ function cmd_list(argv: string[], root: string): number {
     return 0;
 }
 
-function writeHeldBranches(held: readonly { branch: string; worktree: string }[]): void {
+/** snake_case like every other function here (R2 finding 15). */
+function write_held_branches(
+    held: readonly { branch: string; worktree: string }[],
+    filtered: boolean,
+): void {
     if (held.length === 0) {
         return;
     }
     process.stdout.write(
-        `\n${held.length} unmerged branch(es) checked out in another worktree — a claim\n` +
-            'may not have been written yet, so check these before picking work.\n' +
-            'Limit: a branch created seconds ago carries no commits and is therefore\n' +
-            'MERGED into main by definition, so it does not appear here — that first\n' +
-            'minute is what the roadmap-slug axis above covers.\n',
+        filtered
+            ? `\n${held.length} unmerged branch(es) checked out in another worktree — a claim\n` +
+                  'may not have been written yet, so check these before picking work.\n' +
+                  'Limit: a branch created seconds ago carries no commits and is therefore\n' +
+                  'MERGED into main by definition, so it does not appear here — that first\n' +
+                  'minute is what the roadmap-slug axis above covers.\n'
+            : `\n${held.length} branch(es) checked out in another worktree. UNFILTERED —\n` +
+                  '`git branch --no-merged origin/main` was unavailable (no origin/main, or\n' +
+                  'never fetched), so long-merged worktrees are included and this list\n' +
+                  'overstates what is live. `git fetch origin` and re-run for the filtered set.\n',
     );
     for (const h of held) {
         process.stdout.write(`  ${h.branch}\n    ${h.worktree}\n`);
@@ -255,6 +288,42 @@ export function env_session_id(env: NodeJS.ProcessEnv = process.env): string | n
     return null;
 }
 
+/** Same filesystem path, symlink-tolerant. `/var` vs `/private/var` on macOS. */
+function _same_path(a: string, b: string): boolean {
+    try {
+        return fs.realpathSync(a) === fs.realpathSync(b);
+    } catch {
+        return a === b;
+    }
+}
+
+/**
+ * Foreign-worktree branches whose NAME looks like this roadmap.
+ *
+ * Separated from `claim_conflicts` because it is a **heuristic** and its output is
+ * treated differently: a name match warns, it never refuses. R2 finding 4 caught
+ * the contradiction — the docstring called it "a reason to look, not a verdict"
+ * while a hit produced exit 1 and demanded `--force`.
+ *
+ * Two guards on the tail, both from that finding. A slug ending in a date
+ * (`road-to-inbox-harvest-2026-08`) yielded the tail `2026-08`, which cleared the
+ * old `length >= 4` check and matched every branch carrying that string; a tail
+ * whose tokens are all digits is therefore rejected. And a `road-to-` prefix
+ * stripped from a two-token slug can leave a generic word, so the tail must be at
+ * least 8 characters — measured against the real case, `dispatch-safety`.
+ */
+export function branch_name_hits(
+    root: string,
+    slug: string,
+): { branch: string; worktree: string }[] {
+    const tokens = slug.replace(/^road-to-/, '').split('-').filter(Boolean);
+    const tail = tokens.slice(-2).join('-');
+    if (tail.length < 8 || /^[\d-]+$/.test(tail)) {
+        return [];
+    }
+    return other_worktree_branches(root).filter((b) => b.branch.includes(tail));
+}
+
 /**
  * Who else is already on this slug — checked BEFORE the claim is written.
  *
@@ -282,10 +351,21 @@ export function claim_conflicts(
     const sid = env_session_id();
     if (dir !== null) {
         for (const r of read_live_records(dir, { prune: false })) {
-            if (sid !== null && r.session_id === sid) {
+            // Self-exclusion by session id where we have one, and by WORKTREE where
+            // we do not (R2 finding 2): on a host that fills the hook envelope but
+            // exports no shell variable, `sid` is null, our own record would count
+            // as a peer, and re-claiming the same slug would exit 1 citing
+            // ourselves — non-idempotent on exactly the graceful-degradation path.
+            // Compared through `safe_stem`, because the library normalises ids and a
+            // raw comparison fails silently on any id the two spell differently
+            // (R2 finding 11).
+            if (sid !== null && safe_stem(r.session_id) === safe_stem(sid)) {
                 continue;
             }
-            if (r.roadmap_slug === slug && !claim_is_stale(root, r.roadmap_slug)) {
+            if (sid === null && _same_path(r.worktree, root)) {
+                continue;
+            }
+            if (r.roadmap_slug === slug && !claim_is_stale(root, r.roadmap_slug, r.worktree)) {
                 out.push({
                     kind: 'session',
                     detail: `${r.platform} session on branch \`${r.branch ?? 'detached'}\` in ${r.worktree}`,
@@ -293,16 +373,8 @@ export function claim_conflicts(
             }
         }
     }
-    // `road-to-inbox-harvest-2026-08-b-dispatch-safety` → `dispatch-safety`, which
-    // is what a branch name actually carries. Matching the whole slug would find
-    // nothing: neither colliding branch in either measured incident contained it.
-    const tail = slug.replace(/^road-to-/, '').split('-').slice(-2).join('-');
-    if (tail.length >= 4) {
-        for (const b of other_worktree_branches(root)) {
-            if (b.branch.includes(tail)) {
-                out.push({ kind: 'branch', detail: `branch \`${b.branch}\` in ${b.worktree}` });
-            }
-        }
+    for (const b of branch_name_hits(root, slug)) {
+        out.push({ kind: 'branch', detail: `branch \`${b.branch}\` in ${b.worktree}` });
     }
     // Deduplicated by rendered detail. Several records can describe the same
     // peer — observed live: three sessions in one checkout all carrying one slug,
@@ -323,17 +395,21 @@ function cmd_claim(argv: string[], root: string): number {
     const sid = env_session_id();
     const target = path.join(root, roadmap_claim_rel(sid));
     if (argv.includes('--release')) {
-        // Release BOTH paths: a claim written before this session could identify
-        // itself lives in the legacy file, and releasing only the new one would
-        // leave a claim behind that the heartbeat still reports.
-        for (const p of new Set([target, path.join(root, ROADMAP_CLAIM_REL)])) {
-            try {
-                fs.unlinkSync(p);
-            } catch {
-                /* nothing to release */
-            }
+        // Release only what this session could have written. An identified session
+        // never writes the legacy file, so unlinking it would delete a PEER's claim
+        // in a mixed-host checkout and leave that peer reporting nothing, with no
+        // notice to either side (R2 finding 10). An unidentified session shares that
+        // file by construction and releasing it is the only release available.
+        try {
+            fs.unlinkSync(target);
+        } catch {
+            /* nothing to release */
         }
-        process.stdout.write('Roadmap claim released.\n');
+        process.stdout.write(
+            sid === null
+                ? 'Roadmap claim released (shared worktree claim — this host exports no session id).\n'
+                : 'Roadmap claim released.\n',
+        );
         return 0;
     }
     const slug = argv.find((a) => !a.startsWith('-'));
@@ -341,21 +417,38 @@ function cmd_claim(argv: string[], root: string): number {
         return usage();
     }
 
-    // Refuse to WRITE a claim a peer already holds, and exit non-zero. This is a
-    // consistency check on this session's own write, NOT a lock: two sessions can
-    // still claim in the same millisecond, and the register's own contract forbids
-    // building exclusion on it. What it does buy is that the second session to
-    // arrive cannot record a false "I am doing this" and cannot miss the notice —
-    // which is exactly what happened twice, both times ending in a discarded PR.
-    const conflicts = argv.includes('--force') ? [] : claim_conflicts(root, slug.trim());
-    if (conflicts.length > 0) {
+    const forced = argv.includes('--force');
+    const conflicts = forced ? [] : claim_conflicts(root, slug.trim());
+
+    // Split by evidence class, which R2 finding 4 is right to demand: a live peer
+    // record carrying this exact slug is a FACT and refuses the write; a branch
+    // whose name merely resembles the slug is a HEURISTIC and only warns. A
+    // heuristic that forces `--force` trains people to pass `--force`.
+    const hard = conflicts.filter((c) => c.kind === 'session');
+    const soft = conflicts.filter((c) => c.kind === 'branch');
+
+    if (hard.length > 0) {
         process.stderr.write(
-            `sessions:claim: REFUSED — "${slug.trim()}" is already being worked on.\n` +
-                conflicts.map((c) => `  · ${c.kind}: ${c.detail}\n`).join('') +
+            `sessions:claim: REFUSED — "${slug.trim()}" is already claimed by a live session.\n` +
+                hard.map((c) => `  · ${c.detail}\n`).join('') +
+                (soft.length > 0 ? soft.map((c) => `  · also, by name: ${c.detail}\n`).join('') : '') +
                 '\nA different branch name does not make it a different task. Pick another\n' +
                 'roadmap, split this one explicitly with the peer, or re-run with --force\n' +
                 'if you have decided to duplicate deliberately.\n' +
                 'Advisory, not a lock: two sessions claiming simultaneously still race.\n',
+        );
+        return 1;
+    }
+
+    // A slug naming no open roadmap is a typo or an archived roadmap, and writing
+    // it manufactures exactly the stale claim this change teaches every reader to
+    // discount (R2 finding 13). The cheapest guard against creating one belongs at
+    // the only write site.
+    if (!forced && claim_is_stale(root, slug.trim())) {
+        process.stderr.write(
+            `sessions:claim: REFUSED — no open roadmap named "${slug.trim()}".\n` +
+                '  Expected agents/roadmaps/<slug>.md; archive/, later/ and skipped/ do not count.\n' +
+                '  Check the spelling, or use --force if the file is genuinely arriving later.\n',
         );
         return 1;
     }
@@ -375,6 +468,12 @@ function cmd_claim(argv: string[], root: string): number {
             (sid === null
                 ? 'NOTE: this host exports no session id, so the claim is scoped to this\n' +
                   'WORKTREE — a second session in the same checkout will overwrite it.\n'
+                : '') +
+            // The heuristic axis reports here rather than refusing above.
+            (soft.length > 0
+                ? `WARNING: ${soft.length} branch name(s) in other worktrees resemble this roadmap.\n` +
+                  soft.map((c) => `  · ${c.detail}\n`).join('') +
+                  '  A name match is a reason to look, not proof — check before you write code.\n'
                 : ''),
     );
     return 0;

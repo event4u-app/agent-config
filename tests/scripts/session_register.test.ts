@@ -42,7 +42,12 @@ import {
     read_claimed_slug,
     roadmap_claim_rel,
 } from '../../src/scripts/session_register_hook.js';
-import { claim_conflicts, other_worktree_branches } from '../../src/scripts/sessions_cli.js';
+import {
+    branch_name_hits,
+    claim_conflicts,
+    other_worktree_branches,
+    other_worktree_branches_detailed,
+} from '../../src/scripts/sessions_cli.js';
 
 let tmp: string;
 
@@ -375,15 +380,29 @@ describe('the claim is per SESSION, not per worktree', () => {
         fs.writeFileSync(p, JSON.stringify(body));
     }
 
-    it('a peer claim in the SAME checkout is not inherited — the measured defect', () => {
+    it('an IDENTIFIED session never reads the shared legacy claim — the measured defect', () => {
         // Four live records once carried one identical slug because every session
         // in a checkout read the last claim written there. A session reporting a
         // roadmap it is not working is worse than reporting none: the screen reads
         // it as "taken".
+        //
+        // The rule is not "compare the ids" — that was R2 finding 6: `cmd_claim`
+        // serialises `session_id: null` on the legacy path and the reader drops a
+        // null, so the comparison never ran. A session that CAN identify itself
+        // never writes that file, so whatever is in it is not its claim.
         const { main } = make_repo();
         claim(main, { slug: 'road-to-peer', session_id: 'peer-session' }, ROADMAP_CLAIM_REL);
         expect(read_claimed_slug(main, 'my-session')).toBeNull();
-        expect(read_claimed_slug(main, 'peer-session')).toBe('road-to-peer');
+        // Not even the id that wrote it: it belongs to that session's per-session
+        // file now, and reading it here would re-open the inheritance path.
+        expect(read_claimed_slug(main, 'peer-session')).toBeNull();
+    });
+
+    it('only an UNIDENTIFIED session reads the shared file — the shape it must share', () => {
+        const { main } = make_repo();
+        claim(main, { slug: 'road-to-shared' }, ROADMAP_CLAIM_REL);
+        expect(read_claimed_slug(main, null)).toBe('road-to-shared');
+        expect(read_claimed_slug(main, '')).toBe('road-to-shared');
     });
 
     it('the per-session file wins over the legacy one', () => {
@@ -393,10 +412,15 @@ describe('the claim is per SESSION, not per worktree', () => {
         expect(read_claimed_slug(main, 'my-session')).toBe('mine');
     });
 
-    it('a legacy claim with no session_id still works — migration, not a reset', () => {
+    it('the pre-upgrade claim is DROPPED for an identified session — the price, stated', () => {
+        // Migration and non-inheritance are the same read and only one can win: a
+        // legacy file is either a peer's (host with no id) or pre-upgrade, and a
+        // reader cannot tell. Inheriting a peer's claim is the measured defect;
+        // losing a pre-upgrade claim costs one re-run of `sessions:claim`. So this
+        // asserts the loss deliberately rather than papering over it.
         const { main } = make_repo();
         claim(main, { slug: 'pre-existing' }, ROADMAP_CLAIM_REL);
-        expect(read_claimed_slug(main, 'my-session')).toBe('pre-existing');
+        expect(read_claimed_slug(main, 'my-session')).toBeNull();
         expect(read_claimed_slug(main, null)).toBe('pre-existing');
     });
 
@@ -526,6 +550,92 @@ describe('sessions:claim refuses a slug a peer already holds', () => {
         git(wt, 'add', 'w.txt');
         git(wt, 'commit', '-q', '-m', 'w');
         expect(claim_conflicts(main, 'road-to-a-b').filter((h) => h.kind === 'branch')).toEqual([]);
+    });
+});
+
+describe('R2 fixes — each finding gets the case it named', () => {
+    function open_roadmap(root: string, slug: string): void {
+        fs.mkdirSync(path.join(root, 'agents', 'roadmaps'), { recursive: true });
+        fs.writeFileSync(path.join(root, 'agents', 'roadmaps', `${slug}.md`), '# x');
+    }
+
+    it('R2-1: a peer claim is live when the PEER tree holds the roadmap, not ours', () => {
+        // The high finding. Worktrees share one register on different commits, so
+        // resolving the roadmap only in the caller's tree read a live peer claim as
+        // stale — and stale is treated as no claim, which disabled the refusal in
+        // exactly the multi-worktree case this exists for.
+        const { main, wt } = make_repo();
+        open_roadmap(wt, 'road-to-only-in-peer');
+        expect(claim_is_stale(main, 'road-to-only-in-peer')).toBe(true); // our tree alone
+        expect(claim_is_stale(main, 'road-to-only-in-peer', wt)).toBe(false); // peer's tree
+    });
+
+    it('R2-1: absent in BOTH trees is still stale', () => {
+        const { main, wt } = make_repo();
+        expect(claim_is_stale(main, 'road-to-nowhere', wt)).toBe(true);
+    });
+
+    it('R2-2: an unidentified session excludes its OWN record by worktree', () => {
+        const { main } = make_repo();
+        open_roadmap(main, 'road-to-x');
+        const prev = process.env['CLAUDE_CODE_SESSION_ID'];
+        const prev2 = process.env['AGENT_CONFIG_SESSION_ID'];
+        delete process.env['CLAUDE_CODE_SESSION_ID'];
+        delete process.env['AGENT_CONFIG_SESSION_ID'];
+        try {
+            write_record(
+                register_dir(main)!,
+                rec({ session_id: 'whoever', worktree: main, roadmap_slug: 'road-to-x' }),
+            );
+            // Without the worktree fallback this exited 1 citing the session itself,
+            // so re-claiming was non-idempotent on the graceful-degradation path.
+            expect(claim_conflicts(main, 'road-to-x')).toEqual([]);
+        } finally {
+            if (prev === undefined) delete process.env['CLAUDE_CODE_SESSION_ID'];
+            else process.env['CLAUDE_CODE_SESSION_ID'] = prev;
+            if (prev2 === undefined) delete process.env['AGENT_CONFIG_SESSION_ID'];
+            else process.env['AGENT_CONFIG_SESSION_ID'] = prev2;
+        }
+    });
+
+    it('R2-4: a date-suffixed slug does not match every branch', () => {
+        const { main, wt } = make_repo();
+        fs.writeFileSync(path.join(wt, 'w.txt'), 'x');
+        git(wt, 'add', 'w.txt');
+        git(wt, 'commit', '-q', '-m', 'w');
+        // tail `2026-08` cleared the old `length >= 4` guard and matched anything
+        // carrying that string.
+        expect(branch_name_hits(main, 'road-to-inbox-harvest-2026-08')).toEqual([]);
+    });
+
+    it('R2-4: the real slug tail still matches', () => {
+        const { main, wt } = make_repo();
+        git(main, 'branch', 'feat/dispatch-safety-confirmation');
+        git(wt, 'checkout', '-q', 'feat/dispatch-safety-confirmation');
+        fs.writeFileSync(path.join(wt, 'w.txt'), 'x');
+        git(wt, 'add', 'w.txt');
+        git(wt, 'commit', '-q', '-m', 'w');
+        expect(
+            branch_name_hits(main, 'road-to-inbox-harvest-2026-08-b-dispatch-safety').map(
+                (h) => h.branch,
+            ),
+        ).toContain('feat/dispatch-safety-confirmation');
+    });
+
+    it('R2-12: the walk reports whether the unmerged filter was applied', () => {
+        const { main } = make_repo();
+        // No `origin/main` in the fixture, so the filter is unavailable and the
+        // human output must say so instead of claiming "N unmerged branch(es)".
+        expect(other_worktree_branches_detailed(main).filtered).toBe(false);
+    });
+
+    it('R2-14: every roadmap peer is classified, and the renderer has them all', () => {
+        const others = [
+            rec({ session_id: 'p1', branch: 'feat/b', roadmap_slug: 'road-to-x' }),
+            rec({ session_id: 'p2', branch: 'feat/c', roadmap_slug: 'road-to-x' }),
+        ];
+        const hits = classify_collisions(others, { branch: 'feat/a', roadmap_slug: 'road-to-x' });
+        expect(hits.filter((h) => h.kind === 'roadmap')).toHaveLength(2);
     });
 });
 

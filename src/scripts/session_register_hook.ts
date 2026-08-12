@@ -164,7 +164,20 @@ export function read_claimed_slug(
         return null;
     }
     const id = String(session_id ?? '').trim();
-    if (legacy.session_id !== undefined && id !== '' && legacy.session_id !== id) {
+    // A session that CAN identify itself never writes the legacy path, so a legacy
+    // file it did not write is either a peer's (a host with no id, in this same
+    // checkout) or a claim from before this file was keyed on the session. Those
+    // two are indistinguishable to a reader, and only one of them can win:
+    // inheriting a peer's claim is the measured defect, while losing a
+    // pre-upgrade claim costs one re-run of `sessions:claim`. So the identified
+    // session declines it.
+    //
+    // The previous shape compared `legacy.session_id` and was unreachable —
+    // `cmd_claim` serialises `session_id: null` on that path and `_read_claim_file`
+    // drops a null, so the comparison never ran and every legacy claim was read as
+    // "mine". R2 finding 6; the test that covered it hand-wrote a record
+    // production cannot produce.
+    if (id !== '') {
         return null;
     }
     return legacy.slug;
@@ -180,7 +193,11 @@ export function read_claimed_slug(
  * date. Only the ACTIVE tree counts; `archive/`, `later/` and `skipped/` are the
  * dispositions that make a claim meaningless.
  */
-export function claim_is_stale(workspace_root: string, slug: string | null): boolean {
+export function claim_is_stale(
+    workspace_root: string,
+    slug: string | null,
+    peer_worktree?: string | null,
+): boolean {
     if (slug === null || slug.trim() === '') {
         return false;
     }
@@ -188,11 +205,31 @@ export function claim_is_stale(workspace_root: string, slug: string | null): boo
     if (base.includes('/') || base.includes('\\') || base.includes('..')) {
         return true; // not a slug this repo can hold; never render it as live work
     }
-    try {
-        return !fs.existsSync(path.join(workspace_root, 'agents', 'roadmaps', `${base}.md`));
-    } catch {
-        return false; // unreadable tree — fail open, same as every other read here
+    // Resolved in the PEER's worktree when one is known, and only then in ours.
+    //
+    // R2 finding 1: worktrees share one register while sitting on different
+    // commits, so a checkout branched before the roadmap file existed would read a
+    // genuinely live peer claim as stale — and both consumers treat stale as "no
+    // claim", which disables the refusal and the warning in exactly the
+    // multi-worktree case this exists for. Asking the peer's own tree first makes
+    // the verdict a fact about the peer rather than about our checkout's age.
+    //
+    // Absent in BOTH trees still means stale: a slug no tree can resolve names no
+    // work. Present in either means live — the asymmetry is deliberate, because a
+    // false "live" costs one question and a false "stale" costs a duplicated PR.
+    const roots = [peer_worktree, workspace_root].filter(
+        (r): r is string => typeof r === 'string' && r.trim() !== '',
+    );
+    for (const root of roots) {
+        try {
+            if (fs.existsSync(path.join(root, 'agents', 'roadmaps', `${base}.md`))) {
+                return false;
+            }
+        } catch {
+            return false; // unreadable tree — fail open, same as every other read here
+        }
     }
+    return true;
 }
 
 /**
@@ -267,7 +304,7 @@ export function foreign_sessions_block(
 
     for (const r of others) {
         const age_min = Math.max(0, Math.round((now.getTime() - Date.parse(r.last_seen)) / 60000));
-        const stale = claim_is_stale(workspace_root, r.roadmap_slug);
+        const stale = claim_is_stale(workspace_root, r.roadmap_slug, r.worktree);
         const slug =
             r.roadmap_slug === null
                 ? 'no roadmap claimed'
@@ -287,7 +324,10 @@ export function foreign_sessions_block(
         branch: here,
         roadmap_slug: claim_is_stale(workspace_root, my_slug) ? null : my_slug,
     });
-    const roadmap_hit = collisions.find((c) => c.kind === 'roadmap') ?? null;
+    // ALL roadmap peers, not the first. `classify_collisions` returns every one on
+    // purpose and a test pins that; reporting one understated the count whenever
+    // several records described the same work (R2 finding 14).
+    const roadmap_hits = collisions.filter((c) => c.kind === 'roadmap');
     const branch_hit = collisions.find((c) => c.kind === 'branch') ?? null;
 
     const parts = [
@@ -301,11 +341,22 @@ export function foreign_sessions_block(
     // Roadmap first, deliberately. This is the expensive collision — the work is
     // being done twice and one of the two PRs is thrown away — and it is the one
     // that went unreported twice while the cheap branch warning fired correctly.
-    if (roadmap_hit !== null) {
+    //
+    // HONEST SCOPE (R2 finding 5): this block is emitted on `session_start`, where
+    // this session's own slug is normally `null` because the roadmap is picked
+    // later — so it fires only when a claim is already on disk at start, i.e. on a
+    // RESUMED session that claimed in an earlier run. The check that covers the
+    // picking moment is `sessions:claim` itself, which refuses before writing. This
+    // is the resumed-session half of the same guard, not the primary one, and
+    // deleting it would leave a resumed session unwarned.
+    if (roadmap_hits.length > 0) {
         parts.push(
             '',
-            `DUPLICATE WORK: another live session claims the SAME roadmap \`${my_slug}\`.`,
-            `  it is on branch \`${roadmap_hit.record.branch ?? 'detached'}\` in ${roadmap_hit.record.worktree}`,
+            `DUPLICATE WORK: ${roadmap_hits.length} other live session(s) claim the SAME roadmap \`${my_slug}\`.`,
+            ...roadmap_hits.map(
+                (h) =>
+                    `  · branch \`${h.record.branch ?? 'detached'}\` in ${h.record.worktree}`,
+            ),
             'A different branch name does NOT make this a different task — measured twice,',
             'two sessions built one roadmap phase under two branch names and one PR was wasted.',
             'STOP before writing code. Ask the user ONCE, as numbered options:',
@@ -365,6 +416,19 @@ export function main(): number {
         if (event === 'session_end' || (event === 'stop' && stop_means_session_end(platform))) {
             const dir = register_dir(root);
             if (dir !== null) delete_record(dir, session_id);
+            // The claim file dies with the session too. Keyed on a session id it is
+            // never read again once that session ends, so leaving it behind grows one
+            // file per session forever — the same unbounded-growth defect the register
+            // itself spends code avoiding (R2 finding 3). Only ever this session's own
+            // file: the shared legacy path may belong to a peer.
+            const own = roadmap_claim_rel(session_id);
+            if (own !== ROADMAP_CLAIM_REL) {
+                try {
+                    fs.unlinkSync(path.join(root, own));
+                } catch {
+                    /* absent or unwritable — a leftover claim expires with its record */
+                }
+            }
             return 0;
         }
 
