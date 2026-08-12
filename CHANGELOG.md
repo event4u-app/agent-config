@@ -343,8 +343,13 @@ Entry-shape contract: [`docs/contracts/CHANGELOG-conventions.md`](docs/contracts
 
 ### Release highlights
 
-<!-- Curated head: fill before merge, keep it under 10 lines, and leave `_none_` where it is genuinely the answer. The generated log below is unchanged. -->
-- **Behaviour changes:** _auto-derived, rewrite before merge:_ rule/schema diffs, breaking commits or removed public surface in 9f69017, 924cad8, 3c20d47, 72bb1bc.
+- **Behaviour changes:** the demand gate reads `project.audience` and is inert at
+  `self` — a market-demand ladder no longer fires on a project that intends no
+  market (9f69017). The two UI rules stop claiming the `ui-route-nudge` concern
+  reads their `keyword:` triggers; it does not, and six surfaces said it did
+  (3c20d47). The design skills now reach the consumers they were written for
+  (72bb1bc). The CI-side change in 924cad8 is internal to the pipeline and
+  changes no consumer-visible behaviour.
 - **Default changes + migration:** _none_
 - **Security and correctness:** _none_
 - **Honest nulls:** _none_
