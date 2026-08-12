@@ -24,14 +24,59 @@ export function isSettingsClass(value: string): value is SettingsClass {
     return (SETTINGS_CLASSES as readonly string[]).includes(value);
 }
 
+/**
+ * The closed disposition vocabulary — the axis orthogonal to A/B/C.
+ *
+ * A/B/C answers *who may write a key*. This answers *whether the key should
+ * exist at all*, which is a different question with a different action per
+ * value. A row outside the vocabulary is a defect, not a new disposition.
+ */
+export const SETTINGS_DISPOSITIONS = ['derivable', 'un-inferrable', 'consent', 'policy'] as const;
+
+export type SettingsDisposition = (typeof SETTINGS_DISPOSITIONS)[number];
+
+export function isSettingsDisposition(value: string): value is SettingsDisposition {
+    return (SETTINGS_DISPOSITIONS as readonly string[]).includes(value);
+}
+
 /** One parsed row of the contract's key table. */
 export interface SettingsClassRow {
     /** Dotted leaf path, e.g. `personal.autonomy`. */
     key: string;
     /** Raw class cell — NOT yet validated, so the lint can report a bad one. */
     cls: string;
+    /**
+     * Raw disposition cell, or `null` when the row has no fifth column at all.
+     *
+     * NOT validated here, for the same reason `cls` is not: the lint has to be
+     * able to report a bad value, and a parser that silently drops it would
+     * make an unclassified key indistinguishable from a mis-spelled one.
+     *
+     * `derivable` rows carry their replacement after an em dash — the clause
+     * that makes the label falsifiable rather than a synonym for "inconvenient
+     * to keep". `dispositionOf` returns the label, `replacementOf` the clause.
+     */
+    disposition: string | null;
     /** 1-indexed line in the contract, so a finding points at something. */
     line: number;
+}
+
+/** `derivable — the detector's own trigger condition` → `derivable`. */
+export function dispositionOf(cell: string | null): string | null {
+    if (cell === null) {
+        return null;
+    }
+    const [label] = cell.split('—');
+    return (label ?? '').trim();
+}
+
+/** `derivable — the detector's own trigger condition` → the clause after the dash. */
+export function replacementOf(cell: string | null): string {
+    if (cell === null) {
+        return '';
+    }
+    const dash = cell.indexOf('—');
+    return dash === -1 ? '' : cell.slice(dash + 1).trim();
 }
 
 /** What the contract's own `## Counts` table claims about itself. */
@@ -51,11 +96,20 @@ export interface DeclaredClassCounts {
  */
 const ROW_RE = /^\|\s*`([^`]+)`\s*\|\s*([^|]*?)\s*\|/;
 
+/**
+ * The disposition is read as the FIFTH cell, appended after `Why`, so the four
+ * cells every existing consumer indexes keep their positions. A row that
+ * predates the axis simply has no fifth cell and parses to `null` — an absent
+ * disposition, which the lint reports, rather than a shifted `Default`.
+ */
+const DISPOSITION_RE = /^\|\s*`[^`]+`\s*\|[^|]*\|[^|]*\|[^|]*\|\s*([^|]*?)\s*\|/;
+
 export function parseSettingsClassRows(markdown: string): SettingsClassRow[] {
     const rows: SettingsClassRow[] = [];
     const lines = markdown.split('\n');
     for (let i = 0; i < lines.length; i++) {
-        const m = ROW_RE.exec(lines[i] ?? '');
+        const line = lines[i] ?? '';
+        const m = ROW_RE.exec(line);
         if (m === null) {
             continue;
         }
@@ -64,7 +118,9 @@ export function parseSettingsClassRows(markdown: string): SettingsClassRow[] {
         if (!/^[A-Za-z]$/.test(cls)) {
             continue;
         }
-        rows.push({ key, cls, line: i + 1 });
+        const d = DISPOSITION_RE.exec(line);
+        const raw = d?.[1] ?? '';
+        rows.push({ key, cls, disposition: raw === '' ? null : raw, line: i + 1 });
     }
     return rows;
 }
@@ -81,6 +137,41 @@ export function parseDeclaredClassCounts(markdown: string): DeclaredClassCounts 
         B: read(/^\|\s*B\s+—\s+consent\s*\|\s*(\d+)\s*\|/m),
         C: read(/^\|\s*C\s+—\s+guarded\s*\|\s*(\d+)\s*\|/m),
         total: read(/^\|\s*\*\*Total\*\*\s*\|\s*\*\*(\d+)\*\*\s*\|/m),
+    };
+}
+
+/** What the contract's own `## Dispositions` table claims about itself. */
+export interface DeclaredDispositionCounts {
+    derivable: number | null;
+    'un-inferrable': number | null;
+    consent: number | null;
+    policy: number | null;
+    total: number | null;
+}
+
+/** `| derivable | 12 |` and `| **Total** | **140** |` under `## Dispositions`. */
+export function parseDeclaredDispositionCounts(markdown: string): DeclaredDispositionCounts {
+    // Scoped to the section, so the class Counts table's own **Total** row —
+    // identical in shape and earlier in the file — cannot be read as this one.
+    const start = markdown.indexOf('\n## Dispositions');
+    const section = start === -1 ? '' : markdown.slice(start + 1);
+    const end = section.indexOf('\n## ', 1);
+    const scoped = end === -1 ? section : section.slice(0, end);
+    // The value cell is read with optional `**` so the bolded `**Total**` row
+    // and the plain per-label rows go through one path — a second regex for the
+    // total is a second thing to get wrong.
+    const read = (label: string): number | null => {
+        const re = new RegExp(String.raw`^\|\s*` + label + String.raw`\s*\|\s*\**(\d+)\**\s*\|`, 'm');
+        const m = re.exec(scoped);
+        const raw = m?.[1];
+        return raw === undefined ? null : Number.parseInt(raw, 10);
+    };
+    return {
+        derivable: read('derivable'),
+        'un-inferrable': read('un-inferrable'),
+        consent: read('consent'),
+        policy: read('policy'),
+        total: read(String.raw`\*\*Total\*\*`),
     };
 }
 

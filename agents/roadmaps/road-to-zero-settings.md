@@ -63,17 +63,17 @@ the finding.
 
 ## Phase 1 — classify all 140, with the number published
 
-- [ ] 1.1 Extend `lint_settings_classes` (or a sibling reporter) to emit a
+- [x] 1.1 Extend `lint_settings_classes` (or a sibling reporter) to emit a
   per-key **disposition** column alongside the existing class, sourced from a
   committed table rather than a heuristic — the classification is a judgement
   and must be reviewable as data, not re-derived per run.
   `verify:` the reporter prints 140 rows and 0 rows with an empty disposition.
-- [ ] 1.2 Fill the table for all 140 leaves. Each `derivable` row names, in one
+- [x] 1.2 Fill the table for all 140 leaves. Each `derivable` row names, in one
   clause, **what would decide instead** — a mechanism, a probe, a file. A row
   that cannot name its replacement is not `derivable`; it is `policy` or
   `un-inferrable`, and mislabelling it is how a deletion becomes a regression.
   `verify:` every `derivable` row has a non-empty replacement clause.
-- [ ] 1.3 Publish the four counts. This roadmap deliberately does NOT predict
+- [x] 1.3 Publish the four counts. This roadmap deliberately does NOT predict
   them: a target number written before the classification would steer it, which
   is the same pre-registration failure the package has recorded twice.
   `verify:` the four counts sum to 140.
@@ -112,10 +112,58 @@ the finding.
   mechanism can derive it. A floor nobody can argue with is the deliverable; a
   floor asserted without reasons is where the next round quietly re-grows.
   `verify:` every residual key has a non-empty reason.
-- [ ] 4.2 Add the authoring gate: a NEW settings key must arrive with its
+- [x] 4.2 Add the authoring gate: a NEW settings key must arrive with its
   disposition, and `derivable` is rejected. Without this the surface re-grows at
   the rate features land, and every count above becomes historical.
   `verify:` the gate fails a fixture PR that adds a `derivable` key.
+
+## What Phase 1 measured (2026-08-12)
+
+The four counts 1.3 refused to predict, taken from the filled table rather than
+estimated: **derivable 88 · consent 38 · un-inferrable 9 · policy 5**, total 140.
+Re-derive with `./scripts-run src/scripts/lint_settings_classes` rather than
+trusting this paragraph.
+
+Two findings the classification produced that no step asked for:
+
+- **Six keys have no reader at all** — `telegraph.speak_scope`,
+  `chat_history.max_size_kb`, `chat_history.on_overflow`,
+  `quality.wait_for_remote_ci`, `screenshots.data_bearing_gate`,
+  `legal_review_prep.consented_at`. Each is in the template, the schema and the
+  reference page, several are in the setup wizard, and no code path consults any
+  of them. They are the obvious first batch for 2.1: an unread key needs no
+  replacement mechanism, so it is the one deletion that cannot silently change a
+  default. Two of them sit on consent-shaped surfaces, which means the
+  authorisation they appear to carry is not enforced anywhere today.
+- **A live schema-vs-doc drift on `telegraph.speak_scope`**: the Zod schema's
+  enum is `off | reply | all` while the template and the frugality charter
+  document `off | prose_only | aggressive`. Not repaired here — it belongs to
+  whichever step deletes or fixes the key, and repairing it in passing would be
+  the drive-by edit `minimal-safe-diff` forbids.
+
+## Blockers
+
+### blocker: consent-key-redesign-verdict
+
+- **Status:** open
+- **Owner:** maintainer
+- **Blocks:** step 3.2 only. Phases 1 and 4.2 are closed; 2.1/2.2/3.1/4.1 are
+  unblocked by it.
+- **What to do:** 3.2 asks for a keep-vs-redesign verdict on the three class-B
+  consent keys against *"does the action need authorising at all?"*. That is a
+  product call about what the package may do to a user — not a classification —
+  and the roadmap's own `verify:` demands a recorded verdict rather than a
+  deferral, so it cannot be closed by an agent choosing one.
+- **Why it is not council-resolved:** it is a judgement call, so the
+  action-vs-judgement split would normally route it to the AI council. The
+  council was **configured and both members failed** on 2026-08-12 —
+  `anthropic` exit 1, `openai` exit 2 (`unexpected argument '--system'` from the
+  `codex exec` transport). The run also printed `2/2 present, needed 1 —
+  concluded` while its own JSON recorded `present: 0, status: inconclusive`,
+  which is worth repairing separately: a transport failure that reports as a
+  quorum is worse than one that reports as an outage.
+- **Resolved when:** each of the three keys carries a recorded verdict (keep, or
+  redesign the action), in this roadmap or an ADR.
 
 ## Acceptance criteria
 

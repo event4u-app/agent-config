@@ -9,7 +9,7 @@
 **273 / 396 steps done · 69%**
 
 ```text
-████████████████████████████░░░░░░░░░░░░   69%
+████████████████████████████░░░░░░░░░░░░   70%
 ```
 
 ## ✅ Completed — pending archival
@@ -972,14 +972,34 @@ _1 blocker resolved._
 
 ### [road-to-zero-settings.md](roadmaps/road-to-zero-settings.md)
 
-**Road to zero settings — delete the flags whose answer the situation already carries** — 0 / 9 done (0%)
+**Road to zero settings — delete the flags whose answer the situation already carries** — 4 / 9 done (44%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
-| 1 | classify all 140, with the number published | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
+| 1 | classify all 140, with the number published | ✅ done | 0 | 3 | 0 | 0 | 100% |
 | 2 | delete the free tier | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
 | 3 | the keys that need a mechanism first | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
-| 4 | state the floor and stop | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
+| 4 | state the floor and stop | 🟡 in progress | 1 | 1 | 0 | 0 | 50% |
+
+<a id="blockers-road-to-zero-settings"></a>
+**Blockers**
+
+- **consent-key-redesign-verdict** (owner: maintainer) — blocks step 3.2 only. Phases 1 and 4.2 are closed; 2.1/2.2/3.1/4.1 are unblocked by it.
+  - **What to do:**
+    3.2 asks for a keep-vs-redesign verdict on the three class-B
+    consent keys against *"does the action need authorising at all?"*. That is a
+    product call about what the package may do to a user — not a classification —
+    and the roadmap's own `verify:` demands a recorded verdict rather than a
+    deferral, so it cannot be closed by an agent choosing one.
+    - **Why it is not council-resolved:** it is a judgement call, so the
+    action-vs-judgement split would normally route it to the AI council. The
+    council was **configured and both members failed** on 2026-08-12 —
+    `anthropic` exit 1, `openai` exit 2 (`unexpected argument '--system'` from the
+    `codex exec` transport). The run also printed `2/2 present, needed 1 —
+    concluded` while its own JSON recorded `present: 0, status: inconclusive`,
+    which is worth repairing separately: a transport failure that reports as a
+    quorum is worse than one that reports as an outage.
+  - **Resolved when:** each of the three keys carries a recorded verdict (keep, or redesign the action), in this roadmap or an ADR.
 
 ---
 
