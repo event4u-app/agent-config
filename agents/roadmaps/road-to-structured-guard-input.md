@@ -86,10 +86,11 @@ measured. Do not treat the recommendation as settled until Phase 1 answers them.
 > one finding that argues the other way: this guard has **no** second control,
 > so advisory is safe only while the rate holds.
 >
-> The disposition below is **an open decision, not a verdict**. The AI council
-> was convened on it and returned INCONCLUSIVE — `cli_quota_exhausted` on both
-> members — so it is recorded here rather than resolved. The four options as put
-> to the council:
+> **Resolved 2026-08-12 by the operator: option C.** The AI council was convened
+> on it first and returned INCONCLUSIVE — `cli_quota_exhausted` on both members —
+> so this is an operator decision taken with the mandated mechanism unavailable,
+> recorded as such rather than presented as a council verdict. The four options
+> as put to the council:
 >
 > - **A — cancel Phases 2 and 3**, record the published null, keep advisory
 >   severity. The gap F2 names stays open.
@@ -105,34 +106,60 @@ measured. Do not treat the recommendation as settled until Phase 1 answers them.
 >   already enumerates the same population (the downgrade changed severity, not
 >   classification).
 >
-> Until it is answered, Phase 2 and Phase 3 stay open and unstarted **by
-> design** — building them would be the sunk cost Risk 2 names.
+> **Chosen: C.** It targets what F2 measured — this guard is the only control —
+> without paying the cost F3 falsified, and it sits where the case-zero incident
+> actually did damage: not at dispatch, but when a fabricated NO-FINDINGS was
+> booked as binding gate evidence. Option D additionally carries a mechanical
+> cost: a `[~]` step is a hard blocker on archiving in this repo.
 
-- [ ] Add `role: evaluate | implement | coordinate` and
-      `evidence_scope: self | external | none` to the dispatch envelope, set by
-      the caller at the call site — where the intent is known by construction
-      rather than inferred from the prompt text.
-      *Verify:* the field reaches `evidence_independence` in a real envelope; a
-      dispatch missing it is distinguishable from one that set it.
-- [ ] Move the second-dispatch branch to read the field instead of the prose,
-      and restore blocking for `(role=evaluate ∧ evidence_scope=self)` twice in
-      one turn.
-      *Verify:* the 16-way implementation fan-out from the audit still
-      dispatches 16 workers; two genuine self-reviews in one turn block.
-- [ ] Keep the prose predicate as an advisory cross-check and log disagreements
-      between it and the field.
-      *Verify:* a disagreement is logged with both verdicts, so a model that
-      mislabels `role` to dodge the guard is visible rather than silent.
+**Re-cut 2026-08-12 to option C** — the operator chose the downstream control
+over the structured field. The three steps below replace the field steps; what
+they were is recorded above. The measurement that shaped them is in
+`agents/evidence/analysis/structured-guard-input-phase1.md` § Phase 2 re-cut.
+
+- [ ] Verify the prompt→verdict binding that already exists but is checked by
+      nothing. For every `*.findings.md` carrying `prompt_hash`, when the
+      conventional input package `<slug>.review-input/prompt.md` is present:
+      re-derive `sha256(prompt.md)` and compare, and run `preloadedVerdict`
+      **imported from `evidence_independence.ts`** over the prompt text. Absent
+      package or absent hash → nothing to check, exactly as today.
+      *Verify:* the check reproduces the measured baseline on the committed
+      corpus — 19 packages, 0 steered, 17 binding, 2 broken — and a planted
+      steered prompt and a planted one-byte edit each produce a violation.
+      No manifest change: the package path is derivable from the slug, so the
+      `prompt:` manifest field first considered would have been a migration
+      event for 30 committed manifests in exchange for nothing.
+- [ ] Dispose of the two measured breaks, which are not the same kind.
+      `zcs-close-2026-08-09` was broken by the archival sweep rewriting a path
+      inside a frozen record; that cause was fixed 2026-08-11, and § 2.7 forbids
+      editing the round record now to make it re-derive, so it is a documented
+      historical break. `feat-parallel-session-collision-hardening` is dated
+      **after** that fix, has a single commit, and is unexplained — line endings
+      and trailing-newline variants were ruled out.
+      *Verify:* each of the two is either explained with its cause named, or
+      recorded as a baseline entry carrying the reason it may not be repaired.
+- [ ] Correct the dispatcher docstring at `dispatch_r2_reviewer.ts:645`, which
+      states that `--verify` re-derives `prompt_hash` from the same inputs and
+      compares. It does not — `runVerify` re-derives `scope_hash`,
+      `roadmap_hash` and `ac_hash` only.
+      *Verify:* the docstring matches what `runVerify` actually compares, and
+      the contract's § 5 correction and it agree.
 
 ## Phase 3 — the adversarial question the council raised
 
-- [ ] Test whether the field can be gamed: over 20 sessions after Phase 2, count
+- [-] Test whether the field can be gamed: over 20 sessions after Phase 2, count
       dispatches where `role=implement` was set on a prompt that a human reads
       as an evaluation.
       *Verify:* a count with examples. The council's falsifier: >10% means
       structured gates do not survive an adaptive model, and the answer is
       human-in-the-loop approval for the sensitive operation rather than any
       automatic gate.
+      → **Cancelled — it tests a field that will not be built.** The adversarial
+      question itself is not dropped: option C moves it from "can the model
+      mislabel `role`" to "can the host substitute the committed prompt", where
+      it is recorded as the standing residual in
+      `docs/contracts/plan-review-gates.md` § 5. Reopening this step requires
+      reopening Phase 2's field, not this test.
 
 ## Phase 4 — the blind spot the audit missed
 

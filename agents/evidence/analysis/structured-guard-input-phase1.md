@@ -186,6 +186,74 @@ What was taken instead is a positive observation that required no evasion: a
 literal `-n` inside a `git log` command was refused by the live guard, which
 confirms it reads the model-emitted text and that transport delivers it intact.
 
+## Phase 2 re-cut — the measurement behind option C
+
+The operator chose option C (a downstream control on the evidence path) over the
+structured field. Measured before designing it, and the measurement changed what
+the control has to be.
+
+**The contract's stated reason for having no control is false.** `plan-review-gates.md`
+§ 5 records the prompt channel as an accepted risk because *"No in-repo check can
+read the prompt, so there is no detection floor"*. The dispatcher writes
+`promptText` verbatim to `<slug>.review-input/prompt.md` (`dispatch_r2_reviewer.ts:1044`),
+and **19 of those files are tracked in git**. An in-repo check can read the
+prompt today; it simply does not. The premise was true when the residual was
+written about the *hash*, and false about the *text* that sits beside it.
+
+**Nothing verifies `prompt_hash`.** It is written (`:1025`), parsed
+(`check_completion_review.ts:345`) and **never compared to anything**;
+`--verify` / `--verify-current` re-derive `scope_hash`, `roadmap_hash` and
+`ac_hash` only. The dispatcher's own docstring at `:645` claims otherwise.
+
+**Retrospective scan of all 19 tracked prompts**, using `preloadedVerdict` imported
+from the guard and a plain sha256 re-derivation:
+
+| | Result |
+|---|---|
+| Prompts carrying a pre-loaded verdict | **0 of 19** |
+| `prompt_hash` re-derives from the committed text | **17 of 19** |
+| Broken bindings | **2** |
+
+The two breaks are different, and only one is historical:
+
+- **`zcs-close-2026-08-09` — explained and already closed.** The archival sweep
+  rewrote a path *inside* the committed reviewer prompt
+  (`agents/roadmaps/…` → `agents/roadmaps/archive/…`) while migrating inbound
+  references, editing a round record § 2.7 declares immutable. The cause was
+  fixed on **2026-08-11** (`_FROZEN_RECORD_PREFIXES = ['agents/evidence/']`),
+  one day after the break. Nothing to rebuild.
+- **`feat-parallel-session-collision-hardening` — current and unexplained.** Its
+  `prompt.md` has exactly one commit, dated **2026-08-12**, i.e. *after* the
+  sweep fix, so the sweep did not cause it. The declared hash never matched the
+  committed text. Not line endings: CRLF/LF and trailing-newline variants were
+  all tried and none reproduces the declared hash.
+
+That second case is the finding that justifies the control empirically rather
+than by argument: **the only binding between a verdict and the prompt that
+produced it is broken, currently, and nobody noticed — because nothing looks.**
+
+**What the control has to be, and what it is not.** Verifying `sha256(prompt.md)
+== prompt_hash` plus running `preloadedVerdict` over the text is deterministic,
+reads a file rather than inferring intent (Tier 1 under the hook contract's tier
+rule), needs no envelope field and touches none of the 50 dispatch call sites F3
+counted. It does **not** close the residual: the host that authors the prompt
+also writes the file, so a host that substitutes a clean prompt for a steered one
+stays undetected. What changes is that steering must now be an *act of
+substitution* leaving its own artefact in the commit, instead of being invisible
+by default.
+
+Its honest ceiling is measured too: against the four steering clauses case zero
+records verbatim, the existing predicate matches **one** — `"NO-FINDINGS is
+expected"`. The prior-round disclosure, `"a padded list is worse than none"` and
+the requester-chosen file narrowing are **not** matched. One of four is the
+detection floor this buys, not a solved problem.
+
+**No manifest change is needed.** The input package path is derivable from the
+artefact slug by convention (`<slug>.findings.md` ↔ `<slug>.review-input/prompt.md`),
+which is how the scan above located all 19 without any new field — so the
+`prompt:` manifest line that first suggested itself would have been a migration
+event for 30 committed manifests in exchange for nothing.
+
 ## Council attempt on the Phase 2–3 disposition — INCONCLUSIVE
 
 Convened 2026-08-12 on which disposition Phases 2–3 should take given the three
