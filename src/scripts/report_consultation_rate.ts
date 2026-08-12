@@ -46,6 +46,7 @@ import * as os from 'node:os';
 import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+import { projectStoreSlug } from './_lib/cc_transcript.js';
 import {
     isConsultation,
     isUiWrite,
@@ -107,7 +108,7 @@ export interface RateReport {
  * reads a clean zero out of a store it never found.
  */
 export function defaultStore(cwd: string): string {
-    return path.join(os.homedir(), '.claude', 'projects', cwd.replace(/[/.]/g, '-'));
+    return path.join(os.homedir(), '.claude', 'projects', projectStoreSlug(cwd));
 }
 
 /**

@@ -105,25 +105,71 @@ export const WARN_OPS: ReadonlySet<GitOp> = new Set<GitOp>([
 // gate. `G` allows any run of them.
 const G = "(?:-[A-Za-z-]+(?:=\\S+)?(?:\\s+\\S+)?\\s+)*";
 
+/** Optional absolute/relative path in front of the tool word: `/usr/bin/npm`. */
+const P = "^(?:\\S*\\/)?";
+
+/**
+ * A `gh api` call that WRITES. Read-only `gh api` is the standard way to inspect
+ * GitHub state and must never be refused.
+ *
+ * Two lookaheads rather than one linear pattern, because `-X POST` may appear on
+ * either side of the path: `gh api -X POST repos/o/r/releases` and
+ * `gh api repos/o/r/releases -X POST` are the same call.
+ */
+function ghApiWrite(pathRe: string): RegExp {
+  return new RegExp(
+    `${P}gh\\s+api\\b(?=[^\\n]*${pathRe})(?=[^\\n]*(?:-X|--method)\\s+(?:POST|PATCH|PUT|DELETE)\\b)`,
+    "i",
+  );
+}
+
 /**
  * Command → operation. Order matters: the most specific pattern wins, so
  * `git push --tags` is a tag push and not a plain push.
+ *
+ * Every pattern is anchored at command position (`P`), not `\b`. An unanchored
+ * verb matches its own name inside a QUOTED ARGUMENT, and the 2026-08-12 session
+ * audit measured all three of that window's blocked ops as exactly that false
+ * positive — every one read-only or harmless:
+ *
+ *   gh pr create … --title "…(unblock npm publish)"   → classified `publish`
+ *   gh api repos/o/r/releases/latest --jq …           → classified `release`
+ *   gh api repos/jdx/aube-action/releases --jq …      → classified `release`
+ *
+ * The first is a PR *about* a publishing problem; the other two are GETs, one of
+ * them against a third-party repo. All three are BLOCK ops, so on a hook-bound
+ * host the operator could neither open that PR nor diagnose why a release had
+ * not appeared — while the transcripts of that same window carry "Ich kann
+ * wieder nicht releasen. Warum nicht?".
+ *
+ * The heredoc stripper upstream already removes `--body "$(cat <<EOF …)"`
+ * payloads; it cannot help here because `--title` is an ordinary quoted
+ * argument. Anchoring is what separates *invoking* a verb from *naming* one.
  */
 const COMMAND_OPS: ReadonlyArray<{ op: GitOp; re: RegExp }> = [
-  { op: "publish", re: new RegExp(`\\b(npm|pnpm|yarn)\\s+${G}publish\\b`, "i") },
-  { op: "release", re: /\bgh\s+release\s+create\b|\bgh\s+api\b[^\n]*\/releases\b/i },
+  { op: "publish", re: new RegExp(`${P}(npm|pnpm|yarn)\\s+${G}publish\\b`, "i") },
+  {
+    op: "release",
+    re: new RegExp(`${P}gh\\s+release\\s+create\\b|${ghApiWrite("\\/releases\\b").source}`, "i"),
+  },
   {
     op: "tag",
+    re: new RegExp(`${P}git\\s+${G}push\\b[^\\n;|&]*(--tags|--follow-tags|refs\\/tags\\/)`, "i"),
+  },
+  {
+    op: "pr-merge",
     re: new RegExp(
-      `\\bgit\\s+${G}push\\b[^\\n;|&]*(--tags|--follow-tags|refs\\/tags\\/)`,
+      `${P}gh\\s+pr\\s+merge\\b|${ghApiWrite("\\/pulls\\/\\d+\\/merge\\b").source}`,
       "i",
     ),
   },
-  { op: "pr-merge", re: /\bgh\s+pr\s+merge\b|\bgh\s+api\b[^\n]*\/pulls\/\d+\/merge\b/i },
-  { op: "pr-create", re: /\bgh\s+pr\s+create\b|\bgh\s+api\b[^\n]*-X\s+POST[^\n]*\/pulls\b/i },
-  { op: "push", re: new RegExp(`\\bgit\\s+${G}push\\b`, "i") },
-  { op: "commit", re: new RegExp(`\\bgit\\s+${G}commit\\b`, "i") },
-  { op: "branch", re: new RegExp(`\\bgit\\s+${G}(checkout\\s+-b|switch\\s+-c)\\b`, "i") },
+  {
+    op: "pr-create",
+    re: new RegExp(`${P}gh\\s+pr\\s+create\\b|${ghApiWrite("\\/pulls\\b").source}`, "i"),
+  },
+  { op: "push", re: new RegExp(`${P}git\\s+${G}push\\b`, "i") },
+  { op: "commit", re: new RegExp(`${P}git\\s+${G}commit\\b`, "i") },
+  { op: "branch", re: new RegExp(`${P}git\\s+${G}(checkout\\s+-b|switch\\s+-c)\\b`, "i") },
 ];
 
 const COMMAND_TOOLS: ReadonlySet<string> = new Set([

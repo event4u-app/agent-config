@@ -135,9 +135,27 @@ export function isEvaluationPrompt(prompt: string): boolean {
  * ON, so the second-dispatch block requires a self-reference. The pre-loaded-
  * verdict block does NOT: steering an evaluator is wrong whatever it is
  * pointed at.
+ *
+ * That fix was still too wide, and the cross-project session audit (2026-08-12)
+ * measured the cost: `road-to-release-truth/fc1ff181` turn 3 fanned out 16
+ * IMPLEMENTATION workers, and 15 were classified self-scoped on one phrase —
+ * `this branch`. In context it read "two conversions already landed on this
+ * branch in exactly the style you should match", i.e. it named WHERE the work
+ * happens. A worktree dispatch prompt carries that phrase by construction
+ * ("Work in <worktree> (branch …)"), so on a hook-bound host the guard ate 15
+ * of 16 workers — the exact behaviour `evaluator-independence` § "When it does
+ * NOT fire" promises is out of scope ("…or IMPLEMENT is not evaluation and is
+ * not gated").
+ *
+ * So the self-reference must name a SUBJECT a verdict can be shopped for — a
+ * diff, a change, a patch — never the LOCATION the work happens in. `this
+ * branch` is dropped for that reason; `my branch` stays, because the possessive
+ * makes it a claim about the agent's own work rather than an address. `this pr`
+ * stays for the same reason `this diff` does: a PR is a thing reviewers render
+ * verdicts on, whereas a branch is where you stand while working.
  */
 const SELF_SCOPE_RE =
-  /\b(my (work|change|diff|implementation|code|fix|patch|branch|pr)|this (diff|change|branch|pr|delta|implementation|patch)|the delta|the change i|what i (wrote|built|changed|implemented)|i just (wrote|built|changed|implemented))\b/i;
+  /\b(my (work|change|diff|implementation|code|fix|patch|branch|pr)|this (diff|change|pr|delta|implementation|patch)|the delta|the change i|what i (wrote|built|changed|implemented)|i just (wrote|built|changed|implemented))\b/i;
 
 export function isSelfScoped(prompt: string): boolean {
   return SELF_SCOPE_RE.test(prompt);
@@ -251,16 +269,50 @@ export function decide(
     return { exit: EXIT_ALLOW, stdout: "", stderr: "", evaluations: priorEvaluations };
   }
 
+  // WARN, not block — a deliberate severity decision, not an oversight.
+  //
+  // This branch decides from PROSE ALONE: `isEvaluationPrompt` and `isSelfScoped`
+  // both infer intent from a natural-language prompt, and no structured fact
+  // corroborates them. Under the tier rule in `docs/contracts/hook-architecture-v1.md`
+  // (§ What a concern may block on) that is Tier 3, and Tier 3 may only warn.
+  //
+  // It is written from measurement, not taste. A 16-way fan-out of IMPLEMENTATION
+  // subagents lost 15 workers to this branch, because `isEvaluationPrompt` fired
+  // on the unavoidable words review/audit/check and `isSelfScoped` on the phrase
+  // `this branch` — an address every worktree dispatch prompt carries. Narrowing
+  // the phrase list fixed that instance; the council convened on the design
+  // (anthropic + openai, 2026-08-12, quorum 2/2) held that no finite pattern can
+  // bound the false-positive set, and that a prompt — unlike a shell command —
+  // has no grammar to anchor an "invoked vs named" discriminator to.
+  //
+  // What is NOT downgraded: the pre-loaded-verdict block above. That one matches
+  // a literal steering formulation ("NO-FINDINGS is expected and welcome"), which
+  // IS the violation rather than evidence of one, so it keeps blocking.
+  //
+  // The route back to blocking is structural, not another regex: a `role` /
+  // `evidence_scope` field the dispatcher sets at the call site, where the caller
+  // knows by construction whether it is commissioning an evaluation. Then this
+  // branch reads a field instead of guessing, and becomes Tier 1.
+  // exit 0 + `decision: "warn"` on stdout is how this dispatcher carries an
+  // advisory — NOT exit 2. The internal ladder's `2 = warn` is read as BLOCK by
+  // Claude Code's native PreToolUse contract, which is the defect that made an
+  // advisory guard a hard deny once already; the same shape here would have kept
+  // the fan-out blocked while claiming to warn.
   if (priorEvaluations >= 1) {
     return {
-      exit: EXIT_BLOCK,
-      stdout: "",
-      stderr:
-        `Blocked: second evaluation dispatch of your own work in this turn (verdict ` +
-        `shopping). One evaluation has already run; commissioning another with a ` +
-        `different prompt or scope selects the answer instead of measuring it. ` +
-        `Report what the first pass returned, then re-plan.\n`,
-      evaluations: priorEvaluations,
+      exit: EXIT_ALLOW,
+      stdout: `${JSON.stringify({
+        decision: "warn",
+        reason:
+          `Second evaluation dispatch of your own work in this turn. If both passes ` +
+          `judge the SAME subject, that is verdict shopping — commissioning another ` +
+          `with a different prompt or scope selects the answer instead of measuring ` +
+          `it. Report what the first pass returned, then re-plan. If this is an ` +
+          `implementation fan-out rather than a second review, carry on: this check ` +
+          `reads prose and cannot tell the two apart with certainty.`,
+      })}\n`,
+      stderr: "",
+      evaluations: priorEvaluations + 1,
     };
   }
 
