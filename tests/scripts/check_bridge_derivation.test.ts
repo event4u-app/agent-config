@@ -12,7 +12,9 @@ import path from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import {
+    BRIDGE_ROOTS,
     diff_snapshots,
+    partition_roots,
     snapshot_tree,
     validate_symlinks,
 } from '../../src/scripts/check_bridge_derivation.js';
@@ -111,5 +113,82 @@ describe('validate_symlinks', () => {
         const errors = validate_symlinks(root, repo);
         expect(errors.length).toBe(1);
         expect(errors[0]).toContain('outside the derivation sources');
+    });
+
+    it('keeps its teeth on an active root: a broken symlink is still flagged', () => {
+        // The scoping below must narrow WHICH roots are audited, never how
+        // hard. `.claude/rules` is audited whenever claude-code is active, and
+        // the seeded break has to survive that path.
+        const { repo, root } = repoWith('../../dist/agent-src/rules/missing.md');
+        expect(partition_roots(['.claude/rules'], new Set(['claude-code'])).audited).toEqual([
+            '.claude/rules',
+        ]);
+        expect(validate_symlinks(root, repo)[0]).toContain('broken symlink');
+    });
+});
+
+describe('partition_roots', () => {
+    it('null (no tools file / malformed) audits every root', () => {
+        const { audited, skipped } = partition_roots(BRIDGE_ROOTS, null);
+        expect(audited).toEqual([...BRIDGE_ROOTS]);
+        expect(skipped).toEqual([]);
+    });
+
+    it('all eight tools active audits every root — the CI configuration', () => {
+        const all = new Set([
+            'claude-code',
+            'claude-desktop',
+            'augment',
+            'copilot',
+            'cursor',
+            'windsurf',
+            'cline',
+            'gemini',
+        ]);
+        expect(partition_roots(BRIDGE_ROOTS, all).skipped).toEqual([]);
+    });
+
+    it('a deactivated tool drops exactly its own roots', () => {
+        // `tools: []` — the masked local configuration that broke the 9.36.0
+        // release push: `.claude/skills/` had not been regenerated since the
+        // rename that orphaned its symlinks, and no regeneration path existed.
+        const { audited, skipped } = partition_roots(BRIDGE_ROOTS, new Set());
+        expect(skipped).toContain('.claude/skills');
+        expect(skipped).toContain('.claude/rules');
+        expect(skipped).toContain('.clinerules');
+        expect(skipped).toContain('GEMINI.md');
+        expect(audited).not.toContain('.claude/skills');
+    });
+
+    it('deactivating one tool leaves the others audited', () => {
+        const { audited, skipped } = partition_roots(
+            ['.claude/skills', '.cursor/rules', '.clinerules'],
+            new Set(['cursor', 'cline']),
+        );
+        expect(skipped).toEqual(['.claude/skills']);
+        expect(audited).toEqual(['.cursor/rules', '.clinerules']);
+    });
+
+    it('.augment stays audited under every tool selection', () => {
+        // `project_to_augment()` carries no tool gate, so `.augment` is
+        // regenerated on every run. Mapping it to a tool id would silence the
+        // audit on a maintained tree — a strict weakening, and the reason
+        // absent-from-the-map means unconditional rather than skippable.
+        expect(BRIDGE_ROOTS).toContain('.augment');
+        for (const active of [new Set<string>(), new Set(['cursor']), new Set(['augment'])]) {
+            expect(partition_roots(BRIDGE_ROOTS, active).audited).toContain('.augment');
+        }
+    });
+
+    it('never audits a root it also skips, for any selection', () => {
+        for (const active of [
+            new Set<string>(),
+            new Set(['claude-code']),
+            new Set(['windsurf', 'gemini']),
+        ]) {
+            const { audited, skipped } = partition_roots(BRIDGE_ROOTS, active);
+            expect(audited.length + skipped.length).toBe(BRIDGE_ROOTS.length);
+            expect(audited.filter((r) => skipped.includes(r))).toEqual([]);
+        }
     });
 });

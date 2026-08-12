@@ -16,6 +16,11 @@
  *      changed entry means the tree on disk did not derive from the current
  *      source (hand-edit, stale generation, or a nondeterministic generator).
  *
+ * Both legs are scoped to the roots this checkout's generator actually writes:
+ * a root whose owning tool is deactivated in `agents/.agent-tools.yml` has no
+ * regeneration path, so nothing found there is drift it could repair. Skipped
+ * roots are named on stderr, never dropped silently.
+ *
  * Run AFTER `task generate-tools` (CI: the sync-consistency job). Exit 1 on
  * the first drifted artefact, naming it.
  */
@@ -26,6 +31,7 @@ import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { assertScanned, DeadScopeError } from './_lib/scan_scope.js';
+import { active_tools_at } from './condense.js';
 
 const _HERE = fileURLToPath(import.meta.url);
 const REPO_ROOT = path.join(path.dirname(_HERE), '..', '..');
@@ -49,6 +55,59 @@ export const BRIDGE_ROOTS: readonly string[] = [
 
 /** Repo-relative prefixes a bridge symlink may resolve into. */
 const DERIVATION_SOURCES = ['dist/agent-src', 'src', 'AGENTS.md'] as const;
+
+/**
+ * Bridge root → the tool id whose activation makes the generator maintain it.
+ *
+ * A root ABSENT from this map is maintained unconditionally, and `.augment` is
+ * the one that matters: `project_to_augment()` carries no tool gate, so mapping
+ * it to `augment` would silence the audit on a tree that is regenerated on
+ * every run — a strict weakening. Absent-means-unconditional keeps that the
+ * default, so a future bridge root has to opt IN to being skippable.
+ */
+const ROOT_TOOL_ID: Readonly<Record<string, string>> = {
+    '.claude/rules': 'claude-code',
+    '.claude/skills': 'claude-code',
+    '.claude/agents': 'claude-code',
+    '.claude/personas': 'claude-code',
+    '.claude/user-types': 'claude-code',
+    '.cursor/rules': 'cursor',
+    '.cursor/commands': 'cursor',
+    '.windsurf/rules': 'windsurf',
+    '.windsurf/workflows': 'windsurf',
+    '.windsurfrules': 'windsurf',
+    '.clinerules': 'cline',
+    'GEMINI.md': 'gemini',
+};
+
+/**
+ * Split `roots` into the ones this checkout's generator maintains and the ones
+ * it does not, given the active tool set (`null` = all tools active).
+ *
+ * Auditing a root whose owning tool is inactive is not a drift check: the
+ * generator never writes it, so whatever sits there is an unmaintained fossil
+ * with no regeneration path. Reporting it leaves hand-deletion as the only
+ * compliant action, which is exactly what `check_rule_projection_integrity`
+ * rejected as "not a gate" after the same masked-config shape broke the 9.27.0
+ * release. This one broke 9.36.0 the same way: `agents/.agent-tools.yml` is
+ * committed with all eight tools but carries `skip-worktree` locally and reads
+ * `tools: []`, so `.claude/skills/` had not been regenerated since 2026-07-05
+ * and still held symlinks to a directory renamed since.
+ */
+export function partition_roots(
+    roots: readonly string[],
+    active: ReadonlySet<string> | null,
+): { audited: string[]; skipped: string[] } {
+    if (active === null) return { audited: [...roots], skipped: [] };
+    const audited: string[] = [];
+    const skipped: string[] = [];
+    for (const r of roots) {
+        const tool = ROOT_TOOL_ID[r];
+        if (tool === undefined || active.has(tool)) audited.push(r);
+        else skipped.push(r);
+    }
+    return { audited, skipped };
+}
 
 function _walk(p: string, out: string[]): void {
     const st = fs.lstatSync(p);
@@ -132,7 +191,22 @@ export function validate_symlinks(root: string, repoRoot: string): string[] {
 
 export function run(repoRoot: string): string[] {
     const errors: string[] = [];
-    const roots = BRIDGE_ROOTS.map((r) => path.join(repoRoot, r));
+    const { audited, skipped } = partition_roots(BRIDGE_ROOTS, active_tools_at(repoRoot));
+
+    // LOUD, never a silent narrowing: the audited surface just shrank, and a
+    // reader who cannot see which roots dropped out cannot distinguish this run
+    // from a full one — that indistinguishability is the false green
+    // `_lib/scan_scope.ts` exists to prevent.
+    if (skipped.length > 0) {
+        process.stderr.write(
+            `⚠️  check_bridge_derivation: ${skipped.length} bridge root(s) NOT audited — ` +
+                `agents/.agent-tools.yml deactivates the owning tool, so the generator does ` +
+                `not write them in this checkout and their contents cannot be attributed as ` +
+                `drift: ${skipped.join(', ')}. CI activates all eight tools.\n`,
+        );
+    }
+
+    const roots = audited.map((r) => path.join(repoRoot, r));
 
     const before: Record<string, Record<string, string>> = {};
     for (const r of roots) before[r] = snapshot_tree(r);
@@ -141,11 +215,17 @@ export function run(repoRoot: string): string[] {
     // there is nothing to diff and nothing to validate, and the check reports a
     // fixpoint it never tested. Thrown, not returned — `errors` is the drift
     // channel, and a dead scope is not drift.
+    //
+    // No `allowEmpty` twin of the sibling gate's is needed here, and that is a
+    // property of the map rather than an omission: `.augment` is maintained
+    // unconditionally, so `audited` is never empty and zero entries always means
+    // a genuinely dead surface (no `dist/agent-src/` at all), not a deactivated
+    // tool. Map `.augment` to a tool and this reasoning stops holding.
     assertScanned({
         gate: 'check_bridge_derivation',
         scanned: Object.values(before).reduce((n, snap) => n + Object.keys(snap).length, 0),
         units: 'bridge entries',
-        roots: BRIDGE_ROOTS,
+        roots: audited,
     });
 
     // Regenerate in a child process so MODULE_STATE resolves exactly as the
@@ -188,6 +268,12 @@ if (isMain) {
         for (const e of errors) process.stderr.write(`❌  ${e}\n`);
         process.exit(1);
     }
-    process.stdout.write('✅  bridge trees derive from src/ (symlink targets valid, regeneration is a fixpoint)\n');
+    // Name the count rather than "bridge trees": with a tool deactivated the
+    // green covers fewer roots than the reader would assume from a bare tick.
+    const n = partition_roots(BRIDGE_ROOTS, active_tools_at(root)).audited.length;
+    process.stdout.write(
+        `✅  ${n}/${BRIDGE_ROOTS.length} bridge roots derive from src/ ` +
+            '(symlink targets valid, regeneration is a fixpoint)\n',
+    );
     process.exit(0);
 }
