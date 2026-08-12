@@ -96,14 +96,21 @@ for their own obligations, rather than pretending a satisfiable-by-assertion
 condition is a gate.
 
 **A runtime carrier now exists, and it does not change that.** The
-`ui-route-nudge` PreToolUse concern is the first thing in the tree that ever
-consumed this rule's triggers at session time: on a UI write with no design
-consultation latched this session it emits one warning naming the route. It is
-warn-only, capped at two nudges per session, default-OFF, and bound only on
-hosts carrying a `pre_tool_use` slot. A nudge that can be ignored is not
-enforcement, so `enforced_by:` stays `none` — it moves the day a mechanism can
-refuse, not the day a reminder appears. `agent-config hooks:status` answers
-whether the concern is bound on the host you are actually on.
+`ui-route-nudge` PreToolUse concern emits one warning on a UI write with no
+design consultation latched this session.
+
+It runs **parallel** to this rule rather than consuming it. Nothing in the tree
+reads this frontmatter at session time; the concern decides what counts as a UI
+surface from `src/scripts/_lib/ui_surface.ts`, and the `keyword:` triggers here
+still have no runtime consumer. A test — not a code path — keeps the two from
+drifting: `ui_rule_triggers.test.ts` asserts every `file_pattern` declared here
+is accepted by that predicate.
+
+Warn-only, capped at two nudges per session, default-OFF, bound only on hosts
+carrying a `pre_tool_use` slot. A nudge that can be ignored is not enforcement,
+so `enforced_by:` stays `none` — it moves the day a mechanism can refuse, not
+the day a reminder appears. `agent-config hooks:status` answers whether the
+concern is bound on the host you are actually on.
 
 What that leaves, and it is the useful part: the write side now has a named
 obligation and a route to the skill that discharges it, where before it had

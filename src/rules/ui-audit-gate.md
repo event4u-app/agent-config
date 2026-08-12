@@ -100,12 +100,23 @@ pack-scoped rule projection is enabled; that flip is a maintainer decision,
 never an automated one).
 
 **A runtime carrier now exists, and it does not change the verdict.** The
-`ui-route-nudge` PreToolUse concern reads this rule's triggers at session time —
-the first consumer they have had — and warns once on a UI write with no design
-consultation latched. Warn-only, capped at two per session, default-OFF, bound
-only where a `pre_tool_use` slot exists. A reminder that can be ignored is not
-a gate, so `enforced_by:` stays `none`. Run `agent-config hooks:status` for the
-host you are on rather than trusting this sentence.
+`ui-route-nudge` PreToolUse concern warns once on a UI write with no design
+consultation latched this session.
+
+It is a **parallel** mechanism, not a consumer of the triggers above — the
+distinction matters and the earlier wording here got it wrong. The concern
+decides "is this a UI surface" from `src/scripts/_lib/ui_surface.ts`; nothing
+in the tree parses this frontmatter at session time, so the `keyword:` triggers
+still have no runtime consumer at all, and the two sets can drift. What holds
+them together is a test, not a dependency: `ui_rule_triggers.test.ts` asserts
+every `file_pattern` declared here is accepted by that predicate. The predicate
+is deliberately wider (it also covers `.css`, `.scss`, `.astro`), because a
+measurement denominator and a routing trigger are not the same population.
+
+Warn-only, capped at two per session, default-OFF, bound only where a
+`pre_tool_use` slot exists. A reminder that can be ignored is not a gate, so
+`enforced_by:` stays `none`. Run `agent-config hooks:status` for the host you
+are on rather than trusting this sentence.
 
 ## Failure modes
 

@@ -3,11 +3,19 @@
  * PreToolUse UI-route nudge — deterministic, warn-only, default-OFF.
  *
  * The two UI rules have `enforced_by: none` and say so honestly: nothing
- * observes whether a UI write consulted the design surface first. This is the
- * first runtime consumer those rules' triggers have ever had — and it is a
- * nudge, not a gate. It never blocks (dispatcher contract: 0 allow · 2 warn),
- * because the obligation it points at is a judgement call and a block on a
- * judgement call trades an ignore-problem for a friction-problem.
+ * observes whether a UI write consulted the design surface first. This concern
+ * observes it — and it is a nudge, not a gate. It never blocks (dispatcher
+ * contract: 0 allow · 2 warn), because the obligation it points at is a
+ * judgement call and a block on a judgement call trades an ignore-problem for
+ * a friction-problem.
+ *
+ * IT DOES NOT READ THE RULES. Stated because the first draft of this header
+ * claimed it did. The UI-surface decision comes from `_lib/ui_surface.ts`; no
+ * code here parses `src/rules/*.md` frontmatter, so the rules' `keyword:`
+ * triggers still have no runtime consumer and this predicate is deliberately
+ * wider than their `file_pattern` list. The two are kept from drifting by
+ * `ui_rule_triggers.test.ts`, which asserts every declared pattern is accepted
+ * here — a test, not a dependency.
  *
  * WHAT IT OBSERVES, WHICH IS ALSO THE MEASUREMENT.
  * Every PreToolUse event passes through here. A read or search touching a
@@ -68,8 +76,6 @@ export interface ToolEvent {
     file: string;
     /** True when the tool proposes new content (Write / Edit). */
     isWrite: boolean;
-    /** Free-text the tool carries (a grep pattern, a glob). */
-    query: string;
 }
 
 /** Best-effort extraction; mirrors the shape `design_slop_hook` reads. */
@@ -86,20 +92,29 @@ export function extractEvent(outer: JsonObject): ToolEvent | null {
         if (typeof ti[key] === 'string' && (ti[key] as string).length > 0) isWrite = true;
     }
 
-    const parts: string[] = [];
-    for (const key of ['pattern', 'query', 'glob', 'command']) {
-        const v = ti[key];
-        if (typeof v === 'string') parts.push(v);
-    }
-
-    return { file, isWrite, query: parts.join(' ') };
+    return { file, isWrite };
 }
 
-/** True when the event reads or searches one of the design surfaces. */
+/**
+ * True when the event OPENS one of the design surfaces.
+ *
+ * Deliberately narrow, and the narrowness is the fix for a real defect: an
+ * earlier version matched the surface name anywhere in the path OR in any
+ * search text the tool carried, including `command`. That silenced the nudge
+ * for a whole session on a `git log -- src/skills/fe-design`, on a grep for
+ * `design-review` while writing a review artefact, and on a read of
+ * `src/rules/design-review-after-ui-write.md` — whose path contains the skill
+ * name without being the skill. Since the same latch is the consultation
+ * signal the pre-registered rate counts, one false positive corrupted both the
+ * gate and the metric.
+ *
+ * So consultation means: a non-write touching `skills/<surface>/`. A search is
+ * not a consultation — reading the skill is.
+ */
 export function isConsultation(event: ToolEvent): boolean {
-    if (event.isWrite) return false;
-    const haystack = `${event.file} ${event.query}`.toLowerCase();
-    return DESIGN_SURFACES.some((surface) => haystack.includes(surface));
+    if (event.isWrite || !event.file) return false;
+    const normalized = event.file.replace(/\\/g, '/').toLowerCase();
+    return DESIGN_SURFACES.some((surface) => normalized.includes(`skills/${surface}/`));
 }
 
 /** True when the event writes a UI surface. */
@@ -133,6 +148,22 @@ export function readState(root: string, session: string): SessionState {
     return { consulted: false, nudges: 0 };
 }
 
+/** Sessions retained in the state file; oldest entries drop past this. */
+export const MAX_SESSIONS = 50;
+
+/** Drop the oldest entries so the file cannot grow without bound. */
+export function pruneSessions(
+    all: Record<string, SessionState>,
+    keep: number = MAX_SESSIONS,
+): Record<string, SessionState> {
+    const keys = Object.keys(all);
+    if (keys.length <= keep) return all;
+    const survivors = keys.slice(keys.length - keep);
+    const pruned: Record<string, SessionState> = {};
+    for (const key of survivors) pruned[key] = all[key]!;
+    return pruned;
+}
+
 export function writeState(root: string, session: string, state: SessionState): void {
     try {
         const file = stateFile(root);
@@ -140,11 +171,16 @@ export function writeState(root: string, session: string, state: SessionState): 
         try {
             all = JSON.parse(fs.readFileSync(file, 'utf-8')) as Record<string, SessionState>;
         } catch {
-            /* fresh file */
+            // Fresh file, or one nothing can parse. There is no other session
+            // state to preserve in either case — a corrupt file has already
+            // lost it — so starting from empty is recovery, not discard. The
+            // cost is bounded: a lost latch means at most MAX_NUDGES extra
+            // reminders in the sessions that were in flight.
         }
+        if (typeof all !== 'object' || all === null || Array.isArray(all)) all = {};
         all[session] = state;
         fs.mkdirSync(path.dirname(file), { recursive: true });
-        fs.writeFileSync(file, JSON.stringify(all));
+        fs.writeFileSync(file, JSON.stringify(pruneSessions(all)));
     } catch {
         /* fail-open: a persistence failure must never break a tool call */
     }

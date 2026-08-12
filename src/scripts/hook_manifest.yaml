@@ -156,9 +156,11 @@ concerns:
   # nudge. On a Write/Edit to a UI surface with no design consultation latched
   # this session, WARNS (exit 2) naming the route; a read or search touching a
   # design surface latches consultation and silences it. Anti-loop: at most 2
-  # nudges per session. The first runtime consumer the two UI rules' triggers
-  # have had — still a nudge, never a block, so "enforced_by: none" on those
-  # rules stays honest. Default-OFF (hooks.ui_route_nudge.enabled).
+  # nudges per session. It does NOT read the two UI rules — the UI-surface
+  # decision comes from _lib/ui_surface.ts — so it runs parallel to them rather
+  # than consuming their triggers, and it is a nudge, never a block, so
+  # "enforced_by: none" on those rules stays honest.
+  # Default-OFF (hooks.ui_route_nudge.enabled).
   # fail_closed: false.
   ui-route-nudge:
     script: src/scripts/hooks/ui_route_nudge_hook.ts

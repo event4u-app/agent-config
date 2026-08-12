@@ -1255,8 +1255,10 @@ hooks:
   # touching fe-design / existing-ui-audit / design-review / design-intelligence
   # latches consultation and silences it for the rest of the session, so the
   # agent that did the right thing is never nagged. Anti-loop: at most 2 nudges
-  # per session. Host-limited (pre_tool_use fires on ~2-3 hosts) — elsewhere the
-  # obligation stays model-carried, exactly as the two UI rules declare.
+  # per session. It does NOT read the two UI rules: the UI-surface decision
+  # comes from _lib/ui_surface.ts, so this runs parallel to them rather than
+  # consuming their triggers. Host-limited (pre_tool_use fires on ~2-3 hosts) —
+  # elsewhere the obligation stays model-carried, as the two UI rules declare.
   ui_route_nudge:
     enabled: false
 
