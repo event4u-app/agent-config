@@ -75,52 +75,123 @@ it is what pays for the missing kill-switch.
 
 ## Phase 1 — the instrument
 
-- [ ] 1.1 Add a `task-completeness` check to `conformance_scan`: for each
+- [x] 1.1 Add a `task-completeness` check to `conformance_scan`: for each
   assistant turn, extract the deliverables enumerated in the turn's own user
   prompt (reusing `classifyTask`'s signals, not a new parser) and record how many
   are addressed by the turn's tool calls and closing prose.
   `verify:` `CHECK_IDS` holds 5 ids and `CHECK_MEANINGS` has a definition for the new one.
-- [ ] 1.2 Write the definition into `CHECK_MEANINGS` in the shape the four
+  **Landed, and the verify line was stale by one.** `CHECK_IDS` already held
+  **5** before this step — round 7 added `completion-claim`, which this file's own
+  Context section corrected to "five" while this line kept the pre-round-7 four.
+  It now holds **6**, and `CHECK_MEANINGS` carries the new definition.
+  Two departures from the step's text, both recorded rather than taken silently:
+  (a) the unit is the **reply window** (a counted user prompt to the next one),
+  not "each assistant turn" — a turn in this store is one ENTRY and a reply spans
+  several, so per-entry scoring would report every tool-call entry as incomplete;
+  (b) the reused primitive is `enumeratedFileTokens` / `FILE_SIGNAL_FLOOR`, not
+  `classifyTask` itself, because `classifyTask` consumes only COUNTS and a
+  completeness check needs the deliverables' **identities**. Both were extracted
+  from the existing regex in `delegation_nudge_hook` rather than re-matched, so
+  the scan and the classifier cannot disagree about what a file token is.
+- [x] 1.2 Write the definition into `CHECK_MEANINGS` in the shape the four
   existing ones use — what it detects, and what distinguishes a hit from a false
   read. A count with no definition is the shape this file's own comment warns
   about.
   `verify:` `--why task-completeness` prints the definition and, when it did not
   fire, prints *did not fire* rather than silence.
-- [ ] 1.3 Hand-validate every hit on the first run and publish the precision.
+  **Landed — and running this verify command CONTAMINATED step 2.1.** `--why`
+  prints the definition and the hits together by design, so verifying it against
+  the live store necessarily revealed the hit count that 2.1 requires to be
+  unread. As written, 1.2's verify and 2.1's pre-registration are **mutually
+  exclusive**. Disclosed in full under 2.1; the fix for the next roadmap of this
+  shape is to verify a `--why` definition against a FIXTURE store, never the
+  corpus the bar will be read against.
+- [x] 1.3 Hand-validate every hit on the first run and publish the precision.
   A detector over a small corpus can produce confident nonsense; the rate is
   worthless without it.
   `verify:` the published figure names the corpus size and the hand-validated count.
+  **Published in `agents/evidence/analysis/task-completeness-measurement.md`:
+  28 sessions · 4 eligible reply windows · 3 hits · hand-validated true positives
+  0. Precision 0/3.** This step earned its place — the rate alone reads 75 % and
+  looks alarming; every hit is a false positive. All three share ONE extraction
+  defect, verified per hit: the token list is taken from the whole prompt, so
+  files quoted inside material the user PASTED (an agent review, a PR review, a
+  preflight log) read as deliverables, while in all three the user's own ask
+  contributed **zero** tokens. `isInjectedBody` did not filter them because it
+  only excludes long ENGLISH text — 12 295 and 7 656 chars both classify `de` and
+  pass; the one English case misses the 2 500-char cut by **12**. The finding
+  under the finding: **4 eligible windows in 28 sessions**, because the user
+  speaks in intents and the agent is what names files.
 
 ## Phase 2 — the decision, taken on the number
 
-- [ ] 2.1 Pre-register the bar BEFORE reading Phase 1's output: the rate and the
+- [x] 2.1 Pre-register the bar BEFORE reading Phase 1's output: the rate and the
   hand-validated precision at which detector D is worth its false-positive cost,
   and the values at which this roadmap closes as an honest null instead.
   `verify:` the bar is committed in a commit that precedes the measurement commit.
-- [ ] 2.2 Read the number against the bar and record the verdict. **A null here
+  **Landed as `agents/evidence/analysis/task-completeness-preregistered-bar.md`,
+  in its own commit ahead of the measurement — and it discloses a contamination
+  rather than claiming a clean blind.** Running 1.2's `verify:` command
+  necessarily printed the hit COUNT (3 over 28 sessions), because `--why` prints
+  the definition and the hits together; the two `verify:` lines are mutually
+  exclusive as written. Blind at writing time, and therefore the binding half of
+  the bar: the **hand-validated precision**, plus the rate's denominator, which
+  did not exist yet. The contaminated axis (rate) is deliberately set slack so it
+  cannot decide the outcome. Bar: precision >= 0.80 **with** a 95 % one-sided
+  Clopper-Pearson lower bound >= 0.80 (verified: needs >= 14 all-true hits;
+  `0.05^(1/14)` = 0.807, `0.05^(1/13)` = 0.794), and rate >= 2.0 % of eligible
+  windows. The pre-registration therefore states, before the measurement, that a
+  3-hit corpus is **null-by-corpus-size whatever the validation returns** — which
+  is the whole point of writing it down first.
+- [x] 2.2 Read the number against the bar and record the verdict. **A null here
   is a real outcome**, not a failure of the roadmap — the sibling
   `recursive-verification` null is the precedent, and it saved a mechanism whose
   cost scaled with every task for benefit on a 28 % tail.
   `verify:` the verdict cites the pre-registered bar and the measured figure side by side.
+  **Verdict: NULL — detector D is NOT built.** The measurement file carries the
+  bar and the figures side by side: B1 precision ≥ 0.80 vs **0.00** (0/3) → FAIL ·
+  B2 95 % lower bound ≥ 0.80, needing ≥ 14 all-true hits, vs 3 hits / 0 true →
+  FAIL · B3 rate ≥ 2.0 % vs 75.0 % → pass, and meaningless over four windows.
+  **B3 passing is why the bar required all three:** a rate-only bar — the
+  dimension whose numerator was already seen when the bar was written — would have
+  read 75 % and shipped a refusal with no kill-switch on 0-precision evidence.
 
 ## Phase 3 — detector D, only if Phase 2 says so
 
-- [ ] 3.1 Build the false-positive corpus FIRST, in the shape
+**Phase 2 said no, so this phase is SKIPPED, not deferred.** Its gating condition
+("only if Phase 2 says so") resolved against building: precision 0/3 from a named
+extraction defect. Skipping it is the designed outcome the Acceptance criteria
+endorse, not work left undone — a `[~]` here would claim there is still a plan to
+execute, and there is not. The re-ask condition is recorded in
+`agents/evidence/analysis/task-completeness-measurement.md`: separate the ask from
+the pasted material, then re-derive the eligible population before any detector is
+reconsidered.
+
+- [-] 3.1 Build the false-positive corpus FIRST, in the shape
   `PROMISSORY_NEGATIVES` already uses: every legitimate way a turn can address
   fewer items than the prompt enumerated — a blocking question, a hand-back, a
   user-fenced scope, an explicitly deferred item. Refusing these is what teaches
   a maintainer to revert the gate, and there is no switch to reach for now.
   `verify:` the negative corpus is non-empty and every entry returns null.
-- [ ] 3.2 Add detector D to `turn_end_gate_hook.ts` beside A/B/C — one guard,
+- [-] 3.2 Add detector D to `turn_end_gate_hook.ts` beside A/B/C — one guard,
   three-then-four detectors, no second hook. Building the unsafe part twice is
   how a second detector becomes a second outage.
   `verify:` the spawned suite covers D refusing and D staying silent, through the
   real process, on a workspace with no settings file.
-- [ ] 3.3 Re-measure with D live and compare against the pre-registered
+- [-] 3.3 Re-measure with D live and compare against the pre-registered
   reduction. Revert if it does not appear.
   `verify:` the post-flip figure is published beside the pre-flip one.
+  Skipped with 3.1 and 3.2: there is no D to re-measure. The reduction it would
+  have been read against (rate at least halved) is recorded in the
+  pre-registration so a future round inherits it rather than re-inventing it.
 
 ## Acceptance criteria
+
+**Outcome 2026-08-12: all four hold, on the null branch.** The instrument ships
+and publishes a hand-validated rate (0/3 precision over 4 eligible windows in 28
+sessions); the bar was committed one commit ahead of the measurement, with its
+one contaminated dimension disclosed and made non-binding; the bar was missed, so
+the roadmap closes as a published null and detector D was not built.
 
 - `conformance_scan` measures completeness and publishes a hand-validated rate.
 - The bar for shipping detector D was committed before the number was known.

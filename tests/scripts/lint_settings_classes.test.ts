@@ -128,12 +128,20 @@ describe('lint_settings_classes — discrimination', () => {
         const { code, stdout } = runCli(['--self-test']);
         expect(code).toBe(0);
         expect(stdout).toContain('case(s) behaved');
-        // The floor is asserted inside runSelfTest; assert here that the suite
-        // did not silently shrink to the accept case.
+        // BOTH declared floors — `minCases` and `minRejectCases` — are enforced
+        // inside `runSelfTest`, which exits non-zero when either is missed, so
+        // the exit-0 assertion above already proves them. What is left for this
+        // test is the thing the exit code cannot show: that the suite still
+        // contains reject cases at all rather than having shrunk to accepts.
+        //
+        // It used to compare the rejecting count against the number printed as
+        // "floor" — which is `minCases`, the total-case floor, not the reject
+        // floor. That assertion is only satisfiable while EVERY case rejects;
+        // it passed by coincidence (6 of 6) and failed the moment a legitimate
+        // accept case was added. A test that can only hold while a suite has no
+        // accept case is testing the wrong invariant.
         const m = /(\d+) rejecting, floor (\d+)/.exec(stdout);
         expect(m).not.toBeNull();
-        expect(Number.parseInt(m?.[1] ?? '0', 10)).toBeGreaterThanOrEqual(
-            Number.parseInt(m?.[2] ?? '99', 10),
-        );
+        expect(Number.parseInt(m?.[1] ?? '0', 10)).toBeGreaterThan(0);
     });
 });
