@@ -121,7 +121,17 @@ export function runSessionRecycle(
 ): RecycleResult {
     const out: string[] = [];
     const err: string[] = [];
-    const [projectRoot, origin] = resolve_project_root(opts.project ?? null, { cwd: opts.cwd });
+
+    // `--project` is validated by the resolver (existence + directory), which
+    // signals by THROWING. Uncaught, that would surface as a stack trace from
+    // a command whose entire subject is legible failure.
+    let projectRoot: string;
+    let origin: string;
+    try {
+        [projectRoot, origin] = resolve_project_root(opts.project ?? null, { cwd: opts.cwd });
+    } catch (exc) {
+        return { code: 1, out, err: [`recycle envelope refused — ${String(exc)}`] };
+    }
 
     // An unanchored cwd is the ONE case where a successful write is worse than
     // a refusal. `resolve_project_root` falls back to the cwd itself when it
@@ -143,9 +153,11 @@ export function runSessionRecycle(
                 `recycle envelope refused — no project anchor at or above ${projectRoot}`,
                 'Writing here would put the envelope where the successor session never reads it,',
                 'and the resume instruction would then advise /clear on a session that cannot resume.',
-                'Name the repository explicitly:',
-                `  agent-config session:recycle --project <repo> …`,
-                `  AGENT_CONFIG_PROJECT_ROOT=<repo> agent-config session:recycle …`,
+                'Name the repository explicitly — it must be the WORKSPACE ROOT OF THE SESSION',
+                'that will resume, because that is the directory the successor reads the envelope',
+                'from; a path that merely happens to be a project is not enough:',
+                `  agent-config session:recycle --project <session-workspace-root> …`,
+                `  AGENT_CONFIG_PROJECT_ROOT=<session-workspace-root> agent-config session:recycle …`,
             ],
         };
     }
@@ -251,9 +263,11 @@ export function main(argv: string[] = process.argv.slice(2)): number {
         const usage = [
             'usage: agent-config session:recycle [--file <envelope.json>] [--project <path>] [--template] [--verify]',
             '  --file <path>     read the envelope JSON from a file (default: stdin)',
-            '  --project <path>  the repository to write into — required when the working',
-            '                    directory is outside any project (the command refuses rather',
-            '                    than writing an envelope the successor cannot find)',
+            '  --project <path>  the workspace root of the session that will resume — required',
+            '                    when the working directory is outside any project (the command',
+            '                    refuses rather than writing an envelope the successor cannot',
+            '                    find). The successor reads the envelope from ITS OWN workspace',
+            '                    root, so a path that is merely a valid project is not enough.',
             '  --template        print a skeleton envelope and exit',
             '  --verify          validate only — same rejections, no write',
         ].join('\n');

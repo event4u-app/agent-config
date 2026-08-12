@@ -17,6 +17,16 @@
  * SILENCE, never a block (fail-open); hooks cannot inject `/clear`, so the
  * recycle action itself stays advisory-carried by design (roadmap 5.1).
  *
+ * Counter-check (second warn path, also once per session): when the advisory
+ * fired on an earlier Stop and no envelope written since then exists, inject
+ * one further line saying so — the advisory recommends an action whose next
+ * step destroys the session, so recommending it without ever checking the
+ * result is how a silent write failure becomes total context loss. Stamped by
+ * `missing_envelope_warned_at`, gated on the same threshold, so the emergency
+ * off-switch silences BOTH paths. Two independent emitters, at most one line
+ * each per session — the budget the Stop slot carries from this hook is two,
+ * not one.
+ *
  * Phase 4.2 (read surface): every Stop also overwrites
  * `agents/runtime/state/context-fill.json` with the machine-readable fill
  * level + threshold state — display substrate for an external statusline;
@@ -133,15 +143,40 @@ export function readState(file: string): SessionEolState {
 }
 
 /**
- * Does a pending recycle envelope exist under this workspace?
+ * Is there a recycle envelope under this workspace, written since `since`?
  *
- * Read, never written — and every failure reads as "exists", not "missing".
- * A stat error must not manufacture a warning that tells the operator their
- * envelope is gone when the only thing that failed was the check.
+ * Two properties, both load-bearing:
+ *
+ * **Only ENOENT counts as missing.** `fs.existsSync` swallows every error into
+ * `false`, so an unreadable directory (EACCES on a mounted or root-owned tree)
+ * would read as "no envelope" and produce the manufactured "your envelope is
+ * gone" warning this check exists to avoid. `statSync` + an errno test is the
+ * only shape that can tell the two apart.
+ *
+ * **Freshness, not mere existence.** The consumer moves the envelope aside at
+ * session_start, so a file still sitting here belongs to a session that never
+ * cleared. Counting it would silence the warning in the case it exists to
+ * catch, and worse: `/clear` would then resume the successor from another
+ * session's state — a wrong resume instead of an empty one. An envelope whose
+ * `written_at` predates the advisory is not this session's.
  */
-export function envelopeExists(workspaceRoot: string): boolean {
+export function envelopeExists(workspaceRoot: string, since: string | null = null): boolean {
+    const target = path.join(workspaceRoot, RECYCLE_ENVELOPE_REL);
+    let raw: string;
     try {
-        return fs.existsSync(path.join(workspaceRoot, RECYCLE_ENVELOPE_REL));
+        raw = fs.readFileSync(target, 'utf-8');
+    } catch (exc) {
+        // ENOENT is the real "no envelope"; anything else is a failed CHECK,
+        // and a failed check must never assert absence.
+        return (exc as NodeJS.ErrnoException)?.code !== 'ENOENT';
+    }
+    if (since === null) return true;
+    try {
+        const written = (JSON.parse(raw) as { written_at?: unknown }).written_at;
+        // Unparseable or undated: present, and not provably stale. Treat it as
+        // this session's — the alternative warns about a file that is there.
+        if (typeof written !== 'string') return true;
+        return Date.parse(written) >= Date.parse(since);
     } catch {
         return true;
     }
@@ -274,10 +309,16 @@ export function main(): number {
     // appeared since. It can never collide with `shouldAdvise` — that branch
     // requires `advisory_fired_at === null` — so at most one line is emitted
     // per Stop, and this one at most once per session.
+    //
+    // `threshold !== null` gates it for the same reason the advisory is gated:
+    // `AGENT_RECYCLE_THRESHOLD_TOKENS=0` is documented as the emergency switch
+    // for the whole advisory lane, and a lane that keeps one more warn after
+    // being switched off is not off.
     const shouldWarnMissing =
+        threshold !== null &&
         state.advisory_fired_at !== null &&
         (state.missing_envelope_warned_at ?? null) === null &&
-        !envelopeExists(workspaceRoot);
+        !envelopeExists(workspaceRoot, state.advisory_fired_at);
 
     const nextState: SessionEolState = {
         schema_version: 1,

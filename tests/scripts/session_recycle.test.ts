@@ -25,6 +25,7 @@ import {
     RECYCLE_ENVELOPE_MAX_BYTES,
     RECYCLE_ENVELOPE_REL,
 } from '../../src/scripts/_lib/recycle_envelope_paths.js';
+import { consume_recycle_envelope } from '../../src/scripts/handoff_context_hook.js';
 import {
     CAPSULE_SCHEMA_VERSION,
     DECISION_REVERSIBILITY_TAGS,
@@ -43,14 +44,18 @@ import {
  * accepts.
  */
 function scratch(): string {
-    const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'session-recycle-'));
+    // realpath-normalized like the sibling helper in recycle_roundtrip: on
+    // macOS `os.tmpdir()` is a symlink (/var → /private/var) and the resolver
+    // returns the real path, so an exact-path assertion against the raw
+    // mkdtemp value would compare two spellings of the same directory.
+    const dir = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'session-recycle-')));
     fs.mkdirSync(path.join(dir, 'agents', 'overrides'), { recursive: true });
     return dir;
 }
 
 /** A scratch directory with NO project anchor at or above it. */
 function rootlessScratch(): string {
-    return fs.mkdtempSync(path.join(os.tmpdir(), 'session-recycle-rootless-'));
+    return fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'session-recycle-rootless-')));
 }
 
 function minimalEnvelope(): Record<string, unknown> {
@@ -153,6 +158,34 @@ describe('runSessionRecycle', () => {
         expect(result.err).toEqual([]);
         expect(result.code).toBe(0);
         expect(fs.existsSync(path.join(repo, RECYCLE_ENVELOPE_REL))).toBe(true);
+    });
+
+    it('refuses a --project that does not exist, without throwing', () => {
+        // The resolver validates by THROWING; uncaught that would surface as a
+        // stack trace from the one command whose subject is legible failure.
+        const result = runSessionRecycle(JSON.stringify(minimalEnvelope()), {
+            cwd: scratch(),
+            project: path.join(os.tmpdir(), 'session-recycle-does-not-exist-4a7f'),
+        });
+        expect(result.code).toBe(1);
+        expect(result.err.join('\n')).toContain('does not exist');
+    });
+
+    it('writes where the successor-side consumer reads — the two sides stay paired', () => {
+        // The command resolves its target through `resolve_project_root`; the
+        // consumer is a session_start hook that joins the SAME relative path
+        // onto the host session's workspace root. Nothing in the types ties
+        // those together, so this pins the pair: what --project writes,
+        // consume_recycle_envelope(<that same root>) must find.
+        const repo = scratch();
+        const write = runSessionRecycle(JSON.stringify(minimalEnvelope()), {
+            cwd: rootlessScratch(),
+            project: repo,
+        });
+        expect(write.code).toBe(0);
+
+        const decision = consume_recycle_envelope(repo);
+        expect(decision.action).toBe('inject');
     });
 
     it('prints the absolute target path, not the shared relative one', () => {

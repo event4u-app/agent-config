@@ -18,6 +18,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import {
     buildAdvisoryLine,
+    buildMissingEnvelopeLine,
     main,
     readState,
     readThresholdTokens,
@@ -71,11 +72,17 @@ function writeThreshold(tokens: number): void {
     process.env[THRESHOLD_OVERRIDE_ENV] = String(tokens);
 }
 
-/** Put a pending recycle envelope in the workspace — content is irrelevant, existence is not. */
-function writeEnvelope(): void {
+/**
+ * Put a pending recycle envelope in the workspace.
+ *
+ * `written_at` matters: the counter-check compares it against the advisory
+ * stamp, so a fixture written with a past date is how a stale envelope from an
+ * uncleared session is expressed. Default is now — this session's.
+ */
+function writeEnvelope(writtenAt: string = new Date().toISOString()): void {
     const target = path.join(workspace, RECYCLE_ENVELOPE_REL);
     fs.mkdirSync(path.dirname(target), { recursive: true });
-    fs.writeFileSync(target, '{}');
+    fs.writeFileSync(target, JSON.stringify({ written_at: writtenAt }));
 }
 
 function runMain(sessionId = 'session-a'): { rc: number; out: string } {
@@ -165,7 +172,6 @@ describe('recording (Phase 1.1)', () => {
 describe('recycle advisory (Phase 3.2)', () => {
     it('fires once past threshold on a long session — and never twice', () => {
         writeThreshold(100_000);
-        writeEnvelope(); // present from the start: isolates the advisory from the counter-check
         fs.writeFileSync(transcript, assistantLine(5_000, 120_000));
         const first = runMain();
         expect(first.rc).toBe(2);
@@ -173,6 +179,10 @@ describe('recycle advisory (Phase 3.2)', () => {
         expect(parsed['decision']).toBe('warn');
         expect(parsed['additional_context']).toContain('session:recycle');
 
+        // The operator acts on the advisory. Written AFTER it fired, which is
+        // both the real sequence and what the freshness check requires — an
+        // envelope predating the advisory belongs to an earlier session.
+        writeEnvelope();
         fs.appendFileSync(transcript, assistantLine(6_000, 130_000));
         const second = runMain();
         expect(second.rc).toBe(0);
@@ -242,6 +252,46 @@ describe('missing-envelope counter-check', () => {
         expect(runMain()).toEqual({ rc: 0, out: '' });
     });
 
+    it('the 0-override silences BOTH warn paths, not just the advisory', () => {
+        // The advisory fires under a live threshold…
+        writeThreshold(100_000);
+        fs.writeFileSync(transcript, assistantLine(5_000, 120_000));
+        expect(runMain().rc).toBe(2);
+
+        // …then the emergency switch goes in. The counter-check would
+        // otherwise fire next Stop: the stamp is set and no envelope exists.
+        writeThreshold(0);
+        fs.appendFileSync(transcript, assistantLine(6_000, 130_000));
+        const after = runMain();
+        expect(after.rc).toBe(0);
+        expect(after.out).toBe('');
+    });
+
+    it('ignores a stale envelope from a session that never cleared', () => {
+        writeThreshold(100_000);
+        // Written BEFORE the advisory fires — the consumer moves an envelope
+        // aside at session_start, so one still sitting here is another
+        // session's, and /clear would resume from its state.
+        writeEnvelope('2020-01-01T00:00:00.000Z');
+        fs.writeFileSync(transcript, assistantLine(5_000, 120_000));
+        expect(runMain().rc).toBe(2); // the advisory
+
+        fs.appendFileSync(transcript, assistantLine(6_000, 130_000));
+        const second = runMain();
+        expect(second.rc).toBe(2);
+        expect(JSON.parse(second.out)['reason']).toContain('no envelope written');
+    });
+
+    it('keeps the counter-check line to one line under the injection budget', () => {
+        // Same budget as its sibling, and this line embeds an unbounded
+        // absolute path — deep worktree roots are where it would blow.
+        const line = buildMissingEnvelopeLine('/'.padEnd(200, 'x'));
+        expect(line).not.toContain('\n');
+        expect(Buffer.byteLength(line, 'utf-8')).toBeLessThan(512);
+    });
+});
+
+describe('advisory lane configuration (Phase 3.2)', () => {
     it('advisory lane is disabled by the 0-override while recording continues (emergency off)', () => {
         writeThreshold(0);
         fs.writeFileSync(transcript, assistantLine(5_000, 900_000));
