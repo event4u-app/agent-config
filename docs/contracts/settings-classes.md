@@ -187,10 +187,14 @@ dispatch runs, not WHETHER the layer exists, so they keep their own C rows.
 
 | Class | Keys |
 |---|---|
-| A — preference | 27 |
+| A — preference | 26 |
 | B — consent | 3 |
-| C — guarded | 110 |
-| **Total** | **140** |
+| C — guarded | 105 |
+| **Total** | **134** |
+
+The total was 140 until 2026-08-12, when the six keys no code path read were
+deleted (§ The six unread keys, below): one A (`telegraph.speak_scope`) and five
+C.
 
 The total is every leaf in the template, where *leaf* means anything that is not
 a **non-empty** map. An empty map (like the former `subagents.host_capabilities: {}`) is a real
@@ -238,35 +242,95 @@ the template, which is the drift this contract exists to prevent.
 
 | Disposition | Keys |
 |---|---|
-| derivable | 88 |
+| derivable | 83 |
 | un-inferrable | 9 |
-| consent | 38 |
+| consent | 37 |
 | policy | 5 |
-| **Total** | **140** |
+| **Total** | **134** |
 
-Measured 2026-08-12, from the table below rather than predicted — the numbers
-were deliberately not guessed in advance, because a target set before the
-classification is a target the classification then argues toward.
+First measured 2026-08-12 at 140 leaves (derivable 88 · consent 38 ·
+un-inferrable 9 · policy 5), from the table below rather than predicted — the
+numbers were deliberately not guessed in advance, because a target set before the
+classification is a target the classification then argues toward. The six unread
+keys were deleted the same day, which is where the −5 `derivable` and −1
+`consent` come from.
 
 `derivable` is the **deletion queue, not a deletion**: a row stays until the
-mechanism it names actually exists, so 88 measures work outstanding, not keys
+mechanism it names actually exists, so 83 measures work outstanding, not keys
 about to disappear. The count is expected to fall while `un-inferrable` does not
 — those 9 plus whatever survives re-examination in `consent` are the floor this
 surface has, and stating it is the point. `policy` is the smallest class and the
 only one whose action is a *move* rather than a keep or a delete: five keys carry
 a project fact the tree could hold instead.
 
-**Six keys have no reader at all** — found while classifying, not sought:
+## The floor — the nine keys no mechanism can derive
+
+This is the residual set: not "what is left over today", but what stays after the
+`derivable` queue drains to zero. A floor asserted without reasons is where the
+next round quietly re-grows, so each key carries the argument for why the
+situation cannot answer it. The test each one passes is **not** "hard to detect" —
+it is that a probe could at best enumerate candidates while the *choice among them*
+belongs to the human, and choosing wrong has a cost the agent cannot take back.
+
+`consent` (37) and `policy` (5) are deliberately **not** part of this floor:
+consent rows survive only what re-examination leaves of them, and every policy row
+is scheduled to move into the project surface and then disappear. The floor is the
+nine below.
+
+| Key | Why nothing can derive it |
+|---|---|
+| `profile.id` | Selects which product surface is projected at all. The same repository is worked by a developer, a founder, and an ops engineer on different days — the axis is a fact about the person in the chair, and the tree carries no trace of it. |
+| `personal.ide` | Names a binary the agent will execute. A probe can enumerate installed editors; it cannot know which one the human wants opened, and having several installed is the normal case rather than the ambiguous one. Guessing here does not misconfigure a preference, it runs the wrong program. |
+| `personal.canary_name` | How the user wants to be addressed. `git config user.name` is a commit identity, not a form of address, and the two differ for most people who use a nickname at all — deriving one from the other is how the canary ends up greeting a stranger. |
+| `subagents.model_map.lite` | Names an external model endpoint for the cheapest tier. Which endpoints an account can actually reach is not in the tree, and the only probe that would establish it is a paid call. |
+| `subagents.model_map.medium` | Same, for the middle tier — and the tier boundaries are a spend judgement, not a capability fact, so even a complete endpoint list would not choose. |
+| `subagents.model_map.high` | Same, for the top tier, where a wrong guess is the most expensive one available. |
+| `subagents.implementer_model` | Names the endpoint that does the bulk of the work, so it is where a wrong default costs the most per run. Empty means "same tier as the session model", which is a deferral to a human choice already made, not a derivation. |
+| `subagents.judge_model` | Names the endpoint that reviews the implementer. Its default is stated relative to the implementer rather than derived from the environment, and pinning it to a specific model is the reason someone sets it at all. |
+| `ai_team.model` | Names the external model a teammate session runs. Availability is an account and auth fact that lives outside this repository entirely. |
+
+Five of the nine are model endpoints, and they share one argument: an endpoint list
+is account state, and the only mechanism that could observe it spends money to do
+so. That is the shape of an `un-inferrable` row — not "we did not bother", but "the
+observation is itself the thing the user is deciding whether to pay for".
+
+## The six unread keys — found, then deleted
+
+**Six keys had no reader at all** — found while classifying, not sought:
 `telegraph.speak_scope`, `chat_history.max_size_kb`, `chat_history.on_overflow`,
 `quality.wait_for_remote_ci`, `screenshots.data_bearing_gate`, and
-`legal_review_prep.consented_at`. Each is in the template, in the schema, on the
-reference page, and in several cases in the setup wizard; none is consulted by
-any code path. They are configured, documented, surfaced and inert. That is a
-sharper finding than the 88, because a key nothing reads cannot be defended on
-the grounds that someone depends on it — and two of them
-(`screenshots.data_bearing_gate`, `legal_review_prep.consented_at`) sit on
-consent-shaped surfaces where the absence of a reader means the authorisation
-they appear to carry is not actually enforced anywhere.
+`legal_review_prep.consented_at`. Each was in the template, in the schema, on the
+reference page, and in several cases in the setup wizard; none was consulted by
+any code path. They were configured, documented, surfaced and inert. That is a
+sharper finding than the 83, because a key nothing reads cannot be defended on
+the grounds that someone depends on it — and two of them sat on consent-shaped
+surfaces, where the absence of a reader means the authorisation they appeared to
+carry was not enforced anywhere.
+
+All six were deleted on 2026-08-12, each with its own `REMOVED_KEYS` reason
+naming what decides instead. An unread key is the one deletion that cannot
+silently change a default, because no behaviour was reading the old value — which
+is why this batch went first and why it needed no replacement mechanism built
+ahead of it.
+
+Two of the six carried a **documented promise the code did not keep**, and the
+deletion is what repairs them:
+
+- `screenshots.data_bearing_gate` was documented as an on/off switch over the
+  human confirmation for a data-bearing screenshot embed. That embed is a
+  published egress, so the confirmation is a Hard Floor that no settings value may
+  lift — an `off` could never have been honoured, and the reference page
+  advertised an opt-out that did not exist. Its disposition was `consent` on the
+  strength of that description; with no reader and no liftable gate the honest
+  classification is `derivable`, and the mechanism that decides instead is the
+  unconditional gate in `doc-screenshot-hygiene` routing into
+  `non-destructive-by-default`. Recorded here rather than quietly relabelled,
+  because reclassifying a row toward deletion is exactly the move the
+  name-your-replacement rule exists to police.
+- `legal_review_prep.consented_at` was documented as "set automatically by the
+  setup wizard". Nothing wrote it. The record of when and by what route a value
+  was set is the provenance sidecar `settings:set` writes and `consentVerdict`
+  reads — for every key, not for this one.
 
 ## The table
 
@@ -283,7 +347,6 @@ Rows follow template order, so a diff against the template reads straight down.
 | `rule_loading_tier` | C | `__RULE_LOADING_TIER__` | legacy master switch for rule loading | derivable — `discipline_profile` supersedes it with a documented mapping (minimal→off, balanced→essential, full→full) |
 | `lean_projection.mode` | C | `eager-all` | `thin` removes rule bodies from the agent's context | derivable — `probe_host_compliance.ts` already computes the per-host thin/eager recommendation |
 | `telegraph.speak` | C | `false` | ships a rule body; a token-cost lever in both directions | derivable — the telegraph kill-criterion bench verdict is a package-level decision, not a per-install one |
-| `telegraph.speak_scope` | A | `"off"` | output register once that rule ships | derivable — the rule body's own scope statement; no code reader exists at all |
 | `tokens.rich_skills` | C | `"on"` | token-spend lever | derivable — the skill's own `token_budget_class: rich` declaration plus the CI ceiling in `lint_token_budget_discipline.ts` |
 | `cost.budgets.daily` | C | `0` | rolling spend ceiling | consent |
 | `cost.budgets.weekly` | C | `0` | rolling spend ceiling | consent |
@@ -317,8 +380,6 @@ Rows follow template order, so a diff against the template reads straight down.
 | `eloquent.access_style` | A | `getters_setters` | code convention | derivable — the convention the project's existing models already use; `standards-from-config` reads it off the tree |
 | `chat_history.enabled` | C | `true` | kill-switch over a path that writes conversation content to disk | consent |
 | `chat_history.frequency` | C | `__CHAT_HISTORY_FREQUENCY__` | capture granularity — a value that reduces what is captured erases the trail | consent |
-| `chat_history.max_size_kb` | C | `__CHAT_HISTORY_MAX_SIZE_KB__` | cap on how much conversation lands on disk | derivable — nothing reads it; the `rotate` command takes `--max-kb` from argv and session-count pruning is what actually bounds the file |
-| `chat_history.on_overflow` | C | `__CHAT_HISTORY_ON_OVERFLOW__` | decides what survives when the log fills; an audit-integrity choice, not a preference | derivable — nothing reads it; the overflow mode comes from the `--mode` argv of the `rotate` command |
 | `chat_history.text_limits.user` | C | `0` | cap on how much user text is written to disk | consent |
 | `chat_history.text_limits.agent` | C | `5000` | cap on how much agent text is written to disk | consent |
 | `chat_history.text_limits.tool` | C | `200` | cap on how much tool payload is written to disk | consent |
@@ -343,12 +404,10 @@ Rows follow template order, so a diff against the template reads straight down.
 | `planning.risk_review` | C | `true` | disables the risk-register validator | derivable — `lint_plan_risk_register`'s own scope predicate (ready, non-draft plans only) |
 | `planning.completion_review` | C | `true` | disables the completion-review validator | derivable — `check_completion_review`'s own scope predicate, bound to the current diff hash |
 | `quality.local_auto_run` | C | `false` | governs whether local verification runs at all | consent |
-| `quality.wait_for_remote_ci` | C | `false` | governs whether the authoritative gate is waited on | derivable — nothing reads it; whether to poll follows from the push plus a detectable remote pipeline |
 | `design.fidelity_mode` | C | `strict` | strict-mode selector, one of whose values is a Hard Floor | policy |
 | `consistency.cross_source` | C | `"on"` | disables the cross-source discrepancy gate | derivable — the rule's own trigger condition; a discrepancy exists only when two present sources contradict |
 | `screenshots.identity_allowlist` | C | `[]` | allowlist of identities that ship unredacted | consent |
 | `screenshots.forbid_terminal_capture` | C | `true` | kill-switch over the highest-leak capture path | consent |
-| `screenshots.data_bearing_gate` | C | `"on"` | the human-confirmation gate over a published egress | consent |
 | `code_style.docblocks` | A | `minimal` | code convention | derivable — the project's own linter/style config and the docblock density of the touched file, which `standards-from-config` reads off the tree |
 | `subagents.downshift` | C | `true` | routes to another model tier, which is spend and quality | derivable — the per-slice tier assignment in `auto-dispatch-classification`, which the orchestrator already computes per dispatch |
 | `subagents.quota_arbitrage` | C | `true` | spends from a separate quota pool | consent |
@@ -412,7 +471,6 @@ Rows follow template order, so a diff against the template reads straight down.
 | `update_check.enabled` | C | `true` | a background safety check; disabling it pins the user to known-vulnerable code | consent |
 | `explain.enable_last` | A | `true` | a read-only diagnostics surface | derivable — the presence of a work-state trace to render; with no trace the command is already a no-op |
 | `legal_review_prep.acknowledged` | C | `false` | the consent gate; the safety floor requires the wizard checkbox | consent |
-| `legal_review_prep.consented_at` | C | `""` | the record of that consent | derivable — the provenance sidecar row `settings:set` already writes and `consentVerdict` already reads |
 | `legal_review_prep.require_council` | C | `true` | a fail-closed defence-in-depth gate | consent |
 
 ## The council review of the C list (2026-08-05)
@@ -431,6 +489,10 @@ worst placed to certify about their own list.
 | `update_check.enabled` | a background safety check; switching it off pins the user to known-vulnerable code |
 | `chat_history.frequency` | reduces what is captured, so the trail thins |
 | `chat_history.on_overflow` | decides what survives when the log fills |
+<!-- Historical record: `chat_history.on_overflow` was deleted 2026-08-12 as one
+     of the six unread keys. The A → C move above still stands as what the
+     council decided about it while it existed. -->
+
 | `memory.cadence` | suppresses the line that tells the user what the agent learned |
 | `decision_engine.surface_traces` | the decision engine's own black box |
 
