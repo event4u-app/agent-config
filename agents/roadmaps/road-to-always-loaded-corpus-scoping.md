@@ -130,11 +130,12 @@ Phase 3 has spent its budget on the wrong layer.
   same machine.
 - An honest null is a completed roadmap, not an abandoned one.
 
-## Risks
-
-| Risk | Type | Mitigation |
-|---|---|---|
-| `paths:` is projection-inert on the hosts that matter, so scoping cannot reduce delivered tokens | implementation | Phase 1 establishes this first and is authorised to end the roadmap |
-| A scoped rule silently stops firing where it should | implementation | Routing-matrix eval per touched rule in Phase 3; a positive that stops matching blocks adoption |
-| The thin-projection null is read as covering this work | product | Named and distinguished in Context; the mechanism-match difference is stated before Phase 1 |
-| Scoping shrinks the corpus but the doubled-layer topology keeps delivery over cap | implementation | The two are measured separately in Phase 3; neither result is reported as the other |
+## Risk Register
+<!-- risk-review: v1 | reviewed: 2026-08-13 | reviewer: claude/host -->
+| Rank | Item | Risk type | Description | Mitigation | Anchored under |
+|------|------|-----------|-------------|------------|----------------|
+| 1 | `paths:` is projection-inert on the hosts that matter | implementation | No host runs the tier-2 rule router, so `triggers:` already has no runtime consumer. If `paths:` is likewise ignored at load time, scoping cannot reduce what a session receives and the entire premise is void — discovering that in Phase 3 means the budget went to the wrong layer | Phase 1 establishes it before any rule is touched, from the host's own documented contract rather than from this package's intent, and is explicitly authorised to end the roadmap on a NO | Phase 1: Establish whether scoping can reach the load path at all |
+| 2 | A scoped rule silently stops firing where it should | implementation | A rule that saves tokens by no longer reaching its own trigger surface is not a saving, it is a lost obligation — and the loss is invisible, because nothing fails when a rule quietly does not load | Routing-matrix eval for every touched rule in Phase 3; a positive that stops matching blocks adoption regardless of the token win | Phase 3: Pilot on a bounded set, measured before and after |
+| 3 | The thin-projection null is read as covering this work | product | Thin projection measured −65.6% and failed the quality gate at 36.2% vs 48% required. Someone reading only the headline may close this roadmap as already-answered, or conversely re-run the failed arm under a new name | Context names the null explicitly and states the mechanism-match difference — scoping keeps the body intact for sessions that receive it, so the mechanism the thin arm broke is not under test — before Phase 1 begins | Context |
+| 4 | Scoping succeeds but delivery stays over cap | implementation | The doubled-layer topology and the corpus size are independent problems. A real scoping win could still leave `check_standing_rule_delivery` red, and reporting either result as the other would overstate the outcome | Phase 3 measures `eager_rule_load` and `standing_rule_delivery` separately and requires both numbers in the Phase 4 decision | Phase 3: Pilot on a bounded set, measured before and after |
+| 5 | The target is re-cut after the number lands | product | The honest-null outcome is the likely one, and the temptation at Phase 4 is to redefine success to match whatever was measured — the exact goalpost-shift this package's pre-registration convention exists to prevent | Phase 3 requires the target set and expected delta to be declared before editing; Phase 4 decides against that declaration and records a rejection as an ADR with equal standing to an adoption | Phase 4: Decide and record |
