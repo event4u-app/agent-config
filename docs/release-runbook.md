@@ -37,6 +37,15 @@ the **workflow_dispatch** on `release.yml` (inputs: `bump`, `version`,
       to recover a partial run — see § 5).
 - [ ] You have read [`succession.md`](succession.md) if any secret-gated
       downstream (npm publish, cloud deploy) must succeed this release.
+- [ ] **Walk the upstream watchlist** —
+      [`agents/settings/contexts/upstream-watchlist.md`](../agents/settings/contexts/upstream-watchlist.md).
+      For each entry (`host-issue` · `vendored-corpus` · `consumed-tool`), check
+      whether the upstream fact moved; record the change there, then open or
+      close the dependent item in its own change. A closed host issue means a
+      workaround this tree still carries; a moved vendored pin means the port has
+      drifted — one such drift ran two months with every gate green, which is why
+      this line exists. Two consecutive walks that change nothing fire the
+      watchlist's own falsifier: fold it into the dependent roadmaps and delete it.
 - [ ] **On a `release:major` only** — read
       [`MIGRATION.md` § Scheduled deprecations](MIGRATION.md#scheduled-deprecations-forward-looking--read-before-cutting-a-major)
       and act on every row whose "deprecation notice due" or "removal due"
