@@ -246,7 +246,10 @@ Three vendor CLIs are wired:
 - **Google / Gemini** — invokes `gemini --output-format json` with
   the prompt piped on stdin, parses the `response` + `stats.models.<m>.tokens`
   envelope. OAuth consent must be granted once interactively before
-  the CLI is usable from a non-interactive shell.
+  the CLI is usable from a non-interactive shell. Like Codex and unlike Claude,
+  it has **no system-prompt flag** — `--system` is rejected outright with
+  `Unknown argument: system` — so the system prompt is prepended to the piped
+  payload.
 
   ```yaml
   members:
