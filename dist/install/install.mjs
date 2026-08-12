@@ -10210,14 +10210,18 @@ function load_agent_settings(options = {}) {
   _warn_removed_always_on_keys(merged);
   return merged;
 }
-var REMOVED_ALWAYS_ON_KEYS = [
-  "subagents.enabled",
-  "subagents.auto",
-  "subagents.host_capabilities",
-  "subagents.budget_routing",
-  "ai_team.enabled"
-];
-var _warnedRemovedAlwaysOnKeys = /* @__PURE__ */ new Set();
+var REMOVED_KEYS = /* @__PURE__ */ new Map([
+  ["subagents.enabled", "always-on orchestration"],
+  ["subagents.auto", "always-on orchestration"],
+  ["subagents.host_capabilities", "always-on orchestration"],
+  ["subagents.budget_routing", "always-on orchestration"],
+  ["ai_team.enabled", "always-on orchestration"],
+  ["hooks.turn_end_gate.enabled", "the turn-end gate is always armed"],
+  ["hooks.turn_end_gate.promissory", "the turn-end gate is always armed"],
+  ["hooks.turn_end_gate.language", "the turn-end gate is always armed"],
+  ["hooks.turn_end_gate.verification", "the turn-end gate is always armed"]
+]);
+var _warnedRemovedKeys = /* @__PURE__ */ new Set();
 function _readDottedSettingsPath(root, dotted) {
   let node = root;
   for (const part of dotted.split(".")) {
@@ -10229,15 +10233,15 @@ function _readDottedSettingsPath(root, dotted) {
   return node;
 }
 function _warn_removed_always_on_keys(merged) {
-  for (const key of REMOVED_ALWAYS_ON_KEYS) {
-    if (_warnedRemovedAlwaysOnKeys.has(key)) {
+  for (const [key, reason] of REMOVED_KEYS) {
+    if (_warnedRemovedKeys.has(key)) {
       continue;
     }
     if (_readDottedSettingsPath(merged, key) === void 0) {
       continue;
     }
-    _warnedRemovedAlwaysOnKeys.add(key);
-    process.stderr.write(`${key} was removed (always-on orchestration); ignored.
+    _warnedRemovedKeys.add(key);
+    process.stderr.write(`${key} was removed (${reason}); ignored.
 `);
   }
 }
@@ -15075,21 +15079,13 @@ var settingsSchema = external_exports.object({
       enabled: external_exports.boolean().default(false).describe(
         "PreToolUse code-graph nudge (ADR-124 Phase 4). Default off. When on AND a native code-graph cache or a consumer-shipped graph.json/SCIP index is present, warns once per session (never blocks) as the agent is about to Grep/Glob or Read a source file \u2014 query the graph first for who-calls/where-used/impact questions (or rebuild if stale, build if absent). Source G\u2019s strict block-first-read mode is deliberately un-ported."
       )
-    }).default({}),
-    turn_end_gate: external_exports.object({
-      enabled: external_exports.boolean().default(false).describe(
-        "Stop-slot turn-end gate (road-to-conformance-round5 Phase 3). Default off, and it is the only concern that can REFUSE a turn-end rather than a tool call \u2014 so it soaks behind an explicit opt-in before it binds. Round 5 measured the reason: both blocking carriers reached zero violations, neither advisory carrier did, and 19 wrong-language replies survived a pin that had fired 26-35 seconds earlier. A refused turn continues in the SAME turn and is never refused twice."
-      ),
-      promissory: external_exports.boolean().default(true).describe(
-        "Detector A of the turn-end gate: refuse a turn whose closing paragraph promises work not yet performed while asking the user nothing (20 measured occurrences). No fire rate is quoted here on purpose: the measured rate moved twice while the instrument itself was being corrected, so a number in a shipped description would be a moving target. Re-derive it with `measure-turn-end-gate --store <transcript dir>` against your own corpus before arming the gate. Inert while hooks.turn_end_gate.enabled is false."
-      ),
-      language: external_exports.boolean().default(true).describe(
-        "Detector B of the turn-end gate: refuse a turn whose reply is not in the pinned language (19 measured occurrences). Fenced code, inline code, quoted tool output, tables, URLs and paths are stripped first, and the remainder is then scored LEAD-FIRST by the same classifier that sets the pin \u2014 so the verdict usually comes from the reply opening, not from all of it. Sharing that classifier is deliberate: it stops the pin and the detector disagreeing about a turn. Accepted opt-in spellings for the switches below include YAML true/false and yes/no/on/off. Inert while hooks.turn_end_gate.enabled is false."
-      ),
-      verification: external_exports.boolean().default(true).describe(
-        "Detector C of the turn-end gate: refuse a turn that changed a file and then ran nothing that could have checked it \u2014 no test, type-check, lint or build call follows the LAST edit. Ordering is the point: a run before the final edit did not exercise it, which is the freshness clause verify-before-complete states. Read off the turn tool calls, not the prose, because a reply cannot say whether an edit was verified. Deliberately narrow on what counts as verification \u2014 a missed detection costs one unguarded turn, a false refusal teaches you to switch the gate off. No fire rate is quoted: none has been measured yet. Inert while hooks.turn_end_gate.enabled is false."
-      )
     }).default({})
+    // `turn_end_gate` is deliberately ABSENT. The stop-slot turn-end gate is
+    // always armed (2026-08-12) and has no settings surface: whether it
+    // fires is decided by each detector's own trigger conditions, not by a
+    // flag. A leftover `hooks.turn_end_gate.*` block from an older install
+    // warns once on stderr and is ignored — see REMOVED_KEYS in
+    // `src/scripts/_lib/agent_settings.ts`.
   }),
   decision_engine: external_exports.object({
     surface_traces: external_exports.boolean().default(false).describe(

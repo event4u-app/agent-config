@@ -58,19 +58,41 @@
  * matching ordinal reads as already-refused, so on such a host layer 2
  * degrades to "may under-refuse" and layer 1 is the real guard.
  *
- * ## Default OFF — and why, given the roadmap says otherwise
+ * ## Always armed — the switch was removed, and why
  *
- * `road-to-conformance-round5.md` § 3.6 asks for a kill-switch per
- * detector, "default on". The council recorded in round 6 (2026-08-08)
- * asked for the mechanism to be opt-in, "defaulting to off, so the
- * mechanism exists and soaks before it binds" — two prior hook-severity
- * mistakes plus a turn-end blast radius made default-on uninsurable in
- * their reading. Both are satisfied literally: the MASTER switch
- * (`hooks.turn_end_gate.enabled`) is default OFF, and WITHIN it every
- * detector is default ON. A maintainer who opts in gets all of them without
- * further configuration; until then this concern is a no-op that costs one
- * settings-cascade read per turn-end. Detector C landed under the same rule —
- * the master switch was NOT flipped when it shipped.
+ * This gate shipped behind `hooks.turn_end_gate.enabled`, default OFF, on the
+ * council's round-6 reading: "the mechanism exists and soaks before it binds."
+ * The maintainer removed the switch on 2026-08-12, and the decisive argument
+ * was that the soak the switch was protecting could never happen — a concern
+ * that is off does not run, so "merged in its own PR with its own soak period"
+ * (the second condition of `blocker: stop-refusal-decision`) was unsatisfiable
+ * for as long as the condition's own mechanism stayed disabled. A default-off
+ * safety gate is not a soaking gate; it is an absent one.
+ *
+ * What replaces the switch is not "always refuse". It is the detectors' own
+ * trigger conditions, which is where the judgement belonged in the first
+ * place: A fires only on a closing paragraph that promises work, B only when a
+ * language pin exists AND the reply misses it, C only when the turn edited a
+ * file and then ran nothing. Silence is the default on every ordinary turn.
+ * `delegation-nudge` is the sibling precedent — no structural signal, no
+ * output at all.
+ *
+ * The cost of removing the switch, stated once because it is real: a
+ * false-positive detector can no longer be turned off by configuration, only
+ * by a revert. That is bounded rather than open-ended — the two re-entrancy
+ * layers below cap a misfire at ONE extra turn, never a wedge — and it is the
+ * reason a new detector ships only with a measured false-positive corpus.
+ *
+ * MEASURE IT ON YOUR OWN CORPUS, and the instruction moved here on purpose:
+ * it used to live in the settings description that this change deleted, and
+ * `src/config/pack-size-budget.json` cites that description as the reason
+ * `measure_turn_end_gate.ts` is shipped rather than excluded from the pack. So
+ * the pointer is restated rather than dropped —
+ * `./scripts-run src/scripts/measure_turn_end_gate --store <transcript dir>`
+ * re-derives each detector's fire rate against your own transcripts. No rate is
+ * quoted in this file: the round-5 number moved twice while the instrument
+ * itself was being corrected, and a fixed figure in a shipped comment would be
+ * a moving target presented as a constant.
  *
  * CONTRACT: dispatcher-internal exit is 1 (EXIT_BLOCK) on a fire, 0
  * otherwise. `fail_closed: false` — deliberately. A crash in a turn-end
@@ -94,7 +116,6 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
-import { load_agent_settings } from '../_lib/agent_settings.js';
 import {
     classify,
     isSyntheticPrompt,
@@ -689,78 +710,6 @@ function _messageText(content: unknown): string | null {
 }
 
 // ---------------------------------------------------------------------------
-// Settings — master OFF, detectors ON within it
-// ---------------------------------------------------------------------------
-
-export interface GateSettings {
-    enabled: boolean;
-    promissory: boolean;
-    language: boolean;
-    verification: boolean;
-}
-
-/**
- * YAML spellings a human writes for "on". The `yaml` package parses to the 1.2
- * core schema, where `yes` is the STRING "yes" rather than a boolean — so a
- * maintainer who writes `enabled: yes` means it, and a reader that silently
- * treats it as off is the R2 finding-6b defect wearing a parser instead of a
- * regex. Anything not in this set is off; there is no truthiness guessing.
- */
-function _isOn(v: unknown): boolean | null {
-    if (typeof v === 'boolean') return v;
-    if (typeof v !== 'string') return null;
-    const s = v.trim().toLowerCase();
-    if (s === 'true' || s === 'yes' || s === 'on') return true;
-    if (s === 'false' || s === 'no' || s === 'off') return false;
-    return null;
-}
-
-/**
- * Read the three switches through the real settings cascade.
- *
- * The previous version hand-walked `<workspaceRoot>/.agent-settings.yml` for
- * speed, and R2 finding 6 found three defects in that trade: it ignored the
- * user-global layer entirely (so a maintainer who opts in globally got no gate
- * AND no diagnostic), its end-of-line-anchored regex read
- * `enabled: true  # soak opt-in` as FALSE, and it accepted a `turn_end_gate:`
- * block under ANY parent as ON because a text walker has no notion of a parent.
- *
- * The stated reason for skipping the cascade does not survive contact with the
- * sibling concerns: `delegation-nudge` calls `load_agent_settings` on
- * `user_prompt_submit`, i.e. every turn. Correctness on a gate that can refuse
- * a turn-end outranks one settings read per turn-end.
- */
-export function readGateSettings(workspaceRoot: string): GateSettings {
-    const off: GateSettings = {
-        enabled: false,
-        promissory: true,
-        language: true,
-        verification: true,
-    };
-    let settings: Record<string, unknown>;
-    try {
-        settings = load_agent_settings({ cwd: workspaceRoot }) as Record<string, unknown>;
-    } catch {
-        return off;
-    }
-    const hooks = settings['hooks'];
-    if (typeof hooks !== 'object' || hooks === null || Array.isArray(hooks)) return off;
-    const block = (hooks as Record<string, unknown>)['turn_end_gate'];
-    if (typeof block !== 'object' || block === null || Array.isArray(block)) return off;
-    const gate = block as Record<string, unknown>;
-    const flag = (name: string, dflt: boolean): boolean => {
-        const v = _isOn(gate[name]);
-        return v === null ? dflt : v;
-    };
-    return {
-        enabled: flag('enabled', false),
-        promissory: flag('promissory', true),
-        language: flag('language', true),
-        verification: flag('verification', true),
-    };
-}
-
-// ---------------------------------------------------------------------------
 // main
 // ---------------------------------------------------------------------------
 
@@ -781,9 +730,6 @@ export function main(): number {
     if (payload['stop_hook_active'] === true) return EXIT_ALLOW;
 
     const workspaceRoot = str(envelope['workspace_root'] as JsonValue | undefined) || process.cwd();
-
-    const settings = readGateSettings(workspaceRoot);
-    if (!settings.enabled) return EXIT_ALLOW;
 
     const transcriptPath = str(
         (payload['transcript_path'] ?? payload['transcriptPath']) as JsonValue | undefined,
@@ -818,17 +764,16 @@ export function main(): number {
     );
     if (alreadyRefusedTurn(workspaceRoot, sessionKey, turnOrdinal)) return EXIT_ALLOW;
 
+    // Every detector runs on every turn-end. The gating is INSIDE each one —
+    // no promise, no pin mismatch, no unverified edit ⇒ no finding ⇒ the turn
+    // ends. That is the whole of "fires when it is warranted"; there is no
+    // second, configurable notion of warranted layered on top of it.
     const findings: Finding[] = [];
-    if (settings.promissory) {
-        const f = detectPromissory(lastAssistant);
-        if (f) findings.push(f);
-    }
-    if (settings.language) {
-        const f = detectLanguage(lastAssistant, readLanguagePin(workspaceRoot));
-        if (f) findings.push(f);
-    }
-    if (settings.verification) {
-        const f = detectUnverifiedEdit(toolCalls);
+    for (const f of [
+        detectPromissory(lastAssistant),
+        detectLanguage(lastAssistant, readLanguagePin(workspaceRoot)),
+        detectUnverifiedEdit(toolCalls),
+    ]) {
         if (f) findings.push(f);
     }
     if (findings.length === 0) return EXIT_ALLOW;
@@ -842,8 +787,7 @@ export function main(): number {
         `turn-end-gate: REFUSED — this turn is not finished.\n${lines.join('\n')}\n` +
             '  Do the promised work now, correct the language, or run the ' +
             'verification the edit needs, then end the turn.\n' +
-            '  This turn will not be refused a second time.\n' +
-            '  Disable: hooks.turn_end_gate.enabled: false in .agent-settings.yml\n',
+            '  This turn will not be refused a second time.\n',
     );
     return EXIT_BLOCK;
 }

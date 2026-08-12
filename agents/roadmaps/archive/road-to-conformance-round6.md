@@ -1,17 +1,16 @@
 ---
 complexity: structural
-status: later
+status: archived
 ---
 
 # Road to conformance round 6 — the guard regress I shipped, the unmeasured half, and the therapy that has not started
 
-> **Parked in `later/` (2026-08-09).** Every phase and all acceptance criteria
-> are closed; the single open step (6.2) is blocked on
-> `blocker: stop-refusal-decision` — a maintainer decision carried unchanged
-> from round 5. **Resume when** that decision is recorded: a negative decision
-> closes 6.2 and archives the roadmap; an affirmative one resumes once the
-> refusal concern has merged in its own PR and soaked, per the blocker's own
-> resolution condition.
+> **Complete (2026-08-12).** Parked in `later/` on 2026-08-09 with one open
+> step (6.2) blocked on `blocker: stop-refusal-decision`. That blocker resolved
+> on 2026-08-12 — not by the soak it asked for, but by the finding that a
+> default-OFF gate cannot soak at all, which made the condition unsatisfiable
+> as written. The maintainer removed the switch; the turn-end gate is always
+> armed. 6.2 is discharged and this roadmap is archived.
 
 > Source (consumed inbox): `agents/tmp.old/ci-fixes.txt` — an independent review
 > of merged PR #1208 (`2daf29871`), received 2026-08-08, re-verified here
@@ -71,23 +70,40 @@ having written the risk down one file away.
 
 ### blocker: stop-refusal-decision
 
-- **Status:** **decision made 2026-08-09 (affirmative); still blocked on the
-  second condition.** The maintainer decided that a concern which can refuse a
-  turn-end ships. Round 5's Phase 3 and 6.1 built it — `turn-end-gate`, default
-  OFF (`hooks.turn_end_gate.enabled`), with the re-entrancy shape stated and
-  tested BEFORE registration, which is exactly what the design-hole paragraph
-  below demanded and the council said a soak would otherwise discover the
-  expensive way. What is NOT satisfied is the rest of the clause below: "the
-  refusal concern has merged in its own PR with its own soak period." Until that
-  PR merges and soaks, Phase 6.2 stays blocked and this roadmap stays in
-  `later/`. Recorded here because the same blocker text lived in two roadmaps
-  and only one of them moved.
-- **Owner:** was maintainer; decision made, merge + soak outstanding
-- **Blocks:** Phase 6.2 below. No longer blocks round-5 Phase 3 or 6.1 — both
-  shipped under this decision.
-- **What to do:** decide whether a concern that can refuse a turn-end ships.
-- **Resolved when:** the decision is recorded; if affirmative, the refusal
-  concern has merged in its own PR with its own soak period.
+- **Status:** **RESOLVED 2026-08-12.** Two dates, and the second one is the
+  interesting one.
+
+  *2026-08-09* — decision made, affirmative: a concern which can refuse a
+  turn-end ships. Round 5's Phase 3 and 6.1 built it (`turn-end-gate`, default
+  OFF behind `hooks.turn_end_gate.enabled`), with the re-entrancy shape stated
+  and tested BEFORE registration. That left the clause's second half open —
+  "the refusal concern has merged in its own PR with its own soak period."
+  It merged in its own PR on 2026-08-10 (#1243, R2 findings in #1248).
+
+  *2026-08-12* — the soak half was found **unsatisfiable as written**, and
+  that is what resolves the blocker rather than any elapsed time. A concern
+  gated behind a default-OFF switch does not run, so no amount of waiting
+  produces a soak: the flag protecting the soak was the thing preventing it.
+  The maintainer's call was to delete the switch — the gate is always armed,
+  and what decides whether it FIRES is each detector's own trigger condition.
+  A condition no passage of time can satisfy is a defect in the condition, and
+  it is recorded that way here instead of being quietly waited out.
+
+  What the removal does NOT claim: that the gate is now proven in the field.
+  It is not. The residual risk moved from "unknown because it never ran" to
+  "bounded because a misfire costs exactly one extra turn" — the two
+  re-entrancy layers, both tested — and the honest reading is that field
+  evidence starts accumulating from 2026-08-12, not before it.
+- **Owner:** maintainer — decision made, merged, switch removed; nothing outstanding
+- **Blocks:** nothing. Phase 6.2 discharged 2026-08-12; round-5 Phase 3 and 6.1
+  shipped earlier under the affirmative decision.
+- **What to do:** nothing further to decide.
+- **Resolved when:** ✅ the decision is recorded (2026-08-09, affirmative), the
+  concern merged in its own PR (2026-08-10, #1243), and the soak half — found
+  unsatisfiable while the switch was off — was discharged by removing the
+  switch (2026-08-12). The original wording is left above verbatim rather than
+  rewritten, because the fact that a resolution condition could not be met by
+  waiting is the finding, not an editing accident.
 
 Round 5's central measurement stands: both blocking carriers reached zero,
 neither advisory carrier did, and 19 violations survived a pin one turn away.
@@ -747,13 +763,14 @@ whole reason this step existed.
   measurements; no advisory carrier was added, and the one place it would have
   been tempting — 2.2's paste net — became a change to an EXISTING classifier
   rather than a new reminder. -->
-- [ ] **BLOCKED on `stop-refusal-decision`.** 6.2 No enforcement work beyond
-  Phase 1's repair happens before the stop-refusal blocker resolves. Inventing a
-  third mechanism class to route around a parked decision is how a blocker
-  becomes a silent drop.
-  <!-- Held so far and worth stating explicitly, because Phase 1 shipped real
-  enforcement: every line of it repairs a guard that already existed, and no new
-  blocking surface was registered. -->
+- [x] 6.2 No enforcement work beyond Phase 1's repair happens before the
+  stop-refusal blocker resolves. Inventing a third mechanism class to route
+  around a parked decision is how a blocker becomes a silent drop.
+  <!-- Held for the whole parked window, and worth stating explicitly because
+  Phase 1 shipped real enforcement: every line of it repairs a guard that
+  already existed, and no new blocking surface was registered. Discharged
+  2026-08-12 when `stop-refusal-decision` resolved (see Blockers) — the
+  constraint expired with its blocker rather than being waived. -->
 
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-08-08 | reviewer: claude/host -->
