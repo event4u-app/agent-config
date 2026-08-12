@@ -18,11 +18,17 @@
  *   install of that rule cannot receive. The consumer gets the obligation
  *   without the artefact that discharges it.
  *
- *   unrouted-skill (advisory) — some pack delivers a skill while delivering no
- *   rule that routes to it. The consumer has the artefact and no path to it.
- *   This is the measured case above. Advisory on purpose: a skill reachable
- *   only by explicit user invocation is a legitimate design, so a finding here
- *   is a question, not a verdict.
+ *   unrouted-skill (advisory) — a skill that IS routed somewhere reaches a pack
+ *   none of its routing rules reach. The consumer has the artefact and no path
+ *   to it. This is the measured case above.
+ *
+ *   Scope, stated because the obvious reading is wider than the scan: the
+ *   subject set is skills some rule already routes to. A skill NO rule routes
+ *   to anywhere is never examined, deliberately — most of the estate is in
+ *   that set by design (a skill invoked by name needs no rule), so reporting
+ *   it would bury the finding this check exists for. Advisory for the same
+ *   reason: reachability-only-by-invocation is a legitimate design, so a
+ *   finding here is a question, not a verdict.
  *
  * The install closure is `pack + requires*` — the transitive expansion the
  * resolver performs. `suggests` is deliberately NOT followed: it is advisory,
@@ -222,11 +228,17 @@ function main(): number {
     const errors = findings.filter((f) => f.kind === 'unreachable-route');
     const advisories = findings.filter((f) => f.kind === 'unrouted-skill');
 
-    for (const finding of errors) {
-        process.stdout.write(`❌  ${finding.subject} — ${finding.detail}\n`);
-    }
-    for (const finding of advisories) {
-        process.stdout.write(`⚠️  ${finding.subject} — ${finding.detail}\n`);
+    // --quiet suppresses the per-finding lines but never the count line: this
+    // gate is expected to stay non-empty for a while, and a quiet run that
+    // printed nothing at all would read as clean.
+    const quiet = process.argv.includes('--quiet');
+    if (!quiet) {
+        for (const finding of errors) {
+            process.stdout.write(`❌  ${finding.subject} — ${finding.detail}\n`);
+        }
+        for (const finding of advisories) {
+            process.stdout.write(`⚠️  ${finding.subject} — ${finding.detail}\n`);
+        }
     }
 
     const strict = process.argv.includes('--strict');

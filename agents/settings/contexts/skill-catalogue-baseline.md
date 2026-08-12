@@ -64,14 +64,27 @@ First observation recorded to `agents/evidence/metrics/skill-catalogue.jsonl`.
 Partial by construction: 16 entries observed bare, 19 observed described, out of
 336 projected entries.
 
-**Verdict: `no-selector`.** No measured property separates the two groups:
+**Verdict: `no-selector`.** No measured property separates the two groups.
 
-| Candidate | Separates | What the data says |
-|---|---|---|
-| `declares-description` | no | 16/16 bare entries **do** declare a `description:` in their projected `SKILL.md` — the projection is not the cause |
-| `positional-head` | no | described entries reach position #325 while bare entries start at #45; the ranges overlap, so no head-N budget explains the split |
-| `description-length` | no | length ranges overlap |
-| any frontmatter key | no | no key's presence tracks the split |
+The first three rows below are the tool's own candidate output, quoted. The
+fourth is **derived, not quoted**, and the distinction matters in a document
+whose purpose is that later numbers be comparable against something measured:
+`analyzeSelector` only emits a `frontmatter:<key>` candidate when that key
+*does* separate, so "no frontmatter key separates" is read off the **absence**
+of any such row, never printed as one.
+
+| Candidate | Separates | Source | What the data says |
+|---|---|---|---|
+| `declares-description` | no | tool | 16/16 bare entries **do** declare a `description:` in their projected `SKILL.md` — the projection is not the cause |
+| `positional-head` | no | tool | described entries reach position #325 while bare entries start at #45; the ranges overlap, so no head-N budget explains the split |
+| `description-length` | no | tool | length ranges overlap |
+| any frontmatter key | no | derived from absence | no `frontmatter:<key>` candidate was emitted, which is how the tool reports that no key tracks the split |
+
+Reproduce it: the observation inputs are the two files under
+`agents/evidence/metrics/skill-catalogue/` and the record is the append-only
+`agents/evidence/metrics/skill-catalogue.jsonl`; all three are tracked. Re-run
+`./scripts-run src/scripts/capture_skill_catalogue --observed <bare> --described <described>`
+to recompute the verdict rather than re-reading the prose that asserts it.
 
 **Consequence, stated because it is load-bearing.** The census's strongest
 hypothesis — a fixed head-N description budget, with priority ordering as the

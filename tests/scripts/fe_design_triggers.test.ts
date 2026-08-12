@@ -38,7 +38,16 @@ interface TriggerSet {
 const evals = JSON.parse(fs.readFileSync(EVALS, 'utf-8')) as TriggerSet;
 const skillBody = fs.readFileSync(SKILL_MD, 'utf-8');
 
-/** Words that mark a prompt as asking for a UI to be built or changed. */
+/**
+ * Words that mark a prompt as asking for a UI to be built or changed.
+ *
+ * Leading-verb matching only, which is a stated limit rather than a rule: it
+ * is what lets "change the primary button colour to green" stay on the
+ * should-not-trigger side. That case is correct for a different reason — it is
+ * `ui-trivial` — so the verb list, not a principle, is carrying it. If a
+ * negative case ever needs to be an implementation prompt that is NOT
+ * ui-trivial, this heuristic is the thing to replace.
+ */
 const IMPLEMENTATION_VERBS = ['implement', 'build', 'improve'];
 
 function isImplementationPrompt(q: string): boolean {
@@ -47,7 +56,11 @@ function isImplementationPrompt(q: string): boolean {
 }
 
 describe('eval set shape', () => {
-    it('keeps at least five queries on each side', () => {
+    it('keeps at least five should-trigger and four should-not-trigger queries', () => {
+        // Four on the negative side, not five: the implementation query moved
+        // to should-trigger when this skill took ownership of ad-hoc UI work.
+        // The floor is stated where it is asserted, not in a title that
+        // outlived the change.
         expect(evals.queries.filter((q) => q.trigger).length).toBeGreaterThanOrEqual(5);
         expect(evals.queries.filter((q) => !q.trigger).length).toBeGreaterThanOrEqual(4);
     });

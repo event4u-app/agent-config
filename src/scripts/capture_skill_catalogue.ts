@@ -117,12 +117,37 @@ function topLevelKeys(frontmatter: string): string[] {
     return keys;
 }
 
-/** The declared description with surrounding quotes stripped, or "". */
+/**
+ * The declared description with surrounding quotes stripped, or "".
+ *
+ * A block scalar (`description: >-` / `|`) puts the text on the FOLLOWING
+ * lines, so taking the remainder of the header line would yield the
+ * two-character indicator and report `descriptionLength: 2`. That would feed
+ * the length-based selector candidate noise, and a length threshold could be
+ * reported or refuted on it. Block scalars are therefore folded properly.
+ */
 function descriptionOf(frontmatter: string): string {
-    for (const line of frontmatter.split('\n')) {
-        const match = /^description:\s*(.*)$/.exec(line);
+    const lines = frontmatter.split('\n');
+    for (let i = 0; i < lines.length; i += 1) {
+        const match = /^description:\s*(.*)$/.exec(lines[i]!);
         if (!match) continue;
-        return match[1]!.trim().replace(/^["']|["']$/g, '');
+        const rest = match[1]!.trim();
+
+        if (/^[|>][-+]?\d*$/.test(rest)) {
+            const body: string[] = [];
+            for (let j = i + 1; j < lines.length; j += 1) {
+                const line = lines[j]!;
+                if (line.trim() === '') {
+                    body.push('');
+                    continue;
+                }
+                if (!/^\s/.test(line)) break; // dedented, so the block ended
+                body.push(line.trim());
+            }
+            return body.join(' ').trim();
+        }
+
+        return rest.replace(/^["']|["']$/g, '');
     }
     return '';
 }
@@ -184,11 +209,20 @@ export function analyzeSelector(
     observedDescribed?: readonly string[],
 ): Omit<SelectorReport, 'catalogueRoot'> {
     const known = new Map(projected.map((e) => [e.name, e]));
-    const unknownObserved = observedBare.filter((n) => !known.has(n)).sort();
     const bare = observedBare.filter((n) => known.has(n));
-    const described = (
-        observedDescribed ?? projected.map((e) => e.name).filter((n) => !bare.includes(n))
-    ).filter((n) => known.has(n));
+    const describedInput =
+        observedDescribed ?? projected.map((e) => e.name).filter((n) => !bare.includes(n));
+    const described = describedInput.filter((n) => known.has(n));
+
+    // Both self-reported lists are validated, not only the bare one: a typo in
+    // --described silently shrank the described set and weakened the analysis,
+    // while the same typo in --observed was surfaced.
+    const unknownObserved = [
+        ...new Set([
+            ...observedBare.filter((n) => !known.has(n)),
+            ...(observedDescribed ?? []).filter((n) => !known.has(n)),
+        ]),
+    ].sort();
 
     const base = {
         entriesTotal: projected.length,
