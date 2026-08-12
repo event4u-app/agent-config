@@ -1,6 +1,6 @@
 # Completion review — no issue left open without a decision
 
-**Skipped:** no code surface for this completion — the diff is authoring documents, two gate-state files, one derived page, a roadmap and one byte-identical projection, and the gate itself measures zero code paths of nine changed files, scope 239bd876da015ea68643235467648abef5a43d5af20e8b275cea862246944b9f, declared 2026-08-13
+**Skipped:** no code surface for this completion — the diff is authoring documents, two gate-state files, one derived page, a roadmap and one byte-identical projection, and the gate itself measures zero code paths of nine changed files, scope d2bba8efade6121d62919d8f687a512c858ef9ed1b18ffd0f893e15f2f5e8f0e, declared 2026-08-13
 
 ## Why a skip rather than a review
 
@@ -124,6 +124,24 @@ router, so `paths:` may be projection-inert exactly as `triggers:` is, and its
 Phase 1 is authorised to end the roadmap on that finding. It also names the
 thin-projection null (−65.6% tokens, quality gate FAILED at 36.2% vs 48%) and
 why a different mechanism does not inherit that verdict.
+
+## Re-bound after merging main and adding the roadmap's Risk Register
+
+`main` moved mid-work and the branch merged it rather than pushing over a stale
+base. One conflict, in the generated `agents/roadmaps-progress.md`, resolved by
+**regenerating** it rather than hand-merging — a clean auto-merge of a derived
+file is still the wrong content, so the generator is the resolution.
+
+The merge's token cost was measured, not assumed: `eager_rule_load` 106,704 →
+106,946, +0.2% against the freshly set anchor. That is the anchor doing its
+job — the same merge against the pre-anchor baseline would have arrived with
+49 tokens of room and forced an unrelated condensation round on whoever pushed
+next.
+
+`lint_plan_risk_register` then rejected the new roadmap: it carried a plain
+`## Risks` table whose `Anchored under` values resolved to no heading. Fixed by
+writing the required register with five entries anchored to real phases. Caught
+by preflight rather than by CI, which is the gate working as intended.
 
 ## Standing caveat
 
