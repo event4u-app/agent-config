@@ -257,6 +257,10 @@
       "type": "boolean",
       "description": "AI OS Product UI allowlist (road-to-ai-os-product-ui.md Phase 1). When true, the command is exposed in the browser /tasks surface and may be spawned by POST /api/v1/task/run. Default false — commands that touch git, secrets, or run destructive migrations must stay false (terminal only). Per-command opt-in, never opt-out."
     },
+    "requires_confirmation": {
+      "type": "boolean",
+      "description": "Optional, additive: the command's action STAGES rather than executes, so an irreversible step waits for an explicit human confirmation naming the exact object (non-destructive-by-default § Never act while asking). Twin of the same key in skill.schema.json's execution block; commands carry no execution block, so it sits top-level. A declaration only — it names the action class, never the object, which exists at stage time and not in frontmatter. Mechanism: stageAction/confirmOnce in work_engine/hooks/builtin/staged_confirmation.ts; enumerate with `agent-config gates --pending`. Nothing BINDS on it yet (blocker confirmation-degraded-host-semantics: 5 of 8 hosts have no pre_tool_use slot)."
+    },
     "auto_detect": {
       "type": "boolean",
       "description": "6.1.0 orchestrator auto-detection opt-in (Step 1, non-interactive-contract). When true, the orchestrator auto-detects its sub-command per the confidence-tiered detection table instead of always showing the menu, honoring the non-interactive-contract (TTY/CI detection, --yes/--json, abort schemas). Per-orchestrator kill-switch: set false to always show the menu; overridable globally via commands.auto_detect in .agent-settings.yml and per-invocation via --no-auto-detect. Only orchestrators (type: orchestrator) carry it."

@@ -209,7 +209,8 @@ Tier 2 — maintenance / internal (hooks, MCP, memory, telemetry):
                              first. Flags: --all (include maintainer/external),
                              --json, --reply (reply-close form: the one blocking
                              decision in full, the rest as a count; prints
-                             nothing when none are yours)
+                             nothing when none are yours), --pending (staged
+                             requires_confirmation actions awaiting you)
   capabilities:index         Regenerate CAPABILITIES.yaml — the package coverage index
                              (capability area → coverage → backing skills/commands → gaps).
                              Pass --check to fail if stale (for CI). Reads src/ (package repo).
