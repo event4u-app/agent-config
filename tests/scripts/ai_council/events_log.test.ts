@@ -15,7 +15,11 @@ import {
     appendQuorumEvent,
     defaultLogPath,
 } from '../../../src/scripts/ai_council/events_log.js';
-import { evaluateQuorum } from '../../../src/scripts/ai_council/quorum.js';
+import {
+    evaluateQuorum,
+    SOLO_FLOOR_MIN_PRESENT,
+    wouldSoloFloorHold,
+} from '../../../src/scripts/ai_council/quorum.js';
 
 const created: string[] = [];
 function tmpDir(): string {
@@ -126,7 +130,7 @@ describe('events_log — write + schema', () => {
 });
 
 
-describe('events_log — quorum attendance (schema v3)', () => {
+describe('events_log — quorum attendance (schema v4)', () => {
     function readOne(lp: string): Record<string, unknown> {
         return JSON.parse(fs.readFileSync(lp, 'utf-8').trim()) as Record<string, unknown>;
     }
@@ -139,7 +143,7 @@ describe('events_log — quorum attendance (schema v3)', () => {
         dispatch: 'full',
     } as const;
 
-    it('pins the on-wire schema version at 3', () => {
+    it('pins the on-wire schema version at 4', () => {
         // Deliberately a literal, not the constant: this module's whole
         // contract is a versioned wire format, and an assertion written
         // against SCHEMA_VERSION is tautological — it passes whatever the
@@ -148,9 +152,13 @@ describe('events_log — quorum attendance (schema v3)', () => {
         // Bumped 2 → 3 when `quorum_result` gained `gate_class` and
         // `floor_would_hold` (ADR-224 shadow floor). It broke this test on
         // purpose, which is the assertion working.
+        //
+        // Bumped 3 → 4 when the line gained `min_present` — the floor the
+        // counterfactual was computed against. Same mechanism, same reason it
+        // is a literal.
         const lp = path.join(tmpDir(), 'wire.log');
         appendEvent({ action: 'proceed' }, { logPath: lp, now: FIXED });
-        expect(readOne(lp).schema_version).toBe(3);
+        expect(readOne(lp).schema_version).toBe(4);
     });
 
     it('writes a quorum_result line carrying the attendance shape', () => {
@@ -218,6 +226,56 @@ describe('events_log — quorum attendance (schema v3)', () => {
         // Declared, never inferred: no CLI path declares itself gate-class,
         // and `false` is the honest record of that, not a placeholder.
         expect(rec.gate_class).toBe(false);
+        // The floor the counterfactual was computed against, on the line —
+        // without it a reader cannot tell which floor `floor_would_hold`
+        // refers to, and the default is exactly the case most likely to be
+        // assumed rather than checked.
+        expect(rec.min_present).toBe(2);
+    });
+
+    it('records the floor the counterfactual used, so a zero rate is attributable', () => {
+        // `quorum_min_present` lives in the USER-GLOBAL config (ADR-104), so
+        // without this field two machines emit byte-identical lines while
+        // measuring different counterfactuals — and `quorum_min_present: 1`,
+        // which is valid config and provably cannot hold anything, would zero
+        // shadow_floor_fire_rate with no trace on the data.
+        const lp = path.join(tmpDir(), 'provenance.log');
+        const solo = { ...CTX, configuredTotal: 2, result: evaluateQuorum(2, 1), absent: [] };
+        appendQuorumEvent({ ...solo, minPresent: 1 }, { logPath: lp, now: FIXED });
+        appendQuorumEvent({ ...solo, minPresent: 2 }, { logPath: lp, now: FIXED });
+        appendQuorumEvent({ ...solo, minPresent: 3 }, { logPath: lp, now: FIXED });
+        const lines = fs
+            .readFileSync(lp, 'utf-8')
+            .trim()
+            .split('\n')
+            .map((l) => JSON.parse(l) as Record<string, unknown>);
+        // Same pass, three configured floors, three different verdicts — the
+        // reading is only interpretable because the floor is recorded.
+        expect(lines.map((l) => l.min_present)).toEqual([1, 2, 3]);
+        expect(lines.map((l) => l.floor_would_hold)).toEqual([false, true, true]);
+        // Deliberately NOT re-derived here as `present < min_present`: that
+        // ignores the ceiling clamp and would agree with the real rule only by
+        // accident on this input (they diverge at present === ceiling with a
+        // larger floor). The predicate owns the rule; this test owns the
+        // provenance — that the value used is the value recorded.
+        expect(lines.map((l) => l.min_present)).toEqual([1, 2, 3]);
+    });
+
+    it('the recorded floor is the one the predicate used, not a second resolution', () => {
+        // The failure this pins: `min_present` written from the input while
+        // `floor_would_hold` evaluates a different default. Omitting minPresent
+        // must record the SAME default the counterfactual applied — one
+        // resolution, not two that happen to agree today.
+        const lp = path.join(tmpDir(), 'default.log');
+        appendQuorumEvent(
+            { ...CTX, configuredTotal: 2, result: evaluateQuorum(2, 1), absent: [] },
+            { logPath: lp, now: FIXED },
+        );
+        const rec = readOne(lp);
+        expect(rec.min_present).toBe(SOLO_FLOOR_MIN_PRESENT);
+        expect(rec.floor_would_hold).toBe(
+            wouldSoloFloorHold(evaluateQuorum(2, 1), rec.min_present as number, 2),
+        );
     });
 
     it('separates "held by the floor" from "threshold not met" on the line alone', () => {
