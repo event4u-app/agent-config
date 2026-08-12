@@ -652,6 +652,53 @@ describe('the gate, end to end', () => {
         expect(r.stderr).toBe('');
     });
 
+    // Round 7 § Phase 1 — the completion detector THROUGH the real process, not
+    // only as a pure function. The unit tests prove the predicate; this proves it
+    // is wired: a detector that is correct and unreachable is the shape this
+    // repo's own memory calls "defined but not wired".
+    function writeCiState(dir: string, settled: boolean): void {
+        const target = path.join(dir, CI_STATE_FILE);
+        fs.mkdirSync(path.dirname(target), { recursive: true });
+        fs.writeFileSync(
+            target,
+            JSON.stringify({
+                schema_version: 1,
+                ci_last: { at: '2026-08-12T00:00:00+00:00', pending: settled ? 0 : 3, settled },
+            }),
+        );
+    }
+
+    const DONE = 'Fertig, Matze. Der komplette Auftrag ist durch, alles gemergt.';
+
+    it('refuses a completion claim while the recorded CI read is unsettled', () => {
+        const { dir, home } = makeGateWorkspace();
+        writeCiState(dir, false);
+        const t = writeTranscript(home, ['mach weiter'], DONE);
+        const r = runHook(dir, envelopeJson(dir, t), home);
+        expect(r.status, r.stderr).toBe(1);
+        expect(r.stderr).toContain('completion');
+        expect(r.stdout).toBe('');
+    });
+
+    it('lets the SAME claim through once the CI read is settled', () => {
+        const { dir, home } = makeGateWorkspace();
+        writeCiState(dir, true);
+        const t = writeTranscript(home, ['mach weiter'], DONE);
+        const r = runHook(dir, envelopeJson(dir, t), home);
+        expect(r.status, r.stderr).toBe(0);
+        expect(r.stderr).toBe('');
+    });
+
+    it('lets the same claim through when no CI was ever observed', () => {
+        // No state file at all — a session that never touched CI must never be
+        // refused for it, and this is the case an over-eager version would break.
+        const { dir, home } = makeGateWorkspace();
+        const t = writeTranscript(home, ['mach weiter'], DONE);
+        const r = runHook(dir, envelopeJson(dir, t), home);
+        expect(r.status, r.stderr).toBe(0);
+        expect(r.stderr).toBe('');
+    });
+
     it('is a no-op while the master switch is off — the shipped default', () => {
         const dir = makeWorkspace(); // no settings file at all
         const home = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'turn-end-gate-home-')));
