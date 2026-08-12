@@ -52,11 +52,7 @@ import {
     ttl_is_measured,
     ttl_seconds_for,
 } from './_lib/session_register.js';
-import {
-    ROADMAP_CLAIM_REL,
-    claim_is_stale,
-    roadmap_claim_rel,
-} from './session_register_hook.js';
+import { claim_is_stale, roadmap_claim_rel } from './session_register_hook.js';
 
 function usage(): number {
     process.stderr.write(
