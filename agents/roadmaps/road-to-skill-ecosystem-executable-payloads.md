@@ -343,6 +343,9 @@ prevented rather than merely bounded.
   trigger-style evaluation hard-aborts under automation, so they cannot be run
   from an autonomous session. Run them, publish the results (including a null),
   then unblock the dependent phases in their own change.
+- **Resolved when:** the S0.1 invocation count and the S0.2 token measurement
+  are published as evidence — a null counts — and the dependent phases are
+  unblocked in a separate change that cites them.
 
 ### blocker: compatibility-deprecation-is-a-consumer-visible-decision
 
@@ -353,6 +356,8 @@ prevented rather than merely bounded.
   Agent-Skills `compatibility` field, adds `harness_compat` beside it
   permanently, or migrates and diverges. `requires` lands additively either way,
   so nothing else waits on this.
+- **Resolved when:** the maintainer has recorded which of the three options the
+  schema takes, in a decision record the `harness_compat` step can cite.
 
 ## Provenance
 
