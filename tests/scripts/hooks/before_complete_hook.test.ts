@@ -145,3 +145,87 @@ describe('verify_before_complete — tracker behaviour', () => {
         expect(state(tmp)['session_id']).toBe('s1');
     });
 });
+
+/**
+ * Round 7 § Phase 1.1 — `ci_last` is the session-scoped CI-settle NEGATIVE that
+ * `turn-end-gate` reads to refuse a premature completion claim. The property that
+ * matters is the one the turn-scoped counters deliberately do not have: it
+ * survives a user prompt, because the measured failure is a completion claim in a
+ * LATER turn than the poll it rests on.
+ */
+describe('verify_before_complete — ci_last (round 7)', () => {
+    function poll(output: string, session_id = 's1'): void {
+        run(
+            envelope(
+                'augment',
+                'post_tool_use',
+                {
+                    tool_name: 'launch-process',
+                    tool_input: { command: 'gh pr checks 1234' },
+                    tool_response: output,
+                },
+                session_id,
+            ),
+            { consumer_root: tmp },
+        );
+    }
+
+    it('is null before any CI poll', () => {
+        run(envelope('augment', 'session_start', {}), { consumer_root: tmp });
+        expect(state(tmp)['ci_last']).toBe(null);
+    });
+
+    it('records an in-flight poll as not settled', () => {
+        run(envelope('augment', 'session_start', {}), { consumer_root: tmp });
+        poll('build\tpending\t1m\nlint\tpass\t30s\n');
+        const ci = state(tmp)['ci_last'] as Record<string, unknown>;
+        expect(ci['settled']).toBe(false);
+        expect(ci['pending']).toBe(1);
+    });
+
+    it('records a real result table with no in-flight rows as settled', () => {
+        run(envelope('augment', 'session_start', {}), { consumer_root: tmp });
+        poll('build\tpass\t1m\nlint\tpass\t30s\n');
+        const ci = state(tmp)['ci_last'] as Record<string, unknown>;
+        expect(ci['settled']).toBe(true);
+        expect(ci['pending']).toBe(0);
+    });
+
+    it('never reads "no checks reported" as settled', () => {
+        run(envelope('augment', 'session_start', {}), { consumer_root: tmp });
+        poll('no checks reported on the abc123 branch\n');
+        const ci = state(tmp)['ci_last'] as Record<string, unknown>;
+        expect(ci['pending']).toBe(null);
+        expect(ci['settled']).toBe(false);
+    });
+
+    it('survives a user prompt — the turn-scoped witness does not', () => {
+        run(envelope('augment', 'session_start', {}), { consumer_root: tmp });
+        poll('build\tpending\t1m\n');
+        expect(state(tmp)['ci_saw_pending']).toBe(true);
+        run(envelope('augment', 'user_prompt_submit', { prompt: 'fixe die ci' }), {
+            consumer_root: tmp,
+        });
+        // The turn-scoped in-flight witness is reset by design …
+        expect(state(tmp)['ci_saw_pending']).toBe(false);
+        // … and the session-scoped negative is exactly what must NOT be.
+        const ci = state(tmp)['ci_last'] as Record<string, unknown>;
+        expect(ci['settled']).toBe(false);
+    });
+
+    it('a non-CI verification leaves ci_last untouched', () => {
+        run(envelope('augment', 'session_start', {}), { consumer_root: tmp });
+        poll('build\tpending\t1m\n');
+        run(
+            envelope('augment', 'post_tool_use', {
+                tool_name: 'launch-process',
+                tool_input: { command: 'npx vitest run tests/x.test.ts' },
+                tool_response: 'Tests  3 passed (3)',
+            }),
+            { consumer_root: tmp },
+        );
+        const ci = state(tmp)['ci_last'] as Record<string, unknown>;
+        expect(ci['settled']).toBe(false);
+        expect(ci['command']).toContain('gh pr checks');
+    });
+});

@@ -113,6 +113,14 @@ function _empty_state(): StateDict {
     verified_this_turn: false,
     ci_saw_pending: false,
     nonevidence_this_turn: 0,
+    // Round 7 § Phase 1 — the last CI read, SESSION-scoped on purpose. Every
+    // other counter here is turn-scoped because a stale POSITIVE would wrongly
+    // vouch ("I verified"). This one is a NEGATIVE ("CI was not settled"), and a
+    // stale negative only ever refuses more often — so surviving the turn
+    // boundary preserves the freshness invariant rather than bypassing it. It
+    // has to survive it: the measured failure is a completion claim in a LATER
+    // turn than the poll it rests on.
+    ci_last: null,
     checked_at: _now(),
   };
 }
@@ -338,6 +346,16 @@ function _update(state: StateDict, event: string, envelope: StateDict): StateDic
         } else {
           counts = false; // unrecognised or unreadable — never read as settled
         }
+        // Round 7 § 1.1 — the session-scoped negative the turn-end consumer
+        // reads. `settled` is true ONLY for a readable zero-pending result; an
+        // unreadable shape (`pending === null`, which includes "no checks
+        // reported") is NOT a settle, same discrimination `counts` makes above.
+        state["ci_last"] = {
+          at: _now(),
+          command: cmd.slice(0, 512),
+          pending,
+          settled: pending === 0,
+        };
       }
 
       state["last_verification"] = {

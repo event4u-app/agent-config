@@ -24,18 +24,21 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
 import {
     alreadyRefusedTurn,
+    detectCompletionClaim,
     detectLanguage,
     detectPromissory,
     detectUnverifiedEdit,
     deriveSessionKey,
     finalParagraph,
     isVerificationCommand,
+    readCiSettled,
     readGateSettings,
     readLanguagePin,
     readTranscriptTail,
     visibleProse,
     type ToolCall,
 } from '../../src/scripts/hooks/turn_end_gate_hook.js';
+import { STATE_FILE as CI_STATE_FILE } from '../../src/scripts/before_complete_hook.js';
 
 const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..');
 const HOOK = path.join(REPO_ROOT, 'src', 'scripts', 'hooks', 'turn_end_gate_hook.ts');
@@ -311,6 +314,7 @@ describe('settings — default OFF, detectors ON within it (roadmap 3.6)', () =>
             promissory: true,
             language: true,
             verification: true,
+            completion: true,
         });
     });
 
@@ -325,6 +329,7 @@ describe('settings — default OFF, detectors ON within it (roadmap 3.6)', () =>
             promissory: true,
             language: false,
             verification: true,
+            completion: true,
         });
     });
 
@@ -339,6 +344,22 @@ describe('settings — default OFF, detectors ON within it (roadmap 3.6)', () =>
             promissory: true,
             language: true,
             verification: false,
+            completion: true,
+        });
+    });
+
+    it('the completion detector has its own switch', () => {
+        const s = readGateSettings(
+            makeWorkspace(
+                'hooks:\n  turn_end_gate:\n    enabled: true\n    completion: false\n',
+            ),
+        );
+        expect(s).toEqual({
+            enabled: true,
+            promissory: true,
+            language: true,
+            verification: true,
+            completion: false,
         });
     });
 
@@ -416,6 +437,99 @@ describe('language pin', () => {
         fs.mkdirSync(path.join(dir, 'agents', 'state'), { recursive: true });
         fs.writeFileSync(path.join(dir, 'agents', 'state', 'language-mirror.json'), '{ not json');
         expect(readLanguagePin(dir)).toBe('und');
+    });
+});
+
+/**
+ * Round 7 § Phase 1 — detector D: a completion claim over an unsettled CI read.
+ *
+ * The measured class (14 instances, every one costing the user a turn) is
+ * "Fertig" while checks are still running. The three negative cases below are the
+ * point of the detector, not an afterthought: a blocking guard that refuses a
+ * legitimate completion teaches the user to switch it off.
+ */
+describe('detector D — completion claim over unsettled CI (round 7)', () => {
+    function writeCi(dir: string, ci: unknown): void {
+        const target = path.join(dir, CI_STATE_FILE);
+        fs.mkdirSync(path.dirname(target), { recursive: true });
+        fs.writeFileSync(target, JSON.stringify({ schema_version: 1, ci_last: ci }));
+    }
+
+    const UNSETTLED = { seen: true, settled: false };
+    const SETTLED = { seen: true, settled: true };
+    const NEVER_SEEN = { seen: false, settled: false };
+
+    it('fires on the measured German shape', () => {
+        const f = detectCompletionClaim('Fertig, Matze — der komplette Auftrag ist durch.', UNSETTLED);
+        expect(f?.detector).toBe('completion');
+        expect(f?.evidence).toContain('Fertig');
+    });
+
+    it('fires on "Damit ist alles erledigt."', () => {
+        expect(detectCompletionClaim('Damit ist alles erledigt.', UNSETTLED)).not.toBeNull();
+    });
+
+    // --- the three cases that must NOT fire (roadmap 1.4) ---
+
+    it('does NOT fire when the CI read was settled', () => {
+        expect(detectCompletionClaim('Fertig, Matze.', SETTLED)).toBeNull();
+    });
+
+    it('does NOT fire in a session that never read CI', () => {
+        expect(detectCompletionClaim('Fertig, Matze.', NEVER_SEEN)).toBeNull();
+    });
+
+    it('does NOT fire on an unsettled read with no completion claim', () => {
+        expect(
+            detectCompletionClaim('Die CI läuft noch, ich warte auf das Settle.', UNSETTLED),
+        ).toBeNull();
+    });
+
+    it('does NOT fire on "fertig" inside a sentence about something else', () => {
+        expect(
+            detectCompletionClaim(
+                'Der Generator ist noch nicht fertig konfiguriert, deshalb prüfe ich das.',
+                UNSETTLED,
+            ),
+        ).toBeNull();
+    });
+
+    it('does NOT fire on a completion claim inside quoted tool output', () => {
+        expect(
+            detectCompletionClaim('Das Log sagt:\n\n```\nFertig.\n```\n\nIch lese weiter.', UNSETTLED),
+        ).toBeNull();
+    });
+
+    // --- readCiSettled: absence is never a settle, and never a refusal ---
+
+    it('no state file ⇒ not seen ⇒ the detector cannot fire', () => {
+        expect(readCiSettled(makeWorkspace())).toEqual(NEVER_SEEN);
+    });
+
+    it('a malformed state file is treated as not seen', () => {
+        const dir = makeWorkspace();
+        const target = path.join(dir, CI_STATE_FILE);
+        fs.mkdirSync(path.dirname(target), { recursive: true });
+        fs.writeFileSync(target, '{ not json');
+        expect(readCiSettled(dir)).toEqual(NEVER_SEEN);
+    });
+
+    it('ci_last null ⇒ not seen', () => {
+        const dir = makeWorkspace();
+        writeCi(dir, null);
+        expect(readCiSettled(dir)).toEqual(NEVER_SEEN);
+    });
+
+    it('reads an unsettled record the producer wrote', () => {
+        const dir = makeWorkspace();
+        writeCi(dir, { at: '2026-08-12T00:00:00+00:00', pending: 3, settled: false });
+        expect(readCiSettled(dir)).toEqual(UNSETTLED);
+    });
+
+    it('reads a settled record the producer wrote', () => {
+        const dir = makeWorkspace();
+        writeCi(dir, { at: '2026-08-12T00:00:00+00:00', pending: 0, settled: true });
+        expect(readCiSettled(dir)).toEqual(SETTLED);
     });
 });
 
