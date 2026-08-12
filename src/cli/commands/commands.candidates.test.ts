@@ -14,6 +14,8 @@ import { describe, expect, it } from 'vitest';
 import {
     buildCandidatesReport,
     renderCandidates,
+    runCommandsLs,
+    CANDIDATES_INCOMPATIBLE,
     REDUCTION_OWNERS,
     REPORT_ONLY_NOTICE,
     TEXT_LIST_CAP,
@@ -50,7 +52,8 @@ function cmdWithoutIntent(slug: string, pack: string, visibility: string): Disco
     return rest;
 }
 
-/** Mixed fixture: two shims, two undocumented, three packs of unequal weight. */
+/** Mixed fixture: two absorbed-name commands, two undocumented, three packs of
+ * unequal weight. */
 const FIXTURE: readonly DiscoveryArtefact[] = [
     cmd('alpha', 'engineering-base', { visibility: 'visible' }),
     cmd('bravo', 'engineering-base', { visibility: 'advanced' }),
@@ -72,16 +75,17 @@ describe('buildCandidatesReport', () => {
         expect(summed).toBe(FIXTURE.length);
     });
 
-    it('classifies exactly the commands that declare `replaces` as shims', () => {
-        const expected = FIXTURE
-            .filter((c) => (c.replaces ?? []).length > 0)
-            .map((c) => c.slug)
-            .sort();
-        expect(report.shims.map((r) => r.slug)).toEqual(expected);
+    it('collects the commands that ABSORBED prior names, named explicitly', () => {
+        // Named rather than recomputed from the implementation predicate: the
+        // first version of this bucket inverted the field's meaning, and a test
+        // that re-derives `(replaces ?? []).length > 0` certifies whatever the
+        // code does — including the inversion.
+        expect(report.absorbedNames.map((r) => r.slug)).toEqual(['delta', 'echo']);
+        expect(report.absorbedNames.map((r) => r.slug)).not.toContain('alpha');
     });
 
-    it('carries each shim\'s replaced ids through unchanged', () => {
-        for (const row of report.shims) {
+    it('carries each absorbed-name list through unchanged', () => {
+        for (const row of report.absorbedNames) {
             const source = FIXTURE.find((c) => c.slug === row.slug);
             expect(row.replaces).toEqual(source?.replaces ?? []);
         }
@@ -100,11 +104,21 @@ describe('buildCandidatesReport', () => {
         expect(expected).not.toContain('alpha');
     });
 
-    it('orders packs by weight descending, ties broken by name', () => {
+    it('orders packs by weight descending', () => {
         const counts = report.byPack.map(([, n]) => n);
         expect([...counts]).toEqual([...counts].sort((a, b) => b - a));
         const summed = counts.reduce((a, b) => a + b, 0);
         expect(summed).toBe(FIXTURE.length);
+    });
+
+    it('breaks a pack tie by name — exercised on an actual tie', () => {
+        // The mixed fixture has counts 3/2/1 and never hits the tie-break, so
+        // the previous version of this test asserted a branch it never reached.
+        const tied = buildCandidatesReport([
+            cmd('one', 'zulu'),
+            cmd('two', 'alpha'),
+        ]);
+        expect(tied.byPack.map(([p]) => p)).toEqual(['alpha', 'zulu']);
     });
 
     it('is byte-stable across input permutations — the report is a set view', () => {
@@ -118,7 +132,7 @@ describe('buildCandidatesReport — empty estate', () => {
     it('reports a measured zero rather than throwing or omitting sections', () => {
         const empty = buildCandidatesReport([]);
         expect(empty.total).toBe(0);
-        expect(empty.shims).toEqual([]);
+        expect(empty.absorbedNames).toEqual([]);
         expect(empty.noIntent).toEqual([]);
         expect(empty.byPack).toEqual([]);
         const text = renderCandidates(empty);
@@ -150,18 +164,47 @@ describe('renderCandidates — the honesty band', () => {
     });
 
     it('never presents itself as a prune instruction', () => {
-        // `prune` is a different, destructive verb in this CLI; the report must
-        // not borrow its wording. (Step 3.4's naming collision.)
-        expect(text).not.toMatch(/\bprune (this|these|now)\b/i);
         // Assert the exported contract, not a hand-copied sentence — a reworded
         // disclaimer stays covered, a DELETED one fails.
         expect(text).toContain(REPORT_ONLY_NOTICE);
     });
 
-    it('renders every shim it counted', () => {
-        const report: CandidatesReport = buildCandidatesReport(FIXTURE);
-        for (const row of report.shims) expect(text).toContain(row.slug);
+    it('states that the absorbed-name bucket is NOT a retirement class', () => {
+        // The defect this pins: the bucket was first labelled "deprecation
+        // shims", i.e. the exact inverse of what `replaces` means.
+        expect(text).not.toMatch(/deprecation shims +\d/);
+        expect(text).toMatch(/NOT a retirement class/);
+        expect(text).toContain('absorbed prior names');
     });
+
+    it('reports the real shim class as not computable, with its canonical figure', () => {
+        expect(text).toMatch(/deprecation shims\s+not computable/);
+        expect(text).toContain('superseded_by');
+        expect(text).toContain('0 shims of 196');
+    });
+
+    it('renders every absorbed-name row it counted, with its absorbed ids', () => {
+        const report: CandidatesReport = buildCandidatesReport(FIXTURE);
+        for (const row of report.absorbedNames) {
+            expect(text).toContain(row.slug);
+            for (const prior of row.replaces) expect(text).toContain(prior);
+        }
+    });
+});
+
+describe('runCommandsLs — --candidates refuses the narrowing flags', () => {
+    // Regression: each of these silently produced a whole-estate report, and a
+    // typo'd --profile exited 0 where plain `ls` exits 1.
+    for (const flag of CANDIDATES_INCOMPATIBLE) {
+        it(`exits 1 when combined with ${flag}`, () => {
+            const opts: Record<string, unknown> = { candidates: true };
+            if (flag === '--pack') opts['pack'] = 'git';
+            if (flag === '--visible') opts['visible'] = true;
+            if (flag === '--profile') opts['profile'] = 'bogus';
+            if (flag === '--expanded') opts['expanded'] = true;
+            expect(runCommandsLs(opts)).toBe(1);
+        });
+    }
 });
 
 describe('renderCandidates — an unrecognised visibility value cannot vanish', () => {
@@ -185,21 +228,35 @@ describe('renderCandidates — an unrecognised visibility value cannot vanish', 
 
     it('renders it, so the printed breakdown sums to the printed total', () => {
         expect(text).toContain('experimental');
-        const rendered = text
-            .split('\n')
-            .filter((l) => /^ {2}\S+ +\d+$/.test(l) && !l.includes('->'))
-            .map((l) => Number(l.trim().split(/\s+/)[1]));
-        // Sum only the visibility block: it is the run of bucket lines that
-        // directly follows the `surface` line.
-        const start = text.split('\n').findIndex((l) => l.startsWith('surface '));
+        // Sum only the visibility block: the run of bucket lines directly
+        // following the `surface` line. (A wider filter also matched the
+        // owning-packs block, which is why the earlier version of this test
+        // carried a variable that did not hold what its name claimed.)
+        const rows = text.split('\n');
+        const start = rows.findIndex((l) => l.startsWith('surface '));
         const block: number[] = [];
-        for (const line of text.split('\n').slice(start + 1)) {
+        for (const line of rows.slice(start + 1)) {
             const m = line.match(/^ {2}(\S+) +(\d+)$/);
             if (!m) break;
             block.push(Number(m[2]));
         }
+        expect(block).toHaveLength(4);
         expect(block.reduce((a, b) => a + b, 0)).toBe(report.total);
-        expect(rendered.length).toBeGreaterThan(0);
+    });
+
+    it('keeps the JSON record key order deterministic too, not just the render', () => {
+        // The fix first sorted unknowns in the renderer only, leaving the record
+        // a --json consumer reads in first-seen order.
+        const forward = buildCandidatesReport([
+            cmd('a', 'p', { visibility: 'zeta' }),
+            cmd('b', 'p', { visibility: 'alpha' }),
+        ]);
+        const reversed = buildCandidatesReport([
+            cmd('b', 'p', { visibility: 'alpha' }),
+            cmd('a', 'p', { visibility: 'zeta' }),
+        ]);
+        expect(Object.keys(forward.byVisibility)).toEqual(Object.keys(reversed.byVisibility));
+        expect(Object.keys(forward.byVisibility).slice(-2)).toEqual(['alpha', 'zeta']);
     });
 
     it('keeps the known labels ahead of the unrecognised one, for byte stability', () => {

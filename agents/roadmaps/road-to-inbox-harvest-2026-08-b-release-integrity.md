@@ -193,15 +193,36 @@ fix.
       the CLI bundle via `main.ts` — the precondition 3.1 hit on
       `preamble_byte_census`. Half-importing it would have run its `main` at
       import time. The report states the evidence gap and its owner instead.
-      **Measured on the real manifest, first run:** 196 commands — 5 visible,
-      17 advanced, 174 internal; **8 deprecation shims** with their replaced
-      ids; **166 of 196 commands carry no `intent`**. Text mode caps the
-      undocumented enumeration at 12 and **names the withheld count** ("… and
-      154 more"); `--json` is never capped. 19 assertions in
-      `src/cli/commands/commands.candidates.test.ts`, every expectation derived
-      from its input rather than pinned to emitted prose; the disclaimer and
-      the owner list are exported constants so a deletion fails the suite
-      while a rewording does not.
+      **Measured on the real manifest:** 196 commands — 5 visible, 17 advanced,
+      174 internal; **8 commands that absorbed prior names**; **166 of 196
+      carry no `intent`**. Text mode caps the undocumented enumeration at 12 and
+      **names the withheld count** ("… and 154 more"); `--json` is never capped.
+      **Three defects were found in this step's own first draft and fixed
+      before merge — two by probing the diff, one by the neutral review.**
+      (a) A `visibility` value outside the three known labels was counted but
+      never rendered, so the printed breakdown silently disagreed with the
+      printed total; the record's key order was also first-seen, making
+      `--json` unstable. (b) The `replaces` bucket was labelled **"deprecation
+      shims — the one retirement class"**, which is the exact inverse of the
+      field's contract: `command.schema.json` states "`replaces` is set on the
+      NEW canonical command pointing back", and the retirement marker is
+      `superseded_by`, "set on the OLD shim pointing forward". The first draft
+      therefore named `git-commit`, `git-pr-create` and `fix-quality` — tier-0
+      daily drivers — as the evidenced cut class, while
+      `check_command_count_messaging` publishes the CI-enforced canonical
+      figure **0 shims of 196** and `superseded_by` appears in no command file
+      and is not emitted into the manifest at all. The bucket is now "absorbed
+      prior names", carries an explicit NOT-a-retirement-class line, and the
+      real shim class is reported as **not computable from this data** with the
+      canonical figure cited. (c) `--candidates` silently discarded `--pack`,
+      `--visible`, `--profile` and `--expanded` — a narrowed request printed a
+      196-command report, and a typo'd `--profile` exited 0 where plain `ls`
+      exits 1; all four are now refused with exit 1.
+      30 assertions in `src/cli/commands/commands.candidates.test.ts`. Every
+      expectation derives from its input rather than pinning emitted prose,
+      with one deliberate exception: the absorbed-name membership is asserted by
+      **naming** the expected slugs, because re-deriving the implementation's
+      own predicate is what let the inversion pass a green suite.
       ORIGINAL TEXT: Over census data already computed
       in `docs/SKILL_CENSUS.md` and `docs/artefact-census.md`; a flag beats a 197th
       command against a 196-command surface.

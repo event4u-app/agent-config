@@ -9,8 +9,10 @@
  *       Print one command's intent, routes_to, owning pack, and tier.
  *
  *   agent-config commands ls --candidates [--json]
- *       Surface-reduction report over the command estate. Report-only: it
- *       ranks nothing for deletion and decides nothing.
+ *       Structural report over the WHOLE command estate. Report-only: it ranks
+ *       nothing for deletion and decides nothing. Cannot be combined with the
+ *       narrowing flags (`--pack`, `--visible`, `--profile`, `--expanded`) —
+ *       those are refused, not ignored.
  *
  * Reads `dist/discovery/discovery-manifest.json` — the single source of
  * truth, NOT a parallel catalog. Exits 0 on success, 1 on a missing/malformed
@@ -55,21 +57,35 @@ export interface CommandsLsOptions {
     candidates?: boolean;
 }
 
-/** One command carrying a manifest-backed reduction signal. */
+/** One command carrying a manifest-backed structural signal. */
 export interface CandidateRow {
     readonly slug: string;
     readonly pack: string;
     readonly visibility: string;
-    /** Non-empty only for the `shim` class. */
+    /** Prior names this command ABSORBED. Non-empty only for `absorbedNames`. */
     readonly replaces: readonly string[];
 }
 
 export interface CandidatesReport {
     readonly total: number;
     readonly byVisibility: Readonly<Record<string, number>>;
-    /** Declares `replaces` — a deprecation shim, the one retirement class
-     * that is evidenced without a usage window. */
-    readonly shims: readonly CandidateRow[];
+    /**
+     * Commands declaring `replaces` — i.e. commands that ABSORBED prior names.
+     *
+     * NOT a retirement class, and the first version of this report got that
+     * exactly backwards. `command.schema.json` is explicit: "`replaces` is set
+     * on the NEW canonical command pointing back", and the retirement marker is
+     * `superseded_by`, "set on the OLD shim pointing forward". Labelling this
+     * bucket "deprecation shims" named `git-commit`, `git-pr-create` and
+     * `fix-quality` — tier-0 daily drivers — as the one evidenced cut class.
+     *
+     * The real shim population is **zero** and is NOT computable here:
+     * `superseded_by` appears in no command file and is not emitted into the
+     * discovery manifest, and `check_command_count_messaging` publishes the
+     * CI-enforced canonical count "196 files · 0 shims · 196 active". The
+     * report states that rather than substituting the inverse field for it.
+     */
+    readonly absorbedNames: readonly CandidateRow[];
     /** No `intent` in the manifest — undocumented surface, not a prune call. */
     readonly noIntent: readonly CandidateRow[];
     /** Owning-pack distribution, heaviest first. */
@@ -161,27 +177,37 @@ export function buildCandidatesReport(cmds: readonly DiscoveryArtefact[]): Candi
     const byVisibility: Record<string, number> = {};
     for (const label of VISIBILITY_ORDER) byVisibility[label] = 0;
     const packCounts = new Map<string, number>();
-    const shims: CandidateRow[] = [];
+    const absorbedNames: CandidateRow[] = [];
     const noIntent: CandidateRow[] = [];
 
     for (const c of cmds) {
         const row = candidateRow(c);
         byVisibility[row.visibility] = (byVisibility[row.visibility] ?? 0) + 1;
         packCounts.set(row.pack, (packCounts.get(row.pack) ?? 0) + 1);
-        if (row.replaces.length > 0) shims.push(row);
+        if (row.replaces.length > 0) absorbedNames.push(row);
         // An empty-string intent is as undocumented as an absent one.
         if ((c.intent ?? '').trim() === '') noIntent.push(row);
     }
 
     const bySlug = (a: CandidateRow, b: CandidateRow): number => a.slug.localeCompare(b.slug);
-    shims.sort(bySlug);
+    absorbedNames.sort(bySlug);
     noIntent.sort(bySlug);
     // Heaviest pack first; ties by name so the ordering is total, not arbitrary.
     const byPack = [...packCounts.entries()]
         .sort((a, b) => (b[1] - a[1]) || a[0].localeCompare(b[0]))
         .map(([pack, n]) => [pack, n] as const);
 
-    return { total: cmds.length, byVisibility, shims, noIntent, byPack };
+    // Rebuild the visibility record in a deterministic key order: the known
+    // labels first, then any unrecognised ones sorted. Insertion order is
+    // observable to a --json consumer, and seeding-then-appending made the
+    // payload depend on which command happened to be read first.
+    const stableVisibility: Record<string, number> = {};
+    for (const label of VISIBILITY_ORDER) stableVisibility[label] = byVisibility[label] ?? 0;
+    for (const label of Object.keys(byVisibility).filter((l) => !VISIBILITY_ORDER.includes(l)).sort()) {
+        stableVisibility[label] = byVisibility[label] ?? 0;
+    }
+
+    return { total: cmds.length, byVisibility: stableVisibility, absorbedNames, noIntent, byPack };
 }
 
 /** The disclaimer is a contract, not decoration: `prune` is a destructive verb
@@ -218,14 +244,23 @@ export function renderCandidates(report: CandidatesReport): string {
     }
 
     lines.push('');
-    lines.push(`deprecation shims          ${report.shims.length}  (declare 'replaces')`);
-    if (report.shims.length === 0) {
+    lines.push(`absorbed prior names       ${report.absorbedNames.length}  (declare 'replaces')`);
+    lines.push('  NOT a retirement class: `replaces` is set on the NEW canonical command,');
+    lines.push('  pointing back at the names it absorbed. These are survivors.');
+    if (report.absorbedNames.length === 0) {
         lines.push('  none — a measured zero, not a missing check.');
     } else {
-        for (const r of report.shims) {
-            lines.push(`  ${r.slug}  ->  replaces: ${r.replaces.join(', ')}`);
+        for (const r of report.absorbedNames) {
+            lines.push(`  ${r.slug}  <-  absorbed: ${r.replaces.join(', ')}`);
         }
     }
+
+    lines.push('');
+    lines.push('deprecation shims          not computable from this data');
+    lines.push('  The retirement marker is `superseded_by` (set on the OLD shim, pointing');
+    lines.push('  forward). It appears in no command file and is not emitted into the');
+    lines.push('  discovery manifest, so this report cannot count it. The CI-enforced');
+    lines.push('  canonical figure is check_command_count_messaging: 0 shims of 196.');
 
     lines.push('');
     lines.push(`no stated intent           ${report.noIntent.length}  (undocumented, not a prune call)`);
@@ -280,11 +315,32 @@ export function runCommandsCandidates(opts: CommandsCandidatesOptions = {}): num
     return 0;
 }
 
+/** Flags that narrow `ls` and therefore cannot combine with the whole-estate
+ * report. Refused rather than ignored: silently dropping `--pack git` printed a
+ * 196-command report a reader would have read as 4, and a typo'd `--profile`
+ * exited 0 with a full report where plain `ls` exits 1. */
+export const CANDIDATES_INCOMPATIBLE: readonly string[] = ['--pack', '--visible', '--profile', '--expanded'];
+
 export function runCommandsLs(opts: CommandsLsOptions = {}): number {
     // Render mode, checked before the filters: the report covers the whole
-    // command estate, so a --pack/--visible narrowing would silently change
-    // what "the surface" means.
-    if (opts.candidates) return runCommandsCandidates({ json: opts.json });
+    // command estate, so a narrowing flag would change what "the surface"
+    // means without saying so.
+    if (opts.candidates) {
+        const given: string[] = [];
+        if (opts.pack !== undefined) given.push('--pack');
+        if (opts.visible) given.push('--visible');
+        if (opts.profile !== undefined) given.push('--profile');
+        if (opts.expanded) given.push('--expanded');
+        if (given.length > 0) {
+            logger.error(
+                `--candidates reports the whole command estate and cannot be narrowed: ` +
+                    `drop ${given.join(', ')}. Run 'commands ls ${given[0]} …' without ` +
+                    '--candidates for a filtered listing.',
+            );
+            return 1;
+        }
+        return runCommandsCandidates({ json: opts.json });
+    }
 
     const manifest = loadOrReport();
     if (manifest === null) return 1;
