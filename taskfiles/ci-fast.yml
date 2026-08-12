@@ -380,6 +380,11 @@ tasks:
     desc: "Every design-artifact eval fixture id must be cited by a contract, guideline, skill, rule, or test — an uncited fixture is an eval nobody runs (see tests/design-artifacts/eval-fixtures.md § Notes)"
     cmd: ./scripts-run src/scripts/lint_eval_fixture_citations {{.QUIET_FLAG}}
 
+  lint-rule-skill-pack-reach:
+    silent: true
+    desc: "Report where a rule and the skills it routes to cannot arrive in the same install — unreachable-route (obligation without artefact) and unrouted-skill (artefact with no routing rule). ADVISORY: exit 0 while the finding set is non-empty; promote with --strict once it is (see src/rules/design-review-after-ui-write.md § pack asymmetry)"
+    cmd: ./scripts-run src/scripts/lint_rule_skill_pack_reach {{.QUIET_FLAG}}
+
   lint-ui-stack-bundles:
     silent: true
     desc: "Enforce the UI-track verb→skill-bundle map — every bundle member must resolve to a real skill, and a pack-agnostic lane (incl. the `plain` fallback) must name only stack-neutral skills (see docs/contracts/ui-track-flow.md § implement → apply)"
