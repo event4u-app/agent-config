@@ -59,6 +59,7 @@ import * as path from 'node:path';
 import process from 'node:process';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
+import { projectStoreSlug } from './_lib/cc_transcript.js';
 import { entryText, isSidechain, toolUses as _toolUses } from './_lib/transcript_entry.js';
 import { censusSkills, DETERMINISTIC_RE, SKILLS_ROOT } from './report_skill_activation.js';
 
@@ -408,7 +409,7 @@ export interface Sk2Report {
 }
 
 export function defaultStore(cwd: string): string {
-    return path.join(os.homedir(), '.claude', 'projects', cwd.replace(/[/.]/g, '-'));
+    return path.join(os.homedir(), '.claude', 'projects', projectStoreSlug(cwd));
 }
 
 export function scanStore(repoRoot: string, store: string, limit: number): Sk2Report {

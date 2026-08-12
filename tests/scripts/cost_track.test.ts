@@ -28,9 +28,9 @@ afterEach(() => {
     for (const d of tmps.splice(0)) fs.rmSync(d, { recursive: true, force: true });
 });
 
-/** Claude Code encodes BOTH separators and dots (see track.mjs). */
+/** Claude Code slugs every character outside [A-Za-z0-9-] (see track.mjs). */
 function encodeProjectPath(cwd: string): string {
-    return cwd.replace(/[/.]/g, '-');
+    return cwd.replace(/[^A-Za-z0-9-]/g, '-');
 }
 
 function assistantLine(model: string, id: string) {
@@ -124,7 +124,7 @@ describe('cost/track.mjs — rate_missing does not cry wolf', () => {
         const home = fs.mkdtempSync(path.join(os.tmpdir(), 'track-zero-'));
         tmps.push(home);
         const trackCwd = '/work/proj';
-        const dir = path.join(home, '.claude', 'projects', trackCwd.replace(/[/.]/g, '-'));
+        const dir = path.join(home, '.claude', 'projects', encodeProjectPath(trackCwd));
         fs.mkdirSync(dir, { recursive: true });
         fs.writeFileSync(
             path.join(dir, 'sess.jsonl'),

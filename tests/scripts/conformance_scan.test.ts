@@ -13,6 +13,7 @@ import { afterEach, describe, expect, it } from "vitest";
 import {
   BAND_MIN_TURNS,
   bandVerdict,
+  defaultStore,
   DEFAULT_RATE_SERIES,
   isInjectedBody,
   measureDelivered,
@@ -53,6 +54,30 @@ function assistant(text: string, tools: Array<Record<string, unknown>> = []): st
     },
   });
 }
+
+describe("defaultStore", () => {
+  const store = (p: string): string => path.basename(defaultStore(p));
+
+  it("slugs separators and dots", () => {
+    expect(store("/Users/x/.claude")).toBe("-Users-x--claude");
+  });
+
+  // Cross-project session audit, 2026-08-12: the scan run from the worktree
+  // `feat+turn-end-gate-always-on` computed a slug that kept the `+`, matched no
+  // directory, and reported "no transcript store" — an empty corpus that reads
+  // exactly like a clean result. Every store name on the audited machine matches
+  // ^[A-Za-z0-9-]+$, so the class is generalised rather than extended by one
+  // character.
+  it("slugs a `+` in a worktree name, not only separators and dots", () => {
+    expect(store("/Users/x/wt/feat+turn-end-gate-always-on")).toBe(
+      "-Users-x-wt-feat-turn-end-gate-always-on",
+    );
+  });
+
+  it("leaves no character outside [A-Za-z0-9-] in the slug", () => {
+    expect(store("/a/b+c.d_e f@g")).toMatch(/^[A-Za-z0-9-]+$/);
+  });
+});
 
 describe("entry extraction", () => {
   it("reads a user chat message and skips reminders and command stdout", () => {
