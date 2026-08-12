@@ -2,7 +2,7 @@
 
 > Auto-generated — do not edit. Regenerate with `task roadmap-progress` or by running the `update_roadmap_progress` script for your install; rewritten on every roadmap create / execute / completion change (timestamp lives in git history).
 >
-> 30 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **41** open blockers, **9** need you → `agent-config gates`
+> 31 open roadmaps · [roadmaps/](roadmaps/) · [archive/](roadmaps/archive/) · [skipped/](roadmaps/skipped/) · [later/](roadmaps/later/) · **43** open blockers, **9** need you → `agent-config gates`
 
 ## Overall
 
@@ -177,6 +177,40 @@ These roadmaps are **complete** (`count_open == 0`, `count_deferred == 0`) but s
 |---|---|---|---:|---:|---:|---:|---:|
 | 1 | Post-merge dry-run verification (carried from parent Phase 3) | ⬜ not started | 1 | 0 | 0 | 0 | 0% |
 | 2 | First real release + live drills (carried from parent Phase 4 + Phase 7) | ⬜ not started | 7 | 0 | 0 | 0 | 0% |
+
+### [road-to-corpus-knowledge-skills.md](roadmaps/road-to-corpus-knowledge-skills.md)
+
+**Road to corpus knowledge skills — compile a document corpus into on-demand knowledge, and measure whether the compile earned its existence** — 3 / 14 done (21%)
+
+| # | Phase | State | Open | Done | Deferred | Cancelled | % |
+|---|---|---|---:|---:|---:|---:|---:|
+| 0 | Truth repair and scope decision | 🟡 in progress | 2 | 1 | 0 | 0 | 33% |
+| 1 | Instrument before capability | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
+| 2 | Cut | ⏭️ skipped | 0 | 0 | 0 | 1 | 0% |
+| 3 | The compiler | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
+| 4 | Fold-in and freshness | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
+| 5 | Size-gated read protocol | ✅ done | 0 | 2 | 0 | 0 | 100% |
+
+<a id="blockers-road-to-corpus-knowledge-skills"></a>
+**Blockers**
+
+- **first-corpora-named** (owner: maintainer) — blocks Phase 0 steps 0.2 / 0.3, Phase 1, Phase 3, Phase 4
+  - **What to do:**
+    1. Name two concrete corpora to compile first, with a consumer per corpus —
+    the analysis surfaced two candidate shapes: host-platform documentation
+    that `llm-provider-knowledge` currently re-verifies per fact, and a domain
+    manual set for the construction-side integrations.
+    2. Add them to this file as a "first corpora" list with an owner each.
+    3. If no corpus with a named consumer exists, `git mv` this file to
+    `agents/roadmaps/skipped/` and record the demand-not-shown null in it.
+  - **Resolved when:** this file carries a "first corpora" list naming two corpora with an owner each, or the file no longer sits at the top level of `agents/roadmaps/`.
+- **compiler-scope-council-review** (owner: maintainer) — blocks Phase 3 step 3.5
+  - **What to do:**
+    1. Run a council pass on the compile spec once 0.2 and 0.3 are settled —
+    `agent-config council:status` confirms availability without spending.
+    2. Fold the convergence into this file inline, with date and members, per the
+    transient-reference discipline (never a session filepath).
+  - **Resolved when:** this file carries an inlined convergence summary with a date and the member list for the compile spec.
 
 ### [road-to-council-blind-review.md](roadmaps/road-to-council-blind-review.md)
 

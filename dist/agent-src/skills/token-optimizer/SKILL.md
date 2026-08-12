@@ -56,6 +56,10 @@ INTENT
 │     → cite markitdown (upstream: https://github.com/microsoft/markitdown)
 │       Convert FIRST, then read the markdown — never paste raw binary.
 │
+├── Large file read (source / data / log already in the tree, > 800 lines)
+│     → cite [token-efficiency § Size-gated reads](../../rules/token-efficiency.md)
+│       (size → structural grep → bounded slice; never a full read on spec)
+│
 ├── Repeated tool-call across N targets
 │     → cite [token-efficiency](../../rules/token-efficiency.md)
 │       (batch, parallelize, prune; one tool call > many)
@@ -81,7 +85,7 @@ INTENT
 |---|---|---|---|
 | `cli-output-handling` | `src/rules/cli-output-handling.md` | `verbose`, `tail`, `grep`, `CLI` | Wrap-tail-grep contract for any verbose command |
 | `rtk-output-filtering` | `src/skills/rtk-output-filtering/SKILL.md` | `rtk`, `verbose`, `filter`, `wrap` | Project-local rtk filters; wrapper command |
-| `token-efficiency` | `src/rules/token-efficiency.md` | `redirect`, `verbose`, `concise`, `tool` | Batch + parallelize tool calls; brevity floor |
+| `token-efficiency` | `src/rules/token-efficiency.md` | `redirect`, `verbose`, `concise`, `tool`, `large file` | Batch + parallelize tool calls; brevity floor; size-gated reads (probe → grep → slice above 800 lines) |
 | `agent-handoff` | `src/domains/meta/agent-handoff/command.md` | `handoff`, `fresh`, `chat`, `context`, `resume`, `session` | Session picker + generated handoff auto-seeding the next session |
 | `direct-answers` | `src/rules/direct-answers.md` | `brevity`, `flattery`, `severity`, `tiered` | Iron-Law brevity floor (kernel) |
 | `markitdown` | upstream: github.com/microsoft/markitdown | `PDF`, `DOCX`, `HTML`, `convert` | Document → markdown converter (authoritative-link only) |
