@@ -53,8 +53,11 @@ stderr. Two limits, both real:
 ## See also
 
 - `src/agent-src/scripts/archive_completed_roadmaps.ts` — the guard.
-- `agents/roadmaps/road-to-feedback-9-35.md` — the roadmap that found this,
-  including the `b-runtime-state-machine` / `b-benchmark-spend` overlaps noted
-  above.
+- The `b-runtime-state-machine` and `b-benchmark-spend` blockers noted above are
+  live in the active roadmap set; find them by blocker id in
+  `agents/roadmaps-progress.md`, which is the stable index. Deliberately not
+  linked by path: this file outlives any single roadmap, and a stable artefact
+  citing a transient one is what `no-roadmap-references` forbids — the gate
+  caught exactly that here.
 - `roadmap-progress-sync` Iron Law 3 — the same discipline for `[~]` steps, which
   is the rule this guard extends from deferred steps to open decisions.
