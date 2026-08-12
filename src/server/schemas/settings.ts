@@ -21,7 +21,6 @@ const userType = z.enum(['', 'consultant', 'creator', 'developer', 'finance', 'f
 const profileId = z.enum(['developer', 'content_creator', 'founder', 'agency', 'finance', 'ops']);
 const accessStyle = z.enum(['getters_setters', 'get_attribute', 'magic_properties']);
 const chatFreq = z.enum(['per_turn', 'per_phase', 'per_tool']);
-const chatOverflow = z.enum(['rotate', 'condense']);
 const qualityCadence = z.enum(['end_of_roadmap', 'per_phase', 'per_step']);
 const regenCadence = z.enum(['per_step', 'every_5_steps', 'phase_boundary']);
 const worktreeMode = z.enum(['off', 'on', 'ask']);
@@ -169,12 +168,6 @@ export const settingsSchema = z.object({
         frequency: chatFreq.default('per_turn').describe(
             'How often the chat-history writer flushes to disk. per_turn = after every user / agent exchange (default, lowest data loss on crash). per_phase = at phase boundaries (cheaper I/O). per_tool = after every tool call (highest fidelity, noisiest log).',
         ),
-        max_size_kb: z.number().int().min(0).default(2048).describe(
-            'Maximum size (KB) of the active chat-history file before chat_history.on_overflow kicks in. Set 0 to disable rotation / condensation entirely (file grows forever).',
-        ),
-        on_overflow: chatOverflow.default('rotate').describe(
-            'What happens when chat_history.max_size_kb is hit. rotate = move the current log aside and start fresh (default). condense = telegraph-condense the oldest entries in place to keep recent context.',
-        ),
         text_limits: z.object({
             user: z.number().int().min(0).default(0).describe(
                 'Per-message character cap for user inputs in the chat-history log. 0 = log verbatim (default). Raise above 0 only if your prompts contain large pasted artefacts you do not want stored.',
@@ -231,9 +224,6 @@ export const settingsSchema = z.object({
         local_auto_run: z.boolean().default(false).describe(
             'Run quality tools (linters, type-checks, formatters) and the local test suite autonomously after edits. Off by default — the agent never runs quality tools proactively and does not ask; the user runs them manually (e.g. /quality-fix) and remote CI is the authoritative gate. The agent only runs a quality tool on an explicit ask, a concrete CI failure, or the new-gate carve-out. Turn on to restore autonomous pipeline runs.',
         ),
-        wait_for_remote_ci: z.boolean().default(false).describe(
-            'After pushing a branch, poll the remote CI provider (GitHub Actions, GitLab CI) and surface failures inline. Off by default — useful when local CI does not cover everything the remote pipeline runs.',
-        ),
     }),
     design: z.object({
         fidelity_mode: fidelityMode.default('strict').describe(
@@ -252,18 +242,12 @@ export const settingsSchema = z.object({
         forbid_terminal_capture: z.boolean().default(true).describe(
             'Consumed by the doc-screenshot-hygiene rule. true (default) = terminal/CLI/IDE screenshots are forbidden (highest leak vector: absolute local paths, env tokens); use text code blocks with text redaction instead. false = allowed, still subject to the data-bearing human gate.',
         ),
-        data_bearing_gate: z.enum(['on', 'off']).default('on').describe(
-            'Consumed by the doc-screenshot-hygiene rule. on (default) = a data-bearing screenshot embed is gated behind this-turn human confirmation; uncertain/unresolved regions redact-or-refuse, never ship-and-hope; illustrative/no-data screenshots may embed with a stated justification. off = no data-bearing gate (the anonymization taxonomy still applies).',
-        ),
-    }).default({ identity_allowlist: [], forbid_terminal_capture: true, data_bearing_gate: 'on' }),
+    }).default({ identity_allowlist: [], forbid_terminal_capture: true }),
     telegraph: z.object({
         speak: z.boolean().default(false).describe(
-            'Whether the telegraph-speak rule ships at all. false (default) = DORMANT: compile_router omits the rule from dist/router.json entirely, so its body never reaches a host. This — not speak_scope — is the lever that stops the cost. Set true only after an output-side bench clears the kill-criterion bar (docs/adrs/telegraph/0002).',
+            'Whether the telegraph-speak rule ships at all. false (default) = DORMANT: compile_router omits the rule from dist/router.json entirely, so its body never reaches a host. That omission is the only lever that stops the cost — the rule body states its own grammar scope, so no scope setting exists. Set true only after an output-side bench clears the kill-criterion bar (docs/adrs/telegraph/0002).',
         ),
-        speak_scope: z.enum(['off', 'reply', 'all']).default('off').describe(
-            "Where telegraph condensation applies WHEN speak is true. off (default) = agent reply prose is exempt. compile_router never reads this key: with speak false the rule does not ship, so this setting has no effect on its own. Quote the value in YAML — bare `off` parses as a boolean under YAML 1.1 and is rejected.",
-        ),
-    }).default({ speak: false, speak_scope: 'off' }),
+    }).default({ speak: false }),
     tokens: z.object({
         rich_skills: richSkillsMode.default('on').describe(
             'Whether skills marked token_budget_class: rich may load in full (exempt from telegraph-speak + thin-projector trimming), consumed by the token-budget-discipline rule. on = allowed (default); off = fall back to standard condensed behavior; ask = surface an estimated token delta (tokens, not dollars) and ask once per session before loading.',
@@ -573,13 +557,10 @@ export const settingsSchema = z.object({
         acknowledged: z.boolean().default(false).describe(
             'I understand the legal-review-prep pack provides templates and general information ONLY — it is NOT legal advice, creates no attorney-client relationship, and never replaces a licensed lawyer. Individual cases require an attorney. The pack stays inactive until this is checked.',
         ),
-        consented_at: z.string().default('').describe(
-            'ISO timestamp recorded when the legal-review-prep acknowledgment was given. Set automatically by the setup wizard; leave empty otherwise.',
-        ),
         require_council: z.boolean().default(true).describe(
             'Gate legal work-product behind a multi-model AI-council / deep-research pass (defense-in-depth: documented multi-stage review + audit trail; fail-closed when no council is configured). Leave on for the safest posture. Turning it off lets single-model legal output through — not recommended for a high-risk pack.',
         ),
-    }).default({ acknowledged: false, consented_at: '', require_council: true }),
+    }).default({ acknowledged: false, require_council: true }),
 });
 
 export type Settings = z.infer<typeof settingsSchema>;

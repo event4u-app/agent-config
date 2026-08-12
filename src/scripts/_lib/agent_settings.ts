@@ -283,7 +283,6 @@ export const MERGEABLE_KEYS: readonly string[] = [
     'personal.bot_icon',
     'personal.pr_comment_bot_icon',
     'personal.autonomy',
-    'telegraph.speak_scope',
     // Knowledge-card global cross-project sharing is a USER-GLOBAL setting
     // (ADR-100 / road-to-structure-grounding-v2). Whitelisted so the
     // ~/.event4u/agent-config/agent-settings.yml values are honoured.
@@ -909,7 +908,15 @@ export function load_agent_settings(
  * detector's own trigger conditions. See `turn_end_gate_hook.ts` § "Always
  * armed".
  */
-const REMOVED_KEYS: ReadonlyMap<string, string> = new Map([
+/**
+ * Keys that shipped once and no longer exist, mapped to the reason the warning
+ * prints — which must name what decides INSTEAD, never just "removed".
+ *
+ * Exported so `lint_settings_classes` can check the deletion side of the
+ * surface: a reason that names no replacement, or an entry whose key is live in
+ * the template again, is a contradiction the loader itself cannot notice.
+ */
+export const REMOVED_KEYS: ReadonlyMap<string, string> = new Map([
     ['subagents.enabled', 'always-on orchestration'],
     ['subagents.auto', 'always-on orchestration'],
     ['subagents.host_capabilities', 'always-on orchestration'],
@@ -919,6 +926,30 @@ const REMOVED_KEYS: ReadonlyMap<string, string> = new Map([
     ['hooks.turn_end_gate.promissory', 'the turn-end gate is always armed'],
     ['hooks.turn_end_gate.language', 'the turn-end gate is always armed'],
     ['hooks.turn_end_gate.verification', 'the turn-end gate is always armed'],
+    // Six keys deleted 2026-08-12 because no code path read any of them — the
+    // reason per key names what decides instead, which is what makes the
+    // deletion free rather than a silently-changed default.
+    [
+        'telegraph.speak_scope',
+        'the telegraph-speak rule body states its own grammar scope; `telegraph.speak` is the only lever',
+    ],
+    [
+        'chat_history.max_size_kb',
+        'the rotate command takes its cap from --max-kb, and session-count pruning bounds the directory',
+    ],
+    ['chat_history.on_overflow', 'the rotate command takes its mode from --mode'],
+    [
+        'quality.wait_for_remote_ci',
+        'a push plus a detectable remote pipeline decides it; the PR command already states the obligation',
+    ],
+    [
+        'screenshots.data_bearing_gate',
+        'a data-bearing embed is a published egress, so its confirmation is a Hard Floor no setting may lift',
+    ],
+    [
+        'legal_review_prep.consented_at',
+        'the provenance sidecar settings:set writes and consentVerdict reads records when and by what route',
+    ],
 ]);
 
 /** Keys already warned about in THIS process — the "once per run" dedupe. */

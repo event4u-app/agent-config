@@ -150,7 +150,6 @@ const CORE_WIZARD_STEPS: readonly WizardStep[] = [
             'roadmap.quality_cadence',
             'roadmap.dashboard_regen_cadence',
             'quality.local_auto_run',
-            'quality.wait_for_remote_ci',
             'memory.review_threshold',
             'memory.redact_patterns',
         ],
