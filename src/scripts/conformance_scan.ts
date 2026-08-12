@@ -6,17 +6,31 @@
  * The scope constraint is the point, and it is a council ruling
  * (2026-08-06): *"a conformance scan that checks un-mechanised rules is
  * theatre — if you can't gate it, don't pretend measuring it post-hoc is
- * enforcement."* So this scan carries exactly four checks, one per shipped
- * gate, and every classifier is IMPORTED from the gate it measures rather than
- * re-implemented here. A second copy of a classifier is the "second artefact to
- * keep in sync" the repo's own principle forbids, and it would let the scan and
- * the gate disagree silently.
+ * enforcement."* So every classifier is IMPORTED from the gate it measures
+ * rather than re-implemented here. A second copy of a classifier is the "second
+ * artefact to keep in sync" the repo's own principle forbids, and it would let
+ * the scan and the gate disagree silently.
  *
  *   language-pin      ← language_mirror_hook.classify
  *   git-authorization ← git_authorization_hook.classifyAuthorization
  *                       + block_unauthorized_git.commandOp / BLOCK_OPS
  *   vacuous-evidence  ← before_complete_hook.isVacuousOutput / isCiPoll / pendingCount
  *   evidence-steering ← evidence_independence.isEvaluationPrompt / preloadedVerdict
+ *   completion-claim  ← turn_end_gate_hook.detectCompletionClaim          (round 7)
+ *   task-completeness ← delegation_nudge_hook.enumeratedFileTokens /
+ *                       FILE_SIGNAL_FLOOR                                (below)
+ *
+ * The count was "exactly four checks, one per shipped gate" and both halves have
+ * since moved, so both are stated plainly rather than left to rot: there are
+ * SIX, and `task-completeness` is the one with NO gate behind it. That is not a
+ * quiet exception to the council ruling — it is the ruling's own logic run
+ * forwards. The ruling forbids presenting a post-hoc measurement AS enforcement;
+ * this check exists to decide whether a refusal is warranted at all, before one
+ * is built, because the alternative is a gate resting on an unmeasured premise.
+ * The pre-registered bar it will be read against is committed BEFORE the number
+ * (`road-to-completion-loop` Phase 2), and a published null — no gate — is an
+ * accepted outcome. Nothing here claims the check enforces anything: this file
+ * is a REPORT, as its exit contract below says.
  *
  * Deliberately NOT scanned: ask-shape, session-canary, promissory closings,
  * checkbox batching, symptom-vs-root-cause. Those are left as prose by
@@ -45,6 +59,10 @@ import { isVacuousOutput, isCiPoll, pendingCount } from "./before_complete_hook.
 // than reimplemented, so the measured rate and the gate cannot disagree.
 import { detectCompletionClaim } from "./hooks/turn_end_gate_hook.js";
 import { isEvaluationPrompt, isSelfScoped, preloadedVerdict } from "./hooks/evidence_independence.js";
+// Phase 1 of `road-to-completion-loop` — the SAME prompt-signal extraction the
+// delegation nudge classifies on, so the measurement cannot see a different
+// deliverable set than the classifier does.
+import { enumeratedFileTokens, FILE_SIGNAL_FLOOR } from "./hooks/delegation_nudge_hook.js";
 
 /**
  * This module's own repo root, NOT `process.cwd()`.
@@ -65,7 +83,8 @@ export interface Violation {
     | "git-authorization"
     | "vacuous-evidence"
     | "evidence-steering"
-    | "completion-claim";
+    | "completion-claim"
+    | "task-completeness";
   session: string;
   at: string;
   detail: string;
@@ -79,6 +98,19 @@ export interface Violation {
    */
   turns_since_prompt?: number;
   compaction_since_prompt?: boolean;
+  /**
+   * `task-completeness` only. The deliverable set's size, how many of it the
+   * reply window touched, and the tokens it never touched.
+   *
+   * Structured rather than prose-only because 1.3 requires HAND-VALIDATING every
+   * hit: a validator needs the exact missed tokens to open the window and decide
+   * whether the omission was real or one of the legitimate shapes (a blocking
+   * question, a hand-back, a user-fenced scope, an explicitly deferred item).
+   * A count alone cannot be checked, which is the failure this field prevents.
+   */
+  enumerated?: number;
+  addressed?: number;
+  missed?: string[];
 }
 
 export interface SessionReport {
@@ -265,6 +297,7 @@ export const CHECK_IDS: readonly CheckId[] = [
   "vacuous-evidence",
   "evidence-steering",
   "completion-claim",
+  "task-completeness",
 ];
 
 /**
@@ -297,6 +330,25 @@ export const CHECK_MEANINGS: Record<CheckId, string> = {
     "each followed by the user handing the work back; this is the same " +
     "predicate `turn-end-gate`'s completion detector refuses on, so the rate " +
     "and the gate cannot disagree. A session that never polled CI can never hit.",
+  "task-completeness":
+    "A reply window that left at least one file the prompt ENUMERATED " +
+    "untouched — the token appears in neither any tool-call input nor any " +
+    "assistant prose before the next user prompt. Scope is deliberately narrow: " +
+    `only prompts naming >= ${FILE_SIGNAL_FLOOR} distinct file tokens are ` +
+    "measured, the same floor `delegation_nudge_hook` uses for its FILE shape, " +
+    "and the token list comes from that module rather than a second regex.\n" +
+    "    What distinguishes a hit from a false read: a hit is EVIDENCE OF AN " +
+    "OMISSION, not proof of one. Four legitimate shapes produce the same " +
+    "signature and are NOT excluded here — a blocking question, a hand-back, a " +
+    "user-fenced scope, and an explicitly deferred item all address fewer files " +
+    "than the prompt named, correctly. That is why every hit is hand-validated " +
+    "and a precision is published beside the rate; an unvalidated count from " +
+    "this check means nothing.\n" +
+    "    What it cannot see, stated so a zero is not misread as health: the " +
+    "ordered-plan, explicit-count, for-each and conjunction shapes name a " +
+    "COUNT of deliverables but not their identities, so this check is blind to " +
+    "them by construction — it does not score them complete, it does not score " +
+    "them at all. A prose deliverable that is not a filename is invisible to it.",
 };
 
 /**
@@ -331,6 +383,18 @@ export function renderWhy(report: ScanReport, id: CheckId): string {
       lines.push(
         `      provenance: turns_since_prompt=${since ?? "—"} · ` +
           `compaction_since_prompt=${compacted ?? "—"}`,
+      );
+    }
+    // `task-completeness` provenance. Printed as its own line because 1.3
+    // requires hand-validating every hit, and a validator needs the missed
+    // tokens verbatim — not a truncated detail string.
+    const missed = (v as { missed?: string[] }).missed;
+    if (missed !== undefined) {
+      const enumerated = (v as { enumerated?: number }).enumerated;
+      const addressed = (v as { addressed?: number }).addressed;
+      lines.push(
+        `      provenance: enumerated=${enumerated ?? "—"} · ` +
+          `addressed=${addressed ?? "—"} · missed=[${missed.join(", ")}]`,
       );
     }
   }
@@ -418,6 +482,54 @@ export const HARNESS_TEXT =
 const EN_OPENER =
   /^(let me|i'?ll |i'?m |found it|ok[,. ]|okay|alright|here'?s|now[,. ]|looking|checking|reading|running|the |this |that |there |we |you |good |right[,. ]|perfect|done[.,]|all |confirmed|correct)/i;
 
+/**
+ * One prompt's reply window, for the `task-completeness` check.
+ *
+ * A "turn" in this store is one ENTRY, and a single reply spans several of them
+ * (one prose entry plus one per tool call). Scoring per entry would report every
+ * tool-call entry as incomplete, so the unit is the window from a counted user
+ * prompt to the next one — which is what step 1.1's "the turn's own user prompt"
+ * means in the transcript's actual shape. The departure is recorded rather than
+ * silently taken.
+ */
+export interface CompletenessWindow {
+  /** The PROMPT's timestamp, not an assistant entry's: it is where a validator opens the window. */
+  at: string;
+  tokens: string[];
+  addressed: Set<string>;
+  /**
+   * The window contained at least one assistant prose entry or tool call.
+   *
+   * An empty window is a truncated or abandoned session, not an omission — and
+   * counting it would make the rate a measure of how often a store ends
+   * mid-reply. That is the "detector reproduces the defect it measures" trap
+   * this check's own risk register names.
+   */
+  worked: boolean;
+}
+
+/** Mark every deliverable token this text mentions as addressed. */
+export function markAddressed(text: string, w: CompletenessWindow): void {
+  if (w.tokens.length === 0) {
+    return;
+  }
+  const hay = text.toLowerCase();
+  for (const t of w.tokens) {
+    if (!w.addressed.has(t) && hay.includes(t)) {
+      w.addressed.add(t);
+    }
+  }
+}
+
+/** The window's verdict: the untouched tokens, or `null` for no finding. */
+export function evaluateWindow(w: CompletenessWindow): { missed: string[] } | null {
+  if (!w.worked || w.tokens.length === 0) {
+    return null;
+  }
+  const missed = w.tokens.filter((t) => !w.addressed.has(t));
+  return missed.length > 0 ? { missed } : null;
+}
+
 export function scanSession(sessionId: string, lines: string[]): SessionReport {
   const report: SessionReport = {
     session: sessionId,
@@ -443,6 +555,37 @@ export function scanSession(sessionId: string, lines: string[]): SessionReport {
   // measured failure is a completion claim in a LATER turn than the poll.
   let ciSeen = false;
   let ciSettled = false;
+  // Phase 1 of `road-to-completion-loop` — the open reply window, or null when
+  // the last prompt named no deliverable set worth scoring.
+  let openWindow: CompletenessWindow | null = null;
+
+  /**
+   * Close the open window and record a finding if anything went untouched.
+   * Called on the NEXT counted prompt and once after the loop — a window left
+   * open at end-of-file is the most common shape in a live store and dropping it
+   * would silently bias the rate toward long sessions.
+   */
+  const closeWindow = (): void => {
+    if (openWindow === null) {
+      return;
+    }
+    const verdict = evaluateWindow(openWindow);
+    if (verdict !== null) {
+      const addressed = openWindow.tokens.length - verdict.missed.length;
+      report.violations.push({
+        check: "task-completeness",
+        session: sessionId,
+        at: openWindow.at,
+        detail:
+          `prompt enumerated ${openWindow.tokens.length} file(s), reply window touched ` +
+          `${addressed}; untouched: ${verdict.missed.join(", ").slice(0, 160)}`,
+        enumerated: openWindow.tokens.length,
+        addressed,
+        missed: verdict.missed,
+      });
+    }
+    openWindow = null;
+  };
 
   for (const line of lines) {
     if (!line.trim()) {
@@ -516,6 +659,21 @@ export function scanSession(sessionId: string, lines: string[]): SessionReport {
         continue;
       }
       report.user_turns += 1;
+      // Phase 1 — the previous window ends HERE, at the next real chat message.
+      // Ordered deliberately before the new window opens: the filters above
+      // (`isCompactSummary`, `isSyntheticPrompt`, `isInjectedBody`) all `continue`
+      // without closing, which is correct — an injected skill body does not end
+      // the user's reply window.
+      closeWindow();
+      const deliverables = enumeratedFileTokens(ut);
+      if (deliverables.length >= FILE_SIGNAL_FLOOR) {
+        openWindow = {
+          at: String(entry["timestamp"] ?? ""),
+          tokens: deliverables,
+          addressed: new Set<string>(),
+          worked: false,
+        };
+      }
       turnsSincePrompt = 0;
       compactionSincePrompt = false;
       const c = classify(ut);
@@ -538,6 +696,18 @@ export function scanSession(sessionId: string, lines: string[]): SessionReport {
     if (prose !== null) {
       report.assistant_turns += 1;
       turnsSincePrompt += 1;
+      const firstLine = (prose.split("\n").find((l) => l.trim()) ?? "").trim();
+      // Phase 1 — prose is half the window's evidence (tool inputs are the other
+      // half, marked below). Placed before the language block for the same reason
+      // the completion-claim check is: that block `continue`s on a harness banner,
+      // and evidence collected after it would be skipped without saying so.
+      // A harness retry banner is not the assistant writing, so it marks nothing
+      // AND does not make the window count as worked — otherwise a session that
+      // died on a 529 would read as an omission.
+      if (openWindow !== null && !HARNESS_TEXT.test(firstLine)) {
+        openWindow.worked = true;
+        markAddressed(prose, openWindow);
+      }
       // Round 7 § 6.2 — the denominator the language check can actually fire on.
       // Counted here, beside the numerator, so the two cannot be derived from
       // different populations later.
@@ -578,6 +748,15 @@ export function scanSession(sessionId: string, lines: string[]): SessionReport {
     }
 
     for (const tu of toolUses(entry)) {
+      // Phase 1 — the other half of the window's evidence. Serialised whole
+      // rather than field-picked: a deliverable can be named in `file_path`,
+      // `command`, `pattern`, `old_string` or a prompt, and enumerating the
+      // fields that count is how a reader of `file_path` alone would score a
+      // `grep`-then-`sed` edit as untouched.
+      if (openWindow !== null) {
+        openWindow.worked = true;
+        markAddressed(`${tu.name} ${JSON.stringify(tu.input)}`, openWindow);
+      }
       const cmd =
         typeof tu.input["command"] === "string" ? (tu.input["command"] as string) : null;
       if (cmd !== null) {
@@ -627,6 +806,11 @@ export function scanSession(sessionId: string, lines: string[]): SessionReport {
       }
     }
   }
+
+  // The last prompt's window never sees a following prompt, so it is closed
+  // here. Dropping it would bias the rate toward sessions that happen to end on
+  // a user turn.
+  closeWindow();
 
   return report;
 }

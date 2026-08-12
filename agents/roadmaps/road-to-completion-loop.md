@@ -75,17 +75,37 @@ it is what pays for the missing kill-switch.
 
 ## Phase 1 — the instrument
 
-- [ ] 1.1 Add a `task-completeness` check to `conformance_scan`: for each
+- [x] 1.1 Add a `task-completeness` check to `conformance_scan`: for each
   assistant turn, extract the deliverables enumerated in the turn's own user
   prompt (reusing `classifyTask`'s signals, not a new parser) and record how many
   are addressed by the turn's tool calls and closing prose.
   `verify:` `CHECK_IDS` holds 5 ids and `CHECK_MEANINGS` has a definition for the new one.
-- [ ] 1.2 Write the definition into `CHECK_MEANINGS` in the shape the four
+  **Landed, and the verify line was stale by one.** `CHECK_IDS` already held
+  **5** before this step — round 7 added `completion-claim`, which this file's own
+  Context section corrected to "five" while this line kept the pre-round-7 four.
+  It now holds **6**, and `CHECK_MEANINGS` carries the new definition.
+  Two departures from the step's text, both recorded rather than taken silently:
+  (a) the unit is the **reply window** (a counted user prompt to the next one),
+  not "each assistant turn" — a turn in this store is one ENTRY and a reply spans
+  several, so per-entry scoring would report every tool-call entry as incomplete;
+  (b) the reused primitive is `enumeratedFileTokens` / `FILE_SIGNAL_FLOOR`, not
+  `classifyTask` itself, because `classifyTask` consumes only COUNTS and a
+  completeness check needs the deliverables' **identities**. Both were extracted
+  from the existing regex in `delegation_nudge_hook` rather than re-matched, so
+  the scan and the classifier cannot disagree about what a file token is.
+- [x] 1.2 Write the definition into `CHECK_MEANINGS` in the shape the four
   existing ones use — what it detects, and what distinguishes a hit from a false
   read. A count with no definition is the shape this file's own comment warns
   about.
   `verify:` `--why task-completeness` prints the definition and, when it did not
   fire, prints *did not fire* rather than silence.
+  **Landed — and running this verify command CONTAMINATED step 2.1.** `--why`
+  prints the definition and the hits together by design, so verifying it against
+  the live store necessarily revealed the hit count that 2.1 requires to be
+  unread. As written, 1.2's verify and 2.1's pre-registration are **mutually
+  exclusive**. Disclosed in full under 2.1; the fix for the next roadmap of this
+  shape is to verify a `--why` definition against a FIXTURE store, never the
+  corpus the bar will be read against.
 - [ ] 1.3 Hand-validate every hit on the first run and publish the precision.
   A detector over a small corpus can produce confident nonsense; the rate is
   worthless without it.
