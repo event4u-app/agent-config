@@ -171,7 +171,7 @@ and describe the agent system, not the project's business domain.
 
 1. **`.augment/` is read-only** — it's a shared resource across all projects
 2. **Project customization via `agents/overrides/`** — extend or replace shared behavior
-3. **Rules are always active**, skills are on-demand, commands are user-triggered
+3. **The kernel rules are always active**; the remaining rules route on trigger match, skills are on-demand, commands are user-triggered
 4. **Guidelines have cross-references** — each links to related skills and rules
 5. **Templates are the single source of truth** for document structure
 6. **All content in English** — code comments, documentation, agent files
