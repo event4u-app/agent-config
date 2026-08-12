@@ -11,7 +11,7 @@ execution:
   command:
     - ./scripts-run
     - src/scripts/check_references
-requires:
+runtime_requires:
   bins:
     - bash
     - node

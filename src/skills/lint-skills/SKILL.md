@@ -12,7 +12,7 @@ execution:
     - ./scripts-run
     - src/scripts/skill_linter
     - "--all"
-requires:
+runtime_requires:
   bins:
     - bash
     - node

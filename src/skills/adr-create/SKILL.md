@@ -11,7 +11,7 @@ execution:
   command:
     - ./scripts-run
     - src/scripts/adr/regenerate_index
-requires:
+runtime_requires:
   bins:
     - bash
     - node

@@ -33,10 +33,10 @@
       "maxLength": 500,
       "description": "Agent-Skills spec field (optional): machine-readable declaration of environment requirements — system packages, network access, product/host constraints. Mirrors the public spec so media/doc skills can state requirements outside prose."
     },
-    "requires": {
+    "runtime_requires": {
       "type": "object",
       "additionalProperties": false,
-      "description": "Structured runtime prerequisites, in the form `doctor`/`preflight` can actually probe. The free-text `compatibility` field above states requirements for a human reader; this states them for a machine, and the two coexist deliberately — `compatibility` mirrors the public Agent-Skills spec and is not replaced here. Mandatory for an external `execution.handler` (shell/node/php), which cannot run without declared dependencies; meaningless for `internal`, which by definition needs no external binary.",
+      "description": "Structured runtime prerequisites, in the form `doctor`/`preflight` can actually probe. The free-text `compatibility` field above states requirements for a human reader; this states them for a machine, and the two coexist deliberately — `compatibility` mirrors the public Agent-Skills spec and is not replaced here. Mandatory for an external `execution.handler` (shell/node/php), which cannot run without declared dependencies; meaningless for `internal`, which by definition needs no external binary. NOT named `requires`: that key is taken by ADR-015 pack-dependency edges (a list of pack ids, validated in build_discovery_manifest.ts), and reusing it makes every skill carrying one unassignable in the discovery manifest.",
       "properties": {
         "bins": {
           "type": "array",
@@ -68,7 +68,7 @@
           "description": "Egress hostnames the skill contacts, checked against the egress allowlist. An empty array is a positive claim of no network access and is NOT the same as omitting the key."
         }
       },
-      "$comment": "road-to-skill-ecosystem-executable-payloads Phase 1 (defect D2): `compatibility` is free text used by 2 skills, so cmd_doctor.ts / cmd_preflight.ts had nothing structured to verify."
+      "$comment": "road-to-skill-ecosystem-executable-payloads Phase 1 (defect D2): `compatibility` is free text used by 2 skills, so cmd_doctor.ts / cmd_preflight.ts had nothing structured to verify. Named `runtime_requires` because `requires` is reserved for ADR-015 pack edges."
     },
     "provenance": {
       "type": "string",

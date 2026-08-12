@@ -237,8 +237,13 @@ const VALID_EXECUTION_SAFETY_MODES = new Set(['strict']);
  * from it would produce a pro-forma declaration rather than a checkable fact.
  */
 const EXTERNAL_EXECUTION_HANDLERS = new Set(['shell', 'php', 'node']);
-/** Top-level `requires:` block (sibling of `execution:`, not a field inside it). */
-const REQUIRES_BLOCK_PATTERN = /^requires:\s*$/m;
+/**
+ * Top-level `runtime_requires:` block (sibling of `execution:`, not a field inside
+ * it). Deliberately NOT `requires:` — that key is ADR-015 pack-dependency edges
+ * (a list of pack ids), and a skill carrying an object there is rejected by
+ * `build_discovery_manifest.ts` as unassignable.
+ */
+const RUNTIME_REQUIRES_BLOCK_PATTERN = /^runtime_requires:\s*$/m;
 const VALID_EXECUTION_FIELDS = new Set([
     'type',
     'handler',
@@ -1384,24 +1389,25 @@ function lint_execution_metadata(execution: ExecutionBlock, frontmatter = ''): I
     }
 
     // An external handler that actually declares a command depends on binaries or
-    // env the host may not have; without a `requires` block, `doctor`/`preflight`
-    // have nothing to probe and the failure surfaces mid-run instead. Gated on a
-    // declared `command:` on purpose — a `handler: shell` skill with no command is
-    // advisory prose, and demanding requirements from it would be a pro-forma field.
+    // env the host may not have; without a `runtime_requires` block,
+    // `doctor`/`preflight` have nothing to probe and the failure surfaces mid-run
+    // instead. Gated on a declared `command:` on purpose — a `handler: shell` skill
+    // with no command is advisory prose, and demanding requirements from it would be
+    // a pro-forma field.
     if (
         typeof handler === 'string' &&
         EXTERNAL_EXECUTION_HANDLERS.has(handler) &&
         Array.isArray(command) &&
         command.length > 0 &&
-        !REQUIRES_BLOCK_PATTERN.test(frontmatter)
+        !RUNTIME_REQUIRES_BLOCK_PATTERN.test(frontmatter)
     ) {
         issues.push(
             new Issue(
                 'error',
-                'missing_requires',
+                'missing_runtime_requires',
                 `execution.handler '${handler}' declares a command but the skill has no top-level ` +
-                    "'requires:' block — declare bins/env/network so doctor and preflight can verify " +
-                    'the runtime before the command runs',
+                    "'runtime_requires:' block — declare bins/env/network so doctor and preflight can " +
+                    'verify the runtime before the command runs',
             ),
         );
     }
