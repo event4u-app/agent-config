@@ -640,6 +640,7 @@ quality:
   # gates delegated to remote CI", never claim an unrun pipeline passed.
   local_auto_run: false
 
+
 # --- Design fidelity ---
 #
 # Controls how strictly the agent must follow a user-provided, finished
@@ -721,6 +722,11 @@ screenshots:
   #       ship-and-hope. Illustrative / no-data screenshots (diagrams, logos,
   #       placeholder-only UI) may embed with a stated justification.
   # off = no data-bearing gate (legacy; the anonymization taxonomy still applies).
+  #
+  # NOTE: nothing reads this key yet — the gate it names is unconditional prose in
+  # `doc-screenshot-hygiene`. Kept rather than deleted so the missing reader is a
+  # visible gap instead of a silently unguarded action; see settings-classes.md
+  # § The six unread keys for the disagreement about which repair is right.
   data_bearing_gate: "on"
 
 code_style:

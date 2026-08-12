@@ -8,7 +8,7 @@
 #   1. Package defaults (shipped by event4u/agent-config)
 #   2. ~/.event4u/agent-config/agent-settings.yml — user-global DX-comfort
 #      defaults (whitelist: name, ide, rule_loading_tier, personal.bot_icon,
-#      personal.autonomy, telegraph.speak_scope). Created on opt-in via
+#      personal.autonomy, memory.cadence). Created on opt-in via
 #      /onboard; project-local files always win. Legacy
 #      ~/.config/agent-config/agent-settings.yml is read as a fallback.
 #   3. This file (.agent-project-settings.yml) — team defaults

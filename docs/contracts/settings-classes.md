@@ -192,6 +192,10 @@ dispatch runs, not WHETHER the layer exists, so they keep their own C rows.
 | C — guarded | 106 |
 | **Total** | **135** |
 
+The total was 140 until 2026-08-12, when five of the six keys no code path read were
+deleted, minus the one held open (§ The six unread keys, below): one A
+(`telegraph.speak_scope`) and four C.
+
 The total is every leaf in the template, where *leaf* means anything that is not
 a **non-empty** map. An empty map (like the former `subagents.host_capabilities: {}`) is a real
 configurable value with a real default, so such keys count as leaves here — one row more than
@@ -244,11 +248,13 @@ the template, which is the drift this contract exists to prevent.
 | policy | 5 |
 | **Total** | **135** |
 
-Measured 2026-08-12 from the table below rather than predicted — the numbers
-were deliberately not guessed in advance, because a target set before the
-classification is a target the classification then argues toward. The opening
-measurement was 140 leaves at derivable 88 / un-inferrable 9 / consent 38 /
-policy 5; the five deleted below are the whole delta.
+First measured 2026-08-12 at 140 leaves (derivable 88 · consent 38 ·
+un-inferrable 9 · policy 5), from the table below rather than predicted — the
+numbers were deliberately not guessed in advance, because a target set before the
+classification is a target the classification then argues toward. The six unread
+keys were deleted the same day, which is where the −5 `derivable` comes from;
+`consent` is unchanged because the one consent-classified key among them was
+held open rather than deleted.
 
 `derivable` is the **deletion queue, not a deletion**: a row stays until the
 mechanism it names actually exists, so 83 measures work outstanding, not keys
@@ -257,6 +263,40 @@ about to disappear. The count is expected to fall while `un-inferrable` does not
 surface has, and stating it is the point. `policy` is the smallest class and the
 only one whose action is a *move* rather than a keep or a delete: five keys carry
 a project fact the tree could hold instead.
+
+<<<<<<< HEAD
+## The floor — the nine keys no mechanism can derive
+
+This is the residual set: not "what is left over today", but what stays after the
+`derivable` queue drains to zero. A floor asserted without reasons is where the
+next round quietly re-grows, so each key carries the argument for why the
+situation cannot answer it. The test each one passes is **not** "hard to detect" —
+it is that a probe could at best enumerate candidates while the *choice among them*
+belongs to the human, and choosing wrong has a cost the agent cannot take back.
+
+`consent` (38) and `policy` (5) are deliberately **not** part of this floor:
+consent rows survive only what re-examination leaves of them, and every policy row
+is scheduled to move into the project surface and then disappear. The floor is the
+nine below.
+
+| Key | Why nothing can derive it |
+|---|---|
+| `profile.id` | Selects which product surface is projected at all. The same repository is worked by a developer, a founder, and an ops engineer on different days — the axis is a fact about the person in the chair, and the tree carries no trace of it. |
+| `personal.ide` | Names a binary the agent will execute. A probe can enumerate installed editors; it cannot know which one the human wants opened, and having several installed is the normal case rather than the ambiguous one. Guessing here does not misconfigure a preference, it runs the wrong program. |
+| `personal.canary_name` | How the user wants to be addressed. `git config user.name` is a commit identity, not a form of address, and the two differ for most people who use a nickname at all — deriving one from the other is how the canary ends up greeting a stranger. |
+| `subagents.model_map.lite` | Names an external model endpoint for the cheapest tier. Which endpoints an account can actually reach is not in the tree, and the only probe that would establish it is a paid call. |
+| `subagents.model_map.medium` | Same, for the middle tier — and the tier boundaries are a spend judgement, not a capability fact, so even a complete endpoint list would not choose. |
+| `subagents.model_map.high` | Same, for the top tier, where a wrong guess is the most expensive one available. |
+| `subagents.implementer_model` | Names the endpoint that does the bulk of the work, so it is where a wrong default costs the most per run. Empty means "same tier as the session model", which is a deferral to a human choice already made, not a derivation. |
+| `subagents.judge_model` | Names the endpoint that reviews the implementer. Its default is stated relative to the implementer rather than derived from the environment, and pinning it to a specific model is the reason someone sets it at all. |
+| `ai_team.model` | Names the external model a teammate session runs. Availability is an account and auth fact that lives outside this repository entirely. |
+
+Five of the nine are model endpoints, and they share one argument: an endpoint list
+is account state, and the only mechanism that could observe it spends money to do
+so. That is the shape of an `un-inferrable` row — not "we did not bother", but "the
+observation is itself the thing the user is deciding whether to pay for".
+
+## The six unread keys — five deleted, one held open
 
 **Six keys had no reader at all** — found while classifying, not sought:
 `telegraph.speak_scope`, `chat_history.max_size_kb`, `chat_history.on_overflow`,
@@ -281,6 +321,17 @@ repair is to build the reader, which is Phase 3 work with a real behaviour
 change behind it. `legal_review_prep.consented_at` looked like the same case and
 is not: it is the *timestamp* of a consent whose actual gate is
 `legal_review_prep.acknowledged`, which is read and stays.
+
+**The counter-argument is recorded rather than settled**, because it was raised
+against this decision in parallel and is not obviously wrong: a data-bearing
+screenshot embed is a *published egress*, so its confirmation routes into
+`non-destructive-by-default`, which refuses a settings override by construction.
+On that reading an `off` could never have been honoured at all, the reference
+page advertises an opt-out that cannot exist, and the key is `derivable` with the
+unconditional gate in `doc-screenshot-hygiene` as its replacement. Which reading
+wins decides whether Phase 3 builds a reader or deletes a false promise, so it is
+a product call and it is left to the maintainer. Kept as-is meanwhile: the
+conservative side of that disagreement is the one that changes nothing.
 
 ## The table
 
@@ -440,6 +491,10 @@ worst placed to certify about their own list.
 | `update_check.enabled` | a background safety check; switching it off pins the user to known-vulnerable code |
 | `chat_history.frequency` | reduces what is captured, so the trail thins |
 | `chat_history.on_overflow` | decides what survives when the log fills |
+<!-- Historical record: `chat_history.on_overflow` was deleted 2026-08-12 as one
+     of the six unread keys. The A → C move above still stands as what the
+     council decided about it while it existed. -->
+
 | `memory.cadence` | suppresses the line that tells the user what the agent learned |
 | `decision_engine.surface_traces` | the decision engine's own black box |
 

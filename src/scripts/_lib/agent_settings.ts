@@ -916,8 +916,18 @@ export function load_agent_settings(
  * elsewhere. A key nothing reads cannot change a default by leaving — so this
  * is the one deletion batch that needs no replacement mechanism, only the
  * per-key statement of what already decides.
+ *
+ * A sixth unread key, `screenshots.data_bearing_gate`, was found in the same
+ * pass and deliberately NOT deleted — it is `consent`, and the open question is
+ * whether the repair is to build its missing reader or to delete a promise a
+ * Hard Floor can never honour. See `settings-classes.md` § The six unread keys.
+ *
+ * Every reason string must name what decides INSTEAD, never just "removed".
+ * Exported so `lint_settings_classes` can check the deletion side of the
+ * surface: a reason that names no replacement, or an entry whose key is live in
+ * the template again, is a contradiction the loader itself cannot notice.
  */
-const REMOVED_KEYS: ReadonlyMap<string, string> = new Map([
+export const REMOVED_KEYS: ReadonlyMap<string, string> = new Map([
     ['subagents.enabled', 'always-on orchestration'],
     ['subagents.auto', 'always-on orchestration'],
     ['subagents.host_capabilities', 'always-on orchestration'],

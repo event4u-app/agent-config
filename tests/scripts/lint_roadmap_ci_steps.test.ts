@@ -115,11 +115,7 @@ describe('lint_roadmap_ci_steps — _read_local_auto_run', () => {
 
     it('reads local_auto_run: false', () => {
         const settings = path.join(tmp, '.agent-settings.yml');
-        fs.writeFileSync(
-            settings,
-            'quality:\n  local_auto_run: false\n  wait_for_remote_ci: false\n',
-            'utf-8',
-        );
+        fs.writeFileSync(settings, 'quality:\n  local_auto_run: false\n', 'utf-8');
         _setSettingsFileForTest(settings);
         expect(_read_local_auto_run()).toBe(false);
     });
@@ -138,7 +134,11 @@ describe('lint_roadmap_ci_steps — _read_local_auto_run', () => {
 
     it('defaults to true when the key is missing', () => {
         const settings = path.join(tmp, '.agent-settings.yml');
-        fs.writeFileSync(settings, 'quality:\n  wait_for_remote_ci: false\n', 'utf-8');
+        // The section is PRESENT and the key is not — the sibling key this
+        // fixture used to carry (`quality.wait_for_remote_ci`) was deleted on
+        // 2026-08-12, and `local_auto_run` is now the section's only leaf, so an
+        // explicit empty map is what states "section yes, key no".
+        fs.writeFileSync(settings, 'quality: {}\n', 'utf-8');
         _setSettingsFileForTest(settings);
         expect(_read_local_auto_run()).toBe(true);
     });

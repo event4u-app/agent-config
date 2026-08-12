@@ -23,7 +23,7 @@ import YAML from 'yaml';
 
 // ── system prompts per arm ──────────────────────────────────────────────
 
-export const SYSTEM_PROMPT_CONDENSED = `You are speaking in TELEGRAPH-SPEAK mode (speak_scope=aggressive).
+export const SYSTEM_PROMPT_CONDENSED = `You are speaking in TELEGRAPH-SPEAK mode (condense aggressively).
 
 Condense all body prose to telegraph grammar:
 - Drop articles (the, a, an).

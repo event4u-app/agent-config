@@ -118,7 +118,7 @@ A future `telegraph-v2.md` will tabulate the realised input-token saving against
 
 ## Cross-references
 
-- [`telegraph-speak`](../../rules/telegraph-speak.md) — runtime rule the script mirrors for input-side targets; `telegraph.speak_scope` does **not** gate this script (input-side runs regardless).
+- [`telegraph-speak`](../../rules/telegraph-speak.md) — runtime rule the script mirrors for input-side targets; that output-side rule does **not** gate this script (input-side runs regardless).
 - [`src/scripts/validate_safe_paths.ts`](../../../src/scripts/validate_safe_paths.ts) — Phase 0 gate; ported from upstream Telegraph `63a91ec`.
 - [`src/scripts/condense_memory.ts`](../../../src/scripts/condense_memory.ts) — implementation.
 - [`tests/scripts/condense_memory.test.ts`](../../../tests/scripts/condense_memory.test.ts) — regression locks for each carve-out + idempotency + denylist.

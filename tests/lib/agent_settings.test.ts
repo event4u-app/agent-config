@@ -337,6 +337,14 @@ describe('MERGEABLE_KEYS', () => {
         ]);
     });
 
+    it('no longer whitelists telegraph.speak_scope, which is deleted', () => {
+        // The user-global cascade is the one place a leftover value could still
+        // travel from a machine-wide file into a project, so the exact-list pin
+        // above is not enough on its own: this states the direction, and it is
+        // the assertion that reds if a future edit re-adds the key anywhere.
+        expect(ags.MERGEABLE_KEYS).not.toContain('telegraph.speak_scope');
+    });
+
     it('keeps the legacy spelling beside every migrated one (ADR-219 is additive)', () => {
         // The repair must not become a regression for a user-global file that
         // still uses the pre-migration name.

@@ -1,7 +1,7 @@
 ---
 type: "auto"
 tier: "1"
-description: "telegraph.speak_scope != off — telegraph the prose; carve-outs (options, Iron-Law, code, paths) stay byte-stable"
+description: "telegraph.speak on — telegraph the prose; carve-outs (options, Iron-Law, code, paths) stay byte-stable"
 self_contained: true
 workspaces: [agent-config-maintainer]
 packs: [meta]
@@ -25,16 +25,21 @@ BENCH, NEVER A PREFERENCE.
 
 ## Scope
 
-Two independent switches, and only one of them removes the cost:
+One switch decides whether this rule exists at all, and there is no second one:
 
 | Key | Default | Effect |
 |---|---|---|
 | `telegraph.enabled` | `true` | Master — `false` forces every sub-switch off. |
 | `telegraph.speak` | `false` | **Compile-time.** `false` omits this rule from `dist/router.json` entirely — the only lever that stops the ~982-token body from shipping. |
-| `telegraph.speak_scope` | `off` | **Runtime** scope of telegraph grammar. Does NOT remove the token cost: `compile_router` never reads it. |
 
-`speak_scope` values: `off` (rule inactive) · `prose_only` (telegraph in body
-prose, carve-outs preserved) · `aggressive` (everywhere except Iron-Law literals).
+**The scope of the grammar is this rule's own business, not a setting's.** A
+`telegraph.speak_scope` key shipped until 2026-08-12 and no code path ever read
+it: the carve-out list below is what states where condensation applies, so the
+key could only ever disagree with the rule. What it described as `prose_only` is
+simply what this rule does; what it described as `aggressive` — condensing
+everything except Iron-Law literals — is refused, because the other six
+carve-outs each protect another rule's Iron Law. A leftover value in a settings
+file warns once and is ignored.
 
 Both defaults are evidence-locked, not stylistic: telegraph measured **−9.27%**
 (API counts) / **−5.47%** (`cl100k_base` re-analysis, same 30 replies) against a
@@ -47,7 +52,8 @@ and [`condensation-default-kill-criterion`](../../docs/contracts/condensation-de
 
 ## Carve-outs — byte-for-byte preserved
 
-Mangling these breaks Iron Laws. Apply regardless of `speak_scope`:
+Mangling these breaks Iron Laws. Apply whenever this rule is active, without
+exception and with no scope that can narrow them:
 
 1. **Triple-backtick ALL-CAPS blocks** — Iron-Law literal fences in
    `commit-policy`, `non-destructive-by-default`, `direct-answers`, etc.
@@ -65,7 +71,7 @@ Mangling these breaks Iron Laws. Apply regardless of `speak_scope`:
 
 ## Enforcement mechanism
 
-Post-rewrite validator runs on every reply when `speak_scope != off`:
+Post-rewrite validator runs on every reply while this rule is active:
 
 1. **Snapshot** — before condensation, hash each line in carve-out
    regions (1–7 above).
@@ -92,7 +98,7 @@ Example: *"I will now check the file and see if it exists"* →
 
 ## See also
 
-- Input-side memory condensation (shrinking always-loaded memory files like `AGENTS.md` / `CLAUDE.md` / `.cursorrules` rather than the reply stream) runs independently of `speak_scope` — see [`condense-memory`](../skills/condense-memory/SKILL.md) for the script wrapper, sensitive-path refusal contract, and `.original.md` round-trip.
+- Input-side memory condensation (shrinking always-loaded memory files like `AGENTS.md` / `CLAUDE.md` / `.cursorrules` rather than the reply stream) runs independently of this rule — see [`condense-memory`](../skills/condense-memory/SKILL.md) for the script wrapper, sensitive-path refusal contract, and `.original.md` round-trip.
 - Skills marked `token_budget_class: rich` are **exempt** from telegraph condensation + thin-projector trimming (gated by `tokens.rich_skills`, default `on`) — full model in [`token-budget-discipline`](token-budget-discipline.md).
 - Any telegraph/trim decision that would drop a net-positive change purely on budget grounds routes to [`token-budget-discipline § Value-over-budget escalation`](token-budget-discipline.md#value-over-budget-escalation) — surface the trade-off, don't auto-reject.
 

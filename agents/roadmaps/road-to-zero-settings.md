@@ -201,6 +201,77 @@ Two findings the classification produced that no step asked for:
   whichever step deletes or fixes the key, and repairing it in passing would be
   the drive-by edit `minimal-safe-diff` forbids.
 
+## Why 3.1 stays open, and what was built for it instead (2026-08-12)
+
+**3.1 is not a step, it is the queue.** Its subject is "`derivable` rows whose
+replacement does **not** yet exist", and there are 83 of them — writing those
+mechanisms is the remaining programme, not a checkbox. Phase 2 deliberately
+touched none of them: every key deleted either had no reader at all or had its
+replacement already shipped, so 3.1's `verify:` ("each such key's deletion commit
+is later than its mechanism's") holds for this change with no subject. Closing it
+on that basis would be checkbox motion, so it stays open.
+
+What was built instead is the missing half of the gate. `lint_settings_classes`
+had five checks and all five police what is **added** — a new leaf needs a row, a
+class, a disposition, a conservative default. Nothing policed what is **removed**,
+which on a roadmap whose whole direction is deletion was the un-gated half doing
+the work. Check 6 now fails the build on two decidable contradictions the loader
+cannot see: a `REMOVED_KEYS` entry whose reason names no replacement, and a key
+that is simultaneously removed and live in the template (which would make the
+loader warn "ignored" about a value the schema honours). That makes the acceptance
+criterion *"no key is deleted before the mechanism that replaces it exists"*
+mechanical on its naming half.
+
+Stated because the step asks for more than the gate delivers: **the gate does not
+check that the replacement mechanism actually exists, nor that its commit precedes
+the deletion.** Neither is decidable from the template and the contract, so both
+stay model-carried — the same honesty boundary the A/B/C judgement itself carries.
+Falsifiability was verified rather than assumed: re-adding a deleted key to the
+template makes check 6 name it.
+
+## What this branch added beyond Phase 2 (2026-08-12, reconciled)
+
+Phase 2 landed twice, in parallel, and the two runs converged on the same five
+deletions independently — the step's own note above is the record of that work.
+What follows is only what this branch adds on top, kept because none of it was
+duplicated:
+
+**Four live contracts made a claim the code contradicts, and now do not.**
+`condensation-default-kill-criterion` said the runtime rule *reads*
+`telegraph.speak_scope` from settings; `telegraph-telemetry` gated a multiplier on
+it; `layered-settings` and `mcp-client-config` both listed it as a user-global
+mergeable preference after it had been removed from `MERGEABLE_KEYS`. A reader
+following any of the four would have been misled about what the code does. The
+ADRs and the archived changelog that also name the key are deliberately
+untouched: they record what was decided while it existed, which is not drift.
+
+**The telegraph-speak rule now states its own scope.** Its frontmatter
+`description` was literally `telegraph.speak_scope != off`, so the rule announced
+its activation condition in terms of a key that no longer exists. The Scope table,
+three body clauses and the projected `domains/meta` description follow. What the
+key called `prose_only` is simply what the rule does; what it called `aggressive`
+is refused outright, because each of the seven carve-outs protects another rule's
+Iron Law.
+
+**The deletion side of the gate is now gated** — see § Why 3.1 stays open.
+
+**Two findings recorded, not repaired**, both pre-dating this work, so fixing
+them here would be the drive-by edit `minimal-safe-diff` forbids:
+
+- `docs/customization.md` documents the user-global whitelist as five exact
+  dotted paths. `MERGEABLE_KEYS` has fifteen — `personal.ide`,
+  `personal.pr_comment_bot_icon`, `memory.cadence` and the seven
+  `knowledge.global_sharing.*` entries are absent from the doc. Only the
+  arithmetic changed here; the omission is older.
+- `docs/architecture/current-onboard-baseline.md` still names the deleted key and
+  is stale wholesale: it documents the retired `/onboard` command and cites
+  `.agent-src.uncondensed/`, a tree ADR-051 abandoned.
+
+**One fixture deliberately keeps the deleted keys.**
+`tests/fixtures/sync_yaml_rt/current-real.yml` asserts `emit(parse(x)) == x`, and
+a settings file written *before* a deletion is precisely what must still
+round-trip. Editing it would delete the case rather than fix it.
+
 ## Blockers
 
 ### blocker: consent-key-redesign-verdict
@@ -256,6 +327,23 @@ Two findings the classification produced that no step asked for:
   right, and the step's `verify:` demands a verdict for all three. So 3.2 has a
   third question the wording hid: does asking for a nickname authorise anything,
   or is class B doing the wrong job for that key?
+- **A FAILED council attempt still spends quota — measured, and it changes how to
+  wait.** The re-attempt above was itself repeated once more from a parallel
+  branch, and the counters rose across the two runs: `anthropic 125/50 · openai
+  134/50` became `140/50 · 146/50`, with `actual $0.0000` both times. So probing
+  "does it work yet" makes the wait longer rather than shorter. Read the quota
+  line in `council:status` instead of firing a run to find out. One retry IS
+  legitimate when the environment changed underneath you — a transport-repair PR
+  landing between attempts is exactly that case, and it is what produced the
+  `cli_quota_exhausted` reading rather than an assumption.
+- **The two real consent keys are not comparable, and the asymmetry is what 3.2
+  has to weigh.** `memory.learn_on_session_end` has a **real** reader:
+  `src/scripts/memory_learn_hook.ts` parses it itself and stays dark unless it
+  reads `true`. `personal.open_edited_files` is enforced by **prose only** —
+  `src/skills/file-editor/SKILL.md` instructs the agent to read it, and no code
+  path or hook can refuse the action. Whether an authorisation that only prose
+  enforces is a consent gate at all is a different question from whether the
+  action needs authorising, and the step's single wording collapses the two.
 - **Resolved when:** each of the three keys carries a recorded verdict (keep, or
   redesign the action), in this roadmap or an ADR.
 

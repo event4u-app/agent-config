@@ -15,7 +15,9 @@
  *   4. every B row's template default is a conservative value
  *      (`false` / `""` / `0` / `[]` / `null` / `{}`) — the invariant that makes
  *      "absent" and "declined" the same outcome in a sparse settings file;
- *   5. the contract's own Counts table matches the tallies computed here.
+ *   5. the contract's own Counts table matches the tallies computed here;
+ *   6. every `REMOVED_KEYS` entry names what decides instead, and no key is
+ *      both removed and live in the template.
  *
  * **Landed at error, not advisory.** The authoring guideline's advisory-first
  * rule exists so a gate cannot be wired to error over a corpus whose hits are
@@ -64,6 +66,7 @@ import {
     type SettingsDisposition,
     settingsLeafPaths,
 } from '../shared/settingsClasses.js';
+import { REMOVED_KEYS } from './_lib/agent_settings.js';
 import { checkRatchet } from './_lib/gate_baseline.js';
 import { GateLedger } from './_lib/gate_ledger.js';
 import { runGateCli, runSelfTest } from './_lib/gate_self_test.js';
@@ -143,8 +146,8 @@ export function selfTest(): number {
     try {
         return runSelfTest({
             gate: GATE,
-            minCases: 11,
-            minRejectCases: 9,
+            minCases: 12,
+            minRejectCases: 10,
             cases: [
                 {
                     name: 'a template whose every leaf is classified passes',
@@ -305,6 +308,29 @@ export function selfTest(): number {
                     name: 'a missing template — a dead scan root — is rejected, not passed as "nothing to check"',
                     expect: 'reject',
                     run: () => run(seed('dead-root', null, clean)),
+                },
+                {
+                    name: 'a template leaf that is also a REMOVED_KEYS entry is rejected (check 6)',
+                    expect: 'reject',
+                    // `REMOVED_KEYS` is compiled into the loader, so a fixture root
+                    // cannot seed it — but it can seed the other side of the
+                    // contradiction. A fixture that declares `quality.wait_for_remote_ci`
+                    // as a live, fully classified leaf is a tree where the loader
+                    // would warn "ignored" about a value the schema honours, which
+                    // is exactly the state check 6 exists to refuse. Classified and
+                    // counted correctly on purpose: every other check passes here,
+                    // so a rejection can only come from check 6.
+                    run: () =>
+                        run(
+                            seed(
+                                'removed-and-live',
+                                'quality:\n  wait_for_remote_ci: false\nbeta: "keep"\n',
+                                table(
+                                    '| `quality.wait_for_remote_ci` | B | `false` | fixture | consent |\n' +
+                                        '| `beta` | C | `"keep"` | fixture | un-inferrable |\n',
+                                ),
+                            ),
+                        ),
                 },
             ],
         });
@@ -547,6 +573,45 @@ function main(): number {
             findings.push(
                 `${CONTRACT_RELATIVE}  Counts says ${label} = ${String(stated)}, the table holds ` +
                     `${String(actual)} — a derived number beside a mechanism that can compute it.`,
+            );
+        }
+    }
+
+    // Check 6 — the DELETION side of the surface.
+    //
+    // Checks 1-5 all police what is added: a new leaf needs a row, a class, a
+    // disposition, a conservative default. Nothing policed what is removed, and
+    // that is the asymmetry this axis lives on — the whole direction of the
+    // roadmap behind it is deletion, so the un-gated half was the half doing the
+    // work. Two contradictions are decidable here and neither is visible to the
+    // loader that prints the warning:
+    //
+    //   a. a reason that names no replacement. The `derivable` rows above are
+    //      already held to "name what decides instead" because that clause is the
+    //      falsifier; a deleted key is the same claim after the fact, and a
+    //      warning that says only "removed" sends the reader looking for a
+    //      successor key that does not exist.
+    //   b. a key that is BOTH removed and live. Re-adding a leaf while its
+    //      `REMOVED_KEYS` entry stands makes the loader warn "ignored" about a
+    //      value the schema now honours — the reader is told the opposite of what
+    //      happens.
+    //
+    // What this does NOT check, stated because the step it serves asks for it:
+    // that the replacement mechanism actually EXISTS, and that its commit
+    // precedes the deletion. Neither is decidable from these two files; both stay
+    // model-carried, exactly as the A/B/C judgement itself does.
+    const liveLeaves = new Set(leaves);
+    for (const [removedKey, reason] of REMOVED_KEYS) {
+        if (reason.trim() === '') {
+            findings.push(
+                `src/scripts/_lib/agent_settings.ts  \`${removedKey}\` is in REMOVED_KEYS with an empty ` +
+                    'reason — name what decides instead, not that it is gone.',
+            );
+        }
+        if (liveLeaves.has(removedKey)) {
+            findings.push(
+                `${TEMPLATE_RELATIVE}  \`${removedKey}\` is a live template leaf AND a REMOVED_KEYS ` +
+                    'entry — the loader would warn that a honoured value is ignored. Drop one side.',
             );
         }
     }
