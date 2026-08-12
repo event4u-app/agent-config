@@ -1,10 +1,10 @@
 # Findings: frontend-skill-application
-<!-- completion-review: v1 | reviewed: 2026-08-12 | scope: c2714066cf267193967db04e055c68c1776a51ec6ae693ebc080a118c0f317fe | diff: 396d58fbff2704cddce10577e2cbd82db9c5003c | reviewer: r2-fresh-subagent-frontend-skill-application | prompt_hash: cccf6fbf0f41d8fb6c3d42caa8373c2da50180031965cd568d957697970371e3 -->
+<!-- completion-review: v1 | reviewed: 2026-08-12 | scope: ae1406facf566e7a494163f47ed41b0b21a60faa00c9723fdc0b06d060fd9b52 | diff: cfc75b6b26bbf6bd09c0536ca0f553a52fbd09a9 | reviewer: r2-fresh-subagent-frontend-skill-application | prompt_hash: cccf6fbf0f41d8fb6c3d42caa8373c2da50180031965cd568d957697970371e3 -->
 
 <!-- context-manifest: v1
 inputs:
-  diff_sha: 396d58fbff2704cddce10577e2cbd82db9c5003c
-  scope_hash: c2714066cf267193967db04e055c68c1776a51ec6ae693ebc080a118c0f317fe
+  diff_sha: cfc75b6b26bbf6bd09c0536ca0f553a52fbd09a9
+  scope_hash: ae1406facf566e7a494163f47ed41b0b21a60faa00c9723fdc0b06d060fd9b52
   roadmap: none
   roadmap_hash: none
   ac_hash: none
@@ -12,6 +12,15 @@ excluded: [session-history, agents/runtime, implementation-context]
 tools: [git-diff-branch-scoped, file-read-branch-paths]
 dispatched: 2026-08-12T03:25:00Z
 -->
+
+> **Re-bound twice, and the second time is bookkeeping.** The first re-bind
+> followed the fix pass. The scope then moved again because three GENERATED
+> files entered the diff — `agents/index.md`, `docs/catalog.md`,
+> `dist/router.json`, all regenerated from sources the review already covered —
+> plus a merge of `origin/main`. No reviewed content changed between the two
+> scopes; `git diff <first-scope-head>..<this-head>` over `src/` and `tests/`
+> is empty. Recorded rather than silently re-hashed, because a re-bind that
+> does not say what moved is indistinguishable from one that hides a change.
 
 | # | Severity | File:Line | Finding | Status | Reason/Ref |
 |---|----------|-----------|---------|--------|------------|
