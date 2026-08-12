@@ -299,14 +299,21 @@ interface AllowlistEntry {
     file?: string;
     lines?: number[] | '*';
     /**
-     * Content anchor — a substring of the exempted line.
+     * Content anchor — a substring of the exempted line. The only per-line key.
      *
-     * Position-keyed entries (`lines: [100]`) are drift-fragile by
-     * construction: inserting a paragraph above line 100 silently re-fires the
-     * ratchet on an entry nobody touched, which this repository has recorded as
-     * a real cost. An anchor keys the exemption to what is actually being
-     * exempted, so the entry survives the edit that moves it. Prefer it for new
-     * entries; `lines` stays supported for the existing ones.
+     * Position keying (`lines: [100]`) is retired, not merely discouraged.
+     * Inserting a paragraph above line 100 re-fires the ratchet on an entry
+     * nobody touched — recorded twice in one pull request — and, worse, it rots
+     * in silence: the migration that introduced this comment found three shipped
+     * entries that had stopped exempting anything, one naming line 100 of a
+     * 68-line file and two naming blank lines. Nothing reported it, because a
+     * drifted position key still parses.
+     *
+     * An anchor keys the exemption to the content being exempted, so it survives
+     * the edit that moves it and fails loudly when that content is gone.
+     * `validate_allowlist` additionally requires it to match exactly one line:
+     * `includes` is file-scoped, so a too-short anchor would silently exempt a
+     * second line nobody reviewed.
      */
     anchor?: string;
     reason?: string;
@@ -328,35 +335,124 @@ function _load_allowlist(): Allowlist {
     }
 }
 
-function _allowlisted(
+/**
+ * Every allowlist entry must still exempt something, and exactly one thing.
+ *
+ * A position-keyed entry rots in silence: the line it names drifts, the entry
+ * keeps parsing, and nothing reports that an exemption stopped exempting. This
+ * repository shipped three such entries — one naming line 100 of a 68-line file,
+ * two naming blank lines — and the rot was invisible until the whole set was read
+ * at once. An anchor cannot drift, but it can over-reach: `includes` is
+ * file-scoped, so an anchor occurring twice silently exempts a second line nobody
+ * reviewed.
+ *
+ * Both failures are decidable from the file, so they are checked rather than
+ * trusted. `lines: '*'` stays legal — a deliberate whole-file exemption is a
+ * different thing from a position key, and it cannot drift.
+ */
+/**
+ * The exact text `_allowlisted` compares an anchor against.
+ *
+ * The matcher sees `Hit.snippet`, not the raw line — trimmed and cut at 160
+ * chars. A validator reading the raw line would clear an anchor copied with its
+ * indentation, or drawn from past column 160, and the gate would then fail to
+ * suppress a hit the maintainer was told is exempt. One function, both callers.
+ */
+export function anchor_haystack(line: string): string {
+    return line.trim().slice(0, 160);
+}
+
+export function validate_allowlist(allowlist: Allowlist, repo_root?: string): string[] {
+    // Default to the MUTABLE root, not the real one: the scan resolves entry
+    // paths against `REPO_ROOT`, and a validator resolving them anywhere else
+    // would report every entry missing the moment a caller redirects the tree.
+    const root = repo_root ?? REPO_ROOT;
+    const problems: string[] = [];
+    for (const entry of allowlist.entries ?? []) {
+        const file = entry.file;
+        if (typeof file !== 'string' || file === '') {
+            problems.push('entry without a `file`');
+            continue;
+        }
+        if (Array.isArray(entry.lines)) {
+            problems.push(
+                `${file}: position-keyed (\`lines: [${entry.lines.join(', ')}]\`) — ` +
+                    'use `anchor` with a substring of the exempted line; a line number ' +
+                    'drifts out from under its own exemption on any edit above it',
+            );
+            continue;
+        }
+        if (entry.lines === '*') {
+            // A whole-file exemption never consults the anchor, so validating one
+            // here would stop every scan for a field the matcher does not read.
+            continue;
+        }
+        const anchor = entry.anchor;
+        if (typeof anchor !== 'string' || anchor === '') {
+            problems.push(`${file}: neither an \`anchor\` nor \`lines: "*"\``);
+            continue;
+        }
+        const abs = path.join(root, file);
+        if (!_isFile(abs)) {
+            problems.push(`${file}: anchored entry names a file that does not exist`);
+            continue;
+        }
+        const matches = fs
+            .readFileSync(abs, 'utf-8')
+            .split('\n')
+            .filter((l) => anchor_haystack(l).includes(anchor)).length;
+        if (matches === 0) {
+            problems.push(
+                `${file}: anchor matches no line — the exempted content is gone, so the ` +
+                    `entry exempts nothing: ${JSON.stringify(anchor.slice(0, 50))}`,
+            );
+        } else if (matches > 1) {
+            problems.push(
+                `${file}: anchor matches ${matches} lines — it would exempt more than the ` +
+                    `reviewed one; lengthen it: ${JSON.stringify(anchor.slice(0, 50))}`,
+            );
+        }
+    }
+    return problems;
+}
+
+/**
+ * Index of the entry that exempts this hit, or `-1`.
+ *
+ * Returns the index rather than a boolean so the run can report which
+ * exemptions were never used. An entry that suppresses nothing is the failure
+ * this gate shipped: three had rotted under position keys, and re-keying them to
+ * anchors preserved the rot, because an anchor resolving to a line says nothing
+ * about that line producing a hit.
+ */
+function _allowlist_index(
     rel_path: string,
     line_no: number,
     allowlist: Allowlist,
     line_text = '',
-): boolean {
+): number {
     const logical = strip_source_prefix(rel_path);
-    for (const entry of allowlist.entries ?? []) {
+    const entries = allowlist.entries ?? [];
+    for (let i = 0; i < entries.length; i += 1) {
+        const entry = entries[i] as AllowlistEntry;
         const entry_file = entry.file;
         const entry_logical =
             typeof entry_file === 'string' ? strip_source_prefix(entry_file) : null;
         if (entry_file !== rel_path && (logical === null || entry_logical !== logical)) {
             continue;
         }
-        const lines = entry.lines;
-        if (lines === '*') {
-            return true;
+        if (entry.lines === '*') {
+            return i;
         }
-        // Content anchor before line number: an anchored entry keeps matching
-        // after an insertion moves the line, which a position key cannot.
+        // Content anchor, and nothing else. A numeric `lines` entry never reaches
+        // this point — `validate_allowlist` stops the run on one — so matching it
+        // here would be a branch that only fires for input the gate rejects.
         const anchor = entry.anchor;
         if (typeof anchor === 'string' && anchor !== '' && line_text.includes(anchor)) {
-            return true;
-        }
-        if (Array.isArray(lines) && lines.includes(line_no)) {
-            return true;
+            return i;
         }
     }
-    return false;
+    return -1;
 }
 
 function _families_in_window(lines: string[], idx: number, radius = 10): Set<string> {
@@ -502,7 +598,12 @@ function* iter_md_files(paths: Iterable<string>): Generator<string> {
     }
 }
 
-function parse_args(argv: readonly string[]): { json: boolean; quiet: boolean; paths: string[] } {
+function parse_args(argv: readonly string[]): {
+    json: boolean;
+    quiet: boolean;
+    narrowed: boolean;
+    paths: string[];
+} {
     let json = false;
     let quiet = false;
     const paths: string[] = [];
@@ -535,16 +636,26 @@ function parse_args(argv: readonly string[]): { json: boolean; quiet: boolean; p
             process.exit(2);
         }
     }
-    return { json, quiet, paths: paths.length > 0 ? paths : _default_paths() };
+    // `narrowed` distinguishes an explicit `--paths` from the default full set.
+    // `paths.length === 0` cannot: the default is three subdirectories, so a full
+    // run also arrives here with a non-empty list — which silently disabled the
+    // unused-exemption check the first time it was written against that test.
+    return {
+        json,
+        quiet,
+        narrowed: paths.length > 0,
+        paths: paths.length > 0 ? paths : _default_paths(),
+    };
 }
 
 /**
  * The allowlist entry that would silence one finding, ready to paste.
  *
- * Anchored on the matched token rather than on the line number: a
- * position-keyed entry re-fires the moment an insertion above moves the line,
- * on an entry nobody touched, which `check_suppression_hygiene` counts every
- * run until the existing 18 migrate.
+ * Anchored on the matched token rather than on the line number: a position key
+ * re-fires the moment an insertion above moves the line, on an entry nobody
+ * touched. The form is no longer merely discouraged — `validate_allowlist`
+ * refuses it, and the last 18 position-keyed entries were migrated to anchors
+ * in the change that introduced the refusal.
  */
 export function suppressionKey(rel: string, hit: Hit): string {
     const anchor = hit.snippet.trim().slice(0, 60);
@@ -613,7 +724,19 @@ export function main(argv?: readonly string[]): number {
     const args = parse_args(raw);
 
     const allowlist = _load_allowlist();
+    // Judge the exemptions before judging any file. A rotted entry produces a
+    // green run that means nothing, which is the one failure mode a gate must
+    // not have. Structural problems are collected here and reported at the end,
+    // NOT returned on early: an early return skipped the `scanned:` line the
+    // gate-coverage collector consumes and left `--json` emitting nothing, so a
+    // consumer parsing the envelope threw on exactly the runs where the gate
+    // reports itself unusable.
+    const allowlist_problems = validate_allowlist(allowlist);
     const file_hits: Array<[string, Hit[]]> = [];
+    // Which exemptions actually suppressed something. Only meaningful over a full
+    // scan: with `--paths` narrowing the tree, an entry for a file outside the
+    // scope is unused for a reason that says nothing about the entry.
+    const used_entries = new Set<number>();
     let total_hits = 0;
     let allowlisted_total = 0;
     // Every enumerated file is planned up front, so the five exemption branches
@@ -661,7 +784,9 @@ export function main(argv?: readonly string[]): number {
             if (h.cross_stack) {
                 continue;
             }
-            if (_allowlisted(rel, h.line, allowlist, h.snippet)) {
+            const idx = _allowlist_index(rel, h.line, allowlist, h.snippet);
+            if (idx >= 0) {
+                used_entries.add(idx);
                 h.allowlisted = true;
                 allowlisted_total += 1;
                 continue;
@@ -679,10 +804,31 @@ export function main(argv?: readonly string[]): number {
         }
     }
 
+    // An exemption that suppressed nothing over a FULL scan exempts nothing at
+    // all — the rot the anchor migration was supposed to end, and which anchoring
+    // alone does not end: an anchor resolving to a line says nothing about that
+    // line producing a hit. Only checked on a full scan, because `--paths` makes
+    // "unused" mean "out of scope" instead.
+    if (!args.narrowed) {
+        const entries = allowlist.entries ?? [];
+        for (let i = 0; i < entries.length; i += 1) {
+            if (used_entries.has(i)) {
+                continue;
+            }
+            const e = entries[i] as AllowlistEntry;
+            allowlist_problems.push(
+                `${String(e.file)}: exemption suppressed nothing this run — the line it names ` +
+                    'produces no leakage hit, so it exempts nothing: ' +
+                    JSON.stringify(String(e.anchor ?? e.lines).slice(0, 50)),
+            );
+        }
+    }
+
     const summary = {
         total_hits,
         files: file_hits.length,
         allowlisted: allowlisted_total,
+        allowlist_problems: allowlist_problems.length,
     };
 
     // Finalize before either output branch: an unaccounted target must throw
@@ -696,10 +842,11 @@ export function main(argv?: readonly string[]): number {
                 hits.map((h) => ({ file: relToRepo(p), ...h })),
             ),
             summary,
+            allowlist_problems,
             ledger: tally,
         };
         process.stdout.write(`${JSON.stringify(out, null, 2)}\n`);
-        return total_hits ? 1 : 0;
+        return total_hits || allowlist_problems.length ? 1 : 0;
     }
 
     if (!args.quiet) {
@@ -731,6 +878,26 @@ export function main(argv?: readonly string[]): number {
     // judged) and is the same "reading M as coverage" trap the human summary
     // carries. The ledger makes the honest number the cheap one to publish.
     process.stderr.write(`scanned: ${String(tally.completed + tally.failed)}\n`);
+
+    // Reported AFTER the ledger and the `scanned:` line, so a broken allowlist
+    // still produces both output contracts. An exemption problem fails the run
+    // on its own: a gate that scans cleanly through unusable exemptions is
+    // reporting on a question nobody asked.
+    if (allowlist_problems.length > 0) {
+        process.stderr.write(
+            `\n❌  ${allowlist_problems.length} unusable allowlist entr` +
+                `${allowlist_problems.length === 1 ? 'y' : 'ies'}:\n`,
+        );
+        for (const p of allowlist_problems) {
+            process.stderr.write(`  · ${p}\n`);
+        }
+        process.stderr.write(
+            '  An exemption that names nothing, suppresses nothing, or reaches further\n' +
+                '  than the line it was reviewed for is not an exemption. Remove it or\n' +
+                '  re-anchor it to the content it is meant to cover.\n',
+        );
+        return 1;
+    }
     return total_hits ? 1 : 0;
 }
 
