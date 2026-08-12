@@ -163,6 +163,27 @@ expect([403, 404]).toContain((await api.get(`/users/${otherTenantUser.id}`)).sta
 
 Deriving from seeded data is necessary but **not sufficient** — a test that only reads back the exact fields it seeded is still overfit (a mutation in the code survives it). A real test also exercises boundary (empty / null / max / Unicode), error (missing / invalid), and, on security-sensitive paths, an abuse case (IDOR, injection string, XSS payload). Coverage of *cases*, not just lines.
 
+**The adversarial variant, and it is the one that looks safest.** A *negative* test — the abuse case just named — fails the same way, but nothing about it reads as weak: it names an attack, it asserts a refusal, it goes green. It passes because **something other than the control under test** produced that refusal. Two shapes, both from one real review:
+
+- **The hostile value sits only in the argument.** A guard rejecting a path-traversing `token` was pinned by planting a fixture whose own `token` field held the *legitimate* value while `'../outside'` was passed as the argument. Downstream, an ordinary token comparison mismatched and returned exactly the expected refusal — delete the guard and the test still passes. The hostile value belongs in the **field under test**, not only in the call.
+- **The assertion cannot fail.** The same test asserted the planted file still existed after a rejected claim. The two directories were siblings, so both `../x.json` joins resolved to one path and the rename could never have moved it — a green no implementation could turn red.
+
+Gate:
+
+```
+BEFORE trusting a negative test:
+  Delete or invert the control it claims to pin. Does it FAIL?
+  RESTORE THE CONTROL IMMEDIATELY — before any other edit, before any commit.
+    The mutation is a probe, never a change. A deleted guard left deleted is
+    a shipped vulnerability produced by a test-quality check.
+  IF it still passes: it is pinning something else. Name what, then fix the test.
+  IF an assertion cannot fail for ANY implementation: delete THE ASSERTION —
+    it is decoration. Only after proving vacuity, and never to turn a red test
+    green — that is Anti-Pattern 7 below.
+```
+
+No mutation-testing rig required: comment the control out, run that one spec, put it back. A negative test nobody has ever watched fail is a claim, not evidence.
+
 ### Anti-Pattern 7 — Gaming the green (test-integrity)
 
 Symptom: a test fails, and the "fix" edits the *test* instead of the code — `.skip` / `it.skip` / `xfail` / `@Disabled` on the failing case, deleting the failing assertion, loosening `toBe(x)` to `toBeTruthy()`, or rewriting the `expected` value to whatever the (possibly buggy) code now emits. The suite goes green while the behavior stays broken — the worst outcome, because green now *hides* the bug. This is the automation-bias trap: under pressure to finish, the agent optimizes the signal (green) instead of the target (correct behavior).
@@ -211,6 +232,7 @@ This is the test-surface instance of the `autonomous-execution` N=3 / allowlist-
 - Do NOT mark a story complete until at least one test was watched failing first.
 - Do NOT hardcode an expected value the code will emit, or pin a regex to an incidental fixed date/id — derive from inputs and seeded data, and vary the input across cases.
 - Do NOT skip / `xfail` / delete a failing test, or rewrite its `expected` to the code's current output, to get a green run — fix the code, or state a real spec change in the diff.
+- Do NOT trust a negative test you have never watched fail — delete the control it pins, confirm the test goes red, restore the control immediately.
 
 ## Auto-trigger keywords
 
@@ -225,6 +247,9 @@ This is the test-surface instance of the `autonomous-execution` N=3 / allowlist-
 - gaming the green
 - skip failing test
 - test integrity
+- negative test
+- vacuous assertion
+- abuse-case test
 
 ## Provenance
 
