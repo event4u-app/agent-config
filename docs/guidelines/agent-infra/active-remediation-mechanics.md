@@ -22,9 +22,56 @@ Under those constraints the fix is auditable in the same diff and is *not* scope
 
 Bigger, or diverges from the task → do **not** refactor inline, do **not** interrupt the flow. Note the site (file:line + the issue). Surface the batch as **one** numbered-options prompt (per `user-interaction`, one recommendation line) **after the task is delivered** — or mid-work only when the flow makes it natural. Each option must carry a real trade-off (`no-cheap-questions`). Refactor only on an explicit yes, as a separate scoped change (`scope-control`, `downstream-changes`).
 
+#### Option anatomy — a pickable fix, not a yes/no
+
+The user should be able to answer with one number and get a change they can predict. Each numbered option therefore names four things, in a line or two:
+
+1. **What changes** — the concrete edit, in the vocabulary of the code ("replace the three `array()` literals with `[]`", not "clean up the file").
+2. **Where** — file, or the group of files if the option covers a batch.
+3. **How large** — line count or an honest size class, so the user can weigh it without opening the diff.
+4. **What it costs** — the risk, the review burden, or the reason it was not simply done inline.
+
+Group findings by **fix shape**, never one option per finding: seven lint errors that are three `no-unused-vars`, three `prefer-const` and one genuine type hole are three options, not seven. The final option is always an explicit **leave it as is** — its absence is what turns a menu into pressure. One recommendation line under the block names your pick (`user-interaction` Iron Law 1).
+
+#### Carry-over — undecided is not finished
+
+An item the user has not answered stays live: raise it once more at the next natural task boundary, in the same batched form. Two bounds keep that from becoming nagging:
+
+- **A decline is terminal.** An explicit "leave it" / "ignore" closes the item for the task; re-raising it is the re-ask `scope-control` § Decline = silence forbids.
+- **Once per boundary, not once per reply.** The batch is a task-close artifact. Repeating it between steps is the continuation prompt `no-cheap-questions` Iron Law 4 forbids.
+
 ### Propose a follow-up PR (many spots)
 
 When the issues are too many to fold in without blowing the current diff's scope, propose **one or more separate follow-up PRs** (or a roadmap under `agents/roadmaps/`, using the shared-prefix convention) so the user reviews the changes before merge. Creating the PR/roadmap is **permission-gated** — propose, get a yes, then create (`scope-control`, `commit-policy`).
+
+## Observed failing checks — classifying the red you already have
+
+The rule puts a check result you have already seen into the same ladder as a defect you read in a file. Classification is the whole of the work, and it runs on two axes:
+
+| | Inside the fix-now bar | Outside it |
+|---|---|---|
+| **Caused by this diff** | Fix it — it is the task, not remediation. | Fix it; a diff you cannot make green is not deliverable. Blocked → surface it as a blocker, never as a caveat. |
+| **Pre-existing** | Fix it with the work, and say in the commit body that it was pre-existing. | Note + ask with candidate fixes, or a follow-up PR when the batch is large. |
+
+Two failure shapes this table exists to name:
+
+- **"Not mine, so not mentioned."** Pre-existing red is the most common thing an agent walks past, because `minimal-safe-diff` reads like permission to ignore it. It is not: that rule bounds the *diff*, this one bounds the *silence*. The two are satisfied together by noting the finding and asking, which changes no line of code.
+- **"Mine, so quietly worked around."** A gate that goes green because the check was narrowed, an assertion loosened, or a file excluded is a defect with a green light on top. Route it through the ladder as an issue, and say what was narrowed.
+
+### Worked example — a red gate seen mid-task
+
+> `task check` fails; the lint step reports 7 errors, all pre-existing on `main`, in files this branch does not touch.
+
+Wrong, and the canonical shape of it: finish the task, and close with *"the only thing still open is the lint finding — 7 errors on main, which makes `task check` unusable as a chain"*. The sentence is accurate, the issue is named, and nothing about it is decided — the next session inherits it verbatim.
+
+Right: the errors are pre-existing, outside the fix-now bar (unrelated files, more than ~10 lines), so they are **note + ask** — after the task is delivered, one block:
+
+1. Fix the 3 `no-unused-vars` in `src/a.ts`, `src/b.ts` — ~6 lines, mechanical, ships in this PR.
+2. Fix all 7 in a separate follow-up PR — keeps this diff single-purpose; needs a branch (permission-gated).
+3. Suppress the two in generated output with a scoped ignore, fix the rest — smallest green path, adds a suppression to review.
+4. Leave as is — `task check` stays unusable as a chain until someone else picks it up.
+
+One recommendation line names the pick. Whatever the user answers, the item is closed. If they answer nothing, it is raised once at the next task boundary — not carried silently into a third session.
 
 ## Version-gated modernization
 
